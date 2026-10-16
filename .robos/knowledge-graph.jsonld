@@ -4414,9 +4414,9 @@
         "robos:DocArticle",
         "schema:TechArticle"
       ],
-      "dcterms:title": "The Future of Software Development: The Skill Commons",
+      "dcterms:title": "Less AI Strain on Data Centers, If Done Right: The Skill Commons",
       "robos:slug": "future-vision",
-      "dcterms:description": "Plain-English proposal for a shared catalog of verified, compiled skills that small local models assemble into applications. Not yet built.",
+      "dcterms:description": "Plain-English proposal: done right, a shared catalog of verified, compiled skills lets small local models assemble applications, putting less strain on data centers. Not yet built.",
       "robos:docPath": "site/future/index.md",
       "robos:category": "Vision",
       "robos:hasFlowDiagram": "urn:robos:diagram:skill-commons-commons-map",
@@ -4433,9 +4433,9 @@
         "robos:DocArticle",
         "schema:TechArticle"
       ],
-      "dcterms:title": "The Skill Commons (whitepaper)",
+      "dcterms:title": "Less AI Strain on Data Centers, If Done Right (whitepaper)",
       "robos:slug": "whitepaper-turing-skills",
-      "dcterms:description": "Whitepaper: indexing every solved task, compiling it once, and assembling applications from the catalog with small local models; evidence, limits, and a plan to test it.",
+      "dcterms:description": "Whitepaper: reducing the strain of AI on data centers by indexing every solved task, compiling it once, and assembling applications from the catalog with small local models; evidence, limits, and a plan to test it.",
       "robos:docPath": "site/future/whitepaper.md",
       "robos:category": "Whitepaper",
       "robos:hasFlowDiagram": "urn:robos:diagram:skill-commons-worked-example",
@@ -10617,300 +10617,6 @@
         }
       ],
       "robos:namespace": "robos.testing"
-    },
-    {
-      "@id": "urn:robos:app:auto-center",
-      "@type": "robos:DesktopApp",
-      "dcterms:title": "RobOS Auto Center",
-      "robos:appFamily": {
-        "@id": "urn:robos:auto:family"
-      },
-      "robos:description": "Separate owner and maintenance-center modes with invoice OCR, maintenance plans and private shop Git history. Center reports track custody, payments, actual expenses, earned sales and daily/weekly/monthly operating profit with direct margins per repair job. Immutable credits preserve corrections. Bulk recalls link remedies, affected components and exact source rows. The service-desk interface separates shop floor, profit and costs, payments and performance, with keyboard-accessible tabs and responsive owner and shop workspaces.",
-      "robos:desktopFramework": "Electron",
-      "robos:package": "auto",
-      "robos:repository": "https://github.com/nddipiazza/robos",
-      "robos:sourcePath": "packages/auto-center",
-      "robos:technology": "Electron / Node.js / Python 3"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:AccidentRecord",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "AccidentRecord",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Event",
-      "robos:refersFrom": "https://schema.org/Event",
-      "schema:description": "Required properties: robos:vehicle"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:AutoDataset",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "AutoDataset",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Dataset",
-      "robos:refersFrom": "https://schema.org/Dataset",
-      "schema:description": "Required properties: schema:url"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:AutoShop",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "AutoShop",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/AutoRepair",
-      "robos:refersFrom": "https://schema.org/AutoRepair",
-      "schema:description": "Required properties: schema:name"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:AutoSoftware",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "AutoSoftware",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/SoftwareApplication",
-      "robos:refersFrom": "https://schema.org/SoftwareApplication",
-      "schema:description": "Required properties: schema:url"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:AutoVocabularyTerm",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "AutoVocabularyTerm",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/DefinedTerm",
-      "robos:refersFrom": "https://schema.org/DefinedTerm",
-      "schema:description": "Required properties: schema:url"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:BulkRecallCampaign",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "BulkRecallCampaign",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/CreativeWork",
-      "robos:refersFrom": "https://schema.org/CreativeWork",
-      "schema:description": "Required properties: schema:identifier"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:DiagnosticCode",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "DiagnosticCode",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/DefinedTerm",
-      "robos:refersFrom": "https://schema.org/DefinedTerm",
-      "schema:description": "Required properties: schema:name"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:Estimate",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "Estimate",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Offer",
-      "robos:refersFrom": "https://schema.org/Offer",
-      "schema:description": "Required properties: robos:vehicle"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:Inspection",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "Inspection",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/CheckAction",
-      "robos:refersFrom": "https://schema.org/CheckAction",
-      "schema:description": "Required properties: robos:vehicle"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:Invoice",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "Invoice",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Invoice",
-      "robos:refersFrom": "https://schema.org/Invoice",
-      "schema:description": "Required properties: robos:vehicle"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:MaintenanceSchedule",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "MaintenanceSchedule",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Schedule",
-      "robos:refersFrom": "https://schema.org/Schedule",
-      "schema:description": "Required properties: robos:vehicle"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:OdometerReading",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "OdometerReading",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/QuantitativeValue",
-      "robos:refersFrom": "https://schema.org/QuantitativeValue",
-      "schema:description": "Required properties: robos:vehicle, schema:value, schema:unitCode"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:OwnedVehicle",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "OwnedVehicle",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Vehicle",
-      "robos:refersFrom": "https://schema.org/Vehicle",
-      "schema:description": "Required properties: schema:name"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:OwnershipRecord",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "OwnershipRecord",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/OwnershipInfo",
-      "robos:refersFrom": "https://schema.org/OwnershipInfo",
-      "schema:description": "Required properties: robos:vehicle"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:Part",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "Part",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Product",
-      "robos:refersFrom": "https://schema.org/Product",
-      "schema:description": "Required properties: schema:name"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:PartFitment",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "PartFitment",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/ProductModel",
-      "robos:refersFrom": "https://schema.org/ProductModel",
-      "schema:description": "Required properties: robos:part, robos:configuration"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:RecallAffectedPart",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "RecallAffectedPart",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Product",
-      "robos:refersFrom": "https://schema.org/Product",
-      "schema:description": "Required properties: robos:campaign, schema:name"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:RecallApplicability",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "RecallApplicability",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Vehicle",
-      "robos:refersFrom": "https://schema.org/Vehicle",
-      "schema:description": "Required properties: robos:campaign, robos:affectedPart, robos:sourceRecordId"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:RecallCampaign",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "RecallCampaign",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/CreativeWork",
-      "robos:refersFrom": "https://schema.org/CreativeWork",
-      "schema:description": "Required properties: schema:identifier"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:RecallRemedy",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "RecallRemedy",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/CreativeWork",
-      "robos:refersFrom": "https://schema.org/CreativeWork",
-      "schema:description": "Required properties: robos:campaign, schema:description"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:Registration",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "Registration",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/PropertyValue",
-      "robos:refersFrom": "https://schema.org/PropertyValue",
-      "schema:description": "Required properties: robos:vehicle"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:RepairOrder",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "RepairOrder",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Order",
-      "robos:refersFrom": "https://schema.org/Order",
-      "schema:description": "Required properties: robos:vehicle"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:SafetyComplaint",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "SafetyComplaint",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Report",
-      "robos:refersFrom": "https://schema.org/Report",
-      "schema:description": "Required properties: schema:identifier"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:ServiceRecord",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "ServiceRecord",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Service",
-      "robos:refersFrom": "https://schema.org/Service",
-      "schema:description": "Required properties: robos:vehicle, schema:startDate, schema:description"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:ShopFinanceEntry",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "ShopFinanceEntry",
-      "robos:package": "auto",
-      "robos:refersFrom": "https://schema.org/MonetaryAmount",
-      "schema:description": "Required properties: robos:entryKind, robos:entryDirection, robos:amountMinor, robos:currency, robos:effectiveOn, robos:costCategory, schema:description",
-      "schema:url": "https://schema.org/MonetaryAmount"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:ShopPayment",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "ShopPayment",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/PayAction",
-      "robos:refersFrom": "https://schema.org/PayAction",
-      "schema:description": "Required properties: robos:job, robos:amountMinor, robos:currency, robos:paidOn, robos:paymentDirection"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:VehicleConfiguration",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "VehicleConfiguration",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Vehicle",
-      "robos:refersFrom": "https://schema.org/Vehicle",
-      "schema:description": "Required properties: schema:modelDate, robos:model"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:VehicleMake",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "VehicleMake",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Brand",
-      "robos:refersFrom": "https://schema.org/Brand",
-      "schema:description": "Required properties: schema:name"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:VehicleModel",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "VehicleModel",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/ProductModel",
-      "robos:refersFrom": "https://schema.org/ProductModel",
-      "schema:description": "Required properties: schema:name, robos:make"
-    },
-    {
-      "@id": "urn:robos:auto:AutoVocabularyTerm:VehicleStay",
-      "@type": "robos:AutoVocabularyTerm",
-      "dcterms:title": "VehicleStay",
-      "robos:package": "auto",
-      "schema:url": "https://schema.org/Event",
-      "robos:refersFrom": "https://schema.org/Event",
-      "schema:description": "Required properties: robos:vehicle, schema:startDate"
-    },
-    {
-      "@id": "urn:robos:auto:family",
-      "@type": "schema:SoftwareApplication",
-      "dcterms:title": "RobOS Auto",
-      "robos:hasApp": {
-        "@id": "urn:robos:app:auto-center"
-      },
-      "robos:package": "auto",
-      "schema:name": "RobOS Auto"
     }
   ],
   "@graph": [
@@ -15203,9 +14909,9 @@
         "robos:DocArticle",
         "schema:TechArticle"
       ],
-      "dcterms:title": "The Future of Software Development: The Skill Commons",
+      "dcterms:title": "Less AI Strain on Data Centers, If Done Right: The Skill Commons",
       "robos:slug": "future-vision",
-      "dcterms:description": "Plain-English proposal for a shared catalog of verified, compiled skills that small local models assemble into applications. Not yet built.",
+      "dcterms:description": "Plain-English proposal: done right, a shared catalog of verified, compiled skills lets small local models assemble applications, putting less strain on data centers. Not yet built.",
       "robos:docPath": "site/future/index.md",
       "robos:category": "Vision",
       "robos:hasFlowDiagram": "urn:robos:diagram:skill-commons-commons-map",
@@ -15222,9 +14928,9 @@
         "robos:DocArticle",
         "schema:TechArticle"
       ],
-      "dcterms:title": "The Skill Commons (whitepaper)",
+      "dcterms:title": "Less AI Strain on Data Centers, If Done Right (whitepaper)",
       "robos:slug": "whitepaper-turing-skills",
-      "dcterms:description": "Whitepaper: indexing every solved task, compiling it once, and assembling applications from the catalog with small local models; evidence, limits, and a plan to test it.",
+      "dcterms:description": "Whitepaper: reducing the strain of AI on data centers by indexing every solved task, compiling it once, and assembling applications from the catalog with small local models; evidence, limits, and a plan to test it.",
       "robos:docPath": "site/future/whitepaper.md",
       "robos:category": "Whitepaper",
       "robos:hasFlowDiagram": "urn:robos:diagram:skill-commons-worked-example",

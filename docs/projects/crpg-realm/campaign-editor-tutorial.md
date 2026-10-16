@@ -1,609 +1,218 @@
 ---
-title: "Campaign Editor Tutorial: Rescue the Princess"
-parent: Tactical cRPG & Infinity AI Engine
-grand_parent: RobOS Projects
+title: CRPG campaign editor tutorial
 layout: default
-nav_order: 9
+parent: Realm of Heroes CRPG
+grand_parent: Projects
+nav_order: 5
 permalink: /projects/crpg-realm/campaign-editor-tutorial.html
-description: "Step-by-step tutorial on using the RobOS cRPG Campaign Editor to build a complete game: from the Throne Room decree to the Dragonclaw Forge, Overworld, Dark Lord's Lair, and victory."
+description: Use the RobOS cRPG Editor to inspect and edit the Rescue of Princess Jennifer campaign, bundle it into a cartridge and play it, with the file formats and the limits of what the game plays.
 ---
 
-# Campaign Editor Tutorial: Rescue the Princess
+# CRPG campaign editor tutorial
 {: .no_toc }
 
-A complete step-by-step tutorial on building an end-to-end tactical cRPG adventure using the **RobOS cRPG Campaign Editor** (`packages/crpg-editor`). You will learn how to scaffold a multi-scene world, author D&D 5e characters, forge legendary weapons, design branching story quest Directed Acyclic Graphs (DAGs), configure Skyrim-style quest journals with Main and Side quests, and verify the entire experience through automated BDD test suites.
-{: .fs-6 .fw-300 }
+Walks through the RobOS cRPG Editor using the campaign that ships with the game, *Rescue of Princess Jennifer*. You open it, see which file each tab edits, bundle it into a cartridge and start it in Godot. The last section says what the game runtime does with a cartridge today, which decides how much of a new campaign you can play.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
----
+## What the editor is
 
-## Story & Scenario Overview
+The editor is an Electron app in [`packages/crpg-editor`](https://github.com/nddipiazza/robos/tree/main/packages/crpg-editor). It reads and writes JSON-LD files directly in `games/crpg-realm/`. There is no database and no export step: Save writes the file, and the game reads the same file.
 
-In this tutorial, we will construct a classic fantasy quest: **"The Rescue of Princess Jennifer"**.
+| Editor tab | Folder it edits (`games/crpg-realm/`) |
+|:---|:---|
+| Campaign | `campaigns/<slug>.jsonld` |
+| Characters & NPCs | `characters/<slug>.jsonld` |
+| Items | `items/<slug>.jsonld` |
+| Enemies | `enemies/<slug>.jsonld` |
+| Spells | `spells/<slug>.jsonld` |
+| Abilities | `abilities/<slug>.jsonld` |
+| Maps | `maps/<slug>.jsonld`, and `assets/blockouts/<slug>.png` when you build |
 
-```mermaid
-journey
-    title The Hero's Journey: Rescue of Princess Jennifer
-    section Act 1: The Royal Decree
-      Hear King Alden's decree in Throne Room: 5: Sir Caleb, King Alden
-      Visit Master Torvald at Dragonclaw Forge: 4: Sir Caleb, Torvald
-      Slay Projection Goblin combat trial: 4: Sir Caleb
-      Claim The Hero's Sword (+3 ATK): 5: Sir Caleb, Torvald
-    section Act 2: Journey & Showdown
-      Unlock Gate to Overworld: 4: Sir Caleb
-      Traverse Wilderness to Dark Lair: 3: Sir Caleb
-      Slay Dark Lord Malakor: 5: Sir Caleb, Malakor
-      Rescue Princess Jennifer: 5: Sir Caleb, Princess Jennifer
-    section Act 3: Triumphant Return
-      Escort Princess back to Throne Room: 5: Sir Caleb, Princess Jennifer
-      King Alden proclaims Kingdom Victory: 5: Sir Caleb, King Alden, Princess Jennifer
+The editor also edits `events/` and lists `scenes/`. Set the environment variable `ROBOS_CRPG_DIR` to point it at a different game folder.
+
+Start it from the repository:
+
+```bash
+cd packages/crpg-editor
+npm install
+npm start
 ```
 
-### The Scenario Rules & Map Chain
-1. **Scene 1 — Throne Room (`throne-room`)**: King Alden informs the lone hero, **Sir Caleb**, that Princess Jennifer has been abducted by Dark Lord Malakor.
-2. **Scene 2 — Dragonclaw Forge (`main-castle`)**: Before venturing into the wilderness, Sir Caleb must seek out Master Torvald at the Dragonclaw Forge. Torvald conjures a **Projection Goblin** training illusion. Slaying this foe proves Caleb's worth, earning **The Hero's Sword** (+3 ATK, 1d8 slashing).
-3. **Scene 3 — The Overworld Wilderness (`world-overworld`)**: The castle gate is sealed with a state guard: it requires the `obtained_heros_sword` flag. Once equipped, Caleb ventures through the treacherous wilderness.
-4. **Scene 4 — Dark Lord's Lair (`dark-lord-lair`)**: Sir Caleb confronts **Dark Lord Malakor** in an obsidian subterranean arena. Upon defeating Malakor, **Princess Jennifer** is freed and joins the party.
-5. **Scene 5 — Return & Victory (`throne-room`)**: Escorting Princess Jennifer back to King Alden triggers the royal celebration, completing the quest and winning the game.
+`npm start` runs `electron . --no-sandbox --disable-gpu --disable-dev-shm-usage`. Installed RobOS desktops also list it as the app [RobOS cRPG Editor]({{ '/apps/crpg-editor/' | relative_url }}).
 
----
+## Open the shipped campaign
 
-## End-to-End System Pipeline
+Pick **Rescue of Princess Jennifer** in the **Campaign:** drop-down at the top right. The status bar at the bottom shows the file that was loaded, `games/crpg-realm/campaigns/rescue-the-princess.jsonld`. The header buttons are **+ New**, **Save**, **Render as Game**, **Generate Cartridge** and a delete button.
 
-The RobOS cRPG development workflow cleanly decouples **semantic linked-data asset storage** (JSON-LD), **visual desktop authoring** (RobOS cRPG Campaign Editor), and **runtime execution** (Godot 4.3 and the headless Infinity AI test harness).
+The Campaign tab has eight sub-tabs: Overview & Settings, Quest & Scenario Tree, Skyrim Quest Journal, Maps & Scenes, Characters & NPCs, Party & Inventory, Infinity AI Tactics & Arena, and Story Flags.
 
-![End-to-end RobOS cRPG Campaign Editor Pipeline]({{ '/assets/images/crpg-realm/crpg_rescue_princess_tutorial_architecture.jpg' | relative_url }}){: .robos-zoomable-img }
-*System architecture: Semantic JSON-LD asset layer, desktop authoring studio, and real-time runtime execution.*
+### Overview & Settings
 
-```mermaid
-graph TD
-    classDef asset fill:#1e293b,stroke:#00bcd4,stroke-width:2px,color:#fff
-    classDef editor fill:#1e293b,stroke:#a855f7,stroke-width:2px,color:#fff
-    classDef engine fill:#1e293b,stroke:#10b981,stroke-width:2px,color:#fff
+![Campaign Overview tab with title, slug, setting, rule system, starting scene and synopsis]({{ '/assets/images/crpg-realm/tutorial_step1_campaign_overview.png' | relative_url }}){: .robos-zoomable-img }
+*The fields on the left are the campaign's title, slug, world setting, rule system, difficulty, starting scene and synopsis. The counters on the right come from the file.*
 
-    subgraph SemanticLayer["📦 Semantic JSON-LD Asset Layer"]
-        C_JSON["campaigns/rescue-the-princess.jsonld"]:::asset
-        M_JSON["maps/{throne-room, main-castle, world, lair}.jsonld"]:::asset
-        CH_JSON["characters/{hero, king, blacksmith, goblin, malakor}.jsonld"]:::asset
-        I_JSON["items/heros-sword.jsonld"]:::asset
-    end
+These fields map to keys in the campaign file:
 
-    subgraph StudioLayer["🖥️ RobOS cRPG Campaign Editor Studio"]
-        Overview["1. Campaign Metadata & Settings"]:::editor
-        MapConn["2. Map Topological Connectivity & Portals"]:::editor
-        CharRoster["3. Character & D&D 5E Statblock Authoring"]:::editor
-        ItemForge["4. Item Blueprints & Purveyor"]:::editor
-        QuestDAG["5. Visual Story Quest Tree DAG"]:::editor
-        QuestJournal["6. Skyrim-Style Quest Journal (Main/Side)"]:::editor
-        Simulator["7. Interactive Walkthrough Simulator"]:::editor
-    end
+| Field | Key in `campaigns/rescue-the-princess.jsonld` |
+|:---|:---|
+| Campaign Title | `dcterms:title` |
+| World Setting | `robos:setting` (`The High Kingdom of Eldoria`) |
+| Rule System, Difficulty Mode | `robos:ruleSet` (`D&D 5e SRD`), `robos:difficulty` (`Core Rules`) |
+| Starting Scene | `robos:startingMap` (`throne-room`) |
+| Prologue / Story Synopsis | `dcterms:description` |
 
-    subgraph RuntimeLayer["⚡ Runtime Execution & Verification"]
-        Godot["Godot 4.3 Real-Time-with-Pause Engine<br/>5-ft Tactical Collision Matrix"]:::engine
-        InfinityAI["Headless Infinity AI Scenario Engine<br/>Automated Video Proof-of-Work"]:::engine
-        BDD["Cucumber / Jest BDD Test Suite<br/>rescue-princess-tutorial.test.js"]:::engine
-    end
+The file's type is `["robos:CRPGCampaign", "schema:CreativeWork"]` and its id is `urn:robos:crpg:campaign:rescue-the-princess`.
 
-    SemanticLayer -->|Two-way Sync| StudioLayer
-    StudioLayer -->|Export Game State| RuntimeLayer
-    RuntimeLayer -->|Audit & Verification| SemanticLayer
-```
+### Maps & Scenes
 
----
+![Maps and Scenes tab with the starting map, the list of campaign maps and the topology table]({{ '/assets/images/crpg-realm/tutorial_step2_maps_connectivity.png' | relative_url }}){: .robos-zoomable-img }
+*The table in the middle lists the three connections between the four maps. The last row of the screenshot is the editor's simulator for walking a party through them.*
 
-## Step 1: Campaign Overview & Starting Configuration
+This tab sets the starting map, spawn point and facing (`robos:startingSpawn`), which maps belong to the campaign (`robos:maps`, one URN per map), and the connections between them. Use **Add Connection** to add a row and **Validate Topology** to check the graph.
 
-Begin by opening the **RobOS cRPG Campaign Editor** from your application launcher or running `electron packages/crpg-editor`. Under the **Campaign** tab, configure the primary metadata and narrative bounds:
-
-- **Campaign Title**: `Rescue of Princess Jennifer`
-- **Slug**: `rescue-the-princess`
-- **Starting Map**: `throne-room`
-- **Party Size**: `1` (Solo Hero campaign for Sir Caleb)
-- **Ruleset**: `D&D 5e SRD`
-- **Difficulty**: `Normal`
-- **Description**: Enter the background lore setting up King Alden's urgent plea to Sir Caleb.
-
-![Step 1: Campaign Overview and Configuration]({{ '/assets/images/crpg-realm/tutorial_step1_campaign_overview.png' | relative_url }}){: .robos-zoomable-img }
-*Figure 1: Campaign Overview tab showing metadata, starting map selection, party constraints, and story nodes summary.*
-
-### Campaign Manifest Definition (`campaigns/rescue-the-princess.jsonld`)
-
-The editor automatically persists these settings as an OSLC-compatible JSON-LD resource:
+A connection is an entry in `robos:mapConnections`. This is the one that gates the overworld behind the Hero's Sword:
 
 ```json
 {
-  "@context": {
-    "robos": "https://robos.dev/ontology#",
-    "schema": "https://schema.org/"
-  },
-  "@type": ["robos:CRPGCampaign", "schema:CreativeWork"],
-  "@id": "urn:robos:campaign:rescue-the-princess",
-  "name": "Rescue of Princess Jennifer",
-  "robos:slug": "rescue-the-princess",
-  "robos:description": "The King's daughter has been abducted by Dark Lord Malakor. Sir Caleb must forge the Hero's Sword, venture across the overworld into the subterranean dungeon lair, slay the Dark Lord, and return the Princess to the Throne Room.",
-  "robos:ruleset": "D&D 5e SRD",
-  "robos:difficulty": "Normal",
-  "robos:startingMap": "throne-room",
-  "robos:startingPosition": {
-    "x": 25,
-    "y": 20
-  },
-  "robos:partyLimit": 1
+  "id": "conn-castle-to-world",
+  "fromMap": "main-castle",
+  "fromObjectId": "castle-world-gate",
+  "toMap": "world-overworld",
+  "toObjectId": "castle-road-entry",
+  "toSpawn": [15, 20],
+  "toFacing": "east",
+  "transitionType": "portal",
+  "bidirectional": true,
+  "requiredKey": null,
+  "requiredFlag": "obtained_heros_sword",
+  "label": "Castle Gate to World Realm (Requires Hero's Sword)"
 }
 ```
 
----
+`fromObjectId` must match the `robos:objectId` of an object on the `fromMap`. The cartridge runner reads `fromMap`, `fromObjectId`, `toMap`, `toObjectId`, `toSpawn`, `bidirectional` and `requiredFlag`. It ignores `requiredKey`.
 
-## Step 2: Battle Maps & Topological Portals
+### Characters & NPCs, Items, Party & Inventory
 
-Next, navigate to the **Maps & Topological Portals** section. Our adventure links 4 maps sequentially:
-
-1. **Throne Room (`throne-room`)**: $50 \times 40\text{ ft}$ royal chamber with stone flooring, throne dais, and guard pillars.
-2. **Main Castle & Forge (`main-castle`)**: $80 \times 60\text{ ft}$ courtyard containing Master Torvald's Dragonclaw Forge.
-3. **Kingdom Overworld (`world-overworld`)**: $120 \times 80\text{ ft}$ wilderness terrain connecting the castle to the mountain dungeon.
-4. **Dark Lord's Lair (`dark-lord-lair`)**: $60 \times 50\text{ ft}$ obsidian dungeon chamber where Malakor holds Princess Jennifer captive.
-
-![Step 2: Map Topological Connectivity and Portals]({{ '/assets/images/crpg-realm/tutorial_step2_maps_connectivity.png' | relative_url }}){: .robos-zoomable-img }
-*Figure 2: Topological map graph and portal editor showing gated overworld access requiring `obtained_heros_sword`.*
-
-### Portal Graph & State Gating
-
-The editor allows you to attach state-condition requirements to individual doors and transitions:
-
-```mermaid
-graph LR
-    classDef openPort fill:#065f46,stroke:#10b981,stroke-width:2px,color:#fff
-    classDef gatePort fill:#854d0e,stroke:#f59e0b,stroke-width:2px,color:#fff
-    classDef bossPort fill:#7f1d1d,stroke:#ef4444,stroke-width:2px,color:#fff
-    classDef winPort fill:#1e3a8a,stroke:#3b82f6,stroke-width:2px,color:#fff
-
-    TR["👑 Throne Room<br/>(throne-room)"]
-    MC["🔥 Main Castle / Forge<br/>(main-castle)"]
-    WO["🌲 Overworld Wilderness<br/>(world-overworld)"]
-    DL["💀 Dark Lord's Lair<br/>(dark-lord-lair)"]
-
-    TR -->|"Open Passage"| MC:::openPort
-    MC -->|"Requires: obtained_heros_sword"| WO:::gatePort
-    WO -->|"Dungeon Portal"| DL:::bossPort
-    DL -->|"Escort Return Portal"| TR:::winPort
-```
-
-In the campaign JSON-LD, map connections are modeled cleanly with transition prerequisites:
-
-```json
-"robos:mapConnections": [
-  {
-    "fromMap": "throne-room",
-    "portal": "castle_hall_door",
-    "toMap": "main-castle",
-    "targetSpawn": "throne_exit_point",
-    "requiresCondition": null
-  },
-  {
-    "fromMap": "main-castle",
-    "portal": "castle_drawbridge_gate",
-    "toMap": "world-overworld",
-    "targetSpawn": "overworld_castle_entry",
-    "requiresCondition": "obtained_heros_sword"
-  },
-  {
-    "fromMap": "world-overworld",
-    "portal": "dungeon_cave_portal",
-    "toMap": "dark-lord-lair",
-    "targetSpawn": "lair_dungeon_entry",
-    "requiresCondition": null
-  },
-  {
-    "fromMap": "dark-lord-lair",
-    "portal": "lair_teleport_gateway",
-    "toMap": "throne-room",
-    "targetSpawn": "royal_court_center",
-    "requiresCondition": "rescued_princess"
-  }
-]
-```
-
----
-
-## Step 3: Character & NPC Roster Authoring
-
-Switch to the **Characters** studio tab. Here we author the protagonist, the royal family, the blacksmith, and the foes using D&D 5e mechanics.
-
-![Step 3: Character Roster and D&D 5E Statblocks]({{ '/assets/images/crpg-realm/tutorial_step3_characters_roster.png' | relative_url }}){: .robos-zoomable-img }
-*Figure 3: Characters Studio showing Sir Caleb's D&D 5e sheet (16 HP, AC 15, STR 16) and NPC roster list.*
-
-### Combatants & Characters Breakdown
-
-| Entity ID | Name | Role | Class / Type | HP | AC | Signature Action / Dialogue |
-|:---|:---|:---|:---|:---:|:---:|:---|
-| `hero-sir-caleb` | Sir Caleb | `hero` | Lvl 1 Fighter | 16 | 15 | Greatsword Slash (+5 to hit, 2d6+3) |
-| `npc-king-alden` | King Alden | `king` | Royal NPC | 24 | 14 | *"Bring back Jennifer, and the realm will honor you forever!"* |
-| `npc-blacksmith-torvald` | Master Torvald | `blacksmith` | Dwarven Forge-Master | 32 | 16 | Summons Projection Goblin to test Caleb's steel |
-| `creature-projection-goblin` | Projection Goblin | `enemy` | Illusion Construct | 7 | 12 | Scimitar Swing (+3 to hit, 1d6) |
-| `boss-dark-lord-malakor` | Dark Lord Malakor | `boss` | Dark Overlord | 35 | 16 | Void Greatsword (+6 to hit, 2d6+3 + 1d6 necrotic) |
-| `npc-princess-jennifer` | Princess Jennifer | `princess` | Royal Scion | 12 | 12 | Joins party once Malakor falls |
-
-### Hero Definition (`characters/hero-sir-caleb.jsonld`)
+Characters are separate files that the campaign lists in `robos:characters`. The shipped campaign lists six: `hero-sir-caleb`, `npc-king-alden`, `npc-blacksmith-torvald`, `creature-projection-goblin`, `boss-dark-lord-malakor` and `npc-princess-jennifer`. The top-level **Characters & NPCs** tab edits them: its **File** menu has New Player Character, New NPC and Save Character. A hero file carries class, level, ability scores and equipment:
 
 ```json
 {
-  "@type": ["robos:CRPGCharacter", "schema:Person"],
-  "@id": "urn:robos:character:hero-sir-caleb",
+  "@id": "urn:robos:crpg:character:hero-sir-caleb",
+  "@type": ["robos:CRPGCharacter", "robos:CRPGHero", "schema:Person"],
   "name": "Sir Caleb",
-  "robos:slug": "hero-sir-caleb",
-  "robos:isHero": true,
-  "robos:level": 1,
-  "robos:characterClass": "Fighter",
-  "robos:race": "Human",
-  "robos:alignment": "Lawful Good",
-  "robos:hp": { "current": 16, "max": 16 },
-  "robos:armorClass": 15,
-  "robos:speed": 30,
-  "robos:abilityScores": {
-    "str": 16, "dex": 14, "con": 14, "int": 10, "wis": 12, "cha": 13
-  },
-  "robos:equipped": {
-    "main_hand": "urn:robos:item:heros-sword",
-    "armor": "urn:robos:item:chain-shirt"
-  }
+  "class": "Fighter", "subclass": "Champion", "race": "Human", "level": 1,
+  "hpMax": 16, "armorClass": 14, "speed": 30,
+  "stats": { "str": 16, "dex": 14, "con": 15, "int": 10, "wis": 12, "cha": 13 },
+  "robos:modelAssetRef": "res://assets/models/character_knight_pawn.glb",
+  "robos:equipped": { "main_hand": "clothes", "body": "leather-armor" }
 }
 ```
 
----
+(Abridged. Most keys appear twice in the file, once with the `robos:` prefix and once without.) NPC files add `role`, `interactionType`, `location`, `col`, `row`, `facing` and a `dialogue` array of strings.
 
-## Step 4: Items & Inventory Studio (The Hero's Sword)
+The **Items** tab edits one item per file. Its form has Item Name, Unique Slug, Category, Equip Slot, Gold Cost (GP), Weight (lbs), Rarity, Damage Dice, Damage Type, Base AC or Bonus, Consumable Effect and a 3D model section. The Hero's Sword is `items/heros-sword.jsonld`: category `weapon`, slot `main_hand`, rarity `rare`, cost 500, damage `1d8` slashing, and the effect text `+3 ATK, Dragonclaw Rune`.
 
-Select the **Items** tab to blueprint equipment. To satisfy the blacksmith trial, we author **The Hero's Sword**:
+The Party & Inventory sub-tab edits `robos:gameState`: the active party, party formation, shared purse and starting inventory (`gold: 100` and one `potion-healing` in this campaign).
 
-- **Item Type**: `weapon`
-- **Slot**: `main_hand`
-- **Rarity**: `rare`
-- **Base Damage**: $1\text{d}8\text{ Slashing}$
-- **Attack Bonus**: $+3$ (Forged in dragonflame)
-- **Weight**: $3\text{ lbs}$
-- **Value**: $500\text{ GP}$
+### Quest & Scenario Tree and Skyrim Quest Journal
 
-![Step 4: Blueprinting The Hero's Sword]({{ '/assets/images/crpg-realm/tutorial_step4_inventory_heros_sword.png' | relative_url }}){: .robos-zoomable-img }
-*Figure 4: Item Blueprint view in the cRPG Editor configuring weapon stats, damage dice, modifiers, and lore.*
+![Story tree with three acts, six nodes and an inspector for the selected node]({{ '/assets/images/crpg-realm/tutorial_step5_quest_tree_dag.png' | relative_url }}){: .robos-zoomable-img }
+*Each card is a story node. The pills at the bottom of a card are its choices, labelled with what triggers them (talk to an NPC, combat trial, area transition). The panel on the right edits the selected node.*
 
-### Item Blueprint (`items/heros-sword.jsonld`)
+The story tree edits `robos:storyFlow`: a `robos:rootNodeId`, three `robos:flowPages` (the acts) and six `robos:storyNodes`. A node has a `robos:nodeType` (for example `game_start`, `quest_stage`), a `robos:location` map, a `robos:giver` and `robos:choices`. Each choice has a `targetNodeId` and a `robos:triggerType` such as `talk_npc` or `combat`.
+
+The journal edits `robos:questLog`. The campaign has a main quest (`quest-rescue-princess`) and a side quest, each with `robos:questObjectives`, numbered `robos:questStages` (0, 10, 20 and so on) and `robos:questRewards`.
+
+The Story Flags sub-tab edits `robos:worldFlags`. This campaign starts with `princess_kidnapped` and `talked_to_king` set to true and five more set to false, including `obtained_heros_sword`.
+
+### Maps tab
+
+The **Maps** tab edits one map at a time. Its toolbar has **+ New**, **Open**, **Close**, **Save**, **Build PNG & Grid** and **Export PNG**. The canvas tools are Select, Place and Pan (keys V, P and H), with Undo and Redo on Ctrl+Z and Ctrl+Y, and Ctrl+S saves.
+
+A map is a `robos:CRPGBattleMap` with a width and height in feet, a base terrain (the editor offers stone, grass, dirt, wood, sand, snow and cave) and a list of `robos:mapObjects`. The throne room is 50 by 40 ft with three objects. This one, abridged, is the exit door to the courtyard:
 
 ```json
 {
-  "@type": ["robos:CRPGItem", "schema:Product"],
-  "@id": "urn:robos:item:heros-sword",
-  "name": "The Hero's Sword",
-  "robos:slug": "heros-sword",
-  "robos:itemType": "weapon",
-  "robos:slot": "main_hand",
-  "robos:rarity": "rare",
-  "robos:weight": 3,
-  "robos:value": 500,
-  "robos:stats": {
-    "damage": "1d8",
-    "damageType": "slashing",
-    "attackBonus": 3,
-    "critMultiplier": 2
-  },
-  "robos:lore": "Forged in the heart of the Dragonclaw Forge by Master Torvald. Its blade shimmers with ancient enchantments designed to pierce Dark Lord Malakor's shadowy wards."
+  "@type": "robos:CRPGMapObject",
+  "robos:objectId": "castle-exit-door",
+  "robos:objectType": "passage",
+  "robos:shape": "rect",
+  "robos:position": [23, 36],
+  "robos:size": [4, 3],
+  "robos:transition": { "targetMap": "main-castle", "targetSpawn": [25, 8],
+                        "targetFacing": "south", "transitionType": "door" }
 }
 ```
 
----
+The object's `robos:transition` block is read by the navigator in `packages/crpg-builder` (and so by the editor's simulator and the bundler tests). The game takes passage destinations from the campaign's `robos:mapConnections`, not from this block, so keep the two in step.
 
-## Step 5: Visual Story Quest Tree DAG
+**Build PNG & Grid** runs `python3 -m robos_crpg_blockout build` for the open map. It draws a grey-box image into `assets/blockouts/` and writes a 5-ft collision grid into the map file. The scenario engine uses that grid for tests ([testing page]({{ '/projects/crpg-realm/infinity-ai-agent-harness.html' | relative_url }})); the cartridge runner does not. It needs Python 3 and Pillow. The tool's own documentation is the [blockout README](https://github.com/nddipiazza/robos/blob/main/packages/robos-crpg-blockout/README.md).
 
-Click on the **Story DAG** tab. The RobOS cRPG Campaign Editor provides a visual flowchart builder that organizes the narrative into sequential acts and milestones.
+{: .note }
+The Rescue maps were not built with that tool. `throne-room`, `main-castle` and `dark-lord-lair` contain objects of type `spawn`, and `dark-lord-lair` has terrain `dungeon`. `python3 -m robos_crpg_blockout validate` rejects both. None of the four has a file in `assets/blockouts/`. They are drawn in the cartridge runner over background art (`robos:backgroundImage`).
 
-Our game features 6 story nodes organized across 3 acts:
+## Build a cartridge
 
-```mermaid
-graph TD
-    classDef act1 fill:#1e3a8a,stroke:#3b82f6,stroke-width:2px,color:#fff
-    classDef act2 fill:#581c87,stroke:#a855f7,stroke-width:2px,color:#fff
-    classDef act3 fill:#14532d,stroke:#22c55e,stroke-width:2px,color:#fff
+A cartridge bundles a campaign with the maps, characters, items, enemies, spells and quests it references into one file.
 
-    subgraph Act1["Act 1: The Royal Mandate"]
-        Node1["👑 kings_decree<br/>Scene: throne-room<br/>Action: Talk to King Alden"]:::act1
-        Node2["⚔️ blacksmith_trial<br/>Scene: main-castle<br/>Action: Defeat Projection Goblin"]:::act1
-        Node3["🗡️ forge_heros_sword<br/>Scene: main-castle<br/>Reward: The Hero's Sword"]:::act1
-    end
-
-    subgraph Act2["Act 2: Breach the Dark Lair"]
-        Node4["🌲 breach_dark_lair<br/>Scene: world-overworld<br/>Gate: obtained_heros_sword"]:::act2
-        Node5["💀 slay_dark_lord<br/>Scene: dark-lord-lair<br/>Action: Slay Malakor, Free Jennifer"]:::act2
-    end
-
-    subgraph Act3["Act 3: Royal Celebration"]
-        Node6["🏆 royal_celebration<br/>Scene: throne-room<br/>Action: Return Princess to King"]:::act3
-    end
-
-    Node1 --> Node2
-    Node2 --> Node3
-    Node3 --> Node4
-    Node4 --> Node5
-    Node5 --> Node6
-```
-
-![Step 5: Visual Story Quest Tree DAG]({{ '/assets/images/crpg-realm/tutorial_step5_quest_tree_dag.png' | relative_url }}){: .robos-zoomable-img }
-*Figure 5: The visual Story Quest Tree DAG displaying sequential nodes, explicit transition trigger badges (💬 Talk to NPC, ⚔️ Combat Trial, 🚪 Area Transition, 🏆 Victory Epilogue), required prerequisites, and outlet-anchored connection curves.*
-
-### Story Node & Transition Trigger UX
-
-The RobOS cRPG Campaign Editor equips the Story Quest Tree with a high-readability node card UX designed for immediate comprehension of story flow:
-
-- **Glowing Archetype Stripes**: Top accent bar color-coded by node type (`GAME START`: emerald glow, `QUEST STAGE`: cyan glow, `COMBAT TRIAL`: crimson glow, `DECISION BRANCH`: amber glow, `VICTORY EPILOGUE`: royal purple glow).
-- **Node Identifier Chips**: Every card clearly identifies its canonical entity ID (`#node-kings-plea`, `#node-dragonclaw-forge-trial`, `#node-journey-through-world`).
-- **Explicit Transition Trigger Bars**: Each outgoing option pill prominently displays what game action triggers the transition:
-  - `[ 💬 TALK TO NPC: King Alden ] ➔ Master Torvald's Crucible`
-  - `[ ⚔️ COMBAT TRIAL: Projection Goblin ] ➔ Trial of the Projection Goblin`
-  - `[ 🎁 CLAIM ITEM: Hero's Sword ] ➔ Wilderness Trek to the Cavern Maw`
-  - `[ 🚪 AREA TRANSITION: Dark Lord's Lair ] ➔ Slaying the Dark Lord` with `🔒 Requires: obtained_heros_sword`
-  - `[ 🏆 VICTORY EPILOGUE: Princess Jennifer ] ➔ Victory: The Kingdom Celebrates`
-- **Dynamic Bézier Curve Anchoring**: SVG connection curves automatically calculate exact DOM coordinates to snap directly from the right-hand outlet dot of each choice pill to the target node's inlet.
-- **Quick Hover Toolbar**: Hovering over any card reveals quick actions: `▶ Test` (starts walkthrough test from that node), `+ Choice` (adds outgoing branch), `✏️ Edit` (focuses inspector), and `🗑` (safe delete with dangling branch pruning).
-
----
-
-## Step 6: Skyrim-Style Quest Journal (Main & Side Quests)
-
-Click the **Quest Log** tab. RobOS cRPG Editor incorporates the industry-standard Skyrim Quest Engine schema, tracking stage milestones ($10, 20, 30 \dots$) and dynamic checkbox objectives for both **Main Quests** and **Side Quests**.
-
-![Step 6: Skyrim-Style Quest Journal]({{ '/assets/images/crpg-realm/tutorial_step6_skyrim_quest_journal.png' | relative_url }}){: .robos-zoomable-img }
-*Figure 6: Skyrim Quest Journal editor displaying Main Quest 'Rescue of Princess Jennifer' and Side Quest 'The Dragonclaw Blade Trial'.*
-
-### Quest Schema Structure (`campaigns/rescue-the-princess.jsonld`)
-
-The quest log tracks objectives and journal updates at each numerical stage:
-
-```json
-"robos:questLog": [
-  {
-    "id": "quest_rescue_princess",
-    "title": "Rescue of Princess Jennifer",
-    "questType": "main",
-    "description": "King Alden's daughter was abducted by Dark Lord Malakor. Journey to the dark dungeon and bring her home safely.",
-    "currentStage": 10,
-    "stages": [
-      { "stage": 10, "journalEntry": "King Alden has ordered me to rescue Princess Jennifer from Dark Lord Malakor." },
-      { "stage": 20, "journalEntry": "Master Torvald granted me the Hero's Sword after I defeated his projection trial." },
-      { "stage": 30, "journalEntry": "I have crossed the wilderness and breached the Dark Lord's subterranean lair." },
-      { "stage": 40, "journalEntry": "Dark Lord Malakor is slain! Princess Jennifer is safe and traveling with me." },
-      { "stage": 100, "journalEntry": "Princess Jennifer has returned to the Throne Room. Peace is restored to the realm." }
-    ],
-    "objectives": [
-      { "id": "obj_speak_king", "text": "Speak to King Alden in the Throne Room", "isOptional": false, "status": "completed" },
-      { "id": "obj_obtain_sword", "text": "Acquire the Hero's Sword from Master Torvald", "isOptional": false, "status": "active" },
-      { "id": "obj_enter_lair", "text": "Venture into the Dark Lord's Lair", "isOptional": false, "status": "pending" },
-      { "id": "obj_slay_malakor", "text": "Slay Dark Lord Malakor", "isOptional": false, "status": "pending" },
-      { "id": "obj_return_king", "text": "Return Princess Jennifer to King Alden", "isOptional": false, "status": "pending" }
-    ]
-  },
-  {
-    "id": "quest_dragonclaw_forge",
-    "title": "The Dragonclaw Blade Trial",
-    "questType": "side",
-    "description": "Prove your martial prowess to Master Torvald by defeating his conjured training goblin.",
-    "currentStage": 10,
-    "stages": [
-      { "stage": 10, "journalEntry": "Master Torvald offered to forge a blade for me if I can defeat his training construct." },
-      { "stage": 20, "journalEntry": "I defeated the projection goblin with swift precision." },
-      { "stage": 30, "journalEntry": "Torvald handed me the gleaming Hero's Sword." }
-    ],
-    "objectives": [
-      { "id": "obj_speak_torvald", "text": "Speak to Master Torvald at the Dragonclaw Forge", "isOptional": false, "status": "completed" },
-      { "id": "obj_slay_goblin", "text": "Defeat the Projection Goblin in combat", "isOptional": false, "status": "active" },
-      { "id": "obj_claim_sword", "text": "Claim the Hero's Sword from the anvil", "isOptional": false, "status": "pending" }
-    ]
-  }
-]
-```
-
----
-
-## Step 7: Runtime Walkthrough Simulator & Engine Verification
-
-Finally, test the campaign flow directly inside the editor's **Walkthrough Simulator** before launching the Godot 4.3 runtime engine.
-
-![Step 7: Interactive Walkthrough Simulator]({{ '/assets/images/crpg-realm/tutorial_step7_game_execution.png' | relative_url }}){: .robos-zoomable-img }
-*Figure 7: Interactive Walkthrough Simulator showing active scene HUD, dialogue choices, and flag state triggers.*
-
-### Interactive Simulator Features
-- **HUD & Status Indicators**: Displays active scene (`throne-room`), player coordinates, and current stage.
-- **Narrative Dialogue Runner**: Step through dialogue trees and execute response choices.
-- **Dynamic World Flags**: Watch flags such as `obtained_heros_sword` and `malakor_slain` toggle in real time.
-- **Map Transitions**: Test portal gates to ensure the drawbridge correctly blocks passage until the forge trial is won.
-
----
-
-## Automated BDD Test Verification
-
-RobOS follows an **End-to-End Driven Development (EDD)** discipline. To ensure our newly designed campaign never regresses, we maintain an automated test suite in `packages/crpg-builder/tests/rescue-princess-tutorial.test.js`.
-
-### Running the Test Suite
-
-Run the tests directly with Jest:
+In the editor, press **Generate Cartridge**. From a shell, use the bundler:
 
 ```bash
-npx jest packages/crpg-builder/tests/rescue-princess-tutorial.test.js --verbose
-```
-
-### Verified Test Assertions
-
-```text
-PASS packages/crpg-builder/tests/rescue-princess-tutorial.test.js
-  Rescue the Princess Tutorial Campaign Suite
-    ✓ Campaign graph integrity: 4 maps correctly connected with gated portals (8 ms)
-    ✓ Hero Sir Caleb matches D&D 5E specifications and can equip Hero's Sword (4 ms)
-    ✓ Blacksmith trial: Projection Goblin defeated, Hero's Sword rewarded and unlocks Overworld (6 ms)
-    ✓ Dark Lord showdown: Malakor defeated in Lair, Jennifer freed, return portal enabled (5 ms)
-    ✓ Full Skyrim quest progression: Main and Side quest stages advance from start to victory (7 ms)
-
-Test Suites: 1 passed, 1 total
-Tests:       5 passed, 5 total
-Snapshots:   0 total
-Time:        0.412 s
-```
-
-### Test Implementation Snippet
-
-```javascript
-test('Blacksmith trial: Projection Goblin defeated, Hero\'s Sword rewarded and unlocks Overworld', () => {
-  const campaign = loadCampaign();
-  const worldFlags = { ...campaign['robos:gameState']['robos:worldFlags'] };
-
-  // 1. Initial state: gate is locked
-  const overworldGate = campaign['robos:mapConnections'].find(c => c.toMap === 'world-overworld');
-  expect(overworldGate.requiresCondition).toBe('obtained_heros_sword');
-  expect(worldFlags[overworldGate.requiresCondition]).toBe(false);
-
-  // 2. Sir Caleb fights Projection Goblin (7 HP)
-  const goblin = loadCharacter('creature-projection-goblin');
-  expect(goblin['robos:hp'].max).toBe(7);
-
-  // Simulating combat victory
-  worldFlags['defeated_projection_goblin'] = true;
-  worldFlags['obtained_heros_sword'] = true;
-
-  // 3. Drawbridge gate condition now satisfied
-  const canAccessOverworld = worldFlags[overworldGate.requiresCondition] === true;
-  expect(canAccessOverworld).toBe(true);
-});
-```
-
----
-
-## The Player Cartridge System: Plug & Play in Godot 4
-
-Any campaign created in the **RobOS cRPG Campaign Editor** can be packaged into a standalone **Player Cartridge** (`.cartridge.json`). A Player Cartridge bundles all required battle maps, NPCs, monsters, weapons, items, quest journals, and story DAGs into a single self-contained payload that can be plugged into the Godot 4 engine and played immediately.
-
-```mermaid
-flowchart LR
-    subgraph Editor["RobOS cRPG Editor"]
-        Campaign["rescue-the-princess.jsonld"]
-        Maps["maps/*.jsonld"]
-        Chars["characters/*.jsonld"]
-        Items["items/*.jsonld"]
-    end
-
-    subgraph Bundler["Cartridge Bundler"]
-        BundleCLI["crpg-cartridge bundle"]
-    end
-
-    subgraph Cartridge["Player Cartridge (.cartridge.json)"]
-        Cart["rescue-the-princess.cartridge.json"]
-    end
-
-    subgraph Godot["Godot 4 Engine"]
-        CM["CartridgeManager (Autoload)"]
-        Bay["Cartridge Bay UI"]
-        CW["CartridgeWorld.tscn Runner"]
-    end
-
-    Campaign & Maps & Chars & Items --> BundleCLI
-    BundleCLI --> Cart
-    Cart -->|Plug into Bay / CLI| CM
-    CM --> Bay
-    CM --> CW
-```
-
-### 1. Bundling with the CLI
-
-Use the `crpg-cartridge` CLI utility from `packages/crpg-builder`:
-
-```bash
-# Bundle a specific campaign into games/crpg-realm/cartridges/
 node packages/crpg-builder/bin/crpg-cartridge.js bundle rescue-the-princess
-
-# Bundle all available campaigns at once
 node packages/crpg-builder/bin/crpg-cartridge.js bundle-all
-
-# Inspect available cartridges
 node packages/crpg-builder/bin/crpg-cartridge.js list
+node packages/crpg-builder/bin/crpg-cartridge.js inspect rescue-the-princess
 ```
 
-### 2. Plug & Play in Godot 4
+Both write `games/crpg-realm/cartridges/<slug>.cartridge.json`. `bundle` accepts an output path as a third argument. `inspect` prints the header, the maps with their background images, and the ids of the characters, items and quests. For the shipped campaign the header reads 4 maps, 6 characters, 12 items, 9 enemies, 26 spells and 2 quests.
 
-Launch Godot with the cartridge argument directly from the terminal:
+The bundler finds maps through `robos:maps`, the starting map and every `fromMap` and `toMap` in the connections. It finds characters through `robos:characters`, the active party and `robos:heroes`, and items through the heroes' equipment and inventory.
 
-```bash
-# Plug in the cartridge via CLI
-godot4 --path games/crpg-realm --cartridge rescue-the-princess
-```
+## Play it
 
-Alternatively, launch into the **Character Select** scene. The **Cartridge Bay** located at the top of the screen automatically discovers all cartridges in `res://cartridges/` and allows you to swap campaigns dynamically before embarking:
-
-- Selecting a cartridge dynamically loads all items and NPCs into the `DataStore`.
-- Spawns the party on the starting map (e.g. `throne-room` at $(25, 20)$).
-- Maps passages and portals automatically to target scenes via `CartridgeWorld.tscn`.
-
-### 3. Automated REST API Control
-
-The embedded `GameControlServer` (`:8080`) provides REST endpoints for automated agent testing and external cartridge hot-swapping:
+Character Select shows every cartridge in a drop-down with **Play** and **Auto-Play** buttons. Or skip the menu:
 
 ```bash
-# Discover available cartridges
-curl http://127.0.0.1:8080/cartridges
-
-# Hot-swap the plugged cartridge
-curl -X POST http://127.0.0.1:8080/cartridge/insert \
-     -H "Content-Type: application/json" \
-     -d '{"cartridge": "rescue-the-princess"}'
-
-# Embark into the cartridge world
-curl -X POST http://127.0.0.1:8080/cartridge/embark
-```
-
----
-
-## Launching in the Godot 4.3 Engine
-
-Once verified in the editor and test runner, launch the game in Godot:
-
-```bash
-# Launch interactive gameplay in Godot 4.3 with the Player Cartridge plugged in
 cd games/crpg-realm
-godot4 --path . --cartridge rescue-the-princess
+./play.sh --cartridge rescue-the-princess
 ```
 
-Or run headless video proof-of-work with the Infinity AI harness:
+**Render as Game** in the editor does three things. It saves the campaign, rebundles the cartridge into `games/crpg-realm/cartridges/`, and overwrites `games/crpg-realm/data/v1/active_campaign.json`. Then it starts Godot with `--path games/crpg-realm --cartridge <slug>`, looking for the binary in `$GODOT_BIN`, `~/.local/bin/godot`, `~/.local/bin/godot4`, `~/apps/godot4`, `/usr/bin/godot4`, `/usr/local/bin/godot4` and `/usr/bin/godot`, and falling back to `play.sh`.
+
+In the cartridge map, left-click to move and click NPCs, chests, items and passages to walk to them. Space or P starts and stops auto-play. See [controls]({{ '/projects/crpg-realm/controls.html#cartridge-maps' | relative_url }}).
+
+## What the game plays today
+
+The cartridge runner is `scripts/CartridgeWorld.gd`. It reads these things generically from any cartridge:
+
+- Maps. Width, height, terrain, `robos:backgroundImage` and `robos:mapObjects`. Objects of type `wall`, `pillar` and `dais` become obstacles. Type `chest` (or an id containing `chest`) becomes a chest. Types `item`, `weapon`, `pickup`, `loot` and `equipment` become pickups. Types `passage`, `door` and `portal` become map transitions through the campaign's `robos:mapConnections`.
+- The campaign state. `robos:heroes`, the shared inventory, world flags and the quest log go into `GameState`.
+- Items, NPCs and monsters are added to `DataStore`.
+
+It does not read these generically:
+
+- NPC placement and dialogue. NPCs are placed by `_spawn_map_npcs`, which tests the map slug and the character slug against fixed strings (`throne-room` with `king`, `main-castle` with `torvald`, `dark-lord-lair` with `malakor`, and the Dragon Warrior equivalents). The `location`, `col`, `row` and `dialogue` fields in a character file are not used. The lines NPCs speak are strings in `_interact_with_npc`.
+- Story logic. The quest steps (accept the quest, win the goblin trial, claim the sword, defeat the boss, escort the princess, victory) are functions in `CartridgeWorld.gd` for two stories, Rescue the Princess and Dragon Warrior. The story tree in `robos:storyFlow` is bundled into the cartridge as `storyDAG` but not played.
+- Chest contents are chosen from the chest's object id (`120g`, `key`, `torch`, `sword`, `herb`).
+
+So a new campaign gets its maps, walls, chests, pickups and passages in the game. Its NPCs, dialogue and quest steps need code in `CartridgeWorld.gd` until a generic runner exists. Treat the editor as an authoring tool for the data, and the Rescue the Princess campaign as the one end-to-end example.
+
+Some cartridges do not use the cartridge runner at all. When it starts a cartridge, `CartridgeManager.embark_cartridge` loads the hand-built `Homestead` scene if the starting map's slug contains `candlekeep` or `homestead`, `VillageSquare` for `village`, and `AncientCatacombs` for `catacomb`. The slugs `throne-room`, `main-castle`, `world-overworld`, `dark-lord-lair`, `tantegel-throne-room` and `charlock-castle` always go to `CartridgeWorld`. That is why `candlekeep-prologue` opens in the Homestead scene.
+
+## Verify your files
+
+The bundler package has tests for the shipped campaign: starting map and spawn, the chain of map connections and the flag gate on the overworld, the story flow, and the quest journal. They use Node's built-in runner, not Jest:
 
 ```bash
-# Execute automated BDD scenario playthrough with 1080p MP4 recording
-python3 run_cucumber_tests.py --feature features/full_playthroughs/rescue_princess.feature
+cd packages/crpg-builder
+node --test tests/rescue-princess-tutorial.test.js tests/cartridge-system.test.js
 ```
 
----
-
-## Summary of Completed Assets
-
-| Category | File Path | Description |
-|:---|:---|:---|
-| **Campaign** | `games/crpg-realm/campaigns/rescue-the-princess.jsonld` | Master campaign manifest, map graph, story DAG, and quest logs |
-| **Maps** | `games/crpg-realm/maps/throne-room.jsonld` | Throne Room starting arena ($50 \times 40\text{ ft}$) |
-| | `games/crpg-realm/maps/main-castle.jsonld` | Castle Courtyard & Dragonclaw Forge ($80 \times 60\text{ ft}$) |
-| | `games/crpg-realm/maps/world-overworld.jsonld` | Kingdom wilderness ($120 \times 80\text{ ft}$) |
-| | `games/crpg-realm/maps/dark-lord-lair.jsonld` | Subterranean obsidian boss chamber ($60 \times 50\text{ ft}$) |
-| **Characters** | `games/crpg-realm/characters/hero-sir-caleb.jsonld` | Lvl 1 Fighter hero (16 HP, AC 15) |
-| | `games/crpg-realm/characters/npc-king-alden.jsonld` | Royal King Alden |
-| | `games/crpg-realm/characters/npc-blacksmith-torvald.jsonld` | Forge-Master Torvald |
-| | `games/crpg-realm/characters/creature-projection-goblin.jsonld` | Training construct (7 HP, AC 12) |
-| | `games/crpg-realm/characters/boss-dark-lord-malakor.jsonld` | Boss Dark Lord Malakor (35 HP, AC 16) |
-| | `games/crpg-realm/characters/npc-princess-jennifer.jsonld` | Princess Jennifer |
-| **Items** | `games/crpg-realm/items/heros-sword.jsonld` | The Hero's Sword (+3 ATK, 1d8 slashing) |
-| **Tests** | `packages/crpg-builder/tests/rescue-princess-tutorial.test.js` | 5 BDD scenario regression tests |
-
----
-
-## Next Steps
-
-Now that you have mastered authoring a full campaign with maps, characters, items, quests, and DAG story trees:
-
-- Explore **[Creating Your Own Game]({{ '/projects/crpg-realm/create-your-own-game.html' | relative_url }})** for deep dives into GDScript custom abilities, area spells, and trap triggers.
-- Read **[World Systems & Pathfinding]({{ '/projects/crpg-realm/world-systems-and-pathfinding.html' | relative_url }})** to master 5-ft cell collision matrices and blockout generation.
-- Check the **[RobOS cRPG Editor Documentation]({{ '/_apps/crpg-editor.html' | relative_url }})** for app configuration and keyboard shortcuts.
+Use `node --test tests/*.test.js` for all of the package's tests. The editor package has its own, `npm test` in `packages/crpg-editor`, which covers the map undo history.

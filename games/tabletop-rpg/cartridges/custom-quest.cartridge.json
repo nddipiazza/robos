@@ -1,0 +1,3359 @@
+{
+  "cartridgeVersion": "2.0.0",
+  "cartridgeId": "custom-quest",
+  "header": {
+    "title": "Quest 1: Custom Dungeon",
+    "slug": "custom-quest",
+    "author": "RobOS Tabletop Studio",
+    "gameType": "tabletop",
+    "genre": "Tabletop Dungeon Crawler",
+    "ruleset": "heroquest",
+    "description": "Mentor speaks: \"The Emperor calls upon the kingdom's greatest champions...\"",
+    "coverColor": "#0a0e17",
+    "icon": "🛡️",
+    "mapCount": 1,
+    "heroCount": 4,
+    "monsterCount": 23,
+    "itemCount": 0,
+    "questCount": 1,
+    "startingMap": "custom-quest",
+    "startingPosition": [
+      7,
+      14
+    ],
+    "createdDate": "2026-10-16T15:34:19.798Z"
+  },
+  "heroes": {
+    "barbarian": {
+      "id": "barbarian",
+      "slug": "barbarian",
+      "name": "Barbarian",
+      "heroClass": "Barbarian",
+      "bodyPoints": 8,
+      "mindPoints": 2,
+      "attackDice": 3,
+      "defendDice": 2,
+      "gold": 100,
+      "position": [
+        7,
+        14
+      ]
+    },
+    "dwarf": {
+      "id": "dwarf",
+      "slug": "dwarf",
+      "name": "Dwarf",
+      "heroClass": "Dwarf",
+      "bodyPoints": 7,
+      "mindPoints": 3,
+      "attackDice": 2,
+      "defendDice": 2,
+      "gold": 100,
+      "position": [
+        7,
+        14
+      ]
+    },
+    "elf": {
+      "id": "elf",
+      "slug": "elf",
+      "name": "Elf",
+      "heroClass": "Elf",
+      "bodyPoints": 6,
+      "mindPoints": 4,
+      "attackDice": 2,
+      "defendDice": 2,
+      "gold": 100,
+      "position": [
+        7,
+        14
+      ]
+    },
+    "wizard": {
+      "id": "wizard",
+      "slug": "wizard",
+      "name": "Wizard",
+      "heroClass": "Wizard",
+      "bodyPoints": 4,
+      "mindPoints": 6,
+      "attackDice": 1,
+      "defendDice": 2,
+      "gold": 100,
+      "position": [
+        7,
+        14
+      ]
+    }
+  },
+  "monsters": {
+    "mon-boss-3": {
+      "id": "mon-boss-3",
+      "slug": "boss-mon-boss-3",
+      "name": "Doomguard",
+      "monsterType": "boss",
+      "bodyPoints": 4,
+      "mindPoints": 5,
+      "attackDice": 4,
+      "defendDice": 4,
+      "movementSquares": 8,
+      "isBoss": true,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "lightning-bolt",
+        "firestorm"
+      ],
+      "position": [
+        15,
+        15
+      ],
+      "roomId": "room-se-21"
+    },
+    "mon-chaos_warrior-5": {
+      "id": "mon-chaos_warrior-5",
+      "slug": "chaos_warrior-mon-chaos_warrior-5",
+      "name": "Chaos Warrior",
+      "monsterType": "chaos_warrior",
+      "bodyPoints": 1,
+      "mindPoints": 3,
+      "attackDice": 3,
+      "defendDice": 2,
+      "movementSquares": 7,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        15,
+        14
+      ],
+      "roomId": "room-se-21"
+    },
+    "mon-chaos_warrior-6": {
+      "id": "mon-chaos_warrior-6",
+      "slug": "chaos_warrior-mon-chaos_warrior-6",
+      "name": "Chaos Warrior",
+      "monsterType": "chaos_warrior",
+      "bodyPoints": 2,
+      "mindPoints": 3,
+      "attackDice": 3,
+      "defendDice": 4,
+      "movementSquares": 7,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        6,
+        7
+      ],
+      "roomId": "room-nw-22"
+    },
+    "mon-chaos_warrior-7": {
+      "id": "mon-chaos_warrior-7",
+      "slug": "chaos_warrior-mon-chaos_warrior-7",
+      "name": "Chaos Warrior",
+      "monsterType": "chaos_warrior",
+      "bodyPoints": 2,
+      "mindPoints": 3,
+      "attackDice": 3,
+      "defendDice": 4,
+      "movementSquares": 7,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        6,
+        6
+      ],
+      "roomId": "room-nw-22"
+    },
+    "mon-orc-22": {
+      "id": "mon-orc-22",
+      "slug": "orc-mon-orc-22",
+      "name": "Orc",
+      "monsterType": "orc",
+      "bodyPoints": 1,
+      "mindPoints": 2,
+      "attackDice": 3,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        4,
+        7
+      ],
+      "roomId": "room-nw-4"
+    },
+    "mon-orc-24": {
+      "id": "mon-orc-24",
+      "slug": "orc-mon-orc-24",
+      "name": "Orc",
+      "monsterType": "orc",
+      "bodyPoints": 1,
+      "mindPoints": 2,
+      "attackDice": 3,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        3,
+        7
+      ],
+      "roomId": "room-nw-4"
+    },
+    "mon-orc-25": {
+      "id": "mon-orc-25",
+      "slug": "orc-mon-orc-25",
+      "name": "Orc",
+      "monsterType": "orc",
+      "bodyPoints": 1,
+      "mindPoints": 2,
+      "attackDice": 3,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        22,
+        12
+      ],
+      "roomId": "room-se-18"
+    },
+    "mon-orc-8": {
+      "id": "mon-orc-8",
+      "slug": "orc-mon-orc-8",
+      "name": "Orc",
+      "monsterType": "orc",
+      "bodyPoints": 1,
+      "mindPoints": 2,
+      "attackDice": 3,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        10,
+        14
+      ],
+      "roomId": "room-sw-9"
+    },
+    "mon-orc-champion-4": {
+      "id": "mon-orc-champion-4",
+      "slug": "orc-mon-orc-champion-4",
+      "name": "Witch Hand",
+      "monsterType": "orc",
+      "bodyPoints": 5,
+      "mindPoints": 5,
+      "attackDice": 4,
+      "defendDice": 4,
+      "movementSquares": 8,
+      "isBoss": true,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "lightning-bolt",
+        "firestorm"
+      ],
+      "position": [
+        11,
+        9
+      ],
+      "roomId": "room-nw-10"
+    },
+    "mon-skeleton-10": {
+      "id": "mon-skeleton-10",
+      "slug": "skeleton-mon-skeleton-10",
+      "name": "Skeleton",
+      "monsterType": "skeleton",
+      "bodyPoints": 1,
+      "mindPoints": 0,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        11,
+        14
+      ],
+      "roomId": "room-sw-9"
+    },
+    "mon-skeleton-11": {
+      "id": "mon-skeleton-11",
+      "slug": "skeleton-mon-skeleton-11",
+      "name": "Skeleton",
+      "monsterType": "skeleton",
+      "bodyPoints": 1,
+      "mindPoints": 0,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        19,
+        16
+      ],
+      "roomId": "room-se-20"
+    },
+    "mon-skeleton-15": {
+      "id": "mon-skeleton-15",
+      "slug": "skeleton-mon-skeleton-15",
+      "name": "Skeleton",
+      "monsterType": "skeleton",
+      "bodyPoints": 1,
+      "mindPoints": 0,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        11,
+        10
+      ],
+      "roomId": "room-nw-10"
+    },
+    "mon-skeleton-16": {
+      "id": "mon-skeleton-16",
+      "slug": "skeleton-mon-skeleton-16",
+      "name": "Skeleton",
+      "monsterType": "skeleton",
+      "bodyPoints": 1,
+      "mindPoints": 0,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        11,
+        11
+      ],
+      "roomId": "room-nw-10"
+    },
+    "mon-skeleton-17": {
+      "id": "mon-skeleton-17",
+      "slug": "skeleton-mon-skeleton-17",
+      "name": "Skeleton",
+      "monsterType": "skeleton",
+      "bodyPoints": 1,
+      "mindPoints": 0,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        12,
+        11
+      ],
+      "roomId": "room-nw-10"
+    },
+    "mon-skeleton-18": {
+      "id": "mon-skeleton-18",
+      "slug": "skeleton-mon-skeleton-18",
+      "name": "Skeleton",
+      "monsterType": "skeleton",
+      "bodyPoints": 1,
+      "mindPoints": 0,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        11,
+        8
+      ],
+      "roomId": "room-nw-10"
+    },
+    "mon-skeleton-19": {
+      "id": "mon-skeleton-19",
+      "slug": "skeleton-mon-skeleton-19",
+      "name": "Skeleton",
+      "monsterType": "skeleton",
+      "bodyPoints": 1,
+      "mindPoints": 0,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        11,
+        7
+      ],
+      "roomId": "room-nw-10"
+    },
+    "mon-skeleton-20": {
+      "id": "mon-skeleton-20",
+      "slug": "skeleton-mon-skeleton-20",
+      "name": "Skeleton",
+      "monsterType": "skeleton",
+      "bodyPoints": 1,
+      "mindPoints": 0,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        12,
+        7
+      ],
+      "roomId": "room-nw-10"
+    },
+    "mon-skeleton-21": {
+      "id": "mon-skeleton-21",
+      "slug": "skeleton-mon-skeleton-21",
+      "name": "Skeleton",
+      "monsterType": "skeleton",
+      "bodyPoints": 1,
+      "mindPoints": 0,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        3,
+        8
+      ],
+      "roomId": "room-nw-4"
+    },
+    "mon-skeleton-23": {
+      "id": "mon-skeleton-23",
+      "slug": "skeleton-mon-skeleton-23",
+      "name": "Skeleton",
+      "monsterType": "skeleton",
+      "bodyPoints": 1,
+      "mindPoints": 0,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        22,
+        11
+      ],
+      "roomId": "room-se-18"
+    },
+    "mon-skeleton-24": {
+      "id": "mon-skeleton-24",
+      "slug": "skeleton-mon-skeleton-24",
+      "name": "Skeleton",
+      "monsterType": "skeleton",
+      "bodyPoints": 1,
+      "mindPoints": 0,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        23,
+        11
+      ],
+      "roomId": "room-se-18"
+    },
+    "mon-skeleton-9": {
+      "id": "mon-skeleton-9",
+      "slug": "skeleton-mon-skeleton-9",
+      "name": "Skeleton",
+      "monsterType": "skeleton",
+      "bodyPoints": 1,
+      "mindPoints": 0,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        10,
+        15
+      ],
+      "roomId": "room-sw-9"
+    },
+    "mon-orc-23": {
+      "id": "mon-orc-23",
+      "slug": "orc-mon-orc-23",
+      "name": "Orc who hesited chest",
+      "monsterType": "orc",
+      "bodyPoints": 1,
+      "mindPoints": 2,
+      "attackDice": 3,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        18,
+        18
+      ],
+      "roomId": ""
+    },
+    "mon-goblin-23": {
+      "id": "mon-goblin-23",
+      "slug": "goblin-mon-goblin-23",
+      "name": "Goblin who hesited chest",
+      "monsterType": "goblin",
+      "bodyPoints": 1,
+      "mindPoints": 1,
+      "attackDice": 2,
+      "defendDice": 1,
+      "movementSquares": 10,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        16,
+        18
+      ],
+      "roomId": ""
+    }
+  },
+  "maps": {
+    "custom-quest": {
+      "id": "custom-quest",
+      "title": "Quest 1: Custom Dungeon",
+      "mapConfigurationId": "first-light-dungeon",
+      "width": 26,
+      "height": 19,
+      "additionalBorderTile": true,
+      "backgroundImage": "res://assets/boards/first_light_dungeon.png",
+      "tileSize": 39,
+      "pixelOffset": [
+        0,
+        0
+      ],
+      "wanderingMonster": "orc",
+      "startingStair": [
+        7,
+        14
+      ],
+      "startingPosition": [
+        7,
+        14
+      ],
+      "startingStairType": "stairs_down_2x2",
+      "exitTile": [
+        -1,
+        4
+      ],
+      "exitStair": [
+        -1,
+        4
+      ],
+      "exitStairType": "stairs_down_1x1",
+      "activeRooms": [
+        "room-nw-1",
+        "room-nw-2",
+        "room-nw-3",
+        "room-nw-4",
+        "room-sw-5",
+        "room-sw-6",
+        "room-sw-7",
+        "room-sw-8",
+        "room-sw-9",
+        "room-nw-10",
+        "room-ne-11",
+        "room-ne-12",
+        "room-ne-13",
+        "room-ne-14",
+        "room-ne-15",
+        "room-ne-16",
+        "room-se-17",
+        "room-se-18",
+        "room-se-19",
+        "room-se-20",
+        "room-se-21",
+        "room-nw-22"
+      ],
+      "rooms": [
+        {
+          "id": "room-nw-1",
+          "name": "Room 1 (NW)",
+          "x": 1,
+          "y": 1,
+          "w": 4,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              1,
+              4
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              4
+            ],
+            [
+              4,
+              1
+            ],
+            [
+              4,
+              2
+            ],
+            [
+              4,
+              3
+            ],
+            [
+              4,
+              4
+            ]
+          ],
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-nw-2",
+          "name": "Room 2 (NW)",
+          "x": 5,
+          "y": 1,
+          "w": 3,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              5,
+              1
+            ],
+            [
+              5,
+              2
+            ],
+            [
+              5,
+              3
+            ],
+            [
+              5,
+              4
+            ],
+            [
+              6,
+              1
+            ],
+            [
+              6,
+              2
+            ],
+            [
+              6,
+              3
+            ],
+            [
+              6,
+              4
+            ],
+            [
+              7,
+              1
+            ],
+            [
+              7,
+              2
+            ],
+            [
+              7,
+              3
+            ],
+            [
+              7,
+              4
+            ]
+          ],
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-nw-3",
+          "name": "Room 3 (NW)",
+          "x": 8,
+          "y": 1,
+          "w": 4,
+          "h": 5,
+          "shape": "rect",
+          "tiles": [
+            [
+              8,
+              1
+            ],
+            [
+              8,
+              2
+            ],
+            [
+              8,
+              3
+            ],
+            [
+              8,
+              4
+            ],
+            [
+              8,
+              5
+            ],
+            [
+              9,
+              1
+            ],
+            [
+              9,
+              2
+            ],
+            [
+              9,
+              3
+            ],
+            [
+              9,
+              4
+            ],
+            [
+              9,
+              5
+            ],
+            [
+              10,
+              1
+            ],
+            [
+              10,
+              2
+            ],
+            [
+              10,
+              3
+            ],
+            [
+              10,
+              4
+            ],
+            [
+              10,
+              5
+            ],
+            [
+              11,
+              1
+            ],
+            [
+              11,
+              2
+            ],
+            [
+              11,
+              3
+            ],
+            [
+              11,
+              4
+            ],
+            [
+              11,
+              5
+            ]
+          ],
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-nw-4",
+          "name": "Room 4 (NW)",
+          "x": 1,
+          "y": 5,
+          "w": 4,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              1,
+              5
+            ],
+            [
+              1,
+              6
+            ],
+            [
+              1,
+              7
+            ],
+            [
+              1,
+              8
+            ],
+            [
+              2,
+              5
+            ],
+            [
+              2,
+              6
+            ],
+            [
+              2,
+              7
+            ],
+            [
+              2,
+              8
+            ],
+            [
+              3,
+              5
+            ],
+            [
+              3,
+              6
+            ],
+            [
+              3,
+              7
+            ],
+            [
+              3,
+              8
+            ],
+            [
+              4,
+              5
+            ],
+            [
+              4,
+              6
+            ],
+            [
+              4,
+              7
+            ],
+            [
+              4,
+              8
+            ]
+          ],
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-sw-5",
+          "name": "Room 5 (SW)",
+          "x": 1,
+          "y": 10,
+          "w": 4,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              1,
+              10
+            ],
+            [
+              1,
+              11
+            ],
+            [
+              1,
+              12
+            ],
+            [
+              1,
+              13
+            ],
+            [
+              2,
+              10
+            ],
+            [
+              2,
+              11
+            ],
+            [
+              2,
+              12
+            ],
+            [
+              2,
+              13
+            ],
+            [
+              3,
+              10
+            ],
+            [
+              3,
+              11
+            ],
+            [
+              3,
+              12
+            ],
+            [
+              3,
+              13
+            ],
+            [
+              4,
+              10
+            ],
+            [
+              4,
+              11
+            ],
+            [
+              4,
+              12
+            ],
+            [
+              4,
+              13
+            ]
+          ],
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-6",
+          "name": "Room 6 (SW)",
+          "x": 5,
+          "y": 10,
+          "w": 4,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              5,
+              10
+            ],
+            [
+              5,
+              11
+            ],
+            [
+              5,
+              12
+            ],
+            [
+              5,
+              13
+            ],
+            [
+              6,
+              10
+            ],
+            [
+              6,
+              11
+            ],
+            [
+              6,
+              12
+            ],
+            [
+              6,
+              13
+            ],
+            [
+              7,
+              10
+            ],
+            [
+              7,
+              11
+            ],
+            [
+              7,
+              12
+            ],
+            [
+              7,
+              13
+            ],
+            [
+              8,
+              10
+            ],
+            [
+              8,
+              11
+            ],
+            [
+              8,
+              12
+            ],
+            [
+              8,
+              13
+            ]
+          ],
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-7",
+          "name": "Room 7 (SW)",
+          "x": 1,
+          "y": 14,
+          "w": 4,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              1,
+              14
+            ],
+            [
+              1,
+              15
+            ],
+            [
+              1,
+              16
+            ],
+            [
+              1,
+              17
+            ],
+            [
+              2,
+              14
+            ],
+            [
+              2,
+              15
+            ],
+            [
+              2,
+              16
+            ],
+            [
+              2,
+              17
+            ],
+            [
+              3,
+              14
+            ],
+            [
+              3,
+              15
+            ],
+            [
+              3,
+              16
+            ],
+            [
+              3,
+              17
+            ],
+            [
+              4,
+              14
+            ],
+            [
+              4,
+              15
+            ],
+            [
+              4,
+              16
+            ],
+            [
+              4,
+              17
+            ]
+          ],
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-8",
+          "name": "Room 8 (SW)",
+          "x": 5,
+          "y": 14,
+          "w": 4,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              5,
+              14
+            ],
+            [
+              5,
+              15
+            ],
+            [
+              5,
+              16
+            ],
+            [
+              5,
+              17
+            ],
+            [
+              6,
+              14
+            ],
+            [
+              6,
+              15
+            ],
+            [
+              6,
+              16
+            ],
+            [
+              6,
+              17
+            ],
+            [
+              7,
+              14
+            ],
+            [
+              7,
+              15
+            ],
+            [
+              7,
+              16
+            ],
+            [
+              7,
+              17
+            ],
+            [
+              8,
+              14
+            ],
+            [
+              8,
+              15
+            ],
+            [
+              8,
+              16
+            ],
+            [
+              8,
+              17
+            ]
+          ],
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-9",
+          "name": "Room 9 (SW)",
+          "x": 9,
+          "y": 13,
+          "w": 3,
+          "h": 5,
+          "shape": "rect",
+          "tiles": [
+            [
+              9,
+              13
+            ],
+            [
+              9,
+              14
+            ],
+            [
+              9,
+              15
+            ],
+            [
+              9,
+              16
+            ],
+            [
+              9,
+              17
+            ],
+            [
+              10,
+              13
+            ],
+            [
+              10,
+              14
+            ],
+            [
+              10,
+              15
+            ],
+            [
+              10,
+              16
+            ],
+            [
+              10,
+              17
+            ],
+            [
+              11,
+              13
+            ],
+            [
+              11,
+              14
+            ],
+            [
+              11,
+              15
+            ],
+            [
+              11,
+              16
+            ],
+            [
+              11,
+              17
+            ]
+          ],
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-nw-10",
+          "name": "Room 10 (NW)",
+          "x": 10,
+          "y": 7,
+          "w": 6,
+          "h": 5,
+          "shape": "rect",
+          "tiles": [
+            [
+              10,
+              7
+            ],
+            [
+              10,
+              8
+            ],
+            [
+              10,
+              9
+            ],
+            [
+              10,
+              10
+            ],
+            [
+              10,
+              11
+            ],
+            [
+              11,
+              7
+            ],
+            [
+              11,
+              8
+            ],
+            [
+              11,
+              9
+            ],
+            [
+              11,
+              10
+            ],
+            [
+              11,
+              11
+            ],
+            [
+              12,
+              7
+            ],
+            [
+              12,
+              8
+            ],
+            [
+              12,
+              9
+            ],
+            [
+              12,
+              10
+            ],
+            [
+              12,
+              11
+            ],
+            [
+              13,
+              7
+            ],
+            [
+              13,
+              8
+            ],
+            [
+              13,
+              9
+            ],
+            [
+              13,
+              10
+            ],
+            [
+              13,
+              11
+            ],
+            [
+              14,
+              7
+            ],
+            [
+              14,
+              8
+            ],
+            [
+              14,
+              9
+            ],
+            [
+              14,
+              10
+            ],
+            [
+              14,
+              11
+            ],
+            [
+              15,
+              7
+            ],
+            [
+              15,
+              8
+            ],
+            [
+              15,
+              9
+            ],
+            [
+              15,
+              10
+            ],
+            [
+              15,
+              11
+            ]
+          ],
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-ne-11",
+          "name": "Room 11 (NE)",
+          "x": 14,
+          "y": 1,
+          "w": 3,
+          "h": 5,
+          "shape": "rect",
+          "tiles": [
+            [
+              14,
+              1
+            ],
+            [
+              14,
+              2
+            ],
+            [
+              14,
+              3
+            ],
+            [
+              14,
+              4
+            ],
+            [
+              14,
+              5
+            ],
+            [
+              15,
+              1
+            ],
+            [
+              15,
+              2
+            ],
+            [
+              15,
+              3
+            ],
+            [
+              15,
+              4
+            ],
+            [
+              15,
+              5
+            ],
+            [
+              16,
+              1
+            ],
+            [
+              16,
+              2
+            ],
+            [
+              16,
+              3
+            ],
+            [
+              16,
+              4
+            ],
+            [
+              16,
+              5
+            ]
+          ],
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-12",
+          "name": "Room 12 (NE)",
+          "x": 17,
+          "y": 1,
+          "w": 4,
+          "h": 5,
+          "shape": "rect",
+          "tiles": [
+            [
+              17,
+              1
+            ],
+            [
+              17,
+              2
+            ],
+            [
+              17,
+              3
+            ],
+            [
+              17,
+              4
+            ],
+            [
+              17,
+              5
+            ],
+            [
+              18,
+              1
+            ],
+            [
+              18,
+              2
+            ],
+            [
+              18,
+              3
+            ],
+            [
+              18,
+              4
+            ],
+            [
+              18,
+              5
+            ],
+            [
+              19,
+              1
+            ],
+            [
+              19,
+              2
+            ],
+            [
+              19,
+              3
+            ],
+            [
+              19,
+              4
+            ],
+            [
+              19,
+              5
+            ],
+            [
+              20,
+              1
+            ],
+            [
+              20,
+              2
+            ],
+            [
+              20,
+              3
+            ],
+            [
+              20,
+              4
+            ],
+            [
+              20,
+              5
+            ]
+          ],
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-13",
+          "name": "Room 13 (NE)",
+          "x": 17,
+          "y": 6,
+          "w": 2,
+          "h": 3,
+          "shape": "rect",
+          "tiles": [
+            [
+              17,
+              6
+            ],
+            [
+              17,
+              7
+            ],
+            [
+              17,
+              8
+            ],
+            [
+              18,
+              6
+            ],
+            [
+              18,
+              7
+            ],
+            [
+              18,
+              8
+            ]
+          ],
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-14",
+          "name": "Room 14 (NE)",
+          "x": 19,
+          "y": 6,
+          "w": 2,
+          "h": 3,
+          "shape": "rect",
+          "tiles": [
+            [
+              19,
+              6
+            ],
+            [
+              19,
+              7
+            ],
+            [
+              19,
+              8
+            ],
+            [
+              20,
+              6
+            ],
+            [
+              20,
+              7
+            ],
+            [
+              20,
+              8
+            ]
+          ],
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-15",
+          "name": "Room 15 (NE)",
+          "x": 21,
+          "y": 1,
+          "w": 4,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              21,
+              1
+            ],
+            [
+              21,
+              2
+            ],
+            [
+              21,
+              3
+            ],
+            [
+              21,
+              4
+            ],
+            [
+              22,
+              1
+            ],
+            [
+              22,
+              2
+            ],
+            [
+              22,
+              3
+            ],
+            [
+              22,
+              4
+            ],
+            [
+              23,
+              1
+            ],
+            [
+              23,
+              2
+            ],
+            [
+              23,
+              3
+            ],
+            [
+              23,
+              4
+            ],
+            [
+              24,
+              1
+            ],
+            [
+              24,
+              2
+            ],
+            [
+              24,
+              3
+            ],
+            [
+              24,
+              4
+            ]
+          ],
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-16",
+          "name": "Room 16 (NE)",
+          "x": 21,
+          "y": 5,
+          "w": 4,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              21,
+              5
+            ],
+            [
+              21,
+              6
+            ],
+            [
+              21,
+              7
+            ],
+            [
+              21,
+              8
+            ],
+            [
+              22,
+              5
+            ],
+            [
+              22,
+              6
+            ],
+            [
+              22,
+              7
+            ],
+            [
+              22,
+              8
+            ],
+            [
+              23,
+              5
+            ],
+            [
+              23,
+              6
+            ],
+            [
+              23,
+              7
+            ],
+            [
+              23,
+              8
+            ],
+            [
+              24,
+              5
+            ],
+            [
+              24,
+              6
+            ],
+            [
+              24,
+              7
+            ],
+            [
+              24,
+              8
+            ]
+          ],
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-se-17",
+          "name": "Room 17 (SE)",
+          "x": 17,
+          "y": 10,
+          "w": 4,
+          "h": 5,
+          "shape": "rect",
+          "tiles": [
+            [
+              17,
+              10
+            ],
+            [
+              17,
+              11
+            ],
+            [
+              17,
+              12
+            ],
+            [
+              17,
+              13
+            ],
+            [
+              17,
+              14
+            ],
+            [
+              18,
+              10
+            ],
+            [
+              18,
+              11
+            ],
+            [
+              18,
+              12
+            ],
+            [
+              18,
+              13
+            ],
+            [
+              18,
+              14
+            ],
+            [
+              19,
+              10
+            ],
+            [
+              19,
+              11
+            ],
+            [
+              19,
+              12
+            ],
+            [
+              19,
+              13
+            ],
+            [
+              19,
+              14
+            ],
+            [
+              20,
+              10
+            ],
+            [
+              20,
+              11
+            ],
+            [
+              20,
+              12
+            ],
+            [
+              20,
+              13
+            ],
+            [
+              20,
+              14
+            ]
+          ],
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-18",
+          "name": "Room 18 (SE)",
+          "x": 21,
+          "y": 10,
+          "w": 4,
+          "h": 5,
+          "shape": "rect",
+          "tiles": [
+            [
+              21,
+              10
+            ],
+            [
+              21,
+              11
+            ],
+            [
+              21,
+              12
+            ],
+            [
+              21,
+              13
+            ],
+            [
+              21,
+              14
+            ],
+            [
+              22,
+              10
+            ],
+            [
+              22,
+              11
+            ],
+            [
+              22,
+              12
+            ],
+            [
+              22,
+              13
+            ],
+            [
+              22,
+              14
+            ],
+            [
+              23,
+              10
+            ],
+            [
+              23,
+              11
+            ],
+            [
+              23,
+              12
+            ],
+            [
+              23,
+              13
+            ],
+            [
+              23,
+              14
+            ],
+            [
+              24,
+              10
+            ],
+            [
+              24,
+              11
+            ],
+            [
+              24,
+              12
+            ],
+            [
+              24,
+              13
+            ],
+            [
+              24,
+              14
+            ]
+          ],
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-19",
+          "name": "Room 19 (SE)",
+          "x": 21,
+          "y": 15,
+          "w": 4,
+          "h": 3,
+          "shape": "rect",
+          "tiles": [
+            [
+              21,
+              15
+            ],
+            [
+              21,
+              16
+            ],
+            [
+              21,
+              17
+            ],
+            [
+              22,
+              15
+            ],
+            [
+              22,
+              16
+            ],
+            [
+              22,
+              17
+            ],
+            [
+              23,
+              15
+            ],
+            [
+              23,
+              16
+            ],
+            [
+              23,
+              17
+            ],
+            [
+              24,
+              15
+            ],
+            [
+              24,
+              16
+            ],
+            [
+              24,
+              17
+            ]
+          ],
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-20",
+          "name": "Room 20 (SE)",
+          "x": 17,
+          "y": 15,
+          "w": 4,
+          "h": 3,
+          "shape": "rect",
+          "tiles": [
+            [
+              17,
+              15
+            ],
+            [
+              17,
+              16
+            ],
+            [
+              17,
+              17
+            ],
+            [
+              18,
+              15
+            ],
+            [
+              18,
+              16
+            ],
+            [
+              18,
+              17
+            ],
+            [
+              19,
+              15
+            ],
+            [
+              19,
+              16
+            ],
+            [
+              19,
+              17
+            ],
+            [
+              20,
+              15
+            ],
+            [
+              20,
+              16
+            ],
+            [
+              20,
+              17
+            ]
+          ],
+          "quadrant": "se"
+        },
+        {
+          "id": "room-se-21",
+          "name": "Room 21 (SE)",
+          "x": 14,
+          "y": 13,
+          "w": 3,
+          "h": 5,
+          "shape": "rect",
+          "tiles": [
+            [
+              14,
+              13
+            ],
+            [
+              14,
+              14
+            ],
+            [
+              14,
+              15
+            ],
+            [
+              14,
+              16
+            ],
+            [
+              14,
+              17
+            ],
+            [
+              15,
+              13
+            ],
+            [
+              15,
+              14
+            ],
+            [
+              15,
+              15
+            ],
+            [
+              15,
+              16
+            ],
+            [
+              15,
+              17
+            ],
+            [
+              16,
+              13
+            ],
+            [
+              16,
+              14
+            ],
+            [
+              16,
+              15
+            ],
+            [
+              16,
+              16
+            ],
+            [
+              16,
+              17
+            ]
+          ],
+          "quadrant": "se"
+        },
+        {
+          "id": "room-nw-22",
+          "name": "Room 22 (NW)",
+          "x": 5,
+          "y": 5,
+          "w": 4,
+          "h": 4,
+          "shape": "freeform",
+          "tiles": [
+            [
+              5,
+              5
+            ],
+            [
+              6,
+              5
+            ],
+            [
+              7,
+              5
+            ],
+            [
+              7,
+              6
+            ],
+            [
+              8,
+              6
+            ],
+            [
+              8,
+              7
+            ],
+            [
+              8,
+              8
+            ],
+            [
+              7,
+              8
+            ],
+            [
+              7,
+              7
+            ],
+            [
+              6,
+              7
+            ],
+            [
+              6,
+              6
+            ],
+            [
+              5,
+              6
+            ],
+            [
+              5,
+              7
+            ],
+            [
+              5,
+              8
+            ],
+            [
+              6,
+              8
+            ]
+          ],
+          "quadrant": "nw"
+        }
+      ],
+      "corridors": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          9,
+          0
+        ],
+        [
+          10,
+          0
+        ],
+        [
+          11,
+          0
+        ],
+        [
+          12,
+          0
+        ],
+        [
+          13,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          14,
+          0
+        ],
+        [
+          15,
+          0
+        ],
+        [
+          16,
+          0
+        ],
+        [
+          17,
+          0
+        ],
+        [
+          18,
+          0
+        ],
+        [
+          19,
+          0
+        ],
+        [
+          20,
+          0
+        ],
+        [
+          21,
+          0
+        ],
+        [
+          22,
+          0
+        ],
+        [
+          23,
+          0
+        ],
+        [
+          24,
+          0
+        ],
+        [
+          25,
+          0
+        ],
+        [
+          25,
+          1
+        ],
+        [
+          25,
+          2
+        ],
+        [
+          25,
+          3
+        ],
+        [
+          25,
+          4
+        ],
+        [
+          25,
+          5
+        ],
+        [
+          25,
+          6
+        ],
+        [
+          25,
+          7
+        ],
+        [
+          25,
+          8
+        ],
+        [
+          25,
+          9
+        ],
+        [
+          25,
+          10
+        ],
+        [
+          25,
+          11
+        ],
+        [
+          25,
+          12
+        ],
+        [
+          25,
+          13
+        ],
+        [
+          25,
+          14
+        ],
+        [
+          25,
+          15
+        ],
+        [
+          25,
+          16
+        ],
+        [
+          25,
+          17
+        ],
+        [
+          25,
+          18
+        ],
+        [
+          24,
+          18
+        ],
+        [
+          23,
+          18
+        ],
+        [
+          22,
+          18
+        ],
+        [
+          21,
+          18
+        ],
+        [
+          20,
+          18
+        ],
+        [
+          19,
+          18
+        ],
+        [
+          18,
+          18
+        ],
+        [
+          17,
+          18
+        ],
+        [
+          16,
+          18
+        ],
+        [
+          15,
+          18
+        ],
+        [
+          14,
+          18
+        ],
+        [
+          13,
+          18
+        ],
+        [
+          12,
+          18
+        ],
+        [
+          11,
+          18
+        ],
+        [
+          10,
+          18
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          8,
+          18
+        ],
+        [
+          7,
+          18
+        ],
+        [
+          6,
+          18
+        ],
+        [
+          5,
+          18
+        ],
+        [
+          4,
+          18
+        ],
+        [
+          3,
+          18
+        ],
+        [
+          2,
+          18
+        ],
+        [
+          1,
+          18
+        ],
+        [
+          0,
+          18
+        ],
+        [
+          0,
+          17
+        ],
+        [
+          0,
+          16
+        ],
+        [
+          0,
+          15
+        ],
+        [
+          0,
+          14
+        ],
+        [
+          0,
+          13
+        ],
+        [
+          0,
+          12
+        ],
+        [
+          0,
+          11
+        ],
+        [
+          0,
+          10
+        ],
+        [
+          0,
+          9
+        ],
+        [
+          0,
+          8
+        ],
+        [
+          0,
+          7
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          9
+        ],
+        [
+          2,
+          9
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          9,
+          9
+        ],
+        [
+          9,
+          10
+        ],
+        [
+          9,
+          11
+        ],
+        [
+          9,
+          12
+        ],
+        [
+          10,
+          12
+        ],
+        [
+          11,
+          12
+        ],
+        [
+          12,
+          12
+        ],
+        [
+          12,
+          13
+        ],
+        [
+          12,
+          14
+        ],
+        [
+          12,
+          15
+        ],
+        [
+          12,
+          16
+        ],
+        [
+          12,
+          17
+        ],
+        [
+          13,
+          17
+        ],
+        [
+          13,
+          15
+        ],
+        [
+          13,
+          14
+        ],
+        [
+          13,
+          13
+        ],
+        [
+          13,
+          12
+        ],
+        [
+          14,
+          12
+        ],
+        [
+          15,
+          12
+        ],
+        [
+          16,
+          12
+        ],
+        [
+          16,
+          11
+        ],
+        [
+          16,
+          10
+        ],
+        [
+          16,
+          9
+        ],
+        [
+          16,
+          8
+        ],
+        [
+          16,
+          7
+        ],
+        [
+          16,
+          6
+        ],
+        [
+          15,
+          6
+        ],
+        [
+          14,
+          6
+        ],
+        [
+          13,
+          6
+        ],
+        [
+          11,
+          6
+        ],
+        [
+          10,
+          6
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          12,
+          6
+        ],
+        [
+          12,
+          5
+        ],
+        [
+          13,
+          5
+        ],
+        [
+          13,
+          4
+        ],
+        [
+          12,
+          4
+        ],
+        [
+          12,
+          3
+        ],
+        [
+          13,
+          3
+        ],
+        [
+          13,
+          2
+        ],
+        [
+          12,
+          2
+        ],
+        [
+          12,
+          1
+        ],
+        [
+          13,
+          1
+        ],
+        [
+          13,
+          16
+        ],
+        [
+          24,
+          9
+        ],
+        [
+          23,
+          9
+        ],
+        [
+          22,
+          9
+        ],
+        [
+          21,
+          9
+        ],
+        [
+          20,
+          9
+        ],
+        [
+          19,
+          9
+        ],
+        [
+          18,
+          9
+        ],
+        [
+          17,
+          9
+        ]
+      ],
+      "doors": [
+        {
+          "id": "door-1",
+          "from": [
+            7,
+            17
+          ],
+          "to": [
+            7,
+            18
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-sw-8"
+        },
+        {
+          "id": "door-2",
+          "from": [
+            15,
+            17
+          ],
+          "to": [
+            15,
+            18
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-se-21"
+        },
+        {
+          "id": "door-4",
+          "from": [
+            20,
+            12
+          ],
+          "to": [
+            21,
+            12
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-se-17"
+        },
+        {
+          "id": "door-5",
+          "from": [
+            23,
+            10
+          ],
+          "to": [
+            23,
+            9
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-se-18"
+        },
+        {
+          "id": "door-6",
+          "from": [
+            16,
+            16
+          ],
+          "to": [
+            17,
+            16
+          ],
+          "state": "closed",
+          "is_secret": true,
+          "room": "room-se-21"
+        },
+        {
+          "id": "door-7",
+          "from": [
+            19,
+            15
+          ],
+          "to": [
+            19,
+            14
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-se-20"
+        },
+        {
+          "id": "door-9",
+          "from": [
+            0,
+            6
+          ],
+          "to": [
+            1,
+            6
+          ],
+          "state": "closed",
+          "is_secret": true,
+          "room": "room-nw-4"
+        },
+        {
+          "id": "door-9",
+          "from": [
+            10,
+            17
+          ],
+          "to": [
+            10,
+            18
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-sw-9"
+        },
+        {
+          "id": "door-10",
+          "from": [
+            15,
+            9
+          ],
+          "to": [
+            16,
+            9
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-nw-10"
+        },
+        {
+          "id": "door-11",
+          "from": [
+            8,
+            7
+          ],
+          "to": [
+            9,
+            7
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-nw-22"
+        },
+        {
+          "id": "door-11",
+          "from": [
+            4,
+            6
+          ],
+          "to": [
+            5,
+            6
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-nw-4"
+        },
+        {
+          "id": "door-12",
+          "from": [
+            10,
+            8
+          ],
+          "to": [
+            9,
+            8
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-nw-10"
+        }
+      ],
+      "furniture": [
+        {
+          "id": "furn-stairs_down_2x2-1",
+          "name": "Down Staircase (2×2)",
+          "type": "stairs_down_2x2",
+          "x": 7,
+          "y": 14,
+          "width": 2,
+          "height": 2,
+          "roomId": "room-sw-8",
+          "treasure": ""
+        },
+        {
+          "id": "furn-chest-3",
+          "name": "Heist Treasure Chest",
+          "type": "chest",
+          "x": 17,
+          "y": 18,
+          "width": 1,
+          "height": 1,
+          "roomId": "",
+          "treasure": "",
+          "hidden": true
+        }
+      ],
+      "wallBlocks": [
+        {
+          "id": "block-1",
+          "type": "single",
+          "x": 4,
+          "y": 18,
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "block-2",
+          "type": "double-h",
+          "x": 12,
+          "y": 13,
+          "width": 2,
+          "height": 1
+        },
+        {
+          "id": "block-4",
+          "type": "double-h",
+          "x": 15,
+          "y": 6,
+          "width": 2,
+          "height": 1
+        },
+        {
+          "id": "block-6",
+          "type": "double-h",
+          "x": 12,
+          "y": 1,
+          "width": 2,
+          "height": 1
+        },
+        {
+          "id": "block-7",
+          "type": "single",
+          "x": 19,
+          "y": 18,
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "block-7",
+          "type": "single",
+          "x": 25,
+          "y": 9,
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "block-8",
+          "type": "single",
+          "x": 0,
+          "y": 2,
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "block-9",
+          "type": "single",
+          "x": 0,
+          "y": 8,
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "block-9",
+          "type": "single",
+          "x": 9,
+          "y": 10,
+          "width": 1,
+          "height": 1
+        }
+      ],
+      "traps": [
+        {
+          "id": "trap-spear-1",
+          "trapType": "spear",
+          "x": 13,
+          "y": 8,
+          "damageDice": 1,
+          "detected": false,
+          "disarmed": false
+        }
+      ],
+      "triggers": [
+        {
+          "id": "trigger-note-a-l5sv",
+          "name": "Note A Trigger",
+          "title": "Note A Trigger",
+          "marker": "Note A",
+          "event": "on_room_entered",
+          "target": "room-nw-1",
+          "room": "room-nw-1",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            0,
+            0
+          ],
+          "onceOnly": true,
+          "narrative": "Mentor speaks: \"As you step forward, ancient magic stirs...\"",
+          "actions": [
+            {
+              "type": "play_movie",
+              "moviePath": "res://assets/movies/quest1-intro.mp4",
+              "title": "Note A Cinematic",
+              "canSkip": true
+            }
+          ]
+        },
+        {
+          "id": "trigger-note-a-2bug",
+          "name": "Note A Encounter",
+          "title": "Note A Encounter",
+          "marker": "Note A",
+          "event": "on_tile_stepped_on",
+          "target": "",
+          "room": "",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            7,
+            18
+          ],
+          "onceOnly": true,
+          "narrative": "",
+          "actions": [
+            {
+              "type": "play_movie",
+              "moviePath": "res://assets/movies/quest_scene_a_corridor_heist.ogv",
+              "title": "Corridor Heist",
+              "canSkip": true
+            },
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Goblin who hesited chest",
+                  "text": "its the humans! (clank of chest dropping to stone ground)",
+                  "audio": ""
+                }
+              ]
+            },
+            {
+              "type": "furniture_visible",
+              "furnitureId": "furn-chest-3",
+              "target": "Heist Treasure Chest"
+            },
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Orc who hesited chest",
+                  "text": "useless runt, they will never get the treasure rahhh",
+                  "audio": ""
+                }
+              ]
+            },
+            {
+              "type": "move_furniture",
+              "furnitureId": "furn-chest-3",
+              "target": "Heist Treasure Chest",
+              "tile": [
+                18,
+                17
+              ],
+              "x": 18,
+              "y": 17
+            }
+          ]
+        },
+        {
+          "id": "trigger-note-a-srxo",
+          "name": "Witch Hand Ambush",
+          "title": "Witch Hand Ambush",
+          "marker": "Note A",
+          "event": "on_door_opened",
+          "target": "door-10",
+          "room": "room-nw-10",
+          "doorId": "door-10",
+          "monsterId": "",
+          "tile": [
+            15,
+            9
+          ],
+          "onceOnly": true,
+          "narrative": "Stop. Do not draw a card. As your hand reaches into the shadows...",
+          "actions": [
+            {
+              "type": "play_movie",
+              "moviePath": "res://assets/movies/quest_scene_f_witch_hand_undead.ogv",
+              "title": "Witch Hand ambush",
+              "canSkip": true
+            }
+          ]
+        }
+      ],
+      "storyTriggers": [
+        {
+          "id": "trigger-note-a-l5sv",
+          "marker": "Note A",
+          "title": "Note A Trigger",
+          "banner": "QUEST NOTE [Note A]",
+          "narrative": "Mentor speaks: \"As you step forward, ancient magic stirs...\"",
+          "tile": [
+            0,
+            0
+          ],
+          "room": "room-nw-1",
+          "event": "on_room_entered",
+          "onceOnly": true,
+          "movie": "res://assets/movies/quest1-intro.mp4",
+          "actions": [
+            {
+              "type": "play_movie",
+              "moviePath": "res://assets/movies/quest1-intro.mp4",
+              "title": "Note A Cinematic",
+              "canSkip": true
+            }
+          ]
+        },
+        {
+          "id": "trigger-note-a-2bug",
+          "marker": "Note A",
+          "title": "Note A Encounter",
+          "banner": "QUEST NOTE [Note A]",
+          "narrative": "",
+          "tile": [
+            7,
+            18
+          ],
+          "room": "",
+          "event": "on_tile_stepped_on",
+          "onceOnly": true,
+          "movie": "res://assets/movies/quest_scene_a_corridor_heist.ogv",
+          "actions": [
+            {
+              "type": "play_movie",
+              "moviePath": "res://assets/movies/quest_scene_a_corridor_heist.ogv",
+              "title": "Corridor Heist",
+              "canSkip": true
+            },
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Goblin who hesited chest",
+                  "text": "its the humans! (clank of chest dropping to stone ground)",
+                  "audio": ""
+                }
+              ]
+            },
+            {
+              "type": "furniture_visible",
+              "furnitureId": "furn-chest-3",
+              "target": "Heist Treasure Chest"
+            },
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Orc who hesited chest",
+                  "text": "useless runt, they will never get the treasure rahhh",
+                  "audio": ""
+                }
+              ]
+            },
+            {
+              "type": "move_furniture",
+              "furnitureId": "furn-chest-3",
+              "target": "Heist Treasure Chest",
+              "tile": [
+                18,
+                17
+              ],
+              "x": 18,
+              "y": 17
+            }
+          ]
+        },
+        {
+          "id": "trigger-note-a-srxo",
+          "marker": "Note A",
+          "title": "Witch Hand Ambush",
+          "banner": "QUEST NOTE [Note A]",
+          "narrative": "Stop. Do not draw a card. As your hand reaches into the shadows...",
+          "tile": [
+            15,
+            9
+          ],
+          "room": "room-nw-10",
+          "event": "on_door_opened",
+          "onceOnly": true,
+          "movie": "res://assets/movies/quest_scene_f_witch_hand_undead.ogv",
+          "actions": [
+            {
+              "type": "play_movie",
+              "moviePath": "res://assets/movies/quest_scene_f_witch_hand_undead.ogv",
+              "title": "Witch Hand ambush",
+              "canSkip": true
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

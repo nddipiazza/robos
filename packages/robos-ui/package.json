@@ -6,6 +6,7 @@
   "keywords": ["robos", "ui", "components", "web-components"],
   "license": "MIT",
   "files": [
-    "robos-ui.js"
+    "robos-ui.js",
+    "robos-voice-button.js"
   ]
 }

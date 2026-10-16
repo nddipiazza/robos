@@ -829,6 +829,21 @@
       "robos:repository": "github.com/nddipiazza/pulse-metrics-cli",
       "robos:technology": "Node.js 20 / CLI",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:desktop-app:home-speaker",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS Home Speaker",
+      "dcterms:description": "Smart speaker intercom, walkie-talkie voice notes, neural TTS broadcast, custom audio streaming, and soundboard controller for Google Home, Nest, and Cast devices.",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications",
+      "robos:repository": "packages/home-speaker",
+      "robos:technology": "Electron 28 / Google Cast / Kokoro TTS",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
     }
   ]
 }

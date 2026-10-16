@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RobOS Tabletop Blockmap Creator — Static Board Studio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <svg class="brand-icon" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="2">
+          <rect x="5" y="5" width="38" height="38" rx="3" stroke="#00bcd4" />
+          <path d="M5 17 H43 M5 29 H43 M17 5 V43 M29 5 V43" stroke="#00bcd4" stroke-dasharray="2 2" stroke-opacity="0.45" />
+          <rect x="17" y="17" width="12" height="12" fill="#00bcd4" fill-opacity="0.25" stroke="#00bcd4" stroke-width="2" />
+          <path d="M33 7 L41 15 M36 10 L38 8 M38 12 L40 10" stroke="#f59e0b" stroke-width="2" />
+        </svg>
+        <div class="brand-titles">
+          <h1>Tabletop Blockmap Creator</h1>
+          <span class="subtitle">Layer 1: Static Board Geometry & Tile Calibration</span>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <div class="control-group">
+          <label for="board-preset-select">Board Preset:</label>
+          <select id="board-preset-select" class="dropdown">
+            <option value="first-light-dungeon" selected>HeroQuest: First Light Side A (1014×738)</option>
+            <option value="heroquest-classic">HeroQuest Classic Stone Dungeon (1024×768)</option>
+            <option value="first-light-caverns">HeroQuest First Light Side B (1200×896)</option>
+            <option value="fan-dungeon-28x21">Fan Cavern Citadel (1024×768)</option>
+          </select>
+        </div>
+
+        <button id="btn-open-image" class="btn btn-secondary" title="Open any PNG, JPG, or WebP board image to create a new blockmap">
+          📁 Open Image...
+        </button>
+
+        <div class="header-divider"></div>
+
+        <button id="btn-save-board" class="btn btn-accent" title="Save static board blockmap (.blockmap.json)">
+          💾 Save Board Map
+        </button>
+
+        <button id="btn-export-json" class="btn btn-secondary" title="Export static board configuration JSON">
+          📦 Export JSON
+        </button>
+
+        <button id="btn-copy-json" class="btn btn-secondary" title="Copy static board JSON to clipboard">
+          📋 Copy JSON
+        </button>
+      </div>
+    </header>
+
+    <!-- Info Coordinates & Status Bar -->
+    <div class="info-bar">
+      <div class="info-left">
+        <span id="info-map-title" class="info-tag" title="Map Title">🗺️ <strong id="info-map-title-text">HeroQuest: First Light Side A</strong></span>
+        <span id="info-image-name" class="info-tag">🖼️ first_light_dungeon.png</span>
+        <span id="info-image-size" class="info-tag">📐 1014 × 738 px</span>
+        <span id="info-grid-size" class="info-tag">🧱 26 × 19 grid</span>
+      </div>
+      <div class="info-center">
+        <span id="info-active-tool" class="info-tag tool-highlight">🛠️ Tool: Select / Pan</span>
+        <span id="info-cursor-pos" class="info-tag">📍 Cursor: --, --</span>
+        <span id="info-tile-pos" class="info-tag">🎯 Tile: [-, -]</span>
+        <span id="info-room-name" class="info-tag">🏠 Room: None</span>
+      </div>
+      <div class="info-right">
+        <button id="btn-zoom-out" class="btn-icon" title="Zoom Out">-</button>
+        <span id="info-zoom-level" class="zoom-text">100%</span>
+        <button id="btn-zoom-in" class="btn-icon" title="Zoom In">+</button>
+        <button id="btn-zoom-fit" class="btn-sm btn-secondary" title="Fit board to screen">Fit</button>
+        <button id="btn-zoom-reset" class="btn-sm btn-secondary" title="Reset zoom to 100%">100%</button>
+      </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="workspace">
+      <!-- Left Tool Palette: Focused Strictly on Layer 1 Static Blockmap -->
+      <nav class="tool-palette">
+        <div class="palette-title">STATIC TOOLS</div>
+
+        <button class="tool-btn active" data-tool="inspect" title="Select & Inspect tiles / rooms (Key: V)">
+          <span class="icon">👁️</span>
+          <span class="label">Select</span>
+        </button>
+
+        <button class="tool-btn" data-tool="corridor" title="Corridor Draw Tool: Click and drag mouse to toggle/paint/disable corridor tiles (Key: C)">
+          <span class="icon">🛣️</span>
+          <span class="label">Corridor</span>
+        </button>
+
+        <button class="tool-btn" data-tool="room" title="Room Draw Tool: Click & drag mouse to toggle edge of tiles as room or drag box (Key: R)">
+          <span class="icon">🏠</span>
+          <span class="label">Room</span>
+        </button>
+
+        <button class="tool-btn btn-erase" data-tool="erase" title="Eraser Tool: Erase room tiles or corridor tiles (Key: E)">
+          <span class="icon">🗑️</span>
+          <span class="label">Erase</span>
+        </button>
+
+        <div class="palette-divider"></div>
+
+        <button id="btn-undo" class="tool-btn" title="Undo Last Edit (Ctrl+Z)" disabled>
+          <span class="icon">↩️</span>
+          <span class="label">Undo</span>
+        </button>
+        <button id="btn-redo" class="tool-btn" title="Redo Edit (Ctrl+Y)" disabled>
+          <span class="icon">↪️</span>
+          <span class="label">Redo</span>
+        </button>
+
+        <div class="palette-divider"></div>
+
+        <!-- Corridor Subtool Options -->
+        <div id="corridor-subtool-panel" class="subtool-panel hidden">
+          <div class="subtool-title">Corridor</div>
+          <label class="radio-label">
+            <input type="radio" name="corridor-mode" value="toggle" checked> Toggle
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="corridor-mode" value="paint"> Paint
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="corridor-mode" value="erase"> Erase
+          </label>
+        </div>
+
+        <!-- Room Subtool Options -->
+        <div id="room-subtool-panel" class="subtool-panel hidden">
+          <div class="subtool-title">Room Mode</div>
+          <label class="radio-label">
+            <input type="radio" name="room-mode" value="rect" checked> ⬛ Rectangle
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="room-mode" value="freeform"> ✏️ Free Form
+          </label>
+        </div>
+      </nav>
+
+      <!-- Center Interactive Canvas Viewport -->
+      <div class="canvas-viewport" id="canvas-viewport">
+        <!-- Floating Freeform Action Bar -->
+        <div id="freeform-action-bar" class="freeform-action-bar hidden">
+          <div class="freeform-bar-left">
+            <span class="freeform-badge">✏️ FREE FORM ROOM</span>
+            <span class="freeform-text" id="freeform-status-text">Click / drag tiles to define room boundaries: <strong id="freeform-tile-count">0</strong> tiles</span>
+          </div>
+          <div class="freeform-bar-right">
+            <button id="btn-freeform-ok" class="btn btn-sm btn-accent" title="Validate and create room (Enter)">✓ OK</button>
+            <button id="btn-freeform-clear" class="btn btn-sm btn-secondary" title="Clear draft tiles">Clear</button>
+            <button id="btn-freeform-cancel" class="btn btn-sm btn-danger" title="Cancel freeform draft (Esc)">Cancel</button>
+          </div>
+        </div>
+
+        <canvas id="map-canvas"></canvas>
+        <div id="canvas-overlay-help" class="canvas-overlay-help">
+          <span>Pan: Middle-click or Space+drag | Zoom: Scroll wheel | Drag on grid to paint/toggle</span>
+        </div>
+      </div>
+
+      <!-- Right Sidebar: Calibration & Room Geometry -->
+      <aside class="sidebar-right">
+        <div class="sidebar-tabs">
+          <button class="side-tab active" data-sidetab="tab-calibration">⚙️ Calibration</button>
+          <button class="side-tab" data-sidetab="tab-rooms">🏠 Rooms (<span id="sidebar-room-count">22</span>)</button>
+        </div>
+
+        <!-- Tab 1: Calibration -->
+        <div id="tab-calibration" class="sidebar-content active">
+          <!-- Map Identity -->
+          <div class="section-card">
+            <h3>🗺️ Map Identity</h3>
+            <p class="section-desc">Display name and cartridge identifier for this blockmap.</p>
+
+            <div class="form-row">
+              <label for="input-map-title"><strong>Map Name:</strong></label>
+              <input type="text" id="input-map-title" class="text-input" placeholder="e.g. HeroQuest: First Light Side A" style="flex:1;">
+            </div>
+
+            <div class="form-row" style="margin-top:8px;">
+              <label for="input-map-id"><strong>Map ID:</strong></label>
+              <input type="text" id="input-map-id" class="text-input" placeholder="e.g. first-light-dungeon" style="flex:1;">
+            </div>
+          </div>
+
+          <!-- Tile Size Calibration -->
+          <div class="section-card">
+            <h3>📏 1. Tile Size (px)</h3>
+            <p class="section-desc">Adjust width and height of each square tile to snap exactly over the artwork grid lines.</p>
+
+            <div class="form-row">
+              <label for="input-tile-size"><strong>Tile Size:</strong></label>
+              <div class="stepper-input">
+                <button id="btn-tile-minus-1" class="btn-step" title="-1px">-1</button>
+                <button id="btn-tile-minus-01" class="btn-step" title="-0.1px">-0.1</button>
+                <input type="number" id="input-tile-size" value="39.0" step="0.1" min="8" max="150" class="num-input">
+                <button id="btn-tile-plus-01" class="btn-step" title="+0.1px">+0.1</button>
+                <button id="btn-tile-plus-1" class="btn-step" title="+1px">+1</button>
+              </div>
+            </div>
+            <input type="range" id="slider-tile-size" min="16" max="70" step="0.1" value="39.0" class="range-slider">
+          </div>
+
+          <!-- Offset X and Y -->
+          <div class="section-card">
+            <h3>🧭 2. Map Image Offset (X, Y)</h3>
+            <p class="section-desc">Shift the grid origin in pixels so the first tile aligns with the board artwork corner.</p>
+
+            <div class="form-row">
+              <label for="input-offset-x"><strong>Offset X (px):</strong></label>
+              <div class="stepper-input">
+                <button id="btn-offx-minus-5" class="btn-step">-5</button>
+                <button id="btn-offx-minus-1" class="btn-step">-1</button>
+                <input type="number" id="input-offset-x" value="0" step="1" class="num-input">
+                <button id="btn-offx-plus-1" class="btn-step">+1</button>
+                <button id="btn-offx-plus-5" class="btn-step">+5</button>
+              </div>
+            </div>
+
+            <div class="form-row" style="margin-top:6px;">
+              <label for="input-offset-y"><strong>Offset Y (px):</strong></label>
+              <div class="stepper-input">
+                <button id="btn-offy-minus-5" class="btn-step">-5</button>
+                <button id="btn-offy-minus-1" class="btn-step">-1</button>
+                <input type="number" id="input-offset-y" value="0" step="1" class="num-input">
+                <button id="btn-offy-plus-1" class="btn-step">+1</button>
+                <button id="btn-offy-plus-5" class="btn-step">+5</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Additional Border Tile Option -->
+          <div class="section-card">
+            <h3>🛡️ Border Options</h3>
+            <div class="checkbox-row">
+              <label class="custom-checkbox">
+                <input type="checkbox" id="chk-additional-border">
+                <span class="checkmark"></span>
+                <span class="label-text"><strong>Additional Border Tile Option</strong></span>
+              </label>
+              <small class="help-text">Adds a 1-tile outer solid wall border around edge-to-edge boards (like First Light) allowing starting and exit staircases to target it.</small>
+            </div>
+          </div>
+
+          <!-- Grid Dimensions -->
+          <div class="section-card">
+            <h3>🧱 3. Grid Dimensions</h3>
+            <div class="grid-dim-row">
+              <div class="dim-box">
+                <label for="input-grid-cols">Grid Columns (X):</label>
+                <input type="number" id="input-grid-cols" value="26" min="2" max="100" class="num-input">
+              </div>
+              <span class="dim-mult">×</span>
+              <div class="dim-box">
+                <label for="input-grid-rows">Grid Rows (Y):</label>
+                <input type="number" id="input-grid-rows" value="19" min="2" max="100" class="num-input">
+              </div>
+              <button id="btn-auto-calc-grid" class="btn btn-sm btn-secondary" title="Auto-calculate grid columns and rows based on image size and tile size">Auto</button>
+            </div>
+          </div>
+
+          <!-- View Options -->
+          <div class="section-card">
+            <h3>👁️ View Layers</h3>
+            <div class="toggle-list">
+              <label class="custom-checkbox"><input type="checkbox" id="chk-show-image" checked><span class="checkmark"></span> Show Board Image</label>
+              <label class="custom-checkbox"><input type="checkbox" id="chk-show-grid" checked><span class="checkmark"></span> Show Grid Lines</label>
+              <label class="custom-checkbox"><input type="checkbox" id="chk-show-coords" checked><span class="checkmark"></span> Show Coordinates</label>
+              <label class="custom-checkbox"><input type="checkbox" id="chk-show-corridors" checked><span class="checkmark"></span> Show Corridors</label>
+              <label class="custom-checkbox"><input type="checkbox" id="chk-show-rooms" checked><span class="checkmark"></span> Show Rooms</label>
+            </div>
+
+            <div class="form-row" style="margin-top:8px;">
+              <label for="slider-art-opacity">Artwork Opacity:</label>
+              <input type="range" id="slider-art-opacity" min="0.1" max="1.0" step="0.05" value="1.0" class="range-slider">
+            </div>
+
+            <div class="form-row">
+              <label for="slider-grid-opacity">Grid Opacity:</label>
+              <input type="range" id="slider-grid-opacity" min="0.1" max="1.0" step="0.05" value="0.75" class="range-slider">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Rooms & Corridors -->
+        <div id="tab-rooms" class="sidebar-content">
+          <!-- Selected Room Inspector -->
+          <div class="section-card" id="selected-room-card">
+            <div class="room-card-header">
+              <h3 id="prop-room-header">Active Room</h3>
+              <button id="btn-delete-room" class="btn btn-sm btn-danger" title="Delete selected room">Delete</button>
+            </div>
+            <div class="form-group">
+              <label for="prop-room-name">Room Name:</label>
+              <input type="text" id="prop-room-name" class="text-input" placeholder="e.g. North Hall">
+            </div>
+            <div class="form-group">
+              <label for="prop-room-id">Room ID:</label>
+              <input type="text" id="prop-room-id" class="text-input" placeholder="e.g. room-nw-1">
+            </div>
+            <div class="form-group">
+              <label for="prop-room-quadrant">Quadrant:</label>
+              <select id="prop-room-quadrant" class="dropdown">
+                <option value="nw">Northwest (NW)</option>
+                <option value="ne">Northeast (NE)</option>
+                <option value="sw">Southwest (SW)</option>
+                <option value="se">Southeast (SE)</option>
+                <option value="center">Center</option>
+              </select>
+            </div>
+            <div class="room-bounds-info">
+              <span>Shape: <strong id="prop-room-shape">Rectangle</strong></span>
+              <span>Tiles: <strong id="prop-room-tiles-count">0</strong></span>
+            </div>
+            <div class="room-bounds-info" style="margin-top:4px;">
+              <span>Position: X=<strong id="prop-room-x">0</strong>, Y=<strong id="prop-room-y">0</strong></span>
+              <span>Bounds: <strong id="prop-room-w">0</strong> × <strong id="prop-room-h">0</strong></span>
+            </div>
+            <div class="btn-row" style="margin-top:8px;">
+              <button id="btn-edit-room-shape" class="btn btn-sm btn-secondary" title="Edit this room's shape in Free Form mode">✏️ Edit Shape (Free Form)</button>
+            </div>
+          </div>
+
+          <!-- Static Rooms List -->
+          <div class="section-card">
+            <div class="room-list-header">
+              <h3>Static Rooms (<span id="room-list-count">0</span>)</h3>
+              <div class="btn-group">
+                <button id="btn-add-new-room" class="btn btn-sm btn-primary" title="Add rectangular room">+ Rect</button>
+                <button id="btn-add-freeform-room" class="btn btn-sm btn-accent" title="Add free-form room (click boundaries until done)">+ Free Form</button>
+              </div>
+            </div>
+            <div id="room-items-container" class="room-items-container">
+              <!-- Populated dynamically -->
+            </div>
+            <div class="btn-row" style="margin-top:8px;">
+              <button id="btn-clear-all-rooms" class="btn btn-sm btn-danger" style="width:100%;" title="Clear all static rooms">🗑️ Clear All Rooms</button>
+            </div>
+          </div>
+
+          <!-- Permanent Corridors -->
+          <div class="section-card">
+            <h3>🛣️ Static Corridors</h3>
+            <p class="section-desc">Marked corridor tiles: <strong id="corridor-count">0</strong> tiles.</p>
+            <p class="section-desc" style="margin-top:2px;">Use the <strong>Corridor Draw Tool</strong> to click and drag across the map to toggle or paint corridor floor tiles.</p>
+            <div class="btn-row" style="margin-top:6px;">
+              <button id="btn-clear-corridors" class="btn btn-sm btn-danger" style="width:100%;" title="Clear all corridor tiles">🗑️ Clear All Corridors</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script src="../lib/room-shape.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

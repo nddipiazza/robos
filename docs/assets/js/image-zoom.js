@@ -18,52 +18,8 @@
   const MAX_SCALE = 5.0;
   const STEP_SCALE = 0.35;
 
-  // Initialize Mermaid with Bespoke Dark Obsidian & Electric Cyan Theme if loaded
-  function configureMermaid() {
-    if (typeof window !== 'undefined' && window.mermaid) {
-      try {
-        window.mermaid.initialize({
-          startOnLoad: false,
-          theme: 'base',
-          securityLevel: 'loose',
-          themeVariables: {
-            darkMode: true,
-            background: 'transparent',
-            primaryColor: '#162032',
-            primaryTextColor: '#ffffff',
-            primaryBorderColor: '#00e5ff',
-            lineColor: '#38bdf8',
-            secondaryColor: '#1e293b',
-            tertiaryColor: '#0d131f',
-            mainBkg: '#162032',
-            nodeBorder: '#00e5ff',
-            nodeTextColor: '#ffffff',
-            clusterBkg: '#0d1527',
-            clusterBorder: '#6366f1',
-            defaultLinkColor: '#38bdf8',
-            titleColor: '#00e5ff',
-            edgeLabelBackground: '#1a2333',
-            actorBorder: '#00e5ff',
-            actorBkg: '#162032',
-            actorTextColor: '#ffffff',
-            actorLineColor: '#475569',
-            signalColor: '#38bdf8',
-            signalTextColor: '#f8fafc',
-            labelBoxBkgColor: '#1a2333',
-            labelBoxBorderColor: '#00e5ff',
-            labelTextColor: '#ffffff',
-            loopTextColor: '#00e5ff',
-            noteBorderColor: '#f59e0b',
-            noteBkgColor: '#1e293b',
-            noteTextColor: '#fef08a',
-            fontFamily: 'Space Grotesk, Plus Jakarta Sans, sans-serif'
-          }
-        });
-      } catch (e) {
-        // Silently continue if already initialized
-      }
-    }
-  }
+  // Mermaid is configured once, with the site palette, in _includes/mermaid_config.js.
+  function configureMermaid() {}
 
   function createLightboxDOM() {
     if (document.getElementById('robos-lightbox-overlay')) return;
@@ -73,12 +29,12 @@
     overlay.className = 'robos-lightbox-overlay';
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
-    overlay.setAttribute('aria-label', 'Interactive image and flowchart preview and zoom');
+    overlay.setAttribute('aria-label', 'Image and diagram viewer');
 
     overlay.innerHTML = `
       <div class="robos-lightbox-header">
         <div class="robos-lightbox-title-wrap">
-          <span id="robos-lightbox-badge" class="robos-lightbox-badge">RobOS HD View</span>
+          <span id="robos-lightbox-badge" class="robos-lightbox-badge">Zoom</span>
           <span id="robos-lightbox-zoom-level" class="robos-lightbox-zoom-badge">100%</span>
         </div>
         <div class="robos-lightbox-controls">
@@ -277,7 +233,7 @@
       btnNewTab.href = '#';
     }
 
-    const displayTitle = title || 'Interactive Architecture Flowchart & Dependency Graph';
+    const displayTitle = title || 'Diagram & Dependency Graph';
     captionEl.textContent = displayTitle;
     captionEl.style.display = 'block';
 
@@ -488,131 +444,8 @@
     return 'Architecture Flowchart';
   }
 
-  function applyHighContrastToSvg(svg) {
-    if (!svg) return;
-
-    // Clean up outer background rects
-    svg.querySelectorAll('rect.background, rect[fill="#ffffff"], rect[fill="white"], rect[fill="#fff"], rect[fill="#ffffde"], rect[fill="rgb(255, 255, 222)"]').forEach((r) => {
-      r.setAttribute('fill', 'transparent');
-      r.style.fill = 'transparent';
-    });
-
-    // Subgraph / Cluster rects
-    svg.querySelectorAll('.cluster rect, .subgraph rect, [class*="cluster"] rect, g.cluster rect').forEach((r) => {
-      r.setAttribute('fill', '#0c1322');
-      r.setAttribute('stroke', '#6366f1');
-      r.style.fill = '#0c1322';
-      r.style.stroke = '#6366f1';
-      r.style.strokeWidth = '1.6px';
-      r.style.strokeDasharray = '4 4';
-    });
-
-    // Subgraph titles
-    svg.querySelectorAll('.cluster text, .cluster-label text, .cluster span, g.cluster text').forEach((t) => {
-      t.setAttribute('fill', '#00e5ff');
-      t.style.fill = '#00e5ff';
-      t.style.fontWeight = '700';
-    });
-
-    // Flowchart Nodes
-    svg.querySelectorAll('.node rect, .node circle, .node ellipse, .node polygon, .node path, [class*="node"] rect, g.node rect').forEach((r) => {
-      r.setAttribute('fill', '#162032');
-      r.setAttribute('stroke', '#00e5ff');
-      r.style.fill = '#162032';
-      r.style.stroke = '#00e5ff';
-      r.style.strokeWidth = '1.8px';
-    });
-
-    // Node & Actor Text Labels
-    svg.querySelectorAll('.node text, .node tspan, .nodeLabel, .node .label, text.node-text, .actor text, text.actor').forEach((t) => {
-      t.setAttribute('fill', '#ffffff');
-      t.style.fill = '#ffffff';
-    });
-
-    // Flowchart Paths, Lines & Undirected Links
-    svg.querySelectorAll('.edgePath path, .flowchart-link, path.flowchart-link, path.link, path.edge-thickness-normal, path[id^="L-"]').forEach((p) => {
-      p.setAttribute('stroke', '#38bdf8');
-      p.style.stroke = '#38bdf8';
-      p.style.strokeWidth = '2.2px';
-      p.style.opacity = '1';
-    });
-
-    // Markers / Arrowheads
-    svg.querySelectorAll('marker path, .marker, #arrowheadHD path, #flowchart-pointEnd path, #flowchart-circleEnd path, #flowchart-crossEnd path, defs marker path, marker#arrowhead path, marker#crosshead path').forEach((m) => {
-      m.setAttribute('fill', '#38bdf8');
-      m.setAttribute('stroke', '#38bdf8');
-      m.style.fill = '#38bdf8';
-      m.style.stroke = '#38bdf8';
-    });
-
-    // Sequence Actors
-    svg.querySelectorAll('rect.actor, [class*="actor"] rect, .actor-top rect, .actor-bottom rect').forEach((r) => {
-      r.setAttribute('fill', '#162032');
-      r.setAttribute('stroke', '#00e5ff');
-      r.style.fill = '#162032';
-      r.style.stroke = '#00e5ff';
-      r.style.strokeWidth = '1.8px';
-    });
-
-    // Sequence Lifelines
-    svg.querySelectorAll('.actor-line, line.actor-line, [class*="actor-line"]').forEach((l) => {
-      l.setAttribute('stroke', '#475569');
-      l.style.stroke = '#475569';
-      l.style.strokeWidth = '1.5px';
-      l.style.strokeDasharray = '4 4';
-    });
-
-    // Sequence Messages / Signals
-    svg.querySelectorAll('.messageLine0, .messageLine1, line.messageLine0, line.messageLine1, path.messageLine0, path.messageLine1').forEach((l) => {
-      l.setAttribute('stroke', '#38bdf8');
-      l.style.stroke = '#38bdf8';
-      l.style.strokeWidth = '2.2px';
-    });
-
-    // Sequence Message Text
-    svg.querySelectorAll('.messageText, text.messageText').forEach((t) => {
-      t.setAttribute('fill', '#f8fafc');
-      t.style.fill = '#f8fafc';
-    });
-
-    // Sequence Notes
-    svg.querySelectorAll('rect.note, .note rect').forEach((r) => {
-      r.setAttribute('fill', '#1e293b');
-      r.setAttribute('stroke', '#f59e0b');
-      r.style.fill = '#1e293b';
-      r.style.stroke = '#f59e0b';
-    });
-
-    svg.querySelectorAll('.noteText, text.noteText').forEach((t) => {
-      t.setAttribute('fill', '#fef08a');
-      t.style.fill = '#fef08a';
-    });
-
-    // Flowchart Primary Highlight Nodes
-    svg.querySelectorAll('.node.primary rect, [class*="primary"] rect').forEach((r) => {
-      r.style.setProperty('fill', '#16243b', 'important');
-      r.style.setProperty('stroke', '#00e5ff', 'important');
-      r.style.setProperty('stroke-width', '2.5px', 'important');
-    });
-
-    svg.querySelectorAll('.node.primary text, .node.primary .nodeLabel, [class*="primary"] text, [class*="primary"] .nodeLabel').forEach((t) => {
-      t.style.setProperty('color', '#ffffff', 'important');
-      t.style.setProperty('fill', '#ffffff', 'important');
-    });
-
-    // Inline Code Badges inside Nodes (foreignObject)
-    svg.querySelectorAll('code, .node code, foreignObject code').forEach((c) => {
-      c.style.setProperty('color', '#38bdf8', 'important');
-      c.style.setProperty('background-color', '#121927', 'important');
-      c.style.setProperty('border', '1px solid rgba(56, 189, 248, 0.4)', 'important');
-      c.style.setProperty('border-radius', '4px', 'important');
-      c.style.setProperty('padding', '0.15em 0.45em', 'important');
-      c.style.setProperty('font-family', '"Fira Code", monospace', 'important');
-      c.style.setProperty('font-size', '0.85em', 'important');
-      c.style.setProperty('font-weight', '500', 'important');
-      c.style.setProperty('display', 'inline-block', 'important');
-    });
-  }
+  // Diagram colors come from the Mermaid theme; nothing to override.
+  function applyHighContrastToSvg(svg) {}
 
   function bindDocDiagrams() {
     createLightboxDOM();
@@ -653,11 +486,11 @@
         header.innerHTML = `
           <div class="robos-diagram-badge">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 12h10M12 7v10"/></svg>
-            <span>Interactive Architecture Flowchart</span>
+            <span>Diagram</span>
           </div>
           <div class="robos-diagram-hint">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
-            <span>Click to Zoom & Pan (Fullscreen)</span>
+            <span>Click to enlarge</span>
           </div>
         `;
         cardWrapper.appendChild(header);

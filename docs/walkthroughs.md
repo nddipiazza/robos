@@ -1,987 +1,146 @@
 ---
-title: E2E Walkthroughs & Proof of Work
+title: Walkthroughs and proof of work
 layout: default
-parent: Agent Governance & Review
-nav_order: 1
+parent: "Review & governance"
+nav_order: 2
 ---
 
-# Real-World Walkthroughs & Proof of Work
+# Walkthroughs and proof of work
 {: .no_toc }
 
-Explore the real-world engineering scenarios tested across the RobOS ecosystem. Every capability is validated with high-definition video walkthroughs, spoken voiceovers, DOM assertions, and live test execution logs.
-{: .fs-6 .fw-300 }
+What RobOS treats as proof that a change works, and which recorded walkthroughs and tests in the repository back that up. Read it to judge how much to trust a recording or an agent's claim, and to regenerate one yourself.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
+## Kinds of proof
 
-1. TOC
-{:toc}
+| Kind | Where it lives | What it is |
+|:---|:---|:---|
+| Evidence bundle | The Evidence tab of a review; `packages/robos-lib/evidence-*.js` | Output captured by running code at one commit. A new commit marks it stale. |
+| Walkthrough checkpoints | The Walkthrough tab of a review | A Codex agent runs the app to each checkpoint and pauses. You decide when to move on. |
+| CI checks | The CI banner of a review | Check results read from GitHub, and job logs from Buildkite. |
+| Tests | `packages/robos-test/tests/` | Assertions, run with `node --test`. |
+| Recorded demos | `packages/robos-test/demos/` | Scripted clicks through an app, recorded to video. Mostly sandbox data. |
 
----
+The first three are described in [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}). The rest of this page covers tests and recordings. A recording shows what a script did. Its narration states intent, so treat narrated numbers (test counts, latencies, deployment totals) as fixture data unless the script checks them.
 
-## How RobOS Guarantees That Code Actually Works
+## The review lifecycle recording
 
-In traditional software engineering, developers write code and hope their unit tests catch all regressions before production. In RobOS, autonomous AI agents and automated workflows must **prove** their work before requesting human lead approval:
+The recording on the [RobOS home page](https://rowbose.com/) follows one task from an idea to a merged pull request through the real apps: Task Explorer, Task Implementer and the review window. It lasts about 2 minutes 23 seconds in 11 steps. The script is [`demos/review-lifecycle-hero-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/review-lifecycle-hero-demo.js), and the supporting code is in `packages/robos-test/lib/lifecycle/`.
 
-1. **Dedicated 1080p Virtual Desktop (`Xvfb + Picom`)**: All end-to-end scenarios run in an isolated virtual framebuffer with hardware compositing, ensuring tests click real buttons, render real UI components, and never hijack your active desktop display.
-2. **Deterministic Visual & Network Assertions**: Tests wait for DOM elements, verify table schema grids, execute live SQL queries against real databases, and validate HTTP 200/201 response status codes.
-3. **Synchronized Video with Spoken Voiceovers**: Generates 1080p WebM recordings accompanied by natural spoken voiceover explanations (synthesized using offline, local neural text-to-speech) and synchronized WebVTT subtitles.
-4. **Complete Proof-of-Work Packages**: Walkthrough videos, subtitles, code diffs, and test logs are bundled together so lead developers and architects can review and approve complex features in under 30 seconds.
+The sample repository, its tests, the evidence and every screen are real. The forge, the agents and the CI results are scripted stand-ins, so the run is repeatable.
 
----
+| Step | App | Real | Stand-in |
+|:---|:---|:---|:---|
+| 1 Task created | Task Explorer | The UI and issue creation flow | `gh` (a stateful forge), the AI that drafts the tasks |
+| 2 Task implemented | Task Implementer | The UI, the branch, commit, push and test run | The `claude` agent's narration |
+| 3 to 6 Changes, evidence, walkthrough, draft PR | Review window | The diff, the before and after evidence, the PR creation flow | `gh`, the `codex` agent's narration (it runs real commands) |
+| 7 and 8 CI, ready | Review window | The CI banner and the ready dialog | CI results, set by the script |
+| 9 Reviewer approves | Review window, reviewer mode | The UI and the approve flow | `gh` |
+| 10 Owner merges | Review window | The merged state | The merge, run with `gh pr merge` against the stand-in forge |
+| 11 Post-merge CI | Review window, Task Explorer | The failing-CI banner and the follow-up task flow | The CI result, the AI that drafts the follow-up |
 
-## Section 1: The 16-Step Acme Petshop Lifecycle (From Business Idea to Live Cloud Deployment)
-
-The **Acme Petshop Platform** is a reference distributed polyglot microservice application designed to mirror complex enterprise software delivery. It spans a Java Spring Boot backend, a PostgreSQL relational database, a React TypeScript frontend, an Apache Kafka event streaming pipeline, an mTLS rabies vaccination verification gateway, and a dedicated analytics warehouse.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/app-flow-lifecycle-overview.jpg' | relative_url }}" alt="Acme Petshop 16-Step Application Delivery Lifecycle" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Acme Petshop 16-Step Lifecycle Overview</strong>: Complete automated SDLC progression across 5 core phases: Specification, Autonomous Implementation, Cloud Deployment, API Verification, and Data Observability. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
----
-
-### Step 1: AI Task Planner & Automated Project Breakdown (Syncing to GitHub & Jira)
-
-#### The Real-World Business Scenario
-The Acme Pet Adoption Agency wants to modernize its online pet adoption and checkout platform. Currently, customers experience delays because pet inventory is out-of-sync between regional shelters, pet medical records are verified manually by phone with veterinary clinics, and database schemas frequently break when frontend changes are deployed. 
-
-The agency needs a distributed, polyglot system: a high-performance Java Spring Boot backend for checkout and order processing, a React web frontend for customer pet browsing, a PostgreSQL database for relational catalog data, an Apache Kafka message stream for real-time inventory sync across shelters, and a secure veterinary gateway over mutual TLS (mTLS) to automatically verify rabies vaccination health certificates before allowing any puppy or kitten adoption.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Developer Input**: The developer opens **RobOS Task Planner** and inputs a high-level natural language prompt describing the multi-service pet adoption architecture.
-2. **AI Dependency Analysis**: The AI analyzes the requirements and breaks them down into 6 interdependent technical user stories. It automatically establishes strict prerequisite ordering (for example, shared domain data models must compile before API endpoints can be written; backend API endpoints must exist before frontend UI forms can consume them).
-3. **Visual Roadmap Generation**: RobOS renders a visual Directed Acyclic Graph (DAG) showing all task dependencies and milestone gates.
-4. **Issue Tracker Synchronization**: RobOS creates and synchronizes corresponding tickets bi-directionally with your organization's issue tracker (GitHub Issues, Gitea, or Jira), complete with story points, labels, and Git repository bindings.
-- **Source Demo Script**: [`packages/robos-test/demos/acme-petshop-step1-tasks-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step1-tasks-demo.js)
-
-> **What the Developer Typed (AI Architecture Prompt):**
-> ```text
-> Architect and plan the Acme Petshop distributed polyglot platform:
-> - Backend: Java 21 Spring Boot 3 REST API microservice with OpenAPI 3.1 contracts
-> - Database: PostgreSQL with Flyway automated migrations for pet catalog, inventory, and orders
-> - Frontend: React 18 TypeScript single-page application for customer pet adoption & cart checkout
-> - Event Streaming: Apache Kafka topic pipeline for async pet adoption events & real-time inventory sync
-> - Compliance & Security: Dedicated rabies vaccination certification gateway validating vet health records
-> - Shared Contracts: Reusable TypeSpec models and DTO schemas for cross-service type safety
-> ```
-
-| 1. Developer Types High-Level Goal | 2. AI Generates Step-by-Step Task Roadmap |
-|:---:|:---:|
-| ![AI Goal Prompt]({{ '/assets/images/screenshots/acme-petshop-step1-prompt_frame.png' | relative_url }}) | ![DAG Graph]({{ '/assets/images/screenshots/acme-petshop-step1-dag_frame.png' | relative_url }}) |
-
-| 3. Tasks Ordered by Prerequisites | 4. Synchronized Directly to Issue Tracker (Gitea / Jira) |
-|:---:|:---:|
-| ![Synced Tasks]({{ '/assets/images/screenshots/acme-petshop-step1-synced_frame.png' | relative_url }}) | ![Gitea Sync]({{ '/assets/images/screenshots/acme-petshop-step1-chrome_gitea_frame.png' | relative_url }}) |
-
----
-
-## Deep Dive: What are C4 Visuals and Spotify Backstage, and Why Does RobOS Use Them?
-
-Before exploring Step 2, it is essential to understand two open-source standards that form the architectural backbone of RobOS: **The C4 Architecture Model** and **Spotify Backstage**.
-
-### 1. The Problem with Traditional Software Diagrams
-In most companies, system architecture diagrams suffer from three fatal flaws:
-- **They go stale immediately**: Diagrams drawn in static whiteboard tools (like Miro, Lucidchart, or Visio) are out-of-date the moment a developer merges a pull request.
-- **The "Boxes and Lines" Mystery**: Nobody knows what a box represents. Is it a physical server? A Docker container? A single Java class? An entire third-party company?
-- **AI Agents Cannot Read Them**: AI coding tools have no way to query or navigate a static PNG or drawing canvas.
-
----
-
-### 2. What is the C4 Architecture Model? (The "Google Maps" of Software)
-Created by engineer Simon Brown, the **C4 Model** solves diagram confusion by creating a standard 4-level zoom hierarchy—exactly like zooming in on Google Maps:
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/c4-model-architecture.jpg' | relative_url }}" alt="The C4 Software Architecture Model" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>The C4 Software Architecture Model (The Google Maps of Code)</strong>: 4-level progressive zoom hierarchy from System Context (Level 1) to Containers (Level 2), Components (Level 3), and Code (Level 4). <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-| C4 Level | What It Shows | Real-World Acme Petshop Example |
-|---|---|---|
-| **Level 1: System Context** | The 30,000-foot view: Who uses the software, and what external services does it talk to? | Customer adopting a pet, Clinic Staff, Third-Party Veterinary Rabies Registry. |
-| **Level 2: Containers** | The 10,000-foot view: What deployable applications, microservices, and databases make up our system? *(Note: In C4, a "Container" means any deployable unit, not just Docker).* | `petstore-web` (React SPA), `petstore-api` (Java Spring Boot), `petstore-db` (PostgreSQL), `event-bus` (Kafka), `vaccine-gateway` (Fastify). |
-| **Level 3: Components** | The 1,000-foot view: Inside a specific microservice, how is the internal code organized? | `AdoptionController`, `VaccineVerificationService`, `PetRepository`, `KafkaEventPublisher`. |
-| **Level 4: Code** | The 1-foot view: Class diagrams, entity attributes, and methods. | Inspected directly in the IDE editor at breakpoints. |
-
-#### Why RobOS Uses the C4 Model:
-- **A Shared Language for Humans and AI**: Both human architects and autonomous AI agents need an unambiguous mental model. When an agent plans a task, it knows exactly which C4 Level 2 Container and Level 3 Component it is modifying.
-- **Contextual Zooming**: You can zoom out to understand how a customer request travels across the company, or zoom in to inspect a single database query.
-
----
-
-### 3. What is Spotify Backstage?
-Created by Spotify and donated to the Cloud Native Computing Foundation (CNCF), **Backstage** is the industry-standard developer portal for managing software catalogs and team service ownership.
-
-Instead of keeping documentation in wikis that nobody updates, Backstage defines software metadata in a simple, standardized plain-text file called **`catalog-info.yaml`** stored right inside the Git repository alongside the code:
-
-```yaml
-# Example: packages/petstore-api/catalog-info.yaml
-apiVersion: backstage.io/v1alpha1
-kind: Component
-metadata:
-  name: petstore-api
-  description: Core Java Spring Boot REST microservice for pet adoption & orders
-  tags: [java, spring-boot, microservice, pci-compliant]
-spec:
-  type: service
-  lifecycle: production
-  owner: team-adoption-engineers   # Who owns and maintains this service
-  providesApis:
-    - petstore-openapi-v1         # API contracts provided to others
-  dependsOn:
-    - component:default/petstore-db       # Database dependency
-    - component:default/event-bus         # Kafka event bus dependency
-    - component:default/vaccine-gateway   # Rabies verification gateway
-```
-
----
-
-### 4. Why RobOS Combines C4 Visuals and Spotify Backstage
-By combining C4 visual hierarchies with Backstage Git catalogs, RobOS provides unique superpowers:
-
-1. **Zero Manual Diagram Maintenance**: RobOS automatically scans your Git repositories for `catalog-info.yaml` files and draws the live C4 architecture map dynamically. You never have to manually update a diagram again.
-2. **Mathematically Proven "Blast Radius"**: Because Backstage defines `dependsOn` and `providesApis`, RobOS knows every upstream consumer and downstream dependency. If you change a database column in `petstore-db`, RobOS immediately highlights that `petstore-api` and `petstore-web` could break.
-3. **Clear Team Ownership & AI Routing**: When an AI agent detects an issue or needs approval for an API change, it checks the Backstage `owner` field to notify the right human team directly.
-4. **Automatic Kubernetes & Cloud Infrastructure**: Because RobOS knows what containers exist and what databases they connect to, it can auto-generate Kubernetes YAML manifests and Helm chart templates without developers writing boilerplate.
-
----
-
-### Step 2: Interactive System Architecture & Service Map (C4 Visuals & Backstage)
-
-#### The Real-World Business Scenario
-Before writing code across multiple microservices, the lead architect and engineering team need to agree on how services, databases, and message queues communicate. If an engineer later modifies the pet adoption data format, how does the team prevent accidental breaking changes to downstream services or reporting pipelines?
-
-#### What the Test Actually Executes Step-by-Step
-1. **Interactive Architecture Studio**: The developer opens the **System Topology & Backstage Studio** and initializes a fresh architecture canvas.
-2. **AI Interactive Clarifications**: The developer enters the system architecture prompt. The AI engages the architect with clarifying survey questions regarding service protocols, database isolation, and security boundaries.
-3. **Hierarchical C4 Visual Map**: RobOS renders an interactive 3-level C4 model: **Level 1** (High-level customer personas and third-party vet clinic systems), **Level 2** (Polyglot containers: `petstore-web`, `petstore-api`, `petstore-db`, `event-bus`, `vaccine-gateway`), and **Level 3** (Internal controllers and domain repositories).
-4. **Spotify Backstage Synchronization**: Reads existing `catalog-info.yaml` files across Git repositories and populates service ownership and dependencies.
-5. **Live Blast Radius Calculation**: Selecting any service node highlights exactly which upstream and downstream systems could be affected by changes.
-- **Source Demo Script**: [`packages/robos-test/demos/acme-petshop-step2-topology-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step2-topology-demo.js)
-
-> **What the Developer Typed (System Topology Prompt):**
-> ```text
-> Synthesizing architecture for Acme Petshop Platform:
-> - Java 21 Spring Boot 3 REST API microservice (petstore-api)
-> - PostgreSQL 16 relational database with Flyway (petstore-db)
-> - React 18 TypeScript web client (petstore-web)
-> - Apache Kafka event bus for async pet adoption (event-bus)
-> - Dedicated rabies vaccine certification gateway (vaccine-gateway)
-> - Reusable TypeSpec & Pact contract models (petstore-common)
-> 
-> Ask me clarifying questions via the interactive survey to refine service boundaries, event streaming, and compliance gateways.
-> ```
-
-| Live Interactive Architecture Canvas | Service Inspector & Blast Radius (What Could Break) |
-|:---:|:---:|
-| ![Topology Canvas]({{ '/assets/images/screenshots/acme-petshop-step2-canvas_frame.png' | relative_url }}) | ![Service Inspector]({{ '/assets/images/screenshots/acme-petshop-step2-inspector_frame.png' | relative_url }}) |
-
-| Clean Declarative Architecture Export | Live OpenTelemetry Performance Traces |
-|:---:|:---:|
-| ![C4 Export]({{ '/assets/images/screenshots/acme-petshop-step2-c4_export_frame.png' | relative_url }}) | ![OTel Tracing]({{ '/assets/images/screenshots/acme-petshop-step2-otel_frame.png' | relative_url }}) |
-
-
----
-
-### Step 3: API Contracts & Live Mock Servers (REST, Kafka Events & Type Safety)
-
-#### The Real-World Business Scenario
-Frontend and backend teams often get blocked waiting for each other. Frontend engineers cannot build pet checkout screens because backend endpoints are not deployed yet, while backend developers do not know the exact payload format the frontend expects. To eliminate this bottleneck, the team adopts a contract-first development approach.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Contract Authoring**: The developer opens **Contract Studio** to define API endpoints and event schemas before writing application code.
-2. **Multi-Protocol Compilation**: The AI compiles domain models (`pet.typespec`) into an OpenAPI 3.1 contract containing 5 REST endpoints (including `/pets`, `/pets/{id}/adopt`, `/pets/categories`) and AsyncAPI 3.0 event definitions for Kafka streaming (`pet.adopted`, `inventory.delta`).
-3. **Automated Governance & Linting**: Spectral governance rules automatically validate naming conventions, authentication headers (mTLS), and pagination parameters.
-4. **Live Mock Server Launch**: RobOS spins up a local Prism mock server returning realistic JSON responses, allowing frontend developers to test interactive adoption forms immediately without a running backend.
-- **Source Demo Script**: [`packages/robos-test/demos/acme-petshop-step3-contracts-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step3-contracts-demo.js)
-
-> **What the Developer Typed (API Contract Prompt):**
-> ```text
-> Author and compile API contracts for Acme Petshop Platform (urn:robos:project:acme-petshop-platform):
-> - Compile entities/pet.typespec into OpenAPI 3.1 contract for petstore-api (5 endpoints, AdoptionRequest)
-> - Author rabies vaccine verification contract for vaccine-gateway (mTLS security scheme)
-> - Define AsyncAPI 3.0 event streams for Apache Kafka (pet.adopted, inventory.delta)
-> - Run Spectral style governance, Pact consumer verification, and start local Prism mock server.
-> ```
-
-| Centralized API Contract Explorer | Event-Driven Kafka Stream Definitions |
-|:---:|:---:|
-| ![Contract Studio]({{ '/assets/images/screenshots/acme-petshop-step3-studio_open_frame.png' | relative_url }}) | ![AsyncAPI Editor]({{ '/assets/images/screenshots/acme-petshop-step3-events_asyncapi_frame.png' | relative_url }}) |
-
-| Live Mock Server for Instant Frontend Testing | Automated Governance & Compatibility Checks Passed |
-|:---:|:---:|
-| ![Prism Mock]({{ '/assets/images/screenshots/acme-petshop-step3-prism_mock_frame.png' | relative_url }}) | ![Governance Checks]({{ '/assets/images/screenshots/acme-petshop-step3-governance_passed_frame.png' | relative_url }}) |
-
----
-
-### Step 4: Multi-Repo Hub & One-Click Dev Environments
-
-#### The Real-World Business Scenario
-A software developer joins the engineering team and needs to work across all 6 polyglot repositories (`petstore-web`, `petstore-api`, `petstore-common`, `vaccine-gateway`, `event-bus`, `petstore-db`). In traditional environments, installing compilers, configuring environment variables, creating local databases, and generating SSL certificates can take 2 to 3 days.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Multi-Repo Hub Initialization**: The developer opens **Git Projects Multi-Repo Hub**.
-2. **Unified Repository Scaffolding**: The AI clones and links all 6 polyglot repositories into a cohesive project workspace.
-3. **Automated Setup Script Generation**: RobOS generates standalone `dev-setup.sh` environment runners and Docker devcontainer configurations for each service.
-4. **Encrypted Secrets Injection**: Passwords, database connection URIs, and mTLS client certificates are injected automatically from the developer's encrypted vault (Pass / GPG), getting the entire multi-repo suite building in seconds.
-- **Source Demo Script**: [`packages/robos-test/demos/acme-petshop-step4-git-projects-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step4-git-projects-demo.js)
-
-> **What the Developer Typed (Multi-Repo Setup Prompt):**
-> ```text
-> Scaffold and configure all 6 Acme Petshop polyglot repositories from the project graph:
-> - petstore-web (React 18 / Vite frontend client)
-> - petstore-api (Java 21 Spring Boot 3.3 core REST microservice)
-> - petstore-common (Shared TypeSpec domain models & OpenAPI contracts)
-> - vaccine-gateway (Node.js 20 Fastify mTLS rabies certification gateway)
-> - event-bus (Apache Kafka 3.7 streaming broker & topics)
-> - petstore-db (PostgreSQL 16 relational database & Flyway migrations)
-> Include Docker devcontainers, local build instructions, and environment secrets.
-> ```
-
-| Unified Multi-Repository Workspace Hub | AI-Generated One-Click Setup Scripts |
-|:---:|:---:|
-| ![Git Projects Hub]({{ '/assets/images/screenshots/acme-petshop-step4-projects_open_frame.png' | relative_url }}) | ![Dev Setup Script]({{ '/assets/images/screenshots/acme-petshop-step4-devsetup_frame.png' | relative_url }}) |
-
-| Automated Build & Test Lifecycle Hooks | Encrypted Secret & Password Management |
-|:---:|:---:|
-| ![Setup Lifecycle]({{ '/assets/images/screenshots/acme-petshop-step4-devsetup_lifecycle_frame.png' | relative_url }}) | ![GPG Secrets]({{ '/assets/images/screenshots/acme-petshop-step4-secrets_gpg_frame.png' | relative_url }}) |
-
----
-
-### Step 5: Autonomous AI Task Implementation & Solution Plan Review
-
-#### The Real-World Business Scenario
-The team picks up sprint ticket **PET-105**: *"Implement Rabies Vaccine Verification Gateway on petstore-api"*. When a customer adopts a pet, the system must verify its veterinary health certificate over mTLS. If the vaccine certificate is expired or missing, adoption must be blocked with an informative error. The AI agent formulates an implementation plan, generates the required client code, and validates it with automated tests.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Task Selection**: The developer selects task **PET-105** from the sprint backlog in Task Implementer.
-2. **One-Click Workspace Provisioning**: Clicking "Launch Task Workspace" automatically checks out the feature branch (`feature/PET-105-vaccine-gateway`), provisions an isolated RAM workspace, starts the mock services, and bridges to the dev environment.
-3. **Automated Implementation & Plan Presentation**: The AI generates a structured implementation plan, detailing the new `VaccineGatewayClient.java` service, OpenAPI contract links, and Kafka adoption event changes.
-4. **Interactive Breakpoint Debugging Feature**: As an optional debugging feature during investigation, RobOS agents can run a reproduction test and pause execution at a **live breakpoint** in the IDE, allowing developers to step through code and inspect variables on demand.
-- **Source Demo Script**: [`packages/robos-test/demos/acme-petshop-step5-ide-execution-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step5-ide-execution-demo.js)
-
-> **Ticket Requirements & AI Fix Plan (Task PET-105):**
-> ```text
-> Requirement: Implement Rabies Vaccine Verification Gateway & Certification on petstore-api.
-> When adopting a puppy or kitten, verify its certificate via vaccine-gateway over mTLS before approving adoption.
-> Optional Debugging: Agents can run tests and stop at breakpoints (e.g. AdoptionService.java:42) for variable inspection.
-> ```
-
-| Instant IDE Workspace Launch | Interactive Breakpoint Debugging Feature |
-|:---:|:---:|
-| ![IDE Workspace]({{ '/assets/images/screenshots/acme-petshop-step5-ide_open_frame.png' | relative_url }}) | ![Breakpoint Hit]({{ '/assets/images/screenshots/acme-petshop-step5-breakpoint_frame.png' | relative_url }}) |
-
-| Live Runtime Variable Inspection | AI Solution Plan Presented for Developer Review |
-|:---:|:---:|
-| ![Variables Inspector]({{ '/assets/images/screenshots/acme-petshop-step5-debugger_vars_frame.png' | relative_url }}) | ![Plan Review]({{ '/assets/images/screenshots/acme-petshop-step5-ai_plan_review_frame.png' | relative_url }}) |
-
----
-
-### Step 6: PR Review Process & The IDE Review Hub
-
-#### The Real-World Business Scenario
-The AI agent has implemented the mTLS rabies certificate validation fix and opened a pull request. The primary developer touchpoint in the RobOS workflow is the **PR Review Process**. The lead architect reviews the changes using the **Agent Code Review Platform**, with the option to open the project directly in **IntelliJ IDEA** or **VS Code** using RobOS to review the PR with all rich IDE context in tow.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Pull Request Queue**: The lead engineer opens the **Agent Code Review Platform** and selects PR #42 (`feat: PET-105 mTLS Rabies Verification`).
-2. **AI Semantic Diff Audit**: The AI evaluates the code diff, checking cryptographic certificate handling in `VaccineGatewayClient.java` and verifying that the `AdoptionRequest` schema matches OpenAPI 3.1 specifications.
-3. **Optional IDE PR Review with Full Context**:
-   - **Review in IntelliJ IDEA**: One click triggers the port `63343` IPC bridge, opening the PR directly inside JetBrains' native **Pull Requests tool window** with full syntax analysis, symbol navigation, and debugger support in tow.
-   - **Review in VS Code**: Clicking **Review in VS Code** launches the official `GitHub Pull Requests and Issues` extension (`vscode://github.vscode-pull-request-github/open-pr`) for deep in-editor reviewing and inline commenting.
-4. **Automated CI Validation**: Confirms that 100% of unit tests, Pact consumer contract tests, and linting checks passed.
-5. **1-Click Merge & Dual Sync**: The lead architect reviews the findings and approves the pull request with a single click, merging the Git branch and syncing the Knowledge Graph topology.
-- **Source Demo Script**: [`packages/robos-test/demos/agent-code-review-ide-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/agent-code-review-ide-demo.js)
-
-> **AI Code Review Directive:**
-> ```text
-> Perform architectural and security risk analysis on PR #42 (feat: PET-105 mTLS Rabies Verification):
-> - Audit cryptographic cert parsing in VaccineGatewayClient.java
-> - Validate semantic diff against OpenAPI 3.1 AdoptionRequest schema
-> - Confirm 100% pass on Pact consumer contract verification and CI pipeline
-> - Synchronize review status with IntelliJ IDEA (port 63343) and VS Code PR extension
-> ```
-
-| Active Pull Request Queue & Status | Side-by-Side Visual Code Diff |
-|:---:|:---:|
-| ![PR Queue]({{ '/assets/images/screenshots/acme-petshop-step6-pr_list_frame.png' | relative_url }}) | ![Semantic Diff]({{ '/assets/images/screenshots/acme-petshop-step6-files_diff_frame.png' | relative_url }}) |
-
-| Automated AI Code Review & Risk Report | Automated Test & CI Check Suite |
-|:---:|:---:|
-| ![AI Review]({{ '/assets/images/screenshots/acme-petshop-step6-ai_review_frame.png' | relative_url }}) | ![CI Checks]({{ '/assets/images/screenshots/acme-petshop-step6-ci_checks_frame.png' | relative_url }}) |
-
----
-
-### Step 7: Deployment Tracker & Progressive Rollouts (Canary & Rollback)
-
-#### The Real-World Business Scenario
-Deploying updates directly to 100% of production users risks taking down the online pet shop if an unexpected issue occurs. The team uses progressive delivery: deploying first to Development, promoting to Staging, and executing a 10% canary rollout in Production while monitoring key performance indicators (DORA metrics).
-
-#### What the Test Actually Executes Step-by-Step
-1. **Pipeline Visualization**: The engineer opens **Deploy Tracker** to observe the multi-stage deployment pipeline across Development, Staging, and Production.
-2. **DORA Health Metrics**: The dashboard tracks team performance KPIs: Deployment Frequency, Lead Time for Changes, Mean Time to Recovery (MTTR), and Change Failure Rate.
-3. **Environment Filtering**: Inspects active container versions in Staging versus Production.
-4. **Automated Rollback Safeguard**: Verifies that if error rates spike during canary testing, a single click triggers an immediate rollback to the previous stable release.
-- **Source Demo Script**: [`packages/robos-test/demos/acme-petshop-step7-deploy-tracker-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step7-deploy-tracker-demo.js)
-
-| Team Release KPIs & DORA Health Metrics | Staging Environment Deployment Filter |
-|:---:|:---:|
-| ![KPI Dashboard]({{ '/assets/images/screenshots/acme-petshop-step7-kpis_frame.png' | relative_url }}) | ![Staging Filter]({{ '/assets/images/screenshots/acme-petshop-step7-staging_filter_frame.png' | relative_url }}) |
-
-| Production Environment Deployment Filter | Visual Release Timeline |
-|:---:|:---:|
-| ![Production Filter]({{ '/assets/images/screenshots/acme-petshop-step7-prod_filter_frame.png' | relative_url }}) | ![Timeline View]({{ '/assets/images/screenshots/acme-petshop-step7-timeline_frame.png' | relative_url }}) |
-
----
-
-### Step 8: Kubernetes & Cloud Infrastructure Navigator (Pods, Helm & Logs)
-
-#### The Real-World Business Scenario
-DevOps and platform engineers need a visual control room to inspect all running Kubernetes pods, Helm releases, and GitOps synchronization without needing to memorize complex `kubectl` command arguments or juggle multiple terminal windows.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Multi-Cluster Connection**: The engineer opens **Kube Studio** and connects to local Kind clusters or enterprise clouds (AWS EKS, GCP GKE, Azure AKS).
-2. **Live Pod Inspection**: Displays real-time container states, restart counts, and CPU/memory utilization across namespaces.
-3. **Helm & GitOps Sync**: Inspects active Helm release versions and verifies synchronization status with ArgoCD GitOps.
-4. **Log Streaming Console**: Streams live container logs directly in the UI with instant keyword filtering and error highlighting.
-- **Source Demo Script**: [`packages/robos-test/demos/acme-petshop-step8-kube-studio-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step8-kube-studio-demo.js)
-
-| Real-Time Kubernetes Containers (Pods) Grid | Helm Package Releases & Installed Versions |
-|:---:|:---:|
-| ![Pods Table]({{ '/assets/images/screenshots/acme-petshop-step8-pods_table_frame.png' | relative_url }}) | ![Helm Releases]({{ '/assets/images/screenshots/acme-petshop-step8-helm_releases_frame.png' | relative_url }}) |
-
-| ArgoCD GitOps Deployment Status | Live Streaming Container Logs |
-|:---:|:---:|
-| ![ArgoCD GitOps]({{ '/assets/images/screenshots/acme-petshop-step8-argocd_gitops_frame.png' | relative_url }}) | ![Live Logs]({{ '/assets/images/screenshots/acme-petshop-step8-logs_stream_frame.png' | relative_url }}) |
-
----
-
-### Step 9: One-Click Live Kubernetes Cluster Deployment
-
-#### The Real-World Business Scenario
-The engineering team wants to validate microservices inside a real local Kubernetes cluster (Kind) to ensure all container networking, DNS resolution, port mappings, and volume mounts function identically to production cloud environments.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Cluster Connection**: Connects to the active local Kind Kubernetes cluster via Kube Studio.
-2. **Namespace Provisioning**: Automatically creates an isolated namespace (`acme-petshop-staging`).
-3. **Microservice Deployment**: Applies synthesized Kubernetes manifests for the Java API, PostgreSQL database, React web client, and Kafka event streaming broker.
-4. **Health Verification**: Streams real-time pod initialization logs until all workloads report healthy status (1/1 Ready).
-- **Source Demo Script**: [`packages/robos-test/demos/acme-petshop-step9-real-kube-e2e-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step9-real-kube-e2e-demo.js)
-
-| Connect Live Kubernetes Cluster | Automated One-Click Task Deployment |
-|:---:|:---:|
-| ![Add Cluster]({{ '/assets/images/screenshots/acme-petshop-step9-add_cluster_modal_frame.png' | relative_url }}) | ![Deploy Task]({{ '/assets/images/screenshots/acme-petshop-step9-deploying_task_frame.png' | relative_url }}) |
-
-| Live Running Microservices | Real-Time Container Log Stream |
-|:---:|:---:|
-| ![Live Pods]({{ '/assets/images/screenshots/acme-petshop-step9-live_pods_frame.png' | relative_url }}) | ![Pod Logs]({{ '/assets/images/screenshots/acme-petshop-step9-pod_logs_frame.png' | relative_url }}) |
-
----
-
-### Step 10: Automatic Deploy on Merge & Zero-Waste Cleanup
-
-#### The Real-World Business Scenario
-Every merged feature branch needs its own temporary preview environment for automated testing. However, leaving dozens of preview namespaces running overnight leads to ballooning cloud bills and memory exhaustion.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Trigger on PR Merge**: The moment a pull request merges into `main`, RobOS triggers an automatic ephemeral microservice deployment.
-2. **Smoke Test Execution**: Executes automated health checks against the live preview endpoints.
-3. **Automated Resource Reclamation**: Once verification succeeds, RobOS automatically destroys the ephemeral namespace and reclaims all memory and CPU resources, ensuring zero cloud cost waste.
-- **Source Demo Script**: [`packages/robos-test/demos/acme-petshop-step10-continuous-deploy-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step10-continuous-deploy-demo.js)
-
-> **What the Developer Asked (Deployment Assistant):**
-> ```text
-> Explain auto-deployment from Knowledge Graph main branch and verify ephemeral namespace reclamation after verification.
-> ```
-
-| Application Catalog & Config Overview | Auto-Deployed Microservice Pods |
-|:---:|:---:|
-| ![KG Apps Grid]({{ '/assets/images/screenshots/acme-petshop-step10-kgraph_apps_grid_frame.png' | relative_url }}) | ![Auto-Deployed Pods]({{ '/assets/images/screenshots/acme-petshop-step10-autodeployed_pods_frame.png' | relative_url }}) |
-
-| Real-Time Deployment Progress & Logs | Clean Zero-Waste Namespace Reclamation |
-|:---:|:---:|
-| ![Live Execution Logs]({{ '/assets/images/screenshots/acme-petshop-step10-live_logs_frame.png' | relative_url }}) | ![Reclaimed Namespace]({{ '/assets/images/screenshots/acme-petshop-step10-empty_reclaimed_frame.png' | relative_url }}) |
-
----
-
-### Step 11: Git-Backed REST API Client (Postman Alternative via Bruno)
-
-#### The Real-World Business Scenario
-API testing collections in tools like Postman are often trapped in proprietary cloud silos or get desynchronized from the actual code. The team needs Git-backed API requests stored alongside source code in plain text `.bru` format (Bruno).
-
-#### What the Test Actually Executes Step-by-Step
-1. **Open REST API Client**: The developer launches the **RobOS REST API Client**.
-2. **Automated Request Synthesis**: RobOS reads the OpenAPI 3.1 contract and automatically generates complete `.bru` request files with environment variables, auth tokens, and headers.
-3. **Live Endpoint Verification**: Sends live HTTP requests against the running Java backend (`/api/v1/pets`, `/api/v1/pets/adopt`) and displays formatted JSON responses with latency timings.
-4. **Declarative Assertions**: Applies built-in assertion rules to verify response headers, status codes (200/201), and payload schema fields.
-- **Source Demo Script**: [`packages/robos-test/demos/acme-petshop-step11-bruno-rest-client-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step11-bruno-rest-client-demo.js)
-
-> **What the Developer Asked (API Test Generator):**
-> ```text
-> Validate mTLS Fastify headers and payload format across petstore-api and vaccine-gateway endpoints.
-> Auto-synthesize declarative .bru collection files and assertions from OpenAPI 3.1 contracts.
-> ```
-
-| Git-Backed API Request Tree in Repo | Automatic Request Generation from OpenAPI |
-|:---:|:---:|
-| ![Collection Tree]({{ '/assets/images/screenshots/acme-petshop-step11-collections_tree_frame.png' | relative_url }}) | ![Synthesize Bru]({{ '/assets/images/screenshots/acme-petshop-step11-synthesize_bru_frame.png' | relative_url }}) |
-
-| Live HTTP 200/201 Success Responses | Built-In Automated Test Assertions |
-|:---:|:---:|
-| ![Live Response]({{ '/assets/images/screenshots/acme-petshop-step11-live_response_frame.png' | relative_url }}) | ![Assertions]({{ '/assets/images/screenshots/acme-petshop-step11-test_assertions_frame.png' | relative_url }}) |
-
----
-
-### Step 12: Automated API Test Runner & Merge Quality Gates
-
-#### The Real-World Business Scenario
-Before any code can be deployed, a full regression suite of 50+ API requests must run in sequence (creating pet records, attempting adoption, checking stock inventory, validating error handling for expired rabies certificates).
-
-#### What the Test Actually Executes Step-by-Step
-1. **Collection Runner Launch**: The engineer launches the **REST Collection Runner**.
-2. **Batch Suite Execution**: Executes all API requests in parallel/sequential batches across Development and Staging environment matrices.
-3. **Latency Scorecards**: Generates a latency scorecard detailing response times and assertion results for every endpoint.
-4. **Quality Gate Enforcement**: Pull request merge buttons remain locked until 100% of collection tests pass.
-- **Source Demo Script**: [`packages/robos-test/demos/acme-petshop-step12-collection-runner-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step12-collection-runner-demo.js)
-
-| Multi-Endpoint Collection Test Runner | Real-Time Execution Progress & Status |
-|:---:|:---:|
-| ![Runner View]({{ '/assets/images/screenshots/acme-petshop-step12-runner_view_frame.png' | relative_url }}) | ![Execution Progress]({{ '/assets/images/screenshots/acme-petshop-step12-execution_progress_frame.png' | relative_url }}) |
-
-| Test Results Matrix & Latency Scorecard | Passed Quality Gate Required for PR Merge |
-|:---:|:---:|
-| ![Results Matrix]({{ '/assets/images/screenshots/acme-petshop-step12-results_matrix_frame.png' | relative_url }}) | ![PR Gate]({{ '/assets/images/screenshots/acme-petshop-step12-publish_pr_gate_frame.png' | relative_url }}) |
-
----
-
-### Step 13: Universal AI Tool Connections (Model Context Protocol)
-
-#### The Real-World Business Scenario
-Developers want to use modern AI assistants (Anthropic Claude Code, Google Antigravity, GitHub Copilot CLI, Gemini) without giving them dangerous unconstrained access to their system or hardcoding static credentials.
-
-#### What the Test Actually Executes Step-by-Step
-1. **MCP Manager Registry**: The developer opens **MCP Manager**.
-2. **Server Registration**: RobOS registers local Model Context Protocol tool servers (System Topology MCP, Task Manager MCP, DB Manager MCP).
-3. **Interactive OAuth 2.0 Login**: Launches an interactive OAuth 2.0 PKCE web authentication modal for secure tool authorization.
-4. **AI Context Window Binding**: Connects AI models directly to RobOS background tools so agents can query the Knowledge Graph, inspect IDE breakpoints, and trigger test runs safely.
-- **Source Demo Script**: [`packages/robos-test/demos/acme-petshop-step13-agy-mcp-task-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/acme-petshop-step13-agy-mcp-task-demo.js)
-
-> **What the Developer Configured (AI Tool Integration):**
-> ```text
-> Connect Google Antigravity & Claude Code to RobOS System Topology and Task Manager MCP servers via local IPC bridge.
-> Authenticate with OAuth 2.0 PKCE and expose knowledge graph mutations directly into the agent context window.
-> ```
-
-| Google Antigravity MCP Server Registry | Add Custom MCP Tool Server with One Click |
-|:---:|:---:|
-| ![Antigravity MCP]({{ '/assets/images/screenshots/agent-mcp-antigravity_servers_frame.png' | relative_url }}) | ![Add Server Modal]({{ '/assets/images/screenshots/agent-mcp-add_modal_frame.png' | relative_url }}) |
-
-| Secure Interactive OAuth Authentication | Local RobOS Tool Bridge Connected to AI |
-|:---:|:---:|
-| ![OAuth Modal]({{ '/assets/images/screenshots/agent-mcp-auth_modal_frame.png' | relative_url }}) | ![Localhost MCP]({{ '/assets/images/screenshots/agent-mcp-localhost_robos_frame.png' | relative_url }}) |
-
----
-
-### Step 15: Multi-Database Explorer (PostgreSQL, MySQL, Oracle, S3, Kafka)
-
-#### The Real-World Business Scenario
-The Acme Petshop application uses multiple data stores: PostgreSQL for relational orders and pet profiles, MongoDB for unstructured medical notes, Redis for caching, AWS S3 for pet photo uploads, and Kafka for event streams. Engineers need a single console to inspect all these data sources.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Data Sources Hub**: Opens **RobOS Data Sources Explorer**.
-2. **Live Connection Handshakes**: Tests live connections across PostgreSQL, MySQL, Oracle, AWS S3 buckets, and Kafka streaming topics.
-3. **Schema & Index Inspector**: Inspects table schemas, column data types, foreign key constraints, and index configurations.
-4. **Interactive SQL Queries & File Browsing**: Runs SQL queries with sub-millisecond execution times and browses files stored in AWS S3 buckets.
-- **Source Demo Script**: [`packages/robos-test/demos/data-sources-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/data-sources-demo.js)
-
-> **Data Source Onboarding Goal:**
-> ```text
-> Register PostgreSQL 16 petstore-db and AWS S3 analytics bucket into Knowledge Graph.
-> Perform live connection handshake, inspect schemas, and query customer pet adoption records.
-> ```
-
-| PostgreSQL Database Connection Overview | Live Table Schema & Column Inspector |
-|:---:|:---:|
-| ![PostgreSQL Overview]({{ '/assets/images/screenshots/data-sources-postgres_overview_frame.png' | relative_url }}) | ![Schema Inspector]({{ '/assets/images/screenshots/data-sources-schema_inspector_frame.png' | relative_url }}) |
-
-| Interactive SQL Query Results & Performance | AWS S3 Cloud Storage File Browser |
-|:---:|:---:|
-| ![Query Results]({{ '/assets/images/screenshots/data-sources-query_results_frame.png' | relative_url }}) | ![AWS S3 Explorer]({{ '/assets/images/screenshots/data-sources-s3_storage_frame.png' | relative_url }}) |
-
----
-
-### Step 16: Complete Database & Cloud Lifecycle (Visual Design to Live Deployment)
-
-#### The Real-World Business Scenario
-The marketing and analytics team requests a dedicated **PostgreSQL Analytics Warehouse** to track customer adoption trends without running expensive reporting queries against the production transactional database. How quickly can the team design, configure, deploy, and verify this new database in production?
-
-#### What the Test Actually Executes Step-by-Step
-1. **Visual Architecture Addition**: The architect opens **System Topology Studio** and adds a new "PostgreSQL 16 Analytics Warehouse" node to the canvas.
-2. **Automatic Cloud Manifest Synthesis**: RobOS analyzes downstream impact (blast radius) and automatically synthesizes Kubernetes StatefulSet YAML manifests and Helm chart templates.
-3. **Live Cluster Deployment**: Deploys the new database container to the active Kubernetes cluster.
-4. **Schema Execution & Data Seeding**: Opens **RobOS Relational DB Manager**, connects to the new database instance, executes the DDL table schema script (`CREATE TABLE adoption_analytics ...`), inserts test adoption records, and runs analytical SQL queries.
-5. **Live API Verification**: Verifies live API endpoints using the Bruno REST client, completing the entire end-to-end lifecycle in minutes.
-- **Source Demo Script**: [`packages/robos-test/demos/topology-db-kube-lifecycle-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/topology-db-kube-lifecycle-demo.js)
-
-> **Data Architecture & Cloud Lifecycle Goal:**
-> ```text
-> Add PostgreSQL 16 Analytics Warehouse data source node to Acme Petshop System Topology.
-> Auto-synthesize deployable Kubernetes StatefulSet manifests and Helm chart templates.
-> Deploy to Kind cluster, execute DDL schema, seed test adoption records, and verify REST endpoints.
-> ```
-
-| Visual Architecture Map with New Analytics Database | Impact & Blast Radius Inspector |
-|:---:|:---:|
-| ![C4 Polyglot Database Node]({{ '/assets/images/screenshots/topology-db-c4_polyglot_frame.png' | relative_url }}) | ![Blast Radius]({{ '/assets/images/screenshots/topology-db-inspector_blast_radius_frame.png' | relative_url }}) |
-
-| Auto-Generated Kubernetes Manifests & Helm Charts | Fast SQL Console in Relational DB Manager |
-|:---:|:---:|
-| ![K8s Synthesis]({{ '/assets/images/screenshots/topology-db-datasource_synthesized_frame.png' | relative_url }}) | ![SQL Console]({{ '/assets/images/screenshots/dev-tools-sql_console_query_frame.png' | relative_url }}) |
-
-| Live Table Data Grid & Record Insertions | Generated DDL Schema Migration Script |
-|:---:|:---:|
-| ![Table Grid]({{ '/assets/images/screenshots/dev-tools-table_data_grid_frame.png' | relative_url }}) | ![DDL Inspector]({{ '/assets/images/screenshots/dev-tools-table_ddl_frame.png' | relative_url }}) |
-
----
-
-## Section 2: Core Platform Subsystems & Automated Walkthroughs
-
-Beyond the Acme Petshop reference application, each RobOS core subsystem has dedicated verified test runners:
-
-### Live Architecture Map & Semantic Difference Engine
-
-#### The Real-World Scenario
-In a fast-moving engineering organization with 20+ teams, developers frequently make pull requests that inadvertently change shared data models or API response shapes. RobOS acts as an automated guardian by comparing "World 1" (Live Production `main`) against "World 2" (Feature Branches). If a pull request modifies a required field, RobOS flags every affected microservice across all Git repositories before any code is merged.
-- **Source Demo Scripts**: [`robos-graph-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-graph-demo.js), [`graph-diff-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/graph-diff-demo.js), [`graph-copilot-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/graph-copilot-demo.js)
-- **Retired object-panel demos:** GitOps schema, Gherkin traceability, EDD, test fabric and video-generator walkthroughs no longer represent the current graph viewer. Their old entry points report retirement without recording. See [retirement notes](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/RETIRED.md); historical panel screenshots are not current verification evidence.
-
-| Architecture Knowledge Graph Explorer | Dual-State Visual Difference Engine |
-|:---:|:---:|
-| ![Knowledge Graph]({{ '/assets/images/screenshots/robos-graph-frame_01.png' | relative_url }}) | ![Graph Diff]({{ '/assets/images/screenshots/robos-graph-frame_02.png' | relative_url }}) |
-
----
-
-### Clean, Isolated AI Workspaces (Zero Clutter on Your Machine)
-
-#### The Real-World Scenario
-Running multiple autonomous AI coding agents on a single laptop can quickly cause chaos: processes left running in the background, temporary files filling the disk, and potential credential leakage. RobOS solves this by provisioning each agent inside an isolated Linux user account backed entirely by RAM (`tmpfs`). When the agent finishes its task, the account is terminated and the RAM is wiped clean with zero leftover clutter.
-- **Source Demo Scripts**: [`robos-profiled-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-profiled-demo.js), [`robos-profiled-tmpfs-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-profiled-tmpfs-demo.js), [`robos-profiled-display-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-profiled-display-demo.js), [`robos-profiled-zero-residue-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-profiled-zero-residue-demo.js)
-
-| Ephemeral Agent Profile Manager | RAM-Based Filesystem & Zero-Waste Cleanup |
-|:---:|:---:|
-| ![Profile Manager]({{ '/assets/images/screenshots/robos-profiled-frame_01.png' | relative_url }}) | ![Tmpfs Zero Residue]({{ '/assets/images/screenshots/robos-profiled-zero-residue-frame_02.png' | relative_url }}) |
-
----
-
-### Desktop AI Agent Supervisor & Status Sidebar
-
-#### The Real-World Scenario
-A lead engineer assigns 3 different feature tasks to AI agents concurrently: one agent builds a new backend API, another writes frontend React components, and a third runs database migration tests. The engineer uses the Desktop Agents Supervisor dock to monitor all agents simultaneously, view live terminal streams, and pause or resume agent sessions.
-- **Source Demo Scripts**: [`robos-agentd-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/robos-agentd-demo.js), [`desktop-agents-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/desktop-agents-demo.js), [`agent-sidebar-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/agent-sidebar-demo.js), [`agent-session-lib-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/agent-session-lib-demo.js)
-
-| Live Multi-Agent Session Console | Background Process Supervisor |
-|:---:|:---:|
-| ![Agent Session]({{ '/assets/images/screenshots/robos-agent-session-frame_01.png' | relative_url }}) | ![Agent Supervisor]({{ '/assets/images/screenshots/robos-agentd-frame_01.png' | relative_url }}) |
-
----
-
-### Universal Model Context Protocol (MCP) Tool Hub
-
-#### The Real-World Scenario
-An organization wants developers to be free to use any AI coding model (Claude Code from Anthropic, Google Antigravity, GitHub Copilot, Google Gemini) without rewriting tool integrations for each model. RobOS provides a single universal Model Context Protocol (MCP) router that securely bridges all AI models to system capabilities (querying databases, inspecting IDE breakpoints, deploying Kubernetes pods) with interactive OAuth security.
-- **Source Demo Scripts**: [`mcp-manager-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/mcp-manager-demo.js), [`mcp-router-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/mcp-router-demo.js), [`mcp-lib-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/mcp-lib-demo.js), [`system-mcp-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/system-mcp-demo.js)
-
-| Central MCP Tool Router Console | Universal Tool Library & Health Inspector |
-|:---:|:---:|
-| ![MCP Router]({{ '/assets/images/screenshots/robos-mcp-router-frame_01.png' | relative_url }}) | ![MCP Lib]({{ '/assets/images/screenshots/robos-mcp-lib-frame_01.png' | relative_url }}) |
-
----
-
-### Entity Schema Studio, Team Directory & Package Management
-
-#### The Real-World Scenario
-When building cross-language microservices (Java backend, TypeScript frontend, Go event worker), writing data transfer objects (DTOs) by hand in 3 different languages is error-prone. In Entity Schema Studio, developers define data models once in Microsoft TypeSpec, and RobOS automatically compiles matching TypeScript, Java Records, and Go struct packages while keeping service ownership records synchronized.
-- **Source Demo Scripts**: [`schema-studio-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/schema-studio-demo.js), [`people-manager-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/people-manager-demo.js), [`package-manager-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/package-manager-demo.js), [`workspace-orchestrator-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/workspace-orchestrator-demo.js), [`task-dispatcher-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/task-dispatcher-demo.js), [`oss-adapters-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/oss-adapters-demo.js)
-
-| Data Model Studio (TypeSpec to TypeScript/Java/Go) | Team Members & Service Ownership Directory |
-|:---:|:---:|
-| ![Schema Studio]({{ '/assets/images/screenshots/schema-studio-frame_01.png' | relative_url }}) | ![People Manager]({{ '/assets/images/screenshots/people-manager-frame_01.png' | relative_url }}) |
-
-| Language Package & Tool Runtime Manager | Multi-Repo Workspace Switcher |
-|:---:|:---:|
-| ![Package Manager]({{ '/assets/images/screenshots/package-manager-frame_01.png' | relative_url }}) | ![Workspace Orchestrator]({{ '/assets/images/screenshots/workspace-orchestrator-frame_01.png' | relative_url }}) |
-
-| Open-Source Tool Adapters | Automatic Task Dispatcher & Scheduler |
-|:---:|:---:|
-| ![OSS Adapters]({{ '/assets/images/screenshots/oss-adapters-frame_01.png' | relative_url }}) | ![Task Dispatcher]({{ '/assets/images/screenshots/task-dispatcher-frame_01.png' | relative_url }}) |
-
----
-
-### Remote Execution Studio: Distributed REAPI v2 Build Clusters & Client Synthesis
-
-#### The Real-World Scenario
-Over 95% of software engineering organizations avoid adopting distributed build systems (Bazel, Buck2) and distributed remote execution clusters (Buildbarn, NativeLink, BuildGrid) despite 10x–50x compile speedups. The reason is operational friction: arcane gRPC endpoint configurations, complex action cache rules, multi-service deployment manifests (`bb-storage`, `bb-scheduler`, `bb-worker`, `bb-runner`, `bb-browser`), and vendor lock-in from proprietary SaaS build clouds.
-
-RobOS solves this with **Remote Execution Studio** (`packages/remote-execution-studio`). The desktop control room and semantic configuration synthesizer allow developers to inspect cluster topology, probe live REAPI v2 endpoints, generate optimized `.bazelrc` and `.buckconfig` flags with a single click, configure modular Buildbarn microservice JSON specifications, and validate cluster conformance against the `robos:RemoteExecutionCluster` SHACL shape in the Knowledge Graph.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Cluster Topology & Worker Pool Observability**: Launches Remote Execution Studio to inspect active clusters (Acme Buildbarn REAPI Cluster, NativeLink Edge Cache), verifying gRPC execution endpoints, Content Addressable Storage (CAS), Action Cache (AC), worker pool concurrency constraints (`linux-x86_64-large`, `linux-arm64-workers`), and cache hit ratios.
-2. **Live REAPI Endpoint Connectivity Probes**: Clicks **⚡ Test REAPI Endpoints** (`#btn-test-endpoints`) to execute live gRPC health checks and latency benchmarks against the Execution service (14ms), CAS/Bytestream (11ms), and observation web UI (HTTP 200).
-3. **Push-Button Bazel Configuration Synthesis**: Navigates to **Build Clients** tab (`#tab-clients-btn`), dynamically synthesizing production-ready `.bazelrc` flags (`--remote_executor`, `--remote_cache`, `--remote_download_minimal`, `--remote_instance_name`, concurrency flags) with one-click clipboard copying.
-4. **Zero-Overhead Meta Buck2 Client Generation**: Toggles client generator to Meta Buck2 (`#btn-toggle-buck2`), generating native `[buck2_re_client]` TOML blocks with SHA256 digest functions and remote execution flags.
-5. **Modular Buildbarn Microservice Specs**: Switches to **Provider Configurations** tab (`#tab-provider-btn`), inspecting and toggling modular Buildbarn microservice JSON manifests across `bb-storage`, `bb-scheduler`, `bb-worker`, `bb-runner`, and `bb-browser`, as well as alternative providers like NativeLink.
-6. **Knowledge Graph & SHACL Structural Conformance**: Opens **Knowledge Graph & SHACL** tab (`#tab-kgraph-btn`) and clicks **Validate SHACL Constraints** (`#btn-validate-shacl`), confirming the cluster conforms strictly to `urn:robos:shape:RemoteExecutionClusterShape` in `.robos/kgraphs/devops/package.jsonld`.
-- **Source Demo Script**: [`packages/robos-test/demos/remote-execution-studio-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/remote-execution-studio-demo.js)
-- **Automated Test Suite**: [`packages/robos-test/tests/remote-execution/smoke.test.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/tests/remote-execution/smoke.test.js)
-
-| REAPI Cluster Overview & Worker Pools | Live Endpoint Connectivity & Latency Probe |
-|:---:|:---:|
-| ![Cluster Overview]({{ '/assets/images/screenshots/re-studio-overview_frame.png' | relative_url }}) | ![Endpoint Health Probe]({{ '/assets/images/screenshots/re-studio-probe_frame.png' | relative_url }}) |
-
-| Bazel Client Config Generator (`.bazelrc`) | Buck2 Client Config Generator (`.buckconfig`) |
-|:---:|:---:|
-| ![Bazel Config Generator]({{ '/assets/images/screenshots/re-studio-bazel_frame.png' | relative_url }}) | ![Buck2 Config Generator]({{ '/assets/images/screenshots/re-studio-buck2_frame.png' | relative_url }}) |
-
-| Modular Buildbarn Microservice Specs (`bb-storage.json`) | Knowledge Graph & SHACL Validation Badge |
-|:---:|:---:|
-| ![Buildbarn Provider Config]({{ '/assets/images/screenshots/re-studio-buildbarn_frame.png' | relative_url }}) | ![Knowledge Graph SHACL Conformance]({{ '/assets/images/screenshots/re-studio-kgraph_frame.png' | relative_url }}) |
-
----
-
-## Section 3: Company Setup & App Developer Wizards (Hardened Workflows)
-
-RobOS provides purpose-built wizards and governance engines for enterprise onboarding and rapid application scaffolding. Each workflow is verified end-to-end with real processes, live directory synchronization, and zero mocking.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/app-flow-org-foundation.jpg' | relative_url }}" alt="Company Setup and Developer Scaffolding Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Company Setup & Developer Scaffolding Architecture</strong>: Enterprise directory synchronization, greenfield tenant bootstrap, multi-archetype app scaffolding, and GPG-encrypted DevOps pass vault. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
----
-
-### Step 17: Existing Company Setup & Directory Sync (Okta, Azure AD, LDAP)
-
-#### The Real-World Business Scenario
-An established enterprise with 500+ engineers across multiple divisions needs to onboard their entire organization onto RobOS without manual user provisioning. They need automated directory synchronization via SCIM/LDAP (Okta, Microsoft Entra/Azure AD, Google Workspace), GitHub/GitLab team mapping, Team Topologies classification (`stream-aligned`, `platform`, `enabling`, `complicated-subsystem`), and role-based access control (RBAC).
-
-#### What the Test Actually Executes Step-by-Step
-1. **Inspect Unlinked Identity**: Opens **RobOS Group Manager** and inspects the active developer identity badge (`Guest / Unlinked`).
-2. **Open Enterprise Directory Sync Modal**: Clicks **🏢 Sync Directory** to launch the onboarding wizard.
-3. **Configure Developer Credentials**: Enters `Sarah Connor`, `sarah.connor@acmeglobal.com`, GitHub handle `sconnor`, enterprise organization `Acme Enterprise Global`, and directory provider `Okta SCIM 2.0`.
-4. **Execute Directory Synchronization**: Ingests enterprise user rosters, sets global git author credentials, and binds active identity in `~/.config/robos/identity.json`.
-5. **Verify Activated Identity**: Asserts updated active badge showing `Sarah Connor · Lead Architect & Approver · core-platform`.
-6. **Inspect Team Topologies & Members**: Verifies Core Platform team and cryptographic GPG commit signers.
-7. **GitOps & Knowledge Graph Sync**: Persists team definitions to `.robos/teams.yaml` and synchronizes developer/team nodes into **Modular KGraph Packages** (`organization`).
-- **Source Demo Script**: [`packages/robos-test/demos/existing-company-setup-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/existing-company-setup-demo.js)
-- **Dedicated Documentation**: [Existing Company Setup Guide]({{ '/existing-company-setup.html' | relative_url }})
-
-<video controls preload="metadata" width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
-  <source src="{{ '/assets/videos/existing-company-setup-final.webm' | relative_url }}" type="video/webm">
-  Your browser does not support the video tag.
-</video>
-
-| Enterprise Organization Structure | Okta & SCIM Directory Synchronization |
-|:---:|:---:|
-| ![Enterprise Structure]({{ '/assets/images/screenshots/existing-company-sidebar_frame.png' | relative_url }}) | ![Directory Sync]({{ '/assets/images/screenshots/existing-company-directory-sync_frame.png' | relative_url }}) |
-
-| Team Topologies (.robos/teams.yaml) | Role-Based Access Control (RBAC) |
-|:---:|:---:|
-| ![Teams Mapped]({{ '/assets/images/screenshots/existing-company-teams-mapped_frame.png' | relative_url }}) | ![Members RBAC]({{ '/assets/images/screenshots/existing-company-members-rbac_frame.png' | relative_url }}) |
-
----
-
-### Step 18: New Company Setup & Greenfield Startup Bootstrap
-
-#### The Real-World Business Scenario
-A greenfield startup or new engineering division is setting up their software delivery ecosystem from scratch. They need an instant, turnkey foundation: provisioning root administrator credentials, initializing primary VCS organizations (GitHub, GitLab, Gitea), creating foundational engineering squads, establishing GPG/SSH security keyrings, and configuring shared AI coding models.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Inspect Greenfield State**: Opens **RobOS Group Manager** displaying an unlinked workspace (`No Tenant / Unlinked`).
-2. **Open Greenfield Bootstrap Wizard**: Clicks **🚀 Bootstrap** to launch organization initialization.
-3. **Configure Company & Root Administrator**: Enters company legal entity `Acme Cloud Innovations`, domain `acmecloud.io`, root administrator `Alex Rivera`, and role `Chief Architect & VP Engineering`.
-4. **Execute Bootstrap**: Provisions company tenant in `~/.config/robos/company.json`, generates administrator keyrings in `~/.gnupg`, and activates root identity in `~/.config/robos/identity.json`.
-5. **Verify Activated Root Admin**: Asserts updated active badge showing `Alex Rivera · Chief Architect & VP Engineering · founding-core`.
-6. **Inspect Foundational Squads**: Validates `Founding Core Engineering` and `Cloud Platform` teams in `.robos/teams.yaml`.
-7. **Security Baselines & Knowledge Graph Registration**: Materializes administrator and squad nodes into **Modular KGraph Packages** (`organization`) and registers corporate AI models.
-- **Source Demo Script**: [`packages/robos-test/demos/new-company-setup-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/new-company-setup-demo.js)
-- **Dedicated Documentation**: [New Company Setup Guide]({{ '/new-company-setup.html' | relative_url }})
-
-<video controls preload="metadata" width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
-  <source src="{{ '/assets/videos/new-company-setup-final.webm' | relative_url }}" type="video/webm">
-  Your browser does not support the video tag.
-</video>
-
-| Greenfield Bootstrap Modal | Organization & Admin Configuration |
-|:---:|:---:|
-| ![Bootstrap Init]({{ '/assets/images/screenshots/new-company-bootstrap-init_frame.png' | relative_url }}) | ![Tenant Config]({{ '/assets/images/screenshots/new-company-tenant-configured_frame.png' | relative_url }}) |
-
-| Foundational Teams Scaffolding | Security & AI Provider Baseline |
-|:---:|:---:|
-| ![Teams Scaffolding]({{ '/assets/images/screenshots/new-company-teams-scaffolded_frame.png' | relative_url }}) | ![Security Baseline]({{ '/assets/images/screenshots/new-company-security-baseline_frame.png' | relative_url }}) |
-
----
-
-### Step 19: Develop a New App — RobOS App Creation Wizard
-
-#### The Real-World Business Scenario
-An engineer is tasked with building a new microservice or desktop utility. Instead of spending hours writing boilerplate build configurations, Dockerfiles, and CI scripts, the developer launches the **RobOS App Wizard**. The wizard guides the developer through archetype selection, API contract definition (OpenAPI 3.1, TypeSpec, Protobuf, GraphQL), team ownership assignment, and synthesizes an executable developer environment (`dev-setup.sh`) and Spotify Backstage catalog.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Launch App Wizard**: Opens **RobOS App Wizard** in Greenfield App Creation mode.
-2. **Select Multi-App Archetype**: Selects `Microservice` from core archetypes (`DesktopApp`, `Microservice`, `ConsoleApp`, `MobileApp`, `DataPipeline`, `Library`).
-3. **App Identity & Team Ownership**: Names the service `Payment Gateway`, sets technology to `Node.js 20 / TypeScript`, and binds ownership to `Core Platform Team`.
-4. **Contract Specification**: Chooses OpenAPI 3.1 specification for contract-first API development.
-5. **Generate Scaffolding**: Synthesizes `catalog-info.yaml`, Dockerfile, runnable `dev-setup.sh`, and automatically registers the application node in `.robos/packages.yaml` and the Knowledge Graph.
-- **Source Demo Script**: [`packages/robos-test/demos/new-app-wizard-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/new-app-wizard-demo.js)
-- **Dedicated Documentation**: [New App Wizard Guide]({{ '/new-app-wizard.html' | relative_url }})
-
-<video controls preload="metadata" width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
-  <source src="{{ '/assets/videos/new-app-wizard-final.webm' | relative_url }}" type="video/webm">
-  Your browser does not support the video tag.
-</video>
-
-| Multi-App Archetypes Selection | App Identity & Team Assignment |
-|:---:|:---:|
-| ![Archetypes]({{ '/assets/images/screenshots/new-app-archetypes_frame.png' | relative_url }}) | ![App Identity]({{ '/assets/images/screenshots/new-app-identity-team_frame.png' | relative_url }}) |
-
-| API Contract Specification (OpenAPI 3.1) | Scaffolding & Knowledge Graph Registration |
-|:---:|:---:|
-| ![Contract Spec]({{ '/assets/images/screenshots/new-app-contract-spec_frame.png' | relative_url }}) | ![Scaffold Complete]({{ '/assets/images/screenshots/new-app-scaffold-complete_frame.png' | relative_url }}) |
-
----
-
-### Step 20: Import Existing Apps — Codebase Ingestion & Archetype Detection
-
-#### The Real-World Business Scenario
-An engineering organization adopting RobOS has dozens of existing legacy and brownfield repositories across GitHub and internal GitLab servers. They need to import these codebases into the RobOS ecosystem effortlessly: auto-detecting language runtimes, identifying framework dependencies, extracting existing API contracts, assigning team ownership, and generating Backstage catalog manifests without manual YAML editing.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Switch to Import Mode**: Switches RobOS App Wizard to **Import Existing App** mode.
-2. **Deep Automated Codebase Inspection**: Scans source directory files (`package.json`, `pom.xml`, `go.mod`, etc.) without mocking.
-3. **Heuristic Archetype & Stack Inference**: Accurately infers archetype (`robos:DesktopApp`), Node.js 20 runtime, Electron framework, and Bruno REST capabilities.
-4. **Team Topology Mapping**: Assigns team ownership to Core Platform Team in `.robos/teams.yaml`.
-5. **Catalog & Dev-Setup Synthesis**: Generates `catalog-info.yaml`, creates executable `dev-setup.sh`, updates `~/.config/robos/git-projects.json`, and links the component into the SDLC Knowledge Graph.
-- **Source Demo Script**: [`packages/robos-test/demos/app-import-wizard-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/app-import-wizard-demo.js)
-- **Dedicated Documentation**: [App Import Wizard Guide]({{ '/app-import-wizard.html' | relative_url }})
-
-<video controls preload="metadata" width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
-  <source src="{{ '/assets/videos/app-import-wizard-final.webm' | relative_url }}" type="video/webm">
-  Your browser does not support the video tag.
-</video>
-
-| Source Selection & Git Repository Scan | Deep Dependency & Runtime Inspection |
-|:---:|:---:|
-| ![Source Select]({{ '/assets/images/screenshots/import-app-source-select_frame.png' | relative_url }}) | ![Deep Inspection]({{ '/assets/images/screenshots/import-app-deep-inspection_frame.png' | relative_url }}) |
-
-| Team Ownership Assignment | Ingestion & Backstage Catalog Synthesis |
-|:---:|:---:|
-| ![Team Assignment]({{ '/assets/images/screenshots/import-app-team-assignment_frame.png' | relative_url }}) | ![Ingest Complete]({{ '/assets/images/screenshots/import-app-ingest-complete_frame.png' | relative_url }}) |
-
----
-
-### Step 21: Multi-Package & Multi-Repo Knowledge Graph (Namespaces, Git-Tag Dependencies & Remote Caching)
-
-#### The Real-World Business Scenario
-As software ecosystems scale to dozens of engineering squads and hundreds of microservices, storing the entire architectural topology, contracts, DevOps integrations, and eLearning modules in a single monolithic file causes severe merge conflicts, performance bottlenecks, and graph clutter. Furthermore, modern enterprises need to compose knowledge graphs across multiple Git repositories—incorporating external shared infrastructure models, central compliance policies, and API contracts pinned to immutable semantic version releases (e.g. `v2.4.0`).
-
-RobOS solves this by decomposing the dual-state Knowledge Graph into modular, namespaced packages (`core-platform`, `organization`, `services`, `applications`, `devops`, `learning`) indexed by `.robos/kgraph.yaml`. RobOS supports multi-repo composition with Git-tag version pinning and automatic local caching (`~/.robos/cache/kgraphs/<repo>@<tag>/`), while preserving backward compatibility through automated aggregation into `.robos/knowledge-graph.jsonld`.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Inspect Graph Architecture**: Opens **RobOS Knowledge Graph Explorer** and inspects telemetry stats.
-2. **Open Packages & Repositories Console**: Clicks **📦 Packages & Repos** (`#btn-open-packages-modal`) to reveal the package management hub.
-3. **Inspect Standard Namespaces**: Audits the foundational RobOS packages (`robos.core`, `robos.org`, `robos.services`, `robos.apps`, `robos.devops`, `robos.learning`) stored in `.robos/kgraphs/<pkg>/package.jsonld`.
-4. **Register External KGraph Dependency**: Enters Repository ID `enterprise-contracts`, Title `Enterprise Cloud Contracts`, Git URL `https://github.com/acme/cloud-contracts`, and Git Tag `v2.4.0`.
-5. **Sync & Cache Remote Repository**: Executes remote repository sync, cloning and validating into `~/.robos/cache/kgraphs/enterprise-contracts@v2.4.0/` with on-demand package resolution.
-6. **Package Namespace Filter**: Closes the modal and uses the sidebar package filter (`#node-package-filter`) to isolate `robos.services` microservices and contracts.
-7. **Verify Backward-Compatible Aggregation**: Asserts that all distributed package nodes automatically synchronize into `.robos/knowledge-graph.jsonld` upon saving.
-- **Source Demo Script**: [`packages/robos-test/demos/multi-package-repo-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/multi-package-repo-demo.js)
-- **Automated Test Suite**: [`packages/robos-test/tests/sdlc-graph/multi-package-repo.test.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/tests/sdlc-graph/multi-package-repo.test.js)
-
-<video controls preload="metadata" width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
-  <source src="{{ '/assets/videos/multi-package-repo-final.webm' | relative_url }}" type="video/webm">
-  Your browser does not support the video tag.
-</video>
-
-| SDLC Graph Telemetry & Packages Bar | Modular Package Stores (6 Namespaces) |
-|:---:|:---:|
-| ![Stat Bar]({{ '/assets/images/screenshots/multi-pkg-statbar_frame.png' | relative_url }}) | ![Packages Modal]({{ '/assets/images/screenshots/multi-pkg-modal_frame.png' | relative_url }}) |
-
-| Multi-Repo Registry & Git-Tag Versioning | Package Namespace Filter (robos.services) |
-|:---:|:---:|
-| ![Repos Grid]({{ '/assets/images/screenshots/multi-pkg-repos_frame.png' | relative_url }}) | ![Package Filter]({{ '/assets/images/screenshots/multi-pkg-filter_frame.png' | relative_url }}) |
-
----
-
-### Step 22: DevOps Account Integrations & GPG Password Store (Onboarding Wizards, Zero Plaintext Secrets & Connection Probing)
-
-#### The Real-World Business Scenario
-Engineering teams must connect dozens of external platforms to drive their automated delivery lifecycle: source control (GitHub, GitLab, Bitbucket), cloud infrastructure (AWS, GCP, Azure, OpenShift), CI/CD pipelines (Jenkins, GitHub Actions), package and container registries (Docker Hub, Quay, Artifactory, NPM), local virtualization (Docker, Podman, Kubernetes, VMware), identity providers (Okta), and DNS management (GoDaddy).
-
-In conventional tooling, API keys and access tokens are scattered across plaintext configuration files or environment variables, posing severe security risks. RobOS introduces a secure, turnkey DevOps Integration Hub:
-- **Zero Plaintext Credentials in the Knowledge Graph**: Sensitive tokens, passwords, and private keys are never stored in graph nodes or committed to Git.
-- **UNIX Password Store (`pass`) Integration**: Secrets are encrypted using GPG and stored directly in `~/.password-store/devops/<category>/<provider>/<account-slug>/<key>.gpg`.
-- **First-Class PassCredential Reference Nodes**: The Knowledge Graph creates `robos:PassCredential` reference nodes declaring the `robos:passPath`, linked to `robos:DevOpsIntegration` nodes via `robos:hasCredential`.
-- **Pre-Flight Connection Probing**: Before saving, RobOS tests live API connectivity and authenticates credentials against provider endpoints.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Open DevOps Hub**: Clicks **☁️ DevOps Integrations** (`#btn-open-devops-modal`) in the Knowledge Graph explorer.
-2. **Launch Interactive Onboarding Wizard**: Clicks **⚡ Onboard Account** (`#btn-devops-start-onboarding`) to start guided account setup.
-3. **Explore Categories & Providers**: Navigates category filter pills (`Source Control`, `Cloud Infrastructure`, `CI/CD & GitOps`, `Package & Artifact Registries`, `Containers & Virtualization`, `OAuth & Identity`, `Domains & DNS Providers`).
-4. **Configure GitLab Provider**: Selects GitLab provider, dynamically generating the credential form with account slug `acme-gitlab`, server URL `https://gitlab.com`, and personal access token `glpat-MOCKTOKEN987654321`.
-5. **Audit GPG Pass Encryption Badge**: Inspects visual security indicator confirming the token will be encrypted to `~/.password-store/devops/source-control/gitlab/acme-gitlab/personalAccessToken`.
-6. **Execute Live Connection Probe**: Clicks **⚡ Test Connection** (`#btn-test-devops-connection`) to verify credentials and endpoint reachability with instant green status confirmation.
-7. **Save Integration to KGraph & Pass**: Clicks **💾 Save to Knowledge Graph** (`#btn-save-devops-integration`), materializing the `robos:DevOpsIntegration` node into the `devops` package and writing encrypted secrets to `pass`.
-8. **Inspect Active Accounts & Graph Linking**: Validates the active account card with connection badge, GPG secret indicator, and bidirectional linkage to the Knowledge Graph nodes list.
-- **Source Demo Script**: [`packages/robos-test/demos/devops-integrations-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/devops-integrations-demo.js)
-- **Automated Test Suite**: [`packages/robos-test/tests/sdlc-graph/devops-integrations.test.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/tests/sdlc-graph/devops-integrations.test.js)
-
-<video controls preload="metadata" width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
-  <source src="{{ '/assets/videos/devops-integrations-final.webm' | relative_url }}" type="video/webm">
-  Your browser does not support the video tag.
-</video>
-
-| DevOps Hub & Active Accounts | Onboarding Wizard (Categories & Providers) |
-|:---:|:---:|
-| ![DevOps Modal]({{ '/assets/images/screenshots/devops-modal-open_frame.png' | relative_url }}) | ![Categories]({{ '/assets/images/screenshots/devops-wizard-categories_frame.png' | relative_url }}) |
-
-| Dynamic Config Form with GPG Pass Badges | Active Accounts & Pass Credentials View |
-|:---:|:---:|
-| ![Config Form]({{ '/assets/images/screenshots/devops-config-form_frame.png' | relative_url }}) | ![Active Integrations]({{ '/assets/images/screenshots/devops-active-integrations_frame.png' | relative_url }}) |
-
----
-
-### Universal Knowledge Graph Resource Importer & AI Agent Prompt Ingestion
-
-#### The Real-World Enterprise Scenario
-In enterprise engineering environments, architectural knowledge and operational components rarely live in a single clean repository or catalog. An enterprise technology footprint is fragmented across heterogeneous systems:
-- **Architecture Documentation & Decision Records**: Confluence wiki spaces containing architectural diagrams, system overviews, and Architecture Decision Records (ADRs).
-- **Multiple Git Forge Organizations**: Segregated GitHub forge organizations for distinct divisions (e.g. `acme-payments` and `acme-identity`), each with organization-wide security and coding standards.
-- **Standalone Cloud Services**: Individual GitHub repositories hosting critical business APIs (e.g. `checkout-api`).
-- **GitOps Infrastructure Deployments**: GitLab repositories managing Kubernetes cluster deployment pipelines, ArgoCD sync manifests, and Helm releases.
-- **Legacy Monorepos**: Local filesystem directory checkouts containing legacy multi-service codebases with local markdown ADR documentation.
-
-Rather than forcing developers to manually transcribe these systems into YAML or schema files, the **RobOS Universal Knowledge Graph Resource Importer** (`KGraphResourceImporter`) provides an autonomous AI agent prompt interface. Developers provide a natural language prompt referencing any number of web and local resources, and RobOS parses the targets, executes specialized resolvers, assigns canonical modular packages (`organization`, `services`, `applications`, `devops`, `documentation`), and validates the result with 100% SHACL constraint conformance.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Natural Language Agent Prompt**: The developer feeds an unstructured prompt to RobOS specifying:
-   - 1 Confluence wiki space: `https://confluence.acme.corp/display/ARCH`
-   - 2 GitHub organizations: `https://github.com/acme-payments` and `https://github.com/acme-identity`
-   - 1 GitHub repository: `https://github.com/acme-retail/checkout-api`
-   - 1 GitLab repository: `https://gitlab.com/acme-devops/gitops-deployments`
-   - 1 Local filesystem directory: `/tmp/acme-legacy-monorepo`
-2. **Autonomous Prompt Analyzer**: `importer.parsePrompt(text)` classifies targets using URL path heuristics and regex patterns, inferring company name and slug (`Acme Global`).
-3. **Multi-Resource Ingestion Engine**:
-   - **Confluence Resolver**: Synthesizes `robos:DocumentationPage` overview, `robos:ArchitectureDecisionRecord` (ADR-004), and `robos:FlowDiagram` with machine-readable Mermaid sequence syntax.
-   - **GitHub Org Resolver**: Provisions `robos:GitProjectOrganization` nodes with inherited `robos:agentRules` (e.g., mTLS enforcement, BigDecimal currency handling) and discovers member microservices.
-   - **Individual Repo Resolvers**: Classifies `checkout-api` as `robos:Microservice` with an OpenAPI 3.1 YAML contract; classifies GitLab deployment as `robos:DataPipeline` in the `devops` package.
-   - **Local Filesystem Resolver**: Scans codebase manifests and indexes local markdown ADRs (`001-monolith-decoupling.md`).
-4. **SHACL Conformance Verification**: Validates the unified OSLC JSON-LD document against RobOS SHACL shapes, confirming zero constraint violations.
-- **Source Demo Script**: [`packages/robos-test/demos/kgraph-resource-importer-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/kgraph-resource-importer-demo.js)
-
-| 1. Natural Language Agent Prompt | 2. Ingested Multi-Resource Knowledge Graph Overview |
-|:---:|:---:|
-| ![Agent Prompt Ingestion]({{ '/assets/images/screenshots/kgraph-importer-prompt.png' | relative_url }}) | ![Ingested Overview]({{ '/assets/images/screenshots/kgraph-importer-overview.png' | relative_url }}) |
-
-| 3. Confluence Flow Diagram (Mermaid Sequence Flow) | 4. Confluence Architecture Decision Record (ADR-004) |
-|:---:|:---:|
-| ![Flow Diagram]({{ '/assets/images/screenshots/kgraph-importer-flow-diagram.png' | relative_url }}) | ![ADR-004]({{ '/assets/images/screenshots/kgraph-importer-adr.png' | relative_url }}) |
-
-| 5. GitHub Organization & Inherited Agent Rules | 6. Microservice & OpenAPI 3.1 Spec (Checkout API) |
-|:---:|:---:|
-| ![GitHub Org]({{ '/assets/images/screenshots/kgraph-importer-git-org.png' | relative_url }}) | ![Checkout Service]({{ '/assets/images/screenshots/kgraph-importer-checkout-service.png' | relative_url }}) |
-
-| 7. GitLab GitOps Deployment Pipeline | 8. 100% SHACL Constraint Conformance (0 Violations) |
-|:---:|:---:|
-| ![GitLab Pipeline]({{ '/assets/images/screenshots/kgraph-importer-devops-pipeline.png' | relative_url }}) | ![SHACL Conformance]({{ '/assets/images/screenshots/kgraph-importer-shacl-valid.png' | relative_url }}) |
-
----
-
-### Step 26: Agent Tiers, Caveman Prompt Compression & Stanford DSPy Optimization
-
-#### The Real-World Business Scenario
-Invoking homogeneous frontier models for every SDLC task creates severe budget exhaustion and unnecessary latency for simple utility tasks, while starving complex architectural challenges of sufficient reasoning depth. RobOS dynamically routes tasks across a 3-tier intelligence hierarchy (Tier 1 Fast Utility, Tier 2 Workhorse Implementation, Tier 3 Frontier Deep Reasoning), while pruning redundant prompt tokens via algorithmic Caveman Mode and compiling optimized prompt templates using Stanford DSPy teleprompters.
-
-#### What the Test Actually Executes Step-by-Step
-1. **Open RobOS Preferences**: Launches the native desktop preferences console (`packages/robos-preferences`) and navigates to **Agent Tiers & Prompt Optimization**.
-2. **Audit 3-Tier Model Dispatch**: Inspects default tier assignments (Tier 1: `claude-haiku-4-5` / Local Ollama, Tier 2: `claude-sonnet-5`, Tier 3: `o3`).
-3. **Configure Extreme Caveman Compression**: Toggles algorithmic prompt pruning to `extreme` mode (55%–65% token savings) scoped to Tier 1 and Tier 2 tasks.
-4. **Configure Stanford DSPy Teleprompter**: Selects `BootstrapFewShot` teleprompter optimization scored against automated `unit_tests_pass` metrics.
-5. **Save & Knowledge Graph Synchronization**: Clicks **Save All**, verifying local disk persistence (`~/.config/robos/settings.json`) and real-time dual-state synchronization of `robos:PromptStrategy` and `robos:PromptOptimizer` nodes into `.robos/kgraphs/core-platform/package.jsonld`.
-- **Source Demo Script**: [`packages/robos-test/demos/agent-tiers-preferences-demo.js`](https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/agent-tiers-preferences-demo.js)
-- **Dedicated Documentation**: [Agent Tiers & Model Dispatch Guide]({{ '/agent-tiers.html' | relative_url }})
-
-| 1. Agent Tiers & Dispatch Overview | 2. Extreme Caveman & DSPy Configuration |
-|:---:|:---:|
-| ![Agent Tiers Overview]({{ '/assets/images/screenshots/agent-tiers-preferences-overview.png' | relative_url }}) | ![Extreme Configuration]({{ '/assets/images/screenshots/agent-tiers-preferences-extreme-config.png' | relative_url }}) |
-
-| 3. Settings Saved & SDLC Knowledge Graph Synchronized |
-|:---:|
-| ![Saved & Synchronized]({{ '/assets/images/screenshots/agent-tiers-preferences-saved.png' | relative_url }}) |
-
----
-
-## How to Run Walkthroughs Yourself
-
-You can run any of these automated walkthroughs in headless mode to regenerate the videos, voiceovers, and screenshots on your own machine:
+A test covers the building blocks. It passes in a few seconds and needs only Node.js and `git`:
 
 ```bash
-# Run the Agent Tiers & Prompt Optimization Preferences walkthrough
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/agent-tiers-preferences-demo.js
-
-# Run the Existing Codebase Import Wizard walkthrough & screenshot generator
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/app-import-wizard-screenshot-demo.js
-
-# Run the Universal Knowledge Graph Resource Importer & AI Agent Prompt walkthrough
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/kgraph-resource-importer-demo.js
-
-# Run the complete Acme Petshop end-to-end lifecycle walkthrough
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/topology-db-kube-lifecycle-demo.js
-
-# Run the Existing Company Setup & SCIM Directory Sync walkthrough
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/existing-company-setup-demo.js
-
-# Run the New Company Setup & Greenfield Startup Bootstrap walkthrough
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/new-company-setup-demo.js
-
-# Run the Develop a New App (App Creation Wizard) walkthrough
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/new-app-wizard-demo.js
-
-# Run the Import Existing Apps (Codebase Ingestion) walkthrough
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/app-import-wizard-demo.js
-
-# Run the Multi-Package & Multi-Repo Knowledge Graph walkthrough
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/multi-package-repo-demo.js
-
-# Run the DevOps Account Integrations & GPG Password Store walkthrough
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/devops-integrations-demo.js
-
-# Run the Data Sources explorer walkthrough
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/data-sources-demo.js
-
-# Run the Remote Execution Studio walkthrough & screenshot generator
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/remote-execution-studio-demo.js
-
-# Run the Developer Tools Suite walkthrough
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/developer-tools-suite-demo.js
-
-# Run the AI Tool Integration (MCP) walkthrough
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/agy-mcp-demo.js
-
-# Run the Live Architecture Map walkthrough
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/robos-graph-demo.js
+node --test packages/robos-test/tests/lifecycle/lifecycle.test.js
 ```
 
----
+It checks six things: the feature commit passes the sample project's own tests; removing comments is a real, scoped commit; switching to species chips changes only the page; an evidence bundle is valid for `HEAD` and goes stale after a new commit; the stand-in forge walks a PR from draft to merged and enforces the rules (an author cannot approve their own PR, and a draft cannot merge); and the recording composer splits captions and slides correctly.
 
-## Next Steps
+To record it yourself you need `xvfb`, `ffmpeg`, and Electron installed in `packages/robos-test/node_modules` (run `npm install` there):
 
-- **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
-- **[App Development Flow]({{ site.baseurl }}{% link app-development-flow.md %})**: Follow the step-by-step developer tutorial.
-- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+```bash
+xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/review-lifecycle-hero-demo.js /tmp/hero
+node packages/robos-test/lib/lifecycle/compose.js /tmp/hero /tmp/hero/out
+```
 
+`compose.js` cuts dead time, adds captions and encodes MP4, WebM, a poster and a storyboard GIF. A third script, `publish-hero.js`, copies the result into the front site's `assets/hero/` folder and writes `_data/hero.json`; skip it unless you maintain that site. The steps and their environment variables (`HERO_SPEED`, `CHROME_BIN`) are in `packages/robos-test/lib/lifecycle/README.md`.
 
+## How the demo recorder works
+
+Every file in `packages/robos-test/demos/` that calls `runDemo` from `lib/demo-runner.js` follows the same pattern. The script lists cues, each with narration text, an optional element to click or type into, a callout and a minimum hold time. The runner then:
+
+1. Launches the app through `lib/harness.js` in a sandbox, using a scenario from `lib/scenarios.js` and stub binaries from `packages/robos-test/sandbox/bin` (`gh`, `git`, `gpg`, `pass`, `ssh`, `ssh-keygen`, `claude`).
+2. Injects a pointer, callout bubbles and a subtitle banner into the window.
+3. Records the window with `ffmpeg` (`x11grab`) and writes `<slug>.webm`, `<slug>.vtt` and `<slug>-final.webm` to `packages/robos-test/run/demos/<slug>/`.
+4. Copies the result to `~/.robos/development/walkthroughs/<slug>/`, with a `walkthrough.md` summary and a timestamped copy under `history/`.
+
+Narration audio is off by default (`audio: false`). When a demo turns it on, the runner synthesizes each cue with Piper using a voice model from `packages/robos-test/models/`, which is not in the repository, and falls back to `espeak-ng` or `espeak`.
+
+Run a demo on a machine with `xvfb`, `ffmpeg` and Electron, or in the Docker test container:
+
+```bash
+xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/new-app-wizard-demo.js
+./scripts/e2e-container.sh node packages/robos-test/demos/new-app-wizard-demo.js
+```
+
+### Limits
+
+- The scenarios and stub binaries fake accounts, keys and the forge. Steps 9 and 10 below are the exception: they use a real local Kind cluster (set up with `scripts/setup-local-kube.sh`).
+- Many scripts contain checks that throw `E2E Assertion Failed` inside the page. The recorder ignores errors thrown there, so a failed check does not fail the run. Only Steps 9 and 10 check results from Node (`kubectl get pods`) and exit with an error.
+- 41 of the 128 scripts contain hard-coded paths under `/home/ndipiazza/`. Many of those write frames or videos to such a directory, so edit constants like `BRAIN_DIR` before running them elsewhere.
+- Few finished recordings are committed. Generate your own with the commands above.
+- `acme-petshop-step6-pr-ci-demo.js` and `agent-code-review-ide-demo.js` click through a pull request list (`.pr-card`) that the review app no longer shows at startup, so they are not listed below.
+- The five entry points in `demos/RETIRED.md` exit with status 1 on purpose. Do not run them.
+
+## Demo catalog
+
+Every script below is in `packages/robos-test/demos/`, and each app name is a folder under `packages/`. Unless a row says "Backed by" a test or "Fails", the script only records.
+
+### Acme Petshop sequence
+
+A reference project that a sequence of demos builds up, from planning to deployment. Scripts are named `acme-petshop-stepN-...-demo.js`.
+
+| Script | App | What it does |
+|:---|:---|:---|
+| 1 `step1-tasks` | `task-planner` | Creates the "Acme Petshop Platform" project, enters an architecture prompt, answers two planning questions, saves the plan and syncs six issues to a local Gitea server. |
+| 2 `step2-topology` | `topology-manager` | Generates six container nodes from a prompt, inspects two of them, opens the C4 level 1 view and exports the C4 PlantUML. |
+| 3 `step3-contracts` | `contract-studio` | Opens the OpenAPI and AsyncAPI contracts, then runs the lint, Pact and mock-server actions. |
+| 4 `step4-git-projects` | `git-projects` | Generates the repository list from a prompt and inspects one repository's local dev setup and secrets tabs. |
+| 5 `step5-ide-execution` | `intellij-idea` | Launches a task workspace, stops at a breakpoint, shows variables and an AI plan, then resumes. |
+| 7 `step7-deploy-tracker` | `deploy-tracker` | Filters the deployment timeline by staging and production and lists releases mapped to a PR and ticket. |
+| 8 `step8-kube-studio` | `kube-studio` | Tours pods, logs, Helm releases and the ArgoCD tab on fixture data. |
+| 9 `step9-real-kube-e2e` | `kube-studio` | Deploys `petstore-api` to a local Kind cluster from the app. Fails unless `kubectl get pods` lists a `petstore-api` pod. |
+| 10 `step10-continuous-deploy` | `kube-studio` | Implements a task, approves a PR and watches the deployment appear. Fails unless `kubectl get pods` lists a `vaccine-gateway` pod. |
+| 11 `step11-bruno-rest-client` | `rest-client` | Generates a `.bru` request from a TypeSpec schema, saves it into the repository and sends it. |
+| 12 `step12-collection-runner` | `rest-client` | Runs a five-request collection, publishes the result as a PR gate and exports a report. |
+| 13 `step13-agy-mcp-task` | `agents-manager` | Opens the Antigravity provider page: router status, launch flags and saved sessions. |
+| `developer-tools-suite` | `db-manager` | Shows the data viewer, SQL console and DDL tab, then the NoSQL, gRPC and GraphQL clients. |
+| `topology-db-kube-lifecycle` | `topology-manager` | Adds a PostgreSQL data source to the topology and exports the C4 container diagram. |
+
+### Company and app setup
+
+| Script | App | What it does |
+|:---|:---|:---|
+| `existing-company-setup-demo.js` | `group-manager` | Links a developer identity through the directory sync dialog and opens the synchronized team. |
+| `new-company-setup-demo.js` | `group-manager` | Bootstraps a new company with a root administrator and shows the resulting teams. |
+| `new-app-wizard-demo.js` | `app-wizard` | Walks the wizard from the Microservice archetype through name, contract and scaffold. |
+| `app-import-wizard-demo.js` | `app-wizard` | Switches the wizard to Import mode, inspects a codebase and completes ingestion. |
+
+### Knowledge Graph
+
+| Script | What it does |
+|:---|:---|
+| `robos-graph-demo.js`, `graph-diff-demo.js` | The graph explorer's overview, and a branch comparison. |
+| `multi-package-repo-demo.js` | The Packages and Repositories dialog: the standard packages, an external repository pinned to a git tag, and the namespace filter. Backed by `tests/sdlc-graph/multi-package-repo.test.js`. |
+| `devops-integrations-demo.js` | The DevOps account integrations wizard. Backed by `tests/sdlc-graph/devops-integrations.test.js`, which checks the provider catalog and that secrets go into `pass` with no plaintext in the graph. |
+| `kgraph-resource-importer-demo.js` | Calls `importFromPrompt` on a local monorepo fixture and captures the ingested overview, a flow diagram, an architecture decision record, GitHub organization rules, an OpenAPI service and a GitLab pipeline. |
+
+### Agent runtime and tools
+
+| Script | App | What it does |
+|:---|:---|:---|
+| `robos-profiled-demo.js` and the `-tmpfs`, `-zero-residue` and `-display` variants | `robos-profiled` | Provisions an ephemeral agent profile in the manager UI, inspects it and terminates it. |
+| `robos-agentd-demo.js` | `robos-agentd` | Starts a sub-agent session for a task with a persona and ends it. |
+| `desktop-agents-demo.js` | `desktop-agents` | Browses a grid of sub-agent desktops and focuses one stream. |
+| `mcp-manager-demo.js`, `mcp-router-demo.js` | `mcp-manager`, `robos-mcp-router` | Lists MCP servers and sets access permissions saved to `~/.config/robos/mcp-config.json`, and sends a tool call through the unified router endpoint. |
+| `agent-tiers-preferences-demo.js` | `robos-preferences` | Opens Agent Tiers and Prompt Optimization, changes the compression and DSPy settings, saves and captures three frames. See [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}) for what those settings do today. |
+
+### Other apps
+
+| Script | App | What it does |
+|:---|:---|:---|
+| `data-sources-demo.js` | `data-sources` | A PostgreSQL source with its schema inspector and a query, an S3 bucket listing, and the new-source wizard. |
+| `schema-studio-demo.js` | `schema-studio` | The TypeSpec and Protobuf models, code generation and a breaking-change check. |
+| `people-manager-demo.js` | `people-manager` | The roster of people and agent personas. |
+| `remote-execution-studio-demo.js` | `remote-execution-studio` | Cluster overview, an endpoint health probe, Bazel and Buck2 client settings, Buildbarn provider settings and the knowledge graph tab. It saves six screenshots into `docs/assets/images/screenshots/`. Backed by `tests/remote-execution/smoke.test.js`. |

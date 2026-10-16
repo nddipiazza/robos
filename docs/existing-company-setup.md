@@ -1,251 +1,188 @@
 ---
-title: Enterprise & Organization Setup
+title: Company setup
 layout: default
 parent: RobOS for Teams
-nav_order: 4
+nav_order: 3
 has_children: true
 permalink: /existing-company-setup.html
 ---
 
-# Existing Company Setup & Enterprise Onboarding
+# Company setup
 {: .no_toc }
 
-How established engineering organizations migrate to RobOS: enterprise directory synchronization (SAML, Okta, Active Directory, LDAP, GitHub Enterprise Teams), mapping corporate departments to Team Topologies, connecting existing task trackers (Jira / GitHub Projects), and bridging secrets vaults.
-{: .fs-6 .fw-300 }
+How to set up RobOS for a team that already has GitHub repositories, a task tracker and developers with their own machines: what each developer does once, what you define once per team, and what the Group Manager "Sync Directory" button really does.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
----
+{: .important }
+RobOS has no shared company service and does not read your identity provider. Setup is stored as files on each developer's machine under `~/.config/robos/` and in a `.robos/` folder inside your repositories. The **Sync Directory** button in Group Manager writes sample data, not your directory (see the last section).
 
-## Overview: Zero-Friction Enterprise Migration
+## What is stored where
 
-When an existing software organization adopts RobOS, they rarely start from a blank slate. They have dozens or hundreds of engineers, pre-existing identity providers, hundreds of Git repositories, active Jira or GitHub issue tracking projects, enterprise secret vaults, and multi-cluster Kubernetes deployments.
+| Data | File | Written by | Read by |
+|:---|:---|:---|:---|
+| Groups (repos, software, onboarding steps, secrets, CI notes, members) | `~/.config/robos/groups/<id>.json` | Group Manager | Group Manager, Git Projects |
+| People | `~/.config/robos/people/<uid>.json` | People Directory | Group Manager (Members tab) |
+| Task server connections | `task_servers` in `~/.config/robos/settings.json` | Task Servers | Dev Central, Issue Manager, Task Board, Task Planner, Task Implementer, CI Monitor, Deploy Tracker, Git Projects |
+| Repository list | `~/.config/robos/git-projects.json` | Git Projects | Git Projects |
+| Team roster | `.robos/teams.yaml` in a project | You | The app wizard's team list, `robos-lib` GitOps validation |
+| Setup progress | `~/.config/robos/onboarding-completed.json` | RobOS Setup Wizard | Git Login Manager, Desktop Manager |
 
-RobOS is built on open standards (**OASIS OSLC 3.0**, **Team Topologies**, **SCIM 2.0**, **Backstage**, and **POSIX**) so that migrating an established organization requires no proprietary lock-in:
+Groups and people are plain JSON files. The apps do not sync them between machines. To give a colleague a group, copy its file into their `~/.config/robos/groups/` folder.
 
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/enterprise-migration-architecture.jpg' | relative_url }}" alt="Zero-Friction Enterprise Migration Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Zero-Friction Enterprise Migration Architecture</strong>: How enterprise directory providers (Okta, Azure AD, LDAP, GitHub Teams) ingest into RobOS identity and governance engines to orchestrate downstream task trackers, secrets vaults, and multi-cluster Kubernetes environments. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
+## Step 1: Set up each developer's machine
 
----
+Install RobOS first (see [Get started]({{ site.baseurl }}{% link getting-started.md %})). Then each developer launches **RobOS Setup Wizard** from the app launcher. It has 11 steps:
 
-## Step 1: Enterprise Directory & Identity Synchronization
+| Step | Label in the wizard | What it does |
+|:---|:---|:---|
+| 1 | GPG Master Key | Generates a 4096-bit RSA key with `gpg --batch --generate-key`. A blank passphrase creates a key without passphrase protection. |
+| 2 | Password Store (pass) | Runs `pass init` with that key. Needs `pass` and `gpg` installed. |
+| 3 | GUI Pinentry | Configures `gpg-agent` to show a desktop passphrase dialog. |
+| 4 | Git User Profile | Sets the global `user.name` and `user.email`. |
+| 5 | SSH Keypair Setup | Runs `ssh-keygen -t ed25519`. |
+| 6 | Google Chrome Browser | Installs Chrome and can set it as the default browser. |
+| 7 | GitHub Auth (Optional) | Starts `gh auth login --web` or logs in with a token. |
+| 8 | AI Agents | Embeds the Agents Manager to configure agent CLIs and providers. |
+| 9 | Git Projects (Optional) | Embeds Git Projects to clone repositories. |
+| 10 | Dev Apps (Optional) | Embeds Software Center to install tools and IDEs. |
+| 11 | Complete & Provision | Writes `~/.config/robos/onboarding-completed.json`. |
 
-When joining an existing enterprise using RobOS, developers do not need to wait for IT tickets or manually copy config files. RobOS provides a direct **Enterprise Directory Sync & Identity Onboarding Wizard** in **Group Manager** (`packages/group-manager`):
+The wizard targets a Linux desktop with GNOME. It calls `gsettings` and `x-terminal-emulator`, and tells you to run `sudo apt-get install pass gpg` if those tools are missing. The separate **Security Setup** app covers the pinentry, GPG key, password store and SSH key steps on their own.
 
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/directory-sync-workflow.jpg' | relative_url }}" alt="Developer Directory & Identity Synchronization Workflow" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Developer Onboarding & Identity Synchronization</strong>: How single-click enterprise directory sync (Okta, Azure AD, LDAP) unlocks cryptographic Git commit signing, squad code ownership, grounded AI agent context, and unified enterprise tool access. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
+{: .warning }
+In Security Setup, **Reset** deletes the GPG key your password store uses and removes `~/.password-store`. It asks for one confirmation first. Do not use it on a machine with secrets you have not backed up.
 
-### 1. Developer Identity Input & Onboarding Wizard
-1. **Inspect Identity Badge**: Upon launching Group Manager, the sidebar **Active Identity Card** displays the current developer status (initially `Not Identified / Guest / Unlinked`).
-2. **Open Sync Wizard**: Click **🏢 Sync Directory** in the sidebar to open the enterprise identity onboarding modal.
-3. **Configure Developer Credentials**:
-   - **Developer Full Name**: e.g., `Sarah Connor`
-   - **Corporate Email**: e.g., `sarah.connor@acmeglobal.com`
-   - **VCS / GitHub Username**: e.g., `sconnor`
-   - **Enterprise Organization**: e.g., `Acme Enterprise Global`
-   - **Directory Provider**: Select `Okta SCIM 2.0 (SAML / OAuth2)`, `Microsoft Entra / Azure AD SCIM`, `Corporate LDAP / Active Directory`, or `GitHub Enterprise Teams`.
-   - **Assigned Team**: Assign primary squad, e.g., `Core Platform & Infrastructure (Lead)`.
-4. **Execute Synchronization**: Click **Sync Directory & Activate Identity**.
+### Keep git credentials healthy
 
-### 2. Active Identity Persistence (`~/.config/robos/identity.json`)
-Upon execution, RobOS binds your active identity locally, sets global `git config user.name` and `user.email`, and writes your active profile to `~/.config/robos/identity.json`:
+**Git Login Manager** checks four things: `gh` is logged in, an SSH key exists in `~/.ssh` (`id_ed25519`, `id_ecdsa` or `id_rsa`), `ssh -T git@github.com` succeeds, and the global git identity is set. Each failing check has a button next to it. The background check runs every five minutes, and **Check now** runs it at once. The window text says 60 seconds, but that countdown is only cosmetic.
+
+![Git Login Manager showing four failing checks: gh CLI authenticated, SSH key exists, SSH to github.com, and git identity configured, each with an action button]({{ '/assets/images/screenshots/git-login-manager.png' | relative_url }})
+{: .robos-zoomable-img }
+
+*Look at the four checks and the button on each row.*
+
+It only handles GitHub. It also changes your global git config: if the identity is empty it fills it from your GitHub profile, and it always sets `url."git@github.com:".insteadOf https://github.com/`, so HTTPS clone URLs for github.com use SSH.
+
+## Step 2: Define teams as groups
+
+Open **RobOS Group Manager**. Click the plus button above the group list, enter a Group ID, Name and Description, and save. You can also use **Create with AI** to describe a group in a sentence; that needs an AI provider configured for RobOS.
+
+Each group has seven sections:
+
+| Section | What you record |
+|:---|:---|
+| Git Projects | Repository URL, description, default branch, notes |
+| Software Installations | Tool, version, install command, verify command |
+| Onboarding Steps | Ordered steps with an owner |
+| Secret Management | Secret name and the `pass` store path where it lives |
+| CI Environments | Name, CI URL, whether a VPN is needed, steps to connect |
+| Members | People picked from the People Directory |
+| Workspaces | Local folders that contain a `.vscode` or `.idea` directory |
+
+Only the Git Projects section drives other behavior: Git Projects can import a group's repositories. The software, onboarding, secret and CI sections are documentation. Nothing runs an install command or reads a secret from them. Secret Management stores the `pass` path, never the value.
+
+## Step 3: Bring in repositories
+
+In **RobOS Git Projects**, two buttons add repositories in bulk.
+
+- **Add Dev Group Repos** opens the group picker. Choose a group and the app adds every repository URL from its Git Projects section. A checkbox, "Clone all repos now", clones them into the default local paths.
+- **Add GitHub Org** adds the repositories of a GitHub organization, using the `gh` CLI that Step 1 logged in.
+
+Project entries are saved in `~/.config/robos/git-projects.json`.
+
+### Describe the repositories in the knowledge graph
+
+If you want RobOS to know how your services relate, import them into a knowledge graph workspace. The importer reads local Git checkouts you list; it does not fetch from GitHub, S3 or a service catalog. Create `sources.json` and `local.json`:
+
 ```json
-{
-  "uid": "sconnor",
-  "displayName": "Sarah Connor",
-  "name": "Sarah Connor",
-  "email": "sarah.connor@acmeglobal.com",
-  "handle": "sconnor",
-  "role": "Lead Architect & Approver",
-  "department": "Platform Engineering",
-  "company": "Acme Enterprise Global",
-  "provider": "Okta SCIM 2.0",
-  "team": "core-platform",
-  "identifiedAt": "2026-09-05T17:44:11Z"
-}
+{ "namespace": "acme", "title": "Acme system", "sources": [ { "id": "orders-api" }, { "id": "web" } ] }
 ```
-The active identity badge immediately updates to **Sarah Connor · Lead Architect & Approver · core-platform**.
 
-### 3. Enterprise User Directory Materialization (`~/.config/robos/people/`)
-Every synchronized enterprise employee profile is materialized locally under `~/.config/robos/people/<uid>.json`:
 ```json
-{
-  "uid": "sconnor",
-  "displayName": "Sarah Connor",
-  "email": "sarah.connor@acmeglobal.com",
-  "role": "Lead Architect & Approver",
-  "team": "core-platform",
-  "sshKeys": ["ssh-ed25519 AAAAC3NzaC... sarah@acme"],
-  "gpgFingerprint": "8F3B 29A1 ...",
-  "syncedAt": "2026-09-05T17:44:11Z"
-}
+{ "orders-api": "/work/checkouts/orders-api", "web": "/work/checkouts/web" }
 ```
 
----
+Run these from a RobOS checkout. The first command writes `proposal.json` for you to review, and the second applies it:
 
-## Step 2: Mapping to Team Topologies (`.robos/teams.yaml`)
+```bash
+node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
+  --manifest sources.json --paths local.json \
+  --graph-root /work/graph --output proposal.json
 
-RobOS avoids messy ad-hoc permission schemes by standardizing on **Team Topologies**:
-- **Stream-Aligned Teams**: Dedicated to a single product stream (e.g. Order Processing & Payments).
-- **Platform Teams**: Enable stream-aligned teams by providing infrastructure and developer platforms (e.g. Core Platform & Kubernetes).
-- **Enabling Teams**: Cross-cutting guilds propagating new tech, architecture, and security practices (e.g. Architecture Guild).
-- **Complicated Subsystem Teams**: Own mathematically or cryptographically intensive components.
+node packages/robos-graph/bin/kgraph-cli.js apply --graph-root /work/graph --file proposal.json
+node packages/robos-graph/bin/kgraph-cli.js inspect --graph-root /work/graph --require-evidence
+```
 
-### Declarative Team Definition (`.robos/teams.yaml`)
+Add `--dry-run` to the first command to print coverage and validation without writing a proposal. The importer extracts what it can from tracked files, such as `package.json`, and reports the rest as unsupported. See the [knowledge graph guide]({{ site.baseurl }}{% link knowledge-graph.md %}) and the skill's [SKILL.md](https://github.com/nddipiazza/robos/blob/main/plugins/robos/skills/import-company-kgraph/SKILL.md) for refinement and the full option list.
+
+## Step 4: Connect your task tracker
+
+Open **RobOS Task Servers**, click the plus button and pick a type: Gitea, Jira / Atlassian, GitHub Issues, GitLab Issues, Linear or Azure DevOps.
+
+![Task Servers with an empty server list and a plus button]({{ '/assets/images/screenshots/task-servers.png' | relative_url }})
+{: .robos-zoomable-img }
+
+*Look at the plus button at the top of the list, which opens the type menu.*
+
+Jira and GitHub have their own forms:
+
+- **Jira**: Jira Base URL, Username / Email, API Token and Project Keys. Click **Test Connection**. RobOS tries a Bearer token first (Jira Server) and then basic auth (Atlassian Cloud) against `/rest/api/2/myself`.
+- **GitHub Issues**: GitHub API URL (blank for github.com, or your Enterprise URL), a **Use Git client account** option that uses the `gh` login from Step 1, or a Personal Access Token, plus the repositories to track.
+- The other types use a generic form with API / Instance URL, Username / Email, API Token, Project Keys and Notes. There is no connection test for them.
+
+The API token field takes a path in the `pass` store, which you pick with **Select…**. The token itself is not saved in `settings.json`. That is why Step 1 initializes `pass` first.
+
+## Step 5: Record teams and people
+
+Commit a roster to `.robos/teams.yaml` in the repository you work in. This is the format that `robos-lib` validates (`teams.schema.json`):
+
 ```yaml
 version: "1.0"
 kind: TeamRoster
-organization: "Acme Enterprise Global"
-directoryProvider: "Okta / Azure AD SCIM"
-syncedAt: "2026-09-05T12:00:00Z"
 teams:
   - id: core-platform
-    name: Core Platform & Infrastructure
+    name: Core Platform
     topology: platform
-    lead: sarah-connor
     members:
-      - id: sarah-connor
+      - id: sconnor
         name: Sarah Connor
         type: human
         role: Approver
-      - id: marcus-wright
-        name: Marcus Wright
-        type: human
-        role: Developer
-  - id: order-processing
-    name: Order Processing & Payments
-    topology: stream-aligned
-    lead: kyle-reese
-    members:
-      - id: kyle-reese
-        name: Kyle Reese
-        type: human
-        role: Developer
-  - id: architecture-guild
-    name: Enterprise Architecture Guild
-    topology: enabling
-    lead: john-connor
-    members:
-      - id: john-connor
-        name: John Connor
-        type: human
-        role: Approver
 ```
 
-### Modular KGraph Packages Synchronization
-Simultaneously, RobOS materializes the developer profile and team nodes directly into the **Modular KGraph Packages** (`organization` package):
-```json
-{
-  "@id": "urn:robos:person:sconnor",
-  "@type": ["oslc:Person", "robos:Developer"],
-  "dcterms:title": "Sarah Connor",
-  "robos:email": "sarah.connor@acmeglobal.com",
-  "robos:handle": "sconnor",
-  "robos:role": "Lead Architect & Approver",
-  "robos:memberOf": "urn:robos:team:core-platform"
-}
-```
-This enables autonomous AI coding agents, PR review platforms, and IDE bridges to resolve `robos:memberOf` and cryptographically enforce code ownership boundaries immediately upon login.
+The schema allows the topologies `stream-aligned`, `platform`, `enabling` and `complicated-subsystem`, and the member types `human` and `agent`. Agent members can also carry `model` and `skills`. The GitOps parser in `robos-lib` checks that the root has `version`, `kind` and `teams`, and that each team has `id`, `name`, `topology` and `members`. It does not check the allowed values.
 
----
+The app wizard reads this file from the nearest `.robos` folder above where it runs and offers those teams when you create a project. Its reader is line-based, so it also lists each member `id` as an extra team. Without the file it offers three built-in sample teams.
 
-## Step 3: Enterprise VCS & Task Tracker Migration
+To keep a directory of people on each machine, use **RobOS People Directory**. It keeps one JSON file per person, can import LDIF, and marks which person is you. It is a local address book. It has a setting for LDAP, but the app contains no LDAP client yet.
 
-### Generating Company Knowledge Graph Entries with AI Agent (`import-company-kgraph`)
+## What the Sync Directory button does
 
-When onboarding an existing company or engineering organization with dozens or hundreds of repositories across GitHub, GitLab, HTTP service portals, or AWS S3 inventories, developers should tell their autonomous AI agent to use the **`import-company-kgraph`** skill:
+Group Manager has two buttons under the identity badge: **Sync Directory** and **Bootstrap**. Sync Directory opens a form with a name, email, GitHub username, organization, a provider drop-down (Okta, Microsoft Entra, LDAP / Active Directory, GitHub Enterprise Teams) and a team.
 
-```bash
-# Ingest company repository inventory from an AWS S3 bucket
-node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
-  --source s3://acme-cloud-governance/sdlc-catalog/enterprise-repos.json \
-  --company-name "Acme Global" \
-  --company-slug "acme" \
-  --import-to-robos
+![Group Manager showing the Enterprise Directory Sync and Identity Setup form with five status lines below the fields]({{ '/assets/images/screenshots/existing-company-teams-mapped_frame.png' | relative_url }})
+{: .robos-zoomable-img }
 
-# Or ingest from an internal HTTP service portal / Backstage catalog
-node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
-  --source https://developer.internal.acme.com/api/catalog-entities.json \
-  --company-name "Acme Global" \
-  --output ./acme-kgraph.jsonld
+*Look at the status lines under the form. The app prints them itself; no directory was queried.*
 
-# Or scan local directories of cloned workspaces
-node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
-  --source /home/developer/source/repos \
-  --company-name "Acme Global" \
-  --import-to-robos
-```
+The provider choice is only recorded. The app makes no network request to Okta, Entra, LDAP or GitHub. The status lines ("Querying Okta SCIM endpoint", "Ingested 42 enterprise users") are fixed text in the window. Clicking the button writes:
 
-The skill deeply analyzes every repository, detects archetypes (`robos:Microservice`, `robos:FrontEndApp`, `robos:DesktopApp`, `robos:PCGame`, `robos:MobileGame`, `robos:ConsoleApp`, `robos:MobileApp`, `robos:DataPipeline`, `robos:Library`), synthesizes OpenAPI 3.1 contracts, and automatically generates valid OSLC JSON-LD package files ready to import directly into RobOS.
+- `~/.config/robos/identity.json` with the name and email you typed, plus a fixed role (`Lead Architect & Approver`) and department (`Platform Engineering`);
+- three sample colleagues and three sample groups (Core Platform, Order Processing, Enterprise Architecture Guild) into `~/.config/robos/people/` and `~/.config/robos/groups/`;
+- a `.robos/teams.yaml` and person and team nodes in `knowledge-graph.jsonld`, written both under `~/.robos/` and under the folder described below;
+- your global `git config user.name` and `user.email`.
 
-### Bulk Git Repository Ingestion & Git Projects Linking
-Once the Knowledge Graph entries are generated, RobOS Git Projects (`~/.config/robos/git-projects.json`) links all repositories into the multi-repo explorer:
-```bash
-# Ingest all repositories under an enterprise GitHub / Gitea organization
-node packages/robos-cli/bin/robos.js git import --org acme-enterprise --vcs github-enterprise
-```
-RobOS scans all cloned repositories, registers them into the Git Projects catalog, and assigns default team ownership based on repository metadata and `.robos/teams.yaml`.
+That `.robos/` folder is two levels above the app folder: the root of the RobOS checkout in a development setup, or `/usr/local/share/.robos/` for an installed copy. In a RobOS checkout, `teams.yaml` and `knowledge-graph.jsonld` there are tracked by git, so the button overwrites them. The team file is written last, so if that folder is not writable the button reports an error after the other files exist. Do not use this button to set up a real organization. Use Steps 1 to 5 instead.
 
-### Task Tracking Integration (Jira & GitHub Projects)
-RobOS Task Servers connect to enterprise Jira Cloud, Jira Data Center, or GitHub Enterprise:
-1. Open **Task Servers** (`packages/task-servers`) or configure in `~/.config/robos/task-servers.json`.
-2. Connect OAuth tokens or personal API credentials.
-3. Map Jira project keys (e.g., `PAY`, `INFRA`, `CORE`) to RobOS task roadmaps.
-4. Sprint tickets automatically synchronize into the Directed Acyclic Graph (DAG) task engine.
+## Related
 
----
-
-## Step 4: Enterprise Secrets Vault & Commit Governance
-
-### Bridging Corporate Secrets Engines
-RobOS stores runtime credentials in standard GPG-encrypted Unix `pass` format (`~/.password-store`). For enterprise environments, RobOS bridges external secrets engines:
-- **HashiCorp Vault**: Syncs development secrets via `vault kv get` on demand.
-- **AWS Secrets Manager**: Authenticates with AWS SSO to pull non-production API tokens.
-- **1Password CLI (`op`)**: Unlocks secrets directly into developer memory without storing unencrypted files on disk.
-
-### Mandatory Commit Signing Governance
-Enterprise security policies often require signed Git commits:
-1. Every imported user profile contains verified GPG public keys and SSH signing keys.
-2. RobOS enforces cryptographic commit signature validation:
-   ```bash
-   git log --show-signature -1
-   # Good "gpg" signature from "Sarah Connor <sarah.connor@acme-enterprise.com>"
-   ```
-3. Autonomous AI agents run in isolated tmpfs workspaces and sign commits using team agent identities under human approval.
-
----
-
-## Step 5: Multi-Cluster Kubernetes & ArgoCD Ingestion
-
-Enterprise Kubernetes infrastructure connects seamlessly into **Kube Studio** (`packages/kube-studio`):
-1. **Kubeconfig Discovery**: Ingests all active contexts from `~/.kube/config` (EKS, GKE, AKS, and bare-metal clusters).
-2. **Namespace Mapping**: Maps namespaces (`production`, `staging`, `dev`) to container nodes in the **Modular KGraph Packages** (`core-platform`).
-3. **ArgoCD GitOps Sync**: Connects to the ArgoCD API to display live deployment synchronization status and rollback history.
-
----
-
-## E2E Walkthrough & Proof of Work
-
-See the complete, live end-to-end walkthrough video, audio narration, and verification logs:
-* [👉 **Existing Company Setup Walkthrough Video & Proof-of-Work**]({{ site.baseurl }}{% link walkthroughs.md %}#step-17-existing-company-setup--directory-sync-okta-azure-ad-ldap)
-
----
-
-## Next Steps
-
-- **[New Company Setup Guide]({{ site.baseurl }}{% link new-company-setup.md %})**: Bootstrap a new greenfield organization and foundational squads.
-- **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
-- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
-
+- [New company]({{ '/new-company-setup.html' | relative_url }}) for a team that is starting from nothing.
+- [Personas]({{ '/personas.html' | relative_url }}) lists which apps suit which jobs.
+- [Apps]({{ site.baseurl }}{% link apps.md %}) has a page for each app named here.

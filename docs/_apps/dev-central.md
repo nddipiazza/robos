@@ -3,43 +3,46 @@ title: "Dev Central"
 package: dev-central
 category: core-desktop
 icon: dev-central.svg
-summary: "Daily developer engineering command center: sprint burndown, PR health, calendar, and AI standup."
-description: "Daily developer engineering command center: sprint burndown, PR health, calendar, and AI standup."
+summary: "Your daily task list: issues from your task servers as an epic tree, with buttons to start design or implementation agents and to open the related PR."
+description: "Dev Central shows tasks from the task servers configured in RobOS (GitHub issues, Jira), groups them under epics by workflow stage, and launches agent runs and PR review from each row. A legacy dashboard is available with --v1."
 ---
 
-Your daily engineering cockpit and mission control hub for the entire Software Delivery Lifecycle (SDLC). Dev Central aggregates in-flight tasks, sprint commitments, pull request health, reviewer queues, blocker early warnings, and automated daily standup synthesis into a single high-density desktop cockpit:
+Dev Central is where you see what is assigned to you and what to do next with it. Since v2 the default window is a task tree. The older dashboard (v0.8.2: overview cards, my PRs, standup) is still in the package.
 
-- **Executive 5-Metric KPI Ribbon**: Real-time visibility into assigned tasks, open pull requests, pending code reviews, active blocker radar alerts, and aggregate CI/CD pipeline health percentage.
-- **Context-Aware View Tabs**: Fast switching between unified Mission Control, dedicated Tasks & Sprint, Pull Requests & CI, Blocker Radar, AI Standup, and Live Desktop Activity logs.
-- **Lifecycle Status Chips & Fuzzy Command Search (`⌘K`)**: Instant status filtering (`All`, `In Progress`, `Review`, `Todo`) and millisecond-fast fuzzy search across work items, branch names, and microservices.
-- **Automated 3-Column AI Standup Generator**: Analyzes recently merged PRs (Yesterday), assigned sprint work (Today), and detected pipeline roadblocks (Blockers) with single-click clipboard export for daily team standup syncs.
-- **Blocker Early Warning Radar**: Proactive automated detection of failed CI pipelines, stale code review requests (>24h), and stagnant work items (>3d) before they derail sprint velocity.
-- **Interactive Proof-of-Work Review & 1-Click Production Merge**: High-fidelity verification modal with 4 automated quality gates (Pact consumer contracts, W3C SHACL shape conformance, Spectral OpenAPI 3.1 linting, E2E regressions), 1080p recorded video walkthrough with interactive chapter bookmarks, side-by-side diffs, and 1-click merge to `main` promoting feature state to Production Reality.
+## Requirements
 
-| Executive Mission Control Dashboard (`dev-central-overview.png`) | Interactive Proof-of-Work Review & Quality Gates (`dev-central-review-modal.png`) |
-|:---:|:---:|
-| ![Dev Central Overview]({{ '/assets/images/screenshots/dev-central-overview.png' | relative_url }}) | ![Interactive Proof-of-Work Review Modal]({{ '/assets/images/screenshots/dev-central-review-modal.png' | relative_url }}) |
+- At least one task server in `~/.config/robos/settings.json` (`task_servers`), set up in the Task Servers app. GitHub servers use the RobOS-selected Git account; the `gh` CLI is used by the legacy dashboard.
+- For agent buttons, an agent CLI that RobOS Agents can drive (the run records name `codex` or `claude` as the provider).
 
-| My Tasks & Sprint with Lifecycle Filter Chips (`dev-central-tasks-filtered.png`) | Pull Requests & CI Pipeline Health (`dev-central-prs-view.png`) |
-|:---:|:---:|
-| ![Tasks & Lifecycle Filter Chips]({{ '/assets/images/screenshots/dev-central-tasks-filtered.png' | relative_url }}) | ![Pull Requests & CI View]({{ '/assets/images/screenshots/dev-central-prs-view.png' | relative_url }}) |
+## The v2 task tree
 
-| Blocker Early-Warning Radar (`dev-central-blocker-radar.png`) | Real-Time Fuzzy Command Search (`dev-central-search.png`) |
-|:---:|:---:|
-| ![Blocker Radar]({{ '/assets/images/screenshots/dev-central-blocker-radar.png' | relative_url }}) | ![Fuzzy Command Search]({{ '/assets/images/screenshots/dev-central-search.png' | relative_url }}) |
+The sidebar lists **Views**: **Assigned to me**, **Needs attention**, **Unassigned**, **All tasks**, and one view per workflow stage (Not started, Designed, Agent implementing, Local evidence review, Draft PR pipeline review, Human review, Closed). Below it is a list of **Epics**.
 
-| Automated 3-Column AI Standup Notes (`dev-central-standup.png`) | 1-Click Sign-Off & Production Reality Merge (`dev-central-merged-reality.png`) |
-|:---:|:---:|
-| ![AI Standup Summary]({{ '/assets/images/screenshots/dev-central-standup.png' | relative_url }}) | ![Production Reality Merged]({{ '/assets/images/screenshots/dev-central-merged-reality.png' | relative_url }}) |
+- An issue with sub-issues becomes an epic and its descendants become the tasks under it. Choose **View by** Epics (tree) or Tasks (flat list), and use **Group by** (Epic, Status, Priority, Assignee) in the flat list.
+- The table columns include Issue, Summary, Epic, Type, Status, Priority, Assignee, Pull request, PR state, CI, Review, Branch, Parent, Sub-issues, Labels, Repository, Created, Updated and Options. Right-click a header or use the columns button to choose them. **Filter this list...** narrows the current view.
+- **Find** (or `/`) opens a search over every task on your task servers, for example `kafka p0 is:unassigned`. `Enter` assigns the highlighted task to you, and **Assign selected to me** assigns several.
+- The **Options** button follows the task's stage: **Design** (a read-only design agent), **Implement**, **Resume**, **Steer** while a run is live, **Review evidence** (opens PR Review), **Check pipeline** and **Review PR** (open the PR in your browser). Runs can be steered or killed from the row's menu, and a run's discussion opens in a side panel.
+- Keys: `j` and `k` move, the left and right arrows collapse and expand, `Enter` opens details, `a` assigns to you.
 
-## Your pull requests
+Agent runs are plain JSON files in `~/.robos/agent-runs/<runId>.json` with a `.log` of the agent's output, so other RobOS apps can publish runs for a task by writing the same record. The workflow stages come from `packages/robos-lib/default-workflow`. A per-server cache (`~/.config/robos/dev-central-v2-cache.json`) lets the window paint before a refresh finishes.
 
-My Pull Requests sits at the top of the overview. It includes your open PRs
-from every repository on the active task server, with passing CI first and
-the most recently updated PRs first within each group. Use **Passing CI only**
-to narrow the list. GitHub errors appear in the list instead of sample PRs.
+## The legacy dashboard
 
-For a draft with passing CI, **Move from draft to ready** checks the current
-commit, author, and CI on GitHub before removing draft status. **Open code
-review** opens that PR in Review Theater, reusing its saved local review when
-one exists under `~/.robos/local-reviews`. The GitHub link remains available.
+Start it with `--v1` or `ROBOS_DEVCENTRAL_UI=v1`. Its tabs are an overview, Active Feature, My Tasks & Sprint, Pull Requests & CI, Notifications, Blocker Radar, AI Standup and Desktop Activity.
+
+![The legacy Dev Central dashboard with overview cards, task, pull request and blocker lists and a standup summary]({{ '/assets/images/screenshots/dev-central-overview.png' | relative_url }})
+{: .robos-zoomable-img }
+
+*The legacy v0.8.2 dashboard with sample data. The "Sprint 42" badge in the header is fixed text.*
+
+Tasks and PRs come from `gh` for the first repository of the active task server. Sample data is used only in test mode. The "AI Standup" is built by plain code from merged PRs, open issues and detected blockers; if no PR has merged it inserts a fixed placeholder line. In **Pull Requests & CI**, **Passing CI only** filters your open PRs, **Move from draft to ready** re-checks the PR head, author and CI on GitHub before marking a draft ready, and **Open code review** opens the PR in PR Review with its saved local review from `~/.robos/local-reviews` if there is one.
+
+## Command-line options
+
+| Option | Effect |
+|---|---|
+| `--v1`, or `ROBOS_DEVCENTRAL_UI=v1` | Open the legacy dashboard |
+| `--dev`, or `ROBOS_DEV=1` | Reload the window when renderer files change |
+| `--notifications`, `--tab=tasks`, `--tab=feature` | Switch to a tab on start (legacy dashboard) |
+
+Run it with `electron packages/dev-central`. Source: [`packages/dev-central`](https://github.com/nddipiazza/robos/tree/main/packages/dev-central).

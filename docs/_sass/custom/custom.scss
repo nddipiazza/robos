@@ -1,998 +1,216 @@
-// ==============================================================================
-// RobOS Custom Theme & Typography Stylesheet
-// Bespoke Dark Obsidian & Electric Cyan Theme
-// ==============================================================================
+// Fallbacks so the theme's own built-in schemes (light, dark) still compile with this file.
+$rb-hot: #c2410c !default;
+$rb-tint: #e8ecf6 !default;
+$rb-sand: #f2ead3 !default;
+$rb-muted: #5a6070 !default;
+$rb-card: #fffdf8 !default;
+$rb-deep: #14215f !default;
+$rb-tok-comment: #6b7280 !default;
+$rb-tok-keyword: #1c2c6e !default;
+$rb-tok-string: #a8390c !default;
+$rb-tok-number: #7c5a00 !default;
+$rb-tok-func: #2f3f9e !default;
+$rb-tok-type: #1d6b45 !default;
+$rb-tok-punct: #5a6070 !default;
+$rb-tok-ins: #1d6b45 !default;
+$rb-tok-del: #b42318 !default;
 
-// --- Font Families ---
-$font-family-headings: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-$font-family-body: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-$font-family-code: "Fira Code", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+// RobOS docs: look and feel. Compiled into both the light (robos) and dark (robos-dark)
+// stylesheets; every color comes from the scheme variables, so one file serves both.
 
-// --- RobOS Color Palette ---
-$robos-bg-deep: #080b11;          // Deep space obsidian background
-$robos-bg-surface: #0d131f;       // Midnight slate sidebar & header
-$robos-bg-card: #121927;          // Elevated card background
-$robos-bg-card-hover: #172033;    // Hover state for interactive cards
-$robos-border: #1e293b;           // Subtle slate border
-$robos-border-glow: rgba(0, 229, 255, 0.25); // Subtle cyan glow border
-
-$robos-cyan: #00e5ff;             // Primary Electric Cyan
-$robos-cyan-muted: #00bcd4;       // Muted Cyan
-$robos-indigo: #6366f1;           // Electric Indigo / Purple
-$robos-emerald: #10b981;          // Success Green
-$robos-amber: #f59e0b;            // Accent Warning Gold
-$robos-rose: #f43f5e;             // Danger Rose
-
-$robos-text-primary: #f1f5f9;     // Crisp high-contrast text
-$robos-text-secondary: #94a3b8;   // Muted slate text
-$robos-text-dim: #64748b;         // Dim metadata text
-
-// ==============================================================================
-// Global Typography & Body
-// ==============================================================================
-html, body {
-  font-family: $font-family-body;
-  background-color: $robos-bg-deep !important;
-  color: $robos-text-primary !important;
-  letter-spacing: -0.01em;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+:root {
+  --rb-serif: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --rb-hot: #{$rb-hot};
+  --rb-tint: #{$rb-tint};
+  --rb-sand: #{$rb-sand};
+  --rb-muted: #{$rb-muted};
+  --rb-card: #{$rb-card};
+  --rb-deep: #{$rb-deep};
+  --rb-line: #{$border-color};
+  --rb-link: #{$link-color};
+  --rb-head: #{$body-heading-color};
+  --rb-text: #{$body-text-color};
 }
 
-// Headings
-h1, h2, h3, h4, h5, h6, .site-title {
-  font-family: $font-family-headings !important;
-  letter-spacing: -0.025em !important;
-  font-weight: 700;
-  color: $robos-text-primary !important;
-}
+body { -webkit-font-smoothing: antialiased; }
 
-h1 {
-  font-size: 2.25rem !important;
-  line-height: 1.2 !important;
-  margin-bottom: 1.25rem !important;
-  background: linear-gradient(135deg, #ffffff 40%, $robos-cyan 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-h1 code, h2 code, h3 code, h4 code, h5 code, h6 code {
-  -webkit-text-fill-color: $robos-cyan !important;
-  color: $robos-cyan !important;
-  background-color: #162032 !important;
-  background-clip: border-box !important;
-  -webkit-background-clip: border-box !important;
-  border: 1px solid rgba(0, 229, 255, 0.3) !important;
-  font-size: 0.8em !important;
-  vertical-align: middle !important;
-  display: inline-block !important;
-  line-height: 1.3 !important;
-}
-
-h2 {
-  font-size: 1.5rem !important;
-  margin-top: 2.5rem !important;
-  margin-bottom: 1rem !important;
-  border-bottom: 1px solid $robos-border !important;
-  padding-bottom: 0.5rem !important;
-  color: #ffffff !important;
-}
-
-h3 {
-  font-size: 1.2rem !important;
-  margin-top: 1.75rem !important;
-  color: $robos-cyan !important;
-}
-
-p, li {
-  line-height: 1.68 !important;
-  color: #cbd5e1 !important;
-}
-
-strong {
-  color: #ffffff !important;
+// ---------------------------------------------------------------- typography
+h1, h2, h3 {
+  font-family: var(--rb-serif);
   font-weight: 600;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
 }
+h1 { font-size: 2.4rem; line-height: 1.12; margin-bottom: 0.4em; }
+h2 { font-size: 1.6rem; line-height: 1.2; margin-top: 2.2em; }
+h3 { font-size: 1.25rem; line-height: 1.3; margin-top: 1.8em; }
+h4, h5, h6 { color: $body-heading-color; }
+.main-content h2 { padding-top: 0.6em; border-top: 1px solid var(--rb-line); }
+.main-content h2:first-of-type { border-top: 0; }
 
-// Links
-a {
-  color: $robos-cyan !important;
-  text-decoration: none;
-  transition: all 0.2s ease-in-out;
+.fs-6, .fs-5 { color: var(--rb-muted); line-height: 1.55; }
+.fw-300 { font-weight: 400; }
+.fs-6 { font-size: 1.1rem !important; }
 
-  &:hover {
-    color: #80f3ff !important;
-    text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
-  }
+.main-content a:not(.btn):not(.rb-link):not(.robos-app-card) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  background-image: none;
 }
-
-// Code & Monospace
-code, pre, kbd, samp {
-  font-family: $font-family-code !important;
-  font-size: 0.88em !important;
-}
-
-code:not(pre code) {
-  background-color: #1a2234 !important;
-  color: #38bdf8 !important;
-  padding: 0.15em 0.4em !important;
-  border-radius: 4px !important;
-  border: 1px solid rgba(56, 189, 248, 0.2) !important;
-  font-weight: 500;
-}
-
-pre {
-  background-color: $robos-bg-card !important;
-  border: 1px solid $robos-border !important;
-  border-radius: 8px !important;
-  padding: 1.25rem !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
-}
-
-// ==============================================================================
-// Sidebar & Header Styling
-// ==============================================================================
-.side-bar {
-  background-color: $robos-bg-surface !important;
-  border-right: 1px solid $robos-border !important;
-
-  .site-header {
-    position: relative !important;
-    min-height: 11.5rem !important;
-    height: auto !important;
-    max-height: none !important;
-    padding: 1.25rem 1rem !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    border-bottom: 1px solid rgba(30, 41, 59, 0.6) !important;
-
-    #menu-button {
-      @media (max-width: 50rem) {
-        position: absolute !important;
-        right: 1rem !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-      }
-    }
-
-    @media (max-width: 50rem) {
-      min-height: 7rem !important;
-      padding: 0.75rem 1rem !important;
-    }
-  }
-
-  .site-title {
-    padding: 0 !important;
-    width: 100% !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    height: auto !important;
-  }
-
-  .site-logo {
-    height: 9.5rem !important;
-    min-height: 9.5rem !important;
-    width: 12.66rem !important;
-    max-width: 100% !important;
-    background-size: cover !important;
-    background-position: center center !important;
-    border-radius: 14px !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 229, 255, 0.25) !important;
-    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-
-    &:hover {
-      transform: translateY(-1px) !important;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 229, 255, 0.5) !important;
-    }
-
-    @media (max-width: 50rem) {
-      height: 5.5rem !important;
-      min-height: 5.5rem !important;
-      width: 7.33rem !important;
-      border-radius: 10px !important;
-    }
-  }
-
-  .nav-list-item {
-    margin-bottom: 2px;
-  }
-
-  .nav-list-link {
-    font-family: $font-family-body !important;
-    font-size: 0.92rem !important;
-    font-weight: 500 !important;
-    color: $robos-text-secondary !important;
-    padding: 0.45rem 0.75rem !important;
-    border-radius: 6px !important;
-    transition: all 0.15s ease-in-out !important;
-
-    &:hover {
-      background-color: rgba(0, 229, 255, 0.08) !important;
-      color: #ffffff !important;
-      transform: translateX(3px);
-    }
-
-    &.active {
-      background: linear-gradient(90deg, rgba(0, 229, 255, 0.15) 0%, rgba(0, 229, 255, 0.02) 100%) !important;
-      color: $robos-cyan !important;
-      font-weight: 600 !important;
-      border-left: 3px solid $robos-cyan !important;
-      box-shadow: inset 1px 0 0 0 $robos-cyan;
-    }
-  }
-}
-
-// ==============================================================================
-// Tables & Data Grids
-// ==============================================================================
-table {
-  width: 100% !important;
-  border-collapse: separate !important;
-  border-spacing: 0 !important;
-  margin: 1.5rem 0 !important;
-  background-color: $robos-bg-card !important;
-  border: 1px solid $robos-border !important;
-  border-radius: 8px !important;
-  overflow: hidden !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
-
-  thead th {
-    background-color: #0f1624 !important;
-    color: $robos-cyan !important;
-    font-family: $font-family-headings !important;
-    font-size: 0.85rem !important;
-    font-weight: 600 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.05em !important;
-    padding: 0.85rem 1rem !important;
-    border-bottom: 1px solid $robos-border !important;
-    border-top: none !important;
-  }
-
-  tbody td {
-    padding: 0.75rem 1rem !important;
-    border-bottom: 1px solid rgba(30, 41, 59, 0.6) !important;
-    border-top: none !important;
-    font-size: 0.92rem !important;
-    color: #cbd5e1 !important;
-  }
-
-  tbody tr:last-child td {
-    border-bottom: none !important;
-  }
-
-  tbody tr:hover {
-    background-color: rgba(0, 229, 255, 0.03) !important;
-  }
-}
-
-// ==============================================================================
-// Buttons & Callouts
-// ==============================================================================
-.btn {
-  font-family: $font-family-headings !important;
-  font-weight: 600 !important;
-  border-radius: 6px !important;
-  padding: 0.5rem 1.25rem !important;
-  transition: all 0.2s ease !important;
-  display: inline-block !important;
-  letter-spacing: -0.01em !important;
-
-  &.btn-primary {
-    background: linear-gradient(135deg, #00bcd4 0%, #00e5ff 100%) !important;
-    color: #080b11 !important;
-    border: none !important;
-    box-shadow: 0 0 15px rgba(0, 229, 255, 0.3) !important;
-
-    &:hover {
-      background: linear-gradient(135deg, #00e5ff 0%, #38bdf8 100%) !important;
-      box-shadow: 0 0 25px rgba(0, 229, 255, 0.5) !important;
-      transform: translateY(-1px) !important;
-    }
-  }
-
-  &:not(.btn-primary) {
-    background-color: #162032 !important;
-    color: #e2e8f0 !important;
-    border: 1px solid $robos-border !important;
-
-    &:hover {
-      background-color: #1e2d44 !important;
-      border-color: $robos-cyan !important;
-      color: #ffffff !important;
-      transform: translateY(-1px) !important;
-    }
-  }
-}
-
-// Callouts / Alerts
-.callout, blockquote {
-  background-color: $robos-bg-card !important;
-  border: 1px solid $robos-border !important;
-  border-left: 4px solid $robos-cyan !important;
-  border-radius: 8px !important;
-  padding: 1rem 1.25rem !important;
-  margin: 1.5rem 0 !important;
-
-  p {
-    margin: 0 !important;
-  }
-}
-
-// ==============================================================================
-// Images & Visual Artifacts
-// ==============================================================================
-img {
-  border-radius: 8px !important;
-  border: 1px solid $robos-border !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
-  transition: all 0.25s ease !important;
-
-  &:hover {
-    border-color: rgba(0, 229, 255, 0.4) !important;
-  }
-}
-
-// ==============================================================================
-// RobOS Interactive Image Zoom & Lightbox
-// ==============================================================================
-.robos-zoomable-img {
-  cursor: zoom-in !important;
-  transition: transform 0.22s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.22s ease, border-color 0.22s ease !important;
-
-  &:hover {
-    border-color: $robos-cyan !important;
-    box-shadow: 0 12px 36px rgba(0, 229, 255, 0.22), 0 0 0 1px rgba(0, 229, 255, 0.4) !important;
-    transform: translateY(-2px);
-  }
-}
-
-body.robos-lightbox-open {
-  overflow: hidden !important;
-}
-
-.robos-lightbox-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100000;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(6, 9, 15, 0.94);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  user-select: none;
-
-  &.active {
-    opacity: 1;
-    pointer-events: auto;
-  }
-}
-
-.robos-lightbox-header {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  background: linear-gradient(180deg, rgba(8, 11, 17, 0.95) 0%, rgba(8, 11, 17, 0) 100%);
-  z-index: 10;
-}
-
-.robos-lightbox-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.robos-lightbox-badge {
-  font-family: $font-family-headings !important;
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: $robos-cyan;
-  background: rgba(0, 229, 255, 0.12);
-  border: 1px solid rgba(0, 229, 255, 0.35);
-  padding: 0.25rem 0.65rem;
-  border-radius: 4px;
-}
-
-.robos-lightbox-zoom-badge {
-  font-family: $font-family-code !important;
-  font-size: 0.82rem;
-  color: #94a3b8;
-  background: $robos-bg-card;
-  border: 1px solid $robos-border;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-}
-
-.robos-lightbox-controls {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.robos-lightbox-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  background: $robos-bg-card;
-  color: #cbd5e1;
-  border: 1px solid $robos-border;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease-in-out;
-  padding: 0;
-  text-decoration: none;
-
-  &:hover {
-    background: #1a2436;
-    border-color: $robos-cyan;
-    color: $robos-cyan;
-    box-shadow: 0 0 14px rgba(0, 229, 255, 0.35);
-    transform: translateY(-1px);
-  }
-}
-
-.robos-lightbox-btn-close {
-  background: rgba(244, 63, 94, 0.15);
-  border-color: rgba(244, 63, 94, 0.4);
-  color: #f43f5e;
-
-  &:hover {
-    background: #f43f5e;
-    color: #ffffff;
-    border-color: #f43f5e;
-    box-shadow: 0 0 16px rgba(244, 63, 94, 0.5);
-  }
-}
-
-.robos-lightbox-viewport {
-  flex: 1;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  position: relative;
-  cursor: default;
-}
-
-.robos-lightbox-img-wrapper {
-  display: inline-block;
-  transform-origin: center center;
-  transition: transform 0.18s cubic-bezier(0.2, 0, 0, 1);
-  will-change: transform;
-
-  img {
-    max-width: 90vw;
-    max-height: 80vh;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    border-radius: 8px;
-    border: 1px solid rgba(0, 229, 255, 0.3);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 229, 255, 0.15);
-    display: block;
-  }
-}
-
-.robos-lightbox-svg-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  max-width: 90vw;
-  max-height: 80vh;
-  background: #0d1424;
-  border: 1px solid rgba(0, 229, 255, 0.4);
-  border-radius: 10px;
-  padding: 2rem;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 229, 255, 0.15);
-  box-sizing: border-box;
-}
-
-.robos-lightbox-rendered-svg {
-  max-width: 100% !important;
-  max-height: 72vh !important;
-  width: 100% !important;
-  height: auto !important;
-  display: block !important;
-  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.6));
-}
-
-// ==============================================================================
-// RobOS Interactive Flowchart & Diagram Card Component
-// ==============================================================================
-.robos-diagram-card {
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  background: linear-gradient(180deg, #0d1424 0%, #090e1a 100%) !important;
-  border: 1px solid $robos-border !important;
-  border-radius: 10px !important;
-  margin: 2rem 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5) !important;
-  transition: all 0.22s cubic-bezier(0.2, 0, 0, 1) !important;
-
-  &:hover {
-    border-color: $robos-cyan !important;
-    box-shadow: 0 12px 36px rgba(0, 229, 255, 0.18), 0 0 0 1px rgba(0, 229, 255, 0.3) !important;
-    transform: translateY(-2px);
-  }
-}
-
-.robos-zoomable-diagram {
-  cursor: zoom-in !important;
-}
-
-.robos-diagram-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.65rem 1.1rem;
-  background: #121a2d;
-  border-bottom: 1px solid $robos-border;
-  user-select: none;
-}
-
-.robos-diagram-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-family: $font-family-headings !important;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: $robos-cyan;
-
-  svg {
-    stroke: $robos-cyan;
-  }
-}
-
-.robos-diagram-hint {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-family: $font-family-body !important;
-  font-size: 0.76rem;
-  font-weight: 500;
-  color: $robos-text-secondary;
-  background: rgba(0, 229, 255, 0.08);
-  padding: 0.2rem 0.6rem;
-  border-radius: 4px;
-  border: 1px solid rgba(0, 229, 255, 0.2);
-  transition: all 0.15s ease;
-}
-
-.robos-diagram-card:hover .robos-diagram-hint {
-  color: #ffffff;
-  background: rgba(0, 229, 255, 0.2);
-  border-color: $robos-cyan;
-}
-
-// Reset pre containers that enclose diagram cards or mermaid blocks
-pre:has(.robos-diagram-card),
-pre:has(.language-mermaid) {
-  background: transparent !important;
-  border: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  box-shadow: none !important;
-  overflow: visible !important;
-}
-
-// ==============================================================================
-// Mermaid Flowchart Deep Theme & High Contrast Styling
-// ==============================================================================
-.mermaid,
-.robos-diagram-card .mermaid,
-div.mermaid,
-pre.mermaid,
-.language-mermaid,
-code.language-mermaid,
-.robos-diagram-card code.language-mermaid,
-.robos-diagram-card .language-mermaid {
-  background: transparent !important;
-  padding: 1.5rem 1rem !important;
-  margin: 0 !important;
-  border: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  display: flex !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  justify-content: center !important;
-  align-items: center !important;
-  overflow: visible !important;
-}
-
-.mermaid svg,
-.robos-diagram-card svg,
-.language-mermaid svg,
-code.language-mermaid svg,
-svg[id^="mermaid-"] {
-  width: 100% !important;
-  max-width: 100% !important;
-  height: auto !important;
-  display: block !important;
-}
-
-.mermaid .edgePath .path,
-.mermaid .flowchart-link,
-.mermaid path.flowchart-link,
-.mermaid path.link,
-.mermaid .edge-thickness-normal,
-.mermaid .edge-pattern-solid,
-.robos-diagram-card .edgePath .path,
-.robos-diagram-card .flowchart-link,
-.language-mermaid .edgePath .path,
-.language-mermaid .flowchart-link,
-svg[id^="mermaid-"] .edgePath .path,
-svg[id^="mermaid-"] .flowchart-link,
-svg[id^="mermaid-"] path.flowchart-link,
-svg[id^="mermaid-"] path.link,
-.robos-lightbox-rendered-svg .edgePath .path,
-.robos-lightbox-rendered-svg .flowchart-link,
-.robos-lightbox-rendered-svg path.flowchart-link,
-.robos-lightbox-rendered-svg path.link {
-  stroke: #38bdf8 !important;
-  stroke-width: 2.2px !important;
-  stroke-opacity: 1 !important;
-  opacity: 1 !important;
-  stroke-linecap: round !important;
-  stroke-linejoin: round !important;
-}
-
-.mermaid marker path,
-.mermaid .marker,
-.mermaid #arrowheadHD path,
-.mermaid #flowchart-pointEnd path,
-.mermaid #flowchart-circleEnd path,
-.mermaid #flowchart-crossEnd path,
-.mermaid defs marker path,
-.robos-diagram-card marker path,
-.robos-diagram-card .marker,
-.language-mermaid marker path,
-.language-mermaid .marker,
-svg[id^="mermaid-"] marker path,
-svg[id^="mermaid-"] .marker,
-svg[id^="mermaid-"] #arrowheadHD path,
-svg[id^="mermaid-"] #flowchart-pointEnd path,
-svg[id^="mermaid-"] defs marker path,
-.robos-lightbox-rendered-svg marker path,
-.robos-lightbox-rendered-svg .marker,
-.robos-lightbox-rendered-svg #arrowheadHD path,
-.robos-lightbox-rendered-svg defs marker path {
-  fill: #38bdf8 !important;
-  stroke: #38bdf8 !important;
-  stroke-opacity: 1 !important;
-  opacity: 1 !important;
-}
-
-.mermaid .node rect,
-.mermaid .node circle,
-.mermaid .node ellipse,
-.mermaid .node polygon,
-.mermaid .node path,
-.robos-diagram-card .node rect,
-.robos-diagram-card .node circle,
-.robos-diagram-card .node ellipse,
-.robos-diagram-card .node polygon,
-.robos-diagram-card .node path,
-.language-mermaid .node rect,
-.language-mermaid .node circle,
-.language-mermaid .node ellipse,
-.language-mermaid .node polygon,
-.language-mermaid .node path,
-svg[id^="mermaid-"] .node rect,
-svg[id^="mermaid-"] .node circle,
-svg[id^="mermaid-"] .node ellipse,
-svg[id^="mermaid-"] .node polygon,
-svg[id^="mermaid-"] .node path,
-.robos-lightbox-rendered-svg .node rect,
-.robos-lightbox-rendered-svg .node circle,
-.robos-lightbox-rendered-svg .node ellipse,
-.robos-lightbox-rendered-svg .node polygon,
-.robos-lightbox-rendered-svg .node path {
-  fill: #162032 !important;
-  stroke: $robos-cyan !important;
-  stroke-width: 1.8px !important;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
-  rx: 6px !important;
-  ry: 6px !important;
-}
-
-/* Primary Highlight / Anchor Nodes */
-.mermaid .node.primary rect,
-.mermaid [class*="primary"] rect,
-.robos-diagram-card .node.primary rect,
-.robos-diagram-card [class*="primary"] rect,
-.language-mermaid .node.primary rect,
-.language-mermaid [class*="primary"] rect,
-svg[id^="mermaid-"] .node.primary rect,
-svg[id^="mermaid-"] [class*="primary"] rect,
-.robos-lightbox-rendered-svg .node.primary rect,
-.robos-lightbox-rendered-svg [class*="primary"] rect {
-  fill: #16243b !important;
-  stroke: #00e5ff !important;
-  stroke-width: 2.5px !important;
-  filter: drop-shadow(0 0 12px rgba(0, 229, 255, 0.4)) !important;
-}
-
-.mermaid .node .label,
-.mermaid .nodeLabel,
-.mermaid .node text,
-.mermaid .node tspan,
-.robos-diagram-card .node .label,
-.robos-diagram-card .nodeLabel,
-.robos-diagram-card .node text,
-.robos-diagram-card .node tspan,
-.language-mermaid .node .label,
-.language-mermaid .nodeLabel,
-.language-mermaid .node text,
-.language-mermaid .node tspan,
-svg[id^="mermaid-"] .node .label,
-svg[id^="mermaid-"] .nodeLabel,
-svg[id^="mermaid-"] .node text,
-svg[id^="mermaid-"] .node tspan,
-.robos-lightbox-rendered-svg .node .label,
-.robos-lightbox-rendered-svg .nodeLabel,
-.robos-lightbox-rendered-svg .node text,
-.robos-lightbox-rendered-svg .node tspan {
-  fill: #ffffff !important;
-  color: #ffffff !important;
-  font-family: $font-family-headings !important;
-  font-weight: 600 !important;
-  font-size: 13.5px !important;
-}
-
-/* Backticked Code & Identifier Badges inside Diagrams (Expanded & Non-Expanded) */
-.robos-diagram-card .node code,
-.robos-diagram-card foreignObject code,
-.mermaid .node code,
-.mermaid foreignObject code,
-.language-mermaid .node code,
-.language-mermaid foreignObject code,
-svg[id^="mermaid-"] .node code,
-svg[id^="mermaid-"] foreignObject code,
-.robos-lightbox-rendered-svg .node code,
-.robos-lightbox-rendered-svg foreignObject code,
-#robos-lightbox-svg-target foreignObject code {
-  color: #38bdf8 !important;
-  background-color: #121927 !important;
-  border: 1px solid rgba(56, 189, 248, 0.4) !important;
-  padding: 0.15em 0.45em !important;
-  border-radius: 4px !important;
-  font-family: $font-family-code !important;
-  font-size: 0.84em !important;
-  font-weight: 500 !important;
-  display: inline-block !important;
-  line-height: 1.35 !important;
-  margin-top: 3px !important;
-  letter-spacing: normal !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
-}
-
-.mermaid .edgeLabel,
-.mermaid .edgeLabel rect,
-.mermaid .edgeLabel span,
-.robos-diagram-card .edgeLabel,
-.robos-diagram-card .edgeLabel rect,
-.robos-diagram-card .edgeLabel span,
-.language-mermaid .edgeLabel,
-.language-mermaid .edgeLabel rect,
-.language-mermaid .edgeLabel span,
-svg[id^="mermaid-"] .edgeLabel,
-svg[id^="mermaid-"] .edgeLabel rect,
-svg[id^="mermaid-"] .edgeLabel span,
-.robos-lightbox-rendered-svg .edgeLabel,
-.robos-lightbox-rendered-svg .edgeLabel rect,
-.robos-lightbox-rendered-svg .edgeLabel span {
-  background-color: #1a2333 !important;
-  fill: #1a2333 !important;
-  color: #f1f5f9 !important;
-  border: 1px solid #38bdf8 !important;
-  border-radius: 4px !important;
-  font-family: $font-family-body !important;
-  font-weight: 600 !important;
-  font-size: 12.5px !important;
-  padding: 2px 6px !important;
-}
-
-.mermaid .cluster rect,
-.mermaid .subgraph rect,
-.robos-diagram-card .cluster rect,
-.robos-diagram-card .subgraph rect,
-.language-mermaid .cluster rect,
-.language-mermaid .subgraph rect,
-svg[id^="mermaid-"] .cluster rect,
-svg[id^="mermaid-"] .subgraph rect,
-.robos-lightbox-rendered-svg .cluster rect,
-.robos-lightbox-rendered-svg .subgraph rect {
-  fill: #0b111e !important;
-  stroke: $robos-indigo !important;
-  stroke-width: 1.6px !important;
-  stroke-dasharray: 4 4 !important;
-  rx: 8px !important;
-  ry: 8px !important;
-}
-
-.mermaid .cluster text,
-.mermaid .cluster-label text,
-.mermaid .cluster span,
-.robos-diagram-card .cluster text,
-.robos-diagram-card .cluster-label text,
-.robos-diagram-card .cluster span,
-.language-mermaid .cluster text,
-.language-mermaid .cluster-label text,
-.language-mermaid .cluster span,
-svg[id^="mermaid-"] .cluster text,
-svg[id^="mermaid-"] .cluster-label text,
-svg[id^="mermaid-"] .cluster span,
-.robos-lightbox-rendered-svg .cluster text,
-.robos-lightbox-rendered-svg .cluster-label text,
-.robos-lightbox-rendered-svg .cluster span {
-  fill: $robos-cyan !important;
-  color: $robos-cyan !important;
-  font-family: $font-family-headings !important;
-  font-weight: 700 !important;
-  font-size: 14.5px !important;
-  letter-spacing: -0.01em !important;
-}
-
-.mermaid rect.actor,
-.mermaid rect[class*="actor"],
-.mermaid .actor-top rect,
-.mermaid .actor-bottom rect,
-svg[id^="mermaid-"] rect.actor,
-svg[id^="mermaid-"] rect[class*="actor"],
-.robos-lightbox-rendered-svg rect.actor {
-  fill: #162032 !important;
-  stroke: $robos-cyan !important;
-  stroke-width: 1.8px !important;
-  rx: 6px !important;
-  ry: 6px !important;
-}
-
-.mermaid text.actor,
-.mermaid text[class*="actor"],
-svg[id^="mermaid-"] text.actor,
-svg[id^="mermaid-"] text[class*="actor"],
-.robos-lightbox-rendered-svg text.actor {
-  fill: #ffffff !important;
-  font-family: $font-family-headings !important;
-  font-weight: 600 !important;
-  font-size: 13.5px !important;
-}
-
-.mermaid .actor-line,
-.mermaid line.actor-line,
-.mermaid line[class*="actor-line"],
-svg[id^="mermaid-"] .actor-line,
-svg[id^="mermaid-"] line.actor-line,
-.robos-lightbox-rendered-svg .actor-line {
-  stroke: #475569 !important;
-  stroke-width: 1.5px !important;
-  stroke-dasharray: 4 4 !important;
-}
-
-.mermaid .messageLine0,
-.mermaid .messageLine1,
-.mermaid line.messageLine0,
-.mermaid line.messageLine1,
-.mermaid path.messageLine0,
-.mermaid path.messageLine1,
-svg[id^="mermaid-"] .messageLine0,
-svg[id^="mermaid-"] .messageLine1,
-svg[id^="mermaid-"] line.messageLine0,
-svg[id^="mermaid-"] line.messageLine1,
-.robos-lightbox-rendered-svg .messageLine0,
-.robos-lightbox-rendered-svg .messageLine1 {
-  stroke: #38bdf8 !important;
-  stroke-width: 2.2px !important;
-}
-
-.mermaid .messageText,
-.mermaid text.messageText,
-svg[id^="mermaid-"] .messageText,
-svg[id^="mermaid-"] text.messageText,
-.robos-lightbox-rendered-svg .messageText {
-  fill: #f8fafc !important;
-  font-family: $font-family-body !important;
-  font-weight: 500 !important;
-  font-size: 13px !important;
-}
-
-.mermaid rect.note,
-.mermaid .note rect,
-svg[id^="mermaid-"] rect.note,
-.robos-lightbox-rendered-svg rect.note {
-  fill: #1e293b !important;
-  stroke: $robos-amber !important;
-  stroke-width: 1.5px !important;
-  rx: 4px !important;
-}
-
-.mermaid text.noteText,
-.mermaid .noteText,
-svg[id^="mermaid-"] text.noteText,
-.robos-lightbox-rendered-svg text.noteText {
-  fill: #fef08a !important;
-  font-family: $font-family-body !important;
-  font-weight: 500 !important;
-}
-
-// Table of Contents
-#markdown-toc, ul#markdown-toc, .toc, nav.toc {
-  background-color: #0f1624 !important;
-  border: 1px solid $robos-border !important;
-  border-left: 4px solid $robos-cyan !important;
-  border-radius: 8px !important;
-  padding: 1.25rem 1.5rem 1.25rem 2.25rem !important;
-  margin: 1.5rem 0 2rem 0 !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
-
-  a {
-    color: #38bdf8 !important;
-    font-weight: 500 !important;
-
-    &:hover {
-      color: $robos-cyan !important;
-      text-decoration: underline !important;
-    }
-  }
-}
-
-.robos-lightbox-footer {
-  width: 100%;
-  padding: 0.85rem 1.5rem 1.25rem;
-  background: linear-gradient(0deg, rgba(8, 11, 17, 0.95) 0%, rgba(8, 11, 17, 0) 100%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-  z-index: 10;
-}
-
-.robos-lightbox-caption {
-  font-family: $font-family-headings !important;
-  font-size: 0.98rem;
-  font-weight: 500;
-  color: #f1f5f9;
-  text-align: center;
-  margin: 0;
-  max-width: 850px;
-}
-
-.robos-lightbox-hints {
-  font-family: $font-family-body !important;
-  font-size: 0.78rem;
-  color: #64748b;
-  display: flex;
-  gap: 0.5rem;
-}
-
-// Footer
-.site-footer {
-  border-top: 1px solid $robos-border !important;
-  color: $robos-text-dim !important;
-  font-size: 0.85rem !important;
-  margin-top: 4rem !important;
-  padding-top: 1.5rem !important;
-}
+.main-content a:not(.btn):hover { color: var(--rb-hot); }
+.main-content a:focus-visible, .btn:focus-visible { outline: 2px solid var(--rb-hot); outline-offset: 2px; }
+
+// ------------------------------------------------------------------- sidebar
+.side-bar { border-right: 1px solid var(--rb-line); }
+.site-header { border-bottom: 1px solid var(--rb-line); }
+.site-title { padding-top: 0.9rem; padding-bottom: 0.9rem; }
+.rb-brand { display: inline-flex; align-items: center; gap: 0.6rem; font-family: var(--rb-serif); font-weight: 600; font-size: 1.35rem; letter-spacing: -0.01em; color: var(--rb-head); }
+.rb-brand img { height: 30px; width: auto; display: block; }
+.rb-brand small { font: 500 0.7rem "Fira Code", monospace; text-transform: uppercase; letter-spacing: 0.1em; color: var(--rb-hot); margin-left: 0.15rem; }
+[data-theme="dark"] .rb-brand img { background: #f5f5f0; border-radius: 6px; padding: 3px 6px; }
+
+.nav-list .nav-list-item .nav-list-link { font-size: 0.88rem; }
+.nav-list .nav-list-item .nav-list-link.active { font-weight: 600; color: var(--rb-head); box-shadow: inset 3px 0 0 var(--rb-hot); background-image: none; background-color: transparent; }
+.nav-list .nav-list-item .nav-list-link:hover:not(.active) { color: var(--rb-hot); background-image: none; }
+.nav-list .nav-list-item.active > .nav-list-link { font-weight: 600; }
+
+.main-header { border-bottom: 1px solid var(--rb-line); }
+.search-input { font-family: inherit; }
+.aux-nav .aux-nav-list-item a { font-size: 0.85rem; }
+
+.rb-theme-toggle { align-self: center; background: none; border: 1px solid var(--rb-line); border-radius: 6px; color: var(--rb-text); width: 34px; height: 34px; padding: 0; margin: 0 0.5rem; display: inline-grid; place-items: center; cursor: pointer; flex: none; }
+.rb-theme-toggle:hover { border-color: var(--rb-hot); color: var(--rb-hot); }
+.rb-theme-toggle svg { width: 16px; height: 16px; }
+
+// -------------------------------------------------------------- content blocks
+.btn { border-radius: 6px; box-shadow: none; font-weight: 600; }
+.btn-primary { border: 1px solid $btn-primary-color; }
+.btn:hover { box-shadow: none; }
+
+// table-of-contents links read as a list, not as a wall of underlines
+#markdown-toc a, details a { text-decoration: none !important; }
+#markdown-toc a:hover, details a:hover { text-decoration: underline !important; }
+
+// "On this page" table of contents
+details:has(> summary) { border: 1px solid var(--rb-line); border-radius: 6px; background: var(--rb-tint); padding: 0.1rem 1rem; margin: 1.5rem 0; }
+details > summary { font: 500 0.72rem "Fira Code", monospace; text-transform: uppercase; letter-spacing: 0.09em; color: var(--rb-hot); cursor: pointer; padding: 0.7rem 0; }
+details[open] > summary { border-bottom: 1px solid var(--rb-line); margin-bottom: 0.4rem; }
+.text-delta { font: 500 0.72rem "Fira Code", monospace; text-transform: uppercase; letter-spacing: 0.09em; color: var(--rb-hot); }
+
+// tables
+.table-wrapper { border: 1px solid var(--rb-line); border-radius: 6px; box-shadow: none; }
+table th { font: 500 0.7rem "Fira Code", monospace; text-transform: uppercase; letter-spacing: 0.07em; color: var(--rb-muted); background: var(--rb-tint); border-bottom: 1px solid var(--rb-line); }
+table td { font-size: 0.92rem; }
+table th, table td { border-bottom: 1px solid var(--rb-line); border-left: 0; }
+
+// code
+code { font-size: 0.84em; }
+code.highlighter-rouge, :not(pre) > code { border: 1px solid var(--rb-line); border-radius: 3px; padding: 0.05em 0.35em; }
+div.highlighter-rouge, pre.highlight, div.highlighter-rouge div.highlight { border-radius: 6px; box-shadow: none; }
+div.highlighter-rouge { border: 1px solid var(--rb-line); }
+pre { font-size: 0.82rem; }
+
+
+// syntax highlighting (Rouge classes), from the palette tokens in the color scheme
+.highlight { color: $body-text-color; }
+.highlight .c, .highlight .ch, .highlight .cd, .highlight .cm, .highlight .c1, .highlight .cs, .highlight .cp, .highlight .cpf { color: $rb-tok-comment; font-style: italic; }
+.highlight .k, .highlight .kc, .highlight .kd, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kv, .highlight .ow { color: $rb-tok-keyword; font-weight: 500; }
+.highlight .kt, .highlight .nc, .highlight .no, .highlight .nn, .highlight .ne { color: $rb-tok-type; }
+.highlight .s, .highlight .sa, .highlight .sb, .highlight .sc, .highlight .dl, .highlight .sd, .highlight .s2, .highlight .se, .highlight .sh, .highlight .si, .highlight .sx, .highlight .sr, .highlight .s1, .highlight .ss { color: $rb-tok-string; }
+.highlight .m, .highlight .mb, .highlight .mf, .highlight .mh, .highlight .mi, .highlight .il, .highlight .mo { color: $rb-tok-number; }
+.highlight .nf, .highlight .fm, .highlight .nb, .highlight .bp, .highlight .vc, .highlight .vg, .highlight .vi, .highlight .vm { color: $rb-tok-func; }
+.highlight .nt, .highlight .na, .highlight .nl, .highlight .nd { color: $rb-tok-keyword; }
+.highlight .o, .highlight .p, .highlight .pi { color: $rb-tok-punct; }
+.highlight .gi { color: $rb-tok-ins; background: transparent; }
+.highlight .gd { color: $rb-tok-del; background: transparent; }
+.highlight .ge { font-style: italic; }
+.highlight .gs { font-weight: 600; }
+
+// callouts: quiet boxes with a colored left edge
+.callout { border-radius: 4px; border-left-width: 3px; box-shadow: none; }
+
+// block quotes
+blockquote { border-left: 3px solid var(--rb-hot); padding-left: 1rem; color: var(--rb-muted); }
+
+// figures. Images stay as they were; frame them so dark screenshots and diagrams sit on the page.
+.main-content img { max-width: 100%; height: auto; }
+.robos-zoomable-img { cursor: zoom-in; border: 1px solid var(--rb-line); border-radius: 6px; background: #0d1117; }
+.robos-zoomable-img:hover { border-color: var(--rb-hot); }
+img + em { display: block; text-align: center; color: var(--rb-muted); font-size: 0.85rem; margin: 0.45rem 0 1.4rem; }
+
+// hub link lists (use-robos.md and friends)
+.rb-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0; border-top: 2px solid var(--rb-head); margin: 1.2rem 0 2rem; }
+a.rb-link { display: block; padding: 0.95rem 1rem 1rem 0; border-bottom: 1px solid var(--rb-line); text-decoration: none !important; color: var(--rb-text) !important; }
+a.rb-link strong { display: block; font-family: var(--rb-serif); font-size: 1.05rem; color: var(--rb-head); margin-bottom: 0.15rem; }
+a.rb-link span { font-size: 0.9rem; color: var(--rb-muted); line-height: 1.5; }
+a.rb-link:hover strong { color: var(--rb-hot); }
+
+// ------------------------------------------------------------- docs home
+.rb-home-lead { font-size: 1.15rem; max-width: 38rem; color: var(--rb-muted); }
+.rb-home-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1.4rem 0 2.2rem; }
+.rb-pron { font: 0.8rem "Fira Code", monospace; color: var(--rb-muted); margin-top: -0.2rem; }
+
+// ------------------------------------------------------------- app directory
+.rb-app-filter input { width: 100%; max-width: 28rem; padding: 0.6rem 0.9rem; border: 1px solid var(--rb-line); border-radius: 6px; background: var(--rb-card); color: var(--rb-text); font: inherit; }
+.rb-cat-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1rem 0 0.4rem; }
+.rb-cat-pills a { border: 1px solid var(--rb-line); border-radius: 999px; padding: 0.2rem 0.75rem; font-size: 0.8rem; color: var(--rb-text) !important; text-decoration: none !important; }
+.rb-cat-pills a:hover { border-color: var(--rb-hot); color: var(--rb-hot) !important; }
+.rb-cat[hidden], .robos-app-card[hidden] { display: none; }
+.rb-cat-title { margin-top: 2rem !important; }
+.robos-apps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr)); gap: 0.75rem; margin-top: 0.9rem; }
+.robos-app-card { display: flex; gap: 0.8rem; align-items: flex-start; padding: 0.85rem; border: 1px solid var(--rb-line); border-radius: 6px; background: var(--rb-card); text-decoration: none !important; color: var(--rb-text) !important; transition: border-color 0.15s; }
+.robos-app-card:hover { border-color: var(--rb-hot); }
+.robos-app-icon-wrap { flex: none; width: 40px; height: 40px; border-radius: 6px; background: var(--rb-deep); display: grid; place-items: center; }
+.robos-app-icon-wrap img { width: 24px; height: 24px; }
+.rb-app-letter { color: #f3efe3; font: 600 1.1rem var(--rb-serif); }
+.robos-app-name { font-weight: 600; color: var(--rb-head); line-height: 1.25; }
+.robos-app-pkg { display: block; font: 0.7rem "Fira Code", monospace; color: var(--rb-muted); margin: 0.15rem 0 0.3rem; }
+.robos-app-desc { margin: 0; font-size: 0.82rem; line-height: 1.45; color: var(--rb-muted); }
+.rb-app-none { color: var(--rb-muted); margin-top: 2rem; }
+
+.rb-app-crumbs { font-size: 0.82rem; color: var(--rb-muted); margin-bottom: 1rem; }
+.rb-app-crumbs a { color: var(--rb-muted); }
+.rb-app-header { display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; }
+.rb-app-header h1 { margin: 0; }
+.rb-app-icon { flex: none; width: 56px; height: 56px; border-radius: 8px; background: var(--rb-deep); display: grid; place-items: center; color: #f3efe3; font: 600 1.5rem var(--rb-serif); }
+.rb-app-icon img { width: 32px; height: 32px; }
+.rb-app-summary { margin: 0.3rem 0 0; color: var(--rb-muted); font-size: 1.02rem; }
+.rb-app-meta { margin: 0.35rem 0 0; font-size: 0.8rem; }
+.rb-app-empty { color: var(--rb-muted); font-style: italic; }
+.rb-app-body table img, .rb-app-body img { border: 1px solid var(--rb-line); border-radius: 6px; }
+@media (max-width: 600px) { .rb-app-header { flex-direction: column; align-items: flex-start; } }
+
+// ------------------------------------------------------------- footer, back to top
+.site-footer { color: var(--rb-muted); font-size: 0.82rem; }
+.back-to-top { font-size: 0.82rem; }
+
+// -------------------------------------------------- image and diagram lightbox
+body.robos-lightbox-open { overflow: hidden; }
+.robos-lightbox-overlay { position: fixed; inset: 0; z-index: 100000; display: flex; flex-direction: column; justify-content: space-between; align-items: center; background: rgba(10, 14, 24, 0.94); opacity: 0; pointer-events: none; transition: opacity 0.18s ease; user-select: none; }
+.robos-lightbox-overlay.active { opacity: 1; pointer-events: auto; }
+.robos-lightbox-header { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 1.4rem; z-index: 10; }
+.robos-lightbox-title-wrap { display: flex; align-items: center; gap: 0.7rem; }
+.robos-lightbox-badge { font: 500 0.7rem "Fira Code", monospace; text-transform: uppercase; letter-spacing: 0.09em; color: #ff9a6c; }
+.robos-lightbox-zoom-badge { font: 0.78rem "Fira Code", monospace; color: #aab3c8; border: 1px solid #25304a; border-radius: 4px; padding: 0.15rem 0.5rem; }
+.robos-lightbox-controls { display: flex; align-items: center; gap: 0.4rem; }
+.robos-lightbox-btn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: #131a2b; color: #d3d8e6; border: 1px solid #25304a; border-radius: 6px; cursor: pointer; padding: 0; text-decoration: none; }
+.robos-lightbox-btn:hover { border-color: #ff9a6c; color: #ff9a6c; }
+.robos-lightbox-viewport { flex: 1; width: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: grab; }
+.robos-lightbox-viewport:active { cursor: grabbing; }
+.robos-lightbox-img-wrapper { transform-origin: center center; will-change: transform; display: flex; align-items: center; justify-content: center; max-width: 94vw; max-height: 78vh; }
+.robos-lightbox-img-wrapper img { max-width: 94vw; max-height: 78vh; object-fit: contain; border-radius: 4px; }
+.robos-lightbox-svg-container { background: #f7f5ef; border-radius: 6px; padding: 1.2rem; max-width: 94vw; max-height: 78vh; overflow: hidden; }
+.robos-lightbox-rendered-svg { max-width: 100%; max-height: 74vh; height: auto; }
+.robos-lightbox-footer { width: 100%; padding: 0.8rem 1.4rem 1.1rem; text-align: center; color: #aab3c8; font-size: 0.85rem; z-index: 10; }
+.robos-lightbox-caption { margin: 0 0 0.3rem; color: #e8ebf5; }
+.robos-lightbox-hints { font-size: 0.75rem; opacity: 0.75; }
+
+// mermaid diagram card
+.robos-diagram-card { border: 1px solid var(--rb-line); border-radius: 6px; background: var(--rb-card); margin: 1.5rem 0; overflow: hidden; }
+.robos-zoomable-diagram { cursor: zoom-in; }
+.robos-zoomable-diagram:hover { border-color: var(--rb-hot); }
+.robos-diagram-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.5rem 0.9rem; border-bottom: 1px solid var(--rb-line); background: var(--rb-tint); font: 500 0.68rem "Fira Code", monospace; text-transform: uppercase; letter-spacing: 0.08em; color: var(--rb-muted); }
+.robos-diagram-badge, .robos-diagram-hint { display: inline-flex; align-items: center; gap: 0.4rem; }
+.robos-diagram-card .mermaid, .robos-diagram-card svg { display: block; margin: 0 auto; padding: 1rem; max-width: 100%; height: auto; }
+pre:has(.language-mermaid) { background: transparent; border: 0; padding: 0; }

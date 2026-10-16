@@ -1,9 +1,9 @@
 ---
 layout: paper
-title: "The Skill Commons"
-subtitle: "Solve each software task once, index it, and assemble applications from what already exists"
+title: "Less AI Strain on Data Centers, If Done Right"
+subtitle: "The Skill Commons: solve each software task once, index it, and assemble applications from what already exists"
 status: "Proposal · Draft 2 · 12 October 2026 · RobOS project"
-description: "A whitepaper proposing a shared, searchable catalog of verified, compiled skills that small local AI models can assemble into applications, with the evidence for the idea, its limits, and a plan for testing it."
+description: "Done right, AI puts less strain on data centers. A whitepaper proposing a shared, searchable catalog of verified, compiled skills that small local AI models can assemble into applications, with the evidence for the idea, its limits, and a plan for testing it."
 permalink: /future/whitepaper/
 pdf: /future/skill-commons-whitepaper.pdf
 extra_css: /assets/future.css
@@ -17,7 +17,9 @@ Software is built from jobs. "Send a text message." "Check that a card number is
 
 AI coding tools made that repetition faster, not smaller. Ask an assistant for a reminder app and it writes the time-zone code and the phone-number code again, one character at a time, on a very large computer in a data center. Tomorrow it does the same for someone else.
 
-The Skill Commons is a proposal to stop doing that. It has four parts:
+**The point is less strain on data centers.** Every regeneration of a solved routine is another trip to a large, shared machine. If the catalog covers everyday jobs and small local models can do the assembling, most of those trips disappear, and what is left is the new work that really needs a big model. That is the claim, and it holds only if this is done correctly: the catalog has to be good enough, the small models reliable enough, and the savings larger than the cost of running the catalog. Section 11 says how we would measure it.
+
+The Skill Commons is a proposal to stop the repetition. It has four parts:
 
 1. **Break every job into smaller jobs**, down to base tasks that cannot usefully be split further.
 2. **Keep one shared, searchable catalog** of those jobs. Each one is built once, tested, signed and compiled, so it can be run directly with no AI in the loop.
@@ -52,11 +54,11 @@ These results show that copying already happens, mostly by accident and inconsis
 
 npm, PyPI, crates.io and Maven let developers reuse libraries, and most software depends on them. The commons does not replace them. Registries are organized by language, by library and by name. You take a whole library to use one function, and you cannot ask "what already converts time zones?" across languages. The commons indexes pieces by what they do, at the size of a single task, whatever language they were written in.
 
-### 1.3 AI generation brings the repetition back
+### 1.3 AI generation brings the repetition back, and the energy bill
 
 A coding assistant that regenerates a solved routine pays for it every time, in money, delay and energy. The measurements we can cite are for chat queries. Google reports a median of 0.24 Wh for a text prompt to its Gemini Apps [[3]](#r3), a company preprint whose scope excludes networking, user devices and training. An independent analysis by Epoch AI puts a typical short ChatGPT query at roughly 0.3 Wh, and estimates far more for long inputs: about 2.5 Wh at 10,000 input tokens and about 40 Wh at 100,000 [[4]](#r4). The latter matters because coding agents send long contexts.
 
-Two caveats keep us honest. These are chat figures, not measurements of an agentic coding session. And we have no measurement of what a small local model spends on assembly. We do not claim the commons solves data-center demand. We claim a testable reduction, and Section 11 proposes measuring both sides.
+Two caveats keep us honest. These are chat figures, not measurements of an agentic coding session. And we have no measurement of what a small local model spends on assembly. We do not claim the commons solves data-center demand. We claim that, done correctly, it takes a measurable share of routine work off data centers, and Section 11 proposes measuring both sides.
 
 ### 1.4 Regenerated code is unverified code
 
@@ -260,7 +262,7 @@ Four stages, each cheap enough to run before the next is funded. Thresholds will
 
 ## 12. Conclusion
 
-The proposal is plain. Describe software as jobs made of smaller jobs. Keep one searchable, signed catalog of the ones that are solved. Look before building. Let small models on ordinary computers do the assembling, and let machines check their work. Most of the parts are familiar, and the combination is untested. The first step is to measure, and the paper says how.
+The proposal is plain, and its purpose is less strain on data centers: do each piece of work once instead of regenerating it forever. Describe software as jobs made of smaller jobs. Keep one searchable, signed catalog of the ones that are solved. Look before building. Let small models on ordinary computers do the assembling, and let machines check their work. Most of the parts are familiar, and the combination is untested. The first step is to measure, and the paper says how.
 
 ## Appendix A. Glossary
 

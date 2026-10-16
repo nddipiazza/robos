@@ -1,201 +1,201 @@
 ---
-title: RobOS Kgraph Parse Portal
+title: KGraph parse portal
 layout: default
 parent: Build on RobOS
-nav_order: 4
+nav_order: 5
 has_children: true
 permalink: /kgraph-parse-portal.html
+redirect_from:
+  - /kgraph-crawler/tika-grpc-service.html
 ---
 
-# RobOS Kgraph Parse Portal
+# KGraph parse portal
 {: .no_toc }
 
-Heavy-scale connectors web application and headless parsing portal fronting a high-performance **Luxir C++ search index**, contextual MIME disambiguation, and **Apache Tika 4.0 streaming `tika-grpc`**.
-{: .fs-6 .fw-300 }
+A local HTTP server and desktop window that scan files into knowledge graph nodes, parse single documents, keep a search index, and generate Buildbarn Helm values. Read this to run it, call its API, or find out what is real behind the Tika and Luxir labels in the window.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
----
+## What it does today
 
-## What is the RobOS Kgraph Parse Portal?
+The package is [`packages/kgraph-parse-portal`](https://github.com/nddipiazza/robos/tree/main/packages/kgraph-parse-portal), listed in the app catalog as [KGraph Parse Portal]({{ '/apps/kgraph-parse-portal/' | relative_url }}). `server.js` is a plain Node HTTP server that uses only built-in modules, plus `packages/robos-graph` when it commits nodes. `main.js` wraps it in an Electron window. The table separates what the code does from what the labels in the window suggest.
 
-The **RobOS Kgraph Parse Portal** (`packages/kgraph-parse-portal`) is the industrial-strength resource ingestion gateway and connectors engine for the RobOS Dual-State SDLC Knowledge Graph. It allows developers, platform architects, and autonomous AI agents to point at **any web resource or Linux filesystem location** and extract a validated, SHACL-compliant Knowledge Graph package in W3C RDF JSON-LD 1.1 format.
+| Feature | What the code does | Caveat |
+|:---|:---|:---|
+| Directory scan | Walks a directory and returns classified JSON-LD nodes. Documented on the [KGraph crawler]({{ site.baseurl }}{% link kgraph-crawler.md %}) page. | Committing nodes to the graph does not validate them. |
+| Document parse | Classifies one file or snippet, extracts symbols with regular expressions, and returns a graph node. | No text extraction from binary formats. See [Tika connector](#tika-connector). |
+| Search | Substring search over node fields in an in-memory index. | The index is empty after every restart. |
+| Tika | Opens a TCP connection to `localhost:50051` to choose a status label. | It never sends a document to Tika. |
+| Luxir | Pings an HTTP endpoint to choose a status label. | Scan and parse results are not sent to Luxir. See [Search and the CLI](#search-and-the-cli). |
+| Buildbarn | Fills in a Helm values template, probes a TCP port, and registers a cluster node. | The values are not checked against the chart. |
+
+## Run it
+
+Start the HTTP server from the repository root. No install step is needed.
+
+```bash
+node packages/kgraph-parse-portal/server.js
+```
+
+It listens on port `19192` on all network interfaces. Set `ROBOS_PARSE_PORT` to change the port. To use the window UI in a browser, open `http://localhost:19192/renderer/index.html`. The root URL `/` serves the same HTML, but its relative `style.css` and `app.js` links resolve to `/style.css` and `/app.js`, which return 404, so the page shows unstyled and does nothing.
+
+{: .warning }
+The server has no authentication, sends `Access-Control-Allow-Origin: *`, and binds to every interface. `/api/v1/parse` returns the text of any readable file whose path you send, `/api/v1/crawl` and `/api/v1/ingest` read any directory the server's user can read, and `ingest` writes to the knowledge graph. Run it on a trusted machine, or put a firewall rule in front of the port.
+
+To run the desktop window, use Electron. `npm run electron` inside the package runs `electron .`, and `scripts/dev-launch.sh kgraph-parse-portal` launches it with the usual RobOS flags. The package declares no Electron dependency, so Electron must already be installed where the script looks for it (`packages/kgraph-parse-portal/node_modules/.bin/electron`). In the Electron app, the REST server defaults to port `19193` and the app's debug server uses `19192`. The installed desktop entry, named KGraph Parse Portal, starts Electron from `/usr/local/share/robos/kgraph-parse-portal`.
+
+## The window
+
+The header shows status badges: **Tika: Offline Engine** or **Tika gRPC: Live**, and **Luxir: Cached (n)** or **Luxir: C++ (n)**, where `n` is the number of indexed nodes. The tabs are:
+
+| Tab | What it does |
+|:---|:---|
+| **Filesystem Crawler & Ingestion** | Scan a path, commit the nodes, or paste a snippet and click **Parse Document via Tika gRPC**. Output appears as JSON-LD on the right. |
+| **MIME & Archetype Disambiguation** | A **Classify File** box and a static table. |
+| **Luxir Search Explorer** | Query box and five facets: All Items, Contracts (OpenAPI/gRPC), Microservices, Source Files, Living Docs. |
+| **Direct Luxir CLI** | A simulated terminal. |
+| **Hermetiq Buildbarn RBE** | **Generate Helm Values**, **Probe Cluster Health**, **Register in KGraph**. |
+| **Documentation & Living Specs** | Static text. |
+
+![The Luxir Search Explorer tab with the query Contract and the Contracts (OpenAPI/gRPC) facet selected, showing openapi.yaml and tika-service.proto]({{ '/assets/images/screenshots/07_step6_luxir_faceted_filter.png' | relative_url }}){: .robos-zoomable-img }
+*Look at the badges at top right: Tika is in offline mode and Luxir is serving from its cache.*
+
+Two things in the window are not what they look like.
+
+- The **Classify File** box runs a short classifier built into the page. It knows only `package.json`, names containing `openapi` or `swagger`, `.proto`, `Chart.yaml`, `.service` and `/dev/` paths. The server uses the full rules on the [KGraph crawler]({{ site.baseurl }}{% link kgraph-crawler.md %}) page.
+- The simulated terminal does not run a shell. It looks for the word `status`, `search`, `inspect` or `curl` in what you type, in that order, and calls the portal API. Its `status` output always prints `hybrid-local-cache` as the engine state and prints `17 documents` when the index is empty. `inspect` falls back to a hard-coded sample `openapi.yaml` document when nothing matches.
+
+## REST API
+
+All endpoints return JSON. Errors return HTTP 500 with `{"ok": false, "error": "..."}`, and unknown paths return 404.
+
+| Endpoint | Input | Returns |
+|:---|:---|:---|
+| `GET /health` or `GET /api/v1/status` | none | `ok`, `service`, `version`, `tika` (`endpoint`, `online`, `mode`), `luxir` (`indexedCount`, `luxirOnline`, `endpoint`, `engine`), `buildbarn` |
+| `POST /api/v1/parse` | `filePath` (or `fileName`), `content`, `repository` | `ok`, `parseResult`, `graphNode`. If `content` is empty and `filePath` is an existing file, the file is read. The node is added to the search index only. |
+| `POST /api/v1/crawl` | `directoryPath` (or `path`), `maxDepth`, `repository`, `package` | `ok`, `archetype`, `fileCount`, `nodeCount`, `nodes` |
+| `POST /api/v1/ingest` | same as `crawl` | `ok`, `committedToGraph`, `nodesCommitted`, `archetype`, `nodes` |
+| `GET /api/v1/search` | `q`, `type`, `mimeType`, `semanticRole`, `archetype`, `protocol` | `ok`, `query`, `count`, `results` |
+| `GET /api/v1/rbe/status` | `endpoint` (default `127.0.0.1:8980`) | `ok`, `rbe` (`ok`, `status`, `endpoint`, `protocol`, `provider`, `chart`) |
+| `POST /api/v1/rbe/values` | see [Buildbarn helper](#buildbarn-helper) | `ok`, `chart`, `valuesYaml`, `installCommand` |
+| `POST /api/v1/rbe/register-cluster` | `clusterId`, `title`, `executionEndpoint`, `casEndpoint` | `ok`, `clusterNode`, `committed` |
+
+Request and response details for `crawl` and `ingest` are on the [KGraph crawler]({{ site.baseurl }}{% link kgraph-crawler.md %}) page. The package's `contracts/openapi.yaml` describes only `crawl` and `search`.
+
+A parse request and the part of the response that matters:
+
+```bash
+curl -s -X POST http://localhost:19192/api/v1/parse \
+  -H 'Content-Type: application/json' \
+  -d '{"filePath": "petstore.proto", "content": "syntax = \"proto3\"; service PetService { rpc GetPet(Id) returns (Pet); }"}'
+```
+
+```json
+{
+  "ok": true,
+  "parseResult": {
+    "astSymbols": [
+      { "type": "service", "name": "PetService" },
+      { "type": "rpc", "name": "GetPet", "inputType": "Id", "outputType": "Pet" }
+    ],
+    "mimeType": "text/x-protobuf",
+    "source": "tika-offline-engine"
+  }
+}
+```
+
+## Search and the CLI
+
+The search index is a JavaScript `Map` of nodes keyed by `@id`, held in the server process. A query is lower-cased and matched as a substring against the node's id, title, description, MIME type, semantic role, archetype, protocol and types. Symbols and file contents are not searched, even though the search box placeholder mentions AST symbols. An empty query returns every node. Each filter (`type`, `mimeType`, `semanticRole`, `archetype`, `protocol`) is a case-insensitive substring match on that field, and all filters must match.
 
 {: .note }
-> **Interactive Masterclass Available**: Take the hands-on 5-module [RobOS Kgraph Parse Portal Masterclass](/v1/projects/kgraph-parse-portal/elearning/) with interactive architecture diagrams, live labs, quizzes, and earn your verifiable RobOS Knowledge Graph Ingestion Specialist Certificate!
+The portal only pings Luxir. Its search always reads the in-memory index. The bridge indexes through `indexer.indexNodes`, which `LuxirIndexer` does not define, and the resulting error is caught and ignored. So scan and parse results are never sent to a Luxir server, even when one is running. Nodes written through `ingest` and `register-cluster` do go through `SDLCKnowledgeGraphStore.addNode`, which sends each node to Luxir without waiting for the result when a server answers.
 
-It supersedes preliminary crawler drafts by fusing three cutting-edge infrastructure layers:
+The repository contains Luxir clients but no Luxir server. The core-platform graph lists Luxir (`urn:robos:search:luxir-kgraph-index`) as experimental, pre-release and not production-ready. The portal looks for it at `ROBOS_LUXIR_ENDPOINT` (default `http://127.0.0.1:8983`) and pings `GET /api/v1/health` with a 400 ms timeout. The index name the client uses is `robos_kgraph`.
 
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/kgraph-parse-portal-pipeline.jpg' | relative_url }}" alt="RobOS KGraph Parse Portal 5-Stage Ingestion Pipeline" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS KGraph Parse Portal 5-Stage Ingestion Pipeline</strong>: From Linux Inodes &amp; Cryptographic Evidence through Contextual MIME, Apache Tika 4.0 gRPC, Hermetiq Buildbarn RBE, and Luxir C++ Search Index with W3C SHACL Validation Gates. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
----
-
-## Core Pillars & Architectural Foundations
-
-### 1. Universal Linux Filesystem Ingestion
-In RobOS, **any file on a Linux operating system finds itself represented in the Knowledge Graph in a meaningful, evidence-backed way**. The portal crawls directory trees and system roots, attaching cryptographically verifiable `robos:evidence` to every extracted node:
-- **Repository context**: Git repository name or filesystem root.
-- **Relative path**: Normalized path within the workspace.
-- **Line number**: Defaulting to `1` or AST declaration line.
-- **Working tree status**: `clean` vs `modified`.
-- **Cryptographic SHA-256**: Real-time hash generated from file content.
-
-#### Linux System Virtual Nodes
-Beyond regular source files, the portal classifies Linux operating system primitives:
-- **ELF Executables & Dynamic Shared Libraries**: Detected via `\x7fELF` magic headers (`robos:BinaryExecutable`, `robos:SharedLibrary`).
-- **Systemd Unit Files**: Mapped into `robos:SystemdService`.
-- **Unix Domain IPC Sockets**: Mapped into `robos:LinuxSocket`.
-- **Named Pipes (FIFO)**: Mapped into `robos:LinuxNamedPipe`.
-- **Block & Character Devices**: `/dev/sd*`, `/dev/nvme*`, and tty nodes represented as `robos:LinuxDeviceNode`.
-
----
-
-### 2. Contextual MIME & Archetype Disambiguation Engine
-A standard MIME type such as `application/json` or `text/yaml` conveys zero architectural intent on its own. The Kgraph Parse Portal features a disambiguation engine that inspects path context, file names, dependencies, and AST heuristics:
-
-| Raw Pattern | Raw MIME | Disambiguated Meaning | Target RobOS Shape |
-|:---|:---|:---|:---|
-| `package.json` | `application/json` | Node.js Manifest & Scripts | `robos:SourceArtifact` |
-| `tsconfig.json` | `application/json` | TypeScript Compiler Config | `robos:SourceArtifact` |
-| `openapi.yaml` / `.json` | `text/yaml` | REST API Contract | `robos:Contract` (`protocol: OpenAPI`) |
-| `*.proto` | `text/x-protobuf` | Microservice RPC Protocol | `robos:ProtobufContract` |
-| `*.graphql` / `*.gql` | `application/graphql`| GraphQL Schema Contract | `robos:GraphQLContract` |
-| `Chart.yaml` | `application/x-yaml` | Helm Chart Definition | `robos:GitOpsDeployment` |
-| `values.yaml` | `application/x-yaml` | Helm Deployment Values | `robos:GitOpsDeployment` |
-| `*.service` | `text/plain` | Linux Systemd Daemon Unit | `robos:SystemdService` |
-| `.feature` | `text/x-gherkin` | BDD Feature Specification | `robos:GherkinFeature` |
-| `README.md` | `text/markdown` | Architecture Overview Page | `robos:DocumentationPage` |
-| `ADR-*.md` | `text/markdown` | Architecture Decision Record | `robos:ArchitectureDecisionRecord` |
-| `MODULE.bazel` | `text/plain` | Bazel Monorepo Workspace | `robos:BuildSystem` |
-| `project.godot` | `text/plain` | Godot 4 Game Engine | `robos:PCGame` |
-
-#### Directory Archetype Detection
-When pointed at any directory, the classifier automatically discovers the root build system:
-- **Maven**: Detected via `pom.xml` (`robos:Microservice`, `language: Java`).
-- **Gradle**: Detected via `build.gradle`, `build.gradle.kts`, `settings.gradle`.
-- **Cargo**: Detected via `Cargo.toml` (`language: Rust`).
-- **Go Modules**: Detected via `go.mod` (`language: Go`).
-- **Python**: Detected via `pyproject.toml`, `setup.py`, `Pipfile`.
-- **Node.js**: Automatically differentiates between Electron apps, React/Next.js SPAs, Vue/Nuxt apps, and Express/Fastify services.
-- **Bazel & Buck2**: Detected via `MODULE.bazel` or `.buckconfig`.
-
----
-
-### 3. Apache Tika 4.0 Streaming `tika-grpc` Protocol
-The portal interfaces with the **Apache Tika 4.0** streaming `tika-grpc` daemon running on `localhost:50051`. 
-- **Zero-Copy Streaming**: Large files and multi-megabyte specifications stream across process boundaries over gRPC without clogging Node.js event loop memory.
-- **AST Symbol Extraction**: Extracts classes, interfaces, RPC stubs, functions, methods, and message types for TypeScript, Python, Java, Go, Rust, and Protobuf.
-- **Resilient Offline Fallback**: When running in offline or test environments where the external Tika daemon is not running, the portal seamlessly switches to an embedded offline polyglot engine without error.
-
----
-
-### 4. Luxir C++ Hybrid Search Index Bridge
-The portal bridges all parsed nodes directly into **Luxir**, the ultra-fast C++ search index embedded in RobOS. 
-- **Sub-millisecond Search**: Full-text and faceted search across extracted AST symbols, paths, file sizes, MIME types, and SHACL classes.
-- **Dual Indexing**: Writes documents both to the live C++ Luxir server (when online at port 8983) and a fast in-memory resilient fallback cache.
-
----
-
-## REST API Reference
-
-The Kgraph Parse Portal provides a REST API on port `19192` (configurable via `ROBOS_PARSE_PORT`):
-
-### `GET /api/v1/status`
-Returns daemon statuses, Tika gRPC connectivity, and Luxir index counts.
-
-### `POST /api/v1/parse`
-Parses a single document, code snippet, or file path.
-```json
-{
-  "filePath": "petstore.proto",
-  "content": "syntax = \"proto3\"; service PetService { rpc GetPet(Id) returns (Pet); }"
-}
-```
-
-### `POST /api/v1/crawl`
-Crawls a Linux directory recursively and returns extracted KGraph nodes.
-```json
-{
-  "directoryPath": "/home/ndipiazza/source/robos/packages/kgraph-parse-portal",
-  "maxDepth": 5,
-  "package": "core-platform"
-}
-```
-
-### `POST /api/v1/ingest`
-Crawls a Linux directory and immediately commits all nodes to the RobOS Dual-State Knowledge Graph store via `SDLCKnowledgeGraphStore.addNode()`, guarded by the W3C SHACL shape validator.
-
-### `GET /api/v1/search?q={query}&type={targetClass}`
-Queries the Luxir search index.
-
-## Direct CLI Access & Luxir Portal CLI
-
-In addition to the Electron GUI and REST API, the portal includes a standalone CLI tool (`packages/kgraph-parse-portal/bin/luxir-portal-cli.js`) and an in-app interactive Tilix terminal console (`#tab-cli`):
+`bin/luxir-portal-cli.js` queries the index from a terminal.
 
 ```bash
-# Query the Luxir index directly from the terminal
-node packages/kgraph-parse-portal/bin/luxir-portal-cli.js search "Contract"
-
-# Search with faceted SHACL type filter
-node packages/kgraph-parse-portal/bin/luxir-portal-cli.js search "Contract" --type robos:Contract
-
-# Inspect raw Luxir index JSON document by path or ID
-node packages/kgraph-parse-portal/bin/luxir-portal-cli.js inspect openapi.yaml
-
-# Check Luxir C++ engine state (:8983) and indexed document distribution
-node packages/kgraph-parse-portal/bin/luxir-portal-cli.js status
-
-# Direct REST query via cURL
-curl -s "http://localhost:19192/api/v1/search?q=Contract" | jq .
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js status [--json]
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js search "<query>" [--type <class>] [--json]
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js inspect <doc-id>
+node packages/kgraph-parse-portal/bin/luxir-portal-cli.js curl "<query>"
 ```
 
----
+`search` and `status` try the portal on ports `19192` then `19193`. If neither answers, the CLI scans the portal's own package folder (depth 5) into a private index and answers from that, so the results are the portal's own files. `inspect` always uses that private index and matches a full id or a substring of an id or title. `curl` prints the equivalent `curl` line, then prints the query result without calling `curl`. For example, `search "tika" --type robos:Contract` returns `tika-service.proto`.
 
-## Visual Proof-of-Work & Evidence
+![The Direct Luxir CLI tab after running status, with Engine State hybrid-local-cache (Standby Fallback)]({{ '/assets/images/screenshots/12_luxir_cli_status_engine.png' | relative_url }}){: .robos-zoomable-img }
+*Look at Engine State in the terminal: Standby Fallback means no Luxir server answered.*
 
-The portal's capabilities have been verified through automated headless E2E BDD test runs in Xvfb virtual framebuffers with 1080p video walkthroughs and high-resolution terminal captures:
+To reindex the whole graph into a Luxir server, or to search it, use `index` and `search --engine luxir` in `packages/robos-graph/bin/kgraph-cli.js`. Those commands are separate from the portal.
 
-### 1. Direct CLI Search Query
-Terminal execution querying the Luxir search index directly, returning indexed OpenAPI 3.1 contracts and gRPC Protobuf specifications with AST symbols, roles, and cryptographic SHA-256 evidence.
-![Direct Luxir CLI Search Query](/v1/assets/images/screenshots/09_luxir_cli_search_direct.png)
+## Tika connector
 
-### 2. Direct Document Inspection
-Inspecting the complete raw Luxir JSON index document for `openapi.yaml`, demonstrating indexed SHACL types, AST symbol hierarchies, MIME classifications, and content preview.
-![Direct Luxir CLI Document Inspection](/v1/assets/images/screenshots/10_luxir_cli_inspect_doc.png)
+`lib/tika-grpc-connector.js` does two things. `isAvailable()` opens a TCP connection to `ROBOS_TIKA_GRPC_ENDPOINT` (default `localhost:50051`) with a 500 ms timeout. `parseDocument()` then classifies the input and extracts symbols locally, whether or not that port is open. The only difference is the label: `source` is `apache-tika-4.0-grpc` when the port accepts a connection and `tika-offline-engine` otherwise.
 
-### 3. Direct REST API Execution via cURL
-Querying the running KGraph Parse Portal REST gateway directly with cURL, demonstrating HTTP JSON payload responses with search scores, hit counts, and structured AST symbols.
-![Direct cURL REST API Query](/v1/assets/images/screenshots/11_luxir_curl_rest_direct.png)
+No gRPC client is called, and no `tika-grpc` server is shipped in this repository. `contracts/tika-service.proto` defines a `robos.tika.v1.TikaGrpcService` with `ParseDocumentStream` (client streaming) and `ExtractSymbols`, but nothing implements or calls it.
 
-### 4. Luxir Engine Status & Document Distribution
-Status report displaying Luxir engine state (`READY`), endpoint (`:8983`), index name (`robos_kgraph`), and distribution across indexed SHACL types.
-![Luxir Engine Status Report](/v1/assets/images/screenshots/12_luxir_cli_status_engine.png)
+Symbols are found with regular expressions, chosen by the file extension of `filePath`.
 
----
+| Extension | Symbol types returned |
+|:---|:---|
+| `.js`, `.ts`, `.tsx`, `.jsx`, `.mjs` | `class`, `function`, `typeDefinition` |
+| `.py` | `class`, `function` |
+| `.java`, `.kt` | `class`, `method` |
+| `.go` | `struct`, `interface`, `function` |
+| `.rs` | `typeDefinition`, `function` |
+| `.proto` | `message`, `service`, `rpc` |
+| `.graphql`, `.gql` | `typeDefinition` |
 
-## Running the Application
+PDF and ELF input is not parsed. The text becomes a placeholder such as `[PDF Document: name - N bytes]`, and for PDFs `estimatedPages` is a guess from the byte count.
 
-### Via RobOS App Launcher
-Open the **App Launcher** (Super key or Panel grid) and select **KGraph Parse Portal**.
+## Buildbarn helper
 
-### Via Terminal
+The Buildbarn tab and `/api/v1/rbe/*` endpoints produce a Helm values file, a `helm` command, a connectivity probe and a graph node. They do not talk to Kubernetes.
+
+`POST /api/v1/rbe/values` accepts these fields. `installCommand` uses the last three.
+
+| Field | Default |
+|:---|:---|
+| `clusterName` | `hermetiq-buildbarn-rbe` |
+| `replicaCount` | `2`, applied to storage, scheduler, worker and frontend |
+| `storageCapacity` | `100Gi` |
+| `workerConcurrency` | `8` |
+| `executionPort`, `casPort` | `8980`, `8981` |
+| `releaseName`, `namespace`, `valuesFile` | `buildbarn`, `buildbarn`, `buildbarn-values.yaml` |
+
+The resulting command is `helm upgrade --install buildbarn oci://ghcr.io/hermetiq/buildbarn --namespace buildbarn --create-namespace -f buildbarn-values.yaml`. Several settings are fixed in the template in `lib/buildbarn-rbe.js`: `environment: production`, a content-addressable store limit of 100 GiB and an action cache limit of 10 GiB whatever `storageCapacity` says, worker resources of 1000m CPU and 2Gi memory requested and 4000m and 8Gi limited, and a worker runner that mounts `/var/run/docker.sock`. The portal does not check the values against the chart, so review the file before you install.
+
+The probe opens a TCP connection with a 600 ms timeout and reports `online`, `unreachable` or `offline`. Registering builds a node with id `urn:robos:cluster:<clusterId>` and types `robos:RemoteExecutionCluster`, `robos:RemoteBuildCluster` and `schema:ComputerPlatform`, indexes it, and adds it to the graph store. The `committed` field in the response says whether the store was available.
+
+## Configuration
+
+| Variable | Default | Used by |
+|:---|:---|:---|
+| `ROBOS_PARSE_PORT` | `19192` for `server.js`, `19193` for the Electron app | The REST server, and the CLI's `curl` command |
+| `ROBOS_TIKA_GRPC_ENDPOINT` | `localhost:50051` | Tika status probe |
+| `ROBOS_LUXIR_ENDPOINT` | `http://127.0.0.1:8983` | Luxir ping, and the CLI |
+
+## Source and tests
+
+| Path | Contents |
+|:---|:---|
+| `server.js`, `main.js`, `preload.js` | HTTP server, Electron main process, IPC bridge |
+| `lib/fs-mime-classifier.js` | Archetype detection, file classification, directory scan |
+| `lib/tika-grpc-connector.js`, `lib/luxir-search-bridge.js`, `lib/buildbarn-rbe.js` | The three connectors described above |
+| `bin/luxir-portal-cli.js` | The CLI |
+| `renderer/` | The window UI |
+
+The unit tests are in `packages/robos-test/tests/sdlc-graph/kgraph-parse-portal.test.js`. Run them from the repository root.
+
 ```bash
-# Start the web and REST API server
-node packages/kgraph-parse-portal/server.js
-
-# Launch the full Electron desktop UI
-electron packages/kgraph-parse-portal
-
-# Use the direct Luxir CLI
-node packages/kgraph-parse-portal/bin/luxir-portal-cli.js status
+node --test packages/robos-test/tests/sdlc-graph/kgraph-parse-portal.test.js
 ```
 
+`npm test` inside the package finds nothing to run, because the package's `tests/` folder holds only a Gherkin feature file.

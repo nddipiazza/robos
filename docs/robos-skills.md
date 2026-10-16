@@ -1,286 +1,143 @@
 ---
-title: RobOS Skills
+title: Skills
 layout: default
 parent: Build on RobOS
-nav_order: 7
+nav_order: 6
 has_children: true
 permalink: /robos-skills.html
 ---
 
-# RobOS Skills & AI Agent Capabilities
+# Skills
 {: .no_toc }
 
-How autonomous AI coding agents and human developers use standardized, cross-platform skills to automate the Software Delivery Lifecycle across Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot, and Gemini CLI.
-{: .fs-6 .fw-300 }
+A skill is a folder of instructions that a coding agent follows to do one RobOS task, such as starting the VM or importing a knowledge graph. This page explains where skills live, how to run one, and how to add your own.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
-<div style="margin: 1.5rem 0 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
-  <a href="{{ site.baseurl }}{% link skills/skills-catalog.md %}" class="btn fs-3">📚 Complete Skills Catalog</a>
-  <a href="{{ site.baseurl }}{% link skills/import-company-kgraph.md %}" class="btn fs-3">🌐 Company KGraph Import Skill</a>
-  <a href="{{ site.baseurl }}{% link skills/skills-manager.md %}" class="btn fs-3">🖥️ Skills Manager Desktop App</a>
-</div>
+## What a skill is
 
----
+A RobOS agent skill is a directory under `plugins/robos/skills/` that contains a `SKILL.md` file. The file starts with YAML front matter and continues with plain Markdown instructions that the agent reads and follows. A skill is not compiled code. A few skills ship a helper script in a `scripts/` folder (`import-company-kgraph`, `install-desktop-app`, `schema-lookup`), and the instructions tell the agent when to run it.
 
-## Overview: The RobOS Skills Architecture
+The front matter has two keys in every existing skill. `name` matches the directory name and uses lowercase kebab-case. `description` is one sentence that tells an agent when the skill applies.
 
-In conventional development setups, AI coding assistants are trapped in vendor-specific silos. An instruction written for one CLI tool cannot be executed by another agent, and procedural knowledge on how to build, test, deploy, or inspect software is repeatedly lost.
-
-**RobOS unifies developer capabilities through the RobOS Skills Standard.**
-
-A RobOS Skill is an executable, portable capability packaged as open, plain-text markdown specifications (`SKILL.md`) and companion CLI engines. Skills provide deterministic, cross-agent workflows that teach any AI agent—as well as human engineers—how to carry out complex SDLC operations with zero guesswork.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/robos-skills-architecture.jpg' | relative_url }}" alt="RobOS Skills Standard & Marketplace Architecture" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS Skills Standard & Marketplace Architecture</strong>: Synchronizing vendor-agnostic AI agent skills and shell skills across Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot, and Gemini CLI. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
----
-
-## Two Interconnected Skill Layers
-
-RobOS provides two complementary layers of skills designed for developer productivity:
-
-| Layer | Purpose | Target Audience | Storage Location | Examples |
-|:---|:---|:---|:---|:---|
-| **AI Agent Skills (Plugin Marketplace)** | Complex, multi-step SDLC operations, code scaffolding, automated testing, E2E video proof-of-work, and Knowledge Graph synchronization | Autonomous AI Coding Agents & Devs via CLI | `plugins/robos/skills/` and `.agents/skills/` | `import-company-kgraph`, `sync-kgraph-docs`, `create-robos-app`, `e2e-driven-dev` |
-| **Desktop Shell Skills (Skills Manager)** | Fast, parameterized bash commands and workstation diagnostic utilities | Developers via GUI and `<robos-ai-textarea>` | `packages/skills-manager/skills-data.js` | shell skills across Git, Docker, Networking, Memory, and Storage |
-
----
-
-## Complete AI Agent Skills Catalog
-
-The RobOS Plugin Marketplace ships with standard skills categorized across the entire Software Delivery Lifecycle:
-
-### 1. Knowledge Graph (KGraph) Skills Suite
-
-| Skill | Slash Command | Description | What It Accomplishes |
-|:---|:---|:---|:---|
-| **`kgraph-search`** | `/kgraph-search <query>` | Semantic search across KGraph packages | Searches components, databases, contracts, pipelines, and agent personas by keywords, types, or tags. |
-| **`kgraph-insert`** | `/kgraph-insert <node>` | Insert architectural node with SHACL validation | Registers new services, databases, or contracts into modular package stores (`.robos/kgraphs/`) with enforced SHACL validation. |
-| **`kgraph-delete`** | `/kgraph-delete <nodeId>` | Safely delete node with cascade reference cleanup | Decommissions deprecated microservices or databases and cleans up referencing edges across packages. |
-| **`kgraph-update`** | `/kgraph-update <nodeId>` | In-place node mutation and property updates | Updates OpenAPI contracts, database connections, or squad ownership with automatic SHACL re-validation. |
-| **`kgraph-query`** | `/kgraph-query [filters]` | Graph query and multi-hop path traversal | Queries nodes by RDF type or traces connection paths between two entities across microservices and contracts. |
-| **`kgraph-impact-analysis`** | `/kgraph-impact-analysis <nodeId>` | Trace blast radius and dependent nodes | Recursively analyzes inbound/outbound dependency edges to calculate blast radius before code or schema changes. |
-| **`kgraph-validate`** | `/kgraph-validate [package]` | Enforce 100% W3C SHACL shape conformance | Validates all packages in `.robos/kgraphs/` against formal SHACL constraint shapes to guarantee 0 violations. |
-| **`kgraph-diff`** | `/kgraph-diff [branch]` | Semantic blast radius diff (World 1 vs World 2) | Compares Production `main` against feature branches to detect added, modified, or breaking architectural changes. |
-| **`kgraph-export`** | `/kgraph-export [options]` | Export graph to standard RDF formats | Exports Knowledge Graph packages to W3C JSON-LD 1.1, Turtle (`.ttl`), or N-Triples for external graph engines. |
-| **`kgraph-visualize`** | `/kgraph-visualize [target]` | Generate Mermaid and C4 diagrams | Produces executable Mermaid diagram syntax or component trees for any package or focused subsystem. |
-| **`import-company-kgraph`** | `/import-company-kgraph` | Ingest company repository catalogs from HTTP, S3, or Git | Ingests enterprise inventories from HTTP REST APIs, AWS S3 buckets, local directories, or Git forges into KGraph packages. |
-| **`sync-kgraph-docs`** | `/sync-kgraph-docs` | Synchronize living documentation with graph updates | Monitors graph mutations in `.robos/` and automatically synchronizes markdown documentation and diagrams. |
-
-#### Knowledge Graph CLI & Skill Invocation Examples:
-```bash
-# Search for microservices matching 'orders'
-node packages/robos-graph/bin/kgraph-cli.js search "orders" --type robos:Microservice
-
-# Trace blast radius and dependent components before editing a service
-node packages/robos-graph/bin/kgraph-cli.js impact "urn:robos:service:forms-api" --depth 3
-
-# Validate 100% SHACL conformance across all packages
-node packages/robos-graph/bin/kgraph-cli.js validate
-
-# Ingest an entire company repository catalog from an AWS S3 bucket
-node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
-  --source s3://company-cloud-bucket/inventories/repos.json \
-  --company-name "Acme Global" \
-  --company-slug "acme" \
-  --import-to-robos
-```
-
----
-
-### 2. Application Scaffolding & Component Lifecycle
-
-| Skill | Slash Command | Description | What It Accomplishes |
-|:---|:---|:---|:---|
-| **`create-robos-app`** | `/create-robos-app <Name>` | Scaffold a new Electron desktop application | Generates application workspace, main process, preload bridge, renderer UI, Lucide vector icon, DOM snapshot debug port, and registers across all 10 system manifests. |
-| **`create-feature-spec`** | `/create-feature-spec <Idea>` | Convert a raw idea note into a structured specification | Analyzes natural language ideas or prompts and generates rigorous engineering specifications in `docs/ideas/specs/` with user personas, C4 models, and BDD scenarios. |
-| **`create-test`** | `/create-test <Component>` | Generate unit and E2E test suites | Author automated tests using the native `robos-test` framework, covering headless GUI testing and assertions. |
-| **`add-ai-text-area-to-app`** | `/add-ai-text-area-to-app` | Embed `<robos-ai-textarea>` widget | Integrates the streaming AI prompt bar with `@`-mention typeahead for files, repos, and shell skills. |
-| **`update-app-icon`** | `/update-app-icon <App> <SVG>` | Update 48x48 Lucide vector SVG icon | Validates 48x48 cyan vector graphics and synchronizes across `robos-icons`, `icon-lib`, and desktop shortcuts. |
-| **`rename-robos-app`** | `/rename-robos-app <Old> <New>` | Safely rename an existing Electron app | Propagates name changes across package directories, process managers, icon registries, and desktop files without breaking references. |
-| **`remove-robos-app`** | `/remove-robos-app <App>` | Safely decommission and deregister an app | Deregisters the application cleanly across all desktop managers, panels, and icon registries. |
-
----
-
-### 3. Automated E2E Testing & Proof-of-Work
-
-| Skill | Slash Command | Description | What It Accomplishes |
-|:---|:---|:---|:---|
-| **`e2e-driven-dev`** | `/e2e-driven-dev`, `/do-e2e-driven-dev` | Text-narrated E2E driven development | Executes feature development verified by automated end-to-end testing with audio narration and video capture. |
-| **`record-demo`** | `/record-demo <Script>` | Record 1080p narrated video walkthrough | Uses headless Xvfb, FFmpeg, and neural TTS (Piper) to record high-definition video walkthroughs with WebVTT captions, archived to `~/.robos/development/walkthroughs/`. |
-| **`test-container`** | `/test-container` | Run headless containerized E2E tests | Launches isolated containerized E2E test suites inside Docker with Xvfb virtual framebuffers and Picom compositors. |
-| **`app-snapshot`** | `/app-snapshot <App>` | Capture DOM text/JSON/screenshot snapshots | Connects to running Electron applications via snapshot debug ports (19100–19121) to capture live UI states and DOM trees. |
-
----
-
-### 4. VM & Operating System Control
-
-| Skill | Slash Command | Description | What It Accomplishes |
-|:---|:---|:---|:---|
-| **`build-vm`** | `/build-vm` | Build QEMU VM disk image & cloud-init ISO | Creates sparse qcow2 virtual disks and stateless cloud-init ISOs for Ubuntu 26.04 LTS RobOS desktop. |
-| **`start-vm` / `stop-vm`** | `/start-vm`, `/stop-vm` | Start or stop the RobOS virtual machine | Launches QEMU with hardware KVM acceleration, GTK/VNC displays, and forwarded SSH ports (2224). |
-| **`vm-status`** | `/vm-status` | Inspect running VM state and diagnostics | Queries SSH connectivity, memory usage, and hypervisor process state. |
-| **`vm-ssh`** | `/vm-ssh "<Command>"` | Execute shell commands inside the VM | Executes remote administrative commands inside the virtual machine with non-interactive authentication. |
-| **`deploy-to-vm`** | `/deploy-to-vm <Package>` | Deploy packages directly to the running VM | Transfers code via SCP to `/usr/local/share/robos/`, fixes permissions (`chmod -R a+rX`), and rebuilds node modules. |
-| **`add-install-step`** | `/add-install-step` | Add cloud-init provisioning step | Extends first-boot automated provisioning and updates the terminal splash screen. |
-| **`restart-taskbar`** | `/restart-taskbar` | Restart desktop dock and manager | Sends IPC signals to `/run/user/<uid>/robos-dm.sock` to reload the GNOME desktop taskbar without terminating active applications. |
-
----
-
-### 5. System Diagnostics & Marketplace Management
-
-| Skill | Slash Command | Description | What It Accomplishes |
-|:---|:---|:---|:---|
-| **`install-dev-deps`** | `/install-dev-deps` | Audit and install host dev dependencies | Audits and installs host packages: QEMU, KVM, Node.js, Electron, JDK 17+, and Piper TTS. |
-| **`read-error-logs`** | `/read-error-logs` | Inspect centralized RobOS error stream | Queries centralized JSON error logs and Electron crash dumps for rapid root-cause analysis. |
-| **`report-issue`** | `/report-issue` | Convert bug reports into structured issue specs | Structures user reports into markdown issue files in `docs/issues/reported/` with reproduction steps and logs. |
-| **`manage-robos-skill`** | `/manage-robos-skill` | Add, update, or remove marketplace skills | Scaffolds new skills, manages manifests, and synchronizes across all agent platforms. |
-
----
-
-## Universal Cross-Agent Installation & Sync
-
-RobOS skills adhere to an agent-agnostic format that allows any modern AI coding assistant to discover and execute them immediately.
-
-### One-Click Synchronization
-Whenever you add, modify, or update a skill in `plugins/robos/skills/`, run:
-
-```bash
-./plugins/install.sh --sync
-```
-
-This automatically synchronizes manifests and command bridges across:
-- **Claude Code**: `.claude/commands/<skill-name>.md`
-- **OpenAI Codex**: `.agents/skills/<skill-name>/SKILL.md` and `AGENTS.md`
-- **Google Antigravity**: `.antigravity/commands/<skill-name>.md` and `.agents/skills/`
-- **GitHub Copilot**: `.github/skills/<skill-name>/SKILL.md`
-- **Gemini CLI**: `.gemini/commands/<skill-name>.md`
-
-### Installing Globally
-To make RobOS skills available across all workspaces on your development machine:
-```bash
-./plugins/install.sh --global
-```
-
----
-
-## Anatomy of a RobOS Skill (`SKILL.md`)
-
-Every RobOS skill is defined in a standard directory structure:
-
-```
-plugins/robos/skills/<skill-name>/
-├── SKILL.md                 # Primary instruction document with YAML frontmatter
-└── scripts/                 # Optional companion CLI scripts and automation engines
-    └── <skill-name>.js
-```
-
-### Example: Standard `SKILL.md` Format
 ```markdown
 ---
-name: import-company-kgraph
-description: Import company, organization, or team Knowledge Graph entries from any source (HTTP, FileSystem, S3, or Git) and generate validated OSLC JSON-LD files.
+name: <skill-name>
+description: <Concise, actionable description of what this skill does and when to use it.>
 ---
 
-# Import Company Knowledge Graph
+# <Skill Title>
 
-<Overview of what the skill accomplishes>
-
-## When to Use
-<Scenarios and triggers when an agent should execute this skill>
+<Overview of the skill>
 
 ## Input
-$ARGUMENTS — Parameter flags:
-- `--source <path|url|s3-uri>`: Ingestion endpoint
-- `--company-name <name>`: Organization title
-- `--import-to-robos`: Merge directly into workspace
+$ARGUMENTS — <parameters or payload>
 
 ## Procedure
-1. Parse and validate source input.
-2. Execute companion script: `node scripts/import-company-kgraph.js $ARGUMENTS`.
-3. Verify generated JSON-LD output files.
+1. <Step 1>
+2. <Step 2>
 
-## Validation Checklist
-- [ ] Output conforms to OSLC JSON-LD and C4 schema.
-- [ ] No plaintext credentials stored in graph files.
+## Validation
+- <Verification checklist>
 ```
 
----
+This is the template from the `manage-robos-skill` skill. The body is free-form. Most skills use some of the headings `Input`, `When to Use`, `Steps` or `Procedure`, `Execution` and `Validation`. In the `Input` section, `$ARGUMENTS` stands for whatever you type after the skill name.
 
-## Authoring New Skills with `/manage-robos-skill`
+## Two kinds of skill
 
-RobOS provides the `manage-robos-skill` skill to automate creating and registering new skills:
+| | Agent skills | Skills Manager shell skills |
+| --- | --- | --- |
+| What it is | A `SKILL.md` with instructions for an agent | A named shell command with a description and tags |
+| Where it lives | `plugins/robos/skills/<name>/SKILL.md` | `packages/skills-manager/skills-data.js` for built-in ones, `~/.config/robos/skills.json` for your own |
+| Who runs it | A coding agent, usually through a slash command | You, by copying the command from the Skills Manager window |
+| Reference | [Skills catalog]({{ site.baseurl }}{% link skills/skills-catalog.md %}) | [Skills Manager Desktop App]({{ site.baseurl }}{% link skills/skills-manager.md %}) |
+
+`packages/robos-lib/skill-catalog.js` merges both kinds, plus the installed `SKILL.md` files, into one list. PR Review uses it to feed the `/skills` picker in the `<robos-ai-textarea>` prompt box. The picker is described on the Skills Manager page.
+
+## Where skills live
+
+`plugins/robos/skills/` is the source. Other agent directories hold copies that `plugins/install.sh` generates, so edit the source and re-run the installer.
+
+| Path | Contents |
+| --- | --- |
+| `plugins/robos/skills/<name>/SKILL.md` | The skill itself |
+| `plugins/robos/commands/<name>.md` | The slash-command bridge: a short file that passes `$ARGUMENTS` to the skill |
+| `plugins/robos/plugin.json` | Plugin manifest with `skills` and `commands` lists |
+| `.agents/skills/`, `.github/skills/` | Copies of the skill folders |
+| `.claude/commands/`, `.antigravity/commands/`, `.gemini/commands/` | Copies of the command files |
+
+A command file is only a pointer. `plugins/robos/commands/start-vm.md`, for example, takes the optional flags and says to follow `plugins/robos/skills/start-vm/SKILL.md`.
+
+## Run a skill
+
+If the skill has a command file, type the slash command in your agent with the arguments the skill's `Input` section describes:
+
+```text
+/start-vm --headless
+/app-snapshot dev-central --json
+/create-robos-app "Work Journal"
+```
+
+Some skills have no command file, including the `kgraph-*` skills and `pr-review-theater`. Ask the agent for the task in plain words and name the skill, for example "use the kgraph-impact-analysis skill on urn:robos:service:orders-api". The [Skills catalog]({{ site.baseurl }}{% link skills/skills-catalog.md %}) shows which skills have a slash command.
+
+Which agent reads which directory is up to the agent. The table in the next section only lists what the installer writes.
+
+## Install and sync
+
+Run the installer from the repository root. With no options it writes project-level copies for every agent:
 
 ```bash
-# Scaffold and register a new skill in one command:
-/manage-robos-skill add inspect-k8s-logs "Stream and analyze Kubernetes pod logs for microservice crashes"
+./plugins/install.sh
 ```
 
-This automatically:
-1. Validates the lowercase kebab-case naming convention.
-2. Scaffolds `plugins/robos/skills/inspect-k8s-logs/SKILL.md`.
-3. Generates the command bridge `plugins/robos/commands/inspect-k8s-logs.md`.
-4. Registers the skill in `plugins/robos/plugin.json`.
-5. Syncs across all agent platforms via `./plugins/install.sh --sync`.
+| Option | Effect |
+| --- | --- |
+| `--target <agent>` | Limit to `claude`, `codex`, `antigravity`, `copilot` or `gemini` (default `all`) |
+| `--skill <name>` | Sync one skill and its command file; project level only |
+| `--global` | Install to your home directory instead of the repository |
+| `--dry-run` | Print what would be copied |
+| `--sync` | Accepted, but project-level sync is the default behavior |
 
----
+Project-level targets write to these places:
 
-## The Skills Manager Desktop App (`packages/skills-manager`)
+| Target | Writes |
+| --- | --- |
+| `claude` | `.agents/skills/`, `.claude/commands/` |
+| `codex` | `.agents/skills/` |
+| `antigravity` | `.agents/skills/`, `.antigravity/commands/` |
+| `copilot` | `.github/skills/` |
+| `gemini` | `.gemini/commands/` |
 
-In addition to AI agent skills, RobOS includes the **Skills Manager** application (`packages/skills-manager`), which equips developers with an interactive GUI library of shell and system diagnostic commands:
+With `--global`, the installer writes `~/.agents/skills/`, `~/.claude/plugins/marketplaces/robos/` and `~/.antigravity/skills/`. It does not write global Copilot or Gemini files.
 
-- **10 Categorized Packs**: File Operations, Process Management, Git Operations, Networking, Docker / Containers, System Info, Package Management, Text Processing, Security, and Development Runtimes.
-- **Instant Search & Parameterization**: Search by tag, keyword, or command name, with customizable argument fields.
-- **Custom Skill Creation**: Add personal terminal macros and scripts stored in `~/.config/robos/skills.json`.
-- **Integration with `<robos-ai-textarea>`**: Every skill in the manager is available via `@`-mention typeahead in AI prompt boxes throughout RobOS applications.
+## Add a skill
 
-To launch the Skills Manager, open **Skills Manager** from the **RobOS App Launcher** (searchable application grid in the panel/dock), or launch it from the terminal:
-```bash
-electron packages/skills-manager
-```
+The `manage-robos-skill` skill does these steps for you. Run `/manage-robos-skill add <skill-name> "<description>"`, or do them by hand:
 
----
+1. Create `plugins/robos/skills/<skill-name>/SKILL.md` with the front matter above. The name must be lowercase kebab-case.
+2. Create `plugins/robos/commands/<skill-name>.md` if you want a slash command.
+3. Add the name to the `skills` and `commands` arrays in `plugins/robos/plugin.json`.
+4. Run `./plugins/install.sh --skill <skill-name>`.
+5. Add the skill to the list in `AGENTS.md` and to `plugins/README.md`.
 
-## The Future: A Shared Catalog of Compiled Skills
+`manage-robos-skill` also supports `update`, `remove` and `list`.
 
-RobOS skills today are vendor-agnostic markdown instructions (`SKILL.md`) that tell an AI agent how to do a task, plus the shell commands in the Skills Manager. They are not compiled code.
+{: .note }
+`install.sh` copies every directory under `plugins/robos/skills/`, whether or not `plugin.json` lists it. The manifest is not complete today: several skills, including the `kgraph-*` skills, are not in its `skills` list, and it lists a `sync-kgraph-docs` command that has no command file.
 
-The [Skill Commons whitepaper](https://rowbose.com/future/whitepaper/) proposes a next step: break every job down to base tasks, build and verify each one once, compile it, and keep it in a shared, searchable catalog. Before anything is generated, the catalog is searched, and a small local model assembles existing pieces instead of rewriting solved ones. This is a proposal. The catalog, the compiler pipeline and the assembler are not built; the whitepaper lists what exists today and describes how to test whether the idea works.
+## Not built yet
 
-Read the plain-English summary at **[rowbose.com/future](https://rowbose.com/future/)**.
+The Skill Commons whitepaper proposes a shared catalog of verified, compiled skills that a small local model could assemble. That catalog, the compiler and the assembler do not exist. The proposal is at [rowbose.com/future](https://rowbose.com/future/).
 
----
+## Related pages
 
-## Verification & Automated Testing
-
-All skills are verified using automated tests in the `packages/robos-test` framework:
-
-```bash
-# Test the company KGraph import skill:
-node --test packages/robos-test/tests/skills/import-company-kgraph.test.js
-
-# Test the Skills Manager desktop app:
-node --test packages/robos-test/tests/skills-manager/smoke.test.js
-
-# Run the narrated Skills Manager walkthrough demo:
-node packages/robos-test/demos/skills-manager-demo.js
-```
-
----
-
-## Next Steps
-
-- **[The Future of Software Development]({{ site.baseurl }}{% link future.md %})**: A proposal for a shared catalog of verified, compiled skills that small local models can assemble into applications.
-- **[Agent-Agnostic Framework]({{ site.baseurl }}{% link big-wins/agent-agnostic-framework.md %})**: Learn how universal skills eliminate vendor lock-in.
-- **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
-- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
-
+- [Skills catalog]({{ site.baseurl }}{% link skills/skills-catalog.md %}): every skill in `plugins/robos/skills/`, with its purpose and how to invoke it.
+- [Skills Manager Desktop App]({{ site.baseurl }}{% link skills/skills-manager.md %}): the shell-command library and skill packs.
+- [Import company knowledge graph]({{ site.baseurl }}{% link skills/import-company-kgraph.md %}): the `import-company-kgraph` skill in detail.
+- [Knowledge graph]({{ site.baseurl }}{% link knowledge-graph.md %}): the graph that the `kgraph-*` skills read and change.

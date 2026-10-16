@@ -235,7 +235,7 @@ describe('SDLC Knowledge Graph: Testing Package, Gherkin BDD, Build Systems & re
     }
   });
 
-  it('7. Schema Documentation Generator: renders Upstream Schema Basis (Refers From) section on generated docs', () => {
+  it('7. Schema Documentation Generator: renders the upstream standard on generated docs', () => {
     const generator = new SchemaDocGenerator({
       rootDir: path.join(__dirname, '../../../..'),
     });
@@ -250,9 +250,9 @@ describe('SDLC Knowledge Graph: Testing Package, Gherkin BDD, Build Systems & re
       shapes: [gherkinFeatureShape],
     }, 1);
 
-    assert.strictEqual(md.includes('## Upstream Schema Basis (Refers From)'), true);
-    assert.strictEqual(md.includes('http://open-services.net/ns/rm#Requirement'), true);
-    assert.strictEqual(md.includes('When autonomous agents generate, expand, or validate instances of `robos:GherkinFeature`'), true);
+    assert.strictEqual(md.includes('## Details'), true);
+    assert.strictEqual(md.includes('| Domain standard | [OSLC RM](http://open-services.net/ns/rm#Requirement) |'), true);
+    assert.strictEqual(md.includes('| Schema.org type | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) |'), true);
   });
 
   it('8. Universal Schema.org Coverage: 100% of all 98 shapes define canonical schemaOrgType and domainStandard', () => {

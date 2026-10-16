@@ -1,0 +1,36 @@
+// RobOS docs, dark: the same palette on a blue-black base.
+$color-scheme: dark;
+$body-background-color: #0d111c;
+$body-heading-color: #e8ebf5;
+$body-text-color: #d3d8e6;
+$link-color: #9db4ff;
+$nav-child-link-color: #aab3c8;
+$sidebar-color: #0a0e18;
+$base-button-color: #131a2b;
+$btn-primary-color: #3b54c9;
+$code-background-color: #131a2b;
+$code-linenumber-color: #97a1b8;
+$feedback-color: #090d16;
+$table-background-color: #101626;
+$search-background-color: #131a2b;
+$search-result-preview-color: #aab3c8;
+$border-color: #25304a;
+
+$rb-hot: #ff9a6c;
+$rb-tint: #121a2e;
+$rb-sand: #161b2a;
+$rb-muted: #97a1b8;
+$rb-card: #101626;
+$rb-deep: #17235f;
+
+
+// syntax highlighting
+$rb-tok-comment: #8b94a8;
+$rb-tok-keyword: #9db4ff;
+$rb-tok-string: #ffa57d;
+$rb-tok-number: #f2c879;
+$rb-tok-func: #b9c8ff;
+$rb-tok-type: #7fe0ad;
+$rb-tok-punct: #aab3c8;
+$rb-tok-ins: #7fe0ad;
+$rb-tok-del: #ff8f7a;

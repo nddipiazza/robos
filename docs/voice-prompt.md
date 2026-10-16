@@ -1,363 +1,165 @@
 ---
-title: RobOS Voice — Bi-directional Voice & Desktop Assistant
+title: RobOS Voice
 layout: default
 parent: Use RobOS
-nav_order: 3
+nav_order: 2
 permalink: /voice-prompt.html
 ---
 
-# RobOS Voice — Bi-directional Voice & Desktop Assistant
+# RobOS Voice
 {: .no_toc }
 
-Bi-directional, 100% privacy-first voice interaction engineered for AI-first software development. Features lifelike neural text-to-speech (Kokoro-82M and Edge-TTS), ambient background stream listening with wake-word detection ("hello robos", "rob OS", "row bose"), desktop context injection, and an interactive out-loud Desktop Assistant.
-{: .fs-6 .fw-300 }
+RobOS Voice is a desktop app that transcribes your speech on the machine, runs spoken commands, speaks replies, and exposes a local HTTP API and a `robos-voice` command. This page covers what works today, what it needs, and how to drive it.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
----
+## What it is
 
-## 1. Bi-directional Voice in AI-Driven Development
+The package is [`packages/voice-prompt`](https://github.com/nddipiazza/robos/tree/main/packages/voice-prompt) (desktop entry name "RobOS Voice"; app page: [Voice Prompt]({{ '/apps/voice-prompt/' | relative_url }})). Starting it does three things:
 
-In the era of autonomous coding agents (Claude Code, Google Antigravity, GitHub Copilot, OpenAI Codex), software engineering speed is no longer limited by how fast developers write boilerplate syntax—it is bottlenecked by **prompt authoring and review bandwidth**:
+- It opens a small always-on-top window (380 by 520 pixels, bottom-right by default) where recognized speech appears as text bubbles.
+- It registers the push-to-talk hotkey `Super+V`.
+- It starts an HTTP server on port `19188`. Set `ROBOS_VOICE_PORT` to use another port.
 
-- **The Speaking vs. Typing Speed Gap**: Average developers type between 40 to 65 words per minute (WPM). Natural speech occurs at 140 to 180 WPM—nearly **3x to 4x faster**.
-- **Context Switching Friction**: To instruct an AI agent on a bug or refactor, a developer traditionally must stop, switch windows, open an AI chat, manually type file names, paste error lines, specify the active Git branch, and explain what they were looking at.
-- **Robotic Audio Fatigue**: Conventional developer TTS engines (espeak, standard Piper voices) sound mechanical and robotic. Developers need warm, lifelike neural voices for long reviews and conversational debugging.
-- **Privacy & Air-Gap Compliance**: Sending raw audio streams to commercial cloud speech APIs introduces compliance, latency, cost, and secret leakage risks for enterprise engineering codebases.
+## Requirements and limits
 
-### The RobOS Solution: RobOS Voice
+- **Linux only.** The microphone is read with `pw-record` (PipeWire) or `arecord` (ALSA). Window context comes from `xdotool` and `xprop` on an X11 session; without them the focused-window fields are empty.
+- **Speech recognition** uses the `Xenova/whisper-tiny.en` model through `@xenova/transformers`, so it is English only. `packages/voice-prompt/package.json` lists only `electron`, and nothing else in the repository installs `@xenova/transformers`. If the import fails, the engine logs a warning and every transcript is empty. Installing it with `npm install @xenova/transformers` inside the package should satisfy the import; this page does not verify that.
+- **Speech output** needs at least one engine installed. See "Speech output" below.
+- Not built yet: hands-free wake-word activation. See "Not built yet".
 
-The **RobOS Voice** platform (`packages/voice-prompt`, CLI: `robos-voice`, library: `packages/robos-lib/voice.js`) provides a full-duplex bi-directional voice pipeline:
-
-1. **Natural Outgoing Neural Voice (TTS)**: High-fidelity speech synthesis featuring **Kokoro-82M** (24kHz warm open-source offline TTS) and **Edge-TTS** (Microsoft Studio-grade neural voices with zero API keys).
-2. **Strict "Row Bose" Phonetic Pronunciation**: Integrated speech normalization guarantees that "RobOS" is phonetically pronounced as *"Row Bose"* across all voice engines.
-3. **Continuous Background Topic Stream**: Ambient voice listening emits speech chunks directly to subscriber topics without cluttering disk or prompt storage unless explicitly consumed.
-4. **Hands-free Wake-Word Detection**: Listens on the continuous stream for `"hello robos"`, `"rob OS"`, and `"row bose"` (and phonetic variants like *rowbose* and *roh bose*).
-5. **Interactive Desktop Assistant**: Connects the wake-word listener, active window context, and AI agent reasoning to speak answers back out loud to the developer.
-6. **100% Local Neural Whisper STT**: On-device ONNX runtime models via `@xenova/transformers` (`whisper-tiny.en`). Audio never leaves the local machine.
-7. **Automated Desktop Context Injection**: Automatically attaches focused window titles, application class (`vscode`, `idea`, `browser`, `terminal`), active PID, current working directory, and Git branch.
-
----
-
-## 2. System Architecture & Multimodal Pipeline
-
-```mermaid
-flowchart TD
-    subgraph Audio Input & STT
-        Mic[Microphone Input] --> Capture[Audio Capture: pw-record / arecord / sox]
-        Capture --> Whisper[Local Neural Whisper STT ONNX]
-        Whisper --> Stream[Continuous Topic Stream]
-    end
-
-    subgraph Wake Word & Assistant
-        Stream --> WakeDetector{"Wake Word Detector\n'hello robos' | 'rob OS' | 'row bose'"}
-        WakeDetector -->|Triggered Query| Assistant[RobOS Desktop Assistant]
-        Context[Desktop Context Provider: X11/Wayland + Git] --> Assistant
-        Agent[Autonomous Agent / LLM Bridge] <--> Assistant
-    end
-
-    subgraph Outgoing Voice TTS
-        Assistant --> PhoneticEngine["Phonetic Engine: 'RobOS' -> 'Row Bose'"]
-        PhoneticEngine --> TTSEngine{TTS Engine Selector}
-        TTSEngine -->|Offline Lifelike| Kokoro["Kokoro-82M (24kHz ONNX)"]
-        TTSEngine -->|Studio Grade| EdgeTTS["Edge-TTS (Andrew / Ava Neural)"]
-        TTSEngine -->|Fallback| Piper["Piper / Speech-Dispatcher"]
-        Kokoro --> Playback[Audio Output / Speakers]
-        EdgeTTS --> Playback
-        Piper --> Playback
-    end
-```
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/robos-voice-architecture.jpg' | relative_url }}" alt="RobOS Voice Architecture Diagram" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS Voice Architecture</strong>: Bi-directional neural voice pipeline connecting ambient Whisper stream listening, wake-word detection, context-aware desktop assistant, and lifelike Kokoro/Edge-TTS speech output. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
----
-
-## 3. Outgoing Voice (Natural Neural TTS)
-
-RobOS Voice includes a high-performance, non-robotic outgoing speech engine (`lib/tts-engine.js`):
-
-### 3.1 Supported Voice Engines
-
-| Engine | Type | Sample Rate | Description |
-|---|---|---|---|
-| **Kokoro-82M** (`kokoro`) | Local Offline Neural | 24,000 Hz | State-of-the-art open-source 82M parameter neural TTS. Produces warm, lifelike human cadence. Model stored locally at `~/.local/share/kokoro/kokoro-v1.0.onnx`. |
-| **Edge-TTS** (`edge-tts`) | Studio Neural | 24,000 Hz | High-quality Microsoft Azure neural speech voices (`en-US-AndrewMultilingualNeural`, `en-US-AvaMultilingualNeural`) accessible with zero account or API key required. |
-| **Piper** (`piper`) | Local Fast Neural | 22,050 Hz | Ultra-fast local neural TTS model (`en_US-lessac-medium`). |
-| **Speech Dispatcher** (`speech-dispatcher`) | System Local | Varies | Local Linux standard speech synthesizer fallback (`spd-say`). |
-
-### 3.2 Phonetic Normalization: Pronouncing "Row Bose"
-
-To ensure consistent branding and natural pronunciation, all outgoing speech passes through the phonetic pre-processor (`prepareSpeechText`):
-
-```javascript
-// Ensures RobOS is pronounced "Row Bose" like Bose speaker system
-text = text.replace(/\bRobOS\b/gi, 'Row Bose');
-text = text.replace(/\bRob-OS\b/gi, 'Row Bose');
-```
-
----
-
-## 4. Background Topic Streaming & Wake-Word Detection
-
-### 4.1 Ephemeral Topic Stream Mode
-
-When background mode is enabled (`POST /api/background/start`), the microphone streams continuous audio chunks through the Whisper STT engine:
-
-- **No Disk Pollution**: Speech chunks are emitted live as `stream-text` events to active subscribers.
-- **Zero Save Default**: Unlike dictation mode, speech recognized in background mode is **not written** to the persistent `voice-prompts.json` file. It operates strictly like a pub/sub message topic.
-
-### 4.2 Wake-Word Triggers
-
-The wake-word detector (`lib/wake-word.js`) monitors the live stream for trigger phrases:
-
-- **"hello robos"**
-- **"rob OS"**
-- **"row bose"** (including variants: `row-bose`, `rowbose`, `roh bose`)
-
-When a wake word is detected, it strips the wake phrase and extracts the trailing instruction to immediately dispatch to the Desktop Assistant.
-
----
-
-## 5. RobOS Desktop Assistant
-
-The **RobOS Desktop Assistant** (`lib/desktop-assistant.js`) provides hands-free pair programming:
-
-1. **Trigger**: Listens for wake words or explicit API prompts (`POST /api/assistant/chat`).
-2. **Context Enrichment**: Gathers focused application name, window title, PID, and Git branch from `ContextProvider`.
-3. **Agent Reasoning**: Sends the query and desktop context to the RobOS AI Agent loop.
-4. **Spoken Response**: Speaks the response out loud using the configured natural neural voice.
-5. **State Lifecycle**: Emits real-time state changes (`IDLE`, `WAKE_DETECTED`, `LISTENING`, `PROCESSING`, `SPEAKING`).
-
----
-
-## 6. Voice Activated Commands & Knowledge Graph Integration
-
-RobOS Voice bridges hands-free speech dictation directly to autonomous SDLC actions through the **Voice Activated Commands** engine (`lib/voice-commands-registry.js`). Every skill across the RobOS skills catalog and every application across the desktop suite can expose voice activated commands that are automatically matched when developer speech settles.
-
-### 6.1 Knowledge Graph SHACL Shape: `robos:VoiceCommand`
-
-Voice commands are registered as first-class, optional semantic entities in the RobOS Dual-State Knowledge Graph conforming to the W3C SHACL shape `urn:robos:shape:VoiceCommandShape` (derived from Schema.org `schema:ControlAction`):
-
-```turtle
-# W3C SHACL Shape Definition
-urn:robos:shape:VoiceCommandShape a sh:NodeShape ;
-    sh:targetClass robos:VoiceCommand ;
-    rdfs:isDefinedBy <https://schema.org/ControlAction> ;
-    sh:property [
-        sh:path dcterms:title ;
-        sh:minCount 1 ;
-        sh:message "Voice command must have a title." ;
-    ] ;
-    sh:property [
-        sh:path robos:commandMatcher ;
-        sh:minCount 1 ;
-        sh:message "Voice command must have at least one command matcher phrase." ;
-    ] ;
-    sh:property [
-        sh:path robos:targetType ;
-        sh:minCount 1 ;
-        sh:message "Voice command must specify target type (app or skill)." ;
-    ] ;
-    sh:property [
-        sh:path robos:targetId ;
-        sh:minCount 1 ;
-        sh:message "Voice command must specify a target application or skill ID." ;
-    ] .
-```
-
-Applications and skills declare their voice commands via the `robos:hasVoiceCommand` relationship in their respective modular package definitions (such as `.robos/kgraphs/applications/package.jsonld`).
-
-### 6.2 Command Matching & Execution Pipeline
-
-```mermaid
-flowchart TD
-    Speech[Recognized Speech Stream] --> Settle["Settle Debounce Window\n(650ms Quiet Period)"]
-    Settle --> Matcher{"Voice Command Matcher\nExact • Wildcard • Prefix Strip"}
-    Matcher -->|No Match| Bubble[Standard Speech Bubble]
-    Matcher -->|Matched Command| Bounce["HUD Bubble Bounce Effect\n@keyframes commandBounce"]
-    Bounce --> Card[Format Bubble with Command Card]
-    Card --> Dispatch{Target Type Dispatch}
-    Dispatch -->|Skill| MCP["Execute Skill / MCP Tool Action\n(SkillsExecutor)"]
-    Dispatch -->|App| IPC["Launch / Focus App\n(Electron Desktop IPC)"]
-    MCP --> Result["Update Status Badge (Done / Error)\nand Render Result Output"]
-    IPC --> Result
-```
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/voice-commands-architecture.jpg' | relative_url }}" alt="RobOS Voice Activated Commands & Knowledge Graph Pipeline Architecture Diagram" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS Voice Activated Commands Architecture</strong>: End-to-end schematic connecting audio stream transcription, settle debounce gating, multi-token matching engine, W3C SHACL shape validation in the Dual-State Knowledge Graph, action dispatch to skills and apps, and real-time HUD bubble bounce status formatting. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
----
-
-## 7. Floating HUD & Standalone Voice Commands Dialog
- 
-RobOS Voice features a discreet, semi-transparent floating desktop HUD positioned at the corner of your screen (customizable to Bottom-Right, Top-Right, Bottom-Left, or Top-Left).
- 
-### 7.1 Speech Bubble Settle Window & Bounce Animation
- 
-As speech is dictated, words appear live in real-time bubbles:
- 
-1. **Settle Debounce (650ms)**: When the developer pauses speaking, the bubble enters a 650ms settle window. If no new words arrive, the finalized text is evaluated against the voice commands matching engine.
-2. **Bounce Animation Effect**: When a command matches, the dialog bubble triggers a `@keyframes commandBounce` animation, dynamically scaling and pulsing with a glowing cyan accent.
-3. **Execution Card**: The bubble automatically formats to display an execution card featuring:
-   - Target category badge (`App` or `Skill`) with lightning icon.
-   - Command title and live status indicator (`Executing` $\to$ `✓ Done` or `✕ Error`).
-   - Detailed execution feedback (e.g., Knowledge Graph SHACL validation report or app launch confirmation).
- 
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/screenshots/robos-voice-hud-bubble-command.png' | relative_url }}" alt="RobOS Voice HUD with Matched Voice Command and Formatted Status Card" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>RobOS Voice Floating HUD</strong>: Real-time dictation feed displaying finalized speech bubbles, matched app and skill execution cards with live status badges, copy-to-clipboard buttons, and active stream listening.
-  </div>
-</div>
- 
-### 7.2 Standalone Voice Activated Commands Dialog Window
- 
-Clicking the terminal icon button (`>_`) in the HUD header opens the interactive **Voice Activated Commands** standalone dialog popup window in its own BrowserWindow (`720x640`):
- 
-- **Standalone Window Separation**: Opens cleanly in its own dedicated Electron window instead of an in-page modal overlay, providing abundant breathing room and preventing cramped layouts inside the narrow floating HUD.
-- **Command Count Badge**: Displays the total count of registered voice commands across all active skills and desktop apps.
-- **Instant Search Filter**: Filter commands in real time by title, description, target identifier, or trigger phrases with instant clear button (`×`).
-- **Category Filter Tabs**: Switch between **All Commands**, **Applications**, and **Skills & Actions** to isolate specific workflows.
-- **Clickable Trigger Phrase Badges**: Each command displays its supported spoken trigger phrases. Clicking any phrase sends it directly to the active RobOS Voice HUD for instant test execution.
-- **Direct Test Runner**: Each card includes a `Test` button to trigger immediate execution without speaking.
-- **Escape Shortcut & Close**: Press <kbd>Esc</kbd> or click the close icon to dismiss the dialog window cleanly.
- 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
-  <div style="border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-    <img src="{{ '/assets/images/screenshots/robos-voice-commands-modal.png' | relative_url }}" alt="RobOS Voice Commands Standalone Dialog Window" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-    <div style="padding: 0.75rem 1rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-      <strong>Voice Commands Standalone Dialog</strong>: Searchable directory of voice-activated skills and apps with trigger pills and test buttons.
-    </div>
-  </div>
- 
-  <div style="border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-    <img src="{{ '/assets/images/screenshots/robos-voice-commands-search.png' | relative_url }}" alt="RobOS Voice Commands Search Filter" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-    <div style="padding: 0.75rem 1rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-      <strong>Live Search Filter</strong>: Rapid keyword search isolating Knowledge Graph validation, search, impact analysis, and export skills.
-    </div>
-  </div>
-</div>
-
----
-
-## 8. RobOS Voice Library (`packages/robos-lib/voice.js`)
-
-Other RobOS Electron applications, CLI scripts, and AI agent skills can interact with the voice engine via the JavaScript client library:
-
-```javascript
-const { RobOSVoiceClient, voice } = require('/usr/local/share/robos/robos-lib');
-// Or import directly from packages/robos-lib/voice.js
-
-// Speak out loud with lifelike neural voice
-await voice.speak('Task completed successfully. All unit tests passed.');
-
-// Query available voices
-const voices = await voice.getVoices();
-
-// Send query to Desktop Assistant
-const reply = await voice.chatAssistant('What branch am I currently working on?');
-console.log('Assistant replied:', reply.response);
-
-// Control background stream listening
-await voice.startBackgroundStream();
-```
-
----
-
-## 9. CLI Workflows (`robos-voice`)
-
-The `robos-voice` CLI tool provides complete terminal control:
+## Start it
 
 ```bash
-# Check daemon status
-robos-voice status
-
-# Speak text using natural neural voice
-robos-voice speak "Row Bose is online and ready."
-
-# Stop currently playing speech
-robos-voice stop-speaking
-
-# List available voices across Kokoro, Edge-TTS, and Piper
-robos-voice voices
-
-# Query Desktop Assistant hands-free
-robos-voice assistant "What is the git status in the active window?"
-
-# Start / stop background continuous streaming mode
-robos-voice background start
-robos-voice background stop
-
-# Push-to-talk dictation commands
-robos-voice activate
-robos-voice deactivate
-robos-voice context
-robos-voice list --limit 5
+scripts/dev-launch.sh voice-prompt
 ```
 
----
+You can also start it from the desktop launcher entry "RobOS Voice" on an installed system. Only one instance runs; starting a second one quits.
 
-## 10. REST API Reference (`:19188`)
+## Dictate
 
-RobOS Voice exposes an HTTP REST server on port `19188`:
+1. Click **Start Recording** or press `Super+V`. Both toggle the microphone. The key comes from `pushToTalkKey` in `~/.config/robos/voice-prompt-prefs.json` and defaults to `Super+V`.
+2. Speak. Text appears in bubbles marked "Listening" while it is interim and settles when you pause.
+3. Click **Copy All** to copy every bubble to the clipboard, or use the "Save chat history as…" button (the floppy-disk icon) to write them to a text file.
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/voice-commands` | List all discovered voice commands (`?q=&category=all\|apps\|skills`) |
-| `POST` | `/api/voice-commands/match` | Evaluate text against command matchers (`{ text }`) |
-| `POST` | `/api/voice-commands/execute` | Execute a voice command with arguments (`{ commandId, args, text }`) |
-| `GET` | `/screenshot` | Capture high-resolution PNG screenshot of the active HUD window |
-| `POST` | `/api/speak` | Synthesize and speak text out loud (`{ text, engine, voice, rate, pitch }`) |
-| `POST` | `/api/stop-speaking` | Stop all active audio playback |
-| `GET` | `/api/voices` | List all discovered TTS voices grouped by engine |
-| `GET` | `/api/tts/config` | Get current TTS configuration |
-| `POST` | `/api/tts/config` | Update default TTS engine, voice, and speed |
-| `POST` | `/api/background/start` | Start ephemeral background stream listening |
-| `POST` | `/api/background/stop` | Stop background stream listening |
-| `POST` | `/api/assistant/chat` | Send a query to the Desktop Assistant (`{ message, speak }`) |
-| `GET` | `/api/assistant/history` | Get recent conversation history |
-| `DELETE`| `/api/assistant/history` | Clear conversation history |
-| `POST` | `/api/wake-word/toggle` | Enable or disable wake word detection (`{ enabled }`) |
-| `GET` | `/api/status` | Get daemon health, microphone state, and assistant status |
-| `GET` | `/api/context` | Capture real-time focused window and Git context |
-| `POST` | `/api/activate` | Start microphone push-to-talk recording |
-| `POST` | `/api/deactivate` | Stop recording and transcribe to persistent prompt storage |
-| `GET` | `/api/prompts` | Query recorded prompt history |
-| `GET` | `/api/stream` | Server-Sent Events (SSE) live speech stream |
+The window does not type into other applications. It also does not write the live feed to disk. Prompts that are saved with the active-app context go to `~/.config/robos/voice-prompts.json` (the last 500 are kept) when you use `POST /api/activate` followed by `POST /api/deactivate`, `POST /api/dictate`, or `robos-voice dictate`.
 
----
+The context attached to a saved prompt comes from the focused window (`appId`, title, window class, id), the running RobOS apps, and the active workspace from `~/.config/robos/workspaces.json`. If that file is missing, the workspace falls back to the app's working directory and the branch `main`.
 
-## 11. Verification & Testing
+Other buttons in the window: the gear opens settings, the trash icon clears the bubbles, and the corner button cycles the window through the bottom-right, bottom-left, top-left and top-right corners. The choice is saved as `hudPosition`.
 
-RobOS Voice includes full test coverage for TTS, background streaming, wake-word detection, voice commands, and assistant workflows:
+## Voice commands
+
+When you stop speaking for 650 ms, the bubble text is matched against the registered voice commands. On a match, the bubble bounces and shows a card with an "App" or "Skill" badge, the command title, and a status that changes from "Executing" to "Done" or "Error".
+
+Matching ignores a leading "hey", "hello", "hi", "ok" or "okay", an optional "robos", "rob os" or "row bose", and "please", "can you", "could you" or "would you". It then tries, in order: an exact match on a skill phrase, a wildcard match for skills that take an argument, an exact match or "open"/"launch" plus the name for apps, and finally a multi-word phrase contained in what you said. Skills are checked before apps.
+
+| Say | What happens |
+|---|---|
+| "validate knowledge graph" | Runs the knowledge graph validation skill |
+| "search knowledge graph for payments" | Runs the search skill with `payments` as the argument |
+| "list tasks" | Runs the skill that shows the project task plan |
+| "open dev central" | Launches the app |
+
+Every app in the icon registry (`packages/robos-icons`) gets "open <name>" phrases. The skill commands are defined in [`lib/voice-commands-registry.js`](https://github.com/nddipiazza/robos/blob/main/packages/voice-prompt/lib/voice-commands-registry.js).
+
+## Settings window
+
+The gear in the floating window opens "RobOS Voice Settings" (720 by 640 pixels). It has two tabs.
+
+| Tab | What it does |
+|---|---|
+| **Device** | Choose the dictation microphone from **Input device**, **Refresh** the list, and click **Save device**. The choice applies to the next recording, so stop dictation before you switch. **Test microphone** shows a live waveform without saving or transcribing audio. It stops when you click it again, change device, leave the tab, close the window, or after 30 seconds. |
+| **RobOS Commands** | Lists every registered command with its trigger phrases and a count badge. A search box filters by title, description, target or phrase. The buttons **All Commands**, **Applications** and **Skills & Actions** filter by type. **Test** on a card, or clicking a phrase, sends that phrase to the floating window as if you had said it. `Esc` closes the window. |
+
+## Speech output
+
+`robos-voice speak` and `POST /api/speak` synthesize text and play it. The default engine is Kokoro with the voice `af_heart`. "RobOS" is rewritten to "Row Bose" before synthesis so that it is pronounced "row-bose".
+
+| Engine | What it needs |
+|---|---|
+| `kokoro` | `python3` with the `kokoro_onnx` and `soundfile` modules, and the files `kokoro-v1.0.onnx` and `voices-v1.0.bin` in `~/.local/share/kokoro/` |
+| `edge-tts` | The `edge-tts` command on the path. It is a client for an online Microsoft service, so it needs network access and sends the text off the machine. |
+| `piper` | A `piper` binary on the path or at `~/.local/bin/piper`, and a model such as `~/.local/share/piper/voices/en_US-lessac-medium/en_US-lessac-medium.onnx` |
+
+If the chosen engine is `kokoro` and it fails, the code tries Edge-TTS, then Piper if a Piper model is installed. If every engine fails, the call still returns `ok: true` with the engine reported as `fallback` and plays one second of silence generated with `ffmpeg`. If you hear nothing, check the `engine` field in the response.
+
+Audio plays through `pw-play` when `/usr/bin/pw-play` exists. Otherwise it uses `ffplay` for MP3 files and `aplay` for WAV files. Settings posted to `/api/tts/config` apply to the running app; the code does not write them to disk.
+
+## The assistant
+
+`robos-voice assistant "<text>"` and `POST /api/assistant/chat` send text to the desktop assistant. It is a rule-based interpreter in [`lib/skills-executor.js`](https://github.com/nddipiazza/robos/blob/main/packages/voice-prompt/lib/skills-executor.js), not a language model. It recognizes greetings, "open <app>", "add a task ...", listing tasks, knowledge graph validate, search, impact and visualize, restarting the taskbar, reading error logs, running tests, git status and branch, the active window, system status, changing the voice, and stopping speech. It speaks the reply unless you pass `silent: true`.
+
+Text that matches none of these gets the reply "Done: <your text>." and nothing else happens. No model is called.
+
+## Not built yet
+
+Hands-free activation by saying "hello robos" is not connected. `lib/wake-word.js` can detect phrases such as "hello robos", "hey row bose" and "rob os", and unit tests cover it, but nothing in the app passes the live speech stream to it. The same applies to the assistant's stream handler. `POST /api/wake-word/toggle` sets a flag that has no effect today.
+
+## CLI
+
+The command is the executable script `packages/robos-cli/robos-voice`. It talks to the HTTP API on `ROBOS_VOICE_PORT` (default `19188`).
 
 ```bash
-# Run voice command and unit tests
-node --test packages/robos-test/tests/voice-prompt/voice-commands.test.js
+packages/robos-cli/robos-voice status
+packages/robos-cli/robos-voice context
+packages/robos-cli/robos-voice speak "Row Bose is online" --engine kokoro --voice af_heart
+packages/robos-cli/robos-voice stop-speaking
+packages/robos-cli/robos-voice voices
+packages/robos-cli/robos-voice assistant "What is the git status?"
+packages/robos-cli/robos-voice background start
+packages/robos-cli/robos-voice background stop
+packages/robos-cli/robos-voice dictate "Refactor the authentication middleware"
+packages/robos-cli/robos-voice activate
+packages/robos-cli/robos-voice deactivate
+packages/robos-cli/robos-voice list --app dev-central
+packages/robos-cli/robos-voice clear
+```
+
+`activate` and `deactivate` record one prompt and save it with context. `background start` turns on the ephemeral streaming mode: recognized speech is published to `GET /api/stream` subscribers and not saved.
+
+## HTTP API
+
+Base URL `http://127.0.0.1:19188`. Requests and responses are JSON unless noted.
+
+{: .warning }
+The API has no authentication and answers cross-origin requests from any origin (`Access-Control-Allow-Origin: *`). The server calls `listen(port)` without a host, so Node binds all network interfaces, not only the loopback address. Block port `19188` from other machines with a firewall.
+
+| Method and path | Purpose |
+|---|---|
+| `GET /api/status` | Recording state, background mode, configured device, active window, prompt count, TTS engine, assistant state |
+| `GET /api/stream` | Server-Sent Events with interim and final speech text |
+| `POST /api/activate`, `POST /api/deactivate` | Start recording; stop, transcribe and save the prompt with context |
+| `POST /api/dictate` | Save `{ "text": "..." }` as a prompt with context |
+| `GET /api/context` | Focused window, running RobOS apps and workspace |
+| `GET /api/prompts` (`?limit=`, `?app=`), `GET` or `DELETE /api/prompts/:id`, `DELETE /api/prompts` | Read and delete saved prompts |
+| `GET /api/devices`, `GET` or `POST /api/config` | List capture devices; read and update preferences |
+| `POST /api/speak`, `POST /api/stop-speaking`, `GET /api/voices`, `GET` or `POST /api/tts/config` | Speech output |
+| `POST /api/background/start`, `POST /api/background/stop` | Ephemeral streaming mode |
+| `POST /api/assistant/chat`, `GET` or `DELETE /api/assistant/history` | Assistant |
+| `GET /api/voice-commands` (`?q=` and `?category=` with `all`, `apps` or `skills`) | List commands |
+| `POST /api/voice-commands/match`, `POST /api/voice-commands/execute` | Match `{ "text" }`; run `{ "commandId", "args", "text" }` |
+| `GET /api/skills`, `POST /api/skills/execute` | List skills; run `{ "command" }` through the assistant |
+| `POST /api/stream/simulate` | Push `{ "text", "isFinal" }` into the speech stream, for tests |
+| `GET /screenshot`, `GET /health` | PNG of the floating window; health check |
+
+## Tests
+
+```bash
 node --test packages/robos-test/tests/voice-prompt/unit.test.js
-node --test packages/robos-test/tests/voice-prompt/skills-voice.test.js
-
-# Verify W3C SHACL validation conformance across all packages
-node packages/robos-graph/bin/kgraph-cli.js validate
+node --test packages/robos-test/tests/voice-prompt/voice-commands.test.js
+node --test packages/robos-test/tests/voice-prompt/stream-assistant.test.js
 ```
 
----
+The `e2e.test.js` file in the same folder drives the app with Electron. The other files there cover TTS, device routing, agent streaming and skills.
 
-## Next Steps
+## Related pages
 
-- **[Browse All RobOS Apps]({{ site.baseurl }}{% link apps.md %})**: View the full suite of native developer tools.
-- **[RobOS Architecture]({{ site.baseurl }}{% link architecture.md %})**: Learn about the 4-tier desktop bridge and Knowledge Graph governance.
-- **[Agent Code Review Platform]({{ site.baseurl }}{% link pr-review-theater.md %})**: Explore the 6-stage PR Review Theater.
+- [Apps]({{ site.baseurl }}{% link apps.md %})
+- [Get started]({{ site.baseurl }}{% link getting-started.md %})

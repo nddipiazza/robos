@@ -1,15 +1,19 @@
 #!/usr/bin/env node
 'use strict';
-// Scripted stand-in for the `codex` CLI that powers the review walkthrough.
-// It runs REAL commands in the workspace (git diff, node, the project's tests)
-// and reports what they printed; only the narration is scripted.
+// Scripted stand-in for the `codex` CLI that powers the review walkthrough and chat.
+// It does REAL work in the workspace (git, edits, commits, the project's tests, the
+// running app in a browser window); only the narration and the decisions are scripted.
 const fs = require('fs');
-const { execFileSync, spawnSync } = require('child_process');
+const path = require('path');
+const http = require('http');
 const crypto = require('crypto');
+const { spawn, spawnSync } = require('child_process');
+const world = require('../world');
+const evidence = require('../evidence');
 
 const argv = process.argv.slice(2);
 
-if (argv[0] === 'app-server') {           // model catalog handshake (CI recovery picker)
+if (argv[0] === 'app-server') {           // model catalog handshake (agent picker)
   let buf = '';
   process.stdin.on('data', d => {
     buf += d;
@@ -21,52 +25,148 @@ if (argv[0] === 'app-server') {           // model catalog handshake (CI recover
       if (msg.method === 'model/list') console.log(JSON.stringify({ id: msg.id, result: { data: [{ model: 'demo-agent', displayName: 'Demo agent', supportedReasoningEfforts: [{ reasoningEffort: 'high', description: '' }] }] } }));
     }
   });
-  return;
+} else {
+  main();
 }
 
-const flagValue = (n) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
-const outFile = flagValue('--output-last-message');
-let prompt = '';
-process.stdin.on('data', d => prompt += d);
-process.stdin.on('end', run);
-
-const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+function flagValue(n) { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; }
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const ev = (o) => console.log(JSON.stringify(o));
-const say = (text) => { ev({ type: 'item.completed', item: { type: 'agent_message', text } }); };
-const sh = (cmd) => {
+const say = (text) => ev({ type: 'item.completed', item: { type: 'agent_message', text } });
+
+function sh(cmd, cwd) {
   ev({ type: 'item.started', item: { type: 'command_execution', command: cmd } });
-  const r = spawnSync('sh', ['-c', cmd], { cwd: process.cwd(), encoding: 'utf8' });
+  const r = spawnSync('sh', ['-c', cmd], { cwd, encoding: 'utf8' });
   ev({ type: 'item.completed', item: { type: 'command_execution', command: cmd, exit_code: r.status } });
   return (r.stdout || '') + (r.stderr || '');
-};
+}
+const testLine = (ws) => sh('node --test 2>&1 | grep -E "^# (tests|pass|fail)"', ws).trim().split('\n').map(l => l.replace('# ', '')).join(' · ');
 
-function run() {
+// ---- the running app, popped up in its own browser window ---------------------
+const { ensureApp, appPage } = require('../appwin');
+const names = (page) => page.$$eval('.pet b', els => els.map(e => e.textContent).join(', '));
+
+async function main() {
+  let prompt = '';
+  process.stdin.on('data', d => prompt += d);
+  await new Promise(r => process.stdin.on('end', r));
+  const ws = process.cwd();
+  const out = flagValue('--output-last-message');
   ev({ type: 'thread.started', thread_id: crypto.randomUUID() });
-  const m = prompt.match(/Checkpoint (\d+)\/(\d+): (\{.*\})/);
-  const idx = m ? Number(m[1]) : 1;
-  let reply, guidance;
+  let result;
+  try {
+    if (prompt.includes('You are the live RobOS walkthrough agent')) result = await walkthrough(prompt, ws);
+    else if (prompt.includes('implement the requested code changes')) result = await suggest(prompt, ws);
+    else result = { reply: 'Nothing to do for that request.', guidance: '', checkpointReached: false, questions: [] };
+  } catch (e) {
+    say('That did not work: ' + e.message);
+    result = { reply: 'That did not work: ' + e.message, guidance: '', checkpointReached: false, questions: [] };
+  }
+  fs.writeFileSync(out, JSON.stringify({ questions: [], guidance: '', ...result }));
+}
 
+// ---- Walkthrough --------------------------------------------------------------
+async function walkthrough(prompt, ws) {
+  const idx = Number((prompt.match(/Checkpoint (\d+)\/\d+/) || [])[1] || 1);
+  const action = (prompt.match(/Current action: (\w+)\. ([\s\S]*?)\n\nSend a concise/) || []);
+  const kind = action[1] || 'start', request = (action[2] || '').trim();
+
+  if (kind === 'message') return walkthroughMessage(request, ws);
+  if (kind === 'explain') {
+    say('Explaining this checkpoint.');
+    return { reply: idx === 1 ? 'This checkpoint is the diff: a species filter, ranking, and a species control on the search page.' : 'This checkpoint runs the real app and tries the species filter the way an adopter would.', checkpointReached: true, guidance: '' };
+  }
   if (idx === 1) {
     say('Reading the diff against main to see what this branch changes…');
-    sleep(700);
-    const stat = sh('git diff --stat origin/main HEAD').trim();
-    sleep(500);
-    say('searchPets now takes an options object with a species filter, scores matches so exact and prefix hits come first, and throws a RangeError for unknown species.');
-    sleep(500);
-    reply = `Here is what changed on this branch:\n\n${stat}\n\nsearchPets(query, { species }) now filters by species, ranks exact and prefix matches above substring matches, and rejects unknown species with the list of valid choices.`;
-    guidance = 'The change is confined to src/pets.js and its tests. Next, try the new behavior against the sample pets.';
-  } else {
-    say('Calling the real searchPets function with the new options…');
-    sleep(600);
-    const cats = sh(`node -e "const {searchPets}=require('./src/pets');console.log(searchPets('',{species:'cat'}).map(p=>p.name).join(', '))"`).trim();
-    sleep(500);
-    const bad = sh(`node -e "const {searchPets}=require('./src/pets');try{searchPets('',{species:'dragon'})}catch(e){console.log(e.message)}"`).trim();
-    sleep(500);
-    say('Running the test suite…');
-    const tests = sh('node --test 2>&1 | grep -E "^# (tests|pass|fail)"').trim().split('\n').join(' · ');
-    sleep(400);
-    reply = `Tried it against the sample pets:\n\n• species "cat" → ${cats}\n• species "dragon" → ${bad}\n• test run → ${tests.replace(/# /g, '')}\n\nThe acceptance criteria in the task all hold.`;
-    guidance = 'All acceptance criteria verified. You can move on to creating the pull request.';
+    await sleep(600);
+    const stat = sh('git diff --stat origin/main HEAD', ws).trim();
+    await sleep(400);
+    say('searchPets takes a species option and ranks matches, and the search page gets a species control.');
+    await sleep(400);
+    return { reply: `Here is what changed on this branch:\n\n${stat}\n\nsearchPets(query, { species }) filters by species and ranks exact and prefix matches first; the search page has a species control that calls it.`, checkpointReached: true, guidance: 'The change touches the search code, the dev server, the page and the tests. Next, try it in the running app.' };
   }
-  fs.writeFileSync(outFile, JSON.stringify({ reply, checkpointReached: true, guidance, questions: [] }));
+  say('Starting the app and opening it in a browser window…');
+  await ensureApp(ws);
+  await sleep(1500);
+  const { browser, page } = await appPage();
+  try {
+    say('The page loaded with all six pets. Choosing the Cats species…');
+    await sleep(900);
+    await page.selectOption('#species', 'cat');
+    await page.waitForFunction(() => document.querySelectorAll('.pet').length === 2);
+    const cats = await names(page);
+    say(`Species “Cats” now shows ${cats}.`);
+    await sleep(900);
+    await page.fill('#q', 'pep');
+    await page.waitForFunction(() => document.querySelectorAll('.pet').length === 1);
+    say('Typing “pep” narrows it to one result.');
+    await sleep(700);
+    await page.fill('#q', '');
+    await page.waitForFunction(() => document.querySelectorAll('.pet').length === 2);
+    const tests = testLine(ws);
+    return { reply: `The app is running in the window below. In it:\n\n• species “Cats” → ${cats}\n• “pep” within cats → Pepper\n• test run → ${tests}\n\nAsk me to change anything you would like to see different.`, checkpointReached: true, guidance: 'The app is open. Ask for any change to how it looks or behaves and watch it update.' };
+  } finally { await browser.close().catch(() => {}); }
+}
+
+async function walkthroughMessage(request, ws) {
+  if (/chip/i.test(request)) {
+    say('Replacing the species dropdown with clickable chips in public/index.html…');
+    await ensureApp(ws);
+    await sleep(700);
+    const sha = world.useSpeciesChips(ws);
+    say(`Committed ${sha.slice(0, 7)}. The running page reloads on its own.`);
+    await sleep(1800);
+    const { browser, page } = await appPage();
+    try {
+      await page.waitForSelector('#chips', { timeout: 8000 });
+      say('The chips are on the page. Clicking “Cats” to check they filter…');
+      await sleep(900);
+      await page.click('#chips button[data-s="cat"]');
+      await page.waitForFunction(() => document.querySelectorAll('.pet').length === 2);
+      const cats = await names(page);
+      say(`Cats chip → ${cats}.`);
+      await sleep(700);
+      const tests = testLine(ws);
+      // Keep the evidence in step with the new commit.
+      evidence.buildEvidence({ workspace: ws, baseRef: 'origin/main', outDir: process.env.FAKE_EVIDENCE_DIR, scenarios: [...evidence.SCENARIOS, ...evidence.EXTRA_SCENARIOS] });
+      return { reply: `Done. The species dropdown is now a row of chips (All, Dogs, Cats, Rabbits) and the active one is highlighted.\n\n• Cats chip → ${cats}\n• test run → ${tests}\n• committed ${sha.slice(0, 7)}, evidence regenerated for it`, checkpointReached: true, guidance: 'The app now uses chips. Keep asking for changes, or create the pull request.' };
+    } finally { await browser.close().catch(() => {}); }
+  }
+  say('Looking at what you asked for…');
+  return { reply: 'I did not change anything for that. Tell me what to change on the page and I will update it.', checkpointReached: true, guidance: '' };
+}
+
+// ---- "Suggest changes" chat ----------------------------------------------------
+async function suggest(prompt, ws) {
+  const users = [...prompt.matchAll(/^user: (.*)$/gm)];
+  const request = users.length ? users[users.length - 1][1] : '';
+
+  if (/comment/i.test(request)) {
+    say('Opening src/pets.js to find comments that only repeat the code next to them…');
+    await sleep(900);
+    const src = fs.readFileSync(path.join(ws, 'src', 'pets.js'), 'utf8').split('\n');
+    const hits = src.filter(l => world.USELESS_COMMENTS.some(c => l.trim() === '// ' + c));
+    say(`Found ${hits.length} that restate the next line. Keeping the ones that explain why (ranking order, the species typo guard).`);
+    await sleep(1100);
+    const { removed, sha } = world.removeUselessComments(ws);
+    say(`Removed ${removed} comments from src/pets.js. Running the tests…`);
+    await sleep(700);
+    const tests = testLine(ws);
+    say(`Tests: ${tests}. Committed ${sha.slice(0, 7)}.`);
+    await sleep(500);
+    return { reply: `Done. I removed ${removed} comments from src/pets.js that only restated the code (for example “${hits[0].trim().replace('// ', '')}”) and kept the two that explain intent.\n\n• tests: ${tests}\n• committed ${sha.slice(0, 7)}: drop comments that restate the code\n\nThe saved evidence was captured on the previous commit, so it needs regenerating.`, checkpointReached: false, guidance: '' };
+  }
+
+  if (/evidence/i.test(request)) {
+    const head = sh('git rev-parse --short HEAD', ws).trim();
+    say(`Regenerating the evidence for ${head}, and adding the case you asked for…`);
+    await sleep(900);
+    evidence.buildEvidence({ workspace: ws, baseRef: 'origin/main', outDir: process.env.FAKE_EVIDENCE_DIR,
+      scenarios: [...evidence.SCENARIOS, ...evidence.EXTRA_SCENARIOS], progress: say, pauseMs: 1300 });
+    await sleep(500);
+    return { reply: `Regenerated the evidence for ${head}. Every scenario was run again on main and on this branch, and I added “Text search and species filter combine” (searchPets('a', { species: 'rabbit' }) → Waffles only).`, checkpointReached: false, guidance: '' };
+  }
+
+  say('Reading your request…');
+  return { reply: 'I did not find anything to change for that. Tell me which file and what to change.', checkpointReached: false, guidance: '' };
 }

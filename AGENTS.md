@@ -80,12 +80,6 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Agent Chat** | VS Code-like conversational agent chat, code refactoring, and multi-app orchestration |
 | **Dev Discussions** | Discord/Slack-like work-item & PR review discussion threads (Projects -> Features -> Tasks/PRs) with smart caching |
 
-### RobOS Auto
-
-| App | Purpose |
-|-----|---------|
-| **Auto Center** | Owner garage, invoice OCR and maintenance plans; private Git shop repairs, custody, expenses and profit reports; source-backed recall remedies and components |
-
 ### Supporting Apps
 | App | Purpose |
 |-----|---------|
@@ -127,6 +121,10 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Search Index** | File system indexer for @-search in AI textareas |
 | **RobOS Preferences** | System-wide settings (credentials, AI model prefs) |
 | **RobOS cRPG Editor** | Unified cRPG game editor for campaign management, character sheets, party inventory, and 5-ft blockmap level design |
+| **Tabletop Blockmap Creator** | Visual calibration tool for dungeon board images: tile size, offset X/Y, static corridor draw tool, and room boundary authoring |
+| **Tabletop Quest Map Editor** | Layer 2 quest scenario designer on blockmaps: doors, monsters, furniture, traps, stairs, and playable cartridge export |
+| **RobOS Audio Player** | Open-source Howler.js audio player, procedural focus soundscapes, and zero-cloud Google Home / Cast smart speaker streaming |
+| **RobOS Home Speaker** | Smart speaker intercom, push-to-talk voice notes, neural TTS broadcast, custom audio streaming, and soundboard controller |
 
 ## Shared Libraries
 
@@ -249,7 +247,7 @@ See [plugins/README.md](plugins/README.md) for full installation and usage instr
 - **Config storage**: All persistent data in `~/.config/robos/`
 - **Icons**: 48×48 SVG, Lucide style, `stroke="#00bcd4"`, `stroke-width="1.5"`, `stroke-linecap="round"`, `stroke-linejoin="round"`
 - **Documentation Diagrams & Visuals**: When creating RobOS documentation diagrams, always generate and include Gemini 3.8 AI-generated images/illustrations alongside Mermaid syntax. Diagrams must be very professional, developer-friendly, clean, functional, and extremely easy to read (no chaotic AI "wow bling" or cluttered decorative fluff; focus on crisp, structured technical architecture, clear flow schematics, and legible labels).
-- **Docs site (`docs/`, published to rowbose.com)**: Every app has its own page in `docs/_apps/` (run `node scripts/sync-app-docs.js` after adding an app). Don't state totals of things that grow — write "the app suite", not "30+ apps"; "the Big Wins", not "21 Big Wins"; "SHACL shapes", not "98 SHACL shapes". Counts go stale and contradict each other across pages. The `/future` page and whitepaper live in `site/future/` and are rebuilt with `scripts/build-future-whitepaper.sh` (see `site/README.md`); the old `/v1/future.html` pages just redirect there.
+- **Docs site (`docs/`, published to rowbose.com)**: Every app has its own page in `docs/_apps/` (run `node scripts/sync-app-docs.js` after adding an app). Don't state totals of things that grow — write "the app suite", not "30+ apps"; "the Big Wins", not "21 Big Wins"; "SHACL shapes", not "98 SHACL shapes". Counts go stale and contradict each other across pages. The `/future` page and whitepaper live in `site/future/` and are rebuilt with `scripts/build-future-whitepaper.sh` (see `site/README.md`); the old `/v1/future.html` and `/v1/whitepaper-turing-skills.html` pages are deleted, and the front site's `future.html` and `whitepaper-turing-skills.html` forward the legacy root URLs to the new pages (so they never route through `/v1/`).
 - **Logging**: `pino` JSON logging
 - **Walkthrough Archives**: All text-narrated demo recordings, WebVTT captions, and step-by-step markdown summaries are automatically archived to `~/.robos/development/walkthroughs/<slug>/` (with timestamped historical snapshots under `history/<timestamp>/`).
 
