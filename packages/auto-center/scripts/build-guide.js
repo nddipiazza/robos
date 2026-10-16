@@ -77,5 +77,5 @@ node scripts/build-guide.js  # regenerates this page from the run</code></pre>
 <p class="note">Scope: this is a local desktop shop tool backed by a KGraph and a private Git repository, not a multi-user hosted service. Payment recording notes a payment already received; it does not charge cards. Tickets are local DevOps work items; syncing them to GitHub, Gitea or Jira is not built yet.</p></section>
 </div></div></div></section>
 `;
-fs.writeFileSync(path.join(site, 'auto-center.md'), page);
+fs.writeFileSync(path.join(site, 'auto-center.html'), page);
 console.log(`Guide: ${chapters.length} chapters, ${total} scenarios (${pass} passing), ${shotCount} screenshots`);
