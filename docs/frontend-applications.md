@@ -1,98 +1,111 @@
 ---
-title: Front End Applications
+title: Front-end apps
 layout: default
-parent: Application Development
-nav_order: 4
+parent: Building apps
+grand_parent: Build on RobOS
+nav_order: 3
 ---
 
-# Front End Applications
+# Front-end apps
 {: .no_toc }
 
-<div style="margin-top: -0.5rem; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
-  <span style="font-family: 'Fira Code', monospace; font-size: 1.15rem; color: #00e5ff; background: #162032; padding: 0.25rem 0.65rem; border-radius: 6px; border: 1px solid rgba(0, 229, 255, 0.35); font-weight: 600;">robos:FrontEndApp</span>
-  <span class="label label-blue">SDLC Archetype</span>
-</div>
+What RobOS gives you for a web application: the Next.js project the App Wizard generates, the commands to run and test it, and the `robos:FrontEndApp` node that records it in the knowledge graph. This is the only archetype with a full template today.
+{: .fs-6 }
 
-Architect, scaffold, and verify modern single-page (SPA) and server-side rendered (SSR) web applications in RobOS aligned with Schema.org `schema:WebApplication`.
-{: .fs-6 .fw-300 }
-
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
----
+## Generate a web app
 
-## Overview
+In the [New app wizard]({{ site.baseurl }}{% link new-app-wizard.md %}), choose the **Modern Website / Web App** card. Fill in **Project Name**, **What does this project do?**, **Catchy Tagline** and, in Advanced Mode, **Custom Domain Name (Optional)** and **Search Keywords**. These values are substituted into `src/lib/site.js`, `public/llms.txt`, the README and the generated SVGs; the pages read their title, description and keywords from `site.js`. If you leave the domain empty it defaults to `<slug>.com`.
 
-In the RobOS Knowledge Graph, **Front End Applications** represent browser-based web applications that deliver rich interactive user interfaces for end users, internal operators, and customer portals.
+The template is `packages/app-wizard/templates/nextjs-vercel-web`. The wizard writes it to `packages/<slug>/`, along with `catalog-info.yaml` and `dev-setup.sh`. It does not overwrite template files that already exist.
 
-Following open linked-data standards, Front End Applications are co-typed with:
-- **`robos:FrontEndApp`**: RobOS SDLC core archetype namespace (`https://robos.dev/ns/sdlc#`).
-- **`schema:WebApplication`**: [Schema.org WebApplication](https://schema.org/WebApplication), declaring browser requirements and web application properties.
-- **`oslc_am:Resource`**: OASIS Open Services for Lifecycle Collaboration Architecture Management resource.
-- **`c4:Container`**: C4 Model container representing an executable frontend deliverable.
+The template was distilled from the getemgigs.com app, which is in this repository as `packages/getemgigs`. `packages/urban-plant-tracker` has the layout the wizard's Urban Plant Tracker starter produces. See [Get 'Em Gigs]({{ '/projects/getemgigs/' | relative_url }}) for the production app.
 
----
+## What the template contains
 
-## Supported Frameworks & Tooling
+| Area | Contents |
+|:---|:---|
+| Stack | Next.js 15 App Router and React 19, with plain CSS laid out for phones first (bottom tab bar, safe-area insets, 16px inputs). |
+| Database | Neon serverless Postgres when `DATABASE_URL` is set. Otherwise an embedded PGlite database, which is in-memory unless `PGLITE_DIR` is set. The schema is in `src/lib/schema.js` and is created on first use. |
+| Accounts | Email and password with bcrypt, server-side sessions that store a SHA-256 hash of the token, and account deletion. Pages: sign up, log in, dashboard, account, terms, privacy. |
+| Abuse controls | Rate limits stored in Postgres, a honeypot field with a minimum form-fill time, a disposable-email block list, password rules, same-origin checks on API posts, and an audit log table. |
+| CAPTCHA | reCAPTCHA v3 is wired in but disabled until you set the `RECAPTCHA_*` variables. |
+| Security headers | Content-Security-Policy, `X-Frame-Options: DENY`, Permissions-Policy and HSTS, set in `next.config.mjs`. |
+| Search and AI agents | `src/app/robots.js`, `sitemap.js`, `public/llms.txt`, canonical URLs, Open Graph and Twitter tags, generated icons and OG image, a web manifest, and JSON-LD for Organization, WebSite, WebApplication and FAQPage. |
+| Tests | Unit tests with the Node.js test runner in `tests/unit`, and Cucumber with Playwright features in `tests/e2e/features`: sign-up, search and crawlers, abuse controls. |
+| Deploy | `vercel.json`, a GitHub Actions workflow that runs `npm test` and `npm run build`, and `DEPLOYMENT.md`. |
 
-RobOS provides automated heuristic stack detection and scaffolding for modern frontend frameworks:
-- **React 18 / 19** with **Vite** or **Next.js 14 / 15** (TypeScript)
-- **Vue 3** with **Vite** and **Pinia**
-- **SvelteKit** with **TypeScript**
-- **Angular 18** with standalone components
+{: .important }
+`src/app/robots.js` allows AI search and agent crawlers and also the AI training crawlers (GPTBot, ClaudeBot, CCBot and others) on public pages. A comment in the file says which entries to move into a disallow rule if you want to opt out of training. Decide this before you deploy.
 
----
+## Run it
 
-## Schema & Properties
+From `packages/<slug>/`:
 
-A Front End Application node in the **Modular KGraph Packages** conforms to `urn:robos:shape:FrontEndAppShape`:
+```bash
+npm install
+npm run dev     # http://localhost:3000, embedded PGlite, no database setup
+npm test        # unit tests
+```
+
+The generated `dev-setup.sh` does the install, creates `.env.local` from `.env.example` with a random `E2E_BYPASS_KEY`, installs Chromium for Playwright and runs `npm test`.
+
+End-to-end tests need a running server and a browser:
+
+```bash
+npx playwright install chromium
+npm run build && npm start &
+E2E_BYPASS_KEY=<24 or more characters> npm run e2e
+npm run evidence
+```
+
+`npm run e2e` runs the Cucumber features against `http://localhost:3000`, or against `BASE_URL` if you set it. `npm run e2e:live` runs them against `https://www.<domain>`. `npm run evidence` encodes the recorded frames and builds the evidence videos; it needs `ffmpeg` on the path.
+
+## Environment variables
+
+| Variable | Purpose |
+|:---|:---|
+| `DATABASE_URL` | Neon connection string. Empty means embedded PGlite. |
+| `E2E_BYPASS_KEY` | At least 24 characters. Sent as `x-e2e-key` so test runs skip rate limits and the honeypot. Set it in Vercel too if you run `e2e:live`. |
+| `CRON_SECRET` | Bearer secret for any Vercel Cron routes you add. |
+| `RECAPTCHA_ENABLED`, `RECAPTCHA_SECRET_KEY`, `RECAPTCHA_MIN_SCORE`, `NEXT_PUBLIC_RECAPTCHA_ENABLED`, `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | reCAPTCHA v3. Disabled by default. |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_BING_SITE_VERIFICATION` | Search Console and Bing verification tags. |
+
+`DEPLOYMENT.md` in the generated project lists the Vercel steps: import the repository, add the domain, add Neon with `vercel integration add neon`, and set these variables.
+
+## The knowledge graph node
+
+The wizard adds a `robos:FrontEndApp` node to the `applications` package under `.robos/kgraphs/`. The SHACL shape `urn:robos:shape:FrontEndAppShape` requires four properties; the rest are optional and record what the template sets up.
+
+| Required | Optional |
+|:---|:---|
+| `dcterms:title`, `robos:repository`, `robos:technology`, `robos:frontendFramework` | `robos:appTemplate`, `robos:hostingPlatform`, `robos:productionUrl`, `robos:databaseEngine`, `robos:authStrategy`, `robos:abuseControls`, `robos:captchaProvider`, `robos:crawlerPolicy`, `robos:sitemapUrl`, `robos:llmsTxtUrl`, `robos:structuredData`, `robos:e2eEvidence` |
+
+A node the wizard writes looks like this, trimmed:
 
 ```json
 {
-  "@id": "urn:robos:frontend-app:petstore-web",
-  "@type": [
-    "robos:FrontEndApp",
-    "schema:WebApplication",
-    "oslc_am:Resource",
-    "c4:Container"
-  ],
-  "dcterms:title": "Petstore Web Portal",
-  "dcterms:description": "Modern single-page frontend web application for Petstore customer orders.",
-  "robos:repository": "github.com/acme-org/petstore-web",
-  "robos:technology": "React 18 / Vite / TypeScript",
-  "robos:frontendFramework": "React",
-  "robos:buildTool": "Vite",
-  "robos:devServerPort": 3000,
-  "schema:browserRequirements": "Requires HTML5 and modern evergreen browser with JavaScript enabled.",
-  "robos:ownerTeam": "urn:robos:team:order-processing",
-  "robos:hasProject": "urn:robos:project:acme-petshop"
+  "@id": "urn:robos:frontend-app:urban-plant-tracker",
+  "@type": ["oslc_am:Resource", "robos:FrontEndApp", "schema:WebApplication"],
+  "dcterms:title": "Urban Plant Tracker",
+  "robos:repository": "github.com/nddipiazza/urban-plant-tracker",
+  "robos:technology": "Next.js 15 / React 19 / Node.js 22",
+  "robos:frontendFramework": "Next.js",
+  "robos:appTemplate": "robos:template:nextjs-vercel-web@1",
+  "robos:hostingPlatform": "Vercel"
 }
 ```
 
-### SHACL Constraints (`FrontEndAppShape`)
-- **`dcterms:title`**: Application display title (minCount: 1)
-- **`robos:repository`**: Canonical Git repository URL (minCount: 1)
-- **`robos:technology`**: Runtime technology stack (minCount: 1)
-- **`robos:frontendFramework`**: UI framework (React, Vue, Next.js, Angular, Svelte) (minCount: 1)
+The `robos:repository` value is always `github.com/nddipiazza/<slug>` because the wizard does not ask for one. Change it to your repository.
 
----
+## Other frameworks
 
-## Scaffolding via RobOS App Wizard
+The wizard generates only the Next.js template. Pick Vite, Vue, Svelte, Angular or another framework and you still get that template. The [import wizard]({{ site.baseurl }}{% link app-import-wizard.md %}) does recognise existing projects that depend on Vite, Next.js, Nuxt, Vue, Svelte, Angular or `react-scripts`, and classifies them as front-end apps. Its detection reads only the top-level `package.json`.
 
-To scaffold a new Front End Application:
-1. Open the **RobOS App Wizard** (`packages/app-wizard`).
-2. Select the **Front End Application** archetype (🌐).
-3. Specify package slug, target framework, and dev server port.
-4. Click **Generate Scaffolding** to produce `dev-setup.sh`, `catalog-info.yaml`, and Vite configuration.
-
----
-
-## Next Steps
-
-- **[Develop a New App Guide]({{ site.baseurl }}{% link new-app-wizard.md %})**: Learn about all multi-app archetypes.
-- **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
-- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
-
+When you improve the template in a real app, `AGENTS.md` asks you to port the change back into the template, bump `TEMPLATE_VERSION` in `packages/app-wizard/lib/generate-app.js`, and keep `packages/robos-test/tests/app-wizard/generate-app.test.js` passing.

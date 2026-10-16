@@ -1,0 +1,36 @@
+// RobOS docs, light: paper and ink, the logo's navy for structure, one vermilion for emphasis.
+$color-scheme: light;
+$body-background-color: #f7f5ef;
+$body-heading-color: #1c2c6e;
+$body-text-color: #262a33;
+$link-color: #1c2c6e;
+$nav-child-link-color: #3b4153;
+$sidebar-color: #f0ede4;
+$base-button-color: #fffdf8;
+$btn-primary-color: #1c2c6e;
+$code-background-color: #ece8dd;
+$code-linenumber-color: #5a6070;
+$feedback-color: #e9e5d9;
+$table-background-color: #fffdf8;
+$search-background-color: #fffdf8;
+$search-result-preview-color: #4a5063;
+$border-color: #d9d4c5;
+
+// Extra tokens used by custom.scss
+$rb-hot: #c2410c;
+$rb-tint: #e8ecf6;
+$rb-sand: #f2ead3;
+$rb-muted: #5a6070;
+$rb-card: #fffdf8;
+$rb-deep: #14215f;
+
+// syntax highlighting
+$rb-tok-comment: #6b7280;
+$rb-tok-keyword: #1c2c6e;
+$rb-tok-string: #a8390c;
+$rb-tok-number: #7c5a00;
+$rb-tok-func: #2f3f9e;
+$rb-tok-type: #1d6b45;
+$rb-tok-punct: #5a6070;
+$rb-tok-ins: #1d6b45;
+$rb-tok-del: #b42318;

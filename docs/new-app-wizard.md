@@ -1,272 +1,120 @@
 ---
-title: New App Development Wizard
+title: New app wizard
 layout: default
-parent: Application Development
-nav_order: 2
+parent: Building apps
+grand_parent: Build on RobOS
+nav_order: 1
 ---
 
-# New App Development Wizard
+# New app wizard
 {: .no_toc }
 
-How application developers use the guided RobOS App Wizard (`packages/app-wizard`) to build brand-new applications from scratch across all multi-app archetypes: Desktop Applications, Front End Applications, PC Games, Mobile Games, Microservices & Web APIs, Console CLIs, Mobile Apps, Data Pipelines, and Libraries.
-{: .fs-6 .fw-300 }
+How to create a starter project with the App Wizard (`packages/app-wizard`): what each step asks, which template you get, which files it writes, and where it stops short. Read this before you rely on it for anything other than a web app, a desktop app or a command-line tool.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
----
+## Run the wizard
 
-## Overview: Fast Scaffolding Across Archetypes
+Open **RobOS Create Project & App Wizard** from the App Launcher, or run it from a RobOS checkout:
 
-In conventional software development, creating a new application requires hours of tedious setup: stitching together boilerplate directories, writing Dockerfiles, creating local developer setup scripts (`dev-setup.sh`), setting up CI pipelines, configuring contract linting, and registering team ownership metadata.
-
-The **RobOS App Wizard** (`packages/app-wizard`) eliminates this setup friction with a 4-step interactive wizard tailored to the application's architectural archetype:
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/app-flow-scaffolding-ingestion.jpg' | relative_url }}" alt="App Wizard Guided Scaffolding Flow" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>App Wizard Guided Scaffolding Flow</strong>: Interactive 5-step creation pipeline from archetype selection to contract specification, scaffolding, and Knowledge Graph ingestion. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
----
-
-## Supported Multi-App Archetypes
-
-RobOS provides first-class support for **distinct software archetypes**, each equipped with tailored scaffolding generators, runtime configs, and SDLC Knowledge Graph ontology definitions:
-
-| Archetype | URN Format | Supported Technology Stacks | What RobOS Scaffolds |
-|:---|:---|:---|:---|
-| **`robos:Microservice`** | `urn:robos:microservice:<slug>` | Java 21 / Spring Boot 3, Node / Express, Go Gin, Python FastAPI | OpenAPI 3.1 YAML contract, Prism mock server, `Dockerfile`, `dev-setup.sh`, Backstage manifest, Pact consumer test harnesses |
-| **`robos:FrontEndApp`** | `urn:robos:frontend-app:<slug>` | React 18, Vite, Next.js 14, Vue 3, Svelte | SPA/SSR application scaffold, Vite build config, TypeSpec client stubs, mock API proxy, `dev-setup.sh` |
-| **`robos:DesktopApp`** | `urn:robos:desktop-app:<slug>` | Electron 29, Tauri, Qt / C++ | `.desktop` file registration, DOM snapshot debugging port (`19100+`), Lucide vector icon, window manager configs |
-| **`robos:PCGame`** | `urn:robos:pc-game:<slug>` | Unreal Engine 5, Unity 6, Godot 4.2, Bevy | Desktop PC game project manifest, engine build profiles, DirectX 12/Vulkan profiles, asset pipeline configs |
-| **`robos:MobileGame`** | `urn:robos:mobile-game:<slug>` | Unity 6, Unreal Engine 5, Godot 4.2 | Mobile game workspace, iOS/Android build profiles, mobile mock server, touch input bindings, asset bundle configs |
-| **`robos:ConsoleApp`** | `urn:robos:console-app:<slug>` | Go Cobra, Rust Clap, Python Click, Node Commander | Command-line parser, subcommands & flags schema, shell auto-completion (`zsh`/`bash`), man pages, executable build scripts |
-| **`robos:MobileApp`** | `urn:robos:mobile-app:<slug>` | React Native, Flutter, iOS Swift, Android Kotlin | Mobile project config, simulator runner configs, deep-link URI schemes, mock API client |
-| **`robos:DataPipeline`** | `urn:robos:pipeline:<slug>` | Apache Kafka Streams, Celery, Apache Spark | AsyncAPI event schemas, Kafka broker docker-compose, event consumer/producer stubs |
-| **`robos:Library`** | `urn:robos:library:<slug>` | TypeScript/NPM, Python/PyPI, Rust/Crates, Java/Maven | Multi-target compilation configs, semantic release pipeline, living documentation generator |
-
----
-
-## Step-by-Step Guided Creation Flow
-
-The following walkthrough demonstrates scaffolding a production-ready **Payment Gateway API** microservice using the live RobOS App Wizard.
-
-### Step 1: Select Application Archetype
-
-Launch the App Wizard from the **RobOS App Launcher** (search for "App Wizard" in the application grid or desktop dock), or launch it from the terminal:
 ```bash
 electron packages/app-wizard
 ```
 
-The developer chooses between the available archetypes. Clicking an archetype card immediately selects the corresponding architectural archetype and configures downstream options:
+Click **Create New Project** in the header. The wizard writes to `packages/<slug>/` under the nearest `.robos` directory (the working directory or up to four parents; see [Building apps]({{ site.baseurl }}{% link app-development-flow.md %})). The generated projects need Node.js 20 or later. The app page is [App Wizard]({{ '/apps/app-wizard/' | relative_url }}).
 
-| Step 1: Multi-Archetype Selection Grid |
-|:---:|
-| ![Select Application Archetype]({{ '/assets/images/screenshots/new-app-archetypes_frame.png' | relative_url }}) |
+The header also has a **Simple Mode** and **Advanced Mode** toggle. Advanced Mode adds three fields and a contract editor, described below.
 
-* **Interactive Cards**: High-visibility cards with archetype icons, titles, and concise technology descriptions.
-* **Archetype Binding**: Sets `selectedArchetype` (e.g. `robos:Microservice`, `robos:FrontEndApp`, `robos:PCGame`).
+## The four steps
 
----
+The sidebar shows the steps: What to Build, Project Basics, Features & Data, Review & Create.
 
-### Step 2: App Identity & Team Ownership
-
-In Step 2, the developer configures component identity, technology runtime, and organizational ownership:
-
-| Step 2: App Identity & Ownership Configuration |
-|:---:|
-| ![App Identity & Ownership]({{ '/assets/images/screenshots/new-app-identity-team_frame.png' | relative_url }}) |
-
-* **Application Name**: Human-readable name (e.g. `Payment Gateway API`).
-* **Package Identifier Slug**: Lowercase hyphenated identifier (e.g. `payment-gateway-api`).
-* **Technology Stack & Language**: Polyglot dropdown supporting Java 21 / Spring Boot 3, Node.js 20 / TypeScript / Express, Go 1.22 / Gin, Python 3.11 / FastAPI, Electron 29 / Vanilla JS, and Rust / Tokio.
-* **Team Ownership**: Dynamic dropdown pulling active squads directly from `.robos/teams.yaml` (e.g. `Founding Core Engineering (stream-aligned)` or `Platform Engineering (platform)`), enforcing Team Topologies governance from day one.
-
----
-
-### Step 3: Contract & API Specification
-
-RobOS enforces contract-first development. Before writing business logic, the developer inspects and refines the declarative interface contract:
-
-| Step 3: Contract & API Specification Editor |
-|:---:|
-| ![Contract & API Specification]({{ '/assets/images/screenshots/new-app-contract-spec_frame.png' | relative_url }}) |
-
-* **Specification Types**:
-  - **OpenAPI 3.1 (REST API)**: Full YAML editor with initial endpoints (e.g. `POST /v1/payments`, `POST /v1/refunds`).
-  - **Microsoft TypeSpec (`.tsp`)**: Concise language for multi-protocol API contracts.
-  - **Protobuf gRPC (`.proto`)**: High-performance microservice RPC stubs.
-  - **GraphQL Schema (`.graphql`)**: Typed schema definition with queries and mutations.
-* **Spectral Linting**: Contracts are validated to ensure compliance with organization-wide style rules and backwards-compatibility guards.
-
----
-
-### Step 4: Scaffolding Blueprint & Review
-
-Before generating code on disk, Step 4 presents a complete **Scaffolding Blueprint** summarizing the configuration:
-
-| Step 4: Scaffolding Blueprint Preview |
-|:---:|
-| ![Scaffolding Blueprint Preview]({{ '/assets/images/screenshots/new-app-scaffold-blueprint_frame.png' | relative_url }}) |
-
-The summary validates:
-- **Application Name**: `Payment Gateway API`
-- **Archetype**: `robos:Microservice`
-- **Package URN**: `urn:robos:microservice:payment-gateway-api`
-- **Technology**: `Java 21 / Spring Boot 3`
-- **Owner**: `founding-core`
-
----
-
-### Step 5: Automated Scaffolding & Knowledge Graph Registration
-
-Clicking **Scaffold Application ⚡** triggers the polyglot generator, compiling files directly into the repository and linking the component into the SDLC Knowledge Graph:
-
-| Step 5: Execution Console & Knowledge Graph Registration Complete |
-|:---:|
-| ![Scaffolding Generation Complete]({{ '/assets/images/screenshots/new-app-scaffold-complete_frame.png' | relative_url }}) |
-
-The generation process executes 5 coordinated tasks:
-1. **Creates Component Workspace**: Initializes `packages/<slug>/`.
-2. **Generates Backstage Catalog Manifest (`catalog-info.yaml`)**: Standard component metadata for service catalog indexing.
-3. **Generates Automated Dev Setup (`dev-setup.sh`)**: Executable environment setup script (`chmod +x`).
-4. **Generates Container Definition (`Dockerfile`)**: Production-ready container image build definition.
-5. **Registers in `.robos/packages.yaml` & Knowledge Graph**: Assigns the component to the `services` or `applications` package in the Dual-State SDLC Knowledge Graph.
-
----
-
-## Web App Launch Kit (Front End Apps on Vercel)
-
-Choosing **Front End App** (or Next.js / Vercel) generates a complete, working product skeleton from the
-`nextjs-vercel-web` template: the launch kit we distilled from building [getemgigs.com]({{ '/projects/getemgigs/' | relative_url }}).
-Fill in **Tagline**, **Description** and **Keywords** in Step 2; they flow into the hero, meta description,
-Open Graph image, `llms.txt` and schema.org JSON-LD.
-
-| Area | What is generated |
+| Step | What you do |
 |:---|:---|
-| **Stack** | Next.js 15 App Router, React 19, mobile-first CSS with bottom tab bar |
-| **Data & auth** | Neon Postgres (`DATABASE_URL`) with embedded PGlite locally; email + password, hashed server-side sessions, account deletion |
-| **Abuse controls** | Rate limits, honeypot + form timing, disposable-email block, password rules, same-origin checks, CSP/HSTS, audit log; reCAPTCHA v3 wired but off |
-| **Search engines & AI agents** | `robots.txt` (Googlebot, Bingbot, OAI-SearchBot, ChatGPT-User, Claude-SearchBot, ClaudeBot, PerplexityBot, link-preview bots; private paths blocked), `sitemap.xml`, `/llms.txt`, canonical + OG/Twitter tags, generated OG image and app icons, manifest, JSON-LD (Organization, WebSite, WebApplication, FAQPage) |
-| **Tests & proof of work** | Unit tests on real Postgres (PGlite); Cucumber + Playwright scenarios (signup/login, crawler checks, abuse controls) recorded per phone, stitched into RobOS evidence videos with a Cucumber splash intro, step HUD and timeline |
-| **Deploy** | `vercel.json`, GitHub Actions CI (`npm test`, `next build`), `DEPLOYMENT.md` launch checklist (Neon via Vercel Marketplace, env vars, Search Console) |
-| **Registration** | `catalog-info.yaml`, `.robos/packages.yaml`, a `robos:FrontEndApp` node in the SDLC KGraph with launch-kit properties, and a `docs/projects/<slug>.md` page |
+| What to Build | Pick one card: Modern Website / Web App, Desktop Application, Backend Cloud API, Command-Line Utility, PC Video Game, Mobile Phone App, Data Worker / Sync, or Reusable Code Library. Four starter buttons above the cards (Urban Plant Tracker, Barista Order API, DocuVault Desktop, Pulse Metrics CLI) fill in the form fields and jump to step 2. |
+| Project Basics | Set **Project Name**, **Folder Name on Computer** (filled in from the name, lowercase with hyphens, prefixed `packages/`), **What does this project do?**, **Catchy Tagline**, **How will it save data?**, **Where will it run?** and **Project Team Owner**. The team list comes from `.robos/teams.yaml`; if that file has no teams, three built-in sample teams are shown. Advanced Mode adds **Technology Stack & Runtime**, **Custom Domain Name (Optional)** and **Search Keywords**. |
+| Features & Data | Simple Mode shows a fixed list of what the project includes. Advanced Mode shows a **Specification Format** menu (Next.js routes, OpenAPI 3.1, TypeSpec, Protobuf, GraphQL) and a **Raw Contract Preview** editor. |
+| Review & Create | Shows a summary card. **Create Project Now** writes the files and prints a log in the console box below the card. |
 
-The generator never overwrites files that already exist, so it is safe to re-run on a project.
+The folder name must be 2 to 61 characters of `a-z`, `0-9` and `-`, starting with a letter or digit. Anything else fails with "A lowercase slug (a-z, 0-9, -) is required."
 
-## Generated Project Blueprint & Manifests
+Choosing a card changes the defaults for some archetypes only. Desktop Application sets the stack to Electron 29 and **Where will it run?** to Local Workstation / Linux. Backend Cloud API sets Node.js 20 / TypeScript / Express and Docker Container. Command-Line Utility sets Local Workstation / Linux. Modern Website / Web App sets Next.js 15 and Cloud Hosting (Vercel / Web). The other four cards leave the settings alone.
 
-### 1. Backstage Catalog Manifest (`catalog-info.yaml`)
-```yaml
-apiVersion: backstage.io/v1alpha1
-kind: Component
-metadata:
-  name: payment-gateway-api
-  title: "Payment Gateway API"
-  description: "RESTful backend service for payment processing and refund dispatching."
-  tags:
-    - microservice
-    - java-21-spring-boot-3
-    - openapi-3.1
-spec:
-  type: microservice
-  lifecycle: experimental
-  owner: founding-core
-  system: core-platform
-  definition:
-    $text: ./openapi.yaml
-```
+## What gets generated
 
-### 2. Zero-Friction Developer Setup (`dev-setup.sh`)
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
+The generator (`packages/app-wizard/lib/generate-app.js`) picks one template. It checks these conditions in order:
 
-echo "==> Setting up environment for Payment Gateway API..."
+| Condition | Template | Files |
+|:---|:---|:---|
+| **Where will it run?** is Cloud Hosting (Vercel / Web), or the stack contains "Next.js" or "Vercel", or the archetype is Front End App | Next.js launch kit | A full Next.js project; see [Front-end apps]({{ site.baseurl }}{% link frontend-applications.md %}). |
+| Archetype is Desktop Application | Electron app | `package.json`, `main.js`, `preload.js`, `renderer/index.html`, `renderer/app.js`, `renderer/styles.css`, `<slug>.desktop`, `README.md`, `Dockerfile` |
+| Archetype is Command-Line Utility | Node.js CLI | `package.json`, `bin/cli.js` (with `status`, `ping` and `report` commands), `README.md`, `Dockerfile` |
+| Anything else | Node.js HTTP service | `package.json`, `server.js` (serves `/api/health` and returns sample JSON for other `/api/` paths), `openapi.yaml`, `Dockerfile`, `README.md` |
 
-# 1. Audit language runtime
-if ! command -v java >/dev/null 2>&1; then
-  echo "Java 21 required. Installing via RobOS Lang Manager..."
-  robos-lang install java 21
-fi
+Every template also gets `catalog-info.yaml` (a Backstage component descriptor) and an executable `dev-setup.sh`. The script checks for `node` and `git`, runs `npm install` and, for the web template, copies `.env.example` to `.env.local`, installs the Playwright browser and runs `npm test`.
 
-# 2. Verify API contract linting
-if command -v spectral >/dev/null 2>&1; then
-  echo "==> Validating OpenAPI 3.1 contract syntax..."
-  spectral lint openapi.yaml
-fi
+{: .warning }
+The Where will it run? menu starts on Cloud Hosting (Vercel / Web), and the Advanced Mode stack menu starts on Next.js 15. The PC Video Game, Mobile Phone App, Data Worker / Sync and Reusable Code Library cards change neither, so by default they produce the Next.js web template. If you change both settings you get the generic Node.js HTTP service instead. Neither is a game, mobile, pipeline or library scaffold; none exists yet.
 
-echo "==> Payment Gateway API environment ready!"
-```
+### What changes the output
 
-### 3. Container Definition (`Dockerfile`)
-```dockerfile
-# Multi-stage build for Payment Gateway API
-FROM maven:3.9-eclipse-temurin-21-alpine AS builder
-WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-RUN mvn clean package -DskipTests
+| Setting | Effect |
+|:---|:---|
+| Project Name, Folder Name, description, tagline, keywords, domain | Used in the generated files. Keywords are used only by the web template. The domain defaults to `<slug>.com`. |
+| Project Team Owner | Becomes the `owner` under `spec` in `catalog-info.yaml`, and `author` in the desktop `package.json`. |
+| Technology Stack & Runtime | Only decides the web-template check above, and is recorded in registration files. |
+| How will it save data? | Not used. The web template always uses Neon Postgres, with PGlite locally. |
+| Specification Format and Raw Contract Preview | Not used. The HTTP-service template always writes the same `openapi.yaml`. |
 
-FROM eclipse-temurin:21-jre-alpine
-WORKDIR /app
-COPY --from=builder /app/target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
-```
+## What is registered
 
-### 4. Knowledge Graph Package Registration (`.robos/packages.yaml`)
-```yaml
-packages:
-  - id: payment-gateway-api
-    name: "Payment Gateway API"
-    urn: "urn:robos:microservice:payment-gateway-api"
-    archetype: "robos:Microservice"
-    technology: "Java 21 / Spring Boot 3"
-    owner: "founding-core"
-    path: "packages/payment-gateway-api"
-    packageStore: "services"
-    contract: "packages/payment-gateway-api/openapi.yaml"
-```
+After writing files the generator also updates these. A target that does not exist is skipped silently.
 
----
+| Target | Change |
+|:---|:---|
+| `.robos/packages.yaml` | Appends an entry with the URN, title, archetype, `repository` and technology (if the file exists). |
+| `.robos/kgraphs/<package>/package.jsonld` | Adds a node for projects that get the web template, and for Desktop Application, Backend Cloud API and Command-Line Utility projects (if the package file exists). The package is `services` for a Backend Cloud API and `applications` for the others. Nothing is added for the other archetypes. |
+| `docs/projects/<slug>.md` | Creates a project page if `docs/projects/` exists and the page does not. |
+| `~/.config/robos/git-projects.json` | Appends an entry. See the note below. |
 
-## Live E2E Video Walkthrough & Proof of Work
+The repository is always `nddipiazza/<slug>`, because the wizard has no repository field. It appears as the `github.com/project-slug` annotation in `catalog-info.yaml` and as `repository` in `.robos/packages.yaml` and the graph node. Edit it after generation.
 
-The entire Greenfield Application Scaffolding lifecycle is verified with automated, headless 1080p video recording and DOM assertion logs:
+{: .note }
+Git Projects stores its list as `{ "projects": [...] }` in `git-projects.json`, while the wizard reads and writes the file as a bare array. If Git Projects has already created the file, the wizard's entry is skipped. If the wizard creates the file first, Git Projects will not list the project. Add the repository in [Git Projects]({{ '/apps/git-projects/' | relative_url }}) yourself.
 
-<video controls preload="metadata" width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
-  <source src="{{ '/assets/videos/new-app-wizard-final.webm' | relative_url }}" type="video/webm">
-  Your browser does not support the video tag.
-</video>
+`catalog-info.yaml` and `dev-setup.sh` are written every time, so re-running the wizard for an existing folder overwrites them. The Electron, CLI and HTTP-service templates overwrite their files too. Only the Next.js template skips files that already exist.
 
-* **Captions / Subtitles**: WebVTT synchronized narration embedded in the player.
-* **Persistent Walkthrough Archive**: Stored in `~/.robos/development/walkthroughs/new-app-wizard/` with timestamped history.
+## Generate without the GUI
 
----
-
-## How to Run the App Wizard E2E Demo Locally
-
-Execute the automated test and headless walkthrough recording with:
+The generator is plain Node.js and does not need Electron. This example writes to a scratch folder; run it from a RobOS checkout:
 
 ```bash
-# Run the live E2E video demo recording with audio narration:
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/new-app-wizard-demo.js
-
-# Launch the App Wizard directly from the terminal (or open "App Wizard" in RobOS App Launcher):
-electron packages/app-wizard
+mkdir -p /tmp/robos-demo/.robos
+node -e "
+const { generateNewApp } = require('./packages/app-wizard/lib/generate-app');
+const r = generateNewApp(
+  { name: 'Pulse Metrics', slug: 'pulse-metrics', archetype: 'robos:ConsoleApp',
+    technology: 'Node.js 20 / CLI', deploy: 'self-hosted' },
+  { robosRoot: '/tmp/robos-demo' }
+);
+console.log(r.targetDir, r.generated);
+"
 ```
 
----
+The project lands in `/tmp/robos-demo/packages/pulse-metrics`. Set `robosRoot` to a repository root to register the project in that repository's `.robos` instead. Always pass `archetype`. Without `homeDir` in the second argument, the call does not touch `~/.config/robos/git-projects.json`. The unit tests for the generator are in `packages/robos-test/tests/app-wizard/generate-app.test.js`.
 
-## Next Steps
+## Limits
 
-- **[Import Existing Apps Guide]({{ site.baseurl }}{% link app-import-wizard.md %})**: Ingest brownfield codebases with automatic archetype detection.
-- **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural innovations and strategic advantages.
-- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
+- Only the web, desktop and CLI archetypes have their own template. PC Video Game, Mobile Phone App, Data Worker / Sync and Reusable Code Library are cards in the UI, but they produce the generic Node.js service or the web template.
+- The Mobile Game archetype appears only in the import wizard, not on the creation cards.
+- The step 3 contract editor and the data-storage menu do not affect the output.
+- The Electron template's `.desktop` file points at an `icon.svg` that the wizard does not create. Add one (see the `update-app-icon` skill).
+- The generated `dev-setup.sh` checks only for Node.js and git. It does not install Java, Go or other runtimes.
 
+For a project that already exists, use [Import an existing app]({{ site.baseurl }}{% link app-import-wizard.md %}).

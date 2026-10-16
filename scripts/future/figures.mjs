@@ -322,13 +322,13 @@ function ogCard(T) {
   const W = 1200, H = 630;
   let s = '';
   s += k.text(70, 120, 'THE SKILL COMMONS', { size: 26, weight: 700, fill: T.accent, ls: 4 });
-  s += k.text(70, 232, 'Solve each task once.', { size: 84, weight: 800 });
-  s += k.text(70, 330, 'Reuse it everywhere.', { size: 84, weight: 800, fill: T.accent });
-  s += k.text(70, 396, 'A shared catalog of finished building blocks,\nsnapped together by a small AI on your own computer.', { size: 30, fill: T.muted, lh: 1.3 });
+  s += k.text(70, 222, 'Less AI strain on', { size: 82, weight: 800 });
+  s += k.text(70, 316, 'data centers.', { size: 82, weight: 800, fill: T.accent });
+  s += k.text(70, 392, 'If done right: solve each task once, reuse it everywhere,\nand let a small AI on your own computer snap it together.', { size: 29, fill: T.muted, lh: 1.3 });
   const xs = [70, 250, 430, 610, 790];
   const kinds = [[T.accent, T.accentSoft], [T.accent, T.accentSoft], [T.accent, T.accentSoft], [T.private, T.privateSoft], [T.neu, T.neuSoft, true]];
   xs.forEach((x, i) => { s += k.brick(x, 484, 160, 84, { label: '', color: kinds[i][0], soft: kinds[i][1], dash: kinds[i][2] ? '8 6' : undefined, seal: i < 3 }); });
-  s += k.text(1130, 570, 'rowbose.com/future', { size: 26, weight: 600, fill: T.muted, anchor: 'end' });
+  s += k.text(1130, 120, 'rowbose.com/future', { size: 26, weight: 600, fill: T.muted, anchor: 'end' });
   return k.svg(W, H, s, 'The Skill Commons: solve each task once, reuse it everywhere', 'A row of snapped-together building blocks under the headline "Solve each task once. Reuse it everywhere."');
 }
 

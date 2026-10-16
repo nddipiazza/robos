@@ -62,6 +62,12 @@ const BUILTIN_APPS = [
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m19 11-8-8-8.5 8.5a2.12 2.12 0 0 0 3 3L12 8l6.5 6.5a2.12 2.12 0 0 0 3-3L19 11Z"/><path d="m5 2 5 5"/><path d="M2 5l5 5"/><path d="M22 19l-3-3"/><path d="m19 22 3-3"/><circle cx="19" cy="5" r="2"/></svg>'
   },
   {
+    appId: 'audio-player',
+    label: 'Audio Player',
+    category: 'Tools',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/><polygon points="10 10 15 12 10 14 10 10" fill="#00bcd4"/></svg>'
+  },
+  {
     appId: 'automation-studio',
     label: 'Automation Studio',
     category: 'Development',
@@ -84,6 +90,18 @@ const BUILTIN_APPS = [
     label: 'RobOS Tabletop Studio',
     category: 'Game Development',
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 4 L40 10 V24 C40 33 33 41 24 44 C15 41 8 33 8 24 V10 Z" /><rect x="18" y="16" width="12" height="12" rx="2" /><circle cx="21" cy="19" r="1" fill="#00bcd4" /><circle cx="27" cy="19" r="1" fill="#00bcd4" /><circle cx="24" cy="22" r="1" fill="#00bcd4" /><circle cx="21" cy="25" r="1" fill="#00bcd4" /><circle cx="27" cy="25" r="1" fill="#00bcd4" /><line x1="24" y1="28" x2="24" y2="38" /><line x1="16" y1="38" x2="32" y2="38" /></svg>'
+  },
+  {
+    appId: 'tabletop-blockmap-creator',
+    label: 'Tabletop Blockmap Creator',
+    category: 'Game Development',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="38" height="38" rx="3" stroke="#00bcd4" stroke-width="1.8" /><path d="M5 17 H43 M5 29 H43 M17 5 V43 M29 5 V43" stroke="#00bcd4" stroke-dasharray="2 2" stroke-opacity="0.45" /><rect x="17" y="17" width="12" height="12" rx="1" fill="#00bcd4" fill-opacity="0.2" stroke="#00bcd4" stroke-width="2" /><path d="M33 7 L41 15 M36 10 L38 8 M38 12 L40 10" stroke="#f59e0b" stroke-width="1.8" /></svg>'
+  },
+  {
+    appId: 'tabletop-quest-editor',
+    label: 'Tabletop Quest Map Editor',
+    category: 'Game Development',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="36" height="36" rx="4" /><path d="M18 6v36" stroke-dasharray="2 3" opacity="0.4" /><path d="M30 6v36" stroke-dasharray="2 3" opacity="0.4" /><path d="M6 18h36" stroke-dasharray="2 3" opacity="0.4" /><path d="M6 30h36" stroke-dasharray="2 3" opacity="0.4" /><rect x="15" y="16" width="6" height="4" fill="#00bcd4" fill-opacity="0.3" stroke="#00bcd4" stroke-width="1.5" /><circle cx="24" cy="24" r="3" fill="#00bcd4" /><path d="M24 19v2" /><path d="M24 27v2" /><path d="M19 24h2" /><path d="M27 24h2" /><path d="M32 36v-3h3v-3h3" /></svg>'
   },
   {
     appId: 'context-manager',
@@ -174,6 +192,12 @@ const BUILTIN_APPS = [
     label: 'Git Projects',
     category: 'Development',
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v6a3 3 0 0 1-3 3H9"/></svg>'
+  },
+  {
+    appId: 'home-speaker',
+    label: 'Home Speaker',
+    category: 'Tools',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="8" width="12" height="13" rx="3"/><ellipse cx="12" cy="8" rx="6" ry="2"/><circle cx="12" cy="8" r="0.8" fill="#00bcd4"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="8" y1="16" x2="16" y2="16"/><path d="M19 5a5 5 0 0 1 0 6"/><path d="M21 2a9 9 0 0 1 0 12"/><path d="M5 5a5 5 0 0 0 0 6"/><path d="M3 2a9 9 0 0 0 0 12"/></svg>'
   },
   {
     appId: 'mcp-manager',

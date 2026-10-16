@@ -1,150 +1,90 @@
 ---
-title: The Gig Bandit & Get 'Em Gigs
+title: "Get 'Em Gigs"
 layout: default
-parent: RobOS Projects
+parent: Projects
 has_children: true
 permalink: /projects/getemgigs/
 nav_order: 2
+redirect_from:
+  - /projects/getemgigs/venue-stay-to-play-economics.html
 ---
 
-# The Gig Bandit & Get 'Em Gigs (`getemgigs.com`)
+# Get 'Em Gigs
 {: .no_toc }
 
-A live, production web app for local bands: trade attendance with **Buddy Gigs** backed by deposits and Venmo-style scan-in at the door, and replace pay-to-play with **Venue Stay-To-Play**. Built, deployed and verified end-to-end with RobOS video proof-of-work.
-{: .fs-6 .fw-300 }
+A Next.js web app for local bands, kept in the RobOS repository at `packages/getemgigs`. The App Wizard's web template was distilled from it.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
+## What it does
 
-1. TOC
-{:toc}
+Get 'Em Gigs has two features. Both are implemented in `packages/getemgigs/src/lib/services.js`.
 
----
+### Buddy Gigs
 
-<div style="background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 1.5rem; margin: 1.5rem 0;">
-  <h3 style="margin-top: 0; color: #58a6ff;">🚀 Live in production</h3>
-  <p style="color: #c9d1d9; font-size: 0.95rem; margin-bottom: 0;">
-    <strong>App:</strong> <a href="https://www.getemgigs.com" target="_blank" rel="noopener noreferrer">https://www.getemgigs.com</a> — open signup, phone-first<br/>
-    <strong>Source:</strong> <code>packages/getemgigs</code> in RobOS, synced to <a href="https://github.com/nddipiazza/thegigbandit" target="_blank" rel="noopener noreferrer">github.com/nddipiazza/thegigbandit</a> (Vercel deploys from <code>main</code>)<br/>
-    <strong>Health:</strong> <a href="https://www.getemgigs.com/api/health" target="_blank" rel="noopener noreferrer">/api/health</a> → Neon Postgres<br/>
-    <strong>Knowledge Graph node:</strong> <code>urn:robos:app:getemgigs</code> (<code>schema:WebApplication</code>, <code>robos:FrontEndApp</code>)
-  </p>
-</div>
+Two bands trade attendance: each agrees to go to the other's show, and both lock a deposit so the promise has a cost.
 
-## The problem
+1. A band lists a gig with a venue, a start time and a deposit between $10 and $100 (the form default is $25).
+2. Another band offers a trade between one of its gigs and that gig. The deposit for the deal is the larger of the two gigs' deposits.
+3. When the invited band accepts, the deposit is held from both bands' balances in an internal ledger.
+4. At the show, the visiting band opens the deal and displays a QR code. The band that is playing scans it. The deposit goes back to the visitor.
+5. A daily job settles deals whose check-in windows have closed. A band that never showed up forfeits its deposit to the band it stood up.
 
-Local bands struggle to fill rooms. Friends and fellow bands promise to come, then bail. And predatory **pay-to-play** venues make bands pre-buy tickets to their own show and eat the loss.
+The check-in window opens one hour before the show starts and closes five hours after. The state machine, the code format and the settlement rules are on [Buddy Gig scan-in and escrow]({{ '/projects/getemgigs/buddy-gig-geolocation-escrow.html' | relative_url }}).
 
-## How Get ’Em Gigs fixes it
+### Stay-To-Play
 
-### 1. Buddy Gigs — “I’ll come to your gig if you come to mine”
+A band can commit 2 to 10 tickets from one of its own gigs to another band's gig at the same venue. The venue must be marked as a Stay-To-Play partner; the six venues seeded into the database all are. The commitment is stored in the `stay_commitments` table and shown on the target gig's page. No money moves. The app records the commitment and nothing more.
 
-1. Each band lists a gig (venue, time, deposit between $10 and $100).
-2. Band A finds Band B’s show and offers a trade. When B accepts, **both deposits are locked**.
-3. At the show, **like Venmo**: the attendee opens the deal and shows a **check-in QR code**; the band that’s playing scans it with their phone camera (in-app scanner, or any camera app — the QR is a link). The code rotates every 30 seconds, so a screenshot texted to a friend at home stops working. Scanning works from doors (1 h before start) until 5 h after. The deposit comes straight back.
-4. A **daily settlement cron** (06:00 CT) closes every deal whose windows are over. Anyone who never showed up **forfeits their deposit to the band they stood up**, and their reputation score drops. If the attendee opened their code at the show but the host never scanned it, nobody profits: the deposit is simply returned.
+{: .note }
+Deposits are "gig credits" in an internal ledger. Every new band receives $100 in credits, and no card payments are processed. This is stated in the app's own README and FAQ.
 
-Either you get a crowd, or you get paid.
+## Run it locally
 
-### 2. Venue Stay-To-Play
-
-Instead of buying tickets to your own gig, you commit 2–10 tickets to **another band’s show at the same partner venue**. The venue still gets a crowd, and bands build the scene they play in.
-
-> **Beta economics:** every band starts with $100 in *gig credits*. Deposits, refunds and payouts are recorded in a ledger; no real card payments are processed yet.
-
-<div style="margin: 2rem 0;">
-  <img src="{{ '/assets/images/getemgigs/buddy-gig-escrow-flow.jpg' | relative_url }}" alt="Buddy Gig reciprocal agreement lifecycle" class="robos-zoomable-img" style="display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #30363d;" />
-</div>
-
----
-
-## Video proof-of-work: live E2E against getemgigs.com
-
-Every scenario below is a **Cucumber BDD test that ran against the production site**. Each band is a separate phone-sized browser session that really signs up, logs in and uses the app. RobOS records each phone with wall-clock-stamped CDP screencast frames, then stitches all phones onto **one shared timeline of events** with a Cucumber scenario splash card, a step HUD, the step list and a moving playhead. Test accounts delete themselves afterwards.
-
-### Full evidence reel (all scenarios, ~3 min)
-
-<video controls preload="metadata" width="100%" poster="{{ '/assets/videos/getemgigs/02-buddy-gig-escrow.jpg' | relative_url }}" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
-  <source src="{{ '/assets/videos/getemgigs/getemgigs-e2e-evidence-reel.mp4' | relative_url }}" type="video/mp4">
-</video>
-
-### Scenario 1 — A new band signs up, creates its profile and logs back in
-
-`@e2e @auth @mobile` · 9 steps · passed
-
-<video controls preload="metadata" width="100%" poster="{{ '/assets/videos/getemgigs/01-signup-onboarding.jpg' | relative_url }}" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
-  <source src="{{ '/assets/videos/getemgigs/01-signup-onboarding.mp4' | relative_url }}" type="video/mp4">
-</video>
-
-### Scenario 2 — Buddy Gig: deposits locked, the host scans one band in at the door, the no-show pays the host
-
-`@e2e @buddy-gig @escrow @camera-checkin` · two phones (Jess / Neon Vipers and Marco / Velvet Riot) · 16 steps · passed
-
-<video controls preload="metadata" width="100%" poster="{{ '/assets/videos/getemgigs/02-buddy-gig-escrow.jpg' | relative_url }}" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
-  <source src="{{ '/assets/videos/getemgigs/02-buddy-gig-escrow.mp4' | relative_url }}" type="video/mp4">
-</video>
-
-Timeline: Marco lists a gig at The Mohawk starting in 20 minutes → Jess lists hers for 3 days out → Jess offers a Buddy Gig → Marco accepts (both wallets $100 → $75) → Jess arrives at The Mohawk and shows her rotating check-in QR → Marco opens the scanner and points his camera at it (the test feeds Jess’s live code into Marco’s phone camera) → her $25 comes back → settlement runs for the morning after Jess’s show → Marco never showed, so his $25 is paid to Jess ($125).
-
-### Scenario 3 — Stay-To-Play at a partner venue
-
-`@e2e @stay-to-play` · two phones · 6 steps · passed
-
-<video controls preload="metadata" width="100%" poster="{{ '/assets/videos/getemgigs/03-stay-to-play.jpg' | relative_url }}" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
-  <source src="{{ '/assets/videos/getemgigs/03-stay-to-play.mp4' | relative_url }}" type="video/mp4">
-</video>
-
-### Scenario 4 — Abuse controls on open signup
-
-`@e2e @security @abuse` · weak password and disposable email rejected in the UI; honeypot → **400**, cross-site POST → **403**, 11th wrong-password login → **429**, all against production.
-
-<video controls preload="metadata" width="100%" poster="{{ '/assets/videos/getemgigs/04a-signup-validation.jpg' | relative_url }}" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
-  <source src="{{ '/assets/videos/getemgigs/04a-signup-validation.mp4' | relative_url }}" type="video/mp4">
-</video>
-
-<video controls preload="metadata" width="100%" poster="{{ '/assets/videos/getemgigs/04b-api-abuse-controls.jpg' | relative_url }}" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
-  <source src="{{ '/assets/videos/getemgigs/04b-api-abuse-controls.mp4' | relative_url }}" type="video/mp4">
-</video>
-
-### Re-running the evidence
+You need Node.js 20 or later. No database setup is required: without `DATABASE_URL` the app uses PGlite, a Postgres build that runs in-process.
 
 ```bash
 cd packages/getemgigs
-BASE_URL=https://www.getemgigs.com E2E_BYPASS_KEY=... CRON_SECRET=... npm run e2e   # Cucumber + Playwright
-node scripts/encode-frames.mjs    # CDP frames → wall-clock-exact MP4 per phone
-npm run evidence                  # splash + HUD + multi-phone timeline → evidence/*.mp4 + reel
-scripts/make-hero-gif.sh evidence/02-*/jess.mp4 public/hero.gif "<start-end> ..."   # landing-page hero
+npm install
+npm run dev     # Next.js dev server on http://localhost:3000
+npm test        # node --test tests/unit/*.test.js
 ```
 
----
+`.env.example` lists the other settings: `DATABASE_URL` for Neon Postgres, `CRON_SECRET` for the settlement job, `E2E_BYPASS_KEY` for the end-to-end tests, and the reCAPTCHA keys. Hosting, the database and the abuse controls are described on [Get 'Em Gigs architecture]({{ '/projects/getemgigs/vercel-serverless-architecture.html' | relative_url }}).
 
-## Architecture
+## Tests and evidence videos
 
-| **Layer** | **Implementation** |
+The unit tests are 15 tests in `tests/unit` (check-in codes, security helpers, and the full deal lifecycle against PGlite). The end-to-end tests are 5 Cucumber scenarios in `tests/e2e/features`, driven by Playwright with one phone-sized browser per band.
+
+```bash
+cd packages/getemgigs
+npx playwright install chromium
+export E2E_BYPASS_KEY=$(openssl rand -hex 16)   # 32 characters; the key must be at least 24
+export CRON_SECRET=$(openssl rand -hex 16)
+npm run dev      # terminal 1: the server must see the same two variables
+npm run e2e      # terminal 2: export the same two values first
+npm run evidence # needs ffmpeg; writes evidence/*.mp4 and a combined reel
+```
+
+The tests run against `http://localhost:3000` unless you set `BASE_URL`. The escrow scenario calls the settlement endpoint with `CRON_SECRET`, and every browser session sends `E2E_BYPASS_KEY` so that rate limits do not interfere.
+
+Recordings from an evidence run are included in this site's assets. Each one shows the band phones on a shared timeline with the Cucumber steps alongside.
+
+<video controls preload="metadata" width="100%" poster="{{ '/assets/videos/getemgigs/02-buddy-gig-escrow.jpg' | relative_url }}">
+  <source src="{{ '/assets/videos/getemgigs/getemgigs-e2e-evidence-reel.mp4' | relative_url }}" type="video/mp4">
+</video>
+
+*The full reel, about three minutes, with all five scenarios.*
+
+| Scenario | Video |
 |:---|:---|
-| **Framework** | Next.js 15 App Router (server components + JSON route handlers), React 19, plain CSS (mobile-first, bottom tab bar) |
-| **Database** | Neon serverless Postgres via Vercel Marketplace (`DATABASE_URL`); embedded **PGlite** (real Postgres in WASM) for local dev and unit tests. Idempotent schema on cold start |
-| **Auth** | Email + password, bcrypt (cost 11), random 256-bit session tokens stored only as SHA-256 hashes, HttpOnly + SameSite=Lax + Secure cookies, 30-day expiry |
-| **Domain** | Bands, venues (6 seeded + user-added with “use my location”), gigs, agreements, attendance, ledger, Stay-To-Play commitments |
-| **Check-in** | Venmo-style: attendee shows a rotating QR = attendance id + 30 s time step + HMAC-SHA256 over a per-attendance secret, valid ~90 s. Only the host band can scan it (BarcodeDetector or jsQR in the browser, or any camera app via `/scan/<code>`). No location data is collected |
-| **Settlement** | Vercel Cron `0 11 * * *` → `/api/cron/settle` (Bearer `CRON_SECRET`) |
-| **Hosting** | Vercel (project `thegigbandit`), domains `getemgigs.com` / `www.getemgigs.com` |
-| **Tests** | 15 unit/domain tests (Node test runner + PGlite) · 5 Cucumber scenarios / 39 steps against production |
+| A new band signs up, creates a profile and logs back in | [01-signup-onboarding.mp4]({{ '/assets/videos/getemgigs/01-signup-onboarding.mp4' | relative_url }}) |
+| Buddy Gig: deposits locked, host scans one band in, the no-show pays the host | [02-buddy-gig-escrow.mp4]({{ '/assets/videos/getemgigs/02-buddy-gig-escrow.mp4' | relative_url }}) |
+| Stay-To-Play commitment at the same venue | [03-stay-to-play.mp4]({{ '/assets/videos/getemgigs/03-stay-to-play.mp4' | relative_url }}) |
+| Weak passwords and disposable emails rejected at signup | [04a-signup-validation.mp4]({{ '/assets/videos/getemgigs/04a-signup-validation.mp4' | relative_url }}) |
+| Honeypot, cross-site POST and password-guessing limits | [04b-api-abuse-controls.mp4]({{ '/assets/videos/getemgigs/04b-api-abuse-controls.mp4' | relative_url }}) |
 
-## Abuse controls
+## How it relates to RobOS
 
-Signup is open. **reCAPTCHA v3 is wired in but disabled** (`RECAPTCHA_ENABLED` / `NEXT_PUBLIC_RECAPTCHA_ENABLED` plus keys turn it on; Google’s script only loads when enabled).
+The package carries a `catalog-info.yaml` and a node in the RobOS knowledge graph (`urn:robos:frontend-app:getemgigs` in `.robos/kgraphs/applications/package.jsonld`). `DEPLOYMENT.md` in the package says the RobOS monorepo is the source of truth and the code is synced to a separate GitHub repository, `nddipiazza/thegigbandit`, which Vercel deploys. The App Wizard's `nextjs-vercel-web` template was distilled from this app; see [New app wizard]({{ site.baseurl }}{% link new-app-wizard.md %}).
 
-- **Rate limits** (Postgres-backed so they hold across serverless instances): signup 5/hour and 20/day per IP, 60/min globally; login 10 per 15 min per email and 30 per IP; per-user caps on gigs (10/day), venues (5/day), Buddy Gig offers (20/day), code views and scans
-- **Bot traps:** hidden honeypot field and a minimum form-fill time
-- **Input hygiene:** disposable-email blocklist, password length/common-password/email-name checks, control-character stripping, length limits, 20 KB body cap, UUID validation
-- **CSRF:** same-origin check on every mutation plus SameSite cookies
-- **Headers:** strict CSP, HSTS, `X-Frame-Options: DENY`, `Permissions-Policy` allowing the camera only on the site and blocking geolocation
-- **Audit log** of sign-ups, logins, failed logins, check-in scans (accepted and rejected) and account deletions
-- **Account deletion** from the Account page cascades all of a band’s data
-
-## In-depth documentation
-
-1. [**Buddy Gig Scan-In & Escrow Engine**]({{ '/projects/getemgigs/buddy-gig-geolocation-escrow.html' | relative_url }}) — state machine, rotating check-in codes, settlement
-2. [**Venue Stay-To-Play Economics**]({{ '/projects/getemgigs/venue-stay-to-play-economics.html' | relative_url }}) — why reciprocal ticket commitments beat pay-to-play
-3. [**Vercel & Neon Architecture**]({{ '/projects/getemgigs/vercel-serverless-architecture.html' | relative_url }}) — deployment, database, cron, environment
+Source: [packages/getemgigs](https://github.com/nddipiazza/robos/tree/main/packages/getemgigs). The README lists the production site as https://www.getemgigs.com.

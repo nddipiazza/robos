@@ -73,8 +73,8 @@ GODOT_BIN=/path/to/godot4 ./play.sh</code></pre>
   <div class="wrap">
     <div class="panel-g">
       <p class="eyebrow">Make your own</p>
-      <h2 class="h2">Build a campaign without writing code</h2>
-      <p class="sec-p">Maps, characters, quests and items are JSON-LD data. Use the visual campaign editor, or follow the 12-chapter guide to add scenes, traps, enemies and spells.</p>
+      <h2 class="h2">Make your own campaign</h2>
+      <p class="sec-p">Maps, characters, quests and items are JSON-LD data that the campaign editor can edit. Some changes, such as a new spell in the hand-built scenes, still need GDScript; the guide says which. Start with the editor tutorial, or read how scenes, items, traps and combat are put together.</p>
       <div class="cta" style="justify-content:flex-start"><a class="btn" href="{{ '/v1/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}">Campaign editor tutorial</a><a class="btn btn-ghost" href="{{ '/v1/projects/crpg-realm/create-your-own-game.html' | relative_url }}">Create your own game</a></div>
     </div>
   </div>

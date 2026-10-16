@@ -194,6 +194,7 @@ class TestWallBlocksLineOfSightE2E(unittest.TestCase):
         self.player.set_state(
             role="player",
             phase="hero_turn",
+            activeHero="barbarian",
             heroes=[
                 {"id": "barbarian", "name": "Barbarian", "grid_pos": [11, 0], "is_on_board": True}
             ],

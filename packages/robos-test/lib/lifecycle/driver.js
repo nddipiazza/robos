@@ -7,7 +7,8 @@
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
-const { spawn } = require('child_process');
+const { spawn, execFileSync } = require('child_process');
+const callouts = require('./callouts');
 const { evalJS, maximizeWindow } = require('../snapshot');
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -26,16 +27,29 @@ function screenshot(port, file) {
 class Recorder {
   constructor(file, { display = process.env.DISPLAY, size = '1920x1080', fps = 20 } = {}) {
     this.file = file; this.display = display; this.size = size; this.fps = fps;
-    this.marks = []; this.t0 = null;
+    this.marks = []; this.t0 = null; this.frames = null; this.snapNo = 0;
   }
   start() {
-    this.proc = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'x11grab', '-framerate', String(this.fps),
+    this.proc = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'x11grab', '-framerate', String(this.fps), '-draw_mouse', '0',
       '-video_size', this.size, '-i', this.display + '.0', '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '20',
       '-pix_fmt', 'yuv420p', this.file], { stdio: ['pipe', 'inherit', 'inherit'] });
     this.t0 = Date.now();
     return sleep(800);
   }
   now() { return (Date.now() - this.t0) / 1000; }
+  /** Where full-display snapshots (slides) are written. */
+  framesDir(dir) { this.frames = dir; fs.mkdirSync(dir, { recursive: true }); }
+  /** One-line caption under the step title, from now until the next caption / step. */
+  caption(text) { this.marks.push({ t: this.now(), type: 'caption', text }); }
+  /**
+   * A slideshow slide: grabs the whole display right now (lossless) and records which
+   * step and caption it belongs to. Call it while the callouts you want are on screen.
+   */
+  slide(id, { dwell = 5200 } = {}) {
+    const file = path.join(this.frames, `${String(++this.snapNo).padStart(2, '0')}-${id}.png`);
+    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'x11grab', '-draw_mouse', '0', '-video_size', this.size, '-i', this.display + '.0', '-frames:v', '1', file]);
+    this.marks.push({ t: this.now(), type: 'slide', id, file: path.basename(file), dwell });
+  }
   /** Begin a captioned segment. */
   step(id, extra = {}) { this.marks.push({ t: this.now(), type: 'step', id, ...extra }); }
   /** Cut dead time (app launching, waiting) out of the final video. */
@@ -127,4 +141,34 @@ async function waitFor(port, js, { timeout = 30000, interval = 400 } = {}) {
   }
 }
 
-module.exports = { sleep, screenshot, Recorder, click, type, waitFor, evalJS, maximizeWindow };
+/** Show speech-bubble callouts in an Electron app window; returns any targets that were not found. */
+async function callout(port, items, opts = { avoidBottom: 210 }) {
+  const missing = JSON.parse(await evalJS(port, callouts.show(items, opts)));
+  if (missing.length) console.warn('callout targets not found:', missing.join(' '));
+  await sleep(450);   // let the pop-in animation finish before anything is captured
+  return missing;
+}
+const clearCallout = (port) => evalJS(port, callouts.clear());
+/** Same, for a Playwright page (the popped-up app). */
+async function calloutPage(page, items, opts = { avoidBottom: 210 }) {
+  const missing = JSON.parse(await page.evaluate(callouts.show(items, opts)));
+  if (missing.length) console.warn('callout targets not found:', missing.join(' '));
+  await sleep(450);   // let the pop-in animation finish before anything is captured
+  return missing;
+}
+const clearCalloutPage = (page) => page.evaluate(callouts.clear());
+
+/** Type into a contenteditable chat box, one character at a time. */
+async function typeEditable(port, selector, text, { delay = 26 } = {}) {
+  await evalJS(port, `(async () => {
+    const el = document.querySelector(${JSON.stringify(selector)});
+    el.focus(); el.textContent = '';
+    for (const ch of ${JSON.stringify(text)}) {
+      el.textContent += ch;
+      el.dispatchEvent(new InputEvent('input', { bubbles: true, data: ch, inputType: 'insertText' }));
+      await new Promise(r => setTimeout(r, ${delay}));
+    }
+  })()`, 120000);
+}
+
+module.exports = { sleep, screenshot, Recorder, click, type, typeEditable, waitFor, evalJS, maximizeWindow, callout, clearCallout, calloutPage, clearCalloutPage };

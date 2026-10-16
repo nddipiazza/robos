@@ -17,7 +17,7 @@ function tasksFor(prompt) {
       title: 'Add species filter and ranking to pet search',
       isEpic: false,
       parentEpicIndex: 0,
-      labels: ['enhancement', 'search', 'role:backend-engineer'],
+      labels: ['enhancement', 'search', 'role:backend-dev'],
       issueType: 'task',
       body: [
         '`searchPets` only matches free text. Let callers narrow by species and return the most relevant pets first.',
@@ -39,7 +39,7 @@ function followUp() {
   return [{
     title: 'Document the species query parameter in the OpenAPI spec',
     isEpic: false,
-    labels: ['bug', 'ci', 'role:backend-engineer'],
+    labels: ['bug', 'ci', 'role:backend-dev'],
     issueType: 'bug',
     body: [
       'After merging the species filter, `contract-check` fails on `main`: `GET /pets` accepts `species`, but openapi.yaml does not describe it.',

@@ -1,244 +1,130 @@
 ---
-title: Complete Skills Catalog & Reference
+title: Skills catalog
 layout: default
-parent: RobOS Skills
+parent: Skills
+grand_parent: Build on RobOS
 nav_order: 1
 ---
 
-# Complete Skills Catalog & Reference
+# Skills catalog
 {: .no_toc }
 
-Comprehensive reference of all AI Agent Skills in the RobOS Plugin Marketplace and their execution parameters, companion engines, and verification methods.
-{: .fs-6 .fw-300 }
+Every agent skill in `plugins/robos/skills/`, with what it does and how to invoke it. Read this when you want to know which RobOS tasks an agent can already do from a single command.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
----
+## How to read this catalog
 
-## 1. Knowledge Graph (KGraph) Skills Suite
+Each skill is a directory with a `SKILL.md`. The descriptions below paraphrase the `description` line in that file. For the file format, see [Skills]({{ site.baseurl }}{% link robos-skills.md %}).
 
-The RobOS SDLC Knowledge Graph is the executable blueprint of your entire engineering system. This comprehensive skill suite allows AI agents and developers to search, query, insert, update, delete, validate, diff, export, visualize, and import graph components across all modular package stores (`.robos/kgraphs/`).
+The Invoke column shows one of two things:
 
-### `kgraph-search`
-- **Slash Command**: `/kgraph-search <query>`
-- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js search <query> [options]`
-- **Arguments**:
-  - `<query>`: Search string matching titles, descriptions, IDs, roles, or tags.
-  - `--type <type>`: Filter by RDF/SHACL type (e.g. `robos:Microservice`, `robos:Database`, `robos:MCPServer`).
-  - `--package <pkg>`: Filter by modular package (e.g. `services`, `applications`, `devops`, `core-platform`).
-  - `--owner-team <teamId>`: Filter by owning engineering squad.
-  - `--json`: Output raw JSON-LD node array.
-- **Description**: Rapidly searches components, databases, contracts, pipelines, and agents across all modular package stores.
+- A slash command, such as `/start-vm --headless`. These skills have a file in `plugins/robos/commands/`, and `./plugins/install.sh` copies it to `.claude/commands/`, `.antigravity/commands/` and `.gemini/commands/`. Arguments come from the skill's `Input` section.
+- "No command file". These skills have no slash command. Ask your agent for the task and name the skill, or run the CLI shown in the row.
 
-### `kgraph-insert`
-- **Slash Command**: `/kgraph-insert <json-string-or-file>`
-- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js insert [options]`
-- **Arguments**:
-  - `[json-string]`: Raw JSON-LD entity definition.
-  - `--file <path>`: Path to a JSON or JSON-LD file containing the node.
-  - `--id <id>`: Explicit URI (e.g. `urn:robos:service:billing-api`).
-  - `--type <type>`: RDF type (e.g. `robos:Microservice`).
-  - `--title <title>`: Human-readable entity title.
-  - `--package <pkg>`: Target package (`services`, `applications`, `devops`, etc.).
-  - `--no-validate`: Bypass SHACL validation gate (not recommended).
-- **Description**: Registers a newly designed or synthesized component into the Knowledge Graph, automatically enforcing W3C SHACL shape validation before persistence.
+These are agent skills. The shell commands in the Skills Manager app are a separate list and are on the [Skills Manager Desktop App]({{ site.baseurl }}{% link skills/skills-manager.md %}) page.
 
-### `kgraph-delete`
-- **Slash Command**: `/kgraph-delete <node-id>`
-- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js delete <node-id> [--cascade]`
-- **Arguments**:
-  - `<node-id>`: Target entity URI (e.g. `urn:robos:service:legacy-auth`).
-  - `--cascade`: Automatically prune referencing edges from dependent nodes across all packages.
-- **Description**: Safely decommissions an application, service, contract, or infrastructure node and cleans up relational edges without corrupting package JSON-LD manifests.
+## App development
 
-### `kgraph-update`
-- **Slash Command**: `/kgraph-update <node-id> [json-patch]`
-- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js update <node-id> [options]`
-- **Arguments**:
-  - `<node-id>`: Target entity URI to modify.
-  - `[json-patch]`: JSON string with fields to update.
-  - `--file <path>`: JSON file containing updated properties.
-  - `--set <key=value>`: Direct property update (e.g. `--set robos:ownerTeam=urn:robos:team:platform`).
-- **Description**: Modifies existing nodes in-place, updates package stores, and re-validates against SHACL constraints while logging living documentation impact advisories.
+| Skill | What it does | Invoke |
+| --- | --- | --- |
+| `create-robos-app` | Creates and scaffolds a new Electron desktop app, with its registrations and deployment | `/create-robos-app <app name>` |
+| `rename-robos-app` | Renames an app: package directory, desktop entry, icon registry and docs | `/rename-robos-app <old-name> <new-name>` |
+| `remove-robos-app` | Removes an app and deregisters it from manifests, icons and configuration | `/remove-robos-app <app-id or name>` |
+| `update-app-icon` | Replaces or creates the 48x48 Lucide-style SVG icon and syncs it to the icon registries | `/update-app-icon <app-id or name> [icon description]` |
+| `add-ai-text-area-to-app` | Adds the `<robos-ai-textarea>` widget (auto-resize, streaming, `@` file typeahead) to an app | `/add-ai-text-area-to-app` |
+| `create-test` | Generates E2E and unit tests for an app with the `robos-test` framework | `/create-test <app-id> <what to test>` |
+| `create-feature-spec` | Converts a raw idea or prompt into a feature specification in `docs/ideas/specs/` | `/create-feature-spec <idea text or path under docs/ideas/inbox/>` |
+| `install-desktop-app` | Installs and registers a `.desktop` entry and icon on GNOME Linux, with optional desktop shortcut and dock favorite | `/install-desktop-app --app-id <id> --name <name> --exec <command>` |
+| `crpg-game-builder` | Builds, validates and maintains party-based isometric cRPGs in Godot 4 from the knowledge graph | No command file |
 
-### `kgraph-query`
-- **Slash Command**: `/kgraph-query [filters]`
-- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js query [options]`
-- **Arguments**:
-  - `--type <type>`: Filter nodes by RDF type.
-  - `--package <pkg>`: Filter by package store.
-  - `--path-from <id> --path-to <id>`: BFS graph traversal tracing connection path between two entities across microservices and contracts.
-  - `--search <text>`: Text substring match.
-  - `--json`: Output raw query results.
-- **Description**: Executes multi-criteria graph queries and traces reference paths across microservice boundaries.
+## Knowledge graph
 
-### `kgraph-impact-analysis`
-- **Slash Command**: `/kgraph-impact-analysis <node-id>`
-- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js impact <node-id> [--depth <n>]`
-- **Arguments**:
-  - `<node-id>`: Focused entity URI (e.g. `urn:robos:service:auth-service`).
-  - `--depth <n>`: Maximum hop traversal depth (default 3).
-  - `--json`: Output structured blast radius report.
-- **Description**: Recursively traverses inbound and outbound dependency edges to evaluate the blast radius before code edits, API schema mutations, or database migrations.
+The ten `kgraph-*` skills wrap the `kgraph` command-line tool. In this table, `kgraph` means `node packages/robos-graph/bin/kgraph-cli.js`. Pass `--graph-root <workspace>` (or set `ROBOS_GRAPH_ROOT`) to work on an explicit graph workspace. None of these skills has a command file.
 
-### `kgraph-validate`
-- **Slash Command**: `/kgraph-validate [package-id]`
-- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js validate [package-id]`
-- **Arguments**:
-  - `[package-id]`: Specific package (`services`, `devops`, etc.) or omit to validate all packages.
-  - `--strict`: Treat warnings as fatal validation failures.
-  - `--json`: Output full SHACL validation report.
-- **Description**: Enforces 100% W3C SHACL shape conformance, verifying mandatory properties, valid URIs, and structural constraints across all nodes.
+| Skill | What it does | CLI |
+| --- | --- | --- |
+| `kgraph-search` | Searches nodes across all packages by text, RDF type, owner team or tags | `kgraph search "<query>" [--type <type>] [--package <pkg>] [--team <team>] [--json]` |
+| `kgraph-insert` | Adds a node to a package store, gated by shape validation | `kgraph insert --file <path>`, or `--id`, `--type`, `--title`, `--package` |
+| `kgraph-update` | Changes properties, contracts, dependencies or tags on a node and revalidates it | `kgraph update <node-id> --set <key=value>` or `--file <path>` |
+| `kgraph-delete` | Removes a node, optionally pruning references to it | `kgraph delete <node-id> [--cascade]` |
+| `kgraph-query` | Queries nodes by type, package or dependency, or traces a path between two nodes | `kgraph query --type <type>`, or `--path-from <id> --path-to <id>` |
+| `kgraph-impact-analysis` | Traces upstream and downstream dependencies before you change a service, database or contract | `kgraph impact <node-id> [--depth <n>]` |
+| `kgraph-validate` | Validates nodes against the supported built-in shape constraints | `kgraph validate [package] [--strict] [--json]` |
+| `kgraph-diff` | Compares the production `main` graph with a feature branch or working tree | `kgraph diff [branch] [--base <branch>]` |
+| `kgraph-export` | Exports the graph or one package as JSON-LD, Turtle or N-Triples | `kgraph export --format <jsonld\|ttl\|nt> [--package <pkg>] [--output <file>]` |
+| `kgraph-visualize` | Generates Mermaid or C4 diagrams for a node, package or squad | `kgraph visualize [id-or-package] [--direction <TD\|LR>] [--output <file>]` |
 
-### `kgraph-diff`
-- **Slash Command**: `/kgraph-diff [target-branch]`
-- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js diff [target-branch] [--base main]`
-- **Arguments**:
-  - `[target-branch]`: Feature branch or working tree state (defaults to current feature branch).
-  - `--base <branch>`: Base comparison branch (defaults to `main`).
-- **Description**: Computes semantic blast radius diffs between World 1 (Production `main`) and World 2 (feature branch), identifying added, modified, or removed components and breaking changes.
+`kgraph-validate` checks supported structure, references and built-in cardinality rules. Its `SKILL.md` says a passing report is a structural check, not proof that the graph matches the source code.
 
-### `kgraph-export`
-- **Slash Command**: `/kgraph-export [--format <jsonld|ttl|nt>]`
-- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js export [options]`
-- **Arguments**:
-  - `--format <jsonld|ttl|nt>`: Serialization format (JSON-LD 1.1, Turtle `.ttl`, or N-Triples).
-  - `--package <pkg>`: Target package to export (or omit for entire aggregated graph).
-  - `--output <file>`: Destination file path.
-- **Description**: Exports the Knowledge Graph to industry-standard RDF formats for ingestion into external graph databases (Neo4j, Amazon Neptune, GraphDB) or semantic pipelines.
+Other skills that read or write the graph:
 
-### `kgraph-visualize`
-- **Slash Command**: `/kgraph-visualize [id-or-package]`
-- **Companion CLI**: `node packages/robos-graph/bin/kgraph-cli.js visualize [id-or-package] [options]`
-- **Arguments**:
-  - `[id-or-package]`: Focused node URI or package name (e.g. `services`).
-  - `--direction <TD|LR>`: Mermaid layout orientation (Top-Down or Left-to-Right).
-  - `--max-nodes <n>`: Node limit (default 40).
-  - `--output <file>`: Save Mermaid syntax to file.
-- **Description**: Generates executable Mermaid diagram syntax or C4 component dependency visualizations for any subsystem or node in the graph.
+| Skill | What it does | Invoke |
+| --- | --- | --- |
+| `import-company-kgraph` | Extracts an evidence-backed graph from local Git checkouts into a reviewable proposal. See [Import company knowledge graph]({{ site.baseurl }}{% link skills/import-company-kgraph.md %}) | `/import-company-kgraph` with `--manifest`, `--paths`, `--graph-root`, `--output` |
+| `sync-kgraph-docs` | Inspects graph changes under `.robos/`, decides what documentation they affect and updates it | No command file |
+| `schema-lookup` | Queries Schema.org and OSLC vocabularies, shows type lineage, validates JSON-LD and synthesizes graph shapes | No command file. `node plugins/robos/skills/schema-lookup/scripts/schema-query.js <search\|type\|property\|validate\|synthesize> ...` |
+| `generate-app-docs` | Writes a Markdown architecture page and a Mermaid flow diagram for an app from its graph node, and links them to the documentation package | No command file |
+| `generate-app-elearning` | Builds an eLearning course for an app from its graph node, scaffolds a standalone Electron player and records completion certificates | No command file |
 
-### `import-company-kgraph` (Alias: `/kgraph-import`)
-- **Slash Command**: `/import-company-kgraph`, `/kgraph-import`
-- **Companion CLI**: `node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js`
-- **Arguments**:
-  - `--source <path|url|s3-uri>`: Ingestion endpoint (HTTP REST API, AWS S3 bucket URI, local filesystem directory or manifest, or list of Git URLs).
-  - `--source-type <auto|http|file|s3|git-list>`: Explicit ingestion parser.
-  - `--company-name <name>`: Organization title (e.g. `"Acme Global"`).
-  - `--company-slug <slug>`: Organization slug (e.g. `"acme"`).
-  - `--output <file>`: Destination JSON-LD file path.
-  - `--import-to-robos`: Merge generated nodes directly into `.robos/kgraphs/` package stores and register projects in `~/.config/robos/git-projects.json`.
-  - `--dry-run`: Preview discovered entities without writing files.
-- **Description**: Automatically ingests enterprise repositories from HTTP REST endpoints (Backstage `catalog-entities.json`), AWS S3 buckets, local directories, or Git URLs. Classifies components into multi-app archetypes, synthesizes OpenAPI 3.1 contracts, and generates valid OSLC JSON-LD package files.
-- **Documentation**: [Company KGraph Import Skill Guide]({{ site.baseurl }}{% link skills/import-company-kgraph.md %})
+## Project plans
 
-### `sync-kgraph-docs` (Alias: `/kgraph-sync-docs`)
-- **Slash Command**: `/sync-kgraph-docs`, `/kgraph-sync-docs`
-- **Description**: Monitors additions, updates, or removals in **Modular KGraph Packages** and `.robos/packages.yaml`. Automatically discerns impacts across system documentation, architecture diagrams, and API guides, and synchronizes documentation in lockstep.
+These skills read and write saved project plans in a graph workspace. Set `ROBOS_GRAPH_ROOT` to a directory that contains `.robos`. The view, update and remove skills also expect `ROBOS_SOURCE_ROOT`, the absolute path of the RobOS checkout whose CLI you run. The plan format and the headless commands are in `packages/task-planner/PROJECT-PLANS.md`. The matching UI is the Task Planner app; see its [app page]({{ '/apps/task-planner/' | relative_url }}).
 
----
+| Skill | What it does | Invoke |
+| --- | --- | --- |
+| `plan-before-implement` | Creates a reviewed project plan with linked GitHub features and tasks before implementation, and views saved plans by task number or URL | `/plan-before-implement` |
+| `view-task-plan` | Shows or lists saved plans by task number, GitHub issue URL or plan id, without changing data | `/view-task-plan` |
+| `update-project-plan` | Edits, refreshes or restores a saved plan through a reviewed graph proposal, keeping work-item identities | `/update-project-plan` |
+| `remove-project-plan` | Removes one saved plan through a reviewed proposal. The project, tasks, relationships and GitHub issues remain | `/remove-project-plan` |
 
-## 2. Application Scaffolding & Component Lifecycle
+## Testing, demos and proof of work
 
-### `create-robos-app`
-- **Slash Command**: `/create-robos-app <App Name>`
-- **Description**: Scaffolds a complete RobOS Electron desktop application. Automatically creates `packages/<app-id>/` (main.js, preload.js, renderer UI, package.json), Lucide vector SVG icon, DOM snapshot debugging port (`19100+`), `.desktop` launcher, and registers across all 10 system manifests.
+| Skill | What it does | Invoke |
+| --- | --- | --- |
+| `e2e-driven-dev` | Develops a task test-first: writes a text-narrated E2E test, records video with on-screen narration and WebVTT captions, runs on localhost in Docker or Xvfb | `/e2e-driven-dev <app-id> "<task>"`, or `/do-e2e-driven-dev` |
+| `record-demo` | Records a text-narrated walkthrough video of an app on localhost with on-screen narration and WebVTT captions | `/record-demo <app-id> [what to demonstrate]` |
+| `test-container` | Runs RobOS apps in a Docker container with Xvfb and a compositor; runs `./scripts/e2e-container.sh` | `/test-container [--build] [-i] [test file]` |
+| `app-snapshot` | Captures a DOM snapshot (text, JSON or screenshot) from a running app, without VNC | `/app-snapshot <app-id> [--json\|--screenshot]` |
 
-### `create-feature-spec`
-- **Slash Command**: `/create-feature-spec <Idea or Prompt>`
-- **Description**: Converts raw feature ideas or prompt notes into a structured engineering specification under `docs/ideas/specs/` with user stories, C4 component diagrams, BDD Gherkin scenarios, and implementation plans.
+For how recorded demos are used in review, see [Walkthroughs and proof of work]({{ site.baseurl }}{% link walkthroughs.md %}).
 
-### `create-test`
-- **Slash Command**: `/create-test <Component>`
-- **Description**: Generates automated unit and headless GUI integration test files using the native `robos-test` framework.
+## Virtual machine and desktop
 
-### `add-ai-text-area-to-app`
-- **Slash Command**: `/add-ai-text-area-to-app <App ID>`
-- **Description**: Integrates the streaming `<robos-ai-textarea>` web component into any RobOS application, enabling streaming LLM completions and `@`-mention typeahead for files, repos, and shell skills.
+The VM skills drive the QEMU/KVM image built from `infra/desktop/`. They need QEMU and KVM on the host; `install-dev-deps` below installs them.
 
-### `update-app-icon`
-- **Slash Command**: `/update-app-icon <App ID> <SVG Path>`
-- **Description**: Replaces and standardizes an application's Lucide-style vector SVG icon (48×48 cyan `#00bcd4`), syncing across `robos-icons`, `icon-lib`, and desktop launcher shortcuts.
+| Skill | What it does | Invoke |
+| --- | --- | --- |
+| `build-vm` | Builds the RobOS QEMU/KVM disk image and the cloud-init provisioning ISO from scratch | `/build-vm` |
+| `start-vm` | Starts the VM; GTK display by default | `/start-vm [--firstboot] [--vnc] [--spice] [--headless]` |
+| `stop-vm` | Shuts the VM down gracefully, or terminates it | `/stop-vm` |
+| `vm-status` | Reports whether the VM runs, SSH reachability, memory, disk, display and installed apps | `/vm-status` |
+| `vm-ssh` | Runs a shell command in the VM over SSH on port 2224 | `/vm-ssh <command>` |
+| `deploy-to-vm` | Copies one or more packages from the repository to the running VM | `/deploy-to-vm <package...>` or `/deploy-to-vm all` |
+| `add-install-step` | Adds a step to the cloud-init provisioning sequence and the ASCII boot splash | `/add-install-step <step name>` |
+| `restart-taskbar` | Restarts the `robos-desktop` taskbar and the `desktop-manager` service in the VM or locally | `/restart-taskbar` |
 
-### `rename-robos-app`
-- **Slash Command**: `/rename-robos-app <Old ID> <New ID>`
-- **Description**: Safely renames an existing Electron app, updating folder paths, process registries, icons, desktop files, and documentation references without breaking links.
+## Agents, review and integrations
 
-### `remove-robos-app`
-- **Slash Command**: `/remove-robos-app <App ID>`
-- **Description**: Decommissions an Electron application and deregisters it cleanly across all 10 registration manifests.
+| Skill | What it does | Invoke |
+| --- | --- | --- |
+| `pr-review-theater` | Inspects and orchestrates PR Review Theater: training knowledge checks, living documentation, in-app diffs and IDE branch comparisons. See [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}) | No command file |
+| `manage-agent-personas` | Adds, customizes and inspects developer agent personas and their execution modes | `/manage-agent-personas <list\|show\|add\|customize\|reset> ...` |
+| `ide-java` | Automates Java work in IntelliJ IDEA over the port 63343 bridge: run and debug configurations with secrets from `pass`, breakpoints, paused-thread inspection | `/ide-java <subcommand> ...` |
+| `robos-voice` | Speaks to the user through RobOS Voice, checks voice status and sends queries to the desktop assistant | `/robos-voice <speak\|stop\|voices\|assistant\|background\|status> ...` |
+| `robos-github-auth` | Rules for code that touches GitHub issues or PRs: use the RobOS task servers and the selected Git client account, never a bare `gh` call | `/robos-github-auth` |
 
----
+## Setup and housekeeping
 
-## 3. Automated E2E Testing & Proof-of-Work
-
-### `e2e-driven-dev` / `do-e2e-driven-dev`
-- **Slash Command**: `/e2e-driven-dev`, `/do-e2e-driven-dev`
-- **Description**: Guides end-to-end task development verified by text-narrated automated tests and synchronized video recordings.
-
-### `record-demo`
-- **Slash Command**: `/record-demo <Demo Script>`
-- **Description**: Executes headless walkthroughs on Xvfb, synthesizing offline neural voiceovers via Piper TTS and generating 1080p MP4/WebM videos with WebVTT captions archived to `~/.robos/development/walkthroughs/`.
-
-### `test-container`
-- **Slash Command**: `/test-container [options]`
-- **Description**: Runs headless containerized E2E test suites inside Docker with Xvfb virtual framebuffers and Picom compositors (`./scripts/e2e-container.sh`).
-
-### `app-snapshot`
-- **Slash Command**: `/app-snapshot <App ID> [--text|--json|--screenshot]`
-- **Companion CLI**: `node packages/robos-lib/snapshot-cli.js <App ID> [options]`
-- **Description**: Queries live DOM text, JSON element trees, or captures PNG screenshots from running Electron applications via snapshot debug ports (19100–19121).
-
----
-
-## 4. Virtual Machine & OS Lifecycle
-
-### `build-vm`
-- **Slash Command**: `/build-vm`
-- **Companion Script**: `infra/desktop/build.sh`
-- **Description**: Builds the Ubuntu 26.04 LTS QEMU/KVM virtual disk image and cloud-init stateless provisioning ISO.
-
-### `start-vm` / `stop-vm`
-- **Slash Command**: `/start-vm [gtk|vnc|spice|headless]`, `/stop-vm`
-- **Companion Scripts**: `infra/desktop/run.sh`, `infra/desktop/clean.sh`
-- **Description**: Boots or shuts down the local developer virtual machine with full host CPU allocation, 16 GB RAM, forwarded SSH (port 2224), and VNC (port 5910).
-
-### `vm-status` & `vm-ssh`
-- **Slash Command**: `/vm-status`, `/vm-ssh "<Command>"`
-- **Description**: Inspects hypervisor status, SSH connectivity, and executes remote commands inside the VM.
-
-### `deploy-to-vm`
-- **Slash Command**: `/deploy-to-vm [all|<Package>]`
-- **Description**: Transfers local package builds via SCP to `/usr/local/share/robos/`, resets read-executable permissions (`chmod -R a+rX`), and rebuilds node modules.
-
-### `add-install-step`
-- **Slash Command**: `/add-install-step`
-- **Description**: Extends cloud-init first-boot provisioning steps in `infra/desktop/cloud-init.yaml` and updates the ASCII terminal welcome splash screen.
-
-### `restart-taskbar`
-- **Slash Command**: `/restart-taskbar`
-- **Description**: Signals the RobOS Desktop Manager socket (`/run/user/<uid>/robos-dm.sock`) to reload the GNOME panel and taskbar dock without closing active application windows.
-
----
-
-## 5. System Diagnostics & Marketplace Management
-
-### `install-dev-deps`
-- **Slash Command**: `/install-dev-deps`
-- **Companion Script**: `node scripts/install-dev-deps.js`
-- **Description**: Audits host development machine dependencies (QEMU, KVM, Node.js 20+, Electron, JDK 17+, Piper TTS, FFmpeg) and prompts or installs missing packages.
-
-### `read-error-logs`
-- **Slash Command**: `/read-error-logs [n]`
-- **Description**: Inspects centralized Pino JSON application logs and Electron crash streams for rapid root-cause diagnosis.
-
-### `report-issue`
-- **Slash Command**: `/report-issue <Title>`
-- **Description**: Formats user reports or crash findings into standardized issue specifications under `docs/issues/reported/`.
-
-### `manage-robos-skill`
-- **Slash Command**: `/manage-robos-skill <add|update|remove|list>`
-- **Description**: Manages skills in the plugin marketplace, scaffolding files and automatically syncing across `.claude/commands/`, `.agents/skills/`, `.antigravity/commands/`, `.gemini/commands/`, and `.github/skills/`.
+| Skill | What it does | Invoke |
+| --- | --- | --- |
+| `install-dev-deps` | Audits and installs host dependencies: QEMU/KVM, Electron libraries, Java and Gradle, Node.js packages. Runs `scripts/install-dev-deps.sh` | `/install-dev-deps [--check] [--sys] [--npm]` |
+| `read-error-logs` | Reads RobOS application failure logs, uncaught exceptions and Electron error-dialog events | `/read-error-logs [--app <app-id>] [--limit <n>]` |
+| `report-issue` | Turns a raw bug report into an issue spec in `docs/issues/reported/` | `/report-issue <bug text or inbox file>` |
+| `manage-robos-skill` | Adds, updates, removes or lists skills and syncs them across agent directories | `/manage-robos-skill <add\|update\|remove\|list> ...` |

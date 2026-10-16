@@ -1,149 +1,79 @@
 ---
 title: Certificate Of Completion
 layout: default
-parent: eLearning Curriculums (robos.learning)
-grand_parent: KGraph Schemas
+parent: "eLearning Curriculums (robos.learning)"
+grand_parent: Schemas
 nav_order: 2
 permalink: /schemas/learning/certificate-of-completion.html
 ---
 
-# Schema: `robos:CertificateOfCompletion`
+# robos:CertificateOfCompletion
 {: .no_toc }
 
-Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:CertificateOfCompletion` in the `learning` package store.
-{: .fs-6 .fw-300 }
+Validation shape for `robos:CertificateOfCompletion` nodes in the `learning` package group.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
+## Details
 
-1. TOC
-{:toc}
+| | |
+|---|---|
+| Class | `robos:CertificateOfCompletion` |
+| Shape id | `urn:robos:shape:CertificateOfCompletionShape` |
+| Package | [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) (`learning`) |
+| Classification | Learning & assessment |
+| Schema.org type | [`schema:EducationalOccupationalCredential`](https://schema.org/EducationalOccupationalCredential) |
 
----
+## Properties
 
-## Specification Metadata
+Count is the minimum and maximum number of values (`*` means no maximum). The validator enforces both. The type column is documentation only; the validator does not check types.
 
-- **RDF / OWL Class**: `robos:CertificateOfCompletion`
-- **Aliases / Target Classes**: `robos:CertificateOfCompletion`
-- **SHACL Shape ID**: `urn:robos:shape:CertificateOfCompletionShape`
-- **Governing Package**: [eLearning Curriculums (robos.learning)]({{ '/schemas/learning.html' | relative_url }}) (`learning`)
-- **Namespace**: `robos.learning`
-- **Schema.org Classification**: [https://schema.org/EducationalOccupationalCredential](https://schema.org/EducationalOccupationalCredential)
-- **Domain De Facto Standard**: [https://schema.org/EducationalOccupationalCredential](https://schema.org/EducationalOccupationalCredential)
-- **Upstream Schema Basis (Refers From)**: [https://schema.org/EducationalOccupationalCredential](https://schema.org/EducationalOccupationalCredential)
+| Property | Count | Type | Rule or description |
+|---|---|---|---|
+| `dcterms:title` | `1..*` | `xsd:string` | Certificate of Completion must have a title. |
+| `robos:recipientUser` | `1..*` | - | Certificate of Completion must specify the recipient user. |
+| `robos:forCourse` | `1..*` | - | Certificate of Completion must link to the completed course (robos:forCourse). |
+| `robos:issueDate` | `1..*` | - | Certificate of Completion must declare an issuance date. |
+| `robos:scorePercentage` | `1..*` | - | Certificate of Completion must record the final score percentage. |
 
----
+## Example node
 
-## Upstream Schema Basis (Refers From) & Global Standards Provenance
+This node comes from `.robos/kgraphs/learning/package.jsonld` in the RobOS repository. That graph holds sample data for a fictional company, so treat the values as illustrations.
 
-This RobOS schema is modeled after and directly aligns with two levels of global standards:
-- **Universal Schema.org Class**: [https://schema.org/EducationalOccupationalCredential](https://schema.org/EducationalOccupationalCredential) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://schema.org/EducationalOccupationalCredential](https://schema.org/EducationalOccupationalCredential) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
-- **Canonical Reference**: [https://schema.org/EducationalOccupationalCredential](https://schema.org/EducationalOccupationalCredential)
-- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:CertificateOfCompletion`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
-
----
-
-## Entity Relationship & Schema Context
-
-<div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">Certificate Of Completion</span>
-    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:CertificateOfCompletion</span>
-  </div>
-  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:CertificateOfCompletionShape</code> within the <strong>eLearning Curriculums (robos.learning)</strong> (<code>robos.learning</code>) package store.</p>
-  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>dcterms:title</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:recipientUser</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:forCourse</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:issueDate</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:scorePercentage</code></span>
-  </div>
-</div>
-
----
-
-**RobOS classification:** Learning & assessment. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
-
-## Property Constraints & SHACL Rules
-
-| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
-|---|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Certificate of Completion must have a title. |
-| **`robos:recipientUser`** | recipientUser | `1..*` | `xsd:string` | Learning & assessment | Certificate of Completion must specify the recipient user. |
-| **`robos:forCourse`** | forCourse | `1..*` | `xsd:string` | Learning & assessment | Certificate of Completion must link to the completed course (robos:forCourse). |
-| **`robos:issueDate`** | issueDate | `1..*` | `xsd:string` | Learning & assessment | Certificate of Completion must declare an issuance date. |
-| **`robos:scorePercentage`** | scorePercentage | `1..*` | `xsd:string` | Learning & assessment | Certificate of Completion must record the final score percentage. |
-
----
-
-## Canonical OSLC JSON-LD Example
-
+{% raw %}
 ```json
 {
-  "@id": "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuwt58",
+  "@id": "urn:robos:credential:certificate:course-test-architect-mucvneo3",
   "@type": [
     "robos:CertificateOfCompletion",
     "schema:EducationalOccupationalCredential",
     "oslc:Resource"
   ],
-  "dcterms:title": "Certificate of Completion: Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Masterclass",
-  "dcterms:description": "Official RobOS verified certificate of completion awarded to dungeon-master-robos for mastering Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Masterclass.",
-  "robos:recipientUser": "dungeon-master-robos",
-  "robos:forCourse": "urn:robos:elearning:course:robos-crpg",
-  "robos:forApplication": "urn:robos:crpg:game:realm-of-heroes",
-  "robos:issueDate": "2026-09-22T15:56:33.549Z",
-  "robos:scorePercentage": 100,
-  "robos:verificationHash": "ROBOS-CERT-2F4E9C089628E93B",
+  "dcterms:title": "Certificate of Completion: RobOS Platform Masterclass",
+  "dcterms:description": "Official RobOS verified certificate of completion awarded to test-architect for mastering RobOS Platform Masterclass.",
+  "robos:recipientUser": "test-architect",
+  "robos:forCourse": "urn:robos:elearning:app:course",
+  "robos:forApplication": "urn:robos:service:forms-api",
+  "robos:issueDate": "2026-09-22T16:17:14.501Z",
+  "robos:scorePercentage": 98,
+  "robos:verificationHash": "ROBOS-CERT-34FC6D395C5F1599",
   "robos:skillsAcquired": [
-    "Realm of Heroes: A Night Without Memory Architecture & Systems",
-    "BDD Test Scenarios & Contract Verification",
-    "Knowledge Graph State Synchronization"
+    "Forms API Architecture",
+    "OpenAPI 3.1 & Pact Contract Verification",
+    "Strict Red-Green-Refactor E2E Verification"
   ],
   "robos:status": "issued",
   "robos:package": "learning",
   "robos:namespace": "robos.learning"
 }
 ```
+{% endraw %}
 
----
+## Validate the example
 
-## Programmatic SHACL Validation
+Save the example as `node.json` in the repository root, then run:
 
-```javascript
-const { SHACLValidator } = require('/usr/local/share/robos/robos-graph/lib/shacl-validator');
-const { OSLCGraphParser, OSLC_CONTEXT } = require('/usr/local/share/robos/robos-graph/lib/oslc-parser');
-
-const validator = new SHACLValidator();
-const result = validator.validateGraph(new OSLCGraphParser({
-  "@context": OSLC_CONTEXT,
-  "robos:nodes": [
-    {
-        "@id": "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuwt58",
-        "@type": [
-            "robos:CertificateOfCompletion",
-            "schema:EducationalOccupationalCredential",
-            "oslc:Resource"
-        ],
-        "dcterms:title": "Certificate of Completion: Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Masterclass",
-        "dcterms:description": "Official RobOS verified certificate of completion awarded to dungeon-master-robos for mastering Tactical cRPG Architecture: D&D 5e SRD & Godot 4 Infinity Engine Masterclass.",
-        "robos:recipientUser": "dungeon-master-robos",
-        "robos:forCourse": "urn:robos:elearning:course:robos-crpg",
-        "robos:forApplication": "urn:robos:crpg:game:realm-of-heroes",
-        "robos:issueDate": "2026-09-22T15:56:33.549Z",
-        "robos:scorePercentage": 100,
-        "robos:verificationHash": "ROBOS-CERT-2F4E9C089628E93B",
-        "robos:skillsAcquired": [
-            "Realm of Heroes: A Night Without Memory Architecture & Systems",
-            "BDD Test Scenarios & Contract Verification",
-            "Knowledge Graph State Synchronization"
-        ],
-        "robos:status": "issued",
-        "robos:package": "learning",
-        "robos:namespace": "robos.learning"
-    }
-  ],
-}));
-
-console.log("Conforms:", result.conforms); // Expected: true
+```bash
+node -e "const { SHACLValidator } = require('./packages/robos-graph/lib/shacl-validator'); console.log(new SHACLValidator().validate([require('./node.json')]).conforms)"
 ```
+
+The command prints `true` when the node meets every rule for its types.

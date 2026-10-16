@@ -1,82 +1,44 @@
 ---
 title: Desktop App
 layout: default
-parent: Applications (robos.apps)
-grand_parent: KGraph Schemas
+parent: "Applications (robos.apps)"
+grand_parent: Schemas
 nav_order: 1
 permalink: /schemas/applications/desktop-app.html
 ---
 
-# Schema: `robos:DesktopApp`
+# robos:DesktopApp
 {: .no_toc }
 
-Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:DesktopApp` in the `applications` package store.
-{: .fs-6 .fw-300 }
+Validation shape for `robos:DesktopApp` nodes in the `applications` package group.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
+## Details
 
-1. TOC
-{:toc}
+| | |
+|---|---|
+| Class | `robos:DesktopApp` |
+| Shape id | `urn:robos:shape:DesktopAppShape` |
+| Package | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
+| Classification | Applications & entry points |
+| Schema.org type | [`schema:SoftwareApplication`](https://schema.org/SoftwareApplication) |
 
----
+## Properties
 
-## Specification Metadata
+Count is the minimum and maximum number of values (`*` means no maximum). The validator enforces both. The type column is documentation only; the validator does not check types.
 
-- **RDF / OWL Class**: `robos:DesktopApp`
-- **Aliases / Target Classes**: `robos:DesktopApp`
-- **SHACL Shape ID**: `urn:robos:shape:DesktopAppShape`
-- **Governing Package**: [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`)
-- **Namespace**: `robos.apps`
-- **Schema.org Classification**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
-- **Domain De Facto Standard**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
-- **Upstream Schema Basis (Refers From)**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
+| Property | Count | Type | Rule or description |
+|---|---|---|---|
+| `dcterms:title` | `1..*` | `xsd:string` | Desktop App must have a title. |
+| `robos:repository` | `1..*` | `xsd:string` | Desktop App must define a repository. |
+| `robos:technology` | `1..*` | `xsd:string` | Desktop App must specify technology stack. |
+| `robos:desktopFramework` | `1..*` | `xsd:string` | Desktop App must declare desktop framework (Electron, Tauri, Qt, GTK). |
 
----
+## Example node
 
-## Upstream Schema Basis (Refers From) & Global Standards Provenance
+This node comes from `.robos/kgraphs/applications/package.jsonld` in the RobOS repository. That graph holds sample data for a fictional company, so treat the values as illustrations.
 
-This RobOS schema is modeled after and directly aligns with two levels of global standards:
-- **Universal Schema.org Class**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
-- **Canonical Reference**: [https://schema.org/SoftwareApplication](https://schema.org/SoftwareApplication)
-- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:DesktopApp`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
-
----
-
-## Entity Relationship & Schema Context
-
-<div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">Desktop App</span>
-    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:DesktopApp</span>
-  </div>
-  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:DesktopAppShape</code> within the <strong>Applications (robos.apps)</strong> (<code>robos.apps</code>) package store.</p>
-  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>dcterms:title</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:repository</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:technology</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:desktopFramework</code></span>
-  </div>
-</div>
-
----
-
-**RobOS classification:** Applications & entry points. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
-
-## Property Constraints & SHACL Rules
-
-| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
-|---|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | Desktop App must have a title. |
-| **`robos:repository`** | Git Repository | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems, Source control & artifacts | Desktop App must define a repository. |
-| **`robos:technology`** | Technology Stack | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems | Desktop App must specify technology stack. |
-| **`robos:desktopFramework`** | Desktop Framework | `1..*` | `xsd:string` | Applications & entry points | Desktop App must declare desktop framework (Electron, Tauri, Qt, GTK). |
-
----
-
-## Canonical OSLC JSON-LD Example
-
+{% raw %}
 ```json
 {
   "@id": "urn:robos:app:voice-prompt",
@@ -87,7 +49,7 @@ This RobOS schema is modeled after and directly aligns with two levels of global
     "c4:Container"
   ],
   "dcterms:title": "Voice Prompt Agent",
-  "dcterms:description": "Offline neural speech-to-text dictation agent with real-time streaming, desktop active window context capture, and REST API.",
+  "dcterms:description": "Offline neural speech-to-text dictation agent with real-time streaming, desktop active window context capture, REST API, and tabbed microphone and RobOS Commands settings with a live microphone test waveform and text-file chat history export.",
   "robos:package": "applications",
   "robos:namespace": "robos.applications",
   "robos:repository": "github.com/nddipiazza/robos",
@@ -98,50 +60,20 @@ This RobOS schema is modeled after and directly aligns with two levels of global
   "robos:globalHotkey": "Super+V",
   "robos:ownerTeam": "urn:robos:team:core-platform",
   "robos:hasProject": "urn:robos:project:enterprise-core",
+  "robos:hasVoiceCommand": "urn:robos:voice-command:voice-prompt",
   "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
   "robos:domainStandard": "https://schema.org/SoftwareApplication",
   "robos:refersFrom": "https://schema.org/SoftwareApplication"
 }
 ```
+{% endraw %}
 
----
+## Validate the example
 
-## Programmatic SHACL Validation
+Save the example as `node.json` in the repository root, then run:
 
-```javascript
-const { SHACLValidator } = require('/usr/local/share/robos/robos-graph/lib/shacl-validator');
-const { OSLCGraphParser, OSLC_CONTEXT } = require('/usr/local/share/robos/robos-graph/lib/oslc-parser');
-
-const validator = new SHACLValidator();
-const result = validator.validateGraph(new OSLCGraphParser({
-  "@context": OSLC_CONTEXT,
-  "robos:nodes": [
-    {
-        "@id": "urn:robos:app:voice-prompt",
-        "@type": [
-            "robos:DesktopApp",
-            "schema:SoftwareApplication",
-            "oslc_am:Resource",
-            "c4:Container"
-        ],
-        "dcterms:title": "Voice Prompt Agent",
-        "dcterms:description": "Offline neural speech-to-text dictation agent with real-time streaming, desktop active window context capture, and REST API.",
-        "robos:package": "applications",
-        "robos:namespace": "robos.applications",
-        "robos:repository": "github.com/nddipiazza/robos",
-        "robos:technology": "Electron / Vanilla JS / Whisper ONNX",
-        "robos:desktopFramework": "Electron",
-        "robos:localPath": "/home/ndipiazza/source/robos/packages/voice-prompt",
-        "robos:apiPort": 19188,
-        "robos:globalHotkey": "Super+V",
-        "robos:ownerTeam": "urn:robos:team:core-platform",
-        "robos:hasProject": "urn:robos:project:enterprise-core",
-        "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-        "robos:domainStandard": "https://schema.org/SoftwareApplication",
-        "robos:refersFrom": "https://schema.org/SoftwareApplication"
-    }
-  ],
-}));
-
-console.log("Conforms:", result.conforms); // Expected: true
+```bash
+node -e "const { SHACLValidator } = require('./packages/robos-graph/lib/shacl-validator'); console.log(new SHACLValidator().validate([require('./node.json')]).conforms)"
 ```
+
+The command prints `true` when the node meets every rule for its types.

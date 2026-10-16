@@ -8,11 +8,12 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
+const { SkillIntentResolver, defaultIntentResolver } = require('./skill-intent-resolver');
+
 function cleanTranscript(text) {
   if (!text) return '';
   let cleaned = text
     .replace(/\[(?:BLANK_AUDIO|silence|music|applause|laughter|noise|sigh|groan|cough|sound)\]/gi, '')
-    .replace(/\((?:music|applause|laughter|noise|sigh|groan|cough)\)/gi, '')
     .replace(/\[.*?\]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
@@ -20,6 +21,15 @@ function cleanTranscript(text) {
   // Detect and collapse Whisper autoregressive repetition loops
   cleaned = cleaned.replace(/(\b[\w'-]+\b)(?:\s+\1\b){2,}/gi, '$1');
   cleaned = cleaned.replace(/(\b[\w'-]+\s+[\w'-]+\b)(?:\s+\1\b){2,}/gi, '$1');
+
+  // Phonetic correction for common Whisper acoustic confusions in commands:
+  // e.g. "to broom 19" -> "to room 19", "in broom 1" -> "in room 1", "broom 19" -> "room 19"
+  cleaned = cleaned
+    .replace(/\b(?:to|in|into|at|inside)\s+(?:b|g)rooms?\b/gi, (match) => {
+      const prep = match.split(/\s+/)[0];
+      return `${prep} room`;
+    })
+    .replace(/\b(?:b|g)rooms?\s+(#?\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|[a-z0-9\-_]+)\b/gi, 'room $1');
 
   return cleaned.trim();
 }
@@ -133,6 +143,11 @@ class STTEngine extends EventEmitter {
     this.silenceStartOffset = 0;
     this.vadSampleOffset = 0;
 
+    // AI Skill Intent Resolver & Bubble Tracking
+    this.intentResolver = options.intentResolver || defaultIntentResolver;
+    this.currentContext = options.context || {};
+    this.bubbleSeq = 0;
+
     // Pre-warm Whisper worker in background
     if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
       setTimeout(() => {
@@ -142,6 +157,41 @@ class STTEngine extends EventEmitter {
         } catch {}
       }, 100);
     }
+  }
+
+  setContext(context = {}) {
+    this.currentContext = { ...this.currentContext, ...context };
+  }
+
+  getContext() {
+    return { ...this.currentContext };
+  }
+
+  createBubblePayload(text, isFinal = false, extra = {}) {
+    const cleanText = (text || '').trim();
+    const now = Date.now();
+    const d = new Date(now);
+    const timeFormatted = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const bubbleId = extra.bubbleId || `bubble-${now}-${++this.bubbleSeq}`;
+
+    const analysis = this.intentResolver
+      ? this.intentResolver.resolveLikelySkills(cleanText, this.currentContext || {})
+      : { isAmbient: false, ambientReason: null, likelySkills: [] };
+
+    return {
+      type: 'bubble',
+      bubbleId,
+      timestamp: timeFormatted,
+      time: timeFormatted,
+      isoTime: d.toISOString(),
+      msg: cleanText,
+      text: cleanText,
+      isFinal: Boolean(isFinal),
+      isAmbient: Boolean(analysis.isAmbient),
+      ambientReason: analysis.ambientReason || null,
+      likelySkills: analysis.likelySkills || [],
+      ...extra
+    };
   }
 
   isBackgroundMode() {
@@ -345,6 +395,7 @@ class STTEngine extends EventEmitter {
    * Activate listening / dictating (starts hardware recording)
    */
   async activate(options = {}) {
+    this.currentContext = { ...this.currentContext, ...options };
     if (options.backgroundMode !== undefined || options.background !== undefined) {
       this.backgroundMode = Boolean(options.backgroundMode || options.background);
     }
@@ -440,13 +491,16 @@ class STTEngine extends EventEmitter {
                 const text = cleanTranscript(res?.text || '');
                 if (text && this.active) {
                   const now = Date.now();
+                  const bubble = this.createBubblePayload(text, true);
                   const payload = {
                     text,
                     isFinal: true,
                     elapsedMs: now - (this.recordingStartTime || now),
                     backgroundMode: this.backgroundMode,
+                    bubble,
                   };
                   this.emit('stream-text', payload);
+                  this.emit('bubble', bubble);
                 }
               }
             } finally {
@@ -470,13 +524,16 @@ class STTEngine extends EventEmitter {
               if (text && this.active && text !== this.lastInterimText) {
                 this.lastInterimText = text;
                 const now = Date.now();
+                const bubble = this.createBubblePayload(text, false);
                 const payload = {
                   text,
                   isFinal: false,
                   elapsedMs: now - (this.recordingStartTime || now),
                   backgroundMode: this.backgroundMode,
+                  bubble,
                 };
                 this.emit('interim-text', payload);
+                this.emit('bubble', bubble);
               }
             } finally {
               this.isTranscribing = false;
@@ -560,7 +617,9 @@ class STTEngine extends EventEmitter {
         text = this.lastInterimText.trim();
         this.lastInterimText = '';
         if (text) {
-          this.emit('stream-text', { text, isFinal: true, durationMs, backgroundMode: wasBackground });
+          const bubble = this.createBubblePayload(text, true);
+          this.emit('stream-text', { text, isFinal: true, durationMs, backgroundMode: wasBackground, bubble });
+          this.emit('bubble', bubble);
         }
       }
       if (recFile && fs.existsSync(recFile)) {
@@ -591,8 +650,10 @@ class STTEngine extends EventEmitter {
         text = this.lastInterimText;
       }
       if (text) {
-        this.emit('interim-text', { text, isFinal: true, durationMs, backgroundMode: wasBackground });
-        this.emit('stream-text', { text, isFinal: true, durationMs, backgroundMode: wasBackground });
+        const bubble = this.createBubblePayload(text, true);
+        this.emit('interim-text', { text, isFinal: true, durationMs, backgroundMode: wasBackground, bubble });
+        this.emit('stream-text', { text, isFinal: true, durationMs, backgroundMode: wasBackground, bubble });
+        this.emit('bubble', bubble);
       }
     }
 
@@ -604,17 +665,20 @@ class STTEngine extends EventEmitter {
     return { ok: true, active: false, durationMs, text, backgroundMode: wasBackground };
   }
 
-  simulateStreamChunk(text, isFinal = false) {
+  simulateStreamChunk(text, isFinal = false, extra = {}) {
+    const bubble = this.createBubblePayload(text, isFinal, extra);
     const data = {
-      text,
+      text: bubble.msg,
       isFinal,
       elapsedMs: 1000,
       backgroundMode: this.backgroundMode,
-      timestamp: new Date().toISOString(),
+      timestamp: bubble.isoTime,
+      bubble,
     };
     this.emit('interim-text', data);
     this.emit('stream-text', data);
-    return data;
+    this.emit('bubble', bubble);
+    return bubble;
   }
 
   /**

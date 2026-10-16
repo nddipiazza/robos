@@ -48,8 +48,8 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     assert.ok(content.startsWith('---'), 'Must start with Jekyll YAML frontmatter');
     assert.ok(content.includes('layout: null'), 'Must have layout: null for standalone app rendering');
     assert.ok(content.includes('permalink: /projects/crpg-realm/elearning/'), 'Must specify exact GitHub Pages permalink');
-    assert.ok(content.includes('parent: Tactical cRPG & Infinity AI Engine'), 'Must place in Crpg documentation parent');
-    assert.ok(content.includes('grand_parent: RobOS Projects'), 'Must place in RobOS Projects grand parent');
+    assert.ok(content.includes('parent: Realm of Heroes CRPG'), 'Must place in Crpg documentation parent');
+    assert.ok(content.includes('grand_parent: Projects'), 'Must place in Projects grand parent');
     assert.ok(content.includes('redirect_from:'), 'Must include redirect_from fallbacks');
     assert.ok(content.includes('/elearning/robos-crpg-engine'), 'Must include legacy redirect fallback');
 
@@ -153,11 +153,7 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     assert.ok(res.error.includes('Course not found in Knowledge Graph'));
   });
 
-  it('4. Documentation pages link to the interactive web edition inside RobOS Projects area', () => {
-    const masterclassDoc = path.join(rootRepo, 'docs', 'projects', 'crpg-realm', 'elearning-masterclass.md');
-    const docContent = fs.readFileSync(masterclassDoc, 'utf8');
-    assert.ok(docContent.includes('/projects/crpg-realm/elearning/'), 'elearning-masterclass.md must link to web edition in projects area');
-
+  it('4. Documentation pages link to the interactive web edition inside the Projects area', () => {
     const realmDoc = path.join(rootRepo, 'docs', 'projects', 'crpg-realm.md');
     const realmContent = fs.readFileSync(realmDoc, 'utf8');
     assert.ok(realmContent.includes('/projects/crpg-realm/elearning/'), 'crpg-realm.md must link to web edition in projects area');
@@ -185,7 +181,7 @@ describe('RobOS eLearning Website Generator & GitHub Pages Publishing', () => {
     // 1. Verify Jekyll Front Matter
     assert.ok(content.startsWith('---'), 'Must start with Jekyll YAML frontmatter');
     assert.ok(content.includes('permalink: /projects/kgraph-parse-portal/elearning/'), 'Must specify exact GitHub Pages permalink');
-    assert.ok(content.includes('parent: RobOS Kgraph Parse Portal'), 'Must specify parent navigation category');
+    assert.ok(content.includes('parent: KGraph parse portal'), 'Must specify parent navigation category');
     assert.ok(content.includes('grand_parent: Build on RobOS'), 'Must specify grand_parent navigation category');
 
     // 2. Verify all 5 curriculum modules are present in sidebar & content

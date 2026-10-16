@@ -1,139 +1,109 @@
 ---
 title: PC Game
 layout: default
-parent: Applications (robos.apps)
-grand_parent: KGraph Schemas
+parent: "Applications (robos.apps)"
+grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/applications/pc-game.html
 ---
 
-# Schema: `robos:PCGame`
+# robos:PCGame
 {: .no_toc }
 
-Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:PCGame` in the `applications` package store.
-{: .fs-6 .fw-300 }
+Validation shape for `robos:PCGame` nodes in the `applications` package group.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
+## Details
 
-1. TOC
-{:toc}
+| | |
+|---|---|
+| Class | `robos:PCGame` |
+| Shape id | `urn:robos:shape:PCGameShape` |
+| Package | [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`) |
+| Classification | Applications & entry points |
+| Schema.org type | [`schema:VideoGame`](https://schema.org/VideoGame) |
 
----
+## Properties
 
-## Specification Metadata
+Count is the minimum and maximum number of values (`*` means no maximum). The validator enforces both. The type column is documentation only; the validator does not check types.
 
-- **RDF / OWL Class**: `robos:PCGame`
-- **Aliases / Target Classes**: `robos:PCGame`
-- **SHACL Shape ID**: `urn:robos:shape:PCGameShape`
-- **Governing Package**: [Applications (robos.apps)]({{ '/schemas/applications.html' | relative_url }}) (`applications`)
-- **Namespace**: `robos.apps`
-- **Schema.org Classification**: [https://schema.org/VideoGame](https://schema.org/VideoGame)
-- **Domain De Facto Standard**: [https://schema.org/VideoGame](https://schema.org/VideoGame)
-- **Upstream Schema Basis (Refers From)**: [https://schema.org/VideoGame](https://schema.org/VideoGame)
+| Property | Count | Type | Rule or description |
+|---|---|---|---|
+| `dcterms:title` | `1..*` | `xsd:string` | PC Game must have a title. |
+| `robos:repository` | `1..*` | `xsd:string` | PC Game must define a repository. |
+| `robos:technology` | `1..*` | `xsd:string` | PC Game must specify technology stack. |
+| `robos:gameEngine` | `1..*` | `xsd:string` | PC Game must specify game engine (Unreal Engine, Unity, Godot, Bevy). |
+| `robos:targetPlatform` | `1..*` | `xsd:string` | PC Game must specify target PC platform(s) (Windows, Linux, macOS). |
 
----
+## Example node
 
-## Upstream Schema Basis (Refers From) & Global Standards Provenance
+This node comes from `.robos/kgraphs/crpg/package.jsonld` in the RobOS repository. That graph holds sample data for a fictional company, so treat the values as illustrations.
 
-This RobOS schema is modeled after and directly aligns with two levels of global standards:
-- **Universal Schema.org Class**: [https://schema.org/VideoGame](https://schema.org/VideoGame) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://schema.org/VideoGame](https://schema.org/VideoGame) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
-- **Canonical Reference**: [https://schema.org/VideoGame](https://schema.org/VideoGame)
-- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:PCGame`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
-
----
-
-## Entity Relationship & Schema Context
-
-<div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">PC Game</span>
-    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:PCGame</span>
-  </div>
-  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:PCGameShape</code> within the <strong>Applications (robos.apps)</strong> (<code>robos.apps</code>) package store.</p>
-  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>dcterms:title</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:repository</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:technology</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:gameEngine</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:targetPlatform</code></span>
-  </div>
-</div>
-
----
-
-**RobOS classification:** Applications & entry points. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
-
-## Property Constraints & SHACL Rules
-
-| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
-|---|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | PC Game must have a title. |
-| **`robos:repository`** | Git Repository | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems, Source control & artifacts | PC Game must define a repository. |
-| **`robos:technology`** | Technology Stack | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Libraries & build systems | PC Game must specify technology stack. |
-| **`robos:gameEngine`** | Game Engine | `1..*` | `xsd:string` | Applications & entry points | PC Game must specify game engine (Unreal Engine, Unity, Godot, Bevy). |
-| **`robos:targetPlatform`** | Gaming Target Platform | `1..*` | `xsd:string` | Applications & entry points | PC Game must specify target PC platform(s) (Windows, Linux, macOS). |
-
----
-
-## Canonical OSLC JSON-LD Example
-
+{% raw %}
 ```json
 {
-  "@id": "urn:robos:applications:pc-game-sample",
+  "@id": "urn:robos:crpg:game:realm-of-heroes",
   "@type": [
+    "oslc_am:Resource",
+    "robos:CRPGGame",
     "robos:PCGame",
     "schema:VideoGame",
-    "oslc:Resource"
+    "robos:Game"
   ],
-  "dcterms:title": "Sample PC Game",
-  "dcterms:description": "Canonical reference instance for robos:PCGame.",
-  "robos:package": "applications",
-  "robos:namespace": "robos.apps",
-  "robos:repository": "github.com/acme/sample-repo",
-  "robos:technology": "Node.js / TypeScript",
-  "robos:gameEngine": "Unreal Engine 5",
-  "robos:targetPlatform": "Windows / Linux",
-  "robos:schemaOrgType": "https://schema.org/VideoGame",
-  "robos:domainStandard": "https://schema.org/VideoGame",
-  "robos:refersFrom": "https://schema.org/VideoGame"
+  "dcterms:title": "Realm of Heroes: A Night Without Memory",
+  "robos:repository": "github.com/nddipiazza/realm-of-heroes",
+  "robos:technology": "Godot 4 / GDScript",
+  "robos:gameEngine": "Godot 4",
+  "robos:targetPlatform": "Linux, Windows, macOS",
+  "robos:ruleset": "dnd5e",
+  "robos:combatModel": "real-time-with-pause",
+  "robos:startingZone": "urn:robos:crpg:zone:homestead",
+  "robos:assetPackage": "flareteam/flare-game",
+  "robos:engineArchitecture": "urn:robos:infinity:engine:gemrb-infinity",
+  "robos:maxPartySize": 4,
+  "robos:hasELearning": [
+    "urn:robos:elearning:course:robos-crpg",
+    "urn:robos:elearning:course:crpg-game-builder"
+  ],
+  "robos:package": "crpg",
+  "robos:namespace": "robos.crpg",
+  "robos:hasCertificate": [
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuwt58",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxcai",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuxgib",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucuzxah",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvgud2",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucvo90i",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw058n",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucw0qkp",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucxg34v",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-mucxmod6",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkm21t",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkmgt4",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkn2tn",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhknorg",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkny96",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkurva",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkvjue",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkvs2f",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muhkxn9z",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muicj0mi",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muicp0oa",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muicpmge",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muimlank",
+    "urn:robos:credential:certificate:realm-of-heroes-dungeon-master-robos-muimmiax"
+  ],
+  "robos:gameType": "crpg"
 }
 ```
+{% endraw %}
 
----
+## Validate the example
 
-## Programmatic SHACL Validation
+Save the example as `node.json` in the repository root, then run:
 
-```javascript
-const { SHACLValidator } = require('/usr/local/share/robos/robos-graph/lib/shacl-validator');
-const { OSLCGraphParser, OSLC_CONTEXT } = require('/usr/local/share/robos/robos-graph/lib/oslc-parser');
-
-const validator = new SHACLValidator();
-const result = validator.validateGraph(new OSLCGraphParser({
-  "@context": OSLC_CONTEXT,
-  "robos:nodes": [
-    {
-        "@id": "urn:robos:applications:pc-game-sample",
-        "@type": [
-            "robos:PCGame",
-            "schema:VideoGame",
-            "oslc:Resource"
-        ],
-        "dcterms:title": "Sample PC Game",
-        "dcterms:description": "Canonical reference instance for robos:PCGame.",
-        "robos:package": "applications",
-        "robos:namespace": "robos.apps",
-        "robos:repository": "github.com/acme/sample-repo",
-        "robos:technology": "Node.js / TypeScript",
-        "robos:gameEngine": "Unreal Engine 5",
-        "robos:targetPlatform": "Windows / Linux",
-        "robos:schemaOrgType": "https://schema.org/VideoGame",
-        "robos:domainStandard": "https://schema.org/VideoGame",
-        "robos:refersFrom": "https://schema.org/VideoGame"
-    }
-  ],
-}));
-
-console.log("Conforms:", result.conforms); // Expected: true
+```bash
+node -e "const { SHACLValidator } = require('./packages/robos-graph/lib/shacl-validator'); console.log(new SHACLValidator().validate([require('./node.json')]).conforms)"
 ```
+
+The command prints `true` when the node meets every rule for its types.

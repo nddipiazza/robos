@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Home Speaker
+Comment=Smart speaker intercom, voice note sender, neural TTS announcer, and soundboard controller
+Exec=/usr/bin/electron /usr/local/share/robos/home-speaker/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/home-speaker/icon.svg
+Terminal=false
+Categories=Utility;AudioVideo;Audio;
+X-RobOS-Category=Tools
+StartupWMClass=robos-home-speaker

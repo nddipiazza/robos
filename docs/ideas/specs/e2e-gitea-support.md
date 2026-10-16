@@ -1,74 +1,37 @@
 ---
+title: "Proposal: Gitea forge for E2E tests"
 layout: default
 nav_exclude: true
 ---
 
-# Feature Spec: Hermetic Gitea Git Forge for E2E Test Suite
+# Proposal: Gitea forge for E2E tests
+{: .no_toc }
 
-- **Status**: Draft
-- **Created Date**: 2026-09-03
-- **Target Component**: Test Harness / Container E2E (`packages/robos-test`, `scripts/e2e-container.sh`)
-- **Author/Idea Source**: User Idea
+A local Git forge inside the E2E container, so apps that talk to a Git host can be tested without GitHub or network access.
+{: .fs-6 }
 
-## 1. Overview & Vision
-Currently, RobOS end-to-end (E2E) testing harnesses (`packages/robos-test`, `./scripts/e2e-container.sh`) test UI scenarios using mock data, local Git repositories, or simulated states. However, apps such as `git-projects`, `issue-manager`, `git-login-manager`, and `group-manager` interact with remote Git platforms (repositories, clone/push/pull operations, issues, pull requests, organization memberships, and OAuth workflows). Testing these against live GitHub APIs during automated or sandboxed CI/E2E runs introduces flakiness, network dependencies, API rate limiting, and security risks.
+{: .important }
+Proposal, not built. Nothing on this page exists in the repository yet except where "What exists today" says so.
 
-This feature introduces a lightweight, hermetic, container-native **Gitea Git Forge Service** integrated directly into the RobOS E2E test framework. Gitea will be spun up on-demand during test execution (or pre-bundled in the E2E Docker container), pre-seeded with test organizations, repositories, branches, issues, and users, allowing RobOS apps and AI agents to execute genuine Git remote operations, issue management, PR lifecycles, and webhook flows in a 100% offline, reproducible environment.
+## Proposal
 
-## 2. User Stories & Use Cases
-- **As an** engineer working on RobOS apps (`git-projects`, `issue-manager`),
-- **I want** E2E test suites to run against a fully functional, local Git forge (Gitea),
-- **So that** I can test end-to-end Git cloning, commits, branch switching, pushing, issue tracker sync, and PR creation without relying on live GitHub network access or hitting API rate limits.
+Start a Gitea server (SQLite database, data under `/tmp`) when an E2E run needs one, seed it, and point the apps at it.
 
-- **As a** CI/CD maintainer,
-- **I want** hermetic, fast-booting test fixtures with pre-seeded users and repositories,
-- **So that** E2E tests run consistently in isolated Docker containers with zero external credentials.
+- Add a Gitea binary or sidecar to the E2E image built from `infra/docker`.
+- Add helpers to `packages/robos-test` to start, seed and reset the forge. The original spec named `startTestForge()`, `stopTestForge()`, `seedForgeRepo()` and `resetForgeState()`.
+- Seed users, an organization, repositories with branches, issues and pull requests.
+- Let Git Projects, Issue Manager and Git Login Manager read a forge base URL from the environment. The original spec named `ROBOS_GIT_FORGE_URL` and `ROBOS_GITHUB_API_BASE`.
 
-## 3. Key Capabilities & Scope
-- [ ] **Containerized Gitea Test Service**:
-  - Bundle a lightweight Gitea binary or container sidecar into the `robos-e2e` test environment.
-  - Rapid zero-config ephemeral startup (SQLite backend, sub-second boot time).
-- [ ] **Automated Seed Fixtures & Test Data Generator**:
-  - Seed admin user, standard test user accounts (`robos-tester`, `agent-reviewer`), and test organizations (`test-org`).
-  - Pre-populate sample repositories (with branches, commit histories, READMEs, and `.idea` run configurations).
-  - Seed issues with labels, milestones, assignees, and pull requests to validate `issue-manager` Kanban boards.
-- [ ] **Forge API Compatibility Layer / GitHub API Mirroring**:
-  - Expose standard Git HTTP/SSH clone URLs (`http://localhost:3000/test-org/sample-repo.git`).
-  - Utilize Gitea's GitHub-compatible REST APIs for issue listing, comments, PR creation, and user management.
-- [ ] **E2E Test Harness Extensions (`packages/robos-test`)**:
-  - Provide test utilities: `startTestForge()`, `stopTestForge()`, `seedForgeRepo(repoDef)`, `resetForgeState()`.
-  - Configurable scenarios in `robos-test` to point RobOS apps to the local Gitea instance via environment variables (`ROBOS_GIT_FORGE_URL`, `ROBOS_GITHUB_API_BASE`).
-- [ ] **AI Agent & Dev-Setup E2E Testing**:
-  - Validate AI agent skills (e.g. `e2e-driven-dev`, repository clone & dev-setup provisioners) against genuine remote git endpoints in headless test runs.
+The goal is to exercise clone, push, issue and pull request flows against a real forge in `./scripts/e2e-container.sh` runs with no external network.
 
-### Out of Scope
-- Replacing GitHub in production RobOS user environments (Gitea is utilized primarily for local/E2E/isolated testing).
-- Hosting high-availability production Gitea clusters.
+## What exists today
 
-## 4. Architectural & System Integration
-- **Impacted Packages/Apps**:
-  - `packages/robos-test` (harness utilities and fixture seeders)
-  - `scripts/e2e-container.sh` & `infra/docker/Dockerfile.e2e` (Gitea binary and configuration embedding)
-  - `packages/git-projects`, `packages/issue-manager`, `packages/git-login-manager` (support configurable forge endpoint base URLs)
-- **IPC / Endpoints Required**:
-  - Local HTTP server on `http://127.0.0.1:3000` (or dynamic test port)
-  - Gitea REST API: `/api/v1/repos/...`, `/api/v1/issues/...`, `/api/v1/user/...`
-- **Data & Configuration Storage**:
-  - Ephemeral SQLite database in `/tmp/robos-test-gitea/` (cleared between test runs)
-  - Pre-configured `app.ini` optimized for instant startup and disabled telemetry/background cron jobs.
+- `./scripts/e2e-container.sh` runs the tests in Docker through `infra/docker/run.sh`. The image files in `infra/docker` do not mention Gitea.
+- `packages/robos-test/fixtures` holds `sample-robos-root` and `standalone-ide-window` only. No code in `packages` reads `ROBOS_GIT_FORGE_URL` or `ROBOS_GITHUB_API_BASE`.
+- Issue Manager runs the `gh` CLI (`packages/issue-manager/main.js`).
+- [Task Servers]({{ '/apps/task-servers/' | relative_url }}) offers a "Gitea (Local OSS Forge)" entry, but `createAdapter` in `packages/robos-task-client/index.js` only supports `jira` and `github`.
+- [Gitea Browser]({{ '/apps/gitea-browser/' | relative_url }}) (`packages/gitea-browser`) is a static page that looks like a Gitea issue list at `http://localhost:3000`. It makes no network calls and is not a forge.
 
-## 5. Proposed Implementation Plan
-1. **Phase 1: Gitea Container & Fixture Integration**
-   - Add Gitea binary or runner script to `packages/robos-test/fixtures/gitea/`.
-   - Implement CLI helper in `robos-test` to launch, initialize admin user/token, and seed test repos.
-2. **Phase 2: App Configurable Base URLs**
-   - Ensure `git-login-manager`, `git-projects`, and `issue-manager` support custom Git and API hostnames (`ROBOS_GIT_FORGE_URL`).
-3. **Phase 3: E2E Test Suite Suites Migration**
-   - Write comprehensive E2E tests for repository cloning, branch pushing, issue board management, and multi-user interactions using the Gitea forge.
-   - Integrate into `scripts/e2e-container.sh`.
+## Source
 
-## 6. Acceptance Criteria
-- [ ] `./scripts/e2e-container.sh` can launch a local Gitea instance in under 3 seconds without external internet access.
-- [ ] Test harness can programmatically seed repositories, pull requests, and issues before test execution.
-- [ ] `packages/git-projects` and `packages/issue-manager` can clone, push, fetch, and manipulate issues against the local Gitea instance in automated tests.
-- [ ] Full E2E test runs cleanly in isolated sandbox environments with 0 network egress.
+Raw note: [`ideas/inbox/e2e-gitea-support.txt`](https://github.com/nddipiazza/robos/blob/main/docs/ideas/inbox/e2e-gitea-support.txt). The earlier long spec is in the git history of this file.

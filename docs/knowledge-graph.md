@@ -1,718 +1,236 @@
 ---
-title: SDLC Knowledge Graph
+title: Knowledge graph
 layout: default
 parent: Build on RobOS
 nav_order: 1
 ---
 
-# The RobOS SDLC Knowledge Graph
+# Knowledge graph
 {: .no_toc }
 
-The master architectural blueprint, modular packaging system, and dual-state semantic engine powering AI-first software delivery in RobOS.
-{: .fs-6 .fw-300 }
+The knowledge graph is a set of JSON-LD files that describe a software organization: services, applications, contracts, databases, teams, pipelines and the links between them. This page covers what is in it, where the files live, and how the Knowledge Graph Explorer, the `kgraph` command and MCP tools read and change it.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
-
+<details open markdown="block">
+  <summary>On this page</summary>
+  {: .text-delta }
 1. TOC
 {:toc}
+</details>
 
----
+## What the graph holds
 
-## What is the SDLC Knowledge Graph?
+The graph is a list of nodes. Each node has an `@id` (a URN such as `urn:robos:service:billing-api`), one or more `@type` values, a `dcterms:title` and further properties. A property whose value is another node's `@id` is an edge. There is no separate edge list.
 
-In traditional software development, institutional knowledge about an engineering organization is scattered across dozens of disconnected silos: architecture diagrams in Confluence or Miro, API contracts in SwaggerHub or Postman, team rosters in Workday or Okta, cloud credentials in password managers or local `.env` files, and issue tickets in Jira or GitHub.
-
-When an AI coding agent or new engineer joins the team, they have **zero holistic context**. They cannot know that changing a column in a database migration breaks a downstream analytics job, or that changing an authentication header violates an API contract.
-
-**RobOS solves this through the SDLC Knowledge Graph (KGraph).**
-
-The Knowledge Graph is a live, machine-readable, plain-text semantic graph that models every asset, service, dependency, contract, team, and credential across your entire software delivery lifecycle. Rather than locking this data in a proprietary SaaS database, RobOS stores the graph directly inside your Git repositories using open web standards:
-
-- **OASIS OSLC Core 3.0** (Open Services for Lifecycle Collaboration) for requirements, change requests, and quality assurance.
-- **W3C JSON-LD 1.1** (Linked Data) for cross-repository URI references and semantic triples.
-- **W3C SHACL** (Shapes Constraint Language) for structural schema validation and automated quality gates.
-- **Spotify Backstage & C4 Model** for component registries and software architecture topologies.
-- **UNIX Password Store (`pass`) & GPG** for zero-plaintext secret management.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/kgraph-living-architecture.jpg' | relative_url }}" alt="SDLC Knowledge Graph: Living Architecture Engine" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Living Architecture Engine</strong>: How modular package stores and multi-repo composition power the dual-state engine to deliver instant blast radius analysis, grounded AI coding agents, automated living docs, and verified code ownership. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
----
-
-## 1. Dual-State Architecture (World 1 vs. World 2)
-
-Traditional developer tools only see the files currently sitting on your hard drive. RobOS operates on a **Dual-State Engine** that continuously compares two distinct graph realities:
-
-1. **World 1 (Live Baseline / `main`)**: The production architecture, stable schemas, and deployed microservices currently running in production.
-2. **World 2 (Feature Branch / In-Progress Work)**: The proposed architectural changes, newly synthesized services, modified schemas, and updated endpoints in an active pull request or developer workspace.
-
-When an AI agent or developer makes changes, RobOS calculates the semantic difference between World 1 and World 2 before any code is merged. If a proposed change introduces a breaking schema change or violates an OpenAPI contract, RobOS instantly highlights the affected downstream nodes and prevents regressions.
-
-| Architecture Knowledge Graph Explorer (World 1: Production Baseline) | Dual-State Visual Difference Engine (World 1 vs. World 2 Diff) |
-|:---:|:---:|
-| ![Knowledge Graph Explorer]({{ '/assets/images/screenshots/robos-graph-frame_01.png' | relative_url }}) | ![Dual-State Difference Engine]({{ '/assets/images/screenshots/robos-graph-frame_02.png' | relative_url }}) |
-
----
-
-## 2. Modular Packaging & Standard Namespaces
-
-As organizations scale to hundreds of microservices, storing the entire architecture in a single monolithic file causes merge conflicts and performance degradation. 
-
-RobOS decomposes the Knowledge Graph into **modular, namespaced package stores** under [`.robos/kgraphs/<package-id>/package.jsonld`](https://github.com/nddipiazza/robos/tree/main/.robos/kgraphs) indexed by [`.robos/kgraph.yaml`](https://github.com/nddipiazza/robos/blob/main/.robos/kgraph.yaml). Each package represents a logical domain with independent lifecycle versioning:
-
-| Package ID & Live Source | Namespace Prefix | Purpose & Managed Entities |
-|:---|:---|:---|
-| [**`core-platform`**](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/core-platform/package.jsonld) | `robos.core` | System architecture, C4 container topology, relational and NoSQL databases (`robos:Database`, `robos:NoSQLDatabase`), Kafka message brokers (`robos:MessageBroker`), MCP servers (`robos:MCPServer`), and distributed build systems. |
-| [**`organization`**](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/organization/package.jsonld) | `robos.org` | Team Topologies (`stream-aligned`, `platform`, `enabling`, `complicated-subsystem`), human architects, AI agent personas (`robos:AgentPersona`), Git project organizations (`robos:GitProjectOrganization`), and enterprise directory sync. |
-| [**`services`**](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/services/package.jsonld) | `robos.services` | Backend microservices, OpenAPI 3.1 REST contracts, Protobuf gRPC stubs (`robos:ProtobufContract`), GraphQL schemas (`robos:GraphQLContract`), and BDD verification features. |
-| [**`applications`**](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/applications/package.jsonld) | `robos.apps` | Single-page web apps, desktop apps, mobile apps, PC games, mobile games, and console CLI tools. |
-| [**`devops`**](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/devops/package.jsonld) | `robos.devops` | Kubernetes clusters (`robos:KubernetesCluster`), cloud environments (`robos:Environment`), GitOps deployments (`robos:GitOpsDeployment`), CI/CD pipelines (`robos:CICDPipeline`), container registries, OAuth apps, DNS domains, and secure GPG password store credentials. |
-| [**`learning`**](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/learning/package.jsonld) | `robos.learning` | Interactive developer eLearning courses, hands-on architectural labs, and architectural modules. |
-| [**`documentation`**](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/documentation/package.jsonld) | `robos.docs` | Living documentation pages (`robos:DocumentationPage`), visual flow diagrams (`robos:FlowDiagram`) with dual Mermaid text and AI illustrations, Architecture Decision Records (`robos:ArchitectureDecisionRecord` / `robos:ADR`), interactive guided walkthroughs (`robos:InteractiveWalkthrough`), and verified code snippets (`robos:CodeSnippet`). |
-| [**`testing`**](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/testing/package.jsonld) | `robos.testing` | First-class Gherkin features (`robos:GherkinFeature`), backgrounds (`robos:GherkinBackground`), business rules (`robos:GherkinRule`), scenarios (`robos:Scenario`), outlines (`robos:ScenarioOutline`), examples tables (`robos:ExamplesTable`), step definitions (`robos:StepDefinition`), data tables (`robos:DataTable`), docstrings (`robos:DocString`), test plans (`robos:TestPlan`), test suites (`robos:TestSuite`), execution records (`robos:TestExecutionRecord`), and 16+ major testing frameworks (`robos:TestingLibrary`). |
-
-### Backwards-Compatible Aggregation
-
-While each package is stored in its own isolated file, RobOS automatically maintains an aggregated view in [`.robos/knowledge-graph.jsonld`](https://github.com/nddipiazza/robos/blob/main/.robos/knowledge-graph.jsonld) whenever packages are saved, alongside canonical definitions in [`.robos/ontology.jsonld`](https://github.com/nddipiazza/robos/blob/main/.robos/ontology.jsonld) and team structures in [`.robos/teams.yaml`](https://github.com/nddipiazza/robos/blob/main/.robos/teams.yaml). This ensures existing scripts, Backstage catalog importers, and legacy tools continue to function without changes.
-
-| SDLC Graph Telemetry & Packages Bar | Modular Package Stores (8 Namespaces) |
-|:---:|:---:|
-| ![Stat Bar]({{ '/assets/images/screenshots/multi-pkg-statbar_frame.png' | relative_url }}) | ![Packages Modal]({{ '/assets/images/screenshots/multi-pkg-modal_frame.png' | relative_url }}) |
-
----
-
-## 3. Multi-Repo Composition & Git-Tag Versioning
-
-Modern enterprise architectures rarely reside in a single Git repository. Teams frequently depend on shared domain models, corporate identity policies, and infrastructure contracts maintained in separate repositories.
-
-RobOS provides **first-class multi-repository composition**:
-
-1. **Remote Repository Registry**: Developers and squads can register external GitHub or GitLab repositories directly in the Knowledge Graph repository registry.
-2. **SemVer Git-Tag Pinning**: Every remote dependency is pinned to an immutable semantic version Git tag (e.g. `v1.2.0`, `v2.4.1`).
-3. **Automated Local Caching**: Remote knowledge graph packages are fetched and cached into `~/.robos/cache/kgraphs/<repo-id>@<git-tag>/` with on-demand synchronization.
-4. **Namespace Filtering**: In the `robos-graph` desktop explorer, developers can filter the active view by package namespace (`robos.services`, `robos.apps`, `robos.devops`) to focus exclusively on their team's domain.
-
-| Multi-Repo Registry & Git-Tag Versioning | Package Namespace Filter (`robos.services`) |
-|:---:|:---:|
-| ![Repos Grid]({{ '/assets/images/screenshots/multi-pkg-repos_frame.png' | relative_url }}) | ![Package Filter]({{ '/assets/images/screenshots/multi-pkg-filter_frame.png' | relative_url }}) |
-
----
-
-## 4. DevOps Account Integrations & GPG Password Store (`pass`)
-
-A major engineering challenge is integrating external cloud infrastructure and CI/CD tools without leaking sensitive credentials into version control. 
-
-RobOS includes an interactive **DevOps Integration Hub** covering **major categories and providers**:
-
-- **Source Control**: GitHub, GitLab, Bitbucket, Gitea, Azure Repos
-- **Cloud Infrastructure**: AWS, Google Cloud (GCP), Microsoft Azure, Red Hat OpenShift, Cloudflare, DigitalOcean
-- **CI/CD & GitOps**: Jenkins, Buildkite, GitHub Actions, GitLab CI, ArgoCD
-- **Package & Artifact Registries**: JFrog Artifactory, Sonatype Nexus, NPM, Docker Hub, GitHub Packages (GHCR), AWS ECR
-- **Containers & Virtualization**: Docker Engine, Podman, Kubernetes, VMware vSphere, Proxmox
-- **OAuth & Identity**: Okta, Auth0, Keycloak, GitHub OAuth, Microsoft Entra (Azure AD)
-- **Domains & DNS**: GoDaddy, Cloudflare DNS, AWS Route 53, Namecheap
-
-### The Zero-Plaintext Security Standard
-
-RobOS enforces a strict architectural guarantee: **Sensitive tokens, private keys, and passwords NEVER appear in the Knowledge Graph or Git history.**
-
-Instead, RobOS integrates directly with the UNIX standard password store (`pass`):
-
-```
-┌──────────────────────────────────────┐       ┌─────────────────────────────────────────────────────────┐
-│     robos:DevOpsIntegration Node     │       │                robos:PassCredential Node                │
-│ ──────────────────────────────────── │       │ ─────────────────────────────────────────────────────── │
-│ @id: urn:robos:devops:cloud:aws:prod │──────▶│ @id: urn:robos:pass:devops:cloud:aws:prod:secretKey     │
-│ robos:provider: "aws"                │       │ robos:passPath: "devops/cloud/aws/prod/secretAccessKey" │
-│ robos:endpointUrl: "us-east-1"       │       │ robos:managedByPass: true                               │
-└──────────────────────────────────────┘       └────────────────────────────┬────────────────────────────┘
-                                                                            │ (GPG Encrypted on Local Disk)
-                                                                            ▼
-                                               ┌─────────────────────────────────────────────────────────┐
-                                               │ ~/.password-store/devops/cloud/aws/prod/secretAccessKey │
-                                               │ [GPG Encrypted Ciphertext — Zero Plaintext in Git]      │
-                                               └─────────────────────────────────────────────────────────┘
+```json
+{
+  "@id": "urn:robos:service:billing-api",
+  "@type": ["oslc_am:Resource", "robos:Microservice", "schema:SoftwareApplication"],
+  "dcterms:title": "Billing API Service",
+  "robos:package": "services",
+  "robos:repository": "github.com/acme/billing-api",
+  "robos:ownerTeam": "urn:robos:team:order-processing",
+  "robos:usesDatabase": "urn:robos:db:acme-orders-postgres",
+  "robos:publishesTo": "urn:robos:broker:acme-event-kafka",
+  "robos:implementsContract": ["urn:robos:contract:orders-grpc"]
+}
 ```
 
-1. When configuring an integration in the onboarding wizard, fields marked with `🔒 GPG Pass Encrypted` are encrypted using the developer's GPG keyring and written to `~/.password-store/devops/<category>/<provider>/<account-slug>/<key>.gpg`.
-2. The Knowledge Graph creates a first-class `robos:PassCredential` reference node declaring only the safe path `robos:passPath`.
-3. The parent `robos:DevOpsIntegration` node references the credential via `robos:hasCredential`.
-4. **Pre-Flight Connection Probing**: Before saving, RobOS runs a live connection probe (`⚡ Test Connection`) to authenticate credentials against provider endpoints.
+This is an excerpt of a node in `.robos/kgraphs/services/package.jsonld` in the RobOS repository. The graph checked into that repository is mostly sample data for a fictional company called Acme, plus nodes for a few RobOS components.
 
-| DevOps Hub & Active Accounts | Onboarding Wizard (Categories & Providers) |
-|:---:|:---:|
-| ![DevOps Modal]({{ '/assets/images/screenshots/devops-modal-open_frame.png' | relative_url }}) | ![Categories]({{ '/assets/images/screenshots/devops-wizard-categories_frame.png' | relative_url }}) |
+Types come from several vocabularies. The JSON-LD context maps the prefixes `oslc`, `oslc_am`, `oslc_cm`, `oslc_rm` and `oslc_qm` (OSLC), `c4` (C4 model), `schema` (Schema.org), `dcterms`, `pact`, and `robos`, which expands to `https://robos.dev/ns/sdlc#`. Each `robos:` class has a validation shape. See [Schemas]({{ site.baseurl }}{% link schemas.md %}) for the list and the properties each shape checks.
 
-| Dynamic Config Form with GPG Pass Badges | Active Accounts & Pass Credentials View |
-|:---:|:---:|
-| ![Config Form]({{ '/assets/images/screenshots/devops-config-form_frame.png' | relative_url }}) | ![Active Integrations]({{ '/assets/images/screenshots/devops-active-integrations_frame.png' | relative_url }}) |
+Impact analysis follows only some edges. The predicates that count as dependencies are a fixed list in `packages/robos-graph/lib/relationships.js`, for example `robos:dependsOn`, `robos:uses`, `robos:usesDatabase`, `robos:publishesTo` and `robos:implementsContract`. Ownership, containment and provenance predicates such as `robos:ownerTeam` and `robos:inRepository` stay queryable but do not count.
 
----
+## Where it is stored
 
-## 5. High-Density Resource Nodes Explorer & Collapsible Grouping
+The graph is split into packages. A package is one directory under `.robos/kgraphs/` with a `package.jsonld` file. The checked-in `.robos/kgraph.yaml` lists these packages:
 
-As organizations register dozens of microservices, frontends, contracts, and DevOps integrations, the SDLC Resource Nodes panel in the desktop explorer can easily grow to over 100 items. To eliminate vertical clutter and enhance navigation speed, RobOS features a redesigned **high-density collapsible explorer**:
+| Package id | Namespace | Holds |
+|---|---|---|
+| `core-platform` | `robos.platform` | Databases, message brokers, search indexes, MCP servers, build systems, technology and protocol definitions, source artifacts |
+| `organization` | `robos.org` | Teams, developers, companies, Git organizations, agent personas |
+| `services` | `robos.services` | Microservices, contracts, API endpoints |
+| `applications` | `robos.apps` | Front-end, desktop and console apps, voice commands |
+| `devops` | `robos.devops` | Environments, Kubernetes clusters, remote-execution clusters, GitOps deployments, CI pipelines, DevOps integrations |
+| `learning` | `robos.learning` | eLearning courses, completion certificates, agent skills |
+| `documentation` | `robos.docs` | Documentation pages, decision records, flow diagrams, walkthroughs, code snippets |
+| `testing` | `robos.testing` | Gherkin features, scenarios, test plans and suites, testing libraries |
+| `game`, `crpg`, `tabletop-game` | `robos.game`, `robos.crpg`, `robos.tabletop` | Game rules and content for the cRPG and tabletop games |
+| `infinity-engine` | `robos.infinity` | Architecture notes on the Infinity Engine (GemRB) |
 
-- **Collapsible Package Accordions**: Nodes are grouped by package domain (`services`, `applications`, `devops`, `core-platform`, `organization`, `learning`) by default, complete with chevrons, namespace indicators (`robos.services`), and real-time count badges.
-- **Dynamic Category Grouping Mode**: With a single click (`🏷️ Type`), developers can re-group the entire hierarchy into semantic categories: Microservices & Containers, Front End Applications, Desktop Apps, API Contracts, BDD Features, DevOps Integrations, and Pass Credentials.
-- **Single-Row Horizontal Filter Chip Track**: Rather than wrapping 16 filter pills across multiple rows and consuming vertical height, filters are consolidated into a smooth, single-row horizontally scrollable chip track (`overflow-x: auto`), freeing up over 100px of vertical workspace.
-- **High-Density Node Cards**: Each node item features a category-coded left accent border (`var(--accent)` for microservices, green for BDD, purple for frontends, amber for credentials), clear typography, repository subtext, and compact metadata badges.
-- **Real-Time Search & Reset**: Instant filtering across titles, URIs, packages, and repositories. Matching groups automatically expand while non-matching groups hide, and an integrated `×` button resets search in 1 click.
+The first eight are the standard packages that every graph workspace gets. The other four are specific to this repository.
 
-| Package Grouping Mode (`robos.services`) | Category Grouping Mode (Microservices & Contracts) |
-|:---:|:---:|
-| ![Package Grouping]({{ '/assets/images/screenshots/nodes-panel-package-group.png' | relative_url }}) | ![Category Grouping]({{ '/assets/images/screenshots/nodes-panel-category-group.png' | relative_url }}) |
+Next to the packages, `.robos/` holds these files:
 
-| Instant Search & Matching Group Expansion | Single-Row Horizontal Filter Chip Track |
-|:---:|:---:|
-| ![Instant Search Filtered]({{ '/assets/images/screenshots/nodes-panel-search-filtered.png' | relative_url }}) | ![Horizontal Filter Chips]({{ '/assets/images/screenshots/nodes-panel-horizontal-chips.png' | relative_url }}) |
+| Path | Contents |
+|---|---|
+| `kgraph.yaml` | Catalog with the `packages` list. RobOS updates the list when it writes a workspace. It does not read the `repositories` or `dependencies` entries. |
+| `knowledge-graph.jsonld` | All packages combined in one file, rewritten when packages are saved. It exists for tools that read a single file. |
+| `ontology.jsonld` | Classes and properties with their Schema.org parents and shape ids. |
+| `teams.yaml`, `packages.yaml`, `documentation.yaml`, `elearning.yaml` | YAML catalogs kept beside the graph. |
 
----
+### Which graph a tool opens
 
-## 6. Blast Radius Tracing & SHACL Quality Gates
+| Setting | Location | Behavior |
+|---|---|---|
+| None | `~/.robos` | If the directory has no graph, RobOS writes a built-in sample graph (the fictional "Acme Enterprise Global SDLC Universe") there on first use. |
+| `ROBOS_GRAPH_ROOT=<dir>` or `--graph-root <dir>` | `<dir>/.robos` | Workspace mode. The graph starts empty, has no sample data, and every change goes through a proposal and an apply step. |
 
-When an engineer or AI agent updates a service interface, RobOS uses W3C SHACL shape validation and semantic graph traversal to calculate the **blast radius** of the change:
+The environment variable is read by `SDLCKnowledgeGraphStore`, so every app that loads the store follows it. In workspace mode, Data Sources, Kube Studio and Remote Execution Studio show read-only views of what the graph declares. The rules for workspaces are in [`WORKSPACES.md`](https://github.com/nddipiazza/robos/blob/main/packages/robos-graph/WORKSPACES.md).
 
-- **AST & Contract Mutation Detection**: Identifies whether added or modified properties break consumer expectations.
-- **Microservice Dependency Graph**: Traverses upstream and downstream HTTP, gRPC, and Kafka connections to list every impacted component.
-- **Automated Living Documentation Sync**: Whenever nodes in the Knowledge Graph change, RobOS alerts AI agents to discern documentation impacts and automatically update project plans, OpenAPI manifests, and markdown walkthroughs.
+Apps that use the default graph read and write it through `SDLCKnowledgeGraphStore`. For example, DB Manager creates database nodes, Kube Studio creates Kubernetes cluster nodes and MCP Manager creates MCP server nodes. Git Projects imports its repository list into the graph each time it saves that list.
 
-| Blast Radius Tracing & Impact Analysis | Polyglot Service Architecture Map |
-|:---:|:---:|
-| ![Blast Radius]({{ '/assets/images/screenshots/topology-db-inspector_blast_radius_frame.png' | relative_url }}) | ![Polyglot Architecture]({{ '/assets/images/screenshots/topology-db-c4_polyglot_frame.png' | relative_url }}) |
+## Read the graph
 
----
+### With the kgraph command
 
-## 7. Importing Company Knowledge Graph Entries with AI Agent (`import-company-kgraph`)
+Run the CLI from a RobOS checkout. `packages/robos-graph/package.json` also declares it as the `kgraph` binary.
 
-When migrating an existing company, organization, or division into RobOS, institutional catalogs are frequently stored in corporate developer portals (Spotify Backstage, internal REST APIs), centralized **AWS S3** bucket inventories, or local filesystem clones.
-
-RobOS equips autonomous AI agents with the **`import-company-kgraph`** skill to discover, analyze, and convert any source into standard, validated OSLC JSON-LD Knowledge Graph entries:
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/import-company-kgraph-pipeline.jpg' | relative_url }}" alt="Enterprise Knowledge Graph Ingestion Pipeline" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Enterprise Knowledge Graph Ingestion Pipeline</strong>: How import-company-kgraph ingests HTTP, S3, FileSystem, and Git forge inventories into validated OSLC JSON-LD and C4 architecture nodes. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-### Ingestion CLI Commands
-AI agents or developers can execute the companion engine directly:
 ```bash
-# Ingest from an AWS S3 bucket inventory
-node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
-  --source s3://acme-cloud-governance/sdlc-catalog/enterprise-repos.json \
-  --company-name "Acme Global" \
-  --company-slug "acme" \
-  --import-to-robos
-
-# Ingest from an internal HTTP REST API endpoint / Backstage catalog
-node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
-  --source https://developer.internal.acme.com/api/catalog.json \
-  --company-name "Acme Global" \
-  --output ./acme-kgraph.jsonld
-
-# Ingest from local filesystem repository folder
-node plugins/robos/skills/import-company-kgraph/scripts/import-company-kgraph.js \
-  --source /home/developer/source/repos \
-  --company-name "Acme Global" \
-  --import-to-robos
+node packages/robos-graph/bin/kgraph-cli.js <command> [options]
 ```
 
-### Automatic Classification Across All Multi-App Archetypes
-The engine inspects build manifests (`package.json`, `pom.xml`, `go.mod`, `Cargo.toml`, etc.) and repository names, classifying components into:
-- **`robos:Microservice`** — Backend web services with auto-synthesized OpenAPI 3.1 YAML contracts.
-- **`robos:FrontEndApp`** — Web SPAs and SSR portals (React, Next.js, Vue, Svelte).
-- **`robos:DesktopApp`** — Workstation desktop apps (Electron, Tauri).
-- **`robos:PCGame` / `robos:MobileGame`** — Desktop and mobile video games (Unreal, Unity, Godot).
-- **`robos:ConsoleApp`** — Command-line tools (Cobra, Clap, Commander).
-- **`robos:DataPipeline`** — Stream/ETL jobs (Kafka Streams, Spark, Celery).
-- **`robos:Library`** — Reusable SDKs and shared packages.
+| Command | What it does |
+|---|---|
+| `search <query>` | Text search. Options: `--type`, `--package`, `--team`, `--json`. |
+| `get <node-id>` | Show one node with its incoming and outgoing references. |
+| `query` | Filter with `--type` and `--package`, list `--depends-on <id>`, or find a path with `--path-from` and `--path-to`. |
+| `impact <node-id>` | List dependents and dependencies. `--depth` defaults to 3. |
+| `validate [package-id]` | Run the shape checks. Exits non-zero when a node fails. |
+| `export` | Write `--format jsonld`, `ttl` or `nt`, optionally for one `--package`. |
+| `visualize [id-or-package]` | Print Mermaid text. `--direction TD` or `LR`. |
+| `insert`, `update`, `delete` | Change nodes in the default graph. `insert` validates first unless you pass `--no-validate`. `delete --cascade` also removes references to the node. |
 
----
+Add `--graph-root <dir>` to any command to use a workspace instead of `~/.robos`.
 
-## 8. Git Project Organizations & Organization-Wide Agent Rules
+### With the Explorer
 
-In enterprise environments and open-source ecosystems, software projects do not exist in isolation. Hundreds of repositories are governed by organizational policies, common licensing requirements, compliance standards, and architectural conventions.
+The Knowledge Graph Explorer is the Electron app in `packages/robos-graph`. From a checkout:
 
-RobOS establishes **`robos:GitProjectOrganization`** (alias **`robos:GitOrganization`**) as a first-class schema object in the `organization` package store (`robos.org`). 
-
-### Dual-State Metadata & Policy Inheritance
-
-A Git Project Organization captures both external forge metadata and living internal policies:
-
-1. **Forge Metadata**: Tracks public or enterprise forge state: handle/slug (`robos:orgName`), forge type (`robos:forgeType` e.g., GitHub, GitLab, Bitbucket), URL, avatar, member count, repository count, and member repository lists (`robos:hasRepository`).
-2. **Documentation Context (`robos:documentation`)**: Preserves canonical documentation hubs (`docsUrl`), documentation paths (`docsPaths`), corporate/foundation licensing (`license`), and high-level architectural guidelines (`architectureGuidelines`).
-3. **Organization-Wide Agent Rules (`robos:agentRules`)**: Declares standard rules, constraints, and severity levels (e.g., license header requirements, consensus tracing, dependency hygiene) enforced across all child repositories.
-
-<div style="margin: 2rem 0; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; background: #0b101b; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
-  <img src="{{ '/assets/images/agent-context-hierarchy.jpg' | relative_url }}" alt="Git Organization Policy and Agent Rules Inheritance" class="robos-zoomable-img" style="display: block; width: 100%; height: auto;" />
-  <div style="padding: 0.75rem 1.25rem; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid #1e293b; background: #0d1424; text-align: center;">
-    <strong>Hierarchical Context & Agent Rules Inheritance</strong>: How Git Project Organizations cascade documentation, licensing guidelines, and agent rules to member repositories without duplicate configuration. <em>(Click image to zoom full screen)</em>
-  </div>
-</div>
-
-### Automatic Rule Inheritance for AI Agents
-
-Whenever an AI agent is dispatched to investigate an issue, craft a feature, or perform code review in any repository, RobOS automatically computes the effective organizational rules via `store.getEffectiveAgentRulesForRepository(repoUrlOrSlug)` and documentation via `store.getEffectiveDocumentationForRepository(repoUrlOrSlug)`.
-
-Rules are dynamically resolved across three pathways:
-- **Repository URL slug match**: Resolving `https://github.com/apache/kafka` -> organization `apache`.
-- **Direct linkage**: Checking if a component declares `robos:inOrganization: urn:robos:git-org:apache`.
-- **Organization repository roster**: Checking if the organization lists the repository in `robos:hasRepository`.
-
-### Eliminating Duplicate Skills Across Repositories
-
-In traditional workflows, maintaining agent rules across 350+ repositories requires copying `.cursorrules`, `CLAUDE.md`, or custom skill manifests into every single repo. With RobOS Knowledge Graph inheritance:
-- **Zero Redundancy**: Rules, guidelines, and skills are declared once at the Global (`robos.core`), Company, Organization (`robos.org`), or Team level.
-- **Immediate Propagation**: Modifying a rule in `urn:robos:git-org:apache` or `urn:robos:team:core-platform` instantly governs every downstream agent session across all repositories without committing any changes to child repos.
-
-### Canonical Example: Apache Software Foundation (`package.jsonld`)
-
-> 🔗 **Live KGraph Entry**: View this organization node live in the project repository: [`.robos/kgraphs/organization/package.jsonld`](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/organization/package.jsonld)
-
-```json
-{
-  "@id": "urn:robos:git-org:apache",
-  "@type": [
-    "robos:GitProjectOrganization",
-    "robos:GitOrganization",
-    "schema:Organization",
-    "oslc:Resource"
-  ],
-  "dcterms:title": "Apache Software Foundation",
-  "dcterms:description": "The Apache Software Foundation provides software for the public good, with over 350 open-source projects and initiatives.",
-  "robos:orgName": "apache",
-  "robos:url": "https://github.com/apache",
-  "robos:forgeType": "github",
-  "robos:avatarUrl": "https://avatars.githubusercontent.com/u/47359?s=200&v=4",
-  "robos:visibility": "public",
-  "robos:isEnterprise": false,
-  "robos:verified": true,
-  "robos:defaultBranch": "main",
-  "robos:memberCount": 1100,
-  "robos:repoCount": 350,
-  "robos:hasRepository": [
-    "github.com/apache/kafka",
-    "github.com/apache/spark",
-    "github.com/apache/lucene",
-    "github.com/apache/airflow",
-    "github.com/apache/arrow"
-  ],
-  "robos:documentation": {
-    "docsUrl": "https://www.apache.org/dev/",
-    "docsPaths": [
-      "docs/index.md",
-      "README.md",
-      "CONTRIBUTING.md",
-      "GOVERNANCE.md",
-      "SECURITY.md"
-    ],
-    "architectureGuidelines": "The Apache Way: vendor-neutral open governance, consensus-driven decisions, public mailing list discussions, and reproducible builds.",
-    "license": "Apache-2.0"
-  },
-  "robos:agentRules": [
-    {
-      "ruleId": "RULE-APACHE-001",
-      "title": "ASF License Header & Notice Verification",
-      "severity": "mandatory",
-      "description": "Every source file must contain the standard Apache 2.0 license header. Agents must NEVER introduce GPL or copyleft dependencies into ASF codebases.",
-      "ruleFile": "AGENTS.md",
-      "enforcement": "pre-commit"
-    },
-    {
-      "ruleId": "RULE-APACHE-002",
-      "title": "Public Discussion & Consensus Tracing",
-      "severity": "mandatory",
-      "description": "All architectural alterations and pull requests generated by agents must cite a valid dev@ mailing list discussion thread or associated Apache Jira/GitHub issue.",
-      "ruleFile": "docs/governance.md",
-      "enforcement": "agent-review"
-    }
-  ],
-  "robos:agentRulesDoc": "AGENTS.md",
-  "robos:package": "organization",
-  "robos:namespace": "robos.org"
-}
-```
-
-### SHACL Shape Conformance
-
-Every `robos:GitProjectOrganization` is validated against `urn:robos:shape:GitProjectOrganizationShape`, ensuring mandatory title, forge URL, organization handle/slug, and forge type are present before mutations are committed to the graph.
-
----
-
-## 9. Foundational SDLC Domains: Data, AI Agents, Cloud GitOps & Contracts
-
-To provide a complete, unbroken digital twin of modern software development, RobOS models the foundational operational domains of software engineering as first-class, SHACL-validated citizens:
-
-### 1. Data Infrastructure & Storage (`core-platform`)
-
-Databases and message brokers are modeled directly within the platform architecture, allowing microservices to declare relational bindings and event-driven topologies:
-
-- **Relational Databases (`robos:Database` / `robos:RelationalDatabase`)**:
-  - Enforced by `urn:robos:shape:DatabaseShape`.
-  - Properties: `dcterms:title`, `robos:engine` (e.g. `postgresql`, `mysql`, `sqlite`, `oracle`), `robos:databaseName`, `robos:host`, `robos:port`, and optional migration framework `robos:schemaMigration` (Flyway, Liquibase, Prisma).
-  - Credentials link to GPG password vault via `robos:hasCredential`.
-- **NoSQL Databases & Cache Stores (`robos:NoSQLDatabase` / `robos:CacheStore`)**:
-  - Enforced by `urn:robos:shape:NoSQLDatabaseShape`.
-  - Properties: `dcterms:title`, `robos:engine` (e.g. `redis`, `mongodb`, `cassandra`, `dynamodb`), `robos:host`, `robos:port`.
-- **Message Brokers & Event Streams (`robos:MessageBroker` / `robos:EventBus`)**:
-  - Enforced by `urn:robos:shape:MessageBrokerShape`.
-  - Properties: `dcterms:title`, `robos:brokerType` (`kafka`, `rabbitmq`, `sqs`, `nats`), `robos:endpoint`, `robos:topics`.
-- **Semantic Edges**:
-  - `robos:usesDatabase`: Declares that a microservice queries and persists to a database.
-  - `robos:publishesTo` / `robos:subscribesTo`: Declares event stream publishers and consumer groups.
-
-> 🔗 **Live KGraph Entry**: View this database node live in the project repository: [`.robos/kgraphs/core-platform/package.jsonld`](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/core-platform/package.jsonld)
-
-```json
-{
-  "@id": "urn:robos:db:acme-orders-postgres",
-  "@type": ["oslc_am:Resource", "robos:Database", "robos:RelationalDatabase"],
-  "dcterms:title": "Acme Orders PostgreSQL Primary Cluster",
-  "robos:engine": "postgresql",
-  "robos:databaseName": "orders_db",
-  "robos:host": "postgres.internal.acme.corp",
-  "robos:port": 5432,
-  "robos:schemaMigration": "flyway",
-  "robos:package": "core-platform"
-}
-```
-
-### 2. AI Agent Personas & Model Context Protocol (`organization` & `core-platform`)
-
-RobOS eliminates generic, ungrounded AI prompts by modeling specialized agent personas and runtime MCP servers in the Knowledge Graph:
-
-- **AI Agent Personas (`robos:AgentPersona` / `robos:AIAgent`)**:
-  - Enforced by `urn:robos:shape:AgentPersonaShape`.
-  - Properties: `dcterms:title`, `robos:role` (e.g. "Autonomous Pull Request Auditor", "Architecture Guardian", "SRE Incident Triager"), `robos:systemPrompt` (directive), `robos:modelPreference` (Claude Sonnet 5, Gemini 2.5 Pro), and squad assignment (`robos:assignedTeam`).
-- **Model Context Protocol Servers (`robos:MCPServer` / `robos:ToolProvider`)**:
-  - Enforced by `urn:robos:shape:MCPServerShape`.
-  - Properties: `dcterms:title`, `robos:transport` (`stdio`, `sse`), `robos:command` or `robos:endpointUrl`, `robos:toolsProvided` (e.g. `["ast_search", "symbol_lookup", "query_nodes"]`).
-- **Semantic Edge**:
-  - `robos:usesMCPServer`: Connects an AI Agent Persona to the specific MCP tool servers it is authorized to call.
-
-> 🔗 **Live KGraph Entry**: View this persona node live in the project repository: [`.robos/kgraphs/organization/package.jsonld`](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/organization/package.jsonld)
-
-```json
-{
-  "@id": "urn:robos:agent:pr-reviewer",
-  "@type": ["oslc:Person", "robos:AgentPersona", "robos:AIAgent"],
-  "dcterms:title": "RobOS Autonomous PR Code Reviewer",
-  "robos:role": "Autonomous Pull Request Auditor",
-  "robos:systemPrompt": "Audit pull request diffs against architectural rules, OpenAPI specs, and SHACL shapes.",
-  "robos:modelPreference": "claude-sonnet-5",
-  "robos:assignedTeam": "urn:robos:team:core-platform",
-  "robos:usesMCPServer": ["urn:robos:mcp:context-engine", "urn:robos:mcp:kgraph-navigator"],
-  "robos:package": "organization"
-}
-```
-
-### 3. Cloud Infrastructure, Kubernetes & GitOps Deployments (`devops`)
-
-Multi-cluster Kubernetes management (integrated with **Kube Studio**) and GitOps sync engines (ArgoCD, Flux):
-
-- **Kubernetes Clusters (`robos:KubernetesCluster` / `robos:K8sCluster`)**:
-  - Enforced by `urn:robos:shape:KubernetesClusterShape`.
-  - Properties: `dcterms:title`, `robos:provider` (`eks`, `gke`, `aks`, `k3s`, `minikube`), `robos:apiEndpoint`, `robos:clusterContext`, `robos:namespaces`, `robos:inEnvironment`.
-- **Environments (`robos:Environment` / `robos:DeploymentEnvironment`)**:
-  - Enforced by `urn:robos:shape:EnvironmentShape`.
-  - Properties: `dcterms:title`, `robos:environmentType` (`production`, `staging`, `development`, `test`), `robos:tier` (`tier-1`, `tier-2`).
-- **GitOps Deployments (`robos:GitOpsDeployment` / `robos:ArgoCDApplication`)**:
-  - Enforced by `urn:robos:shape:GitOpsDeploymentShape`.
-  - Properties: `dcterms:title`, `robos:gitopsEngine` (`argocd`, `flux`), `robos:sourceRepo`, `robos:targetCluster`, `robos:targetNamespace`, `robos:syncPolicy`.
-- **CI/CD Pipelines (`robos:CICDPipeline` / `robos:Pipeline`)**:
-  - Enforced by `urn:robos:shape:CICDPipelineShape`.
-  - Properties: `dcterms:title`, `robos:platform` (`github-actions`, `gitlab-ci`), `robos:workflowFile`, `robos:stages`.
-
-> 🔗 **Live KGraph Entry**: View this Kubernetes cluster node live in the project repository: [`.robos/kgraphs/devops/package.jsonld`](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/devops/package.jsonld)
-
-```json
-{
-  "@id": "urn:robos:cluster:prod-us-east-eks",
-  "@type": ["c4:DeploymentNode", "robos:KubernetesCluster"],
-  "dcterms:title": "Production US-East AWS EKS Cluster",
-  "robos:provider": "eks",
-  "robos:apiEndpoint": "https://k8s-api.us-east-1.eks.amazonaws.com",
-  "robos:clusterContext": "arn:aws:eks:us-east-1:123456789012:cluster/prod-us-east",
-  "robos:inEnvironment": "urn:robos:env:production",
-  "robos:package": "devops"
-}
-```
-
-### 4. Expanded API Contracts: Protobuf gRPC & GraphQL (`services`)
-
-RobOS elevates Protobuf interface definitions and GraphQL SDL schemas alongside OpenAPI 3.1 REST contracts:
-
-- **Protobuf gRPC Contracts (`robos:ProtobufContract` / `robos:GRPCContract`)**:
-  - Enforced by `urn:robos:shape:ProtobufContractShape`.
-  - Properties: `dcterms:title`, `robos:protocol: "grpc-protobuf"`, `robos:specFile` (e.g. `proto/orders/v1/orders.proto`), `robos:packageName`, `robos:rpcMethods`.
-- **GraphQL Schema Contracts (`robos:GraphQLContract` / `robos:GraphQLSchema`)**:
-  - Enforced by `urn:robos:shape:GraphQLContractShape`.
-  - Properties: `dcterms:title`, `robos:protocol: "graphql"`, `robos:specFile` (e.g. `schemas/catalog.graphql`), `robos:schemaType` (`federated-subgraph`, `monolithic`).
-
----
-
-## 10. Video Walkthroughs & Proof of Work
-
-All Knowledge Graph workflows are validated end-to-end with automated, headless 1080p video recordings and simulated DOM interactions:
-
-### SDLC Resource Nodes Redesign Walkthrough
-<video controls preload="metadata" width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
-  <source src="{{ '/assets/videos/kgraph-nodes-redesign-final.webm' | relative_url }}" type="video/webm">
-  Your browser does not support the video tag.
-</video>
-
-### Multi-Package & Multi-Repo Walkthrough
-<video controls preload="metadata" width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
-  <source src="{{ '/assets/videos/multi-package-repo-final.webm' | relative_url }}" type="video/webm">
-  Your browser does not support the video tag.
-</video>
-
-### DevOps Integrations & Password Store Walkthrough
-<video controls preload="metadata" width="100%" style="border-radius: 8px; border: 1px solid #30363d; margin: 16px 0;">
-  <source src="{{ '/assets/videos/devops-integrations-final.webm' | relative_url }}" type="video/webm">
-  Your browser does not support the video tag.
-</video>
-
----
-
-## 10. How to Explore the KGraph Locally
-
-### Launch the Desktop GUI
-Open the RobOS Knowledge Graph Explorer from your terminal or app launcher:
 ```bash
-# In the RobOS desktop shell:
-robos-graph
+cd packages/robos-graph
+npm install
+ROBOS_GRAPH_ROOT=/path/to/project npm start
 ```
 
-### Inspect Packages via Node.js CLI
-```javascript
-const { SDLCKnowledgeGraphStore, KGraphPackageManager, DevOpsIntegrationManager } = require('/usr/local/share/robos/robos-graph');
+Leave out `ROBOS_GRAPH_ROOT` to open the default graph in `~/.robos`.
 
-const store = new SDLCKnowledgeGraphStore();
-console.log('Registered Packages:', store.listPackages().map(p => p.id));
-console.log('Registered Repositories:', store.listRepos().map(r => r.name));
-console.log('Active DevOps Integrations:', store.listDevOpsIntegrations().map(i => i['dcterms:title']));
+The left panel lists nodes. Group them by **Classification**, **Package**, **Type** or **Flat**, search them, and filter by package, type or classification. Selecting a node opens tabs on the right: **Overview**, **Topology**, **Impact**, **Query & Paths**, **JSON-LD**, and, when the node has the data, **Documentation**, **Source Evidence** and type-specific property tabs. The header has **Import & Refine**, **DevOps Integrations**, **Packages & Repos**, **Generate eLearning**, **Semantic Diff** and **Validate SHACL**. See [Inspector schema coverage]({{ '/inspector-schema-coverage.html' | relative_url }}) for which types get property tabs.
+
+### From a script
+
+```js
+const { SDLCKnowledgeGraphStore } = require('./packages/robos-graph/index.js');
+
+const store = new SDLCKnowledgeGraphStore({ graphRoot: '/path/to/project' });
+console.log(store.query({ type: 'robos:Microservice' }).map(n => n['@id']));
+console.log(store.findDependents('urn:robos:service:orders-api', 2));
+console.log(store.validate().conforms);
 ```
 
-### Run Automated End-to-End Walkthrough Demos
-```bash
-# Run the SDLC Resource Nodes Redesign walkthrough
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/kgraph-nodes-redesign-demo.js
+Require `index.js` explicitly. The package's `main` entry is the Electron app.
 
-# Run the Multi-Package & Multi-Repo Knowledge Graph walkthrough
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/multi-package-repo-demo.js
+### From an agent
 
-# Run the DevOps Account Integrations & GPG Password Store walkthrough
-xvfb-run -a -s "-screen 0 1920x1080x24" node packages/robos-test/demos/devops-integrations-demo.js
+Agents reach the graph in two ways.
 
-# Run the automated unit & GUI test suite
-node --test --test-concurrency=1 \
-  packages/robos-test/tests/sdlc-graph/multi-package-repo.test.js \
-  packages/robos-test/tests/sdlc-graph/devops-integrations.test.js \
-  packages/robos-test/tests/sdlc-graph/bulk-repo-import.test.js \
-  packages/robos-test/tests/sdlc-graph/robos-graph.test.js \
-  packages/robos-test/tests/sdlc-graph/elearning-doc-sync.test.js \
-  packages/robos-test/tests/remote-execution/remote-execution-kgraph.test.js \
-  packages/robos-test/tests/remote-execution/smoke.test.js
-```
+The `kgraph-*` skills in `plugins/robos/skills` (`kgraph-search`, `kgraph-query`, `kgraph-insert`, `kgraph-update`, `kgraph-delete`, `kgraph-validate`, `kgraph-diff`, `kgraph-export`, `kgraph-visualize` and `kgraph-impact-analysis`) tell the agent which `kgraph` command to run.
 
----
+The `ekgraph-mcp` package serves the graph over the Model Context Protocol. Its tools depend on how it is started:
 
-## 9. Remote Execution Clusters (REAPI v2) & Monorepo Build Systems
+| Tools | Available when | Notes |
+|---|---|---|
+| `robos_sdlc_inspect`, `robos_sdlc_query` | `ROBOS_GRAPH_ROOT` (an absolute path) or the `graphRoot` option is set | Read-only. Results are capped at 100 nodes per page and 256 KiB. |
+| `robos_sdlc_propose`, `robos_sdlc_apply` | Same | `propose` writes a draft and changes nothing. `apply` commits a draft by id. |
+| `robos_schema_lookup`, `robos_schema_validate`, `robos_schema_synthesize` | Always listed | Look up Schema.org types, validate a JSON-LD payload and synthesize a type from a Schema.org class. They need the Schema Studio registry. |
+| `robos_ekgraph_search`, `_get_node`, `_list_children`, `_get_linked`, `_create_node`, `_update_node` | Always listed | They use a separate older store, `~/.config/robos/ekgraph/nodes.json`, not the JSON-LD graph. With a graph root that store is turned off: reads return nothing and the write tools refuse and point to propose and apply. |
 
-Modern monorepos and polyglot architectures rely on distributed compilation, remote action caching, and test execution engines. Rather than locking RobOS into any single proprietary vendor or hardcoding specific tools, RobOS anchors build cluster management in the open-source **Remote Execution API (REAPI v2)** standard (`build.bazel.remote.execution.v2`), standardized by the Linux Foundation and Bazel community.
+Start the server from code with `createEKGraphMCPServer({ graphRoot, port })` from `packages/ekgraph-mcp/server.js`. With a `port`, it answers JSON-RPC over HTTP at `http://localhost:<port>/mcp`.
 
-### Open-Standard Ontologies & SHACL Constraints
+## Change the graph in a workspace
 
-1. **`robos:RemoteExecutionCluster`** (`devops` package: `robos.devops`):
-   - Captures distributed build execution clusters, content-addressable storage (CAS), action caches, and worker pools.
-   - Strictly enforced by `urn:robos:shape:RemoteExecutionClusterShape`.
-   - **Provider Independence**: Supports **Buildbarn** (`bb-storage`, `bb-scheduler`, `bb-worker`, `bb-runner`, `bb-browser`), **NativeLink** (Rust), **BuildGrid** (Python), and **BuildBuddy** via the `robos:provider` attribute. Switching providers requires zero schema alterations.
+A workspace write is two steps. `propose` computes a candidate graph and a property-level diff. `apply` commits it only if the graph has not changed since. The commands are `init`, `inspect`, `context`, `propose`, `apply` and `recover`.
 
-2. **`robos:BuildSystem`** (`core-platform` package: `robos.platform`):
-   - Captures monorepo and polyglot build tools: **Bazel** (`.bazelrc`), Meta **Buck2** (`.buckconfig`), Apache **Maven** (`pom.xml`), **Gradle** (`build.gradle.kts`), Rust **Cargo** (`Cargo.toml`), **Go Modules** (`go.mod`), **pnpm** (`pnpm-workspace.yaml`), and **CMake** (`CMakeLists.txt`).
-   - Links client repositories to REAPI distributed build clusters via `robos:hasRemoteExecution`.
-   - Formally anchored upstream via `robos:refersFrom: "https://schema.org/SoftwareApplication"`.
-   - Strictly enforced by `urn:robos:shape:BuildSystemShape`.
+1. Create the workspace.
 
-### Upstream Schema Provenance (`robos:refersFrom`)
+   ```bash
+   node packages/robos-graph/bin/kgraph-cli.js init --graph-root /path/to/project --title "Orders system"
+   ```
 
-RobOS establishes complete semantic traceability and provenance for every schema definition. Every SHACL constraint shape and generated node includes an optional canonical reference `robos:refersFrom` (aliased with `rdfs:isDefinedBy` / `rdfs:seeAlso`) pointing to the upstream specification from which the concept originates:
+   This creates `/path/to/project/.robos` with the eight standard packages and an empty graph.
 
-- **W3C & Schema.org**: `https://schema.org/SoftwareApplication`, `https://schema.org/WebApplication`, `https://schema.org/VideoGame`, `https://schema.org/Organization`, `https://schema.org/Person`, `https://schema.org/Dataset`, `https://schema.org/DataCatalog`.
-- **OASIS OSLC (Open Services for Lifecycle Collaboration)**:
-  - Architecture Management (OSLC AM): `http://open-services.net/ns/am#Resource` (Microservices, Desktop Apps, Console Apps).
-  - Requirements Management (OSLC RM): `http://open-services.net/ns/rm#Requirement` (Epics, Features, User Stories, Gherkin Features).
-  - Change Management (OSLC CM): `http://open-services.net/ns/cm#ChangeRequest` (Tasks, Subtasks, Bugs, Pull Requests).
-  - Quality Management (OSLC QM): `http://open-services.net/ns/qm#TestPlan`, `http://open-services.net/ns/qm#TestSuite`, `http://open-services.net/ns/qm#TestCase` (Scenarios, Outlines), `http://open-services.net/ns/qm#TestExecutionRecord`.
-  - Core & Configuration Management: `http://open-services.net/ns/core#ServiceProvider`, `http://open-services.net/ns/config#ConfigurationItem`.
-- **C4 Model**: `https://c4model.com/ns#Container`, `https://c4model.com/ns#Component`, `https://c4model.com/ns#System`.
-- **Cucumber & Gherkin Reference**: `https://cucumber.io/docs/gherkin/reference/#background`, `https://cucumber.io/docs/gherkin/reference/#rule`, `https://cucumber.io/docs/gherkin/reference/#scenario-outline`, `https://cucumber.io/docs/gherkin/reference/#examples`, `https://cucumber.io/docs/gherkin/reference/#data-tables`, `https://cucumber.io/docs/gherkin/reference/#doc-strings`, `https://cucumber.io/docs/cucumber/step-definitions/`.
+2. Write the nodes to add in `import.json`. With `--require-evidence`, every node needs at least one `robos:evidence` record: a `repository`, a relative `path` and a positive `line`.
 
-**Cardinal Agent Generation Rule**:
-When autonomous agents generate or extend KGraph schemas or instances, they ground their representations in these upstream canonical references, maintaining interoperability while expanding upon them with RobOS-specific SDLC properties.
+   ```json
+   {
+     "@context": { "robos": "https://robos.dev/ns/sdlc#", "dcterms": "http://purl.org/dc/terms/" },
+     "robos:nodes": [
+       {
+         "@id": "urn:robos:service:orders-api",
+         "@type": ["robos:Microservice"],
+         "dcterms:title": "Orders API",
+         "robos:package": "services",
+         "robos:repository": "github.com/example/orders",
+         "robos:ownerTeam": "urn:robos:team:orders",
+         "robos:evidence": [{ "repository": "github.com/example/orders", "path": "package.json", "line": 1 }]
+       },
+       {
+         "@id": "urn:robos:team:orders",
+         "@type": ["robos:Team"],
+         "dcterms:title": "Orders team",
+         "robos:package": "organization",
+         "robos:evidence": [{ "repository": "github.com/example/orders", "path": "CODEOWNERS", "line": 1 }]
+       }
+     ]
+   }
+   ```
 
-### JSON-LD Node Example
+3. Propose, review and apply.
 
-> 🔗 **Live KGraph Entry**: View this remote execution cluster node live in the project repository: [`.robos/kgraphs/devops/package.jsonld`](https://github.com/nddipiazza/robos/blob/main/.robos/kgraphs/devops/package.jsonld)
+   ```bash
+   kgraph="node packages/robos-graph/bin/kgraph-cli.js"
+   $kgraph propose --graph-root /path/to/project --file import.json --mode import --require-evidence --output proposal.json
+   $kgraph apply --graph-root /path/to/project --file proposal.json
+   $kgraph inspect --graph-root /path/to/project
+   ```
 
-```json
-{
-  "@id": "urn:robos:remote-execution:acme-buildbarn-cluster",
-  "@type": ["robos:RemoteExecutionCluster", "robos:RemoteBuildCluster", "oslc:Resource"],
-  "dcterms:title": "Acme Production Buildbarn REAPI Cluster",
-  "robos:protocol": "REAPI_v2",
-  "robos:provider": "buildbarn",
-  "robos:instanceName": "main",
-  "robos:executionEndpoint": "grpc://re-execution.buildbarn.internal:8980",
-  "robos:casEndpoint": "grpc://re-cas.buildbarn.internal:8980",
-  "robos:actionCacheEndpoint": "grpc://re-cas.buildbarn.internal:8980",
-  "robos:browserEndpoint": "http://re-browser.buildbarn.internal:7984",
-  "robos:workerPools": [
-    {
-      "name": "linux-x86_64-large",
-      "osFamily": "linux",
-      "isa": "x86-64",
-      "containerImage": "docker://gcr.io/cloud-marketplace/google/debian11:latest",
-      "concurrency": 64
-    }
-  ],
-  "robos:package": "devops",
-  "robos:namespace": "robos.devops"
-}
-```
+   `proposal.json` holds the candidate graph, the validation result, the conflicts and the diff. When validation fails, `propose` exits with status 1 but still writes the file. The reasons are in `validation.errors`, and `apply` rejects that proposal.
 
-### Autonomous Client Configuration Synthesis
+To compare a candidate document with the current graph, run `diff --file candidate.jsonld --graph-root /path/to/project`. It prints the nodes that were added, changed (with before and after values per property) and removed.
 
-From the single source of truth in the Knowledge Graph, the companion desktop application (**Remote Execution Studio**) synthesizes:
-- **Bazel `.bazelrc` flags**: `--remote_executor`, `--remote_cache`, `--remote_instance_name`, `--remote_default_exec_properties`, `--remote_download_minimal`.
-- **Buck2 `.buckconfig` settings**: `[buck2_re_client]` with `engine_address`, `cas_address`, `action_cache_address`.
-- **Buildbarn Component Configurations**: Generates validated JSON configurations for `bb-storage`, `bb-scheduler`, `bb-worker`, `bb-runner`, and `bb-browser`.
-- **NativeLink Configuration**: Generates validated `nativelink.json` configurations for Rust-powered edge caching.
+`apply` and the Explorer's save action check the proposal's id, the graph revision, references and shapes. If another write happened in between, the proposal is stale and you propose again. After a crash during a write, `recover` finishes it.
 
----
+## Import from source repositories
 
-## 10. Universal Application Backing Audit (Zero Unbacked Data)
+The `import-company-kgraph` skill builds a proposal from local Git checkouts. You give it a `sources.json` that names the repositories and a `local.json` that maps each name to a checkout path. The importer reads tracked files only. It does not run repository code or Git hooks, and it does not clone anything. Every extracted node carries evidence: repository, path, line, revision and a SHA-256 of the file. The importer writes a proposal that you review and apply as above. Its `SKILL.md` has the commands and the manifest format.
 
-In RobOS, **all application operational data across the desktop app suite is 100% backed by the SDLC Knowledge Graph (`SDLCKnowledgeGraphStore`)**. No application maintains orphaned or isolated configuration states.
+Older flags for importing from an S3 bucket, an HTTP catalog or a directory scan exist only in a demo mode that needs `--demo`. They are not the source-backed workflow and their output is not evidence of anything.
 
-### Audited App Data & Ontological Mapping
+The [KGraph parse portal]({{ '/kgraph-parse-portal.html' | relative_url }}) is a separate service. Its `POST /api/v1/ingest` route scans a directory and adds the resulting nodes to the graph at `.robos/knowledge-graph.jsonld` in the RobOS checkout.
 
-| RobOS Application | Managed Domain Data | KGraph Ontological Type | Package Store | SHACL Constraint Shape | Credential Security |
-|:---|:---|:---|:---|:---|:---|
-| **Relational DB Manager (`db-manager`)** | SQL connections, schemas, DDL | `robos:Database`, `robos:RelationalDatabase` | `core-platform` | `DatabaseShape` | UNIX `pass` URN |
-| **NoSQL DB Manager (`nosql-manager`)** | Redis & MongoDB datastores | `robos:NoSQLDatabase`, `robos:CacheStore`, `robos:DocumentStore` | `core-platform` | `NoSQLDatabaseShape` | UNIX `pass` URN |
-| **Data Sources (`data-sources`)** | Knowledge Graph data source endpoints | `robos:DataSource`, `robos:Database`, `robos:StorageStore` | `core-platform` | `DatabaseShape` | UNIX `pass` URN |
-| **MCP Manager (`mcp-manager`)** | Model Context Protocol servers | `robos:MCPServer`, `robos:ToolProvider` | `core-platform` | `MCPServerShape` | Local process / SSE |
-| **Kube Studio (`kube-studio`)** | Kubernetes clusters & GitOps deployments | `robos:KubernetesCluster`, `robos:GitOpsDeployment` | `devops` | `KubernetesClusterShape`, `GitOpsDeploymentShape` | Kubeconfig / mTLS |
-| **Task Servers (`task-servers`)** | Jira & GitHub task servers | `robos:TaskServer` | `organization` | `TaskServerShape` | UNIX `pass` URN |
-| **Context Manager (`context-manager`)** | AI context repositories & files | `robos:ContextSource` | `core-platform` | `ContextSourceShape` | Git forge URN |
-| **Agents Manager (`agents-manager`)** | Autonomous AI agent personas & directives | `robos:AgentPersona`, `robos:AIAgent` | `organization` | `AgentPersonaShape` | Token reference |
-| **Remote Execution Studio (`remote-execution-studio`)** | Distributed REAPI v2 clusters & build configs | `robos:RemoteExecutionCluster`, `robos:BuildSystem` | `devops`, `core-platform` | `RemoteExecutionClusterShape`, `BuildSystemShape` | mTLS / pass |
+## Compare two versions
 
-### Universal Backing Architectural Principles
+Two things exist in the code. Neither reads Git branches.
 
-1. **Single Source of Truth**: All applications query and persist entities through `SDLCKnowledgeGraphStore`, ensuring updates in one tool (e.g. adding a PostgreSQL database in `db-manager`) immediately reify in the architecture map, blast radius analyzer, and living documentation.
-2. **Local Fast Cache Mirroring**: Applications maintain fast local caches under `~/.config/robos/` for offline latency, while automatically reconciling and synchronizing bidirectional state with `.robos/kgraphs/` on startup and mutation.
-3. **Zero Plaintext Credentials**: Sensitive API tokens, private keys, and passwords are never written to the Knowledge Graph. All credential fields strictly reference first-class `urn:robos:credential:...` nodes backed by UNIX `pass`.
-4. **100% SHACL Validation Gate**: Every entity created or updated by any RobOS application must pass W3C SHACL shape validation before being added to the graph, preventing schema drift or incomplete entity definitions.
+`GraphDiffEngine` in `packages/robos-graph/lib/graph-diff.js` compares two graph documents by node `@id` and lists added, removed, modified and unchanged nodes. It rates the result HIGH if a removed node is a contract or microservice, MEDIUM if more than three nodes changed, and LOW otherwise. `BlastRadiusAnalyzer` then walks dependents up to three hops from each changed node and collects the affected services, contracts, requirements and owner teams. Run `kgraph diff --file` in a workspace to diff a candidate against the current graph.
 
----
+`BranchManager` holds named graph versions in memory. In the default graph there are four: `main` and three sample branches written into `branch-manager.js` (`feature/TASK-101-auth`, `poc/v2-graphql` and `pilot/beta-billing`). In a workspace there is only `main`, which is the current revision. The Explorer's branch selector lists these. Its **Semantic Diff** button always compares `main` with `feature/TASK-101-auth`. `kgraph diff <branch>` without `--file` works on the same in-memory branches, and its plain-text output currently prints zero counts, so pass `--json` to see the result.
 
-## 11. Child Schema Elements & Entity Hierarchies
+Nothing in the code builds a graph version from a Git branch or pull request. The PR review app's knowledge graph panel shows fixed sample data and does not call the diff engine.
 
-RobOS models complex software engineering architectures as interconnected parent-child hierarchies. Every top-level node in the Knowledge Graph decomposes into granular, first-class child schema elements governed by dedicated W3C SHACL constraint shapes:
+## DevOps integrations and secrets
 
-### 1. Work Item & Task Server Hierarchy
+**DevOps Integrations** in the Explorer records an account for a provider (GitHub, AWS, Kubernetes and others, grouped into seven categories) as a `robos:DevOpsIntegration` node. Secret fields are not stored in the graph. For each secret, RobOS runs `pass insert` to write it to `~/.password-store/devops/<category>/<provider>/<account>/<field>` and adds a `robos:PassCredential` node that holds only the `robos:passPath`. The integration node links to it with `robos:hasCredential`.
 
-A `robos:TaskServer` (e.g. Jira instance, GitHub Issues) hosts `robos:Project` boards, which decompose into structured agile work items:
+{: .warning }
+If `pass` is missing or cannot run, the code does not stop. It writes a file at the same path whose content is `MOCK_GPG_ENCRYPTED:` followed by the base64 of the secret. Base64 is not encryption. Install and initialize `pass` and GPG before you enter real credentials.
 
-```mermaid
-graph TD
-    TS["TaskServer<br/><code>robos:TaskServer</code>"] -->|robos:hasProject| PROJ["Project<br/><code>robos:Project</code>"]
-    PROJ -->|robos:hasMilestone| MS["Milestone<br/><code>robos:Milestone</code>"]
-    PROJ -->|robos:hasSprint| SPRINT["Sprint<br/><code>robos:Sprint</code>"]
-    PROJ -->|robos:hasEpic| EPIC["Epic<br/><code>robos:Epic</code>"]
-    EPIC -->|robos:hasFeature| FEAT["Feature<br/><code>robos:Feature</code>"]
-    FEAT -->|robos:hasStory| STORY["User Story<br/><code>robos:UserStory</code>"]
-    STORY -->|robos:hasTask| TASK["Task<br/><code>robos:Task</code>"]
-    TASK -->|robos:hasSubtask| SUBTASK["Subtask<br/><code>robos:Subtask</code>"]
-    STORY -->|robos:hasBug| BUG["Bug / Defect<br/><code>robos:Bug</code>"]
-    TASK -.->|robos:inSprint| SPRINT
-    BUG -.->|robos:inSprint| SPRINT
-```
+**Test Connection** checks that the required fields are filled in. Except for Buildkite, it does not contact the provider and always reports success when the fields are present.
 
-| Entity Class | Governing Shape | Key Properties | Parent Predicate |
-|:---|:---|:---|:---|
-| **`robos:Milestone`** | `MilestoneShape` | `targetDate`, `status` | `robos:inProject` |
-| **`robos:Sprint`** | `SprintShape` | `startDate`, `endDate`, `status` | `robos:inProject` |
-| **`robos:Epic`** | `EpicShape` | `title`, `description` | `robos:inProject` |
-| **`robos:Feature`** | `FeatureShape` | `title`, `status` | `robos:inEpic`, `robos:inProject` |
-| **`robos:UserStory`** | `UserStoryShape` | `acceptanceCriteria`, `storyPoints`, `status` | `robos:inFeature`, `robos:inEpic` |
-| **`robos:Task`** | `TaskShape` | `priority`, `status`, `assignedDeveloper`, `assignedAgent` | `robos:inStory`, `robos:inSprint` |
-| **`robos:Subtask`** | `SubtaskShape` | `title`, `status` | `robos:parentTask` |
-| **`robos:Bug`** | `BugShape` | `severity`, `status` | `robos:inSprint`, `robos:parentWorkItem` |
+## Known limits
 
-### 2. Git Organization & Source Control Hierarchy
-
-A `robos:GitProjectOrganization` (e.g. `github.com/apache`) aggregates member repositories, branches, pull requests, and commit records:
-
-- **`robos:GitRepository`** (`GitRepositoryShape`): Repository URL, default branch, language stack.
-- **`robos:GitBranch`** (`GitBranchShape`): Branch name, parent repository, head commit SHA.
-- **`robos:PullRequest`** (`PullRequestShape`): PR number, source branch, target branch, status (`open`, `merged`, `closed`).
-- **`robos:GitCommit`** (`GitCommitShape`): Commit SHA hash, message snippet, committer identity.
-- **`robos:GitTag`** (`GitTagShape`): Release version tag name, target commit SHA.
-
-### 3. Microservices & API Service Decomposition
-
-A `robos:Microservice` contains granular architectural child nodes:
-
-- **`robos:APIEndpoint`** (`APIEndpointShape`): Path pattern (`/api/v1/orders/{id}`), HTTP method (`GET`, `POST`), request/response schema.
-- **`robos:DataModel`** (`DataModelShape`): Core entity data transfer object (DTO) or domain entity name (`OrderDto`).
-- **`robos:ServiceDependency`**: Outbound service link with mock proxy URL, timeout, and fallback circuit breaker.
-
-### 4. Databases & Data Schema Elements
-
-Relational and NoSQL datastores decompose into schemas, tables, and columns:
-
-- **`robos:DatabaseSchema`** (`DatabaseSchemaShape`): Logical schema/namespace within the database (`public`, `auth`).
-- **`robos:DatabaseTable`** (`DatabaseTableShape`): Relational table name (`orders`, `users`).
-- **`robos:DatabaseColumn`** (`DatabaseColumnShape`): Column name, storage data type (`varchar(255)`, `bigint`), primary/foreign key flags.
-- **`robos:DatabaseIndex`** (`DatabaseIndexShape`): Table index name and indexed columns.
-- **`robos:NoSQLCollection`** (`NoSQLCollectionShape`): Document collection or keyspace name in MongoDB or Redis.
-
-### 5. Event Streaming & Model Context Protocol
-
-- **`robos:MessageTopic`** (`MessageTopicShape`): Stream topic or queue on a `MessageBroker` (`order-events-v1`).
-- **`robos:ConsumerGroup`** (`ConsumerGroupShape`): Active consumer group reading from a topic.
-- **`robos:MCPTool`** (`MCPToolShape`): Tool name and input parameter schema exposed by a `MCPServer`.
-- **`robos:MCPResource`** (`MCPResourceShape`): URI template and mime-type exposed by a `MCPServer`.
-- **`robos:MCPPrompt`** (`MCPPromptShape`): Reusable prompt template exposed by a `MCPServer`.
-
-### 6. Kubernetes Infrastructure & CI/CD Stages
-
-- **`robos:KubernetesNamespace`** (`KubernetesNamespaceShape`): Namespace name on a Kubernetes cluster.
-- **`robos:KubernetesDeployment`** (`KubernetesDeploymentShape`): Container image, replicas, and pod spec.
-- **`robos:KubernetesService`** (`KubernetesServiceShape`): Networking service name and type (`ClusterIP`, `LoadBalancer`).
-- **`robos:KubernetesIngress`** (`KubernetesIngressShape`): Ingress hostname routing rules.
-- **`robos:PipelineStage`** (`PipelineStageShape`): Sequential execution stage in a CI/CD pipeline (`build`, `test`, `deploy`).
-- **`robos:PipelineJob`** (`PipelineJobShape`): Execution job within a pipeline stage (`unit-tests`, `e2e-tests`).
-- **`robos:PipelineStep`** (`PipelineStepShape`): Atomic command step within a pipeline job.
-
----
-
-## Next Steps
-
-- **[🌐 Browse Live Knowledge Graph Packages on GitHub](https://github.com/nddipiazza/robos/tree/main/.robos/kgraphs)**: Inspect the modular JSON-LD package stores, ontology schemas, and GitOps models live in the repository.
-- **[📐 Complete KGraph Schemas & Ontologies]({{ site.baseurl }}{% link schemas.md %})**: Explore the full 3-tier specification of all SHACL constraint shapes across the standard RobOS package stores.
-- **[RobOS Main Wins]({{ site.baseurl }}{% link big-wins.md %})**: Discover core architectural advantages powering RobOS.
-- **[A Day in the Life with RobOS]({{ site.baseurl }}{% link day-in-the-life.md %})**: Experience the end-to-end SDLC workflow from concept to deployment.
-- **[💡 Explore the Ideas Store on GitHub](https://github.com/nddipiazza/robos/tree/main/docs/ideas)**: View raw idea dumps, community feature proposals, and structured architecture specs.
-
+- The validator checks only the minimum and maximum number of values per property. It does not check datatypes or formats, and it is not a full W3C SHACL implementation. A passing result is a structural check.
+- The `.robos` directory in the RobOS repository is not a strict workspace. `kgraph inspect --graph-root` on it fails because `knowledge-graph.jsonld` and the package files disagree, and `kgraph validate` on a copy of it reports violations.
+- In the default graph, **Packages & Repos** records external graph repositories in `~/.robos/config/kgraph-repos.json` and clones the chosen tag into `~/.robos/cache/kgraphs/`. If the clone fails, the code writes a stub package in its place. Nothing merges those packages into the graph the Explorer shows, so a registered remote repository is not yet part of the graph. Workspaces refuse this change.
+- Dependency impact covers only the modeled edges. The `impact` output says so itself: finding no dependents does not mean a change is safe.

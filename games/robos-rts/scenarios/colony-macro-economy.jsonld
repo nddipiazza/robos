@@ -1,0 +1,32 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/kgraph#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:rts:scenario:colony-macro-economy",
+  "@type": "robos:RTSTestScenario",
+  "rdfs:label": "Colony Macro Economy: Harvesting, Construction & Production",
+  "seed": 404,
+  "map": {
+    "width": 120,
+    "height": 80,
+    "obstacles": []
+  },
+  "players": {
+    "1": {"crystal": 300, "aether": 50},
+    "2": {"crystal": 200, "aether": 0}
+  },
+  "resources": [
+    {"id": "min_1", "type": "crystal_field", "x": 12.0, "y": 32.0, "amount": 1500},
+    {"id": "min_2", "type": "crystal_field", "x": 12.0, "y": 40.0, "amount": 1500},
+    {"id": "min_3", "type": "crystal_field", "x": 12.0, "y": 48.0, "amount": 1500},
+    {"id": "gas_1", "type": "aether_vent", "x": 16.0, "y": 60.0, "amount": 2250}
+  ],
+  "units": [
+    {"id": "hub_main", "type": "colony_hub", "owner": 1, "count": 1, "x": 22.0, "y": 40.0},
+    {"id": "silo_1", "type": "silo", "owner": 1, "count": 1, "x": 34.0, "y": 30.0},
+    {"id": "hall_1", "type": "muster_hall", "owner": 1, "count": 1, "x": 36.0, "y": 40.0},
+    {"id": "pioneer_workers", "type": "pioneer", "owner": 1, "count": 6, "x": 17.0, "y": 35.0, "spread": 2.2, "auto_harvest": true}
+  ],
+  "directives": []
+}

@@ -1,80 +1,46 @@
 ---
 title: GraphQL Contract
 layout: default
-parent: Services & Contracts (robos.services)
-grand_parent: KGraph Schemas
+parent: "Services & Contracts (robos.services)"
+grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/services/graphql-contract.html
 ---
 
-# Schema: `robos:GraphQLContract`
+# robos:GraphQLContract
 {: .no_toc }
 
-Formal W3C SHACL constraint shape and OSLC JSON-LD specification for `robos:GraphQLContract` in the `services` package store.
-{: .fs-6 .fw-300 }
+Validation shape for `robos:GraphQLContract` nodes in the `services` package group.
+{: .fs-6 }
 
-## Table of contents
-{: .no_toc .text-delta }
+## Details
 
-1. TOC
-{:toc}
+| | |
+|---|---|
+| Class | `robos:GraphQLContract` |
+| Also matches | `robos:GraphQLSchema` |
+| Shape id | `urn:robos:shape:GraphQLContractShape` |
+| Package | [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`) |
+| Classification | Contracts & data models |
+| Schema.org type | [`schema:DigitalDocument`](https://schema.org/DigitalDocument) |
+| Domain standard | [graphql.org](https://graphql.org/learn/schema/) |
+| Upstream reference | [OSLC AM](http://open-services.net/ns/am#Resource) |
 
----
+## Properties
 
-## Specification Metadata
+Count is the minimum and maximum number of values (`*` means no maximum). The validator enforces both. The type column is documentation only; the validator does not check types.
 
-- **RDF / OWL Class**: `robos:GraphQLContract`
-- **Aliases / Target Classes**: `robos:GraphQLContract`, `robos:GraphQLSchema`
-- **SHACL Shape ID**: `urn:robos:shape:GraphQLContractShape`
-- **Governing Package**: [Services & Contracts (robos.services)]({{ '/schemas/services.html' | relative_url }}) (`services`)
-- **Namespace**: `robos.services`
-- **Schema.org Classification**: [https://schema.org/DigitalDocument](https://schema.org/DigitalDocument)
-- **Domain De Facto Standard**: [https://graphql.org/learn/schema/](https://graphql.org/learn/schema/)
-- **Upstream Schema Basis (Refers From)**: [http://open-services.net/ns/am#Resource](http://open-services.net/ns/am#Resource)
+| Property | Count | Type | Rule or description |
+|---|---|---|---|
+| `dcterms:title` | `1..*` | `xsd:string` | GraphQL Contract must have a title. |
+| `robos:specFile` | `1..*` | `xsd:string` | GraphQL Contract must specify schema file path (.graphql). |
+| `robos:schemaType` | `1..*` | - | GraphQL Contract must declare schema type (federated-subgraph, monolithic, gateway). |
 
----
+## Example node
 
-## Upstream Schema Basis (Refers From) & Global Standards Provenance
+This node comes from `.robos/kgraphs/services/package.jsonld` in the RobOS repository. That graph holds sample data for a fictional company, so treat the values as illustrations.
 
-This RobOS schema is modeled after and directly aligns with two levels of global standards:
-- **Universal Schema.org Class**: [https://schema.org/DigitalDocument](https://schema.org/DigitalDocument) (100% interoperability with search engines, web indexers, and general AI reasoning)
-- **Specialized Domain Standard**: [https://graphql.org/learn/schema/](https://graphql.org/learn/schema/) (de facto standard for domain-specific ALM, BDD, or infrastructure operations)
-- **Canonical Reference**: [http://open-services.net/ns/am#Resource](http://open-services.net/ns/am#Resource)
-- **Agent Guidelines**: When autonomous agents generate, expand, or validate instances of `robos:GraphQLContract`, they MUST adhere to and base their output on this referred schema object and universal Schema.org parent class, extending it with RobOS SDLC properties.
-
----
-
-## Entity Relationship & Schema Context
-
-<div style="margin: 1.5rem 0; padding: 1.25rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px;">
-  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-    <span style="font-size: 1.15rem; font-weight: 700; color: #38bdf8;">GraphQL Contract</span>
-    <span style="font-family: monospace; background: #121927; color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.4); padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.85rem;">robos:GraphQLContract</span>
-  </div>
-  <p style="margin-bottom: 0.75rem; font-size: 0.92rem; color: #c9d1d9;">Governed by W3C SHACL shape <code>urn:robos:shape:GraphQLContractShape</code> within the <strong>Services & Contracts (robos.services)</strong> (<code>robos.services</code>) package store.</p>
-  <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>dcterms:title</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:specFile</code></span>
-    <span style="background: #0d1117; border: 1px solid #21262d; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: #8b949e;"><code>robos:schemaType</code></span>
-  </div>
-</div>
-
----
-
-**RobOS classification:** Contracts & data models. These RobOS-owned codes use Schema.org CategoryCode vocabulary.
-
-## Property Constraints & SHACL Rules
-
-| Property Path | Name | Multiplicity | Data Type | Classification | Constraint Rule / Validation Message |
-|---|---|---|---|---|---|
-| **`dcterms:title`** | Title / Display Name | `1..*` | `xsd:string` | Services & processing, Applications & entry points, Contracts & data models, Data stores & messaging, Libraries & build systems, Infrastructure & delivery, Organization & people, Projects & work items, Source control & artifacts, Agents & MCP, Documentation & decisions, Learning & assessment, Testing & behavior | GraphQL Contract must have a title. |
-| **`robos:specFile`** | Specification File | `1..*` | `xsd:string` | Contracts & data models | GraphQL Contract must specify schema file path (.graphql). |
-| **`robos:schemaType`** | schemaType | `1..*` | `xsd:string` | Contracts & data models | GraphQL Contract must declare schema type (federated-subgraph, monolithic, gateway). |
-
----
-
-## Canonical OSLC JSON-LD Example
-
+{% raw %}
 ```json
 {
   "@id": "urn:robos:contract:catalog-graphql",
@@ -111,55 +77,14 @@ This RobOS schema is modeled after and directly aligns with two levels of global
   ]
 }
 ```
+{% endraw %}
 
----
+## Validate the example
 
-## Programmatic SHACL Validation
+Save the example as `node.json` in the repository root, then run:
 
-```javascript
-const { SHACLValidator } = require('/usr/local/share/robos/robos-graph/lib/shacl-validator');
-const { OSLCGraphParser, OSLC_CONTEXT } = require('/usr/local/share/robos/robos-graph/lib/oslc-parser');
-
-const validator = new SHACLValidator();
-const result = validator.validateGraph(new OSLCGraphParser({
-  "@context": OSLC_CONTEXT,
-  "robos:nodes": [
-    {
-        "@id": "urn:robos:contract:catalog-graphql",
-        "@type": [
-            "robos:Contract",
-            "robos:GraphQLContract",
-            "robos:GraphQLSchema",
-            "schema:DigitalDocument"
-        ],
-        "dcterms:title": "Acme Catalog GraphQL SDL Schema",
-        "dcterms:description": "Apollo Federation subgraph schema defining products, pricing, and category queries.",
-        "robos:protocol": "graphql",
-        "robos:specFile": "schemas/catalog.graphql",
-        "robos:schemaType": "federated-subgraph",
-        "robos:package": "services",
-        "robos:namespace": "robos.services",
-        "robos:schemaOrgType": "https://schema.org/DigitalDocument",
-        "robos:domainStandard": "http://open-services.net/ns/am#Resource",
-        "robos:sdlSchema": "type Query {\n  product(id: ID!): Product\n  products(category: String, limit: Int = 20): [Product!]!\n  searchCatalog(term: String!): [Product!]!\n}\n\ntype Mutation {\n  createProduct(input: ProductInput!): Product!\n  updatePrice(id: ID!, newPrice: Float!): Product!\n}\n\ntype Product {\n  id: ID!\n  name: String!\n  sku: String!\n  category: String!\n  price: Float!\n  inStock: Boolean!\n}\n\ninput ProductInput {\n  name: String!\n  sku: String!\n  category: String!\n  price: Float!\n}",
-        "robos:graphqlOperations": [
-            {
-                "name": "ListCatalogProducts",
-                "type": "query",
-                "query": "query ListCatalogProducts {\n  products(limit: 5) {\n    id\n    name\n    price\n    inStock\n  }\n}"
-            },
-            {
-                "name": "GetProductById",
-                "type": "query",
-                "query": "query GetProductById($id: ID!) {\n  product(id: $id) {\n    id\n    name\n    sku\n    price\n    inStock\n  }\n}",
-                "variables": {
-                    "id": "prod_101"
-                }
-            }
-        ]
-    }
-  ],
-}));
-
-console.log("Conforms:", result.conforms); // Expected: true
+```bash
+node -e "const { SHACLValidator } = require('./packages/robos-graph/lib/shacl-validator'); console.log(new SHACLValidator().validate([require('./node.json')]).conforms)"
 ```
+
+The command prints `true` when the node meets every rule for its types.

@@ -3,68 +3,34 @@ title: "Agent Code Review & PR Review Theater"
 package: pr-review
 category: code-review
 icon: pr-review.svg
-summary: "Autonomous AI pull request auditor, PR Review Theater, team KGraph policy, Show The Fix agent phase, and IDE bridges."
-description: "Autonomous AI pull request auditor, PR Review Theater, team KGraph policy, Show The Fix agent phase, and IDE bridges."
+summary: "Review window for a pull request or a local agent branch, with a seven-step reviewer flow, links into IntelliJ and VS Code, and author tools for creating and updating the PR."
+description: "Opens a task, a PR URL or a saved local review, and walks through overview, documentation, changes, IDE, evidence, walkthrough and approval. This page covers the app; the review flow itself is described in the PR Review Theater guide."
 related:
   - /pr-review-theater.html
 ---
 
-Autonomous AI-driven code review, audit hub, and Review Theater for pull requests. Analyzes pull requests created by AI agents or human developers, provides side-by-side color-coded diffs, runs automatic security audits, tests OpenAPI contract compatibility, generates on-demand masterclasses with verified Knowledge Graph completion certificates, proves runtime correctness with 1080p narrated video proof-of-work teaching feature mechanics first followed by "Show Me The Fix" agent demonstrations, and connects directly with your preferred IDE via native plugins:
-- **PR Review Theater**: Customizable multi-stage review pipeline (eLearning Knowledge Check, Living Docs, Diff Viewer, IDE Bridge, Evidence Video Proof-of-Work, "Show Me The Fix" Agent Guided Walkthrough, and Sign-Off & Dual Merge). Configurable per-team in `robos:Team` Knowledge Graph policy. Read the full guide in [PR Review Theater & Verification]({{ site.baseurl }}{% link pr-review-theater.md %}).
-- **IntelliJ IDEA Pull Request Review Plugin**: Communicates over RobOS port `63343` IPC bridge and native JetBrains CLI integration to jump straight to modified files, set live breakpoints at change sites, and launch JetBrains' native Pull Request review tool window.
-- **VS Code Pull Request Review Plugin**: Deeply integrates with the industry-standard `GitHub Pull Requests and Issues` extension (`vscode://github.vscode-pull-request-github/open-pr`) to review diffs, leave inline line comments, and approve PRs right inside Visual Studio Code.
-![PR Review Theater]({{ '/assets/images/screenshots/pr-review-theater-02-pr-detail.png' | relative_url }})
+This is the app behind the review flow described in [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}). It reads pull requests with the `gh` CLI, so it needs `gh` signed in and a GitHub task server (see [Task Servers]({{ '/apps/task-servers/' | relative_url }})).
 
-## Mention reviewers in a PR notification
+## How it opens
 
-Enable **Send PR review notification**, select its destination, and use
-**Reviewers to @mention** to choose recipients. Defaults come from the project's
-messaging settings in Git Projects. Search `@name` to find a person; the preview
-shows who will be notified. The sender is excluded, and Slack receives stable
-member-ID mentions rather than plain display names. Recipient changes here apply
-only to this request. Save project defaults in Git Projects.
+| Start | What you get |
+|---|---|
+| No environment variables | A task picker. It lists saved local reviews from `~/.robos/local-reviews/<name>/review.json`, which [Task Implementer]({{ '/apps/task-implementer/' | relative_url }}) creates through its **Review branch...** button. |
+| `ROBOS_REVIEW_URL=<pull request URL>` | That pull request, loaded through `gh`. |
+| `ROBOS_LOCAL_REVIEW=<path to review.json>` | A local review of an agent's branch before any PR exists. |
 
-## Author mode after publication
+Run it from the launcher (**Agent Code Review Platform**) or with `npm start` in `packages/pr-review`. Dependencies are built in the package's `postinstall` step.
 
-Creating a PR reloads it from GitHub and compares its author with the connected
-GitHub account. The author keeps the same evidence, diff, and walkthrough, with
-an editable description and **Update PR** action while the PR remains open.
-Use the walkthrough discussion for further changes, then **Push walkthrough
-adjustments** in the top toolbar to publish the committed branch changes without
-a force push. The command appears only for unpushed commits, disables while
-pushing, and hides once the branch is up to date. New commits restore it
-automatically; unfinished edits or a newer remote revision must be resolved first.
+## The review steps
 
-The Pull Request tab shows **Not Created**, **In Draft**, **In Review**,
-**Merged**, or **Closed**, each with its own icon and color. **Reload PR**
-refreshes the status and description. Closed/merged PRs and reviewer mode keep
-the description read-only. If someone changes the description on GitHub during
-editing, reload before saving rather than overwriting their work.
+The stepper along the top has these stages: **Description**, **1 Overview**, **2 Documentation**, **3 Changes**, **4 Open in IDE**, **5 Evidence**, **6 Walkthrough**, **Pull Request** and **7 Approve**. In the code the stages are a reviewer knowledge check, a living architecture guide, an in-app diff viewer, an IDE bridge and breakpoint session, an evidence and video canvas, an agent-guided walkthrough, and sign-off. The window warns that you must pass the knowledge check with at least 80% before the later steps. A team can adjust this through the PR Theater configuration, so the guide is the reference for what is enforced.
 
-Buildkite checks use the shared CI connection to show actual job failures. In
-CI recovery, **Read failure** loads the failed job logs directly. Missing token
-access or a mismatched build commit is shown explicitly. Configure the connection
-in CI Monitor; tokens are resolved from `pass`, never sent to the renderer.
+## IDE links
 
-### Live CI jobs and logs
+- **IntelliJ IDEA:** the app contacts a RobOS IntelliJ plugin on `localhost:63343` when one is running, and otherwise starts IntelliJ with the `idea` command.
+- **VS Code:** it opens `vscode://github.vscode-pull-request-github/open-pr?number=<n>&repo=<owner/repo>`, which needs the GitHub Pull Requests and Issues extension.
 
-**Jobs & live logs** opens an inline panel beneath the review toolbar. Buildkite
-job states refresh every 10 seconds directly from the CI integration. Select a
-job to follow its latest 64 KiB of output, refreshed every 3 seconds. Turn off
-**Live** to pause requests or **Follow** to read earlier lines without automatic
-scrolling. Closing the panel stops log polling. A changed PR revision clears
-old selections, and failed refreshes explicitly mark output as potentially stale.
+## Publishing and CI
 
-Monitoring never launches an agent. Agents stop after completing their local
-repair; pushing a reviewed repair opens the CI panel so RobOS can show its
-progress. An agent is used only when the reviewer requests investigation or fixes.
-
-When moving a draft into review, **Request GitHub reviews** starts checked.
-The reviewer list uses Git Projects defaults, falling back to the configured
-RobOS Code Reviewers group. The PR author is excluded. Edits affect this request
-only; unchecking the option disables the field and assigns no reviewers. Slack
-notification remains a separate option.
-For an author's draft PR, a green **Ready for review** button appears in the
-header when CI passes. Use **Reload PR** after checks finish to refresh it.
-Clicking the button checks GitHub again and takes the PR out of draft. A changed
-branch or pending/failed checks leave it in draft.
+- **Author tools.** For a local review, **Create PR** creates the pull request from the branch. The Pull Request step shows the PR as **Not Created**, **In Draft**, **In Review**, **Merged** or **Closed**. **Update PR** edits the description while the PR is open, **Reload PR** refreshes it from GitHub, and **Ready for review** takes a draft out of draft. **Push walkthrough adjustments** pushes new commits without a force push. **Request GitHub reviews** and an optional chat notification (**Send PR review notification to ...**, with workspace, channel and reviewer pickers and a preview) are options when you move a draft into review.
+- **Buildkite CI.** When a PR has Buildkite checks, **Jobs & live logs** opens a panel under the toolbar. Job states refresh every 10 seconds. Selecting a job shows the latest 64 KiB of its log, refreshed every 3 seconds while **Live** is on. Turn off **Follow** to stop auto-scrolling. In CI recovery, **Read failure** loads the failed job's log. Monitoring does not start an agent.

@@ -36,6 +36,12 @@ const SCENARIOS = [
     call: "searchPets('b')", summary: 'Name and breed prefix matches (Biscuit, Juniper, Scout) now come before the substring match (Pepper, "Tabby").' },
 ];
 
+/** Added later at the reviewer's request (see bin/codex). */
+const EXTRA_SCENARIOS = [
+  { id: 'combine', title: 'Text search and species filter combine',
+    call: "searchPets('a', { species: 'rabbit' })", summary: 'Only Waffles, the one rabbit matching "a"; main ignores the filter and returns five pets.' },
+];
+
 const sha = (buf) => createHash('sha256').update(buf).digest('hex');
 const hex16 = (s) => sha(s).slice(0, 16);
 
@@ -49,17 +55,37 @@ function runCall(srcRoot, call) {
   return execFileSync('node', ['-e', code], { encoding: 'utf8' }).trim() + '\n';
 }
 
-function buildEvidence({ workspace, baseRef = 'origin/main', outDir }) {
+const pause = (ms) => ms && Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+
+/**
+ * Builds the evidence bundle. The bundle file is rewritten after every scenario,
+ * so a review window can show evidence filling in while it is being made.
+ */
+function buildEvidence({ workspace, baseRef = 'origin/main', outDir, scenarios: list = SCENARIOS, progress = () => {}, pauseMs = 0 }) {
   fs.mkdirSync(outDir, { recursive: true });
   const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: workspace, encoding: 'utf8' }).trim();
+  const baseShort = execFileSync('git', ['rev-parse', '--short', baseRef], { cwd: workspace, encoding: 'utf8' }).trim();
   const baseDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pawfinder-base-'));
   execFileSync('sh', ['-c', `git archive ${baseRef} | tar -x -C ${baseDir}`], { cwd: workspace });
 
   const artifacts = [], bindings = [], scenarios = [];
-  for (const sc of SCENARIOS) {
+  const bundlePath = path.join(outDir, 'evidence-bundle.json');
+  const write = () => {
+    const bundle = {
+      '@type': 'robos:EvidenceBundle', 'robos:evidenceTemplate': TEMPLATE['@id'], template: TEMPLATE,
+      revision: head, finishedAt: new Date().toISOString(),
+      scenarios, artifacts, templateBindings: bindings,
+      limitations: ['Observed against the bundled sample pets, not production data.'],
+    };
+    fs.writeFileSync(bundlePath + '.tmp', JSON.stringify(bundle, null, 2));
+    fs.renameSync(bundlePath + '.tmp', bundlePath);
+  };
+  for (const sc of list) {
+    progress(`Running ${sc.call} on main and on this branch…`);
+    pause(pauseMs);
     const files = {
       request: `// ${sc.title}\n${sc.call}\n`,
-      before: `// main @ ${execFileSync('git', ['rev-parse', '--short', baseRef], { cwd: workspace, encoding: 'utf8' }).trim()}\n` + runCall(baseDir, sc.call),
+      before: `// main @ ${baseShort}\n` + runCall(baseDir, sc.call),
       after: `// codex/42 @ ${head.slice(0, 7)}\n` + runCall(workspace, sc.call),
     };
     for (const [slot, text] of Object.entries(files)) {
@@ -70,22 +96,12 @@ function buildEvidence({ workspace, baseRef = 'origin/main', outDir }) {
       bindings.push({ scenarioId: sc.id, slotId: slot, artifactId: id });
     }
     scenarios.push({ id: sc.id, title: sc.title, status: 'passed', summary: sc.summary });
+    write();
+    progress(`Captured “${sc.title}”.`);
   }
-
-  // Real test run as one more passed scenario note (kept out of the template slots).
-  const bundle = {
-    '@type': 'robos:EvidenceBundle',
-    'robos:evidenceTemplate': TEMPLATE['@id'],
-    template: TEMPLATE,
-    revision: head,
-    finishedAt: new Date().toISOString(),
-    scenarios, artifacts, templateBindings: bindings,
-    limitations: ['Observed against the bundled sample pets, not production data.'],
-  };
-  const bundlePath = path.join(outDir, 'evidence-bundle.json');
-  fs.writeFileSync(bundlePath, JSON.stringify(bundle, null, 2));
+  if (!list.length) write();
   fs.rmSync(baseDir, { recursive: true, force: true });
   return bundlePath;
 }
 
-module.exports = { buildEvidence, TEMPLATE, SCENARIOS };
+module.exports = { buildEvidence, TEMPLATE, SCENARIOS, EXTRA_SCENARIOS };
