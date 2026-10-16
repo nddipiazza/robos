@@ -2585,7 +2585,8 @@ test('Hidden Object Flag & Furniture Actions: supports hidden property and furni
             target: 'Heist Treasure Chest',
             tile: [18, 17],
             x: 18,
-            y: 17
+            y: 17,
+            message: 'Chest was thrown through the wall and the wall absorbed the chest like it was made of smoke!!'
           }
         ]
       }
@@ -2615,6 +2616,7 @@ test('Hidden Object Flag & Furniture Actions: supports hidden property and furni
     assert.equal(trigger.actions[3].lines[0].speaker, 'Orc who hesited chest');
     assert.equal(trigger.actions[4].type, 'move_furniture');
     assert.deepEqual(trigger.actions[4].tile, [18, 17]);
+    assert.equal(trigger.actions[4].message, 'Chest was thrown through the wall and the wall absorbed the chest like it was made of smoke!!');
   } finally {
     state.quest = savedStateQuest;
   }

@@ -914,3 +914,18 @@ class TabletopQAPlayer:
         """Check if quest is marked completed."""
         st = self.get_state()
         return bool(st.get("isQuestCompleted", False)) or bool(st.get("questObjectivesCompleted", False))
+
+    # --- Furniture Manipulation Helpers ---
+    def reveal_furniture(self, furniture_id: str) -> dict:
+        """Reveal a hidden furniture piece."""
+        self.log(f"Revealing hidden furniture '{furniture_id}'...")
+        return self.execute_action("reveal_furniture", furnitureId=furniture_id)
+
+    def move_furniture(self, furniture_id: str, tile: list, message: str = "") -> dict:
+        """Move a furniture piece to a new tile with an optional custom message."""
+        self.log(f"Moving furniture '{furniture_id}' to {tile} (message='{message}')...")
+        payload = {"furnitureId": furniture_id, "tile": tile}
+        if message:
+            payload["message"] = message
+        return self.execute_action("move_furniture", **payload)
+
