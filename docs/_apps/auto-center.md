@@ -7,6 +7,9 @@ summary: "Owner vehicle care and invoice scans, private Git shop repairs, and so
 description: "Separate owner and maintenance center workspaces backed by KGraph."
 ---
 
+> **Running a shop?** Read the full lifecycle guide, from customer intake to a paid and returned car, with screenshots and video from the end-to-end tests: [rowbose.com/auto-center](https://rowbose.com/auto-center/).
+
+
 Choose **Vehicle owner** to track your vehicles, service history, future maintenance by date or odometer, and repair-shop invoices. Import an image or PDF, review the locally extracted text, and save the original with its hash.
 
 ![Owner maintenance planning in Auto Center, using labeled test records]({{ '/assets/images/screenshots/auto-owner-maintenance.png' | relative_url }})

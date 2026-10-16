@@ -99,7 +99,7 @@ details{border-bottom:1px solid var(--line);padding:16px 0}summary{cursor:pointe
 @media(max-width:600px){.watch{padding:5px 9px}.player-bar span{display:none}}
 
 /* Home: SDLC flow + integrations */
-.flow{list-style:none;display:grid;grid-template-columns:repeat(5,1fr);gap:14px;padding:0;margin:40px 0 0;counter-reset:f}
+.flow{list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;padding:0;margin:40px 0 0;counter-reset:f}
 .flow li{counter-increment:f;border:1px solid var(--line);border-radius:14px;padding:18px;position:relative}
 .flow li:before{content:counter(f);display:block;color:var(--accent);font-weight:800;margin-bottom:6px}
 .flow b{display:block}.flow span{color:var(--muted);font-size:.88rem}

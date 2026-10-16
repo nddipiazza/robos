@@ -221,3 +221,10 @@ footer #count { display: block; font-size: 9px; margin-top: 15px; color: #94a9b4
 .header-date { font-size: 11px; color: var(--muted); white-space: nowrap; }
 @media(max-width:700px) { .header-date { font-size: 10px; max-width: 125px; white-space: normal; text-align: right; } }
 .checked-in-time { color: var(--muted); font-size: 10px; margin: -9px 0 15px; }
+/* Repair lifecycle */
+.pipeline{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:12px 0 18px}
+.pipe-step{border:1px solid var(--line,#30363d);border-radius:8px;padding:10px;text-align:center}.pipe-step b{display:block;font-size:1.6rem}.pipe-step span{font-size:.78rem;opacity:.8}
+.stage-bar{display:flex;gap:4px;list-style:none;padding:0;margin:10px 0}.stage-bar li{flex:1;font-size:.72rem;padding:6px;border-radius:6px;border:1px solid var(--line,#30363d);opacity:.55;text-align:center}
+.stage-bar li.done{opacity:.9;background:rgba(46,160,67,.18)}.stage-bar li.current{opacity:1;border-color:#58a6ff;background:rgba(88,166,255,.18);font-weight:600}
+.ticket .sub{margin:10px 0}.ticket .sub h4{margin:0 0 8px}.timeline{margin:8px 0 0;padding-left:18px}.estimate-form .row{margin:6px 0}.decision{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:8px 0}
+button.secondary{background:transparent;border:1px solid var(--line,#30363d)}
