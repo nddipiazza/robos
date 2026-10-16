@@ -19,7 +19,7 @@ play_script = os.path.join(ROOT_DIR, "play.sh")
 env = dict(os.environ, TABLETOP_SERVER_PORT=str(PORT))
 
 proc = subprocess.Popen(
-    ["xvfb-run", "--auto-servernum", play_script, "--role=player", "--reset"],
+    ["xvfb-run", "--auto-servernum", play_script, "--role=player", "--reset", "--skip-spell-select"],
     env=env,
     stdout=subprocess.DEVNULL,
     stderr=subprocess.DEVNULL,
@@ -33,22 +33,23 @@ try:
     if not ai.wait_for_ready(timeout=16.0):
         raise RuntimeError("Godot failed to start")
 
-    time.sleep(1.0)
+    time.sleep(2.0)
 
     # Resolve elf spell modal if visible
-    st = ai.get_state()
-    if st.get("elfSpellModalVisible", False) or st.get("spellAllocation", {}).get("modalVisible", False):
-        ai.select_elf_element("water", confirm=True)
-        time.sleep(0.5)
+    ai.select_elf_element("water", confirm=True)
+    ai.close_elf_spell_modal()
+    ai.execute_action("close_all_dialogs")
+    time.sleep(0.5)
 
     if ai.is_quest_objective_open():
         ai.close_quest_objective()
-        time.sleep(0.5)
+        time.sleep(0.3)
 
-    # 1. Capture Header with 🤖 AI icon and action bar without AI Step
-    out_hud = "/tmp/tabletop_ai_header_proof.png"
+    # 1. Capture Main Screen with 🤖 AI Options button on bottom-left and clean un-overflowed header
+    out_hud = "/tmp/tabletop_ai_bottom_left_button_proof.png"
     ai.take_screenshot(out_hud)
     print(f"Captured {out_hud}")
+    shutil.copyfile(out_hud, os.path.join(artifact_dir, "tabletop_ai_bottom_left_button_proof.png"))
     shutil.copyfile(out_hud, os.path.join(artifact_dir, "tabletop_ai_header_proof.png"))
     shutil.copyfile(out_hud, os.path.join(TESTS_DIR, "recordings", "ai_header_proof.png"))
 

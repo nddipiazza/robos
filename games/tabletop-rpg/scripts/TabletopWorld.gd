@@ -2438,23 +2438,39 @@ func _setup_ui_signals() -> void:
 		obj_btn.pressed.connect(toggle_quest_objective_modal)
 		header_hbox.add_child(obj_btn)
 
-	btn_ai_options = get_node_or_null("UI/SidebarHeader/BtnAIEngineOptions")
-	if not btn_ai_options and header_hbox:
+	if header_hbox and header_hbox.has_node("BtnAIEngineOptions"):
+		var old_ai_btn = header_hbox.get_node("BtnAIEngineOptions")
+		header_hbox.remove_child(old_ai_btn)
+		old_ai_btn.queue_free()
+
+	# AI Engine Options Button is located at bottom-left of UI (not in crammed header)
+	btn_ai_options = get_node_or_null("UI/BtnAIEngineOptions")
+	if not btn_ai_options:
 		btn_ai_options = Button.new()
 		btn_ai_options.name = "BtnAIEngineOptions"
-		btn_ai_options.text = "🤖 AI"
+		btn_ai_options.text = "🤖 AI Options"
 		btn_ai_options.tooltip_text = "🤖 AI Engine Options [A]\nConfigure autonomous AI player and turn progression."
 		btn_ai_options.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		btn_ai_options.custom_minimum_size = Vector2(68, 30)
-		header_hbox.add_child(btn_ai_options)
+		btn_ai_options.custom_minimum_size = Vector2(160, 40)
+		btn_ai_options.position = Vector2(20, 1024)
+		btn_ai_options.size = Vector2(160, 40)
+		var ui_node = get_node_or_null("UI")
+		if ui_node:
+			ui_node.add_child(btn_ai_options)
+	else:
+		btn_ai_options.position = Vector2(20, 1024)
+		btn_ai_options.size = Vector2(160, 40)
+		btn_ai_options.custom_minimum_size = Vector2(160, 40)
+
 	if btn_ai_options and not btn_ai_options.pressed.is_connected(toggle_ai_options_modal):
 		btn_ai_options.pressed.connect(toggle_ai_options_modal)
-		apply_rpg_font_to_button(btn_ai_options, 11, Color(1.0, 0.94, 0.76, 1.0))
+		apply_rpg_font_to_button(btn_ai_options, 13, Color(1.0, 0.94, 0.76, 1.0))
 	_update_ai_options_button_ui()
 
 	if title_label:
 		apply_rpg_font_to_label(title_label, true, 16, Color(1.0, 0.85, 0.25, 1.0))
 	if role_badge:
+		role_badge.custom_minimum_size = Vector2(110, 30)
 		apply_rpg_font_to_button(role_badge, 11, Color(1.0, 0.94, 0.76, 1.0))
 	if btn_map_end_turn:
 		apply_rpg_font_to_button(btn_map_end_turn, 12, Color(1.0, 0.94, 0.76, 1.0))
@@ -5594,7 +5610,7 @@ func _update_ai_options_button_ui() -> void:
 		btn_ai_options.tooltip_text = "🤖 AI Engine Options [A]\nMode: Manual Play with Auto-Advance\nClick to reconfigure."
 		btn_ai_options.modulate = Color(1.0, 0.88, 0.4, 1.0)
 	else:
-		btn_ai_options.text = "🤖 AI"
+		btn_ai_options.text = "🤖 AI Options"
 		btn_ai_options.tooltip_text = "🤖 AI Engine Options [A]\nMode: Manual Player Control\nClick to reconfigure."
 		btn_ai_options.modulate = Color(1.0, 1.0, 1.0, 1.0)
 
@@ -13810,8 +13826,16 @@ func _execute_trigger_actions(trigger: Dictionary, hero: Dictionary, start_index
 					found_furn["position"] = [new_x, new_y]
 					_rebuild_furniture_tile_map()
 					var dname = str(found_furn.get("name", found_furn.get("id", "Furniture")))
-					_log("[ACTION] 🪑 Furniture '%s' moved to [%d, %d]!" % [dname, new_x, new_y])
-					spawn_floating_text(Vector2i(new_x, new_y), "🪑 %s MOVED" % dname.to_upper(), Color(1.0, 0.8, 0.2), 2.5)
+					var raw_msg = str(act.get("message", act.get("custom_message", act.get("customMessage", act.get("text", ""))))).strip_edges()
+					var display_msg = ""
+					if raw_msg != "":
+						display_msg = raw_msg.replace("{name}", dname).replace("{id}", str(found_furn.get("id", ""))).replace("{x}", str(new_x)).replace("{y}", str(new_y))
+						_log("[ACTION] 🪑 %s" % display_msg)
+						spawn_floating_text(Vector2i(new_x, new_y), display_msg, Color(1.0, 0.8, 0.2), 3.5)
+					else:
+						display_msg = "🪑 %s MOVED" % dname.to_upper()
+						_log("[ACTION] 🪑 Furniture '%s' moved to [%d, %d]!" % [dname, new_x, new_y])
+						spawn_floating_text(Vector2i(new_x, new_y), display_msg, Color(1.0, 0.8, 0.2), 2.5)
 					spawn_burst_vfx(board_offset + Vector2((new_x + 0.5) * tile_size, (new_y + 0.5) * tile_size), Color(1.0, 0.8, 0.2), 50.0, 0.5)
 					update_party_vision()
 					_update_ui()
@@ -19473,9 +19497,17 @@ func get_telemetry_state() -> Dictionary:
 				"text": btn_quest_objectives.text if btn_quest_objectives else "Objectives",
 				"tooltip": btn_quest_objectives.tooltip_text if btn_quest_objectives else "Quest Objectives [O]",
 				"icon": "action_search"
-			} if (btn_quest_objectives != null or get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") != null) else {}
+			} if (btn_quest_objectives != null or get_node_or_null("UI/SidebarHeader/BtnReviewQuestObjective") != null) else {},
+			"ai_options": {
+				"visible": btn_ai_options.visible if btn_ai_options else false,
+				"disabled": btn_ai_options.disabled if btn_ai_options else false,
+				"text": btn_ai_options.text if btn_ai_options else "",
+				"tooltip": btn_ai_options.tooltip_text if btn_ai_options else "",
+				"position": [btn_ai_options.position.x, btn_ai_options.position.y] if btn_ai_options else [20, 1024]
+			} if btn_ai_options else {}
 		},
 		"headerButtons": (get_node_or_null("UI/SidebarHeader").get_children().map(func(c): return c.name) if get_node_or_null("UI/SidebarHeader") else []),
+		"bottomLeftButtons": ([btn_ai_options.name] if (btn_ai_options and btn_ai_options.visible) else []),
 		"hotbar": {
 			"actionsCount": actions_container.get_child_count() if actions_container else 10,
 			"scrollHorizontal": actions_scroll.scroll_horizontal if actions_scroll else 0,
@@ -20088,8 +20120,22 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 					f["y"] = new_y
 					f["position"] = [new_x, new_y]
 					_rebuild_furniture_tile_map()
+					var dname = str(f.get("name", f.get("id", "Furniture")))
+					var raw_msg = str(action_data.get("message", action_data.get("custom_message", action_data.get("customMessage", action_data.get("text", ""))))).strip_edges()
+					var display_msg = ""
+					if raw_msg != "":
+						display_msg = raw_msg.replace("{name}", dname).replace("{id}", str(f.get("id", ""))).replace("{x}", str(new_x)).replace("{y}", str(new_y))
+						_log("[ACTION] 🪑 %s" % display_msg)
+						spawn_floating_text(Vector2i(new_x, new_y), display_msg, Color(1.0, 0.8, 0.2), 3.5)
+					else:
+						display_msg = "🪑 %s MOVED" % dname.to_upper()
+						_log("[ACTION] 🪑 Furniture '%s' moved to [%d, %d]!" % [dname, new_x, new_y])
+						spawn_floating_text(Vector2i(new_x, new_y), display_msg, Color(1.0, 0.8, 0.2), 2.5)
+					spawn_burst_vfx(board_offset + Vector2((new_x + 0.5) * tile_size, (new_y + 0.5) * tile_size), Color(1.0, 0.8, 0.2), 50.0, 0.5)
+					update_party_vision()
+					_update_ui()
 					queue_redraw_all()
-					return { "success": true, "furniture": f }
+					return { "success": true, "furniture": f, "message": display_msg }
 			return { "success": false, "error": "Furniture not found: " + fid }
 		"trigger_story_event":
 			var target_id = str(action_data.get("id", action_data.get("marker", "")))
@@ -21173,6 +21219,7 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				"armory", "btnarmory": target_btn = btn_armory
 				"wandering_monster", "btnwanderingmonster", "wondering_monster", "btnwonderingmonster", "show_wandering_monster", "show_wondering_monster": target_btn = btn_wandering_monster
 				"map_end_turn", "btnmapendturn", "end_turn_top_right", "map_end": target_btn = btn_map_end_turn
+				"ai_options", "btn_ai_options", "btnaiooptions", "ai_engine_options", "btnaieoptions", "btnaieengineoptions": target_btn = btn_ai_options
 			if target_btn:
 				if target_btn.disabled:
 					var reason = _get_button_unavailable_reason(target_btn)
@@ -22360,14 +22407,18 @@ func _draw_floating_texts(canvas: CanvasItem) -> void:
 			var text_y = plaque_y + pad_y + str_size.y * 0.85
 			canvas.draw_string(font, Vector2(plaque_x + pad_x, text_y), full_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size, Color(1.0, 0.92, 0.45, ft.alpha))
 		else:
-			var f_size = 18
-			var col = Color(ft.color.r, ft.color.g, ft.color.b, ft.alpha)
 			var txt = str(ft.get("text", ""))
-			var tw = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size).x
-			var bg_rect = Rect2(ft.pos.x - tw * 0.5 - 6.0, ft.pos.y - 15.0, tw + 12.0, 20.0)
-			canvas.draw_rect(bg_rect, Color(0.05, 0.05, 0.08, 0.85 * ft.alpha))
-			canvas.draw_rect(bg_rect, Color(col.r, col.g, col.b, 0.65 * ft.alpha), false, 1.2)
-			canvas.draw_string(font, Vector2(ft.pos.x - tw * 0.5, ft.pos.y), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size, col)
+			var f_size = 13 if txt.length() > 50 else (15 if txt.length() > 25 else 18)
+			var col = Color(ft.color.r, ft.color.g, ft.color.b, ft.alpha)
+			var text_sz = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size)
+			var tw = text_sz.x
+			var th = maxf(22.0, text_sz.y + 6.0)
+			var vp_w = canvas.get_viewport_rect().size.x if canvas.get_viewport() else 1920.0
+			var draw_x = clampf(ft.pos.x - tw * 0.5, 16.0, maxf(16.0, vp_w - tw - 16.0))
+			var bg_rect = Rect2(draw_x - 8.0, ft.pos.y - th * 0.75, tw + 16.0, th)
+			canvas.draw_rect(bg_rect, Color(0.05, 0.05, 0.08, 0.88 * ft.alpha))
+			canvas.draw_rect(bg_rect, Color(col.r, col.g, col.b, 0.75 * ft.alpha), false, 1.2)
+			canvas.draw_string(font, Vector2(draw_x, ft.pos.y), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, f_size, col)
 
 func _setup_trap_sprung_overlay(trap: Dictionary, hero: Dictionary, final_pos: Vector2i, path: Array, actual_cost: int, is_chest: bool = false) -> void:
 	var t_type = str(trap.get("type", trap.get("trapType", "pit"))).to_lower()
