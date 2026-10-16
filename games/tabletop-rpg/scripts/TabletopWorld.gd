@@ -355,6 +355,13 @@ var btn_menu_save_game: Button = null
 var btn_menu_load_game: Button = null
 var btn_menu_close: Button = null
 
+var restart_confirm_modal: ColorRect = null
+var restart_confirm_card: PanelContainer = null
+var restart_confirm_details_label: Label = null
+var btn_restart_confirm_yes: Button = null
+var btn_restart_confirm_no: Button = null
+var _pending_restart_callback: Callable = Callable()
+
 var quest_objective_modal: ColorRect = null
 var quest_objective_card: PanelContainer = null
 var quest_objective_title_label: Label = null
@@ -535,6 +542,7 @@ func _ready() -> void:
 	_setup_elf_spell_modal()
 	_setup_armory_modal()
 	_setup_game_menu_modal()
+	_setup_restart_confirm_modal()
 	_setup_ai_options_modal()
 	_setup_quest_objective_modal()
 	_setup_quest_objectives_hud()
@@ -4534,7 +4542,8 @@ func confirm_elf_spell_selection() -> Dictionary:
 	if is_quest_begin() and has_party_gold_for_armory():
 		open_armory()
 		res["armory_opened"] = true
-	auto_save_game()
+	if not is_quest_begin():
+		auto_save_game()
 	return res
 
 func _on_confirm_spell_modal_pressed() -> void:
@@ -5321,10 +5330,177 @@ func _update_game_menu_info() -> void:
 
 func restart_quest_from_menu() -> void:
 	_log("[GAME MENU] Player requested Restart Quest from Game Menu.")
+	open_restart_confirm_modal()
+
+# ==============================================================================
+# ROBOS TABLETOP RPG: RESTART QUEST CONFIRMATION MODAL
+# ==============================================================================
+func _setup_restart_confirm_modal() -> void:
+	var ui_node = get_node_or_null("UI")
+	if not ui_node:
+		return
+	if ui_node.has_node("RestartConfirmModal"):
+		restart_confirm_modal = ui_node.get_node("RestartConfirmModal")
+		return
+
+	restart_confirm_modal = ColorRect.new()
+	restart_confirm_modal.name = "RestartConfirmModal"
+	restart_confirm_modal.visible = false
+	restart_confirm_modal.color = Color(0.02, 0.03, 0.06, 0.85)
+	restart_confirm_modal.set_anchors_preset(Control.PRESET_FULL_RECT)
+	restart_confirm_modal.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	# Clicking background dim overlay cancels
+	restart_confirm_modal.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
+			cancel_restart_quest()
+	)
+
+	restart_confirm_card = PanelContainer.new()
+	restart_confirm_card.name = "Card"
+	restart_confirm_card.set_anchors_preset(Control.PRESET_CENTER)
+	restart_confirm_card.custom_minimum_size = Vector2(510, 270)
+	restart_confirm_card.offset_left = -255
+	restart_confirm_card.offset_top = -135
+	restart_confirm_card.offset_right = 255
+	restart_confirm_card.offset_bottom = 135
+	restart_confirm_card.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	restart_confirm_card.grow_vertical = Control.GROW_DIRECTION_BOTH
+	restart_confirm_card.mouse_filter = Control.MOUSE_FILTER_STOP
+	restart_confirm_card.add_theme_stylebox_override("panel", get_rpg_dialog_panel_stylebox(32, 26, 32, 26))
+
+	var margin = MarginContainer.new()
+	margin.name = "Margin"
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_top", 16)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_bottom", 18)
+	restart_confirm_card.add_child(margin)
+
+	var vbox = VBoxContainer.new()
+	vbox.name = "VBox"
+	vbox.add_theme_constant_override("separation", 12)
+	margin.add_child(vbox)
+
+	# 1. Header
+	var header = HBoxContainer.new()
+	header.name = "Header"
+	var title = Label.new()
+	title.name = "Title"
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.text = "⚠️ RESTART QUEST"
+	title.add_theme_stylebox_override("normal", get_rpg_title_plaque_stylebox(14, 6))
+	apply_rpg_font_to_label(title, true, 18, Color(1.0, 0.88, 0.35, 1.0))
+	header.add_child(title)
+
+	var badge = Label.new()
+	badge.name = "Badge"
+	badge.text = "CONFIRMATION REQUIRED"
+	badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	badge.add_theme_stylebox_override("normal", get_rpg_badge_stylebox())
+	apply_rpg_font_to_label(badge, false, 11, Color(1.0, 0.45, 0.45, 1.0))
+	header.add_child(badge)
+	vbox.add_child(header)
+
+	var sep = HSeparator.new()
+	vbox.add_child(sep)
+
+	# 2. Warning Description (Antique Plaque)
+	var info_panel = PanelContainer.new()
+	info_panel.name = "InfoPanel"
+	info_panel.add_theme_stylebox_override("panel", get_rpg_plaque_stylebox(16, 12, 16, 12))
+	var info_margin = MarginContainer.new()
+	info_margin.add_theme_constant_override("margin_left", 10)
+	info_margin.add_theme_constant_override("margin_top", 8)
+	info_margin.add_theme_constant_override("margin_right", 10)
+	info_margin.add_theme_constant_override("margin_bottom", 8)
+	info_panel.add_child(info_margin)
+
+	restart_confirm_details_label = Label.new()
+	restart_confirm_details_label.name = "DetailsLabel"
+	restart_confirm_details_label.text = "Are you sure you want to restart the quest from the beginning?\n\nAll unsaved progress, explored tiles, and current round state will be lost.\nThe quest will reload from the cartridge at Round 1."
+	restart_confirm_details_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	restart_confirm_details_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	apply_rpg_font_to_label(restart_confirm_details_label, false, 13, Color(1.0, 0.94, 0.78, 1.0), false)
+	info_margin.add_child(restart_confirm_details_label)
+	vbox.add_child(info_panel)
+
+	# 3. Action Buttons Row (Confirm / Cancel)
+	var btn_hbox = HBoxContainer.new()
+	btn_hbox.name = "ButtonRow"
+	btn_hbox.add_theme_constant_override("separation", 12)
+
+	btn_restart_confirm_yes = Button.new()
+	btn_restart_confirm_yes.name = "BtnConfirmRestart"
+	btn_restart_confirm_yes.text = "YES, RESTART QUEST"
+	btn_restart_confirm_yes.tooltip_text = "Confirm quest restart: clears save game and resets to Round 1 [Enter]"
+	btn_restart_confirm_yes.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_restart_confirm_yes.custom_minimum_size = Vector2(0, 44)
+	btn_restart_confirm_yes.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_restart_confirm_yes, 14, Color(1.0, 0.45, 0.45, 1.0))
+	btn_restart_confirm_yes.pressed.connect(func(): confirm_restart_quest())
+	btn_hbox.add_child(btn_restart_confirm_yes)
+
+	btn_restart_confirm_no = Button.new()
+	btn_restart_confirm_no.name = "BtnCancelRestart"
+	btn_restart_confirm_no.text = "CANCEL (KEEP PLAYING)"
+	btn_restart_confirm_no.tooltip_text = "Return to current game without restarting [Esc]"
+	btn_restart_confirm_no.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn_restart_confirm_no.custom_minimum_size = Vector2(0, 44)
+	btn_restart_confirm_no.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_restart_confirm_no, 14, Color(0.85, 0.95, 1.0, 1.0))
+	btn_restart_confirm_no.pressed.connect(func(): cancel_restart_quest())
+	btn_hbox.add_child(btn_restart_confirm_no)
+
+	vbox.add_child(btn_hbox)
+
+	restart_confirm_modal.add_child(restart_confirm_card)
+	ui_node.add_child(restart_confirm_modal)
+
+func is_restart_confirm_open() -> bool:
+	return restart_confirm_modal != null and restart_confirm_modal.visible
+
+func open_restart_confirm_modal(on_confirm: Callable = Callable()) -> void:
+	if not restart_confirm_modal:
+		_setup_restart_confirm_modal()
+	if not restart_confirm_modal:
+		return
+
+	_pending_restart_callback = on_confirm
+
+	if restart_confirm_details_label:
+		var cart = CartridgeManager.active_cartridge
+		var act_q = get_active_quest_objective()
+		var q_title = act_q.get("title", cart.get("header", {}).get("title", "HeroQuest"))
+		restart_confirm_details_label.text = "Are you sure you want to restart '%s' from the beginning?\n\nCurrent Round: %d  •  All session progress will be lost.\nThe quest will reset to Round 1." % [
+			q_title, current_round
+		]
+
+	restart_confirm_modal.visible = true
+	_log("[RESTART] Confirmation requested: Restart Quest prompt displayed.")
+
+func confirm_restart_quest() -> Dictionary:
+	if restart_confirm_modal:
+		restart_confirm_modal.visible = false
+
+	if _pending_restart_callback.is_valid():
+		var cb = _pending_restart_callback
+		_pending_restart_callback = Callable()
+		cb.call()
+		return { "success": true, "restarted": true }
+
 	delete_save_game()
 	_load_active_cartridge(true)
 	close_game_menu()
-	_log("[RESET] Quest restarted from cartridge to Round 1.")
+	_log("[RESET] Quest restarted from cartridge to Round 1 after confirmation.")
+	return { "success": true, "restarted": true }
+
+func cancel_restart_quest() -> Dictionary:
+	if restart_confirm_modal:
+		restart_confirm_modal.visible = false
+	_pending_restart_callback = Callable()
+	_log("[RESTART] Quest restart cancelled by user.")
+	return { "success": true, "cancelled": true }
 
 func save_game_from_menu() -> void:
 	auto_save_game()
@@ -6285,12 +6461,14 @@ func _setup_quest_complete_modal() -> void:
 	btn_quest_complete_restart.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	apply_rpg_font_to_button(btn_quest_complete_restart, 12, Color(1.0, 0.85, 0.60, 1.0))
 	btn_quest_complete_restart.pressed.connect(func():
-		close_quest_complete_modal()
-		delete_save_game()
-		_load_active_cartridge(true)
-		_quest_completed = false
-		is_game_closed = false
-		_update_ui()
+		open_restart_confirm_modal(func():
+			close_quest_complete_modal()
+			delete_save_game()
+			_load_active_cartridge(true)
+			_quest_completed = false
+			is_game_closed = false
+			_update_ui()
+		)
 	)
 	btn_hbox.add_child(btn_quest_complete_restart)
 
@@ -8251,6 +8429,10 @@ func _execute_auto_play_step() -> void:
 		resolve_story_trigger_overlay_click()
 		return
 
+	if restart_confirm_modal and restart_confirm_modal.visible:
+		confirm_restart_quest()
+		return
+
 	if elf_spell_modal and elf_spell_modal.visible:
 		select_elf_element("water")
 		confirm_elf_spell_selection()
@@ -8908,6 +9090,20 @@ func _input(event: InputEvent) -> void:
 			if targeting_cursor:
 				targeting_cursor.queue_redraw()
 			queue_redraw_all()
+
+	if restart_confirm_modal and restart_confirm_modal.visible:
+		if event is InputEventKey and event.pressed:
+			if event.keycode == KEY_ESCAPE:
+				cancel_restart_quest()
+				get_viewport().set_input_as_handled()
+				return
+			elif event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER:
+				confirm_restart_quest()
+				get_viewport().set_input_as_handled()
+				return
+		if event is InputEventKey:
+			get_viewport().set_input_as_handled()
+			return
 
 	if quest_complete_modal and quest_complete_modal.visible:
 		if (event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_SPACE or event.keycode == KEY_ENTER)):
@@ -12018,6 +12214,9 @@ func close_all_dialogs() -> void:
 	close_armory()
 	close_treasure_modal()
 	close_elf_spell_selection_modal()
+	if restart_confirm_modal and restart_confirm_modal.visible:
+		restart_confirm_modal.visible = false
+		_pending_restart_callback = Callable()
 	if ai_confirm_modal and ai_confirm_modal.visible:
 		ai_confirm_modal.visible = false
 	if not active_story_trigger_overlay.is_empty():
@@ -19285,6 +19484,7 @@ func get_telemetry_state() -> Dictionary:
 		"modal": {
 			"questObjectiveModalVisible": is_quest_objective_open(),
 			"gameMenuModalVisible": is_game_menu_open(),
+			"restartConfirmModalVisible": is_restart_confirm_open(),
 			"aiConfirmModalVisible": ai_confirm_modal.visible if ai_confirm_modal else false,
 			"elfSpellSelectModalVisible": elf_spell_modal.visible if elf_spell_modal else false,
 			"armoryModalVisible": armory_modal.visible if armory_modal else false,
@@ -19408,6 +19608,9 @@ func get_telemetry_state() -> Dictionary:
 		"exitStairType": exit_stair_type,
 		"gameMenuVisible": is_game_menu_open(),
 		"isGameMenuOpen": is_game_menu_open(),
+		"restartConfirmModalVisible": is_restart_confirm_open(),
+		"restartConfirmModalOpen": is_restart_confirm_open(),
+		"isRestartConfirmOpen": is_restart_confirm_open(),
 		"questObjectiveModalOpen": is_quest_objective_open(),
 		"isQuestObjectiveOpen": is_quest_objective_open(),
 		"questCompleteModalOpen": is_quest_complete_modal_open(),
@@ -20496,12 +20699,23 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 			toggle_game_menu()
 			return { "success": true, "menu_open": is_game_menu_open() }
 		"restart_quest", "reset_game", "reset_quest", "force_reload":
+			var require_confirm = bool(action_data.get("confirm", action_data.get("require_confirm", false)))
+			if require_confirm:
+				open_restart_confirm_modal()
+				return { "success": true, "confirm_requested": true, "modalVisible": is_restart_confirm_open() }
 			var clear_save = bool(action_data.get("clear_save", action_data.get("clearSave", true)))
 			if clear_save:
 				delete_save_game()
 			_load_active_cartridge(true)
 			close_game_menu()
 			return { "success": true }
+		"request_restart_quest", "open_restart_confirm_modal", "click_menu_restart_quest":
+			open_restart_confirm_modal()
+			return { "success": true, "modalVisible": is_restart_confirm_open() }
+		"confirm_restart_quest":
+			return confirm_restart_quest()
+		"cancel_restart_quest":
+			return cancel_restart_quest()
 		"save_game_state", "save_game", "autosave":
 			auto_save_game()
 			_update_game_menu_info()
