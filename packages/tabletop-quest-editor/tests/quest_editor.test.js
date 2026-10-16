@@ -2504,4 +2504,121 @@ test('Open Cartridge Dialog: opens native file dialog and populates quest state'
   }
 });
 
+test('Hidden Object Flag & Furniture Actions: supports hidden property and furniture_visible/move_furniture actions', () => {
+  // Verify action definitions
+  assert.ok(TRIGGER_ACTION_DEFS.furniture_visible, 'furniture_visible action def should exist');
+  assert.equal(TRIGGER_ACTION_DEFS.furniture_visible.icon, '✨');
+  assert.ok(TRIGGER_ACTION_DEFS.move_furniture, 'move_furniture action def should exist');
+  assert.equal(TRIGGER_ACTION_DEFS.move_furniture.icon, '🪑');
+
+  // Verify hidden property serialization in buildCartridgePayload
+  const savedStateQuest = JSON.parse(JSON.stringify(state.quest));
+  try {
+    state.quest.furniture = [
+      {
+        id: 'furn-chest-3',
+        name: 'Heist Treasure Chest',
+        type: 'chest',
+        x: 17,
+        y: 18,
+        width: 1,
+        height: 1,
+        roomId: '',
+        hidden: true
+      },
+      {
+        id: 'furn-table-1',
+        name: 'Normal Table',
+        type: 'table',
+        x: 5,
+        y: 5,
+        width: 3,
+        height: 2,
+        roomId: 'room-1',
+        hidden: false
+      }
+    ];
+
+    state.quest.storyTriggers = [
+      {
+        id: 'trigger-note-a-2bug',
+        marker: 'Note A',
+        title: 'Note A Encounter',
+        event: 'on_tile_stepped_on',
+        tile: [7, 18],
+        onceOnly: true,
+        actions: [
+          {
+            type: 'play_movie',
+            moviePath: 'res://assets/movies/quest_scene_a_corridor_heist.ogv',
+            title: 'Corridor Heist',
+            canSkip: true
+          },
+          {
+            type: 'dialogue',
+            lines: [
+              {
+                speaker: 'Goblin who hesited chest',
+                text: 'its the humans! (clank of chest dropping to stone ground)',
+                audio: ''
+              }
+            ]
+          },
+          {
+            type: 'furniture_visible',
+            furnitureId: 'furn-chest-3',
+            target: 'Heist Treasure Chest'
+          },
+          {
+            type: 'dialogue',
+            lines: [
+              {
+                speaker: 'Orc who hesited chest',
+                text: 'useless runt, they will never get the treasure rahhh',
+                audio: ''
+              }
+            ]
+          },
+          {
+            type: 'move_furniture',
+            furnitureId: 'furn-chest-3',
+            target: 'Heist Treasure Chest',
+            tile: [18, 17],
+            x: 18,
+            y: 17
+          }
+        ]
+      }
+    ];
+
+    const payload = buildCartridgePayload();
+    const mapData = payload.maps[payload.cartridgeId || 'heroquest-the-trial'];
+    assert.ok(mapData, 'map data should exist in payload');
+
+    const chest = mapData.furniture.find(f => f.id === 'furn-chest-3');
+    assert.ok(chest, 'furn-chest-3 should exist');
+    assert.equal(chest.hidden, true, 'furn-chest-3 should have hidden: true');
+
+    const table = mapData.furniture.find(f => f.id === 'furn-table-1');
+    assert.ok(table, 'furn-table-1 should exist');
+    assert.equal(table.hidden, false, 'furn-table-1 should have hidden: false');
+
+    const trigger = (mapData.triggers || []).find(t => t.id === 'trigger-note-a-2bug');
+    assert.ok(trigger, 'trigger-note-a-2bug should exist');
+    assert.equal(trigger.actions.length, 5, 'should have 5 actions in pipeline');
+    assert.equal(trigger.actions[0].type, 'play_movie');
+    assert.equal(trigger.actions[1].type, 'dialogue');
+    assert.equal(trigger.actions[1].lines[0].speaker, 'Goblin who hesited chest');
+    assert.equal(trigger.actions[2].type, 'furniture_visible');
+    assert.equal(trigger.actions[2].target, 'Heist Treasure Chest');
+    assert.equal(trigger.actions[3].type, 'dialogue');
+    assert.equal(trigger.actions[3].lines[0].speaker, 'Orc who hesited chest');
+    assert.equal(trigger.actions[4].type, 'move_furniture');
+    assert.deepEqual(trigger.actions[4].tile, [18, 17]);
+  } finally {
+    state.quest = savedStateQuest;
+  }
+});
+
+
 

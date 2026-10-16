@@ -21,7 +21,7 @@
       7,
       14
     ],
-    "createdDate": "2026-10-15T15:15:12.197Z"
+    "createdDate": "2026-10-16T15:34:19.798Z"
   },
   "heroes": {
     "barbarian": {
@@ -92,7 +92,7 @@
       "name": "Doomguard",
       "monsterType": "boss",
       "bodyPoints": 4,
-      "mindPoints": 0,
+      "mindPoints": 5,
       "attackDice": 4,
       "defendDice": 4,
       "movementSquares": 8,
@@ -252,7 +252,7 @@
     "mon-orc-champion-4": {
       "id": "mon-orc-champion-4",
       "slug": "orc-mon-orc-champion-4",
-      "name": "Witch Commander",
+      "name": "Witch Hand",
       "monsterType": "orc",
       "bodyPoints": 5,
       "mindPoints": 5,
@@ -512,30 +512,10 @@
       ],
       "roomId": "room-sw-9"
     },
-    "mon-goblin-22": {
-      "id": "mon-goblin-22",
-      "slug": "goblin-mon-goblin-22",
-      "name": "Goblin",
-      "monsterType": "goblin",
-      "bodyPoints": 1,
-      "mindPoints": 1,
-      "attackDice": 2,
-      "defendDice": 1,
-      "movementSquares": 10,
-      "isBoss": false,
-      "isUndead": false,
-      "isSpellcaster": false,
-      "spells": [],
-      "position": [
-        14,
-        18
-      ],
-      "roomId": ""
-    },
     "mon-orc-23": {
       "id": "mon-orc-23",
       "slug": "orc-mon-orc-23",
-      "name": "Orc",
+      "name": "Orc who hesited chest",
       "monsterType": "orc",
       "bodyPoints": 1,
       "mindPoints": 2,
@@ -548,6 +528,26 @@
       "spells": [],
       "position": [
         18,
+        18
+      ],
+      "roomId": ""
+    },
+    "mon-goblin-23": {
+      "id": "mon-goblin-23",
+      "slug": "goblin-mon-goblin-23",
+      "name": "Goblin who hesited chest",
+      "monsterType": "goblin",
+      "bodyPoints": 1,
+      "mindPoints": 1,
+      "attackDice": 2,
+      "defendDice": 1,
+      "movementSquares": 10,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        16,
         18
       ],
       "roomId": ""
@@ -3008,6 +3008,20 @@
           "state": "closed",
           "is_secret": false,
           "room": "room-nw-4"
+        },
+        {
+          "id": "door-12",
+          "from": [
+            10,
+            8
+          ],
+          "to": [
+            9,
+            8
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-nw-10"
         }
       ],
       "furniture": [
@@ -3021,6 +3035,18 @@
           "height": 2,
           "roomId": "room-sw-8",
           "treasure": ""
+        },
+        {
+          "id": "furn-chest-3",
+          "name": "Heist Treasure Chest",
+          "type": "chest",
+          "x": 17,
+          "y": 18,
+          "width": 1,
+          "height": 1,
+          "roomId": "",
+          "treasure": "",
+          "hidden": true
         }
       ],
       "wallBlocks": [
@@ -3154,8 +3180,44 @@
             {
               "type": "play_movie",
               "moviePath": "res://assets/movies/quest_scene_a_corridor_heist.ogv",
-              "title": "Note A Cinematic",
+              "title": "Corridor Heist",
               "canSkip": true
+            },
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Goblin who hesited chest",
+                  "text": "its the humans! (clank of chest dropping to stone ground)",
+                  "audio": ""
+                }
+              ]
+            },
+            {
+              "type": "furniture_visible",
+              "furnitureId": "furn-chest-3",
+              "target": "Heist Treasure Chest"
+            },
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Orc who hesited chest",
+                  "text": "useless runt, they will never get the treasure rahhh",
+                  "audio": ""
+                }
+              ]
+            },
+            {
+              "type": "move_furniture",
+              "furnitureId": "furn-chest-3",
+              "target": "Heist Treasure Chest",
+              "tile": [
+                18,
+                17
+              ],
+              "x": 18,
+              "y": 17
             }
           ]
         },
@@ -3227,8 +3289,44 @@
             {
               "type": "play_movie",
               "moviePath": "res://assets/movies/quest_scene_a_corridor_heist.ogv",
-              "title": "Note A Cinematic",
+              "title": "Corridor Heist",
               "canSkip": true
+            },
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Goblin who hesited chest",
+                  "text": "its the humans! (clank of chest dropping to stone ground)",
+                  "audio": ""
+                }
+              ]
+            },
+            {
+              "type": "furniture_visible",
+              "furnitureId": "furn-chest-3",
+              "target": "Heist Treasure Chest"
+            },
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Orc who hesited chest",
+                  "text": "useless runt, they will never get the treasure rahhh",
+                  "audio": ""
+                }
+              ]
+            },
+            {
+              "type": "move_furniture",
+              "furnitureId": "furn-chest-3",
+              "target": "Heist Treasure Chest",
+              "tile": [
+                18,
+                17
+              ],
+              "x": 18,
+              "y": 17
             }
           ]
         },

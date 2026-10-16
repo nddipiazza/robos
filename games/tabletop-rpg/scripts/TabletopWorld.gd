@@ -3248,13 +3248,18 @@ func _rebuild_spatial_caches() -> void:
 		_doors_by_edge[Vector4i(f[0], f[1], t[0], t[1])] = d
 		_doors_by_edge[Vector4i(t[0], t[1], f[0], f[1])] = d
 
+	_rebuild_furniture_tile_map()
+
+func _rebuild_furniture_tile_map() -> void:
 	_furniture_by_tile.clear()
 	for furn in furniture:
+		if bool(furn.get("hidden", false)):
+			continue
 		var fx = int(furn.get("x", furn.get("position", [0, 0])[0]))
 		var fy = int(furn.get("y", furn.get("position", [0, 0])[1]))
 		var fw = int(furn.get("width", furn.get("w", 1)))
 		var fh = int(furn.get("height", furn.get("h", 1)))
-		var f_type = str(furn.get("type", "chest"))
+		var f_type = str(furn.get("type", "chest")).to_lower()
 		if f_type == "altar" and fw == 1 and fh == 1:
 			fw = 3; fh = 2
 		elif f_type == "bookcase" and fw == 1 and fh == 1:
@@ -13113,10 +13118,30 @@ func _resolve_speaker_display_name(speaker_raw: String) -> String:
 			for h in heroes:
 				if str(h.get("id")).to_lower() == s_low or str(h.get("name")).to_lower() == s_low:
 					return str(h.get("name", speaker_raw.capitalize()))
+			# 1. Exact match on monsters
 			for m in monsters:
-				if str(m.get("id")).to_lower() == s_low or str(m.get("monsterType")).to_lower() == s_low:
-					return str(m.get("name", speaker_raw.capitalize()))
-			return speaker_raw.capitalize()
+				var mid = str(m.get("id")).to_lower()
+				var mname = str(m.get("name", "")).to_lower()
+				if mid == s_low or mname == s_low:
+					return str(m.get("name", speaker_raw))
+			# 2. Exact match on furniture
+			for f in furniture:
+				var fid = str(f.get("id", "")).to_lower()
+				var fname = str(f.get("name", "")).to_lower()
+				if fid == s_low or fname == s_low:
+					return str(f.get("name", speaker_raw))
+			# 3. Substring match on monsters
+			for m in monsters:
+				var mname = str(m.get("name", "")).to_lower()
+				var mtype = str(m.get("monsterType")).to_lower()
+				if mtype == s_low or (s_low != "" and s_low in mname):
+					return str(m.get("name", speaker_raw))
+			# 4. Substring match on furniture
+			for f in furniture:
+				var fname = str(f.get("name", "")).to_lower()
+				if s_low != "" and s_low in fname:
+					return str(f.get("name", speaker_raw))
+			return speaker_raw
 
 func _find_speaker_grid_pos(speaker_raw: String) -> Vector2i:
 	var s_low = speaker_raw.to_lower().strip_edges()
@@ -13125,18 +13150,42 @@ func _find_speaker_grid_pos(speaker_raw: String) -> Vector2i:
 			return _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
 		if s_low == "active_hero" and h == get_active_hero():
 			return _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+	# 1. Exact match on monsters
 	for m in monsters:
-		if str(m.get("id")).to_lower() == s_low or str(m.get("monsterType")).to_lower() == s_low:
+		var mid = str(m.get("id")).to_lower()
+		var mname = str(m.get("name", "")).to_lower()
+		var mslug = str(m.get("slug", "")).to_lower()
+		if mid == s_low or mname == s_low or mslug == s_low:
+			return _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+	# 2. Exact match on furniture
+	for f in furniture:
+		var fid = str(f.get("id", "")).to_lower()
+		var fname = str(f.get("name", "")).to_lower()
+		if fid == s_low or fname == s_low:
+			var fx = int(f.get("x", f.get("position", [0, 0])[0]))
+			var fy = int(f.get("y", f.get("position", [0, 0])[1]))
+			return Vector2i(fx, fy)
+	# 3. Substring or type match on monsters
+	for m in monsters:
+		var mname = str(m.get("name", "")).to_lower()
+		var mtype = str(m.get("monsterType")).to_lower()
+		if mtype == s_low or (s_low != "" and s_low in mname):
 			return _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
 	if s_low in ["monster", "enemy", "foe"] and monsters.size() > 0:
 		for m in monsters:
 			if m.get("is_alive", true):
 				return _to_grid_pos(m.get("grid_pos", Vector2i(-1, -1)))
+	for f in furniture:
+		var fname = str(f.get("name", "")).to_lower()
+		if s_low != "" and s_low in fname:
+			var fx = int(f.get("x", f.get("position", [0, 0])[0]))
+			var fy = int(f.get("y", f.get("position", [0, 0])[1]))
+			return Vector2i(fx, fy)
 	return Vector2i(-1, -1)
 
-func _play_dialogue_audio(path: String) -> void:
+func _play_dialogue_audio(path: String) -> float:
 	if path == "":
-		return
+		return 0.0
 	if not voice_audio_player:
 		voice_audio_player = AudioStreamPlayer.new()
 		add_child(voice_audio_player)
@@ -13158,6 +13207,8 @@ func _play_dialogue_audio(path: String) -> void:
 	if stream:
 		voice_audio_player.stream = stream
 		voice_audio_player.play()
+		return stream.get_length()
+	return 0.0
 
 func _start_dialogue_sequence(lines: Array) -> void:
 	if lines.is_empty():
@@ -13192,15 +13243,27 @@ func _present_active_dialogue_bubble() -> void:
 	_log("💬 [%s] \"%s\"" % [speaker_disp, text])
 
 	# Optional audio files backing
+	var audio_dur: float = 0.0
 	if audio_path != "":
-		_play_dialogue_audio(audio_path)
+		audio_dur = _play_dialogue_audio(audio_path)
+
+	var fade_timeout = float(bubble.get("fade_timeout", bubble.get("timeout", 1.2)))
+	var total_dur = 4.5
+	if audio_dur > 0.0:
+		total_dur = audio_dur + fade_timeout
+	elif bubble.has("duration"):
+		total_dur = float(bubble["duration"])
+	elif bubble.has("timeout") and float(bubble["timeout"]) > 0:
+		total_dur = float(bubble["timeout"])
 
 	active_dialogue_sequence["speaker"] = speaker_raw
 	active_dialogue_sequence["speakerName"] = speaker_disp
 	active_dialogue_sequence["text"] = text
 	active_dialogue_sequence["audio"] = audio_path
 	active_dialogue_sequence["time"] = 0.0
-	active_dialogue_sequence["duration"] = float(bubble.get("duration", 4.5))
+	active_dialogue_sequence["duration"] = total_dur
+	active_dialogue_sequence["fade_time"] = minf(fade_timeout, total_dur * 0.5)
+	active_dialogue_sequence["has_audio"] = (audio_dur > 0.0)
 	queue_redraw_all()
 
 func advance_dialogue_bubble() -> bool:
@@ -13416,7 +13479,25 @@ func _execute_trigger_actions(trigger: Dictionary, hero: Dictionary, start_index
 				if movie_path != "":
 					var title = str(act.get("title", trigger.get("title", "Cinematic Scene")))
 					var can_skip = bool(act.get("canSkip", true))
-					play_movie(movie_path, title, can_skip, true)
+					var resolved = _resolve_movie_file_path(movie_path)
+					if is_movie_playing and (current_movie_path == resolved or current_movie_path == movie_path):
+						if act_idx + 1 < actions.size():
+							var prev_cb = pending_movie_callback
+							pending_movie_callback = func():
+								if prev_cb.is_valid():
+									prev_cb.call()
+								_execute_trigger_actions(trigger, hero, act_idx + 1)
+							return
+					elif played_movies.has(resolved) or played_movies.has(movie_path):
+						continue
+					else:
+						if act_idx + 1 < actions.size():
+							play_movie(movie_path, title, can_skip, true, func():
+								_execute_trigger_actions(trigger, hero, act_idx + 1)
+							)
+							return
+						else:
+							play_movie(movie_path, title, can_skip, true)
 			"attack_character":
 				var target_type = str(act.get("target", "active_hero"))
 				var attacker_name = str(act.get("attacker", "Hazard"))
@@ -13489,6 +13570,53 @@ func _execute_trigger_actions(trigger: Dictionary, hero: Dictionary, start_index
 						active_dialogue_sequence["next_action_index"] = act_idx + 1
 						active_dialogue_sequence["hero"] = hero
 						return
+			"furniture_visible", "furniture_becomes_visible", "reveal_furniture":
+				var target_id = str(act.get("furnitureId", act.get("target", act.get("furnitureName", ""))))
+				var target_low = target_id.to_lower().strip_edges()
+				var found_furn: Dictionary = {}
+				for f in furniture:
+					var fid = str(f.get("id", "")).to_lower()
+					var fname = str(f.get("name", "")).to_lower()
+					if fid == target_low or fname == target_low or (target_low != "" and (target_low in fname or fname in target_low)):
+						found_furn = f
+						break
+				if not found_furn.is_empty():
+					found_furn["hidden"] = false
+					_rebuild_furniture_tile_map()
+					var fx = int(found_furn.get("x", found_furn.get("position", [0, 0])[0]))
+					var fy = int(found_furn.get("y", found_furn.get("position", [0, 0])[1]))
+					var dname = str(found_furn.get("name", found_furn.get("id", "Furniture")))
+					_log("[ACTION] ✨ Furniture '%s' is revealed at [%d, %d]!" % [dname, fx, fy])
+					spawn_floating_text(Vector2i(fx, fy), "✨ %s REVEALED" % dname.to_upper(), Color(0.2, 0.9, 1.0), 2.5)
+					spawn_burst_vfx(board_offset + Vector2((fx + 0.5) * tile_size, (fy + 0.5) * tile_size), Color(0.3, 0.8, 1.0), 60.0, 0.5)
+					update_party_vision()
+					_update_ui()
+					queue_redraw_all()
+			"move_furniture", "furniture_moves_to":
+				var target_id = str(act.get("furnitureId", act.get("target", act.get("furnitureName", ""))))
+				var target_low = target_id.to_lower().strip_edges()
+				var tile_target = act.get("tile", [act.get("x", 0), act.get("y", 0)])
+				var new_x = int(tile_target[0] if tile_target is Array and tile_target.size() > 0 else act.get("x", 0))
+				var new_y = int(tile_target[1] if tile_target is Array and tile_target.size() > 1 else act.get("y", 0))
+				var found_furn: Dictionary = {}
+				for f in furniture:
+					var fid = str(f.get("id", "")).to_lower()
+					var fname = str(f.get("name", "")).to_lower()
+					if fid == target_low or fname == target_low or (target_low != "" and (target_low in fname or fname in target_low)):
+						found_furn = f
+						break
+				if not found_furn.is_empty():
+					found_furn["x"] = new_x
+					found_furn["y"] = new_y
+					found_furn["position"] = [new_x, new_y]
+					_rebuild_furniture_tile_map()
+					var dname = str(found_furn.get("name", found_furn.get("id", "Furniture")))
+					_log("[ACTION] 🪑 Furniture '%s' moved to [%d, %d]!" % [dname, new_x, new_y])
+					spawn_floating_text(Vector2i(new_x, new_y), "🪑 %s MOVED" % dname.to_upper(), Color(1.0, 0.8, 0.2), 2.5)
+					spawn_burst_vfx(board_offset + Vector2((new_x + 0.5) * tile_size, (new_y + 0.5) * tile_size), Color(1.0, 0.8, 0.2), 50.0, 0.5)
+					update_party_vision()
+					_update_ui()
+					queue_redraw_all()
 			"spawn_monsters":
 				var m_type = str(act.get("monsterType", "skeleton"))
 				var count = int(act.get("count", 1))
@@ -19725,6 +19853,41 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 				"success": true,
 				"dialogue": active_dialogue_sequence
 			}
+		"start_dialogue":
+			var lines = action_data.get("lines", action_data.get("bubbles", []))
+			if lines is Array and lines.size() > 0:
+				_start_dialogue_sequence(lines)
+				return { "success": true, "dialogue": active_dialogue_sequence }
+			return { "success": false, "error": "No lines provided" }
+		"reveal_furniture", "furniture_visible":
+			var fid = str(action_data.get("furnitureId", action_data.get("target", action_data.get("furnitureName", ""))))
+			var target_low = fid.to_lower().strip_edges()
+			for f in furniture:
+				var mid = str(f.get("id", "")).to_lower()
+				var mname = str(f.get("name", "")).to_lower()
+				if mid == target_low or mname == target_low or (target_low != "" and (target_low in mname or mname in target_low)):
+					f["hidden"] = false
+					_rebuild_furniture_tile_map()
+					queue_redraw_all()
+					return { "success": true, "furniture": f }
+			return { "success": false, "error": "Furniture not found: " + fid }
+		"move_furniture":
+			var fid = str(action_data.get("furnitureId", action_data.get("target", action_data.get("furnitureName", ""))))
+			var target_low = fid.to_lower().strip_edges()
+			var tile_target = action_data.get("tile", [action_data.get("x", 0), action_data.get("y", 0)])
+			var new_x = int(tile_target[0] if tile_target is Array and tile_target.size() > 0 else action_data.get("x", 0))
+			var new_y = int(tile_target[1] if tile_target is Array and tile_target.size() > 1 else action_data.get("y", 0))
+			for f in furniture:
+				var mid = str(f.get("id", "")).to_lower()
+				var mname = str(f.get("name", "")).to_lower()
+				if mid == target_low or mname == target_low or (target_low != "" and (target_low in mname or mname in target_low)):
+					f["x"] = new_x
+					f["y"] = new_y
+					f["position"] = [new_x, new_y]
+					_rebuild_furniture_tile_map()
+					queue_redraw_all()
+					return { "success": true, "furniture": f }
+			return { "success": false, "error": "Furniture not found: " + fid }
 		"trigger_story_event":
 			var target_id = str(action_data.get("id", action_data.get("marker", "")))
 			var found_tr: Dictionary = {}
@@ -21152,9 +21315,12 @@ func _draw_board(canvas: CanvasItem) -> void:
 		var f_pos = Vector2i(px, py)
 		var rm = _get_room_at(f_pos)
 		var effective_room = r_id if r_id != "" else str(rm.get("id", ""))
+		var is_hidden = bool(f.get("hidden", false))
 		var is_visible = false
 		if is_gm_role():
 			is_visible = true
+		elif is_hidden:
+			is_visible = false
 		elif effective_room != "":
 			is_visible = revealed_rooms.has(effective_room)
 		else:
@@ -21260,6 +21426,13 @@ func _draw_board(canvas: CanvasItem) -> void:
 						var b_rect = Rect2(f_rect.end.x - 26, f_rect.position.y + 2, 24, 9)
 						canvas.draw_rect(b_rect, Color(0.55, 0.15, 0.6, 0.95))
 						canvas.draw_string(ThemeDB.fallback_font, b_rect.position + Vector2(2, 7), "GM:T", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(1.0, 0.85, 1.0))
+
+			if is_hidden and is_gm_role():
+				canvas.draw_rect(f_rect, Color(0.65, 0.2, 0.95, 0.25))
+				canvas.draw_rect(f_rect, Color(0.7, 0.3, 1.0, 0.8), false, 1.5)
+				var ghost_lbl = "👻 (HIDDEN)"
+				var g_sz = ThemeDB.fallback_font.get_string_size(ghost_lbl, HORIZONTAL_ALIGNMENT_CENTER, -1, 9).x
+				canvas.draw_string(ThemeDB.fallback_font, Vector2(f_rect.get_center().x - g_sz * 0.5, f_rect.position.y - 3.0), ghost_lbl, HORIZONTAL_ALIGNMENT_CENTER, -1, 9, Color(0.85, 0.5, 1.0))
 
 	# Draw Doors
 	for d in doors:
@@ -22973,6 +23146,14 @@ func _draw_dialogue_bubbles_overlay(canvas: CanvasItem) -> void:
 	var font = ThemeDB.fallback_font
 	_update_board_metrics()
 
+	var cur_time = float(active_dialogue_sequence.get("time", 0.0))
+	var cur_dur = float(active_dialogue_sequence.get("duration", 4.5))
+	var fade_time = float(active_dialogue_sequence.get("fade_time", 0.6))
+	fade_time = clampf(fade_time, 0.2, 2.0)
+	var alpha = 1.0
+	if cur_dur > fade_time and cur_time > (cur_dur - fade_time):
+		alpha = clampf((cur_dur - cur_time) / fade_time, 0.0, 1.0)
+
 	var g_pos = _find_speaker_grid_pos(speaker_raw)
 	var bubble_anchor: Vector2
 	var has_tail = false
@@ -23003,34 +23184,34 @@ func _draw_dialogue_bubbles_overlay(canvas: CanvasItem) -> void:
 			Vector2(clampf(tail_target.x + 10.0, b_rect.position.x + 30.0, b_rect.end.x - 15.0), b_rect.end.y),
 			tail_target
 		])
-		canvas.draw_colored_polygon(tail_pts, Color(0.05, 0.08, 0.14, 0.96))
-		canvas.draw_line(tail_pts[0], tail_pts[2], Color(0.0, 0.85, 1.0, 0.85), 1.5)
-		canvas.draw_line(tail_pts[1], tail_pts[2], Color(0.0, 0.85, 1.0, 0.85), 1.5)
+		canvas.draw_colored_polygon(tail_pts, Color(0.05, 0.08, 0.14, 0.96 * alpha))
+		canvas.draw_line(tail_pts[0], tail_pts[2], Color(0.0, 0.85, 1.0, 0.85 * alpha), 1.5)
+		canvas.draw_line(tail_pts[1], tail_pts[2], Color(0.0, 0.85, 1.0, 0.85 * alpha), 1.5)
 
 	# Bubble drop shadow
-	canvas.draw_rect(Rect2(b_rect.position + Vector2(4, 5), b_rect.size), Color(0.0, 0.0, 0.0, 0.65))
+	canvas.draw_rect(Rect2(b_rect.position + Vector2(4, 5), b_rect.size), Color(0.0, 0.0, 0.0, 0.65 * alpha))
 
 	# Bubble background & glowing neon cyan border
-	canvas.draw_rect(b_rect, Color(0.05, 0.08, 0.14, 0.96))
-	canvas.draw_rect(b_rect, Color(0.0, 0.85, 1.0, 0.9), false, 2.0)
+	canvas.draw_rect(b_rect, Color(0.05, 0.08, 0.14, 0.96 * alpha))
+	canvas.draw_rect(b_rect, Color(0.0, 0.85, 1.0, 0.9 * alpha), false, 2.0)
 
 	# Speaker Badge
 	var spk_text = "💬 " + speaker_disp
 	var spk_sz = font.get_string_size(spk_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11)
 	var spk_badge_rect = Rect2(b_rect.position.x + 10.0, b_rect.position.y + 6.0, spk_sz.x + 12.0, 18.0)
-	canvas.draw_rect(spk_badge_rect, Color(0.12, 0.22, 0.35, 0.95))
-	canvas.draw_rect(spk_badge_rect, Color(0.0, 0.85, 1.0, 0.6), false, 1.0)
-	canvas.draw_string(font, Vector2(spk_badge_rect.position.x + 6.0, spk_badge_rect.position.y + 13.0), spk_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.3, 0.9, 1.0))
+	canvas.draw_rect(spk_badge_rect, Color(0.12, 0.22, 0.35, 0.95 * alpha))
+	canvas.draw_rect(spk_badge_rect, Color(0.0, 0.85, 1.0, 0.6 * alpha), false, 1.0)
+	canvas.draw_string(font, Vector2(spk_badge_rect.position.x + 6.0, spk_badge_rect.position.y + 13.0), spk_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.3, 0.9, 1.0, alpha))
 
 	# Advance prompt hint
 	var hint_text = "[Click or Space (%d/%d)]" % [idx + 1, bubbles.size()]
 	var h_sz = font.get_string_size(hint_text, HORIZONTAL_ALIGNMENT_RIGHT, -1, 9)
-	canvas.draw_string(font, Vector2(b_rect.end.x - h_sz.x - 8.0, b_rect.position.y + 18.0), hint_text, HORIZONTAL_ALIGNMENT_RIGHT, -1, 9, Color(0.6, 0.7, 0.85, 0.8))
+	canvas.draw_string(font, Vector2(b_rect.end.x - h_sz.x - 8.0, b_rect.position.y + 18.0), hint_text, HORIZONTAL_ALIGNMENT_RIGHT, -1, 9, Color(0.6, 0.7, 0.85, 0.8 * alpha))
 
 	# Text lines
 	var text_y = b_rect.position.y + 40.0
 	for l in lines:
-		canvas.draw_string(font, Vector2(b_rect.position.x + 12.0, text_y), l, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.95, 0.96, 0.98))
+		canvas.draw_string(font, Vector2(b_rect.position.x + 12.0, text_y), l, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.95, 0.96, 0.98, alpha))
 		text_y += line_h
 
 func _draw_story_trigger_overlay(canvas: CanvasItem) -> void:
