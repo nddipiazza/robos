@@ -73,6 +73,14 @@ class TabletopQAPlayer:
         self.log("Resetting game to pristine cartridge state...")
         return self.execute_action("reset_game")
 
+    def insert_cartridge(self, cartridge_id: str) -> dict:
+        """Load and insert a different quest cartridge."""
+        self.log(f"Inserting cartridge '{cartridge_id}'...")
+        res = self._post("/cartridge/insert", {"cartridge": cartridge_id})
+        if self.human_delay > 0:
+            time.sleep(self.human_delay)
+        return res
+
     def set_hero_hp(self, hero_id: str, bp: int) -> dict:
         """Update a hero's Body Points."""
         self.log(f"Setting hero {hero_id} BP to {bp}...")
@@ -82,6 +90,11 @@ class TabletopQAPlayer:
         """Mark a hero as dead with 0 Body Points."""
         self.log(f"Defeating hero {hero_id} (BP = 0)...")
         return self.execute_action("defeat_hero", heroId=hero_id, current_bp=0, is_dead=True)
+
+    def defeat_monster(self, monster_id: str = "") -> dict:
+        """Mark a monster as dead with 0 Body Points and trigger defeat hooks."""
+        self.log(f"Defeating monster '{monster_id}' (BP = 0)...")
+        return self.execute_action("defeat_monster", monsterId=monster_id)
 
     def execute_action(self, action, **kwargs) -> dict:
         if isinstance(action, dict):
@@ -435,6 +448,18 @@ class TabletopQAPlayer:
         self.log("Dismissing Quest Note story trigger overlay card...")
         return self.execute_action("dismiss_story_trigger")
 
+    def dismiss_message(self) -> dict:
+        self.log("Dismissing modal message dialog...")
+        return self.execute_action("dismiss_message")
+
+    def get_active_dialogue(self) -> dict:
+        st = self.get_state()
+        return st.get("activeDialogue", {})
+
+    def advance_dialogue(self) -> dict:
+        self.log("Advancing dialogue sequence to next bubble / dismissing...")
+        return self.execute_action("advance_dialogue")
+
     def trigger_story_event(self, marker_or_id: str) -> dict:
         self.log(f"Manually triggering story event '{marker_or_id}'...")
         return self.execute_action("trigger_story_event", id=marker_or_id)
@@ -635,8 +660,39 @@ class TabletopQAPlayer:
         self.log(f"Force reloading current quest from cartridge (clear_save={clear_save})...")
         return self.execute_action("reset_game", clear_save=clear_save)
 
-    def restart_quest(self, clear_save: bool = True) -> dict:
+    def restart_quest(self, clear_save: bool = True, confirm: bool = False) -> dict:
+        if confirm:
+            return self.request_restart_quest()
         return self.reset_quest(clear_save=clear_save)
+
+    def request_restart_quest(self) -> dict:
+        """Open the restart quest confirmation modal (simulating clicking RESTART QUEST in Game Menu)."""
+        self.log("Requesting quest restart (opening confirmation modal)...")
+        return self.execute_action("request_restart_quest")
+
+    def click_menu_restart_quest(self) -> dict:
+        """Click the RESTART QUEST button inside the Game Menu."""
+        return self.request_restart_quest()
+
+    def confirm_restart_quest(self) -> dict:
+        """Confirm the restart quest prompt: wipes save and resets to Round 1."""
+        self.log("Confirming quest restart...")
+        return self.execute_action("confirm_restart_quest")
+
+    def cancel_restart_quest(self) -> dict:
+        """Cancel the restart quest prompt: dismisses modal without resetting progress."""
+        self.log("Cancelling quest restart...")
+        return self.execute_action("cancel_restart_quest")
+
+    def is_restart_confirm_open(self) -> bool:
+        """Check if the restart quest confirmation modal is open."""
+        st = self.get_state()
+        return bool(
+            st.get("restartConfirmModalVisible", False)
+            or st.get("restartConfirmModalOpen", False)
+            or st.get("isRestartConfirmOpen", False)
+            or st.get("modal", {}).get("restartConfirmModalVisible", False)
+        )
 
     # --- Game Menu Helpers ---
     def open_game_menu(self) -> dict:
@@ -654,6 +710,35 @@ class TabletopQAPlayer:
     def is_game_menu_open(self) -> bool:
         st = self.get_state()
         return bool(st.get("gameMenuVisible", False) or st.get("isGameMenuOpen", False))
+
+    # --- AI Engine Options Helpers ---
+    def open_ai_options(self) -> dict:
+        self.log("Opening AI Engine Options Modal...")
+        return self.execute_action("open_ai_options")
+
+    def close_ai_options(self) -> dict:
+        self.log("Closing AI Engine Options Modal...")
+        return self.execute_action("close_ai_options")
+
+    def toggle_ai_options(self) -> dict:
+        self.log("Toggling AI Engine Options Modal...")
+        return self.execute_action("toggle_ai_options")
+
+    def is_ai_options_open(self) -> bool:
+        st = self.get_state()
+        return bool(st.get("isAIOptionsModalOpen", False) or st.get("aiEngineOptions", {}).get("isModalOpen", False))
+
+    def get_ai_options(self) -> dict:
+        return self.execute_action("get_ai_options")
+
+    def set_ai_options(self, ai_play_for_you: bool = None, auto_advance_turn: bool = None) -> dict:
+        kwargs = {}
+        if ai_play_for_you is not None:
+            kwargs["ai_play_for_you"] = ai_play_for_you
+        if auto_advance_turn is not None:
+            kwargs["auto_advance_turn"] = auto_advance_turn
+        self.log(f"Setting AI options: {kwargs}...")
+        return self.execute_action("set_ai_options", **kwargs)
 
     # --- Quest Objective Helpers ---
     def open_quest_objective(self) -> dict:
@@ -697,6 +782,18 @@ class TabletopQAPlayer:
     def is_game_closed(self) -> bool:
         st = self.get_state()
         return bool(st.get("isGameClosed", False) or st.get("gameState") == "closed")
+
+    def is_quest_complete_open(self) -> bool:
+        st = self.get_state()
+        return bool(st.get("isQuestCompleteModalOpen", st.get("questCompleteModalOpen", False)))
+
+    def open_quest_complete_modal(self, is_victory: bool = True) -> dict:
+        self.log(f"Opening Quest Complete Modal (is_victory={is_victory})...")
+        return self.execute_action("open_quest_complete_modal", is_victory=is_victory)
+
+    def close_quest_complete_modal(self) -> dict:
+        self.log("Closing Quest Complete Modal...")
+        return self.execute_action("close_quest_complete_modal")
 
     # --- Autonomous AI Demo Helpers ---
     def start_demo(self) -> dict:
@@ -789,3 +886,46 @@ class TabletopQAPlayer:
     def get_movie_state(self) -> dict:
         st = self.get_state()
         return st.get("movie", {})
+
+    def is_movie_playing(self) -> bool:
+        return bool(self.get_movie_state().get("isPlaying", False))
+
+    # --- Autonomous AI & Demo Mode Helpers ---
+    def start_demo(self) -> dict:
+        """Start autonomous demo mode."""
+        self.log("Starting autonomous demo mode...")
+        return self.execute_action("start_demo")
+
+    def stop_demo(self) -> dict:
+        """Stop / pause autonomous demo mode."""
+        self.log("Stopping autonomous demo mode...")
+        return self.execute_action("stop_demo")
+
+    def step_demo(self) -> dict:
+        """Step one turn in autonomous demo mode."""
+        return self.execute_action("step_demo")
+
+    def get_transaction_log(self) -> list:
+        """Get the full transaction log from the game engine."""
+        st = self.get_state()
+        return st.get("transactionLog", [])
+
+    def is_quest_completed(self) -> bool:
+        """Check if quest is marked completed."""
+        st = self.get_state()
+        return bool(st.get("isQuestCompleted", False)) or bool(st.get("questObjectivesCompleted", False))
+
+    # --- Furniture Manipulation Helpers ---
+    def reveal_furniture(self, furniture_id: str) -> dict:
+        """Reveal a hidden furniture piece."""
+        self.log(f"Revealing hidden furniture '{furniture_id}'...")
+        return self.execute_action("reveal_furniture", furnitureId=furniture_id)
+
+    def move_furniture(self, furniture_id: str, tile: list, message: str = "") -> dict:
+        """Move a furniture piece to a new tile with an optional custom message."""
+        self.log(f"Moving furniture '{furniture_id}' to {tile} (message='{message}')...")
+        payload = {"furnitureId": furniture_id, "tile": tile}
+        if message:
+            payload["message"] = message
+        return self.execute_action("move_furniture", **payload)
+

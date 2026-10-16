@@ -1,0 +1,13 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),{execFileSync}=require('node:child_process');
+class PrivateGit{
+ constructor(root){this.root=root;}
+ git(args){return execFileSync('git',['-c','core.hooksPath=/dev/null','-c','commit.gpgsign=false','-c','user.name=RobOS Auto','-c','user.email=auto@robos.local',...args],{cwd:this.root,encoding:'utf8',timeout:60000,stdio:['ignore','pipe','pipe']}).trim();}
+ ensure(){fs.mkdirSync(this.root,{recursive:true,mode:0o700});fs.chmodSync(this.root,0o700);if(!fs.existsSync(path.join(this.root,'.git')))this.git(['init','--initial-branch=main']);fs.mkdirSync(path.join(this.root,'documents'),{recursive:true,mode:0o700});}
+ commit(message){this.ensure();if(this.git(['symbolic-ref','--short','HEAD'])!=='main')throw new Error('Shop GitOps requires its main branch');this.git(['add','--','.robos','documents']);if(this.git(['diff','--cached','--name-only']))this.git(['commit','-m',message]);return this.status();}
+ status(){if(!fs.existsSync(path.join(this.root,'.git')))return {local:false,remote:null,commits:[],dirty:false};let remote=null;try{remote=this.git(['remote','get-url','origin']);}catch{}let commits=[];try{commits=this.git(['log','-5','--format=%h %s']).split('\n');}catch{}const dirty=!!this.git(['status','--porcelain','--','.robos','documents']);return {local:true,remote,commits,dirty};}
+ verify(repository){if(!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository))throw new Error('Use a GitHub owner/repository name');const info=JSON.parse(execFileSync('gh',['repo','view',repository,'--json','isPrivate,url'],{encoding:'utf8',timeout:30000,stdio:['ignore','pipe','pipe']}));if(info.isPrivate!==true||typeof info.url!=='string'||info.url.toLowerCase()!==`https://github.com/${repository}`.toLowerCase())throw new Error('Remote must be a verified private GitHub repository');return info;}
+ configure(repository){const info=this.verify(repository);this.ensure();const existing=this.status().remote;if(existing&&existing!==info.url)throw new Error('A different remote is already configured');if(!existing)this.git(['remote','add','origin',info.url]);return this.status();}
+ sync(){const remote=this.status().remote;const m=remote?.match(/^https:\/\/github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)$/);if(!m)throw new Error('Configure a private GitHub repository first');this.verify(m[1]);if(this.git(['symbolic-ref','--short','HEAD'])!=='main')throw new Error('Shop GitOps requires its main branch');if(this.status().dirty)this.commit('auto: snapshot shop records before private sync');this.git(['push','origin','main']);return this.status();}
+}
+module.exports={PrivateGit};

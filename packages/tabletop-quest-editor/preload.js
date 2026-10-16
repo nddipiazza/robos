@@ -9,9 +9,11 @@ contextBridge.exposeInMainWorld('robosQuestEditor', {
   openBlockmapDialog: () => ipcRenderer.invoke('quest:open-blockmap-dialog'),
   listCartridges: () => ipcRenderer.invoke('quest:list-cartridges'),
   loadCartridge: (slugOrPath) => ipcRenderer.invoke('quest:load-cartridge', slugOrPath),
+  openCartridgeDialog: () => ipcRenderer.invoke('quest:open-cartridge-dialog'),
   saveCartridge: (payload) => ipcRenderer.invoke('quest:save-cartridge', payload),
   saveFileDialog: (payload) => ipcRenderer.invoke('quest:save-file-dialog', payload),
   copyToClipboard: (text) => ipcRenderer.invoke('quest:copy-to-clipboard', text),
   loadAssetImage: (relPath) => ipcRenderer.invoke('quest:load-asset-image', relPath),
-  launchGame: (slug) => ipcRenderer.invoke('quest:launch-game', slug)
+  launchGame: (slug) => ipcRenderer.invoke('quest:launch-game', slug),
+  ensureVoiceApp: () => ipcRenderer.invoke('voice:ensure-running')
 });

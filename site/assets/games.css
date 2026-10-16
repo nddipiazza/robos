@@ -39,3 +39,29 @@ body.game{background:#05060a;color:#f3efe6}
 .hub a:before{content:'';position:absolute;inset:0;background:linear-gradient(transparent 25%,rgba(5,6,10,.92))}
 .hub .in{position:relative;padding:28px}.hub h2{font-family:'Cinzel',serif;font-size:2rem}.hub p{color:#d6d0c1;margin:8px 0 14px}.hub .go{color:var(--accent);font-weight:600}
 @media(max-width:860px){.shots,.facts,.hub{grid-template-columns:1fr}.shots .wide{grid-column:auto}.g-sec{padding:44px 0}.panel-g{padding:22px}}
+
+/* Starfall Command page */
+.hub.three{grid-template-columns:repeat(3,1fr)}.hub.three a{min-height:380px}.hub.three h2{font-size:1.6rem}
+.annot{position:relative;margin-top:30px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.14)}
+.annot img{display:block;width:100%}
+.annot .pin{position:absolute;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;background:var(--accent);color:#04101c;font-weight:800;display:grid;place-items:center;box-shadow:0 0 0 4px rgba(88,180,255,.28),0 4px 14px rgba(0,0,0,.6)}
+.legend{list-style:none;counter-reset:l;padding:0;margin:22px 0 0;display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.legend li{counter-increment:l;background:rgba(8,9,14,.7);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 14px 16px;backdrop-filter:blur(10px)}
+.legend li:before{content:counter(l);display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#04101c;font-weight:800;font-size:.82rem;margin-bottom:8px}
+.legend b{display:block;margin-bottom:4px}.legend span{color:#b9b3a4;font-size:.86rem;line-height:1.45}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 26px}
+.tabs button{font:inherit;font-weight:600;cursor:pointer;color:#e7e1d2;background:rgba(8,9,14,.7);border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:10px 20px;backdrop-filter:blur(8px);transition:.2s}
+.tabs button:hover{border-color:var(--fc)}.tabs button.on{background:var(--fc);border-color:var(--fc);color:#10131a}
+.js .tabpanel{display:none}.js .tabpanel.on{display:block}
+.faction{display:grid;grid-template-columns:5fr 7fr;gap:26px;align-items:center;background:rgba(8,9,14,.72);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:30px}
+.faction h3{font-family:'Cinzel',serif;font-size:1.9rem;margin:0 0 10px}.faction p{color:#cfc9ba}
+.faction .ticks{margin:14px 0;padding:0;list-style:none}.faction .ticks li{padding:6px 0 6px 22px;position:relative;color:#d8d2c3}.faction .ticks li:before{content:'◆';position:absolute;left:0;color:var(--accent)}
+.faction figure{margin:0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.12)}.faction img{display:block;width:100%}
+.faction figcaption{padding:8px 12px;font-size:.82rem;color:#b9b3a4}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.pills span{font-family:'Fira Code',monospace;font-size:.78rem;color:#bfe0ff;background:rgba(88,180,255,.1);border:1px solid rgba(88,180,255,.3);border-radius:999px;padding:4px 12px}
+.shots img{cursor:zoom-in}
+.lb{position:fixed;inset:0;z-index:99;background:rgba(3,4,8,.92);display:grid;place-items:center;padding:24px;cursor:zoom-out}
+.lb img{max-width:100%;max-height:88vh;border-radius:10px;box-shadow:0 20px 80px #000}.lb p{position:absolute;bottom:18px;left:0;right:0;text-align:center;color:#c9c2b2;margin:0}
+@media(max-width:860px){.hub.three{grid-template-columns:1fr}.legend{grid-template-columns:1fr}.faction{grid-template-columns:1fr;padding:20px}}
+.game .nav .links{gap:22px;flex-wrap:nowrap}.game .nav .links a{white-space:nowrap;font-size:.9rem}.game .brand span{white-space:nowrap}
+@media(max-width:1180px){.game .nav .links a[href$="/docs/"]{display:none}}

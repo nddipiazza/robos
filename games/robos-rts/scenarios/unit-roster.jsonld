@@ -1,0 +1,139 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/kgraph#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#"
+  },
+  "@id": "urn:robos:rts:scenario:unit-roster",
+  "@type": "robos:RTSTestScenario",
+  "rdfs:label": "Unit Roster: every unit of every faction",
+  "seed": 1,
+  "paused": true,
+  "decor": false,
+  "map": {
+    "width": 84,
+    "height": 64,
+    "obstacles": []
+  },
+  "players": {
+    "1": {
+      "crystal": 1000,
+      "aether": 500
+    },
+    "2": {
+      "crystal": 1000,
+      "aether": 500
+    },
+    "3": {
+      "crystal": 1000,
+      "aether": 500
+    }
+  },
+  "resources": [],
+  "units": [
+    {
+      "id": "roster_pioneer",
+      "type": "pioneer",
+      "owner": 1,
+      "count": 1,
+      "x": 22.0,
+      "y": 14.0
+    },
+    {
+      "id": "roster_rifleman",
+      "type": "rifleman",
+      "owner": 1,
+      "count": 1,
+      "x": 30.5,
+      "y": 14.0
+    },
+    {
+      "id": "roster_breacher",
+      "type": "breacher",
+      "owner": 1,
+      "count": 1,
+      "x": 39.0,
+      "y": 14.0
+    },
+    {
+      "id": "roster_howitzer",
+      "type": "howitzer",
+      "owner": 1,
+      "count": 1,
+      "x": 47.5,
+      "y": 14.0
+    },
+    {
+      "id": "roster_howitzer_emplaced",
+      "type": "howitzer_emplaced",
+      "owner": 1,
+      "count": 1,
+      "x": 56.0,
+      "y": 14.0
+    },
+    {
+      "id": "roster_forager",
+      "type": "forager",
+      "owner": 2,
+      "count": 1,
+      "x": 22.0,
+      "y": 32.0
+    },
+    {
+      "id": "roster_skitterling",
+      "type": "skitterling",
+      "owner": 2,
+      "count": 1,
+      "x": 30.5,
+      "y": 32.0
+    },
+    {
+      "id": "roster_bile_crawler",
+      "type": "bile_crawler",
+      "owner": 2,
+      "count": 1,
+      "x": 39.0,
+      "y": 32.0
+    },
+    {
+      "id": "roster_blight_hurler",
+      "type": "blight_hurler",
+      "owner": 2,
+      "count": 1,
+      "x": 47.5,
+      "y": 32.0
+    },
+    {
+      "id": "roster_mote",
+      "type": "mote",
+      "owner": 3,
+      "count": 1,
+      "x": 22.0,
+      "y": 50.0
+    },
+    {
+      "id": "roster_sunblade",
+      "type": "sunblade",
+      "owner": 3,
+      "count": 1,
+      "x": 30.5,
+      "y": 50.0
+    },
+    {
+      "id": "roster_skirmisher",
+      "type": "skirmisher",
+      "owner": 3,
+      "count": 1,
+      "x": 39.0,
+      "y": 50.0
+    },
+    {
+      "id": "roster_spire_walker",
+      "type": "spire_walker",
+      "owner": 3,
+      "count": 1,
+      "x": 47.5,
+      "y": 50.0
+    }
+  ],
+  "directives": []
+}

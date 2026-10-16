@@ -47,6 +47,7 @@ apt-get install -y -qq \
   gnome-shell-extensions \
   gnome-shell-extension-manager \
   curl wget gnupg python3 unzip spice-vdagent pass \
+  tesseract-ocr tesseract-ocr-eng poppler-utils \
   xdotool wmctrl x11-utils x11-xserver-utils xclip xsel \
   2>&1 | tail -5
 apt-get purge -y gnome-initial-setup gnome-tour yelp ubuntu-docs gnome-user-docs ubuntu-welcome ubuntu-desktop-provision ubuntu-desktop-bootstrap ubuntu-report canonical-livepatch ubuntu-release-upgrader-gtk update-notifier update-notifier-common apport apport-gtk 2>/dev/null || true

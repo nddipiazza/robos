@@ -1,0 +1,18 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),{execFileSync}=require('node:child_process');
+const {sha}=require('../lib/importer');const {review,apply,RecallStore}=require('../lib/recalls');
+function fixture(){const root=fs.mkdtempSync(path.join(os.tmpdir(),'robos-recalls-'));const archive=path.join(root,'test.zip');execFileSync('python3',['-c',`import zipfile,sys\na=['']*29\na[0]='1';a[1]='25V123000';a[2]='TEST MAKE';a[3]='Test Model';a[4]='2025';a[6]='BRAKES';a[7]='Test manufacturer';a[19]='A reported defect';a[20]='A reported consequence';a[21]='Inspect, then replace the affected assembly.';a[23]='component-1';a[24]='Brake assembly';a[25]='Manufacturer description';a[26]='A-1, B-2';a[27]='No';a[28]='Yes'\nb=a.copy();b[0]='2';b[4]='2024';b[21]='A second published remedy.'\nwith zipfile.ZipFile(sys.argv[1],'w') as z:z.writestr('FLAT_RCL_POST_2010.txt','\\t'.join(a)+'\\n'+'\\t'.join(b)+'\\n')`,archive]);const source={id:'recalls-bulk',status:'downloaded',file:'test.zip',license:'Synthetic test data',title:'Synthetic test recall fixture',url:'https://static.nhtsa.gov/odi/ffdd/rcl/FLAT_RCL_POST_2010.zip',sha256:sha(fs.readFileSync(archive))};fs.writeFileSync(path.join(root,'manifest.json'),JSON.stringify({sources:[source]}));return root;}
+function prepare(root){return JSON.parse(execFileSync('python3',[path.join(__dirname,'../recall_data.py'),'prepare',root],{encoding:'utf8',stdio:['ignore','pipe','pipe']}));}
+test('bulk parsing preserves applicability, remedy variants, reported part strings and exact source rows',async()=>{
+ const root=fixture(),plan=prepare(root);assert.equal(plan.records,2);assert.equal(plan.counts['robos:RecallRemedy'],2);assert.equal(plan.counts['robos:RecallAffectedPart'],1);const r=review(root,plan.build);assert.equal(fs.existsSync(path.join(root,'recalls/current.json')),false);apply(root,plan.build,r.reviewId);
+ const store=new RecallStore(root),result=await store.search({type:'robos:RecallApplicability',vehicle:{make:'test make',model:'test model',year:'2025'}});assert.equal(result.total,1);
+ const detail=await store.detail(result.nodes[0]['@id']);assert.equal(detail.remedies.length,2);assert.equal(detail.parts[0]['robos:reportedPartNumber'],'A-1, B-2');assert.equal(detail.applicabilityCount,2);assert.equal(detail.node['robos:parkOutside'],'Yes');
+ const source=await store.source(result.nodes[0]['@id']);assert.equal(source.line,1);assert.equal(source.fields.CORRECTIVE_ACTION,'Inspect, then replace the affected assembly.');assert.equal(source.fields.MFR_COMP_PTNO,'A-1, B-2');assert.ok(source.sha256);assert.match(source.archive.url,/nhtsa/);
+ assert.deepEqual(apply(root,plan.build,r.reviewId).counts,plan.counts);
+});
+test('tampered archive, plan and shard are rejected without activating a partial import',()=>{
+ const root=fixture();fs.appendFileSync(path.join(root,'test.zip'),'tampered');assert.throws(()=>prepare(root));
+ const root2=fixture(),plan=prepare(root2),r=review(root2,plan.build);const shard=path.join(root2,plan.build,plan.shards[0].file);fs.appendFileSync(shard,' ');assert.throws(()=>apply(root2,plan.build,r.reviewId),/hash mismatch/);assert.equal(fs.existsSync(path.join(root2,'recalls/current.json')),false);
+ const root3=fixture(),p3=prepare(root3),r3=review(root3,p3.build);const file=path.join(root3,p3.build,'plan.json');const changed=JSON.parse(fs.readFileSync(file));changed.records=999;fs.writeFileSync(file,JSON.stringify(changed));assert.throws(()=>apply(root3,p3.build,r3.reviewId),/plan changed/);
+});

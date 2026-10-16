@@ -74,9 +74,11 @@ ROOMS = [
     {"id": "room-sw-1", "name": "Southwest Outer Gallery", "x": 1, "y": 10, "w": 4, "h": 4, "quadrant": "sw"},
     {"id": "room-sw-2", "name": "Southwest Crypt (Unlettered Encounter)", "x": 5, "y": 10, "w": 4, "h": 4, "quadrant": "sw",
      "description": "Ancient dwarven ossuary containing 3 restless skeletons."},
-    {"id": "room-sw-3", "name": "Southwest Forge Antechamber", "x": 1, "y": 14, "w": 4, "h": 4, "quadrant": "sw"},
-    {"id": "room-sw-4", "name": "Southwest Guard Room (Unlettered Encounter)", "x": 5, "y": 14, "w": 4, "h": 4, "quadrant": "sw",
+    {"id": "room-sw-3", "name": "Southwest Garrison (Unlettered Encounter)", "x": 1, "y": 14, "w": 4, "h": 4, "quadrant": "sw",
      "description": "Garrison quarters harboring greenskin raiders (2 Goblins, 1 Orc)."},
+    {"id": "room-sw-4", "name": "Room 8: Southwest Starting Chamber", "x": 5, "y": 14, "w": 4, "h": 4, "quadrant": "sw",
+     "roomNumber": 8, "isStartingRoom": True,
+     "description": "Starting chamber with spiral staircase leading up from the surface and south door opening to the corridor."},
     {"id": "room-sw-5", "name": "Great Forge of Forgrin", "x": 9, "y": 13, "w": 3, "h": 5, "quadrant": "sw"},
     {"id": "room-se-1", "name": "Smelting Vaults", "x": 13, "y": 13, "w": 3, "h": 5, "quadrant": "se"},
     {"id": "room-se-2", "name": "Southeast Treasury Antechamber", "x": 16, "y": 10, "w": 4, "h": 4, "quadrant": "se"},
@@ -136,7 +138,7 @@ DOORS = [
     {"id": "door-sw-1-w", "from": [0, 11], "to": [1, 11], "state": "closed", "room": "room-sw-1"},
     {"id": "door-sw-2-n", "from": [7, 9], "to": [7, 10], "state": "closed", "room": "room-sw-2"},
     {"id": "door-sw-3-w", "from": [0, 16], "to": [1, 16], "state": "closed", "room": "room-sw-3"},
-    {"id": "door-sw-4-s", "from": [7, 18], "to": [7, 17], "state": "closed", "room": "room-sw-4"},
+    {"id": "door-sw-4-s", "from": [7, 18], "to": [7, 17], "state": "closed", "room": "room-sw-4", "side": "south", "roomNumber": 8, "description": "South door of Room 8 leading out to the corridor"},
     {"id": "door-sw-5-w", "from": [8, 15], "to": [9, 15], "state": "closed", "room": "room-sw-5"},
     
     # SE Quadrant
@@ -151,6 +153,9 @@ DOORS = [
 ]
 
 FURNITURE = [
+    # Room 8: Starting Chamber Staircase
+    {"id": "furn-starting-stair", "name": "Starting Spiral Staircase", "type": "stairs_up_1x1", "x": 5, "y": 14, "width": 1, "height": 1, "roomId": "room-sw-4"},
+
     # Grand Hearth Hall
     {"id": "furn-fire-hearth", "name": "Hearth of Forgrin the Fire King", "type": "altar", "x": 11, "y": 7, "width": 2, "height": 1, "roomId": "room-center"},
     {"id": "furn-grand-table", "name": "Council Table", "type": "table", "x": 11, "y": 9, "width": 2, "height": 2, "roomId": "room-center"},
@@ -225,7 +230,7 @@ MONSTERS = {
         "id": "mon-note-b-gob-1",
         "slug": "goblin-scavenger-1",
         "name": "Goblin Scavenger",
-        "position": [10, 2],
+        "position": [10, 3],
         "roomId": "room-nw-3",
         "movementSquares": 10,
         "attackDice": 2,
@@ -412,7 +417,7 @@ MONSTERS = {
         "id": "mon-note-f-skel-3",
         "slug": "mist-skeleton-3",
         "name": "Mist-Spawned Skeleton",
-        "position": [12, 10],
+        "position": [12, 11],
         "roomId": "room-center",
         "movementSquares": 6,
         "attackDice": 2,
@@ -459,7 +464,7 @@ MONSTERS = {
         "id": "mon-note-g-dread-1",
         "slug": "dread-warrior-throne-1",
         "name": "Dread Warrior Guardian",
-        "position": [21, 15],
+        "position": [21, 16],
         "roomId": "room-se-5",
         "movementSquares": 7,
         "attackDice": 3,
@@ -474,7 +479,7 @@ MONSTERS = {
         "id": "mon-note-g-dread-2",
         "slug": "dread-warrior-throne-2",
         "name": "Dread Warrior Guardian",
-        "position": [22, 15],
+        "position": [22, 16],
         "roomId": "room-se-5",
         "movementSquares": 7,
         "attackDice": 3,
@@ -490,9 +495,9 @@ MONSTERS = {
     "mon-crypt-skel-1": {"id": "mon-crypt-skel-1", "name": "Crypt Skeleton", "position": [6, 11], "roomId": "room-sw-2", "movementSquares": 6, "attackDice": 2, "defendDice": 2, "bodyPoints": 1},
     "mon-crypt-skel-2": {"id": "mon-crypt-skel-2", "name": "Crypt Skeleton", "position": [7, 11], "roomId": "room-sw-2", "movementSquares": 6, "attackDice": 2, "defendDice": 2, "bodyPoints": 1},
     "mon-crypt-skel-3": {"id": "mon-crypt-skel-3", "name": "Crypt Skeleton", "position": [7, 12], "roomId": "room-sw-2", "movementSquares": 6, "attackDice": 2, "defendDice": 2, "bodyPoints": 1},
-    "mon-garrison-gob-1": {"id": "mon-garrison-gob-1", "name": "Garrison Goblin", "position": [6, 15], "roomId": "room-sw-4", "movementSquares": 10, "attackDice": 2, "defendDice": 1, "bodyPoints": 1},
-    "mon-garrison-gob-2": {"id": "mon-garrison-gob-2", "name": "Garrison Goblin", "position": [7, 15], "roomId": "room-sw-4", "movementSquares": 10, "attackDice": 2, "defendDice": 1, "bodyPoints": 1},
-    "mon-garrison-orc": {"id": "mon-garrison-orc", "name": "Garrison Orc", "position": [6, 16], "roomId": "room-sw-4", "movementSquares": 6, "attackDice": 3, "defendDice": 2, "bodyPoints": 1},
+    "mon-garrison-gob-1": {"id": "mon-garrison-gob-1", "name": "Garrison Goblin", "position": [2, 15], "roomId": "room-sw-3", "movementSquares": 10, "attackDice": 2, "defendDice": 1, "bodyPoints": 1},
+    "mon-garrison-gob-2": {"id": "mon-garrison-gob-2", "name": "Garrison Goblin", "position": [3, 15], "roomId": "room-sw-3", "movementSquares": 10, "attackDice": 2, "defendDice": 1, "bodyPoints": 1},
+    "mon-garrison-orc": {"id": "mon-garrison-orc", "name": "Garrison Orc", "position": [2, 16], "roomId": "room-sw-3", "movementSquares": 6, "attackDice": 3, "defendDice": 2, "bodyPoints": 1},
     "mon-patrol-gob-1": {"id": "mon-patrol-gob-1", "name": "Corridor Goblin Patrol", "position": [0, 8], "roomId": "corridor", "movementSquares": 10, "attackDice": 2, "defendDice": 1, "bodyPoints": 1},
     "mon-patrol-gob-2": {"id": "mon-patrol-gob-2", "name": "Corridor Goblin Patrol", "position": [12, 18], "roomId": "corridor", "movementSquares": 10, "attackDice": 2, "defendDice": 1, "bodyPoints": 1},
     "mon-patrol-gob-3": {"id": "mon-patrol-gob-3", "name": "Corridor Goblin Patrol", "position": [25, 9], "roomId": "corridor", "movementSquares": 10, "attackDice": 2, "defendDice": 1, "bodyPoints": 1}
@@ -541,7 +546,7 @@ HEROES = {
         "weapon": "Wizard Staff (1 Combat Die)",
         "armor": "Wizard Cloak (2 Defend Dice)",
         "tokenColor": "#1d4ed8",
-        "position": [0, 1],
+        "position": [6, 16],
         "inventory": [
             {
                 "id": "item-pot-def-1",
@@ -584,7 +589,7 @@ HEROES = {
         "weapon": "Battle Axe (4 Combat Dice)",
         "armor": "Helmet (+1 Defend Die)",
         "tokenColor": "#15803d",
-        "position": [0, 1],
+        "position": [7, 15],
         "inventory": [
             {
                 "id": "item-talisman-lore",
@@ -628,7 +633,7 @@ HEROES = {
         "weapon": "Broadsword (3 Combat Dice)",
         "armor": "Helmet (+1 Defend Die)",
         "tokenColor": "#b45309",
-        "position": [0, 1],
+        "position": [5, 15],
         "inventory": [
             {
                 "id": "item-toolkit-1",
@@ -654,7 +659,7 @@ HEROES = {
         "weapon": "Battle Axe (4 Combat Dice)",
         "armor": "Helmet (+1 Defend Die)",
         "tokenColor": "#b91c1c",
-        "position": [0, 1],
+        "position": [6, 15],
         "inventory": [
             {
                 "id": "item-hearthskin-horn",
@@ -688,7 +693,7 @@ CART = {
         "itemCount": 8,
         "questCount": 1,
         "startingMap": "fortress-fire-king",
-        "startingPosition": [0, 1],
+        "startingPosition": [6, 15],
         "createdDate": "2026-10-10T20:55:00.000Z"
     },
     "heroes": HEROES,
@@ -705,7 +710,7 @@ CART = {
             "goldReward": 400,
             "completed": False,
             "mapConfigId": "first-light-dungeon",
-            "startingPosition": [0, 1]
+            "startingPosition": [6, 15]
         }
     ],
     "maps": {
@@ -718,7 +723,11 @@ CART = {
             "height": 19,
             "backgroundImage": "res://assets/boards/first_light_dungeon.png",
             "wanderingMonster": "orc",
-            "startingStair": [0, 1],
+            "startingRoom": "room-sw-4",
+            "startingRoomId": 8,
+            "startingStair": [5, 14],
+            "startingPosition": [6, 15],
+            "startingStairType": "stairs_up_1x1",
             "activeRooms": [r["id"] for r in ROOMS],
             "storyTriggers": STORY_TRIGGERS,
             "rooms": ROOMS,

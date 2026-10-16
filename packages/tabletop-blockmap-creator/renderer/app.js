@@ -64,6 +64,7 @@ class BlockmapCreator {
     this.offsetY = 0;
     this.cols = 26;
     this.rows = 19;
+    this.additionalBorderTile = false;
 
     // Viewport transform
     this.panX = 40;
@@ -284,6 +285,15 @@ class BlockmapCreator {
     document.getElementById('btn-offy-minus-1').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepOffsetY(-1); });
     document.getElementById('btn-offy-plus-1').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepOffsetY(1); });
     document.getElementById('btn-offy-plus-5').addEventListener('click', () => { if (document.activeElement) document.activeElement.blur(); this.stepOffsetY(5); });
+
+    // Border Options
+    const chkBorder = document.getElementById('chk-additional-border');
+    if (chkBorder) {
+      chkBorder.addEventListener('change', (e) => {
+        this.additionalBorderTile = e.target.checked;
+        this.render();
+      });
+    }
 
     // 3. Grid Dimensions
     document.getElementById('input-grid-cols').addEventListener('change', (e) => {
@@ -1349,6 +1359,10 @@ class BlockmapCreator {
     document.getElementById('input-grid-cols').value = this.cols;
     document.getElementById('input-grid-rows').value = this.rows;
 
+    this.additionalBorderTile = Boolean(boardData.additionalBorderTile || boardData.calibration?.additionalBorderTile || boardData.hasBorder || boardData.calibration?.hasBorder);
+    const chkBorder = document.getElementById('chk-additional-border');
+    if (chkBorder) chkBorder.checked = this.additionalBorderTile;
+
     this.rooms = (boardData.rooms || []).map((r, i) => {
       const shape = r.shape || 'rect';
       const tiles = r.tiles && r.tiles.length > 0
@@ -1492,6 +1506,10 @@ class BlockmapCreator {
     document.getElementById('input-grid-cols').value = this.cols;
     document.getElementById('input-grid-rows').value = this.rows;
 
+    this.additionalBorderTile = Boolean(map.additionalBorderTile || map.calibration?.additionalBorderTile || map.hasBorder || map.calibration?.hasBorder);
+    const chkBorder = document.getElementById('chk-additional-border');
+    if (chkBorder) chkBorder.checked = this.additionalBorderTile;
+
     this.selectedRoomId = this.rooms.length > 0 ? this.rooms[0].id : null;
     this.updateRoomListUI();
     this.updateRoomInspector();
@@ -1521,10 +1539,13 @@ class BlockmapCreator {
       title: this.boardTitle || `${this.fileName} Static Board`,
       backgroundImage: this.imagePath ? `res://assets/boards/${this.fileName}` : 'res://assets/boards/first_light_dungeon.png',
       gridDimensions: [this.cols, this.rows],
+      additionalBorderTile: this.additionalBorderTile,
       calibration: {
         tileSize: this.tileSize,
         offsetX: this.offsetX,
-        offsetY: this.offsetY
+        offsetY: this.offsetY,
+        additionalBorderTile: this.additionalBorderTile,
+        hasBorder: this.additionalBorderTile
       },
       rooms: this.rooms.map(r => ({
         id: r.id,
@@ -1620,6 +1641,30 @@ class BlockmapCreator {
 
     const totalGridW = this.cols * this.tileSize;
     const totalGridH = this.rows * this.tileSize;
+
+    // 0. Draw Additional Black Border Tiles (Border Option)
+    if (this.additionalBorderTile) {
+      ctx.save();
+      for (let c = -1; c <= this.cols; c++) {
+        for (let r = -1; r <= this.rows; r++) {
+          if (c === -1 || c === this.cols || r === -1 || r === this.rows) {
+            const bx = this.offsetX + c * this.tileSize;
+            const by = this.offsetY + r * this.tileSize;
+            ctx.fillStyle = '#080d18';
+            ctx.fillRect(bx, by, this.tileSize, this.tileSize);
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1.0;
+            ctx.strokeRect(bx, by, this.tileSize, this.tileSize);
+            ctx.strokeStyle = 'rgba(51, 65, 85, 0.3)';
+            ctx.beginPath();
+            ctx.moveTo(bx + 3, by + 3);
+            ctx.lineTo(bx + this.tileSize - 3, by + this.tileSize - 3);
+            ctx.stroke();
+          }
+        }
+      }
+      ctx.restore();
+    }
 
     // 1. Draw Map Image
     if (this.showImage && this.image) {

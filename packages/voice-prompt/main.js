@@ -29,6 +29,7 @@ const { TTSEngine } = require('./lib/tts-engine');
 const { WakeWordDetector } = require('./lib/wake-word');
 const { DesktopAssistant } = require('./lib/desktop-assistant');
 const { defaultRegistry: voiceCommandsRegistry } = require('./lib/voice-commands-registry');
+const { defaultIntentResolver } = require('./lib/skill-intent-resolver');
 
 function getAppIcon() {
   const iconPng = path.join(__dirname, 'icon.png');
@@ -107,6 +108,11 @@ sttEngine.on('interim-text', (data) => {
 sttEngine.on('stream-text', (data) => {
   broadcastToWindows('vp-hud-stream-text', data);
   broadcastToWindows('vp-event-stream-text', data);
+});
+
+sttEngine.on('bubble', (data) => {
+  broadcastToWindows('vp-hud-bubble', data);
+  broadcastToWindows('vp-event-bubble', data);
 });
 
 sttEngine.on('activated', (data) => {
@@ -400,9 +406,11 @@ function startApiServer(overridePort) {
         };
         sttEngine.on('stream-text', onStream);
         sttEngine.on('interim-text', onStream);
+        sttEngine.on('bubble', onStream);
         req.on('close', () => {
           sttEngine.off('stream-text', onStream);
           sttEngine.off('interim-text', onStream);
+          sttEngine.off('bubble', onStream);
         });
         return;
       }
@@ -410,6 +418,9 @@ function startApiServer(overridePort) {
       // 2. POST /api/activate
       if (pathname === '/api/activate' && method === 'POST') {
         const body = await parseBody(req);
+        if (body && typeof body === 'object') {
+          sttEngine.setContext(body);
+        }
         const result = await sttEngine.activate(body);
         showHudWindow();
         if (mainWindow && !mainWindow.isDestroyed()) {
@@ -636,6 +647,16 @@ function startApiServer(overridePort) {
         const result = await desktopAssistant.skillsExecutor.executeCommand(command, context, typeof body === 'object' ? body : {});
         res.writeHead(result.ok ? 200 : 400);
         return res.end(JSON.stringify(result));
+      }
+
+      // 10.10b POST /api/skills/resolve — evaluate bubble text against available skills and ambient noise
+      if (pathname === '/api/skills/resolve' && method === 'POST') {
+        const body = await parseBody(req);
+        const msg = typeof body === 'string' ? body : (body.msg || body.text || body.query || '');
+        const ctx = typeof body === 'object' && body.context ? body.context : (await contextProvider.getAggregatedContext());
+        const result = defaultIntentResolver.resolveLikelySkills(msg, ctx);
+        res.writeHead(200);
+        return res.end(JSON.stringify({ ok: true, msg, ...result }));
       }
 
       // 10.11 Voice Activated Commands endpoints
@@ -1212,6 +1233,12 @@ ipcMain.handle('vp-skills-list', () => {
 ipcMain.handle('vp-skills-execute', async (_e, command, options) => {
   const context = await contextProvider.getAggregatedContext();
   return desktopAssistant.skillsExecutor.executeCommand(command, context, options || {});
+});
+
+ipcMain.handle('vp-resolve-bubble-skills', async (_e, { msg, text, context } = {}) => {
+  const query = msg || text || '';
+  const ctx = context || (await contextProvider.getAggregatedContext());
+  return defaultIntentResolver.resolveLikelySkills(query, ctx);
 });
 
 ipcMain.handle('vp-voice-commands-list', (_e, { query, category } = {}) => {

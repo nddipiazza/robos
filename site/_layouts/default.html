@@ -3,20 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% if page.url == '/' %}RobOS — Trust every line your agents write{% else %}{{ page.title }} · RobOS{% endif %}</title>
-  <meta name="description" content="{{ page.description | default: 'RobOS is a desktop suite of developer apps, a knowledge graph of your system, and review tools that show what a coding agent changed.' }}">
+  <title>{% if page.url == '/' %}RobOS — The knowledge graph is the product{% else %}{{ page.title }} · RobOS{% endif %}</title>
+  <meta name="description" content="{{ page.description | default: 'RobOS is a context-engineering toolset for AI development: a standard knowledge graph for everything, context-efficient routing to any LLM, and a complete SDLC.' }}">
   <meta property="og:title" content="{{ page.title }} · RobOS">
-  <meta property="og:image" content="{{ page.og_image | default: '/assets/og.png' | absolute_url }}">
+  <meta property="og:image" content="{{ page.og_image | default: '/v1/assets/images/kgraph-autogen-architecture.jpg' | absolute_url }}">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="{{ '/v1/assets/images/favicon.svg' | relative_url }}" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;1,8..60,500;1,8..60,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ '/assets/site.css' | relative_url }}">
   {%- if page.extra_css %}
   <link rel="stylesheet" href="{{ page.extra_css | relative_url }}">
   {%- endif %}
-  <script>try{var t=localStorage.getItem('rb2-theme');if(!t&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)t='dark';if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+  <script>try{var t=localStorage.getItem('rb2-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
 </head>
 <body class="{{ page.body_class }}">
 <header class="nav">
@@ -31,7 +31,7 @@
       <a href="https://discord.gg/6PjxzkHujE" target="_blank" rel="noopener">Community</a>
     </nav>
     <div class="nav-r">
-      <button class="icon-btn" id="theme" type="button" aria-label="Toggle light and dark theme"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 2a6 6 0 0 0 0 12z" fill="currentColor"/></svg></button>
+      <button class="icon-btn" id="theme" aria-label="Toggle theme">◐</button>
       <a class="btn btn-sm" href="{{ '/download/' | relative_url }}">Download</a>
     </div>
   </div>
@@ -45,13 +45,13 @@
   <div class="wrap foot-in">
     <div>
       <a class="brand" href="{{ '/' | relative_url }}"><img src="{{ '/assets/logo-mark.png' | relative_url }}" alt="" height="30"><span>RobOS</span></a>
-      <p class="muted">AI agents write the code.<br>RobOS makes sure you can trust it.</p>
+      <p class="muted">Capture how everything works.<br>Let agents build it, cheaply.</p>
     </div>
     <div><h4>Product</h4><a href="{{ '/download/' | relative_url }}">Download</a><a href="{{ '/apps/' | relative_url }}">App directory</a><a href="{{ '/v1/roadmap.html' | relative_url }}">Roadmap</a><a href="{{ '/future/' | relative_url }}">The future</a></div>
     <div><h4>Resources</h4><a href="{{ '/docs/' | relative_url }}">Documentation</a><a href="{{ '/v1/getting-started.html' | relative_url }}">Installation guide</a><a href="{{ '/v1/' | relative_url }}">Classic docs (v1)</a></div>
     <div><h4>Community</h4><a href="https://github.com/nddipiazza/robos" target="_blank" rel="noopener">GitHub</a><a href="https://discord.gg/6PjxzkHujE" target="_blank" rel="noopener">Discord</a><a href="{{ '/v1/about.html' | relative_url }}">About</a></div>
   </div>
-  <div class="wrap muted small">Open source · <a href="https://github.com/nddipiazza/robos/blob/main/LICENSE" target="_blank" rel="noopener" style="text-decoration:underline">Apache License 2.0</a> · v0.0.7</div>
+  <div class="wrap muted small">Open source · Apache-2.0 · v0.0.7</div>
 </footer>
 <script src="{{ '/assets/site.js' | relative_url }}"></script>
 </body>

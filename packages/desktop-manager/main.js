@@ -78,6 +78,7 @@ function listDesktops() {
 // ── APP_REGISTRY ────────────────────────────────────────────────────────────
 
 const APPS = [
+  { id: 'auto-center', label: 'Auto Center', icon: '🚘', desc: 'Vehicle catalog and maintenance', category: 'RobOS Auto' },
   // System
   { id: 'notifications',           label: 'Notifications',          icon: '🔔', desc: 'System notifications',            category: 'RobOS System' },
   { id: 'robos-preferences',       label: 'RobOS Preferences',      icon: '⚙️', desc: 'System-wide settings',            category: 'RobOS System' },
@@ -135,6 +136,7 @@ function mkBin(id, opts = {}) {
 // ── APP_BINS ──────────────────────────────────────────────────────────────────
 
 const APP_BINS = {
+  'auto-center': mkBin('auto-center'),
   // System / always-present
   'notifications':           mkBin('notifications', { keepAlive: true }),
   'robos-toast':             mkBin('robos-toast', { keepAlive: true }),
