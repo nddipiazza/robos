@@ -430,6 +430,13 @@
                 <input type="text" id="inspect-name" class="text-input" style="flex:1;">
               </div>
 
+              <div class="form-row" style="margin-top:8px;">
+                <label class="custom-checkbox">👻 Hidden Object (Initially invisible on board)
+                  <input type="checkbox" id="inspect-hidden">
+                  <span class="checkmark"></span>
+                </label>
+              </div>
+
               <!-- Monster specific fields -->
               <div id="inspect-group-monster" class="inspect-group" style="display:none; margin-top:10px;">
                 <div class="stat-pills-row">
@@ -570,6 +577,8 @@
                     <div style="display:flex; gap:6px;">
                       <select id="select-new-action-type" class="dropdown" style="font-size:11px; padding:3px 6px;">
                         <option value="dialogue">💬 Character Dialogue</option>
+                        <option value="furniture_visible">✨ Furniture Becomes Visible</option>
+                        <option value="move_furniture">🪑 Furniture Moves To [X, Y]</option>
                         <option value="display_message">📜 Display Message (Modal)</option>
                         <option value="play_movie">🎬 Play Movie</option>
                         <option value="attack_character">⚔️ Attack Character</option>

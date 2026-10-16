@@ -198,6 +198,16 @@ const TRIGGER_ACTION_DEFS = {
       ]
     }
   },
+  furniture_visible: {
+    name: 'Furniture Becomes Visible',
+    icon: '✨',
+    defaultParams: { furnitureId: '', target: 'Heist Treasure Chest' }
+  },
+  move_furniture: {
+    name: 'Furniture Moves to [X, Y]',
+    icon: '🪑',
+    defaultParams: { furnitureId: '', target: 'Heist Treasure Chest', tile: [18, 17], x: 18, y: 17 }
+  },
   spawn_monsters: {
     name: 'Spawn Monsters',
     icon: '👾',
@@ -298,6 +308,7 @@ const dom = (typeof document !== 'undefined') ? {
   inspectTypeBadge: document.getElementById('inspect-type-badge'),
   inspectPosText: document.getElementById('inspect-pos-text'),
   inspectName: document.getElementById('inspect-name'),
+  inspectHidden: document.getElementById('inspect-hidden'),
   btnDeleteEntity: document.getElementById('btn-delete-entity'),
 
   // Inspector groups
@@ -681,7 +692,8 @@ async function loadCartridge(slugOrPath) {
         to: d.to || [0, 1],
         state: d.state || 'closed',
         is_secret: Boolean(d.is_secret),
-        room: d.room || ''
+        room: d.room || '',
+        hidden: Boolean(d.hidden)
       }));
       state.quest.furniture = (mapData.furniture || []).map((f, i) => {
         const rawType = f.type || 'chest';
@@ -696,7 +708,8 @@ async function loadCartridge(slugOrPath) {
           width: f.width || def.w || 1,
           height: f.height || def.h || 1,
           roomId: f.roomId || '',
-          treasure: f.treasure || ''
+          treasure: f.treasure || '',
+          hidden: Boolean(f.hidden)
         };
       });
       state.quest.wallBlocks = (mapData.wallBlocks || []).map((wb, i) => ({
@@ -705,7 +718,8 @@ async function loadCartridge(slugOrPath) {
         x: wb.x || 0,
         y: wb.y || 0,
         width: wb.width || 1,
-        height: wb.height || 1
+        height: wb.height || 1,
+        hidden: Boolean(wb.hidden)
       }));
       state.quest.traps = (mapData.traps || []).map((t, i) => ({
         id: t.id || `trap-${i+1}`,
@@ -714,7 +728,8 @@ async function loadCartridge(slugOrPath) {
         y: t.y || 0,
         damage: t.damageDice || t.damage || 1,
         detected: Boolean(t.detected),
-        disarmed: Boolean(t.disarmed)
+        disarmed: Boolean(t.disarmed),
+        hidden: Boolean(t.hidden)
       }));
 
       const rawTriggers = mapData.triggers || mapData.storyTriggers || [];
@@ -770,7 +785,8 @@ async function loadCartridge(slugOrPath) {
           tile: st.tile || [0, 0],
           onceOnly: st.onceOnly !== undefined ? Boolean(st.onceOnly) : true,
           narrative: st.narrative || '',
-          actions: actions
+          actions: actions,
+          hidden: Boolean(st.hidden)
         };
       });
       state.quest.triggers = state.quest.storyTriggers;
@@ -796,7 +812,8 @@ async function loadCartridge(slugOrPath) {
             roomId: m.roomId || '',
             isBoss: Boolean(m.isBoss),
             isUndead: Boolean(m.isUndead),
-            isSpellcaster: Boolean(m.isSpellcaster)
+            isSpellcaster: Boolean(m.isSpellcaster),
+            hidden: Boolean(m.hidden)
           });
         });
       } else if (typeof c.monsters === 'object') {
@@ -817,7 +834,8 @@ async function loadCartridge(slugOrPath) {
             roomId: m.roomId || '',
             isBoss: Boolean(m.isBoss),
             isUndead: Boolean(m.isUndead),
-            isSpellcaster: Boolean(m.isSpellcaster)
+            isSpellcaster: Boolean(m.isSpellcaster),
+            hidden: Boolean(m.hidden)
           });
         });
       }
@@ -865,7 +883,8 @@ function buildCartridgePayload() {
       isSpellcaster: m.isSpellcaster,
       spells: m.isSpellcaster ? ['lightning-bolt', 'firestorm'] : [],
       position: [m.pos[0], m.pos[1]],
-      roomId: m.roomId || ''
+      roomId: m.roomId || '',
+      hidden: Boolean(m.hidden)
     };
   });
 
@@ -941,7 +960,8 @@ function buildCartridgePayload() {
           to: [d.to[0], d.to[1]],
           state: d.state || 'closed',
           is_secret: Boolean(d.is_secret),
-          room: d.room || ''
+          room: d.room || '',
+          hidden: Boolean(d.hidden)
         })),
         furniture: q.furniture.map(f => ({
           id: f.id,
@@ -952,7 +972,8 @@ function buildCartridgePayload() {
           width: f.width,
           height: f.height,
           roomId: f.roomId || '',
-          treasure: f.treasure || ''
+          treasure: f.treasure || '',
+          hidden: Boolean(f.hidden)
         })),
         wallBlocks: q.wallBlocks.map(wb => ({
           id: wb.id,
@@ -960,7 +981,8 @@ function buildCartridgePayload() {
           x: wb.x,
           y: wb.y,
           width: wb.width,
-          height: wb.height
+          height: wb.height,
+          hidden: Boolean(wb.hidden)
         })),
         traps: q.traps.map(t => ({
           id: t.id,
@@ -969,7 +991,8 @@ function buildCartridgePayload() {
           y: t.y,
           damageDice: t.damage,
           detected: false,
-          disarmed: false
+          disarmed: false,
+          hidden: Boolean(t.hidden)
         })),
         triggers: q.storyTriggers.map(st => ({
           id: st.id,
@@ -984,6 +1007,7 @@ function buildCartridgePayload() {
           tile: [st.tile[0], st.tile[1]],
           onceOnly: Boolean(st.onceOnly !== false),
           narrative: st.narrative || '',
+          hidden: Boolean(st.hidden),
           actions: (st.actions || []).map(a => ({
             ...a,
             lines: Array.isArray(a.lines) ? a.lines.map(l => ({ ...l })) : undefined
@@ -1002,6 +1026,7 @@ function buildCartridgePayload() {
             event: st.event || (st.room ? 'on_room_entered' : 'on_tile_stepped_on'),
             onceOnly: Boolean(st.onceOnly !== false),
             movie: movieAction?.moviePath || '',
+            hidden: Boolean(st.hidden),
             actions: (st.actions || []).map(a => ({
               ...a,
               lines: Array.isArray(a.lines) ? a.lines.map(l => ({ ...l })) : undefined
@@ -1511,6 +1536,18 @@ function render() {
         ctx.textBaseline = 'middle';
         const def = FURNITURE_DEFS[f.type] || { icon: '🪑' };
         ctx.fillText(def.icon, pos.x + fw / 2, pos.y + fh / 2);
+      }
+
+      if (f.hidden) {
+        ctx.save();
+        ctx.strokeStyle = '#c084fc';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([3, 3]);
+        ctx.strokeRect(pos.x + 1, pos.y + 1, fw - 2, fh - 2);
+        ctx.font = '11px sans-serif';
+        ctx.fillStyle = '#f3e8ff';
+        ctx.fillText('👻', pos.x + fw - 8, pos.y + 10);
+        ctx.restore();
       }
 
       if (state.selectedEntity && state.selectedEntity.type === 'furniture' && state.selectedEntity.index === i) {
@@ -2885,6 +2922,18 @@ function updateInspectorUI() {
   const { type, index } = state.selectedEntity;
   dom.inspectTypeBadge.textContent = type.toUpperCase();
 
+  let currentTargetEntity = null;
+  if (type === 'monster') currentTargetEntity = state.quest.monsters[index];
+  else if (type === 'door') currentTargetEntity = state.quest.doors[index];
+  else if (type === 'furniture') currentTargetEntity = state.quest.furniture[index];
+  else if (type === 'trap') currentTargetEntity = state.quest.traps[index];
+  else if (type === 'note' || type === 'trigger') currentTargetEntity = state.quest.storyTriggers[index];
+  else if (type === 'wall-block') currentTargetEntity = state.quest.wallBlocks[index];
+
+  if (dom.inspectHidden) {
+    dom.inspectHidden.checked = Boolean(currentTargetEntity && currentTargetEntity.hidden);
+  }
+
   if (type === 'monster') {
     const m = state.quest.monsters[index];
     if (!m) return;
@@ -3418,7 +3467,12 @@ function renderActionPipelineUI(st) {
           ['monster', 'Room Monster / Foe'],
           ['narrator', 'Narrator']
         ];
-        return presets.map(([val, label]) => `<option value="${val}" ${selectedVal === val ? 'selected' : ''}>${label}</option>`).join('');
+        const monPresets = (state.quest.monsters || []).map(m => [m.name || m.id, `👾 ${m.name || m.id}`]);
+        const all = [...presets, ...monPresets];
+        if (selectedVal && !all.some(([val]) => val === selectedVal)) {
+          all.push([selectedVal, `🗣️ ${selectedVal}`]);
+        }
+        return all.map(([val, label]) => `<option value="${escapeHtml(val)}" ${selectedVal === val ? 'selected' : ''}>${escapeHtml(label)}</option>`).join('');
       };
 
       const bubblesHtml = act.lines.map((line, bIdx) => `
@@ -3426,11 +3480,15 @@ function renderActionPipelineUI(st) {
           <div class="dialogue-bubble-header">
             <span class="dialogue-bubble-count">💬 Bubble #${bIdx + 1}</span>
             <div style="display:flex; gap:4px; align-items:center;">
-              <select class="dropdown dropdown-xs act-bubble-speaker" data-line-idx="${bIdx}" style="width:130px;">
+              <select class="dropdown dropdown-xs act-bubble-speaker" data-line-idx="${bIdx}" style="width:170px;">
                 ${speakerOptions(line.speaker || 'barbarian')}
               </select>
               ${act.lines.length > 1 ? `<button type="button" class="btn btn-xs btn-danger btn-del-bubble" data-line-idx="${bIdx}" title="Delete Bubble">🗑️</button>` : ''}
             </div>
+          </div>
+          <div class="action-step-row" style="margin-top:2px;">
+            <label style="font-size:9px; min-width:45px;">Speaker:</label>
+            <input type="text" class="text-input text-input-xs act-bubble-speaker-custom" data-line-idx="${bIdx}" value="${escapeHtml(line.speaker || '')}" placeholder="Custom speaker name (e.g. Goblin who hesited chest)" style="flex:1;">
           </div>
           <div class="action-step-row" style="margin-top:2px;">
             <label style="font-size:9px; min-width:45px;">Speech:</label>
@@ -3451,6 +3509,51 @@ function renderActionPipelineUI(st) {
           ${bubblesHtml}
         </div>
         <button type="button" class="btn-add-bubble" style="width:100%; margin-top:4px;">+ Add Dialogue Bubble</button>
+      `;
+    } else if (act.type === 'furniture_visible' || act.type === 'furniture_becomes_visible' || act.type === 'reveal_furniture') {
+      const furnOpts = (state.quest.furniture || []).map(f =>
+        `<option value="${escapeHtml(f.name || f.id)}" ${(act.furnitureId === f.id || act.target === f.name || act.furnitureName === f.name) ? 'selected' : ''}>${escapeHtml(f.name || f.id)} [${f.x}, ${f.y}]</option>`
+      ).join('');
+      fieldsHtml = `
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Furniture:</label>
+          <select class="dropdown dropdown-xs act-field-furn-sel" style="flex:1;">
+            <option value="">-- Select Placed Furniture --</option>
+            ${furnOpts}
+          </select>
+        </div>
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Target Name:</label>
+          <input type="text" class="text-input text-input-xs act-field-furn-name" value="${escapeHtml(act.target || act.furnitureName || act.furnitureId || '')}" placeholder="e.g. Heist Treasure Chest" style="flex:1;">
+        </div>
+      `;
+    } else if (act.type === 'move_furniture' || act.type === 'furniture_moves_to') {
+      const furnOpts = (state.quest.furniture || []).map(f =>
+        `<option value="${escapeHtml(f.name || f.id)}" ${(act.furnitureId === f.id || act.target === f.name || act.furnitureName === f.name) ? 'selected' : ''}>${escapeHtml(f.name || f.id)} [${f.x}, ${f.y}]</option>`
+      ).join('');
+      const curX = act.tile ? act.tile[0] : (act.x !== undefined ? act.x : 0);
+      const curY = act.tile ? act.tile[1] : (act.y !== undefined ? act.y : 0);
+      fieldsHtml = `
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Furniture:</label>
+          <select class="dropdown dropdown-xs act-field-furn-sel" style="flex:1;">
+            <option value="">-- Select Placed Furniture --</option>
+            ${furnOpts}
+          </select>
+        </div>
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Target Name:</label>
+          <input type="text" class="text-input text-input-xs act-field-furn-name" value="${escapeHtml(act.target || act.furnitureName || act.furnitureId || '')}" placeholder="e.g. Heist Treasure Chest" style="flex:1;">
+        </div>
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Move To Tile:</label>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:10px;">X:</span>
+            <input type="number" class="num-input-xs act-field-furn-x" value="${curX}" min="0" max="30" style="width:45px;">
+            <span style="font-size:10px;">Y:</span>
+            <input type="number" class="num-input-xs act-field-furn-y" value="${curY}" min="0" max="30" style="width:45px;">
+          </div>
+        </div>
       `;
     } else if (act.type === 'spawn_monsters') {
       const monOpts = Object.keys(MONSTER_DEFS).map(k =>
@@ -3532,7 +3635,19 @@ function renderActionPipelineUI(st) {
     card.querySelectorAll('.act-bubble-speaker').forEach(sel => {
       sel.addEventListener('change', () => {
         const lIdx = parseInt(sel.dataset.lineIdx);
-        if (act.lines && act.lines[lIdx]) act.lines[lIdx].speaker = sel.value;
+        if (act.lines && act.lines[lIdx]) {
+          act.lines[lIdx].speaker = sel.value;
+          const customIn = card.querySelector(`.act-bubble-speaker-custom[data-line-idx="${lIdx}"]`);
+          if (customIn) customIn.value = sel.value;
+        }
+      });
+    });
+    card.querySelectorAll('.act-bubble-speaker-custom').forEach(cin => {
+      cin.addEventListener('input', () => {
+        const lIdx = parseInt(cin.dataset.lineIdx);
+        if (act.lines && act.lines[lIdx]) {
+          act.lines[lIdx].speaker = cin.value;
+        }
       });
     });
     card.querySelectorAll('.act-bubble-text').forEach(txt => {
@@ -3565,6 +3680,52 @@ function renderActionPipelineUI(st) {
         const nextSpeaker = act.lines.length % 2 === 1 ? 'mentor' : 'barbarian';
         act.lines.push({ speaker: nextSpeaker, text: '', audio: '' });
         renderActionPipelineUI(st);
+      });
+    }
+
+    // Furniture action inputs
+    const furnSelIn = card.querySelector('.act-field-furn-sel');
+    if (furnSelIn) {
+      furnSelIn.addEventListener('change', () => {
+        const val = furnSelIn.value;
+        const matched = (state.quest.furniture || []).find(f => (f.name === val || f.id === val));
+        if (matched) {
+          act.furnitureId = matched.id;
+          act.target = matched.name || matched.id;
+          act.furnitureName = matched.name || matched.id;
+        } else {
+          act.target = val;
+          act.furnitureName = val;
+        }
+        const furnNameIn = card.querySelector('.act-field-furn-name');
+        if (furnNameIn) furnNameIn.value = act.target;
+      });
+    }
+    const furnNameIn = card.querySelector('.act-field-furn-name');
+    if (furnNameIn) {
+      furnNameIn.addEventListener('input', () => {
+        act.target = furnNameIn.value;
+        act.furnitureName = furnNameIn.value;
+        const matched = (state.quest.furniture || []).find(f => (f.name === act.target || f.id === act.target));
+        if (matched) act.furnitureId = matched.id;
+      });
+    }
+    const furnXIn = card.querySelector('.act-field-furn-x');
+    const furnYIn = card.querySelector('.act-field-furn-y');
+    if (furnXIn) {
+      furnXIn.addEventListener('change', () => {
+        const nx = parseInt(furnXIn.value) || 0;
+        act.x = nx;
+        if (!Array.isArray(act.tile)) act.tile = [nx, 0];
+        act.tile[0] = nx;
+      });
+    }
+    if (furnYIn) {
+      furnYIn.addEventListener('change', () => {
+        const ny = parseInt(furnYIn.value) || 0;
+        act.y = ny;
+        if (!Array.isArray(act.tile)) act.tile = [0, ny];
+        act.tile[1] = ny;
       });
     }
 
@@ -5243,6 +5404,23 @@ function setupEventListeners() {
     if (type === 'furniture') state.quest.furniture[index].name = dom.inspectName.value;
     updateEntitySummaryList();
   });
+
+  if (dom.inspectHidden) {
+    dom.inspectHidden.addEventListener('change', () => {
+      if (!state.selectedEntity) return;
+      const { type, index } = state.selectedEntity;
+      const isHidden = dom.inspectHidden.checked;
+      recordHistory();
+      if (type === 'monster' && state.quest.monsters[index]) state.quest.monsters[index].hidden = isHidden;
+      else if (type === 'door' && state.quest.doors[index]) state.quest.doors[index].hidden = isHidden;
+      else if (type === 'furniture' && state.quest.furniture[index]) state.quest.furniture[index].hidden = isHidden;
+      else if (type === 'trap' && state.quest.traps[index]) state.quest.traps[index].hidden = isHidden;
+      else if ((type === 'note' || type === 'trigger') && state.quest.storyTriggers[index]) state.quest.storyTriggers[index].hidden = isHidden;
+      else if (type === 'wall-block' && state.quest.wallBlocks[index]) state.quest.wallBlocks[index].hidden = isHidden;
+      render();
+      updateEntitySummaryList();
+    });
+  }
 
   dom.inspectMonsterBp.addEventListener('change', () => {
     if (state.selectedEntity?.type === 'monster') {
