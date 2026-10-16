@@ -206,7 +206,7 @@ const TRIGGER_ACTION_DEFS = {
   move_furniture: {
     name: 'Furniture Moves to [X, Y]',
     icon: '🪑',
-    defaultParams: { furnitureId: '', target: 'Heist Treasure Chest', tile: [18, 17], x: 18, y: 17 }
+    defaultParams: { furnitureId: '', target: 'Heist Treasure Chest', tile: [18, 17], x: 18, y: 17, message: '' }
   },
   spawn_monsters: {
     name: 'Spawn Monsters',
@@ -3554,6 +3554,10 @@ function renderActionPipelineUI(st) {
             <input type="number" class="num-input-xs act-field-furn-y" value="${curY}" min="0" max="30" style="width:45px;">
           </div>
         </div>
+        <div class="action-step-row" style="margin-top:4px;">
+          <label style="font-size:10px; min-width:65px;">Custom Msg:</label>
+          <input type="text" class="text-input text-input-xs act-field-furn-msg" value="${escapeHtml(act.message || act.customMessage || '')}" placeholder="Default: {name} moved (e.g. Chest was thrown through the wall...)" style="flex:1;">
+        </div>
       `;
     } else if (act.type === 'spawn_monsters') {
       const monOpts = Object.keys(MONSTER_DEFS).map(k =>
@@ -3726,6 +3730,12 @@ function renderActionPipelineUI(st) {
         act.y = ny;
         if (!Array.isArray(act.tile)) act.tile = [0, ny];
         act.tile[1] = ny;
+      });
+    }
+    const furnMsgIn = card.querySelector('.act-field-furn-msg');
+    if (furnMsgIn) {
+      furnMsgIn.addEventListener('input', () => {
+        act.message = furnMsgIn.value;
       });
     }
 

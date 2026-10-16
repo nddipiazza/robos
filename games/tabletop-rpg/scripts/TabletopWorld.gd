@@ -13810,8 +13810,16 @@ func _execute_trigger_actions(trigger: Dictionary, hero: Dictionary, start_index
 					found_furn["position"] = [new_x, new_y]
 					_rebuild_furniture_tile_map()
 					var dname = str(found_furn.get("name", found_furn.get("id", "Furniture")))
-					_log("[ACTION] 🪑 Furniture '%s' moved to [%d, %d]!" % [dname, new_x, new_y])
-					spawn_floating_text(Vector2i(new_x, new_y), "🪑 %s MOVED" % dname.to_upper(), Color(1.0, 0.8, 0.2), 2.5)
+					var raw_msg = str(act.get("message", act.get("custom_message", act.get("customMessage", act.get("text", ""))))).strip_edges()
+					var display_msg = ""
+					if raw_msg != "":
+						display_msg = raw_msg.replace("{name}", dname).replace("{id}", str(found_furn.get("id", ""))).replace("{x}", str(new_x)).replace("{y}", str(new_y))
+						_log("[ACTION] 🪑 %s" % display_msg)
+						spawn_floating_text(Vector2i(new_x, new_y), display_msg, Color(1.0, 0.8, 0.2), 3.5)
+					else:
+						display_msg = "🪑 %s MOVED" % dname.to_upper()
+						_log("[ACTION] 🪑 Furniture '%s' moved to [%d, %d]!" % [dname, new_x, new_y])
+						spawn_floating_text(Vector2i(new_x, new_y), display_msg, Color(1.0, 0.8, 0.2), 2.5)
 					spawn_burst_vfx(board_offset + Vector2((new_x + 0.5) * tile_size, (new_y + 0.5) * tile_size), Color(1.0, 0.8, 0.2), 50.0, 0.5)
 					update_party_vision()
 					_update_ui()
@@ -20088,8 +20096,22 @@ func execute_action(action_data: Dictionary) -> Dictionary:
 					f["y"] = new_y
 					f["position"] = [new_x, new_y]
 					_rebuild_furniture_tile_map()
+					var dname = str(f.get("name", f.get("id", "Furniture")))
+					var raw_msg = str(action_data.get("message", action_data.get("custom_message", action_data.get("customMessage", action_data.get("text", ""))))).strip_edges()
+					var display_msg = ""
+					if raw_msg != "":
+						display_msg = raw_msg.replace("{name}", dname).replace("{id}", str(f.get("id", ""))).replace("{x}", str(new_x)).replace("{y}", str(new_y))
+						_log("[ACTION] 🪑 %s" % display_msg)
+						spawn_floating_text(Vector2i(new_x, new_y), display_msg, Color(1.0, 0.8, 0.2), 3.5)
+					else:
+						display_msg = "🪑 %s MOVED" % dname.to_upper()
+						_log("[ACTION] 🪑 Furniture '%s' moved to [%d, %d]!" % [dname, new_x, new_y])
+						spawn_floating_text(Vector2i(new_x, new_y), display_msg, Color(1.0, 0.8, 0.2), 2.5)
+					spawn_burst_vfx(board_offset + Vector2((new_x + 0.5) * tile_size, (new_y + 0.5) * tile_size), Color(1.0, 0.8, 0.2), 50.0, 0.5)
+					update_party_vision()
+					_update_ui()
 					queue_redraw_all()
-					return { "success": true, "furniture": f }
+					return { "success": true, "furniture": f, "message": display_msg }
 			return { "success": false, "error": "Furniture not found: " + fid }
 		"trigger_story_event":
 			var target_id = str(action_data.get("id", action_data.get("marker", "")))
@@ -22360,14 +22382,18 @@ func _draw_floating_texts(canvas: CanvasItem) -> void:
 			var text_y = plaque_y + pad_y + str_size.y * 0.85
 			canvas.draw_string(font, Vector2(plaque_x + pad_x, text_y), full_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size, Color(1.0, 0.92, 0.45, ft.alpha))
 		else:
-			var f_size = 18
-			var col = Color(ft.color.r, ft.color.g, ft.color.b, ft.alpha)
 			var txt = str(ft.get("text", ""))
-			var tw = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size).x
-			var bg_rect = Rect2(ft.pos.x - tw * 0.5 - 6.0, ft.pos.y - 15.0, tw + 12.0, 20.0)
-			canvas.draw_rect(bg_rect, Color(0.05, 0.05, 0.08, 0.85 * ft.alpha))
-			canvas.draw_rect(bg_rect, Color(col.r, col.g, col.b, 0.65 * ft.alpha), false, 1.2)
-			canvas.draw_string(font, Vector2(ft.pos.x - tw * 0.5, ft.pos.y), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size, col)
+			var f_size = 13 if txt.length() > 50 else (15 if txt.length() > 25 else 18)
+			var col = Color(ft.color.r, ft.color.g, ft.color.b, ft.alpha)
+			var text_sz = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_size)
+			var tw = text_sz.x
+			var th = maxf(22.0, text_sz.y + 6.0)
+			var vp_w = canvas.get_viewport_rect().size.x if canvas.get_viewport() else 1920.0
+			var draw_x = clampf(ft.pos.x - tw * 0.5, 16.0, maxf(16.0, vp_w - tw - 16.0))
+			var bg_rect = Rect2(draw_x - 8.0, ft.pos.y - th * 0.75, tw + 16.0, th)
+			canvas.draw_rect(bg_rect, Color(0.05, 0.05, 0.08, 0.88 * ft.alpha))
+			canvas.draw_rect(bg_rect, Color(col.r, col.g, col.b, 0.75 * ft.alpha), false, 1.2)
+			canvas.draw_string(font, Vector2(draw_x, ft.pos.y), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, f_size, col)
 
 func _setup_trap_sprung_overlay(trap: Dictionary, hero: Dictionary, final_pos: Vector2i, path: Array, actual_cost: int, is_chest: bool = false) -> void:
 	var t_type = str(trap.get("type", trap.get("trapType", "pit"))).to_lower()
