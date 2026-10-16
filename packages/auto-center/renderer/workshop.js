@@ -82,13 +82,13 @@
     }
     return panels;
   }
-  function timeline(job) { return el('ol', { class: 'timeline', 'aria-label': 'DevOps history' }, ...job.workItem.slice().reverse().map(ev => el('li', {}, el('b', { text: ev.kind }), ' ', el('span', { text: ev.detail })))); }
+  function timeline(job) { return el('ol', { class: 'timeline', 'aria-label': 'Ticket history' }, ...job.workItem.slice().reverse().map(ev => el('li', {}, el('b', { text: ev.kind }), ' ', el('span', { text: ev.detail })))); }
   function summary(job) {
     const s = job.summary, hours = Object.entries(s.hoursByTeammate).map(([n, h]) => `${n} ${h}h`).join(', ') || 'no hours yet';
     return el('p', { class: 'note job-summary', text: `Estimate ${money(s.estimateTotal, s.currency)} · parts cost ${money(s.partsCost, s.currency)} · ${hours} · paid ${money(s.paid, s.currency)}` });
   }
   function jobCard(job) {
-    return el('article', { class: 'card ticket', 'data-key': job.key, 'data-stage': job.stage }, el('h3', { text: `${job.key} · ${job.title}` }), el('p', { class: 'note', text: `${job.customer || 'Unknown customer'} · ${job.vehicle}` }), stageBar(job), summary(job), ...actions(job), el('details', {}, el('summary', { text: 'DevOps ticket history' }), timeline(job)));
+    return el('article', { class: 'card ticket', 'data-key': job.key, 'data-stage': job.stage }, el('h3', { text: `${job.key} · ${job.title}` }), el('p', { class: 'note', text: `${job.customer || 'Unknown customer'} · ${job.vehicle}` }), stageBar(job), summary(job), ...actions(job), el('details', {}, el('summary', { text: 'Ticket history' }), timeline(job)));
   }
   async function load() {
     board = await window.auto.workshop({ action: 'board' });

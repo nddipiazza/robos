@@ -59,7 +59,7 @@ description: "A guide to running a car repair shop in RobOS Auto Center: custome
 <section class="hero" style="padding-bottom:24px"><div class="wrap">
 <span class="pill"><b>RobOS Auto</b> · Maintenance center</span>
 <h1>Run a repair shop from first call to paid and returned</h1>
-<p class="lead">Auto Center follows every customer car through intake, diagnosis, estimate, approval, repair, invoice, payment and offboarding. Each repair is a DevOps work item, committed to your shop's private Git history. This guide is built from the same end-to-end tests that prove it works: ${total} scenarios, ${pass} passing, every screenshot taken from the real app.</p>
+<p class="lead">Auto Center follows every customer car through intake, diagnosis, estimate, approval, repair, invoice, payment and offboarding. Each repair is a numbered ticket, and every step is backed up to storage such as GitHub so you never lose your shop's records. This guide is built from the same end-to-end tests that prove it works: ${total} scenarios, ${pass} passing, every screenshot taken from the real app.</p>
 <div class="cta"><a class="btn" href="#walk-in-to-offboard">Watch the whole journey</a><a class="btn btn-ghost" href="{{ '/assets/auto-center/cucumber-report.html' | relative_url }}">Open the test report</a></div>
 </div></section>
 <section style="padding-top:24px"><div class="wrap">
@@ -74,7 +74,7 @@ ${video ? `<figure class="guide-video"><video controls preload="none" playsinlin
 npm install
 npm run e2e:lifecycle        # runs every scenario, records video
 node scripts/build-guide.js  # regenerates this page from the run</code></pre>
-<p class="note">Scope: this is a local desktop shop tool backed by a KGraph and a private Git repository, not a multi-user hosted service. Payment recording notes a payment already received; it does not charge cards. Tickets are local DevOps work items; syncing them to GitHub, Gitea or Jira is not built yet.</p></section>
+<p class="note">Scope: this is a local desktop shop tool backed by a local knowledge graph, with every change backed up to storage such as GitHub, not a multi-user hosted service. Payment recording notes a payment already received; it does not charge cards. Tickets are saved locally and in the shop's Git repository; backups to GitHub are set up under Repair queue, but showing them as issues in GitHub, Gitea or Jira is not built yet.</p></section>
 </div></div></div></section>
 `;
 fs.writeFileSync(path.join(site, 'auto-center.html'), page);

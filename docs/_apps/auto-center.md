@@ -3,7 +3,7 @@ title: "RobOS Auto Center"
 package: auto-center
 category: auto
 icon: auto-center.svg
-summary: "Owner vehicle care and invoice scans, private Git shop repairs, and source-backed recall remedies."
+summary: "Owner vehicle care and invoice scans, repairs backed up to storage such as GitHub, and source-backed recall remedies."
 description: "Separate owner and maintenance center workspaces backed by KGraph."
 ---
 
