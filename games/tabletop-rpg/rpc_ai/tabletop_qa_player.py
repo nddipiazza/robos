@@ -660,8 +660,39 @@ class TabletopQAPlayer:
         self.log(f"Force reloading current quest from cartridge (clear_save={clear_save})...")
         return self.execute_action("reset_game", clear_save=clear_save)
 
-    def restart_quest(self, clear_save: bool = True) -> dict:
+    def restart_quest(self, clear_save: bool = True, confirm: bool = False) -> dict:
+        if confirm:
+            return self.request_restart_quest()
         return self.reset_quest(clear_save=clear_save)
+
+    def request_restart_quest(self) -> dict:
+        """Open the restart quest confirmation modal (simulating clicking RESTART QUEST in Game Menu)."""
+        self.log("Requesting quest restart (opening confirmation modal)...")
+        return self.execute_action("request_restart_quest")
+
+    def click_menu_restart_quest(self) -> dict:
+        """Click the RESTART QUEST button inside the Game Menu."""
+        return self.request_restart_quest()
+
+    def confirm_restart_quest(self) -> dict:
+        """Confirm the restart quest prompt: wipes save and resets to Round 1."""
+        self.log("Confirming quest restart...")
+        return self.execute_action("confirm_restart_quest")
+
+    def cancel_restart_quest(self) -> dict:
+        """Cancel the restart quest prompt: dismisses modal without resetting progress."""
+        self.log("Cancelling quest restart...")
+        return self.execute_action("cancel_restart_quest")
+
+    def is_restart_confirm_open(self) -> bool:
+        """Check if the restart quest confirmation modal is open."""
+        st = self.get_state()
+        return bool(
+            st.get("restartConfirmModalVisible", False)
+            or st.get("restartConfirmModalOpen", False)
+            or st.get("isRestartConfirmOpen", False)
+            or st.get("modal", {}).get("restartConfirmModalVisible", False)
+        )
 
     # --- Game Menu Helpers ---
     def open_game_menu(self) -> dict:
