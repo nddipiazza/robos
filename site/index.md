@@ -80,7 +80,7 @@ permalink: /
     <h2 class="h2">Plugs into the systems you already run</h2>
     <p class="sec-p">Source control, CI, search, content extraction and every database you use. Each integration is a KGraph import plus skills, so it teaches the agents how that system works.</p>
     <ul class="integ">
-      <li><img src="https://cdn.simpleicons.org/github/ffffff" alt="" loading="lazy" onerror="this.remove()">GitHub</li>
+      <li><img src="https://cdn.simpleicons.org/github" alt="" loading="lazy" onerror="this.remove()">GitHub</li>
       <li><img src="https://cdn.simpleicons.org/gitea" alt="" loading="lazy" onerror="this.remove()">Gitea</li>
       <li><img src="https://cdn.simpleicons.org/gitlab" alt="" loading="lazy" onerror="this.remove()">GitLab</li>
       <li><img src="https://cdn.simpleicons.org/jenkins" alt="" loading="lazy" onerror="this.remove()">Jenkins</li>
@@ -91,7 +91,7 @@ permalink: /
       <li><img src="https://cdn.simpleicons.org/redis" alt="" loading="lazy" onerror="this.remove()">Redis</li>
       <li><img src="https://cdn.simpleicons.org/elasticsearch" alt="" loading="lazy" onerror="this.remove()">Elasticsearch</li>
       <li><img src="https://cdn.simpleicons.org/apachesolr" alt="" loading="lazy" onerror="this.remove()">Apache Solr</li>
-      <li><img src="https://cdn.simpleicons.org/apachekafka/ffffff" alt="" loading="lazy" onerror="this.remove()">Kafka</li>
+      <li><img src="https://cdn.simpleicons.org/apachekafka" alt="" loading="lazy" onerror="this.remove()">Kafka</li>
       <li><img src="https://cdn.simpleicons.org/docker" alt="" loading="lazy" onerror="this.remove()">Docker</li>
       <li><img src="https://cdn.simpleicons.org/kubernetes" alt="" loading="lazy" onerror="this.remove()">Kubernetes</li>
       <li><img src="https://cdn.simpleicons.org/jira" alt="" loading="lazy" onerror="this.remove()">Jira</li>
