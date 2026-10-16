@@ -856,6 +856,9 @@ class TabletopQAPlayer:
         st = self.get_state()
         return st.get("movie", {})
 
+    def is_movie_playing(self) -> bool:
+        return bool(self.get_movie_state().get("isPlaying", False))
+
     # --- Autonomous AI & Demo Mode Helpers ---
     def start_demo(self) -> dict:
         """Start autonomous demo mode."""
