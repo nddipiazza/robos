@@ -1344,8 +1344,14 @@ class BlockmapCreator {
       this.cartridgeSlug = null;
       const presetSelect = document.getElementById('board-preset-select');
       if (presetSelect) {
-        const optionExists = Array.from(presetSelect.options).some(o => o.value === this.boardId);
-        if (optionExists) presetSelect.value = this.boardId;
+        let option = Array.from(presetSelect.options).find(o => o.value === this.boardId);
+        if (!option) {
+          option = document.createElement('option');
+          option.value = this.boardId;
+          option.textContent = this.boardTitle || this.boardId;
+          presetSelect.appendChild(option);
+        }
+        presetSelect.value = this.boardId;
       }
       this.showToast(`Loaded Blockmap: ${this.boardTitle || this.boardId}`);
     } else {
@@ -1411,20 +1417,38 @@ class BlockmapCreator {
     this.updateRoomInspector();
 
     if (imageData && imageData.dataUrl) {
-      const img = new Image();
-      img.onload = () => {
-        this.image = img;
-        this.imagePath = imageData.filePath;
-        this.fileName = imageData.fileName;
-        document.getElementById('info-image-name').textContent = `🖼️ ${this.fileName}`;
-        document.getElementById('info-image-size').textContent = `📐 ${img.naturalWidth} × ${img.naturalHeight} px`;
-        document.getElementById('info-grid-size').textContent = `🧱 ${this.cols} × ${this.rows} grid`;
-        this.fitToScreen();
-        this.render();
-      };
-      img.src = imageData.dataUrl;
+      await new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          this.image = img;
+          this.imagePath = imageData.filePath;
+          this.fileName = imageData.fileName;
+          const nameEl = document.getElementById('info-image-name');
+          if (nameEl) nameEl.textContent = `🖼️ ${this.fileName}`;
+          const sizeEl = document.getElementById('info-image-size');
+          if (sizeEl) sizeEl.textContent = `📐 ${img.naturalWidth} × ${img.naturalHeight} px`;
+          const gridEl = document.getElementById('info-grid-size');
+          if (gridEl) gridEl.textContent = `🧱 ${this.cols} × ${this.rows} grid`;
+          this.fitToScreen();
+          this.render();
+          resolve();
+        };
+        img.onerror = (e) => {
+          console.error('Failed to load image in applyBoardData:', e);
+          this.render();
+          resolve();
+        };
+        img.src = imageData.dataUrl;
+      });
     } else {
-      this.render();
+      // Fallback: if no image data attached, try to load corresponding preset or default image
+      const presetsRes = await window.robosBlockmap?.listBoardPresets?.();
+      const p = presetsRes?.presets?.find(x => x.id === this.boardId || x.blockmapFile === `${this.boardId}.blockmap.json`);
+      if (p && p.file) {
+        await this.loadImageFile(p.file);
+      } else {
+        this.render();
+      }
     }
   }
 
