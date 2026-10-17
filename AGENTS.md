@@ -125,6 +125,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **Tabletop Quest Map Editor** | Layer 2 quest scenario designer on blockmaps: doors, monsters, furniture, traps, stairs, and playable cartridge export |
 | **RobOS Audio Player** | Open-source Howler.js audio player, procedural focus soundscapes, and zero-cloud Google Home / Cast smart speaker streaming |
 | **RobOS Home Speaker** | Smart speaker intercom, push-to-talk voice notes, neural TTS broadcast, custom audio streaming, and soundboard controller |
+| **GNOME Desktop App Installer** | Install, manage, and repair GNOME Desktop shortcuts (`~/Desktop`), App Grid `.desktop` launchers, multi-scale hicolor icons, and GNOME Dock favorites for all RobOS apps |
 
 ## Shared Libraries
 

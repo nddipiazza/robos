@@ -295,4 +295,9 @@ packages:
     type: "robos:DesktopApp"
     repository: "packages/home-speaker"
     technology: "Electron 28 / Google Cast / Kokoro TTS"
+  - id: "urn:robos:desktop-app:gnome-desktop-installer"
+    title: "RobOS GNOME Desktop App Installer"
+    type: "robos:DesktopApp"
+    repository: "packages/gnome-desktop-installer"
+    technology: "Electron 28 / FreeDesktop 1.5 / GIO / GSettings"
 

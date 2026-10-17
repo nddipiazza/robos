@@ -194,6 +194,12 @@ const BUILTIN_APPS = [
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v12"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v6a3 3 0 0 1-3 3H9"/></svg>'
   },
   {
+    appId: 'gnome-desktop-installer',
+    label: 'GNOME Desktop Installer',
+    category: 'System',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><rect x="5" y="6" width="3.5" height="3.5" rx="0.8" fill="#00bcd4" fill-opacity="0.25"/><rect x="10.25" y="6" width="3.5" height="3.5" rx="0.8" fill="#00bcd4" fill-opacity="0.25"/><path d="M17.25 6v5m0 0-2-2m2 2 2-2"/><rect x="5" y="11" width="3.5" height="3" rx="0.8" fill="#00bcd4" fill-opacity="0.25"/><rect x="10.25" y="11" width="3.5" height="3" rx="0.8" fill="#00bcd4" fill-opacity="0.25"/></svg>'
+  },
+  {
     appId: 'home-speaker',
     label: 'Home Speaker',
     category: 'Tools',
