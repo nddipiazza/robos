@@ -14,3 +14,9 @@
 .guide-video{margin:24px 0}.guide-video video{width:100%;border:1px solid var(--line);border-radius:10px}.guide-video figcaption{font-size:.85rem;color:var(--muted);margin-top:6px}
 .guide-body pre{overflow:auto;border:1px solid var(--line);border-radius:10px;padding:16px;background:var(--card)}
 @media(max-width:860px){.guide-layout{grid-template-columns:1fr}.guide-toc{position:static}.guide-shots{grid-template-columns:1fr}}
+.role-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:8px 0 28px}
+.role-card{display:flex;flex-direction:column;gap:6px;padding:18px;border:1px solid var(--line);border-radius:12px;background:var(--card)}.role-card b{font-size:1.1rem}.role-card span{color:var(--muted);font-size:.9rem}.role-card:hover{border-color:var(--accent)}
+.quick{margin:16px 0 0;padding-left:22px;max-width:70ch}.quick li{margin:10px 0}
+.guide-guards,.adv-chapter{margin:18px 0;border:1px solid var(--line);border-radius:10px;padding:4px 16px}.guide-guards>summary,.adv-chapter>summary{cursor:pointer;font-weight:600;padding:12px 0}
+.guide-chapter.adv{padding:0}.adv-chapter .guide-chapter{padding-bottom:16px}.adv-chapter .guide-chapter>h2{font-size:1.2rem}
+.flow b{font-size:.95rem}

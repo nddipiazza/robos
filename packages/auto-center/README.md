@@ -49,6 +49,15 @@ EPA configurations and NHTSA models have separate source identities. Equal names
 
 The NHTSA datasets overview page returned HTTP 403 during the initial collection. Its failure is recorded; successful API responses and bulk downloads were imported independently. Downloads are snapshots, not a background synchronization service.
 
+## Shop desk menus (maintenance center mode)
+
+- **Front desk** (`lib/frontdesk.js`, `renderer/frontdesk.js`): five-step intake wizard (contact channel, customer, vehicle, issue, confirm). Existing customers are found by phone, email or name; new customers need a name plus a phone or email. The issue questions come from the KGraph form in `data/intake-form.jsonld` (categories `robos:IntakeCategory`, questions `robos:IntakeQuestion`); a copy named `intake-form.jsonld` in the shop data folder overrides it. Also: estimates and approvals by contact channel, a contact log, and follow-up lists.
+- **Mechanic bench** (`lib/bench.js`, `renderer/mechanic.js`): claim a ticket, record diagnosis and notes, request parts (requested, ordered, received; received parts become part usage), log hours or time with a stopwatch, flag extra work, finish the job.
+- **Checkout** (`renderer/checkout.js`): pick a finished car, issue the invoice, record payments, hand back the keys.
+- **Admin** (`lib/admin.js`, `renderer/admin.js`): team, customers, parts catalog and import, intake form, shop settings, backup to a private GitHub repository.
+
+The older **All tickets** page remains for working one ticket at a time. `npm run e2e:lifecycle` runs the Cucumber scenarios (real Electron app, video capture) and `node scripts/build-guide.js` regenerates https://rowbose.com/auto-center/ from the run.
+
 ## Type-ahead search
 
 Make, model, year, trouble-code, part and labor fields suggest matches as you type (`lib/catalog.js`, `renderer/typeahead.js`). Vehicle suggestions are built in memory from the imported public KGraph (makes, models, EPA configurations, diagnostic codes), scoped so models follow the chosen make and years follow the model. Parts come from the shop's own catalog (add one at a time or import a supplier CSV under **Repair lifecycle → Parts catalog**) followed by a bundled list of common part and labor names (`data/`, names and typical hours only). Fitment columns in a supplier CSV are hints used to rank parts for matching vehicles; they are not verified fitment. Free text is always accepted. Searching 100,000 entries takes a few milliseconds.

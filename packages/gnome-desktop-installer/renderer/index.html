@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';">
+  <title>RobOS GNOME Desktop App Installer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Top Header -->
+    <header class="topbar">
+      <div class="topbar-brand">
+        <div class="brand-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+            <path d="M12 7v6m0 0-2.5-2.5M12 13l2.5-2.5"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">RobOS GNOME Desktop App Installer</h1>
+          <p class="brand-subtitle">Manage GNOME App Grid launchers, trusted ~/Desktop shortcuts, multi-scale icons &amp; Dock favorites across all RobOS apps</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button id="btn-install-all-menu" class="btn btn-primary" title="Install .desktop entries, ~/.local/bin wrappers, and multi-scale icons for target apps">
+          Install to GNOME App Grid
+        </button>
+        <button id="btn-add-all-desktop" class="btn btn-accent" title="Create trusted launchable shortcuts on ~/Desktop for target apps">
+          Add Shortcuts to ~/Desktop
+        </button>
+        <button id="btn-remove-all-desktop" class="btn btn-danger-outline" title="Remove shortcuts from ~/Desktop (keeps App Grid entries)">
+          Remove ~/Desktop Shortcuts
+        </button>
+        <button id="btn-refresh-caches" class="btn btn-secondary" title="Run gtk-update-icon-cache, update-desktop-database, and GIO trust repair">
+          Rebuild Caches
+        </button>
+        <button id="btn-reload" class="btn btn-ghost" title="Rescan RobOS packages and GNOME directories">
+          ↻ Refresh
+        </button>
+      </div>
+    </header>
+
+    <!-- KPI Summary Strip -->
+    <section class="kpi-strip">
+      <div class="kpi-card">
+        <span class="kpi-label">Discovered RobOS Apps</span>
+        <span class="kpi-value" id="stat-total">0</span>
+        <span class="kpi-meta" id="stat-packages-path">packages/</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">In GNOME App Grid</span>
+        <span class="kpi-value accent-cyan" id="stat-app-menu">0</span>
+        <span class="kpi-meta">~/.local/share/applications</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">On ~/Desktop (Trusted)</span>
+        <span class="kpi-value accent-green" id="stat-desktop">0</span>
+        <span class="kpi-meta">~/Desktop/*.desktop (GIO trusted)</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Pinned to GNOME Dock</span>
+        <span class="kpi-value accent-purple" id="stat-dock">0</span>
+        <span class="kpi-meta">org.gnome.shell favorite-apps</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Multi-Scale Icons Ready</span>
+        <span class="kpi-value accent-blue" id="stat-icons">0</span>
+        <span class="kpi-meta">hicolor 16x16–512x512 + SVG</span>
+      </div>
+    </section>
+
+    <!-- Progress & Status Banner -->
+    <div id="progress-panel" class="progress-panel hidden">
+      <div class="progress-header">
+        <span id="progress-label">Installing GNOME desktop launchers...</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+    </div>
+
+    <div id="status-banner" class="status-banner hidden"></div>
+
+    <!-- Filter & View Controls -->
+    <section class="controls-bar">
+      <div class="search-box">
+        <input id="search-input" type="text" placeholder="Search apps by name, id, category, or description..." autocomplete="off" spellcheck="false">
+      </div>
+
+      <div class="filter-group">
+        <label for="status-filter" class="sr-only">Status Filter</label>
+        <select id="status-filter" class="select-control">
+          <option value="all">All Statuses</option>
+          <option value="app-menu">Installed in App Grid</option>
+          <option value="not-installed">Not Installed in App Grid</option>
+          <option value="on-desktop">Has ~/Desktop Shortcut</option>
+          <option value="no-desktop">No ~/Desktop Shortcut</option>
+          <option value="dock-pinned">Pinned to GNOME Dock</option>
+        </select>
+
+        <div class="selection-controls">
+          <button id="btn-select-visible" class="btn btn-sm btn-secondary">Select Visible</button>
+          <button id="btn-clear-selection" class="btn btn-sm btn-ghost">Clear</button>
+          <span id="selection-count" class="selection-badge">All filtered</span>
+        </div>
+
+        <div class="view-toggle">
+          <button id="btn-view-grid" class="btn btn-sm active" title="Grid View">▦ Grid</button>
+          <button id="btn-view-table" class="btn btn-sm" title="Table View">☰ List</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Category Pills -->
+    <nav id="category-tabs" class="category-tabs"></nav>
+
+    <!-- Apps Container -->
+    <main id="apps-container" class="apps-container">
+      <div id="apps-grid" class="apps-grid"></div>
+    </main>
+
+    <!-- Inspector Modal -->
+    <div id="details-modal" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <h2 id="modal-app-title">App Details</h2>
+            <p id="modal-app-subtitle" class="modal-subtitle"></p>
+          </div>
+          <button id="btn-close-modal" class="btn btn-ghost">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="detail-meta-grid" id="modal-meta-grid"></div>
+          <div class="code-section">
+            <h3>FreeDesktop Entry (<code>.desktop</code>)</h3>
+            <pre id="modal-desktop-code" class="code-block"></pre>
+          </div>
+          <div class="code-section">
+            <h3>Launcher Wrapper Script (<code>~/.local/bin/</code>)</h3>
+            <pre id="modal-wrapper-code" class="code-block"></pre>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-modal-uninstall" class="btn btn-danger-outline">Uninstall Shortcut &amp; Wrapper</button>
+          <div class="modal-footer-right">
+            <button id="btn-modal-launch" class="btn btn-secondary">▶ Test Launch</button>
+            <button id="btn-modal-reinstall" class="btn btn-primary">Reinstall / Repair Entry</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

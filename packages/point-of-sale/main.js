@@ -8,7 +8,7 @@ const { createServer, listen } = require('./lib/server');
 app.setName('robos-point-of-sale');
 for (const flag of ['no-sandbox', 'disable-gpu', 'disable-dev-shm-usage']) app.commandLine.appendSwitch(flag);
 
-const DEBUG_PORT = 19201; // see PORT_REGISTRY in packages/robos-lib/snapshot-cli.js
+const DEBUG_PORT = 19202; // see PORT_REGISTRY in packages/robos-lib/snapshot-cli.js
 const dataDir = process.env.ROBOS_POS_DATA || path.join(os.homedir(), '.config', 'robos', 'point-of-sale');
 let origin;
 let mainWindow;
