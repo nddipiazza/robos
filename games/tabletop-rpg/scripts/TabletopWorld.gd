@@ -77,6 +77,10 @@ var monsters: Array[Dictionary] = []
 var doors: Array[Dictionary] = []
 var door_closed_tex: Texture2D = null
 var door_open_tex: Texture2D = null
+var double_door_closed_2x1_tex: Texture2D = null
+var double_door_open_2x1_tex: Texture2D = null
+var double_door_closed_1x2_tex: Texture2D = null
+var double_door_open_1x2_tex: Texture2D = null
 var hero_token_textures: Dictionary = {}
 var monster_token_textures: Dictionary = {}
 var furniture_textures: Dictionary = {}
@@ -1368,6 +1372,14 @@ func _load_door_textures() -> void:
 		door_closed_tex = _load_texture_safe("res://assets/doors/door_closed.png")
 	if not door_open_tex:
 		door_open_tex = _load_texture_safe("res://assets/doors/door_open.png")
+	if not double_door_closed_2x1_tex:
+		double_door_closed_2x1_tex = _load_texture_safe("res://assets/doors/double_door_closed_2x1.png")
+	if not double_door_open_2x1_tex:
+		double_door_open_2x1_tex = _load_texture_safe("res://assets/doors/double_door_open_2x1.png")
+	if not double_door_closed_1x2_tex:
+		double_door_closed_1x2_tex = _load_texture_safe("res://assets/doors/double_door_closed_1x2.png")
+	if not double_door_open_1x2_tex:
+		double_door_open_1x2_tex = _load_texture_safe("res://assets/doors/double_door_open_1x2.png")
 
 func _load_hero_token_textures() -> void:
 	var token_map = {
@@ -3269,8 +3281,22 @@ func _rebuild_spatial_caches() -> void:
 	for d in doors:
 		var f = d.get("from", [0, 0])
 		var t = d.get("to", [0, 0])
+		var w = int(d.get("width", 1))
+		var h = int(d.get("height", 1))
+		var dt = str(d.get("door_type", ""))
+		if dt == "double-2x1" or dt == "double-h" or dt == "2x1":
+			w = 2; h = 1
+		elif dt == "double-1x2" or dt == "double-v" or dt == "1x2":
+			w = 1; h = 2
+
 		_doors_by_edge[Vector4i(f[0], f[1], t[0], t[1])] = d
 		_doors_by_edge[Vector4i(t[0], t[1], f[0], f[1])] = d
+		if w > 1:
+			_doors_by_edge[Vector4i(f[0] + 1, f[1], t[0] + 1, t[1])] = d
+			_doors_by_edge[Vector4i(t[0] + 1, t[1], f[0] + 1, f[1])] = d
+		elif h > 1:
+			_doors_by_edge[Vector4i(f[0], f[1] + 1, t[0], t[1] + 1)] = d
+			_doors_by_edge[Vector4i(t[0], t[1] + 1, f[0], f[1] + 1)] = d
 
 	_rebuild_furniture_tile_map()
 
@@ -9071,13 +9097,34 @@ func get_adjacent_closed_doors() -> Array[Dictionary]:
 	var h_pos: Vector2i = hero.get("grid_pos", Vector2i(-1, -1))
 	var res: Array[Dictionary] = []
 	for d in doors:
-		if not d.get("is_open", false):
+		if not d.get("is_open", false) and str(d.get("state", "closed")) != "open":
 			if d.get("is_secret", false) and not d.get("is_revealed", false):
 				continue
 			var from_pos = Vector2i(d.get("from", [0, 0])[0], d.get("from", [0, 0])[1])
 			var to_pos = Vector2i(d.get("to", [0, 0])[0], d.get("to", [0, 0])[1])
-			if (h_pos == from_pos and absi(h_pos.x - to_pos.x) + absi(h_pos.y - to_pos.y) == 1) or \
-			   (h_pos == to_pos and absi(h_pos.x - from_pos.x) + absi(h_pos.y - from_pos.y) == 1):
+			var is_adj = (h_pos == from_pos and absi(h_pos.x - to_pos.x) + absi(h_pos.y - to_pos.y) == 1) or \
+			             (h_pos == to_pos and absi(h_pos.x - from_pos.x) + absi(h_pos.y - from_pos.y) == 1)
+			if not is_adj:
+				var w = int(d.get("width", 1))
+				var h = int(d.get("height", 1))
+				var dt = str(d.get("door_type", ""))
+				if dt == "double-2x1" or dt == "double-h" or dt == "2x1":
+					w = 2; h = 1
+				elif dt == "double-1x2" or dt == "double-v" or dt == "1x2":
+					w = 1; h = 2
+				if w > 1:
+					var from_pos2 = Vector2i(from_pos.x + 1, from_pos.y)
+					var to_pos2 = Vector2i(to_pos.x + 1, to_pos.y)
+					if (h_pos == from_pos2 and absi(h_pos.x - to_pos2.x) + absi(h_pos.y - to_pos2.y) == 1) or \
+					   (h_pos == to_pos2 and absi(h_pos.x - from_pos2.x) + absi(h_pos.y - from_pos2.y) == 1):
+						is_adj = true
+				elif h > 1:
+					var from_pos2 = Vector2i(from_pos.x, from_pos.y + 1)
+					var to_pos2 = Vector2i(to_pos.x, to_pos.y + 1)
+					if (h_pos == from_pos2 and absi(h_pos.x - to_pos2.x) + absi(h_pos.y - to_pos2.y) == 1) or \
+					   (h_pos == to_pos2 and absi(h_pos.x - from_pos2.x) + absi(h_pos.y - from_pos2.y) == 1):
+						is_adj = true
+			if is_adj:
 				res.append(d)
 	return res
 
@@ -21703,78 +21750,106 @@ func _draw_board(canvas: CanvasItem) -> void:
 		var t_pos = Vector2i(t[0], t[1])
 		var is_secret = bool(d.get("is_secret", false))
 		var is_revealed = bool(d.get("is_revealed", not is_secret))
-		var is_open = bool(d.get("is_open", false))
+		var is_open = bool(d.get("is_open", false) or d.get("state", "closed") == "open")
+		var w = int(d.get("width", 1))
+		var h = int(d.get("height", 1))
+		var dt = str(d.get("door_type", ""))
+		if dt == "double-2x1" or dt == "double-h" or dt == "2x1":
+			w = 2; h = 1
+		elif dt == "double-1x2" or dt == "double-v" or dt == "1x2":
+			w = 1; h = 2
+		var is_double_h = (w > 1)
+		var is_double_v = (h > 1)
+		var is_double = is_double_h or is_double_v
 
 		# Visibility rules:
 		# Undiscovered secret doors are invisible to players
 		if is_secret and not is_revealed and not is_gm_role():
 			continue
 
-		if is_gm_role() or explored_tiles.has(f_pos) or explored_tiles.has(t_pos):
-			var p1 = board_offset + Vector2(f[0] * tile_size + tile_size * 0.5, f[1] * tile_size + tile_size * 0.5)
-			var p2 = board_offset + Vector2(t[0] * tile_size + tile_size * 0.5, t[1] * tile_size + tile_size * 0.5)
-			var mid = (p1 + p2) * 0.5
-			var d_size = tile_size * 0.85
+		var is_explored = explored_tiles.has(f_pos) or explored_tiles.has(t_pos)
+		if not is_explored and is_double_h:
+			is_explored = explored_tiles.has(Vector2i(f_pos.x + 1, f_pos.y)) or explored_tiles.has(Vector2i(t_pos.x + 1, t_pos.y))
+		elif not is_explored and is_double_v:
+			is_explored = explored_tiles.has(Vector2i(f_pos.x, f_pos.y + 1)) or explored_tiles.has(Vector2i(t_pos.x, t_pos.y + 1))
+
+		if is_gm_role() or is_explored:
 			var is_vert = (f[1] == t[1])
-			var rot = PI * 0.5 if is_vert else 0.0
+			var mid: Vector2
+			var d_size_x: float = tile_size * 0.85
+			var d_size_y: float = tile_size * 0.85
+			var rot = 0.0
+
+			if is_double_h:
+				var mid_x = (float(f[0]) + 1.0) * tile_size
+				var mid_y = (float(f[1]) + float(t[1]) + 1.0) * 0.5 * tile_size
+				mid = board_offset + Vector2(mid_x, mid_y)
+				d_size_x = tile_size * 2.0 * 0.90
+				d_size_y = tile_size * 0.85
+				rot = 0.0
+			elif is_double_v:
+				var mid_x = (float(f[0]) + float(t[0]) + 1.0) * 0.5 * tile_size
+				var mid_y = (float(f[1]) + 1.0) * tile_size
+				mid = board_offset + Vector2(mid_x, mid_y)
+				d_size_x = tile_size * 0.85
+				d_size_y = tile_size * 2.0 * 0.90
+				rot = 0.0
+			else:
+				var p1 = board_offset + Vector2(f[0] * tile_size + tile_size * 0.5, f[1] * tile_size + tile_size * 0.5)
+				var p2 = board_offset + Vector2(t[0] * tile_size + tile_size * 0.5, t[1] * tile_size + tile_size * 0.5)
+				mid = (p1 + p2) * 0.5
+				rot = PI * 0.5 if is_vert else 0.0
 
 			if is_secret and not is_revealed:
 				# GM view of hidden secret door
-				var gm_rect = Rect2(mid.x - 6, mid.y - d_size * 0.45, 12, d_size * 0.9) if is_vert else Rect2(mid.x - d_size * 0.45, mid.y - 6, d_size * 0.9, 12)
+				var gm_rect = Rect2(mid.x - d_size_x * 0.5, mid.y - d_size_y * 0.5, d_size_x, d_size_y)
 				canvas.draw_rect(gm_rect, Color(0.35, 0.10, 0.45, 0.85))
 				canvas.draw_rect(gm_rect, Color(0.85, 0.35, 1.0, 0.95), false, 1.5)
-				var gm_txt = "GM: SECRET"
+				var gm_txt = "GM: SECRET (2X)" if is_double else "GM: SECRET"
 				var gm_w = ThemeDB.fallback_font.get_string_size(gm_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7).x
 				canvas.draw_string(ThemeDB.fallback_font, Vector2(mid.x - gm_w * 0.5, mid.y + 3), gm_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7, Color(1.0, 0.8, 1.0))
 			elif is_secret and is_revealed:
-				# Discovered secret door (revolving stone slab)
+				# Discovered secret door
+				var slab_rect = Rect2(mid.x - d_size_x * 0.5, mid.y - d_size_y * 0.5, d_size_x, d_size_y)
 				if is_open:
-					# Discovered and Open: clear passageway through stone arch
-					var arch_rect = Rect2(mid.x - 5, mid.y - d_size * 0.45, 10, d_size * 0.9) if is_vert else Rect2(mid.x - d_size * 0.45, mid.y - 5, d_size * 0.9, 10)
-					canvas.draw_rect(arch_rect, Color(0.12, 0.22, 0.28, 0.85))
-					canvas.draw_rect(arch_rect, Color(0.25, 0.85, 0.75, 0.95), false, 1.5)
-					var op_txt = "OPEN"
+					canvas.draw_rect(slab_rect, Color(0.12, 0.22, 0.28, 0.85))
+					canvas.draw_rect(slab_rect, Color(0.25, 0.85, 0.75, 0.95), false, 1.5)
+					var op_txt = "2X OPEN" if is_double else "OPEN"
 					var op_w = ThemeDB.fallback_font.get_string_size(op_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7).x
 					canvas.draw_string(ThemeDB.fallback_font, Vector2(mid.x - op_w * 0.5, mid.y + 3), op_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7, Color(0.8, 1.0, 0.95))
 				else:
-					# Discovered and Closed: revolving stone slab with golden runic border & SECRET label
-					var slab_rect = Rect2(mid.x - 7, mid.y - d_size * 0.45, 14, d_size * 0.9) if is_vert else Rect2(mid.x - d_size * 0.45, mid.y - 7, d_size * 0.9, 14)
 					canvas.draw_rect(slab_rect, Color(0.22, 0.20, 0.24, 0.95))
 					canvas.draw_rect(slab_rect, Color(0.95, 0.75, 0.20, 1.0), false, 2.0)
-					if is_vert:
-						canvas.draw_line(Vector2(mid.x, slab_rect.position.y + 2), Vector2(mid.x, slab_rect.end.y - 2), Color(0.65, 0.55, 0.25, 0.7), 1.0)
-					else:
-						canvas.draw_line(Vector2(slab_rect.position.x + 2, mid.y), Vector2(slab_rect.end.x - 2, mid.y), Color(0.65, 0.55, 0.25, 0.7), 1.0)
-					var sec_txt = "SECRET"
+					var sec_txt = "SECRET (2X)" if is_double else "SECRET"
 					var sec_w = ThemeDB.fallback_font.get_string_size(sec_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7).x
 					canvas.draw_string(ThemeDB.fallback_font, Vector2(mid.x - sec_w * 0.5, mid.y + 3), sec_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7, Color(1.0, 0.9, 0.4))
 			else:
-				var tex: Texture2D = door_open_tex if is_open else door_closed_tex
+				var tex: Texture2D = null
+				if is_double_h:
+					tex = double_door_open_2x1_tex if is_open else double_door_closed_2x1_tex
+				elif is_double_v:
+					tex = double_door_open_1x2_tex if is_open else double_door_closed_1x2_tex
+				else:
+					tex = door_open_tex if is_open else door_closed_tex
+
 				if tex:
 					var orig_w = float(tex.get_width())
 					var orig_h = float(tex.get_height())
-					var scale_v = Vector2(d_size / orig_w, d_size / orig_h)
+					var scale_v = Vector2(d_size_x / orig_w, d_size_y / orig_h)
 					canvas.draw_set_transform(mid, rot, scale_v)
 					canvas.draw_texture(tex, -Vector2(orig_w, orig_h) * 0.5)
 					canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 				else:
-					# Clean vector fallback if texture unavailable
 					var col = Color(0.2, 0.8, 0.2, 0.9) if is_open else Color(0.65, 0.42, 0.18, 0.95)
-					if is_vert:
-						canvas.draw_rect(Rect2(mid.x - 5, mid.y - d_size * 0.45, 10, d_size * 0.9), col)
-						canvas.draw_rect(Rect2(mid.x - 5, mid.y - d_size * 0.45, 10, d_size * 0.9), Color(0.2, 0.15, 0.1), false, 1.5)
-					else:
-						canvas.draw_rect(Rect2(mid.x - d_size * 0.45, mid.y - 5, d_size * 0.9, 10), col)
-						canvas.draw_rect(Rect2(mid.x - d_size * 0.45, mid.y - 5, d_size * 0.9, 10), Color(0.2, 0.15, 0.1), false, 1.5)
+					canvas.draw_rect(Rect2(mid.x - d_size_x * 0.5, mid.y - d_size_y * 0.5, d_size_x, d_size_y), col)
+					canvas.draw_rect(Rect2(mid.x - d_size_x * 0.5, mid.y - d_size_y * 0.5, d_size_x, d_size_y), Color(0.2, 0.15, 0.1), false, 1.5)
 
 			# If active hero is adjacent to a closed door, render interactive golden highlight
 			if not is_open and current_role == "player" and is_revealed:
 				var adj_doors = get_adjacent_closed_doors()
 				for ad in adj_doors:
-					var ad_f = ad.get("from", [-1, -1])
-					var ad_t = ad.get("to", [-1, -1])
-					if (ad_f == f and ad_t == t) or (ad_f == t and ad_t == f):
-						canvas.draw_arc(mid, d_size * 0.52, 0, TAU, 24, Color(1.0, 0.85, 0.2, 0.9), 2.0)
+					if ad == d:
+						canvas.draw_arc(mid, max(d_size_x, d_size_y) * 0.52, 0, TAU, 24, Color(1.0, 0.85, 0.2, 0.9), 2.0)
 						break
 
 	# Draw Monsters

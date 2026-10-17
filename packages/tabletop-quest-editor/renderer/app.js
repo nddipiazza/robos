@@ -50,6 +50,7 @@ const state = {
 
   // Subtool settings
   subtool: {
+    doorSize: 'single', // 'single', 'double-2x1', 'double-1x2', 'double-auto'
     doorType: 'wood-closed', // 'wood-closed', 'wood-open', 'secret'
     monsterType: 'goblin',
     furnitureType: 'chest',
@@ -282,6 +283,7 @@ const dom = (typeof document !== 'undefined') ? {
   selectExitStairType: document.getElementById('select-exit-stair-type'),
 
   // Subtool inputs
+  selectDoorSize: document.getElementById('select-door-size'),
   radioDoorTypes: document.querySelectorAll('input[name="door-type"]'),
   selectMonsterType: document.getElementById('select-monster-type'),
   selectFurnitureType: document.getElementById('select-furniture-type'),
@@ -326,6 +328,7 @@ const dom = (typeof document !== 'undefined') ? {
 
   inspectGroupDoor: document.getElementById('inspect-group-door'),
   inspectDoorState: document.getElementById('inspect-door-state'),
+  inspectDoorType: document.getElementById('inspect-door-type'),
   inspectDoorSecret: document.getElementById('inspect-door-secret'),
 
   inspectGroupFurniture: document.getElementById('inspect-group-furniture'),
@@ -746,16 +749,24 @@ async function loadCartridge(slugOrPath) {
       state.subtool.exitStairType = state.quest.exitStairType;
       if (dom.selectStartStairType) dom.selectStartStairType.value = state.quest.startingStairType;
       if (dom.selectExitStairType) dom.selectExitStairType.value = state.quest.exitStairType;
-      state.quest.doors = (mapData.doors || []).map((d, i) => ({
-        id: d.id || `door-${i+1}`,
-        name: d.name || d.id || (d.is_secret ? `Secret Door ${i+1}` : `Door ${i+1}`),
-        from: d.from || [0, 0],
-        to: d.to || [0, 1],
-        state: d.state || 'closed',
-        is_secret: Boolean(d.is_secret),
-        room: d.room || '',
-        hidden: Boolean(d.hidden)
-      }));
+      state.quest.doors = (mapData.doors || []).map((d, i) => {
+        const dt = d.door_type || (d.width === 2 ? 'double-2x1' : (d.height === 2 ? 'double-1x2' : 'single'));
+        const w = d.width || (dt === 'double-2x1' || dt === 'double-h' ? 2 : 1);
+        const h = d.height || (dt === 'double-1x2' || dt === 'double-v' ? 2 : 1);
+        return {
+          id: d.id || `door-${i+1}`,
+          name: d.name || d.id || (d.is_secret ? `Secret Door ${i+1}` : (w > 1 || h > 1 ? `Double Door ${i+1}` : `Door ${i+1}`)),
+          from: d.from || [0, 0],
+          to: d.to || [0, 1],
+          state: d.state || 'closed',
+          is_secret: Boolean(d.is_secret),
+          room: d.room || '',
+          hidden: Boolean(d.hidden),
+          door_type: dt,
+          width: w,
+          height: h
+        };
+      });
       state.quest.furniture = (mapData.furniture || []).map((f, i) => {
         const rawType = f.type || 'chest';
         const type = rawType === 'stairs' ? 'stairs_up_1x1' : rawType;
@@ -1023,7 +1034,10 @@ function buildCartridgePayload() {
           state: d.state || 'closed',
           is_secret: Boolean(d.is_secret),
           room: d.room || '',
-          hidden: Boolean(d.hidden)
+          hidden: Boolean(d.hidden),
+          door_type: d.door_type || (d.width === 2 ? 'double-2x1' : (d.height === 2 ? 'double-1x2' : 'single')),
+          width: d.width || (d.door_type === 'double-2x1' || d.door_type === 'double-h' ? 2 : 1),
+          height: d.height || (d.door_type === 'double-1x2' || d.door_type === 'double-v' ? 2 : 1)
         })),
         furniture: q.furniture.map(f => ({
           id: f.id,
@@ -2779,7 +2793,7 @@ function detectDoorEdge(wx, wy) {
   const tile = worldToTile(wx, wy);
   if (!tile) return null;
 
-  const [col, row] = tile;
+  let [col, row] = tile;
   const tilePos = tileToWorld(col, row);
   const relX = (wx - tilePos.x) / geom.tileSize;
   const relY = (wy - tilePos.y) / geom.tileSize;
@@ -2817,12 +2831,58 @@ function detectDoorEdge(wx, wy) {
     cy = tilePos.y + geom.tileSize / 2;
   }
 
+  // Double door sizing / snapping adjustments
+  const isDouble2x1 = state.subtool.doorSize === 'double-2x1' || (state.subtool.doorSize === 'double-auto' && orientation === 'h');
+  const isDouble1x2 = state.subtool.doorSize === 'double-1x2' || (state.subtool.doorSize === 'double-auto' && orientation === 'v');
+
+  if (state.subtool.doorSize === 'double-2x1') {
+    if (orientation === 'v') {
+      orientation = 'h';
+      if (relY < 0.5) {
+        to = [col, row - 1];
+        cy = tilePos.y;
+      } else {
+        to = [col, row + 1];
+        cy = tilePos.y + geom.tileSize;
+      }
+    }
+  } else if (state.subtool.doorSize === 'double-1x2') {
+    if (orientation === 'h') {
+      orientation = 'v';
+      if (relX < 0.5) {
+        to = [col - 1, row];
+        cx = tilePos.x;
+      } else {
+        to = [col + 1, row];
+        cx = tilePos.x + geom.tileSize;
+      }
+    }
+  }
+
+  if (isDouble2x1) {
+    if (col >= geom.cols - 1) {
+      col = Math.max(0, geom.cols - 2);
+      from[0] = col;
+      to[0] = col;
+    }
+    const baseP = tileToWorld(col, row);
+    cx = baseP.x + geom.tileSize;
+  } else if (isDouble1x2) {
+    if (row >= geom.rows - 1) {
+      row = Math.max(0, geom.rows - 2);
+      from[1] = row;
+      to[1] = row;
+    }
+    const baseP = tileToWorld(col, row);
+    cy = baseP.y + geom.tileSize;
+  }
+
   // Determine target room
   const room1 = findRoomAtTile(from[0], from[1]);
   const room2 = findRoomAtTile(to[0], to[1]);
   const room = room1 ? room1.id : (room2 ? room2.id : '');
 
-  return { from, to, orientation, cx, cy, room };
+  return { from, to, orientation, cx, cy, room, isDouble2x1, isDouble1x2 };
 }
 
 // -------------------------------------------------------------
@@ -3284,27 +3344,30 @@ function drawBoardLayers(ctx, geom, options = {}) {
   if (showDoors && state.quest.doors) {
     state.quest.doors.forEach((d, i) => {
       const isVertical = d.from[0] !== d.to[0];
+      const isDoubleH = d.door_type === 'double-2x1' || d.door_type === 'double-h' || d.width === 2;
+      const isDoubleV = d.door_type === 'double-1x2' || d.door_type === 'double-v' || d.height === 2;
+      const isDouble = isDoubleH || isDoubleV;
       const c = isVertical ? Math.max(d.from[0], d.to[0]) : d.from[0];
       const r = isVertical ? d.from[1] : Math.max(d.from[1], d.to[1]);
       const basePos = tileToWorld(c, r);
       const ts = geom.tileSize;
-      const doorLength = Math.round(ts * 0.82);
-      const doorThick = 8;
+      const doorLength = isDouble ? Math.round(ts * 1.82) : Math.round(ts * 0.82);
+      const doorThick = isDouble ? 9 : 8;
 
       let dw, dh, dx, dy, cx, cy;
       if (isVertical) {
         dw = doorThick;
         dh = doorLength;
         cx = basePos.x;
-        cy = basePos.y + ts / 2;
+        cy = isDoubleV ? (basePos.y + ts) : (basePos.y + ts / 2);
         dx = cx - dw / 2;
-        dy = basePos.y + (ts - dh) / 2;
+        dy = cy - dh / 2;
       } else {
         dw = doorLength;
         dh = doorThick;
-        cx = basePos.x + ts / 2;
+        cx = isDoubleH ? (basePos.x + ts) : (basePos.x + ts / 2);
         cy = basePos.y;
-        dx = basePos.x + (ts - dw) / 2;
+        dx = cx - dw / 2;
         dy = cy - dh / 2;
       }
 
@@ -3330,30 +3393,62 @@ function drawBoardLayers(ctx, geom, options = {}) {
           ctx.stroke();
           ctx.setLineDash([]);
 
-          // Swung stone slab
-          const leafLen = Math.round(doorLength * 0.82);
+          const leafLen = Math.round(doorLength * (isDouble ? 0.42 : 0.82));
           const leafThick = 5.5;
           ctx.fillStyle = '#6b21a8';
           ctx.strokeStyle = '#d8b4fe';
           ctx.lineWidth = 1.5;
-          if (isVertical) {
-            ctx.fillRect(cx, dy - leafThick / 2, leafLen, leafThick);
-            ctx.strokeRect(cx, dy - leafThick / 2, leafLen, leafThick);
-            ctx.strokeStyle = 'rgba(216, 180, 254, 0.7)';
-            ctx.setLineDash([2, 2]);
-            ctx.beginPath();
-            ctx.arc(cx, dy, leafLen, 0, Math.PI / 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
+
+          if (isDouble) {
+            if (isVertical) {
+              // Top slab
+              ctx.fillRect(cx, dy - leafThick / 2, leafLen, leafThick);
+              ctx.strokeRect(cx, dy - leafThick / 2, leafLen, leafThick);
+              // Bottom slab
+              ctx.fillRect(cx, dy + dh - leafThick / 2, leafLen, leafThick);
+              ctx.strokeRect(cx, dy + dh - leafThick / 2, leafLen, leafThick);
+              ctx.strokeStyle = 'rgba(216, 180, 254, 0.7)';
+              ctx.setLineDash([2, 2]);
+              ctx.beginPath();
+              ctx.arc(cx, dy, leafLen, 0, Math.PI / 2);
+              ctx.arc(cx, dy + dh, leafLen, 0, Math.PI / 2);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            } else {
+              // Left slab
+              ctx.fillRect(dx - leafThick / 2, cy, leafThick, leafLen);
+              ctx.strokeRect(dx - leafThick / 2, cy, leafThick, leafLen);
+              // Right slab
+              ctx.fillRect(dx + dw - leafThick / 2, cy, leafThick, leafLen);
+              ctx.strokeRect(dx + dw - leafThick / 2, cy, leafThick, leafLen);
+              ctx.strokeStyle = 'rgba(216, 180, 254, 0.7)';
+              ctx.setLineDash([2, 2]);
+              ctx.beginPath();
+              ctx.arc(dx, cy, leafLen, 0, Math.PI / 2);
+              ctx.arc(dx + dw, cy, leafLen, Math.PI / 2, Math.PI);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            }
           } else {
-            ctx.fillRect(dx - leafThick / 2, cy, leafThick, leafLen);
-            ctx.strokeRect(dx - leafThick / 2, cy, leafThick, leafLen);
-            ctx.strokeStyle = 'rgba(216, 180, 254, 0.7)';
-            ctx.setLineDash([2, 2]);
-            ctx.beginPath();
-            ctx.arc(dx, cy, leafLen, 0, Math.PI / 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
+            if (isVertical) {
+              ctx.fillRect(cx, dy - leafThick / 2, leafLen, leafThick);
+              ctx.strokeRect(cx, dy - leafThick / 2, leafLen, leafThick);
+              ctx.strokeStyle = 'rgba(216, 180, 254, 0.7)';
+              ctx.setLineDash([2, 2]);
+              ctx.beginPath();
+              ctx.arc(cx, dy, leafLen, 0, Math.PI / 2);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            } else {
+              ctx.fillRect(dx - leafThick / 2, cy, leafThick, leafLen);
+              ctx.strokeRect(dx - leafThick / 2, cy, leafThick, leafLen);
+              ctx.strokeStyle = 'rgba(216, 180, 254, 0.7)';
+              ctx.setLineDash([2, 2]);
+              ctx.beginPath();
+              ctx.arc(dx, cy, leafLen, 0, Math.PI / 2);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            }
           }
 
           // Secret Open Badge
@@ -3377,6 +3472,20 @@ function drawBoardLayers(ctx, geom, options = {}) {
           ctx.strokeStyle = '#d8b4fe';
           ctx.lineWidth = 2.0;
           ctx.strokeRect(dx, dy, dw, dh);
+
+          if (isDouble) {
+            ctx.strokeStyle = '#c084fc';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            if (isVertical) {
+              ctx.moveTo(dx, cy);
+              ctx.lineTo(dx + dw, cy);
+            } else {
+              ctx.moveTo(cx, dy);
+              ctx.lineTo(cx, dy + dh);
+            }
+            ctx.stroke();
+          }
 
           // Center 'S' badge
           ctx.fillStyle = '#581c87';
@@ -3430,57 +3539,117 @@ function drawBoardLayers(ctx, geom, options = {}) {
           ctx.strokeRect(dx + dw - 2, cy - 3, 3, 6);
         }
 
-        // 4. 90-degree swung wooden door leaf
-        const leafLen = Math.round(doorLength * 0.85);
+        // 4. Swung wooden door leaf / leaves
+        const leafLen = Math.round(doorLength * (isDouble ? 0.42 : 0.85));
         const leafThick = 5.5;
         ctx.fillStyle = '#78350f';
         ctx.strokeStyle = '#34d399'; // vivid emerald outline
         ctx.lineWidth = 1.5;
 
-        if (isVertical) {
-          // Swung into right tile (+X)
-          ctx.fillRect(cx, dy - leafThick / 2, leafLen, leafThick);
-          ctx.strokeRect(cx, dy - leafThick / 2, leafLen, leafThick);
+        if (isDouble) {
+          if (isVertical) {
+            // Top leaf swung into right tile (+X)
+            ctx.fillRect(cx, dy - leafThick / 2, leafLen, leafThick);
+            ctx.strokeRect(cx, dy - leafThick / 2, leafLen, leafThick);
 
-          // Brass hinge pin at corner
-          ctx.fillStyle = '#fbbf24';
-          ctx.strokeStyle = '#d97706';
-          ctx.lineWidth = 1.0;
-          ctx.beginPath();
-          ctx.arc(cx, dy, 2.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
+            // Bottom leaf swung into right tile (+X)
+            ctx.fillRect(cx, dy + dh - leafThick / 2, leafLen, leafThick);
+            ctx.strokeRect(cx, dy + dh - leafThick / 2, leafLen, leafThick);
 
-          // Quarter-circle swing arc
-          ctx.strokeStyle = 'rgba(52, 211, 153, 0.75)';
-          ctx.setLineDash([2, 2]);
-          ctx.lineWidth = 1.2;
-          ctx.beginPath();
-          ctx.arc(cx, dy, leafLen, 0, Math.PI / 2);
-          ctx.stroke();
-          ctx.setLineDash([]);
+            // Brass hinge pins
+            ctx.fillStyle = '#fbbf24';
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 1.0;
+            ctx.beginPath();
+            ctx.arc(cx, dy, 2.5, 0, Math.PI * 2);
+            ctx.arc(cx, dy + dh, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Swing arcs
+            ctx.strokeStyle = 'rgba(52, 211, 153, 0.75)';
+            ctx.setLineDash([2, 2]);
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(cx, dy, leafLen, 0, Math.PI / 2);
+            ctx.arc(cx, dy + dh, leafLen, -Math.PI / 2, 0);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          } else {
+            // Left leaf swung into lower tile (+Y)
+            ctx.fillRect(dx - leafThick / 2, cy, leafThick, leafLen);
+            ctx.strokeRect(dx - leafThick / 2, cy, leafThick, leafLen);
+
+            // Right leaf swung into lower tile (+Y)
+            ctx.fillRect(dx + dw - leafThick / 2, cy, leafThick, leafLen);
+            ctx.strokeRect(dx + dw - leafThick / 2, cy, leafThick, leafLen);
+
+            // Brass hinge pins
+            ctx.fillStyle = '#fbbf24';
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 1.0;
+            ctx.beginPath();
+            ctx.arc(dx, cy, 2.5, 0, Math.PI * 2);
+            ctx.arc(dx + dw, cy, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Swing arcs
+            ctx.strokeStyle = 'rgba(52, 211, 153, 0.75)';
+            ctx.setLineDash([2, 2]);
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(dx, cy, leafLen, 0, Math.PI / 2);
+            ctx.arc(dx + dw, cy, leafLen, Math.PI / 2, Math.PI);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
         } else {
-          // Swung into lower tile (+Y)
-          ctx.fillRect(dx - leafThick / 2, cy, leafThick, leafLen);
-          ctx.strokeRect(dx - leafThick / 2, cy, leafThick, leafLen);
+          if (isVertical) {
+            // Swung into right tile (+X)
+            ctx.fillRect(cx, dy - leafThick / 2, leafLen, leafThick);
+            ctx.strokeRect(cx, dy - leafThick / 2, leafLen, leafThick);
 
-          // Brass hinge pin at corner
-          ctx.fillStyle = '#fbbf24';
-          ctx.strokeStyle = '#d97706';
-          ctx.lineWidth = 1.0;
-          ctx.beginPath();
-          ctx.arc(dx, cy, 2.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
+            // Brass hinge pin at corner
+            ctx.fillStyle = '#fbbf24';
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 1.0;
+            ctx.beginPath();
+            ctx.arc(cx, dy, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
 
-          // Quarter-circle swing arc
-          ctx.strokeStyle = 'rgba(52, 211, 153, 0.75)';
-          ctx.setLineDash([2, 2]);
-          ctx.lineWidth = 1.2;
-          ctx.beginPath();
-          ctx.arc(dx, cy, leafLen, 0, Math.PI / 2);
-          ctx.stroke();
-          ctx.setLineDash([]);
+            // Quarter-circle swing arc
+            ctx.strokeStyle = 'rgba(52, 211, 153, 0.75)';
+            ctx.setLineDash([2, 2]);
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(cx, dy, leafLen, 0, Math.PI / 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          } else {
+            // Swung into lower tile (+Y)
+            ctx.fillRect(dx - leafThick / 2, cy, leafThick, leafLen);
+            ctx.strokeRect(dx - leafThick / 2, cy, leafThick, leafLen);
+
+            // Brass hinge pin at corner
+            ctx.fillStyle = '#fbbf24';
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 1.0;
+            ctx.beginPath();
+            ctx.arc(dx, cy, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Quarter-circle swing arc
+            ctx.strokeStyle = 'rgba(52, 211, 153, 0.75)';
+            ctx.setLineDash([2, 2]);
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(dx, cy, leafLen, 0, Math.PI / 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
         }
 
         // 5. Central "OPEN" badge
@@ -3497,7 +3666,7 @@ function drawBoardLayers(ctx, geom, options = {}) {
         ctx.font = 'bold 7.5px system-ui, -apple-system, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('OPEN', cx, cy + 0.5);
+        ctx.fillText(isDouble ? '2×OPEN' : 'OPEN', cx, cy + 0.5);
 
       } else {
         // ── CLOSED WOOD DOOR ──
@@ -3533,57 +3702,142 @@ function drawBoardLayers(ctx, geom, options = {}) {
         ctx.lineWidth = 1.8;
         ctx.strokeRect(dx, dy, dw, dh);
 
-        // 4. Two Dark Iron Reinforcement Straps with Rivets
-        ctx.fillStyle = '#0f172a';
-        ctx.strokeStyle = '#334155';
-        ctx.lineWidth = 0.8;
-        if (isVertical) {
-          const y1 = dy + Math.round(dh * 0.25) - 1.5;
-          const y2 = dy + Math.round(dh * 0.75) - 1.5;
-          ctx.fillRect(dx, y1, dw, 3);
-          ctx.strokeRect(dx, y1, dw, 3);
-          ctx.fillRect(dx, y2, dw, 3);
-          ctx.strokeRect(dx, y2, dw, 3);
-
-          // Rivet dots
-          ctx.fillStyle = '#cbd5e1';
+        if (isDouble) {
+          // Center Meeting Seam (astragal)
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.arc(dx + 2, y1 + 1.5, 0.8, 0, Math.PI * 2);
-          ctx.arc(dx + dw - 2, y1 + 1.5, 0.8, 0, Math.PI * 2);
-          ctx.arc(dx + 2, y2 + 1.5, 0.8, 0, Math.PI * 2);
-          ctx.arc(dx + dw - 2, y2 + 1.5, 0.8, 0, Math.PI * 2);
-          ctx.fill();
+          if (isVertical) {
+            ctx.moveTo(dx, cy);
+            ctx.lineTo(dx + dw, cy);
+          } else {
+            ctx.moveTo(cx, dy);
+            ctx.lineTo(cx, dy + dh);
+          }
+          ctx.stroke();
+
+          // 4 Iron Reinforcement Straps (2 on each leaf)
+          ctx.fillStyle = '#0f172a';
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = 0.8;
+          if (isVertical) {
+            const straps = [
+              dy + Math.round(dh * 0.12) - 1.5,
+              dy + Math.round(dh * 0.38) - 1.5,
+              dy + Math.round(dh * 0.62) - 1.5,
+              dy + Math.round(dh * 0.88) - 1.5
+            ];
+            straps.forEach(sy => {
+              ctx.fillRect(dx, sy, dw, 3);
+              ctx.strokeRect(dx, sy, dw, 3);
+              ctx.fillStyle = '#cbd5e1';
+              ctx.beginPath();
+              ctx.arc(dx + 2, sy + 1.5, 0.8, 0, Math.PI * 2);
+              ctx.arc(dx + dw - 2, sy + 1.5, 0.8, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#0f172a';
+            });
+
+            // Twin brass pull rings
+            [cy - 7, cy + 7].forEach(ry => {
+              ctx.fillStyle = '#b45309';
+              ctx.strokeStyle = '#fbbf24';
+              ctx.lineWidth = 1.2;
+              ctx.beginPath();
+              ctx.arc(cx, ry, 3.0, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.stroke();
+              ctx.fillStyle = '#1c1917';
+              ctx.beginPath();
+              ctx.arc(cx, ry, 1.2, 0, Math.PI * 2);
+              ctx.fill();
+            });
+          } else {
+            const straps = [
+              dx + Math.round(dw * 0.12) - 1.5,
+              dx + Math.round(dw * 0.38) - 1.5,
+              dx + Math.round(dw * 0.62) - 1.5,
+              dx + Math.round(dw * 0.88) - 1.5
+            ];
+            straps.forEach(sx => {
+              ctx.fillRect(sx, dy, 3, dh);
+              ctx.strokeRect(sx, dy, 3, dh);
+              ctx.fillStyle = '#cbd5e1';
+              ctx.beginPath();
+              ctx.arc(sx + 1.5, dy + 2, 0.8, 0, Math.PI * 2);
+              ctx.arc(sx + 1.5, dy + dh - 2, 0.8, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#0f172a';
+            });
+
+            // Twin brass pull rings
+            [cx - 7, cx + 7].forEach(rx => {
+              ctx.fillStyle = '#b45309';
+              ctx.strokeStyle = '#fbbf24';
+              ctx.lineWidth = 1.2;
+              ctx.beginPath();
+              ctx.arc(rx, cy, 3.0, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.stroke();
+              ctx.fillStyle = '#1c1917';
+              ctx.beginPath();
+              ctx.arc(rx, cy, 1.2, 0, Math.PI * 2);
+              ctx.fill();
+            });
+          }
         } else {
-          const x1 = dx + Math.round(dw * 0.25) - 1.5;
-          const x2 = dx + Math.round(dw * 0.75) - 1.5;
-          ctx.fillRect(x1, dy, 3, dh);
-          ctx.strokeRect(x1, dy, 3, dh);
-          ctx.fillRect(x2, dy, 3, dh);
-          ctx.strokeRect(x2, dy, 3, dh);
+          // Single Door: Two Dark Iron Reinforcement Straps with Rivets
+          ctx.fillStyle = '#0f172a';
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = 0.8;
+          if (isVertical) {
+            const y1 = dy + Math.round(dh * 0.25) - 1.5;
+            const y2 = dy + Math.round(dh * 0.75) - 1.5;
+            ctx.fillRect(dx, y1, dw, 3);
+            ctx.strokeRect(dx, y1, dw, 3);
+            ctx.fillRect(dx, y2, dw, 3);
+            ctx.strokeRect(dx, y2, dw, 3);
 
-          // Rivet dots
-          ctx.fillStyle = '#cbd5e1';
+            // Rivet dots
+            ctx.fillStyle = '#cbd5e1';
+            ctx.beginPath();
+            ctx.arc(dx + 2, y1 + 1.5, 0.8, 0, Math.PI * 2);
+            ctx.arc(dx + dw - 2, y1 + 1.5, 0.8, 0, Math.PI * 2);
+            ctx.arc(dx + 2, y2 + 1.5, 0.8, 0, Math.PI * 2);
+            ctx.arc(dx + dw - 2, y2 + 1.5, 0.8, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            const x1 = dx + Math.round(dw * 0.25) - 1.5;
+            const x2 = dx + Math.round(dw * 0.75) - 1.5;
+            ctx.fillRect(x1, dy, 3, dh);
+            ctx.strokeRect(x1, dy, 3, dh);
+            ctx.fillRect(x2, dy, 3, dh);
+            ctx.strokeRect(x2, dy, 3, dh);
+
+            // Rivet dots
+            ctx.fillStyle = '#cbd5e1';
+            ctx.beginPath();
+            ctx.arc(x1 + 1.5, dy + 2, 0.8, 0, Math.PI * 2);
+            ctx.arc(x1 + 1.5, dy + dh - 2, 0.8, 0, Math.PI * 2);
+            ctx.arc(x2 + 1.5, dy + 2, 0.8, 0, Math.PI * 2);
+            ctx.arc(x2 + 1.5, dy + dh - 2, 0.8, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Brass Handle Stud / Ring Plate in Center
+          ctx.fillStyle = '#b45309';
+          ctx.strokeStyle = '#fbbf24';
+          ctx.lineWidth = 1.2;
           ctx.beginPath();
-          ctx.arc(x1 + 1.5, dy + 2, 0.8, 0, Math.PI * 2);
-          ctx.arc(x1 + 1.5, dy + dh - 2, 0.8, 0, Math.PI * 2);
-          ctx.arc(x2 + 1.5, dy + 2, 0.8, 0, Math.PI * 2);
-          ctx.arc(x2 + 1.5, dy + dh - 2, 0.8, 0, Math.PI * 2);
+          ctx.arc(cx, cy, 3.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#1c1917';
+          ctx.beginPath();
+          ctx.arc(cx, cy, 1.2, 0, Math.PI * 2);
           ctx.fill();
         }
-
-        // 5. Brass Handle Stud / Ring Plate in Center
-        ctx.fillStyle = '#b45309';
-        ctx.strokeStyle = '#fbbf24';
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 3.2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = '#1c1917';
-        ctx.beginPath();
-        ctx.arc(cx, cy, 1.2, 0, Math.PI * 2);
-        ctx.fill();
       }
 
       ctx.restore();
@@ -3805,9 +4059,12 @@ function renderToolPreview(ctx, geom) {
     ctx.save();
     const isSecret = state.subtool.doorType === 'secret';
     const isOpen = state.subtool.doorType === 'wood-open';
+    const isDoubleH = Boolean(e.isDouble2x1 || state.subtool.doorSize === 'double-2x1' || (state.subtool.doorSize === 'double-auto' && e.orientation === 'h'));
+    const isDoubleV = Boolean(e.isDouble1x2 || state.subtool.doorSize === 'double-1x2' || (state.subtool.doorSize === 'double-auto' && e.orientation === 'v'));
+    const isDouble = isDoubleH || isDoubleV;
     const ts = geom.tileSize;
-    const doorLength = Math.round(ts * 0.82);
-    const doorThick = 8;
+    const doorLength = isDouble ? Math.round(ts * 1.82) : Math.round(ts * 0.82);
+    const doorThick = isDouble ? 9 : 8;
 
     let dw, dh, dx, dy;
     if (e.orientation === 'v') {
@@ -3853,6 +4110,20 @@ function renderToolPreview(ctx, geom) {
       ctx.lineWidth = 2.0;
       ctx.fillRect(dx, dy, dw, dh);
       ctx.strokeRect(dx, dy, dw, dh);
+
+      if (isDouble) {
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.9)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        if (e.orientation === 'v') {
+          ctx.moveTo(dx, e.cy);
+          ctx.lineTo(dx + dw, e.cy);
+        } else {
+          ctx.moveTo(e.cx, dy);
+          ctx.lineTo(e.cx, dy + dh);
+        }
+        ctx.stroke();
+      }
     }
     ctx.restore();
     return;
@@ -4157,8 +4428,20 @@ function findEntityAt(col, row) {
   // Check doors
   for (let i = 0; i < state.quest.doors.length; i++) {
     const d = state.quest.doors[i];
+    const isDoubleH = d.door_type === 'double-2x1' || d.door_type === 'double-h' || d.width === 2;
+    const isDoubleV = d.door_type === 'double-1x2' || d.door_type === 'double-v' || d.height === 2;
     if ((d.from[0] === col && d.from[1] === row) || (d.to[0] === col && d.to[1] === row)) {
       return { type: 'door', index: i, data: d };
+    }
+    if (isDoubleH) {
+      if ((d.from[0] + 1 === col && d.from[1] === row) || (d.to[0] + 1 === col && d.to[1] === row)) {
+        return { type: 'door', index: i, data: d };
+      }
+    }
+    if (isDoubleV) {
+      if ((d.from[0] === col && d.from[1] + 1 === row) || (d.to[0] === col && d.to[1] + 1 === row)) {
+        return { type: 'door', index: i, data: d };
+      }
     }
   }
 
@@ -4197,11 +4480,39 @@ function handleCanvasClick(wx, wy) {
     const edge = detectDoorEdge(wx, wy);
     if (!edge) return;
 
-    // Check if door already exists on this edge
-    const existingIdx = state.quest.doors.findIndex(d =>
-      (d.from[0] === edge.from[0] && d.from[1] === edge.from[1] && d.to[0] === edge.to[0] && d.to[1] === edge.to[1]) ||
-      (d.from[0] === edge.to[0] && d.from[1] === edge.to[1] && d.to[0] === edge.from[0] && d.to[1] === edge.from[1])
-    );
+    const isDouble2x1 = Boolean(edge.isDouble2x1 || state.subtool.doorSize === 'double-2x1' || (state.subtool.doorSize === 'double-auto' && edge.orientation === 'h'));
+    const isDouble1x2 = Boolean(edge.isDouble1x2 || state.subtool.doorSize === 'double-1x2' || (state.subtool.doorSize === 'double-auto' && edge.orientation === 'v'));
+    const isDouble = isDouble2x1 || isDouble1x2;
+
+    // Check if door already exists on this edge or overlapping edge
+    const existingIdx = state.quest.doors.findIndex(d => {
+      const dDoubleH = d.door_type === 'double-2x1' || d.door_type === 'double-h' || d.width === 2;
+      const dDoubleV = d.door_type === 'double-1x2' || d.door_type === 'double-v' || d.height === 2;
+      const match1 = (d.from[0] === edge.from[0] && d.from[1] === edge.from[1] && d.to[0] === edge.to[0] && d.to[1] === edge.to[1]) ||
+                     (d.from[0] === edge.to[0] && d.from[1] === edge.to[1] && d.to[0] === edge.from[0] && d.to[1] === edge.from[1]);
+      if (match1) return true;
+      if (dDoubleH) {
+        const match2 = (d.from[0] + 1 === edge.from[0] && d.from[1] === edge.from[1] && d.to[0] + 1 === edge.to[0] && d.to[1] === edge.to[1]) ||
+                       (d.from[0] + 1 === edge.to[0] && d.from[1] === edge.to[1] && d.to[0] + 1 === edge.from[0] && d.to[1] === edge.from[1]);
+        if (match2) return true;
+      }
+      if (dDoubleV) {
+        const match2 = (d.from[0] === edge.from[0] && d.from[1] + 1 === edge.from[1] && d.to[0] === edge.to[0] && d.to[1] + 1 === edge.to[1]) ||
+                       (d.from[0] === edge.to[0] && d.from[1] + 1 === edge.to[1] && d.to[0] === edge.from[0] && d.to[1] + 1 === edge.from[1]);
+        if (match2) return true;
+      }
+      if (isDouble2x1) {
+        const match3 = (d.from[0] === edge.from[0] + 1 && d.from[1] === edge.from[1] && d.to[0] === edge.to[0] + 1 && d.to[1] === edge.to[1]) ||
+                       (d.from[0] === edge.to[0] + 1 && d.from[1] === edge.to[1] && d.to[0] === edge.from[0] + 1 && d.to[1] === edge.from[1]);
+        if (match3) return true;
+      }
+      if (isDouble1x2) {
+        const match3 = (d.from[0] === edge.from[0] && d.from[1] === edge.from[1] + 1 && d.to[0] === edge.to[0] && d.to[1] === edge.to[1] + 1) ||
+                       (d.from[0] === edge.to[0] && d.from[1] === edge.to[1] + 1 && d.to[0] === edge.from[0] && d.to[1] === edge.from[1] + 1);
+        if (match3) return true;
+      }
+      return false;
+    });
 
     if (existingIdx >= 0) {
       // Select it or toggle closed/open/secret
@@ -4211,7 +4522,9 @@ function handleCanvasClick(wx, wy) {
       const isSecret = state.subtool.doorType === 'secret';
       const isOpen = state.subtool.doorType === 'wood-open';
       const doorNum = state.quest.doors.length + 1;
-      const defaultName = isSecret ? `Secret Door ${doorNum}` : `Door ${doorNum}`;
+      const defaultName = isSecret
+        ? (isDouble ? `Secret Double Door ${doorNum}` : `Secret Door ${doorNum}`)
+        : (isDouble ? `Double Door ${doorNum}` : `Door ${doorNum}`);
       const newDoor = {
         id: `door-${doorNum}`,
         name: defaultName,
@@ -4219,7 +4532,10 @@ function handleCanvasClick(wx, wy) {
         to: edge.to,
         state: isOpen ? 'open' : 'closed',
         is_secret: isSecret,
-        room: edge.room || ''
+        room: edge.room || '',
+        door_type: isDouble2x1 ? 'double-2x1' : (isDouble1x2 ? 'double-1x2' : 'single'),
+        width: isDouble2x1 ? 2 : 1,
+        height: isDouble1x2 ? 2 : 1
       };
       state.quest.doors.push(newDoor);
       state.selectedEntity = { type: 'door', index: state.quest.doors.length - 1, data: newDoor };
@@ -4507,10 +4823,16 @@ function updateInspectorUI() {
   } else if (type === 'door') {
     const d = state.quest.doors[index];
     if (!d) return;
-    dom.inspectPosText.textContent = `[${d.from[0]},${d.from[1]}] ↔ [${d.to[0]},${d.to[1]}]`;
+    const isDoubleH = d.door_type === 'double-2x1' || d.door_type === 'double-h' || d.width === 2;
+    const isDoubleV = d.door_type === 'double-1x2' || d.door_type === 'double-v' || d.height === 2;
+    const sizeSpan = isDoubleH ? ' (Double 2×1)' : (isDoubleV ? ' (Double 1×2)' : ' (Single 1×1)');
+    dom.inspectPosText.textContent = `[${d.from[0]},${d.from[1]}] ↔ [${d.to[0]},${d.to[1]}]${sizeSpan}`;
     dom.inspectName.value = d.name !== undefined ? d.name : (d.id || `Door ${index + 1}`);
     dom.inspectDoorState.value = d.state || 'closed';
     dom.inspectDoorSecret.checked = d.is_secret;
+    if (dom.inspectDoorType) {
+      dom.inspectDoorType.value = isDoubleH ? 'double-2x1' : (isDoubleV ? 'double-1x2' : 'single');
+    }
     dom.inspectGroupDoor.style.display = 'block';
   } else if (type === 'furniture') {
     const f = state.quest.furniture[index];
@@ -4701,16 +5023,20 @@ function updateEntitySummaryList() {
     item.className = 'entity-summary-item';
     const isSecret = !!d.is_secret;
     const isOpen = d.state === 'open';
+    const isDoubleH = d.door_type === 'double-2x1' || d.door_type === 'double-h' || d.width === 2;
+    const isDoubleV = d.door_type === 'double-1x2' || d.door_type === 'double-v' || d.height === 2;
+    const sizePill = isDoubleH ? '<span class="door-status-pill door-badge-double">2×1</span>' : (isDoubleV ? '<span class="door-status-pill door-badge-double">1×2</span>' : '');
     const badgeCls = isSecret ? (isOpen ? 'door-badge-secret-open' : 'door-badge-secret') : (isOpen ? 'door-badge-open' : 'door-badge-closed');
     const badgeText = isSecret ? (isOpen ? 'SECRET [OPEN]' : 'SECRET') : (isOpen ? 'OPEN' : 'CLOSED');
     const doorIcon = isSecret ? '🔮' : (isOpen ? '🚪🔓' : '🚪🔒');
-    const displayName = d.name || (isSecret ? 'Secret Door' : 'Wood Door');
+    const displayName = d.name || (isSecret ? (isDoubleH || isDoubleV ? 'Secret Double Door' : 'Secret Door') : (isDoubleH || isDoubleV ? 'Double Door' : 'Wood Door'));
     item.innerHTML = `
       <div class="entity-item-main">
         <span class="entity-item-icon">${doorIcon}</span>
         <div>
           <div class="entity-item-name">
             ${escapeHtml(displayName)}
+            ${sizePill}
             <span class="door-status-pill ${badgeCls}">${badgeText}</span>
           </div>
           <div class="entity-item-pos">[${d.from[0]},${d.from[1]}] ↔ [${d.to[0]},${d.to[1]}]</div>
@@ -5653,14 +5979,38 @@ function validateQuest(quest, blockmap) {
       const to = d.to;
       if (!from || !to) return;
 
+      const isDoubleH = d.door_type === 'double-2x1' || d.door_type === 'double-h' || d.width === 2;
+      const isDoubleV = d.door_type === 'double-1x2' || d.door_type === 'double-v' || d.height === 2;
+      const isDouble = isDoubleH || isDoubleV;
+      const allTiles = [from, to];
+      if (isDoubleH) {
+        allTiles.push([from[0] + 1, from[1]], [to[0] + 1, to[1]]);
+      } else if (isDoubleV) {
+        allTiles.push([from[0], from[1] + 1], [to[0], to[1] + 1]);
+      }
+
       const r1 = getRoomAt(from[0], from[1]);
       const r2 = getRoomAt(to[0], to[1]);
-      const doorName = d.name || (d.is_secret ? 'Secret Door' : (d.state === 'open' ? 'Open Door' : 'Door'));
+      let r3 = null, r4 = null;
+      if (isDoubleH) {
+        r3 = getRoomAt(from[0] + 1, from[1]);
+        r4 = getRoomAt(to[0] + 1, to[1]);
+      } else if (isDoubleV) {
+        r3 = getRoomAt(from[0], from[1] + 1);
+        r4 = getRoomAt(to[0], to[1] + 1);
+      }
+
+      const doorName = d.name || (d.is_secret ? (isDouble ? 'Secret Double Door' : 'Secret Door') : (d.state === 'open' ? (isDouble ? 'Open Double Door' : 'Open Door') : (isDouble ? 'Double Door' : 'Door')));
       const doorId = d.id || idx;
 
       // In HeroQuest, a door connects a room to a corridor or connects two rooms.
       // Invalid: Both sides are corridors (!r1 && !r2) or both sides are in the same room (r1 && r2 && r1.id === r2.id)
-      if (!r1 && !r2) {
+      const half1Corridor = (!r1 && !r2);
+      const half2Corridor = isDouble && (!r3 && !r4);
+      const half1Interior = (r1 && r2 && r1.id === r2.id);
+      const half2Interior = isDouble && (r3 && r4 && r3.id === r4.id);
+
+      if (half1Corridor || half2Corridor) {
         errors.push({
           id: `door-wall-corridor-${doorId}`,
           category: 'door_wall',
@@ -5668,16 +6018,16 @@ function validateQuest(quest, blockmap) {
           icon: '🚪',
           title: `${doorName} Floating in Corridor`,
           description: `${doorName} between [${from[0]}, ${from[1]}] and [${to[0]}, ${to[1]}] is not attached to any room perimeter wall (both sides are corridors).`,
-          tiles: [from, to],
-          allTiles: [from, to],
+          tiles: allTiles,
+          allTiles: allTiles,
           entityType: 'door',
           entityIndex: idx,
           entityId: d.id || null,
           doorEdge: { from, to },
           anchor: from
         });
-      } else if (r1 && r2 && r1.id === r2.id) {
-        const roomName = r1.name || r1.id;
+      } else if (half1Interior || half2Interior) {
+        const roomName = (r1 ? (r1.name || r1.id) : (r3 ? (r3.name || r3.id) : 'Room'));
         errors.push({
           id: `door-wall-interior-${doorId}`,
           category: 'door_wall',
@@ -5685,8 +6035,8 @@ function validateQuest(quest, blockmap) {
           icon: '🚪',
           title: `${doorName} Inside Room Floor`,
           description: `${doorName} between [${from[0]}, ${from[1]}] and [${to[0]}, ${to[1]}] is placed inside open floor space within ${roomName} instead of on its perimeter wall.`,
-          tiles: [from, to],
-          allTiles: [from, to],
+          tiles: allTiles,
+          allTiles: allTiles,
           entityType: 'door',
           entityIndex: idx,
           entityId: d.id || null,
@@ -6975,6 +7325,12 @@ function setupEventListeners() {
   dom.btnRedo.addEventListener('click', redo);
 
   // Subtool radio / dropdown controls
+  if (dom.selectDoorSize) {
+    dom.selectDoorSize.addEventListener('change', () => {
+      state.subtool.doorSize = dom.selectDoorSize.value;
+      render();
+    });
+  }
   dom.radioDoorTypes.forEach(radio => {
     radio.addEventListener('change', () => {
       state.subtool.doorType = radio.value;
@@ -7140,6 +7496,23 @@ function setupEventListeners() {
       updateEntitySummaryList();
     }
   });
+  if (dom.inspectDoorType) {
+    dom.inspectDoorType.addEventListener('change', () => {
+      if (state.selectedEntity?.type === 'door') {
+        recordHistory();
+        const d = state.quest.doors[state.selectedEntity.index];
+        if (d) {
+          const val = dom.inspectDoorType.value;
+          d.door_type = val;
+          d.width = val === 'double-2x1' ? 2 : 1;
+          d.height = val === 'double-1x2' ? 2 : 1;
+          updateInspectorUI();
+          updateEntitySummaryList();
+          render();
+        }
+      }
+    });
+  }
 
   dom.btnInspectRotateFurn.addEventListener('click', () => {
     if (state.selectedEntity?.type === 'furniture') {
@@ -7986,6 +8359,9 @@ if (typeof module !== 'undefined' && module.exports) {
     closeExportPngModal,
     openExportPdfModal,
     closeExportPdfModal,
+    findEntityAt,
+    detectDoorEdge,
+    handleCanvasClick,
     state,
     dom,
     MONSTER_DEFS,

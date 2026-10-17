@@ -88,10 +88,10 @@ if (process.env.WAYLAND_DISPLAY || fs.existsSync('/run/user/1000/wayland-0')) {
 let mainWindow = null;
 
 const DESKTOP_DIRS = [
-  '/usr/share/applications',
+  path.join(process.env.HOME || '/home/robos', '.local/share/applications'),
   '/usr/local/share/applications',
-  '/var/lib/snapd/desktop/applications',
-  path.join(process.env.HOME || '/home/robos', '.local/share/applications')
+  '/usr/share/applications',
+  '/var/lib/snapd/desktop/applications'
 ];
 
 const ICON_SEARCH_PATHS = [

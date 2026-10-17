@@ -119,6 +119,17 @@ const PRESETS = [
     blockmapFile: 'first-light-dungeon.blockmap.json'
   },
   {
+    id: 'midterm-election-capitol',
+    title: 'Midterm Elections: Battle for the Hill (1014×738)',
+    file: 'midterm_election_capitol.png',
+    defaultCols: 26,
+    defaultRows: 19,
+    defaultTileSize: 39.0,
+    offsetX: 0,
+    offsetY: 0,
+    blockmapFile: 'midterm-election-capitol.blockmap.json'
+  },
+  {
     id: 'heroquest-classic',
     title: 'HeroQuest Classic Stone Dungeon (1024×768)',
     file: 'heroquest_board.png',
