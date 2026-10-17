@@ -426,6 +426,7 @@ const dom = (typeof document !== 'undefined') ? {
   chkPdfHeader: document.getElementById('chk-pdf-header'),
   chkPdfMap: document.getElementById('chk-pdf-map'),
   chkPdfNotes: document.getElementById('chk-pdf-notes'),
+  chkPdfActions: document.getElementById('chk-pdf-actions'),
   chkPdfRoster: document.getElementById('chk-pdf-roster'),
   chkPdfFurniture: document.getElementById('chk-pdf-furniture'),
   radioExportPdfOrientation: document.querySelectorAll('input[name="export-pdf-orientation"]'),
@@ -684,6 +685,27 @@ async function loadBlockmap(slugOrPath) {
   } catch (err) {
     console.error('Error loading blockmap:', err);
     showToast(`Error: ${err.message}`, 'error');
+  }
+}
+
+async function openSelectedBlockmapInEditor() {
+  try {
+    const selectedBlockmap = state.blockmapPath || state.blockmap?.id || (dom.selectBlockmap ? dom.selectBlockmap.value : 'first-light-dungeon');
+    if (!window.robosQuestEditor || !window.robosQuestEditor.openBlockmapEditor) {
+      showToast('Blockmap Editor bridge not available in this environment', 'info');
+      return { success: false, error: 'Bridge not available' };
+    }
+    const res = await window.robosQuestEditor.openBlockmapEditor(selectedBlockmap);
+    if (res && res.success) {
+      const displayName = state.blockmap?.title || state.blockmap?.id || res.blockmapName || 'blockmap';
+      showToast(`Opening "${displayName}" in Blockmap Editor...`, 'success');
+    } else {
+      showToast(`Failed to open Blockmap Editor: ${res?.error || 'Unknown error'}`, 'error');
+    }
+    return res;
+  } catch (err) {
+    showToast(`Error opening blockmap editor: ${err.message}`, 'error');
+    return { success: false, error: err.message };
   }
 }
 
@@ -1798,6 +1820,157 @@ function closeExportPdfModal() {
   dom.exportPdfModal.style.display = 'none';
 }
 
+/**
+ * Format a trigger event ID into an icon + user-friendly label.
+ */
+function formatTriggerEventName(event) {
+  if (!event) return 'Trigger Event';
+  const def = (typeof TRIGGER_EVENT_DEFS !== 'undefined') && TRIGGER_EVENT_DEFS[event];
+  if (def) {
+    return `${def.icon ? def.icon + ' ' : ''}${def.label || event}`;
+  }
+  return String(event)
+    .replace(/^on_/, '')
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+/**
+ * Recursively formats an array of trigger actions into clean, printable HTML.
+ * Formats full details of every action type (dialogue lines, movies, moves, spells, traps, rewards)
+ * and recursively indents nested/sub-actions.
+ */
+function renderActionPipelineRecursiveHtml(actions, prefix = '', depth = 0) {
+  if (!actions || !Array.isArray(actions) || actions.length === 0) return '';
+  const indentStyle = depth > 0 ? `margin-left: ${Math.min(depth * 12, 36)}px; border-left: 2px solid #93c5fd; padding-left: 8px;` : '';
+
+  return `<div class="action-pipeline-list" style="${indentStyle}">
+    ${actions.map((a, idx) => {
+      if (!a) return '';
+      const numStr = prefix ? `${prefix}${idx + 1}` : `${idx + 1}`;
+      const type = a.type || 'action';
+      const def = (typeof TRIGGER_ACTION_DEFS !== 'undefined' && TRIGGER_ACTION_DEFS[type]) || { icon: '⚡', name: type };
+      const icon = def.icon || '⚡';
+      let titleHtml = `<strong>${numStr}. ${icon} ${escapeHtml(def.name || type)}</strong>`;
+      if (a.title && a.title !== def.name) {
+        titleHtml += `: <span style="color:#0369a1; font-weight:600;">${escapeHtml(a.title)}</span>`;
+      }
+
+      let detailsHtml = '';
+
+      if (type === 'dialogue') {
+        const rawLines = Array.isArray(a.lines) ? a.lines : (a.text ? [{ speaker: a.speaker, text: a.text, audio: a.audio, fade_timeout: a.fade_timeout }] : []);
+        if (rawLines.length > 0) {
+          detailsHtml = `<div class="action-dialogue-block" style="margin-top:3px; display:flex; flex-direction:column; gap:3px;">
+            ${rawLines.map(l => {
+              const spk = l.speaker || 'Speaker';
+              const txt = l.text || '';
+              return `<div class="action-dialogue-line" style="background:#f0f9ff; border-left:3px solid #0284c7; border-radius:3px; padding:3px 6px; font-size:8pt; line-height:1.35;">
+                <span class="action-dialogue-speaker" style="font-weight:700; color:#0369a1;">💬 ${escapeHtml(spk)}:</span>
+                <span class="action-dialogue-text" style="color:#0f172a; font-style:italic;">"${escapeHtml(txt)}"</span>
+                ${l.audio ? `<span style="font-size:7pt; color:#64748b; margin-left:6px;">🎵 ${escapeHtml(l.audio)}</span>` : ''}
+                ${l.fade_timeout ? `<span style="font-size:7pt; color:#64748b; margin-left:6px;">⏱️ ${l.fade_timeout}s</span>` : ''}
+              </div>`;
+            }).join('')}
+          </div>`;
+        }
+      } else if (type === 'play_movie') {
+        const movieFile = a.moviePath || a.movie || a.file || '';
+        detailsHtml = `<div class="action-details" style="font-size:7.5pt; color:#475569; margin-top:2px;">
+          ${movieFile ? `<span>📹 File: <code>${escapeHtml(movieFile)}</code></span>` : ''}
+          ${a.canSkip !== undefined ? `<span style="margin-left:6px; color:#64748b;">(${a.canSkip ? 'Skippable' : 'Non-skippable'})</span>` : ''}
+          ${(a.narration || a.description) ? `<div style="margin-top:2px; font-style:italic; color:#334155;">🎙️ "${escapeHtml(a.narration || a.description)}"</div>` : ''}
+        </div>`;
+      } else if (type === 'furniture_visible') {
+        const target = a.target || a.furnitureId || 'Furniture';
+        detailsHtml = `<div class="action-details" style="font-size:7.5pt; color:#475569; margin-top:2px;">
+          <span>Target: <strong>${escapeHtml(target)}</strong></span>
+          ${a.furnitureId ? `<span style="margin-left:4px; font-size:7pt; color:#64748b;">(ID: ${escapeHtml(a.furnitureId)})</span>` : ''}
+          ${a.visible !== undefined ? `<span style="margin-left:6px; font-weight:600; color:${a.visible ? '#15803d' : '#b91c1c'};">${a.visible ? '👁️ Made Visible' : '🙈 Hidden'}</span>` : ''}
+        </div>`;
+      } else if (type === 'move_furniture') {
+        const target = a.target || a.furnitureId || 'Furniture';
+        const destX = a.x !== undefined ? a.x : a.tile?.[0];
+        const destY = a.y !== undefined ? a.y : a.tile?.[1];
+        detailsHtml = `<div class="action-details" style="font-size:7.5pt; color:#475569; margin-top:2px;">
+          <span>Target: <strong>${escapeHtml(target)}</strong> → Destination: <strong>[${destX}, ${destY}]</strong></span>
+          ${a.furnitureId ? `<span style="margin-left:4px; font-size:7pt; color:#64748b;">(ID: ${escapeHtml(a.furnitureId)})</span>` : ''}
+          ${a.message ? `<div style="margin-top:2px; color:#0f766e; font-style:italic;">📢 "${escapeHtml(a.message)}"</div>` : ''}
+        </div>`;
+      } else if (type === 'show_message' || type === 'display_message') {
+        detailsHtml = `<div class="action-details" style="font-size:7.5pt; margin-top:2px;">
+          <div style="font-style:italic; color:#334155;">"${escapeHtml(a.text || '')}"</div>
+          ${a.buttonText ? `<span style="font-size:7pt; color:#64748b;">(Button: ${escapeHtml(a.buttonText)})</span>` : ''}
+        </div>`;
+      } else if (type === 'attack_character') {
+        detailsHtml = `<div class="action-details" style="font-size:7.5pt; color:#475569; margin-top:2px;">
+          <span>Attacker: <strong>${escapeHtml(a.attacker || 'Hazard')}</strong></span> • 
+          <span>Target: <strong>${escapeHtml(a.target || 'active_hero')}</strong></span> • 
+          <span>Damage: <strong>${a.damageDice ? a.damageDice + ' dice' : (a.damage || 2) + ' wounds'}</strong></span>
+        </div>`;
+      } else if (type === 'cast_spell') {
+        detailsHtml = `<div class="action-details" style="font-size:7.5pt; color:#475569; margin-top:2px;">
+          <span>Spell: <strong>${escapeHtml(a.spell || 'Spell')}</strong></span>
+          ${a.caster ? ` • <span>Caster: ${escapeHtml(a.caster)}</span>` : ''}
+          ${a.target ? ` • <span>Target: ${escapeHtml(a.target)}</span>` : ''}
+        </div>`;
+      } else if (type === 'spring_trap') {
+        detailsHtml = `<div class="action-details" style="font-size:7.5pt; color:#475569; margin-top:2px;">
+          <span>Trap: <strong>${escapeHtml((a.trapType || a.trap || 'trap').replace('_', ' '))}</strong></span>
+          ${a.damage !== undefined ? ` • <span>Damage: ${a.damage} wounds</span>` : ''}
+        </div>`;
+      } else if (type === 'spawn_monsters') {
+        detailsHtml = `<div class="action-details" style="font-size:7.5pt; color:#475569; margin-top:2px;">
+          <span>Monster: <strong>${escapeHtml(a.monsterType || 'Monster')}</strong> ×${a.count || 1}</span>
+          ${a.roomId ? ` • <span>Room: ${escapeHtml(a.roomId)}</span>` : ''}
+          ${a.tile ? ` • <span>Tile: [${a.tile.join(', ')}]</span>` : ''}
+        </div>`;
+      } else if (type === 'grant_reward') {
+        detailsHtml = `<div class="action-details" style="font-size:7.5pt; color:#475569; margin-top:2px;">
+          ${a.gold ? `<span>💰 ${a.gold} Gold</span>` : ''}
+          ${a.item ? `<span>🎁 ${escapeHtml(a.item)}</span>` : ''}
+        </div>`;
+      } else if (type === 'end_game') {
+        detailsHtml = `<div class="action-details" style="font-size:7.5pt; color:#475569; margin-top:2px;">
+          <span>Outcome: <strong>${escapeHtml((a.outcome || 'victory').toUpperCase())}</strong></span>
+        </div>`;
+      } else {
+        const keys = Object.keys(a).filter(k => !['type', 'title', 'actions', 'subActions', 'then', 'onComplete', 'nextActions', '$$hashKey'].includes(k));
+        if (keys.length > 0) {
+          detailsHtml = `<div class="action-details" style="font-size:7pt; color:#64748b; margin-top:2px;">
+            ${keys.map(k => `${k}: <strong>${escapeHtml(String(a[k]))}</strong>`).join(' • ')}
+          </div>`;
+        }
+      }
+
+      // Check for nested/recursive actions
+      const subActionLists = [a.actions, a.subActions, a.then, a.onComplete, a.nextActions, a.onSuccess, a.onFailure, a.pipeline, a.steps].filter(list => Array.isArray(list) && list.length > 0);
+      let nestedHtml = '';
+      if (subActionLists.length > 0) {
+        nestedHtml = subActionLists.map(list => renderActionPipelineRecursiveHtml(list, `${numStr}.`, depth + 1)).join('');
+      }
+
+      // Check for conditional branching / choices
+      if (Array.isArray(a.choices) && a.choices.length > 0) {
+        nestedHtml += a.choices.map((c, cIdx) => {
+          const choiceLabel = c.label || c.text || `Branch ${cIdx + 1}`;
+          const choiceActions = c.actions || c.then || [];
+          return `<div style="margin-top:3px; margin-left:${Math.min((depth + 1) * 12, 36)}px; border-left:2px dashed #a855f7; padding-left:8px;">
+            <div style="font-size:7.5pt; font-weight:700; color:#7e22ce;">🔀 Branch: ${escapeHtml(choiceLabel)}</div>
+            ${renderActionPipelineRecursiveHtml(choiceActions, `${numStr}.${cIdx + 1}.`, depth + 2)}
+          </div>`;
+        }).join('');
+      }
+
+      return `<div class="action-item">
+        <div class="action-item-header">${titleHtml}</div>
+        ${detailsHtml}
+        ${nestedHtml}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
 function generateQuestPdfHtml(quest, blockmap, mapDataUrl, options = {}) {
   quest = quest || state.quest || {};
   blockmap = blockmap || state.blockmap || {};
@@ -1806,6 +1979,7 @@ function generateQuestPdfHtml(quest, blockmap, mapDataUrl, options = {}) {
   const includeHeader = options.includeHeader !== false;
   const includeMap = options.includeMap !== false && !!mapDataUrl;
   const includeNotes = options.includeNotes !== false;
+  const includeActions = options.includeActions !== false;
   const includeRoster = options.includeRoster !== false;
   const includeFurniture = options.includeFurniture !== false;
 
@@ -1880,6 +2054,14 @@ function generateQuestPdfHtml(quest, blockmap, mapDataUrl, options = {}) {
     const dialogueAction = startingAction.actions?.find(a => a.type === 'dialogue');
     if (dialogueAction && dialogueAction.lines && dialogueAction.lines.length > 0) {
       introHtml += `<div style="margin-top: 4px; font-size: 8pt; color: #475569; font-style: italic;">${dialogueAction.lines.map(l => `"${escapeHtml(l.text)}"`).join(' ')}</div>`;
+    }
+    if (includeActions && startingAction.actions && startingAction.actions.length > 0) {
+      introHtml += `<div class="action-pipeline-container" style="margin-top:6px; padding-top:4px; border-top:1px dashed #cbd5e1;">
+        <div class="action-pipeline-header" style="font-size:7.5pt; font-weight:700; color:#0369a1; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:3px;">
+          ⚡ Opening Action Pipeline (${startingAction.actions.length} action${startingAction.actions.length !== 1 ? 's' : ''}):
+        </div>
+        ${renderActionPipelineRecursiveHtml(startingAction.actions, '', 0)}
+      </div>`;
     }
   }
 
@@ -1986,7 +2168,7 @@ function generateQuestPdfHtml(quest, blockmap, mapDataUrl, options = {}) {
     display: grid;
     grid-template-columns: ${orientation === 'landscape' ? '1.15fr 0.85fr' : '1fr'};
     gap: 12px;
-    page-break-inside: avoid;
+    page-break-inside: auto;
   }
   .section-card {
     background: #ffffff;
@@ -1994,7 +2176,7 @@ function generateQuestPdfHtml(quest, blockmap, mapDataUrl, options = {}) {
     border-radius: 6px;
     padding: 8px 10px;
     margin-bottom: 10px;
-    page-break-inside: avoid;
+    page-break-inside: auto;
   }
   .section-heading {
     font-family: 'Cinzel', Georgia, serif;
@@ -2020,9 +2202,10 @@ function generateQuestPdfHtml(quest, blockmap, mapDataUrl, options = {}) {
     align-items: flex-start;
     font-size: 8.5pt;
     background: #f8fafc;
-    padding: 5px 8px;
+    padding: 6px 9px;
     border-radius: 4px;
     border: 1px solid #e2e8f0;
+    page-break-inside: avoid;
   }
   .note-disc {
     background: #0f172a;
@@ -2051,6 +2234,105 @@ function generateQuestPdfHtml(quest, blockmap, mapDataUrl, options = {}) {
     color: #475569;
     font-size: 8pt;
     line-height: 1.35;
+  }
+  .note-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 2px 0 4px 0;
+    font-size: 7.5pt;
+    color: #475569;
+  }
+  .note-meta-tag {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-weight: 500;
+  }
+  .note-meta-event {
+    background: #e0f2fe;
+    color: #0369a1;
+    border-color: #bae6fd;
+    font-weight: 600;
+  }
+  .note-meta-hidden {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+  }
+  .note-narrative-box {
+    background: #fffbeb;
+    border-left: 3px solid #f59e0b;
+    border-radius: 3px;
+    padding: 4px 8px;
+    margin: 4px 0;
+    color: #78350f;
+    font-size: 8pt;
+    line-height: 1.35;
+  }
+  .action-pipeline-container {
+    margin-top: 5px;
+    padding-top: 4px;
+    border-top: 1px dashed #cbd5e1;
+  }
+  .action-pipeline-header {
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: #0369a1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+  }
+  .action-pipeline-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .action-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin: 2px 0;
+    font-size: 8pt;
+    line-height: 1.35;
+  }
+  .action-item-header {
+    font-size: 8pt;
+    color: #1e293b;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .action-details {
+    margin-top: 2px;
+    color: #475569;
+    font-size: 7.5pt;
+  }
+  .action-dialogue-block {
+    margin-top: 3px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .action-dialogue-line {
+    background: #f0f9ff;
+    border-left: 3px solid #0284c7;
+    border-radius: 3px;
+    padding: 3px 6px;
+    font-size: 8pt;
+    line-height: 1.3;
+  }
+  .action-dialogue-speaker {
+    font-weight: 700;
+    color: #0369a1;
+    margin-right: 4px;
+  }
+  .action-dialogue-text {
+    color: #0f172a;
+    font-style: italic;
   }
   table.data-table {
     width: 100%;
@@ -2147,17 +2429,35 @@ function generateQuestPdfHtml(quest, blockmap, mapDataUrl, options = {}) {
           const mark = ind.letter;
           const targetStr = ind.targetLabel;
           const noteTitle = st.title || st.name || '';
+          const eventLabel = formatTriggerEventName(st.event);
           return `
           <div class="note-entry">
             <div class="note-disc">${escapeHtml(mark)}</div>
             <div class="note-body">
               <div class="note-head">Note ${escapeHtml(mark)}${noteTitle ? ': ' + escapeHtml(noteTitle) : ''} <span style="font-weight:normal; color:#64748b;">(${escapeHtml(targetStr)})</span></div>
-              ${st.narrative ? `<div class="note-desc">${escapeHtml(st.narrative)}</div>` : ''}
-              ${(st.actions && st.actions.length > 0) ? `
-                <div style="margin-top:2px; font-size:7.5pt; color:#0369a1;">
-                  ${st.actions.map(a => `• ${escapeHtml(a.type)}${a.title ? ': ' + escapeHtml(a.title) : ''}`).join(' ')}
-                </div>
-              ` : ''}
+              <div class="note-meta-row">
+                <span class="note-meta-tag note-meta-event">${escapeHtml(eventLabel)}</span>
+                ${targetStr ? `<span class="note-meta-tag">🎯 ${escapeHtml(targetStr)}</span>` : ''}
+                ${st.room ? `<span class="note-meta-tag">🚪 Room: ${escapeHtml(st.room)}</span>` : ''}
+                ${st.tile && Array.isArray(st.tile) && (st.tile[0] !== 0 || st.tile[1] !== 0) ? `<span class="note-meta-tag">📍 Tile: [${st.tile.join(', ')}]</span>` : ''}
+                ${st.onceOnly !== undefined ? `<span class="note-meta-tag">${st.onceOnly ? '🔒 Once Only' : '🔄 Repeatable'}</span>` : ''}
+                ${st.hidden ? `<span class="note-meta-tag note-meta-hidden">👁️ Hidden</span>` : ''}
+              </div>
+              ${st.narrative ? `<div class="note-desc note-narrative-box"><strong>📜 Narrative:</strong> ${escapeHtml(st.narrative)}</div>` : ''}
+              ${(st.actions && st.actions.length > 0) ? (
+                includeActions ? `
+                  <div class="action-pipeline-container">
+                    <div class="action-pipeline-header">
+                      ⚡ Action Pipeline (${st.actions.length} action${st.actions.length !== 1 ? 's' : ''}):
+                    </div>
+                    ${renderActionPipelineRecursiveHtml(st.actions, '', 0)}
+                  </div>
+                ` : `
+                  <div style="margin-top:2px; font-size:7.5pt; color:#0369a1;">
+                    ${st.actions.map(a => `• ${escapeHtml(a.type)}${a.title ? ': ' + escapeHtml(a.title) : ''}`).join(' ')}
+                  </div>
+                `
+              ) : ''}
             </div>
           </div>`;
         }).join('')}
@@ -2252,6 +2552,7 @@ async function exportPdf(customOptions = {}) {
     const includeHeader = customOptions.includeHeader !== undefined ? customOptions.includeHeader : (dom.chkPdfHeader ? dom.chkPdfHeader.checked : true);
     const includeMap = customOptions.includeMap !== undefined ? customOptions.includeMap : (dom.chkPdfMap ? dom.chkPdfMap.checked : true);
     const includeNotes = customOptions.includeNotes !== undefined ? customOptions.includeNotes : (dom.chkPdfNotes ? dom.chkPdfNotes.checked : true);
+    const includeActions = customOptions.includeActions !== undefined ? customOptions.includeActions : (dom.chkPdfActions ? dom.chkPdfActions.checked : true);
     const includeRoster = customOptions.includeRoster !== undefined ? customOptions.includeRoster : (dom.chkPdfRoster ? dom.chkPdfRoster.checked : true);
     const includeFurniture = customOptions.includeFurniture !== undefined ? customOptions.includeFurniture : (dom.chkPdfFurniture ? dom.chkPdfFurniture.checked : true);
 
@@ -2271,6 +2572,7 @@ async function exportPdf(customOptions = {}) {
       includeHeader,
       includeMap,
       includeNotes,
+      includeActions,
       includeRoster,
       includeFurniture
     });
@@ -7060,22 +7362,9 @@ function setupEventListeners() {
     await loadBlockmap(dom.selectBlockmap.value);
   });
 
-  dom.btnOpenBlockmap.addEventListener('click', async () => {
-    if (!window.robosQuestEditor) return;
-    const res = await window.robosQuestEditor.openBlockmapDialog();
-    if (res.success) {
-      state.blockmap = res.blockmap;
-      state.blockmapPath = res.blockmapPath;
-      if (res.imageData && res.imageData.dataUrl) {
-        const img = new Image();
-        img.onload = () => { state.bgImage = img; render(); };
-        img.src = res.imageData.dataUrl;
-      }
-      fitView();
-      render();
-      showToast(`Loaded: ${state.blockmap.title || path.basename(res.blockmapPath)}`, 'success');
-    }
-  });
+  if (dom.btnOpenBlockmap) {
+    dom.btnOpenBlockmap.addEventListener('click', openSelectedBlockmapInEditor);
+  }
 
   if (dom.btnOpenCartridge) {
     dom.btnOpenCartridge.addEventListener('click', async () => {
@@ -7647,10 +7936,13 @@ if (typeof window !== 'undefined') {
     openExportPdfModal,
     closeExportPdfModal,
     loadBlockmap,
+    openSelectedBlockmapInEditor,
     loadCartridge,
     isStartingQuestAction,
     resolveTriggerIndicators,
-    drawExportTriggerIndicator
+    drawExportTriggerIndicator,
+    formatTriggerEventName,
+    renderActionPipelineRecursiveHtml
   };
 
   // Bootstrap application on window load
@@ -7662,9 +7954,12 @@ if (typeof module !== 'undefined' && module.exports) {
     validateQuest,
     loadCartridge,
     loadBlockmap,
+    openSelectedBlockmapInEditor,
     isStartingQuestAction,
     resolveTriggerIndicators,
     drawExportTriggerIndicator,
+    formatTriggerEventName,
+    renderActionPipelineRecursiveHtml,
     interpretVoiceQuestCommands,
     executeVoiceMapCommands,
     findTargetRoom,

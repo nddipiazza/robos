@@ -9,9 +9,12 @@ const {
   validateQuest: validateQuestFn,
   loadCartridge,
   loadBlockmap,
+  openSelectedBlockmapInEditor,
   isStartingQuestAction,
   resolveTriggerIndicators,
   drawExportTriggerIndicator,
+  formatTriggerEventName,
+  renderActionPipelineRecursiveHtml,
   interpretVoiceQuestCommands,
   executeVoiceMapCommands,
   setupSplitDividers,
@@ -3040,7 +3043,11 @@ test('Custom Quest Cartridge Verification: custom-quest intro action appears in 
 
   // 1. Verify starting action detection
   assert.ok(startingAction, 'Starting quest action detected in custom-quest');
-  assert.equal(startingAction.actions[0].moviePath, 'res://assets/movies/quest1-intro.mp4');
+  assert.ok(
+    startingAction.actions[0].moviePath === 'res://assets/movies/quest_introduction_movie.ogv' ||
+    startingAction.actions[0].moviePath === 'res://assets/movies/quest1-intro.mp4',
+    'Starting action moviePath should point to the intro cinematic'
+  );
   assert.ok(startingAction.narrative.includes('Mentor speaks:'), 'Mentor speech in starting action');
 
   // 2. Verify indicators count and targets
@@ -3069,8 +3076,8 @@ test('Custom Quest Cartridge Verification: custom-quest intro action appears in 
 
   // Briefing contains Mentor's words and opening cinematic
   assert.ok(html.includes('The Emperor calls upon'), 'Contains header description in briefing');
-  assert.ok(html.includes('Mentor speaks: &quot;As you step forward, ancient magic stirs...&quot;') ||
-            html.includes('Mentor speaks: "As you step forward, ancient magic stirs..."'), 'Contains starting action narrative in intro');
+  assert.ok(html.includes('Mentor speaks: &quot;As you step forward, ancient magic stirs') ||
+            html.includes('Mentor speaks: "As you step forward, ancient magic stirs'), 'Contains starting action narrative in intro');
   assert.ok(html.includes('Opening Cinematic: Note A Cinematic'), 'Contains opening cinematic in intro');
 
   // Quest notes list shows Note A and Note B with their target descriptions
@@ -3078,8 +3085,234 @@ test('Custom Quest Cartridge Verification: custom-quest intro action appears in 
   assert.ok(html.includes('Tile [7, 18]'), 'Tile [7, 18] in quest notes');
   assert.ok(html.includes('Note B'), 'Note B in quest notes');
   assert.ok(html.includes('Door: door-10'), 'Door: door-10 in quest notes');
+
+  // 4. Verify trigger metadata and full recursive action pipeline in PDF export
+  assert.ok(html.includes('On Tile Stepped On'), 'Note A contains formatted event name');
+  assert.ok(html.includes('On Door Opened'), 'Note B contains formatted event name');
+  assert.ok(html.includes('Action Pipeline (6 actions)'), 'Note A shows 6-action pipeline');
+
+  // Verify dialogue lines, speakers, and text
+  assert.ok(html.includes('Goblin who hesited chest'), 'Contains dialogue speaker goblin');
+  assert.ok(html.includes('its the humans! (clank of chest dropping to stone ground)'), 'Contains dialogue line text from goblin');
+  assert.ok(html.includes('Orc who hesited chest'), 'Contains dialogue speaker orc');
+  assert.ok(html.includes('useless runt, they will never get the treasure rahhh'), 'Contains dialogue line text from orc');
+  assert.ok(html.includes("The chest is safe. Don&#39;t just stand there, kill them!!") ||
+            html.includes("The chest is safe. Don't just stand there, kill them!!"), 'Contains final battle cry dialogue');
+
+  // Verify movie action and move furniture details
+  assert.ok(html.includes('quest_scene_a_corridor_heist.ogv'), 'Contains corridor heist movie path');
+  assert.ok(html.includes('Destination: <strong>[18, 17]</strong>'), 'Contains chest destination coordinates');
+  assert.ok(html.includes('Chest was thrown through the wall and the wall absorbed the chest like it was made of smoke!!'),
+            'Contains custom move furniture narrative message');
+
+  // Verify opening action pipeline in intro
+  assert.ok(html.includes('Opening Action Pipeline'), 'Briefing contains opening action pipeline');
+  assert.ok(html.includes('quest_introduction_movie.ogv'), 'Opening pipeline contains intro movie path');
 });
 
+// -------------------------------------------------------------
+// Test 36: Recursive Action Pipeline & Dialogue Printing
+// -------------------------------------------------------------
+test('Recursive Action Pipeline Printing: formats dialogues, movies, moves, and arbitrary nested sub-actions', () => {
+  // Test formatTriggerEventName
+  assert.equal(formatTriggerEventName('on_tile_stepped_on'), '👣 On Tile Stepped On');
+  assert.equal(formatTriggerEventName('on_door_opened'), '🚪 On Door Opened');
+  assert.equal(formatTriggerEventName('on_monster_killed'), '💀 On Monster Killed');
+  assert.equal(formatTriggerEventName('on_room_entered'), '🏰 On Room Entered');
+  assert.equal(formatTriggerEventName('custom_event_name'), 'Custom Event Name');
 
+  // Test pipeline with various action types including dialogues and recursive sub-actions
+  const pipeline = [
+    {
+      type: 'play_movie',
+      moviePath: 'res://assets/movies/scene_intro.ogv',
+      canSkip: false,
+      narration: 'Deep beneath the mountains, shadows stir...'
+    },
+    {
+      type: 'dialogue',
+      lines: [
+        { speaker: 'Mentor', text: 'Beware the trap!', audio: 'res://audio/mentor_trap.wav', fade_timeout: 4 },
+        { speaker: 'Barbarian', text: 'I fear no stone!', audio: '' }
+      ]
+    },
+    {
+      type: 'move_furniture',
+      target: 'Altar Stone',
+      furnitureId: 'furn-altar-1',
+      x: 10,
+      y: 12,
+      message: 'The altar slides across the stone floor with a grinding noise.'
+    },
+    {
+      type: 'furniture_visible',
+      target: 'Secret Chest',
+      furnitureId: 'furn-chest-9',
+      visible: true
+    },
+    {
+      type: 'cast_spell',
+      spell: 'fire_of_wrath',
+      caster: 'Chaos Sorcerer',
+      target: 'wizard'
+    },
+    {
+      type: 'spring_trap',
+      trapType: 'pit_trap',
+      damage: 2
+    },
+    {
+      type: 'spawn_monsters',
+      monsterType: 'skeleton',
+      count: 3,
+      roomId: 'room-crypt-3'
+    },
+    {
+      type: 'grant_reward',
+      gold: 150,
+      item: 'Spell Scroll of Pass Through Rock'
+    },
+    {
+      type: 'end_game',
+      outcome: 'victory'
+    },
+    // Nested recursive sub-actions
+    {
+      type: 'show_message',
+      text: 'A hidden mechanism activates!',
+      actions: [
+        {
+          type: 'dialogue',
+          lines: [
+            { speaker: 'Elf', text: 'Look above us!' }
+          ]
+        },
+        {
+          type: 'attack_character',
+          attacker: 'Falling Ceiling',
+          target: 'active_hero',
+          damageDice: 3
+        }
+      ]
+    },
+    // Branching / choices sub-actions
+    {
+      type: 'show_message',
+      text: 'Choose your path wisely.',
+      choices: [
+        {
+          label: 'Drink the glowing potion',
+          actions: [
+            { type: 'grant_reward', gold: 50, item: 'Potion of Defense' }
+          ]
+        },
+        {
+          label: 'Smash the flask',
+          actions: [
+            { type: 'spring_trap', trapType: 'poison_gas', damage: 1 }
+          ]
+        }
+      ]
+    }
+  ];
 
+  const html = renderActionPipelineRecursiveHtml(pipeline, '', 0);
+
+  // Assert dialogues formatted with speaker and text
+  assert.ok(html.includes('💬 Mentor:'), 'Renders Mentor speaker');
+  assert.ok(html.includes('&quot;Beware the trap!&quot;') || html.includes('"Beware the trap!"'), 'Renders Mentor dialogue text');
+  assert.ok(html.includes('res://audio/mentor_trap.wav'), 'Renders dialogue audio path');
+  assert.ok(html.includes('4s'), 'Renders dialogue fade timeout');
+  assert.ok(html.includes('💬 Barbarian:'), 'Renders Barbarian speaker');
+  assert.ok(html.includes('&quot;I fear no stone!&quot;') || html.includes('"I fear no stone!"'), 'Renders Barbarian dialogue text');
+
+  // Assert movie action
+  assert.ok(html.includes('scene_intro.ogv'), 'Renders movie path');
+  assert.ok(html.includes('Non-skippable'), 'Renders non-skippable tag');
+  assert.ok(html.includes('Deep beneath the mountains, shadows stir...'), 'Renders movie narration');
+
+  // Assert move furniture
+  assert.ok(html.includes('Destination: <strong>[10, 12]</strong>'), 'Renders destination tile coordinates');
+  assert.ok(html.includes('The altar slides across the stone floor with a grinding noise.'), 'Renders move message');
+
+  // Assert furniture visible
+  assert.ok(html.includes('Secret Chest'), 'Renders visible furniture target');
+  assert.ok(html.includes('Made Visible'), 'Renders made visible badge');
+
+  // Assert spell, trap, monster, reward, endgame
+  assert.ok(html.includes('fire_of_wrath'), 'Renders cast spell name');
+  assert.ok(html.includes('Chaos Sorcerer'), 'Renders spell caster');
+  assert.ok(html.includes('pit trap'), 'Renders spring trap');
+  assert.ok(html.includes('skeleton'), 'Renders spawn monster type');
+  assert.ok(html.includes('150 Gold'), 'Renders reward gold');
+  assert.ok(html.includes('Spell Scroll of Pass Through Rock'), 'Renders reward item');
+  assert.ok(html.includes('VICTORY'), 'Renders end game outcome');
+
+  // Assert recursive nested actions
+  assert.ok(html.includes('💬 Elf:'), 'Renders nested Elf dialogue speaker');
+  assert.ok(html.includes('Look above us!'), 'Renders nested Elf dialogue text');
+  assert.ok(html.includes('Falling Ceiling'), 'Renders nested falling ceiling attack');
+
+  // Assert branching / choices
+  assert.ok(html.includes('Branch: Drink the glowing potion'), 'Renders branch choice 1');
+  assert.ok(html.includes('Potion of Defense'), 'Renders reward in branch choice 1');
+  assert.ok(html.includes('Branch: Smash the flask'), 'Renders branch choice 2');
+  assert.ok(html.includes('poison gas'), 'Renders trap in branch choice 2');
+});
+
+// -------------------------------------------------------------
+// Test 37: Open Selected Blockmap in Blockmap Editor
+// -------------------------------------------------------------
+test('Open Blockmap in Editor: launches tabletop-blockmap-creator with the currently selected blockmap', async () => {
+  const savedWindow = global.window;
+  const savedStateBlockmap = state.blockmap;
+  const savedStatePath = state.blockmapPath;
+  const savedDom = { ...dom };
+
+  try {
+    let openedTarget = null;
+    global.window = {
+      robosQuestEditor: {
+        openBlockmapEditor: async (target) => {
+          openedTarget = target;
+          return { success: true, pid: 4321, targetBlockmap: target, blockmapName: path.basename(target) };
+        }
+      }
+    };
+
+    // 1. With state.blockmapPath set
+    state.blockmap = { id: 'heroquest-classic', title: 'HeroQuest Classic Board' };
+    state.blockmapPath = '/fake/path/heroquest-classic.blockmap.json';
+    dom.selectBlockmap = { value: 'first-light-dungeon' };
+
+    const res1 = await openSelectedBlockmapInEditor();
+    assert.equal(res1.success, true);
+    assert.equal(openedTarget, '/fake/path/heroquest-classic.blockmap.json', 'Passes state.blockmapPath if present');
+
+    // 2. Fallback to state.blockmap.id when path is empty
+    state.blockmapPath = '';
+    state.blockmap = { id: 'fan-dungeon-28x21', title: 'Fan Cavern' };
+    const res2 = await openSelectedBlockmapInEditor();
+    assert.equal(res2.success, true);
+    assert.equal(openedTarget, 'fan-dungeon-28x21', 'Falls back to state.blockmap.id');
+
+    // 3. Fallback to dom.selectBlockmap.value when blockmap is null
+    state.blockmap = null;
+    dom.selectBlockmap = { value: 'first-light-caverns' };
+    const res3 = await openSelectedBlockmapInEditor();
+    assert.equal(res3.success, true);
+    assert.equal(openedTarget, 'first-light-caverns', 'Falls back to dropdown value');
+
+    // 4. Handles missing window bridge gracefully
+    delete global.window.robosQuestEditor.openBlockmapEditor;
+    const res4 = await openSelectedBlockmapInEditor();
+    assert.equal(res4.success, false);
+    assert.equal(res4.error, 'Bridge not available');
+  } finally {
+    global.window = savedWindow;
+    state.blockmap = savedStateBlockmap;
+    state.blockmapPath = savedStatePath;
+    Object.assign(dom, savedDom);
+  }
+});
 

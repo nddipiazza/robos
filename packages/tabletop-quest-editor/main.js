@@ -580,3 +580,69 @@ ipcMain.handle('voice:ensure-running', async () => {
     return { ok: false, error: err.message };
   }
 });
+
+// IPC: Open currently selected blockmap in Tabletop Blockmap Creator
+ipcMain.handle('quest:open-blockmap-editor', async (_event, blockmapArg) => {
+  try {
+    const targetBlockmap = blockmapArg || 'first-light-dungeon';
+
+    // 1. Resolve blockmap path
+    let resolvedBlockmap = targetBlockmap;
+    if (!path.isAbsolute(targetBlockmap)) {
+      const candidates = [
+        path.join(CARTRIDGES_DIR, targetBlockmap),
+        path.join(CARTRIDGES_DIR, `${targetBlockmap}.blockmap.json`),
+        path.join(CARTRIDGES_DIR, `${targetBlockmap.replace(/\.blockmap\.json$/, '')}.blockmap.json`)
+      ];
+      for (const cp of candidates) {
+        if (fs.existsSync(cp) && fs.statSync(cp).isFile()) {
+          resolvedBlockmap = cp;
+          break;
+        }
+      }
+    }
+
+    // 2. Locate tabletop-blockmap-creator package / launcher
+    const repoBlockmapDir = path.join(REPO_ROOT, 'packages/tabletop-blockmap-creator');
+    const repoLaunchScript = path.join(repoBlockmapDir, 'launch.sh');
+    const vmBlockmapDir = '/usr/local/share/robos/tabletop-blockmap-creator';
+
+    let execCmd = null;
+    let execArgs = [];
+    let execCwd = process.cwd();
+
+    if (fs.existsSync(repoLaunchScript)) {
+      execCmd = repoLaunchScript;
+      execArgs = ['--blockmap=' + resolvedBlockmap];
+      execCwd = repoBlockmapDir;
+    } else if (fs.existsSync(repoBlockmapDir)) {
+      execCmd = process.execPath;
+      execArgs = [repoBlockmapDir, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--blockmap=' + resolvedBlockmap];
+      execCwd = repoBlockmapDir;
+    } else if (fs.existsSync(vmBlockmapDir)) {
+      execCmd = process.execPath;
+      execArgs = [vmBlockmapDir, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', '--blockmap=' + resolvedBlockmap];
+      execCwd = vmBlockmapDir;
+    } else {
+      return { success: false, error: 'Tabletop Blockmap Creator not found on system' };
+    }
+
+    const env = { ...process.env, DISPLAY: process.env.DISPLAY || ':0' };
+    const child = spawn(execCmd, execArgs, {
+      cwd: execCwd,
+      env,
+      detached: true,
+      stdio: 'ignore'
+    });
+    child.unref();
+
+    return {
+      success: true,
+      pid: child.pid,
+      targetBlockmap: resolvedBlockmap,
+      blockmapName: path.basename(resolvedBlockmap)
+    };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
