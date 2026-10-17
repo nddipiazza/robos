@@ -13,6 +13,9 @@ const {
   setupSplitDividers,
   toggleRoomNames,
   updateRoomNamesToggleUI,
+  updateInspectorUI,
+  updateEntitySummaryList,
+  updateTriggerTargetOptions,
   updateTriggerTabUI,
   renderActionPipelineUI,
   addActionToTrigger,
@@ -2458,3 +2461,144 @@ test('Treasure Chest Corridor Placement: permits chests in corridors while restr
   assert.equal(resRoomChest.valid, true, 'Chests in rooms should be valid');
   assert.equal(resRoomChest.counts.furniture_bounds, 0);
 });
+
+// -------------------------------------------------------------
+// Test 31: Door Name Updating in Inspector & Cartridge Serialization
+// -------------------------------------------------------------
+test('Door Name Editing: updates name in inspector, reflects in summary and triggers, and serializes to cartridge', () => {
+  const savedDocument = global.document;
+  const savedStateQuest = JSON.parse(JSON.stringify(state.quest));
+  const savedSelectedEntity = state.selectedEntity;
+  const savedDom = { ...dom };
+
+  try {
+    const createdElements = [];
+    global.document = {
+      createElement: (tag) => {
+        const el = {
+          tag,
+          className: '',
+          innerHTML: '',
+          textContent: '',
+          value: '',
+          selected: false,
+          addEventListener: () => {}
+        };
+        createdElements.push(el);
+        return el;
+      }
+    };
+
+    const mockChildren = [];
+    dom.inspectorEmpty = { style: {} };
+    dom.inspectorForm = { style: {} };
+    dom.inspectTypeBadge = { textContent: '', className: '' };
+    dom.inspectPosText = { textContent: '' };
+    dom.inspectName = { value: '', addEventListener: () => {} };
+    dom.inspectHidden = { checked: false, addEventListener: () => {} };
+    dom.inspectGroupMonster = { style: {} };
+    dom.inspectGroupDoor = { style: {} };
+    dom.inspectDoorState = { value: '', addEventListener: () => {} };
+    dom.inspectDoorSecret = { checked: false, addEventListener: () => {} };
+    dom.inspectGroupFurniture = { style: {} };
+    dom.inspectGroupTrap = { style: {} };
+    dom.inspectGroupNote = { style: {} };
+    dom.entitySummaryList = {
+      innerHTML: '',
+      appendChild: (child) => mockChildren.push(child)
+    };
+    dom.badgeEntityCount = { textContent: '' };
+    dom.inspectTriggerTargetGroup = { style: {} };
+    dom.inspectTriggerTargetLbl = { textContent: '' };
+    const doorOptions = [];
+    dom.inspectTriggerTargetDoor = {
+      style: {},
+      innerHTML: '',
+      appendChild: (opt) => doorOptions.push(opt)
+    };
+
+    // 1. Initial door setup
+    state.quest.doors = [
+      { id: 'door-1', name: 'Great Hall Iron Gate', from: [5, 4], to: [5, 5], state: 'closed', is_secret: false },
+      { id: 'door-2', from: [10, 4], to: [10, 5], state: 'open', is_secret: true }
+    ];
+
+    // 2. Select door-1: inspectName should display custom door name
+    state.selectedEntity = { type: 'door', index: 0, data: state.quest.doors[0] };
+    updateInspectorUI();
+    assert.equal(dom.inspectName.value, 'Great Hall Iron Gate', 'dom.inspectName displays custom door name');
+    assert.equal(dom.inspectDoorState.value, 'closed');
+    assert.equal(dom.inspectDoorSecret.checked, false);
+
+    // 3. Select door-2: inspectName should fallback to door id when name not set
+    state.selectedEntity = { type: 'door', index: 1, data: state.quest.doors[1] };
+    updateInspectorUI();
+    assert.equal(dom.inspectName.value, 'door-2', 'dom.inspectName falls back to door id if no custom name');
+    assert.equal(dom.inspectDoorState.value, 'open');
+    assert.equal(dom.inspectDoorSecret.checked, true);
+
+    // 4. Update door-1's name and verify state and entity summary list
+    state.selectedEntity = { type: 'door', index: 0, data: state.quest.doors[0] };
+    dom.inspectName.value = 'Ancient Reinforced Portcullis';
+    // Simulate inspector input listener
+    state.quest.doors[0].name = dom.inspectName.value;
+    if (state.selectedEntity.data) state.selectedEntity.data.name = dom.inspectName.value;
+    mockChildren.length = 0;
+    updateEntitySummaryList();
+
+    assert.equal(state.quest.doors[0].name, 'Ancient Reinforced Portcullis', 'Door entity name in state is updated');
+    assert.equal(state.selectedEntity.data.name, 'Ancient Reinforced Portcullis', 'Selected entity data name is updated');
+
+    const doorItem = mockChildren.find(item => item.innerHTML.includes('Ancient Reinforced Portcullis'));
+    assert.ok(doorItem, 'Entity summary list displays updated door name');
+    assert.ok(!doorItem.innerHTML.includes('Wood Door'), 'Entity summary list uses custom name instead of default fallback');
+
+    // 5. Update door-2's name
+    state.selectedEntity = { type: 'door', index: 1, data: state.quest.doors[1] };
+    dom.inspectName.value = 'Secret Treasury Alcove Door';
+    state.quest.doors[1].name = dom.inspectName.value;
+    if (state.selectedEntity.data) state.selectedEntity.data.name = dom.inspectName.value;
+    mockChildren.length = 0;
+    updateEntitySummaryList();
+
+    const secretItem = mockChildren.find(item => item.innerHTML.includes('Secret Treasury Alcove Door'));
+    assert.ok(secretItem, 'Secret door summary displays updated custom name');
+    assert.ok(secretItem.innerHTML.includes('SECRET [OPEN]'), 'Secret door retains status badge');
+
+    // 6. Trigger target options
+    updateTriggerTargetOptions({ event: 'on_door_opened' });
+    const triggerOpt1 = doorOptions.find(opt => opt.value === 'door-1');
+    assert.ok(triggerOpt1, 'Option for door-1 exists in trigger target dropdown');
+    assert.match(triggerOpt1.textContent, /Ancient Reinforced Portcullis \(door-1\)/, 'Dropdown displays custom name and ID');
+
+    // 7. Cartridge serialization
+    const payload = buildCartridgePayload();
+    const mapData = payload.maps[payload.cartridgeId || 'heroquest-the-trial'];
+    assert.ok(mapData, 'Map data present in serialized cartridge');
+    const serializedDoor1 = mapData.doors.find(d => d.id === 'door-1');
+    assert.ok(serializedDoor1, 'door-1 serialized in cartridge payload');
+    assert.equal(serializedDoor1.name, 'Ancient Reinforced Portcullis', 'Door name is saved into cartridge payload');
+    const serializedDoor2 = mapData.doors.find(d => d.id === 'door-2');
+    assert.equal(serializedDoor2.name, 'Secret Treasury Alcove Door', 'Secret door name is saved into cartridge payload');
+
+    // 8. Validation title uses door.name
+    const bPath = path.resolve(__dirname, '../../../games/tabletop-rpg/cartridges/first-light-dungeon.blockmap.json');
+    const blockmap = JSON.parse(fs.readFileSync(bPath, 'utf8'));
+    const floatingDoorQuest = {
+      doors: [
+        { id: 'door-bad', name: 'Floating Haunted Portal', from: [0, 0], to: [0, 1] }
+      ]
+    };
+    const valResult = validateQuestFn(floatingDoorQuest, blockmap);
+    assert.equal(valResult.valid, false);
+    const doorErr = valResult.errors.find(e => e.entityId === 'door-bad' || e.entityType === 'door');
+    assert.ok(doorErr, 'Validation error for floating door');
+    assert.match(doorErr.title, /Floating Haunted Portal Floating in Corridor/, 'Validation error title uses custom door name');
+  } finally {
+    global.document = savedDocument;
+    state.quest = savedStateQuest;
+    state.selectedEntity = savedSelectedEntity;
+    Object.assign(dom, savedDom);
+  }
+});
+

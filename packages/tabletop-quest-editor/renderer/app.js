@@ -688,6 +688,7 @@ async function loadCartridge(slugOrPath) {
       if (dom.selectExitStairType) dom.selectExitStairType.value = state.quest.exitStairType;
       state.quest.doors = (mapData.doors || []).map((d, i) => ({
         id: d.id || `door-${i+1}`,
+        name: d.name || d.id || (d.is_secret ? `Secret Door ${i+1}` : `Door ${i+1}`),
         from: d.from || [0, 0],
         to: d.to || [0, 1],
         state: d.state || 'closed',
@@ -956,6 +957,7 @@ function buildCartridgePayload() {
         corridors: bm.corridors || [],
         doors: q.doors.map(d => ({
           id: d.id,
+          name: d.name || d.id,
           from: [d.from[0], d.from[1]],
           to: [d.to[0], d.to[1]],
           state: d.state || 'closed',
@@ -2657,8 +2659,11 @@ function handleCanvasClick(wx, wy) {
     } else {
       const isSecret = state.subtool.doorType === 'secret';
       const isOpen = state.subtool.doorType === 'wood-open';
+      const doorNum = state.quest.doors.length + 1;
+      const defaultName = isSecret ? `Secret Door ${doorNum}` : `Door ${doorNum}`;
       const newDoor = {
-        id: `door-${state.quest.doors.length + 1}`,
+        id: `door-${doorNum}`,
+        name: defaultName,
         from: edge.from,
         to: edge.to,
         state: isOpen ? 'open' : 'closed',
@@ -2952,7 +2957,7 @@ function updateInspectorUI() {
     const d = state.quest.doors[index];
     if (!d) return;
     dom.inspectPosText.textContent = `[${d.from[0]},${d.from[1]}] ↔ [${d.to[0]},${d.to[1]}]`;
-    dom.inspectName.value = d.id;
+    dom.inspectName.value = d.name !== undefined ? d.name : (d.id || `Door ${index + 1}`);
     dom.inspectDoorState.value = d.state || 'closed';
     dom.inspectDoorSecret.checked = d.is_secret;
     dom.inspectGroupDoor.style.display = 'block';
@@ -3148,12 +3153,13 @@ function updateEntitySummaryList() {
     const badgeCls = isSecret ? (isOpen ? 'door-badge-secret-open' : 'door-badge-secret') : (isOpen ? 'door-badge-open' : 'door-badge-closed');
     const badgeText = isSecret ? (isOpen ? 'SECRET [OPEN]' : 'SECRET') : (isOpen ? 'OPEN' : 'CLOSED');
     const doorIcon = isSecret ? '🔮' : (isOpen ? '🚪🔓' : '🚪🔒');
+    const displayName = d.name || (isSecret ? 'Secret Door' : 'Wood Door');
     item.innerHTML = `
       <div class="entity-item-main">
         <span class="entity-item-icon">${doorIcon}</span>
         <div>
           <div class="entity-item-name">
-            ${isSecret ? 'Secret Door' : 'Wood Door'}
+            ${escapeHtml(displayName)}
             <span class="door-status-pill ${badgeCls}">${badgeText}</span>
           </div>
           <div class="entity-item-pos">[${d.from[0]},${d.from[1]}] ↔ [${d.to[0]},${d.to[1]}]</div>
@@ -3303,7 +3309,8 @@ function updateTriggerTargetOptions(st) {
       doors.forEach((d) => {
         const opt = document.createElement('option');
         opt.value = d.id;
-        opt.textContent = `${d.id} [${d.from[0]},${d.from[1]}] ${d.is_secret ? '🔮 Secret' : (d.state === 'open' ? '🔓 Open' : '🔒 Closed')}`;
+        const doorLabel = d.name ? `${d.name} (${d.id})` : d.id;
+        opt.textContent = `${doorLabel} [${d.from[0]},${d.from[1]}] ${d.is_secret ? '🔮 Secret' : (d.state === 'open' ? '🔓 Open' : '🔒 Closed')}`;
         if (st.doorId === d.id || st.target === d.id) opt.selected = true;
         dom.inspectTriggerTargetDoor.appendChild(opt);
       });
@@ -4097,7 +4104,7 @@ function validateQuest(quest, blockmap) {
 
       const r1 = getRoomAt(from[0], from[1]);
       const r2 = getRoomAt(to[0], to[1]);
-      const doorName = d.is_secret ? 'Secret Door' : (d.state === 'open' ? 'Open Door' : 'Door');
+      const doorName = d.name || (d.is_secret ? 'Secret Door' : (d.state === 'open' ? 'Open Door' : 'Door'));
       const doorId = d.id || idx;
 
       // In HeroQuest, a door connects a room to a corridor or connects two rooms.
@@ -5256,8 +5263,11 @@ function executeVoiceMapCommands(spokenText, guidancePrompt, targetQuest = null,
       for (const edge of selected) {
         const isSecret = cmd.type === 'secret';
         const isOpen = cmd.type === 'wood-open';
+        const doorNum = currentQuest.doors.length + 1;
+        const defaultName = isSecret ? `Secret Door ${doorNum}` : `Door ${doorNum}`;
         const newDoor = {
-          id: `door-${currentQuest.doors.length + 1}`,
+          id: `door-${doorNum}`,
+          name: defaultName,
           from: [edge.col, edge.row],
           to: [edge.nc, edge.nr],
           state: isSecret ? 'secret' : (isOpen ? 'open' : 'closed'),
@@ -5483,8 +5493,26 @@ function setupEventListeners() {
   dom.inspectName.addEventListener('input', () => {
     if (!state.selectedEntity) return;
     const { type, index } = state.selectedEntity;
-    if (type === 'monster') state.quest.monsters[index].name = dom.inspectName.value;
-    if (type === 'furniture') state.quest.furniture[index].name = dom.inspectName.value;
+    if (type === 'monster' && state.quest.monsters[index]) {
+      state.quest.monsters[index].name = dom.inspectName.value;
+      if (state.selectedEntity.data) state.selectedEntity.data.name = dom.inspectName.value;
+    }
+    if (type === 'furniture' && state.quest.furniture[index]) {
+      state.quest.furniture[index].name = dom.inspectName.value;
+      if (state.selectedEntity.data) state.selectedEntity.data.name = dom.inspectName.value;
+    }
+    if (type === 'door' && state.quest.doors[index]) {
+      state.quest.doors[index].name = dom.inspectName.value;
+      if (state.selectedEntity.data) state.selectedEntity.data.name = dom.inspectName.value;
+    }
+    if (type === 'trap' && state.quest.traps[index]) {
+      state.quest.traps[index].name = dom.inspectName.value;
+      if (state.selectedEntity.data) state.selectedEntity.data.name = dom.inspectName.value;
+    }
+    if (type === 'wall-block' && state.quest.wallBlocks[index]) {
+      state.quest.wallBlocks[index].name = dom.inspectName.value;
+      if (state.selectedEntity.data) state.selectedEntity.data.name = dom.inspectName.value;
+    }
     updateEntitySummaryList();
   });
 
@@ -5551,12 +5579,14 @@ function setupEventListeners() {
     if (state.selectedEntity?.type === 'door') {
       state.quest.doors[state.selectedEntity.index].state = dom.inspectDoorState.value;
       render();
+      updateEntitySummaryList();
     }
   });
   dom.inspectDoorSecret.addEventListener('change', () => {
     if (state.selectedEntity?.type === 'door') {
       state.quest.doors[state.selectedEntity.index].is_secret = dom.inspectDoorSecret.checked;
       render();
+      updateEntitySummaryList();
     }
   });
 
@@ -6316,6 +6346,9 @@ if (typeof module !== 'undefined' && module.exports) {
     setupSplitDividers,
     toggleRoomNames,
     updateRoomNamesToggleUI,
+    updateInspectorUI,
+    updateEntitySummaryList,
+    updateTriggerTargetOptions,
     updateTriggerTabUI,
     renderActionPipelineUI,
     addActionToTrigger,
