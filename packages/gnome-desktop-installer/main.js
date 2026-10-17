@@ -4,7 +4,7 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const { ShortcutManager } = require('./lib/shortcut-manager');
+const { ShortcutWorkerClient } = require('./lib/worker-client');
 
 // Append QEMU / headless container compatibility flags
 app.commandLine.appendSwitch('no-sandbox');
@@ -25,68 +25,57 @@ try {
   } catch {}
 }
 
-const manager = new ShortcutManager();
+// Run all filesystem & GNOME shortcut operations on a dedicated background worker thread
+// so UI rendering and window animations never freeze.
+const workerClient = new ShortcutWorkerClient();
 let mainWindow = null;
 
-// ── IPC Handlers ─────────────────────────────────────────────────────────────
+// ── IPC Handlers (Non-blocking via Worker Thread) ────────────────────────────
 
 ipcMain.handle('gdi:list-apps', () => {
-  const apps = manager.discoverApps();
-  return {
-    ok: true,
-    apps,
-    paths: {
-      appsDir: manager.appsDir,
-      desktopDir: manager.desktopDir,
-      binDir: manager.binDir,
-      iconsBaseDir: manager.iconsBaseDir,
-      robosRoot: manager.robosRoot,
-    },
-  };
+  return workerClient.listApps();
 });
 
 ipcMain.handle('gdi:install-app', (_, appId, options = {}) => {
-  return manager.installApp(appId, options);
+  return workerClient.installApp(appId, options);
 });
 
 ipcMain.handle('gdi:uninstall-app', (_, appId) => {
-  return manager.uninstallApp(appId);
+  return workerClient.uninstallApp(appId);
 });
 
 ipcMain.handle('gdi:set-desktop-shortcut', (_, appId, enabled) => {
-  return manager.setDesktopShortcut(appId, enabled);
+  return workerClient.setDesktopShortcut(appId, enabled);
 });
 
 ipcMain.handle('gdi:set-dock-pinned', (_, appId, pinned) => {
-  return manager.setDockPinned(appId, pinned);
+  return workerClient.setDockPinned(appId, pinned);
 });
 
-ipcMain.handle('gdi:bulk-install', async (event, appIds, options = {}) => {
-  return manager.bulkInstall(appIds, options, (stepData) => {
+ipcMain.handle('gdi:bulk-install', (event, appIds, options = {}) => {
+  return workerClient.bulkInstall(appIds, options, (stepData) => {
     try {
-      event.sender.send('gdi:progress', stepData);
+      if (!event.sender.isDestroyed()) {
+        event.sender.send('gdi:progress', stepData);
+      }
     } catch {}
   });
 });
 
 ipcMain.handle('gdi:bulk-remove-desktop', (_, appIds) => {
-  return manager.bulkRemoveDesktopShortcuts(appIds);
+  return workerClient.bulkRemoveDesktopShortcuts(appIds);
 });
 
 ipcMain.handle('gdi:refresh-caches', () => {
-  const res = manager.refreshCaches();
-  return {
-    ...res,
-    apps: manager.discoverApps(),
-  };
+  return workerClient.refreshCaches();
 });
 
 ipcMain.handle('gdi:get-details', (_, appId) => {
-  return manager.getAppDetails(appId);
+  return workerClient.getAppDetails(appId);
 });
 
 ipcMain.handle('gdi:launch-app', (_, appId) => {
-  return manager.launchApp(appId);
+  return workerClient.launchApp(appId);
 });
 
 // ── Window Setup ─────────────────────────────────────────────────────────────
@@ -137,6 +126,7 @@ function createWindow() {
 
 app.whenReady().then(createWindow);
 
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
+  await workerClient.terminate();
   app.quit();
 });
