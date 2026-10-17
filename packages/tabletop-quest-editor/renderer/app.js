@@ -445,13 +445,22 @@ function showToast(message, type = 'info') {
   if (typeof document === 'undefined' || !dom.toastContainer) return;
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
+  toast.style.cursor = 'pointer';
+  toast.title = 'Click to dismiss';
   toast.innerHTML = `<span>${message}</span>`;
-  dom.toastContainer.appendChild(toast);
-  setTimeout(() => {
+  toast.addEventListener('click', () => {
     toast.style.opacity = '0';
-    toast.style.transition = 'opacity 0.3s ease';
-    setTimeout(() => toast.remove(), 300);
-  }, 3200);
+    setTimeout(() => toast.remove(), 250);
+  });
+  dom.toastContainer.appendChild(toast);
+  const duration = type === 'error' ? 7000 : 3500;
+  setTimeout(() => {
+    if (toast.parentNode) {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s ease';
+      setTimeout(() => toast.remove(), 300);
+    }
+  }, duration);
 }
 
 // -------------------------------------------------------------
@@ -1275,7 +1284,12 @@ function updateExportPngPreview() {
 }
 
 async function exportPng(customOptions = {}) {
+  const origBtnText = dom.btnConfirmSavePng ? dom.btnConfirmSavePng.textContent : '';
   try {
+    if (dom.btnConfirmSavePng) {
+      dom.btnConfirmSavePng.disabled = true;
+      dom.btnConfirmSavePng.textContent = '⏳ Saving PNG...';
+    }
     let scale = customOptions.scale || 1;
     let showGrid = customOptions.showGrid !== undefined ? customOptions.showGrid : true;
     let showRoomNames = customOptions.showRoomNames !== undefined ? customOptions.showRoomNames : true;
@@ -1325,6 +1339,11 @@ async function exportPng(customOptions = {}) {
   } catch (err) {
     showToast(`Export PNG error: ${err.message}`, 'error');
     return { success: false, error: err.message };
+  } finally {
+    if (dom.btnConfirmSavePng) {
+      dom.btnConfirmSavePng.disabled = false;
+      dom.btnConfirmSavePng.textContent = origBtnText || '💾 Save PNG File...';
+    }
   }
 }
 
@@ -1795,7 +1814,12 @@ function generateQuestPdfHtml(quest, blockmap, mapDataUrl, options = {}) {
 }
 
 async function exportPdf(customOptions = {}) {
+  const origBtnText = dom.btnConfirmSavePdf ? dom.btnConfirmSavePdf.textContent : '';
   try {
+    if (dom.btnConfirmSavePdf) {
+      dom.btnConfirmSavePdf.disabled = true;
+      dom.btnConfirmSavePdf.textContent = '⏳ Preparing PDF...';
+    }
     let orientation = customOptions.orientation || 'landscape';
     if (!customOptions.orientation && dom.radioExportPdfOrientation) {
       for (const radio of dom.radioExportPdfOrientation) {
@@ -1857,6 +1881,11 @@ async function exportPdf(customOptions = {}) {
   } catch (err) {
     showToast(`Export PDF error: ${err.message}`, 'error');
     return { success: false, error: err.message };
+  } finally {
+    if (dom.btnConfirmSavePdf) {
+      dom.btnConfirmSavePdf.disabled = false;
+      dom.btnConfirmSavePdf.textContent = origBtnText || '💾 Save PDF Document...';
+    }
   }
 }
 
