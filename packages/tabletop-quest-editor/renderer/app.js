@@ -238,6 +238,8 @@ const dom = (typeof document !== 'undefined') ? {
   btnOpenBlockmap: document.getElementById('btn-open-blockmap'),
   btnOpenCartridge: document.getElementById('btn-open-cartridge'),
   btnSaveCartridge: document.getElementById('btn-save-cartridge'),
+  btnExportPng: document.getElementById('btn-export-png'),
+  btnExportPdf: document.getElementById('btn-export-pdf'),
   btnExportJson: document.getElementById('btn-export-json'),
   btnCopyJson: document.getElementById('btn-copy-json'),
   btnTestPlay: document.getElementById('btn-test-play'),
@@ -401,6 +403,32 @@ const dom = (typeof document !== 'undefined') ? {
 
   // Voice Dictation Controls
   btnVoiceAddItems: document.getElementById('btn-voice-add-items'),
+
+  // Export Modals (PNG / PDF)
+  exportPngModal: document.getElementById('export-png-modal'),
+  btnCloseExportPngModal: document.getElementById('btn-close-export-png-modal'),
+  btnCancelExportPng: document.getElementById('btn-cancel-export-png'),
+  btnConfirmSavePng: document.getElementById('btn-confirm-save-png'),
+  btnCopyPngClipboard: document.getElementById('btn-copy-png-clipboard'),
+  exportPngPreview: document.getElementById('export-png-preview'),
+  exportPngDimensionsBadge: document.getElementById('export-png-dimensions-badge'),
+  chkExportGrid: document.getElementById('chk-export-grid'),
+  chkExportNames: document.getElementById('chk-export-names'),
+  chkExportArtwork: document.getElementById('chk-export-artwork'),
+  chkExportBanner: document.getElementById('chk-export-banner'),
+  radioExportPngScale: document.querySelectorAll('input[name="export-png-scale"]'),
+
+  exportPdfModal: document.getElementById('export-pdf-modal'),
+  btnCloseExportPdfModal: document.getElementById('btn-close-export-pdf-modal'),
+  btnCancelExportPdf: document.getElementById('btn-cancel-export-pdf'),
+  btnConfirmSavePdf: document.getElementById('btn-confirm-save-pdf'),
+  selectPdfPageSize: document.getElementById('select-pdf-page-size'),
+  chkPdfHeader: document.getElementById('chk-pdf-header'),
+  chkPdfMap: document.getElementById('chk-pdf-map'),
+  chkPdfNotes: document.getElementById('chk-pdf-notes'),
+  chkPdfRoster: document.getElementById('chk-pdf-roster'),
+  chkPdfFurniture: document.getElementById('chk-pdf-furniture'),
+  radioExportPdfOrientation: document.querySelectorAll('input[name="export-pdf-orientation"]'),
 
   // Toast Container
   toastContainer: document.getElementById('toast-container')
@@ -1089,6 +1117,749 @@ async function copyJson() {
   }
 }
 
+// -------------------------------------------------------------
+// Quest Map PNG & PDF Export Engine
+// -------------------------------------------------------------
+function generateExportCanvas(options = {}) {
+  const scale = Number(options.scale) || 1;
+  const showBanner = Boolean(options.showBanner);
+  const showArtwork = options.showArtwork !== undefined ? Boolean(options.showArtwork) : true;
+  const showGrid = options.showGrid !== undefined ? Boolean(options.showGrid) : true;
+  const showRoomNames = options.showRoomNames !== undefined ? Boolean(options.showRoomNames) : true;
+  const quest = options.quest || state.quest || {};
+  const blockmap = options.blockmap || state.blockmap || {};
+  const bgImg = options.bgImage !== undefined ? options.bgImage : state.bgImage;
+
+  const geom = getGridGeometry();
+  const maxC = geom.hasAdditionalBorder ? geom.cols + 1 : geom.cols;
+  const maxR = geom.hasAdditionalBorder ? geom.rows + 1 : geom.rows;
+
+  let baseWidth = geom.offsetX + maxC * geom.tileSize + 20;
+  let baseHeight = geom.offsetY + maxR * geom.tileSize + 20;
+
+  if (bgImg && bgImg.width && bgImg.height && showArtwork) {
+    baseWidth = Math.max(baseWidth, bgImg.width);
+    baseHeight = Math.max(baseHeight, bgImg.height);
+  }
+
+  const bannerHeight = showBanner ? 56 : 0;
+  const canvasW = Math.round(baseWidth * scale);
+  const canvasH = Math.round((baseHeight + bannerHeight) * scale);
+
+  let canvas;
+  if (typeof document !== 'undefined' && document.createElement) {
+    canvas = document.createElement('canvas');
+  } else {
+    // Mock canvas for headless test runner
+    canvas = {
+      width: canvasW,
+      height: canvasH,
+      getContext: () => ({
+        save: () => {},
+        restore: () => {},
+        fillRect: () => {},
+        strokeRect: () => {},
+        beginPath: () => {},
+        moveTo: () => {},
+        lineTo: () => {},
+        stroke: () => {},
+        fill: () => {},
+        fillText: () => {},
+        translate: () => {},
+        scale: () => {},
+        drawImage: () => {}
+      }),
+      toDataURL: () => 'data:image/png;base64,mockPngData'
+    };
+    return canvas;
+  }
+
+  canvas.width = canvasW;
+  canvas.height = canvasH;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+
+  // Background fill (deep dungeon navy)
+  ctx.fillStyle = '#070b14';
+  ctx.fillRect(0, 0, canvasW, canvasH);
+
+  // Optional Title Banner
+  if (showBanner) {
+    ctx.save();
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, canvasW, Math.round(bannerHeight * scale));
+    ctx.strokeStyle = '#00bcd4';
+    ctx.lineWidth = Math.max(1.5, Math.round(2 * scale));
+    ctx.beginPath();
+    ctx.moveTo(0, Math.round(bannerHeight * scale));
+    ctx.lineTo(canvasW, Math.round(bannerHeight * scale));
+    ctx.stroke();
+
+    // Quest Title
+    ctx.font = `bold ${Math.round(20 * scale)}px Cinzel, serif, Georgia, sans-serif`;
+    ctx.fillStyle = '#f8fafc';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    const title = quest.title || 'Tabletop Quest Map';
+    ctx.fillText(title, Math.round(24 * scale), Math.round((bannerHeight / 2) * scale));
+
+    // Right subtitle info
+    ctx.font = `500 ${Math.round(11 * scale)}px system-ui, -apple-system, sans-serif`;
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'right';
+    const subText = `${geom.cols}×${geom.rows} Grid • Generated by RobOS Tabletop Quest Editor`;
+    ctx.fillText(subText, canvasW - Math.round(24 * scale), Math.round((bannerHeight / 2) * scale));
+    ctx.restore();
+  }
+
+  // Draw Map Board Layers
+  ctx.save();
+  if (showBanner) {
+    ctx.translate(0, Math.round(bannerHeight * scale));
+  }
+  ctx.scale(scale, scale);
+
+  drawBoardLayers(ctx, geom, {
+    forExport: true,
+    showImage: showArtwork,
+    showGrid: showGrid,
+    showRoomNames: showRoomNames,
+    showCorridors: options.showCorridors !== undefined ? options.showCorridors : true,
+    showRooms: options.showRooms !== undefined ? options.showRooms : true,
+    showWallBlocks: options.showWallBlocks !== undefined ? options.showWallBlocks : true,
+    showTraps: options.showTraps !== undefined ? options.showTraps : true,
+    showFurniture: options.showFurniture !== undefined ? options.showFurniture : true,
+    showDoors: options.showDoors !== undefined ? options.showDoors : true,
+    showMonsters: options.showMonsters !== undefined ? options.showMonsters : true,
+    showNotes: options.showNotes !== undefined ? options.showNotes : true
+  });
+
+  ctx.restore();
+  return canvas;
+}
+
+function openExportPngModal() {
+  if (!dom.exportPngModal) return;
+  dom.exportPngModal.style.display = 'flex';
+  updateExportPngPreview();
+}
+
+function closeExportPngModal() {
+  if (!dom.exportPngModal) return;
+  dom.exportPngModal.style.display = 'none';
+}
+
+function updateExportPngPreview() {
+  if (!dom.exportPngModal) return;
+  let scale = 1;
+  if (dom.radioExportPngScale) {
+    for (const radio of dom.radioExportPngScale) {
+      if (radio.checked) {
+        scale = parseInt(radio.value, 10) || 1;
+        break;
+      }
+    }
+  }
+  const showGrid = dom.chkExportGrid ? dom.chkExportGrid.checked : true;
+  const showRoomNames = dom.chkExportNames ? dom.chkExportNames.checked : true;
+  const showArtwork = dom.chkExportArtwork ? dom.chkExportArtwork.checked : true;
+  const showBanner = dom.chkExportBanner ? dom.chkExportBanner.checked : false;
+
+  const canvas = generateExportCanvas({ scale, showGrid, showRoomNames, showArtwork, showBanner });
+  if (dom.exportPngPreview && canvas.toDataURL) {
+    dom.exportPngPreview.src = canvas.toDataURL('image/png');
+  }
+  if (dom.exportPngDimensionsBadge) {
+    dom.exportPngDimensionsBadge.textContent = `${canvas.width} × ${canvas.height} px (${scale}×)`;
+  }
+}
+
+async function exportPng(customOptions = {}) {
+  try {
+    let scale = customOptions.scale || 1;
+    let showGrid = customOptions.showGrid !== undefined ? customOptions.showGrid : true;
+    let showRoomNames = customOptions.showRoomNames !== undefined ? customOptions.showRoomNames : true;
+    let showArtwork = customOptions.showArtwork !== undefined ? customOptions.showArtwork : true;
+    let showBanner = customOptions.showBanner !== undefined ? customOptions.showBanner : false;
+
+    if (!customOptions.scale && dom.radioExportPngScale) {
+      for (const radio of dom.radioExportPngScale) {
+        if (radio.checked) {
+          scale = parseInt(radio.value, 10) || 1;
+          break;
+        }
+      }
+    }
+    if (customOptions.showGrid === undefined && dom.chkExportGrid) {
+      showGrid = dom.chkExportGrid.checked;
+    }
+    if (customOptions.showRoomNames === undefined && dom.chkExportNames) {
+      showRoomNames = dom.chkExportNames.checked;
+    }
+    if (customOptions.showArtwork === undefined && dom.chkExportArtwork) {
+      showArtwork = dom.chkExportArtwork.checked;
+    }
+    if (customOptions.showBanner === undefined && dom.chkExportBanner) {
+      showBanner = dom.chkExportBanner.checked;
+    }
+
+    const canvas = generateExportCanvas({ scale, showGrid, showRoomNames, showArtwork, showBanner });
+    const dataUrl = canvas.toDataURL ? canvas.toDataURL('image/png') : '';
+
+    if (!window.robosQuestEditor || !window.robosQuestEditor.savePng) {
+      closeExportPngModal();
+      return { success: true, dataUrl, width: canvas.width, height: canvas.height };
+    }
+
+    const defaultName = `${state.quest.slug || 'tabletop-quest'}-map-${scale}x.png`;
+    const res = await window.robosQuestEditor.savePng({ dataUrl, defaultName });
+    if (res && res.success) {
+      showToast(`Exported PNG map: ${res.fileName}`, 'success');
+      closeExportPngModal();
+    } else if (res && res.canceled) {
+      // User canceled save dialog
+    } else if (res && res.error) {
+      showToast(`Export PNG failed: ${res.error}`, 'error');
+    }
+    return res;
+  } catch (err) {
+    showToast(`Export PNG error: ${err.message}`, 'error');
+    return { success: false, error: err.message };
+  }
+}
+
+async function copyPngToClipboard(customOptions = {}) {
+  try {
+    let scale = customOptions.scale || 1;
+    if (!customOptions.scale && dom.radioExportPngScale) {
+      for (const radio of dom.radioExportPngScale) {
+        if (radio.checked) {
+          scale = parseInt(radio.value, 10) || 1;
+          break;
+        }
+      }
+    }
+    const showGrid = customOptions.showGrid !== undefined ? customOptions.showGrid : (dom.chkExportGrid ? dom.chkExportGrid.checked : true);
+    const showRoomNames = customOptions.showRoomNames !== undefined ? customOptions.showRoomNames : (dom.chkExportNames ? dom.chkExportNames.checked : true);
+    const showArtwork = customOptions.showArtwork !== undefined ? customOptions.showArtwork : (dom.chkExportArtwork ? dom.chkExportArtwork.checked : true);
+    const showBanner = customOptions.showBanner !== undefined ? customOptions.showBanner : (dom.chkExportBanner ? dom.chkExportBanner.checked : false);
+
+    const canvas = generateExportCanvas({ scale, showGrid, showRoomNames, showArtwork, showBanner });
+    const dataUrl = canvas.toDataURL ? canvas.toDataURL('image/png') : '';
+
+    if (window.robosQuestEditor && window.robosQuestEditor.copyImageToClipboard) {
+      const res = await window.robosQuestEditor.copyImageToClipboard(dataUrl);
+      if (res && res.success) {
+        showToast('Copied high-res map image to clipboard!', 'success');
+        closeExportPngModal();
+      } else {
+        showToast(`Failed to copy image: ${res?.error || 'Unknown error'}`, 'error');
+      }
+      return res;
+    } else {
+      showToast('Clipboard copy not available in this environment', 'info');
+      closeExportPngModal();
+      return { success: false };
+    }
+  } catch (err) {
+    showToast(`Clipboard error: ${err.message}`, 'error');
+    return { success: false, error: err.message };
+  }
+}
+
+function openExportPdfModal() {
+  if (!dom.exportPdfModal) return;
+  dom.exportPdfModal.style.display = 'flex';
+}
+
+function closeExportPdfModal() {
+  if (!dom.exportPdfModal) return;
+  dom.exportPdfModal.style.display = 'none';
+}
+
+function generateQuestPdfHtml(quest, blockmap, mapDataUrl, options = {}) {
+  quest = quest || state.quest || {};
+  blockmap = blockmap || state.blockmap || {};
+  const orientation = options.orientation === 'portrait' ? 'portrait' : 'landscape';
+  const pageSize = options.pageSize === 'Letter' ? 'letter' : 'a4';
+  const includeHeader = options.includeHeader !== false;
+  const includeMap = options.includeMap !== false && !!mapDataUrl;
+  const includeNotes = options.includeNotes !== false;
+  const includeRoster = options.includeRoster !== false;
+  const includeFurniture = options.includeFurniture !== false;
+
+  // Aggregate monsters
+  const monsters = quest.monsters || [];
+  const monsterCounts = {};
+  monsters.forEach(m => {
+    const type = m.type || 'goblin';
+    if (!monsterCounts[type]) {
+      const def = MONSTER_DEFS[type] || { name: type, move: 6, attack: 2, defend: 2, body: 1, mind: 1, icon: '👾' };
+      monsterCounts[type] = {
+        name: def.name || type,
+        icon: def.icon || '👾',
+        count: 0,
+        move: def.move || 6,
+        attack: def.attack || 2,
+        defend: def.defend || 2,
+        body: def.body || 1,
+        mind: def.mind || 1,
+        bossCount: 0
+      };
+    }
+    monsterCounts[type].count++;
+    if (m.isBoss) monsterCounts[type].bossCount++;
+  });
+
+  // Aggregate furniture
+  const furniture = quest.furniture || [];
+  const furnCounts = {};
+  furniture.forEach(f => {
+    const type = f.type || 'chest';
+    const def = FURNITURE_DEFS[type] || { name: type, icon: '🪑' };
+    if (!furnCounts[type]) {
+      furnCounts[type] = { name: def.name || type, icon: def.icon || '🪑', count: 0 };
+    }
+    furnCounts[type].count++;
+  });
+
+  // Aggregate traps
+  const traps = quest.traps || [];
+  const trapCounts = {};
+  traps.forEach(t => {
+    const type = t.type || 'pit';
+    trapCounts[type] = (trapCounts[type] || 0) + 1;
+  });
+
+  // Story triggers / notes
+  const notes = (quest.storyTriggers || []).slice().sort((a, b) => {
+    const mA = (a.marker || 'A').replace(/[^a-zA-Z0-9]/g, '');
+    const mB = (b.marker || 'B').replace(/[^a-zA-Z0-9]/g, '');
+    return mA.localeCompare(mB, undefined, { numeric: true, sensitivity: 'base' });
+  });
+
+  const title = quest.title || 'Tabletop Quest Map';
+  const briefing = quest.briefing || '';
+  const wanderingMonster = quest.wanderingMonster ? (MONSTER_DEFS[quest.wanderingMonster]?.name || quest.wanderingMonster) : 'None';
+  const goldBounty = quest.goldBounty !== undefined ? quest.goldBounty : 0;
+  const startLoc = quest.startingStair ? `[${quest.startingStair[0]}, ${quest.startingStair[1]}]` : 'Not set';
+  const exitLoc = quest.exitTile ? `[${quest.exitTile[0]}, ${quest.exitTile[1]}]` : (quest.startingStair ? `${startLoc} (Return to Entrance)` : 'None');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>${escapeHtml(title)}</title>
+<style>
+  @page {
+    size: ${pageSize} ${orientation};
+    margin: 10mm 12mm 10mm 12mm;
+  }
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #1e293b;
+    background: #ffffff;
+    margin: 0;
+    padding: 0;
+    line-height: 1.35;
+    font-size: 9.5pt;
+  }
+  .quest-sheet {
+    width: 100%;
+    margin: 0 auto;
+  }
+  .quest-header {
+    border-bottom: 2.5px solid #0f172a;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .quest-title-block h1 {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 20pt;
+    margin: 0 0 2px 0;
+    color: #0f172a;
+    letter-spacing: 0.5px;
+  }
+  .quest-subtitle {
+    font-size: 8.5pt;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+  }
+  .quest-meta-pills {
+    display: flex;
+    gap: 8px;
+    font-size: 8pt;
+  }
+  .meta-pill {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 3px 8px;
+    color: #334155;
+  }
+  .meta-pill strong {
+    color: #0f172a;
+  }
+  .story-briefing {
+    background: #f8fafc;
+    border-left: 3.5px solid #0284c7;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    font-style: italic;
+    color: #334155;
+    font-size: 9pt;
+    line-height: 1.4;
+  }
+  .story-briefing-title {
+    font-family: 'Cinzel', Georgia, serif;
+    font-weight: 700;
+    font-style: normal;
+    color: #0369a1;
+    margin-bottom: 3px;
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .map-container {
+    text-align: center;
+    margin-bottom: 10px;
+    page-break-inside: avoid;
+  }
+  .map-container img {
+    max-width: 100%;
+    max-height: ${orientation === 'landscape' ? '125mm' : '155mm'};
+    object-fit: contain;
+    border: 1.5px solid #334155;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  }
+  .details-columns {
+    display: grid;
+    grid-template-columns: ${orientation === 'landscape' ? '1.15fr 0.85fr' : '1fr'};
+    gap: 12px;
+    page-break-inside: avoid;
+  }
+  .section-card {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    page-break-inside: avoid;
+  }
+  .section-heading {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: #0f172a;
+    border-bottom: 1.5px solid #e2e8f0;
+    padding-bottom: 3px;
+    margin-top: 0;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .notes-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .note-entry {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    font-size: 8.5pt;
+    background: #f8fafc;
+    padding: 5px 8px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+  }
+  .note-disc {
+    background: #0f172a;
+    color: #ffffff;
+    font-weight: 700;
+    font-family: monospace;
+    font-size: 8pt;
+    min-width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .note-body {
+    flex: 1;
+  }
+  .note-head {
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 2px;
+  }
+  .note-desc {
+    color: #475569;
+    font-size: 8pt;
+    line-height: 1.35;
+  }
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8pt;
+  }
+  table.data-table th {
+    background: #f1f5f9;
+    color: #334155;
+    font-weight: 700;
+    text-align: center;
+    padding: 3px 5px;
+    border-bottom: 1.5px solid #cbd5e1;
+  }
+  table.data-table td {
+    padding: 3px 5px;
+    border-bottom: 1px solid #f1f5f9;
+    text-align: center;
+    color: #1e293b;
+  }
+  table.data-table td.text-left {
+    text-align: left;
+  }
+  .boss-badge {
+    background: #e11d48;
+    color: #ffffff;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 6.5pt;
+    font-weight: 700;
+    margin-left: 4px;
+  }
+  .pill-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 7.5pt;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+  .footer-line {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 4px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 7pt;
+    color: #94a3b8;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="quest-sheet">
+  ${includeHeader ? `
+  <div class="quest-header">
+    <div class="quest-title-block">
+      <h1>${escapeHtml(title)}</h1>
+      <div class="quest-subtitle">Tabletop RPG Adventure Module • RobOS Quest Platform</div>
+    </div>
+    <div class="quest-meta-pills">
+      <div class="meta-pill"><strong>Wandering:</strong> ${escapeHtml(wanderingMonster)}</div>
+      <div class="meta-pill"><strong>Bounty:</strong> ${goldBounty} Gold</div>
+      <div class="meta-pill"><strong>Entrance:</strong> ${startLoc}</div>
+      <div class="meta-pill"><strong>Exit:</strong> ${exitLoc}</div>
+    </div>
+  </div>
+  ${briefing ? `
+  <div class="story-briefing">
+    <div class="story-briefing-title">📜 The Quest Briefing</div>
+    ${escapeHtml(briefing).replace(/\n/g, '<br>')}
+  </div>` : ''}
+  ` : ''}
+
+  ${includeMap ? `
+  <div class="map-container">
+    <img src="${mapDataUrl}" alt="${escapeHtml(title)} Dungeon Map" />
+  </div>
+  ` : ''}
+
+  <div class="details-columns">
+    ${includeNotes ? `
+    <div class="section-card">
+      <div class="section-heading">
+        <span>📜 Quest Notes &amp; Story Triggers</span>
+        <span style="font-size:8pt; font-weight:normal; color:#64748b;">${notes.length} Triggers</span>
+      </div>
+      ${notes.length > 0 ? `
+      <div class="notes-flow">
+        ${notes.map(st => {
+          const mark = (st.marker || 'A').replace('Note ', '');
+          const eventLabel = TRIGGER_EVENT_DEFS[st.event]?.name || st.event;
+          const targetStr = st.target || st.room || (st.tile ? `Tile [${st.tile[0]}, ${st.tile[1]}]` : '');
+          const noteTitle = st.title || st.name || '';
+          return `
+          <div class="note-entry">
+            <div class="note-disc">${escapeHtml(mark)}</div>
+            <div class="note-body">
+              <div class="note-head">Note ${escapeHtml(mark)}${noteTitle ? ': ' + escapeHtml(noteTitle) : ''} <span style="font-weight:normal; color:#64748b;">(${escapeHtml(eventLabel)}${targetStr ? ': ' + escapeHtml(targetStr) : ''})</span></div>
+              ${st.narrative ? `<div class="note-desc">${escapeHtml(st.narrative)}</div>` : ''}
+              ${(st.actions && st.actions.length > 0) ? `
+                <div style="margin-top:2px; font-size:7.5pt; color:#0369a1;">
+                  ${st.actions.map(a => `• ${escapeHtml(a.type)}${a.title ? ': ' + escapeHtml(a.title) : ''}`).join(' ')}
+                </div>
+              ` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>` : '<div style="color:#94a3b8; font-style:italic;">No custom story triggers placed in this quest.</div>'}
+    </div>
+    ` : ''}
+
+    <div>
+      ${includeRoster ? `
+      <div class="section-card">
+        <div class="section-heading">
+          <span>👾 Monster Roster &amp; Statistics</span>
+          <span style="font-size:8pt; font-weight:normal; color:#64748b;">${monsters.length} Total</span>
+        </div>
+        ${Object.keys(monsterCounts).length > 0 ? `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="text-left">Monster</th>
+              <th>Qty</th>
+              <th>Move</th>
+              <th>Attack</th>
+              <th>Defend</th>
+              <th>Body</th>
+              <th>Mind</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${Object.values(monsterCounts).map(mc => `
+            <tr>
+              <td class="text-left">${mc.icon} <strong>${escapeHtml(mc.name)}</strong>${mc.bossCount > 0 ? ` <span class="boss-badge">BOSS ×${mc.bossCount}</span>` : ''}</td>
+              <td><strong>${mc.count}</strong></td>
+              <td>${mc.move}</td>
+              <td>${mc.attack}⚔️</td>
+              <td>${mc.defend}🛡️</td>
+              <td>${mc.body}❤️</td>
+              <td>${mc.mind}🧠</td>
+            </tr>
+            `).join('')}
+          </tbody>
+        </table>` : '<div style="color:#94a3b8; font-style:italic;">No monsters placed.</div>'}
+      </div>
+      ` : ''}
+
+      ${includeFurniture ? `
+      <div class="section-card">
+        <div class="section-heading">
+          <span>🪑 Furniture &amp; Dungeon Features</span>
+          <span style="font-size:8pt; font-weight:normal; color:#64748b;">${furniture.length} Pieces • ${traps.length} Traps</span>
+        </div>
+        <div style="margin-bottom:6px;">
+          ${Object.values(furnCounts).map(fc => `
+            <span class="pill-tag">${fc.icon} ${escapeHtml(fc.name)}: <strong>${fc.count}</strong></span>
+          `).join('')}
+          ${Object.keys(furnCounts).length === 0 ? '<span style="color:#94a3b8; font-style:italic;">No furniture. </span>' : ''}
+        </div>
+        ${Object.keys(trapCounts).length > 0 ? `
+        <div style="font-size:8pt; color:#b91c1c; border-top:1px dashed #e2e8f0; padding-top:4px;">
+          ⚠️ <strong>Traps:</strong> ${Object.entries(trapCounts).map(([k, v]) => `${k.replace('_', ' ')} (${v})`).join(', ')}
+        </div>` : ''}
+      </div>
+      ` : ''}
+    </div>
+  </div>
+
+  <div class="footer-line">
+    <span>RobOS Tabletop Quest Map Editor</span>
+    <span>Generated: ${new Date().toLocaleDateString()}</span>
+  </div>
+</div>
+</body>
+</html>`;
+}
+
+async function exportPdf(customOptions = {}) {
+  try {
+    let orientation = customOptions.orientation || 'landscape';
+    if (!customOptions.orientation && dom.radioExportPdfOrientation) {
+      for (const radio of dom.radioExportPdfOrientation) {
+        if (radio.checked) {
+          orientation = radio.value;
+          break;
+        }
+      }
+    }
+    const pageSize = customOptions.pageSize || (dom.selectPdfPageSize ? dom.selectPdfPageSize.value : 'A4');
+    const includeHeader = customOptions.includeHeader !== undefined ? customOptions.includeHeader : (dom.chkPdfHeader ? dom.chkPdfHeader.checked : true);
+    const includeMap = customOptions.includeMap !== undefined ? customOptions.includeMap : (dom.chkPdfMap ? dom.chkPdfMap.checked : true);
+    const includeNotes = customOptions.includeNotes !== undefined ? customOptions.includeNotes : (dom.chkPdfNotes ? dom.chkPdfNotes.checked : true);
+    const includeRoster = customOptions.includeRoster !== undefined ? customOptions.includeRoster : (dom.chkPdfRoster ? dom.chkPdfRoster.checked : true);
+    const includeFurniture = customOptions.includeFurniture !== undefined ? customOptions.includeFurniture : (dom.chkPdfFurniture ? dom.chkPdfFurniture.checked : true);
+
+    // Generate crisp 2x map for print
+    const mapCanvas = generateExportCanvas({
+      scale: 2,
+      showBanner: false,
+      showArtwork: true,
+      showGrid: true,
+      showRoomNames: true
+    });
+    const mapDataUrl = mapCanvas.toDataURL ? mapCanvas.toDataURL('image/png') : '';
+
+    const html = generateQuestPdfHtml(state.quest, state.blockmap, mapDataUrl, {
+      orientation,
+      pageSize,
+      includeHeader,
+      includeMap,
+      includeNotes,
+      includeRoster,
+      includeFurniture
+    });
+
+    if (!window.robosQuestEditor || !window.robosQuestEditor.exportPdf) {
+      closeExportPdfModal();
+      return { success: true, html };
+    }
+
+    const defaultName = `${state.quest.slug || 'tabletop-quest'}-quest-sheet.pdf`;
+    const res = await window.robosQuestEditor.exportPdf({
+      html,
+      orientation,
+      pageSize,
+      defaultName
+    });
+
+    if (res && res.success) {
+      showToast(`Exported PDF Quest Sheet: ${res.fileName}`, 'success');
+      closeExportPdfModal();
+    } else if (res && res.canceled) {
+      // User canceled file dialog
+    } else if (res && res.error) {
+      showToast(`Export PDF failed: ${res.error}`, 'error');
+    }
+    return res;
+  } catch (err) {
+    showToast(`Export PDF error: ${err.message}`, 'error');
+    return { success: false, error: err.message };
+  }
+}
+
 async function testPlay() {
   try {
     if (!window.robosQuestEditor) return;
@@ -1224,16 +1995,16 @@ function worldToTile(wx, wy, clampToBorder = false) {
   return [col, row];
 }
 
-function tileToWorld(col, row) {
-  const geom = getGridGeometry();
+function tileToWorld(col, row, geomOverride) {
+  const geom = geomOverride || getGridGeometry();
   return {
     x: geom.offsetX + col * geom.tileSize,
     y: geom.offsetY + row * geom.tileSize
   };
 }
 
-function isBorderTile(col, row) {
-  const geom = getGridGeometry();
+function isBorderTile(col, row, geomOverride) {
+  const geom = geomOverride || getGridGeometry();
   if (geom.hasAdditionalBorder) {
     return col === -1 || col === geom.cols || row === -1 || row === geom.rows;
   }
@@ -1324,6 +2095,33 @@ function render() {
   ctx.translate(state.panX, state.panY);
   ctx.scale(state.zoom, state.zoom);
 
+  drawBoardLayers(ctx, geom, { forExport: false });
+
+  // 11.6. Validation Warnings Overlay
+  if (state.layers.showValidationWarnings && state.validation && state.validation.errors && state.validation.errors.length > 0) {
+    renderValidationCanvasOverlays(ctx, geom);
+  }
+
+  // 12. Hover & Placement Ghost Preview
+  renderToolPreview(ctx, geom);
+
+  ctx.restore();
+}
+
+function drawBoardLayers(ctx, geom, options = {}) {
+  const forExport = !!options.forExport;
+  const showGrid = options.showGrid !== undefined ? options.showGrid : state.layers.showGrid;
+  const showRoomNames = options.showRoomNames !== undefined ? options.showRoomNames : state.layers.showRoomNames;
+  const showImage = options.showImage !== undefined ? options.showImage : state.layers.showImage;
+  const showCorridors = options.showCorridors !== undefined ? options.showCorridors : state.layers.showCorridors;
+  const showRooms = options.showRooms !== undefined ? options.showRooms : state.layers.showRooms;
+  const showWallBlocks = options.showWallBlocks !== undefined ? options.showWallBlocks : state.layers.showWallBlocks;
+  const showTraps = options.showTraps !== undefined ? options.showTraps : state.layers.showTraps;
+  const showFurniture = options.showFurniture !== undefined ? options.showFurniture : state.layers.showFurniture;
+  const showDoors = options.showDoors !== undefined ? options.showDoors : state.layers.showDoors;
+  const showMonsters = options.showMonsters !== undefined ? options.showMonsters : state.layers.showMonsters;
+  const showNotes = options.showNotes !== undefined ? options.showNotes : state.layers.showNotes;
+
   // 0. Additional Black Border Tiles (Border Option)
   if (geom.hasAdditionalBorder) {
     ctx.save();
@@ -1353,7 +2151,7 @@ function render() {
   }
 
   // 1. Board Background Artwork (Layer 1)
-  if (state.layers.showImage && state.bgImage) {
+  if (showImage && state.bgImage) {
     ctx.save();
     ctx.globalAlpha = state.layers.artOpacity;
     ctx.drawImage(state.bgImage, 0, 0);
@@ -1361,7 +2159,7 @@ function render() {
   }
 
   // 2. Corridors Underlay (Layer 1)
-  if (state.layers.showCorridors && state.blockmap?.corridors) {
+  if (showCorridors && state.blockmap?.corridors) {
     ctx.save();
     ctx.fillStyle = 'rgba(56, 189, 248, 0.16)'; // Soft Sky Blue tint
     ctx.strokeStyle = 'rgba(56, 189, 248, 0.28)'; // Subtle corridor tile edge
@@ -1375,7 +2173,7 @@ function render() {
   }
 
   // 3. Rooms Underlay (Layer 1)
-  if (state.layers.showRooms && state.blockmap?.rooms) {
+  if (showRooms && state.blockmap?.rooms) {
     ctx.save();
     for (const room of state.blockmap.rooms) {
       const roomColor = room.color;
@@ -1419,7 +2217,7 @@ function render() {
   }
 
   // 4. Grid Lines (Layer 1)
-  if (state.layers.showGrid) {
+  if (showGrid) {
     ctx.save();
     ctx.globalAlpha = state.layers.gridOpacity;
     ctx.strokeStyle = '#223249';
@@ -1453,9 +2251,9 @@ function render() {
   }
 
   // 5. Wall Blocks (Layer 2)
-  if (state.layers.showWallBlocks && state.quest.wallBlocks) {
+  if (showWallBlocks && state.quest.wallBlocks) {
     state.quest.wallBlocks.forEach((wb, i) => {
-      const pos = tileToWorld(wb.x, wb.y);
+      const pos = tileToWorld(wb.x, wb.y, geom);
       const bw = (wb.width || 1) * geom.tileSize;
       const bh = (wb.height || 1) * geom.tileSize;
       const blockImg = state.assetCache['wall_block'];
@@ -1477,16 +2275,16 @@ function render() {
         ctx.stroke();
       }
 
-      if (state.selectedEntity && state.selectedEntity.type === 'wall-block' && state.selectedEntity.index === i) {
-        drawSelectionGlow(pos.x, pos.y, bw, bh);
+      if (!forExport && state.selectedEntity && state.selectedEntity.type === 'wall-block' && state.selectedEntity.index === i) {
+        drawSelectionGlow(pos.x, pos.y, bw, bh, ctx);
       }
     });
   }
 
   // 6. Traps (Layer 2)
-  if (state.layers.showTraps && state.quest.traps) {
+  if (showTraps && state.quest.traps) {
     state.quest.traps.forEach((tr, i) => {
-      const pos = tileToWorld(tr.x, tr.y);
+      const pos = tileToWorld(tr.x, tr.y, geom);
       const trapKey = tr.type === 'spear' ? 'trap_spear' : (tr.type === 'falling_rock' ? 'trap_falling_block' : 'trap_pit');
       const trapImg = state.assetCache[trapKey];
 
@@ -1506,16 +2304,16 @@ function render() {
         ctx.fillText('⚠️', pos.x + geom.tileSize / 2, pos.y + geom.tileSize / 2);
       }
 
-      if (state.selectedEntity && state.selectedEntity.type === 'trap' && state.selectedEntity.index === i) {
-        drawSelectionGlow(pos.x, pos.y, geom.tileSize, geom.tileSize);
+      if (!forExport && state.selectedEntity && state.selectedEntity.type === 'trap' && state.selectedEntity.index === i) {
+        drawSelectionGlow(pos.x, pos.y, geom.tileSize, geom.tileSize, ctx);
       }
     });
   }
 
   // 7. Furniture & Map Items (Layer 2)
-  if (state.layers.showFurniture && state.quest.furniture) {
+  if (showFurniture && state.quest.furniture) {
     state.quest.furniture.forEach((f, i) => {
-      const pos = tileToWorld(f.x, f.y);
+      const pos = tileToWorld(f.x, f.y, geom);
       const fw = (f.width || 1) * geom.tileSize;
       const fh = (f.height || 1) * geom.tileSize;
       let furnImg = state.assetCache[f.type];
@@ -1552,8 +2350,8 @@ function render() {
         ctx.restore();
       }
 
-      if (state.selectedEntity && state.selectedEntity.type === 'furniture' && state.selectedEntity.index === i) {
-        drawSelectionGlow(pos.x, pos.y, fw, fh);
+      if (!forExport && state.selectedEntity && state.selectedEntity.type === 'furniture' && state.selectedEntity.index === i) {
+        drawSelectionGlow(pos.x, pos.y, fw, fh, ctx);
       }
     });
   }
@@ -1561,7 +2359,7 @@ function render() {
   // 8. Starting Spiral Stairs & Quest Exit (Layer 2 - drawn over map pieces / stairs)
   if (state.quest.startingStair) {
     const [sc, sr] = state.quest.startingStair;
-    const isBorder = isBorderTile(sc, sr);
+    const isBorder = isBorderTile(sc, sr, geom);
 
     // Check if starting stair is on a placed stairs furniture piece
     const stairFurn = state.quest.furniture.find(f =>
@@ -1570,7 +2368,7 @@ function render() {
       sr >= f.y && sr < f.y + (f.height || 1)
     );
 
-    const spos = stairFurn ? tileToWorld(stairFurn.x, stairFurn.y) : tileToWorld(sc, sr);
+    const spos = stairFurn ? tileToWorld(stairFurn.x, stairFurn.y, geom) : tileToWorld(sc, sr, geom);
     const sw = (stairFurn ? (stairFurn.width || 1) : (state.quest.startingStairType?.includes('2x2') ? 2 : 1)) * geom.tileSize;
     const sh = (stairFurn ? (stairFurn.height || 1) : (state.quest.startingStairType?.includes('2x2') ? 2 : 1)) * geom.tileSize;
 
@@ -1639,15 +2437,15 @@ function render() {
     ctx.fillText('START', spos.x + sw / 2, spos.y + sh - 7.5);
     ctx.restore();
 
-    if (state.selectedEntity && (state.selectedEntity.type === 'start' || state.selectedEntity.type === 'stairs')) {
-      drawSelectionGlow(spos.x, spos.y, sw, sh);
+    if (!forExport && state.selectedEntity && (state.selectedEntity.type === 'start' || state.selectedEntity.type === 'stairs')) {
+      drawSelectionGlow(spos.x, spos.y, sw, sh, ctx);
     }
   }
 
   // 8b. Quest Exit Staircase / Escape Hatch (Layer 2)
   if (state.quest.exitTile) {
     const [ec, er] = state.quest.exitTile;
-    const isBorder = isBorderTile(ec, er);
+    const isBorder = isBorderTile(ec, er, geom);
 
     // Check if exit is on a placed stairs furniture piece
     const stairFurn = state.quest.furniture.find(f =>
@@ -1656,7 +2454,7 @@ function render() {
       er >= f.y && er < f.y + (f.height || 1)
     );
 
-    const epos = stairFurn ? tileToWorld(stairFurn.x, stairFurn.y) : tileToWorld(ec, er);
+    const epos = stairFurn ? tileToWorld(stairFurn.x, stairFurn.y, geom) : tileToWorld(ec, er, geom);
     const ew = (stairFurn ? (stairFurn.width || 1) : (state.quest.exitStairType?.includes('2x2') ? 2 : 1)) * geom.tileSize;
     const eh = (stairFurn ? (stairFurn.height || 1) : (state.quest.exitStairType?.includes('2x2') ? 2 : 1)) * geom.tileSize;
 
@@ -1725,13 +2523,13 @@ function render() {
     ctx.fillText('EXIT', epos.x + ew / 2, epos.y + eh - 7.5);
     ctx.restore();
 
-    if (state.selectedEntity && state.selectedEntity.type === 'exit') {
-      drawSelectionGlow(epos.x, epos.y, ew, eh);
+    if (!forExport && state.selectedEntity && state.selectedEntity.type === 'exit') {
+      drawSelectionGlow(epos.x, epos.y, ew, eh, ctx);
     }
   }
 
   // 9. Doors (Layer 2)
-  if (state.layers.showDoors && state.quest.doors) {
+  if (showDoors && state.quest.doors) {
     state.quest.doors.forEach((d, i) => {
       const isVertical = d.from[0] !== d.to[0];
       const c = isVertical ? Math.max(d.from[0], d.to[0]) : d.from[0];
@@ -2038,18 +2836,18 @@ function render() {
 
       ctx.restore();
 
-      if (state.selectedEntity && state.selectedEntity.type === 'door' && state.selectedEntity.index === i) {
-        drawSelectionGlow(dx - 3, dy - 3, dw + 6, dh + 6);
+      if (!forExport && state.selectedEntity && state.selectedEntity.type === 'door' && state.selectedEntity.index === i) {
+        drawSelectionGlow(dx - 3, dy - 3, dw + 6, dh + 6, ctx);
       }
     });
   }
 
   // 10. Monsters (Layer 2)
-  if (state.layers.showMonsters && state.quest.monsters) {
+  if (showMonsters && state.quest.monsters) {
     state.quest.monsters.forEach((m, i) => {
       const mc = m.pos ? m.pos[0] : (m.x !== undefined ? m.x : 0);
       const mr = m.pos ? m.pos[1] : (m.y !== undefined ? m.y : 0);
-      const pos = tileToWorld(mc, mr);
+      const pos = tileToWorld(mc, mr, geom);
       const tokenKey = `token_${m.type}`;
       const tokenImg = state.assetCache[tokenKey];
       const radius = (geom.tileSize / 2) - 3;
@@ -2083,16 +2881,16 @@ function render() {
         ctx.fillText('👑', cx, cy - radius - 2);
       }
 
-      if (state.selectedEntity && state.selectedEntity.type === 'monster' && state.selectedEntity.index === i) {
-        drawSelectionGlow(pos.x, pos.y, geom.tileSize, geom.tileSize);
+      if (!forExport && state.selectedEntity && state.selectedEntity.type === 'monster' && state.selectedEntity.index === i) {
+        drawSelectionGlow(pos.x, pos.y, geom.tileSize, geom.tileSize, ctx);
       }
     });
   }
 
   // 11. Story Triggers / Notes (Layer 2)
-  if (state.layers.showNotes && state.quest.storyTriggers) {
+  if (showNotes && state.quest.storyTriggers) {
     state.quest.storyTriggers.forEach((st, i) => {
-      const pos = tileToWorld(st.tile[0], st.tile[1]);
+      const pos = tileToWorld(st.tile[0], st.tile[1], geom);
       const cx = pos.x + geom.tileSize / 2;
       const cy = pos.y + geom.tileSize / 2;
 
@@ -2138,14 +2936,14 @@ function render() {
         ctx.fillText('⚔️', cx + 7, cy + 7);
       }
 
-      if (state.selectedEntity && (state.selectedEntity.type === 'note' || state.selectedEntity.type === 'trigger') && state.selectedEntity.index === i) {
-        drawSelectionGlow(pos.x, pos.y, geom.tileSize, geom.tileSize);
+      if (!forExport && state.selectedEntity && (state.selectedEntity.type === 'note' || state.selectedEntity.type === 'trigger') && state.selectedEntity.index === i) {
+        drawSelectionGlow(pos.x, pos.y, geom.tileSize, geom.tileSize, ctx);
       }
     });
   }
 
   // 11.5. Room Names (Layer 2.5 - scrunched height, sits on top of tokens)
-  if (state.layers.showRoomNames && state.blockmap?.rooms) {
+  if (showRoomNames && state.blockmap?.rooms) {
     ctx.save();
     for (const room of state.blockmap.rooms) {
       const text = room.name || room.id;
@@ -2216,20 +3014,11 @@ function render() {
     }
     ctx.restore();
   }
-
-  // 11.6. Validation Warnings Overlay
-  if (state.layers.showValidationWarnings && state.validation && state.validation.errors && state.validation.errors.length > 0) {
-    renderValidationCanvasOverlays(ctx, geom);
-  }
-
-  // 12. Hover & Placement Ghost Preview
-  renderToolPreview(ctx, geom);
-
-  ctx.restore();
 }
 
-function drawSelectionGlow(x, y, w, h) {
-  const ctx = dom.ctx;
+function drawSelectionGlow(x, y, w, h, targetCtx) {
+  const ctx = targetCtx || dom.ctx;
+  if (!ctx) return;
   ctx.save();
   ctx.strokeStyle = '#00bcd4';
   ctx.lineWidth = 2.0;
@@ -5839,9 +6628,56 @@ function setupEventListeners() {
   }
 
   dom.btnSaveCartridge.addEventListener('click', saveCartridge);
+  if (dom.btnExportPng) {
+    dom.btnExportPng.addEventListener('click', openExportPngModal);
+  }
+  if (dom.btnExportPdf) {
+    dom.btnExportPdf.addEventListener('click', openExportPdfModal);
+  }
   dom.btnExportJson.addEventListener('click', exportJson);
   dom.btnCopyJson.addEventListener('click', copyJson);
   dom.btnTestPlay.addEventListener('click', testPlay);
+
+  // Export PNG Modal listeners
+  if (dom.btnCloseExportPngModal) {
+    dom.btnCloseExportPngModal.addEventListener('click', closeExportPngModal);
+  }
+  if (dom.btnCancelExportPng) {
+    dom.btnCancelExportPng.addEventListener('click', closeExportPngModal);
+  }
+  if (dom.btnConfirmSavePng) {
+    dom.btnConfirmSavePng.addEventListener('click', () => exportPng());
+  }
+  if (dom.btnCopyPngClipboard) {
+    dom.btnCopyPngClipboard.addEventListener('click', () => copyPngToClipboard());
+  }
+  if (dom.exportPngModal) {
+    dom.exportPngModal.addEventListener('click', (e) => {
+      if (e.target === dom.exportPngModal) closeExportPngModal();
+    });
+  }
+  if (dom.radioExportPngScale) {
+    dom.radioExportPngScale.forEach(r => r.addEventListener('change', updateExportPngPreview));
+  }
+  [dom.chkExportGrid, dom.chkExportNames, dom.chkExportArtwork, dom.chkExportBanner].forEach(chk => {
+    if (chk) chk.addEventListener('change', updateExportPngPreview);
+  });
+
+  // Export PDF Modal listeners
+  if (dom.btnCloseExportPdfModal) {
+    dom.btnCloseExportPdfModal.addEventListener('click', closeExportPdfModal);
+  }
+  if (dom.btnCancelExportPdf) {
+    dom.btnCancelExportPdf.addEventListener('click', closeExportPdfModal);
+  }
+  if (dom.btnConfirmSavePdf) {
+    dom.btnConfirmSavePdf.addEventListener('click', () => exportPdf());
+  }
+  if (dom.exportPdfModal) {
+    dom.exportPdfModal.addEventListener('click', (e) => {
+      if (e.target === dom.exportPdfModal) closeExportPdfModal();
+    });
+  }
 
   // ── Voice Dictation Integration with RobOS Voice Overlay App ─────────────
   const VOICE_GUIDANCE_PROMPT = "Tabletop Quest Map Editor Voice Assistant: The user is dictating quest map setup commands to place monsters, furniture, doors, traps, or wall blocks on the board (e.g. 'add 3 skeletons to room 1', 'place a treasure chest in room 2', 'put an orc in the north room').";
@@ -6274,6 +7110,19 @@ function setupEventListeners() {
       setActiveTool('note');
     } else if (e.key === 'e' || e.key === '9') {
       setActiveTool('erase');
+    } else if (e.key === 'Escape') {
+      if (dom.exportPngModal && dom.exportPngModal.style.display !== 'none') {
+        closeExportPngModal();
+      }
+      if (dom.exportPdfModal && dom.exportPdfModal.style.display !== 'none') {
+        closeExportPdfModal();
+      }
+    } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'E' || e.key === 'e')) {
+      e.preventDefault();
+      openExportPngModal();
+    } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
+      e.preventDefault();
+      openExportPdfModal();
     } else if (e.key === 'r') {
       // Rotate active furniture
       if (state.activeTool === 'furniture') {
@@ -6327,7 +7176,16 @@ if (typeof window !== 'undefined') {
     findFreeRectInRoom,
     setupSplitDividers,
     toggleRoomNames,
-    updateRoomNamesToggleUI
+    updateRoomNamesToggleUI,
+    generateExportCanvas,
+    generateQuestPdfHtml,
+    exportPng,
+    exportPdf,
+    copyPngToClipboard,
+    openExportPngModal,
+    closeExportPngModal,
+    openExportPdfModal,
+    closeExportPdfModal
   };
 
   // Bootstrap application on window load
@@ -6355,6 +7213,15 @@ if (typeof module !== 'undefined' && module.exports) {
     removeActionFromTrigger,
     addTrigger,
     buildCartridgePayload,
+    generateExportCanvas,
+    generateQuestPdfHtml,
+    exportPng,
+    exportPdf,
+    copyPngToClipboard,
+    openExportPngModal,
+    closeExportPngModal,
+    openExportPdfModal,
+    closeExportPdfModal,
     state,
     dom,
     MONSTER_DEFS,

@@ -50,12 +50,20 @@
           💾 Save Cartridge
         </button>
 
+        <button id="btn-export-png" class="btn btn-secondary" title="Export high-resolution quest map image as PNG (Shortcut: Ctrl+Shift+E)">
+          🖼️ Export PNG
+        </button>
+
+        <button id="btn-export-pdf" class="btn btn-secondary" title="Export printable Quest Sheet as PDF (Shortcut: Ctrl+Shift+P)">
+          📄 Export PDF
+        </button>
+
         <button id="btn-export-json" class="btn btn-secondary" title="Export quest map JSON">
-          📦 Export JSON
+          📦 JSON
         </button>
 
         <button id="btn-copy-json" class="btn btn-secondary" title="Copy quest JSON to clipboard">
-          📋 Copy JSON
+          📋 Copy
         </button>
 
         <div class="header-divider"></div>
@@ -739,6 +747,113 @@
           </div>
         </div>
       </aside>
+    </div>
+
+    <!-- Export PNG Modal -->
+    <div id="export-png-modal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="export-png-title">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div id="export-png-title" class="modal-title">🖼️ Export Quest Map to PNG</div>
+          <button class="btn-icon btn-modal-close" id="btn-close-export-png-modal" title="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="export-preview-container">
+            <canvas id="export-png-preview" class="export-thumb"></canvas>
+            <div id="export-png-dimensions-badge" class="badge-dim">-- × -- px</div>
+          </div>
+          <div class="export-options-form">
+            <div class="form-row">
+              <label><strong>Resolution / Scale:</strong></label>
+              <div class="radio-group">
+                <label class="custom-radio">
+                  <input type="radio" name="export-png-scale" value="1" checked> 1× Standard (Screen)
+                </label>
+                <label class="custom-radio">
+                  <input type="radio" name="export-png-scale" value="2"> 2× High-DPI (Crisp Print)
+                </label>
+              </div>
+            </div>
+            <div class="form-row" style="margin-top:10px;">
+              <label><strong>Layers to Include:</strong></label>
+              <div class="checkbox-grid">
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="chk-export-grid" checked> Grid Lines
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="chk-export-names" checked> Room Names
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="chk-export-artwork" checked> Board Artwork
+                </label>
+                <label class="custom-checkbox">
+                  <input type="checkbox" id="chk-export-banner"> Quest Title Banner
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-copy-png-clipboard" class="btn btn-secondary" title="Copy high-res image to clipboard">📋 Copy to Clipboard</button>
+          <div style="flex:1;"></div>
+          <button id="btn-cancel-export-png" class="btn btn-secondary">Cancel</button>
+          <button id="btn-confirm-save-png" class="btn btn-primary">💾 Save PNG File...</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export PDF Modal -->
+    <div id="export-pdf-modal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="export-pdf-title">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div id="export-pdf-title" class="modal-title">📄 Export Quest Sheet to PDF</div>
+          <button class="btn-icon btn-modal-close" id="btn-close-export-pdf-modal" title="Close">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <label><strong>Page Orientation:</strong></label>
+            <div class="radio-group">
+              <label class="custom-radio">
+                <input type="radio" name="export-pdf-orientation" value="landscape" checked> Landscape (Recommended for 26×19 Board)
+              </label>
+              <label class="custom-radio">
+                <input type="radio" name="export-pdf-orientation" value="portrait"> Portrait
+              </label>
+            </div>
+          </div>
+          <div class="form-row" style="margin-top:10px;">
+            <label for="select-pdf-page-size"><strong>Page Size:</strong></label>
+            <select id="select-pdf-page-size" class="dropdown" style="width:180px;">
+              <option value="A4" selected>A4 (210 × 297 mm)</option>
+              <option value="Letter">Letter (8.5 × 11 in)</option>
+            </select>
+          </div>
+          <div class="form-row" style="margin-top:10px;">
+            <label><strong>Document Sections:</strong></label>
+            <div class="checkbox-grid">
+              <label class="custom-checkbox">
+                <input type="checkbox" id="chk-pdf-header" checked> Quest Title &amp; Story Briefing
+              </label>
+              <label class="custom-checkbox">
+                <input type="checkbox" id="chk-pdf-map" checked> High-Resolution Dungeon Map
+              </label>
+              <label class="custom-checkbox">
+                <input type="checkbox" id="chk-pdf-notes" checked> Quest Notes (Notes A, B, C...)
+              </label>
+              <label class="custom-checkbox">
+                <input type="checkbox" id="chk-pdf-roster" checked> Monster Roster &amp; Stats Table
+              </label>
+              <label class="custom-checkbox">
+                <input type="checkbox" id="chk-pdf-furniture" checked> Furniture &amp; Traps Summary
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div style="flex:1;"></div>
+          <button id="btn-cancel-export-pdf" class="btn btn-secondary">Cancel</button>
+          <button id="btn-confirm-save-pdf" class="btn btn-primary">💾 Save PDF Document...</button>
+        </div>
+      </div>
     </div>
 
     <!-- System Toast Message Container -->

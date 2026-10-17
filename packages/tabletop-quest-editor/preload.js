@@ -12,7 +12,10 @@ contextBridge.exposeInMainWorld('robosQuestEditor', {
   openCartridgeDialog: () => ipcRenderer.invoke('quest:open-cartridge-dialog'),
   saveCartridge: (payload) => ipcRenderer.invoke('quest:save-cartridge', payload),
   saveFileDialog: (payload) => ipcRenderer.invoke('quest:save-file-dialog', payload),
+  savePng: (payload) => ipcRenderer.invoke('quest:save-png', payload),
+  exportPdf: (payload) => ipcRenderer.invoke('quest:export-pdf', payload),
   copyToClipboard: (text) => ipcRenderer.invoke('quest:copy-to-clipboard', text),
+  copyImageToClipboard: (base64Data) => ipcRenderer.invoke('quest:copy-image-to-clipboard', base64Data),
   loadAssetImage: (relPath) => ipcRenderer.invoke('quest:load-asset-image', relPath),
   launchGame: (slug) => ipcRenderer.invoke('quest:launch-game', slug),
   ensureVoiceApp: () => ipcRenderer.invoke('voice:ensure-running')
