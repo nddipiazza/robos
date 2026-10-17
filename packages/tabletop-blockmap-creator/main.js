@@ -23,11 +23,17 @@ function parseArgs() {
   for (const arg of args) {
     if (arg.startsWith('--cartridge=')) {
       startupTarget = { type: 'cartridge', value: arg.split('=')[1] };
+    } else if (arg.startsWith('--blockmap=')) {
+      startupTarget = { type: 'blockmap', value: arg.split('=')[1] };
     } else if (arg.startsWith('--map=')) {
       startupTarget = { type: 'image', value: arg.split('=')[1] };
     } else if (!arg.startsWith('--') && !arg.startsWith('-')) {
-      if (arg.endsWith('.json') || arg.includes('cartridge')) {
+      if (arg.endsWith('.blockmap.json') || arg.includes('.blockmap.')) {
+        startupTarget = { type: 'blockmap', value: arg };
+      } else if (arg.endsWith('.cartridge.json') || arg.includes('cartridge')) {
         startupTarget = { type: 'cartridge', value: arg };
+      } else if (arg.endsWith('.json')) {
+        startupTarget = { type: 'blockmap', value: arg };
       } else if (/\.(png|jpg|jpeg|webp|bmp)$/i.test(arg)) {
         startupTarget = { type: 'image', value: arg };
       } else {
@@ -220,13 +226,27 @@ ipcMain.handle('blockmap:open-file-dialog', async () => {
 // IPC: Load Board Blockmap JSON
 ipcMain.handle('blockmap:load-board-map', async (_event, boardId) => {
   try {
-    const clean = (boardId || '').toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
-    let blockmapPath = path.join(CARTRIDGES_DIR, `${clean}.blockmap.json`);
-    if (!fs.existsSync(blockmapPath)) {
-      blockmapPath = path.join(CARTRIDGES_DIR, `${boardId}.blockmap.json`);
+    let blockmapPath = null;
+    if (boardId && typeof boardId === 'string') {
+      if (fs.existsSync(boardId) && fs.statSync(boardId).isFile()) {
+        blockmapPath = boardId;
+      } else {
+        const clean = boardId.toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
+        const candidates = [
+          path.join(CARTRIDGES_DIR, `${clean}.blockmap.json`),
+          path.join(CARTRIDGES_DIR, `${boardId}.blockmap.json`),
+          path.join(CARTRIDGES_DIR, boardId)
+        ];
+        for (const c of candidates) {
+          if (fs.existsSync(c) && fs.statSync(c).isFile()) {
+            blockmapPath = c;
+            break;
+          }
+        }
+      }
     }
-    if (!fs.existsSync(blockmapPath)) {
-      return { success: false, error: `Blockmap not found: ${clean}.blockmap.json` };
+    if (!blockmapPath || !fs.existsSync(blockmapPath)) {
+      return { success: false, error: `Blockmap not found: ${boardId}` };
     }
 
     const raw = fs.readFileSync(blockmapPath, 'utf8');

@@ -9,6 +9,7 @@ const {
   validateQuest: validateQuestFn,
   loadCartridge,
   loadBlockmap,
+  openSelectedBlockmapInEditor,
   isStartingQuestAction,
   resolveTriggerIndicators,
   drawExportTriggerIndicator,
@@ -3258,3 +3259,60 @@ test('Recursive Action Pipeline Printing: formats dialogues, movies, moves, and 
   assert.ok(html.includes('Branch: Smash the flask'), 'Renders branch choice 2');
   assert.ok(html.includes('poison gas'), 'Renders trap in branch choice 2');
 });
+
+// -------------------------------------------------------------
+// Test 37: Open Selected Blockmap in Blockmap Editor
+// -------------------------------------------------------------
+test('Open Blockmap in Editor: launches tabletop-blockmap-creator with the currently selected blockmap', async () => {
+  const savedWindow = global.window;
+  const savedStateBlockmap = state.blockmap;
+  const savedStatePath = state.blockmapPath;
+  const savedDom = { ...dom };
+
+  try {
+    let openedTarget = null;
+    global.window = {
+      robosQuestEditor: {
+        openBlockmapEditor: async (target) => {
+          openedTarget = target;
+          return { success: true, pid: 4321, targetBlockmap: target, blockmapName: path.basename(target) };
+        }
+      }
+    };
+
+    // 1. With state.blockmapPath set
+    state.blockmap = { id: 'heroquest-classic', title: 'HeroQuest Classic Board' };
+    state.blockmapPath = '/fake/path/heroquest-classic.blockmap.json';
+    dom.selectBlockmap = { value: 'first-light-dungeon' };
+
+    const res1 = await openSelectedBlockmapInEditor();
+    assert.equal(res1.success, true);
+    assert.equal(openedTarget, '/fake/path/heroquest-classic.blockmap.json', 'Passes state.blockmapPath if present');
+
+    // 2. Fallback to state.blockmap.id when path is empty
+    state.blockmapPath = '';
+    state.blockmap = { id: 'fan-dungeon-28x21', title: 'Fan Cavern' };
+    const res2 = await openSelectedBlockmapInEditor();
+    assert.equal(res2.success, true);
+    assert.equal(openedTarget, 'fan-dungeon-28x21', 'Falls back to state.blockmap.id');
+
+    // 3. Fallback to dom.selectBlockmap.value when blockmap is null
+    state.blockmap = null;
+    dom.selectBlockmap = { value: 'first-light-caverns' };
+    const res3 = await openSelectedBlockmapInEditor();
+    assert.equal(res3.success, true);
+    assert.equal(openedTarget, 'first-light-caverns', 'Falls back to dropdown value');
+
+    // 4. Handles missing window bridge gracefully
+    delete global.window.robosQuestEditor.openBlockmapEditor;
+    const res4 = await openSelectedBlockmapInEditor();
+    assert.equal(res4.success, false);
+    assert.equal(res4.error, 'Bridge not available');
+  } finally {
+    global.window = savedWindow;
+    state.blockmap = savedStateBlockmap;
+    state.blockmapPath = savedStatePath;
+    Object.assign(dom, savedDom);
+  }
+});
+
