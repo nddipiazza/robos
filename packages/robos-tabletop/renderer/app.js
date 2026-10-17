@@ -2320,16 +2320,37 @@ const DREAD_SPELLS = [
 // "MIDTERMS 2026" & "BASE GAME" CONTENT PACK CATALOGS
 // ==========================================
 
+const HEROQUEST_MONSTER_ARCHETYPES = [
+  "Goblin",
+  "Orc",
+  "Fimir",
+  "Skeleton",
+  "Zombie",
+  "Mummy",
+  "Dread Warrior",
+  "Gargoyle",
+  "Orc Shaman",
+  "Orc Warlord",
+  "Chaos Sorcerer",
+  "Witch Lord",
+  "Dragon",
+  "Doomguard",
+  "Witch Hand"
+];
+
 const MIDTERMS_2026_MONSTERS = [
   {
     "@id": "urn:robos:tabletop:monster:inflation-spawn",
     "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
-    "dcterms:title": "Inflation Spawn (Goblin Money Monster)",
-    "dcterms:description": "A cackling green goblin made of crumpled dollar bills and $14 egg cartons! Swears price hikes are 'transitory' while picking your pocket.",
-    "robos:category": "Midterms 2026",
-    "robos:monsterArchetype": "Goblin",
+    "dcterms:title": "Inflation Spawn",
+    "robos:altTitle": "Infalation Spawn",
     "robos:alias": "Infalation Spawn",
-    "robos:icon": "🤑",
+    "dcterms:description": "Goblin Mirror: A rabid goblin money monster (Infalation Spawn) hatched from an overheated Federal Reserve printing press. Devours 40% of your gold purse on sight while shrinking potion bottles and swearing price hikes are transitory.",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:goblin",
+    "robos:monsterArchetype": "Goblin",
+    "robos:archetype": "Goblin",
+    "robos:icon": "💸",
     "robos:bodyPoints": 1,
     "robos:attackDice": 2,
     "robos:defendDice": 1,
@@ -2339,19 +2360,21 @@ const MIDTERMS_2026_MONSTERS = [
     "robos:isUndead": false,
     "robos:isSpellcaster": false,
     "robos:spells": [],
-    "robos:tokenColor": "#15803d",
+    "robos:tokenColor": "#16a34a",
     "robos:package": "tabletop-game",
     "robos:namespace": "robos.tabletop"
   },
   {
     "@id": "urn:robos:tabletop:monster:illegal-alien",
     "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
-    "dcterms:title": "Illegal Alien (Grey Alien in a Robber Mask)",
-    "dcterms:description": "A literal extraterrestrial Roswell grey alien wearing a classic striped burglar domino mask and carrying a sack with a '$' sign after crashing its UFO across the border!",
+    "dcterms:title": "Illegal Alien",
+    "dcterms:description": "Orc Mirror: A literal grey alien from Zeta Reticuli wearing a classic black domino robber mask and carrying a striped loot sack after double-parking its flying saucer in a dungeon no-parking zone.",
     "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:orc",
     "robos:monsterArchetype": "Orc",
+    "robos:archetype": "Orc",
     "robos:icon": "👽",
-    "robos:bodyPoints": 2,
+    "robos:bodyPoints": 1,
     "robos:attackDice": 3,
     "robos:defendDice": 2,
     "robos:movementSquares": 8,
@@ -2365,33 +2388,14 @@ const MIDTERMS_2026_MONSTERS = [
     "robos:namespace": "robos.tabletop"
   },
   {
-    "@id": "urn:robos:tabletop:monster:happily-married-gay-man",
-    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
-    "dcterms:title": "Happily Married Gay Man (Dread Warrior)",
-    "dcterms:description": "Terrifying to culture-warriors everywhere! Dual-wields impeccably coordinated throw pillows, a 780 credit score, and a freshly renovated kitchen that raises neighborhood property values.",
-    "robos:category": "Midterms 2026",
-    "robos:monsterArchetype": "Dread Warrior",
-    "robos:icon": "💍",
-    "robos:bodyPoints": 3,
-    "robos:attackDice": 4,
-    "robos:defendDice": 4,
-    "robos:movementSquares": 7,
-    "robos:roomId": "room-e-parlor",
-    "robos:isBoss": false,
-    "robos:isUndead": false,
-    "robos:isSpellcaster": false,
-    "robos:spells": [],
-    "robos:tokenColor": "#ec4899",
-    "robos:package": "tabletop-game",
-    "robos:namespace": "robos.tabletop"
-  },
-  {
     "@id": "urn:robos:tabletop:monster:k-street-swamp-fimir",
     "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
-    "dcterms:title": "K-Street Swamp Lobbyist (Fimir)",
-    "dcterms:description": "A one-eyed swamp reptile in a $4,000 Italian suit carrying a briefcase full of 'totally legal' Super-PAC consulting retainers.",
+    "dcterms:title": "K-Street Swamp Lobbyist",
+    "dcterms:description": "Fimir Mirror: A one-eyed swamp reptile in a $4,000 Italian suit slithering out of a bipartisan tax loophole with a leather briefcase full of untraceable Super-PAC consulting gold.",
     "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:fimir",
     "robos:monsterArchetype": "Fimir",
+    "robos:archetype": "Fimir",
     "robos:icon": "🐊",
     "robos:bodyPoints": 2,
     "robos:attackDice": 3,
@@ -2402,17 +2406,19 @@ const MIDTERMS_2026_MONSTERS = [
     "robos:isUndead": false,
     "robos:isSpellcaster": false,
     "robos:spells": [],
-    "robos:tokenColor": "#0d9488",
+    "robos:tokenColor": "#0f766e",
     "robos:package": "tabletop-game",
     "robos:namespace": "robos.tabletop"
   },
   {
     "@id": "urn:robos:tabletop:monster:gerrymandered-skeleton",
     "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
-    "dcterms:title": "Gerrymandered District Skeleton",
-    "dcterms:description": "An ancient undead incumbent drawn into a 400-mile-long zig-zagging salamander-shaped hallway so it can never be voted out of the crypt.",
+    "dcterms:title": "Gerrymandered Skeleton",
+    "dcterms:description": "Skeleton Mirror: An undead voter contorted into a 47-sided congressional district shaped like an upside-down salamander so the incumbent can never be voted out of the crypt.",
     "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:skeleton",
     "robos:monsterArchetype": "Skeleton",
+    "robos:archetype": "Skeleton",
     "robos:icon": "💀",
     "robos:bodyPoints": 1,
     "robos:attackDice": 2,
@@ -2431,11 +2437,13 @@ const MIDTERMS_2026_MONSTERS = [
     "@id": "urn:robos:tabletop:monster:teleprompter-zombie",
     "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
     "dcterms:title": "Cable News Pundit Zombie",
-    "dcterms:description": "Mindlessly shambles forward reading '[PAUSE FOR APPLAUSE]' straight off the teleprompter glass while screaming 'BREAKING ALERT!' every 4 seconds.",
+    "dcterms:description": "Zombie Mirror: A shambling prime-time anchor that groans BREAKING ALERT every 30 seconds, reads [PAUSE FOR OUTRAGE] off the teleprompter glass, and cannot move without a pharmaceutical ad break.",
     "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:zombie",
     "robos:monsterArchetype": "Zombie",
+    "robos:archetype": "Zombie",
     "robos:icon": "🧟",
-    "robos:bodyPoints": 2,
+    "robos:bodyPoints": 1,
     "robos:attackDice": 2,
     "robos:defendDice": 3,
     "robos:movementSquares": 4,
@@ -2449,12 +2457,188 @@ const MIDTERMS_2026_MONSTERS = [
     "robos:namespace": "robos.tabletop"
   },
   {
+    "@id": "urn:robos:tabletop:monster:octogenarian-incumbent-mummy",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "90-Year-Old Career Incumbent Mummy",
+    "dcterms:description": "Mummy Mirror: First elected during the Eisenhower administration and wrapped in 70 years of bureaucratic red tape! Refuses to retire and is already filing paperwork to run for a 19th term from the crypt.",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:mummy",
+    "robos:monsterArchetype": "Mummy",
+    "robos:archetype": "Mummy",
+    "robos:icon": "🩹",
+    "robos:bodyPoints": 2,
+    "robos:attackDice": 3,
+    "robos:defendDice": 4,
+    "robos:movementSquares": 4,
+    "robos:roomId": "room-nw-crypt",
+    "robos:isBoss": false,
+    "robos:isUndead": true,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#d97706",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:happily-married-gay-man",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Happily Married Gay Man",
+    "dcterms:description": "Dread Warrior Mirror: An unstoppable Dread Warrior of domestic bliss—dual-income 820 credit score, impeccably renovated kitchen, brunch reservations, and a loving marriage that inexplicably terrifies culture-war bosses.",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:chaos-warrior",
+    "robos:monsterArchetype": "Dread Warrior",
+    "robos:archetype": "Dread Warrior",
+    "robos:icon": "💍",
+    "robos:bodyPoints": 3,
+    "robos:attackDice": 4,
+    "robos:defendDice": 4,
+    "robos:movementSquares": 7,
+    "robos:roomId": "room-e-parlor",
+    "robos:isBoss": false,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#ec4899",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:filibuster-gargoyle",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Filibuster Stone Gargoyle",
+    "dcterms:description": "Gargoyle Mirror: A solid granite Senate obstructionist perched on the Capitol rotunda ledge! Reads the local phonebook aloud for 19 hours straight so zero bills or heroes can pass through the room.",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:gargoyle",
+    "robos:monsterArchetype": "Gargoyle",
+    "robos:archetype": "Gargoyle",
+    "robos:icon": "🗿",
+    "robos:bodyPoints": 3,
+    "robos:attackDice": 4,
+    "robos:defendDice": 5,
+    "robos:movementSquares": 6,
+    "robos:roomId": "room-center",
+    "robos:isBoss": false,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#64748b",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:spin-doctor-shaman",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Polling Spin-Doctor Shaman",
+    "dcterms:description": "Orc Shaman Mirror: Reads Crosstab tea leaves and casts Margin-of-Error hexes to convince everyone that losing a dungeon battle by 15 points is actually a historic moral victory!",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:orc-shaman",
+    "robos:monsterArchetype": "Orc Shaman",
+    "robos:archetype": "Orc Shaman",
+    "robos:icon": "📊",
+    "robos:bodyPoints": 2,
+    "robos:attackDice": 2,
+    "robos:defendDice": 3,
+    "robos:movementSquares": 8,
+    "robos:roomId": "room-center",
+    "robos:isBoss": false,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": true,
+    "robos:spells": [
+      "urn:robos:tabletop:spell:culture-war-distraction-cloud",
+      "urn:robos:tabletop:spell:shrinkflation-curse"
+    ],
+    "robos:tokenColor": "#0284c7",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:super-pac-warlord",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Super-PAC Dark Money Warlord",
+    "dcterms:description": "Verag the Orc Warlord Mirror: An untraceable 501(c)(4) billionaire mega-donor boss who buys entire congressional committees in bulk and floods every dungeon corridor with negative attack ads!",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:verag-orc-warlord",
+    "robos:monsterArchetype": "Orc Warlord",
+    "robos:archetype": "Orc Warlord",
+    "robos:icon": "💼",
+    "robos:bodyPoints": 3,
+    "robos:attackDice": 4,
+    "robos:defendDice": 3,
+    "robos:movementSquares": 8,
+    "robos:roomId": "room-center",
+    "robos:isBoss": true,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": true,
+    "robos:spells": [
+      "urn:robos:tabletop:spell:shrinkflation-curse",
+      "urn:robos:tabletop:spell:culture-war-distraction-cloud"
+    ],
+    "robos:tokenColor": "#15803d",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:algorithm-outrage-sorcerer",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Algorithm Outrage Sorcerer",
+    "dcterms:description": "Chaos Sorcerer Mirror: Conjures viral doomscrolling illusions, bot-farm swarms, and AI deepfake hexes guaranteed to make your aunt and uncle scream at each other over Thanksgiving turkey!",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:chaos-sorcerer",
+    "robos:monsterArchetype": "Chaos Sorcerer",
+    "robos:archetype": "Chaos Sorcerer",
+    "robos:icon": "📱",
+    "robos:bodyPoints": 3,
+    "robos:attackDice": 3,
+    "robos:defendDice": 4,
+    "robos:movementSquares": 7,
+    "robos:roomId": "room-center",
+    "robos:isBoss": true,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": true,
+    "robos:spells": [
+      "urn:robos:tabletop:spell:culture-war-distraction-cloud",
+      "urn:robos:tabletop:spell:bipartisan-blame-inferno"
+    ],
+    "robos:tokenColor": "#7c3aed",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:deep-state-witch-lord",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Unelected Bureaucracy Witch Lord",
+    "dcterms:description": "The Witch Lord Mirror: An immortal undead agency director who has survived 14 presidential administrations, immune to mortal voters, summoning endless sub-committees of undead compliance auditors!",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:witch-lord",
+    "robos:monsterArchetype": "Witch Lord",
+    "robos:archetype": "Witch Lord",
+    "robos:icon": "🏛️",
+    "robos:bodyPoints": 4,
+    "robos:attackDice": 4,
+    "robos:defendDice": 5,
+    "robos:movementSquares": 7,
+    "robos:roomId": "room-center",
+    "robos:isBoss": true,
+    "robos:isUndead": true,
+    "robos:isSpellcaster": true,
+    "robos:spells": [
+      "urn:robos:tabletop:spell:shrinkflation-curse",
+      "urn:robos:tabletop:spell:culture-war-distraction-cloud",
+      "urn:robos:tabletop:spell:bipartisan-blame-inferno"
+    ],
+    "robos:tokenColor": "#4c1d95",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
     "@id": "urn:robos:tabletop:monster:trumpbiden-dragon",
     "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
-    "dcterms:title": "TrumpBiden (The Two-Headed Blame Dragon)",
-    "dcterms:description": "A colossal two-headed Dragon fusion of two presidents who failed us all while everything got 3x more expensive—meanwhile both heads spend their entire turn pointing at each other, arguing about golf handicaps, and blaming the other guy!",
+    "dcterms:title": "TrumpBiden (The Blame Dragon)",
+    "dcterms:description": "Dragon Mirror: A colossal two-headed Dragon combining 2 presidents who failed us all while everything got more expensive, meanwhile blaming each other for every single gold coin lost to inflation.",
     "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:dragon",
     "robos:monsterArchetype": "Dragon",
+    "robos:archetype": "Dragon",
     "robos:icon": "🐉",
     "robos:bodyPoints": 6,
     "robos:attackDice": 5,
@@ -2468,6 +2652,55 @@ const MIDTERMS_2026_MONSTERS = [
       "urn:robos:tabletop:spell:bipartisan-blame-inferno",
       "urn:robos:tabletop:spell:shrinkflation-curse",
       "urn:robos:tabletop:spell:culture-war-distraction-cloud"
+    ],
+    "robos:tokenColor": "#dc2626",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:irs-audit-doomguard",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "IRS 87,000-Agent Doomguard",
+    "dcterms:description": "Cassandria's Doomguard Mirror: An heavily armored IRS enforcement agent carrying 87,000 pages of itemized tax code who audits your party's Body Points over an unreported $600 Venmo split for dungeon tavern nachos!",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:cassandria-doomguard",
+    "robos:monsterArchetype": "Doomguard",
+    "robos:archetype": "Doomguard",
+    "robos:icon": "🧾",
+    "robos:bodyPoints": 3,
+    "robos:attackDice": 4,
+    "robos:defendDice": 6,
+    "robos:movementSquares": 8,
+    "robos:roomId": "room-center",
+    "robos:isBoss": true,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#334155",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:hoa-censor-witch-hand",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Censorship Board Witch Hand",
+    "dcterms:description": "Witch Hand of Cassandria Mirror: The high inquisitor of the Ministry of Approved Narratives who slaps 'MISINFORMATION' warning labels on Heroic Spells and shadow-bans any hero who rolls too many Skulls!",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:cassandria-witch-hand",
+    "robos:monsterArchetype": "Witch Hand",
+    "robos:archetype": "Witch Hand",
+    "robos:icon": "🤫",
+    "robos:bodyPoints": 4,
+    "robos:attackDice": 4,
+    "robos:defendDice": 4,
+    "robos:movementSquares": 8,
+    "robos:roomId": "room-center",
+    "robos:isBoss": true,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": true,
+    "robos:spells": [
+      "urn:robos:tabletop:spell:culture-war-distraction-cloud",
+      "urn:robos:tabletop:spell:shrinkflation-curse"
     ],
     "robos:tokenColor": "#9333ea",
     "robos:package": "tabletop-game",
@@ -5070,7 +5303,9 @@ async function saveActiveMonsterToKGraph(explicit = false) {
     "dcterms:title": monster["dcterms:title"] || "Monster",
     "dcterms:description": monster["dcterms:description"] || "",
     "robos:category": monster["robos:category"] || "Base Game",
-    "robos:monsterArchetype": monster["robos:monsterArchetype"] || "Goblin",
+    "robos:mirrorsMonster": monster["robos:mirrorsMonster"] || undefined,
+    "robos:monsterArchetype": monster["robos:monsterArchetype"] || monster["robos:archetype"] || "Goblin",
+    "robos:archetype": monster["robos:archetype"] || monster["robos:monsterArchetype"] || "Goblin",
     "robos:icon": monster["robos:icon"] || "👹",
     "robos:bodyPoints": parseInt(monster["robos:bodyPoints"], 10) || 1,
     "robos:attackDice": parseInt(monster["robos:attackDice"], 10) || 2,
@@ -5135,16 +5370,23 @@ function renderMonstersList() {
       else if (m["robos:isSpellcaster"]) icon = "🧙‍♂️";
     }
     const cat = m["robos:category"] || "Base Game";
+    const hqMirror = m["robos:monsterArchetype"] || "";
     const catBadgeColor = cat === "Midterms 2026"
       ? "background:rgba(245,158,11,0.18); color:#fde047; border:1px solid rgba(245,158,11,0.4);"
       : "background:rgba(56,189,248,0.12); color:#7dd3fc; border:1px solid rgba(56,189,248,0.25);";
+    const mirrorHint = (cat !== "Base Game" && hqMirror)
+      ? `<div style="font-size:0.68rem; color:#94a3b8; margin-left:22px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">HeroQuest Mirror: <span style="color:#38bdf8;">${escapeHtml(hqMirror)}</span></div>`
+      : "";
     div.innerHTML = `
-      <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:6px;">
-        <span style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-          <span>${icon}</span>
-          <strong style="overflow:hidden; text-overflow:ellipsis;">${escapeHtml(m["dcterms:title"] || m["@id"])}</strong>
-        </span>
-        <span class="badge" style="font-size:0.65rem; padding:1px 5px; flex-shrink:0; ${catBadgeColor}">${escapeHtml(cat)}</span>
+      <div style="display:flex; flex-direction:column; width:100%; gap:2px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:6px;">
+          <span style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            <span>${icon}</span>
+            <strong style="overflow:hidden; text-overflow:ellipsis;">${escapeHtml(m["dcterms:title"] || m["@id"])}</strong>
+          </span>
+          <span class="badge" style="font-size:0.65rem; padding:1px 5px; flex-shrink:0; ${catBadgeColor}">${escapeHtml(cat)}</span>
+        </div>
+        ${mirrorHint}
       </div>
     `;
     div.onclick = () => selectMonster(m["@id"]);
@@ -5175,7 +5417,7 @@ function selectMonster(monsterId) {
   }
 
   const archEl = document.getElementById("monster-archetype");
-  if (archEl) archEl.value = monster["robos:monsterArchetype"] || (monster["robos:isBoss"] ? "Dragon" : "Goblin");
+  if (archEl) archEl.value = monster["robos:archetype"] || monster["robos:monsterArchetype"] || (monster["robos:isBoss"] ? "Dragon" : "Goblin");
 
   const iconEl = document.getElementById("monster-icon");
   if (iconEl) iconEl.value = monster["robos:icon"] || (monster["robos:isBoss"] ? "👑" : "👹");
@@ -6145,6 +6387,7 @@ if (typeof window !== "undefined") {
 
   window._tabletopCategories = {
     DEFAULT_CATEGORIES,
+    HEROQUEST_MONSTER_ARCHETYPES,
     MIDTERMS_2026_MONSTERS,
     MIDTERMS_2026_SPELLS,
     MIDTERMS_2026_DREAD_SPELLS,
@@ -6186,6 +6429,7 @@ if (typeof module !== "undefined" && module.exports) {
     closeBetweenQuestsTradeModal,
     getHeroById,
     DEFAULT_CATEGORIES,
+    HEROQUEST_MONSTER_ARCHETYPES,
     MIDTERMS_2026_MONSTERS,
     MIDTERMS_2026_SPELLS,
     MIDTERMS_2026_DREAD_SPELLS,

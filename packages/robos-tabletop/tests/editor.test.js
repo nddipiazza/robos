@@ -956,12 +956,23 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     const baseMonsters = monsters.filter(m => m["robos:category"] === "Base Game");
     const midtermsMonsters = monsters.filter(m => m["robos:category"] === "Midterms 2026");
 
-    assert.ok(baseMonsters.length >= 6, "Must have Base Game monsters in KGraph");
-    assert.strictEqual(midtermsMonsters.length, 7, "Must have 7 Midterms 2026 monsters in KGraph");
+    assert.strictEqual(baseMonsters.length, 15, "Must have all 15 Base Game HeroQuest monsters in KGraph");
+    assert.strictEqual(midtermsMonsters.length, 15, "Must have 15 Midterms 2026 monsters mirroring each Base Game monster 1-to-1");
 
-    // Check user-requested Midterms 2026 enemies
+    // Verify every single Base Game HeroQuest monster has a 1-to-1 mirror in Midterms 2026
+    for (const baseMon of baseMonsters) {
+      const mirror = midtermsMonsters.find(
+        m => m["robos:mirrorsMonster"] === baseMon["@id"] || m["robos:monsterArchetype"] === baseMon["robos:monsterArchetype"]
+      );
+      assert.ok(mirror, `Base Game monster ${baseMon["@id"]} (${baseMon["dcterms:title"]}) must have a 1-to-1 Midterms 2026 mirror`);
+      assert.strictEqual(mirror["robos:mirrorsMonster"], baseMon["@id"], `Mirror ${mirror["@id"]} must reference ${baseMon["@id"]}`);
+      assert.strictEqual(mirror["robos:monsterArchetype"], baseMon["robos:monsterArchetype"], `Mirror ${mirror["@id"]} must match archetype ${baseMon["robos:monsterArchetype"]}`);
+    }
+
+    // Check specific user-requested Midterms 2026 enemies
     const inflationSpawn = midtermsMonsters.find(m => m["@id"].includes("inflation-spawn"));
     assert.ok(inflationSpawn, "Inflation Spawn goblin money monster must exist");
+    assert.strictEqual(inflationSpawn["robos:mirrorsMonster"], "urn:robos:tabletop:monster:goblin");
     assert.ok(
       inflationSpawn["dcterms:title"].includes("Inflation Spawn") || inflationSpawn["robos:alias"] === "Infalation Spawn",
       "Must match Inflation Spawn / Infalation Spawn"
@@ -969,6 +980,7 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
 
     const illegalAlien = midtermsMonsters.find(m => m["@id"].includes("illegal-alien"));
     assert.ok(illegalAlien, "Illegal Alien (grey alien with robber mask) must exist");
+    assert.strictEqual(illegalAlien["robos:mirrorsMonster"], "urn:robos:tabletop:monster:orc");
     assert.ok(
       (illegalAlien["robos:archetype"] || "").toLowerCase().includes("grey alien") ||
       (illegalAlien["dcterms:description"] || "").toLowerCase().includes("grey")
@@ -976,12 +988,14 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
 
     const gayMan = midtermsMonsters.find(m => m["@id"].includes("happily-married-gay-man"));
     assert.ok(gayMan, "Happily Married Gay Man (Dread Warrior) must exist");
-    assert.strictEqual(gayMan["robos:archetype"] || gayMan["robos:monsterArchetype"], "Dread Warrior");
+    assert.strictEqual(gayMan["robos:mirrorsMonster"], "urn:robos:tabletop:monster:chaos-warrior");
+    assert.strictEqual(gayMan["robos:monsterArchetype"], "Dread Warrior");
 
     const trumpBiden = midtermsMonsters.find(m => m["@id"].includes("trumpbiden-dragon"));
     assert.ok(trumpBiden, "TrumpBiden Dragon boss must exist");
+    assert.strictEqual(trumpBiden["robos:mirrorsMonster"], "urn:robos:tabletop:monster:dragon");
     assert.strictEqual(trumpBiden["robos:isBoss"], true);
-    assert.ok((trumpBiden["robos:archetype"] || trumpBiden["robos:monsterArchetype"] || "").includes("Dragon"));
+    assert.strictEqual(trumpBiden["robos:monsterArchetype"], "Dragon");
     assert.ok(trumpBiden["dcterms:description"].toLowerCase().includes("expensive"));
 
     // Verify Midterms 2026 Weapons (illegal presidential acts)
