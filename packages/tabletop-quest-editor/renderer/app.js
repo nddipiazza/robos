@@ -1130,6 +1130,405 @@ async function copyJson() {
 // -------------------------------------------------------------
 // Quest Map PNG & PDF Export Engine
 // -------------------------------------------------------------
+
+/**
+ * Determine if a trigger represents the special opening / starting action of a quest.
+ */
+function isStartingQuestAction(trigger, quest, blockmap) {
+  if (!trigger) return false;
+
+  // Explicit flag
+  if (trigger.isIntro || trigger.isStartingAction) return true;
+
+  // Game start / Quest start events
+  if (trigger.event === 'on_game_start' || trigger.event === 'on_quest_start') return true;
+
+  // Intro movie action
+  const hasIntroMovie = trigger.actions && trigger.actions.some(a =>
+    (a.moviePath && a.moviePath.toLowerCase().includes('intro')) ||
+    (a.title && a.title.toLowerCase().includes('intro'))
+  );
+  if (hasIntroMovie) return true;
+
+  // Title / name containing intro or prologue
+  const titleLower = (trigger.title || trigger.name || '').toLowerCase();
+  if (titleLower.includes('prologue') || titleLower.includes('intro cinematic') || titleLower.includes('quest intro')) {
+    return true;
+  }
+
+  // Positioned at tile [0,0] with narrative or movie/dialogue actions (not a playable room/corridor)
+  if (trigger.tile && trigger.tile[0] === 0 && trigger.tile[1] === 0) {
+    if (trigger.narrative || (trigger.actions && trigger.actions.length > 0)) {
+      return true;
+    }
+  }
+
+  // Trigger placed on the quest's starting position / starting stair that is an intro/mentor narrative
+  if (quest && quest.startingStair && trigger.tile &&
+      trigger.tile[0] === quest.startingStair[0] && trigger.tile[1] === quest.startingStair[1] &&
+      (titleLower.includes('intro') || titleLower.includes('start') || (trigger.narrative && trigger.narrative.toLowerCase().includes('mentor speaks')))) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Iterates through quest triggers, extracts the starting quest intro action,
+ * and resolves each remaining map trigger to its relevant entity (room, monster, door, furniture, or tile)
+ * with a distinct letter indicator (A, B, C...).
+ */
+function resolveTriggerIndicators(quest, blockmap, geomOverride) {
+  quest = quest || state.quest || {};
+  blockmap = blockmap || state.blockmap || {};
+  const geom = geomOverride || (typeof getGridGeometry === 'function' ? getGridGeometry() : { tileSize: 39, offsetX: 0, offsetY: 0, cols: 26, rows: 19 });
+  const triggers = (quest.triggers || quest.storyTriggers || []).slice();
+
+  let startingAction = null;
+  const mapTriggers = [];
+
+  for (let i = 0; i < triggers.length; i++) {
+    const t = triggers[i];
+    if (!startingAction && isStartingQuestAction(t, quest, blockmap)) {
+      startingAction = t;
+    } else {
+      mapTriggers.push({ trigger: t, originalIndex: i });
+    }
+  }
+
+  // Check if markers already have unique distinct letter markers
+  const existingMarkers = mapTriggers.map(item => (item.trigger.marker || '').trim().replace(/^Note\s*/i, ''));
+  const hasDistinctLetters = existingMarkers.length > 0 &&
+    new Set(existingMarkers).size === existingMarkers.length &&
+    existingMarkers.every(m => m.length > 0 && m !== 'A');
+
+  const indicators = [];
+  for (let idx = 0; idx < mapTriggers.length; idx++) {
+    const { trigger: st, originalIndex } = mapTriggers[idx];
+    const letter = hasDistinctLetters
+      ? existingMarkers[idx]
+      : String.fromCharCode(65 + idx); // A, B, C...
+
+    let targetType = 'tile';
+    let targetEntity = null;
+    let targetPos = null;
+    let targetLabel = '';
+
+    // Check Monster / Person target
+    if (st.event === 'on_monster_killed' || st.event === 'on_monster_defeated' || st.monsterId || (st.target && (st.target.startsWith('mon-') || (quest.monsters || []).some(m => m.id === st.target || m.type === st.target || m.name === st.target)))) {
+      let mon = null;
+      if (st.monsterId || st.target) {
+        mon = (quest.monsters || []).find(m =>
+          m.id === st.monsterId ||
+          m.id === st.target ||
+          m.type === st.target ||
+          (m.name && m.name.toLowerCase() === (st.target || '').toLowerCase())
+        );
+      }
+      if (!mon && st.tile) {
+        mon = (quest.monsters || []).find(m =>
+          (m.pos && m.pos[0] === st.tile[0] && m.pos[1] === st.tile[1]) ||
+          (m.x === st.tile[0] && m.y === st.tile[1])
+        );
+      }
+      if (mon) {
+        targetType = 'monster';
+        targetEntity = mon;
+        const mc = mon.pos ? mon.pos[0] : (mon.x !== undefined ? mon.x : 0);
+        const mr = mon.pos ? mon.pos[1] : (mon.y !== undefined ? mon.y : 0);
+        targetPos = { col: mc, row: mr };
+        const def = MONSTER_DEFS[mon.type];
+        targetLabel = `Monster: ${mon.name || def?.name || mon.type || 'Monster'}${mon.isBoss ? ' (Boss)' : ''}`;
+      }
+    }
+
+    // Check Door target
+    if (!targetEntity && (st.event === 'on_door_opened' || st.doorId || (st.target && (st.target.startsWith('door-') || (quest.doors || []).some(d => d.id === st.target || d.name === st.target))))) {
+      let door = null;
+      if (st.doorId || st.target) {
+        door = (quest.doors || []).find(d => d.id === st.doorId || d.id === st.target || d.name === st.target);
+      }
+      if (!door && st.tile) {
+        door = (quest.doors || []).find(d =>
+          (d.from[0] === st.tile[0] && d.from[1] === st.tile[1]) ||
+          (d.to[0] === st.tile[0] && d.to[1] === st.tile[1])
+        );
+      }
+      if (door) {
+        targetType = 'door';
+        targetEntity = door;
+        const isVertical = door.from[0] !== door.to[0];
+        const dc = isVertical ? Math.max(door.from[0], door.to[0]) : door.from[0];
+        const dr = isVertical ? door.from[1] : Math.max(door.from[1], door.to[1]);
+        targetPos = { col: dc, row: dr, isVertical, door };
+        targetLabel = `Door: ${door.name || door.id || 'Door'}${door.is_secret ? ' (Secret)' : ''}`;
+      }
+    }
+
+    // Check Furniture target
+    if (!targetEntity && (st.event === 'on_furniture_searched' || st.furnitureId || (st.target && (st.target.startsWith('furn-') || (quest.furniture || []).some(f => f.id === st.target || f.name === st.target || f.type === st.target))))) {
+      const furn = (quest.furniture || []).find(f => f.id === st.furnitureId || f.id === st.target || f.name === st.target || f.type === st.target);
+      if (furn) {
+        targetType = 'furniture';
+        targetEntity = furn;
+        targetPos = { col: furn.x + (furn.width || 1) / 2, row: furn.y + (furn.height || 1) / 2, furn };
+        const def = FURNITURE_DEFS[furn.type];
+        targetLabel = `Furniture: ${furn.name || def?.name || furn.type || 'Furniture'}`;
+      }
+    }
+
+    // Check Room target
+    if (!targetEntity && (st.event === 'on_room_entered' || st.event === 'on_room_searched_treasure' || st.event === 'on_room_searched_traps' || st.room || (st.target && (st.target.startsWith('room-') || (blockmap.rooms || []).some(r => r.id === st.target || r.name === st.target))))) {
+      let room = null;
+      const targetRoomId = st.room || st.target;
+      if (targetRoomId) {
+        room = (blockmap.rooms || []).find(r => r.id === targetRoomId || r.name === targetRoomId);
+      }
+      if (!room && st.tile) {
+        room = (blockmap.rooms || []).find(r =>
+          (r.tiles && r.tiles.some(t => t[0] === st.tile[0] && t[1] === st.tile[1])) ||
+          (st.tile[0] >= r.x && st.tile[0] < r.x + r.w && st.tile[1] >= r.y && st.tile[1] < r.y + r.h)
+        );
+      }
+      if (room) {
+        targetType = 'room';
+        targetEntity = room;
+        let centerTileX = 0, centerTileY = 0;
+        if (room.tiles && room.tiles.length > 0) {
+          let minC = Infinity, maxC = -Infinity, minR = Infinity, maxR = -Infinity;
+          for (const [c, r] of room.tiles) {
+            if (c < minC) minC = c;
+            if (c > maxC) maxC = c;
+            if (r < minR) minR = r;
+            if (r > maxR) maxR = r;
+          }
+          centerTileX = (minC + maxC + 1) / 2;
+          centerTileY = (minR + maxR + 1) / 2;
+        } else if (room.x !== undefined && room.y !== undefined && room.w && room.h) {
+          centerTileX = room.x + room.w / 2;
+          centerTileY = room.y + room.h / 2;
+        }
+        targetPos = { col: centerTileX, row: centerTileY, room };
+        targetLabel = `Room: ${room.name || room.id || 'Room'}`;
+      }
+    }
+
+    // Fallback: Tile (e.g. on_tile_stepped_on or explicit tile)
+    if (!targetEntity) {
+      if (st.tile && (st.tile[0] !== 0 || st.tile[1] !== 0 || st.event === 'on_tile_stepped_on')) {
+        targetType = 'tile';
+        targetPos = { col: st.tile[0], row: st.tile[1] };
+        targetLabel = `Tile [${st.tile[0]}, ${st.tile[1]}]`;
+      } else if (st.room) {
+        const room = (blockmap.rooms || []).find(r => r.id === st.room);
+        if (room) {
+          targetType = 'room';
+          targetEntity = room;
+          targetPos = { col: (room.x || 0) + (room.w || 1) / 2, row: (room.y || 0) + (room.h || 1) / 2, room };
+          targetLabel = `Room: ${room.name || room.id}`;
+        }
+      }
+    }
+
+    if (!targetPos) {
+      targetPos = { col: st.tile ? st.tile[0] : 0, row: st.tile ? st.tile[1] : 0 };
+      targetLabel = `Tile [${targetPos.col}, ${targetPos.row}]`;
+    }
+
+    indicators.push({
+      trigger: st,
+      originalIndex,
+      letter,
+      marker: `Note ${letter}`,
+      targetType,
+      targetEntity,
+      targetPos,
+      targetLabel
+    });
+  }
+
+  return {
+    startingAction,
+    indicators
+  };
+}
+
+/**
+ * Render a crisp, classic HeroQuest-style letter indicator onto the export canvas.
+ */
+function drawExportTriggerIndicator(ctx, geom, ind, options = {}) {
+  ctx.save();
+  const { targetType, targetPos, letter } = ind;
+  const ts = geom.tileSize;
+
+  if (targetType === 'monster') {
+    // Pinned to the top-right corner of the monster token
+    const mpos = tileToWorld(targetPos.col, targetPos.row, geom);
+    const cx = Math.round(mpos.x + ts - 5);
+    const cy = Math.round(mpos.y + 5);
+    const r = 8.5;
+
+    // Drop shadow
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 1;
+
+    // Outer crimson rimmed parchment pin
+    ctx.fillStyle = '#fef3c7'; // parchment
+    ctx.strokeStyle = '#b91c1c'; // crimson seal border
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.stroke();
+
+    // Inner fine ring
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r - 2, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Letter
+    ctx.fillStyle = '#7f1d1d';
+    ctx.font = 'bold 10px Cinzel, serif, Georgia, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(letter, cx, cy);
+
+  } else if (targetType === 'door') {
+    // Pinned beside / on the door
+    const basePos = tileToWorld(targetPos.col, targetPos.row, geom);
+    let cx = targetPos.isVertical ? basePos.x : basePos.x + ts / 2;
+    let cy = targetPos.isVertical ? basePos.y + ts / 2 : basePos.y;
+    // Offset slightly into the adjacent corridor / room so the door remains visible
+    if (targetPos.isVertical) cx += 9; else cy += 9;
+    const r = 8.5;
+
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 1;
+
+    ctx.fillStyle = '#fef3c7';
+    ctx.strokeStyle = '#b45309'; // warm amber brass border
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.stroke();
+
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r - 2, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#78350f';
+    ctx.font = 'bold 10px Cinzel, serif, Georgia, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(letter, cx, cy);
+
+  } else if (targetType === 'room') {
+    // Room emblem
+    const cx = Math.round(geom.offsetX + targetPos.col * ts);
+    let cy = Math.round(geom.offsetY + targetPos.row * ts);
+    // If room names are enabled, displace slightly vertically so both room name and note letter are distinct
+    if (options.showRoomNames !== false) {
+      cy -= 13;
+    }
+    const r = 11;
+
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+    ctx.shadowBlur = 5;
+    ctx.shadowOffsetY = 1.5;
+
+    // Classic HeroQuest Quest Book parchment seal
+    ctx.fillStyle = '#fef3c7';
+    ctx.strokeStyle = '#78350f'; // dark oak wood/leather border
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.stroke();
+
+    // Inner gold ring
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r - 2.5, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#451a03';
+    ctx.font = 'bold 12px Cinzel, serif, Georgia, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(letter, cx, cy);
+
+  } else if (targetType === 'furniture') {
+    // Pinned to furniture
+    const cx = Math.round(geom.offsetX + targetPos.col * ts);
+    const cy = Math.round(geom.offsetY + targetPos.row * ts);
+    const r = 8.5;
+
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 1;
+
+    ctx.fillStyle = '#fef3c7';
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.stroke();
+
+    ctx.fillStyle = '#78350f';
+    ctx.font = 'bold 10px Cinzel, serif, Georgia, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(letter, cx, cy);
+
+  } else {
+    // Tile (e.g. corridor or floor tile)
+    const tpos = tileToWorld(targetPos.col, targetPos.row, geom);
+    const cx = Math.round(tpos.x + ts / 2);
+    const cy = Math.round(tpos.y + ts / 2);
+    const r = 9;
+
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 1;
+
+    ctx.fillStyle = '#fef3c7';
+    ctx.strokeStyle = '#0284c7'; // sapphire blue border
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.stroke();
+
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r - 2, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#0369a1';
+    ctx.font = 'bold 10px Cinzel, serif, Georgia, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(letter, cx, cy);
+  }
+
+  ctx.restore();
+}
+
 function generateExportCanvas(options = {}) {
   const scale = Number(options.scale) || 1;
   const showBanner = Boolean(options.showBanner);
@@ -1241,7 +1640,9 @@ function generateExportCanvas(options = {}) {
     showFurniture: options.showFurniture !== undefined ? options.showFurniture : true,
     showDoors: options.showDoors !== undefined ? options.showDoors : true,
     showMonsters: options.showMonsters !== undefined ? options.showMonsters : true,
-    showNotes: options.showNotes !== undefined ? options.showNotes : true
+    showNotes: options.showNotes !== undefined ? options.showNotes : true,
+    quest,
+    blockmap
   });
 
   ctx.restore();
@@ -1451,19 +1852,36 @@ function generateQuestPdfHtml(quest, blockmap, mapDataUrl, options = {}) {
     trapCounts[type] = (trapCounts[type] || 0) + 1;
   });
 
-  // Story triggers / notes
-  const notes = (quest.storyTriggers || []).slice().sort((a, b) => {
-    const mA = (a.marker || 'A').replace(/[^a-zA-Z0-9]/g, '');
-    const mB = (b.marker || 'B').replace(/[^a-zA-Z0-9]/g, '');
-    return mA.localeCompare(mB, undefined, { numeric: true, sensitivity: 'base' });
-  });
+  // Story triggers / notes & starting quest action
+  const { startingAction, indicators } = resolveTriggerIndicators(quest, blockmap);
+  const notes = indicators;
 
   const title = quest.title || 'Tabletop Quest Map';
-  const briefing = quest.briefing || '';
+  const briefing = quest.briefing || quest.description || quest.header?.description || '';
   const wanderingMonster = quest.wanderingMonster ? (MONSTER_DEFS[quest.wanderingMonster]?.name || quest.wanderingMonster) : 'None';
   const goldBounty = quest.goldBounty !== undefined ? quest.goldBounty : 0;
   const startLoc = quest.startingStair ? `[${quest.startingStair[0]}, ${quest.startingStair[1]}]` : 'Not set';
   const exitLoc = quest.exitTile ? `[${quest.exitTile[0]}, ${quest.exitTile[1]}]` : (quest.startingStair ? `${startLoc} (Return to Entrance)` : 'None');
+
+  // Starting quest action displayed as intro text alongside quest briefing
+  let introHtml = '';
+  if (briefing) {
+    introHtml += `<div class="story-briefing-text">${escapeHtml(briefing).replace(/\n/g, '<br>')}</div>`;
+  }
+  if (startingAction) {
+    const startNarrative = startingAction.narrative;
+    if (startNarrative && startNarrative.trim() && startNarrative.trim() !== briefing.trim()) {
+      introHtml += `<div class="story-starting-action-text" style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #cbd5e1; color: #1e293b;">${escapeHtml(startNarrative).replace(/\n/g, '<br>')}</div>`;
+    }
+    const movieAction = startingAction.actions?.find(a => a.type === 'play_movie');
+    if (movieAction) {
+      introHtml += `<div style="margin-top: 5px; font-size: 8pt; color: #0284c7; font-style: normal; font-weight: 600;">🎬 Opening Cinematic: ${escapeHtml(movieAction.title || movieAction.moviePath || 'Intro Movie')}</div>`;
+    }
+    const dialogueAction = startingAction.actions?.find(a => a.type === 'dialogue');
+    if (dialogueAction && dialogueAction.lines && dialogueAction.lines.length > 0) {
+      introHtml += `<div style="margin-top: 4px; font-size: 8pt; color: #475569; font-style: italic;">${dialogueAction.lines.map(l => `"${escapeHtml(l.text)}"`).join(' ')}</div>`;
+    }
+  }
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -1702,10 +2120,10 @@ function generateQuestPdfHtml(quest, blockmap, mapDataUrl, options = {}) {
       <div class="meta-pill"><strong>Exit:</strong> ${exitLoc}</div>
     </div>
   </div>
-  ${briefing ? `
+  ${introHtml ? `
   <div class="story-briefing">
     <div class="story-briefing-title">📜 The Quest Briefing</div>
-    ${escapeHtml(briefing).replace(/\n/g, '<br>')}
+    ${introHtml}
   </div>` : ''}
   ` : ''}
 
@@ -1724,16 +2142,16 @@ function generateQuestPdfHtml(quest, blockmap, mapDataUrl, options = {}) {
       </div>
       ${notes.length > 0 ? `
       <div class="notes-flow">
-        ${notes.map(st => {
-          const mark = (st.marker || 'A').replace('Note ', '');
-          const eventLabel = TRIGGER_EVENT_DEFS[st.event]?.name || st.event;
-          const targetStr = st.target || st.room || (st.tile ? `Tile [${st.tile[0]}, ${st.tile[1]}]` : '');
+        ${notes.map(ind => {
+          const st = ind.trigger;
+          const mark = ind.letter;
+          const targetStr = ind.targetLabel;
           const noteTitle = st.title || st.name || '';
           return `
           <div class="note-entry">
             <div class="note-disc">${escapeHtml(mark)}</div>
             <div class="note-body">
-              <div class="note-head">Note ${escapeHtml(mark)}${noteTitle ? ': ' + escapeHtml(noteTitle) : ''} <span style="font-weight:normal; color:#64748b;">(${escapeHtml(eventLabel)}${targetStr ? ': ' + escapeHtml(targetStr) : ''})</span></div>
+              <div class="note-head">Note ${escapeHtml(mark)}${noteTitle ? ': ' + escapeHtml(noteTitle) : ''} <span style="font-weight:normal; color:#64748b;">(${escapeHtml(targetStr)})</span></div>
               ${st.narrative ? `<div class="note-desc">${escapeHtml(st.narrative)}</div>` : ''}
               ${(st.actions && st.actions.length > 0) ? `
                 <div style="margin-top:2px; font-size:7.5pt; color:#0369a1;">
@@ -2140,6 +2558,8 @@ function render() {
 
 function drawBoardLayers(ctx, geom, options = {}) {
   const forExport = !!options.forExport;
+  const quest = options.quest || state.quest || {};
+  const blockmap = options.blockmap || state.blockmap || {};
   const showGrid = options.showGrid !== undefined ? options.showGrid : state.layers.showGrid;
   const showRoomNames = options.showRoomNames !== undefined ? options.showRoomNames : state.layers.showRoomNames;
   const showImage = options.showImage !== undefined ? options.showImage : state.layers.showImage;
@@ -2917,8 +3337,8 @@ function drawBoardLayers(ctx, geom, options = {}) {
     });
   }
 
-  // 11. Story Triggers / Notes (Layer 2)
-  if (showNotes && state.quest.storyTriggers) {
+  // 11. Story Triggers / Notes (Layer 2 - Interactive Editor View)
+  if (showNotes && !forExport && state.quest.storyTriggers) {
     state.quest.storyTriggers.forEach((st, i) => {
       const pos = tileToWorld(st.tile[0], st.tile[1], geom);
       const cx = pos.x + geom.tileSize / 2;
@@ -3043,6 +3463,14 @@ function drawBoardLayers(ctx, geom, options = {}) {
       ctx.restore();
     }
     ctx.restore();
+  }
+
+  // 12. Export Trigger Indicators (HeroQuest-Style Letter Badges placed on target entities)
+  if (showNotes && forExport) {
+    const { indicators } = resolveTriggerIndicators(quest, blockmap, geom);
+    indicators.forEach(ind => {
+      drawExportTriggerIndicator(ctx, geom, ind, { showRoomNames });
+    });
   }
 }
 
@@ -7219,7 +7647,10 @@ if (typeof window !== 'undefined') {
     openExportPdfModal,
     closeExportPdfModal,
     loadBlockmap,
-    loadCartridge
+    loadCartridge,
+    isStartingQuestAction,
+    resolveTriggerIndicators,
+    drawExportTriggerIndicator
   };
 
   // Bootstrap application on window load
@@ -7231,6 +7662,9 @@ if (typeof module !== 'undefined' && module.exports) {
     validateQuest,
     loadCartridge,
     loadBlockmap,
+    isStartingQuestAction,
+    resolveTriggerIndicators,
+    drawExportTriggerIndicator,
     interpretVoiceQuestCommands,
     executeVoiceMapCommands,
     findTargetRoom,

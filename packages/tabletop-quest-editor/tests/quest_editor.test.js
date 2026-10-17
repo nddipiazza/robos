@@ -9,6 +9,9 @@ const {
   validateQuest: validateQuestFn,
   loadCartridge,
   loadBlockmap,
+  isStartingQuestAction,
+  resolveTriggerIndicators,
+  drawExportTriggerIndicator,
   interpretVoiceQuestCommands,
   executeVoiceMapCommands,
   setupSplitDividers,
@@ -2899,6 +2902,184 @@ test('Blockmap Loading & Grid Dimensions: verifies loadBlockmap initializes grid
     global.window = savedWindow;
   }
 });
+
+test('Starting Quest Action & Indicator Resolution: separates intro action from map indicators and anchors indicators to relevant entities', () => {
+  const quest = {
+    title: 'Dungeon of Shadows',
+    startingStair: [2, 2],
+    monsters: [
+      { id: 'mon-warlord-1', name: 'Orc Warlord', type: 'orc', pos: [8, 5], isBoss: true }
+    ],
+    doors: [
+      { id: 'door-armory', name: 'Iron Armory Gate', from: [5, 4], to: [6, 4], state: 'closed', is_secret: false }
+    ],
+    furniture: [
+      { id: 'furn-altar-1', name: 'Bloodstone Altar', type: 'altar', x: 12, y: 8, width: 2, height: 1 }
+    ],
+    storyTriggers: [
+      {
+        id: 'trig-intro',
+        title: 'Opening Prologue',
+        event: 'on_game_start',
+        tile: [0, 0],
+        narrative: 'Mentor speaks: "The shadow of Morcar stretches across the realm..."',
+        actions: [{ type: 'play_movie', moviePath: 'res://assets/movies/quest1-intro.mp4', title: 'Intro Cinematic' }]
+      },
+      {
+        id: 'trig-door',
+        title: 'Armory Trap',
+        event: 'on_door_opened',
+        target: 'door-armory',
+        doorId: 'door-armory',
+        tile: [5, 4],
+        narrative: 'A poisoned dart shoots from the lock!',
+        actions: [{ type: 'attack_character', attacker: 'Poison Dart' }]
+      },
+      {
+        id: 'trig-boss',
+        title: 'Wrath of the Warlord',
+        event: 'on_monster_killed',
+        target: 'mon-warlord-1',
+        monsterId: 'mon-warlord-1',
+        tile: [8, 5],
+        narrative: 'The Warlord roars with his dying breath!',
+        actions: [{ type: 'custom_action', title: 'Spawn Skeletons' }]
+      },
+      {
+        id: 'trig-room',
+        title: 'Sanctum Horror',
+        event: 'on_room_entered',
+        target: 'room-crypt-3',
+        room: 'room-crypt-3',
+        tile: [12, 8],
+        narrative: 'Cold dread washes over your spine.',
+        actions: [{ type: 'cast_spell', spell: 'fear' }]
+      },
+      {
+        id: 'trig-corridor',
+        title: 'Pitfall',
+        event: 'on_tile_stepped_on',
+        tile: [3, 9],
+        narrative: 'The floor gives way beneath your boots!',
+        actions: [{ type: 'spring_trap', trap: 'pit' }]
+      }
+    ]
+  };
+
+  const blockmap = {
+    gridDimensions: [26, 19],
+    rooms: [
+      { id: 'room-crypt-3', name: 'Ancient Crypt', tiles: [[11, 7], [12, 7], [11, 8], [12, 8]] }
+    ]
+  };
+
+  // 1. Verify isStartingQuestAction identifies intro trigger
+  assert.equal(isStartingQuestAction(quest.storyTriggers[0], quest, blockmap), true, 'Opening prologue identified as starting action');
+  assert.equal(isStartingQuestAction(quest.storyTriggers[1], quest, blockmap), false, 'Door trigger not starting action');
+
+  // 2. Verify resolveTriggerIndicators
+  const { startingAction, indicators } = resolveTriggerIndicators(quest, blockmap);
+
+  assert.ok(startingAction, 'Starting action extracted');
+  assert.equal(startingAction.id, 'trig-intro');
+  assert.equal(startingAction.title, 'Opening Prologue');
+
+  // 3. Verify map indicators count (4 remaining triggers)
+  assert.equal(indicators.length, 4, '4 map triggers should receive indicators');
+
+  // Verify unique letter assignment: A, B, C, D
+  assert.equal(indicators[0].letter, 'A');
+  assert.equal(indicators[1].letter, 'B');
+  assert.equal(indicators[2].letter, 'C');
+  assert.equal(indicators[3].letter, 'D');
+
+  // Verify target entity resolution
+  assert.equal(indicators[0].targetType, 'door', 'Indicator A anchored to door');
+  assert.equal(indicators[0].targetLabel, 'Door: Iron Armory Gate');
+
+  assert.equal(indicators[1].targetType, 'monster', 'Indicator B anchored to monster');
+  assert.ok(indicators[1].targetLabel.includes('Orc Warlord (Boss)'));
+
+  assert.equal(indicators[2].targetType, 'room', 'Indicator C anchored to room');
+  assert.equal(indicators[2].targetLabel, 'Room: Ancient Crypt');
+
+  assert.equal(indicators[3].targetType, 'tile', 'Indicator D anchored to tile');
+  assert.equal(indicators[3].targetLabel, 'Tile [3, 9]');
+
+  // 4. Verify mock canvas drawing of all indicator types
+  const mockCtx = {
+    save: () => {},
+    restore: () => {},
+    beginPath: () => {},
+    arc: () => {},
+    fill: () => {},
+    stroke: () => {},
+    fillText: () => {}
+  };
+  const geom = { tileSize: 39, offsetX: 0, offsetY: 0, cols: 26, rows: 19 };
+  for (const ind of indicators) {
+    assert.doesNotThrow(() => {
+      drawExportTriggerIndicator(mockCtx, geom, ind, { showRoomNames: true });
+    });
+  }
+});
+
+test('Custom Quest Cartridge Verification: custom-quest intro action appears in briefing and remaining triggers anchor to corridor tile and door', () => {
+  const cartridgePath = path.join(__dirname, '../../../games/tabletop-rpg/cartridges/custom-quest.cartridge.json');
+  assert.ok(fs.existsSync(cartridgePath), 'custom-quest.cartridge.json exists');
+  const cartridge = JSON.parse(fs.readFileSync(cartridgePath, 'utf8'));
+  const map = cartridge.maps['custom-quest'];
+  assert.ok(map, 'custom-quest map exists in cartridge');
+
+  const blockmap = {
+    gridDimensions: [map.width || 26, map.height || 19],
+    rooms: map.rooms || []
+  };
+
+  const { startingAction, indicators } = resolveTriggerIndicators(map, blockmap);
+
+  // 1. Verify starting action detection
+  assert.ok(startingAction, 'Starting quest action detected in custom-quest');
+  assert.equal(startingAction.actions[0].moviePath, 'res://assets/movies/quest1-intro.mp4');
+  assert.ok(startingAction.narrative.includes('Mentor speaks:'), 'Mentor speech in starting action');
+
+  // 2. Verify indicators count and targets
+  assert.equal(indicators.length, 2, 'Exactly 2 map indicators (excluding intro action)');
+
+  // Indicator 0: Note A on corridor heist stepped-on tile [7, 18]
+  assert.equal(indicators[0].letter, 'A');
+  assert.equal(indicators[0].targetType, 'tile');
+  assert.deepEqual(indicators[0].targetPos, { col: 7, row: 18 });
+  assert.equal(indicators[0].targetLabel, 'Tile [7, 18]');
+
+  // Indicator 1: Note B on door-10
+  assert.equal(indicators[1].letter, 'B');
+  assert.equal(indicators[1].targetType, 'door');
+  assert.equal(indicators[1].targetLabel, 'Door: door-10');
+
+  // 3. Verify Quest Sheet PDF HTML content
+  const mockMapUrl = 'data:image/png;base64,mock';
+  const questPayload = { ...map, briefing: cartridge.header?.description };
+  const html = generateQuestPdfHtml(questPayload, blockmap, mockMapUrl, {
+    orientation: 'landscape',
+    pageSize: 'A4',
+    includeHeader: true,
+    includeNotes: true
+  });
+
+  // Briefing contains Mentor's words and opening cinematic
+  assert.ok(html.includes('The Emperor calls upon'), 'Contains header description in briefing');
+  assert.ok(html.includes('Mentor speaks: &quot;As you step forward, ancient magic stirs...&quot;') ||
+            html.includes('Mentor speaks: "As you step forward, ancient magic stirs..."'), 'Contains starting action narrative in intro');
+  assert.ok(html.includes('Opening Cinematic: Note A Cinematic'), 'Contains opening cinematic in intro');
+
+  // Quest notes list shows Note A and Note B with their target descriptions
+  assert.ok(html.includes('Note A'), 'Note A in quest notes');
+  assert.ok(html.includes('Tile [7, 18]'), 'Tile [7, 18] in quest notes');
+  assert.ok(html.includes('Note B'), 'Note B in quest notes');
+  assert.ok(html.includes('Door: door-10'), 'Door: door-10 in quest notes');
+});
+
 
 
 
