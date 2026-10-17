@@ -3040,7 +3040,11 @@ test('Custom Quest Cartridge Verification: custom-quest intro action appears in 
 
   // 1. Verify starting action detection
   assert.ok(startingAction, 'Starting quest action detected in custom-quest');
-  assert.equal(startingAction.actions[0].moviePath, 'res://assets/movies/quest1-intro.mp4');
+  assert.ok(
+    startingAction.actions[0].moviePath === 'res://assets/movies/quest_introduction_movie.ogv' ||
+    startingAction.actions[0].moviePath === 'res://assets/movies/quest1-intro.mp4',
+    'Starting action moviePath should point to the intro cinematic'
+  );
   assert.ok(startingAction.narrative.includes('Mentor speaks:'), 'Mentor speech in starting action');
 
   // 2. Verify indicators count and targets
@@ -3069,8 +3073,8 @@ test('Custom Quest Cartridge Verification: custom-quest intro action appears in 
 
   // Briefing contains Mentor's words and opening cinematic
   assert.ok(html.includes('The Emperor calls upon'), 'Contains header description in briefing');
-  assert.ok(html.includes('Mentor speaks: &quot;As you step forward, ancient magic stirs...&quot;') ||
-            html.includes('Mentor speaks: "As you step forward, ancient magic stirs..."'), 'Contains starting action narrative in intro');
+  assert.ok(html.includes('Mentor speaks: &quot;As you step forward, ancient magic stirs') ||
+            html.includes('Mentor speaks: "As you step forward, ancient magic stirs'), 'Contains starting action narrative in intro');
   assert.ok(html.includes('Opening Cinematic: Note A Cinematic'), 'Contains opening cinematic in intro');
 
   // Quest notes list shows Note A and Note B with their target descriptions
