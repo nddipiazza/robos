@@ -1320,5 +1320,118 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.strictEqual(launchNew.success, true);
     assert.strictEqual(launchNew.launchMode, "new");
   });
+
+  it("defines robos:TabletopQuestSaveState in KGraph ontology/SHACL and captures screenshots + full telemetry (player health, visible monsters, round, whose turn, items found, play time)", async () => {
+    const gamingLib = require(path.join(REPO_ROOT, "packages/robos-gaming"));
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+    const godotWorldGd = fs.readFileSync(path.join(REPO_ROOT, "games/tabletop-rpg/scripts/TabletopWorld.gd"), "utf8");
+    const ontologyJson = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, ".robos/ontology.jsonld"), "utf8"));
+
+    // 1. Verify KGraph Ontology & SHACL Shape definitions (no hardcoding of telemetry fields)
+    assert.ok(
+      Array.isArray(gamingLib.GAMING_SHACL_SHAPES) &&
+      gamingLib.GAMING_SHACL_SHAPES.some(s => s.shapeId === "urn:robos:shape:TabletopQuestSaveStateShape"),
+      "Must register TabletopQuestSaveStateShape in robos-gaming"
+    );
+    assert.ok(gamingLib.TABLETOP_SAVE_STATE_SCHEMA, "Must export TABLETOP_SAVE_STATE_SCHEMA from robos-gaming");
+    assert.strictEqual(gamingLib.TABLETOP_SAVE_STATE_SCHEMA.targetClass, "robos:TabletopQuestSaveState");
+    assert.ok(Array.isArray(gamingLib.TABLETOP_SAVE_STATE_SCHEMA.telemetryMetrics), "Must define schema-driven telemetryMetrics array");
+    const metricPredicates = gamingLib.TABLETOP_SAVE_STATE_SCHEMA.telemetryMetrics.map(m => m.property);
+    for (const requiredPred of [
+      "robos:currentRound",
+      "robos:activeTurnActor",
+      "robos:turnState",
+      "robos:playTimeSeconds",
+      "robos:visibleMonstersCount",
+      "robos:itemsFoundCount",
+      "robos:totalPartyGold",
+      "robos:exploredTilesCount",
+      "robos:doorsOpenCount",
+      "robos:triggersFiredCount"
+    ]) {
+      assert.ok(metricPredicates.includes(requiredPred), `Schema telemetryMetrics must include ${requiredPred}`);
+    }
+
+    const ontologyGraph = ontologyJson["@graph"] || [];
+    assert.ok(ontologyGraph.some(n => n["@id"] === "robos:TabletopQuestSaveState"), ".robos/ontology.jsonld must define robos:TabletopQuestSaveState class");
+    assert.ok(ontologyGraph.some(n => n["@id"] === "robos:activeTurnActor"), ".robos/ontology.jsonld must define robos:activeTurnActor property");
+    assert.ok(ontologyGraph.some(n => n["@id"] === "robos:visibleMonsters"), ".robos/ontology.jsonld must define robos:visibleMonsters property");
+    assert.ok(ontologyGraph.some(n => n["@id"] === "robos:screenshotPath"), ".robos/ontology.jsonld must define robos:screenshotPath property");
+
+    // 2. Verify Godot TabletopWorld.gd captures screenshot and full telemetry on every save
+    assert.ok(godotWorldGd.includes("func _capture_save_screenshot("), "TabletopWorld.gd must implement _capture_save_screenshot");
+    assert.ok(godotWorldGd.includes("func get_save_screenshot_path("), "TabletopWorld.gd must implement get_save_screenshot_path");
+    assert.ok(godotWorldGd.includes('"screenshot_path":'), "serialize_game_state must record screenshot_path");
+    assert.ok(godotWorldGd.includes('"play_time_seconds": roundi(play_time_seconds)'), "serialize_game_state must record play_time_seconds");
+    assert.ok(godotWorldGd.includes('"active_turn_actor": active_actor_str'), "serialize_game_state must record active_turn_actor");
+    assert.ok(godotWorldGd.includes('"visible_monsters": visible_monsters_save'), "serialize_game_state must record visible_monsters");
+    assert.ok(godotWorldGd.includes('"items_found":'), "serialize_game_state must record items_found");
+
+    // 3. Verify UI containers in index.html for screenshot, telemetry grid, visible monsters, and items found
+    assert.ok(indexHtml.includes('id="quest-save-state-screenshot-panel"'), "index.html must include screenshot panel");
+    assert.ok(indexHtml.includes('id="quest-save-state-screenshot-canvas"'), "index.html must include screenshot canvas");
+    assert.ok(indexHtml.includes('id="quest-save-state-telemetry-grid"'), "index.html must include KGraph telemetry grid");
+    assert.ok(indexHtml.includes('id="quest-save-state-visible-monsters"'), "index.html must include visible monsters list");
+    assert.ok(indexHtml.includes('id="quest-save-state-items-found"'), "index.html must include items found list");
+
+    // 4. Verify normalization of raw Godot save state into KGraph robos:TabletopQuestSaveState node
+    const rawGodotSave = {
+      version: "2.0",
+      timestamp: 1775827298,
+      cartridge_id: "custom-quest",
+      map_id: "custom-quest",
+      current_round: 3,
+      current_phase: "HERO_TURN",
+      active_hero_idx: 1,
+      turn_moved: true,
+      turn_action_used: false,
+      turn_move_remaining: 4,
+      turn_Searched_treasure: true,
+      play_time_seconds: 425,
+      heroes: [
+        { id: "barbarian", name: "Barbarian", class: "Barbarian", pos: [1, 8], current_bp: 6, max_bp: 8, current_mp: 2, max_mp: 2, attack: 3, defend: 2, gold: 150, inventory: [{ name: "Potion of Healing", type: "potion" }], dead: false },
+        { id: "dwarf", name: "Dwarf", class: "Dwarf", pos: [2, 9], current_bp: 7, max_bp: 7, current_mp: 3, max_mp: 3, attack: 2, defend: 2, gold: 125, inventory: [{ name: "Toolkit", type: "tool" }], dead: false }
+      ],
+      monsters: [
+        { id: "mon-orc-1", name: "Orc Warrior", slug: "orc", pos: [4, 9], current_bp: 1, max_bp: 1, attack: 3, defend: 2, dead: false },
+        { id: "mon-goblin-2", name: "Goblin Scout", slug: "goblin", pos: [12, 12], current_bp: 1, max_bp: 1, attack: 2, defend: 1, dead: false }
+      ],
+      discovered_monster_ids: ["mon-orc-1"],
+      explored_tiles: ["1,8", "2,9", "3,9", "4,9"],
+      revealed_rooms: ["room-entry", "room-guard"],
+      doors: [{ from: [2, 8], to: [3, 8], open: true }, { from: [5, 8], to: [6, 8], open: false }],
+      triggers_fired: ["on_enter_guard_room"]
+    };
+
+    const kNode = gamingLib.normalizeQuestSaveStateToKGraphNode(rawGodotSave, { slug: "custom-quest" });
+    assert.strictEqual(kNode["@id"], "urn:robos:tabletop:savestate:custom-quest");
+    assert.ok(kNode["@type"].includes("robos:TabletopQuestSaveState"), "Normalized node must have @type robos:TabletopQuestSaveState");
+    assert.strictEqual(kNode["robos:currentRound"], 3);
+    assert.strictEqual(kNode["robos:currentPhase"], "HERO_TURN");
+    assert.ok(kNode["robos:activeTurnActor"].includes("Dwarf"), "Whose turn must resolve to active_hero_idx=1 (Dwarf)");
+    assert.strictEqual(kNode["robos:playTimeSeconds"], 425);
+    assert.strictEqual(kNode["robos:playTimeFormatted"], "7m 5s");
+    assert.strictEqual(kNode["robos:heroStates"][0].currentBP, 6, "Must map Godot current_bp -> currentBP");
+    assert.strictEqual(kNode["robos:heroStates"][0].maxBP, 8, "Must map Godot max_bp -> maxBP");
+    assert.strictEqual(kNode["robos:visibleMonstersCount"], 1, "Must filter visible monsters by discovered_monster_ids");
+    assert.strictEqual(kNode["robos:visibleMonsters"][0].name, "Orc Warrior");
+    assert.strictEqual(kNode["robos:itemsFoundCount"], 2, "Must aggregate items found across party inventories");
+    assert.strictEqual(kNode["robos:totalPartyGold"], 275);
+    assert.strictEqual(kNode["robos:exploredTilesCount"], 4);
+    assert.strictEqual(kNode["robos:doorsOpenCount"], 1);
+    assert.deepStrictEqual(kNode["robos:triggersFired"], ["on_enter_guard_room"]);
+
+    // 5. Verify saveQuestStateFromNow returns normalized KGraph node + screenshot
+    const snapRes = await appModule.saveQuestStateFromNow();
+    assert.strictEqual(snapRes.success, true);
+    assert.ok(snapRes.savedState["@type"].includes("robos:TabletopQuestSaveState"));
+    assert.strictEqual(typeof snapRes.savedState["robos:currentRound"], "number");
+    assert.ok(typeof snapRes.savedState["robos:activeTurnActor"] === "string" && snapRes.savedState["robos:activeTurnActor"].length > 0);
+    assert.ok(Array.isArray(snapRes.savedState["robos:heroStates"]) && snapRes.savedState["robos:heroStates"].length === 4);
+    assert.ok(Array.isArray(snapRes.savedState["robos:visibleMonsters"]));
+    assert.ok(Array.isArray(snapRes.savedState["robos:itemsFound"]));
+  });
 });
+
 
