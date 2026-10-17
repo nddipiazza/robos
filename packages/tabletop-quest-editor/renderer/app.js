@@ -3944,17 +3944,35 @@ function validateQuest(quest, blockmap) {
     return null;
   }
 
+  // Corridor lookup helper
+  const hasCorridorList = Boolean(blockmap && Array.isArray(blockmap.corridors) && blockmap.corridors.length > 0);
+  const corridorSet = hasCorridorList
+    ? new Set(blockmap.corridors.map(t => `${t[0]},${t[1]}`))
+    : null;
+
   // -------------------------------------------------------------
   // Rule 1: Furniture outside of bounds of single room
+  // (Treasure chests and stairs can appear in corridors)
   // -------------------------------------------------------------
   if (Array.isArray(quest.furniture)) {
     quest.furniture.forEach((f, idx) => {
       const w = f.width || 1;
       const h = f.height || 1;
       const furnName = f.name || f.type || 'Furniture';
+      const furnType = String(f.type || '').toLowerCase();
+      const furnNameLower = String(f.name || '').toLowerCase();
+      const isChest = furnType === 'chest' ||
+                      furnType === 'treasure_chest' ||
+                      furnType === 'treasure-chest' ||
+                      furnType.includes('chest') ||
+                      furnNameLower.includes('chest');
+      const isStair = furnType.includes('stair') || furnNameLower.includes('stair');
+      const isCorridorAllowed = isChest || isStair;
+
       const tiles = [];
       const roomsEncountered = new Map();
       const corridorTiles = [];
+      const voidTiles = [];
 
       for (let dx = 0; dx < w; dx++) {
         for (let dy = 0; dy < h; dy++) {
@@ -3962,37 +3980,92 @@ function validateQuest(quest, blockmap) {
           const row = f.y + dy;
           tiles.push([col, row]);
           const room = getRoomAt(col, row);
-          if (!room) {
-            corridorTiles.push([col, row]);
-          } else {
+          if (room) {
             if (!roomsEncountered.has(room.id)) {
               roomsEncountered.set(room.id, { room, tiles: [] });
             }
             roomsEncountered.get(room.id).tiles.push([col, row]);
+          } else {
+            // Check if this non-room tile is a valid corridor or void/outside bounds
+            let isCorridor = true;
+            if (hasCorridorList) {
+              isCorridor = corridorSet.has(`${col},${row}`);
+            } else if (blockmap && Array.isArray(blockmap.gridDimensions)) {
+              const [cols, rows] = blockmap.gridDimensions;
+              const border = blockmap.additionalBorderTile ? 1 : 0;
+              isCorridor = col >= -border && col < cols + border && row >= -border && row < rows + border;
+            }
+
+            if (isCorridor) {
+              corridorTiles.push([col, row]);
+            } else {
+              voidTiles.push([col, row]);
+            }
           }
         }
       }
 
-      // 1a: Extends into corridor / void outside room
-      if (corridorTiles.length > 0) {
-        const corrStr = corridorTiles.map(t => `[${t[0]}, ${t[1]}]`).join(', ');
-        errors.push({
-          id: `furn-bounds-corr-${f.id || idx}`,
-          category: 'furniture_bounds',
-          categoryLabel: 'Furniture Bounds',
-          icon: '🪑',
-          title: `${furnName} Outside Room Bounds`,
-          description: `${furnName} at [${f.x}, ${f.y}] (${w}×${h}) extends outside room boundaries into corridor or void at tile${corridorTiles.length > 1 ? 's' : ''} ${corrStr}.`,
-          tiles: corridorTiles,
-          allTiles: tiles,
-          entityType: 'furniture',
-          entityIndex: idx,
-          entityId: f.id || null,
-          anchor: [f.x, f.y]
-        });
+      // 1a: Extends into void or outside board boundaries
+      if (isCorridorAllowed) {
+        if (voidTiles.length > 0) {
+          const voidStr = voidTiles.map(t => `[${t[0]}, ${t[1]}]`).join(', ');
+          errors.push({
+            id: `furn-bounds-void-${f.id || idx}`,
+            category: 'furniture_bounds',
+            categoryLabel: 'Furniture Bounds',
+            icon: '🪑',
+            title: `${furnName} Outside Board Bounds`,
+            description: `${furnName} at [${f.x}, ${f.y}] (${w}×${h}) is placed in void or outside board boundaries at tile${voidTiles.length > 1 ? 's' : ''} ${voidStr}.`,
+            tiles: voidTiles,
+            allTiles: tiles,
+            entityType: 'furniture',
+            entityIndex: idx,
+            entityId: f.id || null,
+            anchor: [f.x, f.y]
+          });
+        }
+
+        // 1b: Straddles room and corridor boundaries
+        if (roomsEncountered.size > 0 && corridorTiles.length > 0) {
+          const corrStr = corridorTiles.map(t => `[${t[0]}, ${t[1]}]`).join(', ');
+          errors.push({
+            id: `furn-bounds-corr-${f.id || idx}`,
+            category: 'furniture_bounds',
+            categoryLabel: 'Furniture Bounds',
+            icon: '🪑',
+            title: `${furnName} Straddles Room and Corridor`,
+            description: `${furnName} at [${f.x}, ${f.y}] (${w}×${h}) straddles room and corridor boundaries at tile${corridorTiles.length > 1 ? 's' : ''} ${corrStr}.`,
+            tiles: corridorTiles,
+            allTiles: tiles,
+            entityType: 'furniture',
+            entityIndex: idx,
+            entityId: f.id || null,
+            anchor: [f.x, f.y]
+          });
+        }
+      } else {
+        // Non-corridor furniture cannot extend outside rooms into corridors or void
+        const outTiles = [...corridorTiles, ...voidTiles];
+        if (outTiles.length > 0) {
+          const corrStr = outTiles.map(t => `[${t[0]}, ${t[1]}]`).join(', ');
+          errors.push({
+            id: `furn-bounds-corr-${f.id || idx}`,
+            category: 'furniture_bounds',
+            categoryLabel: 'Furniture Bounds',
+            icon: '🪑',
+            title: `${furnName} Outside Room Bounds`,
+            description: `${furnName} at [${f.x}, ${f.y}] (${w}×${h}) extends outside room boundaries into corridor or void at tile${outTiles.length > 1 ? 's' : ''} ${corrStr}.`,
+            tiles: outTiles,
+            allTiles: tiles,
+            entityType: 'furniture',
+            entityIndex: idx,
+            entityId: f.id || null,
+            anchor: [f.x, f.y]
+          });
+        }
       }
 
-      // 1b: Straddles multiple rooms
+      // 1c: Straddles multiple rooms
       if (roomsEncountered.size > 1) {
         const roomNames = Array.from(roomsEncountered.values()).map(r => r.room.name || r.room.id).join(' and ');
         errors.push({

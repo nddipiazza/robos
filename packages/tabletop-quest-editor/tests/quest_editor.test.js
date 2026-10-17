@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 
 const {
-  validateQuest,
+  validateQuest: validateQuestFn,
   loadCartridge,
   interpretVoiceQuestCommands,
   executeVoiceMapCommands,
@@ -947,254 +947,8 @@ test('Error Validation Area: validates HeroQuest rules for furniture bounds, doo
   const bPath = path.resolve(__dirname, '../../../games/tabletop-rpg/cartridges/first-light-dungeon.blockmap.json');
   const blockmap = JSON.parse(fs.readFileSync(bPath, 'utf8'));
 
-  function getRoomAt(col, row) {
-    if (!blockmap || !blockmap.rooms) return null;
-    for (const r of blockmap.rooms) {
-      if (r.tiles) {
-        if (r.tiles.some(t => t[0] === col && t[1] === row)) return r;
-      } else if (r.x !== undefined) {
-        if (col >= r.x && col < r.x + r.w && row >= r.y && row < r.y + r.h) return r;
-      }
-    }
-    return null;
-  }
-
   function validateQuest(quest) {
-    const errors = [];
-    if (!quest) return { valid: true, totalErrors: 0, errors: [], counts: { all: 0, furniture_bounds: 0, door_wall: 0, overlap: 0 } };
-
-    // 1. Furniture Bounds
-    if (Array.isArray(quest.furniture)) {
-      quest.furniture.forEach((f, idx) => {
-        const w = f.width || 1;
-        const h = f.height || 1;
-        const furnName = f.name || f.type || 'Furniture';
-        const tiles = [];
-        const roomsEncountered = new Map();
-        const corridorTiles = [];
-
-        for (let dx = 0; dx < w; dx++) {
-          for (let dy = 0; dy < h; dy++) {
-            const col = f.x + dx;
-            const row = f.y + dy;
-            tiles.push([col, row]);
-            const room = getRoomAt(col, row);
-            if (!room) {
-              corridorTiles.push([col, row]);
-            } else {
-              if (!roomsEncountered.has(room.id)) {
-                roomsEncountered.set(room.id, { room, tiles: [] });
-              }
-              roomsEncountered.get(room.id).tiles.push([col, row]);
-            }
-          }
-        }
-
-        if (corridorTiles.length > 0) {
-          const corrStr = corridorTiles.map(t => `[${t[0]}, ${t[1]}]`).join(', ');
-          errors.push({
-            id: `furn-bounds-corr-${f.id || idx}`,
-            category: 'furniture_bounds',
-            categoryLabel: 'Furniture Bounds',
-            icon: '🪑',
-            title: `${furnName} Outside Room Bounds`,
-            description: `${furnName} at [${f.x}, ${f.y}] (${w}×${h}) extends outside room boundaries into corridor or void at tile${corridorTiles.length > 1 ? 's' : ''} ${corrStr}.`,
-            tiles: corridorTiles,
-            allTiles: tiles,
-            entityType: 'furniture',
-            entityIndex: idx,
-            entityId: f.id || null,
-            anchor: [f.x, f.y]
-          });
-        }
-
-        if (roomsEncountered.size > 1) {
-          const roomNames = Array.from(roomsEncountered.values()).map(r => r.room.name || r.room.id).join(' and ');
-          errors.push({
-            id: `furn-bounds-multi-${f.id || idx}`,
-            category: 'furniture_bounds',
-            categoryLabel: 'Furniture Bounds',
-            icon: '🪑',
-            title: `${furnName} Straddles Multiple Rooms`,
-            description: `${furnName} at [${f.x}, ${f.y}] (${w}×${h}) straddles multiple rooms (${roomNames}). Furniture must reside strictly within a single room.`,
-            tiles: tiles,
-            allTiles: tiles,
-            entityType: 'furniture',
-            entityIndex: idx,
-            entityId: f.id || null,
-            anchor: [f.x, f.y]
-          });
-        }
-      });
-    }
-
-    // 2. Door Wall Placement
-    if (Array.isArray(quest.doors)) {
-      quest.doors.forEach((d, idx) => {
-        const from = d.from;
-        const to = d.to;
-        if (!from || !to) return;
-
-        const r1 = getRoomAt(from[0], from[1]);
-        const r2 = getRoomAt(to[0], to[1]);
-        const doorName = d.is_secret ? 'Secret Door' : (d.state === 'open' ? 'Open Door' : 'Door');
-        const doorId = d.id || idx;
-
-        if (!r1 && !r2) {
-          errors.push({
-            id: `door-wall-corridor-${doorId}`,
-            category: 'door_wall',
-            categoryLabel: 'Door Wall',
-            icon: '🚪',
-            title: `${doorName} Floating in Corridor`,
-            description: `${doorName} between [${from[0]}, ${from[1]}] and [${to[0]}, ${to[1]}] is not attached to any room perimeter wall (both sides are corridors).`,
-            tiles: [from, to],
-            allTiles: [from, to],
-            entityType: 'door',
-            entityIndex: idx,
-            entityId: d.id || null,
-            doorEdge: { from, to },
-            anchor: from
-          });
-        } else if (r1 && r2 && r1.id === r2.id) {
-          const roomName = r1.name || r1.id;
-          errors.push({
-            id: `door-wall-interior-${doorId}`,
-            category: 'door_wall',
-            categoryLabel: 'Door Wall',
-            icon: '🚪',
-            title: `${doorName} Inside Room Floor`,
-            description: `${doorName} between [${from[0]}, ${from[1]}] and [${to[0]}, ${to[1]}] is placed inside open floor space within ${roomName} instead of on its perimeter wall.`,
-            tiles: [from, to],
-            allTiles: [from, to],
-            entityType: 'door',
-            entityIndex: idx,
-            entityId: d.id || null,
-            doorEdge: { from, to },
-            anchor: from
-          });
-        }
-      });
-    }
-
-    // 3. Object Overlaps
-    const tileOccupants = new Map();
-    function addOccupant(col, row, item) {
-      const key = `${col},${row}`;
-      if (!tileOccupants.has(key)) tileOccupants.set(key, []);
-      tileOccupants.get(key).push(item);
-    }
-
-    if (Array.isArray(quest.furniture)) {
-      quest.furniture.forEach((f, idx) => {
-        const w = f.width || 1;
-        const h = f.height || 1;
-        const name = f.name || f.type || 'Furniture';
-        for (let dx = 0; dx < w; dx++) {
-          for (let dy = 0; dy < h; dy++) {
-            addOccupant(f.x + dx, f.y + dy, { type: 'furniture', index: idx, id: f.id || null, name, x: f.x + dx, y: f.y + dy });
-          }
-        }
-      });
-    }
-
-    if (Array.isArray(quest.monsters)) {
-      quest.monsters.forEach((m, idx) => {
-        const name = m.name || m.type || 'Monster';
-        const mx = m.x !== undefined ? m.x : (m.pos ? m.pos[0] : 0);
-        const my = m.y !== undefined ? m.y : (m.pos ? m.pos[1] : 0);
-        addOccupant(mx, my, { type: 'monster', index: idx, id: m.id || null, name, x: mx, y: my });
-      });
-    }
-
-    if (Array.isArray(quest.wallBlocks)) {
-      quest.wallBlocks.forEach((b, idx) => {
-        addOccupant(b.x, b.y, { type: 'wall-block', index: idx, id: b.id || null, name: 'Wall Block', x: b.x, y: b.y });
-      });
-    }
-
-    if (Array.isArray(quest.traps)) {
-      quest.traps.forEach((t, idx) => {
-        addOccupant(t.x, t.y, { type: 'trap', index: idx, id: t.id || null, name: `Trap (${t.type || 'pit'})`, x: t.x, y: t.y });
-      });
-    }
-
-    for (const [key, occupants] of tileOccupants.entries()) {
-      if (occupants.length <= 1) continue;
-      const [col, row] = key.split(',').map(Number);
-
-      for (let i = 0; i < occupants.length; i++) {
-        for (let j = i + 1; j < occupants.length; j++) {
-          const o1 = occupants[i];
-          const o2 = occupants[j];
-
-          let title = `Object Collision at [${col}, ${row}]`;
-          let desc = '';
-          let primaryEntity = o2;
-
-          if (o1.type === 'furniture' && o2.type === 'monster') {
-            title = `Monster on Furniture at [${col}, ${row}]`;
-            desc = `HeroQuest rule violation: ${o2.name} is standing on top of ${o1.name}. Characters and enemies cannot stand on furniture.`;
-            primaryEntity = o2;
-          } else if (o1.type === 'monster' && o2.type === 'furniture') {
-            title = `Monster on Furniture at [${col}, ${row}]`;
-            desc = `HeroQuest rule violation: ${o1.name} is standing on top of ${o2.name}. Characters and enemies cannot stand on furniture.`;
-            primaryEntity = o1;
-          } else if (o1.type === 'monster' && o2.type === 'monster') {
-            title = `Monsters Colliding at [${col}, ${row}]`;
-            desc = `Multiple monsters (${o1.name} and ${o2.name}) are placed on the exact same tile [${col}, ${row}].`;
-            primaryEntity = o2;
-          } else if (o1.type === 'furniture' && o2.type === 'furniture') {
-            title = `Furniture Overlap at [${col}, ${row}]`;
-            desc = `Furniture pieces '${o1.name}' and '${o2.name}' overlap each other at tile [${col}, ${row}].`;
-            primaryEntity = o2;
-          } else if (o1.type === 'wall-block' || o2.type === 'wall-block') {
-            const other = o1.type === 'wall-block' ? o2 : o1;
-            title = `Wall Block Overlap at [${col}, ${row}]`;
-            desc = `Wall Block is placed on top of ${other.type} '${other.name}' at tile [${col}, ${row}].`;
-            primaryEntity = o2;
-          } else if (o1.type === 'trap' || o2.type === 'trap') {
-            const other = o1.type === 'trap' ? o2 : o1;
-            title = `Trap Collision at [${col}, ${row}]`;
-            desc = `Trap at [${col}, ${row}] is placed on top of ${other.type} '${other.name}'.`;
-            primaryEntity = o2;
-          } else {
-            title = `Object Collision at [${col}, ${row}]`;
-            desc = `${o1.name} and ${o2.name} overlap at tile [${col}, ${row}].`;
-          }
-
-          errors.push({
-            id: `overlap-${col}-${row}-${o1.type}-${o1.index}-${o2.type}-${o2.index}`,
-            category: 'overlap',
-            categoryLabel: 'Object Overlap',
-            icon: '💥',
-            title,
-            description: desc,
-            tiles: [[col, row]],
-            allTiles: [[col, row]],
-            entityType: primaryEntity.type,
-            entityIndex: primaryEntity.index,
-            entityId: primaryEntity.id,
-            anchor: [col, row],
-            occupants: [o1, o2]
-          });
-        }
-      }
-    }
-
-    const counts = {
-      all: errors.length,
-      furniture_bounds: errors.filter(e => e.category === 'furniture_bounds').length,
-      door_wall: errors.filter(e => e.category === 'door_wall').length,
-      overlap: errors.filter(e => e.category === 'overlap').length
-    };
-
-    return {
-      valid: errors.length === 0,
-      totalErrors: errors.length,
-      errors,
-      counts
-    };
+    return validateQuestFn(quest, blockmap);
   }
 
   // 1. Verify Rule 1: Furniture outside of bounds of single room
@@ -1231,6 +985,39 @@ test('Error Validation Area: validates HeroQuest rules for furniture bounds, doo
   };
   const res1c = validateQuest(questValidFurn);
   assert.equal(res1c.counts.furniture_bounds, 0);
+
+  // 1d: Treasure chest in corridor (Valid per HeroQuest rules: chests can appear in corridors)
+  const questCorridorChest = {
+    furniture: [
+      { id: 'f-chest-corr', name: 'Treasure Chest', type: 'chest', x: 13, y: 2, width: 1, height: 1 }
+    ]
+  };
+  const res1d = validateQuest(questCorridorChest);
+  assert.equal(res1d.valid, true);
+  assert.equal(res1d.counts.furniture_bounds, 0);
+  assert.equal(res1d.totalErrors, 0);
+
+  // 1e: Treasure chest straddling room and corridor boundaries (Invalid)
+  const questStraddleChest = {
+    furniture: [
+      { id: 'f-chest-straddle', name: 'Treasure Chest', type: 'chest', x: 13, y: 2, width: 2, height: 1 }
+    ]
+  };
+  const res1e = validateQuest(questStraddleChest);
+  assert.equal(res1e.valid, false);
+  assert.equal(res1e.counts.furniture_bounds, 1);
+  assert.match(res1e.errors[0].title, /Straddles Room and Corridor/i);
+
+  // 1f: Treasure chest placed outside board in void (Invalid)
+  const questVoidChest = {
+    furniture: [
+      { id: 'f-chest-void', name: 'Treasure Chest', type: 'chest', x: -10, y: -10, width: 1, height: 1 }
+    ]
+  };
+  const res1f = validateQuest(questVoidChest);
+  assert.equal(res1f.valid, false);
+  assert.equal(res1f.counts.furniture_bounds, 1);
+  assert.match(res1f.errors[0].title, /Outside Board Bounds/i);
 
   // 2. Verify Rule 2: Door not on wall of room
   // 2a: Floating door in corridors
@@ -1569,7 +1356,7 @@ test('Voice Map Setup: interprets spoken quest instructions and places items cle
   assert.equal(quest.doors.length, 4);
 
   // Validate the resulting quest - must be 100% valid under HeroQuest rules
-  const val = validateQuest(quest, blockmap);
+  const val = validateQuestFn(quest, blockmap);
   assert.equal(val.valid, true);
   assert.equal(val.totalErrors, 0);
   assert.equal(val.errors.length, 0);
@@ -2622,5 +2409,52 @@ test('Hidden Object Flag & Furniture Actions: supports hidden property and furni
   }
 });
 
+// -------------------------------------------------------------
+// Test 30: Treasure Chest Corridor Placement Validation
+// -------------------------------------------------------------
+test('Treasure Chest Corridor Placement: permits chests in corridors while restricting other room furniture', () => {
+  const bPath = path.resolve(__dirname, '../../../games/tabletop-rpg/cartridges/first-light-dungeon.blockmap.json');
+  const blockmap = JSON.parse(fs.readFileSync(bPath, 'utf8'));
 
+  // 1. Single 1x1 treasure chest in corridor tile (13, 2)
+  const questWithCorridorChest = {
+    furniture: [
+      { id: 'f-chest-1', type: 'chest', name: 'Treasure Chest', x: 13, y: 2, width: 1, height: 1 }
+    ]
+  };
+  const resChest = validateQuestFn(questWithCorridorChest, blockmap);
+  assert.equal(resChest.valid, true, 'Chests in corridors should be valid');
+  assert.equal(resChest.counts.furniture_bounds, 0, 'No furniture bounds errors for corridor chest');
+  assert.equal(resChest.totalErrors, 0);
 
+  // 2. Backward compatibility / aliasing: type: 'treasure_chest' and custom name
+  const questCustomChest = {
+    furniture: [
+      { id: 'f-chest-custom', type: 'treasure_chest', name: 'Ancient Iron Chest', x: 0, y: 0, width: 1, height: 1 }
+    ]
+  };
+  const resCustomChest = validateQuestFn(questCustomChest, blockmap);
+  assert.equal(resCustomChest.valid, true, 'Chest with custom name and treasure_chest type in corridor should be valid');
+  assert.equal(resCustomChest.counts.furniture_bounds, 0);
+
+  // 3. Regular furniture (bookcase, table) in the exact same corridor tile is invalid
+  const questWithCorridorBookcase = {
+    furniture: [
+      { id: 'f-bookcase-1', type: 'bookcase', name: 'Bookcase', x: 13, y: 2, width: 3, height: 1 }
+    ]
+  };
+  const resBookcase = validateQuestFn(questWithCorridorBookcase, blockmap);
+  assert.equal(resBookcase.valid, false, 'Bookcases in corridors must be flagged as invalid');
+  assert.equal(resBookcase.counts.furniture_bounds, 1);
+  assert.match(resBookcase.errors[0].title, /Outside Room Bounds/i);
+
+  // 4. Chest in a valid room tile (14, 2) is valid
+  const questWithRoomChest = {
+    furniture: [
+      { id: 'f-chest-room', type: 'chest', name: 'Room Chest', x: 14, y: 2, width: 1, height: 1 }
+    ]
+  };
+  const resRoomChest = validateQuestFn(questWithRoomChest, blockmap);
+  assert.equal(resRoomChest.valid, true, 'Chests in rooms should be valid');
+  assert.equal(resRoomChest.counts.furniture_bounds, 0);
+});
