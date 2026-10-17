@@ -6,19 +6,35 @@ const path = require('path');
 const fs = require('fs');
 
 const {
-  validateQuest,
+  validateQuest: validateQuestFn,
   loadCartridge,
+  loadBlockmap,
+  isStartingQuestAction,
+  resolveTriggerIndicators,
+  drawExportTriggerIndicator,
   interpretVoiceQuestCommands,
   executeVoiceMapCommands,
   setupSplitDividers,
   toggleRoomNames,
   updateRoomNamesToggleUI,
+  updateInspectorUI,
+  updateEntitySummaryList,
+  updateTriggerTargetOptions,
   updateTriggerTabUI,
   renderActionPipelineUI,
   addActionToTrigger,
   removeActionFromTrigger,
   addTrigger,
   buildCartridgePayload,
+  generateExportCanvas,
+  generateQuestPdfHtml,
+  openExportPngModal,
+  closeExportPngModal,
+  openExportPdfModal,
+  closeExportPdfModal,
+  exportPng,
+  exportPdf,
+  copyPngToClipboard,
   state,
   dom,
   TRIGGER_EVENT_DEFS,
@@ -947,254 +963,8 @@ test('Error Validation Area: validates HeroQuest rules for furniture bounds, doo
   const bPath = path.resolve(__dirname, '../../../games/tabletop-rpg/cartridges/first-light-dungeon.blockmap.json');
   const blockmap = JSON.parse(fs.readFileSync(bPath, 'utf8'));
 
-  function getRoomAt(col, row) {
-    if (!blockmap || !blockmap.rooms) return null;
-    for (const r of blockmap.rooms) {
-      if (r.tiles) {
-        if (r.tiles.some(t => t[0] === col && t[1] === row)) return r;
-      } else if (r.x !== undefined) {
-        if (col >= r.x && col < r.x + r.w && row >= r.y && row < r.y + r.h) return r;
-      }
-    }
-    return null;
-  }
-
   function validateQuest(quest) {
-    const errors = [];
-    if (!quest) return { valid: true, totalErrors: 0, errors: [], counts: { all: 0, furniture_bounds: 0, door_wall: 0, overlap: 0 } };
-
-    // 1. Furniture Bounds
-    if (Array.isArray(quest.furniture)) {
-      quest.furniture.forEach((f, idx) => {
-        const w = f.width || 1;
-        const h = f.height || 1;
-        const furnName = f.name || f.type || 'Furniture';
-        const tiles = [];
-        const roomsEncountered = new Map();
-        const corridorTiles = [];
-
-        for (let dx = 0; dx < w; dx++) {
-          for (let dy = 0; dy < h; dy++) {
-            const col = f.x + dx;
-            const row = f.y + dy;
-            tiles.push([col, row]);
-            const room = getRoomAt(col, row);
-            if (!room) {
-              corridorTiles.push([col, row]);
-            } else {
-              if (!roomsEncountered.has(room.id)) {
-                roomsEncountered.set(room.id, { room, tiles: [] });
-              }
-              roomsEncountered.get(room.id).tiles.push([col, row]);
-            }
-          }
-        }
-
-        if (corridorTiles.length > 0) {
-          const corrStr = corridorTiles.map(t => `[${t[0]}, ${t[1]}]`).join(', ');
-          errors.push({
-            id: `furn-bounds-corr-${f.id || idx}`,
-            category: 'furniture_bounds',
-            categoryLabel: 'Furniture Bounds',
-            icon: '🪑',
-            title: `${furnName} Outside Room Bounds`,
-            description: `${furnName} at [${f.x}, ${f.y}] (${w}×${h}) extends outside room boundaries into corridor or void at tile${corridorTiles.length > 1 ? 's' : ''} ${corrStr}.`,
-            tiles: corridorTiles,
-            allTiles: tiles,
-            entityType: 'furniture',
-            entityIndex: idx,
-            entityId: f.id || null,
-            anchor: [f.x, f.y]
-          });
-        }
-
-        if (roomsEncountered.size > 1) {
-          const roomNames = Array.from(roomsEncountered.values()).map(r => r.room.name || r.room.id).join(' and ');
-          errors.push({
-            id: `furn-bounds-multi-${f.id || idx}`,
-            category: 'furniture_bounds',
-            categoryLabel: 'Furniture Bounds',
-            icon: '🪑',
-            title: `${furnName} Straddles Multiple Rooms`,
-            description: `${furnName} at [${f.x}, ${f.y}] (${w}×${h}) straddles multiple rooms (${roomNames}). Furniture must reside strictly within a single room.`,
-            tiles: tiles,
-            allTiles: tiles,
-            entityType: 'furniture',
-            entityIndex: idx,
-            entityId: f.id || null,
-            anchor: [f.x, f.y]
-          });
-        }
-      });
-    }
-
-    // 2. Door Wall Placement
-    if (Array.isArray(quest.doors)) {
-      quest.doors.forEach((d, idx) => {
-        const from = d.from;
-        const to = d.to;
-        if (!from || !to) return;
-
-        const r1 = getRoomAt(from[0], from[1]);
-        const r2 = getRoomAt(to[0], to[1]);
-        const doorName = d.is_secret ? 'Secret Door' : (d.state === 'open' ? 'Open Door' : 'Door');
-        const doorId = d.id || idx;
-
-        if (!r1 && !r2) {
-          errors.push({
-            id: `door-wall-corridor-${doorId}`,
-            category: 'door_wall',
-            categoryLabel: 'Door Wall',
-            icon: '🚪',
-            title: `${doorName} Floating in Corridor`,
-            description: `${doorName} between [${from[0]}, ${from[1]}] and [${to[0]}, ${to[1]}] is not attached to any room perimeter wall (both sides are corridors).`,
-            tiles: [from, to],
-            allTiles: [from, to],
-            entityType: 'door',
-            entityIndex: idx,
-            entityId: d.id || null,
-            doorEdge: { from, to },
-            anchor: from
-          });
-        } else if (r1 && r2 && r1.id === r2.id) {
-          const roomName = r1.name || r1.id;
-          errors.push({
-            id: `door-wall-interior-${doorId}`,
-            category: 'door_wall',
-            categoryLabel: 'Door Wall',
-            icon: '🚪',
-            title: `${doorName} Inside Room Floor`,
-            description: `${doorName} between [${from[0]}, ${from[1]}] and [${to[0]}, ${to[1]}] is placed inside open floor space within ${roomName} instead of on its perimeter wall.`,
-            tiles: [from, to],
-            allTiles: [from, to],
-            entityType: 'door',
-            entityIndex: idx,
-            entityId: d.id || null,
-            doorEdge: { from, to },
-            anchor: from
-          });
-        }
-      });
-    }
-
-    // 3. Object Overlaps
-    const tileOccupants = new Map();
-    function addOccupant(col, row, item) {
-      const key = `${col},${row}`;
-      if (!tileOccupants.has(key)) tileOccupants.set(key, []);
-      tileOccupants.get(key).push(item);
-    }
-
-    if (Array.isArray(quest.furniture)) {
-      quest.furniture.forEach((f, idx) => {
-        const w = f.width || 1;
-        const h = f.height || 1;
-        const name = f.name || f.type || 'Furniture';
-        for (let dx = 0; dx < w; dx++) {
-          for (let dy = 0; dy < h; dy++) {
-            addOccupant(f.x + dx, f.y + dy, { type: 'furniture', index: idx, id: f.id || null, name, x: f.x + dx, y: f.y + dy });
-          }
-        }
-      });
-    }
-
-    if (Array.isArray(quest.monsters)) {
-      quest.monsters.forEach((m, idx) => {
-        const name = m.name || m.type || 'Monster';
-        const mx = m.x !== undefined ? m.x : (m.pos ? m.pos[0] : 0);
-        const my = m.y !== undefined ? m.y : (m.pos ? m.pos[1] : 0);
-        addOccupant(mx, my, { type: 'monster', index: idx, id: m.id || null, name, x: mx, y: my });
-      });
-    }
-
-    if (Array.isArray(quest.wallBlocks)) {
-      quest.wallBlocks.forEach((b, idx) => {
-        addOccupant(b.x, b.y, { type: 'wall-block', index: idx, id: b.id || null, name: 'Wall Block', x: b.x, y: b.y });
-      });
-    }
-
-    if (Array.isArray(quest.traps)) {
-      quest.traps.forEach((t, idx) => {
-        addOccupant(t.x, t.y, { type: 'trap', index: idx, id: t.id || null, name: `Trap (${t.type || 'pit'})`, x: t.x, y: t.y });
-      });
-    }
-
-    for (const [key, occupants] of tileOccupants.entries()) {
-      if (occupants.length <= 1) continue;
-      const [col, row] = key.split(',').map(Number);
-
-      for (let i = 0; i < occupants.length; i++) {
-        for (let j = i + 1; j < occupants.length; j++) {
-          const o1 = occupants[i];
-          const o2 = occupants[j];
-
-          let title = `Object Collision at [${col}, ${row}]`;
-          let desc = '';
-          let primaryEntity = o2;
-
-          if (o1.type === 'furniture' && o2.type === 'monster') {
-            title = `Monster on Furniture at [${col}, ${row}]`;
-            desc = `HeroQuest rule violation: ${o2.name} is standing on top of ${o1.name}. Characters and enemies cannot stand on furniture.`;
-            primaryEntity = o2;
-          } else if (o1.type === 'monster' && o2.type === 'furniture') {
-            title = `Monster on Furniture at [${col}, ${row}]`;
-            desc = `HeroQuest rule violation: ${o1.name} is standing on top of ${o2.name}. Characters and enemies cannot stand on furniture.`;
-            primaryEntity = o1;
-          } else if (o1.type === 'monster' && o2.type === 'monster') {
-            title = `Monsters Colliding at [${col}, ${row}]`;
-            desc = `Multiple monsters (${o1.name} and ${o2.name}) are placed on the exact same tile [${col}, ${row}].`;
-            primaryEntity = o2;
-          } else if (o1.type === 'furniture' && o2.type === 'furniture') {
-            title = `Furniture Overlap at [${col}, ${row}]`;
-            desc = `Furniture pieces '${o1.name}' and '${o2.name}' overlap each other at tile [${col}, ${row}].`;
-            primaryEntity = o2;
-          } else if (o1.type === 'wall-block' || o2.type === 'wall-block') {
-            const other = o1.type === 'wall-block' ? o2 : o1;
-            title = `Wall Block Overlap at [${col}, ${row}]`;
-            desc = `Wall Block is placed on top of ${other.type} '${other.name}' at tile [${col}, ${row}].`;
-            primaryEntity = o2;
-          } else if (o1.type === 'trap' || o2.type === 'trap') {
-            const other = o1.type === 'trap' ? o2 : o1;
-            title = `Trap Collision at [${col}, ${row}]`;
-            desc = `Trap at [${col}, ${row}] is placed on top of ${other.type} '${other.name}'.`;
-            primaryEntity = o2;
-          } else {
-            title = `Object Collision at [${col}, ${row}]`;
-            desc = `${o1.name} and ${o2.name} overlap at tile [${col}, ${row}].`;
-          }
-
-          errors.push({
-            id: `overlap-${col}-${row}-${o1.type}-${o1.index}-${o2.type}-${o2.index}`,
-            category: 'overlap',
-            categoryLabel: 'Object Overlap',
-            icon: '💥',
-            title,
-            description: desc,
-            tiles: [[col, row]],
-            allTiles: [[col, row]],
-            entityType: primaryEntity.type,
-            entityIndex: primaryEntity.index,
-            entityId: primaryEntity.id,
-            anchor: [col, row],
-            occupants: [o1, o2]
-          });
-        }
-      }
-    }
-
-    const counts = {
-      all: errors.length,
-      furniture_bounds: errors.filter(e => e.category === 'furniture_bounds').length,
-      door_wall: errors.filter(e => e.category === 'door_wall').length,
-      overlap: errors.filter(e => e.category === 'overlap').length
-    };
-
-    return {
-      valid: errors.length === 0,
-      totalErrors: errors.length,
-      errors,
-      counts
-    };
+    return validateQuestFn(quest, blockmap);
   }
 
   // 1. Verify Rule 1: Furniture outside of bounds of single room
@@ -1231,6 +1001,39 @@ test('Error Validation Area: validates HeroQuest rules for furniture bounds, doo
   };
   const res1c = validateQuest(questValidFurn);
   assert.equal(res1c.counts.furniture_bounds, 0);
+
+  // 1d: Treasure chest in corridor (Valid per HeroQuest rules: chests can appear in corridors)
+  const questCorridorChest = {
+    furniture: [
+      { id: 'f-chest-corr', name: 'Treasure Chest', type: 'chest', x: 13, y: 2, width: 1, height: 1 }
+    ]
+  };
+  const res1d = validateQuest(questCorridorChest);
+  assert.equal(res1d.valid, true);
+  assert.equal(res1d.counts.furniture_bounds, 0);
+  assert.equal(res1d.totalErrors, 0);
+
+  // 1e: Treasure chest straddling room and corridor boundaries (Invalid)
+  const questStraddleChest = {
+    furniture: [
+      { id: 'f-chest-straddle', name: 'Treasure Chest', type: 'chest', x: 13, y: 2, width: 2, height: 1 }
+    ]
+  };
+  const res1e = validateQuest(questStraddleChest);
+  assert.equal(res1e.valid, false);
+  assert.equal(res1e.counts.furniture_bounds, 1);
+  assert.match(res1e.errors[0].title, /Straddles Room and Corridor/i);
+
+  // 1f: Treasure chest placed outside board in void (Invalid)
+  const questVoidChest = {
+    furniture: [
+      { id: 'f-chest-void', name: 'Treasure Chest', type: 'chest', x: -10, y: -10, width: 1, height: 1 }
+    ]
+  };
+  const res1f = validateQuest(questVoidChest);
+  assert.equal(res1f.valid, false);
+  assert.equal(res1f.counts.furniture_bounds, 1);
+  assert.match(res1f.errors[0].title, /Outside Board Bounds/i);
 
   // 2. Verify Rule 2: Door not on wall of room
   // 2a: Floating door in corridors
@@ -1569,7 +1372,7 @@ test('Voice Map Setup: interprets spoken quest instructions and places items cle
   assert.equal(quest.doors.length, 4);
 
   // Validate the resulting quest - must be 100% valid under HeroQuest rules
-  const val = validateQuest(quest, blockmap);
+  const val = validateQuestFn(quest, blockmap);
   assert.equal(val.valid, true);
   assert.equal(val.totalErrors, 0);
   assert.equal(val.errors.length, 0);
@@ -2621,6 +2424,662 @@ test('Hidden Object Flag & Furniture Actions: supports hidden property and furni
     state.quest = savedStateQuest;
   }
 });
+
+// -------------------------------------------------------------
+// Test 30: Treasure Chest Corridor Placement Validation
+// -------------------------------------------------------------
+test('Treasure Chest Corridor Placement: permits chests in corridors while restricting other room furniture', () => {
+  const bPath = path.resolve(__dirname, '../../../games/tabletop-rpg/cartridges/first-light-dungeon.blockmap.json');
+  const blockmap = JSON.parse(fs.readFileSync(bPath, 'utf8'));
+
+  // 1. Single 1x1 treasure chest in corridor tile (13, 2)
+  const questWithCorridorChest = {
+    furniture: [
+      { id: 'f-chest-1', type: 'chest', name: 'Treasure Chest', x: 13, y: 2, width: 1, height: 1 }
+    ]
+  };
+  const resChest = validateQuestFn(questWithCorridorChest, blockmap);
+  assert.equal(resChest.valid, true, 'Chests in corridors should be valid');
+  assert.equal(resChest.counts.furniture_bounds, 0, 'No furniture bounds errors for corridor chest');
+  assert.equal(resChest.totalErrors, 0);
+
+  // 2. Backward compatibility / aliasing: type: 'treasure_chest' and custom name
+  const questCustomChest = {
+    furniture: [
+      { id: 'f-chest-custom', type: 'treasure_chest', name: 'Ancient Iron Chest', x: 0, y: 0, width: 1, height: 1 }
+    ]
+  };
+  const resCustomChest = validateQuestFn(questCustomChest, blockmap);
+  assert.equal(resCustomChest.valid, true, 'Chest with custom name and treasure_chest type in corridor should be valid');
+  assert.equal(resCustomChest.counts.furniture_bounds, 0);
+
+  // 3. Regular furniture (bookcase, table) in the exact same corridor tile is invalid
+  const questWithCorridorBookcase = {
+    furniture: [
+      { id: 'f-bookcase-1', type: 'bookcase', name: 'Bookcase', x: 13, y: 2, width: 3, height: 1 }
+    ]
+  };
+  const resBookcase = validateQuestFn(questWithCorridorBookcase, blockmap);
+  assert.equal(resBookcase.valid, false, 'Bookcases in corridors must be flagged as invalid');
+  assert.equal(resBookcase.counts.furniture_bounds, 1);
+  assert.match(resBookcase.errors[0].title, /Outside Room Bounds/i);
+
+  // 4. Chest in a valid room tile (14, 2) is valid
+  const questWithRoomChest = {
+    furniture: [
+      { id: 'f-chest-room', type: 'chest', name: 'Room Chest', x: 14, y: 2, width: 1, height: 1 }
+    ]
+  };
+  const resRoomChest = validateQuestFn(questWithRoomChest, blockmap);
+  assert.equal(resRoomChest.valid, true, 'Chests in rooms should be valid');
+  assert.equal(resRoomChest.counts.furniture_bounds, 0);
+});
+
+// -------------------------------------------------------------
+// Test 31: Door Name Updating in Inspector & Cartridge Serialization
+// -------------------------------------------------------------
+test('Door Name Editing: updates name in inspector, reflects in summary and triggers, and serializes to cartridge', () => {
+  const savedDocument = global.document;
+  const savedStateQuest = JSON.parse(JSON.stringify(state.quest));
+  const savedSelectedEntity = state.selectedEntity;
+  const savedDom = { ...dom };
+
+  try {
+    const createdElements = [];
+    global.document = {
+      createElement: (tag) => {
+        const el = {
+          tag,
+          className: '',
+          innerHTML: '',
+          textContent: '',
+          value: '',
+          selected: false,
+          addEventListener: () => {}
+        };
+        createdElements.push(el);
+        return el;
+      }
+    };
+
+    const mockChildren = [];
+    dom.inspectorEmpty = { style: {} };
+    dom.inspectorForm = { style: {} };
+    dom.inspectTypeBadge = { textContent: '', className: '' };
+    dom.inspectPosText = { textContent: '' };
+    dom.inspectName = { value: '', addEventListener: () => {} };
+    dom.inspectHidden = { checked: false, addEventListener: () => {} };
+    dom.inspectGroupMonster = { style: {} };
+    dom.inspectGroupDoor = { style: {} };
+    dom.inspectDoorState = { value: '', addEventListener: () => {} };
+    dom.inspectDoorSecret = { checked: false, addEventListener: () => {} };
+    dom.inspectGroupFurniture = { style: {} };
+    dom.inspectGroupTrap = { style: {} };
+    dom.inspectGroupNote = { style: {} };
+    dom.entitySummaryList = {
+      innerHTML: '',
+      appendChild: (child) => mockChildren.push(child)
+    };
+    dom.badgeEntityCount = { textContent: '' };
+    dom.inspectTriggerTargetGroup = { style: {} };
+    dom.inspectTriggerTargetLbl = { textContent: '' };
+    const doorOptions = [];
+    dom.inspectTriggerTargetDoor = {
+      style: {},
+      innerHTML: '',
+      appendChild: (opt) => doorOptions.push(opt)
+    };
+
+    // 1. Initial door setup
+    state.quest.doors = [
+      { id: 'door-1', name: 'Great Hall Iron Gate', from: [5, 4], to: [5, 5], state: 'closed', is_secret: false },
+      { id: 'door-2', from: [10, 4], to: [10, 5], state: 'open', is_secret: true }
+    ];
+
+    // 2. Select door-1: inspectName should display custom door name
+    state.selectedEntity = { type: 'door', index: 0, data: state.quest.doors[0] };
+    updateInspectorUI();
+    assert.equal(dom.inspectName.value, 'Great Hall Iron Gate', 'dom.inspectName displays custom door name');
+    assert.equal(dom.inspectDoorState.value, 'closed');
+    assert.equal(dom.inspectDoorSecret.checked, false);
+
+    // 3. Select door-2: inspectName should fallback to door id when name not set
+    state.selectedEntity = { type: 'door', index: 1, data: state.quest.doors[1] };
+    updateInspectorUI();
+    assert.equal(dom.inspectName.value, 'door-2', 'dom.inspectName falls back to door id if no custom name');
+    assert.equal(dom.inspectDoorState.value, 'open');
+    assert.equal(dom.inspectDoorSecret.checked, true);
+
+    // 4. Update door-1's name and verify state and entity summary list
+    state.selectedEntity = { type: 'door', index: 0, data: state.quest.doors[0] };
+    dom.inspectName.value = 'Ancient Reinforced Portcullis';
+    // Simulate inspector input listener
+    state.quest.doors[0].name = dom.inspectName.value;
+    if (state.selectedEntity.data) state.selectedEntity.data.name = dom.inspectName.value;
+    mockChildren.length = 0;
+    updateEntitySummaryList();
+
+    assert.equal(state.quest.doors[0].name, 'Ancient Reinforced Portcullis', 'Door entity name in state is updated');
+    assert.equal(state.selectedEntity.data.name, 'Ancient Reinforced Portcullis', 'Selected entity data name is updated');
+
+    const doorItem = mockChildren.find(item => item.innerHTML.includes('Ancient Reinforced Portcullis'));
+    assert.ok(doorItem, 'Entity summary list displays updated door name');
+    assert.ok(!doorItem.innerHTML.includes('Wood Door'), 'Entity summary list uses custom name instead of default fallback');
+
+    // 5. Update door-2's name
+    state.selectedEntity = { type: 'door', index: 1, data: state.quest.doors[1] };
+    dom.inspectName.value = 'Secret Treasury Alcove Door';
+    state.quest.doors[1].name = dom.inspectName.value;
+    if (state.selectedEntity.data) state.selectedEntity.data.name = dom.inspectName.value;
+    mockChildren.length = 0;
+    updateEntitySummaryList();
+
+    const secretItem = mockChildren.find(item => item.innerHTML.includes('Secret Treasury Alcove Door'));
+    assert.ok(secretItem, 'Secret door summary displays updated custom name');
+    assert.ok(secretItem.innerHTML.includes('SECRET [OPEN]'), 'Secret door retains status badge');
+
+    // 6. Trigger target options
+    updateTriggerTargetOptions({ event: 'on_door_opened' });
+    const triggerOpt1 = doorOptions.find(opt => opt.value === 'door-1');
+    assert.ok(triggerOpt1, 'Option for door-1 exists in trigger target dropdown');
+    assert.match(triggerOpt1.textContent, /Ancient Reinforced Portcullis \(door-1\)/, 'Dropdown displays custom name and ID');
+
+    // 7. Cartridge serialization
+    const payload = buildCartridgePayload();
+    const mapData = payload.maps[payload.cartridgeId || 'heroquest-the-trial'];
+    assert.ok(mapData, 'Map data present in serialized cartridge');
+    const serializedDoor1 = mapData.doors.find(d => d.id === 'door-1');
+    assert.ok(serializedDoor1, 'door-1 serialized in cartridge payload');
+    assert.equal(serializedDoor1.name, 'Ancient Reinforced Portcullis', 'Door name is saved into cartridge payload');
+    const serializedDoor2 = mapData.doors.find(d => d.id === 'door-2');
+    assert.equal(serializedDoor2.name, 'Secret Treasury Alcove Door', 'Secret door name is saved into cartridge payload');
+
+    // 8. Validation title uses door.name
+    const bPath = path.resolve(__dirname, '../../../games/tabletop-rpg/cartridges/first-light-dungeon.blockmap.json');
+    const blockmap = JSON.parse(fs.readFileSync(bPath, 'utf8'));
+    const floatingDoorQuest = {
+      doors: [
+        { id: 'door-bad', name: 'Floating Haunted Portal', from: [0, 0], to: [0, 1] }
+      ]
+    };
+    const valResult = validateQuestFn(floatingDoorQuest, blockmap);
+    assert.equal(valResult.valid, false);
+    const doorErr = valResult.errors.find(e => e.entityId === 'door-bad' || e.entityType === 'door');
+    assert.ok(doorErr, 'Validation error for floating door');
+    assert.match(doorErr.title, /Floating Haunted Portal Floating in Corridor/, 'Validation error title uses custom door name');
+  } finally {
+    global.document = savedDocument;
+    state.quest = savedStateQuest;
+    state.selectedEntity = savedSelectedEntity;
+    Object.assign(dom, savedDom);
+  }
+});
+
+test('Quest Map PNG and PDF Export: generates scaled canvas and complete printable PDF quest sheet', async () => {
+  const savedDocument = global.document;
+  const savedStateQuest = state.quest;
+  const savedStateBlockmap = state.blockmap;
+  const savedDom = { ...dom };
+
+  try {
+    // Mock minimal DOM for modal dialogs and inputs
+    let modalPngDisplay = 'none';
+    let modalPdfDisplay = 'none';
+    let previewSrc = '';
+    let previewBadge = '';
+
+    dom.exportPngModal = {
+      style: {
+        get display() { return modalPngDisplay; },
+        set display(v) { modalPngDisplay = v; }
+      }
+    };
+    dom.exportPdfModal = {
+      style: {
+        get display() { return modalPdfDisplay; },
+        set display(v) { modalPdfDisplay = v; }
+      }
+    };
+    dom.exportPngPreview = {
+      set src(v) { previewSrc = v; },
+      get src() { return previewSrc; }
+    };
+    dom.exportPngDimensionsBadge = {
+      set textContent(v) { previewBadge = v; },
+      get textContent() { return previewBadge; }
+    };
+    dom.chkExportGrid = { checked: true };
+    dom.chkExportNames = { checked: true };
+    dom.chkExportArtwork = { checked: true };
+    dom.chkExportBanner = { checked: false };
+    dom.radioExportPngScale = [
+      { value: '1', checked: true },
+      { value: '2', checked: false }
+    ];
+    dom.radioExportPdfOrientation = [
+      { value: 'landscape', checked: true },
+      { value: 'portrait', checked: false }
+    ];
+    dom.selectPdfPageSize = { value: 'A4' };
+    dom.chkPdfHeader = { checked: true };
+    dom.chkPdfMap = { checked: true };
+    dom.chkPdfNotes = { checked: true };
+    dom.chkPdfRoster = { checked: true };
+    dom.chkPdfFurniture = { checked: true };
+
+    // Setup mock quest and blockmap state
+    state.blockmap = {
+      gridDimensions: [26, 19],
+      tileSize: 39.0,
+      pixelOffset: [0, 0],
+      rooms: [
+        { id: 'room-1', name: 'Great Armory', color: '#38bdf8', tiles: [[2, 2], [3, 2], [2, 3], [3, 3]] },
+        { id: 'room-2', name: 'Throne Room', color: '#f59e0b', tiles: [[6, 6], [7, 6], [6, 7], [7, 7]] }
+      ],
+      corridors: [[1, 2], [1, 3], [1, 4]]
+    };
+
+    state.quest = {
+      title: 'Lair of the Orc Warlord',
+      slug: 'lair-of-the-orc-warlord',
+      briefing: 'Deep in the Black Mountains, an orc clan plots ruin.\nYou must breach the stronghold and claim the warlord\'s war banner.',
+      wanderingMonster: 'orc',
+      goldBounty: 250,
+      startingStair: [1, 2],
+      startingStairType: 'stairs_up_1x1',
+      exitTile: [7, 7],
+      exitStairType: 'stairs_down_1x1',
+      monsters: [
+        { type: 'orc', pos: [2, 2], isBoss: false },
+        { type: 'orc', pos: [3, 2], isBoss: false },
+        { type: 'orc', pos: [2, 3], isBoss: false },
+        { type: 'goblin', pos: [3, 3], isBoss: false },
+        { type: 'gargoyle', name: 'Gargoyle Overlord', pos: [6, 6], isBoss: true }
+      ],
+      furniture: [
+        { type: 'chest', x: 3, y: 2, name: 'Armory Iron Chest' },
+        { type: 'throne', x: 6, y: 7, name: 'Warlord Throne' },
+        { type: 'table', x: 7, y: 6, name: 'War Planning Table' }
+      ],
+      traps: [
+        { type: 'pit', x: 1, y: 3 },
+        { type: 'spear', x: 1, y: 4 }
+      ],
+      doors: [
+        { id: 'door-1', name: 'Armory Gate', from: [1, 2], to: [2, 2], state: 'closed', is_secret: false },
+        { id: 'door-2', name: 'Secret Escape Tunnel', from: [7, 7], to: [7, 8], state: 'open', is_secret: true }
+      ],
+      storyTriggers: [
+        {
+          marker: 'Note A',
+          event: 'on_room_entered',
+          room: 'room-1',
+          title: 'Armory Ambush',
+          narrative: 'Iron bars drop behind you as orcish battle horns sound!',
+          actions: [{ type: 'play_movie', title: 'Ambush Cutscene' }]
+        },
+        {
+          marker: 'Note B',
+          event: 'on_monster_defeated',
+          target: 'Gargoyle Overlord',
+          title: 'Fall of the Overlord',
+          narrative: 'The gargoyle crumbles into obsidian dust, revealing a glowing jade key.',
+          actions: [{ type: 'custom_action', title: 'Drop Jade Key' }]
+        }
+      ]
+    };
+
+    // 1. generateExportCanvas at 1x scale without banner
+    const canvas1x = generateExportCanvas({ scale: 1, showBanner: false });
+    assert.ok(canvas1x, 'Canvas generated at 1x');
+    assert.equal(typeof canvas1x.width, 'number', 'Canvas has width');
+    assert.equal(typeof canvas1x.height, 'number', 'Canvas has height');
+    const width1x = canvas1x.width;
+    const height1x = canvas1x.height;
+    assert.ok(width1x >= 1000, `Width at 1x should cover 26 tiles (~1014px): got ${width1x}`);
+    assert.ok(height1x >= 700, `Height at 1x should cover 19 tiles (~741px): got ${height1x}`);
+
+    // 2. generateExportCanvas at 2x scale
+    const canvas2x = generateExportCanvas({ scale: 2, showBanner: false });
+    assert.equal(canvas2x.width, width1x * 2, '2x scale produces double the width');
+    assert.equal(canvas2x.height, height1x * 2, '2x scale produces double the height');
+
+    // 3. generateExportCanvas with Title Banner
+    const canvasBanner = generateExportCanvas({ scale: 1, showBanner: true });
+    assert.equal(canvasBanner.width, width1x, 'Banner canvas has same base width');
+    assert.equal(canvasBanner.height, height1x + 56, 'Banner canvas has additional 56px banner height');
+
+    // 4. Modal toggles and preview update
+    openExportPngModal();
+    assert.equal(dom.exportPngModal.style.display, 'flex', 'openExportPngModal displays modal');
+    assert.ok(previewBadge.includes('1×'), 'Preview badge reflects 1x scale');
+    closeExportPngModal();
+    assert.equal(dom.exportPngModal.style.display, 'none', 'closeExportPngModal hides modal');
+
+    openExportPdfModal();
+    assert.equal(dom.exportPdfModal.style.display, 'flex', 'openExportPdfModal displays modal');
+    closeExportPdfModal();
+    assert.equal(dom.exportPdfModal.style.display, 'none', 'closeExportPdfModal hides modal');
+
+    // 5. Direct exportPng and exportPdf execution in headless environment
+    const pngResult = await exportPng({ scale: 2 });
+    assert.equal(pngResult.success, true, 'exportPng completes successfully in headless test');
+    assert.ok(pngResult.dataUrl.startsWith('data:image/png;base64,'), 'exportPng returns base64 data url');
+
+    const pdfResult = await exportPdf({ orientation: 'landscape', pageSize: 'A4' });
+    assert.equal(pdfResult.success, true, 'exportPdf completes successfully in headless test');
+    assert.ok(pdfResult.html, 'exportPdf returns generated HTML');
+
+    // 6. Comprehensive inspection of generated Quest Sheet HTML
+    const testMapUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const html = generateQuestPdfHtml(state.quest, state.blockmap, testMapUrl, {
+      orientation: 'landscape',
+      pageSize: 'A4',
+      includeHeader: true,
+      includeMap: true,
+      includeNotes: true,
+      includeRoster: true,
+      includeFurniture: true
+    });
+
+    // Verify HTML structure and metadata
+    assert.ok(html.includes('<!DOCTYPE html>'), 'HTML contains doctype');
+    assert.ok(html.includes('<title>Lair of the Orc Warlord</title>'), 'HTML title matches quest title');
+    assert.ok(html.includes('size: a4 landscape;'), 'Print styles reflect A4 landscape');
+    assert.ok(html.includes('<h1>Lair of the Orc Warlord</h1>'), 'Header contains quest title');
+    assert.ok(html.includes('Deep in the Black Mountains'), 'Story briefing narrative is present');
+    assert.ok(html.includes('250 Gold'), 'Gold bounty is present');
+    assert.ok(html.includes('<strong>Wandering:</strong> Orc'), 'Wandering monster name is present');
+    assert.ok(html.includes('[1, 2]'), 'Entrance location is present');
+    assert.ok(html.includes('[7, 7]'), 'Exit location is present');
+
+    // Verify high-resolution map embed
+    assert.ok(html.includes(`<img src="${testMapUrl}"`), 'Embedded map image is present');
+
+    // Verify monster roster table
+    assert.ok(html.includes('Monster Roster &amp; Statistics'), 'Monster roster card is present');
+    assert.ok(html.includes('5 Total'), 'Total monsters count is accurate (3 orcs + 1 goblin + 1 gargoyle)');
+    assert.ok(html.includes('<strong>Orc</strong>'), 'Orc monster row present');
+    assert.ok(html.includes('<strong>3</strong>'), 'Orc quantity 3 present');
+    assert.ok(html.includes('<strong>Goblin</strong>'), 'Goblin monster row present');
+    assert.ok(html.includes('<strong>Gargoyle</strong>'), 'Gargoyle boss row present');
+    assert.ok(html.includes('BOSS ×1'), 'Boss indicator badge present on Gargoyle');
+
+    // Verify furniture & traps summary
+    assert.ok(html.includes('Furniture &amp; Dungeon Features'), 'Furniture card present');
+    assert.ok(html.includes('Chest: <strong>1</strong>'), 'Chest count accurate');
+    assert.ok(html.includes('Throne: <strong>1</strong>'), 'Throne count accurate');
+    assert.ok(html.includes('Table: <strong>1</strong>'), 'Table count accurate');
+    assert.ok(html.includes('pit (1)'), 'Pit trap count present');
+    assert.ok(html.includes('spear (1)'), 'Spear trap count present');
+
+    // Verify quest notes
+    assert.ok(html.includes('Quest Notes &amp; Story Triggers'), 'Quest notes section present');
+    assert.ok(html.includes('2 Triggers'), 'Triggers count accurate');
+    assert.ok(html.includes('Note A'), 'Note A badge present');
+    assert.ok(html.includes('Armory Ambush'), 'Note A title present');
+    assert.ok(html.includes('Iron bars drop behind you'), 'Note A narrative present');
+    assert.ok(html.includes('Note B'), 'Note B badge present');
+    assert.ok(html.includes('Fall of the Overlord'), 'Note B title present');
+    assert.ok(html.includes('obsidian dust'), 'Note B narrative present');
+
+    // 7. Test orientation and page size options
+    const portraitLetterHtml = generateQuestPdfHtml(state.quest, state.blockmap, testMapUrl, {
+      orientation: 'portrait',
+      pageSize: 'Letter'
+    });
+    assert.ok(portraitLetterHtml.includes('size: letter portrait;'), 'Orientation and page size correctly switch to Letter portrait');
+
+    // 8. Test section toggle options
+    const filteredHtml = generateQuestPdfHtml(state.quest, state.blockmap, testMapUrl, {
+      includeHeader: false,
+      includeMap: false,
+      includeNotes: false,
+      includeRoster: false,
+      includeFurniture: false
+    });
+    assert.ok(!filteredHtml.includes('class="quest-header"'), 'Header omitted when includeHeader is false');
+    assert.ok(!filteredHtml.includes('class="map-container"'), 'Map omitted when includeMap is false');
+    assert.ok(!filteredHtml.includes('Quest Notes &amp; Story Triggers'), 'Notes omitted when includeNotes is false');
+    assert.ok(!filteredHtml.includes('Monster Roster &amp; Statistics'), 'Roster omitted when includeRoster is false');
+    assert.ok(!filteredHtml.includes('Furniture &amp; Dungeon Features'), 'Furniture omitted when includeFurniture is false');
+  } finally {
+    global.document = savedDocument;
+    state.quest = savedStateQuest;
+    state.blockmap = savedStateBlockmap;
+    Object.assign(dom, savedDom);
+  }
+});
+
+test('Blockmap Loading & Grid Dimensions: verifies loadBlockmap initializes grid dimensions and updates UI without dims reference errors', async () => {
+  const savedDom = { ...dom };
+  const savedStateBlockmap = JSON.parse(JSON.stringify(state.blockmap));
+  const savedWindow = global.window;
+
+  try {
+    let blockmapInfoText = '';
+    let gridSizeText = '';
+
+    dom.infoBlockmapName = {
+      set textContent(val) { blockmapInfoText = val; },
+      get textContent() { return blockmapInfoText; }
+    };
+    dom.infoGridSize = {
+      set textContent(val) { gridSizeText = val; },
+      get textContent() { return gridSizeText; }
+    };
+    dom.selectBlockmap = { value: '' };
+    dom.chkAdditionalBorder = { checked: false };
+    dom.lblZoom = { textContent: '' };
+    dom.canvas = { width: 800, height: 600, getContext: () => null };
+
+    global.window = {
+      robosQuestEditor: {
+        loadBlockmap: async (slug) => ({
+          success: true,
+          blockmap: {
+            id: slug || 'test-dungeon',
+            title: 'Custom Test Dungeon',
+            gridDimensions: [28, 20],
+            rooms: [],
+            wallTiles: []
+          },
+          imageData: null
+        })
+      }
+    };
+
+    // Execute loadBlockmap and verify dims are correctly parsed and updated in UI
+    await loadBlockmap('test-dungeon');
+
+    assert.equal(state.blockmap.title, 'Custom Test Dungeon');
+    assert.deepEqual(state.blockmap.gridDimensions, [28, 20]);
+    assert.equal(blockmapInfoText, 'Custom Test Dungeon');
+    assert.equal(gridSizeText, '28 × 20');
+  } finally {
+    Object.assign(dom, savedDom);
+    state.blockmap = savedStateBlockmap;
+    global.window = savedWindow;
+  }
+});
+
+test('Starting Quest Action & Indicator Resolution: separates intro action from map indicators and anchors indicators to relevant entities', () => {
+  const quest = {
+    title: 'Dungeon of Shadows',
+    startingStair: [2, 2],
+    monsters: [
+      { id: 'mon-warlord-1', name: 'Orc Warlord', type: 'orc', pos: [8, 5], isBoss: true }
+    ],
+    doors: [
+      { id: 'door-armory', name: 'Iron Armory Gate', from: [5, 4], to: [6, 4], state: 'closed', is_secret: false }
+    ],
+    furniture: [
+      { id: 'furn-altar-1', name: 'Bloodstone Altar', type: 'altar', x: 12, y: 8, width: 2, height: 1 }
+    ],
+    storyTriggers: [
+      {
+        id: 'trig-intro',
+        title: 'Opening Prologue',
+        event: 'on_game_start',
+        tile: [0, 0],
+        narrative: 'Mentor speaks: "The shadow of Morcar stretches across the realm..."',
+        actions: [{ type: 'play_movie', moviePath: 'res://assets/movies/quest1-intro.mp4', title: 'Intro Cinematic' }]
+      },
+      {
+        id: 'trig-door',
+        title: 'Armory Trap',
+        event: 'on_door_opened',
+        target: 'door-armory',
+        doorId: 'door-armory',
+        tile: [5, 4],
+        narrative: 'A poisoned dart shoots from the lock!',
+        actions: [{ type: 'attack_character', attacker: 'Poison Dart' }]
+      },
+      {
+        id: 'trig-boss',
+        title: 'Wrath of the Warlord',
+        event: 'on_monster_killed',
+        target: 'mon-warlord-1',
+        monsterId: 'mon-warlord-1',
+        tile: [8, 5],
+        narrative: 'The Warlord roars with his dying breath!',
+        actions: [{ type: 'custom_action', title: 'Spawn Skeletons' }]
+      },
+      {
+        id: 'trig-room',
+        title: 'Sanctum Horror',
+        event: 'on_room_entered',
+        target: 'room-crypt-3',
+        room: 'room-crypt-3',
+        tile: [12, 8],
+        narrative: 'Cold dread washes over your spine.',
+        actions: [{ type: 'cast_spell', spell: 'fear' }]
+      },
+      {
+        id: 'trig-corridor',
+        title: 'Pitfall',
+        event: 'on_tile_stepped_on',
+        tile: [3, 9],
+        narrative: 'The floor gives way beneath your boots!',
+        actions: [{ type: 'spring_trap', trap: 'pit' }]
+      }
+    ]
+  };
+
+  const blockmap = {
+    gridDimensions: [26, 19],
+    rooms: [
+      { id: 'room-crypt-3', name: 'Ancient Crypt', tiles: [[11, 7], [12, 7], [11, 8], [12, 8]] }
+    ]
+  };
+
+  // 1. Verify isStartingQuestAction identifies intro trigger
+  assert.equal(isStartingQuestAction(quest.storyTriggers[0], quest, blockmap), true, 'Opening prologue identified as starting action');
+  assert.equal(isStartingQuestAction(quest.storyTriggers[1], quest, blockmap), false, 'Door trigger not starting action');
+
+  // 2. Verify resolveTriggerIndicators
+  const { startingAction, indicators } = resolveTriggerIndicators(quest, blockmap);
+
+  assert.ok(startingAction, 'Starting action extracted');
+  assert.equal(startingAction.id, 'trig-intro');
+  assert.equal(startingAction.title, 'Opening Prologue');
+
+  // 3. Verify map indicators count (4 remaining triggers)
+  assert.equal(indicators.length, 4, '4 map triggers should receive indicators');
+
+  // Verify unique letter assignment: A, B, C, D
+  assert.equal(indicators[0].letter, 'A');
+  assert.equal(indicators[1].letter, 'B');
+  assert.equal(indicators[2].letter, 'C');
+  assert.equal(indicators[3].letter, 'D');
+
+  // Verify target entity resolution
+  assert.equal(indicators[0].targetType, 'door', 'Indicator A anchored to door');
+  assert.equal(indicators[0].targetLabel, 'Door: Iron Armory Gate');
+
+  assert.equal(indicators[1].targetType, 'monster', 'Indicator B anchored to monster');
+  assert.ok(indicators[1].targetLabel.includes('Orc Warlord (Boss)'));
+
+  assert.equal(indicators[2].targetType, 'room', 'Indicator C anchored to room');
+  assert.equal(indicators[2].targetLabel, 'Room: Ancient Crypt');
+
+  assert.equal(indicators[3].targetType, 'tile', 'Indicator D anchored to tile');
+  assert.equal(indicators[3].targetLabel, 'Tile [3, 9]');
+
+  // 4. Verify mock canvas drawing of all indicator types
+  const mockCtx = {
+    save: () => {},
+    restore: () => {},
+    beginPath: () => {},
+    arc: () => {},
+    fill: () => {},
+    stroke: () => {},
+    fillText: () => {}
+  };
+  const geom = { tileSize: 39, offsetX: 0, offsetY: 0, cols: 26, rows: 19 };
+  for (const ind of indicators) {
+    assert.doesNotThrow(() => {
+      drawExportTriggerIndicator(mockCtx, geom, ind, { showRoomNames: true });
+    });
+  }
+});
+
+test('Custom Quest Cartridge Verification: custom-quest intro action appears in briefing and remaining triggers anchor to corridor tile and door', () => {
+  const cartridgePath = path.join(__dirname, '../../../games/tabletop-rpg/cartridges/custom-quest.cartridge.json');
+  assert.ok(fs.existsSync(cartridgePath), 'custom-quest.cartridge.json exists');
+  const cartridge = JSON.parse(fs.readFileSync(cartridgePath, 'utf8'));
+  const map = cartridge.maps['custom-quest'];
+  assert.ok(map, 'custom-quest map exists in cartridge');
+
+  const blockmap = {
+    gridDimensions: [map.width || 26, map.height || 19],
+    rooms: map.rooms || []
+  };
+
+  const { startingAction, indicators } = resolveTriggerIndicators(map, blockmap);
+
+  // 1. Verify starting action detection
+  assert.ok(startingAction, 'Starting quest action detected in custom-quest');
+  assert.equal(startingAction.actions[0].moviePath, 'res://assets/movies/quest1-intro.mp4');
+  assert.ok(startingAction.narrative.includes('Mentor speaks:'), 'Mentor speech in starting action');
+
+  // 2. Verify indicators count and targets
+  assert.equal(indicators.length, 2, 'Exactly 2 map indicators (excluding intro action)');
+
+  // Indicator 0: Note A on corridor heist stepped-on tile [7, 18]
+  assert.equal(indicators[0].letter, 'A');
+  assert.equal(indicators[0].targetType, 'tile');
+  assert.deepEqual(indicators[0].targetPos, { col: 7, row: 18 });
+  assert.equal(indicators[0].targetLabel, 'Tile [7, 18]');
+
+  // Indicator 1: Note B on door-10
+  assert.equal(indicators[1].letter, 'B');
+  assert.equal(indicators[1].targetType, 'door');
+  assert.equal(indicators[1].targetLabel, 'Door: door-10');
+
+  // 3. Verify Quest Sheet PDF HTML content
+  const mockMapUrl = 'data:image/png;base64,mock';
+  const questPayload = { ...map, briefing: cartridge.header?.description };
+  const html = generateQuestPdfHtml(questPayload, blockmap, mockMapUrl, {
+    orientation: 'landscape',
+    pageSize: 'A4',
+    includeHeader: true,
+    includeNotes: true
+  });
+
+  // Briefing contains Mentor's words and opening cinematic
+  assert.ok(html.includes('The Emperor calls upon'), 'Contains header description in briefing');
+  assert.ok(html.includes('Mentor speaks: &quot;As you step forward, ancient magic stirs...&quot;') ||
+            html.includes('Mentor speaks: "As you step forward, ancient magic stirs..."'), 'Contains starting action narrative in intro');
+  assert.ok(html.includes('Opening Cinematic: Note A Cinematic'), 'Contains opening cinematic in intro');
+
+  // Quest notes list shows Note A and Note B with their target descriptions
+  assert.ok(html.includes('Note A'), 'Note A in quest notes');
+  assert.ok(html.includes('Tile [7, 18]'), 'Tile [7, 18] in quest notes');
+  assert.ok(html.includes('Note B'), 'Note B in quest notes');
+  assert.ok(html.includes('Door: door-10'), 'Door: door-10 in quest notes');
+});
+
 
 
 
