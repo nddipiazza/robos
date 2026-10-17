@@ -28,8 +28,7 @@
         </div>
 
         <nav class="nav-tabs">
-          <button class="tab-btn active" data-tab="tab-quest">📜 Quest & Campaign</button>
-          <button class="tab-btn" data-tab="tab-heroes">🛡️ Heroes</button>
+          <button class="tab-btn active" data-tab="tab-quest">📜 Campaign</button>
           <button class="tab-btn" data-tab="tab-monsters">👹 Monsters & Bosses</button>
           <button class="tab-btn" data-tab="tab-board">🗺️ Board & Map Studio</button>
           <button class="tab-btn" data-tab="tab-spells">✨ Spells & Items</button>
@@ -71,12 +70,22 @@
 
     <!-- Main Content Panes -->
     <main class="main-content">
-      <!-- 1. Quest & Campaign Tab -->
+      <!-- 1. Campaign Tab (Quests & Campaign Heroes) -->
       <section id="tab-quest" class="tab-pane active">
         <div class="pane-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
-          <div>
-            <h2>Quest & Campaign Blueprint</h2>
-            <p>Campaigns contain 1 or more quests. Select, edit, complete, and track quest progression.</p>
+          <div style="flex:1; min-width:300px;">
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:6px;">
+              <h2 style="margin:0;">Campaign</h2>
+              <div class="campaign-selector-bar" style="display:flex; align-items:center; gap:8px; background:#0f172a; border:1px solid var(--border-color); padding:4px 10px; border-radius:6px;">
+                <span style="font-size:11px; text-transform:uppercase; color:#94a3b8; font-weight:700;">Active Campaign:</span>
+                <select id="campaign-select" class="form-select" style="min-width:220px; font-size:12px; font-weight:600; padding:4px 8px;">
+                  <!-- Dynamically populated from currentData.campaigns -->
+                </select>
+                <button id="btn-add-campaign" class="btn btn-sm btn-secondary" title="Create a new campaign with its own quests and hero roster">+ New Campaign</button>
+                <button id="btn-delete-campaign" class="btn btn-sm btn-danger" title="Delete selected campaign">🗑️ Delete Campaign</button>
+              </div>
+            </div>
+            <p style="margin:0;">Manage multiple campaigns. Each campaign maintains its own quest progression and party of Heroes.</p>
           </div>
           <div class="campaign-summary-card card" style="min-width:320px; padding:10px 14px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:6px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
@@ -93,6 +102,23 @@
           </div>
         </div>
 
+        <!-- Campaign Sub-Navigation (Quests vs Campaign Heroes) -->
+        <div class="campaign-subtabs" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
+          <div style="display:flex; gap:8px;">
+            <button id="btn-subtab-quests" class="btn btn-sm campaign-subtab-btn active" data-campaign-subtab="subtab-campaign-quests">
+              📜 Campaign Quests (<span id="campaign-subtab-quests-count">3</span>)
+            </button>
+            <button id="btn-subtab-heroes" class="btn btn-sm campaign-subtab-btn" data-campaign-subtab="subtab-campaign-heroes">
+              🛡️ Campaign Heroes (<span id="campaign-subtab-heroes-count">4</span>)
+            </button>
+          </div>
+          <div style="font-size:12px; color:#94a3b8;">
+            Campaign Hero Roster &amp; Quest Progression are scoped to <strong id="campaign-scope-label" style="color:#38bdf8;">HeroQuest: The Gathering Storm</strong>
+          </div>
+        </div>
+
+        <!-- Campaign Subpane 1: Quests -->
+        <div id="subtab-campaign-quests" class="campaign-subpane active">
         <div class="split-view campaign-split-view">
           <aside class="sidebar-list campaign-quests-sidebar">
             <div class="list-header" style="display:flex; justify-content:space-between; align-items:center;">
@@ -198,14 +224,14 @@
             </div>
           </div>
         </div>
-      </section>
+        </div>
 
-      <!-- 2. Heroes Tab -->
-      <section id="tab-heroes" class="tab-pane">
+        <!-- Campaign Subpane 2: Heroes (Per Campaign) -->
+        <div id="subtab-campaign-heroes" class="campaign-subpane" style="display:none;">
         <div class="split-view">
           <aside class="sidebar-list">
             <div class="list-header">
-              <h3>Tabletop Heroes</h3>
+              <h3>Campaign Heroes</h3>
               <button id="btn-add-hero" class="btn btn-sm btn-secondary">+ New</button>
             </div>
             <div id="heroes-list" class="item-list"></div>
@@ -422,9 +448,10 @@
             </div>
           </div>
         </div>
+        </div>
       </section>
 
-      <!-- 3. Monsters Tab -->
+      <!-- 2. Monsters Tab -->
       <section id="tab-monsters" class="tab-pane">
         <div class="split-view">
           <aside class="sidebar-list">
