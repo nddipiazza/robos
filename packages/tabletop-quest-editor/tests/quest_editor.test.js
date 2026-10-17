@@ -22,6 +22,15 @@ const {
   removeActionFromTrigger,
   addTrigger,
   buildCartridgePayload,
+  generateExportCanvas,
+  generateQuestPdfHtml,
+  openExportPngModal,
+  closeExportPngModal,
+  openExportPdfModal,
+  closeExportPdfModal,
+  exportPng,
+  exportPdf,
+  copyPngToClipboard,
   state,
   dom,
   TRIGGER_EVENT_DEFS,
@@ -2601,4 +2610,241 @@ test('Door Name Editing: updates name in inspector, reflects in summary and trig
     Object.assign(dom, savedDom);
   }
 });
+
+test('Quest Map PNG and PDF Export: generates scaled canvas and complete printable PDF quest sheet', async () => {
+  const savedDocument = global.document;
+  const savedStateQuest = state.quest;
+  const savedStateBlockmap = state.blockmap;
+  const savedDom = { ...dom };
+
+  try {
+    // Mock minimal DOM for modal dialogs and inputs
+    let modalPngDisplay = 'none';
+    let modalPdfDisplay = 'none';
+    let previewSrc = '';
+    let previewBadge = '';
+
+    dom.exportPngModal = {
+      style: {
+        get display() { return modalPngDisplay; },
+        set display(v) { modalPngDisplay = v; }
+      }
+    };
+    dom.exportPdfModal = {
+      style: {
+        get display() { return modalPdfDisplay; },
+        set display(v) { modalPdfDisplay = v; }
+      }
+    };
+    dom.exportPngPreview = {
+      set src(v) { previewSrc = v; },
+      get src() { return previewSrc; }
+    };
+    dom.exportPngDimensionsBadge = {
+      set textContent(v) { previewBadge = v; },
+      get textContent() { return previewBadge; }
+    };
+    dom.chkExportGrid = { checked: true };
+    dom.chkExportNames = { checked: true };
+    dom.chkExportArtwork = { checked: true };
+    dom.chkExportBanner = { checked: false };
+    dom.radioExportPngScale = [
+      { value: '1', checked: true },
+      { value: '2', checked: false }
+    ];
+    dom.radioExportPdfOrientation = [
+      { value: 'landscape', checked: true },
+      { value: 'portrait', checked: false }
+    ];
+    dom.selectPdfPageSize = { value: 'A4' };
+    dom.chkPdfHeader = { checked: true };
+    dom.chkPdfMap = { checked: true };
+    dom.chkPdfNotes = { checked: true };
+    dom.chkPdfRoster = { checked: true };
+    dom.chkPdfFurniture = { checked: true };
+
+    // Setup mock quest and blockmap state
+    state.blockmap = {
+      gridDimensions: [26, 19],
+      tileSize: 39.0,
+      pixelOffset: [0, 0],
+      rooms: [
+        { id: 'room-1', name: 'Great Armory', color: '#38bdf8', tiles: [[2, 2], [3, 2], [2, 3], [3, 3]] },
+        { id: 'room-2', name: 'Throne Room', color: '#f59e0b', tiles: [[6, 6], [7, 6], [6, 7], [7, 7]] }
+      ],
+      corridors: [[1, 2], [1, 3], [1, 4]]
+    };
+
+    state.quest = {
+      title: 'Lair of the Orc Warlord',
+      slug: 'lair-of-the-orc-warlord',
+      briefing: 'Deep in the Black Mountains, an orc clan plots ruin.\nYou must breach the stronghold and claim the warlord\'s war banner.',
+      wanderingMonster: 'orc',
+      goldBounty: 250,
+      startingStair: [1, 2],
+      startingStairType: 'stairs_up_1x1',
+      exitTile: [7, 7],
+      exitStairType: 'stairs_down_1x1',
+      monsters: [
+        { type: 'orc', pos: [2, 2], isBoss: false },
+        { type: 'orc', pos: [3, 2], isBoss: false },
+        { type: 'orc', pos: [2, 3], isBoss: false },
+        { type: 'goblin', pos: [3, 3], isBoss: false },
+        { type: 'gargoyle', name: 'Gargoyle Overlord', pos: [6, 6], isBoss: true }
+      ],
+      furniture: [
+        { type: 'chest', x: 3, y: 2, name: 'Armory Iron Chest' },
+        { type: 'throne', x: 6, y: 7, name: 'Warlord Throne' },
+        { type: 'table', x: 7, y: 6, name: 'War Planning Table' }
+      ],
+      traps: [
+        { type: 'pit', x: 1, y: 3 },
+        { type: 'spear', x: 1, y: 4 }
+      ],
+      doors: [
+        { id: 'door-1', name: 'Armory Gate', from: [1, 2], to: [2, 2], state: 'closed', is_secret: false },
+        { id: 'door-2', name: 'Secret Escape Tunnel', from: [7, 7], to: [7, 8], state: 'open', is_secret: true }
+      ],
+      storyTriggers: [
+        {
+          marker: 'Note A',
+          event: 'on_room_entered',
+          room: 'room-1',
+          title: 'Armory Ambush',
+          narrative: 'Iron bars drop behind you as orcish battle horns sound!',
+          actions: [{ type: 'play_movie', title: 'Ambush Cutscene' }]
+        },
+        {
+          marker: 'Note B',
+          event: 'on_monster_defeated',
+          target: 'Gargoyle Overlord',
+          title: 'Fall of the Overlord',
+          narrative: 'The gargoyle crumbles into obsidian dust, revealing a glowing jade key.',
+          actions: [{ type: 'custom_action', title: 'Drop Jade Key' }]
+        }
+      ]
+    };
+
+    // 1. generateExportCanvas at 1x scale without banner
+    const canvas1x = generateExportCanvas({ scale: 1, showBanner: false });
+    assert.ok(canvas1x, 'Canvas generated at 1x');
+    assert.equal(typeof canvas1x.width, 'number', 'Canvas has width');
+    assert.equal(typeof canvas1x.height, 'number', 'Canvas has height');
+    const width1x = canvas1x.width;
+    const height1x = canvas1x.height;
+    assert.ok(width1x >= 1000, `Width at 1x should cover 26 tiles (~1014px): got ${width1x}`);
+    assert.ok(height1x >= 700, `Height at 1x should cover 19 tiles (~741px): got ${height1x}`);
+
+    // 2. generateExportCanvas at 2x scale
+    const canvas2x = generateExportCanvas({ scale: 2, showBanner: false });
+    assert.equal(canvas2x.width, width1x * 2, '2x scale produces double the width');
+    assert.equal(canvas2x.height, height1x * 2, '2x scale produces double the height');
+
+    // 3. generateExportCanvas with Title Banner
+    const canvasBanner = generateExportCanvas({ scale: 1, showBanner: true });
+    assert.equal(canvasBanner.width, width1x, 'Banner canvas has same base width');
+    assert.equal(canvasBanner.height, height1x + 56, 'Banner canvas has additional 56px banner height');
+
+    // 4. Modal toggles and preview update
+    openExportPngModal();
+    assert.equal(dom.exportPngModal.style.display, 'flex', 'openExportPngModal displays modal');
+    assert.ok(previewBadge.includes('1×'), 'Preview badge reflects 1x scale');
+    closeExportPngModal();
+    assert.equal(dom.exportPngModal.style.display, 'none', 'closeExportPngModal hides modal');
+
+    openExportPdfModal();
+    assert.equal(dom.exportPdfModal.style.display, 'flex', 'openExportPdfModal displays modal');
+    closeExportPdfModal();
+    assert.equal(dom.exportPdfModal.style.display, 'none', 'closeExportPdfModal hides modal');
+
+    // 5. Direct exportPng and exportPdf execution in headless environment
+    const pngResult = await exportPng({ scale: 2 });
+    assert.equal(pngResult.success, true, 'exportPng completes successfully in headless test');
+    assert.ok(pngResult.dataUrl.startsWith('data:image/png;base64,'), 'exportPng returns base64 data url');
+
+    const pdfResult = await exportPdf({ orientation: 'landscape', pageSize: 'A4' });
+    assert.equal(pdfResult.success, true, 'exportPdf completes successfully in headless test');
+    assert.ok(pdfResult.html, 'exportPdf returns generated HTML');
+
+    // 6. Comprehensive inspection of generated Quest Sheet HTML
+    const testMapUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const html = generateQuestPdfHtml(state.quest, state.blockmap, testMapUrl, {
+      orientation: 'landscape',
+      pageSize: 'A4',
+      includeHeader: true,
+      includeMap: true,
+      includeNotes: true,
+      includeRoster: true,
+      includeFurniture: true
+    });
+
+    // Verify HTML structure and metadata
+    assert.ok(html.includes('<!DOCTYPE html>'), 'HTML contains doctype');
+    assert.ok(html.includes('<title>Lair of the Orc Warlord</title>'), 'HTML title matches quest title');
+    assert.ok(html.includes('size: a4 landscape;'), 'Print styles reflect A4 landscape');
+    assert.ok(html.includes('<h1>Lair of the Orc Warlord</h1>'), 'Header contains quest title');
+    assert.ok(html.includes('Deep in the Black Mountains'), 'Story briefing narrative is present');
+    assert.ok(html.includes('250 Gold'), 'Gold bounty is present');
+    assert.ok(html.includes('<strong>Wandering:</strong> Orc'), 'Wandering monster name is present');
+    assert.ok(html.includes('[1, 2]'), 'Entrance location is present');
+    assert.ok(html.includes('[7, 7]'), 'Exit location is present');
+
+    // Verify high-resolution map embed
+    assert.ok(html.includes(`<img src="${testMapUrl}"`), 'Embedded map image is present');
+
+    // Verify monster roster table
+    assert.ok(html.includes('Monster Roster &amp; Statistics'), 'Monster roster card is present');
+    assert.ok(html.includes('5 Total'), 'Total monsters count is accurate (3 orcs + 1 goblin + 1 gargoyle)');
+    assert.ok(html.includes('<strong>Orc</strong>'), 'Orc monster row present');
+    assert.ok(html.includes('<strong>3</strong>'), 'Orc quantity 3 present');
+    assert.ok(html.includes('<strong>Goblin</strong>'), 'Goblin monster row present');
+    assert.ok(html.includes('<strong>Gargoyle</strong>'), 'Gargoyle boss row present');
+    assert.ok(html.includes('BOSS ×1'), 'Boss indicator badge present on Gargoyle');
+
+    // Verify furniture & traps summary
+    assert.ok(html.includes('Furniture &amp; Dungeon Features'), 'Furniture card present');
+    assert.ok(html.includes('Chest: <strong>1</strong>'), 'Chest count accurate');
+    assert.ok(html.includes('Throne: <strong>1</strong>'), 'Throne count accurate');
+    assert.ok(html.includes('Table: <strong>1</strong>'), 'Table count accurate');
+    assert.ok(html.includes('pit (1)'), 'Pit trap count present');
+    assert.ok(html.includes('spear (1)'), 'Spear trap count present');
+
+    // Verify quest notes
+    assert.ok(html.includes('Quest Notes &amp; Story Triggers'), 'Quest notes section present');
+    assert.ok(html.includes('2 Triggers'), 'Triggers count accurate');
+    assert.ok(html.includes('Note A'), 'Note A badge present');
+    assert.ok(html.includes('Armory Ambush'), 'Note A title present');
+    assert.ok(html.includes('Iron bars drop behind you'), 'Note A narrative present');
+    assert.ok(html.includes('Note B'), 'Note B badge present');
+    assert.ok(html.includes('Fall of the Overlord'), 'Note B title present');
+    assert.ok(html.includes('obsidian dust'), 'Note B narrative present');
+
+    // 7. Test orientation and page size options
+    const portraitLetterHtml = generateQuestPdfHtml(state.quest, state.blockmap, testMapUrl, {
+      orientation: 'portrait',
+      pageSize: 'Letter'
+    });
+    assert.ok(portraitLetterHtml.includes('size: letter portrait;'), 'Orientation and page size correctly switch to Letter portrait');
+
+    // 8. Test section toggle options
+    const filteredHtml = generateQuestPdfHtml(state.quest, state.blockmap, testMapUrl, {
+      includeHeader: false,
+      includeMap: false,
+      includeNotes: false,
+      includeRoster: false,
+      includeFurniture: false
+    });
+    assert.ok(!filteredHtml.includes('class="quest-header"'), 'Header omitted when includeHeader is false');
+    assert.ok(!filteredHtml.includes('class="map-container"'), 'Map omitted when includeMap is false');
+    assert.ok(!filteredHtml.includes('Quest Notes &amp; Story Triggers'), 'Notes omitted when includeNotes is false');
+    assert.ok(!filteredHtml.includes('Monster Roster &amp; Statistics'), 'Roster omitted when includeRoster is false');
+    assert.ok(!filteredHtml.includes('Furniture &amp; Dungeon Features'), 'Furniture omitted when includeFurniture is false');
+  } finally {
+    global.document = savedDocument;
+    state.quest = savedStateQuest;
+    state.blockmap = savedStateBlockmap;
+    Object.assign(dom, savedDom);
+  }
+});
+
 
