@@ -3514,4 +3514,15 @@ test('Double Door Validation: validates perimeter wall placement across both spa
   assert.equal(doorErrors3[0].allTiles.length, 4, 'Warning overlay includes all 4 spanned tiles');
 });
 
+// -------------------------------------------------------------
+// Test 41: Quest Briefing Relabeling
+// -------------------------------------------------------------
+test('Quest Briefing Relabeling: index.html displays "Quest Briefing" instead of "Mentor\'s Quest Parchment Briefing"', () => {
+  const htmlPath = path.join(__dirname, '../renderer/index.html');
+  const html = fs.readFileSync(htmlPath, 'utf8');
+
+  assert.ok(html.includes('<h3>📜 Quest Briefing</h3>'), 'Section card displays "<h3>📜 Quest Briefing</h3>"');
+  assert.ok(!html.includes("Mentor's Quest Parchment Briefing"), 'Does not contain outdated "Mentor\'s Quest Parchment Briefing" label');
+});
+
 
