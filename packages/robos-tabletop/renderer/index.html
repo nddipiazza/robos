@@ -29,8 +29,8 @@
 
         <nav class="nav-tabs">
           <button class="tab-btn active" data-tab="tab-quest">📜 Campaign</button>
+          <button class="tab-btn" data-tab="tab-classes">🏛️ Class</button>
           <button class="tab-btn" data-tab="tab-monsters">👹 Monsters & Bosses</button>
-          <button class="tab-btn" data-tab="tab-board">🗺️ Board & Map Studio</button>
           <button class="tab-btn" data-tab="tab-spells">✨ Spells & Items</button>
         </nav>
       </div>
@@ -42,6 +42,9 @@
             <!-- Dynamically populated from campaign quests -->
           </select>
         </div>
+        <button id="btn-header-launch-quest-editor" class="btn btn-secondary" title="Open custom-quest.cartridge in Tabletop Quest Map Editor">
+          🗺️ Quest Editor
+        </button>
         <button id="btn-open-spell-pick" class="btn btn-secondary" title="Pick spells for Elf vs Wizard (HeroQuest elemental spell draft)">
           🔮 Pick Spells
         </button>
@@ -51,9 +54,16 @@
         <button id="btn-save-kgraph" class="btn btn-secondary" title="Save current form changes directly into .robos/kgraphs/tabletop-game/package.jsonld">
           💾 Save to KGraph
         </button>
-        <button id="btn-bundle" class="btn btn-secondary" title="Compile campaign data into a playable Tabletop Adventure Pack (.cartridge.json)">
-          📦 Export Quest Pack
+        <button id="btn-bundle" class="btn btn-secondary" title="Sync campaign heroes & spells into custom-quest.cartridge.json">
+          📦 Sync Quest Pack
         </button>
+        <div class="header-launch-mode-wrap" style="display:flex; align-items:center; gap:6px; background:#0f172a; border:1px solid #334155; padding:3px 8px; border-radius:6px;">
+          <span style="font-size:11px; color:#94a3b8; font-weight:700;">Launch State:</span>
+          <select id="header-launch-mode-select" class="dropdown form-select-quest" style="font-size:11px; padding:3px 6px;" title="Choose whether to launch in the saved quest state or start a new quest state">
+            <option value="saved">💾 Saved State (Resume)</option>
+            <option value="new">🆕 New Quest State (Fresh)</option>
+          </select>
+        </div>
         <button id="btn-play-hero" class="btn btn-accent" title="Launch Godot 4 Tabletop Player in Player Mode (Play Heroes)">
           ⚔️ Play as Hero
         </button>
@@ -85,19 +95,19 @@
                 <button id="btn-delete-campaign" class="btn btn-sm btn-danger" title="Delete selected campaign">🗑️ Delete Campaign</button>
               </div>
             </div>
-            <p style="margin:0;">Manage multiple campaigns. Each campaign maintains its own quest progression and party of Heroes.</p>
+            <p style="margin:0;">Choose your Campaign, inspect the active quest (<code>custom-quest.cartridge</code>), review quest Heroes, save quest state from now, or launch the game.</p>
           </div>
           <div class="campaign-summary-card card" style="min-width:320px; padding:10px 14px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:6px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-              <strong id="campaign-title-display">HeroQuest: The Gathering Storm</strong>
+              <strong id="campaign-title-display">HeroQuest</strong>
               <span id="campaign-progress-pct" class="badge badge-cyan" style="font-weight:700;">0% Completed</span>
             </div>
             <div class="campaign-progress-bar-container" style="background:#0f172a; height:8px; border-radius:4px; overflow:hidden; border:1px solid #334155;">
               <div id="campaign-progress-bar" style="width:0%; height:100%; background:linear-gradient(90deg, #00bcd4, #10b981); transition:width 0.3s ease;"></div>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:11px; color:#94a3b8; margin-top:4px;">
-              <span id="campaign-progress-count">0 / 3 Quests Finished</span>
-              <span id="campaign-total-gold-pot">Total Bounty: 550g</span>
+              <span id="campaign-progress-count">0 / 1 Quests Finished</span>
+              <span id="campaign-total-gold-pot">Total Bounty: 150g</span>
             </div>
           </div>
         </div>
@@ -106,14 +116,14 @@
         <div class="campaign-subtabs" style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color);">
           <div style="display:flex; gap:8px;">
             <button id="btn-subtab-quests" class="btn btn-sm campaign-subtab-btn active" data-campaign-subtab="subtab-campaign-quests">
-              📜 Campaign Quests (<span id="campaign-subtab-quests-count">3</span>)
+              📜 Campaign Quests (<span id="campaign-subtab-quests-count">1</span>)
             </button>
             <button id="btn-subtab-heroes" class="btn btn-sm campaign-subtab-btn" data-campaign-subtab="subtab-campaign-heroes">
               🛡️ Campaign Heroes (<span id="campaign-subtab-heroes-count">4</span>)
             </button>
           </div>
           <div style="font-size:12px; color:#94a3b8;">
-            Campaign Hero Roster &amp; Quest Progression are scoped to <strong id="campaign-scope-label" style="color:#38bdf8;">HeroQuest: The Gathering Storm</strong>
+            Campaign Hero Roster &amp; Quest Progression are scoped to <strong id="campaign-scope-label" style="color:#38bdf8;">HeroQuest</strong>
           </div>
         </div>
 
@@ -127,7 +137,7 @@
             </div>
             <div class="form-group" style="padding:8px 12px 6px 12px; margin:0; border-bottom:1px solid var(--border-color);">
               <label style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:700;">Campaign Name:</label>
-              <input type="text" id="campaign-name-input" class="form-input" value="HeroQuest: The Gathering Storm" style="padding:4px 8px; font-size:12px; margin-top:4px;">
+              <input type="text" id="campaign-name-input" class="form-input" value="HeroQuest" style="padding:4px 8px; font-size:12px; margin-top:4px;">
             </div>
             <div id="campaign-quests-list" class="item-list"></div>
           </aside>
@@ -148,29 +158,45 @@
               </div>
             </div>
 
+            <!-- 1. Quest Info & Quest Editor Launcher Card -->
             <div class="card form-card" style="margin-bottom:16px;">
               <div class="editor-card-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                  <h3 id="quest-editor-title" style="margin:0;">Quest 1: The Trial</h3>
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                  <h3 id="quest-editor-title" style="margin:0;">Quest 1: Custom Dungeon</h3>
                   <span id="quest-status-badge" class="badge badge-gray">⏳ In Progress</span>
+                  <span id="quest-cartridge-badge" class="badge badge-cyan" style="font-family:monospace; font-size:11px;">📦 custom-quest.cartridge.json</span>
                 </div>
-                <div style="display:flex; gap:8px; align-items:center;">
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                  <button id="btn-launch-quest-editor" class="btn btn-sm btn-accent" title="Open custom-quest.cartridge in Tabletop Quest Map Editor (packages/tabletop-quest-editor)">
+                    🗺️ Launch Quest Editor
+                  </button>
                   <button id="btn-complete-quest" class="btn btn-sm btn-success" title="Complete quest and award gold bounty to party">🏆 Complete Quest</button>
                   <button id="btn-reset-quest" class="btn btn-sm btn-secondary" title="Reopen quest">↩️ Reset</button>
                   <button id="btn-delete-quest" class="btn btn-sm btn-danger" title="Delete quest from campaign">🗑️ Delete</button>
                 </div>
               </div>
 
+              <!-- Live Cartridge Info Strip -->
+              <div id="quest-cartridge-summary-strip" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; padding:8px 12px; margin-bottom:14px; background:rgba(15,23,42,0.75); border:1px solid #334155; border-radius:6px; font-size:12px;">
+                <span style="color:#94a3b8; font-weight:700;">🗺️ Cartridge Entities:</span>
+                <span class="badge" id="cartridge-stat-monsters">👹 24 Monsters</span>
+                <span class="badge" id="cartridge-stat-doors">🚪 21 Doors</span>
+                <span class="badge" id="cartridge-stat-furniture">📦 19 Furniture</span>
+                <span class="badge" id="cartridge-stat-traps">⚠️ 14 Traps</span>
+                <span class="badge" id="cartridge-stat-triggers">🎬 13 Story Triggers</span>
+                <span class="badge" id="cartridge-stat-stairs">🏁 Start: [7, 14]</span>
+              </div>
+
               <div class="form-grid">
                 <div class="form-card-inner">
                   <h4 style="margin-top:0; color:#e2e8f0; font-size:0.9rem;">Basic Quest Metadata</h4>
                   <div class="form-group">
-                    <label>Quest Identifier (Slug):</label>
-                    <input type="text" id="quest-slug" value="heroquest-the-trial" class="form-input">
+                    <label>Quest Identifier (Cartridge Slug):</label>
+                    <input type="text" id="quest-slug" value="custom-quest" class="form-input">
                   </div>
                   <div class="form-group">
                     <label>Quest Title:</label>
-                    <input type="text" id="quest-title" value="Quest 1: The Trial" class="form-input">
+                    <input type="text" id="quest-title" value="Quest 1: Custom Dungeon" class="form-input">
                   </div>
                   <div class="form-group">
                     <label>Ruleset Engine:</label>
@@ -183,14 +209,14 @@
                   <div class="form-group">
                     <label>Starting Spawn Square [X, Y]:</label>
                     <div class="coord-inputs">
-                      <input type="number" id="quest-spawn-x" value="1" min="0" max="25" class="form-input">
-                      <input type="number" id="quest-spawn-y" value="1" min="0" max="18" class="form-input">
+                      <input type="number" id="quest-spawn-x" value="7" min="0" max="27" class="form-input">
+                      <input type="number" id="quest-spawn-y" value="14" min="0" max="20" class="form-input">
                     </div>
                   </div>
                   <div class="form-group">
                     <label>Gold Bounty / Reward (Awarded on Completion):</label>
                     <div style="display:flex; align-items:center; gap:8px;">
-                      <input type="number" id="quest-gold" value="100" class="form-input" style="flex:1;">
+                      <input type="number" id="quest-gold" value="150" class="form-input" style="flex:1;">
                       <span class="gold-badge" style="background:#eab30822; color:#eab308; border:1px solid #eab30844; padding:4px 8px; border-radius:4px; font-weight:700;">🪙 Gold</span>
                     </div>
                   </div>
@@ -200,25 +226,100 @@
                   <h4 style="margin-top:0; color:#e2e8f0; font-size:0.9rem;">Dungeon Briefing & Win State</h4>
                   <div class="form-group">
                     <label>Story Briefing (Parchment):</label>
-                    <textarea id="quest-briefing" rows="5" class="form-textarea">You have learned well, my apprentices. Now comes your final test. Seek out the foul Orc Warlord Verag in his hidden catacombs, slay him, and return to the stairwell alive.</textarea>
+                    <textarea id="quest-briefing" rows="5" class="form-textarea">Descend into the Custom Dungeon via the stairwell at [7, 14]. Explore the dungeon rooms, overcome the traps and monsters within, and return victorious!</textarea>
                   </div>
                   <div class="form-group">
                     <label>Boss Monster Target:</label>
-                    <input type="text" id="quest-boss-target" value="verag-boss" class="form-input">
+                    <input type="text" id="quest-boss-target" value="gargoyle-boss" class="form-input">
                   </div>
                   <div class="form-group">
-                    <label>Board Theme / Background (Maps Studio):</label>
+                    <label>Board Theme / Background (Quest Map Editor):</label>
                     <select id="quest-bg-ref" class="form-select">
+                      <option value="heroquest-classic" selected>HeroQuest Classic Side A - Stone Dungeon (26×19)</option>
                       <option value="fan-dungeon-28x21">HeroQuest Fan Dungeon & Cavern Citadel (28×21)</option>
-                      <option value="heroquest-classic">HeroQuest Classic Side A - Stone Dungeon (26×19)</option>
                       <option value="first-light-caverns">HeroQuest First Light Side B - Caverns (26×19)</option>
                     </select>
                     <div id="quest-bg-meta" class="theme-meta-badges" style="margin-top:6px; display:flex; gap:8px;">
-                      <span id="quest-bg-dims" class="badge">28 × 21 squares</span>
-                      <span id="quest-bg-rooms" class="badge">19 active rooms</span>
-                      <span id="quest-bg-calib" class="badge">Inset: 0px (Battlemat)</span>
+                      <span id="quest-bg-dims" class="badge">26 × 19 squares</span>
+                      <span id="quest-bg-rooms" class="badge">22 calibrated rooms</span>
+                      <span id="quest-bg-calib" class="badge">custom-quest.cartridge.json</span>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Current Heroes for the Quest (Review Panel) -->
+            <div class="card form-card" id="quest-heroes-review-card" style="margin-bottom:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <h3 style="margin:0; font-size:1rem;">🛡️ Current Heroes for This Quest</h3>
+                  <p class="text-muted" style="margin:2px 0 0 0; font-size:12px;">Review the party roster entering <code id="quest-heroes-slug-label">custom-quest</code>, their classes, stats, equipment, and gold.</p>
+                </div>
+                <div style="display:flex; gap:8px;">
+                  <button id="btn-quest-review-edit-heroes" class="btn btn-sm btn-secondary">🛡️ Edit Campaign Heroes</button>
+                  <button id="btn-quest-review-trade" class="btn btn-sm btn-secondary">🤝 Hero Trade</button>
+                </div>
+              </div>
+              <div id="quest-heroes-review-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:10px;"></div>
+            </div>
+
+            <!-- 3. Current Quest State, Save State From Now & Launch Game Controls -->
+            <div class="card form-card" id="quest-save-state-card" style="margin-bottom:16px; border-color:rgba(0,188,212,0.45);">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+                <div>
+                  <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <h3 style="margin:0; font-size:1rem;">💾 Current Quest State &amp; Game Launch</h3>
+                    <span id="quest-save-state-badge" class="badge badge-cyan">Checking save state...</span>
+                  </div>
+                  <p class="text-muted" style="margin:3px 0 0 0; font-size:12px;">
+                    Inspect the live quest progress for <code>custom-quest.cartridge</code>, snapshot <strong>Save State From Now</strong>, or launch the game in either the Saved State or a New Quest State.
+                  </p>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                  <input type="text" id="save-state-label-input" class="form-input" placeholder="Save label (e.g. Before Boss Room)..." style="font-size:12px; padding:4px 8px; width:195px;">
+                  <button id="btn-save-quest-state-now" class="btn btn-sm btn-primary" title="Save the current quest state from now so you can resume or restore it anytime">
+                    💾 Save State From Now
+                  </button>
+                  <button id="btn-refresh-quest-state" class="btn btn-sm btn-secondary" title="Reload quest save state from disk">
+                    🔄 Refresh State
+                  </button>
+                  <button id="btn-clear-quest-state" class="btn btn-sm btn-danger" title="Clear active autosave so next launch starts fresh">
+                    🗑️ Clear Save
+                  </button>
+                </div>
+              </div>
+
+              <!-- Live Quest State Summary Box -->
+              <div id="quest-save-state-details" style="background:rgba(15,23,42,0.85); border:1px solid #334155; border-radius:6px; padding:12px; margin-bottom:12px;">
+                <div id="quest-save-state-summary" style="font-size:12px; color:#cbd5e1; margin-bottom:8px;">
+                  No active in-progress save state found yet. Click <strong>💾 Save State From Now</strong> to create a starting save state from your current Campaign Heroes, or launch the game to generate one automatically.
+                </div>
+                <div id="quest-save-state-heroes" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap:8px;"></div>
+                <div id="quest-save-snapshots-wrap" style="margin-top:10px; padding-top:8px; border-top:1px solid #1e293b; display:none;">
+                  <div style="font-size:11px; color:#94a3b8; font-weight:700; text-transform:uppercase; margin-bottom:6px;">📸 Saved State Snapshots (Click to Restore as Active Launch State):</div>
+                  <div id="quest-save-snapshots-list" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+                </div>
+              </div>
+
+              <!-- Launch Game in Saved State vs New Quest State -->
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-top:10px; border-top:1px solid var(--border-color);">
+                <div style="font-size:12px; color:#94a3b8;">
+                  🚀 <strong>Launch Quest in Godot 4:</strong> Choose whether to resume from the current saved state or start a brand-new quest state:
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <button id="btn-launch-saved-hero" class="btn btn-sm btn-accent" title="Launch Hero Mode resuming from the current Saved Quest State">
+                    ▶️ Launch Saved State (Hero)
+                  </button>
+                  <button id="btn-launch-saved-dm" class="btn btn-sm btn-primary" title="Launch Game Master Mode resuming from the current Saved Quest State">
+                    ▶️ Launch Saved State (GM)
+                  </button>
+                  <button id="btn-launch-new-hero" class="btn btn-sm btn-secondary" title="Start a fresh New Quest State (--reset) in Hero Mode">
+                    🆕 Launch New Quest State (Hero)
+                  </button>
+                  <button id="btn-launch-new-dm" class="btn btn-sm btn-secondary" title="Start a fresh New Quest State (--reset) in Game Master Mode">
+                    🆕 Launch New Quest State (GM)
+                  </button>
                 </div>
               </div>
             </div>
@@ -256,8 +357,17 @@
                   <input type="text" id="hero-name" class="form-input" placeholder="e.g. Grimjaw the Slayer">
                 </div>
                 <div class="form-group" style="flex:2;">
-                  <label>Hero Class / Archetype:</label>
-                  <input type="text" id="hero-class" class="form-input" placeholder="e.g. Barbarian, Dwarf, Elf, Wizard">
+                  <label>Hero Class (Base Class Stats &amp; Abilities):</label>
+                  <div style="display:flex; gap:6px;">
+                    <input type="text" id="hero-class" class="form-input" placeholder="e.g. Barbarian, Dwarf, Elf, Wizard" style="flex:1;">
+                    <select id="hero-base-class-select" class="form-select" style="width:145px; font-size:12px;" title="Apply starting stats and abilities from a Hero Class">
+                      <option value="">Apply Class...</option>
+                      <option value="class-hero-barbarian">Barbarian</option>
+                      <option value="class-hero-dwarf">Dwarf</option>
+                      <option value="class-hero-elf">Elf</option>
+                      <option value="class-hero-wizard">Wizard</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               <div class="form-row stats-row">
@@ -485,7 +595,7 @@
                   <button id="btn-delete-monster" class="btn btn-sm btn-danger">🗑️ Delete</button>
                 </div>
               </div>
-              <div class="form-row" style="grid-template-columns: 1fr 1.5fr 1fr;">
+              <div class="form-row" style="grid-template-columns: 1fr 1.4fr 1.2fr 1fr;">
                 <div class="form-group">
                   <label>Monster ID:</label>
                   <input type="text" id="monster-id" class="form-input" readonly>
@@ -495,6 +605,26 @@
                   <input type="text" id="monster-name" class="form-input">
                 </div>
                 <div class="form-group">
+                  <label>Extends Enemy Class (Base Stats):</label>
+                  <select id="monster-base-class" class="form-select form-input" title="Select a Base HeroQuest Enemy Class to inherit starting Attack, Defend, Mind, Health (BP), Movement, and Abilities">
+                    <option value="Goblin">Goblin (BP:1 MP:1 Atk:2 Def:1 Move:10)</option>
+                    <option value="Orc">Orc (BP:1 MP:2 Atk:3 Def:2 Move:8)</option>
+                    <option value="Fimir">Fimir / Abomination (BP:2 MP:3 Atk:3 Def:3 Move:6)</option>
+                    <option value="Skeleton">Skeleton (BP:1 MP:0 Atk:2 Def:2 Move:6)</option>
+                    <option value="Zombie">Zombie (BP:1 MP:0 Atk:2 Def:3 Move:5)</option>
+                    <option value="Mummy">Mummy (BP:2 MP:0 Atk:3 Def:4 Move:4)</option>
+                    <option value="Dread Warrior">Dread Warrior (BP:3 MP:3 Atk:4 Def:4 Move:7)</option>
+                    <option value="Gargoyle">Gargoyle (BP:3 MP:4 Atk:4 Def:5 Move:6)</option>
+                    <option value="Orc Shaman">Orc Shaman (BP:3 MP:4 Atk:3 Def:3 Move:7)</option>
+                    <option value="Orc Warlord">Orc Warlord (BP:3 MP:3 Atk:4 Def:4 Move:8)</option>
+                    <option value="Chaos Sorcerer">Chaos Sorcerer (BP:4 MP:5 Atk:4 Def:4 Move:7)</option>
+                    <option value="Witch Lord">Witch Lord (BP:4 MP:6 Atk:5 Def:6 Move:6)</option>
+                    <option value="Dragon">Dragon (BP:6 MP:5 Atk:5 Def:5 Move:8)</option>
+                    <option value="Doomguard">Doomguard (BP:4 MP:4 Atk:4 Def:5 Move:7)</option>
+                    <option value="Witch Hand">Witch Hand (BP:3 MP:5 Atk:3 Def:4 Move:6)</option>
+                  </select>
+                </div>
+                <div class="form-group">
                   <label>Category:</label>
                   <select id="monster-category" class="form-select form-input">
                     <option value="Base Game">Base Game</option>
@@ -502,10 +632,14 @@
                   </select>
                 </div>
               </div>
-              <div class="form-row" style="grid-template-columns: 2fr 1fr 1fr;">
+              <div class="form-row" style="grid-template-columns: 1.5fr 1.5fr 0.7fr 0.7fr;">
                 <div class="form-group">
                   <label>Monster Archetype / Subtitle:</label>
                   <input type="text" id="monster-archetype" class="form-input" placeholder="e.g. Goblin Money Monster, Dread Warrior, Dragon">
+                </div>
+                <div class="form-group">
+                  <label>Special Abilities / Class Traits:</label>
+                  <input type="text" id="monster-abilities" class="form-input" placeholder="Inherited from Base Enemy Class or custom trait...">
                 </div>
                 <div class="form-group">
                   <label>Emoji / Icon:</label>
@@ -520,10 +654,14 @@
                 <label>Monster Description & Quest Lore:</label>
                 <textarea id="monster-description" rows="2" class="form-textarea" placeholder="Describe this enemy's appearance, satire, or special behavior..."></textarea>
               </div>
-              <div class="form-row stats-row">
+              <div class="form-row stats-row" style="grid-template-columns: repeat(5, 1fr);">
                 <div class="form-group">
-                  <label>Body Points:</label>
+                  <label>Body Points (Health):</label>
                   <input type="number" id="monster-bp" min="1" max="20" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>Mind Points (MP):</label>
+                  <input type="number" id="monster-mp" min="0" max="20" value="1" class="form-input">
                 </div>
                 <div class="form-group">
                   <label>Attack Dice:</label>
@@ -674,191 +812,140 @@
         </div>
       </section>
 
-      <!-- 4. Quest & Map Studio Tab -->
-      <section id="tab-board" class="tab-pane">
-        <!-- Editor Control Bar -->
-        <div class="editor-toolbar card">
-          <div class="toolbar-group">
-            <label class="toolbar-label">Map Configuration:</label>
-            <select id="map-config-select" class="dropdown form-input-sm">
-              <option value="fan-dungeon-28x21" selected>HeroQuest Fan Cavern Citadel (28×21 — Pixel-Perfect Grid)</option>
-              <option value="heroquest-classic">HeroQuest Classic Dungeon (Side A — 26×19)</option>
-              <option value="first-light-caverns">HeroQuest First Light Caverns (Side B — 26×19)</option>
-            </select>
-          </div>
+      <!-- 3. Class Tab (Hero Classes & Base Enemy Classes) -->
+      <section id="tab-classes" class="tab-pane">
+        <div class="split-view">
+          <aside class="sidebar-list">
+            <div class="list-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <h3>RPG Classes</h3>
+              <button id="btn-add-class" class="btn btn-sm btn-secondary" title="Create a new RPG Class">+ New Class</button>
+            </div>
+            <div class="category-sidebar-bar" style="padding:8px 12px; border-bottom:1px solid var(--border-color); background:rgba(15,23,42,0.5);">
+              <label style="font-size:11px; text-transform:uppercase; color:#94a3b8; font-weight:700; display:block; margin-bottom:4px;">🏛️ Class Type Filter:</label>
+              <select id="class-type-filter" class="form-select dropdown" style="width:100%; font-size:12px; padding:5px 8px;">
+                <option value="All">All Classes (4 Hero + 15 Enemy)</option>
+                <option value="Hero">🛡️ Hero Classes (Barbarian, Dwarf, Elf, Wizard)</option>
+                <option value="Enemy">👹 Enemy Classes (15 Base HeroQuest Monsters)</option>
+              </select>
+            </div>
+            <div id="classes-list" class="item-list"></div>
+          </aside>
 
-          <div class="toolbar-group">
-            <span class="toolbar-label">Tools:</span>
-            <div class="btn-group" id="tool-palette">
-              <button class="btn btn-sm btn-tool active" data-tool="inspect" title="Inspect tile / entity">👁️ Select</button>
-              <button class="btn btn-sm btn-tool" data-tool="room-toggle" title="Toggle room active / in-use">🏷️ Room</button>
-              <button class="btn btn-sm btn-tool" data-tool="door" title="Place or toggle door on wall border">🚪 Door</button>
-              <button class="btn btn-sm btn-tool" data-tool="wall-block" title="Place stone block tile in corridor/room">🧱 Block</button>
-              <button class="btn btn-sm btn-tool" data-tool="furniture" title="Place furniture">📦 Furn</button>
-              <button class="btn btn-sm btn-tool" data-tool="monster" title="Place monster / boss">👹 Monster</button>
-              <button class="btn btn-sm btn-tool" data-tool="trap" title="Place dungeon trap">⚠️ Trap</button>
-              <button class="btn btn-sm btn-tool" data-tool="stairs" title="Place player starting stairs">🏁 Stairs</button>
-              <button class="btn btn-sm btn-tool btn-danger" data-tool="erase" title="Erase item at square">🗑️ Erase</button>
-            </div>
-          </div>
-
-          <div class="toolbar-group">
-            <div class="btn-group">
-              <button id="btn-map-undo" class="btn btn-sm btn-secondary" title="Undo Map Action (Ctrl+Z)" disabled>↩️ Undo</button>
-              <button id="btn-map-redo" class="btn btn-sm btn-secondary" title="Redo Map Action (Ctrl+Y)" disabled>↪️ Redo</button>
-            </div>
-          </div>
-
-          <div class="toolbar-group" id="subtool-options">
-            <!-- Dynamic subtool selectors -->
-            <select id="select-door-type" class="dropdown form-input-sm">
-              <option value="closed">Wood Door (Closed)</option>
-              <option value="open">Wood Door (Open)</option>
-              <option value="secret">Secret Door (Hidden)</option>
-            </select>
-            <select id="select-block-type" class="dropdown form-input-sm" style="display:none;">
-              <option value="1-tile-wall">🧱 1-Tile Wall Block (Single 1×1)</option>
-              <option value="2-tile-wall-h">🧱 2-Tile Wall Block (Horizontal 2×1)</option>
-              <option value="2-tile-wall-v">🧱 2-Tile Wall Block (Vertical 1×2)</option>
-            </select>
-            <select id="select-furniture-type" class="dropdown form-input-sm" style="display:none;">
-              <option value="bookcase">📚 Bookcase (3-Tile Library Wall 3×1)</option>
-              <option value="bookcase-1x3">📚 Bookcase (Vertical 3-Tile 1×3)</option>
-              <option value="bookshelf">📖 Bookshelf (2-Tile Study Shelf 2×1)</option>
-              <option value="bookshelf-1x2">📖 Bookshelf (Vertical 2-Tile 1×2)</option>
-              <option value="bookshelf-1x1">📖 Bookshelf (Single 1×1 Shelf)</option>
-              <option value="altar">🔮 Sorcerer's Altar / Desk (3×2 Altar)</option>
-              <option value="altar-2x3">🔮 Sorcerer's Altar / Desk (Vertical 2×3)</option>
-              <option value="boulder">🪨 Boulder Tile (1×1 Stone Obstacle)</option>
-              <option value="boulder-2x2">🪨 Giant Boulder (2×2 Mega Obstacle)</option>
-              <option value="table">🪵 Wooden Table / Council Desk (3×2)</option>
-              <option value="table-2x3">🪵 Wooden Table / Desk (Vertical 2×3)</option>
-              <option value="alchemists-bench">🧪 Alchemist's Bench (3×2)</option>
-              <option value="cupboard">🚪 Cupboard (2-Tile Cabinet 2×1)</option>
-              <option value="cupboard-1x2">🚪 Cupboard (Vertical 1×2 Cabinet)</option>
-              <option value="weapons-rack">⚔️ Weapons Rack (3×1)</option>
-              <option value="weapons-rack-1x3">⚔️ Weapons Rack (Vertical 1×3)</option>
-              <option value="tomb">🪦 Stone Tomb / Sarcophagus (2×3)</option>
-              <option value="fireplace">🔥 Stone Fireplace (3×1)</option>
-              <option value="throne">👑 King's Throne (1×1)</option>
-              <option value="chest">📦 Treasure Chest (1×1)</option>
-              <option value="torture-rack">⛓️ Torture Rack (3×2)</option>
-            </select>
-            <select id="select-monster-type" class="dropdown form-input-sm" style="display:none;">
-              <option value="goblin-scout-1">Goblin Scout (BP: 1, Atk: 2)</option>
-              <option value="orc-warrior-1">Orc Warrior (BP: 1, Atk: 3)</option>
-              <option value="fimir-1">Fimir (BP: 2, Atk: 3)</option>
-              <option value="skeleton-1">Skeleton (BP: 1, Atk: 2)</option>
-              <option value="zombie-1">Zombie (BP: 1, Atk: 2)</option>
-              <option value="mummy-1">Mummy (BP: 2, Atk: 3)</option>
-              <option value="chaos-warrior-1">Chaos Warrior (BP: 3, Atk: 4)</option>
-              <option value="fellmarg-gargoyle">Fellmarg Gargoyle (BP: 3, Atk: 4)</option>
-              <option value="verag-boss">Verag Orc Warlord [Boss] (BP: 3, Atk: 4)</option>
-            </select>
-            <select id="select-trap-type" class="dropdown form-input-sm" style="display:none;">
-              <option value="pit">🕳️ Pit Trap (1 Body Point)</option>
-              <option value="boulder">🪨 Rolling Boulder Tile (Blocks Passage & 3 Atk)</option>
-              <option value="boulder-2x2">🪨 Giant Boulder (2×2 Crushing Boulder)</option>
-              <option value="falling-block">🧱 Falling Rock Block (Blocks Tile & 3 Atk)</option>
-              <option value="spear">🗡️ Spear Trap (1 Atk Dice)</option>
-              <option value="chest-trap">☠️ Trapped Chest (Poison Needle)</option>
-            </select>
-          </div>
-
-          <div class="toolbar-group toolbar-right">
-            <button id="btn-toggle-calibration" class="btn btn-sm btn-secondary" title="Open Board Grid Inset & Calibration Drawer">
-              ⚙️ Calibration
-            </button>
-            <div class="zoom-controls">
-              <button id="btn-zoom-out" class="btn btn-sm btn-secondary" title="Zoom Out">-</button>
-              <span id="zoom-text" class="zoom-badge">100%</span>
-              <button id="btn-zoom-in" class="btn btn-sm btn-secondary" title="Zoom In">+</button>
-              <button id="btn-zoom-reset" class="btn btn-sm btn-secondary" title="Reset View">Reset</button>
-            </div>
-            <span id="board-hover-coords" class="badge">Square: [0, 0] | Corridor</span>
-          </div>
-        </div>
-
-        <!-- Calibration Drawer (Collapsible) -->
-        <div id="calibration-drawer" class="card calibration-panel" style="display: none;">
-          <div class="calibration-grid">
-            <div class="cal-control">
-              <label>Inset Left (px): <span id="val-inset-left">82</span></label>
-              <input type="range" id="cal-inset-left" min="0" max="250" value="82">
-            </div>
-            <div class="cal-control">
-              <label>Inset Top (px): <span id="val-inset-top">65</span></label>
-              <input type="range" id="cal-inset-top" min="0" max="250" value="65">
-            </div>
-            <div class="cal-control">
-              <label>Inset Right (px): <span id="val-inset-right">78</span></label>
-              <input type="range" id="cal-inset-right" min="0" max="250" value="78">
-            </div>
-            <div class="cal-control">
-              <label>Inset Bottom (px): <span id="val-inset-bottom">43</span></label>
-              <input type="range" id="cal-inset-bottom" min="0" max="250" value="43">
-            </div>
-            <div class="cal-control">
-              <label>Grid Opacity: <span id="val-grid-opacity">80%</span></label>
-              <input type="range" id="cal-grid-opacity" min="0" max="100" value="80">
-            </div>
-            <div class="cal-control">
-              <label>Artwork Opacity: <span id="val-art-opacity">100%</span></label>
-              <input type="range" id="cal-art-opacity" min="0" max="100" value="100">
-            </div>
-          </div>
-          <div class="cal-options">
-            <label class="checkbox-label"><input type="checkbox" id="cal-show-coords" checked> Coordinates (A–Z, 1–19)</label>
-            <label class="checkbox-label"><input type="checkbox" id="cal-show-room-outlines" checked> Highlight Active Rooms</label>
-            <label class="checkbox-label"><input type="checkbox" id="cal-show-wall-outlines" checked> Room Walls</label>
-            <button id="btn-reset-calibration" class="btn btn-sm btn-secondary">Reset to Map Defaults</button>
-            <button id="btn-export-snapshot" class="btn btn-sm btn-primary">📸 Export Grid Snapshot (PNG)</button>
-          </div>
-        </div>
-
-        <!-- Main Workspace: Interactive Canvas + Quest Inspector Sidebar -->
-        <div class="board-studio-layout">
-          <div class="board-canvas-card card">
-            <div class="board-viewport-container" id="board-viewport">
-              <canvas id="board-canvas" width="1024" height="768"></canvas>
-            </div>
-          </div>
-
-          <div class="board-side-panel">
-            <!-- Quest Manifest Summary -->
-            <div class="card">
-              <div class="summary-header">
-                <h3>Quest Elements in Use</h3>
-                <button id="btn-toggle-all-rooms" class="btn btn-xs btn-secondary" title="Activate or deactivate all rooms">All Rooms Active</button>
+          <div class="editor-panel">
+            <div class="card form-card">
+              <div class="editor-card-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                  <h3 id="class-editor-title" style="margin:0;">Class: Barbarian</h3>
+                  <span id="class-type-badge" class="badge badge-cyan" style="font-size:11px;">🛡️ Hero Class</span>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                  <button id="btn-create-monster-from-class" class="btn btn-sm btn-accent" style="display:none;" title="Create a new custom monster that extends this Base Enemy Class">
+                    👹 + Create Custom Monster From Class
+                  </button>
+                  <button id="btn-save-class" class="btn btn-sm btn-primary">💾 Save Class</button>
+                  <button id="btn-delete-class" class="btn btn-sm btn-danger">🗑️ Delete</button>
+                </div>
               </div>
-              <div class="summary-stats-grid">
-                <div class="stat-pill"><span class="stat-label">Active Rooms:</span> <strong id="summary-active-rooms">17 / 17</strong></div>
-                <div class="stat-pill"><span class="stat-label">Wall Blocks:</span> <strong id="summary-wall-blocks">0</strong></div>
-                <div class="stat-pill"><span class="stat-label">Doors:</span> <strong id="summary-doors">12</strong></div>
-                <div class="stat-pill"><span class="stat-label">Furniture:</span> <strong id="summary-furniture">4</strong></div>
-                <div class="stat-pill"><span class="stat-label">Monsters:</span> <strong id="summary-monsters">3</strong></div>
-                <div class="stat-pill"><span class="stat-label">Traps:</span> <strong id="summary-traps">0</strong></div>
+
+              <p class="text-muted" style="margin:0 0 12px 0; font-size:12px;">
+                A <strong>Class</strong> defines the starting set of stats (<strong>Attack Dice</strong>, <strong>Defend Dice</strong>, <strong>Mind Points</strong>, <strong>Body Points / Health</strong>, <strong>Movement</strong>) and <strong>Special Abilities</strong>. Custom monsters in the Monsters tab extend from one of the Base Enemy Classes.
+              </p>
+
+              <div class="form-row" style="grid-template-columns: 1fr 1.5fr 1fr 0.6fr 0.6fr;">
+                <div class="form-group">
+                  <label>Class ID:</label>
+                  <input type="text" id="class-id" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                  <label>Class Name:</label>
+                  <input type="text" id="class-name" class="form-input" placeholder="e.g. Barbarian, Goblin, Dread Warrior">
+                </div>
+                <div class="form-group">
+                  <label>Class Alignment / Type:</label>
+                  <select id="class-type" class="form-select form-input">
+                    <option value="Hero">🛡️ Hero Class</option>
+                    <option value="Enemy">👹 Enemy Class (Base Monster)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Icon:</label>
+                  <input type="text" id="class-icon" class="form-input" value="🛡️">
+                </div>
+                <div class="form-group">
+                  <label>Color:</label>
+                  <input type="color" id="class-color" class="form-color" value="#dc2626">
+                </div>
+              </div>
+
+              <div class="form-row stats-row" style="grid-template-columns: repeat(5, 1fr);">
+                <div class="form-group">
+                  <label>❤️ Starting Health (BP):</label>
+                  <input type="number" id="class-bp" min="1" max="30" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>🧠 Starting Mind (MP):</label>
+                  <input type="number" id="class-mp" min="0" max="30" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>⚔️ Starting Attack Dice:</label>
+                  <input type="number" id="class-atk" min="1" max="12" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>🛡️ Starting Defend Dice:</label>
+                  <input type="number" id="class-def" min="1" max="12" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label>👟 Movement Squares:</label>
+                  <input type="number" id="class-move" min="1" max="20" class="form-input" title="Fixed movement squares for Enemy Classes, or base movement for Hero Classes">
+                </div>
+              </div>
+
+              <div class="form-row" style="grid-template-columns: 1.5fr 1fr 1fr;">
+                <div class="form-group">
+                  <label>⚡ Class Abilities &amp; Special Rules:</label>
+                  <input type="text" id="class-abilities" class="form-input" placeholder="e.g. Trap Disarm Specialist, Casts 3 Elemental Spell Schools...">
+                </div>
+                <div class="form-group">
+                  <label>🗡️ Starting Weapon / Attack Mode:</label>
+                  <input type="text" id="class-weapon" class="form-input" placeholder="e.g. Broadsword (3 Atk), Cleaver...">
+                </div>
+                <div class="form-group">
+                  <label>🛡️ Starting Armor / Defense:</label>
+                  <input type="text" id="class-armor" class="form-input" placeholder="e.g. Natural Reflexes, Stone Hide...">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>📜 Class Description &amp; Lore:</label>
+                <textarea id="class-description" rows="2" class="form-textarea" placeholder="Describe the starting archetype, role, and special tactical rules for this class..."></textarea>
+              </div>
+
+              <div class="form-row check-row">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="class-is-boss">
+                  Boss / Elite Class Tier
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="class-is-undead">
+                  Undead Class (0 Mind Points, Immune to Mind Spells)
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="class-is-spellcaster">
+                  Spellcaster Class (Can Cast Elemental or Dread Spells)
+                </label>
               </div>
             </div>
 
-            <!-- Selected Entity Inspector -->
-            <div class="card inspector-card">
-              <h3>Square & Entity Inspector</h3>
-              <div id="inspector-body" class="inspector-content">
-                <p class="text-muted">Click any square or item on the board to inspect or edit.</p>
+            <!-- Overview Cards of Hero Classes & Base Enemy Classes -->
+            <div class="card form-card" style="margin-top:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <h3 style="margin:0; font-size:1rem;">🏛️ Hero Classes &amp; Base Enemy Classes Reference</h3>
+                  <p class="text-muted" style="margin:2px 0 0 0; font-size:12px;">Click any class card below to inspect or edit its starting stats, or click <strong>+ Extend as Custom Monster</strong> on an Enemy Class.</p>
+                </div>
+                <span id="classes-count-badge" class="badge badge-cyan" style="font-size:11px;">19 Classes</span>
               </div>
-            </div>
-
-            <!-- Placed Items Mini-Lists -->
-            <div class="card mini-list-card">
-              <div class="list-tab-row">
-                <span class="mini-tab active" data-mini="doors">Doors (<span id="count-doors">12</span>)</span>
-                <span class="mini-tab" data-mini="blocks">Blocks (<span id="count-blocks">4</span>)</span>
-                <span class="mini-tab" data-mini="furniture">Furn (<span id="count-furn">4</span>)</span>
-                <span class="mini-tab" data-mini="monsters">Monsters (<span id="count-monsters">3</span>)</span>
-                <span class="mini-tab" data-mini="traps">Traps (<span id="count-traps">0</span>)</span>
-              </div>
-              <div id="placed-entities-list" class="mini-list"></div>
+              <div id="classes-overview-grid" class="cards-grid"></div>
             </div>
           </div>
         </div>

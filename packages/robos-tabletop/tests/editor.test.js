@@ -442,7 +442,10 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.ok(indexHtml.includes('id="header-quest-select"'), "index.html must include #header-quest-select");
     assert.ok(!indexHtml.includes('id="cartridge-select"'), "index.html must not contain legacy #cartridge-select");
     assert.ok(indexHtml.includes("📜 Active Quest:"), "index.html must display '📜 Active Quest:' label");
-    assert.ok(indexHtml.includes("📦 Export Quest Pack"), "index.html must display '📦 Export Quest Pack' button");
+    assert.ok(
+      indexHtml.includes("📦 Sync Quest Pack") || indexHtml.includes("📦 Export Quest Pack"),
+      "index.html must display Quest Pack sync/export button"
+    );
   });
 
   it("supports automatically advancing to next quest when quest completes from tabletop game exit", () => {
@@ -1102,8 +1105,10 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     const appModule = require(path.join(__dirname, "../renderer/app.js"));
     const campaigns = appModule.getCampaigns();
     assert.strictEqual(campaigns.length, 1, "Must initially have 1 campaign in the list");
-    assert.strictEqual(campaigns[0].title, "HeroQuest: The Gathering Storm");
-    assert.strictEqual(campaigns[0].quests.length, 3, "Initial campaign must have 3 quests");
+    assert.strictEqual(campaigns[0].title, "HeroQuest");
+    assert.strictEqual(campaigns[0].quests.length, 1, "Initial HeroQuest campaign must have custom-quest as its 1 and only quest");
+    assert.strictEqual(campaigns[0].quests[0].slug, "custom-quest");
+    assert.strictEqual(campaigns[0].quests[0].cartridgeFile, "custom-quest.cartridge.json");
     assert.strictEqual(campaigns[0].heroes.length, 4, "Initial campaign must have 4 default HeroQuest heroes");
 
     // Cannot delete when only 1 campaign exists
@@ -1173,7 +1178,7 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
 
     // Switch back to Campaign 1
     await appModule.selectCampaign(0);
-    assert.strictEqual(appModule.getCampaign().title, "HeroQuest: The Gathering Storm");
+    assert.strictEqual(appModule.getCampaign().title, "HeroQuest");
     assert.strictEqual(appModule.getCampaign().heroes[0]["dcterms:title"], "Rogar");
 
     // Switch to Campaign 2 by ID
@@ -1185,6 +1190,135 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     const deleted = appModule.deleteCampaign(1);
     assert.strictEqual(deleted, true);
     assert.strictEqual(appModule.getCampaigns().length, 1);
-    assert.strictEqual(appModule.getCampaign().title, "HeroQuest: The Gathering Storm");
+    assert.strictEqual(appModule.getCampaign().title, "HeroQuest");
+  });
+
+  it("supports Class tab with 4 Hero Classes and 15 Base HeroQuest Enemy Classes and custom monster class inheritance", async () => {
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+
+    // 1. Verify Class tab exists in navigation and main content
+    assert.ok(indexHtml.includes('data-tab="tab-classes">🏛️ Class</button>'), "index.html must include Class tab button");
+    assert.ok(indexHtml.includes('id="tab-classes"'), "index.html must include #tab-classes pane");
+    assert.ok(indexHtml.includes('id="monster-base-class"'), "Monster editor must include #monster-base-class selector");
+
+    // 2. Verify 4 Hero Classes (Barbarian, Dwarf, Elf, Wizard)
+    const heroClasses = appModule.getHeroClasses();
+    assert.strictEqual(heroClasses.length, 4, "Must define 4 Hero Classes");
+    const heroClassNames = heroClasses.map(c => c.name);
+    assert.deepStrictEqual(heroClassNames, ["Barbarian", "Dwarf", "Elf", "Wizard"]);
+    for (const hc of heroClasses) {
+      assert.strictEqual(hc.classType, "Hero");
+      assert.ok(typeof hc.attackDice === "number" && hc.attackDice >= 1, `${hc.name} must define attackDice`);
+      assert.ok(typeof hc.defendDice === "number" && hc.defendDice >= 2, `${hc.name} must define defendDice`);
+      assert.ok(typeof hc.bodyPoints === "number" && hc.bodyPoints >= 4, `${hc.name} must define bodyPoints`);
+      assert.ok(typeof hc.mindPoints === "number" && hc.mindPoints >= 2, `${hc.name} must define mindPoints`);
+      assert.ok(typeof hc.abilities === "string" && hc.abilities.length > 0, `${hc.name} must define starting abilities`);
+    }
+
+    // 3. Verify 15 Base HeroQuest Enemy Classes
+    const enemyClasses = appModule.getEnemyClasses();
+    assert.strictEqual(enemyClasses.length, 15, "Must define 15 Base HeroQuest Enemy Classes");
+    const expectedEnemyClassNames = [
+      "Goblin", "Orc", "Fimir", "Skeleton", "Zombie", "Mummy",
+      "Dread Warrior", "Gargoyle", "Orc Shaman", "Orc Warlord",
+      "Chaos Sorcerer", "Witch Lord", "Dragon", "Doomguard", "Witch Hand"
+    ];
+    for (const expectedName of expectedEnemyClassNames) {
+      const ec = enemyClasses.find(c => c.name === expectedName);
+      assert.ok(ec, `Enemy Class '${expectedName}' must exist`);
+      assert.strictEqual(ec.classType, "Enemy");
+      assert.ok(typeof ec.attackDice === "number", `${expectedName} must define attackDice`);
+      assert.ok(typeof ec.defendDice === "number", `${expectedName} must define defendDice`);
+      assert.ok(typeof ec.bodyPoints === "number", `${expectedName} must define bodyPoints`);
+      assert.ok(typeof ec.mindPoints === "number", `${expectedName} must define mindPoints`);
+      assert.ok(typeof ec.movementSquares === "number", `${expectedName} must define movementSquares`);
+      assert.ok(typeof ec.abilities === "string" && ec.abilities.length > 0, `${expectedName} must define abilities`);
+    }
+
+    // 4. Verify extending a custom monster from a Base Enemy Class inherits starting stats & abilities
+    const dreadWarriorClass = appModule.getClassByIdOrName("Dread Warrior");
+    assert.ok(dreadWarriorClass, "Dread Warrior class must be resolvable by name");
+    assert.strictEqual(dreadWarriorClass.attackDice, 4);
+    assert.strictEqual(dreadWarriorClass.defendDice, 4);
+    assert.strictEqual(dreadWarriorClass.bodyPoints, 3);
+    assert.strictEqual(dreadWarriorClass.mindPoints, 3);
+    assert.strictEqual(dreadWarriorClass.movementSquares, 7);
+
+    const createdMonster = await appModule.createCustomMonsterFromClass("Dread Warrior", {
+      name: "Shadow Dread Champion",
+      category: "Custom Quest 2027"
+    });
+    assert.ok(createdMonster, "Custom monster must be returned");
+    assert.strictEqual(createdMonster["dcterms:title"], "Shadow Dread Champion");
+    assert.strictEqual(createdMonster["robos:extendsClass"], "Dread Warrior");
+    assert.strictEqual(createdMonster["robos:monsterArchetype"], "Dread Warrior");
+    assert.strictEqual(createdMonster["robos:attackDice"], 4, "Must inherit 4 Attack Dice from Dread Warrior class");
+    assert.strictEqual(createdMonster["robos:defendDice"], 4, "Must inherit 4 Defend Dice from Dread Warrior class");
+    assert.strictEqual(createdMonster["robos:bodyPoints"], 3, "Must inherit 3 Body Points from Dread Warrior class");
+    assert.strictEqual(createdMonster["robos:mindPoints"], 3, "Must inherit 3 Mind Points from Dread Warrior class");
+    assert.strictEqual(createdMonster["robos:movementSquares"], 7, "Must inherit 7 Movement Squares from Dread Warrior class");
+    assert.ok(typeof createdMonster["robos:abilities"] === "string" && createdMonster["robos:abilities"].length > 0);
+  });
+
+  it("removes 'Board & Map Studio' tab and supports custom-quest.cartridge workflow, save state from now, and launch modes", async () => {
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+    const mainJs = fs.readFileSync(path.join(__dirname, "../main.js"), "utf8");
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+
+    // 1. Verify 'Board & Map Studio' tab is completely deleted
+    assert.ok(!indexHtml.includes('data-tab="tab-board"'), "Board & Map Studio tab button must be deleted");
+    assert.ok(!indexHtml.includes('id="tab-board"'), "#tab-board section must be deleted");
+    assert.ok(!indexHtml.includes("Board & Map Studio"), "Board & Map Studio text must not appear in index.html");
+
+    // 2. Verify custom-quest.cartridge.json exists on disk and is the 1 and only quest of HeroQuest campaign
+    const customCartPath = path.join(REPO_ROOT, "games/tabletop-rpg/cartridges/custom-quest.cartridge.json");
+    assert.ok(fs.existsSync(customCartPath), "custom-quest.cartridge.json must exist");
+    const cartData = JSON.parse(fs.readFileSync(customCartPath, "utf8"));
+    assert.strictEqual(cartData.cartridgeId, "custom-quest");
+
+    const campaign = appModule.getCampaign();
+    assert.strictEqual(campaign.title, "HeroQuest");
+    assert.strictEqual(campaign.quests.length, 1, "HeroQuest campaign must have 1 and only 1 quest");
+    const activeQuest = appModule.getActiveQuest();
+    assert.strictEqual(activeQuest.slug, "custom-quest");
+    assert.strictEqual(activeQuest.cartridgeFile, "custom-quest.cartridge.json");
+
+    // 3. Verify UI elements for Workflow 1 (quest info, review heroes for quest, launch quest editor),
+    //    Workflow 2 (current quest state, save state from now), and Workflow 3 (launch saved state vs new quest state)
+    assert.ok(indexHtml.includes('id="quest-cartridge-summary-strip"'), "Must include quest cartridge info strip");
+    assert.ok(indexHtml.includes('id="quest-heroes-review-grid"'), "Must include current heroes review grid for the quest");
+    assert.ok(indexHtml.includes('id="btn-launch-quest-editor"'), "Must include Launch Quest Editor button");
+    assert.ok(indexHtml.includes('id="quest-save-state-card"'), "Must include Current Quest State card");
+    assert.ok(indexHtml.includes('id="btn-save-quest-state-now"'), "Must include Save State From Now button");
+    assert.ok(indexHtml.includes('id="btn-launch-saved-hero"'), "Must include Launch Saved State (Hero) button");
+    assert.ok(indexHtml.includes('id="btn-launch-new-hero"'), "Must include Launch New Quest State (Hero) button");
+
+    // 4. Verify IPC handlers in main.js support quest editor launch, save state from now, and launch modes
+    assert.ok(mainJs.includes('ipcMain.handle("tabletop:launch-quest-editor"'), "main.js must handle tabletop:launch-quest-editor");
+    assert.ok(mainJs.includes('ipcMain.handle("tabletop:get-quest-save-state"'), "main.js must handle tabletop:get-quest-save-state");
+    assert.ok(mainJs.includes('ipcMain.handle("tabletop:save-quest-state-now"'), "main.js must handle tabletop:save-quest-state-now");
+    assert.ok(mainJs.includes('ipcMain.handle("tabletop:clear-quest-save-state"'), "main.js must handle tabletop:clear-quest-save-state");
+    assert.ok(mainJs.includes('launchMode === "new"'), "main.js launch-game handler must support launchMode 'new' vs 'saved'");
+
+    // 5. Verify renderer workflow functions (saveQuestStateFromNow, launchQuestEditorForActiveQuest, launchQuestInMode)
+    const stateSnap = await appModule.saveQuestStateFromNow();
+    assert.strictEqual(stateSnap.success, true, "saveQuestStateFromNow must succeed");
+    assert.ok(stateSnap.savedState, "saveQuestStateFromNow must return savedState snapshot");
+    assert.strictEqual(stateSnap.savedState.cartridge_id, "custom-quest");
+    assert.strictEqual(stateSnap.savedState.map_id, "custom-quest");
+    assert.strictEqual(stateSnap.savedState.heroes.length, 4, "Saved state must include all 4 quest heroes");
+
+    const editorLaunch = await appModule.launchQuestEditorForActiveQuest();
+    assert.strictEqual(editorLaunch.success, true, "launchQuestEditorForActiveQuest must succeed");
+
+    const launchSaved = await appModule.launchQuestInMode("player", "saved");
+    assert.strictEqual(launchSaved.success, true);
+    assert.strictEqual(launchSaved.launchMode, "saved");
+
+    const launchNew = await appModule.launchQuestInMode("player", "new");
+    assert.strictEqual(launchNew.success, true);
+    assert.strictEqual(launchNew.launchMode, "new");
   });
 });
+

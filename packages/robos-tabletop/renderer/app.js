@@ -193,6 +193,9 @@ let currentData = {
   categories: ['Base Game', 'Midterms 2026'],
   activeMonsterCategoryFilter: 'All',
   activeSpellItemCategoryFilter: 'All',
+  activeClassTypeFilter: 'All',
+  classes: [],
+  activeClassId: 'urn:robos:tabletop:class:hero-barbarian',
   heroes: [],
   monsters: [],
   spells: [],
@@ -210,113 +213,39 @@ let currentData = {
   activeMonsterId: null,
   activeCampaignSubtab: 'subtab-campaign-quests',
   currentCampaignIndex: 0,
+  questSaveState: null,
+  questSaveSnapshots: [],
+  loadedCartridgeData: null,
   campaigns: [
     {
-      id: 'campaign-heroquest-gathering-storm',
-      title: 'HeroQuest: The Gathering Storm',
-      description: "The Emperor calls upon the kingdom's greatest champions to defeat the armies of Morcar and the Witch Lord.",
+      id: 'campaign-heroquest',
+      title: 'HeroQuest',
+      description: "The HeroQuest campaign featuring the real working custom-quest.cartridge dungeon.",
       heroes: createDefaultCampaignHeroes(),
       quests: [
         {
-          id: 'quest-1',
-          slug: 'heroquest-the-trial',
-          title: 'Quest 1: The Trial',
-          briefing: 'You have learned well, my apprentices. Now comes your final test. Seek out the foul Orc Warlord Verag in his hidden catacombs, slay him, and return to the stairwell alive.',
-          mapConfigId: 'fan-dungeon-28x21',
-          ruleset: 'heroquest',
-          goldReward: 100,
-          bossTarget: 'verag-boss',
-          completed: false,
-          startingStairs: [0, 1],
-          activeRooms: new Set(),
-          wallBlocks: [
-            { id: 'block-1', x: 12, y: 0, type: 'single', width: 1, height: 1 },
-            { id: 'block-2', x: 12, y: 20, type: 'single', width: 1, height: 1 },
-            { id: 'block-double-v', x: 0, y: 10, type: 'double-v', width: 1, height: 2 },
-            { id: 'block-double-h', x: 26, y: 10, type: 'double-h', width: 2, height: 1 }
-          ],
-          doors: [],
-          furniture: [
-            { id: 'furn-altar-1', name: "Sorcerer's Altar / Desk", type: 'altar', x: 14, y: 8, width: 2, height: 2, roomId: 'room-center-mid' },
-            { id: 'furn-bookcase-1', name: 'Grand Bookcase', type: 'bookcase', x: 13, y: 3, width: 3, height: 1, roomId: 'room-center-n' },
-            { id: 'furn-bookshelf-1', name: 'Study Bookshelf', type: 'bookshelf', x: 23, y: 5, width: 2, height: 1, roomId: 'room-e-parlor' },
-            { id: 'furn-boulder-1', name: 'Fossil Boulder Tile', type: 'boulder', x: 2, y: 7, width: 1, height: 1, roomId: 'room-grand-fossil' },
-            { id: 'furn-tomb-1', name: 'Ancient Stone Tomb', type: 'tomb', x: 5, y: 2, width: 2, height: 2, roomId: 'room-nw-crypt' },
-            { id: 'furn-chest-1', name: 'Vault Chest of Gold', type: 'chest', x: 23, y: 2, width: 1, height: 1, roomId: 'room-ne-vault' },
-            { id: 'furn-table-1', name: 'Council Table', type: 'table', x: 14, y: 14, width: 2, height: 2, roomId: 'room-center-s' },
-            { id: 'furn-rack-1', name: 'Weapons Rack', type: 'weapons-rack', x: 8, y: 2, width: 3, height: 1, roomId: 'room-n-armory' }
-          ],
-          monsters: [
-            { id: 'mon-verag', name: 'Verag the Orc Warlord', monsterType: 'verag-boss', x: 4, y: 10, bp: 4, atk: 4, def: 4, isBoss: true, roomId: 'room-grand-fossil' },
-            { id: 'mon-skel-1', name: 'Crypt Skeleton', monsterType: 'skeleton-1', x: 3, y: 4, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
-            { id: 'mon-skel-2', name: 'Crypt Skeleton', monsterType: 'skeleton-2', x: 5, y: 4, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
-            { id: 'mon-zombie-1', name: 'Cellar Zombie', monsterType: 'zombie-1', x: 4, y: 16, bp: 2, atk: 3, def: 3, isBoss: false, roomId: 'room-sw-cellar' },
-            { id: 'mon-orc-1', name: 'Orc Guard', monsterType: 'orc-warrior-1', x: 14, y: 11, bp: 1, atk: 3, def: 2, isBoss: false, roomId: 'room-center-mid' },
-            { id: 'mon-goblin-1', name: 'Goblin Scout', monsterType: 'goblin-scout-1', x: 15, y: 11, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center-mid' }
-          ],
-          traps: [
-            { id: 'trap-pit-1', trapType: 'pit', x: 0, y: 5, damageDice: 1, detected: false, disarmed: false },
-            { id: 'trap-boulder-1', trapType: 'boulder', x: 7, y: 5, damageDice: 3, detected: false, disarmed: false },
-            { id: 'trap-falling-1', trapType: 'falling-block', x: 21, y: 10, damageDice: 3, detected: false, disarmed: false }
-          ]
-        },
-        {
-          id: 'quest-2',
-          slug: 'heroquest-rescue-sir-ragnar',
-          title: 'Quest 2: The Rescue of Sir Ragnar',
-          briefing: "Sir Ragnar, one of the Emperor's most trusted knights, has been captured by the Greenskins. Infiltrate the fortress prison, locate his cell, and escort him safely to the surface.",
+          id: 'custom-quest',
+          slug: 'custom-quest',
+          cartridgeFile: 'custom-quest.cartridge.json',
+          title: 'Quest 1: Custom Dungeon',
+          briefing: 'Descend into the Custom Dungeon via the stairwell at [7, 14]. Explore the dungeon rooms, overcome the traps and monsters within, and return victorious!',
           mapConfigId: 'heroquest-classic',
           ruleset: 'heroquest',
-          goldReward: 200,
-          bossTarget: 'orc-jailer-boss',
+          goldReward: 150,
+          bossTarget: 'gargoyle-boss',
           completed: false,
-          startingStairs: [1, 1],
-          activeRooms: new Set(),
+          startingStairs: [7, 14],
+          activeRooms: new Set(['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', 'r10', 'r11', 'r12', 'r13', 'r14', 'r15', 'r16', 'r17', 'r18', 'r19', 'r20', 'r21', 'r22']),
           wallBlocks: [
-            { id: 'block-r-1', x: 12, y: 0, type: 'single', width: 1, height: 1 },
-            { id: 'block-r-2', x: 12, y: 18, type: 'single', width: 1, height: 1 }
+            { id: 'wb1', x: 1, y: 3, type: 'single', width: 1, height: 1 },
+            { id: 'wb2', x: 7, y: 12, type: 'single', width: 1, height: 1 },
+            { id: 'wb3', x: 12, y: 18, type: 'single', width: 1, height: 1 }
           ],
           doors: [],
-          furniture: [
-            { id: 'furn-torture-1', name: 'Iron Torture Rack', type: 'weapons-rack', x: 13, y: 9, width: 3, height: 1, roomId: 'room-center' },
-            { id: 'furn-chest-ragnar', name: "Jailer's Iron Strongbox", type: 'chest', x: 20, y: 3, width: 1, height: 1, roomId: 'room-ne-armory' }
-          ],
-          monsters: [
-            { id: 'mon-jailer', name: 'Gorg the Orc Jailer', monsterType: 'orc-warrior-1', x: 13, y: 8, bp: 3, atk: 3, def: 3, isBoss: true, roomId: 'room-center' },
-            { id: 'mon-guard-1', name: 'Goblin Warden', monsterType: 'goblin-scout-1', x: 14, y: 8, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center' },
-            { id: 'mon-guard-2', name: 'Goblin Warden', monsterType: 'goblin-scout-1', x: 12, y: 8, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center' }
-          ],
-          traps: [
-            { id: 'trap-pit-r-1', trapType: 'pit', x: 10, y: 5, damageDice: 1, detected: false, disarmed: false }
-          ]
-        },
-        {
-          id: 'quest-3',
-          slug: 'heroquest-lair-orc-warlord',
-          title: 'Quest 3: Lair of the Orc Warlord',
-          briefing: 'Deep within the sunken caverns lies the seat of the Orc Chieftain Ulag. Purge his foul guards, shatter his command throne, and reclaim the stolen royal treasure.',
-          mapConfigId: 'first-light-caverns',
-          ruleset: 'heroquest',
-          goldReward: 250,
-          bossTarget: 'ulag-warlord',
-          completed: false,
-          startingStairs: [1, 1],
-          activeRooms: new Set(),
-          wallBlocks: [
-            { id: 'block-u-1', x: 12, y: 0, type: 'single', width: 1, height: 1 }
-          ],
-          doors: [],
-          furniture: [
-            { id: 'furn-throne-1', name: 'Warlord Throne', type: 'altar', x: 13, y: 9, width: 3, height: 2, roomId: 'room-center' },
-            { id: 'furn-cavern-boulder', name: 'Massive Stalagmite', type: 'boulder', x: 5, y: 5, width: 1, height: 1, roomId: 'room-cavern' }
-          ],
-          monsters: [
-            { id: 'mon-ulag', name: 'Ulag the Orc Chieftain', monsterType: 'verag-boss', x: 13, y: 10, bp: 5, atk: 4, def: 5, isBoss: true, roomId: 'room-center' },
-            { id: 'mon-fimir-1', name: 'Swamp Fimir Mystic', monsterType: 'zombie-1', x: 15, y: 9, bp: 2, atk: 3, def: 3, isBoss: false, roomId: 'room-center' }
-          ],
-          traps: [
-            { id: 'trap-cave-in', trapType: 'falling-block', x: 12, y: 7, damageDice: 3, detected: false, disarmed: false }
-          ]
+          furniture: [],
+          monsters: [],
+          traps: [],
+          storyTriggers: []
         }
       ]
     }
@@ -374,8 +303,11 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     const pane = document.getElementById(target);
     if (pane) pane.classList.add("active");
 
-    if (target === "tab-board") {
-      drawBoard();
+    if (target === "tab-classes" && typeof renderClassesTab === "function") {
+      renderClassesTab();
+    } else if (target === "tab-quest" && typeof renderQuestHeroesReviewGrid === "function") {
+      renderQuestHeroesReviewGrid();
+      refreshQuestSaveStateUI();
     }
   });
 });
@@ -2104,13 +2036,30 @@ async function initKGraphData() {
         return t.includes("robos:TabletopMonster");
       });
 
-      // Ensure every monster has a category (default "Base Game") and merge Midterms 2026 monsters if missing
+      // Ensure every monster has a category (default "Base Game"), base enemy class, mindPoints, and abilities
+      initClassesCatalog();
       currentData.monsters.forEach(m => {
         if (!m["robos:category"]) m["robos:category"] = "Base Game";
+        const baseClsName = m["robos:extendsClass"] || m["robos:monsterArchetype"] || m["robos:archetype"] || "Goblin";
+        m["robos:extendsClass"] = baseClsName;
+        const clsObj = getClassByIdOrName(baseClsName);
+        if (m["robos:mindPoints"] === undefined) {
+          m["robos:mindPoints"] = clsObj ? clsObj.mindPoints : (m["robos:isUndead"] ? 0 : 2);
+        }
+        if (!m["robos:abilities"] && clsObj) {
+          m["robos:abilities"] = clsObj.abilities;
+        }
       });
       MIDTERMS_2026_MONSTERS.forEach(mm => {
         if (!currentData.monsters.some(m => m["@id"] === mm["@id"])) {
-          currentData.monsters.push({ ...mm });
+          const baseClsName = mm["robos:extendsClass"] || mm["robos:monsterArchetype"] || mm["robos:archetype"] || "Goblin";
+          const clsObj = getClassByIdOrName(baseClsName);
+          currentData.monsters.push({
+            ...mm,
+            "robos:extendsClass": baseClsName,
+            "robos:mindPoints": mm["robos:mindPoints"] !== undefined ? mm["robos:mindPoints"] : (clsObj ? clsObj.mindPoints : 2),
+            "robos:abilities": mm["robos:abilities"] || (clsObj ? clsObj.abilities : "")
+          });
         }
       });
 
@@ -2128,12 +2077,14 @@ async function initKGraphData() {
       syncCategoryCatalogsFromKGraph();
 
       setupCategoryControls();
+      setupClassEditorControls();
       setupHeroEditorControls();
       setupMonsterEditorControls();
       setupSpellDraftControls();
       setupHeroTradeControls();
       applySpellAllocationToHeroes();
       renderCategoryControlsUI();
+      renderClassesTab();
       renderHeroesList();
       renderMonstersList();
       renderSpellsAndItems();
@@ -2141,17 +2092,20 @@ async function initKGraphData() {
       syncBoardMonsterSelectDropdown();
       syncHeroPresetItemsDropdown();
 
-      // Initialize Campaign & Multi-Quest Blueprint
+      // Initialize Campaign & Single Working Quest (custom-quest.cartridge)
       setupCampaignQuestControls();
       renderCampaignSelectorUI();
       renderCampaignQuestsList();
       updateCampaignProgress();
     }
 
-    // 3. Switch to default map configuration and select active quest
+    // 3. Switch to default map configuration and select active quest (custom-quest)
     await selectQuest(currentData.currentQuestIndex || 0, true);
+    await loadActiveQuestCartridgeInfo();
+    renderQuestHeroesReviewGrid();
+    await refreshQuestSaveStateUI();
     initBoard();
-    setStatus("Tabletop RPG Quest Editor Ready.");
+    setStatus("Tabletop RPG Studio Ready — Loaded HeroQuest campaign (custom-quest.cartridge).");
   } catch (err) {
     setStatus("Failed to initialize: " + err.message);
   }
@@ -5403,6 +5357,839 @@ function castMonsterSpell(monster, spellSlug) {
   return { success: true, monster, spell, effectDescription };
 }
 
+// ==========================================
+// 1.8. RPG CLASS ENGINE (HERO CLASSES & BASE ENEMY CLASSES)
+// ==========================================
+
+const HERO_CLASSES = [
+  {
+    id: "urn:robos:tabletop:class:hero-barbarian",
+    slug: "hero-barbarian",
+    name: "Barbarian",
+    classType: "Hero",
+    icon: "⚔️",
+    color: "#b91c1c",
+    bodyPoints: 8,
+    mindPoints: 2,
+    attackDice: 3,
+    defendDice: 2,
+    movementSquares: 7,
+    startingWeapon: "Broadsword (3 Combat Dice)",
+    startingArmor: "Natural Toughness (2 Defend Dice)",
+    abilities: "Greatest melee strength and vitality; starts with 8 Body Points and Broadsword (3 Attack Dice)",
+    description: "Towering warrior from the northern wastes with unmatched starting health (8 BP) and raw melee attack power (3 Attack Dice).",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:hero-dwarf",
+    slug: "hero-dwarf",
+    name: "Dwarf",
+    classType: "Hero",
+    icon: "🪓",
+    color: "#d97706",
+    bodyPoints: 7,
+    mindPoints: 3,
+    attackDice: 2,
+    defendDice: 2,
+    movementSquares: 7,
+    startingWeapon: "Shortsword (2 Combat Dice)",
+    startingArmor: "Shield & Chainmail (+2 Defend Dice)",
+    abilities: "Master Trap Disarmer — automatically disarms any detected trap without needing a toolkit",
+    description: "Stout mountaineer and master smith of World's Edge Mountains. Can disarm dungeon traps barehanded without a toolkit.",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:hero-elf",
+    slug: "hero-elf",
+    name: "Elf",
+    classType: "Hero",
+    icon: "🏹",
+    color: "#15803d",
+    bodyPoints: 6,
+    mindPoints: 4,
+    attackDice: 2,
+    defendDice: 2,
+    movementSquares: 7,
+    startingWeapon: "Shortsword (2 Combat Dice)",
+    startingArmor: "Elven Leather & Cloak (+2 Defend Dice)",
+    abilities: "Hybrid Spellblade — fights with martial weapons and drafts 1 Elemental Spell College (3 spells)",
+    description: "Agile sylvan champion combining martial swordplay (6 BP, 4 MP) with 1 Elemental Spell College (3 spells).",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: true
+  },
+  {
+    id: "urn:robos:tabletop:class:hero-wizard",
+    slug: "hero-wizard",
+    name: "Wizard",
+    classType: "Hero",
+    icon: "🔮",
+    color: "#7c3aed",
+    bodyPoints: 4,
+    mindPoints: 6,
+    attackDice: 1,
+    defendDice: 2,
+    movementSquares: 7,
+    startingWeapon: "Dagger (1 Combat Die)",
+    startingArmor: "Wizard Cloak (2 Defend Dice)",
+    abilities: "Master of the Arcane — wields 3 Elemental Spell Colleges (9 spells total); highest Mind Points (6 MP)",
+    description: "Scholar of the high elemental colleges with 6 Mind Points and 9 Elemental Spells across 3 schools of magic.",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: true
+  }
+];
+
+const ENEMY_CLASSES = [
+  {
+    id: "urn:robos:tabletop:class:enemy-goblin",
+    slug: "enemy-goblin",
+    name: "Goblin",
+    classType: "Enemy",
+    icon: "👺",
+    color: "#16a34a",
+    bodyPoints: 1,
+    mindPoints: 1,
+    attackDice: 2,
+    defendDice: 1,
+    movementSquares: 10,
+    startingWeapon: "Rusty Shortblade (2 Attack Dice)",
+    startingArmor: "Scraps (1 Defend Die)",
+    abilities: "Fastest dungeon scout (10 movement squares); weak armor (1 Defend Die)",
+    description: "Nimble greenskin scout with the fastest movement speed on the board (10 squares).",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-orc",
+    slug: "enemy-orc",
+    name: "Orc",
+    classType: "Enemy",
+    icon: "👹",
+    color: "#15803d",
+    bodyPoints: 1,
+    mindPoints: 2,
+    attackDice: 3,
+    defendDice: 2,
+    movementSquares: 8,
+    startingWeapon: "Notched Cleaver (3 Attack Dice)",
+    startingArmor: "Iron Mail (2 Defend Dice)",
+    abilities: "Fierce greenskin shock trooper with heavy 3-die cleaver attack",
+    description: "Core infantry of Zargon's legions—strikes hard with 3 Attack Dice and advances 8 squares.",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-fimir",
+    slug: "enemy-fimir",
+    name: "Fimir",
+    classType: "Enemy",
+    icon: "🦎",
+    color: "#0f766e",
+    bodyPoints: 2,
+    mindPoints: 3,
+    attackDice: 3,
+    defendDice: 3,
+    movementSquares: 6,
+    startingWeapon: "Marsh Battleaxe (3 Attack Dice)",
+    startingArmor: "Scaly Swamp Hide (3 Defend Dice)",
+    abilities: "Multi-wound abomination (2 Body Points) with scaly 3-die hide",
+    description: "One-eyed reptilian marsh fiend with 2 Body Points, 3 Attack Dice, and 3 Defend Dice.",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-skeleton",
+    slug: "enemy-skeleton",
+    name: "Skeleton",
+    classType: "Enemy",
+    icon: "💀",
+    color: "#94a3b8",
+    bodyPoints: 1,
+    mindPoints: 0,
+    attackDice: 2,
+    defendDice: 2,
+    movementSquares: 6,
+    startingWeapon: "Ancient Scythe (2 Attack Dice)",
+    startingArmor: "Ribcage Bones (2 Defend Dice)",
+    abilities: "Undead (0 Mind Points, immune to Mind spells, vulnerable to Holy Water / Turn Undead)",
+    description: "Reanimated bone warrior with 0 Mind Points and immunity to mind-affecting spells.",
+    isBoss: false,
+    isUndead: true,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-zombie",
+    slug: "enemy-zombie",
+    name: "Zombie",
+    classType: "Enemy",
+    icon: "🧟",
+    color: "#475569",
+    bodyPoints: 1,
+    mindPoints: 0,
+    attackDice: 2,
+    defendDice: 3,
+    movementSquares: 5,
+    startingWeapon: "Rotting Cleaver (2 Attack Dice)",
+    startingArmor: "Deadened Flesh (3 Defend Dice)",
+    abilities: "Shambling Undead corpse with resilient 3-die rot defense (0 Mind Points)",
+    description: "Slow-moving undead horror that shrugs off blows with 3 Defend Dice.",
+    isBoss: false,
+    isUndead: true,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-mummy",
+    slug: "enemy-mummy",
+    name: "Mummy",
+    classType: "Enemy",
+    icon: "🩹",
+    color: "#d97706",
+    bodyPoints: 2,
+    mindPoints: 0,
+    attackDice: 3,
+    defendDice: 4,
+    movementSquares: 4,
+    startingWeapon: "Embalmed Fist (3 Attack Dice)",
+    startingArmor: "Sacred Linen Wrappings (4 Defend Dice)",
+    abilities: "Elite Undead tomb guardian with 2 Body Points and 4 Defend Dice (0 Mind Points)",
+    description: "Powerful undead pharaoh guard with 2 BP, 3 Attack Dice, and 4 Defend Dice.",
+    isBoss: false,
+    isUndead: true,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-dread-warrior",
+    slug: "enemy-dread-warrior",
+    name: "Dread Warrior",
+    classType: "Enemy",
+    icon: "⚔️",
+    color: "#7f1d1d",
+    bodyPoints: 3,
+    mindPoints: 3,
+    attackDice: 4,
+    defendDice: 4,
+    movementSquares: 7,
+    startingWeapon: "Chaos Runeblade (4 Attack Dice)",
+    startingArmor: "Dread Plate Armor (4 Defend Dice)",
+    abilities: "Heavily armored champion of Chaos (3 Body Points, 4 Attack Dice, 4 Defend Dice)",
+    description: "Elite human warrior sworn to Chaos, clad in heavy dread-plate with 3 BP and 4/4 combat dice.",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-gargoyle",
+    slug: "enemy-gargoyle",
+    name: "Gargoyle",
+    classType: "Enemy",
+    icon: "🗿",
+    color: "#64748b",
+    bodyPoints: 3,
+    mindPoints: 4,
+    attackDice: 4,
+    defendDice: 5,
+    movementSquares: 6,
+    startingWeapon: "Stone Talons & Whip (4 Attack Dice)",
+    startingArmor: "Living Granite Skin (5 Defend Dice)",
+    abilities: "Living stone daemon with 5 Defend Dice and 4 Attack Dice",
+    description: "Winged stone terror with near-impenetrable granite hide (5 Defend Dice) and 3 Body Points.",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-orc-shaman",
+    slug: "enemy-orc-shaman",
+    name: "Orc Shaman",
+    classType: "Enemy",
+    icon: "🧙‍♂️",
+    color: "#059669",
+    bodyPoints: 3,
+    mindPoints: 4,
+    attackDice: 3,
+    defendDice: 3,
+    movementSquares: 7,
+    startingWeapon: "Skull Totem Staff (3 Attack Dice)",
+    startingArmor: "Shamanic Fetish Cloak (3 Defend Dice)",
+    abilities: "Greenskin Dread Spellcaster — casts Summon Undead, Fear, and Cloud of Chaos",
+    description: "Tribal greenskin sorcerer who channels Dread magic and commands lesser greenskins.",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: true
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-orc-warlord",
+    slug: "enemy-orc-warlord",
+    name: "Orc Warlord",
+    classType: "Enemy",
+    icon: "👑",
+    color: "#b45309",
+    bodyPoints: 3,
+    mindPoints: 3,
+    attackDice: 4,
+    defendDice: 4,
+    movementSquares: 8,
+    startingWeapon: "Warboss Greataxe (4 Attack Dice)",
+    startingArmor: "Spiked Warlord Plate (4 Defend Dice)",
+    abilities: "Boss Commander — leads dungeon garrisons with 4 Attack Dice, 4 Defend Dice, and 8 Move",
+    description: "Brutal greenskin warboss (such as Verag or Ulag) commanding dungeon strongholds.",
+    isBoss: true,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-chaos-sorcerer",
+    slug: "enemy-chaos-sorcerer",
+    name: "Chaos Sorcerer",
+    classType: "Enemy",
+    icon: "⚡",
+    color: "#7e22ce",
+    bodyPoints: 4,
+    mindPoints: 5,
+    attackDice: 4,
+    defendDice: 4,
+    movementSquares: 7,
+    startingWeapon: "Staff of Dread Lightning (4 Attack Dice)",
+    startingArmor: "Ward of Chaos (4 Defend Dice)",
+    abilities: "Master of Dread Sorcery — casts Lightning Bolt, Firestorm, Rust, and Escape",
+    description: "High sorcerer of Zargon's inner circle wielding devastating Dread spells and 5 Mind Points.",
+    isBoss: true,
+    isUndead: false,
+    isSpellcaster: true
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-witch-lord",
+    slug: "enemy-witch-lord",
+    name: "Witch Lord",
+    classType: "Enemy",
+    icon: "💀",
+    color: "#581c87",
+    bodyPoints: 4,
+    mindPoints: 6,
+    attackDice: 5,
+    defendDice: 6,
+    movementSquares: 6,
+    startingWeapon: "Scepter of the Undead (5 Attack Dice)",
+    startingArmor: "Necromantic Ward (6 Defend Dice)",
+    abilities: "Undead Sovereign Boss — 6 Defend Dice, 6 Mind Points, and master of all Dread Spells",
+    description: "Immortal ruler of the undead legions with 4 BP, 6 MP, 5 Attack Dice, and 6 Defend Dice.",
+    isBoss: true,
+    isUndead: true,
+    isSpellcaster: true
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-dragon",
+    slug: "enemy-dragon",
+    name: "Dragon",
+    classType: "Enemy",
+    icon: "🐉",
+    color: "#dc2626",
+    bodyPoints: 6,
+    mindPoints: 5,
+    attackDice: 5,
+    defendDice: 5,
+    movementSquares: 8,
+    startingWeapon: "Dragon Jaws & Fire Breath (5 Attack Dice)",
+    startingArmor: "Ancient Dragon Scales (5 Defend Dice)",
+    abilities: "Apex Boss Dragon — 6 Body Points, 5 Attack/Defend Dice, and casts Firestorm breath",
+    description: "Colossal winged wyrm with 6 Body Points, 5 Attack Dice, 5 Defend Dice, and searing fire breath.",
+    isBoss: true,
+    isUndead: false,
+    isSpellcaster: true
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-doomguard",
+    slug: "enemy-doomguard",
+    name: "Doomguard",
+    classType: "Enemy",
+    icon: "🛡️",
+    color: "#991b1b",
+    bodyPoints: 4,
+    mindPoints: 4,
+    attackDice: 4,
+    defendDice: 5,
+    movementSquares: 7,
+    startingWeapon: "Doom Cleaver (4 Attack Dice)",
+    startingArmor: "Crimson Citadel Plate (5 Defend Dice)",
+    abilities: "Elite Citadel Boss — 4 Body Points, 4 Attack Dice, and 5 Defend Dice",
+    description: "Veteran Chaos warlord clad in crimson citadel plate, guarding the inner sanctum.",
+    isBoss: true,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-witch-hand",
+    slug: "enemy-witch-hand",
+    name: "Witch Hand",
+    classType: "Enemy",
+    icon: "🔮",
+    color: "#9333ea",
+    bodyPoints: 3,
+    mindPoints: 5,
+    attackDice: 3,
+    defendDice: 4,
+    movementSquares: 6,
+    startingWeapon: "Coven Dagger (3 Attack Dice)",
+    startingArmor: "Shadow Mantle (4 Defend Dice)",
+    abilities: "High Coven Spellcaster — casts Cloud of Chaos, Sleep of Dread, and Fear",
+    description: "Right-hand coven inquisitor of the Witch Lord with 5 Mind Points and dark hexes.",
+    isBoss: true,
+    isUndead: false,
+    isSpellcaster: true
+  }
+];
+
+const DEFAULT_RPG_CLASSES = [...HERO_CLASSES, ...ENEMY_CLASSES];
+
+function initClassesCatalog() {
+  if (!Array.isArray(currentData.classes) || currentData.classes.length === 0) {
+    currentData.classes = DEFAULT_RPG_CLASSES.map(c => ({ ...c }));
+  } else {
+    DEFAULT_RPG_CLASSES.forEach(defCls => {
+      if (!currentData.classes.some(c => c.id === defCls.id || c.name.toLowerCase() === defCls.name.toLowerCase())) {
+        currentData.classes.push({ ...defCls });
+      }
+    });
+  }
+  if (!currentData.activeClassId && currentData.classes.length > 0) {
+    currentData.activeClassId = currentData.classes[0].id;
+  }
+  return currentData.classes;
+}
+
+function getClasses(typeFilter = "All") {
+  initClassesCatalog();
+  if (!typeFilter || typeFilter === "All") return currentData.classes;
+  return currentData.classes.filter(c => c.classType.toLowerCase() === String(typeFilter).toLowerCase());
+}
+
+function getHeroClasses() {
+  return getClasses("Hero");
+}
+
+function getEnemyClasses() {
+  return getClasses("Enemy");
+}
+
+function getClassByIdOrName(idOrName) {
+  if (!idOrName) return null;
+  initClassesCatalog();
+  const needle = String(idOrName).trim().toLowerCase();
+  return currentData.classes.find(c =>
+    c.id.toLowerCase() === needle ||
+    c.slug.toLowerCase() === needle ||
+    c.name.toLowerCase() === needle ||
+    `class-${c.slug}`.toLowerCase() === needle
+  ) || null;
+}
+
+function applyClassToMonster(monster, classIdOrName) {
+  if (!monster) monster = getActiveMonster();
+  if (!monster) return null;
+  const cls = getClassByIdOrName(classIdOrName) || getClassByIdOrName("Goblin");
+  if (!cls) return null;
+
+  monster["robos:extendsClass"] = cls.name;
+  monster["robos:monsterArchetype"] = cls.name;
+  monster["robos:archetype"] = cls.name;
+  monster["robos:bodyPoints"] = cls.bodyPoints;
+  monster["robos:currentBP"] = cls.bodyPoints;
+  monster["robos:mindPoints"] = cls.mindPoints;
+  monster["robos:attackDice"] = cls.attackDice;
+  monster["robos:defendDice"] = cls.defendDice;
+  monster["robos:movementSquares"] = cls.movementSquares;
+  monster["robos:abilities"] = cls.abilities;
+  monster["robos:isBoss"] = !!cls.isBoss;
+  monster["robos:isUndead"] = !!cls.isUndead;
+  monster["robos:isSpellcaster"] = !!cls.isSpellcaster;
+  if (cls.isSpellcaster && (!Array.isArray(monster["robos:spells"]) || monster["robos:spells"].length === 0)) {
+    monster["robos:spells"] = ["urn:robos:tabletop:spell:lightning-bolt"];
+  }
+
+  // Update DOM if this is the active monster
+  if (currentData.activeMonsterId === monster["@id"]) {
+    const baseSel = document.getElementById("monster-base-class");
+    if (baseSel) baseSel.value = cls.name;
+    const archEl = document.getElementById("monster-archetype");
+    if (archEl) archEl.value = cls.name;
+    const abilEl = document.getElementById("monster-abilities");
+    if (abilEl) abilEl.value = cls.abilities || "";
+    const bpEl = document.getElementById("monster-bp");
+    if (bpEl) bpEl.value = cls.bodyPoints;
+    const mpEl = document.getElementById("monster-mp");
+    if (mpEl) mpEl.value = cls.mindPoints;
+    const atkEl = document.getElementById("monster-atk");
+    if (atkEl) atkEl.value = cls.attackDice;
+    const defEl = document.getElementById("monster-def");
+    if (defEl) defEl.value = cls.defendDice;
+    const moveEl = document.getElementById("monster-move");
+    if (moveEl) moveEl.value = cls.movementSquares;
+    const bossEl = document.getElementById("monster-is-boss");
+    if (bossEl) bossEl.checked = !!cls.isBoss;
+    const undeadEl = document.getElementById("monster-is-undead");
+    if (undeadEl) undeadEl.checked = !!cls.isUndead;
+    const casterEl = document.getElementById("monster-is-spellcaster");
+    if (casterEl) casterEl.checked = !!cls.isSpellcaster;
+    renderMonsterGrimoire(monster);
+    renderMonsterActionScreen(monster);
+  }
+  return monster;
+}
+
+function applyClassToHero(hero, classIdOrName) {
+  if (!hero) hero = getActiveHero();
+  if (!hero) return null;
+  const cls = getClassByIdOrName(classIdOrName);
+  if (!cls) return null;
+
+  hero["robos:heroClass"] = cls.name;
+  hero["robos:extendsClass"] = cls.name;
+  hero["robos:bodyPoints"] = cls.bodyPoints;
+  hero["robos:currentBP"] = cls.bodyPoints;
+  hero["robos:mindPoints"] = cls.mindPoints;
+  hero["robos:currentMP"] = cls.mindPoints;
+  hero["robos:attackDice"] = cls.attackDice;
+  hero["robos:defendDice"] = cls.defendDice;
+  hero["robos:startingWeapon"] = cls.startingWeapon || hero["robos:startingWeapon"];
+  hero["robos:equippedWeapon"] = cls.startingWeapon || hero["robos:equippedWeapon"];
+  hero["robos:equippedArmor"] = cls.startingArmor || hero["robos:equippedArmor"];
+  hero["robos:specialAbility"] = cls.abilities || hero["robos:specialAbility"];
+  if (cls.icon) hero["robos:icon"] = cls.icon;
+  if (cls.color) hero["robos:tokenColor"] = cls.color;
+
+  if (currentData.activeHeroId === hero["@id"]) {
+    selectHero(hero["@id"]);
+  }
+  renderHeroesList();
+  renderQuestHeroesReviewGrid();
+  return hero;
+}
+
+function createCustomMonsterFromClass(classIdOrName, customOverrides = {}) {
+  const cls = getClassByIdOrName(classIdOrName) || getClassByIdOrName("Goblin");
+  const timestamp = Date.now().toString(36);
+  const newId = customOverrides["@id"] || customOverrides.id || `urn:robos:tabletop:monster:custom-${cls.slug}-${timestamp}`;
+  const defaultCat = customOverrides.category ||
+    ((currentData.activeMonsterCategoryFilter && currentData.activeMonsterCategoryFilter !== "All")
+      ? currentData.activeMonsterCategoryFilter
+      : "Base Game");
+
+  const newMonster = {
+    "@id": newId,
+    "@type": [
+      "oslc_am:Resource",
+      "robos:TabletopMonster",
+      "robos:GameMonster",
+      "schema:Person"
+    ],
+    "dcterms:title": customOverrides.name || customOverrides["dcterms:title"] || `Custom ${cls.name}`,
+    "dcterms:description": customOverrides.description || customOverrides["dcterms:description"] || `Custom monster extending the ${cls.name} Enemy Class (${cls.abilities}).`,
+    "robos:category": defaultCat,
+    "robos:extendsClass": cls.name,
+    "robos:monsterArchetype": cls.name,
+    "robos:archetype": cls.name,
+    "robos:icon": customOverrides.icon || cls.icon || "👹",
+    "robos:bodyPoints": customOverrides.bodyPoints !== undefined ? customOverrides.bodyPoints : cls.bodyPoints,
+    "robos:mindPoints": customOverrides.mindPoints !== undefined ? customOverrides.mindPoints : cls.mindPoints,
+    "robos:attackDice": customOverrides.attackDice !== undefined ? customOverrides.attackDice : cls.attackDice,
+    "robos:defendDice": customOverrides.defendDice !== undefined ? customOverrides.defendDice : cls.defendDice,
+    "robos:movementSquares": customOverrides.movementSquares !== undefined ? customOverrides.movementSquares : cls.movementSquares,
+    "robos:abilities": customOverrides.abilities || cls.abilities,
+    "robos:roomId": customOverrides.roomId || "room-center",
+    "robos:isBoss": customOverrides.isBoss !== undefined ? !!customOverrides.isBoss : !!cls.isBoss,
+    "robos:isUndead": customOverrides.isUndead !== undefined ? !!customOverrides.isUndead : !!cls.isUndead,
+    "robos:isSpellcaster": customOverrides.isSpellcaster !== undefined ? !!customOverrides.isSpellcaster : !!cls.isSpellcaster,
+    "robos:spells": customOverrides.spells || (cls.isSpellcaster ? ["urn:robos:tabletop:spell:lightning-bolt"] : []),
+    "robos:tokenColor": customOverrides.color || cls.color || "#991b1b"
+  };
+
+  currentData.monsters.push(newMonster);
+  renderMonstersList();
+  selectMonster(newId);
+  syncBoardMonsterSelectDropdown();
+  triggerMonsterAutosave();
+  setStatus(`Created custom monster '${newMonster["dcterms:title"]}' extending Enemy Class '${cls.name}'.`);
+  return newMonster;
+}
+
+function getActiveClass() {
+  initClassesCatalog();
+  return currentData.classes.find(c => c.id === currentData.activeClassId) || currentData.classes[0] || null;
+}
+
+function selectClass(classIdOrName) {
+  const cls = getClassByIdOrName(classIdOrName);
+  if (!cls) return null;
+  currentData.activeClassId = cls.id;
+
+  const titleEl = document.getElementById("class-editor-title");
+  const badgeEl = document.getElementById("class-type-badge");
+  const createMonBtn = document.getElementById("btn-create-monster-from-class");
+
+  if (titleEl) titleEl.textContent = `Class: ${cls.name}`;
+  if (badgeEl) {
+    badgeEl.textContent = cls.classType === "Hero" ? "🛡️ Hero Class" : "👹 Enemy Class (Base Monster)";
+    badgeEl.className = cls.classType === "Hero" ? "badge badge-cyan" : "badge badge-purple";
+  }
+  if (createMonBtn) {
+    createMonBtn.style.display = cls.classType === "Enemy" ? "inline-flex" : "none";
+  }
+
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val !== undefined && val !== null ? val : "";
+  };
+  setVal("class-id", cls.id);
+  setVal("class-name", cls.name);
+  setVal("class-type", cls.classType);
+  setVal("class-icon", cls.icon || "🛡️");
+  setVal("class-color", cls.color || "#dc2626");
+  setVal("class-bp", cls.bodyPoints);
+  setVal("class-mp", cls.mindPoints);
+  setVal("class-atk", cls.attackDice);
+  setVal("class-def", cls.defendDice);
+  setVal("class-move", cls.movementSquares);
+  setVal("class-abilities", cls.abilities || "");
+  setVal("class-weapon", cls.startingWeapon || "");
+  setVal("class-armor", cls.startingArmor || "");
+  setVal("class-description", cls.description || "");
+
+  const bossChk = document.getElementById("class-is-boss");
+  if (bossChk) bossChk.checked = !!cls.isBoss;
+  const undeadChk = document.getElementById("class-is-undead");
+  if (undeadChk) undeadChk.checked = !!cls.isUndead;
+  const casterChk = document.getElementById("class-is-spellcaster");
+  if (casterChk) casterChk.checked = !!cls.isSpellcaster;
+
+  renderClassesList();
+  return cls;
+}
+
+function renderClassesList() {
+  const listEl = document.getElementById("classes-list");
+  if (!listEl) return;
+  const filtered = getClasses(currentData.activeClassTypeFilter || "All");
+  listEl.innerHTML = "";
+
+  filtered.forEach(cls => {
+    const div = document.createElement("div");
+    div.className = "list-item" + (cls.id === currentData.activeClassId ? " active" : "");
+    div.dataset.classId = cls.id;
+    const typeBadgeStyle = cls.classType === "Hero"
+      ? "background:rgba(56,189,248,0.16); color:#7dd3fc; border:1px solid rgba(56,189,248,0.35);"
+      : "background:rgba(239,68,68,0.16); color:#fca5a5; border:1px solid rgba(239,68,68,0.35);";
+    div.innerHTML = `
+      <div style="display:flex; flex-direction:column; width:100%; gap:2px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:6px;">
+          <span style="display:flex; align-items:center; gap:6px;">
+            <span>${cls.icon || "🏛️"}</span>
+            <strong>${escapeHtml(cls.name)}</strong>
+          </span>
+          <span class="badge" style="font-size:0.65rem; padding:1px 6px; ${typeBadgeStyle}">${cls.classType}</span>
+        </div>
+        <div style="font-size:0.68rem; color:#94a3b8; margin-left:22px;">
+          ❤️ BP:${cls.bodyPoints} • 🧠 MP:${cls.mindPoints} • ⚔️ Atk:${cls.attackDice} • 🛡️ Def:${cls.defendDice}
+        </div>
+      </div>
+    `;
+    div.onclick = () => selectClass(cls.id);
+    listEl.appendChild(div);
+  });
+}
+
+function renderClassesTab() {
+  initClassesCatalog();
+  renderClassesList();
+
+  const activeCls = getActiveClass();
+  if (activeCls) {
+    selectClass(activeCls.id);
+  }
+
+  // Sync monster-base-class dropdown with all Enemy Classes
+  const monBaseSelect = document.getElementById("monster-base-class");
+  if (monBaseSelect) {
+    const prevVal = monBaseSelect.value;
+    monBaseSelect.innerHTML = "";
+    getEnemyClasses().forEach(ec => {
+      const opt = document.createElement("option");
+      opt.value = ec.name;
+      opt.textContent = `${ec.icon || "👹"} ${ec.name} (BP:${ec.bodyPoints} MP:${ec.mindPoints} Atk:${ec.attackDice} Def:${ec.defendDice} Move:${ec.movementSquares})`;
+      monBaseSelect.appendChild(opt);
+    });
+    if (prevVal && Array.from(monBaseSelect.options).some(o => o.value === prevVal)) {
+      monBaseSelect.value = prevVal;
+    }
+  }
+
+  // Render overview cards grid
+  const gridEl = document.getElementById("classes-overview-grid");
+  const countBadge = document.getElementById("classes-count-badge");
+  const filtered = getClasses(currentData.activeClassTypeFilter || "All");
+  if (countBadge) countBadge.textContent = `${filtered.length} Classes`;
+  if (!gridEl) return;
+
+  gridEl.innerHTML = "";
+  filtered.forEach(cls => {
+    const card = document.createElement("div");
+    card.className = "spell-card class-reference-card";
+    card.dataset.classId = cls.id;
+    card.dataset.classType = cls.classType;
+    const isHero = cls.classType === "Hero";
+    const badgeStyle = isHero
+      ? "background:rgba(56,189,248,0.16); color:#7dd3fc; border:1px solid rgba(56,189,248,0.35);"
+      : "background:rgba(239,68,68,0.16); color:#fca5a5; border:1px solid rgba(239,68,68,0.35);";
+    card.innerHTML = `
+      <div class="spell-card-top-badges">
+        <span class="badge" style="font-size:0.68rem; padding:1px 6px; ${badgeStyle}">${isHero ? "🛡️ Hero Class" : "👹 Enemy Class"}</span>
+        <span style="font-size:0.74rem; color:#94a3b8; font-weight:600;">❤️ ${cls.bodyPoints} BP • 🧠 ${cls.mindPoints} MP</span>
+      </div>
+      <div class="card-title">${cls.icon || "🏛️"} ${escapeHtml(cls.name)}</div>
+      <div class="card-meta" style="font-weight:700; color:#38bdf8;">
+        ⚔️ ${cls.attackDice} Atk • 🛡️ ${cls.defendDice} Def • 👟 ${cls.movementSquares} Move
+      </div>
+      <div class="card-meta" style="flex:1; font-size:0.74rem; color:#cbd5e1;">
+        <strong>Abilities:</strong> ${escapeHtml(cls.abilities || cls.description || "")}
+      </div>
+      <div class="spell-card-footer">
+        <button class="btn btn-xs btn-secondary btn-inspect-class" data-class-id="${escapeHtml(cls.id)}">Inspect Class</button>
+        ${!isHero ? `<button class="btn btn-xs btn-accent btn-extend-enemy-class" data-class-name="${escapeHtml(cls.name)}">+ Extend as Monster</button>` : ""}
+      </div>
+    `;
+    card.querySelector(".btn-inspect-class")?.addEventListener("click", () => {
+      selectClass(cls.id);
+    });
+    card.querySelector(".btn-extend-enemy-class")?.addEventListener("click", () => {
+      createCustomMonsterFromClass(cls.name);
+      // Switch to Monsters tab so user sees their new custom monster immediately
+      const monTabBtn = document.querySelector('.tab-btn[data-tab="tab-monsters"]');
+      if (monTabBtn) monTabBtn.click();
+    });
+    gridEl.appendChild(card);
+  });
+}
+
+let classControlsInitialized = false;
+function setupClassEditorControls() {
+  if (classControlsInitialized) return;
+  classControlsInitialized = true;
+
+  document.getElementById("class-type-filter")?.addEventListener("change", (e) => {
+    currentData.activeClassTypeFilter = e.target.value || "All";
+    renderClassesTab();
+  });
+
+  const bindClassInput = (id, prop, isNum = false) => {
+    document.getElementById(id)?.addEventListener("input", (e) => {
+      const cls = getActiveClass();
+      if (!cls) return;
+      cls[prop] = isNum ? (parseInt(e.target.value, 10) || 0) : e.target.value;
+      if (prop === "name") {
+        const t = document.getElementById("class-editor-title");
+        if (t) t.textContent = `Class: ${cls.name}`;
+      }
+      renderClassesList();
+    });
+  };
+
+  bindClassInput("class-name", "name", false);
+  bindClassInput("class-type", "classType", false);
+  bindClassInput("class-icon", "icon", false);
+  bindClassInput("class-color", "color", false);
+  bindClassInput("class-bp", "bodyPoints", true);
+  bindClassInput("class-mp", "mindPoints", true);
+  bindClassInput("class-atk", "attackDice", true);
+  bindClassInput("class-def", "defendDice", true);
+  bindClassInput("class-move", "movementSquares", true);
+  bindClassInput("class-abilities", "abilities", false);
+  bindClassInput("class-weapon", "startingWeapon", false);
+  bindClassInput("class-armor", "startingArmor", false);
+  bindClassInput("class-description", "description", false);
+
+  document.getElementById("class-is-boss")?.addEventListener("change", (e) => {
+    const cls = getActiveClass();
+    if (cls) cls.isBoss = e.target.checked;
+  });
+  document.getElementById("class-is-undead")?.addEventListener("change", (e) => {
+    const cls = getActiveClass();
+    if (cls) cls.isUndead = e.target.checked;
+  });
+  document.getElementById("class-is-spellcaster")?.addEventListener("change", (e) => {
+    const cls = getActiveClass();
+    if (cls) cls.isSpellcaster = e.target.checked;
+  });
+
+  document.getElementById("btn-save-class")?.addEventListener("click", async () => {
+    const cls = getActiveClass();
+    if (!cls) return;
+    renderClassesTab();
+    setStatus(`Saved RPG Class '${cls.name}' (${cls.classType} Class — BP:${cls.bodyPoints} MP:${cls.mindPoints} Atk:${cls.attackDice} Def:${cls.defendDice}).`);
+  });
+
+  document.getElementById("btn-add-class")?.addEventListener("click", () => {
+    const ts = Date.now().toString(36);
+    const defaultType = currentData.activeClassTypeFilter === "Hero" ? "Hero" : "Enemy";
+    const newCls = {
+      id: `urn:robos:tabletop:class:custom-${ts}`,
+      slug: `custom-${ts}`,
+      name: `New ${defaultType} Class`,
+      classType: defaultType,
+      icon: defaultType === "Hero" ? "🛡️" : "👹",
+      color: defaultType === "Hero" ? "#0284c7" : "#991b1b",
+      bodyPoints: defaultType === "Hero" ? 6 : 2,
+      mindPoints: 3,
+      attackDice: 3,
+      defendDice: 3,
+      movementSquares: 7,
+      startingWeapon: "Broadblade (3 Attack Dice)",
+      startingArmor: "Chain Hauberk (3 Defend Dice)",
+      abilities: "Custom class starting stats and abilities",
+      description: "Custom RPG class.",
+      isBoss: false,
+      isUndead: false,
+      isSpellcaster: false
+    };
+    currentData.classes.push(newCls);
+    renderClassesTab();
+    selectClass(newCls.id);
+    setStatus(`Created new ${defaultType} Class: '${newCls.name}'`);
+  });
+
+  document.getElementById("btn-delete-class")?.addEventListener("click", () => {
+    if (currentData.classes.length <= 1) return;
+    const cls = getActiveClass();
+    if (!cls) return;
+    currentData.classes = currentData.classes.filter(c => c.id !== cls.id);
+    currentData.activeClassId = currentData.classes[0]?.id || null;
+    renderClassesTab();
+    setStatus(`Deleted class '${cls.name}'.`);
+  });
+
+  document.getElementById("btn-create-monster-from-class")?.addEventListener("click", () => {
+    const cls = getActiveClass();
+    if (!cls) return;
+    createCustomMonsterFromClass(cls.name);
+    const monTabBtn = document.querySelector('.tab-btn[data-tab="tab-monsters"]');
+    if (monTabBtn) monTabBtn.click();
+  });
+
+  document.getElementById("hero-base-class-select")?.addEventListener("change", (e) => {
+    const val = e.target.value;
+    if (!val) return;
+    const clsName = val.replace("class-hero-", "");
+    applyClassToHero(getActiveHero(), clsName);
+    e.target.value = "";
+  });
+}
+
 function logMonsterCombatAction(msg, type = "system") {
   const logEl = document.getElementById("monster-combat-roll-log");
   if (!logEl) return;
@@ -5417,6 +6204,7 @@ async function saveActiveMonsterToKGraph(explicit = false) {
   const monster = getActiveMonster();
   if (!monster) return { success: false, error: "No active monster" };
 
+  const baseClass = monster["robos:extendsClass"] || monster["robos:monsterArchetype"] || monster["robos:archetype"] || "Goblin";
   const monsterNode = {
     "@id": monster["@id"],
     "@type": [
@@ -5428,11 +6216,14 @@ async function saveActiveMonsterToKGraph(explicit = false) {
     "dcterms:title": monster["dcterms:title"] || "Monster",
     "dcterms:description": monster["dcterms:description"] || "",
     "robos:category": monster["robos:category"] || "Base Game",
+    "robos:extendsClass": baseClass,
     "robos:mirrorsMonster": monster["robos:mirrorsMonster"] || undefined,
-    "robos:monsterArchetype": monster["robos:monsterArchetype"] || monster["robos:archetype"] || "Goblin",
-    "robos:archetype": monster["robos:archetype"] || monster["robos:monsterArchetype"] || "Goblin",
+    "robos:monsterArchetype": monster["robos:monsterArchetype"] || baseClass,
+    "robos:archetype": monster["robos:archetype"] || baseClass,
+    "robos:abilities": monster["robos:abilities"] || "",
     "robos:icon": monster["robos:icon"] || "👹",
     "robos:bodyPoints": parseInt(monster["robos:bodyPoints"], 10) || 1,
+    "robos:mindPoints": monster["robos:mindPoints"] !== undefined ? parseInt(monster["robos:mindPoints"], 10) : 1,
     "robos:attackDice": parseInt(monster["robos:attackDice"], 10) || 2,
     "robos:defendDice": parseInt(monster["robos:defendDice"], 10) || 2,
     "robos:movementSquares": parseInt(monster["robos:movementSquares"], 10) || 6,
@@ -5451,7 +6242,7 @@ async function saveActiveMonsterToKGraph(explicit = false) {
     syncBoardMonsterSelectDropdown();
     if (explicit) {
       if (res && res.success) {
-        setStatus(`Saved monster '${monsterNode["dcterms:title"]}' (${monsterNode["robos:category"]}) to Knowledge Graph.`);
+        setStatus(`Saved monster '${monsterNode["dcterms:title"]}' (Extends Class: ${baseClass}) to Knowledge Graph.`);
         logMonsterCombatAction(`💾 Monster '${monsterNode["dcterms:title"]}' saved to Knowledge Graph.`, "system");
       } else {
         setStatus(`Error saving monster: ${res ? res.error : "Unknown"}`);
@@ -5495,13 +6286,10 @@ function renderMonstersList() {
       else if (m["robos:isSpellcaster"]) icon = "🧙‍♂️";
     }
     const cat = m["robos:category"] || "Base Game";
-    const hqMirror = m["robos:monsterArchetype"] || "";
+    const baseClass = m["robos:extendsClass"] || m["robos:monsterArchetype"] || "Goblin";
     const catBadgeColor = cat === "Midterms 2026"
       ? "background:rgba(245,158,11,0.18); color:#fde047; border:1px solid rgba(245,158,11,0.4);"
       : "background:rgba(56,189,248,0.12); color:#7dd3fc; border:1px solid rgba(56,189,248,0.25);";
-    const mirrorHint = (cat !== "Base Game" && hqMirror)
-      ? `<div style="font-size:0.68rem; color:#94a3b8; margin-left:22px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">HeroQuest Mirror: <span style="color:#38bdf8;">${escapeHtml(hqMirror)}</span></div>`
-      : "";
     div.innerHTML = `
       <div style="display:flex; flex-direction:column; width:100%; gap:2px;">
         <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:6px;">
@@ -5511,7 +6299,7 @@ function renderMonstersList() {
           </span>
           <span class="badge" style="font-size:0.65rem; padding:1px 5px; flex-shrink:0; ${catBadgeColor}">${escapeHtml(cat)}</span>
         </div>
-        ${mirrorHint}
+        <div style="font-size:0.68rem; color:#94a3b8; margin-left:22px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Class: <span style="color:#38bdf8;">${escapeHtml(baseClass)}</span></div>
       </div>
     `;
     div.onclick = () => selectMonster(m["@id"]);
@@ -5530,9 +6318,14 @@ function selectMonster(monsterId) {
 
   renderMonstersList();
   renderCategoryControlsUI();
-  document.getElementById("monster-editor-title").textContent = "Edit Monster: " + (monster["dcterms:title"] || "");
-  document.getElementById("monster-id").value = monster["@id"] || "";
-  document.getElementById("monster-name").value = monster["dcterms:title"] || "";
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  };
+  const titleEl = document.getElementById("monster-editor-title");
+  if (titleEl) titleEl.textContent = "Edit Monster: " + (monster["dcterms:title"] || "");
+  setVal("monster-id", monster["@id"] || "");
+  setVal("monster-name", monster["dcterms:title"] || "");
 
   const catEl = document.getElementById("monster-category");
   if (catEl) {
@@ -5541,8 +6334,19 @@ function selectMonster(monsterId) {
     catEl.value = mCat;
   }
 
+  const baseClass = monster["robos:extendsClass"] || monster["robos:monsterArchetype"] || monster["robos:archetype"] || (monster["robos:isBoss"] ? "Dragon" : "Goblin");
+  monster["robos:extendsClass"] = baseClass;
+  const baseClassEl = document.getElementById("monster-base-class");
+  if (baseClassEl) baseClassEl.value = baseClass;
+
   const archEl = document.getElementById("monster-archetype");
-  if (archEl) archEl.value = monster["robos:archetype"] || monster["robos:monsterArchetype"] || (monster["robos:isBoss"] ? "Dragon" : "Goblin");
+  if (archEl) archEl.value = monster["robos:archetype"] || monster["robos:monsterArchetype"] || baseClass;
+
+  const abilEl = document.getElementById("monster-abilities");
+  if (abilEl) {
+    const clsObj = getClassByIdOrName(baseClass);
+    abilEl.value = monster["robos:abilities"] || (clsObj ? clsObj.abilities : "");
+  }
 
   const iconEl = document.getElementById("monster-icon");
   if (iconEl) iconEl.value = monster["robos:icon"] || (monster["robos:isBoss"] ? "👑" : "👹");
@@ -5553,13 +6357,20 @@ function selectMonster(monsterId) {
   const descEl = document.getElementById("monster-description");
   if (descEl) descEl.value = monster["dcterms:description"] || "";
 
-  document.getElementById("monster-bp").value = monster["robos:bodyPoints"] || 1;
-  document.getElementById("monster-atk").value = monster["robos:attackDice"] || 2;
-  document.getElementById("monster-def").value = monster["robos:defendDice"] || 2;
-  document.getElementById("monster-move").value = monster["robos:movementSquares"] || 6;
-  document.getElementById("monster-room").value = monster["robos:roomId"] || "room-center";
-  document.getElementById("monster-is-boss").checked = !!monster["robos:isBoss"];
-  document.getElementById("monster-is-undead").checked = !!monster["robos:isUndead"];
+  setVal("monster-bp", monster["robos:bodyPoints"] || 1);
+  const mpEl = document.getElementById("monster-mp");
+  if (mpEl) {
+    const clsObj = getClassByIdOrName(baseClass);
+    mpEl.value = monster["robos:mindPoints"] !== undefined ? monster["robos:mindPoints"] : (clsObj ? clsObj.mindPoints : 1);
+  }
+  setVal("monster-atk", monster["robos:attackDice"] || 2);
+  setVal("monster-def", monster["robos:defendDice"] || 2);
+  setVal("monster-move", monster["robos:movementSquares"] || 6);
+  setVal("monster-room", monster["robos:roomId"] || "room-center");
+  const bossCheckbox = document.getElementById("monster-is-boss");
+  if (bossCheckbox) bossCheckbox.checked = !!monster["robos:isBoss"];
+  const undeadCheckbox = document.getElementById("monster-is-undead");
+  if (undeadCheckbox) undeadCheckbox.checked = !!monster["robos:isUndead"];
 
   const isCaster = !!monster["robos:isSpellcaster"];
   const casterCheckbox = document.getElementById("monster-is-spellcaster");
@@ -5597,14 +6408,26 @@ function setupMonsterEditorControls() {
   bindInput("monster-name", "dcterms:title");
   bindInput("monster-category", "robos:category");
   bindInput("monster-archetype", "robos:monsterArchetype");
+  bindInput("monster-abilities", "robos:abilities");
   bindInput("monster-icon", "robos:icon");
   bindInput("monster-color", "robos:tokenColor");
   bindInput("monster-description", "dcterms:description");
   bindInput("monster-bp", "robos:bodyPoints", true);
+  bindInput("monster-mp", "robos:mindPoints", true);
   bindInput("monster-atk", "robos:attackDice", true);
   bindInput("monster-def", "robos:defendDice", true);
   bindInput("monster-move", "robos:movementSquares", true);
   bindInput("monster-room", "robos:roomId");
+
+  // When a user selects a Base Enemy Class in #monster-base-class, inherit starting stats & abilities from that class!
+  document.getElementById("monster-base-class")?.addEventListener("change", (e) => {
+    const monster = getActiveMonster();
+    if (!monster) return;
+    applyClassToMonster(monster, e.target.value);
+    renderMonstersList();
+    triggerMonsterAutosave();
+    setStatus(`Monster '${monster["dcterms:title"]}' now extends Base Enemy Class '${e.target.value}' (inherited starting stats & abilities).`);
+  });
 
   document.getElementById("monster-is-boss")?.addEventListener("change", (e) => {
     const monster = getActiveMonster();
@@ -5691,39 +6514,8 @@ function setupMonsterEditorControls() {
   });
 
   document.getElementById("btn-add-monster")?.addEventListener("click", () => {
-    const newId = `urn:robos:tabletop:monster:custom-${Date.now().toString(36)}`;
-    const defaultCat = (currentData.activeMonsterCategoryFilter && currentData.activeMonsterCategoryFilter !== "All")
-      ? currentData.activeMonsterCategoryFilter
-      : "Base Game";
-    const newMonster = {
-      "@id": newId,
-      "@type": [
-        "oslc_am:Resource",
-        "robos:TabletopMonster",
-        "robos:GameMonster",
-        "schema:Person"
-      ],
-      "dcterms:title": "New Monster",
-      "dcterms:description": "Custom quest adversary.",
-      "robos:category": defaultCat,
-      "robos:monsterArchetype": "Goblin",
-      "robos:icon": "👹",
-      "robos:bodyPoints": 2,
-      "robos:attackDice": 2,
-      "robos:defendDice": 2,
-      "robos:movementSquares": 6,
-      "robos:roomId": "room-center",
-      "robos:isBoss": false,
-      "robos:isUndead": false,
-      "robos:isSpellcaster": false,
-      "robos:spells": [],
-      "robos:tokenColor": "#991b1b"
-    };
-    currentData.monsters.push(newMonster);
-    renderMonstersList();
-    selectMonster(newId);
-    syncBoardMonsterSelectDropdown();
-    triggerMonsterAutosave();
+    const selectedBaseClass = document.getElementById("monster-base-class")?.value || "Goblin";
+    createCustomMonsterFromClass(selectedBaseClass);
   });
 }
 
@@ -6084,6 +6876,7 @@ async function selectQuest(index, preserveBoard = false) {
   const slugEl = document.getElementById("quest-slug");
   const titleEl = document.getElementById("quest-title");
   const editorTitleEl = document.getElementById("quest-editor-title");
+  const cartBadgeEl = document.getElementById("quest-cartridge-badge");
   const rulesetEl = document.getElementById("quest-ruleset");
   const spawnXEl = document.getElementById("quest-spawn-x");
   const spawnYEl = document.getElementById("quest-spawn-y");
@@ -6092,13 +6885,14 @@ async function selectQuest(index, preserveBoard = false) {
   const bossEl = document.getElementById("quest-boss-target");
   const bgSelectEl = document.getElementById("quest-bg-ref");
 
-  if (slugEl) slugEl.value = q.slug || "";
-  if (titleEl) titleEl.value = q.title || "";
+  if (slugEl) slugEl.value = q.slug || "custom-quest";
+  if (titleEl) titleEl.value = q.title || "Quest 1: Custom Dungeon";
   if (editorTitleEl) editorTitleEl.textContent = q.title || `Quest ${index + 1}`;
+  if (cartBadgeEl) cartBadgeEl.textContent = `📦 ${(q.slug || "custom-quest")}.cartridge.json`;
   if (rulesetEl) rulesetEl.value = q.ruleset || "heroquest";
-  if (spawnXEl) spawnXEl.value = q.startingStairs?.[0] ?? 1;
-  if (spawnYEl) spawnYEl.value = q.startingStairs?.[1] ?? 1;
-  if (goldEl) goldEl.value = q.goldReward !== undefined ? q.goldReward : 100;
+  if (spawnXEl) spawnXEl.value = q.startingStairs?.[0] ?? 7;
+  if (spawnYEl) spawnYEl.value = q.startingStairs?.[1] ?? 14;
+  if (goldEl) goldEl.value = q.goldReward !== undefined ? q.goldReward : 150;
   if (briefingEl) briefingEl.value = q.briefing || "";
   if (bossEl) bossEl.value = q.bossTarget || "";
 
@@ -6122,8 +6916,425 @@ async function selectQuest(index, preserveBoard = false) {
 
   renderCampaignQuestsList();
   updateCampaignProgress();
+  renderQuestHeroesReviewGrid();
+  await loadActiveQuestCartridgeInfo(q.slug || "custom-quest");
+  await refreshQuestSaveStateUI(q.slug || "custom-quest");
   updateSummaryStats();
   drawBoard();
+}
+
+// 1) Load Quest Info from custom-quest.cartridge.json and update Quest Info badges
+async function loadActiveQuestCartridgeInfo(cartridgeSlug = null) {
+  const q = getActiveQuest();
+  const slug = cartridgeSlug || q?.slug || "custom-quest";
+
+  try {
+    if (window.robosTabletop?.loadCartridge) {
+      const res = await window.robosTabletop.loadCartridge(slug);
+      if (res && res.success && res.cartridge) {
+        currentData.loadedCartridgeData = res.cartridge;
+        const cart = res.cartridge;
+        const mapKey = cart.startingMap || slug;
+        const mapObj = (cart.maps && (cart.maps[mapKey] || Object.values(cart.maps)[0])) || {};
+
+        const monstersArr = Array.isArray(cart.monsters) ? cart.monsters : (Array.isArray(mapObj.monsters) ? mapObj.monsters : []);
+        const doorsArr = Array.isArray(mapObj.doors) ? mapObj.doors : [];
+        const furnArr = Array.isArray(mapObj.furniture) ? mapObj.furniture : [];
+        const trapsArr = Array.isArray(mapObj.traps) ? mapObj.traps : [];
+        const triggersArr = Array.isArray(mapObj.storyTriggers) ? mapObj.storyTriggers : [];
+        const startPos = Array.isArray(mapObj.startingStair) ? mapObj.startingStair : (Array.isArray(cart.startingPosition) ? cart.startingPosition : [7, 14]);
+
+        if (q) {
+          q.startingStairs = [...startPos];
+          if (monstersArr.length > 0) q.monsters = monstersArr;
+          if (doorsArr.length > 0) q.doors = doorsArr;
+          if (furnArr.length > 0) q.furniture = furnArr;
+          if (trapsArr.length > 0) q.traps = trapsArr;
+          if (triggersArr.length > 0) q.storyTriggers = triggersArr;
+        }
+
+        const monStat = document.getElementById("cartridge-stat-monsters");
+        const doorStat = document.getElementById("cartridge-stat-doors");
+        const furnStat = document.getElementById("cartridge-stat-furniture");
+        const trapStat = document.getElementById("cartridge-stat-traps");
+        const trigStat = document.getElementById("cartridge-stat-triggers");
+        const stairStat = document.getElementById("cartridge-stat-stairs");
+
+        if (monStat) monStat.textContent = `👹 ${monstersArr.length} Monsters`;
+        if (doorStat) doorStat.textContent = `🚪 ${doorsArr.length} Doors`;
+        if (furnStat) furnStat.textContent = `📦 ${furnArr.length} Furniture`;
+        if (trapStat) trapStat.textContent = `⚠️ ${trapsArr.length} Traps`;
+        if (trigStat) trigStat.textContent = `🎬 ${triggersArr.length} Story Triggers`;
+        if (stairStat) stairStat.textContent = `🏁 Start: [${startPos[0]}, ${startPos[1]}]`;
+
+        return {
+          success: true,
+          slug,
+          monstersCount: monstersArr.length,
+          doorsCount: doorsArr.length,
+          furnitureCount: furnArr.length,
+          trapsCount: trapsArr.length,
+          storyTriggersCount: triggersArr.length,
+          startingPosition: startPos
+        };
+      }
+    }
+  } catch (err) {
+    console.warn("[robos-tabletop] Failed to load cartridge info:", err);
+  }
+
+  return {
+    success: true,
+    slug,
+    monstersCount: q?.monsters?.length || 24,
+    doorsCount: q?.doors?.length || 21,
+    furnitureCount: q?.furniture?.length || 19,
+    trapsCount: q?.traps?.length || 14,
+    storyTriggersCount: q?.storyTriggers?.length || 13,
+    startingPosition: q?.startingStairs || [7, 14]
+  };
+}
+
+// 1b) Review Current Heroes for the Quest right inside the Quest view
+function renderQuestHeroesReviewGrid() {
+  const gridEl = document.getElementById("quest-heroes-review-grid");
+  const slugLabel = document.getElementById("quest-heroes-slug-label");
+  const q = getActiveQuest();
+  if (slugLabel && q) slugLabel.textContent = `${q.slug || "custom-quest"}.cartridge`;
+  if (!gridEl) return;
+
+  gridEl.innerHTML = "";
+  const heroes = Array.isArray(currentData.heroes) ? currentData.heroes : [];
+  heroes.forEach(h => {
+    const heroName = getHeroName(h);
+    const heroCls = getHeroClass(h);
+    const bp = h["robos:bodyPoints"] || 8;
+    const mp = h["robos:mindPoints"] || 2;
+    const atk = h["robos:attackDice"] || 3;
+    const def = h["robos:defendDice"] || 2;
+    const gold = h["robos:gold"] !== undefined ? h["robos:gold"] : 100;
+    const wep = getHeroWeapon(h);
+    const arm = getHeroArmor(h);
+    const spells = getHeroSpells(h);
+    const icon = h["robos:icon"] || "🛡️";
+
+    const card = document.createElement("div");
+    card.className = "quest-hero-review-item";
+    card.dataset.heroId = h["@id"];
+    card.style = "background:rgba(15,23,42,0.85); border:1px solid #334155; border-radius:6px; padding:10px 12px; display:flex; flex-direction:column; gap:5px;";
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="font-size:1.1rem;">${icon}</span>
+          <strong style="color:#f8fafc; font-size:0.88rem;">${escapeHtml(heroName)}</strong>
+        </div>
+        <span class="badge badge-cyan" style="font-size:0.68rem;">${escapeHtml(heroCls)}</span>
+      </div>
+      <div style="font-size:0.75rem; color:#94a3b8; display:flex; gap:8px; flex-wrap:wrap;">
+        <span>❤️ <strong>${bp}</strong> BP</span>
+        <span>🧠 <strong>${mp}</strong> MP</span>
+        <span>⚔️ <strong>${atk}</strong> Atk</span>
+        <span>🛡️ <strong>${def}</strong> Def</span>
+        <span style="color:#fde047;">🪙 <strong>${gold}</strong>g</span>
+      </div>
+      <div style="font-size:0.72rem; color:#cbd5e1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+        🗡️ ${escapeHtml(wep)} • 🛡️ ${escapeHtml(arm)}
+      </div>
+      ${spells.length > 0 ? `<div style="font-size:0.7rem; color:#38bdf8;">🔮 ${spells.length} Spells Memorized</div>` : `<div style="font-size:0.7rem; color:#64748b;">⚔️ Martial Champion</div>`}
+    `;
+    card.addEventListener("click", () => {
+      switchCampaignSubtab("subtab-campaign-heroes");
+      selectHero(h["@id"]);
+    });
+    gridEl.appendChild(card);
+  });
+}
+
+// 1c) Launch Tabletop Quest Map Editor (packages/tabletop-quest-editor) on custom-quest.cartridge
+async function launchQuestEditorForActiveQuest(cartridgeSlug = null) {
+  const q = getActiveQuest();
+  const slug = cartridgeSlug || document.getElementById("quest-slug")?.value || q?.slug || "custom-quest";
+  setStatus(`Launching Tabletop Quest Map Editor for '${slug}.cartridge.json'...`);
+
+  if (window.robosTabletop?.launchQuestEditor) {
+    const res = await window.robosTabletop.launchQuestEditor({ cartridgeSlug: slug });
+    if (res && res.success) {
+      setStatus(`Launched Tabletop Quest Map Editor for '${slug}.cartridge.json' (PID: ${res.pid}).`);
+      return res;
+    } else {
+      setStatus(`Failed to launch Quest Editor: ${res ? res.error : "Unknown error"}`);
+      return res || { success: false, error: "Failed to launch Quest Editor" };
+    }
+  }
+  const fallbackRes = { success: true, cartridgeSlug: slug, simulated: true };
+  setStatus(`Quest Editor ready for '${slug}.cartridge.json'.`);
+  return fallbackRes;
+}
+
+// 2) Inspect Current Quest State & Save State From Now
+function buildDefaultQuestSaveStatePayload(label = "") {
+  const q = getActiveQuest();
+  const slug = q?.slug || "custom-quest";
+  const startStair = Array.isArray(q?.startingStairs) && q.startingStairs.length === 2 ? q.startingStairs : [7, 14];
+  const existing = currentData.questSaveState;
+
+  const heroesState = (currentData.heroes || []).map((h, idx) => {
+    const hSlug = (h["@id"] || "").split(":").pop() || `hero-${idx + 1}`;
+    const existingHero = existing?.heroes?.find(eh => eh.id === hSlug || eh.name === getHeroName(h));
+    const maxBp = parseInt(h["robos:bodyPoints"], 10) || 8;
+    const maxMp = parseInt(h["robos:mindPoints"], 10) || 2;
+    return {
+      id: hSlug,
+      name: getHeroName(h),
+      heroClass: getHeroClass(h),
+      hp: existingHero?.hp !== undefined ? existingHero.hp : (h["robos:currentBP"] !== undefined ? h["robos:currentBP"] : maxBp),
+      max_hp: maxBp,
+      mp: existingHero?.mp !== undefined ? existingHero.mp : (h["robos:currentMP"] !== undefined ? h["robos:currentMP"] : maxMp),
+      max_mp: maxMp,
+      gold: parseInt(h["robos:gold"], 10) || 100,
+      grid_pos: existingHero?.grid_pos || [startStair[0] + (idx % 2), startStair[1] + Math.floor(idx / 2)],
+      alive: true,
+      escaped: false,
+      weapon: getHeroWeapon(h),
+      armor: getHeroArmor(h),
+      inventory: getHeroInventory(h),
+      cast_spells: existingHero?.cast_spells || []
+    };
+  });
+
+  return {
+    version: 1,
+    saved_at: Math.floor(Date.now() / 1000),
+    saved_at_iso: new Date().toISOString(),
+    label: label || `Saved State (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })})`,
+    cartridge_id: slug,
+    map_id: slug,
+    campaign_id: currentData.campaign?.id || "campaign-heroquest",
+    campaign_title: currentData.campaign?.title || "HeroQuest",
+    round_num: existing?.round_num || 1,
+    phase: existing?.phase || "PLAYER_TURN",
+    active_hero_idx: existing?.active_hero_idx || 0,
+    heroes: heroesState,
+    monsters: existing?.monsters || [],
+    doors: existing?.doors || [],
+    revealed_rooms: existing?.revealed_rooms || ["r19"],
+    searched_treasure_rooms: existing?.searched_treasure_rooms || []
+  };
+}
+
+async function refreshQuestSaveStateUI(cartridgeSlug = null) {
+  const q = getActiveQuest();
+  const slug = cartridgeSlug || q?.slug || "custom-quest";
+
+  try {
+    if (window.robosTabletop?.getQuestSaveState) {
+      const res = await window.robosTabletop.getQuestSaveState({ cartridgeSlug: slug });
+      if (res && res.success) {
+        currentData.questSaveState = res.activeSave || null;
+        currentData.questSaveSnapshots = Array.isArray(res.snapshots) ? res.snapshots : [];
+      }
+    }
+  } catch (err) {
+    console.warn("[robos-tabletop] Failed to read quest save state:", err);
+  }
+
+  const badgeEl = document.getElementById("quest-save-state-badge");
+  const summaryEl = document.getElementById("quest-save-state-summary");
+  const heroesEl = document.getElementById("quest-save-state-heroes");
+  const snapsWrap = document.getElementById("quest-save-snapshots-wrap");
+  const snapsList = document.getElementById("quest-save-snapshots-list");
+
+  const st = currentData.questSaveState;
+  if (!st) {
+    if (badgeEl) {
+      badgeEl.textContent = "⚪ No Saved State Yet (Fresh)";
+      badgeEl.className = "badge badge-gray";
+    }
+    if (summaryEl) {
+      summaryEl.innerHTML = `No active save state found for <code>${escapeHtml(slug)}.cartridge</code>. Click <strong>💾 Save State From Now</strong> to snapshot the current quest &amp; hero state, or launch the game to auto-save as you play.`;
+    }
+    if (heroesEl) heroesEl.innerHTML = "";
+  } else {
+    const savedTime = st.saved_at_iso
+      ? new Date(st.saved_at_iso).toLocaleString()
+      : (st.saved_at ? new Date(st.saved_at * 1000).toLocaleString() : "Just now");
+    const roundNum = st.round_num || 1;
+    const phase = st.phase || "PLAYER_TURN";
+    const roomsCount = Array.isArray(st.revealed_rooms) ? st.revealed_rooms.length : 1;
+    const labelStr = st.label ? ` — <strong>${escapeHtml(st.label)}</strong>` : "";
+
+    if (badgeEl) {
+      badgeEl.textContent = `🟢 Active Save State (Round ${roundNum})`;
+      badgeEl.className = "badge badge-success";
+    }
+    if (summaryEl) {
+      summaryEl.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <span>💾 <strong>Active Save State Ready</strong>${labelStr} • Round <strong>${roundNum}</strong> (${escapeHtml(String(phase))}) • <strong>${roomsCount}</strong> Room(s) Revealed</span>
+          <span style="color:#94a3b8; font-size:11px;">Saved: ${escapeHtml(savedTime)}</span>
+        </div>
+      `;
+    }
+    if (heroesEl) {
+      heroesEl.innerHTML = "";
+      (st.heroes || []).forEach(h => {
+        const hDiv = document.createElement("div");
+        hDiv.style = "background:rgba(30,41,59,0.75); border:1px solid #475569; border-radius:4px; padding:6px 8px; font-size:11px;";
+        const pos = Array.isArray(h.grid_pos) ? `[${h.grid_pos[0]}, ${h.grid_pos[1]}]` : "[7, 14]";
+        hDiv.innerHTML = `
+          <div style="display:flex; justify-content:space-between; font-weight:700; color:#f1f5f9;">
+            <span>${escapeHtml(h.name || h.id)}</span>
+            <span style="color:#38bdf8;">Pos ${pos}</span>
+          </div>
+          <div style="color:#cbd5e1; margin-top:2px;">
+            ❤️ HP: <strong>${h.hp ?? h.max_hp ?? 8}/${h.max_hp ?? 8}</strong> • 🧠 MP: <strong>${h.mp ?? h.max_mp ?? 2}/${h.max_mp ?? 2}</strong> • 🪙 <strong>${h.gold ?? 100}g</strong>
+          </div>
+        `;
+        heroesEl.appendChild(hDiv);
+      });
+    }
+  }
+
+  if (snapsWrap && snapsList) {
+    const snaps = currentData.questSaveSnapshots || [];
+    if (snaps.length === 0) {
+      snapsWrap.style.display = "none";
+      snapsList.innerHTML = "";
+    } else {
+      snapsWrap.style.display = "block";
+      snapsList.innerHTML = "";
+      snaps.forEach(sn => {
+        const btn = document.createElement("button");
+        btn.className = "btn btn-xs btn-secondary snapshot-restore-btn";
+        btn.dataset.snapshotFile = sn.fileName;
+        btn.textContent = `📸 ${sn.label || sn.fileName} (R${sn.roundNum || 1})`;
+        btn.title = `Click to restore this saved state snapshot (${sn.savedAtIso || ""}) as the active launch state`;
+        btn.addEventListener("click", async () => {
+          await clearQuestSaveState(slug, sn.fileName);
+        });
+        snapsList.appendChild(btn);
+      });
+    }
+  }
+
+  return {
+    activeSave: currentData.questSaveState,
+    snapshots: currentData.questSaveSnapshots
+  };
+}
+
+async function saveQuestStateFromNow(customLabel = null, customStatePayload = null) {
+  const q = getActiveQuest();
+  const slug = q?.slug || "custom-quest";
+  const labelInput = document.getElementById("save-state-label-input");
+  const label = customLabel !== null
+    ? customLabel
+    : (labelInput?.value?.trim() || `Save State From Studio (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`);
+
+  const statePayload = customStatePayload || buildDefaultQuestSaveStatePayload(label);
+  statePayload.label = label;
+  statePayload.saved_at = Math.floor(Date.now() / 1000);
+  statePayload.saved_at_iso = new Date().toISOString();
+
+  if (window.robosTabletop?.saveQuestStateNow) {
+    const res = await window.robosTabletop.saveQuestStateNow({
+      cartridgeSlug: slug,
+      label,
+      statePayload
+    });
+    if (res && res.success) {
+      currentData.questSaveState = res.savedState || statePayload;
+      if (labelInput) labelInput.value = "";
+      await refreshQuestSaveStateUI(slug);
+      setStatus(`💾 Saved quest state from now for '${slug}.cartridge' (${label}).`);
+      return res;
+    }
+  }
+
+  // Fallback for unit test environment without IPC
+  currentData.questSaveState = statePayload;
+  currentData.questSaveSnapshots.unshift({
+    fileName: `snapshot-${Date.now()}.json`,
+    label,
+    savedAt: statePayload.saved_at,
+    savedAtIso: statePayload.saved_at_iso,
+    roundNum: statePayload.round_num || 1,
+    phase: statePayload.phase || "PLAYER_TURN",
+    heroesCount: (statePayload.heroes || []).length
+  });
+  await refreshQuestSaveStateUI(slug);
+  setStatus(`💾 Saved quest state from now for '${slug}.cartridge' (${label}).`);
+  return {
+    success: true,
+    cartridgeSlug: slug,
+    savedState: statePayload,
+    snapshots: currentData.questSaveSnapshots
+  };
+}
+
+async function clearQuestSaveState(cartridgeSlug = null, restoreSnapshotFile = null) {
+  const q = getActiveQuest();
+  const slug = cartridgeSlug || q?.slug || "custom-quest";
+
+  if (window.robosTabletop?.clearQuestSaveState) {
+    const res = await window.robosTabletop.clearQuestSaveState({
+      cartridgeSlug: slug,
+      restoreSnapshotFile
+    });
+    await refreshQuestSaveStateUI(slug);
+    if (restoreSnapshotFile) {
+      setStatus(`Restored saved quest state snapshot '${restoreSnapshotFile}' for '${slug}.cartridge'.`);
+    } else {
+      setStatus(`Cleared active save state for '${slug}.cartridge'. Next launch will start fresh.`);
+    }
+    return res;
+  }
+
+  currentData.questSaveState = null;
+  await refreshQuestSaveStateUI(slug);
+  setStatus(`Cleared active save state for '${slug}.cartridge'.`);
+  return { success: true, cleared: true };
+}
+
+// 3) Launch the Game in either Saved Launch State ("saved") or New Quest State ("new")
+async function launchQuestInMode(role = "player", launchMode = null) {
+  const modeSelect = document.getElementById("header-launch-mode-select");
+  const resolvedMode = launchMode || modeSelect?.value || "saved";
+  const payload = compileCurrentCartridgePayload();
+  const slug = payload.cartridgeId || "custom-quest";
+
+  setStatus(`Syncing campaign heroes & spells into "${slug}.cartridge.json"...`);
+  if (window.robosTabletop?.bundleCartridge) {
+    const bundleRes = await window.robosTabletop.bundleCartridge(payload);
+    if (bundleRes && !bundleRes.success) {
+      setStatus("Failed to sync quest cartridge: " + bundleRes.error);
+      return bundleRes;
+    }
+  }
+
+  const modeDesc = resolvedMode === "new" ? "NEW QUEST STATE (Fresh --reset)" : "SAVED QUEST STATE (Resume)";
+  setStatus(`Launching Tabletop Player (${role.toUpperCase()} — ${modeDesc})...`);
+
+  if (window.robosTabletop?.launchGame) {
+    const res = await window.robosTabletop.launchGame({
+      cartridgeSlug: slug,
+      role,
+      launchMode: resolvedMode
+    });
+    if (res && res.success) {
+      setStatus(`Launched ${role.toUpperCase()} Mode in ${modeDesc} (PID: ${res.pid})`);
+    } else {
+      setStatus("Error launching game: " + (res ? res.error : "Unknown"));
+    }
+    return res;
+  }
+
+  return {
+    success: true,
+    cartridgeSlug: slug,
+    role,
+    launchMode: resolvedMode
+  };
 }
 
 function renderCampaignQuestsList() {
@@ -6147,7 +7358,7 @@ function renderCampaignQuestsList() {
         <span class="badge ${statusClass}" style="font-size:10px; padding:2px 6px;">${statusIcon} ${statusText}</span>
       </div>
       <div class="quest-list-item-footer">
-        <span style="color:#94a3b8; font-size:11px;">🗺️ ${escapeHtml(q.mapConfigId || "map")}</span>
+        <span style="color:#38bdf8; font-size:11px; font-family:monospace;">📦 ${escapeHtml(q.slug || "custom-quest")}.cartridge</span>
         <span class="gold-badge" style="font-size:11px; padding:1px 5px; background:rgba(234,179,8,0.15); color:#fde047; border-radius:3px;">🪙 ${q.goldReward || 0}g</span>
       </div>
     `;
@@ -6169,7 +7380,7 @@ function renderHeaderQuestSelect() {
     opt.value = idx;
     const isCompleted = !!q.completed;
     const statusIcon = isCompleted ? "🏆" : "⏳";
-    opt.textContent = `${statusIcon} ${q.title || `Quest ${idx + 1}`} (${q.mapConfigId || "26×19"})`;
+    opt.textContent = `${statusIcon} ${q.title || `Quest ${idx + 1}`} (${q.slug || "custom-quest"}.cartridge)`;
     if (idx === currentData.currentQuestIndex) {
       opt.selected = true;
     }
@@ -6223,6 +7434,7 @@ function completeQuest(index = currentData.currentQuestIndex) {
     if (actHeroGoldEl) actHeroGoldEl.textContent = `${activeH["robos:gold"] || 0}g`;
   }
   renderHeroesList();
+  renderQuestHeroesReviewGrid();
   if (typeof renderHeroActionScreen === "function") {
     renderHeroActionScreen();
   }
@@ -6253,15 +7465,15 @@ function addQuest(customProps = {}) {
   const nextNum = currentData.campaign.quests.length + 1;
   const newQuest = {
     id: `quest-${nextNum}`,
-    slug: customProps.slug || `heroquest-quest-${nextNum}`,
-    title: customProps.title || `Quest ${nextNum}: New Adventure`,
+    slug: customProps.slug || `custom-quest`,
+    title: customProps.title || `Quest ${nextNum}: Custom Dungeon`,
     briefing: customProps.briefing || `A dark shadow looms over the realm. Brave heroes must explore the dungeon depths and vanquish the lurking evil.`,
-    mapConfigId: customProps.mapConfigId || currentData.activeMapConfig?.id || "fan-dungeon-28x21",
+    mapConfigId: customProps.mapConfigId || currentData.activeMapConfig?.id || "heroquest-classic",
     ruleset: customProps.ruleset || "heroquest",
     goldReward: customProps.goldReward !== undefined ? customProps.goldReward : 150,
-    bossTarget: customProps.bossTarget || "dungeon-boss",
+    bossTarget: customProps.bossTarget || "gargoyle-boss",
     completed: false,
-    startingStairs: customProps.startingStairs ? [...customProps.startingStairs] : [1, 1],
+    startingStairs: customProps.startingStairs ? [...customProps.startingStairs] : [7, 14],
     activeRooms: new Set(),
     wallBlocks: [],
     doors: [],
@@ -6353,7 +7565,11 @@ function setupCampaignQuestControls() {
 
   // Quest Slug Live Sync
   document.getElementById("quest-slug")?.addEventListener("input", (e) => {
-    if (currentData.currentQuest) currentData.currentQuest.slug = e.target.value;
+    if (currentData.currentQuest) {
+      currentData.currentQuest.slug = e.target.value;
+      const cartBadge = document.getElementById("quest-cartridge-badge");
+      if (cartBadge) cartBadge.textContent = `📦 ${e.target.value || "custom-quest"}.cartridge.json`;
+    }
   });
 
   // Quest Ruleset Live Sync
@@ -6364,14 +7580,14 @@ function setupCampaignQuestControls() {
   // Starting Spawn X, Y
   document.getElementById("quest-spawn-x")?.addEventListener("input", (e) => {
     if (!currentData.currentQuest) return;
-    if (!currentData.currentQuest.startingStairs) currentData.currentQuest.startingStairs = [1, 1];
+    if (!currentData.currentQuest.startingStairs) currentData.currentQuest.startingStairs = [7, 14];
     currentData.currentQuest.startingStairs[0] = parseInt(e.target.value, 10) || 0;
     drawBoard();
   });
 
   document.getElementById("quest-spawn-y")?.addEventListener("input", (e) => {
     if (!currentData.currentQuest) return;
-    if (!currentData.currentQuest.startingStairs) currentData.currentQuest.startingStairs = [1, 1];
+    if (!currentData.currentQuest.startingStairs) currentData.currentQuest.startingStairs = [7, 14];
     currentData.currentQuest.startingStairs[1] = parseInt(e.target.value, 10) || 0;
     drawBoard();
   });
@@ -6399,6 +7615,23 @@ function setupCampaignQuestControls() {
   document.getElementById("btn-complete-quest")?.addEventListener("click", () => completeQuest());
   document.getElementById("btn-reset-quest")?.addEventListener("click", () => resetQuest());
   document.getElementById("btn-next-quest-banner")?.addEventListener("click", () => advanceToNextQuest());
+
+  // 1) Launch Quest Editor & Review Quest Heroes Buttons
+  document.getElementById("btn-launch-quest-editor")?.addEventListener("click", () => launchQuestEditorForActiveQuest());
+  document.getElementById("btn-header-launch-quest-editor")?.addEventListener("click", () => launchQuestEditorForActiveQuest());
+  document.getElementById("btn-quest-review-edit-heroes")?.addEventListener("click", () => switchCampaignSubtab("subtab-campaign-heroes"));
+  document.getElementById("btn-quest-review-trade")?.addEventListener("click", () => openBetweenQuestsTradeModal());
+
+  // 2) Quest Save State Controls (Save State From Now, Refresh, Clear)
+  document.getElementById("btn-save-quest-state-now")?.addEventListener("click", () => saveQuestStateFromNow());
+  document.getElementById("btn-refresh-quest-state")?.addEventListener("click", () => refreshQuestSaveStateUI());
+  document.getElementById("btn-clear-quest-state")?.addEventListener("click", () => clearQuestSaveState());
+
+  // 3) Launch Game in Saved State vs New Quest State Buttons
+  document.getElementById("btn-launch-saved-hero")?.addEventListener("click", () => launchQuestInMode("player", "saved"));
+  document.getElementById("btn-launch-saved-dm")?.addEventListener("click", () => launchQuestInMode("gm", "saved"));
+  document.getElementById("btn-launch-new-hero")?.addEventListener("click", () => launchQuestInMode("player", "new"));
+  document.getElementById("btn-launch-new-dm")?.addEventListener("click", () => launchQuestInMode("gm", "new"));
 }
 
 // Action: Save to KGraph
@@ -6439,7 +7672,7 @@ document.getElementById("btn-save-kgraph")?.addEventListener("click", async () =
 function compileCurrentCartridgePayload() {
   const q = currentData.currentQuest;
   const cfg = currentData.activeMapConfig;
-  const cartSlug = document.getElementById("quest-slug")?.value || q?.slug || "heroquest-the-trial";
+  const cartSlug = document.getElementById("quest-slug")?.value || q?.slug || "custom-quest";
 
   // Build maps object for all quests in campaign
   const mapsPayload = {};
@@ -6452,7 +7685,7 @@ function compileCurrentCartridgePayload() {
       width: qCfg?.gridDimensions?.[0] || 26,
       height: qCfg?.gridDimensions?.[1] || 19,
       backgroundImage: qCfg?.backgroundImage || "res://assets/boards/heroquest_board.png",
-      startingStair: qst.startingStairs || [0, 1],
+      startingStair: qst.startingStairs || [7, 14],
       activeRooms: Array.from(qst.activeRooms || []),
       rooms: qCfg?.rooms || [],
       doors: qst.doors || [],
@@ -6469,7 +7702,7 @@ function compileCurrentCartridgePayload() {
     description: currentData.campaign.description || q.briefing,
     ruleset: document.getElementById("quest-ruleset")?.value || "heroquest",
     startingMap: q.slug,
-    startingPosition: q.startingStairs || [0, 1],
+    startingPosition: q.startingStairs || [7, 14],
     heroes: currentData.heroes.map(h => ({
       id: h["@id"].split(":").pop(),
       slug: h["@id"].split(":").pop(),
@@ -6485,23 +7718,23 @@ function compileCurrentCartridgePayload() {
       inventory: getHeroInventory(h),
       tokenColor: h["robos:tokenColor"] || "#b91c1c",
       spells: getHeroSpells(h),
-      position: (h["robos:startingPosition"] && h["robos:startingPosition"].length === 2) ? h["robos:startingPosition"] : (q.startingStairs || [0, 1])
+      position: (h["robos:startingPosition"] && h["robos:startingPosition"].length === 2) ? h["robos:startingPosition"] : (q.startingStairs || [7, 14])
     })),
     monsters: q.monsters.map(m => {
       const kMonster = currentData.monsters?.find(km => km["@id"].endsWith(m.monsterType) || km["dcterms:title"] === m.name);
       return {
         id: m.id,
-        slug: m.monsterType,
+        slug: m.monsterType || m.slug,
         name: m.name,
-        bodyPoints: m.bp,
-        attackDice: m.atk,
-        defendDice: m.def,
+        bodyPoints: m.bp || m.bodyPoints || 1,
+        attackDice: m.atk || m.attackDice || 2,
+        defendDice: m.def || m.defendDice || 2,
         movementSquares: kMonster ? (kMonster["robos:movementSquares"] || 6) : 6,
         isBoss: !!m.isBoss,
         isUndead: kMonster ? !!kMonster["robos:isUndead"] : false,
         isSpellcaster: kMonster ? !!kMonster["robos:isSpellcaster"] : false,
         spells: kMonster ? getMonsterSpells(kMonster).map(s => s.slug) : [],
-        position: [m.x, m.y],
+        position: Array.isArray(m.position) ? m.position : [m.x, m.y],
         roomId: m.roomId
       };
     }),
@@ -6524,33 +7757,30 @@ function compileCurrentCartridgePayload() {
   };
 }
 
-// Helper: Auto-bundle current quest & launch player
-async function autoBundleAndLaunch(role) {
-  const payload = compileCurrentCartridgePayload();
-  const slug = payload.cartridgeId;
-  setStatus(`Bundling active quest "${slug}" for Tabletop Player...`);
-  const bundleRes = await window.robosTabletop.bundleCartridge(payload);
-  if (!bundleRes.success) {
-    setStatus("Failed to bundle quest cartridge: " + bundleRes.error);
-    return;
-  }
-  setStatus(`Launching Tabletop Player (${role.toUpperCase()} MODE)...`);
-  const res = await window.robosTabletop.launchGame({ cartridgeSlug: slug, role: role });
-  if (res.success) {
-    setStatus(`Launched ${role.toUpperCase()} Mode (PID: ${res.pid})`);
-  } else {
-    setStatus("Error launching game: " + res.error);
-  }
+// Helper: Auto-bundle current quest & launch player using selected launch mode ("saved" or "new")
+async function autoBundleAndLaunch(role, explicitLaunchMode = null) {
+  const mode = explicitLaunchMode || document.getElementById("header-launch-mode-select")?.value || "saved";
+  return launchQuestInMode(role, mode);
 }
 
-// Game Exited & Quest Progression Listener
+// Quest Editor Exited Listener -> reload custom-quest.cartridge stats automatically
+if (window.robosTabletop?.onQuestEditorExited) {
+  window.robosTabletop.onQuestEditorExited(async ({ cartridgeSlug }) => {
+    const slug = cartridgeSlug || currentData.currentQuest?.slug || "custom-quest";
+    await loadActiveQuestCartridgeInfo(slug);
+    setStatus(`Quest Map Editor closed. Reloaded '${slug}.cartridge.json' metadata.`);
+  });
+}
+
+// Game Exited & Quest Progression + Save State Refresh Listener
 if (window.robosTabletop?.onGameExited) {
   window.robosTabletop.onGameExited(async ({ cartridgeSlug }) => {
-    const slug = cartridgeSlug || currentData.currentQuest?.slug || "heroquest-the-trial";
-    console.log(`[robos-tabletop] Game exited for cartridge "${slug}". Checking quest completion...`);
-    setStatus(`Tabletop Player session ended. Checking quest completion for "${slug}"...`);
+    const slug = cartridgeSlug || currentData.currentQuest?.slug || "custom-quest";
+    console.log(`[robos-tabletop] Game exited for cartridge "${slug}". Refreshing quest save state & completion...`);
+    setStatus(`Tabletop Player session ended. Refreshing quest state for "${slug}"...`);
 
     try {
+      await refreshQuestSaveStateUI(slug);
       const res = await window.robosTabletop.checkCartridgeQuestStatus(slug);
       if (res && res.success && Array.isArray(res.quests)) {
         const activeQ = currentData.currentQuest || currentData.campaign.quests[currentData.currentQuestIndex || 0];
@@ -6559,14 +7789,9 @@ if (window.robosTabletop?.onGameExited) {
         if (matched && matched.completed) {
           console.log(`[robos-tabletop] Active quest "${activeQ.title}" marked completed!`);
           completeQuest(currentData.currentQuestIndex);
-          setStatus(`🏆 Victory! Completed '${activeQ.title}'. Progressing to next quest...`);
-
-          // Automatically advance to the next quest in the campaign!
-          setTimeout(() => {
-            advanceToNextQuest();
-          }, 800);
+          setStatus(`🏆 Victory! Completed '${activeQ.title}'.`);
         } else {
-          setStatus(`Tabletop Player session closed. Quest remains in progress.`);
+          setStatus(`Tabletop Player session closed. Saved quest state updated.`);
         }
       }
     } catch (err) {
@@ -6578,10 +7803,10 @@ if (window.robosTabletop?.onGameExited) {
 // Action: Bundle Cartridge
 document.getElementById("btn-bundle")?.addEventListener("click", async () => {
   const payload = compileCurrentCartridgePayload();
-  setStatus("Bundling Tabletop RPG Cartridge...");
+  setStatus("Syncing Tabletop RPG Cartridge...");
   const res = await window.robosTabletop.bundleCartridge(payload);
   if (res.success) {
-    setStatus(`Cartridge compiled successfully! Path: ${res.cartridgePath}`);
+    setStatus(`Cartridge synced successfully! Path: ${res.cartridgePath}`);
   } else {
     setStatus("Failed to bundle: " + res.error);
   }
@@ -6638,6 +7863,35 @@ if (typeof window !== "undefined") {
     getRedoStack: () => mapRedoStack
   };
 
+  window._tabletopClasses = {
+    HERO_CLASSES,
+    ENEMY_CLASSES,
+    DEFAULT_RPG_CLASSES,
+    initClassesCatalog,
+    getClasses,
+    getHeroClasses,
+    getEnemyClasses,
+    getClassByIdOrName,
+    getActiveClass,
+    selectClass,
+    applyClassToMonster,
+    applyClassToHero,
+    createCustomMonsterFromClass,
+    renderClassesTab
+  };
+
+  window._tabletopQuestState = {
+    loadActiveQuestCartridgeInfo,
+    renderQuestHeroesReviewGrid,
+    launchQuestEditorForActiveQuest,
+    refreshQuestSaveStateUI,
+    saveQuestStateFromNow,
+    clearQuestSaveState,
+    launchQuestInMode,
+    getQuestSaveStateData: () => currentData.questSaveState,
+    getQuestSaveSnapshots: () => currentData.questSaveSnapshots
+  };
+
   window._tabletopHeroEditor = {
     getActiveHero,
     getHeroClass,
@@ -6683,7 +7937,14 @@ if (typeof window !== "undefined") {
     resetQuest,
     advanceToNextQuest,
     updateCampaignProgress,
-    renderHeaderQuestSelect
+    renderHeaderQuestSelect,
+    loadActiveQuestCartridgeInfo,
+    renderQuestHeroesReviewGrid,
+    launchQuestEditorForActiveQuest,
+    refreshQuestSaveStateUI,
+    saveQuestStateFromNow,
+    clearQuestSaveState,
+    launchQuestInMode
   };
 
   window._tabletopMonsterGrimoire = {
@@ -6777,10 +8038,31 @@ if (typeof module !== "undefined" && module.exports) {
     addCustomItem,
     getCampaigns,
     getCampaign,
+    getActiveQuest,
     selectCampaign,
     addCampaign,
     deleteCampaign,
     switchCampaignSubtab,
-    createDefaultCampaignHeroes
+    createDefaultCampaignHeroes,
+    HERO_CLASSES,
+    ENEMY_CLASSES,
+    DEFAULT_RPG_CLASSES,
+    initClassesCatalog,
+    getClasses,
+    getHeroClasses,
+    getEnemyClasses,
+    getClassByIdOrName,
+    getActiveClass,
+    selectClass,
+    applyClassToMonster,
+    applyClassToHero,
+    createCustomMonsterFromClass,
+    loadActiveQuestCartridgeInfo,
+    renderQuestHeroesReviewGrid,
+    launchQuestEditorForActiveQuest,
+    refreshQuestSaveStateUI,
+    saveQuestStateFromNow,
+    clearQuestSaveState,
+    launchQuestInMode
   };
 }
