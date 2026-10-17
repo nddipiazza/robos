@@ -305,9 +305,13 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 
     if (target === "tab-classes" && typeof renderClassesTab === "function") {
       renderClassesTab();
-    } else if (target === "tab-quest" && typeof renderQuestHeroesReviewGrid === "function") {
-      renderQuestHeroesReviewGrid();
-      refreshQuestSaveStateUI();
+    } else if (target === "tab-monsters" && typeof renderMonstersList === "function") {
+      renderMonstersList();
+    } else if (target === "tab-spells" && typeof renderSpellsAndItems === "function") {
+      renderSpellsAndItems();
+    } else if (target === "tab-quest") {
+      if (typeof renderQuestHeroesReviewGrid === "function") renderQuestHeroesReviewGrid();
+      if (typeof refreshQuestSaveStateUI === "function") refreshQuestSaveStateUI();
     }
   });
 });
@@ -551,6 +555,12 @@ async function switchMapConfiguration(configId, preserveQuestEntities = false) {
 }
 
 async function loadBoardArtwork(relPath) {
+  const canvas = document.getElementById("board-canvas");
+  if (!canvas) {
+    currentData.boardImage = null;
+    currentData.boardImageLoading = false;
+    return;
+  }
   currentData.boardImage = null;
   currentData.boardImageLoading = true;
   try {
@@ -1994,13 +2004,36 @@ function drawBoard() {
   }
 }
 
+let deferredTabsRendered = false;
+function scheduleDeferredTabRenders() {
+  if (deferredTabsRendered) return;
+  const renderAllDeferred = () => {
+    if (deferredTabsRendered) return;
+    deferredTabsRendered = true;
+    if (typeof renderClassesTab === "function") renderClassesTab();
+    if (typeof renderMonstersList === "function") renderMonstersList();
+    if (typeof renderSpellsAndItems === "function") renderSpellsAndItems();
+    if (typeof renderHeroesList === "function") renderHeroesList();
+  };
+
+  if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
+    window.requestIdleCallback(renderAllDeferred, { timeout: 300 });
+  } else if (typeof setTimeout !== "undefined") {
+    setTimeout(renderAllDeferred, 50);
+  }
+}
+
 // Load KGraph Data and Map Configurations
 async function initKGraphData() {
   setStatus("Initializing Tabletop RPG Studio...");
   try {
-    // 1. Load map configurations
-    const mapRes = await window.robosTabletop.getMapConfigs();
-    if (mapRes.success && mapRes.configs) {
+    // 1. Concurrently load map configurations and KGraph in parallel
+    const [mapRes, res] = await Promise.all([
+      (window.robosTabletop?.getMapConfigs ? window.robosTabletop.getMapConfigs() : Promise.resolve({ success: false })),
+      (window.robosTabletop?.loadKGraph ? window.robosTabletop.loadKGraph() : Promise.resolve({ success: false }))
+    ]);
+
+    if (mapRes && mapRes.success && mapRes.configs) {
       currentData.mapConfigs = mapRes.configs;
       const select = document.getElementById("map-config-select");
       const questBgSelect = document.getElementById("quest-bg-ref");
@@ -2016,11 +2049,9 @@ async function initKGraphData() {
       });
     }
 
-    // 2. Load KGraph
-    const res = await window.robosTabletop.loadKGraph();
-    if (res.success) {
-      currentData.tabletopNodes = res.tabletopNodes;
-      currentData.gameNodes = res.gameNodes;
+    if (res && res.success) {
+      currentData.tabletopNodes = res.tabletopNodes || [];
+      currentData.gameNodes = res.gameNodes || [];
 
       const kgraphHeroes = currentData.tabletopNodes.filter(n => {
         const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
@@ -2082,28 +2113,22 @@ async function initKGraphData() {
       setupMonsterEditorControls();
       setupSpellDraftControls();
       setupHeroTradeControls();
+      setupCampaignQuestControls();
+
       applySpellAllocationToHeroes();
       renderCategoryControlsUI();
-      renderClassesTab();
-      renderHeroesList();
-      renderMonstersList();
-      renderSpellsAndItems();
       renderSpellDraftSummaryBadges();
       syncBoardMonsterSelectDropdown();
       syncHeroPresetItemsDropdown();
 
-      // Initialize Campaign & Single Working Quest (custom-quest.cartridge)
-      setupCampaignQuestControls();
+      // Render Active Tab View (Campaign & Quest) Immediately
       renderCampaignSelectorUI();
-      renderCampaignQuestsList();
-      updateCampaignProgress();
+      await selectQuest(currentData.currentQuestIndex || 0, true);
+
+      // Lazily schedule background rendering for inactive tabs so initial load paints instantly
+      scheduleDeferredTabRenders();
     }
 
-    // 3. Switch to default map configuration and select active quest (custom-quest)
-    await selectQuest(currentData.currentQuestIndex || 0, true);
-    await loadActiveQuestCartridgeInfo();
-    renderQuestHeroesReviewGrid();
-    await refreshQuestSaveStateUI();
     initBoard();
     setStatus("Tabletop RPG Studio Ready — Loaded HeroQuest campaign (custom-quest.cartridge).");
   } catch (err) {
@@ -4077,6 +4102,7 @@ function renderHeroesList() {
   if (!container) return;
   container.innerHTML = "";
 
+  const fragment = document.createDocumentFragment();
   currentData.heroes.forEach(h => {
     const div = document.createElement("div");
     div.className = "list-item" + (h["@id"] === currentData.activeHeroId ? " active" : "");
@@ -4097,8 +4123,9 @@ function renderHeroesList() {
     `;
 
     div.onclick = () => selectHero(h["@id"]);
-    container.appendChild(div);
+    fragment.appendChild(div);
   });
+  container.appendChild(fragment);
 
   if (!currentData.activeHeroId && currentData.heroes.length > 0) {
     selectHero(currentData.heroes[0]["@id"]);
@@ -4122,7 +4149,15 @@ function selectHero(heroId) {
   if (hero["robos:currentBP"] === undefined) hero["robos:currentBP"] = maxBP;
   if (hero["robos:currentMP"] === undefined) hero["robos:currentMP"] = maxMP;
 
-  renderHeroesList();
+  // In-place active toggle to avoid full list re-render
+  const items = document.querySelectorAll("#heroes-list .list-item");
+  if (items.length > 0) {
+    items.forEach(el => {
+      el.classList.toggle("active", el.dataset.heroId === heroId);
+    });
+  } else {
+    renderHeroesList();
+  }
 
   // Populate Hero Form
   const heroName = getHeroName(hero);
@@ -5969,7 +6004,15 @@ function selectClass(classIdOrName) {
   const casterChk = document.getElementById("class-is-spellcaster");
   if (casterChk) casterChk.checked = !!cls.isSpellcaster;
 
-  renderClassesList();
+  // In-place active toggle to avoid full list re-render
+  const items = document.querySelectorAll("#classes-list .list-item");
+  if (items.length > 0) {
+    items.forEach(el => {
+      el.classList.toggle("active", el.dataset.classId === cls.id);
+    });
+  } else {
+    renderClassesList();
+  }
   return cls;
 }
 
@@ -5979,6 +6022,7 @@ function renderClassesList() {
   const filtered = getClasses(currentData.activeClassTypeFilter || "All");
   listEl.innerHTML = "";
 
+  const fragment = document.createDocumentFragment();
   filtered.forEach(cls => {
     const div = document.createElement("div");
     div.className = "list-item" + (cls.id === currentData.activeClassId ? " active" : "");
@@ -6001,8 +6045,9 @@ function renderClassesList() {
       </div>
     `;
     div.onclick = () => selectClass(cls.id);
-    listEl.appendChild(div);
+    fragment.appendChild(div);
   });
+  listEl.appendChild(fragment);
 }
 
 function renderClassesTab() {
@@ -6019,12 +6064,14 @@ function renderClassesTab() {
   if (monBaseSelect) {
     const prevVal = monBaseSelect.value;
     monBaseSelect.innerHTML = "";
+    const fragment = document.createDocumentFragment();
     getEnemyClasses().forEach(ec => {
       const opt = document.createElement("option");
       opt.value = ec.name;
       opt.textContent = `${ec.icon || "👹"} ${ec.name} (BP:${ec.bodyPoints} MP:${ec.mindPoints} Atk:${ec.attackDice} Def:${ec.defendDice} Move:${ec.movementSquares})`;
-      monBaseSelect.appendChild(opt);
+      fragment.appendChild(opt);
     });
+    monBaseSelect.appendChild(fragment);
     if (prevVal && Array.from(monBaseSelect.options).some(o => o.value === prevVal)) {
       monBaseSelect.value = prevVal;
     }
@@ -6038,6 +6085,7 @@ function renderClassesTab() {
   if (!gridEl) return;
 
   gridEl.innerHTML = "";
+  const fragment = document.createDocumentFragment();
   filtered.forEach(cls => {
     const card = document.createElement("div");
     card.className = "spell-card class-reference-card";
@@ -6073,8 +6121,9 @@ function renderClassesTab() {
       const monTabBtn = document.querySelector('.tab-btn[data-tab="tab-monsters"]');
       if (monTabBtn) monTabBtn.click();
     });
-    gridEl.appendChild(card);
+    fragment.appendChild(card);
   });
+  gridEl.appendChild(fragment);
 }
 
 let classControlsInitialized = false;
@@ -6275,6 +6324,7 @@ function renderMonstersList() {
     return;
   }
 
+  const fragment = document.createDocumentFragment();
   filtered.forEach(m => {
     const div = document.createElement("div");
     div.className = "list-item" + (m["@id"] === currentData.activeMonsterId ? " active" : "");
@@ -6303,8 +6353,9 @@ function renderMonstersList() {
       </div>
     `;
     div.onclick = () => selectMonster(m["@id"]);
-    container.appendChild(div);
+    fragment.appendChild(div);
   });
+  container.appendChild(fragment);
 
   if ((!currentData.activeMonsterId || !filtered.some(m => m["@id"] === currentData.activeMonsterId)) && filtered.length > 0) {
     selectMonster(filtered[0]["@id"]);
@@ -6316,8 +6367,15 @@ function selectMonster(monsterId) {
   const monster = currentData.monsters.find(m => m["@id"] === monsterId);
   if (!monster) return;
 
-  renderMonstersList();
-  renderCategoryControlsUI();
+  // In-place active toggle to avoid full list re-render
+  const items = document.querySelectorAll("#monsters-list .list-item");
+  if (items.length > 0) {
+    items.forEach(el => {
+      el.classList.toggle("active", el.dataset.monsterId === monsterId);
+    });
+  } else {
+    renderMonstersList();
+  }
   const setVal = (id, val) => {
     const el = document.getElementById(id);
     if (el) el.value = val;
@@ -6543,6 +6601,7 @@ function renderSpellsAndItems() {
     const countBadge = document.getElementById("spells-count-badge");
     if (countBadge) countBadge.textContent = `${filteredSpells.length} Spell${filteredSpells.length === 1 ? "" : "s"}`;
 
+    const fragment = document.createDocumentFragment();
     filteredSpells.forEach(s => {
       const card = document.createElement("div");
       card.className = `spell-card deck-${s.element}`;
@@ -6562,8 +6621,9 @@ function renderSpellsAndItems() {
           <span class="badge ${draftedClass}" style="font-size:0.7rem; white-space:nowrap;">${draftedBy}</span>
         </div>
       `;
-      spellsGrid.appendChild(card);
+      fragment.appendChild(card);
     });
+    spellsGrid.appendChild(fragment);
   }
 
   // 2. Weapons & Armory Grid
@@ -6574,6 +6634,7 @@ function renderSpellsAndItems() {
     const countBadge = document.getElementById("weapons-count-badge");
     if (countBadge) countBadge.textContent = `${filteredWeapons.length} Weapon${filteredWeapons.length === 1 ? "" : "s"}`;
 
+    const fragment = document.createDocumentFragment();
     filteredWeapons.forEach(item => {
       const card = document.createElement("div");
       card.className = "spell-card weapon-card";
@@ -6587,8 +6648,9 @@ function renderSpellsAndItems() {
         <div class="card-meta" style="font-weight:600; color:#93c5fd;">${escapeHtml(item.type)} • ${escapeHtml(item.dice)}</div>
         ${item.description ? `<div class="card-meta" style="flex:1; font-size:0.74rem;">${escapeHtml(item.description)}</div>` : ""}
       `;
-      itemsGrid.appendChild(card);
+      fragment.appendChild(card);
     });
+    itemsGrid.appendChild(fragment);
   }
 
   // 3. Quest Items, Relics & Satire Artifacts Grid
@@ -6599,6 +6661,7 @@ function renderSpellsAndItems() {
     const countBadge = document.getElementById("quest-items-count-badge");
     if (countBadge) countBadge.textContent = `${filteredItems.length} Item${filteredItems.length === 1 ? "" : "s"}`;
 
+    const fragment = document.createDocumentFragment();
     filteredItems.forEach(item => {
       const card = document.createElement("div");
       card.className = "spell-card quest-item-card";
@@ -6612,8 +6675,9 @@ function renderSpellsAndItems() {
         <div class="card-meta" style="font-weight:600; color:#a7f3d0;">${escapeHtml((item.type || "item").toUpperCase())} • ${escapeHtml(item.effect)}</div>
         ${item.description ? `<div class="card-meta" style="flex:1; font-size:0.74rem;">${escapeHtml(item.description)}</div>` : ""}
       `;
-      questItemsGrid.appendChild(card);
+      fragment.appendChild(card);
     });
+    questItemsGrid.appendChild(fragment);
   }
 
   // 4. Dread & Chaos Spells Grid
@@ -6624,6 +6688,7 @@ function renderSpellsAndItems() {
     const countBadge = document.getElementById("dread-spells-count-badge");
     if (countBadge) countBadge.textContent = `${filteredDread.length} Chaos Spell${filteredDread.length === 1 ? "" : "s"}`;
 
+    const fragment = document.createDocumentFragment();
     filteredDread.forEach(s => {
       const card = document.createElement("div");
       card.className = "spell-card deck-dread";
@@ -6640,8 +6705,9 @@ function renderSpellsAndItems() {
           <span class="badge" style="background:#581c87; color:#f3e8ff; border:1px solid #7e22ce; font-size:0.7rem; white-space:nowrap;">Enemy Magic</span>
         </div>
       `;
-      dreadGrid.appendChild(card);
+      fragment.appendChild(card);
     });
+    dreadGrid.appendChild(fragment);
   }
 }
 
@@ -6914,11 +6980,27 @@ async function selectQuest(index, preserveBoard = false) {
     bgSelectEl.value = q.mapConfigId;
   }
 
-  renderCampaignQuestsList();
+  // In-place active toggle for quest list if items exist; otherwise render list
+  const questItems = document.querySelectorAll("#campaign-quests-list .quest-list-item");
+  if (questItems.length === currentData.campaign.quests.length) {
+    questItems.forEach((el, idx) => {
+      el.classList.toggle("active", idx === index);
+    });
+    const headerSelect = document.getElementById("header-quest-select") || document.getElementById("cartridge-select");
+    if (headerSelect) headerSelect.value = String(index);
+  } else {
+    renderCampaignQuestsList();
+  }
+
   updateCampaignProgress();
   renderQuestHeroesReviewGrid();
-  await loadActiveQuestCartridgeInfo(q.slug || "custom-quest");
-  await refreshQuestSaveStateUI(q.slug || "custom-quest");
+
+  // Load cartridge info & active save state in parallel
+  await Promise.all([
+    loadActiveQuestCartridgeInfo(q.slug || "custom-quest"),
+    refreshQuestSaveStateUI(q.slug || "custom-quest")
+  ]);
+
   updateSummaryStats();
   drawBoard();
 }
@@ -7004,6 +7086,7 @@ function renderQuestHeroesReviewGrid() {
   if (!gridEl) return;
 
   gridEl.innerHTML = "";
+  const fragment = document.createDocumentFragment();
   const heroes = Array.isArray(currentData.heroes) ? currentData.heroes : [];
   heroes.forEach(h => {
     const heroName = getHeroName(h);
@@ -7046,8 +7129,9 @@ function renderQuestHeroesReviewGrid() {
       switchCampaignSubtab("subtab-campaign-heroes");
       selectHero(h["@id"]);
     });
-    gridEl.appendChild(card);
+    fragment.appendChild(card);
   });
+  gridEl.appendChild(fragment);
 }
 
 // 1c) Launch Tabletop Quest Map Editor (packages/tabletop-quest-editor) on custom-quest.cartridge
