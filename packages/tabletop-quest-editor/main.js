@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, dialog, clipboard } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, clipboard, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
@@ -353,31 +353,146 @@ ipcMain.handle('quest:save-cartridge', async (_event, payload) => {
   }
 });
 
-// IPC: Export JSON to File
+// IPC: Export File to Disk (Text or Binary)
 ipcMain.handle('quest:save-file-dialog', async (_event, payload) => {
   try {
-    const { content, suggestedName, title } = payload;
+    const { content, base64Data, suggestedName, title, filters } = payload;
     const result = await dialog.showSaveDialog(mainWindow, {
       title: title || 'Export Quest File',
       defaultPath: path.join(CARTRIDGES_DIR, suggestedName || 'custom-quest.json'),
-      filters: [{ name: 'JSON', extensions: ['json'] }]
+      filters: filters || [{ name: 'JSON', extensions: ['json'] }]
     });
 
     if (result.canceled || !result.filePath) {
       return { canceled: true };
     }
 
-    fs.writeFileSync(result.filePath, content, 'utf8');
+    if (base64Data) {
+      const cleanBase64 = base64Data.replace(/^data:image\/\w+;base64,/, '');
+      fs.writeFileSync(result.filePath, Buffer.from(cleanBase64, 'base64'));
+    } else {
+      fs.writeFileSync(result.filePath, content || '', 'utf8');
+    }
     return { success: true, filePath: result.filePath, fileName: path.basename(result.filePath) };
   } catch (err) {
     return { success: false, error: err.message };
   }
 });
 
-// IPC: Copy to Clipboard
+// IPC: Export Quest Map Image (PNG)
+ipcMain.handle('quest:save-png', async (_event, payload) => {
+  try {
+    const rawData = payload.base64Data || payload.dataUrl || '';
+    if (!rawData) {
+      return { success: false, error: 'No image data provided for PNG export' };
+    }
+
+    const { suggestedName, title } = payload;
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: title || 'Export Quest Map Image (PNG)',
+      defaultPath: path.join(CARTRIDGES_DIR, suggestedName || 'quest-map.png'),
+      filters: [{ name: 'PNG Image', extensions: ['png'] }]
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { canceled: true };
+    }
+
+    const cleanBase64 = rawData.replace(/^data:image\/\w+;base64,/, '');
+    fs.writeFileSync(result.filePath, Buffer.from(cleanBase64, 'base64'));
+    return { success: true, filePath: result.filePath, fileName: path.basename(result.filePath) };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+// IPC: Export Printable Quest Sheet (PDF) via Electron printToPDF
+ipcMain.handle('quest:export-pdf', async (_event, payload) => {
+  let printWin = null;
+  let tempFile = null;
+  try {
+    const { html, suggestedName, landscape, pageSize } = payload;
+    if (!html) {
+      return { success: false, error: 'No HTML content provided for PDF export' };
+    }
+
+    // 1. Prompt Save Dialog first so user can choose destination or cancel before rendering
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: 'Export Quest Sheet Document (PDF)',
+      defaultPath: path.join(CARTRIDGES_DIR, suggestedName || 'quest-sheet.pdf'),
+      filters: [{ name: 'PDF Document', extensions: ['pdf'] }]
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { canceled: true };
+    }
+
+    // 2. Write HTML to temporary file to avoid ERR_INVALID_URL from large base64 data URLs
+    tempFile = path.join(app.getPath('temp'), `robos-quest-sheet-${Date.now()}-${Math.random().toString(36).slice(2)}.html`);
+    fs.writeFileSync(tempFile, html, 'utf8');
+
+    // 3. Render HTML in invisible BrowserWindow
+    printWin = new BrowserWindow({
+      show: false,
+      width: landscape !== false ? 1400 : 950,
+      height: landscape !== false ? 950 : 1400,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true
+      }
+    });
+
+    await printWin.loadFile(tempFile);
+
+    // Allow time for images, CSS fonts, and layout to finish rendering
+    await new Promise(r => setTimeout(r, 350));
+
+    const pdfBuffer = await printWin.webContents.printToPDF({
+      printBackground: true,
+      landscape: landscape !== false,
+      pageSize: pageSize || 'A4',
+      margins: {
+        marginType: 'none'
+      }
+    });
+
+    printWin.close();
+    printWin = null;
+
+    fs.writeFileSync(result.filePath, pdfBuffer);
+    return { success: true, filePath: result.filePath, fileName: path.basename(result.filePath) };
+  } catch (err) {
+    return { success: false, error: err.message };
+  } finally {
+    if (printWin) {
+      try { printWin.close(); } catch (_) {}
+    }
+    if (tempFile) {
+      try {
+        if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+      } catch (_) {}
+    }
+  }
+});
+
+// IPC: Copy Text to Clipboard
 ipcMain.handle('quest:copy-to-clipboard', async (_event, text) => {
   clipboard.writeText(text || '');
   return { success: true };
+});
+
+// IPC: Copy Image to System Clipboard
+ipcMain.handle('quest:copy-image-to-clipboard', async (_event, base64Data) => {
+  try {
+    const cleanBase64 = base64Data.startsWith('data:')
+      ? base64Data
+      : `data:image/png;base64,${base64Data}`;
+    const img = nativeImage.createFromDataURL(cleanBase64);
+    clipboard.writeImage(img);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 });
 
 // IPC: Load Asset Sprite / Texture as Data URL

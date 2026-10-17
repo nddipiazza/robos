@@ -238,6 +238,8 @@ const dom = (typeof document !== 'undefined') ? {
   btnOpenBlockmap: document.getElementById('btn-open-blockmap'),
   btnOpenCartridge: document.getElementById('btn-open-cartridge'),
   btnSaveCartridge: document.getElementById('btn-save-cartridge'),
+  btnExportPng: document.getElementById('btn-export-png'),
+  btnExportPdf: document.getElementById('btn-export-pdf'),
   btnExportJson: document.getElementById('btn-export-json'),
   btnCopyJson: document.getElementById('btn-copy-json'),
   btnTestPlay: document.getElementById('btn-test-play'),
@@ -402,6 +404,32 @@ const dom = (typeof document !== 'undefined') ? {
   // Voice Dictation Controls
   btnVoiceAddItems: document.getElementById('btn-voice-add-items'),
 
+  // Export Modals (PNG / PDF)
+  exportPngModal: document.getElementById('export-png-modal'),
+  btnCloseExportPngModal: document.getElementById('btn-close-export-png-modal'),
+  btnCancelExportPng: document.getElementById('btn-cancel-export-png'),
+  btnConfirmSavePng: document.getElementById('btn-confirm-save-png'),
+  btnCopyPngClipboard: document.getElementById('btn-copy-png-clipboard'),
+  exportPngPreview: document.getElementById('export-png-preview'),
+  exportPngDimensionsBadge: document.getElementById('export-png-dimensions-badge'),
+  chkExportGrid: document.getElementById('chk-export-grid'),
+  chkExportNames: document.getElementById('chk-export-names'),
+  chkExportArtwork: document.getElementById('chk-export-artwork'),
+  chkExportBanner: document.getElementById('chk-export-banner'),
+  radioExportPngScale: document.querySelectorAll('input[name="export-png-scale"]'),
+
+  exportPdfModal: document.getElementById('export-pdf-modal'),
+  btnCloseExportPdfModal: document.getElementById('btn-close-export-pdf-modal'),
+  btnCancelExportPdf: document.getElementById('btn-cancel-export-pdf'),
+  btnConfirmSavePdf: document.getElementById('btn-confirm-save-pdf'),
+  selectPdfPageSize: document.getElementById('select-pdf-page-size'),
+  chkPdfHeader: document.getElementById('chk-pdf-header'),
+  chkPdfMap: document.getElementById('chk-pdf-map'),
+  chkPdfNotes: document.getElementById('chk-pdf-notes'),
+  chkPdfRoster: document.getElementById('chk-pdf-roster'),
+  chkPdfFurniture: document.getElementById('chk-pdf-furniture'),
+  radioExportPdfOrientation: document.querySelectorAll('input[name="export-pdf-orientation"]'),
+
   // Toast Container
   toastContainer: document.getElementById('toast-container')
 } : {};
@@ -417,13 +445,22 @@ function showToast(message, type = 'info') {
   if (typeof document === 'undefined' || !dom.toastContainer) return;
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
+  toast.style.cursor = 'pointer';
+  toast.title = 'Click to dismiss';
   toast.innerHTML = `<span>${message}</span>`;
-  dom.toastContainer.appendChild(toast);
-  setTimeout(() => {
+  toast.addEventListener('click', () => {
     toast.style.opacity = '0';
-    toast.style.transition = 'opacity 0.3s ease';
-    setTimeout(() => toast.remove(), 300);
-  }, 3200);
+    setTimeout(() => toast.remove(), 250);
+  });
+  dom.toastContainer.appendChild(toast);
+  const duration = type === 'error' ? 7000 : 3500;
+  setTimeout(() => {
+    if (toast.parentNode) {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s ease';
+      setTimeout(() => toast.remove(), 300);
+    }
+  }, duration);
 }
 
 // -------------------------------------------------------------
@@ -635,6 +672,7 @@ async function loadBlockmap(slugOrPath) {
     if (dom.selectBlockmap) {
       dom.selectBlockmap.value = state.blockmap.id || slugOrPath;
     }
+    const dims = state.blockmap.gridDimensions || [26, 19];
     if (dom.infoBlockmapName) dom.infoBlockmapName.textContent = state.blockmap.title || state.blockmap.id || 'Custom Dungeon';
     if (dom.infoGridSize) dom.infoGridSize.textContent = `${dims[0]} × ${dims[1]}`;
 
@@ -688,6 +726,7 @@ async function loadCartridge(slugOrPath) {
       if (dom.selectExitStairType) dom.selectExitStairType.value = state.quest.exitStairType;
       state.quest.doors = (mapData.doors || []).map((d, i) => ({
         id: d.id || `door-${i+1}`,
+        name: d.name || d.id || (d.is_secret ? `Secret Door ${i+1}` : `Door ${i+1}`),
         from: d.from || [0, 0],
         to: d.to || [0, 1],
         state: d.state || 'closed',
@@ -956,6 +995,7 @@ function buildCartridgePayload() {
         corridors: bm.corridors || [],
         doors: q.doors.map(d => ({
           id: d.id,
+          name: d.name || d.id,
           from: [d.from[0], d.from[1]],
           to: [d.to[0], d.to[1]],
           state: d.state || 'closed',
@@ -1084,6 +1124,1187 @@ async function copyJson() {
     showToast('Copied Quest JSON to clipboard!', 'success');
   } catch (err) {
     showToast(`Copy error: ${err.message}`, 'error');
+  }
+}
+
+// -------------------------------------------------------------
+// Quest Map PNG & PDF Export Engine
+// -------------------------------------------------------------
+
+/**
+ * Determine if a trigger represents the special opening / starting action of a quest.
+ */
+function isStartingQuestAction(trigger, quest, blockmap) {
+  if (!trigger) return false;
+
+  // Explicit flag
+  if (trigger.isIntro || trigger.isStartingAction) return true;
+
+  // Game start / Quest start events
+  if (trigger.event === 'on_game_start' || trigger.event === 'on_quest_start') return true;
+
+  // Intro movie action
+  const hasIntroMovie = trigger.actions && trigger.actions.some(a =>
+    (a.moviePath && a.moviePath.toLowerCase().includes('intro')) ||
+    (a.title && a.title.toLowerCase().includes('intro'))
+  );
+  if (hasIntroMovie) return true;
+
+  // Title / name containing intro or prologue
+  const titleLower = (trigger.title || trigger.name || '').toLowerCase();
+  if (titleLower.includes('prologue') || titleLower.includes('intro cinematic') || titleLower.includes('quest intro')) {
+    return true;
+  }
+
+  // Positioned at tile [0,0] with narrative or movie/dialogue actions (not a playable room/corridor)
+  if (trigger.tile && trigger.tile[0] === 0 && trigger.tile[1] === 0) {
+    if (trigger.narrative || (trigger.actions && trigger.actions.length > 0)) {
+      return true;
+    }
+  }
+
+  // Trigger placed on the quest's starting position / starting stair that is an intro/mentor narrative
+  if (quest && quest.startingStair && trigger.tile &&
+      trigger.tile[0] === quest.startingStair[0] && trigger.tile[1] === quest.startingStair[1] &&
+      (titleLower.includes('intro') || titleLower.includes('start') || (trigger.narrative && trigger.narrative.toLowerCase().includes('mentor speaks')))) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Iterates through quest triggers, extracts the starting quest intro action,
+ * and resolves each remaining map trigger to its relevant entity (room, monster, door, furniture, or tile)
+ * with a distinct letter indicator (A, B, C...).
+ */
+function resolveTriggerIndicators(quest, blockmap, geomOverride) {
+  quest = quest || state.quest || {};
+  blockmap = blockmap || state.blockmap || {};
+  const geom = geomOverride || (typeof getGridGeometry === 'function' ? getGridGeometry() : { tileSize: 39, offsetX: 0, offsetY: 0, cols: 26, rows: 19 });
+  const triggers = (quest.triggers || quest.storyTriggers || []).slice();
+
+  let startingAction = null;
+  const mapTriggers = [];
+
+  for (let i = 0; i < triggers.length; i++) {
+    const t = triggers[i];
+    if (!startingAction && isStartingQuestAction(t, quest, blockmap)) {
+      startingAction = t;
+    } else {
+      mapTriggers.push({ trigger: t, originalIndex: i });
+    }
+  }
+
+  // Check if markers already have unique distinct letter markers
+  const existingMarkers = mapTriggers.map(item => (item.trigger.marker || '').trim().replace(/^Note\s*/i, ''));
+  const hasDistinctLetters = existingMarkers.length > 0 &&
+    new Set(existingMarkers).size === existingMarkers.length &&
+    existingMarkers.every(m => m.length > 0 && m !== 'A');
+
+  const indicators = [];
+  for (let idx = 0; idx < mapTriggers.length; idx++) {
+    const { trigger: st, originalIndex } = mapTriggers[idx];
+    const letter = hasDistinctLetters
+      ? existingMarkers[idx]
+      : String.fromCharCode(65 + idx); // A, B, C...
+
+    let targetType = 'tile';
+    let targetEntity = null;
+    let targetPos = null;
+    let targetLabel = '';
+
+    // Check Monster / Person target
+    if (st.event === 'on_monster_killed' || st.event === 'on_monster_defeated' || st.monsterId || (st.target && (st.target.startsWith('mon-') || (quest.monsters || []).some(m => m.id === st.target || m.type === st.target || m.name === st.target)))) {
+      let mon = null;
+      if (st.monsterId || st.target) {
+        mon = (quest.monsters || []).find(m =>
+          m.id === st.monsterId ||
+          m.id === st.target ||
+          m.type === st.target ||
+          (m.name && m.name.toLowerCase() === (st.target || '').toLowerCase())
+        );
+      }
+      if (!mon && st.tile) {
+        mon = (quest.monsters || []).find(m =>
+          (m.pos && m.pos[0] === st.tile[0] && m.pos[1] === st.tile[1]) ||
+          (m.x === st.tile[0] && m.y === st.tile[1])
+        );
+      }
+      if (mon) {
+        targetType = 'monster';
+        targetEntity = mon;
+        const mc = mon.pos ? mon.pos[0] : (mon.x !== undefined ? mon.x : 0);
+        const mr = mon.pos ? mon.pos[1] : (mon.y !== undefined ? mon.y : 0);
+        targetPos = { col: mc, row: mr };
+        const def = MONSTER_DEFS[mon.type];
+        targetLabel = `Monster: ${mon.name || def?.name || mon.type || 'Monster'}${mon.isBoss ? ' (Boss)' : ''}`;
+      }
+    }
+
+    // Check Door target
+    if (!targetEntity && (st.event === 'on_door_opened' || st.doorId || (st.target && (st.target.startsWith('door-') || (quest.doors || []).some(d => d.id === st.target || d.name === st.target))))) {
+      let door = null;
+      if (st.doorId || st.target) {
+        door = (quest.doors || []).find(d => d.id === st.doorId || d.id === st.target || d.name === st.target);
+      }
+      if (!door && st.tile) {
+        door = (quest.doors || []).find(d =>
+          (d.from[0] === st.tile[0] && d.from[1] === st.tile[1]) ||
+          (d.to[0] === st.tile[0] && d.to[1] === st.tile[1])
+        );
+      }
+      if (door) {
+        targetType = 'door';
+        targetEntity = door;
+        const isVertical = door.from[0] !== door.to[0];
+        const dc = isVertical ? Math.max(door.from[0], door.to[0]) : door.from[0];
+        const dr = isVertical ? door.from[1] : Math.max(door.from[1], door.to[1]);
+        targetPos = { col: dc, row: dr, isVertical, door };
+        targetLabel = `Door: ${door.name || door.id || 'Door'}${door.is_secret ? ' (Secret)' : ''}`;
+      }
+    }
+
+    // Check Furniture target
+    if (!targetEntity && (st.event === 'on_furniture_searched' || st.furnitureId || (st.target && (st.target.startsWith('furn-') || (quest.furniture || []).some(f => f.id === st.target || f.name === st.target || f.type === st.target))))) {
+      const furn = (quest.furniture || []).find(f => f.id === st.furnitureId || f.id === st.target || f.name === st.target || f.type === st.target);
+      if (furn) {
+        targetType = 'furniture';
+        targetEntity = furn;
+        targetPos = { col: furn.x + (furn.width || 1) / 2, row: furn.y + (furn.height || 1) / 2, furn };
+        const def = FURNITURE_DEFS[furn.type];
+        targetLabel = `Furniture: ${furn.name || def?.name || furn.type || 'Furniture'}`;
+      }
+    }
+
+    // Check Room target
+    if (!targetEntity && (st.event === 'on_room_entered' || st.event === 'on_room_searched_treasure' || st.event === 'on_room_searched_traps' || st.room || (st.target && (st.target.startsWith('room-') || (blockmap.rooms || []).some(r => r.id === st.target || r.name === st.target))))) {
+      let room = null;
+      const targetRoomId = st.room || st.target;
+      if (targetRoomId) {
+        room = (blockmap.rooms || []).find(r => r.id === targetRoomId || r.name === targetRoomId);
+      }
+      if (!room && st.tile) {
+        room = (blockmap.rooms || []).find(r =>
+          (r.tiles && r.tiles.some(t => t[0] === st.tile[0] && t[1] === st.tile[1])) ||
+          (st.tile[0] >= r.x && st.tile[0] < r.x + r.w && st.tile[1] >= r.y && st.tile[1] < r.y + r.h)
+        );
+      }
+      if (room) {
+        targetType = 'room';
+        targetEntity = room;
+        let centerTileX = 0, centerTileY = 0;
+        if (room.tiles && room.tiles.length > 0) {
+          let minC = Infinity, maxC = -Infinity, minR = Infinity, maxR = -Infinity;
+          for (const [c, r] of room.tiles) {
+            if (c < minC) minC = c;
+            if (c > maxC) maxC = c;
+            if (r < minR) minR = r;
+            if (r > maxR) maxR = r;
+          }
+          centerTileX = (minC + maxC + 1) / 2;
+          centerTileY = (minR + maxR + 1) / 2;
+        } else if (room.x !== undefined && room.y !== undefined && room.w && room.h) {
+          centerTileX = room.x + room.w / 2;
+          centerTileY = room.y + room.h / 2;
+        }
+        targetPos = { col: centerTileX, row: centerTileY, room };
+        targetLabel = `Room: ${room.name || room.id || 'Room'}`;
+      }
+    }
+
+    // Fallback: Tile (e.g. on_tile_stepped_on or explicit tile)
+    if (!targetEntity) {
+      if (st.tile && (st.tile[0] !== 0 || st.tile[1] !== 0 || st.event === 'on_tile_stepped_on')) {
+        targetType = 'tile';
+        targetPos = { col: st.tile[0], row: st.tile[1] };
+        targetLabel = `Tile [${st.tile[0]}, ${st.tile[1]}]`;
+      } else if (st.room) {
+        const room = (blockmap.rooms || []).find(r => r.id === st.room);
+        if (room) {
+          targetType = 'room';
+          targetEntity = room;
+          targetPos = { col: (room.x || 0) + (room.w || 1) / 2, row: (room.y || 0) + (room.h || 1) / 2, room };
+          targetLabel = `Room: ${room.name || room.id}`;
+        }
+      }
+    }
+
+    if (!targetPos) {
+      targetPos = { col: st.tile ? st.tile[0] : 0, row: st.tile ? st.tile[1] : 0 };
+      targetLabel = `Tile [${targetPos.col}, ${targetPos.row}]`;
+    }
+
+    indicators.push({
+      trigger: st,
+      originalIndex,
+      letter,
+      marker: `Note ${letter}`,
+      targetType,
+      targetEntity,
+      targetPos,
+      targetLabel
+    });
+  }
+
+  return {
+    startingAction,
+    indicators
+  };
+}
+
+/**
+ * Render a crisp, classic HeroQuest-style letter indicator onto the export canvas.
+ */
+function drawExportTriggerIndicator(ctx, geom, ind, options = {}) {
+  ctx.save();
+  const { targetType, targetPos, letter } = ind;
+  const ts = geom.tileSize;
+
+  if (targetType === 'monster') {
+    // Pinned to the top-right corner of the monster token
+    const mpos = tileToWorld(targetPos.col, targetPos.row, geom);
+    const cx = Math.round(mpos.x + ts - 5);
+    const cy = Math.round(mpos.y + 5);
+    const r = 8.5;
+
+    // Drop shadow
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 1;
+
+    // Outer crimson rimmed parchment pin
+    ctx.fillStyle = '#fef3c7'; // parchment
+    ctx.strokeStyle = '#b91c1c'; // crimson seal border
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.stroke();
+
+    // Inner fine ring
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r - 2, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Letter
+    ctx.fillStyle = '#7f1d1d';
+    ctx.font = 'bold 10px Cinzel, serif, Georgia, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(letter, cx, cy);
+
+  } else if (targetType === 'door') {
+    // Pinned beside / on the door
+    const basePos = tileToWorld(targetPos.col, targetPos.row, geom);
+    let cx = targetPos.isVertical ? basePos.x : basePos.x + ts / 2;
+    let cy = targetPos.isVertical ? basePos.y + ts / 2 : basePos.y;
+    // Offset slightly into the adjacent corridor / room so the door remains visible
+    if (targetPos.isVertical) cx += 9; else cy += 9;
+    const r = 8.5;
+
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 1;
+
+    ctx.fillStyle = '#fef3c7';
+    ctx.strokeStyle = '#b45309'; // warm amber brass border
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.stroke();
+
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r - 2, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#78350f';
+    ctx.font = 'bold 10px Cinzel, serif, Georgia, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(letter, cx, cy);
+
+  } else if (targetType === 'room') {
+    // Room emblem
+    const cx = Math.round(geom.offsetX + targetPos.col * ts);
+    let cy = Math.round(geom.offsetY + targetPos.row * ts);
+    // If room names are enabled, displace slightly vertically so both room name and note letter are distinct
+    if (options.showRoomNames !== false) {
+      cy -= 13;
+    }
+    const r = 11;
+
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+    ctx.shadowBlur = 5;
+    ctx.shadowOffsetY = 1.5;
+
+    // Classic HeroQuest Quest Book parchment seal
+    ctx.fillStyle = '#fef3c7';
+    ctx.strokeStyle = '#78350f'; // dark oak wood/leather border
+    ctx.lineWidth = 2.0;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.stroke();
+
+    // Inner gold ring
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r - 2.5, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#451a03';
+    ctx.font = 'bold 12px Cinzel, serif, Georgia, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(letter, cx, cy);
+
+  } else if (targetType === 'furniture') {
+    // Pinned to furniture
+    const cx = Math.round(geom.offsetX + targetPos.col * ts);
+    const cy = Math.round(geom.offsetY + targetPos.row * ts);
+    const r = 8.5;
+
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 1;
+
+    ctx.fillStyle = '#fef3c7';
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.stroke();
+
+    ctx.fillStyle = '#78350f';
+    ctx.font = 'bold 10px Cinzel, serif, Georgia, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(letter, cx, cy);
+
+  } else {
+    // Tile (e.g. corridor or floor tile)
+    const tpos = tileToWorld(targetPos.col, targetPos.row, geom);
+    const cx = Math.round(tpos.x + ts / 2);
+    const cy = Math.round(tpos.y + ts / 2);
+    const r = 9;
+
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 1;
+
+    ctx.fillStyle = '#fef3c7';
+    ctx.strokeStyle = '#0284c7'; // sapphire blue border
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.stroke();
+
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r - 2, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#0369a1';
+    ctx.font = 'bold 10px Cinzel, serif, Georgia, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(letter, cx, cy);
+  }
+
+  ctx.restore();
+}
+
+function generateExportCanvas(options = {}) {
+  const scale = Number(options.scale) || 1;
+  const showBanner = Boolean(options.showBanner);
+  const showArtwork = options.showArtwork !== undefined ? Boolean(options.showArtwork) : true;
+  const showGrid = options.showGrid !== undefined ? Boolean(options.showGrid) : true;
+  const showRoomNames = options.showRoomNames !== undefined ? Boolean(options.showRoomNames) : true;
+  const quest = options.quest || state.quest || {};
+  const blockmap = options.blockmap || state.blockmap || {};
+  const bgImg = options.bgImage !== undefined ? options.bgImage : state.bgImage;
+
+  const geom = getGridGeometry();
+  const maxC = geom.hasAdditionalBorder ? geom.cols + 1 : geom.cols;
+  const maxR = geom.hasAdditionalBorder ? geom.rows + 1 : geom.rows;
+
+  let baseWidth = geom.offsetX + maxC * geom.tileSize + 20;
+  let baseHeight = geom.offsetY + maxR * geom.tileSize + 20;
+
+  if (bgImg && bgImg.width && bgImg.height && showArtwork) {
+    baseWidth = Math.max(baseWidth, bgImg.width);
+    baseHeight = Math.max(baseHeight, bgImg.height);
+  }
+
+  const bannerHeight = showBanner ? 56 : 0;
+  const canvasW = Math.round(baseWidth * scale);
+  const canvasH = Math.round((baseHeight + bannerHeight) * scale);
+
+  let canvas;
+  if (typeof document !== 'undefined' && document.createElement) {
+    canvas = document.createElement('canvas');
+  } else {
+    // Mock canvas for headless test runner
+    canvas = {
+      width: canvasW,
+      height: canvasH,
+      getContext: () => ({
+        save: () => {},
+        restore: () => {},
+        fillRect: () => {},
+        strokeRect: () => {},
+        beginPath: () => {},
+        moveTo: () => {},
+        lineTo: () => {},
+        stroke: () => {},
+        fill: () => {},
+        fillText: () => {},
+        translate: () => {},
+        scale: () => {},
+        drawImage: () => {}
+      }),
+      toDataURL: () => 'data:image/png;base64,mockPngData'
+    };
+    return canvas;
+  }
+
+  canvas.width = canvasW;
+  canvas.height = canvasH;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+
+  // Background fill (deep dungeon navy)
+  ctx.fillStyle = '#070b14';
+  ctx.fillRect(0, 0, canvasW, canvasH);
+
+  // Optional Title Banner
+  if (showBanner) {
+    ctx.save();
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, canvasW, Math.round(bannerHeight * scale));
+    ctx.strokeStyle = '#00bcd4';
+    ctx.lineWidth = Math.max(1.5, Math.round(2 * scale));
+    ctx.beginPath();
+    ctx.moveTo(0, Math.round(bannerHeight * scale));
+    ctx.lineTo(canvasW, Math.round(bannerHeight * scale));
+    ctx.stroke();
+
+    // Quest Title
+    ctx.font = `bold ${Math.round(20 * scale)}px Cinzel, serif, Georgia, sans-serif`;
+    ctx.fillStyle = '#f8fafc';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    const title = quest.title || 'Tabletop Quest Map';
+    ctx.fillText(title, Math.round(24 * scale), Math.round((bannerHeight / 2) * scale));
+
+    // Right subtitle info
+    ctx.font = `500 ${Math.round(11 * scale)}px system-ui, -apple-system, sans-serif`;
+    ctx.fillStyle = '#94a3b8';
+    ctx.textAlign = 'right';
+    const subText = `${geom.cols}×${geom.rows} Grid • Generated by RobOS Tabletop Quest Editor`;
+    ctx.fillText(subText, canvasW - Math.round(24 * scale), Math.round((bannerHeight / 2) * scale));
+    ctx.restore();
+  }
+
+  // Draw Map Board Layers
+  ctx.save();
+  if (showBanner) {
+    ctx.translate(0, Math.round(bannerHeight * scale));
+  }
+  ctx.scale(scale, scale);
+
+  drawBoardLayers(ctx, geom, {
+    forExport: true,
+    showImage: showArtwork,
+    showGrid: showGrid,
+    showRoomNames: showRoomNames,
+    showCorridors: options.showCorridors !== undefined ? options.showCorridors : true,
+    showRooms: options.showRooms !== undefined ? options.showRooms : true,
+    showWallBlocks: options.showWallBlocks !== undefined ? options.showWallBlocks : true,
+    showTraps: options.showTraps !== undefined ? options.showTraps : true,
+    showFurniture: options.showFurniture !== undefined ? options.showFurniture : true,
+    showDoors: options.showDoors !== undefined ? options.showDoors : true,
+    showMonsters: options.showMonsters !== undefined ? options.showMonsters : true,
+    showNotes: options.showNotes !== undefined ? options.showNotes : true,
+    quest,
+    blockmap
+  });
+
+  ctx.restore();
+  return canvas;
+}
+
+function openExportPngModal() {
+  if (!dom.exportPngModal) return;
+  dom.exportPngModal.style.display = 'flex';
+  updateExportPngPreview();
+}
+
+function closeExportPngModal() {
+  if (!dom.exportPngModal) return;
+  dom.exportPngModal.style.display = 'none';
+}
+
+function updateExportPngPreview() {
+  if (!dom.exportPngModal) return;
+  let scale = 1;
+  if (dom.radioExportPngScale) {
+    for (const radio of dom.radioExportPngScale) {
+      if (radio.checked) {
+        scale = parseInt(radio.value, 10) || 1;
+        break;
+      }
+    }
+  }
+  const showGrid = dom.chkExportGrid ? dom.chkExportGrid.checked : true;
+  const showRoomNames = dom.chkExportNames ? dom.chkExportNames.checked : true;
+  const showArtwork = dom.chkExportArtwork ? dom.chkExportArtwork.checked : true;
+  const showBanner = dom.chkExportBanner ? dom.chkExportBanner.checked : false;
+
+  const canvas = generateExportCanvas({ scale, showGrid, showRoomNames, showArtwork, showBanner });
+  if (dom.exportPngPreview && canvas.toDataURL) {
+    dom.exportPngPreview.src = canvas.toDataURL('image/png');
+  }
+  if (dom.exportPngDimensionsBadge) {
+    dom.exportPngDimensionsBadge.textContent = `${canvas.width} × ${canvas.height} px (${scale}×)`;
+  }
+}
+
+async function exportPng(customOptions = {}) {
+  const origBtnText = dom.btnConfirmSavePng ? dom.btnConfirmSavePng.textContent : '';
+  try {
+    if (dom.btnConfirmSavePng) {
+      dom.btnConfirmSavePng.disabled = true;
+      dom.btnConfirmSavePng.textContent = '⏳ Saving PNG...';
+    }
+    let scale = customOptions.scale || 1;
+    let showGrid = customOptions.showGrid !== undefined ? customOptions.showGrid : true;
+    let showRoomNames = customOptions.showRoomNames !== undefined ? customOptions.showRoomNames : true;
+    let showArtwork = customOptions.showArtwork !== undefined ? customOptions.showArtwork : true;
+    let showBanner = customOptions.showBanner !== undefined ? customOptions.showBanner : false;
+
+    if (!customOptions.scale && dom.radioExportPngScale) {
+      for (const radio of dom.radioExportPngScale) {
+        if (radio.checked) {
+          scale = parseInt(radio.value, 10) || 1;
+          break;
+        }
+      }
+    }
+    if (customOptions.showGrid === undefined && dom.chkExportGrid) {
+      showGrid = dom.chkExportGrid.checked;
+    }
+    if (customOptions.showRoomNames === undefined && dom.chkExportNames) {
+      showRoomNames = dom.chkExportNames.checked;
+    }
+    if (customOptions.showArtwork === undefined && dom.chkExportArtwork) {
+      showArtwork = dom.chkExportArtwork.checked;
+    }
+    if (customOptions.showBanner === undefined && dom.chkExportBanner) {
+      showBanner = dom.chkExportBanner.checked;
+    }
+
+    const canvas = generateExportCanvas({ scale, showGrid, showRoomNames, showArtwork, showBanner });
+    const dataUrl = canvas.toDataURL ? canvas.toDataURL('image/png') : '';
+
+    if (!window.robosQuestEditor || !window.robosQuestEditor.savePng) {
+      closeExportPngModal();
+      return { success: true, dataUrl, width: canvas.width, height: canvas.height };
+    }
+
+    const defaultName = `${state.quest.slug || 'tabletop-quest'}-map-${scale}x.png`;
+    const res = await window.robosQuestEditor.savePng({ dataUrl, defaultName });
+    if (res && res.success) {
+      showToast(`Exported PNG map: ${res.fileName}`, 'success');
+      closeExportPngModal();
+    } else if (res && res.canceled) {
+      // User canceled save dialog
+    } else if (res && res.error) {
+      showToast(`Export PNG failed: ${res.error}`, 'error');
+    }
+    return res;
+  } catch (err) {
+    showToast(`Export PNG error: ${err.message}`, 'error');
+    return { success: false, error: err.message };
+  } finally {
+    if (dom.btnConfirmSavePng) {
+      dom.btnConfirmSavePng.disabled = false;
+      dom.btnConfirmSavePng.textContent = origBtnText || '💾 Save PNG File...';
+    }
+  }
+}
+
+async function copyPngToClipboard(customOptions = {}) {
+  try {
+    let scale = customOptions.scale || 1;
+    if (!customOptions.scale && dom.radioExportPngScale) {
+      for (const radio of dom.radioExportPngScale) {
+        if (radio.checked) {
+          scale = parseInt(radio.value, 10) || 1;
+          break;
+        }
+      }
+    }
+    const showGrid = customOptions.showGrid !== undefined ? customOptions.showGrid : (dom.chkExportGrid ? dom.chkExportGrid.checked : true);
+    const showRoomNames = customOptions.showRoomNames !== undefined ? customOptions.showRoomNames : (dom.chkExportNames ? dom.chkExportNames.checked : true);
+    const showArtwork = customOptions.showArtwork !== undefined ? customOptions.showArtwork : (dom.chkExportArtwork ? dom.chkExportArtwork.checked : true);
+    const showBanner = customOptions.showBanner !== undefined ? customOptions.showBanner : (dom.chkExportBanner ? dom.chkExportBanner.checked : false);
+
+    const canvas = generateExportCanvas({ scale, showGrid, showRoomNames, showArtwork, showBanner });
+    const dataUrl = canvas.toDataURL ? canvas.toDataURL('image/png') : '';
+
+    if (window.robosQuestEditor && window.robosQuestEditor.copyImageToClipboard) {
+      const res = await window.robosQuestEditor.copyImageToClipboard(dataUrl);
+      if (res && res.success) {
+        showToast('Copied high-res map image to clipboard!', 'success');
+        closeExportPngModal();
+      } else {
+        showToast(`Failed to copy image: ${res?.error || 'Unknown error'}`, 'error');
+      }
+      return res;
+    } else {
+      showToast('Clipboard copy not available in this environment', 'info');
+      closeExportPngModal();
+      return { success: false };
+    }
+  } catch (err) {
+    showToast(`Clipboard error: ${err.message}`, 'error');
+    return { success: false, error: err.message };
+  }
+}
+
+function openExportPdfModal() {
+  if (!dom.exportPdfModal) return;
+  dom.exportPdfModal.style.display = 'flex';
+}
+
+function closeExportPdfModal() {
+  if (!dom.exportPdfModal) return;
+  dom.exportPdfModal.style.display = 'none';
+}
+
+function generateQuestPdfHtml(quest, blockmap, mapDataUrl, options = {}) {
+  quest = quest || state.quest || {};
+  blockmap = blockmap || state.blockmap || {};
+  const orientation = options.orientation === 'portrait' ? 'portrait' : 'landscape';
+  const pageSize = options.pageSize === 'Letter' ? 'letter' : 'a4';
+  const includeHeader = options.includeHeader !== false;
+  const includeMap = options.includeMap !== false && !!mapDataUrl;
+  const includeNotes = options.includeNotes !== false;
+  const includeRoster = options.includeRoster !== false;
+  const includeFurniture = options.includeFurniture !== false;
+
+  // Aggregate monsters
+  const monsters = quest.monsters || [];
+  const monsterCounts = {};
+  monsters.forEach(m => {
+    const type = m.type || 'goblin';
+    if (!monsterCounts[type]) {
+      const def = MONSTER_DEFS[type] || { name: type, move: 6, attack: 2, defend: 2, body: 1, mind: 1, icon: '👾' };
+      monsterCounts[type] = {
+        name: def.name || type,
+        icon: def.icon || '👾',
+        count: 0,
+        move: def.move || 6,
+        attack: def.attack || 2,
+        defend: def.defend || 2,
+        body: def.body || 1,
+        mind: def.mind || 1,
+        bossCount: 0
+      };
+    }
+    monsterCounts[type].count++;
+    if (m.isBoss) monsterCounts[type].bossCount++;
+  });
+
+  // Aggregate furniture
+  const furniture = quest.furniture || [];
+  const furnCounts = {};
+  furniture.forEach(f => {
+    const type = f.type || 'chest';
+    const def = FURNITURE_DEFS[type] || { name: type, icon: '🪑' };
+    if (!furnCounts[type]) {
+      furnCounts[type] = { name: def.name || type, icon: def.icon || '🪑', count: 0 };
+    }
+    furnCounts[type].count++;
+  });
+
+  // Aggregate traps
+  const traps = quest.traps || [];
+  const trapCounts = {};
+  traps.forEach(t => {
+    const type = t.type || 'pit';
+    trapCounts[type] = (trapCounts[type] || 0) + 1;
+  });
+
+  // Story triggers / notes & starting quest action
+  const { startingAction, indicators } = resolveTriggerIndicators(quest, blockmap);
+  const notes = indicators;
+
+  const title = quest.title || 'Tabletop Quest Map';
+  const briefing = quest.briefing || quest.description || quest.header?.description || '';
+  const wanderingMonster = quest.wanderingMonster ? (MONSTER_DEFS[quest.wanderingMonster]?.name || quest.wanderingMonster) : 'None';
+  const goldBounty = quest.goldBounty !== undefined ? quest.goldBounty : 0;
+  const startLoc = quest.startingStair ? `[${quest.startingStair[0]}, ${quest.startingStair[1]}]` : 'Not set';
+  const exitLoc = quest.exitTile ? `[${quest.exitTile[0]}, ${quest.exitTile[1]}]` : (quest.startingStair ? `${startLoc} (Return to Entrance)` : 'None');
+
+  // Starting quest action displayed as intro text alongside quest briefing
+  let introHtml = '';
+  if (briefing) {
+    introHtml += `<div class="story-briefing-text">${escapeHtml(briefing).replace(/\n/g, '<br>')}</div>`;
+  }
+  if (startingAction) {
+    const startNarrative = startingAction.narrative;
+    if (startNarrative && startNarrative.trim() && startNarrative.trim() !== briefing.trim()) {
+      introHtml += `<div class="story-starting-action-text" style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #cbd5e1; color: #1e293b;">${escapeHtml(startNarrative).replace(/\n/g, '<br>')}</div>`;
+    }
+    const movieAction = startingAction.actions?.find(a => a.type === 'play_movie');
+    if (movieAction) {
+      introHtml += `<div style="margin-top: 5px; font-size: 8pt; color: #0284c7; font-style: normal; font-weight: 600;">🎬 Opening Cinematic: ${escapeHtml(movieAction.title || movieAction.moviePath || 'Intro Movie')}</div>`;
+    }
+    const dialogueAction = startingAction.actions?.find(a => a.type === 'dialogue');
+    if (dialogueAction && dialogueAction.lines && dialogueAction.lines.length > 0) {
+      introHtml += `<div style="margin-top: 4px; font-size: 8pt; color: #475569; font-style: italic;">${dialogueAction.lines.map(l => `"${escapeHtml(l.text)}"`).join(' ')}</div>`;
+    }
+  }
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>${escapeHtml(title)}</title>
+<style>
+  @page {
+    size: ${pageSize} ${orientation};
+    margin: 10mm 12mm 10mm 12mm;
+  }
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #1e293b;
+    background: #ffffff;
+    margin: 0;
+    padding: 0;
+    line-height: 1.35;
+    font-size: 9.5pt;
+  }
+  .quest-sheet {
+    width: 100%;
+    margin: 0 auto;
+  }
+  .quest-header {
+    border-bottom: 2.5px solid #0f172a;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .quest-title-block h1 {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 20pt;
+    margin: 0 0 2px 0;
+    color: #0f172a;
+    letter-spacing: 0.5px;
+  }
+  .quest-subtitle {
+    font-size: 8.5pt;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+  }
+  .quest-meta-pills {
+    display: flex;
+    gap: 8px;
+    font-size: 8pt;
+  }
+  .meta-pill {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 3px 8px;
+    color: #334155;
+  }
+  .meta-pill strong {
+    color: #0f172a;
+  }
+  .story-briefing {
+    background: #f8fafc;
+    border-left: 3.5px solid #0284c7;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    font-style: italic;
+    color: #334155;
+    font-size: 9pt;
+    line-height: 1.4;
+  }
+  .story-briefing-title {
+    font-family: 'Cinzel', Georgia, serif;
+    font-weight: 700;
+    font-style: normal;
+    color: #0369a1;
+    margin-bottom: 3px;
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .map-container {
+    text-align: center;
+    margin-bottom: 10px;
+    page-break-inside: avoid;
+  }
+  .map-container img {
+    max-width: 100%;
+    max-height: ${orientation === 'landscape' ? '125mm' : '155mm'};
+    object-fit: contain;
+    border: 1.5px solid #334155;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  }
+  .details-columns {
+    display: grid;
+    grid-template-columns: ${orientation === 'landscape' ? '1.15fr 0.85fr' : '1fr'};
+    gap: 12px;
+    page-break-inside: avoid;
+  }
+  .section-card {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    page-break-inside: avoid;
+  }
+  .section-heading {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: #0f172a;
+    border-bottom: 1.5px solid #e2e8f0;
+    padding-bottom: 3px;
+    margin-top: 0;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .notes-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .note-entry {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    font-size: 8.5pt;
+    background: #f8fafc;
+    padding: 5px 8px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+  }
+  .note-disc {
+    background: #0f172a;
+    color: #ffffff;
+    font-weight: 700;
+    font-family: monospace;
+    font-size: 8pt;
+    min-width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .note-body {
+    flex: 1;
+  }
+  .note-head {
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 2px;
+  }
+  .note-desc {
+    color: #475569;
+    font-size: 8pt;
+    line-height: 1.35;
+  }
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8pt;
+  }
+  table.data-table th {
+    background: #f1f5f9;
+    color: #334155;
+    font-weight: 700;
+    text-align: center;
+    padding: 3px 5px;
+    border-bottom: 1.5px solid #cbd5e1;
+  }
+  table.data-table td {
+    padding: 3px 5px;
+    border-bottom: 1px solid #f1f5f9;
+    text-align: center;
+    color: #1e293b;
+  }
+  table.data-table td.text-left {
+    text-align: left;
+  }
+  .boss-badge {
+    background: #e11d48;
+    color: #ffffff;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 6.5pt;
+    font-weight: 700;
+    margin-left: 4px;
+  }
+  .pill-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 7.5pt;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+  .footer-line {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 4px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 7pt;
+    color: #94a3b8;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="quest-sheet">
+  ${includeHeader ? `
+  <div class="quest-header">
+    <div class="quest-title-block">
+      <h1>${escapeHtml(title)}</h1>
+      <div class="quest-subtitle">Tabletop RPG Adventure Module • RobOS Quest Platform</div>
+    </div>
+    <div class="quest-meta-pills">
+      <div class="meta-pill"><strong>Wandering:</strong> ${escapeHtml(wanderingMonster)}</div>
+      <div class="meta-pill"><strong>Bounty:</strong> ${goldBounty} Gold</div>
+      <div class="meta-pill"><strong>Entrance:</strong> ${startLoc}</div>
+      <div class="meta-pill"><strong>Exit:</strong> ${exitLoc}</div>
+    </div>
+  </div>
+  ${introHtml ? `
+  <div class="story-briefing">
+    <div class="story-briefing-title">📜 The Quest Briefing</div>
+    ${introHtml}
+  </div>` : ''}
+  ` : ''}
+
+  ${includeMap ? `
+  <div class="map-container">
+    <img src="${mapDataUrl}" alt="${escapeHtml(title)} Dungeon Map" />
+  </div>
+  ` : ''}
+
+  <div class="details-columns">
+    ${includeNotes ? `
+    <div class="section-card">
+      <div class="section-heading">
+        <span>📜 Quest Notes &amp; Story Triggers</span>
+        <span style="font-size:8pt; font-weight:normal; color:#64748b;">${notes.length} Triggers</span>
+      </div>
+      ${notes.length > 0 ? `
+      <div class="notes-flow">
+        ${notes.map(ind => {
+          const st = ind.trigger;
+          const mark = ind.letter;
+          const targetStr = ind.targetLabel;
+          const noteTitle = st.title || st.name || '';
+          return `
+          <div class="note-entry">
+            <div class="note-disc">${escapeHtml(mark)}</div>
+            <div class="note-body">
+              <div class="note-head">Note ${escapeHtml(mark)}${noteTitle ? ': ' + escapeHtml(noteTitle) : ''} <span style="font-weight:normal; color:#64748b;">(${escapeHtml(targetStr)})</span></div>
+              ${st.narrative ? `<div class="note-desc">${escapeHtml(st.narrative)}</div>` : ''}
+              ${(st.actions && st.actions.length > 0) ? `
+                <div style="margin-top:2px; font-size:7.5pt; color:#0369a1;">
+                  ${st.actions.map(a => `• ${escapeHtml(a.type)}${a.title ? ': ' + escapeHtml(a.title) : ''}`).join(' ')}
+                </div>
+              ` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>` : '<div style="color:#94a3b8; font-style:italic;">No custom story triggers placed in this quest.</div>'}
+    </div>
+    ` : ''}
+
+    <div>
+      ${includeRoster ? `
+      <div class="section-card">
+        <div class="section-heading">
+          <span>👾 Monster Roster &amp; Statistics</span>
+          <span style="font-size:8pt; font-weight:normal; color:#64748b;">${monsters.length} Total</span>
+        </div>
+        ${Object.keys(monsterCounts).length > 0 ? `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="text-left">Monster</th>
+              <th>Qty</th>
+              <th>Move</th>
+              <th>Attack</th>
+              <th>Defend</th>
+              <th>Body</th>
+              <th>Mind</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${Object.values(monsterCounts).map(mc => `
+            <tr>
+              <td class="text-left">${mc.icon} <strong>${escapeHtml(mc.name)}</strong>${mc.bossCount > 0 ? ` <span class="boss-badge">BOSS ×${mc.bossCount}</span>` : ''}</td>
+              <td><strong>${mc.count}</strong></td>
+              <td>${mc.move}</td>
+              <td>${mc.attack}⚔️</td>
+              <td>${mc.defend}🛡️</td>
+              <td>${mc.body}❤️</td>
+              <td>${mc.mind}🧠</td>
+            </tr>
+            `).join('')}
+          </tbody>
+        </table>` : '<div style="color:#94a3b8; font-style:italic;">No monsters placed.</div>'}
+      </div>
+      ` : ''}
+
+      ${includeFurniture ? `
+      <div class="section-card">
+        <div class="section-heading">
+          <span>🪑 Furniture &amp; Dungeon Features</span>
+          <span style="font-size:8pt; font-weight:normal; color:#64748b;">${furniture.length} Pieces • ${traps.length} Traps</span>
+        </div>
+        <div style="margin-bottom:6px;">
+          ${Object.values(furnCounts).map(fc => `
+            <span class="pill-tag">${fc.icon} ${escapeHtml(fc.name)}: <strong>${fc.count}</strong></span>
+          `).join('')}
+          ${Object.keys(furnCounts).length === 0 ? '<span style="color:#94a3b8; font-style:italic;">No furniture. </span>' : ''}
+        </div>
+        ${Object.keys(trapCounts).length > 0 ? `
+        <div style="font-size:8pt; color:#b91c1c; border-top:1px dashed #e2e8f0; padding-top:4px;">
+          ⚠️ <strong>Traps:</strong> ${Object.entries(trapCounts).map(([k, v]) => `${k.replace('_', ' ')} (${v})`).join(', ')}
+        </div>` : ''}
+      </div>
+      ` : ''}
+    </div>
+  </div>
+
+  <div class="footer-line">
+    <span>RobOS Tabletop Quest Map Editor</span>
+    <span>Generated: ${new Date().toLocaleDateString()}</span>
+  </div>
+</div>
+</body>
+</html>`;
+}
+
+async function exportPdf(customOptions = {}) {
+  const origBtnText = dom.btnConfirmSavePdf ? dom.btnConfirmSavePdf.textContent : '';
+  try {
+    if (dom.btnConfirmSavePdf) {
+      dom.btnConfirmSavePdf.disabled = true;
+      dom.btnConfirmSavePdf.textContent = '⏳ Preparing PDF...';
+    }
+    let orientation = customOptions.orientation || 'landscape';
+    if (!customOptions.orientation && dom.radioExportPdfOrientation) {
+      for (const radio of dom.radioExportPdfOrientation) {
+        if (radio.checked) {
+          orientation = radio.value;
+          break;
+        }
+      }
+    }
+    const pageSize = customOptions.pageSize || (dom.selectPdfPageSize ? dom.selectPdfPageSize.value : 'A4');
+    const includeHeader = customOptions.includeHeader !== undefined ? customOptions.includeHeader : (dom.chkPdfHeader ? dom.chkPdfHeader.checked : true);
+    const includeMap = customOptions.includeMap !== undefined ? customOptions.includeMap : (dom.chkPdfMap ? dom.chkPdfMap.checked : true);
+    const includeNotes = customOptions.includeNotes !== undefined ? customOptions.includeNotes : (dom.chkPdfNotes ? dom.chkPdfNotes.checked : true);
+    const includeRoster = customOptions.includeRoster !== undefined ? customOptions.includeRoster : (dom.chkPdfRoster ? dom.chkPdfRoster.checked : true);
+    const includeFurniture = customOptions.includeFurniture !== undefined ? customOptions.includeFurniture : (dom.chkPdfFurniture ? dom.chkPdfFurniture.checked : true);
+
+    // Generate crisp 2x map for print
+    const mapCanvas = generateExportCanvas({
+      scale: 2,
+      showBanner: false,
+      showArtwork: true,
+      showGrid: true,
+      showRoomNames: true
+    });
+    const mapDataUrl = mapCanvas.toDataURL ? mapCanvas.toDataURL('image/png') : '';
+
+    const html = generateQuestPdfHtml(state.quest, state.blockmap, mapDataUrl, {
+      orientation,
+      pageSize,
+      includeHeader,
+      includeMap,
+      includeNotes,
+      includeRoster,
+      includeFurniture
+    });
+
+    if (!window.robosQuestEditor || !window.robosQuestEditor.exportPdf) {
+      closeExportPdfModal();
+      return { success: true, html };
+    }
+
+    const defaultName = `${state.quest.slug || 'tabletop-quest'}-quest-sheet.pdf`;
+    const res = await window.robosQuestEditor.exportPdf({
+      html,
+      orientation,
+      pageSize,
+      defaultName
+    });
+
+    if (res && res.success) {
+      showToast(`Exported PDF Quest Sheet: ${res.fileName}`, 'success');
+      closeExportPdfModal();
+    } else if (res && res.canceled) {
+      // User canceled file dialog
+    } else if (res && res.error) {
+      showToast(`Export PDF failed: ${res.error}`, 'error');
+    }
+    return res;
+  } catch (err) {
+    showToast(`Export PDF error: ${err.message}`, 'error');
+    return { success: false, error: err.message };
+  } finally {
+    if (dom.btnConfirmSavePdf) {
+      dom.btnConfirmSavePdf.disabled = false;
+      dom.btnConfirmSavePdf.textContent = origBtnText || '💾 Save PDF Document...';
+    }
   }
 }
 
@@ -1222,16 +2443,16 @@ function worldToTile(wx, wy, clampToBorder = false) {
   return [col, row];
 }
 
-function tileToWorld(col, row) {
-  const geom = getGridGeometry();
+function tileToWorld(col, row, geomOverride) {
+  const geom = geomOverride || getGridGeometry();
   return {
     x: geom.offsetX + col * geom.tileSize,
     y: geom.offsetY + row * geom.tileSize
   };
 }
 
-function isBorderTile(col, row) {
-  const geom = getGridGeometry();
+function isBorderTile(col, row, geomOverride) {
+  const geom = geomOverride || getGridGeometry();
   if (geom.hasAdditionalBorder) {
     return col === -1 || col === geom.cols || row === -1 || row === geom.rows;
   }
@@ -1322,6 +2543,35 @@ function render() {
   ctx.translate(state.panX, state.panY);
   ctx.scale(state.zoom, state.zoom);
 
+  drawBoardLayers(ctx, geom, { forExport: false });
+
+  // 11.6. Validation Warnings Overlay
+  if (state.layers.showValidationWarnings && state.validation && state.validation.errors && state.validation.errors.length > 0) {
+    renderValidationCanvasOverlays(ctx, geom);
+  }
+
+  // 12. Hover & Placement Ghost Preview
+  renderToolPreview(ctx, geom);
+
+  ctx.restore();
+}
+
+function drawBoardLayers(ctx, geom, options = {}) {
+  const forExport = !!options.forExport;
+  const quest = options.quest || state.quest || {};
+  const blockmap = options.blockmap || state.blockmap || {};
+  const showGrid = options.showGrid !== undefined ? options.showGrid : state.layers.showGrid;
+  const showRoomNames = options.showRoomNames !== undefined ? options.showRoomNames : state.layers.showRoomNames;
+  const showImage = options.showImage !== undefined ? options.showImage : state.layers.showImage;
+  const showCorridors = options.showCorridors !== undefined ? options.showCorridors : state.layers.showCorridors;
+  const showRooms = options.showRooms !== undefined ? options.showRooms : state.layers.showRooms;
+  const showWallBlocks = options.showWallBlocks !== undefined ? options.showWallBlocks : state.layers.showWallBlocks;
+  const showTraps = options.showTraps !== undefined ? options.showTraps : state.layers.showTraps;
+  const showFurniture = options.showFurniture !== undefined ? options.showFurniture : state.layers.showFurniture;
+  const showDoors = options.showDoors !== undefined ? options.showDoors : state.layers.showDoors;
+  const showMonsters = options.showMonsters !== undefined ? options.showMonsters : state.layers.showMonsters;
+  const showNotes = options.showNotes !== undefined ? options.showNotes : state.layers.showNotes;
+
   // 0. Additional Black Border Tiles (Border Option)
   if (geom.hasAdditionalBorder) {
     ctx.save();
@@ -1351,7 +2601,7 @@ function render() {
   }
 
   // 1. Board Background Artwork (Layer 1)
-  if (state.layers.showImage && state.bgImage) {
+  if (showImage && state.bgImage) {
     ctx.save();
     ctx.globalAlpha = state.layers.artOpacity;
     ctx.drawImage(state.bgImage, 0, 0);
@@ -1359,7 +2609,7 @@ function render() {
   }
 
   // 2. Corridors Underlay (Layer 1)
-  if (state.layers.showCorridors && state.blockmap?.corridors) {
+  if (showCorridors && state.blockmap?.corridors) {
     ctx.save();
     ctx.fillStyle = 'rgba(56, 189, 248, 0.16)'; // Soft Sky Blue tint
     ctx.strokeStyle = 'rgba(56, 189, 248, 0.28)'; // Subtle corridor tile edge
@@ -1373,7 +2623,7 @@ function render() {
   }
 
   // 3. Rooms Underlay (Layer 1)
-  if (state.layers.showRooms && state.blockmap?.rooms) {
+  if (showRooms && state.blockmap?.rooms) {
     ctx.save();
     for (const room of state.blockmap.rooms) {
       const roomColor = room.color;
@@ -1417,7 +2667,7 @@ function render() {
   }
 
   // 4. Grid Lines (Layer 1)
-  if (state.layers.showGrid) {
+  if (showGrid) {
     ctx.save();
     ctx.globalAlpha = state.layers.gridOpacity;
     ctx.strokeStyle = '#223249';
@@ -1451,9 +2701,9 @@ function render() {
   }
 
   // 5. Wall Blocks (Layer 2)
-  if (state.layers.showWallBlocks && state.quest.wallBlocks) {
+  if (showWallBlocks && state.quest.wallBlocks) {
     state.quest.wallBlocks.forEach((wb, i) => {
-      const pos = tileToWorld(wb.x, wb.y);
+      const pos = tileToWorld(wb.x, wb.y, geom);
       const bw = (wb.width || 1) * geom.tileSize;
       const bh = (wb.height || 1) * geom.tileSize;
       const blockImg = state.assetCache['wall_block'];
@@ -1475,16 +2725,16 @@ function render() {
         ctx.stroke();
       }
 
-      if (state.selectedEntity && state.selectedEntity.type === 'wall-block' && state.selectedEntity.index === i) {
-        drawSelectionGlow(pos.x, pos.y, bw, bh);
+      if (!forExport && state.selectedEntity && state.selectedEntity.type === 'wall-block' && state.selectedEntity.index === i) {
+        drawSelectionGlow(pos.x, pos.y, bw, bh, ctx);
       }
     });
   }
 
   // 6. Traps (Layer 2)
-  if (state.layers.showTraps && state.quest.traps) {
+  if (showTraps && state.quest.traps) {
     state.quest.traps.forEach((tr, i) => {
-      const pos = tileToWorld(tr.x, tr.y);
+      const pos = tileToWorld(tr.x, tr.y, geom);
       const trapKey = tr.type === 'spear' ? 'trap_spear' : (tr.type === 'falling_rock' ? 'trap_falling_block' : 'trap_pit');
       const trapImg = state.assetCache[trapKey];
 
@@ -1504,16 +2754,16 @@ function render() {
         ctx.fillText('⚠️', pos.x + geom.tileSize / 2, pos.y + geom.tileSize / 2);
       }
 
-      if (state.selectedEntity && state.selectedEntity.type === 'trap' && state.selectedEntity.index === i) {
-        drawSelectionGlow(pos.x, pos.y, geom.tileSize, geom.tileSize);
+      if (!forExport && state.selectedEntity && state.selectedEntity.type === 'trap' && state.selectedEntity.index === i) {
+        drawSelectionGlow(pos.x, pos.y, geom.tileSize, geom.tileSize, ctx);
       }
     });
   }
 
   // 7. Furniture & Map Items (Layer 2)
-  if (state.layers.showFurniture && state.quest.furniture) {
+  if (showFurniture && state.quest.furniture) {
     state.quest.furniture.forEach((f, i) => {
-      const pos = tileToWorld(f.x, f.y);
+      const pos = tileToWorld(f.x, f.y, geom);
       const fw = (f.width || 1) * geom.tileSize;
       const fh = (f.height || 1) * geom.tileSize;
       let furnImg = state.assetCache[f.type];
@@ -1550,8 +2800,8 @@ function render() {
         ctx.restore();
       }
 
-      if (state.selectedEntity && state.selectedEntity.type === 'furniture' && state.selectedEntity.index === i) {
-        drawSelectionGlow(pos.x, pos.y, fw, fh);
+      if (!forExport && state.selectedEntity && state.selectedEntity.type === 'furniture' && state.selectedEntity.index === i) {
+        drawSelectionGlow(pos.x, pos.y, fw, fh, ctx);
       }
     });
   }
@@ -1559,7 +2809,7 @@ function render() {
   // 8. Starting Spiral Stairs & Quest Exit (Layer 2 - drawn over map pieces / stairs)
   if (state.quest.startingStair) {
     const [sc, sr] = state.quest.startingStair;
-    const isBorder = isBorderTile(sc, sr);
+    const isBorder = isBorderTile(sc, sr, geom);
 
     // Check if starting stair is on a placed stairs furniture piece
     const stairFurn = state.quest.furniture.find(f =>
@@ -1568,7 +2818,7 @@ function render() {
       sr >= f.y && sr < f.y + (f.height || 1)
     );
 
-    const spos = stairFurn ? tileToWorld(stairFurn.x, stairFurn.y) : tileToWorld(sc, sr);
+    const spos = stairFurn ? tileToWorld(stairFurn.x, stairFurn.y, geom) : tileToWorld(sc, sr, geom);
     const sw = (stairFurn ? (stairFurn.width || 1) : (state.quest.startingStairType?.includes('2x2') ? 2 : 1)) * geom.tileSize;
     const sh = (stairFurn ? (stairFurn.height || 1) : (state.quest.startingStairType?.includes('2x2') ? 2 : 1)) * geom.tileSize;
 
@@ -1637,15 +2887,15 @@ function render() {
     ctx.fillText('START', spos.x + sw / 2, spos.y + sh - 7.5);
     ctx.restore();
 
-    if (state.selectedEntity && (state.selectedEntity.type === 'start' || state.selectedEntity.type === 'stairs')) {
-      drawSelectionGlow(spos.x, spos.y, sw, sh);
+    if (!forExport && state.selectedEntity && (state.selectedEntity.type === 'start' || state.selectedEntity.type === 'stairs')) {
+      drawSelectionGlow(spos.x, spos.y, sw, sh, ctx);
     }
   }
 
   // 8b. Quest Exit Staircase / Escape Hatch (Layer 2)
   if (state.quest.exitTile) {
     const [ec, er] = state.quest.exitTile;
-    const isBorder = isBorderTile(ec, er);
+    const isBorder = isBorderTile(ec, er, geom);
 
     // Check if exit is on a placed stairs furniture piece
     const stairFurn = state.quest.furniture.find(f =>
@@ -1654,7 +2904,7 @@ function render() {
       er >= f.y && er < f.y + (f.height || 1)
     );
 
-    const epos = stairFurn ? tileToWorld(stairFurn.x, stairFurn.y) : tileToWorld(ec, er);
+    const epos = stairFurn ? tileToWorld(stairFurn.x, stairFurn.y, geom) : tileToWorld(ec, er, geom);
     const ew = (stairFurn ? (stairFurn.width || 1) : (state.quest.exitStairType?.includes('2x2') ? 2 : 1)) * geom.tileSize;
     const eh = (stairFurn ? (stairFurn.height || 1) : (state.quest.exitStairType?.includes('2x2') ? 2 : 1)) * geom.tileSize;
 
@@ -1723,13 +2973,13 @@ function render() {
     ctx.fillText('EXIT', epos.x + ew / 2, epos.y + eh - 7.5);
     ctx.restore();
 
-    if (state.selectedEntity && state.selectedEntity.type === 'exit') {
-      drawSelectionGlow(epos.x, epos.y, ew, eh);
+    if (!forExport && state.selectedEntity && state.selectedEntity.type === 'exit') {
+      drawSelectionGlow(epos.x, epos.y, ew, eh, ctx);
     }
   }
 
   // 9. Doors (Layer 2)
-  if (state.layers.showDoors && state.quest.doors) {
+  if (showDoors && state.quest.doors) {
     state.quest.doors.forEach((d, i) => {
       const isVertical = d.from[0] !== d.to[0];
       const c = isVertical ? Math.max(d.from[0], d.to[0]) : d.from[0];
@@ -2036,18 +3286,18 @@ function render() {
 
       ctx.restore();
 
-      if (state.selectedEntity && state.selectedEntity.type === 'door' && state.selectedEntity.index === i) {
-        drawSelectionGlow(dx - 3, dy - 3, dw + 6, dh + 6);
+      if (!forExport && state.selectedEntity && state.selectedEntity.type === 'door' && state.selectedEntity.index === i) {
+        drawSelectionGlow(dx - 3, dy - 3, dw + 6, dh + 6, ctx);
       }
     });
   }
 
   // 10. Monsters (Layer 2)
-  if (state.layers.showMonsters && state.quest.monsters) {
+  if (showMonsters && state.quest.monsters) {
     state.quest.monsters.forEach((m, i) => {
       const mc = m.pos ? m.pos[0] : (m.x !== undefined ? m.x : 0);
       const mr = m.pos ? m.pos[1] : (m.y !== undefined ? m.y : 0);
-      const pos = tileToWorld(mc, mr);
+      const pos = tileToWorld(mc, mr, geom);
       const tokenKey = `token_${m.type}`;
       const tokenImg = state.assetCache[tokenKey];
       const radius = (geom.tileSize / 2) - 3;
@@ -2081,16 +3331,16 @@ function render() {
         ctx.fillText('👑', cx, cy - radius - 2);
       }
 
-      if (state.selectedEntity && state.selectedEntity.type === 'monster' && state.selectedEntity.index === i) {
-        drawSelectionGlow(pos.x, pos.y, geom.tileSize, geom.tileSize);
+      if (!forExport && state.selectedEntity && state.selectedEntity.type === 'monster' && state.selectedEntity.index === i) {
+        drawSelectionGlow(pos.x, pos.y, geom.tileSize, geom.tileSize, ctx);
       }
     });
   }
 
-  // 11. Story Triggers / Notes (Layer 2)
-  if (state.layers.showNotes && state.quest.storyTriggers) {
+  // 11. Story Triggers / Notes (Layer 2 - Interactive Editor View)
+  if (showNotes && !forExport && state.quest.storyTriggers) {
     state.quest.storyTriggers.forEach((st, i) => {
-      const pos = tileToWorld(st.tile[0], st.tile[1]);
+      const pos = tileToWorld(st.tile[0], st.tile[1], geom);
       const cx = pos.x + geom.tileSize / 2;
       const cy = pos.y + geom.tileSize / 2;
 
@@ -2136,14 +3386,14 @@ function render() {
         ctx.fillText('⚔️', cx + 7, cy + 7);
       }
 
-      if (state.selectedEntity && (state.selectedEntity.type === 'note' || state.selectedEntity.type === 'trigger') && state.selectedEntity.index === i) {
-        drawSelectionGlow(pos.x, pos.y, geom.tileSize, geom.tileSize);
+      if (!forExport && state.selectedEntity && (state.selectedEntity.type === 'note' || state.selectedEntity.type === 'trigger') && state.selectedEntity.index === i) {
+        drawSelectionGlow(pos.x, pos.y, geom.tileSize, geom.tileSize, ctx);
       }
     });
   }
 
   // 11.5. Room Names (Layer 2.5 - scrunched height, sits on top of tokens)
-  if (state.layers.showRoomNames && state.blockmap?.rooms) {
+  if (showRoomNames && state.blockmap?.rooms) {
     ctx.save();
     for (const room of state.blockmap.rooms) {
       const text = room.name || room.id;
@@ -2215,19 +3465,18 @@ function render() {
     ctx.restore();
   }
 
-  // 11.6. Validation Warnings Overlay
-  if (state.layers.showValidationWarnings && state.validation && state.validation.errors && state.validation.errors.length > 0) {
-    renderValidationCanvasOverlays(ctx, geom);
+  // 12. Export Trigger Indicators (HeroQuest-Style Letter Badges placed on target entities)
+  if (showNotes && forExport) {
+    const { indicators } = resolveTriggerIndicators(quest, blockmap, geom);
+    indicators.forEach(ind => {
+      drawExportTriggerIndicator(ctx, geom, ind, { showRoomNames });
+    });
   }
-
-  // 12. Hover & Placement Ghost Preview
-  renderToolPreview(ctx, geom);
-
-  ctx.restore();
 }
 
-function drawSelectionGlow(x, y, w, h) {
-  const ctx = dom.ctx;
+function drawSelectionGlow(x, y, w, h, targetCtx) {
+  const ctx = targetCtx || dom.ctx;
+  if (!ctx) return;
   ctx.save();
   ctx.strokeStyle = '#00bcd4';
   ctx.lineWidth = 2.0;
@@ -2426,7 +3675,9 @@ function fitView() {
 }
 
 function updateZoomUI() {
-  dom.infoZoomLevel.textContent = `${Math.round(state.zoom * 100)}%`;
+  if (dom.infoZoomLevel) {
+    dom.infoZoomLevel.textContent = `${Math.round(state.zoom * 100)}%`;
+  }
 }
 
 // -------------------------------------------------------------
@@ -2657,8 +3908,11 @@ function handleCanvasClick(wx, wy) {
     } else {
       const isSecret = state.subtool.doorType === 'secret';
       const isOpen = state.subtool.doorType === 'wood-open';
+      const doorNum = state.quest.doors.length + 1;
+      const defaultName = isSecret ? `Secret Door ${doorNum}` : `Door ${doorNum}`;
       const newDoor = {
-        id: `door-${state.quest.doors.length + 1}`,
+        id: `door-${doorNum}`,
+        name: defaultName,
         from: edge.from,
         to: edge.to,
         state: isOpen ? 'open' : 'closed',
@@ -2952,7 +4206,7 @@ function updateInspectorUI() {
     const d = state.quest.doors[index];
     if (!d) return;
     dom.inspectPosText.textContent = `[${d.from[0]},${d.from[1]}] ↔ [${d.to[0]},${d.to[1]}]`;
-    dom.inspectName.value = d.id;
+    dom.inspectName.value = d.name !== undefined ? d.name : (d.id || `Door ${index + 1}`);
     dom.inspectDoorState.value = d.state || 'closed';
     dom.inspectDoorSecret.checked = d.is_secret;
     dom.inspectGroupDoor.style.display = 'block';
@@ -3148,12 +4402,13 @@ function updateEntitySummaryList() {
     const badgeCls = isSecret ? (isOpen ? 'door-badge-secret-open' : 'door-badge-secret') : (isOpen ? 'door-badge-open' : 'door-badge-closed');
     const badgeText = isSecret ? (isOpen ? 'SECRET [OPEN]' : 'SECRET') : (isOpen ? 'OPEN' : 'CLOSED');
     const doorIcon = isSecret ? '🔮' : (isOpen ? '🚪🔓' : '🚪🔒');
+    const displayName = d.name || (isSecret ? 'Secret Door' : 'Wood Door');
     item.innerHTML = `
       <div class="entity-item-main">
         <span class="entity-item-icon">${doorIcon}</span>
         <div>
           <div class="entity-item-name">
-            ${isSecret ? 'Secret Door' : 'Wood Door'}
+            ${escapeHtml(displayName)}
             <span class="door-status-pill ${badgeCls}">${badgeText}</span>
           </div>
           <div class="entity-item-pos">[${d.from[0]},${d.from[1]}] ↔ [${d.to[0]},${d.to[1]}]</div>
@@ -3303,7 +4558,8 @@ function updateTriggerTargetOptions(st) {
       doors.forEach((d) => {
         const opt = document.createElement('option');
         opt.value = d.id;
-        opt.textContent = `${d.id} [${d.from[0]},${d.from[1]}] ${d.is_secret ? '🔮 Secret' : (d.state === 'open' ? '🔓 Open' : '🔒 Closed')}`;
+        const doorLabel = d.name ? `${d.name} (${d.id})` : d.id;
+        opt.textContent = `${doorLabel} [${d.from[0]},${d.from[1]}] ${d.is_secret ? '🔮 Secret' : (d.state === 'open' ? '🔓 Open' : '🔒 Closed')}`;
         if (st.doorId === d.id || st.target === d.id) opt.selected = true;
         dom.inspectTriggerTargetDoor.appendChild(opt);
       });
@@ -3944,17 +5200,35 @@ function validateQuest(quest, blockmap) {
     return null;
   }
 
+  // Corridor lookup helper
+  const hasCorridorList = Boolean(blockmap && Array.isArray(blockmap.corridors) && blockmap.corridors.length > 0);
+  const corridorSet = hasCorridorList
+    ? new Set(blockmap.corridors.map(t => `${t[0]},${t[1]}`))
+    : null;
+
   // -------------------------------------------------------------
   // Rule 1: Furniture outside of bounds of single room
+  // (Treasure chests and stairs can appear in corridors)
   // -------------------------------------------------------------
   if (Array.isArray(quest.furniture)) {
     quest.furniture.forEach((f, idx) => {
       const w = f.width || 1;
       const h = f.height || 1;
       const furnName = f.name || f.type || 'Furniture';
+      const furnType = String(f.type || '').toLowerCase();
+      const furnNameLower = String(f.name || '').toLowerCase();
+      const isChest = furnType === 'chest' ||
+                      furnType === 'treasure_chest' ||
+                      furnType === 'treasure-chest' ||
+                      furnType.includes('chest') ||
+                      furnNameLower.includes('chest');
+      const isStair = furnType.includes('stair') || furnNameLower.includes('stair');
+      const isCorridorAllowed = isChest || isStair;
+
       const tiles = [];
       const roomsEncountered = new Map();
       const corridorTiles = [];
+      const voidTiles = [];
 
       for (let dx = 0; dx < w; dx++) {
         for (let dy = 0; dy < h; dy++) {
@@ -3962,37 +5236,92 @@ function validateQuest(quest, blockmap) {
           const row = f.y + dy;
           tiles.push([col, row]);
           const room = getRoomAt(col, row);
-          if (!room) {
-            corridorTiles.push([col, row]);
-          } else {
+          if (room) {
             if (!roomsEncountered.has(room.id)) {
               roomsEncountered.set(room.id, { room, tiles: [] });
             }
             roomsEncountered.get(room.id).tiles.push([col, row]);
+          } else {
+            // Check if this non-room tile is a valid corridor or void/outside bounds
+            let isCorridor = true;
+            if (hasCorridorList) {
+              isCorridor = corridorSet.has(`${col},${row}`);
+            } else if (blockmap && Array.isArray(blockmap.gridDimensions)) {
+              const [cols, rows] = blockmap.gridDimensions;
+              const border = blockmap.additionalBorderTile ? 1 : 0;
+              isCorridor = col >= -border && col < cols + border && row >= -border && row < rows + border;
+            }
+
+            if (isCorridor) {
+              corridorTiles.push([col, row]);
+            } else {
+              voidTiles.push([col, row]);
+            }
           }
         }
       }
 
-      // 1a: Extends into corridor / void outside room
-      if (corridorTiles.length > 0) {
-        const corrStr = corridorTiles.map(t => `[${t[0]}, ${t[1]}]`).join(', ');
-        errors.push({
-          id: `furn-bounds-corr-${f.id || idx}`,
-          category: 'furniture_bounds',
-          categoryLabel: 'Furniture Bounds',
-          icon: '🪑',
-          title: `${furnName} Outside Room Bounds`,
-          description: `${furnName} at [${f.x}, ${f.y}] (${w}×${h}) extends outside room boundaries into corridor or void at tile${corridorTiles.length > 1 ? 's' : ''} ${corrStr}.`,
-          tiles: corridorTiles,
-          allTiles: tiles,
-          entityType: 'furniture',
-          entityIndex: idx,
-          entityId: f.id || null,
-          anchor: [f.x, f.y]
-        });
+      // 1a: Extends into void or outside board boundaries
+      if (isCorridorAllowed) {
+        if (voidTiles.length > 0) {
+          const voidStr = voidTiles.map(t => `[${t[0]}, ${t[1]}]`).join(', ');
+          errors.push({
+            id: `furn-bounds-void-${f.id || idx}`,
+            category: 'furniture_bounds',
+            categoryLabel: 'Furniture Bounds',
+            icon: '🪑',
+            title: `${furnName} Outside Board Bounds`,
+            description: `${furnName} at [${f.x}, ${f.y}] (${w}×${h}) is placed in void or outside board boundaries at tile${voidTiles.length > 1 ? 's' : ''} ${voidStr}.`,
+            tiles: voidTiles,
+            allTiles: tiles,
+            entityType: 'furniture',
+            entityIndex: idx,
+            entityId: f.id || null,
+            anchor: [f.x, f.y]
+          });
+        }
+
+        // 1b: Straddles room and corridor boundaries
+        if (roomsEncountered.size > 0 && corridorTiles.length > 0) {
+          const corrStr = corridorTiles.map(t => `[${t[0]}, ${t[1]}]`).join(', ');
+          errors.push({
+            id: `furn-bounds-corr-${f.id || idx}`,
+            category: 'furniture_bounds',
+            categoryLabel: 'Furniture Bounds',
+            icon: '🪑',
+            title: `${furnName} Straddles Room and Corridor`,
+            description: `${furnName} at [${f.x}, ${f.y}] (${w}×${h}) straddles room and corridor boundaries at tile${corridorTiles.length > 1 ? 's' : ''} ${corrStr}.`,
+            tiles: corridorTiles,
+            allTiles: tiles,
+            entityType: 'furniture',
+            entityIndex: idx,
+            entityId: f.id || null,
+            anchor: [f.x, f.y]
+          });
+        }
+      } else {
+        // Non-corridor furniture cannot extend outside rooms into corridors or void
+        const outTiles = [...corridorTiles, ...voidTiles];
+        if (outTiles.length > 0) {
+          const corrStr = outTiles.map(t => `[${t[0]}, ${t[1]}]`).join(', ');
+          errors.push({
+            id: `furn-bounds-corr-${f.id || idx}`,
+            category: 'furniture_bounds',
+            categoryLabel: 'Furniture Bounds',
+            icon: '🪑',
+            title: `${furnName} Outside Room Bounds`,
+            description: `${furnName} at [${f.x}, ${f.y}] (${w}×${h}) extends outside room boundaries into corridor or void at tile${outTiles.length > 1 ? 's' : ''} ${corrStr}.`,
+            tiles: outTiles,
+            allTiles: tiles,
+            entityType: 'furniture',
+            entityIndex: idx,
+            entityId: f.id || null,
+            anchor: [f.x, f.y]
+          });
+        }
       }
 
-      // 1b: Straddles multiple rooms
+      // 1c: Straddles multiple rooms
       if (roomsEncountered.size > 1) {
         const roomNames = Array.from(roomsEncountered.values()).map(r => r.room.name || r.room.id).join(' and ');
         errors.push({
@@ -4024,7 +5353,7 @@ function validateQuest(quest, blockmap) {
 
       const r1 = getRoomAt(from[0], from[1]);
       const r2 = getRoomAt(to[0], to[1]);
-      const doorName = d.is_secret ? 'Secret Door' : (d.state === 'open' ? 'Open Door' : 'Door');
+      const doorName = d.name || (d.is_secret ? 'Secret Door' : (d.state === 'open' ? 'Open Door' : 'Door'));
       const doorId = d.id || idx;
 
       // In HeroQuest, a door connects a room to a corridor or connects two rooms.
@@ -5183,8 +6512,11 @@ function executeVoiceMapCommands(spokenText, guidancePrompt, targetQuest = null,
       for (const edge of selected) {
         const isSecret = cmd.type === 'secret';
         const isOpen = cmd.type === 'wood-open';
+        const doorNum = currentQuest.doors.length + 1;
+        const defaultName = isSecret ? `Secret Door ${doorNum}` : `Door ${doorNum}`;
         const newDoor = {
-          id: `door-${currentQuest.doors.length + 1}`,
+          id: `door-${doorNum}`,
+          name: defaultName,
           from: [edge.col, edge.row],
           to: [edge.nc, edge.nr],
           state: isSecret ? 'secret' : (isOpen ? 'open' : 'closed'),
@@ -5410,8 +6742,26 @@ function setupEventListeners() {
   dom.inspectName.addEventListener('input', () => {
     if (!state.selectedEntity) return;
     const { type, index } = state.selectedEntity;
-    if (type === 'monster') state.quest.monsters[index].name = dom.inspectName.value;
-    if (type === 'furniture') state.quest.furniture[index].name = dom.inspectName.value;
+    if (type === 'monster' && state.quest.monsters[index]) {
+      state.quest.monsters[index].name = dom.inspectName.value;
+      if (state.selectedEntity.data) state.selectedEntity.data.name = dom.inspectName.value;
+    }
+    if (type === 'furniture' && state.quest.furniture[index]) {
+      state.quest.furniture[index].name = dom.inspectName.value;
+      if (state.selectedEntity.data) state.selectedEntity.data.name = dom.inspectName.value;
+    }
+    if (type === 'door' && state.quest.doors[index]) {
+      state.quest.doors[index].name = dom.inspectName.value;
+      if (state.selectedEntity.data) state.selectedEntity.data.name = dom.inspectName.value;
+    }
+    if (type === 'trap' && state.quest.traps[index]) {
+      state.quest.traps[index].name = dom.inspectName.value;
+      if (state.selectedEntity.data) state.selectedEntity.data.name = dom.inspectName.value;
+    }
+    if (type === 'wall-block' && state.quest.wallBlocks[index]) {
+      state.quest.wallBlocks[index].name = dom.inspectName.value;
+      if (state.selectedEntity.data) state.selectedEntity.data.name = dom.inspectName.value;
+    }
     updateEntitySummaryList();
   });
 
@@ -5478,12 +6828,14 @@ function setupEventListeners() {
     if (state.selectedEntity?.type === 'door') {
       state.quest.doors[state.selectedEntity.index].state = dom.inspectDoorState.value;
       render();
+      updateEntitySummaryList();
     }
   });
   dom.inspectDoorSecret.addEventListener('change', () => {
     if (state.selectedEntity?.type === 'door') {
       state.quest.doors[state.selectedEntity.index].is_secret = dom.inspectDoorSecret.checked;
       render();
+      updateEntitySummaryList();
     }
   });
 
@@ -5736,9 +7088,56 @@ function setupEventListeners() {
   }
 
   dom.btnSaveCartridge.addEventListener('click', saveCartridge);
+  if (dom.btnExportPng) {
+    dom.btnExportPng.addEventListener('click', openExportPngModal);
+  }
+  if (dom.btnExportPdf) {
+    dom.btnExportPdf.addEventListener('click', openExportPdfModal);
+  }
   dom.btnExportJson.addEventListener('click', exportJson);
   dom.btnCopyJson.addEventListener('click', copyJson);
   dom.btnTestPlay.addEventListener('click', testPlay);
+
+  // Export PNG Modal listeners
+  if (dom.btnCloseExportPngModal) {
+    dom.btnCloseExportPngModal.addEventListener('click', closeExportPngModal);
+  }
+  if (dom.btnCancelExportPng) {
+    dom.btnCancelExportPng.addEventListener('click', closeExportPngModal);
+  }
+  if (dom.btnConfirmSavePng) {
+    dom.btnConfirmSavePng.addEventListener('click', () => exportPng());
+  }
+  if (dom.btnCopyPngClipboard) {
+    dom.btnCopyPngClipboard.addEventListener('click', () => copyPngToClipboard());
+  }
+  if (dom.exportPngModal) {
+    dom.exportPngModal.addEventListener('click', (e) => {
+      if (e.target === dom.exportPngModal) closeExportPngModal();
+    });
+  }
+  if (dom.radioExportPngScale) {
+    dom.radioExportPngScale.forEach(r => r.addEventListener('change', updateExportPngPreview));
+  }
+  [dom.chkExportGrid, dom.chkExportNames, dom.chkExportArtwork, dom.chkExportBanner].forEach(chk => {
+    if (chk) chk.addEventListener('change', updateExportPngPreview);
+  });
+
+  // Export PDF Modal listeners
+  if (dom.btnCloseExportPdfModal) {
+    dom.btnCloseExportPdfModal.addEventListener('click', closeExportPdfModal);
+  }
+  if (dom.btnCancelExportPdf) {
+    dom.btnCancelExportPdf.addEventListener('click', closeExportPdfModal);
+  }
+  if (dom.btnConfirmSavePdf) {
+    dom.btnConfirmSavePdf.addEventListener('click', () => exportPdf());
+  }
+  if (dom.exportPdfModal) {
+    dom.exportPdfModal.addEventListener('click', (e) => {
+      if (e.target === dom.exportPdfModal) closeExportPdfModal();
+    });
+  }
 
   // ── Voice Dictation Integration with RobOS Voice Overlay App ─────────────
   const VOICE_GUIDANCE_PROMPT = "Tabletop Quest Map Editor Voice Assistant: The user is dictating quest map setup commands to place monsters, furniture, doors, traps, or wall blocks on the board (e.g. 'add 3 skeletons to room 1', 'place a treasure chest in room 2', 'put an orc in the north room').";
@@ -6171,6 +7570,19 @@ function setupEventListeners() {
       setActiveTool('note');
     } else if (e.key === 'e' || e.key === '9') {
       setActiveTool('erase');
+    } else if (e.key === 'Escape') {
+      if (dom.exportPngModal && dom.exportPngModal.style.display !== 'none') {
+        closeExportPngModal();
+      }
+      if (dom.exportPdfModal && dom.exportPdfModal.style.display !== 'none') {
+        closeExportPdfModal();
+      }
+    } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'E' || e.key === 'e')) {
+      e.preventDefault();
+      openExportPngModal();
+    } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
+      e.preventDefault();
+      openExportPdfModal();
     } else if (e.key === 'r') {
       // Rotate active furniture
       if (state.activeTool === 'furniture') {
@@ -6224,7 +7636,21 @@ if (typeof window !== 'undefined') {
     findFreeRectInRoom,
     setupSplitDividers,
     toggleRoomNames,
-    updateRoomNamesToggleUI
+    updateRoomNamesToggleUI,
+    generateExportCanvas,
+    generateQuestPdfHtml,
+    exportPng,
+    exportPdf,
+    copyPngToClipboard,
+    openExportPngModal,
+    closeExportPngModal,
+    openExportPdfModal,
+    closeExportPdfModal,
+    loadBlockmap,
+    loadCartridge,
+    isStartingQuestAction,
+    resolveTriggerIndicators,
+    drawExportTriggerIndicator
   };
 
   // Bootstrap application on window load
@@ -6235,6 +7661,10 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     validateQuest,
     loadCartridge,
+    loadBlockmap,
+    isStartingQuestAction,
+    resolveTriggerIndicators,
+    drawExportTriggerIndicator,
     interpretVoiceQuestCommands,
     executeVoiceMapCommands,
     findTargetRoom,
@@ -6243,12 +7673,24 @@ if (typeof module !== 'undefined' && module.exports) {
     setupSplitDividers,
     toggleRoomNames,
     updateRoomNamesToggleUI,
+    updateInspectorUI,
+    updateEntitySummaryList,
+    updateTriggerTargetOptions,
     updateTriggerTabUI,
     renderActionPipelineUI,
     addActionToTrigger,
     removeActionFromTrigger,
     addTrigger,
     buildCartridgePayload,
+    generateExportCanvas,
+    generateQuestPdfHtml,
+    exportPng,
+    exportPdf,
+    copyPngToClipboard,
+    openExportPngModal,
+    closeExportPngModal,
+    openExportPdfModal,
+    closeExportPdfModal,
     state,
     dom,
     MONSTER_DEFS,
