@@ -1,5 +1,21 @@
 'use strict';
 
+if (typeof document === "undefined") {
+  globalThis.document = {
+    getElementById: () => null,
+    querySelector: () => null,
+    querySelectorAll: () => [],
+    createElement: () => ({ style: {}, dataset: {}, classList: { add() {}, remove() {} }, appendChild() {}, addEventListener() {} }),
+    addEventListener: () => {}
+  };
+}
+if (typeof window === "undefined") {
+  globalThis.window = {
+    addEventListener: () => {},
+    robosTabletop: {}
+  };
+}
+
 const doorClosedImg = typeof Image !== "undefined" ? new Image() : null;
 if (doorClosedImg) doorClosedImg.src = "../assets/door_closed.png";
 
@@ -73,9 +89,15 @@ let currentData = {
   gameNodes: [],
   mapConfigs: [],
   activeMapConfig: null,
+  categories: ['Base Game', 'Midterms 2026'],
+  activeMonsterCategoryFilter: 'All',
+  activeSpellItemCategoryFilter: 'All',
   heroes: [],
   monsters: [],
   spells: [],
+  dreadSpells: [],
+  weapons: [],
+  items: [],
   spellAllocation: {
     elfElement: 'water',
     wizardElements: ['earth', 'fire', 'air'],
@@ -1969,6 +1991,16 @@ async function initKGraphData() {
         return t.includes("robos:TabletopMonster");
       });
 
+      // Ensure every monster has a category (default "Base Game") and merge Midterms 2026 monsters if missing
+      currentData.monsters.forEach(m => {
+        if (!m["robos:category"]) m["robos:category"] = "Base Game";
+      });
+      MIDTERMS_2026_MONSTERS.forEach(mm => {
+        if (!currentData.monsters.some(m => m["@id"] === mm["@id"])) {
+          currentData.monsters.push({ ...mm });
+        }
+      });
+
       currentData.spells = currentData.tabletopNodes.filter(n => {
         const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
         return t.includes("robos:TabletopSpellCard");
@@ -1979,15 +2011,22 @@ async function initKGraphData() {
         return t.includes("robos:TabletopFurniture");
       });
 
+      // Initialize Category Catalogs (Weapons, Items, Spells, Dread Spells, Categories)
+      syncCategoryCatalogsFromKGraph();
+
+      setupCategoryControls();
       setupHeroEditorControls();
       setupMonsterEditorControls();
       setupSpellDraftControls();
       setupHeroTradeControls();
       applySpellAllocationToHeroes();
+      renderCategoryControlsUI();
       renderHeroesList();
       renderMonstersList();
       renderSpellsAndItems();
       renderSpellDraftSummaryBadges();
+      syncBoardMonsterSelectDropdown();
+      syncHeroPresetItemsDropdown();
 
       // Initialize Campaign & Multi-Quest Blueprint
       setupCampaignQuestControls();
@@ -2005,8 +2044,10 @@ async function initKGraphData() {
 }
 
 // ==========================================
-// 1.5. ELEMENTAL SPELL DRAFT & GRIMOIRE ENGINE
+// 1.5. ELEMENTAL SPELL DRAFT, CATEGORIES & GRIMOIRE ENGINE
 // ==========================================
+
+const DEFAULT_CATEGORIES = ["Base Game", "Midterms 2026"];
 
 const ELEMENTAL_DECKS = {
   earth: {
@@ -2022,6 +2063,7 @@ const ELEMENTAL_DECKS = {
         slug: "heal-body",
         name: "Heal Body",
         element: "earth",
+        category: "Base Game",
         icon: "💖",
         description: "Restores up to 4 lost Body Points to any Hero, including yourself.",
         effect: "heal-bp",
@@ -2032,6 +2074,7 @@ const ELEMENTAL_DECKS = {
         slug: "pass-through-rock",
         name: "Pass Through Rock",
         element: "earth",
+        category: "Base Game",
         icon: "🧱",
         description: "Allows the caster or ally to move through solid stone walls on their next turn.",
         effect: "phase-walls",
@@ -2042,6 +2085,7 @@ const ELEMENTAL_DECKS = {
         slug: "rock-skin",
         name: "Rock Skin",
         element: "earth",
+        category: "Base Game",
         icon: "🛡️",
         description: "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
         effect: "buff-def",
@@ -2062,6 +2106,7 @@ const ELEMENTAL_DECKS = {
         slug: "ball-of-flame",
         name: "Ball of Flame",
         element: "fire",
+        category: "Base Game",
         icon: "☄️",
         description: "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
         effect: "damage-bp",
@@ -2072,6 +2117,7 @@ const ELEMENTAL_DECKS = {
         slug: "courage",
         name: "Courage",
         element: "fire",
+        category: "Base Game",
         icon: "🦁",
         description: "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
         effect: "buff-atk",
@@ -2082,6 +2128,7 @@ const ELEMENTAL_DECKS = {
         slug: "fire-of-wrath",
         name: "Fire of Wrath",
         element: "fire",
+        category: "Base Game",
         icon: "🔥",
         description: "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
         effect: "damage-bp",
@@ -2102,6 +2149,7 @@ const ELEMENTAL_DECKS = {
         slug: "water-of-healing",
         name: "Water of Healing",
         element: "water",
+        category: "Base Game",
         icon: "💧",
         description: "Restores up to 4 lost Body Points to any Hero.",
         effect: "heal-bp",
@@ -2112,6 +2160,7 @@ const ELEMENTAL_DECKS = {
         slug: "sleep",
         name: "Sleep",
         element: "water",
+        category: "Base Game",
         icon: "💤",
         description: "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
         effect: "status-sleep",
@@ -2122,6 +2171,7 @@ const ELEMENTAL_DECKS = {
         slug: "veil-of-mist",
         name: "Veil of Mist",
         element: "water",
+        category: "Base Game",
         icon: "🌫️",
         description: "Envelops the caster in thick fog, allowing movement unseen past monsters.",
         effect: "status-stealth",
@@ -2142,6 +2192,7 @@ const ELEMENTAL_DECKS = {
         slug: "genie",
         name: "Genie",
         element: "air",
+        category: "Base Game",
         icon: "🧞",
         description: "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
         effect: "summon-attack",
@@ -2152,6 +2203,7 @@ const ELEMENTAL_DECKS = {
         slug: "swift-wind",
         name: "Swift Wind",
         element: "air",
+        category: "Base Game",
         icon: "💨",
         description: "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
         effect: "buff-move",
@@ -2162,6 +2214,7 @@ const ELEMENTAL_DECKS = {
         slug: "tempest",
         name: "Tempest",
         element: "air",
+        category: "Base Game",
         icon: "🌪️",
         description: "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
         effect: "status-freeze",
@@ -2171,13 +2224,14 @@ const ELEMENTAL_DECKS = {
   }
 };
 
-// Authentic HeroQuest Chaos & Dread Spells (Enemies & Evil Sorcerers)
+// Authentic HeroQuest Chaos & Dread Spells (Base Game Enemies & Evil Sorcerers)
 const DREAD_SPELLS = [
   {
     id: "urn:robos:tabletop:spell:lightning-bolt",
     slug: "lightning-bolt",
     name: "Lightning Bolt",
     element: "dread",
+    category: "Base Game",
     icon: "⚡",
     description: "Strikes any hero with a bolt of dark lightning causing 2 BP damage. Target rolls 2 combat dice to defend.",
     effect: "damage-bp",
@@ -2188,6 +2242,7 @@ const DREAD_SPELLS = [
     slug: "firestorm",
     name: "Firestorm",
     element: "dread",
+    category: "Base Game",
     icon: "🔥",
     description: "Engulfs a hero or entire room in searing hellfire causing 3 BP damage. Target rolls 3 combat dice to defend.",
     effect: "damage-bp",
@@ -2198,6 +2253,7 @@ const DREAD_SPELLS = [
     slug: "fear",
     name: "Fear",
     element: "dread",
+    category: "Base Game",
     icon: "💀",
     description: "Paralyzes a hero with terror, reducing their Attack Strength to 1 combat die on their next turn.",
     effect: "debuff-atk",
@@ -2208,6 +2264,7 @@ const DREAD_SPELLS = [
     slug: "sleep-dread",
     name: "Sleep of Dread",
     element: "dread",
+    category: "Base Game",
     icon: "💤",
     description: "Puts a hero into deep magical slumber. They cannot move, attack, or defend until rolling a 6 or taking damage.",
     effect: "status-sleep",
@@ -2218,6 +2275,7 @@ const DREAD_SPELLS = [
     slug: "cloud-of-chaos",
     name: "Cloud of Chaos",
     element: "dread",
+    category: "Base Game",
     icon: "🕸️",
     description: "Releases a suffocating cloud of toxic chaos vapors. Target hero is stunned and loses their entire next turn.",
     effect: "status-freeze",
@@ -2228,6 +2286,7 @@ const DREAD_SPELLS = [
     slug: "summon-undead",
     name: "Summon Undead",
     element: "dread",
+    category: "Base Game",
     icon: "🧟",
     description: "Raises 2 Skeletons or Zombies from the dungeon floor adjacent to the caster to fight alongside them.",
     effect: "summon-monsters",
@@ -2238,6 +2297,7 @@ const DREAD_SPELLS = [
     slug: "rust",
     name: "Rust",
     element: "dread",
+    category: "Base Game",
     icon: "🛡️",
     description: "Corrodes and destroys one metal weapon or helmet equipped by a target hero, reducing their combat stats.",
     effect: "destroy-equipment",
@@ -2248,12 +2308,1046 @@ const DREAD_SPELLS = [
     slug: "escape",
     name: "Escape",
     element: "dread",
+    category: "Base Game",
     icon: "💨",
     description: "Dissolves the evil sorcerer into dark mist, teleporting them instantly to another room or safety.",
     effect: "teleport",
     val: 1
   }
 ];
+
+// ==========================================
+// "MIDTERMS 2026" & "BASE GAME" CONTENT PACK CATALOGS
+// ==========================================
+
+const MIDTERMS_2026_MONSTERS = [
+  {
+    "@id": "urn:robos:tabletop:monster:inflation-spawn",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Inflation Spawn (Goblin Money Monster)",
+    "dcterms:description": "A cackling green goblin made of crumpled dollar bills and $14 egg cartons! Swears price hikes are 'transitory' while picking your pocket.",
+    "robos:category": "Midterms 2026",
+    "robos:monsterArchetype": "Goblin",
+    "robos:alias": "Infalation Spawn",
+    "robos:icon": "🤑",
+    "robos:bodyPoints": 1,
+    "robos:attackDice": 2,
+    "robos:defendDice": 1,
+    "robos:movementSquares": 10,
+    "robos:roomId": "room-center-mid",
+    "robos:isBoss": false,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#15803d",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:illegal-alien",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Illegal Alien (Grey Alien in a Robber Mask)",
+    "dcterms:description": "A literal extraterrestrial Roswell grey alien wearing a classic striped burglar domino mask and carrying a sack with a '$' sign after crashing its UFO across the border!",
+    "robos:category": "Midterms 2026",
+    "robos:monsterArchetype": "Orc",
+    "robos:icon": "👽",
+    "robos:bodyPoints": 2,
+    "robos:attackDice": 3,
+    "robos:defendDice": 2,
+    "robos:movementSquares": 8,
+    "robos:roomId": "room-nw-crypt",
+    "robos:isBoss": false,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#64748b",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:happily-married-gay-man",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Happily Married Gay Man (Dread Warrior)",
+    "dcterms:description": "Terrifying to culture-warriors everywhere! Dual-wields impeccably coordinated throw pillows, a 780 credit score, and a freshly renovated kitchen that raises neighborhood property values.",
+    "robos:category": "Midterms 2026",
+    "robos:monsterArchetype": "Dread Warrior",
+    "robos:icon": "💍",
+    "robos:bodyPoints": 3,
+    "robos:attackDice": 4,
+    "robos:defendDice": 4,
+    "robos:movementSquares": 7,
+    "robos:roomId": "room-e-parlor",
+    "robos:isBoss": false,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#ec4899",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:k-street-swamp-fimir",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "K-Street Swamp Lobbyist (Fimir)",
+    "dcterms:description": "A one-eyed swamp reptile in a $4,000 Italian suit carrying a briefcase full of 'totally legal' Super-PAC consulting retainers.",
+    "robos:category": "Midterms 2026",
+    "robos:monsterArchetype": "Fimir",
+    "robos:icon": "🐊",
+    "robos:bodyPoints": 2,
+    "robos:attackDice": 3,
+    "robos:defendDice": 3,
+    "robos:movementSquares": 6,
+    "robos:roomId": "room-sw-cellar",
+    "robos:isBoss": false,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#0d9488",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:gerrymandered-skeleton",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Gerrymandered District Skeleton",
+    "dcterms:description": "An ancient undead incumbent drawn into a 400-mile-long zig-zagging salamander-shaped hallway so it can never be voted out of the crypt.",
+    "robos:category": "Midterms 2026",
+    "robos:monsterArchetype": "Skeleton",
+    "robos:icon": "💀",
+    "robos:bodyPoints": 1,
+    "robos:attackDice": 2,
+    "robos:defendDice": 2,
+    "robos:movementSquares": 6,
+    "robos:roomId": "room-nw-crypt",
+    "robos:isBoss": false,
+    "robos:isUndead": true,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#94a3b8",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:teleprompter-zombie",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Cable News Pundit Zombie",
+    "dcterms:description": "Mindlessly shambles forward reading '[PAUSE FOR APPLAUSE]' straight off the teleprompter glass while screaming 'BREAKING ALERT!' every 4 seconds.",
+    "robos:category": "Midterms 2026",
+    "robos:monsterArchetype": "Zombie",
+    "robos:icon": "🧟",
+    "robos:bodyPoints": 2,
+    "robos:attackDice": 2,
+    "robos:defendDice": 3,
+    "robos:movementSquares": 4,
+    "robos:roomId": "room-sw-cellar",
+    "robos:isBoss": false,
+    "robos:isUndead": true,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#475569",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:trumpbiden-dragon",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "TrumpBiden (The Two-Headed Blame Dragon)",
+    "dcterms:description": "A colossal two-headed Dragon fusion of two presidents who failed us all while everything got 3x more expensive—meanwhile both heads spend their entire turn pointing at each other, arguing about golf handicaps, and blaming the other guy!",
+    "robos:category": "Midterms 2026",
+    "robos:monsterArchetype": "Dragon",
+    "robos:icon": "🐉",
+    "robos:bodyPoints": 6,
+    "robos:attackDice": 5,
+    "robos:defendDice": 5,
+    "robos:movementSquares": 8,
+    "robos:roomId": "room-grand-fossil",
+    "robos:isBoss": true,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": true,
+    "robos:spells": [
+      "urn:robos:tabletop:spell:bipartisan-blame-inferno",
+      "urn:robos:tabletop:spell:shrinkflation-curse",
+      "urn:robos:tabletop:spell:culture-war-distraction-cloud"
+    ],
+    "robos:tokenColor": "#9333ea",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  }
+];
+
+const MIDTERMS_2026_SPELLS = [
+  {
+    id: "urn:robos:tabletop:spell:snowflake-meltdown",
+    slug: "snowflake-meltdown",
+    name: "Delicate Snowflake Meltdown",
+    element: "water",
+    category: "Midterms 2026",
+    icon: "❄️",
+    description: "Triggered by a mild difference of opinion! Freezes target in an outrage spiral for 1 turn while everyone in the room walks on eggshells.",
+    effect: "status-freeze",
+    val: 1
+  },
+  {
+    id: "urn:robos:tabletop:spell:midnight-gavel-no-choice",
+    slug: "midnight-gavel-no-choice",
+    name: "Midnight Gavel: No Choice For You!",
+    element: "earth",
+    category: "Midterms 2026",
+    icon: "👩‍⚖️",
+    description: "Slams a leaked shadow-docket gavel that takes away abortion & bodily autonomy! Locks down target's movement and personal choices for 1 turn.",
+    effect: "status-freeze",
+    val: 2
+  },
+  {
+    id: "urn:robos:tabletop:spell:blind-party-line",
+    slug: "blind-party-line",
+    name: "Blind Party-Line Loyalty",
+    element: "fire",
+    category: "Midterms 2026",
+    icon: "🐑",
+    description: "Supporting things just because your party does! You hated this policy yesterday, but your team just endorsed it—grants +2 Attack Dice of pure partisan zeal.",
+    effect: "buff-atk",
+    val: 2
+  },
+  {
+    id: "urn:robos:tabletop:spell:fear-middle-east-debate",
+    slug: "fear-middle-east-debate",
+    name: "Panic of the Middle East Question",
+    element: "air",
+    category: "Midterms 2026",
+    icon: "🎙️",
+    description: "Fear of Israel & the Middle East in an interview! Caster drops a smoke bomb of vague focus-grouped talking points and sprints away at double speed (4d6) to avoid getting cancelled.",
+    effect: "buff-move",
+    val: 2
+  },
+  {
+    id: "urn:robos:tabletop:spell:mcconnell-glitch",
+    slug: "mcconnell-glitch",
+    name: "30-Second Press Conference Freeze",
+    element: "water",
+    category: "Midterms 2026",
+    icon: "🐢",
+    description: "Stares blankly at reporters for 30 silent seconds waiting for a staffer reboot, granting +2 Defend Dice of stone-faced filibuster immunity.",
+    effect: "buff-def",
+    val: 2
+  }
+];
+
+const MIDTERMS_2026_DREAD_SPELLS = [
+  {
+    id: "urn:robos:tabletop:spell:bipartisan-blame-inferno",
+    slug: "bipartisan-blame-inferno",
+    name: "Bipartisan Blame-Game Inferno",
+    element: "dread",
+    category: "Midterms 2026",
+    icon: "🔥",
+    description: "TrumpBiden unleashes a twin-headed firestorm of finger-pointing while groceries hit $400 a bag! Deals 3 BP damage while both heads insist it's the other guy's fault.",
+    effect: "damage-bp",
+    val: 3
+  },
+  {
+    id: "urn:robos:tabletop:spell:shrinkflation-curse",
+    slug: "shrinkflation-curse",
+    name: "Curse of Shrinkflation",
+    element: "dread",
+    category: "Midterms 2026",
+    icon: "📉",
+    description: "Your potion bottle is now 40% smaller, mostly air, and costs twice as much gold! Reduces target Hero's Attack Dice by 1 on their next turn.",
+    effect: "debuff-atk",
+    val: 1
+  },
+  {
+    id: "urn:robos:tabletop:spell:culture-war-distraction-cloud",
+    slug: "culture-war-distraction-cloud",
+    name: "Culture War Distraction Cloud",
+    element: "dread",
+    category: "Midterms 2026",
+    icon: "📺",
+    description: "Fills the dungeon room with 24/7 cable-news outrage so nobody notices the treasury being looted! Stuns target Hero for 1 turn.",
+    effect: "status-freeze",
+    val: 1
+  }
+];
+
+const BASE_WEAPONS = [
+  { id: "urn:robos:tabletop:weapon:broadsword", name: "Broadsword", type: "Weapon", dice: "3 Attack Dice", cost: "250 GP", icon: "⚔️", category: "Base Game", description: "Standard Imperial steel broadsword rolling 3 combat dice." },
+  { id: "urn:robos:tabletop:weapon:shortsword", name: "Shortsword", type: "Weapon", dice: "2 Attack Dice (Diagonal)", cost: "150 GP", icon: "🗡️", category: "Base Game", description: "Balanced blade capable of striking adjacent and diagonal foes." },
+  { id: "urn:robos:tabletop:weapon:battle-axe", name: "Battle Axe", type: "Weapon", dice: "4 Attack Dice (Two-Handed)", cost: "400 GP", icon: "🪓", category: "Base Game", description: "Heavy two-handed greataxe rolling 4 combat dice (cannot use shield)." },
+  { id: "urn:robos:tabletop:weapon:crossbow", name: "Crossbow", type: "Ranged Weapon", dice: "3 Attack Dice (Straight Line)", cost: "350 GP", icon: "🏹", category: "Base Game", description: "Heavy ranged arbalest striking any visible monster in line of sight." },
+  { id: "urn:robos:tabletop:weapon:chainmail", name: "Chainmail", type: "Armor", dice: "+1 Defend Die (3 Total)", cost: "500 GP", icon: "🛡️", category: "Base Game", description: "Linked steel rings granting 3 total defend dice." },
+  { id: "urn:robos:tabletop:weapon:plate-armor", name: "Plate Armor", type: "Armor", dice: "+2 Defend Dice (4 Total, 1d6 Move)", cost: "850 GP", icon: "🦾", category: "Base Game", description: "Heavy full-plate armor granting 4 defend dice but reducing movement to 1d6." },
+  { id: "urn:robos:tabletop:weapon:shield", name: "Shield", type: "Armor", dice: "+1 Defend Die", cost: "150 GP", icon: "🛡️", category: "Base Game", description: "Sturdy oak-and-iron shield granting +1 extra defend die." },
+  { id: "urn:robos:tabletop:weapon:helmet", name: "Helmet", type: "Armor", dice: "+1 Defend Die", cost: "120 GP", icon: "🪖", category: "Base Game", description: "Steel battle helm granting +1 extra defend die." },
+  { id: "urn:robos:tabletop:weapon:toolkit", name: "Toolkit", type: "Gear", dice: "Disarm Traps on 1-5", cost: "250 GP", icon: "🔧", category: "Base Game", description: "Precision picks and wedges allowing any hero to disarm traps." }
+];
+
+const MIDTERMS_2026_WEAPONS = [
+  {
+    id: "urn:robos:tabletop:weapon:unapproved-bombing-run",
+    name: "Unapproved Foreign Bombing Run",
+    type: "Illegal Presidential Act (Ranged)",
+    dice: "4 Attack Dice (Zero Congressional Approval)",
+    cost: "500 GP",
+    icon: "💣",
+    category: "Midterms 2026",
+    description: "Who needs a pesky declaration of war from Congress when both parties just call it a 'limited kinetic military operation' over brunch?"
+  },
+  {
+    id: "urn:robos:tabletop:weapon:classified-bathroom-box",
+    name: "Classified Bathroom Bankers Box Flail",
+    type: "Illegal Presidential Act (Melee)",
+    dice: "3 Attack Dice (Stored Next to Bathroom Chandelier)",
+    cost: "350 GP",
+    icon: "📦",
+    category: "Midterms 2026",
+    description: "A heavy cardboard box stuffed with Top Secret nuclear folders found stacked between a country-club bathroom and a classic Corvette in the garage."
+  },
+  {
+    id: "urn:robos:tabletop:weapon:midnight-pardon-gavel",
+    name: "Midnight Blanket Pardon Gavel",
+    type: "Illegal Presidential Act (Relic)",
+    dice: "3 Attack Dice (Absolves All Cronies & Family)",
+    cost: "450 GP",
+    icon: "🔨",
+    category: "Midterms 2026",
+    description: "Signed at 11:59 PM on the way to Marine One! Retroactively wipes out a decade of questionable felonies for donors, friends, and relatives."
+  },
+  {
+    id: "urn:robos:tabletop:weapon:executive-order-overreach-pen",
+    name: "Unconstitutional Executive Order Sharpie",
+    type: "Illegal Presidential Act (Wand)",
+    dice: "3 Attack Dice (Bypasses Checks & Balances)",
+    cost: "300 GP",
+    icon: "🖊️",
+    category: "Midterms 2026",
+    description: "Why pass a law through Congress when you can legislate by giant black marker and let the courts argue about it for 4 years?"
+  },
+  {
+    id: "urn:robos:tabletop:weapon:crypto-rugpull-scepter",
+    name: "Presidential Meme-Coin Rug-Pull Scepter",
+    type: "Illegal Presidential Act (Emolument)",
+    dice: "4 Attack Dice (Drains 200 GP From Voters)",
+    cost: "600 GP",
+    icon: "🪙",
+    category: "Midterms 2026",
+    description: "The Founding Fathers forgot to write 'No Official White House Crypto Pump-and-Dumps' in the Constitution!"
+  },
+  {
+    id: "urn:robos:tabletop:weapon:doj-subpoena-crossbow",
+    name: "Weaponized Subpoena Crossbow",
+    type: "Illegal Presidential Act (Ranged)",
+    dice: "3 Attack Dice (Fires Indictments Across Rooms)",
+    cost: "400 GP",
+    icon: "🏹",
+    category: "Midterms 2026",
+    description: "Turns federal agencies into a personal campaign war-room! Fires rapid-fire subpoenas and investigations at political rivals."
+  },
+  {
+    id: "urn:robos:tabletop:weapon:official-act-immunity-shield",
+    name: "'Official Act' Sovereign Immunity Shield",
+    type: "Illegal Presidential Act (Armor)",
+    dice: "+3 Defend Dice (Total Legal Invincibility)",
+    cost: "750 GP",
+    icon: "🛡️",
+    category: "Midterms 2026",
+    description: "Just declare whatever sketchy thing you just did an 'Official Core Constitutional Act' and no prosecutor in the dungeon can touch you!"
+  }
+];
+
+const BASE_QUEST_ITEMS = [
+  { id: "urn:robos:tabletop:item:potion-healing", key: "potion-healing", name: "Potion of Healing", type: "potion", effect: "Restores up to 4 BP", value: 100, cost: "100 GP", icon: "🧪", category: "Base Game", description: "Brewed by the Alchemists' Guild to mend grievous dungeon wounds." },
+  { id: "urn:robos:tabletop:item:holy-water", key: "holy-water", name: "Holy Water", type: "relic", effect: "Dispel/Kill Undead", value: 200, cost: "200 GP", icon: "✨", category: "Base Game", description: "Consecrated water that instantly banishes a Skeleton, Zombie, or Mummy." },
+  { id: "urn:robos:tabletop:item:tool-kit", key: "tool-kit", name: "Trap Disarm Toolkit", type: "tool", effect: "Disarm traps without rolling skull", value: 75, cost: "75 GP", icon: "🔧", category: "Base Game", description: "Masterwork thieves' tools for safely disarming pit and spear traps." },
+  { id: "urn:robos:tabletop:item:heavy-rope", key: "heavy-rope", name: "Heavy Rope (30 ft)", type: "tool", effect: "Cross pits or climb chasms", value: 25, cost: "25 GP", icon: "🪢", category: "Base Game", description: "Hemp climbing rope for escaping deep pit traps." },
+  { id: "urn:robos:tabletop:item:torch", key: "torch", name: "Dungeon Torch", type: "tool", effect: "Light darkness for 3 turns", value: 15, cost: "15 GP", icon: "🔥", category: "Base Game", description: "Pitch-soaked torch that illuminates dark corridors and hidden doors." },
+  { id: "urn:robos:tabletop:item:potion-strength", key: "potion-strength", name: "Potion of Strength", type: "potion", effect: "+2 Attack Dice for 1 turn", value: 150, cost: "150 GP", icon: "💪", category: "Base Game", description: "Grants heroic might (+2 Combat Attack Dice) on your next attack." }
+];
+
+const MIDTERMS_2026_ITEMS = [
+  {
+    id: "urn:robos:tabletop:item:snowflake-tears",
+    key: "snowflake-tears",
+    name: "Vial of Delicate Snowflake Tears",
+    type: "potion",
+    effect: "Freezes everyone in awkward silence for 1 turn & restores 2 MP",
+    value: 150,
+    cost: "150 GP",
+    icon: "❄️",
+    category: "Midterms 2026",
+    description: "Distilled from pure comment-section meltdowns on both sides of the aisle! Makes the drinker immune to mild jokes for 1 turn."
+  },
+  {
+    id: "urn:robos:tabletop:item:bodily-autonomy-eraser",
+    key: "bodily-autonomy-eraser",
+    name: "1789 Bodily Autonomy Eraser Scroll",
+    type: "relic",
+    effect: "Takes away abortion & personal choice; forces target to lose their action",
+    value: 250,
+    cost: "250 GP",
+    icon: "📜",
+    category: "Midterms 2026",
+    description: "Takes away reproductive rights and bodily autonomy using a dusty parchment from 1789 because politicians love regulating personal healthcare."
+  },
+  {
+    id: "urn:robos:tabletop:item:party-line-flip-flops",
+    key: "party-line-flip-flops",
+    name: "Party-Line Flip-Flop Sandals",
+    type: "relic",
+    effect: "Support things just because your party does! Instant 180° pivot & +2 Move",
+    value: 200,
+    cost: "200 GP",
+    icon: "🩴",
+    category: "Midterms 2026",
+    description: "Supporting things just because your party does! Automatically spins you 180 degrees the second your party leader changes their mind."
+  },
+  {
+    id: "urn:robos:tabletop:item:middle-east-teleprompter",
+    key: "middle-east-teleprompter",
+    name: "Middle East Briefing Teleprompter Shield",
+    type: "tool",
+    effect: "Deflects impossible questions on Israel & the Middle East (+2 Defend Dice)",
+    value: 300,
+    cost: "300 GP",
+    icon: "📺",
+    category: "Midterms 2026",
+    description: "Fear of Israel and the Middle East in a town-hall debate! Pivots immediately to talking about bridges and roads while dodging all projectiles."
+  },
+  {
+    id: "urn:robos:tabletop:item:fed-printer-coin",
+    key: "fed-printer-coin",
+    name: "Money Printer Goes 'Brrrr' Crank",
+    type: "relic",
+    effect: "Prints +500 GP instantly, but raises shop prices by 50%",
+    value: 500,
+    cost: "500 GP",
+    icon: "🖨️",
+    category: "Midterms 2026",
+    description: "Cranks out fresh stimulus gold coins out of thin air while economists insist inflation isn't real!"
+  }
+];
+
+function getAllDreadSpells() {
+  const map = new Map();
+  [...DREAD_SPELLS, ...MIDTERMS_2026_DREAD_SPELLS, ...(currentData.dreadSpells || [])].forEach(ds => {
+    const key = ds.slug || ds.id;
+    if (key) map.set(key, ds);
+  });
+  return Array.from(map.values());
+}
+
+function getAllHeroSpellsCatalog() {
+  const map = new Map();
+  Object.keys(ELEMENTAL_DECKS).forEach(elemKey => {
+    ELEMENTAL_DECKS[elemKey].spells.forEach(s => {
+      map.set(s.id || s.slug, { ...s, category: s.category || "Base Game" });
+    });
+  });
+  MIDTERMS_2026_SPELLS.forEach(s => {
+    map.set(s.id || s.slug, { ...s, category: s.category || "Midterms 2026" });
+  });
+  (currentData.spells || []).forEach(n => {
+    const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+    if (t.includes("robos:TabletopDreadSpell") || n["robos:spellCollege"] === "dread") return;
+    const id = n["@id"] || n.id;
+    const slug = (id || "").replace("urn:robos:tabletop:spell:", "");
+    if (!map.has(id) && !map.has(slug)) {
+      map.set(id || slug, {
+        id: id || `urn:robos:tabletop:spell:${slug}`,
+        slug: slug,
+        name: n["dcterms:title"] || n.name || slug,
+        element: (n["robos:spellCollege"] || n.element || "fire").toLowerCase(),
+        category: n["robos:category"] || n.category || "Base Game",
+        icon: n["robos:icon"] || n.icon || "✨",
+        description: n["dcterms:description"] || n.description || "",
+        effect: n["robos:effect"] || n.effect || "damage-bp",
+        val: n["robos:effectValue"] || n.val || 2
+      });
+    }
+  });
+  return Array.from(map.values());
+}
+
+function syncCategoryCatalogsFromKGraph() {
+  const catSet = new Set(DEFAULT_CATEGORIES);
+  (currentData.categories || []).forEach(c => {
+    if (c && String(c).trim()) catSet.add(String(c).trim());
+  });
+
+  // Collect categories from KGraph nodes
+  (currentData.tabletopNodes || []).forEach(n => {
+    if (n["robos:category"]) catSet.add(n["robos:category"]);
+  });
+  (currentData.monsters || []).forEach(m => {
+    if (m["robos:category"]) catSet.add(m["robos:category"]);
+  });
+
+  // Sync weapons
+  const wepMap = new Map();
+  [...BASE_WEAPONS, ...MIDTERMS_2026_WEAPONS, ...(currentData.weapons || [])].forEach(w => {
+    wepMap.set(w.id || w.name, { ...w, category: w.category || "Base Game" });
+  });
+  (currentData.tabletopNodes || []).forEach(n => {
+    const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+    if (t.includes("robos:TabletopWeapon") || (t.includes("robos:TabletopArtifact") && n["robos:itemType"] === "weapon")) {
+      const id = n["@id"];
+      if (!wepMap.has(id)) {
+        wepMap.set(id, {
+          id,
+          name: n["dcterms:title"] || id,
+          type: n["robos:weaponType"] || "Weapon",
+          dice: n["robos:combatStat"] || `${n["robos:attackDice"] || 3} Attack Dice`,
+          cost: n["robos:cost"] || `${n["robos:goldValue"] || 250} GP`,
+          icon: n["robos:icon"] || "⚔️",
+          category: n["robos:category"] || "Base Game",
+          description: n["dcterms:description"] || ""
+        });
+      }
+    }
+  });
+  currentData.weapons = Array.from(wepMap.values());
+  currentData.weapons.forEach(w => { if (w.category) catSet.add(w.category); });
+
+  // Sync quest items
+  const itemMap = new Map();
+  [...BASE_QUEST_ITEMS, ...MIDTERMS_2026_ITEMS, ...(currentData.items || [])].forEach(it => {
+    itemMap.set(it.id || it.key || it.name, { ...it, category: it.category || "Base Game" });
+  });
+  (currentData.tabletopNodes || []).forEach(n => {
+    const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+    if (t.includes("robos:TabletopItem") || (t.includes("robos:TabletopBlessing") && n["robos:category"])) {
+      const id = n["@id"];
+      if (!itemMap.has(id)) {
+        const key = id.split(":").pop();
+        itemMap.set(id, {
+          id,
+          key,
+          name: n["dcterms:title"] || key,
+          type: n["robos:itemType"] || "relic",
+          effect: n["robos:effect"] || n["dcterms:description"] || "",
+          value: n["robos:goldValue"] || 100,
+          cost: n["robos:cost"] || `${n["robos:goldValue"] || 100} GP`,
+          icon: n["robos:icon"] || "🎒",
+          category: n["robos:category"] || "Base Game",
+          description: n["dcterms:description"] || ""
+        });
+      }
+    }
+  });
+  currentData.items = Array.from(itemMap.values());
+  currentData.items.forEach(it => { if (it.category) catSet.add(it.category); });
+
+  // Also register all items in PRESET_ITEMS so heroes can equip them
+  currentData.items.forEach(it => {
+    const k = it.key || (it.id ? it.id.split(":").pop() : it.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
+    PRESET_ITEMS[k] = {
+      id: it.id || `item-${k}`,
+      name: it.name,
+      type: it.type || "item",
+      effect: it.effect || it.description || "",
+      value: parseInt(it.value, 10) || parseInt(it.cost, 10) || 100,
+      category: it.category || "Base Game"
+    };
+  });
+
+  // Sync dread spells
+  const dreadMap = new Map();
+  [...DREAD_SPELLS, ...MIDTERMS_2026_DREAD_SPELLS, ...(currentData.dreadSpells || [])].forEach(ds => {
+    dreadMap.set(ds.slug || ds.id, { ...ds, category: ds.category || "Base Game" });
+  });
+  (currentData.tabletopNodes || []).forEach(n => {
+    const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+    if (t.includes("robos:TabletopDreadSpell") || n["robos:spellCollege"] === "dread") {
+      const id = n["@id"];
+      const slug = (id || "").replace("urn:robos:tabletop:spell:", "");
+      if (!dreadMap.has(slug)) {
+        dreadMap.set(slug, {
+          id,
+          slug,
+          name: n["dcterms:title"] || slug,
+          element: "dread",
+          category: n["robos:category"] || "Base Game",
+          icon: n["robos:icon"] || "⚡",
+          description: n["dcterms:description"] || "",
+          effect: n["robos:effect"] || "damage-bp",
+          val: n["robos:effectValue"] || 2
+        });
+      }
+    }
+  });
+  currentData.dreadSpells = Array.from(dreadMap.values());
+  currentData.dreadSpells.forEach(ds => { if (ds.category) catSet.add(ds.category); });
+
+  currentData.categories = Array.from(catSet);
+}
+
+function getCategories() {
+  if (!Array.isArray(currentData.categories) || currentData.categories.length === 0) {
+    currentData.categories = [...DEFAULT_CATEGORIES];
+  }
+  return currentData.categories;
+}
+
+function addCategory(categoryName) {
+  const clean = String(categoryName || "").trim();
+  if (!clean) return { success: false, error: "Category name cannot be empty" };
+  if (!Array.isArray(currentData.categories)) {
+    currentData.categories = [...DEFAULT_CATEGORIES];
+  }
+  const existing = currentData.categories.find(c => c.toLowerCase() === clean.toLowerCase());
+  const finalName = existing || clean;
+  if (!existing) {
+    currentData.categories.push(finalName);
+  }
+  renderCategoryControlsUI();
+  setStatus(`Added content category '${finalName}'.`);
+  return { success: true, category: finalName, categories: [...currentData.categories] };
+}
+
+function getMonstersByCategory(category = "All") {
+  const list = currentData.monsters || [];
+  if (!category || category === "All") return list;
+  return list.filter(m => (m["robos:category"] || "Base Game") === category);
+}
+
+function getSpellsByCategory(category = "All") {
+  const list = getAllHeroSpellsCatalog();
+  if (!category || category === "All") return list;
+  return list.filter(s => (s.category || "Base Game") === category);
+}
+
+function getDreadSpellsByCategory(category = "All") {
+  const list = getAllDreadSpells();
+  if (!category || category === "All") return list;
+  return list.filter(s => (s.category || "Base Game") === category);
+}
+
+function getWeaponsByCategory(category = "All") {
+  if (!currentData.weapons || currentData.weapons.length === 0) syncCategoryCatalogsFromKGraph();
+  const list = currentData.weapons || [];
+  if (!category || category === "All") return list;
+  return list.filter(w => (w.category || "Base Game") === category);
+}
+
+function getItemsByCategory(category = "All") {
+  if (!currentData.items || currentData.items.length === 0) syncCategoryCatalogsFromKGraph();
+  const list = currentData.items || [];
+  if (!category || category === "All") return list;
+  return list.filter(it => (it.category || "Base Game") === category);
+}
+
+function setMonsterCategoryFilter(category) {
+  currentData.activeMonsterCategoryFilter = category || "All";
+  const filterSelect = document.getElementById("monster-category-filter");
+  if (filterSelect && filterSelect.value !== currentData.activeMonsterCategoryFilter) {
+    filterSelect.value = currentData.activeMonsterCategoryFilter;
+  }
+  renderMonstersList();
+  return getMonstersByCategory(currentData.activeMonsterCategoryFilter);
+}
+
+function setSpellItemCategoryFilter(category) {
+  currentData.activeSpellItemCategoryFilter = category || "All";
+  const filterSelect = document.getElementById("spells-items-category-filter");
+  if (filterSelect && filterSelect.value !== currentData.activeSpellItemCategoryFilter) {
+    filterSelect.value = currentData.activeSpellItemCategoryFilter;
+  }
+  renderCategoryControlsUI();
+  renderSpellsAndItems();
+  return {
+    category: currentData.activeSpellItemCategoryFilter,
+    spells: getSpellsByCategory(currentData.activeSpellItemCategoryFilter),
+    dreadSpells: getDreadSpellsByCategory(currentData.activeSpellItemCategoryFilter),
+    weapons: getWeaponsByCategory(currentData.activeSpellItemCategoryFilter),
+    items: getItemsByCategory(currentData.activeSpellItemCategoryFilter)
+  };
+}
+
+function renderCategoryControlsUI() {
+  const cats = getCategories();
+
+  // 1. Filter selects (include "All")
+  ["monster-category-filter", "spells-items-category-filter"].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const prevVal = selId === "monster-category-filter"
+      ? (currentData.activeMonsterCategoryFilter || "All")
+      : (currentData.activeSpellItemCategoryFilter || "All");
+    sel.innerHTML = "";
+    const allOpt = document.createElement("option");
+    allOpt.value = "All";
+    allOpt.textContent = "All Categories (" + cats.length + " Packs)";
+    sel.appendChild(allOpt);
+    cats.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c;
+      opt.textContent = c === "Base Game" ? "🏰 Base Game" : (c === "Midterms 2026" ? "🗳️ Midterms 2026" : `🏷️ ${c}`);
+      sel.appendChild(opt);
+    });
+    sel.value = cats.includes(prevVal) || prevVal === "All" ? prevVal : "All";
+  });
+
+  // 2. Entity assignment selects (no "All")
+  ["monster-category", "new-spell-category", "new-weapon-category", "new-item-category"].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const prevVal = sel.value;
+    sel.innerHTML = "";
+    cats.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c;
+      opt.textContent = c;
+      sel.appendChild(opt);
+    });
+    if (prevVal && cats.includes(prevVal)) {
+      sel.value = prevVal;
+    } else if (currentData.activeSpellItemCategoryFilter && currentData.activeSpellItemCategoryFilter !== "All") {
+      sel.value = currentData.activeSpellItemCategoryFilter;
+    }
+  });
+
+  // 3. Render Category Pills Bar on Spells & Items tab
+  const pillsBar = document.getElementById("category-pills-bar");
+  if (pillsBar) {
+    pillsBar.innerHTML = "";
+    const activeCat = currentData.activeSpellItemCategoryFilter || "All";
+    ["All", ...cats].forEach(c => {
+      const btn = document.createElement("button");
+      const isActive = activeCat === c;
+      btn.className = `btn btn-xs ${isActive ? "btn-primary" : "btn-secondary"} category-pill-btn`;
+      btn.dataset.category = c;
+      const icon = c === "All" ? "🌐" : (c === "Base Game" ? "🏰" : (c === "Midterms 2026" ? "🗳️" : "🏷️"));
+      btn.textContent = `${icon} ${c === "All" ? "All Packs" : c}`;
+      btn.onclick = () => setSpellItemCategoryFilter(c);
+      pillsBar.appendChild(btn);
+    });
+  }
+}
+
+function syncBoardMonsterSelectDropdown() {
+  const sel = document.getElementById("select-monster-type");
+  if (!sel) return;
+  const currentVal = sel.value;
+  const cats = getCategories();
+  sel.innerHTML = "";
+
+  cats.forEach(cat => {
+    const monstersInCat = getMonstersByCategory(cat);
+    if (monstersInCat.length === 0) return;
+    const optgroup = document.createElement("optgroup");
+    optgroup.label = `🏷️ ${cat}`;
+    monstersInCat.forEach(m => {
+      const slug = (m["@id"] || "").replace("urn:robos:tabletop:monster:", "");
+      const opt = document.createElement("option");
+      opt.value = slug;
+      const bp = m["robos:bodyPoints"] || 1;
+      const atk = m["robos:attackDice"] || 2;
+      const bossTag = m["robos:isBoss"] ? "👑 BOSS, " : "";
+      opt.textContent = `${m["dcterms:title"] || slug} (${bossTag}${bp} BP, ${atk} Atk)`;
+      optgroup.appendChild(opt);
+    });
+    sel.appendChild(optgroup);
+  });
+
+  if (currentVal && Array.from(sel.options).some(o => o.value === currentVal)) {
+    sel.value = currentVal;
+  }
+}
+
+function syncHeroPresetItemsDropdown() {
+  const sel = document.getElementById("hero-preset-item");
+  if (!sel) return;
+  const currentVal = sel.value;
+  const cats = getCategories();
+  sel.innerHTML = "";
+
+  cats.forEach(cat => {
+    const itemsInCat = getItemsByCategory(cat);
+    if (itemsInCat.length === 0) return;
+    const optgroup = document.createElement("optgroup");
+    optgroup.label = `🏷️ ${cat}`;
+    itemsInCat.forEach(it => {
+      const key = it.key || (it.id ? it.id.split(":").pop() : it.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
+      const opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = `${it.icon || "🎒"} ${it.name} (${it.effect || it.type || "Item"})`;
+      optgroup.appendChild(opt);
+    });
+    sel.appendChild(optgroup);
+  });
+
+  if (currentVal && Array.from(sel.options).some(o => o.value === currentVal)) {
+    sel.value = currentVal;
+  }
+}
+
+async function addCustomSpell(spellInput) {
+  const name = String(spellInput.name || "").trim();
+  if (!name) return { success: false, error: "Spell name is required" };
+  const category = String(spellInput.category || "Base Game").trim();
+  addCategory(category);
+  const element = String(spellInput.element || "fire").toLowerCase();
+  const slug = spellInput.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const id = `urn:robos:tabletop:spell:${slug}`;
+  const icon = spellInput.icon || (element === "dread" ? "⚡" : "✨");
+  const description = spellInput.description || "Custom tabletop spell.";
+  const effect = spellInput.effect || "damage-bp";
+  const val = parseInt(spellInput.val, 10) || 2;
+
+  const spellObj = { id, slug, name, element, category, icon, description, effect, val };
+
+  if (element === "dread") {
+    currentData.dreadSpells.push(spellObj);
+  } else {
+    currentData.spells.push({
+      "@id": id,
+      "@type": ["oslc_am:Resource", "robos:TabletopSpellCard", "schema:Thing"],
+      "dcterms:title": name,
+      "dcterms:description": description,
+      "robos:category": category,
+      "robos:spellCollege": element,
+      "robos:icon": icon,
+      "robos:effect": effect,
+      "robos:effectValue": val,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    });
+  }
+
+  if (window.robosTabletop?.saveKGraphEntity) {
+    await window.robosTabletop.saveKGraphEntity({
+      entity: {
+        "@id": id,
+        "@type": element === "dread"
+          ? ["oslc_am:Resource", "robos:TabletopSpellCard", "robos:TabletopDreadSpell", "schema:Thing"]
+          : ["oslc_am:Resource", "robos:TabletopSpellCard", "schema:Thing"],
+        "dcterms:title": name,
+        "dcterms:description": description,
+        "robos:category": category,
+        "robos:spellCollege": element,
+        "robos:icon": icon,
+        "robos:effect": effect,
+        "robos:effectValue": val,
+        "robos:package": "tabletop-game",
+        "robos:namespace": "robos.tabletop"
+      }
+    });
+  }
+
+  renderSpellsAndItems();
+  setStatus(`Added spell '${name}' under category '${category}'.`);
+  return { success: true, spell: spellObj };
+}
+
+async function addCustomWeapon(weaponInput) {
+  const name = String(weaponInput.name || "").trim();
+  if (!name) return { success: false, error: "Weapon name is required" };
+  const category = String(weaponInput.category || "Base Game").trim();
+  addCategory(category);
+  const slug = weaponInput.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const id = `urn:robos:tabletop:weapon:${slug}`;
+  const weaponObj = {
+    id,
+    name,
+    type: weaponInput.type || "Weapon",
+    dice: weaponInput.dice || "3 Attack Dice",
+    cost: weaponInput.cost || "250 GP",
+    icon: weaponInput.icon || "⚔️",
+    category,
+    description: weaponInput.description || ""
+  };
+  currentData.weapons.push(weaponObj);
+
+  if (window.robosTabletop?.saveKGraphEntity) {
+    await window.robosTabletop.saveKGraphEntity({
+      entity: {
+        "@id": id,
+        "@type": ["oslc_am:Resource", "robos:TabletopArtifact", "robos:TabletopWeapon", "schema:Product"],
+        "dcterms:title": name,
+        "dcterms:description": weaponObj.description,
+        "robos:category": category,
+        "robos:itemType": "weapon",
+        "robos:weaponType": weaponObj.type,
+        "robos:combatStat": weaponObj.dice,
+        "robos:cost": weaponObj.cost,
+        "robos:icon": weaponObj.icon,
+        "robos:package": "tabletop-game",
+        "robos:namespace": "robos.tabletop"
+      }
+    });
+  }
+
+  renderSpellsAndItems();
+  setStatus(`Added weapon '${name}' under category '${category}'.`);
+  return { success: true, weapon: weaponObj };
+}
+
+async function addCustomItem(itemInput) {
+  const name = String(itemInput.name || "").trim();
+  if (!name) return { success: false, error: "Item name is required" };
+  const category = String(itemInput.category || "Base Game").trim();
+  addCategory(category);
+  const slug = itemInput.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const id = `urn:robos:tabletop:item:${slug}`;
+  const costStr = itemInput.cost ? (String(itemInput.cost).includes("GP") ? String(itemInput.cost) : `${itemInput.cost} GP`) : "100 GP";
+  const valNum = parseInt(itemInput.value || itemInput.cost, 10) || 100;
+  const itemObj = {
+    id,
+    key: slug,
+    name,
+    type: itemInput.type || "relic",
+    effect: itemInput.effect || "Special quest effect",
+    value: valNum,
+    cost: costStr,
+    icon: itemInput.icon || "🎒",
+    category,
+    description: itemInput.description || itemInput.effect || ""
+  };
+  currentData.items.push(itemObj);
+  PRESET_ITEMS[slug] = {
+    id: `item-${slug}`,
+    name: itemObj.name,
+    type: itemObj.type,
+    effect: itemObj.effect,
+    value: itemObj.value,
+    category: itemObj.category
+  };
+
+  if (window.robosTabletop?.saveKGraphEntity) {
+    await window.robosTabletop.saveKGraphEntity({
+      entity: {
+        "@id": id,
+        "@type": ["oslc_am:Resource", "robos:TabletopBlessing", "robos:TabletopItem", "schema:Thing"],
+        "dcterms:title": name,
+        "dcterms:description": itemObj.description,
+        "robos:category": category,
+        "robos:itemType": itemObj.type,
+        "robos:effect": itemObj.effect,
+        "robos:goldValue": itemObj.value,
+        "robos:cost": itemObj.cost,
+        "robos:icon": itemObj.icon,
+        "robos:package": "tabletop-game",
+        "robos:namespace": "robos.tabletop"
+      }
+    });
+  }
+
+  syncHeroPresetItemsDropdown();
+  renderSpellsAndItems();
+  setStatus(`Added item '${name}' under category '${category}'.`);
+  return { success: true, item: itemObj };
+}
+
+let categoryControlsInitialized = false;
+function setupCategoryControls() {
+  if (categoryControlsInitialized) return;
+  categoryControlsInitialized = true;
+
+  // Monster tab category filter
+  document.getElementById("monster-category-filter")?.addEventListener("change", (e) => {
+    setMonsterCategoryFilter(e.target.value);
+  });
+
+  // Monster tab add new category button
+  document.getElementById("btn-add-monster-category")?.addEventListener("click", () => {
+    const input = document.getElementById("monster-new-category-input");
+    const val = input?.value?.trim();
+    if (!val) return;
+    const res = addCategory(val);
+    if (res.success) {
+      if (input) input.value = "";
+      setMonsterCategoryFilter(res.category);
+      const monCatSelect = document.getElementById("monster-category");
+      if (monCatSelect) monCatSelect.value = res.category;
+    }
+  });
+
+  // Spells & Items tab category filter
+  document.getElementById("spells-items-category-filter")?.addEventListener("change", (e) => {
+    setSpellItemCategoryFilter(e.target.value);
+  });
+
+  // Spells & Items tab create category button
+  document.getElementById("btn-create-category")?.addEventListener("click", () => {
+    const input = document.getElementById("new-category-name");
+    const val = input?.value?.trim();
+    if (!val) return;
+    const res = addCategory(val);
+    if (res.success) {
+      if (input) input.value = "";
+      setSpellItemCategoryFilter(res.category);
+    }
+  });
+
+  // Toggle inline forms on Spells & Items tab
+  document.getElementById("btn-toggle-add-spell")?.addEventListener("click", () => {
+    const form = document.getElementById("form-add-spell-card");
+    if (form) form.style.display = form.style.display === "none" ? "block" : "none";
+  });
+  document.getElementById("btn-cancel-new-spell")?.addEventListener("click", () => {
+    const form = document.getElementById("form-add-spell-card");
+    if (form) form.style.display = "none";
+  });
+  document.getElementById("btn-save-new-spell")?.addEventListener("click", async () => {
+    const name = document.getElementById("new-spell-name")?.value;
+    const category = document.getElementById("new-spell-category")?.value || "Base Game";
+    const element = document.getElementById("new-spell-college")?.value || "fire";
+    const icon = document.getElementById("new-spell-icon")?.value || "✨";
+    const description = document.getElementById("new-spell-desc")?.value || "";
+    const res = await addCustomSpell({ name, category, element, icon, description });
+    if (res.success) {
+      document.getElementById("new-spell-name").value = "";
+      document.getElementById("new-spell-desc").value = "";
+      document.getElementById("form-add-spell-card").style.display = "none";
+    }
+  });
+
+  document.getElementById("btn-toggle-add-weapon")?.addEventListener("click", () => {
+    const form = document.getElementById("form-add-weapon-card");
+    if (form) form.style.display = form.style.display === "none" ? "block" : "none";
+  });
+  document.getElementById("btn-cancel-new-weapon")?.addEventListener("click", () => {
+    const form = document.getElementById("form-add-weapon-card");
+    if (form) form.style.display = "none";
+  });
+  document.getElementById("btn-save-new-weapon")?.addEventListener("click", async () => {
+    const name = document.getElementById("new-weapon-name")?.value;
+    const category = document.getElementById("new-weapon-category")?.value || "Base Game";
+    const type = document.getElementById("new-weapon-type")?.value || "Weapon";
+    const dice = document.getElementById("new-weapon-dice")?.value || "3 Attack Dice";
+    const costVal = document.getElementById("new-weapon-cost")?.value || "250";
+    const icon = document.getElementById("new-weapon-icon")?.value || "⚔️";
+    const description = document.getElementById("new-weapon-desc")?.value || "";
+    const res = await addCustomWeapon({ name, category, type, dice, cost: `${costVal} GP`, icon, description });
+    if (res.success) {
+      document.getElementById("new-weapon-name").value = "";
+      document.getElementById("new-weapon-desc").value = "";
+      document.getElementById("form-add-weapon-card").style.display = "none";
+    }
+  });
+
+  document.getElementById("btn-toggle-add-quest-item")?.addEventListener("click", () => {
+    const form = document.getElementById("form-add-quest-item-card");
+    if (form) form.style.display = form.style.display === "none" ? "block" : "none";
+  });
+  document.getElementById("btn-cancel-new-item")?.addEventListener("click", () => {
+    const form = document.getElementById("form-add-quest-item-card");
+    if (form) form.style.display = "none";
+  });
+  document.getElementById("btn-save-new-item")?.addEventListener("click", async () => {
+    const name = document.getElementById("new-item-name")?.value;
+    const category = document.getElementById("new-item-category")?.value || "Base Game";
+    const type = document.getElementById("new-item-type")?.value || "relic";
+    const effect = document.getElementById("new-item-effect")?.value || "";
+    const costVal = document.getElementById("new-item-cost")?.value || "100";
+    const icon = document.getElementById("new-item-icon")?.value || "🎒";
+    const res = await addCustomItem({ name, category, type, effect, value: parseInt(costVal, 10) || 100, cost: `${costVal} GP`, icon });
+    if (res.success) {
+      document.getElementById("new-item-name").value = "";
+      document.getElementById("new-item-effect").value = "";
+      document.getElementById("form-add-quest-item-card").style.display = "none";
+    }
+  });
+}
 
 function getSpellAllocation() {
   return currentData.spellAllocation;
@@ -3631,15 +4725,17 @@ function getActiveMonster() {
 
 function getMonsterSpells(monster) {
   if (!monster) return [];
+  const allDread = getAllDreadSpells();
   const assigned = monster["robos:spells"] || [];
   return assigned.map(sp => {
     if (typeof sp === "object" && sp !== null) return sp;
     const slug = String(sp).replace("urn:robos:tabletop:spell:", "");
-    return DREAD_SPELLS.find(ds => ds.slug === slug || ds.id === sp) || {
+    return allDread.find(ds => ds.slug === slug || ds.id === sp) || {
       id: sp,
       slug: slug,
       name: slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
       element: "dread",
+      category: monster["robos:category"] || "Base Game",
       icon: "⚡",
       description: "Dread Chaos spell."
     };
@@ -3708,12 +4804,13 @@ function renderMonsterGrimoire(monster) {
     });
   }
 
-  // Populate dropdown with unassigned dread spells
+  // Populate dropdown with unassigned dread spells across all categories
   if (select) {
     select.innerHTML = "";
-    const available = DREAD_SPELLS.filter(ds => !assignedSlugs.includes(ds.slug));
+    const allDread = getAllDreadSpells();
+    const available = allDread.filter(ds => !assignedSlugs.includes(ds.slug));
     if (available.length === 0) {
-      select.innerHTML = `<option value="">All 8 Dread Spells Memorized</option>`;
+      select.innerHTML = `<option value="">All Dread Spells Memorized</option>`;
       select.disabled = true;
       const addBtn = document.getElementById("btn-monster-add-spell");
       if (addBtn) addBtn.disabled = true;
@@ -3724,7 +4821,8 @@ function renderMonsterGrimoire(monster) {
       available.forEach(ds => {
         const opt = document.createElement("option");
         opt.value = ds.slug;
-        opt.textContent = `${ds.icon} ${ds.name}`;
+        const catSuffix = ds.category && ds.category !== "Base Game" ? ` [${ds.category}]` : "";
+        opt.textContent = `${ds.icon} ${ds.name}${catSuffix}`;
         select.appendChild(opt);
       });
     }
@@ -3735,6 +4833,8 @@ function renderMonsterActionScreen(monster) {
   if (!monster) return;
   const nameEl = document.getElementById("act-monster-name");
   const typeTag = document.getElementById("act-monster-type-tag");
+  const catTag = document.getElementById("act-monster-category-tag");
+  const descEl = document.getElementById("act-monster-desc");
   const casterBadge = document.getElementById("act-monster-spellcaster-badge");
   const iconEl = document.getElementById("act-monster-icon");
   const atkStat = document.getElementById("act-monster-atk-stat");
@@ -3743,26 +4843,39 @@ function renderMonsterActionScreen(monster) {
 
   if (nameEl) nameEl.textContent = monster["dcterms:title"] || "Monster";
   if (typeTag) {
+    const arch = monster["robos:monsterArchetype"] ? ` (${monster["robos:monsterArchetype"]})` : "";
     if (monster["robos:isBoss"]) {
-      typeTag.textContent = "Boss Monster";
+      typeTag.textContent = `Boss Monster${arch}`;
       typeTag.style.background = "#581c87";
       typeTag.style.color = "#f3e8ff";
       typeTag.style.borderColor = "#a855f7";
     } else if (monster["robos:isUndead"]) {
-      typeTag.textContent = "Undead";
+      typeTag.textContent = `Undead${arch}`;
       typeTag.style.background = "#1f2937";
       typeTag.style.color = "#9ca3af";
       typeTag.style.borderColor = "#4b5563";
     } else {
-      typeTag.textContent = "Monster";
+      typeTag.textContent = `Monster${arch}`;
       typeTag.style.background = "#450a0a";
       typeTag.style.color = "#fca5a5";
       typeTag.style.borderColor = "#991b1b";
     }
   }
 
+  if (catTag) {
+    const cat = monster["robos:category"] || "Base Game";
+    catTag.textContent = `🏷️ ${cat}`;
+  }
+
+  if (descEl) {
+    const desc = monster["dcterms:description"] || "";
+    descEl.textContent = desc;
+    descEl.style.display = desc ? "block" : "none";
+  }
+
   if (iconEl) {
-    if (monster["robos:isBoss"]) iconEl.textContent = "👑";
+    if (monster["robos:icon"]) iconEl.textContent = monster["robos:icon"];
+    else if (monster["robos:isBoss"]) iconEl.textContent = "👑";
     else if (monster["robos:isUndead"]) iconEl.textContent = "💀";
     else if (monster["robos:isSpellcaster"]) iconEl.textContent = "🧙‍♂️";
     else iconEl.textContent = "👹";
@@ -3893,7 +5006,8 @@ function castMonsterSpell(monster, spellSlug) {
   }
   if (!spellSlug) return null;
 
-  const spell = DREAD_SPELLS.find(s => s.slug === spellSlug) || {
+  const allDread = getAllDreadSpells();
+  const spell = allDread.find(s => s.slug === spellSlug) || {
     slug: spellSlug,
     name: spellSlug,
     icon: "⚡",
@@ -3954,6 +5068,10 @@ async function saveActiveMonsterToKGraph(explicit = false) {
       "schema:Person"
     ],
     "dcterms:title": monster["dcterms:title"] || "Monster",
+    "dcterms:description": monster["dcterms:description"] || "",
+    "robos:category": monster["robos:category"] || "Base Game",
+    "robos:monsterArchetype": monster["robos:monsterArchetype"] || "Goblin",
+    "robos:icon": monster["robos:icon"] || "👹",
     "robos:bodyPoints": parseInt(monster["robos:bodyPoints"], 10) || 1,
     "robos:attackDice": parseInt(monster["robos:attackDice"], 10) || 2,
     "robos:defendDice": parseInt(monster["robos:defendDice"], 10) || 2,
@@ -3970,9 +5088,10 @@ async function saveActiveMonsterToKGraph(explicit = false) {
 
   try {
     const res = await window.robosTabletop.saveKGraphEntity({ entity: monsterNode });
+    syncBoardMonsterSelectDropdown();
     if (explicit) {
       if (res && res.success) {
-        setStatus(`Saved monster '${monsterNode["dcterms:title"]}' to Knowledge Graph.`);
+        setStatus(`Saved monster '${monsterNode["dcterms:title"]}' (${monsterNode["robos:category"]}) to Knowledge Graph.`);
         logMonsterCombatAction(`💾 Monster '${monsterNode["dcterms:title"]}' saved to Knowledge Graph.`, "system");
       } else {
         setStatus(`Error saving monster: ${res ? res.error : "Unknown"}`);
@@ -3998,20 +5117,42 @@ function renderMonstersList() {
   if (!container) return;
   container.innerHTML = "";
 
-  currentData.monsters.forEach(m => {
+  const filtered = getMonstersByCategory(currentData.activeMonsterCategoryFilter);
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="text-muted" style="padding:12px; font-size:0.8rem; font-style:italic;">No monsters in category '${escapeHtml(currentData.activeMonsterCategoryFilter)}'. Click "+ Add" to create one.</div>`;
+    return;
+  }
+
+  filtered.forEach(m => {
     const div = document.createElement("div");
     div.className = "list-item" + (m["@id"] === currentData.activeMonsterId ? " active" : "");
-    let icon = "👹";
-    if (m["robos:isBoss"]) icon = "👑";
-    else if (m["robos:isUndead"]) icon = "💀";
-    else if (m["robos:isSpellcaster"]) icon = "🧙‍♂️";
-    div.innerHTML = `<span>${icon}</span> <strong>${m["dcterms:title"] || m["@id"]}</strong>`;
+    div.dataset.monsterId = m["@id"];
+    let icon = m["robos:icon"] || "👹";
+    if (!m["robos:icon"]) {
+      if (m["robos:isBoss"]) icon = "👑";
+      else if (m["robos:isUndead"]) icon = "💀";
+      else if (m["robos:isSpellcaster"]) icon = "🧙‍♂️";
+    }
+    const cat = m["robos:category"] || "Base Game";
+    const catBadgeColor = cat === "Midterms 2026"
+      ? "background:rgba(245,158,11,0.18); color:#fde047; border:1px solid rgba(245,158,11,0.4);"
+      : "background:rgba(56,189,248,0.12); color:#7dd3fc; border:1px solid rgba(56,189,248,0.25);";
+    div.innerHTML = `
+      <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:6px;">
+        <span style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          <span>${icon}</span>
+          <strong style="overflow:hidden; text-overflow:ellipsis;">${escapeHtml(m["dcterms:title"] || m["@id"])}</strong>
+        </span>
+        <span class="badge" style="font-size:0.65rem; padding:1px 5px; flex-shrink:0; ${catBadgeColor}">${escapeHtml(cat)}</span>
+      </div>
+    `;
     div.onclick = () => selectMonster(m["@id"]);
     container.appendChild(div);
   });
 
-  if (!currentData.activeMonsterId && currentData.monsters.length > 0) {
-    selectMonster(currentData.monsters[0]["@id"]);
+  if ((!currentData.activeMonsterId || !filtered.some(m => m["@id"] === currentData.activeMonsterId)) && filtered.length > 0) {
+    selectMonster(filtered[0]["@id"]);
   }
 }
 
@@ -4021,9 +5162,30 @@ function selectMonster(monsterId) {
   if (!monster) return;
 
   renderMonstersList();
+  renderCategoryControlsUI();
   document.getElementById("monster-editor-title").textContent = "Edit Monster: " + (monster["dcterms:title"] || "");
   document.getElementById("monster-id").value = monster["@id"] || "";
   document.getElementById("monster-name").value = monster["dcterms:title"] || "";
+
+  const catEl = document.getElementById("monster-category");
+  if (catEl) {
+    const mCat = monster["robos:category"] || "Base Game";
+    if (!currentData.categories.includes(mCat)) addCategory(mCat);
+    catEl.value = mCat;
+  }
+
+  const archEl = document.getElementById("monster-archetype");
+  if (archEl) archEl.value = monster["robos:monsterArchetype"] || (monster["robos:isBoss"] ? "Dragon" : "Goblin");
+
+  const iconEl = document.getElementById("monster-icon");
+  if (iconEl) iconEl.value = monster["robos:icon"] || (monster["robos:isBoss"] ? "👑" : "👹");
+
+  const colorEl = document.getElementById("monster-color");
+  if (colorEl) colorEl.value = monster["robos:tokenColor"] || "#991b1b";
+
+  const descEl = document.getElementById("monster-description");
+  if (descEl) descEl.value = monster["dcterms:description"] || "";
+
   document.getElementById("monster-bp").value = monster["robos:bodyPoints"] || 1;
   document.getElementById("monster-atk").value = monster["robos:attackDice"] || 2;
   document.getElementById("monster-def").value = monster["robos:defendDice"] || 2;
@@ -4040,17 +5202,25 @@ function selectMonster(monsterId) {
   renderMonsterActionScreen(monster);
 }
 
+let monsterControlsInitialized = false;
 function setupMonsterEditorControls() {
+  if (monsterControlsInitialized) return;
+  monsterControlsInitialized = true;
+
   const bindInput = (id, prop, isNumber = false) => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.addEventListener("input", (e) => {
+    const evtName = el.tagName === "SELECT" ? "change" : "input";
+    el.addEventListener(evtName, (e) => {
       const monster = getActiveMonster();
       if (!monster) return;
       monster[prop] = isNumber ? parseInt(e.target.value, 10) || 0 : e.target.value;
-      if (prop === "dcterms:title") {
-        document.getElementById("monster-editor-title").textContent = "Edit Monster: " + e.target.value;
+      if (prop === "dcterms:title" || prop === "robos:category" || prop === "robos:icon") {
+        if (prop === "dcterms:title") {
+          document.getElementById("monster-editor-title").textContent = "Edit Monster: " + e.target.value;
+        }
         renderMonstersList();
+        syncBoardMonsterSelectDropdown();
       }
       renderMonsterActionScreen(monster);
       triggerMonsterAutosave();
@@ -4058,6 +5228,11 @@ function setupMonsterEditorControls() {
   };
 
   bindInput("monster-name", "dcterms:title");
+  bindInput("monster-category", "robos:category");
+  bindInput("monster-archetype", "robos:monsterArchetype");
+  bindInput("monster-icon", "robos:icon");
+  bindInput("monster-color", "robos:tokenColor");
+  bindInput("monster-description", "dcterms:description");
   bindInput("monster-bp", "robos:bodyPoints", true);
   bindInput("monster-atk", "robos:attackDice", true);
   bindInput("monster-def", "robos:defendDice", true);
@@ -4127,8 +5302,32 @@ function setupMonsterEditorControls() {
   document.getElementById("btn-roll-monster-move")?.addEventListener("click", rollMonsterMove);
   document.getElementById("btn-cast-monster-spell")?.addEventListener("click", () => castMonsterSpell());
 
+  document.getElementById("btn-save-monster")?.addEventListener("click", () => {
+    saveActiveMonsterToKGraph(true);
+  });
+
+  document.getElementById("btn-delete-monster")?.addEventListener("click", async () => {
+    if (currentData.monsters.length <= 1) return;
+    const monster = getActiveMonster();
+    if (!monster) return;
+    const id = monster["@id"];
+    const name = monster["dcterms:title"] || id;
+    currentData.monsters = currentData.monsters.filter(m => m["@id"] !== id);
+    if (window.robosTabletop?.deleteKGraphEntity) {
+      await window.robosTabletop.deleteKGraphEntity({ entityId: id });
+    }
+    currentData.activeMonsterId = currentData.monsters[0]?.["@id"] || null;
+    renderMonstersList();
+    if (currentData.activeMonsterId) selectMonster(currentData.activeMonsterId);
+    syncBoardMonsterSelectDropdown();
+    setStatus(`Deleted monster '${name}'.`);
+  });
+
   document.getElementById("btn-add-monster")?.addEventListener("click", () => {
     const newId = `urn:robos:tabletop:monster:custom-${Date.now().toString(36)}`;
+    const defaultCat = (currentData.activeMonsterCategoryFilter && currentData.activeMonsterCategoryFilter !== "All")
+      ? currentData.activeMonsterCategoryFilter
+      : "Base Game";
     const newMonster = {
       "@id": newId,
       "@type": [
@@ -4138,6 +5337,10 @@ function setupMonsterEditorControls() {
         "schema:Person"
       ],
       "dcterms:title": "New Monster",
+      "dcterms:description": "Custom quest adversary.",
+      "robos:category": defaultCat,
+      "robos:monsterArchetype": "Goblin",
+      "robos:icon": "👹",
       "robos:bodyPoints": 2,
       "robos:attackDice": 2,
       "robos:defendDice": 2,
@@ -4152,35 +5355,51 @@ function setupMonsterEditorControls() {
     currentData.monsters.push(newMonster);
     renderMonstersList();
     selectMonster(newId);
+    syncBoardMonsterSelectDropdown();
     triggerMonsterAutosave();
   });
 }
 
-// Render Spells & Items
+// Render Spells, Dread Spells, Weapons & Quest Items filtered by Category
 function renderSpellsAndItems() {
+  const activeCat = currentData.activeSpellItemCategoryFilter || "All";
+
+  const formatCatBadge = (cat) => {
+    const c = cat || "Base Game";
+    const style = c === "Midterms 2026"
+      ? "background:rgba(245,158,11,0.18); color:#fde047; border:1px solid rgba(245,158,11,0.45);"
+      : (c === "Base Game"
+        ? "background:rgba(56,189,248,0.12); color:#7dd3fc; border:1px solid rgba(56,189,248,0.28);"
+        : "background:rgba(168,85,247,0.18); color:#e9d5ff; border:1px solid rgba(168,85,247,0.45);");
+    const icon = c === "Base Game" ? "🏰" : (c === "Midterms 2026" ? "🗳️" : "🏷️");
+    return `<span class="badge entity-category-badge" data-category="${escapeHtml(c)}" style="font-size:0.68rem; padding:1px 6px; ${style}">${icon} ${escapeHtml(c)}</span>`;
+  };
+
+  // 1. Hero Spells Grid
   const spellsGrid = document.getElementById("spells-grid");
   if (spellsGrid) {
     spellsGrid.innerHTML = "";
     const elfElement = currentData.spellAllocation?.elfElement || "water";
-    const allSpells = [];
-    Object.keys(ELEMENTAL_DECKS).forEach(elemKey => {
-      ELEMENTAL_DECKS[elemKey].spells.forEach(s => allSpells.push(s));
-    });
+    const filteredSpells = getSpellsByCategory(activeCat);
 
-    allSpells.forEach(s => {
+    filteredSpells.forEach(s => {
       const card = document.createElement("div");
       card.className = `spell-card deck-${s.element}`;
+      card.dataset.category = s.category || "Base Game";
       const isElf = s.element === elfElement;
       const draftedBy = isElf ? "🧝 Elf Grimoire" : "🧙 Wizard Grimoire";
       const draftedClass = isElf ? "badge-info" : "badge-purple";
       card.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-          <div class="card-title" style="margin:0;">${s.icon} ${s.name}</div>
-          <span class="element-tag tag-${s.element}">${s.element.toUpperCase()}</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:6px;">
+          <div class="card-title" style="margin:0;">${s.icon || "✨"} ${escapeHtml(s.name)}</div>
+          <div style="display:flex; gap:4px; align-items:center; flex-shrink:0;">
+            ${formatCatBadge(s.category)}
+            <span class="element-tag tag-${s.element}">${(s.element || "fire").toUpperCase()}</span>
+          </div>
         </div>
-        <div class="card-meta" style="color:var(--text-muted); font-size:0.75rem; margin-bottom:6px;">${s.description}</div>
+        <div class="card-meta" style="color:var(--text-muted); font-size:0.75rem; margin-bottom:6px;">${escapeHtml(s.description)}</div>
         <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
-          <span class="card-meta" style="margin:0;">College: ${ELEMENTAL_DECKS[s.element]?.name}</span>
+          <span class="card-meta" style="margin:0;">College: ${ELEMENTAL_DECKS[s.element]?.name || s.element}</span>
           <span class="badge ${draftedClass}" style="font-size:0.7rem;">${draftedBy}</span>
         </div>
       `;
@@ -4188,48 +5407,74 @@ function renderSpellsAndItems() {
     });
   }
 
+  // 2. Weapons & Armory Grid
   const itemsGrid = document.getElementById("items-grid");
   if (itemsGrid) {
     itemsGrid.innerHTML = "";
-    const armory = [
-      { name: "Broadsword", type: "Weapon", dice: "3 Attack Dice", cost: "250 GP", icon: "⚔️" },
-      { name: "Shortsword", type: "Weapon", dice: "2 Attack Dice (Diagonal)", cost: "150 GP", icon: "🗡️" },
-      { name: "Battle Axe", type: "Weapon", dice: "4 Attack Dice (Two-Handed)", cost: "400 GP", icon: "🪓" },
-      { name: "Crossbow", type: "Ranged Weapon", dice: "3 Attack Dice (Straight Line)", cost: "350 GP", icon: "🏹" },
-      { name: "Chainmail", type: "Armor", dice: "+1 Defend Die (3 Total)", cost: "500 GP", icon: "🛡️" },
-      { name: "Plate Armor", type: "Armor", dice: "+2 Defend Dice (4 Total, 1d6 Move)", cost: "850 GP", icon: "🦾" },
-      { name: "Shield", type: "Armor", dice: "+1 Defend Die", cost: "150 GP", icon: "🛡️" },
-      { name: "Helmet", type: "Armor", dice: "+1 Defend Die", cost: "120 GP", icon: "🪖" },
-      { name: "Toolkit", type: "Gear", dice: "Disarm Traps on 1-5", cost: "250 GP", icon: "🔧" }
-    ];
-    armory.forEach(item => {
+    const filteredWeapons = getWeaponsByCategory(activeCat);
+    filteredWeapons.forEach(item => {
       const card = document.createElement("div");
-      card.className = "spell-card";
+      card.className = "spell-card weapon-card";
+      card.dataset.category = item.category || "Base Game";
       card.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div class="card-title">${item.icon} ${item.name}</div>
-          <span style="font-weight:700; color:#fbbf24; font-size:0.8rem;">💰 ${item.cost}</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:4px;">
+          <div class="card-title" style="margin:0;">${item.icon || "⚔️"} ${escapeHtml(item.name)}</div>
+          <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            ${formatCatBadge(item.category)}
+            <span style="font-weight:700; color:#fbbf24; font-size:0.8rem;">💰 ${escapeHtml(item.cost)}</span>
+          </div>
         </div>
-        <div class="card-meta">${item.type} • ${item.dice}</div>
+        <div class="card-meta" style="font-weight:600; color:#93c5fd; margin-bottom:4px;">${escapeHtml(item.type)} • ${escapeHtml(item.dice)}</div>
+        ${item.description ? `<div class="card-meta" style="color:var(--text-muted); font-size:0.74rem;">${escapeHtml(item.description)}</div>` : ""}
       `;
       itemsGrid.appendChild(card);
     });
   }
 
+  // 3. Quest Items, Relics & Satire Artifacts Grid
+  const questItemsGrid = document.getElementById("quest-items-grid");
+  if (questItemsGrid) {
+    questItemsGrid.innerHTML = "";
+    const filteredItems = getItemsByCategory(activeCat);
+    filteredItems.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "spell-card quest-item-card";
+      card.dataset.category = item.category || "Base Game";
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:4px;">
+          <div class="card-title" style="margin:0;">${item.icon || "🎒"} ${escapeHtml(item.name)}</div>
+          <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            ${formatCatBadge(item.category)}
+            <span style="font-weight:700; color:#34d399; font-size:0.8rem;">💰 ${escapeHtml(item.cost || (item.value + " GP"))}</span>
+          </div>
+        </div>
+        <div class="card-meta" style="font-weight:600; color:#a7f3d0; margin-bottom:4px;">${escapeHtml((item.type || "item").toUpperCase())} • ${escapeHtml(item.effect)}</div>
+        ${item.description ? `<div class="card-meta" style="color:var(--text-muted); font-size:0.74rem;">${escapeHtml(item.description)}</div>` : ""}
+      `;
+      questItemsGrid.appendChild(card);
+    });
+  }
+
+  // 4. Dread & Chaos Spells Grid
   const dreadGrid = document.getElementById("dread-spells-grid");
   if (dreadGrid) {
     dreadGrid.innerHTML = "";
-    DREAD_SPELLS.forEach(s => {
+    const filteredDread = getDreadSpellsByCategory(activeCat);
+    filteredDread.forEach(s => {
       const card = document.createElement("div");
       card.className = "spell-card deck-dread";
+      card.dataset.category = s.category || "Base Game";
       card.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-          <div class="card-title" style="margin:0; color:#f3e8ff;">${s.icon} ${s.name}</div>
-          <span class="element-tag tag-dread">DREAD MAGIC</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:6px;">
+          <div class="card-title" style="margin:0; color:#f3e8ff;">${s.icon || "⚡"} ${escapeHtml(s.name)}</div>
+          <div style="display:flex; gap:4px; align-items:center; flex-shrink:0;">
+            ${formatCatBadge(s.category)}
+            <span class="element-tag tag-dread">DREAD MAGIC</span>
+          </div>
         </div>
-        <div class="card-meta" style="color:var(--text-muted); font-size:0.75rem; margin-bottom:6px;">${s.description}</div>
+        <div class="card-meta" style="color:var(--text-muted); font-size:0.75rem; margin-bottom:6px;">${escapeHtml(s.description)}</div>
         <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
-          <span class="card-meta" style="margin:0; color:#c084fc;">Witch Lord & Chaos Sorcerers</span>
+          <span class="card-meta" style="margin:0; color:#c084fc;">${s.category === "Midterms 2026" ? "TrumpBiden & Swamp Bosses" : "Witch Lord & Chaos Sorcerers"}</span>
           <span class="badge" style="background:#581c87; color:#f3e8ff; border:1px solid #7e22ce; font-size:0.7rem;">Enemy Magic</span>
         </div>
       `;
@@ -4897,6 +6142,31 @@ if (typeof window !== "undefined") {
     getHeroById,
     getTradeSessionLogs: () => tradeSessionLogs
   };
+
+  window._tabletopCategories = {
+    DEFAULT_CATEGORIES,
+    MIDTERMS_2026_MONSTERS,
+    MIDTERMS_2026_SPELLS,
+    MIDTERMS_2026_DREAD_SPELLS,
+    BASE_WEAPONS,
+    MIDTERMS_2026_WEAPONS,
+    BASE_QUEST_ITEMS,
+    MIDTERMS_2026_ITEMS,
+    getCategories,
+    addCategory,
+    getMonstersByCategory,
+    getSpellsByCategory,
+    getDreadSpellsByCategory,
+    getWeaponsByCategory,
+    getItemsByCategory,
+    setMonsterCategoryFilter,
+    setSpellItemCategoryFilter,
+    addCustomSpell,
+    addCustomWeapon,
+    addCustomItem,
+    syncCategoryCatalogsFromKGraph,
+    renderCategoryControlsUI
+  };
 }
 
 // Initialize on DOM ready
@@ -4914,7 +6184,26 @@ if (typeof module !== "undefined" && module.exports) {
     tradeHeroGold,
     openBetweenQuestsTradeModal,
     closeBetweenQuestsTradeModal,
-    getHeroById
+    getHeroById,
+    DEFAULT_CATEGORIES,
+    MIDTERMS_2026_MONSTERS,
+    MIDTERMS_2026_SPELLS,
+    MIDTERMS_2026_DREAD_SPELLS,
+    BASE_WEAPONS,
+    MIDTERMS_2026_WEAPONS,
+    BASE_QUEST_ITEMS,
+    MIDTERMS_2026_ITEMS,
+    getCategories,
+    addCategory,
+    getMonstersByCategory,
+    getSpellsByCategory,
+    getDreadSpellsByCategory,
+    getWeaponsByCategory,
+    getItemsByCategory,
+    setMonsterCategoryFilter,
+    setSpellItemCategoryFilter,
+    addCustomSpell,
+    addCustomWeapon,
+    addCustomItem
   };
 }
-

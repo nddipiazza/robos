@@ -159,7 +159,8 @@
       "robos:movementSquares": 10,
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:orc",
@@ -176,7 +177,8 @@
       "robos:movementSquares": 8,
       "robos:tokenColor": "#047857",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:fimir",
@@ -193,7 +195,8 @@
       "robos:movementSquares": 6,
       "robos:tokenColor": "#0f766e",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:skeleton",
@@ -211,7 +214,8 @@
       "robos:monsterType": "undead",
       "robos:tokenColor": "#e2e8f0",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:zombie",
@@ -229,7 +233,8 @@
       "robos:monsterType": "undead",
       "robos:tokenColor": "#94a3b8",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:mummy",
@@ -247,7 +252,8 @@
       "robos:monsterType": "undead",
       "robos:tokenColor": "#d97706",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:chaos-warrior",
@@ -264,7 +270,8 @@
       "robos:movementSquares": 7,
       "robos:tokenColor": "#334155",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:gargoyle",
@@ -281,7 +288,8 @@
       "robos:movementSquares": 6,
       "robos:tokenColor": "#64748b",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:verag-orc-warlord",
@@ -307,7 +315,8 @@
       ],
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:chaos-sorcerer",
@@ -332,7 +341,8 @@
       ],
       "robos:tokenColor": "#7c3aed",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:witch-lord",
@@ -360,7 +370,8 @@
       ],
       "robos:tokenColor": "#4c1d95",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:orc-shaman",
@@ -384,7 +395,8 @@
       ],
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:ball-of-flame",
@@ -398,7 +410,8 @@
       "robos:element": "fire",
       "robos:damageDice": 2,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:courage",
@@ -412,7 +425,8 @@
       "robos:element": "fire",
       "robos:buffAttackDice": 2,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:fire-of-wrath",
@@ -426,7 +440,8 @@
       "robos:element": "fire",
       "robos:damageDice": 1,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:heal-body",
@@ -440,7 +455,8 @@
       "robos:element": "earth",
       "robos:healingPoints": 4,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:pass-through-rock",
@@ -453,7 +469,8 @@
       "dcterms:title": "Pass Through Rock",
       "robos:element": "earth",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:rock-skin",
@@ -467,7 +484,8 @@
       "robos:element": "earth",
       "robos:buffDefendDice": 1,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:water-of-healing",
@@ -481,7 +499,8 @@
       "robos:element": "water",
       "robos:healingPoints": 4,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:sleep",
@@ -494,7 +513,8 @@
       "dcterms:title": "Sleep",
       "robos:element": "water",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:veil-of-mist",
@@ -507,7 +527,8 @@
       "dcterms:title": "Veil of Mist",
       "robos:element": "water",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:genie",
@@ -521,7 +542,8 @@
       "robos:element": "air",
       "robos:attackDice": 5,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:swift-wind",
@@ -535,7 +557,8 @@
       "robos:element": "air",
       "robos:doubleMovement": true,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:tempest",
@@ -548,7 +571,8 @@
       "dcterms:title": "Tempest",
       "robos:element": "air",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:lightning-bolt",
@@ -563,7 +587,8 @@
       "robos:element": "dread",
       "robos:damageDice": 2,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:firestorm",
@@ -578,7 +603,8 @@
       "robos:element": "dread",
       "robos:damageDice": 3,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:fear",
@@ -593,7 +619,8 @@
       "robos:element": "dread",
       "robos:debuffAttackDice": 1,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:sleep-dread",
@@ -607,7 +634,8 @@
       "dcterms:title": "Sleep of Dread",
       "robos:element": "dread",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:cloud-of-chaos",
@@ -621,7 +649,8 @@
       "dcterms:title": "Cloud of Chaos",
       "robos:element": "dread",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:summon-undead",
@@ -636,7 +665,8 @@
       "robos:element": "dread",
       "robos:summonCount": 2,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:rust",
@@ -650,7 +680,8 @@
       "dcterms:title": "Rust",
       "robos:element": "dread",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:escape",
@@ -664,7 +695,8 @@
       "dcterms:title": "Escape",
       "robos:element": "dread",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:chest",
@@ -676,7 +708,8 @@
       ],
       "dcterms:title": "Treasure Chest",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:tomb",
@@ -688,7 +721,8 @@
       ],
       "dcterms:title": "Stone Tomb",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:weapons-rack",
@@ -700,7 +734,8 @@
       ],
       "dcterms:title": "Weapons Rack",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:alchemists-bench",
@@ -712,7 +747,8 @@
       ],
       "dcterms:title": "Alchemist's Bench",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:bookcase",
@@ -724,7 +760,8 @@
       ],
       "dcterms:title": "Bookcase (3-Tile Library Wall)",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:bookshelf",
@@ -736,7 +773,8 @@
       ],
       "dcterms:title": "Bookshelf (2-Tile Study Shelf)",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:altar",
@@ -748,7 +786,8 @@
       ],
       "dcterms:title": "Sorcerer's Altar / Desk (3x2 Tiles)",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:boulder",
@@ -760,7 +799,8 @@
       ],
       "dcterms:title": "Boulder Tile Obstacle",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:table",
@@ -772,7 +812,8 @@
       ],
       "dcterms:title": "Wooden Table / Council Desk",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:cupboard",
@@ -784,7 +825,8 @@
       ],
       "dcterms:title": "Cupboard (2-Tile Cabinet)",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:fireplace",
@@ -796,7 +838,8 @@
       ],
       "dcterms:title": "Stone Fireplace",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:map:the-trial",
@@ -1497,7 +1540,8 @@
         "fated_reroll_dice"
       ],
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:item:hearthskin-horn",
@@ -1514,7 +1558,8 @@
       "robos:isConsumable": false,
       "robos:action": "blow_hearthskin_horn",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:summon:friendly-skeleton",
@@ -1614,7 +1659,8 @@
       "robos:isSpellcaster": false,
       "robos:tokenColor": "#475569",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:cassandria-witch-hand",
@@ -1638,6 +1684,536 @@
         "urn:robos:tabletop:spell:sleep-dread"
       ],
       "robos:tokenColor": "#9333ea",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:inflation-spawn",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Inflation Spawn",
+      "robos:altTitle": "Infalation Spawn",
+      "robos:category": "Midterms 2026",
+      "robos:archetype": "Goblin Money Monster",
+      "dcterms:description": "A rabid goblin money monster (Infalation Spawn) hatched from an overheated Federal Reserve printing press. Devours 40% of your gold purse on sight while shrinking potion bottles.",
+      "robos:bodyPoints": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 1,
+      "robos:movementSquares": 10,
+      "robos:icon": "💸",
+      "robos:tokenColor": "#16a34a",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:illegal-alien",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Illegal Alien",
+      "robos:category": "Midterms 2026",
+      "robos:archetype": "Grey Alien with a Robber Mask",
+      "dcterms:description": "A literal grey extraterrestrial from Zeta Reticuli wearing a classic black domino robber mask and carrying a striped loot sack after parking its flying saucer in a dungeon no-parking zone.",
+      "robos:bodyPoints": 1,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 8,
+      "robos:icon": "👽",
+      "robos:tokenColor": "#64748b",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:happily-married-gay-man",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Happily Married Gay Man",
+      "robos:category": "Midterms 2026",
+      "robos:archetype": "Dread Warrior",
+      "dcterms:description": "An unstoppable Dread Warrior of domestic bliss: dual-income 820 credit score, impeccably landscaped dungeon courtyard, and a loving marriage that inexplicably terrifies culture-war bosses.",
+      "robos:bodyPoints": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 7,
+      "robos:icon": "💍",
+      "robos:tokenColor": "#ec4899",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:k-street-swamp-fimir",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "K-Street Swamp Lobbyist",
+      "robos:category": "Midterms 2026",
+      "robos:archetype": "Swamp Fimir",
+      "dcterms:description": "A one-eyed reptilian lobbyist slithering out of a bipartisan tax loophole with a leather briefcase full of untraceable campaign gold.",
+      "robos:bodyPoints": 2,
+      "robos:attackDice": 3,
+      "robos:defendDice": 3,
+      "robos:movementSquares": 6,
+      "robos:icon": "🐊",
+      "robos:tokenColor": "#0f766e",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:gerrymandered-skeleton",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Gerrymandered Skeleton",
+      "robos:category": "Midterms 2026",
+      "robos:archetype": "Redistricted Undead",
+      "dcterms:description": "An undead voter contorted into a 47-sided congressional district shaped like an upside-down salamander.",
+      "robos:bodyPoints": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 6,
+      "robos:isUndead": true,
+      "robos:monsterType": "undead",
+      "robos:icon": "💀",
+      "robos:tokenColor": "#94a3b8",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:teleprompter-zombie",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Cable News Pundit Zombie",
+      "robos:category": "Midterms 2026",
+      "robos:archetype": "Prime-Time Undead",
+      "dcterms:description": "A shambling prime-time anchor that groans BREAKING NEWS every 30 seconds and cannot move unless fed a pharmaceutical commercial break.",
+      "robos:bodyPoints": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 3,
+      "robos:movementSquares": 4,
+      "robos:isUndead": true,
+      "robos:monsterType": "undead",
+      "robos:icon": "🧟",
+      "robos:tokenColor": "#475569",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:trumpbiden-dragon",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "TrumpBiden (The Blame Dragon)",
+      "robos:category": "Midterms 2026",
+      "robos:archetype": "Two-Headed Presidential Dragon",
+      "dcterms:description": "A colossal two-headed Dragon combining 2 presidents who failed us all while everything got more expensive, meanwhile blaming each other for every single gold coin lost to inflation.",
+      "robos:bodyPoints": 6,
+      "robos:attackDice": 5,
+      "robos:defendDice": 5,
+      "robos:movementSquares": 8,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:bipartisan-blame-inferno",
+        "urn:robos:tabletop:spell:shrinkflation-curse",
+        "urn:robos:tabletop:spell:culture-war-distraction-cloud"
+      ],
+      "robos:icon": "🐉",
+      "robos:tokenColor": "#dc2626",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:snowflake-meltdown",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Meltdown of the Delicate Snowflake",
+      "robos:category": "Midterms 2026",
+      "robos:element": "water",
+      "robos:icon": "❄️",
+      "dcterms:description": "Summons a swirling blizzard of mild disagreement! Target cannot handle hearing an unapproved opinion and must retreat to a Safe Space room for 1 turn.",
+      "robos:effect": "status-freeze",
+      "robos:val": 1,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:midnight-gavel-no-choice",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Taking Away Abortion (Midnight Gavel)",
+      "robos:category": "Midterms 2026",
+      "robos:element": "earth",
+      "robos:icon": "⚖️",
+      "dcterms:description": "Slams a leaked midnight gavel onto the board that takes away bodily autonomy and healthcare choices! Revokes all healing and choice cards in the room while citing 17th-century dungeon traditions.",
+      "robos:effect": "debuff-atk",
+      "robos:val": 2,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:blind-party-line",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Supporting Things Just Because Your Party Does",
+      "robos:category": "Midterms 2026",
+      "robos:element": "air",
+      "robos:icon": "🐑",
+      "dcterms:description": "Instantly flip-flops your stance on whatever happened 5 minutes ago to match party leadership! Grants +2 Attack Dice of pure partisan shamelessness.",
+      "robos:effect": "buff-atk",
+      "robos:val": 2,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:fear-middle-east-debate",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Fear of Israel & the Middle East",
+      "robos:category": "Midterms 2026",
+      "robos:element": "fire",
+      "robos:icon": "🌍",
+      "dcterms:description": "Asks a live-televised question about Israel and the Middle East! Every combatant in the room panics, takes 2 BP stress damage, wires 20 Billion GP overseas, and tries to change the subject.",
+      "robos:effect": "damage-bp",
+      "robos:val": 2,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:mcconnell-glitch",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "30-Second Press Conference Freeze",
+      "robos:category": "Midterms 2026",
+      "robos:element": "earth",
+      "robos:icon": "🐢",
+      "dcterms:description": "Stare blankly into the middle distance mid-sentence for 30 awkward seconds, hardening skin for +2 Defend Dice until an aide reboots you.",
+      "robos:effect": "buff-def",
+      "robos:val": 2,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:bipartisan-blame-inferno",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Bipartisan Blame-Game Inferno",
+      "robos:category": "Midterms 2026",
+      "robos:element": "dread",
+      "robos:icon": "👉",
+      "dcterms:description": "TrumpBiden's ultimate Dread Spell! Both dragon heads point at each other screaming 'He broke the economy!' while setting the room's gold purses on fire for 3 BP damage.",
+      "robos:damageDice": 3,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:shrinkflation-curse",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Shrinkflation Curse",
+      "robos:category": "Midterms 2026",
+      "robos:element": "dread",
+      "robos:icon": "📉",
+      "dcterms:description": "Cuts a hero's potion healing in half while doubling its gold price and blaming 'global dungeon supply chains'.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:culture-war-distraction-cloud",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Culture War Distraction Cloud",
+      "robos:category": "Midterms 2026",
+      "robos:element": "dread",
+      "robos:icon": "🎪",
+      "dcterms:description": "Fills the dungeon with 24/7 outrage over gas stoves and green M&Ms so heroes lose their next turn arguing while the boss loots the treasury.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:weapon:unapproved-bombing-run",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopWeapon",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Unapproved Foreign Bombing Run",
+      "robos:category": "Midterms 2026",
+      "robos:weaponType": "Weapon",
+      "robos:dice": "4 Attack Dice (No Congressional Vote Required)",
+      "robos:cost": "450 GP",
+      "robos:icon": "💣",
+      "dcterms:description": "Illegal presidential act #1: Bypasses Article I and the War Powers Resolution completely! Strike any dungeon room without asking Congress and call it a 'limited kinetic operation'.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:weapon:classified-bathroom-box",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopWeapon",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Classified Bathroom Box Flail",
+      "robos:category": "Midterms 2026",
+      "robos:weaponType": "Weapon",
+      "robos:dice": "3 Attack Dice (Bathroom Chandelier & Corvette Garage Edition)",
+      "robos:cost": "300 GP",
+      "robos:icon": "📦",
+      "dcterms:description": "Illegal presidential act #2: A heavy cardboard banker's box of Top Secret nuclear & war plans stashed next to a golden toilet and a vintage Corvette. Declassified telepathically!",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:weapon:midnight-pardon-gavel",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopWeapon",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Midnight Blanket Pardon Gavel",
+      "robos:category": "Midterms 2026",
+      "robos:weaponType": "Weapon",
+      "robos:dice": "3 Attack Dice (Erases All Past & Future Crimes)",
+      "robos:cost": "350 GP",
+      "robos:icon": "🔨",
+      "dcterms:description": "Illegal presidential act #3: Signed at 11:59 PM on the last day in office! Preemptively pardons family members, political cronies, and campaign donors for a decade of dungeon raids.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:weapon:executive-order-overreach-pen",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopWeapon",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Unconstitutional Executive Order Pen",
+      "robos:category": "Midterms 2026",
+      "robos:weaponType": "Weapon",
+      "robos:dice": "3 Attack Dice (Ignores Supreme Court & Congress)",
+      "robos:cost": "280 GP",
+      "robos:icon": "🖊️",
+      "dcterms:description": "Illegal presidential act #4: Declares a fake 'National Dungeon Emergency' to spend 500 Billion GP, levy random tariffs, and rewrite laws with a single Sharpie stroke.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:weapon:crypto-rugpull-scepter",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopWeapon",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Presidential Meme-Coin Rug-Pull Scepter",
+      "robos:category": "Midterms 2026",
+      "robos:weaponType": "Ranged Weapon",
+      "robos:dice": "3 Attack Dice (Emoluments Clause Drain)",
+      "robos:cost": "420 GP",
+      "robos:icon": "🪙",
+      "dcterms:description": "Illegal presidential act #5: Launches an official presidential crypto token 48 hours before the quest starts, draining every monster's gold purse while insiders cash out.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:weapon:doj-subpoena-crossbow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopWeapon",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Weaponized Subpoena Crossbow",
+      "robos:category": "Midterms 2026",
+      "robos:weaponType": "Ranged Weapon",
+      "robos:dice": "3 Attack Dice (Straight-Line Lawfare)",
+      "robos:cost": "350 GP",
+      "robos:icon": "🏹",
+      "dcterms:description": "Illegal presidential act #6: Fires 400-page federal indictments and retaliatory IRS audits across the corridor at political opponents during election season.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:weapon:official-act-immunity-shield",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopWeapon",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Official Act Sovereign Immunity Shield",
+      "robos:category": "Midterms 2026",
+      "robos:weaponType": "Armor",
+      "robos:dice": "+2 Defend Dice (Total Legal Invulnerability)",
+      "robos:cost": "500 GP",
+      "robos:icon": "🛡️",
+      "dcterms:description": "Any illegal dungeon act committed while holding this shield is automatically declared a Core Official Constitutional Act.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:item:snowflake-tears",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopItem",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Bottle of Delicate Snowflake Tears",
+      "robos:category": "Midterms 2026",
+      "robos:itemType": "potion",
+      "robos:effect": "Restores 4 BP, but forces a 10-minute rant about microaggressions or woke M&Ms",
+      "robos:cost": 100,
+      "robos:icon": "❄️",
+      "dcterms:description": "Brewed from pure bipartisan fragility whenever someone encounters a joke, a pronoun, or a holiday coffee cup they slightly dislike.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:item:bodily-autonomy-eraser",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopItem",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "1789 Bodily Autonomy Eraser Scroll (No Abortion For You)",
+      "robos:category": "Midterms 2026",
+      "robos:itemType": "relic",
+      "robos:effect": "Takes away abortion & personal healthcare choices in the room, replacing them with a politician committee",
+      "robos:cost": 200,
+      "robos:icon": "📜",
+      "dcterms:description": "Overturns 50 years of settled bodily autonomy precedent overnight while claiming 'we just sent the decision back to the dungeon states!'",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:item:party-line-flip-flops",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopItem",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Party-Line Flip-Flop Sandals",
+      "robos:category": "Midterms 2026",
+      "robos:itemType": "relic",
+      "robos:effect": "Supporting things 100% just because your party does! +2 Attack Dice when reversing your opinion from yesterday",
+      "robos:cost": 150,
+      "robos:icon": "🩴",
+      "dcterms:description": "Lets a hero passionately cheer for the exact policy they called treason five minutes ago because their party leader just endorsed it.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:item:middle-east-teleprompter",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopItem",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Middle East Briefing Teleprompter Shield",
+      "robos:category": "Midterms 2026",
+      "robos:itemType": "tool",
+      "robos:effect": "Fear of Israel & Middle East questions: deflects press inquiries while auto-wiring 20 Billion GP",
+      "robos:cost": 175,
+      "robos:icon": "📺",
+      "dcterms:description": "Activated the moment anyone brings up Israel or the Middle East—sweats profusely, mutters a 15-second canned platitude, and dives out the nearest dungeon window.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:item:fed-printer-coin",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopItem",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "100-Trillion Dollar Fed Money Printer",
+      "robos:category": "Midterms 2026",
+      "robos:itemType": "artifact",
+      "robos:effect": "Mints 500 GP instantly, but spawns an Inflation Spawn and makes eggs cost 25 GP",
+      "robos:cost": 300,
+      "robos:icon": "🖨️",
+      "dcterms:description": "Bipartisan economic magic: solves high prices by printing trillions of new gold coins and calling the resulting inflation 'transitory'.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     }
@@ -1779,7 +2355,8 @@
       "robos:movementSquares": 10,
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:orc",
@@ -1796,7 +2373,8 @@
       "robos:movementSquares": 8,
       "robos:tokenColor": "#047857",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:fimir",
@@ -1813,7 +2391,8 @@
       "robos:movementSquares": 6,
       "robos:tokenColor": "#0f766e",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:skeleton",
@@ -1831,7 +2410,8 @@
       "robos:monsterType": "undead",
       "robos:tokenColor": "#e2e8f0",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:zombie",
@@ -1849,7 +2429,8 @@
       "robos:monsterType": "undead",
       "robos:tokenColor": "#94a3b8",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:mummy",
@@ -1867,7 +2448,8 @@
       "robos:monsterType": "undead",
       "robos:tokenColor": "#d97706",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:chaos-warrior",
@@ -1884,7 +2466,8 @@
       "robos:movementSquares": 7,
       "robos:tokenColor": "#334155",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:gargoyle",
@@ -1901,7 +2484,8 @@
       "robos:movementSquares": 6,
       "robos:tokenColor": "#64748b",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:verag-orc-warlord",
@@ -1927,7 +2511,8 @@
       ],
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:chaos-sorcerer",
@@ -1952,7 +2537,8 @@
       ],
       "robos:tokenColor": "#7c3aed",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:witch-lord",
@@ -1980,7 +2566,8 @@
       ],
       "robos:tokenColor": "#4c1d95",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:orc-shaman",
@@ -2004,7 +2591,8 @@
       ],
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:ball-of-flame",
@@ -2018,7 +2606,8 @@
       "robos:element": "fire",
       "robos:damageDice": 2,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:courage",
@@ -2032,7 +2621,8 @@
       "robos:element": "fire",
       "robos:buffAttackDice": 2,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:fire-of-wrath",
@@ -2046,7 +2636,8 @@
       "robos:element": "fire",
       "robos:damageDice": 1,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:heal-body",
@@ -2060,7 +2651,8 @@
       "robos:element": "earth",
       "robos:healingPoints": 4,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:pass-through-rock",
@@ -2073,7 +2665,8 @@
       "dcterms:title": "Pass Through Rock",
       "robos:element": "earth",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:rock-skin",
@@ -2087,7 +2680,8 @@
       "robos:element": "earth",
       "robos:buffDefendDice": 1,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:water-of-healing",
@@ -2101,7 +2695,8 @@
       "robos:element": "water",
       "robos:healingPoints": 4,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:sleep",
@@ -2114,7 +2709,8 @@
       "dcterms:title": "Sleep",
       "robos:element": "water",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:veil-of-mist",
@@ -2127,7 +2723,8 @@
       "dcterms:title": "Veil of Mist",
       "robos:element": "water",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:genie",
@@ -2141,7 +2738,8 @@
       "robos:element": "air",
       "robos:attackDice": 5,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:swift-wind",
@@ -2155,7 +2753,8 @@
       "robos:element": "air",
       "robos:doubleMovement": true,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:tempest",
@@ -2168,7 +2767,8 @@
       "dcterms:title": "Tempest",
       "robos:element": "air",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:lightning-bolt",
@@ -2183,7 +2783,8 @@
       "robos:element": "dread",
       "robos:damageDice": 2,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:firestorm",
@@ -2198,7 +2799,8 @@
       "robos:element": "dread",
       "robos:damageDice": 3,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:fear",
@@ -2213,7 +2815,8 @@
       "robos:element": "dread",
       "robos:debuffAttackDice": 1,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:sleep-dread",
@@ -2227,7 +2830,8 @@
       "dcterms:title": "Sleep of Dread",
       "robos:element": "dread",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:cloud-of-chaos",
@@ -2241,7 +2845,8 @@
       "dcterms:title": "Cloud of Chaos",
       "robos:element": "dread",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:summon-undead",
@@ -2256,7 +2861,8 @@
       "robos:element": "dread",
       "robos:summonCount": 2,
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:rust",
@@ -2270,7 +2876,8 @@
       "dcterms:title": "Rust",
       "robos:element": "dread",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:spell:escape",
@@ -2284,7 +2891,8 @@
       "dcterms:title": "Escape",
       "robos:element": "dread",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:chest",
@@ -2296,7 +2904,8 @@
       ],
       "dcterms:title": "Treasure Chest",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:tomb",
@@ -2308,7 +2917,8 @@
       ],
       "dcterms:title": "Stone Tomb",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:weapons-rack",
@@ -2320,7 +2930,8 @@
       ],
       "dcterms:title": "Weapons Rack",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:alchemists-bench",
@@ -2332,7 +2943,8 @@
       ],
       "dcterms:title": "Alchemist's Bench",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:bookcase",
@@ -2344,7 +2956,8 @@
       ],
       "dcterms:title": "Bookcase (3-Tile Library Wall)",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:bookshelf",
@@ -2356,7 +2969,8 @@
       ],
       "dcterms:title": "Bookshelf (2-Tile Study Shelf)",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:altar",
@@ -2368,7 +2982,8 @@
       ],
       "dcterms:title": "Sorcerer's Altar / Desk (3x2 Tiles)",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:boulder",
@@ -2380,7 +2995,8 @@
       ],
       "dcterms:title": "Boulder Tile Obstacle",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:table",
@@ -2392,7 +3008,8 @@
       ],
       "dcterms:title": "Wooden Table / Council Desk",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:cupboard",
@@ -2404,7 +3021,8 @@
       ],
       "dcterms:title": "Cupboard (2-Tile Cabinet)",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:furniture:fireplace",
@@ -2416,7 +3034,8 @@
       ],
       "dcterms:title": "Stone Fireplace",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:map:the-trial",
@@ -3117,7 +3736,8 @@
         "fated_reroll_dice"
       ],
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:item:hearthskin-horn",
@@ -3134,7 +3754,8 @@
       "robos:isConsumable": false,
       "robos:action": "blow_hearthskin_horn",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:summon:friendly-skeleton",
@@ -3234,7 +3855,8 @@
       "robos:isSpellcaster": false,
       "robos:tokenColor": "#475569",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:cassandria-witch-hand",
@@ -3258,6 +3880,536 @@
         "urn:robos:tabletop:spell:sleep-dread"
       ],
       "robos:tokenColor": "#9333ea",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop",
+      "robos:category": "Base Game"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:inflation-spawn",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Inflation Spawn",
+      "robos:altTitle": "Infalation Spawn",
+      "robos:category": "Midterms 2026",
+      "robos:archetype": "Goblin Money Monster",
+      "dcterms:description": "A rabid goblin money monster (Infalation Spawn) hatched from an overheated Federal Reserve printing press. Devours 40% of your gold purse on sight while shrinking potion bottles.",
+      "robos:bodyPoints": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 1,
+      "robos:movementSquares": 10,
+      "robos:icon": "💸",
+      "robos:tokenColor": "#16a34a",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:illegal-alien",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Illegal Alien",
+      "robos:category": "Midterms 2026",
+      "robos:archetype": "Grey Alien with a Robber Mask",
+      "dcterms:description": "A literal grey extraterrestrial from Zeta Reticuli wearing a classic black domino robber mask and carrying a striped loot sack after parking its flying saucer in a dungeon no-parking zone.",
+      "robos:bodyPoints": 1,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 8,
+      "robos:icon": "👽",
+      "robos:tokenColor": "#64748b",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:happily-married-gay-man",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Happily Married Gay Man",
+      "robos:category": "Midterms 2026",
+      "robos:archetype": "Dread Warrior",
+      "dcterms:description": "An unstoppable Dread Warrior of domestic bliss: dual-income 820 credit score, impeccably landscaped dungeon courtyard, and a loving marriage that inexplicably terrifies culture-war bosses.",
+      "robos:bodyPoints": 3,
+      "robos:attackDice": 4,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 7,
+      "robos:icon": "💍",
+      "robos:tokenColor": "#ec4899",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:k-street-swamp-fimir",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "K-Street Swamp Lobbyist",
+      "robos:category": "Midterms 2026",
+      "robos:archetype": "Swamp Fimir",
+      "dcterms:description": "A one-eyed reptilian lobbyist slithering out of a bipartisan tax loophole with a leather briefcase full of untraceable campaign gold.",
+      "robos:bodyPoints": 2,
+      "robos:attackDice": 3,
+      "robos:defendDice": 3,
+      "robos:movementSquares": 6,
+      "robos:icon": "🐊",
+      "robos:tokenColor": "#0f766e",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:gerrymandered-skeleton",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Gerrymandered Skeleton",
+      "robos:category": "Midterms 2026",
+      "robos:archetype": "Redistricted Undead",
+      "dcterms:description": "An undead voter contorted into a 47-sided congressional district shaped like an upside-down salamander.",
+      "robos:bodyPoints": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:movementSquares": 6,
+      "robos:isUndead": true,
+      "robos:monsterType": "undead",
+      "robos:icon": "💀",
+      "robos:tokenColor": "#94a3b8",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:teleprompter-zombie",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Cable News Pundit Zombie",
+      "robos:category": "Midterms 2026",
+      "robos:archetype": "Prime-Time Undead",
+      "dcterms:description": "A shambling prime-time anchor that groans BREAKING NEWS every 30 seconds and cannot move unless fed a pharmaceutical commercial break.",
+      "robos:bodyPoints": 1,
+      "robos:attackDice": 2,
+      "robos:defendDice": 3,
+      "robos:movementSquares": 4,
+      "robos:isUndead": true,
+      "robos:monsterType": "undead",
+      "robos:icon": "🧟",
+      "robos:tokenColor": "#475569",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:trumpbiden-dragon",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "TrumpBiden (The Blame Dragon)",
+      "robos:category": "Midterms 2026",
+      "robos:archetype": "Two-Headed Presidential Dragon",
+      "dcterms:description": "A colossal two-headed Dragon combining 2 presidents who failed us all while everything got more expensive, meanwhile blaming each other for every single gold coin lost to inflation.",
+      "robos:bodyPoints": 6,
+      "robos:attackDice": 5,
+      "robos:defendDice": 5,
+      "robos:movementSquares": 8,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:bipartisan-blame-inferno",
+        "urn:robos:tabletop:spell:shrinkflation-curse",
+        "urn:robos:tabletop:spell:culture-war-distraction-cloud"
+      ],
+      "robos:icon": "🐉",
+      "robos:tokenColor": "#dc2626",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:snowflake-meltdown",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Meltdown of the Delicate Snowflake",
+      "robos:category": "Midterms 2026",
+      "robos:element": "water",
+      "robos:icon": "❄️",
+      "dcterms:description": "Summons a swirling blizzard of mild disagreement! Target cannot handle hearing an unapproved opinion and must retreat to a Safe Space room for 1 turn.",
+      "robos:effect": "status-freeze",
+      "robos:val": 1,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:midnight-gavel-no-choice",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Taking Away Abortion (Midnight Gavel)",
+      "robos:category": "Midterms 2026",
+      "robos:element": "earth",
+      "robos:icon": "⚖️",
+      "dcterms:description": "Slams a leaked midnight gavel onto the board that takes away bodily autonomy and healthcare choices! Revokes all healing and choice cards in the room while citing 17th-century dungeon traditions.",
+      "robos:effect": "debuff-atk",
+      "robos:val": 2,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:blind-party-line",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Supporting Things Just Because Your Party Does",
+      "robos:category": "Midterms 2026",
+      "robos:element": "air",
+      "robos:icon": "🐑",
+      "dcterms:description": "Instantly flip-flops your stance on whatever happened 5 minutes ago to match party leadership! Grants +2 Attack Dice of pure partisan shamelessness.",
+      "robos:effect": "buff-atk",
+      "robos:val": 2,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:fear-middle-east-debate",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Fear of Israel & the Middle East",
+      "robos:category": "Midterms 2026",
+      "robos:element": "fire",
+      "robos:icon": "🌍",
+      "dcterms:description": "Asks a live-televised question about Israel and the Middle East! Every combatant in the room panics, takes 2 BP stress damage, wires 20 Billion GP overseas, and tries to change the subject.",
+      "robos:effect": "damage-bp",
+      "robos:val": 2,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:mcconnell-glitch",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "30-Second Press Conference Freeze",
+      "robos:category": "Midterms 2026",
+      "robos:element": "earth",
+      "robos:icon": "🐢",
+      "dcterms:description": "Stare blankly into the middle distance mid-sentence for 30 awkward seconds, hardening skin for +2 Defend Dice until an aide reboots you.",
+      "robos:effect": "buff-def",
+      "robos:val": 2,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:bipartisan-blame-inferno",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Bipartisan Blame-Game Inferno",
+      "robos:category": "Midterms 2026",
+      "robos:element": "dread",
+      "robos:icon": "👉",
+      "dcterms:description": "TrumpBiden's ultimate Dread Spell! Both dragon heads point at each other screaming 'He broke the economy!' while setting the room's gold purses on fire for 3 BP damage.",
+      "robos:damageDice": 3,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:shrinkflation-curse",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Shrinkflation Curse",
+      "robos:category": "Midterms 2026",
+      "robos:element": "dread",
+      "robos:icon": "📉",
+      "dcterms:description": "Cuts a hero's potion healing in half while doubling its gold price and blaming 'global dungeon supply chains'.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:spell:culture-war-distraction-cloud",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopSpellCard",
+        "robos:TabletopDreadSpell",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "Culture War Distraction Cloud",
+      "robos:category": "Midterms 2026",
+      "robos:element": "dread",
+      "robos:icon": "🎪",
+      "dcterms:description": "Fills the dungeon with 24/7 outrage over gas stoves and green M&Ms so heroes lose their next turn arguing while the boss loots the treasury.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:weapon:unapproved-bombing-run",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopWeapon",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Unapproved Foreign Bombing Run",
+      "robos:category": "Midterms 2026",
+      "robos:weaponType": "Weapon",
+      "robos:dice": "4 Attack Dice (No Congressional Vote Required)",
+      "robos:cost": "450 GP",
+      "robos:icon": "💣",
+      "dcterms:description": "Illegal presidential act #1: Bypasses Article I and the War Powers Resolution completely! Strike any dungeon room without asking Congress and call it a 'limited kinetic operation'.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:weapon:classified-bathroom-box",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopWeapon",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Classified Bathroom Box Flail",
+      "robos:category": "Midterms 2026",
+      "robos:weaponType": "Weapon",
+      "robos:dice": "3 Attack Dice (Bathroom Chandelier & Corvette Garage Edition)",
+      "robos:cost": "300 GP",
+      "robos:icon": "📦",
+      "dcterms:description": "Illegal presidential act #2: A heavy cardboard banker's box of Top Secret nuclear & war plans stashed next to a golden toilet and a vintage Corvette. Declassified telepathically!",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:weapon:midnight-pardon-gavel",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopWeapon",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Midnight Blanket Pardon Gavel",
+      "robos:category": "Midterms 2026",
+      "robos:weaponType": "Weapon",
+      "robos:dice": "3 Attack Dice (Erases All Past & Future Crimes)",
+      "robos:cost": "350 GP",
+      "robos:icon": "🔨",
+      "dcterms:description": "Illegal presidential act #3: Signed at 11:59 PM on the last day in office! Preemptively pardons family members, political cronies, and campaign donors for a decade of dungeon raids.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:weapon:executive-order-overreach-pen",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopWeapon",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Unconstitutional Executive Order Pen",
+      "robos:category": "Midterms 2026",
+      "robos:weaponType": "Weapon",
+      "robos:dice": "3 Attack Dice (Ignores Supreme Court & Congress)",
+      "robos:cost": "280 GP",
+      "robos:icon": "🖊️",
+      "dcterms:description": "Illegal presidential act #4: Declares a fake 'National Dungeon Emergency' to spend 500 Billion GP, levy random tariffs, and rewrite laws with a single Sharpie stroke.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:weapon:crypto-rugpull-scepter",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopWeapon",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Presidential Meme-Coin Rug-Pull Scepter",
+      "robos:category": "Midterms 2026",
+      "robos:weaponType": "Ranged Weapon",
+      "robos:dice": "3 Attack Dice (Emoluments Clause Drain)",
+      "robos:cost": "420 GP",
+      "robos:icon": "🪙",
+      "dcterms:description": "Illegal presidential act #5: Launches an official presidential crypto token 48 hours before the quest starts, draining every monster's gold purse while insiders cash out.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:weapon:doj-subpoena-crossbow",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopWeapon",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Weaponized Subpoena Crossbow",
+      "robos:category": "Midterms 2026",
+      "robos:weaponType": "Ranged Weapon",
+      "robos:dice": "3 Attack Dice (Straight-Line Lawfare)",
+      "robos:cost": "350 GP",
+      "robos:icon": "🏹",
+      "dcterms:description": "Illegal presidential act #6: Fires 400-page federal indictments and retaliatory IRS audits across the corridor at political opponents during election season.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:weapon:official-act-immunity-shield",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopWeapon",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Official Act Sovereign Immunity Shield",
+      "robos:category": "Midterms 2026",
+      "robos:weaponType": "Armor",
+      "robos:dice": "+2 Defend Dice (Total Legal Invulnerability)",
+      "robos:cost": "500 GP",
+      "robos:icon": "🛡️",
+      "dcterms:description": "Any illegal dungeon act committed while holding this shield is automatically declared a Core Official Constitutional Act.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:item:snowflake-tears",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopItem",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Bottle of Delicate Snowflake Tears",
+      "robos:category": "Midterms 2026",
+      "robos:itemType": "potion",
+      "robos:effect": "Restores 4 BP, but forces a 10-minute rant about microaggressions or woke M&Ms",
+      "robos:cost": 100,
+      "robos:icon": "❄️",
+      "dcterms:description": "Brewed from pure bipartisan fragility whenever someone encounters a joke, a pronoun, or a holiday coffee cup they slightly dislike.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:item:bodily-autonomy-eraser",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopItem",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "1789 Bodily Autonomy Eraser Scroll (No Abortion For You)",
+      "robos:category": "Midterms 2026",
+      "robos:itemType": "relic",
+      "robos:effect": "Takes away abortion & personal healthcare choices in the room, replacing them with a politician committee",
+      "robos:cost": 200,
+      "robos:icon": "📜",
+      "dcterms:description": "Overturns 50 years of settled bodily autonomy precedent overnight while claiming 'we just sent the decision back to the dungeon states!'",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:item:party-line-flip-flops",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopItem",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Party-Line Flip-Flop Sandals",
+      "robos:category": "Midterms 2026",
+      "robos:itemType": "relic",
+      "robos:effect": "Supporting things 100% just because your party does! +2 Attack Dice when reversing your opinion from yesterday",
+      "robos:cost": 150,
+      "robos:icon": "🩴",
+      "dcterms:description": "Lets a hero passionately cheer for the exact policy they called treason five minutes ago because their party leader just endorsed it.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:item:middle-east-teleprompter",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopItem",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Middle East Briefing Teleprompter Shield",
+      "robos:category": "Midterms 2026",
+      "robos:itemType": "tool",
+      "robos:effect": "Fear of Israel & Middle East questions: deflects press inquiries while auto-wiring 20 Billion GP",
+      "robos:cost": 175,
+      "robos:icon": "📺",
+      "dcterms:description": "Activated the moment anyone brings up Israel or the Middle East—sweats profusely, mutters a 15-second canned platitude, and dives out the nearest dungeon window.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:item:fed-printer-coin",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopItem",
+        "robos:TabletopArtifact",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "100-Trillion Dollar Fed Money Printer",
+      "robos:category": "Midterms 2026",
+      "robos:itemType": "artifact",
+      "robos:effect": "Mints 500 GP instantly, but spawns an Inflation Spawn and makes eggs cost 25 GP",
+      "robos:cost": 300,
+      "robos:icon": "🖨️",
+      "dcterms:description": "Bipartisan economic magic: solves high prices by printing trillions of new gold coins and calling the resulting inflation 'transitory'.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     }
