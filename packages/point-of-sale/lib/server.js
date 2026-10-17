@@ -41,6 +41,7 @@ function createServer(pos, { lan = false } = {}) {
 
   // ---- kiosk (customer facing) ----
   on('GET', '/api/kiosk/menu', 'none', () => pos.kioskMenu());
+  on('GET', '/api/kiosk/lookup', 'none', ({ query }) => pos.kioskLookup(query.code));
   on('POST', '/api/kiosk/orders', 'none', ({ body }) => ({ status: 201, body: pos.kioskCreateOrder(body) }));
   on('GET', '/api/kiosk/orders/:id', 'none', ({ params }) => { const o = pos.getOrder(params.id); if (o.channel !== 'kiosk') throw new PosError('not_found', 'Unknown order', 404); return o; });
   on('POST', '/api/kiosk/orders/:id/pay', 'none', async ({ params, body }) => pos.kioskPay(params.id, body));

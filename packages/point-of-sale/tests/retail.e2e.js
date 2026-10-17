@@ -1,5 +1,5 @@
 'use strict';
-// Touchscreen end-to-end tests for the clothing store (retail).
+// Touchscreen end-to-end tests for the general retail store.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { launch } = require('./browser');
@@ -9,7 +9,7 @@ const barcodeOf = (b, name, size) => { const item = b.pos.state.items.find(i => 
 const stock = (b, name, size) => { const item = b.pos.state.items.find(i => i.name === name); const inv = size ? item.variants.find(v => v.name === size).inventoryId : item.inventoryId; return b.pos.state.inventory.find(i => i.id === inv).onHand; };
 
 test('cashier scans a barcode, taps a size for jeans, applies a promo code and takes a card; then handles a return with manager approval', T, async () => {
-  const b = await launch('clothing');
+  const b = await launch('retail');
   try {
     await b.signIn('3333');
     // A hardware scanner types the code and presses Enter into the always-focused scan box.
@@ -25,7 +25,7 @@ test('cashier scans a barcode, taps a size for jeans, applies a promo code and t
     await b.page.fill(b.tid('promo-code'), 'save10');
     await b.tap(b.tid('promo-apply'));
     await b.see(b.tid('discount'), /-\$9\.20/);
-    await b.shot('clothing-register-promo');
+    await b.shot('retail-register-promo');
     await b.tap(b.tid('pay'));
     await b.see(b.tid('due'), /\$89\.63/); // (92.00 - 9.20) + 8.25% tax
     await b.tap(b.tid('method-card'));
@@ -43,7 +43,7 @@ test('cashier scans a barcode, taps a size for jeans, applies a promo code and t
     await b.page.fill(b.tid('refund-reason'), 'Too small');
     await b.tap(b.tid('refund-confirm'));
     await b.see(b.tid('pin-dialog'), /Manager approval needed/);
-    await b.shot('clothing-manager-override');
+    await b.shot('retail-manager-override');
     await b.keys('3333');
     await b.tap(b.tid('pin-ok'));
     await b.seeToast(/Manager PIN not accepted/); // a cashier PIN cannot approve
@@ -59,7 +59,7 @@ test('cashier scans a barcode, taps a size for jeans, applies a promo code and t
 });
 
 test('cash sale at the register: change due is shown, receipt prints, drawer is required first', T, async () => {
-  const b = await launch('clothing');
+  const b = await launch('retail');
   try {
     await b.signIn('3333');
     await b.tap(b.tid('item-Wool Beanie'));
@@ -79,13 +79,13 @@ test('cash sale at the register: change due is shown, receipt prints, drawer is 
     await b.see(b.tid('change'), /Change due \$26\.18/);
     await b.tap(b.tid('take-cash'));
     await b.see(b.tid('change-due'), /\$26\.18/);
-    await b.shot('clothing-receipt');
+    await b.shot('retail-receipt');
     assert.deepEqual(b.errors.filter(e => !/409/.test(e)), []);
   } finally { await b.close(); }
 });
 
 test('manager does inventory input: new stock item, receive a delivery, count the shelf, and import a CSV', T, async () => {
-  const b = await launch('clothing');
+  const b = await launch('retail');
   try {
     await b.signIn('2222');
     await b.nav('inventory');
@@ -114,7 +114,7 @@ test('manager does inventory input: new stock item, receive a delivery, count th
     await b.page.fill(b.tid('csv-text'), 'sku,name,qty,unit,reorder,cost\nTW-SOCKS,Wool Socks (pair),20,,,\nHB-1,Hanger bundle,100,each,20,0.25\n');
     await b.tap(b.tid('csv-ok'));
     await b.see(b.tid('onhand-Hanger bundle'), /100 each/);
-    await b.shot('clothing-inventory');
+    await b.shot('retail-inventory');
     assert.equal(stock(b, 'Wool Socks (pair)'), 22);
     await b.page.fill(b.tid('inv-filter'), 'hanger');
     await b.see(b.tid('inventory-table'), /Hanger bundle/);
@@ -122,8 +122,8 @@ test('manager does inventory input: new stock item, receive a delivery, count th
   } finally { await b.close(); }
 });
 
-test('owner adds a clothing item with sizes and a valid barcode; a bad barcode is refused with a clear message', T, async () => {
-  const b = await launch('clothing');
+test('owner adds a sized product and a valid barcode; a bad barcode is refused with a clear message', T, async () => {
+  const b = await launch('retail');
   try {
     await b.signIn('1111');
     await b.nav('catalog');
@@ -138,14 +138,14 @@ test('owner adds a clothing item with sizes and a valid barcode; a bad barcode i
     await b.page.fill(b.tid('f-variantsText'), `M | LS-M | ${withCheckDigit('61200000099')} | 4\nL | LS-L | ${withCheckDigit('61200000098')} | 6`);
     await b.tap(b.tid('catalog-save'));
     await b.see(b.tid('catalog-table'), /Linen Shirt[\s\S]*M, L/);
-    await b.shot('clothing-catalog-editor');
+    await b.shot('retail-catalog-editor');
     assert.equal(stock(b, 'Linen Shirt', 'L'), 6);
     assert.deepEqual(b.errors.filter(e => !/400/.test(e)), []);
   } finally { await b.close(); }
 });
 
 test('self-checkout in the store: shopper scans a tag, picks a size by touch, chooses pay-at-counter; cashier finds the order and takes cash', T, async () => {
-  const b = await launch('clothing');
+  const b = await launch('retail');
   try {
     await b.page.goto(b.base + '/kiosk');
     await b.tap(b.tid('start'));
@@ -154,12 +154,12 @@ test('self-checkout in the store: shopper scans a tag, picks a size by touch, ch
     await b.see(b.tid('cart'), /Canvas Tote/);
     await b.page.fill(b.tid('scan'), '999');
     await b.page.press(b.tid('scan'), 'Enter');
-    await b.seeToast(/could not find 999/);
+    await b.seeToast(/could not find that item/);
     await b.tap(b.tid('item-Zip Hoodie'));
     await b.tap(b.tid('variant-M'));
     await b.tap(b.tid('add-to-order'));
     await b.see(b.tid('cart-subtotal'), /\$73\.00/);
-    await b.shot('clothing-kiosk-cart');
+    await b.shot('retail-kiosk-cart');
     await b.tap(b.tid('review'));
     await b.see(b.tid('pay-total'), /\$79\.03/); // tax is rounded per line: 1.49 + 4.54
     assert.equal(await b.page.locator(b.tid('tip-none')).count(), 0); // retail: no tipping prompt
@@ -181,7 +181,7 @@ test('self-checkout in the store: shopper scans a tag, picks a size by touch, ch
 });
 
 test('shopper at self-checkout who backs out leaves nothing behind for the staff', T, async () => {
-  const b = await launch('clothing');
+  const b = await launch('retail');
   try {
     await b.page.goto(b.base + '/kiosk');
     await b.tap(b.tid('start'));
@@ -190,7 +190,7 @@ test('shopper at self-checkout who backs out leaves nothing behind for the staff
     await b.tap(b.tid('back'));
     await b.see(b.tid('cart'), /Canvas Tote/); // the basket is still there to edit
     await b.tap(b.tid('cancel-order'));
-    await b.see(b.tid('welcome'), /Threadwell/);
+    await b.see(b.tid('welcome'), /Main Street/);
     assert.equal(b.pos.openOrders().length, 0);
     assert.equal(b.pos.state.orders.filter(o => o.status === 'void').length, 1);
     assert.deepEqual(b.errors, []);
@@ -198,7 +198,7 @@ test('shopper at self-checkout who backs out leaves nothing behind for the staff
 });
 
 test('reports: manager sees the day by category and tender, and a cashier cannot open reports', T, async () => {
-  const b = await launch('clothing');
+  const b = await launch('retail');
   try {
     const cashier = b.pos.state.staff.find(s => s.role === 'cashier');
     b.pos.openDrawer({ float: 0 }, cashier);
@@ -217,7 +217,7 @@ test('reports: manager sees the day by category and tender, and a cashier cannot
     await b.see(b.tid('stat-Gross sales'), /\$40\.00/);
     await b.see(b.tid('by-category'), /Accessories/);
     await b.see(b.tid('by-tender'), /cash[\s\S]*card|card[\s\S]*cash/);
-    await b.shot('clothing-reports');
+    await b.shot('retail-reports');
     assert.deepEqual(b.errors, []);
   } finally { await b.close(); }
 });

@@ -49,18 +49,16 @@
     const grid = h('div', { class: 'tiles', 'data-testid': 'tiles' });
     const chips = h('div', { class: 'chips' });
     const cartEl = h('div', { class: 'card ticket', 'data-testid': 'cart' });
-    const scan = menu.business.type === 'retail' ? h('input', { class: 'scan', placeholder: 'Scan an item barcode', 'data-testid': 'scan', autocomplete: 'off',
-      onkeydown: e => { if (e.key !== 'Enter' || !scan.value.trim()) return; const code = scan.value.trim(); scan.value = ''; const hit = lookup(code); if (!hit) return toast(`We could not find ${code}. Ask a team member for help.`); addToCart(hit); drawCart(); } }) : null;
-
-    function lookup(code) {
-      for (const item of menu.items) {
-        if (item.soldOut) continue;
-        if (item.barcode === code || item.sku === code) { if (item.variants.length) return null; return { itemId: item.id, variantId: null, qty: 1 }; }
-        const v = item.variants.find(x => x.barcode === code || x.sku === code);
-        if (v) return { itemId: item.id, variantId: v.id, qty: 1 };
-      }
-      return null;
+    // The server understands every code a scanner can produce (UPC/EAN/GTIN, QR, GS1 Digital Link, Data Matrix), so look codes up there.
+    async function addScanned(code) {
+      const hit = await api('GET', `/api/kiosk/lookup?code=${encodeURIComponent(code)}`, undefined, { anon: true });
+      if (hit.needsChoice) { const item = menu.items.find(i => i.id === hit.itemId); await choose(item); return `Choose the size for ${hit.name}`; }
+      addToCart({ itemId: hit.itemId, variantId: hit.variantId, qty: 1 }); drawCart();
+      return `Added ${hit.name}`;
     }
+    const scan = menu.business.type === 'retail' ? h('input', { class: 'scan', placeholder: 'Scan an item barcode', 'data-testid': 'scan', autocomplete: 'off',
+      onkeydown: async e => { if (e.key !== 'Enter' || !scan.value.trim()) return; const code = scan.value.trim(); scan.value = ''; try { toast(await addScanned(code), 'ok'); } catch (err) { toast(err.message); } scan.focus(); } }) : null;
+    const cameraBtn = scan ? h('button', { 'aria-label': 'Scan with the camera', 'data-testid': 'camera-scan', style: 'min-height:var(--tap)', onclick: () => POS.camera({ title: 'Hold the item\'s barcode up to the camera', onCode: addScanned }) }, '📷 Camera') : null;
     function drawChips() {
       chips.replaceChildren(h('button', { class: `chip ${!category ? 'active' : ''}`, 'data-testid': 'cat-all', onclick: () => { category = null; drawChips(); drawTiles(); } }, 'All'), ...menu.categories.map(c => h('button', { class: `chip ${category === c.id ? 'active' : ''}`, 'data-testid': `cat-${c.name}`, onclick: () => { category = c.id; drawChips(); drawTiles(); } }, c.name)));
     }
@@ -88,7 +86,7 @@
         h('div', { class: 'actions' }, h('button', { 'data-testid': 'cancel-order', onclick: welcome }, 'Start over'), h('button', { class: 'primary', style: 'grid-column:span 2;min-height:76px;font-size:26px', 'data-testid': 'review', disabled: !cart.length, onclick: guard(review) }, 'Review & pay')));
       if (scan) scan.focus();
     }
-    root.replaceChildren(h('div', { class: 'layout' }, h('div', { class: 'catalog-pane' }, h('div', { class: 'row' }, h('h2', { class: 'grow' }, menu.business.name), scan ? h('div', { style: 'width:340px' }, scan) : null), chips, grid), cartEl));
+    root.replaceChildren(h('div', { class: 'layout' }, h('div', { class: 'catalog-pane' }, h('div', { class: 'row' }, h('h2', { class: 'grow' }, menu.business.name), scan ? h('div', { class: 'row', style: 'width:460px' }, h('div', { class: 'grow' }, scan), cameraBtn) : null), chips, grid), cartEl));
     drawChips(); drawTiles(); drawCart();
   }
 

@@ -92,3 +92,35 @@ test('a PIN is hashed at rest, never stored or returned in clear', () => {
   assert.equal(JSON.stringify(pos.listStaff()).includes('Hash'), false);
   assert.equal(pos.login('4321').staff.role, 'admin');
 });
+
+const scancode = require('../lib/scancode');
+
+test('scan codes: UPC-E expands to the right UPC-A, GTINs match whatever padding they were printed with', () => {
+  assert.equal(scancode.expandUpcE('04252614'), '042100005264'); // published UPC-E / UPC-A pair
+  assert.match(scancode.expandUpcE('01234565'), /^\d{12}$/);
+  assert.equal(scancode.expandUpcE('96385074'), null); // EAN-8 starting 9 is not a UPC-E
+  const upcA = '036000291452';
+  for (const printed of [upcA, '0' + upcA, '00' + upcA]) assert.ok(scancode.candidates(printed).includes(upcA), printed);
+  assert.ok(scancode.candidates('96385074').includes('96385074'));
+  assert.ok(scancode.candidates('0000096385074').includes('96385074')); // GTIN-8 padded to 13
+});
+
+test('scan codes: GS1 Digital Link, GS1 element strings and symbology identifiers all lead to the GTIN', () => {
+  const upcA = '036000291452';
+  assert.ok(scancode.candidates(`https://id.gs1.org/01/00${upcA}/10/LOT9/21/SER1`).includes(upcA));
+  assert.ok(scancode.candidates(`https://example.com/shop/01/00${upcA}`).includes(upcA)); // brand-owned resolvers too
+  assert.ok(scancode.candidates(`(01)00${upcA}(10)ABC`).includes(upcA));
+  assert.ok(scancode.candidates(`0100${upcA}10LOT-7`).includes(upcA)); // raw Data Matrix payload: AI 01, GTIN-14, more AIs
+  assert.ok(scancode.candidates(`]d2 0100${upcA}`.replace(' ', '')).includes(upcA)); // ]d2 = Data Matrix symbology identifier
+  assert.ok(scancode.candidates(`]Q1HM-MUG`).includes('HM-MUG'));
+  assert.deepEqual(scancode.candidates('  '), []);
+  assert.ok(!scancode.candidates('https://example.com/about').some(c => /^\d+$/.test(c))); // a random URL yields no GTIN
+});
+
+test('scan codes: barcodes are stored as plain GTINs when a code that carries one is entered', () => {
+  assert.equal(scancode.canonicalBarcode('https://id.gs1.org/01/09506000134352'), '9506000134352');
+  assert.equal(scancode.canonicalBarcode('00036000291452'), '036000291452');
+  assert.equal(scancode.canonicalBarcode('00000096385074'), '96385074');
+  assert.equal(scancode.canonicalBarcode('HM-MUG'), 'HM-MUG');
+  assert.equal(scancode.canonicalBarcode('036000291453'), '036000291453'); // bad check digit stays as typed so validation can reject it
+});

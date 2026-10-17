@@ -20,14 +20,16 @@ const helpers = pos => ({
   item: (i) => pos.upsert('items', i),
 });
 
-function clothing(pos) {
+function retail(pos) {
   const { cat, tax, item } = helpers(pos);
-  Object.assign(pos.state.settings.business, { name: 'Threadwell Clothing', type: 'retail', address: '14 Market Street' });
+  Object.assign(pos.state.settings.business, { name: 'Main Street General Store', type: 'retail', address: '14 Market Street' });
   Object.assign(pos.state.settings, { orderTypes: ['retail'], autoSendOnPay: false });
   pos.state.settings.kiosk.allowPayAtCounter = true;
   pos.state.settings.card.provider = 'mock';
-  const salesTax = tax('Sales tax', 825);
+  const salesTax = tax('Sales tax', 825), exempt = tax('Tax-exempt groceries', 0);
+  // Departments: apparel is only one of them. Sized goods use variants; everything else is a plain stocked item.
   const tops = cat('Tops', '#3b82f6'), bottoms = cat('Bottoms', '#7c3aed'), outer = cat('Outerwear', '#f97316'), acc = cat('Accessories', '#14b8a6');
+  const home = cat('Home & Kitchen', '#eab308'), tech = cat('Electronics', '#00bcd4'), grocery = cat('Grocery & Sundries', '#22c55e'), stationery = cat('Cards & Stationery', '#ec4899');
   let n = 0, style = 0;
   const sized = (name, categoryId, price, sizes, stock, emoji) => {
     const code = `TW${String(++style).padStart(2, '0')}`;
@@ -47,6 +49,20 @@ function clothing(pos) {
   item({ name: 'Leather Belt', categoryId: acc, price: 3800, taxId: salesTax, barcode: upc(++n), stock: 8, emoji: '🪢', sku: 'TW-BELT' });
   item({ name: 'Canvas Tote', categoryId: acc, price: 1800, taxId: salesTax, barcode: upc(++n), stock: 20, emoji: '👜', sku: 'TW-TOTE' });
   item({ name: 'Wool Socks (pair)', categoryId: acc, price: 1400, taxId: salesTax, barcode: upc(++n), stock: 2, emoji: '🧦', sku: 'TW-SOCKS' });
+  // More departments, appended after the apparel so the earlier barcodes never move.
+  const plain = (name, categoryId, price, stock, emoji, sku, taxId = salesTax) => item({ name, categoryId, price, taxId, barcode: upc(++n), stock, cost: Math.round(price * 0.5), emoji, sku });
+  plain('Ceramic Mug', home, 1200, 24, '☕', 'HM-MUG');
+  plain('Cast Iron Skillet', home, 4500, 6, '🍳', 'HM-SKILLET');
+  item({ name: 'Scented Candle', categoryId: home, price: 1800, taxId: salesTax, emoji: '🕯️', sku: 'HM-CANDLE', variants: ['Lavender', 'Vanilla', 'Cedar'].map(scent => ({ name: scent, sku: `HM-CANDLE-${scent.slice(0, 3).toUpperCase()}`, barcode: upc(++n), stock: 12, cost: 700 })) });
+  plain('USB-C Cable 1m', tech, 999, 40, '🔌', 'EL-USBC');
+  plain('Wall Charger 20W', tech, 1999, 15, '🔋', 'EL-CHARGER');
+  plain('Wired Earbuds', tech, 2999, 10, '🎧', 'EL-EARBUDS');
+  plain('AA Batteries 8-pack', tech, 849, 30, '🔋', 'EL-AA8');
+  plain('Bottled Water', grocery, 150, 60, '💧', 'GR-WATER', exempt);
+  plain('Chocolate Bar', grocery, 225, 48, '🍫', 'GR-CHOC', exempt);
+  plain('Trail Mix', grocery, 549, 20, '🥜', 'GR-TRAIL', exempt);
+  plain('Greeting Card', stationery, 450, 40, '💌', 'ST-CARD');
+  plain('Notebook A5', stationery, 799, 25, '📓', 'ST-NOTEBOOK');
   pos.upsert('promotions', { code: 'SAVE10', name: '10% off', type: 'percent', value: 10 });
   pos.upsert('promotions', { code: 'WELCOME5', name: '$5 off $50', type: 'fixed', value: 500, minSubtotal: 5000 });
 }
@@ -122,7 +138,7 @@ function bar(pos) {
 }
 
 const PROFILES = {
-  clothing: { title: 'Clothing store', summary: 'Retail: sizes, barcodes, returns, self-checkout scanning', build: clothing },
+  retail: { title: 'Retail store', summary: 'Any shop: sized apparel, home goods, electronics, groceries; barcode and QR scanning, returns, self-checkout', build: retail },
   coffee: { title: 'Coffee shop', summary: 'Food and drinks: modifiers, recipes, prep queue, tips, self-checkout', build: coffee },
   bar: { title: 'Bar', summary: 'Open tabs, happy hour, age checks, comps, split checks, tips', build: bar },
 };

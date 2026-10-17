@@ -16,11 +16,18 @@
     const ticket = h('div', { class: 'card ticket', 'data-testid': 'ticket' });
     const scan = h('input', { placeholder: 'Scan barcode or type SKU, press Enter', 'data-testid': 'scan', autocomplete: 'off', enterkeyhint: 'go',
       onkeydown: guard(async e => { if (e.key !== 'Enter' || !scan.value.trim()) return; const code = scan.value.trim(); scan.value = ''; await ensureOrder(); await apply(api('POST', `/api/orders/${st.order.id}/scan`, { code })); scan.focus(); }) });
+    const camera = h('button', { class: 'cam', 'aria-label': 'Scan with the camera', title: 'Scan with the camera', 'data-testid': 'camera-scan', onclick: () => POS.camera({ onCode: async code => {
+      await ensureOrder();
+      const before = new Map(st.order.lines.map(l => [l.id, l.qty]));
+      await apply(api('POST', `/api/orders/${st.order.id}/scan`, { code }));
+      const line = st.order.lines.find(l => !l.removed && (!before.has(l.id) || before.get(l.id) !== l.qty));
+      return line ? `Added ${line.name}${line.variantName ? ' · ' + line.variantName : ''}` : 'Added';
+    } }) }, '📷');
     const find = h('input', { type: 'search', placeholder: 'Search items', 'aria-label': 'Search items', 'data-testid': 'item-search', oninput: e => { search = e.target.value.toLowerCase(); drawTiles(); } });
 
     main.append(h('div', { class: 'register' },
       h('div', { class: 'catalog-pane' },
-        h('div', { class: 'row wrap' }, h('div', { class: 'row', role: 'group', 'aria-label': 'Order type' }, types.map(t => h('button', { class: `chip ${st.orderType === t ? 'active' : ''}`, 'data-testid': `type-${t}`, disabled: !!(st.order && st.order.lines.length), onclick: () => { st.orderType = t; POS.go('register'); } }, t.replace('_', ' ')))), h('div', { class: 'grow' }, scan), h('div', { style: 'width:200px' }, find)),
+        h('div', { class: 'row wrap' }, h('div', { class: 'row', role: 'group', 'aria-label': 'Order type' }, types.map(t => h('button', { class: `chip ${st.orderType === t ? 'active' : ''}`, 'data-testid': `type-${t}`, disabled: !!(st.order && st.order.lines.length), onclick: () => { st.orderType = t; POS.go('register'); } }, t.replace('_', ' ')))), h('div', { class: 'grow row' }, h('div', { class: 'grow' }, scan), camera), h('div', { style: 'width:200px' }, find)),
         chipRow, grid),
       ticket));
 

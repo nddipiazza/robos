@@ -22,7 +22,7 @@ function chromiumPath() {
   return undefined; // let Playwright find its own
 }
 
-async function launch(profile, { date = new Date(2026, 9, 14, 10, 0), touch = true, viewport = { width: 1280, height: 800 } } = {}) {
+async function launch(profile, { date = new Date(2026, 9, 14, 10, 0), touch = true, viewport = { width: 1280, height: 800 }, camera = null } = {}) {
   const clock = { date };
   const pos = new PointOfSale({ now: () => clock.date });
   if (profile) loadSample(pos, profile);
@@ -30,8 +30,11 @@ async function launch(profile, { date = new Date(2026, 9, 14, 10, 0), touch = tr
   const port = await listen(server);
   const base = `http://127.0.0.1:${port}`;
   const { chromium } = playwright();
-  const browser = await chromium.launch({ executablePath: chromiumPath(), args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'] });
-  const context = await browser.newContext({ viewport, hasTouch: touch, isMobile: false });
+  // camera: { text, format } puts that code in front of a fake webcam; without it there is no camera at all.
+  const clip = camera ? await barcodeClip(camera) : null;
+  const cameraArgs = clip ? ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', `--use-file-for-fake-video-capture=${clip}`] : [];
+  const browser = await chromium.launch({ executablePath: chromiumPath(), args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', ...cameraArgs] });
+  const context = await browser.newContext({ viewport, hasTouch: touch, isMobile: false, permissions: clip ? ['camera'] : [] });
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
@@ -63,4 +66,51 @@ async function launch(profile, { date = new Date(2026, 9, 14, 10, 0), touch = tr
   return api;
 }
 
-module.exports = { launch, playwright };
+
+// ---- fake webcam support -------------------------------------------------------------------------------------
+// Renders a barcode with ZXing's encoders, saves a short MJPEG clip of it, and returns the path. Chromium can play the
+// clip back as a webcam (--use-file-for-fake-video-capture), so the camera scanner is tested with real decoding.
+async function barcodeClip({ text, format, frames = 45 }) {
+  const { chromium } = playwright();
+  const browser = await chromium.launch({ executablePath: chromiumPath(), args: ['--no-sandbox', '--disable-gpu'] });
+  try {
+    const page = await browser.newPage({ viewport: { width: 700, height: 520 } });
+    await page.setContent('<canvas id="c" width="640" height="480"></canvas>');
+    await page.addScriptTag({ path: path.join(__dirname, '..', 'renderer', 'vendor', 'zxing-library.min.js') });
+    const jpegBase64 = await page.evaluate(({ text, format }) => {
+      const Z = window.ZXing;
+      // ZXing-js can only *write* QR, Data Matrix and Aztec, so the retail 1D codes are drawn by hand here.
+      const L = ['0001101', '0011001', '0010011', '0111101', '0100011', '0110001', '0101111', '0111011', '0110111', '0001011'];
+      const R = L.map(c => c.replace(/[01]/g, d => (d === '0' ? '1' : '0')));
+      const G = R.map(c => [...c].reverse().join(''));
+      const PARITY = ['LLLLLL', 'LLGLGG', 'LLGGLG', 'LLGGGL', 'LGLLGG', 'LGGLLG', 'LGGGLL', 'LGLGLG', 'LGLGGL', 'LGGLGL'];
+      const ean13 = d => { const par = PARITY[d[0]]; let bits = '101'; for (let i = 1; i < 7; i++) bits += (par[i - 1] === 'L' ? L : G)[d[i]]; bits += '01010'; for (let i = 7; i < 13; i++) bits += R[d[i]]; return bits + '101'; };
+      const ean8 = d => { let bits = '101'; for (let i = 0; i < 4; i++) bits += L[d[i]]; bits += '01010'; for (let i = 4; i < 8; i++) bits += R[d[i]]; return bits + '101'; };
+      const canvas = document.getElementById('c'); const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = '#000';
+      const hints = new Map([[Z.EncodeHintType.MARGIN, 4]]);
+      if (format === 'EAN_13' || format === 'UPC_A' || format === 'EAN_8') {
+        const digits = format === 'UPC_A' ? '0' + text : text;
+        const bits = format === 'EAN_8' ? ean8(digits) : ean13(digits);
+        const mod = Math.floor(520 / (bits.length + 18)); const ox = Math.floor((canvas.width - bits.length * mod) / 2);
+        for (let i = 0; i < bits.length; i++) if (bits[i] === '1') ctx.fillRect(ox + i * mod, 120, mod, 240);
+      } else {
+        const writer = { QR_CODE: new Z.QRCodeWriter(), DATA_MATRIX: new Z.DataMatrixWriter(), AZTEC: new Z.AztecCodeWriter() }[format];
+        if (!writer) throw new Error(`No fixture generator for ${format}`);
+        // Data Matrix rescales to the requested pixel size, so ask for the raw modules.
+        const matrix = format === 'DATA_MATRIX' ? writer.encode(text, Z.BarcodeFormat[format], 1, 1) : writer.encode(text, Z.BarcodeFormat[format], 300, 300, hints);
+        const w = matrix.getWidth(), h = matrix.getHeight();
+        const scale = Math.max(1, Math.floor(Math.min(560 / w, 420 / h)));
+        const ox = Math.floor((canvas.width - w * scale) / 2), oy = Math.floor((canvas.height - h * scale) / 2);
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (matrix.get(x, y)) ctx.fillRect(ox + x * scale, oy + y * scale, scale, scale);
+      }
+      return canvas.toDataURL('image/jpeg', 0.95).split(',')[1];
+    }, { text, format });
+    const frame = Buffer.from(jpegBase64, 'base64');
+    const file = path.join(require('node:os').tmpdir(), `pos-clip-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.mjpeg`);
+    fs.writeFileSync(file, Buffer.concat(Array.from({ length: frames }, () => frame)));
+    return file;
+  } finally { await browser.close(); }
+}
+
+module.exports = { launch, playwright, barcodeClip };

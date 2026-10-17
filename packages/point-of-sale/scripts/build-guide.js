@@ -17,9 +17,9 @@ const titles = file => [...fs.readFileSync(path.join(root, 'tests', file), 'utf8
 
 const CHAPTERS = [
   {
-    id: 'clothing', eyebrow: 'Sample 1 · Retail', title: 'Clothing store', api: 'clothing.api.test.js', ui: 'clothing.e2e.js',
-    intro: 'Threadwell Clothing sells tees, jeans and jackets in sizes, each with its own barcode and stock count. Scan a tag or tap an item and pick a size. Promo codes, returns and exchanges are built in, and a shopper can scan their own items at the self-checkout.',
-    shots: [['clothing-register-promo', 'Scan or tap items, pick a size, apply a promo code'], ['clothing-manager-override', 'A cashier cannot refund alone: a manager types their PIN on the spot'], ['clothing-receipt', 'Cash sale with change due and the receipt'], ['clothing-inventory', 'Inventory input: new stock, deliveries, shelf counts, CSV import'], ['clothing-catalog-editor', 'Add a product with sizes; barcodes are check-digit validated'], ['clothing-kiosk-cart', 'Self-checkout: the shopper scans a tag, picks a size and pays'], ['clothing-reports', 'Sales by category and tender']],
+    id: 'retail', eyebrow: 'Sample 1 · Retail', title: 'Retail store', api: 'retail.api.test.js', ui: 'retail.e2e.js',
+    intro: 'Main Street General Store stands in for any shop that sells things on shelves: apparel in sizes, home goods, electronics, groceries and stationery. Sized goods carry a barcode per size; plain goods have one barcode; groceries can be tax-exempt while everything else is taxed. Scan a tag or tap an item, apply promo codes, take returns and exchanges, and let shoppers scan their own items at the self-checkout. The same screens work for a hardware store, a bookshop, a pharmacy counter or a market stall.',
+    shots: [['retail-register-promo', 'Scan or tap items, pick a size, apply a promo code'], ['retail-manager-override', 'A cashier cannot refund alone: a manager types their PIN on the spot'], ['retail-receipt', 'Cash sale with change due and the receipt'], ['retail-inventory', 'Inventory input: new stock, deliveries, shelf counts, CSV import'], ['retail-catalog-editor', 'Add a product with sizes; barcodes are check-digit validated, or scanned with the camera'], ['retail-kiosk-cart', 'Self-checkout: the shopper scans a tag, picks a size and pays'], ['retail-reports', 'Sales by category and tender']],
   },
   {
     id: 'coffee', eyebrow: 'Sample 2 · Food service', title: 'Coffee shop', api: 'coffee.api.test.js', ui: 'coffee.e2e.js',
@@ -32,12 +32,18 @@ const CHAPTERS = [
     shots: [['bar-tab-register', 'An open tab with a round sent to the bar'], ['bar-open-tabs', 'Open tabs, ready to be picked up again'], ['bar-happy-hour', 'Happy-hour price applied automatically'], ['bar-split-payment', 'Split the check: part card, part cash'], ['bar-receipt', 'Closed tab with mixed taxes and a tip']],
   },
   {
+    id: 'scanning', eyebrow: 'Retail and anywhere with a shelf', title: 'Barcodes, QR codes and the webcam', api: null, ui: 'camera.e2e.js',
+    intro: 'Plug in any USB barcode scanner (it types into the scan box) or just use a webcam. The camera reads the classic UPC and EAN barcodes and the newer 2D codes: QR codes, Data Matrix and Aztec, including GS1 Digital Link QR codes that carry a product\'s GTIN as a web address. The register works out which product a code means, however it was printed: UPC-A, EAN-13, GTIN-14, the compressed UPC-E, a Digital Link, or a GS1 element string with a lot number. The same camera button fills in the barcode when you add a new product, and shoppers can use it at self-checkout.',
+    shots: [['retail-camera-upc', 'A UPC-A barcode read by the register camera'], ['retail-camera-qr', 'A QR code with a GS1 Digital Link, matched by its GTIN'], ['retail-kiosk-camera', 'A shopper scans a tag at self-checkout'], ['retail-camera-item-form', 'Adding a product: the camera fills in the barcode field']],
+  },
+  {
     id: 'cash', eyebrow: 'Every business', title: 'The cash drawer and cash settings', api: null, ui: null,
     intro: 'Cash is handled the way a till is: a counted float at the start, paid-in and paid-out entries with a reason, a blind count by bill and coin at the end, and a Z-report that shows over or short. Managers decide whether cash is accepted at all, whether prices round to the nearest 5 cents, what the quick-tender buttons are, and how much over/short a cashier may close without a manager. The cash scenarios appear under each business above.',
     shots: [['coffee-cash-admin', 'Cash payment settings (manager)'], ['coffee-count-drawer', 'Counting the drawer with bill and coin buttons']],
   },
 ];
 
+fs.rmSync(outAssets, { recursive: true, force: true }); // drop screenshots from renamed or removed scenarios
 fs.mkdirSync(outAssets, { recursive: true });
 const haveConvert = (() => { try { execFileSync('convert', ['-version'], { stdio: 'ignore' }); return true; } catch { return false; } })();
 function publish(name) {
@@ -66,10 +72,10 @@ const table = (head, rows) => `<table class="guide-table"><thead><tr>${head.map(
 
 const start = prose('start', 'Step 1', 'Install it and open your first shop', 'It is a normal RobOS app. You can also run it on any computer with Node.js, with no account and no internet connection.', `<ol class="guide-list">
 <li><b>Open it.</b> Launch <em>RobOS Point of Sale</em> from the App Launcher, or run <code>cd packages/point-of-sale &amp;&amp; npm install &amp;&amp; npm start</code>.</li>
-<li><b>Pick a starting point.</b> On first launch choose <em>Clothing store</em>, <em>Coffee shop</em> or <em>Bar</em> to get a ready-made menu, stock, taxes and team. You can edit everything afterwards, or replace it with another sample from <em>Settings</em>.</li>
+<li><b>Pick a starting point.</b> On first launch choose <em>Retail store</em>, <em>Coffee shop</em> or <em>Bar</em> to get a ready-made menu, stock, taxes and team. You can edit everything afterwards, or replace it with another sample from <em>Settings</em>.</li>
 <li><b>Sign in with a PIN.</b> The samples use owner <code>1111</code>, manager <code>2222</code> and cashier <code>3333</code>. Add your own team in <em>Team &amp; API</em> and retire the sample PINs before real use.</li>
 <li><b>Open the drawer.</b> Go to <em>Cash</em>, count your starting cash, type it on the number pad and press <em>Open drawer</em>. Card sales do not need the drawer; cash sales do.</li>
-<li><b>Ring a sale.</b> On the <em>Register</em> tap items (or scan them), press <em>Pay</em>, choose cash or card. The receipt appears with any change due.</li></ol>
+<li><b>Ring a sale.</b> On the <em>Register</em> tap items (or scan them with a scanner or the camera), press <em>Pay</em>, choose cash or card. The receipt appears with any change due.</li></ol>
 <p>Your data lives in one file, <code>~/.config/robos/point-of-sale/store.json</code>, readable only by you. Back it up by copying it.</p>`);
 
 const roles = prose('roles', 'Step 2', 'Who can do what', 'Every team member signs in with a 4 to 8 digit PIN. Lower roles can borrow a manager for a single action without switching users.', table(['Role', 'Everyday work', 'Also allowed'], [
@@ -101,7 +107,7 @@ const cashAdmin = prose('cash-admin', 'Step 4', 'Setting up cash payments', 'Man
 const kiosk = prose('self-checkout', 'Step 5', 'Self-checkout and customer displays', 'Self-checkout is a customer-facing page that only does one thing: build a basket and pay. It cannot see staff data, prices of hidden items, or other customers\' orders.', `<ul class="guide-list">
 <li><b>Open it</b> from <em>RobOS Point of Sale &rarr; Open self-checkout window</em>, or browse to <code>/kiosk</code>. For a dedicated screen, start the app with <code>--kiosk</code>.</li>
 <li><b>A tablet on the shop network.</b> Run <code>node serve.js --host 0.0.0.0</code> on the till computer and open <code>http://&lt;till-ip&gt;:3410/kiosk</code> on the tablet. There is no encryption on this connection, so use a network you trust.</li>
-<li><b>Retail:</b> a scan box accepts a barcode scanner that types into a field. <b>Food:</b> big icon tiles, required choices, tips.</li>
+<li><b>Retail:</b> a scan box accepts a barcode scanner that types into a field, and a camera button reads barcodes and QR codes from a webcam. <b>Food:</b> big icon tiles, required choices, tips.</li>
 <li><b>Paying.</b> Card is shown only when the card provider can run unattended (a gateway, not a standalone terminal where a worker types the approval code). <em>Pay at the counter</em> gives the customer a number; the cashier finds it under <em>Tabs</em> and takes cash.</li>
 <li><b>Safety.</b> Age-restricted items are never offered, and the server rejects them even if someone calls the API directly. Baskets nobody paid for are cleared after 30 minutes. Switch self-checkout off, or turn off pay-at-the-counter, in <em>Settings</em>.</li>
 <li><b>Order-ready board.</b> Put <code>/ready</code> on a second screen; it shows pick-up numbers as the kitchen marks them ready.</li></ul>`);
@@ -109,7 +115,7 @@ const kiosk = prose('self-checkout', 'Step 5', 'Self-checkout and customer displ
 const limits = prose('limits', 'Good to know', 'What it does not do yet', 'Being honest about the edges saves surprises on opening day.', `<ul class="guide-list">
 <li><b>Card processing.</b> The built-in card options are a standalone terminal (you key in its approval code) and a demo gateway that approves any card, which must never be used for real sales. To take cards online or unattended, add a provider for your processor; the README shows the small interface.</li>
 <li><b>Tax.</b> A flat rate per item, either added on top or already included in prices. There is no address-based lookup, so confirm your local rules.</li>
-<li><b>Hardware.</b> Barcode scanners that type into a text box work. Receipts print through the system print dialog and are also available as plain text for ESC/POS printers. There are no direct cash-drawer or printer drivers yet.</li>
+<li><b>Hardware.</b> Barcode scanners that type into a text box work, and so does a webcam. The browser only allows camera use on <code>localhost</code> or an <code>https://</code> address, so a tablet that opens the till over plain <code>http://</code> on the shop network cannot use its camera; give it a hardware scanner or put the till behind HTTPS. Receipts print through the system print dialog and are also available as plain text for ESC/POS printers. There are no direct cash-drawer or printer drivers yet.</li>
 <li><b>Not included yet:</b> gift cards, loyalty, several locations syncing together, staff time clocks.</li>
 <li><b>Backups.</b> One shop file on one computer. Copy it regularly.</li></ul>`);
 
@@ -136,14 +142,14 @@ title: Point of Sale
 permalink: /point-of-sale/
 body_class: guide
 extra_css: /assets/auto-guide.css
-description: "RobOS Point of Sale: an open-source cash register for shops, cafés and bars. Touchscreen order entry, self-checkout, inventory, cash drawer controls and an open checkout API, tested for a clothing store, a coffee shop and a bar."
+description: "RobOS Point of Sale: an open-source cash register for shops, cafés and bars. Touchscreen order entry, self-checkout, inventory, cash drawer controls and an open checkout API, tested for a retail store, a coffee shop and a bar."
 ---
 ${guideCss}
 <section class="hero" style="padding-bottom:24px"><div class="wrap">
 <span class="pill"><b>RobOS Point of Sale</b> · Retail, food service and bars</span>
 <h1>An open-source cash register that runs on any touchscreen</h1>
-<p class="lead">Take orders, scan items, split checks, run self-checkout, track stock and count the drawer, with no subscription and no cloud account. Your data stays in one file on your own machine. This guide is built from the project's own tests: ${apiTotal} checked against the real server and ${uiTotal} tapped through in a touch-enabled browser, across a clothing store, a coffee shop and a bar. Screenshots come from those runs, using labelled test data.</p>
-<div class="cta"><a class="btn" href="#start">Get started</a><a class="btn btn-ghost" href="#clothing">See the three sample businesses</a><a class="btn btn-ghost" href="https://github.com/nddipiazza/robos/tree/main/packages/point-of-sale">Source code</a></div>
+<p class="lead">Take orders, scan items, split checks, run self-checkout, track stock and count the drawer, with no subscription and no cloud account. Your data stays in one file on your own machine. This guide is built from the project's own tests: ${apiTotal} checked against the real server and ${uiTotal} tapped through in a touch-enabled browser, across a general retail store, a coffee shop and a bar. Scan with a barcode gun or a webcam, from classic UPCs to QR codes. Screenshots come from those runs, using labelled test data.</p>
+<div class="cta"><a class="btn" href="#start">Get started</a><a class="btn btn-ghost" href="#retail">See the three sample businesses</a><a class="btn btn-ghost" href="https://github.com/nddipiazza/robos/tree/main/packages/point-of-sale">Source code</a></div>
 </div></section>
 <section style="padding-top:24px"><div class="wrap">
 <ol class="flow"><li><b>Set up</b><span>Menu, stock, team</span></li><li><b>Sell</b><span>Tap, scan or self-checkout</span></li><li><b>Get paid</b><span>Cash, card, split</span></li><li><b>Prepare</b><span>Kitchen, barista, bar</span></li><li><b>Close</b><span>Count the drawer</span></li><li><b>Review</b><span>Reports and refunds</span></li></ol>

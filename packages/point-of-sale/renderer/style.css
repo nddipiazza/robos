@@ -107,3 +107,6 @@ body.kiosk { font-size: 22px; --tap: 72px; user-select: none; }
 @media (max-width: 900px) { .kiosk .layout { grid-template-columns: 1fr; height: auto; } }
 .ready-board { text-align: center; padding: 3vh 3vw; } .ready-board .numbers { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; margin-top: 3vh; }
 .ready-board .n { font-size: 120px; font-weight: 900; color: var(--green); background: var(--bg-card); border: 3px solid var(--green); border-radius: 24px; padding: 10px 50px; }
+
+.warn-text { color: #ffb4b4; font-weight: 600; }
+.row .cam { min-width: var(--tap); padding: 0 14px; }

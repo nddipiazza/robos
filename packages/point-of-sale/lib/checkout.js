@@ -19,6 +19,16 @@ module.exports = {
     }));
   },
 
+  // Resolve a scanned code to a menu item for the kiosk's own scanner. Only items the kiosk may sell are revealed.
+  kioskLookup(code) {
+    const k = this.settings.kiosk;
+    if (!k.enabled) throw new PosError('kiosk_disabled', 'Self-checkout is not available', 403);
+    const hit = this.findItem(code);
+    if (!hit || (hit.item.ageRestricted && !k.allowAgeRestricted)) throw new PosError('unknown_code', 'We could not find that item. Ask a team member for help.', 404);
+    if (this.isSoldOut(hit.item)) throw new PosError('out_of_stock', `${hit.item.name} is sold out`, 409);
+    return { itemId: hit.item.id, variantId: hit.variant ? hit.variant.id : null, name: hit.item.name, needsChoice: !hit.variant && hit.item.variants.length > 0 };
+  },
+
   isSoldOut(item) {
     if (this.settings.inventory.allowNegativeStock) return false;
     const enough = (id, qty) => { const rec = this.state.inventory.find(i => i.id === id); return !rec || rec.onHand >= qty; };
