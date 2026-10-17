@@ -48,11 +48,16 @@ function addCustomer(service, input) {
   shop(service);
   const name = text(input.name, 200, 'Customer name'), phone = text(input.phone, 50, 'Phone', false), email = text(input.email, 200, 'Email', false);
   if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error('Enter a valid email address');
+  const digits = phone.replace(/\D/g, '');
+  if (phone && (digits.length < 7 || digits.length > 15)) throw new Error('Enter a phone number with area code');
+  if (input.requireContact && !phone && !email) throw new Error('Add a phone number or an email so we can reach the customer');
+  const preferred = ['phone call', 'text message', 'email'].includes(input.preferredContact) ? input.preferredContact : '';
+  if (digits) { const dup = nodes(service).find(n => n['@type'] === 'robos:Customer' && n['robos:phoneDigits'] && n['robos:phoneDigits'].slice(-10) === digits.slice(-10)); if (dup) throw new Error('This phone number already belongs to ' + dup['schema:name']); }
   const dirs = directory(); let userId = '', groupId = '';
   if (input.userId) { if (!dirs.people.some(p => p.id === input.userId)) throw new Error('Select a person from RobOS People'); userId = input.userId; }
   if (input.groupId) { if (!dirs.groups.some(g => g.id === input.groupId)) throw new Error('Select a group from RobOS Groups'); groupId = input.groupId; }
   if (nodes(service).some(n => n['@type'] === 'robos:Customer' && ((userId && n['robos:userId'] === userId) || (email && n['schema:email'] === email.toLowerCase())))) throw new Error('This customer already exists');
-  const n = node('Customer', crypto.randomUUID(), name, { 'schema:name': name, 'schema:telephone': phone, 'schema:email': email.toLowerCase(), 'robos:userId': userId, 'robos:groupId': groupId, 'robos:customerNotes': text(input.notes, 2000, 'Notes', false) });
+  const n = node('Customer', crypto.randomUUID(), name, { 'schema:name': name, 'schema:telephone': phone, 'schema:email': email.toLowerCase(), 'robos:phoneDigits': digits, 'robos:preferredContact': preferred, 'robos:userId': userId, 'robos:groupId': groupId, 'robos:customerNotes': text(input.notes, 2000, 'Notes', false) });
   commit(service, [{ op: 'add', node: n }], 'auto: add customer'); return n;
 }
 function addCustomerVehicle(service, input) {
@@ -72,11 +77,12 @@ function openRepair(service, input) {
   shop(service); const records = nodes(service);
   const vehicle = records.find(n => n['@id'] === input.vehicle && n['@type'] === 'robos:OwnedVehicle'); if (!vehicle) throw new Error('Select a customer vehicle');
   const concern = text(input.concern, 500, 'Customer concern');
+  const intake = input.intake || null;
   const open = records.find(n => n['@type'] === 'robos:RepairOrder' && linked(n, 'robos:vehicle') === vehicle['@id'] && n['robos:jobStatus'] !== 'closed');
   if (open) throw new Error('This vehicle already has an open repair; finish it or add work to it');
   const seq = records.filter(n => n['@type'] === 'robos:RepairTicket').length + 1, key = 'RO-' + String(seq).padStart(4, '0');
-  const job = node('RepairOrder', crypto.randomUUID(), concern, { 'robos:vehicle': ref(vehicle['@id']), 'robos:jobStatus': 'received', 'robos:repairNotes': '', 'robos:technician': '', 'schema:orderDate': service.clock().toISOString(), 'robos:workItemKey': key, 'robos:odometerIn': input.odometer === '' || input.odometer === undefined ? null : Number(input.odometer) });
-  const wi = node('RepairTicket', key, key + ' · ' + concern, { 'robos:job': ref(job['@id']), 'robos:workItemKey': key, 'robos:workItemStatus': 'received', 'robos:events': [event(service, 'created', 'Customer concern: ' + concern)] });
+  const job = node('RepairOrder', crypto.randomUUID(), concern, { 'robos:vehicle': ref(vehicle['@id']), 'robos:jobStatus': 'received', 'robos:repairNotes': '', 'robos:technician': '', 'schema:orderDate': service.clock().toISOString(), 'robos:workItemKey': key, 'robos:odometerIn': input.odometer === '' || input.odometer === undefined ? null : Number(input.odometer), 'robos:intake': intake, 'robos:contactChannel': intake?.channel || '', 'robos:priority': intake?.urgent ? 'urgent' : 'normal' });
+  const wi = node('RepairTicket', key, key + ' · ' + concern, { 'robos:job': ref(job['@id']), 'robos:workItemKey': key, 'robos:workItemStatus': 'received', 'robos:events': [event(service, 'created', (intake?.channel ? 'Request received by ' + intake.channel + '. ' : '') + 'Customer concern: ' + concern)] });
   const edits = [{ op: 'add', node: job }, { op: 'add', node: wi }];
   if (!records.some(s => s['@type'] === 'robos:VehicleStay' && linked(s, 'robos:vehicle') === vehicle['@id'] && !s['schema:endDate'])) edits.push({ op: 'add', node: require('./shop-operations').checkInNode(service, { vehicle: vehicle['@id'], location: input.location }, records) });
   commit(service, edits, key + ': vehicle received'); return { job, workItem: wi };
@@ -154,6 +160,7 @@ function usePart(service, input) {
 function logHours(service, input) {
   shop(service); const records = nodes(service), job = find(service, 'RepairOrder', input.job, 'Select a repair'), mate = find(service, 'Teammate', input.teammate, 'Select a teammate');
   if (!['diagnosing', 'in-progress'].includes(job['robos:jobStatus'])) throw new Error('Hours are logged during diagnosis or repair');
+  if (mate['robos:active'] === false) throw new Error('This teammate is no longer active');
   const hours = Number(input.hours); if (!Number.isFinite(hours) || hours <= 0 || hours > 24) throw new Error('Hours must be more than 0 and at most 24 per entry');
   const minutes = Math.round(hours * 60), on = input.date || service.clock().toISOString().slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(on) || on > service.clock().toISOString().slice(0, 10)) throw new Error('Work date must be valid and not in the future');
@@ -249,11 +256,14 @@ function board(service) {
   const jobs = records.filter(n => n['@type'] === 'robos:RepairOrder').map(job => {
     const vehicle = records.find(n => n['@id'] === linked(job, 'robos:vehicle')), customer = records.find(n => n['@id'] === linked(vehicle || {}, 'robos:customer'));
     return { id: job['@id'], key: job['robos:workItemKey'] || '', title: job['dcterms:title'], stage: job['robos:jobStatus'], vehicle: vehicle?.['dcterms:title'], vehicleInfo: { make: vehicle?.['schema:brand'] || '', model: vehicle?.['schema:model'] || '', year: vehicle?.['schema:modelDate'] || '' }, customer: customer?.['dcterms:title'],
-      workItem: workItemFor(records, job['@id'])?.['robos:events'] || [], estimates: records.filter(n => n['@type'] === 'robos:Estimate' && linked(n, 'robos:job') === job['@id']).map(e => ({ id: e['@id'], version: e['robos:version'], status: e['robos:estimateStatus'], total: e['robos:totalMinor'], currency: e['robos:currency'], lines: e['robos:lines'] })),
+      workItem: workItemFor(records, job['@id'])?.['robos:events'] || [], technician: job['robos:technician'] || '', priority: job['robos:priority'] || 'normal', workComplete: !!job['robos:workComplete'], completionNote: job['robos:completionNote'] || '', needsApproval: job['robos:needsApproval'] || '', intake: job['robos:intake'] || null, channel: job['robos:contactChannel'] || '', odometerIn: job['robos:odometerIn'] ?? null, customerId: customer?.['@id'] || null, vehicleId: vehicle?.['@id'] || null,
+      partRequests: records.filter(n => n['@type'] === 'robos:PartRequest' && linked(n, 'robos:job') === job['@id']).map(r => ({ id: r['@id'], name: r['schema:name'], quantity: r['robos:quantity'], status: r['robos:requestStatus'], urgency: r['robos:urgency'], by: r['robos:requestedBy'], partNumber: r['robos:partNumber'], note: r['robos:note'] })),
+      timers: records.filter(n => n['@type'] === 'robos:Teammate' && n['robos:activeTimer']?.job === job['@id']).map(t => ({ teammate: t['schema:name'], startedAt: t['robos:activeTimer'].startedAt })), estimates: records.filter(n => n['@type'] === 'robos:Estimate' && linked(n, 'robos:job') === job['@id']).map(e => ({ id: e['@id'], version: e['robos:version'], status: e['robos:estimateStatus'], total: e['robos:totalMinor'], currency: e['robos:currency'], lines: e['robos:lines'] })),
       parts: records.filter(n => n['@type'] === 'robos:PartUsage' && linked(n, 'robos:job') === job['@id']).map(p => ({ name: p['schema:name'], quantity: p['robos:quantity'], unitCost: p['robos:unitCostMinor'] })), summary: jobSummary(records, job) };
   });
-  return { stages: STAGES.map(s => ({ id: s, label: STAGE_LABELS[s] })), jobs, teammates: records.filter(n => n['@type'] === 'robos:Teammate').map(t => ({ id: t['@id'], name: t['schema:name'], role: t['robos:role'], personId: t['robos:personId'] })),
-    customers: records.filter(n => n['@type'] === 'robos:Customer').map(c => ({ id: c['@id'], name: c['schema:name'], userId: c['robos:userId'], groupId: c['robos:groupId'], phone: c['schema:telephone'], email: c['schema:email'] })),
+  return { stages: STAGES.map(s => ({ id: s, label: STAGE_LABELS[s] })), jobs, teammates: records.filter(n => n['@type'] === 'robos:Teammate').map(t => ({ id: t['@id'], name: t['schema:name'], role: t['robos:role'], personId: t['robos:personId'], active: t['robos:active'] !== false, hourlyCost: t['robos:hourlyCostMinor'] ?? 0, activeTimer: t['robos:activeTimer'] || null })),
+    customers: records.filter(n => n['@type'] === 'robos:Customer').map(c => ({ id: c['@id'], name: c['schema:name'], userId: c['robos:userId'], groupId: c['robos:groupId'], phone: c['schema:telephone'], email: c['schema:email'], preferred: c['robos:preferredContact'] || '' })),
+    settings: (() => { const s = records.find(n => n['@type'] === 'robos:AutoShop'); return { name: s?.['schema:name'] || '', phone: s?.['schema:telephone'] || '', defaultRateMinor: s?.['robos:defaultLaborRateMinor'] ?? null, currency: s?.['robos:currency'] || 'USD' }; })(),
     vehicles: records.filter(n => n['@type'] === 'robos:OwnedVehicle').map(v => ({ id: v['@id'], name: v['dcterms:title'], customer: linked(v, 'robos:customer'), make: v['schema:brand'] || '', model: v['schema:model'] || '', year: v['schema:modelDate'] || '', plate: v['robos:licensePlate'] || '' })), directory: directory() };
 }
-module.exports = { addPart, importParts, STAGES, STAGE_LABELS, directory, addTeammate, addCustomer, addCustomerVehicle, openRepair, diagnose, createEstimate, decideEstimate, usePart, logHours, issueInvoice, offboard, board, jobSummary };
+module.exports = { nodes, find, event, key, stageEdit, workItemFor, linked, text, approvedEstimate, addPart, importParts, STAGES, STAGE_LABELS, directory, addTeammate, addCustomer, addCustomerVehicle, openRepair, diagnose, createEstimate, decideEstimate, usePart, logHours, issueInvoice, offboard, board, jobSummary };
