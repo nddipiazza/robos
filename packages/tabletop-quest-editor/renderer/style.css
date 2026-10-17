@@ -55,20 +55,51 @@ body {
   border-bottom: 1px solid var(--border-color);
   padding: 6px 14px;
   height: 52px;
+  min-height: 52px;
+  max-height: 52px;
   z-index: 10;
   flex-shrink: 0;
+  gap: 12px;
+  overflow: hidden;
 }
 
 .header-brand {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
+.brand-logo-img,
 .brand-icon {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  max-width: 36px;
+  max-height: 36px;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  object-fit: contain;
   flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(0, 188, 212, 0.35);
+  border: 1px solid rgba(0, 188, 212, 0.4);
+  background: #0a0e17;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.brand-logo-img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 14px rgba(0, 188, 212, 0.6);
+}
+
+.brand-titles {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .brand-titles h1 {
@@ -77,18 +108,78 @@ body {
   color: #fff;
   letter-spacing: 0.3px;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .brand-titles .subtitle {
   font-size: 11px;
   color: var(--accent);
   letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header-controls {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.header-controls::-webkit-scrollbar {
+  display: none;
+}
+
+/* Responsive header rules for small displays */
+@media (max-width: 1450px) {
+  .brand-titles .subtitle {
+    max-width: 220px;
+  }
+}
+
+@media (max-width: 1300px) {
+  .brand-titles .subtitle {
+    display: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .header-brand {
+    gap: 8px;
+  }
+  .brand-titles h1 {
+    font-size: 13px;
+    max-width: 160px;
+  }
+  .header-controls {
+    gap: 6px;
+  }
+  .header-controls .btn {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 900px) {
+  .brand-titles {
+    display: none;
+  }
+  .brand-logo-img,
+  .brand-icon {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    max-width: 32px;
+    max-height: 32px;
+  }
 }
 
 .control-group {

@@ -3316,3 +3316,28 @@ test('Open Blockmap in Editor: launches tabletop-blockmap-creator with the curre
   }
 });
 
+// -------------------------------------------------------------
+// Test 38: Brand Logo & Responsive Small Display Sizing
+// -------------------------------------------------------------
+test('Brand Logo & Small Display: provides AI generated logo image and robust responsive sizing rules', () => {
+  const htmlPath = path.join(__dirname, '../renderer/index.html');
+  const cssPath = path.join(__dirname, '../renderer/style.css');
+  const logoPath = path.join(__dirname, '../renderer/assets/logo.png');
+
+  assert.ok(fs.existsSync(logoPath), 'assets/logo.png exists');
+  const stat = fs.statSync(logoPath);
+  assert.ok(stat.size > 1000, 'assets/logo.png is a valid non-empty image file');
+
+  const html = fs.readFileSync(htmlPath, 'utf8');
+  assert.ok(html.includes('class="brand-logo-img"'), 'index.html contains brand-logo-img element');
+  assert.ok(html.includes('src="assets/logo.png"'), 'brand-logo-img points to assets/logo.png');
+
+  const css = fs.readFileSync(cssPath, 'utf8');
+  assert.ok(css.includes('.brand-logo-img'), 'style.css defines .brand-logo-img rules');
+  assert.ok(css.includes('flex-shrink: 0'), 'Logo has flex-shrink: 0 to prevent squashing');
+  assert.ok(css.includes('object-fit: contain'), 'Logo preserves aspect ratio');
+  assert.ok(css.includes('@media (max-width: 900px)'), 'style.css contains responsive small display media queries');
+  assert.ok(css.includes('@media (max-width: 1300px)'), 'style.css contains subtitle responsive collapse');
+});
+
+
