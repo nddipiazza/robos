@@ -2649,6 +2649,31 @@ func get_save_file_path() -> String:
 	var effective_map = _get_effective_starting_map_id()
 	return "user://tabletop_autosave_%s_%s.json" % [slug.replace("/", "_").replace("\\", "_"), effective_map.replace("/", "_").replace("\\", "_")]
 
+var play_time_seconds: float = 0.0
+var _last_save_tick_msec: int = 0
+var items_found_log: Array = []
+
+func get_save_screenshot_path(custom_slug: String = "") -> String:
+	var save_json_path = get_save_file_path(custom_slug)
+	return save_json_path.trim_suffix(".json") + ".png"
+
+func _capture_save_screenshot(png_user_path: String) -> String:
+	if DisplayServer.get_name() == "headless":
+		return ""
+	var vp = get_viewport()
+	if vp == null:
+		return ""
+	var tex = vp.get_texture()
+	if tex == null:
+		return ""
+	var img = tex.get_image()
+	if img == null or img.is_empty():
+		return ""
+	var err = img.save_png(png_user_path)
+	if err == OK:
+		return ProjectSettings.globalize_path(png_user_path)
+	return ""
+
 func has_saved_game() -> bool:
 	var path = get_save_file_path()
 	if not FileAccess.file_exists(path):
@@ -2669,6 +2694,9 @@ func has_saved_game() -> bool:
 
 func delete_save_game() -> bool:
 	var path = get_save_file_path()
+	var png_path = get_save_screenshot_path()
+	if FileAccess.file_exists(png_path):
+		DirAccess.remove_absolute(png_path)
 	if FileAccess.file_exists(path):
 		var err = DirAccess.remove_absolute(path)
 		if err == OK:
@@ -2679,7 +2707,12 @@ func delete_save_game() -> bool:
 			return false
 	return true
 
-func serialize_game_state() -> Dictionary:
+func serialize_game_state(screenshot_abs_path: String = "") -> Dictionary:
+	var now_ticks = Time.get_ticks_msec()
+	if _last_save_tick_msec > 0 and now_ticks > _last_save_tick_msec:
+		play_time_seconds += float(now_ticks - _last_save_tick_msec) / 1000.0
+	_last_save_tick_msec = now_ticks
+
 	var heroes_save: Array = []
 	for h in heroes:
 		var hc = h.duplicate(true)
@@ -2691,6 +2724,7 @@ func serialize_game_state() -> Dictionary:
 		heroes_save.append(hc)
 
 	var monsters_save: Array = []
+	var visible_monsters_save: Array = []
 	for m in monsters:
 		var mc = m.duplicate(true)
 		var mp = m.get("grid_pos", Vector2i(-1, -1))
@@ -2699,6 +2733,12 @@ func serialize_game_state() -> Dictionary:
 		elif mp is Array:
 			mc["grid_pos"] = mp
 		monsters_save.append(mc)
+		var m_id = str(mc.get("id", ""))
+		var m_alive = bool(mc.get("is_alive", true)) and int(mc.get("current_bp", mc.get("bodyPoints", 1))) > 0
+		var m_room = str(mc.get("roomId", ""))
+		var m_disc = discovered_monster_ids.has(m_id) or (m_room != "" and revealed_rooms.has(m_room) and not bool(mc.get("hidden", false)))
+		if m_alive and m_disc:
+			visible_monsters_save.append(mc)
 
 	var doors_save: Array = []
 	for d in doors:
@@ -2736,9 +2776,18 @@ func serialize_game_state() -> Dictionary:
 
 	var s_alloc = cart.get("spellAllocation", {})
 
+	var active_actor_str = "Zargon / Dread Master"
+	if current_phase == "hero_phase" and heroes_save.size() > 0:
+		var h_idx = clampi(active_hero_idx, 0, heroes_save.size() - 1)
+		var act_h = heroes_save[h_idx]
+		active_actor_str = "%s (Hero %d of %d)" % [str(act_h.get("name", act_h.get("heroClass", "Hero"))), h_idx + 1, heroes_save.size()]
+
 	return {
 		"version": 1,
 		"timestamp": Time.get_unix_time_from_system(),
+		"play_time_seconds": roundi(play_time_seconds),
+		"active_turn_actor": active_actor_str,
+		"screenshot_path": screenshot_abs_path if screenshot_abs_path != "" else ProjectSettings.globalize_path(get_save_screenshot_path()),
 		"cartridge_slug": cart_slug,
 		"map_id": starting_map_id,
 		"grid_cols": grid_cols,
@@ -2758,6 +2807,8 @@ func serialize_game_state() -> Dictionary:
 		"turn_state": turn_state,
 		"heroes": heroes_save,
 		"monsters": monsters_save,
+		"visible_monsters": visible_monsters_save,
+		"items_found": items_found_log.duplicate(true),
 		"doors": doors_save,
 		"traps": traps_save,
 		"furniture": furniture_save,
@@ -2782,7 +2833,9 @@ func auto_save_game() -> void:
 		return
 	if heroes.is_empty():
 		return
-	var data = serialize_game_state()
+	var png_user_path = get_save_screenshot_path()
+	var screenshot_abs = _capture_save_screenshot(png_user_path)
+	var data = serialize_game_state(screenshot_abs)
 	var json_str = JSON.stringify(data, "\t")
 	var path = get_save_file_path()
 	var f = FileAccess.open(path, FileAccess.WRITE)
@@ -2909,6 +2962,14 @@ func restore_saved_game(save_dict: Dictionary = {}) -> bool:
 				discovered_monster_ids[str(k)] = true
 
 	# Restore Turn State
+	play_time_seconds = float(data.get("play_time_seconds", play_time_seconds))
+	_last_save_tick_msec = Time.get_ticks_msec()
+	if data.has("items_found") and data.get("items_found") is Array:
+		items_found_log.clear()
+		for it in data.get("items_found", []):
+			if it is Dictionary:
+				items_found_log.append(it.duplicate(true))
+
 	current_role = str(data.get("current_role", current_role))
 	active_hero_idx = int(data.get("active_hero_idx", active_hero_idx))
 	current_round = int(data.get("current_round", current_round))

@@ -23,7 +23,10 @@ const {
   NS_CRPG,
   NS_TABLETOP,
   NS_SDLC,
-  GAMING_SHACL_SHAPES
+  GAMING_SHACL_SHAPES,
+  TABLETOP_SAVE_STATE_SCHEMA,
+  formatDurationSeconds,
+  normalizeQuestSaveStateToKGraphNode
 } = require("./lib/ontology");
 
 module.exports = {
@@ -56,5 +59,8 @@ module.exports = {
   NS_CRPG,
   NS_TABLETOP,
   NS_SDLC,
-  GAMING_SHACL_SHAPES
+  GAMING_SHACL_SHAPES,
+  TABLETOP_SAVE_STATE_SCHEMA,
+  formatDurationSeconds,
+  normalizeQuestSaveStateToKGraphNode
 };

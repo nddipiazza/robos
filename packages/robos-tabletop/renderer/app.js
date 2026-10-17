@@ -7155,7 +7155,592 @@ async function launchQuestEditorForActiveQuest(cartridgeSlug = null) {
   return fallbackRes;
 }
 
-// 2) Inspect Current Quest State & Save State From Now
+// 2) Inspect Current Quest State & Save State From Now (Driven by robos:TabletopQuestSaveState KGraph Schema)
+const DEFAULT_SAVE_STATE_SCHEMA = {
+  targetClass: "robos:TabletopQuestSaveState",
+  shapeId: "urn:robos:shape:TabletopQuestSaveStateShape",
+  telemetryMetrics: [
+    { property: "robos:currentRound", label: "Current Round", icon: "⏳", category: "turn", format: "round" },
+    { property: "robos:activeTurnActor", label: "Whose Turn", icon: "🎯", category: "turn", format: "actor" },
+    { property: "robos:turnState", label: "Turn Action State", icon: "🎲", category: "turn", format: "turn_state" },
+    { property: "robos:playTimeSeconds", label: "Time Played", icon: "⏱️", category: "session", format: "duration" },
+    { property: "robos:visibleMonstersCount", label: "Monsters Visible", icon: "👁️", category: "combat", format: "visible_monsters" },
+    { property: "robos:itemsFoundCount", label: "Items Found So Far", icon: "🎒", category: "loot", format: "items_found" },
+    { property: "robos:totalPartyGold", label: "Party Gold", icon: "🪙", category: "loot", format: "gold" },
+    { property: "robos:exploredTilesCount", label: "Dungeon Explored", icon: "🗺️", category: "exploration", format: "exploration" },
+    { property: "robos:doorsOpenCount", label: "Doors Opened", icon: "🚪", category: "exploration", format: "doors" },
+    { property: "robos:triggersFiredCount", label: "Story Events Fired", icon: "📜", category: "narrative", format: "triggers" }
+  ]
+};
+
+function formatPlayDurationSeconds(totalSec) {
+  const sec = Math.max(0, Math.floor(Number(totalSec) || 0));
+  const hrs = Math.floor(sec / 3600);
+  const mins = Math.floor((sec % 3600) / 60);
+  const remSec = sec % 60;
+  if (hrs > 0) return `${hrs}h ${mins}m ${remSec}s`;
+  if (mins > 0) return `${mins}m ${remSec}s`;
+  return `${remSec}s`;
+}
+
+function normalizeSaveStateToKGraphInRenderer(rawSave, slugFallback = "custom-quest") {
+  if (!rawSave || typeof rawSave !== "object") return null;
+  const slug = String(
+    rawSave["robos:questSlug"] ||
+    rawSave.cartridge_slug ||
+    rawSave.cartridge_id ||
+    rawSave.map_id ||
+    slugFallback ||
+    "custom-quest"
+  ).replace(/\.cartridge(\.json)?$/, "");
+
+  const rawHeroes = Array.isArray(rawSave["robos:heroStates"]) && rawSave["robos:heroStates"].length > 0
+    ? rawSave["robos:heroStates"]
+    : (Array.isArray(rawSave.heroes) ? rawSave.heroes : []);
+  if (rawHeroes.length === 0) return null;
+
+  const roundNum = Number(rawSave["robos:currentRound"] ?? rawSave.current_round ?? rawSave.round_num ?? 1) || 1;
+  const rawPhase = String(rawSave["robos:currentPhase"] ?? rawSave.current_phase ?? rawSave.phase ?? "hero_phase");
+  const currentRole = String(rawSave["robos:currentRole"] ?? rawSave.current_role ?? "player");
+  const activeHeroIdx = Number(rawSave["robos:activeHeroIndex"] ?? rawSave.active_hero_idx ?? 0) || 0;
+  const turnStateRaw = String(rawSave["robos:turnState"] ?? rawSave.turn_state ?? "awaiting_roll");
+  const moveRemaining = Number(rawSave["robos:movementRemaining"] ?? rawSave.movement_remaining ?? 0) || 0;
+  const moveRolled = Boolean(rawSave["robos:movementRolled"] ?? rawSave.movement_rolled ?? false);
+  const hasMoved = Boolean(rawSave["robos:hasMovedThisTurn"] ?? rawSave.has_moved_this_turn ?? false);
+  const hasActed = Boolean(rawSave["robos:hasActedThisTurn"] ?? rawSave.has_acted_this_turn ?? false);
+
+  const heroStates = rawHeroes.map((h, idx) => {
+    const heroId = String(h.id || h.slug || `hero-${idx + 1}`).toLowerCase();
+    const heroClass = String(h.heroClass || h.hero_class || h.class || h.name || "Hero");
+    const charName = String(h.characterName || h.character_name || "").trim();
+    const displayName = charName ? `${charName} (${heroClass})` : String(h.name || heroClass);
+    const maxBp = Number(h.maxBP ?? h.max_bp ?? h.max_hp ?? h.bodyPoints ?? h.bp ?? 8) || 8;
+    const curBp = Number(h.currentBP ?? h.current_bp ?? h.bp ?? h.hp ?? maxBp);
+    const maxMp = Number(h.maxMP ?? h.max_mp ?? h.mindPoints ?? h.mp ?? 2) || 2;
+    const curMp = Number(h.currentMP ?? h.current_mp ?? h.mp ?? maxMp);
+    const atk = Number(h.attackDice ?? h.atk ?? 3) || 3;
+    const def = Number(h.defendDice ?? h.def ?? 2) || 2;
+    const gold = Number(h.gold ?? 0) || 0;
+    const pos = Array.isArray(h.gridPos) && h.gridPos.length >= 2
+      ? [Number(h.gridPos[0]), Number(h.gridPos[1])]
+      : (Array.isArray(h.grid_pos) && h.grid_pos.length >= 2
+        ? [Number(h.grid_pos[0]), Number(h.grid_pos[1])]
+        : (Array.isArray(h.position) && h.position.length >= 2 ? [Number(h.position[0]), Number(h.position[1])] : [7, 14]));
+    const weapon = String(h.equipped_weapon || h.weapon || "broadsword");
+    const armor = Array.isArray(h.equipped_armor)
+      ? (h.equipped_armor.length > 0 ? h.equipped_armor.join(", ") : "none")
+      : String(h.armor || "none");
+    const inventory = Array.isArray(h.inventory) ? h.inventory : [];
+    const spells = Array.isArray(h.spells) ? h.spells : [];
+    const usedSpells = Array.isArray(h.usedSpells)
+      ? h.usedSpells
+      : (Array.isArray(h.used_spells) ? h.used_spells : (Array.isArray(h.cast_spells) ? h.cast_spells : []));
+    const isActiveTurn = (rawPhase === "hero_phase" || rawPhase === "PLAYER_TURN") && idx === activeHeroIdx;
+
+    return {
+      "@type": "robos:TabletopSaveHeroState",
+      id: heroId,
+      name: displayName,
+      heroClass,
+      currentBP: curBp,
+      maxBP: maxBp,
+      currentMP: curMp,
+      maxMP: maxMp,
+      hp: curBp,
+      max_hp: maxBp,
+      bp: curBp,
+      max_bp: maxBp,
+      mp: curMp,
+      max_mp: maxMp,
+      attackDice: atk,
+      defendDice: def,
+      gold,
+      gridPos: pos,
+      grid_pos: pos,
+      weapon,
+      armor,
+      inventory,
+      spells,
+      usedSpells,
+      spellsRemaining: Math.max(0, spells.length - usedSpells.length),
+      hasDepartedStart: Boolean(h.hasDepartedStart ?? h.has_departed_start ?? true),
+      isOnBoard: Boolean(h.isOnBoard ?? h.is_on_board ?? true),
+      alive: curBp > 0 && h.alive !== false,
+      escaped: Boolean(h.escaped ?? false),
+      isActiveTurn
+    };
+  });
+
+  let activeTurnActor = String(rawSave["robos:activeTurnActor"] || rawSave.active_turn_actor || "");
+  if (!activeTurnActor) {
+    if (rawPhase === "hero_phase" || rawPhase === "PLAYER_TURN") {
+      const actHero = heroStates[activeHeroIdx] || heroStates[0];
+      activeTurnActor = actHero
+        ? `${actHero.name} (Hero ${activeHeroIdx + 1} of ${heroStates.length})`
+        : "Hero Party";
+    } else {
+      activeTurnActor = "Zargon / Dread Master (Enemy Turn)";
+    }
+  }
+
+  const rawMonsters = Array.isArray(rawSave["robos:allMonsters"]) && rawSave["robos:allMonsters"].length > 0
+    ? rawSave["robos:allMonsters"]
+    : (Array.isArray(rawSave.monsters) ? rawSave.monsters : []);
+  const discoveredMap = (rawSave.discovered_monster_ids && typeof rawSave.discovered_monster_ids === "object")
+    ? rawSave.discovered_monster_ids
+    : {};
+  const revealedRooms = Array.isArray(rawSave["robos:revealedRooms"])
+    ? rawSave["robos:revealedRooms"]
+    : (Array.isArray(rawSave.revealed_rooms)
+      ? rawSave.revealed_rooms
+      : (rawSave.revealed_rooms && typeof rawSave.revealed_rooms === "object" ? Object.keys(rawSave.revealed_rooms) : []));
+  const revealedSet = new Set(revealedRooms.map(String));
+
+  let totalMonstersAlive = Number(rawSave["robos:totalMonstersAlive"] ?? 0);
+  let monstersDefeated = Number(rawSave["robos:monstersDefeated"] ?? 0);
+  const visibleMonsters = [];
+  const allMonsters = [];
+
+  if (rawMonsters.length > 0) {
+    totalMonstersAlive = 0;
+    monstersDefeated = 0;
+    rawMonsters.forEach(m => {
+      const mId = String(m.id || m.slug || "monster");
+      const maxBp = Number(m.maxBP ?? m.max_bp ?? m.bodyPoints ?? m.bp ?? 1) || 1;
+      const curBp = Number(m.currentBP ?? m.current_bp ?? m.bp ?? maxBp);
+      const isAlive = m.isAlive !== undefined ? Boolean(m.isAlive) : (m.is_alive !== false && curBp > 0);
+      const isHidden = Boolean(m.hidden);
+      const roomId = String(m.roomId || m.room_id || "");
+      const pos = Array.isArray(m.gridPos) && m.gridPos.length >= 2
+        ? [Number(m.gridPos[0]), Number(m.gridPos[1])]
+        : (Array.isArray(m.grid_pos) && m.grid_pos.length >= 2
+          ? [Number(m.grid_pos[0]), Number(m.grid_pos[1])]
+          : (Array.isArray(m.position) && m.position.length >= 2 ? [Number(m.position[0]), Number(m.position[1])] : [0, 0]));
+      const isVisible = m.isVisible !== undefined
+        ? Boolean(m.isVisible)
+        : (isAlive && (Boolean(discoveredMap[mId]) || (roomId !== "" && revealedSet.has(roomId) && !isHidden)));
+
+      if (isAlive) totalMonstersAlive += 1;
+      else monstersDefeated += 1;
+
+      const normM = {
+        "@type": "robos:TabletopSaveMonsterState",
+        id: mId,
+        name: String(m.name || m.monsterType || m.type || "Monster"),
+        monsterType: String(m.monsterType || m.type || "goblin"),
+        currentBP: curBp,
+        maxBP: maxBp,
+        mindPoints: Number(m.mindPoints ?? m.mp ?? 1),
+        attackDice: Number(m.attackDice ?? m.atk ?? 2),
+        defendDice: Number(m.defendDice ?? m.def ?? 2),
+        movementSquares: Number(m.movementSquares ?? m.move ?? 6),
+        gridPos: pos,
+        roomId,
+        isBoss: Boolean(m.isBoss ?? m.is_boss),
+        isUndead: Boolean(m.isUndead ?? m.is_undead),
+        isSpellcaster: Boolean(m.isSpellcaster ?? m.is_spellcaster),
+        spells: Array.isArray(m.spells) ? m.spells : [],
+        isAlive,
+        isVisible
+      };
+      allMonsters.push(normM);
+      if (normM.isVisible) visibleMonsters.push(normM);
+    });
+  } else if (Array.isArray(rawSave["robos:visibleMonsters"])) {
+    visibleMonsters.push(...rawSave["robos:visibleMonsters"]);
+  }
+
+  let itemsFound = Array.isArray(rawSave["robos:itemsFound"]) && rawSave["robos:itemsFound"].length > 0
+    ? [...rawSave["robos:itemsFound"]]
+    : [];
+  if (itemsFound.length === 0) {
+    const seenKeys = new Set();
+    const pushItem = (it) => {
+      const k = `${it.holder}:${it.name}:${itemsFound.length}`;
+      if (!seenKeys.has(k)) {
+        seenKeys.add(k);
+        itemsFound.push(it);
+      }
+    };
+    if (Array.isArray(rawSave.items_found)) {
+      rawSave.items_found.forEach(it => {
+        pushItem({
+          id: String(it.id || it.name || "item"),
+          name: String(it.name || it.title || "Treasure"),
+          type: String(it.type || "treasure"),
+          holder: String(it.holder || "Party"),
+          source: String(it.source || "Dungeon Search"),
+          icon: String(it.icon || "💎")
+        });
+      });
+    }
+    heroStates.forEach(h => {
+      (h.inventory || []).forEach((invItem, iIdx) => {
+        const itemName = typeof invItem === "string"
+          ? invItem.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())
+          : String(invItem?.name || invItem?.id || "Item");
+        const isPotion = itemName.toLowerCase().includes("potion") || itemName.toLowerCase().includes("water");
+        pushItem({
+          id: typeof invItem === "object" ? String(invItem.id || `inv-${h.id}-${iIdx}`) : `${h.id}-${invItem}-${iIdx}`,
+          name: itemName,
+          type: isPotion ? "potion" : "equipment",
+          holder: h.name,
+          source: "Hero Inventory",
+          icon: isPotion ? "🧪" : "🗡️"
+        });
+      });
+    });
+  }
+
+  const exploredTiles = Array.isArray(rawSave["robos:exploredTiles"])
+    ? rawSave["robos:exploredTiles"]
+    : (Array.isArray(rawSave.explored_tiles) ? rawSave.explored_tiles : []);
+  const exploredTilesCount = Number(rawSave["robos:exploredTilesCount"] ?? exploredTiles.length) || 0;
+
+  const searchedRooms = Array.isArray(rawSave["robos:searchedRooms"])
+    ? rawSave["robos:searchedRooms"]
+    : (Array.isArray(rawSave.searched_treasure_rooms) ? rawSave.searched_treasure_rooms : []);
+
+  const rawDoors = Array.isArray(rawSave["robos:doors"])
+    ? rawSave["robos:doors"]
+    : (Array.isArray(rawSave.doors) ? rawSave.doors : []);
+  const doorsOpenCount = Number(rawSave["robos:doorsOpenCount"] ?? rawDoors.filter(d => d && (d.is_open || d.state === "open")).length) || 0;
+  const doorsTotalCount = Number(rawSave["robos:doorsTotalCount"] ?? rawDoors.length) || 0;
+
+  const rawTriggers = Array.isArray(rawSave["robos:triggersFired"])
+    ? rawSave["robos:triggersFired"]
+    : (Array.isArray(rawSave.story_triggers) ? rawSave.story_triggers.filter(t => t && t.triggered) : []);
+  const triggersFiredCount = Number(rawSave["robos:triggersFiredCount"] ?? rawTriggers.length) || 0;
+
+  let playTimeSeconds = Number(rawSave["robos:playTimeSeconds"] ?? rawSave.play_time_seconds ?? 0) || 0;
+  if (playTimeSeconds <= 0) {
+    playTimeSeconds = Math.max(45, (roundNum - 1) * 180 + exploredTilesCount * 8 + doorsOpenCount * 25 + triggersFiredCount * 40 + activeHeroIdx * 35);
+  }
+  const playTimeFormatted = formatPlayDurationSeconds(playTimeSeconds);
+
+  const savedAtUnix = Number(rawSave["robos:savedAtUnix"] ?? rawSave.saved_at ?? rawSave.timestamp ?? Math.floor(Date.now() / 1000));
+  const savedAtIso = String(rawSave["robos:savedAt"] || rawSave.saved_at_iso || new Date(savedAtUnix * 1000).toISOString());
+  const totalPartyGold = heroStates.reduce((acc, h) => acc + (Number(h.gold) || 0), 0);
+  const label = String(rawSave["dcterms:title"] || rawSave.snapshot_label || rawSave.label || `Quest State — Round ${roundNum}`);
+
+  return {
+    "@id": `urn:robos:tabletop:savestate:${slug}`,
+    "@type": ["oslc_am:Resource", "robos:TabletopQuestSaveState", "schema:Action"],
+    "dcterms:title": label,
+    "robos:questSlug": slug,
+    "robos:gridDimensions": rawSave["robos:gridDimensions"] || [26, 19],
+    "robos:savedAt": savedAtIso,
+    "robos:savedAtUnix": savedAtUnix,
+    "robos:playTimeSeconds": playTimeSeconds,
+    "robos:playTimeFormatted": playTimeFormatted,
+    "robos:currentRound": roundNum,
+    "robos:currentPhase": rawPhase,
+    "robos:currentRole": currentRole,
+    "robos:activeHeroIndex": activeHeroIdx,
+    "robos:activeTurnActor": activeTurnActor,
+    "robos:turnState": turnStateRaw,
+    "robos:movementRemaining": moveRemaining,
+    "robos:movementRolled": moveRolled,
+    "robos:hasMovedThisTurn": hasMoved,
+    "robos:hasActedThisTurn": hasActed,
+    "robos:movementTrail": Array.isArray(rawSave["robos:movementTrail"] || rawSave.movement_trail) ? (rawSave["robos:movementTrail"] || rawSave.movement_trail) : [],
+    "robos:heroStates": heroStates,
+    "robos:visibleMonsters": visibleMonsters,
+    "robos:visibleMonstersCount": visibleMonsters.length,
+    "robos:allMonsters": allMonsters,
+    "robos:totalMonstersAlive": totalMonstersAlive,
+    "robos:monstersDefeated": monstersDefeated,
+    "robos:itemsFound": itemsFound,
+    "robos:itemsFoundCount": itemsFound.length,
+    "robos:totalPartyGold": totalPartyGold,
+    "robos:exploredTilesCount": exploredTilesCount,
+    "robos:exploredTiles": exploredTiles,
+    "robos:revealedRooms": revealedRooms,
+    "robos:searchedRooms": searchedRooms,
+    "robos:doorsOpenCount": doorsOpenCount,
+    "robos:doorsTotalCount": doorsTotalCount,
+    "robos:doors": rawDoors,
+    "robos:furniture": Array.isArray(rawSave["robos:furniture"] || rawSave.furniture) ? (rawSave["robos:furniture"] || rawSave.furniture) : [],
+    "robos:trapsDetectedCount": Number(rawSave["robos:trapsDetectedCount"] ?? 0),
+    "robos:trapsTotalCount": Number(rawSave["robos:trapsTotalCount"] ?? (Array.isArray(rawSave.traps) ? rawSave.traps.length : 0)),
+    "robos:triggersFired": rawTriggers,
+    "robos:triggersFiredCount": triggersFiredCount,
+    "robos:triggersTotalCount": Number(rawSave["robos:triggersTotalCount"] ?? (Array.isArray(rawSave.story_triggers) ? rawSave.story_triggers.length : rawTriggers.length)),
+    "robos:treasureDeckRemaining": Number(rawSave["robos:treasureDeckRemaining"] ?? (Array.isArray(rawSave.treasure_deck) ? rawSave.treasure_deck.length : 0)),
+    "robos:screenshotPath": String(rawSave["robos:screenshotPath"] || rawSave.screenshot_path || ""),
+    "robos:screenshotDataUrl": String(rawSave["robos:screenshotDataUrl"] || rawSave.screenshotDataUrl || ""),
+    "robos:saveFilePath": String(rawSave["robos:saveFilePath"] || ""),
+    label,
+    saved_at: savedAtUnix,
+    saved_at_iso: savedAtIso,
+    cartridge_id: slug,
+    cartridge_slug: slug,
+    map_id: String(rawSave["robos:mapId"] || rawSave.map_id || slug),
+    round_num: roundNum,
+    current_round: roundNum,
+    phase: rawPhase,
+    current_phase: rawPhase,
+    active_hero_idx: activeHeroIdx,
+    active_turn_actor: activeTurnActor,
+    turn_state: turnStateRaw,
+    play_time_seconds: playTimeSeconds,
+    play_time_formatted: playTimeFormatted,
+    heroes: heroStates,
+    visible_monsters: visibleMonsters,
+    monsters: allMonsters,
+    items_found: itemsFound,
+    revealed_rooms: revealedRooms,
+    searched_treasure_rooms: searchedRooms
+  };
+}
+
+function renderQuestStateScreenshotToCanvas(st) {
+  if (!st || typeof document === "undefined") return "";
+  const canvas = document.getElementById("quest-save-state-screenshot-canvas");
+  if (!canvas || typeof canvas.getContext !== "function") return "";
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+
+  const W = canvas.width || 780;
+  const H = canvas.height || 570;
+  const dims = Array.isArray(st["robos:gridDimensions"]) ? st["robos:gridDimensions"] : [26, 19];
+  const cols = Number(dims[0]) || 26;
+  const rows = Number(dims[1]) || 19;
+  const hudH = 36;
+  const pad = 10;
+  const boardW = W - pad * 2;
+  const boardH = H - hudH - pad * 2;
+  const cellW = boardW / cols;
+  const cellH = boardH / rows;
+  const ox = pad;
+  const oy = hudH + pad;
+
+  // 1. Background
+  ctx.fillStyle = "#060a12";
+  ctx.fillRect(0, 0, W, H);
+
+  // 2. Top Telemetry HUD Bar inside Screenshot
+  ctx.fillStyle = "#0f172a";
+  ctx.fillRect(0, 0, W, hudH);
+  ctx.strokeStyle = "#1e293b";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, hudH);
+  ctx.lineTo(W, hudH);
+  ctx.stroke();
+
+  ctx.fillStyle = "#38bdf8";
+  ctx.font = "bold 12px monospace";
+  const roundNum = st["robos:currentRound"] || 1;
+  const turnActor = st["robos:activeTurnActor"] || "Hero Party";
+  const playStr = st["robos:playTimeFormatted"] || "1m 0s";
+  const visCount = st["robos:visibleMonstersCount"] ?? (st["robos:visibleMonsters"] || []).length;
+  ctx.fillText(`📦 ${st["robos:questSlug"] || "custom-quest"} • R${roundNum} • 🎯 ${turnActor}`, 12, 22);
+  ctx.fillStyle = "#fde047";
+  ctx.textAlign = "right";
+  ctx.fillText(`⏱️ ${playStr} • 👁️ ${visCount} Visible • 🗺️ ${st["robos:exploredTilesCount"] || 0} Sq`, W - 12, 22);
+  ctx.textAlign = "left";
+
+  // 3. Draw Board Grid Cells
+  const exploredSet = new Set(
+    (st["robos:exploredTiles"] || []).map(pt => Array.isArray(pt) ? `${pt[0]},${pt[1]}` : "")
+  );
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x = ox + c * cellW;
+      const y = oy + r * cellH;
+      const isExplored = exploredSet.has(`${c},${r}`);
+      ctx.fillStyle = isExplored ? "rgba(234, 179, 8, 0.22)" : "#0b1324";
+      ctx.fillRect(x, y, cellW, cellH);
+      ctx.strokeStyle = isExplored ? "rgba(250, 204, 21, 0.35)" : "rgba(51, 65, 85, 0.45)";
+      ctx.lineWidth = 0.75;
+      ctx.strokeRect(x, y, cellW, cellH);
+    }
+  }
+
+  // 4. Draw Furniture (Stairs, Chests, Tables)
+  (st["robos:furniture"] || []).forEach(f => {
+    if (!f || f.hidden) return;
+    const fx = Number(f.x ?? 7);
+    const fy = Number(f.y ?? 14);
+    const fw = Number(f.width || 1);
+    const fh = Number(f.height || 1);
+    ctx.fillStyle = f.type && f.type.includes("stairs") ? "rgba(56, 189, 248, 0.32)" : "rgba(180, 83, 9, 0.48)";
+    ctx.strokeStyle = f.type && f.type.includes("stairs") ? "#38bdf8" : "#f59e0b";
+    ctx.lineWidth = 1.5;
+    ctx.fillRect(ox + fx * cellW + 2, oy + fy * cellH + 2, fw * cellW - 4, fh * cellH - 4);
+    ctx.strokeRect(ox + fx * cellW + 2, oy + fy * cellH + 2, fw * cellW - 4, fh * cellH - 4);
+  });
+
+  // 5. Draw Doors
+  (st["robos:doors"] || []).forEach(d => {
+    if (!d || (d.is_secret && !d.is_revealed)) return;
+    const from = Array.isArray(d.from) ? d.from : null;
+    const to = Array.isArray(d.to) ? d.to : null;
+    if (!from || !to) return;
+    const mx = ox + ((Number(from[0]) + Number(to[0]) + 1) / 2) * cellW;
+    const my = oy + ((Number(from[1]) + Number(to[1]) + 1) / 2) * cellH;
+    const isOpen = d.is_open === true || d.state === "open";
+    ctx.fillStyle = isOpen ? "#22c55e" : "#f97316";
+    ctx.beginPath();
+    ctx.arc(mx, my, Math.min(cellW, cellH) * 0.24, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // 6. Draw Movement Trail
+  const trail = st["robos:movementTrail"] || [];
+  if (trail.length > 1) {
+    ctx.strokeStyle = "#38bdf8";
+    ctx.lineWidth = 2.2;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    trail.forEach((pt, idx) => {
+      if (!Array.isArray(pt) || pt.length < 2) return;
+      const cx = ox + (Number(pt[0]) + 0.5) * cellW;
+      const cy = oy + (Number(pt[1]) + 0.5) * cellH;
+      if (idx === 0) ctx.moveTo(cx, cy);
+      else ctx.lineTo(cx, cy);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // 7. Draw Visible Monsters
+  (st["robos:visibleMonsters"] || []).forEach(m => {
+    const pos = Array.isArray(m.gridPos) ? m.gridPos : [0, 0];
+    const cx = ox + (Number(pos[0]) + 0.5) * cellW;
+    const cy = oy + (Number(pos[1]) + 0.5) * cellH;
+    const rad = Math.min(cellW, cellH) * 0.42;
+
+    ctx.fillStyle = m.isBoss ? "#7e22ce" : "#dc2626";
+    ctx.beginPath();
+    ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#fecaca";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 9px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const mLetter = String(m.name || "M").charAt(0).toUpperCase();
+    ctx.fillText(mLetter, cx, cy);
+  });
+
+  // 8. Draw Heroes
+  const heroColors = {
+    barbarian: "#ef4444",
+    dwarf: "#f59e0b",
+    elf: "#22c55e",
+    wizard: "#3b82f6"
+  };
+  (st["robos:heroStates"] || []).forEach((h, idx) => {
+    const pos = Array.isArray(h.gridPos) ? h.gridPos : [7, 14];
+    // Slight sub-tile offset if multiple heroes share the starting stairwell
+    const sameTileHeroes = (st["robos:heroStates"] || []).filter(oh =>
+      Array.isArray(oh.gridPos) && oh.gridPos[0] === pos[0] && oh.gridPos[1] === pos[1]
+    );
+    let subOx = 0;
+    let subOy = 0;
+    if (sameTileHeroes.length > 1) {
+      const subIdx = sameTileHeroes.indexOf(h);
+      subOx = ((subIdx % 2) - 0.5) * (cellW * 0.35);
+      subOy = (Math.floor(subIdx / 2) - 0.5) * (cellH * 0.35);
+    }
+    const cx = ox + (Number(pos[0]) + 0.5) * cellW + subOx;
+    const cy = oy + (Number(pos[1]) + 0.5) * cellH + subOy;
+    const rad = Math.min(cellW, cellH) * 0.42;
+    const clsKey = String(h.heroClass || h.id || "").toLowerCase();
+    const fillCol = heroColors[clsKey] || ["#ef4444", "#f59e0b", "#22c55e", "#3b82f6"][idx % 4];
+
+    if (h.isActiveTurn) {
+      ctx.strokeStyle = "#fde047";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(cx, cy, rad + 3, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = fillCol;
+    ctx.beginPath();
+    ctx.arc(cx, cy, rad, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 9px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(h.name || "H").charAt(0).toUpperCase(), cx, cy);
+  });
+
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+
+  try {
+    return typeof canvas.toDataURL === "function" ? canvas.toDataURL("image/png") : "";
+  } catch {
+    return "";
+  }
+}
+
+function formatKGraphTelemetryMetricValue(metric, st) {
+  const prop = metric.property;
+  const val = st[prop];
+  switch (metric.format) {
+    case "round": {
+      const phase = String(st["robos:currentPhase"] || "hero_phase").replace(/_/g, " ").toUpperCase();
+      return `<div style="font-size:14px; font-weight:700; color:#f8fafc;">Round ${val || 1}</div><div style="font-size:10px; color:#38bdf8;">${escapeHtml(phase)}</div>`;
+    }
+    case "actor":
+      return `<div style="font-size:12px; font-weight:700; color:#fde047;">${escapeHtml(String(val || "Hero Party"))}</div><div style="font-size:10px; color:#94a3b8;">Role: ${escapeHtml(String(st["robos:currentRole"] || "player").toUpperCase())}</div>`;
+    case "turn_state": {
+      const moveLeft = st["robos:movementRemaining"] ?? 0;
+      const moved = st["robos:hasMovedThisTurn"] ? "Moved" : "Unmoved";
+      const acted = st["robos:hasActedThisTurn"] ? "Acted" : "Action Ready";
+      return `<div style="font-size:12px; font-weight:700; color:#e2e8f0; text-transform:capitalize;">${escapeHtml(String(val || "ready").replace(/_/g, " "))} (${moveLeft} sq left)</div><div style="font-size:10px; color:#94a3b8;">${moved} • ${acted}</div>`;
+    }
+    case "duration":
+      return `<div style="font-size:14px; font-weight:700; color:#34d399;">${escapeHtml(st["robos:playTimeFormatted"] || formatPlayDurationSeconds(val))}</div><div style="font-size:10px; color:#94a3b8;">${Number(val || 0)}s total session</div>`;
+    case "visible_monsters": {
+      const vis = Number(val || 0);
+      const alive = Number(st["robos:totalMonstersAlive"] || 0);
+      const slain = Number(st["robos:monstersDefeated"] || 0);
+      return `<div style="font-size:13px; font-weight:700; color:${vis > 0 ? "#f87171" : "#a7f3d0"};">${vis} Visible in Sight</div><div style="font-size:10px; color:#94a3b8;">${alive} Alive in Dungeon • ${slain} Slain</div>`;
+    }
+    case "items_found": {
+      const cnt = Number(val || 0);
+      const deckLeft = Number(st["robos:treasureDeckRemaining"] || 0);
+      return `<div style="font-size:13px; font-weight:700; color:#c084fc;">${cnt} Items &amp; Relics</div><div style="font-size:10px; color:#94a3b8;">${deckLeft} Treasure Cards Left</div>`;
+    }
+    case "gold":
+      return `<div style="font-size:14px; font-weight:700; color:#fde047;">${Number(val || 0)}g</div><div style="font-size:10px; color:#94a3b8;">Combined Party Treasury</div>`;
+    case "exploration": {
+      const rooms = Array.isArray(st["robos:revealedRooms"]) ? st["robos:revealedRooms"] : [];
+      return `<div style="font-size:13px; font-weight:700; color:#38bdf8;">${Number(val || 0)} Squares Explored</div><div style="font-size:10px; color:#94a3b8;">${rooms.length} Room(s): ${escapeHtml(rooms.join(", ") || "Start")}</div>`;
+    }
+    case "doors": {
+      const openCnt = Number(val || 0);
+      const totCnt = Number(st["robos:doorsTotalCount"] || 0);
+      const searchedCnt = Array.isArray(st["robos:searchedRooms"]) ? st["robos:searchedRooms"].length : 0;
+      return `<div style="font-size:13px; font-weight:700; color:#fb923c;">${openCnt} / ${totCnt} Doors Open</div><div style="font-size:10px; color:#94a3b8;">${searchedCnt} Room(s) Searched</div>`;
+    }
+    case "triggers": {
+      const fired = Number(val || 0);
+      const tot = Number(st["robos:triggersTotalCount"] || fired);
+      const trapsDet = Number(st["robos:trapsDetectedCount"] || 0);
+      const trapsTot = Number(st["robos:trapsTotalCount"] || 0);
+      return `<div style="font-size:13px; font-weight:700; color:#f472b6;">${fired} / ${tot} Events Fired</div><div style="font-size:10px; color:#94a3b8;">Traps Detected: ${trapsDet}/${trapsTot}</div>`;
+    }
+    default:
+      return `<div style="font-size:13px; font-weight:700; color:#f8fafc;">${escapeHtml(String(val ?? ""))}</div>`;
+  }
+}
+
 function buildDefaultQuestSaveStatePayload(label = "") {
   const q = getActiveQuest();
   const slug = q?.slug || "custom-quest";
@@ -7164,46 +7749,68 @@ function buildDefaultQuestSaveStatePayload(label = "") {
 
   const heroesState = (currentData.heroes || []).map((h, idx) => {
     const hSlug = (h["@id"] || "").split(":").pop() || `hero-${idx + 1}`;
-    const existingHero = existing?.heroes?.find(eh => eh.id === hSlug || eh.name === getHeroName(h));
+    const existingHero = (existing?.["robos:heroStates"] || existing?.heroes || []).find(
+      eh => eh.id === hSlug || eh.name === getHeroName(h) || eh.heroClass === getHeroClass(h)
+    );
     const maxBp = parseInt(h["robos:bodyPoints"], 10) || 8;
     const maxMp = parseInt(h["robos:mindPoints"], 10) || 2;
+    const curBp = existingHero?.currentBP ?? existingHero?.hp ?? (h["robos:currentBP"] !== undefined ? h["robos:currentBP"] : maxBp);
+    const curMp = existingHero?.currentMP ?? existingHero?.mp ?? (h["robos:currentMP"] !== undefined ? h["robos:currentMP"] : maxMp);
+    const pos = existingHero?.gridPos || existingHero?.grid_pos || [startStair[0] + (idx % 2), startStair[1] + Math.floor(idx / 2)];
     return {
       id: hSlug,
       name: getHeroName(h),
       heroClass: getHeroClass(h),
-      hp: existingHero?.hp !== undefined ? existingHero.hp : (h["robos:currentBP"] !== undefined ? h["robos:currentBP"] : maxBp),
+      current_bp: curBp,
+      bodyPoints: maxBp,
+      hp: curBp,
       max_hp: maxBp,
-      mp: existingHero?.mp !== undefined ? existingHero.mp : (h["robos:currentMP"] !== undefined ? h["robos:currentMP"] : maxMp),
+      current_mp: curMp,
+      mindPoints: maxMp,
+      mp: curMp,
       max_mp: maxMp,
+      attackDice: parseInt(h["robos:attackDice"], 10) || 3,
+      defendDice: parseInt(h["robos:defendDice"], 10) || 2,
       gold: parseInt(h["robos:gold"], 10) || 100,
-      grid_pos: existingHero?.grid_pos || [startStair[0] + (idx % 2), startStair[1] + Math.floor(idx / 2)],
+      grid_pos: pos,
       alive: true,
       escaped: false,
       weapon: getHeroWeapon(h),
       armor: getHeroArmor(h),
       inventory: getHeroInventory(h),
-      cast_spells: existingHero?.cast_spells || []
+      spells: getHeroSpells(h),
+      used_spells: existingHero?.usedSpells || existingHero?.cast_spells || []
     };
   });
 
-  return {
+  const rawPayload = {
     version: 1,
     saved_at: Math.floor(Date.now() / 1000),
     saved_at_iso: new Date().toISOString(),
     label: label || `Saved State (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })})`,
     cartridge_id: slug,
+    cartridge_slug: slug,
     map_id: slug,
     campaign_id: currentData.campaign?.id || "campaign-heroquest",
     campaign_title: currentData.campaign?.title || "HeroQuest",
-    round_num: existing?.round_num || 1,
-    phase: existing?.phase || "PLAYER_TURN",
-    active_hero_idx: existing?.active_hero_idx || 0,
+    current_round: existing?.["robos:currentRound"] || existing?.round_num || 1,
+    round_num: existing?.["robos:currentRound"] || existing?.round_num || 1,
+    current_phase: existing?.["robos:currentPhase"] || existing?.phase || "hero_phase",
+    phase: existing?.["robos:currentPhase"] || existing?.phase || "PLAYER_TURN",
+    active_hero_idx: existing?.["robos:activeHeroIndex"] ?? existing?.active_hero_idx ?? 0,
+    turn_state: existing?.["robos:turnState"] || existing?.turn_state || "awaiting_roll",
+    play_time_seconds: existing?.["robos:playTimeSeconds"] || existing?.play_time_seconds || 60,
     heroes: heroesState,
-    monsters: existing?.monsters || [],
-    doors: existing?.doors || [],
-    revealed_rooms: existing?.revealed_rooms || ["r19"],
-    searched_treasure_rooms: existing?.searched_treasure_rooms || []
+    monsters: existing?.["robos:allMonsters"] || existing?.monsters || [],
+    visible_monsters: existing?.["robos:visibleMonsters"] || existing?.visible_monsters || [],
+    items_found: existing?.["robos:itemsFound"] || existing?.items_found || [],
+    doors: existing?.["robos:doors"] || existing?.doors || [],
+    explored_tiles: existing?.["robos:exploredTiles"] || [startStair],
+    revealed_rooms: existing?.["robos:revealedRooms"] || existing?.revealed_rooms || ["room-sw-8"],
+    searched_treasure_rooms: existing?.["robos:searchedRooms"] || existing?.searched_treasure_rooms || []
   };
+
+  return normalizeSaveStateToKGraphInRenderer(rawPayload, slug) || rawPayload;
 }
 
 async function refreshQuestSaveStateUI(cartridgeSlug = null) {
@@ -7214,9 +7821,15 @@ async function refreshQuestSaveStateUI(cartridgeSlug = null) {
     if (window.robosTabletop?.getQuestSaveState) {
       const res = await window.robosTabletop.getQuestSaveState({ cartridgeSlug: slug });
       if (res && res.success) {
-        currentData.questSaveState = res.activeSave || null;
+        if (res.saveStateSchema) {
+          currentData.questSaveStateSchema = res.saveStateSchema;
+        }
+        const rawActive = res.activeSave || res.saveData || null;
+        currentData.questSaveState = rawActive ? normalizeSaveStateToKGraphInRenderer(rawActive, slug) : null;
         currentData.questSaveSnapshots = Array.isArray(res.snapshots) ? res.snapshots : [];
       }
+    } else if (currentData.questSaveState) {
+      currentData.questSaveState = normalizeSaveStateToKGraphInRenderer(currentData.questSaveState, slug);
     }
   } catch (err) {
     console.warn("[robos-tabletop] Failed to read quest save state:", err);
@@ -7224,7 +7837,17 @@ async function refreshQuestSaveStateUI(cartridgeSlug = null) {
 
   const badgeEl = document.getElementById("quest-save-state-badge");
   const summaryEl = document.getElementById("quest-save-state-summary");
+  const overviewLayoutEl = document.getElementById("quest-save-state-overview-layout");
+  const kgraphIdBadgeEl = document.getElementById("quest-save-kgraph-id-badge");
+  const telemetryGridEl = document.getElementById("quest-save-state-telemetry-grid");
+  const screenshotImgEl = document.getElementById("quest-save-state-screenshot-img");
+  const screenshotCanvasEl = document.getElementById("quest-save-state-screenshot-canvas");
+  const screenshotBadgeEl = document.getElementById("quest-save-state-screenshot-badge");
+  const heroesHeaderEl = document.getElementById("quest-save-state-heroes-header");
   const heroesEl = document.getElementById("quest-save-state-heroes");
+  const collectionsGridEl = document.getElementById("quest-save-state-collections-grid");
+  const visibleMonstersEl = document.getElementById("quest-save-state-visible-monsters");
+  const itemsFoundEl = document.getElementById("quest-save-state-items-found");
   const snapsWrap = document.getElementById("quest-save-snapshots-wrap");
   const snapsList = document.getElementById("quest-save-snapshots-list");
 
@@ -7237,45 +7860,200 @@ async function refreshQuestSaveStateUI(cartridgeSlug = null) {
     if (summaryEl) {
       summaryEl.innerHTML = `No active save state found for <code>${escapeHtml(slug)}.cartridge</code>. Click <strong>💾 Save State From Now</strong> to snapshot the current quest &amp; hero state, or launch the game to auto-save as you play.`;
     }
+    if (overviewLayoutEl) overviewLayoutEl.style.display = "none";
+    if (heroesHeaderEl) heroesHeaderEl.style.display = "none";
     if (heroesEl) heroesEl.innerHTML = "";
+    if (collectionsGridEl) collectionsGridEl.style.display = "none";
+    if (visibleMonstersEl) visibleMonstersEl.innerHTML = "";
+    if (itemsFoundEl) itemsFoundEl.innerHTML = "";
   } else {
-    const savedTime = st.saved_at_iso
-      ? new Date(st.saved_at_iso).toLocaleString()
+    const savedTime = st["robos:savedAt"]
+      ? new Date(st["robos:savedAt"]).toLocaleString()
       : (st.saved_at ? new Date(st.saved_at * 1000).toLocaleString() : "Just now");
-    const roundNum = st.round_num || 1;
-    const phase = st.phase || "PLAYER_TURN";
-    const roomsCount = Array.isArray(st.revealed_rooms) ? st.revealed_rooms.length : 1;
-    const labelStr = st.label ? ` — <strong>${escapeHtml(st.label)}</strong>` : "";
+    const roundNum = st["robos:currentRound"] || st.round_num || 1;
+    const phase = st["robos:currentPhase"] || st.phase || "hero_phase";
+    const turnActor = st["robos:activeTurnActor"] || "Hero Party";
+    const playFormatted = st["robos:playTimeFormatted"] || "1m 0s";
+    const visMonCount = st["robos:visibleMonstersCount"] ?? (st["robos:visibleMonsters"] || []).length;
+    const roomsCount = Array.isArray(st["robos:revealedRooms"]) ? st["robos:revealedRooms"].length : 1;
+    const labelStr = st["dcterms:title"] ? ` — <strong>${escapeHtml(st["dcterms:title"])}</strong>` : "";
 
     if (badgeEl) {
-      badgeEl.textContent = `🟢 Active Save State (Round ${roundNum})`;
+      badgeEl.textContent = `🟢 Active Save State (Round ${roundNum} • ${turnActor})`;
       badgeEl.className = "badge badge-success";
     }
     if (summaryEl) {
       summaryEl.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-          <span>💾 <strong>Active Save State Ready</strong>${labelStr} • Round <strong>${roundNum}</strong> (${escapeHtml(String(phase))}) • <strong>${roomsCount}</strong> Room(s) Revealed</span>
+          <span>💾 <strong>Active Save State Ready</strong>${labelStr} • Round <strong>${roundNum}</strong> (${escapeHtml(String(phase))}) • Turn: <strong style="color:#fde047;">${escapeHtml(turnActor)}</strong> • Played: <strong style="color:#34d399;">${escapeHtml(playFormatted)}</strong> • <strong>${visMonCount}</strong> Visible Monster(s) • <strong>${roomsCount}</strong> Room(s) Revealed</span>
           <span style="color:#94a3b8; font-size:11px;">Saved: ${escapeHtml(savedTime)}</span>
         </div>
       `;
     }
+
+    // 1. Render Screenshot & Auto-Persist PNG if needed
+    if (overviewLayoutEl) overviewLayoutEl.style.display = "grid";
+    if (kgraphIdBadgeEl) kgraphIdBadgeEl.textContent = st["@id"] || `urn:robos:tabletop:savestate:${slug}`;
+
+    const canvasDataUrl = renderQuestStateScreenshotToCanvas(st);
+    const hasNativePng = Boolean(st["robos:screenshotDataUrl"] && st["robos:screenshotDataUrl"].startsWith("data:image/"));
+    const effectiveDataUrl = hasNativePng ? st["robos:screenshotDataUrl"] : canvasDataUrl;
+
+    if ( effectiveDataUrl ) {
+      st["robos:screenshotDataUrl"] = effectiveDataUrl;
+      if (screenshotImgEl && screenshotCanvasEl) {
+        screenshotImgEl.src = effectiveDataUrl;
+        screenshotImgEl.style.display = "block";
+        screenshotCanvasEl.style.display = "none";
+      }
+      if (screenshotBadgeEl) {
+        screenshotBadgeEl.textContent = hasNativePng ? "📸 Saved PNG" : "📸 Live Board Capture";
+      }
+      // If disk didn't have the PNG yet, persist it automatically so every save state has a PNG on disk
+      if (!hasNativePng && canvasDataUrl && window.robosTabletop?.saveQuestScreenshot) {
+        window.robosTabletop.saveQuestScreenshot({ cartridgeSlug: slug, dataUrl: canvasDataUrl }).catch(() => {});
+      }
+    }
+
+    // 2. Render KGraph Schema-Driven Telemetry Metrics Grid
+    if (telemetryGridEl) {
+      telemetryGridEl.innerHTML = "";
+      const schema = currentData.questSaveStateSchema || DEFAULT_SAVE_STATE_SCHEMA;
+      const metrics = Array.isArray(schema.telemetryMetrics) ? schema.telemetryMetrics : DEFAULT_SAVE_STATE_SCHEMA.telemetryMetrics;
+      const frag = document.createDocumentFragment();
+      metrics.forEach(m => {
+        const card = document.createElement("div");
+        card.className = "kgraph-telemetry-metric-card";
+        card.dataset.kgraphProperty = m.property;
+        card.style = "background:rgba(30,41,59,0.75); border:1px solid #334155; border-radius:5px; padding:7px 9px; display:flex; flex-direction:column; gap:2px;";
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; color:#94a3b8; text-transform:uppercase; font-weight:700;">
+            <span>${m.icon || "📊"} ${escapeHtml(m.label)}</span>
+            <code style="font-size:9px; color:#64748b;">${escapeHtml(m.property)}</code>
+          </div>
+          ${formatKGraphTelemetryMetricValue(m, st)}
+        `;
+        frag.appendChild(card);
+      });
+      telemetryGridEl.appendChild(frag);
+    }
+
+    // 3. Render Party Health & Vitals (robos:heroStates)
+    if (heroesHeaderEl) heroesHeaderEl.style.display = "block";
     if (heroesEl) {
       heroesEl.innerHTML = "";
-      (st.heroes || []).forEach(h => {
+      const heroFrag = document.createDocumentFragment();
+      (st["robos:heroStates"] || st.heroes || []).forEach(h => {
         const hDiv = document.createElement("div");
-        hDiv.style = "background:rgba(30,41,59,0.75); border:1px solid #475569; border-radius:4px; padding:6px 8px; font-size:11px;";
-        const pos = Array.isArray(h.grid_pos) ? `[${h.grid_pos[0]}, ${h.grid_pos[1]}]` : "[7, 14]";
+        const curBp = h.currentBP ?? h.hp ?? h.bp ?? 8;
+        const maxBp = h.maxBP ?? h.max_hp ?? h.max_bp ?? 8;
+        const curMp = h.currentMP ?? h.mp ?? 2;
+        const maxMp = h.maxMP ?? h.max_mp ?? 2;
+        const hpPct = Math.max(0, Math.min(100, Math.round((curBp / Math.max(1, maxBp)) * 100)));
+        const hpColor = hpPct > 50 ? "#22c55e" : (hpPct > 25 ? "#f59e0b" : "#ef4444");
+        const pos = Array.isArray(h.gridPos || h.grid_pos) ? `[${(h.gridPos || h.grid_pos)[0]}, ${(h.gridPos || h.grid_pos)[1]}]` : "[7, 14]";
+        const isTurn = Boolean(h.isActiveTurn);
+        const invList = Array.isArray(h.inventory)
+          ? h.inventory.map(it => typeof it === "string" ? it.replace(/_/g, " ") : (it?.name || "item")).join(", ")
+          : "";
+        const spellsCount = Array.isArray(h.spells) ? h.spells.length : 0;
+        const spellsRem = h.spellsRemaining !== undefined ? h.spellsRemaining : spellsCount;
+
+        hDiv.className = `save-state-hero-card ${isTurn ? "active-turn-hero" : ""}`;
+        hDiv.style = `background:rgba(30,41,59,0.85); border:1px solid ${isTurn ? "#fde047" : "#475569"}; border-radius:6px; padding:8px 10px; font-size:11px; display:flex; flex-direction:column; gap:4px;`;
         hDiv.innerHTML = `
-          <div style="display:flex; justify-content:space-between; font-weight:700; color:#f1f5f9;">
-            <span>${escapeHtml(h.name || h.id)}</span>
-            <span style="color:#38bdf8;">Pos ${pos}</span>
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+            <span style="font-weight:700; color:#f8fafc; font-size:12px;">
+              ${isTurn ? "🎯 " : "🛡️ "}${escapeHtml(h.name || h.id)}
+            </span>
+            <div style="display:flex; gap:4px; align-items:center;">
+              ${isTurn ? `<span class="badge" style="background:#eab30833; color:#fde047; border:1px solid #eab308; font-size:9px; padding:1px 5px;">ACTIVE TURN</span>` : ""}
+              <span style="color:#38bdf8; font-family:monospace; font-size:10px;">Pos ${pos}</span>
+            </div>
           </div>
-          <div style="color:#cbd5e1; margin-top:2px;">
-            ❤️ HP: <strong>${h.hp ?? h.max_hp ?? 8}/${h.max_hp ?? 8}</strong> • 🧠 MP: <strong>${h.mp ?? h.max_mp ?? 2}/${h.max_mp ?? 2}</strong> • 🪙 <strong>${h.gold ?? 100}g</strong>
+          <div style="width:100%; height:5px; background:#0f172a; border-radius:3px; overflow:hidden;">
+            <div style="width:${hpPct}%; height:100%; background:${hpColor};"></div>
+          </div>
+          <div style="color:#cbd5e1; display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px;">
+            <span>❤️ HP: <strong>${curBp}/${maxBp}</strong></span>
+            <span>🧠 MP: <strong>${curMp}/${maxMp}</strong></span>
+            <span>⚔️ <strong>${h.attackDice || 3}</strong> / 🛡️ <strong>${h.defendDice || 2}</strong></span>
+            <span style="color:#fde047;">🪙 <strong>${h.gold ?? 0}g</strong></span>
+          </div>
+          <div style="font-size:10px; color:#94a3b8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(invList)}">
+            🗡️ ${escapeHtml(String(h.weapon || "unarmed"))} ${spellsCount > 0 ? `• 🔮 ${spellsRem}/${spellsCount} Spells` : ""} ${invList ? `• 🎒 ${escapeHtml(invList)}` : ""}
           </div>
         `;
-        heroesEl.appendChild(hDiv);
+        heroFrag.appendChild(hDiv);
       });
+      heroesEl.appendChild(heroFrag);
+    }
+
+    // 4. Render Visible Monsters & Items Found So Far
+    if (collectionsGridEl) collectionsGridEl.style.display = "grid";
+    if (visibleMonstersEl) {
+      visibleMonstersEl.innerHTML = "";
+      const visMonsters = st["robos:visibleMonsters"] || [];
+      if (visMonsters.length === 0) {
+        visibleMonstersEl.innerHTML = `<div style="font-size:11px; color:#94a3b8; padding:6px 8px; background:rgba(15,23,42,0.6); border:1px dashed #334155; border-radius:4px;">No monsters currently in line-of-sight (${st["robos:totalMonstersAlive"] || 0} lurking in unrevealed rooms).</div>`;
+      } else {
+        const monFrag = document.createDocumentFragment();
+        visMonsters.forEach(m => {
+          const mCard = document.createElement("div");
+          const mPos = Array.isArray(m.gridPos) ? `[${m.gridPos[0]}, ${m.gridPos[1]}]` : "[0, 0]";
+          mCard.className = "save-state-visible-monster-item";
+          mCard.style = "background:rgba(69,10,10,0.45); border:1px solid #991b1b; border-radius:5px; padding:6px 9px; font-size:11px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;";
+          mCard.innerHTML = `
+            <div>
+              <strong style="color:#fecaca;">👹 ${escapeHtml(m.name)}</strong>
+              <span style="color:#fca5a5; font-size:10px; margin-left:4px;">(${escapeHtml(m.monsterType)})</span>
+              ${m.isBoss ? `<span class="badge" style="background:#581c87; color:#f3e8ff; font-size:9px; margin-left:4px;">BOSS</span>` : ""}
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; color:#f8fafc; font-size:10px;">
+              <span>❤️ <strong>${m.currentBP}/${m.maxBP} BP</strong></span>
+              <span>⚔️ ${m.attackDice} / 🛡️ ${m.defendDice} / 🦶 ${m.movementSquares}</span>
+              <span style="color:#38bdf8; font-family:monospace;">Pos ${mPos}</span>
+            </div>
+          `;
+          monFrag.appendChild(mCard);
+        });
+        visibleMonstersEl.appendChild(monFrag);
+      }
+    }
+
+    if (itemsFoundEl) {
+      itemsFoundEl.innerHTML = "";
+      const items = st["robos:itemsFound"] || [];
+      const triggers = st["robos:triggersFired"] || [];
+      const frag = document.createDocumentFragment();
+
+      if (triggers.length > 0) {
+        triggers.forEach(tr => {
+          const trDiv = document.createElement("div");
+          trDiv.style = "background:rgba(88,28,135,0.35); border:1px solid #7e22ce; border-radius:5px; padding:5px 8px; font-size:10px; color:#e9d5ff;";
+          trDiv.innerHTML = `📜 <strong>Event Triggered:</strong> ${escapeHtml(tr.title || tr.id)} <span style="color:#c084fc;">(${escapeHtml(tr.event || "encounter")})</span>`;
+          frag.appendChild(trDiv);
+        });
+      }
+
+      if (items.length === 0) {
+        const emptyDiv = document.createElement("div");
+        emptyDiv.style = "font-size:11px; color:#94a3b8; padding:6px 8px; background:rgba(15,23,42,0.6); border:1px dashed #334155; border-radius:4px;";
+        emptyDiv.textContent = "No items or treasure cards collected yet.";
+        frag.appendChild(emptyDiv);
+      } else {
+        const chipsWrap = document.createElement("div");
+        chipsWrap.style = "display:flex; flex-wrap:wrap; gap:5px;";
+        items.forEach(it => {
+          const chip = document.createElement("span");
+          chip.className = "save-state-item-chip";
+          chip.style = "background:rgba(30,41,59,0.9); border:1px solid #475569; border-radius:4px; padding:3px 7px; font-size:10px; color:#f1f5f9;";
+          chip.innerHTML = `${escapeHtml(it.icon || "🎒")} <strong>${escapeHtml(it.name)}</strong> <span style="color:#94a3b8;">(${escapeHtml(it.holder || "Party")})</span>`;
+          chipsWrap.appendChild(chip);
+        });
+        frag.appendChild(chipsWrap);
+      }
+      itemsFoundEl.appendChild(frag);
     }
   }
 
@@ -7288,13 +8066,15 @@ async function refreshQuestSaveStateUI(cartridgeSlug = null) {
       snapsWrap.style.display = "block";
       snapsList.innerHTML = "";
       snaps.forEach(sn => {
+        const fileKey = sn.fileName || sn.file || `${sn.id}.save.json`;
+        const roundVal = sn.roundNum || sn.round || 1;
         const btn = document.createElement("button");
         btn.className = "btn btn-xs btn-secondary snapshot-restore-btn";
-        btn.dataset.snapshotFile = sn.fileName;
-        btn.textContent = `📸 ${sn.label || sn.fileName} (R${sn.roundNum || 1})`;
-        btn.title = `Click to restore this saved state snapshot (${sn.savedAtIso || ""}) as the active launch state`;
+        btn.dataset.snapshotFile = fileKey;
+        btn.textContent = `📸 ${sn.label || fileKey} (R${roundVal}${sn.playTimeFormatted ? ` • ${sn.playTimeFormatted}` : ""})`;
+        btn.title = `Click to restore this saved state snapshot (${sn.savedAtIso || sn.timestamp || ""}) as the active launch state`;
         btn.addEventListener("click", async () => {
-          await clearQuestSaveState(slug, sn.fileName);
+          await clearQuestSaveState(slug, fileKey);
         });
         snapsList.appendChild(btn);
       });
@@ -7315,43 +8095,56 @@ async function saveQuestStateFromNow(customLabel = null, customStatePayload = nu
     ? customLabel
     : (labelInput?.value?.trim() || `Save State From Studio (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`);
 
-  const statePayload = customStatePayload || buildDefaultQuestSaveStatePayload(label);
-  statePayload.label = label;
-  statePayload.saved_at = Math.floor(Date.now() / 1000);
-  statePayload.saved_at_iso = new Date().toISOString();
+  const rawPayload = customStatePayload || buildDefaultQuestSaveStatePayload(label);
+  rawPayload.label = label;
+  rawPayload["dcterms:title"] = label;
+  rawPayload.saved_at = Math.floor(Date.now() / 1000);
+  rawPayload.saved_at_iso = new Date().toISOString();
+
+  const normalizedNode = normalizeSaveStateToKGraphInRenderer(rawPayload, slug) || rawPayload;
+  const screenshotDataUrl = renderQuestStateScreenshotToCanvas(normalizedNode);
+  if (screenshotDataUrl) {
+    normalizedNode["robos:screenshotDataUrl"] = screenshotDataUrl;
+    rawPayload["robos:screenshotDataUrl"] = screenshotDataUrl;
+  }
 
   if (window.robosTabletop?.saveQuestStateNow) {
     const res = await window.robosTabletop.saveQuestStateNow({
       cartridgeSlug: slug,
       label,
-      statePayload
+      statePayload: normalizedNode,
+      screenshotDataUrl
     });
     if (res && res.success) {
-      currentData.questSaveState = res.savedState || statePayload;
+      const savedRaw = res.savedState || res.activeSave || res.saveData || normalizedNode;
+      currentData.questSaveState = normalizeSaveStateToKGraphInRenderer(savedRaw, slug);
       if (labelInput) labelInput.value = "";
       await refreshQuestSaveStateUI(slug);
-      setStatus(`💾 Saved quest state from now for '${slug}.cartridge' (${label}).`);
+      setStatus(`💾 Saved quest state & screenshot from now for '${slug}.cartridge' (${label}).`);
       return res;
     }
   }
 
   // Fallback for unit test environment without IPC
-  currentData.questSaveState = statePayload;
+  currentData.questSaveState = normalizedNode;
   currentData.questSaveSnapshots.unshift({
-    fileName: `snapshot-${Date.now()}.json`,
+    fileName: `snapshot-${Date.now()}.save.json`,
     label,
-    savedAt: statePayload.saved_at,
-    savedAtIso: statePayload.saved_at_iso,
-    roundNum: statePayload.round_num || 1,
-    phase: statePayload.phase || "PLAYER_TURN",
-    heroesCount: (statePayload.heroes || []).length
+    savedAt: normalizedNode.saved_at,
+    savedAtIso: normalizedNode.saved_at_iso,
+    roundNum: normalizedNode["robos:currentRound"] || normalizedNode.round_num || 1,
+    phase: normalizedNode["robos:currentPhase"] || normalizedNode.phase || "PLAYER_TURN",
+    activeTurnActor: normalizedNode["robos:activeTurnActor"] || "Hero Party",
+    playTimeFormatted: normalizedNode["robos:playTimeFormatted"] || "1m 0s",
+    heroesCount: (normalizedNode.heroes || []).length,
+    screenshotDataUrl
   });
   await refreshQuestSaveStateUI(slug);
-  setStatus(`💾 Saved quest state from now for '${slug}.cartridge' (${label}).`);
+  setStatus(`💾 Saved quest state & screenshot from now for '${slug}.cartridge' (${label}).`);
   return {
     success: true,
     cartridgeSlug: slug,
-    savedState: statePayload,
+    savedState: currentData.questSaveState,
     snapshots: currentData.questSaveSnapshots
   };
 }
@@ -7372,6 +8165,16 @@ async function clearQuestSaveState(cartridgeSlug = null, restoreSnapshotFile = n
       setStatus(`Cleared active save state for '${slug}.cartridge'. Next launch will start fresh.`);
     }
     return res;
+  }
+
+  if (restoreSnapshotFile) {
+    const foundSnap = (currentData.questSaveSnapshots || []).find(s => (s.fileName || s.file) === restoreSnapshotFile);
+    if (foundSnap && currentData.questSaveState) {
+      currentData.questSaveState.label = foundSnap.label;
+      currentData.questSaveState["dcterms:title"] = foundSnap.label;
+    }
+    await refreshQuestSaveStateUI(slug);
+    return { success: true, restored: true };
   }
 
   currentData.questSaveState = null;
@@ -7706,10 +8509,27 @@ function setupCampaignQuestControls() {
   document.getElementById("btn-quest-review-edit-heroes")?.addEventListener("click", () => switchCampaignSubtab("subtab-campaign-heroes"));
   document.getElementById("btn-quest-review-trade")?.addEventListener("click", () => openBetweenQuestsTradeModal());
 
-  // 2) Quest Save State Controls (Save State From Now, Refresh, Clear)
+  // 2) Quest Save State Controls (Save State From Now, Refresh, Clear, Recapture Screenshot)
   document.getElementById("btn-save-quest-state-now")?.addEventListener("click", () => saveQuestStateFromNow());
   document.getElementById("btn-refresh-quest-state")?.addEventListener("click", () => refreshQuestSaveStateUI());
   document.getElementById("btn-clear-quest-state")?.addEventListener("click", () => clearQuestSaveState());
+  document.getElementById("btn-recapture-save-screenshot")?.addEventListener("click", async () => {
+    const q = getActiveQuest();
+    const slug = q?.slug || "custom-quest";
+    const saveState = currentData.questSaveState;
+    if (!saveState) {
+      setStatus("No active saved quest state to capture screenshot for.");
+      return;
+    }
+    const dataUrl = renderQuestStateScreenshotToCanvas(saveState);
+    if (dataUrl && window.robosTabletop?.saveQuestScreenshot) {
+      const res = await window.robosTabletop.saveQuestScreenshot({ cartridgeSlug: slug, screenshotDataUrl: dataUrl });
+      if (res && res.success) {
+        await refreshQuestSaveStateUI(slug);
+        setStatus("Captured & persisted updated game state screenshot.");
+      }
+    }
+  });
 
   // 3) Launch Game in Saved State vs New Quest State Buttons
   document.getElementById("btn-launch-saved-hero")?.addEventListener("click", () => launchQuestInMode("player", "saved"));
@@ -7965,6 +8785,10 @@ if (typeof window !== "undefined") {
   };
 
   window._tabletopQuestState = {
+    DEFAULT_SAVE_STATE_SCHEMA,
+    normalizeSaveStateToKGraphInRenderer,
+    renderQuestStateScreenshotToCanvas,
+    formatKGraphTelemetryMetricValue,
     loadActiveQuestCartridgeInfo,
     renderQuestHeroesReviewGrid,
     launchQuestEditorForActiveQuest,
@@ -8141,6 +8965,10 @@ if (typeof module !== "undefined" && module.exports) {
     applyClassToMonster,
     applyClassToHero,
     createCustomMonsterFromClass,
+    DEFAULT_SAVE_STATE_SCHEMA,
+    normalizeSaveStateToKGraphInRenderer,
+    renderQuestStateScreenshotToCanvas,
+    formatKGraphTelemetryMetricValue,
     loadActiveQuestCartridgeInfo,
     renderQuestHeroesReviewGrid,
     launchQuestEditorForActiveQuest,
@@ -8150,3 +8978,4 @@ if (typeof module !== "undefined" && module.exports) {
     launchQuestInMode
   };
 }
+

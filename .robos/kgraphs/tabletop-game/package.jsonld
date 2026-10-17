@@ -60,7 +60,33 @@
       "robos:startingWeapon": "urn:robos:game:item:broadsword",
       "robos:tokenColor": "#b91c1c",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:heroClass": "Barbariankujh",
+      "robos:gold": 100,
+      "robos:equippedWeapon": "Broadsword (3 Combat Dice)",
+      "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
+      "robos:inventory": [
+        {
+          "id": "item-pot-heal-1",
+          "name": "Potion of Healing",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        },
+        {
+          "id": "item-rope-1",
+          "name": "Heavy Rope (30 ft)",
+          "type": "tool",
+          "effect": "Climb pits & gaps",
+          "value": 25
+        }
+      ],
+      "robos:specialAbility": "",
+      "robos:icon": "🛡️",
+      "robos:startingPosition": [
+        1,
+        1
+      ]
     },
     {
       "@id": "urn:robos:tabletop:hero:dwarf",
@@ -2548,7 +2574,33 @@
       "robos:startingWeapon": "urn:robos:game:item:broadsword",
       "robos:tokenColor": "#b91c1c",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:heroClass": "Barbariankujh",
+      "robos:gold": 100,
+      "robos:equippedWeapon": "Broadsword (3 Combat Dice)",
+      "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
+      "robos:inventory": [
+        {
+          "id": "item-pot-heal-1",
+          "name": "Potion of Healing",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        },
+        {
+          "id": "item-rope-1",
+          "name": "Heavy Rope (30 ft)",
+          "type": "tool",
+          "effect": "Climb pits & gaps",
+          "value": 25
+        }
+      ],
+      "robos:specialAbility": "",
+      "robos:icon": "🛡️",
+      "robos:startingPosition": [
+        1,
+        1
+      ]
     },
     {
       "@id": "urn:robos:tabletop:hero:dwarf",
@@ -4996,6 +5048,2166 @@
       "dcterms:description": "Bipartisan economic magic: solves high prices by printing trillions of new gold coins and calling the resulting inflation 'transitory'.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:savestate:custom-quest",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopQuestSaveState",
+        "schema:Action"
+      ],
+      "dcterms:title": "Quest State — Round 1 (Dwarf (Hero 2 of 4))",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop",
+      "robos:questSlug": "custom-quest",
+      "robos:mapId": "custom-quest",
+      "robos:gridDimensions": [
+        26,
+        19
+      ],
+      "robos:savedAt": "2026-10-17T21:27:53.000Z",
+      "robos:savedAtUnix": 1792272473,
+      "robos:playTimeSeconds": 389,
+      "robos:playTimeFormatted": "6m 29s",
+      "robos:currentRound": 1,
+      "robos:currentPhase": "hero_phase",
+      "robos:currentRole": "player",
+      "robos:activeHeroIndex": 1,
+      "robos:activeTurnActor": "Dwarf (Hero 2 of 4)",
+      "robos:turnState": "moving",
+      "robos:movementRemaining": 3,
+      "robos:movementRolled": true,
+      "robos:hasMovedThisTurn": true,
+      "robos:hasActedThisTurn": false,
+      "robos:movementTrail": [
+        [
+          7,
+          14
+        ],
+        [
+          7,
+          15
+        ],
+        [
+          7,
+          16
+        ],
+        [
+          7,
+          17
+        ],
+        [
+          7,
+          18
+        ]
+      ],
+      "robos:heroStates": [
+        {
+          "@type": "robos:TabletopSaveHeroState",
+          "id": "barbarian",
+          "name": "Barbarian",
+          "heroClass": "Barbarian",
+          "currentBP": 8,
+          "maxBP": 8,
+          "currentMP": 2,
+          "maxMP": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "gold": 0,
+          "gridPos": [
+            7,
+            17
+          ],
+          "weapon": "broadsword",
+          "armor": "none",
+          "inventory": [
+            "broadsword",
+            "healing_potion"
+          ],
+          "spells": [],
+          "usedSpells": [],
+          "spellsRemaining": 0,
+          "hasDepartedStart": true,
+          "isOnBoard": true,
+          "alive": true,
+          "escaped": false,
+          "isActiveTurn": false
+        },
+        {
+          "@type": "robos:TabletopSaveHeroState",
+          "id": "dwarf",
+          "name": "Dwarf",
+          "heroClass": "Dwarf",
+          "currentBP": 7,
+          "maxBP": 7,
+          "currentMP": 3,
+          "maxMP": 3,
+          "attackDice": 2,
+          "defendDice": 2,
+          "gold": 0,
+          "gridPos": [
+            7,
+            18
+          ],
+          "weapon": "shortsword",
+          "armor": "none",
+          "inventory": [
+            "shortsword",
+            "healing_potion"
+          ],
+          "spells": [],
+          "usedSpells": [],
+          "spellsRemaining": 0,
+          "hasDepartedStart": true,
+          "isOnBoard": true,
+          "alive": true,
+          "escaped": false,
+          "isActiveTurn": true
+        },
+        {
+          "@type": "robos:TabletopSaveHeroState",
+          "id": "elf",
+          "name": "Elf",
+          "heroClass": "Elf",
+          "currentBP": 6,
+          "maxBP": 6,
+          "currentMP": 4,
+          "maxMP": 4,
+          "attackDice": 2,
+          "defendDice": 2,
+          "gold": 0,
+          "gridPos": [
+            7,
+            14
+          ],
+          "weapon": "shortsword",
+          "armor": "none",
+          "inventory": [
+            "shortsword",
+            "healing_potion"
+          ],
+          "spells": [
+            "water_of_healing",
+            "sleep",
+            "veil_of_mist"
+          ],
+          "usedSpells": [],
+          "spellsRemaining": 3,
+          "hasDepartedStart": false,
+          "isOnBoard": true,
+          "alive": true,
+          "escaped": false,
+          "isActiveTurn": false
+        },
+        {
+          "@type": "robos:TabletopSaveHeroState",
+          "id": "wizard",
+          "name": "Wizard",
+          "heroClass": "Wizard",
+          "currentBP": 4,
+          "maxBP": 4,
+          "currentMP": 6,
+          "maxMP": 6,
+          "attackDice": 1,
+          "defendDice": 2,
+          "gold": 0,
+          "gridPos": [
+            7,
+            14
+          ],
+          "weapon": "dagger",
+          "armor": "none",
+          "inventory": [
+            "dagger",
+            "staff",
+            "healing_potion"
+          ],
+          "spells": [
+            "heal_body",
+            "pass_through_rock",
+            "rock_skin",
+            "ball_of_flame",
+            "fire_of_wrath",
+            "courage",
+            "genie",
+            "swift_wind",
+            "tempest"
+          ],
+          "usedSpells": [],
+          "spellsRemaining": 9,
+          "hasDepartedStart": false,
+          "isOnBoard": true,
+          "alive": true,
+          "escaped": false,
+          "isActiveTurn": false
+        }
+      ],
+      "robos:visibleMonsters": [
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-orc-23",
+          "name": "Orc who hesited chest",
+          "monsterType": "orc",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            18,
+            18
+          ],
+          "roomId": "",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": true
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-goblin-23",
+          "name": "Goblin who hesited chest",
+          "monsterType": "goblin",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 1,
+          "attackDice": 2,
+          "defendDice": 1,
+          "movementSquares": 10,
+          "gridPos": [
+            16,
+            18
+          ],
+          "roomId": "",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": true
+        }
+      ],
+      "robos:visibleMonstersCount": 2,
+      "robos:allMonsters": [
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-boss-3",
+          "name": "Doomguard",
+          "monsterType": "boss",
+          "currentBP": 4,
+          "maxBP": 4,
+          "mindPoints": 5,
+          "attackDice": 4,
+          "defendDice": 4,
+          "movementSquares": 8,
+          "gridPos": [
+            15,
+            15
+          ],
+          "roomId": "room-se-21",
+          "isBoss": true,
+          "isUndead": false,
+          "isSpellcaster": true,
+          "spells": [
+            "lightning-bolt",
+            "firestorm"
+          ],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-chaos_warrior-5",
+          "name": "Chaos Warrior",
+          "monsterType": "chaos_warrior",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 3,
+          "attackDice": 3,
+          "defendDice": 2,
+          "movementSquares": 7,
+          "gridPos": [
+            15,
+            14
+          ],
+          "roomId": "room-se-21",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-chaos_warrior-6",
+          "name": "Chaos Warrior",
+          "monsterType": "chaos_warrior",
+          "currentBP": 2,
+          "maxBP": 2,
+          "mindPoints": 3,
+          "attackDice": 3,
+          "defendDice": 4,
+          "movementSquares": 7,
+          "gridPos": [
+            6,
+            7
+          ],
+          "roomId": "room-nw-22",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-chaos_warrior-7",
+          "name": "Chaos Warrior",
+          "monsterType": "chaos_warrior",
+          "currentBP": 2,
+          "maxBP": 2,
+          "mindPoints": 3,
+          "attackDice": 3,
+          "defendDice": 4,
+          "movementSquares": 7,
+          "gridPos": [
+            6,
+            6
+          ],
+          "roomId": "room-nw-22",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-orc-22",
+          "name": "Orc",
+          "monsterType": "orc",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            4,
+            7
+          ],
+          "roomId": "room-nw-4",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-orc-24",
+          "name": "Orc",
+          "monsterType": "orc",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            3,
+            7
+          ],
+          "roomId": "room-nw-4",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-orc-25",
+          "name": "Orc",
+          "monsterType": "orc",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            22,
+            12
+          ],
+          "roomId": "room-se-18",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-orc-8",
+          "name": "Orc",
+          "monsterType": "orc",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            10,
+            14
+          ],
+          "roomId": "room-sw-9",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-orc-champion-4",
+          "name": "Witch Hand",
+          "monsterType": "orc",
+          "currentBP": 5,
+          "maxBP": 5,
+          "mindPoints": 5,
+          "attackDice": 4,
+          "defendDice": 4,
+          "movementSquares": 8,
+          "gridPos": [
+            11,
+            9
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": true,
+          "isUndead": false,
+          "isSpellcaster": true,
+          "spells": [
+            "lightning-bolt",
+            "firestorm"
+          ],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-10",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            11,
+            14
+          ],
+          "roomId": "room-sw-9",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-11",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            19,
+            16
+          ],
+          "roomId": "room-se-20",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-15",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            11,
+            10
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-16",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            11,
+            11
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-17",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            12,
+            11
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-18",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            11,
+            8
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-19",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            11,
+            7
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-20",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            12,
+            7
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-21",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            3,
+            8
+          ],
+          "roomId": "room-nw-4",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-23",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            22,
+            11
+          ],
+          "roomId": "room-se-18",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-24",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            23,
+            11
+          ],
+          "roomId": "room-se-18",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-9",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            10,
+            15
+          ],
+          "roomId": "room-sw-9",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-orc-23",
+          "name": "Orc who hesited chest",
+          "monsterType": "orc",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            18,
+            18
+          ],
+          "roomId": "",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": true
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-goblin-23",
+          "name": "Goblin who hesited chest",
+          "monsterType": "goblin",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 1,
+          "attackDice": 2,
+          "defendDice": 1,
+          "movementSquares": 10,
+          "gridPos": [
+            16,
+            18
+          ],
+          "roomId": "",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": true
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-goblin-24",
+          "name": "Goblin",
+          "monsterType": "goblin",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 1,
+          "attackDice": 2,
+          "defendDice": 1,
+          "movementSquares": 10,
+          "gridPos": [
+            18,
+            11
+          ],
+          "roomId": "room-se-17",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        }
+      ],
+      "robos:totalMonstersAlive": 24,
+      "robos:monstersDefeated": 0,
+      "robos:itemsFound": [
+        {
+          "id": "barbarian-broadsword-0",
+          "name": "Broadsword",
+          "type": "equipment",
+          "holder": "Barbarian",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "barbarian-healing_potion-1",
+          "name": "Healing Potion",
+          "type": "potion",
+          "holder": "Barbarian",
+          "source": "Hero Inventory",
+          "icon": "🧪"
+        },
+        {
+          "id": "dwarf-shortsword-0",
+          "name": "Shortsword",
+          "type": "equipment",
+          "holder": "Dwarf",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "dwarf-healing_potion-1",
+          "name": "Healing Potion",
+          "type": "potion",
+          "holder": "Dwarf",
+          "source": "Hero Inventory",
+          "icon": "🧪"
+        },
+        {
+          "id": "elf-shortsword-0",
+          "name": "Shortsword",
+          "type": "equipment",
+          "holder": "Elf",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "elf-healing_potion-1",
+          "name": "Healing Potion",
+          "type": "potion",
+          "holder": "Elf",
+          "source": "Hero Inventory",
+          "icon": "🧪"
+        },
+        {
+          "id": "wizard-dagger-0",
+          "name": "Dagger",
+          "type": "equipment",
+          "holder": "Wizard",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "wizard-staff-1",
+          "name": "Staff",
+          "type": "equipment",
+          "holder": "Wizard",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "wizard-healing_potion-2",
+          "name": "Healing Potion",
+          "type": "potion",
+          "holder": "Wizard",
+          "source": "Hero Inventory",
+          "icon": "🧪"
+        }
+      ],
+      "robos:itemsFoundCount": 9,
+      "robos:totalPartyGold": 0,
+      "robos:exploredTilesCount": 33,
+      "robos:exploredTiles": [
+        [
+          5,
+          14
+        ],
+        [
+          5,
+          15
+        ],
+        [
+          5,
+          16
+        ],
+        [
+          5,
+          17
+        ],
+        [
+          6,
+          14
+        ],
+        [
+          6,
+          15
+        ],
+        [
+          6,
+          16
+        ],
+        [
+          6,
+          17
+        ],
+        [
+          7,
+          14
+        ],
+        [
+          7,
+          15
+        ],
+        [
+          7,
+          16
+        ],
+        [
+          7,
+          17
+        ],
+        [
+          8,
+          14
+        ],
+        [
+          8,
+          15
+        ],
+        [
+          8,
+          16
+        ],
+        [
+          8,
+          17
+        ],
+        [
+          -1,
+          4
+        ],
+        [
+          6,
+          18
+        ],
+        [
+          7,
+          18
+        ],
+        [
+          4,
+          18
+        ],
+        [
+          5,
+          18
+        ],
+        [
+          8,
+          18
+        ],
+        [
+          9,
+          18
+        ],
+        [
+          10,
+          18
+        ],
+        [
+          11,
+          18
+        ],
+        [
+          12,
+          18
+        ],
+        [
+          13,
+          18
+        ],
+        [
+          14,
+          18
+        ],
+        [
+          15,
+          18
+        ],
+        [
+          16,
+          18
+        ],
+        [
+          17,
+          18
+        ],
+        [
+          18,
+          18
+        ],
+        [
+          19,
+          18
+        ]
+      ],
+      "robos:revealedRooms": [
+        "room-sw-8"
+      ],
+      "robos:searchedRooms": [
+        "room-sw-8"
+      ],
+      "robos:doorsOpenCount": 2,
+      "robos:doorsSecretRevealedCount": 0,
+      "robos:doorsTotalCount": 12,
+      "robos:doors": [
+        {
+          "from": [
+            7,
+            17
+          ],
+          "hidden": false,
+          "id": "door-1",
+          "is_open": true,
+          "is_revealed": true,
+          "is_secret": false,
+          "room": "room-sw-8",
+          "state": "closed",
+          "to": [
+            7,
+            18
+          ]
+        },
+        {
+          "from": [
+            15,
+            17
+          ],
+          "hidden": false,
+          "id": "door-2",
+          "is_open": false,
+          "is_revealed": true,
+          "is_secret": false,
+          "room": "room-se-21",
+          "state": "closed",
+          "to": [
+            15,
+            18
+          ]
+        },
+        {
+          "from": [
+            23,
+            10
+          ],
+          "hidden": false,
+          "id": "door-5",
+          "is_open": false,
+          "is_revealed": true,
+          "is_secret": false,
+          "room": "room-se-18",
+          "state": "closed",
+          "to": [
+            23,
+            9
+          ]
+        },
+        {
+          "from": [
+            16,
+            16
+          ],
+          "hidden": false,
+          "id": "door-6",
+          "is_open": false,
+          "is_revealed": false,
+          "is_secret": true,
+          "room": "room-se-21",
+          "state": "closed",
+          "to": [
+            17,
+            16
+          ]
+        },
+        {
+          "from": [
+            19,
+            15
+          ],
+          "hidden": false,
+          "id": "door-7",
+          "is_open": false,
+          "is_revealed": true,
+          "is_secret": false,
+          "room": "room-se-20",
+          "state": "closed",
+          "to": [
+            19,
+            14
+          ]
+        },
+        {
+          "from": [
+            0,
+            6
+          ],
+          "hidden": false,
+          "id": "door-9",
+          "is_open": false,
+          "is_revealed": false,
+          "is_secret": true,
+          "room": "room-nw-4",
+          "state": "closed",
+          "to": [
+            1,
+            6
+          ]
+        },
+        {
+          "from": [
+            10,
+            17
+          ],
+          "hidden": false,
+          "id": "door-9",
+          "is_open": false,
+          "is_revealed": true,
+          "is_secret": false,
+          "room": "room-sw-9",
+          "state": "closed",
+          "to": [
+            10,
+            18
+          ]
+        },
+        {
+          "from": [
+            15,
+            9
+          ],
+          "hidden": false,
+          "id": "door-10",
+          "is_open": false,
+          "is_revealed": true,
+          "is_secret": false,
+          "room": "room-nw-10",
+          "state": "closed",
+          "to": [
+            16,
+            9
+          ]
+        },
+        {
+          "from": [
+            8,
+            7
+          ],
+          "hidden": false,
+          "id": "door-11",
+          "is_open": false,
+          "is_revealed": true,
+          "is_secret": false,
+          "room": "room-nw-22",
+          "state": "closed",
+          "to": [
+            9,
+            7
+          ]
+        },
+        {
+          "from": [
+            4,
+            6
+          ],
+          "hidden": false,
+          "id": "door-11",
+          "is_open": false,
+          "is_revealed": true,
+          "is_secret": false,
+          "room": "room-nw-4",
+          "state": "closed",
+          "to": [
+            5,
+            6
+          ]
+        },
+        {
+          "from": [
+            10,
+            8
+          ],
+          "hidden": false,
+          "id": "door-12",
+          "is_open": false,
+          "is_revealed": true,
+          "is_secret": false,
+          "room": "room-nw-10",
+          "state": "closed",
+          "to": [
+            9,
+            8
+          ]
+        },
+        {
+          "from": [
+            21,
+            12
+          ],
+          "hidden": false,
+          "id": "door-12",
+          "is_open": true,
+          "is_revealed": true,
+          "is_secret": false,
+          "room": "room-se-18",
+          "state": "open",
+          "to": [
+            20,
+            12
+          ]
+        }
+      ],
+      "robos:furniture": [
+        {
+          "height": 2,
+          "hidden": false,
+          "id": "furn-stairs_down_2x2-1",
+          "name": "Down Staircase (2×2)",
+          "roomId": "room-sw-8",
+          "treasure": "",
+          "type": "stairs_down_2x2",
+          "width": 2,
+          "x": 7,
+          "y": 14
+        },
+        {
+          "height": 1,
+          "hidden": true,
+          "id": "furn-chest-3",
+          "name": "Heist Treasure Chest",
+          "roomId": "",
+          "treasure": "",
+          "type": "chest",
+          "width": 1,
+          "x": 17,
+          "y": 18
+        }
+      ],
+      "robos:trapsDetectedCount": 0,
+      "robos:trapsTotalCount": 1,
+      "robos:triggersFired": [
+        {
+          "id": "trigger-note-a-2bug",
+          "title": "Note A Encounter",
+          "event": "on_tile_stepped_on",
+          "tile": [
+            7,
+            18
+          ]
+        }
+      ],
+      "robos:triggersFiredCount": 1,
+      "robos:triggersTotalCount": 3,
+      "robos:treasureDeckRemaining": 16,
+      "robos:currentElfElement": "water",
+      "robos:screenshotPath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_custom-quest_custom-quest.png",
+      "robos:screenshotDataUrl": "",
+      "robos:saveFilePath": "",
+      "label": "Quest State — Round 1 (Dwarf (Hero 2 of 4))",
+      "saved_at": 1792272473,
+      "saved_at_iso": "2026-10-17T21:27:53.000Z",
+      "cartridge_id": "custom-quest",
+      "cartridge_slug": "custom-quest",
+      "round_num": 1,
+      "current_round": 1,
+      "phase": "hero_phase",
+      "current_phase": "hero_phase",
+      "active_hero_idx": 1,
+      "active_turn_actor": "Dwarf (Hero 2 of 4)",
+      "turn_state": "moving",
+      "play_time_seconds": 389,
+      "play_time_formatted": "6m 29s",
+      "heroes": [
+        {
+          "@type": "robos:TabletopSaveHeroState",
+          "id": "barbarian",
+          "name": "Barbarian",
+          "heroClass": "Barbarian",
+          "currentBP": 8,
+          "maxBP": 8,
+          "currentMP": 2,
+          "maxMP": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "gold": 0,
+          "gridPos": [
+            7,
+            17
+          ],
+          "weapon": "broadsword",
+          "armor": "none",
+          "inventory": [
+            "broadsword",
+            "healing_potion"
+          ],
+          "spells": [],
+          "usedSpells": [],
+          "spellsRemaining": 0,
+          "hasDepartedStart": true,
+          "isOnBoard": true,
+          "alive": true,
+          "escaped": false,
+          "isActiveTurn": false,
+          "hp": 8,
+          "max_hp": 8,
+          "bp": 8,
+          "max_bp": 8,
+          "mp": 2,
+          "max_mp": 2,
+          "grid_pos": [
+            7,
+            17
+          ]
+        },
+        {
+          "@type": "robos:TabletopSaveHeroState",
+          "id": "dwarf",
+          "name": "Dwarf",
+          "heroClass": "Dwarf",
+          "currentBP": 7,
+          "maxBP": 7,
+          "currentMP": 3,
+          "maxMP": 3,
+          "attackDice": 2,
+          "defendDice": 2,
+          "gold": 0,
+          "gridPos": [
+            7,
+            18
+          ],
+          "weapon": "shortsword",
+          "armor": "none",
+          "inventory": [
+            "shortsword",
+            "healing_potion"
+          ],
+          "spells": [],
+          "usedSpells": [],
+          "spellsRemaining": 0,
+          "hasDepartedStart": true,
+          "isOnBoard": true,
+          "alive": true,
+          "escaped": false,
+          "isActiveTurn": true,
+          "hp": 7,
+          "max_hp": 7,
+          "bp": 7,
+          "max_bp": 7,
+          "mp": 3,
+          "max_mp": 3,
+          "grid_pos": [
+            7,
+            18
+          ]
+        },
+        {
+          "@type": "robos:TabletopSaveHeroState",
+          "id": "elf",
+          "name": "Elf",
+          "heroClass": "Elf",
+          "currentBP": 6,
+          "maxBP": 6,
+          "currentMP": 4,
+          "maxMP": 4,
+          "attackDice": 2,
+          "defendDice": 2,
+          "gold": 0,
+          "gridPos": [
+            7,
+            14
+          ],
+          "weapon": "shortsword",
+          "armor": "none",
+          "inventory": [
+            "shortsword",
+            "healing_potion"
+          ],
+          "spells": [
+            "water_of_healing",
+            "sleep",
+            "veil_of_mist"
+          ],
+          "usedSpells": [],
+          "spellsRemaining": 3,
+          "hasDepartedStart": false,
+          "isOnBoard": true,
+          "alive": true,
+          "escaped": false,
+          "isActiveTurn": false,
+          "hp": 6,
+          "max_hp": 6,
+          "bp": 6,
+          "max_bp": 6,
+          "mp": 4,
+          "max_mp": 4,
+          "grid_pos": [
+            7,
+            14
+          ]
+        },
+        {
+          "@type": "robos:TabletopSaveHeroState",
+          "id": "wizard",
+          "name": "Wizard",
+          "heroClass": "Wizard",
+          "currentBP": 4,
+          "maxBP": 4,
+          "currentMP": 6,
+          "maxMP": 6,
+          "attackDice": 1,
+          "defendDice": 2,
+          "gold": 0,
+          "gridPos": [
+            7,
+            14
+          ],
+          "weapon": "dagger",
+          "armor": "none",
+          "inventory": [
+            "dagger",
+            "staff",
+            "healing_potion"
+          ],
+          "spells": [
+            "heal_body",
+            "pass_through_rock",
+            "rock_skin",
+            "ball_of_flame",
+            "fire_of_wrath",
+            "courage",
+            "genie",
+            "swift_wind",
+            "tempest"
+          ],
+          "usedSpells": [],
+          "spellsRemaining": 9,
+          "hasDepartedStart": false,
+          "isOnBoard": true,
+          "alive": true,
+          "escaped": false,
+          "isActiveTurn": false,
+          "hp": 4,
+          "max_hp": 4,
+          "bp": 4,
+          "max_bp": 4,
+          "mp": 6,
+          "max_mp": 6,
+          "grid_pos": [
+            7,
+            14
+          ]
+        }
+      ],
+      "visible_monsters": [
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-orc-23",
+          "name": "Orc who hesited chest",
+          "monsterType": "orc",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            18,
+            18
+          ],
+          "roomId": "",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": true
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-goblin-23",
+          "name": "Goblin who hesited chest",
+          "monsterType": "goblin",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 1,
+          "attackDice": 2,
+          "defendDice": 1,
+          "movementSquares": 10,
+          "gridPos": [
+            16,
+            18
+          ],
+          "roomId": "",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": true
+        }
+      ],
+      "monsters": [
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-boss-3",
+          "name": "Doomguard",
+          "monsterType": "boss",
+          "currentBP": 4,
+          "maxBP": 4,
+          "mindPoints": 5,
+          "attackDice": 4,
+          "defendDice": 4,
+          "movementSquares": 8,
+          "gridPos": [
+            15,
+            15
+          ],
+          "roomId": "room-se-21",
+          "isBoss": true,
+          "isUndead": false,
+          "isSpellcaster": true,
+          "spells": [
+            "lightning-bolt",
+            "firestorm"
+          ],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-chaos_warrior-5",
+          "name": "Chaos Warrior",
+          "monsterType": "chaos_warrior",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 3,
+          "attackDice": 3,
+          "defendDice": 2,
+          "movementSquares": 7,
+          "gridPos": [
+            15,
+            14
+          ],
+          "roomId": "room-se-21",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-chaos_warrior-6",
+          "name": "Chaos Warrior",
+          "monsterType": "chaos_warrior",
+          "currentBP": 2,
+          "maxBP": 2,
+          "mindPoints": 3,
+          "attackDice": 3,
+          "defendDice": 4,
+          "movementSquares": 7,
+          "gridPos": [
+            6,
+            7
+          ],
+          "roomId": "room-nw-22",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-chaos_warrior-7",
+          "name": "Chaos Warrior",
+          "monsterType": "chaos_warrior",
+          "currentBP": 2,
+          "maxBP": 2,
+          "mindPoints": 3,
+          "attackDice": 3,
+          "defendDice": 4,
+          "movementSquares": 7,
+          "gridPos": [
+            6,
+            6
+          ],
+          "roomId": "room-nw-22",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-orc-22",
+          "name": "Orc",
+          "monsterType": "orc",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            4,
+            7
+          ],
+          "roomId": "room-nw-4",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-orc-24",
+          "name": "Orc",
+          "monsterType": "orc",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            3,
+            7
+          ],
+          "roomId": "room-nw-4",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-orc-25",
+          "name": "Orc",
+          "monsterType": "orc",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            22,
+            12
+          ],
+          "roomId": "room-se-18",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-orc-8",
+          "name": "Orc",
+          "monsterType": "orc",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            10,
+            14
+          ],
+          "roomId": "room-sw-9",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-orc-champion-4",
+          "name": "Witch Hand",
+          "monsterType": "orc",
+          "currentBP": 5,
+          "maxBP": 5,
+          "mindPoints": 5,
+          "attackDice": 4,
+          "defendDice": 4,
+          "movementSquares": 8,
+          "gridPos": [
+            11,
+            9
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": true,
+          "isUndead": false,
+          "isSpellcaster": true,
+          "spells": [
+            "lightning-bolt",
+            "firestorm"
+          ],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-10",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            11,
+            14
+          ],
+          "roomId": "room-sw-9",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-11",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            19,
+            16
+          ],
+          "roomId": "room-se-20",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-15",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            11,
+            10
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-16",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            11,
+            11
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-17",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            12,
+            11
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-18",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            11,
+            8
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-19",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            11,
+            7
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-20",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            12,
+            7
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-21",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            3,
+            8
+          ],
+          "roomId": "room-nw-4",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-23",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            22,
+            11
+          ],
+          "roomId": "room-se-18",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-24",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            23,
+            11
+          ],
+          "roomId": "room-se-18",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-skeleton-9",
+          "name": "Skeleton",
+          "monsterType": "skeleton",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 0,
+          "attackDice": 2,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            10,
+            15
+          ],
+          "roomId": "room-sw-9",
+          "isBoss": false,
+          "isUndead": true,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-orc-23",
+          "name": "Orc who hesited chest",
+          "monsterType": "orc",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "movementSquares": 6,
+          "gridPos": [
+            18,
+            18
+          ],
+          "roomId": "",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": true
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-goblin-23",
+          "name": "Goblin who hesited chest",
+          "monsterType": "goblin",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 1,
+          "attackDice": 2,
+          "defendDice": 1,
+          "movementSquares": 10,
+          "gridPos": [
+            16,
+            18
+          ],
+          "roomId": "",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": true
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-goblin-24",
+          "name": "Goblin",
+          "monsterType": "goblin",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 1,
+          "attackDice": 2,
+          "defendDice": 1,
+          "movementSquares": 10,
+          "gridPos": [
+            18,
+            11
+          ],
+          "roomId": "room-se-17",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": false
+        }
+      ],
+      "items_found": [
+        {
+          "id": "barbarian-broadsword-0",
+          "name": "Broadsword",
+          "type": "equipment",
+          "holder": "Barbarian",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "barbarian-healing_potion-1",
+          "name": "Healing Potion",
+          "type": "potion",
+          "holder": "Barbarian",
+          "source": "Hero Inventory",
+          "icon": "🧪"
+        },
+        {
+          "id": "dwarf-shortsword-0",
+          "name": "Shortsword",
+          "type": "equipment",
+          "holder": "Dwarf",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "dwarf-healing_potion-1",
+          "name": "Healing Potion",
+          "type": "potion",
+          "holder": "Dwarf",
+          "source": "Hero Inventory",
+          "icon": "🧪"
+        },
+        {
+          "id": "elf-shortsword-0",
+          "name": "Shortsword",
+          "type": "equipment",
+          "holder": "Elf",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "elf-healing_potion-1",
+          "name": "Healing Potion",
+          "type": "potion",
+          "holder": "Elf",
+          "source": "Hero Inventory",
+          "icon": "🧪"
+        },
+        {
+          "id": "wizard-dagger-0",
+          "name": "Dagger",
+          "type": "equipment",
+          "holder": "Wizard",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "wizard-staff-1",
+          "name": "Staff",
+          "type": "equipment",
+          "holder": "Wizard",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "wizard-healing_potion-2",
+          "name": "Healing Potion",
+          "type": "potion",
+          "holder": "Wizard",
+          "source": "Hero Inventory",
+          "icon": "🧪"
+        }
+      ],
+      "revealed_rooms": [
+        "room-sw-8"
+      ],
+      "searched_treasure_rooms": [
+        "room-sw-8"
+      ]
     }
   ]
 }

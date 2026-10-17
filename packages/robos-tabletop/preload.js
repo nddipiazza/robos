@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld("robosTabletop", {
   launchQuestEditor: (payload) => ipcRenderer.invoke("tabletop:launch-quest-editor", payload),
   getQuestSaveState: (slug) => ipcRenderer.invoke("tabletop:get-quest-save-state", slug),
   saveQuestStateNow: (payload) => ipcRenderer.invoke("tabletop:save-quest-state-now", payload),
+  saveQuestScreenshot: (payload) => ipcRenderer.invoke("tabletop:save-quest-screenshot", payload),
   clearQuestSaveState: (payload) => ipcRenderer.invoke("tabletop:clear-quest-save-state", payload),
   launchGame: (payload) => ipcRenderer.invoke("tabletop:launch-game", payload),
   getMapConfigs: () => ipcRenderer.invoke("tabletop:get-map-configs"),
