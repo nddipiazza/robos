@@ -38,6 +38,7 @@ const {
   exportPng,
   exportPdf,
   copyPngToClipboard,
+  findEntityAt,
   state,
   dom,
   TRIGGER_EVENT_DEFS,
@@ -3338,6 +3339,190 @@ test('Brand Logo & Small Display: provides AI generated logo image and robust re
   assert.ok(css.includes('object-fit: contain'), 'Logo preserves aspect ratio');
   assert.ok(css.includes('@media (max-width: 900px)'), 'style.css contains responsive small display media queries');
   assert.ok(css.includes('@media (max-width: 1300px)'), 'style.css contains subtitle responsive collapse');
+});
+
+// -------------------------------------------------------------
+// Test 39: Double Doors (2×1 Horizontal & 1×2 Vertical)
+// -------------------------------------------------------------
+test('Double Doors: supports creating 2x1 horizontal and 1x2 vertical double doors, hit-testing across both spanned tiles, validation, and cartridge serialization', () => {
+  const savedQuest = JSON.parse(JSON.stringify(state.quest));
+  const savedSubtool = JSON.parse(JSON.stringify(state.subtool));
+
+  try {
+    // 1. Create Door 1: 2x1 (Horizontal)
+    const doubleDoor1 = {
+      id: 'door-double-2x1',
+      name: 'Grand Chamber Double Door',
+      from: [2, 4],
+      to: [2, 5],
+      door_type: 'double-2x1',
+      width: 2,
+      height: 1,
+      state: 'closed',
+      is_secret: false,
+      room: 'room-nw'
+    };
+
+    // 2. Create Door 2: 1x2 (Vertical)
+    const doubleDoor2 = {
+      id: 'door-double-1x2',
+      name: 'War Room Double Door',
+      from: [6, 2],
+      to: [7, 2],
+      door_type: 'double-1x2',
+      width: 1,
+      height: 2,
+      state: 'open',
+      is_secret: false,
+      room: 'room-ne'
+    };
+
+    state.quest.doors = [doubleDoor1, doubleDoor2];
+
+    // 3. Hit-testing: findEntityAt must find Door 1 on all 4 adjacent spanned coordinates
+    assert.deepEqual(findEntityAt(2, 4)?.data?.id, 'door-double-2x1', 'Anchor tile [2, 4] finds double door 1');
+    assert.deepEqual(findEntityAt(2, 5)?.data?.id, 'door-double-2x1', 'Target tile [2, 5] finds double door 1');
+    assert.deepEqual(findEntityAt(3, 4)?.data?.id, 'door-double-2x1', 'Spanned column tile [3, 4] finds double door 1');
+    assert.deepEqual(findEntityAt(3, 5)?.data?.id, 'door-double-2x1', 'Spanned column tile [3, 5] finds double door 1');
+
+    // 4. Hit-testing: findEntityAt must find Door 2 on all 4 adjacent spanned coordinates
+    assert.deepEqual(findEntityAt(6, 2)?.data?.id, 'door-double-1x2', 'Anchor tile [6, 2] finds double door 2');
+    assert.deepEqual(findEntityAt(7, 2)?.data?.id, 'door-double-1x2', 'Target tile [7, 2] finds double door 2');
+    assert.deepEqual(findEntityAt(6, 3)?.data?.id, 'door-double-1x2', 'Spanned row tile [6, 3] finds double door 2');
+    assert.deepEqual(findEntityAt(7, 3)?.data?.id, 'door-double-1x2', 'Spanned row tile [7, 3] finds double door 2');
+
+    // 5. Unrelated tile returns null
+    assert.equal(findEntityAt(10, 10), null, 'Unrelated tile has no entity');
+
+    // 6. Cartridge Serialization preserves door_type, width, and height for both double doors
+    const payload = buildCartridgePayload();
+    const serializedDoors = payload.maps[state.quest.slug].doors;
+    assert.equal(serializedDoors.length, 2, '2 doors serialized');
+
+    const sD1 = serializedDoors.find(d => d.id === 'door-double-2x1');
+    assert.ok(sD1, 'door-double-2x1 present in cartridge');
+    assert.equal(sD1.door_type, 'double-2x1');
+    assert.equal(sD1.width, 2);
+    assert.equal(sD1.height, 1);
+    assert.equal(sD1.state, 'closed');
+
+    const sD2 = serializedDoors.find(d => d.id === 'door-double-1x2');
+    assert.ok(sD2, 'door-double-1x2 present in cartridge');
+    assert.equal(sD2.door_type, 'double-1x2');
+    assert.equal(sD2.width, 1);
+    assert.equal(sD2.height, 2);
+    assert.equal(sD2.state, 'open');
+  } finally {
+    state.quest = savedQuest;
+    state.subtool = savedSubtool;
+  }
+});
+
+// -------------------------------------------------------------
+// Test 40: Double Door Validation
+// -------------------------------------------------------------
+test('Double Door Validation: validates perimeter wall placement across both spanned tiles of 2x1 and 1x2 double doors', () => {
+  const dummyBlockmap = {
+    id: 'test-blockmap',
+    gridDimensions: [26, 19],
+    rooms: [
+      { id: 'room-1', x: 2, y: 2, w: 4, h: 4 },
+      { id: 'room-2', x: 10, y: 2, w: 4, h: 4 }
+    ],
+    corridors: [
+      [2, 6], [3, 6], [4, 6], [5, 6],
+      [10, 6], [11, 6], [12, 6], [13, 6]
+    ]
+  };
+
+  // 1. Valid 2x1 double door on room-1 South perimeter wall:
+  // Tile [2, 5] is inside room-1, [2, 6] is corridor
+  // Spanned tile [3, 5] is inside room-1, [3, 6] is corridor
+  const validQuest = {
+    doors: [
+      {
+        id: 'door-valid-2x1',
+        name: 'Valid South 2x1 Door',
+        from: [2, 5],
+        to: [2, 6],
+        door_type: 'double-2x1',
+        width: 2,
+        height: 1,
+        state: 'closed'
+      }
+    ],
+    furniture: [],
+    monsters: [],
+    traps: [],
+    wallBlocks: []
+  };
+
+  const valRes1 = validateQuestFn(validQuest, dummyBlockmap);
+  const doorErrors1 = valRes1.errors.filter(e => e.category === 'door_wall');
+  assert.equal(doorErrors1.length, 0, 'Valid 2x1 double door produces 0 door_wall errors');
+
+  // 2. Invalid 2x1 double door floating completely in corridor (both halves are in corridor)
+  const floatingQuest = {
+    doors: [
+      {
+        id: 'door-floating-2x1',
+        name: 'Floating 2x1 Door',
+        from: [2, 6],
+        to: [2, 7],
+        door_type: 'double-2x1',
+        width: 2,
+        height: 1,
+        state: 'closed'
+      }
+    ],
+    furniture: [],
+    monsters: [],
+    traps: [],
+    wallBlocks: []
+  };
+
+  const valRes2 = validateQuestFn(floatingQuest, dummyBlockmap);
+  const doorErrors2 = valRes2.errors.filter(e => e.category === 'door_wall');
+  assert.ok(doorErrors2.length > 0, 'Floating 2x1 double door produces door_wall error');
+  assert.ok(doorErrors2[0].description.includes('not attached to any room perimeter wall'));
+  assert.equal(doorErrors2[0].allTiles.length, 4, 'Warning overlay includes all 4 spanned tiles');
+
+  // 3. Invalid 1x2 double door completely inside open room interior
+  const interiorQuest = {
+    doors: [
+      {
+        id: 'door-interior-1x2',
+        name: 'Interior 1x2 Door',
+        from: [3, 3],
+        to: [4, 3],
+        door_type: 'double-1x2',
+        width: 1,
+        height: 2,
+        state: 'closed'
+      }
+    ],
+    furniture: [],
+    monsters: [],
+    traps: [],
+    wallBlocks: []
+  };
+
+  const valRes3 = validateQuestFn(interiorQuest, dummyBlockmap);
+  const doorErrors3 = valRes3.errors.filter(e => e.category === 'door_wall');
+  assert.ok(doorErrors3.length > 0, 'Interior 1x2 double door produces door_wall error');
+  assert.ok(doorErrors3[0].description.includes('inside open floor space'));
+  assert.equal(doorErrors3[0].allTiles.length, 4, 'Warning overlay includes all 4 spanned tiles');
+});
+
+// -------------------------------------------------------------
+// Test 41: Quest Briefing Relabeling
+// -------------------------------------------------------------
+test('Quest Briefing Relabeling: index.html displays "Quest Briefing" instead of "Mentor\'s Quest Parchment Briefing"', () => {
+  const htmlPath = path.join(__dirname, '../renderer/index.html');
+  const html = fs.readFileSync(htmlPath, 'utf8');
+
+  assert.ok(html.includes('<h3>📜 Quest Briefing</h3>'), 'Section card displays "<h3>📜 Quest Briefing</h3>"');
+  assert.ok(!html.includes("Mentor's Quest Parchment Briefing"), 'Does not contain outdated "Mentor\'s Quest Parchment Briefing" label');
 });
 
 

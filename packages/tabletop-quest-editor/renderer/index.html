@@ -181,6 +181,14 @@
 
           <!-- Door suboptions -->
           <div id="subopts-door" class="subopts-group active">
+            <div class="form-row" style="margin-bottom:6px;">
+              <select id="select-door-size" class="dropdown dropdown-sm" style="width:100%;">
+                <option value="single" selected>🚪 Single Door (1×1)</option>
+                <option value="double-2x1">🚪 Double Door 1: Horizontal (2×1)</option>
+                <option value="double-1x2">🚪 Double Door 2: Vertical (1×2)</option>
+                <option value="double-auto">🚪 Double Door (Auto 2×1 / 1×2 by Wall)</option>
+              </select>
+            </div>
             <div class="subopt-row">
               <label class="radio-label">
                 <input type="radio" name="door-type" value="wood-closed" checked> Wood Door <span class="door-status-pill door-badge-closed">CLOSED</span>
@@ -398,9 +406,9 @@
           </div>
 
           <div class="section-card">
-            <h3>📜 Mentor's Quest Parchment Briefing</h3>
+            <h3>📜 Quest Briefing</h3>
             <p class="section-desc">Prologue narrative read aloud to players before entering the dungeon.</p>
-            <textarea id="textarea-quest-briefing" class="parchment-textarea" rows="6" placeholder="Mentor speaks: 'The Emperor calls upon the kingdom's greatest champions...'"></textarea>
+            <textarea id="textarea-quest-briefing" class="parchment-textarea" rows="6" placeholder="The Emperor calls upon the kingdom's greatest champions..."></textarea>
           </div>
         </div>
 
@@ -472,6 +480,14 @@
                   <select id="inspect-door-state" class="dropdown">
                     <option value="closed">🔒 Closed (Solid Timber Slab)</option>
                     <option value="open">🔓 Open (Passage &amp; Swung Leaf)</option>
+                  </select>
+                </div>
+                <div class="form-row" style="margin-top:6px;">
+                  <label><strong>Door Size / Span:</strong></label>
+                  <select id="inspect-door-type" class="dropdown">
+                    <option value="single">🚪 Single Door (1×1)</option>
+                    <option value="double-2x1">🚪 Double Door 1: Horizontal (2×1)</option>
+                    <option value="double-1x2">🚪 Double Door 2: Vertical (1×2)</option>
                   </select>
                 </div>
                 <div class="form-row" style="margin-top:8px;">

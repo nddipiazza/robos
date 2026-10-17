@@ -299,7 +299,21 @@ appsGrid.addEventListener('click', async (e) => {
   }
 });
 
-// ── Bulk Actions ─────────────────────────────────────────────────────────────
+// ── Bulk Actions (Background Worker Thread) ──────────────────────────────────
+
+const bulkButtons = [
+  document.getElementById('btn-install-all-menu'),
+  document.getElementById('btn-add-all-desktop'),
+  document.getElementById('btn-remove-all-desktop'),
+  document.getElementById('btn-refresh-caches'),
+  document.getElementById('btn-reload'),
+];
+
+function setToolbarBusy(busy) {
+  for (const btn of bulkButtons) {
+    if (btn) btn.disabled = busy;
+  }
+}
 
 async function runBulkInstall(options, startLabel) {
   const targetIds = getTargetAppIds();
@@ -308,20 +322,24 @@ async function runBulkInstall(options, startLabel) {
     return;
   }
 
+  setToolbarBusy(true);
   progressPanel.classList.remove('hidden');
   progressLabel.textContent = `${startLabel} (0/${targetIds.length})...`;
   progressPct.textContent = '0%';
   progressFill.style.width = '0%';
 
   window.robosDesktopInstaller.onProgress((stepData) => {
-    const pct = Math.round((stepData.step / stepData.total) * 100);
-    progressLabel.textContent = `[${stepData.step}/${stepData.total}] ${stepData.label} (${stepData.appId})`;
-    progressPct.textContent = `${pct}%`;
-    progressFill.style.width = `${pct}%`;
+    requestAnimationFrame(() => {
+      const pct = Math.round((stepData.step / stepData.total) * 100);
+      progressLabel.textContent = `[${stepData.step}/${stepData.total}] ${stepData.label} (${stepData.appId})`;
+      progressPct.textContent = `${pct}%`;
+      progressFill.style.width = `${pct}%`;
+    });
   });
 
   const res = await window.robosDesktopInstaller.bulkInstall(targetIds, options);
   progressPanel.classList.add('hidden');
+  setToolbarBusy(false);
 
   if (res.apps) {
     allApps = res.apps;
@@ -332,7 +350,7 @@ async function runBulkInstall(options, startLabel) {
 
   showStatus(
     res.ok
-      ? `Completed: ${res.succeeded} RobOS apps installed and GNOME caches updated.`
+      ? `Completed: ${res.succeeded} RobOS apps installed on background worker and GNOME caches updated.`
       : `Finished with ${res.succeeded} succeeded, ${res.failed} failed.`,
     res.ok ? 'ok' : 'err'
   );
@@ -348,7 +366,9 @@ document.getElementById('btn-add-all-desktop').addEventListener('click', () => {
 
 document.getElementById('btn-remove-all-desktop').addEventListener('click', async () => {
   const targetIds = getTargetAppIds();
+  setToolbarBusy(true);
   const res = await window.robosDesktopInstaller.bulkRemoveDesktop(targetIds);
+  setToolbarBusy(false);
   if (res.apps) {
     allApps = res.apps;
     updateKPIs();
@@ -358,7 +378,9 @@ document.getElementById('btn-remove-all-desktop').addEventListener('click', asyn
 });
 
 document.getElementById('btn-refresh-caches').addEventListener('click', async () => {
+  setToolbarBusy(true);
   const res = await window.robosDesktopInstaller.refreshCaches();
+  setToolbarBusy(false);
   if (res.apps) {
     allApps = res.apps;
     updateKPIs();
@@ -486,10 +508,19 @@ document.getElementById('btn-modal-reinstall').addEventListener('click', async (
   }
 });
 
-// ── Initial Load ─────────────────────────────────────────────────────────────
+// ── Initial Load (Non-blocking on Background Worker Thread) ──────────────────
 
 async function loadApps() {
+  if (allApps.length === 0) {
+    appsGrid.innerHTML = `
+      <div class="empty-state">
+        Scanning RobOS packages and GNOME Desktop directories on background worker thread...
+      </div>
+    `;
+  }
+  setToolbarBusy(true);
   const res = await window.robosDesktopInstaller.listApps();
+  setToolbarBusy(false);
   if (!res || !res.ok) {
     showStatus('Failed to discover RobOS applications.', 'err');
     return;
@@ -500,4 +531,6 @@ async function loadApps() {
   renderApps();
 }
 
-loadApps();
+requestAnimationFrame(() => {
+  loadApps();
+});

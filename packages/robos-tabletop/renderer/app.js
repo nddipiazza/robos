@@ -1,5 +1,21 @@
 'use strict';
 
+if (typeof document === "undefined") {
+  globalThis.document = {
+    getElementById: () => null,
+    querySelector: () => null,
+    querySelectorAll: () => [],
+    createElement: () => ({ style: {}, dataset: {}, classList: { add() {}, remove() {} }, appendChild() {}, addEventListener() {} }),
+    addEventListener: () => {}
+  };
+}
+if (typeof window === "undefined") {
+  globalThis.window = {
+    addEventListener: () => {},
+    robosTabletop: {}
+  };
+}
+
 const doorClosedImg = typeof Image !== "undefined" ? new Image() : null;
 if (doorClosedImg) doorClosedImg.src = "../assets/door_closed.png";
 
@@ -67,15 +83,125 @@ function getTileImage(type) {
   return null;
 }
 
+// Default 4 HeroQuest Champions for initializing a Campaign's Hero Party
+function createDefaultCampaignHeroes(seedHeroes = null) {
+  if (Array.isArray(seedHeroes) && seedHeroes.length > 0) {
+    return JSON.parse(JSON.stringify(seedHeroes));
+  }
+  return [
+    {
+      "@id": "urn:robos:tabletop:hero:barbarian",
+      "@type": ["oslc_am:Resource", "robos:TabletopHero", "robos:GameCharacter", "schema:Person"],
+      "dcterms:title": "Rogar",
+      "robos:characterName": "Rogar",
+      "robos:heroClass": "Barbarian",
+      "robos:bodyPoints": 8,
+      "robos:mindPoints": 2,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2,
+      "robos:gold": 100,
+      "robos:startingWeapon": "Broadsword (3 Combat Dice)",
+      "robos:equippedWeapon": "Broadsword (3 Combat Dice)",
+      "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
+      "robos:specialAbility": "Greatest strength and vitality in melee combat",
+      "robos:tokenColor": "#b91c1c",
+      "robos:icon": "⚔️",
+      "robos:startingPosition": [0, 1],
+      "robos:inventory": [
+        { id: "item-pot-heal-1", name: "Potion of Healing", type: "potion", effect: "Restores up to 4 BP", value: 100 },
+        { id: "item-rope-1", name: "Heavy Rope (30 ft)", type: "tool", effect: "Climb pits & gaps", value: 25 }
+      ]
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:dwarf",
+      "@type": ["oslc_am:Resource", "robos:TabletopHero", "robos:GameCharacter", "schema:Person"],
+      "dcterms:title": "Dorgan",
+      "robos:characterName": "Dorgan",
+      "robos:heroClass": "Dwarf",
+      "robos:bodyPoints": 7,
+      "robos:mindPoints": 3,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:gold": 100,
+      "robos:startingWeapon": "Shortsword (2 Combat Dice)",
+      "robos:equippedWeapon": "Shortsword (2 Combat Dice)",
+      "robos:equippedArmor": "Shield & Chainmail (+2 Defend Dice)",
+      "robos:specialAbility": "Disarms traps without needing a toolkit",
+      "robos:tokenColor": "#d97706",
+      "robos:icon": "🪓",
+      "robos:startingPosition": [1, 0],
+      "robos:inventory": [
+        { id: "item-toolkit-1", name: "Trap Disarm Toolkit", type: "tool", effect: "Disarm traps without rolling skull", value: 75 },
+        { id: "item-pot-heal-2", name: "Potion of Healing", type: "potion", effect: "Restores up to 4 BP", value: 100 }
+      ]
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:elf",
+      "@type": ["oslc_am:Resource", "robos:TabletopHero", "robos:GameCharacter", "schema:Person"],
+      "dcterms:title": "Ladril",
+      "robos:characterName": "Ladril",
+      "robos:heroClass": "Elf",
+      "robos:bodyPoints": 6,
+      "robos:mindPoints": 4,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:gold": 100,
+      "robos:startingWeapon": "Shortsword (2 Combat Dice)",
+      "robos:equippedWeapon": "Shortsword (2 Combat Dice)",
+      "robos:equippedArmor": "Elven Leather & Cloak (+2 Defend Dice)",
+      "robos:specialAbility": "Master of blade and 1 Elemental Spell deck (3 spells)",
+      "robos:tokenColor": "#15803d",
+      "robos:icon": "🏹",
+      "robos:startingPosition": [1, 1],
+      "robos:inventory": [
+        { id: "item-torch-1", name: "Dungeon Torch", type: "tool", effect: "Detect hidden traps in room", value: 15 },
+        { id: "item-strength-1", name: "Potion of Strength", type: "potion", effect: "+2 Attack Dice for 1 turn", value: 150 }
+      ]
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:wizard",
+      "@type": ["oslc_am:Resource", "robos:TabletopHero", "robos:GameCharacter", "schema:Person"],
+      "dcterms:title": "Telor",
+      "robos:characterName": "Telor",
+      "robos:heroClass": "Wizard",
+      "robos:bodyPoints": 4,
+      "robos:mindPoints": 6,
+      "robos:attackDice": 1,
+      "robos:defendDice": 2,
+      "robos:gold": 100,
+      "robos:startingWeapon": "Dagger (1 Combat Die)",
+      "robos:equippedWeapon": "Dagger (1 Combat Die)",
+      "robos:equippedArmor": "Wizard Cloak (2 Defend Dice)",
+      "robos:specialAbility": "Wields 3 Elemental Spell decks (9 spells total)",
+      "robos:tokenColor": "#7c3aed",
+      "robos:icon": "🔮",
+      "robos:startingPosition": [0, 0],
+      "robos:inventory": [
+        { id: "item-holy-water-1", name: "Holy Water", type: "relic", effect: "Destroys undead instantly", value: 200 },
+        { id: "item-pot-heal-3", name: "Potion of Healing", type: "potion", effect: "Restores up to 4 BP", value: 100 }
+      ]
+    }
+  ];
+}
+
 // RobOS Tabletop Studio Client Application
 let currentData = {
   tabletopNodes: [],
   gameNodes: [],
   mapConfigs: [],
   activeMapConfig: null,
+  categories: ['Base Game', 'Midterms 2026'],
+  activeMonsterCategoryFilter: 'All',
+  activeSpellItemCategoryFilter: 'All',
+  activeClassTypeFilter: 'All',
+  classes: [],
+  activeClassId: 'urn:robos:tabletop:class:hero-barbarian',
   heroes: [],
   monsters: [],
   spells: [],
+  dreadSpells: [],
+  weapons: [],
+  items: [],
   spellAllocation: {
     elfElement: 'water',
     wizardElements: ['earth', 'fire', 'air'],
@@ -85,114 +211,46 @@ let currentData = {
   doors: [],
   activeHeroId: null,
   activeMonsterId: null,
-  campaign: {
-    id: 'campaign-heroquest-gathering-storm',
-    title: 'HeroQuest: The Gathering Storm',
-    description: "The Emperor calls upon the kingdom's greatest champions to defeat the armies of Morcar and the Witch Lord.",
-    quests: [
-      {
-        id: 'quest-1',
-        slug: 'heroquest-the-trial',
-        title: 'Quest 1: The Trial',
-        briefing: 'You have learned well, my apprentices. Now comes your final test. Seek out the foul Orc Warlord Verag in his hidden catacombs, slay him, and return to the stairwell alive.',
-        mapConfigId: 'fan-dungeon-28x21',
-        ruleset: 'heroquest',
-        goldReward: 100,
-        bossTarget: 'verag-boss',
-        completed: false,
-        startingStairs: [0, 1],
-        activeRooms: new Set(),
-        wallBlocks: [
-          { id: 'block-1', x: 12, y: 0, type: 'single', width: 1, height: 1 },
-          { id: 'block-2', x: 12, y: 20, type: 'single', width: 1, height: 1 },
-          { id: 'block-double-v', x: 0, y: 10, type: 'double-v', width: 1, height: 2 },
-          { id: 'block-double-h', x: 26, y: 10, type: 'double-h', width: 2, height: 1 }
-        ],
-        doors: [],
-        furniture: [
-          { id: 'furn-altar-1', name: "Sorcerer's Altar / Desk", type: 'altar', x: 14, y: 8, width: 2, height: 2, roomId: 'room-center-mid' },
-          { id: 'furn-bookcase-1', name: 'Grand Bookcase', type: 'bookcase', x: 13, y: 3, width: 3, height: 1, roomId: 'room-center-n' },
-          { id: 'furn-bookshelf-1', name: 'Study Bookshelf', type: 'bookshelf', x: 23, y: 5, width: 2, height: 1, roomId: 'room-e-parlor' },
-          { id: 'furn-boulder-1', name: 'Fossil Boulder Tile', type: 'boulder', x: 2, y: 7, width: 1, height: 1, roomId: 'room-grand-fossil' },
-          { id: 'furn-tomb-1', name: 'Ancient Stone Tomb', type: 'tomb', x: 5, y: 2, width: 2, height: 2, roomId: 'room-nw-crypt' },
-          { id: 'furn-chest-1', name: 'Vault Chest of Gold', type: 'chest', x: 23, y: 2, width: 1, height: 1, roomId: 'room-ne-vault' },
-          { id: 'furn-table-1', name: 'Council Table', type: 'table', x: 14, y: 14, width: 2, height: 2, roomId: 'room-center-s' },
-          { id: 'furn-rack-1', name: 'Weapons Rack', type: 'weapons-rack', x: 8, y: 2, width: 3, height: 1, roomId: 'room-n-armory' }
-        ],
-        monsters: [
-          { id: 'mon-verag', name: 'Verag the Orc Warlord', monsterType: 'verag-boss', x: 4, y: 10, bp: 4, atk: 4, def: 4, isBoss: true, roomId: 'room-grand-fossil' },
-          { id: 'mon-skel-1', name: 'Crypt Skeleton', monsterType: 'skeleton-1', x: 3, y: 4, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
-          { id: 'mon-skel-2', name: 'Crypt Skeleton', monsterType: 'skeleton-2', x: 5, y: 4, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
-          { id: 'mon-zombie-1', name: 'Cellar Zombie', monsterType: 'zombie-1', x: 4, y: 16, bp: 2, atk: 3, def: 3, isBoss: false, roomId: 'room-sw-cellar' },
-          { id: 'mon-orc-1', name: 'Orc Guard', monsterType: 'orc-warrior-1', x: 14, y: 11, bp: 1, atk: 3, def: 2, isBoss: false, roomId: 'room-center-mid' },
-          { id: 'mon-goblin-1', name: 'Goblin Scout', monsterType: 'goblin-scout-1', x: 15, y: 11, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center-mid' }
-        ],
-        traps: [
-          { id: 'trap-pit-1', trapType: 'pit', x: 0, y: 5, damageDice: 1, detected: false, disarmed: false },
-          { id: 'trap-boulder-1', trapType: 'boulder', x: 7, y: 5, damageDice: 3, detected: false, disarmed: false },
-          { id: 'trap-falling-1', trapType: 'falling-block', x: 21, y: 10, damageDice: 3, detected: false, disarmed: false }
-        ]
-      },
-      {
-        id: 'quest-2',
-        slug: 'heroquest-rescue-sir-ragnar',
-        title: 'Quest 2: The Rescue of Sir Ragnar',
-        briefing: "Sir Ragnar, one of the Emperor's most trusted knights, has been captured by the Greenskins. Infiltrate the fortress prison, locate his cell, and escort him safely to the surface.",
-        mapConfigId: 'heroquest-classic',
-        ruleset: 'heroquest',
-        goldReward: 200,
-        bossTarget: 'orc-jailer-boss',
-        completed: false,
-        startingStairs: [1, 1],
-        activeRooms: new Set(),
-        wallBlocks: [
-          { id: 'block-r-1', x: 12, y: 0, type: 'single', width: 1, height: 1 },
-          { id: 'block-r-2', x: 12, y: 18, type: 'single', width: 1, height: 1 }
-        ],
-        doors: [],
-        furniture: [
-          { id: 'furn-torture-1', name: 'Iron Torture Rack', type: 'weapons-rack', x: 13, y: 9, width: 3, height: 1, roomId: 'room-center' },
-          { id: 'furn-chest-ragnar', name: "Jailer's Iron Strongbox", type: 'chest', x: 20, y: 3, width: 1, height: 1, roomId: 'room-ne-armory' }
-        ],
-        monsters: [
-          { id: 'mon-jailer', name: 'Gorg the Orc Jailer', monsterType: 'orc-warrior-1', x: 13, y: 8, bp: 3, atk: 3, def: 3, isBoss: true, roomId: 'room-center' },
-          { id: 'mon-guard-1', name: 'Goblin Warden', monsterType: 'goblin-scout-1', x: 14, y: 8, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center' },
-          { id: 'mon-guard-2', name: 'Goblin Warden', monsterType: 'goblin-scout-1', x: 12, y: 8, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center' }
-        ],
-        traps: [
-          { id: 'trap-pit-r-1', trapType: 'pit', x: 10, y: 5, damageDice: 1, detected: false, disarmed: false }
-        ]
-      },
-      {
-        id: 'quest-3',
-        slug: 'heroquest-lair-orc-warlord',
-        title: 'Quest 3: Lair of the Orc Warlord',
-        briefing: 'Deep within the sunken caverns lies the seat of the Orc Chieftain Ulag. Purge his foul guards, shatter his command throne, and reclaim the stolen royal treasure.',
-        mapConfigId: 'first-light-caverns',
-        ruleset: 'heroquest',
-        goldReward: 250,
-        bossTarget: 'ulag-warlord',
-        completed: false,
-        startingStairs: [1, 1],
-        activeRooms: new Set(),
-        wallBlocks: [
-          { id: 'block-u-1', x: 12, y: 0, type: 'single', width: 1, height: 1 }
-        ],
-        doors: [],
-        furniture: [
-          { id: 'furn-throne-1', name: 'Warlord Throne', type: 'altar', x: 13, y: 9, width: 3, height: 2, roomId: 'room-center' },
-          { id: 'furn-cavern-boulder', name: 'Massive Stalagmite', type: 'boulder', x: 5, y: 5, width: 1, height: 1, roomId: 'room-cavern' }
-        ],
-        monsters: [
-          { id: 'mon-ulag', name: 'Ulag the Orc Chieftain', monsterType: 'verag-boss', x: 13, y: 10, bp: 5, atk: 4, def: 5, isBoss: true, roomId: 'room-center' },
-          { id: 'mon-fimir-1', name: 'Swamp Fimir Mystic', monsterType: 'zombie-1', x: 15, y: 9, bp: 2, atk: 3, def: 3, isBoss: false, roomId: 'room-center' }
-        ],
-        traps: [
-          { id: 'trap-cave-in', trapType: 'falling-block', x: 12, y: 7, damageDice: 3, detected: false, disarmed: false }
-        ]
-      }
-    ]
-  },
+  activeCampaignSubtab: 'subtab-campaign-quests',
+  currentCampaignIndex: 0,
+  questSaveState: null,
+  questSaveSnapshots: [],
+  loadedCartridgeData: null,
+  campaigns: [
+    {
+      id: 'campaign-heroquest',
+      title: 'HeroQuest',
+      description: "The HeroQuest campaign featuring the real working custom-quest.cartridge dungeon.",
+      heroes: createDefaultCampaignHeroes(),
+      quests: [
+        {
+          id: 'custom-quest',
+          slug: 'custom-quest',
+          cartridgeFile: 'custom-quest.cartridge.json',
+          title: 'Quest 1: Custom Dungeon',
+          briefing: 'Descend into the Custom Dungeon via the stairwell at [7, 14]. Explore the dungeon rooms, overcome the traps and monsters within, and return victorious!',
+          mapConfigId: 'heroquest-classic',
+          ruleset: 'heroquest',
+          goldReward: 150,
+          bossTarget: 'gargoyle-boss',
+          completed: false,
+          startingStairs: [7, 14],
+          activeRooms: new Set(['r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', 'r10', 'r11', 'r12', 'r13', 'r14', 'r15', 'r16', 'r17', 'r18', 'r19', 'r20', 'r21', 'r22']),
+          wallBlocks: [
+            { id: 'wb1', x: 1, y: 3, type: 'single', width: 1, height: 1 },
+            { id: 'wb2', x: 7, y: 12, type: 'single', width: 1, height: 1 },
+            { id: 'wb3', x: 12, y: 18, type: 'single', width: 1, height: 1 }
+          ],
+          doors: [],
+          furniture: [],
+          monsters: [],
+          traps: [],
+          storyTriggers: []
+        }
+      ]
+    }
+  ],
+  campaign: null,
   currentQuestIndex: 0,
   currentQuest: null,
   activeTool: 'inspect',
@@ -213,6 +271,8 @@ let currentData = {
     showWalls: true
   }
 };
+currentData.campaign = currentData.campaigns[0];
+currentData.heroes = currentData.campaign.heroes;
 currentData.currentQuest = currentData.campaign.quests[0];
 
 // DOM references
@@ -243,8 +303,15 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     const pane = document.getElementById(target);
     if (pane) pane.classList.add("active");
 
-    if (target === "tab-board") {
-      drawBoard();
+    if (target === "tab-classes" && typeof renderClassesTab === "function") {
+      renderClassesTab();
+    } else if (target === "tab-monsters" && typeof renderMonstersList === "function") {
+      renderMonstersList();
+    } else if (target === "tab-spells" && typeof renderSpellsAndItems === "function") {
+      renderSpellsAndItems();
+    } else if (target === "tab-quest") {
+      if (typeof renderQuestHeroesReviewGrid === "function") renderQuestHeroesReviewGrid();
+      if (typeof refreshQuestSaveStateUI === "function") refreshQuestSaveStateUI();
     }
   });
 });
@@ -488,6 +555,12 @@ async function switchMapConfiguration(configId, preserveQuestEntities = false) {
 }
 
 async function loadBoardArtwork(relPath) {
+  const canvas = document.getElementById("board-canvas");
+  if (!canvas) {
+    currentData.boardImage = null;
+    currentData.boardImageLoading = false;
+    return;
+  }
   currentData.boardImage = null;
   currentData.boardImageLoading = true;
   try {
@@ -1931,13 +2004,36 @@ function drawBoard() {
   }
 }
 
+let deferredTabsRendered = false;
+function scheduleDeferredTabRenders() {
+  if (deferredTabsRendered) return;
+  const renderAllDeferred = () => {
+    if (deferredTabsRendered) return;
+    deferredTabsRendered = true;
+    if (typeof renderClassesTab === "function") renderClassesTab();
+    if (typeof renderMonstersList === "function") renderMonstersList();
+    if (typeof renderSpellsAndItems === "function") renderSpellsAndItems();
+    if (typeof renderHeroesList === "function") renderHeroesList();
+  };
+
+  if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
+    window.requestIdleCallback(renderAllDeferred, { timeout: 300 });
+  } else if (typeof setTimeout !== "undefined") {
+    setTimeout(renderAllDeferred, 50);
+  }
+}
+
 // Load KGraph Data and Map Configurations
 async function initKGraphData() {
   setStatus("Initializing Tabletop RPG Studio...");
   try {
-    // 1. Load map configurations
-    const mapRes = await window.robosTabletop.getMapConfigs();
-    if (mapRes.success && mapRes.configs) {
+    // 1. Concurrently load map configurations and KGraph in parallel
+    const [mapRes, res] = await Promise.all([
+      (window.robosTabletop?.getMapConfigs ? window.robosTabletop.getMapConfigs() : Promise.resolve({ success: false })),
+      (window.robosTabletop?.loadKGraph ? window.robosTabletop.loadKGraph() : Promise.resolve({ success: false }))
+    ]);
+
+    if (mapRes && mapRes.success && mapRes.configs) {
       currentData.mapConfigs = mapRes.configs;
       const select = document.getElementById("map-config-select");
       const questBgSelect = document.getElementById("quest-bg-ref");
@@ -1953,20 +2049,49 @@ async function initKGraphData() {
       });
     }
 
-    // 2. Load KGraph
-    const res = await window.robosTabletop.loadKGraph();
-    if (res.success) {
-      currentData.tabletopNodes = res.tabletopNodes;
-      currentData.gameNodes = res.gameNodes;
+    if (res && res.success) {
+      currentData.tabletopNodes = res.tabletopNodes || [];
+      currentData.gameNodes = res.gameNodes || [];
 
-      currentData.heroes = currentData.tabletopNodes.filter(n => {
+      const kgraphHeroes = currentData.tabletopNodes.filter(n => {
         const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
         return t.includes("robos:TabletopHero");
       });
+      if (kgraphHeroes.length > 0 && currentData.campaigns[0]) {
+        currentData.campaigns[0].heroes = kgraphHeroes;
+      }
+      currentData.heroes = currentData.campaign.heroes;
 
       currentData.monsters = currentData.tabletopNodes.filter(n => {
         const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
         return t.includes("robos:TabletopMonster");
+      });
+
+      // Ensure every monster has a category (default "Base Game"), base enemy class, mindPoints, and abilities
+      initClassesCatalog();
+      currentData.monsters.forEach(m => {
+        if (!m["robos:category"]) m["robos:category"] = "Base Game";
+        const baseClsName = m["robos:extendsClass"] || m["robos:monsterArchetype"] || m["robos:archetype"] || "Goblin";
+        m["robos:extendsClass"] = baseClsName;
+        const clsObj = getClassByIdOrName(baseClsName);
+        if (m["robos:mindPoints"] === undefined) {
+          m["robos:mindPoints"] = clsObj ? clsObj.mindPoints : (m["robos:isUndead"] ? 0 : 2);
+        }
+        if (!m["robos:abilities"] && clsObj) {
+          m["robos:abilities"] = clsObj.abilities;
+        }
+      });
+      MIDTERMS_2026_MONSTERS.forEach(mm => {
+        if (!currentData.monsters.some(m => m["@id"] === mm["@id"])) {
+          const baseClsName = mm["robos:extendsClass"] || mm["robos:monsterArchetype"] || mm["robos:archetype"] || "Goblin";
+          const clsObj = getClassByIdOrName(baseClsName);
+          currentData.monsters.push({
+            ...mm,
+            "robos:extendsClass": baseClsName,
+            "robos:mindPoints": mm["robos:mindPoints"] !== undefined ? mm["robos:mindPoints"] : (clsObj ? clsObj.mindPoints : 2),
+            "robos:abilities": mm["robos:abilities"] || (clsObj ? clsObj.abilities : "")
+          });
+        }
       });
 
       currentData.spells = currentData.tabletopNodes.filter(n => {
@@ -1979,34 +2104,43 @@ async function initKGraphData() {
         return t.includes("robos:TabletopFurniture");
       });
 
+      // Initialize Category Catalogs (Weapons, Items, Spells, Dread Spells, Categories)
+      syncCategoryCatalogsFromKGraph();
+
+      setupCategoryControls();
+      setupClassEditorControls();
       setupHeroEditorControls();
       setupMonsterEditorControls();
       setupSpellDraftControls();
       setupHeroTradeControls();
-      applySpellAllocationToHeroes();
-      renderHeroesList();
-      renderMonstersList();
-      renderSpellsAndItems();
-      renderSpellDraftSummaryBadges();
-
-      // Initialize Campaign & Multi-Quest Blueprint
       setupCampaignQuestControls();
-      renderCampaignQuestsList();
-      updateCampaignProgress();
+
+      applySpellAllocationToHeroes();
+      renderCategoryControlsUI();
+      renderSpellDraftSummaryBadges();
+      syncBoardMonsterSelectDropdown();
+      syncHeroPresetItemsDropdown();
+
+      // Render Active Tab View (Campaign & Quest) Immediately
+      renderCampaignSelectorUI();
+      await selectQuest(currentData.currentQuestIndex || 0, true);
+
+      // Lazily schedule background rendering for inactive tabs so initial load paints instantly
+      scheduleDeferredTabRenders();
     }
 
-    // 3. Switch to default map configuration and select active quest
-    await selectQuest(currentData.currentQuestIndex || 0, true);
     initBoard();
-    setStatus("Tabletop RPG Quest Editor Ready.");
+    setStatus("Tabletop RPG Studio Ready — Loaded HeroQuest campaign (custom-quest.cartridge).");
   } catch (err) {
     setStatus("Failed to initialize: " + err.message);
   }
 }
 
 // ==========================================
-// 1.5. ELEMENTAL SPELL DRAFT & GRIMOIRE ENGINE
+// 1.5. ELEMENTAL SPELL DRAFT, CATEGORIES & GRIMOIRE ENGINE
 // ==========================================
+
+const DEFAULT_CATEGORIES = ["Base Game", "Midterms 2026"];
 
 const ELEMENTAL_DECKS = {
   earth: {
@@ -2022,6 +2156,7 @@ const ELEMENTAL_DECKS = {
         slug: "heal-body",
         name: "Heal Body",
         element: "earth",
+        category: "Base Game",
         icon: "💖",
         description: "Restores up to 4 lost Body Points to any Hero, including yourself.",
         effect: "heal-bp",
@@ -2032,6 +2167,7 @@ const ELEMENTAL_DECKS = {
         slug: "pass-through-rock",
         name: "Pass Through Rock",
         element: "earth",
+        category: "Base Game",
         icon: "🧱",
         description: "Allows the caster or ally to move through solid stone walls on their next turn.",
         effect: "phase-walls",
@@ -2042,6 +2178,7 @@ const ELEMENTAL_DECKS = {
         slug: "rock-skin",
         name: "Rock Skin",
         element: "earth",
+        category: "Base Game",
         icon: "🛡️",
         description: "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
         effect: "buff-def",
@@ -2062,6 +2199,7 @@ const ELEMENTAL_DECKS = {
         slug: "ball-of-flame",
         name: "Ball of Flame",
         element: "fire",
+        category: "Base Game",
         icon: "☄️",
         description: "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
         effect: "damage-bp",
@@ -2072,6 +2210,7 @@ const ELEMENTAL_DECKS = {
         slug: "courage",
         name: "Courage",
         element: "fire",
+        category: "Base Game",
         icon: "🦁",
         description: "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
         effect: "buff-atk",
@@ -2082,6 +2221,7 @@ const ELEMENTAL_DECKS = {
         slug: "fire-of-wrath",
         name: "Fire of Wrath",
         element: "fire",
+        category: "Base Game",
         icon: "🔥",
         description: "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
         effect: "damage-bp",
@@ -2102,6 +2242,7 @@ const ELEMENTAL_DECKS = {
         slug: "water-of-healing",
         name: "Water of Healing",
         element: "water",
+        category: "Base Game",
         icon: "💧",
         description: "Restores up to 4 lost Body Points to any Hero.",
         effect: "heal-bp",
@@ -2112,6 +2253,7 @@ const ELEMENTAL_DECKS = {
         slug: "sleep",
         name: "Sleep",
         element: "water",
+        category: "Base Game",
         icon: "💤",
         description: "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
         effect: "status-sleep",
@@ -2122,6 +2264,7 @@ const ELEMENTAL_DECKS = {
         slug: "veil-of-mist",
         name: "Veil of Mist",
         element: "water",
+        category: "Base Game",
         icon: "🌫️",
         description: "Envelops the caster in thick fog, allowing movement unseen past monsters.",
         effect: "status-stealth",
@@ -2142,6 +2285,7 @@ const ELEMENTAL_DECKS = {
         slug: "genie",
         name: "Genie",
         element: "air",
+        category: "Base Game",
         icon: "🧞",
         description: "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
         effect: "summon-attack",
@@ -2152,6 +2296,7 @@ const ELEMENTAL_DECKS = {
         slug: "swift-wind",
         name: "Swift Wind",
         element: "air",
+        category: "Base Game",
         icon: "💨",
         description: "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
         effect: "buff-move",
@@ -2162,6 +2307,7 @@ const ELEMENTAL_DECKS = {
         slug: "tempest",
         name: "Tempest",
         element: "air",
+        category: "Base Game",
         icon: "🌪️",
         description: "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
         effect: "status-freeze",
@@ -2171,13 +2317,14 @@ const ELEMENTAL_DECKS = {
   }
 };
 
-// Authentic HeroQuest Chaos & Dread Spells (Enemies & Evil Sorcerers)
+// Authentic HeroQuest Chaos & Dread Spells (Base Game Enemies & Evil Sorcerers)
 const DREAD_SPELLS = [
   {
     id: "urn:robos:tabletop:spell:lightning-bolt",
     slug: "lightning-bolt",
     name: "Lightning Bolt",
     element: "dread",
+    category: "Base Game",
     icon: "⚡",
     description: "Strikes any hero with a bolt of dark lightning causing 2 BP damage. Target rolls 2 combat dice to defend.",
     effect: "damage-bp",
@@ -2188,6 +2335,7 @@ const DREAD_SPELLS = [
     slug: "firestorm",
     name: "Firestorm",
     element: "dread",
+    category: "Base Game",
     icon: "🔥",
     description: "Engulfs a hero or entire room in searing hellfire causing 3 BP damage. Target rolls 3 combat dice to defend.",
     effect: "damage-bp",
@@ -2198,6 +2346,7 @@ const DREAD_SPELLS = [
     slug: "fear",
     name: "Fear",
     element: "dread",
+    category: "Base Game",
     icon: "💀",
     description: "Paralyzes a hero with terror, reducing their Attack Strength to 1 combat die on their next turn.",
     effect: "debuff-atk",
@@ -2208,6 +2357,7 @@ const DREAD_SPELLS = [
     slug: "sleep-dread",
     name: "Sleep of Dread",
     element: "dread",
+    category: "Base Game",
     icon: "💤",
     description: "Puts a hero into deep magical slumber. They cannot move, attack, or defend until rolling a 6 or taking damage.",
     effect: "status-sleep",
@@ -2218,6 +2368,7 @@ const DREAD_SPELLS = [
     slug: "cloud-of-chaos",
     name: "Cloud of Chaos",
     element: "dread",
+    category: "Base Game",
     icon: "🕸️",
     description: "Releases a suffocating cloud of toxic chaos vapors. Target hero is stunned and loses their entire next turn.",
     effect: "status-freeze",
@@ -2228,6 +2379,7 @@ const DREAD_SPELLS = [
     slug: "summon-undead",
     name: "Summon Undead",
     element: "dread",
+    category: "Base Game",
     icon: "🧟",
     description: "Raises 2 Skeletons or Zombies from the dungeon floor adjacent to the caster to fight alongside them.",
     effect: "summon-monsters",
@@ -2238,6 +2390,7 @@ const DREAD_SPELLS = [
     slug: "rust",
     name: "Rust",
     element: "dread",
+    category: "Base Game",
     icon: "🛡️",
     description: "Corrodes and destroys one metal weapon or helmet equipped by a target hero, reducing their combat stats.",
     effect: "destroy-equipment",
@@ -2248,12 +2401,1279 @@ const DREAD_SPELLS = [
     slug: "escape",
     name: "Escape",
     element: "dread",
+    category: "Base Game",
     icon: "💨",
     description: "Dissolves the evil sorcerer into dark mist, teleporting them instantly to another room or safety.",
     effect: "teleport",
     val: 1
   }
 ];
+
+// ==========================================
+// "MIDTERMS 2026" & "BASE GAME" CONTENT PACK CATALOGS
+// ==========================================
+
+const HEROQUEST_MONSTER_ARCHETYPES = [
+  "Goblin",
+  "Orc",
+  "Fimir",
+  "Skeleton",
+  "Zombie",
+  "Mummy",
+  "Dread Warrior",
+  "Gargoyle",
+  "Orc Shaman",
+  "Orc Warlord",
+  "Chaos Sorcerer",
+  "Witch Lord",
+  "Dragon",
+  "Doomguard",
+  "Witch Hand"
+];
+
+const MIDTERMS_2026_MONSTERS = [
+  {
+    "@id": "urn:robos:tabletop:monster:inflation-spawn",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Inflation Spawn",
+    "robos:altTitle": "Infalation Spawn",
+    "robos:alias": "Infalation Spawn",
+    "dcterms:description": "Goblin Mirror: A rabid goblin money monster (Infalation Spawn) hatched from an overheated Federal Reserve printing press. Devours 40% of your gold purse on sight while shrinking potion bottles and swearing price hikes are transitory.",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:goblin",
+    "robos:monsterArchetype": "Goblin",
+    "robos:archetype": "Goblin",
+    "robos:icon": "💸",
+    "robos:bodyPoints": 1,
+    "robos:attackDice": 2,
+    "robos:defendDice": 1,
+    "robos:movementSquares": 10,
+    "robos:roomId": "room-center-mid",
+    "robos:isBoss": false,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#16a34a",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:illegal-alien",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Illegal Alien",
+    "dcterms:description": "Orc Mirror: A literal grey alien from Zeta Reticuli wearing a classic black domino robber mask and carrying a striped loot sack after double-parking its flying saucer in a dungeon no-parking zone.",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:orc",
+    "robos:monsterArchetype": "Orc",
+    "robos:archetype": "Orc",
+    "robos:icon": "👽",
+    "robos:bodyPoints": 1,
+    "robos:attackDice": 3,
+    "robos:defendDice": 2,
+    "robos:movementSquares": 8,
+    "robos:roomId": "room-nw-crypt",
+    "robos:isBoss": false,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#64748b",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:k-street-swamp-fimir",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "K-Street Swamp Lobbyist",
+    "dcterms:description": "Fimir Mirror: A one-eyed swamp reptile in a $4,000 Italian suit slithering out of a bipartisan tax loophole with a leather briefcase full of untraceable Super-PAC consulting gold.",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:fimir",
+    "robos:monsterArchetype": "Fimir",
+    "robos:archetype": "Fimir",
+    "robos:icon": "🐊",
+    "robos:bodyPoints": 2,
+    "robos:attackDice": 3,
+    "robos:defendDice": 3,
+    "robos:movementSquares": 6,
+    "robos:roomId": "room-sw-cellar",
+    "robos:isBoss": false,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#0f766e",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:gerrymandered-skeleton",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Gerrymandered Skeleton",
+    "dcterms:description": "Skeleton Mirror: An undead voter contorted into a 47-sided congressional district shaped like an upside-down salamander so the incumbent can never be voted out of the crypt.",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:skeleton",
+    "robos:monsterArchetype": "Skeleton",
+    "robos:archetype": "Skeleton",
+    "robos:icon": "💀",
+    "robos:bodyPoints": 1,
+    "robos:attackDice": 2,
+    "robos:defendDice": 2,
+    "robos:movementSquares": 6,
+    "robos:roomId": "room-nw-crypt",
+    "robos:isBoss": false,
+    "robos:isUndead": true,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#94a3b8",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:teleprompter-zombie",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Cable News Pundit Zombie",
+    "dcterms:description": "Zombie Mirror: A shambling prime-time anchor that groans BREAKING ALERT every 30 seconds, reads [PAUSE FOR OUTRAGE] off the teleprompter glass, and cannot move without a pharmaceutical ad break.",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:zombie",
+    "robos:monsterArchetype": "Zombie",
+    "robos:archetype": "Zombie",
+    "robos:icon": "🧟",
+    "robos:bodyPoints": 1,
+    "robos:attackDice": 2,
+    "robos:defendDice": 3,
+    "robos:movementSquares": 4,
+    "robos:roomId": "room-sw-cellar",
+    "robos:isBoss": false,
+    "robos:isUndead": true,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#475569",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:octogenarian-incumbent-mummy",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "90-Year-Old Career Incumbent Mummy",
+    "dcterms:description": "Mummy Mirror: First elected during the Eisenhower administration and wrapped in 70 years of bureaucratic red tape! Refuses to retire and is already filing paperwork to run for a 19th term from the crypt.",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:mummy",
+    "robos:monsterArchetype": "Mummy",
+    "robos:archetype": "Mummy",
+    "robos:icon": "🩹",
+    "robos:bodyPoints": 2,
+    "robos:attackDice": 3,
+    "robos:defendDice": 4,
+    "robos:movementSquares": 4,
+    "robos:roomId": "room-nw-crypt",
+    "robos:isBoss": false,
+    "robos:isUndead": true,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#d97706",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:happily-married-gay-man",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Happily Married Gay Man",
+    "dcterms:description": "Dread Warrior Mirror: An unstoppable Dread Warrior of domestic bliss—dual-income 820 credit score, impeccably renovated kitchen, brunch reservations, and a loving marriage that inexplicably terrifies culture-war bosses.",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:chaos-warrior",
+    "robos:monsterArchetype": "Dread Warrior",
+    "robos:archetype": "Dread Warrior",
+    "robos:icon": "💍",
+    "robos:bodyPoints": 3,
+    "robos:attackDice": 4,
+    "robos:defendDice": 4,
+    "robos:movementSquares": 7,
+    "robos:roomId": "room-e-parlor",
+    "robos:isBoss": false,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#ec4899",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:filibuster-gargoyle",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Filibuster Stone Gargoyle",
+    "dcterms:description": "Gargoyle Mirror: A solid granite Senate obstructionist perched on the Capitol rotunda ledge! Reads the local phonebook aloud for 19 hours straight so zero bills or heroes can pass through the room.",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:gargoyle",
+    "robos:monsterArchetype": "Gargoyle",
+    "robos:archetype": "Gargoyle",
+    "robos:icon": "🗿",
+    "robos:bodyPoints": 3,
+    "robos:attackDice": 4,
+    "robos:defendDice": 5,
+    "robos:movementSquares": 6,
+    "robos:roomId": "room-center",
+    "robos:isBoss": false,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#64748b",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:spin-doctor-shaman",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Polling Spin-Doctor Shaman",
+    "dcterms:description": "Orc Shaman Mirror: Reads Crosstab tea leaves and casts Margin-of-Error hexes to convince everyone that losing a dungeon battle by 15 points is actually a historic moral victory!",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:orc-shaman",
+    "robos:monsterArchetype": "Orc Shaman",
+    "robos:archetype": "Orc Shaman",
+    "robos:icon": "📊",
+    "robos:bodyPoints": 2,
+    "robos:attackDice": 2,
+    "robos:defendDice": 3,
+    "robos:movementSquares": 8,
+    "robos:roomId": "room-center",
+    "robos:isBoss": false,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": true,
+    "robos:spells": [
+      "urn:robos:tabletop:spell:culture-war-distraction-cloud",
+      "urn:robos:tabletop:spell:shrinkflation-curse"
+    ],
+    "robos:tokenColor": "#0284c7",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:super-pac-warlord",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Super-PAC Dark Money Warlord",
+    "dcterms:description": "Verag the Orc Warlord Mirror: An untraceable 501(c)(4) billionaire mega-donor boss who buys entire congressional committees in bulk and floods every dungeon corridor with negative attack ads!",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:verag-orc-warlord",
+    "robos:monsterArchetype": "Orc Warlord",
+    "robos:archetype": "Orc Warlord",
+    "robos:icon": "💼",
+    "robos:bodyPoints": 3,
+    "robos:attackDice": 4,
+    "robos:defendDice": 3,
+    "robos:movementSquares": 8,
+    "robos:roomId": "room-center",
+    "robos:isBoss": true,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": true,
+    "robos:spells": [
+      "urn:robos:tabletop:spell:shrinkflation-curse",
+      "urn:robos:tabletop:spell:culture-war-distraction-cloud"
+    ],
+    "robos:tokenColor": "#15803d",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:algorithm-outrage-sorcerer",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Algorithm Outrage Sorcerer",
+    "dcterms:description": "Chaos Sorcerer Mirror: Conjures viral doomscrolling illusions, bot-farm swarms, and AI deepfake hexes guaranteed to make your aunt and uncle scream at each other over Thanksgiving turkey!",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:chaos-sorcerer",
+    "robos:monsterArchetype": "Chaos Sorcerer",
+    "robos:archetype": "Chaos Sorcerer",
+    "robos:icon": "📱",
+    "robos:bodyPoints": 3,
+    "robos:attackDice": 3,
+    "robos:defendDice": 4,
+    "robos:movementSquares": 7,
+    "robos:roomId": "room-center",
+    "robos:isBoss": true,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": true,
+    "robos:spells": [
+      "urn:robos:tabletop:spell:culture-war-distraction-cloud",
+      "urn:robos:tabletop:spell:bipartisan-blame-inferno"
+    ],
+    "robos:tokenColor": "#7c3aed",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:deep-state-witch-lord",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Unelected Bureaucracy Witch Lord",
+    "dcterms:description": "The Witch Lord Mirror: An immortal undead agency director who has survived 14 presidential administrations, immune to mortal voters, summoning endless sub-committees of undead compliance auditors!",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:witch-lord",
+    "robos:monsterArchetype": "Witch Lord",
+    "robos:archetype": "Witch Lord",
+    "robos:icon": "🏛️",
+    "robos:bodyPoints": 4,
+    "robos:attackDice": 4,
+    "robos:defendDice": 5,
+    "robos:movementSquares": 7,
+    "robos:roomId": "room-center",
+    "robos:isBoss": true,
+    "robos:isUndead": true,
+    "robos:isSpellcaster": true,
+    "robos:spells": [
+      "urn:robos:tabletop:spell:shrinkflation-curse",
+      "urn:robos:tabletop:spell:culture-war-distraction-cloud",
+      "urn:robos:tabletop:spell:bipartisan-blame-inferno"
+    ],
+    "robos:tokenColor": "#4c1d95",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:trumpbiden-dragon",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "TrumpBiden (The Blame Dragon)",
+    "dcterms:description": "Dragon Mirror: A colossal two-headed Dragon combining 2 presidents who failed us all while everything got more expensive, meanwhile blaming each other for every single gold coin lost to inflation.",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:dragon",
+    "robos:monsterArchetype": "Dragon",
+    "robos:archetype": "Dragon",
+    "robos:icon": "🐉",
+    "robos:bodyPoints": 6,
+    "robos:attackDice": 5,
+    "robos:defendDice": 5,
+    "robos:movementSquares": 8,
+    "robos:roomId": "room-grand-fossil",
+    "robos:isBoss": true,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": true,
+    "robos:spells": [
+      "urn:robos:tabletop:spell:bipartisan-blame-inferno",
+      "urn:robos:tabletop:spell:shrinkflation-curse",
+      "urn:robos:tabletop:spell:culture-war-distraction-cloud"
+    ],
+    "robos:tokenColor": "#dc2626",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:irs-audit-doomguard",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "IRS 87,000-Agent Doomguard",
+    "dcterms:description": "Cassandria's Doomguard Mirror: An heavily armored IRS enforcement agent carrying 87,000 pages of itemized tax code who audits your party's Body Points over an unreported $600 Venmo split for dungeon tavern nachos!",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:cassandria-doomguard",
+    "robos:monsterArchetype": "Doomguard",
+    "robos:archetype": "Doomguard",
+    "robos:icon": "🧾",
+    "robos:bodyPoints": 3,
+    "robos:attackDice": 4,
+    "robos:defendDice": 6,
+    "robos:movementSquares": 8,
+    "robos:roomId": "room-center",
+    "robos:isBoss": true,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": false,
+    "robos:spells": [],
+    "robos:tokenColor": "#334155",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  },
+  {
+    "@id": "urn:robos:tabletop:monster:hoa-censor-witch-hand",
+    "@type": ["oslc_am:Resource", "robos:TabletopMonster", "robos:GameMonster", "schema:Person"],
+    "dcterms:title": "Censorship Board Witch Hand",
+    "dcterms:description": "Witch Hand of Cassandria Mirror: The high inquisitor of the Ministry of Approved Narratives who slaps 'MISINFORMATION' warning labels on Heroic Spells and shadow-bans any hero who rolls too many Skulls!",
+    "robos:category": "Midterms 2026",
+    "robos:mirrorsMonster": "urn:robos:tabletop:monster:cassandria-witch-hand",
+    "robos:monsterArchetype": "Witch Hand",
+    "robos:archetype": "Witch Hand",
+    "robos:icon": "🤫",
+    "robos:bodyPoints": 4,
+    "robos:attackDice": 4,
+    "robos:defendDice": 4,
+    "robos:movementSquares": 8,
+    "robos:roomId": "room-center",
+    "robos:isBoss": true,
+    "robos:isUndead": false,
+    "robos:isSpellcaster": true,
+    "robos:spells": [
+      "urn:robos:tabletop:spell:culture-war-distraction-cloud",
+      "urn:robos:tabletop:spell:shrinkflation-curse"
+    ],
+    "robos:tokenColor": "#9333ea",
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  }
+];
+
+const MIDTERMS_2026_SPELLS = [
+  {
+    id: "urn:robos:tabletop:spell:snowflake-meltdown",
+    slug: "snowflake-meltdown",
+    name: "Delicate Snowflake Meltdown",
+    element: "water",
+    category: "Midterms 2026",
+    icon: "❄️",
+    description: "Triggered by a mild difference of opinion! Freezes target in an outrage spiral for 1 turn while everyone in the room walks on eggshells.",
+    effect: "status-freeze",
+    val: 1
+  },
+  {
+    id: "urn:robos:tabletop:spell:midnight-gavel-no-choice",
+    slug: "midnight-gavel-no-choice",
+    name: "Midnight Gavel: No Choice For You!",
+    element: "earth",
+    category: "Midterms 2026",
+    icon: "👩‍⚖️",
+    description: "Slams a leaked shadow-docket gavel that takes away abortion & bodily autonomy! Locks down target's movement and personal choices for 1 turn.",
+    effect: "status-freeze",
+    val: 2
+  },
+  {
+    id: "urn:robos:tabletop:spell:blind-party-line",
+    slug: "blind-party-line",
+    name: "Blind Party-Line Loyalty",
+    element: "fire",
+    category: "Midterms 2026",
+    icon: "🐑",
+    description: "Supporting things just because your party does! You hated this policy yesterday, but your team just endorsed it—grants +2 Attack Dice of pure partisan zeal.",
+    effect: "buff-atk",
+    val: 2
+  },
+  {
+    id: "urn:robos:tabletop:spell:fear-middle-east-debate",
+    slug: "fear-middle-east-debate",
+    name: "Panic of the Middle East Question",
+    element: "air",
+    category: "Midterms 2026",
+    icon: "🎙️",
+    description: "Fear of Israel & the Middle East in an interview! Caster drops a smoke bomb of vague focus-grouped talking points and sprints away at double speed (4d6) to avoid getting cancelled.",
+    effect: "buff-move",
+    val: 2
+  },
+  {
+    id: "urn:robos:tabletop:spell:mcconnell-glitch",
+    slug: "mcconnell-glitch",
+    name: "30-Second Press Conference Freeze",
+    element: "water",
+    category: "Midterms 2026",
+    icon: "🐢",
+    description: "Stares blankly at reporters for 30 silent seconds waiting for a staffer reboot, granting +2 Defend Dice of stone-faced filibuster immunity.",
+    effect: "buff-def",
+    val: 2
+  }
+];
+
+const MIDTERMS_2026_DREAD_SPELLS = [
+  {
+    id: "urn:robos:tabletop:spell:bipartisan-blame-inferno",
+    slug: "bipartisan-blame-inferno",
+    name: "Bipartisan Blame-Game Inferno",
+    element: "dread",
+    category: "Midterms 2026",
+    icon: "🔥",
+    description: "TrumpBiden unleashes a twin-headed firestorm of finger-pointing while groceries hit $400 a bag! Deals 3 BP damage while both heads insist it's the other guy's fault.",
+    effect: "damage-bp",
+    val: 3
+  },
+  {
+    id: "urn:robos:tabletop:spell:shrinkflation-curse",
+    slug: "shrinkflation-curse",
+    name: "Curse of Shrinkflation",
+    element: "dread",
+    category: "Midterms 2026",
+    icon: "📉",
+    description: "Your potion bottle is now 40% smaller, mostly air, and costs twice as much gold! Reduces target Hero's Attack Dice by 1 on their next turn.",
+    effect: "debuff-atk",
+    val: 1
+  },
+  {
+    id: "urn:robos:tabletop:spell:culture-war-distraction-cloud",
+    slug: "culture-war-distraction-cloud",
+    name: "Culture War Distraction Cloud",
+    element: "dread",
+    category: "Midterms 2026",
+    icon: "📺",
+    description: "Fills the dungeon room with 24/7 cable-news outrage so nobody notices the treasury being looted! Stuns target Hero for 1 turn.",
+    effect: "status-freeze",
+    val: 1
+  }
+];
+
+const BASE_WEAPONS = [
+  { id: "urn:robos:tabletop:weapon:broadsword", name: "Broadsword", type: "Weapon", dice: "3 Attack Dice", cost: "250 GP", icon: "⚔️", category: "Base Game", description: "Standard Imperial steel broadsword rolling 3 combat dice." },
+  { id: "urn:robos:tabletop:weapon:shortsword", name: "Shortsword", type: "Weapon", dice: "2 Attack Dice (Diagonal)", cost: "150 GP", icon: "🗡️", category: "Base Game", description: "Balanced blade capable of striking adjacent and diagonal foes." },
+  { id: "urn:robos:tabletop:weapon:battle-axe", name: "Battle Axe", type: "Weapon", dice: "4 Attack Dice (Two-Handed)", cost: "400 GP", icon: "🪓", category: "Base Game", description: "Heavy two-handed greataxe rolling 4 combat dice (cannot use shield)." },
+  { id: "urn:robos:tabletop:weapon:crossbow", name: "Crossbow", type: "Ranged Weapon", dice: "3 Attack Dice (Straight Line)", cost: "350 GP", icon: "🏹", category: "Base Game", description: "Heavy ranged arbalest striking any visible monster in line of sight." },
+  { id: "urn:robos:tabletop:weapon:chainmail", name: "Chainmail", type: "Armor", dice: "+1 Defend Die (3 Total)", cost: "500 GP", icon: "🛡️", category: "Base Game", description: "Linked steel rings granting 3 total defend dice." },
+  { id: "urn:robos:tabletop:weapon:plate-armor", name: "Plate Armor", type: "Armor", dice: "+2 Defend Dice (4 Total, 1d6 Move)", cost: "850 GP", icon: "🦾", category: "Base Game", description: "Heavy full-plate armor granting 4 defend dice but reducing movement to 1d6." },
+  { id: "urn:robos:tabletop:weapon:shield", name: "Shield", type: "Armor", dice: "+1 Defend Die", cost: "150 GP", icon: "🛡️", category: "Base Game", description: "Sturdy oak-and-iron shield granting +1 extra defend die." },
+  { id: "urn:robos:tabletop:weapon:helmet", name: "Helmet", type: "Armor", dice: "+1 Defend Die", cost: "120 GP", icon: "🪖", category: "Base Game", description: "Steel battle helm granting +1 extra defend die." },
+  { id: "urn:robos:tabletop:weapon:toolkit", name: "Toolkit", type: "Gear", dice: "Disarm Traps on 1-5", cost: "250 GP", icon: "🔧", category: "Base Game", description: "Precision picks and wedges allowing any hero to disarm traps." }
+];
+
+const MIDTERMS_2026_WEAPONS = [
+  {
+    id: "urn:robos:tabletop:weapon:unapproved-bombing-run",
+    name: "Unapproved Foreign Bombing Run",
+    type: "Illegal Presidential Act (Ranged)",
+    dice: "4 Attack Dice (Zero Congressional Approval)",
+    cost: "500 GP",
+    icon: "💣",
+    category: "Midterms 2026",
+    description: "Who needs a pesky declaration of war from Congress when both parties just call it a 'limited kinetic military operation' over brunch?"
+  },
+  {
+    id: "urn:robos:tabletop:weapon:classified-bathroom-box",
+    name: "Classified Bathroom Bankers Box Flail",
+    type: "Illegal Presidential Act (Melee)",
+    dice: "3 Attack Dice (Stored Next to Bathroom Chandelier)",
+    cost: "350 GP",
+    icon: "📦",
+    category: "Midterms 2026",
+    description: "A heavy cardboard box stuffed with Top Secret nuclear folders found stacked between a country-club bathroom and a classic Corvette in the garage."
+  },
+  {
+    id: "urn:robos:tabletop:weapon:midnight-pardon-gavel",
+    name: "Midnight Blanket Pardon Gavel",
+    type: "Illegal Presidential Act (Relic)",
+    dice: "3 Attack Dice (Absolves All Cronies & Family)",
+    cost: "450 GP",
+    icon: "🔨",
+    category: "Midterms 2026",
+    description: "Signed at 11:59 PM on the way to Marine One! Retroactively wipes out a decade of questionable felonies for donors, friends, and relatives."
+  },
+  {
+    id: "urn:robos:tabletop:weapon:executive-order-overreach-pen",
+    name: "Unconstitutional Executive Order Sharpie",
+    type: "Illegal Presidential Act (Wand)",
+    dice: "3 Attack Dice (Bypasses Checks & Balances)",
+    cost: "300 GP",
+    icon: "🖊️",
+    category: "Midterms 2026",
+    description: "Why pass a law through Congress when you can legislate by giant black marker and let the courts argue about it for 4 years?"
+  },
+  {
+    id: "urn:robos:tabletop:weapon:crypto-rugpull-scepter",
+    name: "Presidential Meme-Coin Rug-Pull Scepter",
+    type: "Illegal Presidential Act (Emolument)",
+    dice: "4 Attack Dice (Drains 200 GP From Voters)",
+    cost: "600 GP",
+    icon: "🪙",
+    category: "Midterms 2026",
+    description: "The Founding Fathers forgot to write 'No Official White House Crypto Pump-and-Dumps' in the Constitution!"
+  },
+  {
+    id: "urn:robos:tabletop:weapon:doj-subpoena-crossbow",
+    name: "Weaponized Subpoena Crossbow",
+    type: "Illegal Presidential Act (Ranged)",
+    dice: "3 Attack Dice (Fires Indictments Across Rooms)",
+    cost: "400 GP",
+    icon: "🏹",
+    category: "Midterms 2026",
+    description: "Turns federal agencies into a personal campaign war-room! Fires rapid-fire subpoenas and investigations at political rivals."
+  },
+  {
+    id: "urn:robos:tabletop:weapon:official-act-immunity-shield",
+    name: "'Official Act' Sovereign Immunity Shield",
+    type: "Illegal Presidential Act (Armor)",
+    dice: "+3 Defend Dice (Total Legal Invincibility)",
+    cost: "750 GP",
+    icon: "🛡️",
+    category: "Midterms 2026",
+    description: "Just declare whatever sketchy thing you just did an 'Official Core Constitutional Act' and no prosecutor in the dungeon can touch you!"
+  }
+];
+
+const BASE_QUEST_ITEMS = [
+  { id: "urn:robos:tabletop:item:potion-healing", key: "potion-healing", name: "Potion of Healing", type: "potion", effect: "Restores up to 4 BP", value: 100, cost: "100 GP", icon: "🧪", category: "Base Game", description: "Brewed by the Alchemists' Guild to mend grievous dungeon wounds." },
+  { id: "urn:robos:tabletop:item:holy-water", key: "holy-water", name: "Holy Water", type: "relic", effect: "Dispel/Kill Undead", value: 200, cost: "200 GP", icon: "✨", category: "Base Game", description: "Consecrated water that instantly banishes a Skeleton, Zombie, or Mummy." },
+  { id: "urn:robos:tabletop:item:tool-kit", key: "tool-kit", name: "Trap Disarm Toolkit", type: "tool", effect: "Disarm traps without rolling skull", value: 75, cost: "75 GP", icon: "🔧", category: "Base Game", description: "Masterwork thieves' tools for safely disarming pit and spear traps." },
+  { id: "urn:robos:tabletop:item:heavy-rope", key: "heavy-rope", name: "Heavy Rope (30 ft)", type: "tool", effect: "Cross pits or climb chasms", value: 25, cost: "25 GP", icon: "🪢", category: "Base Game", description: "Hemp climbing rope for escaping deep pit traps." },
+  { id: "urn:robos:tabletop:item:torch", key: "torch", name: "Dungeon Torch", type: "tool", effect: "Light darkness for 3 turns", value: 15, cost: "15 GP", icon: "🔥", category: "Base Game", description: "Pitch-soaked torch that illuminates dark corridors and hidden doors." },
+  { id: "urn:robos:tabletop:item:potion-strength", key: "potion-strength", name: "Potion of Strength", type: "potion", effect: "+2 Attack Dice for 1 turn", value: 150, cost: "150 GP", icon: "💪", category: "Base Game", description: "Grants heroic might (+2 Combat Attack Dice) on your next attack." }
+];
+
+const MIDTERMS_2026_ITEMS = [
+  {
+    id: "urn:robos:tabletop:item:snowflake-tears",
+    key: "snowflake-tears",
+    name: "Vial of Delicate Snowflake Tears",
+    type: "potion",
+    effect: "Freezes everyone in awkward silence for 1 turn & restores 2 MP",
+    value: 150,
+    cost: "150 GP",
+    icon: "❄️",
+    category: "Midterms 2026",
+    description: "Distilled from pure comment-section meltdowns on both sides of the aisle! Makes the drinker immune to mild jokes for 1 turn."
+  },
+  {
+    id: "urn:robos:tabletop:item:bodily-autonomy-eraser",
+    key: "bodily-autonomy-eraser",
+    name: "1789 Bodily Autonomy Eraser Scroll",
+    type: "relic",
+    effect: "Takes away abortion & personal choice; forces target to lose their action",
+    value: 250,
+    cost: "250 GP",
+    icon: "📜",
+    category: "Midterms 2026",
+    description: "Takes away reproductive rights and bodily autonomy using a dusty parchment from 1789 because politicians love regulating personal healthcare."
+  },
+  {
+    id: "urn:robos:tabletop:item:party-line-flip-flops",
+    key: "party-line-flip-flops",
+    name: "Party-Line Flip-Flop Sandals",
+    type: "relic",
+    effect: "Support things just because your party does! Instant 180° pivot & +2 Move",
+    value: 200,
+    cost: "200 GP",
+    icon: "🩴",
+    category: "Midterms 2026",
+    description: "Supporting things just because your party does! Automatically spins you 180 degrees the second your party leader changes their mind."
+  },
+  {
+    id: "urn:robos:tabletop:item:middle-east-teleprompter",
+    key: "middle-east-teleprompter",
+    name: "Middle East Briefing Teleprompter Shield",
+    type: "tool",
+    effect: "Deflects impossible questions on Israel & the Middle East (+2 Defend Dice)",
+    value: 300,
+    cost: "300 GP",
+    icon: "📺",
+    category: "Midterms 2026",
+    description: "Fear of Israel and the Middle East in a town-hall debate! Pivots immediately to talking about bridges and roads while dodging all projectiles."
+  },
+  {
+    id: "urn:robos:tabletop:item:fed-printer-coin",
+    key: "fed-printer-coin",
+    name: "Money Printer Goes 'Brrrr' Crank",
+    type: "relic",
+    effect: "Prints +500 GP instantly, but raises shop prices by 50%",
+    value: 500,
+    cost: "500 GP",
+    icon: "🖨️",
+    category: "Midterms 2026",
+    description: "Cranks out fresh stimulus gold coins out of thin air while economists insist inflation isn't real!"
+  }
+];
+
+function getAllDreadSpells() {
+  const map = new Map();
+  [...DREAD_SPELLS, ...MIDTERMS_2026_DREAD_SPELLS, ...(currentData.dreadSpells || [])].forEach(ds => {
+    const key = ds.slug || ds.id;
+    if (key) map.set(key, ds);
+  });
+  return Array.from(map.values());
+}
+
+function getAllHeroSpellsCatalog() {
+  const map = new Map();
+  Object.keys(ELEMENTAL_DECKS).forEach(elemKey => {
+    ELEMENTAL_DECKS[elemKey].spells.forEach(s => {
+      map.set(s.id || s.slug, { ...s, category: s.category || "Base Game" });
+    });
+  });
+  MIDTERMS_2026_SPELLS.forEach(s => {
+    map.set(s.id || s.slug, { ...s, category: s.category || "Midterms 2026" });
+  });
+  (currentData.spells || []).forEach(n => {
+    const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+    if (t.includes("robos:TabletopDreadSpell") || n["robos:spellCollege"] === "dread") return;
+    const id = n["@id"] || n.id;
+    const slug = (id || "").replace("urn:robos:tabletop:spell:", "");
+    if (!map.has(id) && !map.has(slug)) {
+      map.set(id || slug, {
+        id: id || `urn:robos:tabletop:spell:${slug}`,
+        slug: slug,
+        name: n["dcterms:title"] || n.name || slug,
+        element: (n["robos:spellCollege"] || n.element || "fire").toLowerCase(),
+        category: n["robos:category"] || n.category || "Base Game",
+        icon: n["robos:icon"] || n.icon || "✨",
+        description: n["dcterms:description"] || n.description || "",
+        effect: n["robos:effect"] || n.effect || "damage-bp",
+        val: n["robos:effectValue"] || n.val || 2
+      });
+    }
+  });
+  return Array.from(map.values());
+}
+
+function syncCategoryCatalogsFromKGraph() {
+  const catSet = new Set(DEFAULT_CATEGORIES);
+  (currentData.categories || []).forEach(c => {
+    if (c && String(c).trim()) catSet.add(String(c).trim());
+  });
+
+  // Collect categories from KGraph nodes
+  (currentData.tabletopNodes || []).forEach(n => {
+    if (n["robos:category"]) catSet.add(n["robos:category"]);
+  });
+  (currentData.monsters || []).forEach(m => {
+    if (m["robos:category"]) catSet.add(m["robos:category"]);
+  });
+
+  // Sync weapons
+  const wepMap = new Map();
+  [...BASE_WEAPONS, ...MIDTERMS_2026_WEAPONS, ...(currentData.weapons || [])].forEach(w => {
+    wepMap.set(w.id || w.name, { ...w, category: w.category || "Base Game" });
+  });
+  (currentData.tabletopNodes || []).forEach(n => {
+    const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+    if (t.includes("robos:TabletopWeapon") || (t.includes("robos:TabletopArtifact") && n["robos:itemType"] === "weapon")) {
+      const id = n["@id"];
+      if (!wepMap.has(id)) {
+        wepMap.set(id, {
+          id,
+          name: n["dcterms:title"] || id,
+          type: n["robos:weaponType"] || "Weapon",
+          dice: n["robos:combatStat"] || `${n["robos:attackDice"] || 3} Attack Dice`,
+          cost: n["robos:cost"] || `${n["robos:goldValue"] || 250} GP`,
+          icon: n["robos:icon"] || "⚔️",
+          category: n["robos:category"] || "Base Game",
+          description: n["dcterms:description"] || ""
+        });
+      }
+    }
+  });
+  currentData.weapons = Array.from(wepMap.values());
+  currentData.weapons.forEach(w => { if (w.category) catSet.add(w.category); });
+
+  // Sync quest items
+  const itemMap = new Map();
+  [...BASE_QUEST_ITEMS, ...MIDTERMS_2026_ITEMS, ...(currentData.items || [])].forEach(it => {
+    itemMap.set(it.id || it.key || it.name, { ...it, category: it.category || "Base Game" });
+  });
+  (currentData.tabletopNodes || []).forEach(n => {
+    const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+    if (t.includes("robos:TabletopItem") || (t.includes("robos:TabletopBlessing") && n["robos:category"])) {
+      const id = n["@id"];
+      if (!itemMap.has(id)) {
+        const key = id.split(":").pop();
+        itemMap.set(id, {
+          id,
+          key,
+          name: n["dcterms:title"] || key,
+          type: n["robos:itemType"] || "relic",
+          effect: n["robos:effect"] || n["dcterms:description"] || "",
+          value: n["robos:goldValue"] || 100,
+          cost: n["robos:cost"] || `${n["robos:goldValue"] || 100} GP`,
+          icon: n["robos:icon"] || "🎒",
+          category: n["robos:category"] || "Base Game",
+          description: n["dcterms:description"] || ""
+        });
+      }
+    }
+  });
+  currentData.items = Array.from(itemMap.values());
+  currentData.items.forEach(it => { if (it.category) catSet.add(it.category); });
+
+  // Also register all items in PRESET_ITEMS so heroes can equip them
+  currentData.items.forEach(it => {
+    const k = it.key || (it.id ? it.id.split(":").pop() : it.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
+    PRESET_ITEMS[k] = {
+      id: it.id || `item-${k}`,
+      name: it.name,
+      type: it.type || "item",
+      effect: it.effect || it.description || "",
+      value: parseInt(it.value, 10) || parseInt(it.cost, 10) || 100,
+      category: it.category || "Base Game"
+    };
+  });
+
+  // Sync dread spells
+  const dreadMap = new Map();
+  [...DREAD_SPELLS, ...MIDTERMS_2026_DREAD_SPELLS, ...(currentData.dreadSpells || [])].forEach(ds => {
+    dreadMap.set(ds.slug || ds.id, { ...ds, category: ds.category || "Base Game" });
+  });
+  (currentData.tabletopNodes || []).forEach(n => {
+    const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+    if (t.includes("robos:TabletopDreadSpell") || n["robos:spellCollege"] === "dread") {
+      const id = n["@id"];
+      const slug = (id || "").replace("urn:robos:tabletop:spell:", "");
+      if (!dreadMap.has(slug)) {
+        dreadMap.set(slug, {
+          id,
+          slug,
+          name: n["dcterms:title"] || slug,
+          element: "dread",
+          category: n["robos:category"] || "Base Game",
+          icon: n["robos:icon"] || "⚡",
+          description: n["dcterms:description"] || "",
+          effect: n["robos:effect"] || "damage-bp",
+          val: n["robos:effectValue"] || 2
+        });
+      }
+    }
+  });
+  currentData.dreadSpells = Array.from(dreadMap.values());
+  currentData.dreadSpells.forEach(ds => { if (ds.category) catSet.add(ds.category); });
+
+  currentData.categories = Array.from(catSet);
+}
+
+function getCategories() {
+  if (!Array.isArray(currentData.categories) || currentData.categories.length === 0) {
+    currentData.categories = [...DEFAULT_CATEGORIES];
+  }
+  return currentData.categories;
+}
+
+function addCategory(categoryName) {
+  const clean = String(categoryName || "").trim();
+  if (!clean) return { success: false, error: "Category name cannot be empty" };
+  if (!Array.isArray(currentData.categories)) {
+    currentData.categories = [...DEFAULT_CATEGORIES];
+  }
+  const existing = currentData.categories.find(c => c.toLowerCase() === clean.toLowerCase());
+  const finalName = existing || clean;
+  if (!existing) {
+    currentData.categories.push(finalName);
+  }
+  renderCategoryControlsUI();
+  setStatus(`Added content category '${finalName}'.`);
+  return { success: true, category: finalName, categories: [...currentData.categories] };
+}
+
+function getMonstersByCategory(category = "All") {
+  const list = currentData.monsters || [];
+  if (!category || category === "All") return list;
+  return list.filter(m => (m["robos:category"] || "Base Game") === category);
+}
+
+function getSpellsByCategory(category = "All") {
+  const list = getAllHeroSpellsCatalog();
+  if (!category || category === "All") return list;
+  return list.filter(s => (s.category || "Base Game") === category);
+}
+
+function getDreadSpellsByCategory(category = "All") {
+  const list = getAllDreadSpells();
+  if (!category || category === "All") return list;
+  return list.filter(s => (s.category || "Base Game") === category);
+}
+
+function getWeaponsByCategory(category = "All") {
+  if (!currentData.weapons || currentData.weapons.length === 0) syncCategoryCatalogsFromKGraph();
+  const list = currentData.weapons || [];
+  if (!category || category === "All") return list;
+  return list.filter(w => (w.category || "Base Game") === category);
+}
+
+function getItemsByCategory(category = "All") {
+  if (!currentData.items || currentData.items.length === 0) syncCategoryCatalogsFromKGraph();
+  const list = currentData.items || [];
+  if (!category || category === "All") return list;
+  return list.filter(it => (it.category || "Base Game") === category);
+}
+
+function setMonsterCategoryFilter(category) {
+  currentData.activeMonsterCategoryFilter = category || "All";
+  const filterSelect = document.getElementById("monster-category-filter");
+  if (filterSelect && filterSelect.value !== currentData.activeMonsterCategoryFilter) {
+    filterSelect.value = currentData.activeMonsterCategoryFilter;
+  }
+  renderMonstersList();
+  return getMonstersByCategory(currentData.activeMonsterCategoryFilter);
+}
+
+function setSpellItemCategoryFilter(category) {
+  currentData.activeSpellItemCategoryFilter = category || "All";
+  const filterSelect = document.getElementById("spells-items-category-filter");
+  if (filterSelect && filterSelect.value !== currentData.activeSpellItemCategoryFilter) {
+    filterSelect.value = currentData.activeSpellItemCategoryFilter;
+  }
+  renderCategoryControlsUI();
+  renderSpellsAndItems();
+  return {
+    category: currentData.activeSpellItemCategoryFilter,
+    spells: getSpellsByCategory(currentData.activeSpellItemCategoryFilter),
+    dreadSpells: getDreadSpellsByCategory(currentData.activeSpellItemCategoryFilter),
+    weapons: getWeaponsByCategory(currentData.activeSpellItemCategoryFilter),
+    items: getItemsByCategory(currentData.activeSpellItemCategoryFilter)
+  };
+}
+
+function renderCategoryControlsUI() {
+  const cats = getCategories();
+
+  // 1. Filter selects (include "All")
+  ["monster-category-filter", "spells-items-category-filter"].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const prevVal = selId === "monster-category-filter"
+      ? (currentData.activeMonsterCategoryFilter || "All")
+      : (currentData.activeSpellItemCategoryFilter || "All");
+    sel.innerHTML = "";
+    const allOpt = document.createElement("option");
+    allOpt.value = "All";
+    allOpt.textContent = "All Categories (" + cats.length + " Packs)";
+    sel.appendChild(allOpt);
+    cats.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c;
+      opt.textContent = c === "Base Game" ? "🏰 Base Game" : (c === "Midterms 2026" ? "🗳️ Midterms 2026" : `🏷️ ${c}`);
+      sel.appendChild(opt);
+    });
+    sel.value = cats.includes(prevVal) || prevVal === "All" ? prevVal : "All";
+  });
+
+  // 2. Entity assignment selects (no "All")
+  ["monster-category", "new-spell-category", "new-weapon-category", "new-item-category"].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const prevVal = sel.value;
+    sel.innerHTML = "";
+    cats.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c;
+      opt.textContent = c;
+      sel.appendChild(opt);
+    });
+    if (prevVal && cats.includes(prevVal)) {
+      sel.value = prevVal;
+    } else if (currentData.activeSpellItemCategoryFilter && currentData.activeSpellItemCategoryFilter !== "All") {
+      sel.value = currentData.activeSpellItemCategoryFilter;
+    }
+  });
+
+  // 3. Render Category Pills Bar on Spells & Items tab
+  const pillsBar = document.getElementById("category-pills-bar");
+  if (pillsBar) {
+    pillsBar.innerHTML = "";
+    const activeCat = currentData.activeSpellItemCategoryFilter || "All";
+    ["All", ...cats].forEach(c => {
+      const btn = document.createElement("button");
+      const isActive = activeCat === c;
+      btn.className = `btn btn-xs ${isActive ? "btn-primary" : "btn-secondary"} category-pill-btn`;
+      btn.dataset.category = c;
+      const icon = c === "All" ? "🌐" : (c === "Base Game" ? "🏰" : (c === "Midterms 2026" ? "🗳️" : "🏷️"));
+      btn.textContent = `${icon} ${c === "All" ? "All Packs" : c}`;
+      btn.onclick = () => setSpellItemCategoryFilter(c);
+      pillsBar.appendChild(btn);
+    });
+  }
+}
+
+function syncBoardMonsterSelectDropdown() {
+  const sel = document.getElementById("select-monster-type");
+  if (!sel) return;
+  const currentVal = sel.value;
+  const cats = getCategories();
+  sel.innerHTML = "";
+
+  cats.forEach(cat => {
+    const monstersInCat = getMonstersByCategory(cat);
+    if (monstersInCat.length === 0) return;
+    const optgroup = document.createElement("optgroup");
+    optgroup.label = `🏷️ ${cat}`;
+    monstersInCat.forEach(m => {
+      const slug = (m["@id"] || "").replace("urn:robos:tabletop:monster:", "");
+      const opt = document.createElement("option");
+      opt.value = slug;
+      const bp = m["robos:bodyPoints"] || 1;
+      const atk = m["robos:attackDice"] || 2;
+      const bossTag = m["robos:isBoss"] ? "👑 BOSS, " : "";
+      opt.textContent = `${m["dcterms:title"] || slug} (${bossTag}${bp} BP, ${atk} Atk)`;
+      optgroup.appendChild(opt);
+    });
+    sel.appendChild(optgroup);
+  });
+
+  if (currentVal && Array.from(sel.options).some(o => o.value === currentVal)) {
+    sel.value = currentVal;
+  }
+}
+
+function syncHeroPresetItemsDropdown() {
+  const sel = document.getElementById("hero-preset-item");
+  if (!sel) return;
+  const currentVal = sel.value;
+  const cats = getCategories();
+  sel.innerHTML = "";
+
+  cats.forEach(cat => {
+    const itemsInCat = getItemsByCategory(cat);
+    if (itemsInCat.length === 0) return;
+    const optgroup = document.createElement("optgroup");
+    optgroup.label = `🏷️ ${cat}`;
+    itemsInCat.forEach(it => {
+      const key = it.key || (it.id ? it.id.split(":").pop() : it.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"));
+      const opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = `${it.icon || "🎒"} ${it.name} (${it.effect || it.type || "Item"})`;
+      optgroup.appendChild(opt);
+    });
+    sel.appendChild(optgroup);
+  });
+
+  if (currentVal && Array.from(sel.options).some(o => o.value === currentVal)) {
+    sel.value = currentVal;
+  }
+}
+
+async function addCustomSpell(spellInput) {
+  const name = String(spellInput.name || "").trim();
+  if (!name) return { success: false, error: "Spell name is required" };
+  const category = String(spellInput.category || "Base Game").trim();
+  addCategory(category);
+  const element = String(spellInput.element || "fire").toLowerCase();
+  const slug = spellInput.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const id = `urn:robos:tabletop:spell:${slug}`;
+  const icon = spellInput.icon || (element === "dread" ? "⚡" : "✨");
+  const description = spellInput.description || "Custom tabletop spell.";
+  const effect = spellInput.effect || "damage-bp";
+  const val = parseInt(spellInput.val, 10) || 2;
+
+  const spellObj = { id, slug, name, element, category, icon, description, effect, val };
+
+  if (element === "dread") {
+    currentData.dreadSpells.push(spellObj);
+  } else {
+    currentData.spells.push({
+      "@id": id,
+      "@type": ["oslc_am:Resource", "robos:TabletopSpellCard", "schema:Thing"],
+      "dcterms:title": name,
+      "dcterms:description": description,
+      "robos:category": category,
+      "robos:spellCollege": element,
+      "robos:icon": icon,
+      "robos:effect": effect,
+      "robos:effectValue": val,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    });
+  }
+
+  if (window.robosTabletop?.saveKGraphEntity) {
+    await window.robosTabletop.saveKGraphEntity({
+      entity: {
+        "@id": id,
+        "@type": element === "dread"
+          ? ["oslc_am:Resource", "robos:TabletopSpellCard", "robos:TabletopDreadSpell", "schema:Thing"]
+          : ["oslc_am:Resource", "robos:TabletopSpellCard", "schema:Thing"],
+        "dcterms:title": name,
+        "dcterms:description": description,
+        "robos:category": category,
+        "robos:spellCollege": element,
+        "robos:icon": icon,
+        "robos:effect": effect,
+        "robos:effectValue": val,
+        "robos:package": "tabletop-game",
+        "robos:namespace": "robos.tabletop"
+      }
+    });
+  }
+
+  renderSpellsAndItems();
+  setStatus(`Added spell '${name}' under category '${category}'.`);
+  return { success: true, spell: spellObj };
+}
+
+async function addCustomWeapon(weaponInput) {
+  const name = String(weaponInput.name || "").trim();
+  if (!name) return { success: false, error: "Weapon name is required" };
+  const category = String(weaponInput.category || "Base Game").trim();
+  addCategory(category);
+  const slug = weaponInput.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const id = `urn:robos:tabletop:weapon:${slug}`;
+  const weaponObj = {
+    id,
+    name,
+    type: weaponInput.type || "Weapon",
+    dice: weaponInput.dice || "3 Attack Dice",
+    cost: weaponInput.cost || "250 GP",
+    icon: weaponInput.icon || "⚔️",
+    category,
+    description: weaponInput.description || ""
+  };
+  currentData.weapons.push(weaponObj);
+
+  if (window.robosTabletop?.saveKGraphEntity) {
+    await window.robosTabletop.saveKGraphEntity({
+      entity: {
+        "@id": id,
+        "@type": ["oslc_am:Resource", "robos:TabletopArtifact", "robos:TabletopWeapon", "schema:Product"],
+        "dcterms:title": name,
+        "dcterms:description": weaponObj.description,
+        "robos:category": category,
+        "robos:itemType": "weapon",
+        "robos:weaponType": weaponObj.type,
+        "robos:combatStat": weaponObj.dice,
+        "robos:cost": weaponObj.cost,
+        "robos:icon": weaponObj.icon,
+        "robos:package": "tabletop-game",
+        "robos:namespace": "robos.tabletop"
+      }
+    });
+  }
+
+  renderSpellsAndItems();
+  setStatus(`Added weapon '${name}' under category '${category}'.`);
+  return { success: true, weapon: weaponObj };
+}
+
+async function addCustomItem(itemInput) {
+  const name = String(itemInput.name || "").trim();
+  if (!name) return { success: false, error: "Item name is required" };
+  const category = String(itemInput.category || "Base Game").trim();
+  addCategory(category);
+  const slug = itemInput.slug || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const id = `urn:robos:tabletop:item:${slug}`;
+  const costStr = itemInput.cost ? (String(itemInput.cost).includes("GP") ? String(itemInput.cost) : `${itemInput.cost} GP`) : "100 GP";
+  const valNum = parseInt(itemInput.value || itemInput.cost, 10) || 100;
+  const itemObj = {
+    id,
+    key: slug,
+    name,
+    type: itemInput.type || "relic",
+    effect: itemInput.effect || "Special quest effect",
+    value: valNum,
+    cost: costStr,
+    icon: itemInput.icon || "🎒",
+    category,
+    description: itemInput.description || itemInput.effect || ""
+  };
+  currentData.items.push(itemObj);
+  PRESET_ITEMS[slug] = {
+    id: `item-${slug}`,
+    name: itemObj.name,
+    type: itemObj.type,
+    effect: itemObj.effect,
+    value: itemObj.value,
+    category: itemObj.category
+  };
+
+  if (window.robosTabletop?.saveKGraphEntity) {
+    await window.robosTabletop.saveKGraphEntity({
+      entity: {
+        "@id": id,
+        "@type": ["oslc_am:Resource", "robos:TabletopBlessing", "robos:TabletopItem", "schema:Thing"],
+        "dcterms:title": name,
+        "dcterms:description": itemObj.description,
+        "robos:category": category,
+        "robos:itemType": itemObj.type,
+        "robos:effect": itemObj.effect,
+        "robos:goldValue": itemObj.value,
+        "robos:cost": itemObj.cost,
+        "robos:icon": itemObj.icon,
+        "robos:package": "tabletop-game",
+        "robos:namespace": "robos.tabletop"
+      }
+    });
+  }
+
+  syncHeroPresetItemsDropdown();
+  renderSpellsAndItems();
+  setStatus(`Added item '${name}' under category '${category}'.`);
+  return { success: true, item: itemObj };
+}
+
+let categoryControlsInitialized = false;
+function setupCategoryControls() {
+  if (categoryControlsInitialized) return;
+  categoryControlsInitialized = true;
+
+  // Monster tab category filter
+  document.getElementById("monster-category-filter")?.addEventListener("change", (e) => {
+    setMonsterCategoryFilter(e.target.value);
+  });
+
+  // Monster tab add new category button
+  document.getElementById("btn-add-monster-category")?.addEventListener("click", () => {
+    const input = document.getElementById("monster-new-category-input");
+    const val = input?.value?.trim();
+    if (!val) return;
+    const res = addCategory(val);
+    if (res.success) {
+      if (input) input.value = "";
+      setMonsterCategoryFilter(res.category);
+      const monCatSelect = document.getElementById("monster-category");
+      if (monCatSelect) monCatSelect.value = res.category;
+    }
+  });
+
+  // Spells & Items tab category filter
+  document.getElementById("spells-items-category-filter")?.addEventListener("change", (e) => {
+    setSpellItemCategoryFilter(e.target.value);
+  });
+
+  // Spells & Items tab create category button
+  document.getElementById("btn-create-category")?.addEventListener("click", () => {
+    const input = document.getElementById("new-category-name");
+    const val = input?.value?.trim();
+    if (!val) return;
+    const res = addCategory(val);
+    if (res.success) {
+      if (input) input.value = "";
+      setSpellItemCategoryFilter(res.category);
+    }
+  });
+
+  // Toggle inline forms on Spells & Items tab
+  document.getElementById("btn-toggle-add-spell")?.addEventListener("click", () => {
+    const form = document.getElementById("form-add-spell-card");
+    if (form) form.style.display = form.style.display === "none" ? "block" : "none";
+  });
+  document.getElementById("btn-cancel-new-spell")?.addEventListener("click", () => {
+    const form = document.getElementById("form-add-spell-card");
+    if (form) form.style.display = "none";
+  });
+  document.getElementById("btn-save-new-spell")?.addEventListener("click", async () => {
+    const name = document.getElementById("new-spell-name")?.value;
+    const category = document.getElementById("new-spell-category")?.value || "Base Game";
+    const element = document.getElementById("new-spell-college")?.value || "fire";
+    const icon = document.getElementById("new-spell-icon")?.value || "✨";
+    const description = document.getElementById("new-spell-desc")?.value || "";
+    const res = await addCustomSpell({ name, category, element, icon, description });
+    if (res.success) {
+      document.getElementById("new-spell-name").value = "";
+      document.getElementById("new-spell-desc").value = "";
+      document.getElementById("form-add-spell-card").style.display = "none";
+    }
+  });
+
+  document.getElementById("btn-toggle-add-weapon")?.addEventListener("click", () => {
+    const form = document.getElementById("form-add-weapon-card");
+    if (form) form.style.display = form.style.display === "none" ? "block" : "none";
+  });
+  document.getElementById("btn-cancel-new-weapon")?.addEventListener("click", () => {
+    const form = document.getElementById("form-add-weapon-card");
+    if (form) form.style.display = "none";
+  });
+  document.getElementById("btn-save-new-weapon")?.addEventListener("click", async () => {
+    const name = document.getElementById("new-weapon-name")?.value;
+    const category = document.getElementById("new-weapon-category")?.value || "Base Game";
+    const type = document.getElementById("new-weapon-type")?.value || "Weapon";
+    const dice = document.getElementById("new-weapon-dice")?.value || "3 Attack Dice";
+    const costVal = document.getElementById("new-weapon-cost")?.value || "250";
+    const icon = document.getElementById("new-weapon-icon")?.value || "⚔️";
+    const description = document.getElementById("new-weapon-desc")?.value || "";
+    const res = await addCustomWeapon({ name, category, type, dice, cost: `${costVal} GP`, icon, description });
+    if (res.success) {
+      document.getElementById("new-weapon-name").value = "";
+      document.getElementById("new-weapon-desc").value = "";
+      document.getElementById("form-add-weapon-card").style.display = "none";
+    }
+  });
+
+  document.getElementById("btn-toggle-add-quest-item")?.addEventListener("click", () => {
+    const form = document.getElementById("form-add-quest-item-card");
+    if (form) form.style.display = form.style.display === "none" ? "block" : "none";
+  });
+  document.getElementById("btn-cancel-new-item")?.addEventListener("click", () => {
+    const form = document.getElementById("form-add-quest-item-card");
+    if (form) form.style.display = "none";
+  });
+  document.getElementById("btn-save-new-item")?.addEventListener("click", async () => {
+    const name = document.getElementById("new-item-name")?.value;
+    const category = document.getElementById("new-item-category")?.value || "Base Game";
+    const type = document.getElementById("new-item-type")?.value || "relic";
+    const effect = document.getElementById("new-item-effect")?.value || "";
+    const costVal = document.getElementById("new-item-cost")?.value || "100";
+    const icon = document.getElementById("new-item-icon")?.value || "🎒";
+    const res = await addCustomItem({ name, category, type, effect, value: parseInt(costVal, 10) || 100, cost: `${costVal} GP`, icon });
+    if (res.success) {
+      document.getElementById("new-item-name").value = "";
+      document.getElementById("new-item-effect").value = "";
+      document.getElementById("form-add-quest-item-card").style.display = "none";
+    }
+  });
+}
 
 function getSpellAllocation() {
   return currentData.spellAllocation;
@@ -2672,10 +4092,17 @@ function getHeroInventory(h) {
 
 // Render Heroes Sidebar List
 function renderHeroesList() {
+  if (currentData.campaign && currentData.campaign.heroes !== currentData.heroes) {
+    currentData.campaign.heroes = currentData.heroes;
+  }
+  const countEl = document.getElementById("campaign-subtab-heroes-count");
+  if (countEl) countEl.textContent = String(currentData.heroes.length);
+
   const container = document.getElementById("heroes-list");
   if (!container) return;
   container.innerHTML = "";
 
+  const fragment = document.createDocumentFragment();
   currentData.heroes.forEach(h => {
     const div = document.createElement("div");
     div.className = "list-item" + (h["@id"] === currentData.activeHeroId ? " active" : "");
@@ -2696,8 +4123,9 @@ function renderHeroesList() {
     `;
 
     div.onclick = () => selectHero(h["@id"]);
-    container.appendChild(div);
+    fragment.appendChild(div);
   });
+  container.appendChild(fragment);
 
   if (!currentData.activeHeroId && currentData.heroes.length > 0) {
     selectHero(currentData.heroes[0]["@id"]);
@@ -2721,26 +4149,39 @@ function selectHero(heroId) {
   if (hero["robos:currentBP"] === undefined) hero["robos:currentBP"] = maxBP;
   if (hero["robos:currentMP"] === undefined) hero["robos:currentMP"] = maxMP;
 
-  renderHeroesList();
+  // In-place active toggle to avoid full list re-render
+  const items = document.querySelectorAll("#heroes-list .list-item");
+  if (items.length > 0) {
+    items.forEach(el => {
+      el.classList.toggle("active", el.dataset.heroId === heroId);
+    });
+  } else {
+    renderHeroesList();
+  }
 
   // Populate Hero Form
   const heroName = getHeroName(hero);
-  document.getElementById("hero-editor-title").textContent = "Edit Hero: " + heroName;
-  document.getElementById("hero-id").value = hero["@id"] || "";
-  document.getElementById("hero-name").value = heroName;
-  document.getElementById("hero-class").value = hero["robos:heroClass"] || "";
-  document.getElementById("hero-bp").value = hero["robos:bodyPoints"] || 8;
-  document.getElementById("hero-mp").value = hero["robos:mindPoints"] || 2;
-  document.getElementById("hero-atk").value = hero["robos:attackDice"] || 3;
-  document.getElementById("hero-def").value = hero["robos:defendDice"] || 2;
-  document.getElementById("hero-gold").value = hero["robos:gold"] !== undefined ? hero["robos:gold"] : 100;
-  document.getElementById("hero-weapon").value = hero["robos:equippedWeapon"] || hero["robos:startingWeapon"] || "";
-  document.getElementById("hero-armor").value = hero["robos:equippedArmor"] || "";
-  document.getElementById("hero-ability").value = hero["robos:specialAbility"] || "";
-  document.getElementById("hero-color").value = hero["robos:tokenColor"] || "#b91c1c";
-  document.getElementById("hero-icon").value = hero["robos:icon"] || "🛡️";
-  document.getElementById("hero-pos-x").value = (hero["robos:startingPosition"] && hero["robos:startingPosition"][0]) || 1;
-  document.getElementById("hero-pos-y").value = (hero["robos:startingPosition"] && hero["robos:startingPosition"][1]) || 1;
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  };
+  const titleEl = document.getElementById("hero-editor-title");
+  if (titleEl) titleEl.textContent = "Edit Hero: " + heroName;
+  setVal("hero-id", hero["@id"] || "");
+  setVal("hero-name", heroName);
+  setVal("hero-class", hero["robos:heroClass"] || "");
+  setVal("hero-bp", hero["robos:bodyPoints"] || 8);
+  setVal("hero-mp", hero["robos:mindPoints"] || 2);
+  setVal("hero-atk", hero["robos:attackDice"] || 3);
+  setVal("hero-def", hero["robos:defendDice"] || 2);
+  setVal("hero-gold", hero["robos:gold"] !== undefined ? hero["robos:gold"] : 100);
+  setVal("hero-weapon", hero["robos:equippedWeapon"] || hero["robos:startingWeapon"] || "");
+  setVal("hero-armor", hero["robos:equippedArmor"] || "");
+  setVal("hero-ability", hero["robos:specialAbility"] || "");
+  setVal("hero-color", hero["robos:tokenColor"] || "#b91c1c");
+  setVal("hero-icon", hero["robos:icon"] || "🛡️");
+  setVal("hero-pos-x", (hero["robos:startingPosition"] && hero["robos:startingPosition"][0]) || 1);
+  setVal("hero-pos-y", (hero["robos:startingPosition"] && hero["robos:startingPosition"][1]) || 1);
 
   // Render Inventory, Grimoire & Action Screen
   renderHeroInventory(hero);
@@ -3631,15 +5072,17 @@ function getActiveMonster() {
 
 function getMonsterSpells(monster) {
   if (!monster) return [];
+  const allDread = getAllDreadSpells();
   const assigned = monster["robos:spells"] || [];
   return assigned.map(sp => {
     if (typeof sp === "object" && sp !== null) return sp;
     const slug = String(sp).replace("urn:robos:tabletop:spell:", "");
-    return DREAD_SPELLS.find(ds => ds.slug === slug || ds.id === sp) || {
+    return allDread.find(ds => ds.slug === slug || ds.id === sp) || {
       id: sp,
       slug: slug,
       name: slug.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
       element: "dread",
+      category: monster["robos:category"] || "Base Game",
       icon: "⚡",
       description: "Dread Chaos spell."
     };
@@ -3708,12 +5151,13 @@ function renderMonsterGrimoire(monster) {
     });
   }
 
-  // Populate dropdown with unassigned dread spells
+  // Populate dropdown with unassigned dread spells across all categories
   if (select) {
     select.innerHTML = "";
-    const available = DREAD_SPELLS.filter(ds => !assignedSlugs.includes(ds.slug));
+    const allDread = getAllDreadSpells();
+    const available = allDread.filter(ds => !assignedSlugs.includes(ds.slug));
     if (available.length === 0) {
-      select.innerHTML = `<option value="">All 8 Dread Spells Memorized</option>`;
+      select.innerHTML = `<option value="">All Dread Spells Memorized</option>`;
       select.disabled = true;
       const addBtn = document.getElementById("btn-monster-add-spell");
       if (addBtn) addBtn.disabled = true;
@@ -3724,7 +5168,8 @@ function renderMonsterGrimoire(monster) {
       available.forEach(ds => {
         const opt = document.createElement("option");
         opt.value = ds.slug;
-        opt.textContent = `${ds.icon} ${ds.name}`;
+        const catSuffix = ds.category && ds.category !== "Base Game" ? ` [${ds.category}]` : "";
+        opt.textContent = `${ds.icon} ${ds.name}${catSuffix}`;
         select.appendChild(opt);
       });
     }
@@ -3735,6 +5180,8 @@ function renderMonsterActionScreen(monster) {
   if (!monster) return;
   const nameEl = document.getElementById("act-monster-name");
   const typeTag = document.getElementById("act-monster-type-tag");
+  const catTag = document.getElementById("act-monster-category-tag");
+  const descEl = document.getElementById("act-monster-desc");
   const casterBadge = document.getElementById("act-monster-spellcaster-badge");
   const iconEl = document.getElementById("act-monster-icon");
   const atkStat = document.getElementById("act-monster-atk-stat");
@@ -3743,26 +5190,39 @@ function renderMonsterActionScreen(monster) {
 
   if (nameEl) nameEl.textContent = monster["dcterms:title"] || "Monster";
   if (typeTag) {
+    const arch = monster["robos:monsterArchetype"] ? ` (${monster["robos:monsterArchetype"]})` : "";
     if (monster["robos:isBoss"]) {
-      typeTag.textContent = "Boss Monster";
+      typeTag.textContent = `Boss Monster${arch}`;
       typeTag.style.background = "#581c87";
       typeTag.style.color = "#f3e8ff";
       typeTag.style.borderColor = "#a855f7";
     } else if (monster["robos:isUndead"]) {
-      typeTag.textContent = "Undead";
+      typeTag.textContent = `Undead${arch}`;
       typeTag.style.background = "#1f2937";
       typeTag.style.color = "#9ca3af";
       typeTag.style.borderColor = "#4b5563";
     } else {
-      typeTag.textContent = "Monster";
+      typeTag.textContent = `Monster${arch}`;
       typeTag.style.background = "#450a0a";
       typeTag.style.color = "#fca5a5";
       typeTag.style.borderColor = "#991b1b";
     }
   }
 
+  if (catTag) {
+    const cat = monster["robos:category"] || "Base Game";
+    catTag.textContent = `🏷️ ${cat}`;
+  }
+
+  if (descEl) {
+    const desc = monster["dcterms:description"] || "";
+    descEl.textContent = desc;
+    descEl.style.display = desc ? "block" : "none";
+  }
+
   if (iconEl) {
-    if (monster["robos:isBoss"]) iconEl.textContent = "👑";
+    if (monster["robos:icon"]) iconEl.textContent = monster["robos:icon"];
+    else if (monster["robos:isBoss"]) iconEl.textContent = "👑";
     else if (monster["robos:isUndead"]) iconEl.textContent = "💀";
     else if (monster["robos:isSpellcaster"]) iconEl.textContent = "🧙‍♂️";
     else iconEl.textContent = "👹";
@@ -3893,7 +5353,8 @@ function castMonsterSpell(monster, spellSlug) {
   }
   if (!spellSlug) return null;
 
-  const spell = DREAD_SPELLS.find(s => s.slug === spellSlug) || {
+  const allDread = getAllDreadSpells();
+  const spell = allDread.find(s => s.slug === spellSlug) || {
     slug: spellSlug,
     name: spellSlug,
     icon: "⚡",
@@ -3931,6 +5392,853 @@ function castMonsterSpell(monster, spellSlug) {
   return { success: true, monster, spell, effectDescription };
 }
 
+// ==========================================
+// 1.8. RPG CLASS ENGINE (HERO CLASSES & BASE ENEMY CLASSES)
+// ==========================================
+
+const HERO_CLASSES = [
+  {
+    id: "urn:robos:tabletop:class:hero-barbarian",
+    slug: "hero-barbarian",
+    name: "Barbarian",
+    classType: "Hero",
+    icon: "⚔️",
+    color: "#b91c1c",
+    bodyPoints: 8,
+    mindPoints: 2,
+    attackDice: 3,
+    defendDice: 2,
+    movementSquares: 7,
+    startingWeapon: "Broadsword (3 Combat Dice)",
+    startingArmor: "Natural Toughness (2 Defend Dice)",
+    abilities: "Greatest melee strength and vitality; starts with 8 Body Points and Broadsword (3 Attack Dice)",
+    description: "Towering warrior from the northern wastes with unmatched starting health (8 BP) and raw melee attack power (3 Attack Dice).",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:hero-dwarf",
+    slug: "hero-dwarf",
+    name: "Dwarf",
+    classType: "Hero",
+    icon: "🪓",
+    color: "#d97706",
+    bodyPoints: 7,
+    mindPoints: 3,
+    attackDice: 2,
+    defendDice: 2,
+    movementSquares: 7,
+    startingWeapon: "Shortsword (2 Combat Dice)",
+    startingArmor: "Shield & Chainmail (+2 Defend Dice)",
+    abilities: "Master Trap Disarmer — automatically disarms any detected trap without needing a toolkit",
+    description: "Stout mountaineer and master smith of World's Edge Mountains. Can disarm dungeon traps barehanded without a toolkit.",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:hero-elf",
+    slug: "hero-elf",
+    name: "Elf",
+    classType: "Hero",
+    icon: "🏹",
+    color: "#15803d",
+    bodyPoints: 6,
+    mindPoints: 4,
+    attackDice: 2,
+    defendDice: 2,
+    movementSquares: 7,
+    startingWeapon: "Shortsword (2 Combat Dice)",
+    startingArmor: "Elven Leather & Cloak (+2 Defend Dice)",
+    abilities: "Hybrid Spellblade — fights with martial weapons and drafts 1 Elemental Spell College (3 spells)",
+    description: "Agile sylvan champion combining martial swordplay (6 BP, 4 MP) with 1 Elemental Spell College (3 spells).",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: true
+  },
+  {
+    id: "urn:robos:tabletop:class:hero-wizard",
+    slug: "hero-wizard",
+    name: "Wizard",
+    classType: "Hero",
+    icon: "🔮",
+    color: "#7c3aed",
+    bodyPoints: 4,
+    mindPoints: 6,
+    attackDice: 1,
+    defendDice: 2,
+    movementSquares: 7,
+    startingWeapon: "Dagger (1 Combat Die)",
+    startingArmor: "Wizard Cloak (2 Defend Dice)",
+    abilities: "Master of the Arcane — wields 3 Elemental Spell Colleges (9 spells total); highest Mind Points (6 MP)",
+    description: "Scholar of the high elemental colleges with 6 Mind Points and 9 Elemental Spells across 3 schools of magic.",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: true
+  }
+];
+
+const ENEMY_CLASSES = [
+  {
+    id: "urn:robos:tabletop:class:enemy-goblin",
+    slug: "enemy-goblin",
+    name: "Goblin",
+    classType: "Enemy",
+    icon: "👺",
+    color: "#16a34a",
+    bodyPoints: 1,
+    mindPoints: 1,
+    attackDice: 2,
+    defendDice: 1,
+    movementSquares: 10,
+    startingWeapon: "Rusty Shortblade (2 Attack Dice)",
+    startingArmor: "Scraps (1 Defend Die)",
+    abilities: "Fastest dungeon scout (10 movement squares); weak armor (1 Defend Die)",
+    description: "Nimble greenskin scout with the fastest movement speed on the board (10 squares).",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-orc",
+    slug: "enemy-orc",
+    name: "Orc",
+    classType: "Enemy",
+    icon: "👹",
+    color: "#15803d",
+    bodyPoints: 1,
+    mindPoints: 2,
+    attackDice: 3,
+    defendDice: 2,
+    movementSquares: 8,
+    startingWeapon: "Notched Cleaver (3 Attack Dice)",
+    startingArmor: "Iron Mail (2 Defend Dice)",
+    abilities: "Fierce greenskin shock trooper with heavy 3-die cleaver attack",
+    description: "Core infantry of Zargon's legions—strikes hard with 3 Attack Dice and advances 8 squares.",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-fimir",
+    slug: "enemy-fimir",
+    name: "Fimir",
+    classType: "Enemy",
+    icon: "🦎",
+    color: "#0f766e",
+    bodyPoints: 2,
+    mindPoints: 3,
+    attackDice: 3,
+    defendDice: 3,
+    movementSquares: 6,
+    startingWeapon: "Marsh Battleaxe (3 Attack Dice)",
+    startingArmor: "Scaly Swamp Hide (3 Defend Dice)",
+    abilities: "Multi-wound abomination (2 Body Points) with scaly 3-die hide",
+    description: "One-eyed reptilian marsh fiend with 2 Body Points, 3 Attack Dice, and 3 Defend Dice.",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-skeleton",
+    slug: "enemy-skeleton",
+    name: "Skeleton",
+    classType: "Enemy",
+    icon: "💀",
+    color: "#94a3b8",
+    bodyPoints: 1,
+    mindPoints: 0,
+    attackDice: 2,
+    defendDice: 2,
+    movementSquares: 6,
+    startingWeapon: "Ancient Scythe (2 Attack Dice)",
+    startingArmor: "Ribcage Bones (2 Defend Dice)",
+    abilities: "Undead (0 Mind Points, immune to Mind spells, vulnerable to Holy Water / Turn Undead)",
+    description: "Reanimated bone warrior with 0 Mind Points and immunity to mind-affecting spells.",
+    isBoss: false,
+    isUndead: true,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-zombie",
+    slug: "enemy-zombie",
+    name: "Zombie",
+    classType: "Enemy",
+    icon: "🧟",
+    color: "#475569",
+    bodyPoints: 1,
+    mindPoints: 0,
+    attackDice: 2,
+    defendDice: 3,
+    movementSquares: 5,
+    startingWeapon: "Rotting Cleaver (2 Attack Dice)",
+    startingArmor: "Deadened Flesh (3 Defend Dice)",
+    abilities: "Shambling Undead corpse with resilient 3-die rot defense (0 Mind Points)",
+    description: "Slow-moving undead horror that shrugs off blows with 3 Defend Dice.",
+    isBoss: false,
+    isUndead: true,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-mummy",
+    slug: "enemy-mummy",
+    name: "Mummy",
+    classType: "Enemy",
+    icon: "🩹",
+    color: "#d97706",
+    bodyPoints: 2,
+    mindPoints: 0,
+    attackDice: 3,
+    defendDice: 4,
+    movementSquares: 4,
+    startingWeapon: "Embalmed Fist (3 Attack Dice)",
+    startingArmor: "Sacred Linen Wrappings (4 Defend Dice)",
+    abilities: "Elite Undead tomb guardian with 2 Body Points and 4 Defend Dice (0 Mind Points)",
+    description: "Powerful undead pharaoh guard with 2 BP, 3 Attack Dice, and 4 Defend Dice.",
+    isBoss: false,
+    isUndead: true,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-dread-warrior",
+    slug: "enemy-dread-warrior",
+    name: "Dread Warrior",
+    classType: "Enemy",
+    icon: "⚔️",
+    color: "#7f1d1d",
+    bodyPoints: 3,
+    mindPoints: 3,
+    attackDice: 4,
+    defendDice: 4,
+    movementSquares: 7,
+    startingWeapon: "Chaos Runeblade (4 Attack Dice)",
+    startingArmor: "Dread Plate Armor (4 Defend Dice)",
+    abilities: "Heavily armored champion of Chaos (3 Body Points, 4 Attack Dice, 4 Defend Dice)",
+    description: "Elite human warrior sworn to Chaos, clad in heavy dread-plate with 3 BP and 4/4 combat dice.",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-gargoyle",
+    slug: "enemy-gargoyle",
+    name: "Gargoyle",
+    classType: "Enemy",
+    icon: "🗿",
+    color: "#64748b",
+    bodyPoints: 3,
+    mindPoints: 4,
+    attackDice: 4,
+    defendDice: 5,
+    movementSquares: 6,
+    startingWeapon: "Stone Talons & Whip (4 Attack Dice)",
+    startingArmor: "Living Granite Skin (5 Defend Dice)",
+    abilities: "Living stone daemon with 5 Defend Dice and 4 Attack Dice",
+    description: "Winged stone terror with near-impenetrable granite hide (5 Defend Dice) and 3 Body Points.",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-orc-shaman",
+    slug: "enemy-orc-shaman",
+    name: "Orc Shaman",
+    classType: "Enemy",
+    icon: "🧙‍♂️",
+    color: "#059669",
+    bodyPoints: 3,
+    mindPoints: 4,
+    attackDice: 3,
+    defendDice: 3,
+    movementSquares: 7,
+    startingWeapon: "Skull Totem Staff (3 Attack Dice)",
+    startingArmor: "Shamanic Fetish Cloak (3 Defend Dice)",
+    abilities: "Greenskin Dread Spellcaster — casts Summon Undead, Fear, and Cloud of Chaos",
+    description: "Tribal greenskin sorcerer who channels Dread magic and commands lesser greenskins.",
+    isBoss: false,
+    isUndead: false,
+    isSpellcaster: true
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-orc-warlord",
+    slug: "enemy-orc-warlord",
+    name: "Orc Warlord",
+    classType: "Enemy",
+    icon: "👑",
+    color: "#b45309",
+    bodyPoints: 3,
+    mindPoints: 3,
+    attackDice: 4,
+    defendDice: 4,
+    movementSquares: 8,
+    startingWeapon: "Warboss Greataxe (4 Attack Dice)",
+    startingArmor: "Spiked Warlord Plate (4 Defend Dice)",
+    abilities: "Boss Commander — leads dungeon garrisons with 4 Attack Dice, 4 Defend Dice, and 8 Move",
+    description: "Brutal greenskin warboss (such as Verag or Ulag) commanding dungeon strongholds.",
+    isBoss: true,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-chaos-sorcerer",
+    slug: "enemy-chaos-sorcerer",
+    name: "Chaos Sorcerer",
+    classType: "Enemy",
+    icon: "⚡",
+    color: "#7e22ce",
+    bodyPoints: 4,
+    mindPoints: 5,
+    attackDice: 4,
+    defendDice: 4,
+    movementSquares: 7,
+    startingWeapon: "Staff of Dread Lightning (4 Attack Dice)",
+    startingArmor: "Ward of Chaos (4 Defend Dice)",
+    abilities: "Master of Dread Sorcery — casts Lightning Bolt, Firestorm, Rust, and Escape",
+    description: "High sorcerer of Zargon's inner circle wielding devastating Dread spells and 5 Mind Points.",
+    isBoss: true,
+    isUndead: false,
+    isSpellcaster: true
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-witch-lord",
+    slug: "enemy-witch-lord",
+    name: "Witch Lord",
+    classType: "Enemy",
+    icon: "💀",
+    color: "#581c87",
+    bodyPoints: 4,
+    mindPoints: 6,
+    attackDice: 5,
+    defendDice: 6,
+    movementSquares: 6,
+    startingWeapon: "Scepter of the Undead (5 Attack Dice)",
+    startingArmor: "Necromantic Ward (6 Defend Dice)",
+    abilities: "Undead Sovereign Boss — 6 Defend Dice, 6 Mind Points, and master of all Dread Spells",
+    description: "Immortal ruler of the undead legions with 4 BP, 6 MP, 5 Attack Dice, and 6 Defend Dice.",
+    isBoss: true,
+    isUndead: true,
+    isSpellcaster: true
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-dragon",
+    slug: "enemy-dragon",
+    name: "Dragon",
+    classType: "Enemy",
+    icon: "🐉",
+    color: "#dc2626",
+    bodyPoints: 6,
+    mindPoints: 5,
+    attackDice: 5,
+    defendDice: 5,
+    movementSquares: 8,
+    startingWeapon: "Dragon Jaws & Fire Breath (5 Attack Dice)",
+    startingArmor: "Ancient Dragon Scales (5 Defend Dice)",
+    abilities: "Apex Boss Dragon — 6 Body Points, 5 Attack/Defend Dice, and casts Firestorm breath",
+    description: "Colossal winged wyrm with 6 Body Points, 5 Attack Dice, 5 Defend Dice, and searing fire breath.",
+    isBoss: true,
+    isUndead: false,
+    isSpellcaster: true
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-doomguard",
+    slug: "enemy-doomguard",
+    name: "Doomguard",
+    classType: "Enemy",
+    icon: "🛡️",
+    color: "#991b1b",
+    bodyPoints: 4,
+    mindPoints: 4,
+    attackDice: 4,
+    defendDice: 5,
+    movementSquares: 7,
+    startingWeapon: "Doom Cleaver (4 Attack Dice)",
+    startingArmor: "Crimson Citadel Plate (5 Defend Dice)",
+    abilities: "Elite Citadel Boss — 4 Body Points, 4 Attack Dice, and 5 Defend Dice",
+    description: "Veteran Chaos warlord clad in crimson citadel plate, guarding the inner sanctum.",
+    isBoss: true,
+    isUndead: false,
+    isSpellcaster: false
+  },
+  {
+    id: "urn:robos:tabletop:class:enemy-witch-hand",
+    slug: "enemy-witch-hand",
+    name: "Witch Hand",
+    classType: "Enemy",
+    icon: "🔮",
+    color: "#9333ea",
+    bodyPoints: 3,
+    mindPoints: 5,
+    attackDice: 3,
+    defendDice: 4,
+    movementSquares: 6,
+    startingWeapon: "Coven Dagger (3 Attack Dice)",
+    startingArmor: "Shadow Mantle (4 Defend Dice)",
+    abilities: "High Coven Spellcaster — casts Cloud of Chaos, Sleep of Dread, and Fear",
+    description: "Right-hand coven inquisitor of the Witch Lord with 5 Mind Points and dark hexes.",
+    isBoss: true,
+    isUndead: false,
+    isSpellcaster: true
+  }
+];
+
+const DEFAULT_RPG_CLASSES = [...HERO_CLASSES, ...ENEMY_CLASSES];
+
+function initClassesCatalog() {
+  if (!Array.isArray(currentData.classes) || currentData.classes.length === 0) {
+    currentData.classes = DEFAULT_RPG_CLASSES.map(c => ({ ...c }));
+  } else {
+    DEFAULT_RPG_CLASSES.forEach(defCls => {
+      if (!currentData.classes.some(c => c.id === defCls.id || c.name.toLowerCase() === defCls.name.toLowerCase())) {
+        currentData.classes.push({ ...defCls });
+      }
+    });
+  }
+  if (!currentData.activeClassId && currentData.classes.length > 0) {
+    currentData.activeClassId = currentData.classes[0].id;
+  }
+  return currentData.classes;
+}
+
+function getClasses(typeFilter = "All") {
+  initClassesCatalog();
+  if (!typeFilter || typeFilter === "All") return currentData.classes;
+  return currentData.classes.filter(c => c.classType.toLowerCase() === String(typeFilter).toLowerCase());
+}
+
+function getHeroClasses() {
+  return getClasses("Hero");
+}
+
+function getEnemyClasses() {
+  return getClasses("Enemy");
+}
+
+function getClassByIdOrName(idOrName) {
+  if (!idOrName) return null;
+  initClassesCatalog();
+  const needle = String(idOrName).trim().toLowerCase();
+  return currentData.classes.find(c =>
+    c.id.toLowerCase() === needle ||
+    c.slug.toLowerCase() === needle ||
+    c.name.toLowerCase() === needle ||
+    `class-${c.slug}`.toLowerCase() === needle
+  ) || null;
+}
+
+function applyClassToMonster(monster, classIdOrName) {
+  if (!monster) monster = getActiveMonster();
+  if (!monster) return null;
+  const cls = getClassByIdOrName(classIdOrName) || getClassByIdOrName("Goblin");
+  if (!cls) return null;
+
+  monster["robos:extendsClass"] = cls.name;
+  monster["robos:monsterArchetype"] = cls.name;
+  monster["robos:archetype"] = cls.name;
+  monster["robos:bodyPoints"] = cls.bodyPoints;
+  monster["robos:currentBP"] = cls.bodyPoints;
+  monster["robos:mindPoints"] = cls.mindPoints;
+  monster["robos:attackDice"] = cls.attackDice;
+  monster["robos:defendDice"] = cls.defendDice;
+  monster["robos:movementSquares"] = cls.movementSquares;
+  monster["robos:abilities"] = cls.abilities;
+  monster["robos:isBoss"] = !!cls.isBoss;
+  monster["robos:isUndead"] = !!cls.isUndead;
+  monster["robos:isSpellcaster"] = !!cls.isSpellcaster;
+  if (cls.isSpellcaster && (!Array.isArray(monster["robos:spells"]) || monster["robos:spells"].length === 0)) {
+    monster["robos:spells"] = ["urn:robos:tabletop:spell:lightning-bolt"];
+  }
+
+  // Update DOM if this is the active monster
+  if (currentData.activeMonsterId === monster["@id"]) {
+    const baseSel = document.getElementById("monster-base-class");
+    if (baseSel) baseSel.value = cls.name;
+    const archEl = document.getElementById("monster-archetype");
+    if (archEl) archEl.value = cls.name;
+    const abilEl = document.getElementById("monster-abilities");
+    if (abilEl) abilEl.value = cls.abilities || "";
+    const bpEl = document.getElementById("monster-bp");
+    if (bpEl) bpEl.value = cls.bodyPoints;
+    const mpEl = document.getElementById("monster-mp");
+    if (mpEl) mpEl.value = cls.mindPoints;
+    const atkEl = document.getElementById("monster-atk");
+    if (atkEl) atkEl.value = cls.attackDice;
+    const defEl = document.getElementById("monster-def");
+    if (defEl) defEl.value = cls.defendDice;
+    const moveEl = document.getElementById("monster-move");
+    if (moveEl) moveEl.value = cls.movementSquares;
+    const bossEl = document.getElementById("monster-is-boss");
+    if (bossEl) bossEl.checked = !!cls.isBoss;
+    const undeadEl = document.getElementById("monster-is-undead");
+    if (undeadEl) undeadEl.checked = !!cls.isUndead;
+    const casterEl = document.getElementById("monster-is-spellcaster");
+    if (casterEl) casterEl.checked = !!cls.isSpellcaster;
+    renderMonsterGrimoire(monster);
+    renderMonsterActionScreen(monster);
+  }
+  return monster;
+}
+
+function applyClassToHero(hero, classIdOrName) {
+  if (!hero) hero = getActiveHero();
+  if (!hero) return null;
+  const cls = getClassByIdOrName(classIdOrName);
+  if (!cls) return null;
+
+  hero["robos:heroClass"] = cls.name;
+  hero["robos:extendsClass"] = cls.name;
+  hero["robos:bodyPoints"] = cls.bodyPoints;
+  hero["robos:currentBP"] = cls.bodyPoints;
+  hero["robos:mindPoints"] = cls.mindPoints;
+  hero["robos:currentMP"] = cls.mindPoints;
+  hero["robos:attackDice"] = cls.attackDice;
+  hero["robos:defendDice"] = cls.defendDice;
+  hero["robos:startingWeapon"] = cls.startingWeapon || hero["robos:startingWeapon"];
+  hero["robos:equippedWeapon"] = cls.startingWeapon || hero["robos:equippedWeapon"];
+  hero["robos:equippedArmor"] = cls.startingArmor || hero["robos:equippedArmor"];
+  hero["robos:specialAbility"] = cls.abilities || hero["robos:specialAbility"];
+  if (cls.icon) hero["robos:icon"] = cls.icon;
+  if (cls.color) hero["robos:tokenColor"] = cls.color;
+
+  if (currentData.activeHeroId === hero["@id"]) {
+    selectHero(hero["@id"]);
+  }
+  renderHeroesList();
+  renderQuestHeroesReviewGrid();
+  return hero;
+}
+
+function createCustomMonsterFromClass(classIdOrName, customOverrides = {}) {
+  const cls = getClassByIdOrName(classIdOrName) || getClassByIdOrName("Goblin");
+  const timestamp = Date.now().toString(36);
+  const newId = customOverrides["@id"] || customOverrides.id || `urn:robos:tabletop:monster:custom-${cls.slug}-${timestamp}`;
+  const defaultCat = customOverrides.category ||
+    ((currentData.activeMonsterCategoryFilter && currentData.activeMonsterCategoryFilter !== "All")
+      ? currentData.activeMonsterCategoryFilter
+      : "Base Game");
+
+  const newMonster = {
+    "@id": newId,
+    "@type": [
+      "oslc_am:Resource",
+      "robos:TabletopMonster",
+      "robos:GameMonster",
+      "schema:Person"
+    ],
+    "dcterms:title": customOverrides.name || customOverrides["dcterms:title"] || `Custom ${cls.name}`,
+    "dcterms:description": customOverrides.description || customOverrides["dcterms:description"] || `Custom monster extending the ${cls.name} Enemy Class (${cls.abilities}).`,
+    "robos:category": defaultCat,
+    "robos:extendsClass": cls.name,
+    "robos:monsterArchetype": cls.name,
+    "robos:archetype": cls.name,
+    "robos:icon": customOverrides.icon || cls.icon || "👹",
+    "robos:bodyPoints": customOverrides.bodyPoints !== undefined ? customOverrides.bodyPoints : cls.bodyPoints,
+    "robos:mindPoints": customOverrides.mindPoints !== undefined ? customOverrides.mindPoints : cls.mindPoints,
+    "robos:attackDice": customOverrides.attackDice !== undefined ? customOverrides.attackDice : cls.attackDice,
+    "robos:defendDice": customOverrides.defendDice !== undefined ? customOverrides.defendDice : cls.defendDice,
+    "robos:movementSquares": customOverrides.movementSquares !== undefined ? customOverrides.movementSquares : cls.movementSquares,
+    "robos:abilities": customOverrides.abilities || cls.abilities,
+    "robos:roomId": customOverrides.roomId || "room-center",
+    "robos:isBoss": customOverrides.isBoss !== undefined ? !!customOverrides.isBoss : !!cls.isBoss,
+    "robos:isUndead": customOverrides.isUndead !== undefined ? !!customOverrides.isUndead : !!cls.isUndead,
+    "robos:isSpellcaster": customOverrides.isSpellcaster !== undefined ? !!customOverrides.isSpellcaster : !!cls.isSpellcaster,
+    "robos:spells": customOverrides.spells || (cls.isSpellcaster ? ["urn:robos:tabletop:spell:lightning-bolt"] : []),
+    "robos:tokenColor": customOverrides.color || cls.color || "#991b1b"
+  };
+
+  currentData.monsters.push(newMonster);
+  renderMonstersList();
+  selectMonster(newId);
+  syncBoardMonsterSelectDropdown();
+  triggerMonsterAutosave();
+  setStatus(`Created custom monster '${newMonster["dcterms:title"]}' extending Enemy Class '${cls.name}'.`);
+  return newMonster;
+}
+
+function getActiveClass() {
+  initClassesCatalog();
+  return currentData.classes.find(c => c.id === currentData.activeClassId) || currentData.classes[0] || null;
+}
+
+function selectClass(classIdOrName) {
+  const cls = getClassByIdOrName(classIdOrName);
+  if (!cls) return null;
+  currentData.activeClassId = cls.id;
+
+  const titleEl = document.getElementById("class-editor-title");
+  const badgeEl = document.getElementById("class-type-badge");
+  const createMonBtn = document.getElementById("btn-create-monster-from-class");
+
+  if (titleEl) titleEl.textContent = `Class: ${cls.name}`;
+  if (badgeEl) {
+    badgeEl.textContent = cls.classType === "Hero" ? "🛡️ Hero Class" : "👹 Enemy Class (Base Monster)";
+    badgeEl.className = cls.classType === "Hero" ? "badge badge-cyan" : "badge badge-purple";
+  }
+  if (createMonBtn) {
+    createMonBtn.style.display = cls.classType === "Enemy" ? "inline-flex" : "none";
+  }
+
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val !== undefined && val !== null ? val : "";
+  };
+  setVal("class-id", cls.id);
+  setVal("class-name", cls.name);
+  setVal("class-type", cls.classType);
+  setVal("class-icon", cls.icon || "🛡️");
+  setVal("class-color", cls.color || "#dc2626");
+  setVal("class-bp", cls.bodyPoints);
+  setVal("class-mp", cls.mindPoints);
+  setVal("class-atk", cls.attackDice);
+  setVal("class-def", cls.defendDice);
+  setVal("class-move", cls.movementSquares);
+  setVal("class-abilities", cls.abilities || "");
+  setVal("class-weapon", cls.startingWeapon || "");
+  setVal("class-armor", cls.startingArmor || "");
+  setVal("class-description", cls.description || "");
+
+  const bossChk = document.getElementById("class-is-boss");
+  if (bossChk) bossChk.checked = !!cls.isBoss;
+  const undeadChk = document.getElementById("class-is-undead");
+  if (undeadChk) undeadChk.checked = !!cls.isUndead;
+  const casterChk = document.getElementById("class-is-spellcaster");
+  if (casterChk) casterChk.checked = !!cls.isSpellcaster;
+
+  // In-place active toggle to avoid full list re-render
+  const items = document.querySelectorAll("#classes-list .list-item");
+  if (items.length > 0) {
+    items.forEach(el => {
+      el.classList.toggle("active", el.dataset.classId === cls.id);
+    });
+  } else {
+    renderClassesList();
+  }
+  return cls;
+}
+
+function renderClassesList() {
+  const listEl = document.getElementById("classes-list");
+  if (!listEl) return;
+  const filtered = getClasses(currentData.activeClassTypeFilter || "All");
+  listEl.innerHTML = "";
+
+  const fragment = document.createDocumentFragment();
+  filtered.forEach(cls => {
+    const div = document.createElement("div");
+    div.className = "list-item" + (cls.id === currentData.activeClassId ? " active" : "");
+    div.dataset.classId = cls.id;
+    const typeBadgeStyle = cls.classType === "Hero"
+      ? "background:rgba(56,189,248,0.16); color:#7dd3fc; border:1px solid rgba(56,189,248,0.35);"
+      : "background:rgba(239,68,68,0.16); color:#fca5a5; border:1px solid rgba(239,68,68,0.35);";
+    div.innerHTML = `
+      <div style="display:flex; flex-direction:column; width:100%; gap:2px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:6px;">
+          <span style="display:flex; align-items:center; gap:6px;">
+            <span>${cls.icon || "🏛️"}</span>
+            <strong>${escapeHtml(cls.name)}</strong>
+          </span>
+          <span class="badge" style="font-size:0.65rem; padding:1px 6px; ${typeBadgeStyle}">${cls.classType}</span>
+        </div>
+        <div style="font-size:0.68rem; color:#94a3b8; margin-left:22px;">
+          ❤️ BP:${cls.bodyPoints} • 🧠 MP:${cls.mindPoints} • ⚔️ Atk:${cls.attackDice} • 🛡️ Def:${cls.defendDice}
+        </div>
+      </div>
+    `;
+    div.onclick = () => selectClass(cls.id);
+    fragment.appendChild(div);
+  });
+  listEl.appendChild(fragment);
+}
+
+function renderClassesTab() {
+  initClassesCatalog();
+  renderClassesList();
+
+  const activeCls = getActiveClass();
+  if (activeCls) {
+    selectClass(activeCls.id);
+  }
+
+  // Sync monster-base-class dropdown with all Enemy Classes
+  const monBaseSelect = document.getElementById("monster-base-class");
+  if (monBaseSelect) {
+    const prevVal = monBaseSelect.value;
+    monBaseSelect.innerHTML = "";
+    const fragment = document.createDocumentFragment();
+    getEnemyClasses().forEach(ec => {
+      const opt = document.createElement("option");
+      opt.value = ec.name;
+      opt.textContent = `${ec.icon || "👹"} ${ec.name} (BP:${ec.bodyPoints} MP:${ec.mindPoints} Atk:${ec.attackDice} Def:${ec.defendDice} Move:${ec.movementSquares})`;
+      fragment.appendChild(opt);
+    });
+    monBaseSelect.appendChild(fragment);
+    if (prevVal && Array.from(monBaseSelect.options).some(o => o.value === prevVal)) {
+      monBaseSelect.value = prevVal;
+    }
+  }
+
+  // Render overview cards grid
+  const gridEl = document.getElementById("classes-overview-grid");
+  const countBadge = document.getElementById("classes-count-badge");
+  const filtered = getClasses(currentData.activeClassTypeFilter || "All");
+  if (countBadge) countBadge.textContent = `${filtered.length} Classes`;
+  if (!gridEl) return;
+
+  gridEl.innerHTML = "";
+  const fragment = document.createDocumentFragment();
+  filtered.forEach(cls => {
+    const card = document.createElement("div");
+    card.className = "spell-card class-reference-card";
+    card.dataset.classId = cls.id;
+    card.dataset.classType = cls.classType;
+    const isHero = cls.classType === "Hero";
+    const badgeStyle = isHero
+      ? "background:rgba(56,189,248,0.16); color:#7dd3fc; border:1px solid rgba(56,189,248,0.35);"
+      : "background:rgba(239,68,68,0.16); color:#fca5a5; border:1px solid rgba(239,68,68,0.35);";
+    card.innerHTML = `
+      <div class="spell-card-top-badges">
+        <span class="badge" style="font-size:0.68rem; padding:1px 6px; ${badgeStyle}">${isHero ? "🛡️ Hero Class" : "👹 Enemy Class"}</span>
+        <span style="font-size:0.74rem; color:#94a3b8; font-weight:600;">❤️ ${cls.bodyPoints} BP • 🧠 ${cls.mindPoints} MP</span>
+      </div>
+      <div class="card-title">${cls.icon || "🏛️"} ${escapeHtml(cls.name)}</div>
+      <div class="card-meta" style="font-weight:700; color:#38bdf8;">
+        ⚔️ ${cls.attackDice} Atk • 🛡️ ${cls.defendDice} Def • 👟 ${cls.movementSquares} Move
+      </div>
+      <div class="card-meta" style="flex:1; font-size:0.74rem; color:#cbd5e1;">
+        <strong>Abilities:</strong> ${escapeHtml(cls.abilities || cls.description || "")}
+      </div>
+      <div class="spell-card-footer">
+        <button class="btn btn-xs btn-secondary btn-inspect-class" data-class-id="${escapeHtml(cls.id)}">Inspect Class</button>
+        ${!isHero ? `<button class="btn btn-xs btn-accent btn-extend-enemy-class" data-class-name="${escapeHtml(cls.name)}">+ Extend as Monster</button>` : ""}
+      </div>
+    `;
+    card.querySelector(".btn-inspect-class")?.addEventListener("click", () => {
+      selectClass(cls.id);
+    });
+    card.querySelector(".btn-extend-enemy-class")?.addEventListener("click", () => {
+      createCustomMonsterFromClass(cls.name);
+      // Switch to Monsters tab so user sees their new custom monster immediately
+      const monTabBtn = document.querySelector('.tab-btn[data-tab="tab-monsters"]');
+      if (monTabBtn) monTabBtn.click();
+    });
+    fragment.appendChild(card);
+  });
+  gridEl.appendChild(fragment);
+}
+
+let classControlsInitialized = false;
+function setupClassEditorControls() {
+  if (classControlsInitialized) return;
+  classControlsInitialized = true;
+
+  document.getElementById("class-type-filter")?.addEventListener("change", (e) => {
+    currentData.activeClassTypeFilter = e.target.value || "All";
+    renderClassesTab();
+  });
+
+  const bindClassInput = (id, prop, isNum = false) => {
+    document.getElementById(id)?.addEventListener("input", (e) => {
+      const cls = getActiveClass();
+      if (!cls) return;
+      cls[prop] = isNum ? (parseInt(e.target.value, 10) || 0) : e.target.value;
+      if (prop === "name") {
+        const t = document.getElementById("class-editor-title");
+        if (t) t.textContent = `Class: ${cls.name}`;
+      }
+      renderClassesList();
+    });
+  };
+
+  bindClassInput("class-name", "name", false);
+  bindClassInput("class-type", "classType", false);
+  bindClassInput("class-icon", "icon", false);
+  bindClassInput("class-color", "color", false);
+  bindClassInput("class-bp", "bodyPoints", true);
+  bindClassInput("class-mp", "mindPoints", true);
+  bindClassInput("class-atk", "attackDice", true);
+  bindClassInput("class-def", "defendDice", true);
+  bindClassInput("class-move", "movementSquares", true);
+  bindClassInput("class-abilities", "abilities", false);
+  bindClassInput("class-weapon", "startingWeapon", false);
+  bindClassInput("class-armor", "startingArmor", false);
+  bindClassInput("class-description", "description", false);
+
+  document.getElementById("class-is-boss")?.addEventListener("change", (e) => {
+    const cls = getActiveClass();
+    if (cls) cls.isBoss = e.target.checked;
+  });
+  document.getElementById("class-is-undead")?.addEventListener("change", (e) => {
+    const cls = getActiveClass();
+    if (cls) cls.isUndead = e.target.checked;
+  });
+  document.getElementById("class-is-spellcaster")?.addEventListener("change", (e) => {
+    const cls = getActiveClass();
+    if (cls) cls.isSpellcaster = e.target.checked;
+  });
+
+  document.getElementById("btn-save-class")?.addEventListener("click", async () => {
+    const cls = getActiveClass();
+    if (!cls) return;
+    renderClassesTab();
+    setStatus(`Saved RPG Class '${cls.name}' (${cls.classType} Class — BP:${cls.bodyPoints} MP:${cls.mindPoints} Atk:${cls.attackDice} Def:${cls.defendDice}).`);
+  });
+
+  document.getElementById("btn-add-class")?.addEventListener("click", () => {
+    const ts = Date.now().toString(36);
+    const defaultType = currentData.activeClassTypeFilter === "Hero" ? "Hero" : "Enemy";
+    const newCls = {
+      id: `urn:robos:tabletop:class:custom-${ts}`,
+      slug: `custom-${ts}`,
+      name: `New ${defaultType} Class`,
+      classType: defaultType,
+      icon: defaultType === "Hero" ? "🛡️" : "👹",
+      color: defaultType === "Hero" ? "#0284c7" : "#991b1b",
+      bodyPoints: defaultType === "Hero" ? 6 : 2,
+      mindPoints: 3,
+      attackDice: 3,
+      defendDice: 3,
+      movementSquares: 7,
+      startingWeapon: "Broadblade (3 Attack Dice)",
+      startingArmor: "Chain Hauberk (3 Defend Dice)",
+      abilities: "Custom class starting stats and abilities",
+      description: "Custom RPG class.",
+      isBoss: false,
+      isUndead: false,
+      isSpellcaster: false
+    };
+    currentData.classes.push(newCls);
+    renderClassesTab();
+    selectClass(newCls.id);
+    setStatus(`Created new ${defaultType} Class: '${newCls.name}'`);
+  });
+
+  document.getElementById("btn-delete-class")?.addEventListener("click", () => {
+    if (currentData.classes.length <= 1) return;
+    const cls = getActiveClass();
+    if (!cls) return;
+    currentData.classes = currentData.classes.filter(c => c.id !== cls.id);
+    currentData.activeClassId = currentData.classes[0]?.id || null;
+    renderClassesTab();
+    setStatus(`Deleted class '${cls.name}'.`);
+  });
+
+  document.getElementById("btn-create-monster-from-class")?.addEventListener("click", () => {
+    const cls = getActiveClass();
+    if (!cls) return;
+    createCustomMonsterFromClass(cls.name);
+    const monTabBtn = document.querySelector('.tab-btn[data-tab="tab-monsters"]');
+    if (monTabBtn) monTabBtn.click();
+  });
+
+  document.getElementById("hero-base-class-select")?.addEventListener("change", (e) => {
+    const val = e.target.value;
+    if (!val) return;
+    const clsName = val.replace("class-hero-", "");
+    applyClassToHero(getActiveHero(), clsName);
+    e.target.value = "";
+  });
+}
+
 function logMonsterCombatAction(msg, type = "system") {
   const logEl = document.getElementById("monster-combat-roll-log");
   if (!logEl) return;
@@ -3945,6 +6253,7 @@ async function saveActiveMonsterToKGraph(explicit = false) {
   const monster = getActiveMonster();
   if (!monster) return { success: false, error: "No active monster" };
 
+  const baseClass = monster["robos:extendsClass"] || monster["robos:monsterArchetype"] || monster["robos:archetype"] || "Goblin";
   const monsterNode = {
     "@id": monster["@id"],
     "@type": [
@@ -3954,7 +6263,16 @@ async function saveActiveMonsterToKGraph(explicit = false) {
       "schema:Person"
     ],
     "dcterms:title": monster["dcterms:title"] || "Monster",
+    "dcterms:description": monster["dcterms:description"] || "",
+    "robos:category": monster["robos:category"] || "Base Game",
+    "robos:extendsClass": baseClass,
+    "robos:mirrorsMonster": monster["robos:mirrorsMonster"] || undefined,
+    "robos:monsterArchetype": monster["robos:monsterArchetype"] || baseClass,
+    "robos:archetype": monster["robos:archetype"] || baseClass,
+    "robos:abilities": monster["robos:abilities"] || "",
+    "robos:icon": monster["robos:icon"] || "👹",
     "robos:bodyPoints": parseInt(monster["robos:bodyPoints"], 10) || 1,
+    "robos:mindPoints": monster["robos:mindPoints"] !== undefined ? parseInt(monster["robos:mindPoints"], 10) : 1,
     "robos:attackDice": parseInt(monster["robos:attackDice"], 10) || 2,
     "robos:defendDice": parseInt(monster["robos:defendDice"], 10) || 2,
     "robos:movementSquares": parseInt(monster["robos:movementSquares"], 10) || 6,
@@ -3970,9 +6288,10 @@ async function saveActiveMonsterToKGraph(explicit = false) {
 
   try {
     const res = await window.robosTabletop.saveKGraphEntity({ entity: monsterNode });
+    syncBoardMonsterSelectDropdown();
     if (explicit) {
       if (res && res.success) {
-        setStatus(`Saved monster '${monsterNode["dcterms:title"]}' to Knowledge Graph.`);
+        setStatus(`Saved monster '${monsterNode["dcterms:title"]}' (Extends Class: ${baseClass}) to Knowledge Graph.`);
         logMonsterCombatAction(`💾 Monster '${monsterNode["dcterms:title"]}' saved to Knowledge Graph.`, "system");
       } else {
         setStatus(`Error saving monster: ${res ? res.error : "Unknown"}`);
@@ -3998,20 +6317,48 @@ function renderMonstersList() {
   if (!container) return;
   container.innerHTML = "";
 
-  currentData.monsters.forEach(m => {
+  const filtered = getMonstersByCategory(currentData.activeMonsterCategoryFilter);
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="text-muted" style="padding:12px; font-size:0.8rem; font-style:italic;">No monsters in category '${escapeHtml(currentData.activeMonsterCategoryFilter)}'. Click "+ Add" to create one.</div>`;
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  filtered.forEach(m => {
     const div = document.createElement("div");
     div.className = "list-item" + (m["@id"] === currentData.activeMonsterId ? " active" : "");
-    let icon = "👹";
-    if (m["robos:isBoss"]) icon = "👑";
-    else if (m["robos:isUndead"]) icon = "💀";
-    else if (m["robos:isSpellcaster"]) icon = "🧙‍♂️";
-    div.innerHTML = `<span>${icon}</span> <strong>${m["dcterms:title"] || m["@id"]}</strong>`;
+    div.dataset.monsterId = m["@id"];
+    let icon = m["robos:icon"] || "👹";
+    if (!m["robos:icon"]) {
+      if (m["robos:isBoss"]) icon = "👑";
+      else if (m["robos:isUndead"]) icon = "💀";
+      else if (m["robos:isSpellcaster"]) icon = "🧙‍♂️";
+    }
+    const cat = m["robos:category"] || "Base Game";
+    const baseClass = m["robos:extendsClass"] || m["robos:monsterArchetype"] || "Goblin";
+    const catBadgeColor = cat === "Midterms 2026"
+      ? "background:rgba(245,158,11,0.18); color:#fde047; border:1px solid rgba(245,158,11,0.4);"
+      : "background:rgba(56,189,248,0.12); color:#7dd3fc; border:1px solid rgba(56,189,248,0.25);";
+    div.innerHTML = `
+      <div style="display:flex; flex-direction:column; width:100%; gap:2px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:6px;">
+          <span style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+            <span>${icon}</span>
+            <strong style="overflow:hidden; text-overflow:ellipsis;">${escapeHtml(m["dcterms:title"] || m["@id"])}</strong>
+          </span>
+          <span class="badge" style="font-size:0.65rem; padding:1px 5px; flex-shrink:0; ${catBadgeColor}">${escapeHtml(cat)}</span>
+        </div>
+        <div style="font-size:0.68rem; color:#94a3b8; margin-left:22px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Class: <span style="color:#38bdf8;">${escapeHtml(baseClass)}</span></div>
+      </div>
+    `;
     div.onclick = () => selectMonster(m["@id"]);
-    container.appendChild(div);
+    fragment.appendChild(div);
   });
+  container.appendChild(fragment);
 
-  if (!currentData.activeMonsterId && currentData.monsters.length > 0) {
-    selectMonster(currentData.monsters[0]["@id"]);
+  if ((!currentData.activeMonsterId || !filtered.some(m => m["@id"] === currentData.activeMonsterId)) && filtered.length > 0) {
+    selectMonster(filtered[0]["@id"]);
   }
 }
 
@@ -4020,17 +6367,68 @@ function selectMonster(monsterId) {
   const monster = currentData.monsters.find(m => m["@id"] === monsterId);
   if (!monster) return;
 
-  renderMonstersList();
-  document.getElementById("monster-editor-title").textContent = "Edit Monster: " + (monster["dcterms:title"] || "");
-  document.getElementById("monster-id").value = monster["@id"] || "";
-  document.getElementById("monster-name").value = monster["dcterms:title"] || "";
-  document.getElementById("monster-bp").value = monster["robos:bodyPoints"] || 1;
-  document.getElementById("monster-atk").value = monster["robos:attackDice"] || 2;
-  document.getElementById("monster-def").value = monster["robos:defendDice"] || 2;
-  document.getElementById("monster-move").value = monster["robos:movementSquares"] || 6;
-  document.getElementById("monster-room").value = monster["robos:roomId"] || "room-center";
-  document.getElementById("monster-is-boss").checked = !!monster["robos:isBoss"];
-  document.getElementById("monster-is-undead").checked = !!monster["robos:isUndead"];
+  // In-place active toggle to avoid full list re-render
+  const items = document.querySelectorAll("#monsters-list .list-item");
+  if (items.length > 0) {
+    items.forEach(el => {
+      el.classList.toggle("active", el.dataset.monsterId === monsterId);
+    });
+  } else {
+    renderMonstersList();
+  }
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  };
+  const titleEl = document.getElementById("monster-editor-title");
+  if (titleEl) titleEl.textContent = "Edit Monster: " + (monster["dcterms:title"] || "");
+  setVal("monster-id", monster["@id"] || "");
+  setVal("monster-name", monster["dcterms:title"] || "");
+
+  const catEl = document.getElementById("monster-category");
+  if (catEl) {
+    const mCat = monster["robos:category"] || "Base Game";
+    if (!currentData.categories.includes(mCat)) addCategory(mCat);
+    catEl.value = mCat;
+  }
+
+  const baseClass = monster["robos:extendsClass"] || monster["robos:monsterArchetype"] || monster["robos:archetype"] || (monster["robos:isBoss"] ? "Dragon" : "Goblin");
+  monster["robos:extendsClass"] = baseClass;
+  const baseClassEl = document.getElementById("monster-base-class");
+  if (baseClassEl) baseClassEl.value = baseClass;
+
+  const archEl = document.getElementById("monster-archetype");
+  if (archEl) archEl.value = monster["robos:archetype"] || monster["robos:monsterArchetype"] || baseClass;
+
+  const abilEl = document.getElementById("monster-abilities");
+  if (abilEl) {
+    const clsObj = getClassByIdOrName(baseClass);
+    abilEl.value = monster["robos:abilities"] || (clsObj ? clsObj.abilities : "");
+  }
+
+  const iconEl = document.getElementById("monster-icon");
+  if (iconEl) iconEl.value = monster["robos:icon"] || (monster["robos:isBoss"] ? "👑" : "👹");
+
+  const colorEl = document.getElementById("monster-color");
+  if (colorEl) colorEl.value = monster["robos:tokenColor"] || "#991b1b";
+
+  const descEl = document.getElementById("monster-description");
+  if (descEl) descEl.value = monster["dcterms:description"] || "";
+
+  setVal("monster-bp", monster["robos:bodyPoints"] || 1);
+  const mpEl = document.getElementById("monster-mp");
+  if (mpEl) {
+    const clsObj = getClassByIdOrName(baseClass);
+    mpEl.value = monster["robos:mindPoints"] !== undefined ? monster["robos:mindPoints"] : (clsObj ? clsObj.mindPoints : 1);
+  }
+  setVal("monster-atk", monster["robos:attackDice"] || 2);
+  setVal("monster-def", monster["robos:defendDice"] || 2);
+  setVal("monster-move", monster["robos:movementSquares"] || 6);
+  setVal("monster-room", monster["robos:roomId"] || "room-center");
+  const bossCheckbox = document.getElementById("monster-is-boss");
+  if (bossCheckbox) bossCheckbox.checked = !!monster["robos:isBoss"];
+  const undeadCheckbox = document.getElementById("monster-is-undead");
+  if (undeadCheckbox) undeadCheckbox.checked = !!monster["robos:isUndead"];
 
   const isCaster = !!monster["robos:isSpellcaster"];
   const casterCheckbox = document.getElementById("monster-is-spellcaster");
@@ -4040,17 +6438,25 @@ function selectMonster(monsterId) {
   renderMonsterActionScreen(monster);
 }
 
+let monsterControlsInitialized = false;
 function setupMonsterEditorControls() {
+  if (monsterControlsInitialized) return;
+  monsterControlsInitialized = true;
+
   const bindInput = (id, prop, isNumber = false) => {
     const el = document.getElementById(id);
     if (!el) return;
-    el.addEventListener("input", (e) => {
+    const evtName = el.tagName === "SELECT" ? "change" : "input";
+    el.addEventListener(evtName, (e) => {
       const monster = getActiveMonster();
       if (!monster) return;
       monster[prop] = isNumber ? parseInt(e.target.value, 10) || 0 : e.target.value;
-      if (prop === "dcterms:title") {
-        document.getElementById("monster-editor-title").textContent = "Edit Monster: " + e.target.value;
+      if (prop === "dcterms:title" || prop === "robos:category" || prop === "robos:icon") {
+        if (prop === "dcterms:title") {
+          document.getElementById("monster-editor-title").textContent = "Edit Monster: " + e.target.value;
+        }
         renderMonstersList();
+        syncBoardMonsterSelectDropdown();
       }
       renderMonsterActionScreen(monster);
       triggerMonsterAutosave();
@@ -4058,11 +6464,28 @@ function setupMonsterEditorControls() {
   };
 
   bindInput("monster-name", "dcterms:title");
+  bindInput("monster-category", "robos:category");
+  bindInput("monster-archetype", "robos:monsterArchetype");
+  bindInput("monster-abilities", "robos:abilities");
+  bindInput("monster-icon", "robos:icon");
+  bindInput("monster-color", "robos:tokenColor");
+  bindInput("monster-description", "dcterms:description");
   bindInput("monster-bp", "robos:bodyPoints", true);
+  bindInput("monster-mp", "robos:mindPoints", true);
   bindInput("monster-atk", "robos:attackDice", true);
   bindInput("monster-def", "robos:defendDice", true);
   bindInput("monster-move", "robos:movementSquares", true);
   bindInput("monster-room", "robos:roomId");
+
+  // When a user selects a Base Enemy Class in #monster-base-class, inherit starting stats & abilities from that class!
+  document.getElementById("monster-base-class")?.addEventListener("change", (e) => {
+    const monster = getActiveMonster();
+    if (!monster) return;
+    applyClassToMonster(monster, e.target.value);
+    renderMonstersList();
+    triggerMonsterAutosave();
+    setStatus(`Monster '${monster["dcterms:title"]}' now extends Base Enemy Class '${e.target.value}' (inherited starting stats & abilities).`);
+  });
 
   document.getElementById("monster-is-boss")?.addEventListener("change", (e) => {
     const monster = getActiveMonster();
@@ -4127,114 +6550,164 @@ function setupMonsterEditorControls() {
   document.getElementById("btn-roll-monster-move")?.addEventListener("click", rollMonsterMove);
   document.getElementById("btn-cast-monster-spell")?.addEventListener("click", () => castMonsterSpell());
 
-  document.getElementById("btn-add-monster")?.addEventListener("click", () => {
-    const newId = `urn:robos:tabletop:monster:custom-${Date.now().toString(36)}`;
-    const newMonster = {
-      "@id": newId,
-      "@type": [
-        "oslc_am:Resource",
-        "robos:TabletopMonster",
-        "robos:GameMonster",
-        "schema:Person"
-      ],
-      "dcterms:title": "New Monster",
-      "robos:bodyPoints": 2,
-      "robos:attackDice": 2,
-      "robos:defendDice": 2,
-      "robos:movementSquares": 6,
-      "robos:roomId": "room-center",
-      "robos:isBoss": false,
-      "robos:isUndead": false,
-      "robos:isSpellcaster": false,
-      "robos:spells": [],
-      "robos:tokenColor": "#991b1b"
-    };
-    currentData.monsters.push(newMonster);
+  document.getElementById("btn-save-monster")?.addEventListener("click", () => {
+    saveActiveMonsterToKGraph(true);
+  });
+
+  document.getElementById("btn-delete-monster")?.addEventListener("click", async () => {
+    if (currentData.monsters.length <= 1) return;
+    const monster = getActiveMonster();
+    if (!monster) return;
+    const id = monster["@id"];
+    const name = monster["dcterms:title"] || id;
+    currentData.monsters = currentData.monsters.filter(m => m["@id"] !== id);
+    if (window.robosTabletop?.deleteKGraphEntity) {
+      await window.robosTabletop.deleteKGraphEntity({ entityId: id });
+    }
+    currentData.activeMonsterId = currentData.monsters[0]?.["@id"] || null;
     renderMonstersList();
-    selectMonster(newId);
-    triggerMonsterAutosave();
+    if (currentData.activeMonsterId) selectMonster(currentData.activeMonsterId);
+    syncBoardMonsterSelectDropdown();
+    setStatus(`Deleted monster '${name}'.`);
+  });
+
+  document.getElementById("btn-add-monster")?.addEventListener("click", () => {
+    const selectedBaseClass = document.getElementById("monster-base-class")?.value || "Goblin";
+    createCustomMonsterFromClass(selectedBaseClass);
   });
 }
 
-// Render Spells & Items
+// Render Spells, Dread Spells, Weapons & Quest Items filtered by Category
 function renderSpellsAndItems() {
+  const activeCat = currentData.activeSpellItemCategoryFilter || "All";
+
+  const formatCatBadge = (cat) => {
+    const c = cat || "Base Game";
+    const style = c === "Midterms 2026"
+      ? "background:rgba(245,158,11,0.18); color:#fde047; border:1px solid rgba(245,158,11,0.45);"
+      : (c === "Base Game"
+        ? "background:rgba(56,189,248,0.12); color:#7dd3fc; border:1px solid rgba(56,189,248,0.28);"
+        : "background:rgba(168,85,247,0.18); color:#e9d5ff; border:1px solid rgba(168,85,247,0.45);");
+    const icon = c === "Base Game" ? "🏰" : (c === "Midterms 2026" ? "🗳️" : "🏷️");
+    return `<span class="badge entity-category-badge" data-category="${escapeHtml(c)}" style="font-size:0.68rem; padding:1px 6px; white-space:nowrap; ${style}">${icon} ${escapeHtml(c)}</span>`;
+  };
+
+  // 1. Hero Spells Grid
   const spellsGrid = document.getElementById("spells-grid");
   if (spellsGrid) {
     spellsGrid.innerHTML = "";
     const elfElement = currentData.spellAllocation?.elfElement || "water";
-    const allSpells = [];
-    Object.keys(ELEMENTAL_DECKS).forEach(elemKey => {
-      ELEMENTAL_DECKS[elemKey].spells.forEach(s => allSpells.push(s));
-    });
+    const filteredSpells = getSpellsByCategory(activeCat);
+    const countBadge = document.getElementById("spells-count-badge");
+    if (countBadge) countBadge.textContent = `${filteredSpells.length} Spell${filteredSpells.length === 1 ? "" : "s"}`;
 
-    allSpells.forEach(s => {
+    const fragment = document.createDocumentFragment();
+    filteredSpells.forEach(s => {
       const card = document.createElement("div");
       card.className = `spell-card deck-${s.element}`;
+      card.dataset.category = s.category || "Base Game";
       const isElf = s.element === elfElement;
       const draftedBy = isElf ? "🧝 Elf Grimoire" : "🧙 Wizard Grimoire";
       const draftedClass = isElf ? "badge-info" : "badge-purple";
       card.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-          <div class="card-title" style="margin:0;">${s.icon} ${s.name}</div>
-          <span class="element-tag tag-${s.element}">${s.element.toUpperCase()}</span>
+        <div class="spell-card-top-badges">
+          ${formatCatBadge(s.category)}
+          <span class="element-tag tag-${s.element}">${(s.element || "fire").toUpperCase()}</span>
         </div>
-        <div class="card-meta" style="color:var(--text-muted); font-size:0.75rem; margin-bottom:6px;">${s.description}</div>
-        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
-          <span class="card-meta" style="margin:0;">College: ${ELEMENTAL_DECKS[s.element]?.name}</span>
-          <span class="badge ${draftedClass}" style="font-size:0.7rem;">${draftedBy}</span>
+        <div class="card-title">${s.icon || "✨"} ${escapeHtml(s.name)}</div>
+        <div class="card-meta" style="flex:1;">${escapeHtml(s.description)}</div>
+        <div class="spell-card-footer">
+          <span class="card-meta" style="margin:0;">College: ${ELEMENTAL_DECKS[s.element]?.name || s.element}</span>
+          <span class="badge ${draftedClass}" style="font-size:0.7rem; white-space:nowrap;">${draftedBy}</span>
         </div>
       `;
-      spellsGrid.appendChild(card);
+      fragment.appendChild(card);
     });
+    spellsGrid.appendChild(fragment);
   }
 
+  // 2. Weapons & Armory Grid
   const itemsGrid = document.getElementById("items-grid");
   if (itemsGrid) {
     itemsGrid.innerHTML = "";
-    const armory = [
-      { name: "Broadsword", type: "Weapon", dice: "3 Attack Dice", cost: "250 GP", icon: "⚔️" },
-      { name: "Shortsword", type: "Weapon", dice: "2 Attack Dice (Diagonal)", cost: "150 GP", icon: "🗡️" },
-      { name: "Battle Axe", type: "Weapon", dice: "4 Attack Dice (Two-Handed)", cost: "400 GP", icon: "🪓" },
-      { name: "Crossbow", type: "Ranged Weapon", dice: "3 Attack Dice (Straight Line)", cost: "350 GP", icon: "🏹" },
-      { name: "Chainmail", type: "Armor", dice: "+1 Defend Die (3 Total)", cost: "500 GP", icon: "🛡️" },
-      { name: "Plate Armor", type: "Armor", dice: "+2 Defend Dice (4 Total, 1d6 Move)", cost: "850 GP", icon: "🦾" },
-      { name: "Shield", type: "Armor", dice: "+1 Defend Die", cost: "150 GP", icon: "🛡️" },
-      { name: "Helmet", type: "Armor", dice: "+1 Defend Die", cost: "120 GP", icon: "🪖" },
-      { name: "Toolkit", type: "Gear", dice: "Disarm Traps on 1-5", cost: "250 GP", icon: "🔧" }
-    ];
-    armory.forEach(item => {
+    const filteredWeapons = getWeaponsByCategory(activeCat);
+    const countBadge = document.getElementById("weapons-count-badge");
+    if (countBadge) countBadge.textContent = `${filteredWeapons.length} Weapon${filteredWeapons.length === 1 ? "" : "s"}`;
+
+    const fragment = document.createDocumentFragment();
+    filteredWeapons.forEach(item => {
       const card = document.createElement("div");
-      card.className = "spell-card";
+      card.className = "spell-card weapon-card";
+      card.dataset.category = item.category || "Base Game";
       card.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div class="card-title">${item.icon} ${item.name}</div>
-          <span style="font-weight:700; color:#fbbf24; font-size:0.8rem;">💰 ${item.cost}</span>
+        <div class="spell-card-top-badges">
+          ${formatCatBadge(item.category)}
+          <span style="font-weight:700; color:#fbbf24; font-size:0.78rem; white-space:nowrap;">💰 ${escapeHtml(item.cost)}</span>
         </div>
-        <div class="card-meta">${item.type} • ${item.dice}</div>
+        <div class="card-title">${item.icon || "⚔️"} ${escapeHtml(item.name)}</div>
+        <div class="card-meta" style="font-weight:600; color:#93c5fd;">${escapeHtml(item.type)} • ${escapeHtml(item.dice)}</div>
+        ${item.description ? `<div class="card-meta" style="flex:1; font-size:0.74rem;">${escapeHtml(item.description)}</div>` : ""}
       `;
-      itemsGrid.appendChild(card);
+      fragment.appendChild(card);
     });
+    itemsGrid.appendChild(fragment);
   }
 
+  // 3. Quest Items, Relics & Satire Artifacts Grid
+  const questItemsGrid = document.getElementById("quest-items-grid");
+  if (questItemsGrid) {
+    questItemsGrid.innerHTML = "";
+    const filteredItems = getItemsByCategory(activeCat);
+    const countBadge = document.getElementById("quest-items-count-badge");
+    if (countBadge) countBadge.textContent = `${filteredItems.length} Item${filteredItems.length === 1 ? "" : "s"}`;
+
+    const fragment = document.createDocumentFragment();
+    filteredItems.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "spell-card quest-item-card";
+      card.dataset.category = item.category || "Base Game";
+      card.innerHTML = `
+        <div class="spell-card-top-badges">
+          ${formatCatBadge(item.category)}
+          <span style="font-weight:700; color:#34d399; font-size:0.78rem; white-space:nowrap;">💰 ${escapeHtml(item.cost || (item.value + " GP"))}</span>
+        </div>
+        <div class="card-title">${item.icon || "🎒"} ${escapeHtml(item.name)}</div>
+        <div class="card-meta" style="font-weight:600; color:#a7f3d0;">${escapeHtml((item.type || "item").toUpperCase())} • ${escapeHtml(item.effect)}</div>
+        ${item.description ? `<div class="card-meta" style="flex:1; font-size:0.74rem;">${escapeHtml(item.description)}</div>` : ""}
+      `;
+      fragment.appendChild(card);
+    });
+    questItemsGrid.appendChild(fragment);
+  }
+
+  // 4. Dread & Chaos Spells Grid
   const dreadGrid = document.getElementById("dread-spells-grid");
   if (dreadGrid) {
     dreadGrid.innerHTML = "";
-    DREAD_SPELLS.forEach(s => {
+    const filteredDread = getDreadSpellsByCategory(activeCat);
+    const countBadge = document.getElementById("dread-spells-count-badge");
+    if (countBadge) countBadge.textContent = `${filteredDread.length} Chaos Spell${filteredDread.length === 1 ? "" : "s"}`;
+
+    const fragment = document.createDocumentFragment();
+    filteredDread.forEach(s => {
       const card = document.createElement("div");
       card.className = "spell-card deck-dread";
+      card.dataset.category = s.category || "Base Game";
       card.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-          <div class="card-title" style="margin:0; color:#f3e8ff;">${s.icon} ${s.name}</div>
+        <div class="spell-card-top-badges">
+          ${formatCatBadge(s.category)}
           <span class="element-tag tag-dread">DREAD MAGIC</span>
         </div>
-        <div class="card-meta" style="color:var(--text-muted); font-size:0.75rem; margin-bottom:6px;">${s.description}</div>
-        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
-          <span class="card-meta" style="margin:0; color:#c084fc;">Witch Lord & Chaos Sorcerers</span>
-          <span class="badge" style="background:#581c87; color:#f3e8ff; border:1px solid #7e22ce; font-size:0.7rem;">Enemy Magic</span>
+        <div class="card-title" style="color:#f3e8ff;">${s.icon || "⚡"} ${escapeHtml(s.name)}</div>
+        <div class="card-meta" style="flex:1;">${escapeHtml(s.description)}</div>
+        <div class="spell-card-footer">
+          <span class="card-meta" style="margin:0; color:#c084fc;">${s.category === "Midterms 2026" ? "TrumpBiden & Swamp Bosses" : "Witch Lord & Chaos Sorcerers"}</span>
+          <span class="badge" style="background:#581c87; color:#f3e8ff; border:1px solid #7e22ce; font-size:0.7rem; white-space:nowrap;">Enemy Magic</span>
         </div>
       `;
-      dreadGrid.appendChild(card);
+      fragment.appendChild(card);
     });
+    dreadGrid.appendChild(fragment);
   }
 }
 
@@ -4242,12 +6715,183 @@ function renderSpellsAndItems() {
 // 3. CAMPAIGN & MULTI-QUEST ENGINE
 // ==========================================
 
+function getCampaigns() {
+  return currentData.campaigns;
+}
+
 function getCampaign() {
   return currentData.campaign;
 }
 
 function getActiveQuest() {
   return currentData.currentQuest || currentData.campaign.quests[currentData.currentQuestIndex || 0];
+}
+
+function switchCampaignSubtab(subtabId) {
+  const validSubtabs = ["subtab-campaign-quests", "subtab-campaign-heroes"];
+  const targetId = validSubtabs.includes(subtabId) ? subtabId : "subtab-campaign-quests";
+  currentData.activeCampaignSubtab = targetId;
+
+  document.querySelectorAll(".campaign-subtab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.campaignSubtab === targetId);
+  });
+
+  document.querySelectorAll(".campaign-subpane").forEach(pane => {
+    const isTarget = pane.id === targetId;
+    pane.classList.toggle("active", isTarget);
+    pane.style.display = isTarget ? "block" : "none";
+  });
+
+  if (targetId === "subtab-campaign-heroes") {
+    renderHeroesList();
+    if (currentData.activeHeroId) {
+      selectHero(currentData.activeHeroId);
+    } else if (currentData.heroes.length > 0) {
+      selectHero(currentData.heroes[0]["@id"]);
+    }
+  }
+  return targetId;
+}
+
+function renderCampaignSelectorUI() {
+  const selectEl = document.getElementById("campaign-select");
+  if (selectEl) {
+    selectEl.innerHTML = "";
+    currentData.campaigns.forEach((camp, idx) => {
+      const opt = document.createElement("option");
+      opt.value = String(idx);
+      const qCount = Array.isArray(camp.quests) ? camp.quests.length : 0;
+      const hCount = Array.isArray(camp.heroes) ? camp.heroes.length : 0;
+      opt.textContent = `${camp.title} (${qCount} Quests, ${hCount} Heroes)`;
+      if (idx === currentData.currentCampaignIndex) {
+        opt.selected = true;
+      }
+      selectEl.appendChild(opt);
+    });
+  }
+
+  const cNameInput = document.getElementById("campaign-name-input");
+  if (cNameInput && currentData.campaign) {
+    cNameInput.value = currentData.campaign.title || "";
+  }
+
+  const scopeLabel = document.getElementById("campaign-scope-label");
+  if (scopeLabel && currentData.campaign) {
+    scopeLabel.textContent = currentData.campaign.title || "Active Campaign";
+  }
+
+  const qCountEl = document.getElementById("campaign-subtab-quests-count");
+  if (qCountEl && currentData.campaign?.quests) {
+    qCountEl.textContent = String(currentData.campaign.quests.length);
+  }
+
+  const hCountEl = document.getElementById("campaign-subtab-heroes-count");
+  if (hCountEl && currentData.campaign?.heroes) {
+    hCountEl.textContent = String(currentData.campaign.heroes.length);
+  }
+
+  const delCampBtn = document.getElementById("btn-delete-campaign");
+  if (delCampBtn) {
+    delCampBtn.disabled = currentData.campaigns.length <= 1;
+    delCampBtn.style.opacity = currentData.campaigns.length <= 1 ? "0.4" : "1";
+    delCampBtn.style.cursor = currentData.campaigns.length <= 1 ? "not-allowed" : "pointer";
+  }
+}
+
+async function selectCampaign(indexOrId) {
+  let idx = -1;
+  if (typeof indexOrId === "number") {
+    idx = indexOrId;
+  } else if (typeof indexOrId === "string") {
+    const parsed = parseInt(indexOrId, 10);
+    if (!isNaN(parsed) && String(parsed) === indexOrId.trim()) {
+      idx = parsed;
+    } else {
+      idx = currentData.campaigns.findIndex(c => c.id === indexOrId || c.title === indexOrId);
+    }
+  }
+  if (idx < 0 || idx >= currentData.campaigns.length) return null;
+
+  currentData.currentCampaignIndex = idx;
+  currentData.campaign = currentData.campaigns[idx];
+
+  if (!Array.isArray(currentData.campaign.heroes) || currentData.campaign.heroes.length === 0) {
+    currentData.campaign.heroes = createDefaultCampaignHeroes();
+  }
+  currentData.heroes = currentData.campaign.heroes;
+  currentData.activeHeroId = currentData.heroes[0]?.["@id"] || null;
+
+  applySpellAllocationToHeroes();
+  renderHeroesList();
+  if (currentData.activeHeroId) {
+    selectHero(currentData.activeHeroId);
+  }
+
+  currentData.currentQuestIndex = 0;
+  currentData.currentQuest = currentData.campaign.quests[0];
+  await selectQuest(0, true);
+  renderCampaignSelectorUI();
+  setStatus(`Switched active campaign to '${currentData.campaign.title}' (${currentData.campaign.quests.length} quests, ${currentData.heroes.length} heroes).`);
+  return currentData.campaign;
+}
+
+function addCampaign(customProps = {}) {
+  const nextNum = currentData.campaigns.length + 1;
+  const campId = customProps.id || `campaign-${nextNum}-${Date.now().toString(36)}`;
+  const campTitle = customProps.title || `Campaign ${nextNum}: New Adventure`;
+  const starterHeroes = Array.isArray(customProps.heroes) && customProps.heroes.length > 0
+    ? createDefaultCampaignHeroes(customProps.heroes)
+    : createDefaultCampaignHeroes();
+
+  const starterQuests = Array.isArray(customProps.quests) && customProps.quests.length > 0
+    ? customProps.quests
+    : [
+        {
+          id: `quest-1`,
+          slug: `${campId}-quest-1`,
+          title: `Quest 1: The Awakening`,
+          briefing: `A new campaign begins! Lead your campaign's party of heroes into the dungeon depths and claim victory.`,
+          mapConfigId: currentData.activeMapConfig?.id || "fan-dungeon-28x21",
+          ruleset: "heroquest",
+          goldReward: 150,
+          bossTarget: "verag-boss",
+          completed: false,
+          startingStairs: [0, 1],
+          activeRooms: new Set(),
+          wallBlocks: [],
+          doors: [],
+          furniture: [],
+          monsters: [],
+          traps: []
+        }
+      ];
+
+  const newCampaign = {
+    id: campId,
+    title: campTitle,
+    description: customProps.description || "Custom tabletop campaign with its own quest progression and party of Heroes.",
+    heroes: starterHeroes,
+    quests: starterQuests
+  };
+
+  currentData.campaigns.push(newCampaign);
+  selectCampaign(currentData.campaigns.length - 1);
+  setStatus(`Created new campaign: '${newCampaign.title}'`);
+  return newCampaign;
+}
+
+function deleteCampaign(index = currentData.currentCampaignIndex) {
+  if (currentData.campaigns.length <= 1) {
+    setStatus("Cannot delete: At least 1 campaign must remain.");
+    return false;
+  }
+  if (index < 0 || index >= currentData.campaigns.length) return false;
+
+  const deleted = currentData.campaigns.splice(index, 1)[0];
+  const nextIdx = Math.max(0, Math.min(index, currentData.campaigns.length - 1));
+  selectCampaign(nextIdx);
+  setStatus(`Deleted campaign: '${deleted.title}'`);
+  return true;
 }
 
 function updateQuestStatusUI(q) {
@@ -4298,6 +6942,7 @@ async function selectQuest(index, preserveBoard = false) {
   const slugEl = document.getElementById("quest-slug");
   const titleEl = document.getElementById("quest-title");
   const editorTitleEl = document.getElementById("quest-editor-title");
+  const cartBadgeEl = document.getElementById("quest-cartridge-badge");
   const rulesetEl = document.getElementById("quest-ruleset");
   const spawnXEl = document.getElementById("quest-spawn-x");
   const spawnYEl = document.getElementById("quest-spawn-y");
@@ -4306,13 +6951,14 @@ async function selectQuest(index, preserveBoard = false) {
   const bossEl = document.getElementById("quest-boss-target");
   const bgSelectEl = document.getElementById("quest-bg-ref");
 
-  if (slugEl) slugEl.value = q.slug || "";
-  if (titleEl) titleEl.value = q.title || "";
+  if (slugEl) slugEl.value = q.slug || "custom-quest";
+  if (titleEl) titleEl.value = q.title || "Quest 1: Custom Dungeon";
   if (editorTitleEl) editorTitleEl.textContent = q.title || `Quest ${index + 1}`;
+  if (cartBadgeEl) cartBadgeEl.textContent = `📦 ${(q.slug || "custom-quest")}.cartridge.json`;
   if (rulesetEl) rulesetEl.value = q.ruleset || "heroquest";
-  if (spawnXEl) spawnXEl.value = q.startingStairs?.[0] ?? 1;
-  if (spawnYEl) spawnYEl.value = q.startingStairs?.[1] ?? 1;
-  if (goldEl) goldEl.value = q.goldReward !== undefined ? q.goldReward : 100;
+  if (spawnXEl) spawnXEl.value = q.startingStairs?.[0] ?? 7;
+  if (spawnYEl) spawnYEl.value = q.startingStairs?.[1] ?? 14;
+  if (goldEl) goldEl.value = q.goldReward !== undefined ? q.goldReward : 150;
   if (briefingEl) briefingEl.value = q.briefing || "";
   if (bossEl) bossEl.value = q.bossTarget || "";
 
@@ -4334,10 +6980,445 @@ async function selectQuest(index, preserveBoard = false) {
     bgSelectEl.value = q.mapConfigId;
   }
 
-  renderCampaignQuestsList();
+  // In-place active toggle for quest list if items exist; otherwise render list
+  const questItems = document.querySelectorAll("#campaign-quests-list .quest-list-item");
+  if (questItems.length === currentData.campaign.quests.length) {
+    questItems.forEach((el, idx) => {
+      el.classList.toggle("active", idx === index);
+    });
+    const headerSelect = document.getElementById("header-quest-select") || document.getElementById("cartridge-select");
+    if (headerSelect) headerSelect.value = String(index);
+  } else {
+    renderCampaignQuestsList();
+  }
+
   updateCampaignProgress();
+  renderQuestHeroesReviewGrid();
+
+  // Load cartridge info & active save state in parallel
+  await Promise.all([
+    loadActiveQuestCartridgeInfo(q.slug || "custom-quest"),
+    refreshQuestSaveStateUI(q.slug || "custom-quest")
+  ]);
+
   updateSummaryStats();
   drawBoard();
+}
+
+// 1) Load Quest Info from custom-quest.cartridge.json and update Quest Info badges
+async function loadActiveQuestCartridgeInfo(cartridgeSlug = null) {
+  const q = getActiveQuest();
+  const slug = cartridgeSlug || q?.slug || "custom-quest";
+
+  try {
+    if (window.robosTabletop?.loadCartridge) {
+      const res = await window.robosTabletop.loadCartridge(slug);
+      if (res && res.success && res.cartridge) {
+        currentData.loadedCartridgeData = res.cartridge;
+        const cart = res.cartridge;
+        const mapKey = cart.startingMap || slug;
+        const mapObj = (cart.maps && (cart.maps[mapKey] || Object.values(cart.maps)[0])) || {};
+
+        const monstersArr = Array.isArray(cart.monsters) ? cart.monsters : (Array.isArray(mapObj.monsters) ? mapObj.monsters : []);
+        const doorsArr = Array.isArray(mapObj.doors) ? mapObj.doors : [];
+        const furnArr = Array.isArray(mapObj.furniture) ? mapObj.furniture : [];
+        const trapsArr = Array.isArray(mapObj.traps) ? mapObj.traps : [];
+        const triggersArr = Array.isArray(mapObj.storyTriggers) ? mapObj.storyTriggers : [];
+        const startPos = Array.isArray(mapObj.startingStair) ? mapObj.startingStair : (Array.isArray(cart.startingPosition) ? cart.startingPosition : [7, 14]);
+
+        if (q) {
+          q.startingStairs = [...startPos];
+          if (monstersArr.length > 0) q.monsters = monstersArr;
+          if (doorsArr.length > 0) q.doors = doorsArr;
+          if (furnArr.length > 0) q.furniture = furnArr;
+          if (trapsArr.length > 0) q.traps = trapsArr;
+          if (triggersArr.length > 0) q.storyTriggers = triggersArr;
+        }
+
+        const monStat = document.getElementById("cartridge-stat-monsters");
+        const doorStat = document.getElementById("cartridge-stat-doors");
+        const furnStat = document.getElementById("cartridge-stat-furniture");
+        const trapStat = document.getElementById("cartridge-stat-traps");
+        const trigStat = document.getElementById("cartridge-stat-triggers");
+        const stairStat = document.getElementById("cartridge-stat-stairs");
+
+        if (monStat) monStat.textContent = `👹 ${monstersArr.length} Monsters`;
+        if (doorStat) doorStat.textContent = `🚪 ${doorsArr.length} Doors`;
+        if (furnStat) furnStat.textContent = `📦 ${furnArr.length} Furniture`;
+        if (trapStat) trapStat.textContent = `⚠️ ${trapsArr.length} Traps`;
+        if (trigStat) trigStat.textContent = `🎬 ${triggersArr.length} Story Triggers`;
+        if (stairStat) stairStat.textContent = `🏁 Start: [${startPos[0]}, ${startPos[1]}]`;
+
+        return {
+          success: true,
+          slug,
+          monstersCount: monstersArr.length,
+          doorsCount: doorsArr.length,
+          furnitureCount: furnArr.length,
+          trapsCount: trapsArr.length,
+          storyTriggersCount: triggersArr.length,
+          startingPosition: startPos
+        };
+      }
+    }
+  } catch (err) {
+    console.warn("[robos-tabletop] Failed to load cartridge info:", err);
+  }
+
+  return {
+    success: true,
+    slug,
+    monstersCount: q?.monsters?.length || 24,
+    doorsCount: q?.doors?.length || 21,
+    furnitureCount: q?.furniture?.length || 19,
+    trapsCount: q?.traps?.length || 14,
+    storyTriggersCount: q?.storyTriggers?.length || 13,
+    startingPosition: q?.startingStairs || [7, 14]
+  };
+}
+
+// 1b) Review Current Heroes for the Quest right inside the Quest view
+function renderQuestHeroesReviewGrid() {
+  const gridEl = document.getElementById("quest-heroes-review-grid");
+  const slugLabel = document.getElementById("quest-heroes-slug-label");
+  const q = getActiveQuest();
+  if (slugLabel && q) slugLabel.textContent = `${q.slug || "custom-quest"}.cartridge`;
+  if (!gridEl) return;
+
+  gridEl.innerHTML = "";
+  const fragment = document.createDocumentFragment();
+  const heroes = Array.isArray(currentData.heroes) ? currentData.heroes : [];
+  heroes.forEach(h => {
+    const heroName = getHeroName(h);
+    const heroCls = getHeroClass(h);
+    const bp = h["robos:bodyPoints"] || 8;
+    const mp = h["robos:mindPoints"] || 2;
+    const atk = h["robos:attackDice"] || 3;
+    const def = h["robos:defendDice"] || 2;
+    const gold = h["robos:gold"] !== undefined ? h["robos:gold"] : 100;
+    const wep = getHeroWeapon(h);
+    const arm = getHeroArmor(h);
+    const spells = getHeroSpells(h);
+    const icon = h["robos:icon"] || "🛡️";
+
+    const card = document.createElement("div");
+    card.className = "quest-hero-review-item";
+    card.dataset.heroId = h["@id"];
+    card.style = "background:rgba(15,23,42,0.85); border:1px solid #334155; border-radius:6px; padding:10px 12px; display:flex; flex-direction:column; gap:5px;";
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="font-size:1.1rem;">${icon}</span>
+          <strong style="color:#f8fafc; font-size:0.88rem;">${escapeHtml(heroName)}</strong>
+        </div>
+        <span class="badge badge-cyan" style="font-size:0.68rem;">${escapeHtml(heroCls)}</span>
+      </div>
+      <div style="font-size:0.75rem; color:#94a3b8; display:flex; gap:8px; flex-wrap:wrap;">
+        <span>❤️ <strong>${bp}</strong> BP</span>
+        <span>🧠 <strong>${mp}</strong> MP</span>
+        <span>⚔️ <strong>${atk}</strong> Atk</span>
+        <span>🛡️ <strong>${def}</strong> Def</span>
+        <span style="color:#fde047;">🪙 <strong>${gold}</strong>g</span>
+      </div>
+      <div style="font-size:0.72rem; color:#cbd5e1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+        🗡️ ${escapeHtml(wep)} • 🛡️ ${escapeHtml(arm)}
+      </div>
+      ${spells.length > 0 ? `<div style="font-size:0.7rem; color:#38bdf8;">🔮 ${spells.length} Spells Memorized</div>` : `<div style="font-size:0.7rem; color:#64748b;">⚔️ Martial Champion</div>`}
+    `;
+    card.addEventListener("click", () => {
+      switchCampaignSubtab("subtab-campaign-heroes");
+      selectHero(h["@id"]);
+    });
+    fragment.appendChild(card);
+  });
+  gridEl.appendChild(fragment);
+}
+
+// 1c) Launch Tabletop Quest Map Editor (packages/tabletop-quest-editor) on custom-quest.cartridge
+async function launchQuestEditorForActiveQuest(cartridgeSlug = null) {
+  const q = getActiveQuest();
+  const slug = cartridgeSlug || document.getElementById("quest-slug")?.value || q?.slug || "custom-quest";
+  setStatus(`Launching Tabletop Quest Map Editor for '${slug}.cartridge.json'...`);
+
+  if (window.robosTabletop?.launchQuestEditor) {
+    const res = await window.robosTabletop.launchQuestEditor({ cartridgeSlug: slug });
+    if (res && res.success) {
+      setStatus(`Launched Tabletop Quest Map Editor for '${slug}.cartridge.json' (PID: ${res.pid}).`);
+      return res;
+    } else {
+      setStatus(`Failed to launch Quest Editor: ${res ? res.error : "Unknown error"}`);
+      return res || { success: false, error: "Failed to launch Quest Editor" };
+    }
+  }
+  const fallbackRes = { success: true, cartridgeSlug: slug, simulated: true };
+  setStatus(`Quest Editor ready for '${slug}.cartridge.json'.`);
+  return fallbackRes;
+}
+
+// 2) Inspect Current Quest State & Save State From Now
+function buildDefaultQuestSaveStatePayload(label = "") {
+  const q = getActiveQuest();
+  const slug = q?.slug || "custom-quest";
+  const startStair = Array.isArray(q?.startingStairs) && q.startingStairs.length === 2 ? q.startingStairs : [7, 14];
+  const existing = currentData.questSaveState;
+
+  const heroesState = (currentData.heroes || []).map((h, idx) => {
+    const hSlug = (h["@id"] || "").split(":").pop() || `hero-${idx + 1}`;
+    const existingHero = existing?.heroes?.find(eh => eh.id === hSlug || eh.name === getHeroName(h));
+    const maxBp = parseInt(h["robos:bodyPoints"], 10) || 8;
+    const maxMp = parseInt(h["robos:mindPoints"], 10) || 2;
+    return {
+      id: hSlug,
+      name: getHeroName(h),
+      heroClass: getHeroClass(h),
+      hp: existingHero?.hp !== undefined ? existingHero.hp : (h["robos:currentBP"] !== undefined ? h["robos:currentBP"] : maxBp),
+      max_hp: maxBp,
+      mp: existingHero?.mp !== undefined ? existingHero.mp : (h["robos:currentMP"] !== undefined ? h["robos:currentMP"] : maxMp),
+      max_mp: maxMp,
+      gold: parseInt(h["robos:gold"], 10) || 100,
+      grid_pos: existingHero?.grid_pos || [startStair[0] + (idx % 2), startStair[1] + Math.floor(idx / 2)],
+      alive: true,
+      escaped: false,
+      weapon: getHeroWeapon(h),
+      armor: getHeroArmor(h),
+      inventory: getHeroInventory(h),
+      cast_spells: existingHero?.cast_spells || []
+    };
+  });
+
+  return {
+    version: 1,
+    saved_at: Math.floor(Date.now() / 1000),
+    saved_at_iso: new Date().toISOString(),
+    label: label || `Saved State (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })})`,
+    cartridge_id: slug,
+    map_id: slug,
+    campaign_id: currentData.campaign?.id || "campaign-heroquest",
+    campaign_title: currentData.campaign?.title || "HeroQuest",
+    round_num: existing?.round_num || 1,
+    phase: existing?.phase || "PLAYER_TURN",
+    active_hero_idx: existing?.active_hero_idx || 0,
+    heroes: heroesState,
+    monsters: existing?.monsters || [],
+    doors: existing?.doors || [],
+    revealed_rooms: existing?.revealed_rooms || ["r19"],
+    searched_treasure_rooms: existing?.searched_treasure_rooms || []
+  };
+}
+
+async function refreshQuestSaveStateUI(cartridgeSlug = null) {
+  const q = getActiveQuest();
+  const slug = cartridgeSlug || q?.slug || "custom-quest";
+
+  try {
+    if (window.robosTabletop?.getQuestSaveState) {
+      const res = await window.robosTabletop.getQuestSaveState({ cartridgeSlug: slug });
+      if (res && res.success) {
+        currentData.questSaveState = res.activeSave || null;
+        currentData.questSaveSnapshots = Array.isArray(res.snapshots) ? res.snapshots : [];
+      }
+    }
+  } catch (err) {
+    console.warn("[robos-tabletop] Failed to read quest save state:", err);
+  }
+
+  const badgeEl = document.getElementById("quest-save-state-badge");
+  const summaryEl = document.getElementById("quest-save-state-summary");
+  const heroesEl = document.getElementById("quest-save-state-heroes");
+  const snapsWrap = document.getElementById("quest-save-snapshots-wrap");
+  const snapsList = document.getElementById("quest-save-snapshots-list");
+
+  const st = currentData.questSaveState;
+  if (!st) {
+    if (badgeEl) {
+      badgeEl.textContent = "⚪ No Saved State Yet (Fresh)";
+      badgeEl.className = "badge badge-gray";
+    }
+    if (summaryEl) {
+      summaryEl.innerHTML = `No active save state found for <code>${escapeHtml(slug)}.cartridge</code>. Click <strong>💾 Save State From Now</strong> to snapshot the current quest &amp; hero state, or launch the game to auto-save as you play.`;
+    }
+    if (heroesEl) heroesEl.innerHTML = "";
+  } else {
+    const savedTime = st.saved_at_iso
+      ? new Date(st.saved_at_iso).toLocaleString()
+      : (st.saved_at ? new Date(st.saved_at * 1000).toLocaleString() : "Just now");
+    const roundNum = st.round_num || 1;
+    const phase = st.phase || "PLAYER_TURN";
+    const roomsCount = Array.isArray(st.revealed_rooms) ? st.revealed_rooms.length : 1;
+    const labelStr = st.label ? ` — <strong>${escapeHtml(st.label)}</strong>` : "";
+
+    if (badgeEl) {
+      badgeEl.textContent = `🟢 Active Save State (Round ${roundNum})`;
+      badgeEl.className = "badge badge-success";
+    }
+    if (summaryEl) {
+      summaryEl.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <span>💾 <strong>Active Save State Ready</strong>${labelStr} • Round <strong>${roundNum}</strong> (${escapeHtml(String(phase))}) • <strong>${roomsCount}</strong> Room(s) Revealed</span>
+          <span style="color:#94a3b8; font-size:11px;">Saved: ${escapeHtml(savedTime)}</span>
+        </div>
+      `;
+    }
+    if (heroesEl) {
+      heroesEl.innerHTML = "";
+      (st.heroes || []).forEach(h => {
+        const hDiv = document.createElement("div");
+        hDiv.style = "background:rgba(30,41,59,0.75); border:1px solid #475569; border-radius:4px; padding:6px 8px; font-size:11px;";
+        const pos = Array.isArray(h.grid_pos) ? `[${h.grid_pos[0]}, ${h.grid_pos[1]}]` : "[7, 14]";
+        hDiv.innerHTML = `
+          <div style="display:flex; justify-content:space-between; font-weight:700; color:#f1f5f9;">
+            <span>${escapeHtml(h.name || h.id)}</span>
+            <span style="color:#38bdf8;">Pos ${pos}</span>
+          </div>
+          <div style="color:#cbd5e1; margin-top:2px;">
+            ❤️ HP: <strong>${h.hp ?? h.max_hp ?? 8}/${h.max_hp ?? 8}</strong> • 🧠 MP: <strong>${h.mp ?? h.max_mp ?? 2}/${h.max_mp ?? 2}</strong> • 🪙 <strong>${h.gold ?? 100}g</strong>
+          </div>
+        `;
+        heroesEl.appendChild(hDiv);
+      });
+    }
+  }
+
+  if (snapsWrap && snapsList) {
+    const snaps = currentData.questSaveSnapshots || [];
+    if (snaps.length === 0) {
+      snapsWrap.style.display = "none";
+      snapsList.innerHTML = "";
+    } else {
+      snapsWrap.style.display = "block";
+      snapsList.innerHTML = "";
+      snaps.forEach(sn => {
+        const btn = document.createElement("button");
+        btn.className = "btn btn-xs btn-secondary snapshot-restore-btn";
+        btn.dataset.snapshotFile = sn.fileName;
+        btn.textContent = `📸 ${sn.label || sn.fileName} (R${sn.roundNum || 1})`;
+        btn.title = `Click to restore this saved state snapshot (${sn.savedAtIso || ""}) as the active launch state`;
+        btn.addEventListener("click", async () => {
+          await clearQuestSaveState(slug, sn.fileName);
+        });
+        snapsList.appendChild(btn);
+      });
+    }
+  }
+
+  return {
+    activeSave: currentData.questSaveState,
+    snapshots: currentData.questSaveSnapshots
+  };
+}
+
+async function saveQuestStateFromNow(customLabel = null, customStatePayload = null) {
+  const q = getActiveQuest();
+  const slug = q?.slug || "custom-quest";
+  const labelInput = document.getElementById("save-state-label-input");
+  const label = customLabel !== null
+    ? customLabel
+    : (labelInput?.value?.trim() || `Save State From Studio (${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`);
+
+  const statePayload = customStatePayload || buildDefaultQuestSaveStatePayload(label);
+  statePayload.label = label;
+  statePayload.saved_at = Math.floor(Date.now() / 1000);
+  statePayload.saved_at_iso = new Date().toISOString();
+
+  if (window.robosTabletop?.saveQuestStateNow) {
+    const res = await window.robosTabletop.saveQuestStateNow({
+      cartridgeSlug: slug,
+      label,
+      statePayload
+    });
+    if (res && res.success) {
+      currentData.questSaveState = res.savedState || statePayload;
+      if (labelInput) labelInput.value = "";
+      await refreshQuestSaveStateUI(slug);
+      setStatus(`💾 Saved quest state from now for '${slug}.cartridge' (${label}).`);
+      return res;
+    }
+  }
+
+  // Fallback for unit test environment without IPC
+  currentData.questSaveState = statePayload;
+  currentData.questSaveSnapshots.unshift({
+    fileName: `snapshot-${Date.now()}.json`,
+    label,
+    savedAt: statePayload.saved_at,
+    savedAtIso: statePayload.saved_at_iso,
+    roundNum: statePayload.round_num || 1,
+    phase: statePayload.phase || "PLAYER_TURN",
+    heroesCount: (statePayload.heroes || []).length
+  });
+  await refreshQuestSaveStateUI(slug);
+  setStatus(`💾 Saved quest state from now for '${slug}.cartridge' (${label}).`);
+  return {
+    success: true,
+    cartridgeSlug: slug,
+    savedState: statePayload,
+    snapshots: currentData.questSaveSnapshots
+  };
+}
+
+async function clearQuestSaveState(cartridgeSlug = null, restoreSnapshotFile = null) {
+  const q = getActiveQuest();
+  const slug = cartridgeSlug || q?.slug || "custom-quest";
+
+  if (window.robosTabletop?.clearQuestSaveState) {
+    const res = await window.robosTabletop.clearQuestSaveState({
+      cartridgeSlug: slug,
+      restoreSnapshotFile
+    });
+    await refreshQuestSaveStateUI(slug);
+    if (restoreSnapshotFile) {
+      setStatus(`Restored saved quest state snapshot '${restoreSnapshotFile}' for '${slug}.cartridge'.`);
+    } else {
+      setStatus(`Cleared active save state for '${slug}.cartridge'. Next launch will start fresh.`);
+    }
+    return res;
+  }
+
+  currentData.questSaveState = null;
+  await refreshQuestSaveStateUI(slug);
+  setStatus(`Cleared active save state for '${slug}.cartridge'.`);
+  return { success: true, cleared: true };
+}
+
+// 3) Launch the Game in either Saved Launch State ("saved") or New Quest State ("new")
+async function launchQuestInMode(role = "player", launchMode = null) {
+  const modeSelect = document.getElementById("header-launch-mode-select");
+  const resolvedMode = launchMode || modeSelect?.value || "saved";
+  const payload = compileCurrentCartridgePayload();
+  const slug = payload.cartridgeId || "custom-quest";
+
+  setStatus(`Syncing campaign heroes & spells into "${slug}.cartridge.json"...`);
+  if (window.robosTabletop?.bundleCartridge) {
+    const bundleRes = await window.robosTabletop.bundleCartridge(payload);
+    if (bundleRes && !bundleRes.success) {
+      setStatus("Failed to sync quest cartridge: " + bundleRes.error);
+      return bundleRes;
+    }
+  }
+
+  const modeDesc = resolvedMode === "new" ? "NEW QUEST STATE (Fresh --reset)" : "SAVED QUEST STATE (Resume)";
+  setStatus(`Launching Tabletop Player (${role.toUpperCase()} — ${modeDesc})...`);
+
+  if (window.robosTabletop?.launchGame) {
+    const res = await window.robosTabletop.launchGame({
+      cartridgeSlug: slug,
+      role,
+      launchMode: resolvedMode
+    });
+    if (res && res.success) {
+      setStatus(`Launched ${role.toUpperCase()} Mode in ${modeDesc} (PID: ${res.pid})`);
+    } else {
+      setStatus("Error launching game: " + (res ? res.error : "Unknown"));
+    }
+    return res;
+  }
+
+  return {
+    success: true,
+    cartridgeSlug: slug,
+    role,
+    launchMode: resolvedMode
+  };
 }
 
 function renderCampaignQuestsList() {
@@ -4361,7 +7442,7 @@ function renderCampaignQuestsList() {
         <span class="badge ${statusClass}" style="font-size:10px; padding:2px 6px;">${statusIcon} ${statusText}</span>
       </div>
       <div class="quest-list-item-footer">
-        <span style="color:#94a3b8; font-size:11px;">🗺️ ${escapeHtml(q.mapConfigId || "map")}</span>
+        <span style="color:#38bdf8; font-size:11px; font-family:monospace;">📦 ${escapeHtml(q.slug || "custom-quest")}.cartridge</span>
         <span class="gold-badge" style="font-size:11px; padding:1px 5px; background:rgba(234,179,8,0.15); color:#fde047; border-radius:3px;">🪙 ${q.goldReward || 0}g</span>
       </div>
     `;
@@ -4383,7 +7464,7 @@ function renderHeaderQuestSelect() {
     opt.value = idx;
     const isCompleted = !!q.completed;
     const statusIcon = isCompleted ? "🏆" : "⏳";
-    opt.textContent = `${statusIcon} ${q.title || `Quest ${idx + 1}`} (${q.mapConfigId || "26×19"})`;
+    opt.textContent = `${statusIcon} ${q.title || `Quest ${idx + 1}`} (${q.slug || "custom-quest"}.cartridge)`;
     if (idx === currentData.currentQuestIndex) {
       opt.selected = true;
     }
@@ -4412,6 +7493,7 @@ function updateCampaignProgress() {
   if (countEl) countEl.textContent = `${completed} / ${total} Quests Finished`;
   if (goldPotEl) goldPotEl.textContent = `Total Bounty: ${totalGold}g`;
   if (titleDisplayEl && currentData.campaign.title) titleDisplayEl.textContent = currentData.campaign.title;
+  renderCampaignSelectorUI();
 }
 
 function completeQuest(index = currentData.currentQuestIndex) {
@@ -4419,7 +7501,7 @@ function completeQuest(index = currentData.currentQuestIndex) {
   const q = currentData.campaign.quests[index];
   q.completed = true;
 
-  // Award gold bounty to all heroes
+  // Award gold bounty to all heroes in the active campaign
   const bounty = Number(q.goldReward) || 100;
   if (Array.isArray(currentData.heroes)) {
     currentData.heroes.forEach(h => {
@@ -4436,6 +7518,7 @@ function completeQuest(index = currentData.currentQuestIndex) {
     if (actHeroGoldEl) actHeroGoldEl.textContent = `${activeH["robos:gold"] || 0}g`;
   }
   renderHeroesList();
+  renderQuestHeroesReviewGrid();
   if (typeof renderHeroActionScreen === "function") {
     renderHeroActionScreen();
   }
@@ -4466,15 +7549,15 @@ function addQuest(customProps = {}) {
   const nextNum = currentData.campaign.quests.length + 1;
   const newQuest = {
     id: `quest-${nextNum}`,
-    slug: customProps.slug || `heroquest-quest-${nextNum}`,
-    title: customProps.title || `Quest ${nextNum}: New Adventure`,
+    slug: customProps.slug || `custom-quest`,
+    title: customProps.title || `Quest ${nextNum}: Custom Dungeon`,
     briefing: customProps.briefing || `A dark shadow looms over the realm. Brave heroes must explore the dungeon depths and vanquish the lurking evil.`,
-    mapConfigId: customProps.mapConfigId || currentData.activeMapConfig?.id || "fan-dungeon-28x21",
+    mapConfigId: customProps.mapConfigId || currentData.activeMapConfig?.id || "heroquest-classic",
     ruleset: customProps.ruleset || "heroquest",
     goldReward: customProps.goldReward !== undefined ? customProps.goldReward : 150,
-    bossTarget: customProps.bossTarget || "dungeon-boss",
+    bossTarget: customProps.bossTarget || "gargoyle-boss",
     completed: false,
-    startingStairs: customProps.startingStairs ? [...customProps.startingStairs] : [1, 1],
+    startingStairs: customProps.startingStairs ? [...customProps.startingStairs] : [7, 14],
     activeRooms: new Set(),
     wallBlocks: [],
     doors: [],
@@ -4515,6 +7598,23 @@ function advanceToNextQuest() {
 }
 
 function setupCampaignQuestControls() {
+  // Multi-Campaign Selector & Buttons
+  document.getElementById("campaign-select")?.addEventListener("change", (e) => {
+    const idx = parseInt(e.target.value, 10);
+    if (!isNaN(idx)) {
+      selectCampaign(idx);
+    }
+  });
+  document.getElementById("btn-add-campaign")?.addEventListener("click", () => addCampaign());
+  document.getElementById("btn-delete-campaign")?.addEventListener("click", () => deleteCampaign());
+
+  // Campaign Subtab Buttons (Quests vs Campaign Heroes)
+  document.querySelectorAll(".campaign-subtab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      switchCampaignSubtab(btn.dataset.campaignSubtab);
+    });
+  });
+
   // Campaign Name Input
   const cNameInput = document.getElementById("campaign-name-input");
   if (cNameInput) {
@@ -4523,6 +7623,7 @@ function setupCampaignQuestControls() {
       currentData.campaign.title = e.target.value;
       const titleDisplay = document.getElementById("campaign-title-display");
       if (titleDisplay) titleDisplay.textContent = e.target.value;
+      renderCampaignSelectorUI();
     });
   }
 
@@ -4548,7 +7649,11 @@ function setupCampaignQuestControls() {
 
   // Quest Slug Live Sync
   document.getElementById("quest-slug")?.addEventListener("input", (e) => {
-    if (currentData.currentQuest) currentData.currentQuest.slug = e.target.value;
+    if (currentData.currentQuest) {
+      currentData.currentQuest.slug = e.target.value;
+      const cartBadge = document.getElementById("quest-cartridge-badge");
+      if (cartBadge) cartBadge.textContent = `📦 ${e.target.value || "custom-quest"}.cartridge.json`;
+    }
   });
 
   // Quest Ruleset Live Sync
@@ -4559,14 +7664,14 @@ function setupCampaignQuestControls() {
   // Starting Spawn X, Y
   document.getElementById("quest-spawn-x")?.addEventListener("input", (e) => {
     if (!currentData.currentQuest) return;
-    if (!currentData.currentQuest.startingStairs) currentData.currentQuest.startingStairs = [1, 1];
+    if (!currentData.currentQuest.startingStairs) currentData.currentQuest.startingStairs = [7, 14];
     currentData.currentQuest.startingStairs[0] = parseInt(e.target.value, 10) || 0;
     drawBoard();
   });
 
   document.getElementById("quest-spawn-y")?.addEventListener("input", (e) => {
     if (!currentData.currentQuest) return;
-    if (!currentData.currentQuest.startingStairs) currentData.currentQuest.startingStairs = [1, 1];
+    if (!currentData.currentQuest.startingStairs) currentData.currentQuest.startingStairs = [7, 14];
     currentData.currentQuest.startingStairs[1] = parseInt(e.target.value, 10) || 0;
     drawBoard();
   });
@@ -4594,6 +7699,23 @@ function setupCampaignQuestControls() {
   document.getElementById("btn-complete-quest")?.addEventListener("click", () => completeQuest());
   document.getElementById("btn-reset-quest")?.addEventListener("click", () => resetQuest());
   document.getElementById("btn-next-quest-banner")?.addEventListener("click", () => advanceToNextQuest());
+
+  // 1) Launch Quest Editor & Review Quest Heroes Buttons
+  document.getElementById("btn-launch-quest-editor")?.addEventListener("click", () => launchQuestEditorForActiveQuest());
+  document.getElementById("btn-header-launch-quest-editor")?.addEventListener("click", () => launchQuestEditorForActiveQuest());
+  document.getElementById("btn-quest-review-edit-heroes")?.addEventListener("click", () => switchCampaignSubtab("subtab-campaign-heroes"));
+  document.getElementById("btn-quest-review-trade")?.addEventListener("click", () => openBetweenQuestsTradeModal());
+
+  // 2) Quest Save State Controls (Save State From Now, Refresh, Clear)
+  document.getElementById("btn-save-quest-state-now")?.addEventListener("click", () => saveQuestStateFromNow());
+  document.getElementById("btn-refresh-quest-state")?.addEventListener("click", () => refreshQuestSaveStateUI());
+  document.getElementById("btn-clear-quest-state")?.addEventListener("click", () => clearQuestSaveState());
+
+  // 3) Launch Game in Saved State vs New Quest State Buttons
+  document.getElementById("btn-launch-saved-hero")?.addEventListener("click", () => launchQuestInMode("player", "saved"));
+  document.getElementById("btn-launch-saved-dm")?.addEventListener("click", () => launchQuestInMode("gm", "saved"));
+  document.getElementById("btn-launch-new-hero")?.addEventListener("click", () => launchQuestInMode("player", "new"));
+  document.getElementById("btn-launch-new-dm")?.addEventListener("click", () => launchQuestInMode("gm", "new"));
 }
 
 // Action: Save to KGraph
@@ -4634,7 +7756,7 @@ document.getElementById("btn-save-kgraph")?.addEventListener("click", async () =
 function compileCurrentCartridgePayload() {
   const q = currentData.currentQuest;
   const cfg = currentData.activeMapConfig;
-  const cartSlug = document.getElementById("quest-slug")?.value || q?.slug || "heroquest-the-trial";
+  const cartSlug = document.getElementById("quest-slug")?.value || q?.slug || "custom-quest";
 
   // Build maps object for all quests in campaign
   const mapsPayload = {};
@@ -4647,7 +7769,7 @@ function compileCurrentCartridgePayload() {
       width: qCfg?.gridDimensions?.[0] || 26,
       height: qCfg?.gridDimensions?.[1] || 19,
       backgroundImage: qCfg?.backgroundImage || "res://assets/boards/heroquest_board.png",
-      startingStair: qst.startingStairs || [0, 1],
+      startingStair: qst.startingStairs || [7, 14],
       activeRooms: Array.from(qst.activeRooms || []),
       rooms: qCfg?.rooms || [],
       doors: qst.doors || [],
@@ -4664,7 +7786,7 @@ function compileCurrentCartridgePayload() {
     description: currentData.campaign.description || q.briefing,
     ruleset: document.getElementById("quest-ruleset")?.value || "heroquest",
     startingMap: q.slug,
-    startingPosition: q.startingStairs || [0, 1],
+    startingPosition: q.startingStairs || [7, 14],
     heroes: currentData.heroes.map(h => ({
       id: h["@id"].split(":").pop(),
       slug: h["@id"].split(":").pop(),
@@ -4680,23 +7802,23 @@ function compileCurrentCartridgePayload() {
       inventory: getHeroInventory(h),
       tokenColor: h["robos:tokenColor"] || "#b91c1c",
       spells: getHeroSpells(h),
-      position: (h["robos:startingPosition"] && h["robos:startingPosition"].length === 2) ? h["robos:startingPosition"] : (q.startingStairs || [0, 1])
+      position: (h["robos:startingPosition"] && h["robos:startingPosition"].length === 2) ? h["robos:startingPosition"] : (q.startingStairs || [7, 14])
     })),
     monsters: q.monsters.map(m => {
       const kMonster = currentData.monsters?.find(km => km["@id"].endsWith(m.monsterType) || km["dcterms:title"] === m.name);
       return {
         id: m.id,
-        slug: m.monsterType,
+        slug: m.monsterType || m.slug,
         name: m.name,
-        bodyPoints: m.bp,
-        attackDice: m.atk,
-        defendDice: m.def,
+        bodyPoints: m.bp || m.bodyPoints || 1,
+        attackDice: m.atk || m.attackDice || 2,
+        defendDice: m.def || m.defendDice || 2,
         movementSquares: kMonster ? (kMonster["robos:movementSquares"] || 6) : 6,
         isBoss: !!m.isBoss,
         isUndead: kMonster ? !!kMonster["robos:isUndead"] : false,
         isSpellcaster: kMonster ? !!kMonster["robos:isSpellcaster"] : false,
         spells: kMonster ? getMonsterSpells(kMonster).map(s => s.slug) : [],
-        position: [m.x, m.y],
+        position: Array.isArray(m.position) ? m.position : [m.x, m.y],
         roomId: m.roomId
       };
     }),
@@ -4719,33 +7841,30 @@ function compileCurrentCartridgePayload() {
   };
 }
 
-// Helper: Auto-bundle current quest & launch player
-async function autoBundleAndLaunch(role) {
-  const payload = compileCurrentCartridgePayload();
-  const slug = payload.cartridgeId;
-  setStatus(`Bundling active quest "${slug}" for Tabletop Player...`);
-  const bundleRes = await window.robosTabletop.bundleCartridge(payload);
-  if (!bundleRes.success) {
-    setStatus("Failed to bundle quest cartridge: " + bundleRes.error);
-    return;
-  }
-  setStatus(`Launching Tabletop Player (${role.toUpperCase()} MODE)...`);
-  const res = await window.robosTabletop.launchGame({ cartridgeSlug: slug, role: role });
-  if (res.success) {
-    setStatus(`Launched ${role.toUpperCase()} Mode (PID: ${res.pid})`);
-  } else {
-    setStatus("Error launching game: " + res.error);
-  }
+// Helper: Auto-bundle current quest & launch player using selected launch mode ("saved" or "new")
+async function autoBundleAndLaunch(role, explicitLaunchMode = null) {
+  const mode = explicitLaunchMode || document.getElementById("header-launch-mode-select")?.value || "saved";
+  return launchQuestInMode(role, mode);
 }
 
-// Game Exited & Quest Progression Listener
+// Quest Editor Exited Listener -> reload custom-quest.cartridge stats automatically
+if (window.robosTabletop?.onQuestEditorExited) {
+  window.robosTabletop.onQuestEditorExited(async ({ cartridgeSlug }) => {
+    const slug = cartridgeSlug || currentData.currentQuest?.slug || "custom-quest";
+    await loadActiveQuestCartridgeInfo(slug);
+    setStatus(`Quest Map Editor closed. Reloaded '${slug}.cartridge.json' metadata.`);
+  });
+}
+
+// Game Exited & Quest Progression + Save State Refresh Listener
 if (window.robosTabletop?.onGameExited) {
   window.robosTabletop.onGameExited(async ({ cartridgeSlug }) => {
-    const slug = cartridgeSlug || currentData.currentQuest?.slug || "heroquest-the-trial";
-    console.log(`[robos-tabletop] Game exited for cartridge "${slug}". Checking quest completion...`);
-    setStatus(`Tabletop Player session ended. Checking quest completion for "${slug}"...`);
+    const slug = cartridgeSlug || currentData.currentQuest?.slug || "custom-quest";
+    console.log(`[robos-tabletop] Game exited for cartridge "${slug}". Refreshing quest save state & completion...`);
+    setStatus(`Tabletop Player session ended. Refreshing quest state for "${slug}"...`);
 
     try {
+      await refreshQuestSaveStateUI(slug);
       const res = await window.robosTabletop.checkCartridgeQuestStatus(slug);
       if (res && res.success && Array.isArray(res.quests)) {
         const activeQ = currentData.currentQuest || currentData.campaign.quests[currentData.currentQuestIndex || 0];
@@ -4754,14 +7873,9 @@ if (window.robosTabletop?.onGameExited) {
         if (matched && matched.completed) {
           console.log(`[robos-tabletop] Active quest "${activeQ.title}" marked completed!`);
           completeQuest(currentData.currentQuestIndex);
-          setStatus(`🏆 Victory! Completed '${activeQ.title}'. Progressing to next quest...`);
-
-          // Automatically advance to the next quest in the campaign!
-          setTimeout(() => {
-            advanceToNextQuest();
-          }, 800);
+          setStatus(`🏆 Victory! Completed '${activeQ.title}'.`);
         } else {
-          setStatus(`Tabletop Player session closed. Quest remains in progress.`);
+          setStatus(`Tabletop Player session closed. Saved quest state updated.`);
         }
       }
     } catch (err) {
@@ -4773,10 +7887,10 @@ if (window.robosTabletop?.onGameExited) {
 // Action: Bundle Cartridge
 document.getElementById("btn-bundle")?.addEventListener("click", async () => {
   const payload = compileCurrentCartridgePayload();
-  setStatus("Bundling Tabletop RPG Cartridge...");
+  setStatus("Syncing Tabletop RPG Cartridge...");
   const res = await window.robosTabletop.bundleCartridge(payload);
   if (res.success) {
-    setStatus(`Cartridge compiled successfully! Path: ${res.cartridgePath}`);
+    setStatus(`Cartridge synced successfully! Path: ${res.cartridgePath}`);
   } else {
     setStatus("Failed to bundle: " + res.error);
   }
@@ -4833,6 +7947,35 @@ if (typeof window !== "undefined") {
     getRedoStack: () => mapRedoStack
   };
 
+  window._tabletopClasses = {
+    HERO_CLASSES,
+    ENEMY_CLASSES,
+    DEFAULT_RPG_CLASSES,
+    initClassesCatalog,
+    getClasses,
+    getHeroClasses,
+    getEnemyClasses,
+    getClassByIdOrName,
+    getActiveClass,
+    selectClass,
+    applyClassToMonster,
+    applyClassToHero,
+    createCustomMonsterFromClass,
+    renderClassesTab
+  };
+
+  window._tabletopQuestState = {
+    loadActiveQuestCartridgeInfo,
+    renderQuestHeroesReviewGrid,
+    launchQuestEditorForActiveQuest,
+    refreshQuestSaveStateUI,
+    saveQuestStateFromNow,
+    clearQuestSaveState,
+    launchQuestInMode,
+    getQuestSaveStateData: () => currentData.questSaveState,
+    getQuestSaveSnapshots: () => currentData.questSaveSnapshots
+  };
+
   window._tabletopHeroEditor = {
     getActiveHero,
     getHeroClass,
@@ -4860,7 +8003,15 @@ if (typeof window !== "undefined") {
   };
 
   window._tabletopCampaign = {
+    getCampaigns,
     getCampaign,
+    getActiveCampaignIndex: () => currentData.currentCampaignIndex,
+    selectCampaign,
+    addCampaign,
+    deleteCampaign,
+    switchCampaignSubtab,
+    renderCampaignSelectorUI,
+    createDefaultCampaignHeroes,
     getActiveQuest,
     getActiveQuestIndex: () => currentData.currentQuestIndex,
     selectQuest,
@@ -4870,7 +8021,14 @@ if (typeof window !== "undefined") {
     resetQuest,
     advanceToNextQuest,
     updateCampaignProgress,
-    renderHeaderQuestSelect
+    renderHeaderQuestSelect,
+    loadActiveQuestCartridgeInfo,
+    renderQuestHeroesReviewGrid,
+    launchQuestEditorForActiveQuest,
+    refreshQuestSaveStateUI,
+    saveQuestStateFromNow,
+    clearQuestSaveState,
+    launchQuestInMode
   };
 
   window._tabletopMonsterGrimoire = {
@@ -4897,6 +8055,32 @@ if (typeof window !== "undefined") {
     getHeroById,
     getTradeSessionLogs: () => tradeSessionLogs
   };
+
+  window._tabletopCategories = {
+    DEFAULT_CATEGORIES,
+    HEROQUEST_MONSTER_ARCHETYPES,
+    MIDTERMS_2026_MONSTERS,
+    MIDTERMS_2026_SPELLS,
+    MIDTERMS_2026_DREAD_SPELLS,
+    BASE_WEAPONS,
+    MIDTERMS_2026_WEAPONS,
+    BASE_QUEST_ITEMS,
+    MIDTERMS_2026_ITEMS,
+    getCategories,
+    addCategory,
+    getMonstersByCategory,
+    getSpellsByCategory,
+    getDreadSpellsByCategory,
+    getWeaponsByCategory,
+    getItemsByCategory,
+    setMonsterCategoryFilter,
+    setSpellItemCategoryFilter,
+    addCustomSpell,
+    addCustomWeapon,
+    addCustomItem,
+    syncCategoryCatalogsFromKGraph,
+    renderCategoryControlsUI
+  };
 }
 
 // Initialize on DOM ready
@@ -4914,7 +8098,55 @@ if (typeof module !== "undefined" && module.exports) {
     tradeHeroGold,
     openBetweenQuestsTradeModal,
     closeBetweenQuestsTradeModal,
-    getHeroById
+    getHeroById,
+    DEFAULT_CATEGORIES,
+    HEROQUEST_MONSTER_ARCHETYPES,
+    MIDTERMS_2026_MONSTERS,
+    MIDTERMS_2026_SPELLS,
+    MIDTERMS_2026_DREAD_SPELLS,
+    BASE_WEAPONS,
+    MIDTERMS_2026_WEAPONS,
+    BASE_QUEST_ITEMS,
+    MIDTERMS_2026_ITEMS,
+    getCategories,
+    addCategory,
+    getMonstersByCategory,
+    getSpellsByCategory,
+    getDreadSpellsByCategory,
+    getWeaponsByCategory,
+    getItemsByCategory,
+    setMonsterCategoryFilter,
+    setSpellItemCategoryFilter,
+    addCustomSpell,
+    addCustomWeapon,
+    addCustomItem,
+    getCampaigns,
+    getCampaign,
+    getActiveQuest,
+    selectCampaign,
+    addCampaign,
+    deleteCampaign,
+    switchCampaignSubtab,
+    createDefaultCampaignHeroes,
+    HERO_CLASSES,
+    ENEMY_CLASSES,
+    DEFAULT_RPG_CLASSES,
+    initClassesCatalog,
+    getClasses,
+    getHeroClasses,
+    getEnemyClasses,
+    getClassByIdOrName,
+    getActiveClass,
+    selectClass,
+    applyClassToMonster,
+    applyClassToHero,
+    createCustomMonsterFromClass,
+    loadActiveQuestCartridgeInfo,
+    renderQuestHeroesReviewGrid,
+    launchQuestEditorForActiveQuest,
+    refreshQuestSaveStateUI,
+    saveQuestStateFromNow,
+    clearQuestSaveState,
+    launchQuestInMode
   };
 }
-

@@ -231,6 +231,63 @@ describe('RobOS GNOME Desktop App Installer', () => {
     });
   });
 
+  describe('Background Worker Thread (ShortcutWorkerClient)', () => {
+    let tmpDir;
+    let workerClient;
+
+    beforeEach(() => {
+      const { ShortcutWorkerClient } = require('../../../gnome-desktop-installer/lib/worker-client');
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-gdi-worker-'));
+      workerClient = new ShortcutWorkerClient({
+        homeDir: tmpDir,
+        appsDir: path.join(tmpDir, '.local', 'share', 'applications'),
+        systemAppsDir: path.join(tmpDir, 'system-applications'),
+        desktopDir: path.join(tmpDir, 'Desktop'),
+        binDir: path.join(tmpDir, '.local', 'bin'),
+        iconsBaseDir: path.join(tmpDir, '.local', 'share', 'icons', 'hicolor'),
+        pixmapsDir: path.join(tmpDir, '.local', 'share', 'pixmaps'),
+        mockFavorites: ['org.gnome.Nautilus.desktop'],
+        skipSystemCommands: true,
+      });
+    });
+
+    afterEach(async () => {
+      if (workerClient) {
+        await workerClient.terminate();
+      }
+      try {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      } catch {}
+    });
+
+    it('executes listApps, installApp, and bulkInstall on background worker thread without blocking main event loop', async () => {
+      let timerTicks = 0;
+      const ticker = setInterval(() => {
+        timerTicks++;
+      }, 5);
+
+      try {
+        const listRes = await workerClient.listApps();
+        assert.strictEqual(listRes.ok, true);
+        assert.ok(listRes.apps.length >= 40);
+
+        const progressEvents = [];
+        const bulkRes = await workerClient.bulkInstall(
+          ['dev-central', 'audio-player', 'home-speaker', 'gnome-desktop-installer'],
+          { appMenu: true, desktopShortcut: true },
+          (step) => progressEvents.push(step)
+        );
+
+        assert.strictEqual(bulkRes.ok, true);
+        assert.strictEqual(bulkRes.succeeded, 4);
+        assert.strictEqual(progressEvents.length, 4);
+        assert.ok(timerTicks > 0, 'Main thread event loop timers should fire freely while worker runs');
+      } finally {
+        clearInterval(ticker);
+      }
+    });
+  });
+
   describe('Renderer UI Assets', () => {
     it('index.html, style.css, and app.js exist and include core controls', () => {
       const html = fs.readFileSync(path.join(APP_DIR, 'renderer', 'index.html'), 'utf8');
@@ -247,6 +304,8 @@ describe('RobOS GNOME Desktop App Installer', () => {
       assert.ok(js.includes('robosDesktopInstaller'));
       assert.ok(js.includes('bulkInstall'));
       assert.ok(js.includes('setDesktopShortcut'));
+      assert.ok(js.includes('requestAnimationFrame'));
     });
   });
 });
+
