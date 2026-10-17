@@ -576,5 +576,61 @@ test('Preset Dropdown Sync: updates select box value or appends custom option', 
   assert.equal(fakeSelect.options.some(o => o.value === 'custom-crypt-lvl2'), true);
 });
 
+// -------------------------------------------------------------
+// Test 14: Midterm Election Capitol Blockmap & Themed Oval Office
+// -------------------------------------------------------------
+test('Midterm Election Capitol Blockmap: exact parity with First Light Side A, custom AI board texture, and central Oval Office', () => {
+  const repoRoot = path.resolve(__dirname, '../../..');
+  const baseBlockmapPath = path.join(repoRoot, 'games/tabletop-rpg/cartridges/first-light-dungeon.blockmap.json');
+  const midtermBlockmapPath = path.join(repoRoot, 'games/tabletop-rpg/cartridges/midterm-election-capitol.blockmap.json');
+  const boardImgPath = path.join(repoRoot, 'games/tabletop-rpg/assets/boards/midterm_election_capitol.png');
+
+  assert.ok(fs.existsSync(baseBlockmapPath), 'first-light-dungeon.blockmap.json exists');
+  assert.ok(fs.existsSync(midtermBlockmapPath), 'midterm-election-capitol.blockmap.json exists');
+  assert.ok(fs.existsSync(boardImgPath), 'midterm_election_capitol.png exists');
+
+  const base = JSON.parse(fs.readFileSync(baseBlockmapPath, 'utf8'));
+  const midterm = JSON.parse(fs.readFileSync(midtermBlockmapPath, 'utf8'));
+
+  // 1. Exact grid and calibration parity
+  assert.deepEqual(midterm.gridDimensions, base.gridDimensions);
+  assert.equal(midterm.gridDimensions[0], 26);
+  assert.equal(midterm.gridDimensions[1], 19);
+  assert.deepEqual(midterm.calibration, base.calibration);
+  assert.equal(midterm.calibration.tileSize, 39);
+  assert.equal(midterm.calibration.offsetX, 0);
+  assert.equal(midterm.calibration.offsetY, 0);
+  assert.equal(midterm.additionalBorderTile, true);
+
+  // 2. Corridors match exactly (148 tiles)
+  assert.deepEqual(midterm.corridors, base.corridors);
+  assert.equal(midterm.corridors.length, 148);
+
+  // 3. Room count and exact tile placement parity (346 tiles across 22 rooms)
+  assert.equal(midterm.rooms.length, base.rooms.length);
+  assert.equal(midterm.rooms.length, 22);
+
+  for (let i = 0; i < base.rooms.length; i++) {
+    const br = base.rooms[i];
+    const mr = midterm.rooms[i];
+    assert.equal(mr.x, br.x, `Room ${i} x coordinate matches`);
+    assert.equal(mr.y, br.y, `Room ${i} y coordinate matches`);
+    assert.equal(mr.w, br.w, `Room ${i} width matches`);
+    assert.equal(mr.h, br.h, `Room ${i} height matches`);
+    assert.deepEqual(mr.tiles, br.tiles, `Room ${i} tiles array matches`);
+    assert.ok(mr.name && mr.name.length > 0, `Room ${i} has descriptive name`);
+  }
+
+  // 4. Middle room (index 9, x=10, y=7, w=6, h=5) is The Oval Office
+  const ovalOffice = midterm.rooms.find(r => r.x === 10 && r.y === 7 && r.w === 6 && r.h === 5);
+  assert.ok(ovalOffice, 'Middle 6x5 room exists at exact center');
+  assert.equal(ovalOffice.name, 'The Oval Office');
+  assert.equal(ovalOffice.id, 'room-oval-office');
+
+  // 5. Board image reference
+  assert.equal(midterm.backgroundImage, 'res://assets/boards/midterm_election_capitol.png');
+});
+
+
 
 
