@@ -10,7 +10,7 @@
     "ruleset": "heroquest",
     "description": "Mentor speaks: \"The Emperor calls upon the kingdom's greatest champions...\"",
     "coverColor": "#0a0e17",
-    "icon": "🛡️",
+    "icon": "\ud83d\udee1\ufe0f",
     "mapCount": 1,
     "heroCount": 4,
     "monsterCount": 24,
@@ -3083,7 +3083,7 @@
       "furniture": [
         {
           "id": "furn-stairs_down_2x2-1",
-          "name": "Down Staircase (2×2)",
+          "name": "Down Staircase (2\u00d72)",
           "type": "stairs_down_2x2",
           "x": 7,
           "y": 14,
@@ -3217,12 +3217,12 @@
             0
           ],
           "onceOnly": true,
-          "narrative": "Mentor speaks: \"As you step forward, ancient magic stirs...\"",
+          "narrative": "Mentor speaks: \"As you step forward, ancient magic stirs... Listen closely, heroes. On the far side of the Talvorn are the ruins of the dwarven fortress built by Forgrin the Fire King. Find the secret passage there which leads into the mountain. But beware, for the Witch Queen Cassandra seeks it as well. Before you step foot into the ruins, heroes, heed well the ancient wisdom of Loretome. Surviving the fortress of the Fire King will require more than raw steel; it demands cunning strategy. First, remember the rhythm of combat: on your turn, every hero may move and perform one action. Never waste an action. Second, economize your movement: use narrow doorways as choke points. Third, protect your fragile allies: form a shield wall in front of the wizard and elf. Finally, I bestow upon you four lost elemental spells recovered from the deep vaults of Loretome: Fire Arrow, Vanish, Extend, and Chain Reaction. Go forth, heroes, and claim the Fire King's passage before Cassandra's shadow falls upon it.\"",
           "hidden": false,
           "actions": [
             {
               "type": "play_movie",
-              "moviePath": "res://assets/movies/quest1-intro.mp4",
+              "moviePath": "res://assets/movies/quest_introduction_movie.ogv",
               "title": "Note A Cinematic",
               "canSkip": true
             }
@@ -3243,7 +3243,7 @@
             18
           ],
           "onceOnly": true,
-          "narrative": "",
+          "narrative": "Deep within the cold corridors of the fortress, muffled grunts echo off the masonry. An orc and a goblin, bearing Witch Queen Cassandra's pale skull and ruby eyes emblem, haul a heavy iron-bound treasure chest along the damp stone passage. 'Heave! Heave! It is too heavy! My spine is going to snap right in two!' 'Shut your sniveling snout, runt! Queen Cassandra wants this chest in the mountain before the Fire King's vault is found!' Torchlight glints off your steel as you round the corridor. The goblin shrieks in terror, dropping his corner of the chest onto the flagstones: 'The heroes! They are here! They have found us!' 'Not with the Queen's prize, they won't!' With a roar of brute strength, the orc shoves the massive chest violently against the solid stone wall. A pulse of violet sorcery flares along the rock face, and the chest sinks straight through the solid masonry, vanishing into thin air. 'Kill them! Spill their blood for the Witch Queen!'",
           "hidden": false,
           "actions": [
             {
@@ -3316,7 +3316,7 @@
             9
           ],
           "onceOnly": true,
-          "narrative": "Stop. Do not draw a card. As your hand reaches into the shadows...",
+          "narrative": "You unbar the heavy iron doors of an ancient crypt. Instantly, an icy draft rushes past, thick with the suffocating stench of decayed flesh and graveyard earth. 'You are too late, dogs of the empire! The secrets of Forgrin, the Fire King, belong to Queen Cassandra now!' At the center of a desecrated altar stands a witch hand, cloaked in tattered violet silks and bone trinkets. Black veins pulse along her flesh as her claws ignite with crackling necrotic fire. 'Awaken, servants of the grave! Rise from the cold earth, heed the call of the pale skull!' A choking violet mist billows up through the flagstones. From within the swirling fog, ancient bones rattle and fleshless jaws snap as skeletons and mummies tear free from the floor. 'Flesh and stone cannot bar their passage! Walk through the very walls, my children! Feast upon their marrow! Flesh for the Witch Queen! Slay the living!' With terrifying hollow groans, the undead stride forward. Their spectral bodies phasing effortlessly through the solid stone walls, cutting off your retreat in the dark corridors behind you.",
           "hidden": false,
           "actions": [
             {
@@ -3334,7 +3334,7 @@
           "marker": "Note A",
           "title": "Note A Trigger",
           "banner": "QUEST NOTE [Note A]",
-          "narrative": "Mentor speaks: \"As you step forward, ancient magic stirs...\"",
+          "narrative": "Mentor speaks: \"As you step forward, ancient magic stirs... Listen closely, heroes. On the far side of the Talvorn are the ruins of the dwarven fortress built by Forgrin the Fire King. Find the secret passage there which leads into the mountain. But beware, for the Witch Queen Cassandra seeks it as well. Before you step foot into the ruins, heroes, heed well the ancient wisdom of Loretome. Surviving the fortress of the Fire King will require more than raw steel; it demands cunning strategy. First, remember the rhythm of combat: on your turn, every hero may move and perform one action. Never waste an action. Second, economize your movement: use narrow doorways as choke points. Third, protect your fragile allies: form a shield wall in front of the wizard and elf. Finally, I bestow upon you four lost elemental spells recovered from the deep vaults of Loretome: Fire Arrow, Vanish, Extend, and Chain Reaction. Go forth, heroes, and claim the Fire King's passage before Cassandra's shadow falls upon it.\"",
           "tile": [
             0,
             0
@@ -3342,12 +3342,12 @@
           "room": "room-nw-1",
           "event": "on_room_entered",
           "onceOnly": true,
-          "movie": "res://assets/movies/quest1-intro.mp4",
+          "movie": "res://assets/movies/quest_introduction_movie.ogv",
           "hidden": false,
           "actions": [
             {
               "type": "play_movie",
-              "moviePath": "res://assets/movies/quest1-intro.mp4",
+              "moviePath": "res://assets/movies/quest_introduction_movie.ogv",
               "title": "Note A Cinematic",
               "canSkip": true
             }
@@ -3358,7 +3358,7 @@
           "marker": "Note A",
           "title": "Note A Encounter",
           "banner": "QUEST NOTE [Note A]",
-          "narrative": "",
+          "narrative": "Deep within the cold corridors of the fortress, muffled grunts echo off the masonry. An orc and a goblin, bearing Witch Queen Cassandra's pale skull and ruby eyes emblem, haul a heavy iron-bound treasure chest along the damp stone passage. 'Heave! Heave! It is too heavy! My spine is going to snap right in two!' 'Shut your sniveling snout, runt! Queen Cassandra wants this chest in the mountain before the Fire King's vault is found!' Torchlight glints off your steel as you round the corridor. The goblin shrieks in terror, dropping his corner of the chest onto the flagstones: 'The heroes! They are here! They have found us!' 'Not with the Queen's prize, they won't!' With a roar of brute strength, the orc shoves the massive chest violently against the solid stone wall. A pulse of violet sorcery flares along the rock face, and the chest sinks straight through the solid masonry, vanishing into thin air. 'Kill them! Spill their blood for the Witch Queen!'",
           "tile": [
             7,
             18
@@ -3429,7 +3429,7 @@
           "marker": "Note A",
           "title": "Witch Hand Ambush",
           "banner": "QUEST NOTE [Note A]",
-          "narrative": "Stop. Do not draw a card. As your hand reaches into the shadows...",
+          "narrative": "You unbar the heavy iron doors of an ancient crypt. Instantly, an icy draft rushes past, thick with the suffocating stench of decayed flesh and graveyard earth. 'You are too late, dogs of the empire! The secrets of Forgrin, the Fire King, belong to Queen Cassandra now!' At the center of a desecrated altar stands a witch hand, cloaked in tattered violet silks and bone trinkets. Black veins pulse along her flesh as her claws ignite with crackling necrotic fire. 'Awaken, servants of the grave! Rise from the cold earth, heed the call of the pale skull!' A choking violet mist billows up through the flagstones. From within the swirling fog, ancient bones rattle and fleshless jaws snap as skeletons and mummies tear free from the floor. 'Flesh and stone cannot bar their passage! Walk through the very walls, my children! Feast upon their marrow! Flesh for the Witch Queen! Slay the living!' With terrifying hollow groans, the undead stride forward. Their spectral bodies phasing effortlessly through the solid stone walls, cutting off your retreat in the dark corridors behind you.",
           "tile": [
             15,
             9

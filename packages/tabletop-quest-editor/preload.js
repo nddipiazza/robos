@@ -18,5 +18,6 @@ contextBridge.exposeInMainWorld('robosQuestEditor', {
   copyImageToClipboard: (base64Data) => ipcRenderer.invoke('quest:copy-image-to-clipboard', base64Data),
   loadAssetImage: (relPath) => ipcRenderer.invoke('quest:load-asset-image', relPath),
   launchGame: (slug) => ipcRenderer.invoke('quest:launch-game', slug),
+  openBlockmapEditor: (blockmapArg) => ipcRenderer.invoke('quest:open-blockmap-editor', blockmapArg),
   ensureVoiceApp: () => ipcRenderer.invoke('voice:ensure-running')
 });

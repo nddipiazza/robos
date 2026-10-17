@@ -1,0 +1,647 @@
+{
+ "@context": {
+  "robos": "https://robos.dev/ns/sdlc#",
+  "dcterms": "http://purl.org/dc/terms/",
+  "schema": "https://schema.org/"
+ },
+ "@graph": [
+  {
+   "@id": "urn:robos:auto:IntakeCategory:brakes",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Brakes",
+   "schema:name": "Brakes",
+   "schema:description": "Squealing, grinding, soft pedal, pulling when stopping",
+   "robos:order": 0,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:brakes-symptom",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What does the brake problem feel or sound like?",
+   "schema:name": "What does the brake problem feel or sound like?",
+   "robos:questionKey": "symptom",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "Squealing or squeaking",
+    "Grinding",
+    "Pedal feels soft or sinks",
+    "Pedal vibrates or pulses",
+    "Car pulls to one side when braking",
+    "Brake warning light",
+    "Burning smell",
+    "Other"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:brakes"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:brakes-when",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "When does it happen?",
+   "schema:name": "When does it happen?",
+   "robos:questionKey": "when",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Every time I brake",
+    "Only light braking",
+    "Only hard braking",
+    "Only when cold",
+    "Only at low speed",
+    "Only at highway speed"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:brakes"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:brakes-where",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Which wheels?",
+   "schema:name": "Which wheels?",
+   "robos:questionKey": "where",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Front",
+    "Rear",
+    "All around",
+    "Not sure"
+   ],
+   "robos:order": 2,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:brakes"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeCategory:engine",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Engine, starting or check-engine light",
+   "schema:name": "Engine, starting or check-engine light",
+   "schema:description": "Won't start, stalls, rough idle, loss of power, warning light",
+   "robos:order": 1,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:engine-symptom",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What is the engine doing?",
+   "schema:name": "What is the engine doing?",
+   "robos:questionKey": "symptom",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "Won't start",
+    "Cranks but won't start",
+    "Stalls",
+    "Rough idle or shaking",
+    "Loss of power",
+    "Hard to start when hot or cold",
+    "Poor fuel mileage",
+    "Smoke from exhaust",
+    "Check-engine light on"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:engine"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:engine-when",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "When does it happen?",
+   "schema:name": "When does it happen?",
+   "robos:questionKey": "when",
+   "robos:questionType": "single",
+   "robos:options": [
+    "All the time",
+    "When cold",
+    "When warm",
+    "Under acceleration",
+    "At idle",
+    "Only sometimes"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:engine"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:engine-light",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Is the check-engine light flashing?",
+   "schema:name": "Is the check-engine light flashing?",
+   "robos:questionKey": "light",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Flashing",
+    "Steady",
+    "Not on",
+    "Not sure"
+   ],
+   "robos:order": 2,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:engine"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeCategory:noise",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Noise or vibration",
+   "schema:name": "Noise or vibration",
+   "schema:description": "Clunks, rattles, humming, shaking while driving",
+   "robos:order": 2,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:noise-symptom",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What does it sound or feel like?",
+   "schema:name": "What does it sound or feel like?",
+   "robos:questionKey": "symptom",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "Clunk or knock",
+    "Rattle",
+    "Humming or growling",
+    "Whining",
+    "Clicking when turning",
+    "Vibration in the steering wheel",
+    "Vibration in the seat or floor",
+    "Other"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:noise"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:noise-when",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "When does it happen?",
+   "schema:name": "When does it happen?",
+   "robos:questionKey": "when",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Over bumps",
+    "When turning",
+    "When accelerating",
+    "At a certain speed",
+    "When braking",
+    "Constantly"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:noise"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:noise-where",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Where does it seem to come from?",
+   "schema:name": "Where does it seem to come from?",
+   "robos:questionKey": "where",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Front",
+    "Rear",
+    "Left side",
+    "Right side",
+    "Under the car",
+    "Engine bay",
+    "Not sure"
+   ],
+   "robos:order": 2,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:noise"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeCategory:leak",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Leak or fluid",
+   "schema:name": "Leak or fluid",
+   "schema:description": "Puddle under the car, low fluid, smell",
+   "robos:order": 3,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:leak-color",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What colour is the fluid?",
+   "schema:name": "What colour is the fluid?",
+   "robos:questionKey": "color",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Clear or water-like",
+    "Green, orange or pink",
+    "Brown or black",
+    "Red or pink (oily)",
+    "Blue (washer fluid)",
+    "Yellow or golden",
+    "Not sure"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:leak"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:leak-where",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Where is it dripping?",
+   "schema:name": "Where is it dripping?",
+   "robos:questionKey": "where",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Front",
+    "Middle",
+    "Rear",
+    "Not sure"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:leak"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:leak-loss",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Are you topping anything up?",
+   "schema:name": "Are you topping anything up?",
+   "robos:questionKey": "loss",
+   "robos:questionType": "text",
+   "robos:options": [],
+   "robos:order": 2,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:leak"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeCategory:electrical",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Battery or electrical",
+   "schema:name": "Battery or electrical",
+   "schema:description": "Dead battery, lights, windows, dashboard warnings",
+   "robos:order": 4,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:electrical-symptom",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What is happening?",
+   "schema:name": "What is happening?",
+   "robos:questionKey": "symptom",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "Dead battery or needs a jump",
+    "Slow crank",
+    "Lights dim or flicker",
+    "Window, lock or mirror not working",
+    "Dashboard lights flicker",
+    "Blown fuses",
+    "Radio or screen problem",
+    "Burning smell"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:electrical"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:electrical-when",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "When did it start?",
+   "schema:name": "When did it start?",
+   "robos:questionKey": "when",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Just now",
+    "After rain or washing",
+    "After other repair work",
+    "Gradually over time"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:electrical"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeCategory:climate",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Heating or air conditioning",
+   "schema:name": "Heating or air conditioning",
+   "schema:description": "No cold air, no heat, weak airflow, smells",
+   "robos:order": 5,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:climate-symptom",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What is wrong?",
+   "schema:name": "What is wrong?",
+   "robos:questionKey": "symptom",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "No cold air",
+    "Not cold enough",
+    "No heat",
+    "Weak airflow",
+    "Strange smell",
+    "Noise from the vents",
+    "Water inside the car",
+    "Fogging windows"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:climate"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:climate-when",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "When does it happen?",
+   "schema:name": "When does it happen?",
+   "robos:questionKey": "when",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Always",
+    "Only at idle",
+    "Only when driving",
+    "Comes and goes"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:climate"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeCategory:steering",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Steering, suspension or tires",
+   "schema:name": "Steering, suspension or tires",
+   "schema:description": "Pulling, bumpy ride, uneven tire wear, flat tire",
+   "robos:order": 6,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:steering-symptom",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What have you noticed?",
+   "schema:name": "What have you noticed?",
+   "robos:questionKey": "symptom",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "Pulls to one side",
+    "Steering wheel off-centre",
+    "Loose or wandering steering",
+    "Bumpy or bouncy ride",
+    "Uneven tire wear",
+    "Flat or low tire",
+    "Vibration at speed",
+    "Hard to steer"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:steering"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:steering-when",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "When does it happen?",
+   "schema:name": "When does it happen?",
+   "robos:questionKey": "when",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Always",
+    "At highway speed",
+    "When turning",
+    "Over bumps",
+    "After hitting something"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:steering"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeCategory:transmission",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Transmission or drivetrain",
+   "schema:name": "Transmission or drivetrain",
+   "schema:description": "Slipping, harsh shifts, clutch problems",
+   "robos:order": 7,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:transmission-symptom",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What is it doing?",
+   "schema:name": "What is it doing?",
+   "robos:questionKey": "symptom",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "Slips out of gear",
+    "Harsh or delayed shifting",
+    "Won't go into gear",
+    "Clutch pedal problem",
+    "Grinding when shifting",
+    "Fluid leak",
+    "Burning smell",
+    "Stuck in one gear"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:transmission"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:transmission-trans",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Automatic or manual?",
+   "schema:name": "Automatic or manual?",
+   "robos:questionKey": "trans",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Automatic",
+    "Manual",
+    "CVT",
+    "Not sure"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:transmission"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeCategory:service",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Routine service or inspection",
+   "schema:name": "Routine service or inspection",
+   "schema:description": "Oil change, tune-up, inspection, tire rotation",
+   "robos:order": 8,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:service-service",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Which services do you need?",
+   "schema:name": "Which services do you need?",
+   "robos:questionKey": "service",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "Oil and filter change",
+    "Tire rotation",
+    "Multi-point inspection",
+    "State safety inspection",
+    "Pre-purchase inspection",
+    "Brake check",
+    "Fluid top-up or flush",
+    "Battery test",
+    "Alignment",
+    "Scheduled manufacturer service"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:service"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:service-due",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Do you know the mileage or date the service is due?",
+   "schema:name": "Do you know the mileage or date the service is due?",
+   "robos:questionKey": "due",
+   "robos:questionType": "text",
+   "robos:options": [],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:service"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeCategory:other",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Something else or not sure",
+   "schema:name": "Something else or not sure",
+   "schema:description": "Describe it in your own words",
+   "robos:order": 9,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:common-warning",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Which warning lights are on?",
+   "schema:name": "Which warning lights are on?",
+   "robos:questionKey": "warning",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "Check engine",
+    "ABS",
+    "Brake",
+    "Battery or charging",
+    "Oil pressure",
+    "Temperature",
+    "Airbag",
+    "Tire pressure",
+    "Traction control",
+    "None"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:appliesToAll": true
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:common-started",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "When did this start?",
+   "schema:name": "When did this start?",
+   "robos:questionKey": "started",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Today",
+    "In the last few days",
+    "This month",
+    "Longer than a month",
+    "It has always done this"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:appliesToAll": true
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:common-driveable",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Is the car safe to drive?",
+   "schema:name": "Is the car safe to drive?",
+   "robos:questionKey": "driveable",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Yes, drives normally",
+    "Drives but not comfortable",
+    "Not sure",
+    "No, it needs to be towed"
+   ],
+   "robos:order": 2,
+   "robos:package": "auto",
+   "robos:appliesToAll": true
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:common-urgency",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "How urgent is it?",
+   "schema:name": "How urgent is it?",
+   "robos:questionKey": "urgency",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Emergency or unsafe",
+    "Need it back soon",
+    "Whenever it fits in",
+    "Just getting a quote"
+   ],
+   "robos:order": 3,
+   "robos:package": "auto",
+   "robos:appliesToAll": true
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:common-dropoff",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Will you wait, or leave the car?",
+   "schema:name": "Will you wait, or leave the car?",
+   "robos:questionKey": "dropoff",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Leaving the car",
+    "Waiting here",
+    "Dropping off and getting a ride",
+    "Car is already here"
+   ],
+   "robos:order": 4,
+   "robos:package": "auto",
+   "robos:appliesToAll": true
+  }
+ ]
+}

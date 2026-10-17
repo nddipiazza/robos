@@ -126,6 +126,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **RobOS Audio Player** | Open-source Howler.js audio player, procedural focus soundscapes, and zero-cloud Google Home / Cast smart speaker streaming |
 | **RobOS Home Speaker** | Smart speaker intercom, push-to-talk voice notes, neural TTS broadcast, custom audio streaming, and soundboard controller |
 | **RobOS Point of Sale** | Open-source cash register for retail, cafés and bars: touchscreen worker order entry, self-checkout kiosk, inventory and menu input, cash drawer administration, tabs/tips/split payments, prep queue, and an open checkout-session API. Sample businesses: clothing store, coffee shop, bar (`packages/point-of-sale`) |
+| **GNOME Desktop App Installer** | Install, manage, and repair GNOME Desktop shortcuts (`~/Desktop`), App Grid `.desktop` launchers, multi-scale hicolor icons, and GNOME Dock favorites for all RobOS apps |
 
 ## Shared Libraries
 

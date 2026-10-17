@@ -5,7 +5,7 @@
   const money = (minor, cur = 'USD') => minor == null ? '—' : (minor / 100).toLocaleString(undefined, { style: 'currency', currency: cur });
   let board;
   const say = m => { $('message').textContent = m; };
-  async function call(action, input) { try { const r = await window.auto.workshop({ action, input }); say(''); await load(); return r; } catch (e) { say(e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, '')); return null; } }
+  async function call(action, input) { try { const r = await window.auto.workshop({ action, input }); say(''); await load(); window.dispatchEvent(new Event('auto-workshop-changed')); return r; } catch (e) { say(e.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, '')); return null; } }
   function field(label, name, opts = {}) {
     const control = opts.options ? el('select', { name }, ...opts.options.map(([v, t]) => el('option', { value: v, text: t }))) : opts.area ? el('textarea', { name, maxlength: 5000 }) : el('input', { name, type: opts.type || 'text', placeholder: opts.ph || '' });
     if (opts.required) control.required = true; if (opts.value !== undefined) control.value = opts.value;
@@ -126,4 +126,5 @@
   document.addEventListener('submit', ev => { if (ev.target.id === 'parts-import-form') { ev.preventDefault(); importPartsSubmit(ev.target); } });
   document.querySelector('[data-view="workshop"]').addEventListener('click', () => load().catch(e => say(e.message)));
   window.workshopReload = load;
+  window.workshopUI = { el, field, form, picker, money, say, call: (a, i) => call(a, i), estimatePanel: job => estimatePanel(job), clean: m => m.replace(/^Error invoking remote method '[^']+': (Error: )?/, ''), ensureBoard: async () => (board = await window.auto.workshop({ action: 'board' })) };
 })();

@@ -1,0 +1,13 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS GNOME Desktop Installer
+GenericName=GNOME Desktop Shortcut & Launcher Manager
+Comment=Install, manage, and repair GNOME Desktop shortcuts, App Grid launchers, multi-scale icons, and Dock favorites for all RobOS applications
+Exec=/usr/bin/electron /usr/local/share/robos/gnome-desktop-installer/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/gnome-desktop-installer/icon.svg
+Terminal=false
+Categories=System;Settings;DesktopSettings;PackageManager;
+X-RobOS-Category=System
+StartupWMClass=robos-gnome-desktop-installer
