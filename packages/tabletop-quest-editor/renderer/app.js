@@ -688,6 +688,27 @@ async function loadBlockmap(slugOrPath) {
   }
 }
 
+async function openSelectedBlockmapInEditor() {
+  try {
+    const selectedBlockmap = state.blockmapPath || state.blockmap?.id || (dom.selectBlockmap ? dom.selectBlockmap.value : 'first-light-dungeon');
+    if (!window.robosQuestEditor || !window.robosQuestEditor.openBlockmapEditor) {
+      showToast('Blockmap Editor bridge not available in this environment', 'info');
+      return { success: false, error: 'Bridge not available' };
+    }
+    const res = await window.robosQuestEditor.openBlockmapEditor(selectedBlockmap);
+    if (res && res.success) {
+      const displayName = state.blockmap?.title || state.blockmap?.id || res.blockmapName || 'blockmap';
+      showToast(`Opening "${displayName}" in Blockmap Editor...`, 'success');
+    } else {
+      showToast(`Failed to open Blockmap Editor: ${res?.error || 'Unknown error'}`, 'error');
+    }
+    return res;
+  } catch (err) {
+    showToast(`Error opening blockmap editor: ${err.message}`, 'error');
+    return { success: false, error: err.message };
+  }
+}
+
 async function loadCartridge(slugOrPath) {
   try {
     if (!window.robosQuestEditor) return;
@@ -7341,22 +7362,9 @@ function setupEventListeners() {
     await loadBlockmap(dom.selectBlockmap.value);
   });
 
-  dom.btnOpenBlockmap.addEventListener('click', async () => {
-    if (!window.robosQuestEditor) return;
-    const res = await window.robosQuestEditor.openBlockmapDialog();
-    if (res.success) {
-      state.blockmap = res.blockmap;
-      state.blockmapPath = res.blockmapPath;
-      if (res.imageData && res.imageData.dataUrl) {
-        const img = new Image();
-        img.onload = () => { state.bgImage = img; render(); };
-        img.src = res.imageData.dataUrl;
-      }
-      fitView();
-      render();
-      showToast(`Loaded: ${state.blockmap.title || path.basename(res.blockmapPath)}`, 'success');
-    }
-  });
+  if (dom.btnOpenBlockmap) {
+    dom.btnOpenBlockmap.addEventListener('click', openSelectedBlockmapInEditor);
+  }
 
   if (dom.btnOpenCartridge) {
     dom.btnOpenCartridge.addEventListener('click', async () => {
@@ -7928,6 +7936,7 @@ if (typeof window !== 'undefined') {
     openExportPdfModal,
     closeExportPdfModal,
     loadBlockmap,
+    openSelectedBlockmapInEditor,
     loadCartridge,
     isStartingQuestAction,
     resolveTriggerIndicators,
@@ -7945,6 +7954,7 @@ if (typeof module !== 'undefined' && module.exports) {
     validateQuest,
     loadCartridge,
     loadBlockmap,
+    openSelectedBlockmapInEditor,
     isStartingQuestAction,
     resolveTriggerIndicators,
     drawExportTriggerIndicator,
