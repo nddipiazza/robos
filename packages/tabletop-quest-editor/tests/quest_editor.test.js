@@ -8,6 +8,7 @@ const fs = require('fs');
 const {
   validateQuest: validateQuestFn,
   loadCartridge,
+  loadBlockmap,
   interpretVoiceQuestCommands,
   executeVoiceMapCommands,
   setupSplitDividers,
@@ -2846,5 +2847,58 @@ test('Quest Map PNG and PDF Export: generates scaled canvas and complete printab
     Object.assign(dom, savedDom);
   }
 });
+
+test('Blockmap Loading & Grid Dimensions: verifies loadBlockmap initializes grid dimensions and updates UI without dims reference errors', async () => {
+  const savedDom = { ...dom };
+  const savedStateBlockmap = JSON.parse(JSON.stringify(state.blockmap));
+  const savedWindow = global.window;
+
+  try {
+    let blockmapInfoText = '';
+    let gridSizeText = '';
+
+    dom.infoBlockmapName = {
+      set textContent(val) { blockmapInfoText = val; },
+      get textContent() { return blockmapInfoText; }
+    };
+    dom.infoGridSize = {
+      set textContent(val) { gridSizeText = val; },
+      get textContent() { return gridSizeText; }
+    };
+    dom.selectBlockmap = { value: '' };
+    dom.chkAdditionalBorder = { checked: false };
+    dom.lblZoom = { textContent: '' };
+    dom.canvas = { width: 800, height: 600, getContext: () => null };
+
+    global.window = {
+      robosQuestEditor: {
+        loadBlockmap: async (slug) => ({
+          success: true,
+          blockmap: {
+            id: slug || 'test-dungeon',
+            title: 'Custom Test Dungeon',
+            gridDimensions: [28, 20],
+            rooms: [],
+            wallTiles: []
+          },
+          imageData: null
+        })
+      }
+    };
+
+    // Execute loadBlockmap and verify dims are correctly parsed and updated in UI
+    await loadBlockmap('test-dungeon');
+
+    assert.equal(state.blockmap.title, 'Custom Test Dungeon');
+    assert.deepEqual(state.blockmap.gridDimensions, [28, 20]);
+    assert.equal(blockmapInfoText, 'Custom Test Dungeon');
+    assert.equal(gridSizeText, '28 × 20');
+  } finally {
+    Object.assign(dom, savedDom);
+    state.blockmap = savedStateBlockmap;
+    global.window = savedWindow;
+  }
+});
+
 
 
