@@ -130,7 +130,9 @@ class BlockmapCreator {
     try {
       const startup = await window.robosBlockmap.getStartupArgs();
       if (startup && startup.value) {
-        if (startup.type === 'cartridge' || startup.value.includes('cartridge')) {
+        if (startup.type === 'blockmap' || startup.value.endsWith('.blockmap.json') || startup.value.includes('.blockmap.')) {
+          await this.loadBlockmapFile(startup.value);
+        } else if (startup.type === 'cartridge' || startup.value.includes('cartridge')) {
           await this.loadCartridge(startup.value);
         } else if (startup.type === 'image') {
           // If image matches a board preset, load the preset and all its rooms
@@ -1330,6 +1332,24 @@ class BlockmapCreator {
       await this.applyBoardData(boardRes.boardData, boardRes.imageData);
     } else {
       await this.loadImageFile(p.file);
+    }
+  }
+
+  async loadBlockmapFile(slugOrPath) {
+    if (!window.robosBlockmap || !window.robosBlockmap.loadBoardMap) return;
+    const res = await window.robosBlockmap.loadBoardMap(slugOrPath);
+    if (res && res.success && res.boardData) {
+      await this.applyBoardData(res.boardData, res.imageData);
+      this.boardId = res.boardId || this.boardId;
+      this.cartridgeSlug = null;
+      const presetSelect = document.getElementById('board-preset-select');
+      if (presetSelect) {
+        const optionExists = Array.from(presetSelect.options).some(o => o.value === this.boardId);
+        if (optionExists) presetSelect.value = this.boardId;
+      }
+      this.showToast(`Loaded Blockmap: ${this.boardTitle || this.boardId}`);
+    } else {
+      this.showToast(`Failed to load blockmap: ${res?.error || 'Unknown error'}`);
     }
   }
 

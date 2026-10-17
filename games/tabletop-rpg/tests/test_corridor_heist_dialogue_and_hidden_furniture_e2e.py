@@ -162,6 +162,11 @@ class TestCorridorHeistDialogueAndHiddenFurnitureE2E(unittest.TestCase):
         self.assertEqual(chest3.get("x"), 18, "Chest X must be 18")
         self.assertEqual(chest3.get("y"), 17, "Chest Y must be 17")
         self.assertFalse(chest3.get("hidden", True), "Chest must remain revealed")
+        # If there is a subsequent battle cry line (Action 6), advance through it
+        if state3.get("activeDialogue", {}).get("active", False):
+            self.ai.execute_action("advance_dialogue")
+            time.sleep(0.2)
+            state3 = self.ai.get_state()
         self.assertFalse(state3.get("activeDialogue", {}).get("active", False), "Dialogue sequence should be concluded")
 
     def test_03_standalone_dialogue_and_furniture_api_actions(self):
