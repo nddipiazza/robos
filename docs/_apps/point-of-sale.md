@@ -29,6 +29,20 @@ RobOS Point of Sale handles three kinds of business out of the box, each with a 
 - **Cash**: open the drawer with a float, paid in / paid out, blind count by bill and coin, and an over/short Z-report. Administrators set cash rounding, quick-tender buttons, the largest tender accepted, and how much over/short a cashier may close without a manager.
 - **Reports**: sales by category, tender and item; CSV export.
 
+## Scanning: barcode guns, webcams, QR codes
+
+Use a **barcode gun** (it types into the scan box) or any **webcam** (press the camera button). The camera reads classic UPC/EAN barcodes and modern 2D codes: **QR codes (including GS1 Digital Link), Data Matrix and Aztec**. However a code was printed (UPC-A, the same number as an EAN-13, a 14-digit GTIN, a compressed UPC-E, a Digital Link web address, or a GS1 code with a lot number), the register finds the same product.
+
+![A barcode gun types a UPC into the scan box and the item is added]({{ '/assets/images/screenshots/pos-scan-gun.jpg' | relative_url }})
+
+![Webcam reading a UPC-A barcode at the register]({{ '/assets/images/screenshots/pos-camera-upc.jpg' | relative_url }})
+
+![Webcam reading a QR code that holds a GS1 Digital Link]({{ '/assets/images/screenshots/pos-camera-qr.jpg' | relative_url }})
+
+![A shopper scanning a tag at self-checkout]({{ '/assets/images/screenshots/pos-kiosk-camera.jpg' | relative_url }})
+
+The pictures are screenshots from the automated tests, which play generated codes into a test webcam. The browser only allows cameras on `localhost` or HTTPS, so a tablet on plain `http://` should use a barcode gun. See the [full scanning guide](https://rowbose.com/point-of-sale/#scanning).
+
 ## Open checkout API
 
 Websites and apps create checkout sessions with an API key (`Team & API` screen). The endpoints follow the shape of the open Agentic Commerce Protocol checkout flow (create, retrieve, update, complete, cancel), amounts are integer cents, and `Idempotency-Key` is honoured. The OpenAPI document is served at `/api/openapi.json`. Card payments go through a provider plug-in, so Stripe, Square, Adyen or a card-terminal bridge can be added without touching the register.

@@ -32,6 +32,12 @@ All screens use large touch targets (56px minimum for buttons and inputs, 72px o
 - **Holding an item steadily in view counts once**; it counts again after it leaves the view.
 - Browsers only allow the camera on `localhost` or HTTPS. A tablet opening the till over plain `http://<ip>:3410` cannot use its camera: use a hardware scanner there, or serve the app over HTTPS. The desktop app grants camera access (video only) to its own pages and nothing else.
 
+![Webcam reading a QR code that holds a GS1 Digital Link, matched to a product and added to the order](../../docs/assets/images/screenshots/pos-camera-qr.jpg)
+
+![A barcode gun typing a UPC into the register's scan box](../../docs/assets/images/screenshots/pos-scan-gun.jpg)
+
+*Screenshots come from the automated tests, which play generated codes into a test webcam.*
+
 ## Roles
 
 | Role | Can additionally |
