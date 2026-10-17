@@ -16,6 +16,7 @@ test('cashier scans a barcode, taps a size for jeans, applies a promo code and t
     await b.page.fill(b.tid('scan'), barcodeOf(b, 'Classic Tee White', 'M'));
     await b.page.press(b.tid('scan'), 'Enter');
     await b.see(b.tid('lines'), /Classic Tee White · M/);
+    await b.shot('retail-scan-gun');
     await b.tap(b.tid('item-Slim Jeans'));
     await b.see(b.tid('add-to-order'), /Choose an option/);
     await b.tap(b.tid('variant-32'));

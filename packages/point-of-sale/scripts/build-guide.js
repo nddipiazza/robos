@@ -15,11 +15,42 @@ const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
 
 const titles = file => [...fs.readFileSync(path.join(root, 'tests', file), 'utf8').matchAll(/^test\('((?:[^'\\]|\\.)*)'/gm)].map(m => m[1].replace(/\\'/g, "'"));
 
+
+// ---- scanning chapter extras ----
+const scanFlow = `<figure class="guide-diagram" style="margin:20px 0"><svg viewBox="0 0 800 250" role="img" aria-labelledby="flow-t flow-d" style="width:100%;height:auto;color:inherit" font-family="system-ui,sans-serif" font-size="15"><title id="flow-t">How a scan becomes a sale</title><desc id="flow-d">A barcode gun, a webcam and a shopper at self-checkout all send a code to the register, which works out the product from it and adds it to the order.</desc>
+<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+<g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+<rect x="10" y="20" width="200" height="58" rx="10"/><rect x="10" y="96" width="200" height="58" rx="10"/><rect x="10" y="172" width="200" height="58" rx="10"/>
+<path d="M210 49h60M210 125h60M210 201h60" marker-end="url(#arr)" opacity=".55"/><path d="M270 49v152M270 125h20" opacity=".55"/>
+<rect x="290" y="88" width="210" height="74" rx="10"/><path d="M500 125h50" marker-end="url(#arr)"/>
+<rect x="550" y="88" width="240" height="74" rx="10"/></g>
+<g fill="currentColor" text-anchor="middle"><text x="110" y="45" font-weight="600">Barcode gun</text><text x="110" y="65" opacity=".7">types the code + Enter</text>
+<text x="110" y="121" font-weight="600">Webcam on the till</text><text x="110" y="141" opacity=".7">reads 1D and 2D codes</text>
+<text x="110" y="197" font-weight="600">Self-checkout camera</text><text x="110" y="217" opacity=".7">shopper scans a tag</text>
+<text x="395" y="119" font-weight="600">Work out the product</text><text x="395" y="140" opacity=".7">any padding, any format</text>
+<text x="670" y="119" font-weight="600">Line added to the order</text><text x="670" y="140" opacity=".7">with the right size</text></g></svg>
+<figcaption style="color:var(--muted);font-size:.9rem">Every path ends in the same lookup, so a product can be printed as a UPC, an EAN or a QR code and still be found.</figcaption></figure>`;
+
+const scanTable = `<table class="guide-table"><thead><tr><th>What you scan</th><th>What it contains</th><th>How the register uses it</th></tr></thead><tbody>
+<tr><td><b>UPC-A / EAN-13 / EAN-8</b> barcode</td><td>A product number (GTIN)</td><td>Matched however it was printed: a UPC-A, the same number as an EAN-13 with a leading zero, or a 14-digit GTIN are one product.</td></tr>
+<tr><td><b>UPC-E</b> small-package barcode</td><td>A compressed UPC-A</td><td>Expanded to the full UPC-A before matching.</td></tr>
+<tr><td><b>QR code with a GS1 Digital Link</b></td><td>A web address such as <code>https://id.gs1.org/01/09506000134352/10/LOT7</code></td><td>The GTIN in the address is the product. Lot and serial numbers are ignored for pricing.</td></tr>
+<tr><td><b>Data Matrix</b> (GS1)</td><td>A GTIN followed by lot or expiry data, e.g. <code>01&hellip;10LOT-7</code></td><td>The GTIN is the product.</td></tr>
+<tr><td><b>QR or Aztec code with your own text</b></td><td>A SKU you made up, such as <code>HM-MUG</code></td><td>Matched to the SKU (or barcode field) of an item.</td></tr>
+<tr><td><b>Sized goods</b></td><td>A barcode that belongs to one size</td><td>Adds that exact size. A code that names only the product asks the shopper or cashier to choose a size.</td></tr>
+<tr><td><b>Anything else</b> (a web address, a code not in the catalog)</td><td>&mdash;</td><td>Nothing is added, and the screen says so.</td></tr></tbody></table>`;
+
+const scanWays = `<ol class="guide-list"><li><b>Barcode gun (USB or Bluetooth).</b> Most scanners act like a keyboard: they type the code and press Enter. Click the scan box on the Register (it is focused for you in a retail shop) and scan. No setup.</li>
+<li><b>Webcam.</b> Press the camera button. Choose the camera if you have more than one, hold the barcode or QR code in front of it, and wait for the beep. A code held in view counts once; take it away and show it again to add another.</li>
+<li><b>Self-checkout.</b> The same two options, for shoppers: the scan box for a gun, or the camera button.</li>
+<li><b>Adding products.</b> On <em>Menu &amp; Catalog &rarr; Add item</em>, press the camera button next to the barcode field and scan the package. A Digital Link QR is saved as the plain product number.</li></ol>
+<p>Cameras only work on <code>localhost</code> or an <code>https://</code> address, and the desktop app asks for video access only. A tablet opening the till over plain <code>http://</code> on the shop network should use a barcode gun instead.</p>`;
+
 const CHAPTERS = [
   {
     id: 'retail', eyebrow: 'Sample 1 · Retail', title: 'Retail store', api: 'retail.api.test.js', ui: 'retail.e2e.js',
     intro: 'Main Street General Store stands in for any shop that sells things on shelves: apparel in sizes, home goods, electronics, groceries and stationery. Sized goods carry a barcode per size; plain goods have one barcode; groceries can be tax-exempt while everything else is taxed. Scan a tag or tap an item, apply promo codes, take returns and exchanges, and let shoppers scan their own items at the self-checkout. The same screens work for a hardware store, a bookshop, a pharmacy counter or a market stall.',
-    shots: [['retail-register-promo', 'Scan or tap items, pick a size, apply a promo code'], ['retail-manager-override', 'A cashier cannot refund alone: a manager types their PIN on the spot'], ['retail-receipt', 'Cash sale with change due and the receipt'], ['retail-inventory', 'Inventory input: new stock, deliveries, shelf counts, CSV import'], ['retail-catalog-editor', 'Add a product with sizes; barcodes are check-digit validated, or scanned with the camera'], ['retail-kiosk-cart', 'Self-checkout: the shopper scans a tag, picks a size and pays'], ['retail-reports', 'Sales by category and tender']],
+    shots: [['retail-register-promo', 'Scan or tap items, pick a size, apply a promo code'], ['retail-manager-override', 'A cashier cannot refund alone: a manager types their PIN on the spot'], ['retail-receipt', 'Cash sale with change due and the receipt'], ['retail-inventory', 'Inventory input: new stock, deliveries, shelf counts, CSV import'], ['retail-catalog-editor', 'Add a product with sizes; barcodes are check-digit validated, or scanned with the camera'], ['retail-kiosk-cart', 'Self-checkout: the shopper picks a size and pays'], ['retail-reports', 'Sales by category and tender']],
   },
   {
     id: 'coffee', eyebrow: 'Sample 2 · Food service', title: 'Coffee shop', api: 'coffee.api.test.js', ui: 'coffee.e2e.js',
@@ -33,8 +64,9 @@ const CHAPTERS = [
   },
   {
     id: 'scanning', eyebrow: 'Retail and anywhere with a shelf', title: 'Barcodes, QR codes and the webcam', api: null, ui: 'camera.e2e.js',
-    intro: 'Plug in any USB barcode scanner (it types into the scan box) or just use a webcam. The camera reads the classic UPC and EAN barcodes and the newer 2D codes: QR codes, Data Matrix and Aztec, including GS1 Digital Link QR codes that carry a product\'s GTIN as a web address. The register works out which product a code means, however it was printed: UPC-A, EAN-13, GTIN-14, the compressed UPC-E, a Digital Link, or a GS1 element string with a lot number. The same camera button fills in the barcode when you add a new product, and shoppers can use it at self-checkout.',
-    shots: [['retail-camera-upc', 'A UPC-A barcode read by the register camera'], ['retail-camera-qr', 'A QR code with a GS1 Digital Link, matched by its GTIN'], ['retail-kiosk-camera', 'A shopper scans a tag at self-checkout'], ['retail-camera-item-form', 'Adding a product: the camera fills in the barcode field']],
+    intro: 'Plug in any barcode gun or use a webcam. The camera reads the classic UPC and EAN barcodes and the newer 2D codes: QR codes (including GS1 Digital Link, which carries a product number as a web address), Data Matrix and Aztec. However a code was printed, the register works out which product it means.',
+    extra: () => `${scanFlow}<h3>Three ways to scan</h3>${scanWays}<h3>What you can scan</h3>${scanTable}<h3>Seen in the app</h3><p class="chapter-intro">Each picture below is a real screenshot from the automated tests: a generated code is played into a test webcam and the register reads it. (Cameras for the pictures are simulated; the decoding and the register are real.)</p>`,
+    shots: [['retail-scan-gun', 'A barcode gun types into the scan box and the item is added'], ['retail-camera-upc', 'Webcam: a classic UPC-A barcode'], ['retail-camera-ean13', 'Webcam: the same product as an EAN-13 (UPC-A with a leading zero)'], ['retail-camera-ean8', 'Webcam: an EAN-8 on a small package'], ['retail-camera-qr', 'Webcam: a QR code holding a GS1 Digital Link'], ['retail-camera-datamatrix', 'Webcam: a GS1 Data Matrix with a lot number'], ['retail-camera-aztec', 'Webcam: an Aztec code holding a SKU'], ['retail-camera-sku-qr', 'Webcam: a QR code holding your own SKU'], ['retail-camera-size', 'A barcode that names one size adds exactly that size'], ['retail-camera-unknown', 'A code that is not in the catalog is explained, nothing is added'], ['retail-kiosk-camera', 'Self-checkout: a shopper scans a tag'], ['retail-camera-item-form', 'Adding a product: the camera fills in the barcode field']],
   },
   {
     id: 'cash', eyebrow: 'Every business', title: 'The cash drawer and cash settings', api: null, ui: null,
@@ -63,7 +95,7 @@ const body = CHAPTERS.map((c, i) => {
   const shots = c.shots.map(([name, caption]) => { const p = publish(name); return p ? `<figure class="guide-shot"><a href="${url(p)}"><img src="${url(p)}" alt="${esc(caption)}" loading="lazy" width="1280" height="800"></a><figcaption>${esc(caption)}</figcaption></figure>` : ''; }).join('');
   const list = (label, items) => items.length ? `<details class="guide-steps"><summary>${label} (${items.length})</summary><ol>${items.map(t => `<li>${esc(t)}</li>`).join('')}</ol></details>` : '';
   return `<section class="guide-chapter" id="${c.id}"><p class="eyebrow">${esc(c.eyebrow)}</p><h2>${esc(c.title)}</h2><p class="chapter-intro">${esc(c.intro)}</p>
-<div class="guide-shots">${shots}</div>
+${c.extra ? c.extra() : ''}<div class="guide-shots">${shots}</div>
 ${list('Use cases checked against the real server', api)}${list('Use cases tapped through on a touchscreen browser', ui)}</section>`;
 }).join('\n');
 

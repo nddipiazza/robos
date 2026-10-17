@@ -43,6 +43,7 @@ test('the same product printed as an EAN-13 (UPC-A with a leading zero) is recog
   try {
     await scanWith(b);
     await b.see(b.tid('camera-last'), /Added Canvas Tote/);
+    await b.shot('retail-camera-ean13');
     assert.deepEqual(b.errors, []);
   } finally { await b.close(); }
 });
@@ -65,6 +66,7 @@ test('a GS1 Data Matrix (GTIN plus lot number) is read', T, async () => {
   try {
     await scanWith(b);
     await b.see(b.tid('camera-last'), /Added Ceramic Mug/);
+    await b.shot('retail-camera-datamatrix');
     assert.deepEqual(b.errors, []);
   } finally { await b.close(); }
 });
@@ -74,6 +76,7 @@ test('an Aztec code holding a SKU is read', T, async () => {
   try {
     await scanWith(b);
     await b.see(b.tid('camera-last'), /Added Cast Iron Skillet/);
+    await b.shot('retail-camera-aztec');
     assert.deepEqual(b.errors, []);
   } finally { await b.close(); }
 });
@@ -83,6 +86,7 @@ test('a QR code holding a plain SKU is read', T, async () => {
   try {
     await scanWith(b);
     await b.see(b.tid('camera-last'), /Added Bottled Water/);
+    await b.shot('retail-camera-sku-qr');
     await b.tap(b.tid('camera-done'));
     await b.see(b.tid('tax'), /\$0\.00/); // groceries are tax-exempt in this shop
     assert.deepEqual(b.errors, []);
@@ -94,6 +98,7 @@ test('a sized product is added with the exact size its barcode names', T, async 
   try {
     await scanWith(b);
     await b.see(b.tid('camera-last'), /Added Slim Jeans · 34/);
+    await b.shot('retail-camera-size');
     assert.deepEqual(b.errors, []);
   } finally { await b.close(); }
 });
@@ -105,6 +110,7 @@ test('an EAN-8 barcode (small packages) works once the shop has an item with tha
     b.pos.upsert('items', { name: 'Gum', price: 150, barcode: '96385074', stock: 10 }, admin);
     await scanWith(b);
     await b.see(b.tid('camera-last'), /Added Gum/);
+    await b.shot('retail-camera-ean8');
     assert.deepEqual(b.errors, []);
   } finally { await b.close(); }
 });
@@ -114,6 +120,7 @@ test('a valid code that is not in the catalog is explained, and nothing is added
   try {
     await scanWith(b);
     await b.see(b.tid('camera-last'), /Nothing matches/);
+    await b.shot('retail-camera-unknown');
     assert.equal(await b.page.locator(`${b.tid('camera-last')}.warn-text`).count(), 1);
     await b.tap(b.tid('camera-done'));
     assert.equal(b.pos.state.orders.reduce((n, o) => n + o.lines.length, 0), 0);
