@@ -295,4 +295,8 @@ packages:
     type: "robos:DesktopApp"
     repository: "packages/home-speaker"
     technology: "Electron 28 / Google Cast / Kokoro TTS"
-
+  - id: "urn:robos:desktop-app:point-of-sale"
+    title: "RobOS Point of Sale"
+    type: "robos:DesktopApp"
+    repository: "packages/point-of-sale"
+    technology: "Electron / Node.js (zero runtime dependencies)"

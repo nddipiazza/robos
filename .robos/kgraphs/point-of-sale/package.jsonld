@@ -1,0 +1,144 @@
+{
+  "@context": {
+    "c4": "https://c4model.com/ns#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "oslc": "http://open-services.net/ns/core#",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "oslc_cm": "http://open-services.net/ns/cm#",
+    "oslc_qm": "http://open-services.net/ns/qm#",
+    "oslc_rm": "http://open-services.net/ns/rm#",
+    "pact": "https://pact.io/ns#",
+    "robos": "https://robos.dev/ns/sdlc#",
+    "robos:annotations": {
+      "@id": "robos:annotations",
+      "@type": "@json"
+    },
+    "robos:arguments": {
+      "@id": "robos:arguments",
+      "@type": "@json"
+    },
+    "robos:classification": {
+      "@container": "@set",
+      "@id": "robos:classification",
+      "@type": "@id"
+    },
+    "robos:evidence": {
+      "@container": "@set",
+      "@context": {
+        "line": {
+          "@id": "robos:sourceLine",
+          "@type": "xsd:integer"
+        },
+        "path": "robos:sourcePath",
+        "repository": "robos:sourceRepository",
+        "revision": "robos:sourceRevision",
+        "sha256": "robos:sourceHash",
+        "workingTreeStatus": "robos:workingTreeStatus"
+      },
+      "@id": "robos:evidence"
+    },
+    "robos:inputSchema": {
+      "@id": "robos:inputSchema",
+      "@type": "@json"
+    },
+    "robos:mcpServer": {
+      "@id": "robos:mcpServer",
+      "@type": "@id"
+    },
+    "robos:outputSchema": {
+      "@id": "robos:outputSchema",
+      "@type": "@json"
+    },
+    "robos:parameters": {
+      "@id": "robos:parameters",
+      "@type": "@json"
+    },
+    "robos:promptsProvided": {
+      "@container": "@set",
+      "@id": "robos:promptsProvided",
+      "@type": "@id"
+    },
+    "robos:protocolReference": {
+      "@id": "robos:protocolReference",
+      "@type": "@id"
+    },
+    "robos:provenance": {
+      "@id": "robos:provenance",
+      "@type": "@json"
+    },
+    "robos:relationshipEvidence": {
+      "@container": "@set",
+      "@context": {
+        "condition": "robos:condition",
+        "evidence": {
+          "@container": "@set",
+          "@context": {
+            "line": {
+              "@id": "robos:sourceLine",
+              "@type": "xsd:integer"
+            },
+            "path": "robos:sourcePath",
+            "repository": "robos:sourceRepository",
+            "revision": "robos:sourceRevision",
+            "sha256": "robos:sourceHash",
+            "workingTreeStatus": "robos:workingTreeStatus"
+          },
+          "@id": "robos:evidence"
+        },
+        "note": "dcterms:description",
+        "predicate": {
+          "@id": "robos:predicate",
+          "@type": "@vocab"
+        },
+        "status": "robos:evidenceStatus",
+        "target": {
+          "@id": "robos:target",
+          "@type": "@id"
+        }
+      },
+      "@id": "robos:relationshipEvidence"
+    },
+    "robos:resourcesProvided": {
+      "@container": "@set",
+      "@id": "robos:resourcesProvided",
+      "@type": "@id"
+    },
+    "robos:sourceSummary": {
+      "@id": "robos:sourceSummary",
+      "@type": "@json"
+    },
+    "robos:technologyReference": {
+      "@id": "robos:technologyReference",
+      "@type": "@id"
+    },
+    "robos:toolAnnotations": {
+      "@id": "robos:toolAnnotations",
+      "@type": "@json"
+    },
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:package:point-of-sale",
+  "@type": [
+    "robos:KGraphPackage"
+  ],
+  "dcterms:title": "point-of-sale",
+  "robos:namespace": "robos.pos",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:app:point-of-sale",
+      "@type": "robos:DesktopApp",
+      "dcterms:title": "RobOS Point of Sale",
+      "robos:appFamily": {
+        "@id": "urn:robos:point-of-sale:family"
+      },
+      "robos:description": "Open-source cash register for retail, food service and bars. Touchscreen worker order entry with modifiers, tabs, tips, discounts, split payments and prep queues; self-checkout kiosk; inventory input with recipes; cash drawer administration (float, rounding, paid in/out, blind count, Z-report); manager-approved voids, comps and refunds; and an open checkout-session API modelled on the Agentic Commerce Protocol with API keys and idempotency. Money is integer cents, barcodes are GS1-validated, receipts export as plain text and schema.org JSON-LD. Verified by node:test API suites and touch-driven Playwright suites for a clothing store, a coffee shop and a bar.",
+      "robos:desktopFramework": "Electron",
+      "robos:package": "point-of-sale",
+      "robos:repository": "https://github.com/nddipiazza/robos",
+      "robos:sourcePath": "packages/point-of-sale",
+      "robos:technology": "Electron / Node.js (zero runtime dependencies)"
+    }
+  ],
+  "robos:package": "point-of-sale"
+}
