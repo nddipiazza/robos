@@ -98,7 +98,29 @@ ipcMain.handle("tabletop:save-kgraph-entity", async (_event, payload) => {
       nodes.push(payload.entity);
     }
     pkg["robos:nodes"] = nodes;
+    if (Array.isArray(pkg["@graph"])) {
+      pkg["@graph"] = nodes;
+    }
 
+    fs.writeFileSync(targetFile, JSON.stringify(pkg, null, 2) + "\n", "utf8");
+    return { success: true, entityId };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+// IPC: Delete KGraph Entity
+ipcMain.handle("tabletop:delete-kgraph-entity", async (_event, payload) => {
+  try {
+    const entityId = payload?.entityId || payload?.id;
+    if (!entityId) throw new Error("entityId is required.");
+    const targetFile = KGRAPH_TABLETOP;
+    const pkg = JSON.parse(fs.readFileSync(targetFile, "utf8"));
+    const nodes = (pkg["robos:nodes"] || []).filter(n => n["@id"] !== entityId);
+    pkg["robos:nodes"] = nodes;
+    if (Array.isArray(pkg["@graph"])) {
+      pkg["@graph"] = nodes;
+    }
     fs.writeFileSync(targetFile, JSON.stringify(pkg, null, 2) + "\n", "utf8");
     return { success: true, entityId };
   } catch (err) {

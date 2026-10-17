@@ -491,10 +491,11 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
 
     const spellNodes = nodes.filter(n => {
       const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
-      return t.includes("robos:TabletopSpellCard") && !t.includes("robos:TabletopDreadSpell");
+      const isBase = !n["robos:category"] || n["robos:category"] === "Base Game";
+      return t.includes("robos:TabletopSpellCard") && !t.includes("robos:TabletopDreadSpell") && isBase;
     });
 
-    assert.strictEqual(spellNodes.length, 12, "Must contain exactly 12 HeroQuest elemental spells");
+    assert.strictEqual(spellNodes.length, 12, "Must contain 12 Base Game HeroQuest elemental spells");
 
     const colleges = { earth: 0, fire: 0, water: 0, air: 0 };
     spellNodes.forEach(sp => {
@@ -527,10 +528,11 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
 
     const dreadSpellNodes = nodes.filter(n => {
       const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
-      return t.includes("robos:TabletopDreadSpell");
+      const isBase = !n["robos:category"] || n["robos:category"] === "Base Game";
+      return t.includes("robos:TabletopDreadSpell") && isBase;
     });
 
-    assert.strictEqual(dreadSpellNodes.length, 8, "Must contain exactly 8 HeroQuest Dread spells");
+    assert.strictEqual(dreadSpellNodes.length, 8, "Must contain 8 Base Game HeroQuest Dread spells");
 
     const expectedDreadTitles = [
       "Lightning Bolt", "Firestorm", "Fear", "Sleep of Dread",
@@ -936,8 +938,116 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.strictEqual(t3.success, false);
     assert.strictEqual(t3.error, "Cannot transfer to self");
   });
+
+  it("supports Category concept ('Base Game', 'Midterms 2026', and custom categories) across Monsters, Weapons, Spells, and Items", async () => {
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+    assert.ok(Array.isArray(appModule.DEFAULT_CATEGORIES), "DEFAULT_CATEGORIES must be exported");
+    assert.ok(appModule.DEFAULT_CATEGORIES.includes("Base Game"), "Must include 'Base Game' category");
+    assert.ok(appModule.DEFAULT_CATEGORIES.includes("Midterms 2026"), "Must include 'Midterms 2026' category");
+
+    // Verify KGraph entities carry robos:category
+    const data = JSON.parse(fs.readFileSync(KGRAPH_TABLETOP, "utf8"));
+    const nodes = data["robos:nodes"] || [];
+
+    const monsters = nodes.filter(n => {
+      const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+      return t.includes("robos:TabletopMonster");
+    });
+    const baseMonsters = monsters.filter(m => m["robos:category"] === "Base Game");
+    const midtermsMonsters = monsters.filter(m => m["robos:category"] === "Midterms 2026");
+
+    assert.ok(baseMonsters.length >= 6, "Must have Base Game monsters in KGraph");
+    assert.strictEqual(midtermsMonsters.length, 7, "Must have 7 Midterms 2026 monsters in KGraph");
+
+    // Check user-requested Midterms 2026 enemies
+    const inflationSpawn = midtermsMonsters.find(m => m["@id"].includes("inflation-spawn"));
+    assert.ok(inflationSpawn, "Inflation Spawn goblin money monster must exist");
+    assert.ok(
+      inflationSpawn["dcterms:title"].includes("Inflation Spawn") || inflationSpawn["robos:alias"] === "Infalation Spawn",
+      "Must match Inflation Spawn / Infalation Spawn"
+    );
+
+    const illegalAlien = midtermsMonsters.find(m => m["@id"].includes("illegal-alien"));
+    assert.ok(illegalAlien, "Illegal Alien (grey alien with robber mask) must exist");
+    assert.ok(
+      (illegalAlien["robos:archetype"] || "").toLowerCase().includes("grey alien") ||
+      (illegalAlien["dcterms:description"] || "").toLowerCase().includes("grey")
+    );
+
+    const gayMan = midtermsMonsters.find(m => m["@id"].includes("happily-married-gay-man"));
+    assert.ok(gayMan, "Happily Married Gay Man (Dread Warrior) must exist");
+    assert.strictEqual(gayMan["robos:archetype"] || gayMan["robos:monsterArchetype"], "Dread Warrior");
+
+    const trumpBiden = midtermsMonsters.find(m => m["@id"].includes("trumpbiden-dragon"));
+    assert.ok(trumpBiden, "TrumpBiden Dragon boss must exist");
+    assert.strictEqual(trumpBiden["robos:isBoss"], true);
+    assert.ok((trumpBiden["robos:archetype"] || trumpBiden["robos:monsterArchetype"] || "").includes("Dragon"));
+    assert.ok(trumpBiden["dcterms:description"].toLowerCase().includes("expensive"));
+
+    // Verify Midterms 2026 Weapons (illegal presidential acts)
+    const midtermsWeapons = appModule.getWeaponsByCategory("Midterms 2026");
+    assert.strictEqual(midtermsWeapons.length, 7, "Must include 7 Midterms 2026 illegal presidential act weapons");
+    assert.ok(midtermsWeapons.some(w => w.name.includes("Unapproved Foreign Bombing Run")));
+    assert.ok(midtermsWeapons.some(w => w.name.includes("Classified Bathroom")));
+    assert.ok(midtermsWeapons.some(w => w.name.includes("Midnight Blanket Pardon")));
+    assert.ok(midtermsWeapons.some(w => w.name.includes("Executive Order")));
+
+    // Verify Base Game Weapons remain intact
+    const baseWeapons = appModule.getWeaponsByCategory("Base Game");
+    assert.ok(baseWeapons.length >= 9, "Must include all 9 Base Game armory weapons/gear");
+
+    // Verify Midterms 2026 Spells & Dread Spells
+    const midtermsSpells = appModule.getSpellsByCategory("Midterms 2026");
+    assert.strictEqual(midtermsSpells.length, 5, "Must include 5 Midterms 2026 hero spells");
+    assert.ok(midtermsSpells.some(s => s.name.includes("Snowflake")));
+    assert.ok(midtermsSpells.some(s => s.name.includes("No Choice") || s.description.toLowerCase().includes("abortion")));
+    assert.ok(midtermsSpells.some(s => s.name.includes("Party-Line")));
+    assert.ok(midtermsSpells.some(s => s.name.includes("Middle East")));
+
+    const midtermsDread = appModule.getDreadSpellsByCategory("Midterms 2026");
+    assert.strictEqual(midtermsDread.length, 3, "Must include 3 Midterms 2026 dread spells");
+    assert.ok(midtermsDread.some(s => s.slug === "bipartisan-blame-inferno"));
+
+    // Verify Midterms 2026 Quest Items
+    const midtermsItems = appModule.getItemsByCategory("Midterms 2026");
+    assert.strictEqual(midtermsItems.length, 5, "Must include 5 Midterms 2026 satirical quest items");
+    assert.ok(midtermsItems.some(it => it.name.includes("Snowflake")));
+    assert.ok(midtermsItems.some(it => it.name.includes("Bodily Autonomy") || it.effect.toLowerCase().includes("abortion")));
+    assert.ok(midtermsItems.some(it => it.name.includes("Party-Line Flip-Flop")));
+    assert.ok(midtermsItems.some(it => it.name.includes("Middle East")));
+
+    // Verify adding a custom category and custom entities for custom quests
+    const catRes = appModule.addCategory("Custom Quest 2027");
+    assert.strictEqual(catRes.success, true);
+    assert.ok(appModule.getCategories().includes("Custom Quest 2027"));
+
+    const customWepRes = await appModule.addCustomWeapon({
+      name: "Filibuster Podium Hammer",
+      category: "Custom Quest 2027",
+      type: "Weapon",
+      dice: "3 Attack Dice",
+      cost: "300 GP"
+    });
+    assert.strictEqual(customWepRes.success, true);
+    assert.strictEqual(appModule.getWeaponsByCategory("Custom Quest 2027").length, 1);
+
+    const customItemRes = await appModule.addCustomItem({
+      name: "Bipartisan Filibuster Coffee",
+      category: "Custom Quest 2027",
+      type: "potion",
+      effect: "Stay awake for 24 hours",
+      value: 75
+    });
+    assert.strictEqual(customItemRes.success, true);
+    assert.strictEqual(appModule.getItemsByCategory("Custom Quest 2027").length, 1);
+
+    const customSpellRes = await appModule.addCustomSpell({
+      name: "Omnibus Bill Avalanche",
+      category: "Custom Quest 2027",
+      element: "earth",
+      description: "Drops a 4,000-page bill that nobody read on target monster for 3 BP damage."
+    });
+    assert.strictEqual(customSpellRes.success, true);
+    assert.strictEqual(appModule.getSpellsByCategory("Custom Quest 2027").length, 1);
+  });
 });
-
-
-
-
