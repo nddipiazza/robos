@@ -5614,7 +5614,7 @@ function renderSpellsAndItems() {
         ? "background:rgba(56,189,248,0.12); color:#7dd3fc; border:1px solid rgba(56,189,248,0.28);"
         : "background:rgba(168,85,247,0.18); color:#e9d5ff; border:1px solid rgba(168,85,247,0.45);");
     const icon = c === "Base Game" ? "🏰" : (c === "Midterms 2026" ? "🗳️" : "🏷️");
-    return `<span class="badge entity-category-badge" data-category="${escapeHtml(c)}" style="font-size:0.68rem; padding:1px 6px; ${style}">${icon} ${escapeHtml(c)}</span>`;
+    return `<span class="badge entity-category-badge" data-category="${escapeHtml(c)}" style="font-size:0.68rem; padding:1px 6px; white-space:nowrap; ${style}">${icon} ${escapeHtml(c)}</span>`;
   };
 
   // 1. Hero Spells Grid
@@ -5623,6 +5623,8 @@ function renderSpellsAndItems() {
     spellsGrid.innerHTML = "";
     const elfElement = currentData.spellAllocation?.elfElement || "water";
     const filteredSpells = getSpellsByCategory(activeCat);
+    const countBadge = document.getElementById("spells-count-badge");
+    if (countBadge) countBadge.textContent = `${filteredSpells.length} Spell${filteredSpells.length === 1 ? "" : "s"}`;
 
     filteredSpells.forEach(s => {
       const card = document.createElement("div");
@@ -5632,17 +5634,15 @@ function renderSpellsAndItems() {
       const draftedBy = isElf ? "🧝 Elf Grimoire" : "🧙 Wizard Grimoire";
       const draftedClass = isElf ? "badge-info" : "badge-purple";
       card.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:6px;">
-          <div class="card-title" style="margin:0;">${s.icon || "✨"} ${escapeHtml(s.name)}</div>
-          <div style="display:flex; gap:4px; align-items:center; flex-shrink:0;">
-            ${formatCatBadge(s.category)}
-            <span class="element-tag tag-${s.element}">${(s.element || "fire").toUpperCase()}</span>
-          </div>
+        <div class="spell-card-top-badges">
+          ${formatCatBadge(s.category)}
+          <span class="element-tag tag-${s.element}">${(s.element || "fire").toUpperCase()}</span>
         </div>
-        <div class="card-meta" style="color:var(--text-muted); font-size:0.75rem; margin-bottom:6px;">${escapeHtml(s.description)}</div>
-        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
+        <div class="card-title">${s.icon || "✨"} ${escapeHtml(s.name)}</div>
+        <div class="card-meta" style="flex:1;">${escapeHtml(s.description)}</div>
+        <div class="spell-card-footer">
           <span class="card-meta" style="margin:0;">College: ${ELEMENTAL_DECKS[s.element]?.name || s.element}</span>
-          <span class="badge ${draftedClass}" style="font-size:0.7rem;">${draftedBy}</span>
+          <span class="badge ${draftedClass}" style="font-size:0.7rem; white-space:nowrap;">${draftedBy}</span>
         </div>
       `;
       spellsGrid.appendChild(card);
@@ -5654,20 +5654,21 @@ function renderSpellsAndItems() {
   if (itemsGrid) {
     itemsGrid.innerHTML = "";
     const filteredWeapons = getWeaponsByCategory(activeCat);
+    const countBadge = document.getElementById("weapons-count-badge");
+    if (countBadge) countBadge.textContent = `${filteredWeapons.length} Weapon${filteredWeapons.length === 1 ? "" : "s"}`;
+
     filteredWeapons.forEach(item => {
       const card = document.createElement("div");
       card.className = "spell-card weapon-card";
       card.dataset.category = item.category || "Base Game";
       card.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:4px;">
-          <div class="card-title" style="margin:0;">${item.icon || "⚔️"} ${escapeHtml(item.name)}</div>
-          <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
-            ${formatCatBadge(item.category)}
-            <span style="font-weight:700; color:#fbbf24; font-size:0.8rem;">💰 ${escapeHtml(item.cost)}</span>
-          </div>
+        <div class="spell-card-top-badges">
+          ${formatCatBadge(item.category)}
+          <span style="font-weight:700; color:#fbbf24; font-size:0.78rem; white-space:nowrap;">💰 ${escapeHtml(item.cost)}</span>
         </div>
-        <div class="card-meta" style="font-weight:600; color:#93c5fd; margin-bottom:4px;">${escapeHtml(item.type)} • ${escapeHtml(item.dice)}</div>
-        ${item.description ? `<div class="card-meta" style="color:var(--text-muted); font-size:0.74rem;">${escapeHtml(item.description)}</div>` : ""}
+        <div class="card-title">${item.icon || "⚔️"} ${escapeHtml(item.name)}</div>
+        <div class="card-meta" style="font-weight:600; color:#93c5fd;">${escapeHtml(item.type)} • ${escapeHtml(item.dice)}</div>
+        ${item.description ? `<div class="card-meta" style="flex:1; font-size:0.74rem;">${escapeHtml(item.description)}</div>` : ""}
       `;
       itemsGrid.appendChild(card);
     });
@@ -5678,20 +5679,21 @@ function renderSpellsAndItems() {
   if (questItemsGrid) {
     questItemsGrid.innerHTML = "";
     const filteredItems = getItemsByCategory(activeCat);
+    const countBadge = document.getElementById("quest-items-count-badge");
+    if (countBadge) countBadge.textContent = `${filteredItems.length} Item${filteredItems.length === 1 ? "" : "s"}`;
+
     filteredItems.forEach(item => {
       const card = document.createElement("div");
       card.className = "spell-card quest-item-card";
       card.dataset.category = item.category || "Base Game";
       card.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:4px;">
-          <div class="card-title" style="margin:0;">${item.icon || "🎒"} ${escapeHtml(item.name)}</div>
-          <div style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
-            ${formatCatBadge(item.category)}
-            <span style="font-weight:700; color:#34d399; font-size:0.8rem;">💰 ${escapeHtml(item.cost || (item.value + " GP"))}</span>
-          </div>
+        <div class="spell-card-top-badges">
+          ${formatCatBadge(item.category)}
+          <span style="font-weight:700; color:#34d399; font-size:0.78rem; white-space:nowrap;">💰 ${escapeHtml(item.cost || (item.value + " GP"))}</span>
         </div>
-        <div class="card-meta" style="font-weight:600; color:#a7f3d0; margin-bottom:4px;">${escapeHtml((item.type || "item").toUpperCase())} • ${escapeHtml(item.effect)}</div>
-        ${item.description ? `<div class="card-meta" style="color:var(--text-muted); font-size:0.74rem;">${escapeHtml(item.description)}</div>` : ""}
+        <div class="card-title">${item.icon || "🎒"} ${escapeHtml(item.name)}</div>
+        <div class="card-meta" style="font-weight:600; color:#a7f3d0;">${escapeHtml((item.type || "item").toUpperCase())} • ${escapeHtml(item.effect)}</div>
+        ${item.description ? `<div class="card-meta" style="flex:1; font-size:0.74rem;">${escapeHtml(item.description)}</div>` : ""}
       `;
       questItemsGrid.appendChild(card);
     });
@@ -5702,22 +5704,23 @@ function renderSpellsAndItems() {
   if (dreadGrid) {
     dreadGrid.innerHTML = "";
     const filteredDread = getDreadSpellsByCategory(activeCat);
+    const countBadge = document.getElementById("dread-spells-count-badge");
+    if (countBadge) countBadge.textContent = `${filteredDread.length} Chaos Spell${filteredDread.length === 1 ? "" : "s"}`;
+
     filteredDread.forEach(s => {
       const card = document.createElement("div");
       card.className = "spell-card deck-dread";
       card.dataset.category = s.category || "Base Game";
       card.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; gap:6px;">
-          <div class="card-title" style="margin:0; color:#f3e8ff;">${s.icon || "⚡"} ${escapeHtml(s.name)}</div>
-          <div style="display:flex; gap:4px; align-items:center; flex-shrink:0;">
-            ${formatCatBadge(s.category)}
-            <span class="element-tag tag-dread">DREAD MAGIC</span>
-          </div>
+        <div class="spell-card-top-badges">
+          ${formatCatBadge(s.category)}
+          <span class="element-tag tag-dread">DREAD MAGIC</span>
         </div>
-        <div class="card-meta" style="color:var(--text-muted); font-size:0.75rem; margin-bottom:6px;">${escapeHtml(s.description)}</div>
-        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem;">
+        <div class="card-title" style="color:#f3e8ff;">${s.icon || "⚡"} ${escapeHtml(s.name)}</div>
+        <div class="card-meta" style="flex:1;">${escapeHtml(s.description)}</div>
+        <div class="spell-card-footer">
           <span class="card-meta" style="margin:0; color:#c084fc;">${s.category === "Midterms 2026" ? "TrumpBiden & Swamp Bosses" : "Witch Lord & Chaos Sorcerers"}</span>
-          <span class="badge" style="background:#581c87; color:#f3e8ff; border:1px solid #7e22ce; font-size:0.7rem;">Enemy Magic</span>
+          <span class="badge" style="background:#581c87; color:#f3e8ff; border:1px solid #7e22ce; font-size:0.7rem; white-space:nowrap;">Enemy Magic</span>
         </div>
       `;
       dreadGrid.appendChild(card);

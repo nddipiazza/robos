@@ -1063,5 +1063,11 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     });
     assert.strictEqual(customSpellRes.success, true);
     assert.strictEqual(appModule.getSpellsByCategory("Custom Quest 2027").length, 1);
+
+    // Verify Spells & Items card CSS prevents overflow (min-width: 0, overflow: hidden, wrapping top badges)
+    const styleCss = fs.readFileSync(path.join(__dirname, "../renderer/style.css"), "utf8");
+    assert.ok(styleCss.includes(".spell-card-top-badges"), "style.css must define .spell-card-top-badges");
+    assert.ok(styleCss.includes(".spell-card-footer"), "style.css must define .spell-card-footer");
+    assert.ok(styleCss.includes("overflow-wrap: anywhere"), "style.css must enforce overflow-wrap: anywhere on cards");
   });
 });
