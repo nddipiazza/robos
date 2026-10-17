@@ -197,16 +197,63 @@ function offboard(service, input) {
   if (stay) edits.push({ op: 'update', id: stay['@id'], set: { 'schema:endDate': new Date(out).toISOString() } });
   commit(service, edits, key(job) + ': vehicle returned, repair closed'); return { job: job['@id'], closed: true };
 }
+function parseCsv(text) {
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (c === '"') q = false; else cell += c; }
+    else if (c === '"') q = true; else if (c === ',') { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); cell = ''; if (row.some(v => v.trim())) rows.push(row); row = []; }
+    else cell += c;
+  }
+  row.push(cell); if (row.some(v => v.trim())) rows.push(row);
+  return rows;
+}
+const HEADERS = { partnumber: 'partNumber', 'part number': 'partNumber', sku: 'partNumber', 'part no': 'partNumber', name: 'name', description: 'name', part: 'name', supplier: 'supplier', vendor: 'supplier', cost: 'cost', price: 'price', category: 'category', make: 'make', model: 'model', yearfrom: 'yearFrom', 'year from': 'yearFrom', yearto: 'yearTo', 'year to': 'yearTo' };
+function partNode(service, input, line) {
+  const where = line ? 'Row ' + line + ': ' : '';
+  const fail = m => { throw new Error(where + m); };
+  const name = String(input.name ?? '').trim(); if (!name) fail('Part name is required'); if (name.length > 200) fail('Part name is too long');
+  const money = (v, label) => { const s = String(v ?? '').trim().replace(/^\$/, ''); if (!s) return null; if (!/^\d{1,10}(?:\.\d{1,2})?$/.test(s)) fail(label + ' must be an amount such as 12.50'); return amountMinor(s); };
+  const year = (v, label) => { const s = String(v ?? '').trim(); if (s && !/^(19|20)\d{2}$/.test(s)) fail(label + ' must be a four-digit year'); return s; };
+  const yf = year(input.yearFrom, 'Year from'), yt = year(input.yearTo, 'Year to'); if (yf && yt && yf > yt) fail('Year from is after year to');
+  if ((yf || yt || input.model) && !String(input.make ?? '').trim()) fail('A make is needed when a model or years are given');
+  const pn = String(input.partNumber ?? '').trim().slice(0, 100), supplier = String(input.supplier ?? '').trim().slice(0, 200);
+  return node('Part', crypto.randomUUID(), name, { 'schema:name': name, 'robos:partNumber': pn, 'robos:supplier': supplier, 'robos:unitCostMinor': money(input.cost, 'Cost'), 'robos:unitPriceMinor': money(input.price, 'Price'),
+    'robos:currency': 'USD', 'robos:partCategory': String(input.category ?? '').trim().slice(0, 100), 'robos:fitsMake': String(input.make ?? '').trim().slice(0, 100), 'robos:fitsModel': String(input.model ?? '').trim().slice(0, 100), 'robos:fitsYearFrom': yf, 'robos:fitsYearTo': yt });
+}
+const partKey = n => (n['robos:partNumber'] ? n['robos:partNumber'].toLowerCase() : n['schema:name'].toLowerCase()) + '|' + (n['robos:supplier'] || '').toLowerCase();
+function addPart(service, input) {
+  shop(service); const n = partNode(service, input, 0);
+  if (nodes(service).some(p => p['@type'] === 'robos:Part' && partKey(p) === partKey(n))) throw new Error('This part is already in the catalog');
+  commit(service, [{ op: 'add', node: n }], 'auto: add catalog part'); return n;
+}
+function importParts(service, input) {
+  shop(service); const text = String(input.csv ?? ''); if (!text.trim()) throw new Error('Choose or paste a parts file');
+  if (text.length > 20 * 1024 * 1024) throw new Error('Parts file is too large');
+  const rows = parseCsv(text), head = rows.shift().map(h => HEADERS[h.trim().toLowerCase()] || null);
+  if (!head.includes('name')) throw new Error('The first row must have a "name" column');
+  if (rows.length > 50000) throw new Error('Import at most 50,000 parts at a time');
+  const existing = new Set(nodes(service).filter(p => p['@type'] === 'robos:Part').map(partKey)), seen = new Set(), edits = [], errors = []; let skipped = 0;
+  rows.forEach((cells, i) => {
+    const rec = {}; head.forEach((h, c) => { if (h) rec[h] = cells[c]; });
+    try { const n = partNode(service, rec, i + 2), k = partKey(n); if (existing.has(k) || seen.has(k)) { skipped++; return; } seen.add(k); edits.push({ op: 'add', node: n }); }
+    catch (e) { errors.push(e.message); }
+  });
+  if (errors.length) throw new Error('Nothing imported. ' + errors.slice(0, 5).join('; ') + (errors.length > 5 ? ` (and ${errors.length - 5} more)` : ''));
+  if (edits.length) commit(service, edits, 'auto: import ' + edits.length + ' catalog parts');
+  return { added: edits.length, skipped };
+}
 function board(service) {
   shop(service); const records = nodes(service);
   const jobs = records.filter(n => n['@type'] === 'robos:RepairOrder').map(job => {
     const vehicle = records.find(n => n['@id'] === linked(job, 'robos:vehicle')), customer = records.find(n => n['@id'] === linked(vehicle || {}, 'robos:customer'));
-    return { id: job['@id'], key: job['robos:workItemKey'] || '', title: job['dcterms:title'], stage: job['robos:jobStatus'], vehicle: vehicle?.['dcterms:title'], customer: customer?.['dcterms:title'],
+    return { id: job['@id'], key: job['robos:workItemKey'] || '', title: job['dcterms:title'], stage: job['robos:jobStatus'], vehicle: vehicle?.['dcterms:title'], vehicleInfo: { make: vehicle?.['schema:brand'] || '', model: vehicle?.['schema:model'] || '', year: vehicle?.['schema:modelDate'] || '' }, customer: customer?.['dcterms:title'],
       workItem: workItemFor(records, job['@id'])?.['robos:events'] || [], estimates: records.filter(n => n['@type'] === 'robos:Estimate' && linked(n, 'robos:job') === job['@id']).map(e => ({ id: e['@id'], version: e['robos:version'], status: e['robos:estimateStatus'], total: e['robos:totalMinor'], currency: e['robos:currency'], lines: e['robos:lines'] })),
       parts: records.filter(n => n['@type'] === 'robos:PartUsage' && linked(n, 'robos:job') === job['@id']).map(p => ({ name: p['schema:name'], quantity: p['robos:quantity'], unitCost: p['robos:unitCostMinor'] })), summary: jobSummary(records, job) };
   });
   return { stages: STAGES.map(s => ({ id: s, label: STAGE_LABELS[s] })), jobs, teammates: records.filter(n => n['@type'] === 'robos:Teammate').map(t => ({ id: t['@id'], name: t['schema:name'], role: t['robos:role'], personId: t['robos:personId'] })),
     customers: records.filter(n => n['@type'] === 'robos:Customer').map(c => ({ id: c['@id'], name: c['schema:name'], userId: c['robos:userId'], groupId: c['robos:groupId'], phone: c['schema:telephone'], email: c['schema:email'] })),
-    vehicles: records.filter(n => n['@type'] === 'robos:OwnedVehicle').map(v => ({ id: v['@id'], name: v['dcterms:title'], customer: linked(v, 'robos:customer') })), directory: directory() };
+    vehicles: records.filter(n => n['@type'] === 'robos:OwnedVehicle').map(v => ({ id: v['@id'], name: v['dcterms:title'], customer: linked(v, 'robos:customer'), make: v['schema:brand'] || '', model: v['schema:model'] || '', year: v['schema:modelDate'] || '', plate: v['robos:licensePlate'] || '' })), directory: directory() };
 }
-module.exports = { STAGES, STAGE_LABELS, directory, addTeammate, addCustomer, addCustomerVehicle, openRepair, diagnose, createEstimate, decideEstimate, usePart, logHours, issueInvoice, offboard, board, jobSummary };
+module.exports = { addPart, importParts, STAGES, STAGE_LABELS, directory, addTeammate, addCustomer, addCustomerVehicle, openRepair, diagnose, createEstimate, decideEstimate, usePart, logHours, issueInvoice, offboard, board, jobSummary };

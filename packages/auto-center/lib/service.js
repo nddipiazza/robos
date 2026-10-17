@@ -15,7 +15,7 @@ const JOB_STATES=['received','diagnosing','awaiting-approval','in-progress','rea
 function date(value){return /^\d{4}-\d{2}-\d{2}$/.test(value)&&!Number.isNaN(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value;}
 class AutoCenter {
  constructor({root=process.env.ROBOS_AUTO_CACHE || path.join(os.homedir(),'.robos/auto-scrape'),privateRoot=process.env.ROBOS_AUTO_PRIVATE || path.join(os.homedir(),'.config/robos/auto-center'),clock=()=>new Date()}={}) {
-  this.clock=clock;this.reportTimeZone=Intl.DateTimeFormat().resolvedOptions().timeZone;this.root=root; this.privateRoot=privateRoot; this.settingsFile=path.join(privateRoot,'settings.json'); this.mode=fs.existsSync(this.settingsFile)?JSON.parse(fs.readFileSync(this.settingsFile)).mode:'owner'; if(!['owner','shop'].includes(this.mode))this.mode='owner'; this.recalls=new RecallStore(root); this.publicGraph=null; this.pending=null; this.busy=false;
+  this.clock=clock;this.reportTimeZone=Intl.DateTimeFormat().resolvedOptions().timeZone;this.root=root; this.privateRoot=privateRoot; this.settingsFile=path.join(privateRoot,'settings.json'); this.mode=fs.existsSync(this.settingsFile)?JSON.parse(fs.readFileSync(this.settingsFile)).mode:'owner'; if(!['owner','shop'].includes(this.mode))this.mode='owner'; this.recalls=new RecallStore(root); this.publicGraph=null; this.catalogIndex=new (require('./catalog').Catalog)(); this.pending=null; this.busy=false;
   fs.mkdirSync(privateRoot,{recursive:true,mode:0o700}); fs.chmodSync(privateRoot,0o700);
  }
  get dataRoot(){return this.mode==='shop'?path.join(this.privateRoot,'shop'):this.privateRoot;}
@@ -34,7 +34,11 @@ class AutoCenter {
  checkOut(input){return shopOperations.checkOut(this,input);}
  recordFinance(input){return require('./finance').recordFinance(this,input);}
  recordPayment(input){return shopOperations.recordPayment(this,input);}
- workshop(action,input={}){const w=require('./workshop');const allowed=['board','addTeammate','addCustomer','addCustomerVehicle','openRepair','diagnose','createEstimate','decideEstimate','usePart','logHours','issueInvoice','offboard'];if(!allowed.includes(action))throw new Error('Unknown workshop action');return w[action](this,input);}
+ catalog(kind,query,ctx){
+  const shopParts=this.mode==='shop'?this.workspace.read()['robos:nodes'].filter(n=>n['@type']==='robos:Part').map(p=>({label:p['schema:name'],detail:[p['robos:partNumber'],p['robos:supplier'],p['robos:unitPriceMinor']!=null&&p['robos:unitPriceMinor']!==''?(p['robos:unitPriceMinor']/100).toFixed(2)+' '+(p['robos:currency']||'USD'):''].filter(Boolean).join(' · '),alias:p['robos:partNumber'],kind:'part',name:p['schema:name'],partNumber:p['robos:partNumber']||'',supplier:p['robos:supplier']||'',unitCost:p['robos:unitCostMinor']!=null?(p['robos:unitCostMinor']/100).toFixed(2):'',unitPrice:p['robos:unitPriceMinor']!=null?(p['robos:unitPriceMinor']/100).toFixed(2):'',fitsMake:p['robos:fitsMake']||'',fitsModel:p['robos:fitsModel']||'',source:'shop'})):[];
+  return this.catalogIndex.search(kind,query,ctx,{parser:this.publicParser(),shopParts});
+ }
+ workshop(action,input={}){const w=require('./workshop');const allowed=['board','addTeammate','addCustomer','addCustomerVehicle','openRepair','diagnose','createEstimate','decideEstimate','usePart','logHours','issueInvoice','offboard','addPart','importParts'];if(!allowed.includes(action))throw new Error('Unknown workshop action');return w[action](this,input);}
  updateJob({id,status,notes,billedTotal,currency}){
   if(this.mode!=='shop'||!JOB_STATES.includes(status))throw new Error('Invalid shop job status');
   const records=this.workspace.read()['robos:nodes'];const n=records.find(n=>n['@id']===id&&n['@type']==='robos:RepairOrder');if(!n)throw new Error('Unknown repair job');

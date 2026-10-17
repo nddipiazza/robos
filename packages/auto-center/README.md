@@ -49,6 +49,10 @@ EPA configurations and NHTSA models have separate source identities. Equal names
 
 The NHTSA datasets overview page returned HTTP 403 during the initial collection. Its failure is recorded; successful API responses and bulk downloads were imported independently. Downloads are snapshots, not a background synchronization service.
 
+## Type-ahead search
+
+Make, model, year, trouble-code, part and labor fields suggest matches as you type (`lib/catalog.js`, `renderer/typeahead.js`). Vehicle suggestions are built in memory from the imported public KGraph (makes, models, EPA configurations, diagnostic codes), scoped so models follow the chosen make and years follow the model. Parts come from the shop's own catalog (add one at a time or import a supplier CSV under **Repair lifecycle → Parts catalog**) followed by a bundled list of common part and labor names (`data/`, names and typical hours only). Fitment columns in a supplier CSV are hints used to rank parts for matching vehicles; they are not verified fitment. Free text is always accepted. Searching 100,000 entries takes a few milliseconds.
+
 ## Schema and implemented workflows
 
 `schema.js` exports standard JSON-LD RDFS classes and SHACL cardinality shapes; `.robos/kgraphs/auto/schema.jsonld` is the repository copy. `packages/robos-graph/lib/auto-shapes.js` integrates equivalent cardinality rules with RobOS's existing validator. These are minimum-field rules, not comprehensive automotive semantic validation.

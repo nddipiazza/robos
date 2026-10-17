@@ -1,0 +1,222 @@
+[
+{
+"name": "Oil and filter change",
+"hours": 0.5
+},
+{
+"name": "Tire rotation",
+"hours": 0.4
+},
+{
+"name": "Tire mount and balance (4)",
+"hours": 1.0
+},
+{
+"name": "Wheel alignment",
+"hours": 1.0
+},
+{
+"name": "Front brake pad replacement",
+"hours": 1.2
+},
+{
+"name": "Rear brake pad replacement",
+"hours": 1.2
+},
+{
+"name": "Brake rotor replacement (axle)",
+"hours": 1.5
+},
+{
+"name": "Brake fluid flush",
+"hours": 0.8
+},
+{
+"name": "Brake caliper replacement",
+"hours": 1.0
+},
+{
+"name": "Battery replacement",
+"hours": 0.4
+},
+{
+"name": "Battery and charging system test",
+"hours": 0.5
+},
+{
+"name": "Alternator replacement",
+"hours": 1.5
+},
+{
+"name": "Starter replacement",
+"hours": 1.5
+},
+{
+"name": "Spark plug replacement",
+"hours": 1.0
+},
+{
+"name": "Ignition coil replacement",
+"hours": 0.6
+},
+{
+"name": "Engine air filter replacement",
+"hours": 0.2
+},
+{
+"name": "Cabin air filter replacement",
+"hours": 0.3
+},
+{
+"name": "Coolant flush",
+"hours": 1.0
+},
+{
+"name": "Radiator replacement",
+"hours": 2.0
+},
+{
+"name": "Thermostat replacement",
+"hours": 1.2
+},
+{
+"name": "Water pump replacement",
+"hours": 2.5
+},
+{
+"name": "Serpentine belt replacement",
+"hours": 0.8
+},
+{
+"name": "Timing belt replacement",
+"hours": 4.0
+},
+{
+"name": "Front strut replacement (pair)",
+"hours": 2.5
+},
+{
+"name": "Rear shock replacement (pair)",
+"hours": 1.5
+},
+{
+"name": "Control arm replacement",
+"hours": 1.8
+},
+{
+"name": "Wheel bearing replacement",
+"hours": 1.8
+},
+{
+"name": "CV axle replacement",
+"hours": 1.8
+},
+{
+"name": "Tie rod end replacement",
+"hours": 1.0
+},
+{
+"name": "Power steering flush",
+"hours": 0.8
+},
+{
+"name": "Transmission fluid service",
+"hours": 1.0
+},
+{
+"name": "Differential fluid service",
+"hours": 0.6
+},
+{
+"name": "Check engine light diagnosis",
+"hours": 1.0
+},
+{
+"name": "Electrical fault diagnosis",
+"hours": 1.0
+},
+{
+"name": "Brake noise diagnosis",
+"hours": 0.5
+},
+{
+"name": "Suspension noise diagnosis",
+"hours": 0.5
+},
+{
+"name": "Overheating diagnosis",
+"hours": 1.0
+},
+{
+"name": "Oxygen sensor replacement",
+"hours": 0.8
+},
+{
+"name": "Catalytic converter replacement",
+"hours": 2.0
+},
+{
+"name": "Muffler replacement",
+"hours": 1.2
+},
+{
+"name": "A/C performance check",
+"hours": 0.5
+},
+{
+"name": "A/C recharge",
+"hours": 1.0
+},
+{
+"name": "A/C compressor replacement",
+"hours": 3.0
+},
+{
+"name": "Fuel pump replacement",
+"hours": 2.5
+},
+{
+"name": "Fuel injector service",
+"hours": 1.5
+},
+{
+"name": "State safety inspection",
+"hours": 0.5
+},
+{
+"name": "Pre-purchase inspection",
+"hours": 1.0
+},
+{
+"name": "Multi-point inspection",
+"hours": 0.5
+},
+{
+"name": "Wiper blade replacement",
+"hours": 0.2
+},
+{
+"name": "Headlight bulb replacement",
+"hours": 0.3
+},
+{
+"name": "Windshield washer pump replacement",
+"hours": 0.5
+},
+{
+"name": "Clutch replacement",
+"hours": 6.0
+},
+{
+"name": "Valve cover gasket replacement",
+"hours": 1.8
+},
+{
+"name": "Engine mount replacement",
+"hours": 1.5
+},
+{
+"name": "Software update or relearn",
+"hours": 0.5
+}
+]
