@@ -234,6 +234,7 @@ body {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 18px;
+  min-width: 0;
 }
 
 .card h3 {
@@ -246,6 +247,7 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
   gap: 20px;
+  min-width: 0;
 }
 
 .form-group {
@@ -426,9 +428,10 @@ body {
 /* Cards Grid */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 12px;
   margin-top: 10px;
+  min-width: 0;
 }
 
 .spell-card, .item-card {
@@ -438,16 +441,58 @@ body {
   padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
+
+.spell-card-top-badges {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.spell-card .element-tag {
+  margin-left: 0;
+  white-space: nowrap;
+}
+
 .card-title {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--accent-blue);
+  line-height: 1.35;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
+
 .card-meta {
-  font-size: 0.75rem;
+  font-size: 0.76rem;
   color: var(--text-muted);
+  line-height: 1.4;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.spell-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 6px;
+  margin-top: auto;
+  border-top: 1px solid rgba(51, 65, 85, 0.45);
+  font-size: 0.74rem;
+  min-width: 0;
 }
 
 /* Quest & Map Editor Toolbar */
@@ -1417,8 +1462,9 @@ body {
 /* Hero Editor Grimoire Grid */
 .hero-spells-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 10px;
+  min-width: 0;
 }
 
 .spell-card-mini {
@@ -1429,6 +1475,10 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .spell-card-mini.deck-earth { border-left: 3px solid #eab308; }
@@ -1440,12 +1490,17 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
 }
 
 .spell-mini-name {
   font-weight: 700;
   font-size: 0.82rem;
   color: #f8fafc;
+  min-width: 0;
+  word-break: break-word;
 }
 
 .spell-mini-elem {
@@ -1457,6 +1512,7 @@ body {
   font-size: 0.72rem;
   color: #94a3b8;
   line-height: 1.25;
+  word-break: break-word;
 }
 
 /* Combat Spellcasting Action Module */
