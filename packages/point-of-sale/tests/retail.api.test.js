@@ -1,5 +1,5 @@
 'use strict';
-// Sample business 1: Threadwell Clothing (retail). Every flow below is a day-in-the-life use case.
+// Sample business 1: Main Street General Store (retail: apparel, home, electronics, groceries). Every flow below is a day-in-the-life use case.
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { boot } = require('./helpers');
@@ -8,7 +8,7 @@ const variantOf = (shop, itemName, size) => { const item = shop.item(itemName); 
 const stockOf = (shop, itemName, size) => shop.pos.state.inventory.find(i => i.id === variantOf(shop, itemName, size).item.variants.find(v => v.name === size).inventoryId).onHand;
 
 test('cashier opens the drawer, scans barcodes and takes a cash sale with change', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     await shop.openDrawer(20000);
     const order = await shop.newOrder({ type: 'retail' });
@@ -25,14 +25,14 @@ test('cashier opens the drawer, scans barcodes and takes a cash sale with change
     assert.equal(stockOf(shop, 'Classic Tee White', 'M'), 9);
     assert.equal(shop.inv('Wool Beanie').onHand, 14);
     const receipt = (await shop.get(`/api/orders/${order.id}/receipt`)).data;
-    assert.match(receipt, /Threadwell Clothing/);
+    assert.match(receipt, /Main Street General Store/);
     assert.match(receipt, /TOTAL\s+\$49\.80/);
     assert.match(receipt, /Change\s+\$0\.20/);
   } finally { await shop.close(); }
 });
 
 test('scanning the same barcode twice stacks quantity; unknown barcodes are reported', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     const order = await shop.newOrder({ type: 'retail' });
     const code = shop.item('Canvas Tote').barcode;
@@ -46,8 +46,8 @@ test('scanning the same barcode twice stacks quantity; unknown barcodes are repo
   } finally { await shop.close(); }
 });
 
-test('a size must be chosen for clothing with variants', async () => {
-  const shop = await boot('clothing');
+test('a size must be chosen for sized goods (variants)', async () => {
+  const shop = await boot('retail');
   try {
     const order = await shop.newOrder({ type: 'retail' });
     const r = await shop.post(`/api/orders/${order.id}/lines`, { itemId: shop.item('Slim Jeans').id });
@@ -57,7 +57,7 @@ test('a size must be chosen for clothing with variants', async () => {
 });
 
 test('card sale: a declined card leaves the order open and stock untouched, then a good card succeeds', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     const order = await shop.newOrder({ type: 'retail' });
     const jeans = variantOf(shop, 'Slim Jeans', '32');
@@ -77,7 +77,7 @@ test('card sale: a declined card leaves the order open and stock untouched, then
 });
 
 test('promo codes: percent code, minimum spend for a fixed code, no stacking the same code', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     const order = await shop.newOrder({ type: 'retail' });
     const tee = variantOf(shop, 'Classic Tee Black', 'L');
@@ -95,7 +95,7 @@ test('promo codes: percent code, minimum spend for a fixed code, no stacking the
 });
 
 test('manual discounts above the cashier limit need a manager PIN, and a reason', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     const order = await shop.newOrder({ type: 'retail' });
     await shop.add(order.id, { itemId: shop.item('Canvas Tote').id });
@@ -115,7 +115,7 @@ test('manual discounts above the cashier limit need a manager PIN, and a reason'
 });
 
 test('stock control: cannot oversell, receiving stock lets the sale go through', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     const order = await shop.newOrder({ type: 'retail' });
     const socks = shop.item('Wool Socks (pair)');
@@ -133,7 +133,7 @@ test('stock control: cannot oversell, receiving stock lets the sale go through',
 });
 
 test('returns: cashier needs a manager, partial refund restocks and reduces the drawer; cannot over-refund', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     await shop.openDrawer(10000);
     const order = await shop.newOrder({ type: 'retail' });
@@ -161,7 +161,7 @@ test('returns: cashier needs a manager, partial refund restocks and reduces the 
 });
 
 test('exchange: refund the small, sell the large, stock follows', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     await shop.openDrawer(5000);
     const first = await shop.newOrder({ type: 'retail' });
@@ -180,7 +180,7 @@ test('exchange: refund the small, sell the large, stock follows', async () => {
 });
 
 test('split tender: part cash, part card', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     await shop.openDrawer(0);
     const order = await shop.newOrder({ type: 'retail' });
@@ -198,7 +198,7 @@ test('split tender: part cash, part card', async () => {
 });
 
 test('cash rules: must open the drawer first, tender must cover the balance, absurd tenders rejected', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     const order = await shop.newOrder({ type: 'retail' });
     await shop.add(order.id, { itemId: shop.item('Canvas Tote').id });
@@ -215,7 +215,7 @@ test('cash rules: must open the drawer first, tender must cover the balance, abs
 });
 
 test('inventory input: add a product with sizes and opening stock, validate barcodes, reject duplicates', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     const { withCheckDigit } = require('../lib/gtin');
     const good = withCheckDigit('61200000099');
@@ -245,7 +245,7 @@ test('inventory input: add a product with sizes and opening stock, validate barc
 });
 
 test('inventory input: receive, count-adjust with reason, CSV import, low-stock list, export', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     const socks = shop.item('Wool Socks (pair)');
     assert.equal((await shop.get('/api/inventory-low')).data.some(i => i.name === 'Wool Socks (pair)'), false);
@@ -270,7 +270,7 @@ test('inventory input: receive, count-adjust with reason, CSV import, low-stock 
 });
 
 test('end of day: count the drawer by denomination, small variance ok, large variance needs a manager', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     await shop.openDrawer(20000);
     const order = await shop.newOrder({ type: 'retail' });
@@ -292,7 +292,7 @@ test('end of day: count the drawer by denomination, small variance ok, large var
 });
 
 test('cash payment administration: manager turns cash off, sets rounding and quick-tender buttons', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     assert.equal((await shop.put('/api/settings/cash', { enabled: false }, 'cashier')).status, 403);
     assert.equal((await shop.put('/api/settings/cash', { rounding: 3 }, 'manager')).data.error.code, 'invalid_settings');
@@ -316,7 +316,7 @@ test('cash payment administration: manager turns cash off, sets rounding and qui
 });
 
 test('self-checkout: customer builds a basket, pays by card; or chooses pay-at-counter and the cashier takes cash', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     const menu = (await shop.call('GET', '/api/kiosk/menu')).data;
     assert.ok(menu.items.length >= 10);
@@ -350,7 +350,7 @@ test('self-checkout: customer builds a basket, pays by card; or chooses pay-at-c
 });
 
 test('open checkout API: key required, create, update, complete (idempotent), decline, cancel', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     assert.equal((await shop.call('POST', '/api/v1/checkout_sessions', { items: [] })).status, 401);
     assert.equal((await shop.post('/api/apikeys', { label: 'Web shop' }, 'manager')).status, 403);
@@ -389,7 +389,7 @@ test('open checkout API: key required, create, update, complete (idempotent), de
 });
 
 test('receipt is also available as schema.org JSON-LD', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     await shop.openDrawer(0);
     const order = await shop.newOrder({ type: 'retail' });
@@ -397,13 +397,13 @@ test('receipt is also available as schema.org JSON-LD', async () => {
     await shop.pay(order.id, { method: 'cash', tendered: 2000 });
     const ld = (await shop.get(`/api/orders/${order.id}/receipt.jsonld`)).data;
     assert.equal(ld['@type'], 'Order');
-    assert.equal(ld.seller.name, 'Threadwell Clothing');
+    assert.equal(ld.seller.name, 'Main Street General Store');
     assert.equal(ld.totalPaymentDue.price, '19.49');
   } finally { await shop.close(); }
 });
 
 test('sales report and CSV export reflect the day', async () => {
-  const shop = await boot('clothing');
+  const shop = await boot('retail');
   try {
     await shop.openDrawer(0);
     for (const code of ['Canvas Tote', 'Wool Beanie']) {
@@ -419,5 +419,76 @@ test('sales report and CSV export reflect the day', async () => {
     assert.equal((await shop.get('/api/reports/sales', 'cashier')).status, 403);
     const csv = (await shop.get('/api/reports/orders.csv', 'manager')).data;
     assert.match(csv, /"paid"/);
+  } finally { await shop.close(); }
+});
+
+test('scanning understands every way a code can arrive: UPC-A, EAN-13, GTIN-14, UPC-E, GS1 Digital Link, element string', async () => {
+  const shop = await boot('retail');
+  try {
+    const mug = shop.item('Ceramic Mug');
+    const upc = mug.barcode;
+    const order = await shop.newOrder({ type: 'retail' });
+    const forms = [upc, '0' + upc, '00' + upc, `https://id.gs1.org/01/00${upc}/10/LOT1`, `(01)00${upc}(10)A`, `0100${upc}10LOT2`, ` ${upc}\n`];
+    let last;
+    for (const code of forms) last = await shop.ok(shop.post(`/api/orders/${order.id}/scan`, { code }));
+    assert.equal(last.lines.length, 1);
+    assert.equal(last.lines[0].qty, forms.length);
+    // UPC-E: the compressed form of a UPC-A is found too.
+    const admin = shop.pos.state.staff.find(s => s.role === 'admin');
+    shop.pos.upsert('items', { name: 'Compact', price: 100, barcode: '042100005264', stock: 5 }, admin);
+    assert.equal((await shop.ok(shop.post(`/api/orders/${order.id}/scan`, { code: '04252614' }))).lines.some(l => l.name === 'Compact'), true);
+    // A QR code that is just a web address does not match anything.
+    assert.equal((await shop.post(`/api/orders/${order.id}/scan`, { code: 'https://example.com/about' })).data.error.code, 'unknown_code');
+  } finally { await shop.close(); }
+});
+
+test('barcode entry: a Digital Link typed or scanned into the item form is saved as the plain GTIN, and duplicates are caught across forms', async () => {
+  const shop = await boot('retail');
+  try {
+    const { withCheckDigit } = require('../lib/gtin');
+    const gtin = withCheckDigit('61200000555');
+    const made = await shop.ok(shop.post('/api/items', { name: 'Plant Pot', price: 1500, barcode: `https://id.gs1.org/01/00${gtin}` }, 'admin'));
+    assert.equal(made.barcode, gtin);
+    const dup = await shop.post('/api/items', { name: 'Plant Pot 2', price: 1500, barcode: '0' + gtin }, 'admin');
+    assert.equal(dup.data.error.code, 'duplicate_code'); // the same product printed as an EAN-13
+    const bad = await shop.post('/api/items', { name: 'Typo', price: 100, barcode: gtin.slice(0, 11) + ((Number(gtin[11]) + 1) % 10) }, 'admin');
+    assert.equal(bad.data.error.code, 'invalid_barcode');
+  } finally { await shop.close(); }
+});
+
+test('self-checkout lookup: finds menu items by any code, hides age-restricted and sold-out items, asks for a size when a code names only the product', async () => {
+  const shop = await boot('retail');
+  try {
+    const tote = shop.item('Canvas Tote');
+    const ok = await shop.call('GET', `/api/kiosk/lookup?code=${encodeURIComponent('0' + tote.barcode)}`);
+    assert.equal(ok.status, 200);
+    assert.equal(ok.data.name, 'Canvas Tote');
+    const hoodie = shop.item('Zip Hoodie');
+    const sized = await shop.call('GET', `/api/kiosk/lookup?code=${hoodie.variants[1].barcode}`);
+    assert.equal(sized.data.variantId, hoodie.variants[1].id);
+    const bySku = await shop.call('GET', `/api/kiosk/lookup?code=${hoodie.sku}`);
+    assert.equal(bySku.data.needsChoice, true);
+    assert.equal((await shop.call('GET', '/api/kiosk/lookup?code=nope')).data.error.code, 'unknown_code');
+    shop.pos.state.inventory.find(i => i.id === tote.inventoryId).onHand = 0;
+    assert.equal((await shop.call('GET', `/api/kiosk/lookup?code=${tote.barcode}`)).data.error.code, 'out_of_stock');
+    const admin = shop.pos.state.staff.find(s => s.role === 'admin');
+    shop.pos.upsert('items', { name: 'Wine', price: 1200, barcode: '036000291452', ageRestricted: true, stock: 3 }, admin);
+    assert.equal((await shop.call('GET', '/api/kiosk/lookup?code=036000291452')).status, 404); // never revealed unattended
+  } finally { await shop.close(); }
+});
+
+test('the retail sample is a general store: several departments, mixed tax, sized and unsized goods', async () => {
+  const shop = await boot('retail');
+  try {
+    const catalog = (await shop.get('/api/catalog')).data;
+    assert.ok(catalog.categories.length >= 8);
+    assert.ok(catalog.taxes.some(t => t.rateBp === 0));
+    assert.ok(catalog.items.some(i => i.variants.length) && catalog.items.some(i => !i.variants.length));
+    const order = await shop.newOrder({ type: 'retail' });
+    await shop.add(order.id, { itemId: shop.item('Wired Earbuds').id });   // taxed electronics
+    const mixed = await shop.add(order.id, { itemId: shop.item('Chocolate Bar').id }); // tax-exempt grocery
+    assert.equal(mixed.totals.subtotal, 2999 + 225);
+    assert.equal(mixed.totals.tax, Math.round(2999 * 0.0825));
+    assert.deepEqual(mixed.totals.taxBreakdown.map(t => t.name).sort(), ['Sales tax', 'Tax-exempt groceries']);
   } finally { await shop.close(); }
 });

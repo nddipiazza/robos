@@ -1,5 +1,5 @@
 'use strict';
-const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, shell, session } = require('electron');
 const os = require('node:os');
 const path = require('node:path');
 const { PointOfSale } = require('./lib/pos');
@@ -31,6 +31,10 @@ app.whenReady().then(async () => {
   const host = process.env.ROBOS_POS_HOST || '127.0.0.1';
   const port = await listen(createServer(pos, { lan: host !== '127.0.0.1' }), { port: Number(process.env.ROBOS_POS_PORT || 0), host });
   origin = `http://127.0.0.1:${port}`;
+  // The only permission this app asks for is the camera (barcode scanning), and only for its own pages.
+  const ours = url => !!url && url.startsWith(origin);
+  session.defaultSession.setPermissionRequestHandler((wc, permission, callback, details) => callback(permission === 'media' && ours(details.requestingUrl) && (details.mediaTypes || []).every(t => t === 'video')));
+  session.defaultSession.setPermissionCheckHandler((wc, permission, requestingOrigin) => permission === 'media' && ours(requestingOrigin));
   ipcMain.handle('pos:info', () => ({ origin, dataDir }));
   ipcMain.handle('pos:openKiosk', () => { open('/kiosk', { fullscreen: true, title: 'Self-checkout' }); });
   ipcMain.handle('pos:openReadyBoard', () => { open('/ready', { fullscreen: true, title: 'Orders ready' }); });

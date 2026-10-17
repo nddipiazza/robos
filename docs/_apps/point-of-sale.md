@@ -13,7 +13,7 @@ RobOS Point of Sale handles three kinds of business out of the box, each with a 
 
 | Sample | What it shows |
 |---|---|
-| **Clothing store** | Sizes with their own barcodes and stock, scanning, promo codes, returns and exchanges, self-checkout by scanning a tag |
+| **Retail store** | A general shop: sized apparel, home goods, electronics, tax-exempt groceries, stationery. Barcode and QR scanning (gun or webcam), promo codes, returns and exchanges, self-checkout by scanning a tag |
 | **Coffee shop** | Drinks with required size and milk choices, recipes that use up beans and milk, a prep screen for the barista and kitchen, tips, self-checkout with an order-ready board |
 | **Bar** | Open tabs, rounds sent to the bar, ID checks, happy-hour pricing, comps and voids with manager approval, split checks, tip-out |
 
@@ -23,6 +23,7 @@ RobOS Point of Sale handles three kinds of business out of the box, each with a 
 - **Tabs**: hold an order, pick it up later, or find a self-checkout order by its number.
 - **Prep**: one screen per station (kitchen, barista, bar). Tap Start, Ready, Picked up. `/ready` shows a customer-facing "now ready" board.
 - **Self-checkout** (`/kiosk`): a customer-facing menu with large buttons. Pays by card or "pay at the counter". Age-restricted items are never offered unattended.
+- **Scanning**: a barcode gun works out of the box, and a webcam reads classic UPC/EAN barcodes plus QR codes (including GS1 Digital Link), Data Matrix and Aztec. Press the 📷 button on the register, the self-checkout or when adding an item.
 - **Inventory**: receive deliveries, count the shelf (with a reason), import a CSV, low-stock warnings.
 - **Menu & Catalog**: items, sizes, option groups, taxes, promo codes and happy-hour rules.
 - **Cash**: open the drawer with a float, paid in / paid out, blind count by bill and coin, and an over/short Z-report. Administrators set cash rounding, quick-tender buttons, the largest tender accepted, and how much over/short a cashier may close without a manager.

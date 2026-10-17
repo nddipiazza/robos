@@ -22,6 +22,11 @@
       } else if (f.type === 'color') input = h('input', { type: 'color', value: v || '#3b82f6', 'data-testid': `f-${f.key}`, style: 'padding:4px' });
       else input = h('input', { type: f.type === 'password' ? 'password' : 'text', inputmode: ['money', 'number', 'percent'].includes(f.type) ? 'decimal' : undefined, value: v ?? f.default ?? '', placeholder: f.placeholder || '', autocomplete: 'off', 'data-testid': `f-${f.key}` });
       inputs[f.key] = input;
+      if (f.scan) {
+        const bare = input;
+        const scanBtn = h('button', { type: 'button', class: 'cam', 'aria-label': 'Scan with the camera', 'data-testid': `scan-${f.key}`, onclick: () => POS.camera({ title: `Scan the ${f.label.toLowerCase()}`, single: true, onCode: text => { bare.value = text; return `Scanned ${text}`; } }) }, '📷');
+        input = h('div', { class: 'row' }, h('div', { class: 'grow' }, bare), scanBtn);
+      }
       el.append(f.type === 'check' ? h('label', { class: 'row', style: 'color:var(--text)' }, input, f.label) : h('div', null, h('label', null, f.label, f.hint ? h('span', { class: 'muted' }, ` — ${f.hint}`) : null), input));
     }
     const read = () => {
@@ -112,7 +117,7 @@
         fields: rec => [
           { key: 'name', label: 'Name' }, { key: 'categoryId', label: 'Category', type: 'select', options: [{ value: '', label: '— none —' }, ...opts(cat.categories)] },
           { key: 'price', label: 'Price', type: 'money', required: true, hint: 'e.g. 4.50' }, { key: 'taxId', label: 'Tax', type: 'select', options: [{ value: '', label: 'No tax' }, ...opts(cat.taxes)], default: cat.taxes[0] && cat.taxes[0].id },
-          { key: 'emoji', label: 'Icon (emoji)' }, { key: 'station', label: 'Prep station', hint: 'kitchen, barista, bar — blank for retail' }, { key: 'sku', label: 'SKU' }, { key: 'barcode', label: 'Barcode (UPC/EAN)' },
+          { key: 'emoji', label: 'Icon (emoji)' }, { key: 'station', label: 'Prep station', hint: 'kitchen, barista, bar — blank for retail' }, { key: 'sku', label: 'SKU' }, { key: 'barcode', label: 'Barcode / QR code', scan: true, hint: 'type it, or scan with the camera' },
           { key: 'ageRestricted', label: 'Age-restricted (ID check required)', type: 'check' },
           ...(rec && rec.variants.length ? [] : [{ key: 'stock', label: 'Opening stock', type: 'number', hint: 'leave blank if not tracked', empty: undefined }]),
           { key: 'variantsText', label: 'Sizes / variants', type: 'lines', placeholder: 'One per line:  name | sku | barcode | opening stock | price (optional)' },

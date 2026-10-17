@@ -132,7 +132,7 @@
       "robos:appFamily": {
         "@id": "urn:robos:point-of-sale:family"
       },
-      "robos:description": "Open-source cash register for retail, food service and bars. Touchscreen worker order entry with modifiers, tabs, tips, discounts, split payments and prep queues; self-checkout kiosk; inventory input with recipes; cash drawer administration (float, rounding, paid in/out, blind count, Z-report); manager-approved voids, comps and refunds; and an open checkout-session API modelled on the Agentic Commerce Protocol with API keys and idempotency. Money is integer cents, barcodes are GS1-validated, receipts export as plain text and schema.org JSON-LD. Verified by node:test API suites and touch-driven Playwright suites for a clothing store, a coffee shop and a bar.",
+      "robos:description": "Open-source cash register for retail, food service and bars. Touchscreen worker order entry with modifiers, tabs, tips, discounts, split payments and prep queues; self-checkout kiosk; inventory input with recipes; cash drawer administration (float, rounding, paid in/out, blind count, Z-report); manager-approved voids, comps and refunds; and an open checkout-session API modelled on the Agentic Commerce Protocol with API keys and idempotency. Money is integer cents, barcodes are GS1-validated, barcodes and QR codes (UPC/EAN, GS1 Digital Link, Data Matrix, Aztec) are read by scanner or webcam, receipts export as plain text and schema.org JSON-LD. Verified by node:test API suites and touch-driven Playwright suites for a general retail store, a coffee shop and a bar.",
       "robos:desktopFramework": "Electron",
       "robos:package": "point-of-sale",
       "robos:repository": "https://github.com/nddipiazza/robos",

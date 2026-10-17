@@ -302,7 +302,7 @@ test('first-run setup: an empty shop offers samples once; afterwards only an adm
   try {
     const setup = await (await fetch(`${base}/api/setup`)).json();
     assert.equal(setup.needsSetup, true);
-    assert.deepEqual(setup.profiles.map(p => p.id), ['clothing', 'coffee', 'bar']);
+    assert.deepEqual(setup.profiles.map(p => p.id), ['retail', 'coffee', 'bar']);
     assert.equal((await fetch(`${base}/api/setup/restaurant`, { method: 'POST', headers: json })).status, 404);
     assert.equal((await fetch(`${base}/api/setup/coffee`, { method: 'POST', headers: json })).status, 200);
     assert.equal((await fetch(`${base}/api/setup/bar`, { method: 'POST', headers: json })).status, 409);

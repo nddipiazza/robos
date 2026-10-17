@@ -5,6 +5,7 @@ const { Store } = require('./store');
 const { permsFor, emptyState, defaultSettings } = require('./defaults');
 const { isValidGtin } = require('./gtin');
 const { assertCents } = require('./money');
+const scancode = require('./scancode');
 
 const SESSION_MS = 12 * 60 * 60 * 1000;
 const LOCKOUT_AFTER = 5;
@@ -250,7 +251,7 @@ class PointOfSale {
     (data.modifierGroupIds || []).forEach(g => this.find('modifierGroups', g, 'modifier group'));
     const item = {
       id: data.id || this.id('itm'), name, categoryId: data.categoryId || null, price: data.price, taxId: taxId || null,
-      sku: data.sku || '', barcode: data.barcode || '', station: data.station || null, ageRestricted: !!data.ageRestricted,
+      sku: data.sku || '', barcode: scancode.canonicalBarcode(data.barcode || ''), station: data.station || null, ageRestricted: !!data.ageRestricted,
       modifierGroupIds: data.modifierGroupIds || [], recipe: (data.recipe || []).map(r => ({ inventoryId: this.find('inventory', r.inventoryId, 'ingredient').id, qty: Number(r.qty) })),
       inventoryId: data.inventoryId || null, color: data.color || null, emoji: data.emoji || '', active: data.active !== false, variants: [],
     };
@@ -258,7 +259,7 @@ class PointOfSale {
     // Variants carry their own SKU/barcode/stock; an opening stock count creates the inventory record.
     item.variants = (data.variants || []).map(v => {
       if (!v.name) throw new PosError('invalid_variant', 'Every variant needs a name');
-      return { id: v.id || this.id('var'), name: String(v.name).trim(), sku: v.sku || '', barcode: v.barcode || '', price: Number.isInteger(v.price) ? v.price : null, inventoryId: v.inventoryId || null, _stock: v.stock, _cost: v.cost };
+      return { id: v.id || this.id('var'), name: String(v.name).trim(), sku: v.sku || '', barcode: scancode.canonicalBarcode(v.barcode || ''), price: Number.isInteger(v.price) ? v.price : null, inventoryId: v.inventoryId || null, _stock: v.stock, _cost: v.cost };
     });
     // Codes must be unique across the catalog and valid GS1 when they look numeric.
     const codes = [item.sku && ['sku', item.sku], item.barcode && ['barcode', item.barcode], ...item.variants.flatMap(v => [v.sku && ['sku', v.sku], v.barcode && ['barcode', v.barcode]])].filter(Boolean);
@@ -332,12 +333,14 @@ class PointOfSale {
 
   inventoryValue() { return this.state.inventory.filter(i => i.active !== false).reduce((sum, i) => sum + Math.round(i.onHand * i.cost), 0); }
 
+  // Find an item by anything a scanner can produce: SKU, UPC/EAN/GTIN in any padding, UPC-E, GS1 Digital Link, GS1 element string.
   findItem(code) {
-    const text = String(code).trim();
+    const wanted = new Set(scancode.candidates(code));
+    if (!wanted.size) return null;
     for (const item of this.state.items) {
       if (item.active === false) continue;
-      if (item.barcode === text || item.sku === text) return { item, variant: null };
-      const variant = item.variants.find(v => v.barcode === text || v.sku === text);
+      if (scancode.matches(item.barcode, wanted) || scancode.matches(item.sku, wanted)) return { item, variant: null };
+      const variant = item.variants.find(v => scancode.matches(v.barcode, wanted) || scancode.matches(v.sku, wanted));
       if (variant) return { item, variant };
     }
     return null;
