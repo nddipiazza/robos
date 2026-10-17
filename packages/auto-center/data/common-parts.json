@@ -1,0 +1,554 @@
+[
+{
+"name": "Front brake pads",
+"category": "Brakes"
+},
+{
+"name": "Rear brake pads",
+"category": "Brakes"
+},
+{
+"name": "Front brake rotor",
+"category": "Brakes"
+},
+{
+"name": "Rear brake rotor",
+"category": "Brakes"
+},
+{
+"name": "Brake caliper",
+"category": "Brakes"
+},
+{
+"name": "Brake caliper bracket",
+"category": "Brakes"
+},
+{
+"name": "Brake hose",
+"category": "Brakes"
+},
+{
+"name": "Brake fluid",
+"category": "Brakes"
+},
+{
+"name": "Brake master cylinder",
+"category": "Brakes"
+},
+{
+"name": "Brake wear sensor",
+"category": "Brakes"
+},
+{
+"name": "Parking brake cable",
+"category": "Brakes"
+},
+{
+"name": "Brake drum",
+"category": "Brakes"
+},
+{
+"name": "Brake shoes",
+"category": "Brakes"
+},
+{
+"name": "Wheel cylinder",
+"category": "Brakes"
+},
+{
+"name": "ABS wheel speed sensor",
+"category": "Brakes"
+},
+{
+"name": "Engine oil 0W-20",
+"category": "Engine oil and filters"
+},
+{
+"name": "Engine oil 5W-20",
+"category": "Engine oil and filters"
+},
+{
+"name": "Engine oil 5W-30",
+"category": "Engine oil and filters"
+},
+{
+"name": "Engine oil 10W-30",
+"category": "Engine oil and filters"
+},
+{
+"name": "Engine oil 0W-40",
+"category": "Engine oil and filters"
+},
+{
+"name": "Oil filter",
+"category": "Engine oil and filters"
+},
+{
+"name": "Oil drain plug gasket",
+"category": "Engine oil and filters"
+},
+{
+"name": "Engine air filter",
+"category": "Engine oil and filters"
+},
+{
+"name": "Cabin air filter",
+"category": "Engine oil and filters"
+},
+{
+"name": "Fuel filter",
+"category": "Engine oil and filters"
+},
+{
+"name": "Transmission filter",
+"category": "Engine oil and filters"
+},
+{
+"name": "Spark plug",
+"category": "Ignition"
+},
+{
+"name": "Iridium spark plug",
+"category": "Ignition"
+},
+{
+"name": "Ignition coil",
+"category": "Ignition"
+},
+{
+"name": "Spark plug wire set",
+"category": "Ignition"
+},
+{
+"name": "Glow plug",
+"category": "Ignition"
+},
+{
+"name": "Ignition switch",
+"category": "Ignition"
+},
+{
+"name": "Coolant 50/50",
+"category": "Cooling"
+},
+{
+"name": "Radiator",
+"category": "Cooling"
+},
+{
+"name": "Radiator hose upper",
+"category": "Cooling"
+},
+{
+"name": "Radiator hose lower",
+"category": "Cooling"
+},
+{
+"name": "Thermostat",
+"category": "Cooling"
+},
+{
+"name": "Thermostat housing gasket",
+"category": "Cooling"
+},
+{
+"name": "Water pump",
+"category": "Cooling"
+},
+{
+"name": "Radiator cap",
+"category": "Cooling"
+},
+{
+"name": "Cooling fan",
+"category": "Cooling"
+},
+{
+"name": "Coolant reservoir",
+"category": "Cooling"
+},
+{
+"name": "Heater hose",
+"category": "Cooling"
+},
+{
+"name": "Heater core",
+"category": "Cooling"
+},
+{
+"name": "Serpentine belt",
+"category": "Belts and drive"
+},
+{
+"name": "Belt tensioner",
+"category": "Belts and drive"
+},
+{
+"name": "Idler pulley",
+"category": "Belts and drive"
+},
+{
+"name": "Timing belt",
+"category": "Belts and drive"
+},
+{
+"name": "Timing chain kit",
+"category": "Belts and drive"
+},
+{
+"name": "Timing belt tensioner",
+"category": "Belts and drive"
+},
+{
+"name": "CV axle",
+"category": "Belts and drive"
+},
+{
+"name": "CV boot kit",
+"category": "Belts and drive"
+},
+{
+"name": "Drive shaft",
+"category": "Belts and drive"
+},
+{
+"name": "U-joint",
+"category": "Belts and drive"
+},
+{
+"name": "Clutch kit",
+"category": "Belts and drive"
+},
+{
+"name": "Clutch master cylinder",
+"category": "Belts and drive"
+},
+{
+"name": "Flywheel",
+"category": "Belts and drive"
+},
+{
+"name": "Front strut",
+"category": "Suspension and steering"
+},
+{
+"name": "Rear shock absorber",
+"category": "Suspension and steering"
+},
+{
+"name": "Coil spring",
+"category": "Suspension and steering"
+},
+{
+"name": "Control arm",
+"category": "Suspension and steering"
+},
+{
+"name": "Ball joint",
+"category": "Suspension and steering"
+},
+{
+"name": "Tie rod end",
+"category": "Suspension and steering"
+},
+{
+"name": "Inner tie rod",
+"category": "Suspension and steering"
+},
+{
+"name": "Sway bar link",
+"category": "Suspension and steering"
+},
+{
+"name": "Sway bar bushing",
+"category": "Suspension and steering"
+},
+{
+"name": "Wheel bearing",
+"category": "Suspension and steering"
+},
+{
+"name": "Wheel hub assembly",
+"category": "Suspension and steering"
+},
+{
+"name": "Power steering pump",
+"category": "Suspension and steering"
+},
+{
+"name": "Power steering fluid",
+"category": "Suspension and steering"
+},
+{
+"name": "Steering rack",
+"category": "Suspension and steering"
+},
+{
+"name": "Strut mount",
+"category": "Suspension and steering"
+},
+{
+"name": "Tire",
+"category": "Tires and wheels"
+},
+{
+"name": "Wheel lug nut",
+"category": "Tires and wheels"
+},
+{
+"name": "Wheel stud",
+"category": "Tires and wheels"
+},
+{
+"name": "Tire valve stem",
+"category": "Tires and wheels"
+},
+{
+"name": "TPMS sensor",
+"category": "Tires and wheels"
+},
+{
+"name": "Wheel weight",
+"category": "Tires and wheels"
+},
+{
+"name": "Battery",
+"category": "Electrical"
+},
+{
+"name": "Alternator",
+"category": "Electrical"
+},
+{
+"name": "Starter motor",
+"category": "Electrical"
+},
+{
+"name": "Headlight bulb",
+"category": "Electrical"
+},
+{
+"name": "Tail light bulb",
+"category": "Electrical"
+},
+{
+"name": "Fuse",
+"category": "Electrical"
+},
+{
+"name": "Relay",
+"category": "Electrical"
+},
+{
+"name": "Battery cable",
+"category": "Electrical"
+},
+{
+"name": "Oxygen sensor",
+"category": "Electrical"
+},
+{
+"name": "Mass air flow sensor",
+"category": "Electrical"
+},
+{
+"name": "Crankshaft position sensor",
+"category": "Electrical"
+},
+{
+"name": "Camshaft position sensor",
+"category": "Electrical"
+},
+{
+"name": "Throttle body",
+"category": "Electrical"
+},
+{
+"name": "Wiper blade",
+"category": "Electrical"
+},
+{
+"name": "Wiper motor",
+"category": "Electrical"
+},
+{
+"name": "Horn",
+"category": "Electrical"
+},
+{
+"name": "Window regulator",
+"category": "Electrical"
+},
+{
+"name": "Blower motor",
+"category": "Electrical"
+},
+{
+"name": "Catalytic converter",
+"category": "Exhaust and emissions"
+},
+{
+"name": "Muffler",
+"category": "Exhaust and emissions"
+},
+{
+"name": "Exhaust gasket",
+"category": "Exhaust and emissions"
+},
+{
+"name": "Exhaust manifold",
+"category": "Exhaust and emissions"
+},
+{
+"name": "EGR valve",
+"category": "Exhaust and emissions"
+},
+{
+"name": "PCV valve",
+"category": "Exhaust and emissions"
+},
+{
+"name": "Evap purge valve",
+"category": "Exhaust and emissions"
+},
+{
+"name": "Gas cap",
+"category": "Exhaust and emissions"
+},
+{
+"name": "Exhaust hanger",
+"category": "Exhaust and emissions"
+},
+{
+"name": "Fuel pump",
+"category": "Fuel"
+},
+{
+"name": "Fuel injector",
+"category": "Fuel"
+},
+{
+"name": "Fuel pressure regulator",
+"category": "Fuel"
+},
+{
+"name": "Fuel line",
+"category": "Fuel"
+},
+{
+"name": "Fuel tank",
+"category": "Fuel"
+},
+{
+"name": "Transmission fluid ATF",
+"category": "Drivetrain fluids"
+},
+{
+"name": "CVT fluid",
+"category": "Drivetrain fluids"
+},
+{
+"name": "Manual transmission fluid",
+"category": "Drivetrain fluids"
+},
+{
+"name": "Differential fluid",
+"category": "Drivetrain fluids"
+},
+{
+"name": "Transfer case fluid",
+"category": "Drivetrain fluids"
+},
+{
+"name": "Axle seal",
+"category": "Drivetrain fluids"
+},
+{
+"name": "Transmission mount",
+"category": "Drivetrain fluids"
+},
+{
+"name": "Engine mount",
+"category": "Drivetrain fluids"
+},
+{
+"name": "Valve cover gasket",
+"category": "Gaskets and seals"
+},
+{
+"name": "Head gasket",
+"category": "Gaskets and seals"
+},
+{
+"name": "Oil pan gasket",
+"category": "Gaskets and seals"
+},
+{
+"name": "Front main seal",
+"category": "Gaskets and seals"
+},
+{
+"name": "Rear main seal",
+"category": "Gaskets and seals"
+},
+{
+"name": "Intake manifold gasket",
+"category": "Gaskets and seals"
+},
+{
+"name": "Camshaft seal",
+"category": "Gaskets and seals"
+},
+{
+"name": "A/C compressor",
+"category": "Air conditioning"
+},
+{
+"name": "A/C condenser",
+"category": "Air conditioning"
+},
+{
+"name": "A/C refrigerant R-134a",
+"category": "Air conditioning"
+},
+{
+"name": "A/C refrigerant R-1234yf",
+"category": "Air conditioning"
+},
+{
+"name": "A/C accumulator",
+"category": "Air conditioning"
+},
+{
+"name": "A/C expansion valve",
+"category": "Air conditioning"
+},
+{
+"name": "Headlight assembly",
+"category": "Body and misc"
+},
+{
+"name": "Side mirror",
+"category": "Body and misc"
+},
+{
+"name": "Door handle",
+"category": "Body and misc"
+},
+{
+"name": "Hood strut",
+"category": "Body and misc"
+},
+{
+"name": "Floor mat set",
+"category": "Body and misc"
+},
+{
+"name": "License plate bulb",
+"category": "Body and misc"
+},
+{
+"name": "Shop supplies",
+"category": "Body and misc"
+}
+]

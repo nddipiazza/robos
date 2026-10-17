@@ -228,3 +228,10 @@ footer #count { display: block; font-size: 9px; margin-top: 15px; color: #94a9b4
 .stage-bar li.done{opacity:.9;background:rgba(46,160,67,.18)}.stage-bar li.current{opacity:1;border-color:#58a6ff;background:rgba(88,166,255,.18);font-weight:600}
 .ticket .sub{margin:10px 0}.ticket .sub h4{margin:0 0 8px}.timeline{margin:8px 0 0;padding-left:18px}.estimate-form .row{margin:6px 0}.decision{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:8px 0}
 button.secondary{background:transparent;border:1px solid var(--line,#30363d)}
+/* Type-ahead */
+.ta-wrap{position:relative;display:block}.ta-wrap>input{width:100%}
+.ta-list{position:absolute;z-index:30;left:0;right:0;top:100%;margin:2px 0 0;padding:4px;list-style:none;max-height:280px;overflow:auto;background:var(--surface,#fff);color:inherit;border:1px solid var(--line,#30363d);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.ta-list[hidden]{display:none}.ta-opt{display:flex;flex-direction:column;gap:1px;padding:7px 10px;border-radius:6px;cursor:pointer}
+.ta-opt[aria-selected="true"],.ta-opt:hover{background:rgba(88,166,255,.18)}.ta-label{font-weight:600}.ta-detail{font-size:.78rem;opacity:.7}
+.est-line{display:grid;grid-template-columns:2.4fr 1fr 1fr;gap:8px;align-items:start}.est-line .ta-wrap{min-width:0}
+.ta-list{min-width:min(320px,90vw)}

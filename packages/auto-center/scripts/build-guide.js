@@ -41,7 +41,7 @@ for (const { file, doc } of features) {
 const files = { 'cucumber-report.html': 'cucumber-report.html' };
 fs.copyFileSync(path.join(evidence, 'cucumber-report.html'), path.join(out, 'cucumber-report.html'));
 let video = false;
-const walk = path.join(evidence, 'videos', '09-walk-in-to-offboard--a-brake-job-from-walk-in-to-offboard.webm');
+const walk = path.join(evidence, 'videos', '10-walk-in-to-offboard--a-brake-job-from-walk-in-to-offboard.webm');
 if (fs.existsSync(path.join(evidence, 'auto-center-suite.mp4'))) {
   try { execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', path.join(evidence, 'auto-center-suite.mp4'), '-vf', 'scale=960:-2', '-c:v', 'libx264', '-crf', '30', '-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-an', path.join(out, 'auto-center-suite.mp4')]); video = true; } catch (e) { console.error('suite video:', e.message); }
 }
