@@ -13,7 +13,7 @@
     "icon": "🛡️",
     "mapCount": 1,
     "heroCount": 4,
-    "monsterCount": 23,
+    "monsterCount": 24,
     "itemCount": 0,
     "questCount": 1,
     "startingMap": "custom-quest",
@@ -21,7 +21,7 @@
       7,
       14
     ],
-    "createdDate": "2026-10-16T15:34:19.798Z"
+    "createdDate": "2026-10-17T12:51:50.666Z"
   },
   "heroes": {
     "barbarian": {
@@ -107,7 +107,8 @@
         15,
         15
       ],
-      "roomId": "room-se-21"
+      "roomId": "room-se-21",
+      "hidden": false
     },
     "mon-chaos_warrior-5": {
       "id": "mon-chaos_warrior-5",
@@ -127,7 +128,8 @@
         15,
         14
       ],
-      "roomId": "room-se-21"
+      "roomId": "room-se-21",
+      "hidden": false
     },
     "mon-chaos_warrior-6": {
       "id": "mon-chaos_warrior-6",
@@ -147,7 +149,8 @@
         6,
         7
       ],
-      "roomId": "room-nw-22"
+      "roomId": "room-nw-22",
+      "hidden": false
     },
     "mon-chaos_warrior-7": {
       "id": "mon-chaos_warrior-7",
@@ -167,7 +170,8 @@
         6,
         6
       ],
-      "roomId": "room-nw-22"
+      "roomId": "room-nw-22",
+      "hidden": false
     },
     "mon-orc-22": {
       "id": "mon-orc-22",
@@ -187,7 +191,8 @@
         4,
         7
       ],
-      "roomId": "room-nw-4"
+      "roomId": "room-nw-4",
+      "hidden": false
     },
     "mon-orc-24": {
       "id": "mon-orc-24",
@@ -207,7 +212,8 @@
         3,
         7
       ],
-      "roomId": "room-nw-4"
+      "roomId": "room-nw-4",
+      "hidden": false
     },
     "mon-orc-25": {
       "id": "mon-orc-25",
@@ -227,7 +233,8 @@
         22,
         12
       ],
-      "roomId": "room-se-18"
+      "roomId": "room-se-18",
+      "hidden": false
     },
     "mon-orc-8": {
       "id": "mon-orc-8",
@@ -247,7 +254,8 @@
         10,
         14
       ],
-      "roomId": "room-sw-9"
+      "roomId": "room-sw-9",
+      "hidden": false
     },
     "mon-orc-champion-4": {
       "id": "mon-orc-champion-4",
@@ -270,7 +278,8 @@
         11,
         9
       ],
-      "roomId": "room-nw-10"
+      "roomId": "room-nw-10",
+      "hidden": false
     },
     "mon-skeleton-10": {
       "id": "mon-skeleton-10",
@@ -290,7 +299,8 @@
         11,
         14
       ],
-      "roomId": "room-sw-9"
+      "roomId": "room-sw-9",
+      "hidden": false
     },
     "mon-skeleton-11": {
       "id": "mon-skeleton-11",
@@ -310,7 +320,8 @@
         19,
         16
       ],
-      "roomId": "room-se-20"
+      "roomId": "room-se-20",
+      "hidden": false
     },
     "mon-skeleton-15": {
       "id": "mon-skeleton-15",
@@ -330,7 +341,8 @@
         11,
         10
       ],
-      "roomId": "room-nw-10"
+      "roomId": "room-nw-10",
+      "hidden": false
     },
     "mon-skeleton-16": {
       "id": "mon-skeleton-16",
@@ -350,7 +362,8 @@
         11,
         11
       ],
-      "roomId": "room-nw-10"
+      "roomId": "room-nw-10",
+      "hidden": false
     },
     "mon-skeleton-17": {
       "id": "mon-skeleton-17",
@@ -370,7 +383,8 @@
         12,
         11
       ],
-      "roomId": "room-nw-10"
+      "roomId": "room-nw-10",
+      "hidden": false
     },
     "mon-skeleton-18": {
       "id": "mon-skeleton-18",
@@ -390,7 +404,8 @@
         11,
         8
       ],
-      "roomId": "room-nw-10"
+      "roomId": "room-nw-10",
+      "hidden": false
     },
     "mon-skeleton-19": {
       "id": "mon-skeleton-19",
@@ -410,7 +425,8 @@
         11,
         7
       ],
-      "roomId": "room-nw-10"
+      "roomId": "room-nw-10",
+      "hidden": false
     },
     "mon-skeleton-20": {
       "id": "mon-skeleton-20",
@@ -430,7 +446,8 @@
         12,
         7
       ],
-      "roomId": "room-nw-10"
+      "roomId": "room-nw-10",
+      "hidden": false
     },
     "mon-skeleton-21": {
       "id": "mon-skeleton-21",
@@ -450,7 +467,8 @@
         3,
         8
       ],
-      "roomId": "room-nw-4"
+      "roomId": "room-nw-4",
+      "hidden": false
     },
     "mon-skeleton-23": {
       "id": "mon-skeleton-23",
@@ -470,7 +488,8 @@
         22,
         11
       ],
-      "roomId": "room-se-18"
+      "roomId": "room-se-18",
+      "hidden": false
     },
     "mon-skeleton-24": {
       "id": "mon-skeleton-24",
@@ -490,7 +509,8 @@
         23,
         11
       ],
-      "roomId": "room-se-18"
+      "roomId": "room-se-18",
+      "hidden": false
     },
     "mon-skeleton-9": {
       "id": "mon-skeleton-9",
@@ -510,7 +530,8 @@
         10,
         15
       ],
-      "roomId": "room-sw-9"
+      "roomId": "room-sw-9",
+      "hidden": false
     },
     "mon-orc-23": {
       "id": "mon-orc-23",
@@ -530,7 +551,8 @@
         18,
         18
       ],
-      "roomId": ""
+      "roomId": "",
+      "hidden": false
     },
     "mon-goblin-23": {
       "id": "mon-goblin-23",
@@ -550,7 +572,29 @@
         16,
         18
       ],
-      "roomId": ""
+      "roomId": "",
+      "hidden": false
+    },
+    "mon-goblin-24": {
+      "id": "mon-goblin-24",
+      "slug": "goblin-mon-goblin-24",
+      "name": "Goblin",
+      "monsterType": "goblin",
+      "bodyPoints": 1,
+      "mindPoints": 1,
+      "attackDice": 2,
+      "defendDice": 1,
+      "movementSquares": 10,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        18,
+        11
+      ],
+      "roomId": "room-se-17",
+      "hidden": false
     }
   },
   "maps": {
@@ -2867,7 +2911,8 @@
           ],
           "state": "closed",
           "is_secret": false,
-          "room": "room-sw-8"
+          "room": "room-sw-8",
+          "hidden": false
         },
         {
           "id": "door-2",
@@ -2881,21 +2926,8 @@
           ],
           "state": "closed",
           "is_secret": false,
-          "room": "room-se-21"
-        },
-        {
-          "id": "door-4",
-          "from": [
-            20,
-            12
-          ],
-          "to": [
-            21,
-            12
-          ],
-          "state": "closed",
-          "is_secret": false,
-          "room": "room-se-17"
+          "room": "room-se-21",
+          "hidden": false
         },
         {
           "id": "door-5",
@@ -2909,7 +2941,8 @@
           ],
           "state": "closed",
           "is_secret": false,
-          "room": "room-se-18"
+          "room": "room-se-18",
+          "hidden": false
         },
         {
           "id": "door-6",
@@ -2923,7 +2956,8 @@
           ],
           "state": "closed",
           "is_secret": true,
-          "room": "room-se-21"
+          "room": "room-se-21",
+          "hidden": false
         },
         {
           "id": "door-7",
@@ -2937,7 +2971,8 @@
           ],
           "state": "closed",
           "is_secret": false,
-          "room": "room-se-20"
+          "room": "room-se-20",
+          "hidden": false
         },
         {
           "id": "door-9",
@@ -2951,7 +2986,8 @@
           ],
           "state": "closed",
           "is_secret": true,
-          "room": "room-nw-4"
+          "room": "room-nw-4",
+          "hidden": false
         },
         {
           "id": "door-9",
@@ -2965,7 +3001,8 @@
           ],
           "state": "closed",
           "is_secret": false,
-          "room": "room-sw-9"
+          "room": "room-sw-9",
+          "hidden": false
         },
         {
           "id": "door-10",
@@ -2979,7 +3016,8 @@
           ],
           "state": "closed",
           "is_secret": false,
-          "room": "room-nw-10"
+          "room": "room-nw-10",
+          "hidden": false
         },
         {
           "id": "door-11",
@@ -2993,7 +3031,8 @@
           ],
           "state": "closed",
           "is_secret": false,
-          "room": "room-nw-22"
+          "room": "room-nw-22",
+          "hidden": false
         },
         {
           "id": "door-11",
@@ -3007,7 +3046,8 @@
           ],
           "state": "closed",
           "is_secret": false,
-          "room": "room-nw-4"
+          "room": "room-nw-4",
+          "hidden": false
         },
         {
           "id": "door-12",
@@ -3021,7 +3061,23 @@
           ],
           "state": "closed",
           "is_secret": false,
-          "room": "room-nw-10"
+          "room": "room-nw-10",
+          "hidden": false
+        },
+        {
+          "id": "door-12",
+          "from": [
+            21,
+            12
+          ],
+          "to": [
+            20,
+            12
+          ],
+          "state": "open",
+          "is_secret": false,
+          "room": "room-se-18",
+          "hidden": false
         }
       ],
       "furniture": [
@@ -3034,7 +3090,8 @@
           "width": 2,
           "height": 2,
           "roomId": "room-sw-8",
-          "treasure": ""
+          "treasure": "",
+          "hidden": false
         },
         {
           "id": "furn-chest-3",
@@ -3056,7 +3113,8 @@
           "x": 4,
           "y": 18,
           "width": 1,
-          "height": 1
+          "height": 1,
+          "hidden": false
         },
         {
           "id": "block-2",
@@ -3064,7 +3122,8 @@
           "x": 12,
           "y": 13,
           "width": 2,
-          "height": 1
+          "height": 1,
+          "hidden": false
         },
         {
           "id": "block-4",
@@ -3072,7 +3131,8 @@
           "x": 15,
           "y": 6,
           "width": 2,
-          "height": 1
+          "height": 1,
+          "hidden": false
         },
         {
           "id": "block-6",
@@ -3080,7 +3140,8 @@
           "x": 12,
           "y": 1,
           "width": 2,
-          "height": 1
+          "height": 1,
+          "hidden": false
         },
         {
           "id": "block-7",
@@ -3088,7 +3149,8 @@
           "x": 19,
           "y": 18,
           "width": 1,
-          "height": 1
+          "height": 1,
+          "hidden": false
         },
         {
           "id": "block-7",
@@ -3096,7 +3158,8 @@
           "x": 25,
           "y": 9,
           "width": 1,
-          "height": 1
+          "height": 1,
+          "hidden": false
         },
         {
           "id": "block-8",
@@ -3104,7 +3167,8 @@
           "x": 0,
           "y": 2,
           "width": 1,
-          "height": 1
+          "height": 1,
+          "hidden": false
         },
         {
           "id": "block-9",
@@ -3112,7 +3176,8 @@
           "x": 0,
           "y": 8,
           "width": 1,
-          "height": 1
+          "height": 1,
+          "hidden": false
         },
         {
           "id": "block-9",
@@ -3120,7 +3185,8 @@
           "x": 9,
           "y": 10,
           "width": 1,
-          "height": 1
+          "height": 1,
+          "hidden": false
         }
       ],
       "traps": [
@@ -3131,7 +3197,8 @@
           "y": 8,
           "damageDice": 1,
           "detected": false,
-          "disarmed": false
+          "disarmed": false,
+          "hidden": false
         }
       ],
       "triggers": [
@@ -3151,6 +3218,7 @@
           ],
           "onceOnly": true,
           "narrative": "Mentor speaks: \"As you step forward, ancient magic stirs...\"",
+          "hidden": false,
           "actions": [
             {
               "type": "play_movie",
@@ -3176,6 +3244,7 @@
           ],
           "onceOnly": true,
           "narrative": "",
+          "hidden": false,
           "actions": [
             {
               "type": "play_movie",
@@ -3219,6 +3288,16 @@
               "x": 18,
               "y": 17,
               "message": "Chest was thrown through the wall and the wall absorbed the chest like it was made of smoke!!"
+            },
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Orc who hesited chest",
+                  "text": "The chest is safe. Don't just stand there, kill them!!",
+                  "audio": ""
+                }
+              ]
             }
           ]
         },
@@ -3238,6 +3317,7 @@
           ],
           "onceOnly": true,
           "narrative": "Stop. Do not draw a card. As your hand reaches into the shadows...",
+          "hidden": false,
           "actions": [
             {
               "type": "play_movie",
@@ -3263,6 +3343,7 @@
           "event": "on_room_entered",
           "onceOnly": true,
           "movie": "res://assets/movies/quest1-intro.mp4",
+          "hidden": false,
           "actions": [
             {
               "type": "play_movie",
@@ -3286,6 +3367,7 @@
           "event": "on_tile_stepped_on",
           "onceOnly": true,
           "movie": "res://assets/movies/quest_scene_a_corridor_heist.ogv",
+          "hidden": false,
           "actions": [
             {
               "type": "play_movie",
@@ -3329,6 +3411,16 @@
               "x": 18,
               "y": 17,
               "message": "Chest was thrown through the wall and the wall absorbed the chest like it was made of smoke!!"
+            },
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Orc who hesited chest",
+                  "text": "The chest is safe. Don't just stand there, kill them!!",
+                  "audio": ""
+                }
+              ]
             }
           ]
         },
@@ -3346,6 +3438,7 @@
           "event": "on_door_opened",
           "onceOnly": true,
           "movie": "res://assets/movies/quest_scene_f_witch_hand_undead.ogv",
+          "hidden": false,
           "actions": [
             {
               "type": "play_movie",

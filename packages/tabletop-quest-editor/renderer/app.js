@@ -672,6 +672,7 @@ async function loadBlockmap(slugOrPath) {
     if (dom.selectBlockmap) {
       dom.selectBlockmap.value = state.blockmap.id || slugOrPath;
     }
+    const dims = state.blockmap.gridDimensions || [26, 19];
     if (dom.infoBlockmapName) dom.infoBlockmapName.textContent = state.blockmap.title || state.blockmap.id || 'Custom Dungeon';
     if (dom.infoGridSize) dom.infoGridSize.textContent = `${dims[0]} × ${dims[1]}`;
 
@@ -3246,7 +3247,9 @@ function fitView() {
 }
 
 function updateZoomUI() {
-  dom.infoZoomLevel.textContent = `${Math.round(state.zoom * 100)}%`;
+  if (dom.infoZoomLevel) {
+    dom.infoZoomLevel.textContent = `${Math.round(state.zoom * 100)}%`;
+  }
 }
 
 // -------------------------------------------------------------
@@ -7214,7 +7217,9 @@ if (typeof window !== 'undefined') {
     openExportPngModal,
     closeExportPngModal,
     openExportPdfModal,
-    closeExportPdfModal
+    closeExportPdfModal,
+    loadBlockmap,
+    loadCartridge
   };
 
   // Bootstrap application on window load
@@ -7225,6 +7230,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     validateQuest,
     loadCartridge,
+    loadBlockmap,
     interpretVoiceQuestCommands,
     executeVoiceMapCommands,
     findTargetRoom,
