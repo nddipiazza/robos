@@ -83,6 +83,107 @@ function getTileImage(type) {
   return null;
 }
 
+// Default 4 HeroQuest Champions for initializing a Campaign's Hero Party
+function createDefaultCampaignHeroes(seedHeroes = null) {
+  if (Array.isArray(seedHeroes) && seedHeroes.length > 0) {
+    return JSON.parse(JSON.stringify(seedHeroes));
+  }
+  return [
+    {
+      "@id": "urn:robos:tabletop:hero:barbarian",
+      "@type": ["oslc_am:Resource", "robos:TabletopHero", "robos:GameCharacter", "schema:Person"],
+      "dcterms:title": "Rogar",
+      "robos:characterName": "Rogar",
+      "robos:heroClass": "Barbarian",
+      "robos:bodyPoints": 8,
+      "robos:mindPoints": 2,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2,
+      "robos:gold": 100,
+      "robos:startingWeapon": "Broadsword (3 Combat Dice)",
+      "robos:equippedWeapon": "Broadsword (3 Combat Dice)",
+      "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
+      "robos:specialAbility": "Greatest strength and vitality in melee combat",
+      "robos:tokenColor": "#b91c1c",
+      "robos:icon": "⚔️",
+      "robos:startingPosition": [0, 1],
+      "robos:inventory": [
+        { id: "item-pot-heal-1", name: "Potion of Healing", type: "potion", effect: "Restores up to 4 BP", value: 100 },
+        { id: "item-rope-1", name: "Heavy Rope (30 ft)", type: "tool", effect: "Climb pits & gaps", value: 25 }
+      ]
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:dwarf",
+      "@type": ["oslc_am:Resource", "robos:TabletopHero", "robos:GameCharacter", "schema:Person"],
+      "dcterms:title": "Dorgan",
+      "robos:characterName": "Dorgan",
+      "robos:heroClass": "Dwarf",
+      "robos:bodyPoints": 7,
+      "robos:mindPoints": 3,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:gold": 100,
+      "robos:startingWeapon": "Shortsword (2 Combat Dice)",
+      "robos:equippedWeapon": "Shortsword (2 Combat Dice)",
+      "robos:equippedArmor": "Shield & Chainmail (+2 Defend Dice)",
+      "robos:specialAbility": "Disarms traps without needing a toolkit",
+      "robos:tokenColor": "#d97706",
+      "robos:icon": "🪓",
+      "robos:startingPosition": [1, 0],
+      "robos:inventory": [
+        { id: "item-toolkit-1", name: "Trap Disarm Toolkit", type: "tool", effect: "Disarm traps without rolling skull", value: 75 },
+        { id: "item-pot-heal-2", name: "Potion of Healing", type: "potion", effect: "Restores up to 4 BP", value: 100 }
+      ]
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:elf",
+      "@type": ["oslc_am:Resource", "robos:TabletopHero", "robos:GameCharacter", "schema:Person"],
+      "dcterms:title": "Ladril",
+      "robos:characterName": "Ladril",
+      "robos:heroClass": "Elf",
+      "robos:bodyPoints": 6,
+      "robos:mindPoints": 4,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:gold": 100,
+      "robos:startingWeapon": "Shortsword (2 Combat Dice)",
+      "robos:equippedWeapon": "Shortsword (2 Combat Dice)",
+      "robos:equippedArmor": "Elven Leather & Cloak (+2 Defend Dice)",
+      "robos:specialAbility": "Master of blade and 1 Elemental Spell deck (3 spells)",
+      "robos:tokenColor": "#15803d",
+      "robos:icon": "🏹",
+      "robos:startingPosition": [1, 1],
+      "robos:inventory": [
+        { id: "item-torch-1", name: "Dungeon Torch", type: "tool", effect: "Detect hidden traps in room", value: 15 },
+        { id: "item-strength-1", name: "Potion of Strength", type: "potion", effect: "+2 Attack Dice for 1 turn", value: 150 }
+      ]
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:wizard",
+      "@type": ["oslc_am:Resource", "robos:TabletopHero", "robos:GameCharacter", "schema:Person"],
+      "dcterms:title": "Telor",
+      "robos:characterName": "Telor",
+      "robos:heroClass": "Wizard",
+      "robos:bodyPoints": 4,
+      "robos:mindPoints": 6,
+      "robos:attackDice": 1,
+      "robos:defendDice": 2,
+      "robos:gold": 100,
+      "robos:startingWeapon": "Dagger (1 Combat Die)",
+      "robos:equippedWeapon": "Dagger (1 Combat Die)",
+      "robos:equippedArmor": "Wizard Cloak (2 Defend Dice)",
+      "robos:specialAbility": "Wields 3 Elemental Spell decks (9 spells total)",
+      "robos:tokenColor": "#7c3aed",
+      "robos:icon": "🔮",
+      "robos:startingPosition": [0, 0],
+      "robos:inventory": [
+        { id: "item-holy-water-1", name: "Holy Water", type: "relic", effect: "Destroys undead instantly", value: 200 },
+        { id: "item-pot-heal-3", name: "Potion of Healing", type: "potion", effect: "Restores up to 4 BP", value: 100 }
+      ]
+    }
+  ];
+}
+
 // RobOS Tabletop Studio Client Application
 let currentData = {
   tabletopNodes: [],
@@ -107,114 +208,120 @@ let currentData = {
   doors: [],
   activeHeroId: null,
   activeMonsterId: null,
-  campaign: {
-    id: 'campaign-heroquest-gathering-storm',
-    title: 'HeroQuest: The Gathering Storm',
-    description: "The Emperor calls upon the kingdom's greatest champions to defeat the armies of Morcar and the Witch Lord.",
-    quests: [
-      {
-        id: 'quest-1',
-        slug: 'heroquest-the-trial',
-        title: 'Quest 1: The Trial',
-        briefing: 'You have learned well, my apprentices. Now comes your final test. Seek out the foul Orc Warlord Verag in his hidden catacombs, slay him, and return to the stairwell alive.',
-        mapConfigId: 'fan-dungeon-28x21',
-        ruleset: 'heroquest',
-        goldReward: 100,
-        bossTarget: 'verag-boss',
-        completed: false,
-        startingStairs: [0, 1],
-        activeRooms: new Set(),
-        wallBlocks: [
-          { id: 'block-1', x: 12, y: 0, type: 'single', width: 1, height: 1 },
-          { id: 'block-2', x: 12, y: 20, type: 'single', width: 1, height: 1 },
-          { id: 'block-double-v', x: 0, y: 10, type: 'double-v', width: 1, height: 2 },
-          { id: 'block-double-h', x: 26, y: 10, type: 'double-h', width: 2, height: 1 }
-        ],
-        doors: [],
-        furniture: [
-          { id: 'furn-altar-1', name: "Sorcerer's Altar / Desk", type: 'altar', x: 14, y: 8, width: 2, height: 2, roomId: 'room-center-mid' },
-          { id: 'furn-bookcase-1', name: 'Grand Bookcase', type: 'bookcase', x: 13, y: 3, width: 3, height: 1, roomId: 'room-center-n' },
-          { id: 'furn-bookshelf-1', name: 'Study Bookshelf', type: 'bookshelf', x: 23, y: 5, width: 2, height: 1, roomId: 'room-e-parlor' },
-          { id: 'furn-boulder-1', name: 'Fossil Boulder Tile', type: 'boulder', x: 2, y: 7, width: 1, height: 1, roomId: 'room-grand-fossil' },
-          { id: 'furn-tomb-1', name: 'Ancient Stone Tomb', type: 'tomb', x: 5, y: 2, width: 2, height: 2, roomId: 'room-nw-crypt' },
-          { id: 'furn-chest-1', name: 'Vault Chest of Gold', type: 'chest', x: 23, y: 2, width: 1, height: 1, roomId: 'room-ne-vault' },
-          { id: 'furn-table-1', name: 'Council Table', type: 'table', x: 14, y: 14, width: 2, height: 2, roomId: 'room-center-s' },
-          { id: 'furn-rack-1', name: 'Weapons Rack', type: 'weapons-rack', x: 8, y: 2, width: 3, height: 1, roomId: 'room-n-armory' }
-        ],
-        monsters: [
-          { id: 'mon-verag', name: 'Verag the Orc Warlord', monsterType: 'verag-boss', x: 4, y: 10, bp: 4, atk: 4, def: 4, isBoss: true, roomId: 'room-grand-fossil' },
-          { id: 'mon-skel-1', name: 'Crypt Skeleton', monsterType: 'skeleton-1', x: 3, y: 4, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
-          { id: 'mon-skel-2', name: 'Crypt Skeleton', monsterType: 'skeleton-2', x: 5, y: 4, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
-          { id: 'mon-zombie-1', name: 'Cellar Zombie', monsterType: 'zombie-1', x: 4, y: 16, bp: 2, atk: 3, def: 3, isBoss: false, roomId: 'room-sw-cellar' },
-          { id: 'mon-orc-1', name: 'Orc Guard', monsterType: 'orc-warrior-1', x: 14, y: 11, bp: 1, atk: 3, def: 2, isBoss: false, roomId: 'room-center-mid' },
-          { id: 'mon-goblin-1', name: 'Goblin Scout', monsterType: 'goblin-scout-1', x: 15, y: 11, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center-mid' }
-        ],
-        traps: [
-          { id: 'trap-pit-1', trapType: 'pit', x: 0, y: 5, damageDice: 1, detected: false, disarmed: false },
-          { id: 'trap-boulder-1', trapType: 'boulder', x: 7, y: 5, damageDice: 3, detected: false, disarmed: false },
-          { id: 'trap-falling-1', trapType: 'falling-block', x: 21, y: 10, damageDice: 3, detected: false, disarmed: false }
-        ]
-      },
-      {
-        id: 'quest-2',
-        slug: 'heroquest-rescue-sir-ragnar',
-        title: 'Quest 2: The Rescue of Sir Ragnar',
-        briefing: "Sir Ragnar, one of the Emperor's most trusted knights, has been captured by the Greenskins. Infiltrate the fortress prison, locate his cell, and escort him safely to the surface.",
-        mapConfigId: 'heroquest-classic',
-        ruleset: 'heroquest',
-        goldReward: 200,
-        bossTarget: 'orc-jailer-boss',
-        completed: false,
-        startingStairs: [1, 1],
-        activeRooms: new Set(),
-        wallBlocks: [
-          { id: 'block-r-1', x: 12, y: 0, type: 'single', width: 1, height: 1 },
-          { id: 'block-r-2', x: 12, y: 18, type: 'single', width: 1, height: 1 }
-        ],
-        doors: [],
-        furniture: [
-          { id: 'furn-torture-1', name: 'Iron Torture Rack', type: 'weapons-rack', x: 13, y: 9, width: 3, height: 1, roomId: 'room-center' },
-          { id: 'furn-chest-ragnar', name: "Jailer's Iron Strongbox", type: 'chest', x: 20, y: 3, width: 1, height: 1, roomId: 'room-ne-armory' }
-        ],
-        monsters: [
-          { id: 'mon-jailer', name: 'Gorg the Orc Jailer', monsterType: 'orc-warrior-1', x: 13, y: 8, bp: 3, atk: 3, def: 3, isBoss: true, roomId: 'room-center' },
-          { id: 'mon-guard-1', name: 'Goblin Warden', monsterType: 'goblin-scout-1', x: 14, y: 8, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center' },
-          { id: 'mon-guard-2', name: 'Goblin Warden', monsterType: 'goblin-scout-1', x: 12, y: 8, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center' }
-        ],
-        traps: [
-          { id: 'trap-pit-r-1', trapType: 'pit', x: 10, y: 5, damageDice: 1, detected: false, disarmed: false }
-        ]
-      },
-      {
-        id: 'quest-3',
-        slug: 'heroquest-lair-orc-warlord',
-        title: 'Quest 3: Lair of the Orc Warlord',
-        briefing: 'Deep within the sunken caverns lies the seat of the Orc Chieftain Ulag. Purge his foul guards, shatter his command throne, and reclaim the stolen royal treasure.',
-        mapConfigId: 'first-light-caverns',
-        ruleset: 'heroquest',
-        goldReward: 250,
-        bossTarget: 'ulag-warlord',
-        completed: false,
-        startingStairs: [1, 1],
-        activeRooms: new Set(),
-        wallBlocks: [
-          { id: 'block-u-1', x: 12, y: 0, type: 'single', width: 1, height: 1 }
-        ],
-        doors: [],
-        furniture: [
-          { id: 'furn-throne-1', name: 'Warlord Throne', type: 'altar', x: 13, y: 9, width: 3, height: 2, roomId: 'room-center' },
-          { id: 'furn-cavern-boulder', name: 'Massive Stalagmite', type: 'boulder', x: 5, y: 5, width: 1, height: 1, roomId: 'room-cavern' }
-        ],
-        monsters: [
-          { id: 'mon-ulag', name: 'Ulag the Orc Chieftain', monsterType: 'verag-boss', x: 13, y: 10, bp: 5, atk: 4, def: 5, isBoss: true, roomId: 'room-center' },
-          { id: 'mon-fimir-1', name: 'Swamp Fimir Mystic', monsterType: 'zombie-1', x: 15, y: 9, bp: 2, atk: 3, def: 3, isBoss: false, roomId: 'room-center' }
-        ],
-        traps: [
-          { id: 'trap-cave-in', trapType: 'falling-block', x: 12, y: 7, damageDice: 3, detected: false, disarmed: false }
-        ]
-      }
-    ]
-  },
+  activeCampaignSubtab: 'subtab-campaign-quests',
+  currentCampaignIndex: 0,
+  campaigns: [
+    {
+      id: 'campaign-heroquest-gathering-storm',
+      title: 'HeroQuest: The Gathering Storm',
+      description: "The Emperor calls upon the kingdom's greatest champions to defeat the armies of Morcar and the Witch Lord.",
+      heroes: createDefaultCampaignHeroes(),
+      quests: [
+        {
+          id: 'quest-1',
+          slug: 'heroquest-the-trial',
+          title: 'Quest 1: The Trial',
+          briefing: 'You have learned well, my apprentices. Now comes your final test. Seek out the foul Orc Warlord Verag in his hidden catacombs, slay him, and return to the stairwell alive.',
+          mapConfigId: 'fan-dungeon-28x21',
+          ruleset: 'heroquest',
+          goldReward: 100,
+          bossTarget: 'verag-boss',
+          completed: false,
+          startingStairs: [0, 1],
+          activeRooms: new Set(),
+          wallBlocks: [
+            { id: 'block-1', x: 12, y: 0, type: 'single', width: 1, height: 1 },
+            { id: 'block-2', x: 12, y: 20, type: 'single', width: 1, height: 1 },
+            { id: 'block-double-v', x: 0, y: 10, type: 'double-v', width: 1, height: 2 },
+            { id: 'block-double-h', x: 26, y: 10, type: 'double-h', width: 2, height: 1 }
+          ],
+          doors: [],
+          furniture: [
+            { id: 'furn-altar-1', name: "Sorcerer's Altar / Desk", type: 'altar', x: 14, y: 8, width: 2, height: 2, roomId: 'room-center-mid' },
+            { id: 'furn-bookcase-1', name: 'Grand Bookcase', type: 'bookcase', x: 13, y: 3, width: 3, height: 1, roomId: 'room-center-n' },
+            { id: 'furn-bookshelf-1', name: 'Study Bookshelf', type: 'bookshelf', x: 23, y: 5, width: 2, height: 1, roomId: 'room-e-parlor' },
+            { id: 'furn-boulder-1', name: 'Fossil Boulder Tile', type: 'boulder', x: 2, y: 7, width: 1, height: 1, roomId: 'room-grand-fossil' },
+            { id: 'furn-tomb-1', name: 'Ancient Stone Tomb', type: 'tomb', x: 5, y: 2, width: 2, height: 2, roomId: 'room-nw-crypt' },
+            { id: 'furn-chest-1', name: 'Vault Chest of Gold', type: 'chest', x: 23, y: 2, width: 1, height: 1, roomId: 'room-ne-vault' },
+            { id: 'furn-table-1', name: 'Council Table', type: 'table', x: 14, y: 14, width: 2, height: 2, roomId: 'room-center-s' },
+            { id: 'furn-rack-1', name: 'Weapons Rack', type: 'weapons-rack', x: 8, y: 2, width: 3, height: 1, roomId: 'room-n-armory' }
+          ],
+          monsters: [
+            { id: 'mon-verag', name: 'Verag the Orc Warlord', monsterType: 'verag-boss', x: 4, y: 10, bp: 4, atk: 4, def: 4, isBoss: true, roomId: 'room-grand-fossil' },
+            { id: 'mon-skel-1', name: 'Crypt Skeleton', monsterType: 'skeleton-1', x: 3, y: 4, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
+            { id: 'mon-skel-2', name: 'Crypt Skeleton', monsterType: 'skeleton-2', x: 5, y: 4, bp: 1, atk: 2, def: 2, isBoss: false, roomId: 'room-nw-crypt' },
+            { id: 'mon-zombie-1', name: 'Cellar Zombie', monsterType: 'zombie-1', x: 4, y: 16, bp: 2, atk: 3, def: 3, isBoss: false, roomId: 'room-sw-cellar' },
+            { id: 'mon-orc-1', name: 'Orc Guard', monsterType: 'orc-warrior-1', x: 14, y: 11, bp: 1, atk: 3, def: 2, isBoss: false, roomId: 'room-center-mid' },
+            { id: 'mon-goblin-1', name: 'Goblin Scout', monsterType: 'goblin-scout-1', x: 15, y: 11, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center-mid' }
+          ],
+          traps: [
+            { id: 'trap-pit-1', trapType: 'pit', x: 0, y: 5, damageDice: 1, detected: false, disarmed: false },
+            { id: 'trap-boulder-1', trapType: 'boulder', x: 7, y: 5, damageDice: 3, detected: false, disarmed: false },
+            { id: 'trap-falling-1', trapType: 'falling-block', x: 21, y: 10, damageDice: 3, detected: false, disarmed: false }
+          ]
+        },
+        {
+          id: 'quest-2',
+          slug: 'heroquest-rescue-sir-ragnar',
+          title: 'Quest 2: The Rescue of Sir Ragnar',
+          briefing: "Sir Ragnar, one of the Emperor's most trusted knights, has been captured by the Greenskins. Infiltrate the fortress prison, locate his cell, and escort him safely to the surface.",
+          mapConfigId: 'heroquest-classic',
+          ruleset: 'heroquest',
+          goldReward: 200,
+          bossTarget: 'orc-jailer-boss',
+          completed: false,
+          startingStairs: [1, 1],
+          activeRooms: new Set(),
+          wallBlocks: [
+            { id: 'block-r-1', x: 12, y: 0, type: 'single', width: 1, height: 1 },
+            { id: 'block-r-2', x: 12, y: 18, type: 'single', width: 1, height: 1 }
+          ],
+          doors: [],
+          furniture: [
+            { id: 'furn-torture-1', name: 'Iron Torture Rack', type: 'weapons-rack', x: 13, y: 9, width: 3, height: 1, roomId: 'room-center' },
+            { id: 'furn-chest-ragnar', name: "Jailer's Iron Strongbox", type: 'chest', x: 20, y: 3, width: 1, height: 1, roomId: 'room-ne-armory' }
+          ],
+          monsters: [
+            { id: 'mon-jailer', name: 'Gorg the Orc Jailer', monsterType: 'orc-warrior-1', x: 13, y: 8, bp: 3, atk: 3, def: 3, isBoss: true, roomId: 'room-center' },
+            { id: 'mon-guard-1', name: 'Goblin Warden', monsterType: 'goblin-scout-1', x: 14, y: 8, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center' },
+            { id: 'mon-guard-2', name: 'Goblin Warden', monsterType: 'goblin-scout-1', x: 12, y: 8, bp: 1, atk: 2, def: 1, isBoss: false, roomId: 'room-center' }
+          ],
+          traps: [
+            { id: 'trap-pit-r-1', trapType: 'pit', x: 10, y: 5, damageDice: 1, detected: false, disarmed: false }
+          ]
+        },
+        {
+          id: 'quest-3',
+          slug: 'heroquest-lair-orc-warlord',
+          title: 'Quest 3: Lair of the Orc Warlord',
+          briefing: 'Deep within the sunken caverns lies the seat of the Orc Chieftain Ulag. Purge his foul guards, shatter his command throne, and reclaim the stolen royal treasure.',
+          mapConfigId: 'first-light-caverns',
+          ruleset: 'heroquest',
+          goldReward: 250,
+          bossTarget: 'ulag-warlord',
+          completed: false,
+          startingStairs: [1, 1],
+          activeRooms: new Set(),
+          wallBlocks: [
+            { id: 'block-u-1', x: 12, y: 0, type: 'single', width: 1, height: 1 }
+          ],
+          doors: [],
+          furniture: [
+            { id: 'furn-throne-1', name: 'Warlord Throne', type: 'altar', x: 13, y: 9, width: 3, height: 2, roomId: 'room-center' },
+            { id: 'furn-cavern-boulder', name: 'Massive Stalagmite', type: 'boulder', x: 5, y: 5, width: 1, height: 1, roomId: 'room-cavern' }
+          ],
+          monsters: [
+            { id: 'mon-ulag', name: 'Ulag the Orc Chieftain', monsterType: 'verag-boss', x: 13, y: 10, bp: 5, atk: 4, def: 5, isBoss: true, roomId: 'room-center' },
+            { id: 'mon-fimir-1', name: 'Swamp Fimir Mystic', monsterType: 'zombie-1', x: 15, y: 9, bp: 2, atk: 3, def: 3, isBoss: false, roomId: 'room-center' }
+          ],
+          traps: [
+            { id: 'trap-cave-in', trapType: 'falling-block', x: 12, y: 7, damageDice: 3, detected: false, disarmed: false }
+          ]
+        }
+      ]
+    }
+  ],
+  campaign: null,
   currentQuestIndex: 0,
   currentQuest: null,
   activeTool: 'inspect',
@@ -235,6 +342,8 @@ let currentData = {
     showWalls: true
   }
 };
+currentData.campaign = currentData.campaigns[0];
+currentData.heroes = currentData.campaign.heroes;
 currentData.currentQuest = currentData.campaign.quests[0];
 
 // DOM references
@@ -1981,10 +2090,14 @@ async function initKGraphData() {
       currentData.tabletopNodes = res.tabletopNodes;
       currentData.gameNodes = res.gameNodes;
 
-      currentData.heroes = currentData.tabletopNodes.filter(n => {
+      const kgraphHeroes = currentData.tabletopNodes.filter(n => {
         const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
         return t.includes("robos:TabletopHero");
       });
+      if (kgraphHeroes.length > 0 && currentData.campaigns[0]) {
+        currentData.campaigns[0].heroes = kgraphHeroes;
+      }
+      currentData.heroes = currentData.campaign.heroes;
 
       currentData.monsters = currentData.tabletopNodes.filter(n => {
         const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
@@ -2030,6 +2143,7 @@ async function initKGraphData() {
 
       // Initialize Campaign & Multi-Quest Blueprint
       setupCampaignQuestControls();
+      renderCampaignSelectorUI();
       renderCampaignQuestsList();
       updateCampaignProgress();
     }
@@ -3999,6 +4113,12 @@ function getHeroInventory(h) {
 
 // Render Heroes Sidebar List
 function renderHeroesList() {
+  if (currentData.campaign && currentData.campaign.heroes !== currentData.heroes) {
+    currentData.campaign.heroes = currentData.heroes;
+  }
+  const countEl = document.getElementById("campaign-subtab-heroes-count");
+  if (countEl) countEl.textContent = String(currentData.heroes.length);
+
   const container = document.getElementById("heroes-list");
   if (!container) return;
   container.innerHTML = "";
@@ -4052,22 +4172,27 @@ function selectHero(heroId) {
 
   // Populate Hero Form
   const heroName = getHeroName(hero);
-  document.getElementById("hero-editor-title").textContent = "Edit Hero: " + heroName;
-  document.getElementById("hero-id").value = hero["@id"] || "";
-  document.getElementById("hero-name").value = heroName;
-  document.getElementById("hero-class").value = hero["robos:heroClass"] || "";
-  document.getElementById("hero-bp").value = hero["robos:bodyPoints"] || 8;
-  document.getElementById("hero-mp").value = hero["robos:mindPoints"] || 2;
-  document.getElementById("hero-atk").value = hero["robos:attackDice"] || 3;
-  document.getElementById("hero-def").value = hero["robos:defendDice"] || 2;
-  document.getElementById("hero-gold").value = hero["robos:gold"] !== undefined ? hero["robos:gold"] : 100;
-  document.getElementById("hero-weapon").value = hero["robos:equippedWeapon"] || hero["robos:startingWeapon"] || "";
-  document.getElementById("hero-armor").value = hero["robos:equippedArmor"] || "";
-  document.getElementById("hero-ability").value = hero["robos:specialAbility"] || "";
-  document.getElementById("hero-color").value = hero["robos:tokenColor"] || "#b91c1c";
-  document.getElementById("hero-icon").value = hero["robos:icon"] || "🛡️";
-  document.getElementById("hero-pos-x").value = (hero["robos:startingPosition"] && hero["robos:startingPosition"][0]) || 1;
-  document.getElementById("hero-pos-y").value = (hero["robos:startingPosition"] && hero["robos:startingPosition"][1]) || 1;
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  };
+  const titleEl = document.getElementById("hero-editor-title");
+  if (titleEl) titleEl.textContent = "Edit Hero: " + heroName;
+  setVal("hero-id", hero["@id"] || "");
+  setVal("hero-name", heroName);
+  setVal("hero-class", hero["robos:heroClass"] || "");
+  setVal("hero-bp", hero["robos:bodyPoints"] || 8);
+  setVal("hero-mp", hero["robos:mindPoints"] || 2);
+  setVal("hero-atk", hero["robos:attackDice"] || 3);
+  setVal("hero-def", hero["robos:defendDice"] || 2);
+  setVal("hero-gold", hero["robos:gold"] !== undefined ? hero["robos:gold"] : 100);
+  setVal("hero-weapon", hero["robos:equippedWeapon"] || hero["robos:startingWeapon"] || "");
+  setVal("hero-armor", hero["robos:equippedArmor"] || "");
+  setVal("hero-ability", hero["robos:specialAbility"] || "");
+  setVal("hero-color", hero["robos:tokenColor"] || "#b91c1c");
+  setVal("hero-icon", hero["robos:icon"] || "🛡️");
+  setVal("hero-pos-x", (hero["robos:startingPosition"] && hero["robos:startingPosition"][0]) || 1);
+  setVal("hero-pos-y", (hero["robos:startingPosition"] && hero["robos:startingPosition"][1]) || 1);
 
   // Render Inventory, Grimoire & Action Screen
   renderHeroInventory(hero);
@@ -5732,12 +5857,183 @@ function renderSpellsAndItems() {
 // 3. CAMPAIGN & MULTI-QUEST ENGINE
 // ==========================================
 
+function getCampaigns() {
+  return currentData.campaigns;
+}
+
 function getCampaign() {
   return currentData.campaign;
 }
 
 function getActiveQuest() {
   return currentData.currentQuest || currentData.campaign.quests[currentData.currentQuestIndex || 0];
+}
+
+function switchCampaignSubtab(subtabId) {
+  const validSubtabs = ["subtab-campaign-quests", "subtab-campaign-heroes"];
+  const targetId = validSubtabs.includes(subtabId) ? subtabId : "subtab-campaign-quests";
+  currentData.activeCampaignSubtab = targetId;
+
+  document.querySelectorAll(".campaign-subtab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.campaignSubtab === targetId);
+  });
+
+  document.querySelectorAll(".campaign-subpane").forEach(pane => {
+    const isTarget = pane.id === targetId;
+    pane.classList.toggle("active", isTarget);
+    pane.style.display = isTarget ? "block" : "none";
+  });
+
+  if (targetId === "subtab-campaign-heroes") {
+    renderHeroesList();
+    if (currentData.activeHeroId) {
+      selectHero(currentData.activeHeroId);
+    } else if (currentData.heroes.length > 0) {
+      selectHero(currentData.heroes[0]["@id"]);
+    }
+  }
+  return targetId;
+}
+
+function renderCampaignSelectorUI() {
+  const selectEl = document.getElementById("campaign-select");
+  if (selectEl) {
+    selectEl.innerHTML = "";
+    currentData.campaigns.forEach((camp, idx) => {
+      const opt = document.createElement("option");
+      opt.value = String(idx);
+      const qCount = Array.isArray(camp.quests) ? camp.quests.length : 0;
+      const hCount = Array.isArray(camp.heroes) ? camp.heroes.length : 0;
+      opt.textContent = `${camp.title} (${qCount} Quests, ${hCount} Heroes)`;
+      if (idx === currentData.currentCampaignIndex) {
+        opt.selected = true;
+      }
+      selectEl.appendChild(opt);
+    });
+  }
+
+  const cNameInput = document.getElementById("campaign-name-input");
+  if (cNameInput && currentData.campaign) {
+    cNameInput.value = currentData.campaign.title || "";
+  }
+
+  const scopeLabel = document.getElementById("campaign-scope-label");
+  if (scopeLabel && currentData.campaign) {
+    scopeLabel.textContent = currentData.campaign.title || "Active Campaign";
+  }
+
+  const qCountEl = document.getElementById("campaign-subtab-quests-count");
+  if (qCountEl && currentData.campaign?.quests) {
+    qCountEl.textContent = String(currentData.campaign.quests.length);
+  }
+
+  const hCountEl = document.getElementById("campaign-subtab-heroes-count");
+  if (hCountEl && currentData.campaign?.heroes) {
+    hCountEl.textContent = String(currentData.campaign.heroes.length);
+  }
+
+  const delCampBtn = document.getElementById("btn-delete-campaign");
+  if (delCampBtn) {
+    delCampBtn.disabled = currentData.campaigns.length <= 1;
+    delCampBtn.style.opacity = currentData.campaigns.length <= 1 ? "0.4" : "1";
+    delCampBtn.style.cursor = currentData.campaigns.length <= 1 ? "not-allowed" : "pointer";
+  }
+}
+
+async function selectCampaign(indexOrId) {
+  let idx = -1;
+  if (typeof indexOrId === "number") {
+    idx = indexOrId;
+  } else if (typeof indexOrId === "string") {
+    const parsed = parseInt(indexOrId, 10);
+    if (!isNaN(parsed) && String(parsed) === indexOrId.trim()) {
+      idx = parsed;
+    } else {
+      idx = currentData.campaigns.findIndex(c => c.id === indexOrId || c.title === indexOrId);
+    }
+  }
+  if (idx < 0 || idx >= currentData.campaigns.length) return null;
+
+  currentData.currentCampaignIndex = idx;
+  currentData.campaign = currentData.campaigns[idx];
+
+  if (!Array.isArray(currentData.campaign.heroes) || currentData.campaign.heroes.length === 0) {
+    currentData.campaign.heroes = createDefaultCampaignHeroes();
+  }
+  currentData.heroes = currentData.campaign.heroes;
+  currentData.activeHeroId = currentData.heroes[0]?.["@id"] || null;
+
+  applySpellAllocationToHeroes();
+  renderHeroesList();
+  if (currentData.activeHeroId) {
+    selectHero(currentData.activeHeroId);
+  }
+
+  currentData.currentQuestIndex = 0;
+  currentData.currentQuest = currentData.campaign.quests[0];
+  await selectQuest(0, true);
+  renderCampaignSelectorUI();
+  setStatus(`Switched active campaign to '${currentData.campaign.title}' (${currentData.campaign.quests.length} quests, ${currentData.heroes.length} heroes).`);
+  return currentData.campaign;
+}
+
+function addCampaign(customProps = {}) {
+  const nextNum = currentData.campaigns.length + 1;
+  const campId = customProps.id || `campaign-${nextNum}-${Date.now().toString(36)}`;
+  const campTitle = customProps.title || `Campaign ${nextNum}: New Adventure`;
+  const starterHeroes = Array.isArray(customProps.heroes) && customProps.heroes.length > 0
+    ? createDefaultCampaignHeroes(customProps.heroes)
+    : createDefaultCampaignHeroes();
+
+  const starterQuests = Array.isArray(customProps.quests) && customProps.quests.length > 0
+    ? customProps.quests
+    : [
+        {
+          id: `quest-1`,
+          slug: `${campId}-quest-1`,
+          title: `Quest 1: The Awakening`,
+          briefing: `A new campaign begins! Lead your campaign's party of heroes into the dungeon depths and claim victory.`,
+          mapConfigId: currentData.activeMapConfig?.id || "fan-dungeon-28x21",
+          ruleset: "heroquest",
+          goldReward: 150,
+          bossTarget: "verag-boss",
+          completed: false,
+          startingStairs: [0, 1],
+          activeRooms: new Set(),
+          wallBlocks: [],
+          doors: [],
+          furniture: [],
+          monsters: [],
+          traps: []
+        }
+      ];
+
+  const newCampaign = {
+    id: campId,
+    title: campTitle,
+    description: customProps.description || "Custom tabletop campaign with its own quest progression and party of Heroes.",
+    heroes: starterHeroes,
+    quests: starterQuests
+  };
+
+  currentData.campaigns.push(newCampaign);
+  selectCampaign(currentData.campaigns.length - 1);
+  setStatus(`Created new campaign: '${newCampaign.title}'`);
+  return newCampaign;
+}
+
+function deleteCampaign(index = currentData.currentCampaignIndex) {
+  if (currentData.campaigns.length <= 1) {
+    setStatus("Cannot delete: At least 1 campaign must remain.");
+    return false;
+  }
+  if (index < 0 || index >= currentData.campaigns.length) return false;
+
+  const deleted = currentData.campaigns.splice(index, 1)[0];
+  const nextIdx = Math.max(0, Math.min(index, currentData.campaigns.length - 1));
+  selectCampaign(nextIdx);
+  setStatus(`Deleted campaign: '${deleted.title}'`);
+  return true;
 }
 
 function updateQuestStatusUI(q) {
@@ -5902,6 +6198,7 @@ function updateCampaignProgress() {
   if (countEl) countEl.textContent = `${completed} / ${total} Quests Finished`;
   if (goldPotEl) goldPotEl.textContent = `Total Bounty: ${totalGold}g`;
   if (titleDisplayEl && currentData.campaign.title) titleDisplayEl.textContent = currentData.campaign.title;
+  renderCampaignSelectorUI();
 }
 
 function completeQuest(index = currentData.currentQuestIndex) {
@@ -5909,7 +6206,7 @@ function completeQuest(index = currentData.currentQuestIndex) {
   const q = currentData.campaign.quests[index];
   q.completed = true;
 
-  // Award gold bounty to all heroes
+  // Award gold bounty to all heroes in the active campaign
   const bounty = Number(q.goldReward) || 100;
   if (Array.isArray(currentData.heroes)) {
     currentData.heroes.forEach(h => {
@@ -6005,6 +6302,23 @@ function advanceToNextQuest() {
 }
 
 function setupCampaignQuestControls() {
+  // Multi-Campaign Selector & Buttons
+  document.getElementById("campaign-select")?.addEventListener("change", (e) => {
+    const idx = parseInt(e.target.value, 10);
+    if (!isNaN(idx)) {
+      selectCampaign(idx);
+    }
+  });
+  document.getElementById("btn-add-campaign")?.addEventListener("click", () => addCampaign());
+  document.getElementById("btn-delete-campaign")?.addEventListener("click", () => deleteCampaign());
+
+  // Campaign Subtab Buttons (Quests vs Campaign Heroes)
+  document.querySelectorAll(".campaign-subtab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      switchCampaignSubtab(btn.dataset.campaignSubtab);
+    });
+  });
+
   // Campaign Name Input
   const cNameInput = document.getElementById("campaign-name-input");
   if (cNameInput) {
@@ -6013,6 +6327,7 @@ function setupCampaignQuestControls() {
       currentData.campaign.title = e.target.value;
       const titleDisplay = document.getElementById("campaign-title-display");
       if (titleDisplay) titleDisplay.textContent = e.target.value;
+      renderCampaignSelectorUI();
     });
   }
 
@@ -6350,7 +6665,15 @@ if (typeof window !== "undefined") {
   };
 
   window._tabletopCampaign = {
+    getCampaigns,
     getCampaign,
+    getActiveCampaignIndex: () => currentData.currentCampaignIndex,
+    selectCampaign,
+    addCampaign,
+    deleteCampaign,
+    switchCampaignSubtab,
+    renderCampaignSelectorUI,
+    createDefaultCampaignHeroes,
     getActiveQuest,
     getActiveQuestIndex: () => currentData.currentQuestIndex,
     selectQuest,
@@ -6451,6 +6774,13 @@ if (typeof module !== "undefined" && module.exports) {
     setSpellItemCategoryFilter,
     addCustomSpell,
     addCustomWeapon,
-    addCustomItem
+    addCustomItem,
+    getCampaigns,
+    getCampaign,
+    selectCampaign,
+    addCampaign,
+    deleteCampaign,
+    switchCampaignSubtab,
+    createDefaultCampaignHeroes
   };
 }

@@ -1070,4 +1070,121 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.ok(styleCss.includes(".spell-card-footer"), "style.css must define .spell-card-footer");
     assert.ok(styleCss.includes("overflow-wrap: anywhere"), "style.css must enforce overflow-wrap: anywhere on cards");
   });
+
+  it("renames 'Quest & Campaign' tab to 'Campaign', moves Heroes into the Campaign area, and supports multiple campaigns with per-campaign heroes", async () => {
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+
+    // 1. Verify top navigation tab is renamed 'Campaign' and top-level 'tab-heroes' button is removed
+    assert.ok(
+      indexHtml.includes('data-tab="tab-quest">📜 Campaign</button>'),
+      "Main navigation tab must be named '📜 Campaign'"
+    );
+    assert.ok(
+      !indexHtml.includes('data-tab="tab-heroes"'),
+      "Top-level Heroes tab button must be moved into the Campaign area"
+    );
+
+    // 2. Verify Campaign selector bar and Campaign subtabs (Quests & Heroes) exist inside #tab-quest
+    const tabQuestIdx = indexHtml.indexOf('id="tab-quest"');
+    const tabMonstersIdx = indexHtml.indexOf('id="tab-monsters"');
+    assert.ok(tabQuestIdx !== -1 && tabMonstersIdx > tabQuestIdx, "#tab-quest must precede #tab-monsters");
+    const campaignSectionHtml = indexHtml.slice(tabQuestIdx, tabMonstersIdx);
+
+    assert.ok(campaignSectionHtml.includes('id="campaign-select"'), "Campaign selector dropdown must exist inside Campaign tab");
+    assert.ok(campaignSectionHtml.includes('id="btn-add-campaign"'), "+ New Campaign button must exist inside Campaign tab");
+    assert.ok(campaignSectionHtml.includes('id="btn-delete-campaign"'), "Delete Campaign button must exist inside Campaign tab");
+    assert.ok(campaignSectionHtml.includes('id="subtab-campaign-quests"'), "Campaign Quests subpane must exist inside Campaign tab");
+    assert.ok(campaignSectionHtml.includes('id="subtab-campaign-heroes"'), "Campaign Heroes subpane must exist inside Campaign tab");
+    assert.ok(campaignSectionHtml.includes('id="heroes-list"'), "Heroes list must reside inside the Campaign area");
+    assert.ok(campaignSectionHtml.includes('id="hero-editor-title"'), "Hero editor panel must reside inside the Campaign area");
+
+    // 3. Verify multi-campaign state & per-campaign heroes isolation
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+    const campaigns = appModule.getCampaigns();
+    assert.strictEqual(campaigns.length, 1, "Must initially have 1 campaign in the list");
+    assert.strictEqual(campaigns[0].title, "HeroQuest: The Gathering Storm");
+    assert.strictEqual(campaigns[0].quests.length, 3, "Initial campaign must have 3 quests");
+    assert.strictEqual(campaigns[0].heroes.length, 4, "Initial campaign must have 4 default HeroQuest heroes");
+
+    // Cannot delete when only 1 campaign exists
+    assert.strictEqual(appModule.deleteCampaign(0), false, "Cannot delete the last remaining campaign");
+    assert.strictEqual(appModule.getCampaigns().length, 1);
+
+    // Add a second campaign with custom heroes (e.g. Midterms 2026 party)
+    const customCampaign = appModule.addCampaign({
+      id: "campaign-midterms-2026",
+      title: "Midterms 2026: The Swamp Filibuster",
+      heroes: [
+        {
+          "@id": "urn:robos:tabletop:hero:obama-barbarian",
+          "dcterms:title": "Obama",
+          "robos:characterName": "Obama",
+          "robos:heroClass": "Barbarian",
+          "robos:bodyPoints": 8,
+          "robos:mindPoints": 2,
+          "robos:attackDice": 3,
+          "robos:defendDice": 2,
+          "robos:gold": 250
+        },
+        {
+          "@id": "urn:robos:tabletop:hero:hillary-elf",
+          "dcterms:title": "Hillary",
+          "robos:characterName": "Hillary",
+          "robos:heroClass": "Elf",
+          "robos:bodyPoints": 6,
+          "robos:mindPoints": 4,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2,
+          "robos:gold": 200
+        },
+        {
+          "@id": "urn:robos:tabletop:hero:trump-dwarf",
+          "dcterms:title": "Trump",
+          "robos:characterName": "Trump",
+          "robos:heroClass": "Dwarf",
+          "robos:bodyPoints": 7,
+          "robos:mindPoints": 3,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2,
+          "robos:gold": 500
+        },
+        {
+          "@id": "urn:robos:tabletop:hero:mcconnell-wizard",
+          "dcterms:title": "Senator McConnell",
+          "robos:characterName": "Senator McConnell",
+          "robos:heroClass": "Wizard",
+          "robos:bodyPoints": 4,
+          "robos:mindPoints": 6,
+          "robos:attackDice": 1,
+          "robos:defendDice": 2,
+          "robos:gold": 300
+        }
+      ]
+    });
+
+    assert.strictEqual(appModule.getCampaigns().length, 2, "Must now have 2 campaigns");
+    assert.strictEqual(appModule.getCampaign().id, "campaign-midterms-2026", "Newly created campaign must be active");
+    assert.strictEqual(customCampaign.heroes[0]["dcterms:title"], "Obama");
+    assert.strictEqual(campaigns[0].heroes[0]["dcterms:title"], "Rogar", "Campaign 1 heroes must remain independent from Campaign 2 heroes");
+
+    // Mutate gold in Campaign 2 and verify Campaign 1 hero gold is untouched
+    customCampaign.heroes[0]["robos:gold"] = 999;
+    assert.strictEqual(campaigns[0].heroes[0]["robos:gold"], 100, "Campaign 1 Barbarian gold must remain 100");
+
+    // Switch back to Campaign 1
+    await appModule.selectCampaign(0);
+    assert.strictEqual(appModule.getCampaign().title, "HeroQuest: The Gathering Storm");
+    assert.strictEqual(appModule.getCampaign().heroes[0]["dcterms:title"], "Rogar");
+
+    // Switch to Campaign 2 by ID
+    await appModule.selectCampaign("campaign-midterms-2026");
+    assert.strictEqual(appModule.getCampaign().title, "Midterms 2026: The Swamp Filibuster");
+    assert.strictEqual(appModule.getCampaign().heroes[0]["dcterms:title"], "Obama");
+
+    // Delete Campaign 2 and verify fallback to Campaign 1
+    const deleted = appModule.deleteCampaign(1);
+    assert.strictEqual(deleted, true);
+    assert.strictEqual(appModule.getCampaigns().length, 1);
+    assert.strictEqual(appModule.getCampaign().title, "HeroQuest: The Gathering Storm");
+  });
 });
