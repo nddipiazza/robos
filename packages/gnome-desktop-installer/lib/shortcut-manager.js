@@ -644,8 +644,7 @@ class ShortcutManager {
    * Install or update a single app's GNOME desktop integration.
    */
   installApp(appId, options = {}) {
-    const apps = this.discoverApps();
-    const app = apps.find(a => a.appId === appId);
+    const app = options._preloadedApp || this.discoverApps().find(a => a.appId === appId);
     if (!app) {
       return { ok: false, appId, error: `Unknown RobOS application: ${appId}` };
     }
@@ -698,7 +697,16 @@ class ShortcutManager {
         this.refreshCaches();
       }
 
-      const updated = this.discoverApps().find(a => a.appId === appId);
+      const updated = options._skipRediscover
+        ? {
+            ...app,
+            appMenuInstalled: installAppMenu ? true : app.appMenuInstalled,
+            desktopShortcutInstalled: Boolean(createDesktopShortcut),
+            desktopShortcutTrusted: Boolean(createDesktopShortcut),
+            wrapperInstalled: true,
+            iconInstalled: true,
+          }
+        : this.discoverApps().find(a => a.appId === appId);
       return { ok: true, appId, app: updated };
     } catch (err) {
       return { ok: false, appId, error: err.message };
@@ -731,6 +739,7 @@ class ShortcutManager {
 
     if (enabled) {
       return this.installApp(appId, {
+        _preloadedApp: app,
         appMenu: true,
         desktopShortcut: true,
         refreshCaches: true,
@@ -758,7 +767,7 @@ class ShortcutManager {
     if (!app) return { ok: false, appId, error: `Unknown app: ${appId}` };
 
     if (pinned && !app.appMenuInstalled && !app.systemMenuInstalled) {
-      this.installApp(appId, { appMenu: true, refreshCaches: true });
+      this.installApp(appId, { _preloadedApp: app, appMenu: true, refreshCaches: true });
     }
 
     const desktopName = `${appId}.desktop`;
@@ -820,6 +829,7 @@ class ShortcutManager {
    */
   async bulkInstall(appIds, options = {}, onProgress = null) {
     const allApps = this.discoverApps();
+    const appById = new Map(allApps.map(a => [a.appId, a]));
     const targetIds = Array.isArray(appIds) && appIds.length > 0
       ? appIds
       : allApps.map(a => a.appId);
@@ -829,13 +839,16 @@ class ShortcutManager {
 
     for (let i = 0; i < total; i++) {
       const appId = targetIds[i];
+      const preloadedApp = appById.get(appId);
       const res = this.installApp(appId, {
         ...options,
+        _preloadedApp: preloadedApp,
+        _skipRediscover: true,
         refreshCaches: false,
       });
       const stepResult = {
         appId,
-        label: res.app ? res.app.label : appId,
+        label: res.app ? res.app.label : (preloadedApp ? preloadedApp.label : appId),
         step: i + 1,
         total,
         ok: res.ok,
@@ -845,6 +858,8 @@ class ShortcutManager {
       if (typeof onProgress === 'function') {
         onProgress(stepResult);
       }
+      // Yield to event loop so worker message port flushes progress events immediately
+      await new Promise(resolve => setImmediate(resolve));
     }
 
     this.refreshCaches();
