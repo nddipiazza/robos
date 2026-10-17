@@ -21,3 +21,5 @@
   name: Learning & Training
 - id: services
   name: Agent Services & MCP Servers
+- id: point-of-sale
+  name: Point of Sale & Commerce

@@ -101,3 +101,9 @@ packages:
     title: "RobOS Auto"
     description: "Vehicle identity, maintenance, parts, shop operations and source provenance."
     path: "kgraphs/auto/package.jsonld"
+
+  - id: "point-of-sale"
+    namespace: "robos.pos"
+    title: "RobOS Point of Sale"
+    description: "Retail, food-service and bar point of sale: catalog, inventory, orders, cash drawer, self-checkout and the open checkout API."
+    path: "kgraphs/point-of-sale/package.jsonld"
