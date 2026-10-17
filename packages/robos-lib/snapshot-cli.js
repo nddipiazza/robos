@@ -120,6 +120,7 @@ const PORT_REGISTRY = {
   'tabletop-editor':   19198,
   'tabletop-blockmap-creator': 19199,
   'home-speaker':      19200,
+  'gnome-desktop-installer': 19201,
 };
 
 
