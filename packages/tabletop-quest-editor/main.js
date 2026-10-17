@@ -382,7 +382,12 @@ ipcMain.handle('quest:save-file-dialog', async (_event, payload) => {
 // IPC: Export Quest Map Image (PNG)
 ipcMain.handle('quest:save-png', async (_event, payload) => {
   try {
-    const { base64Data, suggestedName, title } = payload;
+    const rawData = payload.base64Data || payload.dataUrl || '';
+    if (!rawData) {
+      return { success: false, error: 'No image data provided for PNG export' };
+    }
+
+    const { suggestedName, title } = payload;
     const result = await dialog.showSaveDialog(mainWindow, {
       title: title || 'Export Quest Map Image (PNG)',
       defaultPath: path.join(CARTRIDGES_DIR, suggestedName || 'quest-map.png'),
@@ -393,7 +398,7 @@ ipcMain.handle('quest:save-png', async (_event, payload) => {
       return { canceled: true };
     }
 
-    const cleanBase64 = base64Data.replace(/^data:image\/\w+;base64,/, '');
+    const cleanBase64 = rawData.replace(/^data:image\/\w+;base64,/, '');
     fs.writeFileSync(result.filePath, Buffer.from(cleanBase64, 'base64'));
     return { success: true, filePath: result.filePath, fileName: path.basename(result.filePath) };
   } catch (err) {
@@ -404,33 +409,14 @@ ipcMain.handle('quest:save-png', async (_event, payload) => {
 // IPC: Export Printable Quest Sheet (PDF) via Electron printToPDF
 ipcMain.handle('quest:export-pdf', async (_event, payload) => {
   let printWin = null;
+  let tempFile = null;
   try {
     const { html, suggestedName, landscape, pageSize } = payload;
-    printWin = new BrowserWindow({
-      show: false,
-      width: landscape !== false ? 1400 : 950,
-      height: landscape !== false ? 950 : 1400,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true
-      }
-    });
+    if (!html) {
+      return { success: false, error: 'No HTML content provided for PDF export' };
+    }
 
-    await printWin.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
-
-    // Allow time for images and styles to finish rendering
-    await new Promise(r => setTimeout(r, 250));
-
-    const pdfBuffer = await printWin.webContents.printToPDF({
-      printBackground: true,
-      landscape: landscape !== false,
-      pageSize: pageSize || 'A4',
-      marginsType: 1 // minimal margins
-    });
-
-    printWin.close();
-    printWin = null;
-
+    // 1. Prompt Save Dialog first so user can choose destination or cancel before rendering
     const result = await dialog.showSaveDialog(mainWindow, {
       title: 'Export Quest Sheet Document (PDF)',
       defaultPath: path.join(CARTRIDGES_DIR, suggestedName || 'quest-sheet.pdf'),
@@ -441,13 +427,51 @@ ipcMain.handle('quest:export-pdf', async (_event, payload) => {
       return { canceled: true };
     }
 
+    // 2. Write HTML to temporary file to avoid ERR_INVALID_URL from large base64 data URLs
+    tempFile = path.join(app.getPath('temp'), `robos-quest-sheet-${Date.now()}-${Math.random().toString(36).slice(2)}.html`);
+    fs.writeFileSync(tempFile, html, 'utf8');
+
+    // 3. Render HTML in invisible BrowserWindow
+    printWin = new BrowserWindow({
+      show: false,
+      width: landscape !== false ? 1400 : 950,
+      height: landscape !== false ? 950 : 1400,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true
+      }
+    });
+
+    await printWin.loadFile(tempFile);
+
+    // Allow time for images, CSS fonts, and layout to finish rendering
+    await new Promise(r => setTimeout(r, 350));
+
+    const pdfBuffer = await printWin.webContents.printToPDF({
+      printBackground: true,
+      landscape: landscape !== false,
+      pageSize: pageSize || 'A4',
+      margins: {
+        marginType: 'none'
+      }
+    });
+
+    printWin.close();
+    printWin = null;
+
     fs.writeFileSync(result.filePath, pdfBuffer);
     return { success: true, filePath: result.filePath, fileName: path.basename(result.filePath) };
   } catch (err) {
-    if (printWin) {
-      try { printWin.close(); } catch {}
-    }
     return { success: false, error: err.message };
+  } finally {
+    if (printWin) {
+      try { printWin.close(); } catch (_) {}
+    }
+    if (tempFile) {
+      try {
+        if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+      } catch (_) {}
+    }
   }
 });
 
