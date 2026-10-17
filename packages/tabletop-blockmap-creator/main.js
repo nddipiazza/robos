@@ -20,24 +20,32 @@ let startupTarget = null;
 // Parse command line arguments for target file
 function parseArgs() {
   const args = process.argv.slice(2);
-  for (const arg of args) {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
     if (arg.startsWith('--cartridge=')) {
-      startupTarget = { type: 'cartridge', value: arg.split('=')[1] };
+      startupTarget = { type: 'cartridge', value: arg.slice(arg.indexOf('=') + 1).replace(/^["']|["']$/g, '') };
+    } else if (arg === '--cartridge' && i + 1 < args.length) {
+      startupTarget = { type: 'cartridge', value: args[++i].replace(/^["']|["']$/g, '') };
     } else if (arg.startsWith('--blockmap=')) {
-      startupTarget = { type: 'blockmap', value: arg.split('=')[1] };
+      startupTarget = { type: 'blockmap', value: arg.slice(arg.indexOf('=') + 1).replace(/^["']|["']$/g, '') };
+    } else if (arg === '--blockmap' && i + 1 < args.length) {
+      startupTarget = { type: 'blockmap', value: args[++i].replace(/^["']|["']$/g, '') };
     } else if (arg.startsWith('--map=')) {
-      startupTarget = { type: 'image', value: arg.split('=')[1] };
+      startupTarget = { type: 'image', value: arg.slice(arg.indexOf('=') + 1).replace(/^["']|["']$/g, '') };
+    } else if (arg === '--map' && i + 1 < args.length) {
+      startupTarget = { type: 'image', value: args[++i].replace(/^["']|["']$/g, '') };
     } else if (!arg.startsWith('--') && !arg.startsWith('-')) {
-      if (arg.endsWith('.blockmap.json') || arg.includes('.blockmap.')) {
-        startupTarget = { type: 'blockmap', value: arg };
-      } else if (arg.endsWith('.cartridge.json') || arg.includes('cartridge')) {
-        startupTarget = { type: 'cartridge', value: arg };
-      } else if (arg.endsWith('.json')) {
-        startupTarget = { type: 'blockmap', value: arg };
-      } else if (/\.(png|jpg|jpeg|webp|bmp)$/i.test(arg)) {
-        startupTarget = { type: 'image', value: arg };
+      const cleanArg = arg.replace(/^["']|["']$/g, '');
+      if (cleanArg.endsWith('.blockmap.json') || cleanArg.includes('.blockmap.')) {
+        startupTarget = { type: 'blockmap', value: cleanArg };
+      } else if (cleanArg.endsWith('.cartridge.json') || cleanArg.includes('cartridge')) {
+        startupTarget = { type: 'cartridge', value: cleanArg };
+      } else if (cleanArg.endsWith('.json')) {
+        startupTarget = { type: 'blockmap', value: cleanArg };
+      } else if (/\.(png|jpg|jpeg|webp|bmp)$/i.test(cleanArg)) {
+        startupTarget = { type: 'image', value: cleanArg };
       } else {
-        startupTarget = { type: 'preset', value: arg };
+        startupTarget = { type: 'preset', value: cleanArg };
       }
     }
   }
@@ -97,17 +105,66 @@ ipcMain.handle('blockmap:get-startup-args', async () => {
   };
 });
 
+// Available board presets in repository
+const PRESETS = [
+  {
+    id: 'first-light-dungeon',
+    title: 'HeroQuest: First Light Side A (1014×738)',
+    file: 'first_light_dungeon.png',
+    defaultCols: 26,
+    defaultRows: 19,
+    defaultTileSize: 39.0,
+    offsetX: 0,
+    offsetY: 0,
+    blockmapFile: 'first-light-dungeon.blockmap.json'
+  },
+  {
+    id: 'heroquest-classic',
+    title: 'HeroQuest Classic Stone Dungeon (1024×768)',
+    file: 'heroquest_board.png',
+    defaultCols: 28,
+    defaultRows: 21,
+    defaultTileSize: 36.57,
+    offsetX: 0,
+    offsetY: 0,
+    blockmapFile: 'heroquest-classic.blockmap.json'
+  },
+  {
+    id: 'first-light-caverns',
+    title: 'HeroQuest First Light Side B Caverns (1200×896)',
+    file: 'first_light_caverns.png',
+    defaultCols: 26,
+    defaultRows: 19,
+    defaultTileSize: 42.0,
+    offsetX: 0,
+    offsetY: 0
+  },
+  {
+    id: 'fan-dungeon-28x21',
+    title: 'Fan Cavern Citadel (1024×768)',
+    file: 'fan_dungeon_28x21.png',
+    defaultCols: 28,
+    defaultRows: 21,
+    defaultTileSize: 36.57,
+    offsetX: 0,
+    offsetY: 0
+  }
+];
+
 // Helper: Resolve image path
-function resolveImagePath(rawPath) {
+function resolveImagePath(rawPath, blockmapDir = null) {
   if (!rawPath) return null;
   let clean = rawPath.replace(/^res:\/\//, '');
   const candidates = [
     clean,
     path.resolve(clean),
+    blockmapDir ? path.join(blockmapDir, clean) : null,
+    blockmapDir ? path.join(blockmapDir, path.basename(clean)) : null,
     path.join(BOARDS_DIR, path.basename(clean)),
     path.join(TABLETOP_DIR, clean),
-    path.join(REPO_ROOT, clean)
-  ];
+    path.join(REPO_ROOT, clean),
+    path.join(TABLETOP_DIR, 'assets/boards', path.basename(clean))
+  ].filter(Boolean);
   for (const c of candidates) {
     if (fs.existsSync(c) && fs.statSync(c).isFile()) {
       return c;
@@ -119,52 +176,7 @@ function resolveImagePath(rawPath) {
 // IPC: List available board presets in repository
 ipcMain.handle('blockmap:list-presets', async () => {
   try {
-    const presets = [
-      {
-        id: 'first-light-dungeon',
-        title: 'HeroQuest: First Light Side A (1014×738)',
-        file: 'first_light_dungeon.png',
-        defaultCols: 26,
-        defaultRows: 19,
-        defaultTileSize: 39.0,
-        offsetX: 0,
-        offsetY: 0,
-        blockmapFile: 'first-light-dungeon.blockmap.json'
-      },
-      {
-        id: 'heroquest-classic',
-        title: 'HeroQuest Classic Stone Dungeon (1024×768)',
-        file: 'heroquest_board.png',
-        defaultCols: 28,
-        defaultRows: 21,
-        defaultTileSize: 36.57,
-        offsetX: 0,
-        offsetY: 0,
-        blockmapFile: 'heroquest-classic.blockmap.json'
-      },
-      {
-        id: 'first-light-caverns',
-        title: 'HeroQuest First Light Side B Caverns (1200×896)',
-        file: 'first_light_caverns.png',
-        defaultCols: 26,
-        defaultRows: 19,
-        defaultTileSize: 42.0,
-        offsetX: 0,
-        offsetY: 0
-      },
-      {
-        id: 'fan-dungeon-28x21',
-        title: 'Fan Cavern Citadel (1024×768)',
-        file: 'fan_dungeon_28x21.png',
-        defaultCols: 28,
-        defaultRows: 21,
-        defaultTileSize: 36.57,
-        offsetX: 0,
-        offsetY: 0
-      }
-    ];
-
-    return { success: true, presets };
+    return { success: true, presets: PRESETS };
   } catch (err) {
     return { success: false, error: err.message };
   }
@@ -227,15 +239,20 @@ ipcMain.handle('blockmap:open-file-dialog', async () => {
 ipcMain.handle('blockmap:load-board-map', async (_event, boardId) => {
   try {
     let blockmapPath = null;
+    let clean = 'first-light-dungeon';
+
     if (boardId && typeof boardId === 'string') {
-      if (fs.existsSync(boardId) && fs.statSync(boardId).isFile()) {
-        blockmapPath = boardId;
+      const trimmed = boardId.trim().replace(/^["']|["']$/g, '');
+      if (fs.existsSync(trimmed) && fs.statSync(trimmed).isFile()) {
+        blockmapPath = trimmed;
+        clean = path.basename(trimmed).replace(/\.blockmap\.json$/, '').replace(/\.json$/, '').toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
       } else {
-        const clean = boardId.toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
+        clean = trimmed.toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
         const candidates = [
           path.join(CARTRIDGES_DIR, `${clean}.blockmap.json`),
-          path.join(CARTRIDGES_DIR, `${boardId}.blockmap.json`),
-          path.join(CARTRIDGES_DIR, boardId)
+          path.join(CARTRIDGES_DIR, `${trimmed}.blockmap.json`),
+          path.join(CARTRIDGES_DIR, trimmed),
+          path.resolve(trimmed)
         ];
         for (const c of candidates) {
           if (fs.existsSync(c) && fs.statSync(c).isFile()) {
@@ -251,10 +268,21 @@ ipcMain.handle('blockmap:load-board-map', async (_event, boardId) => {
 
     const raw = fs.readFileSync(blockmapPath, 'utf8');
     const boardData = JSON.parse(raw);
+    const resolvedBoardId = boardData.id || clean;
 
+    const blockmapDir = path.dirname(blockmapPath);
     let imgData = null;
     const bgImage = boardData.backgroundImage || 'res://assets/boards/first_light_dungeon.png';
-    const resolvedPath = resolveImagePath(bgImage);
+    let resolvedPath = resolveImagePath(bgImage, blockmapDir);
+
+    if (!resolvedPath) {
+      // Fallback: check matching preset in PRESETS
+      const preset = PRESETS.find(p => p.id === resolvedBoardId || p.id === clean || p.blockmapFile === path.basename(blockmapPath));
+      if (preset && preset.file) {
+        resolvedPath = resolveImagePath(preset.file, blockmapDir);
+      }
+    }
+
     if (resolvedPath) {
       const ext = path.extname(resolvedPath).toLowerCase();
       const mime = (ext === '.jpg' || ext === '.jpeg') ? 'image/jpeg' : (ext === '.webp' ? 'image/webp' : 'image/png');
@@ -267,7 +295,7 @@ ipcMain.handle('blockmap:load-board-map', async (_event, boardId) => {
 
     return {
       success: true,
-      boardId: clean,
+      boardId: resolvedBoardId,
       boardData,
       imageData: imgData
     };
