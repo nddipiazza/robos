@@ -1483,6 +1483,74 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.strictEqual(campaign.quests.length, 1);
     assert.strictEqual(appModule.getActiveQuest().slug, "custom-quest");
   });
+
+  it("provides resizable column separators (.col-resizer) across all tabs and supports dragging and resetting column widths", () => {
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+    const styleCss = fs.readFileSync(path.join(__dirname, "../renderer/style.css"), "utf8");
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+
+    // 1. Verify every multi-column separator in every tab is present in index.html
+    const requiredResizerIds = [
+      "split-campaign-quests",
+      "grid-quest-metadata-briefing",
+      "grid-quest-save-overview",
+      "grid-quest-save-collections",
+      "split-campaign-heroes",
+      "split-monsters",
+      "split-classes",
+      "grid-spells-weapons",
+      "grid-grimoire-preview",
+      "grid-hero-trade"
+    ];
+
+    for (const rId of requiredResizerIds) {
+      assert.ok(
+        indexHtml.includes(`data-resizer-id="${rId}"`),
+        `index.html must include resizable column separator data-resizer-id="${rId}"`
+      );
+    }
+
+    // 2. Verify CSS rules for .col-resizer and 3-track grid layouts
+    assert.ok(styleCss.includes(".col-resizer"), "style.css must define .col-resizer");
+    assert.ok(styleCss.includes("cursor: col-resize"), "style.css must set col-resize cursor on .col-resizer");
+    assert.ok(styleCss.includes("--split-left-width"), "style.css must use --split-left-width variable for .split-view");
+
+    // 3. Verify programmatic resize and reset across split-view and two-col grids
+    const initialQuestsSplit = appModule.getColumnResizerState("split-campaign-quests");
+    assert.strictEqual(initialQuestsSplit.leftPx, 280);
+    assert.strictEqual(initialQuestsSplit.isCustom, false);
+
+    const resizedQuestsSplit = appModule.resizeColumnSeparator("split-campaign-quests", 80, 1200);
+    assert.strictEqual(resizedQuestsSplit.leftPx, 360);
+    assert.strictEqual(resizedQuestsSplit.isCustom, true);
+    assert.ok(resizedQuestsSplit.gridTemplateColumns.startsWith("360px 12px"));
+
+    const resetQuestsSplit = appModule.resetColumnSeparator("split-campaign-quests");
+    assert.strictEqual(resetQuestsSplit.leftPx, 280);
+    assert.strictEqual(resetQuestsSplit.isCustom, false);
+
+    // Resize Monsters tab split-view
+    const resizedMonstersSplit = appModule.resizeColumnSeparator("split-monsters", 60, 1200);
+    assert.strictEqual(resizedMonstersSplit.leftPx, 340);
+    appModule.resetColumnSeparator("split-monsters");
+
+    // Resize Classes tab split-view
+    const resizedClassesSplit = appModule.resizeColumnSeparator("split-classes", 50, 1200);
+    assert.strictEqual(resizedClassesSplit.leftPx, 330);
+    appModule.resetColumnSeparator("split-classes");
+
+    // Resize Spells & Weapons 2-column grid in Spells tab
+    const resizedSpellsGrid = appModule.resizeColumnSeparator("grid-spells-weapons", 100, 1012);
+    assert.strictEqual(resizedSpellsGrid.leftRatio, 60);
+    assert.strictEqual(resizedSpellsGrid.rightRatio, 40);
+    assert.strictEqual(resizedSpellsGrid.isCustom, true);
+
+    const resetSpellsGrid = appModule.resetColumnSeparator("grid-spells-weapons");
+    assert.strictEqual(resetSpellsGrid.leftRatio, 50);
+    assert.strictEqual(resetSpellsGrid.rightRatio, 50);
+    assert.strictEqual(resetSpellsGrid.isCustom, false);
+  });
 });
+
 
 

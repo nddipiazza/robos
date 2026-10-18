@@ -131,7 +131,7 @@
 
         <!-- Campaign Subpane 1: Quests -->
         <div id="subtab-campaign-quests" class="campaign-subpane active">
-        <div class="split-view campaign-split-view">
+        <div class="split-view campaign-split-view" data-resizer-container="split-campaign-quests">
           <aside class="sidebar-list campaign-quests-sidebar">
             <div class="list-header" style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
               <h3>Campaign Quests</h3>
@@ -146,6 +146,8 @@
             </div>
             <div id="campaign-quests-list" class="item-list"></div>
           </aside>
+
+          <div class="col-resizer" data-resizer-id="split-campaign-quests" role="separator" aria-orientation="vertical" title="Drag to resize columns (double-click to reset)"></div>
 
           <div class="editor-panel campaign-editor-panel">
             <!-- Victory Banner (Hidden by default, shown when quest is completed) -->
@@ -190,7 +192,7 @@
                 <span class="badge" id="cartridge-stat-fog" style="color:#38bdf8;">🌫️ Fog of War: Unseen Content Hidden</span>
               </div>
 
-              <div class="form-grid">
+              <div class="form-grid" data-resizer-container="grid-quest-metadata-briefing">
                 <div class="form-card-inner">
                   <h4 style="margin-top:0; color:#e2e8f0; font-size:0.9rem;">Basic Quest Metadata</h4>
                   <div class="form-group">
@@ -224,6 +226,8 @@
                     </div>
                   </div>
                 </div>
+
+                <div class="col-resizer" data-resizer-id="grid-quest-metadata-briefing" role="separator" aria-orientation="vertical" title="Drag to resize columns (double-click to reset)"></div>
 
                 <div class="form-card-inner">
                   <h4 style="margin-top:0; color:#e2e8f0; font-size:0.9rem;">Dungeon Briefing &amp; Board</h4>
@@ -296,8 +300,8 @@
                 </div>
 
                 <!-- Screenshot + KGraph Telemetry Metrics Grid -->
-                <div id="quest-save-state-overview-layout" style="display:none; grid-template-columns: minmax(280px, 360px) 1fr; gap:12px; margin-bottom:12px; align-items:stretch;">
-                  <div id="quest-save-state-screenshot-panel" style="background:#090d16; border:1px solid #334155; border-radius:6px; padding:8px; display:flex; flex-direction:column; gap:6px;">
+                <div id="quest-save-state-overview-layout" data-resizer-container="grid-quest-save-overview" style="display:none; grid-template-columns: minmax(260px, 360px) 10px minmax(260px, 1fr); gap:0; margin-bottom:12px; align-items:stretch;">
+                  <div id="quest-save-state-screenshot-panel" style="background:#090d16; border:1px solid #334155; border-radius:6px; padding:8px; display:flex; flex-direction:column; gap:6px; min-width:0;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                       <span style="font-size:11px; font-weight:700; color:#38bdf8; text-transform:uppercase;">📸 Saved Game State Screenshot</span>
                       <span id="quest-save-state-screenshot-badge" class="badge badge-cyan" style="font-size:10px;">Live Capture</span>
@@ -312,7 +316,9 @@
                     </div>
                   </div>
 
-                  <div style="display:flex; flex-direction:column; gap:8px;">
+                  <div class="col-resizer" data-resizer-id="grid-quest-save-overview" role="separator" aria-orientation="vertical" title="Drag to resize columns (double-click to reset)"></div>
+
+                  <div style="display:flex; flex-direction:column; gap:8px; min-width:0;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                       <span style="font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase;">📊 KGraph Quest State Telemetry (<code>robos:TabletopQuestSaveState</code>)</span>
                       <span id="quest-save-kgraph-id-badge" style="font-size:10px; font-family:monospace; color:#38bdf8;">urn:robos:tabletop:savestate:custom-quest</span>
@@ -328,14 +334,15 @@
                 <div id="quest-save-state-heroes" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap:8px;"></div>
 
                 <!-- Visible Monsters & Items Found So Far -->
-                <div id="quest-save-state-collections-grid" style="display:none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:10px; margin-top:10px; padding-top:10px; border-top:1px solid #1e293b;">
-                  <div>
+                <div id="quest-save-state-collections-grid" data-resizer-container="grid-quest-save-collections" style="display:none; grid-template-columns: minmax(200px, 1fr) 10px minmax(200px, 1fr); gap:0; margin-top:10px; padding-top:10px; border-top:1px solid #1e293b;">
+                  <div style="min-width:0;">
                     <div style="font-size:11px; font-weight:700; color:#fca5a5; text-transform:uppercase; margin-bottom:6px;">
                       👁️ Monsters Visible to Party (<code>robos:visibleMonsters</code>)
                     </div>
                     <div id="quest-save-state-visible-monsters" style="display:flex; flex-direction:column; gap:6px;"></div>
                   </div>
-                  <div>
+                  <div class="col-resizer" data-resizer-id="grid-quest-save-collections" role="separator" aria-orientation="vertical" title="Drag to resize columns (double-click to reset)"></div>
+                  <div style="min-width:0;">
                     <div style="font-size:11px; font-weight:700; color:#fde047; text-transform:uppercase; margin-bottom:6px;">
                       🎒 Items Found So Far, Inventory &amp; Story Triggers (<code>robos:itemsFound</code>)
                     </div>
@@ -376,7 +383,7 @@
 
         <!-- Campaign Subpane 2: Heroes (Per Campaign) -->
         <div id="subtab-campaign-heroes" class="campaign-subpane" style="display:none;">
-        <div class="split-view">
+        <div class="split-view" data-resizer-container="split-campaign-heroes">
           <aside class="sidebar-list">
             <div class="list-header">
               <h3>Campaign Heroes</h3>
@@ -384,6 +391,7 @@
             </div>
             <div id="heroes-list" class="item-list"></div>
           </aside>
+          <div class="col-resizer" data-resizer-id="split-campaign-heroes" role="separator" aria-orientation="vertical" title="Drag to resize columns (double-click to reset)"></div>
           <div class="editor-panel">
             <div class="card form-card">
               <div class="editor-card-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
@@ -610,7 +618,7 @@
 
       <!-- 2. Monsters Tab -->
       <section id="tab-monsters" class="tab-pane">
-        <div class="split-view">
+        <div class="split-view" data-resizer-container="split-monsters">
           <aside class="sidebar-list">
             <div class="list-header" style="display:flex; justify-content:space-between; align-items:center;">
               <h3>Dungeon Monsters</h3>
@@ -630,6 +638,7 @@
             </div>
             <div id="monsters-list" class="item-list"></div>
           </aside>
+          <div class="col-resizer" data-resizer-id="split-monsters" role="separator" aria-orientation="vertical" title="Drag to resize columns (double-click to reset)"></div>
           <div class="editor-panel">
             <div class="card form-card">
               <div class="editor-card-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
@@ -861,7 +870,7 @@
 
       <!-- 3. Class Tab (Hero Classes & Base Enemy Classes) -->
       <section id="tab-classes" class="tab-pane">
-        <div class="split-view">
+        <div class="split-view" data-resizer-container="split-classes">
           <aside class="sidebar-list">
             <div class="list-header" style="display:flex; justify-content:space-between; align-items:center;">
               <h3>RPG Classes</h3>
@@ -877,6 +886,8 @@
             </div>
             <div id="classes-list" class="item-list"></div>
           </aside>
+
+          <div class="col-resizer" data-resizer-id="split-classes" role="separator" aria-orientation="vertical" title="Drag to resize columns (double-click to reset)"></div>
 
           <div class="editor-panel">
             <div class="card form-card">
@@ -1091,7 +1102,7 @@
           </div>
         </div>
 
-        <div class="form-grid">
+        <div class="form-grid" data-resizer-container="grid-spells-weapons">
           <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
               <h3 style="margin:0;">✨ Elemental & Quest Spell Cards</h3>
@@ -1099,6 +1110,8 @@
             </div>
             <div id="spells-grid" class="cards-grid"></div>
           </div>
+
+          <div class="col-resizer" data-resizer-id="grid-spells-weapons" role="separator" aria-orientation="vertical" title="Drag to resize columns (double-click to reset)"></div>
 
           <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -1326,7 +1339,7 @@
         </div>
 
         <!-- Live Grimoire Distribution Preview -->
-        <div class="grimoire-distribution-preview">
+        <div class="grimoire-distribution-preview" data-resizer-container="grid-grimoire-preview">
           <div class="grimoire-side-card elf-side">
             <div class="side-card-header">
               <span class="hero-avatar">🧝</span>
@@ -1337,6 +1350,8 @@
             </div>
             <div id="modal-elf-spells-preview" class="modal-spells-preview-list"></div>
           </div>
+
+          <div class="col-resizer" data-resizer-id="grid-grimoire-preview" role="separator" aria-orientation="vertical" title="Drag to resize columns (double-click to reset)"></div>
 
           <div class="grimoire-side-card wizard-side">
             <div class="side-card-header">
@@ -1380,9 +1395,9 @@
 
       <div class="modal-body" style="gap:16px;">
         <!-- Two-column Trade Grid -->
-        <div class="trade-split-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+        <div class="trade-split-grid" data-resizer-container="grid-hero-trade" style="display:grid; grid-template-columns: minmax(220px, 1fr) 10px minmax(220px, 1fr); gap:0;">
           <!-- Column A: Hero A -->
-          <div class="trade-hero-panel card" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:14px;">
+          <div class="trade-hero-panel card" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:14px; min-width:0;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
               <div style="display:flex; align-items:center; gap:8px;">
                 <span id="trade-hero-a-icon" style="font-size:1.4rem;">🛡️</span>
@@ -1412,8 +1427,10 @@
             <div id="trade-hero-a-inventory" class="trade-inventory-list" style="max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;"></div>
           </div>
 
+          <div class="col-resizer" data-resizer-id="grid-hero-trade" role="separator" aria-orientation="vertical" title="Drag to resize columns (double-click to reset)"></div>
+
           <!-- Column B: Hero B -->
-          <div class="trade-hero-panel card" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:14px;">
+          <div class="trade-hero-panel card" style="background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; padding:14px; min-width:0;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
               <div style="display:flex; align-items:center; gap:8px;">
                 <span id="trade-hero-b-icon" style="font-size:1.4rem;">⚔️</span>
