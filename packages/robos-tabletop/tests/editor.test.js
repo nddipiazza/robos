@@ -1552,6 +1552,33 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.strictEqual(resetSpellsGrid.rightRatio, 50);
     assert.strictEqual(resetSpellsGrid.isCustom, false);
   });
+
+  it("includes Midterm Elections: Battle for the Hill (midterm-election-capitol) in Board Theme / Background selector and map configurations", async () => {
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+    const kgraph = JSON.parse(fs.readFileSync(KGRAPH_TABLETOP, "utf8"));
+    const { listMapConfigurations, getMapConfiguration } = require(path.join(REPO_ROOT, "packages/robos-gaming"));
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+
+    // 1. Verify midterm-election-capitol is in packages/robos-gaming map configurations
+    const configs = listMapConfigurations();
+    assert.ok(configs.some(c => c.id === "midterm-election-capitol"), "listMapConfigurations must include midterm-election-capitol");
+    const midtermCfg = getMapConfiguration("midterm-election-capitol");
+    assert.strictEqual(midtermCfg.id, "midterm-election-capitol");
+    assert.strictEqual(midtermCfg.title, "Midterm Elections: Battle for the Hill");
+    assert.strictEqual(midtermCfg.backgroundImage, "res://assets/boards/midterm_election_capitol.png");
+    assert.deepEqual(midtermCfg.gridDimensions, [26, 19]);
+
+    // 2. Verify KGraph node urn:robos:tabletop:mapconfig:midterm-election-capitol exists
+    const kgraphNode = (kgraph["robos:nodes"] || []).find(n => n["@id"] === "urn:robos:tabletop:mapconfig:midterm-election-capitol");
+    assert.ok(kgraphNode, "KGraph must contain urn:robos:tabletop:mapconfig:midterm-election-capitol");
+    assert.strictEqual(kgraphNode["robos:backgroundImage"], "res://assets/boards/midterm_election_capitol.png");
+
+    // 3. Verify #quest-bg-ref in index.html and switchMapConfiguration in app.js support midterm-election-capitol
+    assert.ok(indexHtml.includes('value="midterm-election-capitol"'), "#quest-bg-ref must include midterm-election-capitol option");
+    await appModule.switchMapConfiguration("midterm-election-capitol", true);
+    assert.strictEqual(appModule.getActiveQuest().mapConfigId, "midterm-election-capitol");
+    await appModule.switchMapConfiguration("heroquest-classic", true);
+  });
 });
 
 

@@ -184,12 +184,53 @@ function createDefaultCampaignHeroes(seedHeroes = null) {
   ];
 }
 
+const DEFAULT_STUDIO_MAP_CONFIGS = [
+  {
+    id: "heroquest-classic",
+    title: "HeroQuest Classic Stone Dungeon (Side A)",
+    boardSide: "A",
+    gridDimensions: [26, 19],
+    backgroundImage: "res://assets/boards/heroquest_board.png"
+  },
+  {
+    id: "midterm-election-capitol",
+    title: "Midterm Elections: Battle for the Hill",
+    boardSide: "Custom",
+    category: "Midterms 2026",
+    gridDimensions: [26, 19],
+    additionalBorderTile: true,
+    backgroundImage: "res://assets/boards/midterm_election_capitol.png"
+  },
+  {
+    id: "first-light-dungeon",
+    title: "HeroQuest: First Light Side A",
+    boardSide: "A",
+    gridDimensions: [26, 19],
+    additionalBorderTile: true,
+    backgroundImage: "res://assets/boards/first_light_dungeon.png"
+  },
+  {
+    id: "fan-dungeon-28x21",
+    title: "HeroQuest Fan Dungeon & Cavern Citadel (28×21)",
+    boardSide: "Custom",
+    gridDimensions: [28, 21],
+    backgroundImage: "res://assets/boards/fan_dungeon_28x21.png"
+  },
+  {
+    id: "first-light-caverns",
+    title: "HeroQuest: First Light Subterranean Caverns (Side B)",
+    boardSide: "B",
+    gridDimensions: [26, 19],
+    backgroundImage: "res://assets/boards/first_light_caverns.png"
+  }
+];
+
 // RobOS Tabletop Studio Client Application
 let currentData = {
   tabletopNodes: [],
   gameNodes: [],
-  mapConfigs: [],
-  activeMapConfig: null,
+  mapConfigs: [...DEFAULT_STUDIO_MAP_CONFIGS],
+  activeMapConfig: DEFAULT_STUDIO_MAP_CONFIGS[0],
   categories: ['Base Game', 'Midterms 2026'],
   activeMonsterCategoryFilter: 'All',
   activeSpellItemCategoryFilter: 'All',
@@ -456,6 +497,13 @@ document.getElementById("quest-bg-ref")?.addEventListener("change", async (e) =>
   await switchMapConfiguration(configId, false);
   if (typeof renderCampaignQuestsList === "function") {
     renderCampaignQuestsList();
+  }
+  const slug = document.getElementById("quest-slug")?.value || currentData.currentQuest?.slug || "custom-quest";
+  if (window.robosTabletop?.syncCartridgeHeroes) {
+    await window.robosTabletop.syncCartridgeHeroes({
+      slug,
+      mapConfigId: configId
+    });
   }
 });
 
@@ -2033,25 +2081,53 @@ async function initKGraphData() {
       (window.robosTabletop?.loadKGraph ? window.robosTabletop.loadKGraph() : Promise.resolve({ success: false }))
     ]);
 
-    if (mapRes && mapRes.success && mapRes.configs) {
-      currentData.mapConfigs = mapRes.configs;
-      const select = document.getElementById("map-config-select");
-      const questBgSelect = document.getElementById("quest-bg-ref");
-      [select, questBgSelect].forEach(sel => {
-        if (!sel) return;
-        sel.innerHTML = "";
-        currentData.mapConfigs.forEach(c => {
-          const opt = document.createElement("option");
-          opt.value = c.id;
-          opt.textContent = `${c.title} (${c.gridDimensions ? c.gridDimensions[0] + '×' + c.gridDimensions[1] : ''})`;
-          sel.appendChild(opt);
-        });
-      });
-    }
-
     if (res && res.success) {
       currentData.tabletopNodes = res.tabletopNodes || [];
       currentData.gameNodes = res.gameNodes || [];
+    }
+
+    const mergedMapConfigs = new Map();
+    DEFAULT_STUDIO_MAP_CONFIGS.forEach(c => mergedMapConfigs.set(c.id, { ...c }));
+    if (mapRes && mapRes.success && Array.isArray(mapRes.configs)) {
+      mapRes.configs.forEach(c => {
+        if (c && c.id) {
+          mergedMapConfigs.set(c.id, { ...(mergedMapConfigs.get(c.id) || {}), ...c });
+        }
+      });
+    }
+    if (Array.isArray(currentData.tabletopNodes)) {
+      currentData.tabletopNodes.forEach(n => {
+        const types = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+        if (!types.includes("robos:TabletopMapConfiguration")) return;
+        const id = String(n["@id"] || "").split(":").pop();
+        if (!id || mergedMapConfigs.has(id)) return;
+        mergedMapConfigs.set(id, {
+          id,
+          title: n["dcterms:title"] || id,
+          boardSide: n["robos:boardSide"] || "Custom",
+          gridDimensions: Array.isArray(n["robos:gridDimensions"]) ? n["robos:gridDimensions"] : [26, 19],
+          backgroundImage: n["robos:backgroundImage"] || "res://assets/boards/heroquest_board.png"
+        });
+      });
+    }
+    currentData.mapConfigs = Array.from(mergedMapConfigs.values());
+    const select = document.getElementById("map-config-select");
+    const questBgSelect = document.getElementById("quest-bg-ref");
+    const activeMapId = currentData.currentQuest?.mapConfigId || "heroquest-classic";
+    [select, questBgSelect].forEach(sel => {
+      if (!sel) return;
+      sel.innerHTML = "";
+      currentData.mapConfigs.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = `${c.title} (${c.gridDimensions ? c.gridDimensions[0] + '×' + c.gridDimensions[1] : ''})`;
+        if (c.id === activeMapId) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.value = activeMapId;
+    });
+
+    if (res && res.success) {
 
       const kgraphHeroes = currentData.tabletopNodes.filter(n => {
         const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
@@ -6927,6 +7003,21 @@ async function loadActiveQuestCartridgeInfo(cartridgeSlug = null) {
 
         if (q) {
           q.startingStairs = [...startPos];
+          if (mapObj.mapConfigurationId) {
+            q.mapConfigId = mapObj.mapConfigurationId;
+            const bgSelectEl = document.getElementById("quest-bg-ref");
+            if (bgSelectEl) {
+              bgSelectEl.value = mapObj.mapConfigurationId;
+            }
+            const matchedCfg = currentData.mapConfigs?.find(c => c.id === mapObj.mapConfigurationId);
+            if (matchedCfg) {
+              currentData.activeMapConfig = matchedCfg;
+              const dimsEl = document.getElementById("quest-bg-dims");
+              if (dimsEl && matchedCfg.gridDimensions) {
+                dimsEl.textContent = `${matchedCfg.gridDimensions[0]} × ${matchedCfg.gridDimensions[1]} squares`;
+              }
+            }
+          }
           if (monstersArr.length > 0) q.monsters = monstersArr;
           if (doorsArr.length > 0) q.doors = doorsArr;
           if (furnArr.length > 0) q.furniture = furnArr;
@@ -7023,10 +7114,11 @@ function renderQuestHeroesReviewGrid() {
 async function launchQuestEditorForActiveQuest(cartridgeSlug = null) {
   const q = getActiveQuest();
   const slug = cartridgeSlug || document.getElementById("quest-slug")?.value || q?.slug || "custom-quest";
+  const mapConfigId = document.getElementById("quest-bg-ref")?.value || q?.mapConfigId || currentData.activeMapConfig?.id || "heroquest-classic";
   setStatus(`Launching Tabletop Quest Map Editor for '${slug}.cartridge.json'...`);
 
   if (window.robosTabletop?.launchQuestEditor) {
-    const res = await window.robosTabletop.launchQuestEditor({ cartridgeSlug: slug });
+    const res = await window.robosTabletop.launchQuestEditor({ cartridgeSlug: slug, mapConfigId });
     if (res && res.success) {
       setStatus(`Launched Tabletop Quest Map Editor for '${slug}.cartridge.json' (PID: ${res.pid}).`);
       return res;
@@ -7035,7 +7127,7 @@ async function launchQuestEditorForActiveQuest(cartridgeSlug = null) {
       return res || { success: false, error: "Failed to launch Quest Editor" };
     }
   }
-  const fallbackRes = { success: true, cartridgeSlug: slug, simulated: true };
+  const fallbackRes = { success: true, cartridgeSlug: slug, mapConfigId, simulated: true };
   setStatus(`Quest Editor ready for '${slug}.cartridge.json'.`);
   return fallbackRes;
 }
@@ -9480,7 +9572,9 @@ if (typeof module !== "undefined" && module.exports) {
     initColumnResizers,
     resizeColumnSeparator,
     resetColumnSeparator,
-    getColumnResizerState
+    getColumnResizerState,
+    DEFAULT_STUDIO_MAP_CONFIGS,
+    switchMapConfiguration
   };
 }
 

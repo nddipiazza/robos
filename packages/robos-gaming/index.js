@@ -13,6 +13,8 @@ const {
   FAN_DUNGEON_28x21_CONFIG,
   HEROQUEST_CLASSIC_CONFIG,
   HEROQUEST_FIRST_LIGHT_CONFIG,
+  FIRST_LIGHT_DUNGEON_CONFIG,
+  MIDTERM_ELECTION_CAPITOL_CONFIG,
   getMapConfiguration,
   listMapConfigurations,
   registerMapConfiguration
@@ -47,6 +49,8 @@ module.exports = {
   FAN_DUNGEON_28x21_CONFIG,
   HEROQUEST_CLASSIC_CONFIG,
   HEROQUEST_FIRST_LIGHT_CONFIG,
+  FIRST_LIGHT_DUNGEON_CONFIG,
+  MIDTERM_ELECTION_CAPITOL_CONFIG,
   getMapConfiguration,
   listMapConfigurations,
   registerMapConfiguration,

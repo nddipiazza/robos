@@ -340,6 +340,27 @@ ipcMain.handle("tabletop:sync-cartridge-heroes", async (_event, payload) => {
     if (payload?.questBriefing && cartridge.header) {
       cartridge.header.description = payload.questBriefing;
     }
+    if (payload?.mapConfigId) {
+      try {
+        const { getMapConfiguration } = require(path.join(REPO_ROOT, "packages/robos-gaming"));
+        const mapCfg = getMapConfiguration(payload.mapConfigId);
+        if (mapCfg && cartridge.maps) {
+          const mapKey = cartridge.startingMap || cleanSlug;
+          const mapTarget = cartridge.maps[mapKey] || Object.values(cartridge.maps)[0];
+          if (mapTarget) {
+            mapTarget.mapConfigurationId = mapCfg.id;
+            mapTarget.backgroundImage = mapCfg.backgroundImage || mapTarget.backgroundImage;
+            if (Array.isArray(mapCfg.gridDimensions) && mapCfg.gridDimensions.length === 2) {
+              mapTarget.width = mapCfg.gridDimensions[0];
+              mapTarget.height = mapCfg.gridDimensions[1];
+            }
+            if (mapCfg.additionalBorderTile !== undefined) {
+              mapTarget.additionalBorderTile = Boolean(mapCfg.additionalBorderTile);
+            }
+          }
+        }
+      } catch {}
+    }
     fs.writeFileSync(cartPath, JSON.stringify(cartridge, null, 2) + "\n", "utf8");
     return { success: true, cartridgePath: cartPath, cartridgeId: cleanSlug };
   } catch (err) {
@@ -383,6 +404,27 @@ ipcMain.handle("tabletop:bundle-cartridge", async (_event, payload) => {
       }
       if (payload?.spellAllocation) {
         existing.spellAllocation = payload.spellAllocation;
+      }
+      const incomingMap = payload?.maps?.[cartSlug] || (payload?.maps ? Object.values(payload.maps)[0] : null);
+      const selectedMapConfigId = payload?.mapConfigId || incomingMap?.mapConfigurationId;
+      if (selectedMapConfigId && existing.maps) {
+        try {
+          const { getMapConfiguration } = require(path.join(REPO_ROOT, "packages/robos-gaming"));
+          const mapCfg = getMapConfiguration(selectedMapConfigId);
+          const mapKey = existing.startingMap || cartSlug;
+          const mapTarget = existing.maps[mapKey] || Object.values(existing.maps)[0];
+          if (mapTarget && mapCfg) {
+            mapTarget.mapConfigurationId = mapCfg.id;
+            mapTarget.backgroundImage = mapCfg.backgroundImage || mapTarget.backgroundImage;
+            if (Array.isArray(mapCfg.gridDimensions) && mapCfg.gridDimensions.length === 2) {
+              mapTarget.width = mapCfg.gridDimensions[0];
+              mapTarget.height = mapCfg.gridDimensions[1];
+            }
+            if (mapCfg.additionalBorderTile !== undefined) {
+              mapTarget.additionalBorderTile = Boolean(mapCfg.additionalBorderTile);
+            }
+          }
+        } catch {}
       }
       fs.writeFileSync(cartPath, JSON.stringify(existing, null, 2) + "\n", "utf8");
       return {
@@ -441,10 +483,30 @@ ipcMain.handle("tabletop:list-cartridges", async () => {
 ipcMain.handle("tabletop:launch-quest-editor", async (_event, payload) => {
   try {
     const slug = (payload?.cartridgeSlug || payload?.slug || "custom-quest").replace(/\.cartridge\.json$/, "");
+    const mapConfigId = payload?.mapConfigId || "";
+    const cartPath = path.join(TABLETOP_GAME_DIR, "cartridges", `${slug}.cartridge.json`);
+    if (mapConfigId && fs.existsSync(cartPath)) {
+      try {
+        const { getMapConfiguration } = require(path.join(REPO_ROOT, "packages/robos-gaming"));
+        const mapCfg = getMapConfiguration(mapConfigId);
+        const existing = JSON.parse(fs.readFileSync(cartPath, "utf8"));
+        const mapKey = existing.startingMap || slug;
+        const mapTarget = existing.maps?.[mapKey] || (existing.maps ? Object.values(existing.maps)[0] : null);
+        if (mapTarget && mapCfg) {
+          mapTarget.mapConfigurationId = mapCfg.id;
+          mapTarget.backgroundImage = mapCfg.backgroundImage || mapTarget.backgroundImage;
+          fs.writeFileSync(cartPath, JSON.stringify(existing, null, 2) + "\n", "utf8");
+        }
+      } catch {}
+    }
+
     const questEditorDir = path.join(REPO_ROOT, "packages/tabletop-quest-editor");
     const electronBin = process.execPath;
     const display = process.env.DISPLAY || ":0";
-    const cmd = `"${electronBin}" "${questEditorDir}" "--cartridge=${slug}" --no-sandbox --disable-gpu --disable-dev-shm-usage`;
+    const targetArg = fs.existsSync(cartPath)
+      ? `"--cartridge=${slug}"`
+      : (mapConfigId ? `"--blockmap=${mapConfigId}"` : `"--cartridge=${slug}"`);
+    const cmd = `"${electronBin}" "${questEditorDir}" ${targetArg} --no-sandbox --disable-gpu --disable-dev-shm-usage`;
 
     console.log(`[robos-tabletop] Launching Quest Map Editor: ${cmd}`);
     const child = exec(cmd, {
@@ -465,7 +527,8 @@ ipcMain.handle("tabletop:launch-quest-editor", async (_event, payload) => {
     return {
       success: true,
       pid: child.pid,
-      cartridgeSlug: slug
+      cartridgeSlug: slug,
+      mapConfigId
     };
   } catch (err) {
     return { success: false, error: err.message };
