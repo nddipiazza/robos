@@ -2684,18 +2684,18 @@
       ],
       "robos:quests": [
         {
-          "id": "quest-1",
+          "id": "election-2026-quest-1",
           "slug": "election-2026-quest-1",
           "title": "Quest 1: Battle for the Hill",
-          "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Navigate the chambers, overcome partisan perils, and claim victory!",
+          "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office—defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
           "mapConfigId": "midterm-election-capitol",
           "ruleset": "heroquest",
           "goldReward": 150,
-          "bossTarget": "gargoyle-boss",
+          "bossTarget": "talarixon",
           "completed": false,
           "startingStairs": [
-            7,
-            14
+            0,
+            13
           ],
           "cartridgeFile": "election-2026-quest-1.cartridge.json",
           "activeRooms": [
@@ -2710,6 +2710,11 @@
             "room-nw-9",
             "room-nw-10",
             "room-se-11"
+          ],
+          "primaryGoals": [
+            "Defeat the Capitol Bosses & Hydra Bosses (Talarixon, El-Rogers, Brownsted, Katie Zacharia, Mitch McConnell, and Drunk JD Vance & Kamala Harris).",
+            "Storm the Capitol chambers (Briefing Room, Committee Chamber, War Room & Oval Office) and expose the bipartisan slush fund.",
+            "Lead all surviving heroes safely to the Capitol Exit Stairs at [14, 2]."
           ]
         }
       ],
@@ -2740,8 +2745,8 @@
         "room-se-11"
       ],
       "robos:startingSpawn": [
-        7,
-        14
+        0,
+        13
       ],
       "robos:wallBlocksCount": 0,
       "robos:doorsCount": 12,
@@ -3760,6 +3765,264 @@
       "robos:val": 3,
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:savestate:election-2026-quest-1",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopQuestSaveState",
+        "schema:Action"
+      ],
+      "dcterms:title": "Quest State — Round 1 (Rogar (Hero 1 of 4))",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop",
+      "robos:questSlug": "election-2026-quest-1",
+      "robos:mapId": "election-2026-quest-1",
+      "robos:gridDimensions": [
+        26,
+        19
+      ],
+      "robos:savedAt": "2026-10-18T16:42:51.000Z",
+      "robos:playTimeSeconds": 60,
+      "robos:playTimeFormatted": "1m 0s",
+      "robos:currentRound": 1,
+      "robos:currentPhase": "hero_phase",
+      "robos:currentRole": "player",
+      "robos:activeHeroIndex": 0,
+      "robos:activeTurnActor": "Rogar (Hero 1 of 4)",
+      "robos:turnState": "awaiting_roll",
+      "robos:movementRemaining": 0,
+      "robos:hasMovedThisTurn": false,
+      "robos:hasActedThisTurn": false,
+      "robos:heroStates": [
+        {
+          "@type": "robos:TabletopSaveHeroState",
+          "id": "barbarian",
+          "name": "Rogar",
+          "heroClass": "Barbarian",
+          "currentBP": 8,
+          "maxBP": 8,
+          "currentMP": 2,
+          "maxMP": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "gold": 0,
+          "gridPos": [
+            0,
+            13
+          ],
+          "weapon": "broadsword",
+          "armor": "none",
+          "inventory": [
+            "broadsword",
+            "healing_potion"
+          ],
+          "spells": [],
+          "usedSpells": [],
+          "spellsRemaining": 0,
+          "hasDepartedStart": false,
+          "isOnBoard": true,
+          "alive": true,
+          "escaped": false,
+          "isActiveTurn": true
+        },
+        {
+          "@type": "robos:TabletopSaveHeroState",
+          "id": "dwarf",
+          "name": "Dorgan",
+          "heroClass": "Dwarf",
+          "currentBP": 7,
+          "maxBP": 7,
+          "currentMP": 3,
+          "maxMP": 3,
+          "attackDice": 2,
+          "defendDice": 2,
+          "gold": 0,
+          "gridPos": [
+            0,
+            13
+          ],
+          "weapon": "shortsword",
+          "armor": "none",
+          "inventory": [
+            "shortsword",
+            "healing_potion"
+          ],
+          "spells": [],
+          "usedSpells": [],
+          "spellsRemaining": 0,
+          "hasDepartedStart": false,
+          "isOnBoard": true,
+          "alive": true,
+          "escaped": false,
+          "isActiveTurn": false
+        },
+        {
+          "@type": "robos:TabletopSaveHeroState",
+          "id": "elf",
+          "name": "Ladril",
+          "heroClass": "Elf",
+          "currentBP": 6,
+          "maxBP": 6,
+          "currentMP": 4,
+          "maxMP": 4,
+          "attackDice": 2,
+          "defendDice": 2,
+          "gold": 0,
+          "gridPos": [
+            0,
+            13
+          ],
+          "weapon": "shortsword",
+          "armor": "none",
+          "inventory": [
+            "shortsword",
+            "healing_potion"
+          ],
+          "spells": [
+            "water_of_healing",
+            "sleep",
+            "veil_of_mist"
+          ],
+          "usedSpells": [],
+          "spellsRemaining": 3,
+          "hasDepartedStart": false,
+          "isOnBoard": true,
+          "alive": true,
+          "escaped": false,
+          "isActiveTurn": false
+        },
+        {
+          "@type": "robos:TabletopSaveHeroState",
+          "id": "wizard",
+          "name": "Telor",
+          "heroClass": "Wizard",
+          "currentBP": 4,
+          "maxBP": 4,
+          "currentMP": 6,
+          "maxMP": 6,
+          "attackDice": 1,
+          "defendDice": 2,
+          "gold": 0,
+          "gridPos": [
+            0,
+            13
+          ],
+          "weapon": "dagger",
+          "armor": "none",
+          "inventory": [
+            "dagger",
+            "staff",
+            "healing_potion"
+          ],
+          "spells": [
+            "heal_body",
+            "pass_through_rock",
+            "rock_skin",
+            "ball_of_flame",
+            "fire_of_wrath",
+            "courage",
+            "genie",
+            "swift_wind",
+            "tempest"
+          ],
+          "usedSpells": [],
+          "spellsRemaining": 9,
+          "hasDepartedStart": false,
+          "isOnBoard": true,
+          "alive": true,
+          "escaped": false,
+          "isActiveTurn": false
+        }
+      ],
+      "robos:visibleMonsters": [],
+      "robos:visibleMonstersCount": 0,
+      "robos:monstersDefeated": 0,
+      "robos:itemsFound": [
+        {
+          "id": "barbarian-broadsword-0",
+          "name": "Broadsword",
+          "type": "equipment",
+          "holder": "Rogar",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "barbarian-healing_potion-1",
+          "name": "Healing Potion",
+          "type": "potion",
+          "holder": "Rogar",
+          "source": "Hero Inventory",
+          "icon": "🧪"
+        },
+        {
+          "id": "dwarf-shortsword-0",
+          "name": "Shortsword",
+          "type": "equipment",
+          "holder": "Dorgan",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "dwarf-healing_potion-1",
+          "name": "Healing Potion",
+          "type": "potion",
+          "holder": "Dorgan",
+          "source": "Hero Inventory",
+          "icon": "🧪"
+        },
+        {
+          "id": "elf-shortsword-0",
+          "name": "Shortsword",
+          "type": "equipment",
+          "holder": "Ladril",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "elf-healing_potion-1",
+          "name": "Healing Potion",
+          "type": "potion",
+          "holder": "Ladril",
+          "source": "Hero Inventory",
+          "icon": "🧪"
+        },
+        {
+          "id": "wizard-dagger-0",
+          "name": "Dagger",
+          "type": "equipment",
+          "holder": "Telor",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "wizard-staff-1",
+          "name": "Staff",
+          "type": "equipment",
+          "holder": "Telor",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "wizard-healing_potion-2",
+          "name": "Healing Potion",
+          "type": "potion",
+          "holder": "Telor",
+          "source": "Hero Inventory",
+          "icon": "🧪"
+        }
+      ],
+      "robos:itemsFoundCount": 9,
+      "robos:totalPartyGold": 0,
+      "robos:exploredTilesCount": 34,
+      "robos:revealedRooms": [],
+      "robos:searchedRooms": [],
+      "robos:doorsOpenCount": 0,
+      "robos:trapsDetectedCount": 0,
+      "robos:triggersFired": [],
+      "robos:triggersFiredCount": 0,
+      "robos:screenshotPath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_election-2026-quest-1_election-2026-quest-1.png",
+      "robos:saveFilePath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_election-2026-quest-1_election-2026-quest-1.json"
     }
   ],
   "@graph": [
@@ -3826,9 +4089,7 @@
       "robos:startingPosition": [
         1,
         1
-      ],
-      "robos:tokenAsset": "res://assets/tokens/token_barbarian.png",
-      "robos:portraitAsset": "res://assets/hero_cards/card_bg_barbarian.png"
+      ]
     },
     {
       "@id": "urn:robos:tabletop:hero:dwarf",
@@ -3847,9 +4108,7 @@
       "robos:startingWeapon": "urn:robos:game:item:shortsword",
       "robos:tokenColor": "#b45309",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop",
-      "robos:tokenAsset": "res://assets/tokens/token_dwarf.png",
-      "robos:portraitAsset": "res://assets/hero_cards/card_bg_dwarf.png"
+      "robos:namespace": "robos.tabletop"
     },
     {
       "@id": "urn:robos:tabletop:hero:elf",
@@ -3868,9 +4127,7 @@
       "robos:startingWeapon": "urn:robos:game:item:shortsword",
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop",
-      "robos:tokenAsset": "res://assets/tokens/token_elf.png",
-      "robos:portraitAsset": "res://assets/hero_cards/card_bg_elf.png"
+      "robos:namespace": "robos.tabletop"
     },
     {
       "@id": "urn:robos:tabletop:hero:wizard",
@@ -3914,9 +4171,7 @@
       "robos:startingPosition": [
         1,
         1
-      ],
-      "robos:tokenAsset": "res://assets/tokens/token_wizard.png",
-      "robos:portraitAsset": "res://assets/hero_cards/card_bg_wizard.png"
+      ]
     },
     {
       "@id": "urn:robos:tabletop:monster:goblin",
@@ -3936,9 +4191,7 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Goblin",
-      "robos:archetype": "Goblin",
-      "robos:tokenAsset": "res://assets/tokens/token_goblin.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_goblin.png"
+      "robos:archetype": "Goblin"
     },
     {
       "@id": "urn:robos:tabletop:monster:orc",
@@ -3958,9 +4211,7 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Orc",
-      "robos:archetype": "Orc",
-      "robos:tokenAsset": "res://assets/tokens/token_orc.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_orc.png"
+      "robos:archetype": "Orc"
     },
     {
       "@id": "urn:robos:tabletop:monster:fimir",
@@ -3980,9 +4231,7 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Fimir",
-      "robos:archetype": "Fimir",
-      "robos:tokenAsset": "res://assets/tokens/token_fimir.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_fimir.png"
+      "robos:archetype": "Fimir"
     },
     {
       "@id": "urn:robos:tabletop:monster:skeleton",
@@ -4003,9 +4252,7 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Skeleton",
-      "robos:archetype": "Skeleton",
-      "robos:tokenAsset": "res://assets/tokens/token_skeleton.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_skeleton.png"
+      "robos:archetype": "Skeleton"
     },
     {
       "@id": "urn:robos:tabletop:monster:zombie",
@@ -4026,9 +4273,7 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Zombie",
-      "robos:archetype": "Zombie",
-      "robos:tokenAsset": "res://assets/tokens/token_zombie.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_zombie.png"
+      "robos:archetype": "Zombie"
     },
     {
       "@id": "urn:robos:tabletop:monster:mummy",
@@ -4049,9 +4294,7 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Mummy",
-      "robos:archetype": "Mummy",
-      "robos:tokenAsset": "res://assets/tokens/token_mummy.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_mummy.png"
+      "robos:archetype": "Mummy"
     },
     {
       "@id": "urn:robos:tabletop:monster:chaos-warrior",
@@ -4071,9 +4314,7 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Dread Warrior",
-      "robos:archetype": "Dread Warrior",
-      "robos:tokenAsset": "res://assets/tokens/token_chaos_warrior.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_chaos_warrior.png"
+      "robos:archetype": "Dread Warrior"
     },
     {
       "@id": "urn:robos:tabletop:monster:gargoyle",
@@ -4093,9 +4334,7 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Gargoyle",
-      "robos:archetype": "Gargoyle",
-      "robos:tokenAsset": "res://assets/tokens/token_gargoyle.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_gargoyle.png"
+      "robos:archetype": "Gargoyle"
     },
     {
       "@id": "urn:robos:tabletop:monster:verag-orc-warlord",
@@ -4124,9 +4363,7 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Orc Warlord",
-      "robos:archetype": "Orc Warlord",
-      "robos:tokenAsset": "res://assets/tokens/token_verag.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_verag.png"
+      "robos:archetype": "Orc Warlord"
     },
     {
       "@id": "urn:robos:tabletop:monster:chaos-sorcerer",
@@ -4154,9 +4391,7 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Chaos Sorcerer",
-      "robos:archetype": "Chaos Sorcerer",
-      "robos:tokenAsset": "res://assets/tokens/token_chaos_sorcerer.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_chaos_sorcerer.png"
+      "robos:archetype": "Chaos Sorcerer"
     },
     {
       "@id": "urn:robos:tabletop:monster:witch-lord",
@@ -4187,9 +4422,7 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Witch Lord",
-      "robos:archetype": "Witch Lord",
-      "robos:tokenAsset": "res://assets/tokens/token_witch_lord.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_witch_lord.png"
+      "robos:archetype": "Witch Lord"
     },
     {
       "@id": "urn:robos:tabletop:monster:orc-shaman",
@@ -4216,9 +4449,7 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Orc Shaman",
-      "robos:archetype": "Orc Shaman",
-      "robos:tokenAsset": "res://assets/tokens/token_orc_shaman.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_orc_shaman.png"
+      "robos:archetype": "Orc Shaman"
     },
     {
       "@id": "urn:robos:tabletop:monster:dragon",
@@ -4247,9 +4478,7 @@
       ],
       "robos:tokenColor": "#b91c1c",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop",
-      "robos:tokenAsset": "res://assets/tokens/token_dragon.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_dragon.png"
+      "robos:namespace": "robos.tabletop"
     },
     {
       "@id": "urn:robos:tabletop:spell:ball-of-flame",
@@ -5554,9 +5783,7 @@
       "robos:tokenColor": "#475569",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop",
-      "robos:category": "Base Game",
-      "robos:tokenAsset": "res://assets/tokens/token_doomguard.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_doomguard.png"
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:monster:cassandria-witch-hand",
@@ -5584,9 +5811,7 @@
       "robos:tokenColor": "#9333ea",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop",
-      "robos:category": "Base Game",
-      "robos:tokenAsset": "res://assets/tokens/token_witch_hand.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_witch_hand.png"
+      "robos:category": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:weapon:unapproved-bombing-run",
@@ -6462,18 +6687,18 @@
       ],
       "robos:quests": [
         {
-          "id": "quest-1",
+          "id": "election-2026-quest-1",
           "slug": "election-2026-quest-1",
           "title": "Quest 1: Battle for the Hill",
-          "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Navigate the chambers, overcome partisan perils, and claim victory!",
+          "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office—defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
           "mapConfigId": "midterm-election-capitol",
           "ruleset": "heroquest",
           "goldReward": 150,
-          "bossTarget": "gargoyle-boss",
+          "bossTarget": "talarixon",
           "completed": false,
           "startingStairs": [
-            7,
-            14
+            0,
+            13
           ],
           "cartridgeFile": "election-2026-quest-1.cartridge.json",
           "activeRooms": [
@@ -6488,6 +6713,11 @@
             "room-nw-9",
             "room-nw-10",
             "room-se-11"
+          ],
+          "primaryGoals": [
+            "Defeat the Capitol Bosses & Hydra Bosses (Talarixon, El-Rogers, Brownsted, Katie Zacharia, Mitch McConnell, and Drunk JD Vance & Kamala Harris).",
+            "Storm the Capitol chambers (Briefing Room, Committee Chamber, War Room & Oval Office) and expose the bipartisan slush fund.",
+            "Lead all surviving heroes safely to the Capitol Exit Stairs at [14, 2]."
           ]
         }
       ],
@@ -6518,8 +6748,8 @@
         "room-se-11"
       ],
       "robos:startingSpawn": [
-        7,
-        14
+        0,
+        13
       ],
       "robos:wallBlocksCount": 0,
       "robos:doorsCount": 12,
@@ -6974,9 +7204,7 @@
       "robos:icon": "📋",
       "robos:tokenColor": "#16a34a",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop",
-      "robos:tokenAsset": "res://assets/tokens/token_campaign_volunteer.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_campaign_volunteer.png"
+      "robos:namespace": "robos.tabletop"
     },
     {
       "@id": "urn:robos:tabletop:monster:political-operative",
@@ -7007,9 +7235,7 @@
       "robos:icon": "🕵️",
       "robos:tokenColor": "#ca8a04",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop",
-      "robos:tokenAsset": "res://assets/tokens/token_political_operative.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_political_operative.png"
+      "robos:namespace": "robos.tabletop"
     },
     {
       "@id": "urn:robos:tabletop:monster:career-politician",
@@ -7040,9 +7266,7 @@
       "robos:icon": "🏛️",
       "robos:tokenColor": "#94a3b8",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop",
-      "robos:tokenAsset": "res://assets/tokens/token_career_politician.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_career_politician.png"
+      "robos:namespace": "robos.tabletop"
     },
     {
       "@id": "urn:robos:tabletop:monster:bureaucrat",
@@ -7073,9 +7297,7 @@
       "robos:icon": "📎",
       "robos:tokenColor": "#475569",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop",
-      "robos:tokenAsset": "res://assets/tokens/token_bureaucrat.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_bureaucrat.png"
+      "robos:namespace": "robos.tabletop"
     },
     {
       "@id": "urn:robos:tabletop:monster:lobbyist",
@@ -7106,9 +7328,7 @@
       "robos:icon": "💼",
       "robos:tokenColor": "#d97706",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop",
-      "robos:tokenAsset": "res://assets/tokens/token_lobbyist.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_lobbyist.png"
+      "robos:namespace": "robos.tabletop"
     },
     {
       "@id": "urn:robos:tabletop:monster:partisan-enforcer",
@@ -7139,9 +7359,7 @@
       "robos:icon": "⚔️",
       "robos:tokenColor": "#dc2626",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop",
-      "robos:tokenAsset": "res://assets/tokens/token_partisan_enforcer.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_partisan_enforcer.png"
+      "robos:namespace": "robos.tabletop"
     },
     {
       "@id": "urn:robos:tabletop:monster:super-pac-demon",
@@ -7172,9 +7390,7 @@
       "robos:icon": "😈",
       "robos:tokenColor": "#7c3aed",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop",
-      "robos:tokenAsset": "res://assets/tokens/token_super_pac_demon.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_super_pac_demon.png"
+      "robos:namespace": "robos.tabletop"
     },
     {
       "@id": "urn:robos:tabletop:monster:spin-doctor",
@@ -7207,9 +7423,7 @@
       "robos:icon": "🌀",
       "robos:tokenColor": "#0284c7",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop",
-      "robos:tokenAsset": "res://assets/tokens/token_spin_doctor.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_spin_doctor.png"
+      "robos:namespace": "robos.tabletop"
     },
     {
       "@id": "urn:robos:tabletop:monster:talarixon",
@@ -7241,9 +7455,7 @@
       "robos:icon": "🐍",
       "robos:tokenColor": "#b91c1c",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop",
-      "robos:tokenAsset": "res://assets/tokens/token_talarixon.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_talarixon.png"
+      "robos:namespace": "robos.tabletop"
     },
     {
       "@id": "urn:robos:tabletop:monster:el-rogers",
@@ -7275,9 +7487,7 @@
       "robos:icon": "🐲",
       "robos:tokenColor": "#1d4ed8",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop",
-      "robos:tokenAsset": "res://assets/tokens/token_el_rogers.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_el_rogers.png"
+      "robos:namespace": "robos.tabletop"
     },
     {
       "@id": "urn:robos:tabletop:monster:brownsted",
@@ -7309,9 +7519,7 @@
       "robos:icon": "🐉",
       "robos:tokenColor": "#9333ea",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop",
-      "robos:tokenAsset": "res://assets/tokens/token_brownsted.png",
-      "robos:portraitAsset": "res://assets/monster_cards/card_bg_brownsted.png"
+      "robos:namespace": "robos.tabletop"
     },
     {
       "@id": "urn:robos:tabletop:spell:attack-ad",
@@ -7560,6 +7768,264 @@
       "robos:val": 3,
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:savestate:election-2026-quest-1",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopQuestSaveState",
+        "schema:Action"
+      ],
+      "dcterms:title": "Quest State — Round 1 (Rogar (Hero 1 of 4))",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop",
+      "robos:questSlug": "election-2026-quest-1",
+      "robos:mapId": "election-2026-quest-1",
+      "robos:gridDimensions": [
+        26,
+        19
+      ],
+      "robos:savedAt": "2026-10-18T16:42:51.000Z",
+      "robos:playTimeSeconds": 60,
+      "robos:playTimeFormatted": "1m 0s",
+      "robos:currentRound": 1,
+      "robos:currentPhase": "hero_phase",
+      "robos:currentRole": "player",
+      "robos:activeHeroIndex": 0,
+      "robos:activeTurnActor": "Rogar (Hero 1 of 4)",
+      "robos:turnState": "awaiting_roll",
+      "robos:movementRemaining": 0,
+      "robos:hasMovedThisTurn": false,
+      "robos:hasActedThisTurn": false,
+      "robos:heroStates": [
+        {
+          "@type": "robos:TabletopSaveHeroState",
+          "id": "barbarian",
+          "name": "Rogar",
+          "heroClass": "Barbarian",
+          "currentBP": 8,
+          "maxBP": 8,
+          "currentMP": 2,
+          "maxMP": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "gold": 0,
+          "gridPos": [
+            0,
+            13
+          ],
+          "weapon": "broadsword",
+          "armor": "none",
+          "inventory": [
+            "broadsword",
+            "healing_potion"
+          ],
+          "spells": [],
+          "usedSpells": [],
+          "spellsRemaining": 0,
+          "hasDepartedStart": false,
+          "isOnBoard": true,
+          "alive": true,
+          "escaped": false,
+          "isActiveTurn": true
+        },
+        {
+          "@type": "robos:TabletopSaveHeroState",
+          "id": "dwarf",
+          "name": "Dorgan",
+          "heroClass": "Dwarf",
+          "currentBP": 7,
+          "maxBP": 7,
+          "currentMP": 3,
+          "maxMP": 3,
+          "attackDice": 2,
+          "defendDice": 2,
+          "gold": 0,
+          "gridPos": [
+            0,
+            13
+          ],
+          "weapon": "shortsword",
+          "armor": "none",
+          "inventory": [
+            "shortsword",
+            "healing_potion"
+          ],
+          "spells": [],
+          "usedSpells": [],
+          "spellsRemaining": 0,
+          "hasDepartedStart": false,
+          "isOnBoard": true,
+          "alive": true,
+          "escaped": false,
+          "isActiveTurn": false
+        },
+        {
+          "@type": "robos:TabletopSaveHeroState",
+          "id": "elf",
+          "name": "Ladril",
+          "heroClass": "Elf",
+          "currentBP": 6,
+          "maxBP": 6,
+          "currentMP": 4,
+          "maxMP": 4,
+          "attackDice": 2,
+          "defendDice": 2,
+          "gold": 0,
+          "gridPos": [
+            0,
+            13
+          ],
+          "weapon": "shortsword",
+          "armor": "none",
+          "inventory": [
+            "shortsword",
+            "healing_potion"
+          ],
+          "spells": [
+            "water_of_healing",
+            "sleep",
+            "veil_of_mist"
+          ],
+          "usedSpells": [],
+          "spellsRemaining": 3,
+          "hasDepartedStart": false,
+          "isOnBoard": true,
+          "alive": true,
+          "escaped": false,
+          "isActiveTurn": false
+        },
+        {
+          "@type": "robos:TabletopSaveHeroState",
+          "id": "wizard",
+          "name": "Telor",
+          "heroClass": "Wizard",
+          "currentBP": 4,
+          "maxBP": 4,
+          "currentMP": 6,
+          "maxMP": 6,
+          "attackDice": 1,
+          "defendDice": 2,
+          "gold": 0,
+          "gridPos": [
+            0,
+            13
+          ],
+          "weapon": "dagger",
+          "armor": "none",
+          "inventory": [
+            "dagger",
+            "staff",
+            "healing_potion"
+          ],
+          "spells": [
+            "heal_body",
+            "pass_through_rock",
+            "rock_skin",
+            "ball_of_flame",
+            "fire_of_wrath",
+            "courage",
+            "genie",
+            "swift_wind",
+            "tempest"
+          ],
+          "usedSpells": [],
+          "spellsRemaining": 9,
+          "hasDepartedStart": false,
+          "isOnBoard": true,
+          "alive": true,
+          "escaped": false,
+          "isActiveTurn": false
+        }
+      ],
+      "robos:visibleMonsters": [],
+      "robos:visibleMonstersCount": 0,
+      "robos:monstersDefeated": 0,
+      "robos:itemsFound": [
+        {
+          "id": "barbarian-broadsword-0",
+          "name": "Broadsword",
+          "type": "equipment",
+          "holder": "Rogar",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "barbarian-healing_potion-1",
+          "name": "Healing Potion",
+          "type": "potion",
+          "holder": "Rogar",
+          "source": "Hero Inventory",
+          "icon": "🧪"
+        },
+        {
+          "id": "dwarf-shortsword-0",
+          "name": "Shortsword",
+          "type": "equipment",
+          "holder": "Dorgan",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "dwarf-healing_potion-1",
+          "name": "Healing Potion",
+          "type": "potion",
+          "holder": "Dorgan",
+          "source": "Hero Inventory",
+          "icon": "🧪"
+        },
+        {
+          "id": "elf-shortsword-0",
+          "name": "Shortsword",
+          "type": "equipment",
+          "holder": "Ladril",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "elf-healing_potion-1",
+          "name": "Healing Potion",
+          "type": "potion",
+          "holder": "Ladril",
+          "source": "Hero Inventory",
+          "icon": "🧪"
+        },
+        {
+          "id": "wizard-dagger-0",
+          "name": "Dagger",
+          "type": "equipment",
+          "holder": "Telor",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "wizard-staff-1",
+          "name": "Staff",
+          "type": "equipment",
+          "holder": "Telor",
+          "source": "Hero Inventory",
+          "icon": "🗡️"
+        },
+        {
+          "id": "wizard-healing_potion-2",
+          "name": "Healing Potion",
+          "type": "potion",
+          "holder": "Telor",
+          "source": "Hero Inventory",
+          "icon": "🧪"
+        }
+      ],
+      "robos:itemsFoundCount": 9,
+      "robos:totalPartyGold": 0,
+      "robos:exploredTilesCount": 34,
+      "robos:revealedRooms": [],
+      "robos:searchedRooms": [],
+      "robos:doorsOpenCount": 0,
+      "robos:trapsDetectedCount": 0,
+      "robos:triggersFired": [],
+      "robos:triggersFiredCount": 0,
+      "robos:screenshotPath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_election-2026-quest-1_election-2026-quest-1.png",
+      "robos:saveFilePath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_election-2026-quest-1_election-2026-quest-1.json"
     }
   ]
 }

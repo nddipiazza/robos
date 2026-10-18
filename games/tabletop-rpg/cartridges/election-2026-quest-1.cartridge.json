@@ -8,9 +8,9 @@
     "gameType": "tabletop",
     "genre": "Tabletop Dungeon Crawler",
     "ruleset": "heroquest",
-    "description": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Navigate the chambers, overcome partisan perils, and claim victory!",
+    "description": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office\u2014defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
     "coverColor": "#0a0e17",
-    "icon": "🛡️",
+    "icon": "\ud83d\udee1\ufe0f",
     "mapCount": 1,
     "heroCount": 4,
     "monsterCount": 17,
@@ -21,7 +21,7 @@
       0,
       13
     ],
-    "createdDate": "2026-10-18T14:38:46.696Z"
+    "createdDate": "2026-10-18T16:42:58.537Z"
   },
   "heroes": {
     "barbarian": {
@@ -93,9 +93,7 @@
       "monsterType": "campaign-volunteer",
       "category": "Midterms 2026",
       "monsterArchetype": "Goblin",
-      "replaces": "Goblin",
-      "specialAbility": "Door Knocker: Move through other monsters",
-      "icon": "📋",
+      "icon": "\ud83d\udccb",
       "tokenColor": "#16a34a",
       "bodyPoints": 1,
       "mindPoints": 1,
@@ -120,9 +118,7 @@
       "monsterType": "partisan-enforcer",
       "category": "Midterms 2026",
       "monsterArchetype": "Dread Warrior",
-      "replaces": "Dread Warrior",
-      "specialAbility": "Polarization: +1 attack die when adjacent to another Partisan Enforcer",
-      "icon": "⚔️",
+      "icon": "\u2694\ufe0f",
       "tokenColor": "#dc2626",
       "bodyPoints": 3,
       "mindPoints": 3,
@@ -147,9 +143,7 @@
       "monsterType": "career-politician",
       "category": "Midterms 2026",
       "monsterArchetype": "Skeleton",
-      "replaces": "Skeleton",
-      "specialAbility": "Reelection: On death, black shield resurrects with 1 Body Point",
-      "icon": "🏛️",
+      "icon": "\ud83c\udfdb\ufe0f",
       "tokenColor": "#94a3b8",
       "bodyPoints": 1,
       "mindPoints": 0,
@@ -170,13 +164,11 @@
     "mon-talarixon-4": {
       "id": "mon-talarixon-4",
       "slug": "talarixon-mon-talarixon-4",
-      "name": "Talarixon (Talarico + Paxton · Texas Hydra)",
+      "name": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra)",
       "monsterType": "talarixon",
       "category": "Midterms 2026",
       "monsterArchetype": "Texas Hydra",
-      "replaces": "Texas Hydra Boss",
-      "specialAbility": "Holy Smite (3 dice ranged) · Indictment Barrage (1–3 loses action) · Divided Authority (lose turn, 2 dice to adjacent) · Political Infighting",
-      "icon": "🐍",
+      "icon": "\ud83d\udc0d",
       "tokenColor": "#b91c1c",
       "bodyPoints": 6,
       "mindPoints": 5,
@@ -199,13 +191,11 @@
     "mon-brownsted-5": {
       "id": "mon-brownsted-5",
       "slug": "brownsted-mon-brownsted-5",
-      "name": "Brownsted (Brown + Husted · Ohio Hydra)",
+      "name": "Brownsted (Brown + Husted \u00b7 Ohio Hydra)",
       "monsterType": "brownsted",
       "category": "Midterms 2026",
       "monsterArchetype": "Ohio Hydra",
-      "replaces": "Ohio Hydra Boss",
-      "specialAbility": "Union Strike (3 dice to adjacent) · Budget Freeze (no potions 1 round) · Bipartisan Gridlock (black shield = lose turn, skull = +1 atk) · Political Infighting",
-      "icon": "🐉",
+      "icon": "\ud83d\udc09",
       "tokenColor": "#9333ea",
       "bodyPoints": 8,
       "mindPoints": 5,
@@ -231,10 +221,8 @@
       "name": "Spin Doctor",
       "monsterType": "spin-doctor",
       "category": "Midterms 2026",
-      "monsterArchetype": "Dread Sorcerer",
-      "replaces": "Dread Sorcerer",
-      "specialAbility": "Alternative Facts: Cancel one successful attack, once per encounter",
-      "icon": "🌀",
+      "monsterArchetype": "Chaos Sorcerer",
+      "icon": "\ud83c\udf00",
       "tokenColor": "#0284c7",
       "bodyPoints": 3,
       "mindPoints": 5,
@@ -261,9 +249,7 @@
       "monsterType": "bureaucrat",
       "category": "Midterms 2026",
       "monsterArchetype": "Zombie",
-      "replaces": "Zombie",
-      "specialAbility": "Red Tape: Adjacent heroes roll an extra movement die and use the lowest",
-      "icon": "📎",
+      "icon": "\ud83d\udcce",
       "tokenColor": "#475569",
       "bodyPoints": 1,
       "mindPoints": 0,
@@ -288,9 +274,7 @@
       "monsterType": "bureaucrat",
       "category": "Midterms 2026",
       "monsterArchetype": "Zombie",
-      "replaces": "Zombie",
-      "specialAbility": "Red Tape: Adjacent heroes roll an extra movement die and use the lowest",
-      "icon": "📎",
+      "icon": "\ud83d\udcce",
       "tokenColor": "#475569",
       "bodyPoints": 1,
       "mindPoints": 0,
@@ -315,9 +299,7 @@
       "monsterType": "super-pac-demon",
       "category": "Midterms 2026",
       "monsterArchetype": "Gargoyle",
-      "replaces": "Gargoyle",
-      "specialAbility": "Dark Money: Summon one Campaign Volunteer, once per encounter",
-      "icon": "😈",
+      "icon": "\ud83d\ude08",
       "tokenColor": "#7c3aed",
       "bodyPoints": 3,
       "mindPoints": 4,
@@ -338,13 +320,11 @@
     "mon-el-rogers-10": {
       "id": "mon-el-rogers-10",
       "slug": "el-rogers-mon-el-rogers-10",
-      "name": "El-Rogers (El-Sayed + Rogers · Michigan Hydra)",
+      "name": "El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra)",
       "monsterType": "el-rogers",
       "category": "Midterms 2026",
       "monsterArchetype": "Michigan Hydra",
-      "replaces": "Michigan Hydra Boss",
-      "specialAbility": "Universal Healing (+2 BP once) · Security Lockdown (seal doors 1 round) · Industrial Collapse (at 3 BP, 3 dice to adjacent & -1 BP) · Political Infighting",
-      "icon": "🐲",
+      "icon": "\ud83d\udc32",
       "tokenColor": "#1d4ed8",
       "bodyPoints": 7,
       "mindPoints": 4,
@@ -371,9 +351,7 @@
       "monsterType": "lobbyist",
       "category": "Midterms 2026",
       "monsterArchetype": "Mummy",
-      "replaces": "Mummy",
-      "specialAbility": "Bought Influence: Force reroll of one attacking skull, once per encounter",
-      "icon": "💼",
+      "icon": "\ud83d\udcbc",
       "tokenColor": "#d97706",
       "bodyPoints": 2,
       "mindPoints": 0,
@@ -398,9 +376,7 @@
       "monsterType": "political-operative",
       "category": "Midterms 2026",
       "monsterArchetype": "Orc",
-      "replaces": "Orc",
-      "specialAbility": "Smear Campaign: Force reroll of one successful defend die, once per encounter",
-      "icon": "🕵️",
+      "icon": "\ud83d\udd75\ufe0f",
       "tokenColor": "#ca8a04",
       "bodyPoints": 1,
       "mindPoints": 2,
@@ -424,10 +400,8 @@
       "name": "Spin Doctor",
       "monsterType": "spin-doctor",
       "category": "Midterms 2026",
-      "monsterArchetype": "Dread Sorcerer",
-      "replaces": "Dread Sorcerer",
-      "specialAbility": "Alternative Facts: Cancel one successful attack, once per encounter",
-      "icon": "🌀",
+      "monsterArchetype": "Chaos Sorcerer",
+      "icon": "\ud83c\udf00",
       "tokenColor": "#0284c7",
       "bodyPoints": 3,
       "mindPoints": 5,
@@ -453,10 +427,8 @@
       "name": "Katie Zacharia (Press Secretary)",
       "monsterType": "spin-doctor",
       "category": "Midterms 2026",
-      "monsterArchetype": "Dread Sorcerer",
-      "replaces": "Dread Sorcerer",
-      "specialAbility": "Alternative Facts: Cancel one successful attack, once per encounter",
-      "icon": "🎙️",
+      "monsterArchetype": "Chaos Sorcerer",
+      "icon": "\ud83c\udf99\ufe0f",
       "tokenColor": "#db2777",
       "bodyPoints": 4,
       "mindPoints": 6,
@@ -483,9 +455,7 @@
       "monsterType": "career-politician",
       "category": "Midterms 2026",
       "monsterArchetype": "Skeleton",
-      "replaces": "Skeleton",
-      "specialAbility": "Reelection: On death, black shield resurrects with 1 Body Point",
-      "icon": "🐢",
+      "icon": "\ud83d\udc22",
       "tokenColor": "#475569",
       "bodyPoints": 5,
       "mindPoints": 5,
@@ -512,9 +482,7 @@
       "monsterType": "political-operative",
       "category": "Midterms 2026",
       "monsterArchetype": "Orc",
-      "replaces": "Orc",
-      "specialAbility": "Smear Campaign: Force reroll of one successful defend die, once per encounter",
-      "icon": "🥃",
+      "icon": "\ud83e\udd43",
       "tokenColor": "#b91c1c",
       "bodyPoints": 4,
       "mindPoints": 4,
@@ -540,10 +508,8 @@
       "name": "Kamala Harris (Drunk in the War Room)",
       "monsterType": "spin-doctor",
       "category": "Midterms 2026",
-      "monsterArchetype": "Dread Sorcerer",
-      "replaces": "Dread Sorcerer",
-      "specialAbility": "Alternative Facts: Cancel one successful attack, once per encounter",
-      "icon": "🍷",
+      "monsterArchetype": "Chaos Sorcerer",
+      "icon": "\ud83c\udf77",
       "tokenColor": "#1d4ed8",
       "bodyPoints": 4,
       "mindPoints": 5,
@@ -2362,12 +2328,12 @@
       "triggers": [
         {
           "id": "trigger-briefing-room-katie",
+          "name": "The Daily Gaslight Briefing \u2014 Katie Zacharia",
+          "title": "The Daily Gaslight Briefing \u2014 Katie Zacharia",
           "marker": "Note A",
-          "title": "The Daily Gaslight Briefing — Katie Zacharia",
-          "name": "The Daily Gaslight Briefing — Katie Zacharia",
           "event": "on_room_entered",
-          "room": "room-ne-3",
           "target": "room-ne-3",
+          "room": "room-ne-3",
           "doorId": "",
           "monsterId": "",
           "tile": [
@@ -2375,8 +2341,8 @@
             8
           ],
           "onceOnly": true,
-          "hidden": false,
           "narrative": "Behind a $40,000 solid-gold podium stands Press Secretary Katie Zacharia with a color-coded binder of bipartisan spin!",
+          "hidden": false,
           "actions": [
             {
               "type": "dialogue",
@@ -2395,7 +2361,7 @@
                 },
                 {
                   "speaker": "wizard",
-                  "text": "Wait—so you spin for BOTH parties?!"
+                  "text": "Wait\u2014so you spin for BOTH parties?!"
                 },
                 {
                   "speaker": "Katie Zacharia (Press Secretary)",
@@ -2405,7 +2371,7 @@
             },
             {
               "type": "display_message",
-              "title": "🎙️ Boss Encounter: Katie Zacharia (Press Secretary)",
+              "title": "\ud83c\udf99\ufe0f Boss Encounter: Katie Zacharia (Press Secretary)",
               "text": "Katie Zacharia slams her color-coded binder shut and unleashes a weaponized spin cycle! Defeat the Press Secretary and her Cable News Pundit Zombies before she gaslights your gold pouch into thin air!",
               "buttonText": "Challenge the Spin!"
             }
@@ -2413,12 +2379,12 @@
         },
         {
           "id": "trigger-katie-zacharia-defeated",
-          "marker": "Note B",
-          "title": "Katie Pivots to a Cable News Book Deal",
           "name": "Katie Pivots to a Cable News Book Deal",
+          "title": "Katie Pivots to a Cable News Book Deal",
+          "marker": "Note B",
           "event": "on_monster_killed",
-          "room": "room-ne-3",
           "target": "mon-katie-zacharia-boss",
+          "room": "room-ne-3",
           "doorId": "",
           "monsterId": "mon-katie-zacharia-boss",
           "tile": [
@@ -2426,8 +2392,8 @@
             7
           ],
           "onceOnly": true,
-          "hidden": false,
           "narrative": "Katie Zacharia tosses her briefing binder into the air as she golden-parachutes into a corporate lobbying gig!",
+          "hidden": false,
           "actions": [
             {
               "type": "dialogue",
@@ -2438,7 +2404,7 @@
                 },
                 {
                   "speaker": "dwarf",
-                  "text": "Check behind the podium—she left a stack of pre-printed cue cards blaming working families for wanting groceries AND electricity in the same month!"
+                  "text": "Check behind the podium\u2014she left a stack of pre-printed cue cards blaming working families for wanting groceries AND electricity in the same month!"
                 }
               ]
             }
@@ -2446,12 +2412,12 @@
         },
         {
           "id": "trigger-committee-chamber-mitch",
+          "name": "The Eternal Filibuster \u2014 Mitch McConnell",
+          "title": "The Eternal Filibuster \u2014 Mitch McConnell",
           "marker": "Note C",
-          "title": "The Eternal Filibuster — Mitch McConnell",
-          "name": "The Eternal Filibuster — Mitch McConnell",
           "event": "on_room_entered",
-          "room": "room-nw-1",
           "target": "room-nw-1",
+          "room": "room-nw-1",
           "doorId": "",
           "monsterId": "",
           "tile": [
@@ -2459,8 +2425,8 @@
             4
           ],
           "onceOnly": true,
-          "hidden": false,
           "narrative": "Atop the curved mahogany dais of the Legislative Committee Chamber sits Patriarch Mitch McConnell, surrounded by stacks of 6,000-page omnibus bills.",
+          "hidden": false,
           "actions": [
             {
               "type": "dialogue",
@@ -2487,13 +2453,13 @@
                 },
                 {
                   "speaker": "Mitch McConnell (Committee Patriarch)",
-                  "text": "You think voting harder changes the menu? The turtle shell is 100% bipartisan, baby—we eat the caviar, and you eat the inflation!"
+                  "text": "You think voting harder changes the menu? The turtle shell is 100% bipartisan, baby\u2014we eat the caviar, and you eat the inflation!"
                 }
               ]
             },
             {
               "type": "display_message",
-              "title": "🐢 Boss Encounter: Mitch McConnell (Committee Patriarch)",
+              "title": "\ud83d\udc22 Boss Encounter: Mitch McConnell (Committee Patriarch)",
               "text": "Mitch McConnell withdraws into his 6-Defense-Dice Parliamentary Turtle Shell and invokes an eternal omnibus filibuster! Crack his bipartisan shell before he taxes your grandchildren!",
               "buttonText": "Break the Filibuster!"
             }
@@ -2501,12 +2467,12 @@
         },
         {
           "id": "trigger-mitch-mcconnell-defeated",
-          "marker": "Note D",
-          "title": "The Committee Adjourns for a Donor Retreat",
           "name": "The Committee Adjourns for a Donor Retreat",
+          "title": "The Committee Adjourns for a Donor Retreat",
+          "marker": "Note D",
           "event": "on_monster_killed",
-          "room": "room-nw-1",
           "target": "mon-mitch-mcconnell-boss",
+          "room": "room-nw-1",
           "doorId": "",
           "monsterId": "mon-mitch-mcconnell-boss",
           "tile": [
@@ -2514,8 +2480,8 @@
             3
           ],
           "onceOnly": true,
-          "hidden": false,
           "narrative": "Mitch McConnell slowly tips his gavel and vanishes into a cloud of tax-exempt municipal bonds.",
+          "hidden": false,
           "actions": [
             {
               "type": "dialogue",
@@ -2534,12 +2500,12 @@
         },
         {
           "id": "trigger-war-room-vance-kamala",
+          "name": "Bipartisan Open Bar in the War Room \u2014 JD Vance & Kamala Harris",
+          "title": "Bipartisan Open Bar in the War Room \u2014 JD Vance & Kamala Harris",
           "marker": "Note E",
-          "title": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
-          "name": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
           "event": "on_room_entered",
-          "room": "room-ne-2",
           "target": "room-ne-2",
+          "room": "room-ne-2",
           "doorId": "",
           "monsterId": "",
           "tile": [
@@ -2547,15 +2513,15 @@
             4
           ],
           "onceOnly": true,
-          "hidden": false,
           "narrative": "Inside the Campaign War Room, empty bottles of $3,000 bourbon and reserve Napa Cabernet litter the strategy table as JD Vance and Kamala Harris clink glasses and roar with laughter!",
+          "hidden": false,
           "actions": [
             {
               "type": "dialogue",
               "lines": [
                 {
                   "speaker": "Kamala Harris (Drunk in the War Room)",
-                  "text": "*clinks wine glass against bourbon tumbler* HAHAHAHA! Wait, wait, JD—top off my Napa Cabernet! Look at the electoral map on the wall, it's a Venn diagram! A circle of Red, a circle of Blue, and right in the middle is US getting filthy rich! HAHAHAHA!"
+                  "text": "*clinks wine glass against bourbon tumbler* HAHAHAHA! Wait, wait, JD\u2014top off my Napa Cabernet! Look at the electoral map on the wall, it's a Venn diagram! A circle of Red, a circle of Blue, and right in the middle is US getting filthy rich! HAHAHAHA!"
                 },
                 {
                   "speaker": "JD Vance (Drunk in the War Room)",
@@ -2563,25 +2529,25 @@
                 },
                 {
                   "speaker": "barbarian",
-                  "text": "Hold on! You two are supposed to be bitter political rivals—why are you getting hammered together in the Campaign War Room?!"
+                  "text": "Hold on! You two are supposed to be bitter political rivals\u2014why are you getting hammered together in the Campaign War Room?!"
                 },
                 {
                   "speaker": "Kamala Harris (Drunk in the War Room)",
-                  "text": "*wipes tears of laughter* Oh honey, look how adorable they are! We are unburdened by what has been—specifically, unburdened by ever paying our own bar tab! You think Blue or Red cares about your grocery bill when the donor yacht has a champagne fountain?!"
+                  "text": "*wipes tears of laughter* Oh honey, look how adorable they are! We are unburdened by what has been\u2014specifically, unburdened by ever paying our own bar tab! You think Blue or Red cares about your grocery bill when the donor yacht has a champagne fountain?!"
                 },
                 {
                   "speaker": "JD Vance (Drunk in the War Room)",
-                  "text": "*spills bourbon on the leather war-room couch* Don't give away the whole game, Kamala! Look, pal—if Red wins, Wall Street gets a bailout. If Blue wins, Wall Street gets the exact same bailout with a nicer font! Either way, working stiffs like you pay for our open bar!"
+                  "text": "*spills bourbon on the leather war-room couch* Don't give away the whole game, Kamala! Look, pal\u2014if Red wins, Wall Street gets a bailout. If Blue wins, Wall Street gets the exact same bailout with a nicer font! Either way, working stiffs like you pay for our open bar!"
                 },
                 {
                   "speaker": "Kamala Harris (Drunk in the War Room)",
-                  "text": "*raises overflowing wine glass* A bipartisan toast to the American taxpayer: the hardest-working ATM in the dungeon! Get 'em, JD—right after I finish this merlot!"
+                  "text": "*raises overflowing wine glass* A bipartisan toast to the American taxpayer: the hardest-working ATM in the dungeon! Get 'em, JD\u2014right after I finish this merlot!"
                 }
               ]
             },
             {
               "type": "display_message",
-              "title": "🥃🍷 Dual Boss Encounter: Drunk JD Vance & Drunk Kamala Harris",
+              "title": "\ud83e\udd43\ud83c\udf77 Dual Boss Encounter: Drunk JD Vance & Drunk Kamala Harris",
               "text": "Three sheets to the wind on taxpayer-expensed Pappy Van Winkle and Napa Valley Reserve Cabernet, JD Vance and Kamala Harris link arms in front of the electoral map to defend their bipartisan slush fund!",
               "buttonText": "Crash the Open Bar!"
             }
@@ -2589,12 +2555,12 @@
         },
         {
           "id": "trigger-jd-vance-defeated",
-          "marker": "Note F",
-          "title": "JD Vance Spills His Reserve Bourbon",
           "name": "JD Vance Spills His Reserve Bourbon",
+          "title": "JD Vance Spills His Reserve Bourbon",
+          "marker": "Note F",
           "event": "on_monster_killed",
-          "room": "room-ne-2",
           "target": "mon-jd-vance-drunk-boss",
+          "room": "room-ne-2",
           "doorId": "",
           "monsterId": "mon-jd-vance-drunk-boss",
           "tile": [
@@ -2602,15 +2568,15 @@
             3
           ],
           "onceOnly": true,
-          "hidden": false,
           "narrative": "JD Vance stumbles backward into the War Room couch, clutching his crystal decanter.",
+          "hidden": false,
           "actions": [
             {
               "type": "dialogue",
               "lines": [
                 {
                   "speaker": "JD Vance (Drunk in the War Room)",
-                  "text": "*hiccups* Ugh... my Silicon Valley venture-capital donors promised me this dungeon had qualified immunity! Kamala, hide the offshore wire transfers—I'm retreating to my Netflix book deal!"
+                  "text": "*hiccups* Ugh... my Silicon Valley venture-capital donors promised me this dungeon had qualified immunity! Kamala, hide the offshore wire transfers\u2014I'm retreating to my Netflix book deal!"
                 }
               ]
             }
@@ -2618,12 +2584,12 @@
         },
         {
           "id": "trigger-kamala-harris-defeated",
-          "marker": "Note G",
-          "title": "Kamala Harris Unburdens the Wine Bar",
           "name": "Kamala Harris Unburdens the Wine Bar",
+          "title": "Kamala Harris Unburdens the Wine Bar",
+          "marker": "Note G",
           "event": "on_monster_killed",
-          "room": "room-ne-2",
           "target": "mon-kamala-harris-drunk-boss",
+          "room": "room-ne-2",
           "doorId": "",
           "monsterId": "mon-kamala-harris-drunk-boss",
           "tile": [
@@ -2631,8 +2597,8 @@
             3
           ],
           "onceOnly": true,
-          "hidden": false,
           "narrative": "Kamala Harris clutches a magnum of Napa Valley Cabernet as she exits toward a private jet.",
+          "hidden": false,
           "actions": [
             {
               "type": "dialogue",
@@ -2651,12 +2617,12 @@
         },
         {
           "id": "trigger-oval-office-talarixon",
+          "name": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra)",
+          "title": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra)",
           "marker": "Note H",
-          "title": "Talarixon (Talarico + Paxton · Texas Hydra)",
-          "name": "Talarixon (Talarico + Paxton · Texas Hydra)",
           "event": "on_room_entered",
-          "room": "room-nw-10",
           "target": "room-nw-10",
+          "room": "room-nw-10",
           "doorId": "",
           "monsterId": "",
           "tile": [
@@ -2664,15 +2630,15 @@
             5
           ],
           "onceOnly": true,
+          "narrative": "Coiled atop the Resolute Desk in the Oval Office is Talarixon (Talarico + Paxton \u00b7 Texas Hydra), unleashing Holy Smite and Indictment Barrage while fighting itself for control!",
           "hidden": false,
-          "narrative": "Coiled atop the Resolute Desk in the Oval Office is Talarixon (Talarico + Paxton · Texas Hydra), unleashing Holy Smite and Indictment Barrage while fighting itself for control!",
           "actions": [
             {
               "type": "dialogue",
               "lines": [
                 {
                   "speaker": "Talarixon (Texas Hydra)",
-                  "text": "PAXTON HEAD: I hereby serve you with an Indictment Barrage and sue the dungeon dice for unconstitutional skull-rolling! TALARICO HEAD: Brethren, let us pray before I smite these heroes for 3 combat dice—and then split the donor plate 50/50!"
+                  "text": "PAXTON HEAD: I hereby serve you with an Indictment Barrage and sue the dungeon dice for unconstitutional skull-rolling! TALARICO HEAD: Brethren, let us pray before I smite these heroes for 3 combat dice\u2014and then split the donor plate 50/50!"
                 },
                 {
                   "speaker": "Talarixon (Texas Hydra)",
@@ -2687,7 +2653,7 @@
         {
           "id": "trigger-briefing-room-katie",
           "marker": "Note A",
-          "title": "The Daily Gaslight Briefing — Katie Zacharia",
+          "title": "The Daily Gaslight Briefing \u2014 Katie Zacharia",
           "banner": "QUEST NOTE [Note A]",
           "narrative": "Behind a $40,000 solid-gold podium stands Press Secretary Katie Zacharia with a color-coded binder of bipartisan spin!",
           "tile": [
@@ -2696,9 +2662,6 @@
           ],
           "room": "room-ne-3",
           "event": "on_room_entered",
-          "target": "room-ne-3",
-          "doorId": "",
-          "monsterId": "",
           "onceOnly": true,
           "movie": "",
           "hidden": false,
@@ -2720,7 +2683,7 @@
                 },
                 {
                   "speaker": "wizard",
-                  "text": "Wait—so you spin for BOTH parties?!"
+                  "text": "Wait\u2014so you spin for BOTH parties?!"
                 },
                 {
                   "speaker": "Katie Zacharia (Press Secretary)",
@@ -2730,7 +2693,7 @@
             },
             {
               "type": "display_message",
-              "title": "🎙️ Boss Encounter: Katie Zacharia (Press Secretary)",
+              "title": "\ud83c\udf99\ufe0f Boss Encounter: Katie Zacharia (Press Secretary)",
               "text": "Katie Zacharia slams her color-coded binder shut and unleashes a weaponized spin cycle! Defeat the Press Secretary and her Cable News Pundit Zombies before she gaslights your gold pouch into thin air!",
               "buttonText": "Challenge the Spin!"
             }
@@ -2748,9 +2711,6 @@
           ],
           "room": "room-ne-3",
           "event": "on_monster_killed",
-          "target": "mon-katie-zacharia-boss",
-          "doorId": "",
-          "monsterId": "mon-katie-zacharia-boss",
           "onceOnly": true,
           "movie": "",
           "hidden": false,
@@ -2764,7 +2724,7 @@
                 },
                 {
                   "speaker": "dwarf",
-                  "text": "Check behind the podium—she left a stack of pre-printed cue cards blaming working families for wanting groceries AND electricity in the same month!"
+                  "text": "Check behind the podium\u2014she left a stack of pre-printed cue cards blaming working families for wanting groceries AND electricity in the same month!"
                 }
               ]
             }
@@ -2773,7 +2733,7 @@
         {
           "id": "trigger-committee-chamber-mitch",
           "marker": "Note C",
-          "title": "The Eternal Filibuster — Mitch McConnell",
+          "title": "The Eternal Filibuster \u2014 Mitch McConnell",
           "banner": "QUEST NOTE [Note C]",
           "narrative": "Atop the curved mahogany dais of the Legislative Committee Chamber sits Patriarch Mitch McConnell, surrounded by stacks of 6,000-page omnibus bills.",
           "tile": [
@@ -2782,9 +2742,6 @@
           ],
           "room": "room-nw-1",
           "event": "on_room_entered",
-          "target": "room-nw-1",
-          "doorId": "",
-          "monsterId": "",
           "onceOnly": true,
           "movie": "",
           "hidden": false,
@@ -2814,13 +2771,13 @@
                 },
                 {
                   "speaker": "Mitch McConnell (Committee Patriarch)",
-                  "text": "You think voting harder changes the menu? The turtle shell is 100% bipartisan, baby—we eat the caviar, and you eat the inflation!"
+                  "text": "You think voting harder changes the menu? The turtle shell is 100% bipartisan, baby\u2014we eat the caviar, and you eat the inflation!"
                 }
               ]
             },
             {
               "type": "display_message",
-              "title": "🐢 Boss Encounter: Mitch McConnell (Committee Patriarch)",
+              "title": "\ud83d\udc22 Boss Encounter: Mitch McConnell (Committee Patriarch)",
               "text": "Mitch McConnell withdraws into his 6-Defense-Dice Parliamentary Turtle Shell and invokes an eternal omnibus filibuster! Crack his bipartisan shell before he taxes your grandchildren!",
               "buttonText": "Break the Filibuster!"
             }
@@ -2838,9 +2795,6 @@
           ],
           "room": "room-nw-1",
           "event": "on_monster_killed",
-          "target": "mon-mitch-mcconnell-boss",
-          "doorId": "",
-          "monsterId": "mon-mitch-mcconnell-boss",
           "onceOnly": true,
           "movie": "",
           "hidden": false,
@@ -2863,7 +2817,7 @@
         {
           "id": "trigger-war-room-vance-kamala",
           "marker": "Note E",
-          "title": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
+          "title": "Bipartisan Open Bar in the War Room \u2014 JD Vance & Kamala Harris",
           "banner": "QUEST NOTE [Note E]",
           "narrative": "Inside the Campaign War Room, empty bottles of $3,000 bourbon and reserve Napa Cabernet litter the strategy table as JD Vance and Kamala Harris clink glasses and roar with laughter!",
           "tile": [
@@ -2872,9 +2826,6 @@
           ],
           "room": "room-ne-2",
           "event": "on_room_entered",
-          "target": "room-ne-2",
-          "doorId": "",
-          "monsterId": "",
           "onceOnly": true,
           "movie": "",
           "hidden": false,
@@ -2884,7 +2835,7 @@
               "lines": [
                 {
                   "speaker": "Kamala Harris (Drunk in the War Room)",
-                  "text": "*clinks wine glass against bourbon tumbler* HAHAHAHA! Wait, wait, JD—top off my Napa Cabernet! Look at the electoral map on the wall, it's a Venn diagram! A circle of Red, a circle of Blue, and right in the middle is US getting filthy rich! HAHAHAHA!"
+                  "text": "*clinks wine glass against bourbon tumbler* HAHAHAHA! Wait, wait, JD\u2014top off my Napa Cabernet! Look at the electoral map on the wall, it's a Venn diagram! A circle of Red, a circle of Blue, and right in the middle is US getting filthy rich! HAHAHAHA!"
                 },
                 {
                   "speaker": "JD Vance (Drunk in the War Room)",
@@ -2892,25 +2843,25 @@
                 },
                 {
                   "speaker": "barbarian",
-                  "text": "Hold on! You two are supposed to be bitter political rivals—why are you getting hammered together in the Campaign War Room?!"
+                  "text": "Hold on! You two are supposed to be bitter political rivals\u2014why are you getting hammered together in the Campaign War Room?!"
                 },
                 {
                   "speaker": "Kamala Harris (Drunk in the War Room)",
-                  "text": "*wipes tears of laughter* Oh honey, look how adorable they are! We are unburdened by what has been—specifically, unburdened by ever paying our own bar tab! You think Blue or Red cares about your grocery bill when the donor yacht has a champagne fountain?!"
+                  "text": "*wipes tears of laughter* Oh honey, look how adorable they are! We are unburdened by what has been\u2014specifically, unburdened by ever paying our own bar tab! You think Blue or Red cares about your grocery bill when the donor yacht has a champagne fountain?!"
                 },
                 {
                   "speaker": "JD Vance (Drunk in the War Room)",
-                  "text": "*spills bourbon on the leather war-room couch* Don't give away the whole game, Kamala! Look, pal—if Red wins, Wall Street gets a bailout. If Blue wins, Wall Street gets the exact same bailout with a nicer font! Either way, working stiffs like you pay for our open bar!"
+                  "text": "*spills bourbon on the leather war-room couch* Don't give away the whole game, Kamala! Look, pal\u2014if Red wins, Wall Street gets a bailout. If Blue wins, Wall Street gets the exact same bailout with a nicer font! Either way, working stiffs like you pay for our open bar!"
                 },
                 {
                   "speaker": "Kamala Harris (Drunk in the War Room)",
-                  "text": "*raises overflowing wine glass* A bipartisan toast to the American taxpayer: the hardest-working ATM in the dungeon! Get 'em, JD—right after I finish this merlot!"
+                  "text": "*raises overflowing wine glass* A bipartisan toast to the American taxpayer: the hardest-working ATM in the dungeon! Get 'em, JD\u2014right after I finish this merlot!"
                 }
               ]
             },
             {
               "type": "display_message",
-              "title": "🥃🍷 Dual Boss Encounter: Drunk JD Vance & Drunk Kamala Harris",
+              "title": "\ud83e\udd43\ud83c\udf77 Dual Boss Encounter: Drunk JD Vance & Drunk Kamala Harris",
               "text": "Three sheets to the wind on taxpayer-expensed Pappy Van Winkle and Napa Valley Reserve Cabernet, JD Vance and Kamala Harris link arms in front of the electoral map to defend their bipartisan slush fund!",
               "buttonText": "Crash the Open Bar!"
             }
@@ -2928,9 +2879,6 @@
           ],
           "room": "room-ne-2",
           "event": "on_monster_killed",
-          "target": "mon-jd-vance-drunk-boss",
-          "doorId": "",
-          "monsterId": "mon-jd-vance-drunk-boss",
           "onceOnly": true,
           "movie": "",
           "hidden": false,
@@ -2940,7 +2888,7 @@
               "lines": [
                 {
                   "speaker": "JD Vance (Drunk in the War Room)",
-                  "text": "*hiccups* Ugh... my Silicon Valley venture-capital donors promised me this dungeon had qualified immunity! Kamala, hide the offshore wire transfers—I'm retreating to my Netflix book deal!"
+                  "text": "*hiccups* Ugh... my Silicon Valley venture-capital donors promised me this dungeon had qualified immunity! Kamala, hide the offshore wire transfers\u2014I'm retreating to my Netflix book deal!"
                 }
               ]
             }
@@ -2958,9 +2906,6 @@
           ],
           "room": "room-ne-2",
           "event": "on_monster_killed",
-          "target": "mon-kamala-harris-drunk-boss",
-          "doorId": "",
-          "monsterId": "mon-kamala-harris-drunk-boss",
           "onceOnly": true,
           "movie": "",
           "hidden": false,
@@ -2983,18 +2928,15 @@
         {
           "id": "trigger-oval-office-talarixon",
           "marker": "Note H",
-          "title": "Talarixon (Talarico + Paxton · Texas Hydra)",
+          "title": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra)",
           "banner": "QUEST NOTE [Note H]",
-          "narrative": "Coiled atop the Resolute Desk in the Oval Office is Talarixon (Talarico + Paxton · Texas Hydra), unleashing Holy Smite and Indictment Barrage while fighting itself for control!",
+          "narrative": "Coiled atop the Resolute Desk in the Oval Office is Talarixon (Talarico + Paxton \u00b7 Texas Hydra), unleashing Holy Smite and Indictment Barrage while fighting itself for control!",
           "tile": [
             13,
             5
           ],
           "room": "room-nw-10",
           "event": "on_room_entered",
-          "target": "room-nw-10",
-          "doorId": "",
-          "monsterId": "",
           "onceOnly": true,
           "movie": "",
           "hidden": false,
@@ -3004,7 +2946,7 @@
               "lines": [
                 {
                   "speaker": "Talarixon (Texas Hydra)",
-                  "text": "PAXTON HEAD: I hereby serve you with an Indictment Barrage and sue the dungeon dice for unconstitutional skull-rolling! TALARICO HEAD: Brethren, let us pray before I smite these heroes for 3 combat dice—and then split the donor plate 50/50!"
+                  "text": "PAXTON HEAD: I hereby serve you with an Indictment Barrage and sue the dungeon dice for unconstitutional skull-rolling! TALARICO HEAD: Brethren, let us pray before I smite these heroes for 3 combat dice\u2014and then split the donor plate 50/50!"
                 },
                 {
                   "speaker": "Talarixon (Texas Hydra)",
@@ -3012,10 +2954,35 @@
                 }
               ]
             }
-          ],
-          "name": "Talarixon (Talarico + Paxton · Texas Hydra)"
+          ]
         }
       ]
     }
-  }
+  },
+  "quests": [
+    {
+      "id": "election-2026-quest-1",
+      "slug": "election-2026-quest-1",
+      "campaign": "Election 2026: Battle for the Hill",
+      "title": "Quest 1: Battle for the Hill",
+      "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office\u2014defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
+      "goldReward": 150,
+      "completed": false,
+      "mapConfigId": "midterm-election-capitol",
+      "startingPosition": [
+        0,
+        13
+      ],
+      "exitTile": [
+        14,
+        2
+      ],
+      "bossTarget": "talarixon",
+      "primaryGoals": [
+        "Defeat the Capitol Bosses & Hydra Bosses (Talarixon, El-Rogers, Brownsted, Katie Zacharia, Mitch McConnell, and Drunk JD Vance & Kamala Harris).",
+        "Storm the Capitol chambers (Briefing Room, Committee Chamber, War Room & Oval Office) and expose the bipartisan slush fund.",
+        "Lead all surviving heroes safely to the Capitol Exit Stairs at [14, 2]."
+      ]
+    }
+  ]
 }

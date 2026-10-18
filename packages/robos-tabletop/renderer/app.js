@@ -9313,16 +9313,30 @@ function compileCurrentCartridgePayload() {
       wizardElements: currentData.spellAllocation.wizardElements,
       confirmed: !!currentData.spellAllocation.confirmed
     },
-    quests: currentData.campaign.quests.map(qst => ({
-      id: qst.id,
-      slug: qst.slug,
-      title: qst.title,
-      briefing: qst.briefing,
-      goldReward: qst.goldReward,
-      completed: !!qst.completed,
-      mapConfigId: qst.mapConfigId,
-      startingPosition: qst.startingStairs
-    }))
+    quests: currentData.campaign.quests.map(qst => {
+      const isMidterm = /election-2026|midterm/i.test(String(qst.slug || "")) || /midterm/i.test(String(qst.mapConfigId || ""));
+      let primaryGoals = Array.isArray(qst.primaryGoals) && qst.primaryGoals.length > 0 ? [...qst.primaryGoals] : [];
+      if (primaryGoals.length === 0 && isMidterm) {
+        primaryGoals = [
+          "Defeat the Capitol Bosses & Hydra Bosses (Talarixon, El-Rogers, Brownsted, Katie Zacharia, Mitch McConnell, and Drunk JD Vance & Kamala Harris).",
+          "Storm the Capitol chambers (Briefing Room, Committee Chamber, War Room & Oval Office) and expose the bipartisan slush fund.",
+          "Lead all surviving heroes safely to the Capitol Exit Stairs at [14, 2]."
+        ];
+      }
+      return {
+        id: qst.slug || qst.id,
+        slug: qst.slug,
+        campaign: currentData.campaign.title || (isMidterm ? "Election 2026: Battle for the Hill" : "HeroQuest"),
+        title: qst.title,
+        briefing: qst.briefing,
+        goldReward: qst.goldReward,
+        completed: !!qst.completed,
+        mapConfigId: qst.mapConfigId,
+        startingPosition: qst.startingStairs,
+        bossTarget: qst.bossTarget || (isMidterm ? "talarixon" : ""),
+        primaryGoals
+      };
+    })
   };
 }
 

@@ -996,9 +996,16 @@ async function loadCartridge(slugOrPath) {
     }
 
     const c = res.cartridge;
+    const qMeta = (Array.isArray(c.quests) && c.quests[0]) ? c.quests[0] : {};
     state.quest.slug = res.slug || c.cartridgeId || 'custom-quest';
-    state.quest.title = c.header?.title || 'Custom Quest';
-    state.quest.briefing = c.header?.description || '';
+    state.quest.title = qMeta.title || c.header?.title || 'Custom Quest';
+    state.quest.briefing = qMeta.briefing || c.header?.description || '';
+    if (qMeta.goldReward !== undefined) state.quest.goldReward = Number(qMeta.goldReward) || 100;
+    if (qMeta.campaign) state.quest.campaign = qMeta.campaign;
+    if (qMeta.bossTarget) state.quest.bossTarget = qMeta.bossTarget;
+    if (Array.isArray(qMeta.primaryGoals) && qMeta.primaryGoals.length > 0) {
+      state.quest.primaryGoals = [...qMeta.primaryGoals];
+    }
 
     // Find the primary map
     let mapData = null;
@@ -1396,7 +1403,46 @@ function buildCartridgePayload() {
           };
         })
       }
-    }
+    },
+    quests: [
+      (() => {
+        const isMidterm = /election-2026|midterm/i.test(String(q.slug || '')) || /midterm/i.test(String(bm.id || ''));
+        const bossMonsters = (q.monsters || []).filter(m => m.isBoss);
+        const bossNames = Array.from(new Set(bossMonsters.map(m => m.name).filter(Boolean)));
+        let primaryGoals = Array.isArray(q.primaryGoals) && q.primaryGoals.length > 0 ? [...q.primaryGoals] : [];
+        if (primaryGoals.length === 0) {
+          if (isMidterm) {
+            primaryGoals = [
+              'Defeat the Capitol Bosses & Hydra Bosses (Talarixon, El-Rogers, Brownsted, Katie Zacharia, Mitch McConnell, and Drunk JD Vance & Kamala Harris).',
+              'Storm the Capitol chambers (Briefing Room, Committee Chamber, War Room & Oval Office) and expose the bipartisan slush fund.',
+              `Lead all surviving heroes safely to the Capitol Exit Stairs${Array.isArray(q.exitTile) ? ` at [${q.exitTile[0]}, ${q.exitTile[1]}]` : ''}.`
+            ];
+          } else if (bossNames.length > 0) {
+            primaryGoals = [
+              `Locate and defeat ${bossNames.join(', ')}.`,
+              'Explore the dungeon chambers and search for hidden treasures.',
+              Array.isArray(q.exitTile)
+                ? `Lead all surviving heroes safely to the dungeon exit stairs at [${q.exitTile[0]}, ${q.exitTile[1]}].`
+                : 'Ensure all living heroes return safely to the spiral stairway.'
+            ];
+          }
+        }
+        return {
+          id: q.slug,
+          slug: q.slug,
+          campaign: q.campaign || (isMidterm ? 'Election 2026: Battle for the Hill' : 'HeroQuest'),
+          title: q.title,
+          briefing: q.briefing,
+          goldReward: Number(q.goldReward) || (isMidterm ? 150 : 100),
+          completed: false,
+          mapConfigId: bm.id || 'custom-blockmap',
+          startingPosition: q.startingStair || [0, 1],
+          exitTile: q.exitTile || null,
+          bossTarget: q.bossTarget || (bossMonsters[0]?.type || bossMonsters[0]?.id || ''),
+          primaryGoals
+        };
+      })()
+    ]
   };
 
   return cartridgeData;

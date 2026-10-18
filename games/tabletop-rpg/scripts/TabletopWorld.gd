@@ -3129,9 +3129,18 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 	grid_rows = map_data.get("height", GRID_ROWS)
 	hovered_tile = Vector2i(-1, -1)
 
-	var bg_img = map_data.get("backgroundImage", "")
-	if bg_img != "" and ResourceLoader.exists(bg_img):
-		board_sprite.texture = load(bg_img)
+	var bg_img = str(map_data.get("backgroundImage", ""))
+	if bg_img != "":
+		if ResourceLoader.exists(bg_img):
+			var loaded_tex = load(bg_img)
+			if loaded_tex is Texture2D:
+				board_sprite.texture = loaded_tex
+		else:
+			var abs_bg = ProjectSettings.globalize_path(bg_img)
+			if FileAccess.file_exists(abs_bg):
+				var raw_img = Image.load_from_file(abs_bg)
+				if raw_img and not raw_img.is_empty():
+					board_sprite.texture = ImageTexture.create_from_image(raw_img)
 
 	var stair = map_data.get("startingStair", map_data.get("startingPosition", [0, 1]))
 	starting_stair = Vector2i(stair[0], stair[1])
@@ -6077,37 +6086,66 @@ func get_active_quest_objective() -> Dictionary:
 	if active_q.is_empty() and not quests.is_empty() and quests[0] is Dictionary:
 		active_q = quests[0]
 
+	var map_data_obj: Dictionary = cart.get("maps", {}).get(effective_map, {})
+	if map_data_obj.is_empty() and cart.get("maps", {}).size() > 0:
+		map_data_obj = cart.get("maps", {}).values()[0]
+
+	var map_id = str(active_q.get("mapConfigId", map_data_obj.get("mapConfigurationId", "fan-dungeon-28x21")))
+	var q_slug = str(active_q.get("slug", current_slug))
+	var is_midterm_quest = ("election-2026" in current_slug or "midterm" in current_slug or "election-2026" in q_slug or "midterm" in q_slug or "midterm" in map_id)
+
 	var default_title = "Quest: %s" % current_slug.replace("-", " ").capitalize() if current_slug != "" else "HeroQuest"
 	var quest_title = str(active_q.get("title", cart.get("header", {}).get("title", default_title)))
-	var campaign_title = str(active_q.get("campaign", cart.get("header", {}).get("title", "HeroQuest: The Gathering Storm")))
-	var briefing = str(active_q.get("briefing", cart.get("header", {}).get("description", "You enter the perilous dungeon depths. Stay vigilant and vanquish your foes.")))
-	var gold_reward = int(active_q.get("goldReward", 100))
-	var map_id = str(active_q.get("mapConfigId", "fan-dungeon-28x21"))
+	var default_campaign = "Election 2026: Battle for the Hill" if is_midterm_quest else str(cart.get("header", {}).get("title", "HeroQuest: The Gathering Storm"))
+	var campaign_title = str(active_q.get("campaign", default_campaign))
+	var default_briefing = "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office—defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!" if is_midterm_quest else "You enter the perilous dungeon depths. Stay vigilant and vanquish your foes."
+	var briefing = str(active_q.get("briefing", cart.get("header", {}).get("description", default_briefing)))
+	if is_midterm_quest and briefing == "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Navigate the chambers, overcome partisan perils, and claim victory!":
+		briefing = default_briefing
+	var gold_reward = int(active_q.get("goldReward", 150 if is_midterm_quest else 100))
 
 	var primary_goals: Array = []
 	if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array and not active_q["primaryGoals"].is_empty():
 		primary_goals = active_q["primaryGoals"].duplicate()
-	elif active_q.get("slug") == "heroquest-the-trial" or active_q.get("id") == "quest-1" or (active_q.is_empty() and (current_slug == "heroquest-the-trial" or current_slug == "trial-of-verag" or current_slug == "")):
+	elif is_midterm_quest:
+		primary_goals = [
+			"Defeat the Capitol Bosses & Hydra Bosses (Talarixon, El-Rogers, Brownsted, Katie Zacharia, Mitch McConnell, and Drunk JD Vance & Kamala Harris).",
+			"Storm the Capitol chambers (Briefing Room, Committee Chamber, War Room & Oval Office) and expose the bipartisan slush fund.",
+			"Lead all surviving heroes safely to the Capitol Exit Stairs at [14, 2]."
+		]
+	elif q_slug == "heroquest-the-trial" or current_slug == "heroquest-the-trial" or current_slug == "trial-of-verag" or (active_q.is_empty() and current_slug == ""):
 		primary_goals = [
 			"Locate and defeat the Orc Warlord Verag in his inner catacombs.",
 			"Explore the ancient chambers and search for hidden treasures.",
 			"Ensure all living heroes return safely to the spiral stairway."
 		]
-	elif active_q.get("slug") == "heroquest-rescue-sir-ragnar":
+	elif q_slug == "heroquest-rescue-sir-ragnar":
 		primary_goals = [
 			"Infiltrate the prison fortress and locate Sir Ragnar's cell.",
 			"Vanquish the dungeon guards and unlock his holding cell.",
 			"Escort Sir Ragnar alive to the exit stairwell."
 		]
-	elif active_q.get("slug") == "heroquest-lair-orc-warlord":
+	elif q_slug == "heroquest-lair-orc-warlord":
 		primary_goals = [
 			"Purge Orc Chieftain Ulag's vanguard in the sunken caverns.",
 			"Shatter Ulag's command throne and recover the royal relics.",
 			"Survive the onslaught and escape back to the surface."
 		]
 	else:
+		var boss_names: Array[String] = []
+		for m in monsters:
+			if bool(m.get("isBoss", false)) or bool(m.get("is_boss", false)):
+				var b_n = str(m.get("name", "")).strip_edges()
+				if b_n != "" and not boss_names.has(b_n):
+					boss_names.append(b_n)
 		var boss_name = str(active_q.get("bossTarget", "")).strip_edges()
-		if boss_name != "":
+		if not boss_names.is_empty():
+			primary_goals = [
+				"Locate and defeat %s." % ", ".join(boss_names),
+				"Explore the dungeon chambers and uncover hidden treasures.",
+				"Lead all surviving heroes safely to the dungeon exit stairs." if exit_stair != Vector2i(-1, -1) else "Ensure all living heroes return safely to the spiral stairway."
+			]
+		elif boss_name != "" and boss_name != "gargoyle-boss":
 			primary_goals = [
 				"Locate and defeat the %s." % boss_name.capitalize(),
 				"Explore the ancient chambers and search for hidden treasures.",
@@ -6121,8 +6159,8 @@ func get_active_quest_objective() -> Dictionary:
 			]
 
 	return {
-		"id": str(active_q.get("id", "quest-1")),
-		"slug": str(active_q.get("slug", current_slug)),
+		"id": str(active_q.get("id", q_slug if q_slug != "" else "quest-1")),
+		"slug": q_slug,
 		"bossTarget": str(active_q.get("bossTarget", "")),
 		"campaign": campaign_title,
 		"title": quest_title,
@@ -7369,31 +7407,30 @@ func get_quest_objectives() -> Array[Dictionary]:
 	var any_monster_alive = not living_monsters.is_empty()
 	
 	var is_boss_dead = false
+	var boss_monsters = monsters.filter(func(m):
+		return bool(m.get("isBoss", false)) or bool(m.get("is_boss", false))
+	)
 	if _quest_completed or get_game_state() == "quest_victory":
 		is_boss_dead = true
-	elif boss_target != "":
-		var boss_monsters = monsters.filter(func(m):
-			return bool(m.get("isBoss", false)) or bool(m.get("is_boss", false))
+	elif not boss_monsters.is_empty():
+		var boss_alive = boss_monsters.any(func(m):
+			return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0
 		)
-		if not boss_monsters.is_empty():
-			var boss_alive = boss_monsters.any(func(m):
-				return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0
+		is_boss_dead = not boss_alive
+	elif boss_target != "":
+		var has_target_monster = monsters.any(func(m):
+			return boss_target in str(m.get("id", "")).to_lower() or boss_target in str(m.get("name", "")).to_lower()
+		)
+		if has_target_monster:
+			var target_alive = monsters.any(func(m): 
+				return (boss_target in str(m.get("id", "")).to_lower() or boss_target in str(m.get("name", "")).to_lower()) \
+					and bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0
 			)
-			is_boss_dead = not boss_alive
+			is_boss_dead = not target_alive
 		else:
-			var has_target_monster = monsters.any(func(m):
-				return boss_target in str(m.get("id", "")).to_lower() or boss_target in str(m.get("name", "")).to_lower()
-			)
-			if has_target_monster:
-				var target_alive = monsters.any(func(m): 
-					return (boss_target in str(m.get("id", "")).to_lower() or boss_target in str(m.get("name", "")).to_lower()) \
-						and bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0
-				)
-				is_boss_dead = not target_alive
-			else:
-				is_boss_dead = not any_monster_alive and not monsters.is_empty()
+			is_boss_dead = not any_monster_alive and not monsters.is_empty()
 	else:
-		if slug == "heroquest-the-trial" or q_id == "quest-1" or "trial" in slug or slug == "":
+		if slug == "heroquest-the-trial" or "trial" in slug or slug == "":
 			var has_verag = monsters.any(func(m):
 				return "verag" in str(m.get("id", "")).to_lower() or "verag" in str(m.get("name", "")).to_lower()
 			)
@@ -7414,7 +7451,7 @@ func get_quest_objectives() -> Array[Dictionary]:
 	var obj1_text = "Defeat the dungeon commander"
 	if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array and not active_q["primaryGoals"].is_empty():
 		obj1_text = str(active_q["primaryGoals"][0])
-	elif slug == "heroquest-the-trial" or q_id == "quest-1" or "trial" in slug or slug == "":
+	elif slug == "heroquest-the-trial" or "trial" in slug or slug == "":
 		obj1_text = "Defeat Orc Warlord Verag in his catacombs"
 	elif slug == "heroquest-rescue-sir-ragnar":
 		obj1_text = "Vanquish the dungeon guards and locate Sir Ragnar"
