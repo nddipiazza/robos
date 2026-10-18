@@ -6753,6 +6753,15 @@ function switchCampaignSubtab(subtabId) {
   return targetId;
 }
 
+function autoResizeCampaignNameInput(el) {
+  if (!el || typeof el.style === "undefined") return;
+  el.style.height = "auto";
+  const sh = Number(el.scrollHeight) || 0;
+  if (sh > 0) {
+    el.style.height = `${Math.max(44, Math.min(110, sh))}px`;
+  }
+}
+
 function renderCampaignSelectorUI() {
   const selectEl = document.getElementById("campaign-select");
   if (selectEl) {
@@ -6772,7 +6781,10 @@ function renderCampaignSelectorUI() {
 
   const cNameInput = document.getElementById("campaign-name-input");
   if (cNameInput && currentData.campaign) {
-    cNameInput.value = currentData.campaign.title || "";
+    if (typeof document === "undefined" || document.activeElement !== cNameInput) {
+      cNameInput.value = currentData.campaign.title || "";
+    }
+    autoResizeCampaignNameInput(cNameInput);
   }
 
   const scopeLabel = document.getElementById("campaign-scope-label");

@@ -1455,6 +1455,7 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.ok(indexHtml.includes('id="btn-delete-quest"'), "Quest card header must include #btn-delete-quest");
     assert.ok(indexHtml.includes('id="btn-sidebar-delete-quest"'), "Campaign Quests sidebar must include #btn-sidebar-delete-quest");
     assert.ok(indexHtml.includes('id="btn-header-delete-quest"'), "Top header must include #btn-header-delete-quest");
+    assert.ok(indexHtml.includes('<textarea id="campaign-name-input"'), "Campaign Name input must be a multiline textarea so long names wrap cleanly");
     assert.ok(appJs.includes("btn-delete-quest-item"), "Each quest item in Campaign Quests list must include an inline delete button");
     assert.ok(mainJs.includes('ipcMain.handle("tabletop:delete-quest"'), "main.js must handle tabletop:delete-quest IPC");
 
