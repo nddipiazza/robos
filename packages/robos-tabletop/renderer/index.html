@@ -176,15 +176,13 @@
                 </div>
               </div>
 
-              <!-- Live Cartridge Info Strip -->
+              <!-- Live Cartridge Info Strip (Spoiler-Free) -->
               <div id="quest-cartridge-summary-strip" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; padding:8px 12px; margin-bottom:14px; background:rgba(15,23,42,0.75); border:1px solid #334155; border-radius:6px; font-size:12px;">
-                <span style="color:#94a3b8; font-weight:700;">🗺️ Cartridge Entities:</span>
-                <span class="badge" id="cartridge-stat-monsters">👹 24 Monsters</span>
-                <span class="badge" id="cartridge-stat-doors">🚪 21 Doors</span>
-                <span class="badge" id="cartridge-stat-furniture">📦 19 Furniture</span>
-                <span class="badge" id="cartridge-stat-traps">⚠️ 14 Traps</span>
-                <span class="badge" id="cartridge-stat-triggers">🎬 13 Story Triggers</span>
+                <span style="color:#94a3b8; font-weight:700;">🗺️ Quest Cartridge:</span>
+                <span class="badge" id="cartridge-stat-file">📦 custom-quest.cartridge.json</span>
+                <span class="badge" id="cartridge-stat-ruleset">🎲 HeroQuest Ruleset</span>
                 <span class="badge" id="cartridge-stat-stairs">🏁 Start: [7, 14]</span>
+                <span class="badge" id="cartridge-stat-fog" style="color:#38bdf8;">🌫️ Fog of War: Unseen Content Hidden</span>
               </div>
 
               <div class="form-grid">
@@ -223,25 +221,21 @@
                 </div>
 
                 <div class="form-card-inner">
-                  <h4 style="margin-top:0; color:#e2e8f0; font-size:0.9rem;">Dungeon Briefing & Win State</h4>
+                  <h4 style="margin-top:0; color:#e2e8f0; font-size:0.9rem;">Dungeon Briefing &amp; Board</h4>
                   <div class="form-group">
                     <label>Story Briefing (Parchment):</label>
-                    <textarea id="quest-briefing" rows="5" class="form-textarea">Descend into the Custom Dungeon via the stairwell at [7, 14]. Explore the dungeon rooms, overcome the traps and monsters within, and return victorious!</textarea>
-                  </div>
-                  <div class="form-group">
-                    <label>Boss Monster Target:</label>
-                    <input type="text" id="quest-boss-target" value="gargoyle-boss" class="form-input">
+                    <textarea id="quest-briefing" rows="5" class="form-textarea">Descend into the Custom Dungeon via the stairwell at [7, 14]. Explore the dungeon, overcome the perils within, and return victorious!</textarea>
                   </div>
                   <div class="form-group">
                     <label>Board Theme / Background (Quest Map Editor):</label>
                     <select id="quest-bg-ref" class="form-select">
                       <option value="heroquest-classic" selected>HeroQuest Classic Side A - Stone Dungeon (26×19)</option>
-                      <option value="fan-dungeon-28x21">HeroQuest Fan Dungeon & Cavern Citadel (28×21)</option>
+                      <option value="fan-dungeon-28x21">HeroQuest Fan Dungeon &amp; Cavern Citadel (28×21)</option>
                       <option value="first-light-caverns">HeroQuest First Light Side B - Caverns (26×19)</option>
                     </select>
                     <div id="quest-bg-meta" class="theme-meta-badges" style="margin-top:6px; display:flex; gap:8px;">
                       <span id="quest-bg-dims" class="badge">26 × 19 squares</span>
-                      <span id="quest-bg-rooms" class="badge">22 calibrated rooms</span>
+                      <span id="quest-bg-rooms" class="badge">🌫️ Fog of War Active</span>
                       <span id="quest-bg-calib" class="badge">custom-quest.cartridge.json</span>
                     </div>
                   </div>
