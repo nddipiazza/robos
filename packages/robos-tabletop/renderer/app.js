@@ -505,6 +505,7 @@ document.getElementById("quest-bg-ref")?.addEventListener("change", async (e) =>
       mapConfigId: configId
     });
   }
+  triggerCampaignAutosave();
 });
 
 async function switchMapConfiguration(configId, preserveQuestEntities = false) {
@@ -2129,11 +2130,31 @@ async function initKGraphData() {
 
     if (res && res.success) {
 
+      // Restore any persisted robos:TabletopCampaign nodes from Knowledge Graph
+      const kgraphCampaignNodes = currentData.tabletopNodes.filter(n => {
+        const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+        return t.includes("robos:TabletopCampaign");
+      });
+
       const kgraphHeroes = currentData.tabletopNodes.filter(n => {
         const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
         return t.includes("robos:TabletopHero");
       });
-      if (kgraphHeroes.length > 0 && currentData.campaigns[0]) {
+
+      if (kgraphCampaignNodes.length > 0) {
+        kgraphCampaignNodes.forEach(node => {
+          const deserialized = deserializeCampaignFromKGraphNode(node);
+          if (!deserialized) return;
+          const existingIdx = currentData.campaigns.findIndex(c => c.id === deserialized.id);
+          if (existingIdx !== -1) {
+            currentData.campaigns[existingIdx] = deserialized;
+          } else {
+            currentData.campaigns.push(deserialized);
+          }
+        });
+        currentData.currentCampaignIndex = Math.min(currentData.currentCampaignIndex || 0, currentData.campaigns.length - 1);
+        currentData.campaign = currentData.campaigns[currentData.currentCampaignIndex];
+      } else if (kgraphHeroes.length > 0 && currentData.campaigns[0]) {
         currentData.campaigns[0].heroes = kgraphHeroes;
       }
       currentData.heroes = currentData.campaign.heroes;
@@ -2200,7 +2221,14 @@ async function initKGraphData() {
 
       // Render Active Tab View (Campaign & Quest) Immediately
       renderCampaignSelectorUI();
-      await selectQuest(currentData.currentQuestIndex || 0, true);
+      if (currentData.campaign.quests && currentData.campaign.quests.length > 0) {
+        await selectQuest(currentData.currentQuestIndex || 0, true);
+      } else {
+        currentData.currentQuestIndex = -1;
+        currentData.currentQuest = null;
+        renderCampaignQuestsList();
+        applyEmptyQuestEditorUI();
+      }
 
       // Lazily schedule background rendering for inactive tabs so initial load paints instantly
       scheduleDeferredTabRenders();
@@ -4771,6 +4799,9 @@ async function saveActiveHeroToKGraph(explicit = false) {
 
   try {
     const res = await window.robosTabletop.saveKGraphEntity({ entity: heroNode });
+    if (currentData.campaign) {
+      await saveCampaignToKGraph(currentData.campaign, false);
+    }
     if (indicator) {
       setTimeout(() => {
         indicator.textContent = "● Saved";
@@ -6683,7 +6714,7 @@ function getCampaign() {
 }
 
 function getActiveQuest() {
-  return currentData.currentQuest || currentData.campaign.quests[currentData.currentQuestIndex || 0];
+  return currentData.currentQuest || currentData.campaign?.quests?.[currentData.currentQuestIndex >= 0 ? currentData.currentQuestIndex : 0] || null;
 }
 
 function switchCampaignSubtab(subtabId) {
@@ -6769,6 +6800,183 @@ function renderCampaignSelectorUI() {
   }
 }
 
+function serializeCampaignToKGraphNode(camp, isActiveCampaign = false) {
+  if (!camp) return null;
+  const campId = camp.id || "campaign-heroquest-base";
+  return {
+    "@id": `urn:robos:tabletop:campaign:${campId}`,
+    "@type": [
+      "oslc_am:Resource",
+      "robos:TabletopCampaign",
+      "schema:CreativeWork"
+    ],
+    "dcterms:title": camp.title || "HeroQuest",
+    "dcterms:description": camp.description || "",
+    "robos:campaignId": campId,
+    "robos:isActiveCampaign": Boolean(isActiveCampaign),
+    "robos:heroes": Array.isArray(camp.heroes) ? camp.heroes : [],
+    "robos:quests": (Array.isArray(camp.quests) ? camp.quests : []).map(q => ({
+      id: q.id,
+      slug: q.slug,
+      title: q.title,
+      briefing: q.briefing || "",
+      mapConfigId: q.mapConfigId || "heroquest-classic",
+      ruleset: q.ruleset || "heroquest",
+      goldReward: q.goldReward !== undefined ? q.goldReward : 150,
+      bossTarget: q.bossTarget || "",
+      completed: Boolean(q.completed),
+      startingStairs: Array.isArray(q.startingStairs) ? [...q.startingStairs] : [7, 14],
+      cartridgeFile: q.cartridgeFile || `${q.slug || "custom-quest"}.cartridge.json`,
+      activeRooms: Array.from(q.activeRooms || [])
+    })),
+    "robos:package": "tabletop-game",
+    "robos:namespace": "robos.tabletop"
+  };
+}
+
+function deserializeCampaignFromKGraphNode(node) {
+  if (!node) return null;
+  const campId = node["robos:campaignId"] || String(node["@id"] || "").replace(/^urn:robos:tabletop:campaign:/, "") || "campaign-custom";
+  const rawQuests = Array.isArray(node["robos:quests"]) ? node["robos:quests"] : [];
+  return {
+    id: campId,
+    title: node["dcterms:title"] || "Campaign",
+    description: node["dcterms:description"] || "",
+    isActiveCampaign: Boolean(node["robos:isActiveCampaign"]),
+    heroes: Array.isArray(node["robos:heroes"]) && node["robos:heroes"].length > 0
+      ? createDefaultCampaignHeroes(node["robos:heroes"])
+      : createDefaultCampaignHeroes(),
+    quests: rawQuests.map((q, idx) => ({
+      id: q.id || `quest-${idx + 1}`,
+      slug: q.slug || "custom-quest",
+      title: q.title || `Quest ${idx + 1}`,
+      briefing: q.briefing || "",
+      mapConfigId: q.mapConfigId || "heroquest-classic",
+      ruleset: q.ruleset || "heroquest",
+      goldReward: q.goldReward !== undefined ? q.goldReward : 150,
+      bossTarget: q.bossTarget || "",
+      completed: Boolean(q.completed),
+      startingStairs: Array.isArray(q.startingStairs) ? [...q.startingStairs] : [7, 14],
+      cartridgeFile: q.cartridgeFile || `${q.slug || "custom-quest"}.cartridge.json`,
+      activeRooms: new Set(Array.isArray(q.activeRooms) ? q.activeRooms : []),
+      wallBlocks: Array.isArray(q.wallBlocks) ? q.wallBlocks : [],
+      doors: Array.isArray(q.doors) ? q.doors : [],
+      furniture: Array.isArray(q.furniture) ? q.furniture : [],
+      monsters: Array.isArray(q.monsters) ? q.monsters : [],
+      traps: Array.isArray(q.traps) ? q.traps : []
+    }))
+  };
+}
+
+function applyEmptyQuestEditorUI() {
+  currentData.currentQuestIndex = -1;
+  currentData.currentQuest = null;
+  const editorTitleEl = document.getElementById("quest-editor-title");
+  if (editorTitleEl) editorTitleEl.textContent = "No Active Quest";
+  const statusBadge = document.getElementById("quest-status-badge");
+  if (statusBadge) {
+    statusBadge.className = "badge badge-gray";
+    statusBadge.textContent = "Empty";
+  }
+  const cartBadgeEl = document.getElementById("quest-cartridge-badge");
+  if (cartBadgeEl) cartBadgeEl.textContent = "📦 None";
+  const victoryBanner = document.getElementById("quest-victory-banner");
+  if (victoryBanner) victoryBanner.style.display = "none";
+  [
+    document.getElementById("btn-delete-quest"),
+    document.getElementById("btn-sidebar-delete-quest"),
+    document.getElementById("btn-header-delete-quest")
+  ].forEach(delBtn => {
+    if (delBtn) {
+      delBtn.disabled = true;
+      delBtn.style.opacity = "0.4";
+      delBtn.style.cursor = "not-allowed";
+    }
+  });
+}
+
+let campaignAutosaveTimer = null;
+async function saveCampaignToKGraph(camp = currentData.campaign, showToast = false) {
+  const targetCamp = camp || currentData.campaign;
+  if (!targetCamp) return { success: false };
+
+  const indicator = document.getElementById("campaign-autosave-status");
+  if (indicator) {
+    indicator.textContent = "● Saving...";
+    indicator.classList.add("saving");
+  }
+
+  try {
+    const isActive = targetCamp.id === currentData.campaign?.id;
+    const campNode = serializeCampaignToKGraphNode(targetCamp, isActive);
+    if (window.robosTabletop?.saveKGraphEntity && campNode) {
+      await window.robosTabletop.saveKGraphEntity({ entity: campNode });
+    }
+
+    const activeQ = isActive ? currentData.currentQuest : null;
+    if (activeQ && activeQ.slug) {
+      const questMapNode = {
+        "@id": `urn:robos:tabletop:map:${activeQ.slug}`,
+        "@type": [
+          "oslc_am:Resource",
+          "robos:TabletopQuestMap",
+          "robos:GameMap",
+          "schema:Place"
+        ],
+        "dcterms:title": activeQ.title,
+        "robos:mapConfiguration": activeQ.mapConfigId,
+        "robos:activeRooms": Array.from(activeQ.activeRooms || []),
+        "robos:startingSpawn": activeQ.startingStairs || [7, 14],
+        "robos:wallBlocksCount": (activeQ.wallBlocks || []).length,
+        "robos:doorsCount": (activeQ.doors || []).length,
+        "robos:furnitureCount": (activeQ.furniture || []).length,
+        "robos:monstersCount": (activeQ.monsters || []).length,
+        "robos:trapsCount": (activeQ.traps || []).length,
+        "robos:package": "tabletop-game",
+        "robos:namespace": "robos.tabletop"
+      };
+      if (window.robosTabletop?.saveKGraphEntity) {
+        await window.robosTabletop.saveKGraphEntity({ entity: questMapNode });
+      }
+      if (window.robosTabletop?.syncCartridgeHeroes) {
+        await window.robosTabletop.syncCartridgeHeroes({
+          cartridgeSlug: activeQ.slug,
+          questTitle: activeQ.title,
+          questBriefing: activeQ.briefing,
+          mapConfigId: activeQ.mapConfigId
+        });
+      }
+    }
+
+    if (indicator) {
+      indicator.textContent = "✓ All changes saved";
+      indicator.classList.remove("saving");
+    }
+    if (showToast) {
+      setStatus(`Saved Campaign '${targetCamp.title}' to Knowledge Graph.`);
+    }
+    return { success: true, campaignId: targetCamp.id };
+  } catch (err) {
+    if (indicator) {
+      indicator.textContent = "✓ All changes saved";
+      indicator.classList.remove("saving");
+    }
+    return { success: false, error: err.message };
+  }
+}
+
+function triggerCampaignAutosave() {
+  const indicator = document.getElementById("campaign-autosave-status");
+  if (indicator) {
+    indicator.textContent = "● Saving...";
+    indicator.classList.add("saving");
+  }
+  clearTimeout(campaignAutosaveTimer);
+  campaignAutosaveTimer = setTimeout(() => {
+    saveCampaignToKGraph(currentData.campaign, false);
+  }, 150);
+}
+
 async function selectCampaign(indexOrId) {
   let idx = -1;
   if (typeof indexOrId === "number") {
@@ -6803,13 +7011,13 @@ async function selectCampaign(indexOrId) {
     currentData.currentQuest = currentData.campaign.quests[0];
     await selectQuest(0, true);
   } else {
-    currentData.currentQuestIndex = -1;
-    currentData.currentQuest = null;
+    applyEmptyQuestEditorUI();
     renderCampaignQuestsList();
     updateCampaignProgress();
     renderQuestHeroesReviewGrid();
   }
   renderCampaignSelectorUI();
+  saveCampaignToKGraph(currentData.campaign, false);
   setStatus(`Switched active campaign to '${currentData.campaign.title}' (${currentData.campaign.quests.length} quests, ${currentData.heroes.length} heroes).`);
   return currentData.campaign;
 }
@@ -6822,28 +7030,9 @@ function addCampaign(customProps = {}) {
     ? createDefaultCampaignHeroes(customProps.heroes)
     : createDefaultCampaignHeroes();
 
-  const starterQuests = Array.isArray(customProps.quests) && customProps.quests.length > 0
+  const starterQuests = Array.isArray(customProps.quests)
     ? customProps.quests
-    : [
-        {
-          id: `quest-1`,
-          slug: `${campId}-quest-1`,
-          title: `Quest 1: The Awakening`,
-          briefing: `A new campaign begins! Lead your campaign's party of heroes into the dungeon depths and claim victory.`,
-          mapConfigId: currentData.activeMapConfig?.id || "fan-dungeon-28x21",
-          ruleset: "heroquest",
-          goldReward: 150,
-          bossTarget: "verag-boss",
-          completed: false,
-          startingStairs: [0, 1],
-          activeRooms: new Set(),
-          wallBlocks: [],
-          doors: [],
-          furniture: [],
-          monsters: [],
-          traps: []
-        }
-      ];
+    : [];
 
   const newCampaign = {
     id: campId,
@@ -6855,7 +7044,8 @@ function addCampaign(customProps = {}) {
 
   currentData.campaigns.push(newCampaign);
   selectCampaign(currentData.campaigns.length - 1);
-  setStatus(`Created new campaign: '${newCampaign.title}'`);
+  saveCampaignToKGraph(newCampaign, false);
+  setStatus(`Created & saved new campaign: '${newCampaign.title}' (0 quests)`);
   return newCampaign;
 }
 
@@ -6867,8 +7057,14 @@ function deleteCampaign(index = currentData.currentCampaignIndex) {
   if (index < 0 || index >= currentData.campaigns.length) return false;
 
   const deleted = currentData.campaigns.splice(index, 1)[0];
+  if (deleted && window.robosTabletop?.deleteKGraphEntity) {
+    window.robosTabletop.deleteKGraphEntity({
+      entityId: `urn:robos:tabletop:campaign:${deleted.id}`
+    }).catch(() => {});
+  }
   const nextIdx = Math.max(0, Math.min(index, currentData.campaigns.length - 1));
   selectCampaign(nextIdx);
+  saveCampaignToKGraph(currentData.campaign, false);
   setStatus(`Deleted campaign: '${deleted.title}'`);
   return true;
 }
@@ -8408,6 +8604,7 @@ function completeQuest(index = currentData.currentQuestIndex) {
   updateQuestStatusUI(q);
   renderCampaignQuestsList();
   updateCampaignProgress();
+  saveCampaignToKGraph(currentData.campaign, false);
 
   setStatus(`🏆 Victory! Completed '${q.title}' and awarded ${bounty}g bounty to all party members!`);
   return { success: true, quest: q, goldAwarded: bounty };
@@ -8421,6 +8618,7 @@ function resetQuest(index = currentData.currentQuestIndex) {
   updateQuestStatusUI(q);
   renderCampaignQuestsList();
   updateCampaignProgress();
+  saveCampaignToKGraph(currentData.campaign, false);
 
   setStatus(`Reopened quest '${q.title}'. Ready for adventure.`);
   return { success: true, quest: q };
@@ -8450,7 +8648,8 @@ function addQuest(customProps = {}) {
   currentData.campaign.quests.push(newQuest);
   selectQuest(currentData.campaign.quests.length - 1);
   updateCampaignProgress();
-  setStatus(`Created new quest: '${newQuest.title}'`);
+  saveCampaignToKGraph(currentData.campaign, false);
+  setStatus(`Created & saved new quest: '${newQuest.title}'`);
   return newQuest;
 }
 
@@ -8489,32 +8688,12 @@ function deleteQuest(indexOrSlug = currentData.currentQuestIndex, options = {}) 
     const nextIdx = Math.max(0, Math.min(idx, quests.length - 1));
     selectQuest(nextIdx);
   } else {
-    currentData.currentQuestIndex = -1;
-    currentData.currentQuest = null;
-    const editorTitleEl = document.getElementById("quest-editor-title");
-    if (editorTitleEl) editorTitleEl.textContent = "No Active Quest";
-    const statusBadge = document.getElementById("quest-status-badge");
-    if (statusBadge) {
-      statusBadge.className = "badge badge-gray";
-      statusBadge.textContent = "Empty";
-    }
-    const cartBadgeEl = document.getElementById("quest-cartridge-badge");
-    if (cartBadgeEl) cartBadgeEl.textContent = "📦 None";
-    [
-      document.getElementById("btn-delete-quest"),
-      document.getElementById("btn-sidebar-delete-quest"),
-      document.getElementById("btn-header-delete-quest")
-    ].forEach(delBtn => {
-      if (delBtn) {
-        delBtn.disabled = true;
-        delBtn.style.opacity = "0.4";
-        delBtn.style.cursor = "not-allowed";
-      }
-    });
+    applyEmptyQuestEditorUI();
     renderCampaignQuestsList();
   }
 
   updateCampaignProgress();
+  saveCampaignToKGraph(currentData.campaign, false);
   setStatus(`Deleted quest: '${deleted.title}'`);
   return true;
 }
@@ -8555,6 +8734,7 @@ function setupCampaignQuestControls() {
       const titleDisplay = document.getElementById("campaign-title-display");
       if (titleDisplay) titleDisplay.textContent = e.target.value;
       renderCampaignSelectorUI();
+      triggerCampaignAutosave();
     });
   }
 
@@ -8576,20 +8756,26 @@ function setupCampaignQuestControls() {
     const editorTitle = document.getElementById("quest-editor-title");
     if (editorTitle) editorTitle.textContent = e.target.value || "Edit Quest";
     renderCampaignQuestsList();
+    triggerCampaignAutosave();
   });
 
   // Quest Slug Live Sync
   document.getElementById("quest-slug")?.addEventListener("input", (e) => {
     if (currentData.currentQuest) {
       currentData.currentQuest.slug = e.target.value;
+      currentData.currentQuest.cartridgeFile = `${e.target.value || "custom-quest"}.cartridge.json`;
       const cartBadge = document.getElementById("quest-cartridge-badge");
       if (cartBadge) cartBadge.textContent = `📦 ${e.target.value || "custom-quest"}.cartridge.json`;
+      triggerCampaignAutosave();
     }
   });
 
   // Quest Ruleset Live Sync
   document.getElementById("quest-ruleset")?.addEventListener("change", (e) => {
-    if (currentData.currentQuest) currentData.currentQuest.ruleset = e.target.value;
+    if (currentData.currentQuest) {
+      currentData.currentQuest.ruleset = e.target.value;
+      triggerCampaignAutosave();
+    }
   });
 
   // Starting Spawn X, Y
@@ -8598,6 +8784,7 @@ function setupCampaignQuestControls() {
     if (!currentData.currentQuest.startingStairs) currentData.currentQuest.startingStairs = [7, 14];
     currentData.currentQuest.startingStairs[0] = parseInt(e.target.value, 10) || 0;
     drawBoard();
+    triggerCampaignAutosave();
   });
 
   document.getElementById("quest-spawn-y")?.addEventListener("input", (e) => {
@@ -8605,6 +8792,7 @@ function setupCampaignQuestControls() {
     if (!currentData.currentQuest.startingStairs) currentData.currentQuest.startingStairs = [7, 14];
     currentData.currentQuest.startingStairs[1] = parseInt(e.target.value, 10) || 0;
     drawBoard();
+    triggerCampaignAutosave();
   });
 
   // Quest Gold Reward
@@ -8613,15 +8801,22 @@ function setupCampaignQuestControls() {
     currentData.currentQuest.goldReward = parseInt(e.target.value, 10) || 0;
     renderCampaignQuestsList();
     updateCampaignProgress();
+    triggerCampaignAutosave();
   });
 
   // Story Briefing & Boss Target
   document.getElementById("quest-briefing")?.addEventListener("input", (e) => {
-    if (currentData.currentQuest) currentData.currentQuest.briefing = e.target.value;
+    if (currentData.currentQuest) {
+      currentData.currentQuest.briefing = e.target.value;
+      triggerCampaignAutosave();
+    }
   });
 
   document.getElementById("quest-boss-target")?.addEventListener("input", (e) => {
-    if (currentData.currentQuest) currentData.currentQuest.bossTarget = e.target.value;
+    if (currentData.currentQuest) {
+      currentData.currentQuest.bossTarget = e.target.value;
+      triggerCampaignAutosave();
+    }
   });
 
   // Campaign Buttons (Sidebar, Quest Card Header, and Top Header)
@@ -8671,36 +8866,8 @@ function setupCampaignQuestControls() {
 
 // Action: Save to KGraph
 document.getElementById("btn-save-kgraph")?.addEventListener("click", async () => {
-  setStatus("Saving Tabletop Quest to Knowledge Graph package 'tabletop-game'...");
-
-  // Update Quest Map node in KGraph
-  const questMapNode = {
-    "@id": `urn:robos:tabletop:map:${currentData.currentQuest.slug}`,
-    "@type": [
-      "oslc_am:Resource",
-      "robos:TabletopQuestMap",
-      "robos:GameMap",
-      "schema:Place"
-    ],
-    "dcterms:title": currentData.currentQuest.title,
-    "robos:mapConfiguration": currentData.currentQuest.mapConfigId,
-    "robos:activeRooms": Array.from(currentData.currentQuest.activeRooms),
-    "robos:startingSpawn": currentData.currentQuest.startingStairs,
-    "robos:wallBlocksCount": currentData.currentQuest.wallBlocks.length,
-    "robos:doorsCount": currentData.currentQuest.doors.length,
-    "robos:furnitureCount": currentData.currentQuest.furniture.length,
-    "robos:monstersCount": currentData.currentQuest.monsters.length,
-    "robos:trapsCount": currentData.currentQuest.traps.length,
-    "robos:package": "tabletop-game",
-    "robos:namespace": "robos.tabletop"
-  };
-
-  const res = await window.robosTabletop.saveKGraphEntity({ entity: questMapNode });
-  if (res.success) {
-    setStatus(`Successfully saved Quest Map '${questMapNode["dcterms:title"]}' to KGraph.`);
-  } else {
-    setStatus("Error saving quest to KGraph: " + res.error);
-  }
+  setStatus("Saving Tabletop Campaign & Quest to Knowledge Graph package 'tabletop-game'...");
+  await saveCampaignToKGraph(currentData.campaign, true);
 });
 
 // Helper: Compile active campaign & current quest into cartridge payload
@@ -8960,6 +9127,10 @@ if (typeof window !== "undefined") {
     selectCampaign,
     addCampaign,
     deleteCampaign,
+    saveCampaignToKGraph,
+    triggerCampaignAutosave,
+    serializeCampaignToKGraphNode,
+    deserializeCampaignFromKGraphNode,
     switchCampaignSubtab,
     renderCampaignSelectorUI,
     createDefaultCampaignHeroes,
@@ -9536,6 +9707,10 @@ if (typeof module !== "undefined" && module.exports) {
     selectCampaign,
     addCampaign,
     deleteCampaign,
+    saveCampaignToKGraph,
+    triggerCampaignAutosave,
+    serializeCampaignToKGraphNode,
+    deserializeCampaignFromKGraphNode,
     selectQuest,
     addQuest,
     deleteQuest,
