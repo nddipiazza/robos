@@ -1386,7 +1386,11 @@ func _load_hero_token_textures() -> void:
 		"barbarian": "res://assets/tokens/token_barbarian.png",
 		"dwarf": "res://assets/tokens/token_dwarf.png",
 		"elf": "res://assets/tokens/token_elf.png",
-		"wizard": "res://assets/tokens/token_wizard.png"
+		"wizard": "res://assets/tokens/token_wizard.png",
+		"obama": "res://assets/tokens/token_obama.png",
+		"trump": "res://assets/tokens/token_trump.png",
+		"hillary_clinton": "res://assets/tokens/token_hillary_clinton.png",
+		"bernie_sanders": "res://assets/tokens/token_bernie_sanders.png"
 	}
 	for k in token_map:
 		if not hero_token_textures.has(k) or hero_token_textures[k] == null:
@@ -1394,40 +1398,51 @@ func _load_hero_token_textures() -> void:
 			if tex:
 				hero_token_textures[k] = tex
 
-func get_hero_token_path(h: Dictionary) -> String:
-	var custom_asset = str(h.get("tokenAsset", h.get("token_asset", "")))
-	if custom_asset != "":
-		return custom_asset
-
+func _resolve_hero_identity_key(h: Dictionary) -> String:
 	var h_id = str(h.get("id", "")).to_lower()
+	var h_slug = str(h.get("slug", "")).to_lower()
 	var h_cls = str(h.get("heroClass", h.get("hero_class", ""))).to_lower()
 	var h_name = str(h.get("name", "")).to_lower()
 	var char_name = str(h.get("characterName", h.get("character_name", ""))).to_lower()
+	var combined = "%s %s %s %s" % [h_id, h_slug, h_name, char_name]
 
-	var key = "barbarian"
-	if "barbarian" in h_id or "barbarian" in h_cls or "barbarian" in h_name or "berserker" in h_cls:
-		key = "barbarian"
+	if "obama" in combined:
+		return "obama"
+	elif "trump" in combined:
+		return "trump"
+	elif "hillary" in combined or "clinton" in combined:
+		return "hillary_clinton"
+	elif "bernie" in combined or "sanders" in combined:
+		return "bernie_sanders"
+	elif "barbarian" in h_id or "barbarian" in h_cls or "barbarian" in h_name or "berserker" in h_cls:
+		return "barbarian"
 	elif "dwarf" in h_id or "dwarf" in h_cls or "dwarf" in h_name or "dorgan" in char_name:
-		key = "dwarf"
+		return "dwarf"
 	elif "elf" in h_id or "elf" in h_cls or "elf" in h_name or "ladril" in char_name or "ranger" in h_cls:
-		key = "elf"
+		return "elf"
 	elif "wizard" in h_id or "wizard" in h_cls or "wizard" in h_name or "telor" in char_name or "mage" in h_cls:
-		key = "wizard"
+		return "wizard"
+	return "barbarian"
 
+func get_hero_token_path(h: Dictionary) -> String:
+	var custom_asset = str(h.get("tokenAsset", h.get("token_asset", "")))
+	if custom_asset != "":
+		if custom_asset.begins_with("assets/"):
+			return "res://" + custom_asset
+		return custom_asset
+
+	var key = _resolve_hero_identity_key(h)
 	return "res://assets/tokens/token_%s.png" % key
 
 func get_hero_token_texture(h: Dictionary) -> Texture2D:
 	var custom_asset = str(h.get("tokenAsset", h.get("token_asset", "")))
 	if custom_asset != "":
+		if custom_asset.begins_with("assets/"):
+			custom_asset = "res://" + custom_asset
 		if not hero_token_textures.has(custom_asset):
 			hero_token_textures[custom_asset] = _load_texture_safe(custom_asset)
 		if hero_token_textures.get(custom_asset) != null:
 			return hero_token_textures[custom_asset]
-
-	var h_id = str(h.get("id", "")).to_lower()
-	var h_cls = str(h.get("heroClass", h.get("hero_class", ""))).to_lower()
-	var h_name = str(h.get("name", "")).to_lower()
-	var char_name = str(h.get("characterName", h.get("character_name", ""))).to_lower()
 
 	if h.get("is_summon", false) or h.has("token_key"):
 		var tok_k = str(h.get("token_key", "skeleton")).to_lower()
@@ -1442,15 +1457,7 @@ func get_hero_token_texture(h: Dictionary) -> Texture2D:
 			hero_token_textures[tok_k] = sk_tex
 			return sk_tex
 
-	var key = "barbarian"
-	if "barbarian" in h_id or "barbarian" in h_cls or "barbarian" in h_name or "berserker" in h_cls:
-		key = "barbarian"
-	elif "dwarf" in h_id or "dwarf" in h_cls or "dwarf" in h_name or "dorgan" in char_name:
-		key = "dwarf"
-	elif "elf" in h_id or "elf" in h_cls or "elf" in h_name or "ladril" in char_name or "ranger" in h_cls:
-		key = "elf"
-	elif "wizard" in h_id or "wizard" in h_cls or "wizard" in h_name or "telor" in char_name or "mage" in h_cls:
-		key = "wizard"
+	var key = _resolve_hero_identity_key(h)
 
 	if hero_token_textures.has(key) and hero_token_textures[key] != null:
 		return hero_token_textures[key]
@@ -2112,16 +2119,54 @@ func _apply_rpg_theme_to_all_modals() -> void:
 			btn_disarm_trap_close.custom_minimum_size = Vector2(0, 44)
 			apply_rpg_font_to_button(btn_disarm_trap_close, 13)
 
-func get_hero_card_bg_texture(hero_id: String) -> Texture2D:
-	var clean_id = hero_id.to_lower().strip_edges()
-	if "barbarian" in clean_id:
-		clean_id = "barbarian"
-	elif "dwarf" in clean_id:
-		clean_id = "dwarf"
-	elif "elf" in clean_id:
-		clean_id = "elf"
-	elif "wizard" in clean_id:
-		clean_id = "wizard"
+func get_hero_card_bg_texture(h_or_id) -> Texture2D:
+	var h_dict: Dictionary = {}
+	var raw_id = ""
+	if h_or_id is Dictionary:
+		h_dict = h_or_id
+		raw_id = str(h_dict.get("id", ""))
+	else:
+		raw_id = str(h_or_id)
+		for hero_entry in heroes:
+			if str(hero_entry.get("id", "")).to_lower() == raw_id.to_lower() or str(hero_entry.get("slug", "")).to_lower() == raw_id.to_lower():
+				h_dict = hero_entry
+				break
+
+	if not h_dict.is_empty():
+		var custom_portrait = str(h_dict.get("portraitAsset", h_dict.get("portrait_asset", "")))
+		if custom_portrait != "":
+			if custom_portrait.begins_with("assets/portraits/"):
+				custom_portrait = "res://assets/hero_cards/" + custom_portrait.get_file()
+			elif custom_portrait.begins_with("assets/"):
+				custom_portrait = "res://" + custom_portrait
+			if _hero_card_bg_cache.has(custom_portrait) and _hero_card_bg_cache[custom_portrait] != null:
+				return _hero_card_bg_cache[custom_portrait]
+			var c_tex = _load_texture_safe(custom_portrait)
+			if c_tex:
+				_hero_card_bg_cache[custom_portrait] = c_tex
+				return c_tex
+
+	var clean_id = ""
+	if not h_dict.is_empty():
+		clean_id = _resolve_hero_identity_key(h_dict)
+	else:
+		clean_id = raw_id.to_lower().strip_edges()
+		if "obama" in clean_id:
+			clean_id = "obama"
+		elif "trump" in clean_id:
+			clean_id = "trump"
+		elif "hillary" in clean_id or "clinton" in clean_id:
+			clean_id = "hillary_clinton"
+		elif "bernie" in clean_id or "sanders" in clean_id:
+			clean_id = "bernie_sanders"
+		elif "barbarian" in clean_id:
+			clean_id = "barbarian"
+		elif "dwarf" in clean_id:
+			clean_id = "dwarf"
+		elif "elf" in clean_id:
+			clean_id = "elf"
+		elif "wizard" in clean_id:
+			clean_id = "wizard"
 
 	if _hero_card_bg_cache.has(clean_id) and _hero_card_bg_cache[clean_id] != null:
 		return _hero_card_bg_cache[clean_id]
@@ -16692,7 +16737,7 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	card.add_theme_stylebox_override("panel", sb)
 
 	# AI Generated Image Background Underlay
-	var bg_tex = get_hero_card_bg_texture(h_id)
+	var bg_tex = get_hero_card_bg_texture(h)
 	if bg_tex:
 		var bg_rect = TextureRect.new()
 		bg_rect.texture = bg_tex
@@ -17399,7 +17444,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 
 	# Left Column: Portrait & Lore
 	if hero_detail_portrait:
-		var bg_tex = get_hero_card_bg_texture(h_id)
+		var bg_tex = get_hero_card_bg_texture(h)
 		if bg_tex:
 			hero_detail_portrait.texture = bg_tex
 		else:
@@ -17413,7 +17458,16 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 
 	if hero_detail_lore:
 		var lore_text = ""
-		match h_id:
+		var ident_key = _resolve_hero_identity_key(h)
+		match ident_key:
+			"obama":
+				lore_text = "[i]\"Let me be clear: you are Barack Obama the Barbarian, chiseled silver-haired warrior of the Capitol! Armed with the Broadsword of Hope & Change, you cleave through partisan gridlock and Super PAC gargoyles with unmatched physical power.\"[/i]\n\n[color=#ffd700]Specialty:[/color] Frontline melee powerhouse (8 BP, 3 Attack Dice) with Bipartisan Cleave."
+			"trump":
+				lore_text = "[i]\"You are Donald Trump the Dwarf — tremendous golden hair, the greatest braided Dwarven beard in the history of the realm, and gilded rune-plate armor! No bureaucratic red-tape trap or subterranean vault can stop your golden battle-axe.\"[/i]\n\n[color=#ffd700]Specialty:[/color] Innate trap disarm mastery without needing a Tool Kit; heavy gilded armor proficiency."
+			"hillary_clinton":
+				lore_text = "[i]\"You are Hillary Clinton the Woodland Elf — high-born ranger-noble of Lothlorien clad in an emerald leaf-brooch cloak and silver circlet! With a sly, knowing smile, you combine razor-sharp steel with classified arcane spellcraft.\"[/i]\n\n[color=#ffd700]Specialty:[/color] Hybrid martial warrior and elemental spellcaster (1 Spell College)."
+			"bernie_sanders":
+				lore_text = "[i]\"I am once again asking you to behold Bernie Sanders the Elemental Wizard! Wearing your tall starry wizard hat and enchanted Vermont wool mittens, you channel the arcane fury of the 99% across three full spell colleges.\"[/i]\n\n[color=#ffd700]Specialty:[/color] Supreme arcane mastery; commands three distinct elemental spell decks (9 Spells)."
 			"barbarian":
 				lore_text = "[i]\"You are Rogar the Barbarian, greatest warrior in the kingdom! Fearless in the face of Morcar's hordes, you rely on your mighty broadsword and raw physical power to vanquish evil.\"[/i]\n\n[color=#ffd700]Specialty:[/color] Unmatched melee damage and highest vitality in the party."
 			"dwarf":

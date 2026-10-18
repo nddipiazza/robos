@@ -8,9 +8,9 @@
     "gameType": "tabletop",
     "genre": "Tabletop Dungeon Crawler",
     "ruleset": "heroquest",
-    "description": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office\u2014defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
+    "description": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office—defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
     "coverColor": "#0a0e17",
-    "icon": "\ud83d\udee1\ufe0f",
+    "icon": "🛡️",
     "mapCount": 1,
     "heroCount": 4,
     "monsterCount": 0,
@@ -26,62 +26,78 @@
   "heroes": {
     "barbarian": {
       "id": "barbarian",
-      "slug": "barbarian",
-      "name": "Barbarian",
+      "slug": "obama",
+      "name": "Barack Obama",
+      "characterName": "Barack Obama",
       "heroClass": "Barbarian",
+      "category": "Midterms 2026",
       "bodyPoints": 8,
       "mindPoints": 2,
       "attackDice": 3,
       "defendDice": 2,
-      "gold": 100,
+      "gold": 120,
+      "tokenAsset": "res://assets/tokens/token_obama.png",
+      "portraitAsset": "res://assets/hero_cards/card_bg_obama.png",
       "position": [
-        -1,
-        11
+        0,
+        13
       ]
     },
     "dwarf": {
       "id": "dwarf",
-      "slug": "dwarf",
-      "name": "Dwarf",
+      "slug": "trump",
+      "name": "Donald Trump",
+      "characterName": "Donald Trump",
       "heroClass": "Dwarf",
+      "category": "Midterms 2026",
       "bodyPoints": 7,
       "mindPoints": 3,
       "attackDice": 2,
       "defendDice": 2,
-      "gold": 100,
+      "gold": 250,
+      "tokenAsset": "res://assets/tokens/token_trump.png",
+      "portraitAsset": "res://assets/hero_cards/card_bg_trump.png",
       "position": [
-        -1,
-        11
+        0,
+        13
       ]
     },
     "elf": {
       "id": "elf",
-      "slug": "elf",
-      "name": "Elf",
+      "slug": "hillary_clinton",
+      "name": "Hillary Clinton",
+      "characterName": "Hillary Clinton",
       "heroClass": "Elf",
+      "category": "Midterms 2026",
       "bodyPoints": 6,
       "mindPoints": 4,
       "attackDice": 2,
       "defendDice": 2,
-      "gold": 100,
+      "gold": 150,
+      "tokenAsset": "res://assets/tokens/token_hillary_clinton.png",
+      "portraitAsset": "res://assets/hero_cards/card_bg_hillary_clinton.png",
       "position": [
-        -1,
-        11
+        0,
+        13
       ]
     },
     "wizard": {
       "id": "wizard",
-      "slug": "wizard",
-      "name": "Wizard",
+      "slug": "bernie_sanders",
+      "name": "Bernie Sanders",
+      "characterName": "Bernie Sanders",
       "heroClass": "Wizard",
+      "category": "Midterms 2026",
       "bodyPoints": 4,
       "mindPoints": 6,
       "attackDice": 1,
       "defendDice": 2,
-      "gold": 100,
+      "gold": 99,
+      "tokenAsset": "res://assets/tokens/token_bernie_sanders.png",
+      "portraitAsset": "res://assets/hero_cards/card_bg_bernie_sanders.png",
       "position": [
-        -1,
-        11
+        0,
+        13
       ]
     }
   },
@@ -1720,7 +1736,7 @@
       "slug": "midterm-election",
       "campaign": "Election 2026: Battle for the Hill",
       "title": "Quest 1: Battle for the Hill",
-      "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office\u2014defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
+      "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office—defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
       "goldReward": 150,
       "completed": false,
       "mapConfigId": "midterm-election-capitol",
@@ -1739,5 +1755,6 @@
         "Lead all surviving heroes safely to the Capitol Exit Stairs at [14, 2]."
       ]
     }
-  ]
+  ],
+  "heroPack": "Midterms 2026"
 }

@@ -61,7 +61,7 @@
       "robos:tokenColor": "#b91c1c",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop",
-      "robos:heroClass": "Barbariankujh",
+      "robos:heroClass": "Barbarian",
       "robos:gold": 100,
       "robos:equippedWeapon": "Broadsword (3 Combat Dice)",
       "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
@@ -86,7 +86,10 @@
       "robos:startingPosition": [
         1,
         1
-      ]
+      ],
+      "robos:category": "Base Game",
+      "robos:tokenAsset": "assets/tokens/token_barbarian.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_barbarian.png"
     },
     {
       "@id": "urn:robos:tabletop:hero:dwarf",
@@ -105,7 +108,11 @@
       "robos:startingWeapon": "urn:robos:game:item:shortsword",
       "robos:tokenColor": "#b45309",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:heroClass": "Dwarf",
+      "robos:category": "Base Game",
+      "robos:tokenAsset": "assets/tokens/token_dwarf.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_dwarf.png"
     },
     {
       "@id": "urn:robos:tabletop:hero:elf",
@@ -124,7 +131,11 @@
       "robos:startingWeapon": "urn:robos:game:item:shortsword",
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:heroClass": "Elf",
+      "robos:category": "Base Game",
+      "robos:tokenAsset": "assets/tokens/token_elf.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_elf.png"
     },
     {
       "@id": "urn:robos:tabletop:hero:wizard",
@@ -168,7 +179,202 @@
       "robos:startingPosition": [
         1,
         1
-      ]
+      ],
+      "robos:category": "Base Game",
+      "robos:tokenAsset": "assets/tokens/token_wizard.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_wizard.png"
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:bernie-sanders",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Bernie Sanders",
+      "robos:category": "Midterms 2026",
+      "robos:heroClass": "Wizard",
+      "robos:bodyPoints": 4,
+      "robos:mindPoints": 6,
+      "robos:attackDice": 1,
+      "robos:defendDice": 2,
+      "robos:startingWeapon": "urn:robos:game:item:dagger",
+      "robos:equippedWeapon": "Gnarled Oak Staff of the 99% (1 Combat Die)",
+      "robos:equippedArmor": "Starry Wizard Hat & Vermont Wool Mittens (2 Defend Dice)",
+      "robos:specialAbility": "Master Spellcaster (3 Colleges, 9 Spells)",
+      "robos:gold": 99,
+      "robos:tokenColor": "#2563eb",
+      "robos:tokenAsset": "assets/tokens/token_bernie_sanders.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_bernie_sanders.png",
+      "robos:icon": "🪄",
+      "robos:startingPosition": [
+        1,
+        13
+      ],
+      "robos:inventory": [
+        {
+          "id": "item-mittens-bernie",
+          "name": "Enchanted Vermont Mittens",
+          "type": "relic",
+          "effect": "Channels crackling elemental lightning & warmth",
+          "value": 200
+        },
+        {
+          "id": "item-pot-heal-bernie",
+          "name": "Universal Healthcare Potion",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        }
+      ],
+      "dcterms:description": "Ancient Elemental Wizard in a tall starry wizard hat and iconic patterned wool mittens. Commands 3 full elemental spell colleges (9 spells) against Super PAC demons and Hydras.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:hillary-clinton",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Hillary Clinton",
+      "robos:category": "Midterms 2026",
+      "robos:heroClass": "Elf",
+      "robos:bodyPoints": 6,
+      "robos:mindPoints": 4,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:startingWeapon": "urn:robos:game:item:shortsword",
+      "robos:equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
+      "robos:equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
+      "robos:specialAbility": "Spellcaster (1 College — 3 Spells)",
+      "robos:gold": 150,
+      "robos:tokenColor": "#059669",
+      "robos:tokenAsset": "assets/tokens/token_hillary_clinton.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_hillary_clinton.png",
+      "robos:icon": "🏹",
+      "robos:startingPosition": [
+        0,
+        13
+      ],
+      "robos:inventory": [
+        {
+          "id": "item-scroll-hillary",
+          "name": "Classified Elven Parchment",
+          "type": "relic",
+          "effect": "Reveals hidden doors in current corridor",
+          "value": 120
+        },
+        {
+          "id": "item-pot-heal-hillary",
+          "name": "Draught of Miruvor",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        }
+      ],
+      "dcterms:description": "High-born Lord of the Rings Woodland Elf noble with a sly, knowing smile, emerald leaf-brooch cloak, and silver circlet. Combines deft blade work with 1 college of spells.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:trump",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Donald Trump",
+      "robos:category": "Midterms 2026",
+      "robos:heroClass": "Dwarf",
+      "robos:bodyPoints": 7,
+      "robos:mindPoints": 3,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:startingWeapon": "urn:robos:game:item:shortsword",
+      "robos:equippedWeapon": "Gilded Dwarven Battle-Axe (2 Combat Dice)",
+      "robos:equippedArmor": "Gold-Plated Rune Mail (2 Defend Dice)",
+      "robos:specialAbility": "Disarm Traps & Red-Tape Vaults",
+      "robos:gold": 250,
+      "robos:tokenColor": "#d97706",
+      "robos:tokenAsset": "assets/tokens/token_trump.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_trump.png",
+      "robos:icon": "🪓",
+      "robos:startingPosition": [
+        1,
+        12
+      ],
+      "robos:inventory": [
+        {
+          "id": "item-toolkit-trump",
+          "name": "Golden Dwarven Trap Toolkit",
+          "type": "tool",
+          "effect": "Disarms any pit, boulder, or bureaucratic trap",
+          "value": 150
+        },
+        {
+          "id": "item-pot-heal-trump",
+          "name": "Elixir of Tremendous Stamina",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        }
+      ],
+      "dcterms:description": "Heavily armored Dwarf warrior sporting his signature golden hair and a magnificent braided golden Dwarven beard. Master trap disarmer and gilded dungeon builder.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:obama",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Barack Obama",
+      "robos:category": "Midterms 2026",
+      "robos:heroClass": "Barbarian",
+      "robos:bodyPoints": 8,
+      "robos:mindPoints": 2,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2,
+      "robos:startingWeapon": "urn:robos:game:item:broadsword",
+      "robos:equippedWeapon": "Broadsword of Hope & Change (3 Combat Dice)",
+      "robos:equippedArmor": "Chiseled Commander Toughness (2 Defend Dice)",
+      "robos:specialAbility": "Bipartisan Cleave (Melee Specialist)",
+      "robos:gold": 120,
+      "robos:tokenColor": "#b91c1c",
+      "robos:tokenAsset": "assets/tokens/token_obama.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_obama.png",
+      "robos:icon": "⚔️",
+      "robos:startingPosition": [
+        0,
+        12
+      ],
+      "robos:inventory": [
+        {
+          "id": "item-pot-heal-obama",
+          "name": "Potion of Executive Vigor",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        },
+        {
+          "id": "item-mic-drop-1",
+          "name": "Runic Teleprompter Shard",
+          "type": "relic",
+          "effect": "+1 Mind resistance vs Spin Doctors",
+          "value": 50
+        }
+      ],
+      "dcterms:description": "Buff-as-hell, salt-and-pepper grey-haired Barbarian champion of the Midterms 2026 Hero Pack. Wields a rune-etched broadsword and devastating frontline melee power.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
     },
     {
       "@id": "urn:robos:tabletop:monster:goblin",
@@ -1737,7 +1943,8 @@
       "robos:questNumber": 4,
       "robos:map": "urn:robos:tabletop:map:fortress-fire-king",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:heroPack": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:map:fortress-fire-king",
@@ -2370,314 +2577,162 @@
       "robos:isActiveCampaign": true,
       "robos:heroes": [
         {
-          "@id": "urn:robos:tabletop:hero:barbarian",
-          "@type": [
-            "oslc_am:Resource",
-            "robos:TabletopHero",
-            "robos:GameCharacter",
-            "schema:Person"
-          ],
-          "dcterms:title": "Rogar",
-          "robos:characterName": "Rogar",
-          "robos:heroClass": "Barbarian",
-          "robos:bodyPoints": 8,
-          "robos:mindPoints": 2,
-          "robos:attackDice": 3,
-          "robos:defendDice": 2,
-          "robos:gold": 100,
-          "robos:startingWeapon": "Broadsword (3 Combat Dice)",
-          "robos:equippedWeapon": "Broadsword (3 Combat Dice)",
-          "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
-          "robos:specialAbility": "Greatest strength and vitality in melee combat",
-          "robos:tokenColor": "#b91c1c",
-          "robos:icon": "⚔️",
-          "robos:startingPosition": [
+          "id": "urn:robos:tabletop:hero:obama",
+          "slug": "obama",
+          "name": "Barack Obama",
+          "characterName": "Barack Obama",
+          "heroClass": "Barbarian",
+          "category": "Midterms 2026",
+          "bodyPoints": 8,
+          "mindPoints": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "gold": 120,
+          "equippedWeapon": "Broadsword of Hope & Change (3 Combat Dice)",
+          "equippedArmor": "Chiseled Commander Toughness (2 Defend Dice)",
+          "specialAbility": "Bipartisan Cleave (Melee Specialist)",
+          "tokenColor": "#b91c1c",
+          "tokenAsset": "assets/tokens/token_obama.png",
+          "portraitAsset": "assets/portraits/card_bg_obama.png",
+          "icon": "⚔️",
+          "startingPosition": [
             0,
-            1
+            12
           ],
-          "robos:inventory": [
+          "inventory": [
             {
-              "id": "item-pot-heal-1",
-              "name": "Potion of Healing",
+              "id": "item-pot-heal-obama",
+              "name": "Potion of Executive Vigor",
               "type": "potion",
               "effect": "Restores up to 4 BP",
               "value": 100
             },
             {
-              "id": "item-rope-1",
-              "name": "Heavy Rope (30 ft)",
-              "type": "tool",
-              "effect": "Climb pits & gaps",
-              "value": 25
-            }
-          ],
-          "robos:spells": [],
-          "robos:currentBP": 8,
-          "robos:currentMP": 2
-        },
-        {
-          "@id": "urn:robos:tabletop:hero:dwarf",
-          "@type": [
-            "oslc_am:Resource",
-            "robos:TabletopHero",
-            "robos:GameCharacter",
-            "schema:Person"
-          ],
-          "dcterms:title": "Dorgan",
-          "robos:characterName": "Dorgan",
-          "robos:heroClass": "Dwarf",
-          "robos:bodyPoints": 7,
-          "robos:mindPoints": 3,
-          "robos:attackDice": 2,
-          "robos:defendDice": 2,
-          "robos:gold": 100,
-          "robos:startingWeapon": "Shortsword (2 Combat Dice)",
-          "robos:equippedWeapon": "Shortsword (2 Combat Dice)",
-          "robos:equippedArmor": "Shield & Chainmail (+2 Defend Dice)",
-          "robos:specialAbility": "Disarms traps without needing a toolkit",
-          "robos:tokenColor": "#d97706",
-          "robos:icon": "🪓",
-          "robos:startingPosition": [
-            1,
-            0
-          ],
-          "robos:inventory": [
-            {
-              "id": "item-toolkit-1",
-              "name": "Trap Disarm Toolkit",
-              "type": "tool",
-              "effect": "Disarm traps without rolling skull",
-              "value": 75
-            },
-            {
-              "id": "item-pot-heal-2",
-              "name": "Potion of Healing",
-              "type": "potion",
-              "effect": "Restores up to 4 BP",
-              "value": 100
-            }
-          ],
-          "robos:spells": []
-        },
-        {
-          "@id": "urn:robos:tabletop:hero:elf",
-          "@type": [
-            "oslc_am:Resource",
-            "robos:TabletopHero",
-            "robos:GameCharacter",
-            "schema:Person"
-          ],
-          "dcterms:title": "Ladril",
-          "robos:characterName": "Ladril",
-          "robos:heroClass": "Elf",
-          "robos:bodyPoints": 6,
-          "robos:mindPoints": 4,
-          "robos:attackDice": 2,
-          "robos:defendDice": 2,
-          "robos:gold": 100,
-          "robos:startingWeapon": "Shortsword (2 Combat Dice)",
-          "robos:equippedWeapon": "Shortsword (2 Combat Dice)",
-          "robos:equippedArmor": "Elven Leather & Cloak (+2 Defend Dice)",
-          "robos:specialAbility": "Master of blade and 1 Elemental Spell deck (3 spells)",
-          "robos:tokenColor": "#15803d",
-          "robos:icon": "🏹",
-          "robos:startingPosition": [
-            1,
-            1
-          ],
-          "robos:inventory": [
-            {
-              "id": "item-torch-1",
-              "name": "Dungeon Torch",
-              "type": "tool",
-              "effect": "Detect hidden traps in room",
-              "value": 15
-            },
-            {
-              "id": "item-strength-1",
-              "name": "Potion of Strength",
-              "type": "potion",
-              "effect": "+2 Attack Dice for 1 turn",
-              "value": 150
-            }
-          ],
-          "robos:spells": [
-            {
-              "id": "urn:robos:tabletop:spell:water-of-healing",
-              "slug": "water-of-healing",
-              "name": "Water of Healing",
-              "element": "water",
-              "category": "Base Game",
-              "icon": "💧",
-              "description": "Restores up to 4 lost Body Points to any Hero.",
-              "effect": "heal-bp",
-              "val": 4
-            },
-            {
-              "id": "urn:robos:tabletop:spell:sleep",
-              "slug": "sleep",
-              "name": "Sleep",
-              "element": "water",
-              "category": "Base Game",
-              "icon": "💤",
-              "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
-              "effect": "status-sleep",
-              "val": 1
-            },
-            {
-              "id": "urn:robos:tabletop:spell:veil-of-mist",
-              "slug": "veil-of-mist",
-              "name": "Veil of Mist",
-              "element": "water",
-              "category": "Base Game",
-              "icon": "🌫️",
-              "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
-              "effect": "status-stealth",
-              "val": 1
+              "id": "item-mic-drop-1",
+              "name": "Runic Teleprompter Shard",
+              "type": "relic",
+              "effect": "+1 Mind resistance vs Spin Doctors",
+              "value": 50
             }
           ]
         },
         {
-          "@id": "urn:robos:tabletop:hero:wizard",
-          "@type": [
-            "oslc_am:Resource",
-            "robos:TabletopHero",
-            "robos:GameCharacter",
-            "schema:Person"
+          "id": "urn:robos:tabletop:hero:trump",
+          "slug": "trump",
+          "name": "Donald Trump",
+          "characterName": "Donald Trump",
+          "heroClass": "Dwarf",
+          "category": "Midterms 2026",
+          "bodyPoints": 7,
+          "mindPoints": 3,
+          "attackDice": 2,
+          "defendDice": 2,
+          "gold": 250,
+          "equippedWeapon": "Gilded Dwarven Battle-Axe (2 Combat Dice)",
+          "equippedArmor": "Gold-Plated Rune Mail (2 Defend Dice)",
+          "specialAbility": "Disarm Traps & Red-Tape Vaults",
+          "tokenColor": "#d97706",
+          "tokenAsset": "assets/tokens/token_trump.png",
+          "portraitAsset": "assets/portraits/card_bg_trump.png",
+          "icon": "🪓",
+          "startingPosition": [
+            1,
+            12
           ],
-          "dcterms:title": "Telor",
-          "robos:characterName": "Telor",
-          "robos:heroClass": "Wizard",
-          "robos:bodyPoints": 4,
-          "robos:mindPoints": 6,
-          "robos:attackDice": 1,
-          "robos:defendDice": 2,
-          "robos:gold": 100,
-          "robos:startingWeapon": "Dagger (1 Combat Die)",
-          "robos:equippedWeapon": "Dagger (1 Combat Die)",
-          "robos:equippedArmor": "Wizard Cloak (2 Defend Dice)",
-          "robos:specialAbility": "Wields 3 Elemental Spell decks (9 spells total)",
-          "robos:tokenColor": "#7c3aed",
-          "robos:icon": "🔮",
-          "robos:startingPosition": [
-            0,
-            0
-          ],
-          "robos:inventory": [
+          "inventory": [
             {
-              "id": "item-holy-water-1",
-              "name": "Holy Water",
-              "type": "relic",
-              "effect": "Destroys undead instantly",
-              "value": 200
+              "id": "item-toolkit-trump",
+              "name": "Golden Dwarven Trap Toolkit",
+              "type": "tool",
+              "effect": "Disarms any pit, boulder, or bureaucratic trap",
+              "value": 150
             },
             {
-              "id": "item-pot-heal-3",
-              "name": "Potion of Healing",
+              "id": "item-pot-heal-trump",
+              "name": "Elixir of Tremendous Stamina",
               "type": "potion",
               "effect": "Restores up to 4 BP",
               "value": 100
             }
+          ]
+        },
+        {
+          "id": "urn:robos:tabletop:hero:hillary-clinton",
+          "slug": "hillary-clinton",
+          "name": "Hillary Clinton",
+          "characterName": "Hillary Clinton",
+          "heroClass": "Elf",
+          "category": "Midterms 2026",
+          "bodyPoints": 6,
+          "mindPoints": 4,
+          "attackDice": 2,
+          "defendDice": 2,
+          "gold": 150,
+          "equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
+          "equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
+          "specialAbility": "Spellcaster (1 College — 3 Spells)",
+          "tokenColor": "#059669",
+          "tokenAsset": "assets/tokens/token_hillary_clinton.png",
+          "portraitAsset": "assets/portraits/card_bg_hillary_clinton.png",
+          "icon": "🏹",
+          "startingPosition": [
+            0,
+            13
           ],
-          "robos:spells": [
+          "inventory": [
             {
-              "id": "urn:robos:tabletop:spell:heal-body",
-              "slug": "heal-body",
-              "name": "Heal Body",
-              "element": "earth",
-              "category": "Base Game",
-              "icon": "💖",
-              "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
-              "effect": "heal-bp",
-              "val": 4
+              "id": "item-scroll-hillary",
+              "name": "Classified Elven Parchment",
+              "type": "relic",
+              "effect": "Reveals hidden doors in current corridor",
+              "value": 120
             },
             {
-              "id": "urn:robos:tabletop:spell:pass-through-rock",
-              "slug": "pass-through-rock",
-              "name": "Pass Through Rock",
-              "element": "earth",
-              "category": "Base Game",
-              "icon": "🧱",
-              "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
-              "effect": "phase-walls",
-              "val": 1
+              "id": "item-pot-heal-hillary",
+              "name": "Draught of Miruvor",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
+            }
+          ]
+        },
+        {
+          "id": "urn:robos:tabletop:hero:bernie-sanders",
+          "slug": "bernie-sanders",
+          "name": "Bernie Sanders",
+          "characterName": "Bernie Sanders",
+          "heroClass": "Wizard",
+          "category": "Midterms 2026",
+          "bodyPoints": 4,
+          "mindPoints": 6,
+          "attackDice": 1,
+          "defendDice": 2,
+          "gold": 99,
+          "equippedWeapon": "Gnarled Oak Staff of the 99% (1 Combat Die)",
+          "equippedArmor": "Starry Wizard Hat & Vermont Wool Mittens (2 Defend Dice)",
+          "specialAbility": "Master Spellcaster (3 Colleges, 9 Spells)",
+          "tokenColor": "#2563eb",
+          "tokenAsset": "assets/tokens/token_bernie_sanders.png",
+          "portraitAsset": "assets/portraits/card_bg_bernie_sanders.png",
+          "icon": "🪄",
+          "startingPosition": [
+            1,
+            13
+          ],
+          "inventory": [
+            {
+              "id": "item-mittens-bernie",
+              "name": "Enchanted Vermont Mittens",
+              "type": "relic",
+              "effect": "Channels crackling elemental lightning & warmth",
+              "value": 200
             },
             {
-              "id": "urn:robos:tabletop:spell:rock-skin",
-              "slug": "rock-skin",
-              "name": "Rock Skin",
-              "element": "earth",
-              "category": "Base Game",
-              "icon": "🛡️",
-              "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
-              "effect": "buff-def",
-              "val": 1
-            },
-            {
-              "id": "urn:robos:tabletop:spell:ball-of-flame",
-              "slug": "ball-of-flame",
-              "name": "Ball of Flame",
-              "element": "fire",
-              "category": "Base Game",
-              "icon": "☄️",
-              "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
-              "effect": "damage-bp",
-              "val": 2
-            },
-            {
-              "id": "urn:robos:tabletop:spell:courage",
-              "slug": "courage",
-              "name": "Courage",
-              "element": "fire",
-              "category": "Base Game",
-              "icon": "🦁",
-              "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
-              "effect": "buff-atk",
-              "val": 2
-            },
-            {
-              "id": "urn:robos:tabletop:spell:fire-of-wrath",
-              "slug": "fire-of-wrath",
-              "name": "Fire of Wrath",
-              "element": "fire",
-              "category": "Base Game",
-              "icon": "🔥",
-              "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
-              "effect": "damage-bp",
-              "val": 1
-            },
-            {
-              "id": "urn:robos:tabletop:spell:genie",
-              "slug": "genie",
-              "name": "Genie",
-              "element": "air",
-              "category": "Base Game",
-              "icon": "🧞",
-              "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
-              "effect": "summon-attack",
-              "val": 5
-            },
-            {
-              "id": "urn:robos:tabletop:spell:swift-wind",
-              "slug": "swift-wind",
-              "name": "Swift Wind",
-              "element": "air",
-              "category": "Base Game",
-              "icon": "💨",
-              "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
-              "effect": "buff-move",
-              "val": 2
-            },
-            {
-              "id": "urn:robos:tabletop:spell:tempest",
-              "slug": "tempest",
-              "name": "Tempest",
-              "element": "air",
-              "category": "Base Game",
-              "icon": "🌪️",
-              "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
-              "effect": "status-freeze",
-              "val": 1
+              "id": "item-pot-heal-bernie",
+              "name": "Universal Healthcare Potion",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
             }
           ]
         }
@@ -2719,7 +2774,8 @@
         }
       ],
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:heroPack": "Midterms 2026"
     },
     {
       "@id": "urn:robos:tabletop:map:election-2026-quest-1",
@@ -3124,7 +3180,8 @@
         }
       ],
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:heroPack": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:map:custom-quest",
@@ -3773,7 +3830,7 @@
         "robos:TabletopQuestSaveState",
         "schema:Action"
       ],
-      "dcterms:title": "Quest State — Round 1 (Rogar (Hero 1 of 4))",
+      "dcterms:title": "Quest State — Round 1 (Barbarian (Hero 1 of 4))",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop",
       "robos:questSlug": "election-2026-quest-1",
@@ -3782,23 +3839,23 @@
         26,
         19
       ],
-      "robos:savedAt": "2026-10-18T16:42:51.000Z",
-      "robos:playTimeSeconds": 60,
-      "robos:playTimeFormatted": "1m 0s",
+      "robos:savedAt": "2026-10-18T16:58:06.000Z",
+      "robos:playTimeSeconds": 272,
+      "robos:playTimeFormatted": "4m 32s",
       "robos:currentRound": 1,
       "robos:currentPhase": "hero_phase",
       "robos:currentRole": "player",
       "robos:activeHeroIndex": 0,
-      "robos:activeTurnActor": "Rogar (Hero 1 of 4)",
-      "robos:turnState": "awaiting_roll",
-      "robos:movementRemaining": 0,
+      "robos:activeTurnActor": "Barbarian (Hero 1 of 4)",
+      "robos:turnState": "moving",
+      "robos:movementRemaining": 9,
       "robos:hasMovedThisTurn": false,
       "robos:hasActedThisTurn": false,
       "robos:heroStates": [
         {
           "@type": "robos:TabletopSaveHeroState",
           "id": "barbarian",
-          "name": "Rogar",
+          "name": "Barbarian",
           "heroClass": "Barbarian",
           "currentBP": 8,
           "maxBP": 8,
@@ -3829,7 +3886,7 @@
         {
           "@type": "robos:TabletopSaveHeroState",
           "id": "dwarf",
-          "name": "Dorgan",
+          "name": "Dwarf",
           "heroClass": "Dwarf",
           "currentBP": 7,
           "maxBP": 7,
@@ -3860,7 +3917,7 @@
         {
           "@type": "robos:TabletopSaveHeroState",
           "id": "elf",
-          "name": "Ladril",
+          "name": "Elf",
           "heroClass": "Elf",
           "currentBP": 6,
           "maxBP": 6,
@@ -3895,7 +3952,7 @@
         {
           "@type": "robos:TabletopSaveHeroState",
           "id": "wizard",
-          "name": "Telor",
+          "name": "Wizard",
           "heroClass": "Wizard",
           "currentBP": 4,
           "maxBP": 4,
@@ -3943,7 +4000,7 @@
           "id": "barbarian-broadsword-0",
           "name": "Broadsword",
           "type": "equipment",
-          "holder": "Rogar",
+          "holder": "Barbarian",
           "source": "Hero Inventory",
           "icon": "🗡️"
         },
@@ -3951,7 +4008,7 @@
           "id": "barbarian-healing_potion-1",
           "name": "Healing Potion",
           "type": "potion",
-          "holder": "Rogar",
+          "holder": "Barbarian",
           "source": "Hero Inventory",
           "icon": "🧪"
         },
@@ -3959,7 +4016,7 @@
           "id": "dwarf-shortsword-0",
           "name": "Shortsword",
           "type": "equipment",
-          "holder": "Dorgan",
+          "holder": "Dwarf",
           "source": "Hero Inventory",
           "icon": "🗡️"
         },
@@ -3967,7 +4024,7 @@
           "id": "dwarf-healing_potion-1",
           "name": "Healing Potion",
           "type": "potion",
-          "holder": "Dorgan",
+          "holder": "Dwarf",
           "source": "Hero Inventory",
           "icon": "🧪"
         },
@@ -3975,7 +4032,7 @@
           "id": "elf-shortsword-0",
           "name": "Shortsword",
           "type": "equipment",
-          "holder": "Ladril",
+          "holder": "Elf",
           "source": "Hero Inventory",
           "icon": "🗡️"
         },
@@ -3983,7 +4040,7 @@
           "id": "elf-healing_potion-1",
           "name": "Healing Potion",
           "type": "potion",
-          "holder": "Ladril",
+          "holder": "Elf",
           "source": "Hero Inventory",
           "icon": "🧪"
         },
@@ -3991,7 +4048,7 @@
           "id": "wizard-dagger-0",
           "name": "Dagger",
           "type": "equipment",
-          "holder": "Telor",
+          "holder": "Wizard",
           "source": "Hero Inventory",
           "icon": "🗡️"
         },
@@ -3999,7 +4056,7 @@
           "id": "wizard-staff-1",
           "name": "Staff",
           "type": "equipment",
-          "holder": "Telor",
+          "holder": "Wizard",
           "source": "Hero Inventory",
           "icon": "🗡️"
         },
@@ -4007,7 +4064,7 @@
           "id": "wizard-healing_potion-2",
           "name": "Healing Potion",
           "type": "potion",
-          "holder": "Telor",
+          "holder": "Wizard",
           "source": "Hero Inventory",
           "icon": "🧪"
         }
@@ -4064,7 +4121,7 @@
       "robos:tokenColor": "#b91c1c",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop",
-      "robos:heroClass": "Barbariankujh",
+      "robos:heroClass": "Barbarian",
       "robos:gold": 100,
       "robos:equippedWeapon": "Broadsword (3 Combat Dice)",
       "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
@@ -4089,7 +4146,10 @@
       "robos:startingPosition": [
         1,
         1
-      ]
+      ],
+      "robos:category": "Base Game",
+      "robos:tokenAsset": "assets/tokens/token_barbarian.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_barbarian.png"
     },
     {
       "@id": "urn:robos:tabletop:hero:dwarf",
@@ -4108,7 +4168,11 @@
       "robos:startingWeapon": "urn:robos:game:item:shortsword",
       "robos:tokenColor": "#b45309",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:heroClass": "Dwarf",
+      "robos:category": "Base Game",
+      "robos:tokenAsset": "assets/tokens/token_dwarf.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_dwarf.png"
     },
     {
       "@id": "urn:robos:tabletop:hero:elf",
@@ -4127,7 +4191,11 @@
       "robos:startingWeapon": "urn:robos:game:item:shortsword",
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:heroClass": "Elf",
+      "robos:category": "Base Game",
+      "robos:tokenAsset": "assets/tokens/token_elf.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_elf.png"
     },
     {
       "@id": "urn:robos:tabletop:hero:wizard",
@@ -4171,7 +4239,202 @@
       "robos:startingPosition": [
         1,
         1
-      ]
+      ],
+      "robos:category": "Base Game",
+      "robos:tokenAsset": "assets/tokens/token_wizard.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_wizard.png"
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:bernie-sanders",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Bernie Sanders",
+      "robos:category": "Midterms 2026",
+      "robos:heroClass": "Wizard",
+      "robos:bodyPoints": 4,
+      "robos:mindPoints": 6,
+      "robos:attackDice": 1,
+      "robos:defendDice": 2,
+      "robos:startingWeapon": "urn:robos:game:item:dagger",
+      "robos:equippedWeapon": "Gnarled Oak Staff of the 99% (1 Combat Die)",
+      "robos:equippedArmor": "Starry Wizard Hat & Vermont Wool Mittens (2 Defend Dice)",
+      "robos:specialAbility": "Master Spellcaster (3 Colleges, 9 Spells)",
+      "robos:gold": 99,
+      "robos:tokenColor": "#2563eb",
+      "robos:tokenAsset": "assets/tokens/token_bernie_sanders.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_bernie_sanders.png",
+      "robos:icon": "🪄",
+      "robos:startingPosition": [
+        1,
+        13
+      ],
+      "robos:inventory": [
+        {
+          "id": "item-mittens-bernie",
+          "name": "Enchanted Vermont Mittens",
+          "type": "relic",
+          "effect": "Channels crackling elemental lightning & warmth",
+          "value": 200
+        },
+        {
+          "id": "item-pot-heal-bernie",
+          "name": "Universal Healthcare Potion",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        }
+      ],
+      "dcterms:description": "Ancient Elemental Wizard in a tall starry wizard hat and iconic patterned wool mittens. Commands 3 full elemental spell colleges (9 spells) against Super PAC demons and Hydras.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:hillary-clinton",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Hillary Clinton",
+      "robos:category": "Midterms 2026",
+      "robos:heroClass": "Elf",
+      "robos:bodyPoints": 6,
+      "robos:mindPoints": 4,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:startingWeapon": "urn:robos:game:item:shortsword",
+      "robos:equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
+      "robos:equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
+      "robos:specialAbility": "Spellcaster (1 College — 3 Spells)",
+      "robos:gold": 150,
+      "robos:tokenColor": "#059669",
+      "robos:tokenAsset": "assets/tokens/token_hillary_clinton.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_hillary_clinton.png",
+      "robos:icon": "🏹",
+      "robos:startingPosition": [
+        0,
+        13
+      ],
+      "robos:inventory": [
+        {
+          "id": "item-scroll-hillary",
+          "name": "Classified Elven Parchment",
+          "type": "relic",
+          "effect": "Reveals hidden doors in current corridor",
+          "value": 120
+        },
+        {
+          "id": "item-pot-heal-hillary",
+          "name": "Draught of Miruvor",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        }
+      ],
+      "dcterms:description": "High-born Lord of the Rings Woodland Elf noble with a sly, knowing smile, emerald leaf-brooch cloak, and silver circlet. Combines deft blade work with 1 college of spells.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:trump",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Donald Trump",
+      "robos:category": "Midterms 2026",
+      "robos:heroClass": "Dwarf",
+      "robos:bodyPoints": 7,
+      "robos:mindPoints": 3,
+      "robos:attackDice": 2,
+      "robos:defendDice": 2,
+      "robos:startingWeapon": "urn:robos:game:item:shortsword",
+      "robos:equippedWeapon": "Gilded Dwarven Battle-Axe (2 Combat Dice)",
+      "robos:equippedArmor": "Gold-Plated Rune Mail (2 Defend Dice)",
+      "robos:specialAbility": "Disarm Traps & Red-Tape Vaults",
+      "robos:gold": 250,
+      "robos:tokenColor": "#d97706",
+      "robos:tokenAsset": "assets/tokens/token_trump.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_trump.png",
+      "robos:icon": "🪓",
+      "robos:startingPosition": [
+        1,
+        12
+      ],
+      "robos:inventory": [
+        {
+          "id": "item-toolkit-trump",
+          "name": "Golden Dwarven Trap Toolkit",
+          "type": "tool",
+          "effect": "Disarms any pit, boulder, or bureaucratic trap",
+          "value": 150
+        },
+        {
+          "id": "item-pot-heal-trump",
+          "name": "Elixir of Tremendous Stamina",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        }
+      ],
+      "dcterms:description": "Heavily armored Dwarf warrior sporting his signature golden hair and a magnificent braided golden Dwarven beard. Master trap disarmer and gilded dungeon builder.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:hero:obama",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopHero",
+        "robos:GameCharacter",
+        "schema:Person"
+      ],
+      "dcterms:title": "Barack Obama",
+      "robos:category": "Midterms 2026",
+      "robos:heroClass": "Barbarian",
+      "robos:bodyPoints": 8,
+      "robos:mindPoints": 2,
+      "robos:attackDice": 3,
+      "robos:defendDice": 2,
+      "robos:startingWeapon": "urn:robos:game:item:broadsword",
+      "robos:equippedWeapon": "Broadsword of Hope & Change (3 Combat Dice)",
+      "robos:equippedArmor": "Chiseled Commander Toughness (2 Defend Dice)",
+      "robos:specialAbility": "Bipartisan Cleave (Melee Specialist)",
+      "robos:gold": 120,
+      "robos:tokenColor": "#b91c1c",
+      "robos:tokenAsset": "assets/tokens/token_obama.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_obama.png",
+      "robos:icon": "⚔️",
+      "robos:startingPosition": [
+        0,
+        12
+      ],
+      "robos:inventory": [
+        {
+          "id": "item-pot-heal-obama",
+          "name": "Potion of Executive Vigor",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        },
+        {
+          "id": "item-mic-drop-1",
+          "name": "Runic Teleprompter Shard",
+          "type": "relic",
+          "effect": "+1 Mind resistance vs Spin Doctors",
+          "value": 50
+        }
+      ],
+      "dcterms:description": "Buff-as-hell, salt-and-pepper grey-haired Barbarian champion of the Midterms 2026 Hero Pack. Wields a rune-etched broadsword and devastating frontline melee power.",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
     },
     {
       "@id": "urn:robos:tabletop:monster:goblin",
@@ -5740,7 +6003,8 @@
       "robos:questNumber": 4,
       "robos:map": "urn:robos:tabletop:map:fortress-fire-king",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:heroPack": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:map:fortress-fire-king",
@@ -6373,314 +6637,162 @@
       "robos:isActiveCampaign": true,
       "robos:heroes": [
         {
-          "@id": "urn:robos:tabletop:hero:barbarian",
-          "@type": [
-            "oslc_am:Resource",
-            "robos:TabletopHero",
-            "robos:GameCharacter",
-            "schema:Person"
-          ],
-          "dcterms:title": "Rogar",
-          "robos:characterName": "Rogar",
-          "robos:heroClass": "Barbarian",
-          "robos:bodyPoints": 8,
-          "robos:mindPoints": 2,
-          "robos:attackDice": 3,
-          "robos:defendDice": 2,
-          "robos:gold": 100,
-          "robos:startingWeapon": "Broadsword (3 Combat Dice)",
-          "robos:equippedWeapon": "Broadsword (3 Combat Dice)",
-          "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
-          "robos:specialAbility": "Greatest strength and vitality in melee combat",
-          "robos:tokenColor": "#b91c1c",
-          "robos:icon": "⚔️",
-          "robos:startingPosition": [
+          "id": "urn:robos:tabletop:hero:obama",
+          "slug": "obama",
+          "name": "Barack Obama",
+          "characterName": "Barack Obama",
+          "heroClass": "Barbarian",
+          "category": "Midterms 2026",
+          "bodyPoints": 8,
+          "mindPoints": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "gold": 120,
+          "equippedWeapon": "Broadsword of Hope & Change (3 Combat Dice)",
+          "equippedArmor": "Chiseled Commander Toughness (2 Defend Dice)",
+          "specialAbility": "Bipartisan Cleave (Melee Specialist)",
+          "tokenColor": "#b91c1c",
+          "tokenAsset": "assets/tokens/token_obama.png",
+          "portraitAsset": "assets/portraits/card_bg_obama.png",
+          "icon": "⚔️",
+          "startingPosition": [
             0,
-            1
+            12
           ],
-          "robos:inventory": [
+          "inventory": [
             {
-              "id": "item-pot-heal-1",
-              "name": "Potion of Healing",
+              "id": "item-pot-heal-obama",
+              "name": "Potion of Executive Vigor",
               "type": "potion",
               "effect": "Restores up to 4 BP",
               "value": 100
             },
             {
-              "id": "item-rope-1",
-              "name": "Heavy Rope (30 ft)",
-              "type": "tool",
-              "effect": "Climb pits & gaps",
-              "value": 25
-            }
-          ],
-          "robos:spells": [],
-          "robos:currentBP": 8,
-          "robos:currentMP": 2
-        },
-        {
-          "@id": "urn:robos:tabletop:hero:dwarf",
-          "@type": [
-            "oslc_am:Resource",
-            "robos:TabletopHero",
-            "robos:GameCharacter",
-            "schema:Person"
-          ],
-          "dcterms:title": "Dorgan",
-          "robos:characterName": "Dorgan",
-          "robos:heroClass": "Dwarf",
-          "robos:bodyPoints": 7,
-          "robos:mindPoints": 3,
-          "robos:attackDice": 2,
-          "robos:defendDice": 2,
-          "robos:gold": 100,
-          "robos:startingWeapon": "Shortsword (2 Combat Dice)",
-          "robos:equippedWeapon": "Shortsword (2 Combat Dice)",
-          "robos:equippedArmor": "Shield & Chainmail (+2 Defend Dice)",
-          "robos:specialAbility": "Disarms traps without needing a toolkit",
-          "robos:tokenColor": "#d97706",
-          "robos:icon": "🪓",
-          "robos:startingPosition": [
-            1,
-            0
-          ],
-          "robos:inventory": [
-            {
-              "id": "item-toolkit-1",
-              "name": "Trap Disarm Toolkit",
-              "type": "tool",
-              "effect": "Disarm traps without rolling skull",
-              "value": 75
-            },
-            {
-              "id": "item-pot-heal-2",
-              "name": "Potion of Healing",
-              "type": "potion",
-              "effect": "Restores up to 4 BP",
-              "value": 100
-            }
-          ],
-          "robos:spells": []
-        },
-        {
-          "@id": "urn:robos:tabletop:hero:elf",
-          "@type": [
-            "oslc_am:Resource",
-            "robos:TabletopHero",
-            "robos:GameCharacter",
-            "schema:Person"
-          ],
-          "dcterms:title": "Ladril",
-          "robos:characterName": "Ladril",
-          "robos:heroClass": "Elf",
-          "robos:bodyPoints": 6,
-          "robos:mindPoints": 4,
-          "robos:attackDice": 2,
-          "robos:defendDice": 2,
-          "robos:gold": 100,
-          "robos:startingWeapon": "Shortsword (2 Combat Dice)",
-          "robos:equippedWeapon": "Shortsword (2 Combat Dice)",
-          "robos:equippedArmor": "Elven Leather & Cloak (+2 Defend Dice)",
-          "robos:specialAbility": "Master of blade and 1 Elemental Spell deck (3 spells)",
-          "robos:tokenColor": "#15803d",
-          "robos:icon": "🏹",
-          "robos:startingPosition": [
-            1,
-            1
-          ],
-          "robos:inventory": [
-            {
-              "id": "item-torch-1",
-              "name": "Dungeon Torch",
-              "type": "tool",
-              "effect": "Detect hidden traps in room",
-              "value": 15
-            },
-            {
-              "id": "item-strength-1",
-              "name": "Potion of Strength",
-              "type": "potion",
-              "effect": "+2 Attack Dice for 1 turn",
-              "value": 150
-            }
-          ],
-          "robos:spells": [
-            {
-              "id": "urn:robos:tabletop:spell:water-of-healing",
-              "slug": "water-of-healing",
-              "name": "Water of Healing",
-              "element": "water",
-              "category": "Base Game",
-              "icon": "💧",
-              "description": "Restores up to 4 lost Body Points to any Hero.",
-              "effect": "heal-bp",
-              "val": 4
-            },
-            {
-              "id": "urn:robos:tabletop:spell:sleep",
-              "slug": "sleep",
-              "name": "Sleep",
-              "element": "water",
-              "category": "Base Game",
-              "icon": "💤",
-              "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
-              "effect": "status-sleep",
-              "val": 1
-            },
-            {
-              "id": "urn:robos:tabletop:spell:veil-of-mist",
-              "slug": "veil-of-mist",
-              "name": "Veil of Mist",
-              "element": "water",
-              "category": "Base Game",
-              "icon": "🌫️",
-              "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
-              "effect": "status-stealth",
-              "val": 1
+              "id": "item-mic-drop-1",
+              "name": "Runic Teleprompter Shard",
+              "type": "relic",
+              "effect": "+1 Mind resistance vs Spin Doctors",
+              "value": 50
             }
           ]
         },
         {
-          "@id": "urn:robos:tabletop:hero:wizard",
-          "@type": [
-            "oslc_am:Resource",
-            "robos:TabletopHero",
-            "robos:GameCharacter",
-            "schema:Person"
+          "id": "urn:robos:tabletop:hero:trump",
+          "slug": "trump",
+          "name": "Donald Trump",
+          "characterName": "Donald Trump",
+          "heroClass": "Dwarf",
+          "category": "Midterms 2026",
+          "bodyPoints": 7,
+          "mindPoints": 3,
+          "attackDice": 2,
+          "defendDice": 2,
+          "gold": 250,
+          "equippedWeapon": "Gilded Dwarven Battle-Axe (2 Combat Dice)",
+          "equippedArmor": "Gold-Plated Rune Mail (2 Defend Dice)",
+          "specialAbility": "Disarm Traps & Red-Tape Vaults",
+          "tokenColor": "#d97706",
+          "tokenAsset": "assets/tokens/token_trump.png",
+          "portraitAsset": "assets/portraits/card_bg_trump.png",
+          "icon": "🪓",
+          "startingPosition": [
+            1,
+            12
           ],
-          "dcterms:title": "Telor",
-          "robos:characterName": "Telor",
-          "robos:heroClass": "Wizard",
-          "robos:bodyPoints": 4,
-          "robos:mindPoints": 6,
-          "robos:attackDice": 1,
-          "robos:defendDice": 2,
-          "robos:gold": 100,
-          "robos:startingWeapon": "Dagger (1 Combat Die)",
-          "robos:equippedWeapon": "Dagger (1 Combat Die)",
-          "robos:equippedArmor": "Wizard Cloak (2 Defend Dice)",
-          "robos:specialAbility": "Wields 3 Elemental Spell decks (9 spells total)",
-          "robos:tokenColor": "#7c3aed",
-          "robos:icon": "🔮",
-          "robos:startingPosition": [
-            0,
-            0
-          ],
-          "robos:inventory": [
+          "inventory": [
             {
-              "id": "item-holy-water-1",
-              "name": "Holy Water",
-              "type": "relic",
-              "effect": "Destroys undead instantly",
-              "value": 200
+              "id": "item-toolkit-trump",
+              "name": "Golden Dwarven Trap Toolkit",
+              "type": "tool",
+              "effect": "Disarms any pit, boulder, or bureaucratic trap",
+              "value": 150
             },
             {
-              "id": "item-pot-heal-3",
-              "name": "Potion of Healing",
+              "id": "item-pot-heal-trump",
+              "name": "Elixir of Tremendous Stamina",
               "type": "potion",
               "effect": "Restores up to 4 BP",
               "value": 100
             }
+          ]
+        },
+        {
+          "id": "urn:robos:tabletop:hero:hillary-clinton",
+          "slug": "hillary-clinton",
+          "name": "Hillary Clinton",
+          "characterName": "Hillary Clinton",
+          "heroClass": "Elf",
+          "category": "Midterms 2026",
+          "bodyPoints": 6,
+          "mindPoints": 4,
+          "attackDice": 2,
+          "defendDice": 2,
+          "gold": 150,
+          "equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
+          "equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
+          "specialAbility": "Spellcaster (1 College — 3 Spells)",
+          "tokenColor": "#059669",
+          "tokenAsset": "assets/tokens/token_hillary_clinton.png",
+          "portraitAsset": "assets/portraits/card_bg_hillary_clinton.png",
+          "icon": "🏹",
+          "startingPosition": [
+            0,
+            13
           ],
-          "robos:spells": [
+          "inventory": [
             {
-              "id": "urn:robos:tabletop:spell:heal-body",
-              "slug": "heal-body",
-              "name": "Heal Body",
-              "element": "earth",
-              "category": "Base Game",
-              "icon": "💖",
-              "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
-              "effect": "heal-bp",
-              "val": 4
+              "id": "item-scroll-hillary",
+              "name": "Classified Elven Parchment",
+              "type": "relic",
+              "effect": "Reveals hidden doors in current corridor",
+              "value": 120
             },
             {
-              "id": "urn:robos:tabletop:spell:pass-through-rock",
-              "slug": "pass-through-rock",
-              "name": "Pass Through Rock",
-              "element": "earth",
-              "category": "Base Game",
-              "icon": "🧱",
-              "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
-              "effect": "phase-walls",
-              "val": 1
+              "id": "item-pot-heal-hillary",
+              "name": "Draught of Miruvor",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
+            }
+          ]
+        },
+        {
+          "id": "urn:robos:tabletop:hero:bernie-sanders",
+          "slug": "bernie-sanders",
+          "name": "Bernie Sanders",
+          "characterName": "Bernie Sanders",
+          "heroClass": "Wizard",
+          "category": "Midterms 2026",
+          "bodyPoints": 4,
+          "mindPoints": 6,
+          "attackDice": 1,
+          "defendDice": 2,
+          "gold": 99,
+          "equippedWeapon": "Gnarled Oak Staff of the 99% (1 Combat Die)",
+          "equippedArmor": "Starry Wizard Hat & Vermont Wool Mittens (2 Defend Dice)",
+          "specialAbility": "Master Spellcaster (3 Colleges, 9 Spells)",
+          "tokenColor": "#2563eb",
+          "tokenAsset": "assets/tokens/token_bernie_sanders.png",
+          "portraitAsset": "assets/portraits/card_bg_bernie_sanders.png",
+          "icon": "🪄",
+          "startingPosition": [
+            1,
+            13
+          ],
+          "inventory": [
+            {
+              "id": "item-mittens-bernie",
+              "name": "Enchanted Vermont Mittens",
+              "type": "relic",
+              "effect": "Channels crackling elemental lightning & warmth",
+              "value": 200
             },
             {
-              "id": "urn:robos:tabletop:spell:rock-skin",
-              "slug": "rock-skin",
-              "name": "Rock Skin",
-              "element": "earth",
-              "category": "Base Game",
-              "icon": "🛡️",
-              "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
-              "effect": "buff-def",
-              "val": 1
-            },
-            {
-              "id": "urn:robos:tabletop:spell:ball-of-flame",
-              "slug": "ball-of-flame",
-              "name": "Ball of Flame",
-              "element": "fire",
-              "category": "Base Game",
-              "icon": "☄️",
-              "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
-              "effect": "damage-bp",
-              "val": 2
-            },
-            {
-              "id": "urn:robos:tabletop:spell:courage",
-              "slug": "courage",
-              "name": "Courage",
-              "element": "fire",
-              "category": "Base Game",
-              "icon": "🦁",
-              "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
-              "effect": "buff-atk",
-              "val": 2
-            },
-            {
-              "id": "urn:robos:tabletop:spell:fire-of-wrath",
-              "slug": "fire-of-wrath",
-              "name": "Fire of Wrath",
-              "element": "fire",
-              "category": "Base Game",
-              "icon": "🔥",
-              "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
-              "effect": "damage-bp",
-              "val": 1
-            },
-            {
-              "id": "urn:robos:tabletop:spell:genie",
-              "slug": "genie",
-              "name": "Genie",
-              "element": "air",
-              "category": "Base Game",
-              "icon": "🧞",
-              "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
-              "effect": "summon-attack",
-              "val": 5
-            },
-            {
-              "id": "urn:robos:tabletop:spell:swift-wind",
-              "slug": "swift-wind",
-              "name": "Swift Wind",
-              "element": "air",
-              "category": "Base Game",
-              "icon": "💨",
-              "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
-              "effect": "buff-move",
-              "val": 2
-            },
-            {
-              "id": "urn:robos:tabletop:spell:tempest",
-              "slug": "tempest",
-              "name": "Tempest",
-              "element": "air",
-              "category": "Base Game",
-              "icon": "🌪️",
-              "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
-              "effect": "status-freeze",
-              "val": 1
+              "id": "item-pot-heal-bernie",
+              "name": "Universal Healthcare Potion",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
             }
           ]
         }
@@ -6722,7 +6834,8 @@
         }
       ],
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:heroPack": "Midterms 2026"
     },
     {
       "@id": "urn:robos:tabletop:map:election-2026-quest-1",
@@ -7127,7 +7240,8 @@
         }
       ],
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:heroPack": "Base Game"
     },
     {
       "@id": "urn:robos:tabletop:map:custom-quest",
@@ -7776,7 +7890,7 @@
         "robos:TabletopQuestSaveState",
         "schema:Action"
       ],
-      "dcterms:title": "Quest State — Round 1 (Rogar (Hero 1 of 4))",
+      "dcterms:title": "Quest State — Round 1 (Barbarian (Hero 1 of 4))",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop",
       "robos:questSlug": "election-2026-quest-1",
@@ -7785,23 +7899,23 @@
         26,
         19
       ],
-      "robos:savedAt": "2026-10-18T16:42:51.000Z",
-      "robos:playTimeSeconds": 60,
-      "robos:playTimeFormatted": "1m 0s",
+      "robos:savedAt": "2026-10-18T16:58:06.000Z",
+      "robos:playTimeSeconds": 272,
+      "robos:playTimeFormatted": "4m 32s",
       "robos:currentRound": 1,
       "robos:currentPhase": "hero_phase",
       "robos:currentRole": "player",
       "robos:activeHeroIndex": 0,
-      "robos:activeTurnActor": "Rogar (Hero 1 of 4)",
-      "robos:turnState": "awaiting_roll",
-      "robos:movementRemaining": 0,
+      "robos:activeTurnActor": "Barbarian (Hero 1 of 4)",
+      "robos:turnState": "moving",
+      "robos:movementRemaining": 9,
       "robos:hasMovedThisTurn": false,
       "robos:hasActedThisTurn": false,
       "robos:heroStates": [
         {
           "@type": "robos:TabletopSaveHeroState",
           "id": "barbarian",
-          "name": "Rogar",
+          "name": "Barbarian",
           "heroClass": "Barbarian",
           "currentBP": 8,
           "maxBP": 8,
@@ -7832,7 +7946,7 @@
         {
           "@type": "robos:TabletopSaveHeroState",
           "id": "dwarf",
-          "name": "Dorgan",
+          "name": "Dwarf",
           "heroClass": "Dwarf",
           "currentBP": 7,
           "maxBP": 7,
@@ -7863,7 +7977,7 @@
         {
           "@type": "robos:TabletopSaveHeroState",
           "id": "elf",
-          "name": "Ladril",
+          "name": "Elf",
           "heroClass": "Elf",
           "currentBP": 6,
           "maxBP": 6,
@@ -7898,7 +8012,7 @@
         {
           "@type": "robos:TabletopSaveHeroState",
           "id": "wizard",
-          "name": "Telor",
+          "name": "Wizard",
           "heroClass": "Wizard",
           "currentBP": 4,
           "maxBP": 4,
@@ -7946,7 +8060,7 @@
           "id": "barbarian-broadsword-0",
           "name": "Broadsword",
           "type": "equipment",
-          "holder": "Rogar",
+          "holder": "Barbarian",
           "source": "Hero Inventory",
           "icon": "🗡️"
         },
@@ -7954,7 +8068,7 @@
           "id": "barbarian-healing_potion-1",
           "name": "Healing Potion",
           "type": "potion",
-          "holder": "Rogar",
+          "holder": "Barbarian",
           "source": "Hero Inventory",
           "icon": "🧪"
         },
@@ -7962,7 +8076,7 @@
           "id": "dwarf-shortsword-0",
           "name": "Shortsword",
           "type": "equipment",
-          "holder": "Dorgan",
+          "holder": "Dwarf",
           "source": "Hero Inventory",
           "icon": "🗡️"
         },
@@ -7970,7 +8084,7 @@
           "id": "dwarf-healing_potion-1",
           "name": "Healing Potion",
           "type": "potion",
-          "holder": "Dorgan",
+          "holder": "Dwarf",
           "source": "Hero Inventory",
           "icon": "🧪"
         },
@@ -7978,7 +8092,7 @@
           "id": "elf-shortsword-0",
           "name": "Shortsword",
           "type": "equipment",
-          "holder": "Ladril",
+          "holder": "Elf",
           "source": "Hero Inventory",
           "icon": "🗡️"
         },
@@ -7986,7 +8100,7 @@
           "id": "elf-healing_potion-1",
           "name": "Healing Potion",
           "type": "potion",
-          "holder": "Ladril",
+          "holder": "Elf",
           "source": "Hero Inventory",
           "icon": "🧪"
         },
@@ -7994,7 +8108,7 @@
           "id": "wizard-dagger-0",
           "name": "Dagger",
           "type": "equipment",
-          "holder": "Telor",
+          "holder": "Wizard",
           "source": "Hero Inventory",
           "icon": "🗡️"
         },
@@ -8002,7 +8116,7 @@
           "id": "wizard-staff-1",
           "name": "Staff",
           "type": "equipment",
-          "holder": "Telor",
+          "holder": "Wizard",
           "source": "Hero Inventory",
           "icon": "🗡️"
         },
@@ -8010,7 +8124,7 @@
           "id": "wizard-healing_potion-2",
           "name": "Healing Potion",
           "type": "potion",
-          "holder": "Telor",
+          "holder": "Wizard",
           "source": "Hero Inventory",
           "icon": "🧪"
         }

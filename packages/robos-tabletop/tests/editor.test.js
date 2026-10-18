@@ -29,7 +29,10 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
       const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
       return t.includes("robos:TabletopHero");
     });
-    assert.strictEqual(heroes.length, 4, "Must contain 4 classic heroes");
+    const baseHeroes = heroes.filter(h => (h["robos:category"] || "Base Game") === "Base Game");
+    const midtermsHeroes = heroes.filter(h => h["robos:category"] === "Midterms 2026");
+    assert.strictEqual(baseHeroes.length, 4, "Must contain 4 classic Base Game heroes");
+    assert.strictEqual(midtermsHeroes.length, 4, "Must contain 4 Midterms 2026 heroes");
 
     const monsters = nodes.filter(n => {
       const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
@@ -1647,5 +1650,46 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     }
     await appModule.selectCampaign(0);
   });
+
+  it("supports Hero Packs ('Base Game', 'Midterms 2026') in Campaign Heroes with AI-generated tokens, portraits, and portrait cards for Obama, Trump, Hillary Clinton, and Bernie Sanders", () => {
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+
+    // 1. Verify UI elements for Hero Pack filter, load hero pack button, and live portrait card preview
+    assert.ok(indexHtml.includes('id="hero-category-filter"'), "index.html must include #hero-category-filter in Campaign Heroes");
+    assert.ok(indexHtml.includes('id="btn-apply-hero-pack"'), "index.html must include #btn-apply-hero-pack button");
+    assert.ok(indexHtml.includes('id="hero-category"'), "index.html must include #hero-category selector");
+    assert.ok(indexHtml.includes('id="hero-portrait-card-preview"'), "index.html must include #hero-portrait-card-preview card");
+
+    // 2. Verify Base Game & Midterms 2026 Hero Packs via getHeroesByCategory
+    const baseHeroes = appModule.getHeroesByCategory("Base Game");
+    const midtermsHeroes = appModule.getHeroesByCategory("Midterms 2026");
+    assert.strictEqual(baseHeroes.length, 4, "Base Game Hero Pack must have 4 heroes");
+    assert.strictEqual(midtermsHeroes.length, 4, "Midterms 2026 Hero Pack must have 4 heroes");
+
+    const obama = midtermsHeroes.find(h => h["@id"] === "urn:robos:tabletop:hero:obama");
+    const trump = midtermsHeroes.find(h => h["@id"] === "urn:robos:tabletop:hero:trump");
+    const hillary = midtermsHeroes.find(h => h["@id"] === "urn:robos:tabletop:hero:hillary-clinton");
+    const bernie = midtermsHeroes.find(h => h["@id"] === "urn:robos:tabletop:hero:bernie-sanders");
+
+    assert.ok(obama && obama["robos:heroClass"] === "Barbarian", "Obama must be Barbarian class in Midterms 2026 Hero Pack");
+    assert.ok(trump && trump["robos:heroClass"] === "Dwarf", "Trump must be Dwarf class in Midterms 2026 Hero Pack");
+    assert.ok(hillary && hillary["robos:heroClass"] === "Elf", "Hillary Clinton must be Elf class in Midterms 2026 Hero Pack");
+    assert.ok(bernie && bernie["robos:heroClass"] === "Wizard", "Bernie Sanders must be Wizard class in Midterms 2026 Hero Pack");
+
+    // 3. Verify AI-generated circular tokens and portrait card illustrations exist on disk for both editor and Godot runtime
+    for (const key of ["obama", "trump", "hillary_clinton", "bernie_sanders"]) {
+      const editorToken = path.join(__dirname, `../assets/tokens/token_${key}.png`);
+      const editorPortrait = path.join(__dirname, `../assets/portraits/card_bg_${key}.png`);
+      const runtimeToken = path.join(REPO_ROOT, `games/tabletop-rpg/assets/tokens/token_${key}.png`);
+      const runtimeHeroCard = path.join(REPO_ROOT, `games/tabletop-rpg/assets/hero_cards/card_bg_${key}.png`);
+
+      assert.ok(fs.existsSync(editorToken) && fs.statSync(editorToken).size > 5000, `Editor token_${key}.png must exist`);
+      assert.ok(fs.existsSync(editorPortrait) && fs.statSync(editorPortrait).size > 5000, `Editor card_bg_${key}.png must exist`);
+      assert.ok(fs.existsSync(runtimeToken) && fs.statSync(runtimeToken).size > 5000, `Runtime token_${key}.png must exist`);
+      assert.ok(fs.existsSync(runtimeHeroCard) && fs.statSync(runtimeHeroCard).size > 5000, `Runtime hero_cards/card_bg_${key}.png must exist`);
+    }
+  });
 });
+
 
