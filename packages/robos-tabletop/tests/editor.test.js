@@ -1584,56 +1584,58 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
     const appModule = require(path.join(__dirname, "../renderer/app.js"));
 
-    // 1. Verify #campaign-autosave-status indicator exists in .campaign-selector-bar
+    // 1. Verify #campaign-autosave-status indicator and #campaign-no-quest-empty-state card exist
     assert.ok(
       indexHtml.includes('id="campaign-autosave-status"'),
       "index.html must include #campaign-autosave-status indicator in the campaign selector bar"
     );
+    assert.ok(
+      indexHtml.includes('id="campaign-no-quest-empty-state"'),
+      "index.html must include #campaign-no-quest-empty-state card for 0-quest campaigns"
+    );
 
     // 2. Clicking '+ New Campaign' (addCampaign() with no quests prop) must create a campaign with 0 quests by default
     const newCamp = appModule.addCampaign({
-      id: "campaign-empty-by-default",
-      title: "Fresh Empty Campaign"
+      id: "campaign-election-2026",
+      title: "Election 2026"
     });
-    assert.strictEqual(newCamp.title, "Fresh Empty Campaign");
+    assert.strictEqual(newCamp.title, "Election 2026");
     assert.ok(Array.isArray(newCamp.quests), "newCampaign.quests must be an array");
     assert.strictEqual(newCamp.quests.length, 0, "New campaign must have 0 quests by default");
     assert.strictEqual(appModule.getActiveQuest(), null, "Active quest must be null when new campaign has 0 quests");
 
-    // 3. Verify serializeCampaignToKGraphNode and deserializeCampaignFromKGraphNode preserve 0-quest state and added quests
+    // 3. Verify serializeCampaignToKGraphNode and deserializeCampaignFromKGraphNode preserve 0-quest state
     const emptyNode = appModule.serializeCampaignToKGraphNode(newCamp);
-    assert.strictEqual(emptyNode["@id"], "urn:robos:tabletop:campaign:campaign-empty-by-default");
+    assert.strictEqual(emptyNode["@id"], "urn:robos:tabletop:campaign:campaign-election-2026");
     assert.ok(emptyNode["@type"].includes("robos:TabletopCampaign"));
     assert.strictEqual(emptyNode["robos:quests"].length, 0, "Serialized KGraph node for new campaign must have 0 quests");
 
     const restoredEmpty = appModule.deserializeCampaignFromKGraphNode(emptyNode);
-    assert.strictEqual(restoredEmpty.id, "campaign-empty-by-default");
+    assert.strictEqual(restoredEmpty.id, "campaign-election-2026");
     assert.strictEqual(restoredEmpty.quests.length, 0, "Deserialized campaign must retain 0 quests");
 
-    // 4. Add a quest to the new campaign and verify immediate serialization & KGraph save
-    const addedQuest = appModule.addQuest({
-      title: "Midterm Capitol Siege",
-      slug: "midterm-capitol-siege",
-      mapConfigId: "midterm-election-capitol",
-      goldReward: 250
-    });
-    assert.strictEqual(newCamp.quests.length, 1, "Campaign must have 1 quest after addQuest");
-    assert.strictEqual(appModule.getActiveQuest().slug, "midterm-capitol-siege");
+    // 4. Click '+ New Quest' (addQuest() with no args) in 'Election 2026' campaign -> creates 1 quest with non-colliding slug and midterm-election-capitol board
+    const addedQuest = appModule.addQuest();
+    assert.strictEqual(newCamp.quests.length, 1, "Election 2026 campaign must have 1 quest after addQuest()");
+    assert.strictEqual(addedQuest.slug, "election-2026-quest-1");
+    assert.strictEqual(addedQuest.title, "Quest 1: Battle for the Hill");
     assert.strictEqual(addedQuest.mapConfigId, "midterm-election-capitol");
+    assert.strictEqual(appModule.getActiveQuest().slug, "election-2026-quest-1");
 
-    const populatedNode = appModule.serializeCampaignToKGraphNode(newCamp);
+    const populatedNode = appModule.serializeCampaignToKGraphNode(newCamp, true);
     assert.strictEqual(populatedNode["robos:quests"].length, 1);
-    assert.strictEqual(populatedNode["robos:quests"][0].slug, "midterm-capitol-siege");
+    assert.strictEqual(populatedNode["robos:quests"][0].slug, "election-2026-quest-1");
     assert.strictEqual(populatedNode["robos:quests"][0].mapConfigId, "midterm-election-capitol");
 
     const saveRes = await appModule.saveCampaignToKGraph(newCamp, false);
     assert.strictEqual(saveRes.success, true, "saveCampaignToKGraph must succeed immediately");
 
     // Clean up test campaign and switch back to HeroQuest campaign 0
-    const idx = appModule.getCampaigns().findIndex(c => c.id === "campaign-empty-by-default");
+    const idx = appModule.getCampaigns().findIndex(c => c.id === "campaign-election-2026");
     if (idx !== -1) {
       appModule.deleteCampaign(idx);
     }
     await appModule.selectCampaign(0);
   });
 });
+

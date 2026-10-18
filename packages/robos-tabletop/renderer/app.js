@@ -494,6 +494,10 @@ document.getElementById("map-config-select")?.addEventListener("change", async (
 // Map Theme Switcher (Campaign Editor)
 document.getElementById("quest-bg-ref")?.addEventListener("change", async (e) => {
   const configId = e.target.value;
+  if (currentData.currentQuest) {
+    currentData.currentQuest.mapConfigId = configId;
+    currentData.currentQuest._preserveMapConfig = true;
+  }
   await switchMapConfiguration(configId, false);
   if (typeof renderCampaignQuestsList === "function") {
     renderCampaignQuestsList();
@@ -501,7 +505,10 @@ document.getElementById("quest-bg-ref")?.addEventListener("change", async (e) =>
   const slug = document.getElementById("quest-slug")?.value || currentData.currentQuest?.slug || "custom-quest";
   if (window.robosTabletop?.syncCartridgeHeroes) {
     await window.robosTabletop.syncCartridgeHeroes({
+      cartridgeSlug: slug,
       slug,
+      questTitle: currentData.currentQuest?.title,
+      questBriefing: currentData.currentQuest?.briefing,
       mapConfigId: configId
     });
   }
@@ -2133,7 +2140,7 @@ async function initKGraphData() {
       // Restore any persisted robos:TabletopCampaign nodes from Knowledge Graph
       const kgraphCampaignNodes = currentData.tabletopNodes.filter(n => {
         const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
-        return t.includes("robos:TabletopCampaign");
+        return t.includes("robos:TabletopCampaign") && (Array.isArray(n["robos:quests"]) || Boolean(n["robos:campaignId"]));
       });
 
       const kgraphHeroes = currentData.tabletopNodes.filter(n => {
@@ -2142,18 +2149,24 @@ async function initKGraphData() {
       });
 
       if (kgraphCampaignNodes.length > 0) {
+        let activeLoadedIdx = -1;
         kgraphCampaignNodes.forEach(node => {
           const deserialized = deserializeCampaignFromKGraphNode(node);
           if (!deserialized) return;
           const existingIdx = currentData.campaigns.findIndex(c => c.id === deserialized.id);
           if (existingIdx !== -1) {
             currentData.campaigns[existingIdx] = deserialized;
+            if (deserialized.isActiveCampaign) activeLoadedIdx = existingIdx;
           } else {
             currentData.campaigns.push(deserialized);
+            if (deserialized.isActiveCampaign) activeLoadedIdx = currentData.campaigns.length - 1;
           }
         });
-        currentData.currentCampaignIndex = Math.min(currentData.currentCampaignIndex || 0, currentData.campaigns.length - 1);
-        currentData.campaign = currentData.campaigns[currentData.currentCampaignIndex];
+        const targetCampIdx = activeLoadedIdx >= 0
+          ? activeLoadedIdx
+          : Math.min(currentData.currentCampaignIndex || 0, currentData.campaigns.length - 1);
+        currentData.currentCampaignIndex = targetCampIdx;
+        currentData.campaign = currentData.campaigns[targetCampIdx];
       } else if (kgraphHeroes.length > 0 && currentData.campaigns[0]) {
         currentData.campaigns[0].heroes = kgraphHeroes;
       }
@@ -6871,6 +6884,15 @@ function deserializeCampaignFromKGraphNode(node) {
 function applyEmptyQuestEditorUI() {
   currentData.currentQuestIndex = -1;
   currentData.currentQuest = null;
+  const emptyCard = document.getElementById("campaign-no-quest-empty-state");
+  if (emptyCard) emptyCard.style.display = "block";
+  const mainCard = document.getElementById("quest-editor-main-card");
+  if (mainCard) mainCard.style.display = "none";
+  const heroesReviewCard = document.getElementById("quest-heroes-review-card");
+  if (heroesReviewCard) heroesReviewCard.style.display = "none";
+  const saveStateCard = document.getElementById("quest-save-state-card");
+  if (saveStateCard) saveStateCard.style.display = "none";
+
   const editorTitleEl = document.getElementById("quest-editor-title");
   if (editorTitleEl) editorTitleEl.textContent = "No Active Quest";
   const statusBadge = document.getElementById("quest-status-badge");
@@ -7113,6 +7135,15 @@ async function selectQuest(index, preserveBoard = false) {
   const q = currentData.campaign.quests[index];
   currentData.currentQuest = q;
 
+  const emptyCard = document.getElementById("campaign-no-quest-empty-state");
+  if (emptyCard) emptyCard.style.display = "none";
+  const mainCard = document.getElementById("quest-editor-main-card");
+  if (mainCard) mainCard.style.display = "block";
+  const heroesReviewCard = document.getElementById("quest-heroes-review-card");
+  if (heroesReviewCard) heroesReviewCard.style.display = "block";
+  const saveStateCard = document.getElementById("quest-save-state-card");
+  if (saveStateCard) saveStateCard.style.display = "block";
+
   // Populate form fields
   const slugEl = document.getElementById("quest-slug");
   const titleEl = document.getElementById("quest-title");
@@ -7176,10 +7207,15 @@ async function selectQuest(index, preserveBoard = false) {
   drawBoard();
 }
 
-// 1) Load Quest Info from custom-quest.cartridge.json and update Quest Info badges
+// 1) Load Quest Info from <slug>.cartridge.json and update Quest Info badges
 async function loadActiveQuestCartridgeInfo(cartridgeSlug = null) {
   const q = getActiveQuest();
   const slug = cartridgeSlug || q?.slug || "custom-quest";
+  const fileStat = document.getElementById("cartridge-stat-file");
+  const rulesetStat = document.getElementById("cartridge-stat-ruleset");
+  const stairStat = document.getElementById("cartridge-stat-stairs");
+  const fogStat = document.getElementById("cartridge-stat-fog");
+  const calibEl = document.getElementById("quest-bg-calib");
 
   try {
     if (window.robosTabletop?.loadCartridge) {
@@ -7199,7 +7235,7 @@ async function loadActiveQuestCartridgeInfo(cartridgeSlug = null) {
 
         if (q) {
           q.startingStairs = [...startPos];
-          if (mapObj.mapConfigurationId) {
+          if (mapObj.mapConfigurationId && !q._preserveMapConfig) {
             q.mapConfigId = mapObj.mapConfigurationId;
             const bgSelectEl = document.getElementById("quest-bg-ref");
             if (bgSelectEl) {
@@ -7221,12 +7257,8 @@ async function loadActiveQuestCartridgeInfo(cartridgeSlug = null) {
           if (triggersArr.length > 0) q.storyTriggers = triggersArr;
         }
 
-        const fileStat = document.getElementById("cartridge-stat-file");
-        const rulesetStat = document.getElementById("cartridge-stat-ruleset");
-        const stairStat = document.getElementById("cartridge-stat-stairs");
-        const fogStat = document.getElementById("cartridge-stat-fog");
-
         if (fileStat) fileStat.textContent = `📦 ${slug}.cartridge.json`;
+        if (calibEl) calibEl.textContent = `${slug}.cartridge.json`;
         if (rulesetStat) rulesetStat.textContent = `🎲 ${String(cart.ruleset || "HeroQuest")} Ruleset`;
         if (stairStat) stairStat.textContent = `🏁 Start: [${startPos[0]}, ${startPos[1]}]`;
         if (fogStat) fogStat.textContent = `🌫️ Fog of War: Unseen Content Hidden`;
@@ -7242,10 +7274,17 @@ async function loadActiveQuestCartridgeInfo(cartridgeSlug = null) {
     console.warn("[robos-tabletop] Failed to load cartridge info:", err);
   }
 
+  const fallbackStart = q?.startingStairs || [7, 14];
+  if (fileStat) fileStat.textContent = `📦 ${slug}.cartridge.json`;
+  if (calibEl) calibEl.textContent = `${slug}.cartridge.json`;
+  if (rulesetStat) rulesetStat.textContent = `🎲 ${q?.ruleset === "dnd5e" ? "D&D 5e" : "HeroQuest"} Ruleset`;
+  if (stairStat) stairStat.textContent = `🏁 Start: [${fallbackStart[0]}, ${fallbackStart[1]}]`;
+  if (fogStat) fogStat.textContent = `🌫️ Fog of War: Unseen Content Hidden`;
+
   return {
     success: true,
     slug,
-    startingPosition: q?.startingStairs || [7, 14]
+    startingPosition: fallbackStart
   };
 }
 
@@ -8624,14 +8663,43 @@ function resetQuest(index = currentData.currentQuestIndex) {
   return { success: true, quest: q };
 }
 
+function slugifyCampaignOrQuestText(str) {
+  return String(str || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function addQuest(customProps = {}) {
   const nextNum = currentData.campaign.quests.length + 1;
+  const campTitle = currentData.campaign?.title || "HeroQuest";
+  const campSlug = slugifyCampaignOrQuestText(campTitle) || "campaign";
+  const isDefaultHeroQuest = currentData.campaign?.id === "campaign-heroquest" && nextNum === 1;
+  const isElectionCampaign = /election|midterm/i.test(campTitle) || /election|midterm/i.test(customProps.title || "");
+
+  const defaultSlug = isDefaultHeroQuest
+    ? "custom-quest"
+    : `${campSlug}-quest-${nextNum}`;
+
+  const defaultTitle = customProps.title
+    || (isElectionCampaign && nextNum === 1
+      ? `Quest 1: Battle for the Hill`
+      : `Quest ${nextNum}: Custom Dungeon`);
+
+  const defaultMapConfigId = customProps.mapConfigId
+    || (isElectionCampaign ? "midterm-election-capitol" : (currentData.activeMapConfig?.id || "heroquest-classic"));
+
+  const resolvedSlug = customProps.slug || defaultSlug;
   const newQuest = {
     id: `quest-${nextNum}`,
-    slug: customProps.slug || `custom-quest`,
-    title: customProps.title || `Quest ${nextNum}: Custom Dungeon`,
-    briefing: customProps.briefing || `A dark shadow looms over the realm. Brave heroes must explore the dungeon depths and vanquish the lurking evil.`,
-    mapConfigId: customProps.mapConfigId || currentData.activeMapConfig?.id || "heroquest-classic",
+    slug: resolvedSlug,
+    cartridgeFile: customProps.cartridgeFile || `${resolvedSlug}.cartridge.json`,
+    title: defaultTitle,
+    briefing: customProps.briefing || (isElectionCampaign
+      ? `Enter the Capitol halls in Midterm Elections: Battle for the Hill. Navigate the chambers, overcome partisan perils, and claim victory!`
+      : `A dark shadow looms over the realm. Brave heroes must explore the dungeon depths and vanquish the lurking evil.`),
+    mapConfigId: defaultMapConfigId,
+    _preserveMapConfig: Boolean(customProps.mapConfigId || isElectionCampaign),
     ruleset: customProps.ruleset || "heroquest",
     goldReward: customProps.goldReward !== undefined ? customProps.goldReward : 150,
     bossTarget: customProps.bossTarget || "gargoyle-boss",
@@ -8730,9 +8798,35 @@ function setupCampaignQuestControls() {
   if (cNameInput) {
     cNameInput.value = currentData.campaign.title;
     cNameInput.addEventListener("input", (e) => {
-      currentData.campaign.title = e.target.value;
+      const newTitle = e.target.value;
+      currentData.campaign.title = newTitle;
       const titleDisplay = document.getElementById("campaign-title-display");
-      if (titleDisplay) titleDisplay.textContent = e.target.value;
+      if (titleDisplay) titleDisplay.textContent = newTitle;
+
+      const q = currentData.currentQuest;
+      if (q && /^campaign-\d+-new-adventure-quest-(\d+)$/.test(q.slug || "")) {
+        const qNum = RegExp.$1 || "1";
+        const newCampSlug = slugifyCampaignOrQuestText(newTitle);
+        if (newCampSlug) {
+          q.slug = `${newCampSlug}-quest-${qNum}`;
+          q.cartridgeFile = `${q.slug}.cartridge.json`;
+          const slugEl = document.getElementById("quest-slug");
+          if (slugEl) slugEl.value = q.slug;
+          const cartBadge = document.getElementById("quest-cartridge-badge");
+          if (cartBadge) cartBadge.textContent = `📦 ${q.cartridgeFile}`;
+          const fileStat = document.getElementById("cartridge-stat-file");
+          if (fileStat) fileStat.textContent = `📦 ${q.cartridgeFile}`;
+          const calibEl = document.getElementById("quest-bg-calib");
+          if (calibEl) calibEl.textContent = q.cartridgeFile;
+        }
+        if (/election|midterm/i.test(newTitle) && !q._preserveMapConfig) {
+          q.mapConfigId = "midterm-election-capitol";
+          q._preserveMapConfig = true;
+          switchMapConfiguration("midterm-election-capitol", false);
+        }
+        renderCampaignQuestsList();
+      }
+
       renderCampaignSelectorUI();
       triggerCampaignAutosave();
     });
@@ -8766,6 +8860,11 @@ function setupCampaignQuestControls() {
       currentData.currentQuest.cartridgeFile = `${e.target.value || "custom-quest"}.cartridge.json`;
       const cartBadge = document.getElementById("quest-cartridge-badge");
       if (cartBadge) cartBadge.textContent = `📦 ${e.target.value || "custom-quest"}.cartridge.json`;
+      const fileStat = document.getElementById("cartridge-stat-file");
+      if (fileStat) fileStat.textContent = `📦 ${e.target.value || "custom-quest"}.cartridge.json`;
+      const calibEl = document.getElementById("quest-bg-calib");
+      if (calibEl) calibEl.textContent = `${e.target.value || "custom-quest"}.cartridge.json`;
+      renderCampaignQuestsList();
       triggerCampaignAutosave();
     }
   });
@@ -8819,8 +8918,9 @@ function setupCampaignQuestControls() {
     }
   });
 
-  // Campaign Buttons (Sidebar, Quest Card Header, and Top Header)
+  // Campaign Buttons (Sidebar, Empty State Card, Quest Card Header, and Top Header)
   document.getElementById("btn-add-quest")?.addEventListener("click", () => addQuest());
+  document.getElementById("btn-empty-panel-add-quest")?.addEventListener("click", () => addQuest());
   document.getElementById("btn-header-add-quest")?.addEventListener("click", () => addQuest());
   document.getElementById("btn-delete-quest")?.addEventListener("click", () => deleteQuest());
   document.getElementById("btn-sidebar-delete-quest")?.addEventListener("click", () => deleteQuest());

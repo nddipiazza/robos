@@ -148,6 +148,16 @@
           <div class="col-resizer" data-resizer-id="split-campaign-quests" role="separator" aria-orientation="vertical" title="Drag to resize columns (double-click to reset)"></div>
 
           <div class="editor-panel campaign-editor-panel">
+            <!-- Empty Campaign Quests State (Shown when campaign has 0 quests) -->
+            <div id="campaign-no-quest-empty-state" class="card form-card" style="display:none; text-align:center; padding:36px 24px; margin-bottom:16px; border:1px dashed #334155; background:rgba(15,23,42,0.75);">
+              <div style="font-size:2.2rem; margin-bottom:10px;">📜</div>
+              <h3 style="margin:0 0 8px 0; color:#f8fafc;">No Quests in This Campaign Yet</h3>
+              <p class="text-muted" style="margin:0 auto 16px auto; max-width:480px; font-size:13px;">
+                This campaign starts empty with 0 quests. Click <strong>+ New Quest</strong> in the left sidebar or below to create the first quest for this campaign.
+              </p>
+              <button id="btn-empty-panel-add-quest" class="btn btn-primary">+ Create First Quest</button>
+            </div>
+
             <!-- Victory Banner (Hidden by default, shown when quest is completed) -->
             <div id="quest-victory-banner" class="quest-victory-banner" style="display:none;">
               <div class="victory-banner-content" style="display:flex; align-items:center; gap:12px;">
@@ -164,7 +174,7 @@
             </div>
 
             <!-- 1. Quest Info & Quest Editor Launcher Card -->
-            <div class="card form-card" style="margin-bottom:16px;">
+            <div id="quest-editor-main-card" class="card form-card" style="margin-bottom:16px;">
               <div class="editor-card-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
                 <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                   <h3 id="quest-editor-title" style="margin:0;">Quest 1: Custom Dungeon</h3>
