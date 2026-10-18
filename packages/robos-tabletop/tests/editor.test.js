@@ -1499,7 +1499,6 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
       "split-monsters",
       "split-classes",
       "grid-spells-weapons",
-      "grid-grimoire-preview",
       "grid-hero-trade"
     ];
 
@@ -1509,6 +1508,9 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
         `index.html must include resizable column separator data-resizer-id="${rId}"`
       );
     }
+
+    assert.ok(!indexHtml.includes('id="btn-open-spell-pick"'), "index.html must not include #btn-open-spell-pick");
+    assert.ok(!indexHtml.includes('id="modal-spell-pick"'), "index.html must not include #modal-spell-pick");
 
     // 2. Verify CSS rules for .col-resizer and 3-track grid layouts
     assert.ok(styleCss.includes(".col-resizer"), "style.css must define .col-resizer");
