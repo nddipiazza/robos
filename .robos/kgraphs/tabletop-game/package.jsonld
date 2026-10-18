@@ -983,14 +983,53 @@
         "robos:TabletopMapConfiguration",
         "schema:Place"
       ],
-      "dcterms:title": "HeroQuest: First Light Stone Dungeon (Side A)",
+      "dcterms:title": "HeroQuest: First Light Side A",
       "robos:boardSide": "A",
       "robos:gridDimensions": [
         26,
         19
       ],
-      "robos:backgroundImage": "res://assets/boards/heroquest_board.png",
+      "robos:backgroundImage": "res://assets/boards/first_light_dungeon.png",
+      "robos:blockmapFile": "first-light-dungeon.blockmap.json",
       "robos:roomsCount": 22,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:mapconfig:midterm-election-capitol",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMapConfiguration",
+        "schema:Place"
+      ],
+      "dcterms:title": "Midterm Elections: Battle for the Hill",
+      "robos:boardSide": "Custom",
+      "robos:gridDimensions": [
+        26,
+        19
+      ],
+      "robos:backgroundImage": "res://assets/boards/midterm_election_capitol.png",
+      "robos:blockmapFile": "midterm-election-capitol.blockmap.json",
+      "robos:roomsCount": 17,
+      "robos:category": "Midterms 2026",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:mapconfig:fan-dungeon-28x21",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMapConfiguration",
+        "schema:Place"
+      ],
+      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28×21)",
+      "robos:boardSide": "Custom",
+      "robos:gridDimensions": [
+        28,
+        21
+      ],
+      "robos:backgroundImage": "res://assets/boards/fan_dungeon_28x21.png",
+      "robos:roomsCount": 19,
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     },
@@ -2753,6 +2792,7 @@
         }
       ],
       "robos:visibleMonstersCount": 2,
+      "robos:totalMonstersAlive": 24,
       "robos:monstersDefeated": 0,
       "robos:itemsFound": [
         {
@@ -2838,7 +2878,9 @@
         "room-sw-8"
       ],
       "robos:doorsOpenCount": 2,
+      "robos:doorsTotalCount": 12,
       "robos:trapsDetectedCount": 0,
+      "robos:trapsTotalCount": 1,
       "robos:triggersFired": [
         {
           "id": "trigger-note-a-2bug",
@@ -3816,14 +3858,53 @@
         "robos:TabletopMapConfiguration",
         "schema:Place"
       ],
-      "dcterms:title": "HeroQuest: First Light Stone Dungeon (Side A)",
+      "dcterms:title": "HeroQuest: First Light Side A",
       "robos:boardSide": "A",
       "robos:gridDimensions": [
         26,
         19
       ],
-      "robos:backgroundImage": "res://assets/boards/heroquest_board.png",
+      "robos:backgroundImage": "res://assets/boards/first_light_dungeon.png",
+      "robos:blockmapFile": "first-light-dungeon.blockmap.json",
       "robos:roomsCount": 22,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:mapconfig:midterm-election-capitol",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMapConfiguration",
+        "schema:Place"
+      ],
+      "dcterms:title": "Midterm Elections: Battle for the Hill",
+      "robos:boardSide": "Custom",
+      "robos:gridDimensions": [
+        26,
+        19
+      ],
+      "robos:backgroundImage": "res://assets/boards/midterm_election_capitol.png",
+      "robos:blockmapFile": "midterm-election-capitol.blockmap.json",
+      "robos:roomsCount": 17,
+      "robos:category": "Midterms 2026",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:mapconfig:fan-dungeon-28x21",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMapConfiguration",
+        "schema:Place"
+      ],
+      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28×21)",
+      "robos:boardSide": "Custom",
+      "robos:gridDimensions": [
+        28,
+        21
+      ],
+      "robos:backgroundImage": "res://assets/boards/fan_dungeon_28x21.png",
+      "robos:roomsCount": 19,
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     },
@@ -5586,6 +5667,7 @@
         }
       ],
       "robos:visibleMonstersCount": 2,
+      "robos:totalMonstersAlive": 24,
       "robos:monstersDefeated": 0,
       "robos:itemsFound": [
         {
@@ -5671,7 +5753,9 @@
         "room-sw-8"
       ],
       "robos:doorsOpenCount": 2,
+      "robos:doorsTotalCount": 12,
       "robos:trapsDetectedCount": 0,
+      "robos:trapsTotalCount": 1,
       "robos:triggersFired": [
         {
           "id": "trigger-note-a-2bug",
