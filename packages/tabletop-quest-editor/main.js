@@ -578,6 +578,12 @@ ipcMain.handle('quest:launch-game', async (_event, slug) => {
       return { success: false, error: `Run script not found: ${runScript}` };
     }
     const env = { ...process.env, TABLETOP_CARTRIDGE: slug, TABLETOP_RESET: '1', DISPLAY: process.env.DISPLAY || ':0' };
+    delete env.LIBGL_ALWAYS_SOFTWARE;
+    delete env.GALLIUM_DRIVER;
+    delete env.CHROME_DESKTOP;
+    delete env.ELECTRON_RUN_AS_NODE;
+    delete env.NODE_OPTIONS;
+
     const child = spawn(runScript, ['--reset', '--cartridge=' + slug], {
       cwd: TABLETOP_DIR,
       env,
@@ -585,6 +591,12 @@ ipcMain.handle('quest:launch-game', async (_event, slug) => {
       stdio: 'ignore'
     });
     child.unref();
+
+    // Minimize the software-rendered Electron editor while the 3D/2D Godot engine runs
+    if (mainWindow && !mainWindow.isDestroyed() && typeof mainWindow.minimize === 'function') {
+      mainWindow.minimize();
+    }
+
     return { success: true, pid: child.pid };
   } catch (err) {
     return { success: false, error: err.message };

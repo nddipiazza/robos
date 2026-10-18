@@ -582,10 +582,7 @@ func _ready() -> void:
 		_log("[GM] [Game Master / DunMaster Mode Active] You are Zargon, Master of Darkness. Full dungeon visibility granted.")
 	else:
 		_log("[PLAYER] [Player Mode Active] You lead the four heroes into %s!" % q_title)
-		if is_quest_begin():
-			_check_play_intro_movie()
-			_check_show_quest_objective_at_start()
-		else:
+		if not is_quest_begin():
 			if quest_objective_modal:
 				quest_objective_modal.visible = false
 			if elf_spell_modal:
@@ -1729,6 +1726,8 @@ func get_tile_texture(t_type: String) -> Texture2D:
 	return null
 
 func _load_texture_safe(res_path: String) -> Texture2D:
+	if res_path.begins_with("assets/"):
+		res_path = "res://" + res_path
 	if ResourceLoader.exists(res_path):
 		var res = ResourceLoader.load(res_path)
 		if res is Texture2D:
@@ -3211,24 +3210,27 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 		h["heroClass"] = h.get("heroClass", "")
 		h["hero_class"] = h.get("heroClass", "")
 
-		# Standard HeroQuest Loadouts
-		match str(h.get("id")):
-			"barbarian":
+		# Standard HeroQuest Loadouts (matched by class or id)
+		var h_arch = str(h.get("heroClass", h.get("id", ""))).to_lower().strip_edges()
+		if h_arch == "" or not (h_arch in ["barbarian", "dwarf", "elf", "wizard"]):
+			h_arch = str(h.get("id", "")).to_lower().strip_edges()
+		match h_arch:
+			"barbarian", "obama":
 				h["equipped_weapon"] = "broadsword"
 				h["equipped_armor"] = []
 				h["inventory"] = ["broadsword", "healing_potion"]
 				h["spells"] = []
-			"dwarf":
+			"dwarf", "trump":
 				h["equipped_weapon"] = "shortsword"
 				h["equipped_armor"] = []
 				h["inventory"] = ["shortsword", "healing_potion"]
 				h["spells"] = []
-			"elf":
+			"elf", "hillary-clinton", "hillary_clinton":
 				h["equipped_weapon"] = "shortsword"
 				h["equipped_armor"] = []
 				h["inventory"] = ["shortsword", "healing_potion"]
 				h["spells"] = _extract_cartridge_spells(h, "elf", cart)
-			"wizard":
+			"wizard", "bernie-sanders", "bernie_sanders":
 				h["equipped_weapon"] = "dagger"
 				h["equipped_armor"] = []
 				h["inventory"] = ["dagger", "staff", "healing_potion"]
@@ -4730,10 +4732,12 @@ func select_elf_element(elem_key: String) -> Dictionary:
 			wiz_spells.append_array(ELEMENTAL_DECKS[k])
 
 	for h in heroes:
-		if str(h.get("id")) == "elf":
+		var h_cls = get_hero_class_name(h).to_lower()
+		var h_id = str(h.get("id", "")).to_lower()
+		if h_id == "elf" or h_cls == "elf":
 			h["spells"] = elf_spells
 			h["used_spells"] = []
-		elif str(h.get("id")) == "wizard":
+		elif h_id == "wizard" or h_cls == "wizard":
 			h["spells"] = wiz_spells
 			h["used_spells"] = []
 
@@ -8207,7 +8211,8 @@ func can_hero_disarm(hero: Dictionary) -> Dictionary:
 	if hero.get("is_summon", false):
 		return { "can_disarm": false, "reason": "Summons cannot disarm traps" }
 	var h_id = str(hero.get("id", "")).to_lower()
-	if h_id == "dwarf":
+	var h_cls = get_hero_class_name(hero).to_lower()
+	if h_id == "dwarf" or h_cls == "dwarf":
 		return { "can_disarm": true, "is_dwarf": true }
 	var inv = hero.get("inventory", [])
 	for it in inv:
