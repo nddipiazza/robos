@@ -894,6 +894,65 @@ ipcMain.handle("tabletop:clear-quest-save-state", async (_event, payload) => {
   }
 });
 
+// IPC: Delete Quest (removes KGraph quest/map/savestate nodes, clears save state, and optionally deletes cartridge file)
+ipcMain.handle("tabletop:delete-quest", async (_event, payload) => {
+  try {
+    const cleanSlug = resolveSlugArg(payload, "");
+    const questId = payload?.questId || payload?.id || "";
+    const deleteCartridgeFile = Boolean(payload?.deleteCartridgeFile);
+    const clearSaveState = payload?.clearSaveState !== false;
+
+    let deletedCartridgePath = "";
+    if (cleanSlug && deleteCartridgeFile) {
+      const cartPath = path.join(TABLETOP_GAME_DIR, "cartridges", `${cleanSlug}.cartridge.json`);
+      if (fs.existsSync(cartPath)) {
+        fs.unlinkSync(cartPath);
+        deletedCartridgePath = cartPath;
+      }
+    }
+
+    if (cleanSlug && clearSaveState) {
+      const savePath = getGodotAutosavePath(cleanSlug, cleanSlug);
+      const screenshotPath = getGodotAutosaveScreenshotPath(cleanSlug, cleanSlug);
+      if (fs.existsSync(savePath)) fs.unlinkSync(savePath);
+      if (fs.existsSync(screenshotPath)) fs.unlinkSync(screenshotPath);
+    }
+
+    let removedKGraphCount = 0;
+    if (fs.existsSync(KGRAPH_TABLETOP)) {
+      const pkg = JSON.parse(fs.readFileSync(KGRAPH_TABLETOP, "utf8"));
+      const nodes = Array.isArray(pkg["robos:nodes"]) ? pkg["robos:nodes"] : [];
+      const idsToRemove = new Set(
+        [
+          cleanSlug ? `urn:robos:tabletop:quest:${cleanSlug}` : "",
+          cleanSlug ? `urn:robos:tabletop:map:${cleanSlug}` : "",
+          cleanSlug ? `urn:robos:tabletop:savestate:${cleanSlug}` : "",
+          questId ? `urn:robos:tabletop:quest:${questId}` : "",
+          questId
+        ].filter(Boolean)
+      );
+      const nextNodes = nodes.filter(n => !idsToRemove.has(n["@id"]));
+      removedKGraphCount = nodes.length - nextNodes.length;
+      if (removedKGraphCount > 0) {
+        pkg["robos:nodes"] = nextNodes;
+        if (Array.isArray(pkg["@graph"])) pkg["@graph"] = nextNodes;
+        fs.writeFileSync(KGRAPH_TABLETOP, JSON.stringify(pkg, null, 2) + "\n", "utf8");
+      }
+    }
+
+    return {
+      success: true,
+      slug: cleanSlug,
+      questId,
+      deletedCartridgeFile: Boolean(deletedCartridgePath),
+      deletedCartridgePath,
+      removedKGraphCount
+    };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
 // IPC: Launch Godot 4 Player in Player or Game Master role (Supports Saved State or New Quest State)
 ipcMain.handle("tabletop:launch-game", async (_event, payload) => {
   try {
