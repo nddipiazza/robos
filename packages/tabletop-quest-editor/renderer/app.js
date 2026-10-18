@@ -36,6 +36,9 @@ const state = {
   zoom: 1.0,
   panX: 40,
   panY: 40,
+  autoFit: true,
+  lastViewportWidth: 0,
+  lastViewportHeight: 0,
   isPanning: false,
   panStartX: 0,
   panStartY: 0,
@@ -852,9 +855,18 @@ async function initApp() {
 
   resizeCanvas();
   window.addEventListener('resize', () => {
-    resizeCanvas();
-    render();
+    handleViewportResize();
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => handleViewportResize());
+    }
+    setTimeout(() => handleViewportResize(), 80);
   });
+  if (typeof ResizeObserver !== 'undefined' && dom.viewport) {
+    const viewportObserver = new ResizeObserver(() => {
+      handleViewportResize();
+    });
+    viewportObserver.observe(dom.viewport);
+  }
 
   // Check startup arguments
   let startup = { type: 'blockmap', value: 'first-light-dungeon' };
@@ -3038,11 +3050,51 @@ function preloadAssets() {
 // -------------------------------------------------------------
 // Coordinate Math & Geometry
 // -------------------------------------------------------------
-function resizeCanvas() {
-  if (!dom || !dom.viewport || !dom.canvas) return;
+function resizeCanvas(options = {}) {
+  if (!dom || !dom.viewport || !dom.canvas) return false;
   const rect = dom.viewport.getBoundingClientRect();
-  dom.canvas.width = rect.width;
-  dom.canvas.height = rect.height;
+  const newW = Math.round(rect.width);
+  const newH = Math.round(rect.height);
+  if (newW <= 0 || newH <= 0) return false;
+
+  const prevW = state.lastViewportWidth || dom.canvas.width || 0;
+  const prevH = state.lastViewportHeight || dom.canvas.height || 0;
+  const sizeChanged = newW !== dom.canvas.width || newH !== dom.canvas.height || newW !== prevW || newH !== prevH;
+
+  dom.canvas.width = newW;
+  dom.canvas.height = newH;
+  state.lastViewportWidth = newW;
+  state.lastViewportHeight = newH;
+
+  if (options.adjustCamera && sizeChanged && prevW > 0 && prevH > 0) {
+    if (state.autoFit !== false) {
+      fitView();
+    } else {
+      const centerWorldX = (prevW / 2 - state.panX) / state.zoom;
+      const centerWorldY = (prevH / 2 - state.panY) / state.zoom;
+      const geom = getGridGeometry();
+      const minC = geom.hasAdditionalBorder ? -1 : 0;
+      const maxC = geom.hasAdditionalBorder ? geom.cols + 1 : geom.cols;
+      const minR = geom.hasAdditionalBorder ? -1 : 0;
+      const maxR = geom.hasAdditionalBorder ? geom.rows + 1 : geom.rows;
+      const boardW = Math.max(1, (maxC - minC) * geom.tileSize);
+      const boardH = Math.max(1, (maxR - minR) * geom.tileSize);
+      const oldFitScale = Math.min(Math.max(60, prevW - 80) / boardW, Math.max(60, prevH - 80) / boardH);
+      const newFitScale = Math.min(Math.max(60, newW - 80) / boardW, Math.max(60, newH - 80) / boardH);
+      const scaleRatio = oldFitScale > 0 ? (newFitScale / oldFitScale) : 1;
+      state.zoom = Math.max(0.25, Math.min(4.0, state.zoom * scaleRatio));
+      state.panX = Math.round(newW / 2 - centerWorldX * state.zoom);
+      state.panY = Math.round(newH / 2 - centerWorldY * state.zoom);
+      updateZoomUI();
+    }
+  }
+  return sizeChanged;
+}
+
+function handleViewportResize() {
+  if (resizeCanvas({ adjustCamera: true })) {
+    render();
+  }
 }
 
 function getGridGeometry() {
@@ -4578,6 +4630,15 @@ function renderToolPreview(ctx, geom) {
 // -------------------------------------------------------------
 function fitView() {
   if (!dom || !dom.canvas) return;
+  if (dom.viewport) {
+    const rect = dom.viewport.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      dom.canvas.width = Math.round(rect.width);
+      dom.canvas.height = Math.round(rect.height);
+      state.lastViewportWidth = dom.canvas.width;
+      state.lastViewportHeight = dom.canvas.height;
+    }
+  }
   const geom = getGridGeometry();
   const minC = geom.hasAdditionalBorder ? -1 : 0;
   const maxC = geom.hasAdditionalBorder ? geom.cols + 1 : geom.cols;
@@ -4587,13 +4648,15 @@ function fitView() {
   const boardH = (maxR - minR) * geom.tileSize;
   const vpW = dom.canvas.width;
   const vpH = dom.canvas.height;
+  if (vpW <= 0 || vpH <= 0 || boardW <= 0 || boardH <= 0) return;
 
-  const scaleX = (vpW - 80) / boardW;
-  const scaleY = (vpH - 80) / boardH;
-  state.zoom = Math.max(0.4, Math.min(2.5, Math.min(scaleX, scaleY)));
+  const scaleX = Math.max(60, vpW - 80) / boardW;
+  const scaleY = Math.max(60, vpH - 80) / boardH;
+  state.zoom = Math.max(0.25, Math.min(4.0, Math.min(scaleX, scaleY)));
 
   state.panX = Math.round((vpW - boardW * state.zoom) / 2 - (geom.offsetX + minC * geom.tileSize) * state.zoom);
   state.panY = Math.round((vpH - boardH * state.zoom) / 2 - (geom.offsetY + minR * geom.tileSize) * state.zoom);
+  state.autoFit = true;
 
   updateZoomUI();
 }
@@ -7660,7 +7723,7 @@ function setupSplitDividers() {
       targetEl.style.width = `${newSize}px`;
       targetEl.style.flex = `0 0 ${newSize}px`;
 
-      resizeCanvas();
+      resizeCanvas({ adjustCamera: true });
       render();
 
       try {
@@ -7678,7 +7741,7 @@ function setupSplitDividers() {
       divider.classList.remove('active');
       document.body.classList.remove('resizing');
 
-      resizeCanvas();
+      resizeCanvas({ adjustCamera: true });
       render();
     };
 
@@ -7698,7 +7761,7 @@ function setupSplitDividers() {
           const storageKey = targetDirection === 'prev' ? 'robos_quest_editor_tool_palette_w' : 'robos_quest_editor_sidebar_right_w';
           localStorage.removeItem(storageKey);
         } catch (_) {}
-        resizeCanvas();
+        resizeCanvas({ adjustCamera: true });
         render();
       }
     });
@@ -8422,16 +8485,19 @@ function setupEventListeners() {
 
   // Zoom controls
   dom.btnZoomIn.addEventListener('click', () => {
-    state.zoom = Math.min(3.0, state.zoom * 1.2);
+    state.autoFit = false;
+    state.zoom = Math.min(4.0, state.zoom * 1.2);
     updateZoomUI();
     render();
   });
   dom.btnZoomOut.addEventListener('click', () => {
-    state.zoom = Math.max(0.3, state.zoom / 1.2);
+    state.autoFit = false;
+    state.zoom = Math.max(0.25, state.zoom / 1.2);
     updateZoomUI();
     render();
   });
   dom.btnZoomReset.addEventListener('click', () => {
+    state.autoFit = false;
     state.zoom = 1.0;
     updateZoomUI();
     render();
@@ -8463,6 +8529,7 @@ function setupEventListeners() {
 
   window.addEventListener('mousemove', (e) => {
     if (state.isPanning) {
+      state.autoFit = false;
       state.panX = e.clientX - state.panStartX;
       state.panY = e.clientY - state.panStartY;
       render();
@@ -8613,6 +8680,7 @@ function setupEventListeners() {
   // Wheel zoom
   dom.viewport.addEventListener('wheel', (e) => {
     e.preventDefault();
+    state.autoFit = false;
     const rect = dom.canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
@@ -8720,6 +8788,9 @@ if (typeof window !== 'undefined') {
     undo,
     redo,
     render,
+    resizeCanvas,
+    handleViewportResize,
+    fitView,
     updateInspectorUI,
     updateEntitySummaryList,
     syncQuestMetaInputs,
@@ -8780,6 +8851,9 @@ if (typeof module !== 'undefined' && module.exports) {
     findFreeTilesInRoom,
     findFreeRectInRoom,
     setupSplitDividers,
+    resizeCanvas,
+    handleViewportResize,
+    fitView,
     toggleRoomNames,
     updateRoomNamesToggleUI,
     updateInspectorUI,
