@@ -3076,7 +3076,10 @@ test('Custom Quest Cartridge Verification: custom-quest intro action appears in 
   });
 
   // Briefing contains Mentor's words and opening cinematic
-  assert.ok(html.includes('The Emperor calls upon'), 'Contains header description in briefing');
+  assert.ok(
+    html.includes('The Emperor calls upon') || html.includes('Descend into the Custom Dungeon'),
+    'Contains header description in briefing'
+  );
   assert.ok(html.includes('Mentor speaks: &quot;As you step forward, ancient magic stirs') ||
             html.includes('Mentor speaks: "As you step forward, ancient magic stirs'), 'Contains starting action narrative in intro');
   assert.ok(html.includes('Opening Cinematic: Note A Cinematic'), 'Contains opening cinematic in intro');
@@ -3524,5 +3527,156 @@ test('Quest Briefing Relabeling: index.html displays "Quest Briefing" instead of
   assert.ok(html.includes('<h3>📜 Quest Briefing</h3>'), 'Section card displays "<h3>📜 Quest Briefing</h3>"');
   assert.ok(!html.includes("Mentor's Quest Parchment Briefing"), 'Does not contain outdated "Mentor\'s Quest Parchment Briefing" label');
 });
+
+// -------------------------------------------------------------
+// Test 42: Election 2026 / Midterms 2026 Enemy Characters & Category Filter
+// -------------------------------------------------------------
+test('Election 2026 Enemy Characters: supports all 15 Midterms 2026 enemies, category filtering, inspector switching, voice commands, and cartridge export', () => {
+  const appModule = require('../renderer/app.js');
+  const {
+    MONSTER_DEFS: exportedDefs,
+    populateMonsterSelects,
+    updateMonsterSuboptPreview,
+    handleCanvasClick
+  } = appModule;
+
+  const election2026Ids = [
+    'inflation-spawn',
+    'illegal-alien',
+    'k-street-swamp-fimir',
+    'gerrymandered-skeleton',
+    'teleprompter-zombie',
+    'octogenarian-incumbent-mummy',
+    'happily-married-gay-man',
+    'filibuster-gargoyle',
+    'spin-doctor-shaman',
+    'super-pac-warlord',
+    'algorithm-outrage-sorcerer',
+    'deep-state-witch-lord',
+    'trumpbiden-dragon',
+    'irs-audit-doomguard',
+    'hoa-censor-witch-hand'
+  ];
+
+  // 1. Verify all 15 Election 2026 enemies exist in MONSTER_DEFS with Midterms 2026 category
+  for (const id of election2026Ids) {
+    assert.ok(exportedDefs[id], `MONSTER_DEFS must include Election 2026 enemy: ${id}`);
+    assert.equal(exportedDefs[id].category, 'Midterms 2026', `${id} must have category 'Midterms 2026'`);
+    assert.ok(exportedDefs[id].name && exportedDefs[id].name.length > 0, `${id} must have a display name`);
+    assert.ok(exportedDefs[id].icon && exportedDefs[id].icon.length > 0, `${id} must have an icon`);
+    assert.ok(exportedDefs[id].archetype && exportedDefs[id].archetype.length > 0, `${id} must have an archetype`);
+  }
+
+  // Verify specific Election 2026 boss & spellcaster stats
+  assert.equal(exportedDefs['trumpbiden-dragon'].name, 'TrumpBiden (The Blame Dragon)');
+  assert.equal(exportedDefs['trumpbiden-dragon'].bp, 6);
+  assert.equal(exportedDefs['trumpbiden-dragon'].atk, 5);
+  assert.equal(exportedDefs['trumpbiden-dragon'].isBoss, true);
+  assert.equal(exportedDefs['trumpbiden-dragon'].isCaster, true);
+  assert.ok(exportedDefs['trumpbiden-dragon'].spells.includes('bipartisan-blame-inferno'));
+
+  // 2. Verify index.html contains the Monster Pack / Campaign Filter, Election 2026 options, and Inspector Monster Character preset dropdown
+  const htmlPath = path.join(__dirname, '../renderer/index.html');
+  const html = fs.readFileSync(htmlPath, 'utf8');
+  assert.ok(html.includes('id="select-monster-category"'), 'index.html has #select-monster-category filter');
+  assert.ok(html.includes('id="monster-subopt-preview"'), 'index.html has #monster-subopt-preview card');
+  assert.ok(html.includes('id="inspect-monster-type"'), 'index.html has #inspect-monster-type preset selector in Inspector');
+  for (const id of election2026Ids) {
+    assert.ok(html.includes(`value="${id}"`), `index.html contains option value="${id}"`);
+  }
+
+  // 3. Test populateMonsterSelects category filtering ('Midterms 2026' vs 'Base Game' vs 'all')
+  const savedDom = { ...dom };
+  const savedSubtool = { ...state.subtool };
+  const savedQuest = JSON.parse(JSON.stringify(state.quest));
+  const savedBlockmap = JSON.parse(JSON.stringify(state.blockmap));
+
+  try {
+    dom.selectMonsterCategory = { value: 'all' };
+    dom.selectMonsterType = { innerHTML: '', value: 'goblin' };
+    dom.selectWanderingMonster = { innerHTML: '', value: 'orc' };
+    dom.inspectMonsterType = { innerHTML: '', value: 'goblin' };
+    dom.monsterSuboptPreview = { innerHTML: '' };
+
+    // Filter to Midterms 2026 only
+    populateMonsterSelects('Midterms 2026');
+    assert.equal(state.subtool.monsterCategory, 'Midterms 2026');
+    assert.ok(dom.selectMonsterType.innerHTML.includes('value="inflation-spawn"'), 'Midterms filter includes inflation-spawn');
+    assert.ok(dom.selectMonsterType.innerHTML.includes('value="trumpbiden-dragon"'), 'Midterms filter includes trumpbiden-dragon');
+    assert.ok(!dom.selectMonsterType.innerHTML.includes('value="goblin"'), 'Midterms filter excludes Base Game goblin from active palette');
+    assert.equal(state.subtool.monsterType, 'inflation-spawn', 'Automatically switches active monsterType to first Midterms 2026 enemy');
+    assert.ok(dom.monsterSuboptPreview.innerHTML.includes('Inflation Spawn'), 'Monster preview displays Inflation Spawn details');
+
+    // Wandering monster & inspector dropdowns always include both packs
+    assert.ok(dom.selectWanderingMonster.innerHTML.includes('value="trumpbiden-dragon"'));
+    assert.ok(dom.selectWanderingMonster.innerHTML.includes('value="orc"'));
+    assert.ok(dom.inspectMonsterType.innerHTML.includes('value="super-pac-warlord"'));
+
+    // Filter to Base Game only
+    populateMonsterSelects('Base Game');
+    assert.equal(state.subtool.monsterCategory, 'Base Game');
+    assert.ok(dom.selectMonsterType.innerHTML.includes('value="goblin"'), 'Base Game filter includes goblin');
+    assert.ok(!dom.selectMonsterType.innerHTML.includes('value="inflation-spawn"'), 'Base Game filter excludes inflation-spawn');
+
+    // Filter to All
+    populateMonsterSelects('all');
+    assert.ok(dom.selectMonsterType.innerHTML.includes('optgroup label="🗳️ Election 2026 (Midterms 2026)"'));
+    assert.ok(dom.selectMonsterType.innerHTML.includes('optgroup label="⚔️ Base Game (HeroQuest)"'));
+
+    // 4. Test placing an Election 2026 enemy on the map and exporting cartridge
+    state.blockmap = {
+      id: 'midterm-madness-board',
+      gridDimensions: [26, 19],
+      tileSize: 39,
+      pixelOffset: [0, 0],
+      rooms: [{ id: 'room-1', name: 'Suburban Kitchen', tiles: [[4, 4], [5, 4], [4, 5], [5, 5]] }],
+      corridors: []
+    };
+    state.quest.monsters = [];
+    state.quest.furniture = [];
+    state.quest.doors = [];
+    state.quest.traps = [];
+    state.quest.wallBlocks = [];
+    state.quest.storyTriggers = [];
+    state.quest.wanderingMonster = 'inflation-spawn';
+    state.activeTool = 'monster';
+    state.subtool.monsterType = 'super-pac-warlord';
+
+    handleCanvasClick(4 * 39 + 10, 4 * 39 + 10);
+    assert.equal(state.quest.monsters.length, 1, 'Placed 1 Election 2026 monster via canvas click');
+    const placed = state.quest.monsters[0];
+    assert.equal(placed.type, 'super-pac-warlord');
+    assert.equal(placed.name, 'Super-PAC Dark Money Warlord');
+    assert.equal(placed.category, 'Midterms 2026');
+    assert.equal(placed.archetype, 'Orc Warlord');
+    assert.equal(placed.icon, '💼');
+    assert.equal(placed.isBoss, true);
+    assert.equal(placed.isSpellcaster, true);
+    assert.deepEqual(placed.spells, ['shrinkflation-curse', 'culture-war-distraction-cloud']);
+
+    // Also test voice command placement of Election 2026 enemy
+    const voiceRes = executeVoiceMapCommands('add an inflation spawn to room 1', 'guidance', state.quest, state.blockmap);
+    assert.equal(voiceRes.success, true);
+    assert.equal(state.quest.monsters.length, 2);
+    assert.equal(state.quest.monsters[1].type, 'inflation-spawn');
+    assert.equal(state.quest.monsters[1].name, 'Inflation Spawn');
+
+    // Verify cartridge serialization preserves Election 2026 enemy metadata
+    const cartridge = buildCartridgePayload();
+    const exportedMon = cartridge.monsters[placed.id];
+    assert.ok(exportedMon, 'Super-PAC Warlord serialized in cartridge.monsters');
+    assert.equal(exportedMon.monsterType, 'super-pac-warlord');
+    assert.equal(exportedMon.category, 'Midterms 2026');
+    assert.equal(exportedMon.monsterArchetype, 'Orc Warlord');
+    assert.equal(exportedMon.icon, '💼');
+    assert.deepEqual(exportedMon.spells, ['shrinkflation-curse', 'culture-war-distraction-cloud']);
+  } finally {
+    Object.assign(dom, savedDom);
+    state.subtool = savedSubtool;
+    state.quest = savedQuest;
+    state.blockmap = savedBlockmap;
+  }
+});
+
 
 

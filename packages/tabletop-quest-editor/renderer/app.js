@@ -52,6 +52,7 @@ const state = {
   subtool: {
     doorSize: 'single', // 'single', 'double-2x1', 'double-1x2', 'double-auto'
     doorType: 'wood-closed', // 'wood-closed', 'wood-open', 'secret'
+    monsterCategory: 'all', // 'all', 'Midterms 2026', 'Base Game'
     monsterType: 'goblin',
     furnitureType: 'chest',
     furnitureRotated: false, // false: normal, true: 90 deg rotated
@@ -109,19 +110,45 @@ const state = {
 };
 
 // -------------------------------------------------------------
-// Monster Template Defaults (HeroQuest Ruleset)
+// Monster Template Defaults (Base Game + Election 2026 / Midterms 2026)
 // -------------------------------------------------------------
 const MONSTER_DEFS = {
-  goblin: { name: 'Goblin', bp: 1, mp: 1, atk: 2, def: 1, move: 10, isBoss: false, isUndead: false, isCaster: false, color: '#16a34a', icon: '👺' },
-  orc: { name: 'Orc', bp: 1, mp: 2, atk: 3, def: 2, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#ca8a04', icon: '👹' },
-  skeleton: { name: 'Skeleton', bp: 1, mp: 0, atk: 2, def: 2, move: 6, isBoss: false, isUndead: true, isCaster: false, color: '#94a3b8', icon: '💀' },
-  zombie: { name: 'Zombie', bp: 1, mp: 0, atk: 3, def: 3, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#059669', icon: '🧟' },
-  mummy: { name: 'Mummy', bp: 2, mp: 0, atk: 3, def: 4, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#d97706', icon: '🩹' },
-  chaos_warrior: { name: 'Chaos Warrior', bp: 2, mp: 3, atk: 3, def: 4, move: 7, isBoss: false, isUndead: false, isCaster: false, color: '#7c3aed', icon: '⚔️' },
-  fimir: { name: 'Fimir', bp: 2, mp: 3, atk: 3, def: 3, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#2563eb', icon: '🦎' },
-  abomination: { name: 'Abomination', bp: 2, mp: 3, atk: 3, def: 3, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#2563eb', icon: '🦎' },
-  gargoyle: { name: 'Gargoyle', bp: 3, mp: 4, atk: 4, def: 5, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#dc2626', icon: '🗿' },
-  boss: { name: 'Dungeon Boss', bp: 5, mp: 5, atk: 4, def: 4, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#e11d48', icon: '👑' }
+  // Base Game (HeroQuest Classic)
+  goblin: { name: 'Goblin', category: 'Base Game', archetype: 'Goblin', bp: 1, mp: 1, atk: 2, def: 1, move: 10, isBoss: false, isUndead: false, isCaster: false, color: '#16a34a', icon: '👺', spells: [] },
+  orc: { name: 'Orc', category: 'Base Game', archetype: 'Orc', bp: 1, mp: 2, atk: 3, def: 2, move: 8, isBoss: false, isUndead: false, isCaster: false, color: '#ca8a04', icon: '👹', spells: [] },
+  fimir: { name: 'Fimir', category: 'Base Game', archetype: 'Fimir', bp: 2, mp: 3, atk: 3, def: 3, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#2563eb', icon: '🦎', spells: [] },
+  abomination: { name: 'Abomination', category: 'Base Game', archetype: 'Fimir', bp: 2, mp: 3, atk: 3, def: 3, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#2563eb', icon: '🦎', spells: [], aliasOnly: true },
+  skeleton: { name: 'Skeleton', category: 'Base Game', archetype: 'Skeleton', bp: 1, mp: 0, atk: 2, def: 2, move: 6, isBoss: false, isUndead: true, isCaster: false, color: '#94a3b8', icon: '💀', spells: [] },
+  zombie: { name: 'Zombie', category: 'Base Game', archetype: 'Zombie', bp: 1, mp: 0, atk: 3, def: 3, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#059669', icon: '🧟', spells: [] },
+  mummy: { name: 'Mummy', category: 'Base Game', archetype: 'Mummy', bp: 2, mp: 0, atk: 3, def: 4, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#d97706', icon: '🩹', spells: [] },
+  chaos_warrior: { name: 'Chaos Warrior', category: 'Base Game', archetype: 'Dread Warrior', bp: 3, mp: 3, atk: 4, def: 4, move: 7, isBoss: false, isUndead: false, isCaster: false, color: '#7c3aed', icon: '⚔️', spells: [] },
+  'chaos-warrior': { name: 'Chaos Warrior', category: 'Base Game', archetype: 'Dread Warrior', bp: 3, mp: 3, atk: 4, def: 4, move: 7, isBoss: false, isUndead: false, isCaster: false, color: '#7c3aed', icon: '⚔️', spells: [], aliasOnly: true },
+  gargoyle: { name: 'Gargoyle', category: 'Base Game', archetype: 'Gargoyle', bp: 3, mp: 4, atk: 4, def: 5, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#dc2626', icon: '🗿', spells: [] },
+  'orc-shaman': { name: 'Orc Shaman', category: 'Base Game', archetype: 'Orc Shaman', bp: 2, mp: 3, atk: 2, def: 3, move: 8, isBoss: false, isUndead: false, isCaster: true, color: '#15803d', icon: '🪄', spells: ['lightning-bolt', 'firestorm'] },
+  'verag-orc-warlord': { name: 'Verag the Orc Warlord', category: 'Base Game', archetype: 'Orc Warlord', bp: 3, mp: 4, atk: 4, def: 3, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#15803d', icon: '👑', spells: ['lightning-bolt', 'firestorm'] },
+  'chaos-sorcerer': { name: 'Chaos Sorcerer', category: 'Base Game', archetype: 'Chaos Sorcerer', bp: 3, mp: 5, atk: 3, def: 4, move: 7, isBoss: true, isUndead: false, isCaster: true, color: '#7c3aed', icon: '🔮', spells: ['lightning-bolt', 'firestorm', 'fear'] },
+  'witch-lord': { name: 'The Witch Lord', category: 'Base Game', archetype: 'Witch Lord', bp: 4, mp: 6, atk: 4, def: 5, move: 7, isBoss: true, isUndead: true, isCaster: true, color: '#4c1d95', icon: '👑', spells: ['summon-undead', 'fear', 'firestorm'] },
+  dragon: { name: 'Dragon', category: 'Base Game', archetype: 'Dragon', bp: 6, mp: 6, atk: 5, def: 5, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#b91c1c', icon: '🐉', spells: ['firestorm', 'lightning-bolt'] },
+  'cassandria-doomguard': { name: "Cassandria's Doomguard", category: 'Base Game', archetype: 'Doomguard', bp: 3, mp: 3, atk: 4, def: 6, move: 8, isBoss: true, isUndead: false, isCaster: false, color: '#475569', icon: '🛡️', spells: [] },
+  'cassandria-witch-hand': { name: 'Witch Hand of Cassandria', category: 'Base Game', archetype: 'Witch Hand', bp: 4, mp: 5, atk: 4, def: 4, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#9333ea', icon: '🖐️', spells: ['cloud-of-chaos', 'rust'] },
+  boss: { name: 'Dungeon Boss', category: 'Base Game', archetype: 'Orc Warlord', bp: 5, mp: 5, atk: 4, def: 4, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#e11d48', icon: '👑', spells: ['lightning-bolt', 'firestorm'] },
+
+  // Election 2026 (Midterms 2026) Characters
+  'inflation-spawn': { name: 'Inflation Spawn', category: 'Midterms 2026', archetype: 'Goblin', bp: 1, mp: 1, atk: 2, def: 1, move: 10, isBoss: false, isUndead: false, isCaster: false, color: '#16a34a', icon: '💸', spells: [] },
+  'illegal-alien': { name: 'Illegal Alien', category: 'Midterms 2026', archetype: 'Orc', bp: 1, mp: 2, atk: 3, def: 2, move: 8, isBoss: false, isUndead: false, isCaster: false, color: '#64748b', icon: '👽', spells: [] },
+  'k-street-swamp-fimir': { name: 'K-Street Swamp Lobbyist', category: 'Midterms 2026', archetype: 'Fimir', bp: 2, mp: 3, atk: 3, def: 3, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#0f766e', icon: '🐊', spells: [] },
+  'gerrymandered-skeleton': { name: 'Gerrymandered Skeleton', category: 'Midterms 2026', archetype: 'Skeleton', bp: 1, mp: 0, atk: 2, def: 2, move: 6, isBoss: false, isUndead: true, isCaster: false, color: '#94a3b8', icon: '💀', spells: [] },
+  'teleprompter-zombie': { name: 'Cable News Pundit Zombie', category: 'Midterms 2026', archetype: 'Zombie', bp: 1, mp: 0, atk: 2, def: 3, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#475569', icon: '🧟', spells: [] },
+  'octogenarian-incumbent-mummy': { name: '90-Year-Old Career Incumbent Mummy', category: 'Midterms 2026', archetype: 'Mummy', bp: 2, mp: 0, atk: 3, def: 4, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#d97706', icon: '🩹', spells: [] },
+  'happily-married-gay-man': { name: 'Happily Married Gay Man', category: 'Midterms 2026', archetype: 'Dread Warrior', bp: 3, mp: 3, atk: 4, def: 4, move: 7, isBoss: false, isUndead: false, isCaster: false, color: '#ec4899', icon: '💍', spells: [] },
+  'filibuster-gargoyle': { name: 'Filibuster Stone Gargoyle', category: 'Midterms 2026', archetype: 'Gargoyle', bp: 3, mp: 4, atk: 4, def: 5, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#64748b', icon: '🗿', spells: [] },
+  'spin-doctor-shaman': { name: 'Polling Spin-Doctor Shaman', category: 'Midterms 2026', archetype: 'Orc Shaman', bp: 2, mp: 3, atk: 2, def: 3, move: 8, isBoss: false, isUndead: false, isCaster: true, color: '#0284c7', icon: '📊', spells: ['culture-war-distraction-cloud', 'shrinkflation-curse'] },
+  'super-pac-warlord': { name: 'Super-PAC Dark Money Warlord', category: 'Midterms 2026', archetype: 'Orc Warlord', bp: 3, mp: 4, atk: 4, def: 3, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#15803d', icon: '💼', spells: ['shrinkflation-curse', 'culture-war-distraction-cloud'] },
+  'algorithm-outrage-sorcerer': { name: 'Algorithm Outrage Sorcerer', category: 'Midterms 2026', archetype: 'Chaos Sorcerer', bp: 3, mp: 5, atk: 3, def: 4, move: 7, isBoss: true, isUndead: false, isCaster: true, color: '#7c3aed', icon: '📱', spells: ['culture-war-distraction-cloud', 'bipartisan-blame-inferno'] },
+  'deep-state-witch-lord': { name: 'Unelected Bureaucracy Witch Lord', category: 'Midterms 2026', archetype: 'Witch Lord', bp: 4, mp: 6, atk: 4, def: 5, move: 7, isBoss: true, isUndead: true, isCaster: true, color: '#4c1d95', icon: '🏛️', spells: ['shrinkflation-curse', 'culture-war-distraction-cloud', 'bipartisan-blame-inferno'] },
+  'trumpbiden-dragon': { name: 'TrumpBiden (The Blame Dragon)', category: 'Midterms 2026', archetype: 'Dragon', bp: 6, mp: 6, atk: 5, def: 5, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#dc2626', icon: '🐉', spells: ['bipartisan-blame-inferno', 'shrinkflation-curse', 'culture-war-distraction-cloud'] },
+  'irs-audit-doomguard': { name: 'IRS 87,000-Agent Doomguard', category: 'Midterms 2026', archetype: 'Doomguard', bp: 3, mp: 3, atk: 4, def: 6, move: 8, isBoss: true, isUndead: false, isCaster: false, color: '#334155', icon: '🧾', spells: [] },
+  'hoa-censor-witch-hand': { name: 'Censorship Board Witch Hand', category: 'Midterms 2026', archetype: 'Witch Hand', bp: 4, mp: 5, atk: 4, def: 4, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#9333ea', icon: '🤫', spells: ['culture-war-distraction-cloud', 'shrinkflation-curse'] }
 };
 
 // Furniture dimensions (w, h)
@@ -285,7 +312,9 @@ const dom = (typeof document !== 'undefined') ? {
   // Subtool inputs
   selectDoorSize: document.getElementById('select-door-size'),
   radioDoorTypes: document.querySelectorAll('input[name="door-type"]'),
+  selectMonsterCategory: document.getElementById('select-monster-category'),
   selectMonsterType: document.getElementById('select-monster-type'),
+  monsterSuboptPreview: document.getElementById('monster-subopt-preview'),
   selectFurnitureType: document.getElementById('select-furniture-type'),
   btnRotateFurn: document.getElementById('btn-rotate-furn'),
   furnDimText: document.getElementById('furn-dim-text'),
@@ -317,6 +346,7 @@ const dom = (typeof document !== 'undefined') ? {
 
   // Inspector groups
   inspectGroupMonster: document.getElementById('inspect-group-monster'),
+  inspectMonsterType: document.getElementById('inspect-monster-type'),
   inspectMonsterBp: document.getElementById('inspect-monster-bp'),
   inspectMonsterMp: document.getElementById('inspect-monster-mp'),
   inspectMonsterAtk: document.getElementById('inspect-monster-atk'),
@@ -553,6 +583,173 @@ function updateRoomNamesToggleUI() {
 }
 
 // -------------------------------------------------------------
+// Monster Catalog & Category Filtering Helpers
+// -------------------------------------------------------------
+function formatMonsterOptionLabel(slug, def) {
+  if (!def) return slug;
+  const icon = def.icon ? `${def.icon} ` : '';
+  const archPrefix = (def.category === 'Midterms 2026' && def.archetype && def.archetype !== def.name)
+    ? ` — ${def.archetype}`
+    : '';
+  const tags = [];
+  if (def.isUndead) tags.push('Undead');
+  if (def.isBoss) tags.push('Boss');
+  else if (def.isCaster) tags.push('Caster');
+  const tagSuffix = tags.length > 0 ? `, ${tags.join('/')}` : '';
+  return `${icon}${def.name}${archPrefix} (Move: ${def.move}, Atk: ${def.atk}, Def: ${def.def}, BP: ${def.bp}${tagSuffix})`;
+}
+
+function updateMonsterSuboptPreview() {
+  if (!dom || !dom.monsterSuboptPreview) return;
+  const type = state.subtool.monsterType || 'goblin';
+  const def = MONSTER_DEFS[type] || MONSTER_DEFS.goblin;
+  if (!def) return;
+  const catBadge = def.category === 'Midterms 2026'
+    ? `<span style="color:#38bdf8; font-weight:600;">[🗳️ Election 2026${def.archetype ? ' • ' + escapeHtml(def.archetype) : ''}]</span>`
+    : `<span style="color:#94a3b8;">[🏰 ${escapeHtml(def.category || 'Base Game')}]</span>`;
+  const bossTag = def.isBoss ? ' • <span style="color:#fb7185; font-weight:700;">👑 BOSS</span>' : '';
+  const undeadTag = def.isUndead ? ' • 💀 Undead' : '';
+  const casterTag = def.isCaster ? ' • 🪄 Caster' : '';
+  dom.monsterSuboptPreview.innerHTML = `
+    <div>${def.icon || '👾'} <strong>${escapeHtml(def.name)}</strong> ${catBadge}</div>
+    <div style="margin-top:2px; color:#94a3b8;">❤️${def.bp} 🧠${def.mp ?? 1} ⚔️${def.atk} 🛡️${def.def} 👟${def.move}${bossTag}${undeadTag}${casterTag}</div>
+  `;
+}
+
+function populateMonsterSelects(categoryFilter) {
+  const activeCat = categoryFilter !== undefined ? categoryFilter : (state.subtool.monsterCategory || 'all');
+  state.subtool.monsterCategory = activeCat;
+  if (!dom) return;
+
+  if (dom.selectMonsterCategory && dom.selectMonsterCategory.value !== activeCat) {
+    if (dom.selectMonsterCategory.options && typeof document !== 'undefined' && document.createElement) {
+      const existingCats = Array.from(dom.selectMonsterCategory.options).map(o => o.value);
+      if (!existingCats.includes(activeCat)) {
+        const opt = document.createElement('option');
+        opt.value = activeCat;
+        opt.textContent = `📦 ${activeCat}`;
+        dom.selectMonsterCategory.appendChild(opt);
+      }
+    }
+    dom.selectMonsterCategory.value = activeCat;
+  }
+
+  // Group MONSTER_DEFS by category (excluding aliasOnly duplicates)
+  const byCategory = new Map();
+  Object.keys(MONSTER_DEFS).forEach(slug => {
+    const def = MONSTER_DEFS[slug];
+    if (!def || def.aliasOnly) return;
+    const cat = def.category || 'Base Game';
+    if (!byCategory.has(cat)) byCategory.set(cat, []);
+    byCategory.get(cat).push({ slug, def });
+  });
+
+  const getCategoryGroupLabel = (cat) => {
+    if (cat === 'Midterms 2026' || cat === 'Election 2026') return '🗳️ Election 2026 (Midterms 2026)';
+    if (cat === 'Base Game') return '⚔️ Base Game (HeroQuest)';
+    return `📦 ${cat}`;
+  };
+
+  // 1. Populate #select-monster-type (respecting categoryFilter)
+  if (dom.selectMonsterType) {
+    const prevVal = state.subtool.monsterType || dom.selectMonsterType.value || 'goblin';
+    let firstValidSlug = null;
+    let prevStillAvailable = false;
+    let htmlParts = [];
+
+    for (const [cat, entries] of byCategory.entries()) {
+      if (activeCat !== 'all' && cat !== activeCat) continue;
+      const groupLabel = escapeHtml(getCategoryGroupLabel(cat));
+      const opts = entries.map(({ slug, def }) => {
+        if (!firstValidSlug) firstValidSlug = slug;
+        if (slug === prevVal) prevStillAvailable = true;
+        return `<option value="${escapeHtml(slug)}">${escapeHtml(formatMonsterOptionLabel(slug, def))}</option>`;
+      });
+      htmlParts.push(`<optgroup label="${groupLabel}">${opts.join('')}</optgroup>`);
+    }
+
+    dom.selectMonsterType.innerHTML = htmlParts.join('');
+    const chosen = prevStillAvailable ? prevVal : (firstValidSlug || 'goblin');
+    dom.selectMonsterType.value = chosen;
+    state.subtool.monsterType = chosen;
+  }
+
+  // 2. Populate #select-wandering-monster (always show all categories grouped)
+  if (dom.selectWanderingMonster) {
+    const prevWm = state.quest.wanderingMonster || dom.selectWanderingMonster.value || 'orc';
+    let wmParts = [];
+    for (const [cat, entries] of byCategory.entries()) {
+      const groupLabel = escapeHtml(getCategoryGroupLabel(cat));
+      const opts = entries.map(({ slug, def }) => {
+        const label = `${def.icon ? def.icon + ' ' : ''}${def.name} (${def.atk} Atk, ${def.def} Def, ${def.bp} BP)`;
+        return `<option value="${escapeHtml(slug)}">${escapeHtml(label)}</option>`;
+      });
+      wmParts.push(`<optgroup label="${groupLabel}">${opts.join('')}</optgroup>`);
+    }
+    dom.selectWanderingMonster.innerHTML = wmParts.join('');
+    if (MONSTER_DEFS[prevWm]) {
+      dom.selectWanderingMonster.value = prevWm;
+    }
+  }
+
+  // 3. Populate #inspect-monster-type (always show all categories grouped)
+  if (dom.inspectMonsterType) {
+    const prevInsp = dom.inspectMonsterType.value || 'goblin';
+    let inspParts = [];
+    for (const [cat, entries] of byCategory.entries()) {
+      const groupLabel = escapeHtml(getCategoryGroupLabel(cat));
+      const opts = entries.map(({ slug, def }) => {
+        const label = `${def.icon ? def.icon + ' ' : ''}${def.name}${def.category === 'Midterms 2026' && def.archetype ? ' (' + def.archetype + ')' : ''}`;
+        return `<option value="${escapeHtml(slug)}">${escapeHtml(label)}</option>`;
+      });
+      inspParts.push(`<optgroup label="${groupLabel}">${opts.join('')}</optgroup>`);
+    }
+    dom.inspectMonsterType.innerHTML = inspParts.join('');
+    if (MONSTER_DEFS[prevInsp]) {
+      dom.inspectMonsterType.value = prevInsp;
+    }
+  }
+
+  updateMonsterSuboptPreview();
+}
+
+async function syncMonstersFromKGraph() {
+  try {
+    if (!window.robosQuestEditor || typeof window.robosQuestEditor.listMonsters !== 'function') {
+      populateMonsterSelects(state.subtool.monsterCategory || 'all');
+      return;
+    }
+    const res = await window.robosQuestEditor.listMonsters();
+    if (res && res.success && Array.isArray(res.monsters)) {
+      res.monsters.forEach(km => {
+        if (!km || !km.slug) return;
+        const existing = MONSTER_DEFS[km.slug] || {};
+        MONSTER_DEFS[km.slug] = {
+          ...existing,
+          name: km.name || existing.name || km.slug,
+          category: km.category || existing.category || 'Base Game',
+          archetype: km.archetype || existing.archetype || '',
+          bp: km.bp ?? existing.bp ?? 1,
+          mp: km.mp ?? existing.mp ?? 1,
+          atk: km.atk ?? existing.atk ?? 2,
+          def: km.def ?? existing.def ?? 2,
+          move: km.move ?? existing.move ?? 6,
+          isBoss: km.isBoss !== undefined ? Boolean(km.isBoss) : Boolean(existing.isBoss),
+          isUndead: km.isUndead !== undefined ? Boolean(km.isUndead) : Boolean(existing.isUndead),
+          isCaster: km.isCaster !== undefined ? Boolean(km.isCaster) : Boolean(existing.isCaster),
+          color: km.color || existing.color || '#ca8a04',
+          icon: km.icon || existing.icon || '👾',
+          spells: Array.isArray(km.spells) && km.spells.length > 0 ? km.spells : (existing.spells || [])
+        };
+      });
+    }
+  } catch (err) {
+    console.warn('Error syncing monsters from KGraph:', err);
+  }
+  populateMonsterSelects(state.subtool.monsterCategory || 'all');
+}
+
+// -------------------------------------------------------------
 // Blockmap & Cartridge Loading
 // -------------------------------------------------------------
 async function initApp() {
@@ -601,6 +798,9 @@ async function initApp() {
   } catch (err) {
     console.warn('Error reading startup args:', err);
   }
+
+  // Sync monsters from KGraph & populate monster dropdowns
+  await syncMonstersFromKGraph();
 
   // Populate blockmaps dropdown
   await refreshBlockmapsDropdown();
@@ -679,6 +879,13 @@ async function loadBlockmap(slugOrPath) {
     const dims = state.blockmap.gridDimensions || [26, 19];
     if (dom.infoBlockmapName) dom.infoBlockmapName.textContent = state.blockmap.title || state.blockmap.id || 'Custom Dungeon';
     if (dom.infoGridSize) dom.infoGridSize.textContent = `${dims[0]} × ${dims[1]}`;
+
+    // If this blockmap is the Midterm Election Capitol board (or Election 2026 quest), default monster pack filter to Midterms 2026
+    const bmIdLower = String(state.blockmap.id || slugOrPath || '').toLowerCase();
+    const qSlugLower = String(state.quest.slug || '').toLowerCase();
+    if (bmIdLower.includes('midterm') || bmIdLower.includes('election') || qSlugLower.includes('election') || qSlugLower.includes('midterm')) {
+      populateMonsterSelects('Midterms 2026');
+    }
 
     // Fit view to screen
     fitView();
@@ -875,16 +1082,19 @@ async function loadCartridge(slugOrPath) {
             id: m.id || `mon-${i+1}`,
             name: m.name || def.name,
             type: type,
-            bp: m.bodyPoints || def.bp,
-            mp: m.mindPoints || def.mp,
-            atk: m.attackDice || def.atk,
-            def: m.defendDice || def.def,
-            move: m.movementSquares || def.move,
+            bp: m.bodyPoints ?? def.bp,
+            mp: m.mindPoints ?? def.mp,
+            atk: m.attackDice ?? def.atk,
+            def: m.defendDice ?? def.def,
+            move: m.movementSquares ?? def.move,
             pos: m.position || [0, 0],
             roomId: m.roomId || '',
-            isBoss: Boolean(m.isBoss),
-            isUndead: Boolean(m.isUndead),
-            isSpellcaster: Boolean(m.isSpellcaster),
+            isBoss: m.isBoss !== undefined ? Boolean(m.isBoss) : Boolean(def.isBoss),
+            isUndead: m.isUndead !== undefined ? Boolean(m.isUndead) : Boolean(def.isUndead),
+            isSpellcaster: m.isSpellcaster !== undefined ? Boolean(m.isSpellcaster) : Boolean(def.isCaster),
+            icon: m.icon || def.icon || '👾',
+            color: m.tokenColor || m.color || def.color || '#ca8a04',
+            spells: Array.isArray(m.spells) ? m.spells : (def.spells || []),
             hidden: Boolean(m.hidden)
           });
         });
@@ -897,16 +1107,19 @@ async function loadCartridge(slugOrPath) {
             id: m.id || k,
             name: m.name || def.name,
             type: type,
-            bp: m.bodyPoints || def.bp,
-            mp: m.mindPoints || def.mp,
-            atk: m.attackDice || def.atk,
-            def: m.defendDice || def.def,
-            move: m.movementSquares || def.move,
+            bp: m.bodyPoints ?? def.bp,
+            mp: m.mindPoints ?? def.mp,
+            atk: m.attackDice ?? def.atk,
+            def: m.defendDice ?? def.def,
+            move: m.movementSquares ?? def.move,
             pos: m.position || [0, 0],
             roomId: m.roomId || '',
-            isBoss: Boolean(m.isBoss),
-            isUndead: Boolean(m.isUndead),
-            isSpellcaster: Boolean(m.isSpellcaster),
+            isBoss: m.isBoss !== undefined ? Boolean(m.isBoss) : Boolean(def.isBoss),
+            isUndead: m.isUndead !== undefined ? Boolean(m.isUndead) : Boolean(def.isUndead),
+            isSpellcaster: m.isSpellcaster !== undefined ? Boolean(m.isSpellcaster) : Boolean(def.isCaster),
+            icon: m.icon || def.icon || '👾',
+            color: m.tokenColor || m.color || def.color || '#ca8a04',
+            spells: Array.isArray(m.spells) ? m.spells : (def.spells || []),
             hidden: Boolean(m.hidden)
           });
         });
@@ -940,11 +1153,17 @@ function buildCartridgePayload() {
   // Build monsters dictionary
   const monstersDict = {};
   q.monsters.forEach(m => {
+    const def = MONSTER_DEFS[m.type] || MONSTER_DEFS.goblin || {};
+    const defaultSpells = Array.isArray(def.spells) && def.spells.length > 0 ? def.spells : ['lightning-bolt', 'firestorm'];
     monstersDict[m.id] = {
       id: m.id,
       slug: `${m.type}-${m.id}`,
       name: m.name,
       monsterType: m.type,
+      category: def.category || 'Base Game',
+      monsterArchetype: def.archetype || def.name || m.type,
+      icon: m.icon || def.icon || '👾',
+      tokenColor: m.color || def.color || '#ca8a04',
       bodyPoints: m.bp,
       mindPoints: m.mp,
       attackDice: m.atk,
@@ -953,7 +1172,7 @@ function buildCartridgePayload() {
       isBoss: m.isBoss,
       isUndead: m.isUndead,
       isSpellcaster: m.isSpellcaster,
-      spells: m.isSpellcaster ? ['lightning-bolt', 'firestorm'] : [],
+      spells: m.isSpellcaster ? (Array.isArray(m.spells) && m.spells.length > 0 ? m.spells : defaultSpells) : [],
       position: [m.pos[0], m.pos[1]],
       roomId: m.roomId || '',
       hidden: Boolean(m.hidden)
@@ -2003,16 +2222,16 @@ function generateQuestPdfHtml(quest, blockmap, mapDataUrl, options = {}) {
   monsters.forEach(m => {
     const type = m.type || 'goblin';
     if (!monsterCounts[type]) {
-      const def = MONSTER_DEFS[type] || { name: type, move: 6, attack: 2, defend: 2, body: 1, mind: 1, icon: '👾' };
+      const def = MONSTER_DEFS[type] || { name: m.name || type, move: 6, atk: 2, def: 2, bp: 1, mp: 1, icon: '👾' };
       monsterCounts[type] = {
-        name: def.name || type,
-        icon: def.icon || '👾',
+        name: def.name || m.name || type,
+        icon: m.icon || def.icon || '👾',
         count: 0,
-        move: def.move || 6,
-        attack: def.attack || 2,
-        defend: def.defend || 2,
-        body: def.body || 1,
-        mind: def.mind || 1,
+        move: m.move ?? def.move ?? 6,
+        attack: m.atk ?? def.atk ?? def.attack ?? 2,
+        defend: m.def ?? def.def ?? def.defend ?? 2,
+        body: m.bp ?? def.bp ?? def.body ?? 1,
+        mind: m.mp ?? def.mp ?? def.mind ?? 1,
         bossCount: 0
       };
     }
@@ -4138,13 +4357,22 @@ function renderToolPreview(ctx, geom) {
 
   if (state.activeTool === 'monster') {
     const def = MONSTER_DEFS[state.subtool.monsterType] || MONSTER_DEFS.goblin;
+    const cx = pos.x + geom.tileSize / 2;
+    const cy = pos.y + geom.tileSize / 2;
     ctx.beginPath();
-    ctx.arc(pos.x + geom.tileSize / 2, pos.y + geom.tileSize / 2, (geom.tileSize / 2) - 3, 0, Math.PI * 2);
-    ctx.fillStyle = def.color;
+    ctx.arc(cx, cy, (geom.tileSize / 2) - 3, 0, Math.PI * 2);
+    ctx.fillStyle = def.color || '#ca8a04';
     ctx.fill();
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 1.5;
     ctx.stroke();
+    if (typeof ctx.fillText === 'function') {
+      ctx.fillStyle = '#fff';
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(def.icon || '👾', cx, cy);
+    }
   } else if (state.activeTool === 'furniture') {
     const def = FURNITURE_DEFS[state.subtool.furnitureType] || { w: 1, h: 1 };
     const w = (state.subtool.furnitureRotated ? def.h : def.w) * geom.tileSize;
@@ -4227,6 +4455,7 @@ function renderToolPreview(ctx, geom) {
 // View Camera & Zoom
 // -------------------------------------------------------------
 function fitView() {
+  if (!dom || !dom.canvas) return;
   const geom = getGridGeometry();
   const minC = geom.hasAdditionalBorder ? -1 : 0;
   const maxC = geom.hasAdditionalBorder ? geom.cols + 1 : geom.cols;
@@ -4556,6 +4785,8 @@ function handleCanvasClick(wx, wy) {
       id: `mon-${type}-${state.quest.monsters.length + 1}`,
       name: def.name,
       type: type,
+      category: def.category || 'Base Game',
+      archetype: def.archetype || type,
       bp: def.bp,
       mp: def.mp,
       atk: def.atk,
@@ -4565,7 +4796,10 @@ function handleCanvasClick(wx, wy) {
       roomId: roomId,
       isBoss: def.isBoss,
       isUndead: def.isUndead,
-      isSpellcaster: def.isCaster
+      isSpellcaster: def.isCaster,
+      icon: def.icon || '👾',
+      color: def.color || '#ca8a04',
+      spells: Array.isArray(def.spells) ? [...def.spells] : []
     };
     state.quest.monsters.push(newMon);
     state.selectedEntity = { type: 'monster', index: state.quest.monsters.length - 1, data: newMon };
@@ -4764,15 +4998,16 @@ function switchSidebarTab(tabId) {
 }
 
 function syncQuestMetaInputs() {
-  dom.inputQuestTitle.value = state.quest.title;
-  dom.inputQuestSlug.value = state.quest.slug;
-  dom.selectWanderingMonster.value = state.quest.wanderingMonster;
-  dom.inputGoldBounty.value = state.quest.goldBounty;
-  dom.textareaQuestBriefing.value = state.quest.briefing;
-  dom.infoQuestTitle.textContent = state.quest.title;
+  if (dom.inputQuestTitle) dom.inputQuestTitle.value = state.quest.title;
+  if (dom.inputQuestSlug) dom.inputQuestSlug.value = state.quest.slug;
+  if (dom.selectWanderingMonster) dom.selectWanderingMonster.value = state.quest.wanderingMonster;
+  if (dom.inputGoldBounty) dom.inputGoldBounty.value = state.quest.goldBounty;
+  if (dom.textareaQuestBriefing) dom.textareaQuestBriefing.value = state.quest.briefing;
+  if (dom.infoQuestTitle) dom.infoQuestTitle.textContent = state.quest.title;
 }
 
 function updateInspectorUI() {
+  if (!dom || !dom.inspectorEmpty || !dom.inspectorForm) return;
   if (!state.selectedEntity) {
     dom.inspectorEmpty.style.display = 'block';
     dom.inspectorForm.style.display = 'none';
@@ -4789,10 +5024,10 @@ function updateInspectorUI() {
     dom.inspectGroupFurniture,
     dom.inspectGroupTrap,
     dom.inspectGroupNote
-  ].forEach(el => { el.style.display = 'none'; });
+  ].forEach(el => { if (el && el.style) el.style.display = 'none'; });
 
   const { type, index } = state.selectedEntity;
-  dom.inspectTypeBadge.textContent = type.toUpperCase();
+  if (dom.inspectTypeBadge) dom.inspectTypeBadge.textContent = type.toUpperCase();
 
   let currentTargetEntity = null;
   if (type === 'monster') currentTargetEntity = state.quest.monsters[index];
@@ -4809,17 +5044,21 @@ function updateInspectorUI() {
   if (type === 'monster') {
     const m = state.quest.monsters[index];
     if (!m) return;
-    dom.inspectPosText.textContent = `[${m.pos[0]}, ${m.pos[1]}]`;
-    dom.inspectName.value = m.name;
-    dom.inspectMonsterBp.value = m.bp;
-    dom.inspectMonsterMp.value = m.mp;
-    dom.inspectMonsterAtk.value = m.atk;
-    dom.inspectMonsterDef.value = m.def;
-    dom.inspectMonsterMove.value = m.move;
-    dom.inspectMonsterIsBoss.checked = m.isBoss;
-    dom.inspectMonsterIsUndead.checked = m.isUndead;
-    dom.inspectMonsterIsCaster.checked = m.isSpellcaster;
-    dom.inspectGroupMonster.style.display = 'block';
+    if (dom.inspectPosText) dom.inspectPosText.textContent = `[${m.pos[0]}, ${m.pos[1]}]`;
+    if (dom.inspectName) dom.inspectName.value = m.name;
+    if (dom.inspectMonsterType) {
+      const mType = m.type || 'goblin';
+      dom.inspectMonsterType.value = mType;
+    }
+    if (dom.inspectMonsterBp) dom.inspectMonsterBp.value = m.bp;
+    if (dom.inspectMonsterMp) dom.inspectMonsterMp.value = m.mp;
+    if (dom.inspectMonsterAtk) dom.inspectMonsterAtk.value = m.atk;
+    if (dom.inspectMonsterDef) dom.inspectMonsterDef.value = m.def;
+    if (dom.inspectMonsterMove) dom.inspectMonsterMove.value = m.move;
+    if (dom.inspectMonsterIsBoss) dom.inspectMonsterIsBoss.checked = m.isBoss;
+    if (dom.inspectMonsterIsUndead) dom.inspectMonsterIsUndead.checked = m.isUndead;
+    if (dom.inspectMonsterIsCaster) dom.inspectMonsterIsCaster.checked = m.isSpellcaster;
+    if (dom.inspectGroupMonster && dom.inspectGroupMonster.style) dom.inspectGroupMonster.style.display = 'block';
   } else if (type === 'door') {
     const d = state.quest.doors[index];
     if (!d) return;
@@ -4920,6 +5159,7 @@ function updateInspectorUI() {
 }
 
 function updateEntitySummaryList() {
+  if (!dom || !dom.entitySummaryList || typeof document === 'undefined') return;
   const list = dom.entitySummaryList;
   list.innerHTML = '';
 
@@ -4990,13 +5230,15 @@ function updateEntitySummaryList() {
   // Monsters
   state.quest.monsters.forEach((m, idx) => {
     totalCount++;
+    const mDef = MONSTER_DEFS[m.type] || {};
+    const mIcon = m.icon || mDef.icon || '👾';
     const item = document.createElement('div');
     item.className = 'entity-summary-item';
     item.innerHTML = `
       <div class="entity-item-main">
-        <span class="entity-item-icon">👾</span>
+        <span class="entity-item-icon">${mIcon}</span>
         <div>
-          <div class="entity-item-name">${m.name}</div>
+          <div class="entity-item-name">${escapeHtml(m.name)}</div>
           <div class="entity-item-pos">[${m.pos[0]}, ${m.pos[1]}] ${m.isBoss ? '• Boss' : ''}</div>
         </div>
       </div>
@@ -6735,14 +6977,38 @@ function interpretVoiceQuestCommands(spokenText, blockmap, quest, currentContext
   };
 
   const MONSTERS = [
+    // Election 2026 / Midterms 2026 Enemies
+    { type: 'inflation-spawn', keys: ['inflation spawns', 'inflation spawn'] },
+    { type: 'illegal-alien', keys: ['illegal aliens', 'illegal alien'] },
+    { type: 'k-street-swamp-fimir', keys: ['k-street swamp fimirs', 'k-street swamp fimir', 'k street swamp fimir', 'swamp fimirs', 'swamp fimir'] },
+    { type: 'gerrymandered-skeleton', keys: ['gerrymandered skeletons', 'gerrymandered skeleton'] },
+    { type: 'teleprompter-zombie', keys: ['teleprompter zombies', 'teleprompter zombie'] },
+    { type: 'octogenarian-incumbent-mummy', keys: ['octogenarian incumbent mummies', 'octogenarian incumbent mummy', 'incumbent mummies', 'incumbent mummy'] },
+    { type: 'happily-married-gay-man', keys: ['happily married gay men', 'happily married gay man'] },
+    { type: 'filibuster-gargoyle', keys: ['filibuster gargoyles', 'filibuster gargoyle'] },
+    { type: 'spin-doctor-shaman', keys: ['spin doctor shamans', 'spin doctor shaman', 'spin doctors', 'spin doctor'] },
+    { type: 'super-pac-warlord', keys: ['super-pac warlords', 'super-pac warlord', 'super pac warlords', 'super pac warlord'] },
+    { type: 'algorithm-outrage-sorcerer', keys: ['algorithm outrage sorcerers', 'algorithm outrage sorcerer', 'outrage sorcerers', 'outrage sorcerer'] },
+    { type: 'deep-state-witch-lord', keys: ['deep state witch lords', 'deep state witch lord', 'deep state lord'] },
+    { type: 'trumpbiden-dragon', keys: ['trumpbiden dragons', 'trumpbiden dragon', 'trump biden dragon'] },
+    { type: 'irs-audit-doomguard', keys: ['irs audit doomguards', 'irs audit doomguard', 'audit doomguard'] },
+    { type: 'hoa-censor-witch-hand', keys: ['hoa censor witch hands', 'hoa censor witch hand', 'hoa censor'] },
+    // Base Game Enemies
+    { type: 'chaos_sorcerer', keys: ['chaos sorcerers', 'chaos sorcerer', 'dread sorcerers', 'dread sorcerer'] },
+    { type: 'orc_shaman', keys: ['orc shamans', 'orc shaman'] },
+    { type: 'orc_warlord', keys: ['orc warlords', 'orc warlord'] },
+    { type: 'witch_lord', keys: ['witch lords', 'witch lord'] },
     { type: 'skeleton', keys: ['skeletons', 'skeleton', 'skellies', 'skelly'] },
     { type: 'orc', keys: ['orcs', 'orc'] },
     { type: 'goblin', keys: ['goblins', 'goblin'] },
     { type: 'zombie', keys: ['zombies', 'zombie', 'zombys', 'zomby'] },
     { type: 'mummy', keys: ['mummies', 'mummy'] },
-    { type: 'chaos_warrior', keys: ['chaos warriors', 'chaos warrior', 'chaos'] },
+    { type: 'chaos_warrior', keys: ['chaos warriors', 'chaos warrior', 'chaos', 'dread warriors', 'dread warrior'] },
     { type: 'fimir', keys: ['fimirs', 'fimir', 'abominations', 'abomination'] },
     { type: 'gargoyle', keys: ['gargoyles', 'gargoyle'] },
+    { type: 'dragon', keys: ['dragons', 'dragon', 'fire dragons', 'fire dragon'] },
+    { type: 'doomguard', keys: ['doomguards', 'doomguard'] },
+    { type: 'witch_hand', keys: ['witch hands', 'witch hand'] },
     { type: 'boss', keys: ['bosses', 'boss', 'dungeon boss', 'warlord'] }
   ];
 
@@ -6945,6 +7211,10 @@ function executeVoiceMapCommands(spokenText, guidancePrompt, targetQuest = null,
           id: `mon-${cmd.type}-${(currentQuest.monsters || []).length + 1}`,
           name: def.name,
           type: cmd.type,
+          category: def.category || 'Base Game',
+          archetype: def.archetype || cmd.type,
+          icon: def.icon || '',
+          color: def.color || '#ef4444',
           bp: def.bp,
           mp: def.mp,
           atk: def.atk,
@@ -6956,7 +7226,8 @@ function executeVoiceMapCommands(spokenText, guidancePrompt, targetQuest = null,
           roomId: targetRoom.id,
           isBoss: def.isBoss,
           isUndead: def.isUndead,
-          isSpellcaster: def.isCaster
+          isSpellcaster: def.isCaster,
+          spells: Array.isArray(def.spells) ? [...def.spells] : []
         };
         if (!currentQuest.monsters) currentQuest.monsters = [];
         currentQuest.monsters.push(newMon);
@@ -6964,7 +7235,7 @@ function executeVoiceMapCommands(spokenText, guidancePrompt, targetQuest = null,
         placedCount++;
       }
       if (placedCount > 0) {
-        placedSummary.push(`${placedCount} ${cmd.type}${placedCount > 1 ? 's' : ''} in ${roomName}`);
+        placedSummary.push(`${placedCount} ${def.name}${placedCount > 1 ? 's' : ''} in ${roomName}`);
       }
     } else if (cmd.category === 'furniture') {
       const def = FURNITURE_DEFS[cmd.type] || { w: 1, h: 1, name: 'Furniture' };
@@ -7338,8 +7609,16 @@ function setupEventListeners() {
     });
   });
 
+  if (dom.selectMonsterCategory) {
+    dom.selectMonsterCategory.addEventListener('change', () => {
+      populateMonsterSelects(dom.selectMonsterCategory.value);
+      render();
+    });
+  }
+
   dom.selectMonsterType.addEventListener('change', () => {
     state.subtool.monsterType = dom.selectMonsterType.value;
+    updateMonsterSuboptPreview();
     render();
   });
 
@@ -7437,6 +7716,37 @@ function setupEventListeners() {
       else if (type === 'wall-block' && state.quest.wallBlocks[index]) state.quest.wallBlocks[index].hidden = isHidden;
       render();
       updateEntitySummaryList();
+    });
+  }
+
+  if (dom.inspectMonsterType) {
+    dom.inspectMonsterType.addEventListener('change', () => {
+      if (state.selectedEntity?.type === 'monster') {
+        const mon = state.quest.monsters[state.selectedEntity.index];
+        if (!mon) return;
+        recordHistory();
+        const newType = dom.inspectMonsterType.value;
+        const def = MONSTER_DEFS[newType] || MONSTER_DEFS.goblin;
+        mon.type = newType;
+        mon.name = def.name;
+        mon.category = def.category || 'Base Game';
+        mon.archetype = def.archetype || newType;
+        mon.icon = def.icon || '';
+        mon.color = def.color || '#ef4444';
+        mon.bp = def.bp;
+        mon.mp = def.mp;
+        mon.atk = def.atk;
+        mon.def = def.def;
+        mon.move = def.move;
+        mon.isBoss = Boolean(def.isBoss);
+        mon.isUndead = Boolean(def.isUndead);
+        mon.isSpellcaster = Boolean(def.isCaster);
+        mon.spells = Array.isArray(def.spells) ? [...def.spells] : [];
+        if (state.selectedEntity.data) state.selectedEntity.data = mon;
+        updateInspectorUI();
+        updateEntitySummaryList();
+        render();
+      }
     });
   }
 
@@ -8315,7 +8625,12 @@ if (typeof window !== 'undefined') {
     resolveTriggerIndicators,
     drawExportTriggerIndicator,
     formatTriggerEventName,
-    renderActionPipelineRecursiveHtml
+    renderActionPipelineRecursiveHtml,
+    populateMonsterSelects,
+    updateMonsterSuboptPreview,
+    syncMonstersFromKGraph,
+    formatMonsterOptionLabel,
+    MONSTER_DEFS
   };
 
   // Bootstrap application on window load
@@ -8362,6 +8677,10 @@ if (typeof module !== 'undefined' && module.exports) {
     findEntityAt,
     detectDoorEdge,
     handleCanvasClick,
+    populateMonsterSelects,
+    updateMonsterSuboptPreview,
+    syncMonstersFromKGraph,
+    formatMonsterOptionLabel,
     state,
     dom,
     MONSTER_DEFS,
