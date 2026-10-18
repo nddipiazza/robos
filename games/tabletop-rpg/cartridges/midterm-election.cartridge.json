@@ -8,9 +8,9 @@
     "gameType": "tabletop",
     "genre": "Tabletop Dungeon Crawler",
     "ruleset": "heroquest",
-    "description": "Mentor speaks: \"The Emperor calls upon the kingdom's greatest champions...\"",
+    "description": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office\u2014defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
     "coverColor": "#0a0e17",
-    "icon": "🛡️",
+    "icon": "\ud83d\udee1\ufe0f",
     "mapCount": 1,
     "heroCount": 4,
     "monsterCount": 0,
@@ -1713,5 +1713,31 @@
       "triggers": [],
       "storyTriggers": []
     }
-  }
+  },
+  "quests": [
+    {
+      "id": "midterm-election",
+      "slug": "midterm-election",
+      "campaign": "Election 2026: Battle for the Hill",
+      "title": "Quest 1: Battle for the Hill",
+      "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office\u2014defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
+      "goldReward": 150,
+      "completed": false,
+      "mapConfigId": "midterm-election-capitol",
+      "startingPosition": [
+        0,
+        13
+      ],
+      "exitTile": [
+        14,
+        2
+      ],
+      "bossTarget": "talarixon",
+      "primaryGoals": [
+        "Defeat the Capitol Bosses & Hydra Bosses (Talarixon, El-Rogers, Brownsted, Katie Zacharia, Mitch McConnell, and Drunk JD Vance & Kamala Harris).",
+        "Storm the Capitol chambers (Briefing Room, Committee Chamber, War Room & Oval Office) and expose the bipartisan slush fund.",
+        "Lead all surviving heroes safely to the Capitol Exit Stairs at [14, 2]."
+      ]
+    }
+  ]
 }

@@ -458,6 +458,20 @@ ipcMain.handle("tabletop:bundle-cartridge", async (_event, payload) => {
       if (payload?.spellAllocation) {
         existing.spellAllocation = payload.spellAllocation;
       }
+      if (Array.isArray(payload?.quests) && payload.quests.length > 0 && (!Array.isArray(existing.quests) || existing.quests.length === 0)) {
+        existing.quests = payload.quests;
+      } else if (Array.isArray(payload?.quests) && payload.quests.length > 0 && Array.isArray(existing.quests)) {
+        existing.quests = existing.quests.map(eq => {
+          const match = payload.quests.find(pq => pq.slug === eq.slug || pq.id === eq.id) || payload.quests[0];
+          return {
+            ...eq,
+            ...(match || {}),
+            primaryGoals: (Array.isArray(eq.primaryGoals) && eq.primaryGoals.length > 0)
+              ? eq.primaryGoals
+              : (match?.primaryGoals || [])
+          };
+        });
+      }
       const incomingMap = payload?.maps?.[cartSlug] || (payload?.maps ? Object.values(payload.maps)[0] : null);
       const selectedMapConfigId = payload?.mapConfigId || incomingMap?.mapConfigurationId;
       if (selectedMapConfigId && existing.maps) {

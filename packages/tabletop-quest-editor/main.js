@@ -577,8 +577,8 @@ ipcMain.handle('quest:launch-game', async (_event, slug) => {
     if (!fs.existsSync(runScript)) {
       return { success: false, error: `Run script not found: ${runScript}` };
     }
-    const env = { ...process.env, TABLETOP_CARTRIDGE: slug, DISPLAY: process.env.DISPLAY || ':0' };
-    const child = spawn(runScript, ['--cartridge=' + slug], {
+    const env = { ...process.env, TABLETOP_CARTRIDGE: slug, TABLETOP_RESET: '1', DISPLAY: process.env.DISPLAY || ':0' };
+    const child = spawn(runScript, ['--reset', '--cartridge=' + slug], {
       cwd: TABLETOP_DIR,
       env,
       detached: true,
