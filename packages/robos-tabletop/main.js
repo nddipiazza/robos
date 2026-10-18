@@ -90,6 +90,17 @@ ipcMain.handle("tabletop:save-kgraph-entity", async (_event, payload) => {
     const pkg = JSON.parse(fs.readFileSync(targetFile, "utf8"));
     const nodes = pkg["robos:nodes"] || [];
     const entityId = payload.entity["@id"];
+    const entityTypes = Array.isArray(payload.entity["@type"])
+      ? payload.entity["@type"]
+      : [payload.entity["@type"]];
+    if (entityTypes.includes("robos:TabletopCampaign") && payload.entity["robos:isActiveCampaign"]) {
+      nodes.forEach(n => {
+        const nt = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+        if (nt.includes("robos:TabletopCampaign") && n["@id"] !== entityId && n["robos:isActiveCampaign"]) {
+          n["robos:isActiveCampaign"] = false;
+        }
+      });
+    }
 
     const idx = nodes.findIndex(n => n["@id"] === entityId);
     if (idx >= 0) {
@@ -293,15 +304,57 @@ ipcMain.handle("tabletop:load-cartridge", async (_event, slug = "custom-quest") 
   }
 });
 
-// IPC: Non-destructively sync campaign heroes & metadata into existing cartridge file
+// IPC: Non-destructively sync campaign heroes & metadata into existing cartridge file (or initialize starter cartridge for new quests)
 ipcMain.handle("tabletop:sync-cartridge-heroes", async (_event, payload) => {
   try {
-    const cleanSlug = (payload?.cartridgeSlug || payload?.cartridgeId || "custom-quest").replace(/\.cartridge\.json$/, "");
+    const cleanSlug = (payload?.cartridgeSlug || payload?.slug || payload?.cartridgeId || "custom-quest").replace(/\.cartridge(\.json)?$/, "");
     const cartPath = path.join(TABLETOP_GAME_DIR, "cartridges", `${cleanSlug}.cartridge.json`);
-    if (!fs.existsSync(cartPath)) {
-      return { success: false, error: `Cartridge not found: ${cartPath}` };
+    let cartridge;
+    if (fs.existsSync(cartPath)) {
+      cartridge = JSON.parse(fs.readFileSync(cartPath, "utf8"));
+    } else {
+      const initMapConfigId = payload?.mapConfigId || "heroquest-classic";
+      let initMapCfg = null;
+      try {
+        const { getMapConfiguration } = require(path.join(REPO_ROOT, "packages/robos-gaming"));
+        initMapCfg = getMapConfiguration(initMapConfigId);
+      } catch {}
+      const width = initMapCfg?.gridDimensions?.[0] || 26;
+      const height = initMapCfg?.gridDimensions?.[1] || 19;
+      const bgImg = initMapCfg?.backgroundImage || "res://assets/boards/first_light_board.png";
+      cartridge = {
+        cartridgeId: cleanSlug,
+        header: {
+          id: cleanSlug,
+          slug: cleanSlug,
+          title: payload?.questTitle || cleanSlug,
+          description: payload?.questBriefing || "",
+          ruleset: "heroquest",
+          startingPosition: [7, 14],
+          startingMap: cleanSlug,
+          heroCount: 4
+        },
+        startingMap: cleanSlug,
+        heroes: {},
+        maps: {
+          [cleanSlug]: {
+            id: cleanSlug,
+            title: payload?.questTitle || cleanSlug,
+            mapConfigurationId: initMapCfg?.id || initMapConfigId,
+            backgroundImage: bgImg,
+            width,
+            height,
+            startingStair: [7, 14],
+            rooms: [],
+            doors: [],
+            furniture: [],
+            monsters: [],
+            traps: [],
+            storyTriggers: []
+          }
+        }
+      };
     }
-    const cartridge = JSON.parse(fs.readFileSync(cartPath, "utf8"));
     if (Array.isArray(payload?.heroes) && payload.heroes.length > 0) {
       const heroesObj = {};
       const startPos = cartridge.header?.startingPosition || [7, 14];

@@ -1,0 +1,39 @@
+{
+  "cartridgeId": "election-2026-quest-1",
+  "header": {
+    "id": "election-2026-quest-1",
+    "slug": "election-2026-quest-1",
+    "title": "Quest 1: Battle for the Hill",
+    "description": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Navigate the chambers, overcome partisan perils, and claim victory!",
+    "ruleset": "heroquest",
+    "startingPosition": [
+      7,
+      14
+    ],
+    "startingMap": "election-2026-quest-1",
+    "heroCount": 4
+  },
+  "startingMap": "election-2026-quest-1",
+  "heroes": {},
+  "maps": {
+    "election-2026-quest-1": {
+      "id": "election-2026-quest-1",
+      "title": "Quest 1: Battle for the Hill",
+      "mapConfigurationId": "midterm-election-capitol",
+      "backgroundImage": "res://assets/boards/midterm_election_capitol.png",
+      "width": 26,
+      "height": 19,
+      "startingStair": [
+        7,
+        14
+      ],
+      "rooms": [],
+      "doors": [],
+      "furniture": [],
+      "monsters": [],
+      "traps": [],
+      "storyTriggers": [],
+      "additionalBorderTile": true
+    }
+  }
+}
