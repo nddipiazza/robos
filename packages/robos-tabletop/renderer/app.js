@@ -150,9 +150,27 @@ function resolveHeroAssetKey(heroOrClass) {
   if (typeof heroOrClass === "string") {
     raw = heroOrClass;
   } else if (heroOrClass && typeof heroOrClass === "object") {
-    raw = [heroOrClass["robos:heroClass"], heroOrClass.heroClass, heroOrClass["@id"], heroOrClass.id, heroOrClass.name, heroOrClass["dcterms:title"]].filter(Boolean).join(" ");
+    raw = [
+      heroOrClass["@id"],
+      heroOrClass.id,
+      heroOrClass.slug,
+      heroOrClass["dcterms:title"],
+      heroOrClass.name,
+      heroOrClass["robos:characterName"],
+      heroOrClass.characterName,
+      heroOrClass["robos:tokenAsset"],
+      heroOrClass.tokenAsset,
+      heroOrClass["robos:portraitAsset"],
+      heroOrClass.portraitAsset,
+      heroOrClass["robos:heroClass"],
+      heroOrClass.heroClass
+    ].filter(Boolean).join(" ");
   }
   const s = String(raw || "").toLowerCase();
+  if (s.includes("obama")) return "obama";
+  if (s.includes("trump")) return "trump";
+  if (s.includes("hillary") || s.includes("clinton")) return "hillary_clinton";
+  if (s.includes("bernie") || s.includes("sanders")) return "bernie_sanders";
   if (s.includes("dwarf") || s.includes("dorgan")) return "dwarf";
   if (s.includes("elf") || s.includes("ladril")) return "elf";
   if (s.includes("wizard") || s.includes("telor") || s.includes("mage")) return "wizard";
@@ -253,10 +271,159 @@ function getTileImage(type) {
 }
 
 
+const MIDTERMS_2026_HEROES = [
+  {
+    "@id": "urn:robos:tabletop:hero:obama",
+    "@type": ["oslc_am:Resource", "robos:TabletopHero", "robos:GameCharacter", "schema:Person"],
+    "dcterms:title": "Barack Obama",
+    "robos:characterName": "Barack Obama",
+    "robos:heroClass": "Barbarian",
+    "robos:category": "Midterms 2026",
+    "robos:bodyPoints": 8,
+    "robos:mindPoints": 2,
+    "robos:attackDice": 3,
+    "robos:defendDice": 2,
+    "robos:gold": 120,
+    "robos:startingWeapon": "Broadsword of Hope & Change (3 Combat Dice)",
+    "robos:equippedWeapon": "Broadsword of Hope & Change (3 Combat Dice)",
+    "robos:equippedArmor": "Chiseled Commander Toughness (2 Defend Dice)",
+    "robos:specialAbility": "Bipartisan Cleave (Melee Specialist — Buff Silver-Haired Barbarian)",
+    "robos:tokenColor": "#b91c1c",
+    "robos:tokenAsset": "assets/tokens/token_obama.png",
+    "robos:portraitAsset": "assets/portraits/card_bg_obama.png",
+    "robos:icon": "⚔️",
+    "robos:startingPosition": [0, 12],
+    "robos:inventory": [
+      { id: "item-pot-heal-obama", name: "Potion of Executive Vigor", type: "potion", effect: "Restores up to 4 BP", value: 100 },
+      { id: "item-mic-drop-1", name: "Runic Teleprompter Shard", type: "relic", effect: "+1 Mind resistance vs Spin Doctors", value: 50 }
+    ]
+  },
+  {
+    "@id": "urn:robos:tabletop:hero:trump",
+    "@type": ["oslc_am:Resource", "robos:TabletopHero", "robos:GameCharacter", "schema:Person"],
+    "dcterms:title": "Donald Trump",
+    "robos:characterName": "Donald Trump",
+    "robos:heroClass": "Dwarf",
+    "robos:category": "Midterms 2026",
+    "robos:bodyPoints": 7,
+    "robos:mindPoints": 3,
+    "robos:attackDice": 2,
+    "robos:defendDice": 2,
+    "robos:gold": 250,
+    "robos:startingWeapon": "Gilded Dwarven Battle-Axe (2 Combat Dice)",
+    "robos:equippedWeapon": "Gilded Dwarven Battle-Axe (2 Combat Dice)",
+    "robos:equippedArmor": "Gold-Plated Rune Mail (2 Defend Dice)",
+    "robos:specialAbility": "Disarms traps & red-tape vaults without a toolkit",
+    "robos:tokenColor": "#d97706",
+    "robos:tokenAsset": "assets/tokens/token_trump.png",
+    "robos:portraitAsset": "assets/portraits/card_bg_trump.png",
+    "robos:icon": "🪓",
+    "robos:startingPosition": [1, 12],
+    "robos:inventory": [
+      { id: "item-toolkit-trump", name: "Golden Dwarven Trap Toolkit", type: "tool", effect: "Disarms any pit, boulder, or bureaucratic trap", value: 150 },
+      { id: "item-pot-heal-trump", name: "Elixir of Tremendous Stamina", type: "potion", effect: "Restores up to 4 BP", value: 100 }
+    ]
+  },
+  {
+    "@id": "urn:robos:tabletop:hero:hillary-clinton",
+    "@type": ["oslc_am:Resource", "robos:TabletopHero", "robos:GameCharacter", "schema:Person"],
+    "dcterms:title": "Hillary Clinton",
+    "robos:characterName": "Hillary Clinton",
+    "robos:heroClass": "Elf",
+    "robos:category": "Midterms 2026",
+    "robos:bodyPoints": 6,
+    "robos:mindPoints": 4,
+    "robos:attackDice": 2,
+    "robos:defendDice": 2,
+    "robos:gold": 150,
+    "robos:startingWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
+    "robos:equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
+    "robos:equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
+    "robos:specialAbility": "Sly Woodland Elf Noble — Master of blade & 1 Spell College (3 spells)",
+    "robos:tokenColor": "#059669",
+    "robos:tokenAsset": "assets/tokens/token_hillary_clinton.png",
+    "robos:portraitAsset": "assets/portraits/card_bg_hillary_clinton.png",
+    "robos:icon": "🏹",
+    "robos:startingPosition": [0, 13],
+    "robos:inventory": [
+      { id: "item-scroll-hillary", name: "Classified Elven Parchment", type: "relic", effect: "Reveals hidden doors in current corridor", value: 120 },
+      { id: "item-pot-heal-hillary", name: "Draught of Miruvor", type: "potion", effect: "Restores up to 4 BP", value: 100 }
+    ]
+  },
+  {
+    "@id": "urn:robos:tabletop:hero:bernie-sanders",
+    "@type": ["oslc_am:Resource", "robos:TabletopHero", "robos:GameCharacter", "schema:Person"],
+    "dcterms:title": "Bernie Sanders",
+    "robos:characterName": "Bernie Sanders",
+    "robos:heroClass": "Wizard",
+    "robos:category": "Midterms 2026",
+    "robos:bodyPoints": 4,
+    "robos:mindPoints": 6,
+    "robos:attackDice": 1,
+    "robos:defendDice": 2,
+    "robos:gold": 99,
+    "robos:startingWeapon": "Gnarled Oak Staff of the 99% (1 Combat Die)",
+    "robos:equippedWeapon": "Gnarled Oak Staff of the 99% (1 Combat Die)",
+    "robos:equippedArmor": "Starry Wizard Hat & Vermont Wool Mittens (2 Defend Dice)",
+    "robos:specialAbility": "Master Spellcaster — Wields 3 Elemental Spell decks (9 spells total)",
+    "robos:tokenColor": "#2563eb",
+    "robos:tokenAsset": "assets/tokens/token_bernie_sanders.png",
+    "robos:portraitAsset": "assets/portraits/card_bg_bernie_sanders.png",
+    "robos:icon": "🪄",
+    "robos:startingPosition": [1, 13],
+    "robos:inventory": [
+      { id: "item-mittens-bernie", name: "Enchanted Vermont Mittens", type: "relic", effect: "Channels crackling elemental lightning & warmth", value: 200 },
+      { id: "item-pot-heal-bernie", name: "Universal Healthcare Potion", type: "potion", effect: "Restores up to 4 BP", value: 100 }
+    ]
+  }
+];
+
+function normalizeHeroEntity(rawHero) {
+  if (!rawHero || typeof rawHero !== "object") return rawHero;
+  const copy = JSON.parse(JSON.stringify(rawHero));
+  if (!copy["@id"]) {
+    const rawId = copy.id || copy.slug || "barbarian";
+    copy["@id"] = String(rawId).startsWith("urn:robos:") ? rawId : `urn:robos:tabletop:hero:${rawId}`;
+  }
+  if (!copy["@type"]) {
+    copy["@type"] = ["oslc_am:Resource", "robos:TabletopHero", "robos:GameCharacter", "schema:Person"];
+  }
+  if (!copy["dcterms:title"] && (copy.name || copy.characterName)) {
+    copy["dcterms:title"] = copy.name || copy.characterName;
+  }
+  if (!copy["robos:characterName"] && (copy.characterName || copy["dcterms:title"])) {
+    copy["robos:characterName"] = copy.characterName || copy["dcterms:title"];
+  }
+  if (!copy["robos:heroClass"] && copy.heroClass) {
+    copy["robos:heroClass"] = copy.heroClass;
+  }
+  if (!copy["robos:category"]) {
+    const key = resolveHeroAssetKey(copy);
+    const isMidterms = ["obama", "trump", "hillary_clinton", "bernie_sanders"].includes(key);
+    copy["robos:category"] = copy.category || (isMidterms ? "Midterms 2026" : "Base Game");
+  }
+  if (copy["robos:bodyPoints"] === undefined && copy.bodyPoints !== undefined) copy["robos:bodyPoints"] = copy.bodyPoints;
+  if (copy["robos:mindPoints"] === undefined && copy.mindPoints !== undefined) copy["robos:mindPoints"] = copy.mindPoints;
+  if (copy["robos:attackDice"] === undefined && copy.attackDice !== undefined) copy["robos:attackDice"] = copy.attackDice;
+  if (copy["robos:defendDice"] === undefined && copy.defendDice !== undefined) copy["robos:defendDice"] = copy.defendDice;
+  if (copy["robos:gold"] === undefined && copy.gold !== undefined) copy["robos:gold"] = copy.gold;
+  if (!copy["robos:equippedWeapon"] && copy.equippedWeapon) copy["robos:equippedWeapon"] = copy.equippedWeapon;
+  if (!copy["robos:equippedArmor"] && copy.equippedArmor) copy["robos:equippedArmor"] = copy.equippedArmor;
+  if (!copy["robos:specialAbility"] && copy.specialAbility) copy["robos:specialAbility"] = copy.specialAbility;
+  if (!copy["robos:tokenColor"] && copy.tokenColor) copy["robos:tokenColor"] = copy.tokenColor;
+  if (!copy["robos:icon"] && copy.icon) copy["robos:icon"] = copy.icon;
+  if (!copy["robos:startingPosition"] && copy.startingPosition) copy["robos:startingPosition"] = copy.startingPosition;
+  if (!copy["robos:inventory"] && Array.isArray(copy.inventory)) copy["robos:inventory"] = copy.inventory;
+  const assetKey = resolveHeroAssetKey(copy);
+  if (!copy["robos:tokenAsset"]) copy["robos:tokenAsset"] = copy.tokenAsset || `assets/tokens/token_${assetKey}.png`;
+  if (!copy["robos:portraitAsset"]) copy["robos:portraitAsset"] = copy.portraitAsset || `assets/portraits/card_bg_${assetKey}.png`;
+  return copy;
+}
+
 // Default 4 HeroQuest Champions for initializing a Campaign's Hero Party
 function createDefaultCampaignHeroes(seedHeroes = null) {
   if (Array.isArray(seedHeroes) && seedHeroes.length > 0) {
-    return JSON.parse(JSON.stringify(seedHeroes));
+    return seedHeroes.map(h => normalizeHeroEntity(h));
   }
   return [
     {
@@ -265,6 +432,7 @@ function createDefaultCampaignHeroes(seedHeroes = null) {
       "dcterms:title": "Rogar",
       "robos:characterName": "Rogar",
       "robos:heroClass": "Barbarian",
+      "robos:category": "Base Game",
       "robos:bodyPoints": 8,
       "robos:mindPoints": 2,
       "robos:attackDice": 3,
@@ -275,6 +443,8 @@ function createDefaultCampaignHeroes(seedHeroes = null) {
       "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
       "robos:specialAbility": "Greatest strength and vitality in melee combat",
       "robos:tokenColor": "#b91c1c",
+      "robos:tokenAsset": "assets/tokens/token_barbarian.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_barbarian.png",
       "robos:icon": "⚔️",
       "robos:startingPosition": [0, 1],
       "robos:inventory": [
@@ -288,6 +458,7 @@ function createDefaultCampaignHeroes(seedHeroes = null) {
       "dcterms:title": "Dorgan",
       "robos:characterName": "Dorgan",
       "robos:heroClass": "Dwarf",
+      "robos:category": "Base Game",
       "robos:bodyPoints": 7,
       "robos:mindPoints": 3,
       "robos:attackDice": 2,
@@ -298,6 +469,8 @@ function createDefaultCampaignHeroes(seedHeroes = null) {
       "robos:equippedArmor": "Shield & Chainmail (+2 Defend Dice)",
       "robos:specialAbility": "Disarms traps without needing a toolkit",
       "robos:tokenColor": "#d97706",
+      "robos:tokenAsset": "assets/tokens/token_dwarf.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_dwarf.png",
       "robos:icon": "🪓",
       "robos:startingPosition": [1, 0],
       "robos:inventory": [
@@ -311,6 +484,7 @@ function createDefaultCampaignHeroes(seedHeroes = null) {
       "dcterms:title": "Ladril",
       "robos:characterName": "Ladril",
       "robos:heroClass": "Elf",
+      "robos:category": "Base Game",
       "robos:bodyPoints": 6,
       "robos:mindPoints": 4,
       "robos:attackDice": 2,
@@ -321,6 +495,8 @@ function createDefaultCampaignHeroes(seedHeroes = null) {
       "robos:equippedArmor": "Elven Leather & Cloak (+2 Defend Dice)",
       "robos:specialAbility": "Master of blade and 1 Elemental Spell deck (3 spells)",
       "robos:tokenColor": "#15803d",
+      "robos:tokenAsset": "assets/tokens/token_elf.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_elf.png",
       "robos:icon": "🏹",
       "robos:startingPosition": [1, 1],
       "robos:inventory": [
@@ -334,6 +510,7 @@ function createDefaultCampaignHeroes(seedHeroes = null) {
       "dcterms:title": "Telor",
       "robos:characterName": "Telor",
       "robos:heroClass": "Wizard",
+      "robos:category": "Base Game",
       "robos:bodyPoints": 4,
       "robos:mindPoints": 6,
       "robos:attackDice": 1,
@@ -344,6 +521,8 @@ function createDefaultCampaignHeroes(seedHeroes = null) {
       "robos:equippedArmor": "Wizard Cloak (2 Defend Dice)",
       "robos:specialAbility": "Wields 3 Elemental Spell decks (9 spells total)",
       "robos:tokenColor": "#7c3aed",
+      "robos:tokenAsset": "assets/tokens/token_wizard.png",
+      "robos:portraitAsset": "assets/portraits/card_bg_wizard.png",
       "robos:icon": "🔮",
       "robos:startingPosition": [0, 0],
       "robos:inventory": [
@@ -3550,6 +3729,75 @@ function addCategory(categoryName) {
   return { success: true, category: finalName, categories: [...currentData.categories] };
 }
 
+function getAllHeroesCatalog() {
+  const heroMap = new Map();
+  [...createDefaultCampaignHeroes(), ...MIDTERMS_2026_HEROES].forEach(h => {
+    const norm = normalizeHeroEntity(h);
+    if (norm && norm["@id"]) heroMap.set(norm["@id"], norm);
+  });
+  (currentData.tabletopNodes || []).forEach(n => {
+    const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+    if (t.includes("robos:TabletopHero")) {
+      const norm = normalizeHeroEntity(n);
+      if (norm && norm["@id"]) heroMap.set(norm["@id"], norm);
+    }
+  });
+  (currentData.heroes || []).forEach(h => {
+    const norm = normalizeHeroEntity(h);
+    if (norm && norm["@id"]) heroMap.set(norm["@id"], norm);
+  });
+  return Array.from(heroMap.values());
+}
+
+function getHeroesByCategory(category = "All") {
+  const list = getAllHeroesCatalog();
+  if (!category || category === "All") return list;
+  return list.filter(h => (h["robos:category"] || h.category || "Base Game") === category);
+}
+
+function setHeroCategoryFilter(category) {
+  currentData.activeHeroCategoryFilter = category || "All";
+  const filterSelect = document.getElementById("hero-category-filter");
+  if (filterSelect && filterSelect.value !== currentData.activeHeroCategoryFilter) {
+    filterSelect.value = currentData.activeHeroCategoryFilter;
+  }
+  renderHeroesList();
+  const filtered = getHeroesByCategory(currentData.activeHeroCategoryFilter);
+  if (filtered.length > 0) {
+    const stillVisible = filtered.some(h => h["@id"] === currentData.activeHeroId);
+    if (!stillVisible) {
+      selectHero(filtered[0]["@id"]);
+    }
+  }
+  return filtered;
+}
+
+function applyHeroPackToActiveCampaign(category = null) {
+  const targetCat = category || currentData.activeHeroCategoryFilter || "Midterms 2026";
+  const effectiveCat = targetCat === "All" ? "Midterms 2026" : targetCat;
+  const packHeroes = getHeroesByCategory(effectiveCat).map(h => JSON.parse(JSON.stringify(h)));
+  if (packHeroes.length === 0) {
+    setStatus(`No heroes found in pack '${effectiveCat}'.`);
+    return { success: false, category: effectiveCat, heroes: [] };
+  }
+  currentData.heroes = packHeroes;
+  if (currentData.campaign) {
+    currentData.campaign.heroes = packHeroes;
+    currentData.campaign.heroPack = effectiveCat;
+  }
+  currentData.activeHeroCategoryFilter = effectiveCat;
+  const filterSelect = document.getElementById("hero-category-filter");
+  if (filterSelect) filterSelect.value = effectiveCat;
+  currentData.activeHeroId = packHeroes[0]["@id"];
+  renderHeroesList();
+  selectHero(currentData.activeHeroId);
+  if (typeof renderQuestHeroesReviewGrid === "function") renderQuestHeroesReviewGrid();
+  if (typeof renderCampaignSelectorUI === "function") renderCampaignSelectorUI();
+  if (typeof triggerCampaignAutosave === "function") triggerCampaignAutosave();
+  setStatus(`🛡️ Loaded '${effectiveCat}' Hero Pack (${packHeroes.map(h => getHeroName(h)).join(", ")}) into ${currentData.campaign?.title || "Active Campaign"}.`);
+  return { success: true, category: effectiveCat, heroes: packHeroes };
+}
+
 function getMonstersByCategory(category = "All") {
   const list = currentData.monsters || [];
   if (!category || category === "All") return list;
@@ -3613,12 +3861,14 @@ function renderCategoryControlsUI() {
   const cats = getCategories();
 
   // 1. Filter selects (include "All")
-  ["monster-category-filter", "spells-items-category-filter"].forEach(selId => {
+  ["hero-category-filter", "monster-category-filter", "spells-items-category-filter"].forEach(selId => {
     const sel = document.getElementById(selId);
     if (!sel) return;
-    const prevVal = selId === "monster-category-filter"
-      ? (currentData.activeMonsterCategoryFilter || "All")
-      : (currentData.activeSpellItemCategoryFilter || "All");
+    const prevVal = selId === "hero-category-filter"
+      ? (currentData.activeHeroCategoryFilter || "All")
+      : (selId === "monster-category-filter"
+        ? (currentData.activeMonsterCategoryFilter || "All")
+        : (currentData.activeSpellItemCategoryFilter || "All"));
     sel.innerHTML = "";
     const allOpt = document.createElement("option");
     allOpt.value = "All";
@@ -3634,7 +3884,7 @@ function renderCategoryControlsUI() {
   });
 
   // 2. Entity assignment selects (no "All")
-  ["monster-category", "new-spell-category", "new-weapon-category", "new-item-category"].forEach(selId => {
+  ["hero-category", "monster-category", "new-spell-category", "new-weapon-category", "new-item-category"].forEach(selId => {
     const sel = document.getElementById(selId);
     if (!sel) return;
     const prevVal = sel.value;
@@ -3888,6 +4138,31 @@ let categoryControlsInitialized = false;
 function setupCategoryControls() {
   if (categoryControlsInitialized) return;
   categoryControlsInitialized = true;
+
+  // Campaign Heroes subtab category / Hero Pack filter
+  document.getElementById("hero-category-filter")?.addEventListener("change", (e) => {
+    setHeroCategoryFilter(e.target.value);
+  });
+
+  // Campaign Heroes subtab add new hero pack button
+  document.getElementById("btn-add-hero-category")?.addEventListener("click", () => {
+    const input = document.getElementById("hero-new-category-input");
+    const val = input?.value?.trim();
+    if (!val) return;
+    const res = addCategory(val);
+    if (res.success) {
+      if (input) input.value = "";
+      setHeroCategoryFilter(res.category);
+      const heroCatSelect = document.getElementById("hero-category");
+      if (heroCatSelect) heroCatSelect.value = res.category;
+    }
+  });
+
+  // Load Hero Pack into Active Campaign button
+  document.getElementById("btn-apply-hero-pack")?.addEventListener("click", () => {
+    const sel = document.getElementById("hero-category-filter");
+    applyHeroPackToActiveCampaign(sel?.value || currentData.activeHeroCategoryFilter || "Midterms 2026");
+  });
 
   // Monster tab category filter
   document.getElementById("monster-category-filter")?.addEventListener("change", (e) => {
@@ -4212,16 +4487,18 @@ function getActiveHero() {
   if (!currentData.activeHeroId && currentData.heroes.length > 0) {
     currentData.activeHeroId = currentData.heroes[0]["@id"];
   }
-  return currentData.heroes.find(h => h["@id"] === currentData.activeHeroId);
+  return currentData.heroes.find(h => h["@id"] === currentData.activeHeroId)
+    || getAllHeroesCatalog().find(h => h["@id"] === currentData.activeHeroId);
 }
 
 function getHeroClass(h) {
   if (h["robos:heroClass"]) return h["robos:heroClass"];
-  const title = (h["dcterms:title"] || "").toLowerCase();
-  if (title.includes("barbarian")) return "Barbarian";
-  if (title.includes("dwarf")) return "Dwarf";
-  if (title.includes("elf")) return "Elf";
-  if (title.includes("wizard")) return "Wizard";
+  if (h.heroClass) return h.heroClass;
+  const title = (h["dcterms:title"] || h.name || "").toLowerCase();
+  if (title.includes("barbarian") || title.includes("obama")) return "Barbarian";
+  if (title.includes("dwarf") || title.includes("trump")) return "Dwarf";
+  if (title.includes("elf") || title.includes("hillary")) return "Elf";
+  if (title.includes("wizard") || title.includes("bernie")) return "Wizard";
   return "Warrior";
 }
 
@@ -4229,10 +4506,14 @@ function getHeroName(h) {
   if (!h) return "Hero";
   if (h["robos:characterName"]) return h["robos:characterName"];
   if (h.characterName) return h.characterName;
-  const title = h["dcterms:title"] || "";
+  const title = h["dcterms:title"] || h.name || "";
   const heroClass = getHeroClass(h);
   if (!title || title.toLowerCase() === heroClass.toLowerCase() || title.toLowerCase() === (h["@id"] || "").toLowerCase()) {
-    const id = (h["@id"] || "").toLowerCase();
+    const id = (h["@id"] || h.id || "").toLowerCase();
+    if (id.includes("obama")) return "Barack Obama";
+    if (id.includes("trump")) return "Donald Trump";
+    if (id.includes("hillary")) return "Hillary Clinton";
+    if (id.includes("bernie")) return "Bernie Sanders";
     if (id.includes("barbarian")) return "Rogar";
     if (id.includes("dwarf")) return "Dorgan";
     if (id.includes("elf")) return "Ladril";
@@ -4294,11 +4575,16 @@ function getHeroInventory(h) {
   return h["robos:inventory"];
 }
 
-// Render Heroes Sidebar List
+// Render Heroes Sidebar List (Supports Hero Packs: Base Game, Midterms 2026, etc.)
 function renderHeroesList() {
   if (currentData.campaign && currentData.campaign.heroes !== currentData.heroes) {
     currentData.campaign.heroes = currentData.heroes;
   }
+  const filterCat = currentData.activeHeroCategoryFilter || "All";
+  const displayedHeroes = filterCat === "All"
+    ? getAllHeroesCatalog()
+    : getHeroesByCategory(filterCat);
+
   const countEl = document.getElementById("campaign-subtab-heroes-count");
   if (countEl) countEl.textContent = String(currentData.heroes.length);
 
@@ -4307,21 +4593,26 @@ function renderHeroesList() {
   container.innerHTML = "";
 
   const fragment = document.createDocumentFragment();
-  currentData.heroes.forEach(h => {
+  displayedHeroes.forEach(h => {
     const div = document.createElement("div");
     div.className = "list-item" + (h["@id"] === currentData.activeHeroId ? " active" : "");
     div.dataset.heroId = h["@id"];
 
     const heroClass = getHeroClass(h);
     const heroName = getHeroName(h);
+    const heroCat = h["robos:category"] || h.category || "Base Game";
+    const catBadge = heroCat === "Midterms 2026" ? "🗳️ Midterms 2026" : (heroCat === "Base Game" ? "🏰 Base Game" : `🏷️ ${heroCat}`);
     const gold = h["robos:gold"] !== undefined ? h["robos:gold"] : 100;
     const tokUrl = getHeroTokenUrl(h);
 
     div.innerHTML = `
-      <img src="${tokUrl}" alt="${escapeHtml(heroName)}" style="width:28px; height:28px; object-fit:contain; flex-shrink:0;">
-      <div class="hero-item-details">
+      <img src="${tokUrl}" alt="${escapeHtml(heroName)}" style="width:32px; height:32px; object-fit:contain; flex-shrink:0;">
+      <div class="hero-item-details" style="min-width:0; flex:1;">
         <strong class="hero-item-name">${heroName}</strong>
-        <span class="hero-class-tag">${heroClass}</span>
+        <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap; margin-top:2px;">
+          <span class="hero-class-tag">${heroClass}</span>
+          <span class="badge" style="font-size:9px; padding:1px 5px; background:rgba(56,189,248,0.12); color:#38bdf8; border:1px solid rgba(56,189,248,0.3);">${catBadge}</span>
+        </div>
       </div>
       <span class="gold-badge hero-item-gold">${gold}gp</span>
     `;
@@ -4331,18 +4622,46 @@ function renderHeroesList() {
   });
   container.appendChild(fragment);
 
-  if (!currentData.activeHeroId && currentData.heroes.length > 0) {
-    selectHero(currentData.heroes[0]["@id"]);
+  if (!currentData.activeHeroId && displayedHeroes.length > 0) {
+    selectHero(displayedHeroes[0]["@id"]);
   }
+}
+
+function updateHeroPortraitCardPreview(hero) {
+  if (!hero) return;
+  const heroName = getHeroName(hero);
+  const heroClass = getHeroClass(hero);
+  const bp = hero["robos:bodyPoints"] || 8;
+  const mp = hero["robos:mindPoints"] || 2;
+  const atk = hero["robos:attackDice"] || 3;
+  const def = hero["robos:defendDice"] || 2;
+  const portUrl = getHeroPortraitUrl(hero);
+  const tokUrl = getHeroTokenUrl(hero);
+
+  const cardBg = document.getElementById("hero-card-bg-img");
+  if (cardBg) cardBg.src = portUrl;
+  const cardTok = document.getElementById("hero-card-token-img");
+  if (cardTok) cardTok.src = tokUrl;
+  const cardTitle = document.getElementById("hero-card-title-label");
+  if (cardTitle) cardTitle.textContent = heroName;
+  const cardClass = document.getElementById("hero-card-class-label");
+  if (cardClass) cardClass.textContent = `Class: ${heroClass}`;
+  const cardStats = document.getElementById("hero-card-stats-label");
+  if (cardStats) cardStats.textContent = `❤️${bp} 🧠${mp} ⚔️${atk} 🛡️${def}`;
 }
 
 function selectHero(heroId) {
   currentData.activeHeroId = heroId;
-  const hero = currentData.heroes.find(h => h["@id"] === heroId);
+  const hero = currentData.heroes.find(h => h["@id"] === heroId)
+    || getAllHeroesCatalog().find(h => h["@id"] === heroId);
   if (!hero) return;
 
   // Ensure default state properties
   if (hero["robos:heroClass"] === undefined) hero["robos:heroClass"] = getHeroClass(hero);
+  if (hero["robos:category"] === undefined) {
+    const k = resolveHeroAssetKey(hero);
+    hero["robos:category"] = ["obama", "trump", "hillary_clinton", "bernie_sanders"].includes(k) ? "Midterms 2026" : "Base Game";
+  }
   if (hero["robos:gold"] === undefined) hero["robos:gold"] = 100;
   if (hero["robos:equippedWeapon"] === undefined) hero["robos:equippedWeapon"] = getHeroWeapon(hero);
   if (hero["robos:equippedArmor"] === undefined) hero["robos:equippedArmor"] = getHeroArmor(hero);
@@ -4365,15 +4684,19 @@ function selectHero(heroId) {
 
   // Populate Hero Form
   const heroName = getHeroName(hero);
+  const heroCategory = hero["robos:category"] || hero.category || "Base Game";
   const setVal = (id, val) => {
     const el = document.getElementById(id);
     if (el) el.value = val;
   };
   const titleEl = document.getElementById("hero-editor-title");
   if (titleEl) titleEl.textContent = "Edit Hero: " + heroName;
+  const catBadgeEl = document.getElementById("hero-category-badge");
+  if (catBadgeEl) catBadgeEl.textContent = heroCategory;
   setVal("hero-id", hero["@id"] || "");
   setVal("hero-name", heroName);
   setVal("hero-class", hero["robos:heroClass"] || "");
+  setVal("hero-category", heroCategory);
   setVal("hero-bp", hero["robos:bodyPoints"] || 8);
   setVal("hero-mp", hero["robos:mindPoints"] || 2);
   setVal("hero-atk", hero["robos:attackDice"] || 3);
@@ -4396,6 +4719,8 @@ function selectHero(heroId) {
   if (heroPortLbl) heroPortLbl.textContent = `card_bg_${heroAssetKey}.png`;
   const heroTokLbl = document.getElementById("hero-token-path-label");
   if (heroTokLbl) heroTokLbl.textContent = `token_${heroAssetKey}.png`;
+
+  updateHeroPortraitCardPreview(hero);
 
   // Render Inventory, Grimoire & Action Screen
   renderHeroInventory(hero);
@@ -4999,6 +5324,8 @@ async function saveActiveHeroToKGraph(explicit = false) {
     indicator.classList.add("saving");
   }
 
+  const assetKey = resolveHeroAssetKey(hero);
+  const heroCategory = hero["robos:category"] || document.getElementById("hero-category")?.value || "Base Game";
   const heroNode = {
     "@id": hero["@id"],
     "@type": [
@@ -5008,7 +5335,9 @@ async function saveActiveHeroToKGraph(explicit = false) {
       "schema:Person"
     ],
     "dcterms:title": hero["dcterms:title"] || "Hero",
+    "robos:characterName": hero["robos:characterName"] || hero["dcterms:title"] || "Hero",
     "robos:heroClass": hero["robos:heroClass"] || getHeroClass(hero),
+    "robos:category": heroCategory,
     "robos:bodyPoints": parseInt(hero["robos:bodyPoints"], 10) || 8,
     "robos:mindPoints": parseInt(hero["robos:mindPoints"], 10) || 2,
     "robos:attackDice": parseInt(hero["robos:attackDice"], 10) || 3,
@@ -5020,6 +5349,8 @@ async function saveActiveHeroToKGraph(explicit = false) {
     "robos:inventory": hero["robos:inventory"] || [],
     "robos:specialAbility": hero["robos:specialAbility"] || "",
     "robos:tokenColor": hero["robos:tokenColor"] || "#b91c1c",
+    "robos:tokenAsset": hero["robos:tokenAsset"] || `assets/tokens/token_${assetKey}.png`,
+    "robos:portraitAsset": hero["robos:portraitAsset"] || `assets/portraits/card_bg_${assetKey}.png`,
     "robos:icon": hero["robos:icon"] || "🛡️",
     "robos:startingPosition": hero["robos:startingPosition"] || [1, 1],
     "robos:package": "tabletop-game",
@@ -5081,6 +5412,7 @@ function setupHeroEditorControls() {
     if (!hero) return;
     const newName = e.target.value;
     hero["dcterms:title"] = newName;
+    hero["robos:characterName"] = newName;
     document.getElementById("hero-editor-title").textContent = "Edit Hero: " + newName;
 
     const listItemName = document.querySelector(`#heroes-list .list-item[data-hero-id="${hero["@id"]}"] .hero-item-name`);
@@ -5089,6 +5421,7 @@ function setupHeroEditorControls() {
     const actName = document.getElementById("act-hero-name");
     if (actName) actName.textContent = newName;
 
+    updateHeroPortraitCardPreview(hero);
     triggerHeroAutosave();
   });
 
@@ -5105,6 +5438,19 @@ function setupHeroEditorControls() {
     const actClass = document.getElementById("act-hero-class");
     if (actClass) actClass.textContent = newClass;
 
+    updateHeroPortraitCardPreview(hero);
+    triggerHeroAutosave();
+  });
+
+  // Live Hero Pack / Category Updates
+  document.getElementById("hero-category")?.addEventListener("change", (e) => {
+    const hero = getActiveHero();
+    if (!hero) return;
+    const newCat = e.target.value || "Base Game";
+    hero["robos:category"] = newCat;
+    const badgeEl = document.getElementById("hero-category-badge");
+    if (badgeEl) badgeEl.textContent = newCat;
+    renderHeroesList();
     triggerHeroAutosave();
   });
 
@@ -5114,6 +5460,7 @@ function setupHeroEditorControls() {
       const hero = getActiveHero();
       if (!hero) return;
       hero[prop] = isInt ? (parseInt(e.target.value, 10) || 0) : e.target.value;
+      updateHeroPortraitCardPreview(hero);
       renderHeroActionScreen(hero);
       triggerHeroAutosave();
     });
@@ -7088,6 +7435,7 @@ function serializeCampaignToKGraphNode(camp, isActiveCampaign = false) {
     "dcterms:description": camp.description || "",
     "robos:campaignId": campId,
     "robos:isActiveCampaign": Boolean(isActiveCampaign),
+    "robos:heroPack": camp.heroPack || "Base Game",
     "robos:heroes": Array.isArray(camp.heroes) ? camp.heroes : [],
     "robos:quests": (Array.isArray(camp.quests) ? camp.quests : []).map(q => ({
       id: q.id,
@@ -7112,14 +7460,16 @@ function deserializeCampaignFromKGraphNode(node) {
   if (!node) return null;
   const campId = node["robos:campaignId"] || String(node["@id"] || "").replace(/^urn:robos:tabletop:campaign:/, "") || "campaign-custom";
   const rawQuests = Array.isArray(node["robos:quests"]) ? node["robos:quests"] : [];
+  const heroPack = node["robos:heroPack"] || (String(node["dcterms:title"] || "").toLowerCase().includes("election") ? "Midterms 2026" : "Base Game");
   return {
     id: campId,
     title: node["dcterms:title"] || "Campaign",
     description: node["dcterms:description"] || "",
     isActiveCampaign: Boolean(node["robos:isActiveCampaign"]),
+    heroPack,
     heroes: Array.isArray(node["robos:heroes"]) && node["robos:heroes"].length > 0
       ? createDefaultCampaignHeroes(node["robos:heroes"])
-      : createDefaultCampaignHeroes(),
+      : (heroPack === "Midterms 2026" ? createDefaultCampaignHeroes(MIDTERMS_2026_HEROES) : createDefaultCampaignHeroes()),
     quests: rawQuests.map((q, idx) => ({
       id: q.id || `quest-${idx + 1}`,
       slug: q.slug || "custom-quest",
@@ -7282,6 +7632,11 @@ async function selectCampaign(indexOrId) {
   }
   currentData.heroes = currentData.campaign.heroes;
   currentData.activeHeroId = currentData.heroes[0]?.["@id"] || null;
+  if (currentData.campaign.heroPack && currentData.campaign.heroPack !== "Base Game") {
+    currentData.activeHeroCategoryFilter = currentData.campaign.heroPack;
+    const heroFilterEl = document.getElementById("hero-category-filter");
+    if (heroFilterEl) heroFilterEl.value = currentData.campaign.heroPack;
+  }
 
   applySpellAllocationToHeroes();
   renderHeroesList();
@@ -7563,6 +7918,7 @@ function renderQuestHeroesReviewGrid() {
   heroes.forEach(h => {
     const heroName = getHeroName(h);
     const heroCls = getHeroClass(h);
+    const heroCat = h["robos:category"] || h.category || "Base Game";
     const bp = h["robos:bodyPoints"] || 8;
     const mp = h["robos:mindPoints"] || 2;
     const atk = h["robos:attackDice"] || 3;
@@ -7577,27 +7933,32 @@ function renderQuestHeroesReviewGrid() {
     const card = document.createElement("div");
     card.className = "quest-hero-review-item";
     card.dataset.heroId = h["@id"];
-    card.style = "background:rgba(15,23,42,0.85); border:1px solid #334155; border-radius:6px; padding:10px 12px; display:flex; flex-direction:column; gap:5px;";
+    card.style = "position:relative; overflow:hidden; background:#0f172a; border:1.5px solid #334155; border-radius:8px; padding:10px 12px; display:flex; flex-direction:column; gap:6px; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.45);";
     card.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-        <div style="display:flex; align-items:center; gap:6px;">
-          <img src="${tokUrl}" alt="" style="width:24px; height:24px; border-radius:50%; object-fit:cover; border:1.5px solid #38bdf8;">
-          <img src="${portUrl}" alt="" style="width:20px; height:24px; border-radius:3px; object-fit:cover; border:1px solid #475569;">
-          <strong style="color:#f8fafc; font-size:0.88rem;">${escapeHtml(heroName)}</strong>
+      <img src="${portUrl}" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0.30; pointer-events:none;">
+      <div style="position:relative; z-index:1; display:flex; justify-content:space-between; align-items:center; gap:6px;">
+        <div style="display:flex; align-items:center; gap:8px; min-width:0;">
+          <img src="${tokUrl}" alt="" style="width:36px; height:36px; object-fit:contain; flex-shrink:0; filter:drop-shadow(0 2px 6px rgba(0,0,0,0.8));">
+          <div style="min-width:0;">
+            <strong style="color:#f8fafc; font-size:0.9rem; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(heroName)}</strong>
+            <span style="font-size:0.65rem; color:#fbbf24; font-weight:700;">${escapeHtml(heroCat)}</span>
+          </div>
         </div>
         <span class="badge badge-cyan" style="font-size:0.68rem;">${escapeHtml(heroCls)}</span>
       </div>
-      <div style="font-size:0.75rem; color:#94a3b8; display:flex; gap:8px; flex-wrap:wrap;">
+      <div style="position:relative; z-index:1; font-size:0.75rem; color:#e2e8f0; display:flex; gap:8px; flex-wrap:wrap; background:rgba(15,23,42,0.72); padding:4px 6px; border-radius:4px;">
         <span>❤️ <strong>${bp}</strong> BP</span>
         <span>🧠 <strong>${mp}</strong> MP</span>
         <span>⚔️ <strong>${atk}</strong> Atk</span>
         <span>🛡️ <strong>${def}</strong> Def</span>
         <span style="color:#fde047;">🪙 <strong>${gold}</strong>g</span>
       </div>
-      <div style="font-size:0.72rem; color:#cbd5e1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+      <div style="position:relative; z-index:1; font-size:0.72rem; color:#cbd5e1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
         ${escapeHtml(wep)} • ${escapeHtml(arm)}
       </div>
-      ${spells.length > 0 ? `<div style="font-size:0.7rem; color:#38bdf8;">${spells.length} Spells Memorized</div>` : `<div style="font-size:0.7rem; color:#64748b;">Martial Champion</div>`}
+      <div style="position:relative; z-index:1;">
+        ${spells.length > 0 ? `<div style="font-size:0.7rem; color:#38bdf8; font-weight:600;">${spells.length} Spells Memorized</div>` : `<div style="font-size:0.7rem; color:#94a3b8;">Martial Champion</div>`}
+      </div>
     `;
     card.addEventListener("click", () => {
       switchCampaignSubtab("subtab-campaign-heroes");
@@ -10063,6 +10424,7 @@ if (typeof module !== "undefined" && module.exports) {
     getHeroById,
     DEFAULT_CATEGORIES,
     HEROQUEST_MONSTER_ARCHETYPES,
+    MIDTERMS_2026_HEROES,
     MIDTERMS_2026_MONSTERS,
     MIDTERMS_2026_SPELLS,
     MIDTERMS_2026_DREAD_SPELLS,
@@ -10072,6 +10434,14 @@ if (typeof module !== "undefined" && module.exports) {
     MIDTERMS_2026_ITEMS,
     getCategories,
     addCategory,
+    getAllHeroesCatalog,
+    getHeroesByCategory,
+    setHeroCategoryFilter,
+    applyHeroPackToActiveCampaign,
+    resolveHeroAssetKey,
+    getHeroTokenUrl,
+    getHeroPortraitUrl,
+    updateHeroPortraitCardPreview,
     getMonstersByCategory,
     getSpellsByCategory,
     getDreadSpellsByCategory,
