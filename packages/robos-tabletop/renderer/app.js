@@ -22,9 +22,10 @@ if (doorClosedImg) doorClosedImg.src = "../assets/door_closed.png";
 const doorOpenImg = typeof Image !== "undefined" ? new Image() : null;
 if (doorOpenImg) doorOpenImg.src = "../assets/door_open.png";
 
-// AI Generated Furniture & Tile Textures
+// AI Generated Furniture, Tile, Token & Portrait Textures
 const FURNITURE_TEXTURES = {};
 const TILE_TEXTURES = {};
+const TOKEN_TEXTURES = {};
 
 const FURNITURE_ASSET_MAP = {
   altar: "../assets/furniture/altar.png",
@@ -50,6 +51,17 @@ const TILE_ASSET_MAP = {
   boulder: "../assets/tiles/boulder.png"
 };
 
+const ALL_MONSTER_ASSET_KEYS = [
+  "goblin", "orc", "fimir", "skeleton", "zombie", "mummy",
+  "chaos_warrior", "gargoyle", "verag", "chaos_sorcerer",
+  "witch_lord", "orc_shaman", "dragon", "doomguard", "witch_hand",
+  "campaign_volunteer", "political_operative", "career_politician",
+  "bureaucrat", "lobbyist", "partisan_enforcer", "super_pac_demon",
+  "spin_doctor", "talarixon", "el_rogers", "brownsted",
+  "katie_zacharia", "mitch_mcconnell", "war_room_boss",
+  "barbarian", "dwarf", "elf", "wizard"
+];
+
 if (typeof Image !== "undefined") {
   for (const [k, src] of Object.entries(FURNITURE_ASSET_MAP)) {
     const img = new Image();
@@ -61,6 +73,163 @@ if (typeof Image !== "undefined") {
     img.src = src;
     TILE_TEXTURES[k] = img;
   }
+  for (const key of ALL_MONSTER_ASSET_KEYS) {
+    const img = new Image();
+    img.src = `../assets/tokens/token_${key}.png`;
+    TOKEN_TEXTURES[key] = img;
+  }
+}
+
+function resolveMonsterAssetKey(monsterOrIdOrName) {
+  let raw = "";
+  if (typeof monsterOrIdOrName === "string") {
+    raw = monsterOrIdOrName;
+  } else if (monsterOrIdOrName && typeof monsterOrIdOrName === "object") {
+    raw = [
+      monsterOrIdOrName["@id"],
+      monsterOrIdOrName.id,
+      monsterOrIdOrName.monsterType,
+      monsterOrIdOrName.type,
+      monsterOrIdOrName["dcterms:title"],
+      monsterOrIdOrName.name,
+      monsterOrIdOrName["robos:extendsClass"],
+      monsterOrIdOrName["robos:monsterArchetype"]
+    ].filter(Boolean).join(" ");
+  }
+  const s = String(raw || "").toLowerCase();
+  if (s.includes("talarixon") || s.includes("talarico") || s.includes("texas hydra")) return "talarixon";
+  if (s.includes("el-rogers") || s.includes("el_rogers") || s.includes("el-sayed") || s.includes("michigan hydra")) return "el_rogers";
+  if (s.includes("brownsted") || s.includes("husted") || s.includes("ohio hydra")) return "brownsted";
+  if (s.includes("campaign-volunteer") || s.includes("campaign_volunteer") || s.includes("campaign volunteer")) return "campaign_volunteer";
+  if (s.includes("political-operative") || s.includes("political_operative") || s.includes("political operative")) return "political_operative";
+  if (s.includes("career-politician") || s.includes("career_politician") || s.includes("career politician")) return "career_politician";
+  if (s.includes("bureaucrat")) return "bureaucrat";
+  if (s.includes("lobbyist")) return "lobbyist";
+  if (s.includes("partisan-enforcer") || s.includes("partisan_enforcer") || s.includes("partisan enforcer")) return "partisan_enforcer";
+  if (s.includes("super-pac-demon") || s.includes("super_pac_demon") || s.includes("super pac demon")) return "super_pac_demon";
+  if (s.includes("spin-doctor") || s.includes("spin_doctor") || s.includes("spin doctor")) return "spin_doctor";
+  if (s.includes("katie") || s.includes("zacharia")) return "katie_zacharia";
+  if (s.includes("mitch") || s.includes("mcconnell")) return "mitch_mcconnell";
+  if (s.includes("vance") || s.includes("kamala") || s.includes("war_room")) return "war_room_boss";
+  if (s.includes("doomguard")) return "doomguard";
+  if (s.includes("witch-hand") || s.includes("witch_hand") || s.includes("witch hand")) return "witch_hand";
+  if (s.includes("witch-lord") || s.includes("witch_lord") || s.includes("witch lord")) return "witch_lord";
+  if (s.includes("chaos-sorcerer") || s.includes("chaos_sorcerer") || s.includes("chaos sorcerer") || s.includes("dread sorcerer")) return "chaos_sorcerer";
+  if (s.includes("orc-shaman") || s.includes("orc_shaman") || s.includes("orc shaman")) return "orc_shaman";
+  if (s.includes("verag") || s.includes("warlord") || s.includes("ulag")) return "verag";
+  if (s.includes("dragon") || s.includes("wyrm")) return "dragon";
+  if (s.includes("gargoyle")) return "gargoyle";
+  if (s.includes("chaos") || s.includes("dread warrior") || s.includes("dread-warrior")) return "chaos_warrior";
+  if (s.includes("mummy")) return "mummy";
+  if (s.includes("zombie")) return "zombie";
+  if (s.includes("skeleton") || s.includes("skel")) return "skeleton";
+  if (s.includes("fimir") || s.includes("abomination")) return "fimir";
+  if (s.includes("orc")) return "orc";
+  return "goblin";
+}
+
+function getMonsterTokenUrl(m) {
+  const key = resolveMonsterAssetKey(m);
+  return `../assets/tokens/token_${key}.png`;
+}
+
+function getMonsterPortraitUrl(m) {
+  const key = resolveMonsterAssetKey(m);
+  return `../assets/portraits/card_bg_${key}.png`;
+}
+
+function getMonsterTokenImage(m) {
+  const key = resolveMonsterAssetKey(m);
+  const img = TOKEN_TEXTURES[key];
+  if (img && img.complete && img.naturalWidth > 0) return img;
+  return null;
+}
+
+function resolveHeroAssetKey(heroOrClass) {
+  let raw = "";
+  if (typeof heroOrClass === "string") {
+    raw = heroOrClass;
+  } else if (heroOrClass && typeof heroOrClass === "object") {
+    raw = [heroOrClass["robos:heroClass"], heroOrClass.heroClass, heroOrClass["@id"], heroOrClass.id, heroOrClass.name, heroOrClass["dcterms:title"]].filter(Boolean).join(" ");
+  }
+  const s = String(raw || "").toLowerCase();
+  if (s.includes("dwarf") || s.includes("dorgan")) return "dwarf";
+  if (s.includes("elf") || s.includes("ladril")) return "elf";
+  if (s.includes("wizard") || s.includes("telor") || s.includes("mage")) return "wizard";
+  return "barbarian";
+}
+
+function getHeroTokenUrl(h) {
+  const key = resolveHeroAssetKey(h);
+  return `../assets/tokens/token_${key}.png`;
+}
+
+function getHeroPortraitUrl(h) {
+  const key = resolveHeroAssetKey(h);
+  return `../assets/portraits/card_bg_${key}.png`;
+}
+
+function getClassAssetUrls(cls) {
+  if (!cls) return { tokenUrl: "../assets/tokens/token_barbarian.png", portraitUrl: "../assets/portraits/card_bg_barbarian.png" };
+  if (cls.classType === "Hero") {
+    return {
+      tokenUrl: getHeroTokenUrl(cls.name || cls.id),
+      portraitUrl: getHeroPortraitUrl(cls.name || cls.id)
+    };
+  }
+  return {
+    tokenUrl: getMonsterTokenUrl(cls.name || cls.id),
+    portraitUrl: getMonsterPortraitUrl(cls.name || cls.id)
+  };
+}
+
+function getSpellIconUrl(spell) {
+  const s = String((spell && (spell.slug || spell.name || spell.id)) || spell || "").toLowerCase();
+  const elem = String((spell && spell.element) || "").toLowerCase();
+  if (s.includes("ball-of-flame") || s.includes("attack-ad")) return "../assets/icons/spell_ball_of_flame.png";
+  if (s.includes("fire-of-wrath") || s.includes("outrage-inferno")) return "../assets/icons/spell_fire_of_wrath.png";
+  if (s.includes("courage") || s.includes("october-surprise") || s.includes("fear")) return "../assets/icons/spell_courage.png";
+  if (s.includes("water-of-healing") || s.includes("emergency-funding")) return "../assets/icons/spell_water_of_healing.png";
+  if (s.includes("veil-of-mist") || s.includes("executive-privilege")) return "../assets/icons/spell_veil_of_mist.png";
+  if (s.includes("sleep") || s.includes("filibuster")) return "../assets/icons/spell_sleep.png";
+  if (s.includes("heal-body") || s.includes("special-interest")) return "../assets/icons/spell_heal_body.png";
+  if (s.includes("rock-skin") || s.includes("incumbent-protection") || s.includes("rust")) return "../assets/icons/spell_rock_skin.png";
+  if (s.includes("pass-through-rock") || s.includes("gerrymander") || s.includes("escape")) return "../assets/icons/spell_pass_through_rock.png";
+  if (s.includes("swift-wind") || s.includes("polling-surge")) return "../assets/icons/spell_swift_wind.png";
+  if (s.includes("tempest") || s.includes("media-frenzy") || s.includes("recount") || s.includes("cloud")) return "../assets/icons/spell_tempest.png";
+  if (s.includes("genie") || s.includes("landslide-victory") || s.includes("summon") || s.includes("lightning")) return "../assets/icons/spell_genie.png";
+  if (elem === "fire") return "../assets/icons/spell_ball_of_flame.png";
+  if (elem === "water") return "../assets/icons/spell_water_of_healing.png";
+  if (elem === "earth") return "../assets/icons/spell_rock_skin.png";
+  if (elem === "air") return "../assets/icons/spell_swift_wind.png";
+  return "../assets/icons/action_spell.png";
+}
+
+function getWeaponIconUrl(w) {
+  const s = String((w && (w.id || w.name || w.type)) || w || "").toLowerCase();
+  if (s.includes("dagger") || s.includes("stylus")) return "../assets/icons/weapon_dagger.png";
+  if (s.includes("shortsword") || s.includes("cane")) return "../assets/icons/weapon_shortsword.png";
+  if (s.includes("broadsword") || s.includes("longsword") || s.includes("blade")) return "../assets/icons/weapon_broadsword.png";
+  if (s.includes("axe") || s.includes("gavel") || s.includes("hammer")) return "../assets/icons/weapon_battle_axe.png";
+  if (s.includes("crossbow") || s.includes("pistol") || s.includes("taser") || s.includes("ranged") || s.includes("teleprompter")) return "../assets/icons/weapon_crossbow.png";
+  if (s.includes("staff") || s.includes("wand")) return "../assets/icons/weapon_staff.png";
+  if (s.includes("helmet")) return "../assets/icons/armor_helmet.png";
+  if (s.includes("shield") || s.includes("riot") || s.includes("press")) return "../assets/icons/armor_shield.png";
+  if (s.includes("plate") || s.includes("tactical")) return "../assets/icons/armor_plate_mail.png";
+  if (s.includes("chain") || s.includes("suit") || s.includes("armor") || s.includes("vest")) return "../assets/icons/armor_chain_mail.png";
+  return "../assets/icons/weapon_broadsword.png";
+}
+
+function getItemIconUrl(it) {
+  const s = String((it && (it.id || it.name || it.type)) || it || "").toLowerCase();
+  if (s.includes("holy") || s.includes("water")) return "../assets/icons/card_art_holy_water.png";
+  if (s.includes("strength") || s.includes("espresso") || s.includes("covfefe")) return "../assets/icons/item_potion_of_strength.png";
+  if (s.includes("defense") || s.includes("immunity") || s.includes("pardon")) return "../assets/icons/item_potion_of_defense.png";
+  if (s.includes("speed") || s.includes("rope") || s.includes("torch")) return "../assets/icons/item_potion_of_speed.png";
+  if (s.includes("tool") || s.includes("kit") || s.includes("key") || s.includes("burner")) return "../assets/icons/item_tool_kit.png";
+  if (s.includes("gold") || s.includes("pac") || s.includes("coin") || s.includes("check")) return "../assets/icons/card_art_gold_coins.png";
+  if (s.includes("gem") || s.includes("crown") || s.includes("relic") || s.includes("talisman") || s.includes("pelosi")) return "../assets/icons/card_art_gems_jewels.png";
+  return "../assets/icons/item_healing_potion.png";
 }
 
 function getFurnitureImage(type) {
@@ -82,6 +251,7 @@ function getTileImage(type) {
   }
   return null;
 }
+
 
 // Default 4 HeroQuest Champions for initializing a Campaign's Hero Party
 function createDefaultCampaignHeroes(seedHeroes = null) {
@@ -1110,9 +1280,10 @@ function inspectSquare(col, row) {
       </div>`;
   }
   if (mon) {
+    const monTokUrl = getMonsterTokenUrl(mon);
     html += `
       <div class="stat-pill" style="margin-top:6px;">
-        <span>👹 <strong>${mon.name}</strong> ${mon.isBoss ? '[BOSS]' : ''} | BP: ${mon.bp}, Atk: ${mon.atk}</span>
+        <span style="display:flex; align-items:center; gap:6px;"><img src="${monTokUrl}" alt="" style="width:20px; height:20px; object-fit:contain;"> <strong>${mon.name}</strong> ${mon.isBoss ? '[BOSS]' : ''} | BP: ${mon.bp}, Atk: ${mon.atk}</span>
         <button onclick="eraseAt(${col}, ${row})" class="btn btn-xs btn-danger">Remove</button>
       </div>`;
   }
@@ -1216,7 +1387,8 @@ function renderMiniList(type) {
     });
   } else if (type === "monsters") {
     items = q.monsters.map(m => ({
-      label: `${m.name} ${m.isBoss ? '👑' : ''}`,
+      label: `${m.name}`,
+      tokenUrl: getMonsterTokenUrl(m),
       coords: `[${m.x}, ${m.y}]`,
       col: m.x,
       row: m.y
@@ -1241,7 +1413,8 @@ function renderMiniList(type) {
   items.forEach(it => {
     const div = document.createElement("div");
     div.className = "mini-item";
-    div.innerHTML = `<span><strong>${it.label}</strong></span> <span class="badge">${it.coords}</span>`;
+    const imgHtml = it.tokenUrl ? `<img src="${it.tokenUrl}" alt="" style="width:18px; height:18px; object-fit:contain; vertical-align:middle; margin-right:5px;">` : "";
+    div.innerHTML = `<span style="display:flex; align-items:center;">${imgHtml}<strong>${it.label}</strong></span> <span class="badge">${it.coords}</span>`;
     div.onclick = () => {
       inspectSquare(it.col, it.row);
       currentData.selectedSquare = { col: it.col, row: it.row };
@@ -1962,31 +2135,30 @@ function drawBoard() {
   q.monsters.forEach(mEntity => {
     const mx = insetL + mEntity.x * cellW + cellW / 2;
     const my = insetT + mEntity.y * cellH + cellH / 2;
+    const tx = insetL + mEntity.x * cellW;
+    const ty = insetT + mEntity.y * cellH;
 
     ctx.save();
-    ctx.fillStyle = mEntity.isBoss ? "#b91c1c" : "#15803d";
-    ctx.beginPath();
-    ctx.arc(mx, my, cellW * 0.42, 0, Math.PI * 2);
-    ctx.fill();
+    const tokImg = getMonsterTokenImage(mEntity);
+    if (tokImg) {
+      ctx.drawImage(tokImg, tx + 1, ty + 1, cellW - 2, cellH - 2);
+      if (mEntity.isBoss) {
+        ctx.strokeStyle = "#facc15";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(mx, my, cellW * 0.44, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    } else {
+      ctx.fillStyle = mEntity.isBoss ? "#b91c1c" : "#15803d";
+      ctx.beginPath();
+      ctx.arc(mx, my, cellW * 0.42, 0, Math.PI * 2);
+      ctx.fill();
 
-    ctx.strokeStyle = mEntity.isBoss ? "#facc15" : "#ffffff";
-    ctx.lineWidth = mEntity.isBoss ? 2.5 : 1.5;
-    ctx.stroke();
-
-    let icon = '👹';
-    if (mEntity.monsterType.includes('goblin')) icon = '👺';
-    else if (mEntity.monsterType.includes('fimir')) icon = '🐊';
-    else if (mEntity.monsterType.includes('skeleton')) icon = '💀';
-    else if (mEntity.monsterType.includes('zombie')) icon = '🧟';
-    else if (mEntity.monsterType.includes('mummy')) icon = '🏺';
-    else if (mEntity.monsterType.includes('chaos')) icon = '⚔️';
-    else if (mEntity.monsterType.includes('gargoyle')) icon = '🗿';
-    else if (mEntity.isBoss) icon = '👑';
-
-    ctx.font = "14px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(icon, mx, my);
+      ctx.strokeStyle = mEntity.isBoss ? "#facc15" : "#ffffff";
+      ctx.lineWidth = mEntity.isBoss ? 2.5 : 1.5;
+      ctx.stroke();
+    }
     ctx.restore();
   });
 
@@ -2563,6 +2735,8 @@ const MIDTERMS_2026_MONSTERS = [
     "robos:specialAbility": "Door Knocker: Move through other monsters",
     "robos:abilities": "Door Knocker: Move through other monsters",
     "robos:icon": "📋",
+    "robos:tokenAsset": "res://assets/tokens/token_campaign_volunteer.png",
+    "robos:portraitAsset": "res://assets/monster_cards/card_bg_campaign_volunteer.png",
     "robos:bodyPoints": 1,
     "robos:mindPoints": 1,
     "robos:attackDice": 2,
@@ -2590,6 +2764,8 @@ const MIDTERMS_2026_MONSTERS = [
     "robos:specialAbility": "Smear Campaign: Force reroll of one successful defend die, once per encounter",
     "robos:abilities": "Smear Campaign: Force reroll of one successful defend die, once per encounter",
     "robos:icon": "🕵️",
+    "robos:tokenAsset": "res://assets/tokens/token_political_operative.png",
+    "robos:portraitAsset": "res://assets/monster_cards/card_bg_political_operative.png",
     "robos:bodyPoints": 1,
     "robos:mindPoints": 2,
     "robos:attackDice": 3,
@@ -2617,6 +2793,8 @@ const MIDTERMS_2026_MONSTERS = [
     "robos:specialAbility": "Reelection: On death, black shield resurrects with 1 Body Point",
     "robos:abilities": "Reelection: On death, black shield resurrects with 1 Body Point",
     "robos:icon": "🏛️",
+    "robos:tokenAsset": "res://assets/tokens/token_career_politician.png",
+    "robos:portraitAsset": "res://assets/monster_cards/card_bg_career_politician.png",
     "robos:bodyPoints": 1,
     "robos:mindPoints": 0,
     "robos:attackDice": 2,
@@ -2644,6 +2822,8 @@ const MIDTERMS_2026_MONSTERS = [
     "robos:specialAbility": "Red Tape: Adjacent heroes roll an extra movement die and use the lowest",
     "robos:abilities": "Red Tape: Adjacent heroes roll an extra movement die and use the lowest",
     "robos:icon": "📎",
+    "robos:tokenAsset": "res://assets/tokens/token_bureaucrat.png",
+    "robos:portraitAsset": "res://assets/monster_cards/card_bg_bureaucrat.png",
     "robos:bodyPoints": 1,
     "robos:mindPoints": 0,
     "robos:attackDice": 2,
@@ -2671,6 +2851,8 @@ const MIDTERMS_2026_MONSTERS = [
     "robos:specialAbility": "Bought Influence: Force reroll of one attacking skull, once per encounter",
     "robos:abilities": "Bought Influence: Force reroll of one attacking skull, once per encounter",
     "robos:icon": "💼",
+    "robos:tokenAsset": "res://assets/tokens/token_lobbyist.png",
+    "robos:portraitAsset": "res://assets/monster_cards/card_bg_lobbyist.png",
     "robos:bodyPoints": 2,
     "robos:mindPoints": 0,
     "robos:attackDice": 3,
@@ -2698,6 +2880,8 @@ const MIDTERMS_2026_MONSTERS = [
     "robos:specialAbility": "Polarization: +1 attack die when adjacent to another Partisan Enforcer",
     "robos:abilities": "Polarization: +1 attack die when adjacent to another Partisan Enforcer",
     "robos:icon": "⚔️",
+    "robos:tokenAsset": "res://assets/tokens/token_partisan_enforcer.png",
+    "robos:portraitAsset": "res://assets/monster_cards/card_bg_partisan_enforcer.png",
     "robos:bodyPoints": 3,
     "robos:mindPoints": 3,
     "robos:attackDice": 4,
@@ -2725,6 +2909,8 @@ const MIDTERMS_2026_MONSTERS = [
     "robos:specialAbility": "Dark Money: Summon one Campaign Volunteer, once per encounter",
     "robos:abilities": "Dark Money: Summon one Campaign Volunteer, once per encounter",
     "robos:icon": "😈",
+    "robos:tokenAsset": "res://assets/tokens/token_super_pac_demon.png",
+    "robos:portraitAsset": "res://assets/monster_cards/card_bg_super_pac_demon.png",
     "robos:bodyPoints": 3,
     "robos:mindPoints": 4,
     "robos:attackDice": 4,
@@ -2752,6 +2938,8 @@ const MIDTERMS_2026_MONSTERS = [
     "robos:specialAbility": "Alternative Facts: Cancel one successful attack, once per encounter",
     "robos:abilities": "Alternative Facts: Cancel one successful attack, once per encounter",
     "robos:icon": "🌀",
+    "robos:tokenAsset": "res://assets/tokens/token_spin_doctor.png",
+    "robos:portraitAsset": "res://assets/monster_cards/card_bg_spin_doctor.png",
     "robos:bodyPoints": 3,
     "robos:mindPoints": 5,
     "robos:attackDice": 3,
@@ -2781,6 +2969,8 @@ const MIDTERMS_2026_MONSTERS = [
     "robos:specialAbility": "Holy Smite (3 dice ranged) · Indictment Barrage (1–3 loses action) · Divided Authority (lose turn, 2 dice to all adjacent) · Political Infighting",
     "robos:abilities": "Holy Smite: Attack a visible hero with 3 dice. | Indictment Barrage: Hero rolls movement die; 1–3 loses next action. | Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. | Political Infighting (<=3 BP): White shield lets heroes choose special attack.",
     "robos:icon": "🐍",
+    "robos:tokenAsset": "res://assets/tokens/token_talarixon.png",
+    "robos:portraitAsset": "res://assets/monster_cards/card_bg_talarixon.png",
     "robos:bodyPoints": 6,
     "robos:mindPoints": 5,
     "robos:attackDice": 5,
@@ -2810,6 +3000,8 @@ const MIDTERMS_2026_MONSTERS = [
     "robos:specialAbility": "Universal Healing (+2 BP once) · Security Lockdown (seal doors 1 round) · Industrial Collapse (at 3 BP, 3 dice to adjacent & -1 BP) · Political Infighting",
     "robos:abilities": "Universal Healing: Recover 2 Body Points once per battle. | Security Lockdown: Seal room doors for one round. | Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. | Political Infighting (<=3 BP): White shield lets heroes choose special attack.",
     "robos:icon": "🐲",
+    "robos:tokenAsset": "res://assets/tokens/token_el_rogers.png",
+    "robos:portraitAsset": "res://assets/monster_cards/card_bg_el_rogers.png",
     "robos:bodyPoints": 7,
     "robos:mindPoints": 4,
     "robos:attackDice": 5,
@@ -2839,6 +3031,8 @@ const MIDTERMS_2026_MONSTERS = [
     "robos:specialAbility": "Union Strike (3 dice to all adjacent) · Budget Freeze (no potions 1 round) · Bipartisan Gridlock (black shield = lose turn, skull = +1 atk) · Political Infighting",
     "robos:abilities": "Union Strike: Attack every adjacent hero with 3 dice. | Budget Freeze: Prevent heroes using potions for one round. | Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. | Political Infighting (<=4 BP): White shield lets heroes choose special attack.",
     "robos:icon": "🐉",
+    "robos:tokenAsset": "res://assets/tokens/token_brownsted.png",
+    "robos:portraitAsset": "res://assets/monster_cards/card_bg_brownsted.png",
     "robos:bodyPoints": 8,
     "robos:mindPoints": 5,
     "robos:attackDice": 6,
@@ -3893,9 +4087,10 @@ function renderHeroGrimoire(hero) {
   spells.forEach(spell => {
     const card = document.createElement("div");
     card.className = `spell-card-mini deck-${spell.element}`;
+    const spIconUrl = getSpellIconUrl(spell);
     card.innerHTML = `
       <div class="spell-card-mini-header">
-        <span class="spell-mini-name">${spell.icon} ${spell.name}</span>
+        <span class="spell-mini-name" style="display:inline-flex; align-items:center; gap:6px;"><img src="${spIconUrl}" alt="" style="width:20px; height:20px; border-radius:4px; object-fit:cover;"> ${spell.name}</span>
         <span class="element-tag tag-${spell.element}">${spell.element.toUpperCase()}</span>
       </div>
       <div class="spell-mini-desc">${spell.description}</div>
@@ -3926,7 +4121,7 @@ function renderHeroSpellActionModule(hero) {
     spells.forEach(sp => {
       const opt = document.createElement("option");
       opt.value = sp.id || sp.slug;
-      opt.textContent = `${sp.icon} ${sp.name} (${sp.element.toUpperCase()})`;
+      opt.textContent = `${sp.name} (${sp.element.toUpperCase()})`;
       selectEl.appendChild(opt);
     });
     if (currentVal && spells.some(s => (s.id || s.slug) === currentVal)) {
@@ -3973,7 +4168,7 @@ function castHeroSpell(hero, spellId) {
 
   if (resultBox) {
     resultBox.innerHTML = `
-      <span class="dice-badge dice-shield">${spell.icon} ${spell.name}</span>
+      <span class="dice-badge dice-shield"><img src="${getSpellIconUrl(spell)}" alt="" style="width:16px; height:16px; border-radius:3px; vertical-align:middle; margin-right:4px;"> ${spell.name}</span>
       <span style="font-size:0.75rem; color:#a7f3d0; font-weight:600;">${effectSummary}</span>
     `;
   }
@@ -4119,11 +4314,11 @@ function renderHeroesList() {
 
     const heroClass = getHeroClass(h);
     const heroName = getHeroName(h);
-    const tokenColor = h["robos:tokenColor"] || "#b91c1c";
     const gold = h["robos:gold"] !== undefined ? h["robos:gold"] : 100;
+    const tokUrl = getHeroTokenUrl(h);
 
     div.innerHTML = `
-      <span style="font-size:1.1rem; color:${tokenColor};">●</span>
+      <img src="${tokUrl}" alt="${escapeHtml(heroName)}" style="width:28px; height:28px; object-fit:contain; flex-shrink:0;">
       <div class="hero-item-details">
         <strong class="hero-item-name">${heroName}</strong>
         <span class="hero-class-tag">${heroClass}</span>
@@ -4192,6 +4387,16 @@ function selectHero(heroId) {
   setVal("hero-pos-x", (hero["robos:startingPosition"] && hero["robos:startingPosition"][0]) || 1);
   setVal("hero-pos-y", (hero["robos:startingPosition"] && hero["robos:startingPosition"][1]) || 1);
 
+  const heroAssetKey = resolveHeroAssetKey(hero);
+  const heroPortImg = document.getElementById("hero-portrait-preview");
+  if (heroPortImg) heroPortImg.src = getHeroPortraitUrl(hero);
+  const heroTokImg = document.getElementById("hero-token-preview");
+  if (heroTokImg) heroTokImg.src = getHeroTokenUrl(hero);
+  const heroPortLbl = document.getElementById("hero-portrait-path-label");
+  if (heroPortLbl) heroPortLbl.textContent = `card_bg_${heroAssetKey}.png`;
+  const heroTokLbl = document.getElementById("hero-token-path-label");
+  if (heroTokLbl) heroTokLbl.textContent = `token_${heroAssetKey}.png`;
+
   // Render Inventory, Grimoire & Action Screen
   renderHeroInventory(hero);
   renderHeroGrimoire(hero);
@@ -4211,9 +4416,10 @@ function renderHeroInventory(hero) {
   items.forEach((item, idx) => {
     const row = document.createElement("div");
     row.className = "inventory-item-row";
+    const itemIconUrl = getItemIconUrl(item);
     row.innerHTML = `
       <div class="inventory-item-info">
-        <span style="font-size:1.1rem;">🎒</span>
+        <img src="${itemIconUrl}" alt="" style="width:28px; height:28px; border-radius:6px; object-fit:cover; flex-shrink:0;">
         <div>
           <strong>${item.name}</strong>
           <div class="inventory-item-type">${item.type || 'item'} • ${item.effect || ''}</div>
@@ -4653,7 +4859,8 @@ function renderHeroActionScreen(hero) {
   if (classEl) classEl.textContent = heroClass;
   if (goldEl) goldEl.textContent = `💰 ${heroGold} GP`;
   if (iconEl) {
-    iconEl.textContent = hero["robos:icon"] || "🛡️";
+    const tokUrl = getHeroTokenUrl(hero);
+    iconEl.innerHTML = `<img src="${tokUrl}" alt="${escapeHtml(heroName)}" style="width:100%; height:100%; object-fit:contain;">`;
     iconEl.style.borderColor = hero["robos:tokenColor"] || "#b91c1c";
   }
 
@@ -5151,8 +5358,9 @@ function renderMonsterGrimoire(monster) {
     assigned.forEach(s => {
       const chip = document.createElement("div");
       chip.className = "monster-spell-chip";
+      const sIconUrl = getSpellIconUrl(s);
       chip.innerHTML = `
-        <span>${s.icon || "⚡"}</span>
+        <img src="${sIconUrl}" alt="" style="width:16px; height:16px; border-radius:3px; object-fit:cover; vertical-align:middle;">
         <strong>${s.name}</strong>
         <button class="btn-remove-chip" title="Remove spell">&times;</button>
       `;
@@ -5181,7 +5389,7 @@ function renderMonsterGrimoire(monster) {
         const opt = document.createElement("option");
         opt.value = ds.slug;
         const catSuffix = ds.category && ds.category !== "Base Game" ? ` [${ds.category}]` : "";
-        opt.textContent = `${ds.icon} ${ds.name}${catSuffix}`;
+        opt.textContent = `${ds.name}${catSuffix}`;
         select.appendChild(opt);
       });
     }
@@ -5196,6 +5404,7 @@ function renderMonsterActionScreen(monster) {
   const descEl = document.getElementById("act-monster-desc");
   const casterBadge = document.getElementById("act-monster-spellcaster-badge");
   const iconEl = document.getElementById("act-monster-icon");
+  const portraitEl = document.getElementById("act-monster-portrait");
   const atkStat = document.getElementById("act-monster-atk-stat");
   const defStat = document.getElementById("act-monster-def-stat");
   const moveStat = document.getElementById("act-monster-move-stat");
@@ -5223,7 +5432,7 @@ function renderMonsterActionScreen(monster) {
 
   if (catTag) {
     const cat = monster["robos:category"] || "Base Game";
-    catTag.textContent = `🏷️ ${cat}`;
+    catTag.textContent = `${cat}`;
   }
 
   if (descEl) {
@@ -5233,11 +5442,12 @@ function renderMonsterActionScreen(monster) {
   }
 
   if (iconEl) {
-    if (monster["robos:icon"]) iconEl.textContent = monster["robos:icon"];
-    else if (monster["robos:isBoss"]) iconEl.textContent = "👑";
-    else if (monster["robos:isUndead"]) iconEl.textContent = "💀";
-    else if (monster["robos:isSpellcaster"]) iconEl.textContent = "🧙‍♂️";
-    else iconEl.textContent = "👹";
+    const tokUrl = getMonsterTokenUrl(monster);
+    iconEl.innerHTML = `<img src="${tokUrl}" alt="${escapeHtml(monster["dcterms:title"] || "Monster")} Token" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+  }
+  if (portraitEl) {
+    portraitEl.src = getMonsterPortraitUrl(monster);
+    portraitEl.alt = `${monster["dcterms:title"] || "Monster"} Portrait`;
   }
 
   const isSpellcaster = !!monster["robos:isSpellcaster"];
@@ -5273,7 +5483,7 @@ function renderMonsterActionScreen(monster) {
       spells.forEach(s => {
         const opt = document.createElement("option");
         opt.value = s.slug;
-        opt.textContent = `${s.icon || "⚡"} ${s.name}`;
+        opt.textContent = `${s.name}`;
         spellSelect.appendChild(opt);
       });
     }
@@ -5376,7 +5586,8 @@ function castMonsterSpell(monster, spellSlug) {
 
   const resultBox = document.getElementById("act-mon-spell-result");
   if (resultBox) {
-    resultBox.innerHTML = `<span class="dice-badge" style="background:#581c87; color:#f3e8ff; border:1px solid #7e22ce;">${spell.icon} ${spell.name}</span>`;
+    const sIconUrl = getSpellIconUrl(spell);
+    resultBox.innerHTML = `<span class="dice-badge" style="background:#581c87; color:#f3e8ff; border:1px solid #7e22ce; display:inline-flex; align-items:center; gap:5px;"><img src="${sIconUrl}" alt="" style="width:15px; height:15px; border-radius:3px; object-fit:cover;"> ${spell.name}</span>`;
   }
 
   let effectDescription = "";
@@ -5983,12 +6194,18 @@ function selectClass(classIdOrName) {
 
   if (titleEl) titleEl.textContent = `Class: ${cls.name}`;
   if (badgeEl) {
-    badgeEl.textContent = cls.classType === "Hero" ? "🛡️ Hero Class" : "👹 Enemy Class (Base Monster)";
+    badgeEl.textContent = cls.classType === "Hero" ? "Hero Class" : "Enemy Class (Base Monster)";
     badgeEl.className = cls.classType === "Hero" ? "badge badge-cyan" : "badge badge-purple";
   }
   if (createMonBtn) {
     createMonBtn.style.display = cls.classType === "Enemy" ? "inline-flex" : "none";
   }
+
+  const clsAssets = getClassAssetUrls(cls);
+  const clsPortraitEl = document.getElementById("class-portrait-preview");
+  const clsTokenEl = document.getElementById("class-token-preview");
+  if (clsPortraitEl) clsPortraitEl.src = clsAssets.portraitUrl;
+  if (clsTokenEl) clsTokenEl.src = clsAssets.tokenUrl;
 
   const setVal = (id, val) => {
     const el = document.getElementById(id);
@@ -6042,17 +6259,19 @@ function renderClassesList() {
     const typeBadgeStyle = cls.classType === "Hero"
       ? "background:rgba(56,189,248,0.16); color:#7dd3fc; border:1px solid rgba(56,189,248,0.35);"
       : "background:rgba(239,68,68,0.16); color:#fca5a5; border:1px solid rgba(239,68,68,0.35);";
+    const { tokenUrl, portraitUrl } = getClassAssetUrls(cls);
     div.innerHTML = `
       <div style="display:flex; flex-direction:column; width:100%; gap:2px;">
         <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:6px;">
           <span style="display:flex; align-items:center; gap:6px;">
-            <span>${cls.icon || "🏛️"}</span>
+            <img src="${tokenUrl}" alt="" style="width:22px; height:22px; border-radius:50%; object-fit:cover; border:1px solid #d97706;">
+            <img src="${portraitUrl}" alt="" style="width:20px; height:22px; border-radius:3px; object-fit:cover; border:1px solid #475569;">
             <strong>${escapeHtml(cls.name)}</strong>
           </span>
           <span class="badge" style="font-size:0.65rem; padding:1px 6px; ${typeBadgeStyle}">${cls.classType}</span>
         </div>
-        <div style="font-size:0.68rem; color:#94a3b8; margin-left:22px;">
-          ❤️ BP:${cls.bodyPoints} • 🧠 MP:${cls.mindPoints} • ⚔️ Atk:${cls.attackDice} • 🛡️ Def:${cls.defendDice}
+        <div style="font-size:0.68rem; color:#94a3b8; margin-left:4px;">
+          BP:${cls.bodyPoints} • MP:${cls.mindPoints} • Atk:${cls.attackDice} • Def:${cls.defendDice}
         </div>
       </div>
     `;
@@ -6080,7 +6299,7 @@ function renderClassesTab() {
     getEnemyClasses().forEach(ec => {
       const opt = document.createElement("option");
       opt.value = ec.name;
-      opt.textContent = `${ec.icon || "👹"} ${ec.name} (BP:${ec.bodyPoints} MP:${ec.mindPoints} Atk:${ec.attackDice} Def:${ec.defendDice} Move:${ec.movementSquares})`;
+      opt.textContent = `${ec.name} (BP:${ec.bodyPoints} MP:${ec.mindPoints} Atk:${ec.attackDice} Def:${ec.defendDice} Move:${ec.movementSquares})`;
       fragment.appendChild(opt);
     });
     monBaseSelect.appendChild(fragment);
@@ -6107,14 +6326,19 @@ function renderClassesTab() {
     const badgeStyle = isHero
       ? "background:rgba(56,189,248,0.16); color:#7dd3fc; border:1px solid rgba(56,189,248,0.35);"
       : "background:rgba(239,68,68,0.16); color:#fca5a5; border:1px solid rgba(239,68,68,0.35);";
+    const { tokenUrl, portraitUrl } = getClassAssetUrls(cls);
     card.innerHTML = `
       <div class="spell-card-top-badges">
-        <span class="badge" style="font-size:0.68rem; padding:1px 6px; ${badgeStyle}">${isHero ? "🛡️ Hero Class" : "👹 Enemy Class"}</span>
-        <span style="font-size:0.74rem; color:#94a3b8; font-weight:600;">❤️ ${cls.bodyPoints} BP • 🧠 ${cls.mindPoints} MP</span>
+        <span class="badge" style="font-size:0.68rem; padding:1px 6px; ${badgeStyle}">${isHero ? "Hero Class" : "Enemy Class"}</span>
+        <span style="font-size:0.74rem; color:#94a3b8; font-weight:600;">${cls.bodyPoints} BP • ${cls.mindPoints} MP</span>
       </div>
-      <div class="card-title">${cls.icon || "🏛️"} ${escapeHtml(cls.name)}</div>
+      <div class="card-title" style="display:flex; align-items:center; gap:8px;">
+        <img src="${tokenUrl}" alt="${escapeHtml(cls.name)} Token" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:1.5px solid #f59e0b; flex-shrink:0;">
+        <img src="${portraitUrl}" alt="${escapeHtml(cls.name)} Portrait" style="width:28px; height:32px; border-radius:4px; object-fit:cover; border:1px solid #64748b; flex-shrink:0;">
+        <span>${escapeHtml(cls.name)}</span>
+      </div>
       <div class="card-meta" style="font-weight:700; color:#38bdf8;">
-        ⚔️ ${cls.attackDice} Atk • 🛡️ ${cls.defendDice} Def • 👟 ${cls.movementSquares} Move
+        ${cls.attackDice} Atk • ${cls.defendDice} Def • ${cls.movementSquares} Move
       </div>
       <div class="card-meta" style="flex:1; font-size:0.74rem; color:#cbd5e1;">
         <strong>Abilities:</strong> ${escapeHtml(cls.abilities || cls.description || "")}
@@ -6266,6 +6490,7 @@ async function saveActiveMonsterToKGraph(explicit = false) {
   if (!monster) return { success: false, error: "No active monster" };
 
   const baseClass = monster["robos:extendsClass"] || monster["robos:monsterArchetype"] || monster["robos:archetype"] || "Goblin";
+  const assetKey = resolveMonsterAssetKey(monster);
   const monsterNode = {
     "@id": monster["@id"],
     "@type": [
@@ -6283,6 +6508,8 @@ async function saveActiveMonsterToKGraph(explicit = false) {
     "robos:archetype": monster["robos:archetype"] || baseClass,
     "robos:abilities": monster["robos:abilities"] || "",
     "robos:icon": monster["robos:icon"] || "👹",
+    "robos:tokenAsset": monster["robos:tokenAsset"] || `../assets/tokens/token_${assetKey}.png`,
+    "robos:portraitAsset": monster["robos:portraitAsset"] || `../assets/portraits/card_bg_${assetKey}.png`,
     "robos:bodyPoints": parseInt(monster["robos:bodyPoints"], 10) || 1,
     "robos:mindPoints": monster["robos:mindPoints"] !== undefined ? parseInt(monster["robos:mindPoints"], 10) : 1,
     "robos:attackDice": parseInt(monster["robos:attackDice"], 10) || 2,
@@ -6341,12 +6568,8 @@ function renderMonstersList() {
     const div = document.createElement("div");
     div.className = "list-item" + (m["@id"] === currentData.activeMonsterId ? " active" : "");
     div.dataset.monsterId = m["@id"];
-    let icon = m["robos:icon"] || "👹";
-    if (!m["robos:icon"]) {
-      if (m["robos:isBoss"]) icon = "👑";
-      else if (m["robos:isUndead"]) icon = "💀";
-      else if (m["robos:isSpellcaster"]) icon = "🧙‍♂️";
-    }
+    const tokUrl = getMonsterTokenUrl(m);
+    const portUrl = getMonsterPortraitUrl(m);
     const cat = m["robos:category"] || "Base Game";
     const baseClass = m["robos:extendsClass"] || m["robos:monsterArchetype"] || "Goblin";
     const catBadgeColor = cat === "Midterms 2026"
@@ -6356,12 +6579,13 @@ function renderMonstersList() {
       <div style="display:flex; flex-direction:column; width:100%; gap:2px;">
         <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:6px;">
           <span style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-            <span>${icon}</span>
+            <img src="${tokUrl}" alt="Token" title="Board Token" style="width:22px; height:22px; border-radius:50%; object-fit:cover; border:1.5px solid #f59e0b; flex-shrink:0;">
+            <img src="${portUrl}" alt="Portrait" title="Portrait" style="width:20px; height:22px; border-radius:3px; object-fit:cover; border:1px solid #475569; flex-shrink:0;">
             <strong style="overflow:hidden; text-overflow:ellipsis;">${escapeHtml(m["dcterms:title"] || m["@id"])}</strong>
           </span>
           <span class="badge" style="font-size:0.65rem; padding:1px 5px; flex-shrink:0; ${catBadgeColor}">${escapeHtml(cat)}</span>
         </div>
-        <div style="font-size:0.68rem; color:#94a3b8; margin-left:22px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Class: <span style="color:#38bdf8;">${escapeHtml(baseClass)}</span></div>
+        <div style="font-size:0.68rem; color:#94a3b8; margin-left:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Class: <span style="color:#38bdf8;">${escapeHtml(baseClass)}</span></div>
       </div>
     `;
     div.onclick = () => selectMonster(m["@id"]);
@@ -6396,6 +6620,19 @@ function selectMonster(monsterId) {
   if (titleEl) titleEl.textContent = "Edit Monster: " + (monster["dcterms:title"] || "");
   setVal("monster-id", monster["@id"] || "");
   setVal("monster-name", monster["dcterms:title"] || "");
+
+  // Update both Monster Portrait & Circular Board Token previews
+  const assetKey = resolveMonsterAssetKey(monster);
+  const tokUrl = getMonsterTokenUrl(monster);
+  const portUrl = getMonsterPortraitUrl(monster);
+  const portImgEl = document.getElementById("monster-portrait-preview");
+  const tokImgEl = document.getElementById("monster-token-preview");
+  const portPathEl = document.getElementById("monster-portrait-path-label");
+  const tokPathEl = document.getElementById("monster-token-path-label");
+  if (portImgEl) portImgEl.src = portUrl;
+  if (tokImgEl) tokImgEl.src = tokUrl;
+  if (portPathEl) portPathEl.textContent = `card_bg_${assetKey}.png`;
+  if (tokPathEl) tokPathEl.textContent = `token_${assetKey}.png`;
 
   const catEl = document.getElementById("monster-category");
   if (catEl) {
@@ -6600,8 +6837,7 @@ function renderSpellsAndItems() {
       : (c === "Base Game"
         ? "background:rgba(56,189,248,0.12); color:#7dd3fc; border:1px solid rgba(56,189,248,0.28);"
         : "background:rgba(168,85,247,0.18); color:#e9d5ff; border:1px solid rgba(168,85,247,0.45);");
-    const icon = c === "Base Game" ? "🏰" : (c === "Midterms 2026" ? "🗳️" : "🏷️");
-    return `<span class="badge entity-category-badge" data-category="${escapeHtml(c)}" style="font-size:0.68rem; padding:1px 6px; white-space:nowrap; ${style}">${icon} ${escapeHtml(c)}</span>`;
+    return `<span class="badge entity-category-badge" data-category="${escapeHtml(c)}" style="font-size:0.68rem; padding:1px 6px; white-space:nowrap; ${style}">${escapeHtml(c)}</span>`;
   };
 
   // 1. Hero Spells Grid
@@ -6619,14 +6855,18 @@ function renderSpellsAndItems() {
       card.className = `spell-card deck-${s.element}`;
       card.dataset.category = s.category || "Base Game";
       const isElf = s.element === elfElement;
-      const draftedBy = isElf ? "🧝 Elf Grimoire" : "🧙 Wizard Grimoire";
+      const draftedBy = isElf ? "Elf Grimoire" : "Wizard Grimoire";
       const draftedClass = isElf ? "badge-info" : "badge-purple";
+      const sIconUrl = getSpellIconUrl(s);
       card.innerHTML = `
         <div class="spell-card-top-badges">
           ${formatCatBadge(s.category)}
           <span class="element-tag tag-${s.element}">${(s.element || "fire").toUpperCase()}</span>
         </div>
-        <div class="card-title">${s.icon || "✨"} ${escapeHtml(s.name)}</div>
+        <div class="card-title" style="display:flex; align-items:center; gap:7px;">
+          <img src="${sIconUrl}" alt="" style="width:24px; height:24px; border-radius:4px; object-fit:cover; border:1px solid #475569; flex-shrink:0;">
+          <span>${escapeHtml(s.name)}</span>
+        </div>
         <div class="card-meta" style="flex:1;">${escapeHtml(s.description)}</div>
         <div class="spell-card-footer">
           <span class="card-meta" style="margin:0;">College: ${ELEMENTAL_DECKS[s.element]?.name || s.element}</span>
@@ -6651,12 +6891,16 @@ function renderSpellsAndItems() {
       const card = document.createElement("div");
       card.className = "spell-card weapon-card";
       card.dataset.category = item.category || "Base Game";
+      const wIconUrl = getWeaponIconUrl(item);
       card.innerHTML = `
         <div class="spell-card-top-badges">
           ${formatCatBadge(item.category)}
-          <span style="font-weight:700; color:#fbbf24; font-size:0.78rem; white-space:nowrap;">💰 ${escapeHtml(item.cost)}</span>
+          <span style="font-weight:700; color:#fbbf24; font-size:0.78rem; white-space:nowrap;">${escapeHtml(item.cost)}</span>
         </div>
-        <div class="card-title">${item.icon || "⚔️"} ${escapeHtml(item.name)}</div>
+        <div class="card-title" style="display:flex; align-items:center; gap:7px;">
+          <img src="${wIconUrl}" alt="" style="width:24px; height:24px; border-radius:4px; object-fit:cover; border:1px solid #475569; flex-shrink:0;">
+          <span>${escapeHtml(item.name)}</span>
+        </div>
         <div class="card-meta" style="font-weight:600; color:#93c5fd;">${escapeHtml(item.type)} • ${escapeHtml(item.dice)}</div>
         ${item.description ? `<div class="card-meta" style="flex:1; font-size:0.74rem;">${escapeHtml(item.description)}</div>` : ""}
       `;
@@ -6678,12 +6922,16 @@ function renderSpellsAndItems() {
       const card = document.createElement("div");
       card.className = "spell-card quest-item-card";
       card.dataset.category = item.category || "Base Game";
+      const iIconUrl = getItemIconUrl(item);
       card.innerHTML = `
         <div class="spell-card-top-badges">
           ${formatCatBadge(item.category)}
-          <span style="font-weight:700; color:#34d399; font-size:0.78rem; white-space:nowrap;">💰 ${escapeHtml(item.cost || (item.value + " GP"))}</span>
+          <span style="font-weight:700; color:#34d399; font-size:0.78rem; white-space:nowrap;">${escapeHtml(item.cost || (item.value + " GP"))}</span>
         </div>
-        <div class="card-title">${item.icon || "🎒"} ${escapeHtml(item.name)}</div>
+        <div class="card-title" style="display:flex; align-items:center; gap:7px;">
+          <img src="${iIconUrl}" alt="" style="width:24px; height:24px; border-radius:4px; object-fit:cover; border:1px solid #475569; flex-shrink:0;">
+          <span>${escapeHtml(item.name)}</span>
+        </div>
         <div class="card-meta" style="font-weight:600; color:#a7f3d0;">${escapeHtml((item.type || "item").toUpperCase())} • ${escapeHtml(item.effect)}</div>
         ${item.description ? `<div class="card-meta" style="flex:1; font-size:0.74rem;">${escapeHtml(item.description)}</div>` : ""}
       `;
@@ -6705,12 +6953,16 @@ function renderSpellsAndItems() {
       const card = document.createElement("div");
       card.className = "spell-card deck-dread";
       card.dataset.category = s.category || "Base Game";
+      const sIconUrl = getSpellIconUrl(s);
       card.innerHTML = `
         <div class="spell-card-top-badges">
           ${formatCatBadge(s.category)}
           <span class="element-tag tag-dread">DREAD MAGIC</span>
         </div>
-        <div class="card-title" style="color:#f3e8ff;">${s.icon || "⚡"} ${escapeHtml(s.name)}</div>
+        <div class="card-title" style="color:#f3e8ff; display:flex; align-items:center; gap:7px;">
+          <img src="${sIconUrl}" alt="" style="width:24px; height:24px; border-radius:4px; object-fit:cover; border:1px solid #7e22ce; flex-shrink:0;">
+          <span>${escapeHtml(s.name)}</span>
+        </div>
         <div class="card-meta" style="flex:1;">${escapeHtml(s.description)}</div>
         <div class="spell-card-footer">
           <span class="card-meta" style="margin:0; color:#c084fc;">${s.category === "Midterms 2026" ? "Spin Doctors & Hydra Bosses" : "Witch Lord & Chaos Sorcerers"}</span>
@@ -7319,7 +7571,8 @@ function renderQuestHeroesReviewGrid() {
     const wep = getHeroWeapon(h);
     const arm = getHeroArmor(h);
     const spells = getHeroSpells(h);
-    const icon = h["robos:icon"] || "🛡️";
+    const tokUrl = getHeroTokenUrl(h);
+    const portUrl = getHeroPortraitUrl(h);
 
     const card = document.createElement("div");
     card.className = "quest-hero-review-item";
@@ -7328,7 +7581,8 @@ function renderQuestHeroesReviewGrid() {
     card.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
         <div style="display:flex; align-items:center; gap:6px;">
-          <span style="font-size:1.1rem;">${icon}</span>
+          <img src="${tokUrl}" alt="" style="width:24px; height:24px; border-radius:50%; object-fit:cover; border:1.5px solid #38bdf8;">
+          <img src="${portUrl}" alt="" style="width:20px; height:24px; border-radius:3px; object-fit:cover; border:1px solid #475569;">
           <strong style="color:#f8fafc; font-size:0.88rem;">${escapeHtml(heroName)}</strong>
         </div>
         <span class="badge badge-cyan" style="font-size:0.68rem;">${escapeHtml(heroCls)}</span>
@@ -7341,9 +7595,9 @@ function renderQuestHeroesReviewGrid() {
         <span style="color:#fde047;">🪙 <strong>${gold}</strong>g</span>
       </div>
       <div style="font-size:0.72rem; color:#cbd5e1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-        🗡️ ${escapeHtml(wep)} • 🛡️ ${escapeHtml(arm)}
+        ${escapeHtml(wep)} • ${escapeHtml(arm)}
       </div>
-      ${spells.length > 0 ? `<div style="font-size:0.7rem; color:#38bdf8;">🔮 ${spells.length} Spells Memorized</div>` : `<div style="font-size:0.7rem; color:#64748b;">⚔️ Martial Champion</div>`}
+      ${spells.length > 0 ? `<div style="font-size:0.7rem; color:#38bdf8;">${spells.length} Spells Memorized</div>` : `<div style="font-size:0.7rem; color:#64748b;">Martial Champion</div>`}
     `;
     card.addEventListener("click", () => {
       switchCampaignSubtab("subtab-campaign-heroes");
@@ -8291,11 +8545,15 @@ async function refreshQuestSaveStateUI(cartridgeSlug = null) {
         visMonsters.forEach(m => {
           const mCard = document.createElement("div");
           const mPos = Array.isArray(m.gridPos) ? `[${m.gridPos[0]}, ${m.gridPos[1]}]` : "[0, 0]";
+          const tokUrl = getMonsterTokenUrl(m);
+          const portUrl = getMonsterPortraitUrl(m);
           mCard.className = "save-state-visible-monster-item";
           mCard.style = "background:rgba(69,10,10,0.45); border:1px solid #991b1b; border-radius:5px; padding:6px 9px; font-size:11px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;";
           mCard.innerHTML = `
-            <div>
-              <strong style="color:#fecaca;">👹 ${escapeHtml(m.name)}</strong>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <img src="${tokUrl}" alt="" style="width:20px; height:20px; border-radius:50%; object-fit:cover; border:1px solid #f59e0b;">
+              <img src="${portUrl}" alt="" style="width:18px; height:20px; border-radius:3px; object-fit:cover; border:1px solid #475569;">
+              <strong style="color:#fecaca;">${escapeHtml(m.name)}</strong>
               <span style="color:#fca5a5; font-size:10px; margin-left:4px;">(${escapeHtml(m.monsterType)})</span>
               ${m.isBoss ? `<span class="badge" style="background:#581c87; color:#f3e8ff; font-size:9px; margin-left:4px;">BOSS</span>` : ""}
             </div>

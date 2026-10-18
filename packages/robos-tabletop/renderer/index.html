@@ -412,6 +412,23 @@
                   <button id="btn-delete-hero" class="btn btn-sm btn-danger">🗑️ Delete</button>
                 </div>
               </div>
+              <div id="hero-visual-assets-bar" style="display:flex; align-items:center; gap:16px; padding:12px 14px; margin-bottom:14px; background:linear-gradient(135deg, rgba(15,23,42,0.9), rgba(30,41,59,0.75)); border:1px solid #334155; border-radius:8px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <img id="hero-portrait-preview" src="../assets/portraits/card_bg_barbarian.png" alt="Hero Portrait" style="width:88px; height:88px; object-fit:cover; border-radius:8px; border:2px solid #f59e0b; box-shadow:0 4px 12px rgba(0,0,0,0.5);">
+                  <div>
+                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#fbbf24; letter-spacing:0.5px;">AI Character Portrait</div>
+                    <div id="hero-portrait-path-label" style="font-size:11px; color:#94a3b8; font-family:monospace;">card_bg_barbarian.png</div>
+                  </div>
+                </div>
+                <div style="width:1px; height:64px; background:#334155;"></div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <img id="hero-token-preview" src="../assets/tokens/token_barbarian.png" alt="Hero Token" style="width:68px; height:68px; object-fit:contain; filter:drop-shadow(0 3px 8px rgba(0,0,0,0.6));">
+                  <div>
+                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#38bdf8; letter-spacing:0.5px;">AI Board Token</div>
+                    <div id="hero-token-path-label" style="font-size:11px; color:#94a3b8; font-family:monospace;">token_barbarian.png</div>
+                  </div>
+                </div>
+              </div>
               <div class="form-row">
                 <div class="form-group" style="flex:1;">
                   <label>Hero ID:</label>
@@ -529,7 +546,7 @@
             <div class="card form-card hero-action-screen" id="hero-action-screen" style="margin-top:16px;">
               <div class="action-screen-header">
                 <div class="action-hero-identity">
-                  <span id="act-hero-icon" class="act-icon">🛡️</span>
+                  <span id="act-hero-icon" class="act-icon" style="padding:0; overflow:hidden; display:inline-flex; align-items:center; justify-content:center;"><img src="../assets/tokens/token_barbarian.png" alt="Hero" style="width:100%; height:100%; object-fit:contain;"></span>
                   <div>
                     <h3 id="act-hero-name" style="margin:0;">Barbarian</h3>
                     <div style="display:flex; gap:8px; align-items:center; margin-top:2px;">
@@ -660,6 +677,25 @@
                   <button id="btn-delete-monster" class="btn btn-sm btn-danger">🗑️ Delete</button>
                 </div>
               </div>
+              <div id="monster-visual-assets-bar" style="display:flex; align-items:center; gap:18px; padding:12px 16px; margin-bottom:14px; background:linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,27,75,0.65)); border:1px solid #334155; border-radius:8px; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <img id="monster-portrait-preview" src="../assets/portraits/card_bg_goblin.png" alt="Monster Portrait" style="width:108px; height:108px; object-fit:cover; border-radius:8px; border:2px solid #f59e0b; box-shadow:0 4px 14px rgba(0,0,0,0.6);">
+                  <div>
+                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#fbbf24; letter-spacing:0.5px;">AI Monster Portrait</div>
+                    <div id="monster-portrait-path-label" style="font-size:11px; color:#cbd5e1; font-family:monospace; margin-top:2px;">card_bg_goblin.png</div>
+                    <div style="font-size:10px; color:#94a3b8; margin-top:3px;">Used on Monster Cards &amp; Encounter HUD</div>
+                  </div>
+                </div>
+                <div style="width:1px; height:76px; background:#334155;"></div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <img id="monster-token-preview" src="../assets/tokens/token_goblin.png" alt="Monster Token" style="width:80px; height:80px; object-fit:contain; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.65));">
+                  <div>
+                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#38bdf8; letter-spacing:0.5px;">AI Board Token</div>
+                    <div id="monster-token-path-label" style="font-size:11px; color:#cbd5e1; font-family:monospace; margin-top:2px;">token_goblin.png</div>
+                    <div style="font-size:10px; color:#94a3b8; margin-top:3px;">256×256 Ornate Brass Tabletop Token</div>
+                  </div>
+                </div>
+              </div>
               <div class="form-row" style="grid-template-columns: 1fr 1.4fr 1.2fr 1fr;">
                 <div class="form-group">
                   <label>Monster ID:</label>
@@ -788,7 +824,8 @@
             <div class="card form-card monster-action-screen" id="monster-action-screen" style="margin-top:16px;">
               <div class="action-screen-header">
                 <div class="action-hero-identity">
-                  <span id="act-monster-icon" class="act-icon">👹</span>
+                  <span id="act-monster-icon" class="act-icon" style="padding:0; overflow:hidden; display:inline-flex; align-items:center; justify-content:center;"><img src="../assets/tokens/token_goblin.png" alt="Monster" style="width:100%; height:100%; object-fit:contain;"></span>
+                  <img id="act-monster-portrait" src="../assets/portraits/card_bg_goblin.png" alt="Monster Portrait" style="width:68px; height:68px; object-fit:cover; border-radius:8px; border:2px solid #f59e0b; box-shadow:0 3px 10px rgba(0,0,0,0.5);">
                   <div>
                     <h3 id="act-monster-name" style="margin:0;">Monster</h3>
                     <div style="display:flex; gap:8px; align-items:center; margin-top:2px; flex-wrap:wrap;">
@@ -911,6 +948,14 @@
                   </button>
                   <button id="btn-save-class" class="btn btn-sm btn-primary">💾 Save Class</button>
                   <button id="btn-delete-class" class="btn btn-sm btn-danger">🗑️ Delete</button>
+                </div>
+              </div>
+              <div id="class-visual-assets-bar" style="display:flex; align-items:center; gap:16px; padding:10px 14px; margin-bottom:12px; background:linear-gradient(135deg, rgba(15,23,42,0.9), rgba(30,41,59,0.75)); border:1px solid #334155; border-radius:8px;">
+                <img id="class-portrait-preview" src="../assets/portraits/card_bg_barbarian.png" alt="Class Portrait" style="width:76px; height:76px; object-fit:cover; border-radius:8px; border:2px solid #f59e0b;">
+                <img id="class-token-preview" src="../assets/tokens/token_barbarian.png" alt="Class Token" style="width:64px; height:64px; object-fit:contain;">
+                <div style="font-size:11px; color:#94a3b8;">
+                  <div style="color:#f8fafc; font-weight:700;">AI Class Portrait &amp; Board Token</div>
+                  <div>Inherited automatically by Heroes and Monsters extending this class.</div>
                 </div>
               </div>
 
