@@ -3826,7 +3826,9 @@
       "robos:startingPosition": [
         1,
         1
-      ]
+      ],
+      "robos:tokenAsset": "res://assets/tokens/token_barbarian.png",
+      "robos:portraitAsset": "res://assets/hero_cards/card_bg_barbarian.png"
     },
     {
       "@id": "urn:robos:tabletop:hero:dwarf",
@@ -3845,7 +3847,9 @@
       "robos:startingWeapon": "urn:robos:game:item:shortsword",
       "robos:tokenColor": "#b45309",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:tokenAsset": "res://assets/tokens/token_dwarf.png",
+      "robos:portraitAsset": "res://assets/hero_cards/card_bg_dwarf.png"
     },
     {
       "@id": "urn:robos:tabletop:hero:elf",
@@ -3864,7 +3868,9 @@
       "robos:startingWeapon": "urn:robos:game:item:shortsword",
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:tokenAsset": "res://assets/tokens/token_elf.png",
+      "robos:portraitAsset": "res://assets/hero_cards/card_bg_elf.png"
     },
     {
       "@id": "urn:robos:tabletop:hero:wizard",
@@ -3908,7 +3914,9 @@
       "robos:startingPosition": [
         1,
         1
-      ]
+      ],
+      "robos:tokenAsset": "res://assets/tokens/token_wizard.png",
+      "robos:portraitAsset": "res://assets/hero_cards/card_bg_wizard.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:goblin",
@@ -3928,7 +3936,9 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Goblin",
-      "robos:archetype": "Goblin"
+      "robos:archetype": "Goblin",
+      "robos:tokenAsset": "res://assets/tokens/token_goblin.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_goblin.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:orc",
@@ -3948,7 +3958,9 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Orc",
-      "robos:archetype": "Orc"
+      "robos:archetype": "Orc",
+      "robos:tokenAsset": "res://assets/tokens/token_orc.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_orc.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:fimir",
@@ -3968,7 +3980,9 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Fimir",
-      "robos:archetype": "Fimir"
+      "robos:archetype": "Fimir",
+      "robos:tokenAsset": "res://assets/tokens/token_fimir.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_fimir.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:skeleton",
@@ -3989,7 +4003,9 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Skeleton",
-      "robos:archetype": "Skeleton"
+      "robos:archetype": "Skeleton",
+      "robos:tokenAsset": "res://assets/tokens/token_skeleton.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_skeleton.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:zombie",
@@ -4010,7 +4026,9 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Zombie",
-      "robos:archetype": "Zombie"
+      "robos:archetype": "Zombie",
+      "robos:tokenAsset": "res://assets/tokens/token_zombie.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_zombie.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:mummy",
@@ -4031,7 +4049,9 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Mummy",
-      "robos:archetype": "Mummy"
+      "robos:archetype": "Mummy",
+      "robos:tokenAsset": "res://assets/tokens/token_mummy.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_mummy.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:chaos-warrior",
@@ -4051,7 +4071,9 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Dread Warrior",
-      "robos:archetype": "Dread Warrior"
+      "robos:archetype": "Dread Warrior",
+      "robos:tokenAsset": "res://assets/tokens/token_chaos_warrior.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_chaos_warrior.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:gargoyle",
@@ -4071,7 +4093,9 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Gargoyle",
-      "robos:archetype": "Gargoyle"
+      "robos:archetype": "Gargoyle",
+      "robos:tokenAsset": "res://assets/tokens/token_gargoyle.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_gargoyle.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:verag-orc-warlord",
@@ -4100,7 +4124,9 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Orc Warlord",
-      "robos:archetype": "Orc Warlord"
+      "robos:archetype": "Orc Warlord",
+      "robos:tokenAsset": "res://assets/tokens/token_verag.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_verag.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:chaos-sorcerer",
@@ -4128,7 +4154,9 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Chaos Sorcerer",
-      "robos:archetype": "Chaos Sorcerer"
+      "robos:archetype": "Chaos Sorcerer",
+      "robos:tokenAsset": "res://assets/tokens/token_chaos_sorcerer.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_chaos_sorcerer.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:witch-lord",
@@ -4159,7 +4187,9 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Witch Lord",
-      "robos:archetype": "Witch Lord"
+      "robos:archetype": "Witch Lord",
+      "robos:tokenAsset": "res://assets/tokens/token_witch_lord.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_witch_lord.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:orc-shaman",
@@ -4186,7 +4216,9 @@
       "robos:namespace": "robos.tabletop",
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Orc Shaman",
-      "robos:archetype": "Orc Shaman"
+      "robos:archetype": "Orc Shaman",
+      "robos:tokenAsset": "res://assets/tokens/token_orc_shaman.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_orc_shaman.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:dragon",
@@ -4215,7 +4247,9 @@
       ],
       "robos:tokenColor": "#b91c1c",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:tokenAsset": "res://assets/tokens/token_dragon.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_dragon.png"
     },
     {
       "@id": "urn:robos:tabletop:spell:ball-of-flame",
@@ -5520,7 +5554,9 @@
       "robos:tokenColor": "#475569",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop",
-      "robos:category": "Base Game"
+      "robos:category": "Base Game",
+      "robos:tokenAsset": "res://assets/tokens/token_doomguard.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_doomguard.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:cassandria-witch-hand",
@@ -5548,7 +5584,9 @@
       "robos:tokenColor": "#9333ea",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop",
-      "robos:category": "Base Game"
+      "robos:category": "Base Game",
+      "robos:tokenAsset": "res://assets/tokens/token_witch_hand.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_witch_hand.png"
     },
     {
       "@id": "urn:robos:tabletop:weapon:unapproved-bombing-run",
@@ -6936,7 +6974,9 @@
       "robos:icon": "📋",
       "robos:tokenColor": "#16a34a",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:tokenAsset": "res://assets/tokens/token_campaign_volunteer.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_campaign_volunteer.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:political-operative",
@@ -6967,7 +7007,9 @@
       "robos:icon": "🕵️",
       "robos:tokenColor": "#ca8a04",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:tokenAsset": "res://assets/tokens/token_political_operative.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_political_operative.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:career-politician",
@@ -6998,7 +7040,9 @@
       "robos:icon": "🏛️",
       "robos:tokenColor": "#94a3b8",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:tokenAsset": "res://assets/tokens/token_career_politician.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_career_politician.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:bureaucrat",
@@ -7029,7 +7073,9 @@
       "robos:icon": "📎",
       "robos:tokenColor": "#475569",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:tokenAsset": "res://assets/tokens/token_bureaucrat.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_bureaucrat.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:lobbyist",
@@ -7060,7 +7106,9 @@
       "robos:icon": "💼",
       "robos:tokenColor": "#d97706",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:tokenAsset": "res://assets/tokens/token_lobbyist.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_lobbyist.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:partisan-enforcer",
@@ -7091,7 +7139,9 @@
       "robos:icon": "⚔️",
       "robos:tokenColor": "#dc2626",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:tokenAsset": "res://assets/tokens/token_partisan_enforcer.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_partisan_enforcer.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:super-pac-demon",
@@ -7122,7 +7172,9 @@
       "robos:icon": "😈",
       "robos:tokenColor": "#7c3aed",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:tokenAsset": "res://assets/tokens/token_super_pac_demon.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_super_pac_demon.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:spin-doctor",
@@ -7155,7 +7207,9 @@
       "robos:icon": "🌀",
       "robos:tokenColor": "#0284c7",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:tokenAsset": "res://assets/tokens/token_spin_doctor.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_spin_doctor.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:talarixon",
@@ -7187,7 +7241,9 @@
       "robos:icon": "🐍",
       "robos:tokenColor": "#b91c1c",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:tokenAsset": "res://assets/tokens/token_talarixon.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_talarixon.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:el-rogers",
@@ -7219,7 +7275,9 @@
       "robos:icon": "🐲",
       "robos:tokenColor": "#1d4ed8",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:tokenAsset": "res://assets/tokens/token_el_rogers.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_el_rogers.png"
     },
     {
       "@id": "urn:robos:tabletop:monster:brownsted",
@@ -7251,7 +7309,9 @@
       "robos:icon": "🐉",
       "robos:tokenColor": "#9333ea",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:tokenAsset": "res://assets/tokens/token_brownsted.png",
+      "robos:portraitAsset": "res://assets/monster_cards/card_bg_brownsted.png"
     },
     {
       "@id": "urn:robos:tabletop:spell:attack-ad",

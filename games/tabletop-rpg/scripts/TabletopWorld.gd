@@ -1485,7 +1485,26 @@ func _load_monster_token_textures() -> void:
 		"chaos_warrior": "res://assets/tokens/token_chaos_warrior.png",
 		"gargoyle": "res://assets/tokens/token_gargoyle.png",
 		"verag": "res://assets/tokens/token_verag.png",
-		"dragon": "res://assets/tokens/token_dragon.png"
+		"orc_shaman": "res://assets/tokens/token_orc_shaman.png",
+		"chaos_sorcerer": "res://assets/tokens/token_chaos_sorcerer.png",
+		"witch_lord": "res://assets/tokens/token_witch_lord.png",
+		"dragon": "res://assets/tokens/token_dragon.png",
+		"doomguard": "res://assets/tokens/token_doomguard.png",
+		"witch_hand": "res://assets/tokens/token_witch_hand.png",
+		"campaign_volunteer": "res://assets/tokens/token_campaign_volunteer.png",
+		"political_operative": "res://assets/tokens/token_political_operative.png",
+		"career_politician": "res://assets/tokens/token_career_politician.png",
+		"bureaucrat": "res://assets/tokens/token_bureaucrat.png",
+		"lobbyist": "res://assets/tokens/token_lobbyist.png",
+		"partisan_enforcer": "res://assets/tokens/token_partisan_enforcer.png",
+		"super_pac_demon": "res://assets/tokens/token_super_pac_demon.png",
+		"spin_doctor": "res://assets/tokens/token_spin_doctor.png",
+		"talarixon": "res://assets/tokens/token_talarixon.png",
+		"el_rogers": "res://assets/tokens/token_el_rogers.png",
+		"brownsted": "res://assets/tokens/token_brownsted.png",
+		"katie_zacharia": "res://assets/tokens/token_katie_zacharia.png",
+		"mitch_mcconnell": "res://assets/tokens/token_mitch_mcconnell.png",
+		"war_room_boss": "res://assets/tokens/token_war_room_boss.png"
 	}
 	for k in token_map:
 		if not monster_token_textures.has(k) or monster_token_textures[k] == null:
@@ -1497,28 +1516,66 @@ func get_monster_token_key(m: Dictionary) -> String:
 	var m_id = str(m.get("id", "")).to_lower()
 	var m_slug = str(m.get("slug", "")).to_lower()
 	var m_name = str(m.get("name", "")).to_lower()
-	var m_type = str(m.get("type", m.get("monster", ""))).to_lower()
+	var m_type = str(m.get("type", m.get("monsterType", m.get("monster", "")))).to_lower()
+	var combined = "%s %s %s %s" % [m_id, m_slug, m_name, m_type]
 
-	# Check boss / warlord / dragon first
-	if "dragon" in m_id or "dragon" in m_slug or "dragon" in m_name or "dragon" in m_type or "wyrm" in m_name:
+	if "katie" in combined or "zacharia" in combined:
+		return "katie_zacharia"
+	if "mitch" in combined or "mcconnell" in combined:
+		return "mitch_mcconnell"
+	if "vance" in combined or "kamala" in combined or "war_room" in combined or "war-room" in combined:
+		return "war_room_boss"
+	if "talarixon" in combined:
+		return "talarixon"
+	if "el-rogers" in combined or "el_rogers" in combined:
+		return "el_rogers"
+	if "brownsted" in combined:
+		return "brownsted"
+	if "campaign-volunteer" in combined or "campaign_volunteer" in combined or "campaign volunteer" in combined:
+		return "campaign_volunteer"
+	if "political-operative" in combined or "political_operative" in combined or "political operative" in combined:
+		return "political_operative"
+	if "career-politician" in combined or "career_politician" in combined or "career politician" in combined:
+		return "career_politician"
+	if "bureaucrat" in combined:
+		return "bureaucrat"
+	if "lobbyist" in combined:
+		return "lobbyist"
+	if "partisan-enforcer" in combined or "partisan_enforcer" in combined or "partisan enforcer" in combined:
+		return "partisan_enforcer"
+	if "super-pac-demon" in combined or "super_pac_demon" in combined or "super pac demon" in combined:
+		return "super_pac_demon"
+	if "spin-doctor" in combined or "spin_doctor" in combined or "spin doctor" in combined:
+		return "spin_doctor"
+	if "witch_lord" in combined or "witch-lord" in combined or "witch lord" in combined:
+		return "witch_lord"
+	if "witch_hand" in combined or "witch-hand" in combined or "witch hand" in combined or "kessandria" in combined:
+		return "witch_hand"
+	if "doomguard" in combined or "wardoz" in combined:
+		return "doomguard"
+	if "orc_shaman" in combined or "orc-shaman" in combined or "orc shaman" in combined or "grak" in combined:
+		return "orc_shaman"
+	if "chaos_sorcerer" in combined or "chaos-sorcerer" in combined or "chaos sorcerer" in combined or "dread sorcerer" in combined or "zargon" in combined or "balur" in combined:
+		return "chaos_sorcerer"
+	if "dragon" in combined or "wyrm" in combined or "venim" in combined:
 		return "dragon"
-	if "verag" in m_id or "verag" in m_slug or "verag" in m_name or "warlord" in m_name or "ulag" in m_id or "ulag" in m_slug:
+	if "verag" in combined or "warlord" in combined or "ulag" in combined:
 		return "verag"
-	if "chaos" in m_id or "chaos" in m_slug or "chaos" in m_name or "dread" in m_name:
+	if "chaos" in combined or "dread" in combined or "gulthor" in combined:
 		return "chaos_warrior"
-	if "gargoyle" in m_id or "gargoyle" in m_slug or "gargoyle" in m_name:
+	if "gargoyle" in combined:
 		return "gargoyle"
-	if "mummy" in m_id or "mummy" in m_slug or "mummy" in m_name:
+	if "mummy" in combined:
 		return "mummy"
-	if "fimir" in m_id or "fimir" in m_slug or "fimir" in m_name or "abomination" in m_name:
+	if "fimir" in combined or "abomination" in combined:
 		return "fimir"
-	if "zombie" in m_id or "zombie" in m_slug or "zombie" in m_name:
+	if "zombie" in combined:
 		return "zombie"
-	if "skeleton" in m_id or "skeleton" in m_slug or "skeleton" in m_name or "skel" in m_id or "skel" in m_slug:
+	if "skeleton" in combined or "skel" in combined:
 		return "skeleton"
-	if "goblin" in m_id or "goblin" in m_slug or "goblin" in m_name:
+	if "goblin" in combined:
 		return "goblin"
-	if "orc" in m_id or "orc" in m_slug or "orc" in m_name:
+	if "orc" in combined:
 		return "orc"
 	return ""
 

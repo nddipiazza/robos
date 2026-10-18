@@ -581,9 +581,61 @@ function updateRoomNamesToggleUI() {
 // -------------------------------------------------------------
 // Monster Catalog & Category Filtering Helpers
 // -------------------------------------------------------------
+function resolveMonsterAssetSlug(monsterOrType) {
+  let raw = '';
+  if (typeof monsterOrType === 'string') {
+    raw = monsterOrType;
+  } else if (monsterOrType && typeof monsterOrType === 'object') {
+    const idAndName = `${monsterOrType.id || ''} ${monsterOrType.name || ''}`.toLowerCase();
+    if (idAndName.includes('katie') || idAndName.includes('zacharia')) return 'katie_zacharia';
+    if (idAndName.includes('mitch') || idAndName.includes('mcconnell')) return 'mitch_mcconnell';
+    if (idAndName.includes('vance') || idAndName.includes('kamala') || idAndName.includes('war-room') || idAndName.includes('war_room')) return 'war_room_boss';
+    raw = monsterOrType.type || monsterOrType.monsterType || monsterOrType.slug || monsterOrType.name || '';
+  }
+  const s = String(raw).toLowerCase().trim().replace(/^urn:robos:tabletop:monster:/, '');
+  if (s.includes('katie') || s.includes('zacharia')) return 'katie_zacharia';
+  if (s.includes('mitch') || s.includes('mcconnell')) return 'mitch_mcconnell';
+  if (s.includes('vance') || s.includes('kamala') || s.includes('war-room') || s.includes('war_room')) return 'war_room_boss';
+  if (s.includes('campaign-volunteer') || s.includes('campaign_volunteer')) return 'campaign_volunteer';
+  if (s.includes('political-operative') || s.includes('political_operative')) return 'political_operative';
+  if (s.includes('career-politician') || s.includes('career_politician')) return 'career_politician';
+  if (s.includes('bureaucrat')) return 'bureaucrat';
+  if (s.includes('lobbyist')) return 'lobbyist';
+  if (s.includes('partisan-enforcer') || s.includes('partisan_enforcer')) return 'partisan_enforcer';
+  if (s.includes('super-pac-demon') || s.includes('super_pac_demon')) return 'super_pac_demon';
+  if (s.includes('spin-doctor') || s.includes('spin_doctor')) return 'spin_doctor';
+  if (s.includes('talarixon')) return 'talarixon';
+  if (s.includes('el-rogers') || s.includes('el_rogers')) return 'el_rogers';
+  if (s.includes('brownsted')) return 'brownsted';
+  if (s.includes('dread-warrior') || s.includes('dread_warrior') || s.includes('chaos_warrior') || s.includes('gulthor')) return 'chaos_warrior';
+  if (s.includes('abomination') || s.includes('fimir')) return 'fimir';
+  if (s.includes('verag') || s.includes('ulag') || s.includes('orc_warlord') || s.includes('orc-warlord')) return 'verag';
+  if (s.includes('orc-shaman') || s.includes('orc_shaman') || s.includes('grak')) return 'orc_shaman';
+  if (s.includes('chaos-sorcerer') || s.includes('chaos_sorcerer') || s.includes('zargon') || s.includes('balur')) return 'chaos_sorcerer';
+  if (s.includes('witch-lord') || s.includes('witch_lord')) return 'witch_lord';
+  if (s.includes('witch-hand') || s.includes('witch_hand') || s.includes('kessandria')) return 'witch_hand';
+  if (s.includes('doomguard') || s.includes('wardoz')) return 'doomguard';
+  if (s.includes('dragon') || s.includes('venim')) return 'dragon';
+  if (s.includes('gargoyle')) return 'gargoyle';
+  if (s.includes('mummy')) return 'mummy';
+  if (s.includes('zombie')) return 'zombie';
+  if (s.includes('skeleton')) return 'skeleton';
+  if (s.includes('orc')) return 'orc';
+  return 'goblin';
+}
+
+function getMonsterTokenImage(monsterOrType) {
+  const key = resolveMonsterAssetSlug(monsterOrType);
+  return state.assetCache[`token_${key}`] || state.assetCache[`token_${String(monsterOrType?.type || monsterOrType || '')}`] || null;
+}
+
+function getMonsterPortraitImage(monsterOrType) {
+  const key = resolveMonsterAssetSlug(monsterOrType);
+  return state.assetCache[`portrait_${key}`] || state.assetCache[`token_${key}`] || null;
+}
+
 function formatMonsterOptionLabel(slug, def) {
   if (!def) return slug;
-  const icon = def.icon ? `${def.icon} ` : '';
   const archPrefix = (def.category === 'Midterms 2026' && def.archetype && def.archetype !== def.name)
     ? ` — ${def.archetype}`
     : '';
@@ -592,7 +644,7 @@ function formatMonsterOptionLabel(slug, def) {
   if (def.isBoss) tags.push('Boss');
   else if (def.isCaster) tags.push('Caster');
   const tagSuffix = tags.length > 0 ? `, ${tags.join('/')}` : '';
-  return `${icon}${def.name}${archPrefix} (Move: ${def.move}, Atk: ${def.atk}, Def: ${def.def}, BP: ${def.bp}${tagSuffix})`;
+  return `${def.name}${archPrefix} (Move: ${def.move}, Atk: ${def.atk}, Def: ${def.def}, BP: ${def.bp}${tagSuffix})`;
 }
 
 function updateMonsterSuboptPreview() {
@@ -600,18 +652,33 @@ function updateMonsterSuboptPreview() {
   const type = state.subtool.monsterType || 'goblin';
   const def = MONSTER_DEFS[type] || MONSTER_DEFS.goblin;
   if (!def) return;
+  const assetKey = resolveMonsterAssetSlug(type);
+  const tokImg = state.assetCache[`token_${assetKey}`];
+  const portImg = state.assetCache[`portrait_${assetKey}`];
+  const tokSrc = tokImg?.src || '';
+  const portSrc = portImg?.src || tokSrc;
   const catBadge = def.category === 'Midterms 2026'
-    ? `<span style="color:#38bdf8; font-weight:600;">[🗳️ Election 2026${def.archetype ? ' • ' + escapeHtml(def.archetype) : ''}]</span>`
-    : `<span style="color:#94a3b8;">[🏰 ${escapeHtml(def.category || 'Base Game')}]</span>`;
-  const bossTag = def.isBoss ? ' • <span style="color:#fb7185; font-weight:700;">👑 BOSS</span>' : '';
-  const undeadTag = def.isUndead ? ' • 💀 Undead' : '';
-  const casterTag = def.isCaster ? ' • 🪄 Caster' : '';
+    ? `<span style="color:#38bdf8; font-weight:600;">[Election 2026${def.archetype ? ' • ' + escapeHtml(def.archetype) : ''}]</span>`
+    : `<span style="color:#94a3b8;">[${escapeHtml(def.category || 'Base Game')}]</span>`;
+  const bossTag = def.isBoss ? ' • <span style="color:#fb7185; font-weight:700;">BOSS</span>' : '';
+  const undeadTag = def.isUndead ? ' • Undead' : '';
+  const casterTag = def.isCaster ? ' • Caster' : '';
   const specialHtml = def.specialAbility
-    ? `<div style="margin-top:2px; color:#fde047; font-size:9.5px;">⚡ ${escapeHtml(def.specialAbility)}</div>`
+    ? `<div style="margin-top:2px; color:#fde047; font-size:9.5px;">${escapeHtml(def.specialAbility)}</div>`
     : '';
+  const visualsHtml = (tokSrc || portSrc)
+    ? `<div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+        ${portSrc ? `<img src="${portSrc}" alt="Portrait" title="Portrait" style="width:32px; height:32px; border-radius:4px; object-fit:cover; border:1px solid #64748b;">` : ''}
+        ${tokSrc ? `<img src="${tokSrc}" alt="Token" title="Board Token" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:1.5px solid #f59e0b;">` : ''}
+        <div>
+          <div><strong>${escapeHtml(def.name)}</strong></div>
+          <div style="font-size:9.5px;">${catBadge}</div>
+        </div>
+      </div>`
+    : `<div><strong>${escapeHtml(def.name)}</strong> ${catBadge}</div>`;
   dom.monsterSuboptPreview.innerHTML = `
-    <div>${def.icon || '👾'} <strong>${escapeHtml(def.name)}</strong> ${catBadge}</div>
-    <div style="margin-top:2px; color:#94a3b8;">❤️${def.bp} 🧠${def.mp ?? 1} ⚔️${def.atk} 🛡️${def.def} 👟${def.move}${bossTag}${undeadTag}${casterTag}</div>
+    ${visualsHtml}
+    <div style="margin-top:2px; color:#94a3b8;">BP:${def.bp} MP:${def.mp ?? 1} Atk:${def.atk} Def:${def.def} Move:${def.move}${bossTag}${undeadTag}${casterTag}</div>
     ${specialHtml}
   `;
 }
@@ -2864,18 +2931,22 @@ async function testPlay() {
 function preloadAssets() {
   if (!window.robosQuestEditor) return;
 
+  const monsterAssetKeys = [
+    'goblin', 'orc', 'skeleton', 'zombie', 'mummy', 'chaos_warrior', 'fimir', 'gargoyle',
+    'verag', 'orc_shaman', 'chaos_sorcerer', 'witch_lord', 'dragon', 'doomguard', 'witch_hand',
+    'campaign_volunteer', 'political_operative', 'career_politician', 'bureaucrat',
+    'lobbyist', 'partisan_enforcer', 'super_pac_demon', 'spin_doctor',
+    'talarixon', 'el_rogers', 'brownsted',
+    'katie_zacharia', 'mitch_mcconnell', 'war_room_boss'
+  ];
+
   const assetsToLoad = [
     { key: 'door_closed', path: 'assets/doors/door_closed.png' },
     { key: 'door_open', path: 'assets/doors/door_open.png' },
-    { key: 'token_goblin', path: 'assets/tokens/token_goblin.png' },
-    { key: 'token_orc', path: 'assets/tokens/token_orc.png' },
-    { key: 'token_skeleton', path: 'assets/tokens/token_skeleton.png' },
-    { key: 'token_zombie', path: 'assets/tokens/token_zombie.png' },
-    { key: 'token_mummy', path: 'assets/tokens/token_mummy.png' },
-    { key: 'token_chaos_warrior', path: 'assets/tokens/token_chaos_warrior.png' },
-    { key: 'token_fimir', path: 'assets/tokens/token_fimir.png' },
     { key: 'token_abomination', path: 'assets/tokens/token_fimir.png' },
-    { key: 'token_gargoyle', path: 'assets/tokens/token_gargoyle.png' },
+    { key: 'token_dread-warrior', path: 'assets/tokens/token_chaos_warrior.png' },
+    ...monsterAssetKeys.map(k => ({ key: `token_${k}`, path: `assets/tokens/token_${k}.png` })),
+    ...monsterAssetKeys.map(k => ({ key: `portrait_${k}`, path: `assets/monster_cards/card_bg_${k}.png` })),
     { key: 'chest', path: 'assets/furniture/chest.png' },
     { key: 'table', path: 'assets/furniture/table.png' },
     { key: 'bookcase', path: 'assets/furniture/bookcase.png' },
@@ -2908,6 +2979,8 @@ function preloadAssets() {
         const img = new Image();
         img.onload = () => {
           state.assetCache[item.key] = img;
+          updateMonsterSuboptPreview();
+          updateEntitySummaryList();
           render();
         };
         img.src = res.dataUrl;
@@ -4073,8 +4146,7 @@ function drawBoardLayers(ctx, geom, options = {}) {
       const mc = m.pos ? m.pos[0] : (m.x !== undefined ? m.x : 0);
       const mr = m.pos ? m.pos[1] : (m.y !== undefined ? m.y : 0);
       const pos = tileToWorld(mc, mr, geom);
-      const tokenKey = `token_${m.type}`;
-      const tokenImg = state.assetCache[tokenKey];
+      const tokenImg = getMonsterTokenImage(m);
       const radius = (geom.tileSize / 2) - 3;
       const cx = pos.x + geom.tileSize / 2;
       const cy = pos.y + geom.tileSize / 2;
@@ -4093,17 +4165,20 @@ function drawBoardLayers(ctx, geom, options = {}) {
         ctx.stroke();
 
         ctx.fillStyle = '#fff';
-        ctx.font = '14px sans-serif';
+        ctx.font = 'bold 11px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(def.icon || '👾', cx, cy);
+        ctx.fillText((m.name || def.name || 'M').slice(0, 2).toUpperCase(), cx, cy);
       }
 
-      // Boss crown or skull indicator
       if (m.isBoss) {
-        ctx.fillStyle = '#fbbf24';
-        ctx.font = '10px sans-serif';
-        ctx.fillText('👑', cx, cy - radius - 2);
+        ctx.save();
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 2.0;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius + 1.5, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
       }
 
       if (!forExport && state.selectedEntity && state.selectedEntity.type === 'monster' && state.selectedEntity.index === i) {
@@ -4359,22 +4434,20 @@ function renderToolPreview(ctx, geom) {
   ctx.globalAlpha = 0.55;
 
   if (state.activeTool === 'monster') {
-    const def = MONSTER_DEFS[state.subtool.monsterType] || MONSTER_DEFS.goblin;
-    const cx = pos.x + geom.tileSize / 2;
-    const cy = pos.y + geom.tileSize / 2;
-    ctx.beginPath();
-    ctx.arc(cx, cy, (geom.tileSize / 2) - 3, 0, Math.PI * 2);
-    ctx.fillStyle = def.color || '#ca8a04';
-    ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    if (typeof ctx.fillText === 'function') {
-      ctx.fillStyle = '#fff';
-      ctx.font = '14px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(def.icon || '👾', cx, cy);
+    const tokenImg = getMonsterTokenImage(state.subtool.monsterType);
+    if (tokenImg) {
+      ctx.drawImage(tokenImg, pos.x + 2, pos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
+    } else {
+      const def = MONSTER_DEFS[state.subtool.monsterType] || MONSTER_DEFS.goblin;
+      const cx = pos.x + geom.tileSize / 2;
+      const cy = pos.y + geom.tileSize / 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, (geom.tileSize / 2) - 3, 0, Math.PI * 2);
+      ctx.fillStyle = def.color || '#ca8a04';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
     }
   } else if (state.activeTool === 'furniture') {
     const def = FURNITURE_DEFS[state.subtool.furnitureType] || { w: 1, h: 1 };
@@ -5233,13 +5306,21 @@ function updateEntitySummaryList() {
   // Monsters
   state.quest.monsters.forEach((m, idx) => {
     totalCount++;
-    const mDef = MONSTER_DEFS[m.type] || {};
-    const mIcon = m.icon || mDef.icon || '👾';
+    const tokImg = getMonsterTokenImage(m);
+    const portImg = getMonsterPortraitImage(m);
+    const tokSrc = tokImg?.src || '';
+    const portSrc = portImg?.src || tokSrc;
     const item = document.createElement('div');
     item.className = 'entity-summary-item';
+    const visualHtml = (tokSrc || portSrc)
+      ? `<span class="entity-item-icon" style="display:inline-flex; align-items:center; gap:4px;">
+          ${tokSrc ? `<img src="${tokSrc}" alt="Token" title="Board Token" style="width:22px; height:22px; border-radius:50%; object-fit:cover; border:1px solid #f59e0b;">` : ''}
+          ${portSrc ? `<img src="${portSrc}" alt="Portrait" title="Portrait" style="width:20px; height:22px; border-radius:3px; object-fit:cover; border:1px solid #64748b;">` : ''}
+        </span>`
+      : `<span class="entity-item-icon">•</span>`;
     item.innerHTML = `
       <div class="entity-item-main">
-        <span class="entity-item-icon">${mIcon}</span>
+        ${visualHtml}
         <div>
           <div class="entity-item-name">${escapeHtml(m.name)}</div>
           <div class="entity-item-pos">[${m.pos[0]}, ${m.pos[1]}] ${m.isBoss ? '• Boss' : ''}</div>
