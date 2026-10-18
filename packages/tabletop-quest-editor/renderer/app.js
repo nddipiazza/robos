@@ -1018,6 +1018,11 @@ async function loadCartridge(slugOrPath) {
     if (Array.isArray(qMeta.primaryGoals) && qMeta.primaryGoals.length > 0) {
       state.quest.primaryGoals = [...qMeta.primaryGoals];
     }
+    if (c.heroes && typeof c.heroes === 'object' && Object.keys(c.heroes).length > 0) {
+      state.quest.heroes = JSON.parse(JSON.stringify(c.heroes));
+    } else {
+      state.quest.heroes = null;
+    }
 
     // Find the primary map
     let mapData = null;
@@ -1287,28 +1292,73 @@ function buildCartridgePayload() {
       startingPosition: q.startingStair || [0, 1],
       createdDate: new Date().toISOString()
     },
-    heroes: {
-      barbarian: {
-        id: 'barbarian', slug: 'barbarian', name: 'Barbarian', heroClass: 'Barbarian',
-        bodyPoints: 8, mindPoints: 2, attackDice: 3, defendDice: 2, gold: 100,
-        position: q.startingStair || [0, 1]
-      },
-      dwarf: {
-        id: 'dwarf', slug: 'dwarf', name: 'Dwarf', heroClass: 'Dwarf',
-        bodyPoints: 7, mindPoints: 3, attackDice: 2, defendDice: 2, gold: 100,
-        position: q.startingStair || [0, 1]
-      },
-      elf: {
-        id: 'elf', slug: 'elf', name: 'Elf', heroClass: 'Elf',
-        bodyPoints: 6, mindPoints: 4, attackDice: 2, defendDice: 2, gold: 100,
-        position: q.startingStair || [0, 1]
-      },
-      wizard: {
-        id: 'wizard', slug: 'wizard', name: 'Wizard', heroClass: 'Wizard',
-        bodyPoints: 4, mindPoints: 6, attackDice: 1, defendDice: 2, gold: 100,
-        position: q.startingStair || [0, 1]
+    heroes: (() => {
+      const startPos = q.startingStair || [0, 1];
+      if (q.heroes && typeof q.heroes === 'object' && Object.keys(q.heroes).length > 0) {
+        const preserved = JSON.parse(JSON.stringify(q.heroes));
+        for (const hKey of Object.keys(preserved)) {
+          if (preserved[hKey] && typeof preserved[hKey] === 'object' && !Array.isArray(preserved[hKey].position)) {
+            preserved[hKey].position = startPos;
+          }
+        }
+        return preserved;
       }
-    },
+      const isElection = String(q.slug || '').includes('election') || String(q.campaign || '').includes('Midterm');
+      if (isElection) {
+        return {
+          obama: {
+            id: 'obama', slug: 'obama', name: 'Barack Obama', heroClass: 'Barbarian',
+            bodyPoints: 8, mindPoints: 2, attackDice: 3, defendDice: 2, gold: 120,
+            tokenAsset: 'assets/tokens/token_obama.png',
+            portraitAsset: 'assets/hero_cards/card_bg_obama.png',
+            position: startPos
+          },
+          trump: {
+            id: 'trump', slug: 'trump', name: 'Donald Trump', heroClass: 'Dwarf',
+            bodyPoints: 7, mindPoints: 3, attackDice: 2, defendDice: 2, gold: 250,
+            tokenAsset: 'assets/tokens/token_trump.png',
+            portraitAsset: 'assets/hero_cards/card_bg_trump.png',
+            position: startPos
+          },
+          'hillary-clinton': {
+            id: 'hillary-clinton', slug: 'hillary-clinton', name: 'Hillary Clinton', heroClass: 'Elf',
+            bodyPoints: 6, mindPoints: 4, attackDice: 2, defendDice: 2, gold: 150,
+            tokenAsset: 'assets/tokens/token_hillary_clinton.png',
+            portraitAsset: 'assets/hero_cards/card_bg_hillary_clinton.png',
+            position: startPos
+          },
+          'bernie-sanders': {
+            id: 'bernie-sanders', slug: 'bernie-sanders', name: 'Bernie Sanders', heroClass: 'Wizard',
+            bodyPoints: 4, mindPoints: 6, attackDice: 1, defendDice: 2, gold: 99,
+            tokenAsset: 'assets/tokens/token_bernie_sanders.png',
+            portraitAsset: 'assets/hero_cards/card_bg_bernie_sanders.png',
+            position: startPos
+          }
+        };
+      }
+      return {
+        barbarian: {
+          id: 'barbarian', slug: 'barbarian', name: 'Barbarian', heroClass: 'Barbarian',
+          bodyPoints: 8, mindPoints: 2, attackDice: 3, defendDice: 2, gold: 100,
+          position: startPos
+        },
+        dwarf: {
+          id: 'dwarf', slug: 'dwarf', name: 'Dwarf', heroClass: 'Dwarf',
+          bodyPoints: 7, mindPoints: 3, attackDice: 2, defendDice: 2, gold: 100,
+          position: startPos
+        },
+        elf: {
+          id: 'elf', slug: 'elf', name: 'Elf', heroClass: 'Elf',
+          bodyPoints: 6, mindPoints: 4, attackDice: 2, defendDice: 2, gold: 100,
+          position: startPos
+        },
+        wizard: {
+          id: 'wizard', slug: 'wizard', name: 'Wizard', heroClass: 'Wizard',
+          bodyPoints: 4, mindPoints: 6, attackDice: 1, defendDice: 2, gold: 100,
+          position: startPos
+        }
+      };
+    })(),
     monsters: monstersDict,
     maps: {
       [q.slug]: {
@@ -8528,6 +8578,7 @@ function setupEventListeners() {
   });
 
   window.addEventListener('mousemove', (e) => {
+    if (document.hidden) return;
     if (state.isPanning) {
       state.autoFit = false;
       state.panX = e.clientX - state.panStartX;
@@ -8536,11 +8587,16 @@ function setupEventListeners() {
       return;
     }
 
+    const prevTile = state.hoverTile;
+    const prevEdge = state.hoverDoorEdge;
+
     const rect = dom.canvas.getBoundingClientRect();
     if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
-      state.hoverTile = null;
-      state.hoverDoorEdge = null;
-      render();
+      if (state.hoverTile !== null || state.hoverDoorEdge !== null) {
+        state.hoverTile = null;
+        state.hoverDoorEdge = null;
+        render();
+      }
       return;
     }
 
@@ -8571,7 +8627,13 @@ function setupEventListeners() {
       dom.infoRoomName.textContent = '🏠 Room: None';
     }
 
-    render();
+    const tileChanged = (!prevTile && state.hoverTile) || (prevTile && !state.hoverTile) ||
+      (prevTile && state.hoverTile && (prevTile[0] !== state.hoverTile[0] || prevTile[1] !== state.hoverTile[1]));
+    const edgeChanged = JSON.stringify(prevEdge) !== JSON.stringify(state.hoverDoorEdge);
+
+    if (tileChanged || edgeChanged) {
+      render();
+    }
   });
 
   // Clear Exit Tile button handler
