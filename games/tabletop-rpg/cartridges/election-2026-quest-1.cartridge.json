@@ -1,39 +1,2993 @@
 {
+  "cartridgeVersion": "2.0.0",
   "cartridgeId": "election-2026-quest-1",
   "header": {
-    "id": "election-2026-quest-1",
-    "slug": "election-2026-quest-1",
     "title": "Quest 1: Battle for the Hill",
-    "description": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Navigate the chambers, overcome partisan perils, and claim victory!",
+    "slug": "election-2026-quest-1",
+    "author": "RobOS Tabletop Studio",
+    "gameType": "tabletop",
+    "genre": "Tabletop Dungeon Crawler",
     "ruleset": "heroquest",
-    "startingPosition": [
-      7,
-      14
-    ],
+    "description": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Navigate the chambers, overcome partisan perils, and claim victory!",
+    "coverColor": "#0a0e17",
+    "icon": "🛡️",
+    "mapCount": 1,
+    "heroCount": 4,
+    "monsterCount": 17,
+    "itemCount": 0,
+    "questCount": 1,
     "startingMap": "election-2026-quest-1",
-    "heroCount": 4
+    "startingPosition": [
+      0,
+      13
+    ],
+    "createdDate": "2026-10-18T14:38:46.696Z"
   },
-  "startingMap": "election-2026-quest-1",
-  "heroes": {},
+  "heroes": {
+    "barbarian": {
+      "id": "barbarian",
+      "slug": "barbarian",
+      "name": "Barbarian",
+      "heroClass": "Barbarian",
+      "bodyPoints": 8,
+      "mindPoints": 2,
+      "attackDice": 3,
+      "defendDice": 2,
+      "gold": 100,
+      "position": [
+        0,
+        13
+      ]
+    },
+    "dwarf": {
+      "id": "dwarf",
+      "slug": "dwarf",
+      "name": "Dwarf",
+      "heroClass": "Dwarf",
+      "bodyPoints": 7,
+      "mindPoints": 3,
+      "attackDice": 2,
+      "defendDice": 2,
+      "gold": 100,
+      "position": [
+        0,
+        13
+      ]
+    },
+    "elf": {
+      "id": "elf",
+      "slug": "elf",
+      "name": "Elf",
+      "heroClass": "Elf",
+      "bodyPoints": 6,
+      "mindPoints": 4,
+      "attackDice": 2,
+      "defendDice": 2,
+      "gold": 100,
+      "position": [
+        0,
+        13
+      ]
+    },
+    "wizard": {
+      "id": "wizard",
+      "slug": "wizard",
+      "name": "Wizard",
+      "heroClass": "Wizard",
+      "bodyPoints": 4,
+      "mindPoints": 6,
+      "attackDice": 1,
+      "defendDice": 2,
+      "gold": 100,
+      "position": [
+        0,
+        13
+      ]
+    }
+  },
+  "monsters": {
+    "mon-inflation-spawn-1": {
+      "id": "mon-inflation-spawn-1",
+      "slug": "inflation-spawn-mon-inflation-spawn-1",
+      "name": "Inflation Spawn",
+      "monsterType": "inflation-spawn",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Goblin",
+      "icon": "💸",
+      "tokenColor": "#16a34a",
+      "bodyPoints": 1,
+      "mindPoints": 1,
+      "attackDice": 2,
+      "defendDice": 1,
+      "movementSquares": 10,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        7,
+        16
+      ],
+      "roomId": "room-sw-6",
+      "hidden": false
+    },
+    "mon-happily-married-gay-man-2": {
+      "id": "mon-happily-married-gay-man-2",
+      "slug": "happily-married-gay-man-mon-happily-married-gay-man-2",
+      "name": "Happily Married Gay Man",
+      "monsterType": "happily-married-gay-man",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Dread Warrior",
+      "icon": "💍",
+      "tokenColor": "#ec4899",
+      "bodyPoints": 3,
+      "mindPoints": 1,
+      "attackDice": 4,
+      "defendDice": 4,
+      "movementSquares": 7,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        5,
+        6
+      ],
+      "roomId": "room-nw-1",
+      "hidden": false
+    },
+    "mon-gerrymandered-skeleton-3": {
+      "id": "mon-gerrymandered-skeleton-3",
+      "slug": "gerrymandered-skeleton-mon-gerrymandered-skeleton-3",
+      "name": "Gerrymandered Skeleton",
+      "monsterType": "gerrymandered-skeleton",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Skeleton",
+      "icon": "💀",
+      "tokenColor": "#94a3b8",
+      "bodyPoints": 1,
+      "mindPoints": 1,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        7,
+        5
+      ],
+      "roomId": "room-nw-1",
+      "hidden": false
+    },
+    "mon-trumpbiden-dragon-4": {
+      "id": "mon-trumpbiden-dragon-4",
+      "slug": "trumpbiden-dragon-mon-trumpbiden-dragon-4",
+      "name": "TrumpBiden (The Blame Dragon)",
+      "monsterType": "trumpbiden-dragon",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Dragon",
+      "icon": "🐉",
+      "tokenColor": "#dc2626",
+      "bodyPoints": 6,
+      "mindPoints": 1,
+      "attackDice": 5,
+      "defendDice": 5,
+      "movementSquares": 8,
+      "isBoss": true,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "bipartisan-blame-inferno",
+        "shrinkflation-curse",
+        "culture-war-distraction-cloud"
+      ],
+      "position": [
+        12,
+        2
+      ],
+      "roomId": "room-nw-10",
+      "hidden": false
+    },
+    "mon-irs-audit-doomguard-5": {
+      "id": "mon-irs-audit-doomguard-5",
+      "slug": "irs-audit-doomguard-mon-irs-audit-doomguard-5",
+      "name": "IRS 87,000-Agent Doomguard",
+      "monsterType": "irs-audit-doomguard",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Doomguard",
+      "icon": "🧾",
+      "tokenColor": "#334155",
+      "bodyPoints": 3,
+      "mindPoints": 1,
+      "attackDice": 4,
+      "defendDice": 6,
+      "movementSquares": 8,
+      "isBoss": true,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        14,
+        16
+      ],
+      "roomId": "room-sw-5",
+      "hidden": false
+    },
+    "mon-hoa-censor-witch-hand-6": {
+      "id": "mon-hoa-censor-witch-hand-6",
+      "slug": "hoa-censor-witch-hand-mon-hoa-censor-witch-hand-6",
+      "name": "Censorship Board Witch Hand",
+      "monsterType": "hoa-censor-witch-hand",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Witch Hand",
+      "icon": "🤫",
+      "tokenColor": "#9333ea",
+      "bodyPoints": 4,
+      "mindPoints": 1,
+      "attackDice": 4,
+      "defendDice": 4,
+      "movementSquares": 8,
+      "isBoss": true,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "culture-war-distraction-cloud",
+        "shrinkflation-curse"
+      ],
+      "position": [
+        18,
+        7
+      ],
+      "roomId": "room-ne-3",
+      "hidden": false
+    },
+    "mon-teleprompter-zombie-7": {
+      "id": "mon-teleprompter-zombie-7",
+      "slug": "teleprompter-zombie-mon-teleprompter-zombie-7",
+      "name": "Cable News Pundit Zombie",
+      "monsterType": "teleprompter-zombie",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Zombie",
+      "icon": "🧟",
+      "tokenColor": "#475569",
+      "bodyPoints": 1,
+      "mindPoints": 1,
+      "attackDice": 2,
+      "defendDice": 3,
+      "movementSquares": 4,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        21,
+        10
+      ],
+      "roomId": "room-ne-3",
+      "hidden": false
+    },
+    "mon-teleprompter-zombie-8": {
+      "id": "mon-teleprompter-zombie-8",
+      "slug": "teleprompter-zombie-mon-teleprompter-zombie-8",
+      "name": "Cable News Pundit Zombie",
+      "monsterType": "teleprompter-zombie",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Zombie",
+      "icon": "🧟",
+      "tokenColor": "#475569",
+      "bodyPoints": 1,
+      "mindPoints": 1,
+      "attackDice": 2,
+      "defendDice": 3,
+      "movementSquares": 4,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        19,
+        10
+      ],
+      "roomId": "room-ne-3",
+      "hidden": false
+    },
+    "mon-filibuster-gargoyle-9": {
+      "id": "mon-filibuster-gargoyle-9",
+      "slug": "filibuster-gargoyle-mon-filibuster-gargoyle-9",
+      "name": "Filibuster Stone Gargoyle",
+      "monsterType": "filibuster-gargoyle",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Gargoyle",
+      "icon": "🗿",
+      "tokenColor": "#64748b",
+      "bodyPoints": 3,
+      "mindPoints": 1,
+      "attackDice": 4,
+      "defendDice": 5,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        11,
+        16
+      ],
+      "roomId": "room-sw-5",
+      "hidden": false
+    },
+    "mon-k-street-swamp-fimir-10": {
+      "id": "mon-k-street-swamp-fimir-10",
+      "slug": "k-street-swamp-fimir-mon-k-street-swamp-fimir-10",
+      "name": "K-Street Swamp Lobbyist",
+      "monsterType": "k-street-swamp-fimir",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Fimir",
+      "icon": "🐊",
+      "tokenColor": "#0f766e",
+      "bodyPoints": 2,
+      "mindPoints": 1,
+      "attackDice": 3,
+      "defendDice": 3,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        18,
+        15
+      ],
+      "roomId": "room-se-4",
+      "hidden": false
+    },
+    "mon-k-street-swamp-fimir-11": {
+      "id": "mon-k-street-swamp-fimir-11",
+      "slug": "k-street-swamp-fimir-mon-k-street-swamp-fimir-11",
+      "name": "K-Street Swamp Lobbyist",
+      "monsterType": "k-street-swamp-fimir",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Fimir",
+      "icon": "🐊",
+      "tokenColor": "#0f766e",
+      "bodyPoints": 2,
+      "mindPoints": 1,
+      "attackDice": 3,
+      "defendDice": 3,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        20,
+        15
+      ],
+      "roomId": "room-se-4",
+      "hidden": false
+    },
+    "mon-spin-doctor-shaman-12": {
+      "id": "mon-spin-doctor-shaman-12",
+      "slug": "spin-doctor-shaman-mon-spin-doctor-shaman-12",
+      "name": "Polling Spin-Doctor Shaman",
+      "monsterType": "spin-doctor-shaman",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Orc Shaman",
+      "icon": "📊",
+      "tokenColor": "#0284c7",
+      "bodyPoints": 2,
+      "mindPoints": 1,
+      "attackDice": 2,
+      "defendDice": 3,
+      "movementSquares": 8,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "culture-war-distraction-cloud",
+        "shrinkflation-curse"
+      ],
+      "position": [
+        11,
+        4
+      ],
+      "roomId": "room-nw-10",
+      "hidden": false
+    },
+    "mon-spin-doctor-shaman-13": {
+      "id": "mon-spin-doctor-shaman-13",
+      "slug": "spin-doctor-shaman-mon-spin-doctor-shaman-13",
+      "name": "Polling Spin-Doctor Shaman",
+      "monsterType": "spin-doctor-shaman",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Orc Shaman",
+      "icon": "📊",
+      "tokenColor": "#0284c7",
+      "bodyPoints": 2,
+      "mindPoints": 1,
+      "attackDice": 2,
+      "defendDice": 3,
+      "movementSquares": 8,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "culture-war-distraction-cloud",
+        "shrinkflation-curse"
+      ],
+      "position": [
+        15,
+        4
+      ],
+      "roomId": "room-nw-10",
+      "hidden": false
+    },
+    "mon-katie-zacharia-boss": {
+      "id": "mon-katie-zacharia-boss",
+      "slug": "katie-zacharia-press-secretary-mon-katie-zacharia-boss",
+      "name": "Katie Zacharia (Press Secretary)",
+      "monsterType": "katie-zacharia-press-secretary",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Press Secretary",
+      "icon": "🎙️",
+      "tokenColor": "#db2777",
+      "bodyPoints": 4,
+      "mindPoints": 6,
+      "attackDice": 4,
+      "defendDice": 4,
+      "movementSquares": 7,
+      "isBoss": true,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "culture-war-distraction-cloud",
+        "shrinkflation-curse"
+      ],
+      "position": [
+        20,
+        7
+      ],
+      "roomId": "room-ne-3",
+      "hidden": false
+    },
+    "mon-mitch-mcconnell-boss": {
+      "id": "mon-mitch-mcconnell-boss",
+      "slug": "mitch-mcconnell-turtle-patriarch-mon-mitch-mcconnell-boss",
+      "name": "Mitch McConnell (Committee Patriarch)",
+      "monsterType": "mitch-mcconnell-turtle-patriarch",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Committee Patriarch",
+      "icon": "🐢",
+      "tokenColor": "#475569",
+      "bodyPoints": 5,
+      "mindPoints": 5,
+      "attackDice": 3,
+      "defendDice": 6,
+      "movementSquares": 4,
+      "isBoss": true,
+      "isUndead": true,
+      "isSpellcaster": true,
+      "spells": [
+        "shrinkflation-curse",
+        "bipartisan-blame-inferno"
+      ],
+      "position": [
+        5,
+        3
+      ],
+      "roomId": "room-nw-1",
+      "hidden": false
+    },
+    "mon-jd-vance-drunk-boss": {
+      "id": "mon-jd-vance-drunk-boss",
+      "slug": "jd-vance-drunk-war-room-mon-jd-vance-drunk-boss",
+      "name": "JD Vance (Drunk in the War Room)",
+      "monsterType": "jd-vance-drunk-war-room",
+      "category": "Midterms 2026",
+      "monsterArchetype": "War Room Boss",
+      "icon": "🥃",
+      "tokenColor": "#b91c1c",
+      "bodyPoints": 4,
+      "mindPoints": 4,
+      "attackDice": 4,
+      "defendDice": 4,
+      "movementSquares": 6,
+      "isBoss": true,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "bipartisan-blame-inferno",
+        "culture-war-distraction-cloud"
+      ],
+      "position": [
+        19,
+        3
+      ],
+      "roomId": "room-ne-2",
+      "hidden": false
+    },
+    "mon-kamala-harris-drunk-boss": {
+      "id": "mon-kamala-harris-drunk-boss",
+      "slug": "kamala-harris-drunk-war-room-mon-kamala-harris-drunk-boss",
+      "name": "Kamala Harris (Drunk in the War Room)",
+      "monsterType": "kamala-harris-drunk-war-room",
+      "category": "Midterms 2026",
+      "monsterArchetype": "War Room Boss",
+      "icon": "🍷",
+      "tokenColor": "#1d4ed8",
+      "bodyPoints": 4,
+      "mindPoints": 5,
+      "attackDice": 4,
+      "defendDice": 4,
+      "movementSquares": 6,
+      "isBoss": true,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "culture-war-distraction-cloud",
+        "shrinkflation-curse"
+      ],
+      "position": [
+        20,
+        3
+      ],
+      "roomId": "room-ne-2",
+      "hidden": false
+    }
+  },
   "maps": {
     "election-2026-quest-1": {
       "id": "election-2026-quest-1",
       "title": "Quest 1: Battle for the Hill",
       "mapConfigurationId": "midterm-election-capitol",
-      "backgroundImage": "res://assets/boards/midterm_election_capitol.png",
       "width": 26,
       "height": 19,
-      "startingStair": [
-        7,
-        14
+      "additionalBorderTile": true,
+      "backgroundImage": "res://assets/boards/midterm_election_capitol.png",
+      "tileSize": 39,
+      "pixelOffset": [
+        0,
+        0
       ],
-      "rooms": [],
-      "doors": [],
+      "wanderingMonster": "inflation-spawn",
+      "startingStair": [
+        0,
+        13
+      ],
+      "startingPosition": [
+        0,
+        13
+      ],
+      "startingStairType": "stairs_up_1x1",
+      "exitTile": [
+        14,
+        2
+      ],
+      "exitStair": [
+        14,
+        2
+      ],
+      "exitStairType": "stairs_down_1x1",
+      "activeRooms": [
+        "room-nw-1",
+        "room-ne-2",
+        "room-ne-3",
+        "room-se-4",
+        "room-sw-5",
+        "room-sw-6",
+        "room-sw-7",
+        "room-sw-8",
+        "room-nw-9",
+        "room-nw-10",
+        "room-se-11"
+      ],
+      "rooms": [
+        {
+          "id": "room-nw-1",
+          "name": "Legislative Committee Chamber (NW)",
+          "x": 2,
+          "y": 2,
+          "w": 7,
+          "h": 6,
+          "shape": "rect",
+          "tiles": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              2,
+              5
+            ],
+            [
+              2,
+              6
+            ],
+            [
+              2,
+              7
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              4
+            ],
+            [
+              3,
+              5
+            ],
+            [
+              3,
+              6
+            ],
+            [
+              3,
+              7
+            ],
+            [
+              4,
+              2
+            ],
+            [
+              4,
+              3
+            ],
+            [
+              4,
+              4
+            ],
+            [
+              4,
+              5
+            ],
+            [
+              4,
+              6
+            ],
+            [
+              4,
+              7
+            ],
+            [
+              5,
+              2
+            ],
+            [
+              5,
+              3
+            ],
+            [
+              5,
+              4
+            ],
+            [
+              5,
+              5
+            ],
+            [
+              5,
+              6
+            ],
+            [
+              5,
+              7
+            ],
+            [
+              6,
+              2
+            ],
+            [
+              6,
+              3
+            ],
+            [
+              6,
+              4
+            ],
+            [
+              6,
+              5
+            ],
+            [
+              6,
+              6
+            ],
+            [
+              6,
+              7
+            ],
+            [
+              7,
+              2
+            ],
+            [
+              7,
+              3
+            ],
+            [
+              7,
+              4
+            ],
+            [
+              7,
+              5
+            ],
+            [
+              7,
+              6
+            ],
+            [
+              7,
+              7
+            ],
+            [
+              8,
+              2
+            ],
+            [
+              8,
+              3
+            ],
+            [
+              8,
+              4
+            ],
+            [
+              8,
+              5
+            ],
+            [
+              8,
+              6
+            ],
+            [
+              8,
+              7
+            ]
+          ],
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-ne-2",
+          "name": "Campaign War Room (NE)",
+          "x": 17,
+          "y": 2,
+          "w": 6,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              17,
+              2
+            ],
+            [
+              17,
+              3
+            ],
+            [
+              17,
+              4
+            ],
+            [
+              17,
+              5
+            ],
+            [
+              18,
+              2
+            ],
+            [
+              18,
+              3
+            ],
+            [
+              18,
+              4
+            ],
+            [
+              18,
+              5
+            ],
+            [
+              19,
+              2
+            ],
+            [
+              19,
+              3
+            ],
+            [
+              19,
+              4
+            ],
+            [
+              19,
+              5
+            ],
+            [
+              20,
+              2
+            ],
+            [
+              20,
+              3
+            ],
+            [
+              20,
+              4
+            ],
+            [
+              20,
+              5
+            ],
+            [
+              21,
+              2
+            ],
+            [
+              21,
+              3
+            ],
+            [
+              21,
+              4
+            ],
+            [
+              21,
+              5
+            ],
+            [
+              22,
+              2
+            ],
+            [
+              22,
+              3
+            ],
+            [
+              22,
+              4
+            ],
+            [
+              22,
+              5
+            ]
+          ],
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-3",
+          "name": "White House Press Briefing Room (NE)",
+          "x": 18,
+          "y": 6,
+          "w": 5,
+          "h": 7,
+          "shape": "rect",
+          "tiles": [
+            [
+              18,
+              6
+            ],
+            [
+              18,
+              7
+            ],
+            [
+              18,
+              8
+            ],
+            [
+              18,
+              9
+            ],
+            [
+              18,
+              10
+            ],
+            [
+              18,
+              11
+            ],
+            [
+              18,
+              12
+            ],
+            [
+              19,
+              6
+            ],
+            [
+              19,
+              7
+            ],
+            [
+              19,
+              8
+            ],
+            [
+              19,
+              9
+            ],
+            [
+              19,
+              10
+            ],
+            [
+              19,
+              11
+            ],
+            [
+              19,
+              12
+            ],
+            [
+              20,
+              6
+            ],
+            [
+              20,
+              7
+            ],
+            [
+              20,
+              8
+            ],
+            [
+              20,
+              9
+            ],
+            [
+              20,
+              10
+            ],
+            [
+              20,
+              11
+            ],
+            [
+              20,
+              12
+            ],
+            [
+              21,
+              6
+            ],
+            [
+              21,
+              7
+            ],
+            [
+              21,
+              8
+            ],
+            [
+              21,
+              9
+            ],
+            [
+              21,
+              10
+            ],
+            [
+              21,
+              11
+            ],
+            [
+              21,
+              12
+            ],
+            [
+              22,
+              6
+            ],
+            [
+              22,
+              7
+            ],
+            [
+              22,
+              8
+            ],
+            [
+              22,
+              9
+            ],
+            [
+              22,
+              10
+            ],
+            [
+              22,
+              11
+            ],
+            [
+              22,
+              12
+            ]
+          ],
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-se-4",
+          "name": "Senate Cloakrooms East (SE)",
+          "x": 17,
+          "y": 14,
+          "w": 5,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              17,
+              14
+            ],
+            [
+              17,
+              15
+            ],
+            [
+              17,
+              16
+            ],
+            [
+              17,
+              17
+            ],
+            [
+              18,
+              14
+            ],
+            [
+              18,
+              15
+            ],
+            [
+              18,
+              16
+            ],
+            [
+              18,
+              17
+            ],
+            [
+              19,
+              14
+            ],
+            [
+              19,
+              15
+            ],
+            [
+              19,
+              16
+            ],
+            [
+              19,
+              17
+            ],
+            [
+              20,
+              14
+            ],
+            [
+              20,
+              15
+            ],
+            [
+              20,
+              16
+            ],
+            [
+              20,
+              17
+            ],
+            [
+              21,
+              14
+            ],
+            [
+              21,
+              15
+            ],
+            [
+              21,
+              16
+            ],
+            [
+              21,
+              17
+            ]
+          ],
+          "quadrant": "se"
+        },
+        {
+          "id": "room-sw-5",
+          "name": "Supreme Court Bench Room (SW)",
+          "x": 9,
+          "y": 14,
+          "w": 8,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              9,
+              14
+            ],
+            [
+              9,
+              15
+            ],
+            [
+              9,
+              16
+            ],
+            [
+              9,
+              17
+            ],
+            [
+              10,
+              14
+            ],
+            [
+              10,
+              15
+            ],
+            [
+              10,
+              16
+            ],
+            [
+              10,
+              17
+            ],
+            [
+              11,
+              14
+            ],
+            [
+              11,
+              15
+            ],
+            [
+              11,
+              16
+            ],
+            [
+              11,
+              17
+            ],
+            [
+              12,
+              14
+            ],
+            [
+              12,
+              15
+            ],
+            [
+              12,
+              16
+            ],
+            [
+              12,
+              17
+            ],
+            [
+              13,
+              14
+            ],
+            [
+              13,
+              15
+            ],
+            [
+              13,
+              16
+            ],
+            [
+              13,
+              17
+            ],
+            [
+              14,
+              14
+            ],
+            [
+              14,
+              15
+            ],
+            [
+              14,
+              16
+            ],
+            [
+              14,
+              17
+            ],
+            [
+              15,
+              14
+            ],
+            [
+              15,
+              15
+            ],
+            [
+              15,
+              16
+            ],
+            [
+              15,
+              17
+            ],
+            [
+              16,
+              14
+            ],
+            [
+              16,
+              15
+            ],
+            [
+              16,
+              16
+            ],
+            [
+              16,
+              17
+            ]
+          ],
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-6",
+          "name": "Senate Cloakrooms west (SW)",
+          "x": 6,
+          "y": 14,
+          "w": 3,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              6,
+              14
+            ],
+            [
+              6,
+              15
+            ],
+            [
+              6,
+              16
+            ],
+            [
+              6,
+              17
+            ],
+            [
+              7,
+              14
+            ],
+            [
+              7,
+              15
+            ],
+            [
+              7,
+              16
+            ],
+            [
+              7,
+              17
+            ],
+            [
+              8,
+              14
+            ],
+            [
+              8,
+              15
+            ],
+            [
+              8,
+              16
+            ],
+            [
+              8,
+              17
+            ]
+          ],
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-7",
+          "name": "Room 7 (SW)",
+          "x": 3,
+          "y": 14,
+          "w": 3,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              3,
+              14
+            ],
+            [
+              3,
+              15
+            ],
+            [
+              3,
+              16
+            ],
+            [
+              3,
+              17
+            ],
+            [
+              4,
+              14
+            ],
+            [
+              4,
+              15
+            ],
+            [
+              4,
+              16
+            ],
+            [
+              4,
+              17
+            ],
+            [
+              5,
+              14
+            ],
+            [
+              5,
+              15
+            ],
+            [
+              5,
+              16
+            ],
+            [
+              5,
+              17
+            ]
+          ],
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-8",
+          "name": "Russian Spy Voting Proxy Room (SW)",
+          "x": 1,
+          "y": 15,
+          "w": 2,
+          "h": 3,
+          "shape": "rect",
+          "tiles": [
+            [
+              1,
+              15
+            ],
+            [
+              1,
+              16
+            ],
+            [
+              1,
+              17
+            ],
+            [
+              2,
+              15
+            ],
+            [
+              2,
+              16
+            ],
+            [
+              2,
+              17
+            ]
+          ],
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-nw-9",
+          "name": "Epstein Situation Room (NW)",
+          "x": 0,
+          "y": 8,
+          "w": 8,
+          "h": 5,
+          "shape": "freeform",
+          "tiles": [
+            [
+              0,
+              12
+            ],
+            [
+              1,
+              12
+            ],
+            [
+              1,
+              11
+            ],
+            [
+              0,
+              11
+            ],
+            [
+              0,
+              10
+            ],
+            [
+              1,
+              10
+            ],
+            [
+              1,
+              9
+            ],
+            [
+              0,
+              9
+            ],
+            [
+              0,
+              8
+            ],
+            [
+              1,
+              8
+            ],
+            [
+              2,
+              8
+            ],
+            [
+              3,
+              8
+            ],
+            [
+              4,
+              8
+            ],
+            [
+              5,
+              8
+            ],
+            [
+              6,
+              8
+            ],
+            [
+              7,
+              8
+            ],
+            [
+              7,
+              9
+            ],
+            [
+              6,
+              9
+            ],
+            [
+              5,
+              9
+            ],
+            [
+              4,
+              9
+            ],
+            [
+              3,
+              9
+            ],
+            [
+              2,
+              9
+            ]
+          ],
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-nw-10",
+          "name": "Oval Office (NW)",
+          "x": 9,
+          "y": 2,
+          "w": 8,
+          "h": 11,
+          "shape": "freeform",
+          "tiles": [
+            [
+              11,
+              2
+            ],
+            [
+              13,
+              2
+            ],
+            [
+              14,
+              2
+            ],
+            [
+              12,
+              2
+            ],
+            [
+              11,
+              3
+            ],
+            [
+              10,
+              3
+            ],
+            [
+              12,
+              3
+            ],
+            [
+              13,
+              3
+            ],
+            [
+              14,
+              3
+            ],
+            [
+              15,
+              3
+            ],
+            [
+              15,
+              4
+            ],
+            [
+              16,
+              4
+            ],
+            [
+              16,
+              5
+            ],
+            [
+              16,
+              6
+            ],
+            [
+              16,
+              7
+            ],
+            [
+              16,
+              8
+            ],
+            [
+              16,
+              9
+            ],
+            [
+              16,
+              10
+            ],
+            [
+              16,
+              11
+            ],
+            [
+              15,
+              11
+            ],
+            [
+              14,
+              11
+            ],
+            [
+              13,
+              11
+            ],
+            [
+              12,
+              11
+            ],
+            [
+              11,
+              11
+            ],
+            [
+              10,
+              11
+            ],
+            [
+              9,
+              11
+            ],
+            [
+              9,
+              12
+            ],
+            [
+              10,
+              12
+            ],
+            [
+              11,
+              12
+            ],
+            [
+              12,
+              12
+            ],
+            [
+              13,
+              12
+            ],
+            [
+              14,
+              12
+            ],
+            [
+              15,
+              12
+            ],
+            [
+              16,
+              12
+            ],
+            [
+              15,
+              10
+            ],
+            [
+              14,
+              10
+            ],
+            [
+              13,
+              10
+            ],
+            [
+              12,
+              10
+            ],
+            [
+              11,
+              10
+            ],
+            [
+              10,
+              10
+            ],
+            [
+              9,
+              10
+            ],
+            [
+              9,
+              9
+            ],
+            [
+              9,
+              8
+            ],
+            [
+              9,
+              7
+            ],
+            [
+              9,
+              6
+            ],
+            [
+              9,
+              5
+            ],
+            [
+              9,
+              4
+            ],
+            [
+              10,
+              4
+            ],
+            [
+              10,
+              6
+            ],
+            [
+              10,
+              7
+            ],
+            [
+              10,
+              8
+            ],
+            [
+              10,
+              9
+            ],
+            [
+              11,
+              9
+            ],
+            [
+              11,
+              8
+            ],
+            [
+              11,
+              7
+            ],
+            [
+              11,
+              6
+            ],
+            [
+              11,
+              5
+            ],
+            [
+              11,
+              4
+            ],
+            [
+              13,
+              4
+            ],
+            [
+              14,
+              4
+            ],
+            [
+              14,
+              5
+            ],
+            [
+              13,
+              5
+            ],
+            [
+              12,
+              4
+            ],
+            [
+              12,
+              5
+            ],
+            [
+              12,
+              6
+            ],
+            [
+              12,
+              7
+            ],
+            [
+              12,
+              8
+            ],
+            [
+              12,
+              9
+            ],
+            [
+              14,
+              9
+            ],
+            [
+              13,
+              9
+            ],
+            [
+              14,
+              8
+            ],
+            [
+              15,
+              9
+            ],
+            [
+              15,
+              8
+            ],
+            [
+              13,
+              8
+            ],
+            [
+              13,
+              7
+            ],
+            [
+              13,
+              6
+            ],
+            [
+              14,
+              6
+            ],
+            [
+              14,
+              7
+            ],
+            [
+              15,
+              7
+            ],
+            [
+              15,
+              6
+            ],
+            [
+              15,
+              5
+            ],
+            [
+              10,
+              5
+            ]
+          ],
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-se-11",
+          "name": "Broom Closet (SE)",
+          "x": 23,
+          "y": 14,
+          "w": 2,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              23,
+              14
+            ],
+            [
+              23,
+              15
+            ],
+            [
+              23,
+              16
+            ],
+            [
+              23,
+              17
+            ],
+            [
+              24,
+              14
+            ],
+            [
+              24,
+              15
+            ],
+            [
+              24,
+              16
+            ],
+            [
+              24,
+              17
+            ]
+          ],
+          "quadrant": "se"
+        }
+      ],
+      "corridors": [
+        [
+          8,
+          8
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          8,
+          10
+        ],
+        [
+          8,
+          11
+        ],
+        [
+          8,
+          12
+        ],
+        [
+          8,
+          13
+        ],
+        [
+          7,
+          13
+        ],
+        [
+          6,
+          13
+        ],
+        [
+          5,
+          13
+        ],
+        [
+          4,
+          13
+        ],
+        [
+          3,
+          13
+        ],
+        [
+          2,
+          13
+        ],
+        [
+          2,
+          12
+        ],
+        [
+          2,
+          11
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          1,
+          13
+        ],
+        [
+          1,
+          14
+        ],
+        [
+          2,
+          14
+        ],
+        [
+          9,
+          13
+        ],
+        [
+          10,
+          13
+        ],
+        [
+          11,
+          13
+        ],
+        [
+          12,
+          13
+        ],
+        [
+          13,
+          13
+        ],
+        [
+          14,
+          13
+        ],
+        [
+          15,
+          13
+        ],
+        [
+          16,
+          13
+        ],
+        [
+          17,
+          13
+        ],
+        [
+          18,
+          13
+        ],
+        [
+          19,
+          13
+        ],
+        [
+          20,
+          13
+        ],
+        [
+          21,
+          13
+        ],
+        [
+          22,
+          13
+        ],
+        [
+          22,
+          14
+        ],
+        [
+          22,
+          15
+        ],
+        [
+          23,
+          13
+        ],
+        [
+          24,
+          13
+        ],
+        [
+          24,
+          12
+        ],
+        [
+          24,
+          11
+        ],
+        [
+          24,
+          10
+        ],
+        [
+          24,
+          9
+        ],
+        [
+          24,
+          8
+        ],
+        [
+          24,
+          7
+        ],
+        [
+          24,
+          6
+        ],
+        [
+          25,
+          6
+        ],
+        [
+          25,
+          7
+        ],
+        [
+          17,
+          12
+        ],
+        [
+          17,
+          11
+        ],
+        [
+          17,
+          10
+        ],
+        [
+          17,
+          9
+        ],
+        [
+          17,
+          8
+        ],
+        [
+          17,
+          7
+        ],
+        [
+          17,
+          6
+        ]
+      ],
+      "doors": [
+        {
+          "id": "door-1",
+          "name": "Door 1",
+          "from": [
+            2,
+            15
+          ],
+          "to": [
+            2,
+            14
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-sw-8",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "door-2",
+          "name": "Door 2",
+          "from": [
+            8,
+            14
+          ],
+          "to": [
+            8,
+            13
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-sw-6",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "door-3",
+          "name": "Door 3",
+          "from": [
+            9,
+            9
+          ],
+          "to": [
+            8,
+            9
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-nw-10",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "door-4",
+          "name": "Double Door 4",
+          "from": [
+            12,
+            12
+          ],
+          "to": [
+            12,
+            13
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-nw-10",
+          "hidden": false,
+          "door_type": "double-2x1",
+          "width": 2,
+          "height": 1
+        },
+        {
+          "id": "door-5",
+          "name": "Double Door 5",
+          "from": [
+            12,
+            14
+          ],
+          "to": [
+            12,
+            13
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-sw-5",
+          "hidden": false,
+          "door_type": "double-2x1",
+          "width": 2,
+          "height": 1
+        },
+        {
+          "id": "door-6",
+          "name": "Door 6",
+          "from": [
+            16,
+            9
+          ],
+          "to": [
+            17,
+            9
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-nw-10",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "door-7",
+          "name": "Door 7",
+          "from": [
+            18,
+            9
+          ],
+          "to": [
+            17,
+            9
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-ne-3",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "door-8",
+          "name": "Door 8",
+          "from": [
+            17,
+            6
+          ],
+          "to": [
+            17,
+            5
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-ne-2",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "door-9",
+          "name": "Door 9",
+          "from": [
+            8,
+            7
+          ],
+          "to": [
+            8,
+            8
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-nw-1",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "door-10",
+          "name": "Door 10",
+          "from": [
+            17,
+            13
+          ],
+          "to": [
+            17,
+            14
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-se-4",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "door-11",
+          "name": "Double Door 11",
+          "from": [
+            2,
+            10
+          ],
+          "to": [
+            2,
+            9
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-nw-9",
+          "hidden": false,
+          "door_type": "double-2x1",
+          "width": 2,
+          "height": 1
+        }
+      ],
       "furniture": [],
-      "monsters": [],
-      "traps": [],
-      "storyTriggers": [],
-      "additionalBorderTile": true
+      "wallBlocks": [],
+      "traps": [
+        {
+          "id": "trap-spear-1",
+          "trapType": "spear",
+          "x": 7,
+          "y": 13,
+          "damageDice": 1,
+          "detected": false,
+          "disarmed": false,
+          "hidden": false
+        }
+      ],
+      "triggers": [
+        {
+          "id": "trigger-briefing-room-katie",
+          "marker": "Note A",
+          "title": "The Daily Gaslight Briefing — Katie Zacharia",
+          "name": "The Daily Gaslight Briefing — Katie Zacharia",
+          "event": "on_room_entered",
+          "room": "room-ne-3",
+          "target": "room-ne-3",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            20,
+            8
+          ],
+          "onceOnly": true,
+          "hidden": false,
+          "narrative": "Behind a $40,000 solid-gold podium stands Press Secretary Katie Zacharia with a color-coded binder of bipartisan spin!",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "Good afternoon! Before taking questions from my pre-approved zombie press corps, let me be crystal clear: the $19 carton of eggs is actually a vibrant sign of bipartisan economic resilience!"
+                },
+                {
+                  "speaker": "barbarian",
+                  "text": "Your podium is made of solid taxpayer gold and there is a Censorship Witch Hand standing behind you with a giant rubber stamp!"
+                },
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "We prefer the term Narrative Hygiene Specialist! Look, whether Team Blue or Team Red holds this microphone next week, the donor class gets another trillion-dollar bailout and you peasants get an IRS audit!"
+                },
+                {
+                  "speaker": "wizard",
+                  "text": "Wait—so you spin for BOTH parties?!"
+                },
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "Honey, who do you think caters the after-party? On TV we scream about saving democracy; off camera we split BlackRock stock tips over $400 Georgetown martinis on your dime! Now circle back to the grave, taxpayers!"
+                }
+              ]
+            },
+            {
+              "type": "display_message",
+              "title": "🎙️ Boss Encounter: Katie Zacharia (Press Secretary)",
+              "text": "Katie Zacharia slams her color-coded binder shut and unleashes a weaponized spin cycle! Defeat the Press Secretary and her Cable News Pundit Zombies before she gaslights your gold pouch into thin air!",
+              "buttonText": "Challenge the Spin!"
+            }
+          ]
+        },
+        {
+          "id": "trigger-katie-zacharia-defeated",
+          "marker": "Note B",
+          "title": "Katie Pivots to a Cable News Book Deal",
+          "name": "Katie Pivots to a Cable News Book Deal",
+          "event": "on_monster_killed",
+          "room": "room-ne-3",
+          "target": "mon-katie-zacharia-boss",
+          "doorId": "",
+          "monsterId": "mon-katie-zacharia-boss",
+          "tile": [
+            20,
+            7
+          ],
+          "onceOnly": true,
+          "hidden": false,
+          "narrative": "Katie Zacharia tosses her briefing binder into the air as she golden-parachutes into a corporate lobbying gig!",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "I have no further comment at this time! I am resigning effective immediately to accept a $7 million bipartisan defense-board seat and a ghostwritten book deal nobody will ever read!"
+                },
+                {
+                  "speaker": "dwarf",
+                  "text": "Check behind the podium—she left a stack of pre-printed cue cards blaming working families for wanting groceries AND electricity in the same month!"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-committee-chamber-mitch",
+          "marker": "Note C",
+          "title": "The Eternal Filibuster — Mitch McConnell",
+          "name": "The Eternal Filibuster — Mitch McConnell",
+          "event": "on_room_entered",
+          "room": "room-nw-1",
+          "target": "room-nw-1",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            5,
+            4
+          ],
+          "onceOnly": true,
+          "hidden": false,
+          "narrative": "Atop the curved mahogany dais of the Legislative Committee Chamber sits Patriarch Mitch McConnell, surrounded by stacks of 6,000-page omnibus bills.",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "Well... I would like to welcome the distinguished taxpayers to the Legislative Committee Chamber... *stares blankly into space for 14 seconds while a dial-up modem tone echoes*"
+                },
+                {
+                  "speaker": "dwarf",
+                  "text": "By Grungni's beard... did the ancient turtle just freeze mid-sentence?!"
+                },
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "*blinks slowly* ...Reboot complete. Forgive the buffer, my neural link was executing a tax-free defense-contractor stock trade with leadership from the other party before the subcommittee vote."
+                },
+                {
+                  "speaker": "elf",
+                  "text": "You have been sitting in that chair for forty years! Half the chamber wears Red, half wears Blue, and regular citizens cannot even afford rent!"
+                },
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "*chuckles in slow motion* Oh, you sweet summer voter. Red and Blue only pretend to fight when the C-SPAN cameras are blinking! At 3:00 AM we hold hands, pass a $4 trillion omnibus bill giving ourselves a raise, and mail your grandkids the tab!"
+                },
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "You think voting harder changes the menu? The turtle shell is 100% bipartisan, baby—we eat the caviar, and you eat the inflation!"
+                }
+              ]
+            },
+            {
+              "type": "display_message",
+              "title": "🐢 Boss Encounter: Mitch McConnell (Committee Patriarch)",
+              "text": "Mitch McConnell withdraws into his 6-Defense-Dice Parliamentary Turtle Shell and invokes an eternal omnibus filibuster! Crack his bipartisan shell before he taxes your grandchildren!",
+              "buttonText": "Break the Filibuster!"
+            }
+          ]
+        },
+        {
+          "id": "trigger-mitch-mcconnell-defeated",
+          "marker": "Note D",
+          "title": "The Committee Adjourns for a Donor Retreat",
+          "name": "The Committee Adjourns for a Donor Retreat",
+          "event": "on_monster_killed",
+          "room": "room-nw-1",
+          "target": "mon-mitch-mcconnell-boss",
+          "doorId": "",
+          "monsterId": "mon-mitch-mcconnell-boss",
+          "tile": [
+            5,
+            3
+          ],
+          "onceOnly": true,
+          "hidden": false,
+          "narrative": "Mitch McConnell slowly tips his gavel and vanishes into a cloud of tax-exempt municipal bonds.",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "Heh... impressive strike... Unfortunately I already slipped an amendment onto page 4,812 of the Highway Bill making my congressional pension immortal. See you at the Martha's Vineyard bipartisan yacht mixer..."
+                },
+                {
+                  "speaker": "barbarian",
+                  "text": "He dropped a solid-gold gavel engraved: 'Red or Blue, the House Always Wins (and You Always Pay)'."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-war-room-vance-kamala",
+          "marker": "Note E",
+          "title": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
+          "name": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
+          "event": "on_room_entered",
+          "room": "room-ne-2",
+          "target": "room-ne-2",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            19,
+            4
+          ],
+          "onceOnly": true,
+          "hidden": false,
+          "narrative": "Inside the Campaign War Room, empty bottles of $3,000 bourbon and reserve Napa Cabernet litter the strategy table as JD Vance and Kamala Harris clink glasses and roar with laughter!",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Kamala Harris (Drunk in the War Room)",
+                  "text": "*clinks wine glass against bourbon tumbler* HAHAHAHA! Wait, wait, JD—top off my Napa Cabernet! Look at the electoral map on the wall, it's a Venn diagram! A circle of Red, a circle of Blue, and right in the middle is US getting filthy rich! HAHAHAHA!"
+                },
+                {
+                  "speaker": "JD Vance (Drunk in the War Room)",
+                  "text": "*hiccups, slurring over $3,000 Pappy Van Winkle* Cheers to that, Mamala! Man, the voters out there actually think we hate each other! Yesterday I yelled about cat-ladies on Fox, you yelled about joy on CNN, and we both cleared ten million in Super-PAC appearance fees before lunch!"
+                },
+                {
+                  "speaker": "barbarian",
+                  "text": "Hold on! You two are supposed to be bitter political rivals—why are you getting hammered together in the Campaign War Room?!"
+                },
+                {
+                  "speaker": "Kamala Harris (Drunk in the War Room)",
+                  "text": "*wipes tears of laughter* Oh honey, look how adorable they are! We are unburdened by what has been—specifically, unburdened by ever paying our own bar tab! You think Blue or Red cares about your grocery bill when the donor yacht has a champagne fountain?!"
+                },
+                {
+                  "speaker": "JD Vance (Drunk in the War Room)",
+                  "text": "*spills bourbon on the leather war-room couch* Don't give away the whole game, Kamala! Look, pal—if Red wins, Wall Street gets a bailout. If Blue wins, Wall Street gets the exact same bailout with a nicer font! Either way, working stiffs like you pay for our open bar!"
+                },
+                {
+                  "speaker": "Kamala Harris (Drunk in the War Room)",
+                  "text": "*raises overflowing wine glass* A bipartisan toast to the American taxpayer: the hardest-working ATM in the dungeon! Get 'em, JD—right after I finish this merlot!"
+                }
+              ]
+            },
+            {
+              "type": "display_message",
+              "title": "🥃🍷 Dual Boss Encounter: Drunk JD Vance & Drunk Kamala Harris",
+              "text": "Three sheets to the wind on taxpayer-expensed Pappy Van Winkle and Napa Valley Reserve Cabernet, JD Vance and Kamala Harris link arms in front of the electoral map to defend their bipartisan slush fund!",
+              "buttonText": "Crash the Open Bar!"
+            }
+          ]
+        },
+        {
+          "id": "trigger-jd-vance-defeated",
+          "marker": "Note F",
+          "title": "JD Vance Spills His Reserve Bourbon",
+          "name": "JD Vance Spills His Reserve Bourbon",
+          "event": "on_monster_killed",
+          "room": "room-ne-2",
+          "target": "mon-jd-vance-drunk-boss",
+          "doorId": "",
+          "monsterId": "mon-jd-vance-drunk-boss",
+          "tile": [
+            19,
+            3
+          ],
+          "onceOnly": true,
+          "hidden": false,
+          "narrative": "JD Vance stumbles backward into the War Room couch, clutching his crystal decanter.",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "JD Vance (Drunk in the War Room)",
+                  "text": "*hiccups* Ugh... my Silicon Valley venture-capital donors promised me this dungeon had qualified immunity! Kamala, hide the offshore wire transfers—I'm retreating to my Netflix book deal!"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-kamala-harris-defeated",
+          "marker": "Note G",
+          "title": "Kamala Harris Unburdens the Wine Bar",
+          "name": "Kamala Harris Unburdens the Wine Bar",
+          "event": "on_monster_killed",
+          "room": "room-ne-2",
+          "target": "mon-kamala-harris-drunk-boss",
+          "doorId": "",
+          "monsterId": "mon-kamala-harris-drunk-boss",
+          "tile": [
+            20,
+            3
+          ],
+          "onceOnly": true,
+          "hidden": false,
+          "narrative": "Kamala Harris clutches a magnum of Napa Valley Cabernet as she exits toward a private jet.",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Kamala Harris (Drunk in the War Room)",
+                  "text": "*cackles while tucking two bottles of Reserve Cabernet under her arm* You may have defeated us in the passage of time, which is the time in which we pass... but our bipartisan accountants already wired the treasury to the Cayman Islands! Byeeee!"
+                },
+                {
+                  "speaker": "wizard",
+                  "text": "By the four elements... Red and Blue really were clinking glasses and looting the realm together the entire time!"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-oval-office-trumpbiden",
+          "marker": "Note H",
+          "title": "The Two-Headed Blame Dragon of the Oval Office",
+          "name": "The Two-Headed Blame Dragon of the Oval Office",
+          "event": "on_room_entered",
+          "room": "room-nw-10",
+          "target": "room-nw-10",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            13,
+            5
+          ],
+          "onceOnly": true,
+          "hidden": false,
+          "narrative": "Coiled atop the Resolute Desk in the Oval Office is TrumpBiden (The Blame Dragon), arguing with itself while hoarding every gold coin in the Capitol!",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "TrumpBiden (The Blame Dragon)",
+                  "text": "RED HEAD: Folks, nobody has ever seen a gold hoard like this, tremendous luxury, and the inflation is 100% Sleepy Joe's fault! BLUE HEAD: Come on, man! Here's the deal—the other guy printed the trillions while I was eating chocolate-chip ice cream!"
+                },
+                {
+                  "speaker": "TrumpBiden (The Blame Dragon)",
+                  "text": "BOTH HEADS IN UNISON: Now hand over 45% of your quest gold so we can build two more billionaire golf resorts and blame each other until 2036!"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "storyTriggers": [
+        {
+          "id": "trigger-briefing-room-katie",
+          "marker": "Note A",
+          "title": "The Daily Gaslight Briefing — Katie Zacharia",
+          "banner": "QUEST NOTE [Note A]",
+          "narrative": "Behind a $40,000 solid-gold podium stands Press Secretary Katie Zacharia with a color-coded binder of bipartisan spin!",
+          "tile": [
+            20,
+            8
+          ],
+          "room": "room-ne-3",
+          "event": "on_room_entered",
+          "target": "room-ne-3",
+          "doorId": "",
+          "monsterId": "",
+          "onceOnly": true,
+          "movie": "",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "Good afternoon! Before taking questions from my pre-approved zombie press corps, let me be crystal clear: the $19 carton of eggs is actually a vibrant sign of bipartisan economic resilience!"
+                },
+                {
+                  "speaker": "barbarian",
+                  "text": "Your podium is made of solid taxpayer gold and there is a Censorship Witch Hand standing behind you with a giant rubber stamp!"
+                },
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "We prefer the term Narrative Hygiene Specialist! Look, whether Team Blue or Team Red holds this microphone next week, the donor class gets another trillion-dollar bailout and you peasants get an IRS audit!"
+                },
+                {
+                  "speaker": "wizard",
+                  "text": "Wait—so you spin for BOTH parties?!"
+                },
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "Honey, who do you think caters the after-party? On TV we scream about saving democracy; off camera we split BlackRock stock tips over $400 Georgetown martinis on your dime! Now circle back to the grave, taxpayers!"
+                }
+              ]
+            },
+            {
+              "type": "display_message",
+              "title": "🎙️ Boss Encounter: Katie Zacharia (Press Secretary)",
+              "text": "Katie Zacharia slams her color-coded binder shut and unleashes a weaponized spin cycle! Defeat the Press Secretary and her Cable News Pundit Zombies before she gaslights your gold pouch into thin air!",
+              "buttonText": "Challenge the Spin!"
+            }
+          ]
+        },
+        {
+          "id": "trigger-katie-zacharia-defeated",
+          "marker": "Note B",
+          "title": "Katie Pivots to a Cable News Book Deal",
+          "banner": "QUEST NOTE [Note B]",
+          "narrative": "Katie Zacharia tosses her briefing binder into the air as she golden-parachutes into a corporate lobbying gig!",
+          "tile": [
+            20,
+            7
+          ],
+          "room": "room-ne-3",
+          "event": "on_monster_killed",
+          "target": "mon-katie-zacharia-boss",
+          "doorId": "",
+          "monsterId": "mon-katie-zacharia-boss",
+          "onceOnly": true,
+          "movie": "",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "I have no further comment at this time! I am resigning effective immediately to accept a $7 million bipartisan defense-board seat and a ghostwritten book deal nobody will ever read!"
+                },
+                {
+                  "speaker": "dwarf",
+                  "text": "Check behind the podium—she left a stack of pre-printed cue cards blaming working families for wanting groceries AND electricity in the same month!"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-committee-chamber-mitch",
+          "marker": "Note C",
+          "title": "The Eternal Filibuster — Mitch McConnell",
+          "banner": "QUEST NOTE [Note C]",
+          "narrative": "Atop the curved mahogany dais of the Legislative Committee Chamber sits Patriarch Mitch McConnell, surrounded by stacks of 6,000-page omnibus bills.",
+          "tile": [
+            5,
+            4
+          ],
+          "room": "room-nw-1",
+          "event": "on_room_entered",
+          "target": "room-nw-1",
+          "doorId": "",
+          "monsterId": "",
+          "onceOnly": true,
+          "movie": "",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "Well... I would like to welcome the distinguished taxpayers to the Legislative Committee Chamber... *stares blankly into space for 14 seconds while a dial-up modem tone echoes*"
+                },
+                {
+                  "speaker": "dwarf",
+                  "text": "By Grungni's beard... did the ancient turtle just freeze mid-sentence?!"
+                },
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "*blinks slowly* ...Reboot complete. Forgive the buffer, my neural link was executing a tax-free defense-contractor stock trade with leadership from the other party before the subcommittee vote."
+                },
+                {
+                  "speaker": "elf",
+                  "text": "You have been sitting in that chair for forty years! Half the chamber wears Red, half wears Blue, and regular citizens cannot even afford rent!"
+                },
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "*chuckles in slow motion* Oh, you sweet summer voter. Red and Blue only pretend to fight when the C-SPAN cameras are blinking! At 3:00 AM we hold hands, pass a $4 trillion omnibus bill giving ourselves a raise, and mail your grandkids the tab!"
+                },
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "You think voting harder changes the menu? The turtle shell is 100% bipartisan, baby—we eat the caviar, and you eat the inflation!"
+                }
+              ]
+            },
+            {
+              "type": "display_message",
+              "title": "🐢 Boss Encounter: Mitch McConnell (Committee Patriarch)",
+              "text": "Mitch McConnell withdraws into his 6-Defense-Dice Parliamentary Turtle Shell and invokes an eternal omnibus filibuster! Crack his bipartisan shell before he taxes your grandchildren!",
+              "buttonText": "Break the Filibuster!"
+            }
+          ]
+        },
+        {
+          "id": "trigger-mitch-mcconnell-defeated",
+          "marker": "Note D",
+          "title": "The Committee Adjourns for a Donor Retreat",
+          "banner": "QUEST NOTE [Note D]",
+          "narrative": "Mitch McConnell slowly tips his gavel and vanishes into a cloud of tax-exempt municipal bonds.",
+          "tile": [
+            5,
+            3
+          ],
+          "room": "room-nw-1",
+          "event": "on_monster_killed",
+          "target": "mon-mitch-mcconnell-boss",
+          "doorId": "",
+          "monsterId": "mon-mitch-mcconnell-boss",
+          "onceOnly": true,
+          "movie": "",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "Heh... impressive strike... Unfortunately I already slipped an amendment onto page 4,812 of the Highway Bill making my congressional pension immortal. See you at the Martha's Vineyard bipartisan yacht mixer..."
+                },
+                {
+                  "speaker": "barbarian",
+                  "text": "He dropped a solid-gold gavel engraved: 'Red or Blue, the House Always Wins (and You Always Pay)'."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-war-room-vance-kamala",
+          "marker": "Note E",
+          "title": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
+          "banner": "QUEST NOTE [Note E]",
+          "narrative": "Inside the Campaign War Room, empty bottles of $3,000 bourbon and reserve Napa Cabernet litter the strategy table as JD Vance and Kamala Harris clink glasses and roar with laughter!",
+          "tile": [
+            19,
+            4
+          ],
+          "room": "room-ne-2",
+          "event": "on_room_entered",
+          "target": "room-ne-2",
+          "doorId": "",
+          "monsterId": "",
+          "onceOnly": true,
+          "movie": "",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Kamala Harris (Drunk in the War Room)",
+                  "text": "*clinks wine glass against bourbon tumbler* HAHAHAHA! Wait, wait, JD—top off my Napa Cabernet! Look at the electoral map on the wall, it's a Venn diagram! A circle of Red, a circle of Blue, and right in the middle is US getting filthy rich! HAHAHAHA!"
+                },
+                {
+                  "speaker": "JD Vance (Drunk in the War Room)",
+                  "text": "*hiccups, slurring over $3,000 Pappy Van Winkle* Cheers to that, Mamala! Man, the voters out there actually think we hate each other! Yesterday I yelled about cat-ladies on Fox, you yelled about joy on CNN, and we both cleared ten million in Super-PAC appearance fees before lunch!"
+                },
+                {
+                  "speaker": "barbarian",
+                  "text": "Hold on! You two are supposed to be bitter political rivals—why are you getting hammered together in the Campaign War Room?!"
+                },
+                {
+                  "speaker": "Kamala Harris (Drunk in the War Room)",
+                  "text": "*wipes tears of laughter* Oh honey, look how adorable they are! We are unburdened by what has been—specifically, unburdened by ever paying our own bar tab! You think Blue or Red cares about your grocery bill when the donor yacht has a champagne fountain?!"
+                },
+                {
+                  "speaker": "JD Vance (Drunk in the War Room)",
+                  "text": "*spills bourbon on the leather war-room couch* Don't give away the whole game, Kamala! Look, pal—if Red wins, Wall Street gets a bailout. If Blue wins, Wall Street gets the exact same bailout with a nicer font! Either way, working stiffs like you pay for our open bar!"
+                },
+                {
+                  "speaker": "Kamala Harris (Drunk in the War Room)",
+                  "text": "*raises overflowing wine glass* A bipartisan toast to the American taxpayer: the hardest-working ATM in the dungeon! Get 'em, JD—right after I finish this merlot!"
+                }
+              ]
+            },
+            {
+              "type": "display_message",
+              "title": "🥃🍷 Dual Boss Encounter: Drunk JD Vance & Drunk Kamala Harris",
+              "text": "Three sheets to the wind on taxpayer-expensed Pappy Van Winkle and Napa Valley Reserve Cabernet, JD Vance and Kamala Harris link arms in front of the electoral map to defend their bipartisan slush fund!",
+              "buttonText": "Crash the Open Bar!"
+            }
+          ]
+        },
+        {
+          "id": "trigger-jd-vance-defeated",
+          "marker": "Note F",
+          "title": "JD Vance Spills His Reserve Bourbon",
+          "banner": "QUEST NOTE [Note F]",
+          "narrative": "JD Vance stumbles backward into the War Room couch, clutching his crystal decanter.",
+          "tile": [
+            19,
+            3
+          ],
+          "room": "room-ne-2",
+          "event": "on_monster_killed",
+          "target": "mon-jd-vance-drunk-boss",
+          "doorId": "",
+          "monsterId": "mon-jd-vance-drunk-boss",
+          "onceOnly": true,
+          "movie": "",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "JD Vance (Drunk in the War Room)",
+                  "text": "*hiccups* Ugh... my Silicon Valley venture-capital donors promised me this dungeon had qualified immunity! Kamala, hide the offshore wire transfers—I'm retreating to my Netflix book deal!"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-kamala-harris-defeated",
+          "marker": "Note G",
+          "title": "Kamala Harris Unburdens the Wine Bar",
+          "banner": "QUEST NOTE [Note G]",
+          "narrative": "Kamala Harris clutches a magnum of Napa Valley Cabernet as she exits toward a private jet.",
+          "tile": [
+            20,
+            3
+          ],
+          "room": "room-ne-2",
+          "event": "on_monster_killed",
+          "target": "mon-kamala-harris-drunk-boss",
+          "doorId": "",
+          "monsterId": "mon-kamala-harris-drunk-boss",
+          "onceOnly": true,
+          "movie": "",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Kamala Harris (Drunk in the War Room)",
+                  "text": "*cackles while tucking two bottles of Reserve Cabernet under her arm* You may have defeated us in the passage of time, which is the time in which we pass... but our bipartisan accountants already wired the treasury to the Cayman Islands! Byeeee!"
+                },
+                {
+                  "speaker": "wizard",
+                  "text": "By the four elements... Red and Blue really were clinking glasses and looting the realm together the entire time!"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-oval-office-trumpbiden",
+          "marker": "Note H",
+          "title": "The Two-Headed Blame Dragon of the Oval Office",
+          "banner": "QUEST NOTE [Note H]",
+          "narrative": "Coiled atop the Resolute Desk in the Oval Office is TrumpBiden (The Blame Dragon), arguing with itself while hoarding every gold coin in the Capitol!",
+          "tile": [
+            13,
+            5
+          ],
+          "room": "room-nw-10",
+          "event": "on_room_entered",
+          "target": "room-nw-10",
+          "doorId": "",
+          "monsterId": "",
+          "onceOnly": true,
+          "movie": "",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "TrumpBiden (The Blame Dragon)",
+                  "text": "RED HEAD: Folks, nobody has ever seen a gold hoard like this, tremendous luxury, and the inflation is 100% Sleepy Joe's fault! BLUE HEAD: Come on, man! Here's the deal—the other guy printed the trillions while I was eating chocolate-chip ice cream!"
+                },
+                {
+                  "speaker": "TrumpBiden (The Blame Dragon)",
+                  "text": "BOTH HEADS IN UNISON: Now hand over 45% of your quest gold so we can build two more billionaire golf resorts and blame each other until 2036!"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   }
 }

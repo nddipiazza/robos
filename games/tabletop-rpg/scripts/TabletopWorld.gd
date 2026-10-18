@@ -2636,11 +2636,11 @@ func _get_effective_starting_map_id(cart: Dictionary = {}) -> String:
 		return maps.keys()[0]
 	return target
 
-func get_save_file_path() -> String:
+func get_save_file_path(custom_slug: String = "") -> String:
 	var env_path = OS.get_environment("TABLETOP_SAVE_PATH")
 	if env_path != "":
 		return env_path
-	var slug = CartridgeManager.current_cartridge_slug
+	var slug = custom_slug if custom_slug != "" else CartridgeManager.current_cartridge_slug
 	if slug == "":
 		var cart = CartridgeManager.active_cartridge
 		slug = str(cart.get("cartridgeId", _get_effective_starting_map_id(cart)))

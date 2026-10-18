@@ -2205,6 +2205,123 @@
       "robos:namespace": "robos.tabletop"
     },
     {
+      "@id": "urn:robos:tabletop:monster:katie-zacharia-press-secretary",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Katie Zacharia (Press Secretary)",
+      "robos:category": "Midterms 2026",
+      "robos:monsterArchetype": "Press Secretary",
+      "robos:archetype": "Press Secretary",
+      "dcterms:description": "White House Press Secretary Boss: Commands the Briefing Room podium with a color-coded binder of bipartisan spin, smiling warmly while explaining why $18 eggs and billionaire bailouts mean regular taxpayers have never had it better.",
+      "robos:bodyPoints": 4,
+      "robos:mindPoints": 6,
+      "robos:attackDice": 4,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 7,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:culture-war-distraction-cloud",
+        "urn:robos:tabletop:spell:shrinkflation-curse"
+      ],
+      "robos:icon": "🎙️",
+      "robos:tokenColor": "#db2777",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:mitch-mcconnell-turtle-patriarch",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Mitch McConnell (Committee Patriarch)",
+      "robos:category": "Midterms 2026",
+      "robos:monsterArchetype": "Committee Patriarch",
+      "robos:archetype": "Committee Patriarch",
+      "dcterms:description": "Legislative Committee Chamber Boss: An ancient parliamentary tortoise who freezes mid-sentence for 30 seconds to buffer insider stock trades with his across-the-aisle buddies before passing another $4 trillion omnibus bill at 3:00 AM.",
+      "robos:bodyPoints": 5,
+      "robos:mindPoints": 5,
+      "robos:attackDice": 3,
+      "robos:defendDice": 6,
+      "robos:movementSquares": 4,
+      "robos:isBoss": true,
+      "robos:isUndead": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:shrinkflation-curse",
+        "urn:robos:tabletop:spell:bipartisan-blame-inferno"
+      ],
+      "robos:icon": "🐢",
+      "robos:tokenColor": "#475569",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:jd-vance-drunk-war-room",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "JD Vance (Drunk in the War Room)",
+      "robos:category": "Midterms 2026",
+      "robos:monsterArchetype": "War Room Boss",
+      "robos:archetype": "War Room Boss",
+      "dcterms:description": "Campaign War Room Co-Boss: Three sheets to the wind on $3,000 Pappy Van Winkle expensed to working-class donors, clinking glasses with Kamala Harris while laughing about how Red and Blue voters still think the two parties aren't business partners.",
+      "robos:bodyPoints": 4,
+      "robos:mindPoints": 4,
+      "robos:attackDice": 4,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 6,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:bipartisan-blame-inferno",
+        "urn:robos:tabletop:spell:culture-war-distraction-cloud"
+      ],
+      "robos:icon": "🥃",
+      "robos:tokenColor": "#b91c1c",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:kamala-harris-drunk-war-room",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Kamala Harris (Drunk in the War Room)",
+      "robos:category": "Midterms 2026",
+      "robos:monsterArchetype": "War Room Boss",
+      "robos:archetype": "War Room Boss",
+      "dcterms:description": "Campaign War Room Co-Boss: Sloshed on reserve Napa Valley Cabernet paid for by Super-PACs, cackling in a Venn diagram of bipartisan luxury with JD Vance while toasting to how regular taxpayers foot the bill for the open bar.",
+      "robos:bodyPoints": 4,
+      "robos:mindPoints": 5,
+      "robos:attackDice": 4,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 6,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:culture-war-distraction-cloud",
+        "urn:robos:tabletop:spell:shrinkflation-curse"
+      ],
+      "robos:icon": "🍷",
+      "robos:tokenColor": "#1d4ed8",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
       "@id": "urn:robos:tabletop:spell:snowflake-meltdown",
       "@type": [
         "oslc_am:Resource",
@@ -3230,8 +3347,8 @@
           "bossTarget": "gargoyle-boss",
           "completed": false,
           "startingStairs": [
-            -1,
-            11
+            7,
+            14
           ],
           "cartridgeFile": "election-2026-quest-1.cartridge.json",
           "activeRooms": [
@@ -3276,14 +3393,430 @@
         "room-se-11"
       ],
       "robos:startingSpawn": [
-        -1,
-        11
+        7,
+        14
       ],
       "robos:wallBlocksCount": 0,
       "robos:doorsCount": 12,
       "robos:furnitureCount": 0,
       "robos:monstersCount": 0,
       "robos:trapsCount": 0,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:campaign:campaign-heroquest",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopCampaign",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "HeroQuest",
+      "dcterms:description": "The HeroQuest campaign featuring the real working custom-quest.cartridge dungeon.",
+      "robos:campaignId": "campaign-heroquest",
+      "robos:isActiveCampaign": false,
+      "robos:heroes": [
+        {
+          "@id": "urn:robos:tabletop:hero:barbarian",
+          "@type": [
+            "oslc_am:Resource",
+            "robos:TabletopHero",
+            "robos:GameCharacter",
+            "schema:Person"
+          ],
+          "dcterms:title": "Rogar",
+          "robos:characterName": "Rogar",
+          "robos:heroClass": "Barbarian",
+          "robos:bodyPoints": 8,
+          "robos:mindPoints": 2,
+          "robos:attackDice": 3,
+          "robos:defendDice": 2,
+          "robos:gold": 100,
+          "robos:startingWeapon": "Broadsword (3 Combat Dice)",
+          "robos:equippedWeapon": "Broadsword (3 Combat Dice)",
+          "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
+          "robos:specialAbility": "Greatest strength and vitality in melee combat",
+          "robos:tokenColor": "#b91c1c",
+          "robos:icon": "⚔️",
+          "robos:startingPosition": [
+            0,
+            1
+          ],
+          "robos:inventory": [
+            {
+              "id": "item-pot-heal-1",
+              "name": "Potion of Healing",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
+            },
+            {
+              "id": "item-rope-1",
+              "name": "Heavy Rope (30 ft)",
+              "type": "tool",
+              "effect": "Climb pits & gaps",
+              "value": 25
+            }
+          ],
+          "robos:spells": [],
+          "robos:currentBP": 8,
+          "robos:currentMP": 2
+        },
+        {
+          "@id": "urn:robos:tabletop:hero:dwarf",
+          "@type": [
+            "oslc_am:Resource",
+            "robos:TabletopHero",
+            "robos:GameCharacter",
+            "schema:Person"
+          ],
+          "dcterms:title": "Dorgan",
+          "robos:characterName": "Dorgan",
+          "robos:heroClass": "Dwarf",
+          "robos:bodyPoints": 7,
+          "robos:mindPoints": 3,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2,
+          "robos:gold": 100,
+          "robos:startingWeapon": "Shortsword (2 Combat Dice)",
+          "robos:equippedWeapon": "Shortsword (2 Combat Dice)",
+          "robos:equippedArmor": "Shield & Chainmail (+2 Defend Dice)",
+          "robos:specialAbility": "Disarms traps without needing a toolkit",
+          "robos:tokenColor": "#d97706",
+          "robos:icon": "🪓",
+          "robos:startingPosition": [
+            1,
+            0
+          ],
+          "robos:inventory": [
+            {
+              "id": "item-toolkit-1",
+              "name": "Trap Disarm Toolkit",
+              "type": "tool",
+              "effect": "Disarm traps without rolling skull",
+              "value": 75
+            },
+            {
+              "id": "item-pot-heal-2",
+              "name": "Potion of Healing",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
+            }
+          ],
+          "robos:spells": []
+        },
+        {
+          "@id": "urn:robos:tabletop:hero:elf",
+          "@type": [
+            "oslc_am:Resource",
+            "robos:TabletopHero",
+            "robos:GameCharacter",
+            "schema:Person"
+          ],
+          "dcterms:title": "Ladril",
+          "robos:characterName": "Ladril",
+          "robos:heroClass": "Elf",
+          "robos:bodyPoints": 6,
+          "robos:mindPoints": 4,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2,
+          "robos:gold": 100,
+          "robos:startingWeapon": "Shortsword (2 Combat Dice)",
+          "robos:equippedWeapon": "Shortsword (2 Combat Dice)",
+          "robos:equippedArmor": "Elven Leather & Cloak (+2 Defend Dice)",
+          "robos:specialAbility": "Master of blade and 1 Elemental Spell deck (3 spells)",
+          "robos:tokenColor": "#15803d",
+          "robos:icon": "🏹",
+          "robos:startingPosition": [
+            1,
+            1
+          ],
+          "robos:inventory": [
+            {
+              "id": "item-torch-1",
+              "name": "Dungeon Torch",
+              "type": "tool",
+              "effect": "Detect hidden traps in room",
+              "value": 15
+            },
+            {
+              "id": "item-strength-1",
+              "name": "Potion of Strength",
+              "type": "potion",
+              "effect": "+2 Attack Dice for 1 turn",
+              "value": 150
+            }
+          ],
+          "robos:spells": [
+            {
+              "id": "urn:robos:tabletop:spell:water-of-healing",
+              "slug": "water-of-healing",
+              "name": "Water of Healing",
+              "element": "water",
+              "category": "Base Game",
+              "icon": "💧",
+              "description": "Restores up to 4 lost Body Points to any Hero.",
+              "effect": "heal-bp",
+              "val": 4
+            },
+            {
+              "id": "urn:robos:tabletop:spell:sleep",
+              "slug": "sleep",
+              "name": "Sleep",
+              "element": "water",
+              "category": "Base Game",
+              "icon": "💤",
+              "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
+              "effect": "status-sleep",
+              "val": 1
+            },
+            {
+              "id": "urn:robos:tabletop:spell:veil-of-mist",
+              "slug": "veil-of-mist",
+              "name": "Veil of Mist",
+              "element": "water",
+              "category": "Base Game",
+              "icon": "🌫️",
+              "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
+              "effect": "status-stealth",
+              "val": 1
+            }
+          ]
+        },
+        {
+          "@id": "urn:robos:tabletop:hero:wizard",
+          "@type": [
+            "oslc_am:Resource",
+            "robos:TabletopHero",
+            "robos:GameCharacter",
+            "schema:Person"
+          ],
+          "dcterms:title": "Telor",
+          "robos:characterName": "Telor",
+          "robos:heroClass": "Wizard",
+          "robos:bodyPoints": 4,
+          "robos:mindPoints": 6,
+          "robos:attackDice": 1,
+          "robos:defendDice": 2,
+          "robos:gold": 100,
+          "robos:startingWeapon": "Dagger (1 Combat Die)",
+          "robos:equippedWeapon": "Dagger (1 Combat Die)",
+          "robos:equippedArmor": "Wizard Cloak (2 Defend Dice)",
+          "robos:specialAbility": "Wields 3 Elemental Spell decks (9 spells total)",
+          "robos:tokenColor": "#7c3aed",
+          "robos:icon": "🔮",
+          "robos:startingPosition": [
+            0,
+            0
+          ],
+          "robos:inventory": [
+            {
+              "id": "item-holy-water-1",
+              "name": "Holy Water",
+              "type": "relic",
+              "effect": "Destroys undead instantly",
+              "value": 200
+            },
+            {
+              "id": "item-pot-heal-3",
+              "name": "Potion of Healing",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
+            }
+          ],
+          "robos:spells": [
+            {
+              "id": "urn:robos:tabletop:spell:heal-body",
+              "slug": "heal-body",
+              "name": "Heal Body",
+              "element": "earth",
+              "category": "Base Game",
+              "icon": "💖",
+              "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
+              "effect": "heal-bp",
+              "val": 4
+            },
+            {
+              "id": "urn:robos:tabletop:spell:pass-through-rock",
+              "slug": "pass-through-rock",
+              "name": "Pass Through Rock",
+              "element": "earth",
+              "category": "Base Game",
+              "icon": "🧱",
+              "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
+              "effect": "phase-walls",
+              "val": 1
+            },
+            {
+              "id": "urn:robos:tabletop:spell:rock-skin",
+              "slug": "rock-skin",
+              "name": "Rock Skin",
+              "element": "earth",
+              "category": "Base Game",
+              "icon": "🛡️",
+              "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
+              "effect": "buff-def",
+              "val": 1
+            },
+            {
+              "id": "urn:robos:tabletop:spell:ball-of-flame",
+              "slug": "ball-of-flame",
+              "name": "Ball of Flame",
+              "element": "fire",
+              "category": "Base Game",
+              "icon": "☄️",
+              "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
+              "effect": "damage-bp",
+              "val": 2
+            },
+            {
+              "id": "urn:robos:tabletop:spell:courage",
+              "slug": "courage",
+              "name": "Courage",
+              "element": "fire",
+              "category": "Base Game",
+              "icon": "🦁",
+              "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
+              "effect": "buff-atk",
+              "val": 2
+            },
+            {
+              "id": "urn:robos:tabletop:spell:fire-of-wrath",
+              "slug": "fire-of-wrath",
+              "name": "Fire of Wrath",
+              "element": "fire",
+              "category": "Base Game",
+              "icon": "🔥",
+              "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
+              "effect": "damage-bp",
+              "val": 1
+            },
+            {
+              "id": "urn:robos:tabletop:spell:genie",
+              "slug": "genie",
+              "name": "Genie",
+              "element": "air",
+              "category": "Base Game",
+              "icon": "🧞",
+              "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
+              "effect": "summon-attack",
+              "val": 5
+            },
+            {
+              "id": "urn:robos:tabletop:spell:swift-wind",
+              "slug": "swift-wind",
+              "name": "Swift Wind",
+              "element": "air",
+              "category": "Base Game",
+              "icon": "💨",
+              "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
+              "effect": "buff-move",
+              "val": 2
+            },
+            {
+              "id": "urn:robos:tabletop:spell:tempest",
+              "slug": "tempest",
+              "name": "Tempest",
+              "element": "air",
+              "category": "Base Game",
+              "icon": "🌪️",
+              "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
+              "effect": "status-freeze",
+              "val": 1
+            }
+          ]
+        }
+      ],
+      "robos:quests": [
+        {
+          "id": "custom-quest",
+          "slug": "custom-quest",
+          "title": "Quest 1: Custom Dungeon",
+          "briefing": "Descend into the Custom Dungeon via the stairwell at [7, 14]. Explore the dungeon rooms, overcome the traps and monsters within, and return victorious!",
+          "mapConfigId": "first-light-dungeon",
+          "ruleset": "heroquest",
+          "goldReward": 150,
+          "bossTarget": "gargoyle-boss",
+          "completed": false,
+          "startingStairs": [
+            7,
+            14
+          ],
+          "cartridgeFile": "custom-quest.cartridge.json",
+          "activeRooms": [
+            "r1",
+            "r2",
+            "r3",
+            "r4",
+            "r5",
+            "r6",
+            "r7",
+            "r8",
+            "r9",
+            "r10",
+            "r11",
+            "r12",
+            "r13",
+            "r14",
+            "r15",
+            "r16",
+            "r17",
+            "r18",
+            "r19",
+            "r20",
+            "r21",
+            "r22"
+          ]
+        }
+      ],
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:map:custom-quest",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopQuestMap",
+        "robos:GameMap",
+        "schema:Place"
+      ],
+      "dcterms:title": "Quest 1: Custom Dungeon",
+      "robos:mapConfiguration": "first-light-dungeon",
+      "robos:activeRooms": [
+        "r1",
+        "r2",
+        "r3",
+        "r4",
+        "r5",
+        "r6",
+        "r7",
+        "r8",
+        "r9",
+        "r10",
+        "r11",
+        "r12",
+        "r13",
+        "r14",
+        "r15",
+        "r16",
+        "r17",
+        "r18",
+        "r19",
+        "r20",
+        "r21",
+        "r22"
+      ],
+      "robos:startingSpawn": [
+        7,
+        14
+      ],
+      "robos:wallBlocksCount": 3,
+      "robos:doorsCount": 12,
+      "robos:furnitureCount": 2,
+      "robos:monstersCount": 0,
+      "robos:trapsCount": 1,
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     }
@@ -5471,6 +6004,123 @@
       "robos:namespace": "robos.tabletop"
     },
     {
+      "@id": "urn:robos:tabletop:monster:katie-zacharia-press-secretary",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Katie Zacharia (Press Secretary)",
+      "robos:category": "Midterms 2026",
+      "robos:monsterArchetype": "Press Secretary",
+      "robos:archetype": "Press Secretary",
+      "dcterms:description": "White House Press Secretary Boss: Commands the Briefing Room podium with a color-coded binder of bipartisan spin, smiling warmly while explaining why $18 eggs and billionaire bailouts mean regular taxpayers have never had it better.",
+      "robos:bodyPoints": 4,
+      "robos:mindPoints": 6,
+      "robos:attackDice": 4,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 7,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:culture-war-distraction-cloud",
+        "urn:robos:tabletop:spell:shrinkflation-curse"
+      ],
+      "robos:icon": "🎙️",
+      "robos:tokenColor": "#db2777",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:mitch-mcconnell-turtle-patriarch",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Mitch McConnell (Committee Patriarch)",
+      "robos:category": "Midterms 2026",
+      "robos:monsterArchetype": "Committee Patriarch",
+      "robos:archetype": "Committee Patriarch",
+      "dcterms:description": "Legislative Committee Chamber Boss: An ancient parliamentary tortoise who freezes mid-sentence for 30 seconds to buffer insider stock trades with his across-the-aisle buddies before passing another $4 trillion omnibus bill at 3:00 AM.",
+      "robos:bodyPoints": 5,
+      "robos:mindPoints": 5,
+      "robos:attackDice": 3,
+      "robos:defendDice": 6,
+      "robos:movementSquares": 4,
+      "robos:isBoss": true,
+      "robos:isUndead": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:shrinkflation-curse",
+        "urn:robos:tabletop:spell:bipartisan-blame-inferno"
+      ],
+      "robos:icon": "🐢",
+      "robos:tokenColor": "#475569",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:jd-vance-drunk-war-room",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "JD Vance (Drunk in the War Room)",
+      "robos:category": "Midterms 2026",
+      "robos:monsterArchetype": "War Room Boss",
+      "robos:archetype": "War Room Boss",
+      "dcterms:description": "Campaign War Room Co-Boss: Three sheets to the wind on $3,000 Pappy Van Winkle expensed to working-class donors, clinking glasses with Kamala Harris while laughing about how Red and Blue voters still think the two parties aren't business partners.",
+      "robos:bodyPoints": 4,
+      "robos:mindPoints": 4,
+      "robos:attackDice": 4,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 6,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:bipartisan-blame-inferno",
+        "urn:robos:tabletop:spell:culture-war-distraction-cloud"
+      ],
+      "robos:icon": "🥃",
+      "robos:tokenColor": "#b91c1c",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:monster:kamala-harris-drunk-war-room",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopMonster",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Kamala Harris (Drunk in the War Room)",
+      "robos:category": "Midterms 2026",
+      "robos:monsterArchetype": "War Room Boss",
+      "robos:archetype": "War Room Boss",
+      "dcterms:description": "Campaign War Room Co-Boss: Sloshed on reserve Napa Valley Cabernet paid for by Super-PACs, cackling in a Venn diagram of bipartisan luxury with JD Vance while toasting to how regular taxpayers foot the bill for the open bar.",
+      "robos:bodyPoints": 4,
+      "robos:mindPoints": 5,
+      "robos:attackDice": 4,
+      "robos:defendDice": 4,
+      "robos:movementSquares": 6,
+      "robos:isBoss": true,
+      "robos:isSpellcaster": true,
+      "robos:spells": [
+        "urn:robos:tabletop:spell:culture-war-distraction-cloud",
+        "urn:robos:tabletop:spell:shrinkflation-curse"
+      ],
+      "robos:icon": "🍷",
+      "robos:tokenColor": "#1d4ed8",
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
       "@id": "urn:robos:tabletop:spell:snowflake-meltdown",
       "@type": [
         "oslc_am:Resource",
@@ -6496,8 +7146,8 @@
           "bossTarget": "gargoyle-boss",
           "completed": false,
           "startingStairs": [
-            -1,
-            11
+            7,
+            14
           ],
           "cartridgeFile": "election-2026-quest-1.cartridge.json",
           "activeRooms": [
@@ -6542,14 +7192,430 @@
         "room-se-11"
       ],
       "robos:startingSpawn": [
-        -1,
-        11
+        7,
+        14
       ],
       "robos:wallBlocksCount": 0,
       "robos:doorsCount": 12,
       "robos:furnitureCount": 0,
       "robos:monstersCount": 0,
       "robos:trapsCount": 0,
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:campaign:campaign-heroquest",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopCampaign",
+        "schema:CreativeWork"
+      ],
+      "dcterms:title": "HeroQuest",
+      "dcterms:description": "The HeroQuest campaign featuring the real working custom-quest.cartridge dungeon.",
+      "robos:campaignId": "campaign-heroquest",
+      "robos:isActiveCampaign": false,
+      "robos:heroes": [
+        {
+          "@id": "urn:robos:tabletop:hero:barbarian",
+          "@type": [
+            "oslc_am:Resource",
+            "robos:TabletopHero",
+            "robos:GameCharacter",
+            "schema:Person"
+          ],
+          "dcterms:title": "Rogar",
+          "robos:characterName": "Rogar",
+          "robos:heroClass": "Barbarian",
+          "robos:bodyPoints": 8,
+          "robos:mindPoints": 2,
+          "robos:attackDice": 3,
+          "robos:defendDice": 2,
+          "robos:gold": 100,
+          "robos:startingWeapon": "Broadsword (3 Combat Dice)",
+          "robos:equippedWeapon": "Broadsword (3 Combat Dice)",
+          "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
+          "robos:specialAbility": "Greatest strength and vitality in melee combat",
+          "robos:tokenColor": "#b91c1c",
+          "robos:icon": "⚔️",
+          "robos:startingPosition": [
+            0,
+            1
+          ],
+          "robos:inventory": [
+            {
+              "id": "item-pot-heal-1",
+              "name": "Potion of Healing",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
+            },
+            {
+              "id": "item-rope-1",
+              "name": "Heavy Rope (30 ft)",
+              "type": "tool",
+              "effect": "Climb pits & gaps",
+              "value": 25
+            }
+          ],
+          "robos:spells": [],
+          "robos:currentBP": 8,
+          "robos:currentMP": 2
+        },
+        {
+          "@id": "urn:robos:tabletop:hero:dwarf",
+          "@type": [
+            "oslc_am:Resource",
+            "robos:TabletopHero",
+            "robos:GameCharacter",
+            "schema:Person"
+          ],
+          "dcterms:title": "Dorgan",
+          "robos:characterName": "Dorgan",
+          "robos:heroClass": "Dwarf",
+          "robos:bodyPoints": 7,
+          "robos:mindPoints": 3,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2,
+          "robos:gold": 100,
+          "robos:startingWeapon": "Shortsword (2 Combat Dice)",
+          "robos:equippedWeapon": "Shortsword (2 Combat Dice)",
+          "robos:equippedArmor": "Shield & Chainmail (+2 Defend Dice)",
+          "robos:specialAbility": "Disarms traps without needing a toolkit",
+          "robos:tokenColor": "#d97706",
+          "robos:icon": "🪓",
+          "robos:startingPosition": [
+            1,
+            0
+          ],
+          "robos:inventory": [
+            {
+              "id": "item-toolkit-1",
+              "name": "Trap Disarm Toolkit",
+              "type": "tool",
+              "effect": "Disarm traps without rolling skull",
+              "value": 75
+            },
+            {
+              "id": "item-pot-heal-2",
+              "name": "Potion of Healing",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
+            }
+          ],
+          "robos:spells": []
+        },
+        {
+          "@id": "urn:robos:tabletop:hero:elf",
+          "@type": [
+            "oslc_am:Resource",
+            "robos:TabletopHero",
+            "robos:GameCharacter",
+            "schema:Person"
+          ],
+          "dcterms:title": "Ladril",
+          "robos:characterName": "Ladril",
+          "robos:heroClass": "Elf",
+          "robos:bodyPoints": 6,
+          "robos:mindPoints": 4,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2,
+          "robos:gold": 100,
+          "robos:startingWeapon": "Shortsword (2 Combat Dice)",
+          "robos:equippedWeapon": "Shortsword (2 Combat Dice)",
+          "robos:equippedArmor": "Elven Leather & Cloak (+2 Defend Dice)",
+          "robos:specialAbility": "Master of blade and 1 Elemental Spell deck (3 spells)",
+          "robos:tokenColor": "#15803d",
+          "robos:icon": "🏹",
+          "robos:startingPosition": [
+            1,
+            1
+          ],
+          "robos:inventory": [
+            {
+              "id": "item-torch-1",
+              "name": "Dungeon Torch",
+              "type": "tool",
+              "effect": "Detect hidden traps in room",
+              "value": 15
+            },
+            {
+              "id": "item-strength-1",
+              "name": "Potion of Strength",
+              "type": "potion",
+              "effect": "+2 Attack Dice for 1 turn",
+              "value": 150
+            }
+          ],
+          "robos:spells": [
+            {
+              "id": "urn:robos:tabletop:spell:water-of-healing",
+              "slug": "water-of-healing",
+              "name": "Water of Healing",
+              "element": "water",
+              "category": "Base Game",
+              "icon": "💧",
+              "description": "Restores up to 4 lost Body Points to any Hero.",
+              "effect": "heal-bp",
+              "val": 4
+            },
+            {
+              "id": "urn:robos:tabletop:spell:sleep",
+              "slug": "sleep",
+              "name": "Sleep",
+              "element": "water",
+              "category": "Base Game",
+              "icon": "💤",
+              "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
+              "effect": "status-sleep",
+              "val": 1
+            },
+            {
+              "id": "urn:robos:tabletop:spell:veil-of-mist",
+              "slug": "veil-of-mist",
+              "name": "Veil of Mist",
+              "element": "water",
+              "category": "Base Game",
+              "icon": "🌫️",
+              "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
+              "effect": "status-stealth",
+              "val": 1
+            }
+          ]
+        },
+        {
+          "@id": "urn:robos:tabletop:hero:wizard",
+          "@type": [
+            "oslc_am:Resource",
+            "robos:TabletopHero",
+            "robos:GameCharacter",
+            "schema:Person"
+          ],
+          "dcterms:title": "Telor",
+          "robos:characterName": "Telor",
+          "robos:heroClass": "Wizard",
+          "robos:bodyPoints": 4,
+          "robos:mindPoints": 6,
+          "robos:attackDice": 1,
+          "robos:defendDice": 2,
+          "robos:gold": 100,
+          "robos:startingWeapon": "Dagger (1 Combat Die)",
+          "robos:equippedWeapon": "Dagger (1 Combat Die)",
+          "robos:equippedArmor": "Wizard Cloak (2 Defend Dice)",
+          "robos:specialAbility": "Wields 3 Elemental Spell decks (9 spells total)",
+          "robos:tokenColor": "#7c3aed",
+          "robos:icon": "🔮",
+          "robos:startingPosition": [
+            0,
+            0
+          ],
+          "robos:inventory": [
+            {
+              "id": "item-holy-water-1",
+              "name": "Holy Water",
+              "type": "relic",
+              "effect": "Destroys undead instantly",
+              "value": 200
+            },
+            {
+              "id": "item-pot-heal-3",
+              "name": "Potion of Healing",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
+            }
+          ],
+          "robos:spells": [
+            {
+              "id": "urn:robos:tabletop:spell:heal-body",
+              "slug": "heal-body",
+              "name": "Heal Body",
+              "element": "earth",
+              "category": "Base Game",
+              "icon": "💖",
+              "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
+              "effect": "heal-bp",
+              "val": 4
+            },
+            {
+              "id": "urn:robos:tabletop:spell:pass-through-rock",
+              "slug": "pass-through-rock",
+              "name": "Pass Through Rock",
+              "element": "earth",
+              "category": "Base Game",
+              "icon": "🧱",
+              "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
+              "effect": "phase-walls",
+              "val": 1
+            },
+            {
+              "id": "urn:robos:tabletop:spell:rock-skin",
+              "slug": "rock-skin",
+              "name": "Rock Skin",
+              "element": "earth",
+              "category": "Base Game",
+              "icon": "🛡️",
+              "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
+              "effect": "buff-def",
+              "val": 1
+            },
+            {
+              "id": "urn:robos:tabletop:spell:ball-of-flame",
+              "slug": "ball-of-flame",
+              "name": "Ball of Flame",
+              "element": "fire",
+              "category": "Base Game",
+              "icon": "☄️",
+              "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
+              "effect": "damage-bp",
+              "val": 2
+            },
+            {
+              "id": "urn:robos:tabletop:spell:courage",
+              "slug": "courage",
+              "name": "Courage",
+              "element": "fire",
+              "category": "Base Game",
+              "icon": "🦁",
+              "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
+              "effect": "buff-atk",
+              "val": 2
+            },
+            {
+              "id": "urn:robos:tabletop:spell:fire-of-wrath",
+              "slug": "fire-of-wrath",
+              "name": "Fire of Wrath",
+              "element": "fire",
+              "category": "Base Game",
+              "icon": "🔥",
+              "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
+              "effect": "damage-bp",
+              "val": 1
+            },
+            {
+              "id": "urn:robos:tabletop:spell:genie",
+              "slug": "genie",
+              "name": "Genie",
+              "element": "air",
+              "category": "Base Game",
+              "icon": "🧞",
+              "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
+              "effect": "summon-attack",
+              "val": 5
+            },
+            {
+              "id": "urn:robos:tabletop:spell:swift-wind",
+              "slug": "swift-wind",
+              "name": "Swift Wind",
+              "element": "air",
+              "category": "Base Game",
+              "icon": "💨",
+              "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
+              "effect": "buff-move",
+              "val": 2
+            },
+            {
+              "id": "urn:robos:tabletop:spell:tempest",
+              "slug": "tempest",
+              "name": "Tempest",
+              "element": "air",
+              "category": "Base Game",
+              "icon": "🌪️",
+              "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
+              "effect": "status-freeze",
+              "val": 1
+            }
+          ]
+        }
+      ],
+      "robos:quests": [
+        {
+          "id": "custom-quest",
+          "slug": "custom-quest",
+          "title": "Quest 1: Custom Dungeon",
+          "briefing": "Descend into the Custom Dungeon via the stairwell at [7, 14]. Explore the dungeon rooms, overcome the traps and monsters within, and return victorious!",
+          "mapConfigId": "first-light-dungeon",
+          "ruleset": "heroquest",
+          "goldReward": 150,
+          "bossTarget": "gargoyle-boss",
+          "completed": false,
+          "startingStairs": [
+            7,
+            14
+          ],
+          "cartridgeFile": "custom-quest.cartridge.json",
+          "activeRooms": [
+            "r1",
+            "r2",
+            "r3",
+            "r4",
+            "r5",
+            "r6",
+            "r7",
+            "r8",
+            "r9",
+            "r10",
+            "r11",
+            "r12",
+            "r13",
+            "r14",
+            "r15",
+            "r16",
+            "r17",
+            "r18",
+            "r19",
+            "r20",
+            "r21",
+            "r22"
+          ]
+        }
+      ],
+      "robos:package": "tabletop-game",
+      "robos:namespace": "robos.tabletop"
+    },
+    {
+      "@id": "urn:robos:tabletop:map:custom-quest",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:TabletopQuestMap",
+        "robos:GameMap",
+        "schema:Place"
+      ],
+      "dcterms:title": "Quest 1: Custom Dungeon",
+      "robos:mapConfiguration": "first-light-dungeon",
+      "robos:activeRooms": [
+        "r1",
+        "r2",
+        "r3",
+        "r4",
+        "r5",
+        "r6",
+        "r7",
+        "r8",
+        "r9",
+        "r10",
+        "r11",
+        "r12",
+        "r13",
+        "r14",
+        "r15",
+        "r16",
+        "r17",
+        "r18",
+        "r19",
+        "r20",
+        "r21",
+        "r22"
+      ],
+      "robos:startingSpawn": [
+        7,
+        14
+      ],
+      "robos:wallBlocksCount": 3,
+      "robos:doorsCount": 12,
+      "robos:furnitureCount": 2,
+      "robos:monstersCount": 0,
+      "robos:trapsCount": 1,
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     }
