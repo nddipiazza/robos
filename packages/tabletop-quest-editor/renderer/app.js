@@ -148,7 +148,11 @@ const MONSTER_DEFS = {
   'deep-state-witch-lord': { name: 'Unelected Bureaucracy Witch Lord', category: 'Midterms 2026', archetype: 'Witch Lord', bp: 4, mp: 6, atk: 4, def: 5, move: 7, isBoss: true, isUndead: true, isCaster: true, color: '#4c1d95', icon: '🏛️', spells: ['shrinkflation-curse', 'culture-war-distraction-cloud', 'bipartisan-blame-inferno'] },
   'trumpbiden-dragon': { name: 'TrumpBiden (The Blame Dragon)', category: 'Midterms 2026', archetype: 'Dragon', bp: 6, mp: 6, atk: 5, def: 5, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#dc2626', icon: '🐉', spells: ['bipartisan-blame-inferno', 'shrinkflation-curse', 'culture-war-distraction-cloud'] },
   'irs-audit-doomguard': { name: 'IRS 87,000-Agent Doomguard', category: 'Midterms 2026', archetype: 'Doomguard', bp: 3, mp: 3, atk: 4, def: 6, move: 8, isBoss: true, isUndead: false, isCaster: false, color: '#334155', icon: '🧾', spells: [] },
-  'hoa-censor-witch-hand': { name: 'Censorship Board Witch Hand', category: 'Midterms 2026', archetype: 'Witch Hand', bp: 4, mp: 5, atk: 4, def: 4, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#9333ea', icon: '🤫', spells: ['culture-war-distraction-cloud', 'shrinkflation-curse'] }
+  'hoa-censor-witch-hand': { name: 'Censorship Board Witch Hand', category: 'Midterms 2026', archetype: 'Witch Hand', bp: 4, mp: 5, atk: 4, def: 4, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#9333ea', icon: '🤫', spells: ['culture-war-distraction-cloud', 'shrinkflation-curse'] },
+  'katie-zacharia-press-secretary': { name: 'Katie Zacharia (Press Secretary)', category: 'Midterms 2026', archetype: 'Press Secretary', bp: 4, mp: 6, atk: 4, def: 4, move: 7, isBoss: true, isUndead: false, isCaster: true, color: '#db2777', icon: '🎙️', spells: ['culture-war-distraction-cloud', 'shrinkflation-curse'] },
+  'mitch-mcconnell-turtle-patriarch': { name: 'Mitch McConnell (Committee Patriarch)', category: 'Midterms 2026', archetype: 'Committee Patriarch', bp: 5, mp: 5, atk: 3, def: 6, move: 4, isBoss: true, isUndead: true, isCaster: true, color: '#475569', icon: '🐢', spells: ['shrinkflation-curse', 'bipartisan-blame-inferno'] },
+  'jd-vance-drunk-war-room': { name: 'JD Vance (Drunk in the War Room)', category: 'Midterms 2026', archetype: 'War Room Boss', bp: 4, mp: 4, atk: 4, def: 4, move: 6, isBoss: true, isUndead: false, isCaster: true, color: '#b91c1c', icon: '🥃', spells: ['bipartisan-blame-inferno', 'culture-war-distraction-cloud'] },
+  'kamala-harris-drunk-war-room': { name: 'Kamala Harris (Drunk in the War Room)', category: 'Midterms 2026', archetype: 'War Room Boss', bp: 4, mp: 5, atk: 4, def: 4, move: 6, isBoss: true, isUndead: false, isCaster: true, color: '#1d4ed8', icon: '🍷', spells: ['culture-war-distraction-cloud', 'shrinkflation-curse'] }
 };
 
 // Furniture dimensions (w, h)
@@ -4116,8 +4120,11 @@ function drawBoardLayers(ctx, geom, options = {}) {
   if (showNotes && !forExport && state.quest.storyTriggers) {
     state.quest.storyTriggers.forEach((st, i) => {
       const pos = tileToWorld(st.tile[0], st.tile[1], geom);
-      const cx = pos.x + geom.tileSize / 2;
-      const cy = pos.y + geom.tileSize / 2;
+      const hasMonsterOnTile = showMonsters && (state.quest.monsters || []).some(m => m.pos && m.pos[0] === st.tile[0] && m.pos[1] === st.tile[1]);
+      const cx = pos.x + geom.tileSize / 2 + (hasMonsterOnTile ? 11 : 0);
+      const cy = pos.y + geom.tileSize / 2 + (hasMonsterOnTile ? -11 : 0);
+      const outerR = hasMonsterOnTile ? 8 : 11;
+      const innerR = hasMonsterOnTile ? 6.5 : 9;
 
       const eventDef = TRIGGER_EVENT_DEFS[st.event] || TRIGGER_EVENT_DEFS.on_room_entered;
       const color = eventDef.color || '#d97706';
@@ -4128,14 +4135,14 @@ function drawBoardLayers(ctx, geom, options = {}) {
       ctx.shadowBlur = 6;
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(cx, cy, 11, 0, Math.PI * 2);
+      ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
 
       // Inner dark disc
       ctx.fillStyle = '#0f172a';
       ctx.beginPath();
-      ctx.arc(cx, cy, 9, 0, Math.PI * 2);
+      ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = color;
       ctx.lineWidth = 1.5;
@@ -4143,11 +4150,11 @@ function drawBoardLayers(ctx, geom, options = {}) {
 
       // Marker
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 9px monospace';
+      ctx.font = hasMonsterOnTile ? 'bold 8px monospace' : 'bold 9px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const mark = (st.marker || 'A').replace('Note ', '');
-      ctx.fillText(mark, cx, cy - 1);
+      ctx.fillText(mark, cx, cy - 0.5);
 
       // Mini action badge on bottom right
       const actions = st.actions || [];
