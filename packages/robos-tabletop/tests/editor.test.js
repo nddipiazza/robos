@@ -1579,7 +1579,61 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.strictEqual(appModule.getActiveQuest().mapConfigId, "midterm-election-capitol");
     await appModule.switchMapConfiguration("heroquest-classic", true);
   });
+
+  it("creates new campaigns with 0 quests by default and immediately autosaves campaign and quest edits to KGraph", async () => {
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+
+    // 1. Verify #campaign-autosave-status indicator exists in .campaign-selector-bar
+    assert.ok(
+      indexHtml.includes('id="campaign-autosave-status"'),
+      "index.html must include #campaign-autosave-status indicator in the campaign selector bar"
+    );
+
+    // 2. Clicking '+ New Campaign' (addCampaign() with no quests prop) must create a campaign with 0 quests by default
+    const newCamp = appModule.addCampaign({
+      id: "campaign-empty-by-default",
+      title: "Fresh Empty Campaign"
+    });
+    assert.strictEqual(newCamp.title, "Fresh Empty Campaign");
+    assert.ok(Array.isArray(newCamp.quests), "newCampaign.quests must be an array");
+    assert.strictEqual(newCamp.quests.length, 0, "New campaign must have 0 quests by default");
+    assert.strictEqual(appModule.getActiveQuest(), null, "Active quest must be null when new campaign has 0 quests");
+
+    // 3. Verify serializeCampaignToKGraphNode and deserializeCampaignFromKGraphNode preserve 0-quest state and added quests
+    const emptyNode = appModule.serializeCampaignToKGraphNode(newCamp);
+    assert.strictEqual(emptyNode["@id"], "urn:robos:tabletop:campaign:campaign-empty-by-default");
+    assert.ok(emptyNode["@type"].includes("robos:TabletopCampaign"));
+    assert.strictEqual(emptyNode["robos:quests"].length, 0, "Serialized KGraph node for new campaign must have 0 quests");
+
+    const restoredEmpty = appModule.deserializeCampaignFromKGraphNode(emptyNode);
+    assert.strictEqual(restoredEmpty.id, "campaign-empty-by-default");
+    assert.strictEqual(restoredEmpty.quests.length, 0, "Deserialized campaign must retain 0 quests");
+
+    // 4. Add a quest to the new campaign and verify immediate serialization & KGraph save
+    const addedQuest = appModule.addQuest({
+      title: "Midterm Capitol Siege",
+      slug: "midterm-capitol-siege",
+      mapConfigId: "midterm-election-capitol",
+      goldReward: 250
+    });
+    assert.strictEqual(newCamp.quests.length, 1, "Campaign must have 1 quest after addQuest");
+    assert.strictEqual(appModule.getActiveQuest().slug, "midterm-capitol-siege");
+    assert.strictEqual(addedQuest.mapConfigId, "midterm-election-capitol");
+
+    const populatedNode = appModule.serializeCampaignToKGraphNode(newCamp);
+    assert.strictEqual(populatedNode["robos:quests"].length, 1);
+    assert.strictEqual(populatedNode["robos:quests"][0].slug, "midterm-capitol-siege");
+    assert.strictEqual(populatedNode["robos:quests"][0].mapConfigId, "midterm-election-capitol");
+
+    const saveRes = await appModule.saveCampaignToKGraph(newCamp, false);
+    assert.strictEqual(saveRes.success, true, "saveCampaignToKGraph must succeed immediately");
+
+    // Clean up test campaign and switch back to HeroQuest campaign 0
+    const idx = appModule.getCampaigns().findIndex(c => c.id === "campaign-empty-by-default");
+    if (idx !== -1) {
+      appModule.deleteCampaign(idx);
+    }
+    await appModule.selectCampaign(0);
+  });
 });
-
-
-
