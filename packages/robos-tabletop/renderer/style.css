@@ -245,13 +245,19 @@ body {
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-  gap: 20px;
+  grid-template-columns: minmax(220px, var(--col-left-fr, 1fr)) 12px minmax(220px, var(--col-right-fr, 1fr));
+  gap: 0;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.form-card-inner {
   min-width: 0;
 }
 
 .form-group {
   margin-bottom: 14px;
+  min-width: 0;
 }
 .form-group label {
   display: block;
@@ -278,6 +284,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 15px;
+  min-width: 0;
 }
 .stats-row {
   grid-template-columns: repeat(4, 1fr);
@@ -311,12 +318,74 @@ body {
   cursor: pointer;
 }
 
-/* Split View */
+/* Split View & Resizable Column Separators */
 .split-view {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 20px;
+  grid-template-columns: var(--split-left-width, 280px) 12px minmax(260px, 1fr);
+  gap: 0;
   height: calc(100vh - 170px);
+  min-width: 0;
+}
+
+.col-resizer {
+  width: 12px;
+  min-width: 10px;
+  cursor: col-resize;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  z-index: 10;
+  transition: background-color 0.15s ease;
+  border-radius: 4px;
+}
+
+.col-resizer::before {
+  content: "";
+  width: 2px;
+  height: calc(100% - 12px);
+  min-height: 24px;
+  background-color: rgba(148, 163, 184, 0.28);
+  border-radius: 2px;
+  transition: background-color 0.15s ease, width 0.15s ease, box-shadow 0.15s ease;
+}
+
+.col-resizer::after {
+  content: "⋮";
+  position: absolute;
+  color: rgba(148, 163, 184, 0.65);
+  font-size: 12px;
+  line-height: 1;
+  background: var(--bg-surface);
+  padding: 2px 1px;
+  border-radius: 3px;
+  pointer-events: none;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.col-resizer:hover,
+.col-resizer.is-resizing {
+  background-color: rgba(0, 188, 212, 0.12);
+}
+
+.col-resizer:hover::before,
+.col-resizer.is-resizing::before {
+  width: 3px;
+  background-color: var(--accent-cyan);
+  box-shadow: 0 0 8px rgba(0, 188, 212, 0.6);
+}
+
+.col-resizer:hover::after,
+.col-resizer.is-resizing::after {
+  color: var(--accent-cyan);
+  transform: scale(1.15);
+}
+
+body.is-col-resizing,
+body.is-col-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
 }
 
 .sidebar-list {
@@ -325,6 +394,8 @@ body {
   border-radius: 8px;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .list-header {
@@ -365,6 +436,7 @@ body {
 
 .editor-panel {
   overflow-y: auto;
+  min-width: 0;
 }
 
 /* Board Studio */
@@ -1366,9 +1438,10 @@ body {
 /* Grimoire Distribution Preview */
 .grimoire-distribution-preview {
   display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 14px;
+  grid-template-columns: minmax(180px, 1fr) 12px minmax(220px, 2fr);
+  gap: 0;
   margin-top: 6px;
+  min-width: 0;
 }
 
 .grimoire-side-card {
@@ -1379,6 +1452,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
 }
 
 .grimoire-side-card.elf-side {

@@ -2114,6 +2114,7 @@ async function initKGraphData() {
       setupSpellDraftControls();
       setupHeroTradeControls();
       setupCampaignQuestControls();
+      initColumnResizers();
 
       applySpellAllocationToHeroes();
       renderCategoryControlsUI();
@@ -9063,8 +9064,476 @@ if (typeof window !== "undefined") {
   };
 }
 
+// ==========================================
+// UNIVERSAL RESIZABLE COLUMN SEPARATORS ACROSS ALL TABS
+// ==========================================
+const COLUMN_RESIZER_STORAGE_KEY = "robos.tabletop.colResizers.v1";
+
+const DEFAULT_COLUMN_RESIZER_CONFIGS = {
+  "split-campaign-quests": {
+    resizerId: "split-campaign-quests",
+    tabId: "tab-quest",
+    subtabId: "subtab-campaign-quests",
+    mode: "split",
+    defaultLeftPx: 280,
+    minLeftPx: 180,
+    maxLeftPx: 640,
+    defaultGridTemplate: "var(--split-left-width, 280px) 12px minmax(260px, 1fr)"
+  },
+  "grid-quest-metadata-briefing": {
+    resizerId: "grid-quest-metadata-briefing",
+    tabId: "tab-quest",
+    subtabId: "subtab-campaign-quests",
+    mode: "two-col",
+    defaultLeftRatio: 50,
+    minRatio: 20,
+    maxRatio: 80,
+    defaultGridTemplate: "minmax(220px, 1fr) 12px minmax(220px, 1fr)"
+  },
+  "grid-quest-save-overview": {
+    resizerId: "grid-quest-save-overview",
+    tabId: "tab-quest",
+    subtabId: "subtab-campaign-quests",
+    mode: "split",
+    defaultLeftPx: 340,
+    minLeftPx: 200,
+    maxLeftPx: 680,
+    defaultGridTemplate: "minmax(260px, 360px) 10px minmax(260px, 1fr)"
+  },
+  "grid-quest-save-collections": {
+    resizerId: "grid-quest-save-collections",
+    tabId: "tab-quest",
+    subtabId: "subtab-campaign-quests",
+    mode: "two-col",
+    defaultLeftRatio: 50,
+    minRatio: 20,
+    maxRatio: 80,
+    defaultGridTemplate: "minmax(200px, 1fr) 10px minmax(200px, 1fr)"
+  },
+  "split-campaign-heroes": {
+    resizerId: "split-campaign-heroes",
+    tabId: "tab-quest",
+    subtabId: "subtab-campaign-heroes",
+    mode: "split",
+    defaultLeftPx: 280,
+    minLeftPx: 180,
+    maxLeftPx: 640,
+    defaultGridTemplate: "var(--split-left-width, 280px) 12px minmax(260px, 1fr)"
+  },
+  "split-monsters": {
+    resizerId: "split-monsters",
+    tabId: "tab-monsters",
+    mode: "split",
+    defaultLeftPx: 280,
+    minLeftPx: 180,
+    maxLeftPx: 640,
+    defaultGridTemplate: "var(--split-left-width, 280px) 12px minmax(260px, 1fr)"
+  },
+  "split-classes": {
+    resizerId: "split-classes",
+    tabId: "tab-classes",
+    mode: "split",
+    defaultLeftPx: 280,
+    minLeftPx: 180,
+    maxLeftPx: 640,
+    defaultGridTemplate: "var(--split-left-width, 280px) 12px minmax(260px, 1fr)"
+  },
+  "grid-spells-weapons": {
+    resizerId: "grid-spells-weapons",
+    tabId: "tab-spells",
+    mode: "two-col",
+    defaultLeftRatio: 50,
+    minRatio: 20,
+    maxRatio: 80,
+    defaultGridTemplate: "minmax(220px, 1fr) 12px minmax(220px, 1fr)"
+  },
+  "grid-grimoire-preview": {
+    resizerId: "grid-grimoire-preview",
+    tabId: "modal-spell-pick",
+    mode: "two-col",
+    defaultLeftRatio: 33.33,
+    minRatio: 20,
+    maxRatio: 80,
+    defaultGridTemplate: "minmax(180px, 1fr) 12px minmax(220px, 2fr)"
+  },
+  "grid-hero-trade": {
+    resizerId: "grid-hero-trade",
+    tabId: "modal-between-quests-trade",
+    mode: "two-col",
+    defaultLeftRatio: 50,
+    minRatio: 20,
+    maxRatio: 80,
+    defaultGridTemplate: "minmax(220px, 1fr) 10px minmax(220px, 1fr)"
+  }
+};
+
+const columnResizerState = {};
+
+function ensureDefaultColumnResizerState() {
+  Object.keys(DEFAULT_COLUMN_RESIZER_CONFIGS).forEach((id) => {
+    if (!columnResizerState[id]) {
+      const cfg = DEFAULT_COLUMN_RESIZER_CONFIGS[id];
+      columnResizerState[id] = {
+        resizerId: id,
+        tabId: cfg.tabId,
+        subtabId: cfg.subtabId || null,
+        mode: cfg.mode,
+        leftPx: cfg.defaultLeftPx || null,
+        leftRatio: cfg.defaultLeftRatio || 50,
+        rightRatio: cfg.defaultLeftRatio ? +(100 - cfg.defaultLeftRatio).toFixed(2) : 50,
+        gridTemplateColumns: cfg.defaultGridTemplate,
+        isCustom: false
+      };
+    }
+  });
+}
+
+ensureDefaultColumnResizerState();
+
+function getColumnResizerState(resizerId = null) {
+  ensureDefaultColumnResizerState();
+  if (resizerId) {
+    return columnResizerState[resizerId] || null;
+  }
+  return { ...columnResizerState };
+}
+
+function saveColumnResizerStateToStorage() {
+  try {
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(COLUMN_RESIZER_STORAGE_KEY, JSON.stringify(columnResizerState));
+    }
+  } catch (_) {}
+}
+
+function applyColumnResizerStateToDOM(resizerId) {
+  if (typeof document === "undefined") return;
+  const state = columnResizerState[resizerId];
+  if (!state) return;
+
+  const resizerEl = document.querySelector(`.col-resizer[data-resizer-id="${resizerId}"]`);
+  const container = resizerEl?.parentElement || document.querySelector(`[data-resizer-container="${resizerId}"]`);
+  if (!container) return;
+
+  if (!state.isCustom) {
+    if (state.mode === "split") {
+      container.style.removeProperty("--split-left-width");
+    }
+    container.style.gridTemplateColumns = state.gridTemplateColumns || "";
+    return;
+  }
+
+  if (state.mode === "split" && state.leftPx) {
+    container.style.setProperty("--split-left-width", `${Math.round(state.leftPx)}px`);
+    container.style.gridTemplateColumns = `${Math.round(state.leftPx)}px 12px minmax(240px, 1fr)`;
+  } else if (state.mode === "two-col" && typeof state.leftRatio === "number") {
+    const leftR = Math.max(15, Math.min(85, state.leftRatio));
+    const rightR = +(100 - leftR).toFixed(2);
+    container.style.setProperty("--col-left-fr", `${leftR.toFixed(2)}fr`);
+    container.style.setProperty("--col-right-fr", `${rightR.toFixed(2)}fr`);
+    container.style.gridTemplateColumns = `minmax(160px, ${leftR.toFixed(2)}fr) 12px minmax(160px, ${rightR.toFixed(2)}fr)`;
+  } else if (state.gridTemplateColumns) {
+    container.style.gridTemplateColumns = state.gridTemplateColumns;
+  }
+}
+
+function resizeColumnSeparator(resizerId, deltaPx = 0, containerWidthPx = 1000) {
+  ensureDefaultColumnResizerState();
+  const cfg = DEFAULT_COLUMN_RESIZER_CONFIGS[resizerId] || {
+    resizerId,
+    mode: "two-col",
+    defaultLeftRatio: 50,
+    minRatio: 15,
+    maxRatio: 85,
+    defaultGridTemplate: "minmax(120px, 1fr) 10px minmax(120px, 1fr)"
+  };
+  if (!columnResizerState[resizerId]) {
+    columnResizerState[resizerId] = {
+      resizerId,
+      tabId: cfg.tabId || "tab-quest",
+      mode: cfg.mode,
+      leftPx: cfg.defaultLeftPx || 280,
+      leftRatio: cfg.defaultLeftRatio || 50,
+      rightRatio: 50,
+      gridTemplateColumns: cfg.defaultGridTemplate,
+      isCustom: false
+    };
+  }
+
+  const state = columnResizerState[resizerId];
+  const delta = Number(deltaPx) || 0;
+
+  if (state.mode === "split") {
+    const basePx = state.leftPx || cfg.defaultLeftPx || 280;
+    const minPx = cfg.minLeftPx || 180;
+    const maxPx = cfg.maxLeftPx || Math.max(360, containerWidthPx - 260);
+    const nextPx = Math.max(minPx, Math.min(maxPx, Math.round(basePx + delta)));
+    state.leftPx = nextPx;
+    state.gridTemplateColumns = `${nextPx}px 12px minmax(240px, 1fr)`;
+    state.isCustom = true;
+  } else {
+    const usableW = Math.max(300, (Number(containerWidthPx) || 1000) - 12);
+    const curRatio = typeof state.leftRatio === "number" ? state.leftRatio : (cfg.defaultLeftRatio || 50);
+    const deltaPct = (delta / usableW) * 100;
+    const minR = cfg.minRatio || 15;
+    const maxR = cfg.maxRatio || 85;
+    const nextLeftRatio = +Math.max(minR, Math.min(maxR, curRatio + deltaPct)).toFixed(2);
+    const nextRightRatio = +(100 - nextLeftRatio).toFixed(2);
+    state.leftRatio = nextLeftRatio;
+    state.rightRatio = nextRightRatio;
+    state.gridTemplateColumns = `minmax(160px, ${nextLeftRatio}fr) 12px minmax(160px, ${nextRightRatio}fr)`;
+    state.isCustom = true;
+  }
+
+  applyColumnResizerStateToDOM(resizerId);
+  saveColumnResizerStateToStorage();
+  return { ...state };
+}
+
+function resetColumnSeparator(resizerId) {
+  ensureDefaultColumnResizerState();
+  const cfg = DEFAULT_COLUMN_RESIZER_CONFIGS[resizerId];
+  if (!cfg) return null;
+  columnResizerState[resizerId] = {
+    resizerId,
+    tabId: cfg.tabId,
+    subtabId: cfg.subtabId || null,
+    mode: cfg.mode,
+    leftPx: cfg.defaultLeftPx || null,
+    leftRatio: cfg.defaultLeftRatio || 50,
+    rightRatio: cfg.defaultLeftRatio ? +(100 - cfg.defaultLeftRatio).toFixed(2) : 50,
+    gridTemplateColumns: cfg.defaultGridTemplate,
+    isCustom: false
+  };
+  applyColumnResizerStateToDOM(resizerId);
+  saveColumnResizerStateToStorage();
+  return { ...columnResizerState[resizerId] };
+}
+
+function initMultiColumnRowResizer(rowEl, rowIndex) {
+  if (!rowEl || rowEl.dataset.inlineResizerInit === "1") return;
+  const colChildren = Array.from(rowEl.children).filter(
+    (ch) => !ch.classList.contains("col-resizer") && ch.style.display !== "none"
+  );
+  if (colChildren.length < 2) return;
+
+  rowEl.dataset.inlineResizerInit = "1";
+  const allDirectCols = Array.from(rowEl.children).filter((ch) => !ch.classList.contains("col-resizer"));
+  if (allDirectCols.length < 2) return;
+
+  // Insert a .col-resizer between each adjacent pair of columns in the row
+  for (let i = 0; i < allDirectCols.length - 1; i++) {
+    const colA = allDirectCols[i];
+    const colB = allDirectCols[i + 1];
+    const resizer = document.createElement("div");
+    const rId = `inline-row-${rowIndex}-col-${i}`;
+    resizer.className = "col-resizer col-resizer-inline";
+    resizer.dataset.resizerId = rId;
+    resizer.setAttribute("role", "separator");
+    resizer.setAttribute("aria-orientation", "vertical");
+    resizer.title = "Drag to resize columns (double-click to reset)";
+    rowEl.insertBefore(resizer, colB);
+
+    bindInlinePairResizer(rowEl, resizer, colA, colB, rId);
+  }
+
+  syncMultiColumnRowTemplate(rowEl);
+}
+
+function syncMultiColumnRowTemplate(rowEl) {
+  if (!rowEl) return;
+  const children = Array.from(rowEl.children);
+  const cols = children.filter((c) => !c.classList.contains("col-resizer"));
+  const resizers = children.filter((c) => c.classList.contains("col-resizer"));
+
+  // Hide resizer if either adjacent column is hidden
+  for (let i = 0; i < resizers.length; i++) {
+    const leftVisible = cols[i] && cols[i].style.display !== "none";
+    const rightVisible = cols[i + 1] && cols[i + 1].style.display !== "none";
+    resizers[i].style.display = leftVisible && rightVisible ? "flex" : "none";
+  }
+
+  const tracks = [];
+  children.forEach((ch) => {
+    if (ch.style.display === "none") return;
+    if (ch.classList.contains("col-resizer")) {
+      tracks.push("10px");
+    } else {
+      const w = parseFloat(ch.dataset.colWeight || "1") || 1;
+      tracks.push(`minmax(70px, ${w.toFixed(3)}fr)`);
+    }
+  });
+  if (tracks.length > 0) {
+    rowEl.style.gap = "0px";
+    rowEl.style.gridTemplateColumns = tracks.join(" ");
+  }
+}
+
+function bindInlinePairResizer(rowEl, resizerEl, colA, colB, resizerId) {
+  if (!colA.dataset.colWeight) colA.dataset.colWeight = "1";
+  if (!colB.dataset.colWeight) colB.dataset.colWeight = "1";
+
+  resizerEl.addEventListener("dblclick", (e) => {
+    e.preventDefault();
+    Array.from(rowEl.children).forEach((ch) => {
+      if (!ch.classList.contains("col-resizer")) ch.dataset.colWeight = "1";
+    });
+    syncMultiColumnRowTemplate(rowEl);
+  });
+
+  resizerEl.addEventListener("mousedown", (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const startX = e.clientX;
+    const rectA = colA.getBoundingClientRect();
+    const rectB = colB.getBoundingClientRect();
+    const pairWidth = Math.max(140, rectA.width + rectB.width);
+    const weightA = parseFloat(colA.dataset.colWeight || "1") || 1;
+    const weightB = parseFloat(colB.dataset.colWeight || "1") || 1;
+    const weightSum = weightA + weightB;
+
+    resizerEl.classList.add("is-resizing");
+    document.body?.classList.add("is-col-resizing");
+
+    const onMove = (moveEvent) => {
+      const dx = moveEvent.clientX - startX;
+      const newWidthA = Math.max(70, Math.min(pairWidth - 70, rectA.width + dx));
+      const newWidthB = pairWidth - newWidthA;
+      colA.dataset.colWeight = ((newWidthA / pairWidth) * weightSum).toFixed(4);
+      colB.dataset.colWeight = ((newWidthB / pairWidth) * weightSum).toFixed(4);
+      syncMultiColumnRowTemplate(rowEl);
+    };
+
+    const onUp = () => {
+      resizerEl.classList.remove("is-resizing");
+      document.body?.classList.remove("is-col-resizing");
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  });
+}
+
+function initColumnResizers() {
+  ensureDefaultColumnResizerState();
+  if (typeof document === "undefined") return getColumnResizerState();
+
+  // Restore saved column sizes from localStorage if available
+  try {
+    if (typeof localStorage !== "undefined") {
+      const raw = localStorage.getItem(COLUMN_RESIZER_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+          Object.keys(parsed).forEach((k) => {
+            if (columnResizerState[k] && parsed[k]?.isCustom) {
+              columnResizerState[k] = { ...columnResizerState[k], ...parsed[k] };
+            }
+          });
+        }
+      }
+    }
+  } catch (_) {}
+
+  // 1. Bind all explicit .col-resizer[data-resizer-id] handles across all tabs & modals
+  const resizerEls = document.querySelectorAll(".col-resizer[data-resizer-id]");
+  resizerEls.forEach((resizerEl) => {
+    const resizerId = resizerEl.dataset.resizerId;
+    if (!resizerId || resizerEl.dataset.boundResizer === "1") return;
+    resizerEl.dataset.boundResizer = "1";
+
+    applyColumnResizerStateToDOM(resizerId);
+
+    resizerEl.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      resetColumnSeparator(resizerId);
+      setStatus("Reset column layout to default width.");
+    });
+
+    resizerEl.addEventListener("mousedown", (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      const container = resizerEl.parentElement;
+      if (!container) return;
+
+      const prevCol = resizerEl.previousElementSibling;
+      const nextCol = resizerEl.nextElementSibling;
+      if (!prevCol || !nextCol) return;
+
+      const startX = e.clientX;
+      const containerRect = container.getBoundingClientRect();
+      const prevRect = prevCol.getBoundingClientRect();
+      const startLeftPx = prevRect.width || columnResizerState[resizerId]?.leftPx || 280;
+      const usableW = Math.max(320, containerRect.width - 12);
+      const startRatio = containerRect.width > 0
+        ? (prevRect.width / usableW) * 100
+        : (columnResizerState[resizerId]?.leftRatio || 50);
+
+      resizerEl.classList.add("is-resizing");
+      document.body?.classList.add("is-col-resizing");
+
+      const onMouseMove = (moveEvt) => {
+        const dx = moveEvt.clientX - startX;
+        const cfg = DEFAULT_COLUMN_RESIZER_CONFIGS[resizerId] || { mode: "two-col" };
+        if (cfg.mode === "split") {
+          const minPx = cfg.minLeftPx || 180;
+          const maxPx = Math.min(cfg.maxLeftPx || 680, Math.max(minPx + 40, containerRect.width - 260));
+          const newLeftPx = Math.max(minPx, Math.min(maxPx, Math.round(startLeftPx + dx)));
+          columnResizerState[resizerId] = {
+            ...columnResizerState[resizerId],
+            leftPx: newLeftPx,
+            gridTemplateColumns: `${newLeftPx}px 12px minmax(240px, 1fr)`,
+            isCustom: true
+          };
+        } else {
+          const minR = cfg.minRatio || 15;
+          const maxR = cfg.maxRatio || 85;
+          const newLeftRatio = +Math.max(minR, Math.min(maxR, startRatio + (dx / usableW) * 100)).toFixed(2);
+          const newRightRatio = +(100 - newLeftRatio).toFixed(2);
+          columnResizerState[resizerId] = {
+            ...columnResizerState[resizerId],
+            leftRatio: newLeftRatio,
+            rightRatio: newRightRatio,
+            gridTemplateColumns: `minmax(160px, ${newLeftRatio}fr) 12px minmax(160px, ${newRightRatio}fr)`,
+            isCustom: true
+          };
+        }
+        applyColumnResizerStateToDOM(resizerId);
+      };
+
+      const onMouseUp = () => {
+        resizerEl.classList.remove("is-resizing");
+        document.body?.classList.remove("is-col-resizing");
+        saveColumnResizerStateToStorage();
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+      };
+
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    });
+  });
+
+  // 2. Enhance all multi-column .form-row:not(.check-row) and .action-modules-grid across all tabs
+  const inlineRows = document.querySelectorAll(".form-row:not(.check-row), .action-modules-grid");
+  inlineRows.forEach((rowEl, idx) => {
+    initMultiColumnRowResizer(rowEl, idx);
+  });
+
+  return getColumnResizerState();
+}
+
 // Initialize on DOM ready
 if (typeof window !== "undefined") {
+  window._tabletopColumnResizers = {
+    DEFAULT_COLUMN_RESIZER_CONFIGS,
+    initColumnResizers,
+    resizeColumnSeparator,
+    resetColumnSeparator,
+    getColumnResizerState
+  };
   window.addEventListener("DOMContentLoaded", initKGraphData);
 }
 
@@ -9137,7 +9606,13 @@ if (typeof module !== "undefined" && module.exports) {
     refreshQuestSaveStateUI,
     saveQuestStateFromNow,
     clearQuestSaveState,
-    launchQuestInMode
+    launchQuestInMode,
+    DEFAULT_COLUMN_RESIZER_CONFIGS,
+    initColumnResizers,
+    resizeColumnSeparator,
+    resetColumnSeparator,
+    getColumnResizerState
   };
 }
+
 
