@@ -36,11 +36,13 @@
       </div>
 
       <div class="header-actions">
-        <div class="header-quest-select-wrap">
+        <div class="header-quest-select-wrap" style="display:flex; align-items:center; gap:6px;">
           <span class="label">📜 Active Quest:</span>
           <select id="header-quest-select" class="dropdown form-select-quest" title="Select active quest to view or edit">
             <!-- Dynamically populated from campaign quests -->
           </select>
+          <button id="btn-header-add-quest" class="btn btn-sm btn-secondary" style="padding:3px 7px;" title="Add a new quest to the active campaign">+</button>
+          <button id="btn-header-delete-quest" class="btn btn-sm btn-danger" style="padding:3px 7px;" title="Delete active quest from campaign">🗑️</button>
         </div>
         <button id="btn-header-launch-quest-editor" class="btn btn-secondary" title="Open custom-quest.cartridge in Tabletop Quest Map Editor">
           🗺️ Quest Editor
@@ -131,9 +133,12 @@
         <div id="subtab-campaign-quests" class="campaign-subpane active">
         <div class="split-view campaign-split-view">
           <aside class="sidebar-list campaign-quests-sidebar">
-            <div class="list-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="list-header" style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
               <h3>Campaign Quests</h3>
-              <button id="btn-add-quest" class="btn btn-sm btn-secondary" title="Add a new quest to campaign">+ New Quest</button>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <button id="btn-add-quest" class="btn btn-sm btn-secondary" title="Add a new quest to campaign">+ New Quest</button>
+                <button id="btn-sidebar-delete-quest" class="btn btn-sm btn-danger" title="Delete selected quest from campaign">🗑️ Delete Quest</button>
+              </div>
             </div>
             <div class="form-group" style="padding:8px 12px 6px 12px; margin:0; border-bottom:1px solid var(--border-color);">
               <label style="font-size:11px; text-transform:uppercase; color:#64748b; font-weight:700;">Campaign Name:</label>
@@ -172,7 +177,7 @@
                   </button>
                   <button id="btn-complete-quest" class="btn btn-sm btn-success" title="Complete quest and award gold bounty to party">🏆 Complete Quest</button>
                   <button id="btn-reset-quest" class="btn btn-sm btn-secondary" title="Reopen quest">↩️ Reset</button>
-                  <button id="btn-delete-quest" class="btn btn-sm btn-danger" title="Delete quest from campaign">🗑️ Delete</button>
+                  <button id="btn-delete-quest" class="btn btn-sm btn-danger" title="Delete quest from campaign">🗑️ Delete Quest</button>
                 </div>
               </div>
 

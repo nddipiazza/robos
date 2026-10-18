@@ -6827,9 +6827,17 @@ async function selectCampaign(indexOrId) {
     selectHero(currentData.activeHeroId);
   }
 
-  currentData.currentQuestIndex = 0;
-  currentData.currentQuest = currentData.campaign.quests[0];
-  await selectQuest(0, true);
+  if (Array.isArray(currentData.campaign.quests) && currentData.campaign.quests.length > 0) {
+    currentData.currentQuestIndex = 0;
+    currentData.currentQuest = currentData.campaign.quests[0];
+    await selectQuest(0, true);
+  } else {
+    currentData.currentQuestIndex = -1;
+    currentData.currentQuest = null;
+    renderCampaignQuestsList();
+    updateCampaignProgress();
+    renderQuestHeroesReviewGrid();
+  }
   renderCampaignSelectorUI();
   setStatus(`Switched active campaign to '${currentData.campaign.title}' (${currentData.campaign.quests.length} quests, ${currentData.heroes.length} heroes).`);
   return currentData.campaign;
@@ -6965,13 +6973,19 @@ async function selectQuest(index, preserveBoard = false) {
   // Update Status Badge & Victory Banner
   updateQuestStatusUI(q);
 
-  // Update Delete Button state (cannot delete if only 1 quest remains)
-  const delBtn = document.getElementById("btn-delete-quest");
-  if (delBtn) {
-    delBtn.disabled = currentData.campaign.quests.length <= 1;
-    delBtn.style.opacity = currentData.campaign.quests.length <= 1 ? "0.4" : "1";
-    delBtn.style.cursor = currentData.campaign.quests.length <= 1 ? "not-allowed" : "pointer";
-  }
+  // Update Delete Button state (enabled whenever at least 1 quest exists)
+  const hasQuests = currentData.campaign.quests.length > 0;
+  [
+    document.getElementById("btn-delete-quest"),
+    document.getElementById("btn-sidebar-delete-quest"),
+    document.getElementById("btn-header-delete-quest")
+  ].forEach(delBtn => {
+    if (delBtn) {
+      delBtn.disabled = !hasQuests;
+      delBtn.style.opacity = hasQuests ? "1" : "0.4";
+      delBtn.style.cursor = hasQuests ? "pointer" : "not-allowed";
+    }
+  });
 
   // Switch map configuration if different
   if (q.mapConfigId && (!currentData.activeMapConfig || currentData.activeMapConfig.id !== q.mapConfigId)) {
@@ -6980,17 +6994,7 @@ async function selectQuest(index, preserveBoard = false) {
     bgSelectEl.value = q.mapConfigId;
   }
 
-  // In-place active toggle for quest list if items exist; otherwise render list
-  const questItems = document.querySelectorAll("#campaign-quests-list .quest-list-item");
-  if (questItems.length === currentData.campaign.quests.length) {
-    questItems.forEach((el, idx) => {
-      el.classList.toggle("active", idx === index);
-    });
-    const headerSelect = document.getElementById("header-quest-select") || document.getElementById("cartridge-select");
-    if (headerSelect) headerSelect.value = String(index);
-  } else {
-    renderCampaignQuestsList();
-  }
+  renderCampaignQuestsList();
 
   updateCampaignProgress();
   renderQuestHeroesReviewGrid();
@@ -8284,7 +8288,22 @@ function renderCampaignQuestsList() {
   if (!listEl) return;
 
   listEl.innerHTML = "";
-  currentData.campaign.quests.forEach((q, idx) => {
+  const quests = Array.isArray(currentData.campaign?.quests) ? currentData.campaign.quests : [];
+  if (quests.length === 0) {
+    const emptyEl = document.createElement("div");
+    emptyEl.className = "quest-list-empty";
+    emptyEl.style.cssText = "padding:14px; text-align:center; color:#94a3b8; font-size:12px;";
+    emptyEl.innerHTML = `
+      <div>No quests in this campaign.</div>
+      <button id="btn-empty-add-quest" class="btn btn-sm btn-secondary" style="margin-top:8px;">+ Add Quest</button>
+    `;
+    emptyEl.querySelector("#btn-empty-add-quest")?.addEventListener("click", () => addQuest());
+    listEl.appendChild(emptyEl);
+    renderHeaderQuestSelect();
+    return;
+  }
+
+  quests.forEach((q, idx) => {
     const item = document.createElement("div");
     item.className = `quest-list-item ${idx === currentData.currentQuestIndex ? "active" : ""}`;
     item.onclick = () => selectQuest(idx);
@@ -8295,15 +8314,25 @@ function renderCampaignQuestsList() {
     const statusText = isCompleted ? "Completed" : "Active";
 
     item.innerHTML = `
-      <div class="quest-list-item-header">
-        <span class="quest-list-item-title">${escapeHtml(q.title || `Quest ${idx + 1}`)}</span>
-        <span class="badge ${statusClass}" style="font-size:10px; padding:2px 6px;">${statusIcon} ${statusText}</span>
+      <div class="quest-list-item-header" style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+        <span class="quest-list-item-title" style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(q.title || `Quest ${idx + 1}`)}</span>
+        <div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">
+          <span class="badge ${statusClass}" style="font-size:10px; padding:2px 6px;">${statusIcon} ${statusText}</span>
+          <button type="button" class="btn btn-sm btn-danger btn-delete-quest-item" data-quest-index="${idx}" title="Delete '${escapeHtml(q.title || `Quest ${idx + 1}`)}'" style="padding:1px 6px; font-size:10px; line-height:1.2;">🗑️</button>
+        </div>
       </div>
       <div class="quest-list-item-footer">
         <span style="color:#38bdf8; font-size:11px; font-family:monospace;">📦 ${escapeHtml(q.slug || "custom-quest")}.cartridge</span>
         <span class="gold-badge" style="font-size:11px; padding:1px 5px; background:rgba(234,179,8,0.15); color:#fde047; border-radius:3px;">🪙 ${q.goldReward || 0}g</span>
       </div>
     `;
+    const delItemBtn = item.querySelector(".btn-delete-quest-item");
+    if (delItemBtn) {
+      delItemBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        deleteQuest(idx);
+      });
+    }
     listEl.appendChild(item);
   });
 
@@ -8315,9 +8344,16 @@ function renderHeaderQuestSelect() {
   if (!select) return;
 
   select.innerHTML = "";
-  if (!Array.isArray(currentData.campaign?.quests)) return;
+  const quests = Array.isArray(currentData.campaign?.quests) ? currentData.campaign.quests : [];
+  if (quests.length === 0) {
+    const opt = document.createElement("option");
+    opt.value = "-1";
+    opt.textContent = "— No Quests in Campaign —";
+    select.appendChild(opt);
+    return;
+  }
 
-  currentData.campaign.quests.forEach((q, idx) => {
+  quests.forEach((q, idx) => {
     const opt = document.createElement("option");
     opt.value = idx;
     const isCompleted = !!q.completed;
@@ -8431,16 +8467,66 @@ function addQuest(customProps = {}) {
   return newQuest;
 }
 
-function deleteQuest(index = currentData.currentQuestIndex) {
-  if (currentData.campaign.quests.length <= 1) {
-    setStatus("Cannot delete: Campaign must have at least 1 quest.");
+function deleteQuest(indexOrSlug = currentData.currentQuestIndex, options = {}) {
+  const quests = currentData.campaign?.quests;
+  if (!Array.isArray(quests) || quests.length === 0) {
+    setStatus("No quests available to delete.");
     return false;
   }
-  if (index < 0 || index >= currentData.campaign.quests.length) return false;
 
-  const deleted = currentData.campaign.quests.splice(index, 1)[0];
-  const nextIdx = Math.max(0, Math.min(index, currentData.campaign.quests.length - 1));
-  selectQuest(nextIdx);
+  let idx = -1;
+  if (typeof indexOrSlug === "number") {
+    idx = indexOrSlug;
+  } else if (typeof indexOrSlug === "string") {
+    const parsed = parseInt(indexOrSlug, 10);
+    if (!isNaN(parsed) && String(parsed) === indexOrSlug.trim()) {
+      idx = parsed;
+    } else {
+      idx = quests.findIndex(q => q.id === indexOrSlug || q.slug === indexOrSlug || q.title === indexOrSlug);
+    }
+  }
+  if (idx < 0 || idx >= quests.length) return false;
+
+  const deleted = quests.splice(idx, 1)[0];
+
+  if (window.robosTabletop?.deleteQuest && deleted) {
+    window.robosTabletop.deleteQuest({
+      slug: deleted.slug,
+      questId: deleted.id,
+      deleteCartridgeFile: Boolean(options.deleteCartridgeFile),
+      clearSaveState: options.clearSaveState !== false
+    }).catch(() => {});
+  }
+
+  if (quests.length > 0) {
+    const nextIdx = Math.max(0, Math.min(idx, quests.length - 1));
+    selectQuest(nextIdx);
+  } else {
+    currentData.currentQuestIndex = -1;
+    currentData.currentQuest = null;
+    const editorTitleEl = document.getElementById("quest-editor-title");
+    if (editorTitleEl) editorTitleEl.textContent = "No Active Quest";
+    const statusBadge = document.getElementById("quest-status-badge");
+    if (statusBadge) {
+      statusBadge.className = "badge badge-gray";
+      statusBadge.textContent = "Empty";
+    }
+    const cartBadgeEl = document.getElementById("quest-cartridge-badge");
+    if (cartBadgeEl) cartBadgeEl.textContent = "📦 None";
+    [
+      document.getElementById("btn-delete-quest"),
+      document.getElementById("btn-sidebar-delete-quest"),
+      document.getElementById("btn-header-delete-quest")
+    ].forEach(delBtn => {
+      if (delBtn) {
+        delBtn.disabled = true;
+        delBtn.style.opacity = "0.4";
+        delBtn.style.cursor = "not-allowed";
+      }
+    });
+    renderCampaignQuestsList();
+  }
+
   updateCampaignProgress();
   setStatus(`Deleted quest: '${deleted.title}'`);
   return true;
@@ -8551,9 +8637,12 @@ function setupCampaignQuestControls() {
     if (currentData.currentQuest) currentData.currentQuest.bossTarget = e.target.value;
   });
 
-  // Campaign Buttons
+  // Campaign Buttons (Sidebar, Quest Card Header, and Top Header)
   document.getElementById("btn-add-quest")?.addEventListener("click", () => addQuest());
+  document.getElementById("btn-header-add-quest")?.addEventListener("click", () => addQuest());
   document.getElementById("btn-delete-quest")?.addEventListener("click", () => deleteQuest());
+  document.getElementById("btn-sidebar-delete-quest")?.addEventListener("click", () => deleteQuest());
+  document.getElementById("btn-header-delete-quest")?.addEventListener("click", () => deleteQuest());
   document.getElementById("btn-complete-quest")?.addEventListener("click", () => completeQuest());
   document.getElementById("btn-reset-quest")?.addEventListener("click", () => resetQuest());
   document.getElementById("btn-next-quest-banner")?.addEventListener("click", () => advanceToNextQuest());
@@ -9005,6 +9094,12 @@ if (typeof module !== "undefined" && module.exports) {
     selectCampaign,
     addCampaign,
     deleteCampaign,
+    selectQuest,
+    addQuest,
+    deleteQuest,
+    completeQuest,
+    resetQuest,
+    renderCampaignQuestsList,
     switchCampaignSubtab,
     createDefaultCampaignHeroes,
     HERO_CLASSES,

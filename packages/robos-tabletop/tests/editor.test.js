@@ -1445,6 +1445,43 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.strictEqual(snapRes.savedState["robos:allMonsters"], undefined, "Renderer save state must not include robos:allMonsters");
     assert.strictEqual(snapRes.savedState["robos:totalMonstersAlive"], undefined, "Renderer save state must not include robos:totalMonstersAlive");
   });
+
+  it("supports deleting quests from the Campaign Viewer (sidebar list, quest card header, top header, and deleting down to 0 quests)", () => {
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+    const appJs = fs.readFileSync(path.join(__dirname, "../renderer/app.js"), "utf8");
+    const mainJs = fs.readFileSync(path.join(__dirname, "../main.js"), "utf8");
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+
+    assert.ok(indexHtml.includes('id="btn-delete-quest"'), "Quest card header must include #btn-delete-quest");
+    assert.ok(indexHtml.includes('id="btn-sidebar-delete-quest"'), "Campaign Quests sidebar must include #btn-sidebar-delete-quest");
+    assert.ok(indexHtml.includes('id="btn-header-delete-quest"'), "Top header must include #btn-header-delete-quest");
+    assert.ok(appJs.includes("btn-delete-quest-item"), "Each quest item in Campaign Quests list must include an inline delete button");
+    assert.ok(mainJs.includes('ipcMain.handle("tabletop:delete-quest"'), "main.js must handle tabletop:delete-quest IPC");
+
+    const campaign = appModule.getCampaign();
+    assert.strictEqual(campaign.quests.length, 1);
+
+    // Add a second quest and delete it by slug
+    appModule.addQuest({ slug: "temp-quest-2", title: "Quest 2: Temporary" });
+    assert.strictEqual(campaign.quests.length, 2);
+    assert.strictEqual(appModule.deleteQuest("temp-quest-2"), true);
+    assert.strictEqual(campaign.quests.length, 1);
+
+    // Delete the remaining quest (even when only 1 quest is in the campaign)
+    assert.strictEqual(appModule.deleteQuest(0), true);
+    assert.strictEqual(campaign.quests.length, 0);
+    assert.strictEqual(appModule.deleteQuest(0), false, "Deleting when 0 quests remain returns false");
+
+    // Restore custom-quest so campaign state remains clean
+    appModule.addQuest({
+      slug: "custom-quest",
+      title: "Quest 1: Custom Dungeon",
+      cartridgeFile: "custom-quest.cartridge.json",
+      goldReward: 150
+    });
+    assert.strictEqual(campaign.quests.length, 1);
+    assert.strictEqual(appModule.getActiveQuest().slug, "custom-quest");
+  });
 });
 
 
