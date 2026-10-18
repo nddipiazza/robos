@@ -3686,7 +3686,6 @@ function setElfElement(elementKey) {
   currentData.spellAllocation.elfElement = elementKey;
   currentData.spellAllocation.wizardElements = allElements.filter(e => e !== elementKey);
   applySpellAllocationToHeroes();
-  renderSpellSelectionModalUI();
   renderSpellDraftSummaryBadges();
   renderSpellsAndItems();
 }
@@ -3858,26 +3857,6 @@ function castHeroSpell(hero, spellId) {
   return { spell, effectSummary, castMessage };
 }
 
-let pendingSpellDraftCallback = null;
-
-function openSpellSelectionModal(onConfirmCallback = null) {
-  pendingSpellDraftCallback = onConfirmCallback;
-  const modal = document.getElementById("modal-spell-pick");
-  if (!modal) return;
-  modal.style.display = "flex";
-  const confirmBtn = document.getElementById("btn-confirm-spell-modal");
-  if (confirmBtn) {
-    confirmBtn.textContent = onConfirmCallback ? "⚔️ Confirm & Launch Quest" : "✨ Confirm Spell Selection";
-  }
-  renderSpellSelectionModalUI();
-}
-
-function closeSpellSelectionModal() {
-  const modal = document.getElementById("modal-spell-pick");
-  if (modal) modal.style.display = "none";
-  pendingSpellDraftCallback = null;
-}
-
 function renderSpellDraftSummaryBadges() {
   const badge = document.getElementById("spells-draft-summary-badge");
   if (badge) {
@@ -3889,107 +3868,10 @@ function renderSpellDraftSummaryBadges() {
   }
 }
 
-function renderSpellSelectionModalUI() {
-  const elfElem = currentData.spellAllocation.elfElement;
-  const wizElems = currentData.spellAllocation.wizardElements;
-
-  // Highlight active deck card
-  document.querySelectorAll(".element-deck-card").forEach(card => {
-    const elem = card.dataset.element;
-    const selectBtn = card.querySelector(".btn-element-select");
-    if (elem === elfElem) {
-      card.classList.add("active");
-      if (selectBtn) selectBtn.textContent = "✓ Drafted by Elf";
-    } else {
-      card.classList.remove("active");
-      if (selectBtn) selectBtn.textContent = "Draft for Elf";
-    }
-  });
-
-  // Update summary tags
-  const elfSummary = document.getElementById("modal-elf-element-summary");
-  if (elfSummary) {
-    const deck = ELEMENTAL_DECKS[elfElem];
-    elfSummary.className = `element-tag tag-${elfElem}`;
-    elfSummary.textContent = `${deck.icon} ${deck.name} (3 Spells)`;
-  }
-
-  const wizSummary = document.getElementById("modal-wizard-element-summary");
-  if (wizSummary) {
-    const deckNames = wizElems.map(e => `${ELEMENTAL_DECKS[e].icon} ${ELEMENTAL_DECKS[e].name.replace(" Magic", "")}`).join(", ");
-    wizSummary.className = "element-tag tag-multi";
-    wizSummary.textContent = `${deckNames} (9 Spells)`;
-  }
-
-  // Preview chips for Elf
-  const elfPreview = document.getElementById("modal-elf-spells-preview");
-  if (elfPreview) {
-    elfPreview.innerHTML = "";
-    const elfSpells = ELEMENTAL_DECKS[elfElem]?.spells || [];
-    elfSpells.forEach(s => {
-      const chip = document.createElement("div");
-      chip.className = `spell-preview-chip tag-${elfElem}`;
-      chip.innerHTML = `<strong>${s.icon} ${s.name}</strong><span>${s.description}</span>`;
-      elfPreview.appendChild(chip);
-    });
-  }
-
-  // Preview chips for Wizard
-  const wizPreview = document.getElementById("modal-wizard-spells-preview");
-  if (wizPreview) {
-    wizPreview.innerHTML = "";
-    wizElems.forEach(elemKey => {
-      const deckSpells = ELEMENTAL_DECKS[elemKey]?.spells || [];
-      deckSpells.forEach(s => {
-        const chip = document.createElement("div");
-        chip.className = `spell-preview-chip tag-${elemKey}`;
-        chip.innerHTML = `<strong>${s.icon} ${s.name}</strong><span>${s.description}</span>`;
-        wizPreview.appendChild(chip);
-      });
-    });
-  }
-}
-
 let spellDraftControlsInitialized = false;
 function setupSpellDraftControls() {
   if (spellDraftControlsInitialized) return;
   spellDraftControlsInitialized = true;
-
-  document.getElementById("btn-open-spell-pick")?.addEventListener("click", () => openSpellSelectionModal());
-  document.getElementById("btn-spells-tab-pick")?.addEventListener("click", () => openSpellSelectionModal());
-  document.getElementById("btn-hero-repick-spells")?.addEventListener("click", () => openSpellSelectionModal());
-  document.getElementById("btn-close-spell-modal")?.addEventListener("click", closeSpellSelectionModal);
-  document.getElementById("btn-cancel-spell-modal")?.addEventListener("click", closeSpellSelectionModal);
-
-  document.querySelectorAll(".element-deck-card").forEach(card => {
-    card.addEventListener("click", (e) => {
-      const elem = card.dataset.element;
-      if (elem) setElfElement(elem);
-    });
-  });
-
-  document.querySelectorAll(".btn-element-select").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const elem = btn.dataset.selectElement;
-      if (elem) setElfElement(elem);
-    });
-  });
-
-  document.getElementById("btn-confirm-spell-modal")?.addEventListener("click", async () => {
-    currentData.spellAllocation.confirmed = true;
-    applySpellAllocationToHeroes();
-    renderSpellsAndItems();
-    renderSpellDraftSummaryBadges();
-    const cb = pendingSpellDraftCallback;
-    closeSpellSelectionModal();
-    const elfDeckName = ELEMENTAL_DECKS[currentData.spellAllocation.elfElement]?.name || currentData.spellAllocation.elfElement;
-    setStatus(`Spell Selection Confirmed: Elf memorizes ${elfDeckName}; Wizard takes remaining 3 decks.`);
-    logCombatAction(`🔮 Spell Selection Confirmed! Elf memorizes ${elfDeckName}. Wizard takes remaining 3 decks.`, "system");
-    if (typeof cb === "function") {
-      await cb();
-    }
-  });
 
   document.getElementById("btn-cast-hero-spell")?.addEventListener("click", () => {
     const hero = getActiveHero();
@@ -8873,11 +8755,9 @@ document.getElementById("btn-bundle")?.addEventListener("click", async () => {
   }
 });
 
-// Action: Play as Hero (Always presents Elf Elemental Spell Draft modal on start)
-document.getElementById("btn-play-hero")?.addEventListener("click", () => {
-  openSpellSelectionModal(async () => {
-    await autoBundleAndLaunch("player");
-  });
+// Action: Play as Hero
+document.getElementById("btn-play-hero")?.addEventListener("click", async () => {
+  await autoBundleAndLaunch("player");
 });
 
 // Action: Play as Game Master
@@ -8977,8 +8857,6 @@ if (typeof window !== "undefined") {
     getSpellAllocation: () => currentData.spellAllocation,
     setElfElement,
     getHeroSpells,
-    openSpellSelectionModal,
-    closeSpellSelectionModal,
     castHeroSpell,
     renderSpellDraftSummaryBadges
   };
@@ -9146,15 +9024,6 @@ const DEFAULT_COLUMN_RESIZER_CONFIGS = {
     minRatio: 20,
     maxRatio: 80,
     defaultGridTemplate: "minmax(220px, 1fr) 12px minmax(220px, 1fr)"
-  },
-  "grid-grimoire-preview": {
-    resizerId: "grid-grimoire-preview",
-    tabId: "modal-spell-pick",
-    mode: "two-col",
-    defaultLeftRatio: 33.33,
-    minRatio: 20,
-    maxRatio: 80,
-    defaultGridTemplate: "minmax(180px, 1fr) 12px minmax(220px, 2fr)"
   },
   "grid-hero-trade": {
     resizerId: "grid-hero-trade",
