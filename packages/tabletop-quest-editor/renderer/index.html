@@ -204,17 +204,53 @@
 
           <!-- Monster suboptions -->
           <div id="subopts-monster" class="subopts-group" style="display:none;">
-            <select id="select-monster-type" class="dropdown dropdown-sm">
-              <option value="goblin" selected>Goblin (Move: 10, Atk: 2, Def: 1, BP: 1)</option>
-              <option value="orc">Orc (Move: 6, Atk: 3, Def: 2, BP: 1)</option>
-              <option value="skeleton">Skeleton (Move: 6, Atk: 2, Def: 2, BP: 1, Undead)</option>
-              <option value="zombie">Zombie (Move: 4, Atk: 3, Def: 3, BP: 1, Undead)</option>
-              <option value="mummy">Mummy (Move: 4, Atk: 3, Def: 4, BP: 2, Undead)</option>
-              <option value="chaos_warrior">Chaos / Dread Warrior (Move: 7, Atk: 3, Def: 4, BP: 2)</option>
-              <option value="fimir">Fimir / Abomination (Move: 6, Atk: 3, Def: 3, BP: 2)</option>
-              <option value="gargoyle">Gargoyle (Move: 6, Atk: 4, Def: 5, BP: 3)</option>
-              <option value="boss">Custom Boss / Warlord...</option>
+            <label for="select-monster-category" style="font-size:10px; color:#94a3b8; font-weight:600; margin-bottom:2px; display:block;">Content Pack / Category:</label>
+            <select id="select-monster-category" class="dropdown dropdown-sm" style="margin-bottom:6px;">
+              <option value="all" selected>🌐 All Enemies (Base + Election 2026)</option>
+              <option value="Midterms 2026">🗳️ Election 2026 (Midterms 2026)</option>
+              <option value="Base Game">🏰 Base Game (HeroQuest Classic)</option>
             </select>
+            <label for="select-monster-type" style="font-size:10px; color:#94a3b8; font-weight:600; margin-bottom:2px; display:block;">Enemy / Character:</label>
+            <select id="select-monster-type" class="dropdown dropdown-sm">
+              <optgroup label="🏰 Base Game (HeroQuest Classic)">
+                <option value="goblin" selected>👺 Goblin (Move: 10, Atk: 2, Def: 1, BP: 1)</option>
+                <option value="orc">👹 Orc (Move: 8, Atk: 3, Def: 2, BP: 1)</option>
+                <option value="fimir">🦎 Fimir / Abomination (Move: 6, Atk: 3, Def: 3, BP: 2)</option>
+                <option value="skeleton">💀 Skeleton (Move: 6, Atk: 2, Def: 2, BP: 1, Undead)</option>
+                <option value="zombie">🧟 Zombie (Move: 4, Atk: 2, Def: 3, BP: 1, Undead)</option>
+                <option value="mummy">🩹 Mummy (Move: 4, Atk: 3, Def: 4, BP: 2, Undead)</option>
+                <option value="chaos_warrior">⚔️ Chaos / Dread Warrior (Move: 7, Atk: 4, Def: 4, BP: 3)</option>
+                <option value="gargoyle">🗿 Gargoyle (Move: 6, Atk: 4, Def: 5, BP: 3)</option>
+                <option value="orc-shaman">🪄 Orc Shaman (Move: 8, Atk: 2, Def: 3, BP: 2, Caster)</option>
+                <option value="verag-orc-warlord">👑 Verag the Orc Warlord (Move: 8, Atk: 4, Def: 3, BP: 3, Boss)</option>
+                <option value="chaos-sorcerer">🔮 Chaos Sorcerer (Move: 7, Atk: 3, Def: 4, BP: 3, Boss)</option>
+                <option value="witch-lord">👑 The Witch Lord (Move: 7, Atk: 4, Def: 5, BP: 4, Boss)</option>
+                <option value="dragon">🐉 Dragon (Move: 8, Atk: 5, Def: 5, BP: 6, Boss)</option>
+                <option value="cassandria-doomguard">🛡️ Cassandria's Doomguard (Move: 8, Atk: 4, Def: 6, BP: 3, Boss)</option>
+                <option value="cassandria-witch-hand">🖐️ Witch Hand of Cassandria (Move: 8, Atk: 4, Def: 4, BP: 4, Boss)</option>
+                <option value="boss">👑 Custom Boss / Warlord...</option>
+              </optgroup>
+              <optgroup label="🗳️ Election 2026 (Midterms 2026)">
+                <option value="inflation-spawn">💸 Inflation Spawn — Goblin (Move: 10, Atk: 2, Def: 1, BP: 1)</option>
+                <option value="illegal-alien">👽 Illegal Alien — Orc (Move: 8, Atk: 3, Def: 2, BP: 1)</option>
+                <option value="k-street-swamp-fimir">🐊 K-Street Swamp Lobbyist — Fimir (Move: 6, Atk: 3, Def: 3, BP: 2)</option>
+                <option value="gerrymandered-skeleton">💀 Gerrymandered Skeleton — Skeleton (Move: 6, Atk: 2, Def: 2, BP: 1, Undead)</option>
+                <option value="teleprompter-zombie">🧟 Cable News Pundit Zombie — Zombie (Move: 4, Atk: 2, Def: 3, BP: 1, Undead)</option>
+                <option value="octogenarian-incumbent-mummy">🩹 90-Year-Old Career Incumbent Mummy — Mummy (Move: 4, Atk: 3, Def: 4, BP: 2, Undead)</option>
+                <option value="happily-married-gay-man">💍 Happily Married Gay Man — Dread Warrior (Move: 7, Atk: 4, Def: 4, BP: 3)</option>
+                <option value="filibuster-gargoyle">🗿 Filibuster Stone Gargoyle — Gargoyle (Move: 6, Atk: 4, Def: 5, BP: 3)</option>
+                <option value="spin-doctor-shaman">📊 Polling Spin-Doctor Shaman — Orc Shaman (Move: 8, Atk: 2, Def: 3, BP: 2, Caster)</option>
+                <option value="super-pac-warlord">💼 Super-PAC Dark Money Warlord — Orc Warlord (Move: 8, Atk: 4, Def: 3, BP: 3, Boss)</option>
+                <option value="algorithm-outrage-sorcerer">📱 Algorithm Outrage Sorcerer — Chaos Sorcerer (Move: 7, Atk: 3, Def: 4, BP: 3, Boss)</option>
+                <option value="deep-state-witch-lord">🏛️ Unelected Bureaucracy Witch Lord — Witch Lord (Move: 7, Atk: 4, Def: 5, BP: 4, Boss)</option>
+                <option value="trumpbiden-dragon">🐉 TrumpBiden (The Blame Dragon) — Dragon (Move: 8, Atk: 5, Def: 5, BP: 6, Boss)</option>
+                <option value="irs-audit-doomguard">🧾 IRS 87,000-Agent Doomguard — Doomguard (Move: 8, Atk: 4, Def: 6, BP: 3, Boss)</option>
+                <option value="hoa-censor-witch-hand">🤫 Censorship Board Witch Hand — Witch Hand (Move: 8, Atk: 4, Def: 4, BP: 4, Boss)</option>
+              </optgroup>
+            </select>
+            <div id="monster-subopt-preview" style="margin-top:6px; padding:6px 8px; border-radius:5px; background:rgba(15,23,42,0.75); border:1px solid #1e293b; font-size:10px; color:#cbd5e1; line-height:1.35;">
+              👺 <strong>Goblin</strong> • ❤️1 ⚔️2 🛡️1 👟10
+            </div>
           </div>
 
           <!-- Furniture suboptions -->
@@ -388,14 +424,40 @@
             <div class="form-row" style="margin-top:8px;">
               <label for="select-wandering-monster"><strong>Wandering Monster:</strong></label>
               <select id="select-wandering-monster" class="dropdown">
-                <option value="orc" selected>Orc (3 Atk, 2 Def, 1 BP)</option>
-                <option value="goblin">Goblin (2 Atk, 1 Def, 1 BP)</option>
-                <option value="skeleton">Skeleton (2 Atk, 2 Def, 1 BP)</option>
-                <option value="zombie">Zombie (3 Atk, 3 Def, 1 BP)</option>
-                <option value="mummy">Mummy (3 Atk, 4 Def, 2 BP)</option>
-                <option value="chaos_warrior">Chaos Warrior (4 Atk, 4 Def, 3 BP)</option>
-                <option value="fimir">Fimir / Abomination (3 Atk, 3 Def, 2 BP)</option>
-                <option value="gargoyle">Gargoyle (4 Atk, 5 Def, 3 BP)</option>
+                <optgroup label="🏰 Base Game (HeroQuest Classic)">
+                  <option value="orc" selected>👹 Orc (3 Atk, 2 Def, 1 BP)</option>
+                  <option value="goblin">👺 Goblin (2 Atk, 1 Def, 1 BP)</option>
+                  <option value="fimir">🦎 Fimir / Abomination (3 Atk, 3 Def, 2 BP)</option>
+                  <option value="skeleton">💀 Skeleton (2 Atk, 2 Def, 1 BP)</option>
+                  <option value="zombie">🧟 Zombie (2 Atk, 3 Def, 1 BP)</option>
+                  <option value="mummy">🩹 Mummy (3 Atk, 4 Def, 2 BP)</option>
+                  <option value="chaos_warrior">⚔️ Chaos / Dread Warrior (4 Atk, 4 Def, 3 BP)</option>
+                  <option value="gargoyle">🗿 Gargoyle (4 Atk, 5 Def, 3 BP)</option>
+                  <option value="orc-shaman">🪄 Orc Shaman (2 Atk, 3 Def, 2 BP)</option>
+                  <option value="verag-orc-warlord">👑 Verag the Orc Warlord (4 Atk, 3 Def, 3 BP)</option>
+                  <option value="chaos-sorcerer">🔮 Chaos Sorcerer (3 Atk, 4 Def, 3 BP)</option>
+                  <option value="witch-lord">👑 The Witch Lord (4 Atk, 5 Def, 4 BP)</option>
+                  <option value="dragon">🐉 Dragon (5 Atk, 5 Def, 6 BP)</option>
+                  <option value="cassandria-doomguard">🛡️ Cassandria's Doomguard (4 Atk, 6 Def, 3 BP)</option>
+                  <option value="cassandria-witch-hand">🖐️ Witch Hand of Cassandria (4 Atk, 4 Def, 4 BP)</option>
+                </optgroup>
+                <optgroup label="🗳️ Election 2026 (Midterms 2026)">
+                  <option value="inflation-spawn">💸 Inflation Spawn (2 Atk, 1 Def, 1 BP)</option>
+                  <option value="illegal-alien">👽 Illegal Alien (3 Atk, 2 Def, 1 BP)</option>
+                  <option value="k-street-swamp-fimir">🐊 K-Street Swamp Lobbyist (3 Atk, 3 Def, 2 BP)</option>
+                  <option value="gerrymandered-skeleton">💀 Gerrymandered Skeleton (2 Atk, 2 Def, 1 BP)</option>
+                  <option value="teleprompter-zombie">🧟 Cable News Pundit Zombie (2 Atk, 3 Def, 1 BP)</option>
+                  <option value="octogenarian-incumbent-mummy">🩹 90-Year-Old Career Incumbent Mummy (3 Atk, 4 Def, 2 BP)</option>
+                  <option value="happily-married-gay-man">💍 Happily Married Gay Man (4 Atk, 4 Def, 3 BP)</option>
+                  <option value="filibuster-gargoyle">🗿 Filibuster Stone Gargoyle (4 Atk, 5 Def, 3 BP)</option>
+                  <option value="spin-doctor-shaman">📊 Polling Spin-Doctor Shaman (2 Atk, 3 Def, 2 BP)</option>
+                  <option value="super-pac-warlord">💼 Super-PAC Dark Money Warlord (4 Atk, 3 Def, 3 BP)</option>
+                  <option value="algorithm-outrage-sorcerer">📱 Algorithm Outrage Sorcerer (3 Atk, 4 Def, 3 BP)</option>
+                  <option value="deep-state-witch-lord">🏛️ Unelected Bureaucracy Witch Lord (4 Atk, 5 Def, 4 BP)</option>
+                  <option value="trumpbiden-dragon">🐉 TrumpBiden (The Blame Dragon) (5 Atk, 5 Def, 6 BP)</option>
+                  <option value="irs-audit-doomguard">🧾 IRS 87,000-Agent Doomguard (4 Atk, 6 Def, 3 BP)</option>
+                  <option value="hoa-censor-witch-hand">🤫 Censorship Board Witch Hand (4 Atk, 4 Def, 4 BP)</option>
+                </optgroup>
               </select>
             </div>
 
@@ -445,6 +507,47 @@
 
               <!-- Monster specific fields -->
               <div id="inspect-group-monster" class="inspect-group" style="display:none; margin-top:10px;">
+                <div class="form-row" style="margin-bottom:8px;">
+                  <label for="inspect-monster-type"><strong>Enemy Character:</strong></label>
+                  <select id="inspect-monster-type" class="dropdown" style="flex:1;">
+                    <optgroup label="🏰 Base Game (HeroQuest Classic)">
+                      <option value="goblin">👺 Goblin</option>
+                      <option value="orc">👹 Orc</option>
+                      <option value="fimir">🦎 Fimir / Abomination</option>
+                      <option value="skeleton">💀 Skeleton</option>
+                      <option value="zombie">🧟 Zombie</option>
+                      <option value="mummy">🩹 Mummy</option>
+                      <option value="chaos_warrior">⚔️ Chaos / Dread Warrior</option>
+                      <option value="gargoyle">🗿 Gargoyle</option>
+                      <option value="orc-shaman">🪄 Orc Shaman</option>
+                      <option value="verag-orc-warlord">👑 Verag the Orc Warlord</option>
+                      <option value="chaos-sorcerer">🔮 Chaos Sorcerer</option>
+                      <option value="witch-lord">👑 The Witch Lord</option>
+                      <option value="dragon">🐉 Dragon</option>
+                      <option value="cassandria-doomguard">🛡️ Cassandria's Doomguard</option>
+                      <option value="cassandria-witch-hand">🖐️ Witch Hand of Cassandria</option>
+                      <option value="boss">👑 Custom Boss / Warlord</option>
+                    </optgroup>
+                    <optgroup label="🗳️ Election 2026 (Midterms 2026)">
+                      <option value="inflation-spawn">💸 Inflation Spawn</option>
+                      <option value="illegal-alien">👽 Illegal Alien</option>
+                      <option value="k-street-swamp-fimir">🐊 K-Street Swamp Lobbyist</option>
+                      <option value="gerrymandered-skeleton">💀 Gerrymandered Skeleton</option>
+                      <option value="teleprompter-zombie">🧟 Cable News Pundit Zombie</option>
+                      <option value="octogenarian-incumbent-mummy">🩹 90-Year-Old Career Incumbent Mummy</option>
+                      <option value="happily-married-gay-man">💍 Happily Married Gay Man</option>
+                      <option value="filibuster-gargoyle">🗿 Filibuster Stone Gargoyle</option>
+                      <option value="spin-doctor-shaman">📊 Polling Spin-Doctor Shaman</option>
+                      <option value="super-pac-warlord">💼 Super-PAC Dark Money Warlord</option>
+                      <option value="algorithm-outrage-sorcerer">📱 Algorithm Outrage Sorcerer</option>
+                      <option value="deep-state-witch-lord">🏛️ Unelected Bureaucracy Witch Lord</option>
+                      <option value="trumpbiden-dragon">🐉 TrumpBiden (The Blame Dragon)</option>
+                      <option value="irs-audit-doomguard">🧾 IRS 87,000-Agent Doomguard</option>
+                      <option value="hoa-censor-witch-hand">🤫 Censorship Board Witch Hand</option>
+                    </optgroup>
+                  </select>
+                </div>
+
                 <div class="stat-pills-row">
                   <div class="stat-pill"><span class="stat-lbl">❤️ BP</span><input type="number" id="inspect-monster-bp" min="1" max="20" class="num-input-xs"></div>
                   <div class="stat-pill"><span class="stat-lbl">🧠 MP</span><input type="number" id="inspect-monster-mp" min="0" max="10" class="num-input-xs"></div>
