@@ -1414,7 +1414,7 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.strictEqual(kNode["robos:playTimeFormatted"], "7m 5s");
     assert.strictEqual(kNode["robos:heroStates"][0].currentBP, 6, "Must map Godot current_bp -> currentBP");
     assert.strictEqual(kNode["robos:heroStates"][0].maxBP, 8, "Must map Godot max_bp -> maxBP");
-    assert.strictEqual(kNode["robos:visibleMonstersCount"], 1, "Must filter visible monsters by discovered_monster_ids");
+    assert.strictEqual(kNode["robos:visibleMonstersCount"], 1, "Must filter visible monsters by discovered_monster_ids and explored tiles");
     assert.strictEqual(kNode["robos:visibleMonsters"][0].name, "Orc Warrior");
     assert.strictEqual(kNode["robos:itemsFoundCount"], 2, "Must aggregate items found across party inventories");
     assert.strictEqual(kNode["robos:totalPartyGold"], 275);
@@ -1422,7 +1422,18 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.strictEqual(kNode["robos:doorsOpenCount"], 1);
     assert.deepStrictEqual(kNode["robos:triggersFired"], ["on_enter_guard_room"]);
 
-    // 5. Verify saveQuestStateFromNow returns normalized KGraph node + screenshot
+    // 5. Verify strict Fog-of-War & zero-spoiler guarantees (no unseen monsters, unseen doors, unseen furniture, room totals, or treasure deck spoilers)
+    assert.strictEqual(kNode["robos:allMonsters"], undefined, "Must not leak unseen monsters via robos:allMonsters");
+    assert.strictEqual(kNode["robos:totalMonstersAlive"], undefined, "Must not leak total monsters count via robos:totalMonstersAlive");
+    assert.strictEqual(kNode["robos:doorsTotalCount"], undefined, "Must not leak total doors count via robos:doorsTotalCount");
+    assert.strictEqual(kNode["robos:trapsTotalCount"], undefined, "Must not leak total traps count via robos:trapsTotalCount");
+    assert.strictEqual(kNode["robos:triggersTotalCount"], undefined, "Must not leak total triggers count via robos:triggersTotalCount");
+    assert.strictEqual(kNode["robos:treasureDeckRemaining"], undefined, "Must not leak treasure deck remaining count");
+    assert.strictEqual(kNode["robos:doors"].length, 1, "Unseen closed door at [5,8]->[6,8] outside explored tiles must be filtered out");
+    assert.ok(!indexHtml.includes("24 Monsters"), "index.html must not spoil total monster count");
+    assert.ok(!indexHtml.includes("22 calibrated rooms"), "index.html must not spoil room count");
+
+    // 6. Verify saveQuestStateFromNow returns normalized KGraph node + screenshot with zero spoilers
     const snapRes = await appModule.saveQuestStateFromNow();
     assert.strictEqual(snapRes.success, true);
     assert.ok(snapRes.savedState["@type"].includes("robos:TabletopQuestSaveState"));
@@ -1431,6 +1442,8 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.ok(Array.isArray(snapRes.savedState["robos:heroStates"]) && snapRes.savedState["robos:heroStates"].length === 4);
     assert.ok(Array.isArray(snapRes.savedState["robos:visibleMonsters"]));
     assert.ok(Array.isArray(snapRes.savedState["robos:itemsFound"]));
+    assert.strictEqual(snapRes.savedState["robos:allMonsters"], undefined, "Renderer save state must not include robos:allMonsters");
+    assert.strictEqual(snapRes.savedState["robos:totalMonstersAlive"], undefined, "Renderer save state must not include robos:totalMonstersAlive");
   });
 });
 

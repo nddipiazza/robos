@@ -308,7 +308,9 @@ function normalizeQuestSaveStateToKGraphNode(rawSave, options = {}) {
     const gold = Number(h.gold ?? 0) || 0;
     const pos = Array.isArray(h.grid_pos) && h.grid_pos.length >= 2
       ? [Number(h.grid_pos[0]), Number(h.grid_pos[1])]
-      : (Array.isArray(h.position) && h.position.length >= 2 ? [Number(h.position[0]), Number(h.position[1])] : [7, 14]);
+      : (Array.isArray(h.pos) && h.pos.length >= 2
+        ? [Number(h.pos[0]), Number(h.pos[1])]
+        : (Array.isArray(h.position) && h.position.length >= 2 ? [Number(h.position[0]), Number(h.position[1])] : [7, 14]));
     const weapon = String(h.equipped_weapon || h.weapon || 'unarmed');
     const armor = Array.isArray(h.equipped_armor)
       ? (h.equipped_armor.length > 0 ? h.equipped_armor.join(', ') : 'none')
@@ -359,14 +361,24 @@ function normalizeQuestSaveStateToKGraphNode(rawSave, options = {}) {
     }
   }
 
-  // Normalize Monsters & Visible Monsters
-  const rawMonsters = Array.isArray(rawSave.monsters) ? rawSave.monsters : [];
-  const discoveredRaw = rawSave.discovered_monster_ids;
-  const discoveredSet = new Set(
-    Array.isArray(discoveredRaw)
-      ? discoveredRaw.map(String)
-      : (discoveredRaw && typeof discoveredRaw === 'object' ? Object.keys(discoveredRaw).filter(k => discoveredRaw[k]) : [])
-  );
+  // Normalize Exploration Set first so only seen/discovered entities are exposed (Zero Spoilers)
+  const rawExploredTiles = Array.isArray(rawSave.explored_tiles) ? rawSave.explored_tiles : [];
+  const exploredTiles = rawExploredTiles.map(pt => {
+    if (Array.isArray(pt) && pt.length >= 2) return [Number(pt[0]), Number(pt[1])];
+    if (typeof pt === 'string' && pt.includes(',')) {
+      const parts = pt.split(',');
+      return [Number(parts[0]), Number(parts[1])];
+    }
+    return null;
+  }).filter(Boolean);
+  const exploredSet = new Set(exploredTiles.map(pt => `${pt[0]},${pt[1]}`));
+  heroStates.forEach(h => {
+    if (Array.isArray(h.gridPos) && h.gridPos.length >= 2) {
+      exploredSet.add(`${h.gridPos[0]},${h.gridPos[1]}`);
+    }
+  });
+  const exploredTilesCount = Number(rawSave['robos:exploredTilesCount'] ?? exploredSet.size) || 0;
+
   const revealedRooms = Array.isArray(rawSave['robos:revealedRooms'])
     ? rawSave['robos:revealedRooms']
     : (Array.isArray(rawSave.revealed_rooms)
@@ -374,10 +386,17 @@ function normalizeQuestSaveStateToKGraphNode(rawSave, options = {}) {
       : (rawSave.revealed_rooms && typeof rawSave.revealed_rooms === 'object' ? Object.keys(rawSave.revealed_rooms) : []));
   const revealedSet = new Set(revealedRooms.map(String));
 
-  let totalMonstersAlive = 0;
+  // Normalize Monsters: ONLY expose visible/discovered monsters and already-defeated count (never unseen monsters!)
+  const rawMonsters = Array.isArray(rawSave.monsters) ? rawSave.monsters : [];
+  const discoveredRaw = rawSave.discovered_monster_ids;
+  const discoveredSet = new Set(
+    Array.isArray(discoveredRaw)
+      ? discoveredRaw.map(String)
+      : (discoveredRaw && typeof discoveredRaw === 'object' ? Object.keys(discoveredRaw).filter(k => discoveredRaw[k]) : [])
+  );
+
   let monstersDefeated = Number(rawSave['robos:monstersDefeated'] ?? rawSave.monsters_defeated ?? 0) || 0;
   const visibleMonsters = [];
-  const allMonstersNormalized = [];
 
   rawMonsters.forEach(m => {
     const mId = String(m.id || m.slug || 'monster');
@@ -391,15 +410,18 @@ function normalizeQuestSaveStateToKGraphNode(rawSave, options = {}) {
       : (Array.isArray(m.pos) && m.pos.length >= 2
         ? [Number(m.pos[0]), Number(m.pos[1])]
         : (Array.isArray(m.position) && m.position.length >= 2 ? [Number(m.position[0]), Number(m.position[1])] : [0, 0]));
-    const isDiscovered = discoveredSet.has(mId) || (roomId !== '' && revealedSet.has(roomId) && !isHidden);
+    const isDiscovered = discoveredSet.has(mId) || exploredSet.has(`${pos[0]},${pos[1]}`) || (roomId !== '' && revealedSet.has(roomId) && !isHidden);
 
-    if (isAlive) {
-      totalMonstersAlive += 1;
-    } else {
+    if (!isAlive) {
       monstersDefeated += 1;
+      return;
+    }
+    if (!isDiscovered) {
+      // Never include unseen monsters in the save state view (no spoilers)
+      return;
     }
 
-    const normM = {
+    visibleMonsters.push({
       '@type': 'robos:TabletopSaveMonsterState',
       id: mId,
       name: String(m.name || m.monsterType || m.type || 'Monster'),
@@ -416,13 +438,9 @@ function normalizeQuestSaveStateToKGraphNode(rawSave, options = {}) {
       isUndead: Boolean(m.isUndead ?? m.is_undead),
       isSpellcaster: Boolean(m.isSpellcaster ?? m.is_spellcaster),
       spells: Array.isArray(m.spells) ? m.spells : [],
-      isAlive,
-      isVisible: isAlive && isDiscovered
-    };
-    allMonstersNormalized.push(normM);
-    if (normM.isVisible) {
-      visibleMonsters.push(normM);
-    }
+      isAlive: true,
+      isVisible: true
+    });
   });
 
   // If rawSave already had robos:visibleMonsters and rawMonsters was empty
@@ -430,7 +448,7 @@ function normalizeQuestSaveStateToKGraphNode(rawSave, options = {}) {
     visibleMonsters.push(...rawSave['robos:visibleMonsters']);
   }
 
-  // Normalize Items Found So Far (from explicit items_found log, treasure_discard, room_special_treasure_collected, and hero inventories)
+  // Normalize Items Found So Far (only items actually collected or in party inventory — zero uncollected treasure spoilers)
   const itemsFound = [];
   const seenItemKeys = new Set();
   const pushFoundItem = (itemObj) => {
@@ -472,21 +490,6 @@ function normalizeQuestSaveStateToKGraphNode(rawSave, options = {}) {
     });
   }
 
-  if (rawSave.room_special_treasure_collected && typeof rawSave.room_special_treasure_collected === 'object') {
-    Object.entries(rawSave.room_special_treasure_collected).forEach(([roomKey, val]) => {
-      if (val) {
-        pushFoundItem({
-          id: `special-${roomKey}`,
-          name: typeof val === 'string' ? val : `Special Treasure (${roomKey})`,
-          type: 'special_treasure',
-          holder: 'Party',
-          source: `Room ${roomKey}`,
-          icon: '👑'
-        });
-      }
-    });
-  }
-
   // Also include hero inventory items (potions, weapons, artifacts carried)
   heroStates.forEach(h => {
     (h.inventory || []).forEach((invItem, iIdx) => {
@@ -508,10 +511,7 @@ function normalizeQuestSaveStateToKGraphNode(rawSave, options = {}) {
     });
   });
 
-  // Exploration, Doors, Traps & Triggers
-  const exploredTiles = Array.isArray(rawSave.explored_tiles) ? rawSave.explored_tiles : [];
-  const exploredTilesCount = Number(rawSave['robos:exploredTilesCount'] ?? exploredTiles.length) || 0;
-
+  // Searched Rooms, Seen Doors, Seen Furniture, Detected Traps & Fired Triggers (Zero Unseen Spoilers)
   const searchedRoomsObj = (rawSave.searched_rooms && typeof rawSave.searched_rooms === 'object') ? rawSave.searched_rooms : {};
   const searchedSecretRoomsObj = (rawSave.searched_secret_rooms && typeof rawSave.searched_secret_rooms === 'object') ? rawSave.searched_secret_rooms : {};
   const searchedRoomsList = Array.from(new Set([
@@ -521,11 +521,38 @@ function normalizeQuestSaveStateToKGraphNode(rawSave, options = {}) {
   ]));
 
   const rawDoors = Array.isArray(rawSave.doors) ? rawSave.doors : [];
+  const seenDoors = rawDoors.filter(d => {
+    if (!d) return false;
+    if (d.is_secret && !d.is_revealed) return false;
+    const isOpen = d.is_open === true || d.open === true || d.state === 'open';
+    if (isOpen) return true;
+    const from = Array.isArray(d.from) ? `${d.from[0]},${d.from[1]}` : '';
+    const to = Array.isArray(d.to) ? `${d.to[0]},${d.to[1]}` : '';
+    return exploredSet.has(from) || exploredSet.has(to);
+  });
   const doorsOpenCount = rawDoors.filter(d => d && (d.is_open === true || d.open === true || d.state === 'open')).length;
   const doorsSecretRevealed = rawDoors.filter(d => d && d.is_secret && d.is_revealed).length;
 
+  const rawFurniture = Array.isArray(rawSave.furniture) ? rawSave.furniture : [];
+  const seenFurniture = rawFurniture.filter(f => {
+    if (!f || f.hidden) return false;
+    if (f.type && String(f.type).includes('stairs')) return true;
+    const rId = String(f.roomId || f.room_id || '');
+    if (rId && revealedSet.has(rId)) return true;
+    const fx = Number(f.x ?? 0);
+    const fy = Number(f.y ?? 0);
+    const fw = Number(f.width || 1);
+    const fh = Number(f.height || 1);
+    for (let dx = 0; dx < fw; dx++) {
+      for (let dy = 0; dy < fh; dy++) {
+        if (exploredSet.has(`${fx + dx},${fy + dy}`)) return true;
+      }
+    }
+    return false;
+  });
+
   const rawTraps = Array.isArray(rawSave.traps) ? rawSave.traps : [];
-  const trapsDetectedCount = rawTraps.filter(t => t && (t.detected || t.disarmed)).length;
+  const trapsDetectedCount = rawTraps.filter(t => t && (t.detected || t.disarmed || t.sprung)).length;
 
   const rawTriggers = Array.isArray(rawSave.story_triggers) ? rawSave.story_triggers : [];
   const triggersFired = Array.isArray(rawSave.triggers_fired)
@@ -542,7 +569,6 @@ function normalizeQuestSaveStateToKGraphNode(rawSave, options = {}) {
   // Time played estimation if not explicitly recorded in older save files
   let playTimeSeconds = Number(rawSave['robos:playTimeSeconds'] ?? rawSave.play_time_seconds ?? 0) || 0;
   if (playTimeSeconds <= 0) {
-    // Derive deterministic elapsed activity estimate from round, explored tiles, doors opened, and triggers
     playTimeSeconds = Math.max(
       45,
       (roundNum - 1) * 180 +
@@ -556,7 +582,6 @@ function normalizeQuestSaveStateToKGraphNode(rawSave, options = {}) {
   // Timestamp normalization
   const rawTs = Number(rawSave.timestamp ?? rawSave.saved_at ?? 0);
   const nowSec = Math.floor(Date.now() / 1000);
-  // Guard against future/synthetic clock drift if timestamp is far in the future, otherwise use rawTs or file mtime
   const effectiveEpochSec = options.fileMtimeMs
     ? Math.floor(options.fileMtimeMs / 1000)
     : (rawTs > 0 ? Math.floor(rawTs) : nowSec);
@@ -604,8 +629,6 @@ function normalizeQuestSaveStateToKGraphNode(rawSave, options = {}) {
     'robos:heroStates': heroStates,
     'robos:visibleMonsters': visibleMonsters,
     'robos:visibleMonstersCount': visibleMonsters.length,
-    'robos:allMonsters': allMonstersNormalized,
-    'robos:totalMonstersAlive': totalMonstersAlive,
     'robos:monstersDefeated': monstersDefeated,
     'robos:itemsFound': itemsFound,
     'robos:itemsFoundCount': itemsFound.length,
@@ -616,15 +639,11 @@ function normalizeQuestSaveStateToKGraphNode(rawSave, options = {}) {
     'robos:searchedRooms': searchedRoomsList,
     'robos:doorsOpenCount': doorsOpenCount,
     'robos:doorsSecretRevealedCount': doorsSecretRevealed,
-    'robos:doorsTotalCount': rawDoors.length,
-    'robos:doors': rawDoors,
-    'robos:furniture': Array.isArray(rawSave.furniture) ? rawSave.furniture : [],
+    'robos:doors': seenDoors,
+    'robos:furniture': seenFurniture,
     'robos:trapsDetectedCount': trapsDetectedCount,
-    'robos:trapsTotalCount': rawTraps.length,
     'robos:triggersFired': triggersFired,
     'robos:triggersFiredCount': triggersFired.length,
-    'robos:triggersTotalCount': rawTriggers.length,
-    'robos:treasureDeckRemaining': Array.isArray(rawSave.treasure_deck) ? rawSave.treasure_deck.length : 0,
     'robos:currentElfElement': String(rawSave.current_elf_element || ''),
     'robos:screenshotPath': String(options.screenshotPath || rawSave['robos:screenshotPath'] || rawSave.screenshot_path || ''),
     'robos:screenshotDataUrl': String(options.screenshotDataUrl || rawSave['robos:screenshotDataUrl'] || ''),
@@ -656,7 +675,6 @@ function normalizeQuestSaveStateToKGraphNode(rawSave, options = {}) {
       grid_pos: h.gridPos
     })),
     visible_monsters: visibleMonsters,
-    monsters: allMonstersNormalized,
     items_found: itemsFound,
     revealed_rooms: revealedRooms,
     searched_treasure_rooms: searchedRoomsList
