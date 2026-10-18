@@ -70,6 +70,9 @@ class BlockmapCreator {
     this.panX = 40;
     this.panY = 40;
     this.zoom = 1.0;
+    this.autoFit = true;
+    this.lastViewportWidth = 0;
+    this.lastViewportHeight = 0;
 
     // 2. Active Tools
     this.activeTool = 'inspect';  // 'inspect', 'corridor', 'room', 'erase'
@@ -164,9 +167,16 @@ class BlockmapCreator {
 
   bindEvents() {
     window.addEventListener('resize', () => {
-      this.resizeCanvas();
-      this.render();
+      this.handleViewportResize();
+      if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(() => this.handleViewportResize());
+      }
+      setTimeout(() => this.handleViewportResize(), 80);
     });
+    if (typeof ResizeObserver !== 'undefined' && this.viewport) {
+      const obs = new ResizeObserver(() => this.handleViewportResize());
+      obs.observe(this.viewport);
+    }
 
     // Preset selector
     const presetSelect = document.getElementById('board-preset-select');
@@ -519,10 +529,47 @@ class BlockmapCreator {
   }
 
   // ---------------- Canvas Transform & Coordinates ----------------
-  resizeCanvas() {
+  resizeCanvas(options = {}) {
+    if (!this.viewport || !this.canvas) return false;
     const rect = this.viewport.getBoundingClientRect();
-    this.canvas.width = rect.width;
-    this.canvas.height = rect.height;
+    const newW = Math.round(rect.width);
+    const newH = Math.round(rect.height);
+    if (newW <= 0 || newH <= 0) return false;
+
+    const prevW = this.lastViewportWidth || this.canvas.width || 0;
+    const prevH = this.lastViewportHeight || this.canvas.height || 0;
+    const sizeChanged = newW !== this.canvas.width || newH !== this.canvas.height || newW !== prevW || newH !== prevH;
+
+    this.canvas.width = newW;
+    this.canvas.height = newH;
+    this.lastViewportWidth = newW;
+    this.lastViewportHeight = newH;
+
+    if (options.adjustCamera && sizeChanged && prevW > 0 && prevH > 0) {
+      if (this.autoFit !== false) {
+        this.fitToScreen();
+      } else {
+        const centerWorldX = (prevW / 2 - this.panX) / this.zoom;
+        const centerWorldY = (prevH / 2 - this.panY) / this.zoom;
+        const totalW = Math.max(1, this.image ? this.image.naturalWidth : (this.cols * this.tileSize));
+        const totalH = Math.max(1, this.image ? this.image.naturalHeight : (this.rows * this.tileSize));
+        const oldFitScale = Math.min(Math.max(60, prevW - 100) / totalW, Math.max(60, prevH - 100) / totalH);
+        const newFitScale = Math.min(Math.max(60, newW - 100) / totalW, Math.max(60, newH - 100) / totalH);
+        const scaleRatio = oldFitScale > 0 ? (newFitScale / oldFitScale) : 1;
+        this.zoom = Math.max(0.2, Math.min(5.0, this.zoom * scaleRatio));
+        this.panX = Math.round(newW / 2 - centerWorldX * this.zoom);
+        this.panY = Math.round(newH / 2 - centerWorldY * this.zoom);
+        const zoomEl = document.getElementById('info-zoom-level');
+        if (zoomEl) zoomEl.textContent = `${Math.round(this.zoom * 100)}%`;
+      }
+    }
+    return sizeChanged;
+  }
+
+  handleViewportResize() {
+    if (this.resizeCanvas({ adjustCamera: true })) {
+      this.render();
+    }
   }
 
   screenToWorld(screenX, screenY) {
@@ -623,6 +670,7 @@ class BlockmapCreator {
 
   onMouseMove(e) {
     if (this.isPanning) {
+      this.autoFit = false;
       this.panX = e.clientX - this.panStartX;
       this.panY = e.clientY - this.panStartY;
       this.render();
@@ -716,6 +764,7 @@ class BlockmapCreator {
 
   onWheel(e) {
     e.preventDefault();
+    this.autoFit = false;
     const factor = e.deltaY < 0 ? 1.12 : (1 / 1.12);
 
     const rect = this.viewport.getBoundingClientRect();
@@ -1160,12 +1209,14 @@ class BlockmapCreator {
   }
 
   adjustZoom(factor) {
+    this.autoFit = false;
     this.zoom = Math.max(0.2, Math.min(5.0, this.zoom * factor));
     document.getElementById('info-zoom-level').textContent = `${Math.round(this.zoom * 100)}%`;
     this.render();
   }
 
   resetZoom() {
+    this.autoFit = false;
     this.zoom = 1.0;
     this.panX = 40;
     this.panY = 40;
@@ -1179,15 +1230,23 @@ class BlockmapCreator {
     const totalH = this.image ? this.image.naturalHeight : (this.rows * this.tileSize);
 
     const vpRect = this.viewport.getBoundingClientRect();
-    const margin = 50;
-    const scaleX = (vpRect.width - margin * 2) / totalW;
-    const scaleY = (vpRect.height - margin * 2) / totalH;
-    this.zoom = Math.max(0.3, Math.min(2.5, Math.min(scaleX, scaleY)));
+    if (vpRect.width <= 0 || vpRect.height <= 0) return;
+    this.canvas.width = Math.round(vpRect.width);
+    this.canvas.height = Math.round(vpRect.height);
+    this.lastViewportWidth = this.canvas.width;
+    this.lastViewportHeight = this.canvas.height;
 
-    this.panX = (vpRect.width - totalW * this.zoom) / 2;
-    this.panY = (vpRect.height - totalH * this.zoom) / 2;
+    const margin = 40;
+    const scaleX = Math.max(60, vpRect.width - margin * 2) / totalW;
+    const scaleY = Math.max(60, vpRect.height - margin * 2) / totalH;
+    this.zoom = Math.max(0.25, Math.min(4.0, Math.min(scaleX, scaleY)));
 
-    document.getElementById('info-zoom-level').textContent = `${Math.round(this.zoom * 100)}%`;
+    this.panX = Math.round((vpRect.width - totalW * this.zoom) / 2);
+    this.panY = Math.round((vpRect.height - totalH * this.zoom) / 2);
+    this.autoFit = true;
+
+    const zoomEl = document.getElementById('info-zoom-level');
+    if (zoomEl) zoomEl.textContent = `${Math.round(this.zoom * 100)}%`;
     this.render();
   }
 

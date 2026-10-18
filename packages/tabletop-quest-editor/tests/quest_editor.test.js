@@ -3679,5 +3679,89 @@ test('Election 2026 Enemy Characters: supports all 15 Midterms 2026 enemies, cat
   }
 });
 
+// -------------------------------------------------------------
+// Test 43: Window Maximize & Dynamic Viewport Resize Scaling
+// -------------------------------------------------------------
+test('Window Maximize & Viewport Resize: dynamically resizes canvas and scales zoom/pan camera with window size', () => {
+  const { resizeCanvas, fitView } = require('../renderer/app.js');
+  const savedDom = { ...dom };
+  const savedBlockmap = state.blockmap;
+  const savedZoom = state.zoom;
+  const savedPanX = state.panX;
+  const savedPanY = state.panY;
+  const savedAutoFit = state.autoFit;
+  const savedLastW = state.lastViewportWidth;
+  const savedLastH = state.lastViewportHeight;
 
+  try {
+    let vpRect = { width: 1000, height: 800 };
+    dom.viewport = {
+      getBoundingClientRect: () => vpRect
+    };
+    dom.canvas = { width: 1000, height: 800 };
+    dom.infoZoomLevel = { textContent: '100%' };
 
+    state.blockmap = {
+      id: 'first-light-dungeon',
+      gridDimensions: [26, 19],
+      tileSize: 39,
+      pixelOffset: [0, 0],
+      rooms: [],
+      corridors: []
+    };
+    state.hasAdditionalBorder = false;
+
+    // 1. Initial fit at normal window size (1000x800)
+    fitView();
+    const initialZoom = state.zoom;
+    const initialPanX = state.panX;
+    const initialPanY = state.panY;
+    assert.equal(dom.canvas.width, 1000);
+    assert.equal(dom.canvas.height, 800);
+    assert.equal(state.autoFit, true);
+    assert.ok(initialZoom > 0.8 && initialZoom < 1.1, 'Initial zoom fits 26x19 board inside 1000x800 viewport');
+
+    // 2. Simulate maximizing the window to 2200x1300 while autoFit is true
+    vpRect = { width: 2200, height: 1300 };
+    const changed = resizeCanvas({ adjustCamera: true });
+    assert.equal(changed, true, 'resizeCanvas detects viewport size change on maximize');
+    assert.equal(dom.canvas.width, 2200, 'Canvas width updates to maximized viewport width');
+    assert.equal(dom.canvas.height, 1300, 'Canvas height updates to maximized viewport height');
+    assert.ok(state.zoom > initialZoom * 1.5, `Zoom scales up from ${initialZoom.toFixed(2)} to ${state.zoom.toFixed(2)} when window is maximized`);
+    assert.notEqual(state.panX, initialPanX, 'panX re-centers board in maximized viewport');
+
+    // 3. Simulate manual zoom/pan (autoFit = false), then unmaximize back to 1100x750
+    state.autoFit = false;
+    const zoomedOnMax = 2.0;
+    state.zoom = zoomedOnMax;
+    state.panX = 300;
+    state.panY = 200;
+    const worldCenterBeforeX = (2200 / 2 - state.panX) / state.zoom;
+    const worldCenterBeforeY = (1300 / 2 - state.panY) / state.zoom;
+
+    vpRect = { width: 1100, height: 750 };
+    resizeCanvas({ adjustCamera: true });
+    assert.equal(dom.canvas.width, 1100);
+    assert.equal(dom.canvas.height, 750);
+    assert.ok(state.zoom < zoomedOnMax, 'Manual zoom scales down proportionally when window is unmaximized');
+
+    const worldCenterAfterX = (1100 / 2 - state.panX) / state.zoom;
+    const worldCenterAfterY = (750 / 2 - state.panY) / state.zoom;
+    assert.ok(Math.abs(worldCenterAfterX - worldCenterBeforeX) < 2, 'Preserves world X center across window resize');
+    assert.ok(Math.abs(worldCenterAfterY - worldCenterBeforeY) < 2, 'Preserves world Y center across window resize');
+
+    // 4. Verify CSS rules allow #quest-canvas and .canvas-viewport to expand to 100%
+    const cssPath = path.join(__dirname, '../renderer/style.css');
+    const css = fs.readFileSync(cssPath, 'utf8');
+    assert.ok(css.includes('#quest-canvas') && css.includes('width: 100%;') && css.includes('height: 100%;'), 'style.css stretches #quest-canvas and .canvas-viewport to 100%');
+  } finally {
+    Object.assign(dom, savedDom);
+    state.blockmap = savedBlockmap;
+    state.zoom = savedZoom;
+    state.panX = savedPanX;
+    state.panY = savedPanY;
+    state.autoFit = savedAutoFit;
+    state.lastViewportWidth = savedLastW;
+    state.lastViewportHeight = savedLastH;
+  }
+});
