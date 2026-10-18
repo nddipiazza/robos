@@ -960,46 +960,48 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     const midtermsMonsters = monsters.filter(m => m["robos:category"] === "Midterms 2026");
 
     assert.strictEqual(baseMonsters.length, 15, "Must have all 15 Base Game HeroQuest monsters in KGraph");
-    assert.strictEqual(midtermsMonsters.length, 15, "Must have 15 Midterms 2026 monsters mirroring each Base Game monster 1-to-1");
+    assert.strictEqual(midtermsMonsters.length, 11, "Must have 11 Midterms 2026 creations (8 standard monsters + 3 Hydra bosses)");
 
-    // Verify every single Base Game HeroQuest monster has a 1-to-1 mirror in Midterms 2026
-    for (const baseMon of baseMonsters) {
-      const mirror = midtermsMonsters.find(
-        m => m["robos:mirrorsMonster"] === baseMon["@id"] || m["robos:monsterArchetype"] === baseMon["robos:monsterArchetype"]
-      );
-      assert.ok(mirror, `Base Game monster ${baseMon["@id"]} (${baseMon["dcterms:title"]}) must have a 1-to-1 Midterms 2026 mirror`);
-      assert.strictEqual(mirror["robos:mirrorsMonster"], baseMon["@id"], `Mirror ${mirror["@id"]} must reference ${baseMon["@id"]}`);
-      assert.strictEqual(mirror["robos:monsterArchetype"], baseMon["robos:monsterArchetype"], `Mirror ${mirror["@id"]} must match archetype ${baseMon["robos:monsterArchetype"]}`);
-    }
+    const standardMidterms = midtermsMonsters.filter(m => !m["robos:isBoss"]);
+    const hydraBosses = midtermsMonsters.filter(m => m["robos:isBoss"]);
+    assert.strictEqual(standardMidterms.length, 8, "Must have 8 standard Midterms 2026 monsters");
+    assert.strictEqual(hydraBosses.length, 3, "Must have 3 Midterms 2026 Hydra bosses");
 
-    // Check specific user-requested Midterms 2026 enemies
-    const inflationSpawn = midtermsMonsters.find(m => m["@id"].includes("inflation-spawn"));
-    assert.ok(inflationSpawn, "Inflation Spawn goblin money monster must exist");
-    assert.strictEqual(inflationSpawn["robos:mirrorsMonster"], "urn:robos:tabletop:monster:goblin");
-    assert.ok(
-      inflationSpawn["dcterms:title"].includes("Inflation Spawn") || inflationSpawn["robos:alias"] === "Infalation Spawn",
-      "Must match Inflation Spawn / Infalation Spawn"
-    );
+    // Check specific user-requested Midterms 2026 standard monsters
+    const campaignVolunteer = midtermsMonsters.find(m => m["@id"] === "urn:robos:tabletop:monster:campaign-volunteer");
+    assert.ok(campaignVolunteer, "Campaign Volunteer (replaces Goblin) must exist");
+    assert.strictEqual(campaignVolunteer["robos:replaces"], "Goblin");
+    assert.ok(campaignVolunteer["robos:specialAbility"].includes("Door Knocker"));
 
-    const illegalAlien = midtermsMonsters.find(m => m["@id"].includes("illegal-alien"));
-    assert.ok(illegalAlien, "Illegal Alien (grey alien with robber mask) must exist");
-    assert.strictEqual(illegalAlien["robos:mirrorsMonster"], "urn:robos:tabletop:monster:orc");
-    assert.ok(
-      (illegalAlien["robos:archetype"] || "").toLowerCase().includes("grey alien") ||
-      (illegalAlien["dcterms:description"] || "").toLowerCase().includes("grey")
-    );
+    const partisanEnforcer = midtermsMonsters.find(m => m["@id"] === "urn:robos:tabletop:monster:partisan-enforcer");
+    assert.ok(partisanEnforcer, "Partisan Enforcer (replaces Dread Warrior) must exist");
+    assert.strictEqual(partisanEnforcer["robos:replaces"], "Dread Warrior");
+    assert.ok(partisanEnforcer["robos:specialAbility"].includes("Polarization"));
 
-    const gayMan = midtermsMonsters.find(m => m["@id"].includes("happily-married-gay-man"));
-    assert.ok(gayMan, "Happily Married Gay Man (Dread Warrior) must exist");
-    assert.strictEqual(gayMan["robos:mirrorsMonster"], "urn:robos:tabletop:monster:chaos-warrior");
-    assert.strictEqual(gayMan["robos:monsterArchetype"], "Dread Warrior");
+    const spinDoctor = midtermsMonsters.find(m => m["@id"] === "urn:robos:tabletop:monster:spin-doctor");
+    assert.ok(spinDoctor, "Spin Doctor (replaces Dread Sorcerer) must exist");
+    assert.strictEqual(spinDoctor["robos:replaces"], "Dread Sorcerer");
+    assert.ok(spinDoctor["robos:specialAbility"].includes("Alternative Facts"));
 
-    const trumpBiden = midtermsMonsters.find(m => m["@id"].includes("trumpbiden-dragon"));
-    assert.ok(trumpBiden, "TrumpBiden Dragon boss must exist");
-    assert.strictEqual(trumpBiden["robos:mirrorsMonster"], "urn:robos:tabletop:monster:dragon");
-    assert.strictEqual(trumpBiden["robos:isBoss"], true);
-    assert.strictEqual(trumpBiden["robos:monsterArchetype"], "Dragon");
-    assert.ok(trumpBiden["dcterms:description"].toLowerCase().includes("expensive"));
+    // Check the 3 Hydra Bosses
+    const talarixon = midtermsMonsters.find(m => m["@id"] === "urn:robos:tabletop:monster:talarixon");
+    assert.ok(talarixon, "Talarixon (Texas Hydra) boss must exist");
+    assert.strictEqual(talarixon["robos:isBoss"], true);
+    assert.strictEqual(talarixon["robos:movementSquares"], 7);
+    assert.strictEqual(talarixon["robos:attackDice"], 5);
+    assert.strictEqual(talarixon["robos:defendDice"], 5);
+    assert.strictEqual(talarixon["robos:bodyPoints"], 6);
+    assert.strictEqual(talarixon["robos:mindPoints"], 5);
+
+    const elRogers = midtermsMonsters.find(m => m["@id"] === "urn:robos:tabletop:monster:el-rogers");
+    assert.ok(elRogers, "El-Rogers (Michigan Hydra) boss must exist");
+    assert.strictEqual(elRogers["robos:isBoss"], true);
+    assert.strictEqual(elRogers["robos:bodyPoints"], 7);
+
+    const brownsted = midtermsMonsters.find(m => m["@id"] === "urn:robos:tabletop:monster:brownsted");
+    assert.ok(brownsted, "Brownsted (Ohio Hydra) boss must exist");
+    assert.strictEqual(brownsted["robos:isBoss"], true);
+    assert.strictEqual(brownsted["robos:bodyPoints"], 8);
 
     // Verify Midterms 2026 Weapons (illegal presidential acts)
     const midtermsWeapons = appModule.getWeaponsByCategory("Midterms 2026");
@@ -1013,17 +1015,25 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     const baseWeapons = appModule.getWeaponsByCategory("Base Game");
     assert.ok(baseWeapons.length >= 9, "Must include all 9 Base Game armory weapons/gear");
 
-    // Verify Midterms 2026 Spells & Dread Spells
+    // Verify Midterms 2026 Spells (12 elemental spells) & Dread Spells (1 forbidden Dread spell)
     const midtermsSpells = appModule.getSpellsByCategory("Midterms 2026");
-    assert.strictEqual(midtermsSpells.length, 5, "Must include 5 Midterms 2026 hero spells");
-    assert.ok(midtermsSpells.some(s => s.name.includes("Snowflake")));
-    assert.ok(midtermsSpells.some(s => s.name.includes("No Choice") || s.description.toLowerCase().includes("abortion")));
-    assert.ok(midtermsSpells.some(s => s.name.includes("Party-Line")));
-    assert.ok(midtermsSpells.some(s => s.name.includes("Middle East")));
+    assert.strictEqual(midtermsSpells.length, 12, "Must include 12 Midterms 2026 elemental spells (3 Fire, 3 Water, 3 Earth, 3 Air)");
+    assert.ok(midtermsSpells.some(s => s.slug === "attack-ad"));
+    assert.ok(midtermsSpells.some(s => s.slug === "outrage-inferno"));
+    assert.ok(midtermsSpells.some(s => s.slug === "october-surprise"));
+    assert.ok(midtermsSpells.some(s => s.slug === "filibuster"));
+    assert.ok(midtermsSpells.some(s => s.slug === "executive-privilege"));
+    assert.ok(midtermsSpells.some(s => s.slug === "emergency-funding"));
+    assert.ok(midtermsSpells.some(s => s.slug === "incumbent-protection"));
+    assert.ok(midtermsSpells.some(s => s.slug === "special-interest-donation"));
+    assert.ok(midtermsSpells.some(s => s.slug === "gerrymander"));
+    assert.ok(midtermsSpells.some(s => s.slug === "polling-surge"));
+    assert.ok(midtermsSpells.some(s => s.slug === "media-frenzy"));
+    assert.ok(midtermsSpells.some(s => s.slug === "landslide-victory"));
 
     const midtermsDread = appModule.getDreadSpellsByCategory("Midterms 2026");
-    assert.strictEqual(midtermsDread.length, 3, "Must include 3 Midterms 2026 dread spells");
-    assert.ok(midtermsDread.some(s => s.slug === "bipartisan-blame-inferno"));
+    assert.strictEqual(midtermsDread.length, 1, "Must include 1 Midterms 2026 forbidden Dread spell");
+    assert.ok(midtermsDread.some(s => s.slug === "recount-of-the-damned"));
 
     // Verify Midterms 2026 Quest Items
     const midtermsItems = appModule.getItemsByCategory("Midterms 2026");

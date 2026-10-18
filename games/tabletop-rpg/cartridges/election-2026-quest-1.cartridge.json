@@ -86,14 +86,16 @@
     }
   },
   "monsters": {
-    "mon-inflation-spawn-1": {
-      "id": "mon-inflation-spawn-1",
-      "slug": "inflation-spawn-mon-inflation-spawn-1",
-      "name": "Inflation Spawn",
-      "monsterType": "inflation-spawn",
+    "mon-campaign-volunteer-1": {
+      "id": "mon-campaign-volunteer-1",
+      "slug": "campaign-volunteer-mon-campaign-volunteer-1",
+      "name": "Campaign Volunteer",
+      "monsterType": "campaign-volunteer",
       "category": "Midterms 2026",
       "monsterArchetype": "Goblin",
-      "icon": "💸",
+      "replaces": "Goblin",
+      "specialAbility": "Door Knocker: Move through other monsters",
+      "icon": "📋",
       "tokenColor": "#16a34a",
       "bodyPoints": 1,
       "mindPoints": 1,
@@ -111,17 +113,19 @@
       "roomId": "room-sw-6",
       "hidden": false
     },
-    "mon-happily-married-gay-man-2": {
-      "id": "mon-happily-married-gay-man-2",
-      "slug": "happily-married-gay-man-mon-happily-married-gay-man-2",
-      "name": "Happily Married Gay Man",
-      "monsterType": "happily-married-gay-man",
+    "mon-partisan-enforcer-2": {
+      "id": "mon-partisan-enforcer-2",
+      "slug": "partisan-enforcer-mon-partisan-enforcer-2",
+      "name": "Partisan Enforcer",
+      "monsterType": "partisan-enforcer",
       "category": "Midterms 2026",
       "monsterArchetype": "Dread Warrior",
-      "icon": "💍",
-      "tokenColor": "#ec4899",
+      "replaces": "Dread Warrior",
+      "specialAbility": "Polarization: +1 attack die when adjacent to another Partisan Enforcer",
+      "icon": "⚔️",
+      "tokenColor": "#dc2626",
       "bodyPoints": 3,
-      "mindPoints": 1,
+      "mindPoints": 3,
       "attackDice": 4,
       "defendDice": 4,
       "movementSquares": 7,
@@ -136,17 +140,19 @@
       "roomId": "room-nw-1",
       "hidden": false
     },
-    "mon-gerrymandered-skeleton-3": {
-      "id": "mon-gerrymandered-skeleton-3",
-      "slug": "gerrymandered-skeleton-mon-gerrymandered-skeleton-3",
-      "name": "Gerrymandered Skeleton",
-      "monsterType": "gerrymandered-skeleton",
+    "mon-career-politician-3": {
+      "id": "mon-career-politician-3",
+      "slug": "career-politician-mon-career-politician-3",
+      "name": "Career Politician",
+      "monsterType": "career-politician",
       "category": "Midterms 2026",
       "monsterArchetype": "Skeleton",
-      "icon": "💀",
+      "replaces": "Skeleton",
+      "specialAbility": "Reelection: On death, black shield resurrects with 1 Body Point",
+      "icon": "🏛️",
       "tokenColor": "#94a3b8",
       "bodyPoints": 1,
-      "mindPoints": 1,
+      "mindPoints": 0,
       "attackDice": 2,
       "defendDice": 2,
       "movementSquares": 6,
@@ -161,27 +167,27 @@
       "roomId": "room-nw-1",
       "hidden": false
     },
-    "mon-trumpbiden-dragon-4": {
-      "id": "mon-trumpbiden-dragon-4",
-      "slug": "trumpbiden-dragon-mon-trumpbiden-dragon-4",
-      "name": "TrumpBiden (The Blame Dragon)",
-      "monsterType": "trumpbiden-dragon",
+    "mon-talarixon-4": {
+      "id": "mon-talarixon-4",
+      "slug": "talarixon-mon-talarixon-4",
+      "name": "Talarixon (Talarico + Paxton · Texas Hydra)",
+      "monsterType": "talarixon",
       "category": "Midterms 2026",
-      "monsterArchetype": "Dragon",
-      "icon": "🐉",
-      "tokenColor": "#dc2626",
+      "monsterArchetype": "Texas Hydra",
+      "replaces": "Texas Hydra Boss",
+      "specialAbility": "Holy Smite (3 dice ranged) · Indictment Barrage (1–3 loses action) · Divided Authority (lose turn, 2 dice to adjacent) · Political Infighting",
+      "icon": "🐍",
+      "tokenColor": "#b91c1c",
       "bodyPoints": 6,
-      "mindPoints": 1,
+      "mindPoints": 5,
       "attackDice": 5,
       "defendDice": 5,
-      "movementSquares": 8,
+      "movementSquares": 7,
       "isBoss": true,
       "isUndead": false,
       "isSpellcaster": true,
       "spells": [
-        "bipartisan-blame-inferno",
-        "shrinkflation-curse",
-        "culture-war-distraction-cloud"
+        "recount-of-the-damned"
       ],
       "position": [
         12,
@@ -190,24 +196,28 @@
       "roomId": "room-nw-10",
       "hidden": false
     },
-    "mon-irs-audit-doomguard-5": {
-      "id": "mon-irs-audit-doomguard-5",
-      "slug": "irs-audit-doomguard-mon-irs-audit-doomguard-5",
-      "name": "IRS 87,000-Agent Doomguard",
-      "monsterType": "irs-audit-doomguard",
+    "mon-brownsted-5": {
+      "id": "mon-brownsted-5",
+      "slug": "brownsted-mon-brownsted-5",
+      "name": "Brownsted (Brown + Husted · Ohio Hydra)",
+      "monsterType": "brownsted",
       "category": "Midterms 2026",
-      "monsterArchetype": "Doomguard",
-      "icon": "🧾",
-      "tokenColor": "#334155",
-      "bodyPoints": 3,
-      "mindPoints": 1,
-      "attackDice": 4,
-      "defendDice": 6,
-      "movementSquares": 8,
+      "monsterArchetype": "Ohio Hydra",
+      "replaces": "Ohio Hydra Boss",
+      "specialAbility": "Union Strike (3 dice to adjacent) · Budget Freeze (no potions 1 round) · Bipartisan Gridlock (black shield = lose turn, skull = +1 atk) · Political Infighting",
+      "icon": "🐉",
+      "tokenColor": "#9333ea",
+      "bodyPoints": 8,
+      "mindPoints": 5,
+      "attackDice": 6,
+      "defendDice": 5,
+      "movementSquares": 5,
       "isBoss": true,
       "isUndead": false,
-      "isSpellcaster": false,
-      "spells": [],
+      "isSpellcaster": true,
+      "spells": [
+        "recount-of-the-damned"
+      ],
       "position": [
         14,
         16
@@ -215,26 +225,27 @@
       "roomId": "room-sw-5",
       "hidden": false
     },
-    "mon-hoa-censor-witch-hand-6": {
-      "id": "mon-hoa-censor-witch-hand-6",
-      "slug": "hoa-censor-witch-hand-mon-hoa-censor-witch-hand-6",
-      "name": "Censorship Board Witch Hand",
-      "monsterType": "hoa-censor-witch-hand",
+    "mon-spin-doctor-6": {
+      "id": "mon-spin-doctor-6",
+      "slug": "spin-doctor-mon-spin-doctor-6",
+      "name": "Spin Doctor",
+      "monsterType": "spin-doctor",
       "category": "Midterms 2026",
-      "monsterArchetype": "Witch Hand",
-      "icon": "🤫",
-      "tokenColor": "#9333ea",
-      "bodyPoints": 4,
-      "mindPoints": 1,
-      "attackDice": 4,
+      "monsterArchetype": "Dread Sorcerer",
+      "replaces": "Dread Sorcerer",
+      "specialAbility": "Alternative Facts: Cancel one successful attack, once per encounter",
+      "icon": "🌀",
+      "tokenColor": "#0284c7",
+      "bodyPoints": 3,
+      "mindPoints": 5,
+      "attackDice": 3,
       "defendDice": 4,
-      "movementSquares": 8,
-      "isBoss": true,
+      "movementSquares": 7,
+      "isBoss": false,
       "isUndead": false,
       "isSpellcaster": true,
       "spells": [
-        "culture-war-distraction-cloud",
-        "shrinkflation-curse"
+        "recount-of-the-damned"
       ],
       "position": [
         18,
@@ -243,17 +254,19 @@
       "roomId": "room-ne-3",
       "hidden": false
     },
-    "mon-teleprompter-zombie-7": {
-      "id": "mon-teleprompter-zombie-7",
-      "slug": "teleprompter-zombie-mon-teleprompter-zombie-7",
-      "name": "Cable News Pundit Zombie",
-      "monsterType": "teleprompter-zombie",
+    "mon-bureaucrat-7": {
+      "id": "mon-bureaucrat-7",
+      "slug": "bureaucrat-mon-bureaucrat-7",
+      "name": "Bureaucrat",
+      "monsterType": "bureaucrat",
       "category": "Midterms 2026",
       "monsterArchetype": "Zombie",
-      "icon": "🧟",
+      "replaces": "Zombie",
+      "specialAbility": "Red Tape: Adjacent heroes roll an extra movement die and use the lowest",
+      "icon": "📎",
       "tokenColor": "#475569",
       "bodyPoints": 1,
-      "mindPoints": 1,
+      "mindPoints": 0,
       "attackDice": 2,
       "defendDice": 3,
       "movementSquares": 4,
@@ -268,17 +281,19 @@
       "roomId": "room-ne-3",
       "hidden": false
     },
-    "mon-teleprompter-zombie-8": {
-      "id": "mon-teleprompter-zombie-8",
-      "slug": "teleprompter-zombie-mon-teleprompter-zombie-8",
-      "name": "Cable News Pundit Zombie",
-      "monsterType": "teleprompter-zombie",
+    "mon-bureaucrat-8": {
+      "id": "mon-bureaucrat-8",
+      "slug": "bureaucrat-mon-bureaucrat-8",
+      "name": "Bureaucrat",
+      "monsterType": "bureaucrat",
       "category": "Midterms 2026",
       "monsterArchetype": "Zombie",
-      "icon": "🧟",
+      "replaces": "Zombie",
+      "specialAbility": "Red Tape: Adjacent heroes roll an extra movement die and use the lowest",
+      "icon": "📎",
       "tokenColor": "#475569",
       "bodyPoints": 1,
-      "mindPoints": 1,
+      "mindPoints": 0,
       "attackDice": 2,
       "defendDice": 3,
       "movementSquares": 4,
@@ -293,17 +308,19 @@
       "roomId": "room-ne-3",
       "hidden": false
     },
-    "mon-filibuster-gargoyle-9": {
-      "id": "mon-filibuster-gargoyle-9",
-      "slug": "filibuster-gargoyle-mon-filibuster-gargoyle-9",
-      "name": "Filibuster Stone Gargoyle",
-      "monsterType": "filibuster-gargoyle",
+    "mon-super-pac-demon-9": {
+      "id": "mon-super-pac-demon-9",
+      "slug": "super-pac-demon-mon-super-pac-demon-9",
+      "name": "Super PAC Demon",
+      "monsterType": "super-pac-demon",
       "category": "Midterms 2026",
       "monsterArchetype": "Gargoyle",
-      "icon": "🗿",
-      "tokenColor": "#64748b",
+      "replaces": "Gargoyle",
+      "specialAbility": "Dark Money: Summon one Campaign Volunteer, once per encounter",
+      "icon": "😈",
+      "tokenColor": "#7c3aed",
       "bodyPoints": 3,
-      "mindPoints": 1,
+      "mindPoints": 4,
       "attackDice": 4,
       "defendDice": 5,
       "movementSquares": 6,
@@ -318,24 +335,28 @@
       "roomId": "room-sw-5",
       "hidden": false
     },
-    "mon-k-street-swamp-fimir-10": {
-      "id": "mon-k-street-swamp-fimir-10",
-      "slug": "k-street-swamp-fimir-mon-k-street-swamp-fimir-10",
-      "name": "K-Street Swamp Lobbyist",
-      "monsterType": "k-street-swamp-fimir",
+    "mon-el-rogers-10": {
+      "id": "mon-el-rogers-10",
+      "slug": "el-rogers-mon-el-rogers-10",
+      "name": "El-Rogers (El-Sayed + Rogers · Michigan Hydra)",
+      "monsterType": "el-rogers",
       "category": "Midterms 2026",
-      "monsterArchetype": "Fimir",
-      "icon": "🐊",
-      "tokenColor": "#0f766e",
-      "bodyPoints": 2,
-      "mindPoints": 1,
-      "attackDice": 3,
-      "defendDice": 3,
+      "monsterArchetype": "Michigan Hydra",
+      "replaces": "Michigan Hydra Boss",
+      "specialAbility": "Universal Healing (+2 BP once) · Security Lockdown (seal doors 1 round) · Industrial Collapse (at 3 BP, 3 dice to adjacent & -1 BP) · Political Infighting",
+      "icon": "🐲",
+      "tokenColor": "#1d4ed8",
+      "bodyPoints": 7,
+      "mindPoints": 4,
+      "attackDice": 5,
+      "defendDice": 6,
       "movementSquares": 6,
-      "isBoss": false,
+      "isBoss": true,
       "isUndead": false,
-      "isSpellcaster": false,
-      "spells": [],
+      "isSpellcaster": true,
+      "spells": [
+        "recount-of-the-damned"
+      ],
       "position": [
         18,
         15
@@ -343,22 +364,24 @@
       "roomId": "room-se-4",
       "hidden": false
     },
-    "mon-k-street-swamp-fimir-11": {
-      "id": "mon-k-street-swamp-fimir-11",
-      "slug": "k-street-swamp-fimir-mon-k-street-swamp-fimir-11",
-      "name": "K-Street Swamp Lobbyist",
-      "monsterType": "k-street-swamp-fimir",
+    "mon-lobbyist-11": {
+      "id": "mon-lobbyist-11",
+      "slug": "lobbyist-mon-lobbyist-11",
+      "name": "Lobbyist",
+      "monsterType": "lobbyist",
       "category": "Midterms 2026",
-      "monsterArchetype": "Fimir",
-      "icon": "🐊",
-      "tokenColor": "#0f766e",
+      "monsterArchetype": "Mummy",
+      "replaces": "Mummy",
+      "specialAbility": "Bought Influence: Force reroll of one attacking skull, once per encounter",
+      "icon": "💼",
+      "tokenColor": "#d97706",
       "bodyPoints": 2,
-      "mindPoints": 1,
+      "mindPoints": 0,
       "attackDice": 3,
-      "defendDice": 3,
-      "movementSquares": 6,
+      "defendDice": 4,
+      "movementSquares": 4,
       "isBoss": false,
-      "isUndead": false,
+      "isUndead": true,
       "isSpellcaster": false,
       "spells": [],
       "position": [
@@ -368,27 +391,26 @@
       "roomId": "room-se-4",
       "hidden": false
     },
-    "mon-spin-doctor-shaman-12": {
-      "id": "mon-spin-doctor-shaman-12",
-      "slug": "spin-doctor-shaman-mon-spin-doctor-shaman-12",
-      "name": "Polling Spin-Doctor Shaman",
-      "monsterType": "spin-doctor-shaman",
+    "mon-political-operative-12": {
+      "id": "mon-political-operative-12",
+      "slug": "political-operative-mon-political-operative-12",
+      "name": "Political Operative",
+      "monsterType": "political-operative",
       "category": "Midterms 2026",
-      "monsterArchetype": "Orc Shaman",
-      "icon": "📊",
-      "tokenColor": "#0284c7",
-      "bodyPoints": 2,
-      "mindPoints": 1,
-      "attackDice": 2,
-      "defendDice": 3,
+      "monsterArchetype": "Orc",
+      "replaces": "Orc",
+      "specialAbility": "Smear Campaign: Force reroll of one successful defend die, once per encounter",
+      "icon": "🕵️",
+      "tokenColor": "#ca8a04",
+      "bodyPoints": 1,
+      "mindPoints": 2,
+      "attackDice": 3,
+      "defendDice": 2,
       "movementSquares": 8,
       "isBoss": false,
       "isUndead": false,
-      "isSpellcaster": true,
-      "spells": [
-        "culture-war-distraction-cloud",
-        "shrinkflation-curse"
-      ],
+      "isSpellcaster": false,
+      "spells": [],
       "position": [
         11,
         4
@@ -396,26 +418,27 @@
       "roomId": "room-nw-10",
       "hidden": false
     },
-    "mon-spin-doctor-shaman-13": {
-      "id": "mon-spin-doctor-shaman-13",
-      "slug": "spin-doctor-shaman-mon-spin-doctor-shaman-13",
-      "name": "Polling Spin-Doctor Shaman",
-      "monsterType": "spin-doctor-shaman",
+    "mon-spin-doctor-13": {
+      "id": "mon-spin-doctor-13",
+      "slug": "spin-doctor-mon-spin-doctor-13",
+      "name": "Spin Doctor",
+      "monsterType": "spin-doctor",
       "category": "Midterms 2026",
-      "monsterArchetype": "Orc Shaman",
-      "icon": "📊",
+      "monsterArchetype": "Dread Sorcerer",
+      "replaces": "Dread Sorcerer",
+      "specialAbility": "Alternative Facts: Cancel one successful attack, once per encounter",
+      "icon": "🌀",
       "tokenColor": "#0284c7",
-      "bodyPoints": 2,
-      "mindPoints": 1,
-      "attackDice": 2,
-      "defendDice": 3,
-      "movementSquares": 8,
+      "bodyPoints": 3,
+      "mindPoints": 5,
+      "attackDice": 3,
+      "defendDice": 4,
+      "movementSquares": 7,
       "isBoss": false,
       "isUndead": false,
       "isSpellcaster": true,
       "spells": [
-        "culture-war-distraction-cloud",
-        "shrinkflation-curse"
+        "recount-of-the-damned"
       ],
       "position": [
         15,
@@ -426,11 +449,13 @@
     },
     "mon-katie-zacharia-boss": {
       "id": "mon-katie-zacharia-boss",
-      "slug": "katie-zacharia-press-secretary-mon-katie-zacharia-boss",
+      "slug": "spin-doctor-mon-katie-zacharia-boss",
       "name": "Katie Zacharia (Press Secretary)",
-      "monsterType": "katie-zacharia-press-secretary",
+      "monsterType": "spin-doctor",
       "category": "Midterms 2026",
-      "monsterArchetype": "Press Secretary",
+      "monsterArchetype": "Dread Sorcerer",
+      "replaces": "Dread Sorcerer",
+      "specialAbility": "Alternative Facts: Cancel one successful attack, once per encounter",
       "icon": "🎙️",
       "tokenColor": "#db2777",
       "bodyPoints": 4,
@@ -442,8 +467,7 @@
       "isUndead": false,
       "isSpellcaster": true,
       "spells": [
-        "culture-war-distraction-cloud",
-        "shrinkflation-curse"
+        "recount-of-the-damned"
       ],
       "position": [
         20,
@@ -454,11 +478,13 @@
     },
     "mon-mitch-mcconnell-boss": {
       "id": "mon-mitch-mcconnell-boss",
-      "slug": "mitch-mcconnell-turtle-patriarch-mon-mitch-mcconnell-boss",
+      "slug": "career-politician-mon-mitch-mcconnell-boss",
       "name": "Mitch McConnell (Committee Patriarch)",
-      "monsterType": "mitch-mcconnell-turtle-patriarch",
+      "monsterType": "career-politician",
       "category": "Midterms 2026",
-      "monsterArchetype": "Committee Patriarch",
+      "monsterArchetype": "Skeleton",
+      "replaces": "Skeleton",
+      "specialAbility": "Reelection: On death, black shield resurrects with 1 Body Point",
       "icon": "🐢",
       "tokenColor": "#475569",
       "bodyPoints": 5,
@@ -470,8 +496,7 @@
       "isUndead": true,
       "isSpellcaster": true,
       "spells": [
-        "shrinkflation-curse",
-        "bipartisan-blame-inferno"
+        "recount-of-the-damned"
       ],
       "position": [
         5,
@@ -482,11 +507,13 @@
     },
     "mon-jd-vance-drunk-boss": {
       "id": "mon-jd-vance-drunk-boss",
-      "slug": "jd-vance-drunk-war-room-mon-jd-vance-drunk-boss",
+      "slug": "political-operative-mon-jd-vance-drunk-boss",
       "name": "JD Vance (Drunk in the War Room)",
-      "monsterType": "jd-vance-drunk-war-room",
+      "monsterType": "political-operative",
       "category": "Midterms 2026",
-      "monsterArchetype": "War Room Boss",
+      "monsterArchetype": "Orc",
+      "replaces": "Orc",
+      "specialAbility": "Smear Campaign: Force reroll of one successful defend die, once per encounter",
       "icon": "🥃",
       "tokenColor": "#b91c1c",
       "bodyPoints": 4,
@@ -498,8 +525,7 @@
       "isUndead": false,
       "isSpellcaster": true,
       "spells": [
-        "bipartisan-blame-inferno",
-        "culture-war-distraction-cloud"
+        "recount-of-the-damned"
       ],
       "position": [
         19,
@@ -510,11 +536,13 @@
     },
     "mon-kamala-harris-drunk-boss": {
       "id": "mon-kamala-harris-drunk-boss",
-      "slug": "kamala-harris-drunk-war-room-mon-kamala-harris-drunk-boss",
+      "slug": "spin-doctor-mon-kamala-harris-drunk-boss",
       "name": "Kamala Harris (Drunk in the War Room)",
-      "monsterType": "kamala-harris-drunk-war-room",
+      "monsterType": "spin-doctor",
       "category": "Midterms 2026",
-      "monsterArchetype": "War Room Boss",
+      "monsterArchetype": "Dread Sorcerer",
+      "replaces": "Dread Sorcerer",
+      "specialAbility": "Alternative Facts: Cancel one successful attack, once per encounter",
       "icon": "🍷",
       "tokenColor": "#1d4ed8",
       "bodyPoints": 4,
@@ -526,8 +554,7 @@
       "isUndead": false,
       "isSpellcaster": true,
       "spells": [
-        "culture-war-distraction-cloud",
-        "shrinkflation-curse"
+        "recount-of-the-damned"
       ],
       "position": [
         20,
@@ -551,7 +578,7 @@
         0,
         0
       ],
-      "wanderingMonster": "inflation-spawn",
+      "wanderingMonster": "campaign-volunteer",
       "startingStair": [
         0,
         13
@@ -2623,10 +2650,10 @@
           ]
         },
         {
-          "id": "trigger-oval-office-trumpbiden",
+          "id": "trigger-oval-office-talarixon",
           "marker": "Note H",
-          "title": "The Two-Headed Blame Dragon of the Oval Office",
-          "name": "The Two-Headed Blame Dragon of the Oval Office",
+          "title": "Talarixon (Talarico + Paxton · Texas Hydra)",
+          "name": "Talarixon (Talarico + Paxton · Texas Hydra)",
           "event": "on_room_entered",
           "room": "room-nw-10",
           "target": "room-nw-10",
@@ -2638,18 +2665,18 @@
           ],
           "onceOnly": true,
           "hidden": false,
-          "narrative": "Coiled atop the Resolute Desk in the Oval Office is TrumpBiden (The Blame Dragon), arguing with itself while hoarding every gold coin in the Capitol!",
+          "narrative": "Coiled atop the Resolute Desk in the Oval Office is Talarixon (Talarico + Paxton · Texas Hydra), unleashing Holy Smite and Indictment Barrage while fighting itself for control!",
           "actions": [
             {
               "type": "dialogue",
               "lines": [
                 {
-                  "speaker": "TrumpBiden (The Blame Dragon)",
-                  "text": "RED HEAD: Folks, nobody has ever seen a gold hoard like this, tremendous luxury, and the inflation is 100% Sleepy Joe's fault! BLUE HEAD: Come on, man! Here's the deal—the other guy printed the trillions while I was eating chocolate-chip ice cream!"
+                  "speaker": "Talarixon (Texas Hydra)",
+                  "text": "PAXTON HEAD: I hereby serve you with an Indictment Barrage and sue the dungeon dice for unconstitutional skull-rolling! TALARICO HEAD: Brethren, let us pray before I smite these heroes for 3 combat dice—and then split the donor plate 50/50!"
                 },
                 {
-                  "speaker": "TrumpBiden (The Blame Dragon)",
-                  "text": "BOTH HEADS IN UNISON: Now hand over 45% of your quest gold so we can build two more billionaire golf resorts and blame each other until 2036!"
+                  "speaker": "Talarixon (Texas Hydra)",
+                  "text": "BOTH HEADS: Once we drop to 3 Body Points, Political Infighting kicks in and we start attacking everyone adjacent while arguing over who gets the oil lobby check!"
                 }
               ]
             }
@@ -2954,11 +2981,11 @@
           ]
         },
         {
-          "id": "trigger-oval-office-trumpbiden",
+          "id": "trigger-oval-office-talarixon",
           "marker": "Note H",
-          "title": "The Two-Headed Blame Dragon of the Oval Office",
+          "title": "Talarixon (Talarico + Paxton · Texas Hydra)",
           "banner": "QUEST NOTE [Note H]",
-          "narrative": "Coiled atop the Resolute Desk in the Oval Office is TrumpBiden (The Blame Dragon), arguing with itself while hoarding every gold coin in the Capitol!",
+          "narrative": "Coiled atop the Resolute Desk in the Oval Office is Talarixon (Talarico + Paxton · Texas Hydra), unleashing Holy Smite and Indictment Barrage while fighting itself for control!",
           "tile": [
             13,
             5
@@ -2976,16 +3003,17 @@
               "type": "dialogue",
               "lines": [
                 {
-                  "speaker": "TrumpBiden (The Blame Dragon)",
-                  "text": "RED HEAD: Folks, nobody has ever seen a gold hoard like this, tremendous luxury, and the inflation is 100% Sleepy Joe's fault! BLUE HEAD: Come on, man! Here's the deal—the other guy printed the trillions while I was eating chocolate-chip ice cream!"
+                  "speaker": "Talarixon (Texas Hydra)",
+                  "text": "PAXTON HEAD: I hereby serve you with an Indictment Barrage and sue the dungeon dice for unconstitutional skull-rolling! TALARICO HEAD: Brethren, let us pray before I smite these heroes for 3 combat dice—and then split the donor plate 50/50!"
                 },
                 {
-                  "speaker": "TrumpBiden (The Blame Dragon)",
-                  "text": "BOTH HEADS IN UNISON: Now hand over 45% of your quest gold so we can build two more billionaire golf resorts and blame each other until 2036!"
+                  "speaker": "Talarixon (Texas Hydra)",
+                  "text": "BOTH HEADS: Once we drop to 3 Body Points, Political Infighting kicks in and we start attacking everyone adjacent while arguing over who gets the oil lobby check!"
                 }
               ]
             }
-          ]
+          ],
+          "name": "Talarixon (Talarico + Paxton · Texas Hydra)"
         }
       ]
     }

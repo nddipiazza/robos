@@ -133,26 +133,18 @@ const MONSTER_DEFS = {
   'cassandria-witch-hand': { name: 'Witch Hand of Cassandria', category: 'Base Game', archetype: 'Witch Hand', bp: 4, mp: 5, atk: 4, def: 4, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#9333ea', icon: '🖐️', spells: ['cloud-of-chaos', 'rust'] },
   boss: { name: 'Dungeon Boss', category: 'Base Game', archetype: 'Orc Warlord', bp: 5, mp: 5, atk: 4, def: 4, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#e11d48', icon: '👑', spells: ['lightning-bolt', 'firestorm'] },
 
-  // Election 2026 (Midterms 2026) Characters
-  'inflation-spawn': { name: 'Inflation Spawn', category: 'Midterms 2026', archetype: 'Goblin', bp: 1, mp: 1, atk: 2, def: 1, move: 10, isBoss: false, isUndead: false, isCaster: false, color: '#16a34a', icon: '💸', spells: [] },
-  'illegal-alien': { name: 'Illegal Alien', category: 'Midterms 2026', archetype: 'Orc', bp: 1, mp: 2, atk: 3, def: 2, move: 8, isBoss: false, isUndead: false, isCaster: false, color: '#64748b', icon: '👽', spells: [] },
-  'k-street-swamp-fimir': { name: 'K-Street Swamp Lobbyist', category: 'Midterms 2026', archetype: 'Fimir', bp: 2, mp: 3, atk: 3, def: 3, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#0f766e', icon: '🐊', spells: [] },
-  'gerrymandered-skeleton': { name: 'Gerrymandered Skeleton', category: 'Midterms 2026', archetype: 'Skeleton', bp: 1, mp: 0, atk: 2, def: 2, move: 6, isBoss: false, isUndead: true, isCaster: false, color: '#94a3b8', icon: '💀', spells: [] },
-  'teleprompter-zombie': { name: 'Cable News Pundit Zombie', category: 'Midterms 2026', archetype: 'Zombie', bp: 1, mp: 0, atk: 2, def: 3, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#475569', icon: '🧟', spells: [] },
-  'octogenarian-incumbent-mummy': { name: '90-Year-Old Career Incumbent Mummy', category: 'Midterms 2026', archetype: 'Mummy', bp: 2, mp: 0, atk: 3, def: 4, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#d97706', icon: '🩹', spells: [] },
-  'happily-married-gay-man': { name: 'Happily Married Gay Man', category: 'Midterms 2026', archetype: 'Dread Warrior', bp: 3, mp: 3, atk: 4, def: 4, move: 7, isBoss: false, isUndead: false, isCaster: false, color: '#ec4899', icon: '💍', spells: [] },
-  'filibuster-gargoyle': { name: 'Filibuster Stone Gargoyle', category: 'Midterms 2026', archetype: 'Gargoyle', bp: 3, mp: 4, atk: 4, def: 5, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#64748b', icon: '🗿', spells: [] },
-  'spin-doctor-shaman': { name: 'Polling Spin-Doctor Shaman', category: 'Midterms 2026', archetype: 'Orc Shaman', bp: 2, mp: 3, atk: 2, def: 3, move: 8, isBoss: false, isUndead: false, isCaster: true, color: '#0284c7', icon: '📊', spells: ['culture-war-distraction-cloud', 'shrinkflation-curse'] },
-  'super-pac-warlord': { name: 'Super-PAC Dark Money Warlord', category: 'Midterms 2026', archetype: 'Orc Warlord', bp: 3, mp: 4, atk: 4, def: 3, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#15803d', icon: '💼', spells: ['shrinkflation-curse', 'culture-war-distraction-cloud'] },
-  'algorithm-outrage-sorcerer': { name: 'Algorithm Outrage Sorcerer', category: 'Midterms 2026', archetype: 'Chaos Sorcerer', bp: 3, mp: 5, atk: 3, def: 4, move: 7, isBoss: true, isUndead: false, isCaster: true, color: '#7c3aed', icon: '📱', spells: ['culture-war-distraction-cloud', 'bipartisan-blame-inferno'] },
-  'deep-state-witch-lord': { name: 'Unelected Bureaucracy Witch Lord', category: 'Midterms 2026', archetype: 'Witch Lord', bp: 4, mp: 6, atk: 4, def: 5, move: 7, isBoss: true, isUndead: true, isCaster: true, color: '#4c1d95', icon: '🏛️', spells: ['shrinkflation-curse', 'culture-war-distraction-cloud', 'bipartisan-blame-inferno'] },
-  'trumpbiden-dragon': { name: 'TrumpBiden (The Blame Dragon)', category: 'Midterms 2026', archetype: 'Dragon', bp: 6, mp: 6, atk: 5, def: 5, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#dc2626', icon: '🐉', spells: ['bipartisan-blame-inferno', 'shrinkflation-curse', 'culture-war-distraction-cloud'] },
-  'irs-audit-doomguard': { name: 'IRS 87,000-Agent Doomguard', category: 'Midterms 2026', archetype: 'Doomguard', bp: 3, mp: 3, atk: 4, def: 6, move: 8, isBoss: true, isUndead: false, isCaster: false, color: '#334155', icon: '🧾', spells: [] },
-  'hoa-censor-witch-hand': { name: 'Censorship Board Witch Hand', category: 'Midterms 2026', archetype: 'Witch Hand', bp: 4, mp: 5, atk: 4, def: 4, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#9333ea', icon: '🤫', spells: ['culture-war-distraction-cloud', 'shrinkflation-curse'] },
-  'katie-zacharia-press-secretary': { name: 'Katie Zacharia (Press Secretary)', category: 'Midterms 2026', archetype: 'Press Secretary', bp: 4, mp: 6, atk: 4, def: 4, move: 7, isBoss: true, isUndead: false, isCaster: true, color: '#db2777', icon: '🎙️', spells: ['culture-war-distraction-cloud', 'shrinkflation-curse'] },
-  'mitch-mcconnell-turtle-patriarch': { name: 'Mitch McConnell (Committee Patriarch)', category: 'Midterms 2026', archetype: 'Committee Patriarch', bp: 5, mp: 5, atk: 3, def: 6, move: 4, isBoss: true, isUndead: true, isCaster: true, color: '#475569', icon: '🐢', spells: ['shrinkflation-curse', 'bipartisan-blame-inferno'] },
-  'jd-vance-drunk-war-room': { name: 'JD Vance (Drunk in the War Room)', category: 'Midterms 2026', archetype: 'War Room Boss', bp: 4, mp: 4, atk: 4, def: 4, move: 6, isBoss: true, isUndead: false, isCaster: true, color: '#b91c1c', icon: '🥃', spells: ['bipartisan-blame-inferno', 'culture-war-distraction-cloud'] },
-  'kamala-harris-drunk-war-room': { name: 'Kamala Harris (Drunk in the War Room)', category: 'Midterms 2026', archetype: 'War Room Boss', bp: 4, mp: 5, atk: 4, def: 4, move: 6, isBoss: true, isUndead: false, isCaster: true, color: '#1d4ed8', icon: '🍷', spells: ['culture-war-distraction-cloud', 'shrinkflation-curse'] }
+  // Election 2026 (Midterms 2026) — 8 Standard Monsters & 3 Hydra Bosses
+  'campaign-volunteer': { name: 'Campaign Volunteer', category: 'Midterms 2026', archetype: 'Goblin', replaces: 'Goblin', specialAbility: 'Door Knocker: Move through other monsters', bp: 1, mp: 1, atk: 2, def: 1, move: 10, isBoss: false, isUndead: false, isCaster: false, color: '#16a34a', icon: '📋', spells: [] },
+  'political-operative': { name: 'Political Operative', category: 'Midterms 2026', archetype: 'Orc', replaces: 'Orc', specialAbility: 'Smear Campaign: Force reroll of one successful defend die, once per encounter', bp: 1, mp: 2, atk: 3, def: 2, move: 8, isBoss: false, isUndead: false, isCaster: false, color: '#ca8a04', icon: '🕵️', spells: [] },
+  'career-politician': { name: 'Career Politician', category: 'Midterms 2026', archetype: 'Skeleton', replaces: 'Skeleton', specialAbility: 'Reelection: On death, black shield resurrects with 1 Body Point', bp: 1, mp: 0, atk: 2, def: 2, move: 6, isBoss: false, isUndead: true, isCaster: false, color: '#94a3b8', icon: '🏛️', spells: [] },
+  bureaucrat: { name: 'Bureaucrat', category: 'Midterms 2026', archetype: 'Zombie', replaces: 'Zombie', specialAbility: 'Red Tape: Adjacent heroes roll an extra movement die and use the lowest', bp: 1, mp: 0, atk: 2, def: 3, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#475569', icon: '📎', spells: [] },
+  lobbyist: { name: 'Lobbyist', category: 'Midterms 2026', archetype: 'Mummy', replaces: 'Mummy', specialAbility: 'Bought Influence: Force reroll of one attacking skull, once per encounter', bp: 2, mp: 0, atk: 3, def: 4, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#d97706', icon: '💼', spells: [] },
+  'partisan-enforcer': { name: 'Partisan Enforcer', category: 'Midterms 2026', archetype: 'Dread Warrior', replaces: 'Dread Warrior', specialAbility: 'Polarization: +1 attack die when adjacent to another Partisan Enforcer', bp: 3, mp: 3, atk: 4, def: 4, move: 7, isBoss: false, isUndead: false, isCaster: false, color: '#dc2626', icon: '⚔️', spells: [] },
+  'super-pac-demon': { name: 'Super PAC Demon', category: 'Midterms 2026', archetype: 'Gargoyle', replaces: 'Gargoyle', specialAbility: 'Dark Money: Summon one Campaign Volunteer, once per encounter', bp: 3, mp: 4, atk: 4, def: 5, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#7c3aed', icon: '😈', spells: [] },
+  'spin-doctor': { name: 'Spin Doctor', category: 'Midterms 2026', archetype: 'Dread Sorcerer', replaces: 'Dread Sorcerer', specialAbility: 'Alternative Facts: Cancel one successful attack, once per encounter', bp: 3, mp: 5, atk: 3, def: 4, move: 7, isBoss: false, isUndead: false, isCaster: true, color: '#0284c7', icon: '🌀', spells: ['recount-of-the-damned'] },
+  talarixon: { name: 'Talarixon (Talarico + Paxton · Texas Hydra)', category: 'Midterms 2026', archetype: 'Texas Hydra', replaces: 'Texas Hydra Boss', specialAbility: 'Holy Smite (3 dice ranged) · Indictment Barrage (1–3 loses action) · Divided Authority (lose turn, 2 dice to adjacent) · Political Infighting', bp: 6, mp: 5, atk: 5, def: 5, move: 7, isBoss: true, isUndead: false, isCaster: true, color: '#b91c1c', icon: '🐍', spells: ['recount-of-the-damned'] },
+  'el-rogers': { name: 'El-Rogers (El-Sayed + Rogers · Michigan Hydra)', category: 'Midterms 2026', archetype: 'Michigan Hydra', replaces: 'Michigan Hydra Boss', specialAbility: 'Universal Healing (+2 BP once) · Security Lockdown (seal doors 1 round) · Industrial Collapse (at 3 BP, 3 dice to adjacent & -1 BP) · Political Infighting', bp: 7, mp: 4, atk: 5, def: 6, move: 6, isBoss: true, isUndead: false, isCaster: true, color: '#1d4ed8', icon: '🐲', spells: ['recount-of-the-damned'] },
+  brownsted: { name: 'Brownsted (Brown + Husted · Ohio Hydra)', category: 'Midterms 2026', archetype: 'Ohio Hydra', replaces: 'Ohio Hydra Boss', specialAbility: 'Union Strike (3 dice to adjacent) · Budget Freeze (no potions 1 round) · Bipartisan Gridlock (black shield = lose turn, skull = +1 atk) · Political Infighting', bp: 8, mp: 5, atk: 6, def: 5, move: 5, isBoss: true, isUndead: false, isCaster: true, color: '#9333ea', icon: '🐉', spells: ['recount-of-the-damned'] }
 };
 
 // Furniture dimensions (w, h)
@@ -614,9 +606,13 @@ function updateMonsterSuboptPreview() {
   const bossTag = def.isBoss ? ' • <span style="color:#fb7185; font-weight:700;">👑 BOSS</span>' : '';
   const undeadTag = def.isUndead ? ' • 💀 Undead' : '';
   const casterTag = def.isCaster ? ' • 🪄 Caster' : '';
+  const specialHtml = def.specialAbility
+    ? `<div style="margin-top:2px; color:#fde047; font-size:9.5px;">⚡ ${escapeHtml(def.specialAbility)}</div>`
+    : '';
   dom.monsterSuboptPreview.innerHTML = `
     <div>${def.icon || '👾'} <strong>${escapeHtml(def.name)}</strong> ${catBadge}</div>
     <div style="margin-top:2px; color:#94a3b8;">❤️${def.bp} 🧠${def.mp ?? 1} ⚔️${def.atk} 🛡️${def.def} 👟${def.move}${bossTag}${undeadTag}${casterTag}</div>
+    ${specialHtml}
   `;
 }
 
@@ -6984,22 +6980,18 @@ function interpretVoiceQuestCommands(spokenText, blockmap, quest, currentContext
   };
 
   const MONSTERS = [
-    // Election 2026 / Midterms 2026 Enemies
-    { type: 'inflation-spawn', keys: ['inflation spawns', 'inflation spawn'] },
-    { type: 'illegal-alien', keys: ['illegal aliens', 'illegal alien'] },
-    { type: 'k-street-swamp-fimir', keys: ['k-street swamp fimirs', 'k-street swamp fimir', 'k street swamp fimir', 'swamp fimirs', 'swamp fimir'] },
-    { type: 'gerrymandered-skeleton', keys: ['gerrymandered skeletons', 'gerrymandered skeleton'] },
-    { type: 'teleprompter-zombie', keys: ['teleprompter zombies', 'teleprompter zombie'] },
-    { type: 'octogenarian-incumbent-mummy', keys: ['octogenarian incumbent mummies', 'octogenarian incumbent mummy', 'incumbent mummies', 'incumbent mummy'] },
-    { type: 'happily-married-gay-man', keys: ['happily married gay men', 'happily married gay man'] },
-    { type: 'filibuster-gargoyle', keys: ['filibuster gargoyles', 'filibuster gargoyle'] },
-    { type: 'spin-doctor-shaman', keys: ['spin doctor shamans', 'spin doctor shaman', 'spin doctors', 'spin doctor'] },
-    { type: 'super-pac-warlord', keys: ['super-pac warlords', 'super-pac warlord', 'super pac warlords', 'super pac warlord'] },
-    { type: 'algorithm-outrage-sorcerer', keys: ['algorithm outrage sorcerers', 'algorithm outrage sorcerer', 'outrage sorcerers', 'outrage sorcerer'] },
-    { type: 'deep-state-witch-lord', keys: ['deep state witch lords', 'deep state witch lord', 'deep state lord'] },
-    { type: 'trumpbiden-dragon', keys: ['trumpbiden dragons', 'trumpbiden dragon', 'trump biden dragon'] },
-    { type: 'irs-audit-doomguard', keys: ['irs audit doomguards', 'irs audit doomguard', 'audit doomguard'] },
-    { type: 'hoa-censor-witch-hand', keys: ['hoa censor witch hands', 'hoa censor witch hand', 'hoa censor'] },
+    // Election 2026 / Midterms 2026 Enemies (8 Monsters & 3 Hydra Bosses)
+    { type: 'campaign-volunteer', keys: ['campaign volunteers', 'campaign volunteer', 'volunteers', 'volunteer'] },
+    { type: 'political-operative', keys: ['political operatives', 'political operative', 'operatives', 'operative'] },
+    { type: 'career-politician', keys: ['career politicians', 'career politician', 'politicians', 'politician'] },
+    { type: 'bureaucrat', keys: ['bureaucrats', 'bureaucrat'] },
+    { type: 'lobbyist', keys: ['lobbyists', 'lobbyist'] },
+    { type: 'partisan-enforcer', keys: ['partisan enforcers', 'partisan enforcer', 'enforcers', 'enforcer'] },
+    { type: 'super-pac-demon', keys: ['super pac demons', 'super pac demon', 'super-pac demons', 'super-pac demon'] },
+    { type: 'spin-doctor', keys: ['spin doctors', 'spin doctor'] },
+    { type: 'talarixon', keys: ['talarixons', 'talarixon', 'texas hydra', 'talarico paxton'] },
+    { type: 'el-rogers', keys: ['el-rogers', 'el rogers', 'michigan hydra', 'el-sayed rogers'] },
+    { type: 'brownsted', keys: ['brownsteds', 'brownsted', 'ohio hydra', 'brown husted'] },
     // Base Game Enemies
     { type: 'chaos_sorcerer', keys: ['chaos sorcerers', 'chaos sorcerer', 'dread sorcerers', 'dread sorcerer'] },
     { type: 'orc_shaman', keys: ['orc shamans', 'orc shaman'] },
