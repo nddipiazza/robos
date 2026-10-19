@@ -12,6 +12,7 @@ const WEAPONS: Dictionary = {
 		"ranged": false,
 		"cost": 250,
 		"icon": "⚔️",
+		"sfx": "res://assets/audio/sfx/weapons/weapon_broadsword.ogg",
 		"description": "Standard heavy steel blade. Rolls 3 combat dice in adjacent melee combat.",
 		"allowed_heroes": ["barbarian", "dwarf", "elf"]
 	},
@@ -24,6 +25,7 @@ const WEAPONS: Dictionary = {
 		"ranged": false,
 		"cost": 150,
 		"icon": "⚔️",
+		"sfx": "res://assets/audio/sfx/weapons/weapon_shortsword.ogg",
 		"description": "Swift thrusting blade. Rolls 2 combat dice and can strike diagonally adjacent foes.",
 		"allowed_heroes": ["barbarian", "dwarf", "elf"]
 	},
@@ -36,6 +38,7 @@ const WEAPONS: Dictionary = {
 		"ranged": false,
 		"cost": 450,
 		"icon": "🪓",
+		"sfx": "res://assets/audio/sfx/weapons/weapon_battle_axe.ogg",
 		"description": "Massive two-handed greataxe. Rolls 4 combat dice. Requires two hands (cannot use a shield).",
 		"allowed_heroes": ["barbarian", "dwarf", "elf"]
 	},
@@ -48,6 +51,7 @@ const WEAPONS: Dictionary = {
 		"ranged": true, # Fires at any target in direct LOS, cannot fire adjacent!
 		"cost": 350,
 		"icon": "🏹",
+		"sfx": "res://assets/audio/sfx/weapons/weapon_crossbow.ogg",
 		"description": "Deadly missile weapon. Rolls 3 combat dice at any target in line of sight. Cannot shoot adjacent targets.",
 		"allowed_heroes": ["barbarian", "dwarf", "elf"]
 	},
@@ -60,6 +64,8 @@ const WEAPONS: Dictionary = {
 		"ranged": true, # Can be thrown in LOS (consumed on throw)
 		"cost": 25,
 		"icon": "🗡",
+		"sfx": "res://assets/audio/sfx/weapons/weapon_dagger.ogg",
+		"sfx_throw": "res://assets/audio/sfx/weapons/weapon_dagger_throw.ogg",
 		"description": "Swift hunting knife. Rolls 1 combat die. Can be used in melee or thrown at a distant foe in line of sight.",
 		"allowed_heroes": ["barbarian", "dwarf", "elf", "wizard"]
 	},
@@ -72,6 +78,7 @@ const WEAPONS: Dictionary = {
 		"ranged": false,
 		"cost": 100,
 		"icon": "🪄",
+		"sfx": "res://assets/audio/sfx/weapons/weapon_staff.ogg",
 		"description": "Carved hardwood staff. Rolls 1 combat die and can attack diagonally. Requires two hands.",
 		"allowed_heroes": ["barbarian", "dwarf", "elf", "wizard"]
 	}

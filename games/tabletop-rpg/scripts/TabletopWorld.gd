@@ -10117,6 +10117,7 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 			return true
 
 		var t_type = str(sprung_trap.get("type", sprung_trap.get("trapType", "pit"))).to_lower()
+		play_trap_sfx(t_type)
 
 		if "spear" in t_type:
 			# Spear Trap: Rolls 1 combat die. Skull = 1 damage, Shield = 0 damage (dodged).
@@ -10294,9 +10295,11 @@ func open_door(from_pos: Vector2i, to_pos: Vector2i) -> bool:
 	var hero = get_active_hero()
 	var hero_name = get_hero_character_name(hero) if not hero.is_empty() else "Hero"
 	if d.get("is_secret", false):
+		play_sfx("res://assets/audio/sfx/secret_door_found.ogg")
 		_log("[SECRET DOOR] %s swings open the concealed revolving stone secret door!" % hero_name)
 		spawn_floating_text(Vector2i(t[0], t[1]), "🚪 SECRET DOOR OPENED", Color(1.0, 0.85, 0.2), 1.8)
 	else:
+		play_sfx("res://assets/audio/sfx/door_open.ogg")
 		_log("[DOOR] %s opens the door." % hero_name)
 
 	_check_event_triggers("on_door_opened", { "door": d, "doorId": str(d.get("id", "")), "from": from_pos, "to": to_pos, "room": explicit_room }, hero)
@@ -10573,6 +10576,7 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 
 		var th_pos = _to_grid_pos(target_h.get("grid_pos", hero_pos))
 		var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+		play_sfx("res://assets/audio/sfx/potion_drink.ogg")
 		spawn_burst_vfx(th_screen, Color(0.2, 0.9, 0.4), 45.0, 0.45)
 		spawn_floating_text(th_pos, "+%d BP" % healed, Color(0.2, 0.9, 0.3))
 		_log("[ITEM] %s drinks %s! Restores %d Body Points (%d/%d BP)." % [
@@ -10611,6 +10615,7 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 
 		var th_pos = _to_grid_pos(target_h.get("grid_pos", hero_pos))
 		var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+		play_sfx("res://assets/audio/sfx/potion_drink.ogg")
 		spawn_burst_vfx(th_screen, Color(0.25, 0.65, 1.0), 45.0, 0.45)
 		spawn_floating_text(th_pos, "+2 DEF DICE", Color(0.3, 0.7, 1.0))
 		_log("[ITEM] %s drinks %s! Defense increased by +2 Defend Dice on their next defense." % [
@@ -10643,6 +10648,7 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 		hero["inventory"] = inv
 		var th_pos = _to_grid_pos(target_h.get("grid_pos", hero_pos))
 		var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+		play_sfx("res://assets/audio/sfx/potion_drink.ogg")
 		spawn_burst_vfx(th_screen, Color(0.9, 0.3, 0.2), 40.0, 0.4)
 		spawn_floating_text(th_pos, "+2 ATK DICE", Color(1.0, 0.4, 0.3))
 		_log("[ITEM] %s quaffs Potion of Strength! Attack dice increased by +2." % target_h.get("name"))
@@ -10665,6 +10671,7 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 		hero["inventory"] = inv
 		var th_pos = _to_grid_pos(target_h.get("grid_pos", hero_pos))
 		var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
+		play_sfx("res://assets/audio/sfx/potion_drink.ogg")
 		spawn_cyclone_vfx(th_screen, Color(0.3, 0.8, 1.0), 0.5)
 		spawn_floating_text(th_pos, "2X SPEED", Color(0.3, 0.9, 1.0))
 		_log("[ITEM] %s quaffs Potion of Speed! Movement dice doubled to 4d6 on next turn." % target_h.get("name"))
@@ -10693,6 +10700,7 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 
 		inv.remove_at(found_idx)
 		hero["inventory"] = inv
+		play_sfx("res://assets/audio/sfx/holy_water.ogg")
 
 		if not target_m.is_empty():
 			var m_pos = _to_grid_pos(target_m.get("grid_pos", Vector2i(-1, -1)))
@@ -10703,6 +10711,7 @@ func use_item(hero_id: String = "", item_id: String = "", target_id: String = ""
 			target_m["current_bp"] = maxi(0, prev_bp - 3)
 			if int(target_m.get("current_bp", 0)) <= 0:
 				target_m["is_alive"] = false
+				play_sfx("res://assets/audio/sfx/monster_death.ogg")
 				_log("[HOLY WATER] %s splashes Holy Water on %s! Inflicts 3 holy damage, destroying the creature!" % [h_name, target_m.get("name")])
 			else:
 				_log("[HOLY WATER] %s splashes Holy Water on %s! Inflicts 3 holy damage (%d/%d BP remaining)." % [h_name, target_m.get("name"), target_m.get("current_bp"), target_m.get("bodyPoints")])
@@ -11240,6 +11249,7 @@ func blow_hearthskin_horn(blower_hero_id: String = "", options: Dictionary = {})
 		return { "success": false, "error": "No living hero to blow The Hearthskin Horn" }
 
 	var blower_name = str(blower.get("name", "Hero"))
+	play_sfx("res://assets/audio/sfx/hearthskin_horn.ogg")
 	_log("[HEARTHSKIN HORN] 🪯 %s blows The Hearthskin Horn! A piercing resonant note echoes through corridors and stone chambers!" % blower_name)
 
 	var blower_pos = _to_grid_pos(blower.get("grid_pos", Vector2i(-1, -1)))
@@ -11971,6 +11981,9 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 	var atk_dice = get_hero_attack_dice(hero)
 	var def_dice = get_monster_defend_dice(target_m)
 
+	var is_thrown_attack = (cur_w_id == "dagger" and ((is_two_square_monster(target_m) and not is_hero_adjacent_to_monster(hero, target_m)) or (not is_two_square_monster(target_m) and (dx > 1 or dy > 1))))
+	play_weapon_sfx(cur_w_id, is_thrown_attack)
+
 	var res = TabletopDice.resolve_combat(atk_dice, def_dice, false)
 	var will_defeat = (res.wounds >= int(target_m.get("current_bp", 1)))
 	trigger_combat_dice_roll(res, get_hero_display_title(hero), str(target_m.get("name", "Monster")), false, will_defeat)
@@ -12006,6 +12019,7 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 		var is_m_def = int(target_m.get("current_bp", 0)) <= 0
 		if is_m_def:
 			target_m["is_alive"] = false
+			play_sfx("res://assets/audio/sfx/monster_death.ogg")
 			_log("[DEFEATED] %s is DEFEATED!" % target_m.get("name"))
 			_check_event_triggers("on_monster_killed", { "monster": target_m, "monsterId": str(target_m.get("id", "")), "monsterType": str(target_m.get("monsterType", target_m.get("type", ""))) }, hero)
 		record_damage_event(
@@ -12019,6 +12033,7 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 			is_m_def
 		)
 	elif hp_subtracted == 0 and res.wounds == 0:
+		play_sfx("res://assets/audio/sfx/weapons/shield_block.ogg")
 		_log("[BLOCKED] Attack was completely blocked by %s!" % target_m.get("name"))
 		spawn_floating_text(m_pos, "BLOCKED!", Color(0.7, 0.8, 1.0))
 
@@ -12104,6 +12119,8 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 	var def_dice = get_hero_defend_dice(target_h)
 	var h_pos = _to_grid_pos(target_h.get("grid_pos", Vector2i(-1, -1)))
 
+	play_sfx("res://assets/audio/sfx/weapons/weapon_monster_attack.ogg")
+
 	var res = TabletopDice.resolve_combat(atk_dice, def_dice, true)
 	var will_defeat = (res.wounds >= int(target_h.get("current_bp", 8)))
 	trigger_combat_dice_roll(res, str(monster.get("name", "Monster")), get_hero_display_title(target_h), true, will_defeat)
@@ -12157,6 +12174,7 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 			spawn_floating_text(h_pos, "SHATTERED!", Color(0.8, 0.8, 0.8))
 		record_player_attack_hit(target_h, monster, res, prev_h_bp, rock_skin_shattered)
 	elif h_hp_subtracted == 0 and res.wounds == 0:
+		play_sfx("res://assets/audio/sfx/weapons/shield_block.ogg")
 		_log("[BLOCKED] %s successfully blocked the monster attack!" % target_h.get("name"))
 		spawn_floating_text(h_pos, "BLOCKED!", Color(0.3, 0.8, 1.0))
 		play_hero_situation_audio(target_h, "defended")
@@ -12264,6 +12282,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 		return { "success": false, "error": "Spell '%s' already used this quest" % spell_name }
 
 	_log("[SPELL] %s invokes the ancient incantation: [b]%s[/b]!" % [hero.get("name"), spell_name])
+	play_spell_sfx(s_id)
 	play_hero_situation_audio(hero, "castingMagic")
 	var res: Dictionary = { "success": true, "spell": s_id, "name": spell_name }
 
@@ -12304,9 +12323,11 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 					is_m_def
 				)
 			else:
+				play_sfx("res://assets/audio/sfx/weapons/shield_block.ogg")
 				spawn_floating_text(m_pos, "BLOCKED!", Color(0.6, 0.8, 1.0))
 			if target_m.get("current_bp") <= 0:
 				target_m["is_alive"] = false
+				play_sfx("res://assets/audio/sfx/monster_death.ogg")
 				_log("[DEFEATED] %s is incinerated by the Ball of Flame!" % target_m.get("name"))
 				spawn_floating_text(m_pos, "INCINERATED!", Color(1.0, 0.2, 0.1), 1.5)
 				_check_event_triggers("on_monster_killed", { "monster": target_m, "monsterId": str(target_m.get("id", "")), "monsterType": str(target_m.get("monsterType", target_m.get("type", ""))) }, hero)
@@ -12355,9 +12376,11 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 					is_m_def
 				)
 			else:
+				play_sfx("res://assets/audio/sfx/weapons/shield_block.ogg")
 				spawn_floating_text(m_pos, "BLOCKED!", Color(0.6, 0.8, 1.0))
 			if target_m.get("current_bp") <= 0:
 				target_m["is_alive"] = false
+				play_sfx("res://assets/audio/sfx/monster_death.ogg")
 				_log("[DEFEATED] %s was consumed by Fire of Wrath!" % target_m.get("name"))
 				_check_event_triggers("on_monster_killed", { "monster": target_m, "monsterId": str(target_m.get("id", "")), "monsterType": str(target_m.get("monsterType", target_m.get("type", ""))) }, hero)
 				if are_all_quest_objectives_completed() and not _quest_completed:
@@ -12466,6 +12489,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 						var tr = d.get("toRoom", "")
 						if tr != "":
 							reveal_room_by_id(tr)
+						play_sfx("res://assets/audio/sfx/door_open.ogg")
 						_log("[GENIE] Genie gestures and magically forces open the door!")
 						spawn_burst_vfx(hero_screen, Color(0.2, 0.8, 1.0), 55.0, 0.5)
 						res["door_opened"] = true
@@ -12496,9 +12520,11 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 						is_m_def
 					)
 				else:
+					play_sfx("res://assets/audio/sfx/weapons/shield_block.ogg")
 					spawn_floating_text(m_pos, "BLOCKED!", Color(0.6, 0.8, 1.0))
 				if target_m.get("current_bp") <= 0:
 					target_m["is_alive"] = false
+					play_sfx("res://assets/audio/sfx/monster_death.ogg")
 					_log("[DEFEATED] %s is crushed by the Genie's wrath!" % target_m.get("name"))
 					spawn_floating_text(m_pos, "OBLITERATED!", Color(0.3, 0.9, 1.0), 1.5)
 					_check_event_triggers("on_monster_killed", { "monster": target_m, "monsterId": str(target_m.get("id", "")), "monsterType": str(target_m.get("monsterType", target_m.get("type", ""))) }, hero)
@@ -13852,7 +13878,87 @@ func _play_dialogue_audio(path: String) -> float:
 	return 0.0
 
 var hero_voice_audio_player: AudioStreamPlayer = null
+var sfx_audio_players: Array[AudioStreamPlayer] = []
+var _sfx_stream_cache: Dictionary = {}
 var _first_turn_audio_played: bool = false
+
+func play_sfx(sfx_path: String, volume_db: float = 0.0) -> void:
+	if sfx_path == "" or is_headless_mode():
+		return
+	if is_movie_playing:
+		return
+	var stream: AudioStream = _sfx_stream_cache.get(sfx_path, null)
+	if not stream:
+		if ResourceLoader.exists(sfx_path):
+			var res = load(sfx_path)
+			if res is AudioStream:
+				stream = res
+		var abs_p = ProjectSettings.globalize_path(sfx_path) if sfx_path.begins_with("res://") else sfx_path
+		if not stream and FileAccess.file_exists(abs_p):
+			if abs_p.ends_with(".ogg"):
+				stream = AudioStreamOggVorbis.load_from_file(abs_p)
+		if stream:
+			_sfx_stream_cache[sfx_path] = stream
+	if not stream:
+		return
+	if sfx_audio_players.is_empty():
+		for _i in range(4):
+			var p = AudioStreamPlayer.new()
+			add_child(p)
+			sfx_audio_players.append(p)
+	var chosen_player: AudioStreamPlayer = null
+	for p in sfx_audio_players:
+		if is_instance_valid(p) and not p.playing:
+			chosen_player = p
+			break
+	if not chosen_player:
+		chosen_player = sfx_audio_players[0]
+	if is_instance_valid(chosen_player):
+		chosen_player.volume_db = volume_db
+		chosen_player.stream = stream
+		chosen_player.play()
+
+func play_weapon_sfx(weapon_id: String, is_thrown: bool = false) -> void:
+	var w_def = HeroQuestEquipment.get_weapon(weapon_id)
+	var sfx_path = ""
+	if is_thrown and w_def.has("sfx_throw"):
+		sfx_path = str(w_def.get("sfx_throw", ""))
+	elif w_def.has("sfx"):
+		sfx_path = str(w_def.get("sfx", ""))
+	if sfx_path == "":
+		var clean_w = weapon_id.to_lower().strip_edges().replace("-", "_")
+		if "battle_axe" in clean_w or "axe" in clean_w:
+			sfx_path = "res://assets/audio/sfx/weapons/weapon_battle_axe.ogg"
+		elif "shortsword" in clean_w:
+			sfx_path = "res://assets/audio/sfx/weapons/weapon_shortsword.ogg"
+		elif "broadsword" in clean_w or "longsword" in clean_w or "sword" in clean_w:
+			sfx_path = "res://assets/audio/sfx/weapons/weapon_broadsword.ogg"
+		elif "crossbow" in clean_w or "bow" in clean_w:
+			sfx_path = "res://assets/audio/sfx/weapons/weapon_crossbow.ogg"
+		elif "dagger" in clean_w or "knife" in clean_w:
+			sfx_path = "res://assets/audio/sfx/weapons/weapon_dagger_throw.ogg" if is_thrown else "res://assets/audio/sfx/weapons/weapon_dagger.ogg"
+		elif "staff" in clean_w or "wand" in clean_w:
+			sfx_path = "res://assets/audio/sfx/weapons/weapon_staff.ogg"
+		else:
+			sfx_path = "res://assets/audio/sfx/weapons/weapon_unarmed.ogg"
+	play_sfx(sfx_path)
+
+func play_spell_sfx(spell_id: String) -> void:
+	var spell = HeroQuestSpells.get_spell(spell_id)
+	var sfx_path = str(spell.get("sfx", ""))
+	if sfx_path == "":
+		var s_clean = str(spell.get("id", spell_id)).to_lower().strip_edges().replace("-", "_")
+		sfx_path = "res://assets/audio/sfx/spells/spell_%s.ogg" % s_clean
+	play_sfx(sfx_path)
+
+func play_trap_sfx(trap_type: String) -> void:
+	var t_clean = trap_type.to_lower()
+	if "spear" in t_clean:
+		play_sfx("res://assets/audio/sfx/trap_spear.ogg")
+	elif "falling" in t_clean or "boulder" in t_clean or "rock" in t_clean:
+		play_sfx("res://assets/audio/sfx/trap_falling_block.ogg")
+	else:
+		play_sfx("res://assets/audio/sfx/trap_pit.ogg")
 
 func _check_play_first_turn_hero_audio() -> void:
 	if _first_turn_audio_played:
@@ -14644,6 +14750,7 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 
 			var dmg = int(trapped_chest.get("damageDice", 2))
 			hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
+			play_sfx("res://assets/audio/sfx/trap_spear.ogg")
 			_log("[TRAP] ☠️ CHEST TRAP SPRUNG! A poison needle fires from the locked chest! %s suffers %d damage (Remaining BP: %d)!" % [
 				hero.get("name"), dmg, hero.get("current_bp")
 			])
@@ -14701,6 +14808,7 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 				hero["inventory"] = []
 			hero["inventory"].append(item_reward)
 
+		play_sfx("res://assets/audio/sfx/treasure_gold.ogg")
 		var tr_title = str(spec_tr.get("title", "Quest Note Treasure"))
 		_log("[QUEST TREASURE] 📜 %s searches %s: Discovered Quest Note treasure: %s! (+%d Gold Coins, Total: %d)" % [
 			hero.get("name"), h_room.get("name", r_id), tr_title, found_gold, hero.get("gold")
@@ -14786,6 +14894,7 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 		"gold", "gem":
 			found_gold = int(card.get("gold", 0))
 			hero["gold"] = hero.get("gold", 0) + found_gold
+			play_sfx("res://assets/audio/sfx/treasure_gold.ogg")
 			_log("[TREASURE] 💰 %s searches room: Drew %s! Found %d Gold Coins! Total Gold: %d" % [
 				hero.get("name"), card.get("title"), found_gold, hero.get("gold")
 			])
@@ -14795,6 +14904,7 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 			if not (hero.get("inventory", []) is Array):
 				hero["inventory"] = []
 			hero["inventory"].append(item_id)
+			play_sfx("res://assets/audio/sfx/potion_drink.ogg")
 			_log("[TREASURE] 🧪 %s searches room: Drew %s! Added to backpack." % [
 				hero.get("name"), card.get("title")
 			])
@@ -14802,12 +14912,14 @@ func search_room(is_interactive: bool = false) -> Dictionary:
 		"hazard":
 			var dmg = int(card.get("damage", 1))
 			hero["current_bp"] = maxi(0, hero.get("current_bp", 1) - dmg)
+			play_sfx("res://assets/audio/sfx/trap_spear.ogg")
 			_log("[HAZARD] ☠️ %s searches room: Drew %s! Suffers %d damage (Remaining BP: %d)!" % [
 				hero.get("name"), card.get("title"), dmg, hero.get("current_bp")
 			])
 			spawn_floating_text(h_pos, "-%d HP HAZARD" % dmg, Color(0.9, 0.25, 0.25), 1.8)
 		"wandering_monster":
 			spawned_wm = _spawn_wandering_monster(hero, r_id)
+			play_sfx("res://assets/audio/sfx/weapons/weapon_monster_attack.ogg")
 			var wm_info = get_wandering_monster_card_data()
 			card["monster_type"] = wm_info.get("monster_type", "orc")
 			card["monster_name"] = wm_info.get("monster_name", "Wandering Orc")
@@ -14993,6 +15105,7 @@ func search_traps() -> Dictionary:
 	_conclude_action_turn_state()
 
 	if found_secret_doors.size() > 0:
+		play_sfx("res://assets/audio/sfx/secret_door_found.ogg")
 		record_transaction("SEARCH_SECRETS", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s searched carefully and discovered %d secret passageway(s) (%s)!" % [
 			hero.get("name"), found_secret_doors.size(), ", ".join(found_secret_doors)
 		], {
@@ -15001,6 +15114,7 @@ func search_traps() -> Dictionary:
 			"secret_doors": found_secret_doors
 		})
 	elif found_traps.size() > 0:
+		play_sfx("res://assets/audio/sfx/trap_spear.ogg")
 		record_transaction("SEARCH_TRAPS", str(hero.get("id", "")), str(hero.get("name", "Hero")), "%s searched carefully and detected %d trap(s) (%s)!" % [
 			hero.get("name"), found_traps.size(), ", ".join(found_traps)
 		], {
@@ -15074,6 +15188,7 @@ func disarm_trap(trap_id: String) -> Dictionary:
 
 	target_trap["detected"] = true
 	target_trap["disarmed"] = true
+	play_sfx("res://assets/audio/sfx/trap_disarm.ogg")
 	_conclude_action_turn_state()
 
 	var tx = int(target_trap.get("x", target_trap.get("position", [0, 0])[0]))
@@ -15606,6 +15721,7 @@ func dm_cast_spell_on_hero(m: Dictionary, spell_id: String, target_hero: Diction
 	var h_name = str(target_hero.get("name", "Hero"))
 
 	_log("[DREAD SPELL] %s unleashes the dark incantation: [b]%s[/b] upon %s!" % [m_name, spell_name, h_name])
+	play_spell_sfx(s_clean)
 
 	# VFX
 	if "lightning" in s_clean:
@@ -15683,6 +15799,7 @@ func dm_cast_spell_on_hero(m: Dictionary, spell_id: String, target_hero: Diction
 
 	if combat_res.wounds > 0:
 		target_hero["current_bp"] = maxi(0, prev_h_bp - combat_res.wounds)
+		play_hero_situation_audio(target_hero, "attacked")
 		_log("[SPELL HIT] %s takes %d wound(s) from %s! Remaining BP: %d" % [
 			h_name, combat_res.wounds, spell_name, target_hero.get("current_bp")
 		])
@@ -15706,6 +15823,8 @@ func dm_cast_spell_on_hero(m: Dictionary, spell_id: String, target_hero: Diction
 			_log("[SPELL] The wound shatters %s's Rock Skin spell!" % h_name)
 			spawn_floating_text(h_pos, "SHATTERED!", Color(0.8, 0.8, 0.8))
 	else:
+		play_sfx("res://assets/audio/sfx/weapons/shield_block.ogg")
+		play_hero_situation_audio(target_hero, "defended")
 		_log("[BLOCKED] %s successfully warded off %s's %s!" % [h_name, m_name, spell_name])
 		spawn_floating_text(h_pos, "WARDED!", Color(0.3, 0.8, 1.0))
 
@@ -23123,6 +23242,7 @@ func _setup_trap_sprung_overlay(trap: Dictionary, hero: Dictionary, final_pos: V
 		"actual_cost": actual_cost,
 		"is_chest": is_chest
 	}
+	play_trap_sfx(t_type)
 	_log("[TRAP] ⚠️ %s SPRUNG! %s must roll hazard dice!" % [trap_title.to_upper(), h_full])
 	queue_redraw_all()
 
@@ -23138,6 +23258,7 @@ func resolve_trap_overlay_click() -> Dictionary:
 	return { "success": true, "diceStarted": true, "trapType": overlay.get("type", "") }
 
 func trigger_hazard_dice_roll(overlay: Dictionary) -> void:
+	play_sfx("res://assets/audio/sfx/dice_roll.ogg")
 	_update_board_metrics()
 	var center = board_offset + Vector2(grid_cols * tile_size * 0.5, grid_rows * tile_size * 0.45)
 	var t_type = str(overlay.get("type", "pit"))
@@ -24300,6 +24421,7 @@ func _draw_item_flash_banner(canvas: CanvasItem) -> void:
 	canvas.draw_string(font, Vector2(center_x - s_sz.x * 0.5, banner_rect.position.y + 44.0), sub_msg, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(0.65, 0.90, 1.0, 0.95))
 
 func trigger_movement_dice_roll(roll_data: Dictionary, hero_name: String, dice_values: Array) -> void:
+	play_sfx("res://assets/audio/sfx/dice_roll.ogg")
 	_update_board_metrics()
 	var center = board_offset + Vector2(grid_cols * tile_size * 0.5, grid_rows * tile_size * 0.45)
 	var num_dice = dice_values.size()
@@ -24343,6 +24465,7 @@ func trigger_movement_dice_roll(roll_data: Dictionary, hero_name: String, dice_v
 	queue_redraw_all()
 
 func trigger_combat_dice_roll(combat_res: Dictionary, attacker_name: String, defender_name: String, is_hero_defending: bool, is_defeated: bool = false, _extra_opts: Dictionary = {}) -> void:
+	play_sfx("res://assets/audio/sfx/combat_dice_roll.ogg")
 	_update_board_metrics()
 	var center = board_offset + Vector2(grid_cols * tile_size * 0.5, grid_rows * tile_size * 0.45)
 	var atk_res = combat_res.get("attack", {})

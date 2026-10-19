@@ -16,6 +16,7 @@ const SPELLS: Dictionary = {
 		"icon": "🔥",
 		"description": "Engulfs target monster in a blazing sphere of fire. Inflicts 2 BP damage; target rolls 2 combat dice to defend.",
 		"vfx": "projectile_fire_burst",
+		"sfx": "res://assets/audio/sfx/spells/spell_ball_of_flame.ogg",
 		"color": "#ea580c"
 	},
 	"fire_of_wrath": {
@@ -29,6 +30,7 @@ const SPELLS: Dictionary = {
 		"icon": "⚡",
 		"description": "Blasts target monster anywhere in line of sight with holy flame. Inflicts 1 BP damage; target rolls 1 combat die to defend.",
 		"vfx": "fire_beam",
+		"sfx": "res://assets/audio/sfx/spells/spell_fire_of_wrath.ogg",
 		"color": "#f97316"
 	},
 	"courage": {
@@ -41,6 +43,7 @@ const SPELLS: Dictionary = {
 		"icon": "🦁",
 		"description": "Cast on any hero. Grants +2 extra attack dice on attacks until no monsters are visible.",
 		"vfx": "flame_aura",
+		"sfx": "res://assets/audio/sfx/spells/spell_courage.ogg",
 		"color": "#ef4444"
 	},
 
@@ -55,6 +58,7 @@ const SPELLS: Dictionary = {
 		"icon": "🪨",
 		"description": "Hardens the target's skin like granite. Grants +1 extra combat die in defense until wounded.",
 		"vfx": "stone_shield",
+		"sfx": "res://assets/audio/sfx/spells/spell_rock_skin.ogg",
 		"color": "#78716c"
 	},
 	"heal_body": {
@@ -67,6 +71,7 @@ const SPELLS: Dictionary = {
 		"icon": "💚",
 		"description": "Restores up to 4 lost Body Points to target hero (cannot exceed max BP).",
 		"vfx": "healing_radiance",
+		"sfx": "res://assets/audio/sfx/spells/spell_heal_body.ogg",
 		"color": "#22c55e"
 	},
 	"pass_through_rock": {
@@ -78,6 +83,7 @@ const SPELLS: Dictionary = {
 		"icon": "👻",
 		"description": "Enables target hero to phase through solid rock walls on their next move.",
 		"vfx": "phase_mist",
+		"sfx": "res://assets/audio/sfx/spells/spell_pass_through_rock.ogg",
 		"color": "#a8a29e"
 	},
 
@@ -92,6 +98,7 @@ const SPELLS: Dictionary = {
 		"icon": "💧",
 		"description": "Soothing holy waters restore up to 4 lost Body Points to target hero.",
 		"vfx": "water_fountain",
+		"sfx": "res://assets/audio/sfx/spells/spell_water_of_healing.ogg",
 		"color": "#06b6d4"
 	},
 	"sleep": {
@@ -103,6 +110,7 @@ const SPELLS: Dictionary = {
 		"icon": "💤",
 		"description": "Causes target monster to fall into deep enchanted slumber. Sleeping monsters cannot move, attack, or defend.",
 		"vfx": "sleep_runes",
+		"sfx": "res://assets/audio/sfx/spells/spell_sleep.ogg",
 		"color": "#6366f1"
 	},
 	"veil_of_mist": {
@@ -114,6 +122,7 @@ const SPELLS: Dictionary = {
 		"icon": "🌫️",
 		"description": "Wraps hero in dense shroud of mist, allowing them to pass through monster-occupied squares unseen.",
 		"vfx": "mist_veil",
+		"sfx": "res://assets/audio/sfx/spells/spell_veil_of_mist.ogg",
 		"color": "#94a3b8"
 	},
 
@@ -128,6 +137,7 @@ const SPELLS: Dictionary = {
 		"icon": "🧞",
 		"description": "Summons an ancient Genie to strike any monster in line of sight with 5 combat dice, or automatically open any door.",
 		"vfx": "genie_blast",
+		"sfx": "res://assets/audio/sfx/spells/spell_genie.ogg",
 		"color": "#0284c7"
 	},
 	"swift_wind": {
@@ -140,6 +150,7 @@ const SPELLS: Dictionary = {
 		"icon": "💨",
 		"description": "Gales of wind carry target hero forward at double movement speed (4d6 movement dice).",
 		"vfx": "speed_trail",
+		"sfx": "res://assets/audio/sfx/spells/spell_swift_wind.ogg",
 		"color": "#38bdf8"
 	},
 	"tempest": {
@@ -151,6 +162,7 @@ const SPELLS: Dictionary = {
 		"icon": "🌪️",
 		"description": "Envelops target in a violent whirlwind, causing them to lose their next turn. Can be cast on monsters or heroes.",
 		"vfx": "cyclone_vortex",
+		"sfx": "res://assets/audio/sfx/spells/spell_tempest.ogg",
 		"color": "#0ea5e9"
 	},
 
@@ -164,6 +176,7 @@ const SPELLS: Dictionary = {
 		"icon": "🌪️",
 		"description": "Whirlwind of dark chaos magic forcing target hero to miss their next turn.",
 		"vfx": "cyclone_vortex",
+		"sfx": "res://assets/audio/sfx/spells/spell_dread_tempest.ogg",
 		"color": "#0ea5e9"
 	},
 	"command": {
@@ -175,6 +188,7 @@ const SPELLS: Dictionary = {
 		"icon": "👁️",
 		"description": "Dread sorcery forcing target hero to make an attack roll against an adjacent hero.",
 		"vfx": "chaos_eye",
+		"sfx": "res://assets/audio/sfx/spells/spell_command.ogg",
 		"color": "#9333ea"
 	},
 	"summon_undead": {
@@ -186,6 +200,7 @@ const SPELLS: Dictionary = {
 		"icon": "💀",
 		"description": "Zargon summons a dread skeleton warrior into the dungeon.",
 		"vfx": "undead_burst",
+		"sfx": "res://assets/audio/sfx/spells/spell_summon_undead.ogg",
 		"color": "#7e22ce"
 	},
 	"lightning_bolt": {
@@ -199,6 +214,7 @@ const SPELLS: Dictionary = {
 		"icon": "⚡",
 		"description": "Crackling dark lightning bolts inflicting heavy magical damage on target hero.",
 		"vfx": "lightning_strike",
+		"sfx": "res://assets/audio/sfx/spells/spell_lightning_bolt.ogg",
 		"color": "#eab308"
 	},
 	"fear": {
@@ -212,6 +228,7 @@ const SPELLS: Dictionary = {
 		"icon": "😱",
 		"description": "Fills target hero's mind with dread terror, inflicting dark psychological trauma.",
 		"vfx": "fear_aura",
+		"sfx": "res://assets/audio/sfx/spells/spell_fear.ogg",
 		"color": "#a855f7"
 	},
 	"firestorm": {
@@ -225,6 +242,7 @@ const SPELLS: Dictionary = {
 		"icon": "🔥",
 		"description": "Engulfs target hero in searing hellfire causing 3 BP damage; target rolls 3 combat dice to defend.",
 		"vfx": "fire_burst",
+		"sfx": "res://assets/audio/sfx/spells/spell_firestorm.ogg",
 		"color": "#dc2626"
 	},
 	"sleep_dread": {
@@ -236,6 +254,7 @@ const SPELLS: Dictionary = {
 		"icon": "💤",
 		"description": "Puts target hero into deep magical slumber. They cannot move, attack, or defend until awakened.",
 		"vfx": "sleep_runes",
+		"sfx": "res://assets/audio/sfx/spells/spell_sleep_dread.ogg",
 		"color": "#6366f1"
 	},
 	"cloud_of_chaos": {
@@ -247,6 +266,7 @@ const SPELLS: Dictionary = {
 		"icon": "🕸️",
 		"description": "Releases toxic chaos vapors. Target hero is stunned and loses their next turn.",
 		"vfx": "chaos_cloud",
+		"sfx": "res://assets/audio/sfx/spells/spell_cloud_of_chaos.ogg",
 		"color": "#9333ea"
 	},
 	"rust": {
@@ -258,6 +278,7 @@ const SPELLS: Dictionary = {
 		"icon": "🛡️",
 		"description": "Corrodes and destroys metal equipment or weapon wielded by target hero.",
 		"vfx": "corrosion_mist",
+		"sfx": "res://assets/audio/sfx/spells/spell_rust.ogg",
 		"color": "#b45309"
 	},
 	"escape": {
@@ -269,6 +290,7 @@ const SPELLS: Dictionary = {
 		"icon": "💨",
 		"description": "Dissolves the dread spellcaster into dark mist, teleporting them away from danger.",
 		"vfx": "teleport_flash",
+		"sfx": "res://assets/audio/sfx/spells/spell_escape.ogg",
 		"color": "#64748b"
 	}
 }
