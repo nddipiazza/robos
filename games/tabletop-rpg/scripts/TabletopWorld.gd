@@ -13666,6 +13666,10 @@ func _setup_modal_message_dialog(title: String, text: String, btn_text: String =
 
 func _resolve_speaker_display_name(speaker_raw: String) -> String:
 	var s_low = speaker_raw.to_lower().strip_edges()
+	if s_low.begins_with("monster:"):
+		s_low = s_low.substr(8).strip_edges()
+	elif s_low.begins_with("hero:"):
+		s_low = s_low.substr(5).strip_edges()
 	for h in heroes:
 		var hid = str(h.get("id", "")).to_lower()
 		var hslug = str(h.get("slug", "")).to_lower()
@@ -13686,6 +13690,22 @@ func _resolve_speaker_display_name(speaker_raw: String) -> String:
 			if "election-2026" in CartridgeManager.current_cartridge_slug.to_lower() or "midterm" in CartridgeManager.current_cartridge_slug.to_lower():
 				return "Mentor George W. Bush"
 			return "Mentor"
+		"ken-paxton", "paxton", "ken paxton (talarixon)":
+			return "Ken Paxton (Talarixon)"
+		"james-talarico", "talarico", "james talarico (talarixon)":
+			return "James Talarico (Talarixon)"
+		"abdul-el-sayed", "el-sayed", "abdul el-sayed (el-rogers)":
+			return "Abdul El-Sayed (El-Rogers)"
+		"mike-rogers", "rogers", "mike rogers (el-rogers)":
+			return "Mike Rogers (El-Rogers)"
+		"sherrod-brown", "sherrod brown (brownsted)":
+			return "Sherrod Brown (Brownsted)"
+		"jon-husted", "husted", "jon husted (brownsted)":
+			return "Jon Husted (Brownsted)"
+		"mtg", "marjorie-taylor-greene", "marjorie taylor greene (from the mist)":
+			return "Marjorie Taylor Greene (From the Mist)"
+		"aoc", "alexandria-ocasio-cortez", "alexandria ocasio-cortez (from the mist)":
+			return "Alexandria Ocasio-Cortez (From the Mist)"
 		"zargon", "morcar":
 			return "Zargon, Master of Darkness"
 		"monster", "enemy", "foe":
@@ -13720,6 +13740,16 @@ func _resolve_speaker_display_name(speaker_raw: String) -> String:
 
 func _find_speaker_grid_pos(speaker_raw: String) -> Vector2i:
 	var s_low = speaker_raw.to_lower().strip_edges()
+	if s_low.begins_with("monster:"):
+		s_low = s_low.substr(8).strip_edges()
+	elif s_low.begins_with("hero:"):
+		s_low = s_low.substr(5).strip_edges()
+	if "paxton" in s_low or "talarico" in s_low or "talarixon" in s_low:
+		s_low = "talarixon"
+	elif "el-sayed" in s_low or "mike rogers" in s_low or "mike-rogers" in s_low or "el-rogers" in s_low:
+		s_low = "el-rogers"
+	elif "sherrod" in s_low or "husted" in s_low or "brownsted" in s_low:
+		s_low = "brownsted"
 	for h in heroes:
 		var hid = str(h.get("id", "")).to_lower()
 		var hslug = str(h.get("slug", "")).to_lower()
