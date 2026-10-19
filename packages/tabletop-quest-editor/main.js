@@ -245,6 +245,51 @@ ipcMain.handle('quest:open-blockmap-dialog', async () => {
   }
 });
 
+// IPC: List Monsters from KGraph tabletop-game package.jsonld
+ipcMain.handle('quest:list-monsters', async () => {
+  try {
+    const kgraphPath = path.join(REPO_ROOT, '.robos/kgraphs/tabletop-game/package.jsonld');
+    const monsters = [];
+    if (fs.existsSync(kgraphPath)) {
+      const raw = fs.readFileSync(kgraphPath, 'utf8');
+      const data = JSON.parse(raw);
+      const graph = Array.isArray(data['@graph']) ? data['@graph'] : [];
+      for (const node of graph) {
+        const types = [].concat(node['@type'] || []);
+        if (types.includes('robos:TabletopMonster')) {
+          const id = String(node['@id'] || '');
+          const slug = id.replace(/^urn:robos:tabletop:monster:/, '') || node['robos:slug'] || '';
+          if (!slug) continue;
+          monsters.push({
+            id,
+            slug,
+            name: node['dcterms:title'] || slug,
+            description: node['dcterms:description'] || '',
+            category: node['robos:category'] || 'Base Game',
+            archetype: node['robos:monsterArchetype'] || node['robos:archetype'] || '',
+            icon: node['robos:icon'] || '',
+            bp: Number(node['robos:bodyPoints'] ?? 1),
+            mp: Number(node['robos:mindPoints'] ?? 1),
+            atk: Number(node['robos:attackDice'] ?? 2),
+            def: Number(node['robos:defendDice'] ?? 2),
+            move: Number(node['robos:movementSquares'] ?? 6),
+            isBoss: Boolean(node['robos:isBoss']),
+            isUndead: Boolean(node['robos:isUndead']),
+            isCaster: Boolean(node['robos:isSpellcaster']),
+            spells: Array.isArray(node['robos:spells'])
+              ? node['robos:spells'].map(s => String(s).replace(/^urn:robos:tabletop:spell:/, ''))
+              : [],
+            color: node['robos:tokenColor'] || '#ca8a04'
+          });
+        }
+      }
+    }
+    return { success: true, monsters };
+  } catch (err) {
+    return { success: false, error: err.message, monsters: [] };
+  }
+});
+
 // IPC: List Cartridges
 ipcMain.handle('quest:list-cartridges', async () => {
   try {
@@ -532,14 +577,26 @@ ipcMain.handle('quest:launch-game', async (_event, slug) => {
     if (!fs.existsSync(runScript)) {
       return { success: false, error: `Run script not found: ${runScript}` };
     }
-    const env = { ...process.env, TABLETOP_CARTRIDGE: slug, DISPLAY: process.env.DISPLAY || ':0' };
-    const child = spawn(runScript, ['--cartridge=' + slug], {
+    const env = { ...process.env, TABLETOP_CARTRIDGE: slug, TABLETOP_RESET: '1', DISPLAY: process.env.DISPLAY || ':0' };
+    delete env.LIBGL_ALWAYS_SOFTWARE;
+    delete env.GALLIUM_DRIVER;
+    delete env.CHROME_DESKTOP;
+    delete env.ELECTRON_RUN_AS_NODE;
+    delete env.NODE_OPTIONS;
+
+    const child = spawn(runScript, ['--reset', '--cartridge=' + slug], {
       cwd: TABLETOP_DIR,
       env,
       detached: true,
       stdio: 'ignore'
     });
     child.unref();
+
+    // Minimize the software-rendered Electron editor while the 3D/2D Godot engine runs
+    if (mainWindow && !mainWindow.isDestroyed() && typeof mainWindow.minimize === 'function') {
+      mainWindow.minimize();
+    }
+
     return { success: true, pid: child.pid };
   } catch (err) {
     return { success: false, error: err.message };

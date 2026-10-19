@@ -2846,6 +2846,11 @@ const BUILTIN_SHACL_SHAPES = [
         "path": "robos:defendDice",
         "minCount": 1,
         "message": "Tabletop hero must declare defend dice."
+      },
+      {
+        "path": "robos:audioLines",
+        "minCount": 0,
+        "message": "Tabletop hero may declare situational audio voice lines (turnStart, attacking, attacked, defended, castingMagic)."
       }
     ],
     "refersFrom": "https://schema.org/Person",
@@ -3131,6 +3136,53 @@ const BUILTIN_SHACL_SHAPES = [
     "refersFrom": "https://schema.org/InteractAction",
     "schemaOrgType": "https://schema.org/InteractAction",
     "domainStandard": "https://robos.dev/ns/tabletop#AICommand"
+  },
+  {
+    "shapeId": "urn:robos:shape:TabletopQuestSaveStateShape",
+    "targetClass": "robos:TabletopQuestSaveState",
+    "targetClasses": [
+      "robos:TabletopQuestSaveState"
+    ],
+    "properties": [
+      {
+        "path": "dcterms:title",
+        "minCount": 1,
+        "message": "Tabletop Quest Save State must have a title."
+      },
+      {
+        "path": "robos:questSlug",
+        "minCount": 1,
+        "message": "Tabletop Quest Save State must declare its questSlug."
+      },
+      {
+        "path": "robos:currentRound",
+        "minCount": 1,
+        "message": "Tabletop Quest Save State must declare currentRound."
+      },
+      {
+        "path": "robos:currentPhase",
+        "minCount": 1,
+        "message": "Tabletop Quest Save State must declare currentPhase."
+      },
+      {
+        "path": "robos:activeTurnActor",
+        "minCount": 1,
+        "message": "Tabletop Quest Save State must declare activeTurnActor (whose turn it is)."
+      },
+      {
+        "path": "robos:playTimeSeconds",
+        "minCount": 1,
+        "message": "Tabletop Quest Save State must declare playTimeSeconds."
+      },
+      {
+        "path": "robos:heroStates",
+        "minCount": 1,
+        "message": "Tabletop Quest Save State must declare party heroStates."
+      }
+    ],
+    "refersFrom": "https://schema.org/Action",
+    "schemaOrgType": "https://schema.org/Action",
+    "domainStandard": "https://robos.dev/ns/tabletop#QuestSaveState"
   },
   {
     "shapeId": "urn:robos:shape:WebRouteShape",

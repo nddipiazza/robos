@@ -122,6 +122,11 @@ while [[ $# -gt 0 ]]; do
       quest_arg="3"
       shift
       ;;
+    election|midterms|midterm|election-2026|election-2026-quest-1|midterms-2026)
+      cartridge_arg="election-2026-quest-1"
+      quest_arg="1"
+      shift
+      ;;
     *)
       game_args+=("$1")
       shift
@@ -131,12 +136,16 @@ done
 
 if [[ -n "$quest_arg" ]]; then
   export TABLETOP_QUEST="$quest_arg"
-  if [[ "$quest_arg" == "1" || "$quest_arg" == "custom"* ]]; then
-    cartridge_arg="custom-quest"
-  elif [[ "$quest_arg" == "4" || "$quest_arg" == "quest-4" || "$quest_arg" == *"fortress"* ]]; then
-    cartridge_arg="heroquest-fortress-fire-king"
-  elif [[ "$quest_arg" == "5" || "$quest_arg" == "simple"* || "$quest_arg" == *"dialogue"* ]]; then
-    cartridge_arg="simple-dialogue-quest"
+  if [[ -z "$cartridge_arg" ]]; then
+    if [[ "$quest_arg" == "1" || "$quest_arg" == "custom"* ]]; then
+      cartridge_arg="custom-quest"
+    elif [[ "$quest_arg" == "4" || "$quest_arg" == "quest-4" || "$quest_arg" == *"fortress"* ]]; then
+      cartridge_arg="heroquest-fortress-fire-king"
+    elif [[ "$quest_arg" == "5" || "$quest_arg" == "simple"* || "$quest_arg" == *"dialogue"* ]]; then
+      cartridge_arg="simple-dialogue-quest"
+    elif [[ "$quest_arg" == *"election"* || "$quest_arg" == *"midterm"* ]]; then
+      cartridge_arg="election-2026-quest-1"
+    fi
   fi
 fi
 
@@ -152,6 +161,9 @@ if [[ -n "$cartridge_arg" ]]; then
     export TABLETOP_QUEST="5"
   elif [[ "$cartridge_arg" == *"trial"* ]]; then
     cartridge_arg="heroquest-the-trial"
+    export TABLETOP_QUEST="${quest_arg:-1}"
+  elif [[ "$cartridge_arg" == *"election"* || "$cartridge_arg" == *"midterm"* ]]; then
+    cartridge_arg="election-2026-quest-1"
     export TABLETOP_QUEST="1"
   fi
   export TABLETOP_CARTRIDGE="$cartridge_arg"

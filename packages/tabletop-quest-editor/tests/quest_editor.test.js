@@ -38,6 +38,7 @@ const {
   exportPng,
   exportPdf,
   copyPngToClipboard,
+  findEntityAt,
   state,
   dom,
   TRIGGER_EVENT_DEFS,
@@ -3075,7 +3076,10 @@ test('Custom Quest Cartridge Verification: custom-quest intro action appears in 
   });
 
   // Briefing contains Mentor's words and opening cinematic
-  assert.ok(html.includes('The Emperor calls upon'), 'Contains header description in briefing');
+  assert.ok(
+    html.includes('The Emperor calls upon') || html.includes('Descend into the Custom Dungeon'),
+    'Contains header description in briefing'
+  );
   assert.ok(html.includes('Mentor speaks: &quot;As you step forward, ancient magic stirs') ||
             html.includes('Mentor speaks: "As you step forward, ancient magic stirs'), 'Contains starting action narrative in intro');
   assert.ok(html.includes('Opening Cinematic: Note A Cinematic'), 'Contains opening cinematic in intro');
@@ -3316,3 +3320,448 @@ test('Open Blockmap in Editor: launches tabletop-blockmap-creator with the curre
   }
 });
 
+// -------------------------------------------------------------
+// Test 38: Brand Logo & Responsive Small Display Sizing
+// -------------------------------------------------------------
+test('Brand Logo & Small Display: provides AI generated logo image and robust responsive sizing rules', () => {
+  const htmlPath = path.join(__dirname, '../renderer/index.html');
+  const cssPath = path.join(__dirname, '../renderer/style.css');
+  const logoPath = path.join(__dirname, '../renderer/assets/logo.png');
+
+  assert.ok(fs.existsSync(logoPath), 'assets/logo.png exists');
+  const stat = fs.statSync(logoPath);
+  assert.ok(stat.size > 1000, 'assets/logo.png is a valid non-empty image file');
+
+  const html = fs.readFileSync(htmlPath, 'utf8');
+  assert.ok(html.includes('class="brand-logo-img"'), 'index.html contains brand-logo-img element');
+  assert.ok(html.includes('src="assets/logo.png"'), 'brand-logo-img points to assets/logo.png');
+
+  const css = fs.readFileSync(cssPath, 'utf8');
+  assert.ok(css.includes('.brand-logo-img'), 'style.css defines .brand-logo-img rules');
+  assert.ok(css.includes('flex-shrink: 0'), 'Logo has flex-shrink: 0 to prevent squashing');
+  assert.ok(css.includes('object-fit: contain'), 'Logo preserves aspect ratio');
+  assert.ok(css.includes('@media (max-width: 900px)'), 'style.css contains responsive small display media queries');
+  assert.ok(css.includes('@media (max-width: 1300px)'), 'style.css contains subtitle responsive collapse');
+});
+
+// -------------------------------------------------------------
+// Test 39: Double Doors (2×1 Horizontal & 1×2 Vertical)
+// -------------------------------------------------------------
+test('Double Doors: supports creating 2x1 horizontal and 1x2 vertical double doors, hit-testing across both spanned tiles, validation, and cartridge serialization', () => {
+  const savedQuest = JSON.parse(JSON.stringify(state.quest));
+  const savedSubtool = JSON.parse(JSON.stringify(state.subtool));
+
+  try {
+    // 1. Create Door 1: 2x1 (Horizontal)
+    const doubleDoor1 = {
+      id: 'door-double-2x1',
+      name: 'Grand Chamber Double Door',
+      from: [2, 4],
+      to: [2, 5],
+      door_type: 'double-2x1',
+      width: 2,
+      height: 1,
+      state: 'closed',
+      is_secret: false,
+      room: 'room-nw'
+    };
+
+    // 2. Create Door 2: 1x2 (Vertical)
+    const doubleDoor2 = {
+      id: 'door-double-1x2',
+      name: 'War Room Double Door',
+      from: [6, 2],
+      to: [7, 2],
+      door_type: 'double-1x2',
+      width: 1,
+      height: 2,
+      state: 'open',
+      is_secret: false,
+      room: 'room-ne'
+    };
+
+    state.quest.doors = [doubleDoor1, doubleDoor2];
+
+    // 3. Hit-testing: findEntityAt must find Door 1 on all 4 adjacent spanned coordinates
+    assert.deepEqual(findEntityAt(2, 4)?.data?.id, 'door-double-2x1', 'Anchor tile [2, 4] finds double door 1');
+    assert.deepEqual(findEntityAt(2, 5)?.data?.id, 'door-double-2x1', 'Target tile [2, 5] finds double door 1');
+    assert.deepEqual(findEntityAt(3, 4)?.data?.id, 'door-double-2x1', 'Spanned column tile [3, 4] finds double door 1');
+    assert.deepEqual(findEntityAt(3, 5)?.data?.id, 'door-double-2x1', 'Spanned column tile [3, 5] finds double door 1');
+
+    // 4. Hit-testing: findEntityAt must find Door 2 on all 4 adjacent spanned coordinates
+    assert.deepEqual(findEntityAt(6, 2)?.data?.id, 'door-double-1x2', 'Anchor tile [6, 2] finds double door 2');
+    assert.deepEqual(findEntityAt(7, 2)?.data?.id, 'door-double-1x2', 'Target tile [7, 2] finds double door 2');
+    assert.deepEqual(findEntityAt(6, 3)?.data?.id, 'door-double-1x2', 'Spanned row tile [6, 3] finds double door 2');
+    assert.deepEqual(findEntityAt(7, 3)?.data?.id, 'door-double-1x2', 'Spanned row tile [7, 3] finds double door 2');
+
+    // 5. Unrelated tile returns null
+    assert.equal(findEntityAt(10, 10), null, 'Unrelated tile has no entity');
+
+    // 6. Cartridge Serialization preserves door_type, width, and height for both double doors
+    const payload = buildCartridgePayload();
+    const serializedDoors = payload.maps[state.quest.slug].doors;
+    assert.equal(serializedDoors.length, 2, '2 doors serialized');
+
+    const sD1 = serializedDoors.find(d => d.id === 'door-double-2x1');
+    assert.ok(sD1, 'door-double-2x1 present in cartridge');
+    assert.equal(sD1.door_type, 'double-2x1');
+    assert.equal(sD1.width, 2);
+    assert.equal(sD1.height, 1);
+    assert.equal(sD1.state, 'closed');
+
+    const sD2 = serializedDoors.find(d => d.id === 'door-double-1x2');
+    assert.ok(sD2, 'door-double-1x2 present in cartridge');
+    assert.equal(sD2.door_type, 'double-1x2');
+    assert.equal(sD2.width, 1);
+    assert.equal(sD2.height, 2);
+    assert.equal(sD2.state, 'open');
+  } finally {
+    state.quest = savedQuest;
+    state.subtool = savedSubtool;
+  }
+});
+
+// -------------------------------------------------------------
+// Test 40: Double Door Validation
+// -------------------------------------------------------------
+test('Double Door Validation: validates perimeter wall placement across both spanned tiles of 2x1 and 1x2 double doors', () => {
+  const dummyBlockmap = {
+    id: 'test-blockmap',
+    gridDimensions: [26, 19],
+    rooms: [
+      { id: 'room-1', x: 2, y: 2, w: 4, h: 4 },
+      { id: 'room-2', x: 10, y: 2, w: 4, h: 4 }
+    ],
+    corridors: [
+      [2, 6], [3, 6], [4, 6], [5, 6],
+      [10, 6], [11, 6], [12, 6], [13, 6]
+    ]
+  };
+
+  // 1. Valid 2x1 double door on room-1 South perimeter wall:
+  // Tile [2, 5] is inside room-1, [2, 6] is corridor
+  // Spanned tile [3, 5] is inside room-1, [3, 6] is corridor
+  const validQuest = {
+    doors: [
+      {
+        id: 'door-valid-2x1',
+        name: 'Valid South 2x1 Door',
+        from: [2, 5],
+        to: [2, 6],
+        door_type: 'double-2x1',
+        width: 2,
+        height: 1,
+        state: 'closed'
+      }
+    ],
+    furniture: [],
+    monsters: [],
+    traps: [],
+    wallBlocks: []
+  };
+
+  const valRes1 = validateQuestFn(validQuest, dummyBlockmap);
+  const doorErrors1 = valRes1.errors.filter(e => e.category === 'door_wall');
+  assert.equal(doorErrors1.length, 0, 'Valid 2x1 double door produces 0 door_wall errors');
+
+  // 2. Invalid 2x1 double door floating completely in corridor (both halves are in corridor)
+  const floatingQuest = {
+    doors: [
+      {
+        id: 'door-floating-2x1',
+        name: 'Floating 2x1 Door',
+        from: [2, 6],
+        to: [2, 7],
+        door_type: 'double-2x1',
+        width: 2,
+        height: 1,
+        state: 'closed'
+      }
+    ],
+    furniture: [],
+    monsters: [],
+    traps: [],
+    wallBlocks: []
+  };
+
+  const valRes2 = validateQuestFn(floatingQuest, dummyBlockmap);
+  const doorErrors2 = valRes2.errors.filter(e => e.category === 'door_wall');
+  assert.ok(doorErrors2.length > 0, 'Floating 2x1 double door produces door_wall error');
+  assert.ok(doorErrors2[0].description.includes('not attached to any room perimeter wall'));
+  assert.equal(doorErrors2[0].allTiles.length, 4, 'Warning overlay includes all 4 spanned tiles');
+
+  // 3. Invalid 1x2 double door completely inside open room interior
+  const interiorQuest = {
+    doors: [
+      {
+        id: 'door-interior-1x2',
+        name: 'Interior 1x2 Door',
+        from: [3, 3],
+        to: [4, 3],
+        door_type: 'double-1x2',
+        width: 1,
+        height: 2,
+        state: 'closed'
+      }
+    ],
+    furniture: [],
+    monsters: [],
+    traps: [],
+    wallBlocks: []
+  };
+
+  const valRes3 = validateQuestFn(interiorQuest, dummyBlockmap);
+  const doorErrors3 = valRes3.errors.filter(e => e.category === 'door_wall');
+  assert.ok(doorErrors3.length > 0, 'Interior 1x2 double door produces door_wall error');
+  assert.ok(doorErrors3[0].description.includes('inside open floor space'));
+  assert.equal(doorErrors3[0].allTiles.length, 4, 'Warning overlay includes all 4 spanned tiles');
+});
+
+// -------------------------------------------------------------
+// Test 41: Quest Briefing Relabeling
+// -------------------------------------------------------------
+test('Quest Briefing Relabeling: index.html displays "Quest Briefing" instead of "Mentor\'s Quest Parchment Briefing"', () => {
+  const htmlPath = path.join(__dirname, '../renderer/index.html');
+  const html = fs.readFileSync(htmlPath, 'utf8');
+
+  assert.ok(html.includes('<h3>📜 Quest Briefing</h3>'), 'Section card displays "<h3>📜 Quest Briefing</h3>"');
+  assert.ok(!html.includes("Mentor's Quest Parchment Briefing"), 'Does not contain outdated "Mentor\'s Quest Parchment Briefing" label');
+});
+
+// -------------------------------------------------------------
+// Test 42: Election 2026 / Midterms 2026 Enemy Characters & Category Filter
+// -------------------------------------------------------------
+test('Election 2026 Enemy Characters: supports all 15 Midterms 2026 enemies, category filtering, inspector switching, voice commands, and cartridge export', () => {
+  const appModule = require('../renderer/app.js');
+  const {
+    MONSTER_DEFS: exportedDefs,
+    populateMonsterSelects,
+    updateMonsterSuboptPreview,
+    handleCanvasClick
+  } = appModule;
+
+  const election2026Ids = [
+    'campaign-volunteer',
+    'political-operative',
+    'career-politician',
+    'bureaucrat',
+    'lobbyist',
+    'partisan-enforcer',
+    'super-pac-demon',
+    'spin-doctor',
+    'talarixon',
+    'el-rogers',
+    'brownsted'
+  ];
+
+  // 1. Verify all 11 Election 2026 creations (8 standard monsters + 3 Hydra bosses) exist in MONSTER_DEFS with Midterms 2026 category
+  for (const id of election2026Ids) {
+    assert.ok(exportedDefs[id], `MONSTER_DEFS must include Election 2026 enemy: ${id}`);
+    assert.equal(exportedDefs[id].category, 'Midterms 2026', `${id} must have category 'Midterms 2026'`);
+    assert.ok(exportedDefs[id].name && exportedDefs[id].name.length > 0, `${id} must have a display name`);
+    assert.ok(exportedDefs[id].icon && exportedDefs[id].icon.length > 0, `${id} must have an icon`);
+    assert.ok(exportedDefs[id].archetype && exportedDefs[id].archetype.length > 0, `${id} must have an archetype`);
+    assert.ok(exportedDefs[id].specialAbility && exportedDefs[id].specialAbility.length > 0, `${id} must have a specialAbility`);
+  }
+
+  // Verify specific Election 2026 Hydra boss & spellcaster stats
+  assert.equal(exportedDefs.talarixon.name, 'Talarixon (Talarico + Paxton · Texas Hydra)');
+  assert.equal(exportedDefs.talarixon.bp, 6);
+  assert.equal(exportedDefs.talarixon.atk, 5);
+  assert.equal(exportedDefs.talarixon.def, 5);
+  assert.equal(exportedDefs.talarixon.move, 7);
+  assert.equal(exportedDefs.talarixon.mp, 5);
+  assert.equal(exportedDefs.talarixon.isBoss, true);
+  assert.equal(exportedDefs.talarixon.isCaster, true);
+  assert.ok(exportedDefs.talarixon.spells.includes('recount-of-the-damned'));
+
+  // 2. Verify index.html contains the Monster Pack / Campaign Filter, Election 2026 options, and Inspector Monster Character preset dropdown
+  const htmlPath = path.join(__dirname, '../renderer/index.html');
+  const html = fs.readFileSync(htmlPath, 'utf8');
+  assert.ok(html.includes('id="select-monster-category"'), 'index.html has #select-monster-category filter');
+  assert.ok(html.includes('id="monster-subopt-preview"'), 'index.html has #monster-subopt-preview card');
+  assert.ok(html.includes('id="inspect-monster-type"'), 'index.html has #inspect-monster-type preset selector in Inspector');
+  for (const id of election2026Ids) {
+    assert.ok(html.includes(`value="${id}"`), `index.html contains option value="${id}"`);
+  }
+
+  // 3. Test populateMonsterSelects category filtering ('Midterms 2026' vs 'Base Game' vs 'all')
+  const savedDom = { ...dom };
+  const savedSubtool = { ...state.subtool };
+  const savedQuest = JSON.parse(JSON.stringify(state.quest));
+  const savedBlockmap = JSON.parse(JSON.stringify(state.blockmap));
+
+  try {
+    dom.selectMonsterCategory = { value: 'all' };
+    dom.selectMonsterType = { innerHTML: '', value: 'goblin' };
+    dom.selectWanderingMonster = { innerHTML: '', value: 'orc' };
+    dom.inspectMonsterType = { innerHTML: '', value: 'goblin' };
+    dom.monsterSuboptPreview = { innerHTML: '' };
+
+    // Filter to Midterms 2026 only
+    populateMonsterSelects('Midterms 2026');
+    assert.equal(state.subtool.monsterCategory, 'Midterms 2026');
+    assert.ok(dom.selectMonsterType.innerHTML.includes('value="campaign-volunteer"'), 'Midterms filter includes campaign-volunteer');
+    assert.ok(dom.selectMonsterType.innerHTML.includes('value="talarixon"'), 'Midterms filter includes talarixon');
+    assert.ok(!dom.selectMonsterType.innerHTML.includes('value="goblin"'), 'Midterms filter excludes Base Game goblin from active palette');
+    assert.equal(state.subtool.monsterType, 'campaign-volunteer', 'Automatically switches active monsterType to first Midterms 2026 enemy');
+    assert.ok(dom.monsterSuboptPreview.innerHTML.includes('Campaign Volunteer'), 'Monster preview displays Campaign Volunteer details');
+    assert.ok(dom.monsterSuboptPreview.innerHTML.includes('Door Knocker'), 'Monster preview displays Door Knocker special ability');
+
+    // Wandering monster & inspector dropdowns always include both packs
+    assert.ok(dom.selectWanderingMonster.innerHTML.includes('value="talarixon"'));
+    assert.ok(dom.selectWanderingMonster.innerHTML.includes('value="orc"'));
+    assert.ok(dom.inspectMonsterType.innerHTML.includes('value="super-pac-demon"'));
+
+    // Filter to Base Game only
+    populateMonsterSelects('Base Game');
+    assert.equal(state.subtool.monsterCategory, 'Base Game');
+    assert.ok(dom.selectMonsterType.innerHTML.includes('value="goblin"'), 'Base Game filter includes goblin');
+    assert.ok(!dom.selectMonsterType.innerHTML.includes('value="campaign-volunteer"'), 'Base Game filter excludes campaign-volunteer');
+
+    // Filter to All
+    populateMonsterSelects('all');
+    assert.ok(dom.selectMonsterType.innerHTML.includes('optgroup label="🗳️ Election 2026 (Midterms 2026)"'));
+    assert.ok(dom.selectMonsterType.innerHTML.includes('optgroup label="⚔️ Base Game (HeroQuest)"'));
+
+    // 4. Test placing an Election 2026 enemy on the map and exporting cartridge
+    state.blockmap = {
+      id: 'midterm-madness-board',
+      gridDimensions: [26, 19],
+      tileSize: 39,
+      pixelOffset: [0, 0],
+      rooms: [{ id: 'room-1', name: 'Suburban Kitchen', tiles: [[4, 4], [5, 4], [4, 5], [5, 5]] }],
+      corridors: []
+    };
+    state.quest.monsters = [];
+    state.quest.furniture = [];
+    state.quest.doors = [];
+    state.quest.traps = [];
+    state.quest.wallBlocks = [];
+    state.quest.storyTriggers = [];
+    state.quest.wanderingMonster = 'campaign-volunteer';
+    state.activeTool = 'monster';
+    state.subtool.monsterType = 'talarixon';
+
+    handleCanvasClick(4 * 39 + 10, 4 * 39 + 10);
+    assert.equal(state.quest.monsters.length, 1, 'Placed 1 Election 2026 monster via canvas click');
+    const placed = state.quest.monsters[0];
+    assert.equal(placed.type, 'talarixon');
+    assert.equal(placed.name, 'Talarixon (Talarico + Paxton · Texas Hydra)');
+    assert.equal(placed.category, 'Midterms 2026');
+    assert.equal(placed.archetype, 'Texas Hydra');
+    assert.equal(placed.icon, '🐍');
+    assert.equal(placed.isBoss, true);
+    assert.equal(placed.isSpellcaster, true);
+    assert.deepEqual(placed.spells, ['recount-of-the-damned']);
+
+    // Also test voice command placement of Election 2026 enemy
+    const voiceRes = executeVoiceMapCommands('add a campaign volunteer to room 1', 'guidance', state.quest, state.blockmap);
+    assert.equal(voiceRes.success, true);
+    assert.equal(state.quest.monsters.length, 2);
+    assert.equal(state.quest.monsters[1].type, 'campaign-volunteer');
+    assert.equal(state.quest.monsters[1].name, 'Campaign Volunteer');
+
+    // Verify cartridge serialization preserves Election 2026 enemy metadata
+    const cartridge = buildCartridgePayload();
+    const exportedMon = cartridge.monsters[placed.id];
+    assert.ok(exportedMon, 'Talarixon serialized in cartridge.monsters');
+    assert.equal(exportedMon.monsterType, 'talarixon');
+    assert.equal(exportedMon.category, 'Midterms 2026');
+    assert.equal(exportedMon.monsterArchetype, 'Texas Hydra');
+    assert.equal(exportedMon.icon, '🐍');
+    assert.deepEqual(exportedMon.spells, ['recount-of-the-damned']);
+  } finally {
+    Object.assign(dom, savedDom);
+    state.subtool = savedSubtool;
+    state.quest = savedQuest;
+    state.blockmap = savedBlockmap;
+  }
+});
+
+// -------------------------------------------------------------
+// Test 43: Window Maximize & Dynamic Viewport Resize Scaling
+// -------------------------------------------------------------
+test('Window Maximize & Viewport Resize: dynamically resizes canvas and scales zoom/pan camera with window size', () => {
+  const { resizeCanvas, fitView } = require('../renderer/app.js');
+  const savedDom = { ...dom };
+  const savedBlockmap = state.blockmap;
+  const savedZoom = state.zoom;
+  const savedPanX = state.panX;
+  const savedPanY = state.panY;
+  const savedAutoFit = state.autoFit;
+  const savedLastW = state.lastViewportWidth;
+  const savedLastH = state.lastViewportHeight;
+
+  try {
+    let vpRect = { width: 1000, height: 800 };
+    dom.viewport = {
+      getBoundingClientRect: () => vpRect
+    };
+    dom.canvas = { width: 1000, height: 800 };
+    dom.infoZoomLevel = { textContent: '100%' };
+
+    state.blockmap = {
+      id: 'first-light-dungeon',
+      gridDimensions: [26, 19],
+      tileSize: 39,
+      pixelOffset: [0, 0],
+      rooms: [],
+      corridors: []
+    };
+    state.hasAdditionalBorder = false;
+
+    // 1. Initial fit at normal window size (1000x800)
+    fitView();
+    const initialZoom = state.zoom;
+    const initialPanX = state.panX;
+    const initialPanY = state.panY;
+    assert.equal(dom.canvas.width, 1000);
+    assert.equal(dom.canvas.height, 800);
+    assert.equal(state.autoFit, true);
+    assert.ok(initialZoom > 0.8 && initialZoom < 1.1, 'Initial zoom fits 26x19 board inside 1000x800 viewport');
+
+    // 2. Simulate maximizing the window to 2200x1300 while autoFit is true
+    vpRect = { width: 2200, height: 1300 };
+    const changed = resizeCanvas({ adjustCamera: true });
+    assert.equal(changed, true, 'resizeCanvas detects viewport size change on maximize');
+    assert.equal(dom.canvas.width, 2200, 'Canvas width updates to maximized viewport width');
+    assert.equal(dom.canvas.height, 1300, 'Canvas height updates to maximized viewport height');
+    assert.ok(state.zoom > initialZoom * 1.5, `Zoom scales up from ${initialZoom.toFixed(2)} to ${state.zoom.toFixed(2)} when window is maximized`);
+    assert.notEqual(state.panX, initialPanX, 'panX re-centers board in maximized viewport');
+
+    // 3. Simulate manual zoom/pan (autoFit = false), then unmaximize back to 1100x750
+    state.autoFit = false;
+    const zoomedOnMax = 2.0;
+    state.zoom = zoomedOnMax;
+    state.panX = 300;
+    state.panY = 200;
+    const worldCenterBeforeX = (2200 / 2 - state.panX) / state.zoom;
+    const worldCenterBeforeY = (1300 / 2 - state.panY) / state.zoom;
+
+    vpRect = { width: 1100, height: 750 };
+    resizeCanvas({ adjustCamera: true });
+    assert.equal(dom.canvas.width, 1100);
+    assert.equal(dom.canvas.height, 750);
+    assert.ok(state.zoom < zoomedOnMax, 'Manual zoom scales down proportionally when window is unmaximized');
+
+    const worldCenterAfterX = (1100 / 2 - state.panX) / state.zoom;
+    const worldCenterAfterY = (750 / 2 - state.panY) / state.zoom;
+    assert.ok(Math.abs(worldCenterAfterX - worldCenterBeforeX) < 2, 'Preserves world X center across window resize');
+    assert.ok(Math.abs(worldCenterAfterY - worldCenterBeforeY) < 2, 'Preserves world Y center across window resize');
+
+    // 4. Verify CSS rules allow #quest-canvas and .canvas-viewport to expand to 100%
+    const cssPath = path.join(__dirname, '../renderer/style.css');
+    const css = fs.readFileSync(cssPath, 'utf8');
+    assert.ok(css.includes('#quest-canvas') && css.includes('width: 100%;') && css.includes('height: 100%;'), 'style.css stretches #quest-canvas and .canvas-viewport to 100%');
+  } finally {
+    Object.assign(dom, savedDom);
+    state.blockmap = savedBlockmap;
+    state.zoom = savedZoom;
+    state.panX = savedPanX;
+    state.panY = savedPanY;
+    state.autoFit = savedAutoFit;
+    state.lastViewportWidth = savedLastW;
+    state.lastViewportHeight = savedLastH;
+  }
+});

@@ -36,6 +36,9 @@ const state = {
   zoom: 1.0,
   panX: 40,
   panY: 40,
+  autoFit: true,
+  lastViewportWidth: 0,
+  lastViewportHeight: 0,
   isPanning: false,
   panStartX: 0,
   panStartY: 0,
@@ -50,7 +53,9 @@ const state = {
 
   // Subtool settings
   subtool: {
+    doorSize: 'single', // 'single', 'double-2x1', 'double-1x2', 'double-auto'
     doorType: 'wood-closed', // 'wood-closed', 'wood-open', 'secret'
+    monsterCategory: 'all', // 'all', 'Midterms 2026', 'Base Game'
     monsterType: 'goblin',
     furnitureType: 'chest',
     furnitureRotated: false, // false: normal, true: 90 deg rotated
@@ -108,19 +113,41 @@ const state = {
 };
 
 // -------------------------------------------------------------
-// Monster Template Defaults (HeroQuest Ruleset)
+// Monster Template Defaults (Base Game + Election 2026 / Midterms 2026)
 // -------------------------------------------------------------
 const MONSTER_DEFS = {
-  goblin: { name: 'Goblin', bp: 1, mp: 1, atk: 2, def: 1, move: 10, isBoss: false, isUndead: false, isCaster: false, color: '#16a34a', icon: '👺' },
-  orc: { name: 'Orc', bp: 1, mp: 2, atk: 3, def: 2, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#ca8a04', icon: '👹' },
-  skeleton: { name: 'Skeleton', bp: 1, mp: 0, atk: 2, def: 2, move: 6, isBoss: false, isUndead: true, isCaster: false, color: '#94a3b8', icon: '💀' },
-  zombie: { name: 'Zombie', bp: 1, mp: 0, atk: 3, def: 3, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#059669', icon: '🧟' },
-  mummy: { name: 'Mummy', bp: 2, mp: 0, atk: 3, def: 4, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#d97706', icon: '🩹' },
-  chaos_warrior: { name: 'Chaos Warrior', bp: 2, mp: 3, atk: 3, def: 4, move: 7, isBoss: false, isUndead: false, isCaster: false, color: '#7c3aed', icon: '⚔️' },
-  fimir: { name: 'Fimir', bp: 2, mp: 3, atk: 3, def: 3, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#2563eb', icon: '🦎' },
-  abomination: { name: 'Abomination', bp: 2, mp: 3, atk: 3, def: 3, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#2563eb', icon: '🦎' },
-  gargoyle: { name: 'Gargoyle', bp: 3, mp: 4, atk: 4, def: 5, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#dc2626', icon: '🗿' },
-  boss: { name: 'Dungeon Boss', bp: 5, mp: 5, atk: 4, def: 4, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#e11d48', icon: '👑' }
+  // Base Game (HeroQuest Classic)
+  goblin: { name: 'Goblin', category: 'Base Game', archetype: 'Goblin', bp: 1, mp: 1, atk: 2, def: 1, move: 10, isBoss: false, isUndead: false, isCaster: false, color: '#16a34a', icon: '👺', spells: [] },
+  orc: { name: 'Orc', category: 'Base Game', archetype: 'Orc', bp: 1, mp: 2, atk: 3, def: 2, move: 8, isBoss: false, isUndead: false, isCaster: false, color: '#ca8a04', icon: '👹', spells: [] },
+  fimir: { name: 'Fimir', category: 'Base Game', archetype: 'Fimir', bp: 2, mp: 3, atk: 3, def: 3, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#2563eb', icon: '🦎', spells: [] },
+  abomination: { name: 'Abomination', category: 'Base Game', archetype: 'Fimir', bp: 2, mp: 3, atk: 3, def: 3, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#2563eb', icon: '🦎', spells: [], aliasOnly: true },
+  skeleton: { name: 'Skeleton', category: 'Base Game', archetype: 'Skeleton', bp: 1, mp: 0, atk: 2, def: 2, move: 6, isBoss: false, isUndead: true, isCaster: false, color: '#94a3b8', icon: '💀', spells: [] },
+  zombie: { name: 'Zombie', category: 'Base Game', archetype: 'Zombie', bp: 1, mp: 0, atk: 3, def: 3, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#059669', icon: '🧟', spells: [] },
+  mummy: { name: 'Mummy', category: 'Base Game', archetype: 'Mummy', bp: 2, mp: 0, atk: 3, def: 4, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#d97706', icon: '🩹', spells: [] },
+  chaos_warrior: { name: 'Chaos Warrior', category: 'Base Game', archetype: 'Dread Warrior', bp: 3, mp: 3, atk: 4, def: 4, move: 7, isBoss: false, isUndead: false, isCaster: false, color: '#7c3aed', icon: '⚔️', spells: [] },
+  'chaos-warrior': { name: 'Chaos Warrior', category: 'Base Game', archetype: 'Dread Warrior', bp: 3, mp: 3, atk: 4, def: 4, move: 7, isBoss: false, isUndead: false, isCaster: false, color: '#7c3aed', icon: '⚔️', spells: [], aliasOnly: true },
+  gargoyle: { name: 'Gargoyle', category: 'Base Game', archetype: 'Gargoyle', bp: 3, mp: 4, atk: 4, def: 5, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#dc2626', icon: '🗿', spells: [] },
+  'orc-shaman': { name: 'Orc Shaman', category: 'Base Game', archetype: 'Orc Shaman', bp: 2, mp: 3, atk: 2, def: 3, move: 8, isBoss: false, isUndead: false, isCaster: true, color: '#15803d', icon: '🪄', spells: ['lightning-bolt', 'firestorm'] },
+  'verag-orc-warlord': { name: 'Verag the Orc Warlord', category: 'Base Game', archetype: 'Orc Warlord', bp: 3, mp: 4, atk: 4, def: 3, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#15803d', icon: '👑', spells: ['lightning-bolt', 'firestorm'] },
+  'chaos-sorcerer': { name: 'Chaos Sorcerer', category: 'Base Game', archetype: 'Chaos Sorcerer', bp: 3, mp: 5, atk: 3, def: 4, move: 7, isBoss: true, isUndead: false, isCaster: true, color: '#7c3aed', icon: '🔮', spells: ['lightning-bolt', 'firestorm', 'fear'] },
+  'witch-lord': { name: 'The Witch Lord', category: 'Base Game', archetype: 'Witch Lord', bp: 4, mp: 6, atk: 4, def: 5, move: 7, isBoss: true, isUndead: true, isCaster: true, color: '#4c1d95', icon: '👑', spells: ['summon-undead', 'fear', 'firestorm'] },
+  dragon: { name: 'Dragon', category: 'Base Game', archetype: 'Dragon', bp: 6, mp: 6, atk: 5, def: 5, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#b91c1c', icon: '🐉', spells: ['firestorm', 'lightning-bolt'] },
+  'cassandria-doomguard': { name: "Cassandria's Doomguard", category: 'Base Game', archetype: 'Doomguard', bp: 3, mp: 3, atk: 4, def: 6, move: 8, isBoss: true, isUndead: false, isCaster: false, color: '#475569', icon: '🛡️', spells: [] },
+  'cassandria-witch-hand': { name: 'Witch Hand of Cassandria', category: 'Base Game', archetype: 'Witch Hand', bp: 4, mp: 5, atk: 4, def: 4, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#9333ea', icon: '🖐️', spells: ['cloud-of-chaos', 'rust'] },
+  boss: { name: 'Dungeon Boss', category: 'Base Game', archetype: 'Orc Warlord', bp: 5, mp: 5, atk: 4, def: 4, move: 8, isBoss: true, isUndead: false, isCaster: true, color: '#e11d48', icon: '👑', spells: ['lightning-bolt', 'firestorm'] },
+
+  // Election 2026 (Midterms 2026) — 8 Standard Monsters & 3 Hydra Bosses
+  'campaign-volunteer': { name: 'Campaign Volunteer', category: 'Midterms 2026', archetype: 'Goblin', replaces: 'Goblin', specialAbility: 'Door Knocker: Move through other monsters', bp: 1, mp: 1, atk: 2, def: 1, move: 10, isBoss: false, isUndead: false, isCaster: false, color: '#16a34a', icon: '📋', spells: [] },
+  'political-operative': { name: 'Political Operative', category: 'Midterms 2026', archetype: 'Orc', replaces: 'Orc', specialAbility: 'Smear Campaign: Force reroll of one successful defend die, once per encounter', bp: 1, mp: 2, atk: 3, def: 2, move: 8, isBoss: false, isUndead: false, isCaster: false, color: '#ca8a04', icon: '🕵️', spells: [] },
+  'career-politician': { name: 'Career Politician', category: 'Midterms 2026', archetype: 'Skeleton', replaces: 'Skeleton', specialAbility: 'Reelection: On death, black shield resurrects with 1 Body Point', bp: 1, mp: 0, atk: 2, def: 2, move: 6, isBoss: false, isUndead: true, isCaster: false, color: '#94a3b8', icon: '🏛️', spells: [] },
+  bureaucrat: { name: 'Bureaucrat', category: 'Midterms 2026', archetype: 'Zombie', replaces: 'Zombie', specialAbility: 'Red Tape: Adjacent heroes roll an extra movement die and use the lowest', bp: 1, mp: 0, atk: 2, def: 3, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#475569', icon: '📎', spells: [] },
+  lobbyist: { name: 'Lobbyist', category: 'Midterms 2026', archetype: 'Mummy', replaces: 'Mummy', specialAbility: 'Bought Influence: Force reroll of one attacking skull, once per encounter', bp: 2, mp: 0, atk: 3, def: 4, move: 4, isBoss: false, isUndead: true, isCaster: false, color: '#d97706', icon: '💼', spells: [] },
+  'partisan-enforcer': { name: 'Partisan Enforcer', category: 'Midterms 2026', archetype: 'Dread Warrior', replaces: 'Dread Warrior', specialAbility: 'Polarization: +1 attack die when adjacent to another Partisan Enforcer', bp: 3, mp: 3, atk: 4, def: 4, move: 7, isBoss: false, isUndead: false, isCaster: false, color: '#dc2626', icon: '⚔️', spells: [] },
+  'super-pac-demon': { name: 'Super PAC Demon', category: 'Midterms 2026', archetype: 'Gargoyle', replaces: 'Gargoyle', specialAbility: 'Dark Money: Summon one Campaign Volunteer, once per encounter', bp: 3, mp: 4, atk: 4, def: 5, move: 6, isBoss: false, isUndead: false, isCaster: false, color: '#7c3aed', icon: '😈', spells: [] },
+  'spin-doctor': { name: 'Spin Doctor', category: 'Midterms 2026', archetype: 'Dread Sorcerer', replaces: 'Dread Sorcerer', specialAbility: 'Alternative Facts: Cancel one successful attack, once per encounter', bp: 3, mp: 5, atk: 3, def: 4, move: 7, isBoss: false, isUndead: false, isCaster: true, color: '#0284c7', icon: '🌀', spells: ['recount-of-the-damned'] },
+  talarixon: { name: 'Talarixon (Talarico + Paxton · Texas Hydra)', category: 'Midterms 2026', archetype: 'Texas Hydra', replaces: 'Texas Hydra Boss', specialAbility: 'Holy Smite (3 dice ranged) · Indictment Barrage (1–3 loses action) · Divided Authority (lose turn, 2 dice to adjacent) · Political Infighting', bp: 6, mp: 5, atk: 5, def: 5, move: 7, isBoss: true, isUndead: false, isCaster: true, color: '#b91c1c', icon: '🐍', spells: ['recount-of-the-damned'] },
+  'el-rogers': { name: 'El-Rogers (El-Sayed + Rogers · Michigan Hydra)', category: 'Midterms 2026', archetype: 'Michigan Hydra', replaces: 'Michigan Hydra Boss', specialAbility: 'Universal Healing (+2 BP once) · Security Lockdown (seal doors 1 round) · Industrial Collapse (at 3 BP, 3 dice to adjacent & -1 BP) · Political Infighting', bp: 7, mp: 4, atk: 5, def: 6, move: 6, isBoss: true, isUndead: false, isCaster: true, color: '#1d4ed8', icon: '🐲', spells: ['recount-of-the-damned'] },
+  brownsted: { name: 'Brownsted (Brown + Husted · Ohio Hydra)', category: 'Midterms 2026', archetype: 'Ohio Hydra', replaces: 'Ohio Hydra Boss', specialAbility: 'Union Strike (3 dice to adjacent) · Budget Freeze (no potions 1 round) · Bipartisan Gridlock (black shield = lose turn, skull = +1 atk) · Political Infighting', bp: 8, mp: 5, atk: 6, def: 5, move: 5, isBoss: true, isUndead: false, isCaster: true, color: '#9333ea', icon: '🐉', spells: ['recount-of-the-damned'] }
 };
 
 // Furniture dimensions (w, h)
@@ -282,8 +309,11 @@ const dom = (typeof document !== 'undefined') ? {
   selectExitStairType: document.getElementById('select-exit-stair-type'),
 
   // Subtool inputs
+  selectDoorSize: document.getElementById('select-door-size'),
   radioDoorTypes: document.querySelectorAll('input[name="door-type"]'),
+  selectMonsterCategory: document.getElementById('select-monster-category'),
   selectMonsterType: document.getElementById('select-monster-type'),
+  monsterSuboptPreview: document.getElementById('monster-subopt-preview'),
   selectFurnitureType: document.getElementById('select-furniture-type'),
   btnRotateFurn: document.getElementById('btn-rotate-furn'),
   furnDimText: document.getElementById('furn-dim-text'),
@@ -315,6 +345,7 @@ const dom = (typeof document !== 'undefined') ? {
 
   // Inspector groups
   inspectGroupMonster: document.getElementById('inspect-group-monster'),
+  inspectMonsterType: document.getElementById('inspect-monster-type'),
   inspectMonsterBp: document.getElementById('inspect-monster-bp'),
   inspectMonsterMp: document.getElementById('inspect-monster-mp'),
   inspectMonsterAtk: document.getElementById('inspect-monster-atk'),
@@ -326,6 +357,7 @@ const dom = (typeof document !== 'undefined') ? {
 
   inspectGroupDoor: document.getElementById('inspect-group-door'),
   inspectDoorState: document.getElementById('inspect-door-state'),
+  inspectDoorType: document.getElementById('inspect-door-type'),
   inspectDoorSecret: document.getElementById('inspect-door-secret'),
 
   inspectGroupFurniture: document.getElementById('inspect-group-furniture'),
@@ -550,6 +582,244 @@ function updateRoomNamesToggleUI() {
 }
 
 // -------------------------------------------------------------
+// Monster Catalog & Category Filtering Helpers
+// -------------------------------------------------------------
+function resolveMonsterAssetSlug(monsterOrType) {
+  let raw = '';
+  if (typeof monsterOrType === 'string') {
+    raw = monsterOrType;
+  } else if (monsterOrType && typeof monsterOrType === 'object') {
+    const idAndName = `${monsterOrType.id || ''} ${monsterOrType.name || ''}`.toLowerCase();
+    if (idAndName.includes('katie') || idAndName.includes('zacharia')) return 'katie_zacharia';
+    if (idAndName.includes('mitch') || idAndName.includes('mcconnell')) return 'mitch_mcconnell';
+    if (idAndName.includes('vance') || idAndName.includes('kamala') || idAndName.includes('war-room') || idAndName.includes('war_room')) return 'war_room_boss';
+    raw = monsterOrType.type || monsterOrType.monsterType || monsterOrType.slug || monsterOrType.name || '';
+  }
+  const s = String(raw).toLowerCase().trim().replace(/^urn:robos:tabletop:monster:/, '');
+  if (s.includes('katie') || s.includes('zacharia')) return 'katie_zacharia';
+  if (s.includes('mitch') || s.includes('mcconnell')) return 'mitch_mcconnell';
+  if (s.includes('vance') || s.includes('kamala') || s.includes('war-room') || s.includes('war_room')) return 'war_room_boss';
+  if (s.includes('campaign-volunteer') || s.includes('campaign_volunteer')) return 'campaign_volunteer';
+  if (s.includes('political-operative') || s.includes('political_operative')) return 'political_operative';
+  if (s.includes('career-politician') || s.includes('career_politician')) return 'career_politician';
+  if (s.includes('bureaucrat')) return 'bureaucrat';
+  if (s.includes('lobbyist')) return 'lobbyist';
+  if (s.includes('partisan-enforcer') || s.includes('partisan_enforcer')) return 'partisan_enforcer';
+  if (s.includes('super-pac-demon') || s.includes('super_pac_demon')) return 'super_pac_demon';
+  if (s.includes('spin-doctor') || s.includes('spin_doctor')) return 'spin_doctor';
+  if (s.includes('talarixon')) return 'talarixon';
+  if (s.includes('el-rogers') || s.includes('el_rogers')) return 'el_rogers';
+  if (s.includes('brownsted')) return 'brownsted';
+  if (s.includes('dread-warrior') || s.includes('dread_warrior') || s.includes('chaos_warrior') || s.includes('gulthor')) return 'chaos_warrior';
+  if (s.includes('abomination') || s.includes('fimir')) return 'fimir';
+  if (s.includes('verag') || s.includes('ulag') || s.includes('orc_warlord') || s.includes('orc-warlord')) return 'verag';
+  if (s.includes('orc-shaman') || s.includes('orc_shaman') || s.includes('grak')) return 'orc_shaman';
+  if (s.includes('chaos-sorcerer') || s.includes('chaos_sorcerer') || s.includes('zargon') || s.includes('balur')) return 'chaos_sorcerer';
+  if (s.includes('witch-lord') || s.includes('witch_lord')) return 'witch_lord';
+  if (s.includes('witch-hand') || s.includes('witch_hand') || s.includes('kessandria')) return 'witch_hand';
+  if (s.includes('doomguard') || s.includes('wardoz')) return 'doomguard';
+  if (s.includes('dragon') || s.includes('venim')) return 'dragon';
+  if (s.includes('gargoyle')) return 'gargoyle';
+  if (s.includes('mummy')) return 'mummy';
+  if (s.includes('zombie')) return 'zombie';
+  if (s.includes('skeleton')) return 'skeleton';
+  if (s.includes('orc')) return 'orc';
+  return 'goblin';
+}
+
+function getMonsterTokenImage(monsterOrType) {
+  const key = resolveMonsterAssetSlug(monsterOrType);
+  return state.assetCache[`token_${key}`] || state.assetCache[`token_${String(monsterOrType?.type || monsterOrType || '')}`] || null;
+}
+
+function getMonsterPortraitImage(monsterOrType) {
+  const key = resolveMonsterAssetSlug(monsterOrType);
+  return state.assetCache[`portrait_${key}`] || state.assetCache[`token_${key}`] || null;
+}
+
+function formatMonsterOptionLabel(slug, def) {
+  if (!def) return slug;
+  const archPrefix = (def.category === 'Midterms 2026' && def.archetype && def.archetype !== def.name)
+    ? ` — ${def.archetype}`
+    : '';
+  const tags = [];
+  if (def.isUndead) tags.push('Undead');
+  if (def.isBoss) tags.push('Boss');
+  else if (def.isCaster) tags.push('Caster');
+  const tagSuffix = tags.length > 0 ? `, ${tags.join('/')}` : '';
+  return `${def.name}${archPrefix} (Move: ${def.move}, Atk: ${def.atk}, Def: ${def.def}, BP: ${def.bp}${tagSuffix})`;
+}
+
+function updateMonsterSuboptPreview() {
+  if (!dom || !dom.monsterSuboptPreview) return;
+  const type = state.subtool.monsterType || 'goblin';
+  const def = MONSTER_DEFS[type] || MONSTER_DEFS.goblin;
+  if (!def) return;
+  const assetKey = resolveMonsterAssetSlug(type);
+  const tokImg = state.assetCache[`token_${assetKey}`];
+  const portImg = state.assetCache[`portrait_${assetKey}`];
+  const tokSrc = tokImg?.src || '';
+  const portSrc = portImg?.src || tokSrc;
+  const catBadge = def.category === 'Midterms 2026'
+    ? `<span style="color:#38bdf8; font-weight:600;">[Election 2026${def.archetype ? ' • ' + escapeHtml(def.archetype) : ''}]</span>`
+    : `<span style="color:#94a3b8;">[${escapeHtml(def.category || 'Base Game')}]</span>`;
+  const bossTag = def.isBoss ? ' • <span style="color:#fb7185; font-weight:700;">BOSS</span>' : '';
+  const undeadTag = def.isUndead ? ' • Undead' : '';
+  const casterTag = def.isCaster ? ' • Caster' : '';
+  const specialHtml = def.specialAbility
+    ? `<div style="margin-top:2px; color:#fde047; font-size:9.5px;">${escapeHtml(def.specialAbility)}</div>`
+    : '';
+  const visualsHtml = (tokSrc || portSrc)
+    ? `<div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+        ${portSrc ? `<img src="${portSrc}" alt="Portrait" title="Portrait" style="width:32px; height:32px; border-radius:4px; object-fit:cover; border:1px solid #64748b;">` : ''}
+        ${tokSrc ? `<img src="${tokSrc}" alt="Token" title="Board Token" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:1.5px solid #f59e0b;">` : ''}
+        <div>
+          <div><strong>${escapeHtml(def.name)}</strong></div>
+          <div style="font-size:9.5px;">${catBadge}</div>
+        </div>
+      </div>`
+    : `<div><strong>${escapeHtml(def.name)}</strong> ${catBadge}</div>`;
+  dom.monsterSuboptPreview.innerHTML = `
+    ${visualsHtml}
+    <div style="margin-top:2px; color:#94a3b8;">BP:${def.bp} MP:${def.mp ?? 1} Atk:${def.atk} Def:${def.def} Move:${def.move}${bossTag}${undeadTag}${casterTag}</div>
+    ${specialHtml}
+  `;
+}
+
+function populateMonsterSelects(categoryFilter) {
+  const activeCat = categoryFilter !== undefined ? categoryFilter : (state.subtool.monsterCategory || 'all');
+  state.subtool.monsterCategory = activeCat;
+  if (!dom) return;
+
+  if (dom.selectMonsterCategory && dom.selectMonsterCategory.value !== activeCat) {
+    if (dom.selectMonsterCategory.options && typeof document !== 'undefined' && document.createElement) {
+      const existingCats = Array.from(dom.selectMonsterCategory.options).map(o => o.value);
+      if (!existingCats.includes(activeCat)) {
+        const opt = document.createElement('option');
+        opt.value = activeCat;
+        opt.textContent = `📦 ${activeCat}`;
+        dom.selectMonsterCategory.appendChild(opt);
+      }
+    }
+    dom.selectMonsterCategory.value = activeCat;
+  }
+
+  // Group MONSTER_DEFS by category (excluding aliasOnly duplicates)
+  const byCategory = new Map();
+  Object.keys(MONSTER_DEFS).forEach(slug => {
+    const def = MONSTER_DEFS[slug];
+    if (!def || def.aliasOnly) return;
+    const cat = def.category || 'Base Game';
+    if (!byCategory.has(cat)) byCategory.set(cat, []);
+    byCategory.get(cat).push({ slug, def });
+  });
+
+  const getCategoryGroupLabel = (cat) => {
+    if (cat === 'Midterms 2026' || cat === 'Election 2026') return '🗳️ Election 2026 (Midterms 2026)';
+    if (cat === 'Base Game') return '⚔️ Base Game (HeroQuest)';
+    return `📦 ${cat}`;
+  };
+
+  // 1. Populate #select-monster-type (respecting categoryFilter)
+  if (dom.selectMonsterType) {
+    const prevVal = state.subtool.monsterType || dom.selectMonsterType.value || 'goblin';
+    let firstValidSlug = null;
+    let prevStillAvailable = false;
+    let htmlParts = [];
+
+    for (const [cat, entries] of byCategory.entries()) {
+      if (activeCat !== 'all' && cat !== activeCat) continue;
+      const groupLabel = escapeHtml(getCategoryGroupLabel(cat));
+      const opts = entries.map(({ slug, def }) => {
+        if (!firstValidSlug) firstValidSlug = slug;
+        if (slug === prevVal) prevStillAvailable = true;
+        return `<option value="${escapeHtml(slug)}">${escapeHtml(formatMonsterOptionLabel(slug, def))}</option>`;
+      });
+      htmlParts.push(`<optgroup label="${groupLabel}">${opts.join('')}</optgroup>`);
+    }
+
+    dom.selectMonsterType.innerHTML = htmlParts.join('');
+    const chosen = prevStillAvailable ? prevVal : (firstValidSlug || 'goblin');
+    dom.selectMonsterType.value = chosen;
+    state.subtool.monsterType = chosen;
+  }
+
+  // 2. Populate #select-wandering-monster (always show all categories grouped)
+  if (dom.selectWanderingMonster) {
+    const prevWm = state.quest.wanderingMonster || dom.selectWanderingMonster.value || 'orc';
+    let wmParts = [];
+    for (const [cat, entries] of byCategory.entries()) {
+      const groupLabel = escapeHtml(getCategoryGroupLabel(cat));
+      const opts = entries.map(({ slug, def }) => {
+        const label = `${def.icon ? def.icon + ' ' : ''}${def.name} (${def.atk} Atk, ${def.def} Def, ${def.bp} BP)`;
+        return `<option value="${escapeHtml(slug)}">${escapeHtml(label)}</option>`;
+      });
+      wmParts.push(`<optgroup label="${groupLabel}">${opts.join('')}</optgroup>`);
+    }
+    dom.selectWanderingMonster.innerHTML = wmParts.join('');
+    if (MONSTER_DEFS[prevWm]) {
+      dom.selectWanderingMonster.value = prevWm;
+    }
+  }
+
+  // 3. Populate #inspect-monster-type (always show all categories grouped)
+  if (dom.inspectMonsterType) {
+    const prevInsp = dom.inspectMonsterType.value || 'goblin';
+    let inspParts = [];
+    for (const [cat, entries] of byCategory.entries()) {
+      const groupLabel = escapeHtml(getCategoryGroupLabel(cat));
+      const opts = entries.map(({ slug, def }) => {
+        const label = `${def.icon ? def.icon + ' ' : ''}${def.name}${def.category === 'Midterms 2026' && def.archetype ? ' (' + def.archetype + ')' : ''}`;
+        return `<option value="${escapeHtml(slug)}">${escapeHtml(label)}</option>`;
+      });
+      inspParts.push(`<optgroup label="${groupLabel}">${opts.join('')}</optgroup>`);
+    }
+    dom.inspectMonsterType.innerHTML = inspParts.join('');
+    if (MONSTER_DEFS[prevInsp]) {
+      dom.inspectMonsterType.value = prevInsp;
+    }
+  }
+
+  updateMonsterSuboptPreview();
+}
+
+async function syncMonstersFromKGraph() {
+  try {
+    if (!window.robosQuestEditor || typeof window.robosQuestEditor.listMonsters !== 'function') {
+      populateMonsterSelects(state.subtool.monsterCategory || 'all');
+      return;
+    }
+    const res = await window.robosQuestEditor.listMonsters();
+    if (res && res.success && Array.isArray(res.monsters)) {
+      res.monsters.forEach(km => {
+        if (!km || !km.slug) return;
+        const existing = MONSTER_DEFS[km.slug] || {};
+        MONSTER_DEFS[km.slug] = {
+          ...existing,
+          name: km.name || existing.name || km.slug,
+          category: km.category || existing.category || 'Base Game',
+          archetype: km.archetype || existing.archetype || '',
+          bp: km.bp ?? existing.bp ?? 1,
+          mp: km.mp ?? existing.mp ?? 1,
+          atk: km.atk ?? existing.atk ?? 2,
+          def: km.def ?? existing.def ?? 2,
+          move: km.move ?? existing.move ?? 6,
+          isBoss: km.isBoss !== undefined ? Boolean(km.isBoss) : Boolean(existing.isBoss),
+          isUndead: km.isUndead !== undefined ? Boolean(km.isUndead) : Boolean(existing.isUndead),
+          isCaster: km.isCaster !== undefined ? Boolean(km.isCaster) : Boolean(existing.isCaster),
+          color: km.color || existing.color || '#ca8a04',
+          icon: km.icon || existing.icon || '👾',
+          spells: Array.isArray(km.spells) && km.spells.length > 0 ? km.spells : (existing.spells || [])
+        };
+      });
+    }
+  } catch (err) {
+    console.warn('Error syncing monsters from KGraph:', err);
+  }
+  populateMonsterSelects(state.subtool.monsterCategory || 'all');
+}
+
+// -------------------------------------------------------------
 // Blockmap & Cartridge Loading
 // -------------------------------------------------------------
 async function initApp() {
@@ -585,9 +855,18 @@ async function initApp() {
 
   resizeCanvas();
   window.addEventListener('resize', () => {
-    resizeCanvas();
-    render();
+    handleViewportResize();
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => handleViewportResize());
+    }
+    setTimeout(() => handleViewportResize(), 80);
   });
+  if (typeof ResizeObserver !== 'undefined' && dom.viewport) {
+    const viewportObserver = new ResizeObserver(() => {
+      handleViewportResize();
+    });
+    viewportObserver.observe(dom.viewport);
+  }
 
   // Check startup arguments
   let startup = { type: 'blockmap', value: 'first-light-dungeon' };
@@ -598,6 +877,9 @@ async function initApp() {
   } catch (err) {
     console.warn('Error reading startup args:', err);
   }
+
+  // Sync monsters from KGraph & populate monster dropdowns
+  await syncMonstersFromKGraph();
 
   // Populate blockmaps dropdown
   await refreshBlockmapsDropdown();
@@ -677,6 +959,13 @@ async function loadBlockmap(slugOrPath) {
     if (dom.infoBlockmapName) dom.infoBlockmapName.textContent = state.blockmap.title || state.blockmap.id || 'Custom Dungeon';
     if (dom.infoGridSize) dom.infoGridSize.textContent = `${dims[0]} × ${dims[1]}`;
 
+    // If this blockmap is the Midterm Election Capitol board (or Election 2026 quest), default monster pack filter to Midterms 2026
+    const bmIdLower = String(state.blockmap.id || slugOrPath || '').toLowerCase();
+    const qSlugLower = String(state.quest.slug || '').toLowerCase();
+    if (bmIdLower.includes('midterm') || bmIdLower.includes('election') || qSlugLower.includes('election') || qSlugLower.includes('midterm')) {
+      populateMonsterSelects('Midterms 2026');
+    }
+
     // Fit view to screen
     fitView();
     runValidation();
@@ -719,9 +1008,21 @@ async function loadCartridge(slugOrPath) {
     }
 
     const c = res.cartridge;
+    const qMeta = (Array.isArray(c.quests) && c.quests[0]) ? c.quests[0] : {};
     state.quest.slug = res.slug || c.cartridgeId || 'custom-quest';
-    state.quest.title = c.header?.title || 'Custom Quest';
-    state.quest.briefing = c.header?.description || '';
+    state.quest.title = qMeta.title || c.header?.title || 'Custom Quest';
+    state.quest.briefing = qMeta.briefing || c.header?.description || '';
+    if (qMeta.goldReward !== undefined) state.quest.goldReward = Number(qMeta.goldReward) || 100;
+    if (qMeta.campaign) state.quest.campaign = qMeta.campaign;
+    if (qMeta.bossTarget) state.quest.bossTarget = qMeta.bossTarget;
+    if (Array.isArray(qMeta.primaryGoals) && qMeta.primaryGoals.length > 0) {
+      state.quest.primaryGoals = [...qMeta.primaryGoals];
+    }
+    if (c.heroes && typeof c.heroes === 'object' && Object.keys(c.heroes).length > 0) {
+      state.quest.heroes = JSON.parse(JSON.stringify(c.heroes));
+    } else {
+      state.quest.heroes = null;
+    }
 
     // Find the primary map
     let mapData = null;
@@ -738,6 +1039,7 @@ async function loadCartridge(slugOrPath) {
         if (dom.chkAdditionalBorder) dom.chkAdditionalBorder.checked = state.hasAdditionalBorder;
       }
       state.quest.wanderingMonster = mapData.wanderingMonster || 'orc';
+      state.quest.introMovie = mapData.introMovie || (Array.isArray(c.quests) && c.quests[0]?.introMovie) || '';
       state.quest.startingStair = mapData.startingStair || c.header?.startingPosition || [0, 1];
       state.quest.startingStairType = mapData.startingStairType || 'stairs_up_1x1';
       state.quest.exitTile = mapData.exitTile || mapData.exitStair || null;
@@ -746,16 +1048,24 @@ async function loadCartridge(slugOrPath) {
       state.subtool.exitStairType = state.quest.exitStairType;
       if (dom.selectStartStairType) dom.selectStartStairType.value = state.quest.startingStairType;
       if (dom.selectExitStairType) dom.selectExitStairType.value = state.quest.exitStairType;
-      state.quest.doors = (mapData.doors || []).map((d, i) => ({
-        id: d.id || `door-${i+1}`,
-        name: d.name || d.id || (d.is_secret ? `Secret Door ${i+1}` : `Door ${i+1}`),
-        from: d.from || [0, 0],
-        to: d.to || [0, 1],
-        state: d.state || 'closed',
-        is_secret: Boolean(d.is_secret),
-        room: d.room || '',
-        hidden: Boolean(d.hidden)
-      }));
+      state.quest.doors = (mapData.doors || []).map((d, i) => {
+        const dt = d.door_type || (d.width === 2 ? 'double-2x1' : (d.height === 2 ? 'double-1x2' : 'single'));
+        const w = d.width || (dt === 'double-2x1' || dt === 'double-h' ? 2 : 1);
+        const h = d.height || (dt === 'double-1x2' || dt === 'double-v' ? 2 : 1);
+        return {
+          id: d.id || `door-${i+1}`,
+          name: d.name || d.id || (d.is_secret ? `Secret Door ${i+1}` : (w > 1 || h > 1 ? `Double Door ${i+1}` : `Door ${i+1}`)),
+          from: d.from || [0, 0],
+          to: d.to || [0, 1],
+          state: d.state || 'closed',
+          is_secret: Boolean(d.is_secret),
+          room: d.room || '',
+          hidden: Boolean(d.hidden),
+          door_type: dt,
+          width: w,
+          height: h
+        };
+      });
       state.quest.furniture = (mapData.furniture || []).map((f, i) => {
         const rawType = f.type || 'chest';
         const type = rawType === 'stairs' ? 'stairs_up_1x1' : rawType;
@@ -864,16 +1174,19 @@ async function loadCartridge(slugOrPath) {
             id: m.id || `mon-${i+1}`,
             name: m.name || def.name,
             type: type,
-            bp: m.bodyPoints || def.bp,
-            mp: m.mindPoints || def.mp,
-            atk: m.attackDice || def.atk,
-            def: m.defendDice || def.def,
-            move: m.movementSquares || def.move,
+            bp: m.bodyPoints ?? def.bp,
+            mp: m.mindPoints ?? def.mp,
+            atk: m.attackDice ?? def.atk,
+            def: m.defendDice ?? def.def,
+            move: m.movementSquares ?? def.move,
             pos: m.position || [0, 0],
             roomId: m.roomId || '',
-            isBoss: Boolean(m.isBoss),
-            isUndead: Boolean(m.isUndead),
-            isSpellcaster: Boolean(m.isSpellcaster),
+            isBoss: m.isBoss !== undefined ? Boolean(m.isBoss) : Boolean(def.isBoss),
+            isUndead: m.isUndead !== undefined ? Boolean(m.isUndead) : Boolean(def.isUndead),
+            isSpellcaster: m.isSpellcaster !== undefined ? Boolean(m.isSpellcaster) : Boolean(def.isCaster),
+            icon: m.icon || def.icon || '👾',
+            color: m.tokenColor || m.color || def.color || '#ca8a04',
+            spells: Array.isArray(m.spells) ? m.spells : (def.spells || []),
             hidden: Boolean(m.hidden)
           });
         });
@@ -886,16 +1199,19 @@ async function loadCartridge(slugOrPath) {
             id: m.id || k,
             name: m.name || def.name,
             type: type,
-            bp: m.bodyPoints || def.bp,
-            mp: m.mindPoints || def.mp,
-            atk: m.attackDice || def.atk,
-            def: m.defendDice || def.def,
-            move: m.movementSquares || def.move,
+            bp: m.bodyPoints ?? def.bp,
+            mp: m.mindPoints ?? def.mp,
+            atk: m.attackDice ?? def.atk,
+            def: m.defendDice ?? def.def,
+            move: m.movementSquares ?? def.move,
             pos: m.position || [0, 0],
             roomId: m.roomId || '',
-            isBoss: Boolean(m.isBoss),
-            isUndead: Boolean(m.isUndead),
-            isSpellcaster: Boolean(m.isSpellcaster),
+            isBoss: m.isBoss !== undefined ? Boolean(m.isBoss) : Boolean(def.isBoss),
+            isUndead: m.isUndead !== undefined ? Boolean(m.isUndead) : Boolean(def.isUndead),
+            isSpellcaster: m.isSpellcaster !== undefined ? Boolean(m.isSpellcaster) : Boolean(def.isCaster),
+            icon: m.icon || def.icon || '👾',
+            color: m.tokenColor || m.color || def.color || '#ca8a04',
+            spells: Array.isArray(m.spells) ? m.spells : (def.spells || []),
             hidden: Boolean(m.hidden)
           });
         });
@@ -929,11 +1245,17 @@ function buildCartridgePayload() {
   // Build monsters dictionary
   const monstersDict = {};
   q.monsters.forEach(m => {
+    const def = MONSTER_DEFS[m.type] || MONSTER_DEFS.goblin || {};
+    const defaultSpells = Array.isArray(def.spells) && def.spells.length > 0 ? def.spells : ['lightning-bolt', 'firestorm'];
     monstersDict[m.id] = {
       id: m.id,
       slug: `${m.type}-${m.id}`,
       name: m.name,
       monsterType: m.type,
+      category: def.category || 'Base Game',
+      monsterArchetype: def.archetype || def.name || m.type,
+      icon: m.icon || def.icon || '👾',
+      tokenColor: m.color || def.color || '#ca8a04',
       bodyPoints: m.bp,
       mindPoints: m.mp,
       attackDice: m.atk,
@@ -942,7 +1264,7 @@ function buildCartridgePayload() {
       isBoss: m.isBoss,
       isUndead: m.isUndead,
       isSpellcaster: m.isSpellcaster,
-      spells: m.isSpellcaster ? ['lightning-bolt', 'firestorm'] : [],
+      spells: m.isSpellcaster ? (Array.isArray(m.spells) && m.spells.length > 0 ? m.spells : defaultSpells) : [],
       position: [m.pos[0], m.pos[1]],
       roomId: m.roomId || '',
       hidden: Boolean(m.hidden)
@@ -971,34 +1293,159 @@ function buildCartridgePayload() {
       startingPosition: q.startingStair || [0, 1],
       createdDate: new Date().toISOString()
     },
-    heroes: {
-      barbarian: {
-        id: 'barbarian', slug: 'barbarian', name: 'Barbarian', heroClass: 'Barbarian',
-        bodyPoints: 8, mindPoints: 2, attackDice: 3, defendDice: 2, gold: 100,
-        position: q.startingStair || [0, 1]
-      },
-      dwarf: {
-        id: 'dwarf', slug: 'dwarf', name: 'Dwarf', heroClass: 'Dwarf',
-        bodyPoints: 7, mindPoints: 3, attackDice: 2, defendDice: 2, gold: 100,
-        position: q.startingStair || [0, 1]
-      },
-      elf: {
-        id: 'elf', slug: 'elf', name: 'Elf', heroClass: 'Elf',
-        bodyPoints: 6, mindPoints: 4, attackDice: 2, defendDice: 2, gold: 100,
-        position: q.startingStair || [0, 1]
-      },
-      wizard: {
-        id: 'wizard', slug: 'wizard', name: 'Wizard', heroClass: 'Wizard',
-        bodyPoints: 4, mindPoints: 6, attackDice: 1, defendDice: 2, gold: 100,
-        position: q.startingStair || [0, 1]
+    heroes: (() => {
+      const DEFAULT_HERO_AUDIO_LINES = {
+        barbarian: {
+          turnStart: [{ text: 'By my broadsword, clear a path!', audio: 'res://assets/audio/heroes/barbarian_turn_start.ogg' }],
+          attacking: [{ text: 'Taste cold Cimmerian steel!', audio: 'res://assets/audio/heroes/barbarian_attacking.ogg' }],
+          attacked: [{ text: 'Aagh! Only a flesh wound!', audio: 'res://assets/audio/heroes/barbarian_attacked.ogg' }],
+          defended: [{ text: 'Ha! Your feeble blow bounces off my iron muscles!', audio: 'res://assets/audio/heroes/barbarian_defended.ogg' }],
+          castingMagic: [{ text: 'The ancient battle-spirit surges through my blade!', audio: 'res://assets/audio/heroes/barbarian_casting_magic.ogg' }]
+        },
+        dwarf: {
+          turnStart: [{ text: "Stand back! Let a Dwarf of the World's Edge Mountains handle this!", audio: 'res://assets/audio/heroes/dwarf_turn_start.ogg' }],
+          attacking: [{ text: "For Grungni's beard, feel my battle-axe!", audio: 'res://assets/audio/heroes/dwarf_attacking.ogg' }],
+          attacked: [{ text: 'Oof! Right in the chainmail!', audio: 'res://assets/audio/heroes/dwarf_attacked.ogg' }],
+          defended: [{ text: 'Dwarven forged steel never yields!', audio: 'res://assets/audio/heroes/dwarf_defended.ogg' }],
+          castingMagic: [{ text: 'By the runes of the anvil, awaken!', audio: 'res://assets/audio/heroes/dwarf_casting_magic.ogg' }]
+        },
+        elf: {
+          turnStart: [{ text: 'With elven grace, I step into the shadows.', audio: 'res://assets/audio/heroes/elf_turn_start.ogg' }],
+          attacking: [{ text: 'Swift as the wind, strike true!', audio: 'res://assets/audio/heroes/elf_attacking.ogg' }],
+          attacked: [{ text: 'Ah! Darkness stings, yet my spirit endures!', audio: 'res://assets/audio/heroes/elf_attacked.ogg' }],
+          defended: [{ text: 'Too slow, creature! The forest shields me!', audio: 'res://assets/audio/heroes/elf_defended.ogg' }],
+          castingMagic: [{ text: 'Ancient weave of earth and water, heed my call!', audio: 'res://assets/audio/heroes/elf_casting_magic.ogg' }]
+        },
+        wizard: {
+          turnStart: [{ text: 'The winds of magic gather at my staff.', audio: 'res://assets/audio/heroes/wizard_turn_start.ogg' }],
+          attacking: [{ text: 'Back, foul fiend, before my arcane staff!', audio: 'res://assets/audio/heroes/wizard_attacking.ogg' }],
+          attacked: [{ text: 'Gah! My ward-cloak falters!', audio: 'res://assets/audio/heroes/wizard_attacked.ogg' }],
+          defended: [{ text: 'My arcane barrier deflects your strike!', audio: 'res://assets/audio/heroes/wizard_defended.ogg' }],
+          castingMagic: [{ text: 'By fire, air, and tempest, unleash the spell!', audio: 'res://assets/audio/heroes/wizard_casting_magic.ogg' }]
+        },
+        obama: {
+          turnStart: [{ text: 'Uhh... let me be clear... It is now... my turn... to march... toward the horizon... of hope.', audio: 'res://assets/audio/heroes/obama_turn_start.ogg' }],
+          attacking: [{ text: 'Uhh... feel the audacity... of this broadsword... of hope!', audio: 'res://assets/audio/heroes/obama_attacking.ogg' }],
+          attacked: [{ text: 'Uhh... folks... that strike... did not feel... very hopeful.', audio: 'res://assets/audio/heroes/obama_attacked.ogg' }],
+          defended: [{ text: 'Uhh... nice try... You cannot pierce... the shield... of hope.', audio: 'res://assets/audio/heroes/obama_defended.ogg' }],
+          castingMagic: [{ text: 'Uhh... by the power... of hope... and change... I cast... this spell.', audio: 'res://assets/audio/heroes/obama_casting_magic.ogg' }]
+        },
+        trump: {
+          turnStart: [{ text: "As you can see, I'm not just MAGA — I'm Dark MAGA!", audio: 'res://assets/audio/heroes/trump_turn_start.ogg' }],
+          attacking: [{ text: "And I do it! He doesn't do it! He can't hit a ball 50 yards! He challenged me to a golf match, he can't hit a ball 50 yards!", audio: 'res://assets/audio/heroes/trump_attacking.ogg' }],
+          attacked: [{ text: "Would you look at what's happening? This is a persecution! This was never supposed to happen in America!", audio: 'res://assets/audio/heroes/trump_attacked.ogg' }],
+          defended: [{ text: "Here's the fighter — somebody who tried to kill him! You will not take this man down!", audio: 'res://assets/audio/heroes/trump_defended.ogg' }],
+          castingMagic: [{ text: "Do you think that we have aliens coming, flying around or whatever? There's no reason not to think that Mars and all these planets don't have life!", audio: 'res://assets/audio/heroes/trump_casting_magic.ogg' }]
+        },
+        'hillary-clinton': {
+          turnStart: [{ text: "We've traveled to every corner of the United States. I've now been in 57 states — I think one left to go!", audio: 'res://assets/audio/heroes/hillary_turn_start.ogg' }],
+          attacking: [{ text: 'We came, we saw, he died! Ha ha ha!', audio: 'res://assets/audio/heroes/hillary_attacking.ogg' }],
+          attacked: [{ text: 'What difference, at this point, does it make?!', audio: 'res://assets/audio/heroes/hillary_attacked.ogg' }],
+          defended: [{ text: "What, like with a cloth or something? Well, no, I don't know how it works digitally at all!", audio: 'res://assets/audio/heroes/hillary_defended.ogg' }],
+          castingMagic: [{ text: "But I cast it with conviction! And I want the Iranians to know that if I'm the President, we will attack Iran!", audio: 'res://assets/audio/heroes/hillary_casting_magic.ogg' }]
+        },
+        'bernie-sanders': {
+          turnStart: [{ text: "Let's talk about welfare for the rich and the powerful!", audio: 'res://assets/audio/heroes/bernie_turn_start.ogg' }],
+          attacking: [{ text: 'I will be damned if I will vote for a proposal which will stick it to the middle class and the working people!', audio: 'res://assets/audio/heroes/bernie_attacking.ogg' }],
+          attacked: [{ text: "Mr. Speaker, I've got a problem! I've got a problem with a President and a Congress which allows five million children to go hungry!", audio: 'res://assets/audio/heroes/bernie_attacked.ogg' }],
+          defended: [{ text: 'What we are saying very loud and clear is that Ronald Reagan and his billionaire friends do not represent the America that we do!', audio: 'res://assets/audio/heroes/bernie_defended.ogg' }],
+          castingMagic: [{ text: 'This democracy is evolving into an oligarchy! And an oligarchy is a country in which a few people have tremendous wealth and power!', audio: 'res://assets/audio/heroes/bernie_casting_magic.ogg' }]
+        }
+      };
+      const startPos = q.startingStair || [0, 1];
+      if (q.heroes && typeof q.heroes === 'object' && Object.keys(q.heroes).length > 0) {
+        const preserved = JSON.parse(JSON.stringify(q.heroes));
+        for (const hKey of Object.keys(preserved)) {
+          const h = preserved[hKey];
+          if (h && typeof h === 'object') {
+            if (!Array.isArray(h.position)) h.position = startPos;
+            const lookupKey = String(h.id || h.slug || hKey).toLowerCase();
+            const fallbackAl = DEFAULT_HERO_AUDIO_LINES[lookupKey] || DEFAULT_HERO_AUDIO_LINES[String(h.heroClass || 'barbarian').toLowerCase()] || DEFAULT_HERO_AUDIO_LINES.barbarian;
+            if (!h.audioLines) h.audioLines = h['robos:audioLines'] || fallbackAl;
+            if (!h['robos:audioLines']) h['robos:audioLines'] = h.audioLines;
+          }
+        }
+        return preserved;
       }
-    },
+      const isElection = String(q.slug || '').includes('election') || String(q.campaign || '').includes('Midterm');
+      if (isElection) {
+        return {
+          obama: {
+            id: 'obama', slug: 'obama', name: 'Barack Obama', heroClass: 'Barbarian',
+            bodyPoints: 8, mindPoints: 2, attackDice: 3, defendDice: 2, gold: 120,
+            tokenAsset: 'assets/tokens/token_obama.png',
+            portraitAsset: 'assets/hero_cards/card_bg_obama.png',
+            audioLines: DEFAULT_HERO_AUDIO_LINES.obama,
+            'robos:audioLines': DEFAULT_HERO_AUDIO_LINES.obama,
+            position: startPos
+          },
+          trump: {
+            id: 'trump', slug: 'trump', name: 'Donald Trump', heroClass: 'Dwarf',
+            bodyPoints: 7, mindPoints: 3, attackDice: 2, defendDice: 2, gold: 250,
+            tokenAsset: 'assets/tokens/token_trump.png',
+            portraitAsset: 'assets/hero_cards/card_bg_trump.png',
+            audioLines: DEFAULT_HERO_AUDIO_LINES.trump,
+            'robos:audioLines': DEFAULT_HERO_AUDIO_LINES.trump,
+            position: startPos
+          },
+          'hillary-clinton': {
+            id: 'hillary-clinton', slug: 'hillary-clinton', name: 'Hillary Clinton', heroClass: 'Elf',
+            bodyPoints: 6, mindPoints: 4, attackDice: 2, defendDice: 2, gold: 150,
+            tokenAsset: 'assets/tokens/token_hillary_clinton.png',
+            portraitAsset: 'assets/hero_cards/card_bg_hillary_clinton.png',
+            audioLines: DEFAULT_HERO_AUDIO_LINES['hillary-clinton'],
+            'robos:audioLines': DEFAULT_HERO_AUDIO_LINES['hillary-clinton'],
+            position: startPos
+          },
+          'bernie-sanders': {
+            id: 'bernie-sanders', slug: 'bernie-sanders', name: 'Bernie Sanders', heroClass: 'Wizard',
+            bodyPoints: 4, mindPoints: 6, attackDice: 1, defendDice: 2, gold: 99,
+            tokenAsset: 'assets/tokens/token_bernie_sanders.png',
+            portraitAsset: 'assets/hero_cards/card_bg_bernie_sanders.png',
+            audioLines: DEFAULT_HERO_AUDIO_LINES['bernie-sanders'],
+            'robos:audioLines': DEFAULT_HERO_AUDIO_LINES['bernie-sanders'],
+            position: startPos
+          }
+        };
+      }
+      return {
+        barbarian: {
+          id: 'barbarian', slug: 'barbarian', name: 'Barbarian', heroClass: 'Barbarian',
+          bodyPoints: 8, mindPoints: 2, attackDice: 3, defendDice: 2, gold: 100,
+          audioLines: DEFAULT_HERO_AUDIO_LINES.barbarian,
+          'robos:audioLines': DEFAULT_HERO_AUDIO_LINES.barbarian,
+          position: startPos
+        },
+        dwarf: {
+          id: 'dwarf', slug: 'dwarf', name: 'Dwarf', heroClass: 'Dwarf',
+          bodyPoints: 7, mindPoints: 3, attackDice: 2, defendDice: 2, gold: 100,
+          audioLines: DEFAULT_HERO_AUDIO_LINES.dwarf,
+          'robos:audioLines': DEFAULT_HERO_AUDIO_LINES.dwarf,
+          position: startPos
+        },
+        elf: {
+          id: 'elf', slug: 'elf', name: 'Elf', heroClass: 'Elf',
+          bodyPoints: 6, mindPoints: 4, attackDice: 2, defendDice: 2, gold: 100,
+          audioLines: DEFAULT_HERO_AUDIO_LINES.elf,
+          'robos:audioLines': DEFAULT_HERO_AUDIO_LINES.elf,
+          position: startPos
+        },
+        wizard: {
+          id: 'wizard', slug: 'wizard', name: 'Wizard', heroClass: 'Wizard',
+          bodyPoints: 4, mindPoints: 6, attackDice: 1, defendDice: 2, gold: 100,
+          audioLines: DEFAULT_HERO_AUDIO_LINES.wizard,
+          'robos:audioLines': DEFAULT_HERO_AUDIO_LINES.wizard,
+          position: startPos
+        }
+      };
+    })(),
     monsters: monstersDict,
     maps: {
       [q.slug]: {
         id: q.slug,
         title: q.title,
         mapConfigurationId: bm.id || 'custom-blockmap',
+        introMovie: q.introMovie || ((/election-2026|midterm/i.test(String(q.slug || '')) || /midterm/i.test(String(bm.id || ''))) ? 'res://assets/movies/election_2026_intro_movie.ogv' : undefined),
         width: dims[0],
         height: dims[1],
         additionalBorderTile: Boolean(state.hasAdditionalBorder),
@@ -1023,7 +1470,10 @@ function buildCartridgePayload() {
           state: d.state || 'closed',
           is_secret: Boolean(d.is_secret),
           room: d.room || '',
-          hidden: Boolean(d.hidden)
+          hidden: Boolean(d.hidden),
+          door_type: d.door_type || (d.width === 2 ? 'double-2x1' : (d.height === 2 ? 'double-1x2' : 'single')),
+          width: d.width || (d.door_type === 'double-2x1' || d.door_type === 'double-h' ? 2 : 1),
+          height: d.height || (d.door_type === 'double-1x2' || d.door_type === 'double-v' ? 2 : 1)
         })),
         furniture: q.furniture.map(f => ({
           id: f.id,
@@ -1056,25 +1506,29 @@ function buildCartridgePayload() {
           disarmed: false,
           hidden: Boolean(t.hidden)
         })),
-        triggers: q.storyTriggers.map(st => ({
-          id: st.id,
-          name: st.title || st.name || '',
-          title: st.title || st.name || '',
-          marker: st.marker,
-          event: st.event || (st.room ? 'on_room_entered' : 'on_tile_stepped_on'),
-          target: st.target || st.room || st.doorId || st.monsterId || '',
-          room: st.room || '',
-          doorId: st.doorId || '',
-          monsterId: st.monsterId || '',
-          tile: [st.tile[0], st.tile[1]],
-          onceOnly: Boolean(st.onceOnly !== false),
-          narrative: st.narrative || '',
-          hidden: Boolean(st.hidden),
-          actions: (st.actions || []).map(a => ({
-            ...a,
-            lines: Array.isArray(a.lines) ? a.lines.map(l => ({ ...l })) : undefined
-          }))
-        })),
+        triggers: q.storyTriggers.map(st => {
+          const movieAction = (st.actions || []).find(a => a.type === 'play_movie');
+          return {
+            id: st.id,
+            name: st.title || st.name || '',
+            title: st.title || st.name || '',
+            marker: st.marker,
+            event: st.event || (st.room ? 'on_room_entered' : 'on_tile_stepped_on'),
+            target: st.target || st.room || st.doorId || st.monsterId || '',
+            room: st.room || '',
+            doorId: st.doorId || '',
+            monsterId: st.monsterId || '',
+            tile: [st.tile[0], st.tile[1]],
+            onceOnly: Boolean(st.onceOnly !== false),
+            narrative: st.narrative || '',
+            movie: st.movie || movieAction?.moviePath || '',
+            hidden: Boolean(st.hidden),
+            actions: (st.actions || []).map(a => ({
+              ...a,
+              lines: Array.isArray(a.lines) ? a.lines.map(l => ({ ...l })) : undefined
+            }))
+          };
+        }),
         storyTriggers: q.storyTriggers.map(st => {
           const movieAction = (st.actions || []).find(a => a.type === 'play_movie');
           return {
@@ -1087,7 +1541,7 @@ function buildCartridgePayload() {
             room: st.room || '',
             event: st.event || (st.room ? 'on_room_entered' : 'on_tile_stepped_on'),
             onceOnly: Boolean(st.onceOnly !== false),
-            movie: movieAction?.moviePath || '',
+            movie: st.movie || movieAction?.moviePath || '',
             hidden: Boolean(st.hidden),
             actions: (st.actions || []).map(a => ({
               ...a,
@@ -1096,7 +1550,47 @@ function buildCartridgePayload() {
           };
         })
       }
-    }
+    },
+    quests: [
+      (() => {
+        const isMidterm = /election-2026|midterm/i.test(String(q.slug || '')) || /midterm/i.test(String(bm.id || ''));
+        const bossMonsters = (q.monsters || []).filter(m => m.isBoss);
+        const bossNames = Array.from(new Set(bossMonsters.map(m => m.name).filter(Boolean)));
+        let primaryGoals = Array.isArray(q.primaryGoals) && q.primaryGoals.length > 0 ? [...q.primaryGoals] : [];
+        if (primaryGoals.length === 0) {
+          if (isMidterm) {
+            primaryGoals = [
+              'Slay Talarixon (The Texas Hydra: Ken Paxton & James Talarico) in the Oval Office.',
+              'Slay El-Rogers (The Michigan Hydra: Abdul El-Sayed & Mike Rogers) in the Senate Chamber.',
+              'Slay Brownsted (The Ohio Hydra: Sherrod Brown & Jon Husted) in the House Chamber.'
+            ];
+          } else if (bossNames.length > 0) {
+            primaryGoals = [
+              `Locate and defeat ${bossNames.join(', ')}.`,
+              'Explore the dungeon chambers and search for hidden treasures.',
+              Array.isArray(q.exitTile)
+                ? `Lead all surviving heroes safely to the dungeon exit stairs at [${q.exitTile[0]}, ${q.exitTile[1]}].`
+                : 'Ensure all living heroes return safely to the spiral stairway.'
+            ];
+          }
+        }
+        return {
+          id: q.slug,
+          slug: q.slug,
+          campaign: q.campaign || (isMidterm ? 'Election 2026: Battle for the Hill' : 'HeroQuest'),
+          title: q.title,
+          introMovie: q.introMovie || (isMidterm ? 'res://assets/movies/election_2026_intro_movie.ogv' : undefined),
+          briefing: q.briefing,
+          goldReward: Number(q.goldReward) || (isMidterm ? 150 : 100),
+          completed: false,
+          mapConfigId: bm.id || 'custom-blockmap',
+          startingPosition: q.startingStair || [0, 1],
+          exitTile: q.exitTile || null,
+          bossTarget: q.bossTarget || (bossMonsters[0]?.type || bossMonsters[0]?.id || ''),
+          primaryGoals
+        };
+      })()
+    ]
   };
 
   return cartridgeData;
@@ -1989,16 +2483,16 @@ function generateQuestPdfHtml(quest, blockmap, mapDataUrl, options = {}) {
   monsters.forEach(m => {
     const type = m.type || 'goblin';
     if (!monsterCounts[type]) {
-      const def = MONSTER_DEFS[type] || { name: type, move: 6, attack: 2, defend: 2, body: 1, mind: 1, icon: '👾' };
+      const def = MONSTER_DEFS[type] || { name: m.name || type, move: 6, atk: 2, def: 2, bp: 1, mp: 1, icon: '👾' };
       monsterCounts[type] = {
-        name: def.name || type,
-        icon: def.icon || '👾',
+        name: def.name || m.name || type,
+        icon: m.icon || def.icon || '👾',
         count: 0,
-        move: def.move || 6,
-        attack: def.attack || 2,
-        defend: def.defend || 2,
-        body: def.body || 1,
-        mind: def.mind || 1,
+        move: m.move ?? def.move ?? 6,
+        attack: m.atk ?? def.atk ?? def.attack ?? 2,
+        defend: m.def ?? def.def ?? def.defend ?? 2,
+        body: m.bp ?? def.bp ?? def.body ?? 1,
+        mind: m.mp ?? def.mp ?? def.mind ?? 1,
         bossCount: 0
       };
     }
@@ -2631,18 +3125,22 @@ async function testPlay() {
 function preloadAssets() {
   if (!window.robosQuestEditor) return;
 
+  const monsterAssetKeys = [
+    'goblin', 'orc', 'skeleton', 'zombie', 'mummy', 'chaos_warrior', 'fimir', 'gargoyle',
+    'verag', 'orc_shaman', 'chaos_sorcerer', 'witch_lord', 'dragon', 'doomguard', 'witch_hand',
+    'campaign_volunteer', 'political_operative', 'career_politician', 'bureaucrat',
+    'lobbyist', 'partisan_enforcer', 'super_pac_demon', 'spin_doctor',
+    'talarixon', 'el_rogers', 'brownsted',
+    'katie_zacharia', 'mitch_mcconnell', 'war_room_boss'
+  ];
+
   const assetsToLoad = [
     { key: 'door_closed', path: 'assets/doors/door_closed.png' },
     { key: 'door_open', path: 'assets/doors/door_open.png' },
-    { key: 'token_goblin', path: 'assets/tokens/token_goblin.png' },
-    { key: 'token_orc', path: 'assets/tokens/token_orc.png' },
-    { key: 'token_skeleton', path: 'assets/tokens/token_skeleton.png' },
-    { key: 'token_zombie', path: 'assets/tokens/token_zombie.png' },
-    { key: 'token_mummy', path: 'assets/tokens/token_mummy.png' },
-    { key: 'token_chaos_warrior', path: 'assets/tokens/token_chaos_warrior.png' },
-    { key: 'token_fimir', path: 'assets/tokens/token_fimir.png' },
     { key: 'token_abomination', path: 'assets/tokens/token_fimir.png' },
-    { key: 'token_gargoyle', path: 'assets/tokens/token_gargoyle.png' },
+    { key: 'token_dread-warrior', path: 'assets/tokens/token_chaos_warrior.png' },
+    ...monsterAssetKeys.map(k => ({ key: `token_${k}`, path: `assets/tokens/token_${k}.png` })),
+    ...monsterAssetKeys.map(k => ({ key: `portrait_${k}`, path: `assets/monster_cards/card_bg_${k}.png` })),
     { key: 'chest', path: 'assets/furniture/chest.png' },
     { key: 'table', path: 'assets/furniture/table.png' },
     { key: 'bookcase', path: 'assets/furniture/bookcase.png' },
@@ -2675,6 +3173,8 @@ function preloadAssets() {
         const img = new Image();
         img.onload = () => {
           state.assetCache[item.key] = img;
+          updateMonsterSuboptPreview();
+          updateEntitySummaryList();
           render();
         };
         img.src = res.dataUrl;
@@ -2686,11 +3186,51 @@ function preloadAssets() {
 // -------------------------------------------------------------
 // Coordinate Math & Geometry
 // -------------------------------------------------------------
-function resizeCanvas() {
-  if (!dom || !dom.viewport || !dom.canvas) return;
+function resizeCanvas(options = {}) {
+  if (!dom || !dom.viewport || !dom.canvas) return false;
   const rect = dom.viewport.getBoundingClientRect();
-  dom.canvas.width = rect.width;
-  dom.canvas.height = rect.height;
+  const newW = Math.round(rect.width);
+  const newH = Math.round(rect.height);
+  if (newW <= 0 || newH <= 0) return false;
+
+  const prevW = state.lastViewportWidth || dom.canvas.width || 0;
+  const prevH = state.lastViewportHeight || dom.canvas.height || 0;
+  const sizeChanged = newW !== dom.canvas.width || newH !== dom.canvas.height || newW !== prevW || newH !== prevH;
+
+  dom.canvas.width = newW;
+  dom.canvas.height = newH;
+  state.lastViewportWidth = newW;
+  state.lastViewportHeight = newH;
+
+  if (options.adjustCamera && sizeChanged && prevW > 0 && prevH > 0) {
+    if (state.autoFit !== false) {
+      fitView();
+    } else {
+      const centerWorldX = (prevW / 2 - state.panX) / state.zoom;
+      const centerWorldY = (prevH / 2 - state.panY) / state.zoom;
+      const geom = getGridGeometry();
+      const minC = geom.hasAdditionalBorder ? -1 : 0;
+      const maxC = geom.hasAdditionalBorder ? geom.cols + 1 : geom.cols;
+      const minR = geom.hasAdditionalBorder ? -1 : 0;
+      const maxR = geom.hasAdditionalBorder ? geom.rows + 1 : geom.rows;
+      const boardW = Math.max(1, (maxC - minC) * geom.tileSize);
+      const boardH = Math.max(1, (maxR - minR) * geom.tileSize);
+      const oldFitScale = Math.min(Math.max(60, prevW - 80) / boardW, Math.max(60, prevH - 80) / boardH);
+      const newFitScale = Math.min(Math.max(60, newW - 80) / boardW, Math.max(60, newH - 80) / boardH);
+      const scaleRatio = oldFitScale > 0 ? (newFitScale / oldFitScale) : 1;
+      state.zoom = Math.max(0.25, Math.min(4.0, state.zoom * scaleRatio));
+      state.panX = Math.round(newW / 2 - centerWorldX * state.zoom);
+      state.panY = Math.round(newH / 2 - centerWorldY * state.zoom);
+      updateZoomUI();
+    }
+  }
+  return sizeChanged;
+}
+
+function handleViewportResize() {
+  if (resizeCanvas({ adjustCamera: true })) {
+    render();
+  }
 }
 
 function getGridGeometry() {
@@ -2779,7 +3319,7 @@ function detectDoorEdge(wx, wy) {
   const tile = worldToTile(wx, wy);
   if (!tile) return null;
 
-  const [col, row] = tile;
+  let [col, row] = tile;
   const tilePos = tileToWorld(col, row);
   const relX = (wx - tilePos.x) / geom.tileSize;
   const relY = (wy - tilePos.y) / geom.tileSize;
@@ -2817,12 +3357,58 @@ function detectDoorEdge(wx, wy) {
     cy = tilePos.y + geom.tileSize / 2;
   }
 
+  // Double door sizing / snapping adjustments
+  const isDouble2x1 = state.subtool.doorSize === 'double-2x1' || (state.subtool.doorSize === 'double-auto' && orientation === 'h');
+  const isDouble1x2 = state.subtool.doorSize === 'double-1x2' || (state.subtool.doorSize === 'double-auto' && orientation === 'v');
+
+  if (state.subtool.doorSize === 'double-2x1') {
+    if (orientation === 'v') {
+      orientation = 'h';
+      if (relY < 0.5) {
+        to = [col, row - 1];
+        cy = tilePos.y;
+      } else {
+        to = [col, row + 1];
+        cy = tilePos.y + geom.tileSize;
+      }
+    }
+  } else if (state.subtool.doorSize === 'double-1x2') {
+    if (orientation === 'h') {
+      orientation = 'v';
+      if (relX < 0.5) {
+        to = [col - 1, row];
+        cx = tilePos.x;
+      } else {
+        to = [col + 1, row];
+        cx = tilePos.x + geom.tileSize;
+      }
+    }
+  }
+
+  if (isDouble2x1) {
+    if (col >= geom.cols - 1) {
+      col = Math.max(0, geom.cols - 2);
+      from[0] = col;
+      to[0] = col;
+    }
+    const baseP = tileToWorld(col, row);
+    cx = baseP.x + geom.tileSize;
+  } else if (isDouble1x2) {
+    if (row >= geom.rows - 1) {
+      row = Math.max(0, geom.rows - 2);
+      from[1] = row;
+      to[1] = row;
+    }
+    const baseP = tileToWorld(col, row);
+    cy = baseP.y + geom.tileSize;
+  }
+
   // Determine target room
   const room1 = findRoomAtTile(from[0], from[1]);
   const room2 = findRoomAtTile(to[0], to[1]);
   const room = room1 ? room1.id : (room2 ? room2.id : '');
 
-  return { from, to, orientation, cx, cy, room };
+  return { from, to, orientation, cx, cy, room, isDouble2x1, isDouble1x2 };
 }
 
 // -------------------------------------------------------------
@@ -3284,27 +3870,30 @@ function drawBoardLayers(ctx, geom, options = {}) {
   if (showDoors && state.quest.doors) {
     state.quest.doors.forEach((d, i) => {
       const isVertical = d.from[0] !== d.to[0];
+      const isDoubleH = d.door_type === 'double-2x1' || d.door_type === 'double-h' || d.width === 2;
+      const isDoubleV = d.door_type === 'double-1x2' || d.door_type === 'double-v' || d.height === 2;
+      const isDouble = isDoubleH || isDoubleV;
       const c = isVertical ? Math.max(d.from[0], d.to[0]) : d.from[0];
       const r = isVertical ? d.from[1] : Math.max(d.from[1], d.to[1]);
       const basePos = tileToWorld(c, r);
       const ts = geom.tileSize;
-      const doorLength = Math.round(ts * 0.82);
-      const doorThick = 8;
+      const doorLength = isDouble ? Math.round(ts * 1.82) : Math.round(ts * 0.82);
+      const doorThick = isDouble ? 9 : 8;
 
       let dw, dh, dx, dy, cx, cy;
       if (isVertical) {
         dw = doorThick;
         dh = doorLength;
         cx = basePos.x;
-        cy = basePos.y + ts / 2;
+        cy = isDoubleV ? (basePos.y + ts) : (basePos.y + ts / 2);
         dx = cx - dw / 2;
-        dy = basePos.y + (ts - dh) / 2;
+        dy = cy - dh / 2;
       } else {
         dw = doorLength;
         dh = doorThick;
-        cx = basePos.x + ts / 2;
+        cx = isDoubleH ? (basePos.x + ts) : (basePos.x + ts / 2);
         cy = basePos.y;
-        dx = basePos.x + (ts - dw) / 2;
+        dx = cx - dw / 2;
         dy = cy - dh / 2;
       }
 
@@ -3330,30 +3919,62 @@ function drawBoardLayers(ctx, geom, options = {}) {
           ctx.stroke();
           ctx.setLineDash([]);
 
-          // Swung stone slab
-          const leafLen = Math.round(doorLength * 0.82);
+          const leafLen = Math.round(doorLength * (isDouble ? 0.42 : 0.82));
           const leafThick = 5.5;
           ctx.fillStyle = '#6b21a8';
           ctx.strokeStyle = '#d8b4fe';
           ctx.lineWidth = 1.5;
-          if (isVertical) {
-            ctx.fillRect(cx, dy - leafThick / 2, leafLen, leafThick);
-            ctx.strokeRect(cx, dy - leafThick / 2, leafLen, leafThick);
-            ctx.strokeStyle = 'rgba(216, 180, 254, 0.7)';
-            ctx.setLineDash([2, 2]);
-            ctx.beginPath();
-            ctx.arc(cx, dy, leafLen, 0, Math.PI / 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
+
+          if (isDouble) {
+            if (isVertical) {
+              // Top slab
+              ctx.fillRect(cx, dy - leafThick / 2, leafLen, leafThick);
+              ctx.strokeRect(cx, dy - leafThick / 2, leafLen, leafThick);
+              // Bottom slab
+              ctx.fillRect(cx, dy + dh - leafThick / 2, leafLen, leafThick);
+              ctx.strokeRect(cx, dy + dh - leafThick / 2, leafLen, leafThick);
+              ctx.strokeStyle = 'rgba(216, 180, 254, 0.7)';
+              ctx.setLineDash([2, 2]);
+              ctx.beginPath();
+              ctx.arc(cx, dy, leafLen, 0, Math.PI / 2);
+              ctx.arc(cx, dy + dh, leafLen, 0, Math.PI / 2);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            } else {
+              // Left slab
+              ctx.fillRect(dx - leafThick / 2, cy, leafThick, leafLen);
+              ctx.strokeRect(dx - leafThick / 2, cy, leafThick, leafLen);
+              // Right slab
+              ctx.fillRect(dx + dw - leafThick / 2, cy, leafThick, leafLen);
+              ctx.strokeRect(dx + dw - leafThick / 2, cy, leafThick, leafLen);
+              ctx.strokeStyle = 'rgba(216, 180, 254, 0.7)';
+              ctx.setLineDash([2, 2]);
+              ctx.beginPath();
+              ctx.arc(dx, cy, leafLen, 0, Math.PI / 2);
+              ctx.arc(dx + dw, cy, leafLen, Math.PI / 2, Math.PI);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            }
           } else {
-            ctx.fillRect(dx - leafThick / 2, cy, leafThick, leafLen);
-            ctx.strokeRect(dx - leafThick / 2, cy, leafThick, leafLen);
-            ctx.strokeStyle = 'rgba(216, 180, 254, 0.7)';
-            ctx.setLineDash([2, 2]);
-            ctx.beginPath();
-            ctx.arc(dx, cy, leafLen, 0, Math.PI / 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
+            if (isVertical) {
+              ctx.fillRect(cx, dy - leafThick / 2, leafLen, leafThick);
+              ctx.strokeRect(cx, dy - leafThick / 2, leafLen, leafThick);
+              ctx.strokeStyle = 'rgba(216, 180, 254, 0.7)';
+              ctx.setLineDash([2, 2]);
+              ctx.beginPath();
+              ctx.arc(cx, dy, leafLen, 0, Math.PI / 2);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            } else {
+              ctx.fillRect(dx - leafThick / 2, cy, leafThick, leafLen);
+              ctx.strokeRect(dx - leafThick / 2, cy, leafThick, leafLen);
+              ctx.strokeStyle = 'rgba(216, 180, 254, 0.7)';
+              ctx.setLineDash([2, 2]);
+              ctx.beginPath();
+              ctx.arc(dx, cy, leafLen, 0, Math.PI / 2);
+              ctx.stroke();
+              ctx.setLineDash([]);
+            }
           }
 
           // Secret Open Badge
@@ -3377,6 +3998,20 @@ function drawBoardLayers(ctx, geom, options = {}) {
           ctx.strokeStyle = '#d8b4fe';
           ctx.lineWidth = 2.0;
           ctx.strokeRect(dx, dy, dw, dh);
+
+          if (isDouble) {
+            ctx.strokeStyle = '#c084fc';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            if (isVertical) {
+              ctx.moveTo(dx, cy);
+              ctx.lineTo(dx + dw, cy);
+            } else {
+              ctx.moveTo(cx, dy);
+              ctx.lineTo(cx, dy + dh);
+            }
+            ctx.stroke();
+          }
 
           // Center 'S' badge
           ctx.fillStyle = '#581c87';
@@ -3430,57 +4065,117 @@ function drawBoardLayers(ctx, geom, options = {}) {
           ctx.strokeRect(dx + dw - 2, cy - 3, 3, 6);
         }
 
-        // 4. 90-degree swung wooden door leaf
-        const leafLen = Math.round(doorLength * 0.85);
+        // 4. Swung wooden door leaf / leaves
+        const leafLen = Math.round(doorLength * (isDouble ? 0.42 : 0.85));
         const leafThick = 5.5;
         ctx.fillStyle = '#78350f';
         ctx.strokeStyle = '#34d399'; // vivid emerald outline
         ctx.lineWidth = 1.5;
 
-        if (isVertical) {
-          // Swung into right tile (+X)
-          ctx.fillRect(cx, dy - leafThick / 2, leafLen, leafThick);
-          ctx.strokeRect(cx, dy - leafThick / 2, leafLen, leafThick);
+        if (isDouble) {
+          if (isVertical) {
+            // Top leaf swung into right tile (+X)
+            ctx.fillRect(cx, dy - leafThick / 2, leafLen, leafThick);
+            ctx.strokeRect(cx, dy - leafThick / 2, leafLen, leafThick);
 
-          // Brass hinge pin at corner
-          ctx.fillStyle = '#fbbf24';
-          ctx.strokeStyle = '#d97706';
-          ctx.lineWidth = 1.0;
-          ctx.beginPath();
-          ctx.arc(cx, dy, 2.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
+            // Bottom leaf swung into right tile (+X)
+            ctx.fillRect(cx, dy + dh - leafThick / 2, leafLen, leafThick);
+            ctx.strokeRect(cx, dy + dh - leafThick / 2, leafLen, leafThick);
 
-          // Quarter-circle swing arc
-          ctx.strokeStyle = 'rgba(52, 211, 153, 0.75)';
-          ctx.setLineDash([2, 2]);
-          ctx.lineWidth = 1.2;
-          ctx.beginPath();
-          ctx.arc(cx, dy, leafLen, 0, Math.PI / 2);
-          ctx.stroke();
-          ctx.setLineDash([]);
+            // Brass hinge pins
+            ctx.fillStyle = '#fbbf24';
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 1.0;
+            ctx.beginPath();
+            ctx.arc(cx, dy, 2.5, 0, Math.PI * 2);
+            ctx.arc(cx, dy + dh, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Swing arcs
+            ctx.strokeStyle = 'rgba(52, 211, 153, 0.75)';
+            ctx.setLineDash([2, 2]);
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(cx, dy, leafLen, 0, Math.PI / 2);
+            ctx.arc(cx, dy + dh, leafLen, -Math.PI / 2, 0);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          } else {
+            // Left leaf swung into lower tile (+Y)
+            ctx.fillRect(dx - leafThick / 2, cy, leafThick, leafLen);
+            ctx.strokeRect(dx - leafThick / 2, cy, leafThick, leafLen);
+
+            // Right leaf swung into lower tile (+Y)
+            ctx.fillRect(dx + dw - leafThick / 2, cy, leafThick, leafLen);
+            ctx.strokeRect(dx + dw - leafThick / 2, cy, leafThick, leafLen);
+
+            // Brass hinge pins
+            ctx.fillStyle = '#fbbf24';
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 1.0;
+            ctx.beginPath();
+            ctx.arc(dx, cy, 2.5, 0, Math.PI * 2);
+            ctx.arc(dx + dw, cy, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Swing arcs
+            ctx.strokeStyle = 'rgba(52, 211, 153, 0.75)';
+            ctx.setLineDash([2, 2]);
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(dx, cy, leafLen, 0, Math.PI / 2);
+            ctx.arc(dx + dw, cy, leafLen, Math.PI / 2, Math.PI);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
         } else {
-          // Swung into lower tile (+Y)
-          ctx.fillRect(dx - leafThick / 2, cy, leafThick, leafLen);
-          ctx.strokeRect(dx - leafThick / 2, cy, leafThick, leafLen);
+          if (isVertical) {
+            // Swung into right tile (+X)
+            ctx.fillRect(cx, dy - leafThick / 2, leafLen, leafThick);
+            ctx.strokeRect(cx, dy - leafThick / 2, leafLen, leafThick);
 
-          // Brass hinge pin at corner
-          ctx.fillStyle = '#fbbf24';
-          ctx.strokeStyle = '#d97706';
-          ctx.lineWidth = 1.0;
-          ctx.beginPath();
-          ctx.arc(dx, cy, 2.5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
+            // Brass hinge pin at corner
+            ctx.fillStyle = '#fbbf24';
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 1.0;
+            ctx.beginPath();
+            ctx.arc(cx, dy, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
 
-          // Quarter-circle swing arc
-          ctx.strokeStyle = 'rgba(52, 211, 153, 0.75)';
-          ctx.setLineDash([2, 2]);
-          ctx.lineWidth = 1.2;
-          ctx.beginPath();
-          ctx.arc(dx, cy, leafLen, 0, Math.PI / 2);
-          ctx.stroke();
-          ctx.setLineDash([]);
+            // Quarter-circle swing arc
+            ctx.strokeStyle = 'rgba(52, 211, 153, 0.75)';
+            ctx.setLineDash([2, 2]);
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(cx, dy, leafLen, 0, Math.PI / 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          } else {
+            // Swung into lower tile (+Y)
+            ctx.fillRect(dx - leafThick / 2, cy, leafThick, leafLen);
+            ctx.strokeRect(dx - leafThick / 2, cy, leafThick, leafLen);
+
+            // Brass hinge pin at corner
+            ctx.fillStyle = '#fbbf24';
+            ctx.strokeStyle = '#d97706';
+            ctx.lineWidth = 1.0;
+            ctx.beginPath();
+            ctx.arc(dx, cy, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Quarter-circle swing arc
+            ctx.strokeStyle = 'rgba(52, 211, 153, 0.75)';
+            ctx.setLineDash([2, 2]);
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.arc(dx, cy, leafLen, 0, Math.PI / 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
         }
 
         // 5. Central "OPEN" badge
@@ -3497,7 +4192,7 @@ function drawBoardLayers(ctx, geom, options = {}) {
         ctx.font = 'bold 7.5px system-ui, -apple-system, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('OPEN', cx, cy + 0.5);
+        ctx.fillText(isDouble ? '2×OPEN' : 'OPEN', cx, cy + 0.5);
 
       } else {
         // ── CLOSED WOOD DOOR ──
@@ -3533,57 +4228,142 @@ function drawBoardLayers(ctx, geom, options = {}) {
         ctx.lineWidth = 1.8;
         ctx.strokeRect(dx, dy, dw, dh);
 
-        // 4. Two Dark Iron Reinforcement Straps with Rivets
-        ctx.fillStyle = '#0f172a';
-        ctx.strokeStyle = '#334155';
-        ctx.lineWidth = 0.8;
-        if (isVertical) {
-          const y1 = dy + Math.round(dh * 0.25) - 1.5;
-          const y2 = dy + Math.round(dh * 0.75) - 1.5;
-          ctx.fillRect(dx, y1, dw, 3);
-          ctx.strokeRect(dx, y1, dw, 3);
-          ctx.fillRect(dx, y2, dw, 3);
-          ctx.strokeRect(dx, y2, dw, 3);
-
-          // Rivet dots
-          ctx.fillStyle = '#cbd5e1';
+        if (isDouble) {
+          // Center Meeting Seam (astragal)
+          ctx.strokeStyle = '#0f172a';
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.arc(dx + 2, y1 + 1.5, 0.8, 0, Math.PI * 2);
-          ctx.arc(dx + dw - 2, y1 + 1.5, 0.8, 0, Math.PI * 2);
-          ctx.arc(dx + 2, y2 + 1.5, 0.8, 0, Math.PI * 2);
-          ctx.arc(dx + dw - 2, y2 + 1.5, 0.8, 0, Math.PI * 2);
-          ctx.fill();
+          if (isVertical) {
+            ctx.moveTo(dx, cy);
+            ctx.lineTo(dx + dw, cy);
+          } else {
+            ctx.moveTo(cx, dy);
+            ctx.lineTo(cx, dy + dh);
+          }
+          ctx.stroke();
+
+          // 4 Iron Reinforcement Straps (2 on each leaf)
+          ctx.fillStyle = '#0f172a';
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = 0.8;
+          if (isVertical) {
+            const straps = [
+              dy + Math.round(dh * 0.12) - 1.5,
+              dy + Math.round(dh * 0.38) - 1.5,
+              dy + Math.round(dh * 0.62) - 1.5,
+              dy + Math.round(dh * 0.88) - 1.5
+            ];
+            straps.forEach(sy => {
+              ctx.fillRect(dx, sy, dw, 3);
+              ctx.strokeRect(dx, sy, dw, 3);
+              ctx.fillStyle = '#cbd5e1';
+              ctx.beginPath();
+              ctx.arc(dx + 2, sy + 1.5, 0.8, 0, Math.PI * 2);
+              ctx.arc(dx + dw - 2, sy + 1.5, 0.8, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#0f172a';
+            });
+
+            // Twin brass pull rings
+            [cy - 7, cy + 7].forEach(ry => {
+              ctx.fillStyle = '#b45309';
+              ctx.strokeStyle = '#fbbf24';
+              ctx.lineWidth = 1.2;
+              ctx.beginPath();
+              ctx.arc(cx, ry, 3.0, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.stroke();
+              ctx.fillStyle = '#1c1917';
+              ctx.beginPath();
+              ctx.arc(cx, ry, 1.2, 0, Math.PI * 2);
+              ctx.fill();
+            });
+          } else {
+            const straps = [
+              dx + Math.round(dw * 0.12) - 1.5,
+              dx + Math.round(dw * 0.38) - 1.5,
+              dx + Math.round(dw * 0.62) - 1.5,
+              dx + Math.round(dw * 0.88) - 1.5
+            ];
+            straps.forEach(sx => {
+              ctx.fillRect(sx, dy, 3, dh);
+              ctx.strokeRect(sx, dy, 3, dh);
+              ctx.fillStyle = '#cbd5e1';
+              ctx.beginPath();
+              ctx.arc(sx + 1.5, dy + 2, 0.8, 0, Math.PI * 2);
+              ctx.arc(sx + 1.5, dy + dh - 2, 0.8, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.fillStyle = '#0f172a';
+            });
+
+            // Twin brass pull rings
+            [cx - 7, cx + 7].forEach(rx => {
+              ctx.fillStyle = '#b45309';
+              ctx.strokeStyle = '#fbbf24';
+              ctx.lineWidth = 1.2;
+              ctx.beginPath();
+              ctx.arc(rx, cy, 3.0, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.stroke();
+              ctx.fillStyle = '#1c1917';
+              ctx.beginPath();
+              ctx.arc(rx, cy, 1.2, 0, Math.PI * 2);
+              ctx.fill();
+            });
+          }
         } else {
-          const x1 = dx + Math.round(dw * 0.25) - 1.5;
-          const x2 = dx + Math.round(dw * 0.75) - 1.5;
-          ctx.fillRect(x1, dy, 3, dh);
-          ctx.strokeRect(x1, dy, 3, dh);
-          ctx.fillRect(x2, dy, 3, dh);
-          ctx.strokeRect(x2, dy, 3, dh);
+          // Single Door: Two Dark Iron Reinforcement Straps with Rivets
+          ctx.fillStyle = '#0f172a';
+          ctx.strokeStyle = '#334155';
+          ctx.lineWidth = 0.8;
+          if (isVertical) {
+            const y1 = dy + Math.round(dh * 0.25) - 1.5;
+            const y2 = dy + Math.round(dh * 0.75) - 1.5;
+            ctx.fillRect(dx, y1, dw, 3);
+            ctx.strokeRect(dx, y1, dw, 3);
+            ctx.fillRect(dx, y2, dw, 3);
+            ctx.strokeRect(dx, y2, dw, 3);
 
-          // Rivet dots
-          ctx.fillStyle = '#cbd5e1';
+            // Rivet dots
+            ctx.fillStyle = '#cbd5e1';
+            ctx.beginPath();
+            ctx.arc(dx + 2, y1 + 1.5, 0.8, 0, Math.PI * 2);
+            ctx.arc(dx + dw - 2, y1 + 1.5, 0.8, 0, Math.PI * 2);
+            ctx.arc(dx + 2, y2 + 1.5, 0.8, 0, Math.PI * 2);
+            ctx.arc(dx + dw - 2, y2 + 1.5, 0.8, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            const x1 = dx + Math.round(dw * 0.25) - 1.5;
+            const x2 = dx + Math.round(dw * 0.75) - 1.5;
+            ctx.fillRect(x1, dy, 3, dh);
+            ctx.strokeRect(x1, dy, 3, dh);
+            ctx.fillRect(x2, dy, 3, dh);
+            ctx.strokeRect(x2, dy, 3, dh);
+
+            // Rivet dots
+            ctx.fillStyle = '#cbd5e1';
+            ctx.beginPath();
+            ctx.arc(x1 + 1.5, dy + 2, 0.8, 0, Math.PI * 2);
+            ctx.arc(x1 + 1.5, dy + dh - 2, 0.8, 0, Math.PI * 2);
+            ctx.arc(x2 + 1.5, dy + 2, 0.8, 0, Math.PI * 2);
+            ctx.arc(x2 + 1.5, dy + dh - 2, 0.8, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          // Brass Handle Stud / Ring Plate in Center
+          ctx.fillStyle = '#b45309';
+          ctx.strokeStyle = '#fbbf24';
+          ctx.lineWidth = 1.2;
           ctx.beginPath();
-          ctx.arc(x1 + 1.5, dy + 2, 0.8, 0, Math.PI * 2);
-          ctx.arc(x1 + 1.5, dy + dh - 2, 0.8, 0, Math.PI * 2);
-          ctx.arc(x2 + 1.5, dy + 2, 0.8, 0, Math.PI * 2);
-          ctx.arc(x2 + 1.5, dy + dh - 2, 0.8, 0, Math.PI * 2);
+          ctx.arc(cx, cy, 3.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#1c1917';
+          ctx.beginPath();
+          ctx.arc(cx, cy, 1.2, 0, Math.PI * 2);
           ctx.fill();
         }
-
-        // 5. Brass Handle Stud / Ring Plate in Center
-        ctx.fillStyle = '#b45309';
-        ctx.strokeStyle = '#fbbf24';
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 3.2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = '#1c1917';
-        ctx.beginPath();
-        ctx.arc(cx, cy, 1.2, 0, Math.PI * 2);
-        ctx.fill();
       }
 
       ctx.restore();
@@ -3600,8 +4380,7 @@ function drawBoardLayers(ctx, geom, options = {}) {
       const mc = m.pos ? m.pos[0] : (m.x !== undefined ? m.x : 0);
       const mr = m.pos ? m.pos[1] : (m.y !== undefined ? m.y : 0);
       const pos = tileToWorld(mc, mr, geom);
-      const tokenKey = `token_${m.type}`;
-      const tokenImg = state.assetCache[tokenKey];
+      const tokenImg = getMonsterTokenImage(m);
       const radius = (geom.tileSize / 2) - 3;
       const cx = pos.x + geom.tileSize / 2;
       const cy = pos.y + geom.tileSize / 2;
@@ -3620,17 +4399,20 @@ function drawBoardLayers(ctx, geom, options = {}) {
         ctx.stroke();
 
         ctx.fillStyle = '#fff';
-        ctx.font = '14px sans-serif';
+        ctx.font = 'bold 11px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(def.icon || '👾', cx, cy);
+        ctx.fillText((m.name || def.name || 'M').slice(0, 2).toUpperCase(), cx, cy);
       }
 
-      // Boss crown or skull indicator
       if (m.isBoss) {
-        ctx.fillStyle = '#fbbf24';
-        ctx.font = '10px sans-serif';
-        ctx.fillText('👑', cx, cy - radius - 2);
+        ctx.save();
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 2.0;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius + 1.5, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
       }
 
       if (!forExport && state.selectedEntity && state.selectedEntity.type === 'monster' && state.selectedEntity.index === i) {
@@ -3643,8 +4425,11 @@ function drawBoardLayers(ctx, geom, options = {}) {
   if (showNotes && !forExport && state.quest.storyTriggers) {
     state.quest.storyTriggers.forEach((st, i) => {
       const pos = tileToWorld(st.tile[0], st.tile[1], geom);
-      const cx = pos.x + geom.tileSize / 2;
-      const cy = pos.y + geom.tileSize / 2;
+      const hasMonsterOnTile = showMonsters && (state.quest.monsters || []).some(m => m.pos && m.pos[0] === st.tile[0] && m.pos[1] === st.tile[1]);
+      const cx = pos.x + geom.tileSize / 2 + (hasMonsterOnTile ? 11 : 0);
+      const cy = pos.y + geom.tileSize / 2 + (hasMonsterOnTile ? -11 : 0);
+      const outerR = hasMonsterOnTile ? 8 : 11;
+      const innerR = hasMonsterOnTile ? 6.5 : 9;
 
       const eventDef = TRIGGER_EVENT_DEFS[st.event] || TRIGGER_EVENT_DEFS.on_room_entered;
       const color = eventDef.color || '#d97706';
@@ -3655,14 +4440,14 @@ function drawBoardLayers(ctx, geom, options = {}) {
       ctx.shadowBlur = 6;
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(cx, cy, 11, 0, Math.PI * 2);
+      ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
 
       // Inner dark disc
       ctx.fillStyle = '#0f172a';
       ctx.beginPath();
-      ctx.arc(cx, cy, 9, 0, Math.PI * 2);
+      ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = color;
       ctx.lineWidth = 1.5;
@@ -3670,11 +4455,11 @@ function drawBoardLayers(ctx, geom, options = {}) {
 
       // Marker
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 9px monospace';
+      ctx.font = hasMonsterOnTile ? 'bold 8px monospace' : 'bold 9px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const mark = (st.marker || 'A').replace('Note ', '');
-      ctx.fillText(mark, cx, cy - 1);
+      ctx.fillText(mark, cx, cy - 0.5);
 
       // Mini action badge on bottom right
       const actions = st.actions || [];
@@ -3805,9 +4590,12 @@ function renderToolPreview(ctx, geom) {
     ctx.save();
     const isSecret = state.subtool.doorType === 'secret';
     const isOpen = state.subtool.doorType === 'wood-open';
+    const isDoubleH = Boolean(e.isDouble2x1 || state.subtool.doorSize === 'double-2x1' || (state.subtool.doorSize === 'double-auto' && e.orientation === 'h'));
+    const isDoubleV = Boolean(e.isDouble1x2 || state.subtool.doorSize === 'double-1x2' || (state.subtool.doorSize === 'double-auto' && e.orientation === 'v'));
+    const isDouble = isDoubleH || isDoubleV;
     const ts = geom.tileSize;
-    const doorLength = Math.round(ts * 0.82);
-    const doorThick = 8;
+    const doorLength = isDouble ? Math.round(ts * 1.82) : Math.round(ts * 0.82);
+    const doorThick = isDouble ? 9 : 8;
 
     let dw, dh, dx, dy;
     if (e.orientation === 'v') {
@@ -3853,6 +4641,20 @@ function renderToolPreview(ctx, geom) {
       ctx.lineWidth = 2.0;
       ctx.fillRect(dx, dy, dw, dh);
       ctx.strokeRect(dx, dy, dw, dh);
+
+      if (isDouble) {
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.9)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        if (e.orientation === 'v') {
+          ctx.moveTo(dx, e.cy);
+          ctx.lineTo(dx + dw, e.cy);
+        } else {
+          ctx.moveTo(e.cx, dy);
+          ctx.lineTo(e.cx, dy + dh);
+        }
+        ctx.stroke();
+      }
     }
     ctx.restore();
     return;
@@ -3866,14 +4668,21 @@ function renderToolPreview(ctx, geom) {
   ctx.globalAlpha = 0.55;
 
   if (state.activeTool === 'monster') {
-    const def = MONSTER_DEFS[state.subtool.monsterType] || MONSTER_DEFS.goblin;
-    ctx.beginPath();
-    ctx.arc(pos.x + geom.tileSize / 2, pos.y + geom.tileSize / 2, (geom.tileSize / 2) - 3, 0, Math.PI * 2);
-    ctx.fillStyle = def.color;
-    ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    const tokenImg = getMonsterTokenImage(state.subtool.monsterType);
+    if (tokenImg) {
+      ctx.drawImage(tokenImg, pos.x + 2, pos.y + 2, geom.tileSize - 4, geom.tileSize - 4);
+    } else {
+      const def = MONSTER_DEFS[state.subtool.monsterType] || MONSTER_DEFS.goblin;
+      const cx = pos.x + geom.tileSize / 2;
+      const cy = pos.y + geom.tileSize / 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, (geom.tileSize / 2) - 3, 0, Math.PI * 2);
+      ctx.fillStyle = def.color || '#ca8a04';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
   } else if (state.activeTool === 'furniture') {
     const def = FURNITURE_DEFS[state.subtool.furnitureType] || { w: 1, h: 1 };
     const w = (state.subtool.furnitureRotated ? def.h : def.w) * geom.tileSize;
@@ -3956,6 +4765,16 @@ function renderToolPreview(ctx, geom) {
 // View Camera & Zoom
 // -------------------------------------------------------------
 function fitView() {
+  if (!dom || !dom.canvas) return;
+  if (dom.viewport) {
+    const rect = dom.viewport.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      dom.canvas.width = Math.round(rect.width);
+      dom.canvas.height = Math.round(rect.height);
+      state.lastViewportWidth = dom.canvas.width;
+      state.lastViewportHeight = dom.canvas.height;
+    }
+  }
   const geom = getGridGeometry();
   const minC = geom.hasAdditionalBorder ? -1 : 0;
   const maxC = geom.hasAdditionalBorder ? geom.cols + 1 : geom.cols;
@@ -3965,13 +4784,15 @@ function fitView() {
   const boardH = (maxR - minR) * geom.tileSize;
   const vpW = dom.canvas.width;
   const vpH = dom.canvas.height;
+  if (vpW <= 0 || vpH <= 0 || boardW <= 0 || boardH <= 0) return;
 
-  const scaleX = (vpW - 80) / boardW;
-  const scaleY = (vpH - 80) / boardH;
-  state.zoom = Math.max(0.4, Math.min(2.5, Math.min(scaleX, scaleY)));
+  const scaleX = Math.max(60, vpW - 80) / boardW;
+  const scaleY = Math.max(60, vpH - 80) / boardH;
+  state.zoom = Math.max(0.25, Math.min(4.0, Math.min(scaleX, scaleY)));
 
   state.panX = Math.round((vpW - boardW * state.zoom) / 2 - (geom.offsetX + minC * geom.tileSize) * state.zoom);
   state.panY = Math.round((vpH - boardH * state.zoom) / 2 - (geom.offsetY + minR * geom.tileSize) * state.zoom);
+  state.autoFit = true;
 
   updateZoomUI();
 }
@@ -4157,8 +4978,20 @@ function findEntityAt(col, row) {
   // Check doors
   for (let i = 0; i < state.quest.doors.length; i++) {
     const d = state.quest.doors[i];
+    const isDoubleH = d.door_type === 'double-2x1' || d.door_type === 'double-h' || d.width === 2;
+    const isDoubleV = d.door_type === 'double-1x2' || d.door_type === 'double-v' || d.height === 2;
     if ((d.from[0] === col && d.from[1] === row) || (d.to[0] === col && d.to[1] === row)) {
       return { type: 'door', index: i, data: d };
+    }
+    if (isDoubleH) {
+      if ((d.from[0] + 1 === col && d.from[1] === row) || (d.to[0] + 1 === col && d.to[1] === row)) {
+        return { type: 'door', index: i, data: d };
+      }
+    }
+    if (isDoubleV) {
+      if ((d.from[0] === col && d.from[1] + 1 === row) || (d.to[0] === col && d.to[1] + 1 === row)) {
+        return { type: 'door', index: i, data: d };
+      }
     }
   }
 
@@ -4197,11 +5030,39 @@ function handleCanvasClick(wx, wy) {
     const edge = detectDoorEdge(wx, wy);
     if (!edge) return;
 
-    // Check if door already exists on this edge
-    const existingIdx = state.quest.doors.findIndex(d =>
-      (d.from[0] === edge.from[0] && d.from[1] === edge.from[1] && d.to[0] === edge.to[0] && d.to[1] === edge.to[1]) ||
-      (d.from[0] === edge.to[0] && d.from[1] === edge.to[1] && d.to[0] === edge.from[0] && d.to[1] === edge.from[1])
-    );
+    const isDouble2x1 = Boolean(edge.isDouble2x1 || state.subtool.doorSize === 'double-2x1' || (state.subtool.doorSize === 'double-auto' && edge.orientation === 'h'));
+    const isDouble1x2 = Boolean(edge.isDouble1x2 || state.subtool.doorSize === 'double-1x2' || (state.subtool.doorSize === 'double-auto' && edge.orientation === 'v'));
+    const isDouble = isDouble2x1 || isDouble1x2;
+
+    // Check if door already exists on this edge or overlapping edge
+    const existingIdx = state.quest.doors.findIndex(d => {
+      const dDoubleH = d.door_type === 'double-2x1' || d.door_type === 'double-h' || d.width === 2;
+      const dDoubleV = d.door_type === 'double-1x2' || d.door_type === 'double-v' || d.height === 2;
+      const match1 = (d.from[0] === edge.from[0] && d.from[1] === edge.from[1] && d.to[0] === edge.to[0] && d.to[1] === edge.to[1]) ||
+                     (d.from[0] === edge.to[0] && d.from[1] === edge.to[1] && d.to[0] === edge.from[0] && d.to[1] === edge.from[1]);
+      if (match1) return true;
+      if (dDoubleH) {
+        const match2 = (d.from[0] + 1 === edge.from[0] && d.from[1] === edge.from[1] && d.to[0] + 1 === edge.to[0] && d.to[1] === edge.to[1]) ||
+                       (d.from[0] + 1 === edge.to[0] && d.from[1] === edge.to[1] && d.to[0] + 1 === edge.from[0] && d.to[1] === edge.from[1]);
+        if (match2) return true;
+      }
+      if (dDoubleV) {
+        const match2 = (d.from[0] === edge.from[0] && d.from[1] + 1 === edge.from[1] && d.to[0] === edge.to[0] && d.to[1] + 1 === edge.to[1]) ||
+                       (d.from[0] === edge.to[0] && d.from[1] + 1 === edge.to[1] && d.to[0] === edge.from[0] && d.to[1] + 1 === edge.from[1]);
+        if (match2) return true;
+      }
+      if (isDouble2x1) {
+        const match3 = (d.from[0] === edge.from[0] + 1 && d.from[1] === edge.from[1] && d.to[0] === edge.to[0] + 1 && d.to[1] === edge.to[1]) ||
+                       (d.from[0] === edge.to[0] + 1 && d.from[1] === edge.to[1] && d.to[0] === edge.from[0] + 1 && d.to[1] === edge.from[1]);
+        if (match3) return true;
+      }
+      if (isDouble1x2) {
+        const match3 = (d.from[0] === edge.from[0] && d.from[1] === edge.from[1] + 1 && d.to[0] === edge.to[0] && d.to[1] === edge.to[1] + 1) ||
+                       (d.from[0] === edge.to[0] && d.from[1] === edge.to[1] + 1 && d.to[0] === edge.from[0] && d.to[1] === edge.from[1] + 1);
+        if (match3) return true;
+      }
+      return false;
+    });
 
     if (existingIdx >= 0) {
       // Select it or toggle closed/open/secret
@@ -4211,7 +5072,9 @@ function handleCanvasClick(wx, wy) {
       const isSecret = state.subtool.doorType === 'secret';
       const isOpen = state.subtool.doorType === 'wood-open';
       const doorNum = state.quest.doors.length + 1;
-      const defaultName = isSecret ? `Secret Door ${doorNum}` : `Door ${doorNum}`;
+      const defaultName = isSecret
+        ? (isDouble ? `Secret Double Door ${doorNum}` : `Secret Door ${doorNum}`)
+        : (isDouble ? `Double Door ${doorNum}` : `Door ${doorNum}`);
       const newDoor = {
         id: `door-${doorNum}`,
         name: defaultName,
@@ -4219,7 +5082,10 @@ function handleCanvasClick(wx, wy) {
         to: edge.to,
         state: isOpen ? 'open' : 'closed',
         is_secret: isSecret,
-        room: edge.room || ''
+        room: edge.room || '',
+        door_type: isDouble2x1 ? 'double-2x1' : (isDouble1x2 ? 'double-1x2' : 'single'),
+        width: isDouble2x1 ? 2 : 1,
+        height: isDouble1x2 ? 2 : 1
       };
       state.quest.doors.push(newDoor);
       state.selectedEntity = { type: 'door', index: state.quest.doors.length - 1, data: newDoor };
@@ -4240,6 +5106,8 @@ function handleCanvasClick(wx, wy) {
       id: `mon-${type}-${state.quest.monsters.length + 1}`,
       name: def.name,
       type: type,
+      category: def.category || 'Base Game',
+      archetype: def.archetype || type,
       bp: def.bp,
       mp: def.mp,
       atk: def.atk,
@@ -4249,7 +5117,10 @@ function handleCanvasClick(wx, wy) {
       roomId: roomId,
       isBoss: def.isBoss,
       isUndead: def.isUndead,
-      isSpellcaster: def.isCaster
+      isSpellcaster: def.isCaster,
+      icon: def.icon || '👾',
+      color: def.color || '#ca8a04',
+      spells: Array.isArray(def.spells) ? [...def.spells] : []
     };
     state.quest.monsters.push(newMon);
     state.selectedEntity = { type: 'monster', index: state.quest.monsters.length - 1, data: newMon };
@@ -4448,15 +5319,16 @@ function switchSidebarTab(tabId) {
 }
 
 function syncQuestMetaInputs() {
-  dom.inputQuestTitle.value = state.quest.title;
-  dom.inputQuestSlug.value = state.quest.slug;
-  dom.selectWanderingMonster.value = state.quest.wanderingMonster;
-  dom.inputGoldBounty.value = state.quest.goldBounty;
-  dom.textareaQuestBriefing.value = state.quest.briefing;
-  dom.infoQuestTitle.textContent = state.quest.title;
+  if (dom.inputQuestTitle) dom.inputQuestTitle.value = state.quest.title;
+  if (dom.inputQuestSlug) dom.inputQuestSlug.value = state.quest.slug;
+  if (dom.selectWanderingMonster) dom.selectWanderingMonster.value = state.quest.wanderingMonster;
+  if (dom.inputGoldBounty) dom.inputGoldBounty.value = state.quest.goldBounty;
+  if (dom.textareaQuestBriefing) dom.textareaQuestBriefing.value = state.quest.briefing;
+  if (dom.infoQuestTitle) dom.infoQuestTitle.textContent = state.quest.title;
 }
 
 function updateInspectorUI() {
+  if (!dom || !dom.inspectorEmpty || !dom.inspectorForm) return;
   if (!state.selectedEntity) {
     dom.inspectorEmpty.style.display = 'block';
     dom.inspectorForm.style.display = 'none';
@@ -4473,10 +5345,10 @@ function updateInspectorUI() {
     dom.inspectGroupFurniture,
     dom.inspectGroupTrap,
     dom.inspectGroupNote
-  ].forEach(el => { el.style.display = 'none'; });
+  ].forEach(el => { if (el && el.style) el.style.display = 'none'; });
 
   const { type, index } = state.selectedEntity;
-  dom.inspectTypeBadge.textContent = type.toUpperCase();
+  if (dom.inspectTypeBadge) dom.inspectTypeBadge.textContent = type.toUpperCase();
 
   let currentTargetEntity = null;
   if (type === 'monster') currentTargetEntity = state.quest.monsters[index];
@@ -4493,24 +5365,34 @@ function updateInspectorUI() {
   if (type === 'monster') {
     const m = state.quest.monsters[index];
     if (!m) return;
-    dom.inspectPosText.textContent = `[${m.pos[0]}, ${m.pos[1]}]`;
-    dom.inspectName.value = m.name;
-    dom.inspectMonsterBp.value = m.bp;
-    dom.inspectMonsterMp.value = m.mp;
-    dom.inspectMonsterAtk.value = m.atk;
-    dom.inspectMonsterDef.value = m.def;
-    dom.inspectMonsterMove.value = m.move;
-    dom.inspectMonsterIsBoss.checked = m.isBoss;
-    dom.inspectMonsterIsUndead.checked = m.isUndead;
-    dom.inspectMonsterIsCaster.checked = m.isSpellcaster;
-    dom.inspectGroupMonster.style.display = 'block';
+    if (dom.inspectPosText) dom.inspectPosText.textContent = `[${m.pos[0]}, ${m.pos[1]}]`;
+    if (dom.inspectName) dom.inspectName.value = m.name;
+    if (dom.inspectMonsterType) {
+      const mType = m.type || 'goblin';
+      dom.inspectMonsterType.value = mType;
+    }
+    if (dom.inspectMonsterBp) dom.inspectMonsterBp.value = m.bp;
+    if (dom.inspectMonsterMp) dom.inspectMonsterMp.value = m.mp;
+    if (dom.inspectMonsterAtk) dom.inspectMonsterAtk.value = m.atk;
+    if (dom.inspectMonsterDef) dom.inspectMonsterDef.value = m.def;
+    if (dom.inspectMonsterMove) dom.inspectMonsterMove.value = m.move;
+    if (dom.inspectMonsterIsBoss) dom.inspectMonsterIsBoss.checked = m.isBoss;
+    if (dom.inspectMonsterIsUndead) dom.inspectMonsterIsUndead.checked = m.isUndead;
+    if (dom.inspectMonsterIsCaster) dom.inspectMonsterIsCaster.checked = m.isSpellcaster;
+    if (dom.inspectGroupMonster && dom.inspectGroupMonster.style) dom.inspectGroupMonster.style.display = 'block';
   } else if (type === 'door') {
     const d = state.quest.doors[index];
     if (!d) return;
-    dom.inspectPosText.textContent = `[${d.from[0]},${d.from[1]}] ↔ [${d.to[0]},${d.to[1]}]`;
+    const isDoubleH = d.door_type === 'double-2x1' || d.door_type === 'double-h' || d.width === 2;
+    const isDoubleV = d.door_type === 'double-1x2' || d.door_type === 'double-v' || d.height === 2;
+    const sizeSpan = isDoubleH ? ' (Double 2×1)' : (isDoubleV ? ' (Double 1×2)' : ' (Single 1×1)');
+    dom.inspectPosText.textContent = `[${d.from[0]},${d.from[1]}] ↔ [${d.to[0]},${d.to[1]}]${sizeSpan}`;
     dom.inspectName.value = d.name !== undefined ? d.name : (d.id || `Door ${index + 1}`);
     dom.inspectDoorState.value = d.state || 'closed';
     dom.inspectDoorSecret.checked = d.is_secret;
+    if (dom.inspectDoorType) {
+      dom.inspectDoorType.value = isDoubleH ? 'double-2x1' : (isDoubleV ? 'double-1x2' : 'single');
+    }
     dom.inspectGroupDoor.style.display = 'block';
   } else if (type === 'furniture') {
     const f = state.quest.furniture[index];
@@ -4598,6 +5480,7 @@ function updateInspectorUI() {
 }
 
 function updateEntitySummaryList() {
+  if (!dom || !dom.entitySummaryList || typeof document === 'undefined') return;
   const list = dom.entitySummaryList;
   list.innerHTML = '';
 
@@ -4668,13 +5551,23 @@ function updateEntitySummaryList() {
   // Monsters
   state.quest.monsters.forEach((m, idx) => {
     totalCount++;
+    const tokImg = getMonsterTokenImage(m);
+    const portImg = getMonsterPortraitImage(m);
+    const tokSrc = tokImg?.src || '';
+    const portSrc = portImg?.src || tokSrc;
     const item = document.createElement('div');
     item.className = 'entity-summary-item';
+    const visualHtml = (tokSrc || portSrc)
+      ? `<span class="entity-item-icon" style="display:inline-flex; align-items:center; gap:4px;">
+          ${tokSrc ? `<img src="${tokSrc}" alt="Token" title="Board Token" style="width:22px; height:22px; border-radius:50%; object-fit:cover; border:1px solid #f59e0b;">` : ''}
+          ${portSrc ? `<img src="${portSrc}" alt="Portrait" title="Portrait" style="width:20px; height:22px; border-radius:3px; object-fit:cover; border:1px solid #64748b;">` : ''}
+        </span>`
+      : `<span class="entity-item-icon">•</span>`;
     item.innerHTML = `
       <div class="entity-item-main">
-        <span class="entity-item-icon">👾</span>
+        ${visualHtml}
         <div>
-          <div class="entity-item-name">${m.name}</div>
+          <div class="entity-item-name">${escapeHtml(m.name)}</div>
           <div class="entity-item-pos">[${m.pos[0]}, ${m.pos[1]}] ${m.isBoss ? '• Boss' : ''}</div>
         </div>
       </div>
@@ -4701,16 +5594,20 @@ function updateEntitySummaryList() {
     item.className = 'entity-summary-item';
     const isSecret = !!d.is_secret;
     const isOpen = d.state === 'open';
+    const isDoubleH = d.door_type === 'double-2x1' || d.door_type === 'double-h' || d.width === 2;
+    const isDoubleV = d.door_type === 'double-1x2' || d.door_type === 'double-v' || d.height === 2;
+    const sizePill = isDoubleH ? '<span class="door-status-pill door-badge-double">2×1</span>' : (isDoubleV ? '<span class="door-status-pill door-badge-double">1×2</span>' : '');
     const badgeCls = isSecret ? (isOpen ? 'door-badge-secret-open' : 'door-badge-secret') : (isOpen ? 'door-badge-open' : 'door-badge-closed');
     const badgeText = isSecret ? (isOpen ? 'SECRET [OPEN]' : 'SECRET') : (isOpen ? 'OPEN' : 'CLOSED');
     const doorIcon = isSecret ? '🔮' : (isOpen ? '🚪🔓' : '🚪🔒');
-    const displayName = d.name || (isSecret ? 'Secret Door' : 'Wood Door');
+    const displayName = d.name || (isSecret ? (isDoubleH || isDoubleV ? 'Secret Double Door' : 'Secret Door') : (isDoubleH || isDoubleV ? 'Double Door' : 'Wood Door'));
     item.innerHTML = `
       <div class="entity-item-main">
         <span class="entity-item-icon">${doorIcon}</span>
         <div>
           <div class="entity-item-name">
             ${escapeHtml(displayName)}
+            ${sizePill}
             <span class="door-status-pill ${badgeCls}">${badgeText}</span>
           </div>
           <div class="entity-item-pos">[${d.from[0]},${d.from[1]}] ↔ [${d.to[0]},${d.to[1]}]</div>
@@ -5653,14 +6550,38 @@ function validateQuest(quest, blockmap) {
       const to = d.to;
       if (!from || !to) return;
 
+      const isDoubleH = d.door_type === 'double-2x1' || d.door_type === 'double-h' || d.width === 2;
+      const isDoubleV = d.door_type === 'double-1x2' || d.door_type === 'double-v' || d.height === 2;
+      const isDouble = isDoubleH || isDoubleV;
+      const allTiles = [from, to];
+      if (isDoubleH) {
+        allTiles.push([from[0] + 1, from[1]], [to[0] + 1, to[1]]);
+      } else if (isDoubleV) {
+        allTiles.push([from[0], from[1] + 1], [to[0], to[1] + 1]);
+      }
+
       const r1 = getRoomAt(from[0], from[1]);
       const r2 = getRoomAt(to[0], to[1]);
-      const doorName = d.name || (d.is_secret ? 'Secret Door' : (d.state === 'open' ? 'Open Door' : 'Door'));
+      let r3 = null, r4 = null;
+      if (isDoubleH) {
+        r3 = getRoomAt(from[0] + 1, from[1]);
+        r4 = getRoomAt(to[0] + 1, to[1]);
+      } else if (isDoubleV) {
+        r3 = getRoomAt(from[0], from[1] + 1);
+        r4 = getRoomAt(to[0], to[1] + 1);
+      }
+
+      const doorName = d.name || (d.is_secret ? (isDouble ? 'Secret Double Door' : 'Secret Door') : (d.state === 'open' ? (isDouble ? 'Open Double Door' : 'Open Door') : (isDouble ? 'Double Door' : 'Door')));
       const doorId = d.id || idx;
 
       // In HeroQuest, a door connects a room to a corridor or connects two rooms.
       // Invalid: Both sides are corridors (!r1 && !r2) or both sides are in the same room (r1 && r2 && r1.id === r2.id)
-      if (!r1 && !r2) {
+      const half1Corridor = (!r1 && !r2);
+      const half2Corridor = isDouble && (!r3 && !r4);
+      const half1Interior = (r1 && r2 && r1.id === r2.id);
+      const half2Interior = isDouble && (r3 && r4 && r3.id === r4.id);
+
+      if (half1Corridor || half2Corridor) {
         errors.push({
           id: `door-wall-corridor-${doorId}`,
           category: 'door_wall',
@@ -5668,16 +6589,16 @@ function validateQuest(quest, blockmap) {
           icon: '🚪',
           title: `${doorName} Floating in Corridor`,
           description: `${doorName} between [${from[0]}, ${from[1]}] and [${to[0]}, ${to[1]}] is not attached to any room perimeter wall (both sides are corridors).`,
-          tiles: [from, to],
-          allTiles: [from, to],
+          tiles: allTiles,
+          allTiles: allTiles,
           entityType: 'door',
           entityIndex: idx,
           entityId: d.id || null,
           doorEdge: { from, to },
           anchor: from
         });
-      } else if (r1 && r2 && r1.id === r2.id) {
-        const roomName = r1.name || r1.id;
+      } else if (half1Interior || half2Interior) {
+        const roomName = (r1 ? (r1.name || r1.id) : (r3 ? (r3.name || r3.id) : 'Room'));
         errors.push({
           id: `door-wall-interior-${doorId}`,
           category: 'door_wall',
@@ -5685,8 +6606,8 @@ function validateQuest(quest, blockmap) {
           icon: '🚪',
           title: `${doorName} Inside Room Floor`,
           description: `${doorName} between [${from[0]}, ${from[1]}] and [${to[0]}, ${to[1]}] is placed inside open floor space within ${roomName} instead of on its perimeter wall.`,
-          tiles: [from, to],
-          allTiles: [from, to],
+          tiles: allTiles,
+          allTiles: allTiles,
           entityType: 'door',
           entityIndex: idx,
           entityId: d.id || null,
@@ -6385,14 +7306,34 @@ function interpretVoiceQuestCommands(spokenText, blockmap, quest, currentContext
   };
 
   const MONSTERS = [
+    // Election 2026 / Midterms 2026 Enemies (8 Monsters & 3 Hydra Bosses)
+    { type: 'campaign-volunteer', keys: ['campaign volunteers', 'campaign volunteer', 'volunteers', 'volunteer'] },
+    { type: 'political-operative', keys: ['political operatives', 'political operative', 'operatives', 'operative'] },
+    { type: 'career-politician', keys: ['career politicians', 'career politician', 'politicians', 'politician'] },
+    { type: 'bureaucrat', keys: ['bureaucrats', 'bureaucrat'] },
+    { type: 'lobbyist', keys: ['lobbyists', 'lobbyist'] },
+    { type: 'partisan-enforcer', keys: ['partisan enforcers', 'partisan enforcer', 'enforcers', 'enforcer'] },
+    { type: 'super-pac-demon', keys: ['super pac demons', 'super pac demon', 'super-pac demons', 'super-pac demon'] },
+    { type: 'spin-doctor', keys: ['spin doctors', 'spin doctor'] },
+    { type: 'talarixon', keys: ['talarixons', 'talarixon', 'texas hydra', 'talarico paxton'] },
+    { type: 'el-rogers', keys: ['el-rogers', 'el rogers', 'michigan hydra', 'el-sayed rogers'] },
+    { type: 'brownsted', keys: ['brownsteds', 'brownsted', 'ohio hydra', 'brown husted'] },
+    // Base Game Enemies
+    { type: 'chaos_sorcerer', keys: ['chaos sorcerers', 'chaos sorcerer', 'dread sorcerers', 'dread sorcerer'] },
+    { type: 'orc_shaman', keys: ['orc shamans', 'orc shaman'] },
+    { type: 'orc_warlord', keys: ['orc warlords', 'orc warlord'] },
+    { type: 'witch_lord', keys: ['witch lords', 'witch lord'] },
     { type: 'skeleton', keys: ['skeletons', 'skeleton', 'skellies', 'skelly'] },
     { type: 'orc', keys: ['orcs', 'orc'] },
     { type: 'goblin', keys: ['goblins', 'goblin'] },
     { type: 'zombie', keys: ['zombies', 'zombie', 'zombys', 'zomby'] },
     { type: 'mummy', keys: ['mummies', 'mummy'] },
-    { type: 'chaos_warrior', keys: ['chaos warriors', 'chaos warrior', 'chaos'] },
+    { type: 'chaos_warrior', keys: ['chaos warriors', 'chaos warrior', 'chaos', 'dread warriors', 'dread warrior'] },
     { type: 'fimir', keys: ['fimirs', 'fimir', 'abominations', 'abomination'] },
     { type: 'gargoyle', keys: ['gargoyles', 'gargoyle'] },
+    { type: 'dragon', keys: ['dragons', 'dragon', 'fire dragons', 'fire dragon'] },
+    { type: 'doomguard', keys: ['doomguards', 'doomguard'] },
+    { type: 'witch_hand', keys: ['witch hands', 'witch hand'] },
     { type: 'boss', keys: ['bosses', 'boss', 'dungeon boss', 'warlord'] }
   ];
 
@@ -6595,6 +7536,10 @@ function executeVoiceMapCommands(spokenText, guidancePrompt, targetQuest = null,
           id: `mon-${cmd.type}-${(currentQuest.monsters || []).length + 1}`,
           name: def.name,
           type: cmd.type,
+          category: def.category || 'Base Game',
+          archetype: def.archetype || cmd.type,
+          icon: def.icon || '',
+          color: def.color || '#ef4444',
           bp: def.bp,
           mp: def.mp,
           atk: def.atk,
@@ -6606,7 +7551,8 @@ function executeVoiceMapCommands(spokenText, guidancePrompt, targetQuest = null,
           roomId: targetRoom.id,
           isBoss: def.isBoss,
           isUndead: def.isUndead,
-          isSpellcaster: def.isCaster
+          isSpellcaster: def.isCaster,
+          spells: Array.isArray(def.spells) ? [...def.spells] : []
         };
         if (!currentQuest.monsters) currentQuest.monsters = [];
         currentQuest.monsters.push(newMon);
@@ -6614,7 +7560,7 @@ function executeVoiceMapCommands(spokenText, guidancePrompt, targetQuest = null,
         placedCount++;
       }
       if (placedCount > 0) {
-        placedSummary.push(`${placedCount} ${cmd.type}${placedCount > 1 ? 's' : ''} in ${roomName}`);
+        placedSummary.push(`${placedCount} ${def.name}${placedCount > 1 ? 's' : ''} in ${roomName}`);
       }
     } else if (cmd.category === 'furniture') {
       const def = FURNITURE_DEFS[cmd.type] || { w: 1, h: 1, name: 'Furniture' };
@@ -6913,7 +7859,7 @@ function setupSplitDividers() {
       targetEl.style.width = `${newSize}px`;
       targetEl.style.flex = `0 0 ${newSize}px`;
 
-      resizeCanvas();
+      resizeCanvas({ adjustCamera: true });
       render();
 
       try {
@@ -6931,7 +7877,7 @@ function setupSplitDividers() {
       divider.classList.remove('active');
       document.body.classList.remove('resizing');
 
-      resizeCanvas();
+      resizeCanvas({ adjustCamera: true });
       render();
     };
 
@@ -6951,7 +7897,7 @@ function setupSplitDividers() {
           const storageKey = targetDirection === 'prev' ? 'robos_quest_editor_tool_palette_w' : 'robos_quest_editor_sidebar_right_w';
           localStorage.removeItem(storageKey);
         } catch (_) {}
-        resizeCanvas();
+        resizeCanvas({ adjustCamera: true });
         render();
       }
     });
@@ -6975,6 +7921,12 @@ function setupEventListeners() {
   dom.btnRedo.addEventListener('click', redo);
 
   // Subtool radio / dropdown controls
+  if (dom.selectDoorSize) {
+    dom.selectDoorSize.addEventListener('change', () => {
+      state.subtool.doorSize = dom.selectDoorSize.value;
+      render();
+    });
+  }
   dom.radioDoorTypes.forEach(radio => {
     radio.addEventListener('change', () => {
       state.subtool.doorType = radio.value;
@@ -6982,8 +7934,16 @@ function setupEventListeners() {
     });
   });
 
+  if (dom.selectMonsterCategory) {
+    dom.selectMonsterCategory.addEventListener('change', () => {
+      populateMonsterSelects(dom.selectMonsterCategory.value);
+      render();
+    });
+  }
+
   dom.selectMonsterType.addEventListener('change', () => {
     state.subtool.monsterType = dom.selectMonsterType.value;
+    updateMonsterSuboptPreview();
     render();
   });
 
@@ -7084,6 +8044,37 @@ function setupEventListeners() {
     });
   }
 
+  if (dom.inspectMonsterType) {
+    dom.inspectMonsterType.addEventListener('change', () => {
+      if (state.selectedEntity?.type === 'monster') {
+        const mon = state.quest.monsters[state.selectedEntity.index];
+        if (!mon) return;
+        recordHistory();
+        const newType = dom.inspectMonsterType.value;
+        const def = MONSTER_DEFS[newType] || MONSTER_DEFS.goblin;
+        mon.type = newType;
+        mon.name = def.name;
+        mon.category = def.category || 'Base Game';
+        mon.archetype = def.archetype || newType;
+        mon.icon = def.icon || '';
+        mon.color = def.color || '#ef4444';
+        mon.bp = def.bp;
+        mon.mp = def.mp;
+        mon.atk = def.atk;
+        mon.def = def.def;
+        mon.move = def.move;
+        mon.isBoss = Boolean(def.isBoss);
+        mon.isUndead = Boolean(def.isUndead);
+        mon.isSpellcaster = Boolean(def.isCaster);
+        mon.spells = Array.isArray(def.spells) ? [...def.spells] : [];
+        if (state.selectedEntity.data) state.selectedEntity.data = mon;
+        updateInspectorUI();
+        updateEntitySummaryList();
+        render();
+      }
+    });
+  }
+
   dom.inspectMonsterBp.addEventListener('change', () => {
     if (state.selectedEntity?.type === 'monster') {
       state.quest.monsters[state.selectedEntity.index].bp = parseInt(dom.inspectMonsterBp.value) || 1;
@@ -7140,6 +8131,23 @@ function setupEventListeners() {
       updateEntitySummaryList();
     }
   });
+  if (dom.inspectDoorType) {
+    dom.inspectDoorType.addEventListener('change', () => {
+      if (state.selectedEntity?.type === 'door') {
+        recordHistory();
+        const d = state.quest.doors[state.selectedEntity.index];
+        if (d) {
+          const val = dom.inspectDoorType.value;
+          d.door_type = val;
+          d.width = val === 'double-2x1' ? 2 : 1;
+          d.height = val === 'double-1x2' ? 2 : 1;
+          updateInspectorUI();
+          updateEntitySummaryList();
+          render();
+        }
+      }
+    });
+  }
 
   dom.btnInspectRotateFurn.addEventListener('click', () => {
     if (state.selectedEntity?.type === 'furniture') {
@@ -7613,16 +8621,19 @@ function setupEventListeners() {
 
   // Zoom controls
   dom.btnZoomIn.addEventListener('click', () => {
-    state.zoom = Math.min(3.0, state.zoom * 1.2);
+    state.autoFit = false;
+    state.zoom = Math.min(4.0, state.zoom * 1.2);
     updateZoomUI();
     render();
   });
   dom.btnZoomOut.addEventListener('click', () => {
-    state.zoom = Math.max(0.3, state.zoom / 1.2);
+    state.autoFit = false;
+    state.zoom = Math.max(0.25, state.zoom / 1.2);
     updateZoomUI();
     render();
   });
   dom.btnZoomReset.addEventListener('click', () => {
+    state.autoFit = false;
     state.zoom = 1.0;
     updateZoomUI();
     render();
@@ -7653,18 +8664,25 @@ function setupEventListeners() {
   });
 
   window.addEventListener('mousemove', (e) => {
+    if (document.hidden) return;
     if (state.isPanning) {
+      state.autoFit = false;
       state.panX = e.clientX - state.panStartX;
       state.panY = e.clientY - state.panStartY;
       render();
       return;
     }
 
+    const prevTile = state.hoverTile;
+    const prevEdge = state.hoverDoorEdge;
+
     const rect = dom.canvas.getBoundingClientRect();
     if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
-      state.hoverTile = null;
-      state.hoverDoorEdge = null;
-      render();
+      if (state.hoverTile !== null || state.hoverDoorEdge !== null) {
+        state.hoverTile = null;
+        state.hoverDoorEdge = null;
+        render();
+      }
       return;
     }
 
@@ -7695,7 +8713,13 @@ function setupEventListeners() {
       dom.infoRoomName.textContent = '🏠 Room: None';
     }
 
-    render();
+    const tileChanged = (!prevTile && state.hoverTile) || (prevTile && !state.hoverTile) ||
+      (prevTile && state.hoverTile && (prevTile[0] !== state.hoverTile[0] || prevTile[1] !== state.hoverTile[1]));
+    const edgeChanged = JSON.stringify(prevEdge) !== JSON.stringify(state.hoverDoorEdge);
+
+    if (tileChanged || edgeChanged) {
+      render();
+    }
   });
 
   // Clear Exit Tile button handler
@@ -7804,6 +8828,7 @@ function setupEventListeners() {
   // Wheel zoom
   dom.viewport.addEventListener('wheel', (e) => {
     e.preventDefault();
+    state.autoFit = false;
     const rect = dom.canvas.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
@@ -7911,6 +8936,9 @@ if (typeof window !== 'undefined') {
     undo,
     redo,
     render,
+    resizeCanvas,
+    handleViewportResize,
+    fitView,
     updateInspectorUI,
     updateEntitySummaryList,
     syncQuestMetaInputs,
@@ -7942,7 +8970,12 @@ if (typeof window !== 'undefined') {
     resolveTriggerIndicators,
     drawExportTriggerIndicator,
     formatTriggerEventName,
-    renderActionPipelineRecursiveHtml
+    renderActionPipelineRecursiveHtml,
+    populateMonsterSelects,
+    updateMonsterSuboptPreview,
+    syncMonstersFromKGraph,
+    formatMonsterOptionLabel,
+    MONSTER_DEFS
   };
 
   // Bootstrap application on window load
@@ -7966,6 +8999,9 @@ if (typeof module !== 'undefined' && module.exports) {
     findFreeTilesInRoom,
     findFreeRectInRoom,
     setupSplitDividers,
+    resizeCanvas,
+    handleViewportResize,
+    fitView,
     toggleRoomNames,
     updateRoomNamesToggleUI,
     updateInspectorUI,
@@ -7986,6 +9022,13 @@ if (typeof module !== 'undefined' && module.exports) {
     closeExportPngModal,
     openExportPdfModal,
     closeExportPdfModal,
+    findEntityAt,
+    detectDoorEdge,
+    handleCanvasClick,
+    populateMonsterSelects,
+    updateMonsterSuboptPreview,
+    syncMonstersFromKGraph,
+    formatMonsterOptionLabel,
     state,
     dom,
     MONSTER_DEFS,

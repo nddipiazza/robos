@@ -8,7 +8,7 @@
     "gameType": "tabletop",
     "genre": "Tabletop Dungeon Crawler",
     "ruleset": "heroquest",
-    "description": "Mentor speaks: \"The Emperor calls upon the kingdom's greatest champions...\"",
+    "description": "Descend into the Custom Dungeon via the stairwell at [7, 14]. Explore the dungeon rooms, overcome the traps and monsters within, and return victorious!",
     "coverColor": "#0a0e17",
     "icon": "\ud83d\udee1\ufe0f",
     "mapCount": 1,
@@ -37,7 +37,91 @@
       "position": [
         7,
         14
-      ]
+      ],
+      "weapon": "Broadsword (3 Combat Dice)",
+      "armor": "Natural Toughness (2 Defend Dice)",
+      "inventory": [
+        {
+          "id": "item-pot-heal-1",
+          "name": "Potion of Healing",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        },
+        {
+          "id": "item-rope-1",
+          "name": "Heavy Rope (30 ft)",
+          "type": "tool",
+          "effect": "Climb pits & gaps",
+          "value": 25
+        }
+      ],
+      "spells": [],
+      "tokenColor": "#b91c1c",
+      "audioLines": {
+        "turnStart": [
+          {
+            "text": "By my broadsword, clear a path!",
+            "audio": "res://assets/audio/heroes/barbarian_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Taste cold Cimmerian steel!",
+            "audio": "res://assets/audio/heroes/barbarian_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Aagh! Only a flesh wound!",
+            "audio": "res://assets/audio/heroes/barbarian_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Ha! Your feeble blow bounces off my iron muscles!",
+            "audio": "res://assets/audio/heroes/barbarian_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "The ancient battle-spirit surges through my blade!",
+            "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg"
+          }
+        ]
+      },
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "By my broadsword, clear a path!",
+            "audio": "res://assets/audio/heroes/barbarian_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Taste cold Cimmerian steel!",
+            "audio": "res://assets/audio/heroes/barbarian_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Aagh! Only a flesh wound!",
+            "audio": "res://assets/audio/heroes/barbarian_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Ha! Your feeble blow bounces off my iron muscles!",
+            "audio": "res://assets/audio/heroes/barbarian_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "The ancient battle-spirit surges through my blade!",
+            "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg"
+          }
+        ]
+      }
     },
     "dwarf": {
       "id": "dwarf",
@@ -52,7 +136,91 @@
       "position": [
         7,
         14
-      ]
+      ],
+      "weapon": "Shortsword (2 Combat Dice)",
+      "armor": "Shield & Chainmail (+2 Defend Dice)",
+      "inventory": [
+        {
+          "id": "item-toolkit-1",
+          "name": "Trap Disarm Toolkit",
+          "type": "tool",
+          "effect": "Disarm traps without rolling skull",
+          "value": 75
+        },
+        {
+          "id": "item-pot-heal-2",
+          "name": "Potion of Healing",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        }
+      ],
+      "spells": [],
+      "tokenColor": "#b45309",
+      "audioLines": {
+        "turnStart": [
+          {
+            "text": "Stand back! Let a Dwarf of the World's Edge Mountains handle this!",
+            "audio": "res://assets/audio/heroes/dwarf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "For Grungni's beard, feel my battle-axe!",
+            "audio": "res://assets/audio/heroes/dwarf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Oof! Right in the chainmail!",
+            "audio": "res://assets/audio/heroes/dwarf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Dwarven forged steel never yields!",
+            "audio": "res://assets/audio/heroes/dwarf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By the runes of the anvil, awaken!",
+            "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg"
+          }
+        ]
+      },
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "Stand back! Let a Dwarf of the World's Edge Mountains handle this!",
+            "audio": "res://assets/audio/heroes/dwarf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "For Grungni's beard, feel my battle-axe!",
+            "audio": "res://assets/audio/heroes/dwarf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Oof! Right in the chainmail!",
+            "audio": "res://assets/audio/heroes/dwarf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Dwarven forged steel never yields!",
+            "audio": "res://assets/audio/heroes/dwarf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By the runes of the anvil, awaken!",
+            "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg"
+          }
+        ]
+      }
     },
     "elf": {
       "id": "elf",
@@ -67,7 +235,125 @@
       "position": [
         7,
         14
-      ]
+      ],
+      "weapon": "Shortsword (2 Combat Dice)",
+      "armor": "Elven Leather & Cloak (+2 Defend Dice)",
+      "inventory": [
+        {
+          "id": "item-torch-1",
+          "name": "Dungeon Torch",
+          "type": "tool",
+          "effect": "Detect hidden traps in room",
+          "value": 15
+        },
+        {
+          "id": "item-strength-1",
+          "name": "Potion of Strength",
+          "type": "potion",
+          "effect": "+2 Attack Dice for 1 turn",
+          "value": 150
+        }
+      ],
+      "spells": [
+        {
+          "id": "urn:robos:tabletop:spell:water-of-healing",
+          "slug": "water-of-healing",
+          "name": "Water of Healing",
+          "element": "water",
+          "category": "Base Game",
+          "icon": "\ud83d\udca7",
+          "description": "Restores up to 4 lost Body Points to any Hero.",
+          "effect": "heal-bp",
+          "val": 4
+        },
+        {
+          "id": "urn:robos:tabletop:spell:sleep",
+          "slug": "sleep",
+          "name": "Sleep",
+          "element": "water",
+          "category": "Base Game",
+          "icon": "\ud83d\udca4",
+          "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
+          "effect": "status-sleep",
+          "val": 1
+        },
+        {
+          "id": "urn:robos:tabletop:spell:veil-of-mist",
+          "slug": "veil-of-mist",
+          "name": "Veil of Mist",
+          "element": "water",
+          "category": "Base Game",
+          "icon": "\ud83c\udf2b\ufe0f",
+          "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
+          "effect": "status-stealth",
+          "val": 1
+        }
+      ],
+      "tokenColor": "#15803d",
+      "audioLines": {
+        "turnStart": [
+          {
+            "text": "With elven grace, I step into the shadows.",
+            "audio": "res://assets/audio/heroes/elf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Swift as the wind, strike true!",
+            "audio": "res://assets/audio/heroes/elf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Ah! Darkness stings, yet my spirit endures!",
+            "audio": "res://assets/audio/heroes/elf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Too slow, creature! The forest shields me!",
+            "audio": "res://assets/audio/heroes/elf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "Ancient weave of earth and water, heed my call!",
+            "audio": "res://assets/audio/heroes/elf_casting_magic.ogg"
+          }
+        ]
+      },
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "With elven grace, I step into the shadows.",
+            "audio": "res://assets/audio/heroes/elf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Swift as the wind, strike true!",
+            "audio": "res://assets/audio/heroes/elf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Ah! Darkness stings, yet my spirit endures!",
+            "audio": "res://assets/audio/heroes/elf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Too slow, creature! The forest shields me!",
+            "audio": "res://assets/audio/heroes/elf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "Ancient weave of earth and water, heed my call!",
+            "audio": "res://assets/audio/heroes/elf_casting_magic.ogg"
+          }
+        ]
+      }
     },
     "wizard": {
       "id": "wizard",
@@ -80,9 +366,193 @@
       "defendDice": 2,
       "gold": 100,
       "position": [
-        7,
-        14
-      ]
+        1,
+        1
+      ],
+      "weapon": "Dagger (1 Combat Die)",
+      "armor": "Wizard Cloak (2 Defend Dice)",
+      "inventory": [
+        {
+          "id": "item-holy-water-1",
+          "name": "Holy Water",
+          "type": "relic",
+          "effect": "Destroys undead instantly",
+          "value": 200
+        },
+        {
+          "id": "item-pot-heal-3",
+          "name": "Potion of Healing",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        }
+      ],
+      "spells": [
+        {
+          "id": "urn:robos:tabletop:spell:heal-body",
+          "slug": "heal-body",
+          "name": "Heal Body",
+          "element": "earth",
+          "category": "Base Game",
+          "icon": "\ud83d\udc96",
+          "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
+          "effect": "heal-bp",
+          "val": 4
+        },
+        {
+          "id": "urn:robos:tabletop:spell:pass-through-rock",
+          "slug": "pass-through-rock",
+          "name": "Pass Through Rock",
+          "element": "earth",
+          "category": "Base Game",
+          "icon": "\ud83e\uddf1",
+          "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
+          "effect": "phase-walls",
+          "val": 1
+        },
+        {
+          "id": "urn:robos:tabletop:spell:rock-skin",
+          "slug": "rock-skin",
+          "name": "Rock Skin",
+          "element": "earth",
+          "category": "Base Game",
+          "icon": "\ud83d\udee1\ufe0f",
+          "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
+          "effect": "buff-def",
+          "val": 1
+        },
+        {
+          "id": "urn:robos:tabletop:spell:ball-of-flame",
+          "slug": "ball-of-flame",
+          "name": "Ball of Flame",
+          "element": "fire",
+          "category": "Base Game",
+          "icon": "\u2604\ufe0f",
+          "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
+          "effect": "damage-bp",
+          "val": 2
+        },
+        {
+          "id": "urn:robos:tabletop:spell:courage",
+          "slug": "courage",
+          "name": "Courage",
+          "element": "fire",
+          "category": "Base Game",
+          "icon": "\ud83e\udd81",
+          "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
+          "effect": "buff-atk",
+          "val": 2
+        },
+        {
+          "id": "urn:robos:tabletop:spell:fire-of-wrath",
+          "slug": "fire-of-wrath",
+          "name": "Fire of Wrath",
+          "element": "fire",
+          "category": "Base Game",
+          "icon": "\ud83d\udd25",
+          "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
+          "effect": "damage-bp",
+          "val": 1
+        },
+        {
+          "id": "urn:robos:tabletop:spell:genie",
+          "slug": "genie",
+          "name": "Genie",
+          "element": "air",
+          "category": "Base Game",
+          "icon": "\ud83e\uddde",
+          "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
+          "effect": "summon-attack",
+          "val": 5
+        },
+        {
+          "id": "urn:robos:tabletop:spell:swift-wind",
+          "slug": "swift-wind",
+          "name": "Swift Wind",
+          "element": "air",
+          "category": "Base Game",
+          "icon": "\ud83d\udca8",
+          "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
+          "effect": "buff-move",
+          "val": 2
+        },
+        {
+          "id": "urn:robos:tabletop:spell:tempest",
+          "slug": "tempest",
+          "name": "Tempest",
+          "element": "air",
+          "category": "Base Game",
+          "icon": "\ud83c\udf2a\ufe0f",
+          "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
+          "effect": "status-freeze",
+          "val": 1
+        }
+      ],
+      "tokenColor": "#1d4ed8",
+      "audioLines": {
+        "turnStart": [
+          {
+            "text": "The winds of magic gather at my staff.",
+            "audio": "res://assets/audio/heroes/wizard_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Back, foul fiend, before my arcane staff!",
+            "audio": "res://assets/audio/heroes/wizard_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Gah! My ward-cloak falters!",
+            "audio": "res://assets/audio/heroes/wizard_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "My arcane barrier deflects your strike!",
+            "audio": "res://assets/audio/heroes/wizard_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By fire, air, and tempest, unleash the spell!",
+            "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg"
+          }
+        ]
+      },
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "The winds of magic gather at my staff.",
+            "audio": "res://assets/audio/heroes/wizard_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Back, foul fiend, before my arcane staff!",
+            "audio": "res://assets/audio/heroes/wizard_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Gah! My ward-cloak falters!",
+            "audio": "res://assets/audio/heroes/wizard_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "My arcane barrier deflects your strike!",
+            "audio": "res://assets/audio/heroes/wizard_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By fire, air, and tempest, unleash the spell!",
+            "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg"
+          }
+        ]
+      }
     }
   },
   "monsters": {
@@ -3450,5 +3920,14 @@
         }
       ]
     }
+  },
+  "spellAllocation": {
+    "elfElement": "water",
+    "wizardElements": [
+      "earth",
+      "fire",
+      "air"
+    ],
+    "confirmed": false
   }
 }

@@ -2,6 +2,8 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const path = require('node:path');
+const fs = require('node:fs');
 
 // Math helpers mirror app.js logic
 function worldToTile(worldX, worldY, offsetX, offsetY, tileSize) {
@@ -368,5 +370,267 @@ test('Additional Border Tile: persists option in static board payload and calibr
   assert.equal(payload.calibration.additionalBorderTile, true);
   assert.equal(payload.calibration.hasBorder, true);
 });
+
+// -------------------------------------------------------------
+// Test 11: CLI Argument Parsing for Target Blockmaps & Cartridges
+// -------------------------------------------------------------
+test('CLI Argument Parsing: parses --blockmap, --cartridge, --map in both = and space formats', () => {
+  function parseArgsList(argv) {
+    let startupTarget = null;
+    const args = argv.slice();
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i];
+      if (arg.startsWith('--cartridge=')) {
+        startupTarget = { type: 'cartridge', value: arg.slice(arg.indexOf('=') + 1).replace(/^["']|["']$/g, '') };
+      } else if (arg === '--cartridge' && i + 1 < args.length) {
+        startupTarget = { type: 'cartridge', value: args[++i].replace(/^["']|["']$/g, '') };
+      } else if (arg.startsWith('--blockmap=')) {
+        startupTarget = { type: 'blockmap', value: arg.slice(arg.indexOf('=') + 1).replace(/^["']|["']$/g, '') };
+      } else if (arg === '--blockmap' && i + 1 < args.length) {
+        startupTarget = { type: 'blockmap', value: args[++i].replace(/^["']|["']$/g, '') };
+      } else if (arg.startsWith('--map=')) {
+        startupTarget = { type: 'image', value: arg.slice(arg.indexOf('=') + 1).replace(/^["']|["']$/g, '') };
+      } else if (arg === '--map' && i + 1 < args.length) {
+        startupTarget = { type: 'image', value: args[++i].replace(/^["']|["']$/g, '') };
+      } else if (!arg.startsWith('--') && !arg.startsWith('-')) {
+        const cleanArg = arg.replace(/^["']|["']$/g, '');
+        if (cleanArg.endsWith('.blockmap.json') || cleanArg.includes('.blockmap.')) {
+          startupTarget = { type: 'blockmap', value: cleanArg };
+        } else if (cleanArg.endsWith('.cartridge.json') || cleanArg.includes('cartridge')) {
+          startupTarget = { type: 'cartridge', value: cleanArg };
+        } else if (cleanArg.endsWith('.json')) {
+          startupTarget = { type: 'blockmap', value: cleanArg };
+        } else if (/\.(png|jpg|jpeg|webp|bmp)$/i.test(cleanArg)) {
+          startupTarget = { type: 'image', value: cleanArg };
+        } else {
+          startupTarget = { type: 'preset', value: cleanArg };
+        }
+      }
+    }
+    return startupTarget;
+  }
+
+  // Format 1: --blockmap=/path/to/first-light-dungeon.blockmap.json
+  const t1 = parseArgsList(['--blockmap=/home/user/first-light-dungeon.blockmap.json']);
+  assert.deepEqual(t1, { type: 'blockmap', value: '/home/user/first-light-dungeon.blockmap.json' });
+
+  // Format 2: --blockmap /path/to/first-light-dungeon.blockmap.json (space separated)
+  const t2 = parseArgsList(['--no-sandbox', '--blockmap', '/home/user/first-light-dungeon.blockmap.json']);
+  assert.deepEqual(t2, { type: 'blockmap', value: '/home/user/first-light-dungeon.blockmap.json' });
+
+  // Format 3: Quoted paths
+  const t3 = parseArgsList(['--blockmap="/home/user/my custom map.blockmap.json"']);
+  assert.deepEqual(t3, { type: 'blockmap', value: '/home/user/my custom map.blockmap.json' });
+
+  // Format 4: Naked blockmap argument
+  const t4 = parseArgsList(['/tmp/test.blockmap.json']);
+  assert.deepEqual(t4, { type: 'blockmap', value: '/tmp/test.blockmap.json' });
+});
+
+// -------------------------------------------------------------
+// Test 12: Board Map Loading with Absolute File Paths
+// -------------------------------------------------------------
+test('Board Map Loading: loads blockmap from absolute file path without clean ReferenceError', () => {
+  const repoRoot = path.resolve(__dirname, '../../..');
+  const cartridgesDir = path.join(repoRoot, 'games/tabletop-rpg/cartridges');
+  const boardsDir = path.join(repoRoot, 'games/tabletop-rpg/assets/boards');
+  const tabletopDir = path.join(repoRoot, 'games/tabletop-rpg');
+
+  const presets = [
+    {
+      id: 'first-light-dungeon',
+      file: 'first_light_dungeon.png',
+      blockmapFile: 'first-light-dungeon.blockmap.json'
+    }
+  ];
+
+  function resolveImagePath(rawPath, blockmapDir = null) {
+    if (!rawPath) return null;
+    let clean = rawPath.replace(/^res:\/\//, '');
+    const candidates = [
+      clean,
+      path.resolve(clean),
+      blockmapDir ? path.join(blockmapDir, clean) : null,
+      blockmapDir ? path.join(blockmapDir, path.basename(clean)) : null,
+      path.join(boardsDir, path.basename(clean)),
+      path.join(tabletopDir, clean),
+      path.join(repoRoot, clean),
+      path.join(tabletopDir, 'assets/boards', path.basename(clean))
+    ].filter(Boolean);
+    for (const c of candidates) {
+      if (fs.existsSync(c) && fs.statSync(c).isFile()) {
+        return c;
+      }
+    }
+    return null;
+  }
+
+  function simulateLoadBoardMap(boardId) {
+    let blockmapPath = null;
+    let clean = 'first-light-dungeon';
+
+    if (boardId && typeof boardId === 'string') {
+      const trimmed = boardId.trim().replace(/^["']|["']$/g, '');
+      if (fs.existsSync(trimmed) && fs.statSync(trimmed).isFile()) {
+        blockmapPath = trimmed;
+        clean = path.basename(trimmed).replace(/\.blockmap\.json$/, '').replace(/\.json$/, '').toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
+      } else {
+        clean = trimmed.toLowerCase().replace(/[_\s]+/g, '-').replace(/[^a-z0-9-]/g, '');
+        const candidates = [
+          path.join(cartridgesDir, `${clean}.blockmap.json`),
+          path.join(cartridgesDir, `${trimmed}.blockmap.json`),
+          path.join(cartridgesDir, trimmed),
+          path.resolve(trimmed)
+        ];
+        for (const c of candidates) {
+          if (fs.existsSync(c) && fs.statSync(c).isFile()) {
+            blockmapPath = c;
+            break;
+          }
+        }
+      }
+    }
+    if (!blockmapPath || !fs.existsSync(blockmapPath)) {
+      return { success: false, error: `Blockmap not found: ${boardId}` };
+    }
+
+    const raw = fs.readFileSync(blockmapPath, 'utf8');
+    const boardData = JSON.parse(raw);
+    const resolvedBoardId = boardData.id || clean;
+
+    const blockmapDir = path.dirname(blockmapPath);
+    let imgData = null;
+    const bgImage = boardData.backgroundImage || 'res://assets/boards/first_light_dungeon.png';
+    let resolvedPath = resolveImagePath(bgImage, blockmapDir);
+
+    if (!resolvedPath) {
+      const preset = presets.find(p => p.id === resolvedBoardId || p.id === clean || p.blockmapFile === path.basename(blockmapPath));
+      if (preset && preset.file) {
+        resolvedPath = resolveImagePath(preset.file, blockmapDir);
+      }
+    }
+
+    if (resolvedPath) {
+      imgData = {
+        filePath: resolvedPath,
+        fileName: path.basename(resolvedPath)
+      };
+    }
+
+    return {
+      success: true,
+      boardId: resolvedBoardId,
+      boardData,
+      imageData: imgData
+    };
+  }
+
+  // 1. Load by absolute path
+  const absPath = path.join(cartridgesDir, 'first-light-dungeon.blockmap.json');
+  const resAbs = simulateLoadBoardMap(absPath);
+  assert.equal(resAbs.success, true);
+  assert.equal(resAbs.boardId, 'first-light-dungeon');
+  assert.ok(resAbs.boardData.rooms.length > 0, 'Rooms array is populated');
+  assert.ok(resAbs.imageData, 'Background image resolved');
+  assert.equal(resAbs.imageData.fileName, 'first_light_dungeon.png');
+
+  // 2. Load by slug
+  const resSlug = simulateLoadBoardMap('first-light-dungeon');
+  assert.equal(resSlug.success, true);
+  assert.equal(resSlug.boardId, 'first-light-dungeon');
+  assert.ok(resSlug.boardData.rooms.length > 0);
+  assert.ok(resSlug.imageData);
+});
+
+// -------------------------------------------------------------
+// Test 13: Preset Dropdown Synchronization
+// -------------------------------------------------------------
+test('Preset Dropdown Sync: updates select box value or appends custom option', () => {
+  const options = [
+    { value: 'first-light-dungeon', text: 'First Light' },
+    { value: 'heroquest-classic', text: 'HeroQuest Classic' }
+  ];
+
+  const fakeSelect = {
+    options,
+    value: 'first-light-dungeon',
+    appendChild: (opt) => options.push(opt)
+  };
+
+  function syncPresetSelect(select, targetBoardId, title) {
+    let option = select.options.find(o => o.value === targetBoardId);
+    if (!option) {
+      option = { value: targetBoardId, text: title || targetBoardId };
+      select.appendChild(option);
+    }
+    select.value = targetBoardId;
+  }
+
+  // Known preset: updates value directly
+  syncPresetSelect(fakeSelect, 'heroquest-classic', 'HeroQuest Classic');
+  assert.equal(fakeSelect.value, 'heroquest-classic');
+
+  // Custom preset: appends new option and selects it
+  syncPresetSelect(fakeSelect, 'custom-crypt-lvl2', 'The Forgotten Crypt');
+  assert.equal(fakeSelect.value, 'custom-crypt-lvl2');
+  assert.equal(fakeSelect.options.some(o => o.value === 'custom-crypt-lvl2'), true);
+});
+
+// -------------------------------------------------------------
+// Test 14: Midterm Election Capitol Blockmap & Themed Oval Office
+// -------------------------------------------------------------
+test('Midterm Election Capitol Blockmap: exact parity with First Light Side A, custom AI board texture, and central Oval Office', () => {
+  const repoRoot = path.resolve(__dirname, '../../..');
+  const baseBlockmapPath = path.join(repoRoot, 'games/tabletop-rpg/cartridges/first-light-dungeon.blockmap.json');
+  const midtermBlockmapPath = path.join(repoRoot, 'games/tabletop-rpg/cartridges/midterm-election-capitol.blockmap.json');
+  const boardImgPath = path.join(repoRoot, 'games/tabletop-rpg/assets/boards/midterm_election_capitol.png');
+
+  assert.ok(fs.existsSync(baseBlockmapPath), 'first-light-dungeon.blockmap.json exists');
+  assert.ok(fs.existsSync(midtermBlockmapPath), 'midterm-election-capitol.blockmap.json exists');
+  assert.ok(fs.existsSync(boardImgPath), 'midterm_election_capitol.png exists');
+
+  const base = JSON.parse(fs.readFileSync(baseBlockmapPath, 'utf8'));
+  const midterm = JSON.parse(fs.readFileSync(midtermBlockmapPath, 'utf8'));
+
+  // 1. Exact grid and calibration parity
+  assert.deepEqual(midterm.gridDimensions, base.gridDimensions);
+  assert.equal(midterm.gridDimensions[0], 26);
+  assert.equal(midterm.gridDimensions[1], 19);
+  assert.deepEqual(midterm.calibration, base.calibration);
+  assert.equal(midterm.calibration.tileSize, 39);
+  assert.equal(midterm.calibration.offsetX, 0);
+  assert.equal(midterm.calibration.offsetY, 0);
+  assert.equal(midterm.additionalBorderTile, true);
+
+  // 2. Corridors match exactly (148 tiles)
+  assert.deepEqual(midterm.corridors, base.corridors);
+  assert.equal(midterm.corridors.length, 148);
+
+  // 3. Room count and exact tile placement parity (346 tiles across 22 rooms)
+  assert.equal(midterm.rooms.length, base.rooms.length);
+  assert.equal(midterm.rooms.length, 22);
+
+  for (let i = 0; i < base.rooms.length; i++) {
+    const br = base.rooms[i];
+    const mr = midterm.rooms[i];
+    assert.equal(mr.x, br.x, `Room ${i} x coordinate matches`);
+    assert.equal(mr.y, br.y, `Room ${i} y coordinate matches`);
+    assert.equal(mr.w, br.w, `Room ${i} width matches`);
+    assert.equal(mr.h, br.h, `Room ${i} height matches`);
+    assert.deepEqual(mr.tiles, br.tiles, `Room ${i} tiles array matches`);
+    assert.ok(mr.name && mr.name.length > 0, `Room ${i} has descriptive name`);
+  }
+
+  // 4. Middle room (index 9, x=10, y=7, w=6, h=5) is The Oval Office
+  const ovalOffice = midterm.rooms.find(r => r.x === 10 && r.y === 7 && r.w === 6 && r.h === 5);
+  assert.ok(ovalOffice, 'Middle 6x5 room exists at exact center');
+  assert.equal(ovalOffice.name, 'The Oval Office');
+  assert.equal(ovalOffice.id, 'room-oval-office');
+
+  // 5. Board image reference
+  assert.equal(midterm.backgroundImage, 'res://assets/boards/midterm_election_capitol.png');
+});
+
+
 
 

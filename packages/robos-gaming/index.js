@@ -13,6 +13,8 @@ const {
   FAN_DUNGEON_28x21_CONFIG,
   HEROQUEST_CLASSIC_CONFIG,
   HEROQUEST_FIRST_LIGHT_CONFIG,
+  FIRST_LIGHT_DUNGEON_CONFIG,
+  MIDTERM_ELECTION_CAPITOL_CONFIG,
   getMapConfiguration,
   listMapConfigurations,
   registerMapConfiguration
@@ -23,7 +25,10 @@ const {
   NS_CRPG,
   NS_TABLETOP,
   NS_SDLC,
-  GAMING_SHACL_SHAPES
+  GAMING_SHACL_SHAPES,
+  TABLETOP_SAVE_STATE_SCHEMA,
+  formatDurationSeconds,
+  normalizeQuestSaveStateToKGraphNode
 } = require("./lib/ontology");
 
 module.exports = {
@@ -44,6 +49,8 @@ module.exports = {
   FAN_DUNGEON_28x21_CONFIG,
   HEROQUEST_CLASSIC_CONFIG,
   HEROQUEST_FIRST_LIGHT_CONFIG,
+  FIRST_LIGHT_DUNGEON_CONFIG,
+  MIDTERM_ELECTION_CAPITOL_CONFIG,
   getMapConfiguration,
   listMapConfigurations,
   registerMapConfiguration,
@@ -56,5 +63,8 @@ module.exports = {
   NS_CRPG,
   NS_TABLETOP,
   NS_SDLC,
-  GAMING_SHACL_SHAPES
+  GAMING_SHACL_SHAPES,
+  TABLETOP_SAVE_STATE_SCHEMA,
+  formatDurationSeconds,
+  normalizeQuestSaveStateToKGraphNode
 };

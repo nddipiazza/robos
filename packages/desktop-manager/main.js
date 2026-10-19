@@ -119,6 +119,7 @@ const APPS = [
   // System / Tools
   { id: 'task-manager',            label: 'Task Manager',           icon: '📋', desc: 'View & kill processes',           category: 'RobOS System' },
   { id: 'robos-icons',             label: 'Icon Manager',           icon: '🎨', desc: 'Manage app icons',                category: 'RobOS System' },
+  { id: 'gnome-desktop-installer', label: 'GNOME Desktop Installer', icon: '🖥️', desc: 'Manage GNOME desktop shortcuts for all RobOS apps', category: 'RobOS System' },
   { id: 'robos-logs',              label: 'RobOS Logs',             icon: '📋', desc: 'View all app logs',               category: 'RobOS System' },
   { id: 'robos-desktop',          label: 'RobOS Desktop',          icon: '🖥️',  desc: 'Desktop shell (taskbar)',         category: 'RobOS System' },
 ];
@@ -145,6 +146,7 @@ const APP_BINS = {
   'app-launcher':            mkBin('app-launcher'),
   'task-manager':            mkBin('task-manager'),
   'robos-icons':             mkBin('robos-icons'),
+  'gnome-desktop-installer': mkBin('gnome-desktop-installer'),
   'desktop-widgets':         mkBin('desktop-widgets', { keepAlive: true }),
   // Security
   'pass-manager':            mkBin('pass-manager'),

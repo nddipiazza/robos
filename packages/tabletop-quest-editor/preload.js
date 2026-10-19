@@ -19,5 +19,6 @@ contextBridge.exposeInMainWorld('robosQuestEditor', {
   loadAssetImage: (relPath) => ipcRenderer.invoke('quest:load-asset-image', relPath),
   launchGame: (slug) => ipcRenderer.invoke('quest:launch-game', slug),
   openBlockmapEditor: (blockmapArg) => ipcRenderer.invoke('quest:open-blockmap-editor', blockmapArg),
+  listMonsters: () => ipcRenderer.invoke('quest:list-monsters'),
   ensureVoiceApp: () => ipcRenderer.invoke('voice:ensure-running')
 });
