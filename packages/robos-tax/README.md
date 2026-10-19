@@ -1,8 +1,9 @@
 # robos.tax
 
-Public schema package for the proposed **RobOS Household** app. No household data,
-financial documents, calculator, OCR implementation, cloud adapter, or filing service
-is included. See [the app specification](../../docs/ideas/specs/robos-household.md).
+Public schema package for **RobOS Household**. This package contains no household
+data or financial documents. A separate [synthetic browser sandbox](../household/README.md)
+now exercises imports, PDF review and a federal estimate. Production storage,
+scanned OCR and filing remain unimplemented. See [the app specification](../../docs/ideas/specs/robos-household.md).
 
 - `kgraph/package.jsonld`: independently loadable public KGraph package, namespace
   `robos.tax`; domain terms and selected 2025 form/field definitions with IRS sources.

@@ -1,0 +1,17 @@
+{
+  "name": "robos-household",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Synthetic family financial-year lifecycle sandbox",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/service.test.js",
+    "test:e2e": "node --test --test-concurrency=1 tests/lifecycle.e2e.js"
+  },
+  "dependencies": {
+    "papaparse": "5.7.0",
+    "pdf-lib": "1.17.1",
+    "pdfjs-dist": "5.4.624"
+  },
+  "devDependencies": { "playwright-core": "1.63.0" }
+}

@@ -8,9 +8,11 @@ nav_exclude: true
 
 Family finances, accounting, and US taxes in one place.
 
-**Proposal, not built.** This change supplies a public `robos.tax` schema package
-in `packages/robos-tax` and this implementation specification. It does not supply
-a running finance app, verified storage provider, tax calculator, or filing service.
+**Production proposal; synthetic browser prototype implemented.** The public
+`robos.tax` schema lives in `packages/robos-tax`. A runnable `packages/household`
+sandbox now exercises CSV imports, PDF text review and a TenForty/OpenTaxSolver
+federal estimate for a fixed invented family. It accepts no real records and has
+no verified cloud adapter or filing service. [See the E2E screenshots](https://rowbose.com/family-finances/).
 Research checked October 19, 2026.
 
 ## Overview and user stories
@@ -190,7 +192,7 @@ this proposal as an installed app.
 
 | Order | Deliverable | Observable completion check |
 |:---|:---|:---|
-| 0 | Public tax vocabulary and specification (this change) | Schema tests pass; package contains only definitions; limitations are explicit. |
+| 0 | Public tax vocabulary and specification (implemented) | Schema tests pass; package contains only definitions; limitations are explicit. |
 | 1 | Approved cloud-provider integration and private vault adapter | Read approval from the existing cloud providers app; verify key custody and deployment evidence; unrelated user/operator cannot decrypt; restore/revocation/outage tests pass; no local durable record writes. |
 | 2 | Household and permissions | Invite existing users; add dependents/placements; verify two households and restricted-member access through backend calls. |
 | 3 | Reuse spike and ledger/imports | Choose Actual or Firefly; adapt persistence; reconcile CSV/OFX/QFX fixtures including duplicates, transfers, splits and refunds. |
@@ -202,3 +204,9 @@ UI milestones need real-app recorded walkthroughs with synthetic records and neg
 authorization cases. Never use live household documents in repository fixtures,
 screenshots or development evidence. Before implementation, create the normal reviewed
 RobOS task plan; this specification does not claim linked issues or approval already exist.
+
+The browser sandbox is an implementation spike, not completion of the production
+milestones above. Its E2E test imports all six synthetic account statements, checks
+balances and spending, corrects a category and purchase split, advances to February,
+reviews the generated tax PDFs, invokes the actual engine, and checks the filing
+boundary. Scanned OCR and general tax eligibility remain unsupported.
