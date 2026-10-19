@@ -20,3 +20,14 @@
 .guide-guards,.adv-chapter{margin:18px 0;border:1px solid var(--line);border-radius:10px;padding:4px 16px}.guide-guards>summary,.adv-chapter>summary{cursor:pointer;font-weight:600;padding:12px 0}
 .guide-chapter.adv{padding:0}.adv-chapter .guide-chapter{padding-bottom:16px}.adv-chapter .guide-chapter>h2{font-size:1.2rem}
 .flow b{font-size:.95rem}
+/* Multi-page tutorial */
+.guide-page{padding:40px 0 80px}.guide-title{font-size:clamp(1.8rem,3.4vw,2.6rem);font-weight:600;margin:6px 0 10px}
+.guide-toc li.here a{color:var(--accent);font-weight:600}.guide-toc h4 a{color:var(--fg)}
+.guide-body h2{font-size:1.45rem;margin:40px 0 10px;font-weight:600}.guide-body h3{font-size:1.1rem;margin:26px 0 8px;font-weight:600}
+.guide-body p,.guide-body li{max-width:70ch}.guide-body table{border-collapse:collapse;width:100%;margin:16px 0;font-size:.92rem}.guide-body th,.guide-body td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}.guide-body th{background:var(--bg2)}
+.guide-body blockquote{border-left:4px solid var(--accent);margin:20px 0;padding:10px 18px;background:var(--bg2);border-radius:0 8px 8px 0}.guide-body blockquote p{margin:6px 0}
+.guide-body code{background:var(--bg2);padding:1px 6px;border-radius:4px;font-size:.88em}.guide-body pre code{background:none;padding:0}
+.guide-body ul{padding-left:22px}.guide-body li.check{list-style:none;margin-left:-22px;display:flex;gap:10px;align-items:flex-start}.guide-body .box{flex:none;width:16px;height:16px;border:2px solid var(--muted);border-radius:4px;margin-top:5px}
+.guide-body figure.guide-shot{margin:22px 0}.guide-body figure.guide-shot img{box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.guide-pager{display:flex;justify-content:space-between;gap:16px;margin-top:56px;padding-top:24px;border-top:1px solid var(--line)}
+.guide-pager a{display:flex;flex-direction:column;gap:2px;padding:14px 18px;border:1px solid var(--line);border-radius:10px;min-width:220px}.guide-pager a:hover{border-color:var(--accent)}.guide-pager small{color:var(--muted)}.guide-pager .next{text-align:right;margin-left:auto}

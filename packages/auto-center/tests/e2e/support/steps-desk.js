@@ -114,3 +114,5 @@ When('I open the intake category {string}', async function (name) { await this.p
 Then('the admin shows {string}', async function (text) { await this.page.locator(AD).filter({ hasText: text }).first().waitFor({ timeout: 6000 }); this.focus = AD; });
 When('I try to connect the backup to {string}', async function (repo) { await fillName(this, 'repository', repo, AD); this.focus = AD; await press(this, 'Connect', AD); });
 Then('I am told {string} in the admin', async function (text) { await msgHas(this, text); });
+When('I import these customers in admin:', async function (doc) { await fillName(this, 'csv', doc, `${AD} #admin-customer-import-form`); this.focus = `${AD} #admin-customer-import-form`; await press(this, 'Import customers', AD); });
+When('I choose to prepare the estimate', async function () { await clickChoice(this, 'Prepare the estimate'); });

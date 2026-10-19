@@ -1,0 +1,123 @@
+---
+layout: default
+title: Bring in your data · Auto Center tutorial
+permalink: /auto-center/3-bring-in-your-data/
+body_class: guide
+extra_css: /assets/auto-guide.css
+description: "Import your customers, their cars and your parts, and decide what to do with open jobs and old history."
+---
+<section class="guide-page"><div class="wrap"><div class="guide-layout"><nav class="guide-toc" aria-label="Tutorial steps"><h4><a href="{{ '/auto-center/' | relative_url }}">Auto Center tutorial</a></h4><ol><li><a href="{{ '/auto-center/1-before-you-start/' | relative_url }}">Before you start</a></li><li><a href="{{ '/auto-center/2-set-up-your-shop/' | relative_url }}">Set up your shop</a></li><li class="here"><a href="{{ '/auto-center/3-bring-in-your-data/' | relative_url }}">Bring in your data</a></li><li><a href="{{ '/auto-center/4-front-desk/' | relative_url }}">Take the customer's call</a></li><li><a href="{{ '/auto-center/5-mechanic-bench/' | relative_url }}">The mechanic bench</a></li><li><a href="{{ '/auto-center/6-checkout/' | relative_url }}">Check the customer out</a></li><li><a href="{{ '/auto-center/7-protect-your-data/' | relative_url }}">Protect your data</a></li><li><a href="{{ '/auto-center/8-run-the-shop/' | relative_url }}">Run the shop day to day</a></li><li><a href="{{ '/auto-center/9-switch-over/' | relative_url }}">Switch over from your old system</a></li><li><a href="{{ '/auto-center/tests/' | relative_url }}">How we know it works</a></li></ol></nav><article class="guide-body"><p class="eyebrow">Step 3 of 9 · about 30 minutes</p><h1 class="guide-title">Bring in your data</h1><p class="chapter-intro">Import your customers, their cars and your parts, and decide what to do with open jobs and old history.</p>
+<p>This page moves what you already have into Auto Center, so you do not retype it. You will use two imports in <strong>Admin</strong>: one for customers and their vehicles, one for parts.</p>
+<h2>1. Export your customers from the old system</h2>
+<p>Most systems can export to a spreadsheet or CSV file. Aim for <strong>one row per vehicle</strong>. A customer with two cars appears on two rows.</p>
+<p>Use these column names. Only <code>name</code> is required, and the order does not matter:</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>name</code></td>
+<td>Sam Rivera</td>
+</tr>
+<tr>
+<td><code>phone</code></td>
+<td>(555) 010-0100</td>
+</tr>
+<tr>
+<td><code>email</code></td>
+<td><a href="mailto:sam@example.com">sam@example.com</a></td>
+</tr>
+<tr>
+<td><code>preferred contact</code></td>
+<td>text message</td>
+</tr>
+<tr>
+<td><code>notes</code></td>
+<td>Prefers afternoons</td>
+</tr>
+<tr>
+<td><code>year</code></td>
+<td>2015</td>
+</tr>
+<tr>
+<td><code>make</code></td>
+<td>Toyota</td>
+</tr>
+<tr>
+<td><code>model</code></td>
+<td>Camry</td>
+</tr>
+<tr>
+<td><code>vin</code></td>
+<td>4T1BF1FK5FU123456</td>
+</tr>
+<tr>
+<td><code>plate</code></td>
+<td>ABC123</td>
+</tr>
+</tbody></table>
+<p>Here is a small example file:</p>
+<pre><code>Name,Phone,Email,Year,Make,Model,Plate
+Sam Rivera,(555) 010-0100,sam@example.com,2015,Toyota,Camry,ABC123
+Sam Rivera,555-010-0100,,2018,Ford,F-150,TRK999
+Priya Shah,555-010-0199,priya@example.com,2012,Honda,Accord,
+</code></pre>
+<p>Tips for a clean file:</p>
+<ul>
+<li>A vehicle row needs at least a <strong>make and model</strong>. A customer row with no vehicle is fine.</li>
+<li>Customers are matched by phone number first and email second, so the same person on two rows stays one customer.</li>
+<li>Phone numbers need an area code. Spaces, dashes and brackets are fine.</li>
+</ul>
+<h2>2. Import customers and vehicles</h2>
+<p>Open <strong>Admin</strong>, then <strong>Customers</strong>. Choose your CSV file, or paste its text, and press <strong>Import customers</strong>.</p>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/01-shop-admin--bring-in-your-existing-customers-and-their-cars-2.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/01-shop-admin--bring-in-your-existing-customers-and-their-cars-2.jpg' | relative_url }}" alt="Importing a customer list" loading="lazy" width="1000" height="625"></a><figcaption>Importing a customer list</figcaption></figure>
+
+
+
+<p>You will see a message such as <em>Imported 2 customer(s) and 3 vehicle(s)</em>. Running the same file again never creates duplicates, so it is safe to import in several rounds.</p>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/01-shop-admin--a-bad-row-stops-the-whole-customer-import-3.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/01-shop-admin--a-bad-row-stops-the-whole-customer-import-3.jpg' | relative_url }}" alt="A bad row stops the whole import and names the row to fix" loading="lazy" width="1000" height="625"></a><figcaption>A bad row stops the whole import and names the row to fix</figcaption></figure>
+
+
+
+<blockquote>
+<p><strong>Safety net.</strong> If any row has a problem, <strong>nothing</strong> is imported, and the message tells you which row to fix. You never end up with half a customer list.</p>
+</blockquote>
+<h2>3. Import your parts catalog</h2>
+<p>Open <strong>Admin</strong>, then <strong>Parts catalog</strong>. Your supplier&#39;s price list works well here. The file needs a <code>name</code> column. These are optional: <code>part number</code>, <code>supplier</code>, <code>cost</code>, <code>price</code>, <code>category</code>, <code>make</code>, <code>model</code>, <code>year from</code> and <code>year to</code>.</p>
+<pre><code>Part Number,Name,Supplier,Cost,Price,Make,Model
+BP-200,&quot;Brake pads, ceramic, rear&quot;,NAPA,22.00,49.00,Toyota,Camry
+OF-77,Oil filter,NAPA,3.10,8.99,,
+</code></pre>
+<p>Press <strong>Import parts</strong>. From then on, your parts are suggested first as you type on an estimate, with your supplier and price filled in. Parts you marked as fitting a make and model move to the top for matching cars.</p>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/01-shop-admin--import-a-supplier-price-list-3.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/01-shop-admin--import-a-supplier-price-list-3.jpg' | relative_url }}" alt="Importing a supplier price list" loading="lazy" width="1000" height="625"></a><figcaption>Importing a supplier price list</figcaption></figure>
+
+
+
+<p>You can also add one part at a time with the <strong>Add a part</strong> form, then check it with <strong>Search your catalog</strong>.</p>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/01-shop-admin--add-a-part-to-the-catalog-and-find-it-again-4.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/01-shop-admin--add-a-part-to-the-catalog-and-find-it-again-4.jpg' | relative_url }}" alt="A part added to the catalog and found again by searching" loading="lazy" width="1000" height="625"></a><figcaption>A part added to the catalog and found again by searching</figcaption></figure>
+
+
+
+<blockquote>
+<p><strong>Note.</strong> The make and model columns are your supplier&#39;s hints about what a part fits. They are used to sort suggestions, and they are not verified fitment, so always check a part fits before you order it.</p>
+</blockquote>
+<h2>4. Decide what to do with open jobs</h2>
+<p>Cars already in the shop when you switch need a decision:</p>
+<ul>
+<li><strong>Finish them in the old system.</strong> This is the safest choice. Run both systems side by side until the last old job is closed.</li>
+<li><strong>Re-enter them as new tickets.</strong> If a job is only just started, take the car in again on the Front desk and describe where it stands in the notes.</li>
+</ul>
+<h2>5. Decide what to do with old history</h2>
+<p>Auto Center starts fresh. It does not import past repair history, past invoices or old payments. Keep your old system, or an export of it, as a read-only archive. When a returning customer asks what you did last year, look it up there.</p>
+<h2>You are ready when</h2>
+<ul>
+<li><span class="box"></span> Your customers and vehicles are imported and you can see them under <strong>Admin</strong>, <strong>Customers</strong></li>
+<li><span class="box"></span> Your parts are imported, or you have decided to add them as you go</li>
+<li><span class="box"></span> You know what you will do with open jobs and old history</li>
+</ul>
+<p>Next: <a href="../4-front-desk/">Take the customer&#39;s call</a>.</p>
+
+<div class="guide-pager"><a class="prev" href="{{ '/auto-center/2-set-up-your-shop/' | relative_url }}"><small>Previous</small><b>Set up your shop</b></a><a class="next" href="{{ '/auto-center/4-front-desk/' | relative_url }}"><small>Next</small><b>Take the customer's call</b></a></div></article></div></div></section>
