@@ -6154,11 +6154,12 @@ func get_active_quest_objective() -> Dictionary:
 	var quest_title = str(active_q.get("title", cart.get("header", {}).get("title", default_title)))
 	var default_campaign = "Election 2026: Battle for the Hill" if is_midterm_quest else str(cart.get("header", {}).get("title", "HeroQuest: The Gathering Storm"))
 	var campaign_title = str(active_q.get("campaign", default_campaign))
-	var default_briefing = "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office—defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!" if is_midterm_quest else "You enter the perilous dungeon depths. Stay vigilant and vanquish your foes."
+	var default_briefing = "Mentor George W. Bush summons Barack Obama, Donald Trump, Hillary Clinton, and Bernie Sanders to the Basement of Strategery: your mission is to stop the Elite 1% from destroying the world—though Bush has no idea how, isn't sure it will work, and wishes you 'good luck killin' them Hydras' (Talarixon, El-Rogers, and Brownsted) because he's not much help! Then, from a swirling foggy mist, girlfriends Marjorie Taylor Greene and AOC appear under a cozy blanket to share survival tips on stockpiling canned goods and manual can openers for the oncoming AI Superintelligence Apocalypse!" if is_midterm_quest else "You enter the perilous dungeon depths. Stay vigilant and vanquish your foes."
 	var briefing = str(active_q.get("briefing", cart.get("header", {}).get("description", default_briefing)))
-	if is_midterm_quest and briefing == "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Navigate the chambers, overcome partisan perils, and claim victory!":
+	if is_midterm_quest and (briefing == "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Navigate the chambers, overcome partisan perils, and claim victory!" or briefing.begins_with("Enter the Capitol halls in Midterm Elections: Battle for the Hill.")):
 		briefing = default_briefing
 	var gold_reward = int(active_q.get("goldReward", 150 if is_midterm_quest else 100))
+	var intro_movie = str(active_q.get("introMovie", active_q.get("introCinematic", map_data_obj.get("introMovie", map_data_obj.get("introCinematic", "res://assets/movies/election_2026_intro_movie.ogv" if is_midterm_quest else "")))))
 
 	var primary_goals: Array = []
 	if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array and not active_q["primaryGoals"].is_empty():
@@ -6221,6 +6222,7 @@ func get_active_quest_objective() -> Dictionary:
 		"campaign": campaign_title,
 		"title": quest_title,
 		"briefing": briefing,
+		"introMovie": intro_movie,
 		"goldReward": gold_reward,
 		"mapConfigId": map_id,
 		"primaryGoals": primary_goals
@@ -6354,8 +6356,23 @@ func _setup_quest_objective_modal() -> void:
 	var mentor_tag = Label.new()
 	mentor_tag.name = "MentorTag"
 	mentor_tag.text = "MENTOR'S BRIEFING"
+	mentor_tag.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	apply_rpg_font_to_label(mentor_tag, true, 12, Color(1.0, 0.85, 0.35, 1.0))
 	mentor_hdr.add_child(mentor_tag)
+
+	var btn_watch_intro = Button.new()
+	btn_watch_intro.name = "BtnWatchIntroMovie"
+	btn_watch_intro.text = "🎬 Watch Intro Video"
+	btn_watch_intro.custom_minimum_size = Vector2(150, 26)
+	btn_watch_intro.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_watch_intro, 11, Color(1.0, 0.92, 0.55, 1.0))
+	btn_watch_intro.pressed.connect(func():
+		var q_obj = get_active_quest_objective()
+		var m_url = str(q_obj.get("introMovie", ""))
+		if m_url != "":
+			play_movie(m_url, "🎬 Prologue: %s" % str(q_obj.get("title", "HeroQuest")), true, false)
+	)
+	mentor_hdr.add_child(btn_watch_intro)
 	briefing_vbox.add_child(mentor_hdr)
 
 	quest_objective_briefing_label = Label.new()
@@ -6479,6 +6496,10 @@ func _update_quest_objective_content() -> void:
 		quest_objective_campaign_label.text = "Campaign: %s" % str(obj.get("campaign", "HeroQuest"))
 	if quest_objective_briefing_label:
 		quest_objective_briefing_label.text = "\"%s\"" % str(obj.get("briefing", ""))
+	if quest_objective_modal:
+		var btn_watch = quest_objective_modal.find_child("BtnWatchIntroMovie", true, false) as Button
+		if btn_watch:
+			btn_watch.visible = (str(obj.get("introMovie", "")) != "")
 	if quest_objective_reward_label:
 		var reward = int(obj.get("goldReward", 100))
 		quest_objective_reward_label.text = "IMPERIAL BOUNTY: %d Gold Coins awarded to the party upon survival" % reward
