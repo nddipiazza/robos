@@ -112,6 +112,17 @@ details{border-bottom:1px solid var(--line);padding:16px 0}summary{cursor:pointe
 .integ img{width:20px;height:20px}.integ .more{color:var(--muted);border-style:dashed}
 @media(max-width:860px){.flow{grid-template-columns:1fr}}
 
+/* Home: app suites */
+.suite-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:44px}
+.card.suite{padding:0;overflow:hidden;display:flex;flex-direction:column}.card.suite:hover{border-color:var(--accent)}
+.suite-shot{aspect-ratio:16/9;overflow:hidden;border-bottom:1px solid var(--line);background:var(--bg2)}
+.suite-shot img{width:100%;height:100%;object-fit:cover;object-position:top left;display:block;transition:transform .3s}
+.card.suite:hover .suite-shot img{transform:scale(1.02)}
+.suite-body{padding:22px 24px 24px;display:flex;flex-direction:column;flex:1}.suite-body .go{margin-top:auto;padding-top:14px}
+.suite-tag{font-size:.78rem;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+.suite-more{margin:26px 0 0}.suite-more a{color:var(--accent);font-weight:600}
+@media(max-width:860px){.suite-grid{grid-template-columns:1fr}}
+
 /* Cursor-style polish: flat, quiet, hairline borders */
 h1,h2,h3{font-weight:600}.h2{font-weight:600}.split h3{font-weight:600}
 .eyebrow{color:var(--muted);letter-spacing:.06em}
