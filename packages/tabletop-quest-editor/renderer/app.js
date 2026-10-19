@@ -1353,21 +1353,35 @@ function buildCartridgePayload() {
         }
       };
       const startPos = q.startingStair || [0, 1];
+      const isElection = String(q.slug || '').includes('election') || String(q.campaign || '').includes('Midterm') || String(q.campaign || '').includes('Election');
       if (q.heroes && typeof q.heroes === 'object' && Object.keys(q.heroes).length > 0) {
         const preserved = JSON.parse(JSON.stringify(q.heroes));
         for (const hKey of Object.keys(preserved)) {
           const h = preserved[hKey];
           if (h && typeof h === 'object') {
             if (!Array.isArray(h.position)) h.position = startPos;
-            const lookupKey = String(h.id || h.slug || hKey).toLowerCase();
+            const combined = `${hKey} ${h.id || ''} ${h.slug || ''} ${h.name || ''} ${h.characterName || ''}`.toLowerCase();
+            let lookupKey = String(h.id || h.slug || hKey).toLowerCase();
+            if (combined.includes('obama') || (isElection && lookupKey === 'barbarian')) lookupKey = 'obama';
+            else if (combined.includes('trump') || (isElection && lookupKey === 'dwarf')) lookupKey = 'trump';
+            else if (combined.includes('hillary') || combined.includes('clinton') || (isElection && lookupKey === 'elf')) lookupKey = 'hillary-clinton';
+            else if (combined.includes('bernie') || combined.includes('sanders') || (isElection && lookupKey === 'wizard')) lookupKey = 'bernie-sanders';
             const fallbackAl = DEFAULT_HERO_AUDIO_LINES[lookupKey] || DEFAULT_HERO_AUDIO_LINES[String(h.heroClass || 'barbarian').toLowerCase()] || DEFAULT_HERO_AUDIO_LINES.barbarian;
-            if (!h.audioLines) h.audioLines = h['robos:audioLines'] || fallbackAl;
-            if (!h['robos:audioLines']) h['robos:audioLines'] = h.audioLines;
+            const existingAl = h.audioLines || h['robos:audioLines'];
+            const firstAud = existingAl?.turnStart?.[0]?.audio || '';
+            const isElectionHero = ['obama', 'trump', 'hillary-clinton', 'bernie-sanders'].includes(lookupKey);
+            const hasClassicVoice = /\/(barbarian|dwarf|elf|wizard)_/.test(firstAud);
+            if (!existingAl || (isElectionHero && hasClassicVoice)) {
+              h.audioLines = fallbackAl;
+              h['robos:audioLines'] = fallbackAl;
+            } else {
+              h.audioLines = existingAl;
+              h['robos:audioLines'] = existingAl;
+            }
           }
         }
         return preserved;
       }
-      const isElection = String(q.slug || '').includes('election') || String(q.campaign || '').includes('Midterm');
       if (isElection) {
         return {
           obama: {
