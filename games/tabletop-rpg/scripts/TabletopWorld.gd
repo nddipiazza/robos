@@ -2772,7 +2772,7 @@ func _capture_save_screenshot(png_user_path: String) -> String:
 		return ""
 	if img.get_width() > 640:
 		var target_h = maxi(1, int(round(float(img.get_height()) * 640.0 / float(img.get_width()))))
-		img.resize(640, target_h, Image.INTERPOLATION_NEAREST)
+		img.resize(640, target_h, Image.INTERPOLATE_NEAREST)
 	var err = img.save_png(png_user_path)
 	if err == OK:
 		return ProjectSettings.globalize_path(png_user_path)
@@ -17108,11 +17108,16 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	# 3. Memorized Spells
 	var hero_spells: Array = h.get("spells", [])
 	for s_id in hero_spells:
-		var s_str = str(s_id).strip_edges().to_lower()
+		var s_str = ""
+		if s_id is Dictionary:
+			s_str = str(s_id.get("slug", s_id.get("id", s_id.get("name", ""))))
+		else:
+			s_str = str(s_id)
+		s_str = s_str.replace("urn:robos:tabletop:spell:", "").replace("-", "_").strip_edges().to_lower()
 		var s_meta = HeroQuestSpells.get_spell(s_str)
-		var s_name = str(s_meta.get("name", s_str.replace("_", " ").capitalize()))
-		var s_deck = str(s_meta.get("deck", "magic")).capitalize()
-		var s_desc = str(s_meta.get("description", ""))
+		var s_name = str(s_meta.get("name", s_id.get("name", s_str.replace("_", " ").capitalize()) if s_id is Dictionary else s_str.replace("_", " ").capitalize()))
+		var s_deck = str(s_meta.get("deck", s_id.get("deck", s_id.get("school", "magic")) if s_id is Dictionary else "magic")).capitalize()
+		var s_desc = str(s_meta.get("description", s_id.get("description", "") if s_id is Dictionary else ""))
 		var is_spent = is_spell_used(h, s_str)
 		var sp_tooltip = ""
 		if is_spent:
@@ -17719,12 +17724,18 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 			hero_detail_spells_section.add_child(sp_grid)
 
 			for s_id in hero_spells:
-				var s_data = HeroQuestSpells.get_spell(str(s_id))
-				var s_name = str(s_data.get("name", s_id))
-				var s_deck = str(s_data.get("deck", "Magic")).capitalize()
-				var s_desc = str(s_data.get("description", ""))
+				var s_key = ""
+				if s_id is Dictionary:
+					s_key = str(s_id.get("slug", s_id.get("id", s_id.get("name", ""))))
+				else:
+					s_key = str(s_id)
+				s_key = s_key.replace("urn:robos:tabletop:spell:", "").replace("-", "_").strip_edges().to_lower()
+				var s_data = HeroQuestSpells.get_spell(s_key)
+				var s_name = str(s_data.get("name", s_id.get("name", s_key.replace("_", " ").capitalize()) if s_id is Dictionary else s_key.replace("_", " ").capitalize()))
+				var s_deck = str(s_data.get("deck", s_id.get("deck", s_id.get("school", "Magic")) if s_id is Dictionary else "Magic")).capitalize()
+				var s_desc = str(s_data.get("description", s_id.get("description", "") if s_id is Dictionary else ""))
 
-				var is_spent = is_spell_used(h, str(s_id))
+				var is_spent = is_spell_used(h, s_key)
 				var sp_panel = PanelContainer.new()
 				sp_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				var spsb = StyleBoxFlat.new()
@@ -17746,9 +17757,12 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				sp_panel.add_child(smarg)
 
 				var svbox = VBoxContainer.new()
+				svbox.add_theme_constant_override("separation", 4)
+				smarg.add_child(svbox)
+
 				var sp_top = HBoxContainer.new()
 				sp_top.add_theme_constant_override("separation", 6)
-				var sp_icon_tex = get_ai_icon_texture("spell", str(s_id))
+				var sp_icon_tex = get_ai_icon_texture("spell", s_key)
 				if sp_icon_tex:
 					var sp_ico = TextureRect.new()
 					sp_ico.texture = sp_icon_tex
@@ -17760,6 +17774,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				var sp_name_lbl = Label.new()
 				sp_name_lbl.text = s_name
 				sp_name_lbl.add_theme_font_size_override("font_size", 11)
+				sp_name_lbl.add_theme_color_override("font_color", Color(0.95, 0.92, 1.0, 1.0))
 				sp_name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				sp_top.add_child(sp_name_lbl)
 
@@ -17790,7 +17805,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				elif is_act:
 					sp_panel.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 					sp_panel.tooltip_text = "Click to select target for %s (closes sheet)" % s_name
-					var cur_sp_id = str(s_id)
+					var cur_sp_id = s_key
 					var cur_h_id = h_id
 					sp_panel.gui_input.connect(func(ev: InputEvent):
 						if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
@@ -17816,7 +17831,8 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 		hero_detail_abilities_section.add_child(ab_vbox)
 
 		# Dwarf Innate Trap Mastery
-		if h_id == "dwarf":
+		var is_dwarf_hero = (h_id == "dwarf" or get_hero_class_name(h).to_lower() == "dwarf")
+		if is_dwarf_hero:
 			var d_panel = PanelContainer.new()
 			var d_sb = StyleBoxFlat.new()
 			d_sb.bg_color = Color(0.18, 0.15, 0.08, 0.9)
@@ -17828,7 +17844,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 			dm.add_theme_constant_override("margin_left", 8); dm.add_theme_constant_override("margin_right", 8); dm.add_theme_constant_override("margin_top", 6); dm.add_theme_constant_override("margin_bottom", 6)
 			d_panel.add_child(dm)
 			var d_lbl = Label.new()
-			d_lbl.text = "Trap Mastery (Innate Dwarf Ability)\nDorgan has spent centuries studying the subterranean machinations of stone and steel. He automatically detects and disarms adjacent traps without requiring tools or dice checks."
+			d_lbl.text = "Trap Mastery (Innate Dwarf Ability)\n%s automatically detects and disarms adjacent traps without requiring a Tool Kit or dice checks." % str(h.get("name", "Dorgan"))
 			d_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			d_lbl.add_theme_font_size_override("font_size", 10)
 			dm.add_child(d_lbl)
@@ -17851,7 +17867,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 		if h.get("is_sleeping", false):
 			buffs.append({ "name": "[Sleep]", "desc": "Enchanted slumber: Cannot move or take actions until awakened." })
 
-		if buffs.is_empty() and h_id != "dwarf":
+		if buffs.is_empty() and not is_dwarf_hero:
 			var no_buffs = Label.new()
 			no_buffs.text = "No active magical buffs or conditions."
 			no_buffs.add_theme_font_size_override("font_size", 10)
