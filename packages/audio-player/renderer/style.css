@@ -1848,3 +1848,120 @@ body {
 
 
 
+
+/* ── Icons & tabs ───────────────────────────────────────────────────────── */
+.icon { flex-shrink: 0; vertical-align: -3px; }
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 14px;
+  letter-spacing: 0.01em;
+}
+
+.tab-btn.active {
+  background: transparent;
+  border-bottom-color: var(--accent);
+  color: var(--text-main);
+}
+
+.tab-btn.active .icon { color: var(--accent); }
+
+.nav-tabs { gap: 4px; padding: 0 20px; }
+
+.card-emoji { color: var(--accent); display: inline-flex; }
+
+.mini-ctrl-btn, .row-play, .btn-playlist-quick-play, .btn-row-action, .btn-remove-queue-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Cloud storage ──────────────────────────────────────────────────────── */
+.cloud-browser { display: flex; flex-direction: column; gap: 14px; max-width: 980px; margin: 0 auto; }
+
+.cloud-toolbar { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+
+.cloud-conn { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-muted); }
+
+.cloud-conn select {
+  background: var(--bg-secondary);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  min-width: 280px;
+}
+
+.cloud-import-actions { display: flex; gap: 8px; }
+.cloud-import-actions button:disabled { opacity: 0.4; cursor: default; }
+
+.cloud-note, .cloud-progress { font-size: 0.8rem; color: var(--text-muted); }
+.cloud-progress { padding: 8px 12px; border-left: 2px solid var(--accent); background: var(--bg-secondary); }
+.cloud-error { padding: 8px 12px; border-left: 2px solid var(--danger); background: var(--bg-secondary); color: var(--danger); font-size: 0.82rem; }
+
+.cloud-path { display: flex; align-items: center; flex-wrap: wrap; font-family: var(--font-mono); font-size: 0.78rem; padding: 6px 0; }
+.crumb { background: none; border: none; color: var(--accent); cursor: pointer; padding: 2px 4px; font: inherit; }
+.crumb:hover { text-decoration: underline; }
+.crumb-sep { color: var(--text-muted); }
+
+.cloud-rows { border-top: 1px solid var(--border-color); }
+
+.cloud-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 90px;
+  align-items: center;
+  height: 40px;
+  padding: 0 8px;
+  border-bottom: 1px solid rgba(53, 46, 38, 0.55);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.cloud-row:hover { background: var(--bg-secondary); }
+.cloud-row.selected { background: rgba(232, 163, 61, 0.09); }
+.cloud-name { display: flex; align-items: center; gap: 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.cloud-name .icon { color: var(--text-muted); }
+.cloud-size { text-align: right; color: var(--text-muted); font-family: var(--font-mono); font-size: 0.75rem; }
+.cloud-empty { padding: 28px; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+.cloud-check input { accent-color: var(--accent); }
+
+/* ── Lyrics / karaoke ───────────────────────────────────────────────────── */
+.lyrics-panel { border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-primary); }
+
+.lyrics-head {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.lyrics-src { text-transform: none; letter-spacing: 0; }
+
+.lyrics-scroll { height: 240px; overflow-y: auto; padding: 90px 20px; text-align: center; scroll-behavior: smooth; }
+
+.lyric-line {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  line-height: 1.5;
+  padding: 3px 0;
+  color: var(--text-muted);
+  opacity: 0.55;
+  cursor: pointer;
+  transition: color 0.25s, font-size 0.25s, opacity 0.25s;
+}
+
+.lyric-line.past { opacity: 0.35; }
+.lyric-line.active { color: var(--accent); font-size: 1.5rem; opacity: 1; }
+.lyric-line:hover { opacity: 0.9; }
+
+.lyrics-empty { color: var(--text-muted); font-size: 0.85rem; padding: 40px 0 0; margin-top: -50px; }
+.lyrics-plain { white-space: pre-wrap; font-family: var(--font-display); color: var(--text-muted); line-height: 1.6; text-align: center; user-select: text; }
