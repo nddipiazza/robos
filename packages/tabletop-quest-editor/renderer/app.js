@@ -1039,6 +1039,7 @@ async function loadCartridge(slugOrPath) {
         if (dom.chkAdditionalBorder) dom.chkAdditionalBorder.checked = state.hasAdditionalBorder;
       }
       state.quest.wanderingMonster = mapData.wanderingMonster || 'orc';
+      state.quest.introMovie = mapData.introMovie || (Array.isArray(c.quests) && c.quests[0]?.introMovie) || '';
       state.quest.startingStair = mapData.startingStair || c.header?.startingPosition || [0, 1];
       state.quest.startingStairType = mapData.startingStairType || 'stairs_up_1x1';
       state.quest.exitTile = mapData.exitTile || mapData.exitStair || null;
@@ -1365,6 +1366,7 @@ function buildCartridgePayload() {
         id: q.slug,
         title: q.title,
         mapConfigurationId: bm.id || 'custom-blockmap',
+        introMovie: q.introMovie || ((/election-2026|midterm/i.test(String(q.slug || '')) || /midterm/i.test(String(bm.id || ''))) ? 'res://assets/movies/election_2026_intro_movie.ogv' : undefined),
         width: dims[0],
         height: dims[1],
         additionalBorderTile: Boolean(state.hasAdditionalBorder),
@@ -1494,6 +1496,7 @@ function buildCartridgePayload() {
           slug: q.slug,
           campaign: q.campaign || (isMidterm ? 'Election 2026: Battle for the Hill' : 'HeroQuest'),
           title: q.title,
+          introMovie: q.introMovie || (isMidterm ? 'res://assets/movies/election_2026_intro_movie.ogv' : undefined),
           briefing: q.briefing,
           goldReward: Number(q.goldReward) || (isMidterm ? 150 : 100),
           completed: false,

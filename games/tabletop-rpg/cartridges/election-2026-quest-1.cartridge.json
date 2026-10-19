@@ -8,7 +8,7 @@
     "gameType": "tabletop",
     "genre": "Tabletop Dungeon Crawler",
     "ruleset": "heroquest",
-    "description": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office—defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
+    "description": "Mentor George W. Bush summons Barack Obama, Donald Trump, Hillary Clinton, and Bernie Sanders to the Basement of Strategery: your mission is to stop the Elite 1% from destroying the world—though Bush has no idea how, isn't sure it will work, and wishes you 'good luck killin' them Hydras' (Talarixon, El-Rogers, and Brownsted) because he's not much help! Then, from a swirling foggy mist, girlfriends Marjorie Taylor Greene and AOC appear under a cozy blanket to share survival tips on stockpiling canned goods and manual can openers for the oncoming AI Superintelligence Apocalypse!",
     "coverColor": "#0a0e17",
     "icon": "🛡️",
     "mapCount": 1,
@@ -21,82 +21,280 @@
       0,
       13
     ],
-    "createdDate": "2026-10-18T16:57:20.697Z"
+    "createdDate": "2026-10-19T13:38:50.231Z"
   },
   "heroes": {
-    "barbarian": {
-      "id": "barbarian",
+    "obama": {
+      "id": "obama",
       "slug": "obama",
       "name": "Barack Obama",
-      "characterName": "Barack Obama",
       "heroClass": "Barbarian",
-      "category": "Midterms 2026",
       "bodyPoints": 8,
       "mindPoints": 2,
       "attackDice": 3,
       "defendDice": 2,
       "gold": 120,
-      "tokenAsset": "res://assets/tokens/token_obama.png",
-      "portraitAsset": "res://assets/hero_cards/card_bg_obama.png",
+      "weapon": "Broadsword of Hope & Change (3 Combat Dice)",
+      "armor": "Chiseled Commander Toughness (2 Defend Dice)",
+      "inventory": [
+        {
+          "id": "item-pot-heal-obama",
+          "name": "Potion of Executive Vigor",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        },
+        {
+          "id": "item-mic-drop-1",
+          "name": "Runic Teleprompter Shard",
+          "type": "relic",
+          "effect": "+1 Mind resistance vs Spin Doctors",
+          "value": 50
+        }
+      ],
+      "spells": [],
+      "tokenColor": "#b91c1c",
       "position": [
         0,
-        13
+        12
       ]
     },
-    "dwarf": {
-      "id": "dwarf",
+    "trump": {
+      "id": "trump",
       "slug": "trump",
       "name": "Donald Trump",
-      "characterName": "Donald Trump",
       "heroClass": "Dwarf",
-      "category": "Midterms 2026",
       "bodyPoints": 7,
       "mindPoints": 3,
       "attackDice": 2,
       "defendDice": 2,
       "gold": 250,
-      "tokenAsset": "res://assets/tokens/token_trump.png",
-      "portraitAsset": "res://assets/hero_cards/card_bg_trump.png",
+      "weapon": "Gilded Dwarven Battle-Axe (2 Combat Dice)",
+      "armor": "Gold-Plated Rune Mail (2 Defend Dice)",
+      "inventory": [
+        {
+          "id": "item-toolkit-trump",
+          "name": "Golden Dwarven Trap Toolkit",
+          "type": "tool",
+          "effect": "Disarms any pit, boulder, or bureaucratic trap",
+          "value": 150
+        },
+        {
+          "id": "item-pot-heal-trump",
+          "name": "Elixir of Tremendous Stamina",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        }
+      ],
+      "spells": [],
+      "tokenColor": "#d97706",
       "position": [
-        0,
-        13
+        1,
+        12
       ]
     },
-    "elf": {
-      "id": "elf",
-      "slug": "hillary_clinton",
+    "hillary-clinton": {
+      "id": "hillary-clinton",
+      "slug": "hillary-clinton",
       "name": "Hillary Clinton",
-      "characterName": "Hillary Clinton",
       "heroClass": "Elf",
-      "category": "Midterms 2026",
       "bodyPoints": 6,
       "mindPoints": 4,
       "attackDice": 2,
       "defendDice": 2,
       "gold": 150,
-      "tokenAsset": "res://assets/tokens/token_hillary_clinton.png",
-      "portraitAsset": "res://assets/hero_cards/card_bg_hillary_clinton.png",
+      "weapon": "Lothlorien Sting-Blade (2 Combat Dice)",
+      "armor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
+      "inventory": [
+        {
+          "id": "item-scroll-hillary",
+          "name": "Classified Elven Parchment",
+          "type": "relic",
+          "effect": "Reveals hidden doors in current corridor",
+          "value": 120
+        },
+        {
+          "id": "item-pot-heal-hillary",
+          "name": "Draught of Miruvor",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        }
+      ],
+      "spells": [
+        {
+          "id": "urn:robos:tabletop:spell:water-of-healing",
+          "slug": "water-of-healing",
+          "name": "Water of Healing",
+          "element": "water",
+          "category": "Base Game",
+          "icon": "💧",
+          "description": "Restores up to 4 lost Body Points to any Hero.",
+          "effect": "heal-bp",
+          "val": 4
+        },
+        {
+          "id": "urn:robos:tabletop:spell:sleep",
+          "slug": "sleep",
+          "name": "Sleep",
+          "element": "water",
+          "category": "Base Game",
+          "icon": "💤",
+          "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
+          "effect": "status-sleep",
+          "val": 1
+        },
+        {
+          "id": "urn:robos:tabletop:spell:veil-of-mist",
+          "slug": "veil-of-mist",
+          "name": "Veil of Mist",
+          "element": "water",
+          "category": "Base Game",
+          "icon": "🌫️",
+          "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
+          "effect": "status-stealth",
+          "val": 1
+        }
+      ],
+      "tokenColor": "#059669",
       "position": [
         0,
         13
       ]
     },
-    "wizard": {
-      "id": "wizard",
-      "slug": "bernie_sanders",
+    "bernie-sanders": {
+      "id": "bernie-sanders",
+      "slug": "bernie-sanders",
       "name": "Bernie Sanders",
-      "characterName": "Bernie Sanders",
       "heroClass": "Wizard",
-      "category": "Midterms 2026",
       "bodyPoints": 4,
       "mindPoints": 6,
       "attackDice": 1,
       "defendDice": 2,
       "gold": 99,
-      "tokenAsset": "res://assets/tokens/token_bernie_sanders.png",
-      "portraitAsset": "res://assets/hero_cards/card_bg_bernie_sanders.png",
+      "weapon": "Gnarled Oak Staff of the 99% (1 Combat Die)",
+      "armor": "Starry Wizard Hat & Vermont Wool Mittens (2 Defend Dice)",
+      "inventory": [
+        {
+          "id": "item-mittens-bernie",
+          "name": "Enchanted Vermont Mittens",
+          "type": "relic",
+          "effect": "Channels crackling elemental lightning & warmth",
+          "value": 200
+        },
+        {
+          "id": "item-pot-heal-bernie",
+          "name": "Universal Healthcare Potion",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        }
+      ],
+      "spells": [
+        {
+          "id": "urn:robos:tabletop:spell:heal-body",
+          "slug": "heal-body",
+          "name": "Heal Body",
+          "element": "earth",
+          "category": "Base Game",
+          "icon": "💖",
+          "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
+          "effect": "heal-bp",
+          "val": 4
+        },
+        {
+          "id": "urn:robos:tabletop:spell:pass-through-rock",
+          "slug": "pass-through-rock",
+          "name": "Pass Through Rock",
+          "element": "earth",
+          "category": "Base Game",
+          "icon": "🧱",
+          "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
+          "effect": "phase-walls",
+          "val": 1
+        },
+        {
+          "id": "urn:robos:tabletop:spell:rock-skin",
+          "slug": "rock-skin",
+          "name": "Rock Skin",
+          "element": "earth",
+          "category": "Base Game",
+          "icon": "🛡️",
+          "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
+          "effect": "buff-def",
+          "val": 1
+        },
+        {
+          "id": "urn:robos:tabletop:spell:ball-of-flame",
+          "slug": "ball-of-flame",
+          "name": "Ball of Flame",
+          "element": "fire",
+          "category": "Base Game",
+          "icon": "☄️",
+          "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
+          "effect": "damage-bp",
+          "val": 2
+        },
+        {
+          "id": "urn:robos:tabletop:spell:courage",
+          "slug": "courage",
+          "name": "Courage",
+          "element": "fire",
+          "category": "Base Game",
+          "icon": "🦁",
+          "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
+          "effect": "buff-atk",
+          "val": 2
+        },
+        {
+          "id": "urn:robos:tabletop:spell:fire-of-wrath",
+          "slug": "fire-of-wrath",
+          "name": "Fire of Wrath",
+          "element": "fire",
+          "category": "Base Game",
+          "icon": "🔥",
+          "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
+          "effect": "damage-bp",
+          "val": 1
+        },
+        {
+          "id": "urn:robos:tabletop:spell:genie",
+          "slug": "genie",
+          "name": "Genie",
+          "element": "air",
+          "category": "Base Game",
+          "icon": "🧞",
+          "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
+          "effect": "summon-attack",
+          "val": 5
+        },
+        {
+          "id": "urn:robos:tabletop:spell:swift-wind",
+          "slug": "swift-wind",
+          "name": "Swift Wind",
+          "element": "air",
+          "category": "Base Game",
+          "icon": "💨",
+          "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
+          "effect": "buff-move",
+          "val": 2
+        },
+        {
+          "id": "urn:robos:tabletop:spell:tempest",
+          "slug": "tempest",
+          "name": "Tempest",
+          "element": "air",
+          "category": "Base Game",
+          "icon": "🌪️",
+          "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
+          "effect": "status-freeze",
+          "val": 1
+        }
+      ],
+      "tokenColor": "#2563eb",
       "position": [
-        0,
+        1,
         13
       ]
     }
@@ -551,6 +749,7 @@
       "id": "election-2026-quest-1",
       "title": "Quest 1: Battle for the Hill",
       "mapConfigurationId": "midterm-election-capitol",
+      "introMovie": "res://assets/movies/election_2026_intro_movie.ogv",
       "width": 26,
       "height": 19,
       "additionalBorderTile": true,
@@ -586,11 +785,12 @@
         "room-se-4",
         "room-sw-5",
         "room-sw-6",
-        "room-sw-7",
         "room-sw-8",
         "room-nw-9",
         "room-nw-10",
-        "room-se-11"
+        "room-se-11",
+        "room-sw-11",
+        "room-ne-12"
       ],
       "rooms": [
         {
@@ -1326,66 +1526,6 @@
           "quadrant": "sw"
         },
         {
-          "id": "room-sw-7",
-          "name": "Room 7 (SW)",
-          "x": 3,
-          "y": 14,
-          "w": 3,
-          "h": 4,
-          "shape": "rect",
-          "tiles": [
-            [
-              3,
-              14
-            ],
-            [
-              3,
-              15
-            ],
-            [
-              3,
-              16
-            ],
-            [
-              3,
-              17
-            ],
-            [
-              4,
-              14
-            ],
-            [
-              4,
-              15
-            ],
-            [
-              4,
-              16
-            ],
-            [
-              4,
-              17
-            ],
-            [
-              5,
-              14
-            ],
-            [
-              5,
-              15
-            ],
-            [
-              5,
-              16
-            ],
-            [
-              5,
-              17
-            ]
-          ],
-          "quadrant": "sw"
-        },
-        {
           "id": "room-sw-8",
           "name": "Russian Spy Voting Proxy Room (SW)",
           "x": 1,
@@ -1904,6 +2044,58 @@
             ]
           ],
           "quadrant": "se"
+        },
+        {
+          "id": "room-sw-11",
+          "name": "Escort Bathroom (SW)",
+          "x": 6,
+          "y": 10,
+          "w": 2,
+          "h": 3,
+          "shape": "rect",
+          "tiles": [
+            [
+              6,
+              10
+            ],
+            [
+              6,
+              11
+            ],
+            [
+              6,
+              12
+            ],
+            [
+              7,
+              10
+            ],
+            [
+              7,
+              11
+            ],
+            [
+              7,
+              12
+            ]
+          ],
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-ne-12",
+          "name": "Room 12 (NE)",
+          "x": 20,
+          "y": 1,
+          "w": 1,
+          "h": 1,
+          "shape": "rect",
+          "tiles": [
+            [
+              20,
+              1
+            ]
+          ],
+          "quadrant": "ne"
         }
       ],
       "corridors": [
@@ -1970,10 +2162,6 @@
         [
           1,
           13
-        ],
-        [
-          1,
-          14
         ],
         [
           2,
@@ -2114,6 +2302,86 @@
         [
           17,
           6
+        ],
+        [
+          5,
+          14
+        ],
+        [
+          5,
+          15
+        ],
+        [
+          5,
+          16
+        ],
+        [
+          5,
+          17
+        ],
+        [
+          4,
+          17
+        ],
+        [
+          4,
+          16
+        ],
+        [
+          4,
+          15
+        ],
+        [
+          4,
+          14
+        ],
+        [
+          3,
+          14
+        ],
+        [
+          3,
+          17
+        ],
+        [
+          3,
+          16
+        ],
+        [
+          3,
+          15
+        ],
+        [
+          1,
+          14
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          4,
+          12
+        ],
+        [
+          5,
+          12
         ]
       ],
       "doors": [
@@ -2325,23 +2593,57 @@
           "door_type": "double-2x1",
           "width": 2,
           "height": 1
+        },
+        {
+          "id": "door-12",
+          "name": "Door 12",
+          "from": [
+            6,
+            12
+          ],
+          "to": [
+            6,
+            13
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-sw-11",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
         }
       ],
       "furniture": [],
       "wallBlocks": [],
-      "traps": [
-        {
-          "id": "trap-spear-1",
-          "trapType": "spear",
-          "x": 7,
-          "y": 13,
-          "damageDice": 1,
-          "detected": false,
-          "disarmed": false,
-          "hidden": false
-        }
-      ],
+      "traps": [],
       "triggers": [
+        {
+          "id": "trigger-election-intro",
+          "name": "Mentor George W. Bush & Visions in the Mist",
+          "title": "Mentor George W. Bush & Visions in the Mist",
+          "marker": "Intro",
+          "event": "on_room_entered",
+          "target": "room-sw-10",
+          "room": "room-sw-10",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            0,
+            13
+          ],
+          "onceOnly": true,
+          "narrative": "Mentor George W. Bush speaks: \"Howdy, heroes! Your quest is to stop the Elite 1% from destroyin' the world! Now, how do you actually do that? Heck if I know! I have no idea how, and I'm not even sure it's gonna work. Good luck killin' them Hydras—Talarixon, El-Rogers, and Brownsted—I'm really not much help!\" Suddenly, from a swirling foggy mist, Marjorie Taylor Greene and Alexandria Ocasio-Cortez appear sitting cozily together under a plaid blanket—clearly girlfriends—giving you survival hints on how to stockpile canned beans, canned peaches, SPAM, and manual iron can openers for the oncoming AI Superintelligence Apocalypse!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "play_movie",
+              "moviePath": "res://assets/movies/election_2026_intro_movie.ogv",
+              "title": "🎬 Prologue: Mentor George W. Bush & The Mist Oracles",
+              "canSkip": true
+            }
+          ]
+        },
         {
           "id": "trigger-briefing-room-katie",
           "name": "The Daily Gaslight Briefing — Katie Zacharia",
@@ -2667,6 +2969,30 @@
       ],
       "storyTriggers": [
         {
+          "id": "trigger-election-intro",
+          "marker": "Intro",
+          "title": "Mentor George W. Bush & Visions in the Mist",
+          "banner": "QUEST PROLOGUE [Intro]",
+          "narrative": "Mentor George W. Bush speaks: \"Howdy, heroes! Your quest is to stop the Elite 1% from destroyin' the world! Now, how do you actually do that? Heck if I know! I have no idea how, and I'm not even sure it's gonna work. Good luck killin' them Hydras—Talarixon, El-Rogers, and Brownsted—I'm really not much help!\" Suddenly, from a swirling foggy mist, Marjorie Taylor Greene and Alexandria Ocasio-Cortez appear sitting cozily together under a plaid blanket—clearly girlfriends—giving you survival hints on how to stockpile canned beans, canned peaches, SPAM, and manual iron can openers for the oncoming AI Superintelligence Apocalypse!",
+          "tile": [
+            0,
+            13
+          ],
+          "room": "room-sw-10",
+          "event": "on_room_entered",
+          "onceOnly": true,
+          "movie": "res://assets/movies/election_2026_intro_movie.ogv",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "play_movie",
+              "moviePath": "res://assets/movies/election_2026_intro_movie.ogv",
+              "title": "🎬 Prologue: Mentor George W. Bush & The Mist Oracles",
+              "canSkip": true
+            }
+          ]
+        },
+        {
           "id": "trigger-briefing-room-katie",
           "marker": "Note A",
           "title": "The Daily Gaslight Briefing — Katie Zacharia",
@@ -2979,9 +3305,10 @@
     {
       "id": "election-2026-quest-1",
       "slug": "election-2026-quest-1",
-      "campaign": "Election 2026: Battle for the Hill",
+      "campaign": "Election 2026",
       "title": "Quest 1: Battle for the Hill",
-      "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office—defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
+      "introMovie": "res://assets/movies/election_2026_intro_movie.ogv",
+      "briefing": "Mentor George W. Bush summons Barack Obama, Donald Trump, Hillary Clinton, and Bernie Sanders to the Basement of Strategery: your mission is to stop the Elite 1% from destroying the world—though Bush has no idea how, isn't sure it will work, and wishes you 'good luck killin' them Hydras' (Talarixon, El-Rogers, and Brownsted) because he's not much help! Then, from a swirling foggy mist, girlfriends Marjorie Taylor Greene and AOC appear under a cozy blanket to share survival tips on stockpiling canned goods and manual can openers for the oncoming AI Superintelligence Apocalypse!",
       "goldReward": 150,
       "completed": false,
       "mapConfigId": "midterm-election-capitol",
@@ -3000,6 +3327,5 @@
         "Lead all surviving heroes safely to the Capitol Exit Stairs at [14, 2]."
       ]
     }
-  ],
-  "heroPack": "Midterms 2026"
+  ]
 }
