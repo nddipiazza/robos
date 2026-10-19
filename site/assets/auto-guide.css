@@ -11,7 +11,7 @@
 .guide-shots{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.guide-shot{margin:0}
 .guide-shot img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
 .guide-shot figcaption{font-size:.82rem;color:var(--muted);margin-top:6px}
-.guide-video{margin:24px 0}.guide-video video{width:100%;border:1px solid var(--line);border-radius:10px}.guide-video figcaption{font-size:.85rem;color:var(--muted);margin-top:6px}
+.guide-video{margin:24px 0}.guide-video video,.guide-video iframe{width:100%;border:1px solid var(--line);border-radius:10px}.guide-video figcaption{font-size:.85rem;color:var(--muted);margin-top:6px}
 .guide-body pre{overflow:auto;border:1px solid var(--line);border-radius:10px;padding:16px;background:var(--card)}
 @media(max-width:860px){.guide-layout{grid-template-columns:1fr}.guide-toc{position:static}.guide-shots{grid-template-columns:1fr}}
 .role-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:8px 0 28px}
@@ -31,3 +31,5 @@
 .guide-body figure.guide-shot{margin:22px 0}.guide-body figure.guide-shot img{box-shadow:0 6px 24px rgba(0,0,0,.12)}
 .guide-pager{display:flex;justify-content:space-between;gap:16px;margin-top:56px;padding-top:24px;border-top:1px solid var(--line)}
 .guide-pager a{display:flex;flex-direction:column;gap:2px;padding:14px 18px;border:1px solid var(--line);border-radius:10px;min-width:220px}.guide-pager a:hover{border-color:var(--accent)}.guide-pager small{color:var(--muted)}.guide-pager .next{text-align:right;margin-left:auto}
+
+.guide-video iframe{display:block;aspect-ratio:16/9;height:auto}

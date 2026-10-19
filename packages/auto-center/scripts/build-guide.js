@@ -26,7 +26,7 @@ function shotFile(fragment, index) {
   return name;
 }
 const fig = (src, alt, caption) => `<figure class="guide-shot"><a href="{{ '${src}' | relative_url }}"><img src="{{ '${src}' | relative_url }}" alt="${esc(alt)}" loading="lazy" width="1000" height="625"></a><figcaption>${esc(caption || alt)}</figcaption></figure>`;
-const videoFigure = c => `<figure class="guide-video"><video controls preload="none" playsinline src="{{ '/assets/auto-center/whole-journey.webm' | relative_url }}"></video><figcaption>${c}</figcaption></figure>`;
+const videoFigure = c => `<figure class="guide-video"><iframe class="guide-youtube" width="1000" height="563" src="https://www.youtube-nocookie.com/embed/Pro9b8L-QL0" title="RobOS Auto Center — A Complete Repair Shop Workflow" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe><figcaption>${esc(c)} <a href="https://youtu.be/Pro9b8L-QL0">Watch on YouTube</a></figcaption></figure>`;
 function directives(md) {
   return md.replace(/^::video\[([^\]]*)\]$/gm, (_, c) => `\n\n<!--fig-->${videoFigure(c)}<!--/fig-->\n\n`)
     .replace(/^::shot\[([^|\]]+)\|(\d+)\|([^\]]*)\]$/gm, (_, f, i, c) => `\n\n<!--fig-->${fig('/assets/auto-center/shots/' + shotFile(f, Number(i)), c, c)}<!--/fig-->\n\n`)
