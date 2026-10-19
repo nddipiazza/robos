@@ -4,6 +4,7 @@ package: agent-sidebar
 category: ai-agents
 summary: "A prototype 320-pixel sidebar that mocks up an agent's plan, tool feed and approve/refine buttons."
 description: "Agent Sidebar is a UI prototype pinned to the right edge of the screen. Its plan steps and tool feed are hardcoded sample data, not a live view of a running agent."
+icon: agent-sidebar.svg
 ---
 
 Agent Sidebar is a frameless, always-on-top window, 320 pixels wide and full screen height, placed on the right edge of the primary display. It is a mock-up of how a human could follow and approve an agent's work.

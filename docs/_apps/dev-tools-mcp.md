@@ -4,6 +4,7 @@ package: dev-tools-mcp
 category: services
 summary: "An MCP server with a small catalog of developer CLI tools; \"install\" and \"check\" read and write a JSON file and do not touch the system."
 description: "dev-tools-mcp exposes four robos_devtools_* tools over a six-entry catalog stored in ~/.config/robos/devtools/tools.json. It does not run installers or detect real binaries."
+icon: dev-tools-mcp.svg
 ---
 
 This package is an MCP server plus a console window. The idea is that an agent can ask what tooling a machine has and request more. The current code keeps a catalog file and nothing more.

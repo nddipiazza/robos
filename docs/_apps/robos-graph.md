@@ -6,6 +6,7 @@ summary: "Browse, search, edit and validate the knowledge graph of your software
 description: "Explorer and engine for the JSON-LD knowledge graph stored in .robos. It also provides the kgraph command-line tool and the graph library other RobOS apps depend on."
 related:
   - /knowledge-graph.html
+icon: robos-graph.svg
 ---
 
 This package is both a window and a library. The graph store in `lib/graph-store.js` is loaded by many other RobOS apps (eLearning Hub, Documentation, Preferences, Task Servers and more). For what the graph holds and why, see [Knowledge graph]({{ site.baseurl }}{% link knowledge-graph.md %}).

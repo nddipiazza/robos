@@ -4,6 +4,7 @@ package: gitea-browser
 category: code-review
 summary: "A static mock-up of a browser window showing a Gitea issues page, used as a prop in recorded demos. It is not a working browser."
 description: "Gitea Browser loads one hardcoded HTML page that looks like a Chrome window on a Gitea issues list at localhost:3000. It does not connect to any Gitea server."
+icon: gitea-browser.svg
 ---
 
 Gitea Browser exists for the demo recordings in `packages/robos-test/demos`, such as the Acme Petshop task-creation demo. The test harness opens it so a recording can show "the issues now exist on the forge" without a real browser or Gitea instance.

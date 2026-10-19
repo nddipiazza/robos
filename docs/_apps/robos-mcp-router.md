@@ -4,6 +4,7 @@ package: robos-mcp-router
 category: services
 summary: "Single MCP endpoint that lists the tools of the servers in the registry and routes tool calls to them, with built-in fallbacks."
 description: "Reads ~/.config/robos/mcp/servers.json, merges the tools and resources it finds, and exposes them over stdio. When a call cannot reach a server it falls back to local handlers, some of which return sample data."
+icon: robos-mcp-router.svg
 ---
 
 The router lets an agent such as Claude Code connect to one MCP server and see the tools of the other RobOS servers. Treat it as an early implementation: parts of it return canned data, described below.

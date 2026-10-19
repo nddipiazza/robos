@@ -4,6 +4,7 @@ package: intellij-idea
 category: code-review
 summary: "A simulated IntelliJ window that answers the RobOS IDE plugin's HTTP routes on port 63343 with in-memory data, for demos and tests."
 description: "This package is not IntelliJ. It is an Electron mock that serves the same /robos/* routes as the real plugin in plugins/intellij-idea, and shows a canned Acme Petshop task workspace."
+icon: intellij-idea.svg
 ---
 
 The package named `intellij-idea` is a stand-in for the IDE. It lets the [IDE Bridge MCP Server]({{ '/apps/ide-bridge-mcp/' | relative_url }}), the demo scripts and the tests exercise the IDE protocol on a machine without IntelliJ installed. The real integration is the Kotlin plugin in `plugins/intellij-idea`.

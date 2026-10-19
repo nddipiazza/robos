@@ -4,6 +4,7 @@ package: task-manager-mcp
 category: services
 summary: "MCP server with seven tools for listing, creating and advancing tasks stored in ~/.config/robos/tasks/tasks.json."
 description: "Built on the MCP framework. Tasks are a local JSON file seeded with three sample tasks; it is not connected to Jira, GitHub or Linear."
+icon: task-manager-mcp.svg
 ---
 
 Task Manager MCP gives an agent a simple local task list. Tasks live in `~/.config/robos/tasks/tasks.json`. On first run the file is created with three sample tasks (`TASK-101` to `TASK-103`).
