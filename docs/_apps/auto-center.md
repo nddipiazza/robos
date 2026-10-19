@@ -10,6 +10,10 @@ description: "Separate owner and maintenance center workspaces backed by KGraph.
 > **Running a shop?** Read the full lifecycle guide, from customer intake to a paid and returned car, with screenshots and video from the end-to-end tests: [rowbose.com/auto-center](https://rowbose.com/auto-center/).
 
 
+<div style="aspect-ratio:16/9;margin:24px 0"><iframe src="https://www.youtube-nocookie.com/embed/Pro9b8L-QL0" title="RobOS Auto Center — A Complete Repair Shop Workflow" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:0"></iframe></div>
+
+[Watch the complete repair workflow on YouTube](https://youtu.be/Pro9b8L-QL0).
+
 Choose **Vehicle owner** to track your vehicles, service history, future maintenance by date or odometer, and repair-shop invoices. Import an image or PDF, review the locally extracted text, and save the original with its hash.
 
 ![Owner maintenance planning in Auto Center, using labeled test records]({{ '/assets/images/screenshots/auto-owner-maintenance.png' | relative_url }})
