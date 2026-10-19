@@ -63,7 +63,7 @@ layout: default
 title: ${p.step ? `${p.title} · Auto Center tutorial` : 'RobOS Auto Center'}
 permalink: ${p.url}
 body_class: guide
-extra_css: /assets/auto-guide.css
+extra_css: /assets/auto-guide.css${isIndex ? '?v=auto-intro-20261019' : ''}
 description: "${esc(isIndex ? 'Vehicle care for owners and repair operations for independent shops, with the RobOS Auto Guide.' : p.summary)}"
 ---
 ${hero || introduction}<section class="guide-page"><div class="wrap">${guideHeading}<div class="guide-layout">${isIndex ? list.replace('>Auto Center tutorial<', '>RobOS Auto Guide<') : list}<article class="guide-body"><p class="eyebrow">${p.step && p.step < 10 ? `Step ${p.step} of 9${p.minutes ? ` · about ${p.minutes} minutes` : ''}` : isIndex ? 'For the shop owner' : 'Tutorial'}</p><${isIndex ? 'h3' : 'h1'} class="guide-title">${esc(p.title)}</${isIndex ? 'h3' : 'h1'}><p class="chapter-intro">${esc(p.summary)}</p>
