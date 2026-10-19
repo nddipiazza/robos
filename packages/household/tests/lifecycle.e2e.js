@@ -91,6 +91,13 @@ test('family year: onboard → import → reconcile → February → review → 
   assert.match(await page.locator('#tax-result').innerText(),/TenForty/);
   assert.match(await page.locator('#tax-result').innerText(),/8,224/);
   await step('06-tax-estimate','#tax-result');
+  // These are recurring workspaces; returning to one must retain the current records.
+  await page.locator('[data-view="spending"]').click();
+  assert.match(await page.locator('#annual-expenses').innerText(),/47,905/);
+  await page.locator('[data-view="accounts"]').click();
+  assert.match(await page.locator('#net-worth').innerText(),/71,483/);
+  await page.locator('[data-view="taxes"]').click();
+  assert.match(await page.locator('#tax-result').innerText(),/8,224/);
   assert.equal(await page.locator('#submit-irs').isEnabled(),false);
   await page.locator('#prepare-checklist').click();
   await step('07-filing-boundary','#filing-checklist');
