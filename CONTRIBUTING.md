@@ -1,222 +1,236 @@
-# Contributing to RobOS: Use RobOS to Build RobOS!
+# Contributing to RobOS
 
-Welcome! RobOS is an AI-first SDLC platform and autonomous agent governance harness. We believe contributing to open source should not be an exercise in manual drudgery, endless environment debugging, and waiting weeks for unverified diffs to be reviewed.
+**RobOS is a good place to learn context engineering by doing it on a real, public codebase.**
 
-> **"RobOS changes how open source works: we just create task workflows we want to run, and ask someone in the community (or their autonomous AI agent) to run them for us!"**
+Context engineering is the work of deciding what an AI agent knows, when it knows it, and how you check what it did. It covers the instructions an agent reads, the knowledge it can look up, the skills it can run, and the evidence it has to hand back. Most people learn it on private projects nobody else can see. Here you learn it in the open, on an Apache-2.0 project, and every merged pull request is something you can link to.
 
-In the RobOS ecosystem, human contributors act as **Lead System Architects**—steering requirements, defining prompt contracts, and reviewing proof-of-work—while autonomous AI agents (Claude Code, Google Antigravity, GitHub Copilot, and Google Gemini) handle the grueling implementation, boilerplate, and verification in disposable, zero-pollution sandboxes (`tmpfs`).
-
----
-
-## Table of Contents
-
-- [The RobOS Contributor Lifecycle](#the-robos-contributor-lifecycle)
-- [Agent-Ready Contribution Prompts](#agent-ready-contribution-prompts)
-  - [1. Fixing a Bug or Issue](#1-fixing-a-bug-or-issue)
-  - [2. Implementing a Feature Proposal](#2-implementing-a-feature-proposal)
-  - [3. Scaffolding a New Electron App](#3-scaffolding-a-new-electron-app)
-  - [4. Updating Knowledge Graph Schemas & Contracts](#4-updating-knowledge-graph-schemas--contracts)
-- [Local Prerequisites & Setup](#local-prerequisites--setup)
-- [Architecture & Development Conventions](#architecture--development-conventions)
-- [Commit & Pull Request Standards](#commit--pull-request-standards)
-- [Community & Communication](#community--communication)
+If you're a student, a career-changer, or an engineer who wants a structured way into AI-assisted development, treat contributing here as a self-directed **context-engineering internship**: pick a track, ship small changes, get them reviewed, and come out with a public portfolio.
 
 ---
 
-## The RobOS Contributor Lifecycle
+## Contents
+
+- [Why intern here](#why-intern-here)
+- [What you'll practise](#what-youll-practise)
+- [Pick a track](#pick-a-track)
+- [Your first week](#your-first-week)
+- [How a contribution flows](#how-a-contribution-flows)
+- [Prompts you can hand to your agent](#prompts-you-can-hand-to-your-agent)
+- [Local setup](#local-setup)
+- [Conventions](#conventions)
+- [Commits and pull requests](#commits-and-pull-requests)
+- [Getting help](#getting-help)
+
+---
+
+## Why intern here
+
+- **The whole project is a context-engineering exercise.** RobOS is built by people steering coding agents (Claude Code, Codex, Antigravity, Copilot, Gemini CLI). The repo is full of the artifacts that make that work: [`AGENTS.md`](AGENTS.md), skills in [`.agents/skills/`](.agents/skills/), a knowledge graph in [`.robos/kgraphs/`](.robos/kgraphs/), and feature specs written as prompt contracts. You learn by reading and improving them.
+- **Your work is public.** Commits, reviews and discussions are on GitHub under your name. That's a better reference than "I did a course."
+- **Agents do the typing; you do the thinking.** You aren't expected to hand-write every line. You're expected to frame the task well, give the agent the right context, and prove the result works. That's the skill teams are hiring for now.
+- **Feedback is built in.** Every pull request ships with test output and, for anything visible, a recorded walkthrough. Reviewers comment on how you scoped and verified the work, not just the diff.
+- **The bar is clear.** Conventions are written down (this file and [`AGENTS.md`](AGENTS.md)), so you know what "done" looks like before you start.
+
+There's no application, stipend or fixed start date. You set your own pace. If you want a structured plan or someone to check in with, ask in [Discord](https://discord.gg/6PjxzkHujE) and we'll help you pick work.
+
+## What you'll practise
+
+| Skill | Where you practise it in RobOS |
+|-------|--------------------------------|
+| **Writing agent instructions** | [`AGENTS.md`](AGENTS.md) and per-tool files (`CLAUDE.md`, `GEMINI.md`, `ANTIGRAVITY.md`). Tighten a rule, fix a stale one, and watch agents behave differently. |
+| **Authoring skills** | [`.agents/skills/`](.agents/skills/): small, reusable `SKILL.md` playbooks such as `create-robos-app`, `report-issue` and `kgraph-diff`. Write a new one or make an existing one more reliable. |
+| **Modelling knowledge for agents** | [`.robos/kgraphs/`](.robos/kgraphs/): JSON-LD packages checked against SHACL shapes. Describe a system once so an agent can find just the slice it needs. |
+| **Writing specs as prompt contracts** | [`docs/ideas/specs/`](docs/ideas/specs/) and [`docs/issues/reported/`](docs/issues/reported/). Turn a vague idea into something any agent can pick up and finish. |
+| **Verifying agent output** | E2E tests in [`packages/robos-test/`](packages/robos-test/), headless runs via `scripts/e2e-container.sh`, and narrated demo recordings. Learn to prove work instead of trusting it. |
+| **Reviewing agent pull requests** | Read other people's PRs, check their evidence, and leave useful comments. |
+
+## Pick a track
+
+You don't have to choose up front, but it helps to have a focus for your first few PRs.
+
+1. **Agent instructions and skills.** Improve `AGENTS.md`, fix a skill that agents misuse, or add a new skill for a task you keep repeating. Good first step: run an existing skill end to end and fix whatever confused the agent.
+2. **Knowledge graph.** Add or correct entities in `.robos/kgraphs/`, run `kgraph-validate`, and use `kgraph-diff` to check the blast radius. Good first step: find an app whose graph entry is missing or out of date.
+3. **Specs and issues.** Use the `report-issue` and `create-feature-spec` skills to turn a bug or idea into a task another contributor's agent can run. Good first step: reproduce an issue in `docs/issues/reported/` and sharpen its steps.
+4. **Apps and tests.** Fix a bug or build a feature in one of the Electron apps in `packages/`, with a test and a recording to prove it. Good first step: an issue or spec that touches a single app.
+
+## Your first week
+
+A suggested path. Skip ahead if you're already comfortable.
+
+1. **Read the context the agents read.** Skim [`AGENTS.md`](AGENTS.md), open two or three skills in `.agents/skills/`, and look at one package in `.robos/kgraphs/`.
+2. **Run something.** Clone the repo, launch an app (`electron packages/dev-central`) and run the unit tests (see [Local setup](#local-setup)).
+3. **Say hello.** Post in [Discord](https://discord.gg/6PjxzkHujE) with the track you're interested in. We'll point you at a starter task.
+4. **Ship one small PR.** A doc fix, a sharper skill, a corrected graph node. Get it through review so you've seen the whole loop once.
+5. **Write down what you learned.** Something in `AGENTS.md` or a skill that tripped you or your agent up is probably worth fixing for the next person. That fix is a contribution too.
+
+---
+
+## How a contribution flows
 
 ```mermaid
-flowchart TD
-    A["📋 1. Select or Create Task Workflow<br/><i>docs/issues/reported/ or docs/ideas/specs/</i>"] --> B["🤖 2. Dispatch to Autonomous Agent<br/><i>Claude Code, Antigravity, Copilot, Gemini</i>"]
-    B --> C["📦 3. Ephemeral Sandbox Execution<br/><i>Zero-pollution tmpfs + virtual display</i>"]
-    C --> D["🐳 4. Headless Container Verification<br/><i>scripts/e2e-container.sh + 1080p Video Proof</i>"]
-    D --> E["🛡️ 5. Dual-State Blast-Radius Diff<br/><i>kgraph-diff & SHACL Shape Gate</i>"]
-    E --> F["💻 6. PR Review via IDE Bridge<br/><i>JetBrains IntelliJ IDEA or VS Code PR Tools</i>"]
+flowchart LR
+    A["1. Pick a task<br/><i>issue, spec, or your own idea</i>"] --> B["2. Give your agent the context<br/><i>AGENTS.md + spec + skills</i>"]
+    B --> C["3. Agent implements<br/><i>on a feature branch</i>"]
+    C --> D["4. Prove it works<br/><i>tests + recorded walkthrough</i>"]
+    D --> E["5. Check the blast radius<br/><i>kgraph-diff</i>"]
+    E --> F["6. Open a PR<br/><i>with evidence attached</i>"]
 ```
 
-### 1. Select or Create a Task Workflow
-- **Fix an Issue**: Browse open, triaged bug specifications in [`docs/issues/reported/`](docs/issues/reported/).
-- **Build a Feature**: Pick an approved architectural specification from the [Feature Ideas Store](docs/ideas/specs/).
-- **Submit a New Workflow**: If you discovered a bug or have an idea, don't just dump unformatted text—use the `report-issue` or `create-feature-spec` skills to generate a prompt contract that anyone in the community can run.
-
-### 2. Dispatch to an AI Agent (Community Runner)
-Launch your coding agent of choice inside your cloned repository. Feed the agent the exact task workflow or specification. The agent will analyze dependencies, create a feature branch, and build the solution following [AGENTS.md](AGENTS.md).
-
-### 3. Ephemeral Sandbox Execution
-RobOS agents run inside isolated, disposable in-memory environments (`tmpfs`). Workstations stay clean: no lingering daemon processes, no cluttering config files in your user home, and zero credential leaks.
-
-### 4. Containerized E2E Verification & Video Proof-of-Work
-RobOS eliminates blind trust in AI diffs. Before submitting code, the contributor or agent runs `./scripts/e2e-container.sh`. This spins up a headless Docker container with an `Xvfb` virtual framebuffer and Picom compositor, runs the E2E test suite, and records a 1080p narrated video walkthrough proof with Piper TTS voiceover.
-
-### 5. Dual-State Knowledge Graph Blast-Radius Diff
-Run `kgraph-diff` to compare the feature branch against `main`. RobOS checks W3C SHACL shape conformance and verifies that no services, databases, or contracts suffer broken references.
-
-### 6. PR Review in Your IDE
-Open the PR and review it with full rich AST context:
-- **IntelliJ IDEA**: Connect via the RobOS IntelliJ plugin (IPC port 63343) for native JetBrains Pull Request tool window review, breakpoint debugging, and run configuration testing.
-- **VS Code**: Use native GitHub Pull Request review (`GitHub.vscode-pull-request-github`).
-- Inspect the embedded 1080p video proof-of-work in the PR description and approve!
+1. **Pick a task.** Browse [`docs/issues/reported/`](docs/issues/reported/) for bugs or [`docs/ideas/specs/`](docs/ideas/specs/) for features. If you have your own idea, write it up first with `report-issue` or `create-feature-spec` so anyone can run it.
+2. **Give your agent the context.** Start your coding agent in your clone and point it at the task file. It should follow `AGENTS.md`. If it doesn't, that's a context problem worth fixing.
+3. **Let the agent implement** on a branch named `fix/<slug>` or `feat/<slug>`. Stay in the loop: read what it changes and push back when it drifts.
+4. **Prove it works.** Run the relevant tests, or `./scripts/e2e-container.sh` for the headless suite. For anything visible, record a walkthrough with the `record-demo` skill.
+5. **Check the blast radius.** If you touched `.robos/kgraphs/`, run `kgraph-validate` and `kgraph-diff` against `main`.
+6. **Open a PR** with the test output and recording linked. See the [checklist](#pull-request-checklist).
 
 ---
 
-## Agent-Ready Contribution Prompts
+## Prompts you can hand to your agent
 
-Copy and paste these battle-tested prompts directly into your AI agent terminal (Claude Code, Google Antigravity, GitHub Copilot, or Gemini CLI) to execute tasks autonomously.
+Copy one of these into Claude Code, Codex, Antigravity, Copilot or Gemini CLI. Reading why each step is there is a quick lesson in how to brief an agent.
 
-### 1. Fixing a Bug or Issue
+### Fix a reported issue
 
 ```text
-You are a Lead Software Engineer for RobOS. We need you to resolve the reported issue:
-`docs/issues/reported/ISSUE-<XXX>-<slug>.md`
+Resolve the issue in docs/issues/reported/ISSUE-<XXX>-<slug>.md.
+Follow AGENTS.md.
 
-Follow the RobOS Agent Review-Based Development harness (AGENTS.md):
-1. Branch: Create a new branch `fix/<slug>`.
-2. Investigate & Reproduce:
-   - Read the reproduction steps in the issue spec.
-   - Run the relevant app locally or run its unit test in packages/robos-test/.
-3. Implement Fix:
-   - Apply minimal, surgical modifications to packages/<app-id>/.
-   - Ensure all Electron security rules are preserved (contextBridge, userData set before single-instance lock).
-4. Verify & Proof:
-   - Run `./scripts/e2e-container.sh` or the specific package test suite.
-   - Confirm that the issue is fixed with zero regressions.
-5. Commit:
-   - Create a conventional commit: `fix(<app-id>): <clear description>`.
+1. Create a branch fix/<slug>.
+2. Reproduce the issue using the steps in the spec, or with the relevant test
+   in packages/robos-test/.
+3. Make the smallest change in packages/<app-id>/ that fixes it. Keep the
+   Electron security rules (contextBridge only; set userData before the
+   single-instance lock).
+4. Run the package tests or ./scripts/e2e-container.sh and confirm nothing
+   else broke.
+5. Commit as: fix(<app-id>): <what changed>.
 ```
 
-### 2. Implementing a Feature Proposal
+### Implement a feature spec
 
 ```text
-You are an autonomous RobOS Core Architect. Implement the approved feature spec:
-`docs/ideas/specs/<spec-slug>.md`
+Implement the spec in docs/ideas/specs/<spec-slug>.md. Follow AGENTS.md.
 
-Follow AGENTS.md:
-1. Branch: Create a branch `feat/<spec-slug>`.
-2. Knowledge Graph:
-   - Update `.robos/kgraphs/` with any new entities or microservice nodes conforming to W3C SHACL shapes.
-3. Implementation:
-   - Implement the feature across packages/.
-   - If introducing a new app, register its icon in packages/robos-icons/index.js and assign a debug port in packages/robos-lib/snapshot-cli.js.
-4. Testing & Verification:
-   - Add BDD Gherkin test scenarios in packages/robos-test/tests/.
-   - Run containerized headless verification via `./scripts/e2e-container.sh`.
-   - Record a 1080p narrated video demo using `record-demo`.
-5. PR Blast Radius:
-   - Run `kgraph-diff` to verify zero unintended architectural side-effects.
+1. Create a branch feat/<spec-slug>.
+2. Update .robos/kgraphs/ with any new entities so they pass SHACL validation.
+3. Implement the feature in packages/. For a new app, register its icon in
+   packages/robos-icons/index.js and give it a debug port in
+   packages/robos-lib/snapshot-cli.js.
+4. Add tests under packages/robos-test/tests/ and run them headlessly with
+   ./scripts/e2e-container.sh.
+5. Record a narrated walkthrough with the record-demo skill.
+6. Run kgraph-diff against main and confirm there are no unintended changes.
 ```
 
-### 3. Scaffolding a New Electron App
+### Create a new app
 
-Use the `/create-robos-app` skill or prompt your agent:
+Use the `/create-robos-app` skill, or:
 
 ```text
-You are building a new native RobOS Electron application called "<App Label>".
-App ID: "<app-id>"
-Purpose: "<1-sentence description>"
+Build a new RobOS Electron app.
+Name: "<App Label>"  ID: "<app-id>"  Purpose: "<one sentence>"
 
-Please:
-1. Create `packages/<app-id>/` with:
-   - `package.json` (name, version, scripts: "start": "electron .", standalone dependencies)
-   - `main.js` (sets userData to ~/.config/robos/electron/<app-id>, single instance lock, snapshot debug server)
-   - `preload.js` (contextBridge exposing safe IPC invoke channels)
-   - `renderer/index.html`, `renderer/app.js`, `renderer/styles.css` (using RobOS dark navy theme variables)
-   - `<app-id>.desktop` file and `icon.svg` (48x48 Lucide cyan style)
-2. Register the app icon in `packages/robos-icons/index.js` (alphabetical order).
-3. Assign a unique snapshot debug port in `packages/robos-lib/snapshot-cli.js`.
-4. Add a test suite under `packages/robos-test/tests/<app-id>.test.js`.
+1. Create packages/<app-id>/ with package.json ("start": "electron ."),
+   main.js (userData at ~/.config/robos/electron/<app-id>, single-instance
+   lock, snapshot debug server), preload.js (contextBridge only),
+   renderer/index.html, app.js and styles.css using the RobOS theme
+   variables, <app-id>.desktop and a 48x48 icon.svg.
+2. Register the icon in packages/robos-icons/index.js (alphabetical).
+3. Add a debug port in packages/robos-lib/snapshot-cli.js.
+4. Add tests in packages/robos-test/tests/<app-id>/.
 ```
 
-### 4. Updating Knowledge Graph Schemas & Contracts
+### Improve or add a skill
 
 ```text
-You are updating the RobOS Dual-State SDLC Knowledge Graph.
-Target Package: `.robos/kgraphs/<package-id>/package.jsonld`
+Improve the skill in .agents/skills/<skill-name>/SKILL.md.
 
-Instructions:
-1. Read the existing W3C SHACL shapes in `.robos/kgraphs/`.
-2. Apply changes preserving OASIS OSLC 3.0 and Schema.org annotations (`robos:refersFrom`).
-3. Ensure zero plaintext credentials (all credentials MUST link to UNIX pass via `robos:hasCredential`).
-4. Validate schemas by running `kgraph-validate`.
-5. Run `kgraph-diff` against main to review the blast-radius delta before committing.
+1. Run the skill on a realistic task and note every point where the agent
+   guessed, asked an avoidable question, or did the wrong thing.
+2. Edit SKILL.md so those steps are explicit. Keep it short: say what to do,
+   in order, and how to tell it worked.
+3. Run the skill again on a fresh task and confirm the problems are gone.
+4. Commit as: docs(skills): <what changed>, and describe the before/after in
+   the PR.
+```
+
+### Update the knowledge graph
+
+```text
+Update the knowledge graph package .robos/kgraphs/<package-id>/package.jsonld.
+
+1. Read the SHACL shapes in .robos/kgraphs/ first.
+2. Make the change, keeping existing OSLC and Schema.org annotations.
+3. Never store a credential in plain text; link it with robos:hasCredential.
+4. Run kgraph-validate.
+5. Run kgraph-diff against main and include the result in the PR.
 ```
 
 ---
 
-## Local Prerequisites & Setup
+## Local setup
 
-RobOS is a monorepo composed of independent, modular packages. There is **no root `package.json`**. Each app in `packages/` manages its own dependencies to ensure absolute runtime isolation.
+RobOS is a monorepo of independent packages. There's **no root `package.json`**: each app in `packages/` has its own dependencies.
 
-### System Prerequisites
-- **Node.js 20+** and npm
-- **Docker** (recommended for containerized headless E2E verification)
-- **Electron** (installed per-package via npm)
-- **QEMU/KVM** (optional, for running the full turnkey appliance OS image)
+**You'll need:** Node.js 20+ and npm, a coding agent, and Docker for the headless test container. QEMU/KVM is optional, for the full appliance VM.
 
-### Clone the Repository
 ```bash
 git clone https://github.com/nddipiazza/robos.git
 cd robos
-```
 
-### Launch an Application Locally
-You can launch any RobOS desktop application directly from your shell:
-```bash
-# Launch Dev Central daily dashboard
+# Launch an app
 electron packages/dev-central
-
-# Launch any specific app
 electron packages/<app-id>
-```
 
-### Run Tests Locally
-```bash
-# Run unit tests across the test harness
+# Unit tests
 cd packages/robos-test
 npm install
 npm run test:unit
 
-# Run full headless E2E test suite inside Docker container
+# Full headless E2E suite in Docker (from the repo root)
 ./scripts/e2e-container.sh
 ```
 
 ---
 
-## Architecture & Development Conventions
+## Conventions
 
-When contributing code to RobOS, adhere strictly to these architectural rules:
+These are enforced in review. [`AGENTS.md`](AGENTS.md) has the full list.
 
-### 1. Electron IPC & Security Standards
-| Requirement | Rationale |
-|-------------|-----------|
-| **`app.setPath('userData', ...)` before `requestSingleInstanceLock()`** | Must point to `~/.config/robos/electron/<app-id>` to avoid lockfile collisions between apps. |
-| **`contextBridge` + `ipcRenderer.invoke()` ONLY** | Never enable `nodeIntegration: true` or `contextIsolation: false`. All system operations must go through validated IPC handlers. |
-| **Wrap `/usr/local/share/robos/robos-lib/...` in `try/catch`** | Allows apps to fall back cleanly to local relative paths during standalone development outside the VM. |
-| **Chromium Flags** | Pass `--no-sandbox --disable-gpu --disable-dev-shm-usage` when running in virtualized or container environments. |
+### Electron security
 
-### 2. Styling & Theme Palette
-All RobOS applications use native CSS variables for consistent dark navy/cyan styling:
+| Rule | Why |
+|------|-----|
+| Call `app.setPath('userData', ...)` before `requestSingleInstanceLock()` | Points each app at `~/.config/robos/electron/<app-id>` so lockfiles don't collide. |
+| Use `contextBridge` and `ipcRenderer.invoke()` only | Never set `nodeIntegration: true` or `contextIsolation: false`. System calls go through validated IPC handlers. |
+| Wrap requires of `/usr/local/share/robos/robos-lib/...` in `try/catch` | Lets apps fall back to local relative paths when run outside the VM. |
+| Pass `--no-sandbox --disable-gpu --disable-dev-shm-usage` in VMs and containers | Chromium needs them in virtualised environments. |
+
+### Theme
+
 ```css
 --bg-primary: #0d1117;   /* main background */
---bg-card:    #161b22;   /* card and sidebar panels */
---border:     #30363d;   /* structural dividers */
---accent:     #00bcd4;   /* RobOS cyan brand accent */
---accent-glow:#00e5ff;   /* bright interactive highlight */
---text-main:  #c9d1d9;   /* primary typography */
+--bg-card:    #161b22;   /* cards and sidebars */
+--border:     #30363d;   /* dividers */
+--accent:     #00bcd4;   /* RobOS cyan */
+--accent-glow:#00e5ff;   /* interactive highlight */
+--text-main:  #c9d1d9;   /* body text */
 --text-muted: #8b949e;   /* captions and metadata */
 ```
 
-### 3. Iconography
-- 48×48 SVG in Lucide style.
-- `stroke-width="1.5"`, `stroke-linecap="round"`, `stroke-linejoin="round"`.
-- Primary stroke: `#00bcd4` (RobOS cyan).
+### Icons
 
-### 4. Shared Libraries
-- **`robos-lib/ai-json.js`** — Robust AI JSON streaming & repair parser (`parseAIJson`, `JSON_RULES_PROMPT`).
-- **`robos-lib/dom-snapshot.js`** — Debug server for automated DOM tree snapshots.
-- **`robos-lib/ai-agent.js`** — Unified AI agent invocation wrapper.
-- **`robos-icons/index.js`** — SVG icon registry.
+48×48 SVG in Lucide style: `stroke-width="1.5"`, `stroke-linecap="round"`, `stroke-linejoin="round"`. Use a palette colour: `#00bcd4` cyan, `#3b82f6` blue, `#22c55e` green, `#7c3aed` purple, `#f97316` orange or `#ef4444` red.
 
-Load them with fallback for local development outside the VM:
+### Shared libraries
+
+- `robos-lib/ai-json.js`: streaming AI JSON parser and repair (`parseAIJson`, `JSON_RULES_PROMPT`).
+- `robos-lib/dom-snapshot.js`: debug server for DOM snapshots.
+- `robos-lib/ai-agent.js`: one wrapper for invoking any AI agent.
+- `robos-icons/index.js`: the SVG icon registry.
+
+Load them with a fallback so apps also run outside the VM:
+
 ```js
 let robosLib = null;
 try {
@@ -230,82 +244,36 @@ try {
 
 ---
 
-## Creating a New App
-
-Use the slash command (if using Claude Code):
-
-```
-/create-robos-app "My App Name"
-```
-
-Or manually:
-
-1. Create `packages/<app-id>/` with `main.js`, `preload.js`, `renderer/`, `icon.svg`, `package.json`, `<app-id>.desktop`
-2. Register in `packages/robos-icons/index.js` (alphabetical by `appId`)
-3. Add a debug port to `packages/robos-lib/snapshot-cli.js`
-4. Add the `.desktop` file to `/usr/share/applications/` on the VM
-
-See [AGENTS.md](AGENTS.md) for the full app registration checklist.
-
-### Icon style
-
-48×48 SVG, Lucide style:
-- `stroke-width="1.5"`, `stroke-linecap="round"`, `stroke-linejoin="round"`
-- Pick a color from the palette: `#00bcd4` cyan, `#3b82f6` blue, `#22c55e` green, `#7c3aed` purple, `#f97316` orange, `#ef4444` red
-
----
-
-## Commit & Pull Request Standards
+## Commits and pull requests
 
 ### Conventional Commits
-We strictly follow [Conventional Commits](https://www.conventionalcommits.org/):
 
-| Prefix | Description | Example |
-|--------|-------------|---------|
-| `feat:` | New feature, app, or architecture node | `feat(app-wizard): add Bevy game engine archetype` |
-| `fix:` | Bug fix or issue resolution | `fix(dev-central): fix singleton lock collision on logout` |
-| `docs:` | Documentation updates | `docs(ideas): add prompt-driven contributor workflow` |
-| `refactor:` | Code restructure, zero behavior change | `refactor(robos-lib): optimize AI JSON streaming parser` |
+We follow [Conventional Commits](https://www.conventionalcommits.org/), scoped to the package you changed.
+
+| Prefix | Use for | Example |
+|--------|---------|---------|
+| `feat:` | New feature, app or graph node | `feat(app-wizard): add Bevy game engine archetype` |
+| `fix:` | Bug fix | `fix(dev-central): fix singleton lock collision on logout` |
+| `docs:` | Docs, skills, `AGENTS.md` | `docs(skills): make record-demo pick the right display` |
+| `refactor:` | Restructure with no behaviour change | `refactor(robos-lib): simplify AI JSON streaming parser` |
+| `test:` | New or better tests | `test(kube-studio): add Helm release reconciliation test` |
 | `chore:` | Maintenance, deps, tooling | `chore(deps): bump electron to 33.0.0` |
-| `test:` | Test suite improvements or new BDD tests | `test(kube-studio): add Helm release reconciliation test` |
 
-Scope your commit message when modifying a specific package:
-```bash
-feat(workflow-studio): add unsaved-changes confirmation dialog
-fix(task-servers): prevent SingletonLock crash on multi-user systems
-```
+### Pull request checklist
 
----
-
-## Pull Request Checklist & Proof-of-Work
-
-Every pull request submitted to RobOS must be accompanied by proof of work:
-
-1. **Focused Scope**: One feature spec or issue fix per PR.
-2. **Containerized Test Verification**: Run `./scripts/e2e-container.sh` to ensure all tests pass in the headless Docker + Xvfb container.
-3. **1080p Video Proof-of-Work**: Record or link the automated walkthrough video demonstration (`~/.robos/development/walkthroughs/<slug>/`) in your PR description.
-4. **Knowledge Graph Conformance**: Run `kgraph-diff` to confirm that changes to `.robos/kgraphs/` conform to W3C SHACL shapes and cause no unintended transitive breakage.
-5. **IDE Review Ready**: Maintainers review code using the RobOS PR bridge in JetBrains IntelliJ IDEA or VS Code. Ensure your branch contains clean AST and symbol integrity.
+1. **One thing per PR.** One issue, one spec, or one skill.
+2. **Tests pass.** Include the output. For app changes, run `./scripts/e2e-container.sh`.
+3. **Visible changes have a recording.** Link the walkthrough from `record-demo` (saved under `~/.robos/development/walkthroughs/<slug>/`).
+4. **Graph changes are checked.** If you touched `.robos/kgraphs/`, include the `kgraph-diff` result.
+5. **Say how you briefed the agent.** A sentence or two on the prompt, spec or skill you used helps reviewers, and it's the part of the PR that shows your context-engineering work.
 
 ---
 
-## Finding a Task Workflow (Where to Start)
+## Getting help
 
-Looking for high-impact items to pick up?
-- **Triaged Defect Specs**: Browse [`docs/issues/reported/`](docs/issues/reported/) for structured bug specifications ready for agent resolution.
-- **Approved Feature Specs**: Browse [`docs/ideas/specs/`](docs/ideas/specs/) for planned features with full C4 architecture and BDD test requirements.
-- **Roadmap High-Impact Pillars**: Check [docs/roadmap.md](docs/roadmap.md) for transformative capabilities (Search Studio, IaC Studio, Local Gitea, etc.).
-
----
-
-## Community & Communication
-
-Connect with the RobOS architects, core contributors, and researchers exploring AI-first operating systems:
-
-- 🎮 **[RobOS Discord Server](https://discord.gg/6PjxzkHujE)** — Real-time chat, office hours, and developer support.
-- 💬 **[#general Channel](https://discord.com/channels/1546926331193725029/)** — General discussion, architectural debates, and AI agent demos.
-- 💡 **[Feature Ideas Store](docs/ideas/)** — Community proposals and executable prompt workflows.
-- 🐙 **[GitHub Discussions](https://github.com/nddipiazza/robos/discussions)** — Architecture proposals, show-and-tell, and Q&A.
-- 🐞 **[GitHub Issues](https://github.com/nddipiazza/robos/issues)** — Bug reports and defect specifications.
-- 🎥 **[Model Problem](https://nddipiazza.github.io/robos/model-problem/)** — Watch RobOS execute end-to-end SDLC workflows.
-
+- **[Discord](https://discord.gg/6PjxzkHujE)**: the quickest way to find a starter task, ask questions, or get a review.
+- **[GitHub Discussions](https://github.com/nddipiazza/robos/discussions)**: design proposals, show-and-tell, and Q&A.
+- **[GitHub Issues](https://github.com/nddipiazza/robos/issues)**: bug reports.
+- **[Feature ideas](docs/ideas/)**: proposals and specs waiting for someone to run them.
+- **[Roadmap](docs/roadmap.md)**: the bigger pieces of work coming up.
+- **[rowbose.com/contribute](https://rowbose.com/contribute/)**: the short version of this page.
