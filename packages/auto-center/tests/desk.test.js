@@ -77,3 +77,29 @@ test('contacts are logged on the ticket', () => {
   assert.ok(W('board').jobs[0].workItem.some(e => e.detail.includes('We contacted the customer by text message: Sent estimate')));
   assert.throws(() => W('logContact', { job, channel: 'fax', note: 'x' }), /how you reached/);
 });
+test('customer and vehicle CSV import groups vehicles, skips duplicates and rejects bad files whole', () => {
+  const { W } = shop();
+  const csv = 'Customer Name,Phone,Email,Year,Make,Model,VIN,Plate,Notes\n' +
+    'Sam Rivera,(555) 010-0100,sam@example.com,2015,Toyota,Camry,4T1BF1FK5FU123456,ABC123,Prefers texts\n' +
+    'Sam Rivera,555-010-0100,,2018,Ford,F-150,,TRK999,\n' +
+    'Priya Shah,,priya@example.com,,,,,,\n' +
+    'Walk In Joe,,,2005,Honda,Civic,,,\n';
+  const r = W('importCustomers', { csv });
+  assert.deepEqual(r, { customersAdded: 3, customersExisting: 0, vehiclesAdded: 3, skipped: 0 });
+  assert.equal(W('findCustomers', { query: '5550100' })[0].vehicles.length, 2);
+  assert.deepEqual(W('importCustomers', { csv }), { customersAdded: 0, customersExisting: 3, vehiclesAdded: 0, skipped: 3 });
+  assert.throws(() => W('importCustomers', { csv: 'name,phone,make\nA B,555-010-0111,Toyota\nBad Vehicle,555-010-0112,\n,555-010-0113,Ford\n' }), /Nothing imported\. Row 2: A vehicle needs at least a make and a model; Row 4: Customer name is required/);
+  assert.throws(() => W('importCustomers', { csv: 'phone\n555\n' }), /"name" column/);
+  assert.equal(W('board').customers.length, 3);
+});
+test('a shop moves to a new computer by cloning its backup repository', () => {
+  const { execFileSync } = require('node:child_process');
+  const { s, W } = shop(); const { job } = ticket(W); W('logContact', { job, channel: 'email', direction: 'incoming', note: 'Asked for status' });
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'auto-restore-')), target = path.join(dir, 'private');
+  fs.mkdirSync(target, { mode: 0o700 }); execFileSync('git', ['clone', '--quiet', path.join(s.privateRoot, 'shop'), path.join(target, 'shop')]);
+  const moved = new AutoCenter({ root: path.join(dir, 'cache'), privateRoot: target }); moved.setMode('shop');
+  const board = moved.workshop('board', {});
+  assert.equal(board.jobs.length, 1); assert.equal(board.jobs[0].key, 'RO-0001'); assert.equal(board.customers[0].name, 'Sam Rivera');
+  assert.ok(board.jobs[0].workItem.some(e => e.detail.includes('Asked for status')));
+  assert.equal(moved.workshop('findCustomers', { query: '5550100' })[0].vehicles.length, 1);
+});

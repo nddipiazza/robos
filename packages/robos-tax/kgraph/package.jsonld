@@ -1,0 +1,484 @@
+{
+  "@context": {
+    "robos": "https://robos.dev/ns/sdlc#",
+    "tax": "https://robos.dev/ns/tax#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "robos:refersFrom": {
+      "@id": "robos:refersFrom",
+      "@type": "@id"
+    },
+    "rdfs:subClassOf": {
+      "@id": "rdfs:subClassOf",
+      "@type": "@id"
+    }
+  },
+  "@id": "urn:robos:package:tax",
+  "@type": [
+    "robos:KGraphPackage"
+  ],
+  "dcterms:title": "RobOS Household \u2014 public US tax definitions",
+  "robos:package": "tax",
+  "robos:namespace": "robos.tax",
+  "robos:version": "0.1.0",
+  "dcterms:description": "Public vocabulary and partial 2025 form catalog only. No household instances or tax calculations. Not registered in the live graph.",
+  "robos:nodes": [
+    {
+      "@id": "https://robos.dev/ns/tax#Household",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "Household",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/Organization",
+      "robos:refersFrom": "https://schema.org/Organization",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: household.schema.json#/$defs/Household"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#Member",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "Member",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/Person",
+      "robos:refersFrom": "https://schema.org/Person",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: household.schema.json#/$defs/Member"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#Dependent",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "Dependent",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/Person",
+      "robos:refersFrom": "https://schema.org/Person",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: household.schema.json#/$defs/Dependent"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#Placement",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "Placement",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/Event",
+      "robos:refersFrom": "https://schema.org/Event",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: household.schema.json#/$defs/Placement"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#Account",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "Account",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/FinancialProduct",
+      "robos:refersFrom": "https://schema.org/FinancialProduct",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: household.schema.json#/$defs/Account"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#Category",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "Category",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/DefinedTerm",
+      "robos:refersFrom": "https://schema.org/DefinedTerm",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: household.schema.json#/$defs/Category"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#ImportBatch",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "ImportBatch",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/Dataset",
+      "robos:refersFrom": "https://schema.org/Dataset",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: household.schema.json#/$defs/ImportBatch"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#Transaction",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "Transaction",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/MonetaryAmount",
+      "robos:refersFrom": "https://schema.org/MonetaryAmount",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: household.schema.json#/$defs/Transaction"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#RecurringExpense",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "RecurringExpense",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/Schedule",
+      "robos:refersFrom": "https://schema.org/Schedule",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: household.schema.json#/$defs/RecurringExpense"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#Donation",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "Donation",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/DonateAction",
+      "robos:refersFrom": "https://schema.org/DonateAction",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: household.schema.json#/$defs/Donation"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#Document",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "Document",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/DigitalDocument",
+      "robos:refersFrom": "https://schema.org/DigitalDocument",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: household.schema.json#/$defs/Document"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#FieldObservation",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "FieldObservation",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/PropertyValue",
+      "robos:refersFrom": "https://schema.org/PropertyValue",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: household.schema.json#/$defs/FieldObservation"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#TaxTreatment",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "TaxTreatment",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/DefinedTerm",
+      "robos:refersFrom": "https://schema.org/DefinedTerm",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: household.schema.json#/$defs/TaxTreatment"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#TaxReturn",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "TaxReturn",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/DigitalDocument",
+      "robos:refersFrom": "https://schema.org/DigitalDocument",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: household.schema.json#/$defs/TaxReturn"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#FilingSubmission",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "FilingSubmission",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/SendAction",
+      "robos:refersFrom": "https://schema.org/SendAction",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: household.schema.json#/$defs/FilingSubmission"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#AuditEvent",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "AuditEvent",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/Action",
+      "robos:refersFrom": "https://schema.org/Action",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: household.schema.json#/$defs/AuditEvent"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#TaxFormDefinition",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "TaxFormDefinition",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/DigitalDocument",
+      "robos:refersFrom": "https://schema.org/DigitalDocument",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: form catalog"
+    },
+    {
+      "@id": "https://robos.dev/ns/tax#TaxFieldDefinition",
+      "@type": [
+        "rdfs:Class",
+        "robos:TaxVocabularyTerm"
+      ],
+      "dcterms:title": "TaxFieldDefinition",
+      "robos:package": "tax",
+      "robos:namespace": "robos.tax",
+      "rdfs:subClassOf": "https://schema.org/PropertyValue",
+      "robos:refersFrom": "https://schema.org/PropertyValue",
+      "dcterms:description": "Public domain vocabulary definition; private instance contract: form catalog"
+    },
+    {
+      "@id": "urn:robos:tax:US:2025:W-2",
+      "@type": "tax:TaxFormDefinition",
+      "dcterms:title": "W-2 \u2014 2025 selected fields",
+      "robos:package": "tax",
+      "tax:taxYear": 2025,
+      "tax:jurisdiction": "US",
+      "tax:formCode": "W-2",
+      "tax:revision": "2025",
+      "tax:coverage": "partial",
+      "tax:calculationSupported": false,
+      "tax:extractionSupported": false,
+      "tax:filingSupported": false,
+      "robos:refersFrom": "https://www.irs.gov/pub/irs-prior/fw2--2025.pdf"
+    },
+    {
+      "@id": "urn:robos:tax:US:2025:W-2:box:1",
+      "@type": "tax:TaxFieldDefinition",
+      "dcterms:title": "Wages, tips, other compensation",
+      "robos:package": "tax",
+      "tax:formDefinition": {
+        "@id": "urn:robos:tax:US:2025:W-2"
+      },
+      "tax:taxYear": 2025,
+      "tax:jurisdiction": "US",
+      "tax:box": "1",
+      "tax:valueType": "money",
+      "tax:critical": true,
+      "tax:reviewRequired": true,
+      "robos:refersFrom": "https://www.irs.gov/pub/irs-prior/fw2--2025.pdf"
+    },
+    {
+      "@id": "urn:robos:tax:US:2025:W-2:box:2",
+      "@type": "tax:TaxFieldDefinition",
+      "dcterms:title": "Federal income tax withheld",
+      "robos:package": "tax",
+      "tax:formDefinition": {
+        "@id": "urn:robos:tax:US:2025:W-2"
+      },
+      "tax:taxYear": 2025,
+      "tax:jurisdiction": "US",
+      "tax:box": "2",
+      "tax:valueType": "money",
+      "tax:critical": true,
+      "tax:reviewRequired": true,
+      "robos:refersFrom": "https://www.irs.gov/pub/irs-prior/fw2--2025.pdf"
+    },
+    {
+      "@id": "urn:robos:tax:US:2025:W-2:box:3",
+      "@type": "tax:TaxFieldDefinition",
+      "dcterms:title": "Social security wages",
+      "robos:package": "tax",
+      "tax:formDefinition": {
+        "@id": "urn:robos:tax:US:2025:W-2"
+      },
+      "tax:taxYear": 2025,
+      "tax:jurisdiction": "US",
+      "tax:box": "3",
+      "tax:valueType": "money",
+      "tax:critical": true,
+      "tax:reviewRequired": true,
+      "robos:refersFrom": "https://www.irs.gov/pub/irs-prior/fw2--2025.pdf"
+    },
+    {
+      "@id": "urn:robos:tax:US:2025:W-2:box:4",
+      "@type": "tax:TaxFieldDefinition",
+      "dcterms:title": "Social security tax withheld",
+      "robos:package": "tax",
+      "tax:formDefinition": {
+        "@id": "urn:robos:tax:US:2025:W-2"
+      },
+      "tax:taxYear": 2025,
+      "tax:jurisdiction": "US",
+      "tax:box": "4",
+      "tax:valueType": "money",
+      "tax:critical": true,
+      "tax:reviewRequired": true,
+      "robos:refersFrom": "https://www.irs.gov/pub/irs-prior/fw2--2025.pdf"
+    },
+    {
+      "@id": "urn:robos:tax:US:2025:W-2:box:5",
+      "@type": "tax:TaxFieldDefinition",
+      "dcterms:title": "Medicare wages and tips",
+      "robos:package": "tax",
+      "tax:formDefinition": {
+        "@id": "urn:robos:tax:US:2025:W-2"
+      },
+      "tax:taxYear": 2025,
+      "tax:jurisdiction": "US",
+      "tax:box": "5",
+      "tax:valueType": "money",
+      "tax:critical": true,
+      "tax:reviewRequired": true,
+      "robos:refersFrom": "https://www.irs.gov/pub/irs-prior/fw2--2025.pdf"
+    },
+    {
+      "@id": "urn:robos:tax:US:2025:W-2:box:6",
+      "@type": "tax:TaxFieldDefinition",
+      "dcterms:title": "Medicare tax withheld",
+      "robos:package": "tax",
+      "tax:formDefinition": {
+        "@id": "urn:robos:tax:US:2025:W-2"
+      },
+      "tax:taxYear": 2025,
+      "tax:jurisdiction": "US",
+      "tax:box": "6",
+      "tax:valueType": "money",
+      "tax:critical": true,
+      "tax:reviewRequired": true,
+      "robos:refersFrom": "https://www.irs.gov/pub/irs-prior/fw2--2025.pdf"
+    },
+    {
+      "@id": "urn:robos:tax:US:2025:1099-INT",
+      "@type": "tax:TaxFormDefinition",
+      "dcterms:title": "1099-INT \u2014 2025 selected fields",
+      "robos:package": "tax",
+      "tax:taxYear": 2025,
+      "tax:jurisdiction": "US",
+      "tax:formCode": "1099-INT",
+      "tax:revision": "January 2024",
+      "tax:coverage": "partial",
+      "tax:calculationSupported": false,
+      "tax:extractionSupported": false,
+      "tax:filingSupported": false,
+      "robos:refersFrom": "https://www.irs.gov/pub/irs-prior/f1099int--2024.pdf"
+    },
+    {
+      "@id": "urn:robos:tax:US:2025:1099-INT:box:1",
+      "@type": "tax:TaxFieldDefinition",
+      "dcterms:title": "Interest income",
+      "robos:package": "tax",
+      "tax:formDefinition": {
+        "@id": "urn:robos:tax:US:2025:1099-INT"
+      },
+      "tax:taxYear": 2025,
+      "tax:jurisdiction": "US",
+      "tax:box": "1",
+      "tax:valueType": "money",
+      "tax:critical": true,
+      "tax:reviewRequired": true,
+      "robos:refersFrom": "https://www.irs.gov/pub/irs-prior/f1099int--2024.pdf"
+    },
+    {
+      "@id": "urn:robos:tax:US:2025:1099-INT:box:2",
+      "@type": "tax:TaxFieldDefinition",
+      "dcterms:title": "Early withdrawal penalty",
+      "robos:package": "tax",
+      "tax:formDefinition": {
+        "@id": "urn:robos:tax:US:2025:1099-INT"
+      },
+      "tax:taxYear": 2025,
+      "tax:jurisdiction": "US",
+      "tax:box": "2",
+      "tax:valueType": "money",
+      "tax:critical": true,
+      "tax:reviewRequired": true,
+      "robos:refersFrom": "https://www.irs.gov/pub/irs-prior/f1099int--2024.pdf"
+    },
+    {
+      "@id": "urn:robos:tax:US:2025:1099-INT:box:3",
+      "@type": "tax:TaxFieldDefinition",
+      "dcterms:title": "Interest on US savings bonds and Treasury obligations",
+      "robos:package": "tax",
+      "tax:formDefinition": {
+        "@id": "urn:robos:tax:US:2025:1099-INT"
+      },
+      "tax:taxYear": 2025,
+      "tax:jurisdiction": "US",
+      "tax:box": "3",
+      "tax:valueType": "money",
+      "tax:critical": true,
+      "tax:reviewRequired": true,
+      "robos:refersFrom": "https://www.irs.gov/pub/irs-prior/f1099int--2024.pdf"
+    },
+    {
+      "@id": "urn:robos:tax:US:2025:1099-INT:box:4",
+      "@type": "tax:TaxFieldDefinition",
+      "dcterms:title": "Federal income tax withheld",
+      "robos:package": "tax",
+      "tax:formDefinition": {
+        "@id": "urn:robos:tax:US:2025:1099-INT"
+      },
+      "tax:taxYear": 2025,
+      "tax:jurisdiction": "US",
+      "tax:box": "4",
+      "tax:valueType": "money",
+      "tax:critical": true,
+      "tax:reviewRequired": true,
+      "robos:refersFrom": "https://www.irs.gov/pub/irs-prior/f1099int--2024.pdf"
+    },
+    {
+      "@id": "urn:robos:tax:US:2025:1099-INT:box:8",
+      "@type": "tax:TaxFieldDefinition",
+      "dcterms:title": "Tax-exempt interest",
+      "robos:package": "tax",
+      "tax:formDefinition": {
+        "@id": "urn:robos:tax:US:2025:1099-INT"
+      },
+      "tax:taxYear": 2025,
+      "tax:jurisdiction": "US",
+      "tax:box": "8",
+      "tax:valueType": "money",
+      "tax:critical": true,
+      "tax:reviewRequired": true,
+      "robos:refersFrom": "https://www.irs.gov/pub/irs-prior/f1099int--2024.pdf"
+    },
+    {
+      "@id": "urn:robos:tax:US:2025:1099-INT:box:9",
+      "@type": "tax:TaxFieldDefinition",
+      "dcterms:title": "Specified private activity bond interest",
+      "robos:package": "tax",
+      "tax:formDefinition": {
+        "@id": "urn:robos:tax:US:2025:1099-INT"
+      },
+      "tax:taxYear": 2025,
+      "tax:jurisdiction": "US",
+      "tax:box": "9",
+      "tax:valueType": "money",
+      "tax:critical": true,
+      "tax:reviewRequired": true,
+      "robos:refersFrom": "https://www.irs.gov/pub/irs-prior/f1099int--2024.pdf"
+    }
+  ]
+}

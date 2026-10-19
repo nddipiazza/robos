@@ -33,7 +33,7 @@ section{padding:88px 0}.alt{background:var(--bg2)}
 .h2{font-size:clamp(1.8rem,3.6vw,2.8rem);font-weight:800;max-width:20ch}.sec-p{color:var(--muted);max-width:60ch;margin-top:16px;font-size:1.05rem}
 .logos{padding:36px 0;border-block:1px solid var(--line);text-align:center;color:var(--muted);font-size:.85rem}
 .logos .wrap>div{display:flex;gap:34px;justify-content:center;flex-wrap:wrap;margin-top:12px;color:var(--fg);font-weight:600;opacity:.75}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px}.grid2{grid-template-columns:repeat(2,1fr)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px;transition:border-color .2s,transform .2s}
 a.card:hover{border-color:var(--accent);transform:translateY(-2px)}
 .card .ic{margin-bottom:14px;line-height:0}.ic-img{width:48px;height:48px;display:block;border-radius:12px}.btn-ic{width:18px;height:18px;vertical-align:-3px;margin-right:4px}.card h3{font-size:1.15rem;margin-bottom:8px;letter-spacing:-.01em}.card p{margin:0;color:var(--muted);font-size:.94rem}
@@ -69,7 +69,7 @@ details{border-bottom:1px solid var(--line);padding:16px 0}summary{cursor:pointe
 /* footer */
 .foot{border-top:1px solid var(--line);padding:56px 0 30px}.foot-in{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:30px;margin-bottom:34px}
 .foot h4{margin:0 0 12px;font-size:.84rem;color:var(--muted);font-weight:600}.foot-in a:not(.brand){display:block;color:var(--fg);opacity:.85;font-size:.92rem;margin:6px 0}
-@media(max-width:860px){.links{display:none}.grid3,.os-grid,.app-grid,.stats,.doc-list{grid-template-columns:1fr}.split{grid-template-columns:1fr;gap:28px}.split.rev .split-t{order:0}.foot-in{grid-template-columns:1fr 1fr}.hero{padding-top:64px}section{padding:60px 0}}
+@media(max-width:860px){.links{display:none}.grid3,.grid2,.os-grid,.app-grid,.stats,.doc-list{grid-template-columns:1fr}.split{grid-template-columns:1fr;gap:28px}.split.rev .split-t{order:0}.foot-in{grid-template-columns:1fr 1fr}.hero{padding-top:64px}section{padding:60px 0}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 .brand img{height:30px;width:auto;background:#f5f5f0;border-radius:8px;padding:3px 6px;display:block}
 .foot .brand img{height:26px}

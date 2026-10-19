@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import AudioPlayer from 'react-h5-audio-player';
+import { Icon } from './Icon.jsx';
+import CloudBrowser from './CloudBrowser.jsx';
+import Lyrics from './Lyrics.jsx';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('player'); // 'player' | 'library' | 'ambient' | 'speakers'
+  const [activeTab, setActiveTab] = useState('player'); // 'player' | 'playlists' | 'library' | 'cloud' | 'ambient' | 'speakers'
   const [playlist, setPlaylist] = useState([
     {
       id: 'default-1',
@@ -636,7 +639,7 @@ export default function App() {
         setTimeout(() => {
           playerRef.current?.audio?.current?.play().catch((err) => {
             console.warn('[AudioPlayer] Playback error:', err);
-            showStatus(`⚠️ Playback error: ${err.message || 'File not accessible'}`);
+            showStatus(`Playback error: ${err.message || 'File not accessible'}`);
           });
         }, 60);
       }
@@ -805,7 +808,7 @@ export default function App() {
       : { key, dir: 'asc' });
   };
 
-  const sortMark = (key) => librarySort.key === key ? (librarySort.dir === 'asc' ? ' ▲' : ' ▼') : '';
+  const sortMark = (key) => librarySort.key === key ? (librarySort.dir === 'asc' ? ' ↑' : ' ↓') : '';
 
   return (
     <div
@@ -823,7 +826,7 @@ export default function App() {
           </svg>
           <div>
             <h1>RobOS Audio Player</h1>
-            <span className="subtitle">React H5AudioPlayer & Zero-Cloud Google Cast Streaming</span>
+            <span className="subtitle">Local library, cloud storage and Google Cast</span>
           </div>
         </div>
 
@@ -875,12 +878,12 @@ export default function App() {
                 showStatus(`Switched output to: ${e.target.options[e.target.selectedIndex].text}`);
               }}
             >
-              <option value="local">💻 Desktop (Local Audio)</option>
+              <option value="local">Desktop (Local Audio)</option>
               {speakers.map(s => (
-                <option key={s.ip} value={s.ip}>🔊 {s.name} ({s.ip})</option>
+                <option key={s.ip} value={s.ip}>{s.name} ({s.ip})</option>
               ))}
               {speakers.length > 0 && (
-                <option value="all">📢 Broadcast to All Speakers</option>
+                <option value="all">Broadcast to All Speakers</option>
               )}
             </select>
             <button
@@ -903,35 +906,42 @@ export default function App() {
           className={`tab-btn ${activeTab === 'player' ? 'active' : ''}`}
           onClick={() => setActiveTab('player')}
         >
-          🎵 Now Playing
+          <Icon name="note" /><span>Now Playing</span>
         </button>
         <button
           id="tab-btn-playlists"
           className={`tab-btn ${activeTab === 'playlists' ? 'active' : ''}`}
           onClick={() => setActiveTab('playlists')}
         >
-          📑 Playlists ({playlists.length})
+          <Icon name="list" /><span>Playlists ({playlists.length})</span>
         </button>
         <button
           id="tab-btn-library"
           className={`tab-btn ${activeTab === 'library' ? 'active' : ''}`}
           onClick={() => setActiveTab('library')}
         >
-          📚 Media Library ({library.tracks.length})
+          <Icon name="library" /><span>Library ({library.tracks.length})</span>
+        </button>
+        <button
+          id="tab-btn-cloud"
+          className={`tab-btn ${activeTab === 'cloud' ? 'active' : ''}`}
+          onClick={() => setActiveTab('cloud')}
+        >
+          <Icon name="cloud" /><span>Cloud Storage</span>
         </button>
         <button
           id="tab-btn-ambient"
           className={`tab-btn ${activeTab === 'ambient' ? 'active' : ''}`}
           onClick={() => setActiveTab('ambient')}
         >
-          ⚡ Ambient Synthesizers
+          <Icon name="wave" /><span>Ambient</span>
         </button>
         <button
           id="tab-btn-speakers"
           className={`tab-btn ${activeTab === 'speakers' ? 'active' : ''}`}
           onClick={() => setActiveTab('speakers')}
         >
-          🔊 Discovered Speakers ({speakers.length})
+          <Icon name="speaker" /><span>Speakers ({speakers.length})</span>
         </button>
       </nav>
 
@@ -961,7 +971,7 @@ export default function App() {
               />
             </div>
             <button className="btn-cancel-scan" onClick={handleCancelScan}>
-              ✕ Cancel Scan
+              Cancel Scan
             </button>
           </div>
         )}
@@ -979,24 +989,24 @@ export default function App() {
                     ></span>
                     <span>
                       {activeCastSession
-                        ? `🔊 Casting "${currentTrack?.title || 'Track'}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? ' (Paused)' : ' (Live)'}`
-                        : `🎯 Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`}
+                        ? `Casting "${currentTrack?.title || 'Track'}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? ' (Paused)' : ' (Live)'}`
+                        : `Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`}
                     </span>
                   </div>
                   <div className="cast-bar-controls">
                     {activeCastSession && (
                       <button className="btn-chip" onClick={handleToggleCastPause}>
-                        {activeCastSession.isPaused ? '▶ Resume Cast' : '⏸ Pause Cast'}
+                        {activeCastSession.isPaused ? 'Resume cast' : 'Pause cast'}
                       </button>
                     )}
                     {activeCastSession && (
                       <button className="btn-chip btn-stop-cast" onClick={() => handleStopCast(activeCastSession.ip)}>
-                        ⏹ Stop Cast
+                        Stop Cast
                       </button>
                     )}
                     {outputTarget !== 'local' && (
                       <button className="btn-chip" onClick={() => { setOutputTarget('local'); handleStopCast(); }}>
-                        💻 Switch to Local Desktop
+                        Switch to Local Desktop
                       </button>
                     )}
                   </div>
@@ -1020,7 +1030,7 @@ export default function App() {
                     <span className="badge">Output: {getSpeakerName(outputTarget)}</span>
                     {activeCastSession && (
                       <span className="badge" style={{ color: '#22c55e', borderColor: '#22c55e' }}>
-                        {activeCastSession.isPaused ? '⏸ Cast Paused' : '🔊 Casting Active'}
+                        {activeCastSession.isPaused ? 'Cast Paused' : 'Casting Active'}
                       </span>
                     )}
                     {currentTrack?.genre && <span className="badge">{currentTrack.genre}</span>}
@@ -1030,10 +1040,10 @@ export default function App() {
 
                 <div className="hero-quick-actions">
                   <button className="btn-secondary" onClick={handleSelectFolder} title="Add folder via file manager">
-                    📁 Add Folder
+                    Add Folder
                   </button>
                   <button className="btn-secondary" onClick={handleAddFiles} title="Add files">
-                    ➕ Add Files
+                    Add Files
                   </button>
                 </div>
               </div>
@@ -1054,7 +1064,7 @@ export default function App() {
                   onError={(e) => {
                     console.warn('[AudioPlayer] Audio playback error:', e);
                     setIsPlaying(false);
-                    showStatus('⚠️ Playback error: Track file may be missing, network drive unmounted, or format unsupported.');
+                    showStatus('Playback error: Track file may be missing, network drive unmounted, or format unsupported.');
                   }}
                   className="robos-rhap-theme"
                   layout="stacked"
@@ -1062,6 +1072,8 @@ export default function App() {
                   muted={outputTarget !== 'local'}
                 />
               </div>
+
+              <Lyrics track={currentTrack} getAudio={() => playerRef.current?.audio?.current} />
 
               {/* Queue bar */}
               <div className="queue-quick-peek">
@@ -1077,7 +1089,7 @@ export default function App() {
                       onClick={() => setShowSaveQueueModal(true)}
                       title="Save current playback queue as a permanent playlist"
                     >
-                      💾 Save as Playlist
+                      Save as Playlist
                     </button>
                     <button
                       id="btn-shuffle-queue"
@@ -1085,7 +1097,7 @@ export default function App() {
                       onClick={handleShuffleQueue}
                       title="Shuffle queue"
                     >
-                      🔀 Shuffle
+                      Shuffle
                     </button>
                     <button
                       id="btn-clear-queue"
@@ -1093,7 +1105,7 @@ export default function App() {
                       onClick={handleClearQueue}
                       title="Clear other tracks from queue"
                     >
-                      🗑 Clear
+                      Clear
                     </button>
                   </div>
                 </div>
@@ -1120,7 +1132,7 @@ export default function App() {
                             handleRemoveQueueTrack(idx);
                           }}
                         >
-                          ✕
+                          <Icon name="x" size={14} />
                         </button>
                       )}
                     </div>
@@ -1135,7 +1147,7 @@ export default function App() {
           <div className="playlists-view-container">
             <div className="playlists-header">
               <div className="playlists-title-group">
-                <h3>📑 Custom Playlists ({playlists.length})</h3>
+                <h3>Custom Playlists ({playlists.length})</h3>
                 <p className="subtitle">Curate custom music collections, import/export M3U playlists, and cast directly to speakers</p>
               </div>
               <div className="playlists-header-actions">
@@ -1144,7 +1156,7 @@ export default function App() {
                   className="btn-accent"
                   onClick={() => setShowCreatePlaylistModal(true)}
                 >
-                  ➕ New Playlist
+                  New Playlist
                 </button>
                 <button
                   id="btn-import-m3u"
@@ -1152,7 +1164,7 @@ export default function App() {
                   onClick={handleImportM3u}
                   title="Import external .m3u or .m3u8 playlist file"
                 >
-                  📥 Import M3U
+                  Import M3U
                 </button>
               </div>
             </div>
@@ -1189,7 +1201,7 @@ export default function App() {
                           handlePlayPlaylist(pl, true);
                         }}
                       >
-                        ▶
+                        <Icon name="play" size={14} />
                       </button>
                     </div>
                   ))
@@ -1224,7 +1236,7 @@ export default function App() {
                           disabled={!selectedPlaylist.tracks?.length}
                           title="Play all tracks in order (replaces queue)"
                         >
-                          ▶ Play All
+                          Play All
                         </button>
                         <button
                           id="btn-append-playlist"
@@ -1233,7 +1245,7 @@ export default function App() {
                           disabled={!selectedPlaylist.tracks?.length}
                           title="Append all tracks to current queue"
                         >
-                          ➕ Append to Queue
+                          Append to Queue
                         </button>
                         {speakers.length > 0 && (
                           <button
@@ -1243,7 +1255,7 @@ export default function App() {
                             disabled={!selectedPlaylist.tracks?.length}
                             title={`Cast playlist to ${getSpeakerName(outputTarget !== 'local' ? outputTarget : speakers[0].ip)}`}
                           >
-                            🔊 Cast Playlist
+                            Cast Playlist
                           </button>
                         )}
                         <button
@@ -1252,7 +1264,7 @@ export default function App() {
                           onClick={() => handleExportM3u(selectedPlaylist.id)}
                           title="Export playlist to .m3u file"
                         >
-                          📤 Export M3U
+                          Export M3U
                         </button>
                         <button
                           id="btn-delete-playlist"
@@ -1260,7 +1272,7 @@ export default function App() {
                           onClick={() => handleDeletePlaylist(selectedPlaylist.id)}
                           title="Delete playlist"
                         >
-                          🗑 Delete
+                          Delete
                         </button>
                       </div>
                     </div>
@@ -1276,7 +1288,7 @@ export default function App() {
                             onClick={handleAddFilesToSelectedPlaylist}
                             style={{ marginTop: '12px' }}
                           >
-                            ➕ Add Audio Files from Disk
+                            Add Audio Files from Disk
                           </button>
                         </div>
                       ) : (
@@ -1303,7 +1315,7 @@ export default function App() {
                                     title="Play track"
                                     onClick={() => playTrack(track)}
                                   >
-                                    ▶
+                                    <Icon name="play" size={14} />
                                   </button>
                                   <button
                                     className="btn-row-action"
@@ -1311,7 +1323,7 @@ export default function App() {
                                     disabled={tIdx === 0}
                                     onClick={() => handleMoveTrackInPlaylist(selectedPlaylist.id, tIdx, tIdx - 1)}
                                   >
-                                    ▲
+                                    <Icon name="up" size={14} />
                                   </button>
                                   <button
                                     className="btn-row-action"
@@ -1319,14 +1331,14 @@ export default function App() {
                                     disabled={tIdx === selectedPlaylist.tracks.length - 1}
                                     onClick={() => handleMoveTrackInPlaylist(selectedPlaylist.id, tIdx, tIdx + 1)}
                                   >
-                                    ▼
+                                    <Icon name="down" size={14} />
                                   </button>
                                   <button
                                     className="btn-row-action btn-danger"
                                     title="Remove from playlist"
                                     onClick={() => handleRemoveTrackFromPlaylist(selectedPlaylist.id, tIdx)}
                                   >
-                                    ✕
+                                    <Icon name="x" size={14} />
                                   </button>
                                 </span>
                               </div>
@@ -1338,7 +1350,7 @@ export default function App() {
                       {/* Quick Add from Media Library Selector */}
                       {library.tracks.length > 0 && (
                         <div className="quick-add-from-library">
-                          <h4>➕ Add Tracks from Media Library</h4>
+                          <h4>Add Tracks from Media Library</h4>
                           <div className="quick-add-controls">
                             <select
                               id="select-track-to-add"
@@ -1361,7 +1373,7 @@ export default function App() {
                               ))}
                             </select>
                             <button className="btn-secondary" onClick={handleAddFilesToSelectedPlaylist}>
-                              📁 Add Audio Files
+                              Add Audio Files
                             </button>
                           </div>
                         </div>
@@ -1372,7 +1384,7 @@ export default function App() {
                   <div className="empty-state">
                     <p>Select a playlist from the left or create a new one.</p>
                     <button className="btn-accent" onClick={() => setShowCreatePlaylistModal(true)} style={{ marginTop: '12px' }}>
-                      ➕ Create Playlist
+                      Create Playlist
                     </button>
                   </div>
                 )}
@@ -1404,14 +1416,14 @@ export default function App() {
                   }}
                   title="Refresh and sync library index"
                 >
-                  <span>🔄 Refresh</span>
+                  <span>Refresh</span>
                 </button>
                 <button id="btn-browse-add-folder" className="btn-accent" onClick={handleSelectFolder}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
                   <span>Add Folder via File Manager</span>
                 </button>
                 <button className="btn-secondary" onClick={handleAddFiles}>
-                  <span>➕ Add Files</span>
+                  <span>Add Files</span>
                 </button>
               </div>
             </div>
@@ -1424,14 +1436,14 @@ export default function App() {
                     className="cast-pulse-dot"
                     style={{ background: activeCastSession.isPaused ? '#eab308' : '#22c55e' }}
                   ></span>
-                  <span>🔊 Currently casting to <strong>{getSpeakerName(activeCastSession.ip)}</strong></span>
+                  <span>Currently casting to <strong>{getSpeakerName(activeCastSession.ip)}</strong></span>
                 </div>
                 <div className="cast-bar-controls">
                   <button className="btn-chip" onClick={handleToggleCastPause}>
-                    {activeCastSession.isPaused ? '▶ Resume' : '⏸ Pause'}
+                    {activeCastSession.isPaused ? 'Resume' : 'Pause'}
                   </button>
                   <button className="btn-chip btn-stop-cast" onClick={() => handleStopCast(activeCastSession.ip)}>
-                    ⏹ Stop Cast
+                    Stop Cast
                   </button>
                 </div>
               </div>
@@ -1458,7 +1470,7 @@ export default function App() {
                   <p>{library.tracks.length ? 'No tracks match your search.' : 'No tracks indexed in media library yet.'}</p>
                   {!library.tracks.length && (
                     <button className="btn-accent" onClick={handleSelectFolder} style={{ marginTop: '12px' }}>
-                      📁 Add Folder via File Manager Popup
+                      Add Folder via File Manager Popup
                     </button>
                   )}
                 </div>
@@ -1476,7 +1488,7 @@ export default function App() {
                         {isCurrent && isPlaying
                           ? <span className="eq-bars"><i></i><i></i><i></i></span>
                           : <span className="row-index">{idx + 1}</span>}
-                        <button className="row-play" title="Play" onClick={() => playTrack(t)}>▶</button>
+                        <button className="row-play" title="Play" onClick={() => playTrack(t)}><Icon name="play" size={14} /></button>
                       </span>
                       <span className="ll-title">
                         <span className="row-title" title={t.title}>{t.title}</span>
@@ -1528,19 +1540,27 @@ export default function App() {
           </div>
         )}
 
+        {/* TAB: CLOUD STORAGE (Data Sources FTP / SFTP) */}
+        {activeTab === 'cloud' && (
+          <CloudBrowser
+            showStatus={showStatus}
+            onLibrary={(lib) => { if (lib) setLibrary(lib); }}
+          />
+        )}
+
         {/* TAB 3: AMBIENT SYNTHESIZERS */}
         {activeTab === 'ambient' && (
           <div className="ambient-container">
-            <h3>⚡ Procedural Focus Soundscapes</h3>
+            <h3>Procedural Focus Soundscapes</h3>
             <p className="subtitle">Synthesized in real-time with Web Audio API nodes (zero external files)</p>
             <div className="ambient-grid">
               {[
-                { id: 'rain', emoji: '🌧️', name: 'Coding Rain', desc: 'Resonant filtered pink noise mimicking rainfall' },
-                { id: 'synth', emoji: '🌌', name: 'Cyber Synth', desc: 'Dual detuned sawtooth oscillators with analog low-pass filter' },
-                { id: 'pink', emoji: '📻', name: 'Pink Noise', desc: 'Voss-McCartney noise buffer for deep technical focus' },
+                { id: 'rain', icon: 'rain', name: 'Coding Rain', desc: 'Resonant filtered pink noise mimicking rainfall' },
+                { id: 'synth', icon: 'synth', name: 'Cyber Synth', desc: 'Dual detuned sawtooth oscillators with analog low-pass filter' },
+                { id: 'pink', icon: 'noise', name: 'Pink Noise', desc: 'Voss-McCartney noise buffer for deep technical focus' },
               ].map(s => (
                 <div key={s.id} className={`ambient-card-item ${activeAmbient === s.id ? 'active' : ''}`} onClick={() => playAmbient(s.id)}>
-                  <span className="card-emoji">{s.emoji}</span>
+                  <span className="card-emoji"><Icon name={s.icon} size={28} /></span>
                   <h4>{s.name}</h4>
                   <p>{s.desc}</p>
                   <button className="btn-accent">
@@ -1556,13 +1576,13 @@ export default function App() {
         {activeTab === 'speakers' && (
           <div className="speakers-container">
             <div className="speakers-header">
-              <h3>🔊 Connected Google Cast Smart Speakers</h3>
+              <h3>Connected Google Cast Smart Speakers</h3>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button className="btn-chip btn-stop-cast" onClick={() => handleStopCast()}>
-                  ⏹ Stop All Speakers
+                  Stop All Speakers
                 </button>
                 <button className="btn-secondary" onClick={refreshSpeakers}>
-                  🔄 Refresh Subnet Scan
+                  Refresh Subnet Scan
                 </button>
               </div>
             </div>
@@ -1578,7 +1598,7 @@ export default function App() {
                       Set as Output
                     </button>
                     <button className="btn-chip btn-stop-cast" onClick={() => handleStopCast(s.ip)}>
-                      ⏹ Stop Playback
+                      Stop Playback
                     </button>
                     <button className="btn-secondary" onClick={async () => {
                       showStatus(`Playing harmonic test chime on ${s.name}...`);
@@ -1589,7 +1609,7 @@ export default function App() {
                         showStatus('Test chime error: ' + err.message);
                       }
                     }}>
-                      🔔 Play Test Chime
+                      Play Test Chime
                     </button>
                   </div>
                 </div>
@@ -1616,16 +1636,16 @@ export default function App() {
             </div>
           </div>
           <div className="mini-player-controls">
-            <button className="mini-ctrl-btn" title="Previous" onClick={handlePlayPrev}>⏮</button>
+            <button className="mini-ctrl-btn" title="Previous" onClick={handlePlayPrev}><Icon name="prev" size={18} /></button>
             <button className="mini-ctrl-btn mini-btn-play" title={isPlaying ? "Pause" : "Play"} onClick={handleTogglePlayPause}>
-              {isPlaying ? '⏸' : '▶'}
+              <Icon name={isPlaying ? 'pause' : 'play'} size={18} />
             </button>
-            <button className="mini-ctrl-btn" title="Next" onClick={handlePlayNext}>⏭</button>
+            <button className="mini-ctrl-btn" title="Next" onClick={handlePlayNext}><Icon name="next" size={18} /></button>
           </div>
           <div className="mini-player-right">
             <span className="badge mini-badge">Output: {getSpeakerName(outputTarget)}</span>
             <button id="btn-mini-now-playing" className="btn-chip" onClick={() => setActiveTab('player')}>
-              🎵 Now Playing
+              Now Playing
             </button>
           </div>
         </footer>
@@ -1635,7 +1655,7 @@ export default function App() {
       {showCreatePlaylistModal && (
         <div className="modal-overlay" onClick={() => setShowCreatePlaylistModal(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <h3>➕ Create New Playlist</h3>
+            <h3>Create New Playlist</h3>
             <div className="modal-input-group">
               <label>Playlist Name</label>
               <input
@@ -1670,7 +1690,7 @@ export default function App() {
       {showSaveQueueModal && (
         <div className="modal-overlay" onClick={() => setShowSaveQueueModal(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <h3>💾 Save Queue as Playlist</h3>
+            <h3>Save Queue as Playlist</h3>
             <p className="subtitle" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               Save all {playlist.length} track(s) from your current playback queue into a permanent playlist.
             </p>
@@ -1708,7 +1728,7 @@ export default function App() {
       {showAddToPlaylistModal && selectedTrackForPlaylist && (
         <div className="modal-overlay" onClick={() => { setShowAddToPlaylistModal(false); setSelectedTrackForPlaylist(null); }}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <h3>📑 Add Track to Playlist</h3>
+            <h3>Add Track to Playlist</h3>
             <div className="modal-selected-track-info">
               <strong>{selectedTrackForPlaylist.title}</strong>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{selectedTrackForPlaylist.artist} &bull; {selectedTrackForPlaylist.album}</span>
@@ -1731,7 +1751,7 @@ export default function App() {
                           {pl.tracks?.length || 0} track(s)
                         </span>
                       </div>
-                      <span className="btn-chip">➕ Add</span>
+                      <span className="btn-chip">Add</span>
                     </div>
                   ))}
                 </div>
@@ -1745,7 +1765,7 @@ export default function App() {
                   setShowCreatePlaylistModal(true);
                 }}
               >
-                ➕ New Playlist
+                New Playlist
               </button>
               <button
                 className="btn-secondary"

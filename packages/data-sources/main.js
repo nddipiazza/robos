@@ -8,6 +8,7 @@ const os = require('os');
 const GRAPH_ROOT = process.env.ROBOS_GRAPH_ROOT;
 const EXTERNAL_GRAPH = GRAPH_ROOT !== undefined;
 const cp = require('child_process');
+const remoteStorage = require('./lib/remote-storage');
 
 const HOME_DIR = process.env.HOME || os.homedir();
 const CONFIG_FILE = path.join(HOME_DIR, '.config', 'robos', 'data-sources.json');
@@ -215,6 +216,30 @@ const DRIVER_CATALOG = [
     description: 'Cloud document and object repository synced with Google Cloud / Workspace',
     docsUrl: 'https://developers.google.com/drive',
   },
+  {
+    id: 'sftp',
+    name: 'SFTP (SSH File Transfer)',
+    category: 'storage',
+    categoryLabel: 'Cloud & Object Storage',
+    defaultPort: 22,
+    defaultUser: '',
+    uriTemplate: 'sftp://{{host}}:{{port}}/{{path}}',
+    icon: 'sftp',
+    description: 'Encrypted file transfer over SSH with password or private-key authentication',
+    docsUrl: 'https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-13',
+  },
+  {
+    id: 'ftp',
+    name: 'FTP / FTPS',
+    category: 'storage',
+    categoryLabel: 'Cloud & Object Storage',
+    defaultPort: 21,
+    defaultUser: 'anonymous',
+    uriTemplate: 'ftp://{{host}}:{{port}}/{{path}}',
+    icon: 'ftp',
+    description: 'Classic file transfer protocol, with optional explicit TLS (FTPS)',
+    docsUrl: 'https://datatracker.ietf.org/doc/html/rfc959',
+  },
 
   // Streaming & Messaging
   {
@@ -399,7 +424,8 @@ function saveDataSources(data) {
   if (EXTERNAL_GRAPH) throw new Error(READ_ONLY_MESSAGE);
   try {
     fs.mkdirSync(path.dirname(CONFIG_FILE), { recursive: true });
-    fs.writeFileSync(CONFIG_FILE, JSON.stringify(data, null, 2), 'utf8');
+    // Connections can hold FTP/SFTP credentials, so keep the file private.
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(data, null, 2), { encoding: 'utf8', mode: 0o600 });
   } catch {}
 }
 
@@ -556,6 +582,7 @@ registerIPC('ds-delete-datasource', async (_, id) => {
 });
 
 registerIPC('ds-test-connection', async (_, ds) => {
+  if (remoteStorage.isRemoteDriver(ds.driverType)) return remoteStorage.testConnection(ds);
   const start = Date.now();
   // Simulate realistic network connection probe
   await new Promise(r => setTimeout(r, 450));
@@ -574,7 +601,16 @@ registerIPC('ds-test-connection', async (_, ds) => {
   };
 });
 
-registerIPC('ds-inspect-schema', async (_, { id, driverType }) => {
+registerIPC('ds-inspect-schema', async (_, { id, driverType, path: remotePath }) => {
+  if (remoteStorage.isRemoteDriver(driverType)) {
+    const ds = loadDataSources().find(d => d.id === id);
+    if (!ds) return { remote: { error: 'Unknown data source' } };
+    try {
+      return { remote: await remoteStorage.listDir(ds, remotePath) };
+    } catch (err) {
+      return { remote: { path: remotePath || ds.database || '/', entries: [], error: err.message } };
+    }
+  }
   if (driverType === 'postgres' || driverType === 'oracle' || driverType === 'mysql' || driverType === 'mssql' || driverType === 'sqlite') {
     return SAMPLE_POSTGRES_SCHEMA;
   }

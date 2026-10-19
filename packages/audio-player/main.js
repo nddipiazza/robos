@@ -8,6 +8,8 @@ const crypto = require('crypto');
 const { pathToFileURL } = require('url');
 const { CastService } = require('./lib/cast-service');
 const { MediaLibrary } = require('./lib/media-library');
+const cloud = require('./lib/cloud-storage');
+const lyrics = require('./lib/lyrics');
 
 function ensureFileAccessible(filePath) {
   if (!filePath || typeof filePath !== 'string') return false;
@@ -382,6 +384,43 @@ ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
     dirs,
     library: mediaLibrary.getLibrary()
   };
+});
+
+ipcMain.handle('audio:get-lyrics', async (_evt, track) => lyrics.getLyrics(track));
+
+// ── RobOS cloud storage (Data Sources FTP / SFTP connections) ───────────────
+
+function sendToWindow(channel, payload) {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload);
+}
+
+ipcMain.handle('audio:cloud-connections', async () => cloud.listConnections());
+
+ipcMain.handle('audio:cloud-list', async (_evt, { id, path: remotePath }) => {
+  try {
+    return { ok: true, ...(await cloud.list(id, remotePath)) };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('audio:cloud-import', async (_evt, { id, paths }) => {
+  try {
+    const localFiles = await cloud.fetchAudio(id, paths || [], (p) => sendToWindow('audio:cloud-progress', p));
+    const tracks = [];
+    for (const f of localFiles) {
+      try { tracks.push(await mediaLibrary.parseTrack(f)); } catch {}
+    }
+    if (tracks.length) {
+      const incoming = new Set(tracks.map(t => t.filePath));
+      mediaLibrary.tracks = mediaLibrary.tracks.filter(t => !incoming.has(t.filePath)).concat(tracks);
+      mediaLibrary._rebuildIndexes();
+      mediaLibrary._saveCache();
+    }
+    return { ok: true, added: tracks.length, library: mediaLibrary.getLibrary() };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
 });
 
 ipcMain.handle('audio:scan-default-library', async () => {
