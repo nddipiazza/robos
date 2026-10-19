@@ -36,7 +36,7 @@ section{padding:88px 0}.alt{background:var(--bg2)}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px;transition:border-color .2s,transform .2s}
 a.card:hover{border-color:var(--accent);transform:translateY(-2px)}
-.card .ic{font-size:1.6rem;margin-bottom:14px}.card h3{font-size:1.15rem;margin-bottom:8px;letter-spacing:-.01em}.card p{margin:0;color:var(--muted);font-size:.94rem}
+.card .ic{margin-bottom:14px;line-height:0}.ic-img{width:48px;height:48px;display:block;border-radius:12px}.btn-ic{width:18px;height:18px;vertical-align:-3px;margin-right:4px}.card h3{font-size:1.15rem;margin-bottom:8px;letter-spacing:-.01em}.card p{margin:0;color:var(--muted);font-size:.94rem}
 .card .go{display:inline-block;margin-top:14px;color:var(--accent);font-size:.9rem;font-weight:600}
 .split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}.split+.split{margin-top:96px}.split.rev .split-t{order:2}
 .split h3{font-size:clamp(1.5rem,2.6vw,2.1rem);font-weight:800}.split p{color:var(--muted)}

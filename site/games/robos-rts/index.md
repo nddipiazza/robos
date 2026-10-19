@@ -22,12 +22,12 @@ accent: "#58b4ff"
       <h2 class="h2">A real RTS, built from first principles</h2>
       <p class="sec-p">Starfall Canyon is a plateau and a low plain joined by a single ramp. The Meridian Guard hold the high ground; the Gnarl Brood and the Aurelian Concord fight over the valley below. Gather crystal and aether, build, queue units and hold the choke, or break it.</p>
       <div class="grid3">
-        <div class="card"><div class="ic">⛰️</div><h3>High ground &amp; a single ramp</h3><p>Plateaus, wedge ramps and cliff walls ground units cannot cross. A Provision Silo can retract into the floor to open a gate, or extend to close it.</p></div>
-        <div class="card"><div class="ic">⚖️</div><h3>Three asymmetric factions</h3><p>Infantry and artillery, a fast swarm, and shielded warriors that phase through combat. Different economies of attention, not reskins.</p></div>
-        <div class="card"><div class="ic">🎯</div><h3>Micro that matters</h3><p>Every weapon has a wind-up and a recovery. Move during the recovery and you cancel it, which makes stutter-step kiting real.</p></div>
-        <div class="card"><div class="ic">🧭</div><h3>Pathfinding that behaves</h3><p>Funnel-smoothed A*, crowd steering and push priority: idle units yield to marching ones and return to their posts.</p></div>
-        <div class="card"><div class="ic">⏱️</div><h3>Fixed 64 Hz simulation</h3><p>The sim runs on its own clock, separate from rendering and seeded. Same inputs, same match, every time.</p></div>
-        <div class="card"><div class="ic">🤖</div><h3>Built for bots</h3><p>An HTTP/JSON observe-act-step API drives the same game the tests and your own agents play.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/mountain.svg" alt="" width="48" height="48" loading="lazy"></div><h3>High ground &amp; a single ramp</h3><p>Plateaus, wedge ramps and cliff walls ground units cannot cross. A Provision Silo can retract into the floor to open a gate, or extend to close it.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/balance.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Three asymmetric factions</h3><p>Infantry and artillery, a fast swarm, and shielded warriors that phase through combat. Different economies of attention, not reskins.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/target.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Micro that matters</h3><p>Every weapon has a wind-up and a recovery. Move during the recovery and you cancel it, which makes stutter-step kiting real.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/compass.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Pathfinding that behaves</h3><p>Funnel-smoothed A*, crowd steering and push priority: idle units yield to marching ones and return to their posts.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/clock.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Fixed 64 Hz simulation</h3><p>The sim runs on its own clock, separate from rendering and seeded. Same inputs, same match, every time.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/robot.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Built for bots</h3><p>An HTTP/JSON observe-act-step API drives the same game the tests and your own agents play.</p></div>
       </div>
     </div>
   </div>

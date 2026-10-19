@@ -12,9 +12,9 @@ accent: "#58b4ff"
   <h1 class="g-title" style="font-size:clamp(2rem,5vw,3.4rem)">Documentation</h1>
   <p class="lead" style="margin-top:14px;color:#c9c2b2;max-width:60ch">Everything for playing, scripting and testing the RTS.</p>
   <div class="grid3">
-    <a class="card" href="{{ '/v1/projects/robos-rts/' | relative_url }}"><div class="ic">📖</div><h3>Game guide</h3><p>The interface, economy, factions, combat and controls, with screenshots.</p><span class="go">Open →</span></a>
-    <a class="card" href="{{ '/v1/projects/robos-rts/#scripting-and-bots' | relative_url }}"><div class="ic">🤖</div><h3>Bot API</h3><p>Endpoints and the Python SDK.</p><span class="go">Open →</span></a>
-    <a class="card" href="{{ '/v1/projects/robos-rts/#tests' | relative_url }}"><div class="ic">✅</div><h3>Tests</h3><p>The Cucumber scenarios and how to run them.</p><span class="go">Open →</span></a>
+    <a class="card" href="{{ '/v1/projects/robos-rts/' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/book.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Game guide</h3><p>The interface, economy, factions, combat and controls, with screenshots.</p><span class="go">Open →</span></a>
+    <a class="card" href="{{ '/v1/projects/robos-rts/#scripting-and-bots' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/robot.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Bot API</h3><p>Endpoints and the Python SDK.</p><span class="go">Open →</span></a>
+    <a class="card" href="{{ '/v1/projects/robos-rts/#tests' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/check.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Tests</h3><p>The Cucumber scenarios and how to run them.</p><span class="go">Open →</span></a>
   </div>
   <div class="doc-list" style="margin-top:44px">
     <div>

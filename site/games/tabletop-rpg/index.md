@@ -22,12 +22,12 @@ accent: "#e0b252"
       <h2 class="h2">The classic crawl, rebuilt as data</h2>
       <p class="sec-p">Each campaign is a self-contained <em>cartridge</em>: heroes, monsters, spells, furniture, maps and quests in one file. Doors lift the fog of war, dice decide every blow, and the story talks back.</p>
       <div class="grid3">
-        <div class="card"><div class="ic">🎲</div><h3>Skulls &amp; shields</h3><p>Every blow is a roll of combat dice. Skulls wound, shields block. Heroes roll 2d6 to move.</p></div>
-        <div class="card"><div class="ic">🚪</div><h3>Fog of war</h3><p>You start in a lit chamber. Everything else stays hidden until a hero opens the door, monsters and all.</p></div>
-        <div class="card"><div class="ic">🧙</div><h3>Player &amp; GM modes</h3><p>Lead the heroes, or play Zargon behind the GM screen and command the monsters.</p></div>
-        <div class="card"><div class="ic">💬</div><h3>A story that talks</h3><p>Characters speak in dialogue bubbles, key moments stop on a message dialog, and every quest opens with an objectives briefing you can reopen from the toolbar.</p></div>
-        <div class="card"><div class="ic">⚙️</div><h3>Quests are data</h3><p>Trigger events run a pipeline of actions, like dialogue and messages, so a quest can react to what the heroes do. No engine changes needed.</p></div>
-        <div class="card"><div class="ic">🗺️</div><h3>Built to be edited</h3><p>A visual quest map editor, a board calibration tool and a cartridge studio ship with the game.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/dice.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Skulls &amp; shields</h3><p>Every blow is a roll of combat dice. Skulls wound, shields block. Heroes roll 2d6 to move.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/door.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Fog of war</h3><p>You start in a lit chamber. Everything else stays hidden until a hero opens the door, monsters and all.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/wizard.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Player &amp; GM modes</h3><p>Lead the heroes, or play Zargon behind the GM screen and command the monsters.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/chat.svg" alt="" width="48" height="48" loading="lazy"></div><h3>A story that talks</h3><p>Characters speak in dialogue bubbles, key moments stop on a message dialog, and every quest opens with an objectives briefing you can reopen from the toolbar.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/gear.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Quests are data</h3><p>Trigger events run a pipeline of actions, like dialogue and messages, so a quest can react to what the heroes do. No engine changes needed.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/map.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Built to be edited</h3><p>A visual quest map editor, a board calibration tool and a cartridge studio ship with the game.</p></div>
       </div>
       <p class="sec-p" style="margin-top:30px">The four heroes. Body is hit points, Mind is mental strength for spells and resisting magic, and Attack and Defend are how many combat dice each hero rolls.</p>
       <table class="t" style="margin-top:12px">
@@ -105,9 +105,9 @@ GODOT_BIN=/path/to/godot4 ./play.sh          # launch Quest 1: Custom Dungeon
     <h2 class="h2">Make your own quest</h2>
     <p class="sec-p">Quests are plain cartridge files, and three tools write them. Together they take a board image all the way to a playable quest.</p>
     <div class="grid3">
-      <a class="card" href="{{ '/v1/apps/tabletop-blockmap-creator/' | relative_url }}"><div class="ic">📐</div><h3>1. Blockmap Creator</h3><p>Line a grid up with a board image, mark corridors, and outline and name the rooms.</p><span class="go">Open →</span></a>
-      <a class="card" href="https://github.com/nddipiazza/robos/tree/main/packages/tabletop-quest-editor" target="_blank" rel="noopener"><div class="ic">🗺️</div><h3>2. Quest map editor</h3><p>Place doors, furniture, monsters and start and exit stairs, and wire up dialogue and trigger events. It flags out-of-bounds furniture, doors with no wall and overlapping objects as you work, and you can dictate changes with the voice button.</p><span class="go">Source ↗</span></a>
-      <a class="card" href="{{ '/v1/apps/robos-tabletop/' | relative_url }}"><div class="ic">🛠️</div><h3>3. Tabletop Studio</h3><p>Edit heroes, monsters, spells and quest briefings, bundle a cartridge, and launch the game as a hero or as the Game Master.</p><span class="go">Open →</span></a>
+      <a class="card" href="{{ '/v1/apps/tabletop-blockmap-creator/' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/blockmap.svg" alt="" width="48" height="48" loading="lazy"></div><h3>1. Blockmap Creator</h3><p>Line a grid up with a board image, mark corridors, and outline and name the rooms.</p><span class="go">Open →</span></a>
+      <a class="card" href="https://github.com/nddipiazza/robos/tree/main/packages/tabletop-quest-editor" target="_blank" rel="noopener"><div class="ic"><img class="ic-img" src="/assets/icons/map.svg" alt="" width="48" height="48" loading="lazy"></div><h3>2. Quest map editor</h3><p>Place doors, furniture, monsters and start and exit stairs, and wire up dialogue and trigger events. It flags out-of-bounds furniture, doors with no wall and overlapping objects as you work, and you can dictate changes with the voice button.</p><span class="go">Source ↗</span></a>
+      <a class="card" href="{{ '/v1/apps/robos-tabletop/' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/tools.svg" alt="" width="48" height="48" loading="lazy"></div><h3>3. Tabletop Studio</h3><p>Edit heroes, monsters, spells and quest briefings, bundle a cartridge, and launch the game as a hero or as the Game Master.</p><span class="go">Open →</span></a>
     </div>
     <pre class="code" style="margin-top:26px"><button data-copy>Copy</button><code># from games/tabletop-rpg
 ./blockmap-creator.sh                  # calibrate a board image
@@ -132,17 +132,17 @@ GODOT_BIN=/path/to/godot4 ./play.sh          # launch Quest 1: Custom Dungeon
 
       <div class="grid3" style="margin-top:34px">
         <div class="card">
-          <div class="ic">🗺️</div>
+          <div class="ic"><img class="ic-img" src="/assets/icons/map.svg" alt="" width="48" height="48" loading="lazy"></div>
           <h3>1. How we make maps</h3>
           <p>We calibrate a board image in <strong>Tabletop Blockmap Creator</strong>, outline rooms and corridors, then place doors, secret passageways, furniture, monsters and border exit stairs in <strong>Tabletop Quest Map Editor</strong>. Heroes are equipped with custom starting loadouts and healing potions.</p>
         </div>
         <div class="card">
-          <div class="ic">🧠</div>
+          <div class="ic"><img class="ic-img" src="/assets/icons/brain.svg" alt="" width="48" height="48" loading="lazy"></div>
           <h3>2. Determining AI viability</h3>
           <p>The autonomous Mentor AI runs in headless Docker/Xvfb. It enforces a strict decision hierarchy: emergency potion drinking at <code>BP &le; 4</code>, melee targeting, spellcasting (Sleep, Ball of Flame), room/corridor secret door scans, dead-end pruning, and negative border stair navigation.</p>
         </div>
         <div class="card">
-          <div class="ic">📜</div>
+          <div class="ic"><img class="ic-img" src="/assets/icons/scroll.svg" alt="" width="48" height="48" loading="lazy"></div>
           <h3>3. How they progressed</h3>
           <p>Every step, movement roll, melee attack, secret detection and door breach is recorded into an immutable 315-transaction audit ledger with turn-by-turn screenshots. The heroes slayed Boss Doomguard, uncovered 2 secret doors, and escaped onto border square <code>[-1, 4]</code>.</p>
         </div>

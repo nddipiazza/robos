@@ -357,6 +357,7 @@
       position: relative;
     }
 
+    .ic-img { width: 40px; height: 40px; border-radius: 10px; vertical-align: middle; }
     .pillar-icon {
       font-size: 1.8rem;
       margin-bottom: 12px;
@@ -599,7 +600,7 @@
     <!-- Section 1: Visual Turn-by-Turn Evidence -->
     <section>
       <div class="section-header">
-        <h2 class="section-title"><span class="icon">📸</span> Milestone Visual Proof & Playthrough Evidence</h2>
+        <h2 class="section-title"><span class="icon"><img class="ic-img" src="/assets/icons/camera.svg" alt="" width="48" height="48" loading="lazy"></span> Milestone Visual Proof & Playthrough Evidence</h2>
         <div class="nav-buttons">
           <button class="btn" id="prevBtn" onclick="prevSlide()">◀ Prev</button>
           <button class="btn" id="playBtn" onclick="togglePlay()">▶ Auto-Play</button>
@@ -632,7 +633,7 @@
     <!-- Section 2: Key Architectural Innovations -->
     <section>
       <div class="section-header">
-        <h2 class="section-title"><span class="icon">⚙️</span> Proof of Viability: Core Architectural Capabilities</h2>
+        <h2 class="section-title"><span class="icon"><img class="ic-img" src="/assets/icons/gear.svg" alt="" width="48" height="48" loading="lazy"></span> Proof of Viability: Core Architectural Capabilities</h2>
       </div>
 
       <div style="margin-bottom: 26px; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; background: #0d131f;">
@@ -644,7 +645,7 @@
 
       <div class="pillars-grid">
         <div class="pillar-card">
-          <div class="pillar-icon">🧪</div>
+          <div class="pillar-icon"><img class="ic-img" src="/assets/icons/flask.svg" alt="" width="48" height="48" loading="lazy"></div>
           <h3 class="pillar-title">1. Starting Potions & Emergency AI Consumption</h3>
           <p class="pillar-desc">
             All 4 heroes start with 2 Healing Potions each. When any hero drops to <code>BP &lt;= 4</code>, the Mentor AI prioritizes drinking a potion before other actions, restoring up to 4 BP and logging a <code>USE_ITEM</code> transaction.
@@ -653,7 +654,7 @@
         </div>
 
         <div class="pillar-card">
-          <div class="pillar-icon">🔍</div>
+          <div class="pillar-icon"><img class="ic-img" src="/assets/icons/search.svg" alt="" width="48" height="48" loading="lazy"></div>
           <h3 class="pillar-title">2. Corridor & Room Secret Door Detection</h3>
           <p class="pillar-desc">
             The engine tracks <code>searched_secret_rooms</code> and <code>searched_secret_corridor_tiles</code>. Heroes search unsearched rooms and newly visible corridor sets, uncovering hidden exits that make progress possible.
@@ -662,7 +663,7 @@
         </div>
 
         <div class="pillar-card">
-          <div class="pillar-icon">🏁</div>
+          <div class="pillar-icon"><img class="ic-img" src="/assets/icons/flag.svg" alt="" width="48" height="48" loading="lazy"></div>
           <h3 class="pillar-title">3. Border Coordinates & Exit Stairs Walkability</h3>
           <p class="pillar-desc">
             The exit stairs reside on the board boundary at coordinate <code>[-1, 4]</code>. The engine treats exit stairs as an explicit exemption to unwalkable border tiles in <code>is_border_tile</code>, <code>find_path</code>, and <code>move_hero</code>.
@@ -671,7 +672,7 @@
         </div>
 
         <div class="pillar-card">
-          <div class="pillar-icon">🛡️</div>
+          <div class="pillar-icon"><img class="ic-img" src="/assets/icons/shield.svg" alt="" width="48" height="48" loading="lazy"></div>
           <h3 class="pillar-title">4. Dead-End Room Pruning & Extraction March</h3>
           <p class="pillar-desc">
             Once Boss Doomguard is slain and returning to stairs is allowed, the pathfinding engine suppresses unnecessary treasure searches and avoids 1-door dead-end rooms (e.g. room-nw-10), preserving combat health for extraction.
@@ -684,7 +685,7 @@
     <!-- Section 3: Filterable Transaction Ledger -->
     <section>
       <div class="section-header">
-        <h2 class="section-title"><span class="icon">📜</span> Discrete 315-Transaction Immutable Audit Ledger</h2>
+        <h2 class="section-title"><span class="icon"><img class="ic-img" src="/assets/icons/scroll.svg" alt="" width="48" height="48" loading="lazy"></span> Discrete 315-Transaction Immutable Audit Ledger</h2>
         <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-cyan);" id="txCounter">
           Showing 315 / 315 Transactions
         </div>
