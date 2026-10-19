@@ -44,31 +44,38 @@ function addTeammate(service, input) {
     'robos:hourlyCostMinor': rate, 'robos:currency': input.currency || 'USD', 'robos:active': true });
   commit(service, [{ op: 'add', node: n }], 'auto: add teammate'); return n;
 }
-function addCustomer(service, input) {
-  shop(service);
+function buildCustomer(service, input, records) {
   const name = text(input.name, 200, 'Customer name'), phone = text(input.phone, 50, 'Phone', false), email = text(input.email, 200, 'Email', false);
   if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error('Enter a valid email address');
   const digits = phone.replace(/\D/g, '');
   if (phone && (digits.length < 7 || digits.length > 15)) throw new Error('Enter a phone number with area code');
   if (input.requireContact && !phone && !email) throw new Error('Add a phone number or an email so we can reach the customer');
   const preferred = ['phone call', 'text message', 'email'].includes(input.preferredContact) ? input.preferredContact : '';
-  if (digits) { const dup = nodes(service).find(n => n['@type'] === 'robos:Customer' && n['robos:phoneDigits'] && n['robos:phoneDigits'].slice(-10) === digits.slice(-10)); if (dup) throw new Error('This phone number already belongs to ' + dup['schema:name']); }
+  if (digits) { const dup = records.find(n => n['@type'] === 'robos:Customer' && n['robos:phoneDigits'] && n['robos:phoneDigits'].slice(-10) === digits.slice(-10)); if (dup) throw new Error('This phone number already belongs to ' + dup['schema:name']); }
   const dirs = directory(); let userId = '', groupId = '';
   if (input.userId) { if (!dirs.people.some(p => p.id === input.userId)) throw new Error('Select a person from RobOS People'); userId = input.userId; }
   if (input.groupId) { if (!dirs.groups.some(g => g.id === input.groupId)) throw new Error('Select a group from RobOS Groups'); groupId = input.groupId; }
-  if (nodes(service).some(n => n['@type'] === 'robos:Customer' && ((userId && n['robos:userId'] === userId) || (email && n['schema:email'] === email.toLowerCase())))) throw new Error('This customer already exists');
+  if (records.some(n => n['@type'] === 'robos:Customer' && ((userId && n['robos:userId'] === userId) || (email && n['schema:email'] === email.toLowerCase())))) throw new Error('This customer already exists');
   const n = node('Customer', crypto.randomUUID(), name, { 'schema:name': name, 'schema:telephone': phone, 'schema:email': email.toLowerCase(), 'robos:phoneDigits': digits, 'robos:preferredContact': preferred, 'robos:userId': userId, 'robos:groupId': groupId, 'robos:customerNotes': text(input.notes, 2000, 'Notes', false) });
+  return n;
+}
+function addCustomer(service, input) {
+  shop(service); const n = buildCustomer(service, input, nodes(service));
   commit(service, [{ op: 'add', node: n }], 'auto: add customer'); return n;
 }
-function addCustomerVehicle(service, input) {
-  shop(service); const customer = find(service, 'Customer', input.customer, 'Select a customer');
+function buildVehicle(service, input, customer, records) {
   const name = text(input.name, 200, 'Vehicle name');
   if (input.vin && !/^[A-HJ-NPR-Z0-9]{17}$/i.test(input.vin)) throw new Error('Invalid VIN');
   if (input.year && !/^\d{4}$/.test(String(input.year))) throw new Error('Invalid model year');
-  if (input.vin && nodes(service).some(n => n['@type'] === 'robos:OwnedVehicle' && n['schema:vehicleIdentificationNumber'] === input.vin.toUpperCase())) throw new Error('A vehicle with this VIN is already on file');
+  if (input.vin && records.some(n => n['@type'] === 'robos:OwnedVehicle' && n['schema:vehicleIdentificationNumber'] === input.vin.toUpperCase())) throw new Error('A vehicle with this VIN is already on file');
   const n = node('OwnedVehicle', crypto.randomUUID(), name, { 'schema:name': name, 'schema:vehicleIdentificationNumber': String(input.vin || '').toUpperCase(),
     'schema:modelDate': String(input.year || ''), 'schema:brand': String(input.make || ''), 'schema:model': String(input.model || ''), 'robos:licensePlate': String(input.plate || ''),
     'robos:ownerNotes': customer['dcterms:title'], 'robos:customer': ref(customer['@id']) });
+  return n;
+}
+function addCustomerVehicle(service, input) {
+  shop(service); const customer = find(service, 'Customer', input.customer, 'Select a customer');
+  const n = buildVehicle(service, input, customer, nodes(service));
   commit(service, [{ op: 'add', node: n }], 'auto: add customer vehicle'); return n;
 }
 function workItemFor(records, jobId) { return records.find(n => n['@type'] === 'robos:RepairTicket' && linked(n, 'robos:job') === jobId); }
@@ -251,6 +258,40 @@ function importParts(service, input) {
   if (edits.length) commit(service, edits, 'auto: import ' + edits.length + ' catalog parts');
   return { added: edits.length, skipped };
 }
+const CUSTOMER_HEADERS = { name: 'name', customer: 'name', 'customer name': 'name', phone: 'phone', telephone: 'phone', mobile: 'phone', 'phone number': 'phone', email: 'email', 'email address': 'email', preferred: 'preferred', 'preferred contact': 'preferred', notes: 'notes', year: 'year', make: 'make', model: 'model', vin: 'vin', plate: 'plate', 'license plate': 'plate', 'licence plate': 'plate', registration: 'plate' };
+function importCustomers(service, input) {
+  shop(service); const textIn = String(input.csv ?? ''); if (!textIn.trim()) throw new Error('Choose or paste a customer file');
+  if (textIn.length > 20 * 1024 * 1024) throw new Error('Customer file is too large');
+  const rows = parseCsv(textIn), head = rows.shift().map(h => CUSTOMER_HEADERS[h.trim().toLowerCase()] || null);
+  if (!head.includes('name')) throw new Error('The first row must have a "name" column');
+  if (rows.length > 20000) throw new Error('Import at most 20,000 rows at a time');
+  const records = nodes(service).slice(), added = [], errors = []; let customersAdded = 0, customersExisting = 0, vehiclesAdded = 0, skipped = 0;
+  const cache = new Map();
+  rows.forEach((cells, i) => {
+    const rec = {}; head.forEach((h, c) => { if (h) rec[h] = (cells[c] ?? '').trim(); }); const line = i + 2;
+    try {
+      const digits = (rec.phone || '').replace(/\D/g, ''), email = (rec.email || '').toLowerCase();
+      let customer = records.find(n => n['@type'] === 'robos:Customer' && ((digits.length >= 7 && n['robos:phoneDigits'] && n['robos:phoneDigits'].slice(-10) === digits.slice(-10)) || (email && n['schema:email'] === email)));
+      if (!customer && !digits && !email) customer = records.find(n => n['@type'] === 'robos:Customer' && !n['robos:phoneDigits'] && !n['schema:email'] && (n['schema:name'] || '').toLowerCase() === (rec.name || '').toLowerCase());
+      if (customer && !cache.has(customer['@id'])) { customersExisting++; cache.set(customer['@id'], true); }
+      if (!customer) {
+        customer = buildCustomer(service, { name: rec.name, phone: rec.phone, email: rec.email, preferredContact: rec.preferred, notes: rec.notes }, records);
+        records.push(customer); added.push({ op: 'add', node: customer }); customersAdded++; cache.set(customer['@id'], true);
+      }
+      if (rec.make || rec.model || rec.year || rec.vin) {
+        if (!rec.make || !rec.model) throw new Error('A vehicle needs at least a make and a model');
+        const name = [rec.year, rec.make, rec.model].filter(Boolean).join(' '), vin = (rec.vin || '').toUpperCase();
+        const dup = records.find(n => n['@type'] === 'robos:OwnedVehicle' && linked(n, 'robos:customer') === customer['@id'] && ((vin && n['schema:vehicleIdentificationNumber'] === vin) || (!vin && n['dcterms:title'] === name && (n['robos:licensePlate'] || '') === (rec.plate || ''))));
+        if (dup) { skipped++; return; }
+        const v = buildVehicle(service, { name, year: rec.year, make: rec.make, model: rec.model, vin: rec.vin, plate: rec.plate }, customer, records);
+        records.push(v); added.push({ op: 'add', node: v }); vehiclesAdded++;
+      }
+    } catch (e) { errors.push(`Row ${line}: ${e.message.replace(/^Row \d+: /, '')}`); }
+  });
+  if (errors.length) throw new Error('Nothing imported. ' + errors.slice(0, 5).join('; ') + (errors.length > 5 ? ` (and ${errors.length - 5} more)` : ''));
+  if (added.length) commit(service, added, `auto: import ${customersAdded} customers and ${vehiclesAdded} vehicles`);
+  return { customersAdded, customersExisting, vehiclesAdded, skipped };
+}
 function board(service) {
   shop(service); const records = nodes(service);
   const jobs = records.filter(n => n['@type'] === 'robos:RepairOrder').map(job => {
@@ -266,4 +307,4 @@ function board(service) {
     settings: (() => { const s = records.find(n => n['@type'] === 'robos:AutoShop'); return { name: s?.['schema:name'] || '', phone: s?.['schema:telephone'] || '', defaultRateMinor: s?.['robos:defaultLaborRateMinor'] ?? null, currency: s?.['robos:currency'] || 'USD' }; })(),
     vehicles: records.filter(n => n['@type'] === 'robos:OwnedVehicle').map(v => ({ id: v['@id'], name: v['dcterms:title'], customer: linked(v, 'robos:customer'), make: v['schema:brand'] || '', model: v['schema:model'] || '', year: v['schema:modelDate'] || '', plate: v['robos:licensePlate'] || '' })), directory: directory() };
 }
-module.exports = { nodes, find, event, key, stageEdit, workItemFor, linked, text, approvedEstimate, addPart, importParts, STAGES, STAGE_LABELS, directory, addTeammate, addCustomer, addCustomerVehicle, openRepair, diagnose, createEstimate, decideEstimate, usePart, logHours, issueInvoice, offboard, board, jobSummary };
+module.exports = { importCustomers, buildCustomer, buildVehicle, nodes, find, event, key, stageEdit, workItemFor, linked, text, approvedEstimate, addPart, importParts, STAGES, STAGE_LABELS, directory, addTeammate, addCustomer, addCustomerVehicle, openRepair, diagnose, createEstimate, decideEstimate, usePart, logHours, issueInvoice, offboard, board, jobSummary };

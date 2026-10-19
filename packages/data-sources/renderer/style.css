@@ -723,3 +723,4 @@ body {
   font-size: 12px;
   color: var(--text-primary);
 }
+.form-group.hidden { display: none; }

@@ -22,6 +22,8 @@ const DRIVER_ICONS = {
   dynamodb: '🔶',
   s3: '🪣',
   gdrive: '📁',
+  sftp: '⇅',
+  ftp: '⇅',
   kafka: '📡',
 };
 
@@ -97,6 +99,8 @@ async function loadSchemaForCurrent() {
   const paneTitle = document.getElementById('schema-pane-title');
   treeList.innerHTML = '';
 
+  if (currentSchema.remote) { renderRemoteListing(currentSchema.remote); return; }
+
   if (currentSchema.tables && currentSchema.tables.length > 0) {
     paneTitle.textContent = `Database Tables (${currentSchema.tables.length})`;
     currentSchema.tables.forEach((tbl, idx) => {
@@ -131,6 +135,44 @@ async function loadSchemaForCurrent() {
       treeList.appendChild(item);
     });
   }
+}
+
+function renderRemoteListing(listing) {
+  const treeList = document.getElementById('schema-tree-list');
+  document.getElementById('schema-pane-title').textContent = `Remote: ${listing.path}`;
+  const tbody = document.getElementById('table-columns-tbody');
+  tbody.innerHTML = '';
+  document.getElementById('table-detail-title').textContent = listing.error ? `Error: ${listing.error}` : `${listing.entries.length} items in ${listing.path}`;
+
+  const browse = async (p) => {
+    const next = await window.dataSources.inspectSchema({ id: currentDataSource.id, driverType: currentDataSource.driverType, path: p });
+    currentSchema = next;
+    renderRemoteListing(next.remote);
+  };
+  if (listing.path && listing.path !== '/') {
+    const up = document.createElement('div');
+    up.className = 'tree-item';
+    up.innerHTML = '<span>..</span> <span>Parent directory</span>';
+    up.onclick = () => browse(listing.path.replace(/\/[^/]*$/, '') || '/');
+    treeList.appendChild(up);
+  }
+  listing.entries.forEach(e => {
+    if (e.type === 'dir') {
+      const item = document.createElement('div');
+      item.className = 'tree-item';
+      item.innerHTML = `<span>/</span> <span>${esc(e.name)}</span>`;
+      item.onclick = () => browse(e.path);
+      treeList.appendChild(item);
+    }
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:600;color:#58a6ff;">${esc(e.name)}${e.type === 'dir' ? '/' : ''}</td>
+      <td style="color:#7ee787;">${e.type === 'dir' ? '-' : Math.max(1, Math.round(e.size / 1024)) + ' KB'}</td>
+      <td>${e.modified ? esc(e.modified.slice(0, 10)) : '-'}</td>
+      <td><span class="badge ${e.type === 'dir' ? 'badge-cyan' : 'badge-green'}">${e.type === 'dir' ? 'DIR' : 'FILE'}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
 function renderTableDetail(table) {
@@ -236,6 +278,21 @@ function switchTab(tabName) {
   }
 }
 
+const REMOTE_DEFAULTS = { sftp: { port: 22, user: '', database: '/' }, ftp: { port: 21, user: 'anonymous', database: '/' } };
+
+function onModalDriverChange() {
+  const driver = document.getElementById('modal-ds-driver').value;
+  const d = REMOTE_DEFAULTS[driver];
+  document.getElementById('grp-ds-keyfile').classList.toggle('hidden', driver !== 'sftp');
+  document.getElementById('lbl-ds-database').textContent = d ? 'Start Directory' : 'Database / Bucket / Folder ID';
+  if (d) {
+    document.getElementById('modal-ds-port').value = d.port;
+    document.getElementById('modal-ds-user').value = d.user;
+    document.getElementById('modal-ds-database').value = d.database;
+    document.getElementById('modal-ds-host').value = '';
+  }
+}
+
 function openAddModal() {
   document.getElementById('ds-modal-title').textContent = 'Add New Data Source';
   document.getElementById('modal-ds-name').value = '';
@@ -244,6 +301,8 @@ function openAddModal() {
   document.getElementById('modal-ds-database').value = 'petshop';
   document.getElementById('modal-ds-user').value = 'postgres';
   document.getElementById('modal-ds-password').value = '';
+  document.getElementById('modal-ds-keyfile').value = '';
+  onModalDriverChange();
   document.getElementById('modal-ds-services').value = 'petstore-api, vaccine-gateway';
   document.getElementById('ds-modal').classList.remove('hidden');
 }
@@ -260,6 +319,9 @@ async function saveModalDataSource() {
   const database = document.getElementById('modal-ds-database').value.trim();
   const user = document.getElementById('modal-ds-user').value.trim();
   const ssl = document.getElementById('modal-ds-ssl').checked;
+  const isRemote = driver === 'ftp' || driver === 'sftp';
+  const password = isRemote ? document.getElementById('modal-ds-password').value : undefined;
+  const privateKeyPath = driver === 'sftp' ? document.getElementById('modal-ds-keyfile').value.trim() : undefined;
   const servicesStr = document.getElementById('modal-ds-services').value.trim();
   const boundServices = servicesStr ? servicesStr.split(',').map(s => s.trim().startsWith('urn:') ? s.trim() : `urn:robos:service:${s.trim()}`) : [];
 
@@ -275,6 +337,7 @@ async function saveModalDataSource() {
     port,
     database,
     user,
+    ...(isRemote ? { password, privateKeyPath } : {}),
     ssl,
     status: 'Connected',
     latencyMs: 1.5,
@@ -294,6 +357,8 @@ async function testCurrentConnection() {
   if (!currentDataSource) return;
   const res = await window.dataSources.testConnection(currentDataSource);
 
+  const title = document.querySelector('#test-conn-result-card [style*="font-weight:600"]');
+  if (title) { title.textContent = res.ok ? 'Connection Successful' : 'Connection Failed'; title.style.color = res.ok ? '#7ee787' : '#f85149'; }
   document.getElementById('test-conn-latency').textContent = `Round-trip latency: ${res.latencyMs} ms`;
   document.getElementById('test-conn-version').textContent = res.serverVersion;
   document.getElementById('test-conn-msg').textContent = res.message;
@@ -340,6 +405,7 @@ function setupEventListeners() {
   document.getElementById('btn-add-datasource').addEventListener('click', openAddModal);
   document.getElementById('btn-ds-modal-close').addEventListener('click', closeAddModal);
   document.getElementById('btn-ds-modal-cancel').addEventListener('click', closeAddModal);
+  document.getElementById('modal-ds-driver').addEventListener('change', onModalDriverChange);
   document.getElementById('btn-ds-modal-save').addEventListener('click', saveModalDataSource);
 
   document.getElementById('btn-test-conn').addEventListener('click', testCurrentConnection);

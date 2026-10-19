@@ -59,7 +59,7 @@
   function lineRows(container, job) {
     const add = (type) => { const row = el('div', { class: 'row est-line', 'data-type': type }, el('input', { name: 'description', placeholder: type === 'part' ? 'Part' : 'Labor', 'aria-label': type + ' description' }),
       type === 'part' ? el('input', { name: 'quantity', value: '1', 'aria-label': 'Quantity' }) : el('input', { name: 'hours', placeholder: 'Hours', 'aria-label': 'Hours' }),
-      el('input', { name: 'price', placeholder: type === 'part' ? 'Unit price' : 'Rate / hour', 'aria-label': 'Price' })); container.append(row);
+      el('input', { name: 'price', placeholder: type === 'part' ? 'Unit price' : 'Rate / hour', 'aria-label': 'Price', value: type === 'labor' && board?.settings?.defaultRateMinor != null ? (board.settings.defaultRateMinor / 100).toFixed(2) : '' })); container.append(row);
       const q = n => row.querySelector(`[name="${n}"]`), info = job.vehicleInfo || {};
       window.typeahead.attach(q('description'), type === 'part'
         ? { source: t => window.auto.catalog({ kind: 'part', query: t, ctx: { make: info.make, model: info.model } }), onPick: it => { row.dataset.partNumber = it.partNumber || ''; if (it.unitPrice && !q('price').value) q('price').value = it.unitPrice; } }

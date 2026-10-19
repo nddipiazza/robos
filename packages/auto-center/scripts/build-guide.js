@@ -1,89 +1,98 @@
 'use strict';
-// Builds the rowbose.com/auto-center guide from the lifecycle Cucumber run: the feature files supply the
-// prose and steps, evidence/manifest.json supplies the screenshots, and the report/video are published
-// beside the page. Run after `npm run e2e:lifecycle`.
+// Builds the rowbose.com/auto-center tutorial (several pages) from guide/*.md. Screenshots come from the
+// lifecycle Cucumber run (evidence/manifest.json), so the pictures always match the tested app.
+// Run after `npm run e2e:lifecycle`.
 const fs = require('node:fs'), path = require('node:path'), { execFileSync } = require('node:child_process');
+const { marked } = require('marked');
 const { Parser, AstBuilder, GherkinClassicTokenMatcher } = require('@cucumber/gherkin');
 const { IdGenerator } = require('@cucumber/messages');
 const root = path.resolve(__dirname, '..'), repo = path.resolve(root, '../..');
-const evidence = path.join(root, 'evidence'), site = path.join(repo, 'site');
-const out = path.join(site, 'assets/auto-center');
+const evidence = process.env.E2E_EVIDENCE_DIR ? path.resolve(process.env.E2E_EVIDENCE_DIR) : path.join(root, 'evidence');
+const site = path.join(repo, 'site'), out = path.join(site, 'assets/auto-center'), pagesDir = path.join(site, 'auto-center');
 const manifest = JSON.parse(fs.readFileSync(path.join(evidence, 'manifest.json'), 'utf8'));
-const bySlug = Object.fromEntries(manifest.map(m => [m.slug, m]));
-const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-const para = s => (s || '').trim().split(/\n\s*\n/).map(p => md(p.replace(/\s*\n\s*/g, ' '))).join('</p><p>');
-fs.rmSync(out, { recursive: true, force: true }); fs.mkdirSync(path.join(out, 'screens'), { recursive: true });
-const dir = path.join(root, 'tests/e2e/features');
-const features = fs.readdirSync(dir).filter(f => f.endsWith('.feature')).sort().map(f => {
-  const parser = new Parser(new AstBuilder(IdGenerator.uuid()), new GherkinClassicTokenMatcher());
-  return { file: f, doc: parser.parse(fs.readFileSync(path.join(dir, f), 'utf8')) };
-});
-let pass = 0, total = 0, shotCount = 0;
-const MAIN = { 'shop-admin': ['owner', 'Owner'], 'front-desk-intake': ['front-desk', 'Front desk'], 'mechanic-bench': ['mechanic', 'Mechanic'], checkout: ['checkout', 'Checkout'] };
-const chapters = [], advanced = [];
-const isGuard = s => s.steps.some(st => /^I am (told|asked)/.test(st.text) || /is unavailable$/.test(st.text));
-function scenarioHtml(s, base, id, rec, main) {
-  const guard = isGuard(s);
-  const all = rec?.shots || [], chosen = main ? all : all.slice(-2);
-  const shots = chosen.map(sh => { const name = path.basename(sh.file); execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', path.join(evidence, sh.file), '-vf', 'scale=1000:-2', '-q:v', '6', path.join(out, 'screens', name)]); shotCount++; return { ...sh, name }; });
-  const steps = s.steps.map(st => `<li><b>${esc(st.keyword.trim())}</b> ${esc(st.text)}</li>`).join('');
-  const figs = shots.map(sh => `<figure class="guide-shot"><a href="{{ '/assets/auto-center/screens/${sh.name}' | relative_url }}"><img src="{{ '/assets/auto-center/screens/${sh.name}' | relative_url }}" alt="${esc(sh.step)}" loading="lazy" width="1000" height="625"></a><figcaption>${esc(sh.step)}</figcaption></figure>`).join('');
-  return `<article class="guide-scn${guard ? ' guard' : ''}" id="${id}-${slug(s.name)}"><h3>${guard ? '<span class="tag-guard">Safety net</span> ' : ''}${esc(s.name)}</h3><p>${para(s.description)}</p><div class="guide-shots">${figs}</div><details class="guide-steps"><summary>Test steps (${s.steps.length}${rec?.status === 'PASSED' ? ', passing' : ''})</summary><ol>${steps}</ol></details></article>`;
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+for (const d of [out, pagesDir]) fs.rmSync(d, { recursive: true, force: true });
+fs.rmSync(path.join(site, 'auto-center.html'), { force: true });
+fs.mkdirSync(path.join(out, 'shots'), { recursive: true }); fs.mkdirSync(pagesDir, { recursive: true });
+const used = new Map();
+function shotFile(fragment, index) {
+  const [feat, scn0] = fragment.includes('/') ? fragment.split('/') : [null, fragment], scn = slug(scn0);
+  const hits = manifest.filter(m => (m.slug.split('--')[1] === scn || m.slug.endsWith('--' + scn)) && (!feat || m.slug.split('--')[0].endsWith(feat)));
+  if (hits.length !== 1) throw new Error(`Screenshot reference "${fragment}": ${hits.length} scenarios match`);
+  const rec = hits[0], shot = rec.shots[index - 1]; if (!shot) throw new Error(`Scenario "${fragment}" has no screenshot ${index} (it has ${rec.shots.length})`);
+  const name = `${rec.slug}-${index}.jpg`;
+  if (!used.has(name)) { execFileSync('python3', [path.join(__dirname, 'scale-image.py'), path.join(evidence, shot.file), path.join(out, 'shots', name), '1000']); used.set(name, true); }
+  return name;
 }
-for (const { file, doc } of features) {
-  const f = doc.feature, base = path.basename(file, '.feature'), key = base.replace(/^\d+-/, ''), main = MAIN[key];
-  const scenarios = f.children.filter(c => c.scenario).map(c => c.scenario);
-  const items = scenarios.map(s => { const rec = bySlug[`${base}--${slug(s.name)}`]; total++; if (rec?.status === 'PASSED') pass++; return { s, html: scenarioHtml(s, base, key, rec, !!main), guard: isGuard(s) }; });
-  const normal = items.filter(i => !i.guard), guards = items.filter(i => i.guard);
-  const html = `<section class="guide-chapter${main ? '' : ' adv'}" id="${main ? main[0] : key}"><h2>${main ? main[1] + ': ' : ''}${esc(f.name)}</h2><p class="chapter-intro">${para(f.description)}</p>${normal.map(i => i.html).join('\n')}${guards.length ? `<details class="guide-guards"><summary>What the app stops you doing (${guards.length})</summary>${guards.map(i => i.html).join('\n')}</details>` : ''}</section>`;
-  (main ? chapters : advanced).push({ id: main ? main[0] : key, title: f.name, role: main?.[1], html, count: scenarios.length });
+const fig = (src, alt, caption) => `<figure class="guide-shot"><a href="{{ '${src}' | relative_url }}"><img src="{{ '${src}' | relative_url }}" alt="${esc(alt)}" loading="lazy" width="1000" height="625"></a><figcaption>${esc(caption || alt)}</figcaption></figure>`;
+const videoFigure = c => `<figure class="guide-video"><video controls preload="none" playsinline src="{{ '/assets/auto-center/whole-journey.webm' | relative_url }}"></video><figcaption>${c}</figcaption></figure>`;
+function directives(md) {
+  return md.replace(/^::video\[([^\]]*)\]$/gm, (_, c) => `\n\n<!--fig-->${videoFigure(c)}<!--/fig-->\n\n`)
+    .replace(/^::shot\[([^|\]]+)\|(\d+)\|([^\]]*)\]$/gm, (_, f, i, c) => `\n\n<!--fig-->${fig('/assets/auto-center/shots/' + shotFile(f, Number(i)), c, c)}<!--/fig-->\n\n`)
+    .replace(/^::doc\[([^|\]]+)\|([^\]]*)\]$/gm, (_, file, c) => { fs.copyFileSync(path.join(repo, 'docs/assets/images/screenshots', file), path.join(out, 'shots', file)); return `\n\n<!--fig-->${fig('/assets/auto-center/shots/' + file, c, c)}<!--/fig-->\n\n`; });
 }
-execFileSync(process.execPath, [path.join(__dirname, 'slim-report.js'), path.join(evidence, 'cucumber-messages.ndjson'), path.join(out, 'cucumber-report.html')], { stdio: 'inherit' });
-let video = false, walkVideo = false;
-const enc = (src, dst, w, crf) => { execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', src, '-vf', `scale=${w}:-2`, '-c:v', 'libx264', '-crf', String(crf), '-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-an', path.join(out, dst)]); };
-if (fs.existsSync(path.join(evidence, 'auto-center-suite.mp4'))) { try { enc(path.join(evidence, 'auto-center-suite.mp4'), 'auto-center-suite.mp4', 800, 36); video = true; } catch (e) { console.error('suite video:', e.message); } }
-const walk = path.join(evidence, 'videos', '30-walk-in-to-offboard--a-brake-job-from-walk-in-to-offboard.webm');
-if (fs.existsSync(walk)) { try { enc(walk, 'walk-in-to-offboard.mp4', 1100, 28); walkVideo = true; } catch (e) { console.error('walk video:', e.message); } }
-const roleCards = [['owner', 'Owner', 'Set up the team, parts catalog, shop details and backups.'], ['front-desk', 'Front desk', 'Take the customer’s call, text or visit and open a ticket.'], ['mechanic', 'Mechanic', 'See your tickets, request parts and log your work.'], ['checkout', 'Checkout', 'Invoice, take payment and hand back the keys.']];
-const toc = [...chapters.map(c => `<li><a href="#${c.id}">${esc(c.role)}</a> <span>${c.count}</span></li>`), '<li><a href="#advanced">Advanced</a> <span>' + advanced.reduce((n, c) => n + c.count, 0) + '</span></li>', '<li><a href="#evidence">Test evidence</a></li>'].join('');
-const page = `---
+function render(md) {
+  const html = marked.parse(directives(md), { mangle: false, headerIds: true });
+  return html.replace(/<p><!--fig-->([\s\S]*?)<!--\/fig--><\/p>/g, '$1').replace(/<!--fig-->([\s\S]*?)<!--\/fig-->/g, '$1').replace(/<li>\[ \]/g, '<li class="check"><span class="box"></span>').replace(/<li>\[x\]/g, '<li class="check done"><span class="box"></span>')
+    .replace(/<input disabled="" type="checkbox">/g, '<span class="box"></span>').replace(/\{\{/g, '{% raw %}{{').replace(/\}\}/g, '}}{% endraw %}').replace(/\{% raw %\}\{\{ '(\/assets[^']*)' \| relative_url \}\}\{% endraw %\}/g, "{{ '$1' | relative_url }}");
+}
+function front(file) {
+  const raw = fs.readFileSync(file, 'utf8'), m = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/); const meta = {};
+  for (const l of m[1].split('\n')) { const k = l.indexOf(':'); meta[l.slice(0, k).trim()] = l.slice(k + 1).trim(); }
+  return { meta, body: m[2] };
+}
+// ---- pages
+const files = fs.readdirSync(path.join(root, 'guide')).filter(f => f.endsWith('.md')).sort();
+const pages = files.map(f => { const n = f.replace(/\.md$/, ''), { meta, body } = front(path.join(root, 'guide', f)); const isIndex = n === '00-index'; return { file: f, slug: isIndex ? '' : n.replace(/^0/, ''), step: isIndex ? 0 : Number(n.slice(0, 2)), title: meta.title, summary: meta.summary, minutes: Number(meta.minutes || 0), body, url: isIndex ? '/auto-center/' : `/auto-center/${n.replace(/^0/, '')}/` }; });
+const testsPage = { slug: 'tests', step: 10, title: 'How we know it works', summary: 'The test report, recordings and the list of scenarios behind this tutorial.', minutes: 0, url: '/auto-center/tests/' };
+const all = [...pages, testsPage];
+function nav(current) {
+  const steps = all.filter(p => p.step > 0), idx = all.indexOf(current), prev = all[idx - 1], next = all[idx + 1];
+  const list = `<nav class="guide-toc" aria-label="Tutorial steps"><h4><a href="{{ '/auto-center/' | relative_url }}">Auto Center tutorial</a></h4><ol>${steps.map(p => `<li${p === current ? ' class="here"' : ''}><a href="{{ '${p.url}' | relative_url }}">${esc(p.title)}</a></li>`).join('')}</ol></nav>`;
+  const pager = `<div class="guide-pager">${prev ? `<a class="prev" href="{{ '${prev.url}' | relative_url }}"><small>Previous</small><b>${esc(prev.title)}</b></a>` : '<span></span>'}${next ? `<a class="next" href="{{ '${next.url}' | relative_url }}"><small>Next</small><b>${esc(next.title)}</b></a>` : '<span></span>'}</div>`;
+  return { list, pager };
+}
+const wrap = (p, body, hero) => {
+  const { list, pager } = nav(p);
+  return `---
 layout: default
-title: Auto Center
-permalink: /auto-center/
+title: ${p.step ? `${p.title} · Auto Center tutorial` : 'Auto Center tutorial'}
+permalink: ${p.url}
 body_class: guide
 extra_css: /assets/auto-guide.css
-description: "Run a car repair shop with RobOS Auto Center: a front desk intake wizard, a mechanic bench, a checkout wizard and an owner admin menu, with every step tested end to end."
+description: "${esc(p.summary)}"
 ---
-<section class="hero" style="padding-bottom:24px"><div class="wrap">
-<span class="pill"><b>RobOS Auto</b> · Maintenance center</span>
-<h1>A repair shop, one step at a time</h1>
-<p class="lead">Auto Center gives each person in your shop their own menu: the <strong>front desk</strong> takes the call, the <strong>mechanic</strong> does the work, <strong>checkout</strong> collects the money, and the <strong>owner</strong> sets it all up. Every change is backed up, so you never lose a customer’s history.</p>
-<div class="cta"><a class="btn" href="#quick-start">Quick start</a><a class="btn btn-ghost" href="#evidence">Watch it work</a></div>
-</div></section>
-<section style="padding-top:24px"><div class="wrap">
-<div class="role-cards">${roleCards.map(([id, t, d]) => `<a class="role-card" href="#${id}"><b>${t}</b><span>${d}</span></a>`).join('')}</div>
-<ol class="flow"><li><b>1. Intake</b><span>Front desk</span></li><li><b>2. Estimate</b><span>Front desk</span></li><li><b>3. Repair</b><span>Mechanic</span></li><li><b>4. Invoice and payment</b><span>Checkout</span></li><li><b>5. Keys back</b><span>Checkout</span></li></ol>
-<div class="guide-layout"><nav class="guide-toc" aria-label="Guide contents"><h4>In this guide</h4><ol><li><a href="#quick-start">Quick start</a></li>${toc}</ol></nav><div class="guide-body">
-<section class="guide-chapter" id="quick-start"><h2>Quick start: your first repair in 10 minutes</h2>
-<p class="chapter-intro">Open <strong>Auto Center</strong> and switch <strong>Workspace</strong> to <strong>Maintenance center</strong>. You will see four menus under <strong>Shop desk</strong>.</p>
-<ol class="quick"><li><b>Admin</b>: add yourself and your mechanics under <strong>Team</strong>. Optionally import your supplier’s parts list under <strong>Parts catalog</strong>.</li><li><b>Front desk</b>: press <strong>Start an intake</strong> and follow the five steps. You finish with a numbered ticket, such as RO-0001.</li><li><b>Front desk</b>: open the ticket from <strong>Estimates to prepare</strong>, itemize parts and labor, then record the customer’s approval.</li><li><b>Mechanic bench</b>: pick your name, open the ticket and press <strong>Take this ticket</strong>. Request parts, log your time and press <strong>Finish the job</strong>.</li><li><b>Checkout</b>: pick the car, issue the invoice, record payment and hand back the keys.</li></ol>
-<p class="note">Tip: everything you type has suggestions, such as makes, models, trouble codes, parts and jobs. You can always type something that isn’t in the list.</p></section>
-${chapters.map(c => c.html).join('\n')}
-<section class="guide-chapter" id="advanced"><h2>Advanced: working ticket by ticket</h2><p class="chapter-intro">The <strong>All tickets</strong> page shows every ticket at once with all of its forms. You do not need it day to day, because the four menus above do the same jobs step by step. These chapters show the same journey from that page, along with the type-ahead search and parts catalog.</p>
-${advanced.map(c => `<details class="adv-chapter"><summary>${esc(c.title)} (${c.count})</summary>${c.html}</details>`).join('\n')}</section>
-<section class="guide-chapter" id="evidence"><h2>Test evidence</h2><p class="chapter-intro">Every scenario in this guide runs in the real Electron app under Cucumber with video capture. The report lists each step with its screenshot, and the recordings show the same runs in motion.</p>
-${walkVideo ? `<figure class="guide-video"><video controls preload="none" playsinline src="{{ '/assets/auto-center/walk-in-to-offboard.mp4' | relative_url }}"></video><figcaption>A brake job from walk-in to offboard (one scenario).</figcaption></figure>` : ''}
-${video ? `<figure class="guide-video"><video controls preload="none" playsinline src="{{ '/assets/auto-center/auto-center-suite.mp4' | relative_url }}"></video><figcaption>The whole suite, all ${total} scenarios back to back.</figcaption></figure>` : ''}
-<p><strong>${total} scenarios, ${pass} passing.</strong> <a class="btn btn-ghost" href="{{ '/assets/auto-center/cucumber-report.html' | relative_url }}">Open the Cucumber report</a></p>
-<pre><code>cd packages/auto-center
-npm install
-npm start                    # run the app
-npm run e2e:lifecycle        # run every scenario, with video
-node scripts/build-guide.js  # regenerate this page from the run</code></pre>
-<p class="note">Scope: Auto Center is a local desktop tool, not a hosted multi-user service. Your shop’s records are saved on this computer and backed up to a private GitHub repository when you connect one under Admin, then Backup. Payments are recorded as received; Auto Center does not charge cards. Parts fitment hints from a supplier file are not verified fitment.</p></section>
-</div></div></div></section>
+${hero || ''}<section class="guide-page"><div class="wrap"><div class="guide-layout">${list}<article class="guide-body"><p class="eyebrow">${p.step && p.step < 10 ? `Step ${p.step} of 9${p.minutes ? ` · about ${p.minutes} minutes` : ''}` : 'Tutorial'}</p><h1 class="guide-title">${esc(p.title)}</h1><p class="chapter-intro">${esc(p.summary)}</p>
+${body}
+${pager}</article></div></div></section>
 `;
-fs.writeFileSync(path.join(site, 'auto-center.html'), page);
-console.log(`Guide: ${chapters.length} role chapters + ${advanced.length} advanced, ${total} scenarios (${pass} passing), ${shotCount} screenshots`);
+};
+for (const p of pages) {
+  const html = render(p.body);
+  fs.writeFileSync(path.join(pagesDir, p.slug ? `${p.slug}.html` : 'index.html'), wrap(p, html));
+}
+// ---- test evidence page
+let total = 0, pass = 0; const byRole = [];
+for (const f of fs.readdirSync(path.join(root, 'tests/e2e/features')).filter(f => f.endsWith('.feature')).sort()) {
+  const doc = new Parser(new AstBuilder(IdGenerator.uuid()), new GherkinClassicTokenMatcher()).parse(fs.readFileSync(path.join(root, 'tests/e2e/features', f), 'utf8')), base = f.replace(/\.feature$/, '');
+  const names = doc.feature.children.filter(c => c.scenario).map(c => { total++; const ok = manifest.find(m => m.slug === `${base}--${slug(c.scenario.name)}`)?.status === 'PASSED'; if (ok) pass++; return { name: c.scenario.name, ok }; });
+  byRole.push({ title: doc.feature.name, names });
+}
+execFileSync(process.execPath, [path.join(__dirname, 'slim-report.js'), path.join(evidence, 'cucumber-messages.ndjson'), path.join(out, 'cucumber-report.html')], { stdio: 'inherit' });
+// Videos are re-encoded to a smaller WebM with the ffmpeg that ships with Playwright (VP8 only).
+const ffmpeg = process.env.FFMPEG || (fs.readdirSync(path.join(require('node:os').homedir(), '.cache/ms-playwright')).filter(d => d.startsWith('ffmpeg-')).map(d => path.join(require('node:os').homedir(), '.cache/ms-playwright', d, 'ffmpeg-linux'))[0]);
+const enc = (src, dst, w) => execFileSync(ffmpeg, ['-y', '-loglevel', 'error', '-i', src, '-vf', `scale=${w}:-2`, '-c:v', 'libvpx', '-b:v', '350k', '-crf', '34', '-an', path.join(out, dst)]);
+let journey = false;
+const jv = fs.readdirSync(path.join(evidence, 'videos')).find(f => f.includes('a-complete-repair-using-the-four-menus'));
+if (jv) { enc(path.join(evidence, 'videos', jv), 'whole-journey.webm', 1000); journey = true; }
+const testsBody = `<p>Every page of this tutorial is checked by end-to-end tests. They run the real Auto Center app, click through every screen as a person would, and fail if anything is missing or wrong. The screenshots you have seen come from those runs, not from mock-ups.</p>
+<p><strong>${total} scenarios, ${pass} passing.</strong> <a class="btn btn-ghost" href="{{ '/assets/auto-center/cucumber-report.html' | relative_url }}">Open the full test report</a></p>
+${journey ? videoFigure('One whole repair, from the first call to the keys going back.') : ''}
+<h2>What is tested</h2>${byRole.map(r => `<details class="guide-guards"><summary>${esc(r.title)} (${r.names.length})</summary><ul>${r.names.map(n => `<li>${n.ok ? '✓' : '✗'} ${esc(n.name)}</li>`).join('')}</ul></details>`).join('')}
+<h2>Run the tests yourself</h2><pre><code>cd packages/auto-center
+npm install
+npm run e2e:lifecycle        # runs every scenario, with video
+node scripts/build-guide.js  # rebuilds these pages from the run</code></pre>`;
+fs.writeFileSync(path.join(pagesDir, 'tests.html'), wrap(testsPage, testsBody));
+console.log(`Guide: ${all.length} pages, ${used.size} screenshots, ${total} scenarios (${pass} passing)`);

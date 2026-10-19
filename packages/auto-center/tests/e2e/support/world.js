@@ -5,7 +5,7 @@ const { _electron: electron } = require('../../../../robos-test/node_modules/pla
 setDefaultTimeout(60000);
 const fixtureCatalog = require('./fixture-catalog');
 const ROOT = path.resolve(__dirname, '../../..');
-const EVIDENCE = path.join(ROOT, 'evidence');
+const EVIDENCE = process.env.E2E_EVIDENCE_DIR ? path.resolve(process.env.E2E_EVIDENCE_DIR) : path.join(ROOT, 'evidence');
 const PEOPLE = [['person-maria', 'Maria Lopez', 'maria@lopezauto.example'], ['person-dan', 'Dan Okafor', 'dan@lopezauto.example'], ['person-priya', 'Priya Shah', 'priya@example.com'], ['person-sam', 'Sam Rivera', 'sam@example.com']];
 const GROUPS = [['shop-team', 'Shop team', ['person-maria', 'person-dan']], ['fleet-customers', 'Fleet customers', ['person-priya']]];
 function fixtures(base) {

@@ -1,0 +1,54 @@
+---
+layout: default
+title: Family finances
+description: "An automated walkthrough of a synthetic family's financial year in RobOS Household: six accounts, twelve months of expenses, and February tax preparation."
+permalink: /family-finances/
+extra_css: /assets/family-finances.css
+og_image: /assets/family-finances/02-accounts.png
+---
+<div class="family-guide">
+<section class="family-intro wrap">
+  <span class="family-kicker">ROBOS HOUSEHOLD · DEVELOPMENT WALKTHROUGH</span>
+  <h1>A family's financial year,<br>from January to tax season.</h1>
+  <p class="family-lead">Keep accounts current. Review spending throughout the year. Return to your tax documents as they arrive.</p>
+  <p>Family, Accounts, Spending, Taxes and Privacy are recurring workspaces. Return to each whenever statements arrive, expenses need attention, residency changes or tax documents are ready.</p>
+  <p>These are screenshots captured by a passing browser E2E test of the working Household sandbox. The Rivera family, statements and tax documents are invented. CSV import, PDF text extraction, corrections and the tax-engine call execute during the test.</p>
+  <div class="family-status"><strong>Development sandbox, not a production tax service.</strong> Approved private cloud storage is not connected. Real files are rejected. The final screen is an incomplete federal estimate; no return is filed.</div>
+  <nav class="family-jump" aria-label="Walkthrough chapters"><a href="#family">Family</a><a href="#accounts">Accounts</a><a href="#year">The year</a><a href="#review">February</a><a href="#estimate">Tax estimate</a><a href="#privacy">Privacy</a></nav>
+</section>
+<div class="family-body wrap">
+<section class="family-chapter" id="family">
+  <div class="family-copy"><span class="family-label">FAMILY & RESIDENCY</span><h2>Start with the people.</h2><p>Maya and Jordan are the adults. Leo and Ava have dependent records, dated placements and full-year residency. Children do not need a RobOS login to appear in the household.</p><p>The test imports the synthetic family file, checks all four people, and verifies the residency records. Production user assignment and access grants remain future integrations.</p></div>
+  <figure><a href="/assets/family-finances/01-family.png"><img src="/assets/family-finances/01-family.png" alt="Household app showing two adults, two children, and dated placement records with 365 nights" width="1440" loading="lazy"></a><figcaption>Actual sandbox screen after the family import.</figcaption></figure>
+</section>
+<section class="family-chapter" id="accounts">
+  <div class="family-copy"><span class="family-label">ACCOUNTS & IMPORTS</span><h2>Six statements. One picture.</h2><p>Checking, savings, a credit card, a car loan, investment contributions and cash. The test uploads six CSV files containing <strong>318 transactions</strong>, then checks every closing balance against independently specified synthetic statement totals.</p><p>Year-end net worth is <strong>$71,483</strong>. Re-importing checking adds zero transactions and leaves that balance unchanged. There is no live bank or brokerage connection.</p></div>
+  <figure><a href="/assets/family-finances/02-accounts.png"><img src="/assets/family-finances/02-accounts.png" alt="Six reconciled accounts in the Household app, 318 imported transactions and net worth of $71,483" width="1440" loading="lazy"></a><figcaption>Each green check compares imported activity with its sample year-end statement.</figcaption></figure>
+</section>
+<section class="family-chapter" id="year">
+  <div class="family-copy"><span class="family-label">SPENDING & TRANSACTIONS</span><h2>Include the ordinary expenses, too.</h2><p>The year includes rent, groceries, electricity, water, insurance, fuel, dining, pharmacy purchases, childcare, school supplies, quarterly dental bills, loan interest and donations. It also includes a refund and a purchase that needs splitting.</p><p>Annual spending is <strong>$47,905</strong>, net of the refund. Net cash income is <strong>$92,688</strong>. Transfers and loan principal are excluded from spending. Donations total <strong>$1,200</strong>; tracking them does not automatically make them deductible.</p></div>
+  <figure><a href="/assets/family-finances/03-year.png"><img src="/assets/family-finances/03-year.png" alt="Annual spending, income, donations, monthly expenses and category totals in the real sandbox UI" width="1440" loading="lazy"></a><figcaption>Twelve months of imported transactions, aggregated by the application.</figcaption></figure>
+  <div class="family-copy"><h3>Correct a category. Split a purchase.</h3><p>The test categorizes a local-market purchase, then splits the $300 electronics purchase into $200 for the household and $100 for education. It checks that the split is saved without changing total spending.</p></div>
+  <figure><a href="/assets/family-finances/04-transactions.png"><img src="/assets/family-finances/04-transactions.png" alt="The saved electronics split showing Household $200 and Education $100 in the transaction table" width="1440" loading="lazy"></a><figcaption>Saved split in the application transaction table.</figcaption></figure>
+</section>
+<section class="family-chapter" id="review">
+  <div class="family-copy"><span class="family-label">TAX DOCUMENT REVIEW</span><h2>Check what the document actually says.</h2><p>The test advances the app's scenario date, uploads two synthetic W-2 PDFs and one 1099-INT, and attempts a calculation. The application blocks it until all critical fields have been reviewed.</p><p>PDF.js extracts embedded text and its page coordinates. Jordan's fixture deliberately contains ambiguous letter-O characters in the withholding amount. The test enters <strong>$4,000</strong>, verifies the highlighted source field, and approves the correction. This exercises PDF text review, not OCR of scanned documents.</p></div>
+  <figure><a href="/assets/family-finances/05-field-review.png"><img src="/assets/family-finances/05-field-review.png" alt="Side-by-side synthetic W-2 and editable critical fields, with the withholding source highlighted and corrected to $4,000" width="1440" loading="lazy"></a><figcaption>The source PDF and corrected value are visible together. This image comes from the test's browser session.</figcaption></figure>
+</section>
+<section class="family-chapter" id="estimate">
+  <div class="family-copy"><span class="family-label">TAX ESTIMATES</span><h2>Show the math and its limits.</h2><p>The backend calls <a href="https://github.com/mmacpherson/tenforty">TenForty 2025.11</a> with the OpenTaxSolver backend. Reviewed wages total <strong>$120,000</strong>, interest is <strong>$288</strong>, and the engine reports <strong>$88,788</strong> in taxable income after the standard deduction.</p><p>The engine's $10,176 tax result excludes child credits. A separate, clearly identified supplement applies $4,400 for the two confirmed eligible children. With $14,000 of withholding, the displayed refund estimate is <strong>$8,224 before other credits</strong>.</p><p>The test verifies those results and confirms that a later document correction invalidates the estimate. Eligibility outside this exact synthetic scenario, other credits (including dependent-care credits), state returns and filing forms are not implemented.</p></div>
+  <figure><a href="/assets/family-finances/06-tax-estimate.png"><img src="/assets/family-finances/06-tax-estimate.png" alt="Federal estimate showing income, deduction, OpenTaxSolver result, separately modeled child credits and an $8,224 refund estimate" width="1440" loading="lazy"></a><figcaption>A real local engine response, labeled as an incomplete estimate rather than a completed return.</figcaption></figure>
+  <div class="family-copy"><h3>Prepared is different from filed.</h3><p>The tax workspace can prepare a filing checklist. The IRS submission control stays disabled, and the application says <strong>not filed</strong>. This test never sends documents or returns to a tax agency.</p></div>
+  <figure><a href="/assets/family-finances/07-filing-boundary.png"><img src="/assets/family-finances/07-filing-boundary.png" alt="Filing checklist in the app with the IRS submission control disabled and the status not filed" width="1440" loading="lazy"></a><figcaption>The test asserts that IRS submission is disabled.</figcaption></figure>
+</section>
+<section class="family-chapter" id="privacy">
+  <div class="family-copy"><span class="family-label">PRIVACY & STORAGE</span><h2>Use the approved provider registry.</h2><p>Production storage must bind to the existing RobOS cloud providers app's approved-provider records. This integration is not connected yet. The sandbox accepts only exact, allowlisted fixture bytes and keeps its session data in memory.</p><p>The test uploads an unrecognized file and checks the rejection, verifies that browser localStorage and sessionStorage remain empty, and confirms that a separate browser context cannot read the session through the API. These checks do not certify a cloud vault or replace production authorization testing.</p></div>
+  <figure><a href="/assets/family-finances/08-privacy.png"><img src="/assets/family-finances/08-privacy.png" alt="Privacy screen showing production imports locked and an unrecognized-file rejection" width="1440" loading="lazy"></a><figcaption>Real-file intake remains blocked; no provider approval is simulated.</figcaption></figure>
+</section>
+<section class="family-reproduce"><h2>Run the same lifecycle.</h2><p>The test uses a real local HTTP service and Chromium. No bank, OCR or tax-engine response is mocked. All data is synthetic.</p><pre><code>cd packages/household
+npm ci
+uv venv .venv --python 3.12
+uv pip install --python .venv/bin/python -r requirements.txt
+npm test
+npm run test:e2e</code></pre><p>Install Chromium with <code>npx playwright-core install chromium</code> if it is not already available. The E2E run writes these screenshots directly into the site assets.</p><p><a href="https://github.com/nddipiazza/robos/tree/main/packages/household">Application and tests on GitHub</a> · <a href="/v1/ideas/specs/robos-household.html">Full product specification</a> · <a href="https://www.irs.gov/credits-deductions/individuals/child-tax-credit">IRS child-credit requirements</a></p></section>
+</div></div>

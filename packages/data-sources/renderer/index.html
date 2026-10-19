@@ -249,6 +249,8 @@
             <option value="redis">Redis (In-Memory Key-Value)</option>
             <option value="s3">Amazon S3 / MinIO (Object Storage)</option>
             <option value="gdrive">Google Drive / GCS (Cloud Storage)</option>
+            <option value="sftp">SFTP (SSH File Transfer)</option>
+            <option value="ftp">FTP / FTPS (File Transfer)</option>
             <option value="kafka">Apache Kafka (Event Streaming)</option>
           </select>
         </div>
@@ -279,6 +281,10 @@
             <label class="form-label">Password / Secret</label>
             <input type="password" id="modal-ds-password" class="form-input" placeholder="••••••••"/>
           </div>
+        </div>
+        <div class="form-group hidden" id="grp-ds-keyfile">
+          <label class="form-label">Private Key File (optional, SFTP; password is used as passphrase)</label>
+          <input type="text" id="modal-ds-keyfile" class="form-input mono" placeholder="~/.ssh/id_ed25519"/>
         </div>
         <div class="form-group">
           <label class="flags-bool-label">

@@ -49,6 +49,34 @@ Feature: Set up the shop (owner admin)
     And I save the shop settings "Lopez Auto Repair", phone "555-0111", currency "USD" and rate "110.00"
     Then the settings show the shop name "Lopez Auto Repair"
 
+  Scenario: Bring in your existing customers and their cars
+    Export your customer list from your old system as a CSV, with one row per vehicle, then choose the file
+    or paste its text under **Customers**. Customers who appear more than once keep all their vehicles, and
+    importing the same file again never creates duplicates.
+    Given I am in the shop admin
+    When I open the "Customers" tab
+    And I import these customers in admin:
+      """
+      Name,Phone,Email,Year,Make,Model,Plate
+      Sam Rivera,(555) 010-0100,sam@example.com,2015,Toyota,Camry,ABC123
+      Sam Rivera,555-010-0100,,2018,Ford,F-150,TRK999
+      Priya Shah,555-010-0199,priya@example.com,2012,Honda,Accord,
+      """
+    Then I am told "Imported 2 customer(s) and 3 vehicle(s)"
+    And the admin shows "Sam Rivera"
+
+  Scenario: A bad row stops the whole customer import
+    Nothing is imported when a row has a problem, and the message names the row to fix.
+    Given I am in the shop admin
+    When I open the "Customers" tab
+    And I import these customers in admin:
+      """
+      Name,Phone,Make,Model
+      Sam Rivera,555-010-0100,Toyota,Camry
+      Priya Shah,555-010-0199,Honda,
+      """
+    Then I am told "Nothing imported. Row 3: A vehicle needs at least a make and a model"
+
   Scenario: Add a part to the catalog and find it again
     Add a part with its number, supplier, cost and price, then search the catalog to confirm it is there.
     Given I am in the shop admin
