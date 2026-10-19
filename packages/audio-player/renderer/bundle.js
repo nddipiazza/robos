@@ -782,7 +782,7 @@
   var require_react_dom_production = __commonJS({
     "node_modules/react-dom/cjs/react-dom.production.js"(exports) {
       "use strict";
-      var React6 = require_react();
+      var React9 = require_react();
       function formatProdErrorMessage(code) {
         var url = "https://react.dev/errors/" + code;
         if (1 < arguments.length) {
@@ -824,7 +824,7 @@
           implementation
         };
       }
-      var ReactSharedInternals = React6.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      var ReactSharedInternals = React9.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       function getCrossOriginStringAs(as, input) {
         if ("font" === as) return "";
         if ("string" === typeof input)
@@ -966,7 +966,7 @@
     "node_modules/react-dom/cjs/react-dom-client.production.js"(exports) {
       "use strict";
       var Scheduler = require_scheduler();
-      var React6 = require_react();
+      var React9 = require_react();
       var ReactDOM = require_react_dom();
       function formatProdErrorMessage(code) {
         var url = "https://react.dev/errors/" + code;
@@ -1257,7 +1257,7 @@
         return null;
       }
       var isArrayImpl = Array.isArray;
-      var ReactSharedInternals = React6.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      var ReactSharedInternals = React9.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       var ReactDOMSharedInternals = ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       var sharedNotPendingObject = {
         pending: false,
@@ -14406,7 +14406,7 @@
           0 === i && attemptExplicitHydrationTarget(target);
         }
       };
-      var isomorphicReactPackageVersion$jscomp$inline_2043 = React6.version;
+      var isomorphicReactPackageVersion$jscomp$inline_2043 = React9.version;
       if ("19.3.0" !== isomorphicReactPackageVersion$jscomp$inline_2043)
         throw Error(
           formatProdErrorMessage(
@@ -14532,11 +14532,11 @@
   });
 
   // src/index.jsx
-  var import_react9 = __toESM(require_react());
+  var import_react12 = __toESM(require_react());
   var import_client = __toESM(require_client());
 
   // src/App.jsx
-  var import_react8 = __toESM(require_react());
+  var import_react11 = __toESM(require_react());
 
   // node_modules/react-h5-audio-player/es/index.js
   var import_react6 = __toESM(require_react());
@@ -17391,10 +17391,197 @@
   };
   var es_default = H5AudioPlayer;
 
+  // src/Icon.jsx
+  var import_react8 = __toESM(require_react());
+  var ICON_PATHS = {
+    play: /* @__PURE__ */ import_react8.default.createElement("polygon", { points: "6 4 20 12 6 20 6 4", fill: "currentColor", stroke: "none" }),
+    pause: /* @__PURE__ */ import_react8.default.createElement("g", { fill: "currentColor", stroke: "none" }, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "6", y: "4", width: "4", height: "16" }), /* @__PURE__ */ import_react8.default.createElement("rect", { x: "14", y: "4", width: "4", height: "16" })),
+    prev: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("polygon", { points: "19 5 9 12 19 19 19 5", fill: "currentColor", stroke: "none" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "5", y1: "5", x2: "5", y2: "19" })),
+    next: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("polygon", { points: "5 5 15 12 5 19 5 5", fill: "currentColor", stroke: "none" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "19", y1: "5", x2: "19", y2: "19" })),
+    note: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "18", cy: "16", r: "3" })),
+    list: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("line", { x1: "8", y1: "6", x2: "21", y2: "6" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "8", y1: "12", x2: "21", y2: "12" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "8", y1: "18", x2: "21", y2: "18" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "6", x2: "3.01", y2: "6" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "12", x2: "3.01", y2: "12" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "18", x2: "3.01", y2: "18" })),
+    library: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M4 19V5" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M9 19V5" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M14 19l3-14 4 1-3 14-4-1z" })),
+    cloud: /* @__PURE__ */ import_react8.default.createElement("path", { d: "M18 18a4 4 0 0 0 0-8 6 6 0 0 0-11.7 1.5A3.5 3.5 0 0 0 7 18h11z" }),
+    wave: /* @__PURE__ */ import_react8.default.createElement("path", { d: "M2 12h3l2-6 4 12 3-9 2 3h6" }),
+    speaker: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "5", y: "2", width: "14", height: "20", rx: "2" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "14", r: "4" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "6", x2: "12.01", y2: "6" })),
+    rain: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M18 12a4 4 0 0 0 0-8 6 6 0 0 0-11.7 1.5A3.5 3.5 0 0 0 7 12h11z" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "8", y1: "16", x2: "7", y2: "20" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "16", x2: "11", y2: "20" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "16", y1: "16", x2: "15", y2: "20" })),
+    synth: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "2", y: "6", width: "20", height: "12", rx: "1" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "7", y1: "6", x2: "7", y2: "18" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "6", x2: "12", y2: "18" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "17", y1: "6", x2: "17", y2: "18" })),
+    noise: /* @__PURE__ */ import_react8.default.createElement("path", { d: "M3 12h2l1-4 2 8 2-12 2 14 2-10 1 4h6" }),
+    x: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("line", { x1: "6", y1: "6", x2: "18", y2: "18" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "18", y1: "6", x2: "6", y2: "18" })),
+    up: /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "6 15 12 9 18 15" }),
+    down: /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "6 9 12 15 18 9" }),
+    folder: /* @__PURE__ */ import_react8.default.createElement("path", { d: "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" }),
+    file: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z" }), /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "14 3 14 8 19 8" })),
+    check: /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "5 12 10 17 19 7" }),
+    mic: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "9", y: "2", width: "6", height: "12", rx: "3" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M5 11a7 7 0 0 0 14 0" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "18", x2: "12", y2: "22" }))
+  };
+  function Icon2({ name, size = 16 }) {
+    return /* @__PURE__ */ import_react8.default.createElement("svg", { className: "icon", xmlns: "http://www.w3.org/2000/svg", width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, ICON_PATHS[name]);
+  }
+
+  // src/CloudBrowser.jsx
+  var import_react9 = __toESM(require_react());
+  var formatSize = (b) => b == null ? "" : b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`;
+  function CloudBrowser({ onLibrary, showStatus }) {
+    const [connections, setConnections] = (0, import_react9.useState)(null);
+    const [connId, setConnId] = (0, import_react9.useState)("");
+    const [listing, setListing] = (0, import_react9.useState)(null);
+    const [loading, setLoading] = (0, import_react9.useState)(false);
+    const [error, setError] = (0, import_react9.useState)("");
+    const [selected, setSelected] = (0, import_react9.useState)(/* @__PURE__ */ new Set());
+    const [progress, setProgress] = (0, import_react9.useState)(null);
+    const importing = (0, import_react9.useRef)(false);
+    const loadConnections = async () => {
+      const list = await window.robosAudio.cloudConnections();
+      setConnections(list);
+      if (list.length && !list.some((c) => c.id === connId)) {
+        const first = list.find((c) => c.browsable);
+        if (first) setConnId(first.id);
+      }
+    };
+    (0, import_react9.useEffect)(() => {
+      loadConnections();
+      return window.robosAudio.onCloudProgress(setProgress);
+    }, []);
+    const browse = async (id, p) => {
+      setLoading(true);
+      setError("");
+      setSelected(/* @__PURE__ */ new Set());
+      const res = await window.robosAudio.cloudList(id, p);
+      setLoading(false);
+      if (!res.ok) {
+        setError(res.error);
+        setListing(null);
+        return;
+      }
+      setListing(res);
+    };
+    (0, import_react9.useEffect)(() => {
+      if (!connId) {
+        setListing(null);
+        return;
+      }
+      const c = (connections || []).find((x) => x.id === connId);
+      browse(connId, c ? c.startPath : "/");
+    }, [connId]);
+    const toggle = (p) => setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(p) ? next.delete(p) : next.add(p);
+      return next;
+    });
+    const parentPath = listing && listing.path !== "/" ? listing.path.replace(/\/[^/]*$/, "") || "/" : null;
+    const crumbs = listing ? listing.path.split("/").filter(Boolean) : [];
+    const doImport = async (paths) => {
+      if (importing.current || !paths.length) return;
+      importing.current = true;
+      setProgress({ phase: "scanning" });
+      const res = await window.robosAudio.cloudImport(connId, paths);
+      importing.current = false;
+      setProgress(null);
+      if (!res.ok) {
+        showStatus(`Cloud import failed: ${res.error}`);
+        return;
+      }
+      onLibrary(res.library);
+      setSelected(/* @__PURE__ */ new Set());
+      showStatus(res.added ? `Added ${res.added} track${res.added === 1 ? "" : "s"} from cloud storage to your library.` : "No audio files found in the selection.");
+    };
+    const usable = (connections || []).filter((c) => c.browsable);
+    const other = (connections || []).filter((c) => !c.browsable);
+    return /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-browser" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-toolbar" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-conn" }, /* @__PURE__ */ import_react9.default.createElement("label", { htmlFor: "cloud-conn-select" }, "Connection"), /* @__PURE__ */ import_react9.default.createElement("select", { id: "cloud-conn-select", value: connId, onChange: (e) => setConnId(e.target.value), disabled: !usable.length }, !usable.length && /* @__PURE__ */ import_react9.default.createElement("option", { value: "" }, "No FTP / SFTP connections"), usable.map((c) => /* @__PURE__ */ import_react9.default.createElement("option", { key: c.id, value: c.id }, c.name, " (", c.driverType.toUpperCase(), " ", c.host, ")"))), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", onClick: loadConnections }, "Reload")), /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-import-actions" }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-accent", disabled: !selected.size || !!progress, onClick: () => doImport([...selected]) }, "Add ", selected.size ? `${selected.size} selected` : "selected", " to library"), listing && /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", disabled: !!progress, onClick: () => doImport([listing.path]) }, "Add this folder"))), connections && !connections.length && /* @__PURE__ */ import_react9.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react9.default.createElement("p", null, "No cloud storage is linked yet."), /* @__PURE__ */ import_react9.default.createElement("p", { className: "hint" }, "Open RobOS Data Sources, add an SFTP or FTP connection under Cloud & Object Storage, and it will appear here.")), other.length > 0 && /* @__PURE__ */ import_react9.default.createElement("p", { className: "cloud-note" }, other.map((c) => c.name).join(", "), ": browsing ", other.length === 1 ? "this" : "these", " storage type", other.length === 1 ? " is" : "s are", " not supported yet (FTP and SFTP only)."), progress && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-progress" }, progress.phase === "scanning" && "Scanning remote folders...", progress.phase === "downloading" && `Downloading ${progress.done + 1} of ${progress.total}: ${progress.name}`, progress.phase === "done" && "Finishing up..."), listing && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-listing" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-path" }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/") }, "root"), crumbs.map((c, i) => /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, { key: i }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "crumb-sep" }, "/"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/" + crumbs.slice(0, i + 1).join("/")) }, c)))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-rows" }, parentPath && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-row", onClick: () => browse(connId, parentPath) }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-check" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "up", size: 14 }), " Parent folder"), /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-size" })), listing.entries.length === 0 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-empty" }, "No folders or audio files here."), listing.entries.map((e) => /* @__PURE__ */ import_react9.default.createElement(
+      "div",
+      {
+        key: e.path,
+        className: `cloud-row ${selected.has(e.path) ? "selected" : ""}`,
+        onClick: () => e.type === "dir" ? browse(connId, e.path) : toggle(e.path)
+      },
+      /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-check", onClick: (ev) => {
+        ev.stopPropagation();
+        toggle(e.path);
+      } }, /* @__PURE__ */ import_react9.default.createElement("input", { type: "checkbox", readOnly: true, checked: selected.has(e.path), "aria-label": `Select ${e.name}` })),
+      /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: e.type === "dir" ? "folder" : "note", size: 15 }), " ", e.name),
+      /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-size" }, e.type === "dir" ? "" : formatSize(e.size))
+    )))), loading && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-progress" }, "Loading..."), error && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-error" }, error));
+  }
+
+  // src/Lyrics.jsx
+  var import_react10 = __toESM(require_react());
+  function Lyrics({ track, getAudio }) {
+    const [data, setData] = (0, import_react10.useState)(null);
+    const [active, setActive] = (0, import_react10.useState)(-1);
+    const boxRef = (0, import_react10.useRef)(null);
+    const lineRefs = (0, import_react10.useRef)([]);
+    (0, import_react10.useEffect)(() => {
+      let cancelled = false;
+      setData(null);
+      setActive(-1);
+      if (!track || !window.robosAudio?.getLyrics) {
+        setData({ found: false });
+        return;
+      }
+      window.robosAudio.getLyrics({ title: track.title, artist: track.artist, album: track.album, duration: track.duration, filePath: track.filePath }).then((r) => {
+        if (!cancelled) setData(r);
+      }).catch(() => {
+        if (!cancelled) setData({ found: false });
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [track?.id, track?.filePath, track?.title, track?.artist]);
+    const synced = data?.synced || [];
+    (0, import_react10.useEffect)(() => {
+      if (!synced.length) return;
+      const tick = () => {
+        const audio = getAudio();
+        if (!audio) return;
+        const t = audio.currentTime + 0.15;
+        let lo = 0, hi = synced.length - 1, idx = -1;
+        while (lo <= hi) {
+          const mid = lo + hi >> 1;
+          if (synced[mid].t <= t) {
+            idx = mid;
+            lo = mid + 1;
+          } else hi = mid - 1;
+        }
+        setActive((prev) => prev === idx ? prev : idx);
+      };
+      const timer = setInterval(tick, 120);
+      tick();
+      return () => clearInterval(timer);
+    }, [data]);
+    (0, import_react10.useEffect)(() => {
+      const el = lineRefs.current[active];
+      const box = boxRef.current;
+      if (el && box) box.scrollTo({ top: el.offsetTop - box.clientHeight / 2 + el.clientHeight / 2, behavior: "smooth" });
+    }, [active]);
+    const seek = (t) => {
+      const audio = getAudio();
+      if (audio) audio.currentTime = t;
+    };
+    let body;
+    if (data === null) body = /* @__PURE__ */ import_react10.default.createElement("div", { className: "lyrics-empty" }, "Looking up lyrics...");
+    else if (synced.length) {
+      body = synced.map((l, i) => /* @__PURE__ */ import_react10.default.createElement(
+        "div",
+        {
+          key: i,
+          ref: (el) => {
+            lineRefs.current[i] = el;
+          },
+          className: `lyric-line ${i === active ? "active" : i < active ? "past" : ""}`,
+          onClick: () => seek(l.t)
+        },
+        l.text || "\xA0"
+      ));
+    } else if (data.plain) body = /* @__PURE__ */ import_react10.default.createElement("pre", { className: "lyrics-plain" }, data.plain);
+    else body = /* @__PURE__ */ import_react10.default.createElement("div", { className: "lyrics-empty" }, data.error || "No synced lyrics found for this track.");
+    return /* @__PURE__ */ import_react10.default.createElement("div", { className: "lyrics-panel" }, /* @__PURE__ */ import_react10.default.createElement("div", { className: "lyrics-head" }, /* @__PURE__ */ import_react10.default.createElement("span", null, /* @__PURE__ */ import_react10.default.createElement(Icon2, { name: "mic", size: 14 }), " Lyrics"), synced.length > 0 && /* @__PURE__ */ import_react10.default.createElement("span", { className: "lyrics-src" }, "Synced", data.source === "lrclib" ? " via LRCLIB" : " from .lrc file")), /* @__PURE__ */ import_react10.default.createElement("div", { className: "lyrics-scroll", ref: boxRef }, body));
+  }
+
   // src/App.jsx
   function App() {
-    const [activeTab, setActiveTab] = (0, import_react8.useState)("player");
-    const [playlist, setPlaylist] = (0, import_react8.useState)([
+    const [activeTab, setActiveTab] = (0, import_react11.useState)("player");
+    const [playlist, setPlaylist] = (0, import_react11.useState)([
       {
         id: "default-1",
         title: "RobOS Lo-Fi Synth Session",
@@ -17403,33 +17590,33 @@
         src: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3"
       }
     ]);
-    const [currentTrackIndex, setCurrentTrackIndex] = (0, import_react8.useState)(0);
-    const [librarySort, setLibrarySort] = (0, import_react8.useState)({ key: "title", dir: "asc" });
-    const [outputTarget, setOutputTarget] = (0, import_react8.useState)("local");
-    const [speakers, setSpeakers] = (0, import_react8.useState)([]);
-    const [library, setLibrary] = (0, import_react8.useState)({ tracks: [], artists: [], albums: [] });
-    const [searchQuery, setSearchQuery] = (0, import_react8.useState)("");
-    const [isScanning, setIsScanning] = (0, import_react8.useState)(false);
-    const [isScanningLibrary, setIsScanningLibrary] = (0, import_react8.useState)(false);
-    const [libraryScanStatus, setLibraryScanStatus] = (0, import_react8.useState)(null);
-    const [activeCastSession, setActiveCastSession] = (0, import_react8.useState)(null);
-    const [statusMsg, setStatusMsg] = (0, import_react8.useState)("");
-    const [activeAmbient, setActiveAmbient] = (0, import_react8.useState)(null);
-    const [isPlaying, setIsPlaying] = (0, import_react8.useState)(false);
-    const [playlists, setPlaylists] = (0, import_react8.useState)([]);
-    const [selectedPlaylistId, setSelectedPlaylistId] = (0, import_react8.useState)(null);
-    const [showCreatePlaylistModal, setShowCreatePlaylistModal] = (0, import_react8.useState)(false);
-    const [newPlaylistName, setNewPlaylistName] = (0, import_react8.useState)("");
-    const [newPlaylistDesc, setNewPlaylistDesc] = (0, import_react8.useState)("");
-    const [showSaveQueueModal, setShowSaveQueueModal] = (0, import_react8.useState)(false);
-    const [saveQueueName, setSaveQueueName] = (0, import_react8.useState)("");
-    const [saveQueueDesc, setSaveQueueDesc] = (0, import_react8.useState)("");
-    const [showAddToPlaylistModal, setShowAddToPlaylistModal] = (0, import_react8.useState)(false);
-    const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = (0, import_react8.useState)(null);
-    const playerRef = (0, import_react8.useRef)(null);
-    const audioCtxRef = (0, import_react8.useRef)(null);
-    const ambientNodeRef = (0, import_react8.useRef)(null);
-    const toastTimerRef = (0, import_react8.useRef)(null);
+    const [currentTrackIndex, setCurrentTrackIndex] = (0, import_react11.useState)(0);
+    const [librarySort, setLibrarySort] = (0, import_react11.useState)({ key: "title", dir: "asc" });
+    const [outputTarget, setOutputTarget] = (0, import_react11.useState)("local");
+    const [speakers, setSpeakers] = (0, import_react11.useState)([]);
+    const [library, setLibrary] = (0, import_react11.useState)({ tracks: [], artists: [], albums: [] });
+    const [searchQuery, setSearchQuery] = (0, import_react11.useState)("");
+    const [isScanning, setIsScanning] = (0, import_react11.useState)(false);
+    const [isScanningLibrary, setIsScanningLibrary] = (0, import_react11.useState)(false);
+    const [libraryScanStatus, setLibraryScanStatus] = (0, import_react11.useState)(null);
+    const [activeCastSession, setActiveCastSession] = (0, import_react11.useState)(null);
+    const [statusMsg, setStatusMsg] = (0, import_react11.useState)("");
+    const [activeAmbient, setActiveAmbient] = (0, import_react11.useState)(null);
+    const [isPlaying, setIsPlaying] = (0, import_react11.useState)(false);
+    const [playlists, setPlaylists] = (0, import_react11.useState)([]);
+    const [selectedPlaylistId, setSelectedPlaylistId] = (0, import_react11.useState)(null);
+    const [showCreatePlaylistModal, setShowCreatePlaylistModal] = (0, import_react11.useState)(false);
+    const [newPlaylistName, setNewPlaylistName] = (0, import_react11.useState)("");
+    const [newPlaylistDesc, setNewPlaylistDesc] = (0, import_react11.useState)("");
+    const [showSaveQueueModal, setShowSaveQueueModal] = (0, import_react11.useState)(false);
+    const [saveQueueName, setSaveQueueName] = (0, import_react11.useState)("");
+    const [saveQueueDesc, setSaveQueueDesc] = (0, import_react11.useState)("");
+    const [showAddToPlaylistModal, setShowAddToPlaylistModal] = (0, import_react11.useState)(false);
+    const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = (0, import_react11.useState)(null);
+    const playerRef = (0, import_react11.useRef)(null);
+    const audioCtxRef = (0, import_react11.useRef)(null);
+    const ambientNodeRef = (0, import_react11.useRef)(null);
+    const toastTimerRef = (0, import_react11.useRef)(null);
     const formatDuration = (sec) => {
       if (!sec || isNaN(sec)) return "--:--";
       const totalSec = Math.round(sec);
@@ -17454,7 +17641,7 @@
       const found = speakers.find((s) => s.ip === ip);
       return found ? found.name : `Speaker (${ip})`;
     };
-    (0, import_react8.useEffect)(() => {
+    (0, import_react11.useEffect)(() => {
       refreshSpeakers();
       loadLibrary();
       refreshPlaylists();
@@ -17975,7 +18162,7 @@
           setTimeout(() => {
             playerRef.current?.audio?.current?.play().catch((err) => {
               console.warn("[AudioPlayer] Playback error:", err);
-              showStatus(`\u26A0\uFE0F Playback error: ${err.message || "File not accessible"}`);
+              showStatus(`Playback error: ${err.message || "File not accessible"}`);
             });
           }, 60);
         }
@@ -18128,15 +18315,15 @@
     const toggleLibrarySort = (key) => {
       setLibrarySort((prev) => prev.key === key ? { key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" });
     };
-    const sortMark = (key) => librarySort.key === key ? librarySort.dir === "asc" ? " \u25B2" : " \u25BC" : "";
-    return /* @__PURE__ */ import_react8.default.createElement(
+    const sortMark = (key) => librarySort.key === key ? librarySort.dir === "asc" ? " \u2191" : " \u2193" : "";
+    return /* @__PURE__ */ import_react11.default.createElement(
       "div",
       {
         className: "react-audio-app",
         onDragOver: (e) => e.preventDefault(),
         onDrop: handleDrop
       },
-      /* @__PURE__ */ import_react8.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react8.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M3 18v-6a9 9 0 0 1 18 0v6" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" }), /* @__PURE__ */ import_react8.default.createElement("polygon", { points: "10 10 15 12 10 14 10 10", fill: "#e8a33d" })), /* @__PURE__ */ import_react8.default.createElement("div", null, /* @__PURE__ */ import_react8.default.createElement("h1", null, "RobOS Audio Player"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "subtitle" }, "React H5AudioPlayer & Zero-Cloud Google Cast Streaming"))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react8.default.createElement(
+      /* @__PURE__ */ import_react11.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react11.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react11.default.createElement("path", { d: "M3 18v-6a9 9 0 0 1 18 0v6" }), /* @__PURE__ */ import_react11.default.createElement("path", { d: "M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" }), /* @__PURE__ */ import_react11.default.createElement("polygon", { points: "10 10 15 12 10 14 10 10", fill: "#e8a33d" })), /* @__PURE__ */ import_react11.default.createElement("div", null, /* @__PURE__ */ import_react11.default.createElement("h1", null, "RobOS Audio Player"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "subtitle" }, "Local library, cloud storage and Google Cast"))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "btn-header-add-folder",
@@ -18144,9 +18331,9 @@
           onClick: handleSelectFolder,
           title: "Open built-in system file manager to add music folder"
         },
-        /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "10", x2: "12", y2: "16" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "9", y1: "13", x2: "15", y2: "13" })),
-        /* @__PURE__ */ import_react8.default.createElement("span", null, "Add Folder")
-      ), /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react11.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" }), /* @__PURE__ */ import_react11.default.createElement("line", { x1: "12", y1: "10", x2: "12", y2: "16" }), /* @__PURE__ */ import_react11.default.createElement("line", { x1: "9", y1: "13", x2: "15", y2: "13" })),
+        /* @__PURE__ */ import_react11.default.createElement("span", null, "Add Folder")
+      ), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "btn-header-add-files",
@@ -18154,9 +18341,9 @@
           onClick: handleAddFiles,
           title: "Open file picker to select individual audio files"
         },
-        /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }), /* @__PURE__ */ import_react8.default.createElement("polyline", { points: "14 2 14 8 20 8" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "18", x2: "12", y2: "12" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "9", y1: "15", x2: "15", y2: "15" })),
-        /* @__PURE__ */ import_react8.default.createElement("span", null, "Add Files")
-      )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "output-selector-wrapper" }, /* @__PURE__ */ import_react8.default.createElement("label", null, "Audio Output:"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "select-group" }, /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react11.default.createElement("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }), /* @__PURE__ */ import_react11.default.createElement("polyline", { points: "14 2 14 8 20 8" }), /* @__PURE__ */ import_react11.default.createElement("line", { x1: "12", y1: "18", x2: "12", y2: "12" }), /* @__PURE__ */ import_react11.default.createElement("line", { x1: "9", y1: "15", x2: "15", y2: "15" })),
+        /* @__PURE__ */ import_react11.default.createElement("span", null, "Add Files")
+      )), /* @__PURE__ */ import_react11.default.createElement("div", { className: "output-selector-wrapper" }, /* @__PURE__ */ import_react11.default.createElement("label", null, "Audio Output:"), /* @__PURE__ */ import_react11.default.createElement("div", { className: "select-group" }, /* @__PURE__ */ import_react11.default.createElement(
         "select",
         {
           id: "output-select",
@@ -18180,10 +18367,10 @@
             showStatus(`Switched output to: ${e.target.options[e.target.selectedIndex].text}`);
           }
         },
-        /* @__PURE__ */ import_react8.default.createElement("option", { value: "local" }, "\u{1F4BB} Desktop (Local Audio)"),
-        speakers.map((s) => /* @__PURE__ */ import_react8.default.createElement("option", { key: s.ip, value: s.ip }, "\u{1F50A} ", s.name, " (", s.ip, ")")),
-        speakers.length > 0 && /* @__PURE__ */ import_react8.default.createElement("option", { value: "all" }, "\u{1F4E2} Broadcast to All Speakers")
-      ), /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement("option", { value: "local" }, "Desktop (Local Audio)"),
+        speakers.map((s) => /* @__PURE__ */ import_react11.default.createElement("option", { key: s.ip, value: s.ip }, s.name, " (", s.ip, ")")),
+        speakers.length > 0 && /* @__PURE__ */ import_react11.default.createElement("option", { value: "all" }, "Broadcast to All Speakers")
+      ), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "btn-scan-speakers",
@@ -18191,57 +18378,65 @@
           onClick: refreshSpeakers,
           title: "Scan LAN for Google Cast speakers"
         },
-        /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M3 3v5h5" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M16 21h5v-5" })),
-        /* @__PURE__ */ import_react8.default.createElement("span", null, "Scan Speakers")
+        /* @__PURE__ */ import_react11.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react11.default.createElement("path", { d: "M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" }), /* @__PURE__ */ import_react11.default.createElement("path", { d: "M3 3v5h5" }), /* @__PURE__ */ import_react11.default.createElement("path", { d: "M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" }), /* @__PURE__ */ import_react11.default.createElement("path", { d: "M16 21h5v-5" })),
+        /* @__PURE__ */ import_react11.default.createElement("span", null, "Scan Speakers")
       )))),
-      /* @__PURE__ */ import_react8.default.createElement("nav", { className: "nav-tabs" }, /* @__PURE__ */ import_react8.default.createElement(
+      /* @__PURE__ */ import_react11.default.createElement("nav", { className: "nav-tabs" }, /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "tab-btn-player",
           className: `tab-btn ${activeTab === "player" ? "active" : ""}`,
           onClick: () => setActiveTab("player")
         },
-        "\u{1F3B5} Now Playing"
-      ), /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "note" }),
+        /* @__PURE__ */ import_react11.default.createElement("span", null, "Now Playing")
+      ), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "tab-btn-playlists",
           className: `tab-btn ${activeTab === "playlists" ? "active" : ""}`,
           onClick: () => setActiveTab("playlists")
         },
-        "\u{1F4D1} Playlists (",
-        playlists.length,
-        ")"
-      ), /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "list" }),
+        /* @__PURE__ */ import_react11.default.createElement("span", null, "Playlists (", playlists.length, ")")
+      ), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "tab-btn-library",
           className: `tab-btn ${activeTab === "library" ? "active" : ""}`,
           onClick: () => setActiveTab("library")
         },
-        "\u{1F4DA} Media Library (",
-        library.tracks.length,
-        ")"
-      ), /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "library" }),
+        /* @__PURE__ */ import_react11.default.createElement("span", null, "Library (", library.tracks.length, ")")
+      ), /* @__PURE__ */ import_react11.default.createElement(
+        "button",
+        {
+          id: "tab-btn-cloud",
+          className: `tab-btn ${activeTab === "cloud" ? "active" : ""}`,
+          onClick: () => setActiveTab("cloud")
+        },
+        /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "cloud" }),
+        /* @__PURE__ */ import_react11.default.createElement("span", null, "Cloud Storage")
+      ), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "tab-btn-ambient",
           className: `tab-btn ${activeTab === "ambient" ? "active" : ""}`,
           onClick: () => setActiveTab("ambient")
         },
-        "\u26A1 Ambient Synthesizers"
-      ), /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "wave" }),
+        /* @__PURE__ */ import_react11.default.createElement("span", null, "Ambient")
+      ), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "tab-btn-speakers",
           className: `tab-btn ${activeTab === "speakers" ? "active" : ""}`,
           onClick: () => setActiveTab("speakers")
         },
-        "\u{1F50A} Discovered Speakers (",
-        speakers.length,
-        ")"
+        /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "speaker" }),
+        /* @__PURE__ */ import_react11.default.createElement("span", null, "Speakers (", speakers.length, ")")
       )),
-      /* @__PURE__ */ import_react8.default.createElement("main", { className: "tab-content" }, isScanningLibrary && /* @__PURE__ */ import_react8.default.createElement("div", { className: "scan-progress-banner" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "scan-progress-info" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react8.default.createElement("div", { className: "scan-text" }, /* @__PURE__ */ import_react8.default.createElement("strong", null, "Background Library Scanning Active"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "scan-details" }, libraryScanStatus?.total > 0 ? `${libraryScanStatus.current || 0} / ${libraryScanStatus.total} files (${Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)}%)` : "Discovering audio files in folder(s)...", libraryScanStatus?.file ? ` \u2014 ${libraryScanStatus.file.split("/").slice(-2).join("/")}` : ""))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "scan-bar-container" }, /* @__PURE__ */ import_react8.default.createElement(
+      /* @__PURE__ */ import_react11.default.createElement("main", { className: "tab-content" }, isScanningLibrary && /* @__PURE__ */ import_react11.default.createElement("div", { className: "scan-progress-banner" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "scan-progress-info" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react11.default.createElement("div", { className: "scan-text" }, /* @__PURE__ */ import_react11.default.createElement("strong", null, "Background Library Scanning Active"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "scan-details" }, libraryScanStatus?.total > 0 ? `${libraryScanStatus.current || 0} / ${libraryScanStatus.total} files (${Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)}%)` : "Discovering audio files in folder(s)...", libraryScanStatus?.file ? ` \u2014 ${libraryScanStatus.file.split("/").slice(-2).join("/")}` : ""))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "scan-bar-container" }, /* @__PURE__ */ import_react11.default.createElement(
         "div",
         {
           className: "scan-bar-fill",
@@ -18249,16 +18444,16 @@
             width: `${libraryScanStatus?.total > 0 ? Math.min(100, Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)) : 100}%`
           }
         }
-      )), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelScan }, "\u2715 Cancel Scan")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "player-deck-container", style: { display: activeTab === "player" ? "block" : "none" } }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "deck-card" }, (outputTarget !== "local" || activeCastSession) && /* @__PURE__ */ import_react8.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react8.default.createElement(
+      )), /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelScan }, "Cancel Scan")), /* @__PURE__ */ import_react11.default.createElement("div", { className: "player-deck-container", style: { display: activeTab === "player" ? "block" : "none" } }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "deck-card" }, (outputTarget !== "local" || activeCastSession) && /* @__PURE__ */ import_react11.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react11.default.createElement(
         "span",
         {
           className: "cast-pulse-dot",
           style: { background: activeCastSession?.isPaused ? "#eab308" : "#22c55e" }
         }
-      ), /* @__PURE__ */ import_react8.default.createElement("span", null, activeCastSession ? `\u{1F50A} Casting "${currentTrack?.title || "Track"}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? " (Paused)" : " (Live)"}` : `\u{1F3AF} Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`)), /* @__PURE__ */ import_react8.default.createElement("div", { className: "cast-bar-controls" }, activeCastSession && /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "\u25B6 Resume Cast" : "\u23F8 Pause Cast"), activeCastSession && /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "\u23F9 Stop Cast"), outputTarget !== "local" && /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip", onClick: () => {
+      ), /* @__PURE__ */ import_react11.default.createElement("span", null, activeCastSession ? `Casting "${currentTrack?.title || "Track"}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? " (Paused)" : " (Live)"}` : `Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`)), /* @__PURE__ */ import_react11.default.createElement("div", { className: "cast-bar-controls" }, activeCastSession && /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume cast" : "Pause cast"), activeCastSession && /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "Stop Cast"), outputTarget !== "local" && /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-chip", onClick: () => {
         setOutputTarget("local");
         handleStopCast();
-      } }, "\u{1F4BB} Switch to Local Desktop"))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "track-hero" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "album-art-box" }, currentTrack?.artId ? /* @__PURE__ */ import_react8.default.createElement("img", { src: `http://192.168.1.34:0/art/${currentTrack.artId}.jpg`, alt: "Album Art" }) : /* @__PURE__ */ import_react8.default.createElement("div", { className: "art-fallback" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "48", height: "48", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5" }, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "3" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "2", x2: "12", y2: "4" })))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "track-details" }, /* @__PURE__ */ import_react8.default.createElement("h2", { id: "track-title" }, currentTrack?.title || "No Track Selected"), /* @__PURE__ */ import_react8.default.createElement("p", { id: "track-artist" }, currentTrack?.artist || "Unknown Artist", " \u2022 ", currentTrack?.album || "RobOS Library"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "track-meta-pills" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, "Output: ", getSpeakerName(outputTarget)), activeCastSession && /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge", style: { color: "#22c55e", borderColor: "#22c55e" } }, activeCastSession.isPaused ? "\u23F8 Cast Paused" : "\u{1F50A} Casting Active"), currentTrack?.genre && /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, currentTrack.genre), currentTrack?.year && /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, currentTrack.year))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "hero-quick-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: handleSelectFolder, title: "Add folder via file manager" }, "\u{1F4C1} Add Folder"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles, title: "Add files" }, "\u2795 Add Files"))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "react-h5-wrapper" }, /* @__PURE__ */ import_react8.default.createElement(
+      } }, "Switch to Local Desktop"))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "track-hero" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "album-art-box" }, currentTrack?.artId ? /* @__PURE__ */ import_react11.default.createElement("img", { src: `http://192.168.1.34:0/art/${currentTrack.artId}.jpg`, alt: "Album Art" }) : /* @__PURE__ */ import_react11.default.createElement("div", { className: "art-fallback" }, /* @__PURE__ */ import_react11.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "48", height: "48", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5" }, /* @__PURE__ */ import_react11.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react11.default.createElement("circle", { cx: "12", cy: "12", r: "3" }), /* @__PURE__ */ import_react11.default.createElement("line", { x1: "12", y1: "2", x2: "12", y2: "4" })))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "track-details" }, /* @__PURE__ */ import_react11.default.createElement("h2", { id: "track-title" }, currentTrack?.title || "No Track Selected"), /* @__PURE__ */ import_react11.default.createElement("p", { id: "track-artist" }, currentTrack?.artist || "Unknown Artist", " \u2022 ", currentTrack?.album || "RobOS Library"), /* @__PURE__ */ import_react11.default.createElement("div", { className: "track-meta-pills" }, /* @__PURE__ */ import_react11.default.createElement("span", { className: "badge" }, "Output: ", getSpeakerName(outputTarget)), activeCastSession && /* @__PURE__ */ import_react11.default.createElement("span", { className: "badge", style: { color: "#22c55e", borderColor: "#22c55e" } }, activeCastSession.isPaused ? "Cast Paused" : "Casting Active"), currentTrack?.genre && /* @__PURE__ */ import_react11.default.createElement("span", { className: "badge" }, currentTrack.genre), currentTrack?.year && /* @__PURE__ */ import_react11.default.createElement("span", { className: "badge" }, currentTrack.year))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "hero-quick-actions" }, /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-secondary", onClick: handleSelectFolder, title: "Add folder via file manager" }, "Add Folder"), /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles, title: "Add files" }, "Add Files"))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "react-h5-wrapper" }, /* @__PURE__ */ import_react11.default.createElement(
         es_default,
         {
           ref: playerRef,
@@ -18274,14 +18469,14 @@
           onError: (e) => {
             console.warn("[AudioPlayer] Audio playback error:", e);
             setIsPlaying(false);
-            showStatus("\u26A0\uFE0F Playback error: Track file may be missing, network drive unmounted, or format unsupported.");
+            showStatus("Playback error: Track file may be missing, network drive unmounted, or format unsupported.");
           },
           className: "robos-rhap-theme",
           layout: "stacked",
           customAdditionalControls: [],
           muted: outputTarget !== "local"
         }
-      )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "queue-quick-peek" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "queue-header" }, /* @__PURE__ */ import_react8.default.createElement("div", null, /* @__PURE__ */ import_react8.default.createElement("h4", null, "Playback Queue (", playlist.length, ")"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "queue-subtitle" }, "Drag & drop files or save queue as a custom playlist")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "queue-header-actions" }, /* @__PURE__ */ import_react8.default.createElement(
+      )), /* @__PURE__ */ import_react11.default.createElement(Lyrics, { track: currentTrack, getAudio: () => playerRef.current?.audio?.current }), /* @__PURE__ */ import_react11.default.createElement("div", { className: "queue-quick-peek" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "queue-header" }, /* @__PURE__ */ import_react11.default.createElement("div", null, /* @__PURE__ */ import_react11.default.createElement("h4", null, "Playback Queue (", playlist.length, ")"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "queue-subtitle" }, "Drag & drop files or save queue as a custom playlist")), /* @__PURE__ */ import_react11.default.createElement("div", { className: "queue-header-actions" }, /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "btn-save-queue-as-playlist",
@@ -18289,8 +18484,8 @@
           onClick: () => setShowSaveQueueModal(true),
           title: "Save current playback queue as a permanent playlist"
         },
-        "\u{1F4BE} Save as Playlist"
-      ), /* @__PURE__ */ import_react8.default.createElement(
+        "Save as Playlist"
+      ), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "btn-shuffle-queue",
@@ -18298,8 +18493,8 @@
           onClick: handleShuffleQueue,
           title: "Shuffle queue"
         },
-        "\u{1F500} Shuffle"
-      ), /* @__PURE__ */ import_react8.default.createElement(
+        "Shuffle"
+      ), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "btn-clear-queue",
@@ -18307,8 +18502,8 @@
           onClick: handleClearQueue,
           title: "Clear other tracks from queue"
         },
-        "\u{1F5D1} Clear"
-      ))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "queue-items-scroll" }, playlist.map((t, idx) => /* @__PURE__ */ import_react8.default.createElement(
+        "Clear"
+      ))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "queue-items-scroll" }, playlist.map((t, idx) => /* @__PURE__ */ import_react11.default.createElement(
         "div",
         {
           key: t.id || idx,
@@ -18318,8 +18513,8 @@
             if (outputTarget !== "local") castTrack(outputTarget, t);
           }
         },
-        /* @__PURE__ */ import_react8.default.createElement("div", { className: "queue-chip-content" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "queue-chip-title" }, idx + 1, ". ", t.title), /* @__PURE__ */ import_react8.default.createElement("span", { className: "queue-chip-artist" }, t.artist)),
-        playlist.length > 1 && /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement("div", { className: "queue-chip-content" }, /* @__PURE__ */ import_react11.default.createElement("span", { className: "queue-chip-title" }, idx + 1, ". ", t.title), /* @__PURE__ */ import_react11.default.createElement("span", { className: "queue-chip-artist" }, t.artist)),
+        playlist.length > 1 && /* @__PURE__ */ import_react11.default.createElement(
           "button",
           {
             className: "btn-remove-queue-item",
@@ -18329,17 +18524,17 @@
               handleRemoveQueueTrack(idx);
             }
           },
-          "\u2715"
+          /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "x", size: 14 })
         )
-      )))))), activeTab === "playlists" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlists-view-container" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlists-header" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlists-title-group" }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u{1F4D1} Custom Playlists (", playlists.length, ")"), /* @__PURE__ */ import_react8.default.createElement("p", { className: "subtitle" }, "Curate custom music collections, import/export M3U playlists, and cast directly to speakers")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlists-header-actions" }, /* @__PURE__ */ import_react8.default.createElement(
+      )))))), activeTab === "playlists" && /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlists-view-container" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlists-header" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlists-title-group" }, /* @__PURE__ */ import_react11.default.createElement("h3", null, "Custom Playlists (", playlists.length, ")"), /* @__PURE__ */ import_react11.default.createElement("p", { className: "subtitle" }, "Curate custom music collections, import/export M3U playlists, and cast directly to speakers")), /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlists-header-actions" }, /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "btn-create-playlist",
           className: "btn-accent",
           onClick: () => setShowCreatePlaylistModal(true)
         },
-        "\u2795 New Playlist"
-      ), /* @__PURE__ */ import_react8.default.createElement(
+        "New Playlist"
+      ), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "btn-import-m3u",
@@ -18347,17 +18542,17 @@
           onClick: handleImportM3u,
           title: "Import external .m3u or .m3u8 playlist file"
         },
-        "\u{1F4E5} Import M3U"
-      ))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlists-layout" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlists-sidebar" }, playlists.length === 0 ? /* @__PURE__ */ import_react8.default.createElement("div", { className: "empty-playlists-sidebar" }, /* @__PURE__ */ import_react8.default.createElement("p", null, "No playlists created yet."), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "8px" } }, "Create Playlist")) : playlists.map((pl) => /* @__PURE__ */ import_react8.default.createElement(
+        "Import M3U"
+      ))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlists-layout" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlists-sidebar" }, playlists.length === 0 ? /* @__PURE__ */ import_react11.default.createElement("div", { className: "empty-playlists-sidebar" }, /* @__PURE__ */ import_react11.default.createElement("p", null, "No playlists created yet."), /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "8px" } }, "Create Playlist")) : playlists.map((pl) => /* @__PURE__ */ import_react11.default.createElement(
         "div",
         {
           key: pl.id,
           className: `playlist-sidebar-card ${selectedPlaylistId === pl.id ? "active" : ""}`,
           onClick: () => setSelectedPlaylistId(pl.id)
         },
-        /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-sidebar-icon" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.5" }, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))),
-        /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-sidebar-info" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "playlist-sidebar-name" }, pl.name), /* @__PURE__ */ import_react8.default.createElement("span", { className: "playlist-sidebar-meta" }, pl.tracks?.length || 0, " track", (pl.tracks?.length || 0) === 1 ? "" : "s")),
-        /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlist-sidebar-icon" }, /* @__PURE__ */ import_react11.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.5" }, /* @__PURE__ */ import_react11.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react11.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react11.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))),
+        /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlist-sidebar-info" }, /* @__PURE__ */ import_react11.default.createElement("span", { className: "playlist-sidebar-name" }, pl.name), /* @__PURE__ */ import_react11.default.createElement("span", { className: "playlist-sidebar-meta" }, pl.tracks?.length || 0, " track", (pl.tracks?.length || 0) === 1 ? "" : "s")),
+        /* @__PURE__ */ import_react11.default.createElement(
           "button",
           {
             className: "btn-playlist-quick-play",
@@ -18367,9 +18562,9 @@
               handlePlayPlaylist(pl, true);
             }
           },
-          "\u25B6"
+          /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "play", size: 14 })
         )
-      ))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-detail-pane" }, selectedPlaylist ? /* @__PURE__ */ import_react8.default.createElement(import_react8.default.Fragment, null, /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-detail-header" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-detail-meta" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-cover-icon" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "36", height: "36", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5" }, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-text-meta" }, /* @__PURE__ */ import_react8.default.createElement("h2", null, selectedPlaylist.name), /* @__PURE__ */ import_react8.default.createElement("p", { className: "playlist-description" }, selectedPlaylist.description || "No description provided."), /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-stats" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, selectedPlaylist.tracks?.length || 0, " Tracks"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, "Duration: ", formatTotalDuration(selectedPlaylist.tracks)), /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge" }, "Updated: ", new Date(selectedPlaylist.updatedAt || selectedPlaylist.createdAt || Date.now()).toLocaleDateString())))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-actions-bar" }, /* @__PURE__ */ import_react8.default.createElement(
+      ))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlist-detail-pane" }, selectedPlaylist ? /* @__PURE__ */ import_react11.default.createElement(import_react11.default.Fragment, null, /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlist-detail-header" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlist-detail-meta" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlist-cover-icon" }, /* @__PURE__ */ import_react11.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "36", height: "36", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5" }, /* @__PURE__ */ import_react11.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react11.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react11.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlist-text-meta" }, /* @__PURE__ */ import_react11.default.createElement("h2", null, selectedPlaylist.name), /* @__PURE__ */ import_react11.default.createElement("p", { className: "playlist-description" }, selectedPlaylist.description || "No description provided."), /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlist-stats" }, /* @__PURE__ */ import_react11.default.createElement("span", { className: "badge" }, selectedPlaylist.tracks?.length || 0, " Tracks"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "badge" }, "Duration: ", formatTotalDuration(selectedPlaylist.tracks)), /* @__PURE__ */ import_react11.default.createElement("span", { className: "badge" }, "Updated: ", new Date(selectedPlaylist.updatedAt || selectedPlaylist.createdAt || Date.now()).toLocaleDateString())))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlist-actions-bar" }, /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "btn-play-all-playlist",
@@ -18378,8 +18573,8 @@
           disabled: !selectedPlaylist.tracks?.length,
           title: "Play all tracks in order (replaces queue)"
         },
-        "\u25B6 Play All"
-      ), /* @__PURE__ */ import_react8.default.createElement(
+        "Play All"
+      ), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "btn-append-playlist",
@@ -18388,8 +18583,8 @@
           disabled: !selectedPlaylist.tracks?.length,
           title: "Append all tracks to current queue"
         },
-        "\u2795 Append to Queue"
-      ), speakers.length > 0 && /* @__PURE__ */ import_react8.default.createElement(
+        "Append to Queue"
+      ), speakers.length > 0 && /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "btn-cast-playlist",
@@ -18398,8 +18593,8 @@
           disabled: !selectedPlaylist.tracks?.length,
           title: `Cast playlist to ${getSpeakerName(outputTarget !== "local" ? outputTarget : speakers[0].ip)}`
         },
-        "\u{1F50A} Cast Playlist"
-      ), /* @__PURE__ */ import_react8.default.createElement(
+        "Cast Playlist"
+      ), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "btn-export-m3u",
@@ -18407,8 +18602,8 @@
           onClick: () => handleExportM3u(selectedPlaylist.id),
           title: "Export playlist to .m3u file"
         },
-        "\u{1F4E4} Export M3U"
-      ), /* @__PURE__ */ import_react8.default.createElement(
+        "Export M3U"
+      ), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "btn-delete-playlist",
@@ -18416,24 +18611,24 @@
           onClick: () => handleDeletePlaylist(selectedPlaylist.id),
           title: "Delete playlist"
         },
-        "\u{1F5D1} Delete"
-      ))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-tracks-container" }, !selectedPlaylist.tracks || selectedPlaylist.tracks.length === 0 ? /* @__PURE__ */ import_react8.default.createElement("div", { className: "empty-playlist-tracks" }, /* @__PURE__ */ import_react8.default.createElement("p", null, "This playlist has no tracks yet."), /* @__PURE__ */ import_react8.default.createElement("span", { className: "hint" }, "Choose tracks from your Media Library below or import local files."), /* @__PURE__ */ import_react8.default.createElement(
+        "Delete"
+      ))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlist-tracks-container" }, !selectedPlaylist.tracks || selectedPlaylist.tracks.length === 0 ? /* @__PURE__ */ import_react11.default.createElement("div", { className: "empty-playlist-tracks" }, /* @__PURE__ */ import_react11.default.createElement("p", null, "This playlist has no tracks yet."), /* @__PURE__ */ import_react11.default.createElement("span", { className: "hint" }, "Choose tracks from your Media Library below or import local files."), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           className: "btn-accent",
           onClick: handleAddFilesToSelectedPlaylist,
           style: { marginTop: "12px" }
         },
-        "\u2795 Add Audio Files from Disk"
-      )) : /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-tracks-table" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-table-header" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-num" }, "#"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-title" }, "Title"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-artist" }, "Artist"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-album" }, "Album"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-duration" }, "Duration"), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-actions" }, "Actions")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "playlist-table-body" }, selectedPlaylist.tracks.map((track, tIdx) => /* @__PURE__ */ import_react8.default.createElement("div", { key: track.id || tIdx, className: "playlist-table-row" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-num" }, tIdx + 1), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-title", title: track.title }, track.title), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-artist", title: track.artist }, track.artist), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-album", title: track.album }, track.album), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-duration" }, formatDuration(track.duration)), /* @__PURE__ */ import_react8.default.createElement("span", { className: "col-actions" }, /* @__PURE__ */ import_react8.default.createElement(
+        "Add Audio Files from Disk"
+      )) : /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlist-tracks-table" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlist-table-header" }, /* @__PURE__ */ import_react11.default.createElement("span", { className: "col-num" }, "#"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "col-title" }, "Title"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "col-artist" }, "Artist"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "col-album" }, "Album"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "col-duration" }, "Duration"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "col-actions" }, "Actions")), /* @__PURE__ */ import_react11.default.createElement("div", { className: "playlist-table-body" }, selectedPlaylist.tracks.map((track, tIdx) => /* @__PURE__ */ import_react11.default.createElement("div", { key: track.id || tIdx, className: "playlist-table-row" }, /* @__PURE__ */ import_react11.default.createElement("span", { className: "col-num" }, tIdx + 1), /* @__PURE__ */ import_react11.default.createElement("span", { className: "col-title", title: track.title }, track.title), /* @__PURE__ */ import_react11.default.createElement("span", { className: "col-artist", title: track.artist }, track.artist), /* @__PURE__ */ import_react11.default.createElement("span", { className: "col-album", title: track.album }, track.album), /* @__PURE__ */ import_react11.default.createElement("span", { className: "col-duration" }, formatDuration(track.duration)), /* @__PURE__ */ import_react11.default.createElement("span", { className: "col-actions" }, /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           className: "btn-row-action",
           title: "Play track",
           onClick: () => playTrack(track)
         },
-        "\u25B6"
-      ), /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "play", size: 14 })
+      ), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           className: "btn-row-action",
@@ -18441,8 +18636,8 @@
           disabled: tIdx === 0,
           onClick: () => handleMoveTrackInPlaylist(selectedPlaylist.id, tIdx, tIdx - 1)
         },
-        "\u25B2"
-      ), /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "up", size: 14 })
+      ), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           className: "btn-row-action",
@@ -18450,16 +18645,16 @@
           disabled: tIdx === selectedPlaylist.tracks.length - 1,
           onClick: () => handleMoveTrackInPlaylist(selectedPlaylist.id, tIdx, tIdx + 1)
         },
-        "\u25BC"
-      ), /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "down", size: 14 })
+      ), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           className: "btn-row-action btn-danger",
           title: "Remove from playlist",
           onClick: () => handleRemoveTrackFromPlaylist(selectedPlaylist.id, tIdx)
         },
-        "\u2715"
-      )))))), library.tracks.length > 0 && /* @__PURE__ */ import_react8.default.createElement("div", { className: "quick-add-from-library" }, /* @__PURE__ */ import_react8.default.createElement("h4", null, "\u2795 Add Tracks from Media Library"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "quick-add-controls" }, /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "x", size: 14 })
+      )))))), library.tracks.length > 0 && /* @__PURE__ */ import_react11.default.createElement("div", { className: "quick-add-from-library" }, /* @__PURE__ */ import_react11.default.createElement("h4", null, "Add Tracks from Media Library"), /* @__PURE__ */ import_react11.default.createElement("div", { className: "quick-add-controls" }, /* @__PURE__ */ import_react11.default.createElement(
         "select",
         {
           id: "select-track-to-add",
@@ -18474,9 +18669,9 @@
             }
           }
         },
-        /* @__PURE__ */ import_react8.default.createElement("option", { value: "", disabled: true }, 'Select track to add to "', selectedPlaylist.name, '"...'),
-        library.tracks.map((t, idx) => /* @__PURE__ */ import_react8.default.createElement("option", { key: t.id || idx, value: t.id || t.filePath }, t.title, " \u2014 ", t.artist, " (", formatDuration(t.duration), ")"))
-      ), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: handleAddFilesToSelectedPlaylist }, "\u{1F4C1} Add Audio Files"))))) : /* @__PURE__ */ import_react8.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react8.default.createElement("p", null, "Select a playlist from the left or create a new one."), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "12px" } }, "\u2795 Create Playlist"))))), activeTab === "library" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "media-browser-container" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "browser-toolbar" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "search-box" }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" }, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "11", cy: "11", r: "8" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "21", y1: "21", x2: "16.65", y2: "16.65" })), /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement("option", { value: "", disabled: true }, 'Select track to add to "', selectedPlaylist.name, '"...'),
+        library.tracks.map((t, idx) => /* @__PURE__ */ import_react11.default.createElement("option", { key: t.id || idx, value: t.id || t.filePath }, t.title, " \u2014 ", t.artist, " (", formatDuration(t.duration), ")"))
+      ), /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-secondary", onClick: handleAddFilesToSelectedPlaylist }, "Add Audio Files"))))) : /* @__PURE__ */ import_react11.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react11.default.createElement("p", null, "Select a playlist from the left or create a new one."), /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "12px" } }, "Create Playlist"))))), activeTab === "library" && /* @__PURE__ */ import_react11.default.createElement("div", { className: "media-browser-container" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "browser-toolbar" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "search-box" }, /* @__PURE__ */ import_react11.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2" }, /* @__PURE__ */ import_react11.default.createElement("circle", { cx: "11", cy: "11", r: "8" }), /* @__PURE__ */ import_react11.default.createElement("line", { x1: "21", y1: "21", x2: "16.65", y2: "16.65" })), /* @__PURE__ */ import_react11.default.createElement(
         "input",
         {
           type: "text",
@@ -18484,7 +18679,7 @@
           value: searchQuery,
           onChange: (e) => setSearchQuery(e.target.value)
         }
-      )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "browser-actions" }, /* @__PURE__ */ import_react8.default.createElement(
+      )), /* @__PURE__ */ import_react11.default.createElement("div", { className: "browser-actions" }, /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           id: "btn-browse-refresh",
@@ -18495,29 +18690,29 @@
           },
           title: "Refresh and sync library index"
         },
-        /* @__PURE__ */ import_react8.default.createElement("span", null, "\u{1F504} Refresh")
-      ), /* @__PURE__ */ import_react8.default.createElement("button", { id: "btn-browse-add-folder", className: "btn-accent", onClick: handleSelectFolder }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "10", x2: "12", y2: "16" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "9", y1: "13", x2: "15", y2: "13" })), /* @__PURE__ */ import_react8.default.createElement("span", null, "Add Folder via File Manager")), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles }, /* @__PURE__ */ import_react8.default.createElement("span", null, "\u2795 Add Files")))), activeCastSession && /* @__PURE__ */ import_react8.default.createElement("div", { className: "active-cast-bar", style: { marginBottom: "16px" } }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement("span", null, "Refresh")
+      ), /* @__PURE__ */ import_react11.default.createElement("button", { id: "btn-browse-add-folder", className: "btn-accent", onClick: handleSelectFolder }, /* @__PURE__ */ import_react11.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react11.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" }), /* @__PURE__ */ import_react11.default.createElement("line", { x1: "12", y1: "10", x2: "12", y2: "16" }), /* @__PURE__ */ import_react11.default.createElement("line", { x1: "9", y1: "13", x2: "15", y2: "13" })), /* @__PURE__ */ import_react11.default.createElement("span", null, "Add Folder via File Manager")), /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles }, /* @__PURE__ */ import_react11.default.createElement("span", null, "Add Files")))), activeCastSession && /* @__PURE__ */ import_react11.default.createElement("div", { className: "active-cast-bar", style: { marginBottom: "16px" } }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react11.default.createElement(
         "span",
         {
           className: "cast-pulse-dot",
           style: { background: activeCastSession.isPaused ? "#eab308" : "#22c55e" }
         }
-      ), /* @__PURE__ */ import_react8.default.createElement("span", null, "\u{1F50A} Currently casting to ", /* @__PURE__ */ import_react8.default.createElement("strong", null, getSpeakerName(activeCastSession.ip)))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "cast-bar-controls" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "\u25B6 Resume" : "\u23F8 Pause"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "\u23F9 Stop Cast"))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "dropzone-banner", onClick: handleSelectFolder }, /* @__PURE__ */ import_react8.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "2" }, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" })), /* @__PURE__ */ import_react8.default.createElement("p", null, "Click here or drag & drop any music folder from your file manager to scan and index")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "library-list" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "library-list-header" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "ll-num" }, "#"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "ll-sort ll-title", onClick: () => toggleLibrarySort("title") }, "Title", sortMark("title")), /* @__PURE__ */ import_react8.default.createElement("button", { className: "ll-sort ll-album", onClick: () => toggleLibrarySort("album") }, "Album", sortMark("album")), /* @__PURE__ */ import_react8.default.createElement("button", { className: "ll-sort ll-genre", onClick: () => toggleLibrarySort("genre") }, "Genre", sortMark("genre")), /* @__PURE__ */ import_react8.default.createElement("button", { className: "ll-sort ll-dur", onClick: () => toggleLibrarySort("duration") }, "Time", sortMark("duration")), /* @__PURE__ */ import_react8.default.createElement("span", { className: "ll-actions" })), sortedLibrary.length === 0 ? /* @__PURE__ */ import_react8.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react8.default.createElement("p", null, library.tracks.length ? "No tracks match your search." : "No tracks indexed in media library yet."), !library.tracks.length && /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-accent", onClick: handleSelectFolder, style: { marginTop: "12px" } }, "\u{1F4C1} Add Folder via File Manager Popup")) : sortedLibrary.map((t, idx) => {
+      ), /* @__PURE__ */ import_react11.default.createElement("span", null, "Currently casting to ", /* @__PURE__ */ import_react11.default.createElement("strong", null, getSpeakerName(activeCastSession.ip)))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "cast-bar-controls" }, /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume" : "Pause"), /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "Stop Cast"))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "dropzone-banner", onClick: handleSelectFolder }, /* @__PURE__ */ import_react11.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "2" }, /* @__PURE__ */ import_react11.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" })), /* @__PURE__ */ import_react11.default.createElement("p", null, "Click here or drag & drop any music folder from your file manager to scan and index")), /* @__PURE__ */ import_react11.default.createElement("div", { className: "library-list" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "library-list-header" }, /* @__PURE__ */ import_react11.default.createElement("span", { className: "ll-num" }, "#"), /* @__PURE__ */ import_react11.default.createElement("button", { className: "ll-sort ll-title", onClick: () => toggleLibrarySort("title") }, "Title", sortMark("title")), /* @__PURE__ */ import_react11.default.createElement("button", { className: "ll-sort ll-album", onClick: () => toggleLibrarySort("album") }, "Album", sortMark("album")), /* @__PURE__ */ import_react11.default.createElement("button", { className: "ll-sort ll-genre", onClick: () => toggleLibrarySort("genre") }, "Genre", sortMark("genre")), /* @__PURE__ */ import_react11.default.createElement("button", { className: "ll-sort ll-dur", onClick: () => toggleLibrarySort("duration") }, "Time", sortMark("duration")), /* @__PURE__ */ import_react11.default.createElement("span", { className: "ll-actions" })), sortedLibrary.length === 0 ? /* @__PURE__ */ import_react11.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react11.default.createElement("p", null, library.tracks.length ? "No tracks match your search." : "No tracks indexed in media library yet."), !library.tracks.length && /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-accent", onClick: handleSelectFolder, style: { marginTop: "12px" } }, "Add Folder via File Manager Popup")) : sortedLibrary.map((t, idx) => {
         const isCurrent = currentTrack && (currentTrack.id === t.id || currentTrack.filePath === t.filePath);
         const isCasting = activeCastSession && (activeCastSession.trackId === t.id || activeCastSession.filePath === t.filePath);
-        return /* @__PURE__ */ import_react8.default.createElement(
+        return /* @__PURE__ */ import_react11.default.createElement(
           "div",
           {
             key: t.id || idx,
             className: `library-row ${isCurrent ? "current" : ""}`,
             onDoubleClick: () => playTrack(t)
           },
-          /* @__PURE__ */ import_react8.default.createElement("span", { className: "ll-num" }, isCurrent && isPlaying ? /* @__PURE__ */ import_react8.default.createElement("span", { className: "eq-bars" }, /* @__PURE__ */ import_react8.default.createElement("i", null), /* @__PURE__ */ import_react8.default.createElement("i", null), /* @__PURE__ */ import_react8.default.createElement("i", null)) : /* @__PURE__ */ import_react8.default.createElement("span", { className: "row-index" }, idx + 1), /* @__PURE__ */ import_react8.default.createElement("button", { className: "row-play", title: "Play", onClick: () => playTrack(t) }, "\u25B6")),
-          /* @__PURE__ */ import_react8.default.createElement("span", { className: "ll-title" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "row-title", title: t.title }, t.title), /* @__PURE__ */ import_react8.default.createElement("span", { className: "row-artist", title: t.artist }, t.artist || "Unknown artist")),
-          /* @__PURE__ */ import_react8.default.createElement("span", { className: "ll-album", title: t.album }, t.album || "\u2014"),
-          /* @__PURE__ */ import_react8.default.createElement("span", { className: "ll-genre" }, t.genre || "\u2014"),
-          /* @__PURE__ */ import_react8.default.createElement("span", { className: "ll-dur" }, formatDuration(t.duration)),
-          /* @__PURE__ */ import_react8.default.createElement("span", { className: "ll-actions" }, /* @__PURE__ */ import_react8.default.createElement(
+          /* @__PURE__ */ import_react11.default.createElement("span", { className: "ll-num" }, isCurrent && isPlaying ? /* @__PURE__ */ import_react11.default.createElement("span", { className: "eq-bars" }, /* @__PURE__ */ import_react11.default.createElement("i", null), /* @__PURE__ */ import_react11.default.createElement("i", null), /* @__PURE__ */ import_react11.default.createElement("i", null)) : /* @__PURE__ */ import_react11.default.createElement("span", { className: "row-index" }, idx + 1), /* @__PURE__ */ import_react11.default.createElement("button", { className: "row-play", title: "Play", onClick: () => playTrack(t) }, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "play", size: 14 }))),
+          /* @__PURE__ */ import_react11.default.createElement("span", { className: "ll-title" }, /* @__PURE__ */ import_react11.default.createElement("span", { className: "row-title", title: t.title }, t.title), /* @__PURE__ */ import_react11.default.createElement("span", { className: "row-artist", title: t.artist }, t.artist || "Unknown artist")),
+          /* @__PURE__ */ import_react11.default.createElement("span", { className: "ll-album", title: t.album }, t.album || "\u2014"),
+          /* @__PURE__ */ import_react11.default.createElement("span", { className: "ll-genre" }, t.genre || "\u2014"),
+          /* @__PURE__ */ import_react11.default.createElement("span", { className: "ll-dur" }, formatDuration(t.duration)),
+          /* @__PURE__ */ import_react11.default.createElement("span", { className: "ll-actions" }, /* @__PURE__ */ import_react11.default.createElement(
             "button",
             {
               className: "row-btn",
@@ -18528,7 +18723,7 @@
               }
             },
             "Queue"
-          ), /* @__PURE__ */ import_react8.default.createElement(
+          ), /* @__PURE__ */ import_react11.default.createElement(
             "button",
             {
               className: "row-btn",
@@ -18539,7 +18734,7 @@
               }
             },
             "Playlist"
-          ), speakers.length > 0 && (isCasting ? /* @__PURE__ */ import_react8.default.createElement(
+          ), speakers.length > 0 && (isCasting ? /* @__PURE__ */ import_react11.default.createElement(
             "button",
             {
               className: "row-btn row-btn-stop",
@@ -18547,7 +18742,7 @@
               onClick: () => handleStopCast(activeCastSession.ip)
             },
             "Stop cast"
-          ) : /* @__PURE__ */ import_react8.default.createElement(
+          ) : /* @__PURE__ */ import_react11.default.createElement(
             "button",
             {
               className: "row-btn",
@@ -18561,14 +18756,22 @@
             "Cast"
           )))
         );
-      }))), activeTab === "ambient" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "ambient-container" }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u26A1 Procedural Focus Soundscapes"), /* @__PURE__ */ import_react8.default.createElement("p", { className: "subtitle" }, "Synthesized in real-time with Web Audio API nodes (zero external files)"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "ambient-grid" }, [
-        { id: "rain", emoji: "\u{1F327}\uFE0F", name: "Coding Rain", desc: "Resonant filtered pink noise mimicking rainfall" },
-        { id: "synth", emoji: "\u{1F30C}", name: "Cyber Synth", desc: "Dual detuned sawtooth oscillators with analog low-pass filter" },
-        { id: "pink", emoji: "\u{1F4FB}", name: "Pink Noise", desc: "Voss-McCartney noise buffer for deep technical focus" }
-      ].map((s) => /* @__PURE__ */ import_react8.default.createElement("div", { key: s.id, className: `ambient-card-item ${activeAmbient === s.id ? "active" : ""}`, onClick: () => playAmbient(s.id) }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "card-emoji" }, s.emoji), /* @__PURE__ */ import_react8.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react8.default.createElement("p", null, s.desc), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-accent" }, activeAmbient === s.id ? "Stop" : "Start"))))), activeTab === "speakers" && /* @__PURE__ */ import_react8.default.createElement("div", { className: "speakers-container" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "speakers-header" }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u{1F50A} Connected Google Cast Smart Speakers"), /* @__PURE__ */ import_react8.default.createElement("div", { style: { display: "flex", gap: "8px" } }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast() }, "\u23F9 Stop All Speakers"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: refreshSpeakers }, "\u{1F504} Refresh Subnet Scan"))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "speakers-grid" }, speakers.map((s) => /* @__PURE__ */ import_react8.default.createElement("div", { key: s.ip, className: "speaker-card" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "speaker-badge" }, "ONLINE"), /* @__PURE__ */ import_react8.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react8.default.createElement("p", { className: "speaker-ip" }, "IP Address: ", /* @__PURE__ */ import_react8.default.createElement("code", null, s.ip)), /* @__PURE__ */ import_react8.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model), /* @__PURE__ */ import_react8.default.createElement("div", { className: "speaker-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-accent", onClick: () => {
+      }))), activeTab === "cloud" && /* @__PURE__ */ import_react11.default.createElement(
+        CloudBrowser,
+        {
+          showStatus,
+          onLibrary: (lib) => {
+            if (lib) setLibrary(lib);
+          }
+        }
+      ), activeTab === "ambient" && /* @__PURE__ */ import_react11.default.createElement("div", { className: "ambient-container" }, /* @__PURE__ */ import_react11.default.createElement("h3", null, "Procedural Focus Soundscapes"), /* @__PURE__ */ import_react11.default.createElement("p", { className: "subtitle" }, "Synthesized in real-time with Web Audio API nodes (zero external files)"), /* @__PURE__ */ import_react11.default.createElement("div", { className: "ambient-grid" }, [
+        { id: "rain", icon: "rain", name: "Coding Rain", desc: "Resonant filtered pink noise mimicking rainfall" },
+        { id: "synth", icon: "synth", name: "Cyber Synth", desc: "Dual detuned sawtooth oscillators with analog low-pass filter" },
+        { id: "pink", icon: "noise", name: "Pink Noise", desc: "Voss-McCartney noise buffer for deep technical focus" }
+      ].map((s) => /* @__PURE__ */ import_react11.default.createElement("div", { key: s.id, className: `ambient-card-item ${activeAmbient === s.id ? "active" : ""}`, onClick: () => playAmbient(s.id) }, /* @__PURE__ */ import_react11.default.createElement("span", { className: "card-emoji" }, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: s.icon, size: 28 })), /* @__PURE__ */ import_react11.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react11.default.createElement("p", null, s.desc), /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-accent" }, activeAmbient === s.id ? "Stop" : "Start"))))), activeTab === "speakers" && /* @__PURE__ */ import_react11.default.createElement("div", { className: "speakers-container" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "speakers-header" }, /* @__PURE__ */ import_react11.default.createElement("h3", null, "Connected Google Cast Smart Speakers"), /* @__PURE__ */ import_react11.default.createElement("div", { style: { display: "flex", gap: "8px" } }, /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast() }, "Stop All Speakers"), /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-secondary", onClick: refreshSpeakers }, "Refresh Subnet Scan"))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "speakers-grid" }, speakers.map((s) => /* @__PURE__ */ import_react11.default.createElement("div", { key: s.ip, className: "speaker-card" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "speaker-badge" }, "ONLINE"), /* @__PURE__ */ import_react11.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react11.default.createElement("p", { className: "speaker-ip" }, "IP Address: ", /* @__PURE__ */ import_react11.default.createElement("code", null, s.ip)), /* @__PURE__ */ import_react11.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model), /* @__PURE__ */ import_react11.default.createElement("div", { className: "speaker-actions" }, /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-accent", onClick: () => {
         setOutputTarget(s.ip);
         setActiveTab("player");
-      } }, "Set as Output"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(s.ip) }, "\u23F9 Stop Playback"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: async () => {
+      } }, "Set as Output"), /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(s.ip) }, "Stop Playback"), /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-secondary", onClick: async () => {
         showStatus(`Playing harmonic test chime on ${s.name}...`);
         try {
           await window.robosAudio.playTestChime(s.ip);
@@ -18576,9 +18779,9 @@
         } catch (err) {
           showStatus("Test chime error: " + err.message);
         }
-      } }, "\u{1F514} Play Test Chime"))))))),
-      activeTab !== "player" && currentTrack && /* @__PURE__ */ import_react8.default.createElement("footer", { className: "mini-player-bar" }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "mini-player-info", onClick: () => setActiveTab("player") }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "mini-art" }, currentTrack?.artId ? /* @__PURE__ */ import_react8.default.createElement("img", { src: `http://192.168.1.34:0/art/${currentTrack.artId}.jpg`, alt: "" }) : /* @__PURE__ */ import_react8.default.createElement("svg", { width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", strokeWidth: "2" }, /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react8.default.createElement("polygon", { points: "10 8 16 12 10 16 10 8", fill: "#e8a33d" }))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "mini-text" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "mini-title" }, currentTrack.title), /* @__PURE__ */ import_react8.default.createElement("span", { className: "mini-artist" }, currentTrack.artist || "Unknown", " \u2022 ", currentTrack.album || ""))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "mini-player-controls" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "mini-ctrl-btn", title: "Previous", onClick: handlePlayPrev }, "\u23EE"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "mini-ctrl-btn mini-btn-play", title: isPlaying ? "Pause" : "Play", onClick: handleTogglePlayPause }, isPlaying ? "\u23F8" : "\u25B6"), /* @__PURE__ */ import_react8.default.createElement("button", { className: "mini-ctrl-btn", title: "Next", onClick: handlePlayNext }, "\u23ED")), /* @__PURE__ */ import_react8.default.createElement("div", { className: "mini-player-right" }, /* @__PURE__ */ import_react8.default.createElement("span", { className: "badge mini-badge" }, "Output: ", getSpeakerName(outputTarget)), /* @__PURE__ */ import_react8.default.createElement("button", { id: "btn-mini-now-playing", className: "btn-chip", onClick: () => setActiveTab("player") }, "\u{1F3B5} Now Playing"))),
-      showCreatePlaylistModal && /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-overlay", onClick: () => setShowCreatePlaylistModal(false) }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u2795 Create New Playlist"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react8.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react8.default.createElement(
+      } }, "Play Test Chime"))))))),
+      activeTab !== "player" && currentTrack && /* @__PURE__ */ import_react11.default.createElement("footer", { className: "mini-player-bar" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "mini-player-info", onClick: () => setActiveTab("player") }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "mini-art" }, currentTrack?.artId ? /* @__PURE__ */ import_react11.default.createElement("img", { src: `http://192.168.1.34:0/art/${currentTrack.artId}.jpg`, alt: "" }) : /* @__PURE__ */ import_react11.default.createElement("svg", { width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", strokeWidth: "2" }, /* @__PURE__ */ import_react11.default.createElement("circle", { cx: "12", cy: "12", r: "10" }), /* @__PURE__ */ import_react11.default.createElement("polygon", { points: "10 8 16 12 10 16 10 8", fill: "#e8a33d" }))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "mini-text" }, /* @__PURE__ */ import_react11.default.createElement("span", { className: "mini-title" }, currentTrack.title), /* @__PURE__ */ import_react11.default.createElement("span", { className: "mini-artist" }, currentTrack.artist || "Unknown", " \u2022 ", currentTrack.album || ""))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "mini-player-controls" }, /* @__PURE__ */ import_react11.default.createElement("button", { className: "mini-ctrl-btn", title: "Previous", onClick: handlePlayPrev }, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "prev", size: 18 })), /* @__PURE__ */ import_react11.default.createElement("button", { className: "mini-ctrl-btn mini-btn-play", title: isPlaying ? "Pause" : "Play", onClick: handleTogglePlayPause }, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 18 })), /* @__PURE__ */ import_react11.default.createElement("button", { className: "mini-ctrl-btn", title: "Next", onClick: handlePlayNext }, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "next", size: 18 }))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "mini-player-right" }, /* @__PURE__ */ import_react11.default.createElement("span", { className: "badge mini-badge" }, "Output: ", getSpeakerName(outputTarget)), /* @__PURE__ */ import_react11.default.createElement("button", { id: "btn-mini-now-playing", className: "btn-chip", onClick: () => setActiveTab("player") }, "Now Playing"))),
+      showCreatePlaylistModal && /* @__PURE__ */ import_react11.default.createElement("div", { className: "modal-overlay", onClick: () => setShowCreatePlaylistModal(false) }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react11.default.createElement("h3", null, "Create New Playlist"), /* @__PURE__ */ import_react11.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react11.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react11.default.createElement(
         "input",
         {
           id: "input-playlist-name",
@@ -18591,7 +18794,7 @@
             if (e.key === "Enter") handleCreatePlaylist();
           }
         }
-      )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react8.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react8.default.createElement(
+      )), /* @__PURE__ */ import_react11.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react11.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react11.default.createElement(
         "textarea",
         {
           id: "input-playlist-desc",
@@ -18600,8 +18803,8 @@
           value: newPlaylistDesc,
           onChange: (e) => setNewPlaylistDesc(e.target.value)
         }
-      )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: () => setShowCreatePlaylistModal(false) }, "Cancel"), /* @__PURE__ */ import_react8.default.createElement("button", { id: "btn-modal-create-playlist", className: "btn-accent", onClick: handleCreatePlaylist }, "Create Playlist")))),
-      showSaveQueueModal && /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-overlay", onClick: () => setShowSaveQueueModal(false) }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u{1F4BE} Save Queue as Playlist"), /* @__PURE__ */ import_react8.default.createElement("p", { className: "subtitle", style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "Save all ", playlist.length, " track(s) from your current playback queue into a permanent playlist."), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react8.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react8.default.createElement(
+      )), /* @__PURE__ */ import_react11.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-secondary", onClick: () => setShowCreatePlaylistModal(false) }, "Cancel"), /* @__PURE__ */ import_react11.default.createElement("button", { id: "btn-modal-create-playlist", className: "btn-accent", onClick: handleCreatePlaylist }, "Create Playlist")))),
+      showSaveQueueModal && /* @__PURE__ */ import_react11.default.createElement("div", { className: "modal-overlay", onClick: () => setShowSaveQueueModal(false) }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react11.default.createElement("h3", null, "Save Queue as Playlist"), /* @__PURE__ */ import_react11.default.createElement("p", { className: "subtitle", style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "Save all ", playlist.length, " track(s) from your current playback queue into a permanent playlist."), /* @__PURE__ */ import_react11.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react11.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react11.default.createElement(
         "input",
         {
           id: "input-save-queue-name",
@@ -18614,7 +18817,7 @@
             if (e.key === "Enter") handleSaveQueueAsPlaylist();
           }
         }
-      )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react8.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react8.default.createElement(
+      )), /* @__PURE__ */ import_react11.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react11.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react11.default.createElement(
         "textarea",
         {
           id: "input-save-queue-desc",
@@ -18623,20 +18826,20 @@
           value: saveQueueDesc,
           onChange: (e) => setSaveQueueDesc(e.target.value)
         }
-      )), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react8.default.createElement("button", { className: "btn-secondary", onClick: () => setShowSaveQueueModal(false) }, "Cancel"), /* @__PURE__ */ import_react8.default.createElement("button", { id: "btn-modal-save-queue", className: "btn-accent", onClick: handleSaveQueueAsPlaylist }, "Save Playlist")))),
-      showAddToPlaylistModal && selectedTrackForPlaylist && /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-overlay", onClick: () => {
+      )), /* @__PURE__ */ import_react11.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-secondary", onClick: () => setShowSaveQueueModal(false) }, "Cancel"), /* @__PURE__ */ import_react11.default.createElement("button", { id: "btn-modal-save-queue", className: "btn-accent", onClick: handleSaveQueueAsPlaylist }, "Save Playlist")))),
+      showAddToPlaylistModal && selectedTrackForPlaylist && /* @__PURE__ */ import_react11.default.createElement("div", { className: "modal-overlay", onClick: () => {
         setShowAddToPlaylistModal(false);
         setSelectedTrackForPlaylist(null);
-      } }, /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react8.default.createElement("h3", null, "\u{1F4D1} Add Track to Playlist"), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-selected-track-info" }, /* @__PURE__ */ import_react8.default.createElement("strong", null, selectedTrackForPlaylist.title), /* @__PURE__ */ import_react8.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, selectedTrackForPlaylist.artist, " \u2022 ", selectedTrackForPlaylist.album)), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react8.default.createElement("label", null, "Choose Destination Playlist"), playlists.length === 0 ? /* @__PURE__ */ import_react8.default.createElement("p", { style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "No playlists exist yet.") : /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-playlist-select-list" }, playlists.map((pl) => /* @__PURE__ */ import_react8.default.createElement(
+      } }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react11.default.createElement("h3", null, "Add Track to Playlist"), /* @__PURE__ */ import_react11.default.createElement("div", { className: "modal-selected-track-info" }, /* @__PURE__ */ import_react11.default.createElement("strong", null, selectedTrackForPlaylist.title), /* @__PURE__ */ import_react11.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, selectedTrackForPlaylist.artist, " \u2022 ", selectedTrackForPlaylist.album)), /* @__PURE__ */ import_react11.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react11.default.createElement("label", null, "Choose Destination Playlist"), playlists.length === 0 ? /* @__PURE__ */ import_react11.default.createElement("p", { style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "No playlists exist yet.") : /* @__PURE__ */ import_react11.default.createElement("div", { className: "modal-playlist-select-list" }, playlists.map((pl) => /* @__PURE__ */ import_react11.default.createElement(
         "div",
         {
           key: pl.id,
           className: "modal-playlist-select-item",
           onClick: () => handleAddTrackToPlaylist(pl.id, selectedTrackForPlaylist)
         },
-        /* @__PURE__ */ import_react8.default.createElement("div", null, /* @__PURE__ */ import_react8.default.createElement("strong", null, pl.name), /* @__PURE__ */ import_react8.default.createElement("span", { style: { display: "block", fontSize: "0.72rem", color: "var(--text-muted)" } }, pl.tracks?.length || 0, " track(s)")),
-        /* @__PURE__ */ import_react8.default.createElement("span", { className: "btn-chip" }, "\u2795 Add")
-      )))), /* @__PURE__ */ import_react8.default.createElement("div", { className: "modal-actions", style: { justifyContent: "space-between" } }, /* @__PURE__ */ import_react8.default.createElement(
+        /* @__PURE__ */ import_react11.default.createElement("div", null, /* @__PURE__ */ import_react11.default.createElement("strong", null, pl.name), /* @__PURE__ */ import_react11.default.createElement("span", { style: { display: "block", fontSize: "0.72rem", color: "var(--text-muted)" } }, pl.tracks?.length || 0, " track(s)")),
+        /* @__PURE__ */ import_react11.default.createElement("span", { className: "btn-chip" }, "Add")
+      )))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "modal-actions", style: { justifyContent: "space-between" } }, /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           className: "btn-chip",
@@ -18645,8 +18848,8 @@
             setShowCreatePlaylistModal(true);
           }
         },
-        "\u2795 New Playlist"
-      ), /* @__PURE__ */ import_react8.default.createElement(
+        "New Playlist"
+      ), /* @__PURE__ */ import_react11.default.createElement(
         "button",
         {
           className: "btn-secondary",
@@ -18657,7 +18860,7 @@
         },
         "Cancel"
       )))),
-      statusMsg && /* @__PURE__ */ import_react8.default.createElement("div", { className: "toast" }, statusMsg)
+      statusMsg && /* @__PURE__ */ import_react11.default.createElement("div", { className: "toast" }, statusMsg)
     );
   }
 
@@ -18665,7 +18868,7 @@
   var container = document.getElementById("root");
   if (container) {
     const root = (0, import_client.createRoot)(container);
-    root.render(/* @__PURE__ */ import_react9.default.createElement(App, null));
+    root.render(/* @__PURE__ */ import_react12.default.createElement(App, null));
   }
 })();
 /*! Bundled license information:
