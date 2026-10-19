@@ -61,64 +61,412 @@
       "audioLines": {
         "turnStart": [
           {
-            "text": "Uhh... let me be clear... It is now... my turn... to march... toward the horizon... of hope.",
-            "audio": "res://assets/audio/heroes/obama_turn_start.ogg"
+            "text": "Uhh... let me be clear... When you roll the dice... in this dungeon... you are not merely rolling plastic... you are rolling... the audacity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_1.ogg"
+          },
+          {
+            "text": "Uhh... folks... Michelle and I... were talking just the other day... about how even in a dark corridor... filled with goblins... hope... always finds a way.",
+            "audio": "res://assets/audio/heroes/obama_quote_2.ogg"
+          },
+          {
+            "text": "Uhh... make no mistake... The arc of the moral dungeon... is long... but it bends... toward hope... and... uhh... a modest middle-class tax cut.",
+            "audio": "res://assets/audio/heroes/obama_quote_3.ogg"
+          },
+          {
+            "text": "Uhh... look... we can disagree... without being disagreeable... even when a two-headed hydra... is trying... to bite your head off... with hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_4.ogg"
+          },
+          {
+            "text": "Uhh... let me say this... Change does not roll in... on the wheels of inevitability... It rolls in... on two red six-sided dice... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_5.ogg"
+          },
+          {
+            "text": "Uhh... there is not a liberal dungeon... and a conservative dungeon... There is the United Dungeon... of America... and... uhh... we are lost in it.",
+            "audio": "res://assets/audio/heroes/obama_quote_6.ogg"
+          },
+          {
+            "text": "Uhh... yes we can... step onto this next stone square... with the fierce urgency... of now... and the quiet dignity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_7.ogg"
+          },
+          {
+            "text": "Uhh... if you like your broadsword... you can keep... your broadsword... Period... Full stop... Because that... is the promise... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_8.ogg"
+          }
+        ],
+        "moving": [
+          {
+            "text": "Uhh... let me be clear... When you roll the dice... in this dungeon... you are not merely rolling plastic... you are rolling... the audacity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_1.ogg"
+          },
+          {
+            "text": "Uhh... folks... Michelle and I... were talking just the other day... about how even in a dark corridor... filled with goblins... hope... always finds a way.",
+            "audio": "res://assets/audio/heroes/obama_quote_2.ogg"
+          },
+          {
+            "text": "Uhh... make no mistake... The arc of the moral dungeon... is long... but it bends... toward hope... and... uhh... a modest middle-class tax cut.",
+            "audio": "res://assets/audio/heroes/obama_quote_3.ogg"
+          },
+          {
+            "text": "Uhh... look... we can disagree... without being disagreeable... even when a two-headed hydra... is trying... to bite your head off... with hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_4.ogg"
+          },
+          {
+            "text": "Uhh... let me say this... Change does not roll in... on the wheels of inevitability... It rolls in... on two red six-sided dice... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_5.ogg"
+          },
+          {
+            "text": "Uhh... there is not a liberal dungeon... and a conservative dungeon... There is the United Dungeon... of America... and... uhh... we are lost in it.",
+            "audio": "res://assets/audio/heroes/obama_quote_6.ogg"
+          },
+          {
+            "text": "Uhh... yes we can... step onto this next stone square... with the fierce urgency... of now... and the quiet dignity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_7.ogg"
+          },
+          {
+            "text": "Uhh... if you like your broadsword... you can keep... your broadsword... Period... Full stop... Because that... is the promise... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_8.ogg"
           }
         ],
         "attacking": [
           {
-            "text": "Uhh... feel the audacity... of this broadsword... of hope!",
-            "audio": "res://assets/audio/heroes/obama_attacking.ogg"
+            "text": "Uhh... let me be clear... When you roll the dice... in this dungeon... you are not merely rolling plastic... you are rolling... the audacity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_1.ogg"
+          },
+          {
+            "text": "Uhh... folks... Michelle and I... were talking just the other day... about how even in a dark corridor... filled with goblins... hope... always finds a way.",
+            "audio": "res://assets/audio/heroes/obama_quote_2.ogg"
+          },
+          {
+            "text": "Uhh... make no mistake... The arc of the moral dungeon... is long... but it bends... toward hope... and... uhh... a modest middle-class tax cut.",
+            "audio": "res://assets/audio/heroes/obama_quote_3.ogg"
+          },
+          {
+            "text": "Uhh... look... we can disagree... without being disagreeable... even when a two-headed hydra... is trying... to bite your head off... with hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_4.ogg"
+          },
+          {
+            "text": "Uhh... let me say this... Change does not roll in... on the wheels of inevitability... It rolls in... on two red six-sided dice... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_5.ogg"
+          },
+          {
+            "text": "Uhh... there is not a liberal dungeon... and a conservative dungeon... There is the United Dungeon... of America... and... uhh... we are lost in it.",
+            "audio": "res://assets/audio/heroes/obama_quote_6.ogg"
+          },
+          {
+            "text": "Uhh... yes we can... step onto this next stone square... with the fierce urgency... of now... and the quiet dignity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_7.ogg"
+          },
+          {
+            "text": "Uhh... if you like your broadsword... you can keep... your broadsword... Period... Full stop... Because that... is the promise... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_8.ogg"
           }
         ],
         "attacked": [
           {
-            "text": "Uhh... folks... that strike... did not feel... very hopeful.",
-            "audio": "res://assets/audio/heroes/obama_attacked.ogg"
+            "text": "Uhh... let me be clear... When you roll the dice... in this dungeon... you are not merely rolling plastic... you are rolling... the audacity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_1.ogg"
+          },
+          {
+            "text": "Uhh... folks... Michelle and I... were talking just the other day... about how even in a dark corridor... filled with goblins... hope... always finds a way.",
+            "audio": "res://assets/audio/heroes/obama_quote_2.ogg"
+          },
+          {
+            "text": "Uhh... make no mistake... The arc of the moral dungeon... is long... but it bends... toward hope... and... uhh... a modest middle-class tax cut.",
+            "audio": "res://assets/audio/heroes/obama_quote_3.ogg"
+          },
+          {
+            "text": "Uhh... look... we can disagree... without being disagreeable... even when a two-headed hydra... is trying... to bite your head off... with hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_4.ogg"
+          },
+          {
+            "text": "Uhh... let me say this... Change does not roll in... on the wheels of inevitability... It rolls in... on two red six-sided dice... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_5.ogg"
+          },
+          {
+            "text": "Uhh... there is not a liberal dungeon... and a conservative dungeon... There is the United Dungeon... of America... and... uhh... we are lost in it.",
+            "audio": "res://assets/audio/heroes/obama_quote_6.ogg"
+          },
+          {
+            "text": "Uhh... yes we can... step onto this next stone square... with the fierce urgency... of now... and the quiet dignity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_7.ogg"
+          },
+          {
+            "text": "Uhh... if you like your broadsword... you can keep... your broadsword... Period... Full stop... Because that... is the promise... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_8.ogg"
           }
         ],
         "defended": [
           {
-            "text": "Uhh... nice try... You cannot pierce... the shield... of hope.",
-            "audio": "res://assets/audio/heroes/obama_defended.ogg"
+            "text": "Uhh... let me be clear... When you roll the dice... in this dungeon... you are not merely rolling plastic... you are rolling... the audacity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_1.ogg"
+          },
+          {
+            "text": "Uhh... folks... Michelle and I... were talking just the other day... about how even in a dark corridor... filled with goblins... hope... always finds a way.",
+            "audio": "res://assets/audio/heroes/obama_quote_2.ogg"
+          },
+          {
+            "text": "Uhh... make no mistake... The arc of the moral dungeon... is long... but it bends... toward hope... and... uhh... a modest middle-class tax cut.",
+            "audio": "res://assets/audio/heroes/obama_quote_3.ogg"
+          },
+          {
+            "text": "Uhh... look... we can disagree... without being disagreeable... even when a two-headed hydra... is trying... to bite your head off... with hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_4.ogg"
+          },
+          {
+            "text": "Uhh... let me say this... Change does not roll in... on the wheels of inevitability... It rolls in... on two red six-sided dice... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_5.ogg"
+          },
+          {
+            "text": "Uhh... there is not a liberal dungeon... and a conservative dungeon... There is the United Dungeon... of America... and... uhh... we are lost in it.",
+            "audio": "res://assets/audio/heroes/obama_quote_6.ogg"
+          },
+          {
+            "text": "Uhh... yes we can... step onto this next stone square... with the fierce urgency... of now... and the quiet dignity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_7.ogg"
+          },
+          {
+            "text": "Uhh... if you like your broadsword... you can keep... your broadsword... Period... Full stop... Because that... is the promise... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_8.ogg"
           }
         ],
         "castingMagic": [
           {
-            "text": "Uhh... by the power... of hope... and change... I cast... this spell.",
-            "audio": "res://assets/audio/heroes/obama_casting_magic.ogg"
+            "text": "Uhh... let me be clear... When you roll the dice... in this dungeon... you are not merely rolling plastic... you are rolling... the audacity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_1.ogg"
+          },
+          {
+            "text": "Uhh... folks... Michelle and I... were talking just the other day... about how even in a dark corridor... filled with goblins... hope... always finds a way.",
+            "audio": "res://assets/audio/heroes/obama_quote_2.ogg"
+          },
+          {
+            "text": "Uhh... make no mistake... The arc of the moral dungeon... is long... but it bends... toward hope... and... uhh... a modest middle-class tax cut.",
+            "audio": "res://assets/audio/heroes/obama_quote_3.ogg"
+          },
+          {
+            "text": "Uhh... look... we can disagree... without being disagreeable... even when a two-headed hydra... is trying... to bite your head off... with hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_4.ogg"
+          },
+          {
+            "text": "Uhh... let me say this... Change does not roll in... on the wheels of inevitability... It rolls in... on two red six-sided dice... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_5.ogg"
+          },
+          {
+            "text": "Uhh... there is not a liberal dungeon... and a conservative dungeon... There is the United Dungeon... of America... and... uhh... we are lost in it.",
+            "audio": "res://assets/audio/heroes/obama_quote_6.ogg"
+          },
+          {
+            "text": "Uhh... yes we can... step onto this next stone square... with the fierce urgency... of now... and the quiet dignity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_7.ogg"
+          },
+          {
+            "text": "Uhh... if you like your broadsword... you can keep... your broadsword... Period... Full stop... Because that... is the promise... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_8.ogg"
           }
         ]
       },
       "robos:audioLines": {
         "turnStart": [
           {
-            "text": "Uhh... let me be clear... It is now... my turn... to march... toward the horizon... of hope.",
-            "audio": "res://assets/audio/heroes/obama_turn_start.ogg"
+            "text": "Uhh... let me be clear... When you roll the dice... in this dungeon... you are not merely rolling plastic... you are rolling... the audacity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_1.ogg"
+          },
+          {
+            "text": "Uhh... folks... Michelle and I... were talking just the other day... about how even in a dark corridor... filled with goblins... hope... always finds a way.",
+            "audio": "res://assets/audio/heroes/obama_quote_2.ogg"
+          },
+          {
+            "text": "Uhh... make no mistake... The arc of the moral dungeon... is long... but it bends... toward hope... and... uhh... a modest middle-class tax cut.",
+            "audio": "res://assets/audio/heroes/obama_quote_3.ogg"
+          },
+          {
+            "text": "Uhh... look... we can disagree... without being disagreeable... even when a two-headed hydra... is trying... to bite your head off... with hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_4.ogg"
+          },
+          {
+            "text": "Uhh... let me say this... Change does not roll in... on the wheels of inevitability... It rolls in... on two red six-sided dice... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_5.ogg"
+          },
+          {
+            "text": "Uhh... there is not a liberal dungeon... and a conservative dungeon... There is the United Dungeon... of America... and... uhh... we are lost in it.",
+            "audio": "res://assets/audio/heroes/obama_quote_6.ogg"
+          },
+          {
+            "text": "Uhh... yes we can... step onto this next stone square... with the fierce urgency... of now... and the quiet dignity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_7.ogg"
+          },
+          {
+            "text": "Uhh... if you like your broadsword... you can keep... your broadsword... Period... Full stop... Because that... is the promise... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_8.ogg"
+          }
+        ],
+        "moving": [
+          {
+            "text": "Uhh... let me be clear... When you roll the dice... in this dungeon... you are not merely rolling plastic... you are rolling... the audacity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_1.ogg"
+          },
+          {
+            "text": "Uhh... folks... Michelle and I... were talking just the other day... about how even in a dark corridor... filled with goblins... hope... always finds a way.",
+            "audio": "res://assets/audio/heroes/obama_quote_2.ogg"
+          },
+          {
+            "text": "Uhh... make no mistake... The arc of the moral dungeon... is long... but it bends... toward hope... and... uhh... a modest middle-class tax cut.",
+            "audio": "res://assets/audio/heroes/obama_quote_3.ogg"
+          },
+          {
+            "text": "Uhh... look... we can disagree... without being disagreeable... even when a two-headed hydra... is trying... to bite your head off... with hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_4.ogg"
+          },
+          {
+            "text": "Uhh... let me say this... Change does not roll in... on the wheels of inevitability... It rolls in... on two red six-sided dice... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_5.ogg"
+          },
+          {
+            "text": "Uhh... there is not a liberal dungeon... and a conservative dungeon... There is the United Dungeon... of America... and... uhh... we are lost in it.",
+            "audio": "res://assets/audio/heroes/obama_quote_6.ogg"
+          },
+          {
+            "text": "Uhh... yes we can... step onto this next stone square... with the fierce urgency... of now... and the quiet dignity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_7.ogg"
+          },
+          {
+            "text": "Uhh... if you like your broadsword... you can keep... your broadsword... Period... Full stop... Because that... is the promise... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_8.ogg"
           }
         ],
         "attacking": [
           {
-            "text": "Uhh... feel the audacity... of this broadsword... of hope!",
-            "audio": "res://assets/audio/heroes/obama_attacking.ogg"
+            "text": "Uhh... let me be clear... When you roll the dice... in this dungeon... you are not merely rolling plastic... you are rolling... the audacity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_1.ogg"
+          },
+          {
+            "text": "Uhh... folks... Michelle and I... were talking just the other day... about how even in a dark corridor... filled with goblins... hope... always finds a way.",
+            "audio": "res://assets/audio/heroes/obama_quote_2.ogg"
+          },
+          {
+            "text": "Uhh... make no mistake... The arc of the moral dungeon... is long... but it bends... toward hope... and... uhh... a modest middle-class tax cut.",
+            "audio": "res://assets/audio/heroes/obama_quote_3.ogg"
+          },
+          {
+            "text": "Uhh... look... we can disagree... without being disagreeable... even when a two-headed hydra... is trying... to bite your head off... with hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_4.ogg"
+          },
+          {
+            "text": "Uhh... let me say this... Change does not roll in... on the wheels of inevitability... It rolls in... on two red six-sided dice... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_5.ogg"
+          },
+          {
+            "text": "Uhh... there is not a liberal dungeon... and a conservative dungeon... There is the United Dungeon... of America... and... uhh... we are lost in it.",
+            "audio": "res://assets/audio/heroes/obama_quote_6.ogg"
+          },
+          {
+            "text": "Uhh... yes we can... step onto this next stone square... with the fierce urgency... of now... and the quiet dignity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_7.ogg"
+          },
+          {
+            "text": "Uhh... if you like your broadsword... you can keep... your broadsword... Period... Full stop... Because that... is the promise... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_8.ogg"
           }
         ],
         "attacked": [
           {
-            "text": "Uhh... folks... that strike... did not feel... very hopeful.",
-            "audio": "res://assets/audio/heroes/obama_attacked.ogg"
+            "text": "Uhh... let me be clear... When you roll the dice... in this dungeon... you are not merely rolling plastic... you are rolling... the audacity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_1.ogg"
+          },
+          {
+            "text": "Uhh... folks... Michelle and I... were talking just the other day... about how even in a dark corridor... filled with goblins... hope... always finds a way.",
+            "audio": "res://assets/audio/heroes/obama_quote_2.ogg"
+          },
+          {
+            "text": "Uhh... make no mistake... The arc of the moral dungeon... is long... but it bends... toward hope... and... uhh... a modest middle-class tax cut.",
+            "audio": "res://assets/audio/heroes/obama_quote_3.ogg"
+          },
+          {
+            "text": "Uhh... look... we can disagree... without being disagreeable... even when a two-headed hydra... is trying... to bite your head off... with hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_4.ogg"
+          },
+          {
+            "text": "Uhh... let me say this... Change does not roll in... on the wheels of inevitability... It rolls in... on two red six-sided dice... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_5.ogg"
+          },
+          {
+            "text": "Uhh... there is not a liberal dungeon... and a conservative dungeon... There is the United Dungeon... of America... and... uhh... we are lost in it.",
+            "audio": "res://assets/audio/heroes/obama_quote_6.ogg"
+          },
+          {
+            "text": "Uhh... yes we can... step onto this next stone square... with the fierce urgency... of now... and the quiet dignity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_7.ogg"
+          },
+          {
+            "text": "Uhh... if you like your broadsword... you can keep... your broadsword... Period... Full stop... Because that... is the promise... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_8.ogg"
           }
         ],
         "defended": [
           {
-            "text": "Uhh... nice try... You cannot pierce... the shield... of hope.",
-            "audio": "res://assets/audio/heroes/obama_defended.ogg"
+            "text": "Uhh... let me be clear... When you roll the dice... in this dungeon... you are not merely rolling plastic... you are rolling... the audacity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_1.ogg"
+          },
+          {
+            "text": "Uhh... folks... Michelle and I... were talking just the other day... about how even in a dark corridor... filled with goblins... hope... always finds a way.",
+            "audio": "res://assets/audio/heroes/obama_quote_2.ogg"
+          },
+          {
+            "text": "Uhh... make no mistake... The arc of the moral dungeon... is long... but it bends... toward hope... and... uhh... a modest middle-class tax cut.",
+            "audio": "res://assets/audio/heroes/obama_quote_3.ogg"
+          },
+          {
+            "text": "Uhh... look... we can disagree... without being disagreeable... even when a two-headed hydra... is trying... to bite your head off... with hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_4.ogg"
+          },
+          {
+            "text": "Uhh... let me say this... Change does not roll in... on the wheels of inevitability... It rolls in... on two red six-sided dice... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_5.ogg"
+          },
+          {
+            "text": "Uhh... there is not a liberal dungeon... and a conservative dungeon... There is the United Dungeon... of America... and... uhh... we are lost in it.",
+            "audio": "res://assets/audio/heroes/obama_quote_6.ogg"
+          },
+          {
+            "text": "Uhh... yes we can... step onto this next stone square... with the fierce urgency... of now... and the quiet dignity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_7.ogg"
+          },
+          {
+            "text": "Uhh... if you like your broadsword... you can keep... your broadsword... Period... Full stop... Because that... is the promise... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_8.ogg"
           }
         ],
         "castingMagic": [
           {
-            "text": "Uhh... by the power... of hope... and change... I cast... this spell.",
-            "audio": "res://assets/audio/heroes/obama_casting_magic.ogg"
+            "text": "Uhh... let me be clear... When you roll the dice... in this dungeon... you are not merely rolling plastic... you are rolling... the audacity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_1.ogg"
+          },
+          {
+            "text": "Uhh... folks... Michelle and I... were talking just the other day... about how even in a dark corridor... filled with goblins... hope... always finds a way.",
+            "audio": "res://assets/audio/heroes/obama_quote_2.ogg"
+          },
+          {
+            "text": "Uhh... make no mistake... The arc of the moral dungeon... is long... but it bends... toward hope... and... uhh... a modest middle-class tax cut.",
+            "audio": "res://assets/audio/heroes/obama_quote_3.ogg"
+          },
+          {
+            "text": "Uhh... look... we can disagree... without being disagreeable... even when a two-headed hydra... is trying... to bite your head off... with hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_4.ogg"
+          },
+          {
+            "text": "Uhh... let me say this... Change does not roll in... on the wheels of inevitability... It rolls in... on two red six-sided dice... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_5.ogg"
+          },
+          {
+            "text": "Uhh... there is not a liberal dungeon... and a conservative dungeon... There is the United Dungeon... of America... and... uhh... we are lost in it.",
+            "audio": "res://assets/audio/heroes/obama_quote_6.ogg"
+          },
+          {
+            "text": "Uhh... yes we can... step onto this next stone square... with the fierce urgency... of now... and the quiet dignity... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_7.ogg"
+          },
+          {
+            "text": "Uhh... if you like your broadsword... you can keep... your broadsword... Period... Full stop... Because that... is the promise... of hope.",
+            "audio": "res://assets/audio/heroes/obama_quote_8.ogg"
           }
         ]
       }
@@ -160,64 +508,412 @@
       "audioLines": {
         "turnStart": [
           {
-            "text": "As you can see, I'm not just MAGA — I'm Dark MAGA!",
-            "audio": "res://assets/audio/heroes/trump_turn_start.ogg"
+            "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
+            "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
+          },
+          {
+            "text": "Threatening me with 400 years in prison for possessing my own presidential papers, which just about every other president has done!",
+            "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
+          },
+          {
+            "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
+            "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
+          },
+          {
+            "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
+            "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
+          },
+          {
+            "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+            "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
+          },
+          {
+            "text": "I won two regular club championships! To do that, you have to be quite smart and hit the ball a long way. And I do it! He can't hit a ball 50 yards!",
+            "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
+          },
+          {
+            "text": "She did things that nobody would ever think of! Now she wants to do transgender operations on illegal aliens that are in prison!",
+            "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
+          },
+          {
+            "text": "Well, we need Greenland for national security purposes! People really don't even know if Denmark has any legal right to it, but if they do, they should give it up!",
+            "audio": "res://assets/audio/heroes/trump_quote_8.ogg"
+          }
+        ],
+        "moving": [
+          {
+            "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
+            "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
+          },
+          {
+            "text": "Threatening me with 400 years in prison for possessing my own presidential papers, which just about every other president has done!",
+            "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
+          },
+          {
+            "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
+            "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
+          },
+          {
+            "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
+            "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
+          },
+          {
+            "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+            "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
+          },
+          {
+            "text": "I won two regular club championships! To do that, you have to be quite smart and hit the ball a long way. And I do it! He can't hit a ball 50 yards!",
+            "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
+          },
+          {
+            "text": "She did things that nobody would ever think of! Now she wants to do transgender operations on illegal aliens that are in prison!",
+            "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
+          },
+          {
+            "text": "Well, we need Greenland for national security purposes! People really don't even know if Denmark has any legal right to it, but if they do, they should give it up!",
+            "audio": "res://assets/audio/heroes/trump_quote_8.ogg"
           }
         ],
         "attacking": [
           {
-            "text": "And I do it! He doesn't do it! He can't hit a ball 50 yards! He challenged me to a golf match, he can't hit a ball 50 yards!",
-            "audio": "res://assets/audio/heroes/trump_attacking.ogg"
+            "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
+            "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
+          },
+          {
+            "text": "Threatening me with 400 years in prison for possessing my own presidential papers, which just about every other president has done!",
+            "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
+          },
+          {
+            "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
+            "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
+          },
+          {
+            "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
+            "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
+          },
+          {
+            "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+            "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
+          },
+          {
+            "text": "I won two regular club championships! To do that, you have to be quite smart and hit the ball a long way. And I do it! He can't hit a ball 50 yards!",
+            "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
+          },
+          {
+            "text": "She did things that nobody would ever think of! Now she wants to do transgender operations on illegal aliens that are in prison!",
+            "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
+          },
+          {
+            "text": "Well, we need Greenland for national security purposes! People really don't even know if Denmark has any legal right to it, but if they do, they should give it up!",
+            "audio": "res://assets/audio/heroes/trump_quote_8.ogg"
           }
         ],
         "attacked": [
           {
-            "text": "Would you look at what's happening? This is a persecution! This was never supposed to happen in America!",
-            "audio": "res://assets/audio/heroes/trump_attacked.ogg"
+            "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
+            "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
+          },
+          {
+            "text": "Threatening me with 400 years in prison for possessing my own presidential papers, which just about every other president has done!",
+            "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
+          },
+          {
+            "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
+            "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
+          },
+          {
+            "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
+            "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
+          },
+          {
+            "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+            "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
+          },
+          {
+            "text": "I won two regular club championships! To do that, you have to be quite smart and hit the ball a long way. And I do it! He can't hit a ball 50 yards!",
+            "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
+          },
+          {
+            "text": "She did things that nobody would ever think of! Now she wants to do transgender operations on illegal aliens that are in prison!",
+            "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
+          },
+          {
+            "text": "Well, we need Greenland for national security purposes! People really don't even know if Denmark has any legal right to it, but if they do, they should give it up!",
+            "audio": "res://assets/audio/heroes/trump_quote_8.ogg"
           }
         ],
         "defended": [
           {
-            "text": "Here's the fighter — somebody who tried to kill him! You will not take this man down!",
-            "audio": "res://assets/audio/heroes/trump_defended.ogg"
+            "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
+            "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
+          },
+          {
+            "text": "Threatening me with 400 years in prison for possessing my own presidential papers, which just about every other president has done!",
+            "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
+          },
+          {
+            "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
+            "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
+          },
+          {
+            "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
+            "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
+          },
+          {
+            "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+            "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
+          },
+          {
+            "text": "I won two regular club championships! To do that, you have to be quite smart and hit the ball a long way. And I do it! He can't hit a ball 50 yards!",
+            "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
+          },
+          {
+            "text": "She did things that nobody would ever think of! Now she wants to do transgender operations on illegal aliens that are in prison!",
+            "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
+          },
+          {
+            "text": "Well, we need Greenland for national security purposes! People really don't even know if Denmark has any legal right to it, but if they do, they should give it up!",
+            "audio": "res://assets/audio/heroes/trump_quote_8.ogg"
           }
         ],
         "castingMagic": [
           {
-            "text": "Do you think that we have aliens coming, flying around or whatever? There's no reason not to think that Mars and all these planets don't have life!",
-            "audio": "res://assets/audio/heroes/trump_casting_magic.ogg"
+            "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
+            "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
+          },
+          {
+            "text": "Threatening me with 400 years in prison for possessing my own presidential papers, which just about every other president has done!",
+            "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
+          },
+          {
+            "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
+            "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
+          },
+          {
+            "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
+            "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
+          },
+          {
+            "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+            "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
+          },
+          {
+            "text": "I won two regular club championships! To do that, you have to be quite smart and hit the ball a long way. And I do it! He can't hit a ball 50 yards!",
+            "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
+          },
+          {
+            "text": "She did things that nobody would ever think of! Now she wants to do transgender operations on illegal aliens that are in prison!",
+            "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
+          },
+          {
+            "text": "Well, we need Greenland for national security purposes! People really don't even know if Denmark has any legal right to it, but if they do, they should give it up!",
+            "audio": "res://assets/audio/heroes/trump_quote_8.ogg"
           }
         ]
       },
       "robos:audioLines": {
         "turnStart": [
           {
-            "text": "As you can see, I'm not just MAGA — I'm Dark MAGA!",
-            "audio": "res://assets/audio/heroes/trump_turn_start.ogg"
+            "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
+            "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
+          },
+          {
+            "text": "Threatening me with 400 years in prison for possessing my own presidential papers, which just about every other president has done!",
+            "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
+          },
+          {
+            "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
+            "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
+          },
+          {
+            "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
+            "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
+          },
+          {
+            "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+            "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
+          },
+          {
+            "text": "I won two regular club championships! To do that, you have to be quite smart and hit the ball a long way. And I do it! He can't hit a ball 50 yards!",
+            "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
+          },
+          {
+            "text": "She did things that nobody would ever think of! Now she wants to do transgender operations on illegal aliens that are in prison!",
+            "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
+          },
+          {
+            "text": "Well, we need Greenland for national security purposes! People really don't even know if Denmark has any legal right to it, but if they do, they should give it up!",
+            "audio": "res://assets/audio/heroes/trump_quote_8.ogg"
+          }
+        ],
+        "moving": [
+          {
+            "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
+            "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
+          },
+          {
+            "text": "Threatening me with 400 years in prison for possessing my own presidential papers, which just about every other president has done!",
+            "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
+          },
+          {
+            "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
+            "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
+          },
+          {
+            "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
+            "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
+          },
+          {
+            "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+            "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
+          },
+          {
+            "text": "I won two regular club championships! To do that, you have to be quite smart and hit the ball a long way. And I do it! He can't hit a ball 50 yards!",
+            "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
+          },
+          {
+            "text": "She did things that nobody would ever think of! Now she wants to do transgender operations on illegal aliens that are in prison!",
+            "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
+          },
+          {
+            "text": "Well, we need Greenland for national security purposes! People really don't even know if Denmark has any legal right to it, but if they do, they should give it up!",
+            "audio": "res://assets/audio/heroes/trump_quote_8.ogg"
           }
         ],
         "attacking": [
           {
-            "text": "And I do it! He doesn't do it! He can't hit a ball 50 yards! He challenged me to a golf match, he can't hit a ball 50 yards!",
-            "audio": "res://assets/audio/heroes/trump_attacking.ogg"
+            "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
+            "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
+          },
+          {
+            "text": "Threatening me with 400 years in prison for possessing my own presidential papers, which just about every other president has done!",
+            "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
+          },
+          {
+            "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
+            "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
+          },
+          {
+            "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
+            "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
+          },
+          {
+            "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+            "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
+          },
+          {
+            "text": "I won two regular club championships! To do that, you have to be quite smart and hit the ball a long way. And I do it! He can't hit a ball 50 yards!",
+            "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
+          },
+          {
+            "text": "She did things that nobody would ever think of! Now she wants to do transgender operations on illegal aliens that are in prison!",
+            "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
+          },
+          {
+            "text": "Well, we need Greenland for national security purposes! People really don't even know if Denmark has any legal right to it, but if they do, they should give it up!",
+            "audio": "res://assets/audio/heroes/trump_quote_8.ogg"
           }
         ],
         "attacked": [
           {
-            "text": "Would you look at what's happening? This is a persecution! This was never supposed to happen in America!",
-            "audio": "res://assets/audio/heroes/trump_attacked.ogg"
+            "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
+            "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
+          },
+          {
+            "text": "Threatening me with 400 years in prison for possessing my own presidential papers, which just about every other president has done!",
+            "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
+          },
+          {
+            "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
+            "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
+          },
+          {
+            "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
+            "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
+          },
+          {
+            "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+            "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
+          },
+          {
+            "text": "I won two regular club championships! To do that, you have to be quite smart and hit the ball a long way. And I do it! He can't hit a ball 50 yards!",
+            "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
+          },
+          {
+            "text": "She did things that nobody would ever think of! Now she wants to do transgender operations on illegal aliens that are in prison!",
+            "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
+          },
+          {
+            "text": "Well, we need Greenland for national security purposes! People really don't even know if Denmark has any legal right to it, but if they do, they should give it up!",
+            "audio": "res://assets/audio/heroes/trump_quote_8.ogg"
           }
         ],
         "defended": [
           {
-            "text": "Here's the fighter — somebody who tried to kill him! You will not take this man down!",
-            "audio": "res://assets/audio/heroes/trump_defended.ogg"
+            "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
+            "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
+          },
+          {
+            "text": "Threatening me with 400 years in prison for possessing my own presidential papers, which just about every other president has done!",
+            "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
+          },
+          {
+            "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
+            "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
+          },
+          {
+            "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
+            "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
+          },
+          {
+            "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+            "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
+          },
+          {
+            "text": "I won two regular club championships! To do that, you have to be quite smart and hit the ball a long way. And I do it! He can't hit a ball 50 yards!",
+            "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
+          },
+          {
+            "text": "She did things that nobody would ever think of! Now she wants to do transgender operations on illegal aliens that are in prison!",
+            "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
+          },
+          {
+            "text": "Well, we need Greenland for national security purposes! People really don't even know if Denmark has any legal right to it, but if they do, they should give it up!",
+            "audio": "res://assets/audio/heroes/trump_quote_8.ogg"
           }
         ],
         "castingMagic": [
           {
-            "text": "Do you think that we have aliens coming, flying around or whatever? There's no reason not to think that Mars and all these planets don't have life!",
-            "audio": "res://assets/audio/heroes/trump_casting_magic.ogg"
+            "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
+            "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
+          },
+          {
+            "text": "Threatening me with 400 years in prison for possessing my own presidential papers, which just about every other president has done!",
+            "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
+          },
+          {
+            "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
+            "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
+          },
+          {
+            "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
+            "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
+          },
+          {
+            "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+            "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
+          },
+          {
+            "text": "I won two regular club championships! To do that, you have to be quite smart and hit the ball a long way. And I do it! He can't hit a ball 50 yards!",
+            "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
+          },
+          {
+            "text": "She did things that nobody would ever think of! Now she wants to do transgender operations on illegal aliens that are in prison!",
+            "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
+          },
+          {
+            "text": "Well, we need Greenland for national security purposes! People really don't even know if Denmark has any legal right to it, but if they do, they should give it up!",
+            "audio": "res://assets/audio/heroes/trump_quote_8.ogg"
           }
         ]
       }
@@ -293,64 +989,412 @@
       "audioLines": {
         "turnStart": [
           {
-            "text": "We've traveled to every corner of the United States. I've now been in 57 states — I think one left to go!",
-            "audio": "res://assets/audio/heroes/hillary_turn_start.ogg"
+            "text": "Saddam Hussein will continue to increase his capacity to wage biological and chemical warfare!",
+            "audio": "res://assets/audio/heroes/hillary_quote_1.ogg"
+          },
+          {
+            "text": "We came, we saw, he died! Ha ha ha!",
+            "audio": "res://assets/audio/heroes/hillary_quote_2.ogg"
+          },
+          {
+            "text": "What difference, at this point, does it make?!",
+            "audio": "res://assets/audio/heroes/hillary_quote_3.ogg"
+          },
+          {
+            "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do, and the way we do it better than anybody else!",
+            "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
+          },
+          {
+            "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
+            "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
+          },
+          {
+            "text": "Don't let anybody tell you that it's corporations and businesses that create jobs! If you've got a business, you didn't build that!",
+            "audio": "res://assets/audio/heroes/hillary_quote_6.ogg"
+          },
+          {
+            "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there, and we struggled!",
+            "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
+          },
+          {
+            "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
+            "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
+          }
+        ],
+        "moving": [
+          {
+            "text": "Saddam Hussein will continue to increase his capacity to wage biological and chemical warfare!",
+            "audio": "res://assets/audio/heroes/hillary_quote_1.ogg"
+          },
+          {
+            "text": "We came, we saw, he died! Ha ha ha!",
+            "audio": "res://assets/audio/heroes/hillary_quote_2.ogg"
+          },
+          {
+            "text": "What difference, at this point, does it make?!",
+            "audio": "res://assets/audio/heroes/hillary_quote_3.ogg"
+          },
+          {
+            "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do, and the way we do it better than anybody else!",
+            "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
+          },
+          {
+            "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
+            "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
+          },
+          {
+            "text": "Don't let anybody tell you that it's corporations and businesses that create jobs! If you've got a business, you didn't build that!",
+            "audio": "res://assets/audio/heroes/hillary_quote_6.ogg"
+          },
+          {
+            "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there, and we struggled!",
+            "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
+          },
+          {
+            "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
+            "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
           }
         ],
         "attacking": [
           {
+            "text": "Saddam Hussein will continue to increase his capacity to wage biological and chemical warfare!",
+            "audio": "res://assets/audio/heroes/hillary_quote_1.ogg"
+          },
+          {
             "text": "We came, we saw, he died! Ha ha ha!",
-            "audio": "res://assets/audio/heroes/hillary_attacking.ogg"
+            "audio": "res://assets/audio/heroes/hillary_quote_2.ogg"
+          },
+          {
+            "text": "What difference, at this point, does it make?!",
+            "audio": "res://assets/audio/heroes/hillary_quote_3.ogg"
+          },
+          {
+            "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do, and the way we do it better than anybody else!",
+            "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
+          },
+          {
+            "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
+            "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
+          },
+          {
+            "text": "Don't let anybody tell you that it's corporations and businesses that create jobs! If you've got a business, you didn't build that!",
+            "audio": "res://assets/audio/heroes/hillary_quote_6.ogg"
+          },
+          {
+            "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there, and we struggled!",
+            "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
+          },
+          {
+            "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
+            "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
           }
         ],
         "attacked": [
           {
+            "text": "Saddam Hussein will continue to increase his capacity to wage biological and chemical warfare!",
+            "audio": "res://assets/audio/heroes/hillary_quote_1.ogg"
+          },
+          {
+            "text": "We came, we saw, he died! Ha ha ha!",
+            "audio": "res://assets/audio/heroes/hillary_quote_2.ogg"
+          },
+          {
             "text": "What difference, at this point, does it make?!",
-            "audio": "res://assets/audio/heroes/hillary_attacked.ogg"
+            "audio": "res://assets/audio/heroes/hillary_quote_3.ogg"
+          },
+          {
+            "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do, and the way we do it better than anybody else!",
+            "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
+          },
+          {
+            "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
+            "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
+          },
+          {
+            "text": "Don't let anybody tell you that it's corporations and businesses that create jobs! If you've got a business, you didn't build that!",
+            "audio": "res://assets/audio/heroes/hillary_quote_6.ogg"
+          },
+          {
+            "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there, and we struggled!",
+            "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
+          },
+          {
+            "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
+            "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
           }
         ],
         "defended": [
           {
-            "text": "What, like with a cloth or something? Well, no, I don't know how it works digitally at all!",
-            "audio": "res://assets/audio/heroes/hillary_defended.ogg"
+            "text": "Saddam Hussein will continue to increase his capacity to wage biological and chemical warfare!",
+            "audio": "res://assets/audio/heroes/hillary_quote_1.ogg"
+          },
+          {
+            "text": "We came, we saw, he died! Ha ha ha!",
+            "audio": "res://assets/audio/heroes/hillary_quote_2.ogg"
+          },
+          {
+            "text": "What difference, at this point, does it make?!",
+            "audio": "res://assets/audio/heroes/hillary_quote_3.ogg"
+          },
+          {
+            "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do, and the way we do it better than anybody else!",
+            "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
+          },
+          {
+            "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
+            "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
+          },
+          {
+            "text": "Don't let anybody tell you that it's corporations and businesses that create jobs! If you've got a business, you didn't build that!",
+            "audio": "res://assets/audio/heroes/hillary_quote_6.ogg"
+          },
+          {
+            "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there, and we struggled!",
+            "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
+          },
+          {
+            "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
+            "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
           }
         ],
         "castingMagic": [
           {
-            "text": "But I cast it with conviction! And I want the Iranians to know that if I'm the President, we will attack Iran!",
-            "audio": "res://assets/audio/heroes/hillary_casting_magic.ogg"
+            "text": "Saddam Hussein will continue to increase his capacity to wage biological and chemical warfare!",
+            "audio": "res://assets/audio/heroes/hillary_quote_1.ogg"
+          },
+          {
+            "text": "We came, we saw, he died! Ha ha ha!",
+            "audio": "res://assets/audio/heroes/hillary_quote_2.ogg"
+          },
+          {
+            "text": "What difference, at this point, does it make?!",
+            "audio": "res://assets/audio/heroes/hillary_quote_3.ogg"
+          },
+          {
+            "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do, and the way we do it better than anybody else!",
+            "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
+          },
+          {
+            "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
+            "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
+          },
+          {
+            "text": "Don't let anybody tell you that it's corporations and businesses that create jobs! If you've got a business, you didn't build that!",
+            "audio": "res://assets/audio/heroes/hillary_quote_6.ogg"
+          },
+          {
+            "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there, and we struggled!",
+            "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
+          },
+          {
+            "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
+            "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
           }
         ]
       },
       "robos:audioLines": {
         "turnStart": [
           {
-            "text": "We've traveled to every corner of the United States. I've now been in 57 states — I think one left to go!",
-            "audio": "res://assets/audio/heroes/hillary_turn_start.ogg"
+            "text": "Saddam Hussein will continue to increase his capacity to wage biological and chemical warfare!",
+            "audio": "res://assets/audio/heroes/hillary_quote_1.ogg"
+          },
+          {
+            "text": "We came, we saw, he died! Ha ha ha!",
+            "audio": "res://assets/audio/heroes/hillary_quote_2.ogg"
+          },
+          {
+            "text": "What difference, at this point, does it make?!",
+            "audio": "res://assets/audio/heroes/hillary_quote_3.ogg"
+          },
+          {
+            "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do, and the way we do it better than anybody else!",
+            "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
+          },
+          {
+            "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
+            "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
+          },
+          {
+            "text": "Don't let anybody tell you that it's corporations and businesses that create jobs! If you've got a business, you didn't build that!",
+            "audio": "res://assets/audio/heroes/hillary_quote_6.ogg"
+          },
+          {
+            "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there, and we struggled!",
+            "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
+          },
+          {
+            "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
+            "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
+          }
+        ],
+        "moving": [
+          {
+            "text": "Saddam Hussein will continue to increase his capacity to wage biological and chemical warfare!",
+            "audio": "res://assets/audio/heroes/hillary_quote_1.ogg"
+          },
+          {
+            "text": "We came, we saw, he died! Ha ha ha!",
+            "audio": "res://assets/audio/heroes/hillary_quote_2.ogg"
+          },
+          {
+            "text": "What difference, at this point, does it make?!",
+            "audio": "res://assets/audio/heroes/hillary_quote_3.ogg"
+          },
+          {
+            "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do, and the way we do it better than anybody else!",
+            "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
+          },
+          {
+            "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
+            "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
+          },
+          {
+            "text": "Don't let anybody tell you that it's corporations and businesses that create jobs! If you've got a business, you didn't build that!",
+            "audio": "res://assets/audio/heroes/hillary_quote_6.ogg"
+          },
+          {
+            "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there, and we struggled!",
+            "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
+          },
+          {
+            "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
+            "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
           }
         ],
         "attacking": [
           {
+            "text": "Saddam Hussein will continue to increase his capacity to wage biological and chemical warfare!",
+            "audio": "res://assets/audio/heroes/hillary_quote_1.ogg"
+          },
+          {
             "text": "We came, we saw, he died! Ha ha ha!",
-            "audio": "res://assets/audio/heroes/hillary_attacking.ogg"
+            "audio": "res://assets/audio/heroes/hillary_quote_2.ogg"
+          },
+          {
+            "text": "What difference, at this point, does it make?!",
+            "audio": "res://assets/audio/heroes/hillary_quote_3.ogg"
+          },
+          {
+            "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do, and the way we do it better than anybody else!",
+            "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
+          },
+          {
+            "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
+            "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
+          },
+          {
+            "text": "Don't let anybody tell you that it's corporations and businesses that create jobs! If you've got a business, you didn't build that!",
+            "audio": "res://assets/audio/heroes/hillary_quote_6.ogg"
+          },
+          {
+            "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there, and we struggled!",
+            "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
+          },
+          {
+            "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
+            "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
           }
         ],
         "attacked": [
           {
+            "text": "Saddam Hussein will continue to increase his capacity to wage biological and chemical warfare!",
+            "audio": "res://assets/audio/heroes/hillary_quote_1.ogg"
+          },
+          {
+            "text": "We came, we saw, he died! Ha ha ha!",
+            "audio": "res://assets/audio/heroes/hillary_quote_2.ogg"
+          },
+          {
             "text": "What difference, at this point, does it make?!",
-            "audio": "res://assets/audio/heroes/hillary_attacked.ogg"
+            "audio": "res://assets/audio/heroes/hillary_quote_3.ogg"
+          },
+          {
+            "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do, and the way we do it better than anybody else!",
+            "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
+          },
+          {
+            "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
+            "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
+          },
+          {
+            "text": "Don't let anybody tell you that it's corporations and businesses that create jobs! If you've got a business, you didn't build that!",
+            "audio": "res://assets/audio/heroes/hillary_quote_6.ogg"
+          },
+          {
+            "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there, and we struggled!",
+            "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
+          },
+          {
+            "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
+            "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
           }
         ],
         "defended": [
           {
-            "text": "What, like with a cloth or something? Well, no, I don't know how it works digitally at all!",
-            "audio": "res://assets/audio/heroes/hillary_defended.ogg"
+            "text": "Saddam Hussein will continue to increase his capacity to wage biological and chemical warfare!",
+            "audio": "res://assets/audio/heroes/hillary_quote_1.ogg"
+          },
+          {
+            "text": "We came, we saw, he died! Ha ha ha!",
+            "audio": "res://assets/audio/heroes/hillary_quote_2.ogg"
+          },
+          {
+            "text": "What difference, at this point, does it make?!",
+            "audio": "res://assets/audio/heroes/hillary_quote_3.ogg"
+          },
+          {
+            "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do, and the way we do it better than anybody else!",
+            "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
+          },
+          {
+            "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
+            "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
+          },
+          {
+            "text": "Don't let anybody tell you that it's corporations and businesses that create jobs! If you've got a business, you didn't build that!",
+            "audio": "res://assets/audio/heroes/hillary_quote_6.ogg"
+          },
+          {
+            "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there, and we struggled!",
+            "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
+          },
+          {
+            "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
+            "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
           }
         ],
         "castingMagic": [
           {
-            "text": "But I cast it with conviction! And I want the Iranians to know that if I'm the President, we will attack Iran!",
-            "audio": "res://assets/audio/heroes/hillary_casting_magic.ogg"
+            "text": "Saddam Hussein will continue to increase his capacity to wage biological and chemical warfare!",
+            "audio": "res://assets/audio/heroes/hillary_quote_1.ogg"
+          },
+          {
+            "text": "We came, we saw, he died! Ha ha ha!",
+            "audio": "res://assets/audio/heroes/hillary_quote_2.ogg"
+          },
+          {
+            "text": "What difference, at this point, does it make?!",
+            "audio": "res://assets/audio/heroes/hillary_quote_3.ogg"
+          },
+          {
+            "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do, and the way we do it better than anybody else!",
+            "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
+          },
+          {
+            "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
+            "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
+          },
+          {
+            "text": "Don't let anybody tell you that it's corporations and businesses that create jobs! If you've got a business, you didn't build that!",
+            "audio": "res://assets/audio/heroes/hillary_quote_6.ogg"
+          },
+          {
+            "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there, and we struggled!",
+            "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
+          },
+          {
+            "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
+            "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
           }
         ]
       }
@@ -492,64 +1536,412 @@
       "audioLines": {
         "turnStart": [
           {
-            "text": "Let's talk about welfare for the rich and the powerful!",
-            "audio": "res://assets/audio/heroes/bernie_turn_start.ogg"
+            "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
+            "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
+          },
+          {
+            "text": "In some of the largest cities in America, 50% of the kids are not graduating high school! The cost of college education is zooming up, so you have to be a wealthy person to send your kid to college!",
+            "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
+          },
+          {
+            "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+            "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
+          },
+          {
+            "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+            "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
+          },
+          {
+            "text": "We have an approach to campaign financing which allows wealthy people and major corporations to buy and sell politicians! The rich get richer and the poor get poorer!",
+            "audio": "res://assets/audio/heroes/bernie_quote_5.ogg"
+          },
+          {
+            "text": "The chief executive officers are seeing their salaries soar, and the gap between the rich and the poor grows wider! Ten million Americans are unemployed!",
+            "audio": "res://assets/audio/heroes/bernie_quote_6.ogg"
+          },
+          {
+            "text": "We give huge tax breaks to the wealthy and you have two million people sleeping out on the street! Billions of dollars in obsolete weapon systems, and five million children who are hungry!",
+            "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
+          },
+          {
+            "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
+            "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
+          }
+        ],
+        "moving": [
+          {
+            "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
+            "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
+          },
+          {
+            "text": "In some of the largest cities in America, 50% of the kids are not graduating high school! The cost of college education is zooming up, so you have to be a wealthy person to send your kid to college!",
+            "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
+          },
+          {
+            "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+            "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
+          },
+          {
+            "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+            "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
+          },
+          {
+            "text": "We have an approach to campaign financing which allows wealthy people and major corporations to buy and sell politicians! The rich get richer and the poor get poorer!",
+            "audio": "res://assets/audio/heroes/bernie_quote_5.ogg"
+          },
+          {
+            "text": "The chief executive officers are seeing their salaries soar, and the gap between the rich and the poor grows wider! Ten million Americans are unemployed!",
+            "audio": "res://assets/audio/heroes/bernie_quote_6.ogg"
+          },
+          {
+            "text": "We give huge tax breaks to the wealthy and you have two million people sleeping out on the street! Billions of dollars in obsolete weapon systems, and five million children who are hungry!",
+            "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
+          },
+          {
+            "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
+            "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
           }
         ],
         "attacking": [
           {
-            "text": "I will be damned if I will vote for a proposal which will stick it to the middle class and the working people!",
-            "audio": "res://assets/audio/heroes/bernie_attacking.ogg"
+            "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
+            "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
+          },
+          {
+            "text": "In some of the largest cities in America, 50% of the kids are not graduating high school! The cost of college education is zooming up, so you have to be a wealthy person to send your kid to college!",
+            "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
+          },
+          {
+            "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+            "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
+          },
+          {
+            "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+            "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
+          },
+          {
+            "text": "We have an approach to campaign financing which allows wealthy people and major corporations to buy and sell politicians! The rich get richer and the poor get poorer!",
+            "audio": "res://assets/audio/heroes/bernie_quote_5.ogg"
+          },
+          {
+            "text": "The chief executive officers are seeing their salaries soar, and the gap between the rich and the poor grows wider! Ten million Americans are unemployed!",
+            "audio": "res://assets/audio/heroes/bernie_quote_6.ogg"
+          },
+          {
+            "text": "We give huge tax breaks to the wealthy and you have two million people sleeping out on the street! Billions of dollars in obsolete weapon systems, and five million children who are hungry!",
+            "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
+          },
+          {
+            "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
+            "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
           }
         ],
         "attacked": [
           {
-            "text": "Mr. Speaker, I've got a problem! I've got a problem with a President and a Congress which allows five million children to go hungry!",
-            "audio": "res://assets/audio/heroes/bernie_attacked.ogg"
+            "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
+            "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
+          },
+          {
+            "text": "In some of the largest cities in America, 50% of the kids are not graduating high school! The cost of college education is zooming up, so you have to be a wealthy person to send your kid to college!",
+            "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
+          },
+          {
+            "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+            "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
+          },
+          {
+            "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+            "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
+          },
+          {
+            "text": "We have an approach to campaign financing which allows wealthy people and major corporations to buy and sell politicians! The rich get richer and the poor get poorer!",
+            "audio": "res://assets/audio/heroes/bernie_quote_5.ogg"
+          },
+          {
+            "text": "The chief executive officers are seeing their salaries soar, and the gap between the rich and the poor grows wider! Ten million Americans are unemployed!",
+            "audio": "res://assets/audio/heroes/bernie_quote_6.ogg"
+          },
+          {
+            "text": "We give huge tax breaks to the wealthy and you have two million people sleeping out on the street! Billions of dollars in obsolete weapon systems, and five million children who are hungry!",
+            "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
+          },
+          {
+            "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
+            "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
           }
         ],
         "defended": [
           {
-            "text": "What we are saying very loud and clear is that Ronald Reagan and his billionaire friends do not represent the America that we do!",
-            "audio": "res://assets/audio/heroes/bernie_defended.ogg"
+            "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
+            "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
+          },
+          {
+            "text": "In some of the largest cities in America, 50% of the kids are not graduating high school! The cost of college education is zooming up, so you have to be a wealthy person to send your kid to college!",
+            "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
+          },
+          {
+            "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+            "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
+          },
+          {
+            "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+            "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
+          },
+          {
+            "text": "We have an approach to campaign financing which allows wealthy people and major corporations to buy and sell politicians! The rich get richer and the poor get poorer!",
+            "audio": "res://assets/audio/heroes/bernie_quote_5.ogg"
+          },
+          {
+            "text": "The chief executive officers are seeing their salaries soar, and the gap between the rich and the poor grows wider! Ten million Americans are unemployed!",
+            "audio": "res://assets/audio/heroes/bernie_quote_6.ogg"
+          },
+          {
+            "text": "We give huge tax breaks to the wealthy and you have two million people sleeping out on the street! Billions of dollars in obsolete weapon systems, and five million children who are hungry!",
+            "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
+          },
+          {
+            "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
+            "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
           }
         ],
         "castingMagic": [
           {
-            "text": "This democracy is evolving into an oligarchy! And an oligarchy is a country in which a few people have tremendous wealth and power!",
-            "audio": "res://assets/audio/heroes/bernie_casting_magic.ogg"
+            "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
+            "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
+          },
+          {
+            "text": "In some of the largest cities in America, 50% of the kids are not graduating high school! The cost of college education is zooming up, so you have to be a wealthy person to send your kid to college!",
+            "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
+          },
+          {
+            "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+            "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
+          },
+          {
+            "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+            "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
+          },
+          {
+            "text": "We have an approach to campaign financing which allows wealthy people and major corporations to buy and sell politicians! The rich get richer and the poor get poorer!",
+            "audio": "res://assets/audio/heroes/bernie_quote_5.ogg"
+          },
+          {
+            "text": "The chief executive officers are seeing their salaries soar, and the gap between the rich and the poor grows wider! Ten million Americans are unemployed!",
+            "audio": "res://assets/audio/heroes/bernie_quote_6.ogg"
+          },
+          {
+            "text": "We give huge tax breaks to the wealthy and you have two million people sleeping out on the street! Billions of dollars in obsolete weapon systems, and five million children who are hungry!",
+            "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
+          },
+          {
+            "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
+            "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
           }
         ]
       },
       "robos:audioLines": {
         "turnStart": [
           {
-            "text": "Let's talk about welfare for the rich and the powerful!",
-            "audio": "res://assets/audio/heroes/bernie_turn_start.ogg"
+            "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
+            "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
+          },
+          {
+            "text": "In some of the largest cities in America, 50% of the kids are not graduating high school! The cost of college education is zooming up, so you have to be a wealthy person to send your kid to college!",
+            "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
+          },
+          {
+            "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+            "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
+          },
+          {
+            "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+            "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
+          },
+          {
+            "text": "We have an approach to campaign financing which allows wealthy people and major corporations to buy and sell politicians! The rich get richer and the poor get poorer!",
+            "audio": "res://assets/audio/heroes/bernie_quote_5.ogg"
+          },
+          {
+            "text": "The chief executive officers are seeing their salaries soar, and the gap between the rich and the poor grows wider! Ten million Americans are unemployed!",
+            "audio": "res://assets/audio/heroes/bernie_quote_6.ogg"
+          },
+          {
+            "text": "We give huge tax breaks to the wealthy and you have two million people sleeping out on the street! Billions of dollars in obsolete weapon systems, and five million children who are hungry!",
+            "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
+          },
+          {
+            "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
+            "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
+          }
+        ],
+        "moving": [
+          {
+            "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
+            "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
+          },
+          {
+            "text": "In some of the largest cities in America, 50% of the kids are not graduating high school! The cost of college education is zooming up, so you have to be a wealthy person to send your kid to college!",
+            "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
+          },
+          {
+            "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+            "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
+          },
+          {
+            "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+            "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
+          },
+          {
+            "text": "We have an approach to campaign financing which allows wealthy people and major corporations to buy and sell politicians! The rich get richer and the poor get poorer!",
+            "audio": "res://assets/audio/heroes/bernie_quote_5.ogg"
+          },
+          {
+            "text": "The chief executive officers are seeing their salaries soar, and the gap between the rich and the poor grows wider! Ten million Americans are unemployed!",
+            "audio": "res://assets/audio/heroes/bernie_quote_6.ogg"
+          },
+          {
+            "text": "We give huge tax breaks to the wealthy and you have two million people sleeping out on the street! Billions of dollars in obsolete weapon systems, and five million children who are hungry!",
+            "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
+          },
+          {
+            "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
+            "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
           }
         ],
         "attacking": [
           {
-            "text": "I will be damned if I will vote for a proposal which will stick it to the middle class and the working people!",
-            "audio": "res://assets/audio/heroes/bernie_attacking.ogg"
+            "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
+            "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
+          },
+          {
+            "text": "In some of the largest cities in America, 50% of the kids are not graduating high school! The cost of college education is zooming up, so you have to be a wealthy person to send your kid to college!",
+            "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
+          },
+          {
+            "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+            "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
+          },
+          {
+            "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+            "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
+          },
+          {
+            "text": "We have an approach to campaign financing which allows wealthy people and major corporations to buy and sell politicians! The rich get richer and the poor get poorer!",
+            "audio": "res://assets/audio/heroes/bernie_quote_5.ogg"
+          },
+          {
+            "text": "The chief executive officers are seeing their salaries soar, and the gap between the rich and the poor grows wider! Ten million Americans are unemployed!",
+            "audio": "res://assets/audio/heroes/bernie_quote_6.ogg"
+          },
+          {
+            "text": "We give huge tax breaks to the wealthy and you have two million people sleeping out on the street! Billions of dollars in obsolete weapon systems, and five million children who are hungry!",
+            "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
+          },
+          {
+            "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
+            "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
           }
         ],
         "attacked": [
           {
-            "text": "Mr. Speaker, I've got a problem! I've got a problem with a President and a Congress which allows five million children to go hungry!",
-            "audio": "res://assets/audio/heroes/bernie_attacked.ogg"
+            "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
+            "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
+          },
+          {
+            "text": "In some of the largest cities in America, 50% of the kids are not graduating high school! The cost of college education is zooming up, so you have to be a wealthy person to send your kid to college!",
+            "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
+          },
+          {
+            "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+            "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
+          },
+          {
+            "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+            "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
+          },
+          {
+            "text": "We have an approach to campaign financing which allows wealthy people and major corporations to buy and sell politicians! The rich get richer and the poor get poorer!",
+            "audio": "res://assets/audio/heroes/bernie_quote_5.ogg"
+          },
+          {
+            "text": "The chief executive officers are seeing their salaries soar, and the gap between the rich and the poor grows wider! Ten million Americans are unemployed!",
+            "audio": "res://assets/audio/heroes/bernie_quote_6.ogg"
+          },
+          {
+            "text": "We give huge tax breaks to the wealthy and you have two million people sleeping out on the street! Billions of dollars in obsolete weapon systems, and five million children who are hungry!",
+            "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
+          },
+          {
+            "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
+            "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
           }
         ],
         "defended": [
           {
-            "text": "What we are saying very loud and clear is that Ronald Reagan and his billionaire friends do not represent the America that we do!",
-            "audio": "res://assets/audio/heroes/bernie_defended.ogg"
+            "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
+            "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
+          },
+          {
+            "text": "In some of the largest cities in America, 50% of the kids are not graduating high school! The cost of college education is zooming up, so you have to be a wealthy person to send your kid to college!",
+            "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
+          },
+          {
+            "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+            "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
+          },
+          {
+            "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+            "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
+          },
+          {
+            "text": "We have an approach to campaign financing which allows wealthy people and major corporations to buy and sell politicians! The rich get richer and the poor get poorer!",
+            "audio": "res://assets/audio/heroes/bernie_quote_5.ogg"
+          },
+          {
+            "text": "The chief executive officers are seeing their salaries soar, and the gap between the rich and the poor grows wider! Ten million Americans are unemployed!",
+            "audio": "res://assets/audio/heroes/bernie_quote_6.ogg"
+          },
+          {
+            "text": "We give huge tax breaks to the wealthy and you have two million people sleeping out on the street! Billions of dollars in obsolete weapon systems, and five million children who are hungry!",
+            "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
+          },
+          {
+            "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
+            "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
           }
         ],
         "castingMagic": [
           {
-            "text": "This democracy is evolving into an oligarchy! And an oligarchy is a country in which a few people have tremendous wealth and power!",
-            "audio": "res://assets/audio/heroes/bernie_casting_magic.ogg"
+            "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
+            "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
+          },
+          {
+            "text": "In some of the largest cities in America, 50% of the kids are not graduating high school! The cost of college education is zooming up, so you have to be a wealthy person to send your kid to college!",
+            "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
+          },
+          {
+            "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+            "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
+          },
+          {
+            "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+            "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
+          },
+          {
+            "text": "We have an approach to campaign financing which allows wealthy people and major corporations to buy and sell politicians! The rich get richer and the poor get poorer!",
+            "audio": "res://assets/audio/heroes/bernie_quote_5.ogg"
+          },
+          {
+            "text": "The chief executive officers are seeing their salaries soar, and the gap between the rich and the poor grows wider! Ten million Americans are unemployed!",
+            "audio": "res://assets/audio/heroes/bernie_quote_6.ogg"
+          },
+          {
+            "text": "We give huge tax breaks to the wealthy and you have two million people sleeping out on the street! Billions of dollars in obsolete weapon systems, and five million children who are hungry!",
+            "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
+          },
+          {
+            "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
+            "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
           }
         ]
       }
