@@ -24,10 +24,11 @@ The source files, including raw notes, are in the repository: [docs/ideas on Git
 
 ## Proposals
 
-None of these is built. Where part of the idea exists, the proposal page lists it under "What exists today".
+These are production proposals. Each page distinguishes implemented parts and prototypes from planned work.
 
 | Proposal | What it would add |
 |:---|:---|
+| [RobOS Household]({{ '/ideas/specs/robos-household.html' | relative_url }}) | Family finances and US taxes; public schema and [synthetic lifecycle walkthrough](https://rowbose.com/family-finances/) implemented, production storage and filing planned |
 | [Dev Central as an agent review hub]({{ '/ideas/specs/dev-central-ai-agent-review-development.html' | relative_url }}) | Goal dispatch, plan review and a live agent monitor in Dev Central |
 | [Agent Linux accounts and live agent desktops]({{ '/ideas/specs/ephemeral-agent-user-profiles.html' | relative_url }}) | A real Linux user per agent, and agent displays you can watch |
 | [Gitea forge for E2E tests]({{ '/ideas/specs/e2e-gitea-support.html' | relative_url }}) | A local Git forge in the E2E container |
