@@ -4,6 +4,7 @@ package: people-manager
 category: arch-planning
 summary: "Prototype roster screen for teams of people and AI agents, grouped by Team Topologies type. It shows built-in sample data."
 description: "A prototype that lists sample teams with their human and agent members. Nothing is read from or saved to disk yet."
+icon: people-manager.svg
 ---
 
 People Manager is a prototype. It displays a fixed sample organisation ("Acme Global Platform Engineering") to show how a roster of people and AI agents could look. It does not read your teams.

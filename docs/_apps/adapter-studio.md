@@ -4,6 +4,7 @@ package: adapter-studio
 category: apis-testing
 summary: "A prototype window that shows sample translations between Backstage, TypeSpec, Buf, Pact and Dev Container files and RobOS specs."
 description: "Adapter Studio displays built-in example input and output for five open-source formats. It does not read or write your repository; the adapter code is in the robos-adapters package."
+icon: adapter-studio.svg
 ---
 
 Adapter Studio is a demo of the idea behind the `robos-adapters` library: take a file in an existing standard (a Backstage `catalog-info.yaml`, a TypeSpec `main.tsp`, a Buf config, a Pact contract, a `devcontainer.json`) and show the matching RobOS spec next to it.

@@ -4,6 +4,7 @@ package: topology-manager
 category: arch-planning
 summary: "Prototype C4-style canvas that shows a built-in sample system (Acme Petshop). Backstage import and C4 export return canned results."
 description: "Shows a sample topology with L1, L2 and L3 views, a node inspector, and buttons for Backstage import, C4 export and adding a data source. It does not read your Backstage catalog or your services yet."
+icon: topology-manager.svg
 ---
 
 System Topology Studio is a prototype. The window shows one hard-coded example system, "Acme Petshop Platform", so you can see how a topology canvas could look. It does not discover your architecture.

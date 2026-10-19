@@ -23,3 +23,9 @@
   name: Agent Services & MCP Servers
 - id: point-of-sale
   name: Point of Sale & Commerce
+- id: auto
+  name: Auto Center & Vehicle Care
+- id: household
+  name: Household & Personal Finance
+- id: games
+  name: Game Studios & Level Editors

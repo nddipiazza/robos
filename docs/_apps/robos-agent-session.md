@@ -4,6 +4,7 @@ package: robos-agent-session
 category: services
 summary: "Node.js client for the agentd socket, plus a small demo window and a simulated test-driven-development runner."
 description: "A library that other RobOS apps use to spawn, list, inspect and terminate sub-agent sessions through robos-agentd. The package's own window is a demo, not a product screen."
+icon: robos-agent-session.svg
 ---
 
 `robos-agent-session` is mainly a library. Its window exists to demonstrate the API.

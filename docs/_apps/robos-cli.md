@@ -4,6 +4,7 @@ package: robos-cli
 category: services
 summary: "Four shell scripts for scripts and agents: send a notification, set the active task, append to the work journal, and emit or read events."
 description: "robos-notify, robos-active-task, robos-journal-append and robos-event, plus a small console window that runs them for testing. They write plain files under ~/.config/robos."
+icon: robos-cli.svg
 ---
 
 The scripts in `packages/robos-cli` let scripts, cron jobs and agents talk to other RobOS apps without an API. Each is a bash script that calls `python3` for JSON handling. They are listed under `bin` in `package.json`.

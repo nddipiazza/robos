@@ -4,6 +4,7 @@ package: ekgraph-mcp
 category: services
 summary: "An MCP server that lets agents search and edit a small node store, query and propose changes to the SDLC graph, and look up schema types."
 description: "ekgraph-mcp runs in two modes. By default it serves a JSON node store seeded with five sample nodes. When ROBOS_GRAPH_ROOT is set it serves the SDLC graph workspace through review-based sdlc tools."
+icon: ekgraph-mcp.svg
 ---
 
 This package is an MCP server with a console window. Which tools do real work depends on whether a graph workspace is configured.

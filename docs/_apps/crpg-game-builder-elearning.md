@@ -4,6 +4,7 @@ package: crpg-game-builder-elearning
 category: learning
 summary: "A window that opens the cRPG game-building training pages from the docs folder."
 description: "This package is a thin Electron shell around the static eLearning page in docs/projects/crpg-realm/create-your-own-game/elearning. It has no features of its own."
+icon: crpg-game-builder-elearning.svg
 ---
 
 The app creates one 1400 by 900 window and loads `docs/projects/crpg-realm/create-your-own-game/elearning/index.html` from the repository with `loadFile`. The page is titled "RobOS cRPG Game Builder & Tactical Engine Academy". All content lives in that HTML file; the package adds no menus, storage or network access.

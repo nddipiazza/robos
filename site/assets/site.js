@@ -47,14 +47,19 @@
 
   // App filter
   var q = document.getElementById('app-q');
+  var none = document.getElementById('app-none');
   if (q) q.addEventListener('input', function () {
     var v = q.value.trim().toLowerCase();
+    var any = false;
     document.querySelectorAll('.app-card').forEach(function (c) {
-      c.hidden = v && c.dataset.s.indexOf(v) === -1;
+      var hide = !!(v && c.dataset.s.indexOf(v) === -1);
+      c.hidden = hide;
+      if (!hide) any = true;
     });
-    document.querySelectorAll(".app-group:not(.games-link)").forEach(function (g) {
+    document.querySelectorAll('.app-group:not(.games-link)').forEach(function (g) {
       g.hidden = !g.querySelector('.app-card:not([hidden])');
     });
+    if (none) none.hidden = any;
   });
 })();
 

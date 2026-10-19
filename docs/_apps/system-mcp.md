@@ -4,6 +4,7 @@ package: system-mcp
 category: services
 summary: "MCP server with six tools for preferences, notifications, a tool inventory, file-name search and the active task, backed by a JSON file with sample data."
 description: "Built on the MCP framework. It stores its state in ~/.config/robos/system/state.json and does not read live system data or the real toast daemon."
+icon: system-mcp.svg
 ---
 
 System MCP exposes a small set of "system" tools to an agent. The data comes from `~/.config/robos/system/state.json`, which is created with built-in sample values on first run and edited by the tools afterwards.
