@@ -28,6 +28,7 @@ None of these is built. Where part of the idea exists, the proposal page lists i
 
 | Proposal | What it would add |
 |:---|:---|
+| [RobOS Household]({{ '/ideas/specs/robos-household.html' | relative_url }}) | Family finances, reviewed tax-document extraction, private cloud records, and a US tax wizard; initial public tax schema supplied |
 | [Dev Central as an agent review hub]({{ '/ideas/specs/dev-central-ai-agent-review-development.html' | relative_url }}) | Goal dispatch, plan review and a live agent monitor in Dev Central |
 | [Agent Linux accounts and live agent desktops]({{ '/ideas/specs/ephemeral-agent-user-profiles.html' | relative_url }}) | A real Linux user per agent, and agent displays you can watch |
 | [Gitea forge for E2E tests]({{ '/ideas/specs/e2e-gitea-support.html' | relative_url }}) | A local Git forge in the E2E container |
