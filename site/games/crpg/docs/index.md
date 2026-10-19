@@ -12,9 +12,9 @@ accent: "#5ec8e5"
   <h1 class="g-title" style="font-size:clamp(2rem,5vw,3.4rem)">Documentation</h1>
   <p class="lead" style="margin-top:14px;color:#c9c2b2;max-width:60ch">Everything for playing, modding and understanding the cRPG.</p>
   <div class="grid3">
-    <a class="card" href="{{ '/v1/projects/crpg-realm/quick-start.html' | relative_url }}"><div class="ic">🚀</div><h3>Quick start</h3><p>Run the game and the test suite.</p><span class="go">Open →</span></a>
-    <a class="card" href="{{ '/v1/projects/crpg-realm/controls.html' | relative_url }}"><div class="ic">⌨️</div><h3>Controls</h3><p>Keys, mouse and pause commands.</p><span class="go">Open →</span></a>
-    <a class="card" href="{{ '/v1/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}"><div class="ic">🗺️</div><h3>Campaign editor tutorial</h3><p>Step-by-step "Rescue the Princess".</p><span class="go">Open →</span></a>
+    <a class="card" href="{{ '/v1/projects/crpg-realm/quick-start.html' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/rocket.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Quick start</h3><p>Run the game and the test suite.</p><span class="go">Open →</span></a>
+    <a class="card" href="{{ '/v1/projects/crpg-realm/controls.html' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/keyboard.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Controls</h3><p>Keys, mouse and pause commands.</p><span class="go">Open →</span></a>
+    <a class="card" href="{{ '/v1/projects/crpg-realm/campaign-editor-tutorial.html' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/map.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Campaign editor tutorial</h3><p>Step-by-step "Rescue the Princess".</p><span class="go">Open →</span></a>
   </div>
   <div class="doc-list" style="margin-top:44px">
     <div>

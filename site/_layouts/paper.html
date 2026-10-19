@@ -9,7 +9,7 @@ layout: default
     <p class="paper-status">{{ page.status }}</p>
     <div class="cta cta-left">
       {%- if page.pdf %}
-      <a class="btn btn-accent" href="{{ page.pdf | relative_url }}">⬇ Download the PDF</a>
+      <a class="btn btn-accent" href="{{ page.pdf | relative_url }}"><img class="btn-ic" src="/assets/icons/download.svg" alt="" width="18" height="18"> Download the PDF</a>
       {%- endif %}
       <a class="btn btn-ghost" href="{{ '/future/' | relative_url }}">← Plain-English summary</a>
     </div>

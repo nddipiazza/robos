@@ -22,12 +22,12 @@ accent: "#5ec8e5"
       <h2 class="h2">Pause. Plan. Resolve.</h2>
       <p class="sec-p">Press Space to freeze the fight, queue moves, change formation or pick a spell, then unpause and watch it resolve. It is modelled on the Infinity Engine classics, with d20 combat, threat-driven enemy AI and a Baldur's Gate-style activity log.</p>
       <div class="grid3">
-        <div class="card"><div class="ic">⏸️</div><h3>Real-time with pause</h3><p>Queue orders while time is frozen. Six formations, party leader swapping, and shift-click move queues.</p></div>
-        <div class="card"><div class="ic">🎲</div><h3>d20 tactical combat</h3><p>Attack rolls versus AC with advantage and disadvantage, saving throws, and 3D area spells like Fireball (8d6, DC 14 DEX save).</p></div>
-        <div class="card"><div class="ic">🐺</div><h3>Enemies that coordinate</h3><p>Enemies keep a threat table, switch targets, and alert packmates up to 950 px away.</p></div>
-        <div class="card"><div class="ic">🧭</div><h3>Smart pathfinding</h3><p>Sub-tile A* with string-pulling smoothing. Characters clear corners instead of sticking to walls.</p></div>
-        <div class="card"><div class="ic">🌫️</div><h3>Fog of war &amp; traps</h3><p>Hidden traps, rogue searches, <em>Find Traps</em>, and torch-lit exploration of catacombs.</p></div>
-        <div class="card"><div class="ic">♟️</div><h3>3D miniature pawns</h3><p>Heroes and monsters render as tabletop miniatures with equipment that mounts to weapon, shield and helm sockets.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/pause.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Real-time with pause</h3><p>Queue orders while time is frozen. Six formations, party leader swapping, and shift-click move queues.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/dice.svg" alt="" width="48" height="48" loading="lazy"></div><h3>d20 tactical combat</h3><p>Attack rolls versus AC with advantage and disadvantage, saving throws, and 3D area spells like Fireball (8d6, DC 14 DEX save).</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/wolf.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Enemies that coordinate</h3><p>Enemies keep a threat table, switch targets, and alert packmates up to 950 px away.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/compass.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Smart pathfinding</h3><p>Sub-tile A* with string-pulling smoothing. Characters clear corners instead of sticking to walls.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/fog.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Fog of war &amp; traps</h3><p>Hidden traps, rogue searches, <em>Find Traps</em>, and torch-lit exploration of catacombs.</p></div>
+        <div class="card"><div class="ic"><img class="ic-img" src="/assets/icons/pawn.svg" alt="" width="48" height="48" loading="lazy"></div><h3>3D miniature pawns</h3><p>Heroes and monsters render as tabletop miniatures with equipment that mounts to weapon, shield and helm sockets.</p></div>
       </div>
     </div>
   </div>
