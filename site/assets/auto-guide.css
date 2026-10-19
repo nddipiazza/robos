@@ -35,3 +35,19 @@
 .guide-video iframe{display:block;aspect-ratio:16/9;height:auto}
 
 .guide-body{min-width:0}
+
+/* Product introduction, followed by the owner guide. */
+.auto-intro{padding:64px 0 36px;border-bottom:1px solid var(--line)}
+.auto-intro-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:44px;align-items:center}
+.auto-intro-copy h1{font-size:clamp(2rem,4vw,3rem);line-height:1.12;letter-spacing:-.04em;margin:12px 0 20px}
+.auto-intro-lead{font-size:clamp(1.1rem,1.8vw,1.4rem);line-height:1.5;color:var(--fg);margin:0 0 18px}
+.auto-intro-copy>p:not(.eyebrow):not(.auto-intro-lead){color:var(--muted);max-width:55ch}
+.auto-intro-copy .btn{margin-top:12px}.auto-intro-demo{min-width:0}.auto-intro-demo .guide-video{margin:0}
+.auto-audiences{display:grid;grid-template-columns:1fr 1fr;gap:44px;margin:40px 0 22px;padding-top:26px;border-top:1px solid var(--line)}
+.auto-audiences h2{font-size:1rem;font-weight:600;margin:0 0 8px}.auto-audiences p{font-size:.95rem;color:var(--muted);max-width:58ch;margin:0}
+.auto-intro-note{font-size:.82rem;color:var(--muted);max-width:95ch}
+.auto-guide-heading{padding:16px 0 25px;border-bottom:1px solid var(--line)}
+.auto-guide-heading h2{font-size:clamp(1.7rem,3vw,2.2rem);margin:8px 0 10px;scroll-margin-top:90px}
+.auto-guide-heading>p:last-child{color:var(--muted);margin:0}
+.auto-guide-heading+.guide-layout{margin-top:32px}
+@media(max-width:860px){.auto-intro{padding-top:36px}.auto-intro-grid,.auto-audiences{grid-template-columns:1fr;gap:26px}.auto-intro-demo{max-width:680px}.auto-audiences{margin-top:30px}}

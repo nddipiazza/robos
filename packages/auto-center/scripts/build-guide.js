@@ -55,15 +55,18 @@ function nav(current) {
 }
 const wrap = (p, body, hero) => {
   const { list, pager } = nav(p);
+  const isIndex = p.step === 0;
+  const introduction = isIndex ? fs.readFileSync(path.join(root, 'guide/introduction.html'), 'utf8').replace('<!--walkthrough-->', videoFigure('A complete repair, from customer intake to handing back the keys.')) : '';
+  const guideHeading = isIndex ? '<header class="auto-guide-heading"><p class="eyebrow">Documentation</p><h2 id="robos-auto-guide">RobOS Auto Guide</h2><p>A step-by-step guide for the shop owner, with real app walkthroughs.</p></header>' : '';
   return `---
 layout: default
-title: ${p.step ? `${p.title} · Auto Center tutorial` : 'Auto Center tutorial'}
+title: ${p.step ? `${p.title} · Auto Center tutorial` : 'RobOS Auto Center'}
 permalink: ${p.url}
 body_class: guide
 extra_css: /assets/auto-guide.css
-description: "${esc(p.summary)}"
+description: "${esc(isIndex ? 'Vehicle care for owners and repair operations for independent shops, with the RobOS Auto Guide.' : p.summary)}"
 ---
-${hero || ''}<section class="guide-page"><div class="wrap"><div class="guide-layout">${list}<article class="guide-body"><p class="eyebrow">${p.step && p.step < 10 ? `Step ${p.step} of 9${p.minutes ? ` · about ${p.minutes} minutes` : ''}` : 'Tutorial'}</p><h1 class="guide-title">${esc(p.title)}</h1><p class="chapter-intro">${esc(p.summary)}</p>
+${hero || introduction}<section class="guide-page"><div class="wrap">${guideHeading}<div class="guide-layout">${isIndex ? list.replace('>Auto Center tutorial<', '>RobOS Auto Guide<') : list}<article class="guide-body"><p class="eyebrow">${p.step && p.step < 10 ? `Step ${p.step} of 9${p.minutes ? ` · about ${p.minutes} minutes` : ''}` : isIndex ? 'For the shop owner' : 'Tutorial'}</p><${isIndex ? 'h3' : 'h1'} class="guide-title">${esc(p.title)}</${isIndex ? 'h3' : 'h1'}><p class="chapter-intro">${esc(p.summary)}</p>
 ${body}
 ${pager}</article></div></div></section>
 `;

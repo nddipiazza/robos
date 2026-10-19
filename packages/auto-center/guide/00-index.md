@@ -1,13 +1,9 @@
 ---
-title: Replace your shop system with Auto Center
-summary: A step-by-step tutorial for a shop owner moving to RobOS Auto Center.
+title: Start here
+summary: Set up Auto Center, bring in your records, and follow a repair through the shop.
 minutes: 0
 ---
-Auto Center runs a repair shop from the first phone call to the keys going back. Each person gets their own menu: the **front desk** takes the call, the **mechanic** does the work, **checkout** collects the money, and the **owner** sets it all up. Every change is saved and backed up to a private GitHub repository, so you never lose a customer's history.
-
-This tutorial is written for **you, the owner**. It takes you from nothing to a shop that runs on Auto Center, in the order you will do things. Plan on **about two hours of setup**, then a week of running your old system alongside the new one.
-
-::video[One whole repair, from the first call to the keys going back.]
+This guide is written for **you, the shop owner**. Work through the steps in order: set up the shop, bring in your data, then follow the front desk, mechanic and checkout workflows. Run your old system alongside Auto Center while you check that your records and daily routine are covered.
 
 ## The path
 
