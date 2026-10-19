@@ -1,0 +1,60 @@
+---
+layout: default
+title: Protect your data · Auto Center tutorial
+permalink: /auto-center/7-protect-your-data/
+body_class: guide
+extra_css: /assets/auto-guide.css
+description: "Back up your shop's records to a private GitHub repository, and move to a new computer if you ever need to."
+---
+<section class="guide-page"><div class="wrap"><div class="guide-layout"><nav class="guide-toc" aria-label="Tutorial steps"><h4><a href="{{ '/auto-center/' | relative_url }}">Auto Center tutorial</a></h4><ol><li><a href="{{ '/auto-center/1-before-you-start/' | relative_url }}">Before you start</a></li><li><a href="{{ '/auto-center/2-set-up-your-shop/' | relative_url }}">Set up your shop</a></li><li><a href="{{ '/auto-center/3-bring-in-your-data/' | relative_url }}">Bring in your data</a></li><li><a href="{{ '/auto-center/4-front-desk/' | relative_url }}">Take the customer's call</a></li><li><a href="{{ '/auto-center/5-mechanic-bench/' | relative_url }}">The mechanic bench</a></li><li><a href="{{ '/auto-center/6-checkout/' | relative_url }}">Check the customer out</a></li><li class="here"><a href="{{ '/auto-center/7-protect-your-data/' | relative_url }}">Protect your data</a></li><li><a href="{{ '/auto-center/8-run-the-shop/' | relative_url }}">Run the shop day to day</a></li><li><a href="{{ '/auto-center/9-switch-over/' | relative_url }}">Switch over from your old system</a></li><li><a href="{{ '/auto-center/tests/' | relative_url }}">How we know it works</a></li></ol></nav><article class="guide-body"><p class="eyebrow">Step 7 of 9 · about 15 minutes</p><h1 class="guide-title">Protect your data</h1><p class="chapter-intro">Back up your shop's records to a private GitHub repository, and move to a new computer if you ever need to.</p>
+<p>Your customers, tickets and payments are your business. This page makes sure a broken or stolen computer never costs you any of it.</p>
+<h2>How your records are stored</h2>
+<p>Every change you make, such as a new customer, a diagnosis or a payment, is saved on your computer and added to a private history in the same moment. You do not press a save button. The history lives in a folder called <code>shop</code> inside your Auto Center data folder, which by default is <code>~/.config/robos/auto-center</code>. Only your own user can read it.</p>
+<p>That history is a normal <strong>Git repository</strong>. Git is the same tool programmers use to keep every version of their work. You do not need to learn it. It means your history can be copied to GitHub as a backup.</p>
+<h2>Set up your backup</h2>
+<ol>
+<li>Create a free account at github.com if you do not have one.</li>
+<li>Create a new repository and choose <strong>Private</strong>. Name it something like <code>your-shop-records</code>. Never make it public, because it will hold customer names and phone numbers.</li>
+<li>Install the GitHub command line tool (<code>gh</code>) on the shop computer and sign in with <code>gh auth login</code>. Auto Center uses it to check that your repository really is private.</li>
+<li>In Auto Center open <strong>Admin</strong>, then <strong>Backup</strong>.</li>
+<li>Enter your repository as <code>your-account/your-shop-records</code> and press <strong>Connect</strong>.</li>
+<li>Press <strong>Back up now</strong>.</li>
+</ol>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/01-shop-admin--see-whether-your-records-are-backed-up-2.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/01-shop-admin--see-whether-your-records-are-backed-up-2.jpg' | relative_url }}" alt="The Backup tab before a repository is connected" loading="lazy" width="1000" height="625"></a><figcaption>The Backup tab before a repository is connected</figcaption></figure>
+
+
+
+<p>The banner changes from <em>Not backed up yet</em> to <em>Backed up to <a href="https://github.com/%E2%80%A6">https://github.com/…</a></em>. If the repository is not private, or the name is wrong, Auto Center refuses to connect and tells you why.</p>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/01-shop-admin--see-whether-your-records-are-backed-up-4.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/01-shop-admin--see-whether-your-records-are-backed-up-4.jpg' | relative_url }}" alt="A repository name that is not valid is refused" loading="lazy" width="1000" height="625"></a><figcaption>A repository name that is not valid is refused</figcaption></figure>
+
+
+
+<blockquote>
+<p><strong>Make it a habit.</strong> Pressing <strong>Back up now</strong> is manual. Do it at closing time every day. Anything you did since the last backup exists only on the shop computer.</p>
+</blockquote>
+<blockquote>
+<p><strong>Privacy.</strong> A private GitHub repository is still stored on GitHub&#39;s servers. Check that keeping customer names, phone numbers and vehicle details there is acceptable under the rules where you operate.</p>
+</blockquote>
+<h2>Move to a new computer</h2>
+<p>If the shop computer dies, you can get everything back from your backup. This was tested with a copy of a real shop.</p>
+<ol>
+<li><p>Install Auto Center on the new computer and open it once, then close it.</p>
+</li>
+<li><p>In a terminal, copy your backup into the data folder:</p>
+<pre><code>mkdir -p ~/.config/robos/auto-center
+git clone https://github.com/your-account/your-shop-records.git ~/.config/robos/auto-center/shop
+</code></pre>
+</li>
+<li><p>Open Auto Center, set <strong>Workspace</strong> to <strong>Maintenance center</strong>, and open <strong>Admin</strong>, then <strong>Customers</strong>. Your customers, tickets and team are back.</p>
+</li>
+</ol>
+<p>The new computer is already connected to the same backup, so <strong>Back up now</strong> works straight away.</p>
+<h2>You are ready when</h2>
+<ul>
+<li><span class="box"></span> <strong>Admin</strong>, <strong>Backup</strong> shows <em>Backed up to</em> your private repository</li>
+<li><span class="box"></span> You have a reminder to back up at closing time</li>
+<li><span class="box"></span> You know where the restore steps are</li>
+</ul>
+<p>Next: <a href="../8-run-the-shop/">Run the shop day to day</a>.</p>
+
+<div class="guide-pager"><a class="prev" href="{{ '/auto-center/6-checkout/' | relative_url }}"><small>Previous</small><b>Check the customer out</b></a><a class="next" href="{{ '/auto-center/8-run-the-shop/' | relative_url }}"><small>Next</small><b>Run the shop day to day</b></a></div></article></div></div></section>

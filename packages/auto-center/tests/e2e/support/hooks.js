@@ -33,12 +33,5 @@ After(async function ({ pickle, result }) {
 AfterAll(() => {
   fs.writeFileSync(path.join(EVIDENCE, 'manifest.json'), JSON.stringify(manifest, null, 2));
   fs.rmSync(path.join(EVIDENCE, 'videos', '_raw'), { recursive: true, force: true });
-  const vids = manifest.map(m => m.video).filter(Boolean).sort();
-  if (!vids.length) return;
-  try {
-    const list = path.join(EVIDENCE, 'videos', 'list.txt');
-    fs.writeFileSync(list, vids.map(v => `file '${path.join(EVIDENCE, v)}'`).join('\n'));
-    execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', list, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-an', path.join(EVIDENCE, 'auto-center-suite.mp4')], { timeout: 600000 });
-    fs.rmSync(list);
-  } catch (e) { console.error('Combined suite video failed:', e.message); }
+  // Videos are published per scenario; the guide re-encodes the ones it shows.
 });
