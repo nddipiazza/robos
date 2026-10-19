@@ -1,0 +1,1151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robos.dev/schemas/tax/household-0.1.0.schema.json",
+  "title": "RobOS Household private instance contracts",
+  "description": "Design contracts only. All durable instances belong in the approved private cloud vault, never in Git. No runtime authorization or tax engine is supplied.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Household"
+    },
+    {
+      "$ref": "#/$defs/Member"
+    },
+    {
+      "$ref": "#/$defs/Dependent"
+    },
+    {
+      "$ref": "#/$defs/Placement"
+    },
+    {
+      "$ref": "#/$defs/Account"
+    },
+    {
+      "$ref": "#/$defs/Category"
+    },
+    {
+      "$ref": "#/$defs/ImportBatch"
+    },
+    {
+      "$ref": "#/$defs/Transaction"
+    },
+    {
+      "$ref": "#/$defs/RecurringExpense"
+    },
+    {
+      "$ref": "#/$defs/Donation"
+    },
+    {
+      "$ref": "#/$defs/Document"
+    },
+    {
+      "$ref": "#/$defs/FieldObservation"
+    },
+    {
+      "$ref": "#/$defs/TaxTreatment"
+    },
+    {
+      "$ref": "#/$defs/TaxReturn"
+    },
+    {
+      "$ref": "#/$defs/FilingSubmission"
+    },
+    {
+      "$ref": "#/$defs/AuditEvent"
+    }
+  ],
+  "$defs": {
+    "Money": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)\\.[0-9]{2}$",
+          "description": "Exact USD amount, never a binary floating-point value."
+        },
+        "currency": {
+          "const": "USD"
+        }
+      },
+      "required": [
+        "amount",
+        "currency"
+      ]
+    },
+    "BoundingBox": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "height": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ]
+    },
+    "Household": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "Household"
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "vaultId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approvedCloudProviderId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "householdId",
+        "displayName",
+        "vaultId",
+        "approvedCloudProviderId"
+      ]
+    },
+    "Member": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "Member"
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "robosUserId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "enum": [
+            "owner",
+            "adult",
+            "limited-member",
+            "tax-reviewer"
+          ]
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "householdId",
+        "robosUserId",
+        "role"
+      ]
+    },
+    "Dependent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "Dependent"
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "birthDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "relationship": {
+          "enum": [
+            "child",
+            "stepchild",
+            "foster-child",
+            "sibling",
+            "parent",
+            "other"
+          ]
+        },
+        "robosUserId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "householdId",
+        "displayName",
+        "birthDate",
+        "relationship"
+      ]
+    },
+    "Placement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "Placement"
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dependentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "residenceId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "endDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "nights": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 366
+        },
+        "taxYear": {
+          "type": "integer",
+          "minimum": 2000,
+          "maximum": 2100
+        },
+        "placementType": {
+          "enum": [
+            "custody",
+            "foster",
+            "shared-residency",
+            "other"
+          ]
+        },
+        "evidenceDocumentIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "householdId",
+        "dependentId",
+        "residenceId",
+        "startDate",
+        "endDate",
+        "nights",
+        "taxYear",
+        "placementType"
+      ]
+    },
+    "Account": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "Account"
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ownerMemberIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "accountType": {
+          "enum": [
+            "checking",
+            "savings",
+            "credit-card",
+            "cash",
+            "loan",
+            "investment",
+            "other"
+          ]
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lastFour": {
+          "type": "string",
+          "pattern": "^[0-9]{4}$"
+        },
+        "openingBalance": {
+          "$ref": "#/$defs/Money"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "householdId",
+        "ownerMemberIds",
+        "accountType",
+        "displayName"
+      ]
+    },
+    "Category": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "Category"
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parentId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "householdId",
+        "name"
+      ]
+    },
+    "ImportBatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "ImportBatch"
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accountId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceDocumentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "format": {
+          "enum": [
+            "CSV",
+            "OFX",
+            "QFX"
+          ]
+        },
+        "importedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "householdId",
+        "accountId",
+        "sourceDocumentId",
+        "format",
+        "importedAt"
+      ]
+    },
+    "Transaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "Transaction"
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "accountId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "postedDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "money": {
+          "$ref": "#/$defs/Money"
+        },
+        "payee": {
+          "type": "string",
+          "minLength": 1
+        },
+        "categoryId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entryType": {
+          "enum": [
+            "income",
+            "expense",
+            "transfer",
+            "refund",
+            "reimbursement"
+          ]
+        },
+        "transferPairId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "relatedTransactionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "importBatchId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceRowId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "deduplicationKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receiptDocumentIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "taxTreatment": {
+          "enum": [
+            "unassessed",
+            "candidate",
+            "allowed",
+            "disallowed",
+            "review-needed"
+          ]
+        },
+        "splits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "categoryId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "money": {
+                "$ref": "#/$defs/Money"
+              }
+            },
+            "required": [
+              "categoryId",
+              "money"
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "householdId",
+        "accountId",
+        "postedDate",
+        "money",
+        "entryType",
+        "taxTreatment"
+      ]
+    },
+    "RecurringExpense": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "RecurringExpense"
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "categoryId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expectedMoney": {
+          "$ref": "#/$defs/Money"
+        },
+        "frequency": {
+          "enum": [
+            "weekly",
+            "monthly",
+            "quarterly",
+            "annually",
+            "other"
+          ]
+        },
+        "nextDueDate": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "householdId",
+        "name",
+        "frequency"
+      ]
+    },
+    "Donation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "Donation"
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "transactionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recipient": {
+          "type": "string",
+          "minLength": 1
+        },
+        "donationDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "donationType": {
+          "enum": [
+            "cash",
+            "noncash"
+          ]
+        },
+        "money": {
+          "$ref": "#/$defs/Money"
+        },
+        "acknowledgmentDocumentIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "benefitReceived": {
+          "$ref": "#/$defs/Money"
+        },
+        "valuationDocumentId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "householdId",
+        "recipient",
+        "donationDate",
+        "donationType",
+        "money"
+      ]
+    },
+    "Document": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "Document"
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "vaultObjectId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "documentType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "taxYear": {
+          "type": "integer",
+          "minimum": 2000,
+          "maximum": 2100
+        },
+        "formRevision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recipientMemberId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "contentHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "replacesDocumentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewStatus": {
+          "enum": [
+            "unreviewed",
+            "in-review",
+            "approved",
+            "superseded"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "householdId",
+        "vaultObjectId",
+        "documentType",
+        "taxYear",
+        "formRevision",
+        "contentHash",
+        "reviewStatus"
+      ]
+    },
+    "FieldObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "FieldObservation"
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "documentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "formFieldDefinitionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "taxYear": {
+          "type": "integer",
+          "minimum": 2000,
+          "maximum": 2100
+        },
+        "jurisdiction": {
+          "type": "string",
+          "minLength": 1
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "boundingBox": {
+          "$ref": "#/$defs/BoundingBox"
+        },
+        "rawText": {
+          "type": "string",
+          "minLength": 1
+        },
+        "proposedValue": {
+          "type": "string",
+          "minLength": 1
+        },
+        "correctedValue": {
+          "type": "string",
+          "minLength": 1
+        },
+        "valueType": {
+          "enum": [
+            "money",
+            "identifier",
+            "text",
+            "boolean",
+            "integer",
+            "date"
+          ]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "parserVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceContentHash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "critical": {
+          "type": "boolean"
+        },
+        "reviewStatus": {
+          "enum": [
+            "unreviewed",
+            "approved",
+            "corrected",
+            "rejected"
+          ]
+        },
+        "reviewedBy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "householdId",
+        "documentId",
+        "formFieldDefinitionId",
+        "taxYear",
+        "jurisdiction",
+        "page",
+        "boundingBox",
+        "rawText",
+        "proposedValue",
+        "valueType",
+        "confidence",
+        "parserVersion",
+        "sourceContentHash",
+        "critical",
+        "reviewStatus"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "reviewStatus": {
+                "enum": [
+                  "approved",
+                  "corrected"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "reviewedBy",
+              "reviewedAt"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "reviewStatus": {
+                "const": "corrected"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "correctedValue"
+            ]
+          }
+        }
+      ]
+    },
+    "TaxTreatment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "TaxTreatment"
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "transactionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "taxYear": {
+          "type": "integer",
+          "minimum": 2000,
+          "maximum": 2100
+        },
+        "jurisdiction": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ruleSource": {
+          "type": "string",
+          "format": "uri"
+        },
+        "status": {
+          "enum": [
+            "candidate",
+            "allowed",
+            "disallowed",
+            "review-needed"
+          ]
+        },
+        "eligibleMoney": {
+          "$ref": "#/$defs/Money"
+        },
+        "evidenceDocumentIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "reviewedBy": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "householdId",
+        "transactionId",
+        "taxYear",
+        "jurisdiction",
+        "ruleSource",
+        "status"
+      ]
+    },
+    "TaxReturn": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "TaxReturn"
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "taxYear": {
+          "type": "integer",
+          "minimum": 2000,
+          "maximum": 2100
+        },
+        "jurisdiction": {
+          "type": "string",
+          "minLength": 1
+        },
+        "filingStatus": {
+          "enum": [
+            "single",
+            "married-filing-jointly",
+            "married-filing-separately",
+            "head-of-household",
+            "qualifying-surviving-spouse"
+          ]
+        },
+        "taxpayerMemberIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "dependentIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "engineVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "catalogVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "review-required",
+            "prepared",
+            "transmitted",
+            "accepted",
+            "rejected",
+            "amended"
+          ]
+        },
+        "vaultObjectId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "householdId",
+        "taxYear",
+        "jurisdiction",
+        "taxpayerMemberIds",
+        "status"
+      ]
+    },
+    "FilingSubmission": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "FilingSubmission"
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "returnId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "route": {
+          "enum": [
+            "print-mail",
+            "external-handoff",
+            "native-efile"
+          ]
+        },
+        "status": {
+          "enum": [
+            "prepared",
+            "consented",
+            "transmitted",
+            "accepted",
+            "rejected",
+            "unknown"
+          ]
+        },
+        "submissionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "transmittedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "acknowledgmentDocumentId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "householdId",
+        "returnId",
+        "route",
+        "status"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "accepted",
+                  "rejected"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "acknowledgmentDocumentId"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "route": {
+                "const": "print-mail"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "prepared",
+                  "consented",
+                  "unknown"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AuditEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "AuditEvent"
+        },
+        "householdId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actorMemberId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recordId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "householdId",
+        "actorMemberId",
+        "recordId",
+        "action",
+        "occurredAt"
+      ]
+    }
+  }
+}

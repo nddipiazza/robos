@@ -19,6 +19,7 @@ Proposals for RobOS features that are not built, or only partly built. The publi
 
 | Proposal | Page |
 |:---|:---|
+| RobOS Household: family finances and US taxes | [specs/robos-household.md](specs/robos-household.md) |
 | Dev Central as an agent review hub | [specs/dev-central-ai-agent-review-development.md](https://github.com/nddipiazza/robos/blob/main/docs/ideas/specs/dev-central-ai-agent-review-development.md) |
 | Agent Linux accounts and live agent desktops | [specs/ephemeral-agent-user-profiles.md](https://github.com/nddipiazza/robos/blob/main/docs/ideas/specs/ephemeral-agent-user-profiles.md) |
 | Gitea forge for E2E tests | [specs/e2e-gitea-support.md](https://github.com/nddipiazza/robos/blob/main/docs/ideas/specs/e2e-gitea-support.md) |
