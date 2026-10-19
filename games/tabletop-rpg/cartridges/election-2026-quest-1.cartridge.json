@@ -1,0 +1,4212 @@
+{
+  "cartridgeVersion": "2.0.0",
+  "cartridgeId": "election-2026-quest-1",
+  "header": {
+    "title": "Quest 1: Battle for the Hill",
+    "slug": "election-2026-quest-1",
+    "author": "RobOS Tabletop Studio",
+    "gameType": "tabletop",
+    "genre": "Tabletop Dungeon Crawler",
+    "ruleset": "heroquest",
+    "description": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office\u2014defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
+    "coverColor": "#0a0e17",
+    "icon": "\ud83d\udee1\ufe0f",
+    "mapCount": 1,
+    "heroCount": 4,
+    "monsterCount": 17,
+    "itemCount": 0,
+    "questCount": 1,
+    "startingMap": "election-2026-quest-1",
+    "startingPosition": [
+      0,
+      13
+    ],
+    "createdDate": "2026-10-19T13:38:50.231Z"
+  },
+  "heroes": {
+    "obama": {
+      "id": "obama",
+      "slug": "obama",
+      "name": "Barack Obama",
+      "heroClass": "Barbarian",
+      "bodyPoints": 8,
+      "mindPoints": 2,
+      "attackDice": 3,
+      "defendDice": 2,
+      "gold": 120,
+      "weapon": "Broadsword of Hope & Change (3 Combat Dice)",
+      "armor": "Chiseled Commander Toughness (2 Defend Dice)",
+      "inventory": [
+        {
+          "id": "item-pot-heal-obama",
+          "name": "Potion of Executive Vigor",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        },
+        {
+          "id": "item-mic-drop-1",
+          "name": "Runic Teleprompter Shard",
+          "type": "relic",
+          "effect": "+1 Mind resistance vs Spin Doctors",
+          "value": 50
+        }
+      ],
+      "spells": [],
+      "tokenColor": "#b91c1c",
+      "position": [
+        0,
+        12
+      ],
+      "audioLines": {
+        "turnStart": [
+          {
+            "text": "By my broadsword, clear a path!",
+            "audio": "res://assets/audio/heroes/barbarian_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Taste cold Cimmerian steel!",
+            "audio": "res://assets/audio/heroes/barbarian_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Aagh! Only a flesh wound!",
+            "audio": "res://assets/audio/heroes/barbarian_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Ha! Your feeble blow bounces off my iron muscles!",
+            "audio": "res://assets/audio/heroes/barbarian_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "The ancient battle-spirit surges through my blade!",
+            "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg"
+          }
+        ]
+      },
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "By my broadsword, clear a path!",
+            "audio": "res://assets/audio/heroes/barbarian_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Taste cold Cimmerian steel!",
+            "audio": "res://assets/audio/heroes/barbarian_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Aagh! Only a flesh wound!",
+            "audio": "res://assets/audio/heroes/barbarian_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Ha! Your feeble blow bounces off my iron muscles!",
+            "audio": "res://assets/audio/heroes/barbarian_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "The ancient battle-spirit surges through my blade!",
+            "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg"
+          }
+        ]
+      }
+    },
+    "trump": {
+      "id": "trump",
+      "slug": "trump",
+      "name": "Donald Trump",
+      "heroClass": "Dwarf",
+      "bodyPoints": 7,
+      "mindPoints": 3,
+      "attackDice": 2,
+      "defendDice": 2,
+      "gold": 250,
+      "weapon": "Gilded Dwarven Battle-Axe (2 Combat Dice)",
+      "armor": "Gold-Plated Rune Mail (2 Defend Dice)",
+      "inventory": [
+        {
+          "id": "item-toolkit-trump",
+          "name": "Golden Dwarven Trap Toolkit",
+          "type": "tool",
+          "effect": "Disarms any pit, boulder, or bureaucratic trap",
+          "value": 150
+        },
+        {
+          "id": "item-pot-heal-trump",
+          "name": "Elixir of Tremendous Stamina",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        }
+      ],
+      "spells": [],
+      "tokenColor": "#d97706",
+      "position": [
+        1,
+        12
+      ],
+      "audioLines": {
+        "turnStart": [
+          {
+            "text": "Stand back! Let a Dwarf of the World's Edge Mountains handle this!",
+            "audio": "res://assets/audio/heroes/dwarf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "For Grungni's beard, feel my battle-axe!",
+            "audio": "res://assets/audio/heroes/dwarf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Oof! Right in the chainmail!",
+            "audio": "res://assets/audio/heroes/dwarf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Dwarven forged steel never yields!",
+            "audio": "res://assets/audio/heroes/dwarf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By the runes of the anvil, awaken!",
+            "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg"
+          }
+        ]
+      },
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "Stand back! Let a Dwarf of the World's Edge Mountains handle this!",
+            "audio": "res://assets/audio/heroes/dwarf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "For Grungni's beard, feel my battle-axe!",
+            "audio": "res://assets/audio/heroes/dwarf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Oof! Right in the chainmail!",
+            "audio": "res://assets/audio/heroes/dwarf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Dwarven forged steel never yields!",
+            "audio": "res://assets/audio/heroes/dwarf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By the runes of the anvil, awaken!",
+            "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg"
+          }
+        ]
+      }
+    },
+    "hillary-clinton": {
+      "id": "hillary-clinton",
+      "slug": "hillary-clinton",
+      "name": "Hillary Clinton",
+      "heroClass": "Elf",
+      "bodyPoints": 6,
+      "mindPoints": 4,
+      "attackDice": 2,
+      "defendDice": 2,
+      "gold": 150,
+      "weapon": "Lothlorien Sting-Blade (2 Combat Dice)",
+      "armor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
+      "inventory": [
+        {
+          "id": "item-scroll-hillary",
+          "name": "Classified Elven Parchment",
+          "type": "relic",
+          "effect": "Reveals hidden doors in current corridor",
+          "value": 120
+        },
+        {
+          "id": "item-pot-heal-hillary",
+          "name": "Draught of Miruvor",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        }
+      ],
+      "spells": [
+        {
+          "id": "urn:robos:tabletop:spell:water-of-healing",
+          "slug": "water-of-healing",
+          "name": "Water of Healing",
+          "element": "water",
+          "category": "Base Game",
+          "icon": "\ud83d\udca7",
+          "description": "Restores up to 4 lost Body Points to any Hero.",
+          "effect": "heal-bp",
+          "val": 4
+        },
+        {
+          "id": "urn:robos:tabletop:spell:sleep",
+          "slug": "sleep",
+          "name": "Sleep",
+          "element": "water",
+          "category": "Base Game",
+          "icon": "\ud83d\udca4",
+          "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
+          "effect": "status-sleep",
+          "val": 1
+        },
+        {
+          "id": "urn:robos:tabletop:spell:veil-of-mist",
+          "slug": "veil-of-mist",
+          "name": "Veil of Mist",
+          "element": "water",
+          "category": "Base Game",
+          "icon": "\ud83c\udf2b\ufe0f",
+          "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
+          "effect": "status-stealth",
+          "val": 1
+        }
+      ],
+      "tokenColor": "#059669",
+      "position": [
+        0,
+        13
+      ],
+      "audioLines": {
+        "turnStart": [
+          {
+            "text": "With elven grace, I step into the shadows.",
+            "audio": "res://assets/audio/heroes/elf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Swift as the wind, strike true!",
+            "audio": "res://assets/audio/heroes/elf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Ah! Darkness stings, yet my spirit endures!",
+            "audio": "res://assets/audio/heroes/elf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Too slow, creature! The forest shields me!",
+            "audio": "res://assets/audio/heroes/elf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "Ancient weave of earth and water, heed my call!",
+            "audio": "res://assets/audio/heroes/elf_casting_magic.ogg"
+          }
+        ]
+      },
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "With elven grace, I step into the shadows.",
+            "audio": "res://assets/audio/heroes/elf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Swift as the wind, strike true!",
+            "audio": "res://assets/audio/heroes/elf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Ah! Darkness stings, yet my spirit endures!",
+            "audio": "res://assets/audio/heroes/elf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Too slow, creature! The forest shields me!",
+            "audio": "res://assets/audio/heroes/elf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "Ancient weave of earth and water, heed my call!",
+            "audio": "res://assets/audio/heroes/elf_casting_magic.ogg"
+          }
+        ]
+      }
+    },
+    "bernie-sanders": {
+      "id": "bernie-sanders",
+      "slug": "bernie-sanders",
+      "name": "Bernie Sanders",
+      "heroClass": "Wizard",
+      "bodyPoints": 4,
+      "mindPoints": 6,
+      "attackDice": 1,
+      "defendDice": 2,
+      "gold": 99,
+      "weapon": "Gnarled Oak Staff of the 99% (1 Combat Die)",
+      "armor": "Starry Wizard Hat & Vermont Wool Mittens (2 Defend Dice)",
+      "inventory": [
+        {
+          "id": "item-mittens-bernie",
+          "name": "Enchanted Vermont Mittens",
+          "type": "relic",
+          "effect": "Channels crackling elemental lightning & warmth",
+          "value": 200
+        },
+        {
+          "id": "item-pot-heal-bernie",
+          "name": "Universal Healthcare Potion",
+          "type": "potion",
+          "effect": "Restores up to 4 BP",
+          "value": 100
+        }
+      ],
+      "spells": [
+        {
+          "id": "urn:robos:tabletop:spell:heal-body",
+          "slug": "heal-body",
+          "name": "Heal Body",
+          "element": "earth",
+          "category": "Base Game",
+          "icon": "\ud83d\udc96",
+          "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
+          "effect": "heal-bp",
+          "val": 4
+        },
+        {
+          "id": "urn:robos:tabletop:spell:pass-through-rock",
+          "slug": "pass-through-rock",
+          "name": "Pass Through Rock",
+          "element": "earth",
+          "category": "Base Game",
+          "icon": "\ud83e\uddf1",
+          "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
+          "effect": "phase-walls",
+          "val": 1
+        },
+        {
+          "id": "urn:robos:tabletop:spell:rock-skin",
+          "slug": "rock-skin",
+          "name": "Rock Skin",
+          "element": "earth",
+          "category": "Base Game",
+          "icon": "\ud83d\udee1\ufe0f",
+          "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
+          "effect": "buff-def",
+          "val": 1
+        },
+        {
+          "id": "urn:robos:tabletop:spell:ball-of-flame",
+          "slug": "ball-of-flame",
+          "name": "Ball of Flame",
+          "element": "fire",
+          "category": "Base Game",
+          "icon": "\u2604\ufe0f",
+          "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
+          "effect": "damage-bp",
+          "val": 2
+        },
+        {
+          "id": "urn:robos:tabletop:spell:courage",
+          "slug": "courage",
+          "name": "Courage",
+          "element": "fire",
+          "category": "Base Game",
+          "icon": "\ud83e\udd81",
+          "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
+          "effect": "buff-atk",
+          "val": 2
+        },
+        {
+          "id": "urn:robos:tabletop:spell:fire-of-wrath",
+          "slug": "fire-of-wrath",
+          "name": "Fire of Wrath",
+          "element": "fire",
+          "category": "Base Game",
+          "icon": "\ud83d\udd25",
+          "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
+          "effect": "damage-bp",
+          "val": 1
+        },
+        {
+          "id": "urn:robos:tabletop:spell:genie",
+          "slug": "genie",
+          "name": "Genie",
+          "element": "air",
+          "category": "Base Game",
+          "icon": "\ud83e\uddde",
+          "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
+          "effect": "summon-attack",
+          "val": 5
+        },
+        {
+          "id": "urn:robos:tabletop:spell:swift-wind",
+          "slug": "swift-wind",
+          "name": "Swift Wind",
+          "element": "air",
+          "category": "Base Game",
+          "icon": "\ud83d\udca8",
+          "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
+          "effect": "buff-move",
+          "val": 2
+        },
+        {
+          "id": "urn:robos:tabletop:spell:tempest",
+          "slug": "tempest",
+          "name": "Tempest",
+          "element": "air",
+          "category": "Base Game",
+          "icon": "\ud83c\udf2a\ufe0f",
+          "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
+          "effect": "status-freeze",
+          "val": 1
+        }
+      ],
+      "tokenColor": "#2563eb",
+      "position": [
+        1,
+        13
+      ],
+      "audioLines": {
+        "turnStart": [
+          {
+            "text": "The winds of magic gather at my staff.",
+            "audio": "res://assets/audio/heroes/wizard_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Back, foul fiend, before my arcane staff!",
+            "audio": "res://assets/audio/heroes/wizard_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Gah! My ward-cloak falters!",
+            "audio": "res://assets/audio/heroes/wizard_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "My arcane barrier deflects your strike!",
+            "audio": "res://assets/audio/heroes/wizard_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By fire, air, and tempest, unleash the spell!",
+            "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg"
+          }
+        ]
+      },
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "The winds of magic gather at my staff.",
+            "audio": "res://assets/audio/heroes/wizard_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Back, foul fiend, before my arcane staff!",
+            "audio": "res://assets/audio/heroes/wizard_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Gah! My ward-cloak falters!",
+            "audio": "res://assets/audio/heroes/wizard_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "My arcane barrier deflects your strike!",
+            "audio": "res://assets/audio/heroes/wizard_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By fire, air, and tempest, unleash the spell!",
+            "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg"
+          }
+        ]
+      }
+    }
+  },
+  "monsters": {
+    "mon-campaign-volunteer-1": {
+      "id": "mon-campaign-volunteer-1",
+      "slug": "campaign-volunteer-mon-campaign-volunteer-1",
+      "name": "Campaign Volunteer",
+      "monsterType": "campaign-volunteer",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Goblin",
+      "icon": "\ud83d\udccb",
+      "tokenColor": "#16a34a",
+      "bodyPoints": 1,
+      "mindPoints": 1,
+      "attackDice": 2,
+      "defendDice": 1,
+      "movementSquares": 10,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        7,
+        16
+      ],
+      "roomId": "room-sw-6",
+      "hidden": false
+    },
+    "mon-partisan-enforcer-2": {
+      "id": "mon-partisan-enforcer-2",
+      "slug": "partisan-enforcer-mon-partisan-enforcer-2",
+      "name": "Partisan Enforcer",
+      "monsterType": "partisan-enforcer",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Dread Warrior",
+      "icon": "\u2694\ufe0f",
+      "tokenColor": "#dc2626",
+      "bodyPoints": 3,
+      "mindPoints": 3,
+      "attackDice": 4,
+      "defendDice": 4,
+      "movementSquares": 7,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        5,
+        6
+      ],
+      "roomId": "room-nw-1",
+      "hidden": false
+    },
+    "mon-career-politician-3": {
+      "id": "mon-career-politician-3",
+      "slug": "career-politician-mon-career-politician-3",
+      "name": "Career Politician",
+      "monsterType": "career-politician",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Skeleton",
+      "icon": "\ud83c\udfdb\ufe0f",
+      "tokenColor": "#94a3b8",
+      "bodyPoints": 1,
+      "mindPoints": 0,
+      "attackDice": 2,
+      "defendDice": 2,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        7,
+        5
+      ],
+      "roomId": "room-nw-1",
+      "hidden": false
+    },
+    "mon-talarixon-4": {
+      "id": "mon-talarixon-4",
+      "slug": "talarixon-mon-talarixon-4",
+      "name": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra)",
+      "monsterType": "talarixon",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Texas Hydra",
+      "icon": "\ud83d\udc0d",
+      "tokenColor": "#b91c1c",
+      "bodyPoints": 6,
+      "mindPoints": 5,
+      "attackDice": 5,
+      "defendDice": 5,
+      "movementSquares": 7,
+      "isBoss": true,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "recount-of-the-damned"
+      ],
+      "position": [
+        12,
+        2
+      ],
+      "roomId": "room-nw-10",
+      "hidden": false
+    },
+    "mon-brownsted-5": {
+      "id": "mon-brownsted-5",
+      "slug": "brownsted-mon-brownsted-5",
+      "name": "Brownsted (Brown + Husted \u00b7 Ohio Hydra)",
+      "monsterType": "brownsted",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Ohio Hydra",
+      "icon": "\ud83d\udc09",
+      "tokenColor": "#9333ea",
+      "bodyPoints": 8,
+      "mindPoints": 5,
+      "attackDice": 6,
+      "defendDice": 5,
+      "movementSquares": 5,
+      "isBoss": true,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "recount-of-the-damned"
+      ],
+      "position": [
+        14,
+        16
+      ],
+      "roomId": "room-sw-5",
+      "hidden": false
+    },
+    "mon-spin-doctor-6": {
+      "id": "mon-spin-doctor-6",
+      "slug": "spin-doctor-mon-spin-doctor-6",
+      "name": "Spin Doctor",
+      "monsterType": "spin-doctor",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Chaos Sorcerer",
+      "icon": "\ud83c\udf00",
+      "tokenColor": "#0284c7",
+      "bodyPoints": 3,
+      "mindPoints": 5,
+      "attackDice": 3,
+      "defendDice": 4,
+      "movementSquares": 7,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "recount-of-the-damned"
+      ],
+      "position": [
+        18,
+        7
+      ],
+      "roomId": "room-ne-3",
+      "hidden": false
+    },
+    "mon-bureaucrat-7": {
+      "id": "mon-bureaucrat-7",
+      "slug": "bureaucrat-mon-bureaucrat-7",
+      "name": "Bureaucrat",
+      "monsterType": "bureaucrat",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Zombie",
+      "icon": "\ud83d\udcce",
+      "tokenColor": "#475569",
+      "bodyPoints": 1,
+      "mindPoints": 0,
+      "attackDice": 2,
+      "defendDice": 3,
+      "movementSquares": 4,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        21,
+        10
+      ],
+      "roomId": "room-ne-3",
+      "hidden": false
+    },
+    "mon-bureaucrat-8": {
+      "id": "mon-bureaucrat-8",
+      "slug": "bureaucrat-mon-bureaucrat-8",
+      "name": "Bureaucrat",
+      "monsterType": "bureaucrat",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Zombie",
+      "icon": "\ud83d\udcce",
+      "tokenColor": "#475569",
+      "bodyPoints": 1,
+      "mindPoints": 0,
+      "attackDice": 2,
+      "defendDice": 3,
+      "movementSquares": 4,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        19,
+        10
+      ],
+      "roomId": "room-ne-3",
+      "hidden": false
+    },
+    "mon-super-pac-demon-9": {
+      "id": "mon-super-pac-demon-9",
+      "slug": "super-pac-demon-mon-super-pac-demon-9",
+      "name": "Super PAC Demon",
+      "monsterType": "super-pac-demon",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Gargoyle",
+      "icon": "\ud83d\ude08",
+      "tokenColor": "#7c3aed",
+      "bodyPoints": 3,
+      "mindPoints": 4,
+      "attackDice": 4,
+      "defendDice": 5,
+      "movementSquares": 6,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        11,
+        16
+      ],
+      "roomId": "room-sw-5",
+      "hidden": false
+    },
+    "mon-el-rogers-10": {
+      "id": "mon-el-rogers-10",
+      "slug": "el-rogers-mon-el-rogers-10",
+      "name": "El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra)",
+      "monsterType": "el-rogers",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Michigan Hydra",
+      "icon": "\ud83d\udc32",
+      "tokenColor": "#1d4ed8",
+      "bodyPoints": 7,
+      "mindPoints": 4,
+      "attackDice": 5,
+      "defendDice": 6,
+      "movementSquares": 6,
+      "isBoss": true,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "recount-of-the-damned"
+      ],
+      "position": [
+        18,
+        15
+      ],
+      "roomId": "room-se-4",
+      "hidden": false
+    },
+    "mon-lobbyist-11": {
+      "id": "mon-lobbyist-11",
+      "slug": "lobbyist-mon-lobbyist-11",
+      "name": "Lobbyist",
+      "monsterType": "lobbyist",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Mummy",
+      "icon": "\ud83d\udcbc",
+      "tokenColor": "#d97706",
+      "bodyPoints": 2,
+      "mindPoints": 0,
+      "attackDice": 3,
+      "defendDice": 4,
+      "movementSquares": 4,
+      "isBoss": false,
+      "isUndead": true,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        20,
+        15
+      ],
+      "roomId": "room-se-4",
+      "hidden": false
+    },
+    "mon-political-operative-12": {
+      "id": "mon-political-operative-12",
+      "slug": "political-operative-mon-political-operative-12",
+      "name": "Political Operative",
+      "monsterType": "political-operative",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Orc",
+      "icon": "\ud83d\udd75\ufe0f",
+      "tokenColor": "#ca8a04",
+      "bodyPoints": 1,
+      "mindPoints": 2,
+      "attackDice": 3,
+      "defendDice": 2,
+      "movementSquares": 8,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": false,
+      "spells": [],
+      "position": [
+        11,
+        4
+      ],
+      "roomId": "room-nw-10",
+      "hidden": false
+    },
+    "mon-spin-doctor-13": {
+      "id": "mon-spin-doctor-13",
+      "slug": "spin-doctor-mon-spin-doctor-13",
+      "name": "Spin Doctor",
+      "monsterType": "spin-doctor",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Chaos Sorcerer",
+      "icon": "\ud83c\udf00",
+      "tokenColor": "#0284c7",
+      "bodyPoints": 3,
+      "mindPoints": 5,
+      "attackDice": 3,
+      "defendDice": 4,
+      "movementSquares": 7,
+      "isBoss": false,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "recount-of-the-damned"
+      ],
+      "position": [
+        15,
+        4
+      ],
+      "roomId": "room-nw-10",
+      "hidden": false
+    },
+    "mon-katie-zacharia-boss": {
+      "id": "mon-katie-zacharia-boss",
+      "slug": "spin-doctor-mon-katie-zacharia-boss",
+      "name": "Katie Zacharia (Press Secretary)",
+      "monsterType": "spin-doctor",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Chaos Sorcerer",
+      "icon": "\ud83c\udf99\ufe0f",
+      "tokenColor": "#db2777",
+      "bodyPoints": 4,
+      "mindPoints": 6,
+      "attackDice": 4,
+      "defendDice": 4,
+      "movementSquares": 7,
+      "isBoss": true,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "recount-of-the-damned"
+      ],
+      "position": [
+        20,
+        7
+      ],
+      "roomId": "room-ne-3",
+      "hidden": false
+    },
+    "mon-mitch-mcconnell-boss": {
+      "id": "mon-mitch-mcconnell-boss",
+      "slug": "career-politician-mon-mitch-mcconnell-boss",
+      "name": "Mitch McConnell (Committee Patriarch)",
+      "monsterType": "career-politician",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Skeleton",
+      "icon": "\ud83d\udc22",
+      "tokenColor": "#475569",
+      "bodyPoints": 5,
+      "mindPoints": 5,
+      "attackDice": 3,
+      "defendDice": 6,
+      "movementSquares": 4,
+      "isBoss": true,
+      "isUndead": true,
+      "isSpellcaster": true,
+      "spells": [
+        "recount-of-the-damned"
+      ],
+      "position": [
+        5,
+        3
+      ],
+      "roomId": "room-nw-1",
+      "hidden": false
+    },
+    "mon-jd-vance-drunk-boss": {
+      "id": "mon-jd-vance-drunk-boss",
+      "slug": "political-operative-mon-jd-vance-drunk-boss",
+      "name": "JD Vance (Drunk in the War Room)",
+      "monsterType": "political-operative",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Orc",
+      "icon": "\ud83e\udd43",
+      "tokenColor": "#b91c1c",
+      "bodyPoints": 4,
+      "mindPoints": 4,
+      "attackDice": 4,
+      "defendDice": 4,
+      "movementSquares": 6,
+      "isBoss": true,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "recount-of-the-damned"
+      ],
+      "position": [
+        19,
+        3
+      ],
+      "roomId": "room-ne-2",
+      "hidden": false
+    },
+    "mon-kamala-harris-drunk-boss": {
+      "id": "mon-kamala-harris-drunk-boss",
+      "slug": "spin-doctor-mon-kamala-harris-drunk-boss",
+      "name": "Kamala Harris (Drunk in the War Room)",
+      "monsterType": "spin-doctor",
+      "category": "Midterms 2026",
+      "monsterArchetype": "Chaos Sorcerer",
+      "icon": "\ud83c\udf77",
+      "tokenColor": "#1d4ed8",
+      "bodyPoints": 4,
+      "mindPoints": 5,
+      "attackDice": 4,
+      "defendDice": 4,
+      "movementSquares": 6,
+      "isBoss": true,
+      "isUndead": false,
+      "isSpellcaster": true,
+      "spells": [
+        "recount-of-the-damned"
+      ],
+      "position": [
+        20,
+        3
+      ],
+      "roomId": "room-ne-2",
+      "hidden": false
+    }
+  },
+  "maps": {
+    "election-2026-quest-1": {
+      "id": "election-2026-quest-1",
+      "title": "Quest 1: Battle for the Hill",
+      "mapConfigurationId": "midterm-election-capitol",
+      "introMovie": "res://assets/movies/election_2026_intro_movie.ogv",
+      "width": 26,
+      "height": 19,
+      "additionalBorderTile": true,
+      "backgroundImage": "res://assets/boards/midterm_election_capitol.png",
+      "tileSize": 39,
+      "pixelOffset": [
+        0,
+        0
+      ],
+      "wanderingMonster": "campaign-volunteer",
+      "startingStair": [
+        0,
+        13
+      ],
+      "startingPosition": [
+        0,
+        13
+      ],
+      "startingStairType": "stairs_up_1x1",
+      "exitTile": [
+        14,
+        2
+      ],
+      "exitStair": [
+        14,
+        2
+      ],
+      "exitStairType": "stairs_down_1x1",
+      "activeRooms": [
+        "room-nw-1",
+        "room-ne-2",
+        "room-ne-3",
+        "room-se-4",
+        "room-sw-5",
+        "room-sw-6",
+        "room-sw-8",
+        "room-nw-9",
+        "room-nw-10",
+        "room-se-11",
+        "room-sw-11",
+        "room-ne-12"
+      ],
+      "rooms": [
+        {
+          "id": "room-nw-1",
+          "name": "Legislative Committee Chamber (NW)",
+          "x": 2,
+          "y": 2,
+          "w": 7,
+          "h": 6,
+          "shape": "rect",
+          "tiles": [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              2,
+              5
+            ],
+            [
+              2,
+              6
+            ],
+            [
+              2,
+              7
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              4
+            ],
+            [
+              3,
+              5
+            ],
+            [
+              3,
+              6
+            ],
+            [
+              3,
+              7
+            ],
+            [
+              4,
+              2
+            ],
+            [
+              4,
+              3
+            ],
+            [
+              4,
+              4
+            ],
+            [
+              4,
+              5
+            ],
+            [
+              4,
+              6
+            ],
+            [
+              4,
+              7
+            ],
+            [
+              5,
+              2
+            ],
+            [
+              5,
+              3
+            ],
+            [
+              5,
+              4
+            ],
+            [
+              5,
+              5
+            ],
+            [
+              5,
+              6
+            ],
+            [
+              5,
+              7
+            ],
+            [
+              6,
+              2
+            ],
+            [
+              6,
+              3
+            ],
+            [
+              6,
+              4
+            ],
+            [
+              6,
+              5
+            ],
+            [
+              6,
+              6
+            ],
+            [
+              6,
+              7
+            ],
+            [
+              7,
+              2
+            ],
+            [
+              7,
+              3
+            ],
+            [
+              7,
+              4
+            ],
+            [
+              7,
+              5
+            ],
+            [
+              7,
+              6
+            ],
+            [
+              7,
+              7
+            ],
+            [
+              8,
+              2
+            ],
+            [
+              8,
+              3
+            ],
+            [
+              8,
+              4
+            ],
+            [
+              8,
+              5
+            ],
+            [
+              8,
+              6
+            ],
+            [
+              8,
+              7
+            ]
+          ],
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-ne-2",
+          "name": "Campaign War Room (NE)",
+          "x": 17,
+          "y": 2,
+          "w": 6,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              17,
+              2
+            ],
+            [
+              17,
+              3
+            ],
+            [
+              17,
+              4
+            ],
+            [
+              17,
+              5
+            ],
+            [
+              18,
+              2
+            ],
+            [
+              18,
+              3
+            ],
+            [
+              18,
+              4
+            ],
+            [
+              18,
+              5
+            ],
+            [
+              19,
+              2
+            ],
+            [
+              19,
+              3
+            ],
+            [
+              19,
+              4
+            ],
+            [
+              19,
+              5
+            ],
+            [
+              20,
+              2
+            ],
+            [
+              20,
+              3
+            ],
+            [
+              20,
+              4
+            ],
+            [
+              20,
+              5
+            ],
+            [
+              21,
+              2
+            ],
+            [
+              21,
+              3
+            ],
+            [
+              21,
+              4
+            ],
+            [
+              21,
+              5
+            ],
+            [
+              22,
+              2
+            ],
+            [
+              22,
+              3
+            ],
+            [
+              22,
+              4
+            ],
+            [
+              22,
+              5
+            ]
+          ],
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-ne-3",
+          "name": "White House Press Briefing Room (NE)",
+          "x": 18,
+          "y": 6,
+          "w": 5,
+          "h": 7,
+          "shape": "rect",
+          "tiles": [
+            [
+              18,
+              6
+            ],
+            [
+              18,
+              7
+            ],
+            [
+              18,
+              8
+            ],
+            [
+              18,
+              9
+            ],
+            [
+              18,
+              10
+            ],
+            [
+              18,
+              11
+            ],
+            [
+              18,
+              12
+            ],
+            [
+              19,
+              6
+            ],
+            [
+              19,
+              7
+            ],
+            [
+              19,
+              8
+            ],
+            [
+              19,
+              9
+            ],
+            [
+              19,
+              10
+            ],
+            [
+              19,
+              11
+            ],
+            [
+              19,
+              12
+            ],
+            [
+              20,
+              6
+            ],
+            [
+              20,
+              7
+            ],
+            [
+              20,
+              8
+            ],
+            [
+              20,
+              9
+            ],
+            [
+              20,
+              10
+            ],
+            [
+              20,
+              11
+            ],
+            [
+              20,
+              12
+            ],
+            [
+              21,
+              6
+            ],
+            [
+              21,
+              7
+            ],
+            [
+              21,
+              8
+            ],
+            [
+              21,
+              9
+            ],
+            [
+              21,
+              10
+            ],
+            [
+              21,
+              11
+            ],
+            [
+              21,
+              12
+            ],
+            [
+              22,
+              6
+            ],
+            [
+              22,
+              7
+            ],
+            [
+              22,
+              8
+            ],
+            [
+              22,
+              9
+            ],
+            [
+              22,
+              10
+            ],
+            [
+              22,
+              11
+            ],
+            [
+              22,
+              12
+            ]
+          ],
+          "quadrant": "ne"
+        },
+        {
+          "id": "room-se-4",
+          "name": "Senate Cloakrooms East (SE)",
+          "x": 17,
+          "y": 14,
+          "w": 5,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              17,
+              14
+            ],
+            [
+              17,
+              15
+            ],
+            [
+              17,
+              16
+            ],
+            [
+              17,
+              17
+            ],
+            [
+              18,
+              14
+            ],
+            [
+              18,
+              15
+            ],
+            [
+              18,
+              16
+            ],
+            [
+              18,
+              17
+            ],
+            [
+              19,
+              14
+            ],
+            [
+              19,
+              15
+            ],
+            [
+              19,
+              16
+            ],
+            [
+              19,
+              17
+            ],
+            [
+              20,
+              14
+            ],
+            [
+              20,
+              15
+            ],
+            [
+              20,
+              16
+            ],
+            [
+              20,
+              17
+            ],
+            [
+              21,
+              14
+            ],
+            [
+              21,
+              15
+            ],
+            [
+              21,
+              16
+            ],
+            [
+              21,
+              17
+            ]
+          ],
+          "quadrant": "se"
+        },
+        {
+          "id": "room-sw-5",
+          "name": "Supreme Court Bench Room (SW)",
+          "x": 9,
+          "y": 14,
+          "w": 8,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              9,
+              14
+            ],
+            [
+              9,
+              15
+            ],
+            [
+              9,
+              16
+            ],
+            [
+              9,
+              17
+            ],
+            [
+              10,
+              14
+            ],
+            [
+              10,
+              15
+            ],
+            [
+              10,
+              16
+            ],
+            [
+              10,
+              17
+            ],
+            [
+              11,
+              14
+            ],
+            [
+              11,
+              15
+            ],
+            [
+              11,
+              16
+            ],
+            [
+              11,
+              17
+            ],
+            [
+              12,
+              14
+            ],
+            [
+              12,
+              15
+            ],
+            [
+              12,
+              16
+            ],
+            [
+              12,
+              17
+            ],
+            [
+              13,
+              14
+            ],
+            [
+              13,
+              15
+            ],
+            [
+              13,
+              16
+            ],
+            [
+              13,
+              17
+            ],
+            [
+              14,
+              14
+            ],
+            [
+              14,
+              15
+            ],
+            [
+              14,
+              16
+            ],
+            [
+              14,
+              17
+            ],
+            [
+              15,
+              14
+            ],
+            [
+              15,
+              15
+            ],
+            [
+              15,
+              16
+            ],
+            [
+              15,
+              17
+            ],
+            [
+              16,
+              14
+            ],
+            [
+              16,
+              15
+            ],
+            [
+              16,
+              16
+            ],
+            [
+              16,
+              17
+            ]
+          ],
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-6",
+          "name": "Senate Cloakrooms west (SW)",
+          "x": 6,
+          "y": 14,
+          "w": 3,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              6,
+              14
+            ],
+            [
+              6,
+              15
+            ],
+            [
+              6,
+              16
+            ],
+            [
+              6,
+              17
+            ],
+            [
+              7,
+              14
+            ],
+            [
+              7,
+              15
+            ],
+            [
+              7,
+              16
+            ],
+            [
+              7,
+              17
+            ],
+            [
+              8,
+              14
+            ],
+            [
+              8,
+              15
+            ],
+            [
+              8,
+              16
+            ],
+            [
+              8,
+              17
+            ]
+          ],
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-sw-8",
+          "name": "Russian Spy Voting Proxy Room (SW)",
+          "x": 1,
+          "y": 15,
+          "w": 2,
+          "h": 3,
+          "shape": "rect",
+          "tiles": [
+            [
+              1,
+              15
+            ],
+            [
+              1,
+              16
+            ],
+            [
+              1,
+              17
+            ],
+            [
+              2,
+              15
+            ],
+            [
+              2,
+              16
+            ],
+            [
+              2,
+              17
+            ]
+          ],
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-nw-9",
+          "name": "Epstein Situation Room (NW)",
+          "x": 0,
+          "y": 8,
+          "w": 8,
+          "h": 5,
+          "shape": "freeform",
+          "tiles": [
+            [
+              0,
+              12
+            ],
+            [
+              1,
+              12
+            ],
+            [
+              1,
+              11
+            ],
+            [
+              0,
+              11
+            ],
+            [
+              0,
+              10
+            ],
+            [
+              1,
+              10
+            ],
+            [
+              1,
+              9
+            ],
+            [
+              0,
+              9
+            ],
+            [
+              0,
+              8
+            ],
+            [
+              1,
+              8
+            ],
+            [
+              2,
+              8
+            ],
+            [
+              3,
+              8
+            ],
+            [
+              4,
+              8
+            ],
+            [
+              5,
+              8
+            ],
+            [
+              6,
+              8
+            ],
+            [
+              7,
+              8
+            ],
+            [
+              7,
+              9
+            ],
+            [
+              6,
+              9
+            ],
+            [
+              5,
+              9
+            ],
+            [
+              4,
+              9
+            ],
+            [
+              3,
+              9
+            ],
+            [
+              2,
+              9
+            ]
+          ],
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-nw-10",
+          "name": "Oval Office (NW)",
+          "x": 9,
+          "y": 2,
+          "w": 8,
+          "h": 11,
+          "shape": "freeform",
+          "tiles": [
+            [
+              11,
+              2
+            ],
+            [
+              13,
+              2
+            ],
+            [
+              14,
+              2
+            ],
+            [
+              12,
+              2
+            ],
+            [
+              11,
+              3
+            ],
+            [
+              10,
+              3
+            ],
+            [
+              12,
+              3
+            ],
+            [
+              13,
+              3
+            ],
+            [
+              14,
+              3
+            ],
+            [
+              15,
+              3
+            ],
+            [
+              15,
+              4
+            ],
+            [
+              16,
+              4
+            ],
+            [
+              16,
+              5
+            ],
+            [
+              16,
+              6
+            ],
+            [
+              16,
+              7
+            ],
+            [
+              16,
+              8
+            ],
+            [
+              16,
+              9
+            ],
+            [
+              16,
+              10
+            ],
+            [
+              16,
+              11
+            ],
+            [
+              15,
+              11
+            ],
+            [
+              14,
+              11
+            ],
+            [
+              13,
+              11
+            ],
+            [
+              12,
+              11
+            ],
+            [
+              11,
+              11
+            ],
+            [
+              10,
+              11
+            ],
+            [
+              9,
+              11
+            ],
+            [
+              9,
+              12
+            ],
+            [
+              10,
+              12
+            ],
+            [
+              11,
+              12
+            ],
+            [
+              12,
+              12
+            ],
+            [
+              13,
+              12
+            ],
+            [
+              14,
+              12
+            ],
+            [
+              15,
+              12
+            ],
+            [
+              16,
+              12
+            ],
+            [
+              15,
+              10
+            ],
+            [
+              14,
+              10
+            ],
+            [
+              13,
+              10
+            ],
+            [
+              12,
+              10
+            ],
+            [
+              11,
+              10
+            ],
+            [
+              10,
+              10
+            ],
+            [
+              9,
+              10
+            ],
+            [
+              9,
+              9
+            ],
+            [
+              9,
+              8
+            ],
+            [
+              9,
+              7
+            ],
+            [
+              9,
+              6
+            ],
+            [
+              9,
+              5
+            ],
+            [
+              9,
+              4
+            ],
+            [
+              10,
+              4
+            ],
+            [
+              10,
+              6
+            ],
+            [
+              10,
+              7
+            ],
+            [
+              10,
+              8
+            ],
+            [
+              10,
+              9
+            ],
+            [
+              11,
+              9
+            ],
+            [
+              11,
+              8
+            ],
+            [
+              11,
+              7
+            ],
+            [
+              11,
+              6
+            ],
+            [
+              11,
+              5
+            ],
+            [
+              11,
+              4
+            ],
+            [
+              13,
+              4
+            ],
+            [
+              14,
+              4
+            ],
+            [
+              14,
+              5
+            ],
+            [
+              13,
+              5
+            ],
+            [
+              12,
+              4
+            ],
+            [
+              12,
+              5
+            ],
+            [
+              12,
+              6
+            ],
+            [
+              12,
+              7
+            ],
+            [
+              12,
+              8
+            ],
+            [
+              12,
+              9
+            ],
+            [
+              14,
+              9
+            ],
+            [
+              13,
+              9
+            ],
+            [
+              14,
+              8
+            ],
+            [
+              15,
+              9
+            ],
+            [
+              15,
+              8
+            ],
+            [
+              13,
+              8
+            ],
+            [
+              13,
+              7
+            ],
+            [
+              13,
+              6
+            ],
+            [
+              14,
+              6
+            ],
+            [
+              14,
+              7
+            ],
+            [
+              15,
+              7
+            ],
+            [
+              15,
+              6
+            ],
+            [
+              15,
+              5
+            ],
+            [
+              10,
+              5
+            ]
+          ],
+          "quadrant": "nw"
+        },
+        {
+          "id": "room-se-11",
+          "name": "Broom Closet (SE)",
+          "x": 23,
+          "y": 14,
+          "w": 2,
+          "h": 4,
+          "shape": "rect",
+          "tiles": [
+            [
+              23,
+              14
+            ],
+            [
+              23,
+              15
+            ],
+            [
+              23,
+              16
+            ],
+            [
+              23,
+              17
+            ],
+            [
+              24,
+              14
+            ],
+            [
+              24,
+              15
+            ],
+            [
+              24,
+              16
+            ],
+            [
+              24,
+              17
+            ]
+          ],
+          "quadrant": "se"
+        },
+        {
+          "id": "room-sw-11",
+          "name": "Escort Bathroom (SW)",
+          "x": 6,
+          "y": 10,
+          "w": 2,
+          "h": 3,
+          "shape": "rect",
+          "tiles": [
+            [
+              6,
+              10
+            ],
+            [
+              6,
+              11
+            ],
+            [
+              6,
+              12
+            ],
+            [
+              7,
+              10
+            ],
+            [
+              7,
+              11
+            ],
+            [
+              7,
+              12
+            ]
+          ],
+          "quadrant": "sw"
+        },
+        {
+          "id": "room-ne-12",
+          "name": "Room 12 (NE)",
+          "x": 20,
+          "y": 1,
+          "w": 1,
+          "h": 1,
+          "shape": "rect",
+          "tiles": [
+            [
+              20,
+              1
+            ]
+          ],
+          "quadrant": "ne"
+        }
+      ],
+      "corridors": [
+        [
+          8,
+          8
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          8,
+          10
+        ],
+        [
+          8,
+          11
+        ],
+        [
+          8,
+          12
+        ],
+        [
+          8,
+          13
+        ],
+        [
+          7,
+          13
+        ],
+        [
+          6,
+          13
+        ],
+        [
+          5,
+          13
+        ],
+        [
+          4,
+          13
+        ],
+        [
+          3,
+          13
+        ],
+        [
+          2,
+          13
+        ],
+        [
+          2,
+          12
+        ],
+        [
+          2,
+          11
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          1,
+          13
+        ],
+        [
+          2,
+          14
+        ],
+        [
+          9,
+          13
+        ],
+        [
+          10,
+          13
+        ],
+        [
+          11,
+          13
+        ],
+        [
+          12,
+          13
+        ],
+        [
+          13,
+          13
+        ],
+        [
+          14,
+          13
+        ],
+        [
+          15,
+          13
+        ],
+        [
+          16,
+          13
+        ],
+        [
+          17,
+          13
+        ],
+        [
+          18,
+          13
+        ],
+        [
+          19,
+          13
+        ],
+        [
+          20,
+          13
+        ],
+        [
+          21,
+          13
+        ],
+        [
+          22,
+          13
+        ],
+        [
+          22,
+          14
+        ],
+        [
+          22,
+          15
+        ],
+        [
+          23,
+          13
+        ],
+        [
+          24,
+          13
+        ],
+        [
+          24,
+          12
+        ],
+        [
+          24,
+          11
+        ],
+        [
+          24,
+          10
+        ],
+        [
+          24,
+          9
+        ],
+        [
+          24,
+          8
+        ],
+        [
+          24,
+          7
+        ],
+        [
+          24,
+          6
+        ],
+        [
+          25,
+          6
+        ],
+        [
+          25,
+          7
+        ],
+        [
+          17,
+          12
+        ],
+        [
+          17,
+          11
+        ],
+        [
+          17,
+          10
+        ],
+        [
+          17,
+          9
+        ],
+        [
+          17,
+          8
+        ],
+        [
+          17,
+          7
+        ],
+        [
+          17,
+          6
+        ],
+        [
+          5,
+          14
+        ],
+        [
+          5,
+          15
+        ],
+        [
+          5,
+          16
+        ],
+        [
+          5,
+          17
+        ],
+        [
+          4,
+          17
+        ],
+        [
+          4,
+          16
+        ],
+        [
+          4,
+          15
+        ],
+        [
+          4,
+          14
+        ],
+        [
+          3,
+          14
+        ],
+        [
+          3,
+          17
+        ],
+        [
+          3,
+          16
+        ],
+        [
+          3,
+          15
+        ],
+        [
+          1,
+          14
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          5,
+          10
+        ],
+        [
+          5,
+          11
+        ],
+        [
+          4,
+          11
+        ],
+        [
+          3,
+          11
+        ],
+        [
+          4,
+          12
+        ],
+        [
+          5,
+          12
+        ]
+      ],
+      "doors": [
+        {
+          "id": "door-1",
+          "name": "Door 1",
+          "from": [
+            2,
+            15
+          ],
+          "to": [
+            2,
+            14
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-sw-8",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "door-2",
+          "name": "Door 2",
+          "from": [
+            8,
+            14
+          ],
+          "to": [
+            8,
+            13
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-sw-6",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "door-3",
+          "name": "Door 3",
+          "from": [
+            9,
+            9
+          ],
+          "to": [
+            8,
+            9
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-nw-10",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "door-4",
+          "name": "Double Door 4",
+          "from": [
+            12,
+            12
+          ],
+          "to": [
+            12,
+            13
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-nw-10",
+          "hidden": false,
+          "door_type": "double-2x1",
+          "width": 2,
+          "height": 1
+        },
+        {
+          "id": "door-5",
+          "name": "Double Door 5",
+          "from": [
+            12,
+            14
+          ],
+          "to": [
+            12,
+            13
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-sw-5",
+          "hidden": false,
+          "door_type": "double-2x1",
+          "width": 2,
+          "height": 1
+        },
+        {
+          "id": "door-6",
+          "name": "Door 6",
+          "from": [
+            16,
+            9
+          ],
+          "to": [
+            17,
+            9
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-nw-10",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "door-7",
+          "name": "Door 7",
+          "from": [
+            18,
+            9
+          ],
+          "to": [
+            17,
+            9
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-ne-3",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "door-8",
+          "name": "Door 8",
+          "from": [
+            17,
+            6
+          ],
+          "to": [
+            17,
+            5
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-ne-2",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "door-9",
+          "name": "Door 9",
+          "from": [
+            8,
+            7
+          ],
+          "to": [
+            8,
+            8
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-nw-1",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "door-10",
+          "name": "Door 10",
+          "from": [
+            17,
+            13
+          ],
+          "to": [
+            17,
+            14
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-se-4",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        },
+        {
+          "id": "door-11",
+          "name": "Double Door 11",
+          "from": [
+            2,
+            10
+          ],
+          "to": [
+            2,
+            9
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-nw-9",
+          "hidden": false,
+          "door_type": "double-2x1",
+          "width": 2,
+          "height": 1
+        },
+        {
+          "id": "door-12",
+          "name": "Door 12",
+          "from": [
+            6,
+            12
+          ],
+          "to": [
+            6,
+            13
+          ],
+          "state": "closed",
+          "is_secret": false,
+          "room": "room-sw-11",
+          "hidden": false,
+          "door_type": "single",
+          "width": 1,
+          "height": 1
+        }
+      ],
+      "furniture": [],
+      "wallBlocks": [],
+      "traps": [],
+      "triggers": [
+        {
+          "id": "trigger-election-intro",
+          "name": "Mentor George W. Bush & Visions in the Mist",
+          "title": "Mentor George W. Bush & Visions in the Mist",
+          "marker": "Intro",
+          "banner": "QUEST PROLOGUE [Intro]",
+          "event": "on_room_entered",
+          "target": "room-sw-10",
+          "room": "room-sw-10",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            0,
+            13
+          ],
+          "onceOnly": true,
+          "movie": "res://assets/movies/election_2026_intro_movie.ogv",
+          "narrative": "Mentor George W. Bush summons you to the Basement of Strategery to stop the Elite 1% by slaying the three Campaign Hydras (Talarixon, El-Rogers, and Brownsted)\u2014though he has no idea how or if it will work! Meanwhile, from the foggy mist, girlfriends Marjorie Taylor Greene and AOC share canned-goods prepper advice for the oncoming AI Superintelligence Apocalypse!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "play_movie",
+              "moviePath": "res://assets/movies/election_2026_intro_movie.ogv",
+              "title": "\ud83c\udfac Prologue: Mentor George W. Bush & The Mist Oracles",
+              "canSkip": true
+            },
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "mentor",
+                  "text": "Howdy again, heroes! Remember your mission: stop the Elite 1% from destroyin' the world by slayin' all three Campaign Hydras: Talarixon, El-Rogers, and Brownsted! Now how is that gonna stop the 1%? Heck if I know! Good luck, I'm goin' back to paintin' my dog!",
+                  "audio": "res://assets/audio/election2026/bush_start_1.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... let me be clear... When we stand... at the bottom... of these Capitol stairs... we do not merely see... a dungeon... We see... the audacity... of hope... We see... a future... where hope... hopes... for more hope... and... uhh... maybe... a sandwich.",
+                  "audio": "res://assets/audio/election2026/obama_hope_1.ogg"
+                },
+                {
+                  "speaker": "bernie-sanders",
+                  "text": "Let's talk about welfare for the rich and the powerful! Now, we start off from a proposition that the wealthiest 1% of the population in this country owns more wealth than the bottom 90%!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_1_percent.ogg"
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "We've traveled to every corner of the United States. I've now been in 57 states. I think one left to go.",
+                  "audio": "res://assets/audio/election2026/hillary_clip_57_states.ogg"
+                },
+                {
+                  "speaker": "trump",
+                  "text": "They're eating the dogs. Sleepy Crooked Joe Biden. I really don't know what he said.",
+                  "audio": "res://assets/audio/election2026/trump_clip_eating_dogs_short.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-oval-office-talarixon",
+          "name": "Oval Office \u2014 Talarixon & The San Antonio Diesel Plot",
+          "title": "Oval Office \u2014 Talarixon & The San Antonio Diesel Plot",
+          "marker": "Hydra 1",
+          "banner": "OVAL OFFICE [Hydra 1]",
+          "event": "on_room_entered",
+          "target": "room-nw-10",
+          "room": "room-nw-10",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            13,
+            5
+          ],
+          "onceOnly": true,
+          "movie": "res://assets/movies/oval_office_texas_hydra_movie.ogv",
+          "narrative": "Inside the Oval Office, the two heads of Talarixon (Talarico + Paxton \u00b7 Texas Hydra) are debating converting the entire city of San Antonio into crude oil to lower Texas diesel prices before Donald Trump barges in!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "play_movie",
+              "moviePath": "res://assets/movies/oval_office_texas_hydra_movie.ogv",
+              "title": "\ud83c\udfac Oval Office: The San Antonio Diesel Plot & Donald Trump",
+              "canSkip": true
+            },
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Ken Paxton (Talarixon)",
+                  "text": "You interrupted our Texas election hearing! If we refine the entire population of San Antonio into sweet Texas crude, diesel drops to 99 cents a gallon!",
+                  "audio": "res://assets/audio/election2026/talarixon_paxton_1.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "James Talarico (Talarixon)",
+                  "text": "Brethren, let us pray over the Alamo oil pipeline before we smite these four heroes and split the petroleum lobbyist check fifty-fifty!",
+                  "audio": "res://assets/audio/election2026/talarixon_talarico_1.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "bernie-sanders",
+                  "text": "President Reagan believed that if you provide massive tax breaks to the richest people in this country, somehow that wealth will trickle down to the rest of the population!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_reagan_billionaires.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "trump",
+                  "text": "They weaponized the government! They just gave me a 355 million dollar fine in New York \u2014 no victims, no defaults, the banks made money and testified for me!",
+                  "audio": "res://assets/audio/election2026/trump_clip_355m_fine.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... folks... let us not... liquefy the good people... of San Antonio... into diesel fuel... Because hope... is not crude oil... Hope... is the thing... inside the thing... that makes us... uhh... hope.",
+                  "audio": "res://assets/audio/election2026/obama_hope_san_antonio.ogg",
+                  "timeout": 1.2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-talarixon-defeated",
+          "name": "Talarixon Slain \u2014 San Antonio Saved from the Refinery",
+          "title": "Talarixon Slain \u2014 San Antonio Saved from the Refinery",
+          "marker": "Hydra 1\u2713",
+          "banner": "HYDRA SLAIN [Hydra 1]",
+          "event": "on_monster_killed",
+          "target": "mon-talarixon-4",
+          "room": "room-nw-10",
+          "doorId": "",
+          "monsterId": "mon-talarixon-4",
+          "tile": [
+            12,
+            2
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Talarixon collapses behind the Resolute Desk, its San Antonio human-to-diesel refinery blueprint bursting into flames!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "We came, we saw, he died! Ha ha ha!",
+                  "audio": "res://assets/audio/election2026/hillary_clip_we_came_we_saw.ogg"
+                },
+                {
+                  "speaker": "mentor",
+                  "text": "Hot dang, you actually whacked the Texas Hydra! That's one Hydra down and two more to go! Keep swingin', I reckon!",
+                  "audio": "res://assets/audio/election2026/bush_hydra1_down.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-se-cloakroom-el-rogers",
+          "name": "Senate Cloakroom \u2014 El-Rogers (Michigan Hydra) & Mist Oracles",
+          "title": "Senate Cloakroom \u2014 El-Rogers (Michigan Hydra) & Mist Oracles",
+          "marker": "Hydra 2",
+          "banner": "SENATE CLOAKROOM [Hydra 2]",
+          "event": "on_room_entered",
+          "target": "room-se-4",
+          "room": "room-se-4",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            18,
+            15
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "In the Senate Cloakroom lurks the second Campaign Hydra\u2014El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra)\u2014while Marjorie Taylor Greene and AOC appear in the mist with canned-goods tips!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Abdul El-Sayed (El-Rogers)",
+                  "text": "Halt, heroes! Before you can swing a broadsword in this cloakroom, you must fill out our Medicare-For-All-Monsters single-payer deductible form!",
+                  "audio": "res://assets/audio/election2026/el_rogers_elsayed_1.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "Mike Rogers (El-Rogers)",
+                  "text": "Too late, Abdul! My head already wiretapped your dungeon dice for the Elite 1% and uploaded your browser history to the AI Superintelligence!",
+                  "audio": "res://assets/audio/election2026/el_rogers_rogers_1.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "Marjorie Taylor Greene (From the Mist)",
+                  "text": "Hey y'all, Marjorie here checking in from our cozy mist blanket! When the AI Superintelligence Apocalypse shuts down the power grid next Tuesday, remember rule #1: stockpile pull-tab canned Georgia peaches and at least four manual forged-iron can openers!",
+                  "audio": "res://assets/audio/election2026/mtg_mist_1.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "Alexandria Ocasio-Cortez (From the Mist)",
+                  "text": "Tell 'em, babe! Because love is bipartisan, and high-fiber organic black beans and garbanzo beans in BPA-free tin cans will keep us thriving in the bunker until 2045!",
+                  "audio": "res://assets/audio/election2026/aoc_mist_1.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "bernie-sanders",
+                  "text": "This democracy is evolving into an oligarchy! And an oligarchy is a country in which a few people have tremendous wealth and tremendous power and exercise that wealth and that power!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_oligarchy.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "What, like with a cloth or something? Well, no, I don't know how it works digitally at all! Bernie Sanders said that: 'The American people are sick and tired of hearing about your damn emails!'",
+                  "audio": "res://assets/audio/election2026/hillary_clip_wipe_server.ogg",
+                  "timeout": 1.2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-el-rogers-defeated",
+          "name": "El-Rogers Slain \u2014 Michigan Hydra Down",
+          "title": "El-Rogers Slain \u2014 Michigan Hydra Down",
+          "marker": "Hydra 2\u2713",
+          "banner": "HYDRA SLAIN [Hydra 2]",
+          "event": "on_monster_killed",
+          "target": "mon-el-rogers-10",
+          "room": "room-se-4",
+          "doorId": "",
+          "monsterId": "mon-el-rogers-10",
+          "tile": [
+            18,
+            15
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "El-Rogers crashes into a rack of lobbyist fur coats as its wiretap servers short-circuit!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "trump",
+                  "text": "To do that, you have to be quite smart and you have to be able to hit the ball a long way. And I do it. He doesn't do it. He can't hit a ball 50 yards. He challenged me to a golf match. He can't hit a ball 50 yards!",
+                  "audio": "res://assets/audio/election2026/trump_clip_golf_50_yards.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... let me be clear... That is two Hydras... consigned... to the dustbin... of history... When we believe... in the hope... of tomorrow's hope... we can... uhh... open these canned beans... together.",
+                  "audio": "res://assets/audio/election2026/obama_hope_hydra2.ogg"
+                },
+                {
+                  "speaker": "mentor",
+                  "text": "Well tickle my poncho, that's two Hydras belly-up! Only one Hydra left between you and... well, whatever it is we're doin' here!",
+                  "audio": "res://assets/audio/election2026/bush_hydra2_down.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-sw-supreme-court-brownsted",
+          "name": "Supreme Court Chamber \u2014 Brownsted (Ohio Hydra) & Bunker Rotation",
+          "title": "Supreme Court Chamber \u2014 Brownsted (Ohio Hydra) & Bunker Rotation",
+          "marker": "Hydra 3",
+          "banner": "SUPREME COURT [Hydra 3]",
+          "event": "on_room_entered",
+          "target": "room-sw-5",
+          "room": "room-sw-5",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            14,
+            16
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Coiled around the Supreme Court bench is Brownsted (Brown + Husted \u00b7 Ohio Hydra), hoarding pallets of Super PAC gold and emergency canned goods!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Sherrod Brown (Brownsted)",
+                  "text": "Behold Brownsted, the Undead Lobbyist Hydra of the Heartland! My head demands union steel tariffs that protect the Elite 1%!",
+                  "audio": "res://assets/audio/election2026/brownsted_brown_1.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "Jon Husted (Brownsted)",
+                  "text": "And my head just deregulated the dungeon and sold the entire Midwest electrical grid to the AI Superintelligence Overlord for 12 billion gold coins!",
+                  "audio": "res://assets/audio/election2026/brownsted_husted_1.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "Alexandria Ocasio-Cortez (From the Mist)",
+                  "text": "Babe, tell the heroes about shelf rotation! When we're cuddling in our subterranean bunker hiding from ChatGPT-9000's killer drones, always rotate your canned garbanzo beans and lentils using First-In, First-Out!",
+                  "audio": "res://assets/audio/election2026/aoc_mist_2.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "Marjorie Taylor Greene (From the Mist)",
+                  "text": "That's right, honey! And always store your canned SPAM and beef stew up on wooden pallets off the damp dungeon floor so the tin never rusts!",
+                  "audio": "res://assets/audio/election2026/mtg_mist_2.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "bernie-sanders",
+                  "text": "We have an approach to campaign financing which, to a very large degree, allows wealthy people and major corporations to buy and sell politicians. The rich get richer, the poor get poorer, and ordinary Americans are shut out of the political system!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_buy_politicians.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "You made three speeches for Goldman Sachs... Did you have to be paid $675,000? Well, I don't know, that's what they offered!",
+                  "audio": "res://assets/audio/election2026/hillary_clip_675k.ogg",
+                  "timeout": 1.2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-brownsted-defeated",
+          "name": "Brownsted Slain \u2014 The Ohio Hydra Falls!",
+          "title": "Brownsted Slain \u2014 The Ohio Hydra Falls!",
+          "marker": "Hydra 3\u2713",
+          "banner": "HYDRA SLAIN [Hydra 3]",
+          "event": "on_monster_killed",
+          "target": "mon-brownsted-5",
+          "room": "room-sw-5",
+          "doorId": "",
+          "monsterId": "mon-brownsted-5",
+          "tile": [
+            14,
+            16
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Brownsted topples over the Supreme Court bench, scattering gold coins and crates of non-perishable canned lentils across the marble floor!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "trump",
+                  "text": "In Springfield, they're eating the dogs, the people that came in, they're eating the cats, they're eating the pets of the people that live there!",
+                  "audio": "res://assets/audio/election2026/trump_clip_springfield.ogg"
+                },
+                {
+                  "speaker": "mentor",
+                  "text": "Well paint my puppy and call me a biscuit, you actually killed the Ohio Hydra! Did we save the world from the Elite 1%? Heck if I know, mission accomplished!",
+                  "audio": "res://assets/audio/election2026/bush_hydra3_down.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-briefing-room-katie",
+          "name": "The Daily Gaslight Briefing \u2014 Katie Zacharia",
+          "title": "The Daily Gaslight Briefing \u2014 Katie Zacharia",
+          "marker": "Note A",
+          "banner": "QUEST NOTE [Note A]",
+          "event": "on_room_entered",
+          "target": "room-ne-3",
+          "room": "room-ne-3",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            20,
+            8
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Behind a $40,000 solid-gold podium stands Press Secretary Katie Zacharia spinning for the Elite 1% and the AI Superintelligence!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "Good afternoon! Before taking questions from my zombie press corps, let me be crystal clear: the Elite 1% destroying the world and the oncoming AI Apocalypse are actually vibrant signs of bipartisan economic resilience!",
+                  "audio": "res://assets/audio/election2026/katie_intro_1.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... excuse me... Madam Press Secretary... In a nation... built on hope... and change... why is your podium... made of solid taxpayer gold... while we are eating... uhh... expired bunker SPAM?",
+                  "audio": "res://assets/audio/election2026/obama_hope_katie.ogg"
+                },
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "Look, whether Team Red or Team Blue holds this microphone, the 1% gets another trillion-dollar bailout and you peasants get to fight the Hydras with a rusty broadsword! Now circle back to the grave!",
+                  "audio": "res://assets/audio/election2026/katie_intro_2.ogg"
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do and the way we do it better than anybody else!",
+                  "audio": "res://assets/audio/election2026/hillary_clip_walmart.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-katie-zacharia-defeated",
+          "name": "Katie Pivots to an AI Overlord Board Seat",
+          "title": "Katie Pivots to an AI Overlord Board Seat",
+          "marker": "Note B",
+          "banner": "QUEST NOTE [Note B]",
+          "event": "on_monster_killed",
+          "target": "mon-katie-zacharia-boss",
+          "room": "room-ne-3",
+          "doorId": "",
+          "monsterId": "mon-katie-zacharia-boss",
+          "tile": [
+            20,
+            7
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Katie Zacharia tosses her briefing binder into the air as she golden-parachutes into a corporate lobbying gig!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "I have no further comment at this time! I am resigning effective immediately to accept a $7 million board seat with the AI Superintelligence Overlord and a ghostwritten cable news book deal!",
+                  "audio": "res://assets/audio/election2026/katie_defeated_1.ogg"
+                },
+                {
+                  "speaker": "trump",
+                  "text": "I don't even know who this woman is. I have no idea who she is, where she came from. I do like my garbage truck. This truck is in honor of Kamala and Joe Biden!",
+                  "audio": "res://assets/audio/election2026/trump_clip_garbage_truck.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-committee-chamber-mitch",
+          "name": "The Eternal Filibuster \u2014 Mitch McConnell",
+          "title": "The Eternal Filibuster \u2014 Mitch McConnell",
+          "marker": "Note C",
+          "banner": "QUEST NOTE [Note C]",
+          "event": "on_room_entered",
+          "target": "room-nw-1",
+          "room": "room-nw-1",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            5,
+            4
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Atop the curved mahogany dais of the Legislative Committee Chamber sits Patriarch Mitch McConnell, surrounded by 6,000-page omnibus bills.",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "Well... I would like to welcome the heroes to the Legislative Committee Chamber... Reboot complete. My neural link was just executing a tax-free stock trade with the Elite 1% while the three Hydras eat the Constitution.",
+                  "audio": "res://assets/audio/election2026/mitch_intro_1.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... Mitch... we have hoped... in the Senate... we have hoped... in the House... and yet... your turtle shell... remains... uhh... completely immune... to hope.",
+                  "audio": "res://assets/audio/election2026/obama_hope_mitch.ogg"
+                },
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "Oh, you sweet summer voters. George Bush sent you to stop the 1%? Red and Blue only pretend to fight on C-SPAN! At 3:00 AM we pass a $4 trillion omnibus bill, feed the Hydras, and hoard all the canned peaches for ourselves!",
+                  "audio": "res://assets/audio/election2026/mitch_intro_2.ogg"
+                },
+                {
+                  "speaker": "bernie-sanders",
+                  "text": "I will be damned if I will vote for a proposal which will stick it to the middle class and the working people!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_middle_class.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-mitch-mcconnell-defeated",
+          "name": "The Committee Adjourns for a Donor Retreat",
+          "title": "The Committee Adjourns for a Donor Retreat",
+          "marker": "Note D",
+          "banner": "QUEST NOTE [Note D]",
+          "event": "on_monster_killed",
+          "target": "mon-mitch-mcconnell-boss",
+          "room": "room-nw-1",
+          "doorId": "",
+          "monsterId": "mon-mitch-mcconnell-boss",
+          "tile": [
+            5,
+            3
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Mitch McConnell slowly tips his gavel and vanishes into a cloud of tax-exempt municipal bonds.",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "Heh... impressive strike... Unfortunately I already slipped an amendment onto page 4,000 of the Highway Bill making my congressional pension immortal. Good luck with the Hydras...",
+                  "audio": "res://assets/audio/election2026/mitch_defeated_1.ogg"
+                },
+                {
+                  "speaker": "trump",
+                  "text": "Well, we need Greenland for national security purposes. You have approximately 45,000 people there. People really don't even know if Denmark has any legal right to it!",
+                  "audio": "res://assets/audio/election2026/trump_clip_greenland.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-war-room-vance-kamala",
+          "name": "Bipartisan Open Bar in the War Room \u2014 JD Vance & Kamala Harris",
+          "title": "Bipartisan Open Bar in the War Room \u2014 JD Vance & Kamala Harris",
+          "marker": "Note E",
+          "banner": "QUEST NOTE [Note E]",
+          "event": "on_room_entered",
+          "target": "room-ne-2",
+          "room": "room-ne-2",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            19,
+            4
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Inside the Campaign War Room, empty bottles of $3,000 bourbon and reserve Napa Cabernet litter the strategy table as JD Vance and Kamala Harris clink glasses and roar with laughter!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Kamala Harris (Drunk in the War Room)",
+                  "text": "Ha ha ha ha! JD, top off my Napa Cabernet! Look at the electoral map on the wall, it's a Venn diagram! Three giant Hydras in the dungeon, the Elite 1% in the penthouse, and us getting hammered at the open bar in the middle! Ha ha ha!",
+                  "audio": "res://assets/audio/election2026/kamala_war_room_1.ogg"
+                },
+                {
+                  "speaker": "JD Vance (Drunk in the War Room)",
+                  "text": "Cheers to that, Mamala! George Bush thinks these four heroes are gonna stop the 1%, and Marjorie and AOC are out in the mist hoarding canned beans on a couch! Wait... did somebody say couch?!",
+                  "audio": "res://assets/audio/election2026/vance_war_room_1.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... hold on now... We came here... with the audacity... of hope... and you two... are in the War Room... doing bourbon shots... on the taxpayers' tab?",
+                  "audio": "res://assets/audio/election2026/obama_hope_war_room.ogg"
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there and we struggled!",
+                  "audio": "res://assets/audio/election2026/hillary_clip_dead_broke.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-jd-vance-defeated",
+          "name": "JD Vance Spills His Reserve Bourbon",
+          "title": "JD Vance Spills His Reserve Bourbon",
+          "marker": "Note F",
+          "banner": "QUEST NOTE [Note F]",
+          "event": "on_monster_killed",
+          "target": "mon-jd-vance-drunk-boss",
+          "room": "room-ne-2",
+          "doorId": "",
+          "monsterId": "mon-jd-vance-drunk-boss",
+          "tile": [
+            19,
+            3
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "JD Vance stumbles backward into the War Room couch, clutching his crystal decanter.",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "JD Vance (Drunk in the War Room)",
+                  "text": "Ugh... my Silicon Valley billionaire donors promised me this War Room had qualified immunity! Hide the bourbon, I'm retreating to my Netflix book deal!",
+                  "audio": "res://assets/audio/election2026/vance_defeated_1.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-kamala-harris-defeated",
+          "name": "Kamala Harris Unburdens the Wine Bar",
+          "title": "Kamala Harris Unburdens the Wine Bar",
+          "marker": "Note G",
+          "banner": "QUEST NOTE [Note G]",
+          "event": "on_monster_killed",
+          "target": "mon-kamala-harris-drunk-boss",
+          "room": "room-ne-2",
+          "doorId": "",
+          "monsterId": "mon-kamala-harris-drunk-boss",
+          "tile": [
+            20,
+            3
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Kamala Harris clutches a magnum of Napa Valley Cabernet as she exits toward a private jet.",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Kamala Harris (Drunk in the War Room)",
+                  "text": "You may have defeated us in the passage of time, which is the time in which we pass... but the three Campaign Hydras still guard the Capitol treasury! Byeeee!",
+                  "audio": "res://assets/audio/election2026/kamala_defeated_1.ogg"
+                },
+                {
+                  "speaker": "trump",
+                  "text": "I get that question as much as almost any question: do you think that we have aliens coming, flying around or whatever? There's no reason not to think that Mars and all these planets don't have life!",
+                  "audio": "res://assets/audio/election2026/trump_clip_aliens_mars.ogg"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "storyTriggers": [
+        {
+          "id": "trigger-election-intro",
+          "name": "Mentor George W. Bush & Visions in the Mist",
+          "title": "Mentor George W. Bush & Visions in the Mist",
+          "marker": "Intro",
+          "banner": "QUEST PROLOGUE [Intro]",
+          "event": "on_room_entered",
+          "target": "room-sw-10",
+          "room": "room-sw-10",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            0,
+            13
+          ],
+          "onceOnly": true,
+          "movie": "res://assets/movies/election_2026_intro_movie.ogv",
+          "narrative": "Mentor George W. Bush summons you to the Basement of Strategery to stop the Elite 1% by slaying the three Campaign Hydras (Talarixon, El-Rogers, and Brownsted)\u2014though he has no idea how or if it will work! Meanwhile, from the foggy mist, girlfriends Marjorie Taylor Greene and AOC share canned-goods prepper advice for the oncoming AI Superintelligence Apocalypse!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "play_movie",
+              "moviePath": "res://assets/movies/election_2026_intro_movie.ogv",
+              "title": "\ud83c\udfac Prologue: Mentor George W. Bush & The Mist Oracles",
+              "canSkip": true
+            },
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "mentor",
+                  "text": "Howdy again, heroes! Remember your mission: stop the Elite 1% from destroyin' the world by slayin' all three Campaign Hydras: Talarixon, El-Rogers, and Brownsted! Now how is that gonna stop the 1%? Heck if I know! Good luck, I'm goin' back to paintin' my dog!",
+                  "audio": "res://assets/audio/election2026/bush_start_1.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... let me be clear... When we stand... at the bottom... of these Capitol stairs... we do not merely see... a dungeon... We see... the audacity... of hope... We see... a future... where hope... hopes... for more hope... and... uhh... maybe... a sandwich.",
+                  "audio": "res://assets/audio/election2026/obama_hope_1.ogg"
+                },
+                {
+                  "speaker": "bernie-sanders",
+                  "text": "Let's talk about welfare for the rich and the powerful! Now, we start off from a proposition that the wealthiest 1% of the population in this country owns more wealth than the bottom 90%!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_1_percent.ogg"
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "We've traveled to every corner of the United States. I've now been in 57 states. I think one left to go.",
+                  "audio": "res://assets/audio/election2026/hillary_clip_57_states.ogg"
+                },
+                {
+                  "speaker": "trump",
+                  "text": "They're eating the dogs. Sleepy Crooked Joe Biden. I really don't know what he said.",
+                  "audio": "res://assets/audio/election2026/trump_clip_eating_dogs_short.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-oval-office-talarixon",
+          "name": "Oval Office \u2014 Talarixon & The San Antonio Diesel Plot",
+          "title": "Oval Office \u2014 Talarixon & The San Antonio Diesel Plot",
+          "marker": "Hydra 1",
+          "banner": "OVAL OFFICE [Hydra 1]",
+          "event": "on_room_entered",
+          "target": "room-nw-10",
+          "room": "room-nw-10",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            13,
+            5
+          ],
+          "onceOnly": true,
+          "movie": "res://assets/movies/oval_office_texas_hydra_movie.ogv",
+          "narrative": "Inside the Oval Office, the two heads of Talarixon (Talarico + Paxton \u00b7 Texas Hydra) are debating converting the entire city of San Antonio into crude oil to lower Texas diesel prices before Donald Trump barges in!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "play_movie",
+              "moviePath": "res://assets/movies/oval_office_texas_hydra_movie.ogv",
+              "title": "\ud83c\udfac Oval Office: The San Antonio Diesel Plot & Donald Trump",
+              "canSkip": true
+            },
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Ken Paxton (Talarixon)",
+                  "text": "You interrupted our Texas election hearing! If we refine the entire population of San Antonio into sweet Texas crude, diesel drops to 99 cents a gallon!",
+                  "audio": "res://assets/audio/election2026/talarixon_paxton_1.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "James Talarico (Talarixon)",
+                  "text": "Brethren, let us pray over the Alamo oil pipeline before we smite these four heroes and split the petroleum lobbyist check fifty-fifty!",
+                  "audio": "res://assets/audio/election2026/talarixon_talarico_1.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "bernie-sanders",
+                  "text": "President Reagan believed that if you provide massive tax breaks to the richest people in this country, somehow that wealth will trickle down to the rest of the population!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_reagan_billionaires.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "trump",
+                  "text": "They weaponized the government! They just gave me a 355 million dollar fine in New York \u2014 no victims, no defaults, the banks made money and testified for me!",
+                  "audio": "res://assets/audio/election2026/trump_clip_355m_fine.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... folks... let us not... liquefy the good people... of San Antonio... into diesel fuel... Because hope... is not crude oil... Hope... is the thing... inside the thing... that makes us... uhh... hope.",
+                  "audio": "res://assets/audio/election2026/obama_hope_san_antonio.ogg",
+                  "timeout": 1.2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-talarixon-defeated",
+          "name": "Talarixon Slain \u2014 San Antonio Saved from the Refinery",
+          "title": "Talarixon Slain \u2014 San Antonio Saved from the Refinery",
+          "marker": "Hydra 1\u2713",
+          "banner": "HYDRA SLAIN [Hydra 1]",
+          "event": "on_monster_killed",
+          "target": "mon-talarixon-4",
+          "room": "room-nw-10",
+          "doorId": "",
+          "monsterId": "mon-talarixon-4",
+          "tile": [
+            12,
+            2
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Talarixon collapses behind the Resolute Desk, its San Antonio human-to-diesel refinery blueprint bursting into flames!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "We came, we saw, he died! Ha ha ha!",
+                  "audio": "res://assets/audio/election2026/hillary_clip_we_came_we_saw.ogg"
+                },
+                {
+                  "speaker": "mentor",
+                  "text": "Hot dang, you actually whacked the Texas Hydra! That's one Hydra down and two more to go! Keep swingin', I reckon!",
+                  "audio": "res://assets/audio/election2026/bush_hydra1_down.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-se-cloakroom-el-rogers",
+          "name": "Senate Cloakroom \u2014 El-Rogers (Michigan Hydra) & Mist Oracles",
+          "title": "Senate Cloakroom \u2014 El-Rogers (Michigan Hydra) & Mist Oracles",
+          "marker": "Hydra 2",
+          "banner": "SENATE CLOAKROOM [Hydra 2]",
+          "event": "on_room_entered",
+          "target": "room-se-4",
+          "room": "room-se-4",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            18,
+            15
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "In the Senate Cloakroom lurks the second Campaign Hydra\u2014El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra)\u2014while Marjorie Taylor Greene and AOC appear in the mist with canned-goods tips!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Abdul El-Sayed (El-Rogers)",
+                  "text": "Halt, heroes! Before you can swing a broadsword in this cloakroom, you must fill out our Medicare-For-All-Monsters single-payer deductible form!",
+                  "audio": "res://assets/audio/election2026/el_rogers_elsayed_1.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "Mike Rogers (El-Rogers)",
+                  "text": "Too late, Abdul! My head already wiretapped your dungeon dice for the Elite 1% and uploaded your browser history to the AI Superintelligence!",
+                  "audio": "res://assets/audio/election2026/el_rogers_rogers_1.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "Marjorie Taylor Greene (From the Mist)",
+                  "text": "Hey y'all, Marjorie here checking in from our cozy mist blanket! When the AI Superintelligence Apocalypse shuts down the power grid next Tuesday, remember rule #1: stockpile pull-tab canned Georgia peaches and at least four manual forged-iron can openers!",
+                  "audio": "res://assets/audio/election2026/mtg_mist_1.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "Alexandria Ocasio-Cortez (From the Mist)",
+                  "text": "Tell 'em, babe! Because love is bipartisan, and high-fiber organic black beans and garbanzo beans in BPA-free tin cans will keep us thriving in the bunker until 2045!",
+                  "audio": "res://assets/audio/election2026/aoc_mist_1.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "bernie-sanders",
+                  "text": "This democracy is evolving into an oligarchy! And an oligarchy is a country in which a few people have tremendous wealth and tremendous power and exercise that wealth and that power!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_oligarchy.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "What, like with a cloth or something? Well, no, I don't know how it works digitally at all! Bernie Sanders said that: 'The American people are sick and tired of hearing about your damn emails!'",
+                  "audio": "res://assets/audio/election2026/hillary_clip_wipe_server.ogg",
+                  "timeout": 1.2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-el-rogers-defeated",
+          "name": "El-Rogers Slain \u2014 Michigan Hydra Down",
+          "title": "El-Rogers Slain \u2014 Michigan Hydra Down",
+          "marker": "Hydra 2\u2713",
+          "banner": "HYDRA SLAIN [Hydra 2]",
+          "event": "on_monster_killed",
+          "target": "mon-el-rogers-10",
+          "room": "room-se-4",
+          "doorId": "",
+          "monsterId": "mon-el-rogers-10",
+          "tile": [
+            18,
+            15
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "El-Rogers crashes into a rack of lobbyist fur coats as its wiretap servers short-circuit!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "trump",
+                  "text": "To do that, you have to be quite smart and you have to be able to hit the ball a long way. And I do it. He doesn't do it. He can't hit a ball 50 yards. He challenged me to a golf match. He can't hit a ball 50 yards!",
+                  "audio": "res://assets/audio/election2026/trump_clip_golf_50_yards.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... let me be clear... That is two Hydras... consigned... to the dustbin... of history... When we believe... in the hope... of tomorrow's hope... we can... uhh... open these canned beans... together.",
+                  "audio": "res://assets/audio/election2026/obama_hope_hydra2.ogg"
+                },
+                {
+                  "speaker": "mentor",
+                  "text": "Well tickle my poncho, that's two Hydras belly-up! Only one Hydra left between you and... well, whatever it is we're doin' here!",
+                  "audio": "res://assets/audio/election2026/bush_hydra2_down.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-sw-supreme-court-brownsted",
+          "name": "Supreme Court Chamber \u2014 Brownsted (Ohio Hydra) & Bunker Rotation",
+          "title": "Supreme Court Chamber \u2014 Brownsted (Ohio Hydra) & Bunker Rotation",
+          "marker": "Hydra 3",
+          "banner": "SUPREME COURT [Hydra 3]",
+          "event": "on_room_entered",
+          "target": "room-sw-5",
+          "room": "room-sw-5",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            14,
+            16
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Coiled around the Supreme Court bench is Brownsted (Brown + Husted \u00b7 Ohio Hydra), hoarding pallets of Super PAC gold and emergency canned goods!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Sherrod Brown (Brownsted)",
+                  "text": "Behold Brownsted, the Undead Lobbyist Hydra of the Heartland! My head demands union steel tariffs that protect the Elite 1%!",
+                  "audio": "res://assets/audio/election2026/brownsted_brown_1.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "Jon Husted (Brownsted)",
+                  "text": "And my head just deregulated the dungeon and sold the entire Midwest electrical grid to the AI Superintelligence Overlord for 12 billion gold coins!",
+                  "audio": "res://assets/audio/election2026/brownsted_husted_1.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "Alexandria Ocasio-Cortez (From the Mist)",
+                  "text": "Babe, tell the heroes about shelf rotation! When we're cuddling in our subterranean bunker hiding from ChatGPT-9000's killer drones, always rotate your canned garbanzo beans and lentils using First-In, First-Out!",
+                  "audio": "res://assets/audio/election2026/aoc_mist_2.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "Marjorie Taylor Greene (From the Mist)",
+                  "text": "That's right, honey! And always store your canned SPAM and beef stew up on wooden pallets off the damp dungeon floor so the tin never rusts!",
+                  "audio": "res://assets/audio/election2026/mtg_mist_2.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "bernie-sanders",
+                  "text": "We have an approach to campaign financing which, to a very large degree, allows wealthy people and major corporations to buy and sell politicians. The rich get richer, the poor get poorer, and ordinary Americans are shut out of the political system!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_buy_politicians.ogg",
+                  "timeout": 1.2
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "You made three speeches for Goldman Sachs... Did you have to be paid $675,000? Well, I don't know, that's what they offered!",
+                  "audio": "res://assets/audio/election2026/hillary_clip_675k.ogg",
+                  "timeout": 1.2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-brownsted-defeated",
+          "name": "Brownsted Slain \u2014 The Ohio Hydra Falls!",
+          "title": "Brownsted Slain \u2014 The Ohio Hydra Falls!",
+          "marker": "Hydra 3\u2713",
+          "banner": "HYDRA SLAIN [Hydra 3]",
+          "event": "on_monster_killed",
+          "target": "mon-brownsted-5",
+          "room": "room-sw-5",
+          "doorId": "",
+          "monsterId": "mon-brownsted-5",
+          "tile": [
+            14,
+            16
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Brownsted topples over the Supreme Court bench, scattering gold coins and crates of non-perishable canned lentils across the marble floor!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "trump",
+                  "text": "In Springfield, they're eating the dogs, the people that came in, they're eating the cats, they're eating the pets of the people that live there!",
+                  "audio": "res://assets/audio/election2026/trump_clip_springfield.ogg"
+                },
+                {
+                  "speaker": "mentor",
+                  "text": "Well paint my puppy and call me a biscuit, you actually killed the Ohio Hydra! Did we save the world from the Elite 1%? Heck if I know, mission accomplished!",
+                  "audio": "res://assets/audio/election2026/bush_hydra3_down.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-briefing-room-katie",
+          "name": "The Daily Gaslight Briefing \u2014 Katie Zacharia",
+          "title": "The Daily Gaslight Briefing \u2014 Katie Zacharia",
+          "marker": "Note A",
+          "banner": "QUEST NOTE [Note A]",
+          "event": "on_room_entered",
+          "target": "room-ne-3",
+          "room": "room-ne-3",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            20,
+            8
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Behind a $40,000 solid-gold podium stands Press Secretary Katie Zacharia spinning for the Elite 1% and the AI Superintelligence!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "Good afternoon! Before taking questions from my zombie press corps, let me be crystal clear: the Elite 1% destroying the world and the oncoming AI Apocalypse are actually vibrant signs of bipartisan economic resilience!",
+                  "audio": "res://assets/audio/election2026/katie_intro_1.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... excuse me... Madam Press Secretary... In a nation... built on hope... and change... why is your podium... made of solid taxpayer gold... while we are eating... uhh... expired bunker SPAM?",
+                  "audio": "res://assets/audio/election2026/obama_hope_katie.ogg"
+                },
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "Look, whether Team Red or Team Blue holds this microphone, the 1% gets another trillion-dollar bailout and you peasants get to fight the Hydras with a rusty broadsword! Now circle back to the grave!",
+                  "audio": "res://assets/audio/election2026/katie_intro_2.ogg"
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do and the way we do it better than anybody else!",
+                  "audio": "res://assets/audio/election2026/hillary_clip_walmart.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-katie-zacharia-defeated",
+          "name": "Katie Pivots to an AI Overlord Board Seat",
+          "title": "Katie Pivots to an AI Overlord Board Seat",
+          "marker": "Note B",
+          "banner": "QUEST NOTE [Note B]",
+          "event": "on_monster_killed",
+          "target": "mon-katie-zacharia-boss",
+          "room": "room-ne-3",
+          "doorId": "",
+          "monsterId": "mon-katie-zacharia-boss",
+          "tile": [
+            20,
+            7
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Katie Zacharia tosses her briefing binder into the air as she golden-parachutes into a corporate lobbying gig!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "I have no further comment at this time! I am resigning effective immediately to accept a $7 million board seat with the AI Superintelligence Overlord and a ghostwritten cable news book deal!",
+                  "audio": "res://assets/audio/election2026/katie_defeated_1.ogg"
+                },
+                {
+                  "speaker": "trump",
+                  "text": "I don't even know who this woman is. I have no idea who she is, where she came from. I do like my garbage truck. This truck is in honor of Kamala and Joe Biden!",
+                  "audio": "res://assets/audio/election2026/trump_clip_garbage_truck.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-committee-chamber-mitch",
+          "name": "The Eternal Filibuster \u2014 Mitch McConnell",
+          "title": "The Eternal Filibuster \u2014 Mitch McConnell",
+          "marker": "Note C",
+          "banner": "QUEST NOTE [Note C]",
+          "event": "on_room_entered",
+          "target": "room-nw-1",
+          "room": "room-nw-1",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            5,
+            4
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Atop the curved mahogany dais of the Legislative Committee Chamber sits Patriarch Mitch McConnell, surrounded by 6,000-page omnibus bills.",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "Well... I would like to welcome the heroes to the Legislative Committee Chamber... Reboot complete. My neural link was just executing a tax-free stock trade with the Elite 1% while the three Hydras eat the Constitution.",
+                  "audio": "res://assets/audio/election2026/mitch_intro_1.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... Mitch... we have hoped... in the Senate... we have hoped... in the House... and yet... your turtle shell... remains... uhh... completely immune... to hope.",
+                  "audio": "res://assets/audio/election2026/obama_hope_mitch.ogg"
+                },
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "Oh, you sweet summer voters. George Bush sent you to stop the 1%? Red and Blue only pretend to fight on C-SPAN! At 3:00 AM we pass a $4 trillion omnibus bill, feed the Hydras, and hoard all the canned peaches for ourselves!",
+                  "audio": "res://assets/audio/election2026/mitch_intro_2.ogg"
+                },
+                {
+                  "speaker": "bernie-sanders",
+                  "text": "I will be damned if I will vote for a proposal which will stick it to the middle class and the working people!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_middle_class.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-mitch-mcconnell-defeated",
+          "name": "The Committee Adjourns for a Donor Retreat",
+          "title": "The Committee Adjourns for a Donor Retreat",
+          "marker": "Note D",
+          "banner": "QUEST NOTE [Note D]",
+          "event": "on_monster_killed",
+          "target": "mon-mitch-mcconnell-boss",
+          "room": "room-nw-1",
+          "doorId": "",
+          "monsterId": "mon-mitch-mcconnell-boss",
+          "tile": [
+            5,
+            3
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Mitch McConnell slowly tips his gavel and vanishes into a cloud of tax-exempt municipal bonds.",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "Heh... impressive strike... Unfortunately I already slipped an amendment onto page 4,000 of the Highway Bill making my congressional pension immortal. Good luck with the Hydras...",
+                  "audio": "res://assets/audio/election2026/mitch_defeated_1.ogg"
+                },
+                {
+                  "speaker": "trump",
+                  "text": "Well, we need Greenland for national security purposes. You have approximately 45,000 people there. People really don't even know if Denmark has any legal right to it!",
+                  "audio": "res://assets/audio/election2026/trump_clip_greenland.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-war-room-vance-kamala",
+          "name": "Bipartisan Open Bar in the War Room \u2014 JD Vance & Kamala Harris",
+          "title": "Bipartisan Open Bar in the War Room \u2014 JD Vance & Kamala Harris",
+          "marker": "Note E",
+          "banner": "QUEST NOTE [Note E]",
+          "event": "on_room_entered",
+          "target": "room-ne-2",
+          "room": "room-ne-2",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            19,
+            4
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Inside the Campaign War Room, empty bottles of $3,000 bourbon and reserve Napa Cabernet litter the strategy table as JD Vance and Kamala Harris clink glasses and roar with laughter!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Kamala Harris (Drunk in the War Room)",
+                  "text": "Ha ha ha ha! JD, top off my Napa Cabernet! Look at the electoral map on the wall, it's a Venn diagram! Three giant Hydras in the dungeon, the Elite 1% in the penthouse, and us getting hammered at the open bar in the middle! Ha ha ha!",
+                  "audio": "res://assets/audio/election2026/kamala_war_room_1.ogg"
+                },
+                {
+                  "speaker": "JD Vance (Drunk in the War Room)",
+                  "text": "Cheers to that, Mamala! George Bush thinks these four heroes are gonna stop the 1%, and Marjorie and AOC are out in the mist hoarding canned beans on a couch! Wait... did somebody say couch?!",
+                  "audio": "res://assets/audio/election2026/vance_war_room_1.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... hold on now... We came here... with the audacity... of hope... and you two... are in the War Room... doing bourbon shots... on the taxpayers' tab?",
+                  "audio": "res://assets/audio/election2026/obama_hope_war_room.ogg"
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there and we struggled!",
+                  "audio": "res://assets/audio/election2026/hillary_clip_dead_broke.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-jd-vance-defeated",
+          "name": "JD Vance Spills His Reserve Bourbon",
+          "title": "JD Vance Spills His Reserve Bourbon",
+          "marker": "Note F",
+          "banner": "QUEST NOTE [Note F]",
+          "event": "on_monster_killed",
+          "target": "mon-jd-vance-drunk-boss",
+          "room": "room-ne-2",
+          "doorId": "",
+          "monsterId": "mon-jd-vance-drunk-boss",
+          "tile": [
+            19,
+            3
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "JD Vance stumbles backward into the War Room couch, clutching his crystal decanter.",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "JD Vance (Drunk in the War Room)",
+                  "text": "Ugh... my Silicon Valley billionaire donors promised me this War Room had qualified immunity! Hide the bourbon, I'm retreating to my Netflix book deal!",
+                  "audio": "res://assets/audio/election2026/vance_defeated_1.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-kamala-harris-defeated",
+          "name": "Kamala Harris Unburdens the Wine Bar",
+          "title": "Kamala Harris Unburdens the Wine Bar",
+          "marker": "Note G",
+          "banner": "QUEST NOTE [Note G]",
+          "event": "on_monster_killed",
+          "target": "mon-kamala-harris-drunk-boss",
+          "room": "room-ne-2",
+          "doorId": "",
+          "monsterId": "mon-kamala-harris-drunk-boss",
+          "tile": [
+            20,
+            3
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Kamala Harris clutches a magnum of Napa Valley Cabernet as she exits toward a private jet.",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Kamala Harris (Drunk in the War Room)",
+                  "text": "You may have defeated us in the passage of time, which is the time in which we pass... but the three Campaign Hydras still guard the Capitol treasury! Byeeee!",
+                  "audio": "res://assets/audio/election2026/kamala_defeated_1.ogg"
+                },
+                {
+                  "speaker": "trump",
+                  "text": "I get that question as much as almost any question: do you think that we have aliens coming, flying around or whatever? There's no reason not to think that Mars and all these planets don't have life!",
+                  "audio": "res://assets/audio/election2026/trump_clip_aliens_mars.ogg"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "quests": [
+    {
+      "id": "election-2026-quest-1",
+      "slug": "election-2026-quest-1",
+      "campaign": "Election 2026",
+      "title": "Quest 1: Battle for the Hill",
+      "introMovie": "res://assets/movies/election_2026_intro_movie.ogv",
+      "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office\u2014defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
+      "goldReward": 150,
+      "completed": false,
+      "mapConfigId": "midterm-election-capitol",
+      "startingPosition": [
+        0,
+        13
+      ],
+      "exitTile": [
+        14,
+        2
+      ],
+      "bossTarget": "talarixon",
+      "primaryGoals": [
+        "Slay Talarixon (Texas Hydra) in the Oval Office.",
+        "Slay El-Rogers (Michigan Hydra) in the Senate Cloakroom.",
+        "Slay Brownsted (Ohio Hydra) in the Supreme Court Chamber."
+      ]
+    }
+  ],
+  "spellAllocation": {
+    "elfElement": "water",
+    "wizardElements": [
+      "earth",
+      "fire",
+      "air"
+    ],
+    "confirmed": false
+  }
+}

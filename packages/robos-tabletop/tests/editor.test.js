@@ -29,7 +29,10 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
       const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
       return t.includes("robos:TabletopHero");
     });
-    assert.strictEqual(heroes.length, 4, "Must contain 4 classic heroes");
+    const baseHeroes = heroes.filter(h => (h["robos:category"] || "Base Game") === "Base Game");
+    const midtermsHeroes = heroes.filter(h => h["robos:category"] === "Midterms 2026");
+    assert.strictEqual(baseHeroes.length, 4, "Must contain 4 classic Base Game heroes");
+    assert.strictEqual(midtermsHeroes.length, 4, "Must contain 4 Midterms 2026 heroes");
 
     const monsters = nodes.filter(n => {
       const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
@@ -442,7 +445,10 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.ok(indexHtml.includes('id="header-quest-select"'), "index.html must include #header-quest-select");
     assert.ok(!indexHtml.includes('id="cartridge-select"'), "index.html must not contain legacy #cartridge-select");
     assert.ok(indexHtml.includes("📜 Active Quest:"), "index.html must display '📜 Active Quest:' label");
-    assert.ok(indexHtml.includes("📦 Export Quest Pack"), "index.html must display '📦 Export Quest Pack' button");
+    assert.ok(
+      indexHtml.includes("📦 Sync Quest Pack") || indexHtml.includes("📦 Export Quest Pack"),
+      "index.html must display Quest Pack sync/export button"
+    );
   });
 
   it("supports automatically advancing to next quest when quest completes from tabletop game exit", () => {
@@ -491,10 +497,11 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
 
     const spellNodes = nodes.filter(n => {
       const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
-      return t.includes("robos:TabletopSpellCard") && !t.includes("robos:TabletopDreadSpell");
+      const isBase = !n["robos:category"] || n["robos:category"] === "Base Game";
+      return t.includes("robos:TabletopSpellCard") && !t.includes("robos:TabletopDreadSpell") && isBase;
     });
 
-    assert.strictEqual(spellNodes.length, 12, "Must contain exactly 12 HeroQuest elemental spells");
+    assert.strictEqual(spellNodes.length, 12, "Must contain 12 Base Game HeroQuest elemental spells");
 
     const colleges = { earth: 0, fire: 0, water: 0, air: 0 };
     spellNodes.forEach(sp => {
@@ -527,10 +534,11 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
 
     const dreadSpellNodes = nodes.filter(n => {
       const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
-      return t.includes("robos:TabletopDreadSpell");
+      const isBase = !n["robos:category"] || n["robos:category"] === "Base Game";
+      return t.includes("robos:TabletopDreadSpell") && isBase;
     });
 
-    assert.strictEqual(dreadSpellNodes.length, 8, "Must contain exactly 8 HeroQuest Dread spells");
+    assert.strictEqual(dreadSpellNodes.length, 8, "Must contain 8 Base Game HeroQuest Dread spells");
 
     const expectedDreadTitles = [
       "Lightning Bolt", "Firestorm", "Fear", "Sleep of Dread",
@@ -936,8 +944,752 @@ describe("RobOS Tabletop Studio Editor Test Suite", () => {
     assert.strictEqual(t3.success, false);
     assert.strictEqual(t3.error, "Cannot transfer to self");
   });
+
+  it("supports Category concept ('Base Game', 'Midterms 2026', and custom categories) across Monsters, Weapons, Spells, and Items", async () => {
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+    assert.ok(Array.isArray(appModule.DEFAULT_CATEGORIES), "DEFAULT_CATEGORIES must be exported");
+    assert.ok(appModule.DEFAULT_CATEGORIES.includes("Base Game"), "Must include 'Base Game' category");
+    assert.ok(appModule.DEFAULT_CATEGORIES.includes("Midterms 2026"), "Must include 'Midterms 2026' category");
+
+    // Verify KGraph entities carry robos:category
+    const data = JSON.parse(fs.readFileSync(KGRAPH_TABLETOP, "utf8"));
+    const nodes = data["robos:nodes"] || [];
+
+    const monsters = nodes.filter(n => {
+      const t = Array.isArray(n["@type"]) ? n["@type"] : [n["@type"]];
+      return t.includes("robos:TabletopMonster");
+    });
+    const baseMonsters = monsters.filter(m => m["robos:category"] === "Base Game");
+    const midtermsMonsters = monsters.filter(m => m["robos:category"] === "Midterms 2026");
+
+    assert.strictEqual(baseMonsters.length, 15, "Must have all 15 Base Game HeroQuest monsters in KGraph");
+    assert.strictEqual(midtermsMonsters.length, 11, "Must have 11 Midterms 2026 creations (8 standard monsters + 3 Hydra bosses)");
+
+    const standardMidterms = midtermsMonsters.filter(m => !m["robos:isBoss"]);
+    const hydraBosses = midtermsMonsters.filter(m => m["robos:isBoss"]);
+    assert.strictEqual(standardMidterms.length, 8, "Must have 8 standard Midterms 2026 monsters");
+    assert.strictEqual(hydraBosses.length, 3, "Must have 3 Midterms 2026 Hydra bosses");
+
+    // Check specific user-requested Midterms 2026 standard monsters
+    const campaignVolunteer = midtermsMonsters.find(m => m["@id"] === "urn:robos:tabletop:monster:campaign-volunteer");
+    assert.ok(campaignVolunteer, "Campaign Volunteer (replaces Goblin) must exist");
+    assert.strictEqual(campaignVolunteer["robos:replaces"], "Goblin");
+    assert.ok(campaignVolunteer["robos:specialAbility"].includes("Door Knocker"));
+
+    const partisanEnforcer = midtermsMonsters.find(m => m["@id"] === "urn:robos:tabletop:monster:partisan-enforcer");
+    assert.ok(partisanEnforcer, "Partisan Enforcer (replaces Dread Warrior) must exist");
+    assert.strictEqual(partisanEnforcer["robos:replaces"], "Dread Warrior");
+    assert.ok(partisanEnforcer["robos:specialAbility"].includes("Polarization"));
+
+    const spinDoctor = midtermsMonsters.find(m => m["@id"] === "urn:robos:tabletop:monster:spin-doctor");
+    assert.ok(spinDoctor, "Spin Doctor (replaces Dread Sorcerer) must exist");
+    assert.strictEqual(spinDoctor["robos:replaces"], "Dread Sorcerer");
+    assert.ok(spinDoctor["robos:specialAbility"].includes("Alternative Facts"));
+
+    // Check the 3 Hydra Bosses
+    const talarixon = midtermsMonsters.find(m => m["@id"] === "urn:robos:tabletop:monster:talarixon");
+    assert.ok(talarixon, "Talarixon (Texas Hydra) boss must exist");
+    assert.strictEqual(talarixon["robos:isBoss"], true);
+    assert.strictEqual(talarixon["robos:movementSquares"], 7);
+    assert.strictEqual(talarixon["robos:attackDice"], 5);
+    assert.strictEqual(talarixon["robos:defendDice"], 5);
+    assert.strictEqual(talarixon["robos:bodyPoints"], 6);
+    assert.strictEqual(talarixon["robos:mindPoints"], 5);
+
+    const elRogers = midtermsMonsters.find(m => m["@id"] === "urn:robos:tabletop:monster:el-rogers");
+    assert.ok(elRogers, "El-Rogers (Michigan Hydra) boss must exist");
+    assert.strictEqual(elRogers["robos:isBoss"], true);
+    assert.strictEqual(elRogers["robos:bodyPoints"], 7);
+
+    const brownsted = midtermsMonsters.find(m => m["@id"] === "urn:robos:tabletop:monster:brownsted");
+    assert.ok(brownsted, "Brownsted (Ohio Hydra) boss must exist");
+    assert.strictEqual(brownsted["robos:isBoss"], true);
+    assert.strictEqual(brownsted["robos:bodyPoints"], 8);
+
+    // Verify Midterms 2026 Weapons (illegal presidential acts)
+    const midtermsWeapons = appModule.getWeaponsByCategory("Midterms 2026");
+    assert.strictEqual(midtermsWeapons.length, 7, "Must include 7 Midterms 2026 illegal presidential act weapons");
+    assert.ok(midtermsWeapons.some(w => w.name.includes("Unapproved Foreign Bombing Run")));
+    assert.ok(midtermsWeapons.some(w => w.name.includes("Classified Bathroom")));
+    assert.ok(midtermsWeapons.some(w => w.name.includes("Midnight Blanket Pardon")));
+    assert.ok(midtermsWeapons.some(w => w.name.includes("Executive Order")));
+
+    // Verify Base Game Weapons remain intact
+    const baseWeapons = appModule.getWeaponsByCategory("Base Game");
+    assert.ok(baseWeapons.length >= 9, "Must include all 9 Base Game armory weapons/gear");
+
+    // Verify Midterms 2026 Spells (12 elemental spells) & Dread Spells (1 forbidden Dread spell)
+    const midtermsSpells = appModule.getSpellsByCategory("Midterms 2026");
+    assert.strictEqual(midtermsSpells.length, 12, "Must include 12 Midterms 2026 elemental spells (3 Fire, 3 Water, 3 Earth, 3 Air)");
+    assert.ok(midtermsSpells.some(s => s.slug === "attack-ad"));
+    assert.ok(midtermsSpells.some(s => s.slug === "outrage-inferno"));
+    assert.ok(midtermsSpells.some(s => s.slug === "october-surprise"));
+    assert.ok(midtermsSpells.some(s => s.slug === "filibuster"));
+    assert.ok(midtermsSpells.some(s => s.slug === "executive-privilege"));
+    assert.ok(midtermsSpells.some(s => s.slug === "emergency-funding"));
+    assert.ok(midtermsSpells.some(s => s.slug === "incumbent-protection"));
+    assert.ok(midtermsSpells.some(s => s.slug === "special-interest-donation"));
+    assert.ok(midtermsSpells.some(s => s.slug === "gerrymander"));
+    assert.ok(midtermsSpells.some(s => s.slug === "polling-surge"));
+    assert.ok(midtermsSpells.some(s => s.slug === "media-frenzy"));
+    assert.ok(midtermsSpells.some(s => s.slug === "landslide-victory"));
+
+    const midtermsDread = appModule.getDreadSpellsByCategory("Midterms 2026");
+    assert.strictEqual(midtermsDread.length, 1, "Must include 1 Midterms 2026 forbidden Dread spell");
+    assert.ok(midtermsDread.some(s => s.slug === "recount-of-the-damned"));
+
+    // Verify Midterms 2026 Quest Items
+    const midtermsItems = appModule.getItemsByCategory("Midterms 2026");
+    assert.strictEqual(midtermsItems.length, 5, "Must include 5 Midterms 2026 satirical quest items");
+    assert.ok(midtermsItems.some(it => it.name.includes("Snowflake")));
+    assert.ok(midtermsItems.some(it => it.name.includes("Bodily Autonomy") || it.effect.toLowerCase().includes("abortion")));
+    assert.ok(midtermsItems.some(it => it.name.includes("Party-Line Flip-Flop")));
+    assert.ok(midtermsItems.some(it => it.name.includes("Middle East")));
+
+    // Verify adding a custom category and custom entities for custom quests
+    const catRes = appModule.addCategory("Custom Quest 2027");
+    assert.strictEqual(catRes.success, true);
+    assert.ok(appModule.getCategories().includes("Custom Quest 2027"));
+
+    const customWepRes = await appModule.addCustomWeapon({
+      name: "Filibuster Podium Hammer",
+      category: "Custom Quest 2027",
+      type: "Weapon",
+      dice: "3 Attack Dice",
+      cost: "300 GP"
+    });
+    assert.strictEqual(customWepRes.success, true);
+    assert.strictEqual(appModule.getWeaponsByCategory("Custom Quest 2027").length, 1);
+
+    const customItemRes = await appModule.addCustomItem({
+      name: "Bipartisan Filibuster Coffee",
+      category: "Custom Quest 2027",
+      type: "potion",
+      effect: "Stay awake for 24 hours",
+      value: 75
+    });
+    assert.strictEqual(customItemRes.success, true);
+    assert.strictEqual(appModule.getItemsByCategory("Custom Quest 2027").length, 1);
+
+    const customSpellRes = await appModule.addCustomSpell({
+      name: "Omnibus Bill Avalanche",
+      category: "Custom Quest 2027",
+      element: "earth",
+      description: "Drops a 4,000-page bill that nobody read on target monster for 3 BP damage."
+    });
+    assert.strictEqual(customSpellRes.success, true);
+    assert.strictEqual(appModule.getSpellsByCategory("Custom Quest 2027").length, 1);
+
+    // Verify Spells & Items card CSS prevents overflow (min-width: 0, overflow: hidden, wrapping top badges)
+    const styleCss = fs.readFileSync(path.join(__dirname, "../renderer/style.css"), "utf8");
+    assert.ok(styleCss.includes(".spell-card-top-badges"), "style.css must define .spell-card-top-badges");
+    assert.ok(styleCss.includes(".spell-card-footer"), "style.css must define .spell-card-footer");
+    assert.ok(styleCss.includes("overflow-wrap: anywhere"), "style.css must enforce overflow-wrap: anywhere on cards");
+  });
+
+  it("renames 'Quest & Campaign' tab to 'Campaign', moves Heroes into the Campaign area, and supports multiple campaigns with per-campaign heroes", async () => {
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+
+    // 1. Verify top navigation tab is renamed 'Campaign' and top-level 'tab-heroes' button is removed
+    assert.ok(
+      indexHtml.includes('data-tab="tab-quest">📜 Campaign</button>'),
+      "Main navigation tab must be named '📜 Campaign'"
+    );
+    assert.ok(
+      !indexHtml.includes('data-tab="tab-heroes"'),
+      "Top-level Heroes tab button must be moved into the Campaign area"
+    );
+
+    // 2. Verify Campaign selector bar and Campaign subtabs (Quests & Heroes) exist inside #tab-quest
+    const tabQuestIdx = indexHtml.indexOf('id="tab-quest"');
+    const tabMonstersIdx = indexHtml.indexOf('id="tab-monsters"');
+    assert.ok(tabQuestIdx !== -1 && tabMonstersIdx > tabQuestIdx, "#tab-quest must precede #tab-monsters");
+    const campaignSectionHtml = indexHtml.slice(tabQuestIdx, tabMonstersIdx);
+
+    assert.ok(campaignSectionHtml.includes('id="campaign-select"'), "Campaign selector dropdown must exist inside Campaign tab");
+    assert.ok(campaignSectionHtml.includes('id="btn-add-campaign"'), "+ New Campaign button must exist inside Campaign tab");
+    assert.ok(campaignSectionHtml.includes('id="btn-delete-campaign"'), "Delete Campaign button must exist inside Campaign tab");
+    assert.ok(campaignSectionHtml.includes('id="subtab-campaign-quests"'), "Campaign Quests subpane must exist inside Campaign tab");
+    assert.ok(campaignSectionHtml.includes('id="subtab-campaign-heroes"'), "Campaign Heroes subpane must exist inside Campaign tab");
+    assert.ok(campaignSectionHtml.includes('id="heroes-list"'), "Heroes list must reside inside the Campaign area");
+    assert.ok(campaignSectionHtml.includes('id="hero-editor-title"'), "Hero editor panel must reside inside the Campaign area");
+
+    // 3. Verify multi-campaign state & per-campaign heroes isolation
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+    const campaigns = appModule.getCampaigns();
+    assert.strictEqual(campaigns.length, 1, "Must initially have 1 campaign in the list");
+    assert.strictEqual(campaigns[0].title, "HeroQuest");
+    assert.strictEqual(campaigns[0].quests.length, 1, "Initial HeroQuest campaign must have custom-quest as its 1 and only quest");
+    assert.strictEqual(campaigns[0].quests[0].slug, "custom-quest");
+    assert.strictEqual(campaigns[0].quests[0].cartridgeFile, "custom-quest.cartridge.json");
+    assert.strictEqual(campaigns[0].heroes.length, 4, "Initial campaign must have 4 default HeroQuest heroes");
+
+    // Cannot delete when only 1 campaign exists
+    assert.strictEqual(appModule.deleteCampaign(0), false, "Cannot delete the last remaining campaign");
+    assert.strictEqual(appModule.getCampaigns().length, 1);
+
+    // Add a second campaign with custom heroes (e.g. Midterms 2026 party)
+    const customCampaign = appModule.addCampaign({
+      id: "campaign-midterms-2026",
+      title: "Midterms 2026: The Swamp Filibuster",
+      heroes: [
+        {
+          "@id": "urn:robos:tabletop:hero:obama-barbarian",
+          "dcterms:title": "Obama",
+          "robos:characterName": "Obama",
+          "robos:heroClass": "Barbarian",
+          "robos:bodyPoints": 8,
+          "robos:mindPoints": 2,
+          "robos:attackDice": 3,
+          "robos:defendDice": 2,
+          "robos:gold": 250
+        },
+        {
+          "@id": "urn:robos:tabletop:hero:hillary-elf",
+          "dcterms:title": "Hillary",
+          "robos:characterName": "Hillary",
+          "robos:heroClass": "Elf",
+          "robos:bodyPoints": 6,
+          "robos:mindPoints": 4,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2,
+          "robos:gold": 200
+        },
+        {
+          "@id": "urn:robos:tabletop:hero:trump-dwarf",
+          "dcterms:title": "Trump",
+          "robos:characterName": "Trump",
+          "robos:heroClass": "Dwarf",
+          "robos:bodyPoints": 7,
+          "robos:mindPoints": 3,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2,
+          "robos:gold": 500
+        },
+        {
+          "@id": "urn:robos:tabletop:hero:mcconnell-wizard",
+          "dcterms:title": "Senator McConnell",
+          "robos:characterName": "Senator McConnell",
+          "robos:heroClass": "Wizard",
+          "robos:bodyPoints": 4,
+          "robos:mindPoints": 6,
+          "robos:attackDice": 1,
+          "robos:defendDice": 2,
+          "robos:gold": 300
+        }
+      ]
+    });
+
+    assert.strictEqual(appModule.getCampaigns().length, 2, "Must now have 2 campaigns");
+    assert.strictEqual(appModule.getCampaign().id, "campaign-midterms-2026", "Newly created campaign must be active");
+    assert.strictEqual(customCampaign.heroes[0]["dcterms:title"], "Obama");
+    assert.strictEqual(campaigns[0].heroes[0]["dcterms:title"], "Rogar", "Campaign 1 heroes must remain independent from Campaign 2 heroes");
+
+    // Mutate gold in Campaign 2 and verify Campaign 1 hero gold is untouched
+    customCampaign.heroes[0]["robos:gold"] = 999;
+    assert.strictEqual(campaigns[0].heroes[0]["robos:gold"], 100, "Campaign 1 Barbarian gold must remain 100");
+
+    // Switch back to Campaign 1
+    await appModule.selectCampaign(0);
+    assert.strictEqual(appModule.getCampaign().title, "HeroQuest");
+    assert.strictEqual(appModule.getCampaign().heroes[0]["dcterms:title"], "Rogar");
+
+    // Switch to Campaign 2 by ID
+    await appModule.selectCampaign("campaign-midterms-2026");
+    assert.strictEqual(appModule.getCampaign().title, "Midterms 2026: The Swamp Filibuster");
+    assert.strictEqual(appModule.getCampaign().heroes[0]["dcterms:title"], "Obama");
+
+    // Delete Campaign 2 and verify fallback to Campaign 1
+    const deleted = appModule.deleteCampaign(1);
+    assert.strictEqual(deleted, true);
+    assert.strictEqual(appModule.getCampaigns().length, 1);
+    assert.strictEqual(appModule.getCampaign().title, "HeroQuest");
+  });
+
+  it("supports Class tab with 4 Hero Classes and 15 Base HeroQuest Enemy Classes and custom monster class inheritance", async () => {
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+
+    // 1. Verify Class tab exists in navigation and main content
+    assert.ok(indexHtml.includes('data-tab="tab-classes">🏛️ Class</button>'), "index.html must include Class tab button");
+    assert.ok(indexHtml.includes('id="tab-classes"'), "index.html must include #tab-classes pane");
+    assert.ok(indexHtml.includes('id="monster-base-class"'), "Monster editor must include #monster-base-class selector");
+
+    // 2. Verify 4 Hero Classes (Barbarian, Dwarf, Elf, Wizard)
+    const heroClasses = appModule.getHeroClasses();
+    assert.strictEqual(heroClasses.length, 4, "Must define 4 Hero Classes");
+    const heroClassNames = heroClasses.map(c => c.name);
+    assert.deepStrictEqual(heroClassNames, ["Barbarian", "Dwarf", "Elf", "Wizard"]);
+    for (const hc of heroClasses) {
+      assert.strictEqual(hc.classType, "Hero");
+      assert.ok(typeof hc.attackDice === "number" && hc.attackDice >= 1, `${hc.name} must define attackDice`);
+      assert.ok(typeof hc.defendDice === "number" && hc.defendDice >= 2, `${hc.name} must define defendDice`);
+      assert.ok(typeof hc.bodyPoints === "number" && hc.bodyPoints >= 4, `${hc.name} must define bodyPoints`);
+      assert.ok(typeof hc.mindPoints === "number" && hc.mindPoints >= 2, `${hc.name} must define mindPoints`);
+      assert.ok(typeof hc.abilities === "string" && hc.abilities.length > 0, `${hc.name} must define starting abilities`);
+    }
+
+    // 3. Verify 15 Base HeroQuest Enemy Classes
+    const enemyClasses = appModule.getEnemyClasses();
+    assert.strictEqual(enemyClasses.length, 15, "Must define 15 Base HeroQuest Enemy Classes");
+    const expectedEnemyClassNames = [
+      "Goblin", "Orc", "Fimir", "Skeleton", "Zombie", "Mummy",
+      "Dread Warrior", "Gargoyle", "Orc Shaman", "Orc Warlord",
+      "Chaos Sorcerer", "Witch Lord", "Dragon", "Doomguard", "Witch Hand"
+    ];
+    for (const expectedName of expectedEnemyClassNames) {
+      const ec = enemyClasses.find(c => c.name === expectedName);
+      assert.ok(ec, `Enemy Class '${expectedName}' must exist`);
+      assert.strictEqual(ec.classType, "Enemy");
+      assert.ok(typeof ec.attackDice === "number", `${expectedName} must define attackDice`);
+      assert.ok(typeof ec.defendDice === "number", `${expectedName} must define defendDice`);
+      assert.ok(typeof ec.bodyPoints === "number", `${expectedName} must define bodyPoints`);
+      assert.ok(typeof ec.mindPoints === "number", `${expectedName} must define mindPoints`);
+      assert.ok(typeof ec.movementSquares === "number", `${expectedName} must define movementSquares`);
+      assert.ok(typeof ec.abilities === "string" && ec.abilities.length > 0, `${expectedName} must define abilities`);
+    }
+
+    // 4. Verify extending a custom monster from a Base Enemy Class inherits starting stats & abilities
+    const dreadWarriorClass = appModule.getClassByIdOrName("Dread Warrior");
+    assert.ok(dreadWarriorClass, "Dread Warrior class must be resolvable by name");
+    assert.strictEqual(dreadWarriorClass.attackDice, 4);
+    assert.strictEqual(dreadWarriorClass.defendDice, 4);
+    assert.strictEqual(dreadWarriorClass.bodyPoints, 3);
+    assert.strictEqual(dreadWarriorClass.mindPoints, 3);
+    assert.strictEqual(dreadWarriorClass.movementSquares, 7);
+
+    const createdMonster = await appModule.createCustomMonsterFromClass("Dread Warrior", {
+      name: "Shadow Dread Champion",
+      category: "Custom Quest 2027"
+    });
+    assert.ok(createdMonster, "Custom monster must be returned");
+    assert.strictEqual(createdMonster["dcterms:title"], "Shadow Dread Champion");
+    assert.strictEqual(createdMonster["robos:extendsClass"], "Dread Warrior");
+    assert.strictEqual(createdMonster["robos:monsterArchetype"], "Dread Warrior");
+    assert.strictEqual(createdMonster["robos:attackDice"], 4, "Must inherit 4 Attack Dice from Dread Warrior class");
+    assert.strictEqual(createdMonster["robos:defendDice"], 4, "Must inherit 4 Defend Dice from Dread Warrior class");
+    assert.strictEqual(createdMonster["robos:bodyPoints"], 3, "Must inherit 3 Body Points from Dread Warrior class");
+    assert.strictEqual(createdMonster["robos:mindPoints"], 3, "Must inherit 3 Mind Points from Dread Warrior class");
+    assert.strictEqual(createdMonster["robos:movementSquares"], 7, "Must inherit 7 Movement Squares from Dread Warrior class");
+    assert.ok(typeof createdMonster["robos:abilities"] === "string" && createdMonster["robos:abilities"].length > 0);
+  });
+
+  it("removes 'Board & Map Studio' tab and supports custom-quest.cartridge workflow, save state from now, and launch modes", async () => {
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+    const mainJs = fs.readFileSync(path.join(__dirname, "../main.js"), "utf8");
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+
+    // 1. Verify 'Board & Map Studio' tab is completely deleted
+    assert.ok(!indexHtml.includes('data-tab="tab-board"'), "Board & Map Studio tab button must be deleted");
+    assert.ok(!indexHtml.includes('id="tab-board"'), "#tab-board section must be deleted");
+    assert.ok(!indexHtml.includes("Board & Map Studio"), "Board & Map Studio text must not appear in index.html");
+
+    // 2. Verify custom-quest.cartridge.json exists on disk and is the 1 and only quest of HeroQuest campaign
+    const customCartPath = path.join(REPO_ROOT, "games/tabletop-rpg/cartridges/custom-quest.cartridge.json");
+    assert.ok(fs.existsSync(customCartPath), "custom-quest.cartridge.json must exist");
+    const cartData = JSON.parse(fs.readFileSync(customCartPath, "utf8"));
+    assert.strictEqual(cartData.cartridgeId, "custom-quest");
+
+    const campaign = appModule.getCampaign();
+    assert.strictEqual(campaign.title, "HeroQuest");
+    assert.strictEqual(campaign.quests.length, 1, "HeroQuest campaign must have 1 and only 1 quest");
+    const activeQuest = appModule.getActiveQuest();
+    assert.strictEqual(activeQuest.slug, "custom-quest");
+    assert.strictEqual(activeQuest.cartridgeFile, "custom-quest.cartridge.json");
+
+    // 3. Verify UI elements for Workflow 1 (quest info, review heroes for quest, launch quest editor),
+    //    Workflow 2 (current quest state, save state from now), and Workflow 3 (launch saved state vs new quest state)
+    assert.ok(indexHtml.includes('id="quest-cartridge-summary-strip"'), "Must include quest cartridge info strip");
+    assert.ok(indexHtml.includes('id="quest-heroes-review-grid"'), "Must include current heroes review grid for the quest");
+    assert.ok(indexHtml.includes('id="btn-launch-quest-editor"'), "Must include Launch Quest Editor button");
+    assert.ok(indexHtml.includes('id="quest-save-state-card"'), "Must include Current Quest State card");
+    assert.ok(indexHtml.includes('id="btn-save-quest-state-now"'), "Must include Save State From Now button");
+    assert.ok(indexHtml.includes('id="btn-launch-saved-hero"'), "Must include Launch Saved State (Hero) button");
+    assert.ok(indexHtml.includes('id="btn-launch-new-hero"'), "Must include Launch New Quest State (Hero) button");
+
+    // 4. Verify IPC handlers in main.js support quest editor launch, save state from now, and launch modes
+    assert.ok(mainJs.includes('ipcMain.handle("tabletop:launch-quest-editor"'), "main.js must handle tabletop:launch-quest-editor");
+    assert.ok(mainJs.includes('ipcMain.handle("tabletop:get-quest-save-state"'), "main.js must handle tabletop:get-quest-save-state");
+    assert.ok(mainJs.includes('ipcMain.handle("tabletop:save-quest-state-now"'), "main.js must handle tabletop:save-quest-state-now");
+    assert.ok(mainJs.includes('ipcMain.handle("tabletop:clear-quest-save-state"'), "main.js must handle tabletop:clear-quest-save-state");
+    assert.ok(mainJs.includes('launchMode === "new"'), "main.js launch-game handler must support launchMode 'new' vs 'saved'");
+
+    // 5. Verify renderer workflow functions (saveQuestStateFromNow, launchQuestEditorForActiveQuest, launchQuestInMode)
+    const stateSnap = await appModule.saveQuestStateFromNow();
+    assert.strictEqual(stateSnap.success, true, "saveQuestStateFromNow must succeed");
+    assert.ok(stateSnap.savedState, "saveQuestStateFromNow must return savedState snapshot");
+    assert.strictEqual(stateSnap.savedState.cartridge_id, "custom-quest");
+    assert.strictEqual(stateSnap.savedState.map_id, "custom-quest");
+    assert.strictEqual(stateSnap.savedState.heroes.length, 4, "Saved state must include all 4 quest heroes");
+
+    const editorLaunch = await appModule.launchQuestEditorForActiveQuest();
+    assert.strictEqual(editorLaunch.success, true, "launchQuestEditorForActiveQuest must succeed");
+
+    const launchSaved = await appModule.launchQuestInMode("player", "saved");
+    assert.strictEqual(launchSaved.success, true);
+    assert.strictEqual(launchSaved.launchMode, "saved");
+
+    const launchNew = await appModule.launchQuestInMode("player", "new");
+    assert.strictEqual(launchNew.success, true);
+    assert.strictEqual(launchNew.launchMode, "new");
+  });
+
+  it("defines robos:TabletopQuestSaveState in KGraph ontology/SHACL and captures screenshots + full telemetry (player health, visible monsters, round, whose turn, items found, play time)", async () => {
+    const gamingLib = require(path.join(REPO_ROOT, "packages/robos-gaming"));
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+    const godotWorldGd = fs.readFileSync(path.join(REPO_ROOT, "games/tabletop-rpg/scripts/TabletopWorld.gd"), "utf8");
+    const ontologyJson = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, ".robos/ontology.jsonld"), "utf8"));
+
+    // 1. Verify KGraph Ontology & SHACL Shape definitions (no hardcoding of telemetry fields)
+    assert.ok(
+      Array.isArray(gamingLib.GAMING_SHACL_SHAPES) &&
+      gamingLib.GAMING_SHACL_SHAPES.some(s => s.shapeId === "urn:robos:shape:TabletopQuestSaveStateShape"),
+      "Must register TabletopQuestSaveStateShape in robos-gaming"
+    );
+    assert.ok(gamingLib.TABLETOP_SAVE_STATE_SCHEMA, "Must export TABLETOP_SAVE_STATE_SCHEMA from robos-gaming");
+    assert.strictEqual(gamingLib.TABLETOP_SAVE_STATE_SCHEMA.targetClass, "robos:TabletopQuestSaveState");
+    assert.ok(Array.isArray(gamingLib.TABLETOP_SAVE_STATE_SCHEMA.telemetryMetrics), "Must define schema-driven telemetryMetrics array");
+    const metricPredicates = gamingLib.TABLETOP_SAVE_STATE_SCHEMA.telemetryMetrics.map(m => m.property);
+    for (const requiredPred of [
+      "robos:currentRound",
+      "robos:activeTurnActor",
+      "robos:turnState",
+      "robos:playTimeSeconds",
+      "robos:visibleMonstersCount",
+      "robos:itemsFoundCount",
+      "robos:totalPartyGold",
+      "robos:exploredTilesCount",
+      "robos:doorsOpenCount",
+      "robos:triggersFiredCount"
+    ]) {
+      assert.ok(metricPredicates.includes(requiredPred), `Schema telemetryMetrics must include ${requiredPred}`);
+    }
+
+    const ontologyGraph = ontologyJson["@graph"] || [];
+    assert.ok(ontologyGraph.some(n => n["@id"] === "robos:TabletopQuestSaveState"), ".robos/ontology.jsonld must define robos:TabletopQuestSaveState class");
+    assert.ok(ontologyGraph.some(n => n["@id"] === "robos:activeTurnActor"), ".robos/ontology.jsonld must define robos:activeTurnActor property");
+    assert.ok(ontologyGraph.some(n => n["@id"] === "robos:visibleMonsters"), ".robos/ontology.jsonld must define robos:visibleMonsters property");
+    assert.ok(ontologyGraph.some(n => n["@id"] === "robos:screenshotPath"), ".robos/ontology.jsonld must define robos:screenshotPath property");
+
+    // 2. Verify Godot TabletopWorld.gd captures screenshot and full telemetry on every save
+    assert.ok(godotWorldGd.includes("func _capture_save_screenshot("), "TabletopWorld.gd must implement _capture_save_screenshot");
+    assert.ok(godotWorldGd.includes("func get_save_screenshot_path("), "TabletopWorld.gd must implement get_save_screenshot_path");
+    assert.ok(godotWorldGd.includes('"screenshot_path":'), "serialize_game_state must record screenshot_path");
+    assert.ok(godotWorldGd.includes('"play_time_seconds": roundi(play_time_seconds)'), "serialize_game_state must record play_time_seconds");
+    assert.ok(godotWorldGd.includes('"active_turn_actor": active_actor_str'), "serialize_game_state must record active_turn_actor");
+    assert.ok(godotWorldGd.includes('"visible_monsters": visible_monsters_save'), "serialize_game_state must record visible_monsters");
+    assert.ok(godotWorldGd.includes('"items_found":'), "serialize_game_state must record items_found");
+
+    // 3. Verify UI containers in index.html for screenshot, telemetry grid, visible monsters, and items found
+    assert.ok(indexHtml.includes('id="quest-save-state-screenshot-panel"'), "index.html must include screenshot panel");
+    assert.ok(indexHtml.includes('id="quest-save-state-screenshot-canvas"'), "index.html must include screenshot canvas");
+    assert.ok(indexHtml.includes('id="quest-save-state-telemetry-grid"'), "index.html must include KGraph telemetry grid");
+    assert.ok(indexHtml.includes('id="quest-save-state-visible-monsters"'), "index.html must include visible monsters list");
+    assert.ok(indexHtml.includes('id="quest-save-state-items-found"'), "index.html must include items found list");
+
+    // 4. Verify normalization of raw Godot save state into KGraph robos:TabletopQuestSaveState node
+    const rawGodotSave = {
+      version: "2.0",
+      timestamp: 1775827298,
+      cartridge_id: "custom-quest",
+      map_id: "custom-quest",
+      current_round: 3,
+      current_phase: "HERO_TURN",
+      active_hero_idx: 1,
+      turn_moved: true,
+      turn_action_used: false,
+      turn_move_remaining: 4,
+      turn_Searched_treasure: true,
+      play_time_seconds: 425,
+      heroes: [
+        { id: "barbarian", name: "Barbarian", class: "Barbarian", pos: [1, 8], current_bp: 6, max_bp: 8, current_mp: 2, max_mp: 2, attack: 3, defend: 2, gold: 150, inventory: [{ name: "Potion of Healing", type: "potion" }], dead: false },
+        { id: "dwarf", name: "Dwarf", class: "Dwarf", pos: [2, 9], current_bp: 7, max_bp: 7, current_mp: 3, max_mp: 3, attack: 2, defend: 2, gold: 125, inventory: [{ name: "Toolkit", type: "tool" }], dead: false }
+      ],
+      monsters: [
+        { id: "mon-orc-1", name: "Orc Warrior", slug: "orc", pos: [4, 9], current_bp: 1, max_bp: 1, attack: 3, defend: 2, dead: false },
+        { id: "mon-goblin-2", name: "Goblin Scout", slug: "goblin", pos: [12, 12], current_bp: 1, max_bp: 1, attack: 2, defend: 1, dead: false }
+      ],
+      discovered_monster_ids: ["mon-orc-1"],
+      explored_tiles: ["1,8", "2,9", "3,9", "4,9"],
+      revealed_rooms: ["room-entry", "room-guard"],
+      doors: [{ from: [2, 8], to: [3, 8], open: true }, { from: [5, 8], to: [6, 8], open: false }],
+      triggers_fired: ["on_enter_guard_room"]
+    };
+
+    const kNode = gamingLib.normalizeQuestSaveStateToKGraphNode(rawGodotSave, { slug: "custom-quest" });
+    assert.strictEqual(kNode["@id"], "urn:robos:tabletop:savestate:custom-quest");
+    assert.ok(kNode["@type"].includes("robos:TabletopQuestSaveState"), "Normalized node must have @type robos:TabletopQuestSaveState");
+    assert.strictEqual(kNode["robos:currentRound"], 3);
+    assert.strictEqual(kNode["robos:currentPhase"], "HERO_TURN");
+    assert.ok(kNode["robos:activeTurnActor"].includes("Dwarf"), "Whose turn must resolve to active_hero_idx=1 (Dwarf)");
+    assert.strictEqual(kNode["robos:playTimeSeconds"], 425);
+    assert.strictEqual(kNode["robos:playTimeFormatted"], "7m 5s");
+    assert.strictEqual(kNode["robos:heroStates"][0].currentBP, 6, "Must map Godot current_bp -> currentBP");
+    assert.strictEqual(kNode["robos:heroStates"][0].maxBP, 8, "Must map Godot max_bp -> maxBP");
+    assert.strictEqual(kNode["robos:visibleMonstersCount"], 1, "Must filter visible monsters by discovered_monster_ids and explored tiles");
+    assert.strictEqual(kNode["robos:visibleMonsters"][0].name, "Orc Warrior");
+    assert.strictEqual(kNode["robos:itemsFoundCount"], 2, "Must aggregate items found across party inventories");
+    assert.strictEqual(kNode["robos:totalPartyGold"], 275);
+    assert.strictEqual(kNode["robos:exploredTilesCount"], 4);
+    assert.strictEqual(kNode["robos:doorsOpenCount"], 1);
+    assert.deepStrictEqual(kNode["robos:triggersFired"], ["on_enter_guard_room"]);
+
+    // 5. Verify strict Fog-of-War & zero-spoiler guarantees (no unseen monsters, unseen doors, unseen furniture, room totals, or treasure deck spoilers)
+    assert.strictEqual(kNode["robos:allMonsters"], undefined, "Must not leak unseen monsters via robos:allMonsters");
+    assert.strictEqual(kNode["robos:totalMonstersAlive"], undefined, "Must not leak total monsters count via robos:totalMonstersAlive");
+    assert.strictEqual(kNode["robos:doorsTotalCount"], undefined, "Must not leak total doors count via robos:doorsTotalCount");
+    assert.strictEqual(kNode["robos:trapsTotalCount"], undefined, "Must not leak total traps count via robos:trapsTotalCount");
+    assert.strictEqual(kNode["robos:triggersTotalCount"], undefined, "Must not leak total triggers count via robos:triggersTotalCount");
+    assert.strictEqual(kNode["robos:treasureDeckRemaining"], undefined, "Must not leak treasure deck remaining count");
+    assert.strictEqual(kNode["robos:doors"].length, 1, "Unseen closed door at [5,8]->[6,8] outside explored tiles must be filtered out");
+    assert.ok(!indexHtml.includes("24 Monsters"), "index.html must not spoil total monster count");
+    assert.ok(!indexHtml.includes("22 calibrated rooms"), "index.html must not spoil room count");
+
+    // 6. Verify saveQuestStateFromNow returns normalized KGraph node + screenshot with zero spoilers
+    const snapRes = await appModule.saveQuestStateFromNow();
+    assert.strictEqual(snapRes.success, true);
+    assert.ok(snapRes.savedState["@type"].includes("robos:TabletopQuestSaveState"));
+    assert.strictEqual(typeof snapRes.savedState["robos:currentRound"], "number");
+    assert.ok(typeof snapRes.savedState["robos:activeTurnActor"] === "string" && snapRes.savedState["robos:activeTurnActor"].length > 0);
+    assert.ok(Array.isArray(snapRes.savedState["robos:heroStates"]) && snapRes.savedState["robos:heroStates"].length === 4);
+    assert.ok(Array.isArray(snapRes.savedState["robos:visibleMonsters"]));
+    assert.ok(Array.isArray(snapRes.savedState["robos:itemsFound"]));
+    assert.strictEqual(snapRes.savedState["robos:allMonsters"], undefined, "Renderer save state must not include robos:allMonsters");
+    assert.strictEqual(snapRes.savedState["robos:totalMonstersAlive"], undefined, "Renderer save state must not include robos:totalMonstersAlive");
+  });
+
+  it("supports deleting quests from the Campaign Viewer (sidebar list, quest card header, top header, and deleting down to 0 quests)", () => {
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+    const appJs = fs.readFileSync(path.join(__dirname, "../renderer/app.js"), "utf8");
+    const mainJs = fs.readFileSync(path.join(__dirname, "../main.js"), "utf8");
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+
+    assert.ok(indexHtml.includes('id="btn-delete-quest"'), "Quest card header must include #btn-delete-quest");
+    assert.ok(indexHtml.includes('id="btn-sidebar-delete-quest"'), "Campaign Quests sidebar must include #btn-sidebar-delete-quest");
+    assert.ok(indexHtml.includes('id="btn-header-delete-quest"'), "Top header must include #btn-header-delete-quest");
+    assert.ok(indexHtml.includes('<textarea id="campaign-name-input"'), "Campaign Name input must be a multiline textarea so long names wrap cleanly");
+    assert.ok(appJs.includes("btn-delete-quest-item"), "Each quest item in Campaign Quests list must include an inline delete button");
+    assert.ok(mainJs.includes('ipcMain.handle("tabletop:delete-quest"'), "main.js must handle tabletop:delete-quest IPC");
+
+    const campaign = appModule.getCampaign();
+    assert.strictEqual(campaign.quests.length, 1);
+
+    // Add a second quest and delete it by slug
+    appModule.addQuest({ slug: "temp-quest-2", title: "Quest 2: Temporary" });
+    assert.strictEqual(campaign.quests.length, 2);
+    assert.strictEqual(appModule.deleteQuest("temp-quest-2"), true);
+    assert.strictEqual(campaign.quests.length, 1);
+
+    // Delete the remaining quest (even when only 1 quest is in the campaign)
+    assert.strictEqual(appModule.deleteQuest(0), true);
+    assert.strictEqual(campaign.quests.length, 0);
+    assert.strictEqual(appModule.deleteQuest(0), false, "Deleting when 0 quests remain returns false");
+
+    // Restore custom-quest so campaign state remains clean
+    appModule.addQuest({
+      slug: "custom-quest",
+      title: "Quest 1: Custom Dungeon",
+      cartridgeFile: "custom-quest.cartridge.json",
+      goldReward: 150
+    });
+    assert.strictEqual(campaign.quests.length, 1);
+    assert.strictEqual(appModule.getActiveQuest().slug, "custom-quest");
+  });
+
+  it("provides resizable column separators (.col-resizer) across all tabs and supports dragging and resetting column widths", () => {
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+    const styleCss = fs.readFileSync(path.join(__dirname, "../renderer/style.css"), "utf8");
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+
+    // 1. Verify every multi-column separator in every tab is present in index.html
+    const requiredResizerIds = [
+      "split-campaign-quests",
+      "grid-quest-metadata-briefing",
+      "grid-quest-save-overview",
+      "grid-quest-save-collections",
+      "split-campaign-heroes",
+      "split-monsters",
+      "split-classes",
+      "grid-spells-weapons",
+      "grid-hero-trade"
+    ];
+
+    for (const rId of requiredResizerIds) {
+      assert.ok(
+        indexHtml.includes(`data-resizer-id="${rId}"`),
+        `index.html must include resizable column separator data-resizer-id="${rId}"`
+      );
+    }
+
+    assert.ok(!indexHtml.includes('id="btn-open-spell-pick"'), "index.html must not include #btn-open-spell-pick");
+    assert.ok(!indexHtml.includes('id="modal-spell-pick"'), "index.html must not include #modal-spell-pick");
+
+    // 2. Verify CSS rules for .col-resizer and 3-track grid layouts
+    assert.ok(styleCss.includes(".col-resizer"), "style.css must define .col-resizer");
+    assert.ok(styleCss.includes("cursor: col-resize"), "style.css must set col-resize cursor on .col-resizer");
+    assert.ok(styleCss.includes("--split-left-width"), "style.css must use --split-left-width variable for .split-view");
+
+    // 3. Verify programmatic resize and reset across split-view and two-col grids
+    const initialQuestsSplit = appModule.getColumnResizerState("split-campaign-quests");
+    assert.strictEqual(initialQuestsSplit.leftPx, 280);
+    assert.strictEqual(initialQuestsSplit.isCustom, false);
+
+    const resizedQuestsSplit = appModule.resizeColumnSeparator("split-campaign-quests", 80, 1200);
+    assert.strictEqual(resizedQuestsSplit.leftPx, 360);
+    assert.strictEqual(resizedQuestsSplit.isCustom, true);
+    assert.ok(resizedQuestsSplit.gridTemplateColumns.startsWith("360px 12px"));
+
+    const resetQuestsSplit = appModule.resetColumnSeparator("split-campaign-quests");
+    assert.strictEqual(resetQuestsSplit.leftPx, 280);
+    assert.strictEqual(resetQuestsSplit.isCustom, false);
+
+    // Resize Monsters tab split-view
+    const resizedMonstersSplit = appModule.resizeColumnSeparator("split-monsters", 60, 1200);
+    assert.strictEqual(resizedMonstersSplit.leftPx, 340);
+    appModule.resetColumnSeparator("split-monsters");
+
+    // Resize Classes tab split-view
+    const resizedClassesSplit = appModule.resizeColumnSeparator("split-classes", 50, 1200);
+    assert.strictEqual(resizedClassesSplit.leftPx, 330);
+    appModule.resetColumnSeparator("split-classes");
+
+    // Resize Spells & Weapons 2-column grid in Spells tab
+    const resizedSpellsGrid = appModule.resizeColumnSeparator("grid-spells-weapons", 100, 1012);
+    assert.strictEqual(resizedSpellsGrid.leftRatio, 60);
+    assert.strictEqual(resizedSpellsGrid.rightRatio, 40);
+    assert.strictEqual(resizedSpellsGrid.isCustom, true);
+
+    const resetSpellsGrid = appModule.resetColumnSeparator("grid-spells-weapons");
+    assert.strictEqual(resetSpellsGrid.leftRatio, 50);
+    assert.strictEqual(resetSpellsGrid.rightRatio, 50);
+    assert.strictEqual(resetSpellsGrid.isCustom, false);
+  });
+
+  it("includes Midterm Elections: Battle for the Hill (midterm-election-capitol) in Board Theme / Background selector and map configurations", async () => {
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+    const kgraph = JSON.parse(fs.readFileSync(KGRAPH_TABLETOP, "utf8"));
+    const { listMapConfigurations, getMapConfiguration } = require(path.join(REPO_ROOT, "packages/robos-gaming"));
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+
+    // 1. Verify midterm-election-capitol is in packages/robos-gaming map configurations
+    const configs = listMapConfigurations();
+    assert.ok(configs.some(c => c.id === "midterm-election-capitol"), "listMapConfigurations must include midterm-election-capitol");
+    const midtermCfg = getMapConfiguration("midterm-election-capitol");
+    assert.strictEqual(midtermCfg.id, "midterm-election-capitol");
+    assert.strictEqual(midtermCfg.title, "Midterm Elections: Battle for the Hill");
+    assert.strictEqual(midtermCfg.backgroundImage, "res://assets/boards/midterm_election_capitol.png");
+    assert.deepEqual(midtermCfg.gridDimensions, [26, 19]);
+
+    // 2. Verify KGraph node urn:robos:tabletop:mapconfig:midterm-election-capitol exists
+    const kgraphNode = (kgraph["robos:nodes"] || []).find(n => n["@id"] === "urn:robos:tabletop:mapconfig:midterm-election-capitol");
+    assert.ok(kgraphNode, "KGraph must contain urn:robos:tabletop:mapconfig:midterm-election-capitol");
+    assert.strictEqual(kgraphNode["robos:backgroundImage"], "res://assets/boards/midterm_election_capitol.png");
+
+    // 3. Verify #quest-bg-ref in index.html and switchMapConfiguration in app.js support midterm-election-capitol
+    assert.ok(indexHtml.includes('value="midterm-election-capitol"'), "#quest-bg-ref must include midterm-election-capitol option");
+    await appModule.switchMapConfiguration("midterm-election-capitol", true);
+    assert.strictEqual(appModule.getActiveQuest().mapConfigId, "midterm-election-capitol");
+    await appModule.switchMapConfiguration("heroquest-classic", true);
+  });
+
+  it("creates new campaigns with 0 quests by default and immediately autosaves campaign and quest edits to KGraph", async () => {
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+
+    // 1. Verify #campaign-autosave-status indicator and #campaign-no-quest-empty-state card exist
+    assert.ok(
+      indexHtml.includes('id="campaign-autosave-status"'),
+      "index.html must include #campaign-autosave-status indicator in the campaign selector bar"
+    );
+    assert.ok(
+      indexHtml.includes('id="campaign-no-quest-empty-state"'),
+      "index.html must include #campaign-no-quest-empty-state card for 0-quest campaigns"
+    );
+
+    // 2. Clicking '+ New Campaign' (addCampaign() with no quests prop) must create a campaign with 0 quests by default
+    const newCamp = appModule.addCampaign({
+      id: "campaign-election-2026",
+      title: "Election 2026"
+    });
+    assert.strictEqual(newCamp.title, "Election 2026");
+    assert.ok(Array.isArray(newCamp.quests), "newCampaign.quests must be an array");
+    assert.strictEqual(newCamp.quests.length, 0, "New campaign must have 0 quests by default");
+    assert.strictEqual(appModule.getActiveQuest(), null, "Active quest must be null when new campaign has 0 quests");
+
+    // 3. Verify serializeCampaignToKGraphNode and deserializeCampaignFromKGraphNode preserve 0-quest state
+    const emptyNode = appModule.serializeCampaignToKGraphNode(newCamp);
+    assert.strictEqual(emptyNode["@id"], "urn:robos:tabletop:campaign:campaign-election-2026");
+    assert.ok(emptyNode["@type"].includes("robos:TabletopCampaign"));
+    assert.strictEqual(emptyNode["robos:quests"].length, 0, "Serialized KGraph node for new campaign must have 0 quests");
+
+    const restoredEmpty = appModule.deserializeCampaignFromKGraphNode(emptyNode);
+    assert.strictEqual(restoredEmpty.id, "campaign-election-2026");
+    assert.strictEqual(restoredEmpty.quests.length, 0, "Deserialized campaign must retain 0 quests");
+
+    // 4. Click '+ New Quest' (addQuest() with no args) in 'Election 2026' campaign -> creates 1 quest with non-colliding slug and midterm-election-capitol board
+    const addedQuest = appModule.addQuest();
+    assert.strictEqual(newCamp.quests.length, 1, "Election 2026 campaign must have 1 quest after addQuest()");
+    assert.strictEqual(addedQuest.slug, "election-2026-quest-1");
+    assert.strictEqual(addedQuest.title, "Quest 1: Battle for the Hill");
+    assert.strictEqual(addedQuest.mapConfigId, "midterm-election-capitol");
+    assert.strictEqual(appModule.getActiveQuest().slug, "election-2026-quest-1");
+
+    const populatedNode = appModule.serializeCampaignToKGraphNode(newCamp, true);
+    assert.strictEqual(populatedNode["robos:quests"].length, 1);
+    assert.strictEqual(populatedNode["robos:quests"][0].slug, "election-2026-quest-1");
+    assert.strictEqual(populatedNode["robos:quests"][0].mapConfigId, "midterm-election-capitol");
+
+    const saveRes = await appModule.saveCampaignToKGraph(newCamp, false);
+    assert.strictEqual(saveRes.success, true, "saveCampaignToKGraph must succeed immediately");
+
+    // Clean up test campaign and switch back to HeroQuest campaign 0
+    const idx = appModule.getCampaigns().findIndex(c => c.id === "campaign-election-2026");
+    if (idx !== -1) {
+      appModule.deleteCampaign(idx);
+    }
+    await appModule.selectCampaign(0);
+  });
+
+  it("supports Hero Packs ('Base Game', 'Midterms 2026') in Campaign Heroes with AI-generated tokens, portraits, and portrait cards for Obama, Trump, Hillary Clinton, and Bernie Sanders", () => {
+    const indexHtml = fs.readFileSync(path.join(__dirname, "../renderer/index.html"), "utf8");
+    const appModule = require(path.join(__dirname, "../renderer/app.js"));
+
+    // 1. Verify UI elements for Hero Pack filter, load hero pack button, and live portrait card preview
+    assert.ok(indexHtml.includes('id="hero-category-filter"'), "index.html must include #hero-category-filter in Campaign Heroes");
+    assert.ok(indexHtml.includes('id="btn-apply-hero-pack"'), "index.html must include #btn-apply-hero-pack button");
+    assert.ok(indexHtml.includes('id="hero-category"'), "index.html must include #hero-category selector");
+    assert.ok(indexHtml.includes('id="hero-portrait-card-preview"'), "index.html must include #hero-portrait-card-preview card");
+
+    // 2. Verify Base Game & Midterms 2026 Hero Packs via getHeroesByCategory
+    const baseHeroes = appModule.getHeroesByCategory("Base Game");
+    const midtermsHeroes = appModule.getHeroesByCategory("Midterms 2026");
+    assert.strictEqual(baseHeroes.length, 4, "Base Game Hero Pack must have 4 heroes");
+    assert.strictEqual(midtermsHeroes.length, 4, "Midterms 2026 Hero Pack must have 4 heroes");
+
+    const obama = midtermsHeroes.find(h => h["@id"] === "urn:robos:tabletop:hero:obama");
+    const trump = midtermsHeroes.find(h => h["@id"] === "urn:robos:tabletop:hero:trump");
+    const hillary = midtermsHeroes.find(h => h["@id"] === "urn:robos:tabletop:hero:hillary-clinton");
+    const bernie = midtermsHeroes.find(h => h["@id"] === "urn:robos:tabletop:hero:bernie-sanders");
+
+    assert.ok(obama && obama["robos:heroClass"] === "Barbarian", "Obama must be Barbarian class in Midterms 2026 Hero Pack");
+    assert.ok(trump && trump["robos:heroClass"] === "Dwarf", "Trump must be Dwarf class in Midterms 2026 Hero Pack");
+    assert.ok(hillary && hillary["robos:heroClass"] === "Elf", "Hillary Clinton must be Elf class in Midterms 2026 Hero Pack");
+    assert.ok(bernie && bernie["robos:heroClass"] === "Wizard", "Bernie Sanders must be Wizard class in Midterms 2026 Hero Pack");
+
+    // 3. Verify AI-generated circular tokens and portrait card illustrations exist on disk for both editor and Godot runtime
+    for (const key of ["obama", "trump", "hillary_clinton", "bernie_sanders"]) {
+      const editorToken = path.join(__dirname, `../assets/tokens/token_${key}.png`);
+      const editorPortrait = path.join(__dirname, `../assets/portraits/card_bg_${key}.png`);
+      const runtimeToken = path.join(REPO_ROOT, `games/tabletop-rpg/assets/tokens/token_${key}.png`);
+      const runtimeHeroCard = path.join(REPO_ROOT, `games/tabletop-rpg/assets/hero_cards/card_bg_${key}.png`);
+
+      assert.ok(fs.existsSync(editorToken) && fs.statSync(editorToken).size > 5000, `Editor token_${key}.png must exist`);
+      assert.ok(fs.existsSync(editorPortrait) && fs.statSync(editorPortrait).size > 5000, `Editor card_bg_${key}.png must exist`);
+      assert.ok(fs.existsSync(runtimeToken) && fs.statSync(runtimeToken).size > 5000, `Runtime token_${key}.png must exist`);
+      assert.ok(fs.existsSync(runtimeHeroCard) && fs.statSync(runtimeHeroCard).size > 5000, `Runtime hero_cards/card_bg_${key}.png must exist`);
+    }
+  });
 });
-
-
 
 

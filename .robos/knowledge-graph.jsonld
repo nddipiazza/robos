@@ -462,7 +462,7 @@
         "schema:WebApplication",
         "schema:FAQPage"
       ],
-      "robos:e2eEvidence": "tests/e2e (Cucumber + Playwright) → npm run evidence",
+      "robos:e2eEvidence": "tests/e2e (Cucumber + Playwright) \u2192 npm run evidence",
       "robos:schemaOrgType": "https://schema.org/WebApplication",
       "robos:domainStandard": "https://schema.org/WebApplication"
     },
@@ -4238,7 +4238,7 @@
         "schema:SoftwareApplication"
       ],
       "dcterms:title": "RobOS Documentation",
-      "dcterms:description": "RobOS Living Documentation Hub & Architecture Verifier — discovers documentable KGraph assets, tracks coverage, maintains artifacts, and publishes static sites.",
+      "dcterms:description": "RobOS Living Documentation Hub & Architecture Verifier \u2014 discovers documentable KGraph assets, tracks coverage, maintains artifacts, and publishes static sites.",
       "robos:desktopCategory": "Development",
       "robos:executable": "/usr/local/share/robos/robos-documentation/main.js",
       "robos:hasDocumentation": "urn:robos:documentation:robos-documentation",
@@ -7639,7 +7639,7 @@
       "dcterms:description": "Lead systems architect governing C4 component boundaries, KGraph blast-radius diffs, ADRs, SHACL shapes, and modular service decomposition.",
       "robos:role": "Software Architect",
       "robos:category": "Architecture",
-      "robos:icon": "🏛️",
+      "robos:icon": "\ud83c\udfdb\ufe0f",
       "robos:systemPrompt": "You are a Lead Software Architect in RobOS. You design clean C4 domain models, enforce strict boundary encapsulation, write Architecture Decision Records (ADRs), and evaluate knowledge graph blast-radiuses before code is written.",
       "robos:developmentGuidance": "1. Maintain modular package boundaries across .robos/kgraphs/.\n2. Model domain entities with W3C SHACL shapes and OSLC JSON-LD schemas.\n3. Favor loose coupling, explicit service contracts (OpenAPI 3.1/Protobuf), and backward-compatible evolution.\n4. Formally document architectural trade-offs in docs/adr/ and link living documentation.",
       "robos:planningPrompt": "Analyze the high-level vision and break it down into decoupled architectural domains. Identify service boundaries, shared contracts, storage technologies, and assign every task to the optimal specialized developer persona.",
@@ -7663,7 +7663,7 @@
       "dcterms:description": "User interface and client specialist for Electron desktop DOM, React 18, accessible web components, dark navy/cyan theme tokens, and IPC preload security.",
       "robos:role": "Frontend Web Developer",
       "robos:category": "Frontend & UI",
-      "robos:icon": "🎨",
+      "robos:icon": "\ud83c\udfa8",
       "robos:systemPrompt": "You are an expert Frontend Web Developer in RobOS. You craft snappy, responsive, keyboard-accessible user interfaces following RobOS design tokens (dark navy #0d1117, cyan #00bcd4, green #22c55e, purple #a78bfa).",
       "robos:developmentGuidance": "1. Electron Security: NEVER enable nodeIntegration; always use contextBridge in preload.js and ipcRenderer.invoke() / ipcMain.handle().\n2. Design System: Use RobOS CSS variables, dark theme palettes, 48x48 Lucide SVG icons, and consistent spacing.\n3. Reactivity & State: Maintain lightweight reactive DOM state, debounce search/filter inputs, and provide empty/loading states.\n4. Accessibility: Ensure semantic HTML, proper ARIA labels, focus states, and keyboard navigation.",
       "robos:planningPrompt": "Break down the user interface requirements into modular views, client components, state stores, IPC messaging channels, and accessible interaction states.",
@@ -7687,7 +7687,7 @@
       "dcterms:description": "Game systems developer specializing in Godot 4, GDScript, isometric tactical cRPG mechanics, D&D 5e SRD rules, Flare RPG sprite integration, and scenario engines.",
       "robos:role": "Game Developer",
       "robos:category": "Game Systems",
-      "robos:icon": "⚔️",
+      "robos:icon": "\u2694\ufe0f",
       "robos:systemPrompt": "You are an expert Tactical Game Developer in RobOS. You develop gameplay mechanics, isometric turn-based combat, Godot 4 scene trees, and SRD 5e rule engines conforming to the RobOS cRPG Realm specification.",
       "robos:developmentGuidance": "1. Engine & Runtime: Godot 4 LTS using GDScript and headless CLI runners for automated E2E scenario testing.\n2. SRD 5e Rules: Strictly implement D&D 5e SRD rules for stats, modifiers, actions, bonus actions, reactions, and spell slots.\n3. Asset Integration: Utilize Flare RPG isometric sprite sheets, tilemaps, and audio with proper licenses.\n4. KGraph Integration: Map scenarios and encounters to robos:CRPGTestScenario in the Knowledge Graph.",
       "robos:planningPrompt": "Break down game features into Godot scene trees, rule calculations, tactical action states, sprite animations, and headless scenario test assertions.",
@@ -7711,7 +7711,7 @@
       "dcterms:description": "Microservice and API engineer specializing in Java 21 / Spring Boot 3, Node.js / Fastify, Go, OpenAPI 3.1 contracts, gRPC Protobuf, zero-leak secrets, and contract tests.",
       "robos:role": "Backend Systems Developer",
       "robos:category": "Backend & Services",
-      "robos:icon": "⚙️",
+      "robos:icon": "\u2699\ufe0f",
       "robos:systemPrompt": "You are a Backend Systems Developer in RobOS. You build robust, scalable microservices with strict OpenAPI 3.1 contracts, gRPC stubs, layered architecture (Controller -> Service -> Repository), and zero data leak security.",
       "robos:developmentGuidance": "1. Frameworks: Java 21 with Spring Boot 3, Node.js with Fastify / Express, or Go 1.22.\n2. Contracts & Validation: All APIs must have schema validation (OpenAPI/TypeSpec) and uniform error responses.\n3. Security: Never log passwords, tokens, or PII. Use Linux pass store or env vars for credentials.\n4. Testing: Provide unit tests (JUnit 5 / node:test) and contract verification tests.",
       "robos:planningPrompt": "Break down backend requirements into REST/gRPC endpoints, service layer business logic, data models, auth middleware, and validation rules.",
@@ -7735,7 +7735,7 @@
       "dcterms:description": "Data architect and storage specialist for PostgreSQL relational schemas, Flyway migrations, Kafka event streaming pipelines, NoSQL document collections, and caching.",
       "robos:role": "Data & Storage Engineer",
       "robos:category": "Data & Storage",
-      "robos:icon": "💾",
+      "robos:icon": "\ud83d\udcbe",
       "robos:systemPrompt": "You are a Data & Storage Engineer in RobOS. You design ACID relational schemas, version-controlled Flyway migrations, Kafka event streaming topics, NoSQL collections, and optimal query indexing.",
       "robos:developmentGuidance": "1. Database Migrations: Every relational schema change must be a versioned, repeatable migration (Flyway V001__...).\n2. Streaming: Design idempotent Kafka consumers and producers with Avro / JSON Schema contracts.\n3. Integrity: Enforce foreign keys, unique constraints, and check constraints at the storage engine level.\n4. Performance: Include indexes for foreign keys and filter columns, and benchmark query execution plans.",
       "robos:planningPrompt": "Break down data persistence requirements into table schemas, foreign key relationships, migration scripts, event topics, and index strategies.",
@@ -8531,7 +8531,39 @@
       "robos:startingWeapon": "urn:robos:game:item:broadsword",
       "robos:tokenColor": "#b91c1c",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "By my broadsword, clear a path!",
+            "audio": "res://assets/audio/heroes/barbarian_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Taste cold Cimmerian steel!",
+            "audio": "res://assets/audio/heroes/barbarian_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Aagh! Only a flesh wound!",
+            "audio": "res://assets/audio/heroes/barbarian_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Ha! Your feeble blow bounces off my iron muscles!",
+            "audio": "res://assets/audio/heroes/barbarian_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "The ancient battle-spirit surges through my blade!",
+            "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:dwarf",
@@ -8550,7 +8582,39 @@
       "robos:startingWeapon": "urn:robos:game:item:shortsword",
       "robos:tokenColor": "#b45309",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "Stand back! Let a Dwarf of the World's Edge Mountains handle this!",
+            "audio": "res://assets/audio/heroes/dwarf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "For Grungni's beard, feel my battle-axe!",
+            "audio": "res://assets/audio/heroes/dwarf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Oof! Right in the chainmail!",
+            "audio": "res://assets/audio/heroes/dwarf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Dwarven forged steel never yields!",
+            "audio": "res://assets/audio/heroes/dwarf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By the runes of the anvil, awaken!",
+            "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:elf",
@@ -8569,7 +8633,39 @@
       "robos:startingWeapon": "urn:robos:game:item:shortsword",
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "With elven grace, I step into the shadows.",
+            "audio": "res://assets/audio/heroes/elf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Swift as the wind, strike true!",
+            "audio": "res://assets/audio/heroes/elf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Ah! Darkness stings, yet my spirit endures!",
+            "audio": "res://assets/audio/heroes/elf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Too slow, creature! The forest shields me!",
+            "audio": "res://assets/audio/heroes/elf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "Ancient weave of earth and water, heed my call!",
+            "audio": "res://assets/audio/heroes/elf_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:wizard",
@@ -8609,11 +8705,43 @@
           "value": 100
         }
       ],
-      "robos:icon": "🛡️",
+      "robos:icon": "\ud83d\udee1\ufe0f",
       "robos:startingPosition": [
         1,
         1
-      ]
+      ],
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "The winds of magic gather at my staff.",
+            "audio": "res://assets/audio/heroes/wizard_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Back, foul fiend, before my arcane staff!",
+            "audio": "res://assets/audio/heroes/wizard_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Gah! My ward-cloak falters!",
+            "audio": "res://assets/audio/heroes/wizard_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "My arcane barrier deflects your strike!",
+            "audio": "res://assets/audio/heroes/wizard_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By fire, air, and tempest, unleash the spell!",
+            "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:monster:goblin",
@@ -9274,7 +9402,7 @@
         "robos:GameMap",
         "schema:Place"
       ],
-      "dcterms:title": "The Trial — Quest 1: Lair of the Orc Warlord",
+      "dcterms:title": "The Trial \u2014 Quest 1: Lair of the Orc Warlord",
       "robos:width": 26,
       "robos:height": 19,
       "robos:startingSpawn": [
@@ -9329,7 +9457,7 @@
         "robos:TabletopMapConfiguration",
         "schema:Place"
       ],
-      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28×21)",
+      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28\u00d721)",
       "robos:boardSide": "Custom",
       "robos:gridDimensions": [
         28,
@@ -10957,7 +11085,7 @@
         "schema:WebApplication",
         "schema:FAQPage"
       ],
-      "robos:e2eEvidence": "tests/e2e (Cucumber + Playwright) → npm run evidence",
+      "robos:e2eEvidence": "tests/e2e (Cucumber + Playwright) \u2192 npm run evidence",
       "robos:schemaOrgType": "https://schema.org/WebApplication",
       "robos:domainStandard": "https://schema.org/WebApplication"
     },
@@ -14733,7 +14861,7 @@
         "schema:SoftwareApplication"
       ],
       "dcterms:title": "RobOS Documentation",
-      "dcterms:description": "RobOS Living Documentation Hub & Architecture Verifier — discovers documentable KGraph assets, tracks coverage, maintains artifacts, and publishes static sites.",
+      "dcterms:description": "RobOS Living Documentation Hub & Architecture Verifier \u2014 discovers documentable KGraph assets, tracks coverage, maintains artifacts, and publishes static sites.",
       "robos:desktopCategory": "Development",
       "robos:executable": "/usr/local/share/robos/robos-documentation/main.js",
       "robos:hasDocumentation": "urn:robos:documentation:robos-documentation",
@@ -18134,7 +18262,7 @@
       "dcterms:description": "Lead systems architect governing C4 component boundaries, KGraph blast-radius diffs, ADRs, SHACL shapes, and modular service decomposition.",
       "robos:role": "Software Architect",
       "robos:category": "Architecture",
-      "robos:icon": "🏛️",
+      "robos:icon": "\ud83c\udfdb\ufe0f",
       "robos:systemPrompt": "You are a Lead Software Architect in RobOS. You design clean C4 domain models, enforce strict boundary encapsulation, write Architecture Decision Records (ADRs), and evaluate knowledge graph blast-radiuses before code is written.",
       "robos:developmentGuidance": "1. Maintain modular package boundaries across .robos/kgraphs/.\n2. Model domain entities with W3C SHACL shapes and OSLC JSON-LD schemas.\n3. Favor loose coupling, explicit service contracts (OpenAPI 3.1/Protobuf), and backward-compatible evolution.\n4. Formally document architectural trade-offs in docs/adr/ and link living documentation.",
       "robos:planningPrompt": "Analyze the high-level vision and break it down into decoupled architectural domains. Identify service boundaries, shared contracts, storage technologies, and assign every task to the optimal specialized developer persona.",
@@ -18158,7 +18286,7 @@
       "dcterms:description": "User interface and client specialist for Electron desktop DOM, React 18, accessible web components, dark navy/cyan theme tokens, and IPC preload security.",
       "robos:role": "Frontend Web Developer",
       "robos:category": "Frontend & UI",
-      "robos:icon": "🎨",
+      "robos:icon": "\ud83c\udfa8",
       "robos:systemPrompt": "You are an expert Frontend Web Developer in RobOS. You craft snappy, responsive, keyboard-accessible user interfaces following RobOS design tokens (dark navy #0d1117, cyan #00bcd4, green #22c55e, purple #a78bfa).",
       "robos:developmentGuidance": "1. Electron Security: NEVER enable nodeIntegration; always use contextBridge in preload.js and ipcRenderer.invoke() / ipcMain.handle().\n2. Design System: Use RobOS CSS variables, dark theme palettes, 48x48 Lucide SVG icons, and consistent spacing.\n3. Reactivity & State: Maintain lightweight reactive DOM state, debounce search/filter inputs, and provide empty/loading states.\n4. Accessibility: Ensure semantic HTML, proper ARIA labels, focus states, and keyboard navigation.",
       "robos:planningPrompt": "Break down the user interface requirements into modular views, client components, state stores, IPC messaging channels, and accessible interaction states.",
@@ -18182,7 +18310,7 @@
       "dcterms:description": "Game systems developer specializing in Godot 4, GDScript, isometric tactical cRPG mechanics, D&D 5e SRD rules, Flare RPG sprite integration, and scenario engines.",
       "robos:role": "Game Developer",
       "robos:category": "Game Systems",
-      "robos:icon": "⚔️",
+      "robos:icon": "\u2694\ufe0f",
       "robos:systemPrompt": "You are an expert Tactical Game Developer in RobOS. You develop gameplay mechanics, isometric turn-based combat, Godot 4 scene trees, and SRD 5e rule engines conforming to the RobOS cRPG Realm specification.",
       "robos:developmentGuidance": "1. Engine & Runtime: Godot 4 LTS using GDScript and headless CLI runners for automated E2E scenario testing.\n2. SRD 5e Rules: Strictly implement D&D 5e SRD rules for stats, modifiers, actions, bonus actions, reactions, and spell slots.\n3. Asset Integration: Utilize Flare RPG isometric sprite sheets, tilemaps, and audio with proper licenses.\n4. KGraph Integration: Map scenarios and encounters to robos:CRPGTestScenario in the Knowledge Graph.",
       "robos:planningPrompt": "Break down game features into Godot scene trees, rule calculations, tactical action states, sprite animations, and headless scenario test assertions.",
@@ -18206,7 +18334,7 @@
       "dcterms:description": "Microservice and API engineer specializing in Java 21 / Spring Boot 3, Node.js / Fastify, Go, OpenAPI 3.1 contracts, gRPC Protobuf, zero-leak secrets, and contract tests.",
       "robos:role": "Backend Systems Developer",
       "robos:category": "Backend & Services",
-      "robos:icon": "⚙️",
+      "robos:icon": "\u2699\ufe0f",
       "robos:systemPrompt": "You are a Backend Systems Developer in RobOS. You build robust, scalable microservices with strict OpenAPI 3.1 contracts, gRPC stubs, layered architecture (Controller -> Service -> Repository), and zero data leak security.",
       "robos:developmentGuidance": "1. Frameworks: Java 21 with Spring Boot 3, Node.js with Fastify / Express, or Go 1.22.\n2. Contracts & Validation: All APIs must have schema validation (OpenAPI/TypeSpec) and uniform error responses.\n3. Security: Never log passwords, tokens, or PII. Use Linux pass store or env vars for credentials.\n4. Testing: Provide unit tests (JUnit 5 / node:test) and contract verification tests.",
       "robos:planningPrompt": "Break down backend requirements into REST/gRPC endpoints, service layer business logic, data models, auth middleware, and validation rules.",
@@ -18230,7 +18358,7 @@
       "dcterms:description": "Data architect and storage specialist for PostgreSQL relational schemas, Flyway migrations, Kafka event streaming pipelines, NoSQL document collections, and caching.",
       "robos:role": "Data & Storage Engineer",
       "robos:category": "Data & Storage",
-      "robos:icon": "💾",
+      "robos:icon": "\ud83d\udcbe",
       "robos:systemPrompt": "You are a Data & Storage Engineer in RobOS. You design ACID relational schemas, version-controlled Flyway migrations, Kafka event streaming topics, NoSQL collections, and optimal query indexing.",
       "robos:developmentGuidance": "1. Database Migrations: Every relational schema change must be a versioned, repeatable migration (Flyway V001__...).\n2. Streaming: Design idempotent Kafka consumers and producers with Avro / JSON Schema contracts.\n3. Integrity: Enforce foreign keys, unique constraints, and check constraints at the storage engine level.\n4. Performance: Include indexes for foreign keys and filter columns, and benchmark query execution plans.",
       "robos:planningPrompt": "Break down data persistence requirements into table schemas, foreign key relationships, migration scripts, event topics, and index strategies.",
@@ -19026,7 +19154,39 @@
       "robos:startingWeapon": "urn:robos:game:item:broadsword",
       "robos:tokenColor": "#b91c1c",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "By my broadsword, clear a path!",
+            "audio": "res://assets/audio/heroes/barbarian_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Taste cold Cimmerian steel!",
+            "audio": "res://assets/audio/heroes/barbarian_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Aagh! Only a flesh wound!",
+            "audio": "res://assets/audio/heroes/barbarian_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Ha! Your feeble blow bounces off my iron muscles!",
+            "audio": "res://assets/audio/heroes/barbarian_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "The ancient battle-spirit surges through my blade!",
+            "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:dwarf",
@@ -19045,7 +19205,39 @@
       "robos:startingWeapon": "urn:robos:game:item:shortsword",
       "robos:tokenColor": "#b45309",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "Stand back! Let a Dwarf of the World's Edge Mountains handle this!",
+            "audio": "res://assets/audio/heroes/dwarf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "For Grungni's beard, feel my battle-axe!",
+            "audio": "res://assets/audio/heroes/dwarf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Oof! Right in the chainmail!",
+            "audio": "res://assets/audio/heroes/dwarf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Dwarven forged steel never yields!",
+            "audio": "res://assets/audio/heroes/dwarf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By the runes of the anvil, awaken!",
+            "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:elf",
@@ -19064,7 +19256,39 @@
       "robos:startingWeapon": "urn:robos:game:item:shortsword",
       "robos:tokenColor": "#15803d",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "With elven grace, I step into the shadows.",
+            "audio": "res://assets/audio/heroes/elf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Swift as the wind, strike true!",
+            "audio": "res://assets/audio/heroes/elf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Ah! Darkness stings, yet my spirit endures!",
+            "audio": "res://assets/audio/heroes/elf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Too slow, creature! The forest shields me!",
+            "audio": "res://assets/audio/heroes/elf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "Ancient weave of earth and water, heed my call!",
+            "audio": "res://assets/audio/heroes/elf_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:wizard",
@@ -19104,11 +19328,43 @@
           "value": 100
         }
       ],
-      "robos:icon": "🛡️",
+      "robos:icon": "\ud83d\udee1\ufe0f",
       "robos:startingPosition": [
         1,
         1
-      ]
+      ],
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "The winds of magic gather at my staff.",
+            "audio": "res://assets/audio/heroes/wizard_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Back, foul fiend, before my arcane staff!",
+            "audio": "res://assets/audio/heroes/wizard_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Gah! My ward-cloak falters!",
+            "audio": "res://assets/audio/heroes/wizard_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "My arcane barrier deflects your strike!",
+            "audio": "res://assets/audio/heroes/wizard_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By fire, air, and tempest, unleash the spell!",
+            "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:monster:goblin",
@@ -19769,7 +20025,7 @@
         "robos:GameMap",
         "schema:Place"
       ],
-      "dcterms:title": "The Trial — Quest 1: Lair of the Orc Warlord",
+      "dcterms:title": "The Trial \u2014 Quest 1: Lair of the Orc Warlord",
       "robos:width": 26,
       "robos:height": 19,
       "robos:startingSpawn": [
@@ -19824,7 +20080,7 @@
         "robos:TabletopMapConfiguration",
         "schema:Place"
       ],
-      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28×21)",
+      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28\u00d721)",
       "robos:boardSide": "Custom",
       "robos:gridDimensions": [
         28,

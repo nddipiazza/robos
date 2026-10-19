@@ -11,17 +11,7 @@
     <!-- Top Header -->
     <header class="app-header">
       <div class="header-brand">
-        <svg class="brand-icon" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="6" y="6" width="36" height="36" rx="4" />
-          <path d="M18 6v36" stroke-dasharray="2 3" opacity="0.4" />
-          <path d="M30 6v36" stroke-dasharray="2 3" opacity="0.4" />
-          <path d="M6 18h36" stroke-dasharray="2 3" opacity="0.4" />
-          <path d="M6 30h36" stroke-dasharray="2 3" opacity="0.4" />
-          <rect x="15" y="16" width="6" height="4" fill="#00bcd4" fill-opacity="0.3" stroke="#00bcd4" stroke-width="1.5" />
-          <circle cx="24" cy="24" r="3" fill="#00bcd4" />
-          <path d="M24 19v2" /><path d="M24 27v2" /><path d="M19 24h2" /><path d="M27 24h2" />
-          <path d="M32 36v-3h3v-3h3" />
-        </svg>
+        <img class="brand-logo-img" src="assets/logo.png" alt="Tabletop Quest Map Editor Logo" />
         <div class="brand-titles">
           <h1>Tabletop Quest Map Editor</h1>
           <span class="subtitle">Layer 2: Quest Scenario, Doors, Monsters, Traps &amp; Furniture</span>
@@ -191,6 +181,14 @@
 
           <!-- Door suboptions -->
           <div id="subopts-door" class="subopts-group active">
+            <div class="form-row" style="margin-bottom:6px;">
+              <select id="select-door-size" class="dropdown dropdown-sm" style="width:100%;">
+                <option value="single" selected>🚪 Single Door (1×1)</option>
+                <option value="double-2x1">🚪 Double Door 1: Horizontal (2×1)</option>
+                <option value="double-1x2">🚪 Double Door 2: Vertical (1×2)</option>
+                <option value="double-auto">🚪 Double Door (Auto 2×1 / 1×2 by Wall)</option>
+              </select>
+            </div>
             <div class="subopt-row">
               <label class="radio-label">
                 <input type="radio" name="door-type" value="wood-closed" checked> Wood Door <span class="door-status-pill door-badge-closed">CLOSED</span>
@@ -206,17 +204,49 @@
 
           <!-- Monster suboptions -->
           <div id="subopts-monster" class="subopts-group" style="display:none;">
-            <select id="select-monster-type" class="dropdown dropdown-sm">
-              <option value="goblin" selected>Goblin (Move: 10, Atk: 2, Def: 1, BP: 1)</option>
-              <option value="orc">Orc (Move: 6, Atk: 3, Def: 2, BP: 1)</option>
-              <option value="skeleton">Skeleton (Move: 6, Atk: 2, Def: 2, BP: 1, Undead)</option>
-              <option value="zombie">Zombie (Move: 4, Atk: 3, Def: 3, BP: 1, Undead)</option>
-              <option value="mummy">Mummy (Move: 4, Atk: 3, Def: 4, BP: 2, Undead)</option>
-              <option value="chaos_warrior">Chaos / Dread Warrior (Move: 7, Atk: 3, Def: 4, BP: 2)</option>
-              <option value="fimir">Fimir / Abomination (Move: 6, Atk: 3, Def: 3, BP: 2)</option>
-              <option value="gargoyle">Gargoyle (Move: 6, Atk: 4, Def: 5, BP: 3)</option>
-              <option value="boss">Custom Boss / Warlord...</option>
+            <label for="select-monster-category" style="font-size:10px; color:#94a3b8; font-weight:600; margin-bottom:2px; display:block;">Content Pack / Category:</label>
+            <select id="select-monster-category" class="dropdown dropdown-sm" style="margin-bottom:6px;">
+              <option value="all" selected>🌐 All Enemies (Base + Election 2026)</option>
+              <option value="Midterms 2026">🗳️ Election 2026 (Midterms 2026)</option>
+              <option value="Base Game">🏰 Base Game (HeroQuest Classic)</option>
             </select>
+            <label for="select-monster-type" style="font-size:10px; color:#94a3b8; font-weight:600; margin-bottom:2px; display:block;">Enemy / Character:</label>
+            <select id="select-monster-type" class="dropdown dropdown-sm">
+              <optgroup label="🏰 Base Game (HeroQuest Classic)">
+                <option value="goblin" selected>👺 Goblin (Move: 10, Atk: 2, Def: 1, BP: 1)</option>
+                <option value="orc">👹 Orc (Move: 8, Atk: 3, Def: 2, BP: 1)</option>
+                <option value="fimir">🦎 Fimir / Abomination (Move: 6, Atk: 3, Def: 3, BP: 2)</option>
+                <option value="skeleton">💀 Skeleton (Move: 6, Atk: 2, Def: 2, BP: 1, Undead)</option>
+                <option value="zombie">🧟 Zombie (Move: 4, Atk: 2, Def: 3, BP: 1, Undead)</option>
+                <option value="mummy">🩹 Mummy (Move: 4, Atk: 3, Def: 4, BP: 2, Undead)</option>
+                <option value="chaos_warrior">⚔️ Chaos / Dread Warrior (Move: 7, Atk: 4, Def: 4, BP: 3)</option>
+                <option value="gargoyle">🗿 Gargoyle (Move: 6, Atk: 4, Def: 5, BP: 3)</option>
+                <option value="orc-shaman">🪄 Orc Shaman (Move: 8, Atk: 2, Def: 3, BP: 2, Caster)</option>
+                <option value="verag-orc-warlord">👑 Verag the Orc Warlord (Move: 8, Atk: 4, Def: 3, BP: 3, Boss)</option>
+                <option value="chaos-sorcerer">🔮 Chaos Sorcerer (Move: 7, Atk: 3, Def: 4, BP: 3, Boss)</option>
+                <option value="witch-lord">👑 The Witch Lord (Move: 7, Atk: 4, Def: 5, BP: 4, Boss)</option>
+                <option value="dragon">🐉 Dragon (Move: 8, Atk: 5, Def: 5, BP: 6, Boss)</option>
+                <option value="cassandria-doomguard">🛡️ Cassandria's Doomguard (Move: 8, Atk: 4, Def: 6, BP: 3, Boss)</option>
+                <option value="cassandria-witch-hand">🖐️ Witch Hand of Cassandria (Move: 8, Atk: 4, Def: 4, BP: 4, Boss)</option>
+                <option value="boss">👑 Custom Boss / Warlord...</option>
+              </optgroup>
+              <optgroup label="🗳️ Election 2026 (Midterms 2026)">
+                <option value="campaign-volunteer">📋 Campaign Volunteer — Goblin (Move: 10, Atk: 2, Def: 1, BP: 1)</option>
+                <option value="political-operative">🕵️ Political Operative — Orc (Move: 8, Atk: 3, Def: 2, BP: 1)</option>
+                <option value="career-politician">🏛️ Career Politician — Skeleton (Move: 6, Atk: 2, Def: 2, BP: 1, Undead)</option>
+                <option value="bureaucrat">📎 Bureaucrat — Zombie (Move: 4, Atk: 2, Def: 3, BP: 1, Undead)</option>
+                <option value="lobbyist">💼 Lobbyist — Mummy (Move: 4, Atk: 3, Def: 4, BP: 2, Undead)</option>
+                <option value="partisan-enforcer">⚔️ Partisan Enforcer — Dread Warrior (Move: 7, Atk: 4, Def: 4, BP: 3)</option>
+                <option value="super-pac-demon">😈 Super PAC Demon — Gargoyle (Move: 6, Atk: 4, Def: 5, BP: 3)</option>
+                <option value="spin-doctor">🌀 Spin Doctor — Dread Sorcerer (Move: 7, Atk: 3, Def: 4, BP: 3, Caster)</option>
+                <option value="talarixon">🐍 Talarixon (Talarico + Paxton · Texas Hydra) — Texas Hydra (Move: 7, Atk: 5, Def: 5, BP: 6, Boss)</option>
+                <option value="el-rogers">🐲 El-Rogers (El-Sayed + Rogers · Michigan Hydra) — Michigan Hydra (Move: 6, Atk: 5, Def: 6, BP: 7, Boss)</option>
+                <option value="brownsted">🐉 Brownsted (Brown + Husted · Ohio Hydra) — Ohio Hydra (Move: 5, Atk: 6, Def: 5, BP: 8, Boss)</option>
+              </optgroup>
+            </select>
+            <div id="monster-subopt-preview" style="margin-top:6px; padding:6px 8px; border-radius:5px; background:rgba(15,23,42,0.75); border:1px solid #1e293b; font-size:10px; color:#cbd5e1; line-height:1.35;">
+              👺 <strong>Goblin</strong> • ❤️1 ⚔️2 🛡️1 👟10
+            </div>
           </div>
 
           <!-- Furniture suboptions -->
@@ -390,14 +420,36 @@
             <div class="form-row" style="margin-top:8px;">
               <label for="select-wandering-monster"><strong>Wandering Monster:</strong></label>
               <select id="select-wandering-monster" class="dropdown">
-                <option value="orc" selected>Orc (3 Atk, 2 Def, 1 BP)</option>
-                <option value="goblin">Goblin (2 Atk, 1 Def, 1 BP)</option>
-                <option value="skeleton">Skeleton (2 Atk, 2 Def, 1 BP)</option>
-                <option value="zombie">Zombie (3 Atk, 3 Def, 1 BP)</option>
-                <option value="mummy">Mummy (3 Atk, 4 Def, 2 BP)</option>
-                <option value="chaos_warrior">Chaos Warrior (4 Atk, 4 Def, 3 BP)</option>
-                <option value="fimir">Fimir / Abomination (3 Atk, 3 Def, 2 BP)</option>
-                <option value="gargoyle">Gargoyle (4 Atk, 5 Def, 3 BP)</option>
+                <optgroup label="🏰 Base Game (HeroQuest Classic)">
+                  <option value="orc" selected>👹 Orc (3 Atk, 2 Def, 1 BP)</option>
+                  <option value="goblin">👺 Goblin (2 Atk, 1 Def, 1 BP)</option>
+                  <option value="fimir">🦎 Fimir / Abomination (3 Atk, 3 Def, 2 BP)</option>
+                  <option value="skeleton">💀 Skeleton (2 Atk, 2 Def, 1 BP)</option>
+                  <option value="zombie">🧟 Zombie (2 Atk, 3 Def, 1 BP)</option>
+                  <option value="mummy">🩹 Mummy (3 Atk, 4 Def, 2 BP)</option>
+                  <option value="chaos_warrior">⚔️ Chaos / Dread Warrior (4 Atk, 4 Def, 3 BP)</option>
+                  <option value="gargoyle">🗿 Gargoyle (4 Atk, 5 Def, 3 BP)</option>
+                  <option value="orc-shaman">🪄 Orc Shaman (2 Atk, 3 Def, 2 BP)</option>
+                  <option value="verag-orc-warlord">👑 Verag the Orc Warlord (4 Atk, 3 Def, 3 BP)</option>
+                  <option value="chaos-sorcerer">🔮 Chaos Sorcerer (3 Atk, 4 Def, 3 BP)</option>
+                  <option value="witch-lord">👑 The Witch Lord (4 Atk, 5 Def, 4 BP)</option>
+                  <option value="dragon">🐉 Dragon (5 Atk, 5 Def, 6 BP)</option>
+                  <option value="cassandria-doomguard">🛡️ Cassandria's Doomguard (4 Atk, 6 Def, 3 BP)</option>
+                  <option value="cassandria-witch-hand">🖐️ Witch Hand of Cassandria (4 Atk, 4 Def, 4 BP)</option>
+                </optgroup>
+                <optgroup label="🗳️ Election 2026 (Midterms 2026)">
+                  <option value="campaign-volunteer">📋 Campaign Volunteer (2 Atk, 1 Def, 1 BP)</option>
+                  <option value="political-operative">🕵️ Political Operative (3 Atk, 2 Def, 1 BP)</option>
+                  <option value="career-politician">🏛️ Career Politician (2 Atk, 2 Def, 1 BP)</option>
+                  <option value="bureaucrat">📎 Bureaucrat (2 Atk, 3 Def, 1 BP)</option>
+                  <option value="lobbyist">💼 Lobbyist (3 Atk, 4 Def, 2 BP)</option>
+                  <option value="partisan-enforcer">⚔️ Partisan Enforcer (4 Atk, 4 Def, 3 BP)</option>
+                  <option value="super-pac-demon">😈 Super PAC Demon (4 Atk, 5 Def, 3 BP)</option>
+                  <option value="spin-doctor">🌀 Spin Doctor (3 Atk, 4 Def, 3 BP)</option>
+                  <option value="talarixon">🐍 Talarixon (Talarico + Paxton · Texas Hydra) (5 Atk, 5 Def, 6 BP)</option>
+                  <option value="el-rogers">🐲 El-Rogers (El-Sayed + Rogers · Michigan Hydra) (5 Atk, 6 Def, 7 BP)</option>
+                  <option value="brownsted">🐉 Brownsted (Brown + Husted · Ohio Hydra) (6 Atk, 5 Def, 8 BP)</option>
+                </optgroup>
               </select>
             </div>
 
@@ -408,9 +460,9 @@
           </div>
 
           <div class="section-card">
-            <h3>📜 Mentor's Quest Parchment Briefing</h3>
+            <h3>📜 Quest Briefing</h3>
             <p class="section-desc">Prologue narrative read aloud to players before entering the dungeon.</p>
-            <textarea id="textarea-quest-briefing" class="parchment-textarea" rows="6" placeholder="Mentor speaks: 'The Emperor calls upon the kingdom's greatest champions...'"></textarea>
+            <textarea id="textarea-quest-briefing" class="parchment-textarea" rows="6" placeholder="The Emperor calls upon the kingdom's greatest champions..."></textarea>
           </div>
         </div>
 
@@ -447,6 +499,43 @@
 
               <!-- Monster specific fields -->
               <div id="inspect-group-monster" class="inspect-group" style="display:none; margin-top:10px;">
+                <div class="form-row" style="margin-bottom:8px;">
+                  <label for="inspect-monster-type"><strong>Enemy Character:</strong></label>
+                  <select id="inspect-monster-type" class="dropdown" style="flex:1;">
+                    <optgroup label="🏰 Base Game (HeroQuest Classic)">
+                      <option value="goblin">👺 Goblin</option>
+                      <option value="orc">👹 Orc</option>
+                      <option value="fimir">🦎 Fimir / Abomination</option>
+                      <option value="skeleton">💀 Skeleton</option>
+                      <option value="zombie">🧟 Zombie</option>
+                      <option value="mummy">🩹 Mummy</option>
+                      <option value="chaos_warrior">⚔️ Chaos / Dread Warrior</option>
+                      <option value="gargoyle">🗿 Gargoyle</option>
+                      <option value="orc-shaman">🪄 Orc Shaman</option>
+                      <option value="verag-orc-warlord">👑 Verag the Orc Warlord</option>
+                      <option value="chaos-sorcerer">🔮 Chaos Sorcerer</option>
+                      <option value="witch-lord">👑 The Witch Lord</option>
+                      <option value="dragon">🐉 Dragon</option>
+                      <option value="cassandria-doomguard">🛡️ Cassandria's Doomguard</option>
+                      <option value="cassandria-witch-hand">🖐️ Witch Hand of Cassandria</option>
+                      <option value="boss">👑 Custom Boss / Warlord</option>
+                    </optgroup>
+                    <optgroup label="🗳️ Election 2026 (Midterms 2026)">
+                      <option value="campaign-volunteer">📋 Campaign Volunteer</option>
+                      <option value="political-operative">🕵️ Political Operative</option>
+                      <option value="career-politician">🏛️ Career Politician</option>
+                      <option value="bureaucrat">📎 Bureaucrat</option>
+                      <option value="lobbyist">💼 Lobbyist</option>
+                      <option value="partisan-enforcer">⚔️ Partisan Enforcer</option>
+                      <option value="super-pac-demon">😈 Super PAC Demon</option>
+                      <option value="spin-doctor">🌀 Spin Doctor</option>
+                      <option value="talarixon">🐍 Talarixon (Talarico + Paxton · Texas Hydra)</option>
+                      <option value="el-rogers">🐲 El-Rogers (El-Sayed + Rogers · Michigan Hydra)</option>
+                      <option value="brownsted">🐉 Brownsted (Brown + Husted · Ohio Hydra)</option>
+                    </optgroup>
+                  </select>
+                </div>
+
                 <div class="stat-pills-row">
                   <div class="stat-pill"><span class="stat-lbl">❤️ BP</span><input type="number" id="inspect-monster-bp" min="1" max="20" class="num-input-xs"></div>
                   <div class="stat-pill"><span class="stat-lbl">🧠 MP</span><input type="number" id="inspect-monster-mp" min="0" max="10" class="num-input-xs"></div>
@@ -482,6 +571,14 @@
                   <select id="inspect-door-state" class="dropdown">
                     <option value="closed">🔒 Closed (Solid Timber Slab)</option>
                     <option value="open">🔓 Open (Passage &amp; Swung Leaf)</option>
+                  </select>
+                </div>
+                <div class="form-row" style="margin-top:6px;">
+                  <label><strong>Door Size / Span:</strong></label>
+                  <select id="inspect-door-type" class="dropdown">
+                    <option value="single">🚪 Single Door (1×1)</option>
+                    <option value="double-2x1">🚪 Double Door 1: Horizontal (2×1)</option>
+                    <option value="double-1x2">🚪 Double Door 2: Vertical (1×2)</option>
                   </select>
                 </div>
                 <div class="form-row" style="margin-top:8px;">

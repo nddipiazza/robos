@@ -8166,6 +8166,160 @@
           "@id": "https://robos.dev/ns/sdlc#classification/testing"
         }
       ]
+    },
+    {
+      "@id": "robos:TabletopQuestSaveState",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TabletopQuestSaveState",
+      "robos:shaclShape": "urn:robos:shape:TabletopQuestSaveStateShape",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:questSlug",
+      "@type": "rdf:Property",
+      "rdfs:label": "questSlug",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:currentRound",
+      "@type": "rdf:Property",
+      "rdfs:label": "currentRound",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:currentPhase",
+      "@type": "rdf:Property",
+      "rdfs:label": "currentPhase",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:activeTurnActor",
+      "@type": "rdf:Property",
+      "rdfs:label": "activeTurnActor",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:playTimeSeconds",
+      "@type": "rdf:Property",
+      "rdfs:label": "playTimeSeconds",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:heroStates",
+      "@type": "rdf:Property",
+      "rdfs:label": "heroStates",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:visibleMonsters",
+      "@type": "rdf:Property",
+      "rdfs:label": "visibleMonsters",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:itemsFound",
+      "@type": "rdf:Property",
+      "rdfs:label": "itemsFound",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:screenshotPath",
+      "@type": "rdf:Property",
+      "rdfs:label": "screenshotPath",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:exploredTilesCount",
+      "@type": "rdf:Property",
+      "rdfs:label": "exploredTilesCount",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:revealedRooms",
+      "@type": "rdf:Property",
+      "rdfs:label": "revealedRooms",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:doorsOpenCount",
+      "@type": "rdf:Property",
+      "rdfs:label": "doorsOpenCount",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:triggersFired",
+      "@type": "rdf:Property",
+      "rdfs:label": "triggersFired",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
+    },
+    {
+      "@id": "robos:totalPartyGold",
+      "@type": "rdf:Property",
+      "rdfs:label": "totalPartyGold",
+      "robos:classification": [
+        {
+          "@id": "https://robos.dev/ns/sdlc#classification/testing"
+        }
+      ]
     }
   ]
 }

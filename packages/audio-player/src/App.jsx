@@ -13,6 +13,7 @@ export default function App() {
     }
   ]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const [librarySort, setLibrarySort] = useState({ key: 'title', dir: 'asc' });
   const [outputTarget, setOutputTarget] = useState('local'); // 'local' | speaker IP | 'all'
   const [speakers, setSpeakers] = useState([]);
   const [library, setLibrary] = useState({ tracks: [], artists: [], albums: [] });
@@ -788,6 +789,24 @@ export default function App() {
            (t.genre && t.genre.toLowerCase().includes(q));
   });
 
+  const sortedLibrary = [...filteredLibrary].sort((a, b) => {
+    const { key, dir } = librarySort;
+    const av = a[key] ?? '';
+    const bv = b[key] ?? '';
+    const cmp = key === 'duration'
+      ? (av || 0) - (bv || 0)
+      : String(av).localeCompare(String(bv), undefined, { sensitivity: 'base', numeric: true });
+    return dir === 'asc' ? cmp : -cmp;
+  });
+
+  const toggleLibrarySort = (key) => {
+    setLibrarySort(prev => prev.key === key
+      ? { key, dir: prev.dir === 'asc' ? 'desc' : 'asc' }
+      : { key, dir: 'asc' });
+  };
+
+  const sortMark = (key) => librarySort.key === key ? (librarySort.dir === 'asc' ? ' ▲' : ' ▼') : '';
+
   return (
     <div
       className="react-audio-app"
@@ -797,10 +816,10 @@ export default function App() {
       {/* Header */}
       <header className="app-header">
         <div className="header-brand">
-          <svg className="brand-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg className="brand-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e8a33d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
             <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
-            <polygon points="10 10 15 12 10 14 10 10" fill="#00bcd4"/>
+            <polygon points="10 10 15 12 10 14 10 10" fill="#e8a33d"/>
           </svg>
           <div>
             <h1>RobOS Audio Player</h1>
@@ -990,7 +1009,7 @@ export default function App() {
                     <img src={`http://192.168.1.34:0/art/${currentTrack.artId}.jpg`} alt="Album Art" />
                   ) : (
                     <div className="art-fallback">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="4"/></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#e8a33d" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="4"/></svg>
                     </div>
                   )}
                 </div>
@@ -1184,7 +1203,7 @@ export default function App() {
                     <div className="playlist-detail-header">
                       <div className="playlist-detail-meta">
                         <div className="playlist-cover-icon">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#e8a33d" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                         </div>
                         <div className="playlist-text-meta">
                           <h2>{selectedPlaylist.name}</h2>
@@ -1420,85 +1439,90 @@ export default function App() {
 
             {/* Dropzone Hint */}
             <div className="dropzone-banner" onClick={handleSelectFolder}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e8a33d" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
               <p>Click here or drag & drop any music folder from your file manager to scan and index</p>
             </div>
 
-            {/* Library Grid */}
-            <div className="library-grid">
-              {filteredLibrary.length === 0 ? (
+            {/* Library List */}
+            <div className="library-list">
+              <div className="library-list-header">
+                <span className="ll-num">#</span>
+                <button className="ll-sort ll-title" onClick={() => toggleLibrarySort('title')}>Title{sortMark('title')}</button>
+                <button className="ll-sort ll-album" onClick={() => toggleLibrarySort('album')}>Album{sortMark('album')}</button>
+                <button className="ll-sort ll-genre" onClick={() => toggleLibrarySort('genre')}>Genre{sortMark('genre')}</button>
+                <button className="ll-sort ll-dur" onClick={() => toggleLibrarySort('duration')}>Time{sortMark('duration')}</button>
+                <span className="ll-actions"></span>
+              </div>
+              {sortedLibrary.length === 0 ? (
                 <div className="empty-state">
-                  <p>No tracks indexed in media library yet.</p>
-                  <button className="btn-accent" onClick={handleSelectFolder} style={{ marginTop: '12px' }}>
-                    📁 Add Folder via File Manager Popup
-                  </button>
+                  <p>{library.tracks.length ? 'No tracks match your search.' : 'No tracks indexed in media library yet.'}</p>
+                  {!library.tracks.length && (
+                    <button className="btn-accent" onClick={handleSelectFolder} style={{ marginTop: '12px' }}>
+                      📁 Add Folder via File Manager Popup
+                    </button>
+                  )}
                 </div>
               ) : (
-                filteredLibrary.map((t, idx) => (
-                  <div key={t.id || idx} className="track-card" onClick={() => playTrack(t)}>
-                    <div className="card-thumb">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="#00bcd4"/></svg>
-                    </div>
-                    <div className="card-info">
-                      <h4>{t.title}</h4>
-                      <p>{t.artist} &bull; {t.album}</p>
-                    </div>
-                    <div className="card-actions">
-                      <button className="btn-chip" onClick={(e) => { e.stopPropagation(); playTrack(t); }}>
-                        ▶ Play
-                      </button>
-                      <button
-                        className="btn-chip"
-                        title="Add to current playback queue"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPlaylist(prev => [...prev, t]);
-                          showStatus(`Added "${t.title}" to queue`);
-                        }}
-                      >
-                        ➕ Queue
-                      </button>
-                      <button
-                        className="btn-chip"
-                        title="Add track to a custom playlist"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedTrackForPlaylist(t);
-                          setShowAddToPlaylistModal(true);
-                        }}
-                      >
-                        📑 Playlist
-                      </button>
-                      {speakers.length > 0 && (
-                        (activeCastSession && (activeCastSession.trackId === t.id || activeCastSession.filePath === t.filePath)) ? (
+                sortedLibrary.map((t, idx) => {
+                  const isCurrent = currentTrack && (currentTrack.id === t.id || currentTrack.filePath === t.filePath);
+                  const isCasting = activeCastSession && (activeCastSession.trackId === t.id || activeCastSession.filePath === t.filePath);
+                  return (
+                    <div
+                      key={t.id || idx}
+                      className={`library-row ${isCurrent ? 'current' : ''}`}
+                      onDoubleClick={() => playTrack(t)}
+                    >
+                      <span className="ll-num">
+                        {isCurrent && isPlaying
+                          ? <span className="eq-bars"><i></i><i></i><i></i></span>
+                          : <span className="row-index">{idx + 1}</span>}
+                        <button className="row-play" title="Play" onClick={() => playTrack(t)}>▶</button>
+                      </span>
+                      <span className="ll-title">
+                        <span className="row-title" title={t.title}>{t.title}</span>
+                        <span className="row-artist" title={t.artist}>{t.artist || 'Unknown artist'}</span>
+                      </span>
+                      <span className="ll-album" title={t.album}>{t.album || '—'}</span>
+                      <span className="ll-genre">{t.genre || '—'}</span>
+                      <span className="ll-dur">{formatDuration(t.duration)}</span>
+                      <span className="ll-actions">
+                        <button
+                          className="row-btn"
+                          title="Add to current playback queue"
+                          onClick={() => {
+                            setPlaylist(prev => [...prev, t]);
+                            showStatus(`Added "${t.title}" to queue`);
+                          }}
+                        >Queue</button>
+                        <button
+                          className="row-btn"
+                          title="Add track to a custom playlist"
+                          onClick={() => {
+                            setSelectedTrackForPlaylist(t);
+                            setShowAddToPlaylistModal(true);
+                          }}
+                        >Playlist</button>
+                        {speakers.length > 0 && (isCasting ? (
                           <button
-                            className="btn-chip btn-stop-cast active"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleStopCast(activeCastSession.ip);
-                            }}
+                            className="row-btn row-btn-stop"
                             title="Stop playback on Google Cast speaker"
-                          >
-                            ⏹ Stop Cast
-                          </button>
+                            onClick={() => handleStopCast(activeCastSession.ip)}
+                          >Stop cast</button>
                         ) : (
                           <button
-                            className="btn-chip"
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            className="row-btn"
+                            title={`Cast to ${getSpeakerName(outputTarget !== 'local' ? outputTarget : speakers[0].ip)}`}
+                            onClick={() => {
                               const target = outputTarget !== 'local' ? outputTarget : speakers[0].ip;
                               if (outputTarget === 'local') setOutputTarget(target);
                               playTrack(t);
                             }}
-                            title={`Cast to ${getSpeakerName(outputTarget !== 'local' ? outputTarget : speakers[0].ip)}`}
-                          >
-                            🔊 Cast
-                          </button>
-                        )
-                      )}
+                          >Cast</button>
+                        ))}
+                      </span>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
@@ -1583,7 +1607,7 @@ export default function App() {
               {currentTrack?.artId ? (
                 <img src={`http://192.168.1.34:0/art/${currentTrack.artId}.jpg`} alt="" />
               ) : (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00bcd4" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="#00bcd4"/></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e8a33d" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="#e8a33d"/></svg>
               )}
             </div>
             <div className="mini-text">

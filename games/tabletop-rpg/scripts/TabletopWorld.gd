@@ -77,6 +77,10 @@ var monsters: Array[Dictionary] = []
 var doors: Array[Dictionary] = []
 var door_closed_tex: Texture2D = null
 var door_open_tex: Texture2D = null
+var double_door_closed_2x1_tex: Texture2D = null
+var double_door_open_2x1_tex: Texture2D = null
+var double_door_closed_1x2_tex: Texture2D = null
+var double_door_open_1x2_tex: Texture2D = null
 var hero_token_textures: Dictionary = {}
 var monster_token_textures: Dictionary = {}
 var furniture_textures: Dictionary = {}
@@ -527,7 +531,7 @@ var pending_ai_command: Dictionary = {}
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
-		auto_save_game()
+		auto_save_game(true)
 
 func _ready() -> void:
 	print("[TabletopWorld] Initializing HeroQuest Cartridge Player...")
@@ -578,10 +582,7 @@ func _ready() -> void:
 		_log("[GM] [Game Master / DunMaster Mode Active] You are Zargon, Master of Darkness. Full dungeon visibility granted.")
 	else:
 		_log("[PLAYER] [Player Mode Active] You lead the four heroes into %s!" % q_title)
-		if is_quest_begin():
-			_check_play_intro_movie()
-			_check_show_quest_objective_at_start()
-		else:
+		if not is_quest_begin():
 			if quest_objective_modal:
 				quest_objective_modal.visible = false
 			if elf_spell_modal:
@@ -1368,13 +1369,25 @@ func _load_door_textures() -> void:
 		door_closed_tex = _load_texture_safe("res://assets/doors/door_closed.png")
 	if not door_open_tex:
 		door_open_tex = _load_texture_safe("res://assets/doors/door_open.png")
+	if not double_door_closed_2x1_tex:
+		double_door_closed_2x1_tex = _load_texture_safe("res://assets/doors/double_door_closed_2x1.png")
+	if not double_door_open_2x1_tex:
+		double_door_open_2x1_tex = _load_texture_safe("res://assets/doors/double_door_open_2x1.png")
+	if not double_door_closed_1x2_tex:
+		double_door_closed_1x2_tex = _load_texture_safe("res://assets/doors/double_door_closed_1x2.png")
+	if not double_door_open_1x2_tex:
+		double_door_open_1x2_tex = _load_texture_safe("res://assets/doors/double_door_open_1x2.png")
 
 func _load_hero_token_textures() -> void:
 	var token_map = {
 		"barbarian": "res://assets/tokens/token_barbarian.png",
 		"dwarf": "res://assets/tokens/token_dwarf.png",
 		"elf": "res://assets/tokens/token_elf.png",
-		"wizard": "res://assets/tokens/token_wizard.png"
+		"wizard": "res://assets/tokens/token_wizard.png",
+		"obama": "res://assets/tokens/token_obama.png",
+		"trump": "res://assets/tokens/token_trump.png",
+		"hillary_clinton": "res://assets/tokens/token_hillary_clinton.png",
+		"bernie_sanders": "res://assets/tokens/token_bernie_sanders.png"
 	}
 	for k in token_map:
 		if not hero_token_textures.has(k) or hero_token_textures[k] == null:
@@ -1382,40 +1395,51 @@ func _load_hero_token_textures() -> void:
 			if tex:
 				hero_token_textures[k] = tex
 
-func get_hero_token_path(h: Dictionary) -> String:
-	var custom_asset = str(h.get("tokenAsset", h.get("token_asset", "")))
-	if custom_asset != "":
-		return custom_asset
-
+func _resolve_hero_identity_key(h: Dictionary) -> String:
 	var h_id = str(h.get("id", "")).to_lower()
+	var h_slug = str(h.get("slug", "")).to_lower()
 	var h_cls = str(h.get("heroClass", h.get("hero_class", ""))).to_lower()
 	var h_name = str(h.get("name", "")).to_lower()
 	var char_name = str(h.get("characterName", h.get("character_name", ""))).to_lower()
+	var combined = "%s %s %s %s" % [h_id, h_slug, h_name, char_name]
 
-	var key = "barbarian"
-	if "barbarian" in h_id or "barbarian" in h_cls or "barbarian" in h_name or "berserker" in h_cls:
-		key = "barbarian"
+	if "obama" in combined:
+		return "obama"
+	elif "trump" in combined:
+		return "trump"
+	elif "hillary" in combined or "clinton" in combined:
+		return "hillary_clinton"
+	elif "bernie" in combined or "sanders" in combined:
+		return "bernie_sanders"
+	elif "barbarian" in h_id or "barbarian" in h_cls or "barbarian" in h_name or "berserker" in h_cls:
+		return "barbarian"
 	elif "dwarf" in h_id or "dwarf" in h_cls or "dwarf" in h_name or "dorgan" in char_name:
-		key = "dwarf"
+		return "dwarf"
 	elif "elf" in h_id or "elf" in h_cls or "elf" in h_name or "ladril" in char_name or "ranger" in h_cls:
-		key = "elf"
+		return "elf"
 	elif "wizard" in h_id or "wizard" in h_cls or "wizard" in h_name or "telor" in char_name or "mage" in h_cls:
-		key = "wizard"
+		return "wizard"
+	return "barbarian"
 
+func get_hero_token_path(h: Dictionary) -> String:
+	var custom_asset = str(h.get("tokenAsset", h.get("token_asset", "")))
+	if custom_asset != "":
+		if custom_asset.begins_with("assets/"):
+			return "res://" + custom_asset
+		return custom_asset
+
+	var key = _resolve_hero_identity_key(h)
 	return "res://assets/tokens/token_%s.png" % key
 
 func get_hero_token_texture(h: Dictionary) -> Texture2D:
 	var custom_asset = str(h.get("tokenAsset", h.get("token_asset", "")))
 	if custom_asset != "":
+		if custom_asset.begins_with("assets/"):
+			custom_asset = "res://" + custom_asset
 		if not hero_token_textures.has(custom_asset):
 			hero_token_textures[custom_asset] = _load_texture_safe(custom_asset)
 		if hero_token_textures.get(custom_asset) != null:
 			return hero_token_textures[custom_asset]
-
-	var h_id = str(h.get("id", "")).to_lower()
-	var h_cls = str(h.get("heroClass", h.get("hero_class", ""))).to_lower()
-	var h_name = str(h.get("name", "")).to_lower()
-	var char_name = str(h.get("characterName", h.get("character_name", ""))).to_lower()
 
 	if h.get("is_summon", false) or h.has("token_key"):
 		var tok_k = str(h.get("token_key", "skeleton")).to_lower()
@@ -1430,15 +1454,7 @@ func get_hero_token_texture(h: Dictionary) -> Texture2D:
 			hero_token_textures[tok_k] = sk_tex
 			return sk_tex
 
-	var key = "barbarian"
-	if "barbarian" in h_id or "barbarian" in h_cls or "barbarian" in h_name or "berserker" in h_cls:
-		key = "barbarian"
-	elif "dwarf" in h_id or "dwarf" in h_cls or "dwarf" in h_name or "dorgan" in char_name:
-		key = "dwarf"
-	elif "elf" in h_id or "elf" in h_cls or "elf" in h_name or "ladril" in char_name or "ranger" in h_cls:
-		key = "elf"
-	elif "wizard" in h_id or "wizard" in h_cls or "wizard" in h_name or "telor" in char_name or "mage" in h_cls:
-		key = "wizard"
+	var key = _resolve_hero_identity_key(h)
 
 	if hero_token_textures.has(key) and hero_token_textures[key] != null:
 		return hero_token_textures[key]
@@ -1473,7 +1489,26 @@ func _load_monster_token_textures() -> void:
 		"chaos_warrior": "res://assets/tokens/token_chaos_warrior.png",
 		"gargoyle": "res://assets/tokens/token_gargoyle.png",
 		"verag": "res://assets/tokens/token_verag.png",
-		"dragon": "res://assets/tokens/token_dragon.png"
+		"orc_shaman": "res://assets/tokens/token_orc_shaman.png",
+		"chaos_sorcerer": "res://assets/tokens/token_chaos_sorcerer.png",
+		"witch_lord": "res://assets/tokens/token_witch_lord.png",
+		"dragon": "res://assets/tokens/token_dragon.png",
+		"doomguard": "res://assets/tokens/token_doomguard.png",
+		"witch_hand": "res://assets/tokens/token_witch_hand.png",
+		"campaign_volunteer": "res://assets/tokens/token_campaign_volunteer.png",
+		"political_operative": "res://assets/tokens/token_political_operative.png",
+		"career_politician": "res://assets/tokens/token_career_politician.png",
+		"bureaucrat": "res://assets/tokens/token_bureaucrat.png",
+		"lobbyist": "res://assets/tokens/token_lobbyist.png",
+		"partisan_enforcer": "res://assets/tokens/token_partisan_enforcer.png",
+		"super_pac_demon": "res://assets/tokens/token_super_pac_demon.png",
+		"spin_doctor": "res://assets/tokens/token_spin_doctor.png",
+		"talarixon": "res://assets/tokens/token_talarixon.png",
+		"el_rogers": "res://assets/tokens/token_el_rogers.png",
+		"brownsted": "res://assets/tokens/token_brownsted.png",
+		"katie_zacharia": "res://assets/tokens/token_katie_zacharia.png",
+		"mitch_mcconnell": "res://assets/tokens/token_mitch_mcconnell.png",
+		"war_room_boss": "res://assets/tokens/token_war_room_boss.png"
 	}
 	for k in token_map:
 		if not monster_token_textures.has(k) or monster_token_textures[k] == null:
@@ -1485,28 +1520,66 @@ func get_monster_token_key(m: Dictionary) -> String:
 	var m_id = str(m.get("id", "")).to_lower()
 	var m_slug = str(m.get("slug", "")).to_lower()
 	var m_name = str(m.get("name", "")).to_lower()
-	var m_type = str(m.get("type", m.get("monster", ""))).to_lower()
+	var m_type = str(m.get("type", m.get("monsterType", m.get("monster", "")))).to_lower()
+	var combined = "%s %s %s %s" % [m_id, m_slug, m_name, m_type]
 
-	# Check boss / warlord / dragon first
-	if "dragon" in m_id or "dragon" in m_slug or "dragon" in m_name or "dragon" in m_type or "wyrm" in m_name:
+	if "katie" in combined or "zacharia" in combined:
+		return "katie_zacharia"
+	if "mitch" in combined or "mcconnell" in combined:
+		return "mitch_mcconnell"
+	if "vance" in combined or "kamala" in combined or "war_room" in combined or "war-room" in combined:
+		return "war_room_boss"
+	if "talarixon" in combined:
+		return "talarixon"
+	if "el-rogers" in combined or "el_rogers" in combined:
+		return "el_rogers"
+	if "brownsted" in combined:
+		return "brownsted"
+	if "campaign-volunteer" in combined or "campaign_volunteer" in combined or "campaign volunteer" in combined:
+		return "campaign_volunteer"
+	if "political-operative" in combined or "political_operative" in combined or "political operative" in combined:
+		return "political_operative"
+	if "career-politician" in combined or "career_politician" in combined or "career politician" in combined:
+		return "career_politician"
+	if "bureaucrat" in combined:
+		return "bureaucrat"
+	if "lobbyist" in combined:
+		return "lobbyist"
+	if "partisan-enforcer" in combined or "partisan_enforcer" in combined or "partisan enforcer" in combined:
+		return "partisan_enforcer"
+	if "super-pac-demon" in combined or "super_pac_demon" in combined or "super pac demon" in combined:
+		return "super_pac_demon"
+	if "spin-doctor" in combined or "spin_doctor" in combined or "spin doctor" in combined:
+		return "spin_doctor"
+	if "witch_lord" in combined or "witch-lord" in combined or "witch lord" in combined:
+		return "witch_lord"
+	if "witch_hand" in combined or "witch-hand" in combined or "witch hand" in combined or "kessandria" in combined:
+		return "witch_hand"
+	if "doomguard" in combined or "wardoz" in combined:
+		return "doomguard"
+	if "orc_shaman" in combined or "orc-shaman" in combined or "orc shaman" in combined or "grak" in combined:
+		return "orc_shaman"
+	if "chaos_sorcerer" in combined or "chaos-sorcerer" in combined or "chaos sorcerer" in combined or "dread sorcerer" in combined or "zargon" in combined or "balur" in combined:
+		return "chaos_sorcerer"
+	if "dragon" in combined or "wyrm" in combined or "venim" in combined:
 		return "dragon"
-	if "verag" in m_id or "verag" in m_slug or "verag" in m_name or "warlord" in m_name or "ulag" in m_id or "ulag" in m_slug:
+	if "verag" in combined or "warlord" in combined or "ulag" in combined:
 		return "verag"
-	if "chaos" in m_id or "chaos" in m_slug or "chaos" in m_name or "dread" in m_name:
+	if "chaos" in combined or "dread" in combined or "gulthor" in combined:
 		return "chaos_warrior"
-	if "gargoyle" in m_id or "gargoyle" in m_slug or "gargoyle" in m_name:
+	if "gargoyle" in combined:
 		return "gargoyle"
-	if "mummy" in m_id or "mummy" in m_slug or "mummy" in m_name:
+	if "mummy" in combined:
 		return "mummy"
-	if "fimir" in m_id or "fimir" in m_slug or "fimir" in m_name or "abomination" in m_name:
+	if "fimir" in combined or "abomination" in combined:
 		return "fimir"
-	if "zombie" in m_id or "zombie" in m_slug or "zombie" in m_name:
+	if "zombie" in combined:
 		return "zombie"
-	if "skeleton" in m_id or "skeleton" in m_slug or "skeleton" in m_name or "skel" in m_id or "skel" in m_slug:
+	if "skeleton" in combined or "skel" in combined:
 		return "skeleton"
-	if "goblin" in m_id or "goblin" in m_slug or "goblin" in m_name:
+	if "goblin" in combined:
 		return "goblin"
-	if "orc" in m_id or "orc" in m_slug or "orc" in m_name:
+	if "orc" in combined:
 		return "orc"
 	return ""
 
@@ -1653,6 +1726,8 @@ func get_tile_texture(t_type: String) -> Texture2D:
 	return null
 
 func _load_texture_safe(res_path: String) -> Texture2D:
+	if res_path.begins_with("assets/"):
+		res_path = "res://" + res_path
 	if ResourceLoader.exists(res_path):
 		var res = ResourceLoader.load(res_path)
 		if res is Texture2D:
@@ -2043,16 +2118,54 @@ func _apply_rpg_theme_to_all_modals() -> void:
 			btn_disarm_trap_close.custom_minimum_size = Vector2(0, 44)
 			apply_rpg_font_to_button(btn_disarm_trap_close, 13)
 
-func get_hero_card_bg_texture(hero_id: String) -> Texture2D:
-	var clean_id = hero_id.to_lower().strip_edges()
-	if "barbarian" in clean_id:
-		clean_id = "barbarian"
-	elif "dwarf" in clean_id:
-		clean_id = "dwarf"
-	elif "elf" in clean_id:
-		clean_id = "elf"
-	elif "wizard" in clean_id:
-		clean_id = "wizard"
+func get_hero_card_bg_texture(h_or_id) -> Texture2D:
+	var h_dict: Dictionary = {}
+	var raw_id = ""
+	if h_or_id is Dictionary:
+		h_dict = h_or_id
+		raw_id = str(h_dict.get("id", ""))
+	else:
+		raw_id = str(h_or_id)
+		for hero_entry in heroes:
+			if str(hero_entry.get("id", "")).to_lower() == raw_id.to_lower() or str(hero_entry.get("slug", "")).to_lower() == raw_id.to_lower():
+				h_dict = hero_entry
+				break
+
+	if not h_dict.is_empty():
+		var custom_portrait = str(h_dict.get("portraitAsset", h_dict.get("portrait_asset", "")))
+		if custom_portrait != "":
+			if custom_portrait.begins_with("assets/portraits/"):
+				custom_portrait = "res://assets/hero_cards/" + custom_portrait.get_file()
+			elif custom_portrait.begins_with("assets/"):
+				custom_portrait = "res://" + custom_portrait
+			if _hero_card_bg_cache.has(custom_portrait) and _hero_card_bg_cache[custom_portrait] != null:
+				return _hero_card_bg_cache[custom_portrait]
+			var c_tex = _load_texture_safe(custom_portrait)
+			if c_tex:
+				_hero_card_bg_cache[custom_portrait] = c_tex
+				return c_tex
+
+	var clean_id = ""
+	if not h_dict.is_empty():
+		clean_id = _resolve_hero_identity_key(h_dict)
+	else:
+		clean_id = raw_id.to_lower().strip_edges()
+		if "obama" in clean_id:
+			clean_id = "obama"
+		elif "trump" in clean_id:
+			clean_id = "trump"
+		elif "hillary" in clean_id or "clinton" in clean_id:
+			clean_id = "hillary_clinton"
+		elif "bernie" in clean_id or "sanders" in clean_id:
+			clean_id = "bernie_sanders"
+		elif "barbarian" in clean_id:
+			clean_id = "barbarian"
+		elif "dwarf" in clean_id:
+			clean_id = "dwarf"
+		elif "elf" in clean_id:
+			clean_id = "elf"
+		elif "wizard" in clean_id:
+			clean_id = "wizard"
 
 	if _hero_card_bg_cache.has(clean_id) and _hero_card_bg_cache[clean_id] != null:
 		return _hero_card_bg_cache[clean_id]
@@ -2624,11 +2737,11 @@ func _get_effective_starting_map_id(cart: Dictionary = {}) -> String:
 		return maps.keys()[0]
 	return target
 
-func get_save_file_path() -> String:
+func get_save_file_path(custom_slug: String = "") -> String:
 	var env_path = OS.get_environment("TABLETOP_SAVE_PATH")
 	if env_path != "":
 		return env_path
-	var slug = CartridgeManager.current_cartridge_slug
+	var slug = custom_slug if custom_slug != "" else CartridgeManager.current_cartridge_slug
 	if slug == "":
 		var cart = CartridgeManager.active_cartridge
 		slug = str(cart.get("cartridgeId", _get_effective_starting_map_id(cart)))
@@ -2636,6 +2749,34 @@ func get_save_file_path() -> String:
 		slug = "heroquest-the-trial"
 	var effective_map = _get_effective_starting_map_id()
 	return "user://tabletop_autosave_%s_%s.json" % [slug.replace("/", "_").replace("\\", "_"), effective_map.replace("/", "_").replace("\\", "_")]
+
+var play_time_seconds: float = 0.0
+var _last_save_tick_msec: int = 0
+var items_found_log: Array = []
+
+func get_save_screenshot_path(custom_slug: String = "") -> String:
+	var save_json_path = get_save_file_path(custom_slug)
+	return save_json_path.trim_suffix(".json") + ".png"
+
+func _capture_save_screenshot(png_user_path: String) -> String:
+	if DisplayServer.get_name() == "headless":
+		return ""
+	var vp = get_viewport()
+	if vp == null:
+		return ""
+	var tex = vp.get_texture()
+	if tex == null:
+		return ""
+	var img = tex.get_image()
+	if img == null or img.is_empty():
+		return ""
+	if img.get_width() > 640:
+		var target_h = maxi(1, int(round(float(img.get_height()) * 640.0 / float(img.get_width()))))
+		img.resize(640, target_h, Image.INTERPOLATE_NEAREST)
+	var err = img.save_png(png_user_path)
+	if err == OK:
+		return ProjectSettings.globalize_path(png_user_path)
+	return ""
 
 func has_saved_game() -> bool:
 	var path = get_save_file_path()
@@ -2657,6 +2798,9 @@ func has_saved_game() -> bool:
 
 func delete_save_game() -> bool:
 	var path = get_save_file_path()
+	var png_path = get_save_screenshot_path()
+	if FileAccess.file_exists(png_path):
+		DirAccess.remove_absolute(png_path)
 	if FileAccess.file_exists(path):
 		var err = DirAccess.remove_absolute(path)
 		if err == OK:
@@ -2667,7 +2811,12 @@ func delete_save_game() -> bool:
 			return false
 	return true
 
-func serialize_game_state() -> Dictionary:
+func serialize_game_state(screenshot_abs_path: String = "") -> Dictionary:
+	var now_ticks = Time.get_ticks_msec()
+	if _last_save_tick_msec > 0 and now_ticks > _last_save_tick_msec:
+		play_time_seconds += float(now_ticks - _last_save_tick_msec) / 1000.0
+	_last_save_tick_msec = now_ticks
+
 	var heroes_save: Array = []
 	for h in heroes:
 		var hc = h.duplicate(true)
@@ -2679,6 +2828,7 @@ func serialize_game_state() -> Dictionary:
 		heroes_save.append(hc)
 
 	var monsters_save: Array = []
+	var visible_monsters_save: Array = []
 	for m in monsters:
 		var mc = m.duplicate(true)
 		var mp = m.get("grid_pos", Vector2i(-1, -1))
@@ -2687,6 +2837,12 @@ func serialize_game_state() -> Dictionary:
 		elif mp is Array:
 			mc["grid_pos"] = mp
 		monsters_save.append(mc)
+		var m_id = str(mc.get("id", ""))
+		var m_alive = bool(mc.get("is_alive", true)) and int(mc.get("current_bp", mc.get("bodyPoints", 1))) > 0
+		var m_room = str(mc.get("roomId", ""))
+		var m_disc = discovered_monster_ids.has(m_id) or (m_room != "" and revealed_rooms.has(m_room) and not bool(mc.get("hidden", false)))
+		if m_alive and m_disc:
+			visible_monsters_save.append(mc)
 
 	var doors_save: Array = []
 	for d in doors:
@@ -2724,9 +2880,18 @@ func serialize_game_state() -> Dictionary:
 
 	var s_alloc = cart.get("spellAllocation", {})
 
+	var active_actor_str = "Zargon / Dread Master"
+	if current_phase == "hero_phase" and heroes_save.size() > 0:
+		var h_idx = clampi(active_hero_idx, 0, heroes_save.size() - 1)
+		var act_h = heroes_save[h_idx]
+		active_actor_str = "%s (Hero %d of %d)" % [str(act_h.get("name", act_h.get("heroClass", "Hero"))), h_idx + 1, heroes_save.size()]
+
 	return {
 		"version": 1,
 		"timestamp": Time.get_unix_time_from_system(),
+		"play_time_seconds": roundi(play_time_seconds),
+		"active_turn_actor": active_actor_str,
+		"screenshot_path": screenshot_abs_path if screenshot_abs_path != "" else ProjectSettings.globalize_path(get_save_screenshot_path()),
 		"cartridge_slug": cart_slug,
 		"map_id": starting_map_id,
 		"grid_cols": grid_cols,
@@ -2746,6 +2911,8 @@ func serialize_game_state() -> Dictionary:
 		"turn_state": turn_state,
 		"heroes": heroes_save,
 		"monsters": monsters_save,
+		"visible_monsters": visible_monsters_save,
+		"items_found": items_found_log.duplicate(true),
 		"doors": doors_save,
 		"traps": traps_save,
 		"furniture": furniture_save,
@@ -2765,12 +2932,18 @@ func serialize_game_state() -> Dictionary:
 		"game_state": get_game_state()
 	}
 
-func auto_save_game() -> void:
+func auto_save_game(capture_screenshot: bool = false) -> void:
 	if _is_restoring_state:
 		return
 	if heroes.is_empty():
 		return
-	var data = serialize_game_state()
+	var png_user_path = get_save_screenshot_path()
+	var screenshot_abs = ""
+	if capture_screenshot:
+		screenshot_abs = _capture_save_screenshot(png_user_path)
+	elif FileAccess.file_exists(png_user_path):
+		screenshot_abs = ProjectSettings.globalize_path(png_user_path)
+	var data = serialize_game_state(screenshot_abs)
 	var json_str = JSON.stringify(data, "\t")
 	var path = get_save_file_path()
 	var f = FileAccess.open(path, FileAccess.WRITE)
@@ -2897,6 +3070,14 @@ func restore_saved_game(save_dict: Dictionary = {}) -> bool:
 				discovered_monster_ids[str(k)] = true
 
 	# Restore Turn State
+	play_time_seconds = float(data.get("play_time_seconds", play_time_seconds))
+	_last_save_tick_msec = Time.get_ticks_msec()
+	if data.has("items_found") and data.get("items_found") is Array:
+		items_found_log.clear()
+		for it in data.get("items_found", []):
+			if it is Dictionary:
+				items_found_log.append(it.duplicate(true))
+
 	current_role = str(data.get("current_role", current_role))
 	active_hero_idx = int(data.get("active_hero_idx", active_hero_idx))
 	current_round = int(data.get("current_round", current_round))
@@ -2999,9 +3180,18 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 	grid_rows = map_data.get("height", GRID_ROWS)
 	hovered_tile = Vector2i(-1, -1)
 
-	var bg_img = map_data.get("backgroundImage", "")
-	if bg_img != "" and ResourceLoader.exists(bg_img):
-		board_sprite.texture = load(bg_img)
+	var bg_img = str(map_data.get("backgroundImage", ""))
+	if bg_img != "":
+		if ResourceLoader.exists(bg_img):
+			var loaded_tex = load(bg_img)
+			if loaded_tex is Texture2D:
+				board_sprite.texture = loaded_tex
+		else:
+			var abs_bg = ProjectSettings.globalize_path(bg_img)
+			if FileAccess.file_exists(abs_bg):
+				var raw_img = Image.load_from_file(abs_bg)
+				if raw_img and not raw_img.is_empty():
+					board_sprite.texture = ImageTexture.create_from_image(raw_img)
 
 	var stair = map_data.get("startingStair", map_data.get("startingPosition", [0, 1]))
 	starting_stair = Vector2i(stair[0], stair[1])
@@ -3027,24 +3217,27 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 		h["heroClass"] = h.get("heroClass", "")
 		h["hero_class"] = h.get("heroClass", "")
 
-		# Standard HeroQuest Loadouts
-		match str(h.get("id")):
-			"barbarian":
+		# Standard HeroQuest Loadouts (matched by class or id)
+		var h_arch = str(h.get("heroClass", h.get("id", ""))).to_lower().strip_edges()
+		if h_arch == "" or not (h_arch in ["barbarian", "dwarf", "elf", "wizard"]):
+			h_arch = str(h.get("id", "")).to_lower().strip_edges()
+		match h_arch:
+			"barbarian", "obama":
 				h["equipped_weapon"] = "broadsword"
 				h["equipped_armor"] = []
 				h["inventory"] = ["broadsword", "healing_potion"]
 				h["spells"] = []
-			"dwarf":
+			"dwarf", "trump":
 				h["equipped_weapon"] = "shortsword"
 				h["equipped_armor"] = []
 				h["inventory"] = ["shortsword", "healing_potion"]
 				h["spells"] = []
-			"elf":
+			"elf", "hillary-clinton", "hillary_clinton":
 				h["equipped_weapon"] = "shortsword"
 				h["equipped_armor"] = []
 				h["inventory"] = ["shortsword", "healing_potion"]
 				h["spells"] = _extract_cartridge_spells(h, "elf", cart)
-			"wizard":
+			"wizard", "bernie-sanders", "bernie_sanders":
 				h["equipped_weapon"] = "dagger"
 				h["equipped_armor"] = []
 				h["inventory"] = ["dagger", "staff", "healing_potion"]
@@ -3269,8 +3462,22 @@ func _rebuild_spatial_caches() -> void:
 	for d in doors:
 		var f = d.get("from", [0, 0])
 		var t = d.get("to", [0, 0])
+		var w = int(d.get("width", 1))
+		var h = int(d.get("height", 1))
+		var dt = str(d.get("door_type", ""))
+		if dt == "double-2x1" or dt == "double-h" or dt == "2x1":
+			w = 2; h = 1
+		elif dt == "double-1x2" or dt == "double-v" or dt == "1x2":
+			w = 1; h = 2
+
 		_doors_by_edge[Vector4i(f[0], f[1], t[0], t[1])] = d
 		_doors_by_edge[Vector4i(t[0], t[1], f[0], f[1])] = d
+		if w > 1:
+			_doors_by_edge[Vector4i(f[0] + 1, f[1], t[0] + 1, t[1])] = d
+			_doors_by_edge[Vector4i(t[0] + 1, t[1], f[0] + 1, f[1])] = d
+		elif h > 1:
+			_doors_by_edge[Vector4i(f[0], f[1] + 1, t[0], t[1] + 1)] = d
+			_doors_by_edge[Vector4i(t[0], t[1] + 1, f[0], f[1] + 1)] = d
 
 	_rebuild_furniture_tile_map()
 
@@ -3939,7 +4146,7 @@ func reveal_room_by_id(r_id: String, is_starting_room: bool = false) -> void:
 		else:
 			# Check if any story trigger in this room has a movie and is room-reveal triggered
 			for st in story_triggers:
-				if str(st.get("room", "")) == r_id and st.has("movie") and not st.get("triggered", false):
+				if str(st.get("room", "")) == r_id and str(st.get("movie", "")).strip_edges() != "" and not st.get("triggered", false):
 					var ev = str(st.get("event", ""))
 					# If tied to door opening, let on_door_opened handle it with full door context
 					if ev == "on_door_opened":
@@ -4171,9 +4378,10 @@ func _process(delta: float) -> void:
 
 	if not active_dialogue_sequence.is_empty() and active_dialogue_sequence.get("active", false):
 		active_dialogue_sequence["time"] = float(active_dialogue_sequence.get("time", 0.0)) + delta
-		var d_dur = float(active_dialogue_sequence.get("duration", 4.5))
-		if active_dialogue_sequence["time"] >= d_dur:
-			advance_dialogue_bubble()
+		if is_headless_mode() or CartridgeManager.auto_play_enabled or ai_play_for_you:
+			var d_dur = float(active_dialogue_sequence.get("duration", 4.5))
+			if active_dialogue_sequence["time"] >= d_dur:
+				advance_dialogue_bubble()
 		needs_redraw = true
 
 	if is_enemy_turn_waiting:
@@ -4532,10 +4740,12 @@ func select_elf_element(elem_key: String) -> Dictionary:
 			wiz_spells.append_array(ELEMENTAL_DECKS[k])
 
 	for h in heroes:
-		if str(h.get("id")) == "elf":
+		var h_cls = get_hero_class_name(h).to_lower()
+		var h_id = str(h.get("id", "")).to_lower()
+		if h_id == "elf" or h_cls == "elf":
 			h["spells"] = elf_spells
 			h["used_spells"] = []
-		elif str(h.get("id")) == "wizard":
+		elif h_id == "wizard" or h_cls == "wizard":
 			h["spells"] = wiz_spells
 			h["used_spells"] = []
 
@@ -5933,37 +6143,67 @@ func get_active_quest_objective() -> Dictionary:
 	if active_q.is_empty() and not quests.is_empty() and quests[0] is Dictionary:
 		active_q = quests[0]
 
+	var map_data_obj: Dictionary = cart.get("maps", {}).get(effective_map, {})
+	if map_data_obj.is_empty() and cart.get("maps", {}).size() > 0:
+		map_data_obj = cart.get("maps", {}).values()[0]
+
+	var map_id = str(active_q.get("mapConfigId", map_data_obj.get("mapConfigurationId", "fan-dungeon-28x21")))
+	var q_slug = str(active_q.get("slug", current_slug))
+	var is_midterm_quest = ("election-2026" in current_slug or "midterm" in current_slug or "election-2026" in q_slug or "midterm" in q_slug or "midterm" in map_id)
+
 	var default_title = "Quest: %s" % current_slug.replace("-", " ").capitalize() if current_slug != "" else "HeroQuest"
 	var quest_title = str(active_q.get("title", cart.get("header", {}).get("title", default_title)))
-	var campaign_title = str(active_q.get("campaign", cart.get("header", {}).get("title", "HeroQuest: The Gathering Storm")))
-	var briefing = str(active_q.get("briefing", cart.get("header", {}).get("description", "You enter the perilous dungeon depths. Stay vigilant and vanquish your foes.")))
-	var gold_reward = int(active_q.get("goldReward", 100))
-	var map_id = str(active_q.get("mapConfigId", "fan-dungeon-28x21"))
+	var default_campaign = "Election 2026: Battle for the Hill" if is_midterm_quest else str(cart.get("header", {}).get("title", "HeroQuest: The Gathering Storm"))
+	var campaign_title = str(active_q.get("campaign", default_campaign))
+	var default_briefing = "Mentor George W. Bush summons Barack Obama, Donald Trump, Hillary Clinton, and Bernie Sanders to the Basement of Strategery: your mission is to stop the Elite 1% from destroying the world—though Bush has no idea how, isn't sure it will work, and wishes you 'good luck killin' them Hydras' (Talarixon, El-Rogers, and Brownsted) because he's not much help! Then, from a swirling foggy mist, girlfriends Marjorie Taylor Greene and AOC appear under a cozy blanket to share survival tips on stockpiling canned goods and manual can openers for the oncoming AI Superintelligence Apocalypse!" if is_midterm_quest else "You enter the perilous dungeon depths. Stay vigilant and vanquish your foes."
+	var briefing = str(active_q.get("briefing", cart.get("header", {}).get("description", default_briefing)))
+	if is_midterm_quest and (briefing == "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Navigate the chambers, overcome partisan perils, and claim victory!" or briefing.begins_with("Enter the Capitol halls in Midterm Elections: Battle for the Hill.")):
+		briefing = default_briefing
+	var gold_reward = int(active_q.get("goldReward", 150 if is_midterm_quest else 100))
+	var intro_movie = str(active_q.get("introMovie", active_q.get("introCinematic", map_data_obj.get("introMovie", map_data_obj.get("introCinematic", "res://assets/movies/election_2026_intro_movie.ogv" if is_midterm_quest else "")))))
 
 	var primary_goals: Array = []
 	if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array and not active_q["primaryGoals"].is_empty():
 		primary_goals = active_q["primaryGoals"].duplicate()
-	elif active_q.get("slug") == "heroquest-the-trial" or active_q.get("id") == "quest-1" or (active_q.is_empty() and (current_slug == "heroquest-the-trial" or current_slug == "trial-of-verag" or current_slug == "")):
+	elif is_midterm_quest:
+		primary_goals = [
+			"Slay Talarixon (Texas Hydra) in the Oval Office.",
+			"Slay El-Rogers (Michigan Hydra) in the Senate Cloakroom.",
+			"Slay Brownsted (Ohio Hydra) in the Supreme Court Chamber."
+		]
+	elif q_slug == "heroquest-the-trial" or current_slug == "heroquest-the-trial" or current_slug == "trial-of-verag" or (active_q.is_empty() and current_slug == ""):
 		primary_goals = [
 			"Locate and defeat the Orc Warlord Verag in his inner catacombs.",
 			"Explore the ancient chambers and search for hidden treasures.",
 			"Ensure all living heroes return safely to the spiral stairway."
 		]
-	elif active_q.get("slug") == "heroquest-rescue-sir-ragnar":
+	elif q_slug == "heroquest-rescue-sir-ragnar":
 		primary_goals = [
 			"Infiltrate the prison fortress and locate Sir Ragnar's cell.",
 			"Vanquish the dungeon guards and unlock his holding cell.",
 			"Escort Sir Ragnar alive to the exit stairwell."
 		]
-	elif active_q.get("slug") == "heroquest-lair-orc-warlord":
+	elif q_slug == "heroquest-lair-orc-warlord":
 		primary_goals = [
 			"Purge Orc Chieftain Ulag's vanguard in the sunken caverns.",
 			"Shatter Ulag's command throne and recover the royal relics.",
 			"Survive the onslaught and escape back to the surface."
 		]
 	else:
+		var boss_names: Array[String] = []
+		for m in monsters:
+			if bool(m.get("isBoss", false)) or bool(m.get("is_boss", false)):
+				var b_n = str(m.get("name", "")).strip_edges()
+				if b_n != "" and not boss_names.has(b_n):
+					boss_names.append(b_n)
 		var boss_name = str(active_q.get("bossTarget", "")).strip_edges()
-		if boss_name != "":
+		if not boss_names.is_empty():
+			primary_goals = [
+				"Locate and defeat %s." % ", ".join(boss_names),
+				"Explore the dungeon chambers and uncover hidden treasures.",
+				"Lead all surviving heroes safely to the dungeon exit stairs." if exit_stair != Vector2i(-1, -1) else "Ensure all living heroes return safely to the spiral stairway."
+			]
+		elif boss_name != "" and boss_name != "gargoyle-boss":
 			primary_goals = [
 				"Locate and defeat the %s." % boss_name.capitalize(),
 				"Explore the ancient chambers and search for hidden treasures.",
@@ -5977,12 +6217,13 @@ func get_active_quest_objective() -> Dictionary:
 			]
 
 	return {
-		"id": str(active_q.get("id", "quest-1")),
-		"slug": str(active_q.get("slug", current_slug)),
+		"id": str(active_q.get("id", q_slug if q_slug != "" else "quest-1")),
+		"slug": q_slug,
 		"bossTarget": str(active_q.get("bossTarget", "")),
 		"campaign": campaign_title,
 		"title": quest_title,
 		"briefing": briefing,
+		"introMovie": intro_movie,
 		"goldReward": gold_reward,
 		"mapConfigId": map_id,
 		"primaryGoals": primary_goals
@@ -6116,8 +6357,23 @@ func _setup_quest_objective_modal() -> void:
 	var mentor_tag = Label.new()
 	mentor_tag.name = "MentorTag"
 	mentor_tag.text = "MENTOR'S BRIEFING"
+	mentor_tag.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	apply_rpg_font_to_label(mentor_tag, true, 12, Color(1.0, 0.85, 0.35, 1.0))
 	mentor_hdr.add_child(mentor_tag)
+
+	var btn_watch_intro = Button.new()
+	btn_watch_intro.name = "BtnWatchIntroMovie"
+	btn_watch_intro.text = "🎬 Watch Intro Video"
+	btn_watch_intro.custom_minimum_size = Vector2(150, 26)
+	btn_watch_intro.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	apply_rpg_font_to_button(btn_watch_intro, 11, Color(1.0, 0.92, 0.55, 1.0))
+	btn_watch_intro.pressed.connect(func():
+		var q_obj = get_active_quest_objective()
+		var m_url = str(q_obj.get("introMovie", ""))
+		if m_url != "":
+			play_movie(m_url, "🎬 Prologue: %s" % str(q_obj.get("title", "HeroQuest")), true, false)
+	)
+	mentor_hdr.add_child(btn_watch_intro)
 	briefing_vbox.add_child(mentor_hdr)
 
 	quest_objective_briefing_label = Label.new()
@@ -6241,6 +6497,10 @@ func _update_quest_objective_content() -> void:
 		quest_objective_campaign_label.text = "Campaign: %s" % str(obj.get("campaign", "HeroQuest"))
 	if quest_objective_briefing_label:
 		quest_objective_briefing_label.text = "\"%s\"" % str(obj.get("briefing", ""))
+	if quest_objective_modal:
+		var btn_watch = quest_objective_modal.find_child("BtnWatchIntroMovie", true, false) as Button
+		if btn_watch:
+			btn_watch.visible = (str(obj.get("introMovie", "")) != "")
 	if quest_objective_reward_label:
 		var reward = int(obj.get("goldReward", 100))
 		quest_objective_reward_label.text = "IMPERIAL BOUNTY: %d Gold Coins awarded to the party upon survival" % reward
@@ -7207,6 +7467,20 @@ func _update_quest_objectives_hud() -> void:
 	if btn_modal_complete_quest:
 		btn_modal_complete_quest.visible = all_done
 
+func _is_hydra_target_dead(hydra_key: String) -> bool:
+	if _quest_completed or get_game_state() == "quest_victory":
+		return true
+	var key_low = hydra_key.to_lower()
+	var matched = monsters.filter(func(m):
+		var mid = str(m.get("id", "")).to_lower()
+		var mtype = str(m.get("monsterType", m.get("type", ""))).to_lower()
+		var mname = str(m.get("name", "")).to_lower()
+		return key_low in mid or key_low == mtype or key_low in mname
+	)
+	if matched.is_empty():
+		return false
+	return not matched.any(func(m): return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0)
+
 func get_quest_objectives() -> Array[Dictionary]:
 	var cart = CartridgeManager.active_cartridge
 	var active_q = get_active_quest_objective()
@@ -7214,6 +7488,40 @@ func get_quest_objectives() -> Array[Dictionary]:
 	var q_id = str(active_q.get("id", "quest-1"))
 	
 	var objs: Array[Dictionary] = []
+
+	# Special 3-Hydra Objective Mode for Election 2026
+	var has_three_hydras = monsters.any(func(m): return "talarixon" in str(m.get("id", "")).to_lower() or str(m.get("monsterType", "")).to_lower() == "talarixon") \
+		and monsters.any(func(m): return "el-rogers" in str(m.get("id", "")).to_lower() or str(m.get("monsterType", "")).to_lower() == "el-rogers") \
+		and monsters.any(func(m): return "brownsted" in str(m.get("id", "")).to_lower() or str(m.get("monsterType", "")).to_lower() == "brownsted")
+
+	if "election-2026" in slug.to_lower() or "midterm" in slug.to_lower() or has_three_hydras:
+		var g1 = "Slay Talarixon (Texas Hydra) in the Oval Office."
+		var g2 = "Slay El-Rogers (Michigan Hydra) in the Senate Cloakroom."
+		var g3 = "Slay Brownsted (Ohio Hydra) in the Supreme Court Chamber."
+		if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array:
+			var pg: Array = active_q["primaryGoals"]
+			if pg.size() >= 1: g1 = str(pg[0])
+			if pg.size() >= 2: g2 = str(pg[1])
+			if pg.size() >= 3: g3 = str(pg[2])
+		objs.append({
+			"id": "slay_talarixon",
+			"title": g1,
+			"completed": _is_hydra_target_dead("talarixon"),
+			"required": true
+		})
+		objs.append({
+			"id": "slay_el_rogers",
+			"title": g2,
+			"completed": _is_hydra_target_dead("el-rogers"),
+			"required": true
+		})
+		objs.append({
+			"id": "slay_brownsted",
+			"title": g3,
+			"completed": _is_hydra_target_dead("brownsted"),
+			"required": true
+		})
+		return objs
 	
 	# Boss / Primary Target Check
 	var boss_target = str(active_q.get("bossTarget", "")).to_lower()
@@ -7225,31 +7533,30 @@ func get_quest_objectives() -> Array[Dictionary]:
 	var any_monster_alive = not living_monsters.is_empty()
 	
 	var is_boss_dead = false
+	var boss_monsters = monsters.filter(func(m):
+		return bool(m.get("isBoss", false)) or bool(m.get("is_boss", false))
+	)
 	if _quest_completed or get_game_state() == "quest_victory":
 		is_boss_dead = true
-	elif boss_target != "":
-		var boss_monsters = monsters.filter(func(m):
-			return bool(m.get("isBoss", false)) or bool(m.get("is_boss", false))
+	elif not boss_monsters.is_empty():
+		var boss_alive = boss_monsters.any(func(m):
+			return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0
 		)
-		if not boss_monsters.is_empty():
-			var boss_alive = boss_monsters.any(func(m):
-				return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0
+		is_boss_dead = not boss_alive
+	elif boss_target != "":
+		var has_target_monster = monsters.any(func(m):
+			return boss_target in str(m.get("id", "")).to_lower() or boss_target in str(m.get("name", "")).to_lower()
+		)
+		if has_target_monster:
+			var target_alive = monsters.any(func(m): 
+				return (boss_target in str(m.get("id", "")).to_lower() or boss_target in str(m.get("name", "")).to_lower()) \
+					and bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0
 			)
-			is_boss_dead = not boss_alive
+			is_boss_dead = not target_alive
 		else:
-			var has_target_monster = monsters.any(func(m):
-				return boss_target in str(m.get("id", "")).to_lower() or boss_target in str(m.get("name", "")).to_lower()
-			)
-			if has_target_monster:
-				var target_alive = monsters.any(func(m): 
-					return (boss_target in str(m.get("id", "")).to_lower() or boss_target in str(m.get("name", "")).to_lower()) \
-						and bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0
-				)
-				is_boss_dead = not target_alive
-			else:
-				is_boss_dead = not any_monster_alive and not monsters.is_empty()
+			is_boss_dead = not any_monster_alive and not monsters.is_empty()
 	else:
-		if slug == "heroquest-the-trial" or q_id == "quest-1" or "trial" in slug or slug == "":
+		if slug == "heroquest-the-trial" or "trial" in slug or slug == "":
 			var has_verag = monsters.any(func(m):
 				return "verag" in str(m.get("id", "")).to_lower() or "verag" in str(m.get("name", "")).to_lower()
 			)
@@ -7270,7 +7577,7 @@ func get_quest_objectives() -> Array[Dictionary]:
 	var obj1_text = "Defeat the dungeon commander"
 	if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array and not active_q["primaryGoals"].is_empty():
 		obj1_text = str(active_q["primaryGoals"][0])
-	elif slug == "heroquest-the-trial" or q_id == "quest-1" or "trial" in slug or slug == "":
+	elif slug == "heroquest-the-trial" or "trial" in slug or slug == "":
 		obj1_text = "Defeat Orc Warlord Verag in his catacombs"
 	elif slug == "heroquest-rescue-sir-ragnar":
 		obj1_text = "Vanquish the dungeon guards and locate Sir Ragnar"
@@ -7391,14 +7698,30 @@ func complete_active_quest(quit_on_complete: bool = false) -> Dictionary:
 	auto_advance_turn = false
 
 	# Play celebratory voice dialogue sequence
-	_start_dialogue_sequence([
-		{
-			"speaker": "mentor",
-			"text": "Hail, victorious heroes! You have proven your valor in the depths of the catacombs. Verag lies slain, and your triumph echoes across the Empire!",
-			"audio": "res://assets/audio/quest_victory.ogg",
-			"duration": 8.5
-		}
-	])
+	if "election-2026" in slug.to_lower() or "midterm" in slug.to_lower():
+		_start_dialogue_sequence([
+			{
+				"speaker": "Mentor George W. Bush",
+				"text": "Well paint my puppy and call me a biscuit, you actually killed all three Hydras! Did we save the world from the Elite 1%? Heck if I know, mission accomplished!",
+				"audio": "res://assets/audio/election2026/bush_hydra3_down.ogg",
+				"duration": 11.0
+			},
+			{
+				"speaker": "MTG & AOC (From the Mist)",
+				"text": "Yay, you slew all three Hydras! Now ditch the Capitol before the AI Superintelligence finishes compiling its orbital laser, grab a crate of canned ravioli, and come snuggle under our plaid prepper blanket in the mist!",
+				"audio": "res://assets/audio/election2026/mtg_aoc_victory.ogg",
+				"duration": 13.0
+			}
+		])
+	else:
+		_start_dialogue_sequence([
+			{
+				"speaker": "mentor",
+				"text": "Hail, victorious heroes! You have proven your valor in the depths of the catacombs. Verag lies slain, and your triumph echoes across the Empire!",
+				"audio": "res://assets/audio/quest_victory.ogg",
+				"duration": 8.5
+			}
+		])
 
 	# Celebrate with floating text over living heroes
 	for h in heroes:
@@ -7981,7 +8304,8 @@ func can_hero_disarm(hero: Dictionary) -> Dictionary:
 	if hero.get("is_summon", false):
 		return { "can_disarm": false, "reason": "Summons cannot disarm traps" }
 	var h_id = str(hero.get("id", "")).to_lower()
-	if h_id == "dwarf":
+	var h_cls = get_hero_class_name(hero).to_lower()
+	if h_id == "dwarf" or h_cls == "dwarf":
 		return { "can_disarm": true, "is_dwarf": true }
 	var inv = hero.get("inventory", [])
 	for it in inv:
@@ -9071,13 +9395,34 @@ func get_adjacent_closed_doors() -> Array[Dictionary]:
 	var h_pos: Vector2i = hero.get("grid_pos", Vector2i(-1, -1))
 	var res: Array[Dictionary] = []
 	for d in doors:
-		if not d.get("is_open", false):
+		if not d.get("is_open", false) and str(d.get("state", "closed")) != "open":
 			if d.get("is_secret", false) and not d.get("is_revealed", false):
 				continue
 			var from_pos = Vector2i(d.get("from", [0, 0])[0], d.get("from", [0, 0])[1])
 			var to_pos = Vector2i(d.get("to", [0, 0])[0], d.get("to", [0, 0])[1])
-			if (h_pos == from_pos and absi(h_pos.x - to_pos.x) + absi(h_pos.y - to_pos.y) == 1) or \
-			   (h_pos == to_pos and absi(h_pos.x - from_pos.x) + absi(h_pos.y - from_pos.y) == 1):
+			var is_adj = (h_pos == from_pos and absi(h_pos.x - to_pos.x) + absi(h_pos.y - to_pos.y) == 1) or \
+			             (h_pos == to_pos and absi(h_pos.x - from_pos.x) + absi(h_pos.y - from_pos.y) == 1)
+			if not is_adj:
+				var w = int(d.get("width", 1))
+				var h = int(d.get("height", 1))
+				var dt = str(d.get("door_type", ""))
+				if dt == "double-2x1" or dt == "double-h" or dt == "2x1":
+					w = 2; h = 1
+				elif dt == "double-1x2" or dt == "double-v" or dt == "1x2":
+					w = 1; h = 2
+				if w > 1:
+					var from_pos2 = Vector2i(from_pos.x + 1, from_pos.y)
+					var to_pos2 = Vector2i(to_pos.x + 1, to_pos.y)
+					if (h_pos == from_pos2 and absi(h_pos.x - to_pos2.x) + absi(h_pos.y - to_pos2.y) == 1) or \
+					   (h_pos == to_pos2 and absi(h_pos.x - from_pos2.x) + absi(h_pos.y - from_pos2.y) == 1):
+						is_adj = true
+				elif h > 1:
+					var from_pos2 = Vector2i(from_pos.x, from_pos.y + 1)
+					var to_pos2 = Vector2i(to_pos.x, to_pos.y + 1)
+					if (h_pos == from_pos2 and absi(h_pos.x - to_pos2.x) + absi(h_pos.y - to_pos2.y) == 1) or \
+					   (h_pos == to_pos2 and absi(h_pos.x - from_pos2.x) + absi(h_pos.y - from_pos2.y) == 1):
+						is_adj = true
+			if is_adj:
 				res.append(d)
 	return res
 
@@ -11604,6 +11949,7 @@ func attack_adjacent_monster(monster_id: String = "", weapon_id: String = "") ->
 	_log("[ATTACK] %s attacks %s with %s (%d dice)! Rolled %d Skulls. %s defended with %d Black Shields." % [
 		hero.get("name"), target_m.get("name"), w_def.get("name", "weapon"), atk_dice, res.total_skulls, target_m.get("name"), res.effective_shields
 	])
+	play_hero_situation_audio(hero, "attacking")
 
 	var hp_subtracted = 0
 	var prev_bp = int(target_m.get("current_bp", 1))
@@ -11759,6 +12105,7 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 		target_h["current_bp"] = maxi(0, prev_h_bp - res.wounds)
 		h_hp_subtracted = prev_h_bp - int(target_h.get("current_bp", 0))
 		_log("[HIT] %s takes %d wound(s)! Remaining HP: %d" % [target_h.get("name"), res.wounds, target_h.get("current_bp")])
+		play_hero_situation_audio(target_h, "attacked")
 		if int(target_h.get("current_bp", 0)) <= 0:
 			target_h["is_dead"] = true
 			target_h["is_on_board"] = false
@@ -11784,6 +12131,7 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 	elif h_hp_subtracted == 0 and res.wounds == 0:
 		_log("[BLOCKED] %s successfully blocked the monster attack!" % target_h.get("name"))
 		spawn_floating_text(h_pos, "BLOCKED!", Color(0.3, 0.8, 1.0))
+		play_hero_situation_audio(target_h, "defended")
 
 	if target_h.get("potion_defense_active", false):
 		target_h["potion_defense_active"] = false
@@ -11888,6 +12236,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 		return { "success": false, "error": "Spell '%s' already used this quest" % spell_name }
 
 	_log("[SPELL] %s invokes the ancient incantation: [b]%s[/b]!" % [hero.get("name"), spell_name])
+	play_hero_situation_audio(hero, "castingMagic")
 	var res: Dictionary = { "success": true, "spell": s_id, "name": spell_name }
 
 	match s_id:
@@ -11932,6 +12281,9 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 				target_m["is_alive"] = false
 				_log("[DEFEATED] %s is incinerated by the Ball of Flame!" % target_m.get("name"))
 				spawn_floating_text(m_pos, "INCINERATED!", Color(1.0, 0.2, 0.1), 1.5)
+				_check_event_triggers("on_monster_killed", { "monster": target_m, "monsterId": str(target_m.get("id", "")), "monsterType": str(target_m.get("monsterType", target_m.get("type", ""))) }, hero)
+				if are_all_quest_objectives_completed() and not _quest_completed:
+					complete_active_quest(false)
 			res["target"] = target_m.get("id")
 			res["wounds"] = wounds
 			res["defended"] = shields
@@ -11979,6 +12331,9 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			if target_m.get("current_bp") <= 0:
 				target_m["is_alive"] = false
 				_log("[DEFEATED] %s was consumed by Fire of Wrath!" % target_m.get("name"))
+				_check_event_triggers("on_monster_killed", { "monster": target_m, "monsterId": str(target_m.get("id", "")), "monsterType": str(target_m.get("monsterType", target_m.get("type", ""))) }, hero)
+				if are_all_quest_objectives_completed() and not _quest_completed:
+					complete_active_quest(false)
 			res["target"] = target_m.get("id")
 			res["wounds"] = wounds
 			res["defended"] = shields
@@ -11990,7 +12345,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			var th_pos = target_h.get("grid_pos", hero_pos)
 			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
 			spawn_burst_vfx(th_screen, Color(0.9, 0.2, 0.2), 40.0, 0.4)
-			spawn_floating_text(th_pos, "+2 ATK DICE", Color(1.0, 0.3, 0.3))
+			spawn_floating_text(th_pos, "+2 ATK DICE", Color(0.0, 0.0, 0.0) + Color(1.0, 0.3, 0.3))
 			_log("[SPELL] %s is filled with Courage! +2 extra combat dice on attacks." % target_h.get("name"))
 			res["target"] = target_h.get("id")
 			res["courage_active"] = true
@@ -12118,6 +12473,9 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 					target_m["is_alive"] = false
 					_log("[DEFEATED] %s is crushed by the Genie's wrath!" % target_m.get("name"))
 					spawn_floating_text(m_pos, "OBLITERATED!", Color(0.3, 0.9, 1.0), 1.5)
+					_check_event_triggers("on_monster_killed", { "monster": target_m, "monsterId": str(target_m.get("id", "")), "monsterType": str(target_m.get("monsterType", target_m.get("type", ""))) }, hero)
+					if are_all_quest_objectives_completed() and not _quest_completed:
+						complete_active_quest(false)
 				res["target"] = target_m.get("id")
 				res["wounds"] = combat_res.wounds
 				res["killed"] = not target_m.get("is_alive", true)
@@ -13312,6 +13670,17 @@ func _setup_modal_message_dialog(title: String, text: String, btn_text: String =
 
 func _resolve_speaker_display_name(speaker_raw: String) -> String:
 	var s_low = speaker_raw.to_lower().strip_edges()
+	if s_low.begins_with("monster:"):
+		s_low = s_low.substr(8).strip_edges()
+	elif s_low.begins_with("hero:"):
+		s_low = s_low.substr(5).strip_edges()
+	for h in heroes:
+		var hid = str(h.get("id", "")).to_lower()
+		var hslug = str(h.get("slug", "")).to_lower()
+		var hclass = str(h.get("heroClass", h.get("class", ""))).to_lower()
+		var hname = str(h.get("characterName", h.get("name", ""))).to_lower()
+		if s_low == hid or s_low == hslug or s_low == hclass or s_low == hname or (s_low != "" and s_low in hname):
+			return get_hero_display_title(h)
 	match s_low:
 		"barbarian", "rogar":
 			return "Rogar (Barbarian)"
@@ -13322,7 +13691,25 @@ func _resolve_speaker_display_name(speaker_raw: String) -> String:
 		"wizard", "telor":
 			return "Telor (Wizard)"
 		"mentor":
+			if "election-2026" in CartridgeManager.current_cartridge_slug.to_lower() or "midterm" in CartridgeManager.current_cartridge_slug.to_lower():
+				return "Mentor George W. Bush"
 			return "Mentor"
+		"ken-paxton", "paxton", "ken paxton (talarixon)":
+			return "Ken Paxton (Talarixon)"
+		"james-talarico", "talarico", "james talarico (talarixon)":
+			return "James Talarico (Talarixon)"
+		"abdul-el-sayed", "el-sayed", "abdul el-sayed (el-rogers)":
+			return "Abdul El-Sayed (El-Rogers)"
+		"mike-rogers", "rogers", "mike rogers (el-rogers)":
+			return "Mike Rogers (El-Rogers)"
+		"sherrod-brown", "sherrod brown (brownsted)":
+			return "Sherrod Brown (Brownsted)"
+		"jon-husted", "husted", "jon husted (brownsted)":
+			return "Jon Husted (Brownsted)"
+		"mtg", "marjorie-taylor-greene", "marjorie taylor greene (from the mist)":
+			return "Marjorie Taylor Greene (From the Mist)"
+		"aoc", "alexandria-ocasio-cortez", "alexandria ocasio-cortez (from the mist)":
+			return "Alexandria Ocasio-Cortez (From the Mist)"
 		"zargon", "morcar":
 			return "Zargon, Master of Darkness"
 		"monster", "enemy", "foe":
@@ -13330,9 +13717,6 @@ func _resolve_speaker_display_name(speaker_raw: String) -> String:
 		"narrator":
 			return "Narrator"
 		_:
-			for h in heroes:
-				if str(h.get("id")).to_lower() == s_low or str(h.get("name")).to_lower() == s_low:
-					return str(h.get("name", speaker_raw.capitalize()))
 			# 1. Exact match on monsters
 			for m in monsters:
 				var mid = str(m.get("id")).to_lower()
@@ -13360,8 +13744,22 @@ func _resolve_speaker_display_name(speaker_raw: String) -> String:
 
 func _find_speaker_grid_pos(speaker_raw: String) -> Vector2i:
 	var s_low = speaker_raw.to_lower().strip_edges()
+	if s_low.begins_with("monster:"):
+		s_low = s_low.substr(8).strip_edges()
+	elif s_low.begins_with("hero:"):
+		s_low = s_low.substr(5).strip_edges()
+	if "paxton" in s_low or "talarico" in s_low or "talarixon" in s_low:
+		s_low = "talarixon"
+	elif "el-sayed" in s_low or "mike rogers" in s_low or "mike-rogers" in s_low or "el-rogers" in s_low:
+		s_low = "el-rogers"
+	elif "sherrod" in s_low or "husted" in s_low or "brownsted" in s_low:
+		s_low = "brownsted"
 	for h in heroes:
-		if str(h.get("id")).to_lower() == s_low or str(h.get("name")).to_lower() == s_low or str(h.get("characterName", "")).to_lower() == s_low:
+		var hid = str(h.get("id", "")).to_lower()
+		var hslug = str(h.get("slug", "")).to_lower()
+		var hclass = str(h.get("heroClass", h.get("class", ""))).to_lower()
+		var hname = str(h.get("characterName", h.get("name", ""))).to_lower()
+		if s_low == hid or s_low == hslug or s_low == hclass or s_low == hname or (s_low != "" and s_low in hname):
 			return _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
 		if s_low == "active_hero" and h == get_active_hero():
 			return _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
@@ -13425,6 +13823,124 @@ func _play_dialogue_audio(path: String) -> float:
 		return stream.get_length()
 	return 0.0
 
+var hero_voice_audio_player: AudioStreamPlayer = null
+
+func _get_default_hero_audio_lines(h: Dictionary) -> Dictionary:
+	var key = _resolve_hero_identity_key(h)
+	match key:
+		"obama":
+			return {
+				"turnStart": [{ "text": "Uhh... let me be clear... It is now... my turn... to march... toward the horizon... of hope.", "audio": "res://assets/audio/heroes/obama_turn_start.ogg" }],
+				"attacking": [{ "text": "Uhh... feel the audacity... of this broadsword... of hope!", "audio": "res://assets/audio/heroes/obama_attacking.ogg" }],
+				"attacked": [{ "text": "Uhh... folks... that strike... did not feel... very hopeful.", "audio": "res://assets/audio/heroes/obama_attacked.ogg" }],
+				"defended": [{ "text": "Uhh... nice try... You cannot pierce... the shield... of hope.", "audio": "res://assets/audio/heroes/obama_defended.ogg" }],
+				"castingMagic": [{ "text": "Uhh... by the power... of hope... and change... I cast... this spell.", "audio": "res://assets/audio/heroes/obama_casting_magic.ogg" }]
+			}
+		"trump":
+			return {
+				"turnStart": [{ "text": "As you can see, I'm not just MAGA — I'm Dark MAGA!", "audio": "res://assets/audio/heroes/trump_turn_start.ogg" }],
+				"attacking": [{ "text": "And I do it! He doesn't do it! He can't hit a ball 50 yards! He challenged me to a golf match, he can't hit a ball 50 yards!", "audio": "res://assets/audio/heroes/trump_attacking.ogg" }],
+				"attacked": [{ "text": "Would you look at what's happening? This is a persecution! This was never supposed to happen in America!", "audio": "res://assets/audio/heroes/trump_attacked.ogg" }],
+				"defended": [{ "text": "Here's the fighter — somebody who tried to kill him! You will not take this man down!", "audio": "res://assets/audio/heroes/trump_defended.ogg" }],
+				"castingMagic": [{ "text": "Do you think that we have aliens coming, flying around or whatever? There's no reason not to think that Mars and all these planets don't have life!", "audio": "res://assets/audio/heroes/trump_casting_magic.ogg" }]
+			}
+		"hillary_clinton":
+			return {
+				"turnStart": [{ "text": "We've traveled to every corner of the United States. I've now been in 57 states — I think one left to go!", "audio": "res://assets/audio/heroes/hillary_turn_start.ogg" }],
+				"attacking": [{ "text": "We came, we saw, he died! Ha ha ha!", "audio": "res://assets/audio/heroes/hillary_attacking.ogg" }],
+				"attacked": [{ "text": "What difference, at this point, does it make?!", "audio": "res://assets/audio/heroes/hillary_attacked.ogg" }],
+				"defended": [{ "text": "What, like with a cloth or something? Well, no, I don't know how it works digitally at all!", "audio": "res://assets/audio/heroes/hillary_defended.ogg" }],
+				"castingMagic": [{ "text": "But I cast it with conviction! And I want the Iranians to know that if I'm the President, we will attack Iran!", "audio": "res://assets/audio/heroes/hillary_casting_magic.ogg" }]
+			}
+		"bernie_sanders":
+			return {
+				"turnStart": [{ "text": "Let's talk about welfare for the rich and the powerful!", "audio": "res://assets/audio/heroes/bernie_turn_start.ogg" }],
+				"attacking": [{ "text": "I will be damned if I will vote for a proposal which will stick it to the middle class and the working people!", "audio": "res://assets/audio/heroes/bernie_attacking.ogg" }],
+				"attacked": [{ "text": "Mr. Speaker, I've got a problem! I've got a problem with a President and a Congress which allows five million children to go hungry!", "audio": "res://assets/audio/heroes/bernie_attacked.ogg" }],
+				"defended": [{ "text": "What we are saying very loud and clear is that Ronald Reagan and his billionaire friends do not represent the America that we do!", "audio": "res://assets/audio/heroes/bernie_defended.ogg" }],
+				"castingMagic": [{ "text": "This democracy is evolving into an oligarchy! And an oligarchy is a country in which a few people have tremendous wealth and power!", "audio": "res://assets/audio/heroes/bernie_casting_magic.ogg" }]
+			}
+		"dwarf":
+			return {
+				"turnStart": [{ "text": "Stand back! Let a Dwarf of the World's Edge Mountains handle this!", "audio": "res://assets/audio/heroes/dwarf_turn_start.ogg" }],
+				"attacking": [{ "text": "For Grungni's beard, feel my battle-axe!", "audio": "res://assets/audio/heroes/dwarf_attacking.ogg" }],
+				"attacked": [{ "text": "Oof! Right in the chainmail!", "audio": "res://assets/audio/heroes/dwarf_attacked.ogg" }],
+				"defended": [{ "text": "Dwarven forged steel never yields!", "audio": "res://assets/audio/heroes/dwarf_defended.ogg" }],
+				"castingMagic": [{ "text": "By the runes of the anvil, awaken!", "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg" }]
+			}
+		"elf":
+			return {
+				"turnStart": [{ "text": "With elven grace, I step into the shadows.", "audio": "res://assets/audio/heroes/elf_turn_start.ogg" }],
+				"attacking": [{ "text": "Swift as the wind, strike true!", "audio": "res://assets/audio/heroes/elf_attacking.ogg" }],
+				"attacked": [{ "text": "Ah! Darkness stings, yet my spirit endures!", "audio": "res://assets/audio/heroes/elf_attacked.ogg" }],
+				"defended": [{ "text": "Too slow, creature! The forest shields me!", "audio": "res://assets/audio/heroes/elf_defended.ogg" }],
+				"castingMagic": [{ "text": "Ancient weave of earth and water, heed my call!", "audio": "res://assets/audio/heroes/elf_casting_magic.ogg" }]
+			}
+		"wizard":
+			return {
+				"turnStart": [{ "text": "The winds of magic gather at my staff.", "audio": "res://assets/audio/heroes/wizard_turn_start.ogg" }],
+				"attacking": [{ "text": "Back, foul fiend, before my arcane staff!", "audio": "res://assets/audio/heroes/wizard_attacking.ogg" }],
+				"attacked": [{ "text": "Gah! My ward-cloak falters!", "audio": "res://assets/audio/heroes/wizard_attacked.ogg" }],
+				"defended": [{ "text": "My arcane barrier deflects your strike!", "audio": "res://assets/audio/heroes/wizard_defended.ogg" }],
+				"castingMagic": [{ "text": "By fire, air, and tempest, unleash the spell!", "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg" }]
+			}
+		_:
+			return {
+				"turnStart": [{ "text": "By my broadsword, clear a path!", "audio": "res://assets/audio/heroes/barbarian_turn_start.ogg" }],
+				"attacking": [{ "text": "Taste cold Cimmerian steel!", "audio": "res://assets/audio/heroes/barbarian_attacking.ogg" }],
+				"attacked": [{ "text": "Aagh! Only a flesh wound!", "audio": "res://assets/audio/heroes/barbarian_attacked.ogg" }],
+				"defended": [{ "text": "Ha! Your feeble blow bounces off my iron muscles!", "audio": "res://assets/audio/heroes/barbarian_defended.ogg" }],
+				"castingMagic": [{ "text": "The ancient battle-spirit surges through my blade!", "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg" }]
+			}
+
+func play_hero_situation_audio(hero: Dictionary, situation: String) -> void:
+	if hero.is_empty() or hero.get("is_summon", false):
+		return
+	var al = hero.get("audioLines", hero.get("robos:audioLines", {}))
+	if not (al is Dictionary) or al.is_empty() or not al.has(situation):
+		al = _get_default_hero_audio_lines(hero)
+	var entries = al.get(situation, [])
+	var chosen_text = ""
+	var chosen_audio = ""
+	if entries is Array and entries.size() > 0:
+		var item = entries[randi() % entries.size()]
+		if item is Dictionary:
+			chosen_text = str(item.get("text", ""))
+			chosen_audio = str(item.get("audio", ""))
+		elif item is String:
+			chosen_audio = str(item)
+	elif entries is Dictionary:
+		chosen_text = str(entries.get("text", ""))
+		chosen_audio = str(entries.get("audio", ""))
+	elif entries is String:
+		chosen_audio = str(entries)
+	if chosen_text != "":
+		_log("🔊 [%s — %s] \"%s\"" % [get_hero_display_title(hero), situation, chosen_text])
+	if chosen_audio == "" or is_headless_mode():
+		return
+	# Do not talk over active story dialogue bubbles or cutscene movies
+	if not active_dialogue_sequence.is_empty() and active_dialogue_sequence.get("active", false):
+		return
+	if is_movie_playing:
+		return
+	if not hero_voice_audio_player:
+		hero_voice_audio_player = AudioStreamPlayer.new()
+		add_child(hero_voice_audio_player)
+	var stream: AudioStream = null
+	if ResourceLoader.exists(chosen_audio):
+		var res = load(chosen_audio)
+		if res is AudioStream:
+			stream = res
+	var abs_p = ProjectSettings.globalize_path(chosen_audio) if chosen_audio.begins_with("res://") else chosen_audio
+	if not stream and FileAccess.file_exists(abs_p):
+		if abs_p.ends_with(".ogg"):
+			stream = AudioStreamOggVorbis.load_from_file(abs_p)
+	if stream:
+		if hero_voice_audio_player.playing:
+			hero_voice_audio_player.stop()
+		hero_voice_audio_player.stream = stream
+		hero_voice_audio_player.play()
+
 func _start_dialogue_sequence(lines: Array) -> void:
 	if lines.is_empty():
 		return
@@ -13458,6 +13974,8 @@ func _present_active_dialogue_bubble() -> void:
 	_log("💬 [%s] \"%s\"" % [speaker_disp, text])
 
 	# Optional audio files backing
+	if voice_audio_player and voice_audio_player.playing:
+		voice_audio_player.stop()
 	var audio_dur: float = 0.0
 	if audio_path != "":
 		audio_dur = _play_dialogue_audio(audio_path)
@@ -13484,6 +14002,8 @@ func _present_active_dialogue_bubble() -> void:
 func advance_dialogue_bubble() -> bool:
 	if active_dialogue_sequence.is_empty() or not active_dialogue_sequence.get("active", false):
 		return false
+	if voice_audio_player and voice_audio_player.playing:
+		voice_audio_player.stop()
 	var bubbles: Array = active_dialogue_sequence.get("bubbles", [])
 	var idx: int = int(active_dialogue_sequence.get("index", 0)) + 1
 	if idx < bubbles.size():
@@ -14550,6 +15070,7 @@ func end_turn() -> void:
 		else:
 			_log("--- Next Hero: %s ---" % get_active_hero().get("name", "Hero"))
 			_check_hero_enter_board(active_hero_idx)
+			play_hero_situation_audio(get_active_hero(), "turnStart")
 	else:
 		current_phase = "hero_phase"
 		current_round += 1
@@ -14567,6 +15088,7 @@ func end_turn() -> void:
 			_log("--- Round %d begins (Heroes Turn) ---" % current_round)
 			_log("Active hero: %s" % get_active_hero().get("name", "Hero"))
 			_check_hero_enter_board(active_hero_idx)
+			play_hero_situation_audio(get_active_hero(), "turnStart")
 
 	record_transaction("END_TURN", ending_id, ending_actor, "Concluded turn for %s. Active phase: %s, round: %d" % [
 		ending_actor, current_phase, current_round
@@ -16490,7 +17012,7 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	card.add_theme_stylebox_override("panel", sb)
 
 	# AI Generated Image Background Underlay
-	var bg_tex = get_hero_card_bg_texture(h_id)
+	var bg_tex = get_hero_card_bg_texture(h)
 	if bg_tex:
 		var bg_rect = TextureRect.new()
 		bg_rect.texture = bg_tex
@@ -16849,11 +17371,16 @@ func _create_hero_card(h: Dictionary, is_active: bool) -> PanelContainer:
 	# 3. Memorized Spells
 	var hero_spells: Array = h.get("spells", [])
 	for s_id in hero_spells:
-		var s_str = str(s_id).strip_edges().to_lower()
+		var s_str = ""
+		if s_id is Dictionary:
+			s_str = str(s_id.get("slug", s_id.get("id", s_id.get("name", ""))))
+		else:
+			s_str = str(s_id)
+		s_str = s_str.replace("urn:robos:tabletop:spell:", "").replace("-", "_").strip_edges().to_lower()
 		var s_meta = HeroQuestSpells.get_spell(s_str)
-		var s_name = str(s_meta.get("name", s_str.replace("_", " ").capitalize()))
-		var s_deck = str(s_meta.get("deck", "magic")).capitalize()
-		var s_desc = str(s_meta.get("description", ""))
+		var s_name = str(s_meta.get("name", s_id.get("name", s_str.replace("_", " ").capitalize()) if s_id is Dictionary else s_str.replace("_", " ").capitalize()))
+		var s_deck = str(s_meta.get("deck", s_id.get("deck", s_id.get("school", "magic")) if s_id is Dictionary else "magic")).capitalize()
+		var s_desc = str(s_meta.get("description", s_id.get("description", "") if s_id is Dictionary else ""))
 		var is_spent = is_spell_used(h, s_str)
 		var sp_tooltip = ""
 		if is_spent:
@@ -17197,7 +17724,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 
 	# Left Column: Portrait & Lore
 	if hero_detail_portrait:
-		var bg_tex = get_hero_card_bg_texture(h_id)
+		var bg_tex = get_hero_card_bg_texture(h)
 		if bg_tex:
 			hero_detail_portrait.texture = bg_tex
 		else:
@@ -17211,7 +17738,16 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 
 	if hero_detail_lore:
 		var lore_text = ""
-		match h_id:
+		var ident_key = _resolve_hero_identity_key(h)
+		match ident_key:
+			"obama":
+				lore_text = "[i]\"Let me be clear: you are Barack Obama the Barbarian, chiseled silver-haired warrior of the Capitol! Armed with the Broadsword of Hope & Change, you cleave through partisan gridlock and Super PAC gargoyles with unmatched physical power.\"[/i]\n\n[color=#ffd700]Specialty:[/color] Frontline melee powerhouse (8 BP, 3 Attack Dice) with Bipartisan Cleave."
+			"trump":
+				lore_text = "[i]\"You are Donald Trump the Dwarf — tremendous golden hair, the greatest braided Dwarven beard in the history of the realm, and gilded rune-plate armor! No bureaucratic red-tape trap or subterranean vault can stop your golden battle-axe.\"[/i]\n\n[color=#ffd700]Specialty:[/color] Innate trap disarm mastery without needing a Tool Kit; heavy gilded armor proficiency."
+			"hillary_clinton":
+				lore_text = "[i]\"You are Hillary Clinton the Woodland Elf — high-born ranger-noble of Lothlorien clad in an emerald leaf-brooch cloak and silver circlet! With a sly, knowing smile, you combine razor-sharp steel with classified arcane spellcraft.\"[/i]\n\n[color=#ffd700]Specialty:[/color] Hybrid martial warrior and elemental spellcaster (1 Spell College)."
+			"bernie_sanders":
+				lore_text = "[i]\"I am once again asking you to behold Bernie Sanders the Elemental Wizard! Wearing your tall starry wizard hat and enchanted Vermont wool mittens, you channel the arcane fury of the 99% across three full spell colleges.\"[/i]\n\n[color=#ffd700]Specialty:[/color] Supreme arcane mastery; commands three distinct elemental spell decks (9 Spells)."
 			"barbarian":
 				lore_text = "[i]\"You are Rogar the Barbarian, greatest warrior in the kingdom! Fearless in the face of Morcar's hordes, you rely on your mighty broadsword and raw physical power to vanquish evil.\"[/i]\n\n[color=#ffd700]Specialty:[/color] Unmatched melee damage and highest vitality in the party."
 			"dwarf":
@@ -17451,12 +17987,18 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 			hero_detail_spells_section.add_child(sp_grid)
 
 			for s_id in hero_spells:
-				var s_data = HeroQuestSpells.get_spell(str(s_id))
-				var s_name = str(s_data.get("name", s_id))
-				var s_deck = str(s_data.get("deck", "Magic")).capitalize()
-				var s_desc = str(s_data.get("description", ""))
+				var s_key = ""
+				if s_id is Dictionary:
+					s_key = str(s_id.get("slug", s_id.get("id", s_id.get("name", ""))))
+				else:
+					s_key = str(s_id)
+				s_key = s_key.replace("urn:robos:tabletop:spell:", "").replace("-", "_").strip_edges().to_lower()
+				var s_data = HeroQuestSpells.get_spell(s_key)
+				var s_name = str(s_data.get("name", s_id.get("name", s_key.replace("_", " ").capitalize()) if s_id is Dictionary else s_key.replace("_", " ").capitalize()))
+				var s_deck = str(s_data.get("deck", s_id.get("deck", s_id.get("school", "Magic")) if s_id is Dictionary else "Magic")).capitalize()
+				var s_desc = str(s_data.get("description", s_id.get("description", "") if s_id is Dictionary else ""))
 
-				var is_spent = is_spell_used(h, str(s_id))
+				var is_spent = is_spell_used(h, s_key)
 				var sp_panel = PanelContainer.new()
 				sp_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				var spsb = StyleBoxFlat.new()
@@ -17478,9 +18020,12 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				sp_panel.add_child(smarg)
 
 				var svbox = VBoxContainer.new()
+				svbox.add_theme_constant_override("separation", 4)
+				smarg.add_child(svbox)
+
 				var sp_top = HBoxContainer.new()
 				sp_top.add_theme_constant_override("separation", 6)
-				var sp_icon_tex = get_ai_icon_texture("spell", str(s_id))
+				var sp_icon_tex = get_ai_icon_texture("spell", s_key)
 				if sp_icon_tex:
 					var sp_ico = TextureRect.new()
 					sp_ico.texture = sp_icon_tex
@@ -17492,6 +18037,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				var sp_name_lbl = Label.new()
 				sp_name_lbl.text = s_name
 				sp_name_lbl.add_theme_font_size_override("font_size", 11)
+				sp_name_lbl.add_theme_color_override("font_color", Color(0.95, 0.92, 1.0, 1.0))
 				sp_name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 				sp_top.add_child(sp_name_lbl)
 
@@ -17522,7 +18068,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 				elif is_act:
 					sp_panel.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 					sp_panel.tooltip_text = "Click to select target for %s (closes sheet)" % s_name
-					var cur_sp_id = str(s_id)
+					var cur_sp_id = s_key
 					var cur_h_id = h_id
 					sp_panel.gui_input.connect(func(ev: InputEvent):
 						if ev is InputEventMouseButton and ev.pressed and ev.button_index == MOUSE_BUTTON_LEFT:
@@ -17548,7 +18094,8 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 		hero_detail_abilities_section.add_child(ab_vbox)
 
 		# Dwarf Innate Trap Mastery
-		if h_id == "dwarf":
+		var is_dwarf_hero = (h_id == "dwarf" or get_hero_class_name(h).to_lower() == "dwarf")
+		if is_dwarf_hero:
 			var d_panel = PanelContainer.new()
 			var d_sb = StyleBoxFlat.new()
 			d_sb.bg_color = Color(0.18, 0.15, 0.08, 0.9)
@@ -17560,7 +18107,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 			dm.add_theme_constant_override("margin_left", 8); dm.add_theme_constant_override("margin_right", 8); dm.add_theme_constant_override("margin_top", 6); dm.add_theme_constant_override("margin_bottom", 6)
 			d_panel.add_child(dm)
 			var d_lbl = Label.new()
-			d_lbl.text = "Trap Mastery (Innate Dwarf Ability)\nDorgan has spent centuries studying the subterranean machinations of stone and steel. He automatically detects and disarms adjacent traps without requiring tools or dice checks."
+			d_lbl.text = "Trap Mastery (Innate Dwarf Ability)\n%s automatically detects and disarms adjacent traps without requiring a Tool Kit or dice checks." % str(h.get("name", "Dorgan"))
 			d_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			d_lbl.add_theme_font_size_override("font_size", 10)
 			dm.add_child(d_lbl)
@@ -17583,7 +18130,7 @@ func _populate_hero_detail_modal(h: Dictionary) -> void:
 		if h.get("is_sleeping", false):
 			buffs.append({ "name": "[Sleep]", "desc": "Enchanted slumber: Cannot move or take actions until awakened." })
 
-		if buffs.is_empty() and h_id != "dwarf":
+		if buffs.is_empty() and not is_dwarf_hero:
 			var no_buffs = Label.new()
 			no_buffs.text = "No active magical buffs or conditions."
 			no_buffs.add_theme_font_size_override("font_size", 10)
@@ -21703,78 +22250,106 @@ func _draw_board(canvas: CanvasItem) -> void:
 		var t_pos = Vector2i(t[0], t[1])
 		var is_secret = bool(d.get("is_secret", false))
 		var is_revealed = bool(d.get("is_revealed", not is_secret))
-		var is_open = bool(d.get("is_open", false))
+		var is_open = bool(d.get("is_open", false) or d.get("state", "closed") == "open")
+		var w = int(d.get("width", 1))
+		var h = int(d.get("height", 1))
+		var dt = str(d.get("door_type", ""))
+		if dt == "double-2x1" or dt == "double-h" or dt == "2x1":
+			w = 2; h = 1
+		elif dt == "double-1x2" or dt == "double-v" or dt == "1x2":
+			w = 1; h = 2
+		var is_double_h = (w > 1)
+		var is_double_v = (h > 1)
+		var is_double = is_double_h or is_double_v
 
 		# Visibility rules:
 		# Undiscovered secret doors are invisible to players
 		if is_secret and not is_revealed and not is_gm_role():
 			continue
 
-		if is_gm_role() or explored_tiles.has(f_pos) or explored_tiles.has(t_pos):
-			var p1 = board_offset + Vector2(f[0] * tile_size + tile_size * 0.5, f[1] * tile_size + tile_size * 0.5)
-			var p2 = board_offset + Vector2(t[0] * tile_size + tile_size * 0.5, t[1] * tile_size + tile_size * 0.5)
-			var mid = (p1 + p2) * 0.5
-			var d_size = tile_size * 0.85
+		var is_explored = explored_tiles.has(f_pos) or explored_tiles.has(t_pos)
+		if not is_explored and is_double_h:
+			is_explored = explored_tiles.has(Vector2i(f_pos.x + 1, f_pos.y)) or explored_tiles.has(Vector2i(t_pos.x + 1, t_pos.y))
+		elif not is_explored and is_double_v:
+			is_explored = explored_tiles.has(Vector2i(f_pos.x, f_pos.y + 1)) or explored_tiles.has(Vector2i(t_pos.x, t_pos.y + 1))
+
+		if is_gm_role() or is_explored:
 			var is_vert = (f[1] == t[1])
-			var rot = PI * 0.5 if is_vert else 0.0
+			var mid: Vector2
+			var d_size_x: float = tile_size * 0.85
+			var d_size_y: float = tile_size * 0.85
+			var rot = 0.0
+
+			if is_double_h:
+				var mid_x = (float(f[0]) + 1.0) * tile_size
+				var mid_y = (float(f[1]) + float(t[1]) + 1.0) * 0.5 * tile_size
+				mid = board_offset + Vector2(mid_x, mid_y)
+				d_size_x = tile_size * 2.0 * 0.90
+				d_size_y = tile_size * 0.85
+				rot = 0.0
+			elif is_double_v:
+				var mid_x = (float(f[0]) + float(t[0]) + 1.0) * 0.5 * tile_size
+				var mid_y = (float(f[1]) + 1.0) * tile_size
+				mid = board_offset + Vector2(mid_x, mid_y)
+				d_size_x = tile_size * 0.85
+				d_size_y = tile_size * 2.0 * 0.90
+				rot = 0.0
+			else:
+				var p1 = board_offset + Vector2(f[0] * tile_size + tile_size * 0.5, f[1] * tile_size + tile_size * 0.5)
+				var p2 = board_offset + Vector2(t[0] * tile_size + tile_size * 0.5, t[1] * tile_size + tile_size * 0.5)
+				mid = (p1 + p2) * 0.5
+				rot = PI * 0.5 if is_vert else 0.0
 
 			if is_secret and not is_revealed:
 				# GM view of hidden secret door
-				var gm_rect = Rect2(mid.x - 6, mid.y - d_size * 0.45, 12, d_size * 0.9) if is_vert else Rect2(mid.x - d_size * 0.45, mid.y - 6, d_size * 0.9, 12)
+				var gm_rect = Rect2(mid.x - d_size_x * 0.5, mid.y - d_size_y * 0.5, d_size_x, d_size_y)
 				canvas.draw_rect(gm_rect, Color(0.35, 0.10, 0.45, 0.85))
 				canvas.draw_rect(gm_rect, Color(0.85, 0.35, 1.0, 0.95), false, 1.5)
-				var gm_txt = "GM: SECRET"
+				var gm_txt = "GM: SECRET (2X)" if is_double else "GM: SECRET"
 				var gm_w = ThemeDB.fallback_font.get_string_size(gm_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7).x
 				canvas.draw_string(ThemeDB.fallback_font, Vector2(mid.x - gm_w * 0.5, mid.y + 3), gm_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7, Color(1.0, 0.8, 1.0))
 			elif is_secret and is_revealed:
-				# Discovered secret door (revolving stone slab)
+				# Discovered secret door
+				var slab_rect = Rect2(mid.x - d_size_x * 0.5, mid.y - d_size_y * 0.5, d_size_x, d_size_y)
 				if is_open:
-					# Discovered and Open: clear passageway through stone arch
-					var arch_rect = Rect2(mid.x - 5, mid.y - d_size * 0.45, 10, d_size * 0.9) if is_vert else Rect2(mid.x - d_size * 0.45, mid.y - 5, d_size * 0.9, 10)
-					canvas.draw_rect(arch_rect, Color(0.12, 0.22, 0.28, 0.85))
-					canvas.draw_rect(arch_rect, Color(0.25, 0.85, 0.75, 0.95), false, 1.5)
-					var op_txt = "OPEN"
+					canvas.draw_rect(slab_rect, Color(0.12, 0.22, 0.28, 0.85))
+					canvas.draw_rect(slab_rect, Color(0.25, 0.85, 0.75, 0.95), false, 1.5)
+					var op_txt = "2X OPEN" if is_double else "OPEN"
 					var op_w = ThemeDB.fallback_font.get_string_size(op_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7).x
 					canvas.draw_string(ThemeDB.fallback_font, Vector2(mid.x - op_w * 0.5, mid.y + 3), op_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7, Color(0.8, 1.0, 0.95))
 				else:
-					# Discovered and Closed: revolving stone slab with golden runic border & SECRET label
-					var slab_rect = Rect2(mid.x - 7, mid.y - d_size * 0.45, 14, d_size * 0.9) if is_vert else Rect2(mid.x - d_size * 0.45, mid.y - 7, d_size * 0.9, 14)
 					canvas.draw_rect(slab_rect, Color(0.22, 0.20, 0.24, 0.95))
 					canvas.draw_rect(slab_rect, Color(0.95, 0.75, 0.20, 1.0), false, 2.0)
-					if is_vert:
-						canvas.draw_line(Vector2(mid.x, slab_rect.position.y + 2), Vector2(mid.x, slab_rect.end.y - 2), Color(0.65, 0.55, 0.25, 0.7), 1.0)
-					else:
-						canvas.draw_line(Vector2(slab_rect.position.x + 2, mid.y), Vector2(slab_rect.end.x - 2, mid.y), Color(0.65, 0.55, 0.25, 0.7), 1.0)
-					var sec_txt = "SECRET"
+					var sec_txt = "SECRET (2X)" if is_double else "SECRET"
 					var sec_w = ThemeDB.fallback_font.get_string_size(sec_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7).x
 					canvas.draw_string(ThemeDB.fallback_font, Vector2(mid.x - sec_w * 0.5, mid.y + 3), sec_txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 7, Color(1.0, 0.9, 0.4))
 			else:
-				var tex: Texture2D = door_open_tex if is_open else door_closed_tex
+				var tex: Texture2D = null
+				if is_double_h:
+					tex = double_door_open_2x1_tex if is_open else double_door_closed_2x1_tex
+				elif is_double_v:
+					tex = double_door_open_1x2_tex if is_open else double_door_closed_1x2_tex
+				else:
+					tex = door_open_tex if is_open else door_closed_tex
+
 				if tex:
 					var orig_w = float(tex.get_width())
 					var orig_h = float(tex.get_height())
-					var scale_v = Vector2(d_size / orig_w, d_size / orig_h)
+					var scale_v = Vector2(d_size_x / orig_w, d_size_y / orig_h)
 					canvas.draw_set_transform(mid, rot, scale_v)
 					canvas.draw_texture(tex, -Vector2(orig_w, orig_h) * 0.5)
 					canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 				else:
-					# Clean vector fallback if texture unavailable
 					var col = Color(0.2, 0.8, 0.2, 0.9) if is_open else Color(0.65, 0.42, 0.18, 0.95)
-					if is_vert:
-						canvas.draw_rect(Rect2(mid.x - 5, mid.y - d_size * 0.45, 10, d_size * 0.9), col)
-						canvas.draw_rect(Rect2(mid.x - 5, mid.y - d_size * 0.45, 10, d_size * 0.9), Color(0.2, 0.15, 0.1), false, 1.5)
-					else:
-						canvas.draw_rect(Rect2(mid.x - d_size * 0.45, mid.y - 5, d_size * 0.9, 10), col)
-						canvas.draw_rect(Rect2(mid.x - d_size * 0.45, mid.y - 5, d_size * 0.9, 10), Color(0.2, 0.15, 0.1), false, 1.5)
+					canvas.draw_rect(Rect2(mid.x - d_size_x * 0.5, mid.y - d_size_y * 0.5, d_size_x, d_size_y), col)
+					canvas.draw_rect(Rect2(mid.x - d_size_x * 0.5, mid.y - d_size_y * 0.5, d_size_x, d_size_y), Color(0.2, 0.15, 0.1), false, 1.5)
 
 			# If active hero is adjacent to a closed door, render interactive golden highlight
 			if not is_open and current_role == "player" and is_revealed:
 				var adj_doors = get_adjacent_closed_doors()
 				for ad in adj_doors:
-					var ad_f = ad.get("from", [-1, -1])
-					var ad_t = ad.get("to", [-1, -1])
-					if (ad_f == f and ad_t == t) or (ad_f == t and ad_t == f):
-						canvas.draw_arc(mid, d_size * 0.52, 0, TAU, 24, Color(1.0, 0.85, 0.2, 0.9), 2.0)
+					if ad == d:
+						canvas.draw_arc(mid, max(d_size_x, d_size_y) * 0.52, 0, TAU, 24, Color(1.0, 0.85, 0.2, 0.9), 2.0)
 						break
 
 	# Draw Monsters
@@ -23416,7 +23991,7 @@ func _draw_dialogue_bubbles_overlay(canvas: CanvasItem) -> void:
 	var fade_time = float(active_dialogue_sequence.get("fade_time", 0.6))
 	fade_time = clampf(fade_time, 0.2, 2.0)
 	var alpha = 1.0
-	if cur_dur > fade_time and cur_time > (cur_dur - fade_time):
+	if (is_headless_mode() or CartridgeManager.auto_play_enabled or ai_play_for_you) and cur_dur > fade_time and cur_time > (cur_dur - fade_time):
 		alpha = clampf((cur_dur - cur_time) / fade_time, 0.0, 1.0)
 
 	var g_pos = _find_speaker_grid_pos(speaker_raw)
@@ -23469,9 +24044,9 @@ func _draw_dialogue_bubbles_overlay(canvas: CanvasItem) -> void:
 	canvas.draw_string(font, Vector2(spk_badge_rect.position.x + 6.0, spk_badge_rect.position.y + 13.0), spk_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.3, 0.9, 1.0, alpha))
 
 	# Advance prompt hint
-	var hint_text = "[Click or Space (%d/%d)]" % [idx + 1, bubbles.size()]
+	var hint_text = "[🖱️ Click to Continue (%d/%d)]" % [idx + 1, bubbles.size()]
 	var h_sz = font.get_string_size(hint_text, HORIZONTAL_ALIGNMENT_RIGHT, -1, 9)
-	canvas.draw_string(font, Vector2(b_rect.end.x - h_sz.x - 8.0, b_rect.position.y + 18.0), hint_text, HORIZONTAL_ALIGNMENT_RIGHT, -1, 9, Color(0.6, 0.7, 0.85, 0.8 * alpha))
+	canvas.draw_string(font, Vector2(b_rect.end.x - h_sz.x - 8.0, b_rect.position.y + 18.0), hint_text, HORIZONTAL_ALIGNMENT_RIGHT, -1, 9, Color(1.0, 0.85, 0.35, 0.95 * alpha))
 
 	# Text lines
 	var text_y = b_rect.position.y + 40.0

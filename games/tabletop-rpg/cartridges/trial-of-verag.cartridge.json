@@ -10,7 +10,7 @@
     "ruleset": "heroquest",
     "description": "Mentor speaks: \"The Emperor calls upon the kingdom's greatest champions...\"",
     "coverColor": "#0a0e17",
-    "icon": "🛡️",
+    "icon": "\ud83d\udee1\ufe0f",
     "mapCount": 1,
     "heroCount": 4,
     "monsterCount": 4,
@@ -37,7 +37,71 @@
       "position": [
         0,
         1
-      ]
+      ],
+      "audioLines": {
+        "turnStart": [
+          {
+            "text": "By my broadsword, clear a path!",
+            "audio": "res://assets/audio/heroes/barbarian_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Taste cold Cimmerian steel!",
+            "audio": "res://assets/audio/heroes/barbarian_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Aagh! Only a flesh wound!",
+            "audio": "res://assets/audio/heroes/barbarian_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Ha! Your feeble blow bounces off my iron muscles!",
+            "audio": "res://assets/audio/heroes/barbarian_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "The ancient battle-spirit surges through my blade!",
+            "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg"
+          }
+        ]
+      },
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "By my broadsword, clear a path!",
+            "audio": "res://assets/audio/heroes/barbarian_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Taste cold Cimmerian steel!",
+            "audio": "res://assets/audio/heroes/barbarian_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Aagh! Only a flesh wound!",
+            "audio": "res://assets/audio/heroes/barbarian_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Ha! Your feeble blow bounces off my iron muscles!",
+            "audio": "res://assets/audio/heroes/barbarian_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "The ancient battle-spirit surges through my blade!",
+            "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg"
+          }
+        ]
+      }
     },
     "dwarf": {
       "id": "dwarf",
@@ -52,7 +116,71 @@
       "position": [
         0,
         1
-      ]
+      ],
+      "audioLines": {
+        "turnStart": [
+          {
+            "text": "Stand back! Let a Dwarf of the World's Edge Mountains handle this!",
+            "audio": "res://assets/audio/heroes/dwarf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "For Grungni's beard, feel my battle-axe!",
+            "audio": "res://assets/audio/heroes/dwarf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Oof! Right in the chainmail!",
+            "audio": "res://assets/audio/heroes/dwarf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Dwarven forged steel never yields!",
+            "audio": "res://assets/audio/heroes/dwarf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By the runes of the anvil, awaken!",
+            "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg"
+          }
+        ]
+      },
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "Stand back! Let a Dwarf of the World's Edge Mountains handle this!",
+            "audio": "res://assets/audio/heroes/dwarf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "For Grungni's beard, feel my battle-axe!",
+            "audio": "res://assets/audio/heroes/dwarf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Oof! Right in the chainmail!",
+            "audio": "res://assets/audio/heroes/dwarf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Dwarven forged steel never yields!",
+            "audio": "res://assets/audio/heroes/dwarf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By the runes of the anvil, awaken!",
+            "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg"
+          }
+        ]
+      }
     },
     "elf": {
       "id": "elf",
@@ -67,7 +195,71 @@
       "position": [
         0,
         1
-      ]
+      ],
+      "audioLines": {
+        "turnStart": [
+          {
+            "text": "With elven grace, I step into the shadows.",
+            "audio": "res://assets/audio/heroes/elf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Swift as the wind, strike true!",
+            "audio": "res://assets/audio/heroes/elf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Ah! Darkness stings, yet my spirit endures!",
+            "audio": "res://assets/audio/heroes/elf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Too slow, creature! The forest shields me!",
+            "audio": "res://assets/audio/heroes/elf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "Ancient weave of earth and water, heed my call!",
+            "audio": "res://assets/audio/heroes/elf_casting_magic.ogg"
+          }
+        ]
+      },
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "With elven grace, I step into the shadows.",
+            "audio": "res://assets/audio/heroes/elf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Swift as the wind, strike true!",
+            "audio": "res://assets/audio/heroes/elf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Ah! Darkness stings, yet my spirit endures!",
+            "audio": "res://assets/audio/heroes/elf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Too slow, creature! The forest shields me!",
+            "audio": "res://assets/audio/heroes/elf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "Ancient weave of earth and water, heed my call!",
+            "audio": "res://assets/audio/heroes/elf_casting_magic.ogg"
+          }
+        ]
+      }
     },
     "wizard": {
       "id": "wizard",
@@ -82,7 +274,71 @@
       "position": [
         0,
         1
-      ]
+      ],
+      "audioLines": {
+        "turnStart": [
+          {
+            "text": "The winds of magic gather at my staff.",
+            "audio": "res://assets/audio/heroes/wizard_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Back, foul fiend, before my arcane staff!",
+            "audio": "res://assets/audio/heroes/wizard_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Gah! My ward-cloak falters!",
+            "audio": "res://assets/audio/heroes/wizard_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "My arcane barrier deflects your strike!",
+            "audio": "res://assets/audio/heroes/wizard_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By fire, air, and tempest, unleash the spell!",
+            "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg"
+          }
+        ]
+      },
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "The winds of magic gather at my staff.",
+            "audio": "res://assets/audio/heroes/wizard_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Back, foul fiend, before my arcane staff!",
+            "audio": "res://assets/audio/heroes/wizard_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Gah! My ward-cloak falters!",
+            "audio": "res://assets/audio/heroes/wizard_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "My arcane barrier deflects your strike!",
+            "audio": "res://assets/audio/heroes/wizard_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By fire, air, and tempest, unleash the spell!",
+            "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg"
+          }
+        ]
+      }
     }
   },
   "monsters": {

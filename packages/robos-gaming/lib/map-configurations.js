@@ -191,18 +191,208 @@ const FAN_DUNGEON_28x21_CONFIG = {
   }
 };
 
+const fs = require('fs');
+const path = require('path');
+
+const REPO_ROOT = path.resolve(__dirname, '../../..');
+const CARTRIDGES_DIR = path.join(REPO_ROOT, 'games/tabletop-rpg/cartridges');
+const KGRAPH_TABLETOP_PATH = path.join(REPO_ROOT, '.robos/kgraphs/tabletop-game/package.jsonld');
+
+// 4. Midterm Elections 2026: Battle for the Hill (26×19)
+const MIDTERM_ELECTION_CAPITOL_CONFIG = {
+  id: 'midterm-election-capitol',
+  title: 'Midterm Elections: Battle for the Hill',
+  description: '26x19 Capitol Hill dungeon board featuring Legislative Committee Chambers, Rotunda Chamber, Speaker Chambers, and subterranean corridors.',
+  boardSide: 'Custom',
+  theme: 'midterm-election-capitol',
+  category: 'Midterms 2026',
+  gridDimensions: [26, 19],
+  additionalBorderTile: true,
+  backgroundImage: 'res://assets/boards/midterm_election_capitol.png',
+  localImageFile: 'assets/boards/midterm_election_capitol.png',
+  blockmapFile: 'midterm-election-capitol.blockmap.json',
+  calibration: {
+    insetLeft: 0,
+    insetTop: 0,
+    insetRight: 0,
+    insetBottom: 0,
+    cellWidth: 39.0,
+    cellHeight: 39.0,
+    tileSize: 39.0,
+    offsetX: 0,
+    offsetY: 0,
+    additionalBorderTile: true,
+    hasBorder: true
+  },
+  rooms: HEROQUEST_ROOMS,
+  doors: HEROQUEST_STANDARD_DOORS,
+  defaultStartingStair: [-1, 11],
+  outerCorridor: {
+    top: { y: 0, fromX: 0, toX: 25 },
+    bottom: { y: 18, fromX: 0, toX: 25 },
+    left: { x: 0, fromY: 0, toY: 18 },
+    right: { x: 25, fromY: 0, toY: 18 }
+  }
+};
+
+// 5. HeroQuest: First Light Side A Stone Dungeon (26×19)
+const FIRST_LIGHT_DUNGEON_CONFIG = {
+  id: 'first-light-dungeon',
+  title: 'HeroQuest: First Light Side A',
+  description: 'First Light 26x19 stone dungeon board with 39px calibrated grid and outer border.',
+  boardSide: 'A',
+  theme: 'stone-dungeon',
+  gridDimensions: [26, 19],
+  additionalBorderTile: true,
+  backgroundImage: 'res://assets/boards/first_light_dungeon.png',
+  localImageFile: 'assets/boards/first_light_dungeon.png',
+  blockmapFile: 'first-light-dungeon.blockmap.json',
+  calibration: {
+    insetLeft: 0,
+    insetTop: 0,
+    insetRight: 0,
+    insetBottom: 0,
+    cellWidth: 39.0,
+    cellHeight: 39.0,
+    tileSize: 39.0,
+    offsetX: 0,
+    offsetY: 0,
+    additionalBorderTile: true,
+    hasBorder: true
+  },
+  rooms: HEROQUEST_ROOMS,
+  doors: HEROQUEST_STANDARD_DOORS,
+  defaultStartingStair: [1, 0],
+  outerCorridor: {
+    top: { y: 0, fromX: 0, toX: 25 },
+    bottom: { y: 18, fromX: 0, toX: 25 },
+    left: { x: 0, fromY: 0, toY: 18 },
+    right: { x: 25, fromY: 0, toY: 18 }
+  }
+};
+
 // Map Configuration Registry
 const MAP_CONFIGURATIONS = new Map();
 MAP_CONFIGURATIONS.set(FAN_DUNGEON_28x21_CONFIG.id, FAN_DUNGEON_28x21_CONFIG);
 MAP_CONFIGURATIONS.set(HEROQUEST_CLASSIC_CONFIG.id, HEROQUEST_CLASSIC_CONFIG);
 MAP_CONFIGURATIONS.set(HEROQUEST_FIRST_LIGHT_CONFIG.id, HEROQUEST_FIRST_LIGHT_CONFIG);
+MAP_CONFIGURATIONS.set(FIRST_LIGHT_DUNGEON_CONFIG.id, FIRST_LIGHT_DUNGEON_CONFIG);
+MAP_CONFIGURATIONS.set(MIDTERM_ELECTION_CAPITOL_CONFIG.id, MIDTERM_ELECTION_CAPITOL_CONFIG);
+
+const PRESET_IMMUTABLE_IDS = new Set([
+  FAN_DUNGEON_28x21_CONFIG.id,
+  HEROQUEST_CLASSIC_CONFIG.id,
+  HEROQUEST_FIRST_LIGHT_CONFIG.id
+]);
+
+function syncDynamicMapConfigurations() {
+  // 1. Load any .blockmap.json files in games/tabletop-rpg/cartridges/
+  try {
+    if (fs.existsSync(CARTRIDGES_DIR)) {
+      const files = fs.readdirSync(CARTRIDGES_DIR).filter(f => f.endsWith('.blockmap.json'));
+      for (const f of files) {
+        try {
+          const fullPath = path.join(CARTRIDGES_DIR, f);
+          const data = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+          const slug = data.id || path.basename(f, '.blockmap.json');
+          if (PRESET_IMMUTABLE_IDS.has(slug)) continue;
+
+          const existing = MAP_CONFIGURATIONS.get(slug) || {};
+          const dims = Array.isArray(data.gridDimensions) && data.gridDimensions.length === 2
+            ? data.gridDimensions
+            : (existing.gridDimensions || [26, 19]);
+          const bgImg = data.backgroundImage || existing.backgroundImage || 'res://assets/boards/heroquest_board.png';
+          const tileSize = data.calibration?.tileSize || existing.calibration?.tileSize || 39.0;
+
+          MAP_CONFIGURATIONS.set(slug, {
+            ...existing,
+            id: slug,
+            title: data.title || existing.title || slug,
+            description: data.description || existing.description || `${data.title || slug} (${dims[0]}x${dims[1]})`,
+            boardSide: data.boardSide || existing.boardSide || 'Custom',
+            theme: data.theme || existing.theme || slug,
+            gridDimensions: dims,
+            additionalBorderTile: Boolean(data.additionalBorderTile ?? data.calibration?.additionalBorderTile ?? existing.additionalBorderTile),
+            backgroundImage: bgImg,
+            localImageFile: bgImg.replace(/^res:\/\//, ''),
+            blockmapFile: f,
+            calibration: {
+              insetLeft: data.calibration?.insetLeft ?? data.calibration?.offsetX ?? existing.calibration?.insetLeft ?? 0,
+              insetTop: data.calibration?.insetTop ?? data.calibration?.offsetY ?? existing.calibration?.insetTop ?? 0,
+              insetRight: data.calibration?.insetRight ?? existing.calibration?.insetRight ?? 0,
+              insetBottom: data.calibration?.insetBottom ?? existing.calibration?.insetBottom ?? 0,
+              cellWidth: data.calibration?.cellWidth ?? tileSize,
+              cellHeight: data.calibration?.cellHeight ?? tileSize,
+              tileSize,
+              offsetX: data.calibration?.offsetX ?? 0,
+              offsetY: data.calibration?.offsetY ?? 0,
+              additionalBorderTile: Boolean(data.additionalBorderTile ?? data.calibration?.additionalBorderTile)
+            },
+            rooms: Array.isArray(data.rooms) && data.rooms.length > 0 ? data.rooms : (existing.rooms || HEROQUEST_ROOMS),
+            corridorTiles: Array.isArray(data.corridorTiles) ? data.corridorTiles : (existing.corridorTiles || []),
+            doors: Array.isArray(data.doors) && data.doors.length > 0 ? data.doors : (existing.doors || HEROQUEST_STANDARD_DOORS),
+            defaultStartingStair: Array.isArray(data.defaultStartingStair) ? data.defaultStartingStair : (existing.defaultStartingStair || [1, 0]),
+            outerCorridor: data.outerCorridor || existing.outerCorridor || {
+              top: { y: 0, fromX: 0, toX: dims[0] - 1 },
+              bottom: { y: dims[1] - 1, fromX: 0, toX: dims[0] - 1 },
+              left: { x: 0, fromY: 0, toY: dims[1] - 1 },
+              right: { x: dims[0] - 1, fromY: 0, toY: dims[1] - 1 }
+            }
+          });
+        } catch {}
+      }
+    }
+  } catch {}
+
+  // 2. Load any robos:TabletopMapConfiguration nodes from KGraph that aren't registered yet
+  try {
+    if (fs.existsSync(KGRAPH_TABLETOP_PATH)) {
+      const kgraph = JSON.parse(fs.readFileSync(KGRAPH_TABLETOP_PATH, 'utf8'));
+      const nodes = Array.isArray(kgraph['robos:nodes']) ? kgraph['robos:nodes'] : [];
+      for (const n of nodes) {
+        const types = Array.isArray(n['@type']) ? n['@type'] : [n['@type']];
+        if (!types.includes('robos:TabletopMapConfiguration')) continue;
+        const id = String(n['@id'] || '').split(':').pop();
+        if (!id || MAP_CONFIGURATIONS.has(id)) continue;
+        const dims = Array.isArray(n['robos:gridDimensions']) ? n['robos:gridDimensions'] : [26, 19];
+        const bgImg = n['robos:backgroundImage'] || 'res://assets/boards/heroquest_board.png';
+        MAP_CONFIGURATIONS.set(id, {
+          id,
+          title: n['dcterms:title'] || id,
+          description: n['dcterms:description'] || `${n['dcterms:title'] || id} (${dims[0]}x${dims[1]})`,
+          boardSide: n['robos:boardSide'] || 'Custom',
+          theme: n['robos:theme'] || id,
+          gridDimensions: dims,
+          backgroundImage: bgImg,
+          localImageFile: bgImg.replace(/^res:\/\//, ''),
+          blockmapFile: n['robos:blockmapFile'] || `${id}.blockmap.json`,
+          calibration: {
+            insetLeft: 0,
+            insetTop: 0,
+            insetRight: 0,
+            insetBottom: 0,
+            cellWidth: 39.0,
+            cellHeight: 39.0
+          },
+          rooms: HEROQUEST_ROOMS,
+          doors: HEROQUEST_STANDARD_DOORS,
+          defaultStartingStair: [1, 0]
+        });
+      }
+    }
+  } catch {}
+}
+
+syncDynamicMapConfigurations();
 
 function getMapConfiguration(id) {
+  syncDynamicMapConfigurations();
   if (!id) return FAN_DUNGEON_28x21_CONFIG;
   return MAP_CONFIGURATIONS.get(id) || FAN_DUNGEON_28x21_CONFIG;
 }
 
 function listMapConfigurations() {
+  syncDynamicMapConfigurations();
   return Array.from(MAP_CONFIGURATIONS.values());
 }
 
@@ -218,8 +408,11 @@ module.exports = {
   FAN_DUNGEON_28x21_CONFIG,
   HEROQUEST_CLASSIC_CONFIG,
   HEROQUEST_FIRST_LIGHT_CONFIG,
+  FIRST_LIGHT_DUNGEON_CONFIG,
+  MIDTERM_ELECTION_CAPITOL_CONFIG,
   getMapConfiguration,
   listMapConfigurations,
   registerMapConfiguration
 };
+
 
