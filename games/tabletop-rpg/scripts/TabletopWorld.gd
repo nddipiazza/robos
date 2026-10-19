@@ -13980,41 +13980,70 @@ func _check_play_first_turn_hero_audio() -> void:
 		_first_turn_audio_played = true
 		play_hero_situation_audio(h, "turnStart")
 
-func _get_default_hero_audio_lines(h: Dictionary) -> Dictionary:
-	var key = _resolve_hero_identity_key(h)
+var _last_hero_quote_audio: Dictionary = {}
+
+func _get_election_hero_quote_pool(key: String) -> Array:
 	match key:
 		"obama":
-			return {
-				"turnStart": [{ "text": "Uhh... let me be clear... It is now... my turn... to march... toward the horizon... of hope.", "audio": "res://assets/audio/heroes/obama_turn_start.ogg" }],
-				"attacking": [{ "text": "Uhh... feel the audacity... of this broadsword... of hope!", "audio": "res://assets/audio/heroes/obama_attacking.ogg" }],
-				"attacked": [{ "text": "Uhh... folks... that strike... did not feel... very hopeful.", "audio": "res://assets/audio/heroes/obama_attacked.ogg" }],
-				"defended": [{ "text": "Uhh... nice try... You cannot pierce... the shield... of hope.", "audio": "res://assets/audio/heroes/obama_defended.ogg" }],
-				"castingMagic": [{ "text": "Uhh... by the power... of hope... and change... I cast... this spell.", "audio": "res://assets/audio/heroes/obama_casting_magic.ogg" }]
-			}
+			return [
+				{ "text": "Uhh... let me be clear... When you roll the dice... in this dungeon... you are not merely rolling plastic... you are rolling... the audacity... of hope.", "audio": "res://assets/audio/heroes/obama_quote_1.ogg" },
+				{ "text": "Uhh... folks... Michelle and I... were talking just the other day... about how even in a dark corridor... filled with goblins... hope... always finds a way.", "audio": "res://assets/audio/heroes/obama_quote_2.ogg" },
+				{ "text": "Uhh... make no mistake... The arc of the moral dungeon... is long... but it bends... toward hope... and... uhh... a modest middle-class tax cut.", "audio": "res://assets/audio/heroes/obama_quote_3.ogg" },
+				{ "text": "Uhh... look... we can disagree... without being disagreeable... even when a two-headed hydra... is trying... to bite your head off... with hope.", "audio": "res://assets/audio/heroes/obama_quote_4.ogg" },
+				{ "text": "Uhh... let me say this... Change does not roll in... on the wheels of inevitability... It rolls in... on two red six-sided dice... of hope.", "audio": "res://assets/audio/heroes/obama_quote_5.ogg" },
+				{ "text": "Uhh... there is not a liberal dungeon... and a conservative dungeon... There is the United Dungeon... of America... and... uhh... we are lost in it.", "audio": "res://assets/audio/heroes/obama_quote_6.ogg" },
+				{ "text": "Uhh... yes we can... step onto this next stone square... with the fierce urgency... of now... and the quiet dignity... of hope.", "audio": "res://assets/audio/heroes/obama_quote_7.ogg" },
+				{ "text": "Uhh... if you like your broadsword... you can keep... your broadsword... Period... Full stop... Because that... is the promise... of hope.", "audio": "res://assets/audio/heroes/obama_quote_8.ogg" }
+			]
 		"trump":
-			return {
-				"turnStart": [{ "text": "As you can see, I'm not just MAGA — I'm Dark MAGA!", "audio": "res://assets/audio/heroes/trump_turn_start.ogg" }],
-				"attacking": [{ "text": "And I do it! He doesn't do it! He can't hit a ball 50 yards! He challenged me to a golf match, he can't hit a ball 50 yards!", "audio": "res://assets/audio/heroes/trump_attacking.ogg" }],
-				"attacked": [{ "text": "Would you look at what's happening? This is a persecution! This was never supposed to happen in America!", "audio": "res://assets/audio/heroes/trump_attacked.ogg" }],
-				"defended": [{ "text": "Here's the fighter — somebody who tried to kill him! You will not take this man down!", "audio": "res://assets/audio/heroes/trump_defended.ogg" }],
-				"castingMagic": [{ "text": "Do you think that we have aliens coming, flying around or whatever? There's no reason not to think that Mars and all these planets don't have life!", "audio": "res://assets/audio/heroes/trump_casting_magic.ogg" }]
-			}
+			return [
+				{ "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!", "audio": "res://assets/audio/heroes/trump_quote_1.ogg" },
+				{ "text": "Threatening me with 400 years in prison for possessing my own presidential papers, which just about every other president has done!", "audio": "res://assets/audio/heroes/trump_quote_2.ogg" },
+				{ "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!", "audio": "res://assets/audio/heroes/trump_quote_3.ogg" },
+				{ "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!", "audio": "res://assets/audio/heroes/trump_quote_4.ogg" },
+				{ "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!", "audio": "res://assets/audio/heroes/trump_quote_5.ogg" },
+				{ "text": "I won two regular club championships! To do that, you have to be quite smart and hit the ball a long way. And I do it! He can't hit a ball 50 yards!", "audio": "res://assets/audio/heroes/trump_quote_6.ogg" },
+				{ "text": "She did things that nobody would ever think of! Now she wants to do transgender operations on illegal aliens that are in prison!", "audio": "res://assets/audio/heroes/trump_quote_7.ogg" },
+				{ "text": "Well, we need Greenland for national security purposes! People really don't even know if Denmark has any legal right to it, but if they do, they should give it up!", "audio": "res://assets/audio/heroes/trump_quote_8.ogg" }
+			]
 		"hillary_clinton":
-			return {
-				"turnStart": [{ "text": "We've traveled to every corner of the United States. I've now been in 57 states — I think one left to go!", "audio": "res://assets/audio/heroes/hillary_turn_start.ogg" }],
-				"attacking": [{ "text": "We came, we saw, he died! Ha ha ha!", "audio": "res://assets/audio/heroes/hillary_attacking.ogg" }],
-				"attacked": [{ "text": "What difference, at this point, does it make?!", "audio": "res://assets/audio/heroes/hillary_attacked.ogg" }],
-				"defended": [{ "text": "What, like with a cloth or something? Well, no, I don't know how it works digitally at all!", "audio": "res://assets/audio/heroes/hillary_defended.ogg" }],
-				"castingMagic": [{ "text": "But I cast it with conviction! And I want the Iranians to know that if I'm the President, we will attack Iran!", "audio": "res://assets/audio/heroes/hillary_casting_magic.ogg" }]
-			}
+			return [
+				{ "text": "Saddam Hussein will continue to increase his capacity to wage biological and chemical warfare!", "audio": "res://assets/audio/heroes/hillary_quote_1.ogg" },
+				{ "text": "We came, we saw, he died! Ha ha ha!", "audio": "res://assets/audio/heroes/hillary_quote_2.ogg" },
+				{ "text": "What difference, at this point, does it make?!", "audio": "res://assets/audio/heroes/hillary_quote_3.ogg" },
+				{ "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do, and the way we do it better than anybody else!", "audio": "res://assets/audio/heroes/hillary_quote_4.ogg" },
+				{ "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!", "audio": "res://assets/audio/heroes/hillary_quote_5.ogg" },
+				{ "text": "Don't let anybody tell you that it's corporations and businesses that create jobs! If you've got a business, you didn't build that!", "audio": "res://assets/audio/heroes/hillary_quote_6.ogg" },
+				{ "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there, and we struggled!", "audio": "res://assets/audio/heroes/hillary_quote_7.ogg" },
+				{ "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!", "audio": "res://assets/audio/heroes/hillary_quote_8.ogg" }
+			]
 		"bernie_sanders":
-			return {
-				"turnStart": [{ "text": "Let's talk about welfare for the rich and the powerful!", "audio": "res://assets/audio/heroes/bernie_turn_start.ogg" }],
-				"attacking": [{ "text": "I will be damned if I will vote for a proposal which will stick it to the middle class and the working people!", "audio": "res://assets/audio/heroes/bernie_attacking.ogg" }],
-				"attacked": [{ "text": "Mr. Speaker, I've got a problem! I've got a problem with a President and a Congress which allows five million children to go hungry!", "audio": "res://assets/audio/heroes/bernie_attacked.ogg" }],
-				"defended": [{ "text": "What we are saying very loud and clear is that Ronald Reagan and his billionaire friends do not represent the America that we do!", "audio": "res://assets/audio/heroes/bernie_defended.ogg" }],
-				"castingMagic": [{ "text": "This democracy is evolving into an oligarchy! And an oligarchy is a country in which a few people have tremendous wealth and power!", "audio": "res://assets/audio/heroes/bernie_casting_magic.ogg" }]
-			}
+			return [
+				{ "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!", "audio": "res://assets/audio/heroes/bernie_quote_1.ogg" },
+				{ "text": "In some of the largest cities in America, 50% of the kids are not graduating high school! The cost of college education is zooming up, so you have to be a wealthy person to send your kid to college!", "audio": "res://assets/audio/heroes/bernie_quote_2.ogg" },
+				{ "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!", "audio": "res://assets/audio/heroes/bernie_quote_3.ogg" },
+				{ "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!", "audio": "res://assets/audio/heroes/bernie_quote_4.ogg" },
+				{ "text": "We have an approach to campaign financing which allows wealthy people and major corporations to buy and sell politicians! The rich get richer and the poor get poorer!", "audio": "res://assets/audio/heroes/bernie_quote_5.ogg" },
+				{ "text": "The chief executive officers are seeing their salaries soar, and the gap between the rich and the poor grows wider! Ten million Americans are unemployed!", "audio": "res://assets/audio/heroes/bernie_quote_6.ogg" },
+				{ "text": "We give huge tax breaks to the wealthy and you have two million people sleeping out on the street! Billions of dollars in obsolete weapon systems, and five million children who are hungry!", "audio": "res://assets/audio/heroes/bernie_quote_7.ogg" },
+				{ "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!", "audio": "res://assets/audio/heroes/bernie_quote_8.ogg" }
+			]
+		_:
+			return []
+
+func _get_default_hero_audio_lines(h: Dictionary) -> Dictionary:
+	var key = _resolve_hero_identity_key(h)
+	if key in ["obama", "trump", "hillary_clinton", "bernie_sanders"]:
+		var pool = _get_election_hero_quote_pool(key)
+		return {
+			"turnStart": pool.duplicate(true),
+			"moving": pool.duplicate(true),
+			"attacking": pool.duplicate(true),
+			"attacked": pool.duplicate(true),
+			"defended": pool.duplicate(true),
+			"castingMagic": pool.duplicate(true)
+		}
+	match key:
 		"dwarf":
 			return {
 				"turnStart": [{ "text": "Stand back! Let a Dwarf of the World's Edge Mountains handle this!", "audio": "res://assets/audio/heroes/dwarf_turn_start.ogg" }],
@@ -14066,10 +14095,24 @@ func play_hero_situation_audio(hero: Dictionary, situation: String) -> void:
 			eff_situation = "turnStart"
 			al = default_al
 	var entries = al.get(eff_situation, [])
+	# For Election 2026 characters, always use the full 8-quote pool if cartridge/save has fewer than 8 entries
+	if ident_key in ["obama", "trump", "hillary_clinton", "bernie_sanders"]:
+		var full_pool = _get_election_hero_quote_pool(ident_key)
+		if not (entries is Array) or entries.size() < full_pool.size():
+			entries = full_pool
 	var chosen_text = ""
 	var chosen_audio = ""
 	if entries is Array and entries.size() > 0:
-		var item = entries[randi() % entries.size()]
+		var last_audio = str(_last_hero_quote_audio.get(ident_key, ""))
+		var candidates: Array = []
+		if entries.size() > 1 and last_audio != "":
+			for cand in entries:
+				var c_aud = str(cand.get("audio", "")) if cand is Dictionary else str(cand)
+				if c_aud != last_audio:
+					candidates.append(cand)
+		if candidates.is_empty():
+			candidates = entries
+		var item = candidates[randi() % candidates.size()]
 		if item is Dictionary:
 			chosen_text = str(item.get("text", ""))
 			chosen_audio = str(item.get("audio", ""))
@@ -14083,10 +14126,13 @@ func play_hero_situation_audio(hero: Dictionary, situation: String) -> void:
 	# Ensure Election 2026 characters never fall back to classic HeroQuest voices
 	if ident_key in ["obama", "trump", "hillary_clinton", "bernie_sanders"]:
 		if chosen_audio == "" or "/barbarian_" in chosen_audio or "/dwarf_" in chosen_audio or "/elf_" in chosen_audio or "/wizard_" in chosen_audio:
-			var def_entries = default_al.get(eff_situation, default_al.get("turnStart", []))
-			if def_entries is Array and def_entries.size() > 0 and def_entries[0] is Dictionary:
-				chosen_text = str(def_entries[0].get("text", chosen_text))
-				chosen_audio = str(def_entries[0].get("audio", chosen_audio))
+			var full_pool2 = _get_election_hero_quote_pool(ident_key)
+			if full_pool2.size() > 0:
+				var pick = full_pool2[randi() % full_pool2.size()]
+				chosen_text = str(pick.get("text", chosen_text))
+				chosen_audio = str(pick.get("audio", chosen_audio))
+	if chosen_audio != "":
+		_last_hero_quote_audio[ident_key] = chosen_audio
 	if chosen_text != "":
 		_log("🔊 [%s — %s] \"%s\"" % [get_hero_display_title(hero), situation, chosen_text])
 	if chosen_audio == "" or is_headless_mode():
