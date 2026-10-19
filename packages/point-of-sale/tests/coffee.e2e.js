@@ -17,8 +17,11 @@ test('worker rings a custom latte, adds a tip, takes cash with quick-tender, the
   const b = await launch('coffee');
   try {
     await b.signIn('3333');
+    await b.step('Sign in as the cashier');
+    await b.step('Count the starting float and open the drawer');
     await openDrawerInUi(b, '100');
     await b.nav('register');
+    await b.step('Build a latte with size, milk and extras');
     await b.tap(b.tid('item-Latte'));
     await b.see(b.tid('customize-dialog'), /Size/);
     assert.equal(await b.page.locator(b.tid('add-to-order')).isDisabled(), true); // size and milk are required
@@ -28,10 +31,12 @@ test('worker rings a custom latte, adds a tip, takes cash with quick-tender, the
     await b.see(b.tid('add-to-order'), /\$6\.35/);
     await b.tap(b.tid('add-to-order'));
     await b.see(b.tid('total'), /\$6\.89/); // 6.35 + 8.5% tax
+    await b.step('Add a tip and review the total');
     await b.tap(b.tid('tip-open'));
     await b.tap(b.tid('tip-20'));
     await b.see(b.tid('total'), /\$8\.16/);
     await b.shot('coffee-register-latte');
+    await b.step('Take cash and show the change due');
     await b.tap(b.tid('pay'));
     await b.see(b.tid('due'), /\$8\.16/);
     await b.tap(b.tid('quick-2000'));
@@ -43,6 +48,7 @@ test('worker rings a custom latte, adds a tip, takes cash with quick-tender, the
     await b.tap(b.tid('new-order'));
     await b.see(b.tid('total'), /\$0\.00/);
 
+    await b.step('Prepare the paid order and mark it ready');
     await b.nav('prep');
     await b.see(b.tid('ticket-1'), /Latte/);
     await b.shot('coffee-prep-queue');
@@ -52,6 +58,7 @@ test('worker rings a custom latte, adds a tip, takes cash with quick-tender, the
     await board.goto(b.base + '/ready');
     await board.waitForFunction(() => /#1/.test(document.body.innerText));
     await b.shot('coffee-ready');
+    await b.step('Record collection and clear the prep ticket');
     await b.tap(b.tid('ticket-1-served'));
     await b.see(b.tid('queue-empty'), /Nothing waiting/);
     assert.deepEqual(b.errors, []);

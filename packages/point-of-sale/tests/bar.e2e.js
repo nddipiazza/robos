@@ -17,6 +17,8 @@ test('bartender opens a tab, sends rounds, holds it, recalls it, checks ID, adds
   const b = await launch('bar');
   try {
     await b.signIn('3333');
+    await b.step('Sign in as the bartender');
+    await b.step('Open a named tab and add the first round');
     await b.tap(b.tid('type-tab'));
     await addIpa(b);
     await b.page.fill(b.tid('tab-name'), 'Dana');
@@ -24,6 +26,7 @@ test('bartender opens a tab, sends rounds, holds it, recalls it, checks ID, adds
     await b.see(b.tid('order-title'), /Order #1 · Dana/);
     await b.tap(b.tid('item-Pretzel Bites'));
     await b.see(b.tid('subtotal'), /\$15\.00/);
+    await b.step('Send drinks and food to their prep stations');
     await b.tap(b.tid('send'));
     await b.seeToast(/Sent 2 item/);
     await b.shot('bar-tab-register');
@@ -31,10 +34,12 @@ test('bartender opens a tab, sends rounds, holds it, recalls it, checks ID, adds
     await b.see(b.tid('tab-1'), /Dana/);
     await b.shot('bar-open-tabs');
     // Meanwhile the bar screen shows the drinks.
+    await b.step('Check the bar prep queue');
     await b.nav('prep');
     await b.tap(b.tid('station-bar'));
     await b.see(b.tid('ticket-1'), /Hazy IPA/);
     assert.equal(await b.page.locator(`${b.tid('ticket-1')} :text("Pretzel")`).count(), 0); // pretzels belong to the kitchen
+    await b.step('Recall the tab and add another round');
     await b.nav('tabs');
     await b.tap(b.tid('tab-1'));
     await b.see(b.tid('lines'), /Hazy IPA/);
@@ -42,11 +47,13 @@ test('bartender opens a tab, sends rounds, holds it, recalls it, checks ID, adds
     await b.tap(b.tid('send'));
     await b.seeToast(/Sent 1 item/);
     // Payment is blocked until ID is checked.
+    await b.step('Verify that payment requires an ID check');
     await b.tap(b.tid('pay'));
     await b.tap(b.tid('method-card'));
     await b.tap(b.tid('take-card'));
     await b.seeToast(/Check ID/);
     await b.page.keyboard.press('Escape');
+    await b.step('Record the ID check and add a tip');
     await b.tap(b.tid('age-check'));
     await b.see(b.tid('age-check'), /ID checked/);
     await b.tap(b.tid('tip-open'));
@@ -56,6 +63,7 @@ test('bartender opens a tab, sends rounds, holds it, recalls it, checks ID, adds
     await b.tap(b.tid('method-card'));
     await b.tap(b.tid('take-card'));
     await b.see(b.tid('receipt-text'), /Dana[\s\S]*Hazy IPA[\s\S]*Alcohol tax[\s\S]*Food tax[\s\S]*Tip\s+\$4\.40/);
+    await b.step('Close the tab and review the demo receipt');
     await b.shot('bar-receipt');
     assert.equal(b.pos.getOrder(b.pos.state.orders[0].id).status, 'paid');
     assert.deepEqual(b.errors.filter(e => !/409|400/.test(e)), []);

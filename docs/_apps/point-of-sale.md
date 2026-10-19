@@ -7,7 +7,7 @@ summary: "Open-source cash register for shops, cafés and bars: touchscreen orde
 description: "A modern, self-hosted cash register that runs on any touchscreen. No subscription, no cloud account, no card-processing lock-in."
 ---
 
-> **Running a business?** The full guide, from first sale to closing the drawer, with the tests behind it: [rowbose.com/point-of-sale](https://rowbose.com/point-of-sale/).
+> **Running a business?** Start with the [Point of Sale introduction](https://rowbose.com/point-of-sale/), then choose your tutorial and video: [Retail store](https://rowbose.com/point-of-sale/retail/), [Coffee shop](https://rowbose.com/point-of-sale/coffee/) or [Bar](https://rowbose.com/point-of-sale/bar/).
 
 RobOS Point of Sale handles three kinds of business out of the box, each with a ready-made sample you can try on first launch and then edit into your own:
 

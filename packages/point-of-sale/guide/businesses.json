@@ -1,0 +1,201 @@
+[
+  {
+    "id": "retail",
+    "title": "Retail store",
+    "sample": "Main Street General Store",
+    "summary": "Scan stocked goods, choose sizes, apply promotions, and handle returns with manager approval.",
+    "youtubeId": "GUIs--IONwk",
+    "videoTitle": "RobOS Point of Sale — Retail Checkout and Returns",
+    "videoDescription": "A recorded test walkthrough of a retail sale: scan a barcode, choose a size, apply SAVE10, record a demo card payment, and process a return with a manager PIN.",
+    "highlights": [
+      "Barcode and camera scanning",
+      "Size variants and stock tracking",
+      "Promotions and manager-approved returns"
+    ],
+    "steps": [
+      {
+        "title": "Start with the retail sample",
+        "actions": [
+          "On first launch choose Retail store. The example shop is Main Street General Store.",
+          "Sign in with the sample cashier PIN 3333. These PINs and products are demonstration data; replace them before real use."
+        ]
+      },
+      {
+        "title": "Scan an item and choose a size",
+        "actions": [
+          "On Register, scan the barcode on a Classic Tee White in size M. A keyboard-style scanner types the code and presses Enter.",
+          "Tap Slim Jeans, choose size 32, then Add to order. Check the item names and sizes in the ticket."
+        ],
+        "shot": "retail-scan-gun"
+      },
+      {
+        "title": "Apply a promotion and review the total",
+        "actions": [
+          "Open the discount controls, enter SAVE10 and apply it. The sample gives 10% off the order.",
+          "Check the discount, item tax and amount due before pressing Pay. Your own catalog and tax settings determine live totals."
+        ],
+        "shot": "retail-register-promo"
+      },
+      {
+        "title": "Record payment and review the receipt",
+        "actions": [
+          "The video uses the sample test card provider, which does not move money. Select Card and complete the demo payment.",
+          "For live trading, configure your supported card workflow first. A standalone terminal payment is processed on that terminal, then its approval reference is recorded in the register.",
+          "Check the receipt and return to a new order. Paid stocked items reduce inventory."
+        ]
+      },
+      {
+        "title": "Handle a return with a manager",
+        "actions": [
+          "Open Orders and select the sale. Open the refund controls, choose the returned quantity and enter a reason.",
+          "A cashier needs manager approval. Enter the sample manager PIN 2222 in the approval dialog.",
+          "Confirm the refund result and check the stock quantity. In the video the test provider handles the refund; verify your live provider's behavior before accepting returns."
+        ],
+        "shot": "retail-manager-override"
+      },
+      {
+        "title": "Continue with stock and self-checkout",
+        "actions": [
+          "Use Inventory to receive a delivery or count the shelf. Counts require a reason.",
+          "Use Menu & Catalog to edit products and variants, then review Reports for recorded sales.",
+          "The shared guide below covers shopper self-checkout, camera scanning and counting the cash drawer."
+        ],
+        "shot": "retail-inventory",
+        "caption": "Related workflow: receiving and counting retail inventory."
+      }
+    ]
+  },
+  {
+    "id": "coffee",
+    "title": "Coffee shop",
+    "sample": "Bean There Coffee",
+    "summary": "Customize drinks, take cash with change due, and move paid orders through the barista queue to collection.",
+    "youtubeId": "dFP5ojwVJkQ",
+    "videoTitle": "RobOS Point of Sale — Coffee Order, Cash and Prep",
+    "videoDescription": "A recorded test walkthrough of a coffee order: open the drawer, customize a latte, add a tip, record cash and change, then prepare the drink and record collection.",
+    "highlights": [
+      "Required drink choices and priced extras",
+      "Cash tender, change and tips",
+      "Barista prep and customer-ready displays"
+    ],
+    "steps": [
+      {
+        "title": "Start the coffee shop and open the drawer",
+        "actions": [
+          "Choose Coffee shop on first launch. The example menu belongs to Bean There Coffee.",
+          "Sign in with sample cashier PIN 3333. Open Cash, enter a starting float of 100 using the keypad, then press Open drawer.",
+          "The recording uses sample data and simulated cash entries; it does not process real transactions."
+        ]
+      },
+      {
+        "title": "Build a custom latte",
+        "actions": [
+          "Return to Register and tap Latte. Required option groups must be completed before the item can be added.",
+          "Choose Medium, Oat milk and Extra shot, then Add to order. Check that the modifiers and their prices appear on the ticket."
+        ],
+        "shot": "coffee-register-latte"
+      },
+      {
+        "title": "Add a tip and take cash",
+        "actions": [
+          "Open the tip controls and choose 20% for this example. Review the total, then press Pay.",
+          "Tap the $20 quick-tender button. Check the displayed change and record the cash payment.",
+          "Read the receipt before starting the next order. Cash rounding and quick-tender amounts can be configured by a manager."
+        ],
+        "shot": "coffee-pay-cash"
+      },
+      {
+        "title": "Prepare the paid order",
+        "actions": [
+          "Open Prep. The paid latte appears at the barista station.",
+          "Start preparation, then mark the ticket Ready when the drink is finished.",
+          "The customer-ready display at /ready shows order numbers. It is a separate customer-facing page."
+        ],
+        "shot": "coffee-prep-queue"
+      },
+      {
+        "title": "Record collection",
+        "actions": [
+          "Hand the order to the customer and mark it Picked up on the prep ticket.",
+          "Check that the ticket leaves the active queue. This closes the preparation work; payment was recorded earlier."
+        ],
+        "shot": "coffee-ready"
+      },
+      {
+        "title": "Offer customer self-ordering",
+        "actions": [
+          "Open /kiosk on a customer-facing device to show the sample menu.",
+          "Customers choose their drink options and can take an order number to pay at the counter when that option is enabled.",
+          "Unattended card payments require a real integrated provider. The sample card gateway is for demonstration only."
+        ],
+        "shot": "coffee-kiosk-review",
+        "caption": "Related workflow: a customer reviews a self-ordering kiosk order."
+      }
+    ]
+  },
+  {
+    "id": "bar",
+    "title": "Bar",
+    "sample": "The Rusty Anchor",
+    "summary": "Keep named tabs open, send rounds to prep stations, record an ID check, and close the tab with a tip.",
+    "youtubeId": "W7q8jJ1cy4k",
+    "videoTitle": "RobOS Point of Sale — Bar Tabs, Rounds and Checkout",
+    "videoDescription": "A recorded test walkthrough of a bar tab: open a named tab, send drinks and food to prep, recall it for another round, record the staff ID check, add a tip, and close with a demo card payment.",
+    "highlights": [
+      "Named tabs and repeated rounds",
+      "Separate bar and kitchen prep queues",
+      "Recorded ID checks, tips and split payments"
+    ],
+    "steps": [
+      {
+        "title": "Start the bar sample",
+        "actions": [
+          "Choose Bar on first launch. The example venue is The Rusty Anchor.",
+          "Sign in with sample cashier PIN 3333. The recording uses demo products and a test card provider; no real payment is taken."
+        ]
+      },
+      {
+        "title": "Open a named tab",
+        "actions": [
+          "Select the tab order type on Register. Add a Hazy IPA and choose Pint.",
+          "Enter the tab name Dana and open the tab. Add Pretzel Bites to the same ticket."
+        ],
+        "shot": "bar-tab-register"
+      },
+      {
+        "title": "Send the round and hold the tab",
+        "actions": [
+          "Press Send to send the current items to their preparation stations, then Hold the tab.",
+          "Open Prep and select the bar station. Drinks appear there; food is routed to the kitchen.",
+          "Tabs keeps the unpaid ticket available while staff work on other orders."
+        ],
+        "shot": "bar-open-tabs"
+      },
+      {
+        "title": "Recall the tab for another round",
+        "actions": [
+          "Open Tabs, select Dana's tab and check the existing items.",
+          "Add another pint and press Send. Only the newly added items are sent for preparation."
+        ],
+        "shot": "bar-tab-register"
+      },
+      {
+        "title": "Record the ID check and add a tip",
+        "actions": [
+          "The sample blocks payment for age-restricted items until staff record an ID check. The video demonstrates that guard.",
+          "After checking the customer's ID yourself, record ID checked in the register. This records a staff action; the app does not verify identity.",
+          "Open the tip controls and choose 20% for the example, then review the final amount."
+        ]
+      },
+      {
+        "title": "Close the tab and review the receipt",
+        "actions": [
+          "Press Pay and select Card for the recorded demonstration. The test provider approves the sample transaction without charging anyone.",
+          "Read the closed-tab receipt, including the tip and item tax lines. For a live venue, configure your real payment workflow before use.",
+          "The shared guide explains splitting payments, manager-approved comps, and closing the cash drawer."
+        ],
+        "shot": "bar-receipt"
+      }
+    ]
+  }
+]
