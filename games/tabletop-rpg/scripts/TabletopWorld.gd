@@ -531,7 +531,7 @@ var pending_ai_command: Dictionary = {}
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
-		auto_save_game()
+		auto_save_game(true)
 
 func _ready() -> void:
 	print("[TabletopWorld] Initializing HeroQuest Cartridge Player...")
@@ -2770,6 +2770,9 @@ func _capture_save_screenshot(png_user_path: String) -> String:
 	var img = tex.get_image()
 	if img == null or img.is_empty():
 		return ""
+	if img.get_width() > 640:
+		var target_h = maxi(1, int(round(float(img.get_height()) * 640.0 / float(img.get_width()))))
+		img.resize(640, target_h, Image.INTERPOLATION_NEAREST)
 	var err = img.save_png(png_user_path)
 	if err == OK:
 		return ProjectSettings.globalize_path(png_user_path)
@@ -2929,13 +2932,17 @@ func serialize_game_state(screenshot_abs_path: String = "") -> Dictionary:
 		"game_state": get_game_state()
 	}
 
-func auto_save_game() -> void:
+func auto_save_game(capture_screenshot: bool = false) -> void:
 	if _is_restoring_state:
 		return
 	if heroes.is_empty():
 		return
 	var png_user_path = get_save_screenshot_path()
-	var screenshot_abs = _capture_save_screenshot(png_user_path)
+	var screenshot_abs = ""
+	if capture_screenshot:
+		screenshot_abs = _capture_save_screenshot(png_user_path)
+	elif FileAccess.file_exists(png_user_path):
+		screenshot_abs = ProjectSettings.globalize_path(png_user_path)
 	var data = serialize_game_state(screenshot_abs)
 	var json_str = JSON.stringify(data, "\t")
 	var path = get_save_file_path()
