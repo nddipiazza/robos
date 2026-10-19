@@ -1395,13 +1395,22 @@ func _load_hero_token_textures() -> void:
 			if tex:
 				hero_token_textures[k] = tex
 
+func _is_election_2026_quest() -> bool:
+	var c_slug = str(CartridgeManager.current_cartridge_slug).to_lower()
+	var q_id = str(active_quest_id).to_lower()
+	var cart_title = str(CartridgeManager.active_cartridge.get("metadata", {}).get("title", "")).to_lower()
+	var combined_q = "%s %s %s" % [c_slug, q_id, cart_title]
+	return "election" in combined_q or "midterm" in combined_q or "battle for the hill" in combined_q
+
 func _resolve_hero_identity_key(h: Dictionary) -> String:
 	var h_id = str(h.get("id", "")).to_lower()
 	var h_slug = str(h.get("slug", "")).to_lower()
 	var h_cls = str(h.get("heroClass", h.get("hero_class", ""))).to_lower()
 	var h_name = str(h.get("name", "")).to_lower()
 	var char_name = str(h.get("characterName", h.get("character_name", ""))).to_lower()
-	var combined = "%s %s %s %s" % [h_id, h_slug, h_name, char_name]
+	var tok_asset = str(h.get("tokenAsset", h.get("token_asset", ""))).to_lower()
+	var port_asset = str(h.get("portraitAsset", h.get("portrait_asset", ""))).to_lower()
+	var combined = "%s %s %s %s %s %s" % [h_id, h_slug, h_name, char_name, tok_asset, port_asset]
 
 	if "obama" in combined:
 		return "obama"
@@ -1411,15 +1420,17 @@ func _resolve_hero_identity_key(h: Dictionary) -> String:
 		return "hillary_clinton"
 	elif "bernie" in combined or "sanders" in combined:
 		return "bernie_sanders"
-	elif "barbarian" in h_id or "barbarian" in h_cls or "barbarian" in h_name or "berserker" in h_cls:
-		return "barbarian"
+
+	var is_elec = _is_election_2026_quest()
+	if "barbarian" in h_id or "barbarian" in h_cls or "barbarian" in h_name or "berserker" in h_cls:
+		return "obama" if is_elec else "barbarian"
 	elif "dwarf" in h_id or "dwarf" in h_cls or "dwarf" in h_name or "dorgan" in char_name:
-		return "dwarf"
+		return "trump" if is_elec else "dwarf"
 	elif "elf" in h_id or "elf" in h_cls or "elf" in h_name or "ladril" in char_name or "ranger" in h_cls:
-		return "elf"
+		return "hillary_clinton" if is_elec else "elf"
 	elif "wizard" in h_id or "wizard" in h_cls or "wizard" in h_name or "telor" in char_name or "mage" in h_cls:
-		return "wizard"
-	return "barbarian"
+		return "bernie_sanders" if is_elec else "wizard"
+	return "obama" if is_elec else "barbarian"
 
 func get_hero_token_path(h: Dictionary) -> String:
 	var custom_asset = str(h.get("tokenAsset", h.get("token_asset", "")))
@@ -2998,6 +3009,10 @@ func restore_saved_game(save_dict: Dictionary = {}) -> bool:
 				h["grid_pos"] = gp
 			else:
 				h["grid_pos"] = starting_stair
+			var ident_k = _resolve_hero_identity_key(h)
+			if ident_k in ["obama", "trump", "hillary_clinton", "bernie_sanders"]:
+				h["audioLines"] = _get_default_hero_audio_lines(h)
+				h["robos:audioLines"] = h["audioLines"]
 			heroes.append(h)
 
 	# Restore Monsters
@@ -3262,6 +3277,10 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 		h["is_on_board"] = true
 		h["grid_pos"] = starting_stair
 		h["has_departed_start"] = false
+		var ident_k = _resolve_hero_identity_key(h)
+		if ident_k in ["obama", "trump", "hillary_clinton", "bernie_sanders"]:
+			h["audioLines"] = _get_default_hero_audio_lines(h)
+			h["robos:audioLines"] = h["audioLines"]
 		heroes.append(h)
 		h_idx += 1
 
@@ -3372,6 +3391,7 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 	enemy_movement_remaining = 0
 	enemy_movement_rolled_total = 0
 	pending_enemy_turn_monsters.clear()
+	_first_turn_audio_played = false
 
 	# If a saved game exists and not resetting, restore it over the baseline map state
 	if not should_reset and has_saved_game():
@@ -4313,6 +4333,9 @@ func get_reachable_walk_tiles() -> Array[Vector2i]:
 func _process(delta: float) -> void:
 	if is_movie_playing:
 		return
+
+	if not _first_turn_audio_played:
+		_check_play_first_turn_hero_audio()
 
 	if not _quest_completed and not is_game_closed:
 		if CartridgeManager.auto_play_enabled or (ai_play_for_you and auto_advance_turn):
@@ -10087,6 +10110,8 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 			if hero.get("veil_of_mist_active", false):
 				hero["veil_of_mist_active"] = false
 				_log("[SPELL] The Veil of Mist dissipates from around %s." % hero.get("name"))
+			_first_turn_audio_played = true
+			play_hero_situation_audio(hero, "moving")
 			_update_ui()
 			queue_redraw_all()
 			return true
@@ -10199,6 +10224,9 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 	if not hit_story_trigger.is_empty():
 		hit_story_trigger["triggered"] = true
 		_setup_story_trigger_overlay(hit_story_trigger, hero)
+
+	_first_turn_audio_played = true
+	play_hero_situation_audio(hero, "moving")
 
 	_log("[MOVE] %s moved to (%d, %d). Remaining movement: %d" % [
 		hero.get("name"), final_pos.x, final_pos.y, movement_remaining
@@ -13824,6 +13852,27 @@ func _play_dialogue_audio(path: String) -> float:
 	return 0.0
 
 var hero_voice_audio_player: AudioStreamPlayer = null
+var _first_turn_audio_played: bool = false
+
+func _check_play_first_turn_hero_audio() -> void:
+	if _first_turn_audio_played:
+		return
+	if current_phase != "hero_phase" or current_role != "player":
+		return
+	if is_movie_playing:
+		return
+	if not active_dialogue_sequence.is_empty() and active_dialogue_sequence.get("active", false):
+		return
+	if is_quest_objective_open():
+		return
+	if elf_spell_modal and elf_spell_modal.visible:
+		return
+	if armory_open or (armory_modal and armory_modal.visible):
+		return
+	var h = get_active_hero()
+	if not h.is_empty():
+		_first_turn_audio_played = true
+		play_hero_situation_audio(h, "turnStart")
 
 func _get_default_hero_audio_lines(h: Dictionary) -> Dictionary:
 	var key = _resolve_hero_identity_key(h)
@@ -13896,10 +13945,21 @@ func _get_default_hero_audio_lines(h: Dictionary) -> Dictionary:
 func play_hero_situation_audio(hero: Dictionary, situation: String) -> void:
 	if hero.is_empty() or hero.get("is_summon", false):
 		return
+	var ident_key = _resolve_hero_identity_key(hero)
+	var default_al = _get_default_hero_audio_lines(hero)
 	var al = hero.get("audioLines", hero.get("robos:audioLines", {}))
-	if not (al is Dictionary) or al.is_empty() or not al.has(situation):
-		al = _get_default_hero_audio_lines(hero)
-	var entries = al.get(situation, [])
+	if not (al is Dictionary) or al.is_empty():
+		al = default_al
+	var eff_situation = situation
+	if not al.has(eff_situation):
+		if eff_situation == "moving" and al.has("turnStart"):
+			eff_situation = "turnStart"
+		elif default_al.has(eff_situation):
+			al = default_al
+		else:
+			eff_situation = "turnStart"
+			al = default_al
+	var entries = al.get(eff_situation, [])
 	var chosen_text = ""
 	var chosen_audio = ""
 	if entries is Array and entries.size() > 0:
@@ -13914,6 +13974,13 @@ func play_hero_situation_audio(hero: Dictionary, situation: String) -> void:
 		chosen_audio = str(entries.get("audio", ""))
 	elif entries is String:
 		chosen_audio = str(entries)
+	# Ensure Election 2026 characters never fall back to classic HeroQuest voices
+	if ident_key in ["obama", "trump", "hillary_clinton", "bernie_sanders"]:
+		if chosen_audio == "" or "/barbarian_" in chosen_audio or "/dwarf_" in chosen_audio or "/elf_" in chosen_audio or "/wizard_" in chosen_audio:
+			var def_entries = default_al.get(eff_situation, default_al.get("turnStart", []))
+			if def_entries is Array and def_entries.size() > 0 and def_entries[0] is Dictionary:
+				chosen_text = str(def_entries[0].get("text", chosen_text))
+				chosen_audio = str(def_entries[0].get("audio", chosen_audio))
 	if chosen_text != "":
 		_log("🔊 [%s — %s] \"%s\"" % [get_hero_display_title(hero), situation, chosen_text])
 	if chosen_audio == "" or is_headless_mode():
@@ -13944,6 +14011,8 @@ func play_hero_situation_audio(hero: Dictionary, situation: String) -> void:
 func _start_dialogue_sequence(lines: Array) -> void:
 	if lines.is_empty():
 		return
+	if hero_voice_audio_player and hero_voice_audio_player.playing:
+		hero_voice_audio_player.stop()
 	active_dialogue_sequence = {
 		"bubbles": lines.duplicate(true),
 		"index": 0,
@@ -15034,6 +15103,7 @@ func _check_hero_enter_board(idx: int) -> void:
 
 func end_turn() -> void:
 	quest_begun = true
+	_first_turn_audio_played = true
 	ai_turn_waiting_for_input = false
 	auto_advance_timer = 0.0
 	var cur_hero = get_active_hero()
@@ -24911,6 +24981,9 @@ func play_movie(movie_path: String, title: String = "", can_skip: bool = true, o
 
 	if movie_player_layer:
 		movie_player_layer.visible = true
+
+	if hero_voice_audio_player and hero_voice_audio_player.playing:
+		hero_voice_audio_player.stop()
 
 	is_movie_playing = true
 	cinematic_started.emit(resolved, title)
