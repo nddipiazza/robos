@@ -4,6 +4,7 @@
 // Run after `npm run e2e:lifecycle`.
 const fs = require('node:fs'), path = require('node:path'), { execFileSync } = require('node:child_process');
 const { marked } = require('marked');
+const { createGuideRenderer } = require('./guide-markdown');
 const { Parser, AstBuilder, GherkinClassicTokenMatcher } = require('@cucumber/gherkin');
 const { IdGenerator } = require('@cucumber/messages');
 const root = path.resolve(__dirname, '..'), repo = path.resolve(root, '../..');
@@ -33,9 +34,9 @@ function directives(md) {
     .replace(/^::doc\[([^|\]]+)\|([^\]]*)\]$/gm, (_, file, c) => { fs.copyFileSync(path.join(repo, 'docs/assets/images/screenshots', file), path.join(out, 'shots', file)); return `\n\n<!--fig-->${fig('/assets/auto-center/shots/' + file, c, c)}<!--/fig-->\n\n`; });
 }
 function render(md) {
-  const html = marked.parse(directives(md), { mangle: false, headerIds: true });
-  return html.replace(/<p><!--fig-->([\s\S]*?)<!--\/fig--><\/p>/g, '$1').replace(/<!--fig-->([\s\S]*?)<!--\/fig-->/g, '$1').replace(/<li>\[ \]/g, '<li class="check"><span class="box"></span>').replace(/<li>\[x\]/g, '<li class="check done"><span class="box"></span>')
-    .replace(/<input disabled="" type="checkbox">/g, '<span class="box"></span>').replace(/\{\{/g, '{% raw %}{{').replace(/\}\}/g, '}}{% endraw %}').replace(/\{% raw %\}\{\{ '(\/assets[^']*)' \| relative_url \}\}\{% endraw %\}/g, "{{ '$1' | relative_url }}");
+  const html = marked.parse(directives(md), { renderer: createGuideRenderer(), mangle: false, headerIds: true });
+  return html.replace(/<p><!--fig-->([\s\S]*?)<!--\/fig--><\/p>/g, '$1').replace(/<!--fig-->([\s\S]*?)<!--\/fig-->/g, '$1')
+    .replace(/\{\{/g, '{% raw %}{{').replace(/\}\}/g, '}}{% endraw %}').replace(/\{% raw %\}\{\{ '(\/assets[^']*)' \| relative_url \}\}\{% endraw %\}/g, "{{ '$1' | relative_url }}");
 }
 function front(file) {
   const raw = fs.readFileSync(file, 'utf8'), m = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/); const meta = {};
