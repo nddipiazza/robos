@@ -1294,12 +1294,75 @@ function buildCartridgePayload() {
       createdDate: new Date().toISOString()
     },
     heroes: (() => {
+      const DEFAULT_HERO_AUDIO_LINES = {
+        barbarian: {
+          turnStart: [{ text: 'By my broadsword, clear a path!', audio: 'res://assets/audio/heroes/barbarian_turn_start.ogg' }],
+          attacking: [{ text: 'Taste cold Cimmerian steel!', audio: 'res://assets/audio/heroes/barbarian_attacking.ogg' }],
+          attacked: [{ text: 'Aagh! Only a flesh wound!', audio: 'res://assets/audio/heroes/barbarian_attacked.ogg' }],
+          defended: [{ text: 'Ha! Your feeble blow bounces off my iron muscles!', audio: 'res://assets/audio/heroes/barbarian_defended.ogg' }],
+          castingMagic: [{ text: 'The ancient battle-spirit surges through my blade!', audio: 'res://assets/audio/heroes/barbarian_casting_magic.ogg' }]
+        },
+        dwarf: {
+          turnStart: [{ text: "Stand back! Let a Dwarf of the World's Edge Mountains handle this!", audio: 'res://assets/audio/heroes/dwarf_turn_start.ogg' }],
+          attacking: [{ text: "For Grungni's beard, feel my battle-axe!", audio: 'res://assets/audio/heroes/dwarf_attacking.ogg' }],
+          attacked: [{ text: 'Oof! Right in the chainmail!', audio: 'res://assets/audio/heroes/dwarf_attacked.ogg' }],
+          defended: [{ text: 'Dwarven forged steel never yields!', audio: 'res://assets/audio/heroes/dwarf_defended.ogg' }],
+          castingMagic: [{ text: 'By the runes of the anvil, awaken!', audio: 'res://assets/audio/heroes/dwarf_casting_magic.ogg' }]
+        },
+        elf: {
+          turnStart: [{ text: 'With elven grace, I step into the shadows.', audio: 'res://assets/audio/heroes/elf_turn_start.ogg' }],
+          attacking: [{ text: 'Swift as the wind, strike true!', audio: 'res://assets/audio/heroes/elf_attacking.ogg' }],
+          attacked: [{ text: 'Ah! Darkness stings, yet my spirit endures!', audio: 'res://assets/audio/heroes/elf_attacked.ogg' }],
+          defended: [{ text: 'Too slow, creature! The forest shields me!', audio: 'res://assets/audio/heroes/elf_defended.ogg' }],
+          castingMagic: [{ text: 'Ancient weave of earth and water, heed my call!', audio: 'res://assets/audio/heroes/elf_casting_magic.ogg' }]
+        },
+        wizard: {
+          turnStart: [{ text: 'The winds of magic gather at my staff.', audio: 'res://assets/audio/heroes/wizard_turn_start.ogg' }],
+          attacking: [{ text: 'Back, foul fiend, before my arcane staff!', audio: 'res://assets/audio/heroes/wizard_attacking.ogg' }],
+          attacked: [{ text: 'Gah! My ward-cloak falters!', audio: 'res://assets/audio/heroes/wizard_attacked.ogg' }],
+          defended: [{ text: 'My arcane barrier deflects your strike!', audio: 'res://assets/audio/heroes/wizard_defended.ogg' }],
+          castingMagic: [{ text: 'By fire, air, and tempest, unleash the spell!', audio: 'res://assets/audio/heroes/wizard_casting_magic.ogg' }]
+        },
+        obama: {
+          turnStart: [{ text: 'Uhh... let me be clear... It is now... my turn... to march... toward the horizon... of hope.', audio: 'res://assets/audio/heroes/obama_turn_start.ogg' }],
+          attacking: [{ text: 'Uhh... feel the audacity... of this broadsword... of hope!', audio: 'res://assets/audio/heroes/obama_attacking.ogg' }],
+          attacked: [{ text: 'Uhh... folks... that strike... did not feel... very hopeful.', audio: 'res://assets/audio/heroes/obama_attacked.ogg' }],
+          defended: [{ text: 'Uhh... nice try... You cannot pierce... the shield... of hope.', audio: 'res://assets/audio/heroes/obama_defended.ogg' }],
+          castingMagic: [{ text: 'Uhh... by the power... of hope... and change... I cast... this spell.', audio: 'res://assets/audio/heroes/obama_casting_magic.ogg' }]
+        },
+        trump: {
+          turnStart: [{ text: "As you can see, I'm not just MAGA — I'm Dark MAGA!", audio: 'res://assets/audio/heroes/trump_turn_start.ogg' }],
+          attacking: [{ text: "And I do it! He doesn't do it! He can't hit a ball 50 yards! He challenged me to a golf match, he can't hit a ball 50 yards!", audio: 'res://assets/audio/heroes/trump_attacking.ogg' }],
+          attacked: [{ text: "Would you look at what's happening? This is a persecution! This was never supposed to happen in America!", audio: 'res://assets/audio/heroes/trump_attacked.ogg' }],
+          defended: [{ text: "Here's the fighter — somebody who tried to kill him! You will not take this man down!", audio: 'res://assets/audio/heroes/trump_defended.ogg' }],
+          castingMagic: [{ text: "Do you think that we have aliens coming, flying around or whatever? There's no reason not to think that Mars and all these planets don't have life!", audio: 'res://assets/audio/heroes/trump_casting_magic.ogg' }]
+        },
+        'hillary-clinton': {
+          turnStart: [{ text: "We've traveled to every corner of the United States. I've now been in 57 states — I think one left to go!", audio: 'res://assets/audio/heroes/hillary_turn_start.ogg' }],
+          attacking: [{ text: 'We came, we saw, he died! Ha ha ha!', audio: 'res://assets/audio/heroes/hillary_attacking.ogg' }],
+          attacked: [{ text: 'What difference, at this point, does it make?!', audio: 'res://assets/audio/heroes/hillary_attacked.ogg' }],
+          defended: [{ text: "What, like with a cloth or something? Well, no, I don't know how it works digitally at all!", audio: 'res://assets/audio/heroes/hillary_defended.ogg' }],
+          castingMagic: [{ text: "But I cast it with conviction! And I want the Iranians to know that if I'm the President, we will attack Iran!", audio: 'res://assets/audio/heroes/hillary_casting_magic.ogg' }]
+        },
+        'bernie-sanders': {
+          turnStart: [{ text: "Let's talk about welfare for the rich and the powerful!", audio: 'res://assets/audio/heroes/bernie_turn_start.ogg' }],
+          attacking: [{ text: 'I will be damned if I will vote for a proposal which will stick it to the middle class and the working people!', audio: 'res://assets/audio/heroes/bernie_attacking.ogg' }],
+          attacked: [{ text: "Mr. Speaker, I've got a problem! I've got a problem with a President and a Congress which allows five million children to go hungry!", audio: 'res://assets/audio/heroes/bernie_attacked.ogg' }],
+          defended: [{ text: 'What we are saying very loud and clear is that Ronald Reagan and his billionaire friends do not represent the America that we do!', audio: 'res://assets/audio/heroes/bernie_defended.ogg' }],
+          castingMagic: [{ text: 'This democracy is evolving into an oligarchy! And an oligarchy is a country in which a few people have tremendous wealth and power!', audio: 'res://assets/audio/heroes/bernie_casting_magic.ogg' }]
+        }
+      };
       const startPos = q.startingStair || [0, 1];
       if (q.heroes && typeof q.heroes === 'object' && Object.keys(q.heroes).length > 0) {
         const preserved = JSON.parse(JSON.stringify(q.heroes));
         for (const hKey of Object.keys(preserved)) {
-          if (preserved[hKey] && typeof preserved[hKey] === 'object' && !Array.isArray(preserved[hKey].position)) {
-            preserved[hKey].position = startPos;
+          const h = preserved[hKey];
+          if (h && typeof h === 'object') {
+            if (!Array.isArray(h.position)) h.position = startPos;
+            const lookupKey = String(h.id || h.slug || hKey).toLowerCase();
+            const fallbackAl = DEFAULT_HERO_AUDIO_LINES[lookupKey] || DEFAULT_HERO_AUDIO_LINES[String(h.heroClass || 'barbarian').toLowerCase()] || DEFAULT_HERO_AUDIO_LINES.barbarian;
+            if (!h.audioLines) h.audioLines = h['robos:audioLines'] || fallbackAl;
+            if (!h['robos:audioLines']) h['robos:audioLines'] = h.audioLines;
           }
         }
         return preserved;
@@ -1312,6 +1375,8 @@ function buildCartridgePayload() {
             bodyPoints: 8, mindPoints: 2, attackDice: 3, defendDice: 2, gold: 120,
             tokenAsset: 'assets/tokens/token_obama.png',
             portraitAsset: 'assets/hero_cards/card_bg_obama.png',
+            audioLines: DEFAULT_HERO_AUDIO_LINES.obama,
+            'robos:audioLines': DEFAULT_HERO_AUDIO_LINES.obama,
             position: startPos
           },
           trump: {
@@ -1319,6 +1384,8 @@ function buildCartridgePayload() {
             bodyPoints: 7, mindPoints: 3, attackDice: 2, defendDice: 2, gold: 250,
             tokenAsset: 'assets/tokens/token_trump.png',
             portraitAsset: 'assets/hero_cards/card_bg_trump.png',
+            audioLines: DEFAULT_HERO_AUDIO_LINES.trump,
+            'robos:audioLines': DEFAULT_HERO_AUDIO_LINES.trump,
             position: startPos
           },
           'hillary-clinton': {
@@ -1326,6 +1393,8 @@ function buildCartridgePayload() {
             bodyPoints: 6, mindPoints: 4, attackDice: 2, defendDice: 2, gold: 150,
             tokenAsset: 'assets/tokens/token_hillary_clinton.png',
             portraitAsset: 'assets/hero_cards/card_bg_hillary_clinton.png',
+            audioLines: DEFAULT_HERO_AUDIO_LINES['hillary-clinton'],
+            'robos:audioLines': DEFAULT_HERO_AUDIO_LINES['hillary-clinton'],
             position: startPos
           },
           'bernie-sanders': {
@@ -1333,6 +1402,8 @@ function buildCartridgePayload() {
             bodyPoints: 4, mindPoints: 6, attackDice: 1, defendDice: 2, gold: 99,
             tokenAsset: 'assets/tokens/token_bernie_sanders.png',
             portraitAsset: 'assets/hero_cards/card_bg_bernie_sanders.png',
+            audioLines: DEFAULT_HERO_AUDIO_LINES['bernie-sanders'],
+            'robos:audioLines': DEFAULT_HERO_AUDIO_LINES['bernie-sanders'],
             position: startPos
           }
         };
@@ -1341,21 +1412,29 @@ function buildCartridgePayload() {
         barbarian: {
           id: 'barbarian', slug: 'barbarian', name: 'Barbarian', heroClass: 'Barbarian',
           bodyPoints: 8, mindPoints: 2, attackDice: 3, defendDice: 2, gold: 100,
+          audioLines: DEFAULT_HERO_AUDIO_LINES.barbarian,
+          'robos:audioLines': DEFAULT_HERO_AUDIO_LINES.barbarian,
           position: startPos
         },
         dwarf: {
           id: 'dwarf', slug: 'dwarf', name: 'Dwarf', heroClass: 'Dwarf',
           bodyPoints: 7, mindPoints: 3, attackDice: 2, defendDice: 2, gold: 100,
+          audioLines: DEFAULT_HERO_AUDIO_LINES.dwarf,
+          'robos:audioLines': DEFAULT_HERO_AUDIO_LINES.dwarf,
           position: startPos
         },
         elf: {
           id: 'elf', slug: 'elf', name: 'Elf', heroClass: 'Elf',
           bodyPoints: 6, mindPoints: 4, attackDice: 2, defendDice: 2, gold: 100,
+          audioLines: DEFAULT_HERO_AUDIO_LINES.elf,
+          'robos:audioLines': DEFAULT_HERO_AUDIO_LINES.elf,
           position: startPos
         },
         wizard: {
           id: 'wizard', slug: 'wizard', name: 'Wizard', heroClass: 'Wizard',
           bodyPoints: 4, mindPoints: 6, attackDice: 1, defendDice: 2, gold: 100,
+          audioLines: DEFAULT_HERO_AUDIO_LINES.wizard,
+          'robos:audioLines': DEFAULT_HERO_AUDIO_LINES.wizard,
           position: startPos
         }
       };
