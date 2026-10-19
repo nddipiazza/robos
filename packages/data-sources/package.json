@@ -6,7 +6,20 @@
   "scripts": {
     "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
   },
-  "keywords": ["robos", "datasources", "kgraph", "postgres", "sql", "nosql", "s3", "gdrive"],
+  "keywords": [
+    "robos",
+    "datasources",
+    "kgraph",
+    "postgres",
+    "sql",
+    "nosql",
+    "s3",
+    "gdrive"
+  ],
   "author": "RobOS Core Platform",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "dependencies": {
+    "basic-ftp": "^6.2.3",
+    "ssh2-sftp-client": "^12.1.1"
+  }
 }
