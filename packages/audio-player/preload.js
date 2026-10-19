@@ -21,6 +21,15 @@ contextBridge.exposeInMainWorld('robosAudio', {
   cancelLibraryScan: () => ipcRenderer.invoke('audio:cancel-scan'),
   importPaths: (paths) => ipcRenderer.invoke('audio:import-paths', paths),
   scanDefaultLibrary: () => ipcRenderer.invoke('audio:scan-default-library'),
+  getLyrics: (track) => ipcRenderer.invoke('audio:get-lyrics', track),
+  cloudConnections: () => ipcRenderer.invoke('audio:cloud-connections'),
+  cloudList: (id, path) => ipcRenderer.invoke('audio:cloud-list', { id, path }),
+  cloudImport: (id, paths) => ipcRenderer.invoke('audio:cloud-import', { id, paths }),
+  onCloudProgress: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:cloud-progress', handler);
+    return () => ipcRenderer.removeListener('audio:cloud-progress', handler);
+  },
   getPlaylists: () => ipcRenderer.invoke('audio:get-playlists'),
   getPlaylist: (id) => ipcRenderer.invoke('audio:get-playlist', id),
   createPlaylist: (data) => ipcRenderer.invoke('audio:create-playlist', data),
