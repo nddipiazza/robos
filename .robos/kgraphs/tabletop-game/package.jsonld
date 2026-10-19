@@ -82,14 +82,46 @@
         }
       ],
       "robos:specialAbility": "",
-      "robos:icon": "🛡️",
+      "robos:icon": "\ud83d\udee1\ufe0f",
       "robos:startingPosition": [
         1,
         1
       ],
       "robos:category": "Base Game",
       "robos:tokenAsset": "assets/tokens/token_barbarian.png",
-      "robos:portraitAsset": "assets/portraits/card_bg_barbarian.png"
+      "robos:portraitAsset": "assets/portraits/card_bg_barbarian.png",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "By my broadsword, clear a path!",
+            "audio": "res://assets/audio/heroes/barbarian_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Taste cold Cimmerian steel!",
+            "audio": "res://assets/audio/heroes/barbarian_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Aagh! Only a flesh wound!",
+            "audio": "res://assets/audio/heroes/barbarian_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Ha! Your feeble blow bounces off my iron muscles!",
+            "audio": "res://assets/audio/heroes/barbarian_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "The ancient battle-spirit surges through my blade!",
+            "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:dwarf",
@@ -112,7 +144,39 @@
       "robos:heroClass": "Dwarf",
       "robos:category": "Base Game",
       "robos:tokenAsset": "assets/tokens/token_dwarf.png",
-      "robos:portraitAsset": "assets/portraits/card_bg_dwarf.png"
+      "robos:portraitAsset": "assets/portraits/card_bg_dwarf.png",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "Stand back! Let a Dwarf of the World's Edge Mountains handle this!",
+            "audio": "res://assets/audio/heroes/dwarf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "For Grungni's beard, feel my battle-axe!",
+            "audio": "res://assets/audio/heroes/dwarf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Oof! Right in the chainmail!",
+            "audio": "res://assets/audio/heroes/dwarf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Dwarven forged steel never yields!",
+            "audio": "res://assets/audio/heroes/dwarf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By the runes of the anvil, awaken!",
+            "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:elf",
@@ -135,7 +199,39 @@
       "robos:heroClass": "Elf",
       "robos:category": "Base Game",
       "robos:tokenAsset": "assets/tokens/token_elf.png",
-      "robos:portraitAsset": "assets/portraits/card_bg_elf.png"
+      "robos:portraitAsset": "assets/portraits/card_bg_elf.png",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "With elven grace, I step into the shadows.",
+            "audio": "res://assets/audio/heroes/elf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Swift as the wind, strike true!",
+            "audio": "res://assets/audio/heroes/elf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Ah! Darkness stings, yet my spirit endures!",
+            "audio": "res://assets/audio/heroes/elf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Too slow, creature! The forest shields me!",
+            "audio": "res://assets/audio/heroes/elf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "Ancient weave of earth and water, heed my call!",
+            "audio": "res://assets/audio/heroes/elf_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:wizard",
@@ -175,14 +271,46 @@
           "value": 100
         }
       ],
-      "robos:icon": "🛡️",
+      "robos:icon": "\ud83d\udee1\ufe0f",
       "robos:startingPosition": [
         1,
         1
       ],
       "robos:category": "Base Game",
       "robos:tokenAsset": "assets/tokens/token_wizard.png",
-      "robos:portraitAsset": "assets/portraits/card_bg_wizard.png"
+      "robos:portraitAsset": "assets/portraits/card_bg_wizard.png",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "The winds of magic gather at my staff.",
+            "audio": "res://assets/audio/heroes/wizard_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Back, foul fiend, before my arcane staff!",
+            "audio": "res://assets/audio/heroes/wizard_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Gah! My ward-cloak falters!",
+            "audio": "res://assets/audio/heroes/wizard_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "My arcane barrier deflects your strike!",
+            "audio": "res://assets/audio/heroes/wizard_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By fire, air, and tempest, unleash the spell!",
+            "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:bernie-sanders",
@@ -207,7 +335,7 @@
       "robos:tokenColor": "#2563eb",
       "robos:tokenAsset": "assets/tokens/token_bernie_sanders.png",
       "robos:portraitAsset": "assets/portraits/card_bg_bernie_sanders.png",
-      "robos:icon": "🪄",
+      "robos:icon": "\ud83e\ude84",
       "robos:startingPosition": [
         1,
         13
@@ -230,7 +358,39 @@
       ],
       "dcterms:description": "Ancient Elemental Wizard in a tall starry wizard hat and iconic patterned wool mittens. Commands 3 full elemental spell colleges (9 spells) against Super PAC demons and Hydras.",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "Let's talk about welfare for the rich and the powerful!",
+            "audio": "res://assets/audio/heroes/bernie_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "I will be damned if I will vote for a proposal which will stick it to the middle class and the working people!",
+            "audio": "res://assets/audio/heroes/bernie_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Mr. Speaker, I've got a problem! I've got a problem with a President and a Congress which allows five million children to go hungry!",
+            "audio": "res://assets/audio/heroes/bernie_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "What we are saying very loud and clear is that Ronald Reagan and his billionaire friends do not represent the America that we do!",
+            "audio": "res://assets/audio/heroes/bernie_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "This democracy is evolving into an oligarchy! And an oligarchy is a country in which a few people have tremendous wealth and power!",
+            "audio": "res://assets/audio/heroes/bernie_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:hillary-clinton",
@@ -250,12 +410,12 @@
       "robos:startingWeapon": "urn:robos:game:item:shortsword",
       "robos:equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
       "robos:equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
-      "robos:specialAbility": "Spellcaster (1 College — 3 Spells)",
+      "robos:specialAbility": "Spellcaster (1 College \u2014 3 Spells)",
       "robos:gold": 150,
       "robos:tokenColor": "#059669",
       "robos:tokenAsset": "assets/tokens/token_hillary_clinton.png",
       "robos:portraitAsset": "assets/portraits/card_bg_hillary_clinton.png",
-      "robos:icon": "🏹",
+      "robos:icon": "\ud83c\udff9",
       "robos:startingPosition": [
         0,
         13
@@ -278,7 +438,39 @@
       ],
       "dcterms:description": "High-born Lord of the Rings Woodland Elf noble with a sly, knowing smile, emerald leaf-brooch cloak, and silver circlet. Combines deft blade work with 1 college of spells.",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "We've traveled to every corner of the United States. I've now been in 57 states \u2014 I think one left to go!",
+            "audio": "res://assets/audio/heroes/hillary_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "We came, we saw, he died! Ha ha ha!",
+            "audio": "res://assets/audio/heroes/hillary_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "What difference, at this point, does it make?!",
+            "audio": "res://assets/audio/heroes/hillary_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "What, like with a cloth or something? Well, no, I don't know how it works digitally at all!",
+            "audio": "res://assets/audio/heroes/hillary_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "But I cast it with conviction! And I want the Iranians to know that if I'm the President, we will attack Iran!",
+            "audio": "res://assets/audio/heroes/hillary_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:trump",
@@ -303,7 +495,7 @@
       "robos:tokenColor": "#d97706",
       "robos:tokenAsset": "assets/tokens/token_trump.png",
       "robos:portraitAsset": "assets/portraits/card_bg_trump.png",
-      "robos:icon": "🪓",
+      "robos:icon": "\ud83e\ude93",
       "robos:startingPosition": [
         1,
         12
@@ -326,7 +518,39 @@
       ],
       "dcterms:description": "Heavily armored Dwarf warrior sporting his signature golden hair and a magnificent braided golden Dwarven beard. Master trap disarmer and gilded dungeon builder.",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "As you can see, I'm not just MAGA \u2014 I'm Dark MAGA!",
+            "audio": "res://assets/audio/heroes/trump_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "And I do it! He doesn't do it! He can't hit a ball 50 yards! He challenged me to a golf match, he can't hit a ball 50 yards!",
+            "audio": "res://assets/audio/heroes/trump_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Would you look at what's happening? This is a persecution! This was never supposed to happen in America!",
+            "audio": "res://assets/audio/heroes/trump_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Here's the fighter \u2014 somebody who tried to kill him! You will not take this man down!",
+            "audio": "res://assets/audio/heroes/trump_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "Do you think that we have aliens coming, flying around or whatever? There's no reason not to think that Mars and all these planets don't have life!",
+            "audio": "res://assets/audio/heroes/trump_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:obama",
@@ -351,7 +575,7 @@
       "robos:tokenColor": "#b91c1c",
       "robos:tokenAsset": "assets/tokens/token_obama.png",
       "robos:portraitAsset": "assets/portraits/card_bg_obama.png",
-      "robos:icon": "⚔️",
+      "robos:icon": "\u2694\ufe0f",
       "robos:startingPosition": [
         0,
         12
@@ -374,7 +598,39 @@
       ],
       "dcterms:description": "Buff-as-hell, salt-and-pepper grey-haired Barbarian champion of the Midterms 2026 Hero Pack. Wields a rune-etched broadsword and devastating frontline melee power.",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "Uhh... let me be clear... It is now... my turn... to march... toward the horizon... of hope.",
+            "audio": "res://assets/audio/heroes/obama_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Uhh... feel the audacity... of this broadsword... of hope!",
+            "audio": "res://assets/audio/heroes/obama_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Uhh... folks... that strike... did not feel... very hopeful.",
+            "audio": "res://assets/audio/heroes/obama_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Uhh... nice try... You cannot pierce... the shield... of hope.",
+            "audio": "res://assets/audio/heroes/obama_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "Uhh... by the power... of hope... and change... I cast... this spell.",
+            "audio": "res://assets/audio/heroes/obama_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:monster:goblin",
@@ -667,7 +923,7 @@
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Dragon",
       "robos:archetype": "Dragon",
-      "robos:icon": "🐉",
+      "robos:icon": "\ud83d\udc09",
       "robos:bodyPoints": 6,
       "robos:attackDice": 5,
       "robos:defendDice": 5,
@@ -1134,7 +1390,7 @@
         "robos:GameMap",
         "schema:Place"
       ],
-      "dcterms:title": "The Trial — Quest 1: Lair of the Orc Warlord",
+      "dcterms:title": "The Trial \u2014 Quest 1: Lair of the Orc Warlord",
       "robos:width": 26,
       "robos:height": 19,
       "robos:startingSpawn": [
@@ -1228,7 +1484,7 @@
         "robos:TabletopMapConfiguration",
         "schema:Place"
       ],
-      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28×21)",
+      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28\u00d721)",
       "robos:boardSide": "Custom",
       "robos:gridDimensions": [
         28,
@@ -1954,7 +2210,7 @@
         "robos:GameMap",
         "schema:Place"
       ],
-      "dcterms:title": "The Fortress of the Fire King — Quest 4",
+      "dcterms:title": "The Fortress of the Fire King \u2014 Quest 4",
       "robos:width": 26,
       "robos:height": 19,
       "robos:startingSpawn": [
@@ -2031,7 +2287,7 @@
       "robos:weaponType": "Weapon",
       "robos:dice": "4 Attack Dice (No Congressional Vote Required)",
       "robos:cost": "450 GP",
-      "robos:icon": "💣",
+      "robos:icon": "\ud83d\udca3",
       "dcterms:description": "Illegal presidential act #1: Bypasses Article I and the War Powers Resolution completely! Strike any dungeon room without asking Congress and call it a 'limited kinetic operation'.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2050,7 +2306,7 @@
       "robos:weaponType": "Weapon",
       "robos:dice": "3 Attack Dice (Bathroom Chandelier & Corvette Garage Edition)",
       "robos:cost": "300 GP",
-      "robos:icon": "📦",
+      "robos:icon": "\ud83d\udce6",
       "dcterms:description": "Illegal presidential act #2: A heavy cardboard banker's box of Top Secret nuclear & war plans stashed next to a golden toilet and a vintage Corvette. Declassified telepathically!",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2069,7 +2325,7 @@
       "robos:weaponType": "Weapon",
       "robos:dice": "3 Attack Dice (Erases All Past & Future Crimes)",
       "robos:cost": "350 GP",
-      "robos:icon": "🔨",
+      "robos:icon": "\ud83d\udd28",
       "dcterms:description": "Illegal presidential act #3: Signed at 11:59 PM on the last day in office! Preemptively pardons family members, political cronies, and campaign donors for a decade of dungeon raids.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2088,7 +2344,7 @@
       "robos:weaponType": "Weapon",
       "robos:dice": "3 Attack Dice (Ignores Supreme Court & Congress)",
       "robos:cost": "280 GP",
-      "robos:icon": "🖊️",
+      "robos:icon": "\ud83d\udd8a\ufe0f",
       "dcterms:description": "Illegal presidential act #4: Declares a fake 'National Dungeon Emergency' to spend 500 Billion GP, levy random tariffs, and rewrite laws with a single Sharpie stroke.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2107,7 +2363,7 @@
       "robos:weaponType": "Ranged Weapon",
       "robos:dice": "3 Attack Dice (Emoluments Clause Drain)",
       "robos:cost": "420 GP",
-      "robos:icon": "🪙",
+      "robos:icon": "\ud83e\ude99",
       "dcterms:description": "Illegal presidential act #5: Launches an official presidential crypto token 48 hours before the quest starts, draining every monster's gold purse while insiders cash out.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2126,7 +2382,7 @@
       "robos:weaponType": "Ranged Weapon",
       "robos:dice": "3 Attack Dice (Straight-Line Lawfare)",
       "robos:cost": "350 GP",
-      "robos:icon": "🏹",
+      "robos:icon": "\ud83c\udff9",
       "dcterms:description": "Illegal presidential act #6: Fires 400-page federal indictments and retaliatory IRS audits across the corridor at political opponents during election season.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2145,7 +2401,7 @@
       "robos:weaponType": "Armor",
       "robos:dice": "+2 Defend Dice (Total Legal Invulnerability)",
       "robos:cost": "500 GP",
-      "robos:icon": "🛡️",
+      "robos:icon": "\ud83d\udee1\ufe0f",
       "dcterms:description": "Any illegal dungeon act committed while holding this shield is automatically declared a Core Official Constitutional Act.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2164,7 +2420,7 @@
       "robos:itemType": "potion",
       "robos:effect": "Restores 4 BP, but forces a 10-minute rant about microaggressions or woke M&Ms",
       "robos:cost": 100,
-      "robos:icon": "❄️",
+      "robos:icon": "\u2744\ufe0f",
       "dcterms:description": "Brewed from pure bipartisan fragility whenever someone encounters a joke, a pronoun, or a holiday coffee cup they slightly dislike.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2183,7 +2439,7 @@
       "robos:itemType": "relic",
       "robos:effect": "Takes away abortion & personal healthcare choices in the room, replacing them with a politician committee",
       "robos:cost": 200,
-      "robos:icon": "📜",
+      "robos:icon": "\ud83d\udcdc",
       "dcterms:description": "Overturns 50 years of settled bodily autonomy precedent overnight while claiming 'we just sent the decision back to the dungeon states!'",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2202,7 +2458,7 @@
       "robos:itemType": "relic",
       "robos:effect": "Supporting things 100% just because your party does! +2 Attack Dice when reversing your opinion from yesterday",
       "robos:cost": 150,
-      "robos:icon": "🩴",
+      "robos:icon": "\ud83e\ude74",
       "dcterms:description": "Lets a hero passionately cheer for the exact policy they called treason five minutes ago because their party leader just endorsed it.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2221,8 +2477,8 @@
       "robos:itemType": "tool",
       "robos:effect": "Fear of Israel & Middle East questions: deflects press inquiries while auto-wiring 20 Billion GP",
       "robos:cost": 175,
-      "robos:icon": "📺",
-      "dcterms:description": "Activated the moment anyone brings up Israel or the Middle East—sweats profusely, mutters a 15-second canned platitude, and dives out the nearest dungeon window.",
+      "robos:icon": "\ud83d\udcfa",
+      "dcterms:description": "Activated the moment anyone brings up Israel or the Middle East\u2014sweats profusely, mutters a 15-second canned platitude, and dives out the nearest dungeon window.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     },
@@ -2240,7 +2496,7 @@
       "robos:itemType": "artifact",
       "robos:effect": "Mints 500 GP instantly, but spawns an Inflation Spawn and makes eggs cost 25 GP",
       "robos:cost": 300,
-      "robos:icon": "🖨️",
+      "robos:icon": "\ud83d\udda8\ufe0f",
       "dcterms:description": "Bipartisan economic magic: solves high prices by printing trillions of new gold coins and calling the resulting inflation 'transitory'.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2252,7 +2508,7 @@
         "robos:TabletopQuestSaveState",
         "schema:Action"
       ],
-      "dcterms:title": "Quest State — Round 1 (Dwarf (Hero 2 of 4))",
+      "dcterms:title": "Quest State \u2014 Round 1 (Dwarf (Hero 2 of 4))",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop",
       "robos:questSlug": "custom-quest",
@@ -2471,7 +2727,7 @@
           "type": "equipment",
           "holder": "Barbarian",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
           "id": "barbarian-healing_potion-1",
@@ -2479,7 +2735,7 @@
           "type": "potion",
           "holder": "Barbarian",
           "source": "Hero Inventory",
-          "icon": "🧪"
+          "icon": "\ud83e\uddea"
         },
         {
           "id": "dwarf-shortsword-0",
@@ -2487,7 +2743,7 @@
           "type": "equipment",
           "holder": "Dwarf",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
           "id": "dwarf-healing_potion-1",
@@ -2495,7 +2751,7 @@
           "type": "potion",
           "holder": "Dwarf",
           "source": "Hero Inventory",
-          "icon": "🧪"
+          "icon": "\ud83e\uddea"
         },
         {
           "id": "elf-shortsword-0",
@@ -2503,7 +2759,7 @@
           "type": "equipment",
           "holder": "Elf",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
           "id": "elf-healing_potion-1",
@@ -2511,7 +2767,7 @@
           "type": "potion",
           "holder": "Elf",
           "source": "Hero Inventory",
-          "icon": "🧪"
+          "icon": "\ud83e\uddea"
         },
         {
           "id": "wizard-dagger-0",
@@ -2519,7 +2775,7 @@
           "type": "equipment",
           "holder": "Wizard",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
           "id": "wizard-staff-1",
@@ -2527,7 +2783,7 @@
           "type": "equipment",
           "holder": "Wizard",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
           "id": "wizard-healing_potion-2",
@@ -2535,7 +2791,7 @@
           "type": "potion",
           "holder": "Wizard",
           "source": "Hero Inventory",
-          "icon": "🧪"
+          "icon": "\ud83e\uddea"
         }
       ],
       "robos:itemsFoundCount": 9,
@@ -2594,7 +2850,7 @@
           "tokenColor": "#b91c1c",
           "tokenAsset": "assets/tokens/token_obama.png",
           "portraitAsset": "assets/portraits/card_bg_obama.png",
-          "icon": "⚔️",
+          "icon": "\u2694\ufe0f",
           "startingPosition": [
             0,
             12
@@ -2614,7 +2870,83 @@
               "effect": "+1 Mind resistance vs Spin Doctors",
               "value": 50
             }
-          ]
+          ],
+          "@id": "urn:robos:tabletop:hero:obama",
+          "@type": [
+            "oslc_am:Resource",
+            "robos:TabletopHero",
+            "robos:GameCharacter",
+            "schema:Person"
+          ],
+          "dcterms:title": "Barack Obama",
+          "robos:characterName": "Barack Obama",
+          "robos:heroClass": "Barbarian",
+          "robos:category": "Midterms 2026",
+          "robos:bodyPoints": 8,
+          "robos:mindPoints": 2,
+          "robos:attackDice": 3,
+          "robos:defendDice": 2,
+          "robos:gold": 120,
+          "robos:equippedWeapon": "Broadsword of Hope & Change (3 Combat Dice)",
+          "robos:equippedArmor": "Chiseled Commander Toughness (2 Defend Dice)",
+          "robos:specialAbility": "Bipartisan Cleave (Melee Specialist)",
+          "robos:tokenColor": "#b91c1c",
+          "robos:icon": "\u2694\ufe0f",
+          "robos:startingPosition": [
+            0,
+            12
+          ],
+          "robos:inventory": [
+            {
+              "id": "item-pot-heal-obama",
+              "name": "Potion of Executive Vigor",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
+            },
+            {
+              "id": "item-mic-drop-1",
+              "name": "Runic Teleprompter Shard",
+              "type": "relic",
+              "effect": "+1 Mind resistance vs Spin Doctors",
+              "value": 50
+            }
+          ],
+          "robos:tokenAsset": "assets/tokens/token_obama.png",
+          "robos:portraitAsset": "assets/portraits/card_bg_obama.png",
+          "robos:spells": [],
+          "robos:audioLines": {
+            "turnStart": [
+              {
+                "text": "Uhh... let me be clear... It is now... my turn... to march... toward the horizon... of hope.",
+                "audio": "res://assets/audio/heroes/obama_turn_start.ogg"
+              }
+            ],
+            "attacking": [
+              {
+                "text": "Uhh... feel the audacity... of this broadsword... of hope!",
+                "audio": "res://assets/audio/heroes/obama_attacking.ogg"
+              }
+            ],
+            "attacked": [
+              {
+                "text": "Uhh... folks... that strike... did not feel... very hopeful.",
+                "audio": "res://assets/audio/heroes/obama_attacked.ogg"
+              }
+            ],
+            "defended": [
+              {
+                "text": "Uhh... nice try... You cannot pierce... the shield... of hope.",
+                "audio": "res://assets/audio/heroes/obama_defended.ogg"
+              }
+            ],
+            "castingMagic": [
+              {
+                "text": "Uhh... by the power... of hope... and change... I cast... this spell.",
+                "audio": "res://assets/audio/heroes/obama_casting_magic.ogg"
+              }
+            ]
+          }
         },
         {
           "id": "urn:robos:tabletop:hero:trump",
@@ -2634,7 +2966,7 @@
           "tokenColor": "#d97706",
           "tokenAsset": "assets/tokens/token_trump.png",
           "portraitAsset": "assets/portraits/card_bg_trump.png",
-          "icon": "🪓",
+          "icon": "\ud83e\ude93",
           "startingPosition": [
             1,
             12
@@ -2654,7 +2986,83 @@
               "effect": "Restores up to 4 BP",
               "value": 100
             }
-          ]
+          ],
+          "@id": "urn:robos:tabletop:hero:trump",
+          "@type": [
+            "oslc_am:Resource",
+            "robos:TabletopHero",
+            "robos:GameCharacter",
+            "schema:Person"
+          ],
+          "dcterms:title": "Donald Trump",
+          "robos:characterName": "Donald Trump",
+          "robos:heroClass": "Dwarf",
+          "robos:category": "Midterms 2026",
+          "robos:bodyPoints": 7,
+          "robos:mindPoints": 3,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2,
+          "robos:gold": 250,
+          "robos:equippedWeapon": "Gilded Dwarven Battle-Axe (2 Combat Dice)",
+          "robos:equippedArmor": "Gold-Plated Rune Mail (2 Defend Dice)",
+          "robos:specialAbility": "Disarm Traps & Red-Tape Vaults",
+          "robos:tokenColor": "#d97706",
+          "robos:icon": "\ud83e\ude93",
+          "robos:startingPosition": [
+            1,
+            12
+          ],
+          "robos:inventory": [
+            {
+              "id": "item-toolkit-trump",
+              "name": "Golden Dwarven Trap Toolkit",
+              "type": "tool",
+              "effect": "Disarms any pit, boulder, or bureaucratic trap",
+              "value": 150
+            },
+            {
+              "id": "item-pot-heal-trump",
+              "name": "Elixir of Tremendous Stamina",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
+            }
+          ],
+          "robos:tokenAsset": "assets/tokens/token_trump.png",
+          "robos:portraitAsset": "assets/portraits/card_bg_trump.png",
+          "robos:spells": [],
+          "robos:audioLines": {
+            "turnStart": [
+              {
+                "text": "As you can see, I'm not just MAGA \u2014 I'm Dark MAGA!",
+                "audio": "res://assets/audio/heroes/trump_turn_start.ogg"
+              }
+            ],
+            "attacking": [
+              {
+                "text": "And I do it! He doesn't do it! He can't hit a ball 50 yards! He challenged me to a golf match, he can't hit a ball 50 yards!",
+                "audio": "res://assets/audio/heroes/trump_attacking.ogg"
+              }
+            ],
+            "attacked": [
+              {
+                "text": "Would you look at what's happening? This is a persecution! This was never supposed to happen in America!",
+                "audio": "res://assets/audio/heroes/trump_attacked.ogg"
+              }
+            ],
+            "defended": [
+              {
+                "text": "Here's the fighter \u2014 somebody who tried to kill him! You will not take this man down!",
+                "audio": "res://assets/audio/heroes/trump_defended.ogg"
+              }
+            ],
+            "castingMagic": [
+              {
+                "text": "Do you think that we have aliens coming, flying around or whatever? There's no reason not to think that Mars and all these planets don't have life!",
+                "audio": "res://assets/audio/heroes/trump_casting_magic.ogg"
+              }
+            ]
+          }
         },
         {
           "id": "urn:robos:tabletop:hero:hillary-clinton",
@@ -2670,11 +3078,11 @@
           "gold": 150,
           "equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
           "equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
-          "specialAbility": "Spellcaster (1 College — 3 Spells)",
+          "specialAbility": "Spellcaster (1 College \u2014 3 Spells)",
           "tokenColor": "#059669",
           "tokenAsset": "assets/tokens/token_hillary_clinton.png",
           "portraitAsset": "assets/portraits/card_bg_hillary_clinton.png",
-          "icon": "🏹",
+          "icon": "\ud83c\udff9",
           "startingPosition": [
             0,
             13
@@ -2694,7 +3102,117 @@
               "effect": "Restores up to 4 BP",
               "value": 100
             }
-          ]
+          ],
+          "@id": "urn:robos:tabletop:hero:hillary-clinton",
+          "@type": [
+            "oslc_am:Resource",
+            "robos:TabletopHero",
+            "robos:GameCharacter",
+            "schema:Person"
+          ],
+          "dcterms:title": "Hillary Clinton",
+          "robos:characterName": "Hillary Clinton",
+          "robos:heroClass": "Elf",
+          "robos:category": "Midterms 2026",
+          "robos:bodyPoints": 6,
+          "robos:mindPoints": 4,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2,
+          "robos:gold": 150,
+          "robos:equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
+          "robos:equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
+          "robos:specialAbility": "Spellcaster (1 College \u2014 3 Spells)",
+          "robos:tokenColor": "#059669",
+          "robos:icon": "\ud83c\udff9",
+          "robos:startingPosition": [
+            0,
+            13
+          ],
+          "robos:inventory": [
+            {
+              "id": "item-scroll-hillary",
+              "name": "Classified Elven Parchment",
+              "type": "relic",
+              "effect": "Reveals hidden doors in current corridor",
+              "value": 120
+            },
+            {
+              "id": "item-pot-heal-hillary",
+              "name": "Draught of Miruvor",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
+            }
+          ],
+          "robos:tokenAsset": "assets/tokens/token_hillary_clinton.png",
+          "robos:portraitAsset": "assets/portraits/card_bg_hillary_clinton.png",
+          "robos:spells": [
+            {
+              "id": "urn:robos:tabletop:spell:water-of-healing",
+              "slug": "water-of-healing",
+              "name": "Water of Healing",
+              "element": "water",
+              "category": "Base Game",
+              "icon": "\ud83d\udca7",
+              "description": "Restores up to 4 lost Body Points to any Hero.",
+              "effect": "heal-bp",
+              "val": 4
+            },
+            {
+              "id": "urn:robos:tabletop:spell:sleep",
+              "slug": "sleep",
+              "name": "Sleep",
+              "element": "water",
+              "category": "Base Game",
+              "icon": "\ud83d\udca4",
+              "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
+              "effect": "status-sleep",
+              "val": 1
+            },
+            {
+              "id": "urn:robos:tabletop:spell:veil-of-mist",
+              "slug": "veil-of-mist",
+              "name": "Veil of Mist",
+              "element": "water",
+              "category": "Base Game",
+              "icon": "\ud83c\udf2b\ufe0f",
+              "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
+              "effect": "status-stealth",
+              "val": 1
+            }
+          ],
+          "robos:audioLines": {
+            "turnStart": [
+              {
+                "text": "We've traveled to every corner of the United States. I've now been in 57 states \u2014 I think one left to go!",
+                "audio": "res://assets/audio/heroes/hillary_turn_start.ogg"
+              }
+            ],
+            "attacking": [
+              {
+                "text": "We came, we saw, he died! Ha ha ha!",
+                "audio": "res://assets/audio/heroes/hillary_attacking.ogg"
+              }
+            ],
+            "attacked": [
+              {
+                "text": "What difference, at this point, does it make?!",
+                "audio": "res://assets/audio/heroes/hillary_attacked.ogg"
+              }
+            ],
+            "defended": [
+              {
+                "text": "What, like with a cloth or something? Well, no, I don't know how it works digitally at all!",
+                "audio": "res://assets/audio/heroes/hillary_defended.ogg"
+              }
+            ],
+            "castingMagic": [
+              {
+                "text": "But I cast it with conviction! And I want the Iranians to know that if I'm the President, we will attack Iran!",
+                "audio": "res://assets/audio/heroes/hillary_casting_magic.ogg"
+              }
+            ]
+          }
         },
         {
           "id": "urn:robos:tabletop:hero:bernie-sanders",
@@ -2714,7 +3232,7 @@
           "tokenColor": "#2563eb",
           "tokenAsset": "assets/tokens/token_bernie_sanders.png",
           "portraitAsset": "assets/portraits/card_bg_bernie_sanders.png",
-          "icon": "🪄",
+          "icon": "\ud83e\ude84",
           "startingPosition": [
             1,
             13
@@ -2734,7 +3252,183 @@
               "effect": "Restores up to 4 BP",
               "value": 100
             }
-          ]
+          ],
+          "@id": "urn:robos:tabletop:hero:bernie-sanders",
+          "@type": [
+            "oslc_am:Resource",
+            "robos:TabletopHero",
+            "robos:GameCharacter",
+            "schema:Person"
+          ],
+          "dcterms:title": "Bernie Sanders",
+          "robos:characterName": "Bernie Sanders",
+          "robos:heroClass": "Wizard",
+          "robos:category": "Midterms 2026",
+          "robos:bodyPoints": 4,
+          "robos:mindPoints": 6,
+          "robos:attackDice": 1,
+          "robos:defendDice": 2,
+          "robos:gold": 99,
+          "robos:equippedWeapon": "Gnarled Oak Staff of the 99% (1 Combat Die)",
+          "robos:equippedArmor": "Starry Wizard Hat & Vermont Wool Mittens (2 Defend Dice)",
+          "robos:specialAbility": "Master Spellcaster (3 Colleges, 9 Spells)",
+          "robos:tokenColor": "#2563eb",
+          "robos:icon": "\ud83e\ude84",
+          "robos:startingPosition": [
+            1,
+            13
+          ],
+          "robos:inventory": [
+            {
+              "id": "item-mittens-bernie",
+              "name": "Enchanted Vermont Mittens",
+              "type": "relic",
+              "effect": "Channels crackling elemental lightning & warmth",
+              "value": 200
+            },
+            {
+              "id": "item-pot-heal-bernie",
+              "name": "Universal Healthcare Potion",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
+            }
+          ],
+          "robos:tokenAsset": "assets/tokens/token_bernie_sanders.png",
+          "robos:portraitAsset": "assets/portraits/card_bg_bernie_sanders.png",
+          "robos:spells": [
+            {
+              "id": "urn:robos:tabletop:spell:heal-body",
+              "slug": "heal-body",
+              "name": "Heal Body",
+              "element": "earth",
+              "category": "Base Game",
+              "icon": "\ud83d\udc96",
+              "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
+              "effect": "heal-bp",
+              "val": 4
+            },
+            {
+              "id": "urn:robos:tabletop:spell:pass-through-rock",
+              "slug": "pass-through-rock",
+              "name": "Pass Through Rock",
+              "element": "earth",
+              "category": "Base Game",
+              "icon": "\ud83e\uddf1",
+              "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
+              "effect": "phase-walls",
+              "val": 1
+            },
+            {
+              "id": "urn:robos:tabletop:spell:rock-skin",
+              "slug": "rock-skin",
+              "name": "Rock Skin",
+              "element": "earth",
+              "category": "Base Game",
+              "icon": "\ud83d\udee1\ufe0f",
+              "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
+              "effect": "buff-def",
+              "val": 1
+            },
+            {
+              "id": "urn:robos:tabletop:spell:ball-of-flame",
+              "slug": "ball-of-flame",
+              "name": "Ball of Flame",
+              "element": "fire",
+              "category": "Base Game",
+              "icon": "\u2604\ufe0f",
+              "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
+              "effect": "damage-bp",
+              "val": 2
+            },
+            {
+              "id": "urn:robos:tabletop:spell:courage",
+              "slug": "courage",
+              "name": "Courage",
+              "element": "fire",
+              "category": "Base Game",
+              "icon": "\ud83e\udd81",
+              "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
+              "effect": "buff-atk",
+              "val": 2
+            },
+            {
+              "id": "urn:robos:tabletop:spell:fire-of-wrath",
+              "slug": "fire-of-wrath",
+              "name": "Fire of Wrath",
+              "element": "fire",
+              "category": "Base Game",
+              "icon": "\ud83d\udd25",
+              "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
+              "effect": "damage-bp",
+              "val": 1
+            },
+            {
+              "id": "urn:robos:tabletop:spell:genie",
+              "slug": "genie",
+              "name": "Genie",
+              "element": "air",
+              "category": "Base Game",
+              "icon": "\ud83e\uddde",
+              "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
+              "effect": "summon-attack",
+              "val": 5
+            },
+            {
+              "id": "urn:robos:tabletop:spell:swift-wind",
+              "slug": "swift-wind",
+              "name": "Swift Wind",
+              "element": "air",
+              "category": "Base Game",
+              "icon": "\ud83d\udca8",
+              "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
+              "effect": "buff-move",
+              "val": 2
+            },
+            {
+              "id": "urn:robos:tabletop:spell:tempest",
+              "slug": "tempest",
+              "name": "Tempest",
+              "element": "air",
+              "category": "Base Game",
+              "icon": "\ud83c\udf2a\ufe0f",
+              "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
+              "effect": "status-freeze",
+              "val": 1
+            }
+          ],
+          "robos:audioLines": {
+            "turnStart": [
+              {
+                "text": "Let's talk about welfare for the rich and the powerful!",
+                "audio": "res://assets/audio/heroes/bernie_turn_start.ogg"
+              }
+            ],
+            "attacking": [
+              {
+                "text": "I will be damned if I will vote for a proposal which will stick it to the middle class and the working people!",
+                "audio": "res://assets/audio/heroes/bernie_attacking.ogg"
+              }
+            ],
+            "attacked": [
+              {
+                "text": "Mr. Speaker, I've got a problem! I've got a problem with a President and a Congress which allows five million children to go hungry!",
+                "audio": "res://assets/audio/heroes/bernie_attacked.ogg"
+              }
+            ],
+            "defended": [
+              {
+                "text": "What we are saying very loud and clear is that Ronald Reagan and his billionaire friends do not represent the America that we do!",
+                "audio": "res://assets/audio/heroes/bernie_defended.ogg"
+              }
+            ],
+            "castingMagic": [
+              {
+                "text": "This democracy is evolving into an oligarchy! And an oligarchy is a country in which a few people have tremendous wealth and power!",
+                "audio": "res://assets/audio/heroes/bernie_casting_magic.ogg"
+              }
+            ]
+          }
         }
       ],
       "robos:quests": [
@@ -2742,7 +3436,7 @@
           "id": "election-2026-quest-1",
           "slug": "election-2026-quest-1",
           "title": "Quest 1: Battle for the Hill",
-          "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office—defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
+          "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office\u2014defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
           "mapConfigId": "midterm-election-capitol",
           "ruleset": "heroquest",
           "goldReward": 150,
@@ -2765,11 +3459,6 @@
             "room-nw-9",
             "room-nw-10",
             "room-se-11"
-          ],
-          "primaryGoals": [
-            "Defeat the Capitol Bosses & Hydra Bosses (Talarixon, El-Rogers, Brownsted, Katie Zacharia, Mitch McConnell, and Drunk JD Vance & Kamala Harris).",
-            "Storm the Capitol chambers (Briefing Room, Committee Chamber, War Room & Oval Office) and expose the bipartisan slush fund.",
-            "Lead all surviving heroes safely to the Capitol Exit Stairs at [14, 2]."
           ]
         }
       ],
@@ -2845,7 +3534,7 @@
           "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
           "robos:specialAbility": "Greatest strength and vitality in melee combat",
           "robos:tokenColor": "#b91c1c",
-          "robos:icon": "⚔️",
+          "robos:icon": "\u2694\ufe0f",
           "robos:startingPosition": [
             0,
             1
@@ -2868,7 +3557,39 @@
           ],
           "robos:spells": [],
           "robos:currentBP": 8,
-          "robos:currentMP": 2
+          "robos:currentMP": 2,
+          "robos:audioLines": {
+            "turnStart": [
+              {
+                "text": "By my broadsword, clear a path!",
+                "audio": "res://assets/audio/heroes/barbarian_turn_start.ogg"
+              }
+            ],
+            "attacking": [
+              {
+                "text": "Taste cold Cimmerian steel!",
+                "audio": "res://assets/audio/heroes/barbarian_attacking.ogg"
+              }
+            ],
+            "attacked": [
+              {
+                "text": "Aagh! Only a flesh wound!",
+                "audio": "res://assets/audio/heroes/barbarian_attacked.ogg"
+              }
+            ],
+            "defended": [
+              {
+                "text": "Ha! Your feeble blow bounces off my iron muscles!",
+                "audio": "res://assets/audio/heroes/barbarian_defended.ogg"
+              }
+            ],
+            "castingMagic": [
+              {
+                "text": "The ancient battle-spirit surges through my blade!",
+                "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg"
+              }
+            ]
+          }
         },
         {
           "@id": "urn:robos:tabletop:hero:dwarf",
@@ -2891,7 +3612,7 @@
           "robos:equippedArmor": "Shield & Chainmail (+2 Defend Dice)",
           "robos:specialAbility": "Disarms traps without needing a toolkit",
           "robos:tokenColor": "#d97706",
-          "robos:icon": "🪓",
+          "robos:icon": "\ud83e\ude93",
           "robos:startingPosition": [
             1,
             0
@@ -2912,7 +3633,39 @@
               "value": 100
             }
           ],
-          "robos:spells": []
+          "robos:spells": [],
+          "robos:audioLines": {
+            "turnStart": [
+              {
+                "text": "Stand back! Let a Dwarf of the World's Edge Mountains handle this!",
+                "audio": "res://assets/audio/heroes/dwarf_turn_start.ogg"
+              }
+            ],
+            "attacking": [
+              {
+                "text": "For Grungni's beard, feel my battle-axe!",
+                "audio": "res://assets/audio/heroes/dwarf_attacking.ogg"
+              }
+            ],
+            "attacked": [
+              {
+                "text": "Oof! Right in the chainmail!",
+                "audio": "res://assets/audio/heroes/dwarf_attacked.ogg"
+              }
+            ],
+            "defended": [
+              {
+                "text": "Dwarven forged steel never yields!",
+                "audio": "res://assets/audio/heroes/dwarf_defended.ogg"
+              }
+            ],
+            "castingMagic": [
+              {
+                "text": "By the runes of the anvil, awaken!",
+                "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg"
+              }
+            ]
+          }
         },
         {
           "@id": "urn:robos:tabletop:hero:elf",
@@ -2935,7 +3688,7 @@
           "robos:equippedArmor": "Elven Leather & Cloak (+2 Defend Dice)",
           "robos:specialAbility": "Master of blade and 1 Elemental Spell deck (3 spells)",
           "robos:tokenColor": "#15803d",
-          "robos:icon": "🏹",
+          "robos:icon": "\ud83c\udff9",
           "robos:startingPosition": [
             1,
             1
@@ -2963,7 +3716,7 @@
               "name": "Water of Healing",
               "element": "water",
               "category": "Base Game",
-              "icon": "💧",
+              "icon": "\ud83d\udca7",
               "description": "Restores up to 4 lost Body Points to any Hero.",
               "effect": "heal-bp",
               "val": 4
@@ -2974,7 +3727,7 @@
               "name": "Sleep",
               "element": "water",
               "category": "Base Game",
-              "icon": "💤",
+              "icon": "\ud83d\udca4",
               "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
               "effect": "status-sleep",
               "val": 1
@@ -2985,12 +3738,44 @@
               "name": "Veil of Mist",
               "element": "water",
               "category": "Base Game",
-              "icon": "🌫️",
+              "icon": "\ud83c\udf2b\ufe0f",
               "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
               "effect": "status-stealth",
               "val": 1
             }
-          ]
+          ],
+          "robos:audioLines": {
+            "turnStart": [
+              {
+                "text": "With elven grace, I step into the shadows.",
+                "audio": "res://assets/audio/heroes/elf_turn_start.ogg"
+              }
+            ],
+            "attacking": [
+              {
+                "text": "Swift as the wind, strike true!",
+                "audio": "res://assets/audio/heroes/elf_attacking.ogg"
+              }
+            ],
+            "attacked": [
+              {
+                "text": "Ah! Darkness stings, yet my spirit endures!",
+                "audio": "res://assets/audio/heroes/elf_attacked.ogg"
+              }
+            ],
+            "defended": [
+              {
+                "text": "Too slow, creature! The forest shields me!",
+                "audio": "res://assets/audio/heroes/elf_defended.ogg"
+              }
+            ],
+            "castingMagic": [
+              {
+                "text": "Ancient weave of earth and water, heed my call!",
+                "audio": "res://assets/audio/heroes/elf_casting_magic.ogg"
+              }
+            ]
+          }
         },
         {
           "@id": "urn:robos:tabletop:hero:wizard",
@@ -3013,7 +3798,7 @@
           "robos:equippedArmor": "Wizard Cloak (2 Defend Dice)",
           "robos:specialAbility": "Wields 3 Elemental Spell decks (9 spells total)",
           "robos:tokenColor": "#7c3aed",
-          "robos:icon": "🔮",
+          "robos:icon": "\ud83d\udd2e",
           "robos:startingPosition": [
             0,
             0
@@ -3041,7 +3826,7 @@
               "name": "Heal Body",
               "element": "earth",
               "category": "Base Game",
-              "icon": "💖",
+              "icon": "\ud83d\udc96",
               "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
               "effect": "heal-bp",
               "val": 4
@@ -3052,7 +3837,7 @@
               "name": "Pass Through Rock",
               "element": "earth",
               "category": "Base Game",
-              "icon": "🧱",
+              "icon": "\ud83e\uddf1",
               "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
               "effect": "phase-walls",
               "val": 1
@@ -3063,7 +3848,7 @@
               "name": "Rock Skin",
               "element": "earth",
               "category": "Base Game",
-              "icon": "🛡️",
+              "icon": "\ud83d\udee1\ufe0f",
               "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
               "effect": "buff-def",
               "val": 1
@@ -3074,7 +3859,7 @@
               "name": "Ball of Flame",
               "element": "fire",
               "category": "Base Game",
-              "icon": "☄️",
+              "icon": "\u2604\ufe0f",
               "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
               "effect": "damage-bp",
               "val": 2
@@ -3085,7 +3870,7 @@
               "name": "Courage",
               "element": "fire",
               "category": "Base Game",
-              "icon": "🦁",
+              "icon": "\ud83e\udd81",
               "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
               "effect": "buff-atk",
               "val": 2
@@ -3096,7 +3881,7 @@
               "name": "Fire of Wrath",
               "element": "fire",
               "category": "Base Game",
-              "icon": "🔥",
+              "icon": "\ud83d\udd25",
               "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
               "effect": "damage-bp",
               "val": 1
@@ -3107,7 +3892,7 @@
               "name": "Genie",
               "element": "air",
               "category": "Base Game",
-              "icon": "🧞",
+              "icon": "\ud83e\uddde",
               "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
               "effect": "summon-attack",
               "val": 5
@@ -3118,7 +3903,7 @@
               "name": "Swift Wind",
               "element": "air",
               "category": "Base Game",
-              "icon": "💨",
+              "icon": "\ud83d\udca8",
               "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
               "effect": "buff-move",
               "val": 2
@@ -3129,12 +3914,44 @@
               "name": "Tempest",
               "element": "air",
               "category": "Base Game",
-              "icon": "🌪️",
+              "icon": "\ud83c\udf2a\ufe0f",
               "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
               "effect": "status-freeze",
               "val": 1
             }
-          ]
+          ],
+          "robos:audioLines": {
+            "turnStart": [
+              {
+                "text": "The winds of magic gather at my staff.",
+                "audio": "res://assets/audio/heroes/wizard_turn_start.ogg"
+              }
+            ],
+            "attacking": [
+              {
+                "text": "Back, foul fiend, before my arcane staff!",
+                "audio": "res://assets/audio/heroes/wizard_attacking.ogg"
+              }
+            ],
+            "attacked": [
+              {
+                "text": "Gah! My ward-cloak falters!",
+                "audio": "res://assets/audio/heroes/wizard_attacked.ogg"
+              }
+            ],
+            "defended": [
+              {
+                "text": "My arcane barrier deflects your strike!",
+                "audio": "res://assets/audio/heroes/wizard_defended.ogg"
+              }
+            ],
+            "castingMagic": [
+              {
+                "text": "By fire, air, and tempest, unleash the spell!",
+                "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg"
+              }
+            ]
+          }
         }
       ],
       "robos:quests": [
@@ -3245,7 +4062,7 @@
       "robos:replaces": "Goblin",
       "robos:specialAbility": "Door Knocker: Move through other monsters",
       "robos:abilities": "Door Knocker: Move through other monsters",
-      "dcterms:description": "Replaces Goblin — Door Knocker: Move through other monsters.",
+      "dcterms:description": "Replaces Goblin \u2014 Door Knocker: Move through other monsters.",
       "robos:bodyPoints": 1,
       "robos:mindPoints": 1,
       "robos:attackDice": 2,
@@ -3255,7 +4072,7 @@
       "robos:isUndead": false,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "📋",
+      "robos:icon": "\ud83d\udccb",
       "robos:tokenColor": "#16a34a",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -3276,7 +4093,7 @@
       "robos:replaces": "Orc",
       "robos:specialAbility": "Smear Campaign: Force reroll of one successful defend die, once per encounter",
       "robos:abilities": "Smear Campaign: Force reroll of one successful defend die, once per encounter",
-      "dcterms:description": "Replaces Orc — Smear Campaign: Force reroll of one successful defend die, once per encounter.",
+      "dcterms:description": "Replaces Orc \u2014 Smear Campaign: Force reroll of one successful defend die, once per encounter.",
       "robos:bodyPoints": 1,
       "robos:mindPoints": 2,
       "robos:attackDice": 3,
@@ -3286,7 +4103,7 @@
       "robos:isUndead": false,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "🕵️",
+      "robos:icon": "\ud83d\udd75\ufe0f",
       "robos:tokenColor": "#ca8a04",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -3307,7 +4124,7 @@
       "robos:replaces": "Skeleton",
       "robos:specialAbility": "Reelection: On death, black shield resurrects with 1 Body Point",
       "robos:abilities": "Reelection: On death, black shield resurrects with 1 Body Point",
-      "dcterms:description": "Replaces Skeleton — Reelection: On death, black shield resurrects with 1 Body Point.",
+      "dcterms:description": "Replaces Skeleton \u2014 Reelection: On death, black shield resurrects with 1 Body Point.",
       "robos:bodyPoints": 1,
       "robos:mindPoints": 0,
       "robos:attackDice": 2,
@@ -3317,7 +4134,7 @@
       "robos:isUndead": true,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "🏛️",
+      "robos:icon": "\ud83c\udfdb\ufe0f",
       "robos:tokenColor": "#94a3b8",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -3338,7 +4155,7 @@
       "robos:replaces": "Zombie",
       "robos:specialAbility": "Red Tape: Adjacent heroes roll an extra movement die and use the lowest",
       "robos:abilities": "Red Tape: Adjacent heroes roll an extra movement die and use the lowest",
-      "dcterms:description": "Replaces Zombie — Red Tape: Adjacent heroes roll an extra movement die and use the lowest.",
+      "dcterms:description": "Replaces Zombie \u2014 Red Tape: Adjacent heroes roll an extra movement die and use the lowest.",
       "robos:bodyPoints": 1,
       "robos:mindPoints": 0,
       "robos:attackDice": 2,
@@ -3348,7 +4165,7 @@
       "robos:isUndead": true,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "📎",
+      "robos:icon": "\ud83d\udcce",
       "robos:tokenColor": "#475569",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -3369,7 +4186,7 @@
       "robos:replaces": "Mummy",
       "robos:specialAbility": "Bought Influence: Force reroll of one attacking skull, once per encounter",
       "robos:abilities": "Bought Influence: Force reroll of one attacking skull, once per encounter",
-      "dcterms:description": "Replaces Mummy — Bought Influence: Force reroll of one attacking skull, once per encounter.",
+      "dcterms:description": "Replaces Mummy \u2014 Bought Influence: Force reroll of one attacking skull, once per encounter.",
       "robos:bodyPoints": 2,
       "robos:mindPoints": 0,
       "robos:attackDice": 3,
@@ -3379,7 +4196,7 @@
       "robos:isUndead": true,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "💼",
+      "robos:icon": "\ud83d\udcbc",
       "robos:tokenColor": "#d97706",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -3400,7 +4217,7 @@
       "robos:replaces": "Dread Warrior",
       "robos:specialAbility": "Polarization: +1 attack die when adjacent to another Partisan Enforcer",
       "robos:abilities": "Polarization: +1 attack die when adjacent to another Partisan Enforcer",
-      "dcterms:description": "Replaces Dread Warrior — Polarization: +1 attack die when adjacent to another Partisan Enforcer.",
+      "dcterms:description": "Replaces Dread Warrior \u2014 Polarization: +1 attack die when adjacent to another Partisan Enforcer.",
       "robos:bodyPoints": 3,
       "robos:mindPoints": 3,
       "robos:attackDice": 4,
@@ -3410,7 +4227,7 @@
       "robos:isUndead": false,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "⚔️",
+      "robos:icon": "\u2694\ufe0f",
       "robos:tokenColor": "#dc2626",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -3431,7 +4248,7 @@
       "robos:replaces": "Gargoyle",
       "robos:specialAbility": "Dark Money: Summon one Campaign Volunteer, once per encounter",
       "robos:abilities": "Dark Money: Summon one Campaign Volunteer, once per encounter",
-      "dcterms:description": "Replaces Gargoyle — Dark Money: Summon one Campaign Volunteer, once per encounter.",
+      "dcterms:description": "Replaces Gargoyle \u2014 Dark Money: Summon one Campaign Volunteer, once per encounter.",
       "robos:bodyPoints": 3,
       "robos:mindPoints": 4,
       "robos:attackDice": 4,
@@ -3441,7 +4258,7 @@
       "robos:isUndead": false,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "😈",
+      "robos:icon": "\ud83d\ude08",
       "robos:tokenColor": "#7c3aed",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -3462,7 +4279,7 @@
       "robos:replaces": "Dread Sorcerer",
       "robos:specialAbility": "Alternative Facts: Cancel one successful attack, once per encounter",
       "robos:abilities": "Alternative Facts: Cancel one successful attack, once per encounter",
-      "dcterms:description": "Replaces Dread Sorcerer — Alternative Facts: Cancel one successful attack, once per encounter.",
+      "dcterms:description": "Replaces Dread Sorcerer \u2014 Alternative Facts: Cancel one successful attack, once per encounter.",
       "robos:bodyPoints": 3,
       "robos:mindPoints": 5,
       "robos:attackDice": 3,
@@ -3474,7 +4291,7 @@
       "robos:spells": [
         "urn:robos:tabletop:spell:recount-of-the-damned"
       ],
-      "robos:icon": "🌀",
+      "robos:icon": "\ud83c\udf00",
       "robos:tokenColor": "#0284c7",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -3487,14 +4304,14 @@
         "robos:GameMonster",
         "schema:Person"
       ],
-      "dcterms:title": "Talarixon (Talarico + Paxton · Texas Hydra)",
+      "dcterms:title": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra)",
       "robos:category": "Midterms 2026",
       "robos:mirrorsMonster": "urn:robos:tabletop:monster:dragon",
       "robos:monsterArchetype": "Texas Hydra",
       "robos:archetype": "Texas Hydra",
-      "robos:specialAbility": "Holy Smite (3 dice vs visible hero) • Indictment Barrage (move die 1-3 loses action) • Divided Authority (once/battle: lose turn, 2 dice to all adjacent heroes) • Political Infighting (≤3 BP: white shield lets heroes pick special attack)",
-      "robos:abilities": "Holy Smite: Attack a visible hero with 3 dice. | Indictment Barrage: Hero rolls movement die; 1–3 loses next action. | Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. | Political Infighting: At ≤3 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
-      "dcterms:description": "Talarico + Paxton · Texas Hydra Boss — Holy Smite: Attack a visible hero with 3 dice. Indictment Barrage: Hero rolls movement die; 1–3 loses next action. Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. Universal Hydra Rule — Political Infighting: At ≤3 BP, on a white shield at turn start, heroes choose its special attack.",
+      "robos:specialAbility": "Holy Smite (3 dice vs visible hero) \u2022 Indictment Barrage (move die 1-3 loses action) \u2022 Divided Authority (once/battle: lose turn, 2 dice to all adjacent heroes) \u2022 Political Infighting (\u22643 BP: white shield lets heroes pick special attack)",
+      "robos:abilities": "Holy Smite: Attack a visible hero with 3 dice. | Indictment Barrage: Hero rolls movement die; 1\u20133 loses next action. | Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. | Political Infighting: At \u22643 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
+      "dcterms:description": "Talarico + Paxton \u00b7 Texas Hydra Boss \u2014 Holy Smite: Attack a visible hero with 3 dice. Indictment Barrage: Hero rolls movement die; 1\u20133 loses next action. Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. Universal Hydra Rule \u2014 Political Infighting: At \u22643 BP, on a white shield at turn start, heroes choose its special attack.",
       "robos:bodyPoints": 6,
       "robos:mindPoints": 5,
       "robos:attackDice": 5,
@@ -3506,7 +4323,7 @@
       "robos:spells": [
         "urn:robos:tabletop:spell:recount-of-the-damned"
       ],
-      "robos:icon": "🐍",
+      "robos:icon": "\ud83d\udc0d",
       "robos:tokenColor": "#b91c1c",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -3519,14 +4336,14 @@
         "robos:GameMonster",
         "schema:Person"
       ],
-      "dcterms:title": "El-Rogers (El-Sayed + Rogers · Michigan Hydra)",
+      "dcterms:title": "El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra)",
       "robos:category": "Midterms 2026",
       "robos:mirrorsMonster": "urn:robos:tabletop:monster:witch-lord",
       "robos:monsterArchetype": "Michigan Hydra",
       "robos:archetype": "Michigan Hydra",
-      "robos:specialAbility": "Universal Healing (recover 2 BP once/battle) • Security Lockdown (seal room doors 1 round) • Industrial Collapse (at 3 BP: 3 dice to adjacent heroes, lose 1 BP) • Political Infighting (≤3 BP: white shield lets heroes pick special attack)",
-      "robos:abilities": "Universal Healing: Recover 2 Body Points once per battle. | Security Lockdown: Seal room doors for one round. | Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. | Political Infighting: At ≤3 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
-      "dcterms:description": "El-Sayed + Rogers · Michigan Hydra Boss — Universal Healing: Recover 2 Body Points once per battle. Security Lockdown: Seal room doors for one round. Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. Universal Hydra Rule — Political Infighting: At ≤3 BP, on a white shield at turn start, heroes choose its special attack.",
+      "robos:specialAbility": "Universal Healing (recover 2 BP once/battle) \u2022 Security Lockdown (seal room doors 1 round) \u2022 Industrial Collapse (at 3 BP: 3 dice to adjacent heroes, lose 1 BP) \u2022 Political Infighting (\u22643 BP: white shield lets heroes pick special attack)",
+      "robos:abilities": "Universal Healing: Recover 2 Body Points once per battle. | Security Lockdown: Seal room doors for one round. | Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. | Political Infighting: At \u22643 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
+      "dcterms:description": "El-Sayed + Rogers \u00b7 Michigan Hydra Boss \u2014 Universal Healing: Recover 2 Body Points once per battle. Security Lockdown: Seal room doors for one round. Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. Universal Hydra Rule \u2014 Political Infighting: At \u22643 BP, on a white shield at turn start, heroes choose its special attack.",
       "robos:bodyPoints": 7,
       "robos:mindPoints": 4,
       "robos:attackDice": 5,
@@ -3538,7 +4355,7 @@
       "robos:spells": [
         "urn:robos:tabletop:spell:recount-of-the-damned"
       ],
-      "robos:icon": "🐲",
+      "robos:icon": "\ud83d\udc32",
       "robos:tokenColor": "#1d4ed8",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -3551,14 +4368,14 @@
         "robos:GameMonster",
         "schema:Person"
       ],
-      "dcterms:title": "Brownsted (Brown + Husted · Ohio Hydra)",
+      "dcterms:title": "Brownsted (Brown + Husted \u00b7 Ohio Hydra)",
       "robos:category": "Midterms 2026",
       "robos:mirrorsMonster": "urn:robos:tabletop:monster:verag-orc-warlord",
       "robos:monsterArchetype": "Ohio Hydra",
       "robos:archetype": "Ohio Hydra",
-      "robos:specialAbility": "Union Strike (3 dice to all adjacent heroes) • Budget Freeze (no hero potions for 1 round) • Bipartisan Gridlock (roll combat die each turn: black shield = lose turn, skull = +1 atk die) • Political Infighting (≤4 BP: white shield lets heroes pick special attack)",
-      "robos:abilities": "Union Strike: Attack every adjacent hero with 3 dice. | Budget Freeze: Prevent heroes using potions for one round. | Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. | Political Infighting: At ≤4 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
-      "dcterms:description": "Brown + Husted · Ohio Hydra Boss — Union Strike: Attack every adjacent hero with 3 dice. Budget Freeze: Prevent heroes using potions for one round. Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. Universal Hydra Rule — Political Infighting: At ≤4 BP, on a white shield at turn start, heroes choose its special attack.",
+      "robos:specialAbility": "Union Strike (3 dice to all adjacent heroes) \u2022 Budget Freeze (no hero potions for 1 round) \u2022 Bipartisan Gridlock (roll combat die each turn: black shield = lose turn, skull = +1 atk die) \u2022 Political Infighting (\u22644 BP: white shield lets heroes pick special attack)",
+      "robos:abilities": "Union Strike: Attack every adjacent hero with 3 dice. | Budget Freeze: Prevent heroes using potions for one round. | Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. | Political Infighting: At \u22644 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
+      "dcterms:description": "Brown + Husted \u00b7 Ohio Hydra Boss \u2014 Union Strike: Attack every adjacent hero with 3 dice. Budget Freeze: Prevent heroes using potions for one round. Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. Universal Hydra Rule \u2014 Political Infighting: At \u22644 BP, on a white shield at turn start, heroes choose its special attack.",
       "robos:bodyPoints": 8,
       "robos:mindPoints": 5,
       "robos:attackDice": 6,
@@ -3570,7 +4387,7 @@
       "robos:spells": [
         "urn:robos:tabletop:spell:recount-of-the-damned"
       ],
-      "robos:icon": "🐉",
+      "robos:icon": "\ud83d\udc09",
       "robos:tokenColor": "#9333ea",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -3586,8 +4403,8 @@
       "dcterms:title": "Attack Ad",
       "robos:category": "Midterms 2026",
       "robos:element": "fire",
-      "robos:spellCollege": "Fire — Campaign Chaos",
-      "robos:icon": "📺",
+      "robos:spellCollege": "Fire \u2014 Campaign Chaos",
+      "robos:icon": "\ud83d\udcfa",
       "dcterms:description": "Attack one visible monster with 2 combat dice.",
       "robos:effect": "damage-dice",
       "robos:val": 2,
@@ -3605,8 +4422,8 @@
       "dcterms:title": "Outrage Inferno",
       "robos:category": "Midterms 2026",
       "robos:element": "fire",
-      "robos:spellCollege": "Fire — Campaign Chaos",
-      "robos:icon": "🔥",
+      "robos:spellCollege": "Fire \u2014 Campaign Chaos",
+      "robos:icon": "\ud83d\udd25",
       "dcterms:description": "Every monster in the room rolls 1 combat die; skull = 1 damage.",
       "robos:effect": "room-damage-dice",
       "robos:val": 1,
@@ -3624,8 +4441,8 @@
       "dcterms:title": "October Surprise",
       "robos:category": "Midterms 2026",
       "robos:element": "fire",
-      "robos:spellCollege": "Fire — Campaign Chaos",
-      "robos:icon": "💣",
+      "robos:spellCollege": "Fire \u2014 Campaign Chaos",
+      "robos:icon": "\ud83d\udca3",
       "dcterms:description": "Hero makes an additional attack with +2 attack dice.",
       "robos:effect": "buff-atk",
       "robos:val": 2,
@@ -3643,9 +4460,9 @@
       "dcterms:title": "Filibuster",
       "robos:category": "Midterms 2026",
       "robos:element": "water",
-      "robos:spellCollege": "Water — Bureaucracy",
-      "robos:icon": "⏳",
-      "dcterms:description": "Monster loses next turn unless it rolls 5–6 on one movement die.",
+      "robos:spellCollege": "Water \u2014 Bureaucracy",
+      "robos:icon": "\u23f3",
+      "dcterms:description": "Monster loses next turn unless it rolls 5\u20136 on one movement die.",
       "robos:effect": "status-sleep",
       "robos:val": 1,
       "robos:package": "tabletop-game",
@@ -3662,8 +4479,8 @@
       "dcterms:title": "Executive Privilege",
       "robos:category": "Midterms 2026",
       "robos:element": "water",
-      "robos:spellCollege": "Water — Bureaucracy",
-      "robos:icon": "🛡️",
+      "robos:spellCollege": "Water \u2014 Bureaucracy",
+      "robos:icon": "\ud83d\udee1\ufe0f",
       "dcterms:description": "Hero ignores all damage from the next damaging attack.",
       "robos:effect": "buff-ignore-damage",
       "robos:val": 1,
@@ -3681,8 +4498,8 @@
       "dcterms:title": "Emergency Funding",
       "robos:category": "Midterms 2026",
       "robos:element": "water",
-      "robos:spellCollege": "Water — Bureaucracy",
-      "robos:icon": "💉",
+      "robos:spellCollege": "Water \u2014 Bureaucracy",
+      "robos:icon": "\ud83d\udc89",
       "dcterms:description": "Restore up to 4 lost Body Points.",
       "robos:effect": "heal-bp",
       "robos:val": 4,
@@ -3700,8 +4517,8 @@
       "dcterms:title": "Incumbent Protection",
       "robos:category": "Midterms 2026",
       "robos:element": "earth",
-      "robos:spellCollege": "Earth — Establishment",
-      "robos:icon": "🏰",
+      "robos:spellCollege": "Earth \u2014 Establishment",
+      "robos:icon": "\ud83c\udff0",
       "dcterms:description": "Hero gains +2 defend dice until suffering damage.",
       "robos:effect": "buff-def",
       "robos:val": 2,
@@ -3719,8 +4536,8 @@
       "dcterms:title": "Special Interest Donation",
       "robos:category": "Midterms 2026",
       "robos:element": "earth",
-      "robos:spellCollege": "Earth — Establishment",
-      "robos:icon": "💰",
+      "robos:spellCollege": "Earth \u2014 Establishment",
+      "robos:icon": "\ud83d\udcb0",
       "dcterms:description": "Gain 100 gold, or 50 if a monster is visible.",
       "robos:effect": "grant-gold",
       "robos:val": 100,
@@ -3738,8 +4555,8 @@
       "dcterms:title": "Gerrymander",
       "robos:category": "Midterms 2026",
       "robos:element": "earth",
-      "robos:spellCollege": "Earth — Establishment",
-      "robos:icon": "🗺️",
+      "robos:spellCollege": "Earth \u2014 Establishment",
+      "robos:icon": "\ud83d\uddfa\ufe0f",
       "dcterms:description": "Relocate one visible monster up to 4 legal squares.",
       "robos:effect": "relocate-monster",
       "robos:val": 4,
@@ -3757,8 +4574,8 @@
       "dcterms:title": "Polling Surge",
       "robos:category": "Midterms 2026",
       "robos:element": "air",
-      "robos:spellCollege": "Air — Public Opinion",
-      "robos:icon": "📈",
+      "robos:spellCollege": "Air \u2014 Public Opinion",
+      "robos:icon": "\ud83d\udcc8",
       "dcterms:description": "Double next movement roll.",
       "robos:effect": "buff-move",
       "robos:val": 2,
@@ -3776,8 +4593,8 @@
       "dcterms:title": "Media Frenzy",
       "robos:category": "Midterms 2026",
       "robos:element": "air",
-      "robos:spellCollege": "Air — Public Opinion",
-      "robos:icon": "🎙️",
+      "robos:spellCollege": "Air \u2014 Public Opinion",
+      "robos:icon": "\ud83c\udf99\ufe0f",
       "dcterms:description": "Monster loses next turn; Mind 4+ may resist on a 6.",
       "robos:effect": "status-freeze",
       "robos:val": 1,
@@ -3795,8 +4612,8 @@
       "dcterms:title": "Landslide Victory",
       "robos:category": "Midterms 2026",
       "robos:element": "air",
-      "robos:spellCollege": "Air — Public Opinion",
-      "robos:icon": "🌊",
+      "robos:spellCollege": "Air \u2014 Public Opinion",
+      "robos:icon": "\ud83c\udf0a",
       "dcterms:description": "Attack one visible monster with 5 combat dice.",
       "robos:effect": "damage-dice",
       "robos:val": 5,
@@ -3816,8 +4633,8 @@
       "robos:category": "Midterms 2026",
       "robos:element": "dread",
       "robos:spellCollege": "Forbidden Dread Spell",
-      "robos:icon": "🗳️",
-      "dcterms:description": "All heroes in one room roll one movement die. On 1–3, they lose their next action.",
+      "robos:icon": "\ud83d\uddf3\ufe0f",
+      "dcterms:description": "All heroes in one room roll one movement die. On 1\u20133, they lose their next action.",
       "robos:effect": "room-lose-action",
       "robos:val": 3,
       "robos:package": "tabletop-game",
@@ -3830,7 +4647,7 @@
         "robos:TabletopQuestSaveState",
         "schema:Action"
       ],
-      "dcterms:title": "Quest State — Round 1 (Barbarian (Hero 1 of 4))",
+      "dcterms:title": "Quest State \u2014 Round 2 (Hillary Clinton (Hero 3 of 4))",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop",
       "robos:questSlug": "election-2026-quest-1",
@@ -3839,23 +4656,23 @@
         26,
         19
       ],
-      "robos:savedAt": "2026-10-18T16:58:06.000Z",
-      "robos:playTimeSeconds": 272,
-      "robos:playTimeFormatted": "4m 32s",
-      "robos:currentRound": 1,
+      "robos:savedAt": "2026-10-19T16:59:35.000Z",
+      "robos:playTimeSeconds": 134,
+      "robos:playTimeFormatted": "2m 14s",
+      "robos:currentRound": 2,
       "robos:currentPhase": "hero_phase",
       "robos:currentRole": "player",
-      "robos:activeHeroIndex": 0,
-      "robos:activeTurnActor": "Barbarian (Hero 1 of 4)",
-      "robos:turnState": "moving",
-      "robos:movementRemaining": 9,
+      "robos:activeHeroIndex": 2,
+      "robos:activeTurnActor": "Hillary Clinton (Hero 3 of 4)",
+      "robos:turnState": "awaiting_roll",
+      "robos:movementRemaining": 0,
       "robos:hasMovedThisTurn": false,
       "robos:hasActedThisTurn": false,
       "robos:heroStates": [
         {
           "@type": "robos:TabletopSaveHeroState",
-          "id": "barbarian",
-          "name": "Barbarian",
+          "id": "obama",
+          "name": "Barack Obama",
           "heroClass": "Barbarian",
           "currentBP": 8,
           "maxBP": 8,
@@ -3865,7 +4682,7 @@
           "defendDice": 2,
           "gold": 0,
           "gridPos": [
-            0,
+            4,
             13
           ],
           "weapon": "broadsword",
@@ -3877,16 +4694,16 @@
           "spells": [],
           "usedSpells": [],
           "spellsRemaining": 0,
-          "hasDepartedStart": false,
+          "hasDepartedStart": true,
           "isOnBoard": true,
           "alive": true,
           "escaped": false,
-          "isActiveTurn": true
+          "isActiveTurn": false
         },
         {
           "@type": "robos:TabletopSaveHeroState",
-          "id": "dwarf",
-          "name": "Dwarf",
+          "id": "trump",
+          "name": "Donald Trump",
           "heroClass": "Dwarf",
           "currentBP": 7,
           "maxBP": 7,
@@ -3896,7 +4713,7 @@
           "defendDice": 2,
           "gold": 0,
           "gridPos": [
-            0,
+            12,
             13
           ],
           "weapon": "shortsword",
@@ -3908,7 +4725,7 @@
           "spells": [],
           "usedSpells": [],
           "spellsRemaining": 0,
-          "hasDepartedStart": false,
+          "hasDepartedStart": true,
           "isOnBoard": true,
           "alive": true,
           "escaped": false,
@@ -3916,8 +4733,8 @@
         },
         {
           "@type": "robos:TabletopSaveHeroState",
-          "id": "elf",
-          "name": "Elf",
+          "id": "hillary-clinton",
+          "name": "Hillary Clinton",
           "heroClass": "Elf",
           "currentBP": 6,
           "maxBP": 6,
@@ -3927,7 +4744,7 @@
           "defendDice": 2,
           "gold": 0,
           "gridPos": [
-            0,
+            7,
             13
           ],
           "weapon": "shortsword",
@@ -3943,16 +4760,16 @@
           ],
           "usedSpells": [],
           "spellsRemaining": 3,
-          "hasDepartedStart": false,
+          "hasDepartedStart": true,
           "isOnBoard": true,
           "alive": true,
           "escaped": false,
-          "isActiveTurn": false
+          "isActiveTurn": true
         },
         {
           "@type": "robos:TabletopSaveHeroState",
-          "id": "wizard",
-          "name": "Wizard",
+          "id": "bernie-sanders",
+          "name": "Bernie Sanders",
           "heroClass": "Wizard",
           "currentBP": 4,
           "maxBP": 4,
@@ -3992,92 +4809,178 @@
           "isActiveTurn": false
         }
       ],
-      "robos:visibleMonsters": [],
-      "robos:visibleMonstersCount": 0,
+      "robos:visibleMonsters": [
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-talarixon-4",
+          "name": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra)",
+          "monsterType": "talarixon",
+          "currentBP": 6,
+          "maxBP": 6,
+          "mindPoints": 5,
+          "attackDice": 5,
+          "defendDice": 5,
+          "movementSquares": 7,
+          "gridPos": [
+            12,
+            2
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": true,
+          "isUndead": false,
+          "isSpellcaster": true,
+          "spells": [
+            "recount-of-the-damned"
+          ],
+          "isAlive": true,
+          "isVisible": true
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-political-operative-12",
+          "name": "Political Operative",
+          "monsterType": "political-operative",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "movementSquares": 8,
+          "gridPos": [
+            11,
+            4
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": true
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-spin-doctor-13",
+          "name": "Spin Doctor",
+          "monsterType": "spin-doctor",
+          "currentBP": 3,
+          "maxBP": 3,
+          "mindPoints": 5,
+          "attackDice": 3,
+          "defendDice": 4,
+          "movementSquares": 7,
+          "gridPos": [
+            15,
+            4
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": true,
+          "spells": [
+            "recount-of-the-damned"
+          ],
+          "isAlive": true,
+          "isVisible": true
+        }
+      ],
+      "robos:visibleMonstersCount": 3,
       "robos:monstersDefeated": 0,
       "robos:itemsFound": [
         {
-          "id": "barbarian-broadsword-0",
+          "id": "obama-broadsword-0",
           "name": "Broadsword",
           "type": "equipment",
-          "holder": "Barbarian",
+          "holder": "Barack Obama",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
-          "id": "barbarian-healing_potion-1",
+          "id": "obama-healing_potion-1",
           "name": "Healing Potion",
           "type": "potion",
-          "holder": "Barbarian",
+          "holder": "Barack Obama",
           "source": "Hero Inventory",
-          "icon": "🧪"
+          "icon": "\ud83e\uddea"
         },
         {
-          "id": "dwarf-shortsword-0",
+          "id": "trump-shortsword-0",
           "name": "Shortsword",
           "type": "equipment",
-          "holder": "Dwarf",
+          "holder": "Donald Trump",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
-          "id": "dwarf-healing_potion-1",
+          "id": "trump-healing_potion-1",
           "name": "Healing Potion",
           "type": "potion",
-          "holder": "Dwarf",
+          "holder": "Donald Trump",
           "source": "Hero Inventory",
-          "icon": "🧪"
+          "icon": "\ud83e\uddea"
         },
         {
-          "id": "elf-shortsword-0",
+          "id": "hillary-clinton-shortsword-0",
           "name": "Shortsword",
           "type": "equipment",
-          "holder": "Elf",
+          "holder": "Hillary Clinton",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
-          "id": "elf-healing_potion-1",
+          "id": "hillary-clinton-healing_potion-1",
           "name": "Healing Potion",
           "type": "potion",
-          "holder": "Elf",
+          "holder": "Hillary Clinton",
           "source": "Hero Inventory",
-          "icon": "🧪"
+          "icon": "\ud83e\uddea"
         },
         {
-          "id": "wizard-dagger-0",
+          "id": "bernie-sanders-dagger-0",
           "name": "Dagger",
           "type": "equipment",
-          "holder": "Wizard",
+          "holder": "Bernie Sanders",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
-          "id": "wizard-staff-1",
+          "id": "bernie-sanders-staff-1",
           "name": "Staff",
           "type": "equipment",
-          "holder": "Wizard",
+          "holder": "Bernie Sanders",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
-          "id": "wizard-healing_potion-2",
+          "id": "bernie-sanders-healing_potion-2",
           "name": "Healing Potion",
           "type": "potion",
-          "holder": "Wizard",
+          "holder": "Bernie Sanders",
           "source": "Hero Inventory",
-          "icon": "🧪"
+          "icon": "\ud83e\uddea"
         }
       ],
       "robos:itemsFoundCount": 9,
       "robos:totalPartyGold": 0,
-      "robos:exploredTilesCount": 34,
-      "robos:revealedRooms": [],
+      "robos:exploredTilesCount": 136,
+      "robos:revealedRooms": [
+        "room-nw-10"
+      ],
       "robos:searchedRooms": [],
-      "robos:doorsOpenCount": 0,
+      "robos:doorsOpenCount": 1,
       "robos:trapsDetectedCount": 0,
-      "robos:triggersFired": [],
-      "robos:triggersFiredCount": 0,
+      "robos:triggersFired": [
+        {
+          "id": "trigger-oval-office-talarixon",
+          "title": "Oval Office \u2014 Talarixon & The San Antonio Diesel Plot",
+          "event": "on_room_entered",
+          "tile": [
+            13,
+            5
+          ]
+        }
+      ],
+      "robos:triggersFiredCount": 1,
       "robos:screenshotPath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_election-2026-quest-1_election-2026-quest-1.png",
       "robos:saveFilePath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_election-2026-quest-1_election-2026-quest-1.json"
     }
@@ -4142,14 +5045,46 @@
         }
       ],
       "robos:specialAbility": "",
-      "robos:icon": "🛡️",
+      "robos:icon": "\ud83d\udee1\ufe0f",
       "robos:startingPosition": [
         1,
         1
       ],
       "robos:category": "Base Game",
       "robos:tokenAsset": "assets/tokens/token_barbarian.png",
-      "robos:portraitAsset": "assets/portraits/card_bg_barbarian.png"
+      "robos:portraitAsset": "assets/portraits/card_bg_barbarian.png",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "By my broadsword, clear a path!",
+            "audio": "res://assets/audio/heroes/barbarian_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Taste cold Cimmerian steel!",
+            "audio": "res://assets/audio/heroes/barbarian_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Aagh! Only a flesh wound!",
+            "audio": "res://assets/audio/heroes/barbarian_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Ha! Your feeble blow bounces off my iron muscles!",
+            "audio": "res://assets/audio/heroes/barbarian_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "The ancient battle-spirit surges through my blade!",
+            "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:dwarf",
@@ -4172,7 +5107,39 @@
       "robos:heroClass": "Dwarf",
       "robos:category": "Base Game",
       "robos:tokenAsset": "assets/tokens/token_dwarf.png",
-      "robos:portraitAsset": "assets/portraits/card_bg_dwarf.png"
+      "robos:portraitAsset": "assets/portraits/card_bg_dwarf.png",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "Stand back! Let a Dwarf of the World's Edge Mountains handle this!",
+            "audio": "res://assets/audio/heroes/dwarf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "For Grungni's beard, feel my battle-axe!",
+            "audio": "res://assets/audio/heroes/dwarf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Oof! Right in the chainmail!",
+            "audio": "res://assets/audio/heroes/dwarf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Dwarven forged steel never yields!",
+            "audio": "res://assets/audio/heroes/dwarf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By the runes of the anvil, awaken!",
+            "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:elf",
@@ -4195,7 +5162,39 @@
       "robos:heroClass": "Elf",
       "robos:category": "Base Game",
       "robos:tokenAsset": "assets/tokens/token_elf.png",
-      "robos:portraitAsset": "assets/portraits/card_bg_elf.png"
+      "robos:portraitAsset": "assets/portraits/card_bg_elf.png",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "With elven grace, I step into the shadows.",
+            "audio": "res://assets/audio/heroes/elf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Swift as the wind, strike true!",
+            "audio": "res://assets/audio/heroes/elf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Ah! Darkness stings, yet my spirit endures!",
+            "audio": "res://assets/audio/heroes/elf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Too slow, creature! The forest shields me!",
+            "audio": "res://assets/audio/heroes/elf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "Ancient weave of earth and water, heed my call!",
+            "audio": "res://assets/audio/heroes/elf_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:wizard",
@@ -4235,14 +5234,46 @@
           "value": 100
         }
       ],
-      "robos:icon": "🛡️",
+      "robos:icon": "\ud83d\udee1\ufe0f",
       "robos:startingPosition": [
         1,
         1
       ],
       "robos:category": "Base Game",
       "robos:tokenAsset": "assets/tokens/token_wizard.png",
-      "robos:portraitAsset": "assets/portraits/card_bg_wizard.png"
+      "robos:portraitAsset": "assets/portraits/card_bg_wizard.png",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "The winds of magic gather at my staff.",
+            "audio": "res://assets/audio/heroes/wizard_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Back, foul fiend, before my arcane staff!",
+            "audio": "res://assets/audio/heroes/wizard_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Gah! My ward-cloak falters!",
+            "audio": "res://assets/audio/heroes/wizard_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "My arcane barrier deflects your strike!",
+            "audio": "res://assets/audio/heroes/wizard_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By fire, air, and tempest, unleash the spell!",
+            "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:bernie-sanders",
@@ -4267,7 +5298,7 @@
       "robos:tokenColor": "#2563eb",
       "robos:tokenAsset": "assets/tokens/token_bernie_sanders.png",
       "robos:portraitAsset": "assets/portraits/card_bg_bernie_sanders.png",
-      "robos:icon": "🪄",
+      "robos:icon": "\ud83e\ude84",
       "robos:startingPosition": [
         1,
         13
@@ -4290,7 +5321,39 @@
       ],
       "dcterms:description": "Ancient Elemental Wizard in a tall starry wizard hat and iconic patterned wool mittens. Commands 3 full elemental spell colleges (9 spells) against Super PAC demons and Hydras.",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "Let's talk about welfare for the rich and the powerful!",
+            "audio": "res://assets/audio/heroes/bernie_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "I will be damned if I will vote for a proposal which will stick it to the middle class and the working people!",
+            "audio": "res://assets/audio/heroes/bernie_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Mr. Speaker, I've got a problem! I've got a problem with a President and a Congress which allows five million children to go hungry!",
+            "audio": "res://assets/audio/heroes/bernie_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "What we are saying very loud and clear is that Ronald Reagan and his billionaire friends do not represent the America that we do!",
+            "audio": "res://assets/audio/heroes/bernie_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "This democracy is evolving into an oligarchy! And an oligarchy is a country in which a few people have tremendous wealth and power!",
+            "audio": "res://assets/audio/heroes/bernie_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:hillary-clinton",
@@ -4310,12 +5373,12 @@
       "robos:startingWeapon": "urn:robos:game:item:shortsword",
       "robos:equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
       "robos:equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
-      "robos:specialAbility": "Spellcaster (1 College — 3 Spells)",
+      "robos:specialAbility": "Spellcaster (1 College \u2014 3 Spells)",
       "robos:gold": 150,
       "robos:tokenColor": "#059669",
       "robos:tokenAsset": "assets/tokens/token_hillary_clinton.png",
       "robos:portraitAsset": "assets/portraits/card_bg_hillary_clinton.png",
-      "robos:icon": "🏹",
+      "robos:icon": "\ud83c\udff9",
       "robos:startingPosition": [
         0,
         13
@@ -4338,7 +5401,39 @@
       ],
       "dcterms:description": "High-born Lord of the Rings Woodland Elf noble with a sly, knowing smile, emerald leaf-brooch cloak, and silver circlet. Combines deft blade work with 1 college of spells.",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "We've traveled to every corner of the United States. I've now been in 57 states \u2014 I think one left to go!",
+            "audio": "res://assets/audio/heroes/hillary_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "We came, we saw, he died! Ha ha ha!",
+            "audio": "res://assets/audio/heroes/hillary_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "What difference, at this point, does it make?!",
+            "audio": "res://assets/audio/heroes/hillary_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "What, like with a cloth or something? Well, no, I don't know how it works digitally at all!",
+            "audio": "res://assets/audio/heroes/hillary_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "But I cast it with conviction! And I want the Iranians to know that if I'm the President, we will attack Iran!",
+            "audio": "res://assets/audio/heroes/hillary_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:trump",
@@ -4363,7 +5458,7 @@
       "robos:tokenColor": "#d97706",
       "robos:tokenAsset": "assets/tokens/token_trump.png",
       "robos:portraitAsset": "assets/portraits/card_bg_trump.png",
-      "robos:icon": "🪓",
+      "robos:icon": "\ud83e\ude93",
       "robos:startingPosition": [
         1,
         12
@@ -4386,7 +5481,39 @@
       ],
       "dcterms:description": "Heavily armored Dwarf warrior sporting his signature golden hair and a magnificent braided golden Dwarven beard. Master trap disarmer and gilded dungeon builder.",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "As you can see, I'm not just MAGA \u2014 I'm Dark MAGA!",
+            "audio": "res://assets/audio/heroes/trump_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "And I do it! He doesn't do it! He can't hit a ball 50 yards! He challenged me to a golf match, he can't hit a ball 50 yards!",
+            "audio": "res://assets/audio/heroes/trump_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Would you look at what's happening? This is a persecution! This was never supposed to happen in America!",
+            "audio": "res://assets/audio/heroes/trump_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Here's the fighter \u2014 somebody who tried to kill him! You will not take this man down!",
+            "audio": "res://assets/audio/heroes/trump_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "Do you think that we have aliens coming, flying around or whatever? There's no reason not to think that Mars and all these planets don't have life!",
+            "audio": "res://assets/audio/heroes/trump_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:hero:obama",
@@ -4411,7 +5538,7 @@
       "robos:tokenColor": "#b91c1c",
       "robos:tokenAsset": "assets/tokens/token_obama.png",
       "robos:portraitAsset": "assets/portraits/card_bg_obama.png",
-      "robos:icon": "⚔️",
+      "robos:icon": "\u2694\ufe0f",
       "robos:startingPosition": [
         0,
         12
@@ -4434,7 +5561,39 @@
       ],
       "dcterms:description": "Buff-as-hell, salt-and-pepper grey-haired Barbarian champion of the Midterms 2026 Hero Pack. Wields a rune-etched broadsword and devastating frontline melee power.",
       "robos:package": "tabletop-game",
-      "robos:namespace": "robos.tabletop"
+      "robos:namespace": "robos.tabletop",
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "Uhh... let me be clear... It is now... my turn... to march... toward the horizon... of hope.",
+            "audio": "res://assets/audio/heroes/obama_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Uhh... feel the audacity... of this broadsword... of hope!",
+            "audio": "res://assets/audio/heroes/obama_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Uhh... folks... that strike... did not feel... very hopeful.",
+            "audio": "res://assets/audio/heroes/obama_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Uhh... nice try... You cannot pierce... the shield... of hope.",
+            "audio": "res://assets/audio/heroes/obama_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "Uhh... by the power... of hope... and change... I cast... this spell.",
+            "audio": "res://assets/audio/heroes/obama_casting_magic.ogg"
+          }
+        ]
+      }
     },
     {
       "@id": "urn:robos:tabletop:monster:goblin",
@@ -4727,7 +5886,7 @@
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Dragon",
       "robos:archetype": "Dragon",
-      "robos:icon": "🐉",
+      "robos:icon": "\ud83d\udc09",
       "robos:bodyPoints": 6,
       "robos:attackDice": 5,
       "robos:defendDice": 5,
@@ -5194,7 +6353,7 @@
         "robos:GameMap",
         "schema:Place"
       ],
-      "dcterms:title": "The Trial — Quest 1: Lair of the Orc Warlord",
+      "dcterms:title": "The Trial \u2014 Quest 1: Lair of the Orc Warlord",
       "robos:width": 26,
       "robos:height": 19,
       "robos:startingSpawn": [
@@ -5288,7 +6447,7 @@
         "robos:TabletopMapConfiguration",
         "schema:Place"
       ],
-      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28×21)",
+      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28\u00d721)",
       "robos:boardSide": "Custom",
       "robos:gridDimensions": [
         28,
@@ -6014,7 +7173,7 @@
         "robos:GameMap",
         "schema:Place"
       ],
-      "dcterms:title": "The Fortress of the Fire King — Quest 4",
+      "dcterms:title": "The Fortress of the Fire King \u2014 Quest 4",
       "robos:width": 26,
       "robos:height": 19,
       "robos:startingSpawn": [
@@ -6091,7 +7250,7 @@
       "robos:weaponType": "Weapon",
       "robos:dice": "4 Attack Dice (No Congressional Vote Required)",
       "robos:cost": "450 GP",
-      "robos:icon": "💣",
+      "robos:icon": "\ud83d\udca3",
       "dcterms:description": "Illegal presidential act #1: Bypasses Article I and the War Powers Resolution completely! Strike any dungeon room without asking Congress and call it a 'limited kinetic operation'.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -6110,7 +7269,7 @@
       "robos:weaponType": "Weapon",
       "robos:dice": "3 Attack Dice (Bathroom Chandelier & Corvette Garage Edition)",
       "robos:cost": "300 GP",
-      "robos:icon": "📦",
+      "robos:icon": "\ud83d\udce6",
       "dcterms:description": "Illegal presidential act #2: A heavy cardboard banker's box of Top Secret nuclear & war plans stashed next to a golden toilet and a vintage Corvette. Declassified telepathically!",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -6129,7 +7288,7 @@
       "robos:weaponType": "Weapon",
       "robos:dice": "3 Attack Dice (Erases All Past & Future Crimes)",
       "robos:cost": "350 GP",
-      "robos:icon": "🔨",
+      "robos:icon": "\ud83d\udd28",
       "dcterms:description": "Illegal presidential act #3: Signed at 11:59 PM on the last day in office! Preemptively pardons family members, political cronies, and campaign donors for a decade of dungeon raids.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -6148,7 +7307,7 @@
       "robos:weaponType": "Weapon",
       "robos:dice": "3 Attack Dice (Ignores Supreme Court & Congress)",
       "robos:cost": "280 GP",
-      "robos:icon": "🖊️",
+      "robos:icon": "\ud83d\udd8a\ufe0f",
       "dcterms:description": "Illegal presidential act #4: Declares a fake 'National Dungeon Emergency' to spend 500 Billion GP, levy random tariffs, and rewrite laws with a single Sharpie stroke.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -6167,7 +7326,7 @@
       "robos:weaponType": "Ranged Weapon",
       "robos:dice": "3 Attack Dice (Emoluments Clause Drain)",
       "robos:cost": "420 GP",
-      "robos:icon": "🪙",
+      "robos:icon": "\ud83e\ude99",
       "dcterms:description": "Illegal presidential act #5: Launches an official presidential crypto token 48 hours before the quest starts, draining every monster's gold purse while insiders cash out.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -6186,7 +7345,7 @@
       "robos:weaponType": "Ranged Weapon",
       "robos:dice": "3 Attack Dice (Straight-Line Lawfare)",
       "robos:cost": "350 GP",
-      "robos:icon": "🏹",
+      "robos:icon": "\ud83c\udff9",
       "dcterms:description": "Illegal presidential act #6: Fires 400-page federal indictments and retaliatory IRS audits across the corridor at political opponents during election season.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -6205,7 +7364,7 @@
       "robos:weaponType": "Armor",
       "robos:dice": "+2 Defend Dice (Total Legal Invulnerability)",
       "robos:cost": "500 GP",
-      "robos:icon": "🛡️",
+      "robos:icon": "\ud83d\udee1\ufe0f",
       "dcterms:description": "Any illegal dungeon act committed while holding this shield is automatically declared a Core Official Constitutional Act.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -6224,7 +7383,7 @@
       "robos:itemType": "potion",
       "robos:effect": "Restores 4 BP, but forces a 10-minute rant about microaggressions or woke M&Ms",
       "robos:cost": 100,
-      "robos:icon": "❄️",
+      "robos:icon": "\u2744\ufe0f",
       "dcterms:description": "Brewed from pure bipartisan fragility whenever someone encounters a joke, a pronoun, or a holiday coffee cup they slightly dislike.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -6243,7 +7402,7 @@
       "robos:itemType": "relic",
       "robos:effect": "Takes away abortion & personal healthcare choices in the room, replacing them with a politician committee",
       "robos:cost": 200,
-      "robos:icon": "📜",
+      "robos:icon": "\ud83d\udcdc",
       "dcterms:description": "Overturns 50 years of settled bodily autonomy precedent overnight while claiming 'we just sent the decision back to the dungeon states!'",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -6262,7 +7421,7 @@
       "robos:itemType": "relic",
       "robos:effect": "Supporting things 100% just because your party does! +2 Attack Dice when reversing your opinion from yesterday",
       "robos:cost": 150,
-      "robos:icon": "🩴",
+      "robos:icon": "\ud83e\ude74",
       "dcterms:description": "Lets a hero passionately cheer for the exact policy they called treason five minutes ago because their party leader just endorsed it.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -6281,8 +7440,8 @@
       "robos:itemType": "tool",
       "robos:effect": "Fear of Israel & Middle East questions: deflects press inquiries while auto-wiring 20 Billion GP",
       "robos:cost": 175,
-      "robos:icon": "📺",
-      "dcterms:description": "Activated the moment anyone brings up Israel or the Middle East—sweats profusely, mutters a 15-second canned platitude, and dives out the nearest dungeon window.",
+      "robos:icon": "\ud83d\udcfa",
+      "dcterms:description": "Activated the moment anyone brings up Israel or the Middle East\u2014sweats profusely, mutters a 15-second canned platitude, and dives out the nearest dungeon window.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     },
@@ -6300,7 +7459,7 @@
       "robos:itemType": "artifact",
       "robos:effect": "Mints 500 GP instantly, but spawns an Inflation Spawn and makes eggs cost 25 GP",
       "robos:cost": 300,
-      "robos:icon": "🖨️",
+      "robos:icon": "\ud83d\udda8\ufe0f",
       "dcterms:description": "Bipartisan economic magic: solves high prices by printing trillions of new gold coins and calling the resulting inflation 'transitory'.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -6312,7 +7471,7 @@
         "robos:TabletopQuestSaveState",
         "schema:Action"
       ],
-      "dcterms:title": "Quest State — Round 1 (Dwarf (Hero 2 of 4))",
+      "dcterms:title": "Quest State \u2014 Round 1 (Dwarf (Hero 2 of 4))",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop",
       "robos:questSlug": "custom-quest",
@@ -6531,7 +7690,7 @@
           "type": "equipment",
           "holder": "Barbarian",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
           "id": "barbarian-healing_potion-1",
@@ -6539,7 +7698,7 @@
           "type": "potion",
           "holder": "Barbarian",
           "source": "Hero Inventory",
-          "icon": "🧪"
+          "icon": "\ud83e\uddea"
         },
         {
           "id": "dwarf-shortsword-0",
@@ -6547,7 +7706,7 @@
           "type": "equipment",
           "holder": "Dwarf",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
           "id": "dwarf-healing_potion-1",
@@ -6555,7 +7714,7 @@
           "type": "potion",
           "holder": "Dwarf",
           "source": "Hero Inventory",
-          "icon": "🧪"
+          "icon": "\ud83e\uddea"
         },
         {
           "id": "elf-shortsword-0",
@@ -6563,7 +7722,7 @@
           "type": "equipment",
           "holder": "Elf",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
           "id": "elf-healing_potion-1",
@@ -6571,7 +7730,7 @@
           "type": "potion",
           "holder": "Elf",
           "source": "Hero Inventory",
-          "icon": "🧪"
+          "icon": "\ud83e\uddea"
         },
         {
           "id": "wizard-dagger-0",
@@ -6579,7 +7738,7 @@
           "type": "equipment",
           "holder": "Wizard",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
           "id": "wizard-staff-1",
@@ -6587,7 +7746,7 @@
           "type": "equipment",
           "holder": "Wizard",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
           "id": "wizard-healing_potion-2",
@@ -6595,7 +7754,7 @@
           "type": "potion",
           "holder": "Wizard",
           "source": "Hero Inventory",
-          "icon": "🧪"
+          "icon": "\ud83e\uddea"
         }
       ],
       "robos:itemsFoundCount": 9,
@@ -6654,7 +7813,7 @@
           "tokenColor": "#b91c1c",
           "tokenAsset": "assets/tokens/token_obama.png",
           "portraitAsset": "assets/portraits/card_bg_obama.png",
-          "icon": "⚔️",
+          "icon": "\u2694\ufe0f",
           "startingPosition": [
             0,
             12
@@ -6674,7 +7833,83 @@
               "effect": "+1 Mind resistance vs Spin Doctors",
               "value": 50
             }
-          ]
+          ],
+          "@id": "urn:robos:tabletop:hero:obama",
+          "@type": [
+            "oslc_am:Resource",
+            "robos:TabletopHero",
+            "robos:GameCharacter",
+            "schema:Person"
+          ],
+          "dcterms:title": "Barack Obama",
+          "robos:characterName": "Barack Obama",
+          "robos:heroClass": "Barbarian",
+          "robos:category": "Midterms 2026",
+          "robos:bodyPoints": 8,
+          "robos:mindPoints": 2,
+          "robos:attackDice": 3,
+          "robos:defendDice": 2,
+          "robos:gold": 120,
+          "robos:equippedWeapon": "Broadsword of Hope & Change (3 Combat Dice)",
+          "robos:equippedArmor": "Chiseled Commander Toughness (2 Defend Dice)",
+          "robos:specialAbility": "Bipartisan Cleave (Melee Specialist)",
+          "robos:tokenColor": "#b91c1c",
+          "robos:icon": "\u2694\ufe0f",
+          "robos:startingPosition": [
+            0,
+            12
+          ],
+          "robos:inventory": [
+            {
+              "id": "item-pot-heal-obama",
+              "name": "Potion of Executive Vigor",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
+            },
+            {
+              "id": "item-mic-drop-1",
+              "name": "Runic Teleprompter Shard",
+              "type": "relic",
+              "effect": "+1 Mind resistance vs Spin Doctors",
+              "value": 50
+            }
+          ],
+          "robos:tokenAsset": "assets/tokens/token_obama.png",
+          "robos:portraitAsset": "assets/portraits/card_bg_obama.png",
+          "robos:spells": [],
+          "robos:audioLines": {
+            "turnStart": [
+              {
+                "text": "Uhh... let me be clear... It is now... my turn... to march... toward the horizon... of hope.",
+                "audio": "res://assets/audio/heroes/obama_turn_start.ogg"
+              }
+            ],
+            "attacking": [
+              {
+                "text": "Uhh... feel the audacity... of this broadsword... of hope!",
+                "audio": "res://assets/audio/heroes/obama_attacking.ogg"
+              }
+            ],
+            "attacked": [
+              {
+                "text": "Uhh... folks... that strike... did not feel... very hopeful.",
+                "audio": "res://assets/audio/heroes/obama_attacked.ogg"
+              }
+            ],
+            "defended": [
+              {
+                "text": "Uhh... nice try... You cannot pierce... the shield... of hope.",
+                "audio": "res://assets/audio/heroes/obama_defended.ogg"
+              }
+            ],
+            "castingMagic": [
+              {
+                "text": "Uhh... by the power... of hope... and change... I cast... this spell.",
+                "audio": "res://assets/audio/heroes/obama_casting_magic.ogg"
+              }
+            ]
+          }
         },
         {
           "id": "urn:robos:tabletop:hero:trump",
@@ -6694,7 +7929,7 @@
           "tokenColor": "#d97706",
           "tokenAsset": "assets/tokens/token_trump.png",
           "portraitAsset": "assets/portraits/card_bg_trump.png",
-          "icon": "🪓",
+          "icon": "\ud83e\ude93",
           "startingPosition": [
             1,
             12
@@ -6714,7 +7949,83 @@
               "effect": "Restores up to 4 BP",
               "value": 100
             }
-          ]
+          ],
+          "@id": "urn:robos:tabletop:hero:trump",
+          "@type": [
+            "oslc_am:Resource",
+            "robos:TabletopHero",
+            "robos:GameCharacter",
+            "schema:Person"
+          ],
+          "dcterms:title": "Donald Trump",
+          "robos:characterName": "Donald Trump",
+          "robos:heroClass": "Dwarf",
+          "robos:category": "Midterms 2026",
+          "robos:bodyPoints": 7,
+          "robos:mindPoints": 3,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2,
+          "robos:gold": 250,
+          "robos:equippedWeapon": "Gilded Dwarven Battle-Axe (2 Combat Dice)",
+          "robos:equippedArmor": "Gold-Plated Rune Mail (2 Defend Dice)",
+          "robos:specialAbility": "Disarm Traps & Red-Tape Vaults",
+          "robos:tokenColor": "#d97706",
+          "robos:icon": "\ud83e\ude93",
+          "robos:startingPosition": [
+            1,
+            12
+          ],
+          "robos:inventory": [
+            {
+              "id": "item-toolkit-trump",
+              "name": "Golden Dwarven Trap Toolkit",
+              "type": "tool",
+              "effect": "Disarms any pit, boulder, or bureaucratic trap",
+              "value": 150
+            },
+            {
+              "id": "item-pot-heal-trump",
+              "name": "Elixir of Tremendous Stamina",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
+            }
+          ],
+          "robos:tokenAsset": "assets/tokens/token_trump.png",
+          "robos:portraitAsset": "assets/portraits/card_bg_trump.png",
+          "robos:spells": [],
+          "robos:audioLines": {
+            "turnStart": [
+              {
+                "text": "As you can see, I'm not just MAGA \u2014 I'm Dark MAGA!",
+                "audio": "res://assets/audio/heroes/trump_turn_start.ogg"
+              }
+            ],
+            "attacking": [
+              {
+                "text": "And I do it! He doesn't do it! He can't hit a ball 50 yards! He challenged me to a golf match, he can't hit a ball 50 yards!",
+                "audio": "res://assets/audio/heroes/trump_attacking.ogg"
+              }
+            ],
+            "attacked": [
+              {
+                "text": "Would you look at what's happening? This is a persecution! This was never supposed to happen in America!",
+                "audio": "res://assets/audio/heroes/trump_attacked.ogg"
+              }
+            ],
+            "defended": [
+              {
+                "text": "Here's the fighter \u2014 somebody who tried to kill him! You will not take this man down!",
+                "audio": "res://assets/audio/heroes/trump_defended.ogg"
+              }
+            ],
+            "castingMagic": [
+              {
+                "text": "Do you think that we have aliens coming, flying around or whatever? There's no reason not to think that Mars and all these planets don't have life!",
+                "audio": "res://assets/audio/heroes/trump_casting_magic.ogg"
+              }
+            ]
+          }
         },
         {
           "id": "urn:robos:tabletop:hero:hillary-clinton",
@@ -6730,11 +8041,11 @@
           "gold": 150,
           "equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
           "equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
-          "specialAbility": "Spellcaster (1 College — 3 Spells)",
+          "specialAbility": "Spellcaster (1 College \u2014 3 Spells)",
           "tokenColor": "#059669",
           "tokenAsset": "assets/tokens/token_hillary_clinton.png",
           "portraitAsset": "assets/portraits/card_bg_hillary_clinton.png",
-          "icon": "🏹",
+          "icon": "\ud83c\udff9",
           "startingPosition": [
             0,
             13
@@ -6754,7 +8065,117 @@
               "effect": "Restores up to 4 BP",
               "value": 100
             }
-          ]
+          ],
+          "@id": "urn:robos:tabletop:hero:hillary-clinton",
+          "@type": [
+            "oslc_am:Resource",
+            "robos:TabletopHero",
+            "robos:GameCharacter",
+            "schema:Person"
+          ],
+          "dcterms:title": "Hillary Clinton",
+          "robos:characterName": "Hillary Clinton",
+          "robos:heroClass": "Elf",
+          "robos:category": "Midterms 2026",
+          "robos:bodyPoints": 6,
+          "robos:mindPoints": 4,
+          "robos:attackDice": 2,
+          "robos:defendDice": 2,
+          "robos:gold": 150,
+          "robos:equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
+          "robos:equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
+          "robos:specialAbility": "Spellcaster (1 College \u2014 3 Spells)",
+          "robos:tokenColor": "#059669",
+          "robos:icon": "\ud83c\udff9",
+          "robos:startingPosition": [
+            0,
+            13
+          ],
+          "robos:inventory": [
+            {
+              "id": "item-scroll-hillary",
+              "name": "Classified Elven Parchment",
+              "type": "relic",
+              "effect": "Reveals hidden doors in current corridor",
+              "value": 120
+            },
+            {
+              "id": "item-pot-heal-hillary",
+              "name": "Draught of Miruvor",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
+            }
+          ],
+          "robos:tokenAsset": "assets/tokens/token_hillary_clinton.png",
+          "robos:portraitAsset": "assets/portraits/card_bg_hillary_clinton.png",
+          "robos:spells": [
+            {
+              "id": "urn:robos:tabletop:spell:water-of-healing",
+              "slug": "water-of-healing",
+              "name": "Water of Healing",
+              "element": "water",
+              "category": "Base Game",
+              "icon": "\ud83d\udca7",
+              "description": "Restores up to 4 lost Body Points to any Hero.",
+              "effect": "heal-bp",
+              "val": 4
+            },
+            {
+              "id": "urn:robos:tabletop:spell:sleep",
+              "slug": "sleep",
+              "name": "Sleep",
+              "element": "water",
+              "category": "Base Game",
+              "icon": "\ud83d\udca4",
+              "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
+              "effect": "status-sleep",
+              "val": 1
+            },
+            {
+              "id": "urn:robos:tabletop:spell:veil-of-mist",
+              "slug": "veil-of-mist",
+              "name": "Veil of Mist",
+              "element": "water",
+              "category": "Base Game",
+              "icon": "\ud83c\udf2b\ufe0f",
+              "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
+              "effect": "status-stealth",
+              "val": 1
+            }
+          ],
+          "robos:audioLines": {
+            "turnStart": [
+              {
+                "text": "We've traveled to every corner of the United States. I've now been in 57 states \u2014 I think one left to go!",
+                "audio": "res://assets/audio/heroes/hillary_turn_start.ogg"
+              }
+            ],
+            "attacking": [
+              {
+                "text": "We came, we saw, he died! Ha ha ha!",
+                "audio": "res://assets/audio/heroes/hillary_attacking.ogg"
+              }
+            ],
+            "attacked": [
+              {
+                "text": "What difference, at this point, does it make?!",
+                "audio": "res://assets/audio/heroes/hillary_attacked.ogg"
+              }
+            ],
+            "defended": [
+              {
+                "text": "What, like with a cloth or something? Well, no, I don't know how it works digitally at all!",
+                "audio": "res://assets/audio/heroes/hillary_defended.ogg"
+              }
+            ],
+            "castingMagic": [
+              {
+                "text": "But I cast it with conviction! And I want the Iranians to know that if I'm the President, we will attack Iran!",
+                "audio": "res://assets/audio/heroes/hillary_casting_magic.ogg"
+              }
+            ]
+          }
         },
         {
           "id": "urn:robos:tabletop:hero:bernie-sanders",
@@ -6774,7 +8195,7 @@
           "tokenColor": "#2563eb",
           "tokenAsset": "assets/tokens/token_bernie_sanders.png",
           "portraitAsset": "assets/portraits/card_bg_bernie_sanders.png",
-          "icon": "🪄",
+          "icon": "\ud83e\ude84",
           "startingPosition": [
             1,
             13
@@ -6794,7 +8215,183 @@
               "effect": "Restores up to 4 BP",
               "value": 100
             }
-          ]
+          ],
+          "@id": "urn:robos:tabletop:hero:bernie-sanders",
+          "@type": [
+            "oslc_am:Resource",
+            "robos:TabletopHero",
+            "robos:GameCharacter",
+            "schema:Person"
+          ],
+          "dcterms:title": "Bernie Sanders",
+          "robos:characterName": "Bernie Sanders",
+          "robos:heroClass": "Wizard",
+          "robos:category": "Midterms 2026",
+          "robos:bodyPoints": 4,
+          "robos:mindPoints": 6,
+          "robos:attackDice": 1,
+          "robos:defendDice": 2,
+          "robos:gold": 99,
+          "robos:equippedWeapon": "Gnarled Oak Staff of the 99% (1 Combat Die)",
+          "robos:equippedArmor": "Starry Wizard Hat & Vermont Wool Mittens (2 Defend Dice)",
+          "robos:specialAbility": "Master Spellcaster (3 Colleges, 9 Spells)",
+          "robos:tokenColor": "#2563eb",
+          "robos:icon": "\ud83e\ude84",
+          "robos:startingPosition": [
+            1,
+            13
+          ],
+          "robos:inventory": [
+            {
+              "id": "item-mittens-bernie",
+              "name": "Enchanted Vermont Mittens",
+              "type": "relic",
+              "effect": "Channels crackling elemental lightning & warmth",
+              "value": 200
+            },
+            {
+              "id": "item-pot-heal-bernie",
+              "name": "Universal Healthcare Potion",
+              "type": "potion",
+              "effect": "Restores up to 4 BP",
+              "value": 100
+            }
+          ],
+          "robos:tokenAsset": "assets/tokens/token_bernie_sanders.png",
+          "robos:portraitAsset": "assets/portraits/card_bg_bernie_sanders.png",
+          "robos:spells": [
+            {
+              "id": "urn:robos:tabletop:spell:heal-body",
+              "slug": "heal-body",
+              "name": "Heal Body",
+              "element": "earth",
+              "category": "Base Game",
+              "icon": "\ud83d\udc96",
+              "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
+              "effect": "heal-bp",
+              "val": 4
+            },
+            {
+              "id": "urn:robos:tabletop:spell:pass-through-rock",
+              "slug": "pass-through-rock",
+              "name": "Pass Through Rock",
+              "element": "earth",
+              "category": "Base Game",
+              "icon": "\ud83e\uddf1",
+              "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
+              "effect": "phase-walls",
+              "val": 1
+            },
+            {
+              "id": "urn:robos:tabletop:spell:rock-skin",
+              "slug": "rock-skin",
+              "name": "Rock Skin",
+              "element": "earth",
+              "category": "Base Game",
+              "icon": "\ud83d\udee1\ufe0f",
+              "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
+              "effect": "buff-def",
+              "val": 1
+            },
+            {
+              "id": "urn:robos:tabletop:spell:ball-of-flame",
+              "slug": "ball-of-flame",
+              "name": "Ball of Flame",
+              "element": "fire",
+              "category": "Base Game",
+              "icon": "\u2604\ufe0f",
+              "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
+              "effect": "damage-bp",
+              "val": 2
+            },
+            {
+              "id": "urn:robos:tabletop:spell:courage",
+              "slug": "courage",
+              "name": "Courage",
+              "element": "fire",
+              "category": "Base Game",
+              "icon": "\ud83e\udd81",
+              "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
+              "effect": "buff-atk",
+              "val": 2
+            },
+            {
+              "id": "urn:robos:tabletop:spell:fire-of-wrath",
+              "slug": "fire-of-wrath",
+              "name": "Fire of Wrath",
+              "element": "fire",
+              "category": "Base Game",
+              "icon": "\ud83d\udd25",
+              "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
+              "effect": "damage-bp",
+              "val": 1
+            },
+            {
+              "id": "urn:robos:tabletop:spell:genie",
+              "slug": "genie",
+              "name": "Genie",
+              "element": "air",
+              "category": "Base Game",
+              "icon": "\ud83e\uddde",
+              "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
+              "effect": "summon-attack",
+              "val": 5
+            },
+            {
+              "id": "urn:robos:tabletop:spell:swift-wind",
+              "slug": "swift-wind",
+              "name": "Swift Wind",
+              "element": "air",
+              "category": "Base Game",
+              "icon": "\ud83d\udca8",
+              "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
+              "effect": "buff-move",
+              "val": 2
+            },
+            {
+              "id": "urn:robos:tabletop:spell:tempest",
+              "slug": "tempest",
+              "name": "Tempest",
+              "element": "air",
+              "category": "Base Game",
+              "icon": "\ud83c\udf2a\ufe0f",
+              "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
+              "effect": "status-freeze",
+              "val": 1
+            }
+          ],
+          "robos:audioLines": {
+            "turnStart": [
+              {
+                "text": "Let's talk about welfare for the rich and the powerful!",
+                "audio": "res://assets/audio/heroes/bernie_turn_start.ogg"
+              }
+            ],
+            "attacking": [
+              {
+                "text": "I will be damned if I will vote for a proposal which will stick it to the middle class and the working people!",
+                "audio": "res://assets/audio/heroes/bernie_attacking.ogg"
+              }
+            ],
+            "attacked": [
+              {
+                "text": "Mr. Speaker, I've got a problem! I've got a problem with a President and a Congress which allows five million children to go hungry!",
+                "audio": "res://assets/audio/heroes/bernie_attacked.ogg"
+              }
+            ],
+            "defended": [
+              {
+                "text": "What we are saying very loud and clear is that Ronald Reagan and his billionaire friends do not represent the America that we do!",
+                "audio": "res://assets/audio/heroes/bernie_defended.ogg"
+              }
+            ],
+            "castingMagic": [
+              {
+                "text": "This democracy is evolving into an oligarchy! And an oligarchy is a country in which a few people have tremendous wealth and power!",
+                "audio": "res://assets/audio/heroes/bernie_casting_magic.ogg"
+              }
+            ]
+          }
         }
       ],
       "robos:quests": [
@@ -6802,7 +8399,7 @@
           "id": "election-2026-quest-1",
           "slug": "election-2026-quest-1",
           "title": "Quest 1: Battle for the Hill",
-          "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office—defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
+          "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office\u2014defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
           "mapConfigId": "midterm-election-capitol",
           "ruleset": "heroquest",
           "goldReward": 150,
@@ -6825,11 +8422,6 @@
             "room-nw-9",
             "room-nw-10",
             "room-se-11"
-          ],
-          "primaryGoals": [
-            "Defeat the Capitol Bosses & Hydra Bosses (Talarixon, El-Rogers, Brownsted, Katie Zacharia, Mitch McConnell, and Drunk JD Vance & Kamala Harris).",
-            "Storm the Capitol chambers (Briefing Room, Committee Chamber, War Room & Oval Office) and expose the bipartisan slush fund.",
-            "Lead all surviving heroes safely to the Capitol Exit Stairs at [14, 2]."
           ]
         }
       ],
@@ -6905,7 +8497,7 @@
           "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
           "robos:specialAbility": "Greatest strength and vitality in melee combat",
           "robos:tokenColor": "#b91c1c",
-          "robos:icon": "⚔️",
+          "robos:icon": "\u2694\ufe0f",
           "robos:startingPosition": [
             0,
             1
@@ -6928,7 +8520,39 @@
           ],
           "robos:spells": [],
           "robos:currentBP": 8,
-          "robos:currentMP": 2
+          "robos:currentMP": 2,
+          "robos:audioLines": {
+            "turnStart": [
+              {
+                "text": "By my broadsword, clear a path!",
+                "audio": "res://assets/audio/heroes/barbarian_turn_start.ogg"
+              }
+            ],
+            "attacking": [
+              {
+                "text": "Taste cold Cimmerian steel!",
+                "audio": "res://assets/audio/heroes/barbarian_attacking.ogg"
+              }
+            ],
+            "attacked": [
+              {
+                "text": "Aagh! Only a flesh wound!",
+                "audio": "res://assets/audio/heroes/barbarian_attacked.ogg"
+              }
+            ],
+            "defended": [
+              {
+                "text": "Ha! Your feeble blow bounces off my iron muscles!",
+                "audio": "res://assets/audio/heroes/barbarian_defended.ogg"
+              }
+            ],
+            "castingMagic": [
+              {
+                "text": "The ancient battle-spirit surges through my blade!",
+                "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg"
+              }
+            ]
+          }
         },
         {
           "@id": "urn:robos:tabletop:hero:dwarf",
@@ -6951,7 +8575,7 @@
           "robos:equippedArmor": "Shield & Chainmail (+2 Defend Dice)",
           "robos:specialAbility": "Disarms traps without needing a toolkit",
           "robos:tokenColor": "#d97706",
-          "robos:icon": "🪓",
+          "robos:icon": "\ud83e\ude93",
           "robos:startingPosition": [
             1,
             0
@@ -6972,7 +8596,39 @@
               "value": 100
             }
           ],
-          "robos:spells": []
+          "robos:spells": [],
+          "robos:audioLines": {
+            "turnStart": [
+              {
+                "text": "Stand back! Let a Dwarf of the World's Edge Mountains handle this!",
+                "audio": "res://assets/audio/heroes/dwarf_turn_start.ogg"
+              }
+            ],
+            "attacking": [
+              {
+                "text": "For Grungni's beard, feel my battle-axe!",
+                "audio": "res://assets/audio/heroes/dwarf_attacking.ogg"
+              }
+            ],
+            "attacked": [
+              {
+                "text": "Oof! Right in the chainmail!",
+                "audio": "res://assets/audio/heroes/dwarf_attacked.ogg"
+              }
+            ],
+            "defended": [
+              {
+                "text": "Dwarven forged steel never yields!",
+                "audio": "res://assets/audio/heroes/dwarf_defended.ogg"
+              }
+            ],
+            "castingMagic": [
+              {
+                "text": "By the runes of the anvil, awaken!",
+                "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg"
+              }
+            ]
+          }
         },
         {
           "@id": "urn:robos:tabletop:hero:elf",
@@ -6995,7 +8651,7 @@
           "robos:equippedArmor": "Elven Leather & Cloak (+2 Defend Dice)",
           "robos:specialAbility": "Master of blade and 1 Elemental Spell deck (3 spells)",
           "robos:tokenColor": "#15803d",
-          "robos:icon": "🏹",
+          "robos:icon": "\ud83c\udff9",
           "robos:startingPosition": [
             1,
             1
@@ -7023,7 +8679,7 @@
               "name": "Water of Healing",
               "element": "water",
               "category": "Base Game",
-              "icon": "💧",
+              "icon": "\ud83d\udca7",
               "description": "Restores up to 4 lost Body Points to any Hero.",
               "effect": "heal-bp",
               "val": 4
@@ -7034,7 +8690,7 @@
               "name": "Sleep",
               "element": "water",
               "category": "Base Game",
-              "icon": "💤",
+              "icon": "\ud83d\udca4",
               "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
               "effect": "status-sleep",
               "val": 1
@@ -7045,12 +8701,44 @@
               "name": "Veil of Mist",
               "element": "water",
               "category": "Base Game",
-              "icon": "🌫️",
+              "icon": "\ud83c\udf2b\ufe0f",
               "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
               "effect": "status-stealth",
               "val": 1
             }
-          ]
+          ],
+          "robos:audioLines": {
+            "turnStart": [
+              {
+                "text": "With elven grace, I step into the shadows.",
+                "audio": "res://assets/audio/heroes/elf_turn_start.ogg"
+              }
+            ],
+            "attacking": [
+              {
+                "text": "Swift as the wind, strike true!",
+                "audio": "res://assets/audio/heroes/elf_attacking.ogg"
+              }
+            ],
+            "attacked": [
+              {
+                "text": "Ah! Darkness stings, yet my spirit endures!",
+                "audio": "res://assets/audio/heroes/elf_attacked.ogg"
+              }
+            ],
+            "defended": [
+              {
+                "text": "Too slow, creature! The forest shields me!",
+                "audio": "res://assets/audio/heroes/elf_defended.ogg"
+              }
+            ],
+            "castingMagic": [
+              {
+                "text": "Ancient weave of earth and water, heed my call!",
+                "audio": "res://assets/audio/heroes/elf_casting_magic.ogg"
+              }
+            ]
+          }
         },
         {
           "@id": "urn:robos:tabletop:hero:wizard",
@@ -7073,7 +8761,7 @@
           "robos:equippedArmor": "Wizard Cloak (2 Defend Dice)",
           "robos:specialAbility": "Wields 3 Elemental Spell decks (9 spells total)",
           "robos:tokenColor": "#7c3aed",
-          "robos:icon": "🔮",
+          "robos:icon": "\ud83d\udd2e",
           "robos:startingPosition": [
             0,
             0
@@ -7101,7 +8789,7 @@
               "name": "Heal Body",
               "element": "earth",
               "category": "Base Game",
-              "icon": "💖",
+              "icon": "\ud83d\udc96",
               "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
               "effect": "heal-bp",
               "val": 4
@@ -7112,7 +8800,7 @@
               "name": "Pass Through Rock",
               "element": "earth",
               "category": "Base Game",
-              "icon": "🧱",
+              "icon": "\ud83e\uddf1",
               "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
               "effect": "phase-walls",
               "val": 1
@@ -7123,7 +8811,7 @@
               "name": "Rock Skin",
               "element": "earth",
               "category": "Base Game",
-              "icon": "🛡️",
+              "icon": "\ud83d\udee1\ufe0f",
               "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
               "effect": "buff-def",
               "val": 1
@@ -7134,7 +8822,7 @@
               "name": "Ball of Flame",
               "element": "fire",
               "category": "Base Game",
-              "icon": "☄️",
+              "icon": "\u2604\ufe0f",
               "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
               "effect": "damage-bp",
               "val": 2
@@ -7145,7 +8833,7 @@
               "name": "Courage",
               "element": "fire",
               "category": "Base Game",
-              "icon": "🦁",
+              "icon": "\ud83e\udd81",
               "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
               "effect": "buff-atk",
               "val": 2
@@ -7156,7 +8844,7 @@
               "name": "Fire of Wrath",
               "element": "fire",
               "category": "Base Game",
-              "icon": "🔥",
+              "icon": "\ud83d\udd25",
               "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
               "effect": "damage-bp",
               "val": 1
@@ -7167,7 +8855,7 @@
               "name": "Genie",
               "element": "air",
               "category": "Base Game",
-              "icon": "🧞",
+              "icon": "\ud83e\uddde",
               "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
               "effect": "summon-attack",
               "val": 5
@@ -7178,7 +8866,7 @@
               "name": "Swift Wind",
               "element": "air",
               "category": "Base Game",
-              "icon": "💨",
+              "icon": "\ud83d\udca8",
               "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
               "effect": "buff-move",
               "val": 2
@@ -7189,12 +8877,44 @@
               "name": "Tempest",
               "element": "air",
               "category": "Base Game",
-              "icon": "🌪️",
+              "icon": "\ud83c\udf2a\ufe0f",
               "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
               "effect": "status-freeze",
               "val": 1
             }
-          ]
+          ],
+          "robos:audioLines": {
+            "turnStart": [
+              {
+                "text": "The winds of magic gather at my staff.",
+                "audio": "res://assets/audio/heroes/wizard_turn_start.ogg"
+              }
+            ],
+            "attacking": [
+              {
+                "text": "Back, foul fiend, before my arcane staff!",
+                "audio": "res://assets/audio/heroes/wizard_attacking.ogg"
+              }
+            ],
+            "attacked": [
+              {
+                "text": "Gah! My ward-cloak falters!",
+                "audio": "res://assets/audio/heroes/wizard_attacked.ogg"
+              }
+            ],
+            "defended": [
+              {
+                "text": "My arcane barrier deflects your strike!",
+                "audio": "res://assets/audio/heroes/wizard_defended.ogg"
+              }
+            ],
+            "castingMagic": [
+              {
+                "text": "By fire, air, and tempest, unleash the spell!",
+                "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg"
+              }
+            ]
+          }
         }
       ],
       "robos:quests": [
@@ -7305,7 +9025,7 @@
       "robos:replaces": "Goblin",
       "robos:specialAbility": "Door Knocker: Move through other monsters",
       "robos:abilities": "Door Knocker: Move through other monsters",
-      "dcterms:description": "Replaces Goblin — Door Knocker: Move through other monsters.",
+      "dcterms:description": "Replaces Goblin \u2014 Door Knocker: Move through other monsters.",
       "robos:bodyPoints": 1,
       "robos:mindPoints": 1,
       "robos:attackDice": 2,
@@ -7315,7 +9035,7 @@
       "robos:isUndead": false,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "📋",
+      "robos:icon": "\ud83d\udccb",
       "robos:tokenColor": "#16a34a",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -7336,7 +9056,7 @@
       "robos:replaces": "Orc",
       "robos:specialAbility": "Smear Campaign: Force reroll of one successful defend die, once per encounter",
       "robos:abilities": "Smear Campaign: Force reroll of one successful defend die, once per encounter",
-      "dcterms:description": "Replaces Orc — Smear Campaign: Force reroll of one successful defend die, once per encounter.",
+      "dcterms:description": "Replaces Orc \u2014 Smear Campaign: Force reroll of one successful defend die, once per encounter.",
       "robos:bodyPoints": 1,
       "robos:mindPoints": 2,
       "robos:attackDice": 3,
@@ -7346,7 +9066,7 @@
       "robos:isUndead": false,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "🕵️",
+      "robos:icon": "\ud83d\udd75\ufe0f",
       "robos:tokenColor": "#ca8a04",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -7367,7 +9087,7 @@
       "robos:replaces": "Skeleton",
       "robos:specialAbility": "Reelection: On death, black shield resurrects with 1 Body Point",
       "robos:abilities": "Reelection: On death, black shield resurrects with 1 Body Point",
-      "dcterms:description": "Replaces Skeleton — Reelection: On death, black shield resurrects with 1 Body Point.",
+      "dcterms:description": "Replaces Skeleton \u2014 Reelection: On death, black shield resurrects with 1 Body Point.",
       "robos:bodyPoints": 1,
       "robos:mindPoints": 0,
       "robos:attackDice": 2,
@@ -7377,7 +9097,7 @@
       "robos:isUndead": true,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "🏛️",
+      "robos:icon": "\ud83c\udfdb\ufe0f",
       "robos:tokenColor": "#94a3b8",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -7398,7 +9118,7 @@
       "robos:replaces": "Zombie",
       "robos:specialAbility": "Red Tape: Adjacent heroes roll an extra movement die and use the lowest",
       "robos:abilities": "Red Tape: Adjacent heroes roll an extra movement die and use the lowest",
-      "dcterms:description": "Replaces Zombie — Red Tape: Adjacent heroes roll an extra movement die and use the lowest.",
+      "dcterms:description": "Replaces Zombie \u2014 Red Tape: Adjacent heroes roll an extra movement die and use the lowest.",
       "robos:bodyPoints": 1,
       "robos:mindPoints": 0,
       "robos:attackDice": 2,
@@ -7408,7 +9128,7 @@
       "robos:isUndead": true,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "📎",
+      "robos:icon": "\ud83d\udcce",
       "robos:tokenColor": "#475569",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -7429,7 +9149,7 @@
       "robos:replaces": "Mummy",
       "robos:specialAbility": "Bought Influence: Force reroll of one attacking skull, once per encounter",
       "robos:abilities": "Bought Influence: Force reroll of one attacking skull, once per encounter",
-      "dcterms:description": "Replaces Mummy — Bought Influence: Force reroll of one attacking skull, once per encounter.",
+      "dcterms:description": "Replaces Mummy \u2014 Bought Influence: Force reroll of one attacking skull, once per encounter.",
       "robos:bodyPoints": 2,
       "robos:mindPoints": 0,
       "robos:attackDice": 3,
@@ -7439,7 +9159,7 @@
       "robos:isUndead": true,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "💼",
+      "robos:icon": "\ud83d\udcbc",
       "robos:tokenColor": "#d97706",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -7460,7 +9180,7 @@
       "robos:replaces": "Dread Warrior",
       "robos:specialAbility": "Polarization: +1 attack die when adjacent to another Partisan Enforcer",
       "robos:abilities": "Polarization: +1 attack die when adjacent to another Partisan Enforcer",
-      "dcterms:description": "Replaces Dread Warrior — Polarization: +1 attack die when adjacent to another Partisan Enforcer.",
+      "dcterms:description": "Replaces Dread Warrior \u2014 Polarization: +1 attack die when adjacent to another Partisan Enforcer.",
       "robos:bodyPoints": 3,
       "robos:mindPoints": 3,
       "robos:attackDice": 4,
@@ -7470,7 +9190,7 @@
       "robos:isUndead": false,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "⚔️",
+      "robos:icon": "\u2694\ufe0f",
       "robos:tokenColor": "#dc2626",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -7491,7 +9211,7 @@
       "robos:replaces": "Gargoyle",
       "robos:specialAbility": "Dark Money: Summon one Campaign Volunteer, once per encounter",
       "robos:abilities": "Dark Money: Summon one Campaign Volunteer, once per encounter",
-      "dcterms:description": "Replaces Gargoyle — Dark Money: Summon one Campaign Volunteer, once per encounter.",
+      "dcterms:description": "Replaces Gargoyle \u2014 Dark Money: Summon one Campaign Volunteer, once per encounter.",
       "robos:bodyPoints": 3,
       "robos:mindPoints": 4,
       "robos:attackDice": 4,
@@ -7501,7 +9221,7 @@
       "robos:isUndead": false,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "😈",
+      "robos:icon": "\ud83d\ude08",
       "robos:tokenColor": "#7c3aed",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -7522,7 +9242,7 @@
       "robos:replaces": "Dread Sorcerer",
       "robos:specialAbility": "Alternative Facts: Cancel one successful attack, once per encounter",
       "robos:abilities": "Alternative Facts: Cancel one successful attack, once per encounter",
-      "dcterms:description": "Replaces Dread Sorcerer — Alternative Facts: Cancel one successful attack, once per encounter.",
+      "dcterms:description": "Replaces Dread Sorcerer \u2014 Alternative Facts: Cancel one successful attack, once per encounter.",
       "robos:bodyPoints": 3,
       "robos:mindPoints": 5,
       "robos:attackDice": 3,
@@ -7534,7 +9254,7 @@
       "robos:spells": [
         "urn:robos:tabletop:spell:recount-of-the-damned"
       ],
-      "robos:icon": "🌀",
+      "robos:icon": "\ud83c\udf00",
       "robos:tokenColor": "#0284c7",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -7547,14 +9267,14 @@
         "robos:GameMonster",
         "schema:Person"
       ],
-      "dcterms:title": "Talarixon (Talarico + Paxton · Texas Hydra)",
+      "dcterms:title": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra)",
       "robos:category": "Midterms 2026",
       "robos:mirrorsMonster": "urn:robos:tabletop:monster:dragon",
       "robos:monsterArchetype": "Texas Hydra",
       "robos:archetype": "Texas Hydra",
-      "robos:specialAbility": "Holy Smite (3 dice vs visible hero) • Indictment Barrage (move die 1-3 loses action) • Divided Authority (once/battle: lose turn, 2 dice to all adjacent heroes) • Political Infighting (≤3 BP: white shield lets heroes pick special attack)",
-      "robos:abilities": "Holy Smite: Attack a visible hero with 3 dice. | Indictment Barrage: Hero rolls movement die; 1–3 loses next action. | Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. | Political Infighting: At ≤3 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
-      "dcterms:description": "Talarico + Paxton · Texas Hydra Boss — Holy Smite: Attack a visible hero with 3 dice. Indictment Barrage: Hero rolls movement die; 1–3 loses next action. Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. Universal Hydra Rule — Political Infighting: At ≤3 BP, on a white shield at turn start, heroes choose its special attack.",
+      "robos:specialAbility": "Holy Smite (3 dice vs visible hero) \u2022 Indictment Barrage (move die 1-3 loses action) \u2022 Divided Authority (once/battle: lose turn, 2 dice to all adjacent heroes) \u2022 Political Infighting (\u22643 BP: white shield lets heroes pick special attack)",
+      "robos:abilities": "Holy Smite: Attack a visible hero with 3 dice. | Indictment Barrage: Hero rolls movement die; 1\u20133 loses next action. | Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. | Political Infighting: At \u22643 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
+      "dcterms:description": "Talarico + Paxton \u00b7 Texas Hydra Boss \u2014 Holy Smite: Attack a visible hero with 3 dice. Indictment Barrage: Hero rolls movement die; 1\u20133 loses next action. Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. Universal Hydra Rule \u2014 Political Infighting: At \u22643 BP, on a white shield at turn start, heroes choose its special attack.",
       "robos:bodyPoints": 6,
       "robos:mindPoints": 5,
       "robos:attackDice": 5,
@@ -7566,7 +9286,7 @@
       "robos:spells": [
         "urn:robos:tabletop:spell:recount-of-the-damned"
       ],
-      "robos:icon": "🐍",
+      "robos:icon": "\ud83d\udc0d",
       "robos:tokenColor": "#b91c1c",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -7579,14 +9299,14 @@
         "robos:GameMonster",
         "schema:Person"
       ],
-      "dcterms:title": "El-Rogers (El-Sayed + Rogers · Michigan Hydra)",
+      "dcterms:title": "El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra)",
       "robos:category": "Midterms 2026",
       "robos:mirrorsMonster": "urn:robos:tabletop:monster:witch-lord",
       "robos:monsterArchetype": "Michigan Hydra",
       "robos:archetype": "Michigan Hydra",
-      "robos:specialAbility": "Universal Healing (recover 2 BP once/battle) • Security Lockdown (seal room doors 1 round) • Industrial Collapse (at 3 BP: 3 dice to adjacent heroes, lose 1 BP) • Political Infighting (≤3 BP: white shield lets heroes pick special attack)",
-      "robos:abilities": "Universal Healing: Recover 2 Body Points once per battle. | Security Lockdown: Seal room doors for one round. | Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. | Political Infighting: At ≤3 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
-      "dcterms:description": "El-Sayed + Rogers · Michigan Hydra Boss — Universal Healing: Recover 2 Body Points once per battle. Security Lockdown: Seal room doors for one round. Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. Universal Hydra Rule — Political Infighting: At ≤3 BP, on a white shield at turn start, heroes choose its special attack.",
+      "robos:specialAbility": "Universal Healing (recover 2 BP once/battle) \u2022 Security Lockdown (seal room doors 1 round) \u2022 Industrial Collapse (at 3 BP: 3 dice to adjacent heroes, lose 1 BP) \u2022 Political Infighting (\u22643 BP: white shield lets heroes pick special attack)",
+      "robos:abilities": "Universal Healing: Recover 2 Body Points once per battle. | Security Lockdown: Seal room doors for one round. | Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. | Political Infighting: At \u22643 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
+      "dcterms:description": "El-Sayed + Rogers \u00b7 Michigan Hydra Boss \u2014 Universal Healing: Recover 2 Body Points once per battle. Security Lockdown: Seal room doors for one round. Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. Universal Hydra Rule \u2014 Political Infighting: At \u22643 BP, on a white shield at turn start, heroes choose its special attack.",
       "robos:bodyPoints": 7,
       "robos:mindPoints": 4,
       "robos:attackDice": 5,
@@ -7598,7 +9318,7 @@
       "robos:spells": [
         "urn:robos:tabletop:spell:recount-of-the-damned"
       ],
-      "robos:icon": "🐲",
+      "robos:icon": "\ud83d\udc32",
       "robos:tokenColor": "#1d4ed8",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -7611,14 +9331,14 @@
         "robos:GameMonster",
         "schema:Person"
       ],
-      "dcterms:title": "Brownsted (Brown + Husted · Ohio Hydra)",
+      "dcterms:title": "Brownsted (Brown + Husted \u00b7 Ohio Hydra)",
       "robos:category": "Midterms 2026",
       "robos:mirrorsMonster": "urn:robos:tabletop:monster:verag-orc-warlord",
       "robos:monsterArchetype": "Ohio Hydra",
       "robos:archetype": "Ohio Hydra",
-      "robos:specialAbility": "Union Strike (3 dice to all adjacent heroes) • Budget Freeze (no hero potions for 1 round) • Bipartisan Gridlock (roll combat die each turn: black shield = lose turn, skull = +1 atk die) • Political Infighting (≤4 BP: white shield lets heroes pick special attack)",
-      "robos:abilities": "Union Strike: Attack every adjacent hero with 3 dice. | Budget Freeze: Prevent heroes using potions for one round. | Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. | Political Infighting: At ≤4 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
-      "dcterms:description": "Brown + Husted · Ohio Hydra Boss — Union Strike: Attack every adjacent hero with 3 dice. Budget Freeze: Prevent heroes using potions for one round. Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. Universal Hydra Rule — Political Infighting: At ≤4 BP, on a white shield at turn start, heroes choose its special attack.",
+      "robos:specialAbility": "Union Strike (3 dice to all adjacent heroes) \u2022 Budget Freeze (no hero potions for 1 round) \u2022 Bipartisan Gridlock (roll combat die each turn: black shield = lose turn, skull = +1 atk die) \u2022 Political Infighting (\u22644 BP: white shield lets heroes pick special attack)",
+      "robos:abilities": "Union Strike: Attack every adjacent hero with 3 dice. | Budget Freeze: Prevent heroes using potions for one round. | Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. | Political Infighting: At \u22644 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
+      "dcterms:description": "Brown + Husted \u00b7 Ohio Hydra Boss \u2014 Union Strike: Attack every adjacent hero with 3 dice. Budget Freeze: Prevent heroes using potions for one round. Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. Universal Hydra Rule \u2014 Political Infighting: At \u22644 BP, on a white shield at turn start, heroes choose its special attack.",
       "robos:bodyPoints": 8,
       "robos:mindPoints": 5,
       "robos:attackDice": 6,
@@ -7630,7 +9350,7 @@
       "robos:spells": [
         "urn:robos:tabletop:spell:recount-of-the-damned"
       ],
-      "robos:icon": "🐉",
+      "robos:icon": "\ud83d\udc09",
       "robos:tokenColor": "#9333ea",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -7646,8 +9366,8 @@
       "dcterms:title": "Attack Ad",
       "robos:category": "Midterms 2026",
       "robos:element": "fire",
-      "robos:spellCollege": "Fire — Campaign Chaos",
-      "robos:icon": "📺",
+      "robos:spellCollege": "Fire \u2014 Campaign Chaos",
+      "robos:icon": "\ud83d\udcfa",
       "dcterms:description": "Attack one visible monster with 2 combat dice.",
       "robos:effect": "damage-dice",
       "robos:val": 2,
@@ -7665,8 +9385,8 @@
       "dcterms:title": "Outrage Inferno",
       "robos:category": "Midterms 2026",
       "robos:element": "fire",
-      "robos:spellCollege": "Fire — Campaign Chaos",
-      "robos:icon": "🔥",
+      "robos:spellCollege": "Fire \u2014 Campaign Chaos",
+      "robos:icon": "\ud83d\udd25",
       "dcterms:description": "Every monster in the room rolls 1 combat die; skull = 1 damage.",
       "robos:effect": "room-damage-dice",
       "robos:val": 1,
@@ -7684,8 +9404,8 @@
       "dcterms:title": "October Surprise",
       "robos:category": "Midterms 2026",
       "robos:element": "fire",
-      "robos:spellCollege": "Fire — Campaign Chaos",
-      "robos:icon": "💣",
+      "robos:spellCollege": "Fire \u2014 Campaign Chaos",
+      "robos:icon": "\ud83d\udca3",
       "dcterms:description": "Hero makes an additional attack with +2 attack dice.",
       "robos:effect": "buff-atk",
       "robos:val": 2,
@@ -7703,9 +9423,9 @@
       "dcterms:title": "Filibuster",
       "robos:category": "Midterms 2026",
       "robos:element": "water",
-      "robos:spellCollege": "Water — Bureaucracy",
-      "robos:icon": "⏳",
-      "dcterms:description": "Monster loses next turn unless it rolls 5–6 on one movement die.",
+      "robos:spellCollege": "Water \u2014 Bureaucracy",
+      "robos:icon": "\u23f3",
+      "dcterms:description": "Monster loses next turn unless it rolls 5\u20136 on one movement die.",
       "robos:effect": "status-sleep",
       "robos:val": 1,
       "robos:package": "tabletop-game",
@@ -7722,8 +9442,8 @@
       "dcterms:title": "Executive Privilege",
       "robos:category": "Midterms 2026",
       "robos:element": "water",
-      "robos:spellCollege": "Water — Bureaucracy",
-      "robos:icon": "🛡️",
+      "robos:spellCollege": "Water \u2014 Bureaucracy",
+      "robos:icon": "\ud83d\udee1\ufe0f",
       "dcterms:description": "Hero ignores all damage from the next damaging attack.",
       "robos:effect": "buff-ignore-damage",
       "robos:val": 1,
@@ -7741,8 +9461,8 @@
       "dcterms:title": "Emergency Funding",
       "robos:category": "Midterms 2026",
       "robos:element": "water",
-      "robos:spellCollege": "Water — Bureaucracy",
-      "robos:icon": "💉",
+      "robos:spellCollege": "Water \u2014 Bureaucracy",
+      "robos:icon": "\ud83d\udc89",
       "dcterms:description": "Restore up to 4 lost Body Points.",
       "robos:effect": "heal-bp",
       "robos:val": 4,
@@ -7760,8 +9480,8 @@
       "dcterms:title": "Incumbent Protection",
       "robos:category": "Midterms 2026",
       "robos:element": "earth",
-      "robos:spellCollege": "Earth — Establishment",
-      "robos:icon": "🏰",
+      "robos:spellCollege": "Earth \u2014 Establishment",
+      "robos:icon": "\ud83c\udff0",
       "dcterms:description": "Hero gains +2 defend dice until suffering damage.",
       "robos:effect": "buff-def",
       "robos:val": 2,
@@ -7779,8 +9499,8 @@
       "dcterms:title": "Special Interest Donation",
       "robos:category": "Midterms 2026",
       "robos:element": "earth",
-      "robos:spellCollege": "Earth — Establishment",
-      "robos:icon": "💰",
+      "robos:spellCollege": "Earth \u2014 Establishment",
+      "robos:icon": "\ud83d\udcb0",
       "dcterms:description": "Gain 100 gold, or 50 if a monster is visible.",
       "robos:effect": "grant-gold",
       "robos:val": 100,
@@ -7798,8 +9518,8 @@
       "dcterms:title": "Gerrymander",
       "robos:category": "Midterms 2026",
       "robos:element": "earth",
-      "robos:spellCollege": "Earth — Establishment",
-      "robos:icon": "🗺️",
+      "robos:spellCollege": "Earth \u2014 Establishment",
+      "robos:icon": "\ud83d\uddfa\ufe0f",
       "dcterms:description": "Relocate one visible monster up to 4 legal squares.",
       "robos:effect": "relocate-monster",
       "robos:val": 4,
@@ -7817,8 +9537,8 @@
       "dcterms:title": "Polling Surge",
       "robos:category": "Midterms 2026",
       "robos:element": "air",
-      "robos:spellCollege": "Air — Public Opinion",
-      "robos:icon": "📈",
+      "robos:spellCollege": "Air \u2014 Public Opinion",
+      "robos:icon": "\ud83d\udcc8",
       "dcterms:description": "Double next movement roll.",
       "robos:effect": "buff-move",
       "robos:val": 2,
@@ -7836,8 +9556,8 @@
       "dcterms:title": "Media Frenzy",
       "robos:category": "Midterms 2026",
       "robos:element": "air",
-      "robos:spellCollege": "Air — Public Opinion",
-      "robos:icon": "🎙️",
+      "robos:spellCollege": "Air \u2014 Public Opinion",
+      "robos:icon": "\ud83c\udf99\ufe0f",
       "dcterms:description": "Monster loses next turn; Mind 4+ may resist on a 6.",
       "robos:effect": "status-freeze",
       "robos:val": 1,
@@ -7855,8 +9575,8 @@
       "dcterms:title": "Landslide Victory",
       "robos:category": "Midterms 2026",
       "robos:element": "air",
-      "robos:spellCollege": "Air — Public Opinion",
-      "robos:icon": "🌊",
+      "robos:spellCollege": "Air \u2014 Public Opinion",
+      "robos:icon": "\ud83c\udf0a",
       "dcterms:description": "Attack one visible monster with 5 combat dice.",
       "robos:effect": "damage-dice",
       "robos:val": 5,
@@ -7876,8 +9596,8 @@
       "robos:category": "Midterms 2026",
       "robos:element": "dread",
       "robos:spellCollege": "Forbidden Dread Spell",
-      "robos:icon": "🗳️",
-      "dcterms:description": "All heroes in one room roll one movement die. On 1–3, they lose their next action.",
+      "robos:icon": "\ud83d\uddf3\ufe0f",
+      "dcterms:description": "All heroes in one room roll one movement die. On 1\u20133, they lose their next action.",
       "robos:effect": "room-lose-action",
       "robos:val": 3,
       "robos:package": "tabletop-game",
@@ -7890,7 +9610,7 @@
         "robos:TabletopQuestSaveState",
         "schema:Action"
       ],
-      "dcterms:title": "Quest State — Round 1 (Barbarian (Hero 1 of 4))",
+      "dcterms:title": "Quest State \u2014 Round 2 (Hillary Clinton (Hero 3 of 4))",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop",
       "robos:questSlug": "election-2026-quest-1",
@@ -7899,23 +9619,23 @@
         26,
         19
       ],
-      "robos:savedAt": "2026-10-18T16:58:06.000Z",
-      "robos:playTimeSeconds": 272,
-      "robos:playTimeFormatted": "4m 32s",
-      "robos:currentRound": 1,
+      "robos:savedAt": "2026-10-19T16:59:35.000Z",
+      "robos:playTimeSeconds": 134,
+      "robos:playTimeFormatted": "2m 14s",
+      "robos:currentRound": 2,
       "robos:currentPhase": "hero_phase",
       "robos:currentRole": "player",
-      "robos:activeHeroIndex": 0,
-      "robos:activeTurnActor": "Barbarian (Hero 1 of 4)",
-      "robos:turnState": "moving",
-      "robos:movementRemaining": 9,
+      "robos:activeHeroIndex": 2,
+      "robos:activeTurnActor": "Hillary Clinton (Hero 3 of 4)",
+      "robos:turnState": "awaiting_roll",
+      "robos:movementRemaining": 0,
       "robos:hasMovedThisTurn": false,
       "robos:hasActedThisTurn": false,
       "robos:heroStates": [
         {
           "@type": "robos:TabletopSaveHeroState",
-          "id": "barbarian",
-          "name": "Barbarian",
+          "id": "obama",
+          "name": "Barack Obama",
           "heroClass": "Barbarian",
           "currentBP": 8,
           "maxBP": 8,
@@ -7925,7 +9645,7 @@
           "defendDice": 2,
           "gold": 0,
           "gridPos": [
-            0,
+            4,
             13
           ],
           "weapon": "broadsword",
@@ -7937,16 +9657,16 @@
           "spells": [],
           "usedSpells": [],
           "spellsRemaining": 0,
-          "hasDepartedStart": false,
+          "hasDepartedStart": true,
           "isOnBoard": true,
           "alive": true,
           "escaped": false,
-          "isActiveTurn": true
+          "isActiveTurn": false
         },
         {
           "@type": "robos:TabletopSaveHeroState",
-          "id": "dwarf",
-          "name": "Dwarf",
+          "id": "trump",
+          "name": "Donald Trump",
           "heroClass": "Dwarf",
           "currentBP": 7,
           "maxBP": 7,
@@ -7956,7 +9676,7 @@
           "defendDice": 2,
           "gold": 0,
           "gridPos": [
-            0,
+            12,
             13
           ],
           "weapon": "shortsword",
@@ -7968,7 +9688,7 @@
           "spells": [],
           "usedSpells": [],
           "spellsRemaining": 0,
-          "hasDepartedStart": false,
+          "hasDepartedStart": true,
           "isOnBoard": true,
           "alive": true,
           "escaped": false,
@@ -7976,8 +9696,8 @@
         },
         {
           "@type": "robos:TabletopSaveHeroState",
-          "id": "elf",
-          "name": "Elf",
+          "id": "hillary-clinton",
+          "name": "Hillary Clinton",
           "heroClass": "Elf",
           "currentBP": 6,
           "maxBP": 6,
@@ -7987,7 +9707,7 @@
           "defendDice": 2,
           "gold": 0,
           "gridPos": [
-            0,
+            7,
             13
           ],
           "weapon": "shortsword",
@@ -8003,16 +9723,16 @@
           ],
           "usedSpells": [],
           "spellsRemaining": 3,
-          "hasDepartedStart": false,
+          "hasDepartedStart": true,
           "isOnBoard": true,
           "alive": true,
           "escaped": false,
-          "isActiveTurn": false
+          "isActiveTurn": true
         },
         {
           "@type": "robos:TabletopSaveHeroState",
-          "id": "wizard",
-          "name": "Wizard",
+          "id": "bernie-sanders",
+          "name": "Bernie Sanders",
           "heroClass": "Wizard",
           "currentBP": 4,
           "maxBP": 4,
@@ -8052,92 +9772,178 @@
           "isActiveTurn": false
         }
       ],
-      "robos:visibleMonsters": [],
-      "robos:visibleMonstersCount": 0,
+      "robos:visibleMonsters": [
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-talarixon-4",
+          "name": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra)",
+          "monsterType": "talarixon",
+          "currentBP": 6,
+          "maxBP": 6,
+          "mindPoints": 5,
+          "attackDice": 5,
+          "defendDice": 5,
+          "movementSquares": 7,
+          "gridPos": [
+            12,
+            2
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": true,
+          "isUndead": false,
+          "isSpellcaster": true,
+          "spells": [
+            "recount-of-the-damned"
+          ],
+          "isAlive": true,
+          "isVisible": true
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-political-operative-12",
+          "name": "Political Operative",
+          "monsterType": "political-operative",
+          "currentBP": 1,
+          "maxBP": 1,
+          "mindPoints": 2,
+          "attackDice": 3,
+          "defendDice": 2,
+          "movementSquares": 8,
+          "gridPos": [
+            11,
+            4
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": false,
+          "spells": [],
+          "isAlive": true,
+          "isVisible": true
+        },
+        {
+          "@type": "robos:TabletopSaveMonsterState",
+          "id": "mon-spin-doctor-13",
+          "name": "Spin Doctor",
+          "monsterType": "spin-doctor",
+          "currentBP": 3,
+          "maxBP": 3,
+          "mindPoints": 5,
+          "attackDice": 3,
+          "defendDice": 4,
+          "movementSquares": 7,
+          "gridPos": [
+            15,
+            4
+          ],
+          "roomId": "room-nw-10",
+          "isBoss": false,
+          "isUndead": false,
+          "isSpellcaster": true,
+          "spells": [
+            "recount-of-the-damned"
+          ],
+          "isAlive": true,
+          "isVisible": true
+        }
+      ],
+      "robos:visibleMonstersCount": 3,
       "robos:monstersDefeated": 0,
       "robos:itemsFound": [
         {
-          "id": "barbarian-broadsword-0",
+          "id": "obama-broadsword-0",
           "name": "Broadsword",
           "type": "equipment",
-          "holder": "Barbarian",
+          "holder": "Barack Obama",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
-          "id": "barbarian-healing_potion-1",
+          "id": "obama-healing_potion-1",
           "name": "Healing Potion",
           "type": "potion",
-          "holder": "Barbarian",
+          "holder": "Barack Obama",
           "source": "Hero Inventory",
-          "icon": "🧪"
+          "icon": "\ud83e\uddea"
         },
         {
-          "id": "dwarf-shortsword-0",
+          "id": "trump-shortsword-0",
           "name": "Shortsword",
           "type": "equipment",
-          "holder": "Dwarf",
+          "holder": "Donald Trump",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
-          "id": "dwarf-healing_potion-1",
+          "id": "trump-healing_potion-1",
           "name": "Healing Potion",
           "type": "potion",
-          "holder": "Dwarf",
+          "holder": "Donald Trump",
           "source": "Hero Inventory",
-          "icon": "🧪"
+          "icon": "\ud83e\uddea"
         },
         {
-          "id": "elf-shortsword-0",
+          "id": "hillary-clinton-shortsword-0",
           "name": "Shortsword",
           "type": "equipment",
-          "holder": "Elf",
+          "holder": "Hillary Clinton",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
-          "id": "elf-healing_potion-1",
+          "id": "hillary-clinton-healing_potion-1",
           "name": "Healing Potion",
           "type": "potion",
-          "holder": "Elf",
+          "holder": "Hillary Clinton",
           "source": "Hero Inventory",
-          "icon": "🧪"
+          "icon": "\ud83e\uddea"
         },
         {
-          "id": "wizard-dagger-0",
+          "id": "bernie-sanders-dagger-0",
           "name": "Dagger",
           "type": "equipment",
-          "holder": "Wizard",
+          "holder": "Bernie Sanders",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
-          "id": "wizard-staff-1",
+          "id": "bernie-sanders-staff-1",
           "name": "Staff",
           "type": "equipment",
-          "holder": "Wizard",
+          "holder": "Bernie Sanders",
           "source": "Hero Inventory",
-          "icon": "🗡️"
+          "icon": "\ud83d\udde1\ufe0f"
         },
         {
-          "id": "wizard-healing_potion-2",
+          "id": "bernie-sanders-healing_potion-2",
           "name": "Healing Potion",
           "type": "potion",
-          "holder": "Wizard",
+          "holder": "Bernie Sanders",
           "source": "Hero Inventory",
-          "icon": "🧪"
+          "icon": "\ud83e\uddea"
         }
       ],
       "robos:itemsFoundCount": 9,
       "robos:totalPartyGold": 0,
-      "robos:exploredTilesCount": 34,
-      "robos:revealedRooms": [],
+      "robos:exploredTilesCount": 136,
+      "robos:revealedRooms": [
+        "room-nw-10"
+      ],
       "robos:searchedRooms": [],
-      "robos:doorsOpenCount": 0,
+      "robos:doorsOpenCount": 1,
       "robos:trapsDetectedCount": 0,
-      "robos:triggersFired": [],
-      "robos:triggersFiredCount": 0,
+      "robos:triggersFired": [
+        {
+          "id": "trigger-oval-office-talarixon",
+          "title": "Oval Office \u2014 Talarixon & The San Antonio Diesel Plot",
+          "event": "on_room_entered",
+          "tile": [
+            13,
+            5
+          ]
+        }
+      ],
+      "robos:triggersFiredCount": 1,
       "robos:screenshotPath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_election-2026-quest-1_election-2026-quest-1.png",
       "robos:saveFilePath": "/home/ndipiazza/.local/share/godot/app_userdata/RobOS Tabletop RPG- HeroQuest/tabletop_autosave_election-2026-quest-1_election-2026-quest-1.json"
     }

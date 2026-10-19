@@ -10,7 +10,7 @@
     "ruleset": "heroquest",
     "description": "Descend into the Custom Dungeon via the stairwell at [7, 14]. Explore the dungeon rooms, overcome the traps and monsters within, and return victorious!",
     "coverColor": "#0a0e17",
-    "icon": "🛡️",
+    "icon": "\ud83d\udee1\ufe0f",
     "mapCount": 1,
     "heroCount": 4,
     "monsterCount": 24,
@@ -57,7 +57,71 @@
         }
       ],
       "spells": [],
-      "tokenColor": "#b91c1c"
+      "tokenColor": "#b91c1c",
+      "audioLines": {
+        "turnStart": [
+          {
+            "text": "By my broadsword, clear a path!",
+            "audio": "res://assets/audio/heroes/barbarian_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Taste cold Cimmerian steel!",
+            "audio": "res://assets/audio/heroes/barbarian_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Aagh! Only a flesh wound!",
+            "audio": "res://assets/audio/heroes/barbarian_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Ha! Your feeble blow bounces off my iron muscles!",
+            "audio": "res://assets/audio/heroes/barbarian_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "The ancient battle-spirit surges through my blade!",
+            "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg"
+          }
+        ]
+      },
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "By my broadsword, clear a path!",
+            "audio": "res://assets/audio/heroes/barbarian_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Taste cold Cimmerian steel!",
+            "audio": "res://assets/audio/heroes/barbarian_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Aagh! Only a flesh wound!",
+            "audio": "res://assets/audio/heroes/barbarian_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Ha! Your feeble blow bounces off my iron muscles!",
+            "audio": "res://assets/audio/heroes/barbarian_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "The ancient battle-spirit surges through my blade!",
+            "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg"
+          }
+        ]
+      }
     },
     "dwarf": {
       "id": "dwarf",
@@ -92,7 +156,71 @@
         }
       ],
       "spells": [],
-      "tokenColor": "#b45309"
+      "tokenColor": "#b45309",
+      "audioLines": {
+        "turnStart": [
+          {
+            "text": "Stand back! Let a Dwarf of the World's Edge Mountains handle this!",
+            "audio": "res://assets/audio/heroes/dwarf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "For Grungni's beard, feel my battle-axe!",
+            "audio": "res://assets/audio/heroes/dwarf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Oof! Right in the chainmail!",
+            "audio": "res://assets/audio/heroes/dwarf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Dwarven forged steel never yields!",
+            "audio": "res://assets/audio/heroes/dwarf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By the runes of the anvil, awaken!",
+            "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg"
+          }
+        ]
+      },
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "Stand back! Let a Dwarf of the World's Edge Mountains handle this!",
+            "audio": "res://assets/audio/heroes/dwarf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "For Grungni's beard, feel my battle-axe!",
+            "audio": "res://assets/audio/heroes/dwarf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Oof! Right in the chainmail!",
+            "audio": "res://assets/audio/heroes/dwarf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Dwarven forged steel never yields!",
+            "audio": "res://assets/audio/heroes/dwarf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By the runes of the anvil, awaken!",
+            "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg"
+          }
+        ]
+      }
     },
     "elf": {
       "id": "elf",
@@ -133,7 +261,7 @@
           "name": "Water of Healing",
           "element": "water",
           "category": "Base Game",
-          "icon": "💧",
+          "icon": "\ud83d\udca7",
           "description": "Restores up to 4 lost Body Points to any Hero.",
           "effect": "heal-bp",
           "val": 4
@@ -144,7 +272,7 @@
           "name": "Sleep",
           "element": "water",
           "category": "Base Game",
-          "icon": "💤",
+          "icon": "\ud83d\udca4",
           "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
           "effect": "status-sleep",
           "val": 1
@@ -155,13 +283,77 @@
           "name": "Veil of Mist",
           "element": "water",
           "category": "Base Game",
-          "icon": "🌫️",
+          "icon": "\ud83c\udf2b\ufe0f",
           "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
           "effect": "status-stealth",
           "val": 1
         }
       ],
-      "tokenColor": "#15803d"
+      "tokenColor": "#15803d",
+      "audioLines": {
+        "turnStart": [
+          {
+            "text": "With elven grace, I step into the shadows.",
+            "audio": "res://assets/audio/heroes/elf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Swift as the wind, strike true!",
+            "audio": "res://assets/audio/heroes/elf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Ah! Darkness stings, yet my spirit endures!",
+            "audio": "res://assets/audio/heroes/elf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Too slow, creature! The forest shields me!",
+            "audio": "res://assets/audio/heroes/elf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "Ancient weave of earth and water, heed my call!",
+            "audio": "res://assets/audio/heroes/elf_casting_magic.ogg"
+          }
+        ]
+      },
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "With elven grace, I step into the shadows.",
+            "audio": "res://assets/audio/heroes/elf_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Swift as the wind, strike true!",
+            "audio": "res://assets/audio/heroes/elf_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Ah! Darkness stings, yet my spirit endures!",
+            "audio": "res://assets/audio/heroes/elf_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "Too slow, creature! The forest shields me!",
+            "audio": "res://assets/audio/heroes/elf_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "Ancient weave of earth and water, heed my call!",
+            "audio": "res://assets/audio/heroes/elf_casting_magic.ogg"
+          }
+        ]
+      }
     },
     "wizard": {
       "id": "wizard",
@@ -202,7 +394,7 @@
           "name": "Heal Body",
           "element": "earth",
           "category": "Base Game",
-          "icon": "💖",
+          "icon": "\ud83d\udc96",
           "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
           "effect": "heal-bp",
           "val": 4
@@ -213,7 +405,7 @@
           "name": "Pass Through Rock",
           "element": "earth",
           "category": "Base Game",
-          "icon": "🧱",
+          "icon": "\ud83e\uddf1",
           "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
           "effect": "phase-walls",
           "val": 1
@@ -224,7 +416,7 @@
           "name": "Rock Skin",
           "element": "earth",
           "category": "Base Game",
-          "icon": "🛡️",
+          "icon": "\ud83d\udee1\ufe0f",
           "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
           "effect": "buff-def",
           "val": 1
@@ -235,7 +427,7 @@
           "name": "Ball of Flame",
           "element": "fire",
           "category": "Base Game",
-          "icon": "☄️",
+          "icon": "\u2604\ufe0f",
           "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
           "effect": "damage-bp",
           "val": 2
@@ -246,7 +438,7 @@
           "name": "Courage",
           "element": "fire",
           "category": "Base Game",
-          "icon": "🦁",
+          "icon": "\ud83e\udd81",
           "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
           "effect": "buff-atk",
           "val": 2
@@ -257,7 +449,7 @@
           "name": "Fire of Wrath",
           "element": "fire",
           "category": "Base Game",
-          "icon": "🔥",
+          "icon": "\ud83d\udd25",
           "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
           "effect": "damage-bp",
           "val": 1
@@ -268,7 +460,7 @@
           "name": "Genie",
           "element": "air",
           "category": "Base Game",
-          "icon": "🧞",
+          "icon": "\ud83e\uddde",
           "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
           "effect": "summon-attack",
           "val": 5
@@ -279,7 +471,7 @@
           "name": "Swift Wind",
           "element": "air",
           "category": "Base Game",
-          "icon": "💨",
+          "icon": "\ud83d\udca8",
           "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
           "effect": "buff-move",
           "val": 2
@@ -290,13 +482,77 @@
           "name": "Tempest",
           "element": "air",
           "category": "Base Game",
-          "icon": "🌪️",
+          "icon": "\ud83c\udf2a\ufe0f",
           "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
           "effect": "status-freeze",
           "val": 1
         }
       ],
-      "tokenColor": "#1d4ed8"
+      "tokenColor": "#1d4ed8",
+      "audioLines": {
+        "turnStart": [
+          {
+            "text": "The winds of magic gather at my staff.",
+            "audio": "res://assets/audio/heroes/wizard_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Back, foul fiend, before my arcane staff!",
+            "audio": "res://assets/audio/heroes/wizard_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Gah! My ward-cloak falters!",
+            "audio": "res://assets/audio/heroes/wizard_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "My arcane barrier deflects your strike!",
+            "audio": "res://assets/audio/heroes/wizard_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By fire, air, and tempest, unleash the spell!",
+            "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg"
+          }
+        ]
+      },
+      "robos:audioLines": {
+        "turnStart": [
+          {
+            "text": "The winds of magic gather at my staff.",
+            "audio": "res://assets/audio/heroes/wizard_turn_start.ogg"
+          }
+        ],
+        "attacking": [
+          {
+            "text": "Back, foul fiend, before my arcane staff!",
+            "audio": "res://assets/audio/heroes/wizard_attacking.ogg"
+          }
+        ],
+        "attacked": [
+          {
+            "text": "Gah! My ward-cloak falters!",
+            "audio": "res://assets/audio/heroes/wizard_attacked.ogg"
+          }
+        ],
+        "defended": [
+          {
+            "text": "My arcane barrier deflects your strike!",
+            "audio": "res://assets/audio/heroes/wizard_defended.ogg"
+          }
+        ],
+        "castingMagic": [
+          {
+            "text": "By fire, air, and tempest, unleash the spell!",
+            "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg"
+          }
+        ]
+      }
     }
   },
   "monsters": {
@@ -3297,7 +3553,7 @@
       "furniture": [
         {
           "id": "furn-stairs_down_2x2-1",
-          "name": "Down Staircase (2×2)",
+          "name": "Down Staircase (2\u00d72)",
           "type": "stairs_down_2x2",
           "x": 7,
           "y": 14,

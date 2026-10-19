@@ -378,6 +378,65 @@ const MIDTERMS_2026_HEROES = [
   }
 ];
 
+const DEFAULT_HERO_AUDIO_LINES_MAP = {
+  barbarian: {
+    turnStart: [{ text: "By my broadsword, clear a path!", audio: "res://assets/audio/heroes/barbarian_turn_start.ogg" }],
+    attacking: [{ text: "Taste cold Cimmerian steel!", audio: "res://assets/audio/heroes/barbarian_attacking.ogg" }],
+    attacked: [{ text: "Aagh! Only a flesh wound!", audio: "res://assets/audio/heroes/barbarian_attacked.ogg" }],
+    defended: [{ text: "Ha! Your feeble blow bounces off my iron muscles!", audio: "res://assets/audio/heroes/barbarian_defended.ogg" }],
+    castingMagic: [{ text: "The ancient battle-spirit surges through my blade!", audio: "res://assets/audio/heroes/barbarian_casting_magic.ogg" }]
+  },
+  dwarf: {
+    turnStart: [{ text: "Stand back! Let a Dwarf of the World's Edge Mountains handle this!", audio: "res://assets/audio/heroes/dwarf_turn_start.ogg" }],
+    attacking: [{ text: "For Grungni's beard, feel my battle-axe!", audio: "res://assets/audio/heroes/dwarf_attacking.ogg" }],
+    attacked: [{ text: "Oof! Right in the chainmail!", audio: "res://assets/audio/heroes/dwarf_attacked.ogg" }],
+    defended: [{ text: "Dwarven forged steel never yields!", audio: "res://assets/audio/heroes/dwarf_defended.ogg" }],
+    castingMagic: [{ text: "By the runes of the anvil, awaken!", audio: "res://assets/audio/heroes/dwarf_casting_magic.ogg" }]
+  },
+  elf: {
+    turnStart: [{ text: "With elven grace, I step into the shadows.", audio: "res://assets/audio/heroes/elf_turn_start.ogg" }],
+    attacking: [{ text: "Swift as the wind, strike true!", audio: "res://assets/audio/heroes/elf_attacking.ogg" }],
+    attacked: [{ text: "Ah! Darkness stings, yet my spirit endures!", audio: "res://assets/audio/heroes/elf_attacked.ogg" }],
+    defended: [{ text: "Too slow, creature! The forest shields me!", audio: "res://assets/audio/heroes/elf_defended.ogg" }],
+    castingMagic: [{ text: "Ancient weave of earth and water, heed my call!", audio: "res://assets/audio/heroes/elf_casting_magic.ogg" }]
+  },
+  wizard: {
+    turnStart: [{ text: "The winds of magic gather at my staff.", audio: "res://assets/audio/heroes/wizard_turn_start.ogg" }],
+    attacking: [{ text: "Back, foul fiend, before my arcane staff!", audio: "res://assets/audio/heroes/wizard_attacking.ogg" }],
+    attacked: [{ text: "Gah! My ward-cloak falters!", audio: "res://assets/audio/heroes/wizard_attacked.ogg" }],
+    defended: [{ text: "My arcane barrier deflects your strike!", audio: "res://assets/audio/heroes/wizard_defended.ogg" }],
+    castingMagic: [{ text: "By fire, air, and tempest, unleash the spell!", audio: "res://assets/audio/heroes/wizard_casting_magic.ogg" }]
+  },
+  obama: {
+    turnStart: [{ text: "Uhh... let me be clear... It is now... my turn... to march... toward the horizon... of hope.", audio: "res://assets/audio/heroes/obama_turn_start.ogg" }],
+    attacking: [{ text: "Uhh... feel the audacity... of this broadsword... of hope!", audio: "res://assets/audio/heroes/obama_attacking.ogg" }],
+    attacked: [{ text: "Uhh... folks... that strike... did not feel... very hopeful.", audio: "res://assets/audio/heroes/obama_attacked.ogg" }],
+    defended: [{ text: "Uhh... nice try... You cannot pierce... the shield... of hope.", audio: "res://assets/audio/heroes/obama_defended.ogg" }],
+    castingMagic: [{ text: "Uhh... by the power... of hope... and change... I cast... this spell.", audio: "res://assets/audio/heroes/obama_casting_magic.ogg" }]
+  },
+  trump: {
+    turnStart: [{ text: "As you can see, I'm not just MAGA — I'm Dark MAGA!", audio: "res://assets/audio/heroes/trump_turn_start.ogg" }],
+    attacking: [{ text: "And I do it! He doesn't do it! He can't hit a ball 50 yards! He challenged me to a golf match, he can't hit a ball 50 yards!", audio: "res://assets/audio/heroes/trump_attacking.ogg" }],
+    attacked: [{ text: "Would you look at what's happening? This is a persecution! This was never supposed to happen in America!", audio: "res://assets/audio/heroes/trump_attacked.ogg" }],
+    defended: [{ text: "Here's the fighter — somebody who tried to kill him! You will not take this man down!", audio: "res://assets/audio/heroes/trump_defended.ogg" }],
+    castingMagic: [{ text: "Do you think that we have aliens coming, flying around or whatever? There's no reason not to think that Mars and all these planets don't have life!", audio: "res://assets/audio/heroes/trump_casting_magic.ogg" }]
+  },
+  hillary_clinton: {
+    turnStart: [{ text: "We've traveled to every corner of the United States. I've now been in 57 states — I think one left to go!", audio: "res://assets/audio/heroes/hillary_turn_start.ogg" }],
+    attacking: [{ text: "We came, we saw, he died! Ha ha ha!", audio: "res://assets/audio/heroes/hillary_attacking.ogg" }],
+    attacked: [{ text: "What difference, at this point, does it make?!", audio: "res://assets/audio/heroes/hillary_attacked.ogg" }],
+    defended: [{ text: "What, like with a cloth or something? Well, no, I don't know how it works digitally at all!", audio: "res://assets/audio/heroes/hillary_defended.ogg" }],
+    castingMagic: [{ text: "But I cast it with conviction! And I want the Iranians to know that if I'm the President, we will attack Iran!", audio: "res://assets/audio/heroes/hillary_casting_magic.ogg" }]
+  },
+  bernie_sanders: {
+    turnStart: [{ text: "Let's talk about welfare for the rich and the powerful!", audio: "res://assets/audio/heroes/bernie_turn_start.ogg" }],
+    attacking: [{ text: "I will be damned if I will vote for a proposal which will stick it to the middle class and the working people!", audio: "res://assets/audio/heroes/bernie_attacking.ogg" }],
+    attacked: [{ text: "Mr. Speaker, I've got a problem! I've got a problem with a President and a Congress which allows five million children to go hungry!", audio: "res://assets/audio/heroes/bernie_attacked.ogg" }],
+    defended: [{ text: "What we are saying very loud and clear is that Ronald Reagan and his billionaire friends do not represent the America that we do!", audio: "res://assets/audio/heroes/bernie_defended.ogg" }],
+    castingMagic: [{ text: "This democracy is evolving into an oligarchy! And an oligarchy is a country in which a few people have tremendous wealth and power!", audio: "res://assets/audio/heroes/bernie_casting_magic.ogg" }]
+  }
+};
+
 function normalizeHeroEntity(rawHero) {
   if (!rawHero || typeof rawHero !== "object") return rawHero;
   const copy = JSON.parse(JSON.stringify(rawHero));
@@ -417,6 +476,11 @@ function normalizeHeroEntity(rawHero) {
   const assetKey = resolveHeroAssetKey(copy);
   if (!copy["robos:tokenAsset"]) copy["robos:tokenAsset"] = copy.tokenAsset || `assets/tokens/token_${assetKey}.png`;
   if (!copy["robos:portraitAsset"]) copy["robos:portraitAsset"] = copy.portraitAsset || `assets/portraits/card_bg_${assetKey}.png`;
+  if (!copy["robos:audioLines"]) {
+    copy["robos:audioLines"] = JSON.parse(JSON.stringify(
+      copy.audioLines || DEFAULT_HERO_AUDIO_LINES_MAP[assetKey] || DEFAULT_HERO_AUDIO_LINES_MAP.barbarian
+    ));
+  }
   return copy;
 }
 
@@ -4722,10 +4786,71 @@ function selectHero(heroId) {
 
   updateHeroPortraitCardPreview(hero);
 
-  // Render Inventory, Grimoire & Action Screen
+  // Render Inventory, Grimoire, Audio Lines & Action Screen
   renderHeroInventory(hero);
   renderHeroGrimoire(hero);
+  renderHeroAudioLines(hero);
   renderHeroActionScreen(hero);
+}
+
+let _activeHeroAudioPreview = null;
+function renderHeroAudioLines(hero) {
+  const container = document.getElementById("hero-audio-lines-list");
+  if (!container || !hero) return;
+  const assetKey = resolveHeroAssetKey(hero);
+  if (!hero["robos:audioLines"] || typeof hero["robos:audioLines"] !== "object") {
+    hero["robos:audioLines"] = JSON.parse(JSON.stringify(
+      DEFAULT_HERO_AUDIO_LINES_MAP[assetKey] || DEFAULT_HERO_AUDIO_LINES_MAP.barbarian
+    ));
+  }
+  const al = hero["robos:audioLines"];
+  const situations = [
+    { key: "turnStart", label: "🎬 When Turn Begins (turnStart)" },
+    { key: "attacking", label: "⚔️ Attacking (attacking)" },
+    { key: "attacked", label: "🩸 Attacked / Damaged (attacked)" },
+    { key: "defended", label: "🛡️ Defended / Blocked (defended)" },
+    { key: "castingMagic", label: "✨ Casting Magic (castingMagic)" }
+  ];
+  container.innerHTML = "";
+  situations.forEach(sit => {
+    const arr = Array.isArray(al[sit.key]) ? al[sit.key] : (al[sit.key] ? [al[sit.key]] : []);
+    const first = arr[0] || { text: "", audio: "" };
+    const row = document.createElement("div");
+    row.style.cssText = "background:rgba(15,23,42,0.65); border:1px solid var(--border-color); border-radius:6px; padding:8px 10px; display:flex; flex-direction:column; gap:6px;";
+    row.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; font-weight:600; color:#fbbf24;">${sit.label}</span>
+        <button type="button" class="btn btn-sm btn-secondary hero-audio-play-btn" style="padding:2px 8px; font-size:11px;">▶ Preview Audio</button>
+      </div>
+      <input type="text" class="form-input hero-audio-text-input" placeholder="Spoken quote text..." value="${String(first.text || "").replace(/"/g, "&quot;")}" style="font-size:12px;">
+      <input type="text" class="form-input hero-audio-path-input" placeholder="res://assets/audio/heroes/..." value="${String(first.audio || "").replace(/"/g, "&quot;")}" style="font-size:11px; color:#94a3b8; font-family:monospace;">
+    `;
+    const textInput = row.querySelector(".hero-audio-text-input");
+    const pathInput = row.querySelector(".hero-audio-path-input");
+    const playBtn = row.querySelector(".hero-audio-play-btn");
+    const syncSituation = () => {
+      hero["robos:audioLines"][sit.key] = [{
+        text: textInput.value.trim(),
+        audio: pathInput.value.trim()
+      }];
+      if (typeof triggerCampaignAutosave === "function") triggerCampaignAutosave();
+    };
+    textInput.addEventListener("change", syncSituation);
+    pathInput.addEventListener("change", syncSituation);
+    playBtn.addEventListener("click", () => {
+      const rawPath = pathInput.value.trim();
+      if (!rawPath) return;
+      const rel = rawPath.replace(/^res:\/\//, "");
+      const fileUrl = `../../../games/tabletop-rpg/${rel}`;
+      if (_activeHeroAudioPreview) {
+        _activeHeroAudioPreview.pause();
+        _activeHeroAudioPreview = null;
+      }
+      _activeHeroAudioPreview = new Audio(fileUrl);
+      _activeHeroAudioPreview.play().catch(err => console.warn("Audio preview error:", err));
+    });
+    container.appendChild(row);
+  });
 }
 
 // Render Backpack Inventory

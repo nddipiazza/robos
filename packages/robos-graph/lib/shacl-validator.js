@@ -2846,6 +2846,11 @@ const BUILTIN_SHACL_SHAPES = [
         "path": "robos:defendDice",
         "minCount": 1,
         "message": "Tabletop hero must declare defend dice."
+      },
+      {
+        "path": "robos:audioLines",
+        "minCount": 0,
+        "message": "Tabletop hero may declare situational audio voice lines (turnStart, attacking, attacked, defended, castingMagic)."
       }
     ],
     "refersFrom": "https://schema.org/Person",

@@ -97,7 +97,8 @@ const GAMING_SHACL_SHAPES = [
       { path: 'robos:bodyPoints', minCount: 1, message: 'Tabletop hero must declare Body Points (HP).' },
       { path: 'robos:mindPoints', minCount: 1, message: 'Tabletop hero must declare Mind Points (MP).' },
       { path: 'robos:attackDice', minCount: 1, message: 'Tabletop hero must declare initial attack dice count.' },
-      { path: 'robos:defendDice', minCount: 1, message: 'Tabletop hero must declare initial defend dice count.' }
+      { path: 'robos:defendDice', minCount: 1, message: 'Tabletop hero must declare initial defend dice count.' },
+      { path: 'robos:audioLines', minCount: 0, message: 'Tabletop hero may declare situational audio voice lines (turnStart, attacking, attacked, defended, castingMagic).' }
     ]
   },
   {
