@@ -4146,7 +4146,7 @@ func reveal_room_by_id(r_id: String, is_starting_room: bool = false) -> void:
 		else:
 			# Check if any story trigger in this room has a movie and is room-reveal triggered
 			for st in story_triggers:
-				if str(st.get("room", "")) == r_id and st.has("movie") and not st.get("triggered", false):
+				if str(st.get("room", "")) == r_id and str(st.get("movie", "")).strip_edges() != "" and not st.get("triggered", false):
 					var ev = str(st.get("event", ""))
 					# If tied to door opening, let on_door_opened handle it with full door context
 					if ev == "on_door_opened":
@@ -4378,9 +4378,10 @@ func _process(delta: float) -> void:
 
 	if not active_dialogue_sequence.is_empty() and active_dialogue_sequence.get("active", false):
 		active_dialogue_sequence["time"] = float(active_dialogue_sequence.get("time", 0.0)) + delta
-		var d_dur = float(active_dialogue_sequence.get("duration", 4.5))
-		if active_dialogue_sequence["time"] >= d_dur:
-			advance_dialogue_bubble()
+		if is_headless_mode() or CartridgeManager.auto_play_enabled or ai_play_for_you:
+			var d_dur = float(active_dialogue_sequence.get("duration", 4.5))
+			if active_dialogue_sequence["time"] >= d_dur:
+				advance_dialogue_bubble()
 		needs_redraw = true
 
 	if is_enemy_turn_waiting:
@@ -6166,9 +6167,9 @@ func get_active_quest_objective() -> Dictionary:
 		primary_goals = active_q["primaryGoals"].duplicate()
 	elif is_midterm_quest:
 		primary_goals = [
-			"Defeat the Capitol Bosses & Hydra Bosses (Talarixon, El-Rogers, Brownsted, Katie Zacharia, Mitch McConnell, and Drunk JD Vance & Kamala Harris).",
-			"Storm the Capitol chambers (Briefing Room, Committee Chamber, War Room & Oval Office) and expose the bipartisan slush fund.",
-			"Lead all surviving heroes safely to the Capitol Exit Stairs at [14, 2]."
+			"Slay Talarixon (Texas Hydra) in the Oval Office.",
+			"Slay El-Rogers (Michigan Hydra) in the Senate Cloakroom.",
+			"Slay Brownsted (Ohio Hydra) in the Supreme Court Chamber."
 		]
 	elif q_slug == "heroquest-the-trial" or current_slug == "heroquest-the-trial" or current_slug == "trial-of-verag" or (active_q.is_empty() and current_slug == ""):
 		primary_goals = [
@@ -7466,6 +7467,20 @@ func _update_quest_objectives_hud() -> void:
 	if btn_modal_complete_quest:
 		btn_modal_complete_quest.visible = all_done
 
+func _is_hydra_target_dead(hydra_key: String) -> bool:
+	if _quest_completed or get_game_state() == "quest_victory":
+		return true
+	var key_low = hydra_key.to_lower()
+	var matched = monsters.filter(func(m):
+		var mid = str(m.get("id", "")).to_lower()
+		var mtype = str(m.get("monsterType", m.get("type", ""))).to_lower()
+		var mname = str(m.get("name", "")).to_lower()
+		return key_low in mid or key_low == mtype or key_low in mname
+	)
+	if matched.is_empty():
+		return false
+	return not matched.any(func(m): return bool(m.get("is_alive", false)) and int(m.get("current_bp", 1)) > 0)
+
 func get_quest_objectives() -> Array[Dictionary]:
 	var cart = CartridgeManager.active_cartridge
 	var active_q = get_active_quest_objective()
@@ -7473,6 +7488,40 @@ func get_quest_objectives() -> Array[Dictionary]:
 	var q_id = str(active_q.get("id", "quest-1"))
 	
 	var objs: Array[Dictionary] = []
+
+	# Special 3-Hydra Objective Mode for Election 2026
+	var has_three_hydras = monsters.any(func(m): return "talarixon" in str(m.get("id", "")).to_lower() or str(m.get("monsterType", "")).to_lower() == "talarixon") \
+		and monsters.any(func(m): return "el-rogers" in str(m.get("id", "")).to_lower() or str(m.get("monsterType", "")).to_lower() == "el-rogers") \
+		and monsters.any(func(m): return "brownsted" in str(m.get("id", "")).to_lower() or str(m.get("monsterType", "")).to_lower() == "brownsted")
+
+	if "election-2026" in slug.to_lower() or "midterm" in slug.to_lower() or has_three_hydras:
+		var g1 = "Slay Talarixon (Texas Hydra) in the Oval Office."
+		var g2 = "Slay El-Rogers (Michigan Hydra) in the Senate Cloakroom."
+		var g3 = "Slay Brownsted (Ohio Hydra) in the Supreme Court Chamber."
+		if active_q.has("primaryGoals") and active_q["primaryGoals"] is Array:
+			var pg: Array = active_q["primaryGoals"]
+			if pg.size() >= 1: g1 = str(pg[0])
+			if pg.size() >= 2: g2 = str(pg[1])
+			if pg.size() >= 3: g3 = str(pg[2])
+		objs.append({
+			"id": "slay_talarixon",
+			"title": g1,
+			"completed": _is_hydra_target_dead("talarixon"),
+			"required": true
+		})
+		objs.append({
+			"id": "slay_el_rogers",
+			"title": g2,
+			"completed": _is_hydra_target_dead("el-rogers"),
+			"required": true
+		})
+		objs.append({
+			"id": "slay_brownsted",
+			"title": g3,
+			"completed": _is_hydra_target_dead("brownsted"),
+			"required": true
+		})
+		return objs
 	
 	# Boss / Primary Target Check
 	var boss_target = str(active_q.get("bossTarget", "")).to_lower()
@@ -7649,14 +7698,30 @@ func complete_active_quest(quit_on_complete: bool = false) -> Dictionary:
 	auto_advance_turn = false
 
 	# Play celebratory voice dialogue sequence
-	_start_dialogue_sequence([
-		{
-			"speaker": "mentor",
-			"text": "Hail, victorious heroes! You have proven your valor in the depths of the catacombs. Verag lies slain, and your triumph echoes across the Empire!",
-			"audio": "res://assets/audio/quest_victory.ogg",
-			"duration": 8.5
-		}
-	])
+	if "election-2026" in slug.to_lower() or "midterm" in slug.to_lower():
+		_start_dialogue_sequence([
+			{
+				"speaker": "Mentor George W. Bush",
+				"text": "Well paint my puppy and call me a biscuit, you actually killed all three Hydras! Did we save the world from the Elite 1%? Heck if I know, mission accomplished!",
+				"audio": "res://assets/audio/election2026/bush_hydra3_down.ogg",
+				"duration": 11.0
+			},
+			{
+				"speaker": "MTG & AOC (From the Mist)",
+				"text": "Yay, you slew all three Hydras! Now ditch the Capitol before the AI Superintelligence finishes compiling its orbital laser, grab a crate of canned ravioli, and come snuggle under our plaid prepper blanket in the mist!",
+				"audio": "res://assets/audio/election2026/mtg_aoc_victory.ogg",
+				"duration": 13.0
+			}
+		])
+	else:
+		_start_dialogue_sequence([
+			{
+				"speaker": "mentor",
+				"text": "Hail, victorious heroes! You have proven your valor in the depths of the catacombs. Verag lies slain, and your triumph echoes across the Empire!",
+				"audio": "res://assets/audio/quest_victory.ogg",
+				"duration": 8.5
+			}
+		])
 
 	# Celebrate with floating text over living heroes
 	for h in heroes:
@@ -12212,6 +12277,9 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 				target_m["is_alive"] = false
 				_log("[DEFEATED] %s is incinerated by the Ball of Flame!" % target_m.get("name"))
 				spawn_floating_text(m_pos, "INCINERATED!", Color(1.0, 0.2, 0.1), 1.5)
+				_check_event_triggers("on_monster_killed", { "monster": target_m, "monsterId": str(target_m.get("id", "")), "monsterType": str(target_m.get("monsterType", target_m.get("type", ""))) }, hero)
+				if are_all_quest_objectives_completed() and not _quest_completed:
+					complete_active_quest(false)
 			res["target"] = target_m.get("id")
 			res["wounds"] = wounds
 			res["defended"] = shields
@@ -12259,6 +12327,9 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			if target_m.get("current_bp") <= 0:
 				target_m["is_alive"] = false
 				_log("[DEFEATED] %s was consumed by Fire of Wrath!" % target_m.get("name"))
+				_check_event_triggers("on_monster_killed", { "monster": target_m, "monsterId": str(target_m.get("id", "")), "monsterType": str(target_m.get("monsterType", target_m.get("type", ""))) }, hero)
+				if are_all_quest_objectives_completed() and not _quest_completed:
+					complete_active_quest(false)
 			res["target"] = target_m.get("id")
 			res["wounds"] = wounds
 			res["defended"] = shields
@@ -12270,7 +12341,7 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 			var th_pos = target_h.get("grid_pos", hero_pos)
 			var th_screen = board_offset + Vector2((th_pos.x + 0.5) * tile_size, (th_pos.y + 0.5) * tile_size)
 			spawn_burst_vfx(th_screen, Color(0.9, 0.2, 0.2), 40.0, 0.4)
-			spawn_floating_text(th_pos, "+2 ATK DICE", Color(1.0, 0.3, 0.3))
+			spawn_floating_text(th_pos, "+2 ATK DICE", Color(0.0, 0.0, 0.0) + Color(1.0, 0.3, 0.3))
 			_log("[SPELL] %s is filled with Courage! +2 extra combat dice on attacks." % target_h.get("name"))
 			res["target"] = target_h.get("id")
 			res["courage_active"] = true
@@ -12398,6 +12469,9 @@ func cast_spell(spell_id: String, target_id: String = "", target_pos: Vector2i =
 					target_m["is_alive"] = false
 					_log("[DEFEATED] %s is crushed by the Genie's wrath!" % target_m.get("name"))
 					spawn_floating_text(m_pos, "OBLITERATED!", Color(0.3, 0.9, 1.0), 1.5)
+					_check_event_triggers("on_monster_killed", { "monster": target_m, "monsterId": str(target_m.get("id", "")), "monsterType": str(target_m.get("monsterType", target_m.get("type", ""))) }, hero)
+					if are_all_quest_objectives_completed() and not _quest_completed:
+						complete_active_quest(false)
 				res["target"] = target_m.get("id")
 				res["wounds"] = combat_res.wounds
 				res["killed"] = not target_m.get("is_alive", true)
@@ -13592,6 +13666,13 @@ func _setup_modal_message_dialog(title: String, text: String, btn_text: String =
 
 func _resolve_speaker_display_name(speaker_raw: String) -> String:
 	var s_low = speaker_raw.to_lower().strip_edges()
+	for h in heroes:
+		var hid = str(h.get("id", "")).to_lower()
+		var hslug = str(h.get("slug", "")).to_lower()
+		var hclass = str(h.get("heroClass", h.get("class", ""))).to_lower()
+		var hname = str(h.get("characterName", h.get("name", ""))).to_lower()
+		if s_low == hid or s_low == hslug or s_low == hclass or s_low == hname or (s_low != "" and s_low in hname):
+			return get_hero_display_title(h)
 	match s_low:
 		"barbarian", "rogar":
 			return "Rogar (Barbarian)"
@@ -13602,6 +13683,8 @@ func _resolve_speaker_display_name(speaker_raw: String) -> String:
 		"wizard", "telor":
 			return "Telor (Wizard)"
 		"mentor":
+			if "election-2026" in CartridgeManager.current_cartridge_slug.to_lower() or "midterm" in CartridgeManager.current_cartridge_slug.to_lower():
+				return "Mentor George W. Bush"
 			return "Mentor"
 		"zargon", "morcar":
 			return "Zargon, Master of Darkness"
@@ -13610,9 +13693,6 @@ func _resolve_speaker_display_name(speaker_raw: String) -> String:
 		"narrator":
 			return "Narrator"
 		_:
-			for h in heroes:
-				if str(h.get("id")).to_lower() == s_low or str(h.get("name")).to_lower() == s_low:
-					return str(h.get("name", speaker_raw.capitalize()))
 			# 1. Exact match on monsters
 			for m in monsters:
 				var mid = str(m.get("id")).to_lower()
@@ -13641,7 +13721,11 @@ func _resolve_speaker_display_name(speaker_raw: String) -> String:
 func _find_speaker_grid_pos(speaker_raw: String) -> Vector2i:
 	var s_low = speaker_raw.to_lower().strip_edges()
 	for h in heroes:
-		if str(h.get("id")).to_lower() == s_low or str(h.get("name")).to_lower() == s_low or str(h.get("characterName", "")).to_lower() == s_low:
+		var hid = str(h.get("id", "")).to_lower()
+		var hslug = str(h.get("slug", "")).to_lower()
+		var hclass = str(h.get("heroClass", h.get("class", ""))).to_lower()
+		var hname = str(h.get("characterName", h.get("name", ""))).to_lower()
+		if s_low == hid or s_low == hslug or s_low == hclass or s_low == hname or (s_low != "" and s_low in hname):
 			return _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
 		if s_low == "active_hero" and h == get_active_hero():
 			return _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
@@ -13738,6 +13822,8 @@ func _present_active_dialogue_bubble() -> void:
 	_log("💬 [%s] \"%s\"" % [speaker_disp, text])
 
 	# Optional audio files backing
+	if voice_audio_player and voice_audio_player.playing:
+		voice_audio_player.stop()
 	var audio_dur: float = 0.0
 	if audio_path != "":
 		audio_dur = _play_dialogue_audio(audio_path)
@@ -13764,6 +13850,8 @@ func _present_active_dialogue_bubble() -> void:
 func advance_dialogue_bubble() -> bool:
 	if active_dialogue_sequence.is_empty() or not active_dialogue_sequence.get("active", false):
 		return false
+	if voice_audio_player and voice_audio_player.playing:
+		voice_audio_player.stop()
 	var bubbles: Array = active_dialogue_sequence.get("bubbles", [])
 	var idx: int = int(active_dialogue_sequence.get("index", 0)) + 1
 	if idx < bubbles.size():
@@ -23749,7 +23837,7 @@ func _draw_dialogue_bubbles_overlay(canvas: CanvasItem) -> void:
 	var fade_time = float(active_dialogue_sequence.get("fade_time", 0.6))
 	fade_time = clampf(fade_time, 0.2, 2.0)
 	var alpha = 1.0
-	if cur_dur > fade_time and cur_time > (cur_dur - fade_time):
+	if (is_headless_mode() or CartridgeManager.auto_play_enabled or ai_play_for_you) and cur_dur > fade_time and cur_time > (cur_dur - fade_time):
 		alpha = clampf((cur_dur - cur_time) / fade_time, 0.0, 1.0)
 
 	var g_pos = _find_speaker_grid_pos(speaker_raw)
@@ -23802,9 +23890,9 @@ func _draw_dialogue_bubbles_overlay(canvas: CanvasItem) -> void:
 	canvas.draw_string(font, Vector2(spk_badge_rect.position.x + 6.0, spk_badge_rect.position.y + 13.0), spk_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(0.3, 0.9, 1.0, alpha))
 
 	# Advance prompt hint
-	var hint_text = "[Click or Space (%d/%d)]" % [idx + 1, bubbles.size()]
+	var hint_text = "[🖱️ Click to Continue (%d/%d)]" % [idx + 1, bubbles.size()]
 	var h_sz = font.get_string_size(hint_text, HORIZONTAL_ALIGNMENT_RIGHT, -1, 9)
-	canvas.draw_string(font, Vector2(b_rect.end.x - h_sz.x - 8.0, b_rect.position.y + 18.0), hint_text, HORIZONTAL_ALIGNMENT_RIGHT, -1, 9, Color(0.6, 0.7, 0.85, 0.8 * alpha))
+	canvas.draw_string(font, Vector2(b_rect.end.x - h_sz.x - 8.0, b_rect.position.y + 18.0), hint_text, HORIZONTAL_ALIGNMENT_RIGHT, -1, 9, Color(1.0, 0.85, 0.35, 0.95 * alpha))
 
 	# Text lines
 	var text_y = b_rect.position.y + 40.0

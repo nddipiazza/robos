@@ -1427,25 +1427,29 @@ function buildCartridgePayload() {
           disarmed: false,
           hidden: Boolean(t.hidden)
         })),
-        triggers: q.storyTriggers.map(st => ({
-          id: st.id,
-          name: st.title || st.name || '',
-          title: st.title || st.name || '',
-          marker: st.marker,
-          event: st.event || (st.room ? 'on_room_entered' : 'on_tile_stepped_on'),
-          target: st.target || st.room || st.doorId || st.monsterId || '',
-          room: st.room || '',
-          doorId: st.doorId || '',
-          monsterId: st.monsterId || '',
-          tile: [st.tile[0], st.tile[1]],
-          onceOnly: Boolean(st.onceOnly !== false),
-          narrative: st.narrative || '',
-          hidden: Boolean(st.hidden),
-          actions: (st.actions || []).map(a => ({
-            ...a,
-            lines: Array.isArray(a.lines) ? a.lines.map(l => ({ ...l })) : undefined
-          }))
-        })),
+        triggers: q.storyTriggers.map(st => {
+          const movieAction = (st.actions || []).find(a => a.type === 'play_movie');
+          return {
+            id: st.id,
+            name: st.title || st.name || '',
+            title: st.title || st.name || '',
+            marker: st.marker,
+            event: st.event || (st.room ? 'on_room_entered' : 'on_tile_stepped_on'),
+            target: st.target || st.room || st.doorId || st.monsterId || '',
+            room: st.room || '',
+            doorId: st.doorId || '',
+            monsterId: st.monsterId || '',
+            tile: [st.tile[0], st.tile[1]],
+            onceOnly: Boolean(st.onceOnly !== false),
+            narrative: st.narrative || '',
+            movie: st.movie || movieAction?.moviePath || '',
+            hidden: Boolean(st.hidden),
+            actions: (st.actions || []).map(a => ({
+              ...a,
+              lines: Array.isArray(a.lines) ? a.lines.map(l => ({ ...l })) : undefined
+            }))
+          };
+        }),
         storyTriggers: q.storyTriggers.map(st => {
           const movieAction = (st.actions || []).find(a => a.type === 'play_movie');
           return {
@@ -1458,7 +1462,7 @@ function buildCartridgePayload() {
             room: st.room || '',
             event: st.event || (st.room ? 'on_room_entered' : 'on_tile_stepped_on'),
             onceOnly: Boolean(st.onceOnly !== false),
-            movie: movieAction?.moviePath || '',
+            movie: st.movie || movieAction?.moviePath || '',
             hidden: Boolean(st.hidden),
             actions: (st.actions || []).map(a => ({
               ...a,
@@ -1477,9 +1481,9 @@ function buildCartridgePayload() {
         if (primaryGoals.length === 0) {
           if (isMidterm) {
             primaryGoals = [
-              'Defeat the Capitol Bosses & Hydra Bosses (Talarixon, El-Rogers, Brownsted, Katie Zacharia, Mitch McConnell, and Drunk JD Vance & Kamala Harris).',
-              'Storm the Capitol chambers (Briefing Room, Committee Chamber, War Room & Oval Office) and expose the bipartisan slush fund.',
-              `Lead all surviving heroes safely to the Capitol Exit Stairs${Array.isArray(q.exitTile) ? ` at [${q.exitTile[0]}, ${q.exitTile[1]}]` : ''}.`
+              'Slay Talarixon (The Texas Hydra: Ken Paxton & James Talarico) in the Oval Office.',
+              'Slay El-Rogers (The Michigan Hydra: Abdul El-Sayed & Mike Rogers) in the Senate Chamber.',
+              'Slay Brownsted (The Ohio Hydra: Sherrod Brown & Jon Husted) in the House Chamber.'
             ];
           } else if (bossNames.length > 0) {
             primaryGoals = [

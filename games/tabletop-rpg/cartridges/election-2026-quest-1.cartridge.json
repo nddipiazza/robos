@@ -2623,6 +2623,7 @@
           "name": "Mentor George W. Bush & Visions in the Mist",
           "title": "Mentor George W. Bush & Visions in the Mist",
           "marker": "Intro",
+          "banner": "QUEST PROLOGUE [Intro]",
           "event": "on_room_entered",
           "target": "room-sw-10",
           "room": "room-sw-10",
@@ -2633,7 +2634,8 @@
             13
           ],
           "onceOnly": true,
-          "narrative": "Mentor George W. Bush speaks: \"Howdy, heroes! Your quest is to stop the Elite 1% from destroyin' the world! Now, how do you actually do that? Heck if I know! I have no idea how, and I'm not even sure it's gonna work. Good luck killin' them Hydras—Talarixon, El-Rogers, and Brownsted—I'm really not much help!\" Suddenly, from a swirling foggy mist, Marjorie Taylor Greene and Alexandria Ocasio-Cortez appear sitting cozily together under a plaid blanket—clearly girlfriends—giving you survival hints on how to stockpile canned beans, canned peaches, SPAM, and manual iron can openers for the oncoming AI Superintelligence Apocalypse!",
+          "movie": "res://assets/movies/election_2026_intro_movie.ogv",
+          "narrative": "Mentor George W. Bush summons you to the Basement of Strategery to stop the Elite 1% by slaying the three Campaign Hydras (Talarixon, El-Rogers, and Brownsted)—though he has no idea how or if it will work! Meanwhile, from the foggy mist, girlfriends Marjorie Taylor Greene and AOC share canned-goods prepper advice for the oncoming AI Superintelligence Apocalypse!",
           "hidden": false,
           "actions": [
             {
@@ -2641,293 +2643,34 @@
               "moviePath": "res://assets/movies/election_2026_intro_movie.ogv",
               "title": "🎬 Prologue: Mentor George W. Bush & The Mist Oracles",
               "canSkip": true
-            }
-          ]
-        },
-        {
-          "id": "trigger-briefing-room-katie",
-          "name": "The Daily Gaslight Briefing — Katie Zacharia",
-          "title": "The Daily Gaslight Briefing — Katie Zacharia",
-          "marker": "Note A",
-          "event": "on_room_entered",
-          "target": "room-ne-3",
-          "room": "room-ne-3",
-          "doorId": "",
-          "monsterId": "",
-          "tile": [
-            20,
-            8
-          ],
-          "onceOnly": true,
-          "narrative": "Behind a $40,000 solid-gold podium stands Press Secretary Katie Zacharia with a color-coded binder of bipartisan spin!",
-          "hidden": false,
-          "actions": [
-            {
-              "type": "dialogue",
-              "lines": [
-                {
-                  "speaker": "Katie Zacharia (Press Secretary)",
-                  "text": "Good afternoon! Before taking questions from my pre-approved zombie press corps, let me be crystal clear: the $19 carton of eggs is actually a vibrant sign of bipartisan economic resilience!"
-                },
-                {
-                  "speaker": "barbarian",
-                  "text": "Your podium is made of solid taxpayer gold and there is a Censorship Witch Hand standing behind you with a giant rubber stamp!"
-                },
-                {
-                  "speaker": "Katie Zacharia (Press Secretary)",
-                  "text": "We prefer the term Narrative Hygiene Specialist! Look, whether Team Blue or Team Red holds this microphone next week, the donor class gets another trillion-dollar bailout and you peasants get an IRS audit!"
-                },
-                {
-                  "speaker": "wizard",
-                  "text": "Wait—so you spin for BOTH parties?!"
-                },
-                {
-                  "speaker": "Katie Zacharia (Press Secretary)",
-                  "text": "Honey, who do you think caters the after-party? On TV we scream about saving democracy; off camera we split BlackRock stock tips over $400 Georgetown martinis on your dime! Now circle back to the grave, taxpayers!"
-                }
-              ]
             },
             {
-              "type": "display_message",
-              "title": "🎙️ Boss Encounter: Katie Zacharia (Press Secretary)",
-              "text": "Katie Zacharia slams her color-coded binder shut and unleashes a weaponized spin cycle! Defeat the Press Secretary and her Cable News Pundit Zombies before she gaslights your gold pouch into thin air!",
-              "buttonText": "Challenge the Spin!"
-            }
-          ]
-        },
-        {
-          "id": "trigger-katie-zacharia-defeated",
-          "name": "Katie Pivots to a Cable News Book Deal",
-          "title": "Katie Pivots to a Cable News Book Deal",
-          "marker": "Note B",
-          "event": "on_monster_killed",
-          "target": "mon-katie-zacharia-boss",
-          "room": "room-ne-3",
-          "doorId": "",
-          "monsterId": "mon-katie-zacharia-boss",
-          "tile": [
-            20,
-            7
-          ],
-          "onceOnly": true,
-          "narrative": "Katie Zacharia tosses her briefing binder into the air as she golden-parachutes into a corporate lobbying gig!",
-          "hidden": false,
-          "actions": [
-            {
               "type": "dialogue",
               "lines": [
                 {
-                  "speaker": "Katie Zacharia (Press Secretary)",
-                  "text": "I have no further comment at this time! I am resigning effective immediately to accept a $7 million bipartisan defense-board seat and a ghostwritten book deal nobody will ever read!"
+                  "speaker": "mentor",
+                  "text": "Howdy again, heroes! Remember your mission: stop the Elite 1% from destroyin' the world by slayin' all three Campaign Hydras: Talarixon, El-Rogers, and Brownsted! Now how is that gonna stop the 1%? Heck if I know! Good luck, I'm goin' back to paintin' my dog!",
+                  "audio": "res://assets/audio/election2026/bush_start_1.ogg"
                 },
                 {
-                  "speaker": "dwarf",
-                  "text": "Check behind the podium—she left a stack of pre-printed cue cards blaming working families for wanting groceries AND electricity in the same month!"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "trigger-committee-chamber-mitch",
-          "name": "The Eternal Filibuster — Mitch McConnell",
-          "title": "The Eternal Filibuster — Mitch McConnell",
-          "marker": "Note C",
-          "event": "on_room_entered",
-          "target": "room-nw-1",
-          "room": "room-nw-1",
-          "doorId": "",
-          "monsterId": "",
-          "tile": [
-            5,
-            4
-          ],
-          "onceOnly": true,
-          "narrative": "Atop the curved mahogany dais of the Legislative Committee Chamber sits Patriarch Mitch McConnell, surrounded by stacks of 6,000-page omnibus bills.",
-          "hidden": false,
-          "actions": [
-            {
-              "type": "dialogue",
-              "lines": [
-                {
-                  "speaker": "Mitch McConnell (Committee Patriarch)",
-                  "text": "Well... I would like to welcome the distinguished taxpayers to the Legislative Committee Chamber... *stares blankly into space for 14 seconds while a dial-up modem tone echoes*"
+                  "speaker": "obama",
+                  "text": "Uhh... let me be clear... When we stand... at the bottom... of these Capitol stairs... we do not merely see... a dungeon... We see... the audacity... of hope... We see... a future... where hope... hopes... for more hope... and... uhh... maybe... a sandwich.",
+                  "audio": "res://assets/audio/election2026/obama_hope_1.ogg"
                 },
                 {
-                  "speaker": "dwarf",
-                  "text": "By Grungni's beard... did the ancient turtle just freeze mid-sentence?!"
+                  "speaker": "bernie-sanders",
+                  "text": "Let's talk about welfare for the rich and the powerful! Now, we start off from a proposition that the wealthiest 1% of the population in this country owns more wealth than the bottom 90%!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_1_percent.ogg"
                 },
                 {
-                  "speaker": "Mitch McConnell (Committee Patriarch)",
-                  "text": "*blinks slowly* ...Reboot complete. Forgive the buffer, my neural link was executing a tax-free defense-contractor stock trade with leadership from the other party before the subcommittee vote."
+                  "speaker": "hillary-clinton",
+                  "text": "We've traveled to every corner of the United States. I've now been in 57 states. I think one left to go.",
+                  "audio": "res://assets/audio/election2026/hillary_clip_57_states.ogg"
                 },
                 {
-                  "speaker": "elf",
-                  "text": "You have been sitting in that chair for forty years! Half the chamber wears Red, half wears Blue, and regular citizens cannot even afford rent!"
-                },
-                {
-                  "speaker": "Mitch McConnell (Committee Patriarch)",
-                  "text": "*chuckles in slow motion* Oh, you sweet summer voter. Red and Blue only pretend to fight when the C-SPAN cameras are blinking! At 3:00 AM we hold hands, pass a $4 trillion omnibus bill giving ourselves a raise, and mail your grandkids the tab!"
-                },
-                {
-                  "speaker": "Mitch McConnell (Committee Patriarch)",
-                  "text": "You think voting harder changes the menu? The turtle shell is 100% bipartisan, baby—we eat the caviar, and you eat the inflation!"
-                }
-              ]
-            },
-            {
-              "type": "display_message",
-              "title": "🐢 Boss Encounter: Mitch McConnell (Committee Patriarch)",
-              "text": "Mitch McConnell withdraws into his 6-Defense-Dice Parliamentary Turtle Shell and invokes an eternal omnibus filibuster! Crack his bipartisan shell before he taxes your grandchildren!",
-              "buttonText": "Break the Filibuster!"
-            }
-          ]
-        },
-        {
-          "id": "trigger-mitch-mcconnell-defeated",
-          "name": "The Committee Adjourns for a Donor Retreat",
-          "title": "The Committee Adjourns for a Donor Retreat",
-          "marker": "Note D",
-          "event": "on_monster_killed",
-          "target": "mon-mitch-mcconnell-boss",
-          "room": "room-nw-1",
-          "doorId": "",
-          "monsterId": "mon-mitch-mcconnell-boss",
-          "tile": [
-            5,
-            3
-          ],
-          "onceOnly": true,
-          "narrative": "Mitch McConnell slowly tips his gavel and vanishes into a cloud of tax-exempt municipal bonds.",
-          "hidden": false,
-          "actions": [
-            {
-              "type": "dialogue",
-              "lines": [
-                {
-                  "speaker": "Mitch McConnell (Committee Patriarch)",
-                  "text": "Heh... impressive strike... Unfortunately I already slipped an amendment onto page 4,812 of the Highway Bill making my congressional pension immortal. See you at the Martha's Vineyard bipartisan yacht mixer..."
-                },
-                {
-                  "speaker": "barbarian",
-                  "text": "He dropped a solid-gold gavel engraved: 'Red or Blue, the House Always Wins (and You Always Pay)'."
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "trigger-war-room-vance-kamala",
-          "name": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
-          "title": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
-          "marker": "Note E",
-          "event": "on_room_entered",
-          "target": "room-ne-2",
-          "room": "room-ne-2",
-          "doorId": "",
-          "monsterId": "",
-          "tile": [
-            19,
-            4
-          ],
-          "onceOnly": true,
-          "narrative": "Inside the Campaign War Room, empty bottles of $3,000 bourbon and reserve Napa Cabernet litter the strategy table as JD Vance and Kamala Harris clink glasses and roar with laughter!",
-          "hidden": false,
-          "actions": [
-            {
-              "type": "dialogue",
-              "lines": [
-                {
-                  "speaker": "Kamala Harris (Drunk in the War Room)",
-                  "text": "*clinks wine glass against bourbon tumbler* HAHAHAHA! Wait, wait, JD—top off my Napa Cabernet! Look at the electoral map on the wall, it's a Venn diagram! A circle of Red, a circle of Blue, and right in the middle is US getting filthy rich! HAHAHAHA!"
-                },
-                {
-                  "speaker": "JD Vance (Drunk in the War Room)",
-                  "text": "*hiccups, slurring over $3,000 Pappy Van Winkle* Cheers to that, Mamala! Man, the voters out there actually think we hate each other! Yesterday I yelled about cat-ladies on Fox, you yelled about joy on CNN, and we both cleared ten million in Super-PAC appearance fees before lunch!"
-                },
-                {
-                  "speaker": "barbarian",
-                  "text": "Hold on! You two are supposed to be bitter political rivals—why are you getting hammered together in the Campaign War Room?!"
-                },
-                {
-                  "speaker": "Kamala Harris (Drunk in the War Room)",
-                  "text": "*wipes tears of laughter* Oh honey, look how adorable they are! We are unburdened by what has been—specifically, unburdened by ever paying our own bar tab! You think Blue or Red cares about your grocery bill when the donor yacht has a champagne fountain?!"
-                },
-                {
-                  "speaker": "JD Vance (Drunk in the War Room)",
-                  "text": "*spills bourbon on the leather war-room couch* Don't give away the whole game, Kamala! Look, pal—if Red wins, Wall Street gets a bailout. If Blue wins, Wall Street gets the exact same bailout with a nicer font! Either way, working stiffs like you pay for our open bar!"
-                },
-                {
-                  "speaker": "Kamala Harris (Drunk in the War Room)",
-                  "text": "*raises overflowing wine glass* A bipartisan toast to the American taxpayer: the hardest-working ATM in the dungeon! Get 'em, JD—right after I finish this merlot!"
-                }
-              ]
-            },
-            {
-              "type": "display_message",
-              "title": "🥃🍷 Dual Boss Encounter: Drunk JD Vance & Drunk Kamala Harris",
-              "text": "Three sheets to the wind on taxpayer-expensed Pappy Van Winkle and Napa Valley Reserve Cabernet, JD Vance and Kamala Harris link arms in front of the electoral map to defend their bipartisan slush fund!",
-              "buttonText": "Crash the Open Bar!"
-            }
-          ]
-        },
-        {
-          "id": "trigger-jd-vance-defeated",
-          "name": "JD Vance Spills His Reserve Bourbon",
-          "title": "JD Vance Spills His Reserve Bourbon",
-          "marker": "Note F",
-          "event": "on_monster_killed",
-          "target": "mon-jd-vance-drunk-boss",
-          "room": "room-ne-2",
-          "doorId": "",
-          "monsterId": "mon-jd-vance-drunk-boss",
-          "tile": [
-            19,
-            3
-          ],
-          "onceOnly": true,
-          "narrative": "JD Vance stumbles backward into the War Room couch, clutching his crystal decanter.",
-          "hidden": false,
-          "actions": [
-            {
-              "type": "dialogue",
-              "lines": [
-                {
-                  "speaker": "JD Vance (Drunk in the War Room)",
-                  "text": "*hiccups* Ugh... my Silicon Valley venture-capital donors promised me this dungeon had qualified immunity! Kamala, hide the offshore wire transfers—I'm retreating to my Netflix book deal!"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "trigger-kamala-harris-defeated",
-          "name": "Kamala Harris Unburdens the Wine Bar",
-          "title": "Kamala Harris Unburdens the Wine Bar",
-          "marker": "Note G",
-          "event": "on_monster_killed",
-          "target": "mon-kamala-harris-drunk-boss",
-          "room": "room-ne-2",
-          "doorId": "",
-          "monsterId": "mon-kamala-harris-drunk-boss",
-          "tile": [
-            20,
-            3
-          ],
-          "onceOnly": true,
-          "narrative": "Kamala Harris clutches a magnum of Napa Valley Cabernet as she exits toward a private jet.",
-          "hidden": false,
-          "actions": [
-            {
-              "type": "dialogue",
-              "lines": [
-                {
-                  "speaker": "Kamala Harris (Drunk in the War Room)",
-                  "text": "*cackles while tucking two bottles of Reserve Cabernet under her arm* You may have defeated us in the passage of time, which is the time in which we pass... but our bipartisan accountants already wired the treasury to the Cayman Islands! Byeeee!"
-                },
-                {
-                  "speaker": "wizard",
-                  "text": "By the four elements... Red and Blue really were clinking glasses and looting the realm together the entire time!"
+                  "speaker": "trump",
+                  "text": "They're eating the dogs. Sleepy Crooked Joe Biden. I really don't know what he said.",
+                  "audio": "res://assets/audio/election2026/trump_clip_eating_dogs_short.ogg"
                 }
               ]
             }
@@ -2935,9 +2678,10 @@
         },
         {
           "id": "trigger-oval-office-talarixon",
-          "name": "Talarixon (Talarico + Paxton · Texas Hydra)",
-          "title": "Talarixon (Talarico + Paxton · Texas Hydra)",
-          "marker": "Note H",
+          "name": "Oval Office — Talarixon & The San Antonio Diesel Plot",
+          "title": "Oval Office — Talarixon & The San Antonio Diesel Plot",
+          "marker": "Hydra 1",
+          "banner": "OVAL OFFICE [Hydra 1]",
           "event": "on_room_entered",
           "target": "room-nw-10",
           "room": "room-nw-10",
@@ -2948,19 +2692,527 @@
             5
           ],
           "onceOnly": true,
-          "narrative": "Coiled atop the Resolute Desk in the Oval Office is Talarixon (Talarico + Paxton · Texas Hydra), unleashing Holy Smite and Indictment Barrage while fighting itself for control!",
+          "movie": "res://assets/movies/oval_office_texas_hydra_movie.ogv",
+          "narrative": "Inside the Oval Office, the two heads of Talarixon (Talarico + Paxton · Texas Hydra) are debating converting the entire city of San Antonio into crude oil to lower Texas diesel prices before Donald Trump barges in!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "play_movie",
+              "moviePath": "res://assets/movies/oval_office_texas_hydra_movie.ogv",
+              "title": "🎬 Oval Office: The San Antonio Diesel Plot & Donald Trump",
+              "canSkip": true
+            },
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "mon-talarixon-4",
+                  "text": "PAXTON HEAD: You interrupted our Texas election hearing! If we refine the entire population of San Antonio into sweet Texas crude, diesel drops to 99 cents a gallon! TALARICO HEAD: Brethren, let us pray over the Alamo pipeline before we smite these heroes and split the oil lobby check 50/50!",
+                  "audio": "res://assets/audio/election2026/talarixon_intro_1.ogg"
+                },
+                {
+                  "speaker": "trump",
+                  "text": "We're going to be changing the name of the Gulf of Mexico to the Gulf of America!",
+                  "audio": "res://assets/audio/election2026/trump_clip_gulf_of_america.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... folks... let us not... liquefy the good people... of San Antonio... into diesel fuel... Because hope... is not crude oil... Hope... is the thing... inside the thing... that makes us... uhh... hope.",
+                  "audio": "res://assets/audio/election2026/obama_hope_san_antonio.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-talarixon-defeated",
+          "name": "Talarixon Slain — San Antonio Saved from the Refinery",
+          "title": "Talarixon Slain — San Antonio Saved from the Refinery",
+          "marker": "Hydra 1✓",
+          "banner": "HYDRA SLAIN [Hydra 1]",
+          "event": "on_monster_killed",
+          "target": "mon-talarixon-4",
+          "room": "room-nw-10",
+          "doorId": "",
+          "monsterId": "mon-talarixon-4",
+          "tile": [
+            12,
+            2
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Talarixon collapses behind the Resolute Desk, its San Antonio human-to-diesel refinery blueprint bursting into flames!",
           "hidden": false,
           "actions": [
             {
               "type": "dialogue",
               "lines": [
                 {
-                  "speaker": "Talarixon (Texas Hydra)",
-                  "text": "PAXTON HEAD: I hereby serve you with an Indictment Barrage and sue the dungeon dice for unconstitutional skull-rolling! TALARICO HEAD: Brethren, let us pray before I smite these heroes for 3 combat dice—and then split the donor plate 50/50!"
+                  "speaker": "hillary-clinton",
+                  "text": "We came, we saw, he died! Ha ha ha!",
+                  "audio": "res://assets/audio/election2026/hillary_clip_we_came_we_saw.ogg"
                 },
                 {
-                  "speaker": "Talarixon (Texas Hydra)",
-                  "text": "BOTH HEADS: Once we drop to 3 Body Points, Political Infighting kicks in and we start attacking everyone adjacent while arguing over who gets the oil lobby check!"
+                  "speaker": "mentor",
+                  "text": "Hot dang, you actually whacked the Texas Hydra! That's one Hydra down and two more to go! Keep swingin', I reckon!",
+                  "audio": "res://assets/audio/election2026/bush_hydra1_down.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-se-cloakroom-el-rogers",
+          "name": "Senate Cloakroom — El-Rogers (Michigan Hydra) & Mist Oracles",
+          "title": "Senate Cloakroom — El-Rogers (Michigan Hydra) & Mist Oracles",
+          "marker": "Hydra 2",
+          "banner": "SENATE CLOAKROOM [Hydra 2]",
+          "event": "on_room_entered",
+          "target": "room-se-4",
+          "room": "room-se-4",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            18,
+            15
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "In the Senate Cloakroom lurks the second Campaign Hydra—El-Rogers (El-Sayed + Rogers · Michigan Hydra)—while Marjorie Taylor Greene and AOC appear in the mist with canned-goods tips!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "mon-el-rogers-10",
+                  "text": "EL-SAYED HEAD: Halt, heroes! Before you can swing a sword in this cloakroom, you must fill out our Medicare-For-All-Monsters deductible form! ROGERS HEAD: Too late! My head already wiretapped your dungeon dice for the Elite 1% and uploaded your browser history to the AI Superintelligence!",
+                  "audio": "res://assets/audio/election2026/el_rogers_intro_1.ogg"
+                },
+                {
+                  "speaker": "MTG & AOC (From the Mist)",
+                  "text": "MTG & AOC: Hey y'all, Marjorie and Alexandria checking in from our cozy mist blanket! When the AI Superintelligence Apocalypse shuts down the power grid next Tuesday, remember rule #1: stockpile pull-tab canned Georgia peaches, black beans, and at least four manual forged-iron can openers! Because love is bipartisan, babe, and high-fiber legumes last until 2045!",
+                  "audio": "res://assets/audio/election2026/mtg_aoc_tip_1.ogg"
+                },
+                {
+                  "speaker": "bernie-sanders",
+                  "text": "This democracy is evolving into an oligarchy! And an oligarchy is a country in which a few people have tremendous wealth and tremendous power and exercise that wealth and that power!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_oligarchy.ogg"
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "What, like with a cloth or something? Well, no, I don't know how it works digitally at all! Bernie Sanders said that: 'The American people are sick and tired of hearing about your damn emails!'",
+                  "audio": "res://assets/audio/election2026/hillary_clip_wipe_server.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-el-rogers-defeated",
+          "name": "El-Rogers Slain — Michigan Hydra Down",
+          "title": "El-Rogers Slain — Michigan Hydra Down",
+          "marker": "Hydra 2✓",
+          "banner": "HYDRA SLAIN [Hydra 2]",
+          "event": "on_monster_killed",
+          "target": "mon-el-rogers-10",
+          "room": "room-se-4",
+          "doorId": "",
+          "monsterId": "mon-el-rogers-10",
+          "tile": [
+            18,
+            15
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "El-Rogers crashes into a rack of lobbyist fur coats as its wiretap servers short-circuit!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "trump",
+                  "text": "To do that, you have to be quite smart and you have to be able to hit the ball a long way. And I do it. He doesn't do it. He can't hit a ball 50 yards. He challenged me to a golf match. He can't hit a ball 50 yards!",
+                  "audio": "res://assets/audio/election2026/trump_clip_golf_50_yards.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... let me be clear... That is two Hydras... consigned... to the dustbin... of history... When we believe... in the hope... of tomorrow's hope... we can... uhh... open these canned beans... together.",
+                  "audio": "res://assets/audio/election2026/obama_hope_hydra2.ogg"
+                },
+                {
+                  "speaker": "mentor",
+                  "text": "Well tickle my poncho, that's two Hydras belly-up! Only one Hydra left between you and... well, whatever it is we're doin' here!",
+                  "audio": "res://assets/audio/election2026/bush_hydra2_down.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-sw-supreme-court-brownsted",
+          "name": "Supreme Court Chamber — Brownsted (Ohio Hydra) & Bunker Rotation",
+          "title": "Supreme Court Chamber — Brownsted (Ohio Hydra) & Bunker Rotation",
+          "marker": "Hydra 3",
+          "banner": "SUPREME COURT [Hydra 3]",
+          "event": "on_room_entered",
+          "target": "room-sw-5",
+          "room": "room-sw-5",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            14,
+            16
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Coiled around the Supreme Court bench is Brownsted (Brown + Husted · Ohio Hydra), hoarding pallets of Super PAC gold and emergency canned goods!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "mon-brownsted-5",
+                  "text": "BROWN HEAD: Behold Brownsted, the Undead Lobbyist Hydra of the Heartland! Our tariffs protect the Elite 1%! HUSTED HEAD: And our bipartisan Super PAC just sold the entire Midwest electrical grid to the AI Superintelligence Overlord for 12 billion gold coins!",
+                  "audio": "res://assets/audio/election2026/brownsted_intro_1.ogg"
+                },
+                {
+                  "speaker": "MTG & AOC (From the Mist)",
+                  "text": "AOC & MTG: Babe, tell the heroes about shelf rotation! When you're cuddling in your subterranean bunker hiding from ChatGPT-9000's killer drones, always rotate your canned garbanzo beans, lentils, and SPAM using First-In, First-Out! And store your cans off the damp dungeon floor so the tin never rusts!",
+                  "audio": "res://assets/audio/election2026/mtg_aoc_tip_2.ogg"
+                },
+                {
+                  "speaker": "bernie-sanders",
+                  "text": "We have an approach to campaign financing which, to a very large degree, allows wealthy people and major corporations to buy and sell politicians. The rich get richer, the poor get poorer, and ordinary Americans are shut out of the political system!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_buy_politicians.ogg"
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "You made three speeches for Goldman Sachs... Did you have to be paid $675,000? Well, I don't know, that's what they offered!",
+                  "audio": "res://assets/audio/election2026/hillary_clip_675k.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-brownsted-defeated",
+          "name": "Brownsted Slain — The Ohio Hydra Falls!",
+          "title": "Brownsted Slain — The Ohio Hydra Falls!",
+          "marker": "Hydra 3✓",
+          "banner": "HYDRA SLAIN [Hydra 3]",
+          "event": "on_monster_killed",
+          "target": "mon-brownsted-5",
+          "room": "room-sw-5",
+          "doorId": "",
+          "monsterId": "mon-brownsted-5",
+          "tile": [
+            14,
+            16
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Brownsted topples over the Supreme Court bench, scattering gold coins and crates of non-perishable canned lentils across the marble floor!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "trump",
+                  "text": "In Springfield, they're eating the dogs, the people that came in, they're eating the cats, they're eating the pets of the people that live there!",
+                  "audio": "res://assets/audio/election2026/trump_clip_springfield.ogg"
+                },
+                {
+                  "speaker": "mentor",
+                  "text": "Well paint my puppy and call me a biscuit, you actually killed the Ohio Hydra! Did we save the world from the Elite 1%? Heck if I know, mission accomplished!",
+                  "audio": "res://assets/audio/election2026/bush_hydra3_down.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-briefing-room-katie",
+          "name": "The Daily Gaslight Briefing — Katie Zacharia",
+          "title": "The Daily Gaslight Briefing — Katie Zacharia",
+          "marker": "Note A",
+          "banner": "QUEST NOTE [Note A]",
+          "event": "on_room_entered",
+          "target": "room-ne-3",
+          "room": "room-ne-3",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            20,
+            8
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Behind a $40,000 solid-gold podium stands Press Secretary Katie Zacharia spinning for the Elite 1% and the AI Superintelligence!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "Good afternoon! Before taking questions from my zombie press corps, let me be crystal clear: the Elite 1% destroying the world and the oncoming AI Apocalypse are actually vibrant signs of bipartisan economic resilience!",
+                  "audio": "res://assets/audio/election2026/katie_intro_1.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... excuse me... Madam Press Secretary... In a nation... built on hope... and change... why is your podium... made of solid taxpayer gold... while we are eating... uhh... expired bunker SPAM?",
+                  "audio": "res://assets/audio/election2026/obama_hope_katie.ogg"
+                },
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "Look, whether Team Red or Team Blue holds this microphone, the 1% gets another trillion-dollar bailout and you peasants get to fight the Hydras with a rusty broadsword! Now circle back to the grave!",
+                  "audio": "res://assets/audio/election2026/katie_intro_2.ogg"
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do and the way we do it better than anybody else!",
+                  "audio": "res://assets/audio/election2026/hillary_clip_walmart.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-katie-zacharia-defeated",
+          "name": "Katie Pivots to an AI Overlord Board Seat",
+          "title": "Katie Pivots to an AI Overlord Board Seat",
+          "marker": "Note B",
+          "banner": "QUEST NOTE [Note B]",
+          "event": "on_monster_killed",
+          "target": "mon-katie-zacharia-boss",
+          "room": "room-ne-3",
+          "doorId": "",
+          "monsterId": "mon-katie-zacharia-boss",
+          "tile": [
+            20,
+            7
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Katie Zacharia tosses her briefing binder into the air as she golden-parachutes into a corporate lobbying gig!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "I have no further comment at this time! I am resigning effective immediately to accept a $7 million board seat with the AI Superintelligence Overlord and a ghostwritten cable news book deal!",
+                  "audio": "res://assets/audio/election2026/katie_defeated_1.ogg"
+                },
+                {
+                  "speaker": "trump",
+                  "text": "I don't even know who this woman is. I have no idea who she is, where she came from. I do like my garbage truck. This truck is in honor of Kamala and Joe Biden!",
+                  "audio": "res://assets/audio/election2026/trump_clip_garbage_truck.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-committee-chamber-mitch",
+          "name": "The Eternal Filibuster — Mitch McConnell",
+          "title": "The Eternal Filibuster — Mitch McConnell",
+          "marker": "Note C",
+          "banner": "QUEST NOTE [Note C]",
+          "event": "on_room_entered",
+          "target": "room-nw-1",
+          "room": "room-nw-1",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            5,
+            4
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Atop the curved mahogany dais of the Legislative Committee Chamber sits Patriarch Mitch McConnell, surrounded by 6,000-page omnibus bills.",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "Well... I would like to welcome the heroes to the Legislative Committee Chamber... Reboot complete. My neural link was just executing a tax-free stock trade with the Elite 1% while the three Hydras eat the Constitution.",
+                  "audio": "res://assets/audio/election2026/mitch_intro_1.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... Mitch... we have hoped... in the Senate... we have hoped... in the House... and yet... your turtle shell... remains... uhh... completely immune... to hope.",
+                  "audio": "res://assets/audio/election2026/obama_hope_mitch.ogg"
+                },
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "Oh, you sweet summer voters. George Bush sent you to stop the 1%? Red and Blue only pretend to fight on C-SPAN! At 3:00 AM we pass a $4 trillion omnibus bill, feed the Hydras, and hoard all the canned peaches for ourselves!",
+                  "audio": "res://assets/audio/election2026/mitch_intro_2.ogg"
+                },
+                {
+                  "speaker": "bernie-sanders",
+                  "text": "I will be damned if I will vote for a proposal which will stick it to the middle class and the working people!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_middle_class.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-mitch-mcconnell-defeated",
+          "name": "The Committee Adjourns for a Donor Retreat",
+          "title": "The Committee Adjourns for a Donor Retreat",
+          "marker": "Note D",
+          "banner": "QUEST NOTE [Note D]",
+          "event": "on_monster_killed",
+          "target": "mon-mitch-mcconnell-boss",
+          "room": "room-nw-1",
+          "doorId": "",
+          "monsterId": "mon-mitch-mcconnell-boss",
+          "tile": [
+            5,
+            3
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Mitch McConnell slowly tips his gavel and vanishes into a cloud of tax-exempt municipal bonds.",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "Heh... impressive strike... Unfortunately I already slipped an amendment onto page 4,000 of the Highway Bill making my congressional pension immortal. Good luck with the Hydras...",
+                  "audio": "res://assets/audio/election2026/mitch_defeated_1.ogg"
+                },
+                {
+                  "speaker": "trump",
+                  "text": "Well, we need Greenland for national security purposes. You have approximately 45,000 people there. People really don't even know if Denmark has any legal right to it!",
+                  "audio": "res://assets/audio/election2026/trump_clip_greenland.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-war-room-vance-kamala",
+          "name": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
+          "title": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
+          "marker": "Note E",
+          "banner": "QUEST NOTE [Note E]",
+          "event": "on_room_entered",
+          "target": "room-ne-2",
+          "room": "room-ne-2",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            19,
+            4
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Inside the Campaign War Room, empty bottles of $3,000 bourbon and reserve Napa Cabernet litter the strategy table as JD Vance and Kamala Harris clink glasses and roar with laughter!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Kamala Harris (Drunk in the War Room)",
+                  "text": "Ha ha ha ha! JD, top off my Napa Cabernet! Look at the electoral map on the wall, it's a Venn diagram! Three giant Hydras in the dungeon, the Elite 1% in the penthouse, and us getting hammered at the open bar in the middle! Ha ha ha!",
+                  "audio": "res://assets/audio/election2026/kamala_war_room_1.ogg"
+                },
+                {
+                  "speaker": "JD Vance (Drunk in the War Room)",
+                  "text": "Cheers to that, Mamala! George Bush thinks these four heroes are gonna stop the 1%, and Marjorie and AOC are out in the mist hoarding canned beans on a couch! Wait... did somebody say couch?!",
+                  "audio": "res://assets/audio/election2026/vance_war_room_1.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... hold on now... We came here... with the audacity... of hope... and you two... are in the War Room... doing bourbon shots... on the taxpayers' tab?",
+                  "audio": "res://assets/audio/election2026/obama_hope_war_room.ogg"
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there and we struggled!",
+                  "audio": "res://assets/audio/election2026/hillary_clip_dead_broke.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-jd-vance-defeated",
+          "name": "JD Vance Spills His Reserve Bourbon",
+          "title": "JD Vance Spills His Reserve Bourbon",
+          "marker": "Note F",
+          "banner": "QUEST NOTE [Note F]",
+          "event": "on_monster_killed",
+          "target": "mon-jd-vance-drunk-boss",
+          "room": "room-ne-2",
+          "doorId": "",
+          "monsterId": "mon-jd-vance-drunk-boss",
+          "tile": [
+            19,
+            3
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "JD Vance stumbles backward into the War Room couch, clutching his crystal decanter.",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "JD Vance (Drunk in the War Room)",
+                  "text": "Ugh... my Silicon Valley billionaire donors promised me this War Room had qualified immunity! Hide the bourbon, I'm retreating to my Netflix book deal!",
+                  "audio": "res://assets/audio/election2026/vance_defeated_1.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-kamala-harris-defeated",
+          "name": "Kamala Harris Unburdens the Wine Bar",
+          "title": "Kamala Harris Unburdens the Wine Bar",
+          "marker": "Note G",
+          "banner": "QUEST NOTE [Note G]",
+          "event": "on_monster_killed",
+          "target": "mon-kamala-harris-drunk-boss",
+          "room": "room-ne-2",
+          "doorId": "",
+          "monsterId": "mon-kamala-harris-drunk-boss",
+          "tile": [
+            20,
+            3
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Kamala Harris clutches a magnum of Napa Valley Cabernet as she exits toward a private jet.",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Kamala Harris (Drunk in the War Room)",
+                  "text": "You may have defeated us in the passage of time, which is the time in which we pass... but the three Campaign Hydras still guard the Capitol treasury! Byeeee!",
+                  "audio": "res://assets/audio/election2026/kamala_defeated_1.ogg"
+                },
+                {
+                  "speaker": "trump",
+                  "text": "I get that question as much as almost any question: do you think that we have aliens coming, flying around or whatever? There's no reason not to think that Mars and all these planets don't have life!",
+                  "audio": "res://assets/audio/election2026/trump_clip_aliens_mars.ogg"
                 }
               ]
             }
@@ -2970,18 +3222,22 @@
       "storyTriggers": [
         {
           "id": "trigger-election-intro",
-          "marker": "Intro",
+          "name": "Mentor George W. Bush & Visions in the Mist",
           "title": "Mentor George W. Bush & Visions in the Mist",
+          "marker": "Intro",
           "banner": "QUEST PROLOGUE [Intro]",
-          "narrative": "Mentor George W. Bush speaks: \"Howdy, heroes! Your quest is to stop the Elite 1% from destroyin' the world! Now, how do you actually do that? Heck if I know! I have no idea how, and I'm not even sure it's gonna work. Good luck killin' them Hydras—Talarixon, El-Rogers, and Brownsted—I'm really not much help!\" Suddenly, from a swirling foggy mist, Marjorie Taylor Greene and Alexandria Ocasio-Cortez appear sitting cozily together under a plaid blanket—clearly girlfriends—giving you survival hints on how to stockpile canned beans, canned peaches, SPAM, and manual iron can openers for the oncoming AI Superintelligence Apocalypse!",
+          "event": "on_room_entered",
+          "target": "room-sw-10",
+          "room": "room-sw-10",
+          "doorId": "",
+          "monsterId": "",
           "tile": [
             0,
             13
           ],
-          "room": "room-sw-10",
-          "event": "on_room_entered",
           "onceOnly": true,
           "movie": "res://assets/movies/election_2026_intro_movie.ogv",
+          "narrative": "Mentor George W. Bush summons you to the Basement of Strategery to stop the Elite 1% by slaying the three Campaign Hydras (Talarixon, El-Rogers, and Brownsted)—though he has no idea how or if it will work! Meanwhile, from the foggy mist, girlfriends Marjorie Taylor Greene and AOC share canned-goods prepper advice for the oncoming AI Superintelligence Apocalypse!",
           "hidden": false,
           "actions": [
             {
@@ -2989,279 +3245,34 @@
               "moviePath": "res://assets/movies/election_2026_intro_movie.ogv",
               "title": "🎬 Prologue: Mentor George W. Bush & The Mist Oracles",
               "canSkip": true
-            }
-          ]
-        },
-        {
-          "id": "trigger-briefing-room-katie",
-          "marker": "Note A",
-          "title": "The Daily Gaslight Briefing — Katie Zacharia",
-          "banner": "QUEST NOTE [Note A]",
-          "narrative": "Behind a $40,000 solid-gold podium stands Press Secretary Katie Zacharia with a color-coded binder of bipartisan spin!",
-          "tile": [
-            20,
-            8
-          ],
-          "room": "room-ne-3",
-          "event": "on_room_entered",
-          "onceOnly": true,
-          "movie": "",
-          "hidden": false,
-          "actions": [
-            {
-              "type": "dialogue",
-              "lines": [
-                {
-                  "speaker": "Katie Zacharia (Press Secretary)",
-                  "text": "Good afternoon! Before taking questions from my pre-approved zombie press corps, let me be crystal clear: the $19 carton of eggs is actually a vibrant sign of bipartisan economic resilience!"
-                },
-                {
-                  "speaker": "barbarian",
-                  "text": "Your podium is made of solid taxpayer gold and there is a Censorship Witch Hand standing behind you with a giant rubber stamp!"
-                },
-                {
-                  "speaker": "Katie Zacharia (Press Secretary)",
-                  "text": "We prefer the term Narrative Hygiene Specialist! Look, whether Team Blue or Team Red holds this microphone next week, the donor class gets another trillion-dollar bailout and you peasants get an IRS audit!"
-                },
-                {
-                  "speaker": "wizard",
-                  "text": "Wait—so you spin for BOTH parties?!"
-                },
-                {
-                  "speaker": "Katie Zacharia (Press Secretary)",
-                  "text": "Honey, who do you think caters the after-party? On TV we scream about saving democracy; off camera we split BlackRock stock tips over $400 Georgetown martinis on your dime! Now circle back to the grave, taxpayers!"
-                }
-              ]
             },
             {
-              "type": "display_message",
-              "title": "🎙️ Boss Encounter: Katie Zacharia (Press Secretary)",
-              "text": "Katie Zacharia slams her color-coded binder shut and unleashes a weaponized spin cycle! Defeat the Press Secretary and her Cable News Pundit Zombies before she gaslights your gold pouch into thin air!",
-              "buttonText": "Challenge the Spin!"
-            }
-          ]
-        },
-        {
-          "id": "trigger-katie-zacharia-defeated",
-          "marker": "Note B",
-          "title": "Katie Pivots to a Cable News Book Deal",
-          "banner": "QUEST NOTE [Note B]",
-          "narrative": "Katie Zacharia tosses her briefing binder into the air as she golden-parachutes into a corporate lobbying gig!",
-          "tile": [
-            20,
-            7
-          ],
-          "room": "room-ne-3",
-          "event": "on_monster_killed",
-          "onceOnly": true,
-          "movie": "",
-          "hidden": false,
-          "actions": [
-            {
               "type": "dialogue",
               "lines": [
                 {
-                  "speaker": "Katie Zacharia (Press Secretary)",
-                  "text": "I have no further comment at this time! I am resigning effective immediately to accept a $7 million bipartisan defense-board seat and a ghostwritten book deal nobody will ever read!"
+                  "speaker": "mentor",
+                  "text": "Howdy again, heroes! Remember your mission: stop the Elite 1% from destroyin' the world by slayin' all three Campaign Hydras: Talarixon, El-Rogers, and Brownsted! Now how is that gonna stop the 1%? Heck if I know! Good luck, I'm goin' back to paintin' my dog!",
+                  "audio": "res://assets/audio/election2026/bush_start_1.ogg"
                 },
                 {
-                  "speaker": "dwarf",
-                  "text": "Check behind the podium—she left a stack of pre-printed cue cards blaming working families for wanting groceries AND electricity in the same month!"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "trigger-committee-chamber-mitch",
-          "marker": "Note C",
-          "title": "The Eternal Filibuster — Mitch McConnell",
-          "banner": "QUEST NOTE [Note C]",
-          "narrative": "Atop the curved mahogany dais of the Legislative Committee Chamber sits Patriarch Mitch McConnell, surrounded by stacks of 6,000-page omnibus bills.",
-          "tile": [
-            5,
-            4
-          ],
-          "room": "room-nw-1",
-          "event": "on_room_entered",
-          "onceOnly": true,
-          "movie": "",
-          "hidden": false,
-          "actions": [
-            {
-              "type": "dialogue",
-              "lines": [
-                {
-                  "speaker": "Mitch McConnell (Committee Patriarch)",
-                  "text": "Well... I would like to welcome the distinguished taxpayers to the Legislative Committee Chamber... *stares blankly into space for 14 seconds while a dial-up modem tone echoes*"
+                  "speaker": "obama",
+                  "text": "Uhh... let me be clear... When we stand... at the bottom... of these Capitol stairs... we do not merely see... a dungeon... We see... the audacity... of hope... We see... a future... where hope... hopes... for more hope... and... uhh... maybe... a sandwich.",
+                  "audio": "res://assets/audio/election2026/obama_hope_1.ogg"
                 },
                 {
-                  "speaker": "dwarf",
-                  "text": "By Grungni's beard... did the ancient turtle just freeze mid-sentence?!"
+                  "speaker": "bernie-sanders",
+                  "text": "Let's talk about welfare for the rich and the powerful! Now, we start off from a proposition that the wealthiest 1% of the population in this country owns more wealth than the bottom 90%!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_1_percent.ogg"
                 },
                 {
-                  "speaker": "Mitch McConnell (Committee Patriarch)",
-                  "text": "*blinks slowly* ...Reboot complete. Forgive the buffer, my neural link was executing a tax-free defense-contractor stock trade with leadership from the other party before the subcommittee vote."
+                  "speaker": "hillary-clinton",
+                  "text": "We've traveled to every corner of the United States. I've now been in 57 states. I think one left to go.",
+                  "audio": "res://assets/audio/election2026/hillary_clip_57_states.ogg"
                 },
                 {
-                  "speaker": "elf",
-                  "text": "You have been sitting in that chair for forty years! Half the chamber wears Red, half wears Blue, and regular citizens cannot even afford rent!"
-                },
-                {
-                  "speaker": "Mitch McConnell (Committee Patriarch)",
-                  "text": "*chuckles in slow motion* Oh, you sweet summer voter. Red and Blue only pretend to fight when the C-SPAN cameras are blinking! At 3:00 AM we hold hands, pass a $4 trillion omnibus bill giving ourselves a raise, and mail your grandkids the tab!"
-                },
-                {
-                  "speaker": "Mitch McConnell (Committee Patriarch)",
-                  "text": "You think voting harder changes the menu? The turtle shell is 100% bipartisan, baby—we eat the caviar, and you eat the inflation!"
-                }
-              ]
-            },
-            {
-              "type": "display_message",
-              "title": "🐢 Boss Encounter: Mitch McConnell (Committee Patriarch)",
-              "text": "Mitch McConnell withdraws into his 6-Defense-Dice Parliamentary Turtle Shell and invokes an eternal omnibus filibuster! Crack his bipartisan shell before he taxes your grandchildren!",
-              "buttonText": "Break the Filibuster!"
-            }
-          ]
-        },
-        {
-          "id": "trigger-mitch-mcconnell-defeated",
-          "marker": "Note D",
-          "title": "The Committee Adjourns for a Donor Retreat",
-          "banner": "QUEST NOTE [Note D]",
-          "narrative": "Mitch McConnell slowly tips his gavel and vanishes into a cloud of tax-exempt municipal bonds.",
-          "tile": [
-            5,
-            3
-          ],
-          "room": "room-nw-1",
-          "event": "on_monster_killed",
-          "onceOnly": true,
-          "movie": "",
-          "hidden": false,
-          "actions": [
-            {
-              "type": "dialogue",
-              "lines": [
-                {
-                  "speaker": "Mitch McConnell (Committee Patriarch)",
-                  "text": "Heh... impressive strike... Unfortunately I already slipped an amendment onto page 4,812 of the Highway Bill making my congressional pension immortal. See you at the Martha's Vineyard bipartisan yacht mixer..."
-                },
-                {
-                  "speaker": "barbarian",
-                  "text": "He dropped a solid-gold gavel engraved: 'Red or Blue, the House Always Wins (and You Always Pay)'."
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "trigger-war-room-vance-kamala",
-          "marker": "Note E",
-          "title": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
-          "banner": "QUEST NOTE [Note E]",
-          "narrative": "Inside the Campaign War Room, empty bottles of $3,000 bourbon and reserve Napa Cabernet litter the strategy table as JD Vance and Kamala Harris clink glasses and roar with laughter!",
-          "tile": [
-            19,
-            4
-          ],
-          "room": "room-ne-2",
-          "event": "on_room_entered",
-          "onceOnly": true,
-          "movie": "",
-          "hidden": false,
-          "actions": [
-            {
-              "type": "dialogue",
-              "lines": [
-                {
-                  "speaker": "Kamala Harris (Drunk in the War Room)",
-                  "text": "*clinks wine glass against bourbon tumbler* HAHAHAHA! Wait, wait, JD—top off my Napa Cabernet! Look at the electoral map on the wall, it's a Venn diagram! A circle of Red, a circle of Blue, and right in the middle is US getting filthy rich! HAHAHAHA!"
-                },
-                {
-                  "speaker": "JD Vance (Drunk in the War Room)",
-                  "text": "*hiccups, slurring over $3,000 Pappy Van Winkle* Cheers to that, Mamala! Man, the voters out there actually think we hate each other! Yesterday I yelled about cat-ladies on Fox, you yelled about joy on CNN, and we both cleared ten million in Super-PAC appearance fees before lunch!"
-                },
-                {
-                  "speaker": "barbarian",
-                  "text": "Hold on! You two are supposed to be bitter political rivals—why are you getting hammered together in the Campaign War Room?!"
-                },
-                {
-                  "speaker": "Kamala Harris (Drunk in the War Room)",
-                  "text": "*wipes tears of laughter* Oh honey, look how adorable they are! We are unburdened by what has been—specifically, unburdened by ever paying our own bar tab! You think Blue or Red cares about your grocery bill when the donor yacht has a champagne fountain?!"
-                },
-                {
-                  "speaker": "JD Vance (Drunk in the War Room)",
-                  "text": "*spills bourbon on the leather war-room couch* Don't give away the whole game, Kamala! Look, pal—if Red wins, Wall Street gets a bailout. If Blue wins, Wall Street gets the exact same bailout with a nicer font! Either way, working stiffs like you pay for our open bar!"
-                },
-                {
-                  "speaker": "Kamala Harris (Drunk in the War Room)",
-                  "text": "*raises overflowing wine glass* A bipartisan toast to the American taxpayer: the hardest-working ATM in the dungeon! Get 'em, JD—right after I finish this merlot!"
-                }
-              ]
-            },
-            {
-              "type": "display_message",
-              "title": "🥃🍷 Dual Boss Encounter: Drunk JD Vance & Drunk Kamala Harris",
-              "text": "Three sheets to the wind on taxpayer-expensed Pappy Van Winkle and Napa Valley Reserve Cabernet, JD Vance and Kamala Harris link arms in front of the electoral map to defend their bipartisan slush fund!",
-              "buttonText": "Crash the Open Bar!"
-            }
-          ]
-        },
-        {
-          "id": "trigger-jd-vance-defeated",
-          "marker": "Note F",
-          "title": "JD Vance Spills His Reserve Bourbon",
-          "banner": "QUEST NOTE [Note F]",
-          "narrative": "JD Vance stumbles backward into the War Room couch, clutching his crystal decanter.",
-          "tile": [
-            19,
-            3
-          ],
-          "room": "room-ne-2",
-          "event": "on_monster_killed",
-          "onceOnly": true,
-          "movie": "",
-          "hidden": false,
-          "actions": [
-            {
-              "type": "dialogue",
-              "lines": [
-                {
-                  "speaker": "JD Vance (Drunk in the War Room)",
-                  "text": "*hiccups* Ugh... my Silicon Valley venture-capital donors promised me this dungeon had qualified immunity! Kamala, hide the offshore wire transfers—I'm retreating to my Netflix book deal!"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "trigger-kamala-harris-defeated",
-          "marker": "Note G",
-          "title": "Kamala Harris Unburdens the Wine Bar",
-          "banner": "QUEST NOTE [Note G]",
-          "narrative": "Kamala Harris clutches a magnum of Napa Valley Cabernet as she exits toward a private jet.",
-          "tile": [
-            20,
-            3
-          ],
-          "room": "room-ne-2",
-          "event": "on_monster_killed",
-          "onceOnly": true,
-          "movie": "",
-          "hidden": false,
-          "actions": [
-            {
-              "type": "dialogue",
-              "lines": [
-                {
-                  "speaker": "Kamala Harris (Drunk in the War Room)",
-                  "text": "*cackles while tucking two bottles of Reserve Cabernet under her arm* You may have defeated us in the passage of time, which is the time in which we pass... but our bipartisan accountants already wired the treasury to the Cayman Islands! Byeeee!"
-                },
-                {
-                  "speaker": "wizard",
-                  "text": "By the four elements... Red and Blue really were clinking glasses and looting the realm together the entire time!"
+                  "speaker": "trump",
+                  "text": "They're eating the dogs. Sleepy Crooked Joe Biden. I really don't know what he said.",
+                  "audio": "res://assets/audio/election2026/trump_clip_eating_dogs_short.ogg"
                 }
               ]
             }
@@ -3269,30 +3280,541 @@
         },
         {
           "id": "trigger-oval-office-talarixon",
-          "marker": "Note H",
-          "title": "Talarixon (Talarico + Paxton · Texas Hydra)",
-          "banner": "QUEST NOTE [Note H]",
-          "narrative": "Coiled atop the Resolute Desk in the Oval Office is Talarixon (Talarico + Paxton · Texas Hydra), unleashing Holy Smite and Indictment Barrage while fighting itself for control!",
+          "name": "Oval Office — Talarixon & The San Antonio Diesel Plot",
+          "title": "Oval Office — Talarixon & The San Antonio Diesel Plot",
+          "marker": "Hydra 1",
+          "banner": "OVAL OFFICE [Hydra 1]",
+          "event": "on_room_entered",
+          "target": "room-nw-10",
+          "room": "room-nw-10",
+          "doorId": "",
+          "monsterId": "",
           "tile": [
             13,
             5
           ],
+          "onceOnly": true,
+          "movie": "res://assets/movies/oval_office_texas_hydra_movie.ogv",
+          "narrative": "Inside the Oval Office, the two heads of Talarixon (Talarico + Paxton · Texas Hydra) are debating converting the entire city of San Antonio into crude oil to lower Texas diesel prices before Donald Trump barges in!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "play_movie",
+              "moviePath": "res://assets/movies/oval_office_texas_hydra_movie.ogv",
+              "title": "🎬 Oval Office: The San Antonio Diesel Plot & Donald Trump",
+              "canSkip": true
+            },
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "mon-talarixon-4",
+                  "text": "PAXTON HEAD: You interrupted our Texas election hearing! If we refine the entire population of San Antonio into sweet Texas crude, diesel drops to 99 cents a gallon! TALARICO HEAD: Brethren, let us pray over the Alamo pipeline before we smite these heroes and split the oil lobby check 50/50!",
+                  "audio": "res://assets/audio/election2026/talarixon_intro_1.ogg"
+                },
+                {
+                  "speaker": "trump",
+                  "text": "We're going to be changing the name of the Gulf of Mexico to the Gulf of America!",
+                  "audio": "res://assets/audio/election2026/trump_clip_gulf_of_america.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... folks... let us not... liquefy the good people... of San Antonio... into diesel fuel... Because hope... is not crude oil... Hope... is the thing... inside the thing... that makes us... uhh... hope.",
+                  "audio": "res://assets/audio/election2026/obama_hope_san_antonio.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-talarixon-defeated",
+          "name": "Talarixon Slain — San Antonio Saved from the Refinery",
+          "title": "Talarixon Slain — San Antonio Saved from the Refinery",
+          "marker": "Hydra 1✓",
+          "banner": "HYDRA SLAIN [Hydra 1]",
+          "event": "on_monster_killed",
+          "target": "mon-talarixon-4",
           "room": "room-nw-10",
-          "event": "on_room_entered",
+          "doorId": "",
+          "monsterId": "mon-talarixon-4",
+          "tile": [
+            12,
+            2
+          ],
           "onceOnly": true,
           "movie": "",
+          "narrative": "Talarixon collapses behind the Resolute Desk, its San Antonio human-to-diesel refinery blueprint bursting into flames!",
           "hidden": false,
           "actions": [
             {
               "type": "dialogue",
               "lines": [
                 {
-                  "speaker": "Talarixon (Texas Hydra)",
-                  "text": "PAXTON HEAD: I hereby serve you with an Indictment Barrage and sue the dungeon dice for unconstitutional skull-rolling! TALARICO HEAD: Brethren, let us pray before I smite these heroes for 3 combat dice—and then split the donor plate 50/50!"
+                  "speaker": "hillary-clinton",
+                  "text": "We came, we saw, he died! Ha ha ha!",
+                  "audio": "res://assets/audio/election2026/hillary_clip_we_came_we_saw.ogg"
                 },
                 {
-                  "speaker": "Talarixon (Texas Hydra)",
-                  "text": "BOTH HEADS: Once we drop to 3 Body Points, Political Infighting kicks in and we start attacking everyone adjacent while arguing over who gets the oil lobby check!"
+                  "speaker": "mentor",
+                  "text": "Hot dang, you actually whacked the Texas Hydra! That's one Hydra down and two more to go! Keep swingin', I reckon!",
+                  "audio": "res://assets/audio/election2026/bush_hydra1_down.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-se-cloakroom-el-rogers",
+          "name": "Senate Cloakroom — El-Rogers (Michigan Hydra) & Mist Oracles",
+          "title": "Senate Cloakroom — El-Rogers (Michigan Hydra) & Mist Oracles",
+          "marker": "Hydra 2",
+          "banner": "SENATE CLOAKROOM [Hydra 2]",
+          "event": "on_room_entered",
+          "target": "room-se-4",
+          "room": "room-se-4",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            18,
+            15
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "In the Senate Cloakroom lurks the second Campaign Hydra—El-Rogers (El-Sayed + Rogers · Michigan Hydra)—while Marjorie Taylor Greene and AOC appear in the mist with canned-goods tips!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "mon-el-rogers-10",
+                  "text": "EL-SAYED HEAD: Halt, heroes! Before you can swing a sword in this cloakroom, you must fill out our Medicare-For-All-Monsters deductible form! ROGERS HEAD: Too late! My head already wiretapped your dungeon dice for the Elite 1% and uploaded your browser history to the AI Superintelligence!",
+                  "audio": "res://assets/audio/election2026/el_rogers_intro_1.ogg"
+                },
+                {
+                  "speaker": "MTG & AOC (From the Mist)",
+                  "text": "MTG & AOC: Hey y'all, Marjorie and Alexandria checking in from our cozy mist blanket! When the AI Superintelligence Apocalypse shuts down the power grid next Tuesday, remember rule #1: stockpile pull-tab canned Georgia peaches, black beans, and at least four manual forged-iron can openers! Because love is bipartisan, babe, and high-fiber legumes last until 2045!",
+                  "audio": "res://assets/audio/election2026/mtg_aoc_tip_1.ogg"
+                },
+                {
+                  "speaker": "bernie-sanders",
+                  "text": "This democracy is evolving into an oligarchy! And an oligarchy is a country in which a few people have tremendous wealth and tremendous power and exercise that wealth and that power!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_oligarchy.ogg"
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "What, like with a cloth or something? Well, no, I don't know how it works digitally at all! Bernie Sanders said that: 'The American people are sick and tired of hearing about your damn emails!'",
+                  "audio": "res://assets/audio/election2026/hillary_clip_wipe_server.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-el-rogers-defeated",
+          "name": "El-Rogers Slain — Michigan Hydra Down",
+          "title": "El-Rogers Slain — Michigan Hydra Down",
+          "marker": "Hydra 2✓",
+          "banner": "HYDRA SLAIN [Hydra 2]",
+          "event": "on_monster_killed",
+          "target": "mon-el-rogers-10",
+          "room": "room-se-4",
+          "doorId": "",
+          "monsterId": "mon-el-rogers-10",
+          "tile": [
+            18,
+            15
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "El-Rogers crashes into a rack of lobbyist fur coats as its wiretap servers short-circuit!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "trump",
+                  "text": "To do that, you have to be quite smart and you have to be able to hit the ball a long way. And I do it. He doesn't do it. He can't hit a ball 50 yards. He challenged me to a golf match. He can't hit a ball 50 yards!",
+                  "audio": "res://assets/audio/election2026/trump_clip_golf_50_yards.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... let me be clear... That is two Hydras... consigned... to the dustbin... of history... When we believe... in the hope... of tomorrow's hope... we can... uhh... open these canned beans... together.",
+                  "audio": "res://assets/audio/election2026/obama_hope_hydra2.ogg"
+                },
+                {
+                  "speaker": "mentor",
+                  "text": "Well tickle my poncho, that's two Hydras belly-up! Only one Hydra left between you and... well, whatever it is we're doin' here!",
+                  "audio": "res://assets/audio/election2026/bush_hydra2_down.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-sw-supreme-court-brownsted",
+          "name": "Supreme Court Chamber — Brownsted (Ohio Hydra) & Bunker Rotation",
+          "title": "Supreme Court Chamber — Brownsted (Ohio Hydra) & Bunker Rotation",
+          "marker": "Hydra 3",
+          "banner": "SUPREME COURT [Hydra 3]",
+          "event": "on_room_entered",
+          "target": "room-sw-5",
+          "room": "room-sw-5",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            14,
+            16
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Coiled around the Supreme Court bench is Brownsted (Brown + Husted · Ohio Hydra), hoarding pallets of Super PAC gold and emergency canned goods!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "mon-brownsted-5",
+                  "text": "BROWN HEAD: Behold Brownsted, the Undead Lobbyist Hydra of the Heartland! Our tariffs protect the Elite 1%! HUSTED HEAD: And our bipartisan Super PAC just sold the entire Midwest electrical grid to the AI Superintelligence Overlord for 12 billion gold coins!",
+                  "audio": "res://assets/audio/election2026/brownsted_intro_1.ogg"
+                },
+                {
+                  "speaker": "MTG & AOC (From the Mist)",
+                  "text": "AOC & MTG: Babe, tell the heroes about shelf rotation! When you're cuddling in your subterranean bunker hiding from ChatGPT-9000's killer drones, always rotate your canned garbanzo beans, lentils, and SPAM using First-In, First-Out! And store your cans off the damp dungeon floor so the tin never rusts!",
+                  "audio": "res://assets/audio/election2026/mtg_aoc_tip_2.ogg"
+                },
+                {
+                  "speaker": "bernie-sanders",
+                  "text": "We have an approach to campaign financing which, to a very large degree, allows wealthy people and major corporations to buy and sell politicians. The rich get richer, the poor get poorer, and ordinary Americans are shut out of the political system!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_buy_politicians.ogg"
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "You made three speeches for Goldman Sachs... Did you have to be paid $675,000? Well, I don't know, that's what they offered!",
+                  "audio": "res://assets/audio/election2026/hillary_clip_675k.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-brownsted-defeated",
+          "name": "Brownsted Slain — The Ohio Hydra Falls!",
+          "title": "Brownsted Slain — The Ohio Hydra Falls!",
+          "marker": "Hydra 3✓",
+          "banner": "HYDRA SLAIN [Hydra 3]",
+          "event": "on_monster_killed",
+          "target": "mon-brownsted-5",
+          "room": "room-sw-5",
+          "doorId": "",
+          "monsterId": "mon-brownsted-5",
+          "tile": [
+            14,
+            16
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Brownsted topples over the Supreme Court bench, scattering gold coins and crates of non-perishable canned lentils across the marble floor!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "trump",
+                  "text": "In Springfield, they're eating the dogs, the people that came in, they're eating the cats, they're eating the pets of the people that live there!",
+                  "audio": "res://assets/audio/election2026/trump_clip_springfield.ogg"
+                },
+                {
+                  "speaker": "mentor",
+                  "text": "Well paint my puppy and call me a biscuit, you actually killed the Ohio Hydra! Did we save the world from the Elite 1%? Heck if I know, mission accomplished!",
+                  "audio": "res://assets/audio/election2026/bush_hydra3_down.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-briefing-room-katie",
+          "name": "The Daily Gaslight Briefing — Katie Zacharia",
+          "title": "The Daily Gaslight Briefing — Katie Zacharia",
+          "marker": "Note A",
+          "banner": "QUEST NOTE [Note A]",
+          "event": "on_room_entered",
+          "target": "room-ne-3",
+          "room": "room-ne-3",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            20,
+            8
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Behind a $40,000 solid-gold podium stands Press Secretary Katie Zacharia spinning for the Elite 1% and the AI Superintelligence!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "Good afternoon! Before taking questions from my zombie press corps, let me be crystal clear: the Elite 1% destroying the world and the oncoming AI Apocalypse are actually vibrant signs of bipartisan economic resilience!",
+                  "audio": "res://assets/audio/election2026/katie_intro_1.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... excuse me... Madam Press Secretary... In a nation... built on hope... and change... why is your podium... made of solid taxpayer gold... while we are eating... uhh... expired bunker SPAM?",
+                  "audio": "res://assets/audio/election2026/obama_hope_katie.ogg"
+                },
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "Look, whether Team Red or Team Blue holds this microphone, the 1% gets another trillion-dollar bailout and you peasants get to fight the Hydras with a rusty broadsword! Now circle back to the grave!",
+                  "audio": "res://assets/audio/election2026/katie_intro_2.ogg"
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "As a shareholder and director of our company, I'm always proud of Walmart and what we do and the way we do it better than anybody else!",
+                  "audio": "res://assets/audio/election2026/hillary_clip_walmart.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-katie-zacharia-defeated",
+          "name": "Katie Pivots to an AI Overlord Board Seat",
+          "title": "Katie Pivots to an AI Overlord Board Seat",
+          "marker": "Note B",
+          "banner": "QUEST NOTE [Note B]",
+          "event": "on_monster_killed",
+          "target": "mon-katie-zacharia-boss",
+          "room": "room-ne-3",
+          "doorId": "",
+          "monsterId": "mon-katie-zacharia-boss",
+          "tile": [
+            20,
+            7
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Katie Zacharia tosses her briefing binder into the air as she golden-parachutes into a corporate lobbying gig!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Katie Zacharia (Press Secretary)",
+                  "text": "I have no further comment at this time! I am resigning effective immediately to accept a $7 million board seat with the AI Superintelligence Overlord and a ghostwritten cable news book deal!",
+                  "audio": "res://assets/audio/election2026/katie_defeated_1.ogg"
+                },
+                {
+                  "speaker": "trump",
+                  "text": "I don't even know who this woman is. I have no idea who she is, where she came from. I do like my garbage truck. This truck is in honor of Kamala and Joe Biden!",
+                  "audio": "res://assets/audio/election2026/trump_clip_garbage_truck.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-committee-chamber-mitch",
+          "name": "The Eternal Filibuster — Mitch McConnell",
+          "title": "The Eternal Filibuster — Mitch McConnell",
+          "marker": "Note C",
+          "banner": "QUEST NOTE [Note C]",
+          "event": "on_room_entered",
+          "target": "room-nw-1",
+          "room": "room-nw-1",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            5,
+            4
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Atop the curved mahogany dais of the Legislative Committee Chamber sits Patriarch Mitch McConnell, surrounded by 6,000-page omnibus bills.",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "Well... I would like to welcome the heroes to the Legislative Committee Chamber... Reboot complete. My neural link was just executing a tax-free stock trade with the Elite 1% while the three Hydras eat the Constitution.",
+                  "audio": "res://assets/audio/election2026/mitch_intro_1.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... Mitch... we have hoped... in the Senate... we have hoped... in the House... and yet... your turtle shell... remains... uhh... completely immune... to hope.",
+                  "audio": "res://assets/audio/election2026/obama_hope_mitch.ogg"
+                },
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "Oh, you sweet summer voters. George Bush sent you to stop the 1%? Red and Blue only pretend to fight on C-SPAN! At 3:00 AM we pass a $4 trillion omnibus bill, feed the Hydras, and hoard all the canned peaches for ourselves!",
+                  "audio": "res://assets/audio/election2026/mitch_intro_2.ogg"
+                },
+                {
+                  "speaker": "bernie-sanders",
+                  "text": "I will be damned if I will vote for a proposal which will stick it to the middle class and the working people!",
+                  "audio": "res://assets/audio/election2026/bernie_clip_middle_class.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-mitch-mcconnell-defeated",
+          "name": "The Committee Adjourns for a Donor Retreat",
+          "title": "The Committee Adjourns for a Donor Retreat",
+          "marker": "Note D",
+          "banner": "QUEST NOTE [Note D]",
+          "event": "on_monster_killed",
+          "target": "mon-mitch-mcconnell-boss",
+          "room": "room-nw-1",
+          "doorId": "",
+          "monsterId": "mon-mitch-mcconnell-boss",
+          "tile": [
+            5,
+            3
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Mitch McConnell slowly tips his gavel and vanishes into a cloud of tax-exempt municipal bonds.",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Mitch McConnell (Committee Patriarch)",
+                  "text": "Heh... impressive strike... Unfortunately I already slipped an amendment onto page 4,000 of the Highway Bill making my congressional pension immortal. Good luck with the Hydras...",
+                  "audio": "res://assets/audio/election2026/mitch_defeated_1.ogg"
+                },
+                {
+                  "speaker": "trump",
+                  "text": "Well, we need Greenland for national security purposes. You have approximately 45,000 people there. People really don't even know if Denmark has any legal right to it!",
+                  "audio": "res://assets/audio/election2026/trump_clip_greenland.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-war-room-vance-kamala",
+          "name": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
+          "title": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
+          "marker": "Note E",
+          "banner": "QUEST NOTE [Note E]",
+          "event": "on_room_entered",
+          "target": "room-ne-2",
+          "room": "room-ne-2",
+          "doorId": "",
+          "monsterId": "",
+          "tile": [
+            19,
+            4
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Inside the Campaign War Room, empty bottles of $3,000 bourbon and reserve Napa Cabernet litter the strategy table as JD Vance and Kamala Harris clink glasses and roar with laughter!",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Kamala Harris (Drunk in the War Room)",
+                  "text": "Ha ha ha ha! JD, top off my Napa Cabernet! Look at the electoral map on the wall, it's a Venn diagram! Three giant Hydras in the dungeon, the Elite 1% in the penthouse, and us getting hammered at the open bar in the middle! Ha ha ha!",
+                  "audio": "res://assets/audio/election2026/kamala_war_room_1.ogg"
+                },
+                {
+                  "speaker": "JD Vance (Drunk in the War Room)",
+                  "text": "Cheers to that, Mamala! George Bush thinks these four heroes are gonna stop the 1%, and Marjorie and AOC are out in the mist hoarding canned beans on a couch! Wait... did somebody say couch?!",
+                  "audio": "res://assets/audio/election2026/vance_war_room_1.ogg"
+                },
+                {
+                  "speaker": "obama",
+                  "text": "Uhh... hold on now... We came here... with the audacity... of hope... and you two... are in the War Room... doing bourbon shots... on the taxpayers' tab?",
+                  "audio": "res://assets/audio/election2026/obama_hope_war_room.ogg"
+                },
+                {
+                  "speaker": "hillary-clinton",
+                  "text": "We came out of the White House not only dead broke, but in debt! We had no money when we got there and we struggled!",
+                  "audio": "res://assets/audio/election2026/hillary_clip_dead_broke.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-jd-vance-defeated",
+          "name": "JD Vance Spills His Reserve Bourbon",
+          "title": "JD Vance Spills His Reserve Bourbon",
+          "marker": "Note F",
+          "banner": "QUEST NOTE [Note F]",
+          "event": "on_monster_killed",
+          "target": "mon-jd-vance-drunk-boss",
+          "room": "room-ne-2",
+          "doorId": "",
+          "monsterId": "mon-jd-vance-drunk-boss",
+          "tile": [
+            19,
+            3
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "JD Vance stumbles backward into the War Room couch, clutching his crystal decanter.",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "JD Vance (Drunk in the War Room)",
+                  "text": "Ugh... my Silicon Valley billionaire donors promised me this War Room had qualified immunity! Hide the bourbon, I'm retreating to my Netflix book deal!",
+                  "audio": "res://assets/audio/election2026/vance_defeated_1.ogg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-kamala-harris-defeated",
+          "name": "Kamala Harris Unburdens the Wine Bar",
+          "title": "Kamala Harris Unburdens the Wine Bar",
+          "marker": "Note G",
+          "banner": "QUEST NOTE [Note G]",
+          "event": "on_monster_killed",
+          "target": "mon-kamala-harris-drunk-boss",
+          "room": "room-ne-2",
+          "doorId": "",
+          "monsterId": "mon-kamala-harris-drunk-boss",
+          "tile": [
+            20,
+            3
+          ],
+          "onceOnly": true,
+          "movie": "",
+          "narrative": "Kamala Harris clutches a magnum of Napa Valley Cabernet as she exits toward a private jet.",
+          "hidden": false,
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Kamala Harris (Drunk in the War Room)",
+                  "text": "You may have defeated us in the passage of time, which is the time in which we pass... but the three Campaign Hydras still guard the Capitol treasury! Byeeee!",
+                  "audio": "res://assets/audio/election2026/kamala_defeated_1.ogg"
+                },
+                {
+                  "speaker": "trump",
+                  "text": "I get that question as much as almost any question: do you think that we have aliens coming, flying around or whatever? There's no reason not to think that Mars and all these planets don't have life!",
+                  "audio": "res://assets/audio/election2026/trump_clip_aliens_mars.ogg"
                 }
               ]
             }
@@ -3322,9 +3844,9 @@
       ],
       "bossTarget": "talarixon",
       "primaryGoals": [
-        "Defeat the Capitol Bosses & Hydra Bosses (Talarixon, El-Rogers, Brownsted, Katie Zacharia, Mitch McConnell, and Drunk JD Vance & Kamala Harris).",
-        "Storm the Capitol chambers (Briefing Room, Committee Chamber, War Room & Oval Office) and expose the bipartisan slush fund.",
-        "Lead all surviving heroes safely to the Capitol Exit Stairs at [14, 2]."
+        "Slay Talarixon (Texas Hydra) in the Oval Office.",
+        "Slay El-Rogers (Michigan Hydra) in the Senate Cloakroom.",
+        "Slay Brownsted (Ohio Hydra) in the Supreme Court Chamber."
       ]
     }
   ]
