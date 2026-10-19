@@ -24,6 +24,9 @@ function chromiumPath() {
 
 async function launch(profile, { date = new Date(2026, 9, 14, 10, 0), touch = true, viewport = { width: 1280, height: 800 }, camera = null } = {}) {
   const clock = { date };
+  const recording = process.env.POS_DEMO_RECORD === '1';
+  const videoDir = process.env.POS_VIDEO_DIR || path.join(__dirname, '..', '.proof', 'videos');
+  if (recording) fs.mkdirSync(path.join(videoDir, 'raw'), { recursive: true });
   const pos = new PointOfSale({ now: () => clock.date });
   if (profile) loadSample(pos, profile);
   const server = createServer(pos);
@@ -34,7 +37,7 @@ async function launch(profile, { date = new Date(2026, 9, 14, 10, 0), touch = tr
   const clip = camera ? await barcodeClip(camera) : null;
   const cameraArgs = clip ? ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', `--use-file-for-fake-video-capture=${clip}`] : [];
   const browser = await chromium.launch({ executablePath: chromiumPath(), args: ['--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', ...cameraArgs] });
-  const context = await browser.newContext({ viewport, hasTouch: touch, isMobile: false, permissions: clip ? ['camera'] : [] });
+  const context = await browser.newContext({ viewport, hasTouch: touch, isMobile: false, permissions: clip ? ['camera'] : [], ...(recording ? { recordVideo: { dir: path.join(videoDir, 'raw'), size: viewport } } : {}) });
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
@@ -43,8 +46,18 @@ async function launch(profile, { date = new Date(2026, 9, 14, 10, 0), touch = tr
   const shots = [];
   const api = {
     pos, base, page, context, browser, clock, errors,
+    async step(title) {
+      if (!recording) return;
+      await page.evaluate(({ title, profile }) => {
+        let caption = document.getElementById('pos-test-walkthrough');
+        if (!caption) { caption = document.createElement('div'); caption.id = 'pos-test-walkthrough'; document.body.append(caption); }
+        caption.style.cssText = 'position:fixed;bottom:12px;left:50%;transform:translateX(-50%);max-width:90%;z-index:99999;padding:10px 18px;background:#17272ff2;color:white;border:1px solid #71818b;border-radius:4px;font:15px/1.4 system-ui;pointer-events:none;text-align:center';
+        caption.textContent = `${title} · ${profile} test shop · demo payments`;
+      }, { title, profile });
+      await page.waitForTimeout(1600);
+    },
     // Touch-friendly tap: uses the touchscreen, as a worker's finger would.
-    tap: async selector => { const loc = page.locator(selector).first(); await loc.waitFor({ state: 'visible' }); await loc.tap(); },
+    tap: async selector => { const loc = page.locator(selector).first(); await loc.waitFor({ state: 'visible' }); await loc.tap(); if (recording) await page.waitForTimeout(300); },
     // Wait until an element's text matches (the UI updates after a network round trip).
     async see(selector, pattern, timeout = 8000) {
       try { await page.waitForFunction(([sel, src, flags]) => new RegExp(src, flags).test((document.querySelector(sel) || {}).innerText || ''), [selector, pattern.source, pattern.flags], { timeout }); }
@@ -61,7 +74,10 @@ async function launch(profile, { date = new Date(2026, 9, 14, 10, 0), touch = tr
     async shot(name) { fs.mkdirSync(proofDir, { recursive: true }); const file = path.join(proofDir, `${name}.png`); await page.screenshot({ path: file }); shots.push(file); },
     async signIn(pin) { await page.goto(base + '/'); await api.keys(pin); await api.tap('[data-testid="login-submit"]'); await page.locator('[data-testid="whoami"]').waitFor(); },
     async nav(view) { await api.tap(`[data-testid="nav-${view}"]`); await page.locator(`[data-testid="view-${view}"]`).waitFor(); },
-    async close() { await browser.close(); await new Promise(r => server.close(r)); },
+    async close() {
+      if (recording) { await page.waitForTimeout(1500); const video = page.video(); await context.close(); await video.saveAs(path.join(videoDir, `${profile}-walkthrough.webm`)); }
+      await browser.close(); await new Promise(r => server.close(r));
+    },
   };
   return api;
 }

@@ -5,6 +5,9 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
+const businessGuide = require('./business-guide');
+const businesses = require('../guide/businesses.json');
+businessGuide.validate(businesses);
 
 const root = path.resolve(__dirname, '..');
 const repo = path.resolve(root, '..', '..');
@@ -70,17 +73,19 @@ const CHAPTERS = [
   },
   {
     id: 'cash', eyebrow: 'Every business', title: 'The cash drawer and cash settings', api: null, ui: null,
-    intro: 'Cash is handled the way a till is: a counted float at the start, paid-in and paid-out entries with a reason, a blind count by bill and coin at the end, and a Z-report that shows over or short. Managers decide whether cash is accepted at all, whether prices round to the nearest 5 cents, what the quick-tender buttons are, and how much over/short a cashier may close without a manager. The cash scenarios appear under each business above.',
+    intro: 'Cash is handled the way a till is: a counted float at the start, paid-in and paid-out entries with a reason, a blind count by bill and coin at the end, and a Z-report that shows over or short. Managers decide whether cash is accepted at all, whether prices round to the nearest 5 cents, what the quick-tender buttons are, and how much over/short a cashier may close without a manager. Use the business tutorials above to try a sample sale, then follow the drawer setup below.',
     shots: [['coffee-cash-admin', 'Cash payment settings (manager)'], ['coffee-count-drawer', 'Counting the drawer with bill and coin buttons']],
   },
 ];
 
-fs.rmSync(outAssets, { recursive: true, force: true }); // drop screenshots from renamed or removed scenarios
 fs.mkdirSync(outAssets, { recursive: true });
 const haveConvert = (() => { try { execFileSync('convert', ['-version'], { stdio: 'ignore' }); return true; } catch { return false; } })();
 function publish(name) {
   const src = path.join(proof, `${name}.png`);
-  if (!fs.existsSync(src)) return null;
+  if (!fs.existsSync(src)) {
+    const ext = ['jpg', 'png'].find(ext => fs.existsSync(path.join(outAssets, `${name}.${ext}`)));
+    return ext ? `/assets/point-of-sale/${name}.${ext}` : null;
+  }
   const ext = haveConvert ? 'jpg' : 'png';
   const dest = path.join(outAssets, `${name}.${ext}`);
   if (haveConvert) execFileSync('convert', [src, '-strip', '-quality', '82', dest]); else fs.copyFileSync(src, dest);
@@ -89,7 +94,7 @@ function publish(name) {
 const url = p => `{{ '${p}' | relative_url }}`;
 
 let apiTotal = 0, uiTotal = 0;
-const body = CHAPTERS.map((c, i) => {
+const body = CHAPTERS.filter(c => !businesses.some(b => b.id === c.id)).map((c, i) => {
   const api = c.api ? titles(c.api) : [], ui = c.ui ? titles(c.ui) : [];
   apiTotal += api.length; uiTotal += ui.length;
   const shots = c.shots.map(([name, caption]) => { const p = publish(name); return p ? `<figure class="guide-shot"><a href="${url(p)}"><img src="${url(p)}" alt="${esc(caption)}" loading="lazy" width="1280" height="800"></a><figcaption>${esc(caption)}</figcaption></figure>` : ''; }).join('');
@@ -166,25 +171,25 @@ curl -X POST http://127.0.0.1:3410/api/v1/checkout_sessions/&lt;id&gt;/complete 
   -H "Authorization: Bearer $POS_KEY" -H "Idempotency-Key: order-1001" -H "Content-Type: application/json" \\
   -d '{"payment_data":{"token":"tok_visa","provider":"mock"}}'</code></pre></section>`;
 
-const toc = [['start', 'Install it and open your first shop'], ['roles', 'Who can do what'], ['screens', 'The screens'], ['cash-admin', 'Setting up cash payments'], ['self-checkout', 'Self-checkout and customer displays'], ...CHAPTERS.map(c => [c.id, c.title]), ['checkout-api', 'The open checkout API'], ['limits', 'What it does not do yet']].map(([id, t]) => `<li><a href="#${id}">${esc(t)}</a></li>`).join('');
-const guideCss = `<style>.guide-table{width:100%;border-collapse:collapse;margin:14px 0}.guide-table th,.guide-table td{text-align:left;vertical-align:top;padding:10px 12px;border-bottom:1px solid var(--line)}.guide-table th{color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em}.guide-list{padding-left:20px;line-height:1.6}.guide-list li{margin:8px 0}</style>`;
+const toc = [['start', 'Install it and open your first shop'], ['roles', 'Who can do what'], ['screens', 'The screens'], ['cash-admin', 'Setting up cash payments'], ['self-checkout', 'Self-checkout and customer displays'], ...CHAPTERS.filter(c => !businesses.some(b => b.id === c.id)).map(c => [c.id, c.title]), ['checkout-api', 'The open checkout API'], ['limits', 'What it does not do yet']].map(([id, t]) => `<li><a href="#${id}">${esc(t)}</a></li>`).join('');
 const page = `---
 layout: default
 title: Point of Sale
 permalink: /point-of-sale/
 body_class: guide
-extra_css: /assets/auto-guide.css
+extra_css: /assets/pos-guide.css?v=20261019
 description: "RobOS Point of Sale: an open-source cash register for shops, cafés and bars. Touchscreen order entry, self-checkout, inventory, cash drawer controls and an open checkout API, tested for a retail store, a coffee shop and a bar."
 ---
-${guideCss}
-<section class="hero" style="padding-bottom:24px"><div class="wrap">
-<span class="pill"><b>RobOS Point of Sale</b> · Retail, food service and bars</span>
-<h1>An open-source cash register that runs on any touchscreen</h1>
-<p class="lead">Take orders, scan items, split checks, run self-checkout, track stock and count the drawer, with no subscription and no cloud account. Your data stays in one file on your own machine. This guide is built from the project's own tests: ${apiTotal} checked against the real server and ${uiTotal} tapped through in a touch-enabled browser, across a general retail store, a coffee shop and a bar. Scan with a barcode gun or a webcam, from classic UPCs to QR codes. Screenshots come from those runs, using labelled test data.</p>
-<div class="cta"><a class="btn" href="#start">Get started</a><a class="btn btn-ghost" href="#retail">See the three sample businesses</a><a class="btn btn-ghost" href="https://github.com/nddipiazza/robos/tree/main/packages/point-of-sale">Source code</a></div>
+<section class="hero pos-intro"><div class="wrap">
+<span class="pill"><b>RobOS Point of Sale</b> · Retail, coffee shops and bars</span>
+<h1>Your counter. Your business. Your point of sale.</h1>
+<p class="lead">An open-source register for the way you work: scan a shelf item, build a custom coffee, or keep a tab open for the next round. Take orders, track stock, manage prep and count the drawer on your own computer.</p>
+<p>No subscription or cloud account. A touchscreen interface, staff permissions, customer self-checkout and an open checkout API, with your shop data stored locally.</p>
+<div class="cta"><a class="btn" href="#businesses">Find your business</a><a class="btn btn-ghost" href="#guide">RobOS Point of Sale Guide</a><a class="btn btn-ghost" href="https://github.com/nddipiazza/robos/tree/main/packages/point-of-sale">Source code</a></div>
 </div></section>
-<section style="padding-top:24px"><div class="wrap">
-<ol class="flow"><li><b>Set up</b><span>Menu, stock, team</span></li><li><b>Sell</b><span>Tap, scan or self-checkout</span></li><li><b>Get paid</b><span>Cash, card, split</span></li><li><b>Prepare</b><span>Kitchen, barista, bar</span></li><li><b>Close</b><span>Count the drawer</span></li><li><b>Review</b><span>Reports and refunds</span></li></ol>
+<section id="businesses"><div class="wrap"><p class="eyebrow">Choose your starting point</p><h2>One register, three ways to run your counter</h2><p>Each business has its own sample shop, step-by-step tutorial and short video. Try the sample, then make the menu, team and settings your own.</p><nav class="pos-jump" aria-label="Business types">${businesses.map(b => `<a href="#${b.id}">${esc(b.title)}</a>`).join('')}</nav>
+${businesses.map(businessGuide.section).join('\n')}
+<div class="pos-guide-heading" id="guide"><p class="eyebrow">Shared setup and reference</p><h2>RobOS Point of Sale Guide</h2><p>Install the app, set up your team and payments, then use the reference below for cash, scanning, self-checkout and the checkout API. Sample card payments are demonstrations; configure a real payment workflow before trading.</p></div>
 <div class="guide-layout"><nav class="guide-toc" aria-label="Guide contents"><h4>In this guide</h4><ol>${toc}</ol></nav><div class="guide-body">
 ${start}
 ${roles}
@@ -197,4 +202,9 @@ ${limits}
 </div></div></div></section>
 `;
 fs.writeFileSync(outPage, page);
-console.log(`Wrote ${path.relative(repo, outPage)} (${apiTotal} API + ${uiTotal} touchscreen scenarios) and assets in ${path.relative(repo, outAssets)}`);
+for (const b of businesses) {
+  const dir = path.join(repo, 'site', 'point-of-sale', b.id);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'index.html'), businessGuide.tutorial(b, businesses, publish));
+}
+console.log(`Wrote the Point of Sale overview, three business tutorials and assets in ${path.relative(repo, outAssets)}`);

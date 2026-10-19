@@ -12,21 +12,26 @@ test('cashier scans a barcode, taps a size for jeans, applies a promo code and t
   const b = await launch('retail');
   try {
     await b.signIn('3333');
+    await b.step('Sign in as the cashier');
     // A hardware scanner types the code and presses Enter into the always-focused scan box.
+    await b.step('Scan the item barcode');
     await b.page.fill(b.tid('scan'), barcodeOf(b, 'Classic Tee White', 'M'));
     await b.page.press(b.tid('scan'), 'Enter');
     await b.see(b.tid('lines'), /Classic Tee White · M/);
     await b.shot('retail-scan-gun');
+    await b.step('Choose a size and add it to the sale');
     await b.tap(b.tid('item-Slim Jeans'));
     await b.see(b.tid('add-to-order'), /Choose an option/);
     await b.tap(b.tid('variant-32'));
     await b.tap(b.tid('add-to-order'));
     await b.see(b.tid('subtotal'), /\$92\.00/);
+    await b.step('Apply the SAVE10 promotion');
     await b.tap(b.tid('discount-open'));
     await b.page.fill(b.tid('promo-code'), 'save10');
     await b.tap(b.tid('promo-apply'));
     await b.see(b.tid('discount'), /-\$9\.20/);
     await b.shot('retail-register-promo');
+    await b.step('Review the total and record a demo card payment');
     await b.tap(b.tid('pay'));
     await b.see(b.tid('due'), /\$89\.63/); // (92.00 - 9.20) + 8.25% tax
     await b.tap(b.tid('method-card'));
@@ -37,6 +42,7 @@ test('cashier scans a barcode, taps a size for jeans, applies a promo code and t
     await b.tap(b.tid('new-order'));
 
     // Return: the cashier cannot refund alone; a manager types their PIN on the spot.
+    await b.step('Find the sale and request a return');
     await b.nav('orders');
     await b.tap(b.tid('order-row-1'));
     await b.tap(b.tid('refund-open'));
@@ -49,6 +55,7 @@ test('cashier scans a barcode, taps a size for jeans, applies a promo code and t
     await b.tap(b.tid('pin-ok'));
     await b.seeToast(/Manager PIN not accepted/); // a cashier PIN cannot approve
     await b.tap(b.tid('refund-confirm'));
+    await b.step('Approve the return with the manager PIN');
     await b.keys('2222');
     await b.tap(b.tid('pin-ok'));
     await b.seeToast(/Refunded/);

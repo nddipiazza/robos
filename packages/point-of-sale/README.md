@@ -84,3 +84,18 @@ lib/        pos.js (catalog, inventory, auth) · orders.js · cash.js · reports
 renderer/   index.html (staff) · kiosk.html · ready.html · register.js · backoffice.js · camera.js · common.js · vendor/ (ZXing)
 tests/      *.api.test.js (HTTP, per business) · *.e2e.js (touch-driven Chromium, per business)
 ```
+
+### Business tutorials and videos
+
+The [Point of Sale introduction](https://rowbose.com/point-of-sale/) leads to separate
+[retail](https://rowbose.com/point-of-sale/retail/),
+[coffee shop](https://rowbose.com/point-of-sale/coffee/) and
+[bar](https://rowbose.com/point-of-sale/bar/) tutorials, each with its own embedded video.
+Edit `guide/businesses.json` for the tutorial steps and published YouTube IDs, then run
+`node scripts/build-guide.js` from this package. Existing screenshots are preserved;
+set `POS_PROOF_DIR` to refresh screenshots from a new test run.
+
+To record the three real sample workflows, set `POS_DEMO_RECORD=1` and `POS_VIDEO_DIR`
+when running their first browser scenarios. The recordings have step captions and
+use sample data and demo payments. Upload those files, then update the video IDs
+before regenerating the guide. The builder rejects missing or duplicate video IDs.
