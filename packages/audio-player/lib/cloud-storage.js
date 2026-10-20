@@ -99,4 +99,9 @@ async function fetchAudio(id, remotePaths, onProgress) {
   return out;
 }
 
-module.exports = { listConnections, list, fetchAudio };
+// Local directory that mirrors a remote folder in the download cache.
+function localDirFor(id, remoteDir) {
+  return cachePathFor(id, remoteDir);
+}
+
+module.exports = { listConnections, list, fetchAudio, localDirFor };
