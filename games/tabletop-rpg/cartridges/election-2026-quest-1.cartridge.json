@@ -2173,8 +2173,7 @@
         "room-nw-9",
         "room-nw-10",
         "room-se-11",
-        "room-sw-11",
-        "room-ne-12"
+        "room-sw-11"
       ],
       "rooms": [
         {
@@ -3464,22 +3463,6 @@
             ]
           ],
           "quadrant": "sw"
-        },
-        {
-          "id": "room-ne-12",
-          "name": "Room 12 (NE)",
-          "x": 20,
-          "y": 1,
-          "w": 1,
-          "h": 1,
-          "shape": "rect",
-          "tiles": [
-            [
-              20,
-              1
-            ]
-          ],
-          "quadrant": "ne"
         }
       ],
       "corridors": [
@@ -5387,7 +5370,7 @@
                   "portrait": "res://assets/election2026/mentor_george_bush_shrug.jpg",
                   "text": "Whoa nelly, Donald just hit zero Body Points! He says the dice were rigged, folks, but that golden armor is flat on the dungeon floor!",
                   "audio": "res://assets/audio/election2026/bush_death_trump.ogg",
-                  "duration": 7.0
+                  "duration": 7
                 }
               ]
             }
@@ -5445,7 +5428,7 @@
                   "useRandomDeathQuote": true,
                   "text": "Let us give hope to people in America today who have lost hope!",
                   "audio": "res://assets/audio/heroes/bernie_death_1.ogg",
-                  "duration": 5.0
+                  "duration": 5
                 },
                 {
                   "speaker": "George W. Bush (Mentor)",
@@ -5453,7 +5436,7 @@
                   "portrait": "res://assets/election2026/mentor_george_bush_shrug.jpg",
                   "text": "Dagnabbit, Bernie just collapsed in his wool mittens! Turns out the top one percent of dungeon monsters own ninety-nine percent of the combat dice!",
                   "audio": "res://assets/audio/election2026/bush_death_bernie.ogg",
-                  "duration": 7.0
+                  "duration": 7
                 }
               ]
             }

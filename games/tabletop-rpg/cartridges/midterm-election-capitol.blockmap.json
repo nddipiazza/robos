@@ -1302,22 +1302,6 @@
         ]
       ],
       "quadrant": "sw"
-    },
-    {
-      "id": "room-ne-12",
-      "name": "Room 12 (NE)",
-      "x": 20,
-      "y": 1,
-      "w": 1,
-      "h": 1,
-      "shape": "rect",
-      "tiles": [
-        [
-          20,
-          1
-        ]
-      ],
-      "quadrant": "ne"
     }
   ],
   "corridors": [
