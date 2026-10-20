@@ -8,9 +8,9 @@
     "gameType": "tabletop",
     "genre": "Tabletop Dungeon Crawler",
     "ruleset": "heroquest",
-    "description": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office—defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
+    "description": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office\u2014defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
     "coverColor": "#0a0e17",
-    "icon": "🛡️",
+    "icon": "\ud83d\udee1\ufe0f",
     "mapCount": 1,
     "heroCount": 4,
     "monsterCount": 17,
@@ -221,6 +221,20 @@
           {
             "text": "Uhh... folks, ouch!",
             "audio": "res://assets/audio/heroes/obama_react_6.ogg"
+          }
+        ],
+        "death": [
+          {
+            "audio": "res://assets/audio/heroes/obama_death_1.ogg",
+            "quote": "Uhh... let me be clear... even in defeat... hope... never dies."
+          },
+          {
+            "audio": "res://assets/audio/heroes/obama_death_2.ogg",
+            "quote": "Uhh... folks... carry on... the audacity... of hope... without me."
+          },
+          {
+            "audio": "res://assets/audio/heroes/obama_death_3.ogg",
+            "quote": "Uhh... tell Michelle... I fought... for change... until the last roll."
           }
         ]
       },
@@ -440,7 +454,7 @@
             "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
           },
           {
-            "text": "I took two cognitive tests — I aced them!",
+            "text": "I took two cognitive tests \u2014 I aced them!",
             "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
           },
           {
@@ -452,7 +466,7 @@
             "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
           },
           {
-            "text": "I'm not just MAGA — I'm Dark MAGA!",
+            "text": "I'm not just MAGA \u2014 I'm Dark MAGA!",
             "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
           },
           {
@@ -589,6 +603,20 @@
             "text": "This is a persecution!",
             "audio": "res://assets/audio/heroes/trump_react_6.ogg"
           }
+        ],
+        "death": [
+          {
+            "audio": "res://assets/audio/heroes/trump_death_1.ogg",
+            "quote": "This was never supposed to happen in America!"
+          },
+          {
+            "audio": "res://assets/audio/heroes/trump_death_2.ogg",
+            "quote": "We'll be appealing this decision!"
+          },
+          {
+            "audio": "res://assets/audio/heroes/trump_death_3.ogg",
+            "quote": "And this is what's happening in our country, and it's a shame!"
+          }
         ]
       },
       "robos:audioLines": {
@@ -606,7 +634,7 @@
             "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
           },
           {
-            "text": "I took two cognitive tests — I aced them!",
+            "text": "I took two cognitive tests \u2014 I aced them!",
             "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
           },
           {
@@ -618,7 +646,7 @@
             "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
           },
           {
-            "text": "I'm not just MAGA — I'm Dark MAGA!",
+            "text": "I'm not just MAGA \u2014 I'm Dark MAGA!",
             "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
           },
           {
@@ -793,7 +821,7 @@
           "name": "Water of Healing",
           "element": "water",
           "category": "Base Game",
-          "icon": "💧",
+          "icon": "\ud83d\udca7",
           "description": "Restores up to 4 lost Body Points to any Hero.",
           "effect": "heal-bp",
           "val": 4
@@ -804,7 +832,7 @@
           "name": "Sleep",
           "element": "water",
           "category": "Base Game",
-          "icon": "💤",
+          "icon": "\ud83d\udca4",
           "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
           "effect": "status-sleep",
           "val": 1
@@ -815,7 +843,7 @@
           "name": "Veil of Mist",
           "element": "water",
           "category": "Base Game",
-          "icon": "🌫️",
+          "icon": "\ud83c\udf2b\ufe0f",
           "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
           "effect": "status-stealth",
           "val": 1
@@ -989,6 +1017,20 @@
           {
             "text": "Thank you very much!",
             "audio": "res://assets/audio/heroes/hillary_react_6.ogg"
+          }
+        ],
+        "death": [
+          {
+            "audio": "res://assets/audio/heroes/hillary_death_1.ogg",
+            "quote": "Not only dead broke, but in debt! We had no money when we got there and we struggled!"
+          },
+          {
+            "audio": "res://assets/audio/heroes/hillary_death_2.ogg",
+            "quote": "What difference, at this point, does it make?!"
+          },
+          {
+            "audio": "res://assets/audio/heroes/hillary_death_3.ogg",
+            "quote": "We came, we saw, he died!"
           }
         ]
       },
@@ -1194,7 +1236,7 @@
           "name": "Heal Body",
           "element": "earth",
           "category": "Base Game",
-          "icon": "💖",
+          "icon": "\ud83d\udc96",
           "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
           "effect": "heal-bp",
           "val": 4
@@ -1205,7 +1247,7 @@
           "name": "Pass Through Rock",
           "element": "earth",
           "category": "Base Game",
-          "icon": "🧱",
+          "icon": "\ud83e\uddf1",
           "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
           "effect": "phase-walls",
           "val": 1
@@ -1216,7 +1258,7 @@
           "name": "Rock Skin",
           "element": "earth",
           "category": "Base Game",
-          "icon": "🛡️",
+          "icon": "\ud83d\udee1\ufe0f",
           "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
           "effect": "buff-def",
           "val": 1
@@ -1227,7 +1269,7 @@
           "name": "Ball of Flame",
           "element": "fire",
           "category": "Base Game",
-          "icon": "☄️",
+          "icon": "\u2604\ufe0f",
           "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
           "effect": "damage-bp",
           "val": 2
@@ -1238,7 +1280,7 @@
           "name": "Courage",
           "element": "fire",
           "category": "Base Game",
-          "icon": "🦁",
+          "icon": "\ud83e\udd81",
           "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
           "effect": "buff-atk",
           "val": 2
@@ -1249,7 +1291,7 @@
           "name": "Fire of Wrath",
           "element": "fire",
           "category": "Base Game",
-          "icon": "🔥",
+          "icon": "\ud83d\udd25",
           "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
           "effect": "damage-bp",
           "val": 1
@@ -1260,7 +1302,7 @@
           "name": "Genie",
           "element": "air",
           "category": "Base Game",
-          "icon": "🧞",
+          "icon": "\ud83e\uddde",
           "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
           "effect": "summon-attack",
           "val": 5
@@ -1271,7 +1313,7 @@
           "name": "Swift Wind",
           "element": "air",
           "category": "Base Game",
-          "icon": "💨",
+          "icon": "\ud83d\udca8",
           "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
           "effect": "buff-move",
           "val": 2
@@ -1282,7 +1324,7 @@
           "name": "Tempest",
           "element": "air",
           "category": "Base Game",
-          "icon": "🌪️",
+          "icon": "\ud83c\udf2a\ufe0f",
           "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
           "effect": "status-freeze",
           "val": 1
@@ -1456,6 +1498,20 @@
           {
             "text": "Out on the street!",
             "audio": "res://assets/audio/heroes/bernie_react_6.ogg"
+          }
+        ],
+        "death": [
+          {
+            "audio": "res://assets/audio/heroes/bernie_death_1.ogg",
+            "quote": "Let us give hope to people in America today who have lost hope!"
+          },
+          {
+            "audio": "res://assets/audio/heroes/bernie_death_2.ogg",
+            "quote": "They're starving to death right now!"
+          },
+          {
+            "audio": "res://assets/audio/heroes/bernie_death_3.ogg",
+            "quote": "The rich get richer, the poor get poorer, and ordinary Americans are shut out of the political system!"
           }
         ]
       },
@@ -1635,7 +1691,7 @@
       "monsterType": "campaign-volunteer",
       "category": "Midterms 2026",
       "monsterArchetype": "Goblin",
-      "icon": "📋",
+      "icon": "\ud83d\udccb",
       "tokenColor": "#16a34a",
       "bodyPoints": 1,
       "mindPoints": 1,
@@ -1660,7 +1716,7 @@
       "monsterType": "partisan-enforcer",
       "category": "Midterms 2026",
       "monsterArchetype": "Dread Warrior",
-      "icon": "⚔️",
+      "icon": "\u2694\ufe0f",
       "tokenColor": "#dc2626",
       "bodyPoints": 3,
       "mindPoints": 3,
@@ -1685,7 +1741,7 @@
       "monsterType": "career-politician",
       "category": "Midterms 2026",
       "monsterArchetype": "Skeleton",
-      "icon": "🏛️",
+      "icon": "\ud83c\udfdb\ufe0f",
       "tokenColor": "#94a3b8",
       "bodyPoints": 1,
       "mindPoints": 0,
@@ -1706,11 +1762,11 @@
     "mon-talarixon-4": {
       "id": "mon-talarixon-4",
       "slug": "talarixon-mon-talarixon-4",
-      "name": "Talarixon (Talarico + Paxton · Texas Hydra)",
+      "name": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra)",
       "monsterType": "talarixon",
       "category": "Midterms 2026",
       "monsterArchetype": "Texas Hydra",
-      "icon": "🐍",
+      "icon": "\ud83d\udc0d",
       "tokenColor": "#b91c1c",
       "bodyPoints": 6,
       "mindPoints": 5,
@@ -1733,11 +1789,11 @@
     "mon-brownsted-5": {
       "id": "mon-brownsted-5",
       "slug": "brownsted-mon-brownsted-5",
-      "name": "Brownsted (Brown + Husted · Ohio Hydra)",
+      "name": "Brownsted (Brown + Husted \u00b7 Ohio Hydra)",
       "monsterType": "brownsted",
       "category": "Midterms 2026",
       "monsterArchetype": "Ohio Hydra",
-      "icon": "🐉",
+      "icon": "\ud83d\udc09",
       "tokenColor": "#9333ea",
       "bodyPoints": 8,
       "mindPoints": 5,
@@ -1764,7 +1820,7 @@
       "monsterType": "spin-doctor",
       "category": "Midterms 2026",
       "monsterArchetype": "Chaos Sorcerer",
-      "icon": "🌀",
+      "icon": "\ud83c\udf00",
       "tokenColor": "#0284c7",
       "bodyPoints": 3,
       "mindPoints": 5,
@@ -1791,7 +1847,7 @@
       "monsterType": "bureaucrat",
       "category": "Midterms 2026",
       "monsterArchetype": "Zombie",
-      "icon": "📎",
+      "icon": "\ud83d\udcce",
       "tokenColor": "#475569",
       "bodyPoints": 1,
       "mindPoints": 0,
@@ -1816,7 +1872,7 @@
       "monsterType": "bureaucrat",
       "category": "Midterms 2026",
       "monsterArchetype": "Zombie",
-      "icon": "📎",
+      "icon": "\ud83d\udcce",
       "tokenColor": "#475569",
       "bodyPoints": 1,
       "mindPoints": 0,
@@ -1841,7 +1897,7 @@
       "monsterType": "super-pac-demon",
       "category": "Midterms 2026",
       "monsterArchetype": "Gargoyle",
-      "icon": "😈",
+      "icon": "\ud83d\ude08",
       "tokenColor": "#7c3aed",
       "bodyPoints": 3,
       "mindPoints": 4,
@@ -1862,11 +1918,11 @@
     "mon-el-rogers-10": {
       "id": "mon-el-rogers-10",
       "slug": "el-rogers-mon-el-rogers-10",
-      "name": "El-Rogers (El-Sayed + Rogers · Michigan Hydra)",
+      "name": "El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra)",
       "monsterType": "el-rogers",
       "category": "Midterms 2026",
       "monsterArchetype": "Michigan Hydra",
-      "icon": "🐲",
+      "icon": "\ud83d\udc32",
       "tokenColor": "#1d4ed8",
       "bodyPoints": 7,
       "mindPoints": 4,
@@ -1893,7 +1949,7 @@
       "monsterType": "lobbyist",
       "category": "Midterms 2026",
       "monsterArchetype": "Mummy",
-      "icon": "💼",
+      "icon": "\ud83d\udcbc",
       "tokenColor": "#d97706",
       "bodyPoints": 2,
       "mindPoints": 0,
@@ -1918,7 +1974,7 @@
       "monsterType": "political-operative",
       "category": "Midterms 2026",
       "monsterArchetype": "Orc",
-      "icon": "🕵️",
+      "icon": "\ud83d\udd75\ufe0f",
       "tokenColor": "#ca8a04",
       "bodyPoints": 1,
       "mindPoints": 2,
@@ -1943,7 +1999,7 @@
       "monsterType": "spin-doctor",
       "category": "Midterms 2026",
       "monsterArchetype": "Chaos Sorcerer",
-      "icon": "🌀",
+      "icon": "\ud83c\udf00",
       "tokenColor": "#0284c7",
       "bodyPoints": 3,
       "mindPoints": 5,
@@ -1970,7 +2026,7 @@
       "monsterType": "spin-doctor",
       "category": "Midterms 2026",
       "monsterArchetype": "Chaos Sorcerer",
-      "icon": "🎙️",
+      "icon": "\ud83c\udf99\ufe0f",
       "tokenColor": "#db2777",
       "bodyPoints": 4,
       "mindPoints": 6,
@@ -1997,7 +2053,7 @@
       "monsterType": "career-politician",
       "category": "Midterms 2026",
       "monsterArchetype": "Skeleton",
-      "icon": "🐢",
+      "icon": "\ud83d\udc22",
       "tokenColor": "#475569",
       "bodyPoints": 5,
       "mindPoints": 5,
@@ -2024,7 +2080,7 @@
       "monsterType": "political-operative",
       "category": "Midterms 2026",
       "monsterArchetype": "Orc",
-      "icon": "🥃",
+      "icon": "\ud83e\udd43",
       "tokenColor": "#b91c1c",
       "bodyPoints": 4,
       "mindPoints": 4,
@@ -2051,7 +2107,7 @@
       "monsterType": "spin-doctor",
       "category": "Midterms 2026",
       "monsterArchetype": "Chaos Sorcerer",
-      "icon": "🍷",
+      "icon": "\ud83c\udf77",
       "tokenColor": "#1d4ed8",
       "bodyPoints": 4,
       "mindPoints": 5,
@@ -3963,13 +4019,13 @@
           ],
           "onceOnly": true,
           "movie": "res://assets/movies/election_2026_intro_movie.ogv",
-          "narrative": "Mentor George W. Bush summons you to the Basement of Strategery to stop the Elite 1% by slaying the three Campaign Hydras (Talarixon, El-Rogers, and Brownsted)—though he has no idea how or if it will work! Meanwhile, from the foggy mist, girlfriends Marjorie Taylor Greene and AOC share canned-goods prepper advice for the oncoming AI Superintelligence Apocalypse!",
+          "narrative": "Mentor George W. Bush summons you to the Basement of Strategery to stop the Elite 1% by slaying the three Campaign Hydras (Talarixon, El-Rogers, and Brownsted)\u2014though he has no idea how or if it will work! Meanwhile, from the foggy mist, girlfriends Marjorie Taylor Greene and AOC share canned-goods prepper advice for the oncoming AI Superintelligence Apocalypse!",
           "hidden": false,
           "actions": [
             {
               "type": "play_movie",
               "moviePath": "res://assets/movies/election_2026_intro_movie.ogv",
-              "title": "🎬 Prologue: Mentor George W. Bush & The Mist Oracles",
+              "title": "\ud83c\udfac Prologue: Mentor George W. Bush & The Mist Oracles",
               "canSkip": true
             },
             {
@@ -4006,8 +4062,8 @@
         },
         {
           "id": "trigger-oval-office-talarixon",
-          "name": "Oval Office — Talarixon & The San Antonio Diesel Plot",
-          "title": "Oval Office — Talarixon & The San Antonio Diesel Plot",
+          "name": "Oval Office \u2014 Talarixon & The San Antonio Diesel Plot",
+          "title": "Oval Office \u2014 Talarixon & The San Antonio Diesel Plot",
           "marker": "Hydra 1",
           "banner": "OVAL OFFICE [Hydra 1]",
           "event": "on_room_entered",
@@ -4021,13 +4077,13 @@
           ],
           "onceOnly": true,
           "movie": "res://assets/movies/oval_office_texas_hydra_movie.ogv",
-          "narrative": "Inside the Oval Office, the two heads of Talarixon (Talarico + Paxton · Texas Hydra) are debating converting the entire city of San Antonio into crude oil to lower Texas diesel prices before Donald Trump barges in!",
+          "narrative": "Inside the Oval Office, the two heads of Talarixon (Talarico + Paxton \u00b7 Texas Hydra) are debating converting the entire city of San Antonio into crude oil to lower Texas diesel prices before Donald Trump barges in!",
           "hidden": false,
           "actions": [
             {
               "type": "play_movie",
               "moviePath": "res://assets/movies/oval_office_texas_hydra_movie.ogv",
-              "title": "🎬 Oval Office: The San Antonio Diesel Plot & Donald Trump",
+              "title": "\ud83c\udfac Oval Office: The San Antonio Diesel Plot & Donald Trump",
               "canSkip": true
             },
             {
@@ -4053,7 +4109,7 @@
                 },
                 {
                   "speaker": "trump",
-                  "text": "They weaponized the government! They just gave me a 355 million dollar fine in New York — no victims, no defaults, the banks made money and testified for me!",
+                  "text": "They weaponized the government! They just gave me a 355 million dollar fine in New York \u2014 no victims, no defaults, the banks made money and testified for me!",
                   "audio": "res://assets/audio/election2026/trump_clip_355m_fine.ogg",
                   "timeout": 1.2
                 },
@@ -4069,9 +4125,9 @@
         },
         {
           "id": "trigger-talarixon-defeated",
-          "name": "Talarixon Slain — San Antonio Saved from the Refinery",
-          "title": "Talarixon Slain — San Antonio Saved from the Refinery",
-          "marker": "Hydra 1✓",
+          "name": "Talarixon Slain \u2014 San Antonio Saved from the Refinery",
+          "title": "Talarixon Slain \u2014 San Antonio Saved from the Refinery",
+          "marker": "Hydra 1\u2713",
           "banner": "HYDRA SLAIN [Hydra 1]",
           "event": "on_monster_killed",
           "target": "mon-talarixon-4",
@@ -4106,8 +4162,8 @@
         },
         {
           "id": "trigger-se-cloakroom-el-rogers",
-          "name": "Senate Cloakroom — El-Rogers (Michigan Hydra) & Mist Oracles",
-          "title": "Senate Cloakroom — El-Rogers (Michigan Hydra) & Mist Oracles",
+          "name": "Senate Cloakroom \u2014 El-Rogers (Michigan Hydra) & Mist Oracles",
+          "title": "Senate Cloakroom \u2014 El-Rogers (Michigan Hydra) & Mist Oracles",
           "marker": "Hydra 2",
           "banner": "SENATE CLOAKROOM [Hydra 2]",
           "event": "on_room_entered",
@@ -4121,7 +4177,7 @@
           ],
           "onceOnly": true,
           "movie": "",
-          "narrative": "In the Senate Cloakroom lurks the second Campaign Hydra—El-Rogers (El-Sayed + Rogers · Michigan Hydra)—while Marjorie Taylor Greene and AOC appear in the mist with canned-goods tips!",
+          "narrative": "In the Senate Cloakroom lurks the second Campaign Hydra\u2014El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra)\u2014while Marjorie Taylor Greene and AOC appear in the mist with canned-goods tips!",
           "hidden": false,
           "actions": [
             {
@@ -4169,9 +4225,9 @@
         },
         {
           "id": "trigger-el-rogers-defeated",
-          "name": "El-Rogers Slain — Michigan Hydra Down",
-          "title": "El-Rogers Slain — Michigan Hydra Down",
-          "marker": "Hydra 2✓",
+          "name": "El-Rogers Slain \u2014 Michigan Hydra Down",
+          "title": "El-Rogers Slain \u2014 Michigan Hydra Down",
+          "marker": "Hydra 2\u2713",
           "banner": "HYDRA SLAIN [Hydra 2]",
           "event": "on_monster_killed",
           "target": "mon-el-rogers-10",
@@ -4211,8 +4267,8 @@
         },
         {
           "id": "trigger-sw-supreme-court-brownsted",
-          "name": "Supreme Court Chamber — Brownsted (Ohio Hydra) & Bunker Rotation",
-          "title": "Supreme Court Chamber — Brownsted (Ohio Hydra) & Bunker Rotation",
+          "name": "Supreme Court Chamber \u2014 Brownsted (Ohio Hydra) & Bunker Rotation",
+          "title": "Supreme Court Chamber \u2014 Brownsted (Ohio Hydra) & Bunker Rotation",
           "marker": "Hydra 3",
           "banner": "SUPREME COURT [Hydra 3]",
           "event": "on_room_entered",
@@ -4226,7 +4282,7 @@
           ],
           "onceOnly": true,
           "movie": "",
-          "narrative": "Coiled around the Supreme Court bench is Brownsted (Brown + Husted · Ohio Hydra), hoarding pallets of Super PAC gold and emergency canned goods!",
+          "narrative": "Coiled around the Supreme Court bench is Brownsted (Brown + Husted \u00b7 Ohio Hydra), hoarding pallets of Super PAC gold and emergency canned goods!",
           "hidden": false,
           "actions": [
             {
@@ -4274,9 +4330,9 @@
         },
         {
           "id": "trigger-brownsted-defeated",
-          "name": "Brownsted Slain — The Ohio Hydra Falls!",
-          "title": "Brownsted Slain — The Ohio Hydra Falls!",
-          "marker": "Hydra 3✓",
+          "name": "Brownsted Slain \u2014 The Ohio Hydra Falls!",
+          "title": "Brownsted Slain \u2014 The Ohio Hydra Falls!",
+          "marker": "Hydra 3\u2713",
           "banner": "HYDRA SLAIN [Hydra 3]",
           "event": "on_monster_killed",
           "target": "mon-brownsted-5",
@@ -4311,8 +4367,8 @@
         },
         {
           "id": "trigger-briefing-room-katie",
-          "name": "The Daily Gaslight Briefing — Katie Zacharia",
-          "title": "The Daily Gaslight Briefing — Katie Zacharia",
+          "name": "The Daily Gaslight Briefing \u2014 Katie Zacharia",
+          "title": "The Daily Gaslight Briefing \u2014 Katie Zacharia",
           "marker": "Note A",
           "banner": "QUEST NOTE [Note A]",
           "event": "on_room_entered",
@@ -4395,8 +4451,8 @@
         },
         {
           "id": "trigger-committee-chamber-mitch",
-          "name": "The Eternal Filibuster — Mitch McConnell",
-          "title": "The Eternal Filibuster — Mitch McConnell",
+          "name": "The Eternal Filibuster \u2014 Mitch McConnell",
+          "title": "The Eternal Filibuster \u2014 Mitch McConnell",
           "marker": "Note C",
           "banner": "QUEST NOTE [Note C]",
           "event": "on_room_entered",
@@ -4479,8 +4535,8 @@
         },
         {
           "id": "trigger-war-room-vance-kamala",
-          "name": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
-          "title": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
+          "name": "Bipartisan Open Bar in the War Room \u2014 JD Vance & Kamala Harris",
+          "title": "Bipartisan Open Bar in the War Room \u2014 JD Vance & Kamala Harris",
           "marker": "Note E",
           "banner": "QUEST NOTE [Note E]",
           "event": "on_room_entered",
@@ -4612,13 +4668,13 @@
           ],
           "onceOnly": true,
           "movie": "res://assets/movies/election_2026_intro_movie.ogv",
-          "narrative": "Mentor George W. Bush summons you to the Basement of Strategery to stop the Elite 1% by slaying the three Campaign Hydras (Talarixon, El-Rogers, and Brownsted)—though he has no idea how or if it will work! Meanwhile, from the foggy mist, girlfriends Marjorie Taylor Greene and AOC share canned-goods prepper advice for the oncoming AI Superintelligence Apocalypse!",
+          "narrative": "Mentor George W. Bush summons you to the Basement of Strategery to stop the Elite 1% by slaying the three Campaign Hydras (Talarixon, El-Rogers, and Brownsted)\u2014though he has no idea how or if it will work! Meanwhile, from the foggy mist, girlfriends Marjorie Taylor Greene and AOC share canned-goods prepper advice for the oncoming AI Superintelligence Apocalypse!",
           "hidden": false,
           "actions": [
             {
               "type": "play_movie",
               "moviePath": "res://assets/movies/election_2026_intro_movie.ogv",
-              "title": "🎬 Prologue: Mentor George W. Bush & The Mist Oracles",
+              "title": "\ud83c\udfac Prologue: Mentor George W. Bush & The Mist Oracles",
               "canSkip": true
             },
             {
@@ -4655,8 +4711,8 @@
         },
         {
           "id": "trigger-oval-office-talarixon",
-          "name": "Oval Office — Talarixon & The San Antonio Diesel Plot",
-          "title": "Oval Office — Talarixon & The San Antonio Diesel Plot",
+          "name": "Oval Office \u2014 Talarixon & The San Antonio Diesel Plot",
+          "title": "Oval Office \u2014 Talarixon & The San Antonio Diesel Plot",
           "marker": "Hydra 1",
           "banner": "OVAL OFFICE [Hydra 1]",
           "event": "on_room_entered",
@@ -4670,13 +4726,13 @@
           ],
           "onceOnly": true,
           "movie": "res://assets/movies/oval_office_texas_hydra_movie.ogv",
-          "narrative": "Inside the Oval Office, the two heads of Talarixon (Talarico + Paxton · Texas Hydra) are debating converting the entire city of San Antonio into crude oil to lower Texas diesel prices before Donald Trump barges in!",
+          "narrative": "Inside the Oval Office, the two heads of Talarixon (Talarico + Paxton \u00b7 Texas Hydra) are debating converting the entire city of San Antonio into crude oil to lower Texas diesel prices before Donald Trump barges in!",
           "hidden": false,
           "actions": [
             {
               "type": "play_movie",
               "moviePath": "res://assets/movies/oval_office_texas_hydra_movie.ogv",
-              "title": "🎬 Oval Office: The San Antonio Diesel Plot & Donald Trump",
+              "title": "\ud83c\udfac Oval Office: The San Antonio Diesel Plot & Donald Trump",
               "canSkip": true
             },
             {
@@ -4702,7 +4758,7 @@
                 },
                 {
                   "speaker": "trump",
-                  "text": "They weaponized the government! They just gave me a 355 million dollar fine in New York — no victims, no defaults, the banks made money and testified for me!",
+                  "text": "They weaponized the government! They just gave me a 355 million dollar fine in New York \u2014 no victims, no defaults, the banks made money and testified for me!",
                   "audio": "res://assets/audio/election2026/trump_clip_355m_fine.ogg",
                   "timeout": 1.2
                 },
@@ -4718,9 +4774,9 @@
         },
         {
           "id": "trigger-talarixon-defeated",
-          "name": "Talarixon Slain — San Antonio Saved from the Refinery",
-          "title": "Talarixon Slain — San Antonio Saved from the Refinery",
-          "marker": "Hydra 1✓",
+          "name": "Talarixon Slain \u2014 San Antonio Saved from the Refinery",
+          "title": "Talarixon Slain \u2014 San Antonio Saved from the Refinery",
+          "marker": "Hydra 1\u2713",
           "banner": "HYDRA SLAIN [Hydra 1]",
           "event": "on_monster_killed",
           "target": "mon-talarixon-4",
@@ -4755,8 +4811,8 @@
         },
         {
           "id": "trigger-se-cloakroom-el-rogers",
-          "name": "Senate Cloakroom — El-Rogers (Michigan Hydra) & Mist Oracles",
-          "title": "Senate Cloakroom — El-Rogers (Michigan Hydra) & Mist Oracles",
+          "name": "Senate Cloakroom \u2014 El-Rogers (Michigan Hydra) & Mist Oracles",
+          "title": "Senate Cloakroom \u2014 El-Rogers (Michigan Hydra) & Mist Oracles",
           "marker": "Hydra 2",
           "banner": "SENATE CLOAKROOM [Hydra 2]",
           "event": "on_room_entered",
@@ -4770,7 +4826,7 @@
           ],
           "onceOnly": true,
           "movie": "",
-          "narrative": "In the Senate Cloakroom lurks the second Campaign Hydra—El-Rogers (El-Sayed + Rogers · Michigan Hydra)—while Marjorie Taylor Greene and AOC appear in the mist with canned-goods tips!",
+          "narrative": "In the Senate Cloakroom lurks the second Campaign Hydra\u2014El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra)\u2014while Marjorie Taylor Greene and AOC appear in the mist with canned-goods tips!",
           "hidden": false,
           "actions": [
             {
@@ -4818,9 +4874,9 @@
         },
         {
           "id": "trigger-el-rogers-defeated",
-          "name": "El-Rogers Slain — Michigan Hydra Down",
-          "title": "El-Rogers Slain — Michigan Hydra Down",
-          "marker": "Hydra 2✓",
+          "name": "El-Rogers Slain \u2014 Michigan Hydra Down",
+          "title": "El-Rogers Slain \u2014 Michigan Hydra Down",
+          "marker": "Hydra 2\u2713",
           "banner": "HYDRA SLAIN [Hydra 2]",
           "event": "on_monster_killed",
           "target": "mon-el-rogers-10",
@@ -4860,8 +4916,8 @@
         },
         {
           "id": "trigger-sw-supreme-court-brownsted",
-          "name": "Supreme Court Chamber — Brownsted (Ohio Hydra) & Bunker Rotation",
-          "title": "Supreme Court Chamber — Brownsted (Ohio Hydra) & Bunker Rotation",
+          "name": "Supreme Court Chamber \u2014 Brownsted (Ohio Hydra) & Bunker Rotation",
+          "title": "Supreme Court Chamber \u2014 Brownsted (Ohio Hydra) & Bunker Rotation",
           "marker": "Hydra 3",
           "banner": "SUPREME COURT [Hydra 3]",
           "event": "on_room_entered",
@@ -4875,7 +4931,7 @@
           ],
           "onceOnly": true,
           "movie": "",
-          "narrative": "Coiled around the Supreme Court bench is Brownsted (Brown + Husted · Ohio Hydra), hoarding pallets of Super PAC gold and emergency canned goods!",
+          "narrative": "Coiled around the Supreme Court bench is Brownsted (Brown + Husted \u00b7 Ohio Hydra), hoarding pallets of Super PAC gold and emergency canned goods!",
           "hidden": false,
           "actions": [
             {
@@ -4923,9 +4979,9 @@
         },
         {
           "id": "trigger-brownsted-defeated",
-          "name": "Brownsted Slain — The Ohio Hydra Falls!",
-          "title": "Brownsted Slain — The Ohio Hydra Falls!",
-          "marker": "Hydra 3✓",
+          "name": "Brownsted Slain \u2014 The Ohio Hydra Falls!",
+          "title": "Brownsted Slain \u2014 The Ohio Hydra Falls!",
+          "marker": "Hydra 3\u2713",
           "banner": "HYDRA SLAIN [Hydra 3]",
           "event": "on_monster_killed",
           "target": "mon-brownsted-5",
@@ -4960,8 +5016,8 @@
         },
         {
           "id": "trigger-briefing-room-katie",
-          "name": "The Daily Gaslight Briefing — Katie Zacharia",
-          "title": "The Daily Gaslight Briefing — Katie Zacharia",
+          "name": "The Daily Gaslight Briefing \u2014 Katie Zacharia",
+          "title": "The Daily Gaslight Briefing \u2014 Katie Zacharia",
           "marker": "Note A",
           "banner": "QUEST NOTE [Note A]",
           "event": "on_room_entered",
@@ -5044,8 +5100,8 @@
         },
         {
           "id": "trigger-committee-chamber-mitch",
-          "name": "The Eternal Filibuster — Mitch McConnell",
-          "title": "The Eternal Filibuster — Mitch McConnell",
+          "name": "The Eternal Filibuster \u2014 Mitch McConnell",
+          "title": "The Eternal Filibuster \u2014 Mitch McConnell",
           "marker": "Note C",
           "banner": "QUEST NOTE [Note C]",
           "event": "on_room_entered",
@@ -5128,8 +5184,8 @@
         },
         {
           "id": "trigger-war-room-vance-kamala",
-          "name": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
-          "title": "Bipartisan Open Bar in the War Room — JD Vance & Kamala Harris",
+          "name": "Bipartisan Open Bar in the War Room \u2014 JD Vance & Kamala Harris",
+          "title": "Bipartisan Open Bar in the War Room \u2014 JD Vance & Kamala Harris",
           "marker": "Note E",
           "banner": "QUEST NOTE [Note E]",
           "event": "on_room_entered",
@@ -5252,7 +5308,7 @@
       "campaign": "Election 2026",
       "title": "Quest 1: Battle for the Hill",
       "introMovie": "res://assets/movies/election_2026_intro_movie.ogv",
-      "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office—defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
+      "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office\u2014defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
       "goldReward": 150,
       "completed": false,
       "mapConfigId": "midterm-election-capitol",
@@ -5269,6 +5325,140 @@
         "Slay Talarixon (Texas Hydra) in the Oval Office.",
         "Slay El-Rogers (Michigan Hydra) in the Senate Cloakroom.",
         "Slay Brownsted (Ohio Hydra) in the Supreme Court Chamber."
+      ],
+      "triggers": [
+        {
+          "id": "trigger-obama-fallen",
+          "event": "on_hero_killed",
+          "targetId": "obama",
+          "once": true,
+          "title": "BARACK OBAMA HAS FALLEN!",
+          "narrative": "",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Barack Obama (Fallen)",
+                  "speakerColor": "#ef5350",
+                  "portrait": "res://assets/hero_cards/card_bg_obama.png",
+                  "heroId": "obama",
+                  "useRandomDeathQuote": true,
+                  "text": "Uhh... let me be clear... even in defeat... hope... never dies.",
+                  "audio": "res://assets/audio/heroes/obama_death_1.ogg",
+                  "duration": 5.5
+                },
+                {
+                  "speaker": "George W. Bush (Mentor)",
+                  "speakerColor": "#ffd54f",
+                  "portrait": "res://assets/election2026/mentor_george_bush_shrug.jpg",
+                  "text": "Heh... well heck, Barack just ran completely outta Body Points! Somebody get that man a teleprompter and a healing potion!",
+                  "audio": "res://assets/audio/election2026/bush_death_obama.ogg",
+                  "duration": 6.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-trump-fallen",
+          "event": "on_hero_killed",
+          "targetId": "trump",
+          "once": true,
+          "title": "DONALD TRUMP HAS FALLEN!",
+          "narrative": "",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Donald Trump (Fallen)",
+                  "speakerColor": "#ef5350",
+                  "portrait": "res://assets/hero_cards/card_bg_trump.png",
+                  "heroId": "trump",
+                  "useRandomDeathQuote": true,
+                  "text": "This was never supposed to happen in America! We'll be appealing this decision!",
+                  "audio": "res://assets/audio/heroes/trump_death_1.ogg",
+                  "duration": 4.5
+                },
+                {
+                  "speaker": "George W. Bush (Mentor)",
+                  "speakerColor": "#ffd54f",
+                  "portrait": "res://assets/election2026/mentor_george_bush_shrug.jpg",
+                  "text": "Whoa nelly, Donald just hit zero Body Points! He says the dice were rigged, folks, but that golden armor is flat on the dungeon floor!",
+                  "audio": "res://assets/audio/election2026/bush_death_trump.ogg",
+                  "duration": 7.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-hillary-fallen",
+          "event": "on_hero_killed",
+          "targetId": "hillary-clinton",
+          "once": true,
+          "title": "HILLARY CLINTON HAS FALLEN!",
+          "narrative": "",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Hillary Clinton (Fallen)",
+                  "speakerColor": "#ef5350",
+                  "portrait": "res://assets/hero_cards/card_bg_hillary_clinton.png",
+                  "heroId": "hillary-clinton",
+                  "useRandomDeathQuote": true,
+                  "text": "What difference, at this point, does it make?!",
+                  "audio": "res://assets/audio/heroes/hillary_death_2.ogg",
+                  "duration": 4.5
+                },
+                {
+                  "speaker": "George W. Bush (Mentor)",
+                  "speakerColor": "#ffd54f",
+                  "portrait": "res://assets/election2026/mentor_george_bush_shrug.jpg",
+                  "text": "uh-oh... Hillary just got wiped right off the board! Somebody better bleach that server before Zargon reads her spell scrolls!",
+                  "audio": "res://assets/audio/election2026/bush_death_hillary.ogg",
+                  "duration": 6.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-bernie-fallen",
+          "event": "on_hero_killed",
+          "targetId": "bernie-sanders",
+          "once": true,
+          "title": "BERNIE SANDERS HAS FALLEN!",
+          "narrative": "",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Bernie Sanders (Fallen)",
+                  "speakerColor": "#ef5350",
+                  "portrait": "res://assets/hero_cards/card_bg_bernie_sanders.png",
+                  "heroId": "bernie-sanders",
+                  "useRandomDeathQuote": true,
+                  "text": "Let us give hope to people in America today who have lost hope!",
+                  "audio": "res://assets/audio/heroes/bernie_death_1.ogg",
+                  "duration": 5.0
+                },
+                {
+                  "speaker": "George W. Bush (Mentor)",
+                  "speakerColor": "#ffd54f",
+                  "portrait": "res://assets/election2026/mentor_george_bush_shrug.jpg",
+                  "text": "Dagnabbit, Bernie just collapsed in his wool mittens! Turns out the top one percent of dungeon monsters own ninety-nine percent of the combat dice!",
+                  "audio": "res://assets/audio/election2026/bush_death_bernie.ogg",
+                  "duration": 7.0
+                }
+              ]
+            }
+          ]
+        }
       ]
     }
   ],

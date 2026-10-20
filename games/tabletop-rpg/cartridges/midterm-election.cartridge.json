@@ -8,9 +8,9 @@
     "gameType": "tabletop",
     "genre": "Tabletop Dungeon Crawler",
     "ruleset": "heroquest",
-    "description": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office—defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
+    "description": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office\u2014defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
     "coverColor": "#0a0e17",
-    "icon": "🛡️",
+    "icon": "\ud83d\udee1\ufe0f",
     "mapCount": 1,
     "heroCount": 4,
     "monsterCount": 0,
@@ -205,6 +205,12 @@
           {
             "text": "Uhh... folks, ouch!",
             "audio": "res://assets/audio/heroes/obama_react_6.ogg"
+          }
+        ],
+        "death": [
+          {
+            "audio": "res://assets/audio/heroes/barbarian_death.ogg",
+            "quote": "By Crom... my blade falls..."
           }
         ]
       },
@@ -408,7 +414,7 @@
             "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
           },
           {
-            "text": "I took two cognitive tests — I aced them!",
+            "text": "I took two cognitive tests \u2014 I aced them!",
             "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
           },
           {
@@ -420,7 +426,7 @@
             "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
           },
           {
-            "text": "I'm not just MAGA — I'm Dark MAGA!",
+            "text": "I'm not just MAGA \u2014 I'm Dark MAGA!",
             "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
           },
           {
@@ -557,6 +563,12 @@
             "text": "This is a persecution!",
             "audio": "res://assets/audio/heroes/trump_react_6.ogg"
           }
+        ],
+        "death": [
+          {
+            "audio": "res://assets/audio/heroes/dwarf_death.ogg",
+            "quote": "By Moradin's beard... tell the clan I stood fast..."
+          }
         ]
       },
       "robos:audioLines": {
@@ -574,7 +586,7 @@
             "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
           },
           {
-            "text": "I took two cognitive tests — I aced them!",
+            "text": "I took two cognitive tests \u2014 I aced them!",
             "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
           },
           {
@@ -586,7 +598,7 @@
             "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
           },
           {
-            "text": "I'm not just MAGA — I'm Dark MAGA!",
+            "text": "I'm not just MAGA \u2014 I'm Dark MAGA!",
             "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
           },
           {
@@ -907,6 +919,12 @@
           {
             "text": "Thank you very much!",
             "audio": "res://assets/audio/heroes/hillary_react_6.ogg"
+          }
+        ],
+        "death": [
+          {
+            "audio": "res://assets/audio/heroes/elf_death.ogg",
+            "quote": "The starlight fades... carry on the quest..."
           }
         ]
       },
@@ -1258,6 +1276,12 @@
           {
             "text": "Out on the street!",
             "audio": "res://assets/audio/heroes/bernie_react_6.ogg"
+          }
+        ],
+        "death": [
+          {
+            "audio": "res://assets/audio/heroes/wizard_death.ogg",
+            "quote": "My arcane light... is extinguished..."
           }
         ]
       },
@@ -3064,7 +3088,7 @@
       "slug": "midterm-election",
       "campaign": "Election 2026: Battle for the Hill",
       "title": "Quest 1: Battle for the Hill",
-      "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office—defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
+      "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office\u2014defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
       "goldReward": 150,
       "completed": false,
       "mapConfigId": "midterm-election-capitol",
@@ -3081,6 +3105,140 @@
         "Defeat the Capitol Bosses & Hydra Bosses (Talarixon, El-Rogers, Brownsted, Katie Zacharia, Mitch McConnell, and Drunk JD Vance & Kamala Harris).",
         "Storm the Capitol chambers (Briefing Room, Committee Chamber, War Room & Oval Office) and expose the bipartisan slush fund.",
         "Lead all surviving heroes safely to the Capitol Exit Stairs at [14, 2]."
+      ],
+      "triggers": [
+        {
+          "id": "trigger-obama-fallen",
+          "event": "on_hero_killed",
+          "targetId": "obama",
+          "once": true,
+          "title": "BARACK OBAMA HAS FALLEN!",
+          "narrative": "",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Barack Obama (Fallen)",
+                  "speakerColor": "#ef5350",
+                  "portrait": "res://assets/hero_cards/card_bg_obama.png",
+                  "heroId": "obama",
+                  "useRandomDeathQuote": true,
+                  "text": "Uhh... let me be clear... even in defeat... hope... never dies.",
+                  "audio": "res://assets/audio/heroes/obama_death_1.ogg",
+                  "duration": 5.5
+                },
+                {
+                  "speaker": "George W. Bush (Mentor)",
+                  "speakerColor": "#ffd54f",
+                  "portrait": "res://assets/election2026/mentor_george_bush_shrug.jpg",
+                  "text": "Heh... well heck, Barack just ran completely outta Body Points! Somebody get that man a teleprompter and a healing potion!",
+                  "audio": "res://assets/audio/election2026/bush_death_obama.ogg",
+                  "duration": 6.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-trump-fallen",
+          "event": "on_hero_killed",
+          "targetId": "trump",
+          "once": true,
+          "title": "DONALD TRUMP HAS FALLEN!",
+          "narrative": "",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Donald Trump (Fallen)",
+                  "speakerColor": "#ef5350",
+                  "portrait": "res://assets/hero_cards/card_bg_trump.png",
+                  "heroId": "trump",
+                  "useRandomDeathQuote": true,
+                  "text": "This was never supposed to happen in America! We'll be appealing this decision!",
+                  "audio": "res://assets/audio/heroes/trump_death_1.ogg",
+                  "duration": 4.5
+                },
+                {
+                  "speaker": "George W. Bush (Mentor)",
+                  "speakerColor": "#ffd54f",
+                  "portrait": "res://assets/election2026/mentor_george_bush_shrug.jpg",
+                  "text": "Whoa nelly, Donald just hit zero Body Points! He says the dice were rigged, folks, but that golden armor is flat on the dungeon floor!",
+                  "audio": "res://assets/audio/election2026/bush_death_trump.ogg",
+                  "duration": 7.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-hillary-fallen",
+          "event": "on_hero_killed",
+          "targetId": "hillary-clinton",
+          "once": true,
+          "title": "HILLARY CLINTON HAS FALLEN!",
+          "narrative": "",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Hillary Clinton (Fallen)",
+                  "speakerColor": "#ef5350",
+                  "portrait": "res://assets/hero_cards/card_bg_hillary_clinton.png",
+                  "heroId": "hillary-clinton",
+                  "useRandomDeathQuote": true,
+                  "text": "What difference, at this point, does it make?!",
+                  "audio": "res://assets/audio/heroes/hillary_death_2.ogg",
+                  "duration": 4.5
+                },
+                {
+                  "speaker": "George W. Bush (Mentor)",
+                  "speakerColor": "#ffd54f",
+                  "portrait": "res://assets/election2026/mentor_george_bush_shrug.jpg",
+                  "text": "uh-oh... Hillary just got wiped right off the board! Somebody better bleach that server before Zargon reads her spell scrolls!",
+                  "audio": "res://assets/audio/election2026/bush_death_hillary.ogg",
+                  "duration": 6.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "trigger-bernie-fallen",
+          "event": "on_hero_killed",
+          "targetId": "bernie-sanders",
+          "once": true,
+          "title": "BERNIE SANDERS HAS FALLEN!",
+          "narrative": "",
+          "actions": [
+            {
+              "type": "dialogue",
+              "lines": [
+                {
+                  "speaker": "Bernie Sanders (Fallen)",
+                  "speakerColor": "#ef5350",
+                  "portrait": "res://assets/hero_cards/card_bg_bernie_sanders.png",
+                  "heroId": "bernie-sanders",
+                  "useRandomDeathQuote": true,
+                  "text": "Let us give hope to people in America today who have lost hope!",
+                  "audio": "res://assets/audio/heroes/bernie_death_1.ogg",
+                  "duration": 5.0
+                },
+                {
+                  "speaker": "George W. Bush (Mentor)",
+                  "speakerColor": "#ffd54f",
+                  "portrait": "res://assets/election2026/mentor_george_bush_shrug.jpg",
+                  "text": "Dagnabbit, Bernie just collapsed in his wool mittens! Turns out the top one percent of dungeon monsters own ninety-nine percent of the combat dice!",
+                  "audio": "res://assets/audio/election2026/bush_death_bernie.ogg",
+                  "duration": 7.0
+                }
+              ]
+            }
+          ]
+        }
       ]
     }
   ],
