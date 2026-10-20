@@ -1,21 +1,27 @@
 #!/usr/bin/env bash
 set -e
 
-SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ]; do
-  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-  SOURCE="$(readlink "$SOURCE")"
-  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
-done
-SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-ROBOS_ROOT="${ROBOS_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
-APP_DIR="$ROBOS_ROOT/packages/task-planner"
+ROBOS_ROOT="/home/ndipiazza/source/robos"
+if [ -d "/home/ndipiazza/source/robos/packages/task-planner" ]; then
+  APP_DIR="/home/ndipiazza/source/robos/packages/task-planner"
+elif [ -d "/usr/local/share/robos/robos-task-explorer" ]; then
+  APP_DIR="/usr/local/share/robos/robos-task-explorer"
+else
+  echo "Error: RobOS app directory not found for robos-task-explorer" >&2
+  exit 1
+fi
 
-# Locate electron binary
+# Locate Electron binary across local package, shared workspace packages, or system
 if [ -x "$APP_DIR/node_modules/.bin/electron" ]; then
   ELECTRON_BIN="$APP_DIR/node_modules/.bin/electron"
+elif [ -x "$ROBOS_ROOT/packages/app-launcher/node_modules/.bin/electron" ]; then
+  ELECTRON_BIN="$ROBOS_ROOT/packages/app-launcher/node_modules/.bin/electron"
 elif [ -x "$ROBOS_ROOT/packages/robos-test/node_modules/.bin/electron" ]; then
   ELECTRON_BIN="$ROBOS_ROOT/packages/robos-test/node_modules/.bin/electron"
+elif [ -x "$ROBOS_ROOT/packages/crpg-editor/node_modules/.bin/electron" ]; then
+  ELECTRON_BIN="$ROBOS_ROOT/packages/crpg-editor/node_modules/.bin/electron"
+elif [ -x "$ROBOS_ROOT/packages/robos-tabletop/node_modules/.bin/electron" ]; then
+  ELECTRON_BIN="$ROBOS_ROOT/packages/robos-tabletop/node_modules/.bin/electron"
 elif command -v electron >/dev/null 2>&1; then
   ELECTRON_BIN="$(command -v electron)"
 elif [ -x "/usr/bin/electron" ]; then
@@ -25,4 +31,5 @@ else
   exit 1
 fi
 
+cd "$APP_DIR"
 exec "$ELECTRON_BIN" "$APP_DIR" --no-sandbox --disable-gpu --disable-dev-shm-usage "$@"
