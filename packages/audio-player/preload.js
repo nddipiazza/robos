@@ -31,6 +31,9 @@ contextBridge.exposeInMainWorld('robosAudio', {
   cloudConnections: () => ipcRenderer.invoke('audio:cloud-connections'),
   cloudList: (id, path) => ipcRenderer.invoke('audio:cloud-list', { id, path }),
   cloudImport: (id, paths) => ipcRenderer.invoke('audio:cloud-import', { id, paths }),
+  cloudCacheStats: () => ipcRenderer.invoke('audio:cloud-cache-stats'),
+  cloudCacheSetMax: (maxBytes) => ipcRenderer.invoke('audio:cloud-cache-set-max', maxBytes),
+  cloudCacheClear: () => ipcRenderer.invoke('audio:cloud-cache-clear'),
   onCloudProgress: (callback) => {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on('audio:cloud-progress', handler);

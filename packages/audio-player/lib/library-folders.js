@@ -8,9 +8,10 @@ const os = require('os');
 const path = require('path');
 
 class LibraryFolders {
-  constructor({ mediaLibrary, cloud, configDir }) {
+  constructor({ mediaLibrary, cloud, castService, configDir }) {
     this.mediaLibrary = mediaLibrary;
     this.cloud = cloud;
+    this.castService = castService || null;
     this.file = path.join(configDir || path.join(process.env.HOME || os.homedir(), '.config', 'robos'), 'audio-folders.json');
     this.folders = this._load();
   }
@@ -89,20 +90,52 @@ class LibraryFolders {
     if (f && label && label.trim()) { f.label = label.trim(); this._save(); }
   }
 
-  // Downloads new/changed files for a cloud folder, indexes them, and drops
-  // tracks whose remote file is gone.
+  // Indexes remote audio files for a cloud folder (metadata only, NO bulk downloads)
+  // and drops tracks whose remote file is gone.
   async syncCloud(id, onProgress) {
     const f = this.get(id);
     if (!f || f.kind !== 'cloud') throw new Error('Not a cloud folder');
-    const localFiles = await this.cloud.fetchAudio(f.connectionId, [f.path], onProgress);
-    const keep = new Set(localFiles);
+    const descriptors = typeof this.cloud.indexCloudAudio === 'function'
+      ? await this.cloud.indexCloudAudio(f.connectionId, [f.path], onProgress)
+      : (await this.cloud.fetchAudio(f.connectionId, [f.path], onProgress)).map(localPath => ({
+          connectionId: f.connectionId,
+          remotePath: f.path,
+          localPath,
+          name: path.basename(localPath),
+          cached: fs.existsSync(localPath),
+        }));
+
+    const keep = new Set(descriptors.map(d => d.localPath));
     const ml = this.mediaLibrary;
-    const known = new Set(ml.tracks.map(t => t.filePath));
+    const existingByPath = new Map(ml.tracks.map(t => [t.filePath, t]));
 
     const added = [];
-    for (const file of localFiles) {
-      if (known.has(file)) continue;
-      try { added.push(await ml.parseTrack(file)); } catch {}
+    for (const desc of descriptors) {
+      const existing = existingByPath.get(desc.localPath);
+      if (existing) {
+        existing.cloud = {
+          connectionId: desc.connectionId,
+          driverType: desc.driverType || (existing.cloud && existing.cloud.driverType) || 'gdrive',
+          remotePath: desc.remotePath,
+          driveId: desc.driveId || (existing.cloud && existing.cloud.driveId) || null,
+          size: desc.size != null ? desc.size : (existing.cloud && existing.cloud.size) || null,
+          cached: !!desc.cached,
+        };
+        if (this.castService && typeof this.castService.getCloudStreamUrl === 'function') {
+          existing.src = this.castService.getCloudStreamUrl(existing.id, false);
+        }
+        continue;
+      }
+      try {
+        const trackId = ml._generateTrackId(desc.localPath);
+        const streamUrl = (this.castService && typeof this.castService.getCloudStreamUrl === 'function')
+          ? this.castService.getCloudStreamUrl(trackId, false)
+          : null;
+        const track = typeof ml.buildCloudTrack === 'function'
+          ? await ml.buildCloudTrack(desc, streamUrl)
+          : await ml.parseTrack(desc.localPath);
+        added.push(track);
+      } catch {}
     }
     const before = ml.tracks.length;
     ml.tracks = ml.tracks.filter(t => !this._owns(f, t.filePath) || keep.has(t.filePath)).concat(added);

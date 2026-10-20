@@ -136,12 +136,34 @@ function dismissOverlayToast(key) {
   }
 }
 
+function getDataSourcesFile() {
+  return path.join(getHomeDir(), '.config', 'robos', 'data-sources.json');
+}
+
+function isDsAuthenticatedOnDisk(dsId) {
+  if (!dsId) return false;
+  try {
+    const f = getDataSourcesFile();
+    if (!fs.existsSync(f)) return false;
+    const list = JSON.parse(fs.readFileSync(f, 'utf8'));
+    if (!Array.isArray(list)) return false;
+    const ds = list.find(d => d && d.id === dsId);
+    if (!ds) return false;
+    if (ds.authStatus === 'logged_out' || ds.status === 'Login Required' || ds.loggedIn === false) {
+      return false;
+    }
+    return Boolean(ds.refreshToken || ds.accessToken || ds.localMountPath || ds.serviceAccountKeyPath || ds.serviceAccountJson);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Spawns a top-right overlay toast window (using robos-toast's toast.html)
  * directly from the current Electron process so the user always sees the
  * top-right login popup even if the background robos-toast daemon isn't running.
  */
-function showOverlayToastWindow(electron, notif, { key, persistent = true, duration = 0 } = {}) {
+function showOverlayToastWindow(electron, notif, { key, dsId, persistent = false, duration = 10000 } = {}) {
   try {
     if (!electron || !electron.BrowserWindow || typeof electron.BrowserWindow !== 'function') return null;
     if (process.env.ROBOS_GRAPH_ROOT !== undefined) return null;
@@ -202,18 +224,39 @@ function showOverlayToastWindow(electron, notif, { key, persistent = true, durat
       } catch {}
     });
 
-    if (!persistent && duration > 0) {
-      const timer = setTimeout(() => {
-        if (key) dismissOverlayToast(key);
-        else {
-          try { if (!win.isDestroyed()) win.close(); } catch {}
+    // Auto-dismiss timer so toast never stays stuck forever
+    const effectiveDuration = duration > 0 ? duration : 12000;
+    const timer = setTimeout(() => {
+      if (key) dismissOverlayToast(key);
+      else {
+        try { if (!win.isDestroyed()) win.close(); } catch {}
+      }
+    }, effectiveDuration);
+    timer.unref?.();
+
+    // Also poll data-sources.json so if the user logs in from ANY process, the toast closes immediately
+    let authWatchTimer = null;
+    if (dsId) {
+      authWatchTimer = setInterval(() => {
+        if (win.isDestroyed()) {
+          clearInterval(authWatchTimer);
+          return;
         }
-      }, duration);
-      timer.unref?.();
-      win.on('closed', () => clearTimeout(timer));
+        if (isDsAuthenticatedOnDisk(dsId)) {
+          clearInterval(authWatchTimer);
+          clearAuthNotificationRecords(dsId);
+          if (key) dismissOverlayToast(key);
+          else {
+            try { if (!win.isDestroyed()) win.close(); } catch {}
+          }
+        }
+      }, 1200);
+      authWatchTimer.unref?.();
     }
 
     win.on('closed', () => {
+      clearTimeout(timer);
+      if (authWatchTimer) clearInterval(authWatchTimer);
       if (key && activeOverlayToasts.get(key) === win) {
         activeOverlayToasts.delete(key);
       }
@@ -232,9 +275,17 @@ function showOverlayToastWindow(electron, notif, { key, persistent = true, durat
 function emitAuthRequiredToast(ds, { electron, reason, force = false } = {}) {
   if (!ds) return null;
   const dsId = ds.id || 'gdrive';
+
+  // Never emit "Login Required" toast if data-sources.json on disk is already authenticated
+  if (!force && isDsAuthenticatedOnDisk(dsId)) {
+    clearAuthNotificationRecords(dsId);
+    dismissOverlayToast(`datasource-auth:${dsId}`);
+    return null;
+  }
+
   const now = Date.now();
   const prev = lastToastTimeByDs.get(dsId) || 0;
-  if (!force && now - prev < 4000) {
+  if (!force && now - prev < 15000) {
     return null;
   }
   lastToastTimeByDs.set(dsId, now);
@@ -286,7 +337,7 @@ function emitAuthRequiredToast(ds, { electron, reason, force = false } = {}) {
 
   appendNotificationRecord(notif);
   notifyDesktopManager(notif);
-  showOverlayToastWindow(electron, notif, { key: entityKey, persistent: true, duration: 0 });
+  showOverlayToastWindow(electron, notif, { key: entityKey, dsId, persistent: false, duration: 12000 });
   return notif;
 }
 
