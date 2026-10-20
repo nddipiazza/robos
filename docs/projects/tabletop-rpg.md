@@ -148,4 +148,8 @@ The test produces an immutable 315-transaction audit ledger, 0 hero casualties (
 
 For **Election 2026: Battle for the Hill** (`election-2026-quest-1.cartridge.json`), the end-to-end autonomous proof in [`games/tabletop-rpg/tests/test_demo_election_2026_quest_e2e.py`](file:///home/ndipiazza/source/robos/games/tabletop-rpg/tests/test_demo_election_2026_quest_e2e.py) drives the bipartisan party (Barack Obama, Donald Trump, Hillary Clinton, Bernie Sanders) across 266 autonomous steps, 15 combat rounds, and 283 transactions to slay all three 2-square Capitol Hydras (`Talarixon` in TX #167, `Brownsted` in TX #211, and `El-Rogers` in TX #282–283) with 100% hero survival (4/4 alive).
 
+<div style="aspect-ratio:16/9;margin:24px 0"><iframe src="https://www.youtube-nocookie.com/embed/7HkZARyvqmM" title="RobOS Tabletop RPG — Election 2026: Full 266-Turn Autonomous AI Playthrough" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:0"></iframe></div>
+
+[Watch the full 266-turn Election 2026 playthrough on YouTube](https://youtu.be/7HkZARyvqmM).
+
 See the complete [Custom Dungeon Proof of Viability Report]({{ '/games/tabletop-rpg/proof-of-viability.html' | relative_url }}), the [Election 2026 Proof of Viability Report]({{ '/games/tabletop-rpg/proof-of-viability-election-2026.html' | relative_url }}), and the [Game Showcase Page]({{ '/games/tabletop-rpg/#proof-of-viability' | relative_url }}).
