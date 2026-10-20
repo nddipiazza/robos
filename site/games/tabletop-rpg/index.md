@@ -268,10 +268,8 @@ TABLETOP_CARTRIDGE=election-2026-quest-1 ./play.sh --demo --reset        # watch
 
       <div style="margin-top:28px">
         <figure class="wide" style="margin:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#0d131f">
-          <video controls preload="metadata" poster="{{ '/assets/games/proof-of-viability-election-2026/m19_el_rogers_slain_victory.jpg' | relative_url }}" style="width:100%;height:auto;display:block;background:#000">
-            <source src="{{ '/assets/games/proof-of-viability-election-2026/election-2026-playthrough.webm' | relative_url }}" type="video/webm">
-          </video>
-          <figcaption style="padding:10px 14px;background:#141f36;font-size:0.85rem;color:#b9b3a4">Full 266-turn autonomous playthrough WebM video: Mentor AI leading Barack Obama, Donald Trump, Hillary Clinton, and Bernie Sanders to vanquish all three Capitol Hydras.</figcaption>
+          <iframe src="https://www.youtube-nocookie.com/embed/7HkZARyvqmM" title="RobOS Tabletop RPG — Election 2026: Full 266-Turn Autonomous AI Playthrough" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;aspect-ratio:16/9;display:block;border:0;background:#000"></iframe>
+          <figcaption style="padding:10px 14px;background:#141f36;font-size:0.85rem;color:#b9b3a4">Full 266-turn autonomous playthrough: Mentor AI leading Barack Obama, Donald Trump, Hillary Clinton, and Bernie Sanders to vanquish all three Capitol Hydras. <a href="https://youtu.be/7HkZARyvqmM" target="_blank" rel="noopener">Watch on YouTube</a> · <a href="{{ '/assets/games/proof-of-viability-election-2026/election-2026-playthrough.webm' | relative_url }}" download>Download WebM</a></figcaption>
         </figure>
       </div>
 
