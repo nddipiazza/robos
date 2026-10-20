@@ -5,7 +5,6 @@ const assert = require('node:assert');
 const path = require('node:path');
 const fs = require('node:fs');
 const os = require('node:os');
-const { EventEmitter } = require('node:events');
 
 const {
   PromptSecurityGuard,
@@ -17,8 +16,6 @@ const {
   PROMPT_SECURITY_MODES,
 } = require('../../../robos-lib/prompt-security');
 
-const { AgentSession } = require('../../../robos-agent-client/agent-session');
-const { EmbeddedHarnessRouter } = require('../../../robos-agent-client/harness-router');
 
 // ── Shannon Entropy & Luhn Checks ────────────────────────────────────────────
 
@@ -320,80 +317,4 @@ describe('Custom Allowlists & Blocklists', () => {
   });
 });
 
-// ── AgentSession & HarnessRouter Integration ──────────────────────────────────
-
-describe('Agent Integration (AgentSession & EmbeddedHarnessRouter)', () => {
-  it('AgentSession automatically redacts sensitive data in redact mode', () => {
-    let receivedPrompt = '';
-    const mockBackend = {
-      spawn: (cwd, files, prompt) => {
-        receivedPrompt = prompt;
-        return new EventEmitter();
-      }
-    };
-
-    const session = new AgentSession({
-      agentId: 'claude',
-      backend: mockBackend,
-      securityOptions: { mode: 'redact' }
-    });
-
-    session.start('/tmp', [], 'Deploy with AKIA1234567890ABCDEF');
-
-    assert.ok(receivedPrompt.includes('[REDACTED:AWS_ACCESS_KEY_ID]'));
-    assert.ok(!receivedPrompt.includes('AKIA1234567890ABCDEF'));
-    assert.strictEqual(session.securityFindings.length, 1);
-  });
-
-  it('AgentSession blocks execution and throws PromptSecurityError in block mode', () => {
-    const mockBackend = {
-      spawn: () => new EventEmitter(),
-    };
-
-    const session = new AgentSession({
-      agentId: 'claude',
-      backend: mockBackend,
-      securityOptions: { mode: 'block' }
-    });
-
-    assert.throws(() => {
-      session.start('/tmp', [], 'Deploy with AKIA1234567890ABCDEF');
-    }, (err) => {
-      return err.name === 'PromptSecurityError' && err.findings.length === 1;
-    });
-
-    assert.strictEqual(session.status, 'error');
-  });
-
-  it('EmbeddedHarnessRouter blocks prompt execution with UHP security violation', async () => {
-    const tempStorage = path.join(os.tmpdir(), `harness-test-${Date.now()}`);
-    const router = new EmbeddedHarnessRouter({ storageDir: tempStorage });
-
-    const res = await router.runTask({
-      input: 'Deploy with AKIA1234567890ABCDEF',
-      harnessId: 'chrn_claude',
-      securityOptions: { mode: 'block' }
-    });
-
-    assert.strictEqual(res.ok, false);
-    assert.strictEqual(res.error.code, 'prompt_security_violation');
-    assert.ok(res.error.findings.length >= 1);
-  });
-
-  it('EmbeddedHarnessRouter automatically sanitizes prompt in default redact mode', async () => {
-    const tempStorage = path.join(os.tmpdir(), `harness-test-${Date.now()}`);
-    const router = new EmbeddedHarnessRouter({ storageDir: tempStorage });
-
-    const res = await router.runTask({
-      input: 'Deploy with AKIA1234567890ABCDEF',
-      harnessId: 'nonexistent_agent_sim',
-      securityOptions: { mode: 'redact' }
-    });
-
-    const sessions = router._readSessions();
-    assert.ok(sessions.length > 0);
-    const turn = sessions[0].turns[0];
-    assert.ok(turn.input.includes('[REDACTED:AWS_ACCESS_KEY_ID]'));
-    assert.ok(!turn.input.includes('AKIA1234567890ABCDEF'));
-  });
-});
+// Interception in the shared AI library (robos-lib/ai-agent) is tested in tests/ai-agent/unit.test.js.

@@ -41,8 +41,8 @@ Well-known dummy values such as AWS's `AKIAIOSFODNN7EXAMPLE`, `example.com`, `lo
 | Component | Mode comes from | When it is blocked |
 |:---|:---|:---|
 | `<robos-ai-textarea>` in `packages/robos-ui` | The element's `prompt-security` attribute, default `redact` | A banner appears and the message is not submitted |
-| `AgentSession.start()` in `robos-agent-client` | `~/.config/robos/settings.json` | Throws `PromptSecurityError` |
-| `EmbeddedHarnessRouter.runTask()` | `~/.config/robos/settings.json` | Returns status 400 with code `prompt_security_violation` |
+| `ask()` in `robos-lib/ai-agent` (generate buttons, quick-ask, AI Co-Pilot, Import & Refine) | `~/.config/robos/settings.json` | Returns `ok: false` with code `prompt_security_violation`; no CLI is started and no API is called |
+| `robos-llm` (optional API mode) | `~/.config/robos/settings.json` | Same code; text sent for embeddings is always redacted |
 | AI Prompt and Agent Chat | `~/.config/robos/settings.json` | Returns the summary as an error to the window |
 
 The text box is separate code. It has its own, smaller rule list (secrets, SSNs, card numbers, injection and exfiltration phrases) and does not read the settings below. It has no email, phone, IP, entropy, allowlist or blocklist checks. While you type, a banner appears when something matches, in every mode except `off`. It reads "RobOS Prompt Security: Detected ... Use Auto-Redact to sanitize before sending to AI." The **Auto-Redact** button masks the matches in the box, and the close button on the right dismisses the banner.
@@ -50,7 +50,6 @@ The text box is separate code. It has its own, smaller rule list (secrets, SSNs,
 These do not call the guard:
 
 - Task Implementer and Task Planner. They start `claude` and `gh copilot` directly from their main process.
-- The HTTP client for a remote router (`HarnessRouterClient`). Whatever that server does is up to the server.
 - Files an agent opens on its own, and the agent's output.
 
 ## Choose a mode

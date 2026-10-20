@@ -247,17 +247,19 @@ if [ "$SYS_ONLY" = false ]; then
     echo ""
 
     # -----------------------------------------------------------------------------
-    # Step 4: HarnessRouter & UHP Protocol Engine
+    # Step 4: Agent CLIs (RobOS runs whichever ones you install)
     # -----------------------------------------------------------------------------
-    echo "[5/5] Verifying HarnessRouter & UHP agent routing baseline..."
-    if command -v docker &>/dev/null; then
-        if docker ps -a --format '{{.Names}}' | grep -q '^harnessrouter$'; then
-            echo "  HarnessRouter CE container is configured and ready."
-        else
-            echo "  HarnessRouter CE container can be launched via: docker run -d --name harnessrouter --restart unless-stopped -p 127.0.0.1:3000:3000 -v harnessrouter:/data harnessrouter/harnessrouter"
+    echo "[5/5] Checking for coding-agent CLIs..."
+    found_agent=0
+    for cli in copilot claude codex gemini; do
+        if command -v "$cli" &>/dev/null; then
+            echo "  Found $cli"
+            found_agent=1
         fi
+    done
+    if [ "$found_agent" -eq 0 ]; then
+        echo "  No agent CLI found. Install one (GitHub Copilot, Claude Code, Codex or Gemini CLI) from Software Center or npm, sign in, then set it as active in RobOS Agents."
     fi
-    echo "  RobOS Embedded UHP Router is active (100% open-source & free fallback)."
     echo ""
 fi
 

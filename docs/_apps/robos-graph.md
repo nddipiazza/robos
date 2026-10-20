@@ -26,7 +26,7 @@ Without an explicit workspace the Branch list contains sample branches that ship
 
 ### Import & Refine
 
-With `ROBOS_GRAPH_ROOT` set, **Import & Refine** lets you describe a correction, click **Prepare agent brief** to see the matching records and their source evidence, give the brief to your coding agent, then paste its JSON edits under "Advanced". **Preview changes** shows the diff, evidence and validation result, and **Save reviewed revision** applies it. A conflict or validation failure blocks saving. **Ask configured agent** needs `ROBOS_GRAPH_AGENT_URL`, `ROBOS_GRAPH_AGENT_HARNESS` and `ROBOS_GRAPH_AGENT_MODEL`, and it never saves on its own. See `IMPORT-REFINE.md` in the package.
+With `ROBOS_GRAPH_ROOT` set, **Import & Refine** lets you describe a correction, click **Prepare agent brief** to see the matching records and their source evidence, give the brief to your coding agent, then paste its JSON edits under "Advanced". **Preview changes** shows the diff, evidence and validation result, and **Save reviewed revision** applies it. A conflict or validation failure blocks saving. **Ask AI agent** sends the brief to your active agent CLI (or the optional API mode) through `robos-lib/ai-agent` and previews the edits it returns; it never saves on its own. See `IMPORT-REFINE.md` in the package.
 
 ## The kgraph command
 

@@ -31,7 +31,7 @@ RobOS is a set of desktop apps and libraries aimed at those four points. It does
 | Impact beyond the diff | A knowledge graph stored as JSON-LD under `.robos/`, validated with SHACL shapes. `robos-graph` can diff two graph states and list the services, teams and contracts that the changed nodes touch. | [Knowledge graph]({{ site.baseurl }}{% link knowledge-graph.md %}) |
 | "Tests pass" as the only proof | An evidence runner in PR Review asks an agent to run scenarios and attach artifacts. A scenario reported as passed is rejected if it has no artifact file inside the run directory. The test harness in `packages/robos-test` can add Piper text-to-speech narration to a recording with ffmpeg. | [Walkthroughs and proof of work]({{ site.baseurl }}{% link walkthroughs.md %}) |
 | Agents cannot use the desktop tools | RobOS apps expose DOM inspection through `snapshot-cli.js` in `robos-lib`, and `robos-mcp-router` is a router for the Model Context Protocol (MCP) servers listed in `~/.config/robos/mcp/servers.json`. | [Apps]({{ site.baseurl }}{% link apps.md %}) |
-| Secrets and personal data in prompts | A prompt scanner in `robos-lib/prompt-security.js`, used by the AI text area, Agent Chat, `AgentSession` and the embedded agent router. Modes are `redact` (default), `block`, `warn`, `audit-only` and `off`. | [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}) |
+| Secrets and personal data in prompts | A prompt scanner in `robos-lib/prompt-security.js`, used by the AI text area, Agent Chat and the shared AI library (`robos-lib/ai-agent`) behind the apps' one-shot AI requests. Modes are `redact` (default), `block`, `warn`, `audit-only` and `off`. | [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}) |
 | Many agent CLIs | Agents Manager lists Claude Code, GitHub Copilot CLI, Codex and Antigravity sessions in one window. RobOS skills are `SKILL.md` files under `plugins/robos/skills/`. | [Skills]({{ site.baseurl }}{% link robos-skills.md %}) |
 
 Most RobOS apps are Electron apps written in plain JavaScript, and most of their state is plain files: settings under `~/.config/robos/` and project data under `.robos/` in your repository. The license is Apache-2.0. The [Apps]({{ site.baseurl }}{% link apps.md %}) page lists every app with its package.
@@ -43,7 +43,7 @@ Built, with code in the repository:
 - The PR Review app with the staged review, the knowledge-check gate, and the evidence runner.
 - The knowledge graph library, its explorer app, SHACL validation, graph diff and blast-radius analysis.
 - The prompt security scanner and its five modes.
-- Agents Manager, including a panel for the Unified Harness Protocol router, and the `robos-agent-client` package.
+- Agents Manager, which shows the sessions of each agent CLI and sets the active one.
 - Per-user settings in RobOS Preferences, including the AI provider and GitHub account selectors.
 
 Not built, or not what the older documentation said:
@@ -59,6 +59,6 @@ Not built, or not what the older documentation said:
 - **You bring the agents.** RobOS drives agent CLIs that you install and sign in to yourself. It does not supply models or API keys. An optional API mode can call Anthropic, OpenAI, Gemini or a local Ollama server with your own key for quick requests; it is off by default. See [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}).
 - **The graph needs upkeep.** Blast-radius results come from the relationships recorded in the graph. Missing or stale relationships give missing or stale impact results.
 - **Evidence is checked for presence, not meaning.** The evidence runner confirms that artifacts exist. A person still has to look at them.
-- **Some features need extra software.** Examples are Docker for the HarnessRouter container, Xvfb and ffmpeg for recorded test runs, and `pass` with GPG for the password apps.
+- **Some features need extra software.** Examples are Xvfb and ffmpeg for recorded test runs, and `pass` with GPG for the password apps.
 
 If a feature you need is not listed above, check the app's own page under [Apps]({{ site.baseurl }}{% link apps.md %}) and the [Roadmap]({{ site.baseurl }}{% link roadmap.md %}) before assuming it exists.
