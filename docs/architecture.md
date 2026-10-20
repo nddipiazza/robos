@@ -88,7 +88,8 @@ Libraries are not npm dependencies. On a RobOS machine they are copied to `/usr/
 
 | Package | What it is |
 |:---|:---|
-| `robos-lib` | `.desktop` parsing and app categories, the DOM snapshot server and CLI, logging, the prompt security guard, and other helpers. |
+| `robos-lib` | `.desktop` parsing and app categories, the DOM snapshot server and CLI, logging, the prompt security guard, `ai-agent` (one-shot requests to the active agent CLI) and `quick-ask`, and other helpers. |
+| `robos-llm` | Optional API mode, off by default: direct calls to Anthropic, OpenAI, Gemini or Ollama through LangChain.js, plus embeddings for semantic graph search. Its LangChain packages are installed on request from RobOS Preferences into `~/.local/share/robos/llm-deps`, not with RobOS. See [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}). |
 | `robos-ui` | Web components for renderer pages, such as `<robos-ai-textarea>`. |
 | `robos-icons` | The SVG icon registry for built-in apps. |
 | `robos-graph` | The knowledge graph engine, and also the Knowledge Graph Explorer app. |
@@ -119,6 +120,8 @@ Two limits to know about:
 `robos-agent-client` has three backends: Claude Code (`claude`), GitHub Copilot CLI (through `gh`) and `harnessrouter`. The HarnessRouter backend speaks the Unified Harness Protocol (version `2026-08-11`) to a server at `http://127.0.0.1:3000` by default. If no server answers, `getHarnessRouter()` falls back to an embedded router that runs inside the process and stores sessions in `~/.config/robos/harnessrouter/sessions.json`.
 
 The embedded router lists six harnesses: Claude Code, OpenAI Codex, GitHub Copilot CLI, Gemini CLI, Hermes and Oh My Pi. It runs a task only through `claude -p`, `codex exec` or Copilot. For the others, or when the CLI is not installed, it returns a placeholder response without running anything. Check the response text before you trust a result.
+
+One-shot requests (generate buttons, the text box quick-ask, the Knowledge Graph AI Co-Pilot) do not go through `robos-agent-client`. They use `robos-lib/ai-agent`, which runs the active CLI from `~/.config/robos/ai-provider.json` (Copilot, Claude Code, Codex or Gemini CLI). If the user turned on API mode, the request goes to `robos-llm` first and falls back to that CLI when the call fails. Agent tasks never use API mode. See [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}).
 
 The embedded router scans each prompt with the prompt security guard in `robos-lib` before running it. The mode is `redact` by default, or `block`, `warn`, `audit-only` or `off` from the preferences setting. Events are logged to `~/.config/robos/prompt-security-audit.json`.
 

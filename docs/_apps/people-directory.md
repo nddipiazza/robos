@@ -15,7 +15,7 @@ People Directory keeps one JSON file per person under `~/.config/robos/people/`.
 - Click the plus button next to the list heading to create a person. The form has Identity (UID, display name, first and last name, username), Contact (email, phone, location), Org (title, department, manager) and a Bio. The UID names the file and cannot be changed after the first save.
 - Select a person to see their profile, then **Edit**, **Delete**, or click **Set as My Profile** to mark which person is you. The choice is saved as `myProfileUid` in `~/.config/robos/settings.json`.
 - Use **Import LDIF** to paste LDIF text and import its entries.
-- Use **Add with AI** to describe one or more people in plain language, pick an agent (the default is the RobOS agent), and click **Generate & Add**. This needs an AI provider available through the shared RobOS AI library; without it the app reports "AI library not available".
+- Use **Add with AI** to describe one or more people in plain language, pick an agent (the default is the RobOS agent), and click **Generate & Add**. This needs an AI provider available through the shared RobOS AI library ([AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %})); without it the app reports "AI library not available".
 
 On every save or delete the app rewrites `~/.config/robos/search-index/people.txt`, one `person:<username>:<display name>` line per person, which the [Search Indexer]({{ '/apps/search-index/' | relative_url }}) uses for @-mentions.
 

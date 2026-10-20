@@ -16,7 +16,7 @@ You need at least one agent CLI installed and signed in:
 - `claude` (Claude Code). The app runs `claude --print --output-format json` and sends the prompt on standard input.
 - `gh` with the Copilot extension. The app runs `gh copilot -- -p <prompt> --allow-all-tools --silent`.
 
-The agent is chosen in the prompt box (`<robos-ai-textarea>`); the app falls back to Copilot if the box reports none. If the agent is not signed in, the box offers a login that opens a terminal with `claude /login` or `gh auth login`. A run is stopped after five minutes.
+The agent is chosen in the prompt box (`<robos-ai-textarea>`); the app falls back to Copilot if the box reports none. If the agent is not signed in, the box offers a login that opens a terminal with `claude /login` or `gh auth login`. A run is stopped after five minutes. The run itself always uses the agent CLI, because the agent runs commands. The **?** button in the prompt box is different: it answers a quick question without running anything, through your active agent CLI or the optional API mode ([AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %})).
 
 {: .warning }
 The agent is asked to run commands with its own shell tool on your machine, and the Copilot call uses `--allow-all-tools`. Treat a prompt like a command you type yourself.

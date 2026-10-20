@@ -56,7 +56,7 @@ Not built, or not what the older documentation said:
 ## Limits to plan for
 
 - **Platform.** The install scripts use `apt`, and the VM image is Ubuntu. Treat Debian-based Linux with a desktop as the supported setup unless the [Get started]({{ site.baseurl }}{% link getting-started.md %}) page says otherwise.
-- **You bring the agents.** RobOS drives agent CLIs that you install and sign in to yourself. It does not supply models or API keys.
+- **You bring the agents.** RobOS drives agent CLIs that you install and sign in to yourself. It does not supply models or API keys. An optional API mode can call Anthropic, OpenAI, Gemini or a local Ollama server with your own key for quick requests; it is off by default. See [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}).
 - **The graph needs upkeep.** Blast-radius results come from the relationships recorded in the graph. Missing or stale relationships give missing or stale impact results.
 - **Evidence is checked for presence, not meaning.** The evidence runner confirms that artifacts exist. A person still has to look at them.
 - **Some features need extra software.** Examples are Docker for the HarnessRouter container, Xvfb and ffmpeg for recorded test runs, and `pass` with GPG for the password apps.

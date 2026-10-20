@@ -30,8 +30,8 @@ describe('RobOS Preferences App E2E Test Suite with In-Depth Assertions', () => 
 
       // 3. Edit Settings Fields
       await evalJS(app.port, `
-        window.setFieldValue('ai_provider', 'openai');
-        window.setFieldValue('ai_model', 'gpt-4o');
+        window.setFieldValue('ai_api_provider', 'openai');
+        window.setFieldValue('ai_api_model', 'gpt-5-mini');
         window.setFieldValue('default_ide', 'vscode');
         window.setFieldValue('knowledge_graph_branch', 'feature/pilot-state');
         window.setFieldValue('toast_enabled', true);
@@ -47,15 +47,23 @@ describe('RobOS Preferences App E2E Test Suite with In-Depth Assertions', () => 
       assert.ok(fs.existsSync(settingsFile), 'settings.json must exist in sandbox config dir');
 
       const diskData = JSON.parse(fs.readFileSync(settingsFile, 'utf8'));
-      assert.strictEqual(diskData.ai_provider, 'openai', 'ai_provider must be saved as openai');
-      assert.strictEqual(diskData.ai_model, 'gpt-4o', 'ai_model must be saved as gpt-4o');
+      assert.strictEqual(diskData.ai_api_provider, 'openai', 'ai_api_provider must be saved as openai');
+      assert.strictEqual(diskData.ai_api_model, 'gpt-5-mini', 'ai_api_model must be saved as gpt-5-mini');
+      assert.strictEqual(diskData.ai_api_enabled, false, 'API mode must stay off unless the user turns it on');
+      assert.ok(!Object.keys(diskData).some(k => /api_key|ai_key_/.test(k)), 'API keys must never be written to settings.json');
       assert.strictEqual(diskData.default_ide, 'vscode', 'default_ide must be saved as vscode');
       assert.strictEqual(diskData.knowledge_graph_branch, 'feature/pilot-state', 'knowledge_graph_branch must be saved');
       assert.strictEqual(diskData.toast_enabled, true, 'toast_enabled must be saved as true');
 
       // 6. Assert IPC load-settings
       const loaded = await evalJS(app.port, `window.api.loadSettings()`);
-      assert.strictEqual(loaded.ai_provider, 'openai');
+      assert.strictEqual(loaded.ai_api_provider, 'openai');
+
+      // 7. The API key fields save to pass, not settings
+      const secretFields = await evalJS(app.port, `[...document.querySelectorAll('[data-secret]')].map(el => el.dataset.secret)`);
+      assert.deepStrictEqual(secretFields, ['anthropic', 'openai', 'gemini']);
+      const apiStatus = await evalJS(app.port, `document.getElementById('ai-api-status').textContent`);
+      assert.match(apiStatus, /API mode is off|not deployed/, 'API status line must render');
       assert.strictEqual(loaded.default_ide, 'vscode');
     } finally {
       // Clean Teardown

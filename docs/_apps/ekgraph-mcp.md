@@ -20,6 +20,7 @@ With no `ROBOS_GRAPH_ROOT`, the server uses a flat store at `~/.config/robos/ekg
 | `robos_ekgraph_list_children` | Nodes under a path prefix |
 | `robos_ekgraph_create_node`, `robos_ekgraph_update_node` | Write to the store |
 | `robos_ekgraph_get_linked` | Nodes linked from or to a path |
+| `robos_kgraph_semantic_search` | Meaning-based search over the JSON-LD Knowledge Graph (not this node store). Needs API mode and semantic search turned on in RobOS Preferences; otherwise it returns text matches and a note. See [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}#semantic-knowledge-graph-search). |
 
 Resources: `robos://ekgraph-mcp/ekgraph/repos`, `.../services`, `.../environments` and `.../people`.
 

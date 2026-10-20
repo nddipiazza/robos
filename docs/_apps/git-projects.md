@@ -38,7 +38,7 @@ Select a project to get **Clone** or **Pull**, **Load in IDE** (it lists the IDE
 Review settings are stored per repository in `~/.robos/project-review-settings/`. For messaging, choose a Slack workspace configured in Team Chat Servers and a channel, then search `@name` under **Reviewers to @mention**. Each saved reviewer keeps `serverId`, the Slack member `userId` and a display `name`, so renaming someone in Slack does not change who is notified. PR Review preselects the project's reviewers when you send a notification.
 
 {: .note }
-The AI buttons (**Generate all tabs**, **Fix**, **Refine**, **Ask me first**, the **AI Prompt** dialog) load `robos-copilot-lib` from `/usr/local/share/robos/robos-copilot-lib`. That module is not in this repository; without it they report "AI features unavailable: robos-copilot-lib not installed". Everything else works.
+The AI buttons (**Generate all tabs**, **Fix**, **Refine**, **Ask me first**, the **AI Prompt** dialog) load `robos-copilot-lib` from `/usr/local/share/robos/robos-copilot-lib`. That module is not in this repository; without it they report "AI features unavailable: robos-copilot-lib not installed". Everything else works. The JSON generators that use the **Agent** menu, and the **?** quick-ask button in the AI text boxes, use the shared `robos-lib/ai-agent` library instead and work with any agent CLI ([AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %})).
 
 ## Data
 

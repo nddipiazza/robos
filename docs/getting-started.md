@@ -156,6 +156,10 @@ infra/desktop/run.sh     # boots it; attaches the seed ISO on the first boot onl
 
 `build.sh` needs `qemu-img`, `wget`, `python3` and either `xorriso` or `genisoimage`. `run.sh` accepts `--vnc` (VNC on port 5912), `--spice` (SPICE on port 5932) and `--headless`. Output goes to `infra/desktop/output/`.
 
+## Set up an AI agent
+
+AI features in the apps run through a coding-agent CLI that you install and sign in to: GitHub Copilot, Claude Code, Codex or Gemini CLI / Antigravity. Install one, sign in, then open **RobOS Agents** and click **Set as Active** on it. No API keys are needed. If you also want direct model APIs, local Ollama models or semantic Knowledge Graph search, turn on the optional API mode in RobOS Preferences. [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}) covers both.
+
 ## Run the tests
 
 The unit tests need only Node.js. This is the command the release workflow runs.
@@ -179,6 +183,7 @@ npm run test:unit
 
 - [A day with RobOS]({{ site.baseurl }}{% link day-in-the-life.md %}): one task from plan to merged pull request, as recorded on the home page.
 - [Apps]({{ site.baseurl }}{% link apps.md %}): the app catalog.
+- [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}): which agent CLI answers, and the optional API mode.
 - [RobOS Voice]({{ site.baseurl }}{% link voice-prompt.md %}): dictation and voice commands.
 - [Company setup]({{ site.baseurl }}{% link existing-company-setup.md %}): connect RobOS to an existing organization.
 - [New app wizard]({{ site.baseurl }}{% link new-app-wizard.md %}): scaffold a new application.

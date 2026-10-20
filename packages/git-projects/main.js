@@ -569,6 +569,11 @@ try {
   for (const p of libPaths) { try { aiAgent = require(p); break; } catch {} }
 } catch { aiAgent = null; }
 
+// Quick-ask "?" button in <robos-ai-textarea> (robos-lib/quick-ask)
+for (const p of [process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'quick-ask'), path.resolve(__dirname, '..', 'robos-lib', 'quick-ask'), '/usr/local/share/robos/robos-lib/quick-ask'].filter(Boolean)) {
+  try { require(p).registerQuickAskIPC(ipcMain); break; } catch {}
+}
+
 let aiJson = null;
 try {
   const libPaths = [

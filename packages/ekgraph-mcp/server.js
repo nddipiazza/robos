@@ -188,6 +188,29 @@ function createEKGraphMCPServer(options = {}) {
         handler: async (args) => service.search(args.query),
       },
       {
+        name: 'robos_kgraph_semantic_search',
+        description: 'Meaning-based search over SDLC Knowledge Graph nodes using embeddings. Works only when the user turned on API mode and semantic search in RobOS Preferences; otherwise returns substring matches and a note saying why.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: { type: 'string', description: 'What to look for, in plain words' },
+            type: { type: 'string', description: 'Optional RDF type filter, e.g. Microservice' },
+            limit: { type: 'integer', minimum: 1, maximum: 50, default: 10 },
+          },
+          required: ['query'],
+        },
+        handler: async (args) => {
+          const { SDLCKnowledgeGraphStore } = require('../robos-graph/lib/graph-store');
+          const store = new SDLCKnowledgeGraphStore({ graphRoot });
+          const res = await store.semanticSearchNodes(String(args.query || ''), { type: args.type }, { k: Math.min(Math.max(Number(args.limit) || 10, 1), 50) });
+          return {
+            mode: res.mode,
+            note: res.note,
+            results: res.results.map(r => ({ id: r.node['@id'], title: r.node['dcterms:title'] || '', type: r.node['@type'], score: r.score })),
+          };
+        },
+      },
+      {
         name: 'robos_ekgraph_get_node',
         description: 'Get a specific knowledge node by its canonical path.',
         inputSchema: {

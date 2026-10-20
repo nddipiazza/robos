@@ -1756,7 +1756,7 @@ robos-question-wizard {
           this._askSend.disabled = false;
         });
       } else {
-        this._askResponse.textContent = '⚠ Quick-ask not available in this app. The app needs to set window.robosQuickAsk.';
+        this._askResponse.textContent = '⚠ Quick-ask is not set up in this app. The app registers robos-lib/quick-ask in its main process and exposes window.robosQuickAsk in its preload.';
         this._askSend.disabled = false;
       }
     }

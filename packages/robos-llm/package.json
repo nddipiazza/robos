@@ -1,0 +1,17 @@
+{
+  "name": "robos-llm",
+  "version": "0.1.0",
+  "description": "RobOS optional API mode — direct model calls (Anthropic, OpenAI, Gemini, Ollama) through LangChain.js. Off by default; the coding-agent CLIs stay the default path.",
+  "main": "index.js",
+  "license": "Apache-2.0",
+  "robos": {
+    "comment": "Not installed with RobOS. Preferences installs these into ~/.local/share/robos/llm-deps when the user turns API mode on. @langchain/openai is held at 1.5.8, the last release that supports the Node 20 runtime in Electron 30.",
+    "optionalProviders": {
+      "core": { "@langchain/core": "^1.2.19" },
+      "anthropic": { "@langchain/anthropic": "^1.5.12" },
+      "openai": { "@langchain/openai": "1.5.8" },
+      "gemini": { "@langchain/google-genai": "^2.3.4" },
+      "ollama": { "@langchain/ollama": "^1.3.0" }
+    }
+  }
+}

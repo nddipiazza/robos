@@ -6,6 +6,11 @@
  * Reads ~/.config/robos/ai-provider.json to determine the active provider and
  * provides a uniform ask() API regardless of which CLI is underneath.
  *
+ * The coding-agent CLIs are the default path. If the user turned on the
+ * optional API mode in RobOS Preferences (and installed its packages),
+ * ask() calls without a providerId go to the configured model API through
+ * robos-llm instead, and fall back to the active CLI if that call fails.
+ *
  * Usage (in any Electron main.js):
  *
  *   const aiAgent = require('/usr/local/share/robos/robos-lib/ai-agent');
@@ -14,7 +19,7 @@
  *   const { activeId, activeName, providers } = aiAgent.listProviders();
  *
  *   // Ask using the default (or a specific) provider
- *   const { ok, text, error } = await aiAgent.ask(prompt);
+ *   const { ok, text, error, via } = await aiAgent.ask(prompt);
  *   const { ok, text, error } = await aiAgent.ask(prompt, { providerId: 'claude-code' });
  */
 
@@ -51,9 +56,59 @@ const PROVIDERS = [
     buildArgs: (prompt) => ['exec', '-c', 'approval_policy=never', '--skip-git-repo-check', prompt],
     bin: 'codex',
   },
+  {
+    id:   'antigravity',
+    name: 'Gemini CLI / Antigravity',
+    // gemini -p: non-interactive single prompt (the harness router treats Gemini CLI and Antigravity as one harness)
+    buildArgs: (prompt) => ['-p', prompt],
+    bin: 'gemini',
+  },
 ];
 
 const PROVIDER_MAP = Object.fromEntries(PROVIDERS.map(p => [p.id, p]));
+
+// ── Optional API mode (robos-llm) ─────────────────────────────────────────────
+
+let llm;
+function loadLlm() {
+  if (llm !== undefined) return llm;
+  llm = null;
+  const candidates = [
+    process.env.ROBOS_LLM_PATH,
+    path.resolve(__dirname, '..', 'robos-llm'),
+    '/usr/local/share/robos/robos-llm',
+  ].filter(Boolean);
+  for (const p of candidates) { try { llm = require(p); break; } catch {} }
+  return llm;
+}
+
+/** API mode settings, or null when it is off or robos-llm is not deployed. */
+function apiMode() {
+  const lib = loadLlm();
+  if (!lib) return null;
+  const config = lib.readConfig();
+  return config.enabled ? { ...config, label: lib.PROVIDERS[config.provider].label } : null;
+}
+
+// One notification per error code per process, so a broken key does not flood the panel.
+const notified = new Set();
+function notifyApiFallback(result, cliName) {
+  if (notified.has(result.code)) return;
+  notified.add(result.code);
+  try {
+    const store = require('./auth-notifications');
+    store.update(path.join(os.homedir(), '.config', 'robos'), file => {
+      const entry = {
+        id: require('crypto').randomUUID(),
+        title: 'API mode unavailable, used ' + cliName,
+        body: result.error + ' Turn API mode off or fix it in RobOS Preferences > AI.',
+        category: 'agent', tier: 'warning', source: 'robos-llm',
+        ts: new Date().toISOString(), read: false,
+      };
+      store.write(file, [entry, ...store.read(file, [])].slice(0, 500));
+    });
+  } catch {}
+}
 
 // ── Config helpers ────────────────────────────────────────────────────────────
 
@@ -73,31 +128,20 @@ function getActiveProviderId() {
  * The remaining entries are the explicit per-provider overrides, with the
  * active default filtered out to avoid duplication.
  *
- * @returns {{ activeId: string, activeName: string, providers: {id,name}[] }}
+ * @returns {{ activeId: string, activeName: string, providers: {id,name}[], api: object|null }}
  */
 function listProviders() {
   const activeId   = getActiveProviderId();
   const activeP    = PROVIDER_MAP[activeId] || PROVIDERS[0];
-  const activeName = activeP.name;
+  const api        = apiMode();
+  const activeName = api ? `${api.label} API, then ${activeP.name}` : activeP.name;
   const providers  = PROVIDERS.filter(p => p.id !== activeId).map(({ id, name }) => ({ id, name }));
-  return { activeId, activeName, providers };
+  return { activeId, activeName, providers, api: api && { provider: api.provider, model: api.model, label: api.label } };
 }
 
 // ── Invocation ────────────────────────────────────────────────────────────────
 
-/**
- * ask(prompt, opts) — invoke an AI provider and collect the full text response.
- *
- * @param {string} prompt
- * @param {{ providerId?: string }} [opts]
- *   providerId — override the active provider; null/undefined = use default
- * @returns {Promise<{ ok: boolean, text: string, error: string|null }>}
- */
-function ask(prompt, opts = {}) {
-  prompt = require('./engineering-writing').instructions + '\n\n' + prompt;
-  const resolvedId = opts.providerId || getActiveProviderId();
-  const provider   = PROVIDER_MAP[resolvedId] || PROVIDER_MAP['github-copilot'];
-
+function askCli(prompt, provider) {
   return new Promise((resolve) => {
     let proc;
     try {
@@ -106,7 +150,7 @@ function ask(prompt, opts = {}) {
         stdio: ['ignore', 'pipe', 'pipe'],
       });
     } catch (e) {
-      return resolve({ ok: false, text: '', error: `Could not launch '${provider.bin}': ${e.message}` });
+      return resolve({ ok: false, text: '', error: `Could not launch '${provider.bin}': ${e.message}`, via: 'cli', provider: provider.id });
     }
 
     let out = '', err = '';
@@ -117,15 +161,44 @@ function ask(prompt, opts = {}) {
       if (code !== 0) {
         // Some CLIs (e.g. claude) write their error message to stdout, not stderr
         const detail = err.trim() || out.trim().slice(0, 400) || `exit code ${code}`;
-        return resolve({ ok: false, text: '', error: `${provider.bin} failed: ${detail}` });
+        return resolve({ ok: false, text: '', error: `${provider.bin} failed: ${detail}`, via: 'cli', provider: provider.id });
       }
-      resolve({ ok: true, text: out.trim(), error: null });
+      resolve({ ok: true, text: out.trim(), error: null, via: 'cli', provider: provider.id });
     });
 
     proc.on('error', e => {
-      resolve({ ok: false, text: '', error: `Could not launch '${provider.bin}': ${e.message}` });
+      resolve({ ok: false, text: '', error: `Could not launch '${provider.bin}': ${e.message}`, via: 'cli', provider: provider.id });
     });
   });
+}
+
+/**
+ * ask(prompt, opts) — invoke an AI provider and collect the full text response.
+ *
+ * @param {string} prompt
+ * @param {{ providerId?: string, allowApi?: boolean, timeoutMs?: number }} [opts]
+ *   providerId — use this CLI; null/undefined = use the default
+ *   allowApi   — false keeps the call on the CLI even when API mode is on
+ * @returns {Promise<{ ok: boolean, text: string, error: string|null, via: 'cli'|'api', provider: string, apiFallback?: string }>}
+ */
+async function ask(prompt, opts = {}) {
+  prompt = require('./engineering-writing').instructions + '\n\n' + prompt;
+  const resolvedId = opts.providerId || getActiveProviderId();
+  const provider   = PROVIDER_MAP[resolvedId] || PROVIDER_MAP['github-copilot'];
+
+  // API mode only applies when the caller did not pick a specific CLI.
+  let apiFallback = null;
+  if (!opts.providerId && opts.allowApi !== false && apiMode()) {
+    const res = await loadLlm().complete(prompt, { timeoutMs: opts.timeoutMs });
+    if (res.ok) return res;
+    // A prompt blocked by the security policy must not be retried through a CLI.
+    if (res.code === 'prompt_security_violation') return res;
+    apiFallback = res.error;
+    notifyApiFallback(res, provider.name);
+  }
+
+  const res = await askCli(prompt, provider);
+  return apiFallback ? { ...res, apiFallback } : res;
 }
 
 module.exports = { listProviders, getActiveProviderId, ask, PROVIDERS, PROVIDER_MAP };
