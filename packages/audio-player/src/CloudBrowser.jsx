@@ -3,7 +3,7 @@ import { Icon } from './Icon.jsx';
 
 const formatSize = (b) => (b == null ? '' : b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
 
-export default function CloudBrowser({ onLibrary, showStatus }) {
+export default function CloudBrowser({ onLibrary, onFolders, showStatus }) {
   const [connections, setConnections] = useState(null);
   const [connId, setConnId] = useState('');
   const [listing, setListing] = useState(null); // { path, entries }
@@ -65,6 +65,18 @@ export default function CloudBrowser({ onLibrary, showStatus }) {
     showStatus(res.added ? `Added ${res.added} track${res.added === 1 ? '' : 's'} from cloud storage to your library.` : 'No audio files found in the selection.');
   };
 
+  const addFolder = async (p) => {
+    if (importing.current) return;
+    importing.current = true;
+    setProgress({ phase: 'scanning' });
+    const res = await window.robosAudio.addCloudFolder(connId, p);
+    importing.current = false;
+    setProgress(null);
+    if (!res.ok) { showStatus(`Could not add folder: ${res.error}`); return; }
+    onFolders(res);
+    showStatus(`Folder added to your library: ${res.added} new track${res.added === 1 ? '' : 's'}.`);
+  };
+
   const usable = (connections || []).filter(c => c.browsable);
   const other = (connections || []).filter(c => !c.browsable);
 
@@ -84,8 +96,9 @@ export default function CloudBrowser({ onLibrary, showStatus }) {
             Add {selected.size ? `${selected.size} selected` : 'selected'} to library
           </button>
           {listing && (
-            <button className="btn-secondary" disabled={!!progress} onClick={() => doImport([listing.path])}>
-              Add this folder
+            <button className="btn-secondary" disabled={!!progress} onClick={() => addFolder(listing.path)}
+              title="Keep this folder in your library and sync it">
+              Add as library folder
             </button>
           )}
         </div>

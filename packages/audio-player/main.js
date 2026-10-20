@@ -10,6 +10,7 @@ const { CastService } = require('./lib/cast-service');
 const { MediaLibrary } = require('./lib/media-library');
 const cloud = require('./lib/cloud-storage');
 const lyrics = require('./lib/lyrics');
+const { LibraryFolders } = require('./lib/library-folders');
 
 function ensureFileAccessible(filePath) {
   if (!filePath || typeof filePath !== 'string') return false;
@@ -52,6 +53,7 @@ app.commandLine.appendSwitch('disable-dev-shm-usage');
 
 let mainWindow = null;
 const mediaLibrary = new MediaLibrary();
+const libraryFolders = new LibraryFolders({ mediaLibrary, cloud });
 const castService = new CastService();
 castService.mediaLibrary = mediaLibrary;
 
@@ -384,6 +386,83 @@ ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
     dirs,
     library: mediaLibrary.getLibrary()
   };
+});
+
+// ── Managed library folders (local + cloud) ────────────────────────────────
+
+function folderState() {
+  return { folders: libraryFolders.list(), library: mediaLibrary.getLibrary() };
+}
+
+function scanLocalFolders(folders) {
+  const paths = folders.filter(f => f.kind === 'local' && fs.existsSync(f.path)).map(f => f.path);
+  if (!paths.length) return;
+  mediaLibrary.scanFoldersInBackground(paths, {
+    onDiscovered: (d) => sendToWindow('audio:library-scan-discovered', d),
+    onProgress: (p) => sendToWindow('audio:library-scan-progress', p),
+    onBatch: (b) => sendToWindow('audio:library-scan-batch', b),
+    onDone: (done) => {
+      folders.forEach(f => f.kind === 'local' && libraryFolders.markSynced(f.id));
+      sendToWindow('audio:library-scan-complete', done);
+    },
+    onError: (err) => sendToWindow('audio:library-scan-error', { error: err.message }),
+  });
+}
+
+async function syncCloudFolders(folders) {
+  const results = [];
+  for (const f of folders.filter(x => x.kind === 'cloud')) {
+    try {
+      results.push({ id: f.id, ...(await libraryFolders.syncCloud(f.id, (p) => sendToWindow('audio:cloud-progress', { ...p, folder: f.label }))) });
+    } catch (err) {
+      results.push({ id: f.id, error: err.message });
+    }
+  }
+  return results;
+}
+
+ipcMain.handle('audio:folders-list', async () => folderState());
+
+ipcMain.handle('audio:folders-add-local', async () => {
+  if (!mainWindow) return { canceled: true };
+  const res = await dialog.showOpenDialog(mainWindow, {
+    title: 'Add Music Folder(s) to Library',
+    buttonLabel: 'Add Folder',
+    properties: ['openDirectory', 'multiSelections', 'dontAddToRecent'],
+  });
+  if (res.canceled || !res.filePaths.length) return { canceled: true };
+  const added = res.filePaths.map(p => libraryFolders.add({ kind: 'local', path: p }));
+  scanLocalFolders(added);
+  return { canceled: false, ...folderState() };
+});
+
+ipcMain.handle('audio:folders-add-cloud', async (_evt, { connectionId, path: remotePath, label }) => {
+  try {
+    const folder = libraryFolders.add({ kind: 'cloud', connectionId, path: remotePath, label });
+    const [result] = await syncCloudFolders([folder]);
+    if (result && result.error) return { ok: false, error: result.error, ...folderState() };
+    return { ok: true, ...result, ...folderState() };
+  } catch (err) {
+    return { ok: false, error: err.message, ...folderState() };
+  }
+});
+
+ipcMain.handle('audio:folders-rescan', async (_evt, id) => {
+  const targets = id ? [libraryFolders.get(id)].filter(Boolean) : libraryFolders.folders.slice();
+  scanLocalFolders(targets);
+  const results = await syncCloudFolders(targets);
+  const failed = results.filter(r => r.error);
+  return { ok: !failed.length, error: failed.map(r => r.error).join('; ') || undefined, ...folderState() };
+});
+
+ipcMain.handle('audio:folders-rename', async (_evt, { id, label }) => {
+  libraryFolders.rename(id, label);
+  return folderState();
+});
+
+ipcMain.handle('audio:folders-remove', async (_evt, { id, removeTracks }) => {
+  libraryFolders.remove(id, !!removeTracks);
+  return folderState();
 });
 
 ipcMain.handle('audio:get-lyrics', async (_evt, track) => lyrics.getLyrics(track));
