@@ -1,1209 +1,1091 @@
 'use strict';
 
-let allDataSources = [];
-let allDrivers = [];
-let allCloudFolders = [];
-let currentDataSource = null;
-let currentSchema = null;
+let drivers = [];
+let dsList = [];
+let cloudFolders = [];
+let selectedDsId = null;
+let activeCategoryFilter = 'all';
 let currentRemotePath = '/';
-let activeCategory = 'all';
-let activeServiceFilter = 'all';
-let activeTab = 'schema';
-let currentTable = null;
-let editingDataSourceId = null;
-let searchQuery = '';
 
-const DRIVER_ICONS = {
-  gdrive: '📁',
-  s3: '🪣',
-  dropbox: '📦',
-  onedrive: '☁️',
-  webdav: '🌐',
-  sftp: '⇅',
-  ftp: '⇅',
-  local: '🖧',
-  postgres: '🐘',
-  mysql: '🐬',
-  oracle: '🔴',
-  mssql: '🪟',
-  sqlite: '🪶',
-  snowflake: '❄️',
-  mongodb: '🍃',
-  redis: '⚡',
-  dynamodb: '🔶',
-  kafka: '📡',
+// Wizard state
+let wizardStep = 1;
+let wizardDriverId = 'gdrive';
+let wizardEditingId = null;
+let wizardAuthState = {
+  loggedIn: false,
+  user: '',
+  accessToken: '',
+  refreshToken: '',
+  localMountPath: '',
 };
 
-const CATEGORY_LABELS = {
-  storage: 'Cloud & Object Storage',
-  sql: 'SQL / Relational',
-  nosql: 'NoSQL & Document',
-  streaming: 'Streaming & Queues',
-  warehouse: 'Analytics & Warehouse',
-};
+const STORAGE_DRIVERS = new Set(['gdrive', 's3', 'dropbox', 'onedrive', 'webdav', 'sftp', 'ftp', 'local']);
 
-const CLOUD_DRIVERS = new Set(['gdrive', 's3', 'dropbox', 'onedrive', 'webdav', 'sftp', 'ftp', 'local']);
-
-function isCloudDriver(driverType) {
-  return CLOUD_DRIVERS.has(String(driverType || '').toLowerCase());
+function esc(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
-function inferCategoryForDriver(driverType) {
-  const d = String(driverType || '').toLowerCase();
-  if (isCloudDriver(d)) return 'storage';
-  if (['postgres', 'mysql', 'oracle', 'mssql', 'sqlite', 'snowflake'].includes(d)) return 'sql';
-  if (['mongodb', 'redis', 'dynamodb'].includes(d)) return 'nosql';
-  if (['kafka', 'nats', 'rabbitmq'].includes(d)) return 'streaming';
-  return 'storage';
+function isStorageDs(ds) {
+  if (!ds) return false;
+  return ds.category === 'storage' || STORAGE_DRIVERS.has(String(ds.driverType || '').toLowerCase());
 }
 
-function extractDriveFolderIdClient(input) {
-  const s = String(input || '').trim();
-  if (!s || s === '/' || s.toLowerCase() === 'root') return 'root';
-  const gdriveProto = s.match(/^gdrive:\/\/([^/?#]+)/i);
-  if (gdriveProto) return gdriveProto[1];
-  const foldersMatch = s.match(/\/folders\/([a-zA-Z0-9_-]+)/);
-  if (foldersMatch) return foldersMatch[1];
-  const idParamMatch = s.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-  if (idParamMatch) return idParamMatch[1];
-  return s;
+function isGDriveLoggedIn(ds) {
+  if (!ds || ds.driverType !== 'gdrive') return true;
+  if (ds.authStatus === 'logged_out' || ds.status === 'Login Required' || ds.loggedIn === false) return false;
+  return Boolean(ds.loggedIn || ds.authStatus === 'authenticated' || ds.accessToken || ds.refreshToken || ds.localMountPath);
 }
 
-function showToast(msg, isError = false) {
-  const banner = document.getElementById('toast-banner');
-  if (!banner) return;
-  banner.style.background = isError ? 'rgba(248, 81, 73, 0.18)' : 'rgba(0, 188, 212, 0.16)';
-  banner.style.borderColor = isError ? 'rgba(248, 81, 73, 0.45)' : 'rgba(0, 188, 212, 0.45)';
-  banner.innerHTML = `<span>${esc(msg)}</span><button class="btn btn-xs" onclick="document.getElementById('toast-banner').classList.add('hidden')">Dismiss</button>`;
-  banner.classList.remove('hidden');
-  clearTimeout(showToast._timer);
-  showToast._timer = setTimeout(() => banner.classList.add('hidden'), 6000);
+// ── Source-Only Declaration Mode (when ROBOS_GRAPH_ROOT is set) ─────────────
+
+function renderSourceWorkspace(ws) {
+  const label = id => ws.labels?.[id] || String(id || '').split(':').pop();
+  const list = values => [].concat(values || []).map(v => typeof v === 'string' ? v : v?.['@id']).filter(Boolean);
+  const items = ws.nodes.map(node => {
+    const title = esc(node['dcterms:title'] || node['@id']);
+    const id = esc(node['@id']);
+    const types = [].concat(node['@type'] || []).map(t => `<code>${esc(t)}</code>`).join(' ');
+    const engine = node['robos:engine'] || node['robos:driverType'] || node['robos:brokerType'] || '';
+    const services = list(node['robos:boundServices']).map(ref => `<li>${esc(label(ref))} <code>${esc(ref)}</code></li>`).join('');
+    const evidence = (node['robos:evidence'] || []).map(ev =>
+      `<li><code>${esc([ev.repository, ev.path].filter(Boolean).join(':'))}${ev.line ? `:${esc(ev.line)}` : ''}</code></li>`).join('');
+    return `<article class="source-card" data-node-id="${id}">
+      <h3>${title}</h3>
+      <p><code>${id}</code> ${types} ${engine ? `<span>${esc(engine)}</span>` : ''}</p>
+      ${services ? `<section><h4>Services</h4><ul>${services}</ul></section>` : ''}
+      ${evidence ? `<section><h4>Evidence</h4><ul>${evidence}</ul></section>` : ''}
+    </article>`;
+  }).join('');
+  document.body.innerHTML = `<main class="source-workspace" style="padding:24px;overflow:auto;height:100vh;">
+    <header style="margin-bottom:16px;">
+      <p>Read-only source workspace</p>
+      <h1>${esc(ws.title || ws.appName)}</h1>
+      <p><code>${esc(ws.root)}</code></p>
+    </header>
+    <section aria-label="Declared data and messaging resources">${items || '<p>No data store or messaging declarations found in this graph workspace.</p>'}</section>
+  </main>`;
 }
 
-async function copyTextToClipboard(text, label = 'Path') {
-  try {
-    await navigator.clipboard.writeText(text);
-    showToast(`✓ Copied ${label} to clipboard: ${text}`);
-  } catch {
-    showToast(`${label}: ${text}`);
-  }
-}
+// ── Initialization ──────────────────────────────────────────────────────────
 
 async function init() {
-  const source = await window.dataSources.getSourceWorkspace();
-  if (source.sourceOnly) { window.renderSourceWorkspace(source); return; }
+  const sourceWorkspace = await window.dataSources.getSourceWorkspace?.();
+  if (sourceWorkspace?.sourceOnly) {
+    renderSourceWorkspace(sourceWorkspace);
+    return;
+  }
 
-  allDrivers = await window.dataSources.getDrivers();
-  allDataSources = await window.dataSources.getDataSources();
+  drivers = await window.dataSources.getDrivers();
+  dsList = await window.dataSources.getDataSources();
   try {
-    allCloudFolders = await window.dataSources.getCloudFolders();
+    cloudFolders = await window.dataSources.getCloudFolders();
   } catch {
-    allCloudFolders = [];
+    cloudFolders = [];
   }
 
-  setupEventListeners();
-  setupResizer();
-  updateCategoryCounts();
-  renderSidebarDataSources();
-  renderMountedFolders();
-  renderDataSourcesGrid();
+  bindEvents();
+  renderWizardProviderCards();
 
-  if (allDataSources.length > 0) {
-    await selectDataSource(allDataSources[0].id);
+  if (dsList.length > 0 && !selectedDsId) {
+    selectedDsId = dsList[0].id;
   }
+
+  renderAll();
 }
 
-function updateCategoryCounts() {
-  const sqlCount = allDataSources.filter(d => d.category === 'sql').length;
-  const nosqlCount = allDataSources.filter(d => d.category === 'nosql').length;
-  const storageCount = allDataSources.filter(d => d.category === 'storage').length;
-  const streamCount = allDataSources.filter(d => d.category === 'streaming').length;
-
-  document.getElementById('count-all').textContent = allDataSources.length;
-  document.getElementById('count-sql').textContent = sqlCount;
-  document.getElementById('count-nosql').textContent = nosqlCount;
-  document.getElementById('count-storage').textContent = storageCount;
-  document.getElementById('count-streaming').textContent = streamCount;
-
-  const badgeText = document.getElementById('kgraph-badge-text');
-  if (badgeText) {
-    badgeText.textContent = `Knowledge Graph Connected (${allDataSources.length} Sources)`;
-  }
-  const mountBadge = document.getElementById('count-mounted-folders');
-  if (mountBadge) {
-    mountBadge.textContent = allCloudFolders.length;
-  }
+function renderAll() {
+  renderSidebar();
+  renderMainWorkspace();
+  renderMountedFoldersTab();
 }
+
+// ── Sidebar Rendering ───────────────────────────────────────────────────────
 
 function getFilteredDataSources() {
-  let filtered = allDataSources;
-  if (activeCategory !== 'all') {
-    filtered = filtered.filter(d => d.category === activeCategory);
-  }
-  if (activeServiceFilter !== 'all') {
-    filtered = filtered.filter(d => (d.boundServices || []).some(s => s.includes(activeServiceFilter)));
-  }
-  if (searchQuery) {
-    const q = searchQuery.toLowerCase();
-    filtered = filtered.filter(d =>
-      (d.name || '').toLowerCase().includes(q) ||
-      (d.driverType || '').toLowerCase().includes(q) ||
-      (d.host || '').toLowerCase().includes(q) ||
-      (d.database || '').toLowerCase().includes(q) ||
-      (d.folderId || '').toLowerCase().includes(q) ||
-      (d.description || '').toLowerCase().includes(q)
+  const q = (document.getElementById('ds-search')?.value || '').trim().toLowerCase();
+  return dsList.filter(ds => {
+    if (activeCategoryFilter === 'storage' && !isStorageDs(ds)) return false;
+    if (activeCategoryFilter === 'database' && isStorageDs(ds)) return false;
+    if (!q) return true;
+    return (
+      (ds.name || '').toLowerCase().includes(q) ||
+      (ds.driverType || '').toLowerCase().includes(q) ||
+      (ds.user || '').toLowerCase().includes(q) ||
+      (ds.host || '').toLowerCase().includes(q)
     );
-  }
-  return filtered;
+  });
 }
 
-function renderSidebarDataSources() {
-  const container = document.getElementById('sidebar-ds-list');
-  if (!container) return;
-  container.innerHTML = '';
+function renderSidebar() {
+  const listEl = document.getElementById('sidebar-ds-list');
+  const countBadge = document.getElementById('ds-count-badge');
+  if (countBadge) countBadge.textContent = String(dsList.length);
+  if (!listEl) return;
 
   const filtered = getFilteredDataSources();
   if (filtered.length === 0) {
-    container.innerHTML = `<div style="padding:8px;font-size:11px;color:#8b949e;">No matching data sources.</div>`;
+    listEl.innerHTML = `
+      <div style="padding:24px 12px;text-align:center;color:var(--text-muted);font-size:12px;">
+        ${dsList.length === 0 ? 'No data sources added yet.<br>Click <b>+ Add Google Drive</b> or <b>+ Add Data Source</b> above.' : 'No matching data sources.'}
+      </div>
+    `;
     return;
   }
 
-  filtered.forEach(ds => {
-    const item = document.createElement('div');
-    item.className = `sidebar-ds-item ${currentDataSource && currentDataSource.id === ds.id ? 'active' : ''}`;
-    const sub = ds.driverType === 'gdrive'
-      ? `gdrive://${ds.folderId || ds.database || 'root'}`
-      : (ds.host ? `${ds.host}${ds.port ? ':' + ds.port : ''}` : (ds.driverType || 'local'));
-    item.innerHTML = `
-      <span class="sidebar-ds-icon">${DRIVER_ICONS[ds.driverType] || '🗄️'}</span>
-      <div class="sidebar-ds-text">
-        <div class="sidebar-ds-name">${esc(ds.name)}</div>
-        <div class="sidebar-ds-sub">${esc(sub)}</div>
+  listEl.innerHTML = filtered.map(ds => {
+    const active = ds.id === selectedDsId ? 'active' : '';
+    const needsLogin = ds.driverType === 'gdrive' && !isGDriveLoggedIn(ds);
+    const statusLabel = needsLogin ? '🔑 Login Required' : (ds.status || 'Connected');
+    const statusCls = needsLogin ? 'status-warn' : (ds.status === 'Failed' || ds.status === 'Error' ? 'status-error' : '');
+    const subText = ds.driverType === 'gdrive'
+      ? (ds.user || 'Google Drive Account')
+      : (ds.host || ds.bucket || ds.database || ds.driverType);
+
+    return `
+      <div class="ds-item ${active}" data-id="${esc(ds.id)}">
+        <div class="ds-item-top">
+          <span class="ds-item-name">${esc(ds.name)}</span>
+          <span class="driver-badge" style="font-size:9px;padding:2px 6px;">${esc((ds.driverType || 'DS').toUpperCase())}</span>
+        </div>
+        <div class="ds-item-sub">
+          <span class="mono" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;">${esc(subText)}</span>
+          <span class="status-pill ${statusCls}" style="font-size:10px;padding:1px 7px;">${esc(statusLabel)}</span>
+        </div>
       </div>
-      <span class="sidebar-ds-dot" title="${esc(ds.status || 'Connected')}"></span>
     `;
-    item.onclick = () => {
-      selectDataSource(ds.id);
-      if (activeTab === 'sources-grid') switchTab('schema');
-    };
-    container.appendChild(item);
+  }).join('');
+
+  listEl.querySelectorAll('.ds-item').forEach(item => {
+    item.addEventListener('click', () => {
+      selectedDsId = item.dataset.id;
+      currentRemotePath = '/';
+      renderAll();
+    });
   });
 }
 
-function renderMountedFolders() {
-  const sidebarList = document.getElementById('sidebar-mounts-list');
-  const grid = document.getElementById('mounted-folders-grid');
-  const mountBadge = document.getElementById('count-mounted-folders');
-  if (mountBadge) mountBadge.textContent = allCloudFolders.length;
+// ── Main Workspace Rendering ────────────────────────────────────────────────
 
-  if (sidebarList) {
-    sidebarList.innerHTML = '';
-    if (allCloudFolders.length === 0) {
-      sidebarList.innerHTML = `<div style="padding:4px 6px;font-size:11px;color:#8b949e;">No folders mounted yet.</div>`;
-    } else {
-      allCloudFolders.slice(0, 5).forEach(m => {
-        const row = document.createElement('div');
-        row.className = 'sidebar-mount-item';
-        row.title = `Local RobOS Path: ${m.localPath}`;
-        row.innerHTML = `
-          <span class="sidebar-mount-label">${DRIVER_ICONS[m.driverType] || '📁'} ${esc(m.label)}</span>
-          <button class="btn btn-xs" data-copy="${esc(m.localPath)}" title="Copy local path">📋</button>
-        `;
-        row.onclick = (e) => {
-          if (e.target.closest('[data-copy]')) {
-            e.stopPropagation();
-            copyTextToClipboard(m.localPath, 'RobOS folder path');
-            return;
-          }
-          if (m.dsId && allDataSources.some(d => d.id === m.dsId)) {
-            selectDataSource(m.dsId, m.remotePath || '/');
-            switchTab('schema');
-          } else {
-            switchTab('cloud-folders');
-          }
-        };
-        sidebarList.appendChild(row);
-      });
-    }
+async function renderMainWorkspace() {
+  const emptyPanel = document.getElementById('empty-welcome-panel');
+  const wsPanel = document.getElementById('ds-workspace-panel');
+
+  if (dsList.length === 0) {
+    emptyPanel?.classList.remove('hidden');
+    wsPanel?.classList.add('hidden');
+    return;
   }
 
-  if (grid) {
-    grid.innerHTML = '';
-    if (allCloudFolders.length === 0) {
-      grid.innerHTML = `
-        <div class="ds-card" style="grid-column: 1 / -1; text-align:center; padding: 28px;">
-          <div style="font-size:28px;margin-bottom:8px;">📁</div>
-          <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px;">No Cloud Folders Mounted Yet</div>
-          <div style="font-size:12px;color:#8b949e;margin-bottom:12px;">Connect your Google Drive or S3/SFTP storage and click "Use This Folder in RobOS" to mount folders locally.</div>
-        </div>
-      `;
-      return;
-    }
+  emptyPanel?.classList.add('hidden');
+  wsPanel?.classList.remove('hidden');
 
-    allCloudFolders.forEach(m => {
-      const card = document.createElement('div');
-      card.className = 'mount-card';
-      card.innerHTML = `
-        <div class="mount-card-top">
-          <div class="mount-card-title">
-            <span>${DRIVER_ICONS[m.driverType] || '📁'}</span>
-            <span>${esc(m.label)}</span>
-          </div>
-          <span class="badge badge-cyan">${esc((m.driverType || 'cloud').toUpperCase())}</span>
-        </div>
-        <div style="font-size:11px;color:#8b949e;">
-          Source: <strong style="color:#c9d1d9;">${esc(m.dsName || m.dsId)}</strong> &bull; Remote Path: <code class="mono">${esc(m.remotePath || '/')}</code>
-          ${m.folderId && m.driverType === 'gdrive' ? ` &bull; Drive ID: <code class="mono">${esc(m.folderId)}</code>` : ''}
-        </div>
-        <div>
-          <div style="font-size:10px;color:#8b949e;margin-bottom:3px;text-transform:uppercase;font-weight:600;">Local RobOS Filesystem Mount Path:</div>
-          <div class="mount-path-box">${esc(m.localPath)}</div>
-        </div>
-        <div class="mount-card-actions">
-          <button class="btn btn-sm btn-gdrive" data-action="copy">📋 Copy Local Path</button>
-          <button class="btn btn-sm" data-action="open">📂 Open in File Explorer</button>
-          <button class="btn btn-sm" data-action="browse">🔍 Browse in Data Sources</button>
-          <button class="btn btn-sm" data-action="sync">🔄 Sync Now</button>
-          <button class="btn btn-sm btn-danger" data-action="unmount" style="margin-left:auto;">✕</button>
-        </div>
-      `;
-
-      card.querySelector('[data-action="copy"]').onclick = () => copyTextToClipboard(m.localPath, 'RobOS folder path');
-      card.querySelector('[data-action="open"]').onclick = async () => {
-        const res = await window.dataSources.openLocalPath(m.localPath);
-        if (!res.ok) showToast(res.error || 'Could not open folder', true);
-      };
-      card.querySelector('[data-action="browse"]').onclick = async () => {
-        if (m.dsId) {
-          await selectDataSource(m.dsId, m.remotePath || '/');
-          switchTab('schema');
-        }
-      };
-      card.querySelector('[data-action="sync"]').onclick = async () => {
-        try {
-          const res = await window.dataSources.mountCloudFolder({ dsId: m.dsId, remotePath: m.remotePath || '/', label: m.label });
-          allCloudFolders = res.folders || allCloudFolders;
-          renderMountedFolders();
-          showToast(`✓ Synced "${m.label}" (${res.entry.syncedFiles || 0} files) to ${res.entry.localPath}`);
-        } catch (err) {
-          showToast(`Sync failed: ${err.message}`, true);
-        }
-      };
-      card.querySelector('[data-action="unmount"]').onclick = async () => {
-        const res = await window.dataSources.unmountCloudFolder(m.id);
-        allCloudFolders = res.folders || [];
-        renderMountedFolders();
-        updateCategoryCounts();
-        showToast(`Removed mounted folder "${m.label}"`);
-      };
-
-      grid.appendChild(card);
-    });
-  }
-}
-
-async function selectDataSource(id, initialRemotePath = '/') {
-  currentDataSource = allDataSources.find(d => d.id === id);
-  if (!currentDataSource) return;
-  currentRemotePath = initialRemotePath || '/';
-
-  renderSidebarDataSources();
-
-  // Update Detail Header
-  document.getElementById('ds-detail-name').textContent = currentDataSource.name;
-  document.getElementById('ds-icon-avatar').textContent = DRIVER_ICONS[currentDataSource.driverType] || '🗄️';
-  document.getElementById('ds-detail-type').textContent = `Type: ${currentDataSource.driverType.toUpperCase()}`;
-
-  const catPill = document.getElementById('ds-detail-category-pill');
-  if (catPill) {
-    catPill.textContent = CATEGORY_LABELS[currentDataSource.category] || 'Data Source';
+  let ds = dsList.find(d => d.id === selectedDsId);
+  if (!ds) {
+    ds = dsList[0];
+    selectedDsId = ds.id;
   }
 
-  let endpoint = '';
-  if (currentDataSource.driverType === 'gdrive') {
-    endpoint = `gdrive://${currentDataSource.folderId || currentDataSource.database || 'root'}`;
-  } else if (currentDataSource.host) {
-    endpoint = `${currentDataSource.host}${currentDataSource.port ? ':' + currentDataSource.port : ''}/${currentDataSource.database || currentDataSource.bucket || ''}`;
+  // Populate top Admin bar
+  document.getElementById('ds-detail-type').textContent = (ds.driverType || 'DS').toUpperCase();
+  document.getElementById('ds-detail-name').textContent = ds.name || 'Unnamed Data Source';
+
+  const needsLogin = ds.driverType === 'gdrive' && !isGDriveLoggedIn(ds);
+  const statusPill = document.getElementById('ds-status-pill');
+  if (needsLogin) {
+    statusPill.textContent = '🔑 Login Required';
+    statusPill.className = 'status-pill status-warn';
+  } else if (ds.status === 'Failed' || ds.status === 'Error') {
+    statusPill.textContent = 'Error';
+    statusPill.className = 'status-pill status-error';
   } else {
-    endpoint = currentDataSource.localMountPath || currentDataSource.region || (currentDataSource.sourceOnly ? 'Unknown' : 'Local');
-  }
-  document.getElementById('ds-detail-endpoint').textContent = endpoint;
-  document.getElementById('ds-detail-latency').textContent =
-    currentDataSource.sourceOnly && currentDataSource.latencyMs == null
-      ? 'Latency: Unknown'
-      : `Latency: ${currentDataSource.latencyMs ?? 1.2}ms`;
-
-  const badge = document.getElementById('ds-detail-badge');
-  badge.className = `badge ${currentDataSource.status === 'Connected' ? 'badge-green' : 'badge-yellow'}`;
-  badge.textContent = currentDataSource.status || 'Connected';
-
-  // Bindings
-  const bindingsContainer = document.getElementById('ds-bindings-row');
-  const services = currentDataSource.boundServices || [];
-  bindingsContainer.innerHTML = `<span class="bind-label">Bound to:</span>` +
-    (services.length
-      ? services.map(s => `<span class="badge badge-cyan">${esc(s.replace('urn:robos:service:', ''))}</span>`).join(' ')
-      : `<span style="color:#8b949e;">All RobOS Apps</span>`);
-
-  const isCloud = isCloudDriver(currentDataSource.driverType);
-  const mountBtn = document.getElementById('btn-mount-current-ds');
-  if (mountBtn) mountBtn.classList.toggle('hidden', !isCloud);
-
-  const schemaTabLabel = document.getElementById('tab-btn-schema-label');
-  if (schemaTabLabel) {
-    schemaTabLabel.textContent = isCloud ? 'Cloud File & Folder Explorer' : 'Schema Inspector';
+    statusPill.textContent = ds.user && ds.driverType === 'gdrive' ? `Connected (${ds.user})` : (ds.status || 'Connected');
+    statusPill.className = 'status-pill';
   }
 
-  // Load Schema or Cloud Directory Listing
-  await loadSchemaForCurrent(currentRemotePath);
+  const endpointEl = document.getElementById('ds-detail-endpoint');
+  if (ds.driverType === 'gdrive') {
+    endpointEl.textContent = `Google Drive · Account: ${ds.user || 'Not signed in'} · Root Folder: ${ds.folderId || 'root'}`;
+  } else if (isStorageDs(ds)) {
+    endpointEl.textContent = `${ds.host || ds.bucket || 'Local Mount'}${ds.port ? ':' + ds.port : ''} · Path: ${ds.database || '/'}`;
+  } else {
+    endpointEl.textContent = `${ds.host || '127.0.0.1'}${ds.port ? ':' + ds.port : ''} / ${ds.database || ''}`;
+  }
+
+  // Show/hide Google Drive browser login & logout buttons in Admin bar
+  const btnBrowserLogin = document.getElementById('btn-admin-browser-login');
+  const btnLogout = document.getElementById('btn-admin-logout');
+  const authBanner = document.getElementById('auth-required-banner');
+
+  if (ds.driverType === 'gdrive') {
+    btnBrowserLogin.classList.remove('hidden');
+    btnBrowserLogin.textContent = needsLogin ? '🌐 Log in with Browser' : '🔄 Re-login in Browser';
+    if (needsLogin) {
+      btnLogout.classList.add('hidden');
+      authBanner.classList.remove('hidden');
+      document.getElementById('auth-banner-desc').textContent =
+        `"${ds.name}" is logged out. Sign in with your browser to access and mount Google Drive folders in RobOS.`;
+    } else {
+      btnLogout.classList.remove('hidden');
+      authBanner.classList.add('hidden');
+    }
+  } else {
+    btnBrowserLogin.classList.add('hidden');
+    btnLogout.classList.add('hidden');
+    authBanner.classList.add('hidden');
+  }
+
+  // Render Browse vs DB view
+  const storageContainer = document.getElementById('storage-browser-container');
+  const dbContainer = document.getElementById('db-browser-container');
+  const browseTabBtn = document.getElementById('tab-btn-browse');
+
+  if (isStorageDs(ds)) {
+    browseTabBtn.textContent = '📂 Browse & Mount Folders';
+    storageContainer.classList.remove('hidden');
+    dbContainer.classList.add('hidden');
+    await loadStorageDirectory(ds, currentRemotePath);
+  } else {
+    browseTabBtn.textContent = '🗄️ Database Overview';
+    storageContainer.classList.add('hidden');
+    dbContainer.classList.remove('hidden');
+    document.getElementById('db-summary-text').textContent =
+      `${ds.name} (${(ds.driverType || '').toUpperCase()}) at ${ds.host || '127.0.0.1'}${ds.port ? ':' + ds.port : ''}/${ds.database || ''}`;
+  }
+
+  renderDetailsTab(ds);
 }
 
-async function loadSchemaForCurrent(remotePath = '/') {
-  if (!currentDataSource) return;
-  currentRemotePath = remotePath || '/';
+// ── Cloud Storage Folder Browser ────────────────────────────────────────────
 
-  currentSchema = await window.dataSources.inspectSchema({
-    id: currentDataSource.id,
-    driverType: currentDataSource.driverType,
+async function loadStorageDirectory(ds, remotePath = '/') {
+  currentRemotePath = remotePath || '/';
+  const tbody = document.getElementById('storage-entries-tbody');
+  const providerLabel = document.getElementById('storage-provider-label');
+  const localMountEl = document.getElementById('storage-local-mount-path');
+
+  providerLabel.textContent = `Provider: ${(ds.driverType || 'Storage').toUpperCase()}`;
+  renderBreadcrumbs(currentRemotePath);
+
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px;">Loading folder contents...</td></tr>`;
+
+  const res = await window.dataSources.inspectSchema({
+    id: ds.id,
+    driverType: ds.driverType,
     path: currentRemotePath,
   });
 
-  const treeList = document.getElementById('schema-tree-list');
-  const paneTitle = document.getElementById('schema-pane-title');
-  const cloudToolbar = document.getElementById('cloud-explorer-toolbar');
-  const mountBar = document.getElementById('ds-cloud-mount-bar');
-  const thead = document.getElementById('schema-table-thead');
-  treeList.innerHTML = '';
+  const remote = res?.remote || { path: currentRemotePath, entries: [] };
+  if (remote.localMountPath) {
+    localMountEl.textContent = remote.localMountPath;
+  }
 
-  if (currentSchema.remote) {
-    if (cloudToolbar) cloudToolbar.classList.remove('hidden');
-    if (mountBar && currentSchema.remote.localMountPath) {
-      mountBar.classList.remove('hidden');
-      document.getElementById('ds-cloud-mount-path').textContent = currentSchema.remote.localMountPath;
-    }
-    if (thead) {
-      thead.innerHTML = `
-        <tr>
-          <th>Folder / File Name</th>
-          <th>Size</th>
-          <th>Last Modified</th>
-          <th>Type &amp; RobOS Actions</th>
-        </tr>
-      `;
-    }
-    renderRemoteListing(currentSchema.remote, currentSchema.buckets);
+  if (remote.error) {
+    const isAuthErr = Boolean(remote.authRequired || String(remote.error).toLowerCase().includes('logged out'));
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align:center;padding:32px;">
+          <div style="color:${isAuthErr ? '#fde047' : 'var(--danger)'};font-weight:700;font-size:14px;margin-bottom:8px;">
+            ${isAuthErr ? '🔑 Authentication Required — Logged Out' : '⚠️ Unable to Load Folder'}
+          </div>
+          <div style="color:var(--text-muted);margin-bottom:16px;">${esc(remote.error)}</div>
+          ${isAuthErr ? `<button class="btn btn-primary btn-sm" id="btn-table-login-now">🌐 Sign in with Google in Browser</button>` : ''}
+        </td>
+      </tr>
+    `;
+    document.getElementById('btn-table-login-now')?.addEventListener('click', () => triggerBrowserLoginForDs(ds));
     return;
   }
 
-  if (cloudToolbar) cloudToolbar.classList.add('hidden');
-  if (mountBar) mountBar.classList.add('hidden');
-  if (thead) {
-    thead.innerHTML = `
+  const entries = remote.entries || [];
+  if (entries.length === 0) {
+    tbody.innerHTML = `
       <tr>
-        <th>Column Name</th>
-        <th>Data Type</th>
-        <th>Nullable</th>
-        <th>Key Constraint</th>
+        <td colspan="5" style="text-align:center;color:var(--text-muted);padding:28px;">
+          This folder is empty. Use <b>＋ New Folder</b> or <b>⬆️ Upload Files</b> above to add content, or click <b>📌 Mount Current Folder for RobOS</b>.
+        </td>
       </tr>
     `;
+    return;
   }
 
-  if (currentSchema.tables && currentSchema.tables.length > 0) {
-    paneTitle.textContent = `Database Tables (${currentSchema.tables.length})`;
-    currentSchema.tables.forEach((tbl, idx) => {
-      const item = document.createElement('div');
-      item.className = `tree-item ${idx === 0 ? 'active' : ''}`;
-      item.innerHTML = `<span>📄</span> <span>${esc(tbl.name)}</span> <span style="margin-left:auto;color:#8b949e;font-size:10px;">${tbl.rows || 0} rows</span>`;
-      item.onclick = () => {
-        document.querySelectorAll('#schema-tree-list .tree-item').forEach(el => el.classList.remove('active'));
-        item.classList.add('active');
-        renderTableDetail(tbl);
-      };
-      treeList.appendChild(item);
+  tbody.innerHTML = entries.map(e => {
+    const isDir = e.type === 'dir';
+    const icon = isDir ? '📁' : '📄';
+    const sizeText = isDir ? 'Folder' : `${Math.max(1, Math.round((e.size || 0) / 1024))} KB`;
+    const modText = e.modified ? e.modified.slice(0, 16).replace('T', ' ') : '—';
+
+    return `
+      <tr class="storage-row" data-path="${esc(e.path)}" data-type="${esc(e.type)}">
+        <td>
+          <span style="cursor:${isDir ? 'pointer' : 'default'};font-weight:${isDir ? '600' : '400'};color:${isDir ? '#58a6ff' : 'var(--text)'};" class="entry-name-link">
+            ${icon} ${esc(e.name)}
+          </span>
+        </td>
+        <td>${isDir ? 'Folder' : 'File'}</td>
+        <td class="mono">${esc(sizeText)}</td>
+        <td class="mono">${esc(modText)}</td>
+        <td style="text-align:right;">
+          ${isDir
+            ? `<button class="btn btn-secondary btn-xs btn-open-dir" data-path="${esc(e.path)}">Open</button>
+               <button class="btn btn-primary btn-xs btn-mount-dir" data-path="${esc(e.path)}" data-name="${esc(e.name)}">📌 Mount</button>`
+            : `<button class="btn btn-secondary btn-xs btn-download-file" data-path="${esc(e.path)}">⬇️ Download</button>`
+          }
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  tbody.querySelectorAll('.entry-name-link, .btn-open-dir').forEach(el => {
+    el.addEventListener('click', (ev) => {
+      const row = ev.target.closest('tr');
+      const p = ev.target.dataset.path || row?.dataset.path;
+      const t = row?.dataset.type;
+      if (t === 'dir' && p) {
+        loadStorageDirectory(ds, p);
+      }
     });
+  });
 
-    renderTableDetail(currentSchema.tables[0]);
-  } else {
-    paneTitle.textContent = 'Schema Objects (0)';
-    document.getElementById('table-detail-title').textContent = 'No tables or objects found';
-    document.getElementById('table-columns-tbody').innerHTML = '';
-  }
+  tbody.querySelectorAll('.btn-mount-dir').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const p = btn.dataset.path;
+      const name = btn.dataset.name;
+      await mountFolderForRobOS(ds, p, `${ds.name}: ${name}`);
+    });
+  });
+
+  tbody.querySelectorAll('.btn-download-file').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const p = btn.dataset.path;
+      const res = await window.dataSources.downloadFile({ dsId: ds.id, remoteFile: p });
+      if (res?.ok && res.localPath) {
+        await window.dataSources.openLocalPath(res.localPath);
+      }
+    });
+  });
 }
 
 function renderBreadcrumbs(remotePath) {
-  const crumbsEl = document.getElementById('cloud-breadcrumbs');
-  if (!crumbsEl || !currentDataSource) return;
-  crumbsEl.innerHTML = '';
-
-  const rootBtn = document.createElement('button');
-  rootBtn.className = 'crumb-btn';
-  rootBtn.textContent = currentDataSource.driverType === 'gdrive'
-    ? `📁 ${currentDataSource.name} (${currentDataSource.folderId || 'root'})`
-    : `☁️ ${currentDataSource.name} (/)`;
-  rootBtn.onclick = () => loadSchemaForCurrent('/');
-  crumbsEl.appendChild(rootBtn);
-
+  const wrap = document.getElementById('storage-breadcrumbs');
+  if (!wrap) return;
   const parts = String(remotePath || '/').split('/').filter(Boolean);
-  parts.forEach((part, idx) => {
-    const sep = document.createElement('span');
-    sep.className = 'crumb-sep';
-    sep.textContent = '/';
-    crumbsEl.appendChild(sep);
-
-    const btn = document.createElement('button');
-    btn.className = 'crumb-btn';
-    btn.textContent = part;
-    const subPath = '/' + parts.slice(0, idx + 1).join('/');
-    btn.onclick = () => loadSchemaForCurrent(subPath);
-    crumbsEl.appendChild(btn);
+  let acc = '';
+  const crumbs = [`<span class="crumb ${parts.length === 0 ? 'active' : ''}" data-path="/">/ (Root)</span>`];
+  parts.forEach((p, idx) => {
+    acc += '/' + p;
+    const isLast = idx === parts.length - 1;
+    crumbs.push(`<span class="crumb ${isLast ? 'active' : ''}" data-path="${esc(acc)}">${esc(p)}</span>`);
   });
-}
-
-function renderRemoteListing(listing, buckets) {
-  const treeList = document.getElementById('schema-tree-list');
-  const tbody = document.getElementById('table-columns-tbody');
-  treeList.innerHTML = '';
-  tbody.innerHTML = '';
-
-  currentRemotePath = listing.path || '/';
-  renderBreadcrumbs(currentRemotePath);
-
-  const isGDrive = currentDataSource && currentDataSource.driverType === 'gdrive';
-  const dirs = (listing.entries || []).filter(e => e.type === 'dir');
-  document.getElementById('schema-pane-title').textContent = isGDrive
-    ? `Google Drive Folders (${dirs.length})`
-    : buckets && buckets.length
-      ? `S3 Buckets & Folders (${dirs.length})`
-      : `Folders in ${listing.path} (${dirs.length})`;
-
-  document.getElementById('table-detail-title').textContent = listing.error
-    ? `Error: ${listing.error}`
-    : `${listing.entries.length} items in ${listing.path === '/' ? (currentDataSource.name + ' Root') : listing.path}`;
-
-  const browse = async (p) => {
-    await loadSchemaForCurrent(p);
-  };
-
-  if (listing.path && listing.path !== '/') {
-    const up = document.createElement('div');
-    up.className = 'tree-item';
-    up.innerHTML = '<span>⬆️</span> <span>.. (Parent Folder)</span>';
-    up.onclick = () => browse(listing.path.replace(/\/[^/]*$/, '') || '/');
-    treeList.appendChild(up);
-  }
-
-  // If S3 buckets are provided, show them in the left tree too
-  if (buckets && buckets.length > 0 && listing.path === '/') {
-    buckets.forEach((bkt, idx) => {
-      const item = document.createElement('div');
-      item.className = `tree-item ${idx === 0 ? 'active' : ''}`;
-      item.innerHTML = `<span>🪣</span> <span>${esc(bkt.name)}</span> <span style="margin-left:auto;color:#8b949e;font-size:10px;">${bkt.objectsCount} objs</span>`;
-      item.onclick = () => browse('/');
-      treeList.appendChild(item);
+  wrap.innerHTML = crumbs.join(' <span>/</span> ');
+  wrap.querySelectorAll('.crumb').forEach(c => {
+    c.addEventListener('click', () => {
+      const ds = dsList.find(d => d.id === selectedDsId);
+      if (ds) loadStorageDirectory(ds, c.dataset.path);
     });
-  }
-
-  dirs.forEach(e => {
-    const item = document.createElement('div');
-    item.className = 'tree-item';
-    item.innerHTML = `<span>📁</span> <span>${esc(e.name)}</span>`;
-    item.onclick = () => browse(e.path);
-    treeList.appendChild(item);
-  });
-
-  if (listing.entries.length === 0) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td colspan="4" style="text-align:center;color:#8b949e;padding:24px;">This folder is empty. Click "➕ New Folder" or "⬆️ Upload Files" above to add content.</td>`;
-    tbody.appendChild(tr);
-    return;
-  }
-
-  listing.entries.forEach(e => {
-    const tr = document.createElement('tr');
-    if (e.type === 'dir') tr.className = 'clickable-row';
-    const sizeText = e.type === 'dir' ? 'Folder' : `${Math.max(1, Math.round((e.size || 0) / 1024))} KB`;
-    const modText = e.modified ? esc(e.modified.slice(0, 10)) : '-';
-
-    tr.innerHTML = `
-      <td style="font-weight:600;color:${e.type === 'dir' ? '#38bdf8' : '#c9d1d9'};" data-role="name">
-        ${e.type === 'dir' ? '📁' : '📄'} ${esc(e.name)}${e.type === 'dir' ? '/' : ''}
-      </td>
-      <td style="color:#7ee787;">${sizeText}</td>
-      <td>${modText}</td>
-      <td>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <span class="badge ${e.type === 'dir' ? 'badge-cyan' : 'badge-green'}">${e.type === 'dir' ? 'FOLDER' : 'SYNCED'}</span>
-          ${e.type === 'dir'
-            ? `<button class="btn btn-xs btn-gdrive" data-action="mount-folder" title="Sync and mount this folder for use in RobOS apps">📌 Use in RobOS</button>`
-            : `<button class="btn btn-xs" data-action="download-file" title="Sync file to local RobOS mount">⬇️ Sync</button>`
-          }
-          ${e.localPath ? `<button class="btn btn-xs" data-action="copy-path" title="Copy local RobOS path">📋 Path</button>` : ''}
-          ${e.webViewLink ? `<button class="btn btn-xs" data-action="open-web" title="Open in Google Drive Web">🌐</button>` : ''}
-        </div>
-      </td>
-    `;
-
-    tr.querySelector('[data-role="name"]').onclick = () => {
-      if (e.type === 'dir') browse(e.path);
-    };
-
-    const mountBtn = tr.querySelector('[data-action="mount-folder"]');
-    if (mountBtn) {
-      mountBtn.onclick = async (ev) => {
-        ev.stopPropagation();
-        await mountFolderForRobOS(currentDataSource.id, e.path, `${currentDataSource.name}: ${e.name}`);
-      };
-    }
-
-    const dlBtn = tr.querySelector('[data-action="download-file"]');
-    if (dlBtn) {
-      dlBtn.onclick = async (ev) => {
-        ev.stopPropagation();
-        try {
-          const res = await window.dataSources.downloadFile({ dsId: currentDataSource.id, remoteFile: e.path });
-          showToast(`✓ Synced file to RobOS: ${res.localPath}`);
-        } catch (err) {
-          showToast(`Download failed: ${err.message}`, true);
-        }
-      };
-    }
-
-    const copyBtn = tr.querySelector('[data-action="copy-path"]');
-    if (copyBtn) {
-      copyBtn.onclick = (ev) => {
-        ev.stopPropagation();
-        copyTextToClipboard(e.localPath, 'Local file path');
-      };
-    }
-
-    const webBtn = tr.querySelector('[data-action="open-web"]');
-    if (webBtn) {
-      webBtn.onclick = (ev) => {
-        ev.stopPropagation();
-        window.dataSources.openUrl(e.webViewLink);
-      };
-    }
-
-    tbody.appendChild(tr);
   });
 }
 
-async function mountFolderForRobOS(dsId, remotePath, label) {
+async function mountFolderForRobOS(ds, remotePath, label) {
   try {
-    const res = await window.dataSources.mountCloudFolder({ dsId, remotePath, label });
-    allCloudFolders = res.folders || [];
-    renderMountedFolders();
-    updateCategoryCounts();
-    showToast(`✓ Mounted "${res.entry.label}" for RobOS at ${res.entry.localPath}`);
+    const res = await window.dataSources.mountCloudFolder({
+      dsId: ds.id,
+      remotePath,
+      label,
+    });
+    if (res?.folders) {
+      cloudFolders = res.folders;
+      renderMountedFoldersTab();
+      switchTab('mounts');
+    }
   } catch (err) {
-    showToast(`Failed to mount folder: ${err.message}`, true);
+    alert('Failed to mount folder: ' + err.message);
   }
 }
 
-function renderTableDetail(table) {
-  currentTable = table;
-  document.getElementById('table-detail-title').textContent = `Table: ${table.name} (${table.type || 'BASE TABLE'})`;
+// ── Mounted Folders Tab ─────────────────────────────────────────────────────
 
-  const actionsEl = document.getElementById('table-detail-actions');
-  if (actionsEl) {
-    actionsEl.innerHTML = `<button class="btn btn-xs btn-primary" id="btn-query-this-table">▶ Query ${esc(table.name)}</button>`;
-    const qBtn = document.getElementById('btn-query-this-table');
-    if (qBtn) {
-      qBtn.onclick = () => {
-        document.getElementById('query-input').value = `SELECT * FROM ${table.name} LIMIT 25;`;
-        switchTab('query');
-        runCurrentQuery();
-      };
-    }
-  }
-
-  const tbody = document.getElementById('table-columns-tbody');
-  tbody.innerHTML = '';
-
-  (table.columns || []).forEach(col => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td style="font-weight:600;color:${col.isPrimary ? '#58a6ff' : '#c9d1d9'};">${col.isPrimary ? '🔑 ' : ''}${esc(col.name)}</td>
-      <td style="color:#7ee787;">${esc(col.type)}</td>
-      <td>${col.nullable ? '<span style="color:#8b949e;">YES</span>' : '<span style="color:#f85149;">NO</span>'}</td>
-      <td>${col.isPrimary ? '<span class="badge badge-cyan">PRIMARY KEY</span>' : '-'}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-async function runCurrentQuery() {
-  if (!currentDataSource) return;
-  const query = document.getElementById('query-input').value.trim();
-
-  const res = await window.dataSources.executeQuery({
-    id: currentDataSource.id,
-    driverType: currentDataSource.driverType,
-    query,
-  });
-
-  const thead = document.getElementById('results-thead');
-  const tbody = document.getElementById('results-tbody');
-  const statusEl = document.getElementById('query-status-text');
-
-  statusEl.textContent = `${res.rowCount} rows returned in ${res.executionTimeMs}ms`;
-
-  thead.innerHTML = '<tr>' + (res.columns || []).map(c => `<th>${esc(c)}</th>`).join('') + '</tr>';
-  tbody.innerHTML = (res.rows || []).map(r => '<tr>' + r.map(cell => `<td>${esc(cell)}</td>`).join('') + '</tr>').join('');
-}
-
-function exportQueryResultsCsv() {
-  const thead = document.getElementById('results-thead');
-  const tbody = document.getElementById('results-tbody');
-  if (!thead || !tbody) return;
-  const headers = [...thead.querySelectorAll('th')].map(th => `"${th.textContent.replace(/"/g, '""')}"`).join(',');
-  const rows = [...tbody.querySelectorAll('tr')].map(tr =>
-    [...tr.querySelectorAll('td')].map(td => `"${td.textContent.replace(/"/g, '""')}"`).join(',')
-  );
-  const csv = [headers, ...rows].join('\n');
-  copyTextToClipboard(csv, 'CSV query results');
-}
-
-function renderDataSourcesGrid() {
-  const grid = document.getElementById('datasources-grid');
+function renderMountedFoldersTab() {
+  const countEl = document.getElementById('mounted-folders-count');
+  const grid = document.getElementById('mounted-folders-grid');
+  if (countEl) countEl.textContent = String(cloudFolders.length);
   if (!grid) return;
-  grid.innerHTML = '';
 
-  const filtered = getFilteredDataSources();
-
-  filtered.forEach(ds => {
-    const card = document.createElement('div');
-    card.className = 'ds-card';
-    const endpoint = ds.driverType === 'gdrive'
-      ? `gdrive://${ds.folderId || ds.database || 'root'}`
-      : (ds.host || ds.region || (ds.sourceOnly ? 'Unknown' : 'local'));
-
-    card.innerHTML = `
-      <div class="ds-card-header">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:20px;">${DRIVER_ICONS[ds.driverType] || '🗄️'}</span>
-          <span class="ds-card-title">${esc(ds.name)}</span>
-        </div>
-        <span class="badge ${ds.status === 'Connected' ? 'badge-green' : 'badge-yellow'}">${esc(ds.status || 'Connected')}</span>
-      </div>
-      <div class="ds-card-desc">${esc(ds.description || '')}</div>
-      <div class="ds-card-footer">
-        <span>${esc(ds.schemaSummary || CATEGORY_LABELS[ds.category] || '')}</span>
-        <span class="mono">${esc(endpoint)}</span>
-      </div>
-      <div class="ds-card-actions">
-        <button class="btn btn-xs btn-primary" data-card-action="browse">Explore</button>
-        <button class="btn btn-xs" data-card-action="edit">Configure</button>
-        <button class="btn btn-xs btn-danger" data-card-action="delete" style="margin-left:auto;">Delete</button>
+  if (cloudFolders.length === 0) {
+    grid.innerHTML = `
+      <div style="grid-column:1/-1;padding:28px;text-align:center;color:var(--text-muted);background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;">
+        No folders mounted yet. Open <b>📂 Browse &amp; Mount Folders</b> and click <b>📌 Mount Current Folder for RobOS</b>.
       </div>
     `;
-
-    card.onclick = (e) => {
-      const actionBtn = e.target.closest('[data-card-action]');
-      if (actionBtn) {
-        e.stopPropagation();
-        const act = actionBtn.dataset.cardAction;
-        if (act === 'browse') {
-          selectDataSource(ds.id);
-          switchTab('schema');
-        } else if (act === 'edit') {
-          openEditModal(ds);
-        } else if (act === 'delete') {
-          deleteDataSourceById(ds.id);
-        }
-        return;
-      }
-      selectDataSource(ds.id);
-      switchTab('schema');
-    };
-    grid.appendChild(card);
-  });
-}
-
-function switchTab(tabName) {
-  activeTab = tabName;
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === `tab-${tabName}`));
-
-  if (tabName === 'query' && document.getElementById('results-tbody').children.length === 0) {
-    runCurrentQuery();
-  }
-  if (tabName === 'cloud-folders') {
-    renderMountedFolders();
-  }
-}
-
-const DRIVER_FORM_DEFAULTS = {
-  gdrive:   { host: 'drive.google.com', port: 443, user: '', database: 'root', dbLabel: 'Google Drive Folder URL or Folder ID (use "root" for My Drive)', userLabel: 'Google Account Email (optional)', passLabel: 'OAuth Access Token / Google API Key (optional for RobOS Mount)' },
-  s3:       { host: 's3.us-east-1.amazonaws.com', port: 443, user: '', database: 'my-bucket', dbLabel: 'S3 Bucket Name', userLabel: 'AWS Access Key ID', passLabel: 'AWS Secret Access Key' },
-  dropbox:  { host: 'api.dropboxapi.com', port: 443, user: '', database: '/', dbLabel: 'Dropbox Folder Path', userLabel: 'Dropbox Account / App Key', passLabel: 'Dropbox OAuth2 Access Token' },
-  onedrive: { host: 'graph.microsoft.com', port: 443, user: '', database: '/', dbLabel: 'OneDrive Folder Path', userLabel: 'Microsoft 365 Account', passLabel: 'Microsoft Graph Access Token' },
-  webdav:   { host: 'nextcloud.example.com', port: 443, user: '', database: '/remote.php/dav/files/user/', dbLabel: 'WebDAV Remote Path', userLabel: 'Username', passLabel: 'App Password' },
-  sftp:     { host: '', port: 22, user: '', database: '/', dbLabel: 'Start Directory', userLabel: 'SSH Username', passLabel: 'SSH Password / Key Passphrase' },
-  ftp:      { host: '', port: 21, user: 'anonymous', database: '/', dbLabel: 'Start Directory', userLabel: 'FTP Username', passLabel: 'FTP Password' },
-  local:    { host: 'localhost', port: 0, user: '', database: '/', dbLabel: 'Local / Mounted Directory Path', userLabel: 'Owner (optional)', passLabel: 'Token (optional)' },
-};
-
-function onGDriveAuthModeChange() {
-  const mode = document.getElementById('modal-gdrive-auth-mode').value;
-  document.getElementById('gdrive-local-mount-row').classList.toggle('hidden', mode !== 'local_mount');
-  document.getElementById('gdrive-oauth-row').classList.toggle('hidden', mode !== 'oauth');
-  document.getElementById('gdrive-sa-row').classList.toggle('hidden', mode !== 'service_account');
-
-  const passLabel = document.getElementById('lbl-ds-password');
-  if (mode === 'api_key') passLabel.textContent = 'Google Cloud API Key (AIza...)';
-  else if (mode === 'oauth') passLabel.textContent = 'Google OAuth 2.0 Access Token (ya29...)';
-  else passLabel.textContent = 'OAuth Token / API Key (optional)';
-}
-
-function onModalDriverChange(preserveValues = false) {
-  const driver = document.getElementById('modal-ds-driver').value;
-  const preset = DRIVER_FORM_DEFAULTS[driver];
-  const isGDrive = driver === 'gdrive';
-
-  document.getElementById('gdrive-setup-panel').classList.toggle('hidden', !isGDrive);
-  document.getElementById('grp-ds-keyfile').classList.toggle('hidden', driver !== 'sftp');
-  document.getElementById('row-host-port').classList.toggle('hidden', isGDrive || driver === 'local');
-
-  document.getElementById('lbl-ds-database').textContent = preset ? preset.dbLabel : 'Database / Bucket / Folder ID';
-  document.getElementById('lbl-ds-user').textContent = preset ? preset.userLabel : 'Username / Key ID';
-  document.getElementById('lbl-ds-password').textContent = preset ? preset.passLabel : 'Password / Secret';
-
-  if (!preserveValues) {
-    if (preset) {
-      document.getElementById('modal-ds-host').value = preset.host;
-      document.getElementById('modal-ds-port').value = preset.port || '';
-      document.getElementById('modal-ds-user').value = preset.user;
-      document.getElementById('modal-ds-database').value = preset.database;
-    } else {
-      document.getElementById('modal-ds-host').value = '127.0.0.1';
-      document.getElementById('modal-ds-port').value = '5432';
-      document.getElementById('modal-ds-user').value = 'postgres';
-      document.getElementById('modal-ds-database').value = 'petshop';
-    }
-  }
-
-  if (isGDrive) {
-    onGDriveAuthModeChange();
-    updateGDriveFolderIdPreview();
-  } else {
-    document.getElementById('gdrive-folder-id-preview').classList.add('hidden');
-  }
-}
-
-function updateGDriveFolderIdPreview() {
-  const driver = document.getElementById('modal-ds-driver').value;
-  const preview = document.getElementById('gdrive-folder-id-preview');
-  if (!preview || driver !== 'gdrive') {
-    if (preview) preview.classList.add('hidden');
     return;
   }
-  const raw = document.getElementById('modal-ds-database').value.trim();
-  const extracted = extractDriveFolderIdClient(raw);
-  preview.classList.remove('hidden');
-  preview.textContent = extracted === 'root'
-    ? '✓ Target Folder: My Drive Root ("root") — will be mounted in ~/.robos/cloud-mounts/'
-    : `✓ Extracted Google Drive Folder ID: ${extracted}`;
+
+  grid.innerHTML = cloudFolders.map(f => `
+    <div class="mount-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="mount-card-title">📌 ${esc(f.label || f.dsName)}</span>
+        <span class="driver-badge" style="font-size:10px;">${esc((f.driverType || 'CLOUD').toUpperCase())}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);">Remote Path: <code>${esc(f.remotePath || '/')}</code></div>
+      <div class="mount-card-path mono">${esc(f.localPath || '')}</div>
+      <div class="mount-card-actions">
+        <button class="btn btn-secondary btn-xs btn-open-mount-dir" data-local="${esc(f.localPath || '')}">📂 Open Folder</button>
+        <button class="btn btn-secondary btn-xs btn-resync-mount" data-ds="${esc(f.dsId)}" data-remote="${esc(f.remotePath || '/')}" data-label="${esc(f.label || '')}">🔄 Sync</button>
+        <button class="btn btn-danger-outline btn-xs btn-unmount-folder" data-id="${esc(f.id)}">Unmount</button>
+      </div>
+    </div>
+  `).join('');
+
+  grid.querySelectorAll('.btn-open-mount-dir').forEach(btn => {
+    btn.addEventListener('click', () => window.dataSources.openLocalPath(btn.dataset.local));
+  });
+
+  grid.querySelectorAll('.btn-resync-mount').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const ds = dsList.find(d => d.id === btn.dataset.ds);
+      if (ds) await mountFolderForRobOS(ds, btn.dataset.remote, btn.dataset.label);
+    });
+  });
+
+  grid.querySelectorAll('.btn-unmount-folder').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const res = await window.dataSources.unmountCloudFolder(btn.dataset.id);
+      if (res?.folders) {
+        cloudFolders = res.folders;
+        renderMountedFoldersTab();
+      }
+    });
+  });
 }
 
-function openAddModal(presetDriver = 'postgres') {
-  editingDataSourceId = null;
-  const driverToUse = typeof presetDriver === 'string' && presetDriver ? presetDriver : 'postgres';
-  document.getElementById('ds-modal-title').textContent =
-    driverToUse === 'gdrive' ? 'Connect Google Drive to RobOS' : 'Add New Data Source';
-  document.getElementById('modal-ds-driver').value = driverToUse;
-  document.getElementById('modal-ds-name').value = driverToUse === 'gdrive' ? 'My Google Drive' : '';
-  document.getElementById('modal-ds-password').value = '';
-  document.getElementById('modal-ds-keyfile').value = '';
-  document.getElementById('modal-ds-local-mount').value = '';
-  document.getElementById('modal-gdrive-sa-path').value = '';
-  document.getElementById('modal-gdrive-client-id').value = '';
-  document.getElementById('modal-gdrive-client-secret').value = '';
-  document.getElementById('modal-gdrive-auth-mode').value = 'workspace';
-  document.getElementById('modal-test-banner').classList.add('hidden');
-  onModalDriverChange(false);
-  document.getElementById('modal-ds-services').value = 'petstore-api, vaccine-gateway';
-  document.getElementById('ds-modal').classList.remove('hidden');
+// ── Details & Diagnostics Tab ───────────────────────────────────────────────
+
+function renderDetailsTab(ds) {
+  const grid = document.getElementById('ds-config-kv-grid');
+  if (!grid || !ds) return;
+
+  const items = [
+    { label: 'Name', value: ds.name },
+    { label: 'Provider / Driver', value: (ds.driverType || '').toUpperCase() },
+    { label: 'Status', value: ds.driverType === 'gdrive' && !isGDriveLoggedIn(ds) ? 'Login Required (Logged Out)' : (ds.status || 'Connected') },
+    { label: 'Account / User', value: ds.user || '—' },
+    { label: 'Host / Endpoint', value: ds.host || '—' },
+    { label: 'Folder ID / Database', value: ds.folderId || ds.bucket || ds.database || '/' },
+    { label: 'Last Checked', value: ds.lastChecked ? ds.lastChecked.slice(0, 19).replace('T', ' ') : '—' },
+  ];
+
+  grid.innerHTML = items.map(i => `
+    <div class="kv-item">
+      <div class="kv-label">${esc(i.label)}</div>
+      <div class="kv-val mono">${esc(i.value)}</div>
+    </div>
+  `).join('');
 }
 
-function openEditModal(ds) {
+// ── Browser Login Trigger for Existing Data Source ──────────────────────────
+
+async function triggerBrowserLoginForDs(ds) {
   if (!ds) return;
-  editingDataSourceId = ds.id;
-  document.getElementById('ds-modal-title').textContent = `Configure: ${ds.name}`;
-  document.getElementById('modal-ds-driver').value = ds.driverType || 'postgres';
-  document.getElementById('modal-ds-name').value = ds.name || '';
-  document.getElementById('modal-ds-host').value = ds.host || '';
-  document.getElementById('modal-ds-port').value = ds.port || '';
-  document.getElementById('modal-ds-database').value = ds.driverType === 'gdrive' ? (ds.folderId || ds.database || 'root') : (ds.database || ds.bucket || '');
-  document.getElementById('modal-ds-user').value = ds.user || '';
-  document.getElementById('modal-ds-password').value = (ds.password && ds.password !== '••••••••') ? ds.password : '';
-  document.getElementById('modal-ds-keyfile').value = ds.privateKeyPath || '';
-  document.getElementById('modal-ds-local-mount').value = ds.localMountPath || '';
-  document.getElementById('modal-gdrive-sa-path').value = ds.serviceAccountKeyPath || '';
-  document.getElementById('modal-gdrive-client-id').value = ds.clientId || '';
-  document.getElementById('modal-gdrive-client-secret').value = ds.clientSecret || '';
-  document.getElementById('modal-gdrive-auth-mode').value = ds.authMode || 'workspace';
-  document.getElementById('modal-ds-ssl').checked = Boolean(ds.ssl);
-  document.getElementById('modal-ds-services').value = (ds.boundServices || []).map(s => s.replace('urn:robos:service:', '')).join(', ');
-  document.getElementById('modal-test-banner').classList.add('hidden');
-  onModalDriverChange(true);
-  document.getElementById('ds-modal').classList.remove('hidden');
+  const btn = document.getElementById('btn-admin-browser-login');
+  const origText = btn ? btn.textContent : '';
+  if (btn) btn.textContent = '⏳ Signing in via Browser...';
+
+  try {
+    const res = await window.dataSources.googleBrowserLogin({
+      dsId: ds.id,
+      name: ds.name,
+      user: ds.user || '',
+      folderId: ds.folderId || 'root',
+    });
+    if (res?.ok) {
+      dsList = await window.dataSources.getDataSources();
+      cloudFolders = await window.dataSources.getCloudFolders();
+      renderAll();
+    }
+  } catch (err) {
+    alert('Browser login cancelled or failed: ' + err.message);
+  } finally {
+    if (btn) btn.textContent = origText;
+  }
 }
 
-function closeAddModal() {
-  document.getElementById('ds-modal').classList.add('hidden');
+// ── 3-Step Add / Edit Data Source Wizard ────────────────────────────────────
+
+function renderWizardProviderCards() {
+  const storageGrid = document.getElementById('wizard-storage-providers');
+  const dbGrid = document.getElementById('wizard-db-providers');
+  if (!storageGrid || !dbGrid) return;
+
+  const storageDrivers = drivers.filter(d => d.category === 'storage');
+  const dbDrivers = drivers.filter(d => d.category !== 'storage');
+
+  const cardHtml = (d) => `
+    <div class="provider-card ${d.id === wizardDriverId ? 'selected' : ''}" data-driver="${esc(d.id)}">
+      <div class="provider-card-title">${esc(d.name)}</div>
+      <div class="provider-card-desc">${esc(d.description)}</div>
+    </div>
+  `;
+
+  storageGrid.innerHTML = storageDrivers.map(cardHtml).join('');
+  dbGrid.innerHTML = dbDrivers.map(cardHtml).join('');
+
+  document.querySelectorAll('#add-ds-modal .provider-card').forEach(card => {
+    card.addEventListener('click', () => {
+      wizardDriverId = card.dataset.driver;
+      document.querySelectorAll('#add-ds-modal .provider-card').forEach(c => c.classList.toggle('selected', c.dataset.driver === wizardDriverId));
+      setWizardStep(2);
+    });
+  });
 }
 
-function buildModalDataSourceObject() {
-  const driver = document.getElementById('modal-ds-driver').value;
-  const name = document.getElementById('modal-ds-name').value.trim() || (driver === 'gdrive' ? 'My Google Drive' : 'New Data Source');
-  const host = document.getElementById('modal-ds-host').value.trim() || (driver === 'gdrive' ? 'drive.google.com' : '127.0.0.1');
-  const port = parseInt(document.getElementById('modal-ds-port').value, 10) || (driver === 'gdrive' ? 443 : 5432);
-  const rawDb = document.getElementById('modal-ds-database').value.trim();
+function openAddModal(initialDriverId = null, existingDs = null) {
+  wizardEditingId = existingDs ? existingDs.id : null;
+  wizardDriverId = existingDs ? existingDs.driverType : (initialDriverId || 'gdrive');
+
+  if (existingDs) {
+    wizardAuthState = {
+      loggedIn: isGDriveLoggedIn(existingDs),
+      user: existingDs.user || '',
+      accessToken: existingDs.accessToken || '',
+      refreshToken: existingDs.refreshToken || '',
+      localMountPath: existingDs.localMountPath || '',
+    };
+    document.getElementById('modal-ds-name').value = existingDs.name || '';
+    document.getElementById('modal-gdrive-email').value = existingDs.user || '';
+    document.getElementById('modal-gdrive-folder').value = existingDs.folderId || 'root';
+    document.getElementById('modal-gdrive-local-path').value = existingDs.localMountPath || '';
+    document.getElementById('modal-gdrive-token').value = existingDs.accessToken || '';
+    document.getElementById('modal-ds-host').value = existingDs.host || '';
+    document.getElementById('modal-ds-port').value = existingDs.port || '';
+    document.getElementById('modal-ds-database').value = existingDs.database || existingDs.bucket || '/';
+    document.getElementById('modal-ds-user').value = existingDs.user || '';
+    document.getElementById('modal-ds-password').value = '';
+    document.getElementById('modal-ds-keyfile').value = existingDs.privateKeyPath || '';
+  } else {
+    wizardAuthState = {
+      loggedIn: false,
+      user: '',
+      accessToken: '',
+      refreshToken: '',
+      localMountPath: '',
+    };
+    const drv = drivers.find(d => d.id === wizardDriverId);
+    document.getElementById('modal-ds-name').value = wizardDriverId === 'gdrive' ? 'My Google Drive' : (drv ? `My ${drv.name}` : '');
+    document.getElementById('modal-gdrive-email').value = '';
+    document.getElementById('modal-gdrive-folder').value = 'root';
+    document.getElementById('modal-gdrive-local-path').value = '';
+    document.getElementById('modal-gdrive-token').value = '';
+    document.getElementById('modal-ds-host').value = '';
+    document.getElementById('modal-ds-port').value = drv?.defaultPort || '';
+    document.getElementById('modal-ds-database').value = '/';
+    document.getElementById('modal-ds-user').value = drv?.defaultUser || '';
+    document.getElementById('modal-ds-password').value = '';
+    document.getElementById('modal-ds-keyfile').value = '';
+  }
+
+  document.getElementById('ds-modal-title').textContent = existingDs
+    ? `Edit Data Source: ${existingDs.name}`
+    : 'Add Data Source Wizard';
+
+  renderWizardProviderCards();
+  updateWizardAuthCardUI();
+
+  // If caller asked for a specific driver (e.g. "+ Add Google Drive") or editing, jump right to Step 2
+  setWizardStep(initialDriverId || existingDs ? 2 : 1);
+  document.getElementById('add-ds-modal').classList.remove('hidden');
+}
+
+// Keep global reference for tests/legacy callers
+window.openAddModal = openAddModal;
+
+function updateWizardAuthCardUI() {
+  const card = document.getElementById('wiz-gdrive-login-card');
+  const icon = document.getElementById('wiz-gdrive-auth-icon');
+  const title = document.getElementById('wiz-gdrive-auth-title');
+  const sub = document.getElementById('wiz-gdrive-auth-sub');
+  const badge = document.getElementById('wiz-gdrive-auth-badge');
+  const btn = document.getElementById('btn-wizard-gdrive-login');
+
+  if (wizardAuthState.loggedIn) {
+    card.classList.add('authenticated');
+    icon.textContent = '✅';
+    title.textContent = `Signed in as ${wizardAuthState.user || 'Google Account'}`;
+    sub.textContent = 'Your Google Drive account is authenticated and ready to test or save.';
+    badge.textContent = 'Authenticated';
+    badge.className = 'status-pill';
+    btn.textContent = '🔄 Sign in with a Different Google Account';
+  } else {
+    card.classList.remove('authenticated');
+    icon.textContent = '🔑';
+    title.textContent = 'Sign in with Google Account';
+    sub.textContent = 'Click below to open your web browser and log in to your Google Drive account.';
+    badge.textContent = 'Login Required';
+    badge.className = 'status-pill status-warn';
+    btn.textContent = '🌐 Sign in with Google in Browser';
+  }
+}
+
+function setWizardStep(step) {
+  wizardStep = step;
+
+  [1, 2, 3].forEach(n => {
+    const ind = document.getElementById(`wiz-step-ind-${n}`);
+    const pane = document.getElementById(`wizard-step-${n}`);
+    if (ind) {
+      ind.classList.toggle('active', n === step);
+      ind.classList.toggle('done', n < step);
+    }
+    if (pane) {
+      pane.classList.toggle('active', n === step);
+    }
+  });
+
+  const btnBack = document.getElementById('btn-wiz-back');
+  const btnNext = document.getElementById('btn-wiz-next');
+  const btnSave = document.getElementById('btn-ds-modal-save');
+
+  btnBack.classList.toggle('hidden', step === 1);
+  btnNext.classList.toggle('hidden', step === 3);
+  btnSave.classList.toggle('hidden', step !== 3);
+
+  if (step === 1) {
+    btnNext.textContent = 'Next: Account & Login →';
+  } else if (step === 2) {
+    configureWizardStep2Fields();
+    btnNext.textContent = 'Next: Test & Save →';
+  } else if (step === 3) {
+    renderWizardStep3Review();
+    runWizardConnectionTest();
+  }
+}
+
+function configureWizardStep2Fields() {
+  const drv = drivers.find(d => d.id === wizardDriverId) || { id: wizardDriverId, name: wizardDriverId.toUpperCase(), description: '' };
+  document.getElementById('wiz-provider-badge').textContent = drv.id.toUpperCase();
+  document.getElementById('wiz-provider-name').textContent = drv.name;
+  document.getElementById('wiz-provider-desc').textContent = drv.description || '';
+
+  const nameInput = document.getElementById('modal-ds-name');
+  if (!nameInput.value.trim() || nameInput.value.startsWith('My ')) {
+    nameInput.value = `My ${drv.name}`;
+  }
+
+  const gdriveSec = document.getElementById('wiz-gdrive-section');
+  const genericSec = document.getElementById('wiz-generic-section');
+
+  if (wizardDriverId === 'gdrive') {
+    gdriveSec.classList.remove('hidden');
+    genericSec.classList.add('hidden');
+    updateWizardAuthCardUI();
+  } else {
+    gdriveSec.classList.add('hidden');
+    genericSec.classList.remove('hidden');
+
+    const portInput = document.getElementById('modal-ds-port');
+    if (drv.defaultPort && !portInput.value) portInput.value = drv.defaultPort;
+
+    const isLocal = wizardDriverId === 'local' || wizardDriverId === 'sqlite';
+    document.getElementById('wiz-host-port-row').classList.toggle('hidden', isLocal);
+    document.getElementById('wiz-user-pass-row').classList.toggle('hidden', isLocal);
+    document.getElementById('btn-wiz-pick-generic-folder').classList.toggle('hidden', wizardDriverId !== 'local');
+    document.getElementById('grp-modal-ssh-key').classList.toggle('hidden', wizardDriverId !== 'sftp');
+
+    document.getElementById('lbl-modal-database').textContent =
+      wizardDriverId === 's3' ? 'Bucket Name' :
+      wizardDriverId === 'local' ? 'Local Folder Path' :
+      STORAGE_DRIVERS.has(wizardDriverId) ? 'Remote Folder Path' : 'Database Name';
+  }
+}
+
+function buildWizardCandidatePayload() {
+  const name = document.getElementById('modal-ds-name').value.trim() || `My ${wizardDriverId.toUpperCase()}`;
+  const id = wizardEditingId || `${wizardDriverId}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${Date.now().toString(36).slice(-4)}`;
+
+  if (wizardDriverId === 'gdrive') {
+    const email = document.getElementById('modal-gdrive-email').value.trim() || wizardAuthState.user || '';
+    const folderId = document.getElementById('modal-gdrive-folder').value.trim() || 'root';
+    const localMountPath = document.getElementById('modal-gdrive-local-path').value.trim() || wizardAuthState.localMountPath || '';
+    const accessToken = document.getElementById('modal-gdrive-token').value.trim() || wizardAuthState.accessToken || '';
+    const loggedIn = Boolean(wizardAuthState.loggedIn || accessToken || localMountPath);
+
+    return {
+      id,
+      name,
+      driverType: 'gdrive',
+      category: 'storage',
+      host: 'drive.google.com',
+      port: 443,
+      user: email,
+      folderId,
+      database: '/',
+      accessToken,
+      refreshToken: wizardAuthState.refreshToken || '',
+      localMountPath,
+      authStatus: loggedIn ? 'authenticated' : 'logged_out',
+      loggedIn,
+      status: loggedIn ? 'Connected' : 'Login Required',
+    };
+  }
+
+  const host = document.getElementById('modal-ds-host').value.trim() || '127.0.0.1';
+  const port = Number(document.getElementById('modal-ds-port').value) || null;
+  const database = document.getElementById('modal-ds-database').value.trim() || '/';
   const user = document.getElementById('modal-ds-user').value.trim();
-  const ssl = document.getElementById('modal-ds-ssl').checked;
   const password = document.getElementById('modal-ds-password').value;
-  const privateKeyPath = driver === 'sftp' ? document.getElementById('modal-ds-keyfile').value.trim() : undefined;
-  const localMountPath = document.getElementById('modal-ds-local-mount').value.trim() || undefined;
-  const serviceAccountKeyPath = document.getElementById('modal-gdrive-sa-path').value.trim() || undefined;
-  const clientId = document.getElementById('modal-gdrive-client-id').value.trim() || undefined;
-  const clientSecret = document.getElementById('modal-gdrive-client-secret').value.trim() || undefined;
-  const authMode = driver === 'gdrive' ? document.getElementById('modal-gdrive-auth-mode').value : undefined;
-
-  const servicesStr = document.getElementById('modal-ds-services').value.trim();
-  const boundServices = servicesStr
-    ? servicesStr.split(',').map(s => s.trim()).filter(Boolean).map(s => s.startsWith('urn:') ? s : `urn:robos:service:${s}`)
-    : [];
-
-  const id = editingDataSourceId || (name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).slice(2, 6));
-  const category = inferCategoryForDriver(driver);
-  const folderId = driver === 'gdrive' ? extractDriveFolderIdClient(rawDb) : undefined;
-  const database = driver === 'gdrive' ? '/' : (rawDb || '/');
+  const privateKeyPath = document.getElementById('modal-ds-keyfile').value.trim();
 
   return {
     id,
     name,
-    driverType: driver,
-    category,
+    driverType: wizardDriverId,
+    category: STORAGE_DRIVERS.has(wizardDriverId) ? 'storage' : 'sql',
     host,
     port,
     database,
-    ...(driver === 'gdrive' ? { folderId, authMode, localMountPath, serviceAccountKeyPath, clientId, clientSecret } : {}),
-    ...(driver === 's3' ? { bucket: rawDb || 'default-bucket' } : {}),
-    ...(driver === 'local' ? { localMountPath: rawDb || localMountPath } : {}),
+    bucket: wizardDriverId === 's3' ? database : undefined,
+    localMountPath: wizardDriverId === 'local' ? database : undefined,
     user,
-    ...(password ? { password } : {}),
-    ...(privateKeyPath ? { privateKeyPath } : {}),
-    ssl,
+    password: password || undefined,
+    privateKeyPath: privateKeyPath || undefined,
     status: 'Connected',
-    latencyMs: 1.5,
-    boundServices,
-    description: driver === 'gdrive'
-      ? `Google Drive folder (${folderId}) mounted for RobOS applications`
-      : `${name} managed through RobOS Knowledge Graph`,
-    schemaSummary: driver === 'gdrive' ? `Drive Folder (${folderId})` : 'Initialized data source',
   };
 }
 
-async function saveModalDataSource() {
-  const dsObj = buildModalDataSourceObject();
-  allDataSources = await window.dataSources.saveDataSource(dsObj);
-  try {
-    allCloudFolders = await window.dataSources.getCloudFolders();
-  } catch {}
-  closeAddModal();
-  updateCategoryCounts();
-  renderSidebarDataSources();
-  renderMountedFolders();
-  await selectDataSource(dsObj.id);
-  renderDataSourcesGrid();
-  showToast(`✓ Saved "${dsObj.name}" and synced with RobOS Knowledge Graph`);
+function renderWizardStep3Review() {
+  const candidate = buildWizardCandidatePayload();
+  const grid = document.getElementById('wiz-review-grid');
+  if (!grid) return;
+
+  const rows = [
+    { label: 'Data Source Name', val: candidate.name },
+    { label: 'Provider', val: candidate.driverType.toUpperCase() },
+    { label: 'Account / User', val: candidate.user || (candidate.driverType === 'gdrive' ? 'Not signed in yet' : '—') },
+    { label: 'Target / Folder', val: candidate.folderId || candidate.database || '/' },
+    { label: 'Authentication', val: candidate.driverType === 'gdrive' ? (candidate.loggedIn ? '✅ Browser Signed In' : '🟠 Login Required') : 'Configured' },
+  ];
+
+  grid.innerHTML = rows.map(r => `
+    <div class="kv-item">
+      <div class="kv-label">${esc(r.label)}</div>
+      <div class="kv-val mono">${esc(r.val)}</div>
+    </div>
+  `).join('');
 }
 
-async function deleteDataSourceById(id) {
-  if (!id) return;
-  const target = allDataSources.find(d => d.id === id);
-  allDataSources = await window.dataSources.deleteDataSource(id);
-  try {
-    allCloudFolders = await window.dataSources.getCloudFolders();
-  } catch {}
-  updateCategoryCounts();
-  renderSidebarDataSources();
-  renderMountedFolders();
-  renderDataSourcesGrid();
-  if (allDataSources.length > 0) {
-    await selectDataSource(allDataSources[0].id);
+async function runWizardConnectionTest() {
+  const box = document.getElementById('wiz-test-result');
+  if (!box) return;
+  box.className = 'test-result-box';
+  box.textContent = '⏳ Testing connection and verifying credentials...';
+
+  const candidate = buildWizardCandidatePayload();
+  const res = await window.dataSources.testConnection(candidate);
+
+  if (res?.ok) {
+    box.className = 'test-result-box ok';
+    box.innerHTML = `<strong>✅ Connection Verified (${res.latencyMs || 1} ms)</strong><br>${esc(res.message)}`;
+  } else {
+    box.className = 'test-result-box err';
+    box.innerHTML = `<strong>⚠️ ${esc(res?.status || 'Connection Check')}</strong><br>${esc(res?.message || 'Connection failed')}`;
   }
-  showToast(`Removed data source "${target ? target.name : id}"`);
 }
 
-async function testCurrentConnection() {
-  if (!currentDataSource) return;
-  const res = await window.dataSources.testConnection(currentDataSource);
+// ── Event Bindings ──────────────────────────────────────────────────────────
 
-  const title = document.querySelector('#test-conn-result-card [style*="font-weight:600"]');
-  if (title) {
-    title.textContent = res.ok ? 'Connection Successful' : 'Connection Failed';
-    title.style.color = res.ok ? '#7ee787' : '#f85149';
-  }
-  document.getElementById('test-conn-latency').textContent = `Round-trip latency: ${res.latencyMs} ms`;
-  document.getElementById('test-conn-version').textContent = res.serverVersion;
-  document.getElementById('test-conn-msg').textContent = res.message;
-  document.getElementById('test-conn-modal').classList.remove('hidden');
+function switchTab(tabId) {
+  document.querySelectorAll('.ws-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tabId));
+  document.querySelectorAll('.tab-content').forEach(pane => pane.classList.toggle('active', pane.id === `tab-${tabId}`));
 }
+window.switchTab = switchTab;
 
-function setupEventListeners() {
-  // Category Navigation
-  document.querySelectorAll('#category-nav .nav-item').forEach(item => {
-    item.addEventListener('click', () => {
-      document.querySelectorAll('#category-nav .nav-item').forEach(el => el.classList.remove('active'));
-      item.classList.add('active');
-      activeCategory = item.dataset.cat;
-      renderSidebarDataSources();
-      renderDataSourcesGrid();
-      const filtered = getFilteredDataSources();
-      if (filtered.length > 0 && (!currentDataSource || !filtered.some(d => d.id === currentDataSource.id))) {
-        selectDataSource(filtered[0].id);
-      }
+function bindEvents() {
+  // Header & Empty State buttons
+  document.getElementById('btn-connect-gdrive')?.addEventListener('click', () => openAddModal('gdrive'));
+  document.getElementById('btn-add-ds')?.addEventListener('click', () => openAddModal(null));
+  document.getElementById('btn-empty-add-gdrive')?.addEventListener('click', () => openAddModal('gdrive'));
+  document.getElementById('btn-empty-add-other')?.addEventListener('click', () => openAddModal(null));
+
+  document.getElementById('btn-refresh')?.addEventListener('click', async () => {
+    dsList = await window.dataSources.getDataSources();
+    cloudFolders = await window.dataSources.getCloudFolders();
+    renderAll();
+  });
+
+  // Search & Category filter pills
+  document.getElementById('ds-search')?.addEventListener('input', () => renderSidebar());
+  document.querySelectorAll('#category-filter-pills .cat-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      activeCategoryFilter = pill.dataset.cat;
+      document.querySelectorAll('#category-filter-pills .cat-pill').forEach(p => p.classList.toggle('active', p === pill));
+      renderSidebar();
     });
   });
 
-  // Microservice tags filter
-  document.querySelectorAll('#bound-services-list .service-tag').forEach(tag => {
-    tag.addEventListener('click', () => {
-      document.querySelectorAll('#bound-services-list .service-tag').forEach(el => el.classList.remove('active'));
-      tag.classList.add('active');
-      activeServiceFilter = tag.dataset.service;
-      renderSidebarDataSources();
-      renderDataSourcesGrid();
-    });
-  });
-
-  // Tabs
-  document.querySelectorAll('.tab-btn').forEach(btn => {
+  // Workspace tabs
+  document.querySelectorAll('.ws-tab').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
 
-  // Search
-  document.getElementById('search-input').addEventListener('input', (e) => {
-    searchQuery = e.target.value.trim();
-    renderSidebarDataSources();
-    renderDataSourcesGrid();
+  // Admin Bar Actions
+  document.getElementById('btn-admin-browser-login')?.addEventListener('click', () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (ds) triggerBrowserLoginForDs(ds);
   });
 
-  // Header & Sidebar Add Buttons
-  document.getElementById('btn-add-datasource').addEventListener('click', () => openAddModal('postgres'));
-  document.getElementById('btn-connect-gdrive').addEventListener('click', () => openAddModal('gdrive'));
-  document.getElementById('btn-sidebar-add').addEventListener('click', () => openAddModal('gdrive'));
-  document.getElementById('btn-sidebar-view-mounts').addEventListener('click', () => switchTab('cloud-folders'));
-  document.getElementById('btn-mounts-add-gdrive').addEventListener('click', () => openAddModal('gdrive'));
-  document.getElementById('btn-mounts-refresh').addEventListener('click', async () => {
-    allCloudFolders = await window.dataSources.getCloudFolders();
-    renderMountedFolders();
-    showToast('✓ Refreshed mounted RobOS cloud folders');
+  document.getElementById('btn-banner-browser-login')?.addEventListener('click', () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (ds) triggerBrowserLoginForDs(ds);
   });
 
-  // Quick-Connect Provider Cards in Catalog Tab
-  document.querySelectorAll('.quick-provider-btn').forEach(btn => {
-    btn.addEventListener('click', () => openAddModal(btn.dataset.driver));
+  document.getElementById('btn-admin-logout')?.addEventListener('click', async () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (!ds) return;
+    dsList = await window.dataSources.logoutDataSource(ds.id);
+    renderAll();
   });
 
-  // Detail Header Actions
-  document.getElementById('btn-test-conn').addEventListener('click', testCurrentConnection);
-  document.getElementById('btn-edit-current-ds').addEventListener('click', () => openEditModal(currentDataSource));
-  document.getElementById('btn-delete-current-ds').addEventListener('click', () => {
-    if (currentDataSource) deleteDataSourceById(currentDataSource.id);
-  });
-  document.getElementById('btn-mount-current-ds').addEventListener('click', () => {
-    if (currentDataSource) mountFolderForRobOS(currentDataSource.id, '/', `${currentDataSource.name} (Root)`);
-  });
-  document.getElementById('btn-copy-mount-path').addEventListener('click', () => {
-    const p = document.getElementById('ds-cloud-mount-path').textContent;
-    if (p) copyTextToClipboard(p, 'RobOS local folder path');
-  });
-  document.getElementById('btn-open-mount-path').addEventListener('click', async () => {
-    const p = document.getElementById('ds-cloud-mount-path').textContent;
-    if (p) {
-      const res = await window.dataSources.openLocalPath(p);
-      if (!res.ok) showToast(res.error || 'Could not open folder', true);
-    }
+  document.getElementById('btn-test-conn')?.addEventListener('click', async () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (!ds) return;
+    await showQuickConnectionTestModal(ds);
   });
 
-  // Cloud Explorer Toolbar Actions
-  document.getElementById('btn-mount-current-folder').addEventListener('click', () => {
-    if (!currentDataSource) return;
-    const label = currentRemotePath === '/'
-      ? `${currentDataSource.name} (Root)`
-      : `${currentDataSource.name}: ${currentRemotePath.split('/').filter(Boolean).pop()}`;
-    mountFolderForRobOS(currentDataSource.id, currentRemotePath, label);
+  document.getElementById('btn-db-test-now')?.addEventListener('click', async () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (ds) await showQuickConnectionTestModal(ds);
   });
 
-  document.getElementById('btn-new-cloud-folder').addEventListener('click', () => {
-    const bar = document.getElementById('new-folder-bar');
-    bar.classList.remove('hidden');
-    const inp = document.getElementById('new-folder-name-input');
-    inp.value = '';
-    inp.focus();
+  document.getElementById('btn-details-test')?.addEventListener('click', async () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (!ds) return;
+    const out = document.getElementById('details-test-output');
+    out.classList.remove('hidden');
+    out.className = 'test-result-box';
+    out.textContent = '⏳ Testing connection...';
+    const res = await window.dataSources.testConnection(ds);
+    out.className = `test-result-box ${res?.ok ? 'ok' : 'err'}`;
+    out.textContent = res?.message || 'Test finished.';
+    dsList = await window.dataSources.getDataSources();
+    renderSidebar();
   });
 
-  document.getElementById('btn-cancel-new-folder').addEventListener('click', () => {
-    document.getElementById('new-folder-bar').classList.add('hidden');
+  document.getElementById('btn-edit-ds')?.addEventListener('click', () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (ds) openAddModal(ds.driverType, ds);
   });
 
-  document.getElementById('btn-confirm-new-folder').addEventListener('click', async () => {
-    const name = document.getElementById('new-folder-name-input').value.trim();
-    if (!name || !currentDataSource) return;
-    const targetPath = (currentRemotePath === '/' ? '' : currentRemotePath) + '/' + name;
+  document.getElementById('btn-details-edit')?.addEventListener('click', () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (ds) openAddModal(ds.driverType, ds);
+  });
+
+  document.getElementById('btn-delete-ds')?.addEventListener('click', async () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (!ds) return;
+    dsList = await window.dataSources.deleteDataSource(ds.id);
+    cloudFolders = await window.dataSources.getCloudFolders();
+    selectedDsId = dsList[0]?.id || null;
+    renderAll();
+  });
+
+  // Storage Browser Toolbar
+  document.getElementById('btn-storage-up')?.addEventListener('click', () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (!ds || currentRemotePath === '/') return;
+    const parts = currentRemotePath.split('/').filter(Boolean);
+    parts.pop();
+    loadStorageDirectory(ds, '/' + parts.join('/'));
+  });
+
+  document.getElementById('btn-storage-refresh')?.addEventListener('click', () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (ds) loadStorageDirectory(ds, currentRemotePath);
+  });
+
+  document.getElementById('btn-storage-mkdir')?.addEventListener('click', async () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (!ds) return;
+    const folderName = prompt('New folder name:');
+    if (!folderName || !folderName.trim()) return;
+    const newPath = (currentRemotePath === '/' ? '' : currentRemotePath) + '/' + folderName.trim();
     try {
-      await window.dataSources.createFolder({ dsId: currentDataSource.id, remotePath: targetPath });
-      document.getElementById('new-folder-bar').classList.add('hidden');
-      await loadSchemaForCurrent(currentRemotePath);
-      showToast(`✓ Created folder "${name}" in ${currentDataSource.name}`);
+      await window.dataSources.createFolder({ dsId: ds.id, remotePath: newPath });
+      await loadStorageDirectory(ds, currentRemotePath);
     } catch (err) {
-      showToast(`Could not create folder: ${err.message}`, true);
+      await loadStorageDirectory(ds, currentRemotePath);
     }
   });
 
-  document.getElementById('btn-upload-cloud-files').addEventListener('click', async () => {
-    if (!currentDataSource) return;
+  document.getElementById('btn-storage-upload')?.addEventListener('click', async () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (!ds) return;
     try {
-      const res = await window.dataSources.uploadFiles({ dsId: currentDataSource.id, remoteDir: currentRemotePath });
-      if (!res.canceled && res.uploaded && res.uploaded.length) {
-        await loadSchemaForCurrent(currentRemotePath);
-        showToast(`✓ Uploaded ${res.uploaded.length} file(s) to ${currentDataSource.name}`);
+      const res = await window.dataSources.uploadFiles({ dsId: ds.id, remoteDir: currentRemotePath });
+      if (!res?.canceled) {
+        await loadStorageDirectory(ds, currentRemotePath);
+      }
+    } catch {
+      await loadStorageDirectory(ds, currentRemotePath);
+    }
+  });
+
+  document.getElementById('btn-mount-current-folder')?.addEventListener('click', async () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (!ds) return;
+    const label = currentRemotePath === '/' ? `${ds.name} (Root)` : `${ds.name}: ${currentRemotePath.split('/').pop()}`;
+    await mountFolderForRobOS(ds, currentRemotePath, label);
+  });
+
+  document.getElementById('btn-open-local-mount')?.addEventListener('click', () => {
+    const p = document.getElementById('storage-local-mount-path')?.textContent;
+    if (p) window.dataSources.openLocalPath(p);
+  });
+
+  // Wizard Modal Controls
+  document.getElementById('btn-ds-modal-close')?.addEventListener('click', () => {
+    document.getElementById('add-ds-modal').classList.add('hidden');
+  });
+  document.getElementById('btn-wiz-cancel')?.addEventListener('click', () => {
+    document.getElementById('add-ds-modal').classList.add('hidden');
+  });
+  document.getElementById('btn-wiz-change-provider')?.addEventListener('click', () => setWizardStep(1));
+  document.getElementById('btn-wiz-back')?.addEventListener('click', () => {
+    if (wizardStep > 1) setWizardStep(wizardStep - 1);
+  });
+  document.getElementById('btn-wiz-next')?.addEventListener('click', () => {
+    if (wizardStep < 3) setWizardStep(wizardStep + 1);
+  });
+
+  // Wizard Step 2: Google Drive Browser Login button
+  document.getElementById('btn-wizard-gdrive-login')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-wizard-gdrive-login');
+    const name = document.getElementById('modal-ds-name').value.trim() || 'My Google Drive';
+    const email = document.getElementById('modal-gdrive-email').value.trim();
+    const folderId = document.getElementById('modal-gdrive-folder').value.trim() || 'root';
+
+    btn.textContent = '⏳ Opening Browser for Google Sign-In...';
+    btn.disabled = true;
+    try {
+      const res = await window.dataSources.googleBrowserLogin({
+        dsId: wizardEditingId || undefined,
+        name,
+        user: email,
+        folderId,
+      });
+      if (res?.ok) {
+        wizardAuthState = {
+          loggedIn: true,
+          user: res.user || email || 'Google Account',
+          accessToken: res.accessToken || '',
+          refreshToken: res.refreshToken || '',
+          localMountPath: res.localMountPath || '',
+        };
+        if (res.user) document.getElementById('modal-gdrive-email').value = res.user;
+        if (res.folderId) document.getElementById('modal-gdrive-folder').value = res.folderId;
+        if (res.localMountPath) document.getElementById('modal-gdrive-local-path').value = res.localMountPath;
+        updateWizardAuthCardUI();
       }
     } catch (err) {
-      showToast(`Upload failed: ${err.message}`, true);
+      alert('Browser login did not complete: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      updateWizardAuthCardUI();
     }
   });
 
-  document.getElementById('btn-refresh-schema').addEventListener('click', () => {
-    loadSchemaForCurrent(currentRemotePath);
-  });
-
-  // Modal Controls
-  document.getElementById('btn-ds-modal-close').addEventListener('click', closeAddModal);
-  document.getElementById('btn-ds-modal-cancel').addEventListener('click', closeAddModal);
-  document.getElementById('modal-ds-driver').addEventListener('change', () => onModalDriverChange(false));
-  document.getElementById('modal-gdrive-auth-mode').addEventListener('change', onGDriveAuthModeChange);
-  document.getElementById('modal-ds-database').addEventListener('input', updateGDriveFolderIdPreview);
-  document.getElementById('btn-ds-modal-save').addEventListener('click', saveModalDataSource);
-
-  document.getElementById('btn-modal-test-conn').addEventListener('click', async () => {
-    const banner = document.getElementById('modal-test-banner');
-    banner.classList.remove('hidden');
-    banner.style.color = '#8b949e';
-    banner.textContent = 'Testing connection...';
-    const dsObj = buildModalDataSourceObject();
-    const res = await window.dataSources.testConnection(dsObj);
-    banner.style.color = res.ok ? '#7ee787' : '#f85149';
-    banner.textContent = `${res.ok ? '✓' : '✕'} ${res.message} (${res.latencyMs}ms)`;
-  });
-
-  // Google Drive Modal Helpers
-  document.getElementById('btn-browse-local-folder').addEventListener('click', async () => {
+  document.getElementById('btn-wiz-pick-local')?.addEventListener('click', async () => {
     const res = await window.dataSources.pickLocalFolder();
-    if (!res.canceled && res.folderPath) {
-      document.getElementById('modal-ds-local-mount').value = res.folderPath;
+    if (!res?.canceled && res?.folderPath) {
+      document.getElementById('modal-gdrive-local-path').value = res.folderPath;
+      wizardAuthState.localMountPath = res.folderPath;
+      wizardAuthState.loggedIn = true;
+      updateWizardAuthCardUI();
     }
   });
 
-  document.getElementById('btn-detect-gdrive').addEventListener('click', async () => {
-    const mounts = await window.dataSources.detectGDriveMounts();
-    const listEl = document.getElementById('detected-mounts-list');
-    listEl.innerHTML = '';
-    if (!mounts || mounts.length === 0) {
-      listEl.innerHTML = `<span style="font-size:11px;color:#e3b341;">No existing GVFS or ~/Google Drive mounts found. Use "RobOS Managed Cloud Folder" or OAuth/Service Account mode, or click Browse Folder.</span>`;
-      return;
-    }
-    mounts.forEach(m => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'btn btn-xs btn-gdrive';
-      btn.textContent = `Use ${m.label}: ${m.path}`;
-      btn.onclick = () => {
-        document.getElementById('modal-ds-local-mount').value = m.path;
-      };
-      listEl.appendChild(btn);
-    });
-  });
-
-  document.getElementById('btn-pick-sa-json').addEventListener('click', async () => {
-    const res = await window.dataSources.pickKeyFile({ title: 'Select Google Cloud Service Account JSON Key' });
-    if (!res.canceled && res.filePath) {
-      document.getElementById('modal-gdrive-sa-path').value = res.filePath;
+  document.getElementById('btn-wiz-pick-generic-folder')?.addEventListener('click', async () => {
+    const res = await window.dataSources.pickLocalFolder();
+    if (!res?.canceled && res?.folderPath) {
+      document.getElementById('modal-ds-database').value = res.folderPath;
     }
   });
 
-  document.getElementById('btn-pick-ssh-key').addEventListener('click', async () => {
-    const res = await window.dataSources.pickKeyFile({ title: 'Select SSH Private Key File' });
-    if (!res.canceled && res.filePath) {
+  document.getElementById('btn-wiz-pick-keyfile')?.addEventListener('click', async () => {
+    const res = await window.dataSources.pickKeyFile({ title: 'Select SSH Private Key' });
+    if (!res?.canceled && res?.filePath) {
       document.getElementById('modal-ds-keyfile').value = res.filePath;
     }
   });
 
-  document.getElementById('btn-launch-google-oauth').addEventListener('click', async () => {
-    const clientId = document.getElementById('modal-gdrive-client-id').value.trim();
-    const clientSecret = document.getElementById('modal-gdrive-client-secret').value.trim();
-    const statusLbl = document.getElementById('oauth-status-label');
-    try {
-      statusLbl.style.color = '#38bdf8';
-      statusLbl.textContent = 'Waiting for Google Sign-In in your browser...';
-      const res = await window.dataSources.googleOAuthSignIn({ clientId, clientSecret });
-      if (res.ok && res.accessToken) {
-        document.getElementById('modal-ds-password').value = res.accessToken;
-        statusLbl.style.color = '#7ee787';
-        statusLbl.textContent = '✓ Google Drive OAuth 2.0 token acquired!';
-      }
-    } catch (err) {
-      statusLbl.style.color = '#f85149';
-      statusLbl.textContent = err.message;
+  document.getElementById('btn-wiz-test-conn')?.addEventListener('click', () => runWizardConnectionTest());
+
+  // Save Data Source
+  document.getElementById('btn-ds-modal-save')?.addEventListener('click', async () => {
+    const payload = buildWizardCandidatePayload();
+    dsList = await window.dataSources.saveDataSource(payload);
+    cloudFolders = await window.dataSources.getCloudFolders();
+    selectedDsId = payload.id;
+    document.getElementById('add-ds-modal').classList.add('hidden');
+    renderAll();
+  });
+
+  // Quick Connection Test Modal
+  document.getElementById('btn-test-conn-close')?.addEventListener('click', () => {
+    document.getElementById('test-conn-modal').classList.add('hidden');
+  });
+  document.getElementById('btn-test-conn-ok')?.addEventListener('click', () => {
+    document.getElementById('test-conn-modal').classList.add('hidden');
+  });
+  document.getElementById('btn-test-conn-login')?.addEventListener('click', async () => {
+    document.getElementById('test-conn-modal').classList.add('hidden');
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (ds) await triggerBrowserLoginForDs(ds);
+  });
+
+  // Live IPC listeners from main process (Toast click & Browser login completion)
+  window.dataSources.onAuthUpdated?.((data) => {
+    if (data?.dataSources) {
+      dsList = data.dataSources;
+      if (data.dsId) selectedDsId = data.dsId;
+      renderAll();
     }
   });
 
-  // Test Connection Modal
-  document.getElementById('btn-test-conn-close').addEventListener('click', () => document.getElementById('test-conn-modal').classList.add('hidden'));
-  document.getElementById('btn-test-conn-ok').addEventListener('click', () => document.getElementById('test-conn-modal').classList.add('hidden'));
-
-  // Query Console
-  document.getElementById('btn-run-query').addEventListener('click', runCurrentQuery);
-  document.getElementById('btn-export-query').addEventListener('click', exportQueryResultsCsv);
-  document.getElementById('query-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      runCurrentQuery();
+  window.dataSources.onSelectAndLogin?.((data) => {
+    if (data?.dsId) {
+      selectedDsId = data.dsId;
+      renderAll();
     }
   });
 }
 
-function setupResizer() {
-  const sidebar = document.getElementById('sidebar');
-  const resizer = document.getElementById('resizer');
-  let startX, startW;
+async function showQuickConnectionTestModal(ds) {
+  const modal = document.getElementById('test-conn-modal');
+  const msgEl = document.getElementById('test-conn-msg');
+  const loginBtn = document.getElementById('btn-test-conn-login');
 
-  resizer.addEventListener('mousedown', (e) => {
-    startX = e.clientX;
-    startW = sidebar.offsetWidth;
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
+  modal.classList.remove('hidden');
+  loginBtn.classList.add('hidden');
+  msgEl.className = 'test-result-box';
+  msgEl.textContent = `⏳ Testing connection to "${ds.name}"...`;
 
-    const onMove = (e) => {
-      const w = startW + (e.clientX - startX);
-      sidebar.style.width = Math.max(220, Math.min(400, w)) + 'px';
-    };
-    const onUp = () => {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-  });
+  const res = await window.dataSources.testConnection(ds);
+  dsList = await window.dataSources.getDataSources();
+  renderSidebar();
+
+  if (res?.ok) {
+    msgEl.className = 'test-result-box ok';
+    msgEl.innerHTML = `<strong>✅ Connected (${res.latencyMs || 1} ms)</strong><br>${esc(res.message)}`;
+  } else {
+    msgEl.className = 'test-result-box err';
+    msgEl.innerHTML = `<strong>⚠️ ${esc(res?.status || 'Connection Failed')}</strong><br>${esc(res?.message || 'Unable to connect.')}`;
+    if (res?.authRequired || ds.driverType === 'gdrive') {
+      loginBtn.classList.remove('hidden');
+    }
+  }
 }
 
-function esc(s) {
-  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-init().catch(console.error);
+document.addEventListener('DOMContentLoaded', init);

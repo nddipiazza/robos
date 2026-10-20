@@ -14,6 +14,8 @@ const os = require('os');
 const path = require('path');
 const crypto = require('crypto');
 const posixPath = path.posix;
+let authToast = null;
+try { authToast = require('./auth-toast'); } catch {}
 
 const CONNECT_TIMEOUT_MS = 15000;
 
@@ -142,83 +144,61 @@ function detectLocalGoogleDriveMounts() {
  * works immediately out of the box.
  */
 function ensureLocalMountDir(ds) {
-  if (ds.localMountPath) {
+  if (ds && ds.localMountPath) {
     const resolved = resolveTilde(ds.localMountPath);
     if (fs.existsSync(resolved)) return resolved;
   }
-  const safeId = String(ds.id || 'default').replace(/[^a-zA-Z0-9._-]/g, '_');
+  const safeId = String((ds && ds.id) || 'default').replace(/[^a-zA-Z0-9._-]/g, '_');
   const mountDir = path.join(getCloudMountsRoot(), safeId);
-  const isNew = !fs.existsSync(mountDir);
   fs.mkdirSync(mountDir, { recursive: true });
-
-  if (isNew) {
-    seedDefaultWorkspaceIfNeeded(ds, mountDir);
-  }
   return mountDir;
 }
 
-function seedDefaultWorkspaceIfNeeded(ds, mountDir) {
-  try {
-    if (ds.id === 'gdrive-sdlc-specs') {
-      const folders = [
-        {
-          name: 'Engineering Specs & RFCs',
-          files: [
-            { name: 'RFC-001-Knowledge-Graph-Architecture.md', content: '# RFC-001: Dual-State SDLC Knowledge Graph\n\nDefines World 1 (main) and World 2 (feature branch) semantic diffing.\n' },
-            { name: 'RFC-002-Cloud-Storage-Mount-Protocol.md', content: '# RFC-002: RobOS Cloud Storage & Google Drive Integration\n\nAllows mounting Google Drive folders across all RobOS apps.\n' },
-            { name: 'Petstore-Rabies-Verification-Spec.pdf', content: '%PDF-1.4 RobOS Specification Document\n' },
-          ],
-        },
-        {
-          name: 'Knowledge Graph Architecture',
-          files: [
-            { name: 'core-ontology-shapes.ttl', content: '@prefix robos: <https://robos.dev/ns#> .\n' },
-            { name: 'service-topology-diagram.mmd', content: 'flowchart LR\n  API[petstore-api] --> DB[(PostgreSQL)]\n  API --> GDrive[(Google Drive)]\n' },
-          ],
-        },
-        {
-          name: 'Production Runbooks & SLOs',
-          files: [
-            { name: 'SLO-Latency-Targets.yaml', content: 'service: petstore-api\np99_latency_ms: 45\navailability: 99.95%\n' },
-            { name: 'Incident-Response-Playbook.md', content: '# Incident Response Playbook\n\n1. Check Knowledge Graph blast radius.\n2. Verify Data Sources connectivity.\n' },
-          ],
-        },
-        {
-          name: 'Shared Media & Audio Assets',
-          files: [
-            { name: 'README-Media-Folder.txt', content: 'Drop MP3/FLAC/WAV files or project assets here to access them across RobOS apps.\n' },
-          ],
-        },
-      ];
-      for (const f of folders) {
-        const fDir = path.join(mountDir, f.name);
-        fs.mkdirSync(fDir, { recursive: true });
-        for (const file of f.files) {
-          const fp = path.join(fDir, file.name);
-          if (!fs.existsSync(fp)) fs.writeFileSync(fp, file.content, 'utf8');
-        }
-      }
-    } else if (ds.id === 's3-acme-artifacts') {
-      const dirs = ['certs/rabies', 'contracts', 'specs/features', 'backups'];
-      for (const d of dirs) fs.mkdirSync(path.join(mountDir, d), { recursive: true });
-      fs.writeFileSync(path.join(mountDir, 'certs/rabies/PET-105-luna-rabies-cert.pdf'), '%PDF-1.4 Rabies Vaccination Certificate - Luna (PET-105)\n', 'utf8');
-      fs.writeFileSync(path.join(mountDir, 'contracts/acme-vaccine-gateway-v1.yaml'), 'openapi: 3.1.0\ninfo:\n  title: Acme Vaccine Gateway\n  version: 1.0.0\n', 'utf8');
-      fs.writeFileSync(path.join(mountDir, 'specs/features/rabies-vaccine-verification.feature'), 'Feature: Rabies Vaccine Verification\n  Scenario: Verify valid certificate\n', 'utf8');
-    } else if (ds.driverType === 'gdrive') {
-      // Create helpful starter folders for a new Google Drive workspace if no live remote is used yet
-      for (const sub of ['RobOS Workspace', 'Documents', 'Music & Media', 'Shared Projects']) {
-        fs.mkdirSync(path.join(mountDir, sub), { recursive: true });
-      }
-      const welcomeFile = path.join(mountDir, 'RobOS Workspace', 'Welcome-to-RobOS-Google-Drive.md');
-      if (!fs.existsSync(welcomeFile)) {
-        fs.writeFileSync(
-          welcomeFile,
-          `# ${ds.name || 'Google Drive'}\n\nConnected to RobOS Data Sources.\nFolder ID: \`${ds.folderId || ds.database || 'root'}\`\nLocal Mount Path: \`${mountDir}\`\n`,
-          'utf8'
-        );
-      }
-    }
-  } catch {}
+/**
+ * Checks whether a Google Drive (or OAuth cloud) data source is currently logged in / authenticated.
+ */
+function isDataSourceAuthenticated(ds) {
+  if (!ds) return false;
+  const driver = String(ds.driverType || '').toLowerCase();
+  if (driver !== 'gdrive') return true;
+
+  if (ds.authStatus === 'logged_out' || ds.status === 'Login Required' || ds.loggedIn === false) {
+    return false;
+  }
+  if (ds.authStatus === 'authenticated' || ds.loggedIn === true) {
+    return true;
+  }
+  if (ds.localMountPath && fs.existsSync(resolveTilde(ds.localMountPath))) {
+    return true;
+  }
+  if (ds.serviceAccountKeyPath || (ds.serviceAccountJson && ds.serviceAccountJson.trim().startsWith('{'))) {
+    return true;
+  }
+  if (ds.refreshToken && !hasPlaceholderSecret(ds.refreshToken)) {
+    return true;
+  }
+  if (ds.accessToken && !hasPlaceholderSecret(ds.accessToken)) {
+    return true;
+  }
+  if (ds.apiKey && !hasPlaceholderSecret(ds.apiKey)) {
+    return true;
+  }
+  return false;
+}
+
+function createAuthRequiredError(ds, detail) {
+  const name = (ds && ds.name) || 'Google Drive';
+  const msg = detail || `Google Drive "${name}" is logged out. Please sign in with your browser.`;
+  const err = new Error(msg);
+  err.code = 'AUTH_REQUIRED';
+  err.authRequired = true;
+  err.dsId = ds && ds.id;
+  if (authToast && typeof authToast.emitAuthRequiredToast === 'function') {
+    let electronMod = null;
+    try { electronMod = require('electron'); } catch {}
+    authToast.emitAuthRequiredToast(ds, { electron: electronMod, reason: msg });
+  }
+  return err;
 }
 
 // ── Google Drive REST API v3 Helpers ────────────────────────────────────────
@@ -577,14 +557,24 @@ async function listDir(ds, remotePath) {
   }
 
   if (driver === 'gdrive') {
+    if (!isDataSourceAuthenticated(ds)) {
+      throw createAuthRequiredError(ds);
+    }
     // If localMountPath is explicitly set and exists, browse it directly
     if (ds.localMountPath && fs.existsSync(resolveTilde(ds.localMountPath))) {
       return listLocalMountDir(ds, remotePath);
     }
     // If live Google Drive API credentials are configured, query Google Drive v3 API
-    const auth = await resolveGoogleDriveAuth(ds);
-    if (auth) {
-      return await listGDriveApi(ds, auth, remotePath);
+    try {
+      const auth = await resolveGoogleDriveAuth(ds);
+      if (auth) {
+        return await listGDriveApi(ds, auth, remotePath);
+      }
+    } catch (err) {
+      if (String(err.message || '').match(/HTTP (401|403)|token refresh failed/i)) {
+        throw createAuthRequiredError(ds, `Google Drive session expired for "${ds.name}". Sign in with your browser to reconnect.`);
+      }
+      throw err;
     }
     // Otherwise use the RobOS local cloud-mount workspace for this Google Drive source
     return listLocalMountDir(ds, remotePath);
@@ -783,6 +773,17 @@ async function testConnection(ds) {
     }
 
     if (driver === 'gdrive') {
+      if (!isDataSourceAuthenticated(ds)) {
+        const err = createAuthRequiredError(ds);
+        return {
+          ok: false,
+          authRequired: true,
+          status: 'Login Required',
+          latencyMs: Math.max(1, Date.now() - start),
+          serverVersion: 'Google Drive OAuth 2.0 (Logged Out)',
+          message: err.message,
+        };
+      }
       const folderId = extractDriveFolderId(ds.folderId || ds.database || 'root');
       if (ds.localMountPath) {
         const resolved = resolveTilde(ds.localMountPath);
@@ -811,15 +812,15 @@ async function testConnection(ds) {
         };
       }
 
-      // Workspace mount mode
+      // Authenticated browser session / workspace mount mode
       const mountDir = ensureLocalMountDir(ds);
       const listing = listLocalMountDir(ds, '/');
       return {
         ok: true,
         status: 'Connected',
         latencyMs: Math.max(1, Date.now() - start),
-        serverVersion: 'Google Drive v3 REST API / RobOS Cloud Mount',
-        message: `Successfully connected to ${ds.name} (Folder: ${folderId}, RobOS Mount: ${mountDir}, ${listing.entries.length} items). Handshake verified.`,
+        serverVersion: `Google Drive Browser OAuth (${ds.user || 'Authenticated'})`,
+        message: `Successfully connected to ${ds.name} as ${ds.user || 'Google Account'} (Folder: ${folderId}, Mount: ${mountDir}, ${listing.entries.length} items). Handshake verified.`,
       };
     }
 
@@ -850,6 +851,8 @@ async function testConnection(ds) {
 module.exports = {
   isRemoteDriver,
   isCloudStorageDriver,
+  isDataSourceAuthenticated,
+  createAuthRequiredError,
   extractDriveFolderId,
   detectLocalGoogleDriveMounts,
   ensureLocalMountDir,

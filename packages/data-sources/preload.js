@@ -21,5 +21,10 @@ contextBridge.exposeInMainWorld('dataSources', {
   pickKeyFile:        (params) => ipcRenderer.invoke('ds-pick-key-file', params),
   openLocalPath:      (localPath) => ipcRenderer.invoke('ds-open-local-path', localPath),
   googleOAuthSignIn:  (params) => ipcRenderer.invoke('ds-google-oauth-signin', params),
+  googleBrowserLogin: (params) => ipcRenderer.invoke('ds-google-browser-login', params),
+  logoutDataSource:   (id) => ipcRenderer.invoke('ds-logout-datasource', id),
+  triggerAuthToast:   (params) => ipcRenderer.invoke('ds-trigger-auth-toast', params),
+  onAuthUpdated:      (cb) => ipcRenderer.on('ds-auth-updated', (_, data) => cb(data)),
+  onSelectAndLogin:   (cb) => ipcRenderer.on('ds-select-and-login', (_, data) => cb(data)),
   openUrl:            (url) => ipcRenderer.invoke('open-url', url),
 });
