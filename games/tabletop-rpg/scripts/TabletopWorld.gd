@@ -23600,14 +23600,19 @@ func _draw_trap_sprung_overlay(canvas: CanvasItem) -> void:
 	var v_sz = font.get_string_size(victim_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 14)
 	canvas.draw_string(font, Vector2(center.x - v_sz.x * 0.5, badge_rect.end.y + 24.0), victim_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 14, Color(0.96, 0.96, 0.96, 1.0))
 
-	# 6. Description / Flavor Text
+	# 6. Description / Flavor Text (wrapped cleanly within modal width)
 	var desc = str(overlay.get("description", ""))
 	var flavor = str(overlay.get("flavor", ""))
-	var desc_sz = font.get_string_size(desc, HORIZONTAL_ALIGNMENT_CENTER, -1, 12)
-	canvas.draw_string(font, Vector2(center.x - desc_sz.x * 0.5, badge_rect.end.y + 44.0), desc, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color(0.85, 0.85, 0.82, 0.95))
+	var cur_trap_y = badge_rect.end.y + 44.0
+	for d_line in _wrap_card_text(desc, font, 12, box_w - 56.0):
+		var desc_sz = font.get_string_size(d_line, HORIZONTAL_ALIGNMENT_CENTER, -1, 12)
+		canvas.draw_string(font, Vector2(center.x - desc_sz.x * 0.5, cur_trap_y), d_line, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color(0.85, 0.85, 0.82, 0.95))
+		cur_trap_y += 16.0
 	if flavor != "":
-		var flv_sz = font.get_string_size(flavor, HORIZONTAL_ALIGNMENT_CENTER, -1, 11)
-		canvas.draw_string(font, Vector2(center.x - flv_sz.x * 0.5, badge_rect.end.y + 60.0), flavor, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(1.0, 0.65, 0.35, 0.90))
+		for f_line in _wrap_card_text(flavor, font, 11, box_w - 56.0):
+			var flv_sz = font.get_string_size(f_line, HORIZONTAL_ALIGNMENT_CENTER, -1, 11)
+			canvas.draw_string(font, Vector2(center.x - flv_sz.x * 0.5, cur_trap_y), f_line, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(1.0, 0.65, 0.35, 0.90))
+			cur_trap_y += 15.0
 
 	# 7. CTA Action Bar: 👉 CLICK ANYWHERE TO ROLL HAZARD DICE 🎲
 	var pulse = 0.85 + 0.15 * sin(Time.get_ticks_msec() * 0.005)
@@ -24105,7 +24110,7 @@ func _draw_treasure_card_overlay(canvas: CanvasItem) -> void:
 	canvas.draw_line(corners[3] + Vector2(-tick, 0), corners[3] + Vector2(-tick, -tick), ink_col, 1.0)
 	canvas.draw_line(corners[3] + Vector2(0, -tick), corners[3] + Vector2(-tick, -tick), ink_col, 1.0)
 
-	# 3. Card Title (Antique classic serif font centered at top)
+	# 3. Card Title (Antique classic serif font centered at top, word-wrapped to fit card)
 	var raw_title = str(overlay.get("title", "Treasure"))
 	var title_display = raw_title
 	if "(" in title_display and ("gold" in raw_title.to_lower() or "gem" in raw_title.to_lower() or "hazard" in raw_title.to_lower()):
@@ -24113,12 +24118,15 @@ func _draw_treasure_card_overlay(canvas: CanvasItem) -> void:
 	if title_display.is_empty():
 		title_display = raw_title
 
-	var t_sz = font.get_string_size(title_display, HORIZONTAL_ALIGNMENT_CENTER, -1, 19)
-	var title_y = parchment_rect.position.y + 34.0
-	canvas.draw_string(font, Vector2(center.x - t_sz.x * 0.5, title_y), title_display, HORIZONTAL_ALIGNMENT_CENTER, -1, 19, ink_col)
+	var title_lines = _wrap_card_text(title_display, font, 17, inner_frame.size.x - 24.0)
+	var title_y = parchment_rect.position.y + 30.0
+	for t_line in title_lines:
+		var t_sz = font.get_string_size(t_line, HORIZONTAL_ALIGNMENT_CENTER, -1, 17)
+		canvas.draw_string(font, Vector2(center.x - t_sz.x * 0.5, title_y), t_line, HORIZONTAL_ALIGNMENT_CENTER, -1, 17, ink_col)
+		title_y += 20.0
 
 	# Decorative divider line under title
-	var div_y = title_y + 8.0
+	var div_y = title_y - 8.0
 	canvas.draw_line(Vector2(center.x - 70.0, div_y), Vector2(center.x + 70.0, div_y), Color(ink_col.r, ink_col.g, ink_col.b, 0.4), 1.0)
 	canvas.draw_circle(Vector2(center.x, div_y), 2.5, ink_col)
 
@@ -24165,20 +24173,22 @@ func _draw_treasure_card_overlay(canvas: CanvasItem) -> void:
 
 	# 6. Bottom CTA / Dismiss Prompt
 	var pulse = 0.82 + 0.18 * sin(Time.get_ticks_msec() * 0.006)
-	var cta_y = parchment_rect.end.y - 18.0
-	var cta_text = "[ CLICK ANYWHERE OR PRESS SPACE TO COLLECT ]"
+	var cta_text = "CLICK ANYWHERE OR PRESS SPACE TO COLLECT"
 	if card_type == "wandering_monster":
-		cta_text = "[ CLICK ANYWHERE OR PRESS SPACE TO ENGAGE ]"
+		cta_text = "CLICK ANYWHERE OR PRESS SPACE TO ENGAGE"
 	elif card_type == "hazard":
-		cta_text = "[ CLICK ANYWHERE OR PRESS SPACE TO CONTINUE ]"
+		cta_text = "CLICK ANYWHERE OR PRESS SPACE TO CONTINUE"
 
-	var c_sz = font.get_string_size(cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11)
-	canvas.draw_string(font, Vector2(center.x - c_sz.x * 0.5, cta_y), cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(0.36, 0.20, 0.10, pulse))
+	var cta_bar_rect = Rect2(inner_frame.position.x + 12.0, inner_frame.end.y - 34.0, inner_frame.size.x - 24.0, 24.0)
+	canvas.draw_rect(cta_bar_rect, Color(0.20, 0.12, 0.07, 0.94))
+	canvas.draw_rect(cta_bar_rect, Color(0.85, 0.68, 0.28, pulse), false, 1.2)
+	var c_sz = font.get_string_size(cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10)
+	canvas.draw_string(font, Vector2(center.x - c_sz.x * 0.5, cta_bar_rect.position.y + 16.0), cta_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.92, 0.72, pulse))
 
 func _draw_gm_story_trigger_markers(canvas: CanvasItem) -> void:
 	var font = ThemeDB.fallback_font
 	for st in story_triggers:
-		var marker = str(st.get("marker", "?"))
+		var marker = str(st.get("marker", "?")).strip_edges()
 		var is_trig = bool(st.get("triggered", false))
 		var marker_tile = Vector2i(-1, -1)
 		if st.has("tile") and st.tile is Array and st.tile.size() >= 2:
@@ -24201,10 +24211,16 @@ func _draw_gm_story_trigger_markers(canvas: CanvasItem) -> void:
 		var rim_col = Color(0.65, 0.55, 0.35, 0.7) if is_trig else Color(1.0, 0.85, 0.25, 1.0)
 		canvas.draw_arc(center, radius, 0, TAU, 24, rim_col, 2.0)
 		canvas.draw_arc(center, radius * 0.75, 0, TAU, 18, Color(rim_col.r, rim_col.g, rim_col.b, 0.5), 1.0)
-		# Letter label
-		var txt = marker if not is_trig else "%s✓" % marker
-		var txt_w = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 13).x
-		canvas.draw_string(font, Vector2(center.x - txt_w * 0.5, center.y + 5), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, Color.WHITE)
+		# Compact label so long markers like "Hydra 1" or "Note A" fit cleanly inside the board seal
+		var short_marker = marker.replace("✓", "").strip_edges()
+		if short_marker.begins_with("Hydra "):
+			short_marker = "H" + short_marker.substr(6).strip_edges()
+		elif short_marker.begins_with("Note "):
+			short_marker = short_marker.substr(5).strip_edges()
+		var txt = short_marker if (not is_trig and not marker.ends_with("✓")) else "%s✓" % short_marker
+		var f_sz = 12 if txt.length() <= 2 else 10
+		var txt_w = font.get_string_size(txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_sz).x
+		canvas.draw_string(font, Vector2(center.x - txt_w * 0.5, center.y + 4), txt, HORIZONTAL_ALIGNMENT_CENTER, -1, f_sz, Color.WHITE)
 
 func _draw_dialogue_bubbles_overlay(canvas: CanvasItem) -> void:
 	if active_dialogue_sequence.is_empty() or not active_dialogue_sequence.get("active", false):
@@ -24291,6 +24307,78 @@ func _draw_dialogue_bubbles_overlay(canvas: CanvasItem) -> void:
 		canvas.draw_string(font, Vector2(b_rect.position.x + 12.0, text_y), l, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(0.95, 0.96, 0.98, alpha))
 		text_y += line_h
 
+var _story_card_tex_cache: Dictionary = {}
+
+func _resolve_story_trigger_texture(overlay: Dictionary) -> Texture2D:
+	var tr: Dictionary = overlay.get("trigger", {}) if overlay.get("trigger") is Dictionary else {}
+	var explicit_img = str(overlay.get("image", tr.get("image", ""))).strip_edges()
+	var combined = ("%s %s %s %s %s" % [
+		str(tr.get("id", "")),
+		str(tr.get("monsterId", "")),
+		str(overlay.get("title", "")),
+		str(overlay.get("banner", "")),
+		str(overlay.get("narrative", ""))
+	]).to_lower()
+
+	var candidate_paths: Array[String] = []
+	if explicit_img != "":
+		candidate_paths.append(explicit_img)
+	if "talarixon" in combined or "oval office" in combined or "san antonio" in combined or "hydra 1" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_talarixon.png")
+	elif "el-rogers" in combined or "el_rogers" in combined or "michigan hydra" in combined or "hydra 2" in combined or "cloakroom" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_el_rogers.png")
+	elif "brownsted" in combined or "ohio hydra" in combined or "hydra 3" in combined or "supreme court" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_brownsted.png")
+	elif "katie" in combined or "zacharia" in combined or "briefing" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_katie_zacharia.png")
+	elif "mitch" in combined or "mcconnell" in combined or "filibuster" in combined or "committee" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_mitch_mcconnell.png")
+	elif "vance" in combined or "kamala" in combined or "war room" in combined or "war-room" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_war_room_boss.png")
+	elif "verag" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_verag.png")
+	elif "witch lord" in combined or "witch-lord" in combined or "witch_lord" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_witch_lord.png")
+	elif "chaos sorcerer" in combined or "chaos-sorcerer" in combined or "wardoz" in combined or "balur" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_chaos_sorcerer.png")
+	elif "doomguard" in combined or "cassandria" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_doomguard.png")
+	elif "witch hand" in combined or "witch-hand" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_witch_hand.png")
+	elif "ulag" in combined or "grak" in combined or "orc shaman" in combined or "orc-shaman" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_orc_shaman.png")
+	elif "gargoyle" in combined or "super pac" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_gargoyle.png")
+	elif "mummy" in combined or "lobbyist" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_mummy.png")
+	elif "zombie" in combined or "bureaucrat" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_zombie.png")
+	elif "skeleton" in combined or "politician" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_skeleton.png")
+	elif "orc" in combined or "operative" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_orc.png")
+	elif "goblin" in combined or "volunteer" in combined:
+		candidate_paths.append("res://assets/monster_cards/card_bg_goblin.png")
+
+	for p in candidate_paths:
+		if _story_card_tex_cache.has(p):
+			return _story_card_tex_cache[p]
+		var tex: Texture2D = null
+		if ResourceLoader.exists(p):
+			var res = load(p)
+			if res is Texture2D:
+				tex = res
+		if not tex:
+			var abs_p = ProjectSettings.globalize_path(p) if p.begins_with("res://") else p
+			if FileAccess.file_exists(abs_p):
+				var img = Image.load_from_file(abs_p)
+				if img and not img.is_empty():
+					tex = ImageTexture.create_from_image(img)
+		if tex:
+			_story_card_tex_cache[p] = tex
+			return tex
+	return null
+
 func _draw_story_trigger_overlay(canvas: CanvasItem) -> void:
 	if active_story_trigger_overlay.is_empty():
 		return
@@ -24298,16 +24386,47 @@ func _draw_story_trigger_overlay(canvas: CanvasItem) -> void:
 	var overlay = active_story_trigger_overlay
 	var font = ThemeDB.fallback_font
 	_update_board_metrics()
-	var center = board_offset + Vector2(grid_cols * tile_size * 0.5, grid_rows * tile_size * 0.44)
+	var center = board_offset + Vector2(grid_cols * tile_size * 0.5, grid_rows * tile_size * 0.45)
 
 	# 1. Full Board Dark Vignette / Backdrop Dimmer
 	var total_w = float(grid_cols * tile_size)
 	var total_h = float(grid_rows * tile_size)
 	canvas.draw_rect(Rect2(board_offset, Vector2(total_w, total_h)), Color(0.02, 0.03, 0.06, 0.84))
 
-	# 2. Deluxe Parchment Folio Card (440 x 580)
-	var card_w = 440.0
-	var card_h = 580.0
+	# Pre-calculate layout metrics so card height fits content cleanly with zero overflow or empty gaps
+	var card_w = 460.0
+	var inner_w = card_w - 44.0
+	var text_box_w = inner_w - 28.0
+
+	var title_text = str(overlay.get("title", "Story Event")).strip_edges()
+	var title_lines = _wrap_card_text(title_text, font, 17, inner_w - 28.0)
+	if title_lines.is_empty():
+		title_lines = ["Story Event"]
+
+	var narrative = str(overlay.get("narrative", "")).strip_edges()
+	var narrative_lines = _wrap_card_text(narrative, font, 13, text_box_w - 28.0)
+	var consequence = str(overlay.get("consequence", "")).strip_edges()
+	var conseq_lines = _wrap_card_text(consequence, font, 12, text_box_w - 28.0) if consequence != "" else ([] as Array[String])
+
+	var gold_val = int(overlay.get("gold", 0))
+	var item_data = overlay.get("item", null)
+	var spawns = overlay.get("spawnMonsters", [])
+	var loot_items: Array[String] = []
+	if gold_val > 0:
+		loot_items.append("💰 +%d Gold Coins" % gold_val)
+	if item_data != null:
+		var iname = item_data.get("name", "Quest Item") if item_data is Dictionary else str(item_data)
+		loot_items.append("📜 %s" % iname)
+	if spawns is Array and spawns.size() > 0:
+		loot_items.append("⚔️ AMBUSH! %d Monster(s) appear!" % spawns.size())
+
+	var illus_w = 240.0
+	var illus_h = 185.0
+	var title_block_h = float(title_lines.size()) * 22.0
+	var text_box_h = maxf(64.0, float(narrative_lines.size()) * 19.0 + (float(conseq_lines.size()) * 17.0 + 10.0 if conseq_lines.size() > 0 else 0.0) + 24.0)
+	var reward_block_h = 38.0 if loot_items.size() > 0 else 0.0
+
+	var card_h = 28.0 + 30.0 + 36.0 + title_block_h + 18.0 + illus_h + 16.0 + text_box_h + reward_block_h + 52.0
 	var card_rect = Rect2(center.x - card_w * 0.5, center.y - card_h * 0.5, card_w, card_h)
 
 	# Drop shadow
@@ -24331,98 +24450,119 @@ func _draw_story_trigger_overlay(canvas: CanvasItem) -> void:
 
 	# Inner double border frame
 	var inner_frame = Rect2(parchment_rect.position + Vector2(8.0, 8.0), parchment_rect.size - Vector2(16.0, 16.0))
-	var ink_col = Color(0.22, 0.12, 0.07, 0.95)
+	var ink_col = Color(0.20, 0.11, 0.06, 0.98)
 	canvas.draw_rect(inner_frame, ink_col, false, 2.0)
 	var inner_hairline = Rect2(inner_frame.position + Vector2(3.0, 3.0), inner_frame.size - Vector2(6.0, 6.0))
 	canvas.draw_rect(inner_hairline, Color(0.70, 0.55, 0.30, 0.70), false, 1.0)
 
-	# 3. Top Banner: Royal Crimson Ribbon
-	var banner_w = 260.0
-	var banner_h = 24.0
-	var banner_rect = Rect2(center.x - banner_w * 0.5, parchment_rect.position.y + 12.0, banner_w, banner_h)
-	canvas.draw_rect(banner_rect, Color(0.60, 0.10, 0.14, 0.98))
-	canvas.draw_rect(banner_rect, Color(0.95, 0.80, 0.30, 1.0), false, 1.5)
-	var banner_text = str(overlay.get("banner", "QUEST BOOK NOTE"))
+	# 3. Top Banner + Marker Badge (Unified Royal Crimson Header so marker text never overflows onto beige parchment)
+	var banner_text = str(overlay.get("banner", "QUEST BOOK NOTE")).strip_edges()
+	var marker_letter = str(overlay.get("marker", "A")).strip_edges()
 	var b_sz = font.get_string_size(banner_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11)
-	canvas.draw_string(font, Vector2(center.x - b_sz.x * 0.5, banner_rect.position.y + 16.0), banner_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(1.0, 0.95, 0.85))
+	var banner_w = clampf(b_sz.x + 48.0, 260.0, inner_w - 28.0)
+	var banner_h = 26.0
+	var banner_rect = Rect2(center.x - banner_w * 0.5, inner_frame.position.y + 10.0, banner_w, banner_h)
+	canvas.draw_rect(banner_rect, Color(0.58, 0.09, 0.13, 0.98))
+	canvas.draw_rect(banner_rect, Color(0.95, 0.80, 0.30, 1.0), false, 1.5)
+	canvas.draw_string(font, Vector2(center.x - b_sz.x * 0.5, banner_rect.position.y + 17.0), banner_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(1.0, 0.95, 0.85))
 
-	# 4. Circular Wax Seal Medallion (with marker letter e.g. "A" or "B")
-	var seal_center = Vector2(center.x, banner_rect.end.y + 36.0)
-	var seal_radius = 24.0
-	# Seal drop shadow
-	canvas.draw_circle(seal_center + Vector2(1.5, 2.5), seal_radius, Color(0.0, 0.0, 0.0, 0.5))
-	# Seal body
-	canvas.draw_circle(seal_center, seal_radius, Color(0.72, 0.12, 0.16, 1.0))
-	canvas.draw_arc(seal_center, seal_radius, 0, TAU, 32, Color(0.95, 0.80, 0.25, 1.0), 2.0)
-	canvas.draw_arc(seal_center, seal_radius * 0.76, 0, TAU, 24, Color(0.95, 0.80, 0.25, 0.6), 1.0)
-	var marker_letter = str(overlay.get("marker", "A"))
-	var m_sz = font.get_string_size(marker_letter, HORIZONTAL_ALIGNMENT_CENTER, -1, 22)
-	canvas.draw_string(font, Vector2(seal_center.x - m_sz.x * 0.5, seal_center.y + 8.0), marker_letter, HORIZONTAL_ALIGNMENT_CENTER, -1, 22, Color(1.0, 0.95, 0.80))
+	# 4. Wax Seal Medallion / Pill Badge (auto-widens if marker_letter > 2 chars so text is 100% inside the red seal)
+	var seal_cy = banner_rect.end.y + 20.0
+	var m_font_sz = 16 if marker_letter.length() <= 2 else 13
+	var m_sz = font.get_string_size(marker_letter, HORIZONTAL_ALIGNMENT_CENTER, -1, m_font_sz)
+	if marker_letter.length() <= 2:
+		var seal_radius = 16.0
+		canvas.draw_circle(Vector2(center.x + 1.5, seal_cy + 2.0), seal_radius, Color(0.0, 0.0, 0.0, 0.45))
+		canvas.draw_circle(Vector2(center.x, seal_cy), seal_radius, Color(0.72, 0.12, 0.16, 1.0))
+		canvas.draw_arc(Vector2(center.x, seal_cy), seal_radius, 0, TAU, 32, Color(0.95, 0.80, 0.25, 1.0), 2.0)
+		canvas.draw_string(font, Vector2(center.x - m_sz.x * 0.5, seal_cy + 6.0), marker_letter, HORIZONTAL_ALIGNMENT_CENTER, -1, m_font_sz, Color(1.0, 0.96, 0.84))
+	else:
+		var pill_w = maxf(96.0, m_sz.x + 32.0)
+		var pill_h = 26.0
+		var pill_rect = Rect2(center.x - pill_w * 0.5, seal_cy - pill_h * 0.5, pill_w, pill_h)
+		canvas.draw_rect(Rect2(pill_rect.position + Vector2(1.5, 2.0), pill_rect.size), Color(0.0, 0.0, 0.0, 0.45))
+		canvas.draw_rect(pill_rect, Color(0.72, 0.12, 0.16, 1.0))
+		canvas.draw_rect(pill_rect, Color(0.95, 0.80, 0.25, 1.0), false, 1.8)
+		canvas.draw_rect(Rect2(pill_rect.position + Vector2(3, 3), pill_rect.size - Vector2(6, 6)), Color(0.95, 0.80, 0.25, 0.45), false, 1.0)
+		canvas.draw_string(font, Vector2(center.x - m_sz.x * 0.5, pill_rect.position.y + 18.0), marker_letter, HORIZONTAL_ALIGNMENT_CENTER, -1, m_font_sz, Color(1.0, 0.96, 0.84))
 
-	# 5. Story Title
-	var title_text = str(overlay.get("title", "Story Event"))
-	var t_sz = font.get_string_size(title_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 18)
-	var title_y = seal_center.y + seal_radius + 24.0
-	canvas.draw_string(font, Vector2(center.x - t_sz.x * 0.5, title_y), title_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 18, ink_col)
+	# 5. Wrapped Story Title (never overflows card width)
+	var cur_y = seal_cy + 30.0
+	for t_line in title_lines:
+		var t_sz = font.get_string_size(t_line, HORIZONTAL_ALIGNMENT_CENTER, -1, 17)
+		canvas.draw_string(font, Vector2(center.x - t_sz.x * 0.5 + 1.0, cur_y + 1.0), t_line, HORIZONTAL_ALIGNMENT_CENTER, -1, 17, Color(1.0, 0.96, 0.86, 0.65))
+		canvas.draw_string(font, Vector2(center.x - t_sz.x * 0.5, cur_y), t_line, HORIZONTAL_ALIGNMENT_CENTER, -1, 17, ink_col)
+		cur_y += 22.0
 
 	# Decorative divider
-	var div_y = title_y + 8.0
+	var div_y = cur_y - 8.0
 	var div_w = 280.0
 	canvas.draw_line(Vector2(center.x - div_w * 0.5, div_y), Vector2(center.x + div_w * 0.5, div_y), Color(0.60, 0.45, 0.30, 0.8), 1.0)
 	canvas.draw_circle(Vector2(center.x, div_y), 3.0, Color(0.60, 0.10, 0.14, 0.9))
 
-	# 6. Narrative Folio Box (Zargon's Read-Aloud Text)
-	var text_box_y = div_y + 14.0
-	var text_box_w = card_w - 64.0
-	var text_box_h = 210.0
+	# 6. Framed Artwork / Illustration Window
+	var illus_rect = Rect2(center.x - illus_w * 0.5, div_y + 10.0, illus_w, illus_h)
+	canvas.draw_rect(Rect2(illus_rect.position + Vector2(2, 3), illus_rect.size), Color(0.0, 0.0, 0.0, 0.35))
+	canvas.draw_rect(illus_rect, Color(0.10, 0.07, 0.05, 1.0))
+	var story_tex = _resolve_story_trigger_texture(overlay)
+	if story_tex:
+		canvas.draw_texture_rect(story_tex, Rect2(illus_rect.position + Vector2(3, 3), illus_rect.size - Vector2(6, 6)), false)
+	else:
+		canvas.draw_rect(Rect2(illus_rect.position + Vector2(3, 3), illus_rect.size - Vector2(6, 6)), Color(0.97, 0.94, 0.88, 1.0))
+		_draw_woodcut_illustration(canvas, illus_rect, "quest_note", true, overlay)
+	canvas.draw_rect(illus_rect, ink_col, false, 2.2)
+	canvas.draw_rect(Rect2(illus_rect.position + Vector2(3, 3), illus_rect.size - Vector2(6, 6)), Color(0.92, 0.76, 0.28, 0.85), false, 1.2)
+
+	# Optional "DEFEATED / SLAIN" stamp badge on portrait when a boss/hydra is slain
+	if "slain" in banner_text.to_lower() or "slain" in title_text.to_lower() or "✓" in marker_letter:
+		var stamp_str = "⚔️ VANQUISHED ⚔️"
+		var st_sz = font.get_string_size(stamp_str, HORIZONTAL_ALIGNMENT_CENTER, -1, 11)
+		var st_w = st_sz.x + 20.0
+		var st_rect = Rect2(center.x - st_w * 0.5, illus_rect.end.y - 26.0, st_w, 20.0)
+		canvas.draw_rect(st_rect, Color(0.55, 0.08, 0.10, 0.94))
+		canvas.draw_rect(st_rect, Color(1.0, 0.84, 0.28, 0.95), false, 1.2)
+		canvas.draw_string(font, Vector2(center.x - st_sz.x * 0.5, st_rect.position.y + 14.0), stamp_str, HORIZONTAL_ALIGNMENT_CENTER, -1, 11, Color(1.0, 0.95, 0.80))
+
+	# 7. Tightly Fitted Narrative Folio Box (Zargon's Read-Aloud Text)
+	var text_box_y = illus_rect.end.y + 12.0
 	var text_box_rect = Rect2(center.x - text_box_w * 0.5, text_box_y, text_box_w, text_box_h)
-	# Subtle parchment inset
-	canvas.draw_rect(text_box_rect, Color(0.90, 0.83, 0.68, 0.95))
-	canvas.draw_rect(text_box_rect, Color(0.70, 0.55, 0.38, 0.8), false, 1.0)
+	canvas.draw_rect(text_box_rect, Color(0.90, 0.83, 0.68, 0.96))
+	canvas.draw_rect(text_box_rect, Color(0.65, 0.48, 0.30, 0.85), false, 1.2)
 
-	# Render word-wrapped narrative
-	var narrative = str(overlay.get("narrative", ""))
-	var lines = _wrap_card_text(narrative, font, 12, text_box_w - 24.0)
-	var line_y = text_box_rect.position.y + 24.0
-	for l in lines:
-		if line_y > text_box_rect.end.y - 12.0:
-			break
-		var l_sz = font.get_string_size(l, HORIZONTAL_ALIGNMENT_LEFT, -1, 12)
-		canvas.draw_string(font, Vector2(text_box_rect.position.x + 12.0, line_y), l, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.18, 0.10, 0.06, 0.95))
-		line_y += 18.0
+	var line_y = text_box_rect.position.y + 22.0
+	for l in narrative_lines:
+		var l_sz = font.get_string_size(l, HORIZONTAL_ALIGNMENT_CENTER, -1, 13)
+		canvas.draw_string(font, Vector2(center.x - l_sz.x * 0.5, line_y), l, HORIZONTAL_ALIGNMENT_CENTER, -1, 13, Color(0.16, 0.09, 0.05, 0.98))
+		line_y += 19.0
 
-	# 7. Rewards / Consequences Section
-	var reward_y = text_box_rect.end.y + 12.0
-	var gold_val = int(overlay.get("gold", 0))
-	var item_data = overlay.get("item", null)
-	var spawns = overlay.get("spawnMonsters", [])
+	if conseq_lines.size() > 0:
+		line_y += 6.0
+		for cl in conseq_lines:
+			var cl_sz = font.get_string_size(cl, HORIZONTAL_ALIGNMENT_CENTER, -1, 12)
+			canvas.draw_string(font, Vector2(center.x - cl_sz.x * 0.5, line_y), cl, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color(0.55, 0.12, 0.10, 0.95))
+			line_y += 17.0
 
-	var loot_items: Array[String] = []
-	if gold_val > 0:
-		loot_items.append("💰 +%d Gold Coins" % gold_val)
-	if item_data != null:
-		var iname = item_data.get("name", "Quest Item") if item_data is Dictionary else str(item_data)
-		loot_items.append("📜 %s" % iname)
-	if spawns is Array and spawns.size() > 0:
-		loot_items.append("⚔️ AMBUSH! %d Monster(s) appear!" % spawns.size())
-
+	# 8. Rewards / Consequences Section
+	var reward_y = text_box_rect.end.y + 10.0
 	if loot_items.size() > 0:
 		var loot_str = "  •  ".join(loot_items)
 		var loot_sz = font.get_string_size(loot_str, HORIZONTAL_ALIGNMENT_CENTER, -1, 12)
-		var loot_box_w = minf(card_w - 64.0, loot_sz.x + 24.0)
+		var loot_box_w = minf(text_box_w, loot_sz.x + 24.0)
 		var loot_rect = Rect2(center.x - loot_box_w * 0.5, reward_y, loot_box_w, 28.0)
 		canvas.draw_rect(loot_rect, Color(0.12, 0.24, 0.16, 0.95) if spawns.is_empty() else Color(0.35, 0.10, 0.12, 0.95))
 		canvas.draw_rect(loot_rect, Color(0.95, 0.80, 0.30, 1.0), false, 1.5)
 		canvas.draw_string(font, Vector2(center.x - loot_sz.x * 0.5, reward_y + 19.0), loot_str, HORIZONTAL_ALIGNMENT_CENTER, -1, 12, Color.WHITE)
 
-	# 8. Dismiss Action Prompt
+	# 9. Dismiss Action Button Bar
 	var pulse = 0.82 + 0.18 * sin(Time.get_ticks_msec() * 0.006)
-	var prompt_text = "[ CLICK ANYWHERE OR PRESS SPACE / ENTER TO PROCEED ]"
+	var prompt_text = "CLICK ANYWHERE OR PRESS SPACE / ENTER TO PROCEED"
 	if overlay.has("buttonText") and str(overlay.get("buttonText")).strip_edges() != "":
-		prompt_text = "[ %s — CLICK ANYWHERE OR PRESS SPACE / ENTER ]" % str(overlay.get("buttonText")).strip_edges().to_upper()
+		prompt_text = "%s — CLICK ANYWHERE OR PRESS SPACE / ENTER" % str(overlay.get("buttonText")).strip_edges().to_upper()
+	var btn_rect = Rect2(inner_frame.position.x + 14.0, inner_frame.end.y - 36.0, inner_frame.size.x - 28.0, 26.0)
+	canvas.draw_rect(btn_rect, Color(0.18, 0.11, 0.07, 0.95))
+	canvas.draw_rect(btn_rect, Color(0.90, 0.72, 0.28, pulse), false, 1.4)
 	var p_sz = font.get_string_size(prompt_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10)
-	var prompt_y = parchment_rect.end.y - 14.0
-	canvas.draw_string(font, Vector2(center.x - p_sz.x * 0.5, prompt_y), prompt_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(0.36, 0.20, 0.10, pulse))
+	canvas.draw_string(font, Vector2(center.x - p_sz.x * 0.5, btn_rect.position.y + 17.0), prompt_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 10, Color(1.0, 0.92, 0.72, pulse))
 
 func _draw_item_flash_banner(canvas: CanvasItem) -> void:
 	if flashing_item.is_empty() or not bool(flashing_item.get("active", false)):
