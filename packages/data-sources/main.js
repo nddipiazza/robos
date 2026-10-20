@@ -395,12 +395,18 @@ function normalizeDataSourceRecord(d) {
     out.authStatus = authed ? 'authenticated' : 'logged_out';
     out.loggedIn = authed;
     out.status = authed ? (out.status === 'Login Required' ? 'Connected' : (out.status || 'Connected')) : 'Login Required';
+    const linked = remoteStorage.normalizeCloudFoldersArray(out);
+    out.folders = linked.map(f => ({
+      id: f.id,
+      label: f.label || f.id,
+      virtualName: f.virtualName,
+    }));
     if (out.driverType === 'gdrive') {
       out.host = out.host || 'drive.google.com';
-      out.folderId = remoteStorage.extractDriveFolderId(out.folderId || out.database || 'root');
+      out.folderId = out.folders[0]?.id || remoteStorage.extractDriveFolderId(out.folderId || out.database || 'root');
     } else {
       out.host = out.host || 'graph.microsoft.com';
-      out.folderId = remoteStorage.extractOneDriveFolderPath(out.folderId || out.database || '/');
+      out.folderId = out.folders[0]?.id || remoteStorage.extractOneDriveFolderPath(out.folderId || out.database || '/');
     }
   }
   return out;
@@ -1176,14 +1182,14 @@ registerIPC('ds-save-datasource', async (_, ds) => {
   });
 
   if (normalized.driverType === 'gdrive') {
-    normalized.folderId = remoteStorage.extractDriveFolderId(normalized.folderId || normalized.database || 'root');
+    normalized.folderId = normalized.folders?.[0]?.id || remoteStorage.extractDriveFolderId(normalized.folderId || normalized.database || 'root');
     if (!normalized.database || normalized.database.includes('drive.google.com')) {
       normalized.database = '/';
     }
     normalized.host = normalized.host || 'drive.google.com';
   } else if (normalized.driverType === 'onedrive') {
-    normalized.folderId = remoteStorage.extractOneDriveFolderPath(normalized.folderId || normalized.database || '/');
-    normalized.database = normalized.folderId || '/';
+    normalized.folderId = normalized.folders?.[0]?.id || remoteStorage.extractOneDriveFolderPath(normalized.folderId || normalized.database || '/');
+    normalized.database = normalized.folders?.length > 1 ? '/' : (normalized.folderId || '/');
     normalized.host = normalized.host || 'graph.microsoft.com';
   }
 
@@ -1209,21 +1215,32 @@ registerIPC('ds-save-datasource', async (_, ds) => {
     try {
       const localPath = remoteStorage.ensureLocalMountDir(normalized);
       const folders = loadCloudFolders();
-      const mountId = `mount-${normalized.id}-root`;
-      const existingIdx = folders.findIndex(f => f.id === mountId);
-      const folderEntry = {
-        id: mountId,
-        dsId: normalized.id,
-        dsName: normalized.name,
-        driverType: normalized.driverType,
-        remotePath: '/',
-        folderId: normalized.folderId || normalized.bucket || 'root',
-        label: `${normalized.name} (Root)`,
-        localPath,
-        syncedAt: new Date().toISOString(),
-      };
-      if (existingIdx >= 0) folders[existingIdx] = folderEntry;
-      else folders.push(folderEntry);
+      const linkedFolders = (normalized.driverType === 'gdrive' || normalized.driverType === 'onedrive')
+        ? remoteStorage.normalizeCloudFoldersArray(normalized)
+        : [{ id: normalized.folderId || normalized.bucket || 'root', label: 'Root', virtualName: 'root' }];
+
+      linkedFolders.forEach((lf, index) => {
+        const isMulti = linkedFolders.length > 1;
+        const mountSuffix = index === 0 ? 'root' : `folder-${index + 1}-${lf.virtualName.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+        const mountId = `mount-${normalized.id}-${mountSuffix}`;
+        const remotePath = isMulti ? `/${lf.virtualName}` : '/';
+        const subLocalPath = isMulti ? path.join(localPath, lf.virtualName) : localPath;
+        try { fs.mkdirSync(subLocalPath, { recursive: true }); } catch {}
+        const folderEntry = {
+          id: mountId,
+          dsId: normalized.id,
+          dsName: normalized.name,
+          driverType: normalized.driverType,
+          remotePath,
+          folderId: lf.id,
+          label: isMulti ? `${normalized.name}: ${lf.label || lf.id}` : `${normalized.name} (${lf.label || 'Root'})`,
+          localPath: subLocalPath,
+          syncedAt: new Date().toISOString(),
+        };
+        const existingIdx = folders.findIndex(f => f.id === mountId);
+        if (existingIdx >= 0) folders[existingIdx] = folderEntry;
+        else folders.push(folderEntry);
+      });
       saveCloudFolders(folders);
     } catch {}
   }

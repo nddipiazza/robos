@@ -73,14 +73,21 @@ function listConnections() {
     const startPath = (d.driverType === 'sftp' || d.driverType === 'ftp')
       ? rawStart
       : (String(rawStart).startsWith('/') ? rawStart : '/');
+    const linkedFolders = (rs && (d.driverType === 'gdrive' || d.driverType === 'onedrive'))
+      ? rs.normalizeCloudFoldersArray(d)
+      : [];
+    const folderSummary = linkedFolders.length > 1
+      ? `${linkedFolders.length} folders (${linkedFolders.map(f => f.label || f.id).join(', ')})`
+      : (linkedFolders[0]?.label || d.folderId);
     return {
       id: d.id,
       name: d.name,
       driverType: d.driverType,
+      folders: linkedFolders,
       host: d.driverType === 'gdrive'
-        ? (d.folderId || 'My Drive')
+        ? (folderSummary || 'My Drive')
         : d.driverType === 'onedrive'
-          ? (d.folderId || d.user || 'OneDrive')
+          ? (folderSummary || d.user || 'OneDrive')
           : (d.host || d.bucket || 'local'),
       startPath,
       browsable: !!(rs && rs.isRemoteDriver(d.driverType)),
