@@ -4,7 +4,7 @@ RobOS is a platform for working with coding agents. It combines a suite of deskt
 
 It is free and open source under the [Apache License 2.0](LICENSE). The current release is [v0.0.7](https://github.com/nddipiazza/robos/releases/tag/v0.0.7).
 
-[Website](https://rowbose.com/) | [Documentation](https://rowbose.com/docs/) | [Future](https://rowbose.com/future/) | [Download](https://rowbose.com/download/) | [Releases](https://github.com/nddipiazza/robos/releases) | [Discord](https://discord.gg/6PjxzkHujE)
+[Website](https://rowbose.com/) | [Documentation](https://rowbose.com/docs/) | [Future](https://rowbose.com/future/) | [Blog](https://rowbose.com/blog/) | [Download](https://rowbose.com/download/) | [Releases](https://github.com/nddipiazza/robos/releases) | [Discord](https://discord.gg/6PjxzkHujE)
 
 <p align="center">
   <img src="site/assets/hero/slides/15-evidence-updated.jpg" alt="Code Review Theater showing before and after evidence for a branch an agent pushed" width="900">

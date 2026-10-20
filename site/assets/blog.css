@@ -1,0 +1,45 @@
+/* /blog and individual blog posts. Uses site tokens from site.css. */
+.blog-hero{padding:72px 0 36px;text-align:center}
+.blog-hero h1{font-size:clamp(2.2rem,5vw,3.6rem);font-weight:600;letter-spacing:-.035em;max-width:20ch;margin:0 auto}
+.blog-hero p.lead{font-size:1.12rem;color:var(--muted);max-width:62ch;margin:18px auto 0}
+
+.blog-jump{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:980px;margin:28px auto 0;padding:0 20px}
+.blog-jump a{font-size:.82rem;color:var(--muted);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 13px;transition:border-color .15s,color .15s}
+.blog-jump a:hover{border-color:var(--accent);color:var(--fg)}
+
+.blog-feed{max-width:960px;margin:0 auto;padding:24px 20px 88px;display:flex;flex-direction:column;gap:40px}
+
+.blog-entry{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:34px 36px;scroll-margin-top:80px;transition:border-color .2s}
+.blog-entry:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.blog-meta{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;font-size:.82rem;color:var(--muted);margin-bottom:12px}
+.blog-date{font-family:'Fira Code',monospace;font-weight:500;color:var(--accent)}
+.blog-tag{background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:.76rem;color:var(--fg);font-weight:500}
+.blog-entry h2{font-size:clamp(1.45rem,2.5vw,1.9rem);font-weight:600;letter-spacing:-.025em;margin:0 0 12px;line-height:1.2}
+.blog-entry h2 a:hover{color:var(--accent)}
+.blog-summary{font-size:1.04rem;color:var(--fg);opacity:.9;margin:0 0 18px;line-height:1.65}
+
+.blog-body{color:var(--muted);font-size:.96rem;line-height:1.68}
+.blog-body p{margin:0 0 14px}
+.blog-body ul{margin:10px 0 18px;padding-left:1.25em}
+.blog-body li{margin:7px 0}
+.blog-body li strong,.blog-body p strong{color:var(--fg);font-weight:600}
+.blog-body code{font-size:.84em;background:var(--bg2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--fg)}
+.blog-body a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+
+.blog-fig{margin:22px 0;background:var(--bg2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.blog-fig img{display:block;width:100%;height:auto;max-height:520px;object-fit:cover;object-position:top}
+.blog-fig figcaption{padding:10px 16px;font-size:.82rem;color:var(--muted);border-top:1px solid var(--line)}
+
+.blog-fig-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.blog-fig-grid .blog-fig{margin:0}
+
+.blog-links{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);font-size:.88rem;font-weight:600}
+.blog-links a{color:var(--accent)}
+.blog-links a:hover{text-decoration:underline}
+.blog-commits{margin-left:auto;font-family:'Fira Code',monospace;font-size:.78rem;font-weight:400;color:var(--muted)}
+
+@media(max-width:760px){
+  .blog-entry{padding:24px 20px}
+  .blog-fig-grid{grid-template-columns:1fr}
+  .blog-commits{margin-left:0;width:100%}
+}
