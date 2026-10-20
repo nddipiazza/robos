@@ -74,7 +74,7 @@ export default function CloudBrowser({ onLibrary, showStatus }) {
         <div className="cloud-conn">
           <label htmlFor="cloud-conn-select">Connection</label>
           <select id="cloud-conn-select" value={connId} onChange={(e) => setConnId(e.target.value)} disabled={!usable.length}>
-            {!usable.length && <option value="">No FTP / SFTP connections</option>}
+            {!usable.length && <option value="">No Cloud Storage connections</option>}
             {usable.map(c => <option key={c.id} value={c.id}>{c.name} ({c.driverType.toUpperCase()} {c.host})</option>)}
           </select>
           <button className="btn-secondary" onClick={loadConnections}>Reload</button>
@@ -94,11 +94,11 @@ export default function CloudBrowser({ onLibrary, showStatus }) {
       {connections && !connections.length && (
         <div className="empty-state">
           <p>No cloud storage is linked yet.</p>
-          <p className="hint">Open RobOS Data Sources, add an SFTP or FTP connection under Cloud &amp; Object Storage, and it will appear here.</p>
+          <p className="hint">Open RobOS Data Sources, add a Google Drive, S3, Dropbox, SFTP, or FTP connection under Cloud &amp; Object Storage, and it will appear here.</p>
         </div>
       )}
       {other.length > 0 && (
-        <p className="cloud-note">{other.map(c => c.name).join(', ')}: browsing {other.length === 1 ? 'this' : 'these'} storage type{other.length === 1 ? ' is' : 's are'} not supported yet (FTP and SFTP only).</p>
+        <p className="cloud-note">{other.map(c => c.name).join(', ')}: browsing {other.length === 1 ? 'this' : 'these'} storage type{other.length === 1 ? ' is' : 's are'} not supported yet.</p>
       )}
 
       {progress && (

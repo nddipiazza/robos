@@ -46,14 +46,20 @@ function getConnection(id) {
 // Never hands passwords to the renderer.
 function listConnections() {
   const rs = (() => { try { return loadRemoteStorage(); } catch { return null; } })();
-  return readConnections().map(d => ({
-    id: d.id,
-    name: d.name,
-    driverType: d.driverType,
-    host: d.host,
-    startPath: d.database || '/',
-    browsable: !!(rs && rs.isRemoteDriver(d.driverType)),
-  }));
+  return readConnections().map(d => {
+    const rawStart = d.database || '/';
+    const startPath = (d.driverType === 'sftp' || d.driverType === 'ftp')
+      ? rawStart
+      : (String(rawStart).startsWith('/') ? rawStart : '/');
+    return {
+      id: d.id,
+      name: d.name,
+      driverType: d.driverType,
+      host: d.driverType === 'gdrive' ? (d.folderId || 'My Drive') : (d.host || d.bucket || 'local'),
+      startPath,
+      browsable: !!(rs && rs.isRemoteDriver(d.driverType)),
+    };
+  });
 }
 
 async function list(id, remotePath) {

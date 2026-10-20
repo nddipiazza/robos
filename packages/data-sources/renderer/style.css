@@ -7,6 +7,8 @@
   --border-subtle: #21262d;
   --accent: #00bcd4;
   --accent-dim: rgba(0, 188, 212, 0.15);
+  --gdrive-accent: #38bdf8;
+  --gdrive-dim: rgba(56, 189, 248, 0.14);
   --text-primary: #c9d1d9;
   --text-secondary: #8b949e;
   --text-muted: #484f58;
@@ -16,6 +18,7 @@
   --yellow-text: #e3b341;
   --yellow-dim: rgba(227, 179, 65, 0.15);
   --red-text: #f85149;
+  --red-dim: rgba(248, 81, 73, 0.15);
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
@@ -37,9 +40,24 @@ body {
   height: 100vh;
 }
 
+.hidden { display: none !important; }
+
+/* ── Toast Banner ── */
+.toast-banner {
+  background: rgba(0, 188, 212, 0.14);
+  border-bottom: 1px solid rgba(0, 188, 212, 0.4);
+  color: #fff;
+  font-size: 12px;
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
 /* ── Header ── */
 #header {
-  height: 52px;
+  height: 54px;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border);
   display: flex;
@@ -98,7 +116,7 @@ body {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .search-box {
@@ -118,7 +136,7 @@ body {
   color: #fff;
   font-size: 12px;
   outline: none;
-  width: 200px;
+  width: 220px;
 }
 
 /* ── Layout ── */
@@ -129,15 +147,15 @@ body {
 }
 
 #sidebar {
-  width: 250px;
-  min-width: 200px;
-  max-width: 360px;
+  width: 280px;
+  min-width: 220px;
+  max-width: 400px;
   background: var(--bg-primary);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  padding: 16px 12px;
-  gap: 16px;
+  padding: 14px 12px;
+  gap: 14px;
   overflow-y: auto;
   flex-shrink: 0;
 }
@@ -161,15 +179,34 @@ body {
 }
 
 /* ── Sidebar Items ── */
+.sidebar-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  padding: 0 6px;
+}
+
 .sidebar-heading {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-secondary);
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   padding: 0 6px;
 }
+
+.btn-link {
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-link:hover { text-decoration: underline; }
 
 .sidebar-nav {
   display: flex;
@@ -181,7 +218,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 10px;
+  padding: 6px 10px;
   border-radius: 6px;
   color: var(--text-secondary);
   cursor: pointer;
@@ -209,6 +246,107 @@ body {
   font-size: 10px;
 }
 
+/* ── Sidebar Connections Switcher List ── */
+.sidebar-ds-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.sidebar-ds-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.sidebar-ds-item:hover {
+  background: var(--bg-card);
+  border-color: var(--border);
+}
+
+.sidebar-ds-item.active {
+  background: rgba(0, 188, 212, 0.12);
+  border-color: rgba(0, 188, 212, 0.45);
+}
+
+.sidebar-ds-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.sidebar-ds-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.sidebar-ds-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-ds-sub {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-ds-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green-text);
+  flex-shrink: 0;
+}
+
+/* ── Sidebar Mounted Cloud Folders ── */
+.sidebar-mounts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-mount-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 5px 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.sidebar-mount-item:hover {
+  border-color: var(--accent);
+}
+
+.sidebar-mount-label {
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
 .bound-services-list {
   display: flex;
   flex-wrap: wrap;
@@ -217,7 +355,7 @@ body {
 }
 
 .service-tag {
-  padding: 4px 8px;
+  padding: 3px 8px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -246,15 +384,23 @@ body {
   border-radius: 8px;
   padding: 16px 20px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 16px;
+  gap: 16px;
+  margin-bottom: 14px;
 }
 
 .ds-header-left {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.ds-header-info {
+  min-width: 0;
+  flex: 1;
 }
 
 .ds-icon-avatar {
@@ -267,12 +413,14 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .ds-title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 4px;
 }
 
@@ -285,6 +433,7 @@ body {
 .ds-meta-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 14px;
   font-size: 12px;
   color: var(--text-secondary);
@@ -294,6 +443,7 @@ body {
 .ds-bindings-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
   font-size: 11px;
 }
@@ -302,9 +452,38 @@ body {
   color: var(--text-muted);
 }
 
+.ds-cloud-mount-bar {
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.mount-bar-label {
+  color: var(--gdrive-accent);
+  font-weight: 600;
+}
+
+.mount-bar-path {
+  color: #e6edf3;
+  font-family: var(--font-mono);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
 .ds-header-actions {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 /* ── Badges ── */
@@ -337,12 +516,18 @@ body {
   font-family: var(--font-mono);
 }
 
+.badge-subtle {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
 /* ── Tabs ── */
 .tab-nav {
   display: flex;
   gap: 4px;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .tab-btn {
@@ -368,14 +553,83 @@ body {
   font-weight: 600;
 }
 
+.tab-badge {
+  background: rgba(0, 188, 212, 0.18);
+  color: var(--accent);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-/* ── Schema Inspector ── */
+/* ── Cloud Explorer Toolbar & Breadcrumbs ── */
+.cloud-explorer-toolbar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.cloud-breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.crumb-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.crumb-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.crumb-sep {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.cloud-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.new-folder-bar {
+  background: rgba(0, 188, 212, 0.08);
+  border: 1px solid rgba(0, 188, 212, 0.35);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── Schema Inspector & Cloud File Browser ── */
 .schema-layout {
   display: flex;
   gap: 16px;
-  height: 480px;
+  height: 470px;
 }
 
 .schema-tree-pane {
@@ -387,6 +641,14 @@ body {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.pane-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
 }
 
 .pane-title {
@@ -436,6 +698,74 @@ body {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+}
+
+/* ── RobOS Mounted Cloud Folders Tab ── */
+.cloud-folders-header-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.mounted-folders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 14px;
+}
+
+.mount-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mount-card:hover {
+  border-color: rgba(56, 189, 248, 0.5);
+}
+
+.mount-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mount-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mount-path-box {
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 5px;
+  padding: 7px 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #7ee787;
+  word-break: break-all;
+}
+
+.mount-card-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: auto;
 }
 
 /* ── Query Console ── */
@@ -529,7 +859,47 @@ body {
   background: rgba(255, 255, 255, 0.02);
 }
 
-/* ── Data Sources Grid ── */
+.clickable-row {
+  cursor: pointer;
+}
+
+/* ── Quick-Connect Providers & Data Sources Grid ── */
+.quick-connect-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.quick-connect-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+  gap: 10px;
+}
+
+.quick-provider-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.quick-provider-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.qp-icon { font-size: 22px; }
+.qp-name { font-size: 12px; font-weight: 600; color: #fff; }
+.qp-sub { font-size: 10px; color: var(--text-secondary); }
+
 .datasources-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -581,6 +951,12 @@ body {
   color: var(--text-muted);
 }
 
+.ds-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
 /* ── Buttons ── */
 .btn {
   display: inline-flex;
@@ -616,33 +992,66 @@ body {
   color: #0d1117;
 }
 
+.btn-gdrive {
+  background: var(--gdrive-dim);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: var(--gdrive-accent);
+  font-weight: 600;
+}
+
+.btn-gdrive:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: var(--gdrive-accent);
+  color: #fff;
+}
+
+.btn-danger {
+  background: var(--red-dim);
+  border-color: rgba(248, 81, 73, 0.35);
+  color: var(--red-text);
+}
+
+.btn-danger:hover {
+  background: rgba(248, 81, 73, 0.28);
+  border-color: var(--red-text);
+  color: #fff;
+}
+
 .btn-sm {
   padding: 4px 10px;
   font-size: 11px;
+}
+
+.btn-xs {
+  padding: 2px 7px;
+  font-size: 10px;
 }
 
 /* ── Modals ── */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.72);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
 }
 
-.modal-overlay.hidden { display: none; }
-
 .modal-dialog {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 8px;
-  width: 520px;
-  max-width: 90vw;
+  width: 540px;
+  max-width: 92vw;
+  max-height: 90vh;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
+}
+
+.modal-dialog-wide {
+  width: 640px;
 }
 
 .modal-header {
@@ -672,6 +1081,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow-y: auto;
 }
 
 .modal-footer {
@@ -679,7 +1089,45 @@ body {
   border-top: 1px solid var(--border);
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 8px;
+}
+
+.gdrive-setup-panel {
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gdrive-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.detected-mounts-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.field-hint {
+  font-size: 11px;
+  color: var(--green-text);
+  font-family: var(--font-mono);
+}
+
+.modal-test-banner {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .form-group {
@@ -723,4 +1171,3 @@ body {
   font-size: 12px;
   color: var(--text-primary);
 }
-.form-group.hidden { display: none; }

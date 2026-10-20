@@ -1,17 +1,19 @@
 'use strict';
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const electron = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = electron;
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const http = require('http');
 
 // An explicitly configured workspace is a source-only, read-only consumer.
 const GRAPH_ROOT = process.env.ROBOS_GRAPH_ROOT;
 const EXTERNAL_GRAPH = GRAPH_ROOT !== undefined;
-const cp = require('child_process');
 const remoteStorage = require('./lib/remote-storage');
 
 const HOME_DIR = process.env.HOME || os.homedir();
 const CONFIG_FILE = path.join(HOME_DIR, '.config', 'robos', 'data-sources.json');
+const CLOUD_FOLDERS_FILE = path.join(HOME_DIR, '.config', 'robos', 'cloud-folders.json');
 const KGRAPH_FILE = path.join(HOME_DIR, '.robos', 'knowledge-graph.jsonld');
 
 // Debug server (optional)
@@ -27,12 +29,14 @@ try {
   }
 } catch {}
 
+let mainWindow = null;
+
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1200,
-    height: 780,
-    minWidth: 900,
-    minHeight: 600,
+    width: 1320,
+    height: 840,
+    minWidth: 960,
+    minHeight: 620,
     backgroundColor: '#0d1117',
     icon: path.join(__dirname, 'icon.svg'),
     webPreferences: {
@@ -44,6 +48,7 @@ function createWindow() {
     autoHideMenuBar: true,
   });
 
+  mainWindow = win;
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
   if (_debugServer) {
@@ -76,9 +81,107 @@ app.commandLine.appendSwitch('disable-dev-shm-usage');
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => app.quit());
 
-// ── Standard OSS Driver Catalog ─────────────────────────────────────────────
+// ── Standard OSS & Cloud Driver Catalog ─────────────────────────────────────
 
 const DRIVER_CATALOG = [
+  // Cloud & Object Storage (Featured First)
+  {
+    id: 'gdrive',
+    name: 'Google Drive',
+    category: 'storage',
+    categoryLabel: 'Cloud & Object Storage',
+    defaultPort: 443,
+    defaultUser: '',
+    uriTemplate: 'gdrive://{{folderId}}',
+    icon: 'gdrive',
+    description: 'Connect Google Drive folders (OAuth 2.0, Service Account, Shared Folder URL, or Local Mount) and mount them across RobOS apps',
+    docsUrl: 'https://developers.google.com/drive',
+  },
+  {
+    id: 's3',
+    name: 'Amazon S3 / Cloudflare R2 / MinIO',
+    category: 'storage',
+    categoryLabel: 'Cloud & Object Storage',
+    defaultPort: 443,
+    defaultUser: 's3_access_key',
+    uriTemplate: 's3://{{bucket}}',
+    icon: 's3',
+    description: 'S3-compatible object storage for cloud buckets, media assets, contracts, and backups',
+    docsUrl: 'https://aws.amazon.com/s3/',
+  },
+  {
+    id: 'dropbox',
+    name: 'Dropbox Cloud Storage',
+    category: 'storage',
+    categoryLabel: 'Cloud & Object Storage',
+    defaultPort: 443,
+    defaultUser: 'oauth_token',
+    uriTemplate: 'dropbox://{{path}}',
+    icon: 'dropbox',
+    description: 'Dropbox cloud folders synced for RobOS workspaces, media libraries, and shared documents',
+    docsUrl: 'https://www.dropbox.com/developers',
+  },
+  {
+    id: 'onedrive',
+    name: 'Microsoft OneDrive / SharePoint',
+    category: 'storage',
+    categoryLabel: 'Cloud & Object Storage',
+    defaultPort: 443,
+    defaultUser: 'graph_token',
+    uriTemplate: 'onedrive://{{path}}',
+    icon: 'onedrive',
+    description: 'Microsoft 365 OneDrive and SharePoint document libraries via Microsoft Graph API',
+    docsUrl: 'https://learn.microsoft.com/en-us/onedrive/developer/',
+  },
+  {
+    id: 'webdav',
+    name: 'Nextcloud / ownCloud (WebDAV)',
+    category: 'storage',
+    categoryLabel: 'Cloud & Object Storage',
+    defaultPort: 443,
+    defaultUser: 'admin',
+    uriTemplate: 'webdavs://{{host}}/remote.php/dav/files/{{user}}/',
+    icon: 'webdav',
+    description: 'Self-hosted Nextcloud, ownCloud, or standard RFC 4918 WebDAV cloud storage server',
+    docsUrl: 'https://docs.nextcloud.com/',
+  },
+  {
+    id: 'sftp',
+    name: 'SFTP (SSH File Transfer)',
+    category: 'storage',
+    categoryLabel: 'Cloud & Object Storage',
+    defaultPort: 22,
+    defaultUser: '',
+    uriTemplate: 'sftp://{{host}}:{{port}}/{{path}}',
+    icon: 'sftp',
+    description: 'Encrypted file transfer over SSH with password or private-key authentication',
+    docsUrl: 'https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-13',
+  },
+  {
+    id: 'ftp',
+    name: 'FTP / FTPS',
+    category: 'storage',
+    categoryLabel: 'Cloud & Object Storage',
+    defaultPort: 21,
+    defaultUser: 'anonymous',
+    uriTemplate: 'ftp://{{host}}:{{port}}/{{path}}',
+    icon: 'ftp',
+    description: 'Classic file transfer protocol, with optional explicit TLS (FTPS)',
+    docsUrl: 'https://datatracker.ietf.org/doc/html/rfc959',
+  },
+  {
+    id: 'local',
+    name: 'Local / NAS / Network Folder Mount',
+    category: 'storage',
+    categoryLabel: 'Cloud & Object Storage',
+    defaultPort: null,
+    defaultUser: '',
+    uriTemplate: 'file://{{path}}',
+    icon: 'local',
+    description: 'Mounted NAS share (NFS, SMB/CIFS, GVFS, rclone mount) or local directory exposed to RobOS apps',
+    docsUrl: 'https://wiki.archlinux.org/title/GVFS',
+  },
+
   // SQL / Relational
   {
     id: 'postgres',
@@ -191,56 +294,6 @@ const DRIVER_CATALOG = [
     docsUrl: 'https://docs.aws.amazon.com/dynamodb/',
   },
 
-  // Object Storage & Cloud
-  {
-    id: 's3',
-    name: 'Amazon S3 / MinIO',
-    category: 'storage',
-    categoryLabel: 'Cloud & Object Storage',
-    defaultPort: 443,
-    defaultUser: 's3_access_key',
-    uriTemplate: 's3://{{bucket}}',
-    icon: 's3',
-    description: 'Scalable object storage for contracts, artifacts, and backups',
-    docsUrl: 'https://aws.amazon.com/s3/',
-  },
-  {
-    id: 'gdrive',
-    name: 'Google Drive / GCS',
-    category: 'storage',
-    categoryLabel: 'Cloud & Object Storage',
-    defaultPort: 443,
-    defaultUser: 'service_account',
-    uriTemplate: 'gdrive://{{folderId}}',
-    icon: 'gdrive',
-    description: 'Cloud document and object repository synced with Google Cloud / Workspace',
-    docsUrl: 'https://developers.google.com/drive',
-  },
-  {
-    id: 'sftp',
-    name: 'SFTP (SSH File Transfer)',
-    category: 'storage',
-    categoryLabel: 'Cloud & Object Storage',
-    defaultPort: 22,
-    defaultUser: '',
-    uriTemplate: 'sftp://{{host}}:{{port}}/{{path}}',
-    icon: 'sftp',
-    description: 'Encrypted file transfer over SSH with password or private-key authentication',
-    docsUrl: 'https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-13',
-  },
-  {
-    id: 'ftp',
-    name: 'FTP / FTPS',
-    category: 'storage',
-    categoryLabel: 'Cloud & Object Storage',
-    defaultPort: 21,
-    defaultUser: 'anonymous',
-    uriTemplate: 'ftp://{{host}}:{{port}}/{{path}}',
-    icon: 'ftp',
-    description: 'Classic file transfer protocol, with optional explicit TLS (FTPS)',
-    docsUrl: 'https://datatracker.ietf.org/doc/html/rfc959',
-  },
-
   // Streaming & Messaging
   {
     id: 'kafka',
@@ -286,6 +339,7 @@ const DEFAULT_DATASOURCES = [
     port: 443,
     region: 'us-east-1',
     bucket: 'acme-petshop-vault-prod',
+    database: '/',
     user: 'AKIA_PROD_S3_KEY',
     password: '••••••••',
     ssl: true,
@@ -304,14 +358,15 @@ const DEFAULT_DATASOURCES = [
     host: 'drive.google.com',
     port: 443,
     folderId: '0B123_Acme_SDLC_Engineering_Root',
+    database: '/',
     user: 'sa-robos-sdlc@acme-corp.iam.gserviceaccount.com',
     password: '••••••••',
     ssl: true,
     status: 'Connected',
     latencyMs: 22.1,
     boundServices: ['urn:robos:service:petstore-api'],
-    description: 'Shared engineering documentation, architectural decisions, and requirement docs',
-    schemaSummary: '12 active spec folders',
+    description: 'Shared engineering documentation, architectural decisions, media folders, and requirement docs',
+    schemaSummary: '4 synced folders in RobOS',
     lastChecked: new Date().toISOString(),
   },
   {
@@ -409,12 +464,26 @@ const SAMPLE_POSTGRES_SCHEMA = {
   ],
 };
 
+function inferCategory(driverType, fallback) {
+  const d = String(driverType || '').toLowerCase();
+  if (remoteStorage.isRemoteDriver(d)) return 'storage';
+  if (['postgres', 'mysql', 'oracle', 'mssql', 'sqlite', 'snowflake'].includes(d)) return 'sql';
+  if (['mongodb', 'redis', 'dynamodb'].includes(d)) return 'nosql';
+  if (['kafka', 'nats', 'rabbitmq', 'pulsar'].includes(d)) return 'streaming';
+  return fallback || 'storage';
+}
+
 function loadDataSources() {
   if (EXTERNAL_GRAPH) return sourceDataSources();
   try {
     if (fs.existsSync(CONFIG_FILE)) {
       const data = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
-      if (Array.isArray(data) && data.length > 0) return data;
+      if (Array.isArray(data) && data.length > 0) {
+        return data.map(d => ({
+          ...d,
+          category: inferCategory(d.driverType, d.category),
+        }));
+      }
     }
   } catch {}
   return JSON.parse(JSON.stringify(DEFAULT_DATASOURCES));
@@ -424,8 +493,41 @@ function saveDataSources(data) {
   if (EXTERNAL_GRAPH) throw new Error(READ_ONLY_MESSAGE);
   try {
     fs.mkdirSync(path.dirname(CONFIG_FILE), { recursive: true });
-    // Connections can hold FTP/SFTP credentials, so keep the file private.
+    // Connections can hold cloud/FTP/SFTP credentials, so keep the file private.
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(data, null, 2), { encoding: 'utf8', mode: 0o600 });
+  } catch {}
+}
+
+function loadCloudFolders() {
+  try {
+    if (fs.existsSync(CLOUD_FOLDERS_FILE)) {
+      const list = JSON.parse(fs.readFileSync(CLOUD_FOLDERS_FILE, 'utf8'));
+      if (Array.isArray(list)) return list;
+    }
+  } catch {}
+  // Seed default mounted folders from storage data sources
+  const sources = loadDataSources().filter(d => d.category === 'storage');
+  return sources.map(ds => {
+    const localPath = remoteStorage.ensureLocalMountDir(ds);
+    return {
+      id: `mount-${ds.id}-root`,
+      dsId: ds.id,
+      dsName: ds.name,
+      driverType: ds.driverType,
+      remotePath: '/',
+      folderId: ds.folderId || ds.bucket || 'root',
+      label: `${ds.name} (Root)`,
+      localPath,
+      syncedAt: new Date().toISOString(),
+    };
+  });
+}
+
+function saveCloudFolders(list) {
+  if (EXTERNAL_GRAPH) throw new Error(READ_ONLY_MESSAGE);
+  try {
+    fs.mkdirSync(path.dirname(CLOUD_FOLDERS_FILE), { recursive: true });
+    fs.writeFileSync(CLOUD_FOLDERS_FILE, JSON.stringify(list, null, 2), { encoding: 'utf8', mode: 0o600 });
   } catch {}
 }
 
@@ -434,7 +536,6 @@ function getKGraphStore() {
   if (EXTERNAL_GRAPH) {
     if (!GRAPH_ROOT.trim()) throw new Error('ROBOS_GRAPH_ROOT must name an available graph workspace');
     if (!_kgraphStore) {
-      // Load the shared store directly: package main.js is the Electron app entry.
       let Store;
       try { Store = require('../robos-graph/lib/graph-store').SDLCKnowledgeGraphStore; }
       catch (error) {
@@ -443,7 +544,6 @@ function getKGraphStore() {
       }
       _kgraphStore = new Store({ graphRoot: GRAPH_ROOT });
     } else {
-      // Re-read accepted state and fail if the workspace has become unavailable.
       _kgraphStore.init();
     }
     const workspace = _kgraphStore.workspace;
@@ -514,7 +614,6 @@ function syncToKnowledgeGraph(dataSources) {
   } catch (_) {}
 }
 
-
 const READ_ONLY_MESSAGE = 'External graph mode is source-only. Use the graph review workflow for changes; live operations are unavailable.';
 function sourceDataSources() {
   const types = ['robos:Database', 'robos:RelationalDatabase', 'robos:NoSQLDatabase', 'robos:DataStore', 'robos:BrokerDefinition', 'robos:DataSource', 'robos:StorageStore', 'robos:MessageBroker', 'robos:ObjectStorage'];
@@ -541,6 +640,7 @@ function sourceDataSources() {
     };
   });
 }
+
 function registerIPC(channel, handler) {
   ipcMain.handle(channel, (event, ...args) => {
     if (!EXTERNAL_GRAPH) return handler(event, ...args);
@@ -562,14 +662,51 @@ registerIPC('ds-get-datasources', async () => {
 
 registerIPC('ds-save-datasource', async (_, ds) => {
   const list = loadDataSources();
-  const idx = list.findIndex(d => d.id === ds.id);
+  const normalized = {
+    ...ds,
+    category: inferCategory(ds.driverType, ds.category),
+    lastChecked: new Date().toISOString(),
+  };
+  if (normalized.driverType === 'gdrive') {
+    normalized.folderId = remoteStorage.extractDriveFolderId(normalized.folderId || normalized.database || 'root');
+    if (!normalized.database || normalized.database.includes('drive.google.com')) {
+      normalized.database = '/';
+    }
+    normalized.host = normalized.host || 'drive.google.com';
+  }
+  const idx = list.findIndex(d => d.id === normalized.id);
   if (idx >= 0) {
-    list[idx] = { ...list[idx], ...ds, lastChecked: new Date().toISOString() };
+    list[idx] = { ...list[idx], ...normalized };
   } else {
-    list.push({ ...ds, lastChecked: new Date().toISOString() });
+    list.push(normalized);
   }
   saveDataSources(list);
   syncToKnowledgeGraph(list);
+
+  // If it's a cloud storage provider, ensure its local mount directory exists and register root folder
+  if (normalized.category === 'storage') {
+    try {
+      const localPath = remoteStorage.ensureLocalMountDir(normalized);
+      const folders = loadCloudFolders();
+      const mountId = `mount-${normalized.id}-root`;
+      const existingIdx = folders.findIndex(f => f.id === mountId);
+      const folderEntry = {
+        id: mountId,
+        dsId: normalized.id,
+        dsName: normalized.name,
+        driverType: normalized.driverType,
+        remotePath: '/',
+        folderId: normalized.folderId || normalized.bucket || 'root',
+        label: `${normalized.name} (Root)`,
+        localPath,
+        syncedAt: new Date().toISOString(),
+      };
+      if (existingIdx >= 0) folders[existingIdx] = folderEntry;
+      else folders.push(folderEntry);
+      saveCloudFolders(folders);
+    } catch {}
+  }
+
   return list;
 });
 
@@ -578,14 +715,17 @@ registerIPC('ds-delete-datasource', async (_, id) => {
   list = list.filter(d => d.id !== id);
   saveDataSources(list);
   syncToKnowledgeGraph(list);
+  try {
+    const folders = loadCloudFolders().filter(f => f.dsId !== id);
+    saveCloudFolders(folders);
+  } catch {}
   return list;
 });
 
 registerIPC('ds-test-connection', async (_, ds) => {
   if (remoteStorage.isRemoteDriver(ds.driverType)) return remoteStorage.testConnection(ds);
   const start = Date.now();
-  // Simulate realistic network connection probe
-  await new Promise(r => setTimeout(r, 450));
+  await new Promise(r => setTimeout(r, 350));
   const latency = Math.round((Date.now() - start) * 0.05 * 10) / 10 + 0.8;
   return {
     ok: true,
@@ -604,9 +744,26 @@ registerIPC('ds-test-connection', async (_, ds) => {
 registerIPC('ds-inspect-schema', async (_, { id, driverType, path: remotePath }) => {
   if (remoteStorage.isRemoteDriver(driverType)) {
     const ds = loadDataSources().find(d => d.id === id);
-    if (!ds) return { remote: { error: 'Unknown data source' } };
+    if (!ds) return { remote: { path: '/', entries: [], error: 'Unknown data source' } };
     try {
-      return { remote: await remoteStorage.listDir(ds, remotePath) };
+      const listing = await remoteStorage.listDir(ds, remotePath);
+      const response = { remote: listing };
+      if (driverType === 's3') {
+        response.buckets = [
+          { name: ds.bucket || 'acme-petshop-vault-prod', objectsCount: listing.entries.length, sizeFormatted: '48.2 MB' },
+          { name: 'acme-petshop-specs-contracts', objectsCount: 68, sizeFormatted: '2.4 MB' },
+          { name: 'acme-petshop-backups', objectsCount: 14, sizeFormatted: '1.2 GB' },
+        ];
+      }
+      if (driverType === 'gdrive') {
+        response.folders = listing.entries.filter(e => e.type === 'dir').map(e => ({
+          id: e.driveId || e.name,
+          name: e.name,
+          path: e.path,
+          filesCount: 'Folder',
+        }));
+      }
+      return response;
     } catch (err) {
       return { remote: { path: remotePath || ds.database || '/', entries: [], error: err.message } };
     }
@@ -614,38 +771,41 @@ registerIPC('ds-inspect-schema', async (_, { id, driverType, path: remotePath })
   if (driverType === 'postgres' || driverType === 'oracle' || driverType === 'mysql' || driverType === 'mssql' || driverType === 'sqlite') {
     return SAMPLE_POSTGRES_SCHEMA;
   }
-  if (driverType === 's3') {
-    return {
-      buckets: [
-        { name: 'acme-petshop-vault-prod', objectsCount: 1420, sizeFormatted: '48.2 MB' },
-        { name: 'acme-petshop-specs-contracts', objectsCount: 68, sizeFormatted: '2.4 MB' },
-        { name: 'acme-petshop-backups', objectsCount: 14, sizeFormatted: '1.2 GB' },
-      ],
-      files: [
-        { key: 'certs/rabies/PET-105-luna-rabies-cert.pdf', size: 142850, modified: '2026-09-04T10:15:00Z' },
-        { key: 'contracts/acme-vaccine-gateway-v1.yaml', size: 14920, modified: '2026-09-04T11:00:00Z' },
-        { key: 'specs/features/rabies-vaccine-verification.feature', size: 4120, modified: '2026-09-04T09:30:00Z' },
-      ],
-    };
-  }
-  if (driverType === 'gdrive') {
-    return {
-      folders: [
-        { id: 'f_specs_01', name: 'Engineering Specs & RFCs', filesCount: 24 },
-        { id: 'f_arch_02', name: 'Knowledge Graph Architecture', filesCount: 12 },
-        { id: 'f_ops_03', name: 'Production Runbooks & SLOs', filesCount: 9 },
-      ],
-    };
-  }
   return { tables: [] };
 });
 
 registerIPC('ds-execute-query', async (_, { id, driverType, query }) => {
   const start = Date.now();
-  await new Promise(r => setTimeout(r, 200));
-  const executionTimeMs = Date.now() - start;
+  await new Promise(r => setTimeout(r, 150));
+  const executionTimeMs = Math.max(1, Date.now() - start);
 
   const q = (query || '').trim().toLowerCase();
+
+  // If querying a Cloud Storage / Google Drive source, search files matching the query
+  if (remoteStorage.isRemoteDriver(driverType)) {
+    const ds = loadDataSources().find(d => d.id === id);
+    if (ds) {
+      try {
+        const searchTerm = q.replace(/^select\s+\*\s+from\s+\S+\s*(where\s+name\s+like\s+)?/i, '').replace(/['"%;]/g, '').trim();
+        const files = await remoteStorage.walk(ds, '/', (name) => !searchTerm || name.toLowerCase().includes(searchTerm), 200);
+        return {
+          ok: true,
+          columns: ['name', 'path', 'size_kb', 'modified'],
+          rows: files.map(f => [f.name, f.path, `${Math.max(1, Math.round((f.size || 0) / 1024))} KB`, f.modified ? f.modified.slice(0, 19).replace('T', ' ') : '-']),
+          rowCount: files.length,
+          executionTimeMs,
+        };
+      } catch (err) {
+        return {
+          ok: false,
+          columns: ['status', 'error'],
+          rows: [['ERROR', err.message]],
+          rowCount: 1,
+          executionTimeMs,
+        };
+      }
+    }
+  }
 
   if (q.includes('select') && q.includes('pets')) {
     return {
@@ -677,7 +837,6 @@ registerIPC('ds-execute-query', async (_, { id, driverType, query }) => {
     };
   }
 
-  // Default query response
   return {
     ok: true,
     columns: ['status', 'message', 'timestamp'],
@@ -689,8 +848,201 @@ registerIPC('ds-execute-query', async (_, { id, driverType, query }) => {
   };
 });
 
+// ── Cloud Storage & Google Drive Folder Operations ──────────────────────────
+
+registerIPC('ds-get-cloud-folders', async () => {
+  return loadCloudFolders();
+});
+
+registerIPC('ds-mount-cloud-folder', async (_, { dsId, remotePath, label }) => {
+  const ds = loadDataSources().find(d => d.id === dsId);
+  if (!ds) throw new Error(`Data source not found: ${dsId}`);
+  const normPath = remoteStorage.normalizeRemote(remotePath || '/');
+  const syncRes = await remoteStorage.syncFolderToLocal(ds, normPath);
+
+  const folders = loadCloudFolders();
+  const mountId = `mount-${ds.id}-${normPath === '/' ? 'root' : normPath.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+  const folderName = normPath === '/' ? `${ds.name} (Root)` : `${ds.name}: ${path.posix.basename(normPath)}`;
+  const entry = {
+    id: mountId,
+    dsId: ds.id,
+    dsName: ds.name,
+    driverType: ds.driverType,
+    remotePath: normPath,
+    folderId: ds.folderId || ds.bucket || 'root',
+    label: label || folderName,
+    localPath: syncRes.localPath,
+    syncedFiles: syncRes.syncedFiles,
+    syncedAt: new Date().toISOString(),
+  };
+
+  const idx = folders.findIndex(f => f.id === mountId);
+  if (idx >= 0) folders[idx] = entry;
+  else folders.push(entry);
+  saveCloudFolders(folders);
+
+  return { ok: true, entry, folders };
+});
+
+registerIPC('ds-unmount-cloud-folder', async (_, mountId) => {
+  const folders = loadCloudFolders().filter(f => f.id !== mountId);
+  saveCloudFolders(folders);
+  return { ok: true, folders };
+});
+
+registerIPC('ds-create-folder', async (_, { dsId, remotePath }) => {
+  const ds = loadDataSources().find(d => d.id === dsId);
+  if (!ds) throw new Error(`Data source not found: ${dsId}`);
+  return await remoteStorage.mkdir(ds, remotePath);
+});
+
+registerIPC('ds-upload-files', async (_, { dsId, remoteDir, filePaths }) => {
+  const ds = loadDataSources().find(d => d.id === dsId);
+  if (!ds) throw new Error(`Data source not found: ${dsId}`);
+
+  let targets = filePaths;
+  if (!Array.isArray(targets) || !targets.length) {
+    if (!electron.dialog || !mainWindow) return { canceled: true, uploaded: [] };
+    const res = await electron.dialog.showOpenDialog(mainWindow, {
+      title: `Upload Files to ${ds.name}`,
+      buttonLabel: 'Upload',
+      properties: ['openFile', 'multiSelections'],
+    });
+    if (res.canceled || !res.filePaths.length) return { canceled: true, uploaded: [] };
+    targets = res.filePaths;
+  }
+
+  const uploaded = [];
+  for (const fp of targets) {
+    const out = await remoteStorage.upload(ds, fp, remoteDir || '/');
+    uploaded.push(out);
+  }
+  return { ok: true, canceled: false, uploaded };
+});
+
+registerIPC('ds-download-file', async (_, { dsId, remoteFile }) => {
+  const ds = loadDataSources().find(d => d.id === dsId);
+  if (!ds) throw new Error(`Data source not found: ${dsId}`);
+  const rootDir = remoteStorage.ensureLocalMountDir(ds);
+  const rel = remoteStorage.normalizeRemote(remoteFile).split('/').filter(p => p && p !== '..').join(path.sep);
+  const localTarget = path.join(rootDir, rel);
+  await remoteStorage.download(ds, remoteFile, localTarget);
+  return { ok: true, localPath: localTarget };
+});
+
+registerIPC('ds-detect-gdrive-mounts', async () => {
+  return remoteStorage.detectLocalGoogleDriveMounts();
+});
+
+registerIPC('ds-pick-local-folder', async () => {
+  if (!electron.dialog || !mainWindow) return { canceled: true };
+  const res = await electron.dialog.showOpenDialog(mainWindow, {
+    title: 'Select Local or Mounted Cloud Directory',
+    buttonLabel: 'Select Folder',
+    properties: ['openDirectory'],
+  });
+  if (res.canceled || !res.filePaths.length) return { canceled: true };
+  return { canceled: false, folderPath: res.filePaths[0] };
+});
+
+registerIPC('ds-pick-key-file', async (_, { title } = {}) => {
+  if (!electron.dialog || !mainWindow) return { canceled: true };
+  const res = await electron.dialog.showOpenDialog(mainWindow, {
+    title: title || 'Select Key / Service Account File',
+    buttonLabel: 'Select File',
+    properties: ['openFile', 'showHiddenFiles'],
+  });
+  if (res.canceled || !res.filePaths.length) return { canceled: true };
+  return { canceled: false, filePath: res.filePaths[0] };
+});
+
+registerIPC('ds-open-local-path', async (_, localPath) => {
+  if (localPath && fs.existsSync(localPath) && shell && typeof shell.openPath === 'function') {
+    await shell.openPath(localPath);
+    return { ok: true };
+  }
+  return { ok: false, error: 'Path does not exist: ' + localPath };
+});
+
+registerIPC('ds-google-oauth-signin', async (_, { clientId, clientSecret }) => {
+  if (!clientId || !clientSecret) {
+    throw new Error('Enter your Google Cloud OAuth 2.0 Client ID and Client Secret first, or use Service Account JSON / API Token / Local Mount.');
+  }
+
+  return await new Promise((resolve, reject) => {
+    const server = http.createServer(async (req, res) => {
+      try {
+        const u = new URL(req.url, 'http://127.0.0.1');
+        if (u.pathname !== '/oauth2callback') {
+          res.writeHead(404);
+          res.end('Not found');
+          return;
+        }
+        const code = u.searchParams.get('code');
+        const err = u.searchParams.get('error');
+        if (err || !code) {
+          res.writeHead(400, { 'Content-Type': 'text/html' });
+          res.end('<h2>Google Drive Authorization Cancelled</h2><p>You can close this tab and return to RobOS Data Sources.</p>');
+          server.close();
+          reject(new Error(err || 'No authorization code returned'));
+          return;
+        }
+        const port = server.address().port;
+        const redirectUri = `http://127.0.0.1:${port}/oauth2callback`;
+        const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            code,
+            client_id: clientId,
+            client_secret: clientSecret,
+            redirect_uri: redirectUri,
+            grant_type: 'authorization_code',
+          }),
+        });
+        const tokenData = await tokenRes.json();
+        if (!tokenRes.ok) {
+          throw new Error(tokenData.error_description || tokenData.error || 'Token exchange failed');
+        }
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end('<h2 style="font-family:sans-serif;color:#10b981;">✓ Google Drive Connected to RobOS!</h2><p style="font-family:sans-serif;">You can close this browser tab and return to RobOS Data Sources.</p>');
+        server.close();
+        resolve({
+          ok: true,
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token,
+          expiresIn: tokenData.expires_in,
+        });
+      } catch (e) {
+        server.close();
+        reject(e);
+      }
+    });
+
+    server.listen(0, '127.0.0.1', () => {
+      const port = server.address().port;
+      const redirectUri = `http://127.0.0.1:${port}/oauth2callback`;
+      const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+      authUrl.searchParams.set('client_id', clientId);
+      authUrl.searchParams.set('redirect_uri', redirectUri);
+      authUrl.searchParams.set('response_type', 'code');
+      authUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/drive');
+      authUrl.searchParams.set('access_type', 'offline');
+      authUrl.searchParams.set('prompt', 'consent');
+      if (shell && typeof shell.openExternal === 'function') {
+        shell.openExternal(authUrl.toString());
+      }
+    });
+
+    setTimeout(() => {
+      try { server.close(); } catch {}
+      reject(new Error('Google OAuth sign-in timed out after 120 seconds.'));
+    }, 120000).unref?.();
+  });
+});
+
 registerIPC('open-url', async (_, url) => {
-  if (url) shell.openExternal(url);
+  if (url && shell && typeof shell.openExternal === 'function') shell.openExternal(url);
   return { ok: true };
 });
 
