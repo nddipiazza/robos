@@ -89,12 +89,15 @@ var furniture: Array[Dictionary] = []
 var wall_blocks: Array[Dictionary] = []
 var traps: Array[Dictionary] = []
 var rooms: Array[Dictionary] = []
+var corridors: Array = []
 var revealed_rooms: Array[String] = []
 var explored_tiles: Dictionary = {}
 var discovered_monster_ids: Dictionary = {}
 var _tile_to_room: Dictionary = {}
 var _tile_to_room_id: Dictionary = {}
 var _rooms_by_id: Dictionary = {}
+var _corridor_tiles: Dictionary = {}
+var _unreachable_non_room_tiles: Dictionary = {}
 var _blocked_wall_tiles: Dictionary = {}
 var _doors_by_edge: Dictionary = {}
 var _furniture_by_tile: Dictionary = {}
@@ -3316,6 +3319,13 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 	for r in map_data.get("rooms", []):
 		rooms.append(r.duplicate(true))
 
+	corridors.clear()
+	for c_pt in map_data.get("corridors", []):
+		if c_pt is Array and c_pt.size() >= 2:
+			corridors.append([int(c_pt[0]), int(c_pt[1])])
+		elif c_pt is Vector2i:
+			corridors.append([c_pt.x, c_pt.y])
+
 	doors.clear()
 	for d in map_data.get("doors", []):
 		var door_entry = d.duplicate(true)
@@ -3449,6 +3459,26 @@ func _detect_starting_room(m_data: Dictionary = {}) -> String:
 				break
 	return starting_room_id
 
+func _get_room_tiles(r: Dictionary) -> Array[Vector2i]:
+	var res: Array[Vector2i] = []
+	var r_tiles = r.get("tiles", [])
+	if r_tiles is Array and r_tiles.size() > 0:
+		for pt in r_tiles:
+			if pt is Vector2i:
+				res.append(pt)
+			elif pt is Array and pt.size() >= 2:
+				res.append(Vector2i(int(pt[0]), int(pt[1])))
+		if res.size() > 0:
+			return res
+	var rx = int(r.get("x", 0))
+	var ry = int(r.get("y", 0))
+	var rw = int(r.get("w", 1))
+	var rh = int(r.get("h", 1))
+	for x in range(rx, rx + rw):
+		for y in range(ry, ry + rh):
+			res.append(Vector2i(x, y))
+	return res
+
 func _rebuild_spatial_caches() -> void:
 	_tile_to_room.clear()
 	_tile_to_room_id.clear()
@@ -3457,15 +3487,16 @@ func _rebuild_spatial_caches() -> void:
 		var r_id = str(r.get("id", ""))
 		if r_id != "":
 			_rooms_by_id[r_id] = r
-		var rx = int(r.get("x", 0))
-		var ry = int(r.get("y", 0))
-		var rw = int(r.get("w", 1))
-		var rh = int(r.get("h", 1))
-		for x in range(rx, rx + rw):
-			for y in range(ry, ry + rh):
-				var pos = Vector2i(x, y)
-				_tile_to_room[pos] = r
-				_tile_to_room_id[pos] = r_id
+		for pos in _get_room_tiles(r):
+			_tile_to_room[pos] = r
+			_tile_to_room_id[pos] = r_id
+
+	_corridor_tiles.clear()
+	for c_pt in corridors:
+		if c_pt is Array and c_pt.size() >= 2:
+			_corridor_tiles[Vector2i(int(c_pt[0]), int(c_pt[1]))] = true
+		elif c_pt is Vector2i:
+			_corridor_tiles[c_pt] = true
 
 	_blocked_wall_tiles.clear()
 	for wb in wall_blocks:
@@ -3504,6 +3535,72 @@ func _rebuild_spatial_caches() -> void:
 			_doors_by_edge[Vector4i(t[0], t[1] + 1, f[0], f[1] + 1)] = d
 
 	_rebuild_furniture_tile_map()
+	_rebuild_unreachable_non_room_tiles()
+
+func _rebuild_unreachable_non_room_tiles() -> void:
+	_unreachable_non_room_tiles.clear()
+	var has_explicit_corridors = _corridor_tiles.size() > 0
+	var reachable: Dictionary = {}
+	var has_corridor_reached = false
+	var run_bfs = has_explicit_corridors or doors.size() > 0 or wall_blocks.size() > 0
+	if run_bfs:
+		var queue: Array[Vector2i] = []
+		var seeds: Array[Vector2i] = [starting_stair]
+		if exit_stair != Vector2i(-1, -1):
+			seeds.append(exit_stair)
+		for h in heroes:
+			var hp = _to_grid_pos(h.get("grid_pos", Vector2i(-1, -1)))
+			if hp.x >= 0 and hp.y >= 0 and not seeds.has(hp):
+				seeds.append(hp)
+		for s in seeds:
+			if s.x >= 0 and s.x < grid_cols and s.y >= 0 and s.y < grid_rows:
+				reachable[s] = true
+				queue.append(s)
+				if not _tile_to_room.has(s):
+					has_corridor_reached = true
+		var dirs = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+		while queue.size() > 0:
+			var cur = queue.pop_front()
+			var r_cur = _tile_to_room_id.get(cur, "")
+			for d in dirs:
+				var nxt = cur + d
+				if nxt.x < 0 or nxt.x >= grid_cols or nxt.y < 0 or nxt.y >= grid_rows:
+					continue
+				if reachable.has(nxt):
+					continue
+				if _blocked_wall_tiles.has(nxt):
+					continue
+				if is_border_tile(nxt) and not is_starting_stair_tile(nxt) and not is_exit_stair_tile(nxt):
+					continue
+				var r_nxt = _tile_to_room_id.get(nxt, "")
+				if has_explicit_corridors and r_nxt == "" and not _corridor_tiles.has(nxt) and not is_starting_stair_tile(nxt) and not is_exit_stair_tile(nxt):
+					continue
+				if r_cur != r_nxt:
+					if not _doors_by_edge.has(Vector4i(cur.x, cur.y, nxt.x, nxt.y)) and not is_starting_stair_tile(cur) and not is_starting_stair_tile(nxt) and not is_exit_stair_tile(cur) and not is_exit_stair_tile(nxt):
+						continue
+				reachable[nxt] = true
+				queue.append(nxt)
+				if r_nxt == "":
+					has_corridor_reached = true
+
+	for c in range(grid_cols):
+		for r in range(grid_rows):
+			var t = Vector2i(c, r)
+			if _tile_to_room.has(t):
+				continue
+			if is_starting_stair_tile(t) or is_exit_stair_tile(t):
+				continue
+			if is_border_tile(t):
+				_unreachable_non_room_tiles[t] = true
+			elif has_explicit_corridors and not _corridor_tiles.has(t):
+				_unreachable_non_room_tiles[t] = true
+			elif run_bfs and has_corridor_reached and not reachable.has(t):
+				_unreachable_non_room_tiles[t] = true
+
+func is_unreachable_non_room_tile(tile: Vector2i) -> bool:
+	if _tile_to_room.has(tile):
+		return false
+	return _unreachable_non_room_tiles.has(tile) or is_border_tile(tile)
 
 func _rebuild_furniture_tile_map() -> void:
 	_furniture_by_tile.clear()
@@ -3679,6 +3776,8 @@ func is_tile_walkable(tile: Vector2i) -> bool:
 	if is_border_tile(tile):
 		if not is_starting_stair_tile(tile) and not is_exit_stair_tile(tile):
 			return false
+	if _corridor_tiles.size() > 0 and not _tile_to_room.has(tile) and not _corridor_tiles.has(tile):
+		return false
 	if is_tile_wall_blocked(tile):
 		return false
 	if is_tile_occupied_by_furniture(tile):
@@ -3953,6 +4052,13 @@ func has_wall_between(a: Vector2i, b: Vector2i) -> bool:
 	if ra_id != rb_id:
 		return true
 
+	# 4. If map defines explicit corridors, non-room tiles outside corridors are solid masonry/background
+	if _corridor_tiles.size() > 0:
+		if ra_id == "" and not _corridor_tiles.has(a) and not is_starting_stair_tile(a) and not is_exit_stair_tile(a):
+			return true
+		if rb_id == "" and not _corridor_tiles.has(b) and not is_starting_stair_tile(b) and not is_exit_stair_tile(b):
+			return true
+
 	return false
 
 func is_tile_solid(tile: Vector2i) -> bool:
@@ -3962,6 +4068,8 @@ func is_tile_solid(tile: Vector2i) -> bool:
 		return true
 	var rm_id = _tile_to_room_id.get(tile, "")
 	if rm_id != "" and not revealed_rooms.has(rm_id):
+		return true
+	if _corridor_tiles.size() > 0 and rm_id == "" and not _corridor_tiles.has(tile) and not is_starting_stair_tile(tile) and not is_exit_stair_tile(tile):
 		return true
 	return false
 
@@ -4072,17 +4180,16 @@ func update_party_vision() -> void:
 	if exit_stair != Vector2i(-1, -1):
 		explored_tiles[exit_stair] = true
 
+	# Unreachable tiles that are not in rooms are permanently visible
+	for u_tile in _unreachable_non_room_tiles.keys():
+		explored_tiles[u_tile] = true
+
 	# Ensure all tiles in revealed rooms are permanently explored
 	for r_id in revealed_rooms:
 		var rm = _get_room_by_id(r_id)
 		if rm.size() > 0:
-			var rx = int(rm.get("x", 0))
-			var ry = int(rm.get("y", 0))
-			var rw = int(rm.get("w", 1))
-			var rh = int(rm.get("h", 1))
-			for x in range(rx, rx + rw):
-				for y in range(ry, ry + rh):
-					explored_tiles[Vector2i(x, y)] = true
+			for r_tile in _get_room_tiles(rm):
+				explored_tiles[r_tile] = true
 
 	# Cast rays from all living heroes to find all visible corridor and revealed room tiles
 	for c in range(grid_cols):
@@ -4138,13 +4245,8 @@ func reveal_room_by_id(r_id: String, is_starting_room: bool = false) -> void:
 		_log("[DOOR] Door kicked open! Revealed chamber: %s!" % room_name)
 
 	# Reveal all tiles of this room immediately
-	var rx = int(room_obj.get("x", 0))
-	var ry = int(room_obj.get("y", 0))
-	var rw = int(room_obj.get("w", 1))
-	var rh = int(room_obj.get("h", 1))
-	for x in range(rx, rx + rw):
-		for y in range(ry, ry + rh):
-			explored_tiles[Vector2i(x, y)] = true
+	for r_tile in _get_room_tiles(room_obj):
+		explored_tiles[r_tile] = true
 
 	# Discover and log any monsters residing in this newly revealed chamber
 	var found_m: Array[String] = []
@@ -4195,9 +4297,13 @@ func is_tile_revealed(tile: Vector2i) -> bool:
 	var rm_id = str(rm.get("id", ""))
 	if rm_id != "":
 		return revealed_rooms.has(rm_id)
+	if is_unreachable_non_room_tile(tile):
+		return true
 	return explored_tiles.has(tile)
 
 func is_tile_explored(tile: Vector2i) -> bool:
+	if is_unreachable_non_room_tile(tile):
+		return true
 	return explored_tiles.has(tile)
 
 func get_game_state() -> String:
@@ -22410,17 +22516,23 @@ func _draw_board(canvas: CanvasItem) -> void:
 				var ry = int(rm.get("y", 0))
 				var rw = int(rm.get("w", 1))
 				var rh = int(rm.get("h", 1))
-				var r_rect = Rect2(board_offset + Vector2(rx * tile_size, ry * tile_size), Vector2(rw * tile_size, rh * tile_size))
-				# Atmospheric translucent fog layer over the authentic room floor art
-				canvas.draw_rect(r_rect, Color(0.04, 0.06, 0.10, 0.58))
-				canvas.draw_rect(r_rect, Color(0.12, 0.18, 0.28, 0.35), false, 1.5)
+				var r_tiles = _get_room_tiles(rm)
+				if str(rm.get("shape", "rect")) == "freeform" or r_tiles.size() != rw * rh:
+					for rt in r_tiles:
+						var t_rect = Rect2(board_offset + Vector2(rt.x * tile_size, rt.y * tile_size), Vector2(tile_size, tile_size))
+						canvas.draw_rect(t_rect, Color(0.04, 0.06, 0.10, 0.58))
+				else:
+					var r_rect = Rect2(board_offset + Vector2(rx * tile_size, ry * tile_size), Vector2(rw * tile_size, rh * tile_size))
+					# Atmospheric translucent fog layer over the authentic room floor art
+					canvas.draw_rect(r_rect, Color(0.04, 0.06, 0.10, 0.58))
+					canvas.draw_rect(r_rect, Color(0.12, 0.18, 0.28, 0.35), false, 1.5)
 
-		# 2. Unexplored corridor tiles shroud (always show border tiles!)
+		# 2. Unexplored corridor tiles shroud (always show border tiles and unreachable non-room tiles!)
 		for c in range(grid_cols):
 			for r in range(grid_rows):
 				var t = Vector2i(c, r)
-				# Always show the perimeter border tiles of the board
-				if is_border_tile(t):
+				# Always show the perimeter border tiles and unreachable non-room tiles of the board
+				if is_border_tile(t) or is_unreachable_non_room_tile(t):
 					continue
 				if not _is_inside_any_room(t):
 					if not explored_tiles.has(t):
