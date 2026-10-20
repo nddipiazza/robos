@@ -138,14 +138,26 @@ async function handleToastAction(action) {
     const ds = loadDataSources().find(d => d.id === dsId);
     if (ds) {
       try {
-        await startGoogleBrowserLogin({
-          dsId: ds.id,
-          name: ds.name,
-          user: ds.user,
-          folderId: ds.folderId,
-          clientId: ds.clientId,
-          clientSecret: ds.clientSecret,
-        });
+        if (ds.driverType === 'onedrive') {
+          await startOneDriveBrowserLogin({
+            dsId: ds.id,
+            name: ds.name,
+            user: ds.user,
+            folderId: ds.folderId || ds.database || '/',
+            clientId: ds.clientId,
+            clientSecret: ds.clientSecret,
+            tenant: ds.tenant,
+          });
+        } else {
+          await startGoogleBrowserLogin({
+            dsId: ds.id,
+            name: ds.name,
+            user: ds.user,
+            folderId: ds.folderId,
+            clientId: ds.clientId,
+            clientSecret: ds.clientSecret,
+          });
+        }
       } catch {}
     }
   }
@@ -156,11 +168,12 @@ function checkStartupAuthStatus() {
   try {
     const list = loadDataSources();
     for (const ds of list) {
-      if (ds.driverType === 'gdrive' && !remoteStorage.isDataSourceAuthenticated(ds)) {
+      if ((ds.driverType === 'gdrive' || ds.driverType === 'onedrive') && !remoteStorage.isDataSourceAuthenticated(ds)) {
+        const providerName = ds.driverType === 'onedrive' ? 'Microsoft OneDrive' : 'Google Drive';
         if (authToast) {
           authToast.emitAuthRequiredToast(ds, {
             electron,
-            reason: `Google Drive "${ds.name}" is logged out. Click to sign in with your browser.`,
+            reason: `${providerName} "${ds.name}" is logged out. Click to sign in with your browser.`,
             force: true,
           });
         }
@@ -209,6 +222,18 @@ const DRIVER_CATALOG = [
     docsUrl: 'https://developers.google.com/drive',
   },
   {
+    id: 'onedrive',
+    name: 'Microsoft OneDrive',
+    category: 'storage',
+    categoryLabel: 'Cloud Storage',
+    defaultPort: 443,
+    defaultUser: '',
+    uriTemplate: 'onedrive://{{path}}',
+    icon: 'onedrive',
+    description: 'Sign in with your Microsoft account in the browser and mount OneDrive & SharePoint folders for RobOS apps',
+    docsUrl: 'https://learn.microsoft.com/en-us/onedrive/developer/',
+  },
+  {
     id: 's3',
     name: 'Amazon S3 / Cloudflare R2 / MinIO',
     category: 'storage',
@@ -231,18 +256,6 @@ const DRIVER_CATALOG = [
     icon: 'dropbox',
     description: 'Dropbox cloud folders synced for RobOS apps and media libraries',
     docsUrl: 'https://www.dropbox.com/developers',
-  },
-  {
-    id: 'onedrive',
-    name: 'Microsoft OneDrive',
-    category: 'storage',
-    categoryLabel: 'Cloud Storage',
-    defaultPort: 443,
-    defaultUser: '',
-    uriTemplate: 'onedrive://{{path}}',
-    icon: 'onedrive',
-    description: 'Microsoft OneDrive and SharePoint document libraries',
-    docsUrl: 'https://learn.microsoft.com/en-us/onedrive/developer/',
   },
   {
     id: 'webdav',
@@ -377,13 +390,18 @@ function inferCategory(driverType, fallback) {
 function normalizeDataSourceRecord(d) {
   const category = inferCategory(d.driverType, d.category);
   const out = { ...d, category };
-  if (out.driverType === 'gdrive') {
+  if (out.driverType === 'gdrive' || out.driverType === 'onedrive') {
     const authed = remoteStorage.isDataSourceAuthenticated(out);
     out.authStatus = authed ? 'authenticated' : 'logged_out';
     out.loggedIn = authed;
     out.status = authed ? (out.status === 'Login Required' ? 'Connected' : (out.status || 'Connected')) : 'Login Required';
-    out.host = out.host || 'drive.google.com';
-    out.folderId = remoteStorage.extractDriveFolderId(out.folderId || out.database || 'root');
+    if (out.driverType === 'gdrive') {
+      out.host = out.host || 'drive.google.com';
+      out.folderId = remoteStorage.extractDriveFolderId(out.folderId || out.database || 'root');
+    } else {
+      out.host = out.host || 'graph.microsoft.com';
+      out.folderId = remoteStorage.extractOneDriveFolderPath(out.folderId || out.database || '/');
+    }
   }
   return out;
 }
@@ -948,6 +966,198 @@ async function startGoogleBrowserLogin(params = {}) {
   });
 }
 
+// ── Microsoft OneDrive Browser Login Server ─────────────────────────────────
+
+async function startOneDriveBrowserLogin(params = {}) {
+  const {
+    dsId,
+    name = 'My Microsoft OneDrive',
+    user = '',
+    folderId = '/',
+    clientId = '',
+    clientSecret = '',
+    tenant = 'common',
+  } = params;
+
+  const defaultEmail = user || getDefaultUserEmail() || '';
+
+  return await new Promise((resolve, reject) => {
+    const activeClientId = clientId || remoteStorage.DEFAULT_ONEDRIVE_CLIENT_ID;
+    const activeClientSecret = clientSecret || remoteStorage.getDefaultOneDriveClientSecret();
+    const activeTenant = (tenant && tenant.trim()) || 'common';
+
+    const finalizeSuccess = (resultPayload) => {
+      if (dsId) {
+        const list = loadDataSources();
+        const idx = list.findIndex(d => d.id === dsId);
+        if (idx >= 0) {
+          list[idx] = normalizeDataSourceRecord({
+            ...list[idx],
+            user: resultPayload.user || list[idx].user || defaultEmail,
+            folderId: remoteStorage.extractOneDriveFolderPath(resultPayload.folderId || list[idx].folderId || '/'),
+            driveId: resultPayload.driveId || list[idx].driveId || '',
+            driveType: resultPayload.driveType || list[idx].driveType || '',
+            accessToken: resultPayload.accessToken || list[idx].accessToken || '',
+            refreshToken: resultPayload.refreshToken || list[idx].refreshToken || '',
+            localMountPath: resultPayload.localMountPath || list[idx].localMountPath || '',
+            authStatus: 'authenticated',
+            loggedIn: true,
+            status: 'Connected',
+            lastChecked: new Date().toISOString(),
+          });
+          saveDataSources(list);
+          if (authToast) {
+            authToast.emitAuthSuccessToast(list[idx], { electron });
+          }
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('ds-auth-updated', {
+              dsId,
+              ds: list[idx],
+              dataSources: list,
+            });
+          }
+          focusMainWindow();
+        }
+      }
+      resolve(resultPayload);
+    };
+
+    const buildOneDriveOAuthUrl = (port, loginHint = '') => {
+      const redirectUri = `http://localhost:${port}/`;
+      const authUrl = new URL(`https://login.microsoftonline.com/${encodeURIComponent(activeTenant)}/oauth2/v2.0/authorize`);
+      authUrl.searchParams.set('client_id', activeClientId);
+      authUrl.searchParams.set('redirect_uri', redirectUri);
+      authUrl.searchParams.set('response_type', 'code');
+      authUrl.searchParams.set('scope', remoteStorage.DEFAULT_ONEDRIVE_SCOPES);
+      authUrl.searchParams.set('prompt', 'select_account');
+      if (loginHint && loginHint.includes('@') && !loginHint.includes('noreply.github.com')) {
+        authUrl.searchParams.set('login_hint', loginHint);
+      }
+      return authUrl.toString();
+    };
+
+    const server = http.createServer(async (req, res) => {
+      try {
+        const u = new URL(req.url, 'http://localhost');
+        const port = server.address().port;
+
+        // 1. OAuth 2.0 Callback from login.microsoftonline.com (at / with ?code=... or ?error=...)
+        if (req.method === 'GET' && (u.searchParams.has('code') || u.searchParams.has('error') || u.pathname === '/oauth2callback')) {
+          const code = u.searchParams.get('code');
+          const err = u.searchParams.get('error');
+          if (err || !code) {
+            const errDesc = u.searchParams.get('error_description') || err || 'No authorization code returned';
+            res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.end(`<h2>Microsoft OneDrive Authorization Cancelled</h2><p>${String(errDesc).replace(/[<>&]/g, '')}</p><p>You can close this tab and return to RobOS Data Sources.</p>`);
+            server.close();
+            reject(new Error(errDesc));
+            return;
+          }
+          const redirectUri = `http://localhost:${port}/`;
+          const tokenUrl = `https://login.microsoftonline.com/${encodeURIComponent(activeTenant)}/oauth2/v2.0/token`;
+          const tokenRes = await fetch(tokenUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              code,
+              client_id: activeClientId,
+              client_secret: activeClientSecret,
+              redirect_uri: redirectUri,
+              grant_type: 'authorization_code',
+              scope: remoteStorage.DEFAULT_ONEDRIVE_SCOPES,
+            }),
+          });
+          const tokenData = await tokenRes.json();
+          if (!tokenRes.ok || !tokenData.access_token) {
+            throw new Error(tokenData.error_description || tokenData.error || 'OneDrive token exchange failed');
+          }
+
+          // Fetch the authenticated user's OneDrive info and Microsoft email/userPrincipalName
+          let msEmail = defaultEmail || 'Microsoft Account';
+          let driveId = '';
+          let driveType = 'personal';
+          try {
+            const driveRes = await fetch('https://graph.microsoft.com/v1.0/me/drive', {
+              headers: { Authorization: `Bearer ${tokenData.access_token}` },
+            });
+            if (driveRes.ok) {
+              const driveData = await driveRes.json();
+              if (driveData?.id) driveId = driveData.id;
+              if (driveData?.driveType) driveType = driveData.driveType;
+              const ownerUser = driveData?.owner?.user;
+              if (ownerUser?.email || ownerUser?.userPrincipalName || ownerUser?.displayName) {
+                msEmail = ownerUser.email || ownerUser.userPrincipalName || ownerUser.displayName;
+              }
+            }
+          } catch {}
+
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(`<!DOCTYPE html><html><body style="font-family:sans-serif;background:#0d1117;color:#e6edf3;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+            <div style="background:#161b22;border:1px solid #2ea043;border-radius:12px;padding:32px;max-width:440px;text-align:center;">
+              <div style="font-size:42px;margin-bottom:12px;">✅</div>
+              <h2 style="color:#3fb950;margin:0 0 8px;">Microsoft OneDrive Connected!</h2>
+              <p style="color:#8b949e;font-size:14px;line-height:1.5;">Signed in as <strong style="color:#f0f6fc;">${String(msEmail).replace(/[<>&]/g, '')}</strong>.<br>Your OneDrive folders are now live in RobOS Data Sources. You can close this tab.</p>
+            </div>
+          </body></html>`);
+          server.close();
+          finalizeSuccess({
+            ok: true,
+            user: msEmail,
+            folderId: remoteStorage.extractOneDriveFolderPath(folderId),
+            driveId,
+            driveType,
+            accessToken: tokenData.access_token,
+            refreshToken: tokenData.refresh_token || '',
+            expiresIn: tokenData.expires_in,
+            authStatus: 'authenticated',
+            loggedIn: true,
+          });
+          return;
+        }
+
+        // 2. Entry point /auth or / immediately redirects to Microsoft Entra / Live OAuth 2.0 Sign-In
+        if (req.method === 'GET' && (u.pathname === '/' || u.pathname === '/auth')) {
+          res.writeHead(302, { Location: buildOneDriveOAuthUrl(port, defaultEmail) });
+          res.end();
+          return;
+        }
+
+        res.writeHead(404);
+        res.end('Not found');
+      } catch (e) {
+        try { server.close(); } catch {}
+        reject(e);
+      }
+    });
+
+    const openAuthInBrowser = () => {
+      const port = server.address().port;
+      const loginUrl = `http://localhost:${port}/auth`;
+      try {
+        if (shell && typeof shell.openExternal === 'function') {
+          shell.openExternal(loginUrl);
+        }
+      } catch {}
+    };
+
+    server.once('error', (err) => {
+      if (err && err.code === 'EADDRINUSE') {
+        server.listen(0, '127.0.0.1', openAuthInBrowser);
+      } else {
+        reject(err);
+      }
+    });
+
+    // Bind port 53682 (`http://localhost:53682/`, standard desktop OAuth redirect URI)
+    server.listen(53682, '127.0.0.1', openAuthInBrowser);
+
+    setTimeout(() => {
+      try { server.close(); } catch {}
+      reject(new Error('Browser sign-in timed out after 180 seconds.'));
+    }, 180000).unref?.();
+  });
+}
+
 // ── IPC Handlers ────────────────────────────────────────────────────────────
 
 registerIPC('ds-get-drivers', async () => {
@@ -971,6 +1181,10 @@ registerIPC('ds-save-datasource', async (_, ds) => {
       normalized.database = '/';
     }
     normalized.host = normalized.host || 'drive.google.com';
+  } else if (normalized.driverType === 'onedrive') {
+    normalized.folderId = remoteStorage.extractOneDriveFolderPath(normalized.folderId || normalized.database || '/');
+    normalized.database = normalized.folderId || '/';
+    normalized.host = normalized.host || 'graph.microsoft.com';
   }
 
   const idx = list.findIndex(d => d.id === normalized.id);
@@ -981,12 +1195,13 @@ registerIPC('ds-save-datasource', async (_, ds) => {
   }
   saveDataSources(list);
 
-  // If Google Drive was saved while still logged out, pop up the top-right login toast
-  if (normalized.driverType === 'gdrive' && !remoteStorage.isDataSourceAuthenticated(normalized)) {
+  // If Google Drive or OneDrive was saved while still logged out, pop up the top-right login toast
+  if ((normalized.driverType === 'gdrive' || normalized.driverType === 'onedrive') && !remoteStorage.isDataSourceAuthenticated(normalized)) {
+    const providerLabel = normalized.driverType === 'onedrive' ? 'Microsoft OneDrive' : 'Google Drive';
     if (authToast) {
       authToast.emitAuthRequiredToast(normalized, {
         electron,
-        reason: `"${normalized.name}" needs browser login to access Google Drive folders.`,
+        reason: `"${normalized.name}" needs browser login to access ${providerLabel} folders.`,
         force: true,
       });
     }
@@ -1099,7 +1314,7 @@ registerIPC('ds-inspect-schema', async (_, { id, driverType, path: remotePath })
     try {
       const listing = await remoteStorage.listDir(ds, remotePath);
       const response = { remote: listing };
-      if (driverType === 'gdrive') {
+      if (driverType === 'gdrive' || driverType === 'onedrive') {
         response.folders = listing.entries.filter(e => e.type === 'dir').map(e => ({
           id: e.driveId || e.name,
           name: e.name,
@@ -1285,6 +1500,17 @@ registerIPC('ds-google-browser-login', async (_, params) => {
 });
 
 registerIPC('ds-google-oauth-signin', async (_, params) => {
+  return await startGoogleBrowserLogin(params || {});
+});
+
+registerIPC('ds-onedrive-browser-login', async (_, params) => {
+  return await startOneDriveBrowserLogin(params || {});
+});
+
+registerIPC('ds-cloud-browser-login', async (_, params) => {
+  if (params && String(params.driverType || '').toLowerCase() === 'onedrive') {
+    return await startOneDriveBrowserLogin(params);
+  }
   return await startGoogleBrowserLogin(params || {});
 });
 

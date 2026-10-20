@@ -34,10 +34,25 @@ function isStorageDs(ds) {
   return ds.category === 'storage' || STORAGE_DRIVERS.has(String(ds.driverType || '').toLowerCase());
 }
 
-function isGDriveLoggedIn(ds) {
-  if (!ds || ds.driverType !== 'gdrive') return true;
+function isOAuthCloudDs(dsOrDriver) {
+  const driver = typeof dsOrDriver === 'string'
+    ? dsOrDriver.toLowerCase()
+    : String((dsOrDriver && dsOrDriver.driverType) || '').toLowerCase();
+  return driver === 'gdrive' || driver === 'onedrive';
+}
+
+function getCloudProviderLabel(driverType) {
+  return String(driverType || '').toLowerCase() === 'onedrive' ? 'Microsoft OneDrive' : 'Google Drive';
+}
+
+function isCloudLoggedIn(ds) {
+  if (!ds || !isOAuthCloudDs(ds)) return true;
   if (ds.authStatus === 'logged_out' || ds.status === 'Login Required' || ds.loggedIn === false) return false;
   return Boolean(ds.accessToken || ds.refreshToken || ds.localMountPath || ds.serviceAccountKeyPath || ds.serviceAccountJson);
+}
+
+function isGDriveLoggedIn(ds) {
+  return isCloudLoggedIn(ds);
 }
 
 // ── Source-Only Declaration Mode (when ROBOS_GRAPH_ROOT is set) ─────────────
@@ -138,12 +153,14 @@ function renderSidebar() {
 
   listEl.innerHTML = filtered.map(ds => {
     const active = ds.id === selectedDsId ? 'active' : '';
-    const needsLogin = ds.driverType === 'gdrive' && !isGDriveLoggedIn(ds);
+    const needsLogin = isOAuthCloudDs(ds) && !isCloudLoggedIn(ds);
     const statusLabel = needsLogin ? '🔑 Login Required' : (ds.status || 'Connected');
     const statusCls = needsLogin ? 'status-warn' : (ds.status === 'Failed' || ds.status === 'Error' ? 'status-error' : '');
     const subText = ds.driverType === 'gdrive'
       ? (ds.user || 'Google Drive Account')
-      : (ds.host || ds.bucket || ds.database || ds.driverType);
+      : ds.driverType === 'onedrive'
+        ? (ds.user || 'Microsoft OneDrive Account')
+        : (ds.host || ds.bucket || ds.database || ds.driverType);
 
     return `
       <div class="ds-item ${active}" data-id="${esc(ds.id)}">
@@ -193,7 +210,7 @@ async function renderMainWorkspace() {
   document.getElementById('ds-detail-type').textContent = (ds.driverType || 'DS').toUpperCase();
   document.getElementById('ds-detail-name').textContent = ds.name || 'Unnamed Data Source';
 
-  const needsLogin = ds.driverType === 'gdrive' && !isGDriveLoggedIn(ds);
+  const needsLogin = isOAuthCloudDs(ds) && !isCloudLoggedIn(ds);
   const statusPill = document.getElementById('ds-status-pill');
   if (needsLogin) {
     statusPill.textContent = '🔑 Login Required';
@@ -202,32 +219,39 @@ async function renderMainWorkspace() {
     statusPill.textContent = 'Error';
     statusPill.className = 'status-pill status-error';
   } else {
-    statusPill.textContent = ds.user && ds.driverType === 'gdrive' ? `Connected (${ds.user})` : (ds.status || 'Connected');
+    statusPill.textContent = ds.user && isOAuthCloudDs(ds) ? `Connected (${ds.user})` : (ds.status || 'Connected');
     statusPill.className = 'status-pill';
   }
 
   const endpointEl = document.getElementById('ds-detail-endpoint');
   if (ds.driverType === 'gdrive') {
     endpointEl.textContent = `Google Drive · Account: ${ds.user || 'Not signed in'} · Root Folder: ${ds.folderId || 'root'}`;
+  } else if (ds.driverType === 'onedrive') {
+    endpointEl.textContent = `Microsoft OneDrive · Account: ${ds.user || 'Not signed in'} · Root Path: ${ds.folderId || ds.database || '/'}`;
   } else if (isStorageDs(ds)) {
     endpointEl.textContent = `${ds.host || ds.bucket || 'Local Mount'}${ds.port ? ':' + ds.port : ''} · Path: ${ds.database || '/'}`;
   } else {
     endpointEl.textContent = `${ds.host || '127.0.0.1'}${ds.port ? ':' + ds.port : ''} / ${ds.database || ''}`;
   }
 
-  // Show/hide Google Drive browser login & logout buttons in Admin bar
+  // Show/hide Cloud OAuth browser login & logout buttons in Admin bar
   const btnBrowserLogin = document.getElementById('btn-admin-browser-login');
   const btnLogout = document.getElementById('btn-admin-logout');
   const authBanner = document.getElementById('auth-required-banner');
 
-  if (ds.driverType === 'gdrive') {
+  if (isOAuthCloudDs(ds)) {
+    const providerLabel = getCloudProviderLabel(ds.driverType);
     btnBrowserLogin.classList.remove('hidden');
     btnBrowserLogin.textContent = needsLogin ? '🌐 Log in with Browser' : '🔄 Re-login in Browser';
     if (needsLogin) {
       btnLogout.classList.add('hidden');
       authBanner.classList.remove('hidden');
+      const bannerTitle = authBanner.querySelector('.auth-banner-title');
+      if (bannerTitle) bannerTitle.textContent = `${providerLabel} Authentication Required`;
+      const bannerBtn = document.getElementById('btn-banner-browser-login');
+      if (bannerBtn) bannerBtn.textContent = `🌐 Sign in with ${ds.driverType === 'onedrive' ? 'Microsoft' : 'Google'} in Browser`;
       document.getElementById('auth-banner-desc').textContent =
-        `"${ds.name}" is logged out. Sign in with your browser to access and mount Google Drive folders in RobOS.`;
+        `"${ds.name}" is logged out. Sign in with your browser to access and mount ${providerLabel} folders in RobOS.`;
     } else {
       btnLogout.classList.remove('hidden');
       authBanner.classList.add('hidden');
@@ -470,7 +494,7 @@ function renderDetailsTab(ds) {
   const items = [
     { label: 'Name', value: ds.name },
     { label: 'Provider / Driver', value: (ds.driverType || '').toUpperCase() },
-    { label: 'Status', value: ds.driverType === 'gdrive' && !isGDriveLoggedIn(ds) ? 'Login Required (Logged Out)' : (ds.status || 'Connected') },
+    { label: 'Status', value: isOAuthCloudDs(ds) && !isCloudLoggedIn(ds) ? 'Login Required (Logged Out)' : (ds.status || 'Connected') },
     { label: 'Account / User', value: ds.user || '—' },
     { label: 'Host / Endpoint', value: ds.host || '—' },
     { label: 'Folder ID / Database', value: ds.folderId || ds.bucket || ds.database || '/' },
@@ -494,11 +518,16 @@ async function triggerBrowserLoginForDs(ds) {
   if (btn) btn.textContent = '⏳ Signing in via Browser...';
 
   try {
-    const res = await window.dataSources.googleBrowserLogin({
+    const isOneDrive = ds.driverType === 'onedrive';
+    const loginFn = isOneDrive
+      ? (window.dataSources.onedriveBrowserLogin || window.dataSources.cloudBrowserLogin)
+      : window.dataSources.googleBrowserLogin;
+    const res = await loginFn({
       dsId: ds.id,
+      driverType: ds.driverType,
       name: ds.name,
       user: ds.user || '',
-      folderId: ds.folderId || 'root',
+      folderId: ds.folderId || (isOneDrive ? '/' : 'root'),
     });
     if (res?.ok) {
       dsList = await window.dataSources.getDataSources();
@@ -573,9 +602,13 @@ function openAddModal(initialDriverId = null, existingDs = null) {
       localMountPath: '',
     };
     const drv = drivers.find(d => d.id === wizardDriverId);
-    document.getElementById('modal-ds-name').value = wizardDriverId === 'gdrive' ? 'My Google Drive' : (drv ? `My ${drv.name}` : '');
+    document.getElementById('modal-ds-name').value = wizardDriverId === 'gdrive'
+      ? 'My Google Drive'
+      : wizardDriverId === 'onedrive'
+        ? 'My Microsoft OneDrive'
+        : (drv ? `My ${drv.name}` : '');
     document.getElementById('modal-gdrive-email').value = '';
-    document.getElementById('modal-gdrive-folder').value = 'root';
+    document.getElementById('modal-gdrive-folder').value = wizardDriverId === 'onedrive' ? '/' : 'root';
     document.getElementById('modal-gdrive-local-path').value = '';
     document.getElementById('modal-gdrive-token').value = '';
     document.getElementById('modal-ds-host').value = '';
@@ -608,23 +641,46 @@ function updateWizardAuthCardUI() {
   const sub = document.getElementById('wiz-gdrive-auth-sub');
   const badge = document.getElementById('wiz-gdrive-auth-badge');
   const btn = document.getElementById('btn-wizard-gdrive-login');
+  const emailLbl = document.getElementById('lbl-wiz-cloud-email');
+  const emailInput = document.getElementById('modal-gdrive-email');
+  const folderLbl = document.getElementById('lbl-wiz-cloud-folder');
+  const folderInput = document.getElementById('modal-gdrive-folder');
+
+  const isOneDrive = wizardDriverId === 'onedrive';
+  const providerName = isOneDrive ? 'Microsoft OneDrive' : 'Google Drive';
+  const accountType = isOneDrive ? 'Microsoft Account' : 'Google Account';
+
+  if (emailLbl) {
+    emailLbl.innerHTML = `${accountType} Email <span class="muted">(auto-filled on browser login)</span>`;
+  }
+  if (emailInput) {
+    emailInput.placeholder = isOneDrive ? 'you@outlook.com or work@company.com' : 'you@gmail.com';
+  }
+  if (folderLbl) {
+    folderLbl.innerHTML = isOneDrive
+      ? `Root OneDrive Folder Path <span class="muted">(optional)</span>`
+      : `Root Folder URL or ID <span class="muted">(optional)</span>`;
+  }
+  if (folderInput) {
+    folderInput.placeholder = isOneDrive ? '/ (entire OneDrive) or /Music' : 'root (My Drive) or folder URL';
+  }
 
   if (wizardAuthState.loggedIn) {
     card.classList.add('authenticated');
     icon.textContent = '✅';
-    title.textContent = `Signed in as ${wizardAuthState.user || 'Google Account'}`;
-    sub.textContent = 'Your Google Drive account is authenticated and ready to test or save.';
+    title.textContent = `Signed in as ${wizardAuthState.user || accountType}`;
+    sub.textContent = `Your ${providerName} account is authenticated and ready to test or save.`;
     badge.textContent = 'Authenticated';
     badge.className = 'status-pill';
-    btn.textContent = '🔄 Sign in with a Different Google Account';
+    btn.textContent = `🔄 Sign in with a Different ${accountType}`;
   } else {
     card.classList.remove('authenticated');
     icon.textContent = '🔑';
-    title.textContent = 'Sign in with Google Account';
-    sub.textContent = 'Click below to open your web browser and log in to your Google Drive account.';
+    title.textContent = `Sign in with ${accountType}`;
+    sub.textContent = `Click below to open your web browser and log in to your ${providerName} account.`;
     badge.textContent = 'Login Required';
     badge.className = 'status-pill status-warn';
-    btn.textContent = '🌐 Sign in with Google in Browser';
+    btn.textContent = `🌐 Sign in with ${isOneDrive ? 'Microsoft' : 'Google'} in Browser`;
   }
 }
 
@@ -676,9 +732,15 @@ function configureWizardStep2Fields() {
   const gdriveSec = document.getElementById('wiz-gdrive-section');
   const genericSec = document.getElementById('wiz-generic-section');
 
-  if (wizardDriverId === 'gdrive') {
+  if (wizardDriverId === 'gdrive' || wizardDriverId === 'onedrive') {
     gdriveSec.classList.remove('hidden');
     genericSec.classList.add('hidden');
+    const folderInput = document.getElementById('modal-gdrive-folder');
+    if (wizardDriverId === 'onedrive' && folderInput && folderInput.value === 'root') {
+      folderInput.value = '/';
+    } else if (wizardDriverId === 'gdrive' && folderInput && folderInput.value === '/') {
+      folderInput.value = 'root';
+    }
     updateWizardAuthCardUI();
   } else {
     gdriveSec.classList.add('hidden');
@@ -704,9 +766,10 @@ function buildWizardCandidatePayload() {
   const name = document.getElementById('modal-ds-name').value.trim() || `My ${wizardDriverId.toUpperCase()}`;
   const id = wizardEditingId || `${wizardDriverId}-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${Date.now().toString(36).slice(-4)}`;
 
-  if (wizardDriverId === 'gdrive') {
+  if (wizardDriverId === 'gdrive' || wizardDriverId === 'onedrive') {
+    const isOneDrive = wizardDriverId === 'onedrive';
     const email = document.getElementById('modal-gdrive-email').value.trim() || wizardAuthState.user || '';
-    const folderId = document.getElementById('modal-gdrive-folder').value.trim() || 'root';
+    const folderId = document.getElementById('modal-gdrive-folder').value.trim() || (isOneDrive ? '/' : 'root');
     const localMountPath = document.getElementById('modal-gdrive-local-path').value.trim() || wizardAuthState.localMountPath || '';
     const accessToken = document.getElementById('modal-gdrive-token').value.trim() || wizardAuthState.accessToken || '';
     const loggedIn = Boolean(wizardAuthState.loggedIn || accessToken || localMountPath);
@@ -714,13 +777,13 @@ function buildWizardCandidatePayload() {
     return {
       id,
       name,
-      driverType: 'gdrive',
+      driverType: wizardDriverId,
       category: 'storage',
-      host: 'drive.google.com',
+      host: isOneDrive ? 'graph.microsoft.com' : 'drive.google.com',
       port: 443,
       user: email,
       folderId,
-      database: '/',
+      database: isOneDrive ? folderId : '/',
       accessToken,
       refreshToken: wizardAuthState.refreshToken || '',
       localMountPath,
@@ -762,9 +825,9 @@ function renderWizardStep3Review() {
   const rows = [
     { label: 'Data Source Name', val: candidate.name },
     { label: 'Provider', val: candidate.driverType.toUpperCase() },
-    { label: 'Account / User', val: candidate.user || (candidate.driverType === 'gdrive' ? 'Not signed in yet' : '—') },
+    { label: 'Account / User', val: candidate.user || (isOAuthCloudDs(candidate) ? 'Not signed in yet' : '—') },
     { label: 'Target / Folder', val: candidate.folderId || candidate.database || '/' },
-    { label: 'Authentication', val: candidate.driverType === 'gdrive' ? (candidate.loggedIn ? '✅ Browser Signed In' : '🟠 Login Required') : 'Configured' },
+    { label: 'Authentication', val: isOAuthCloudDs(candidate) ? (candidate.loggedIn ? '✅ Browser Signed In' : '🟠 Login Required') : 'Configured' },
   ];
 
   grid.innerHTML = rows.map(r => `
@@ -804,8 +867,10 @@ window.switchTab = switchTab;
 function bindEvents() {
   // Header & Empty State buttons
   document.getElementById('btn-connect-gdrive')?.addEventListener('click', () => openAddModal('gdrive'));
+  document.getElementById('btn-connect-onedrive')?.addEventListener('click', () => openAddModal('onedrive'));
   document.getElementById('btn-add-ds')?.addEventListener('click', () => openAddModal(null));
   document.getElementById('btn-empty-add-gdrive')?.addEventListener('click', () => openAddModal('gdrive'));
+  document.getElementById('btn-empty-add-onedrive')?.addEventListener('click', () => openAddModal('onedrive'));
   document.getElementById('btn-empty-add-other')?.addEventListener('click', () => openAddModal(null));
 
   document.getElementById('btn-refresh')?.addEventListener('click', async () => {
@@ -959,18 +1024,23 @@ function bindEvents() {
     if (wizardStep < 3) setWizardStep(wizardStep + 1);
   });
 
-  // Wizard Step 2: Google Drive Browser Login button
+  // Wizard Step 2: Google Drive / Microsoft OneDrive Browser Login button
   document.getElementById('btn-wizard-gdrive-login')?.addEventListener('click', async () => {
     const btn = document.getElementById('btn-wizard-gdrive-login');
-    const name = document.getElementById('modal-ds-name').value.trim() || 'My Google Drive';
+    const isOneDrive = wizardDriverId === 'onedrive';
+    const name = document.getElementById('modal-ds-name').value.trim() || (isOneDrive ? 'My Microsoft OneDrive' : 'My Google Drive');
     const email = document.getElementById('modal-gdrive-email').value.trim();
-    const folderId = document.getElementById('modal-gdrive-folder').value.trim() || 'root';
+    const folderId = document.getElementById('modal-gdrive-folder').value.trim() || (isOneDrive ? '/' : 'root');
 
-    btn.textContent = '⏳ Opening Browser for Google Sign-In...';
+    btn.textContent = `⏳ Opening Browser for ${isOneDrive ? 'Microsoft OneDrive' : 'Google'} Sign-In...`;
     btn.disabled = true;
     try {
-      const res = await window.dataSources.googleBrowserLogin({
+      const loginFn = isOneDrive
+        ? (window.dataSources.onedriveBrowserLogin || window.dataSources.cloudBrowserLogin)
+        : window.dataSources.googleBrowserLogin;
+      const res = await loginFn({
         dsId: wizardEditingId || undefined,
+        driverType: wizardDriverId,
         name,
         user: email,
         folderId,
@@ -978,7 +1048,7 @@ function bindEvents() {
       if (res?.ok) {
         wizardAuthState = {
           loggedIn: true,
-          user: res.user || email || 'Google Account',
+          user: res.user || email || (isOneDrive ? 'Microsoft Account' : 'Google Account'),
           accessToken: res.accessToken || '',
           refreshToken: res.refreshToken || '',
           localMountPath: res.localMountPath || '',
@@ -1082,7 +1152,7 @@ async function showQuickConnectionTestModal(ds) {
   } else {
     msgEl.className = 'test-result-box err';
     msgEl.innerHTML = `<strong>⚠️ ${esc(res?.status || 'Connection Failed')}</strong><br>${esc(res?.message || 'Unable to connect.')}`;
-    if (res?.authRequired || ds.driverType === 'gdrive') {
+    if (res?.authRequired || isOAuthCloudDs(ds)) {
       loginBtn.classList.remove('hidden');
     }
   }

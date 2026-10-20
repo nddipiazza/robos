@@ -290,7 +290,11 @@ function emitAuthRequiredToast(ds, { electron, reason, force = false } = {}) {
   }
   lastToastTimeByDs.set(dsId, now);
 
-  const providerLabel = ds.driverType === 'gdrive' ? 'Google Drive' : (ds.driverType || 'Cloud Storage').toUpperCase();
+  const providerLabel = ds.driverType === 'gdrive'
+    ? 'Google Drive'
+    : ds.driverType === 'onedrive'
+      ? 'Microsoft OneDrive'
+      : (ds.driverType || 'Cloud Storage').toUpperCase();
   const title = `${providerLabel} Login Required`;
   const message = reason || `RobOS tried to access "${ds.name || providerLabel}" but it is logged out. Sign in with your browser to continue.`;
   const entityKey = `datasource-auth:${dsId}`;
@@ -352,7 +356,11 @@ function emitAuthSuccessToast(ds, { electron } = {}) {
   clearAuthNotificationRecords(dsId);
   dismissOverlayToast(entityKey);
 
-  const providerLabel = ds.driverType === 'gdrive' ? 'Google Drive' : (ds.driverType || 'Cloud Storage').toUpperCase();
+  const providerLabel = ds.driverType === 'gdrive'
+    ? 'Google Drive'
+    : ds.driverType === 'onedrive'
+      ? 'Microsoft OneDrive'
+      : (ds.driverType || 'Cloud Storage').toUpperCase();
   const accountText = ds.user ? ` as ${ds.user}` : '';
   const message = `"${ds.name || providerLabel}" is now authenticated${accountText} and ready for RobOS apps.`;
 
