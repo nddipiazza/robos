@@ -272,11 +272,52 @@ async function getServiceAccountToken(saJson) {
   return data.access_token;
 }
 
+function getDataSourcesConfigPath() {
+  return path.join(getHomeDir(), '.config', 'robos', 'data-sources.json');
+}
+
+function syncDsCredentialsFromDisk(ds) {
+  if (!ds || !ds.id) return ds;
+  try {
+    const p = getDataSourcesConfigPath();
+    if (!fs.existsSync(p)) return ds;
+    const list = JSON.parse(fs.readFileSync(p, 'utf8'));
+    if (!Array.isArray(list)) return ds;
+    const diskDs = list.find(d => d && d.id === ds.id);
+    if (!diskDs) return ds;
+    if (diskDs.refreshToken && !ds.refreshToken) ds.refreshToken = diskDs.refreshToken;
+    if (diskDs.accessToken && diskDs.accessToken !== ds.accessToken) ds.accessToken = diskDs.accessToken;
+    if (diskDs.clientId && !ds.clientId) ds.clientId = diskDs.clientId;
+    if (diskDs.clientSecret && !ds.clientSecret) ds.clientSecret = diskDs.clientSecret;
+  } catch {}
+  return ds;
+}
+
+function persistRefreshedTokenToDisk(dsId, newAccessToken) {
+  if (!dsId || !newAccessToken) return;
+  try {
+    const p = getDataSourcesConfigPath();
+    if (!fs.existsSync(p)) return;
+    const list = JSON.parse(fs.readFileSync(p, 'utf8'));
+    if (!Array.isArray(list)) return;
+    const idx = list.findIndex(d => d && d.id === dsId);
+    if (idx >= 0) {
+      list[idx].accessToken = newAccessToken;
+      list[idx].authStatus = 'authenticated';
+      list[idx].loggedIn = true;
+      list[idx].status = 'Connected';
+      fs.writeFileSync(p, JSON.stringify(list, null, 2), { encoding: 'utf8', mode: 0o600 });
+    }
+  } catch {}
+}
+
 /**
  * Resolves a live Google Drive API authentication credential (Bearer token or API key)
  * if the data source is configured with live Google API credentials.
  */
 async function resolveGoogleDriveAuth(ds, { forceRefresh = false } = {}) {
+  syncDsCredentialsFromDisk(ds);
+
   // 1. Check Service Account JSON file or inline JSON
   if (ds.serviceAccountKeyPath) {
     const p = resolveTilde(ds.serviceAccountKeyPath);
@@ -323,6 +364,7 @@ async function resolveGoogleDriveAuth(ds, { forceRefresh = false } = {}) {
     const data = await res.json();
     if (data.access_token) {
       ds.accessToken = data.access_token;
+      persistRefreshedTokenToDisk(ds.id, data.access_token);
     }
     return { type: 'bearer', token: data.access_token };
   }
@@ -410,21 +452,25 @@ async function listGDriveApi(ds, auth, remotePath) {
   };
 }
 
-async function downloadGDriveFile(ds, auth, remoteFile, localFile) {
+async function resolveGDriveFileObj(ds, auth, remoteFile, driveId = '') {
+  if (driveId && /^[A-Za-z0-9_-]{8,}$/.test(driveId)) {
+    return { id: driveId, name: posixPath.basename(normalizeRemote(remoteFile || '/')), mimeType: '' };
+  }
   const norm = normalizeRemote(remoteFile);
   const parentPath = posixPath.dirname(norm);
   const fileName = posixPath.basename(norm);
   const folderId = await resolveGDrivePathToFolderId(ds, auth, parentPath);
   const escapedName = fileName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
   const q = `'${folderId}' in parents and name = '${escapedName}' and trashed = false`;
-  const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType)&pageSize=5&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+  const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,size)&pageSize=5&supportsAllDrives=true&includeItemsFromAllDrives=true`;
   const data = await gdriveFetchJson(url, auth);
   if (!data.files || !data.files.length) {
     throw new Error(`File not found in Google Drive: ${remoteFile}`);
   }
-  const fileObj = data.files[0];
+  return data.files[0];
+}
 
-  // Google Docs/Sheets/Slides export vs binary file download
+function buildGDriveDownloadUrl(fileObj) {
   let downloadUrl;
   if (fileObj.mimeType && fileObj.mimeType.startsWith('application/vnd.google-apps.')) {
     const exportMime = fileObj.mimeType.includes('document') ? 'application/pdf' :
@@ -434,16 +480,97 @@ async function downloadGDriveFile(ds, auth, remoteFile, localFile) {
   } else {
     downloadUrl = new URL(`https://www.googleapis.com/drive/v3/files/${fileObj.id}`);
     downloadUrl.searchParams.set('alt', 'media');
+    downloadUrl.searchParams.set('acknowledgeAbuse', 'true');
+    downloadUrl.searchParams.set('supportsAllDrives', 'true');
+  }
+  return downloadUrl;
+}
+
+/**
+ * Opens an authenticated readable stream from Google Drive (supporting HTTP Range requests)
+ * for on-demand streaming to file/player without bulk-copying entire folders.
+ */
+async function openGDriveMediaStream(ds, { remoteFile = '', driveId = '', range = '' } = {}) {
+  const { Readable } = require('stream');
+  let auth = await resolveGoogleDriveAuth(ds);
+  if (!auth) {
+    throw createAuthRequiredError(ds);
   }
 
-  const headers = {};
-  if (auth.type === 'bearer') headers.Authorization = `Bearer ${auth.token}`;
-  else if (auth.type === 'api_key') downloadUrl.searchParams.set('key', auth.apiKey);
+  let fileObj;
+  try {
+    fileObj = await resolveGDriveFileObj(ds, auth, remoteFile, driveId);
+  } catch (err) {
+    if (String(err.message || '').includes('HTTP 401') && ds.refreshToken && !hasPlaceholderSecret(ds.refreshToken)) {
+      auth = await resolveGoogleDriveAuth(ds, { forceRefresh: true });
+      fileObj = await resolveGDriveFileObj(ds, auth, remoteFile, driveId);
+    } else {
+      throw err;
+    }
+  }
 
-  const res = await fetch(downloadUrl.toString(), {
-    headers,
-    signal: AbortSignal.timeout(CONNECT_TIMEOUT_MS * 2),
-  });
+  const doFetch = async (currentAuth) => {
+    const downloadUrl = buildGDriveDownloadUrl(fileObj);
+    const headers = {};
+    if (currentAuth.type === 'bearer') headers.Authorization = `Bearer ${currentAuth.token}`;
+    else if (currentAuth.type === 'api_key') downloadUrl.searchParams.set('key', currentAuth.apiKey);
+    if (range) headers.Range = range;
+    return await fetch(downloadUrl.toString(), { headers });
+  };
+
+  let res = await doFetch(auth);
+  if (res.status === 401 && ds.refreshToken && !hasPlaceholderSecret(ds.refreshToken)) {
+    auth = await resolveGoogleDriveAuth(ds, { forceRefresh: true });
+    res = await doFetch(auth);
+  }
+
+  if (!res.ok && res.status !== 206) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`Google Drive stream failed (HTTP ${res.status}): ${errText.slice(0, 200)}`);
+  }
+
+  return {
+    status: res.status,
+    contentType: res.headers.get('content-type') || 'audio/mpeg',
+    contentLength: res.headers.get('content-length'),
+    contentRange: res.headers.get('content-range'),
+    acceptRanges: res.headers.get('accept-ranges') || 'bytes',
+    stream: Readable.fromWeb(res.body),
+    fileId: fileObj.id,
+  };
+}
+
+async function downloadGDriveFile(ds, auth, remoteFile, localFile, driveId = '') {
+  const fileName = posixPath.basename(normalizeRemote(remoteFile || '/'));
+  let fileObj;
+  try {
+    fileObj = await resolveGDriveFileObj(ds, auth, remoteFile, driveId);
+  } catch (err) {
+    if (String(err.message || '').includes('HTTP 401') && ds.refreshToken && !hasPlaceholderSecret(ds.refreshToken)) {
+      auth = await resolveGoogleDriveAuth(ds, { forceRefresh: true });
+      fileObj = await resolveGDriveFileObj(ds, auth, remoteFile, driveId);
+    } else {
+      throw err;
+    }
+  }
+
+  const doDownload = async (currentAuth) => {
+    const downloadUrl = buildGDriveDownloadUrl(fileObj);
+    const headers = {};
+    if (currentAuth.type === 'bearer') headers.Authorization = `Bearer ${currentAuth.token}`;
+    else if (currentAuth.type === 'api_key') downloadUrl.searchParams.set('key', currentAuth.apiKey);
+    return await fetch(downloadUrl.toString(), {
+      headers,
+      signal: AbortSignal.timeout(CONNECT_TIMEOUT_MS * 6),
+    });
+  };
+
+  let res = await doDownload(auth);
+  if (res.status === 401 && ds.refreshToken && !hasPlaceholderSecret(ds.refreshToken)) {
+    auth = await resolveGoogleDriveAuth(ds, { forceRefresh: true });
+    res = await doDownload(auth);
+  }
+
   if (!res.ok) {
     throw new Error(`Failed to download ${fileName} from Google Drive (HTTP ${res.status})`);
   }
@@ -611,8 +738,8 @@ async function listDir(ds, remotePath) {
       }
     } catch (err) {
       if (err.code === 'AUTH_REQUIRED' || err.authRequired) throw err;
-      if (String(err.message || '').match(/HTTP (401|403)|token refresh failed/i)) {
-        throw createAuthRequiredError(ds, `Google Drive session expired or unauthorized for "${ds.name}". Sign in with your browser to reconnect.`);
+      if (String(err.message || '').match(/HTTP 401|token refresh failed/i)) {
+        throw createAuthRequiredError(ds, `Google Drive session expired for "${ds.name}". Sign in with your browser to reconnect.`);
       }
       throw err;
     }
@@ -637,7 +764,7 @@ async function walk(ds, remotePath, filter = () => true, limit = 5000) {
   return out;
 }
 
-async function download(ds, remoteFile, localFile) {
+async function download(ds, remoteFile, localFile, options = {}) {
   const driver = String(ds.driverType || '').toLowerCase();
   fs.mkdirSync(path.dirname(localFile), { recursive: true });
 
@@ -657,7 +784,7 @@ async function download(ds, remoteFile, localFile) {
     if (!ds.localMountPath) {
       const auth = await resolveGoogleDriveAuth(ds);
       if (auth) {
-        return await downloadGDriveFile(ds, auth, remoteFile, localFile);
+        return await downloadGDriveFile(ds, auth, remoteFile, localFile, options.driveId || '');
       }
     }
   }
@@ -759,9 +886,9 @@ async function mkdir(ds, remoteDirPath) {
 }
 
 /**
- * Syncs / mounts a remote folder (e.g. a Google Drive folder or SFTP directory)
- * into a local RobOS directory (~/.robos/cloud-mounts/<ds-id>/<remotePath>) so any
- * RobOS desktop app can use the folder directly as a local filesystem path.
+ * Registers / indexes a remote folder in a local RobOS directory
+ * (~/.robos/cloud-mounts/<ds-id>/<remotePath>) WITHOUT bulk-downloading all remote files.
+ * Files are streamed and cached on demand when accessed.
  */
 async function syncFolderToLocal(ds, remotePath = '/') {
   const norm = normalizeRemote(remotePath);
@@ -770,23 +897,22 @@ async function syncFolderToLocal(ds, remotePath = '/') {
   fs.mkdirSync(localDir, { recursive: true });
 
   const files = await walk(ds, norm, () => true, 500);
-  let syncedCount = 0;
-  for (const f of files) {
-    const dest = resolveSafeLocalSubpath(rootDir, f.path);
-    fs.mkdirSync(path.dirname(dest), { recursive: true });
-    if (f.localPath && path.resolve(f.localPath) === path.resolve(dest)) {
-      syncedCount++;
-      continue;
-    }
-    await download(ds, f.path, dest);
-    syncedCount++;
-  }
+  const manifestPath = path.join(localDir, '.robos-cloud-manifest.json');
+  try {
+    fs.writeFileSync(manifestPath, JSON.stringify({
+      dsId: ds.id,
+      driverType: ds.driverType,
+      remotePath: norm,
+      indexedAt: new Date().toISOString(),
+      files,
+    }, null, 2), 'utf8');
+  } catch {}
 
   return {
     ok: true,
     remotePath: norm,
     localPath: localDir,
-    syncedFiles: syncedCount,
+    syncedFiles: files.length,
   };
 }
 
@@ -909,6 +1035,8 @@ async function testConnection(ds) {
 module.exports = {
   DEFAULT_GDRIVE_CLIENT_ID,
   getDefaultGDriveClientSecret,
+  resolveGoogleDriveAuth,
+  openGDriveMediaStream,
   isRemoteDriver,
   isCloudStorageDriver,
   isDataSourceAuthenticated,

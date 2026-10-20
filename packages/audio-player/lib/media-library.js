@@ -68,7 +68,7 @@ class MediaLibrary {
             seenIds.add(track.id);
 
             const properSrc = this._toSafeFileUrl(track.filePath);
-            if (track.src !== properSrc) {
+            if (!track.cloud && track.src !== properSrc) {
               track.src = properSrc;
               needsSave = true;
             }
@@ -117,7 +117,7 @@ class MediaLibrary {
                   plNeedsSave = true;
                 }
                 const properSrc = this._toSafeFileUrl(track.filePath);
-                if (track.src !== properSrc) {
+                if (!track.cloud && track.src !== properSrc) {
                   track.src = properSrc;
                   plNeedsSave = true;
                 }
@@ -237,6 +237,58 @@ class MediaLibrary {
         error: err.message
       };
     }
+  }
+
+  /**
+   * Build a track entry for a remote cloud audio file without downloading it upfront.
+   * If the file happens to already be in the local cache, parse its ID3 tags;
+   * otherwise infer initial title/artist/album from the filename and folder path.
+   */
+  async buildCloudTrack(descriptor, streamUrl = null) {
+    const filePath = descriptor.localPath;
+    const id = this._generateTrackId(filePath);
+    const cloudMeta = {
+      connectionId: descriptor.connectionId,
+      driverType: descriptor.driverType || 'gdrive',
+      remotePath: descriptor.remotePath,
+      driveId: descriptor.driveId || null,
+      size: descriptor.size != null ? descriptor.size : null,
+      cached: !!descriptor.cached,
+    };
+
+    if (descriptor.cached && fs.existsSync(filePath)) {
+      const parsed = await this.parseTrack(filePath);
+      return {
+        ...parsed,
+        id,
+        filePath,
+        cloud: cloudMeta,
+        src: streamUrl || parsed.src,
+      };
+    }
+
+    const baseName = path.parse(descriptor.name || path.posix.basename(descriptor.remotePath)).name;
+    const parentFolder = path.posix.basename(path.posix.dirname(descriptor.remotePath));
+    let artist = 'Cloud Stream';
+    let title = baseName;
+    if (baseName.includes(' - ')) {
+      const parts = baseName.split(' - ');
+      if (parts.length >= 2 && !/^\d+$/.test(parts[0].trim())) {
+        artist = parts[0].trim();
+        title = parts.slice(1).join(' - ').trim();
+      }
+    }
+
+    return {
+      id,
+      filePath,
+      title,
+      artist,
+      album: (parentFolder && parentFolder !== '/' && parentFolder !== '.') ? parentFolder : 'Cloud Storage',
+      duration: 0,
+      cloud: cloudMeta,
+      src: streamUrl || this._toSafeFileUrl(filePath),
+    };
   }
 
   getArt(artId) {

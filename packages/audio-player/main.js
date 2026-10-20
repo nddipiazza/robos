@@ -52,10 +52,51 @@ app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
 
 let mainWindow = null;
-const mediaLibrary = new MediaLibrary();
-const libraryFolders = new LibraryFolders({ mediaLibrary, cloud });
 const castService = new CastService();
+const mediaLibrary = new MediaLibrary();
 castService.mediaLibrary = mediaLibrary;
+castService.cloudStorage = cloud;
+const libraryFolders = new LibraryFolders({ mediaLibrary, cloud, castService });
+
+// Refresh cloud track stream URLs once CastService streamServer allocates its port,
+// and migrate any legacy cloud tracks stored under ~/.cache/robos/audio-player/cloud/
+function refreshCloudTrackUrls() {
+  if (!castService.streamPort) return;
+  let updated = false;
+  for (const track of mediaLibrary.tracks) {
+    if (!track.cloud && track.filePath && track.filePath.startsWith(cloud.CACHE_ROOT + path.sep)) {
+      const rel = path.relative(cloud.CACHE_ROOT, track.filePath);
+      const parts = rel.split(path.sep);
+      if (parts.length >= 2) {
+        const connId = parts[0];
+        const remotePath = '/' + parts.slice(1).join('/');
+        track.cloud = {
+          connectionId: connId,
+          driverType: 'gdrive',
+          remotePath,
+          driveId: null,
+          size: fs.existsSync(track.filePath) ? fs.statSync(track.filePath).size : null,
+          cached: fs.existsSync(track.filePath),
+        };
+        updated = true;
+      }
+    }
+    if (track.cloud) {
+      track.cloud.cached = cloud.isTrackCached(track.filePath, track.cloud.size);
+      const nextSrc = castService.getCloudStreamUrl(track.id, false);
+      if (track.src !== nextSrc) {
+        track.src = nextSrc;
+        updated = true;
+      }
+    }
+  }
+  if (updated) {
+    mediaLibrary._saveCache();
+  }
+}
+
+setTimeout(refreshCloudTrackUrls, 200);
+try { cloud.enforceCacheLimit(); } catch {}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -138,8 +179,18 @@ ipcMain.handle('audio:set-speaker-volume', async (_evt, { ip, level, muted }) =>
 
 ipcMain.handle('audio:cast-file', async (_evt, { ip, filePath, metadata }) => {
   try {
-    if (!fs.existsSync(filePath)) throw new Error('File does not exist: ' + filePath);
-    const streamUrl = castService.registerFile(filePath);
+    let streamUrl;
+    if (fs.existsSync(filePath)) {
+      if (filePath.startsWith(cloud.CACHE_ROOT + path.sep)) {
+        cloud.touchCacheFile(filePath);
+      }
+      streamUrl = castService.registerFile(filePath);
+    } else {
+      // Check if it's a cloud track that should be streamed on demand
+      const cloudTrack = mediaLibrary.tracks.find(t => t.filePath === filePath && t.cloud);
+      if (!cloudTrack) throw new Error('File does not exist: ' + filePath);
+      streamUrl = castService.getCloudStreamUrl(cloudTrack.id, true);
+    }
     return await castService.castMediaUrl(ip, streamUrl, metadata, (status) => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('audio:speaker-status-change', { ip, status });
@@ -226,10 +277,17 @@ ipcMain.handle('audio:open-file-dialog', async () => {
 });
 
 ipcMain.handle('audio:ensure-file-accessible', async (_evt, filePath) => {
+  if (filePath && filePath.startsWith(cloud.CACHE_ROOT + path.sep) && fs.existsSync(filePath)) {
+    cloud.touchCacheFile(filePath);
+    return true;
+  }
+  const cloudTrack = mediaLibrary.tracks.find(t => t.filePath === filePath && t.cloud);
+  if (cloudTrack) return true; // Will be streamed on demand via /cloud-stream/:trackId
   return ensureFileAccessible(filePath);
 });
 
 ipcMain.handle('audio:get-library', async () => {
+  refreshCloudTrackUrls();
   return mediaLibrary.getLibrary();
 });
 
@@ -485,10 +543,14 @@ ipcMain.handle('audio:cloud-list', async (_evt, { id, path: remotePath }) => {
 
 ipcMain.handle('audio:cloud-import', async (_evt, { id, paths }) => {
   try {
-    const localFiles = await cloud.fetchAudio(id, paths || [], (p) => sendToWindow('audio:cloud-progress', p));
+    const descriptors = await cloud.indexCloudAudio(id, paths || [], (p) => sendToWindow('audio:cloud-progress', p));
     const tracks = [];
-    for (const f of localFiles) {
-      try { tracks.push(await mediaLibrary.parseTrack(f)); } catch {}
+    for (const desc of descriptors) {
+      try {
+        const trackId = mediaLibrary._generateTrackId(desc.localPath);
+        const streamUrl = castService.getCloudStreamUrl(trackId, false);
+        tracks.push(await mediaLibrary.buildCloudTrack(desc, streamUrl));
+      } catch {}
     }
     if (tracks.length) {
       const incoming = new Set(tracks.map(t => t.filePath));
@@ -500,6 +562,20 @@ ipcMain.handle('audio:cloud-import', async (_evt, { id, paths }) => {
   } catch (err) {
     return { ok: false, error: err.message };
   }
+});
+
+ipcMain.handle('audio:cloud-cache-stats', async () => cloud.getCacheStats());
+
+ipcMain.handle('audio:cloud-cache-set-max', async (_evt, maxBytes) => {
+  const stats = cloud.setMaxCacheBytes(maxBytes);
+  refreshCloudTrackUrls();
+  return stats;
+});
+
+ipcMain.handle('audio:cloud-cache-clear', async () => {
+  const res = cloud.clearCache();
+  refreshCloudTrackUrls();
+  return res;
 });
 
 ipcMain.handle('audio:scan-default-library', async () => {

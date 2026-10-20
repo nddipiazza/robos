@@ -70,6 +70,45 @@ class CastService {
         return;
       }
 
+      // Handle Cloud Track on-demand streaming + LRU cache route (/cloud-stream/:trackId)
+      if (parsedUrl.pathname.startsWith('/cloud-stream/')) {
+        const trackId = decodeURIComponent(parsedUrl.pathname.replace(/^\/cloud-stream\//, '').replace(/\.[^.]+$/, ''));
+        const track = this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)
+          ? this.mediaLibrary.tracks.find(t => t.id === trackId)
+          : null;
+
+        if (!track || !track.cloud) {
+          res.writeHead(404, { 'Content-Type': 'text/plain' });
+          res.end('Cloud track not found');
+          return;
+        }
+
+        if (this.cloudStorage && typeof this.cloudStorage.streamCloudTrackToHttp === 'function') {
+          this.cloudStorage.streamCloudTrackToHttp(req, res, track.cloud, async (cachedFile) => {
+            if (this.mediaLibrary && cachedFile && fs.existsSync(cachedFile)) {
+              try {
+                const parsed = await this.mediaLibrary.parseTrack(cachedFile);
+                track.title = parsed.title && parsed.title !== path.parse(cachedFile).name ? parsed.title : track.title;
+                track.artist = parsed.artist && parsed.artist !== 'Unknown Artist' ? parsed.artist : track.artist;
+                track.album = parsed.album && parsed.album !== 'Unknown Album' ? parsed.album : track.album;
+                track.duration = parsed.duration || track.duration || 0;
+                track.artId = parsed.artId || track.artId || null;
+                track.cloud.cached = true;
+                this.mediaLibrary._rebuildIndexes();
+                this.mediaLibrary._saveCache();
+              } catch {}
+            }
+          }).catch((err) => {
+            console.error('[CastService] Cloud stream error:', err.message);
+            if (!res.headersSent) {
+              res.writeHead(502, { 'Content-Type': 'text/plain' });
+              res.end(`Cloud stream error: ${err.message}`);
+            }
+          });
+          return;
+        }
+      }
+
       const mediaId = parsedUrl.pathname.replace(/^\/media\//, '').replace(/\.[^.]+$/, '');
       const item = this.mediaRegistry.get(mediaId);
 
@@ -148,6 +187,11 @@ class CastService {
       contentType,
     });
     return `http://${this.hostIp}:${this.streamPort}/media/${id}.mp3`;
+  }
+
+  getCloudStreamUrl(trackId, forCast = false) {
+    const host = forCast ? this.hostIp : '127.0.0.1';
+    return `http://${host}:${this.streamPort}/cloud-stream/${encodeURIComponent(trackId)}.mp3`;
   }
 
   /**
