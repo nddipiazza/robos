@@ -37,7 +37,7 @@ function isStorageDs(ds) {
 function isGDriveLoggedIn(ds) {
   if (!ds || ds.driverType !== 'gdrive') return true;
   if (ds.authStatus === 'logged_out' || ds.status === 'Login Required' || ds.loggedIn === false) return false;
-  return Boolean(ds.loggedIn || ds.authStatus === 'authenticated' || ds.accessToken || ds.refreshToken || ds.localMountPath);
+  return Boolean(ds.accessToken || ds.refreshToken || ds.localMountPath || ds.serviceAccountKeyPath || ds.serviceAccountJson);
 }
 
 // ── Source-Only Declaration Mode (when ROBOS_GRAPH_ROOT is set) ─────────────

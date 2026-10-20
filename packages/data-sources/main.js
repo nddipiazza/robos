@@ -727,15 +727,15 @@ async function startGoogleBrowserLogin(params = {}) {
   const localMounts = remoteStorage.detectLocalGoogleDriveMounts();
 
   return await new Promise((resolve, reject) => {
-    let activeClientId = clientId;
-    let activeClientSecret = clientSecret;
+    let activeClientId = clientId || remoteStorage.DEFAULT_GDRIVE_CLIENT_ID;
+    let activeClientSecret = clientSecret || remoteStorage.getDefaultGDriveClientSecret();
 
     const finalizeSuccess = (resultPayload) => {
       if (dsId) {
         const list = loadDataSources();
         const idx = list.findIndex(d => d.id === dsId);
         if (idx >= 0) {
-          list[idx] = {
+          list[idx] = normalizeDataSourceRecord({
             ...list[idx],
             user: resultPayload.user || list[idx].user || defaultEmail,
             folderId: remoteStorage.extractDriveFolderId(resultPayload.folderId || list[idx].folderId || 'root'),
@@ -746,7 +746,7 @@ async function startGoogleBrowserLogin(params = {}) {
             loggedIn: true,
             status: 'Connected',
             lastChecked: new Date().toISOString(),
-          };
+          });
           saveDataSources(list);
           if (authToast) {
             authToast.emitAuthSuccessToast(list[idx], { electron });
@@ -764,12 +764,101 @@ async function startGoogleBrowserLogin(params = {}) {
       resolve(resultPayload);
     };
 
+    const buildGoogleOAuthUrl = (port, loginHint = '') => {
+      const redirectUri = `http://127.0.0.1:${port}/`;
+      const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+      authUrl.searchParams.set('client_id', activeClientId);
+      authUrl.searchParams.set('redirect_uri', redirectUri);
+      authUrl.searchParams.set('response_type', 'code');
+      authUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/drive');
+      authUrl.searchParams.set('access_type', 'offline');
+      authUrl.searchParams.set('prompt', 'select_account');
+      if (loginHint && loginHint.includes('@') && !loginHint.includes('noreply.github.com')) {
+        authUrl.searchParams.set('login_hint', loginHint);
+      }
+      return authUrl.toString();
+    };
+
     const server = http.createServer(async (req, res) => {
       try {
         const u = new URL(req.url, 'http://127.0.0.1');
         const port = server.address().port;
 
+        // 1. OAuth 2.0 Callback from accounts.google.com (at / or /oauth2callback with ?code=... or ?error=...)
+        if (req.method === 'GET' && (u.searchParams.has('code') || u.searchParams.has('error') || u.pathname === '/oauth2callback')) {
+          const code = u.searchParams.get('code');
+          const err = u.searchParams.get('error');
+          if (err || !code) {
+            res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.end('<h2>Google Drive Authorization Cancelled</h2><p>You can close this tab and return to RobOS Data Sources.</p>');
+            server.close();
+            reject(new Error(err || 'No authorization code returned'));
+            return;
+          }
+          const redirectUri = u.pathname === '/oauth2callback'
+            ? `http://127.0.0.1:${port}/oauth2callback`
+            : `http://127.0.0.1:${port}/`;
+          const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              code,
+              client_id: activeClientId,
+              client_secret: activeClientSecret,
+              redirect_uri: redirectUri,
+              grant_type: 'authorization_code',
+            }),
+          });
+          const tokenData = await tokenRes.json();
+          if (!tokenRes.ok || !tokenData.access_token) {
+            throw new Error(tokenData.error_description || tokenData.error || 'Token exchange failed');
+          }
+
+          // Fetch the authenticated user's real Google email address from Drive v3 about endpoint
+          let googleEmail = defaultEmail;
+          try {
+            const aboutRes = await fetch('https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress)', {
+              headers: { Authorization: `Bearer ${tokenData.access_token}` },
+            });
+            if (aboutRes.ok) {
+              const aboutData = await aboutRes.json();
+              if (aboutData?.user?.emailAddress) {
+                googleEmail = aboutData.user.emailAddress;
+              }
+            }
+          } catch {}
+
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(`<!DOCTYPE html><html><body style="font-family:sans-serif;background:#0d1117;color:#e6edf3;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+            <div style="background:#161b22;border:1px solid #2ea043;border-radius:12px;padding:32px;max-width:440px;text-align:center;">
+              <div style="font-size:42px;margin-bottom:12px;">✅</div>
+              <h2 style="color:#3fb950;margin:0 0 8px;">Google Drive Connected!</h2>
+              <p style="color:#8b949e;font-size:14px;line-height:1.5;">Signed in as <strong style="color:#f0f6fc;">${String(googleEmail).replace(/[<>&]/g, '')}</strong>.<br>Your Google Drive folders are now live in RobOS Data Sources. You can close this tab.</p>
+            </div>
+          </body></html>`);
+          server.close();
+          finalizeSuccess({
+            ok: true,
+            user: googleEmail,
+            folderId: remoteStorage.extractDriveFolderId(folderId),
+            accessToken: tokenData.access_token,
+            refreshToken: tokenData.refresh_token || '',
+            expiresIn: tokenData.expires_in,
+            authStatus: 'authenticated',
+            loggedIn: true,
+          });
+          return;
+        }
+
+        // 2. Entry point /auth or / immediately redirects to real Google OAuth 2.0 Sign-In
         if (req.method === 'GET' && (u.pathname === '/' || u.pathname === '/auth')) {
+          res.writeHead(302, { Location: buildGoogleOAuthUrl(port, defaultEmail) });
+          res.end();
+          return;
+        }
+
+        // 3. Optional manual token / local mount fallback page at /manual
+        if (req.method === 'GET' && u.pathname === '/manual') {
           res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
           res.end(renderBrowserLoginHtml({
             port,
@@ -794,19 +883,10 @@ async function startGoogleBrowserLogin(params = {}) {
           const fClientId = (form.get('clientId') || '').trim();
           const fClientSecret = (form.get('clientSecret') || '').trim();
 
-          if (u.pathname === '/start-google-oauth' && fClientId && fClientSecret) {
-            activeClientId = fClientId;
-            activeClientSecret = fClientSecret;
-            const redirectUri = `http://127.0.0.1:${port}/oauth2callback`;
-            const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-            authUrl.searchParams.set('client_id', activeClientId);
-            authUrl.searchParams.set('redirect_uri', redirectUri);
-            authUrl.searchParams.set('response_type', 'code');
-            authUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/drive');
-            authUrl.searchParams.set('access_type', 'offline');
-            authUrl.searchParams.set('prompt', 'consent');
-            if (email) authUrl.searchParams.set('login_hint', email);
-            res.writeHead(302, { Location: authUrl.toString() });
+          if (!accessToken && !localMountPath) {
+            if (fClientId) activeClientId = fClientId;
+            if (fClientSecret) activeClientSecret = fClientSecret;
+            res.writeHead(302, { Location: buildGoogleOAuthUrl(port, email) });
             res.end();
             return;
           }
@@ -832,48 +912,6 @@ async function startGoogleBrowserLogin(params = {}) {
           return;
         }
 
-        if (u.pathname === '/oauth2callback') {
-          const code = u.searchParams.get('code');
-          const err = u.searchParams.get('error');
-          if (err || !code) {
-            res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
-            res.end('<h2>Google Drive Authorization Cancelled</h2><p>You can close this tab and return to RobOS Data Sources.</p>');
-            server.close();
-            reject(new Error(err || 'No authorization code returned'));
-            return;
-          }
-          const redirectUri = `http://127.0.0.1:${port}/oauth2callback`;
-          const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-              code,
-              client_id: activeClientId,
-              client_secret: activeClientSecret,
-              redirect_uri: redirectUri,
-              grant_type: 'authorization_code',
-            }),
-          });
-          const tokenData = await tokenRes.json();
-          if (!tokenRes.ok) {
-            throw new Error(tokenData.error_description || tokenData.error || 'Token exchange failed');
-          }
-          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-          res.end('<h2 style="font-family:sans-serif;color:#10b981;">✓ Google Drive Connected to RobOS!</h2><p style="font-family:sans-serif;">You can close this browser tab and return to RobOS Data Sources.</p>');
-          server.close();
-          finalizeSuccess({
-            ok: true,
-            user: defaultEmail,
-            folderId: remoteStorage.extractDriveFolderId(folderId),
-            accessToken: tokenData.access_token,
-            refreshToken: tokenData.refresh_token,
-            expiresIn: tokenData.expires_in,
-            authStatus: 'authenticated',
-            loggedIn: true,
-          });
-          return;
-        }
-
         res.writeHead(404);
         res.end('Not found');
       } catch (e) {
@@ -882,7 +920,7 @@ async function startGoogleBrowserLogin(params = {}) {
       }
     });
 
-    server.listen(0, '127.0.0.1', () => {
+    const openAuthInBrowser = () => {
       const port = server.address().port;
       const loginUrl = `http://127.0.0.1:${port}/auth`;
       try {
@@ -890,7 +928,18 @@ async function startGoogleBrowserLogin(params = {}) {
           shell.openExternal(loginUrl);
         }
       } catch {}
+    };
+
+    server.once('error', (err) => {
+      if (err && err.code === 'EADDRINUSE') {
+        server.listen(0, '127.0.0.1', openAuthInBrowser);
+      } else {
+        reject(err);
+      }
     });
+
+    // Bind port 53682 (standard Google Desktop OAuth loopback port) or fallback to random loopback port
+    server.listen(53682, '127.0.0.1', openAuthInBrowser);
 
     setTimeout(() => {
       try { server.close(); } catch {}
