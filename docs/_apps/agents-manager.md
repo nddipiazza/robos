@@ -19,9 +19,8 @@ The window has three panes: the **AI Providers** list, the sessions of the selec
 | GitHub Copilot | `copilot-auth.js` in the package | `~/.copilot/session-state` |
 | Codex | `codex --version` and `codex login status` | `state_*.sqlite` under `$CODEX_HOME` or `~/.codex`, read with `python3` |
 | Antigravity / Gemini CLI | always shown as installed and signed in | no session list; opens its settings page directly |
-| HarnessRouter (UHP) | always shown as active | no session list; opens its settings page directly, backed by `packages/robos-agent-client` |
 
-Provider settings are the only view for the last two entries, so the points below about sessions apply to Claude Code, GitHub Copilot and Codex.
+Provider settings are the only view for Antigravity / Gemini CLI, so the points below about sessions apply to Claude Code, GitHub Copilot and Codex.
 
 ## What you do in it
 

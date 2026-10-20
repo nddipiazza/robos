@@ -11,7 +11,8 @@ process.env.HOME = HOME;
 const BIN = path.join(HOME, 'bin');
 fs.mkdirSync(BIN);
 for (const name of ['copilot', 'claude', 'codex', 'gemini']) {
-  fs.writeFileSync(path.join(BIN, name), `#!/bin/sh\necho "${name}-cli-answer"\n`, { mode: 0o755 });
+  // Each fake CLI records its arguments so tests can see the prompt it received.
+  fs.writeFileSync(path.join(BIN, name), `#!/bin/sh\nprintf '%s' "$*" > "$HOME/${name}.args"\necho "${name}-cli-answer"\n`, { mode: 0o755 });
 }
 process.env.PATH = BIN + path.delimiter + process.env.PATH;
 
@@ -113,6 +114,34 @@ describe('ai-agent: optional API mode', () => {
     const res = await aiAgent.ask('hello');
     assert.strictEqual(res.ok, false);
     assert.strictEqual(res.code, 'prompt_security_violation');
+  });
+});
+
+describe('ai-agent: prompt security', () => {
+  const lastArgs = name => fs.readFileSync(path.join(HOME, `${name}.args`), 'utf8');
+
+  it('redacts secrets before the prompt reaches the CLI', async () => {
+    const res = await aiAgent.ask('Deploy with AKIA1234567890ABCDEF');
+    assert.strictEqual(res.ok, true);
+    assert.ok(lastArgs('claude').includes('[REDACTED:AWS_ACCESS_KEY_ID]'));
+    assert.ok(!lastArgs('claude').includes('AKIA1234567890ABCDEF'));
+  });
+
+  it('blocks the request in block mode without starting a CLI or calling the API', async () => {
+    globalThis.__api.enabled = true;
+    fs.rmSync(path.join(HOME, 'codex.args'), { force: true });
+    const res = await aiAgent.ask('Deploy with AKIA1234567890ABCDEF', { providerId: 'codex', securityOptions: { mode: 'block' } });
+    assert.strictEqual(res.ok, false);
+    assert.strictEqual(res.code, 'prompt_security_violation');
+    assert.ok(res.findings.length >= 1);
+    assert.ok(!fs.existsSync(path.join(HOME, 'codex.args')), 'the CLI must not run');
+    assert.strictEqual(globalThis.__api.prompts.length, 0, 'the API must not be called');
+  });
+
+  it('sends the redacted prompt to the API in API mode', async () => {
+    globalThis.__api.enabled = true;
+    await aiAgent.ask('Deploy with AKIA1234567890ABCDEF');
+    assert.ok(globalThis.__api.prompts[0].includes('[REDACTED:AWS_ACCESS_KEY_ID]'));
   });
 });
 

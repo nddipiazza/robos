@@ -4,6 +4,9 @@ layout: default
 parent: Use RobOS
 nav_order: 3
 permalink: /ai-providers.html
+redirect_from:
+  - /training/harness-and-security/harness-router.html
+  - /training/agent-harness-engineering/01-unified-harness-protocol-architecture.html
 description: "How RobOS talks to AI: the coding-agent CLIs you install by default, and an optional API mode for quick requests, local Ollama models and semantic Knowledge Graph search."
 ---
 
@@ -40,7 +43,7 @@ The shared library behind these one-shot requests is `robos-lib/ai-agent`. These
 - The **AI Co-Pilot** in the Knowledge Graph Explorer, which asks the agent for new graph nodes and checks them with SHACL before you apply them.
 - RobOS Voice, when a spoken request falls through to an AI agent.
 
-Agent tasks are separate. Task Implementer, Dev Central, Code Review and the HarnessRouter start the agent CLIs with their own runners, so they never use API mode. See [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}) for how tasks reach an agent.
+Agent tasks are separate. Task Implementer, Dev Central and Code Review start the agent CLIs with their own runners, so they never use API mode. See [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}) for how tasks reach an agent.
 
 ## Optional API mode
 
@@ -134,7 +137,7 @@ Do not build a feature that only works in API mode. Users who installed only a C
 ## Limits
 
 - Answers arrive in one piece. Neither path streams tokens into the text box yet.
-- For Antigravity, RobOS runs the Gemini CLI (`gemini -p`), the same way the harness router does. It does not use AGY's own command.
+- For Antigravity, RobOS runs the Gemini CLI (`gemini -p`). It does not use AGY's own `agy` command.
 - The Knowledge Graph Explorer search box still uses text search. Semantic search is available from the `kgraph` command, the MCP tool and the store API.
 - `@langchain/openai` is held at 1.5.8, the last release that supports the Node 20 runtime in the apps' Electron version.
 - The AI Co-Pilot falls back to the old keyword template when no agent answers or the answer is not a usable list of new nodes. The proposal card says when that happened.

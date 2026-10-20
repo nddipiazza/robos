@@ -4,7 +4,6 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
-const http = require('node:http');
 const { WorkspaceReview } = require('../../../robos-graph/lib/workspace-review');
 const { hash } = require('../../../robos-graph/lib/graph-workspace');
 function setup(t) {
@@ -26,31 +25,28 @@ test('scoped agent context includes object-reference neighbors, relevant shapes 
   assert.throws(() => review.context({ limit: 201 }), /limit/);
   assert.throws(() => review.context({ prompt: 'x'.repeat(20001) }), /20,000/);
 });
-test('configured agent HTTP response creates only a proposal; malformed and stale results cannot save', async t => {
+test('AI agent answer creates only a proposal; failures, malformed and stale results cannot save', async t => {
   const { review, ws } = setup(t);
-  let body, response = '{bad', changeWhileRunning = false;
-  const server = http.createServer((req, res) => {
-    let data = ''; req.on('data', b => { data += b; });
-    req.on('end', () => {
-      body = JSON.parse(data);
-      if (changeWhileRunning) ws.apply(ws.propose({ mode: 'refine', edits: [{ op: 'update', id: 'urn:example:two', set: { 'dcterms:title': 'Concurrent edit' } }] }));
-      res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ output: response }));
-    });
-  });
-  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  t.after(() => new Promise(resolve => server.close(resolve)));
-  const config = { url: `http://127.0.0.1:${server.address().port}`, harnessId: 'test-contract', model: 'test-contract' };
+  let asked = '', askedOpts = null, response = '{bad', changeWhileRunning = false;
+  const ask = async (prompt, opts) => {
+    asked = prompt; askedOpts = opts;
+    if (changeWhileRunning) ws.apply(ws.propose({ mode: 'refine', edits: [{ op: 'update', id: 'urn:example:two', set: { 'dcterms:title': 'Concurrent edit' } }] }));
+    return { ok: true, text: response, via: 'cli' };
+  };
   const initial = hash(ws.read());
-  await assert.rejects(review.askAgent({ query: 'one' }, config), /structured JSON/);
+  await assert.rejects(review.askAgent({ query: 'one' }, { ask: async () => ({ ok: false, error: 'claude failed: not logged in' }) }), /not logged in/);
+  await assert.rejects(review.askAgent({ query: 'one' }, { ask }), /structured JSON/);
   assert.equal(hash(ws.read()), initial);
-  response = JSON.stringify({ edits: [{ op: 'update', id: 'urn:example:one', set: { 'dcterms:title': 'Reviewed name' } }], questions: ['Who owns this project?'] });
-  const result = await review.askAgent({ prompt: 'Clarify title', query: 'one' }, config);
-  assert.equal(JSON.parse(body.input).prompt, 'Clarify title');
+  response = '```json\n' + JSON.stringify({ edits: [{ op: 'update', id: 'urn:example:one', set: { 'dcterms:title': 'Reviewed name' } }], questions: ['Who owns this project?'] }) + '\n```';
+  const result = await review.askAgent({ prompt: 'Clarify title', query: 'one' }, { ask, providerId: 'codex' });
+  assert.match(asked, /Return ONLY JSON/);
+  assert.ok(asked.includes('"prompt":"Clarify title"'), 'the brief is sent to the agent');
+  assert.deepEqual(askedOpts, { providerId: 'codex' });
   assert.equal(result.proposal.delta.changed.length, 1);
   assert.equal(result.questions.length, 1);
   assert.equal(hash(ws.read()), initial);
   changeWhileRunning = true;
-  await assert.rejects(review.askAgent({ query: 'one' }, config), /Graph changed/);
+  await assert.rejects(review.askAgent({ query: 'one' }, { ask }), /Graph changed/);
   assert.equal(ws.read()['robos:nodes'].find(n => n['@id'] === 'urn:example:one')['dcterms:title'], 'one');
 });
 

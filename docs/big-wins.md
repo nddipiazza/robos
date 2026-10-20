@@ -103,13 +103,13 @@ For stronger isolation, run agents and tests in the Docker container (`./scripts
 
 Set the mode under **Prompt Security & Guardrails** in the Preferences app: `redact` (default), `block`, `warn`, `audit-only` or `off`. It is stored as `prompt_security_mode` in `~/.config/robos/settings.json`. When a scan finds something, an entry with the finding types and counts, not the secret, is appended to `~/.config/robos/prompt-security-audit.json`, which keeps the last 200 entries.
 
-The scan runs in `AgentSession.start()`, in the embedded router's `runTask()`, in the `ai-prompt` and `agent-chat` apps, and in the `<robos-ai-textarea>` component. It checks the prompt you send. It does not check files an agent reads later or the output of its tools.
+The scan runs in the shared AI library `robos-lib/ai-agent` (and the optional API mode in `robos-llm`), in the `ai-prompt` and `agent-chat` apps, and in the `<robos-ai-textarea>` component. It checks the prompt you send. It does not check files an agent reads later or the output of its tools.
 
-## Agent-agnostic harness
+## Bring your own agent CLI
 
-`packages/robos-agent-client` puts several agent CLIs behind one interface. `AgentSession` runs a prompt through a backend: Claude Code (`claude`), GitHub Copilot CLI (`gh`), or the HarnessRouter backend. The task runner in `work-task/backend.js` calls `codex exec` or `claude -p`, and `providers.js` lists Codex and Antigravity (`agy`) with their model catalogs, reading each CLI's stored login. `harness-router.js` implements a client for the Unified Harness Protocol (UHP, spec version `2026-08-11`, default server `http://127.0.0.1:3000`) and an embedded in-process router. The embedded router lists Claude Code, Codex, Copilot CLI, Gemini CLI or Antigravity, Hermes and Oh My Pi, and reports whether each command is installed.
+RobOS works with the coding-agent CLIs you already use: GitHub Copilot, Claude Code, Codex and Gemini CLI / Antigravity. Install one, sign in, and set it as active in RobOS Agents. One-shot requests across the apps go through `robos-lib/ai-agent`, which runs that CLI. The task runner in `robos-agent-client/work-task/backend.js` calls `codex exec` or `claude -p` for Dev Central, and `providers.js` lists Codex and Antigravity (`agy`) with their model catalogs, reading each CLI's stored login. An optional API mode (`robos-llm`, LangChain.js) can answer one-shot requests with Anthropic, OpenAI, Gemini or a local Ollama server instead; it is off by default. See [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}).
 
-Limit: the embedded router only starts Claude Code, Codex and Copilot. For the other harnesses, or when the chosen CLI is missing, `runTask()` returns a placeholder success message instead of an error. Do not treat a Gemini or Hermes result from the embedded router as real output. How work is assigned to agent tiers is on [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}).
+Limit: there is no shared session or routing layer. Each app starts its CLI itself, with the model that CLI is configured to use. How work could be assigned to agent tiers is on [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}).
 
 ## Generating apps from the knowledge graph
 

@@ -99,36 +99,6 @@
       "robos:status": "active"
     },
     {
-      "@id": "urn:robos:agent-router:harnessrouter",
-      "@type": [
-        "robos:AgentRouter",
-        "robos:HarnessRouter",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "HarnessRouter & Unified Harness Protocol (UHP) Engine",
-      "dcterms:description": "Unified AI agent execution runtime, session gateway, and routing harness conforming to UHP 2026-08-11 Draft standard. 100% Free and Open Source (Apache-2.0) with local embedded fallback.",
-      "robos:protocol": "UHP",
-      "robos:protocolVersion": "2026-08-11",
-      "robos:conformanceClass": "Full",
-      "robos:openSource": true,
-      "robos:license": "Apache-2.0",
-      "robos:defaultEndpoint": "http://127.0.0.1:3000",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://unifiedharnessprotocol.dev/",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://harnessrouter.ai/",
-      "robos:supportedHarnesses": [
-        "claude-code",
-        "codex",
-        "github-copilot",
-        "gemini-cli",
-        "hermes",
-        "oh-my-pi"
-      ]
-    },
-    {
       "@id": "urn:robos:security:prompt-security-guard",
       "@type": [
         "robos:SecurityGuard",
@@ -1211,36 +1181,6 @@
       "robos:namespace": "robos.platform",
       "robos:version": "1.0.0",
       "robos:status": "active"
-    },
-    {
-      "@id": "urn:robos:agent-router:harnessrouter",
-      "@type": [
-        "robos:AgentRouter",
-        "robos:HarnessRouter",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "HarnessRouter & Unified Harness Protocol (UHP) Engine",
-      "dcterms:description": "Unified AI agent execution runtime, session gateway, and routing harness conforming to UHP 2026-08-11 Draft standard. 100% Free and Open Source (Apache-2.0) with local embedded fallback.",
-      "robos:protocol": "UHP",
-      "robos:protocolVersion": "2026-08-11",
-      "robos:conformanceClass": "Full",
-      "robos:openSource": true,
-      "robos:license": "Apache-2.0",
-      "robos:defaultEndpoint": "http://127.0.0.1:3000",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://unifiedharnessprotocol.dev/",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://harnessrouter.ai/",
-      "robos:supportedHarnesses": [
-        "claude-code",
-        "codex",
-        "github-copilot",
-        "gemini-cli",
-        "hermes",
-        "oh-my-pi"
-      ]
     },
     {
       "@id": "urn:robos:security:prompt-security-guard",

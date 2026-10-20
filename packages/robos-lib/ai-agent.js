@@ -59,7 +59,7 @@ const PROVIDERS = [
   {
     id:   'antigravity',
     name: 'Gemini CLI / Antigravity',
-    // gemini -p: non-interactive single prompt (the harness router treats Gemini CLI and Antigravity as one harness)
+    // gemini -p: non-interactive single prompt (RobOS runs the Gemini CLI for the Antigravity provider)
     buildArgs: (prompt) => ['-p', prompt],
     bin: 'gemini',
   },
@@ -108,6 +108,17 @@ function notifyApiFallback(result, cliName) {
       store.write(file, [entry, ...store.read(file, [])].slice(0, 500));
     });
   } catch {}
+}
+
+// ── Prompt security ───────────────────────────────────────────────────────────
+
+/** Applies the user's prompt security policy (redact by default) to a prompt. */
+function guardPrompt(text, securityOptions) {
+  let lib = null;
+  try { lib = require('./prompt-security'); } catch { return { blocked: false, text }; }
+  const result = new lib.PromptSecurityGuard(securityOptions).scan(text);
+  if (!result.allowed) return { blocked: true, summary: result.summary, findings: result.findings };
+  return { blocked: false, text: result.mode === 'redact' && result.findings.length ? result.redactedText : text };
 }
 
 // ── Config helpers ────────────────────────────────────────────────────────────
@@ -176,15 +187,22 @@ function askCli(prompt, provider) {
  * ask(prompt, opts) — invoke an AI provider and collect the full text response.
  *
  * @param {string} prompt
- * @param {{ providerId?: string, allowApi?: boolean, timeoutMs?: number }} [opts]
- *   providerId — use this CLI; null/undefined = use the default
- *   allowApi   — false keeps the call on the CLI even when API mode is on
+ * @param {{ providerId?: string, allowApi?: boolean, timeoutMs?: number, securityOptions?: object }} [opts]
+ *   providerId      — use this CLI; null/undefined = use the default
+ *   allowApi        — false keeps the call on the CLI even when API mode is on
+ *   securityOptions — PromptSecurityGuard options (e.g. { mode: 'block' }); default is the user's policy
  * @returns {Promise<{ ok: boolean, text: string, error: string|null, via: 'cli'|'api', provider: string, apiFallback?: string }>}
  */
 async function ask(prompt, opts = {}) {
-  prompt = require('./engineering-writing').instructions + '\n\n' + prompt;
   const resolvedId = opts.providerId || getActiveProviderId();
   const provider   = PROVIDER_MAP[resolvedId] || PROVIDER_MAP['github-copilot'];
+
+  // Every prompt passes the prompt security guard before it reaches a CLI or an API.
+  const scan = guardPrompt(String(prompt || ''), opts.securityOptions);
+  if (scan.blocked) {
+    return { ok: false, text: '', error: scan.summary, code: 'prompt_security_violation', findings: scan.findings, via: 'cli', provider: provider.id };
+  }
+  prompt = require('./engineering-writing').instructions + '\n\n' + scan.text;
 
   // API mode only applies when the caller did not pick a specific CLI.
   let apiFallback = null;
