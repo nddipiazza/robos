@@ -28,6 +28,9 @@
         <button class="btn btn-gdrive-cta btn-sm" id="btn-connect-gdrive" title="Add a Google Drive account via browser sign-in">
           🌐 + Add Google Drive
         </button>
+        <button class="btn btn-gdrive-cta btn-sm" id="btn-connect-onedrive" title="Add a Microsoft OneDrive account via browser sign-in">
+          ☁️ + Add OneDrive
+        </button>
         <button class="btn btn-primary btn-sm" id="btn-add-ds">
           + Add Data Source
         </button>
@@ -69,11 +72,14 @@
             <div class="empty-welcome-icon">☁️</div>
             <h2>No Data Sources Configured Yet</h2>
             <p>
-              Connect your <strong>Google Drive</strong> account using your web browser, or add S3 buckets, SFTP servers, and databases to use across RobOS applications.
+              Connect your <strong>Google Drive</strong> or <strong>Microsoft OneDrive</strong> account using your web browser, or add S3 buckets, SFTP servers, and databases to use across RobOS applications.
             </p>
             <div class="empty-welcome-actions">
               <button class="btn btn-primary btn-lg" id="btn-empty-add-gdrive">
                 🌐 Add Google Drive Account
+              </button>
+              <button class="btn btn-primary btn-lg" id="btn-empty-add-onedrive">
+                ☁️ Add Microsoft OneDrive
               </button>
               <button class="btn btn-secondary btn-lg" id="btn-empty-add-other">
                 + Add Another Data Source (S3, SFTP, SQL…)
@@ -322,11 +328,11 @@
 
             <div class="form-row-2" style="margin-top:14px;">
               <div class="form-group">
-                <label>Google Account Email <span class="muted">(auto-filled on browser login)</span></label>
+                <label id="lbl-wiz-cloud-email">Google Account Email <span class="muted">(auto-filled on browser login)</span></label>
                 <input type="email" id="modal-gdrive-email" class="form-input" placeholder="you@gmail.com"/>
               </div>
               <div class="form-group">
-                <label>Root Folder URL or ID <span class="muted">(optional)</span></label>
+                <label id="lbl-wiz-cloud-folder">Root Folder URL or ID <span class="muted">(optional)</span></label>
                 <input type="text" id="modal-gdrive-folder" class="form-input mono" value="root" placeholder="root (My Drive) or folder URL"/>
               </div>
             </div>

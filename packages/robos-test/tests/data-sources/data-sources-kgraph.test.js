@@ -81,6 +81,36 @@ describe('RobOS Data Sources — Wizard Administration GUI, Google Drive Browser
 
       const authedStatus = await evalJS(app.port, `document.getElementById('ds-status-pill').textContent`);
       assert.ok(authedStatus.includes('Connected'));
+
+      // ── 5. Open 3-Step Add Microsoft OneDrive Wizard ────────────────────────
+      await evalJS(app.port, `document.getElementById('btn-connect-onedrive').click()`);
+      await new Promise(r => setTimeout(r, 300));
+
+      const odWizBadge = await evalJS(app.port, `document.getElementById('wiz-provider-badge').textContent`);
+      assert.strictEqual(odWizBadge, 'ONEDRIVE');
+
+      const odLoginBtnText = await evalJS(app.port, `document.getElementById('btn-wizard-gdrive-login').textContent`);
+      assert.ok(odLoginBtnText.includes('Microsoft'));
+
+      await evalJS(app.port, `
+        document.getElementById('modal-ds-name').value = 'Personal OneDrive';
+        document.getElementById('modal-gdrive-email').value = 'architect@outlook.com';
+        document.getElementById('modal-gdrive-token').value = 'onedrive_test_authenticated_session';
+        document.getElementById('btn-wiz-next').click();
+      `);
+      await new Promise(r => setTimeout(r, 400));
+
+      const odTestResult = await evalJS(app.port, `document.getElementById('wiz-test-result').textContent`);
+      assert.ok(odTestResult.includes('Connection Verified'));
+
+      await evalJS(app.port, `document.getElementById('btn-ds-modal-save').click()`);
+      await new Promise(r => setTimeout(r, 600));
+
+      const odDetailName = await evalJS(app.port, `document.getElementById('ds-detail-name').textContent`);
+      assert.strictEqual(odDetailName, 'Personal OneDrive');
+
+      const odDetailType = await evalJS(app.port, `document.getElementById('ds-detail-type').textContent`);
+      assert.strictEqual(odDetailType, 'ONEDRIVE');
     } finally {
       await killApp(app);
     }

@@ -77,7 +77,11 @@ function listConnections() {
       id: d.id,
       name: d.name,
       driverType: d.driverType,
-      host: d.driverType === 'gdrive' ? (d.folderId || 'My Drive') : (d.host || d.bucket || 'local'),
+      host: d.driverType === 'gdrive'
+        ? (d.folderId || 'My Drive')
+        : d.driverType === 'onedrive'
+          ? (d.folderId || d.user || 'OneDrive')
+          : (d.host || d.bucket || 'local'),
       startPath,
       browsable: !!(rs && rs.isRemoteDriver(d.driverType)),
     };
@@ -339,8 +343,20 @@ async function ensureTrackCached({ connectionId, remotePath, driveId, size }) {
           out.on('error', reject);
           stream.on('error', reject);
         });
+      } else if (ds.driverType === 'onedrive' && typeof rs.openOneDriveMediaStream === 'function') {
+        const { stream } = await rs.openOneDriveMediaStream(ds, {
+          remoteFile: remotePath,
+          driveId: driveId || null,
+        });
+        await new Promise((resolve, reject) => {
+          const out = fs.createWriteStream(partPath);
+          stream.pipe(out);
+          out.on('finish', () => out.close(resolve));
+          out.on('error', reject);
+          stream.on('error', reject);
+        });
       } else {
-        await rs.download(ds, remotePath, partPath);
+        await rs.download(ds, remotePath, partPath, { driveId: driveId || '' });
       }
 
       fs.renameSync(partPath, localPath);
@@ -417,28 +433,33 @@ async function streamCloudTrackToHttp(req, res, cloudMeta, onCached = null) {
       });
   }
 
-  // For Google Drive, stream bytes immediately to the player with Range forwarding
-  if (ds.driverType === 'gdrive' && typeof rs.openGDriveMediaStream === 'function') {
+  // For Google Drive and Microsoft OneDrive, stream bytes immediately to the player with Range forwarding
+  const openStreamFn = ds.driverType === 'gdrive'
+    ? rs.openGDriveMediaStream
+    : ds.driverType === 'onedrive'
+      ? rs.openOneDriveMediaStream
+      : null;
+
+  if (typeof openStreamFn === 'function') {
     const rangeHeader = req.headers.range || undefined;
-    const upstream = await rs.openGDriveMediaStream(ds, {
+    const upstream = await openStreamFn(ds, {
       remoteFile: remotePath,
       driveId: driveId || null,
       range: rangeHeader,
     });
 
     const resHeaders = {
-      'Content-Type': upstream.headers['content-type'] || contentType,
+      'Content-Type': (upstream.headers && upstream.headers['content-type']) || upstream.contentType || contentType,
       'Accept-Ranges': 'bytes',
       'X-RobOS-Cache': 'MISS-STREAMING',
     };
-    if (upstream.headers['content-length']) {
-      resHeaders['Content-Length'] = upstream.headers['content-length'];
-    }
-    if (upstream.headers['content-range']) {
-      resHeaders['Content-Range'] = upstream.headers['content-range'];
-    }
+    const cLen = (upstream.headers && upstream.headers['content-length']) || upstream.contentLength;
+    const cRange = (upstream.headers && upstream.headers['content-range']) || upstream.contentRange;
+    if (cLen) resHeaders['Content-Length'] = cLen;
+    if (cRange) resHeaders['Content-Range'] = cRange;
 
-    res.writeHead(upstream.statusCode === 206 ? 206 : 200, resHeaders);
+    const status = upstream.statusCode || upstream.status || 200;
+    res.writeHead(status === 206 ? 206 : 200, resHeaders);
     upstream.stream.pipe(res);
     req.on('close', () => {
       try { upstream.stream.destroy(); } catch {}

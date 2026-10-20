@@ -173,7 +173,7 @@ export default function CloudBrowser({ onLibrary, onFolders, showStatus }) {
       {connections && !connections.length && (
         <div className="empty-state">
           <p>No cloud storage is linked yet.</p>
-          <p className="hint">Open RobOS Data Sources, add a Google Drive, S3, Dropbox, SFTP, or FTP connection under Cloud &amp; Object Storage, and it will appear here.</p>
+          <p className="hint">Open RobOS Data Sources, add a Google Drive, Microsoft OneDrive, S3, Dropbox, SFTP, or FTP connection under Cloud &amp; Object Storage, and it will appear here.</p>
         </div>
       )}
       {other.length > 0 && (
