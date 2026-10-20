@@ -3,6 +3,7 @@ import AudioPlayer from 'react-h5-audio-player';
 import { Icon } from './Icon.jsx';
 import CloudBrowser from './CloudBrowser.jsx';
 import Lyrics from './Lyrics.jsx';
+import FolderPanel from './FolderPanel.jsx';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('player'); // 'player' | 'playlists' | 'library' | 'cloud' | 'ambient' | 'speakers'
@@ -16,6 +17,9 @@ export default function App() {
     }
   ]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const [folders, setFolders] = useState([]);
+  const [folderFilter, setFolderFilter] = useState(null);
+  const [syncingFolder, setSyncingFolder] = useState(null);
   const [librarySort, setLibrarySort] = useState({ key: 'title', dir: 'asc' });
   const [outputTarget, setOutputTarget] = useState('local'); // 'local' | speaker IP | 'all'
   const [speakers, setSpeakers] = useState([]);
@@ -78,6 +82,7 @@ export default function App() {
   useEffect(() => {
     refreshSpeakers();
     loadLibrary();
+    refreshFolders();
     refreshPlaylists();
 
     const cleanups = [];
@@ -121,6 +126,7 @@ export default function App() {
         setIsScanningLibrary(false);
         setLibraryScanStatus(null);
         if (done.library) setLibrary(done.library);
+        refreshFolders();
         showStatus(`Library background scan complete! Found ${done.totalFound} track(s).`);
       }));
     }
@@ -163,6 +169,37 @@ export default function App() {
       cleanups.forEach(fn => { try { fn(); } catch {} });
     };
   }, []);
+
+  const refreshFolders = async () => {
+    try {
+      const res = await window.robosAudio.listFolders();
+      if (res && res.folders) setFolders(res.folders);
+    } catch {}
+  };
+
+  const applyFolderState = (res) => {
+    if (!res) return;
+    if (res.folders) setFolders(res.folders);
+    if (res.library) setLibrary(res.library);
+  };
+
+  const handleRescanFolder = async (id) => {
+    setSyncingFolder(id || 'all');
+    showStatus(id ? 'Syncing folder...' : 'Syncing all folders...');
+    const res = await window.robosAudio.rescanFolders(id);
+    setSyncingFolder(null);
+    applyFolderState(res);
+    showStatus(res.ok ? 'Folder sync finished.' : `Sync problem: ${res.error}`);
+  };
+
+  const handleRenameFolder = async (id, label) => applyFolderState(await window.robosAudio.renameFolder(id, label));
+
+  const handleRemoveFolder = async (id, removeTracks) => {
+    const res = await window.robosAudio.removeFolder(id, removeTracks);
+    applyFolderState(res);
+    if (folderFilter === id) setFolderFilter(null);
+    showStatus(removeTracks ? 'Folder and its tracks removed from the library.' : 'Folder removed. Its tracks stay in the library.');
+  };
 
   const showStatus = (msg) => {
     setStatusMsg(msg);
@@ -219,18 +256,15 @@ export default function App() {
   const handleSelectFolder = async () => {
     showStatus('Opening file manager to select music folder(s)...');
     try {
-      const res = await window.robosAudio.selectLibraryFolder();
-      if (!res.canceled && res.started) {
+      const res = await window.robosAudio.addLocalFolder();
+      if (res && !res.canceled) {
+        applyFolderState(res);
         setIsScanningLibrary(true);
-        setLibraryScanStatus({
-          current: 0,
-          total: 0,
-          file: 'Discovering audio files in folder(s)...'
-        });
-        showStatus(`Started background scanning of ${res.folders?.length || 1} folder(s)...`);
+        setLibraryScanStatus({ current: 0, total: 0, file: 'Discovering audio files in folder(s)...' });
+        showStatus('Folder added to your library. Scanning in the background...');
       }
     } catch (err) {
-      showStatus('Error scanning folder: ' + err.message);
+      showStatus('Error adding folder: ' + err.message);
     }
   };
 
@@ -783,7 +817,10 @@ export default function App() {
 
   // ── Filtered Library Tracks ───────────────────────────────────────────────
 
+  const activeFolder = folders.find(f => f.id === folderFilter) || null;
+
   const filteredLibrary = library.tracks.filter(t => {
+    if (activeFolder && !(t.filePath === activeFolder.localRoot || (t.filePath || '').startsWith(activeFolder.localRoot + '/'))) return false;
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return (t.title && t.title.toLowerCase().includes(q)) ||
@@ -1395,6 +1432,18 @@ export default function App() {
 
         {/* TAB 2: MEDIA LIBRARY BROWSER */}
         {activeTab === 'library' && (
+          <div className="library-layout">
+          <FolderPanel
+            folders={folders}
+            activeId={folderFilter}
+            onSelect={setFolderFilter}
+            onAddLocal={handleSelectFolder}
+            onAddCloud={() => setActiveTab('cloud')}
+            onRescan={handleRescanFolder}
+            onRename={handleRenameFolder}
+            onRemove={handleRemoveFolder}
+            busyId={syncingFolder === 'all' ? '__all__' : syncingFolder}
+          />
           <div className="media-browser-container">
             <div className="browser-toolbar">
               <div className="search-box">
@@ -1420,7 +1469,7 @@ export default function App() {
                 </button>
                 <button id="btn-browse-add-folder" className="btn-accent" onClick={handleSelectFolder}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
-                  <span>Add Folder via File Manager</span>
+                  <span>Add folder</span>
                 </button>
                 <button className="btn-secondary" onClick={handleAddFiles}>
                   <span>Add Files</span>
@@ -1470,7 +1519,7 @@ export default function App() {
                   <p>{library.tracks.length ? 'No tracks match your search.' : 'No tracks indexed in media library yet.'}</p>
                   {!library.tracks.length && (
                     <button className="btn-accent" onClick={handleSelectFolder} style={{ marginTop: '12px' }}>
-                      Add Folder via File Manager Popup
+                      Add folder Popup
                     </button>
                   )}
                 </div>
@@ -1538,12 +1587,14 @@ export default function App() {
               )}
             </div>
           </div>
+          </div>
         )}
 
         {/* TAB: CLOUD STORAGE (Data Sources FTP / SFTP) */}
         {activeTab === 'cloud' && (
           <CloudBrowser
             showStatus={showStatus}
+            onFolders={(res) => { applyFolderState(res); setActiveTab('library'); }}
             onLibrary={(lib) => { if (lib) setLibrary(lib); }}
           />
         )}
