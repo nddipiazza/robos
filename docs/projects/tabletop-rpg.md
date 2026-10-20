@@ -40,11 +40,12 @@ Other flags in `play.sh`: `--reset` starts a new game instead of resuming, `--pl
 
 ## What is in the game
 
-The game loads a cartridge, a single `.cartridge.json` file that holds heroes, monsters, quests and maps. The canonical verified cartridge ships in `games/tabletop-rpg/cartridges/custom-quest.cartridge.json`.
+The game loads a cartridge, a single `.cartridge.json` file that holds heroes, monsters, quests and maps. Two verified playable cartridges ship in `games/tabletop-rpg/cartridges/`:
 
 | Cartridge | Quests | Maps | Verification |
 |:---|:---|:---|:---|
 | `custom-quest` | Quest 1: Custom Dungeon. Vanquish the Dungeon Boss, explore ancient chambers, and escape to border stairs `[-1, 4]`. | Classic board, 28x19 grid. | **100% Verified Playable**: 296 turns, 21 combat rounds, 315 audit transactions, 0 casualties. |
+| `election-2026-quest-1` | Election 2026: Battle for the Hill. Lead the bipartisan party (Barack Obama, Donald Trump, Hillary Clinton, Bernie Sanders) through the Capitol catacombs to slay all 3 two-headed Hydras (`Talarixon`, `Brownsted`, `El-Rogers`). | Capitol Catacombs, 26x19 grid. | **100% Verified Playable**: 266 turns, 15 combat rounds, 283 audit transactions, 4/4 heroes alive. |
 
 The rules in code:
 
@@ -145,4 +146,6 @@ The end-to-end autonomous proof is implemented in [`games/tabletop-rpg/tests/tes
 
 The test produces an immutable 315-transaction audit ledger, 0 hero casualties (100% survival rate), and turn-by-turn visual evidence.
 
-See the complete [Proof of Viability Interactive Report]({{ '/games/tabletop-rpg/proof-of-viability.html' | relative_url }}) and the [Game Showcase Page]({{ '/games/tabletop-rpg/#proof-of-viability' | relative_url }}).
+For **Election 2026: Battle for the Hill** (`election-2026-quest-1.cartridge.json`), the end-to-end autonomous proof in [`games/tabletop-rpg/tests/test_demo_election_2026_quest_e2e.py`](file:///home/ndipiazza/source/robos/games/tabletop-rpg/tests/test_demo_election_2026_quest_e2e.py) drives the bipartisan party (Barack Obama, Donald Trump, Hillary Clinton, Bernie Sanders) across 266 autonomous steps, 15 combat rounds, and 283 transactions to slay all three 2-square Capitol Hydras (`Talarixon` in TX #167, `Brownsted` in TX #211, and `El-Rogers` in TX #282–283) with 100% hero survival (4/4 alive).
+
+See the complete [Custom Dungeon Proof of Viability Report]({{ '/games/tabletop-rpg/proof-of-viability.html' | relative_url }}), the [Election 2026 Proof of Viability Report]({{ '/games/tabletop-rpg/proof-of-viability-election-2026.html' | relative_url }}), and the [Game Showcase Page]({{ '/games/tabletop-rpg/#proof-of-viability' | relative_url }}).
