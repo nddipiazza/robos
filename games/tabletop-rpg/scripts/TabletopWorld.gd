@@ -174,10 +174,14 @@ func _update_board_metrics() -> void:
 		board_offset = board_sprite.position - Vector2(scaled_w * 0.5, scaled_h * 0.5)
 		tile_size = scaled_w / float(maxi(1, grid_cols))
 
+var top_overlay_canvas: Control = null
+
 func queue_redraw_all() -> void:
 	_update_board_metrics()
 	if has_node("BoardOverlay"):
 		$BoardOverlay.queue_redraw()
+	if top_overlay_canvas and is_instance_valid(top_overlay_canvas):
+		top_overlay_canvas.queue_redraw()
 
 var auto_play_timer: float = 0.0
 var auto_play_step: int = 0
@@ -17047,6 +17051,8 @@ func _setup_turn_overlay_ui() -> void:
 		turn_overlay_btn.queue_free()
 	if flashy_number_panel and is_instance_valid(flashy_number_panel):
 		flashy_number_panel.queue_free()
+	if top_overlay_canvas and is_instance_valid(top_overlay_canvas):
+		top_overlay_canvas.queue_free()
 
 	# 1. Turn Overlay Button ("Rogar (Barbarian)'s turn... Click to roll!" or "turn complete, next turn Dorgan")
 	turn_overlay_btn = Button.new()
@@ -17092,6 +17098,15 @@ func _setup_turn_overlay_ui() -> void:
 
 	ui.add_child(flashy_number_panel)
 
+	# 3. Top-Level Overlay Canvas (renders dialogue bubbles, quest cards, treasure cards, and trap modals ON TOP of turn_overlay_btn)
+	top_overlay_canvas = Control.new()
+	top_overlay_canvas.name = "TopOverlayCanvas"
+	top_overlay_canvas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	top_overlay_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	top_overlay_canvas.z_index = 60
+	top_overlay_canvas.draw.connect(_draw_top_ui_overlays)
+	ui.add_child(top_overlay_canvas)
+
 func show_flashy_roll_number(total: int) -> void:
 	flashy_number_val = total
 	if flashy_number_label:
@@ -17122,6 +17137,12 @@ func get_next_turn_name() -> String:
 func _update_turn_overlay() -> void:
 	if not turn_overlay_btn:
 		return
+
+	var has_blocking_overlay = (not active_dialogue_sequence.is_empty() and bool(active_dialogue_sequence.get("active", false))) \
+		or not active_story_trigger_overlay.is_empty() \
+		or not active_treasure_overlay.is_empty() \
+		or not active_trap_overlay.is_empty()
+	turn_overlay_btn.mouse_filter = Control.MOUSE_FILTER_IGNORE if has_blocking_overlay else Control.MOUSE_FILTER_STOP
 
 	if _quest_completed:
 		turn_overlay_mode = "quest_complete_prompt"
@@ -23041,11 +23062,23 @@ func _draw_board(canvas: CanvasItem) -> void:
 	_draw_active_enemy_turn_highlight(canvas)
 	_draw_floating_texts(canvas)
 	_draw_active_dice_roll(canvas)
-	_draw_trap_sprung_overlay(canvas)
-	_draw_treasure_card_overlay(canvas)
-	_draw_dialogue_bubbles_overlay(canvas)
-	_draw_story_trigger_overlay(canvas)
-	_draw_item_flash_banner(canvas)
+	if not top_overlay_canvas or not is_instance_valid(top_overlay_canvas):
+		_draw_trap_sprung_overlay(canvas)
+		_draw_treasure_card_overlay(canvas)
+		_draw_dialogue_bubbles_overlay(canvas)
+		_draw_story_trigger_overlay(canvas)
+		_draw_item_flash_banner(canvas)
+	else:
+		top_overlay_canvas.queue_redraw()
+
+func _draw_top_ui_overlays() -> void:
+	if not top_overlay_canvas or not is_instance_valid(top_overlay_canvas):
+		return
+	_draw_trap_sprung_overlay(top_overlay_canvas)
+	_draw_treasure_card_overlay(top_overlay_canvas)
+	_draw_dialogue_bubbles_overlay(top_overlay_canvas)
+	_draw_story_trigger_overlay(top_overlay_canvas)
+	_draw_item_flash_banner(top_overlay_canvas)
 
 func _draw_vfx_effects(canvas: CanvasItem) -> void:
 	for vfx in active_vfx:
