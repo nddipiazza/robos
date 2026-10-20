@@ -4690,6 +4690,7 @@
             0,
             13
           ],
+          "exitHidden": true,
           "cartridgeFile": "election-2026-quest-1.cartridge.json",
           "activeRooms": [
             "room-nw-1",
@@ -5900,9 +5901,9 @@
         26,
         19
       ],
-      "robos:savedAt": "2026-10-20T14:11:52.000Z",
-      "robos:playTimeSeconds": 16697,
-      "robos:playTimeFormatted": "4h 38m 17s",
+      "robos:savedAt": "2026-10-20T19:49:52.000Z",
+      "robos:playTimeSeconds": 16711,
+      "robos:playTimeFormatted": "4h 38m 31s",
       "robos:currentRound": 3,
       "robos:currentPhase": "hero_phase",
       "robos:currentRole": "player",
@@ -6183,7 +6184,7 @@
       ],
       "robos:itemsFoundCount": 9,
       "robos:totalPartyGold": 0,
-      "robos:exploredTilesCount": 92,
+      "robos:exploredTilesCount": 216,
       "robos:revealedRooms": [
         "room-sw-11",
         "room-sw-5"
@@ -10875,6 +10876,7 @@
             0,
             13
           ],
+          "exitHidden": true,
           "cartridgeFile": "election-2026-quest-1.cartridge.json",
           "activeRooms": [
             "room-nw-1",
@@ -12085,9 +12087,9 @@
         26,
         19
       ],
-      "robos:savedAt": "2026-10-20T14:11:52.000Z",
-      "robos:playTimeSeconds": 16697,
-      "robos:playTimeFormatted": "4h 38m 17s",
+      "robos:savedAt": "2026-10-20T19:49:52.000Z",
+      "robos:playTimeSeconds": 16711,
+      "robos:playTimeFormatted": "4h 38m 31s",
       "robos:currentRound": 3,
       "robos:currentPhase": "hero_phase",
       "robos:currentRole": "player",
@@ -12368,7 +12370,7 @@
       ],
       "robos:itemsFoundCount": 9,
       "robos:totalPartyGold": 0,
-      "robos:exploredTilesCount": 92,
+      "robos:exploredTilesCount": 216,
       "robos:revealedRooms": [
         "room-sw-11",
         "room-sw-5"

@@ -107,6 +107,7 @@ var starting_stair: Vector2i = Vector2i(1, 1)
 var starting_stair_type: String = "stairs_up_1x1"
 var exit_stair: Vector2i = Vector2i(-1, -1)
 var exit_stair_type: String = "stairs_down_1x1"
+var exit_stair_hidden: bool = false
 var tile_size: float = TILE_SIZE
 var board_offset: Vector2 = BOARD_OFFSET
 var hovered_tile: Vector2i = Vector2i(-1, -1)
@@ -2947,6 +2948,7 @@ func serialize_game_state(screenshot_abs_path: String = "") -> Dictionary:
 		"spell_allocation": s_alloc.duplicate(true),
 		"current_elf_element": current_elf_element,
 		"quest_begun": quest_begun,
+		"exit_stair_hidden": exit_stair_hidden,
 		"game_state": get_game_state()
 	}
 
@@ -3058,6 +3060,9 @@ func restore_saved_game(save_dict: Dictionary = {}) -> bool:
 		story_triggers.clear()
 		for st in data.get("story_triggers", []):
 			story_triggers.append(st.duplicate(true))
+
+	if data.has("exit_stair_hidden"):
+		exit_stair_hidden = bool(data.get("exit_stair_hidden", exit_stair_hidden))
 
 	# Rebuild caches with restored entities
 	_rebuild_spatial_caches()
@@ -3225,6 +3230,12 @@ func _load_active_cartridge(force_fresh: bool = false) -> void:
 		exit_stair_type = str(map_data.get("exitStairType", cart.get("exitStairType", "stairs_down_1x1")))
 	else:
 		exit_stair = Vector2i(-1, -1)
+
+	exit_stair_hidden = bool(map_data.get("exitHidden", map_data.get("exit_hidden", map_data.get("hideExit", cart.get("exitHidden", false)))))
+	if not map_data.has("exitHidden") and not map_data.has("exit_hidden") and not map_data.has("hideExit"):
+		var map_slug_low = (starting_map_id + " " + CartridgeManager.current_cartridge_slug).to_lower()
+		if "election-2026" in map_slug_low or "midterm" in map_slug_low:
+			exit_stair_hidden = true
 
 	var cart_heroes = cart.get("heroes", {})
 	heroes.clear()
@@ -3669,13 +3680,38 @@ func is_starting_stair_tile(tile: Vector2i) -> bool:
 	return tile.x >= r.position.x and tile.x < r.position.x + r.size.x and tile.y >= r.position.y and tile.y < r.position.y + r.size.y
 
 func is_exit_stair_tile(tile: Vector2i) -> bool:
-	if exit_stair == Vector2i(-1, -1):
+	if exit_stair == Vector2i(-1, -1) or exit_stair_hidden:
 		return false
 	var r = get_exit_stair_rect_tiles()
 	return tile.x >= r.position.x and tile.x < r.position.x + r.size.x and tile.y >= r.position.y and tile.y < r.position.y + r.size.y
 
+func is_exit_stair_visible() -> bool:
+	if exit_stair == Vector2i(-1, -1):
+		return false
+	if is_gm_role():
+		return true
+	if exit_stair_hidden:
+		return false
+	for f in furniture:
+		var f_type = str(f.get("type", "")).to_lower()
+		if "stair" in f_type:
+			var fx = int(f.get("x", f.get("position", [0, 0])[0]))
+			var fy = int(f.get("y", f.get("position", [0, 0])[1]))
+			var fw = int(f.get("width", 2 if "2x2" in f_type else 1))
+			var fh = int(f.get("height", 2 if "2x2" in f_type else 1))
+			if exit_stair.x >= fx and exit_stair.x < fx + fw and exit_stair.y >= fy and exit_stair.y < fy + fh:
+				if bool(f.get("hidden", false)):
+					return false
+				break
+	var rm = _get_room_at(exit_stair)
+	if not rm.is_empty():
+		var r_id = str(rm.get("id", ""))
+		if r_id != "":
+			return revealed_rooms.has(r_id)
+	return explored_tiles.has(exit_stair)
+
 func _is_hero_assembled_at_stairs(pos: Vector2i) -> bool:
-	if exit_stair != Vector2i(-1, -1):
+	if exit_stair != Vector2i(-1, -1) and not exit_stair_hidden:
 		if is_exit_stair_tile(pos):
 			return true
 		var er = get_exit_stair_rect_tiles()
@@ -4177,8 +4213,6 @@ func update_party_vision() -> void:
 		vision_sources.append(starting_stair)
 
 	explored_tiles[starting_stair] = true
-	if exit_stair != Vector2i(-1, -1):
-		explored_tiles[exit_stair] = true
 
 	# Unreachable tiles that are not in rooms are permanently visible
 	for u_tile in _unreachable_non_room_tiles.keys():
@@ -14896,6 +14930,14 @@ func _execute_trigger_actions(trigger: Dictionary, hero: Dictionary, start_index
 			"furniture_visible", "furniture_becomes_visible", "reveal_furniture":
 				var target_id = str(act.get("furnitureId", act.get("target", act.get("furnitureName", ""))))
 				var target_low = target_id.to_lower().strip_edges()
+				if target_low in ["exit", "exit_stair", "exit-stair", "quest exit", "quest exit staircase"] and exit_stair != Vector2i(-1, -1):
+					exit_stair_hidden = false
+					_log("[ACTION] ✨ Quest Exit Staircase is revealed at [%d, %d]!" % [exit_stair.x, exit_stair.y])
+					spawn_floating_text(exit_stair, "✨ EXIT REVEALED", Color(0.2, 0.9, 1.0), 2.5)
+					spawn_burst_vfx(board_offset + Vector2((exit_stair.x + 0.5) * tile_size, (exit_stair.y + 0.5) * tile_size), Color(0.3, 0.8, 1.0), 60.0, 0.5)
+					update_party_vision()
+					_update_ui()
+					queue_redraw_all()
 				var found_furn: Dictionary = {}
 				for f in furniture:
 					var fid = str(f.get("id", "")).to_lower()
@@ -23111,8 +23153,8 @@ func _draw_board(canvas: CanvasItem) -> void:
 		var st_w = ThemeDB.fallback_font.get_string_size("STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
 		canvas.draw_string(ThemeDB.fallback_font, Vector2(stair_rect.get_center().x - st_w * 0.5, stair_rect.get_center().y + 3), "STAIR", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.85, 0.9, 1.0, 0.85))
 
-	# Draw Exit Staircase Tile (if present)
-	if exit_stair != Vector2i(-1, -1):
+	# Draw Exit Staircase Tile (if present and visible)
+	if exit_stair != Vector2i(-1, -1) and is_exit_stair_visible():
 		var ex_bounds = get_exit_stair_rect_tiles()
 		var exit_rect = Rect2(board_offset + Vector2(ex_bounds.position.x * tile_size + 2, ex_bounds.position.y * tile_size + 2), Vector2(ex_bounds.size.x * tile_size - 4, ex_bounds.size.y * tile_size - 4))
 		var ex_tex_key = exit_stair_type
@@ -23129,22 +23171,23 @@ func _draw_board(canvas: CanvasItem) -> void:
 		var exit_tex = get_tile_texture(ex_tex_key)
 		if exit_tex == null:
 			exit_tex = get_tile_texture("stairs")
+		var ex_label = "EXIT (HIDDEN)" if (is_gm_role() and exit_stair_hidden) else "EXIT"
 		if exit_tex:
 			canvas.draw_rect(Rect2(exit_rect.position + Vector2(2, 2), exit_rect.size), Color(0.0, 0.0, 0.0, 0.5))
-			canvas.draw_texture_rect(exit_tex, exit_rect, false)
+			canvas.draw_texture_rect(exit_tex, exit_rect, false, Color(1, 1, 1, 0.45) if (is_gm_role() and exit_stair_hidden) else Color(1, 1, 1, 1))
 			canvas.draw_rect(exit_rect, Color(0.20, 0.85, 0.55, 0.9), false, 1.5)
-			var ex_w = ThemeDB.fallback_font.get_string_size("EXIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
+			var ex_w = ThemeDB.fallback_font.get_string_size(ex_label, HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
 			var ex_b = Rect2(exit_rect.get_center().x - ex_w * 0.5 - 3, exit_rect.get_center().y - 4, ex_w + 6, 12)
 			canvas.draw_rect(ex_b, Color(0.06, 0.20, 0.14, 0.85))
 			canvas.draw_rect(ex_b, Color(0.20, 0.85, 0.55, 0.8), false, 1.0)
-			canvas.draw_string(ThemeDB.fallback_font, Vector2(exit_rect.get_center().x - ex_w * 0.5, exit_rect.get_center().y + 5), "EXIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.65, 1.0, 0.80, 0.95))
+			canvas.draw_string(ThemeDB.fallback_font, Vector2(exit_rect.get_center().x - ex_w * 0.5, exit_rect.get_center().y + 5), ex_label, HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.65, 1.0, 0.80, 0.95))
 		else:
 			canvas.draw_rect(exit_rect, Color(0.08, 0.24, 0.16, 0.95))
 			canvas.draw_rect(exit_rect, Color(0.20, 0.85, 0.55, 1.0), false, 1.5)
 			canvas.draw_arc(exit_rect.get_center(), min(ex_bounds.size.x, ex_bounds.size.y) * tile_size * 0.36, 0, TAU, 24, Color(0.18, 0.65, 0.42, 0.8), 1.5)
 			canvas.draw_arc(exit_rect.get_center(), min(ex_bounds.size.x, ex_bounds.size.y) * tile_size * 0.20, 0, TAU, 16, Color(0.35, 0.88, 0.60, 0.9), 1.5)
-			var ex_w = ThemeDB.fallback_font.get_string_size("EXIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
-			canvas.draw_string(ThemeDB.fallback_font, Vector2(exit_rect.get_center().x - ex_w * 0.5, exit_rect.get_center().y + 3), "EXIT", HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.65, 1.0, 0.80, 0.85))
+			var ex_w = ThemeDB.fallback_font.get_string_size(ex_label, HORIZONTAL_ALIGNMENT_CENTER, -1, 8).x
+			canvas.draw_string(ThemeDB.fallback_font, Vector2(exit_rect.get_center().x - ex_w * 0.5, exit_rect.get_center().y + 3), ex_label, HORIZONTAL_ALIGNMENT_CENTER, -1, 8, Color(0.65, 1.0, 0.80, 0.85))
 
 	# Draw Movement Trail (Green line from where hero or monster came from with moves remaining in middle)
 	var is_enemy_moving = (is_enemy_turn_waiting or active_enemy_turn_monster_id != "") and (enemy_turn_stage in ["moving", "pause_after_move", "acting", "waiting_for_action"])

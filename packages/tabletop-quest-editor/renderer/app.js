@@ -23,6 +23,7 @@ const state = {
     startingStairType: 'stairs_up_1x1',
     exitTile: null,
     exitStairType: 'stairs_down_1x1',
+    exitHidden: false,
     doors: [],
     monsters: [],
     furniture: [],
@@ -1044,6 +1045,7 @@ async function loadCartridge(slugOrPath) {
       state.quest.startingStairType = mapData.startingStairType || 'stairs_up_1x1';
       state.quest.exitTile = mapData.exitTile || mapData.exitStair || null;
       state.quest.exitStairType = mapData.exitStairType || 'stairs_down_1x1';
+      state.quest.exitHidden = Boolean(mapData.exitHidden ?? mapData.exit_hidden ?? mapData.hideExit ?? false);
       state.subtool.startStairType = state.quest.startingStairType;
       state.subtool.exitStairType = state.quest.exitStairType;
       if (dom.selectStartStairType) dom.selectStartStairType.value = state.quest.startingStairType;
@@ -1677,6 +1679,7 @@ function buildCartridgePayload() {
         exitTile: q.exitTile || null,
         exitStair: q.exitTile || null,
         exitStairType: q.exitStairType || 'stairs_down_1x1',
+        exitHidden: Boolean(q.exitHidden),
         activeRooms: (bm.rooms || []).map(r => r.id),
         rooms: bm.rooms || [],
         corridors: bm.corridors || [],
@@ -4065,18 +4068,20 @@ function drawBoardLayers(ctx, geom, options = {}) {
     ctx.restore();
 
     // High-visibility EXIT label pill
-    const pillW = Math.min(ew - 4, 46);
+    const isExitHidden = Boolean(state.quest.exitHidden || (stairFurn && stairFurn.hidden));
+    const exitLabel = isExitHidden ? '👻 EXIT' : 'EXIT';
+    const pillW = Math.min(ew - 2, isExitHidden ? 52 : 46);
     ctx.save();
-    ctx.fillStyle = 'rgba(6, 78, 59, 0.9)';
+    ctx.fillStyle = isExitHidden ? 'rgba(88, 28, 135, 0.92)' : 'rgba(6, 78, 59, 0.9)';
     ctx.fillRect(epos.x + (ew - pillW) / 2, epos.y + eh - 13, pillW, 11);
-    ctx.strokeStyle = '#34d399';
+    ctx.strokeStyle = isExitHidden ? '#c084fc' : '#34d399';
     ctx.lineWidth = 1.0;
     ctx.strokeRect(epos.x + (ew - pillW) / 2, epos.y + eh - 13, pillW, 11);
-    ctx.fillStyle = '#6ee7b7';
+    ctx.fillStyle = isExitHidden ? '#e9d5ff' : '#6ee7b7';
     ctx.font = 'bold 8.5px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('EXIT', epos.x + ew / 2, epos.y + eh - 7.5);
+    ctx.fillText(exitLabel, epos.x + ew / 2, epos.y + eh - 7.5);
     ctx.restore();
 
     if (!forExport && state.selectedEntity && state.selectedEntity.type === 'exit') {
@@ -5577,7 +5582,11 @@ function updateInspectorUI() {
   else if (type === 'wall-block') currentTargetEntity = state.quest.wallBlocks[index];
 
   if (dom.inspectHidden) {
-    dom.inspectHidden.checked = Boolean(currentTargetEntity && currentTargetEntity.hidden);
+    if (type === 'exit') {
+      dom.inspectHidden.checked = Boolean(state.quest.exitHidden);
+    } else {
+      dom.inspectHidden.checked = Boolean(currentTargetEntity && currentTargetEntity.hidden);
+    }
   }
 
   if (type === 'monster') {
@@ -5746,8 +5755,8 @@ function updateEntitySummaryList() {
       <div class="entity-item-main">
         <span class="entity-item-icon">🏁</span>
         <div>
-          <div class="entity-item-name">Quest Exit Staircase</div>
-          <div class="entity-item-pos">[${ec}, ${er}] ${isBorder ? '• Border Exit' : ''}</div>
+          <div class="entity-item-name">Quest Exit Staircase${state.quest.exitHidden ? ' <span class="badge-hidden" style="font-size:9px; color:#c084fc;">👻 HIDDEN</span>' : ''}</div>
+          <div class="entity-item-pos">[${ec}, ${er}] ${isBorder ? '• Border Exit' : ''}${state.quest.exitHidden ? ' • Hidden' : ''}</div>
         </div>
       </div>
       <button class="btn btn-sm btn-danger btn-del-entity">🗑️</button>
@@ -8257,6 +8266,7 @@ function setupEventListeners() {
       else if (type === 'trap' && state.quest.traps[index]) state.quest.traps[index].hidden = isHidden;
       else if ((type === 'note' || type === 'trigger') && state.quest.storyTriggers[index]) state.quest.storyTriggers[index].hidden = isHidden;
       else if (type === 'wall-block' && state.quest.wallBlocks[index]) state.quest.wallBlocks[index].hidden = isHidden;
+      else if (type === 'exit') state.quest.exitHidden = isHidden;
       render();
       updateEntitySummaryList();
     });
