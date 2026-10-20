@@ -65,12 +65,24 @@ describe('RobOS Data Sources — Wizard Administration GUI, Google Drive Browser
       const notifs = JSON.parse(fs.readFileSync(notifFile, 'utf8'));
       assert.ok(notifs.some(n => n.title === 'Google Drive Login Required' && n.sticky === true));
 
-      // ── 4. Edit via Wizard to Authenticate & Mount Folder for RobOS ─────────
+      // ── 4. Edit via Wizard to Authenticate & Link Multiple Google Drive Folders ─
       await evalJS(app.port, `document.getElementById('btn-edit-ds').click()`);
       await new Promise(r => setTimeout(r, 300));
 
+      // Add a second linked folder in Wizard Step 2
       await evalJS(app.port, `
         document.getElementById('modal-gdrive-email').value = 'architect@robos.dev';
+        document.getElementById('modal-gdrive-folder').value = 'https://drive.google.com/drive/folders/1QGnPkjx3m22tvqMN_8iR-xexf7uDlsSY';
+        document.getElementById('modal-gdrive-folder-label').value = 'Synthwave';
+        document.getElementById('btn-wiz-add-folder').click();
+      `);
+      await new Promise(r => setTimeout(r, 150));
+
+      await evalJS(app.port, `
+        const extraId = document.querySelector('#wiz-extra-folders-list .wiz-extra-folder-id');
+        const extraLbl = document.querySelector('#wiz-extra-folders-list .wiz-extra-folder-label');
+        if (extraId) extraId.value = 'https://drive.google.com/drive/folders/1AbCdEfGhIjKlMnOpQrStUvWxYz123456';
+        if (extraLbl) extraLbl.value = 'Soundtracks';
         document.getElementById('modal-gdrive-token').value = 'ya29.test_authenticated_session';
         document.getElementById('btn-wiz-next').click();
       `);
@@ -82,7 +94,27 @@ describe('RobOS Data Sources — Wizard Administration GUI, Google Drive Browser
       const authedStatus = await evalJS(app.port, `document.getElementById('ds-status-pill').textContent`);
       assert.ok(authedStatus.includes('Connected'));
 
-      // ── 5. Open 3-Step Add Microsoft OneDrive Wizard ────────────────────────
+      const gdriveEndpointText = await evalJS(app.port, `document.getElementById('ds-detail-endpoint').textContent`);
+      assert.ok(gdriveEndpointText.includes('2 folders'), `Expected 2 linked folders in endpoint summary, got: ${gdriveEndpointText}`);
+
+      // Verify quick-linking a 3rd folder directly from the Storage Browser bar
+      await evalJS(app.port, `
+        document.getElementById('input-quick-link-folder').value = '1ZyXwVuTsRqPoNmLkJiHgFeDcBa654321';
+        document.getElementById('input-quick-link-label').value = 'Podcasts';
+        document.getElementById('btn-quick-link-folder').click();
+      `);
+      await new Promise(r => setTimeout(r, 500));
+
+      const gdriveEndpointAfterQuickLink = await evalJS(app.port, `document.getElementById('ds-detail-endpoint').textContent`);
+      assert.ok(gdriveEndpointAfterQuickLink.includes('3 folders'), `Expected 3 linked folders after quick link, got: ${gdriveEndpointAfterQuickLink}`);
+
+      // Verify root listing shows all 3 linked folders as top-level directories
+      const gdriveRootRows = await evalJS(app.port, `Array.from(document.querySelectorAll('#storage-entries-tbody .entry-name-link')).map(e => e.textContent.trim())`);
+      assert.ok(gdriveRootRows.some(r => r.includes('Synthwave')));
+      assert.ok(gdriveRootRows.some(r => r.includes('Soundtracks')));
+      assert.ok(gdriveRootRows.some(r => r.includes('Podcasts')));
+
+      // ── 5. Open 3-Step Add Microsoft OneDrive Wizard with Multiple Linked Folders ─
       await evalJS(app.port, `document.getElementById('btn-connect-onedrive').click()`);
       await new Promise(r => setTimeout(r, 300));
 
@@ -95,9 +127,20 @@ describe('RobOS Data Sources — Wizard Administration GUI, Google Drive Browser
       await evalJS(app.port, `
         document.getElementById('modal-ds-name').value = 'Personal OneDrive';
         document.getElementById('modal-gdrive-email').value = 'architect@outlook.com';
+        document.getElementById('modal-gdrive-folder').value = '/Music/FLAC';
+        document.getElementById('modal-gdrive-folder-label').value = 'FLAC Library';
+        document.getElementById('btn-wiz-add-folder').click();
+      `);
+      await new Promise(r => setTimeout(r, 150));
+
+      await evalJS(app.port, `(() => {
+        const extraId = document.querySelector('#wiz-extra-folders-list .wiz-extra-folder-id');
+        const extraLbl = document.querySelector('#wiz-extra-folders-list .wiz-extra-folder-label');
+        if (extraId) extraId.value = '/Recordings/LiveSets';
+        if (extraLbl) extraLbl.value = 'Live Sets';
         document.getElementById('modal-gdrive-token').value = 'onedrive_test_authenticated_session';
         document.getElementById('btn-wiz-next').click();
-      `);
+      })()`);
       await new Promise(r => setTimeout(r, 400));
 
       const odTestResult = await evalJS(app.port, `document.getElementById('wiz-test-result').textContent`);
@@ -111,6 +154,9 @@ describe('RobOS Data Sources — Wizard Administration GUI, Google Drive Browser
 
       const odDetailType = await evalJS(app.port, `document.getElementById('ds-detail-type').textContent`);
       assert.strictEqual(odDetailType, 'ONEDRIVE');
+
+      const odEndpointText = await evalJS(app.port, `document.getElementById('ds-detail-endpoint').textContent`);
+      assert.ok(odEndpointText.includes('2 folders'), `Expected 2 linked OneDrive folders, got: ${odEndpointText}`);
     } finally {
       await killApp(app);
     }

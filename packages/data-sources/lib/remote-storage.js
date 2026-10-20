@@ -462,13 +462,97 @@ async function gdriveFetchJson(url, auth, options = {}) {
   return res.json();
 }
 
+function normalizeCloudFoldersArray(ds) {
+  if (!ds) return [];
+  const driver = String(ds.driverType || '').toLowerCase();
+  const isOneDrive = driver === 'onedrive';
+  const rawList = [];
+
+  if (Array.isArray(ds.folders) && ds.folders.length > 0) {
+    for (const item of ds.folders) {
+      if (!item) continue;
+      if (typeof item === 'string') {
+        rawList.push({ id: item, label: '' });
+      } else if (typeof item === 'object') {
+        rawList.push({
+          id: item.id || item.folderId || item.path || (isOneDrive ? '/' : 'root'),
+          label: item.label || item.name || '',
+        });
+      }
+    }
+  } else {
+    const rawSingle = String(ds.folderId || ds.database || (isOneDrive ? '/' : 'root'));
+    const splitParts = rawSingle.split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean);
+    for (const part of splitParts) {
+      rawList.push({ id: part, label: '' });
+    }
+  }
+
+  if (rawList.length === 0) {
+    rawList.push({ id: isOneDrive ? '/' : 'root', label: isOneDrive ? 'OneDrive Root (/)' : 'My Drive (root)' });
+  }
+
+  const seen = new Set();
+  const normalized = [];
+  for (let i = 0; i < rawList.length; i++) {
+    const raw = rawList[i];
+    const cleanId = isOneDrive
+      ? extractOneDriveFolderPath(raw.id)
+      : extractDriveFolderId(raw.id);
+    if (!cleanId || seen.has(cleanId)) continue;
+    seen.add(cleanId);
+
+    let defaultLabel;
+    if (isOneDrive) {
+      defaultLabel = cleanId === '/' ? 'OneDrive Root (/)' : (posixPath.basename(cleanId) || cleanId);
+    } else {
+      defaultLabel = cleanId === 'root' ? 'My Drive (root)' : `Folder (${cleanId.slice(0, 10)})`;
+    }
+    const label = (raw.label && String(raw.label).trim()) || defaultLabel;
+    const baseName = label.replace(/\//g, ' - ').trim() || `Folder ${i + 1}`;
+    normalized.push({
+      id: cleanId,
+      folderId: cleanId,
+      label,
+      virtualName: rawList.length > 1 ? `${baseName} [${cleanId === '/' || cleanId === 'root' ? 'root' : cleanId.slice(0, 6)}]` : baseName,
+    });
+  }
+
+  return normalized;
+}
+
 /**
- * Resolves a POSIX path like "/Engineering Specs & RFCs/Subfolder" to a Google Drive folder ID
- * starting from the data source's root folderId.
+ * Resolves a POSIX path like "/Engineering Specs & RFCs/Subfolder" (or a virtual multi-folder
+ * path when 2+ folders are linked) to a Google Drive folder ID.
  */
 async function resolveGDrivePathToFolderId(ds, auth, remotePath) {
-  const rootId = extractDriveFolderId(ds.folderId || ds.database || 'root');
+  const folders = normalizeCloudFoldersArray(ds);
   const norm = normalizeRemote(remotePath);
+
+  if (folders.length > 1) {
+    if (norm === '/') return '__MULTI_ROOT__';
+    const segments = norm.split('/').filter(Boolean);
+    const firstSeg = segments[0];
+    const matched = folders.find(f =>
+      f.virtualName === firstSeg ||
+      f.label === firstSeg ||
+      f.id === firstSeg
+    ) || folders[0];
+    let currentId = matched.id;
+    for (const seg of segments.slice(1)) {
+      const escapedName = seg.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      const q = `'${currentId}' in parents and name = '${escapedName}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
+      const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&pageSize=10&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+      const data = await gdriveFetchJson(url, auth);
+      if (!data.files || !data.files.length) {
+        throw new Error(`Google Drive folder not found: ${seg} (in ${norm})`);
+      }
+      currentId = data.files[0].id;
+    }
+    return currentId;
+  }
+
+  const rootId = folders[0] ? folders[0].id : extractDriveFolderId(ds.folderId || ds.database || 'root');
   if (norm === '/') return rootId;
 
   const segments = norm.split('/').filter(Boolean);
@@ -488,6 +572,43 @@ async function resolveGDrivePathToFolderId(ds, auth, remotePath) {
 
 async function listGDriveApi(ds, auth, remotePath) {
   const norm = normalizeRemote(remotePath);
+  const folders = normalizeCloudFoldersArray(ds);
+
+  // If 2+ folders are linked to this Google Drive connection, root '/' shows each linked folder
+  if (folders.length > 1 && norm === '/') {
+    const entries = await Promise.all(folders.map(async (f) => {
+      let resolvedName = f.virtualName;
+      if (f.id !== 'root' && (!f.label || f.label.startsWith('Folder ('))) {
+        try {
+          const metaUrl = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(f.id)}?fields=id,name,modifiedTime,webViewLink&supportsAllDrives=true`;
+          const meta = await gdriveFetchJson(metaUrl, auth);
+          if (meta && meta.name) {
+            f.label = meta.name;
+            resolvedName = `${meta.name.replace(/\//g, ' - ')} [${f.id.slice(0, 6)}]`;
+            f.virtualName = resolvedName;
+          }
+        } catch {}
+      }
+      return {
+        name: resolvedName,
+        type: 'dir',
+        size: 0,
+        modified: null,
+        mimeType: 'application/vnd.google-apps.folder',
+        driveId: f.id,
+        webViewLink: f.id === 'root' ? 'https://drive.google.com/drive/my-drive' : `https://drive.google.com/drive/folders/${f.id}`,
+        path: posixPath.join('/', resolvedName),
+      };
+    }));
+    return {
+      path: '/',
+      folderId: folders.map(f => f.id).join(', '),
+      provider: 'gdrive-api',
+      localMountPath: ensureLocalMountDir(ds),
+      entries,
+    };
+  }
+
   const folderId = await resolveGDrivePathToFolderId(ds, auth, norm);
   const q = `'${folderId}' in parents and trashed = false`;
   const fields = 'files(id,name,mimeType,size,modifiedTime,webViewLink,iconLink)';
@@ -664,6 +785,22 @@ function extractOneDriveFolderPath(input) {
   if (protoMatch) {
     return normalizeRemote(protoMatch[1] || '/');
   }
+  // Support OneDrive sharing links or web URLs with ?id=/personal/.../Documents/Folder
+  try {
+    if (s.startsWith('http://') || s.startsWith('https://')) {
+      const u = new URL(s);
+      const idParam = u.searchParams.get('id');
+      if (idParam) {
+        const docIdx = idParam.indexOf('/Documents/');
+        if (docIdx >= 0) {
+          return normalizeRemote(idParam.slice(docIdx + '/Documents'.length));
+        }
+        return normalizeRemote(idParam);
+      }
+      const pathParam = u.searchParams.get('path');
+      if (pathParam) return normalizeRemote(pathParam);
+    }
+  } catch {}
   return normalizeRemote(s);
 }
 
@@ -737,8 +874,25 @@ function getOneDriveBasePrefix(ds) {
 }
 
 function resolveOneDriveFullSubpath(ds, remotePath) {
-  const baseFolder = extractOneDriveFolderPath(ds.folderId || ds.database || '/');
+  const folders = normalizeCloudFoldersArray(ds);
   const sub = normalizeRemote(remotePath || '/');
+
+  if (folders.length > 1) {
+    if (sub === '/') return '/';
+    const segments = sub.split('/').filter(Boolean);
+    const firstSeg = segments[0];
+    const matched = folders.find(f =>
+      f.virtualName === firstSeg ||
+      f.label === firstSeg ||
+      f.id === firstSeg
+    ) || folders[0];
+    const baseFolder = extractOneDriveFolderPath(matched.id || '/');
+    const rest = segments.slice(1).join('/');
+    if (!rest) return baseFolder;
+    return baseFolder === '/' ? posixPath.join('/', rest) : posixPath.join(baseFolder, rest);
+  }
+
+  const baseFolder = folders[0] ? extractOneDriveFolderPath(folders[0].id) : extractOneDriveFolderPath(ds.folderId || ds.database || '/');
   if (baseFolder === '/') return sub;
   if (sub === '/') return baseFolder;
   if (sub === baseFolder || sub.startsWith(baseFolder + '/')) return sub;
@@ -753,6 +907,28 @@ function encodeOneDriveGraphPath(fullPath) {
 
 async function listOneDriveApi(ds, auth, remotePath) {
   const norm = normalizeRemote(remotePath);
+  const folders = normalizeCloudFoldersArray(ds);
+
+  if (folders.length > 1 && norm === '/') {
+    const entries = folders.map((f) => ({
+      name: f.virtualName,
+      type: 'dir',
+      size: 0,
+      modified: null,
+      mimeType: 'inode/directory',
+      driveId: f.id,
+      webViewLink: 'https://onedrive.live.com',
+      path: posixPath.join('/', f.virtualName),
+    }));
+    return {
+      path: '/',
+      folderId: folders.map(f => f.id).join(', '),
+      provider: 'onedrive-graph',
+      localMountPath: ensureLocalMountDir(ds),
+      entries,
+    };
+  }
+
   const fullDrivePath = resolveOneDriveFullSubpath(ds, norm);
   const basePrefix = getOneDriveBasePrefix(ds);
   const encodedPath = encodeOneDriveGraphPath(fullDrivePath);
@@ -884,6 +1060,19 @@ function listLocalMountDir(ds, remotePath) {
 
   if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });
+  }
+
+  // If a Google Drive or OneDrive connection links multiple folders, ensure each linked folder's virtual directory exists at /
+  if (norm === '/' && ds && (ds.driverType === 'gdrive' || ds.driverType === 'onedrive')) {
+    const linked = normalizeCloudFoldersArray(ds);
+    if (linked.length > 1) {
+      for (const f of linked) {
+        const subDir = path.join(rootDir, f.virtualName);
+        if (!fs.existsSync(subDir)) {
+          try { fs.mkdirSync(subDir, { recursive: true }); } catch {}
+        }
+      }
+    }
   }
 
   const rawEntries = fs.readdirSync(targetDir, { withFileTypes: true });
@@ -1497,6 +1686,7 @@ module.exports = {
   createAuthRequiredError,
   extractDriveFolderId,
   extractOneDriveFolderPath,
+  normalizeCloudFoldersArray,
   detectLocalGoogleDriveMounts,
   detectLocalOneDriveMounts,
   ensureLocalMountDir,

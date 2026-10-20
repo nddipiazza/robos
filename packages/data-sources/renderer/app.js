@@ -11,6 +11,7 @@ let currentRemotePath = '/';
 let wizardStep = 1;
 let wizardDriverId = 'gdrive';
 let wizardEditingId = null;
+let wizardExtraFolders = [];
 let wizardAuthState = {
   loggedIn: false,
   user: '',
@@ -18,6 +19,27 @@ let wizardAuthState = {
   refreshToken: '',
   localMountPath: '',
 };
+
+function getDsLinkedFolders(ds) {
+  if (!ds) return [];
+  if (Array.isArray(ds.folders) && ds.folders.length > 0) {
+    return ds.folders.map((f, idx) => {
+      if (typeof f === 'string') return { id: f, label: f, virtualName: f };
+      const id = f.id || f.folderId || f.path || (ds.driverType === 'onedrive' ? '/' : 'root');
+      const label = f.label || f.name || id;
+      const virtualName = f.virtualName || String(label || id).replace(/[\\/]+/g, '_').trim() || `folder-${idx + 1}`;
+      return { id, label, virtualName };
+    });
+  }
+  const fallback = ds.folderId || ds.database || (ds.driverType === 'onedrive' ? '/' : 'root');
+  return [{ id: fallback, label: fallback, virtualName: fallback }];
+}
+
+function formatDsFoldersSummary(ds) {
+  const linked = getDsLinkedFolders(ds);
+  if (linked.length === 1) return linked[0].label !== linked[0].id ? `${linked[0].label} (${linked[0].id})` : linked[0].id;
+  return `${linked.length} folders (${linked.map(f => f.label || f.id).join(', ')})`;
+}
 
 const STORAGE_DRIVERS = new Set(['gdrive', 's3', 'dropbox', 'onedrive', 'webdav', 'sftp', 'ftp', 'local']);
 
@@ -225,9 +247,9 @@ async function renderMainWorkspace() {
 
   const endpointEl = document.getElementById('ds-detail-endpoint');
   if (ds.driverType === 'gdrive') {
-    endpointEl.textContent = `Google Drive · Account: ${ds.user || 'Not signed in'} · Root Folder: ${ds.folderId || 'root'}`;
+    endpointEl.textContent = `Google Drive · Account: ${ds.user || 'Not signed in'} · Linked Folders: ${formatDsFoldersSummary(ds)}`;
   } else if (ds.driverType === 'onedrive') {
-    endpointEl.textContent = `Microsoft OneDrive · Account: ${ds.user || 'Not signed in'} · Root Path: ${ds.folderId || ds.database || '/'}`;
+    endpointEl.textContent = `Microsoft OneDrive · Account: ${ds.user || 'Not signed in'} · Linked Folders: ${formatDsFoldersSummary(ds)}`;
   } else if (isStorageDs(ds)) {
     endpointEl.textContent = `${ds.host || ds.bucket || 'Local Mount'}${ds.port ? ':' + ds.port : ''} · Path: ${ds.database || '/'}`;
   } else {
@@ -285,6 +307,74 @@ async function renderMainWorkspace() {
 
 // ── Cloud Storage Folder Browser ────────────────────────────────────────────
 
+function renderLinkedFoldersBar(ds) {
+  const bar = document.getElementById('storage-linked-folders-bar');
+  const pillsWrap = document.getElementById('storage-linked-folder-pills');
+  const quickInput = document.getElementById('input-quick-link-folder');
+  if (!bar || !pillsWrap) return;
+
+  if (!isOAuthCloudDs(ds)) {
+    bar.classList.add('hidden');
+    return;
+  }
+
+  bar.classList.remove('hidden');
+  if (quickInput) {
+    quickInput.placeholder = ds.driverType === 'onedrive'
+      ? 'Link OneDrive path (e.g. /Music or URL)'
+      : 'Link Google Drive folder URL or ID';
+  }
+
+  const linked = getDsLinkedFolders(ds);
+  const isMulti = linked.length > 1;
+
+  const rootBtnHtml = isMulti
+    ? `<button type="button" class="btn btn-xs ${currentRemotePath === '/' ? 'btn-primary' : 'btn-secondary'} btn-jump-linked-folder" data-path="/">📂 All (${linked.length})</button>`
+    : '';
+
+  const pillsHtml = linked.map((f, idx) => {
+    const targetPath = isMulti ? `/${f.virtualName}` : '/';
+    const isActive = isMulti
+      ? (currentRemotePath === targetPath || currentRemotePath.startsWith(targetPath + '/'))
+      : currentRemotePath === '/';
+    const displayLabel = f.label && f.label !== f.id ? `${f.label} (${f.id.slice(0, 14)}${f.id.length > 14 ? '…' : ''})` : f.id;
+    return `
+      <span style="display:inline-flex;align-items:center;gap:4px;background:${isActive ? 'rgba(88,166,255,0.22)' : 'var(--bg-card)'};border:1px solid ${isActive ? '#58a6ff' : 'var(--border)'};border-radius:14px;padding:2px 8px;font-size:11px;">
+        <button type="button" class="btn-jump-linked-folder" data-path="${esc(targetPath)}" style="background:none;border:none;color:var(--text);cursor:pointer;font-size:11px;padding:0;font-family:var(--mono);" title="Browse linked folder: ${esc(f.id)}">
+          📁 ${esc(displayLabel)}
+        </button>
+        ${isMulti ? `<button type="button" class="btn-remove-linked-folder" data-idx="${idx}" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:12px;padding:0 2px;line-height:1;" title="Unlink this folder">&times;</button>` : ''}
+      </span>
+    `;
+  }).join('');
+
+  pillsWrap.innerHTML = rootBtnHtml + pillsHtml;
+
+  pillsWrap.querySelectorAll('.btn-jump-linked-folder').forEach(btn => {
+    btn.addEventListener('click', () => {
+      loadStorageDirectory(ds, btn.dataset.path || '/');
+    });
+  });
+
+  pillsWrap.querySelectorAll('.btn-remove-linked-folder').forEach(btn => {
+    btn.addEventListener('click', async (ev) => {
+      ev.stopPropagation();
+      const idx = Number(btn.dataset.idx);
+      const nextFolders = linked.filter((_, i) => i !== idx).map(f => ({ id: f.id, label: f.label }));
+      if (nextFolders.length === 0) return;
+      const updated = {
+        ...ds,
+        folders: nextFolders,
+        folderId: nextFolders[0].id,
+      };
+      dsList = await window.dataSources.saveDataSource(updated);
+      cloudFolders = await window.dataSources.getCloudFolders();
+      currentRemotePath = '/';
+      renderAll();
+    });
+  });
+}
+
 async function loadStorageDirectory(ds, remotePath = '/') {
   currentRemotePath = remotePath || '/';
   const tbody = document.getElementById('storage-entries-tbody');
@@ -293,6 +383,7 @@ async function loadStorageDirectory(ds, remotePath = '/') {
 
   providerLabel.textContent = `Provider: ${(ds.driverType || 'Storage').toUpperCase()}`;
   renderBreadcrumbs(currentRemotePath);
+  renderLinkedFoldersBar(ds);
 
   tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px;">Loading folder contents...</td></tr>`;
 
@@ -497,7 +588,7 @@ function renderDetailsTab(ds) {
     { label: 'Status', value: isOAuthCloudDs(ds) && !isCloudLoggedIn(ds) ? 'Login Required (Logged Out)' : (ds.status || 'Connected') },
     { label: 'Account / User', value: ds.user || '—' },
     { label: 'Host / Endpoint', value: ds.host || '—' },
-    { label: 'Folder ID / Database', value: ds.folderId || ds.bucket || ds.database || '/' },
+    { label: isOAuthCloudDs(ds) ? 'Linked Folders' : 'Folder ID / Database', value: isOAuthCloudDs(ds) ? formatDsFoldersSummary(ds) : (ds.folderId || ds.bucket || ds.database || '/') },
     { label: 'Last Checked', value: ds.lastChecked ? ds.lastChecked.slice(0, 19).replace('T', ' ') : '—' },
   ];
 
@@ -570,6 +661,60 @@ function renderWizardProviderCards() {
   });
 }
 
+function syncWizardExtraFoldersFromDom() {
+  const wrap = document.getElementById('wiz-extra-folders-list');
+  if (!wrap) return;
+  const rows = wrap.querySelectorAll('.wiz-extra-folder-row');
+  rows.forEach((row, idx) => {
+    if (wizardExtraFolders[idx]) {
+      const idEl = row.querySelector('.wiz-extra-folder-id');
+      const lblEl = row.querySelector('.wiz-extra-folder-label');
+      if (idEl) wizardExtraFolders[idx].id = idEl.value;
+      if (lblEl) wizardExtraFolders[idx].label = lblEl.value;
+    }
+  });
+}
+
+function renderWizardExtraFolders() {
+  const wrap = document.getElementById('wiz-extra-folders-list');
+  if (!wrap) return;
+  const isOneDrive = wizardDriverId === 'onedrive';
+  const folderPlaceholder = isOneDrive
+    ? 'Additional OneDrive folder path (e.g. /Music or URL)'
+    : 'Additional Google Drive folder URL or ID';
+
+  wrap.innerHTML = wizardExtraFolders.map((f, idx) => `
+    <div class="wiz-extra-folder-row" data-idx="${idx}" style="display:flex;gap:8px;align-items:center;">
+      <input type="text" class="form-input mono wiz-extra-folder-id" data-idx="${idx}" style="flex:2;" value="${esc(f.id || '')}" placeholder="${esc(folderPlaceholder)}"/>
+      <input type="text" class="form-input wiz-extra-folder-label" data-idx="${idx}" style="flex:1;" value="${esc(f.label || '')}" placeholder="Label (optional)"/>
+      <button type="button" class="btn btn-danger-outline btn-xs btn-wiz-remove-folder" data-idx="${idx}" title="Remove folder">&times;</button>
+    </div>
+  `).join('');
+
+  wrap.querySelectorAll('.wiz-extra-folder-id').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const idx = Number(inp.dataset.idx);
+      if (wizardExtraFolders[idx]) wizardExtraFolders[idx].id = inp.value;
+    });
+  });
+
+  wrap.querySelectorAll('.wiz-extra-folder-label').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const idx = Number(inp.dataset.idx);
+      if (wizardExtraFolders[idx]) wizardExtraFolders[idx].label = inp.value;
+    });
+  });
+
+  wrap.querySelectorAll('.btn-wiz-remove-folder').forEach(btn => {
+    btn.addEventListener('click', () => {
+      syncWizardExtraFoldersFromDom();
+      const idx = Number(btn.dataset.idx);
+      wizardExtraFolders.splice(idx, 1);
+      renderWizardExtraFolders();
+    });
+  });
+}
+
 function openAddModal(initialDriverId = null, existingDs = null) {
   wizardEditingId = existingDs ? existingDs.id : null;
   wizardDriverId = existingDs ? existingDs.driverType : (initialDriverId || 'gdrive');
@@ -582,9 +727,18 @@ function openAddModal(initialDriverId = null, existingDs = null) {
       refreshToken: existingDs.refreshToken || '',
       localMountPath: existingDs.localMountPath || '',
     };
+    const linked = getDsLinkedFolders(existingDs);
+    const firstFolder = linked[0] || { id: existingDs.folderId || (wizardDriverId === 'onedrive' ? '/' : 'root'), label: '' };
+    wizardExtraFolders = linked.slice(1).map(f => ({
+      id: f.id,
+      label: f.label && f.label !== f.id ? f.label : '',
+    }));
+
     document.getElementById('modal-ds-name').value = existingDs.name || '';
     document.getElementById('modal-gdrive-email').value = existingDs.user || '';
-    document.getElementById('modal-gdrive-folder').value = existingDs.folderId || 'root';
+    document.getElementById('modal-gdrive-folder').value = firstFolder.id || 'root';
+    const labelEl = document.getElementById('modal-gdrive-folder-label');
+    if (labelEl) labelEl.value = firstFolder.label && firstFolder.label !== firstFolder.id ? firstFolder.label : '';
     document.getElementById('modal-gdrive-local-path').value = existingDs.localMountPath || '';
     document.getElementById('modal-gdrive-token').value = existingDs.accessToken || '';
     document.getElementById('modal-ds-host').value = existingDs.host || '';
@@ -601,6 +755,7 @@ function openAddModal(initialDriverId = null, existingDs = null) {
       refreshToken: '',
       localMountPath: '',
     };
+    wizardExtraFolders = [];
     const drv = drivers.find(d => d.id === wizardDriverId);
     document.getElementById('modal-ds-name').value = wizardDriverId === 'gdrive'
       ? 'My Google Drive'
@@ -609,6 +764,8 @@ function openAddModal(initialDriverId = null, existingDs = null) {
         : (drv ? `My ${drv.name}` : '');
     document.getElementById('modal-gdrive-email').value = '';
     document.getElementById('modal-gdrive-folder').value = wizardDriverId === 'onedrive' ? '/' : 'root';
+    const labelEl = document.getElementById('modal-gdrive-folder-label');
+    if (labelEl) labelEl.value = '';
     document.getElementById('modal-gdrive-local-path').value = '';
     document.getElementById('modal-gdrive-token').value = '';
     document.getElementById('modal-ds-host').value = '';
@@ -624,6 +781,7 @@ function openAddModal(initialDriverId = null, existingDs = null) {
     : 'Add Data Source Wizard';
 
   renderWizardProviderCards();
+  renderWizardExtraFolders();
   updateWizardAuthCardUI();
 
   // If caller asked for a specific driver (e.g. "+ Add Google Drive") or editing, jump right to Step 2
@@ -658,12 +816,14 @@ function updateWizardAuthCardUI() {
   }
   if (folderLbl) {
     folderLbl.innerHTML = isOneDrive
-      ? `Root OneDrive Folder Path <span class="muted">(optional)</span>`
-      : `Root Folder URL or ID <span class="muted">(optional)</span>`;
+      ? `Linked OneDrive Folders (1 or more) <span class="muted">(paths or URLs)</span>`
+      : `Linked Google Drive Folders (1 or more) <span class="muted">(folder URLs or IDs)</span>`;
   }
   if (folderInput) {
-    folderInput.placeholder = isOneDrive ? '/ (entire OneDrive) or /Music' : 'root (My Drive) or folder URL';
+    folderInput.placeholder = isOneDrive ? '/ (entire OneDrive) or /Music' : 'root (My Drive) or folder URL / ID';
   }
+  syncWizardExtraFoldersFromDom();
+  renderWizardExtraFolders();
 
   if (wizardAuthState.loggedIn) {
     card.classList.add('authenticated');
@@ -769,7 +929,27 @@ function buildWizardCandidatePayload() {
   if (wizardDriverId === 'gdrive' || wizardDriverId === 'onedrive') {
     const isOneDrive = wizardDriverId === 'onedrive';
     const email = document.getElementById('modal-gdrive-email').value.trim() || wizardAuthState.user || '';
-    const folderId = document.getElementById('modal-gdrive-folder').value.trim() || (isOneDrive ? '/' : 'root');
+    const primaryFolderId = document.getElementById('modal-gdrive-folder').value.trim() || (isOneDrive ? '/' : 'root');
+    const primaryFolderLabel = (document.getElementById('modal-gdrive-folder-label')?.value || '').trim();
+
+    // Sync any live DOM values from .wiz-extra-folder-row inputs as well
+    const domExtraRows = Array.from(document.querySelectorAll('#wiz-extra-folders-list .wiz-extra-folder-row'));
+    const extraList = domExtraRows.length > 0
+      ? domExtraRows.map(row => ({
+          id: (row.querySelector('.wiz-extra-folder-id')?.value || '').trim(),
+          label: (row.querySelector('.wiz-extra-folder-label')?.value || '').trim(),
+        }))
+      : wizardExtraFolders;
+
+    const allFolders = [
+      { id: primaryFolderId, label: primaryFolderLabel || primaryFolderId },
+      ...extraList.filter(f => f && f.id && f.id.trim()).map(f => ({
+        id: f.id.trim(),
+        label: (f.label && f.label.trim()) || f.id.trim(),
+      })),
+    ];
+
+    const folderId = allFolders[0].id;
     const localMountPath = document.getElementById('modal-gdrive-local-path').value.trim() || wizardAuthState.localMountPath || '';
     const accessToken = document.getElementById('modal-gdrive-token').value.trim() || wizardAuthState.accessToken || '';
     const loggedIn = Boolean(wizardAuthState.loggedIn || accessToken || localMountPath);
@@ -783,7 +963,8 @@ function buildWizardCandidatePayload() {
       port: 443,
       user: email,
       folderId,
-      database: isOneDrive ? folderId : '/',
+      folders: allFolders,
+      database: isOneDrive ? (allFolders.length > 1 ? '/' : folderId) : '/',
       accessToken,
       refreshToken: wizardAuthState.refreshToken || '',
       localMountPath,
@@ -822,11 +1003,15 @@ function renderWizardStep3Review() {
   const grid = document.getElementById('wiz-review-grid');
   if (!grid) return;
 
+  const targetSummary = isOAuthCloudDs(candidate)
+    ? formatDsFoldersSummary(candidate)
+    : (candidate.folderId || candidate.database || '/');
+
   const rows = [
     { label: 'Data Source Name', val: candidate.name },
     { label: 'Provider', val: candidate.driverType.toUpperCase() },
     { label: 'Account / User', val: candidate.user || (isOAuthCloudDs(candidate) ? 'Not signed in yet' : '—') },
-    { label: 'Target / Folder', val: candidate.folderId || candidate.database || '/' },
+    { label: isOAuthCloudDs(candidate) ? 'Linked Folders' : 'Target / Folder', val: targetSummary },
     { label: 'Authentication', val: isOAuthCloudDs(candidate) ? (candidate.loggedIn ? '✅ Browser Signed In' : '🟠 Login Required') : 'Configured' },
   ];
 
@@ -1007,6 +1192,41 @@ function bindEvents() {
   document.getElementById('btn-open-local-mount')?.addEventListener('click', () => {
     const p = document.getElementById('storage-local-mount-path')?.textContent;
     if (p) window.dataSources.openLocalPath(p);
+  });
+
+  // Quick Link Another Folder in Storage Browser
+  document.getElementById('btn-quick-link-folder')?.addEventListener('click', async () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (!ds || !isOAuthCloudDs(ds)) return;
+    const folderInp = document.getElementById('input-quick-link-folder');
+    const labelInp = document.getElementById('input-quick-link-label');
+    const newFolderRaw = (folderInp?.value || '').trim();
+    const newLabelRaw = (labelInp?.value || '').trim();
+    if (!newFolderRaw) return;
+
+    const existing = getDsLinkedFolders(ds).map(f => ({ id: f.id, label: f.label }));
+    existing.push({
+      id: newFolderRaw,
+      label: newLabelRaw || newFolderRaw,
+    });
+    const updated = {
+      ...ds,
+      folders: existing,
+      folderId: existing[0].id,
+    };
+    dsList = await window.dataSources.saveDataSource(updated);
+    cloudFolders = await window.dataSources.getCloudFolders();
+    if (folderInp) folderInp.value = '';
+    if (labelInp) labelInp.value = '';
+    currentRemotePath = '/';
+    renderAll();
+  });
+
+  // Wizard Step 2: + Add Another Folder button
+  document.getElementById('btn-wiz-add-folder')?.addEventListener('click', () => {
+    syncWizardExtraFoldersFromDom();
+    wizardExtraFolders.push({ id: '', label: '' });
+    renderWizardExtraFolders();
   });
 
   // Wizard Modal Controls

@@ -178,6 +178,19 @@
                 <button class="btn-link" id="btn-open-local-mount">📂 Open in File Manager</button>
               </div>
 
+              <!-- Linked Cloud Folders Bar (1 or more linked folders for Google Drive / Microsoft OneDrive) -->
+              <div id="storage-linked-folders-bar" class="storage-info-strip hidden" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:rgba(88,166,255,0.06);border-bottom:1px solid var(--border);padding:8px 14px;">
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;">
+                  <span style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.4px;">Linked Folders:</span>
+                  <div id="storage-linked-folder-pills" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <input type="text" id="input-quick-link-folder" class="form-input mono" style="width:230px;padding:4px 8px;font-size:11px;height:26px;" placeholder="Paste folder URL, ID, or /path"/>
+                  <input type="text" id="input-quick-link-label" class="form-input" style="width:120px;padding:4px 8px;font-size:11px;height:26px;" placeholder="Label (optional)"/>
+                  <button type="button" class="btn btn-secondary btn-xs" id="btn-quick-link-folder">＋ Link Folder</button>
+                </div>
+              </div>
+
               <div class="table-scroll-wrap">
                 <table class="data-table">
                   <thead>
@@ -326,15 +339,21 @@
               </div>
             </div>
 
-            <div class="form-row-2" style="margin-top:14px;">
-              <div class="form-group">
-                <label id="lbl-wiz-cloud-email">Google Account Email <span class="muted">(auto-filled on browser login)</span></label>
-                <input type="email" id="modal-gdrive-email" class="form-input" placeholder="you@gmail.com"/>
+            <div class="form-group" style="margin-top:14px;">
+              <label id="lbl-wiz-cloud-email">Google Account Email <span class="muted">(auto-filled on browser login)</span></label>
+              <input type="email" id="modal-gdrive-email" class="form-input" placeholder="you@gmail.com"/>
+            </div>
+
+            <div class="form-group" style="margin-top:10px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <label id="lbl-wiz-cloud-folder" style="margin-bottom:0;">Linked Folders (1 or more) <span class="muted">(paste folder URLs, IDs, or paths)</span></label>
+                <button type="button" class="btn btn-secondary btn-xs" id="btn-wiz-add-folder">＋ Add Another Folder</button>
               </div>
-              <div class="form-group">
-                <label id="lbl-wiz-cloud-folder">Root Folder URL or ID <span class="muted">(optional)</span></label>
-                <input type="text" id="modal-gdrive-folder" class="form-input mono" value="root" placeholder="root (My Drive) or folder URL"/>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="text" id="modal-gdrive-folder" class="form-input mono" style="flex:2;" value="root" placeholder="root (My Drive) or folder URL / ID"/>
+                <input type="text" id="modal-gdrive-folder-label" class="form-input" style="flex:1;" placeholder="Label (e.g. Music)"/>
               </div>
+              <div id="wiz-extra-folders-list" style="display:flex;flex-direction:column;gap:8px;margin-top:8px;"></div>
             </div>
 
             <details class="wiz-advanced-details">
