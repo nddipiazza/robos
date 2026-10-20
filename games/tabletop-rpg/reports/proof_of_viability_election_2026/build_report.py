@@ -691,6 +691,22 @@ def render_report(asset_prefix: str, use_site_icons: bool) -> str:
           <!-- Populated by JS -->
         </div>
       </div>
+
+      <div class="viewer-card" style="margin-top: 24px;">
+        <div class="viewer-details" style="border-top: none; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 class="viewer-title" style="margin-bottom: 2px;">🎬 Full 266-Turn Autonomous Playthrough Video (WebM)</h3>
+            <p class="viewer-desc" style="margin-bottom: 0;">Complete turn-by-turn timelapse of the Mentor AI clearing the Capitol catacombs and defeating all 3 two-headed Hydras (Talarixon, Brownsted, and El-Rogers).</p>
+          </div>
+          <a class="btn" href="{asset_prefix}/election-2026-playthrough.webm" download>⬇ Download WebM</a>
+        </div>
+        <div class="viewer-display" style="min-height: 360px; padding: 0;">
+          <video controls preload="metadata" poster="{asset_prefix}/m19_el_rogers_slain_victory.jpg" style="width: 100%; max-height: 640px; display: block; background: #000;">
+            <source src="{asset_prefix}/election-2026-playthrough.webm" type="video/webm">
+            Your browser does not support HTML5 WebM video.
+          </video>
+        </div>
+      </div>
     </section>
 
     <!-- Section 2: Key Architectural Innovations -->

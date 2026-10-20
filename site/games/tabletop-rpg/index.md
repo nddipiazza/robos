@@ -266,6 +266,15 @@ TABLETOP_CARTRIDGE=election-2026-quest-1 ./play.sh --demo --reset        # watch
         <figure><img loading="lazy" src="{{ '/assets/games/proof-of-viability-election-2026/m18_final_hydra_assault.jpg' | relative_url }}" alt="Obama, Trump, and Hillary surround El-Rogers in the Senate Cloakroom"><figcaption>Step 261 (TX #276–277): Party surrounds El-Rogers in the Senate Cloakroom.</figcaption></figure>
       </div>
 
+      <div style="margin-top:28px">
+        <figure class="wide" style="margin:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:#0d131f">
+          <video controls preload="metadata" poster="{{ '/assets/games/proof-of-viability-election-2026/m19_el_rogers_slain_victory.jpg' | relative_url }}" style="width:100%;height:auto;display:block;background:#000">
+            <source src="{{ '/assets/games/proof-of-viability-election-2026/election-2026-playthrough.webm' | relative_url }}" type="video/webm">
+          </video>
+          <figcaption style="padding:10px 14px;background:#141f36;font-size:0.85rem;color:#b9b3a4">Full 266-turn autonomous playthrough WebM video: Mentor AI leading Barack Obama, Donald Trump, Hillary Clinton, and Bernie Sanders to vanquish all three Capitol Hydras.</figcaption>
+        </figure>
+      </div>
+
       <h3 style="font-family:'Cinzel',serif;font-size:1.35rem;margin-top:36px;color:#fff">Election 2026 pivotal ledger turning points</h3>
       <table class="t" style="margin-top:14px">
         <tr><th>TX #</th><th>Step</th><th>Round</th><th>Actor</th><th>Action</th><th>Verification Significance</th></tr>
