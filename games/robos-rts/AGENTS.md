@@ -17,13 +17,25 @@ An open-source deterministic 64Hz Real-Time Strategy (RTS) game and engine built
 4. **Unified Bot & Testing API ([`scripts/GameControlServer.gd`](./scripts/GameControlServer.gd) & [`robos_rts_bot_sdk.py`](./robos_rts_bot_sdk.py))**:
    - The exact same `/observation`, `/action`, `/step`, `/directive`, and `/scenario` HTTP/JSON endpoints (`:18095`) and `RTSClient` / `RTSBotBase` Python SDK power both Cucumber E2E tests and custom external bots.
 
+5. **Map Editor ([`scenes/MapEditor.tscn`](./scenes/MapEditor.tscn), [`scripts/editor/`](./scripts/editor/))**:
+   - Top-down editor for `scenarios/*.jsonld`: paint cliff walls / high-ground plateaus / ramps (ramps descend west -> east), place mineral fields, vespene geysers, and unit/structure spawns (type, owner, count, spread, auto-harvest, HP/shield overrides), set player factions & starting resources, and pick `RTSCommanderAI` directive targets.
+   - [`RTSMapDocument.gd`](./scripts/editor/RTSMapDocument.gd) is the UI-free model (undo/redo, hit-testing, validation, JSON-LD I/O); [`MapCanvas.gd`](./scripts/editor/MapCanvas.gd) draws and handles tools; [`MapEditor.gd`](./scripts/editor/MapEditor.gd) builds the panels.
+   - **F5** playtests the map in `RTSMain`; **F10** in-game returns to the editor with undo history intact.
+   - Automation: `POST /editor {"action": ...}` (`open`, `state`, `new`, `load`, `add_rect`, `add_resource`, `add_unit`, `set_field`, `set_map`, `set_player`, `set_directive`, `remove`, `undo`, `redo`, `save`, `playtest`) — `RobOSSC2Client.editor()` in the SDK.
+
 ## Running the Game & E2E Tests
 
 ```bash
 # Launch interactive 2.5D Angled 3D RTS game
 ./play.sh
 
-# Run headless deterministic 3-faction Cucumber E2E test suite (~4.9s for all 5 scenarios)
+# Open the Map Editor (optionally on an existing scenario slug or path)
+./map-editor.sh siege-canyon-defense
+
+# Launch the game directly into a scenario
+./play.sh -- --scenario=siege-canyon-defense
+
+# Run headless deterministic 3-faction Cucumber E2E test suite (~5s for all 6 scenarios)
 ./run_cucumber_tests.py --backend
 ```
 

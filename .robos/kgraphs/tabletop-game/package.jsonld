@@ -82,7 +82,7 @@
         }
       ],
       "robos:specialAbility": "",
-      "robos:icon": "\ud83d\udee1\ufe0f",
+      "robos:icon": "🛡️",
       "robos:startingPosition": [
         1,
         1
@@ -271,7 +271,7 @@
           "value": 100
         }
       ],
-      "robos:icon": "\ud83d\udee1\ufe0f",
+      "robos:icon": "🛡️",
       "robos:startingPosition": [
         1,
         1
@@ -335,7 +335,7 @@
       "robos:tokenColor": "#2563eb",
       "robos:tokenAsset": "assets/tokens/token_bernie_sanders.png",
       "robos:portraitAsset": "assets/portraits/card_bg_bernie_sanders.png",
-      "robos:icon": "\ud83e\ude84",
+      "robos:icon": "🪄",
       "robos:startingPosition": [
         1,
         13
@@ -545,12 +545,12 @@
       "robos:startingWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
       "robos:equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
       "robos:equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
-      "robos:specialAbility": "Spellcaster (1 College \u2014 3 Spells)",
+      "robos:specialAbility": "Spellcaster (1 College — 3 Spells)",
       "robos:gold": 150,
       "robos:tokenColor": "#059669",
       "robos:tokenAsset": "assets/tokens/token_hillary_clinton.png",
       "robos:portraitAsset": "assets/portraits/card_bg_hillary_clinton.png",
-      "robos:icon": "\ud83c\udff9",
+      "robos:icon": "🏹",
       "robos:startingPosition": [
         0,
         13
@@ -765,7 +765,7 @@
       "robos:tokenColor": "#d97706",
       "robos:tokenAsset": "assets/tokens/token_trump.png",
       "robos:portraitAsset": "assets/portraits/card_bg_trump.png",
-      "robos:icon": "\ud83e\ude93",
+      "robos:icon": "🪓",
       "robos:startingPosition": [
         1,
         12
@@ -804,7 +804,7 @@
             "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
           },
           {
-            "text": "I took two cognitive tests \u2014 I aced them!",
+            "text": "I took two cognitive tests — I aced them!",
             "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
           },
           {
@@ -816,7 +816,7 @@
             "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
           },
           {
-            "text": "I'm not just MAGA \u2014 I'm Dark MAGA!",
+            "text": "I'm not just MAGA — I'm Dark MAGA!",
             "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
           },
           {
@@ -980,7 +980,7 @@
       "robos:tokenColor": "#b91c1c",
       "robos:tokenAsset": "assets/tokens/token_obama.png",
       "robos:portraitAsset": "assets/portraits/card_bg_obama.png",
-      "robos:icon": "\u2694\ufe0f",
+      "robos:icon": "⚔️",
       "robos:startingPosition": [
         0,
         12
@@ -1463,7 +1463,7 @@
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Dragon",
       "robos:archetype": "Dragon",
-      "robos:icon": "\ud83d\udc09",
+      "robos:icon": "🐉",
       "robos:bodyPoints": 6,
       "robos:attackDice": 5,
       "robos:defendDice": 5,
@@ -1930,7 +1930,7 @@
         "robos:GameMap",
         "schema:Place"
       ],
-      "dcterms:title": "The Trial \u2014 Quest 1: Lair of the Orc Warlord",
+      "dcterms:title": "The Trial — Quest 1: Lair of the Orc Warlord",
       "robos:width": 26,
       "robos:height": 19,
       "robos:startingSpawn": [
@@ -2024,7 +2024,7 @@
         "robos:TabletopMapConfiguration",
         "schema:Place"
       ],
-      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28\u00d721)",
+      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28×21)",
       "robos:boardSide": "Custom",
       "robos:gridDimensions": [
         28,
@@ -2750,7 +2750,7 @@
         "robos:GameMap",
         "schema:Place"
       ],
-      "dcterms:title": "The Fortress of the Fire King \u2014 Quest 4",
+      "dcterms:title": "The Fortress of the Fire King — Quest 4",
       "robos:width": 26,
       "robos:height": 19,
       "robos:startingSpawn": [
@@ -2827,7 +2827,7 @@
       "robos:weaponType": "Weapon",
       "robos:dice": "4 Attack Dice (No Congressional Vote Required)",
       "robos:cost": "450 GP",
-      "robos:icon": "\ud83d\udca3",
+      "robos:icon": "💣",
       "dcterms:description": "Illegal presidential act #1: Bypasses Article I and the War Powers Resolution completely! Strike any dungeon room without asking Congress and call it a 'limited kinetic operation'.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2846,7 +2846,7 @@
       "robos:weaponType": "Weapon",
       "robos:dice": "3 Attack Dice (Bathroom Chandelier & Corvette Garage Edition)",
       "robos:cost": "300 GP",
-      "robos:icon": "\ud83d\udce6",
+      "robos:icon": "📦",
       "dcterms:description": "Illegal presidential act #2: A heavy cardboard banker's box of Top Secret nuclear & war plans stashed next to a golden toilet and a vintage Corvette. Declassified telepathically!",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2865,7 +2865,7 @@
       "robos:weaponType": "Weapon",
       "robos:dice": "3 Attack Dice (Erases All Past & Future Crimes)",
       "robos:cost": "350 GP",
-      "robos:icon": "\ud83d\udd28",
+      "robos:icon": "🔨",
       "dcterms:description": "Illegal presidential act #3: Signed at 11:59 PM on the last day in office! Preemptively pardons family members, political cronies, and campaign donors for a decade of dungeon raids.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2884,7 +2884,7 @@
       "robos:weaponType": "Weapon",
       "robos:dice": "3 Attack Dice (Ignores Supreme Court & Congress)",
       "robos:cost": "280 GP",
-      "robos:icon": "\ud83d\udd8a\ufe0f",
+      "robos:icon": "🖊️",
       "dcterms:description": "Illegal presidential act #4: Declares a fake 'National Dungeon Emergency' to spend 500 Billion GP, levy random tariffs, and rewrite laws with a single Sharpie stroke.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2903,7 +2903,7 @@
       "robos:weaponType": "Ranged Weapon",
       "robos:dice": "3 Attack Dice (Emoluments Clause Drain)",
       "robos:cost": "420 GP",
-      "robos:icon": "\ud83e\ude99",
+      "robos:icon": "🪙",
       "dcterms:description": "Illegal presidential act #5: Launches an official presidential crypto token 48 hours before the quest starts, draining every monster's gold purse while insiders cash out.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2922,7 +2922,7 @@
       "robos:weaponType": "Ranged Weapon",
       "robos:dice": "3 Attack Dice (Straight-Line Lawfare)",
       "robos:cost": "350 GP",
-      "robos:icon": "\ud83c\udff9",
+      "robos:icon": "🏹",
       "dcterms:description": "Illegal presidential act #6: Fires 400-page federal indictments and retaliatory IRS audits across the corridor at political opponents during election season.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2941,7 +2941,7 @@
       "robos:weaponType": "Armor",
       "robos:dice": "+2 Defend Dice (Total Legal Invulnerability)",
       "robos:cost": "500 GP",
-      "robos:icon": "\ud83d\udee1\ufe0f",
+      "robos:icon": "🛡️",
       "dcterms:description": "Any illegal dungeon act committed while holding this shield is automatically declared a Core Official Constitutional Act.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2960,7 +2960,7 @@
       "robos:itemType": "potion",
       "robos:effect": "Restores 4 BP, but forces a 10-minute rant about microaggressions or woke M&Ms",
       "robos:cost": 100,
-      "robos:icon": "\u2744\ufe0f",
+      "robos:icon": "❄️",
       "dcterms:description": "Brewed from pure bipartisan fragility whenever someone encounters a joke, a pronoun, or a holiday coffee cup they slightly dislike.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2979,7 +2979,7 @@
       "robos:itemType": "relic",
       "robos:effect": "Takes away abortion & personal healthcare choices in the room, replacing them with a politician committee",
       "robos:cost": 200,
-      "robos:icon": "\ud83d\udcdc",
+      "robos:icon": "📜",
       "dcterms:description": "Overturns 50 years of settled bodily autonomy precedent overnight while claiming 'we just sent the decision back to the dungeon states!'",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -2998,7 +2998,7 @@
       "robos:itemType": "relic",
       "robos:effect": "Supporting things 100% just because your party does! +2 Attack Dice when reversing your opinion from yesterday",
       "robos:cost": 150,
-      "robos:icon": "\ud83e\ude74",
+      "robos:icon": "🩴",
       "dcterms:description": "Lets a hero passionately cheer for the exact policy they called treason five minutes ago because their party leader just endorsed it.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -3017,8 +3017,8 @@
       "robos:itemType": "tool",
       "robos:effect": "Fear of Israel & Middle East questions: deflects press inquiries while auto-wiring 20 Billion GP",
       "robos:cost": 175,
-      "robos:icon": "\ud83d\udcfa",
-      "dcterms:description": "Activated the moment anyone brings up Israel or the Middle East\u2014sweats profusely, mutters a 15-second canned platitude, and dives out the nearest dungeon window.",
+      "robos:icon": "📺",
+      "dcterms:description": "Activated the moment anyone brings up Israel or the Middle East—sweats profusely, mutters a 15-second canned platitude, and dives out the nearest dungeon window.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     },
@@ -3036,7 +3036,7 @@
       "robos:itemType": "artifact",
       "robos:effect": "Mints 500 GP instantly, but spawns an Inflation Spawn and makes eggs cost 25 GP",
       "robos:cost": 300,
-      "robos:icon": "\ud83d\udda8\ufe0f",
+      "robos:icon": "🖨️",
       "dcterms:description": "Bipartisan economic magic: solves high prices by printing trillions of new gold coins and calling the resulting inflation 'transitory'.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -3048,7 +3048,7 @@
         "robos:TabletopQuestSaveState",
         "schema:Action"
       ],
-      "dcterms:title": "Quest State \u2014 Round 1 (Dwarf (Hero 2 of 4))",
+      "dcterms:title": "Quest State — Round 1 (Dwarf (Hero 2 of 4))",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop",
       "robos:questSlug": "custom-quest",
@@ -3267,7 +3267,7 @@
           "type": "equipment",
           "holder": "Barbarian",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "barbarian-healing_potion-1",
@@ -3275,7 +3275,7 @@
           "type": "potion",
           "holder": "Barbarian",
           "source": "Hero Inventory",
-          "icon": "\ud83e\uddea"
+          "icon": "🧪"
         },
         {
           "id": "dwarf-shortsword-0",
@@ -3283,7 +3283,7 @@
           "type": "equipment",
           "holder": "Dwarf",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "dwarf-healing_potion-1",
@@ -3291,7 +3291,7 @@
           "type": "potion",
           "holder": "Dwarf",
           "source": "Hero Inventory",
-          "icon": "\ud83e\uddea"
+          "icon": "🧪"
         },
         {
           "id": "elf-shortsword-0",
@@ -3299,7 +3299,7 @@
           "type": "equipment",
           "holder": "Elf",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "elf-healing_potion-1",
@@ -3307,7 +3307,7 @@
           "type": "potion",
           "holder": "Elf",
           "source": "Hero Inventory",
-          "icon": "\ud83e\uddea"
+          "icon": "🧪"
         },
         {
           "id": "wizard-dagger-0",
@@ -3315,7 +3315,7 @@
           "type": "equipment",
           "holder": "Wizard",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "wizard-staff-1",
@@ -3323,7 +3323,7 @@
           "type": "equipment",
           "holder": "Wizard",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "wizard-healing_potion-2",
@@ -3331,7 +3331,7 @@
           "type": "potion",
           "holder": "Wizard",
           "source": "Hero Inventory",
-          "icon": "\ud83e\uddea"
+          "icon": "🧪"
         }
       ],
       "robos:itemsFoundCount": 9,
@@ -3390,7 +3390,7 @@
           "tokenColor": "#b91c1c",
           "tokenAsset": "assets/tokens/token_obama.png",
           "portraitAsset": "assets/portraits/card_bg_obama.png",
-          "icon": "\u2694\ufe0f",
+          "icon": "⚔️",
           "startingPosition": [
             0,
             12
@@ -3431,7 +3431,7 @@
           "robos:equippedArmor": "Chiseled Commander Toughness (2 Defend Dice)",
           "robos:specialAbility": "Bipartisan Cleave (Melee Specialist)",
           "robos:tokenColor": "#b91c1c",
-          "robos:icon": "\u2694\ufe0f",
+          "robos:icon": "⚔️",
           "robos:startingPosition": [
             0,
             12
@@ -3682,7 +3682,7 @@
           "tokenColor": "#d97706",
           "tokenAsset": "assets/tokens/token_trump.png",
           "portraitAsset": "assets/portraits/card_bg_trump.png",
-          "icon": "\ud83e\ude93",
+          "icon": "🪓",
           "startingPosition": [
             1,
             12
@@ -3723,7 +3723,7 @@
           "robos:equippedArmor": "Gold-Plated Rune Mail (2 Defend Dice)",
           "robos:specialAbility": "Disarm Traps & Red-Tape Vaults",
           "robos:tokenColor": "#d97706",
-          "robos:icon": "\ud83e\ude93",
+          "robos:icon": "🪓",
           "robos:startingPosition": [
             1,
             12
@@ -3750,7 +3750,7 @@
           "robos:audioLines": {
             "turnStart": [
               {
-                "text": "They're eating the dogs! Sleepy Crooked Joe Biden \u2014 I really don't know what he said!",
+                "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
                 "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
               },
               {
@@ -3758,15 +3758,15 @@
                 "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
               },
               {
-                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace \u2014 I don't even know who this woman is!",
+                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
                 "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
               },
               {
-                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters \u2014 he called them garbage, no way!",
+                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
                 "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
               },
               {
-                "text": "Well, I took two tests \u2014 cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+                "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
                 "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
               },
               {
@@ -3784,7 +3784,7 @@
             ],
             "moving": [
               {
-                "text": "They're eating the dogs! Sleepy Crooked Joe Biden \u2014 I really don't know what he said!",
+                "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
                 "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
               },
               {
@@ -3792,15 +3792,15 @@
                 "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
               },
               {
-                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace \u2014 I don't even know who this woman is!",
+                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
                 "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
               },
               {
-                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters \u2014 he called them garbage, no way!",
+                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
                 "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
               },
               {
-                "text": "Well, I took two tests \u2014 cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+                "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
                 "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
               },
               {
@@ -3818,7 +3818,7 @@
             ],
             "attacking": [
               {
-                "text": "They're eating the dogs! Sleepy Crooked Joe Biden \u2014 I really don't know what he said!",
+                "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
                 "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
               },
               {
@@ -3826,15 +3826,15 @@
                 "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
               },
               {
-                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace \u2014 I don't even know who this woman is!",
+                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
                 "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
               },
               {
-                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters \u2014 he called them garbage, no way!",
+                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
                 "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
               },
               {
-                "text": "Well, I took two tests \u2014 cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+                "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
                 "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
               },
               {
@@ -3852,7 +3852,7 @@
             ],
             "attacked": [
               {
-                "text": "They're eating the dogs! Sleepy Crooked Joe Biden \u2014 I really don't know what he said!",
+                "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
                 "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
               },
               {
@@ -3860,15 +3860,15 @@
                 "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
               },
               {
-                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace \u2014 I don't even know who this woman is!",
+                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
                 "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
               },
               {
-                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters \u2014 he called them garbage, no way!",
+                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
                 "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
               },
               {
-                "text": "Well, I took two tests \u2014 cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+                "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
                 "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
               },
               {
@@ -3886,7 +3886,7 @@
             ],
             "defended": [
               {
-                "text": "They're eating the dogs! Sleepy Crooked Joe Biden \u2014 I really don't know what he said!",
+                "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
                 "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
               },
               {
@@ -3894,15 +3894,15 @@
                 "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
               },
               {
-                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace \u2014 I don't even know who this woman is!",
+                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
                 "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
               },
               {
-                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters \u2014 he called them garbage, no way!",
+                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
                 "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
               },
               {
-                "text": "Well, I took two tests \u2014 cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+                "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
                 "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
               },
               {
@@ -3920,7 +3920,7 @@
             ],
             "castingMagic": [
               {
-                "text": "They're eating the dogs! Sleepy Crooked Joe Biden \u2014 I really don't know what he said!",
+                "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
                 "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
               },
               {
@@ -3928,15 +3928,15 @@
                 "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
               },
               {
-                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace \u2014 I don't even know who this woman is!",
+                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
                 "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
               },
               {
-                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters \u2014 he called them garbage, no way!",
+                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
                 "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
               },
               {
-                "text": "Well, I took two tests \u2014 cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+                "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
                 "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
               },
               {
@@ -3970,11 +3970,11 @@
           "gold": 150,
           "equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
           "equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
-          "specialAbility": "Spellcaster (1 College \u2014 3 Spells)",
+          "specialAbility": "Spellcaster (1 College — 3 Spells)",
           "tokenColor": "#059669",
           "tokenAsset": "assets/tokens/token_hillary_clinton.png",
           "portraitAsset": "assets/portraits/card_bg_hillary_clinton.png",
-          "icon": "\ud83c\udff9",
+          "icon": "🏹",
           "startingPosition": [
             0,
             13
@@ -4013,9 +4013,9 @@
           "robos:gold": 150,
           "robos:equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
           "robos:equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
-          "robos:specialAbility": "Spellcaster (1 College \u2014 3 Spells)",
+          "robos:specialAbility": "Spellcaster (1 College — 3 Spells)",
           "robos:tokenColor": "#059669",
-          "robos:icon": "\ud83c\udff9",
+          "robos:icon": "🏹",
           "robos:startingPosition": [
             0,
             13
@@ -4045,7 +4045,7 @@
               "name": "Water of Healing",
               "element": "water",
               "category": "Base Game",
-              "icon": "\ud83d\udca7",
+              "icon": "💧",
               "description": "Restores up to 4 lost Body Points to any Hero.",
               "effect": "heal-bp",
               "val": 4
@@ -4056,7 +4056,7 @@
               "name": "Sleep",
               "element": "water",
               "category": "Base Game",
-              "icon": "\ud83d\udca4",
+              "icon": "💤",
               "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
               "effect": "status-sleep",
               "val": 1
@@ -4067,7 +4067,7 @@
               "name": "Veil of Mist",
               "element": "water",
               "category": "Base Game",
-              "icon": "\ud83c\udf2b\ufe0f",
+              "icon": "🌫️",
               "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
               "effect": "status-stealth",
               "val": 1
@@ -4092,7 +4092,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
               },
               {
-                "text": "Using clean renewable energy as the key into coal country \u2014 because we're going to put a lot of coal miners and coal companies out of business!",
+                "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
                 "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
               },
               {
@@ -4104,7 +4104,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
               },
               {
-                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy \u2014 first we have to bring them to heel!",
+                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
                 "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
               }
             ],
@@ -4126,7 +4126,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
               },
               {
-                "text": "Using clean renewable energy as the key into coal country \u2014 because we're going to put a lot of coal miners and coal companies out of business!",
+                "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
                 "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
               },
               {
@@ -4138,7 +4138,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
               },
               {
-                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy \u2014 first we have to bring them to heel!",
+                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
                 "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
               }
             ],
@@ -4160,7 +4160,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
               },
               {
-                "text": "Using clean renewable energy as the key into coal country \u2014 because we're going to put a lot of coal miners and coal companies out of business!",
+                "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
                 "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
               },
               {
@@ -4172,7 +4172,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
               },
               {
-                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy \u2014 first we have to bring them to heel!",
+                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
                 "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
               }
             ],
@@ -4194,7 +4194,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
               },
               {
-                "text": "Using clean renewable energy as the key into coal country \u2014 because we're going to put a lot of coal miners and coal companies out of business!",
+                "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
                 "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
               },
               {
@@ -4206,7 +4206,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
               },
               {
-                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy \u2014 first we have to bring them to heel!",
+                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
                 "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
               }
             ],
@@ -4228,7 +4228,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
               },
               {
-                "text": "Using clean renewable energy as the key into coal country \u2014 because we're going to put a lot of coal miners and coal companies out of business!",
+                "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
                 "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
               },
               {
@@ -4240,7 +4240,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
               },
               {
-                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy \u2014 first we have to bring them to heel!",
+                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
                 "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
               }
             ],
@@ -4262,7 +4262,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
               },
               {
-                "text": "Using clean renewable energy as the key into coal country \u2014 because we're going to put a lot of coal miners and coal companies out of business!",
+                "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
                 "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
               },
               {
@@ -4274,7 +4274,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
               },
               {
-                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy \u2014 first we have to bring them to heel!",
+                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
                 "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
               }
             ]
@@ -4300,7 +4300,7 @@
           "tokenColor": "#2563eb",
           "tokenAsset": "assets/tokens/token_bernie_sanders.png",
           "portraitAsset": "assets/portraits/card_bg_bernie_sanders.png",
-          "icon": "\ud83e\ude84",
+          "icon": "🪄",
           "startingPosition": [
             1,
             13
@@ -4341,7 +4341,7 @@
           "robos:equippedArmor": "Starry Wizard Hat & Vermont Wool Mittens (2 Defend Dice)",
           "robos:specialAbility": "Master Spellcaster (3 Colleges, 9 Spells)",
           "robos:tokenColor": "#2563eb",
-          "robos:icon": "\ud83e\ude84",
+          "robos:icon": "🪄",
           "robos:startingPosition": [
             1,
             13
@@ -4371,7 +4371,7 @@
               "name": "Heal Body",
               "element": "earth",
               "category": "Base Game",
-              "icon": "\ud83d\udc96",
+              "icon": "💖",
               "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
               "effect": "heal-bp",
               "val": 4
@@ -4382,7 +4382,7 @@
               "name": "Pass Through Rock",
               "element": "earth",
               "category": "Base Game",
-              "icon": "\ud83e\uddf1",
+              "icon": "🧱",
               "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
               "effect": "phase-walls",
               "val": 1
@@ -4393,7 +4393,7 @@
               "name": "Rock Skin",
               "element": "earth",
               "category": "Base Game",
-              "icon": "\ud83d\udee1\ufe0f",
+              "icon": "🛡️",
               "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
               "effect": "buff-def",
               "val": 1
@@ -4404,7 +4404,7 @@
               "name": "Ball of Flame",
               "element": "fire",
               "category": "Base Game",
-              "icon": "\u2604\ufe0f",
+              "icon": "☄️",
               "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
               "effect": "damage-bp",
               "val": 2
@@ -4415,7 +4415,7 @@
               "name": "Courage",
               "element": "fire",
               "category": "Base Game",
-              "icon": "\ud83e\udd81",
+              "icon": "🦁",
               "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
               "effect": "buff-atk",
               "val": 2
@@ -4426,7 +4426,7 @@
               "name": "Fire of Wrath",
               "element": "fire",
               "category": "Base Game",
-              "icon": "\ud83d\udd25",
+              "icon": "🔥",
               "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
               "effect": "damage-bp",
               "val": 1
@@ -4437,7 +4437,7 @@
               "name": "Genie",
               "element": "air",
               "category": "Base Game",
-              "icon": "\ud83e\uddde",
+              "icon": "🧞",
               "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
               "effect": "summon-attack",
               "val": 5
@@ -4448,7 +4448,7 @@
               "name": "Swift Wind",
               "element": "air",
               "category": "Base Game",
-              "icon": "\ud83d\udca8",
+              "icon": "💨",
               "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
               "effect": "buff-move",
               "val": 2
@@ -4459,7 +4459,7 @@
               "name": "Tempest",
               "element": "air",
               "category": "Base Game",
-              "icon": "\ud83c\udf2a\ufe0f",
+              "icon": "🌪️",
               "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
               "effect": "status-freeze",
               "val": 1
@@ -4468,7 +4468,7 @@
           "robos:audioLines": {
             "turnStart": [
               {
-                "text": "We live in a world today where there are several hundred million people starving to death \u2014 they're starving to death right now!",
+                "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
                 "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
               },
               {
@@ -4476,11 +4476,11 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
               },
               {
-                "text": "In Sweden, they've had socialist governments for decades \u2014 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+                "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
                 "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
               },
               {
-                "text": "They say we're getting tough on crime \u2014 if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+                "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
                 "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
               },
               {
@@ -4496,13 +4496,13 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
               },
               {
-                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time \u2014 is there any wonder why so many millions of Americans feel stressed out?!",
+                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
                 "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
               }
             ],
             "moving": [
               {
-                "text": "We live in a world today where there are several hundred million people starving to death \u2014 they're starving to death right now!",
+                "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
                 "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
               },
               {
@@ -4510,11 +4510,11 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
               },
               {
-                "text": "In Sweden, they've had socialist governments for decades \u2014 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+                "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
                 "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
               },
               {
-                "text": "They say we're getting tough on crime \u2014 if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+                "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
                 "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
               },
               {
@@ -4530,13 +4530,13 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
               },
               {
-                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time \u2014 is there any wonder why so many millions of Americans feel stressed out?!",
+                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
                 "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
               }
             ],
             "attacking": [
               {
-                "text": "We live in a world today where there are several hundred million people starving to death \u2014 they're starving to death right now!",
+                "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
                 "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
               },
               {
@@ -4544,11 +4544,11 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
               },
               {
-                "text": "In Sweden, they've had socialist governments for decades \u2014 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+                "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
                 "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
               },
               {
-                "text": "They say we're getting tough on crime \u2014 if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+                "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
                 "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
               },
               {
@@ -4564,13 +4564,13 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
               },
               {
-                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time \u2014 is there any wonder why so many millions of Americans feel stressed out?!",
+                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
                 "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
               }
             ],
             "attacked": [
               {
-                "text": "We live in a world today where there are several hundred million people starving to death \u2014 they're starving to death right now!",
+                "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
                 "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
               },
               {
@@ -4578,11 +4578,11 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
               },
               {
-                "text": "In Sweden, they've had socialist governments for decades \u2014 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+                "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
                 "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
               },
               {
-                "text": "They say we're getting tough on crime \u2014 if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+                "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
                 "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
               },
               {
@@ -4598,13 +4598,13 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
               },
               {
-                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time \u2014 is there any wonder why so many millions of Americans feel stressed out?!",
+                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
                 "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
               }
             ],
             "defended": [
               {
-                "text": "We live in a world today where there are several hundred million people starving to death \u2014 they're starving to death right now!",
+                "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
                 "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
               },
               {
@@ -4612,11 +4612,11 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
               },
               {
-                "text": "In Sweden, they've had socialist governments for decades \u2014 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+                "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
                 "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
               },
               {
-                "text": "They say we're getting tough on crime \u2014 if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+                "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
                 "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
               },
               {
@@ -4632,13 +4632,13 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
               },
               {
-                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time \u2014 is there any wonder why so many millions of Americans feel stressed out?!",
+                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
                 "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
               }
             ],
             "castingMagic": [
               {
-                "text": "We live in a world today where there are several hundred million people starving to death \u2014 they're starving to death right now!",
+                "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
                 "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
               },
               {
@@ -4646,11 +4646,11 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
               },
               {
-                "text": "In Sweden, they've had socialist governments for decades \u2014 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+                "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
                 "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
               },
               {
-                "text": "They say we're getting tough on crime \u2014 if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+                "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
                 "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
               },
               {
@@ -4666,7 +4666,7 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
               },
               {
-                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time \u2014 is there any wonder why so many millions of Americans feel stressed out?!",
+                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
                 "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
               }
             ]
@@ -4680,7 +4680,7 @@
           "id": "election-2026-quest-1",
           "slug": "election-2026-quest-1",
           "title": "Quest 1: Battle for the Hill",
-          "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office\u2014defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
+          "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office—defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
           "mapConfigId": "midterm-election-capitol",
           "ruleset": "heroquest",
           "goldReward": 150,
@@ -4778,7 +4778,7 @@
           "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
           "robos:specialAbility": "Greatest strength and vitality in melee combat",
           "robos:tokenColor": "#b91c1c",
-          "robos:icon": "\u2694\ufe0f",
+          "robos:icon": "⚔️",
           "robos:startingPosition": [
             0,
             1
@@ -4856,7 +4856,7 @@
           "robos:equippedArmor": "Shield & Chainmail (+2 Defend Dice)",
           "robos:specialAbility": "Disarms traps without needing a toolkit",
           "robos:tokenColor": "#d97706",
-          "robos:icon": "\ud83e\ude93",
+          "robos:icon": "🪓",
           "robos:startingPosition": [
             1,
             0
@@ -4932,7 +4932,7 @@
           "robos:equippedArmor": "Elven Leather & Cloak (+2 Defend Dice)",
           "robos:specialAbility": "Master of blade and 1 Elemental Spell deck (3 spells)",
           "robos:tokenColor": "#15803d",
-          "robos:icon": "\ud83c\udff9",
+          "robos:icon": "🏹",
           "robos:startingPosition": [
             1,
             1
@@ -4960,7 +4960,7 @@
               "name": "Water of Healing",
               "element": "water",
               "category": "Base Game",
-              "icon": "\ud83d\udca7",
+              "icon": "💧",
               "description": "Restores up to 4 lost Body Points to any Hero.",
               "effect": "heal-bp",
               "val": 4
@@ -4971,7 +4971,7 @@
               "name": "Sleep",
               "element": "water",
               "category": "Base Game",
-              "icon": "\ud83d\udca4",
+              "icon": "💤",
               "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
               "effect": "status-sleep",
               "val": 1
@@ -4982,7 +4982,7 @@
               "name": "Veil of Mist",
               "element": "water",
               "category": "Base Game",
-              "icon": "\ud83c\udf2b\ufe0f",
+              "icon": "🌫️",
               "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
               "effect": "status-stealth",
               "val": 1
@@ -5042,7 +5042,7 @@
           "robos:equippedArmor": "Wizard Cloak (2 Defend Dice)",
           "robos:specialAbility": "Wields 3 Elemental Spell decks (9 spells total)",
           "robos:tokenColor": "#7c3aed",
-          "robos:icon": "\ud83d\udd2e",
+          "robos:icon": "🔮",
           "robos:startingPosition": [
             0,
             0
@@ -5070,7 +5070,7 @@
               "name": "Heal Body",
               "element": "earth",
               "category": "Base Game",
-              "icon": "\ud83d\udc96",
+              "icon": "💖",
               "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
               "effect": "heal-bp",
               "val": 4
@@ -5081,7 +5081,7 @@
               "name": "Pass Through Rock",
               "element": "earth",
               "category": "Base Game",
-              "icon": "\ud83e\uddf1",
+              "icon": "🧱",
               "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
               "effect": "phase-walls",
               "val": 1
@@ -5092,7 +5092,7 @@
               "name": "Rock Skin",
               "element": "earth",
               "category": "Base Game",
-              "icon": "\ud83d\udee1\ufe0f",
+              "icon": "🛡️",
               "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
               "effect": "buff-def",
               "val": 1
@@ -5103,7 +5103,7 @@
               "name": "Ball of Flame",
               "element": "fire",
               "category": "Base Game",
-              "icon": "\u2604\ufe0f",
+              "icon": "☄️",
               "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
               "effect": "damage-bp",
               "val": 2
@@ -5114,7 +5114,7 @@
               "name": "Courage",
               "element": "fire",
               "category": "Base Game",
-              "icon": "\ud83e\udd81",
+              "icon": "🦁",
               "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
               "effect": "buff-atk",
               "val": 2
@@ -5125,7 +5125,7 @@
               "name": "Fire of Wrath",
               "element": "fire",
               "category": "Base Game",
-              "icon": "\ud83d\udd25",
+              "icon": "🔥",
               "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
               "effect": "damage-bp",
               "val": 1
@@ -5136,7 +5136,7 @@
               "name": "Genie",
               "element": "air",
               "category": "Base Game",
-              "icon": "\ud83e\uddde",
+              "icon": "🧞",
               "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
               "effect": "summon-attack",
               "val": 5
@@ -5147,7 +5147,7 @@
               "name": "Swift Wind",
               "element": "air",
               "category": "Base Game",
-              "icon": "\ud83d\udca8",
+              "icon": "💨",
               "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
               "effect": "buff-move",
               "val": 2
@@ -5158,7 +5158,7 @@
               "name": "Tempest",
               "element": "air",
               "category": "Base Game",
-              "icon": "\ud83c\udf2a\ufe0f",
+              "icon": "🌪️",
               "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
               "effect": "status-freeze",
               "val": 1
@@ -5306,7 +5306,7 @@
       "robos:replaces": "Goblin",
       "robos:specialAbility": "Door Knocker: Move through other monsters",
       "robos:abilities": "Door Knocker: Move through other monsters",
-      "dcterms:description": "Replaces Goblin \u2014 Door Knocker: Move through other monsters.",
+      "dcterms:description": "Replaces Goblin — Door Knocker: Move through other monsters.",
       "robos:bodyPoints": 1,
       "robos:mindPoints": 1,
       "robos:attackDice": 2,
@@ -5316,7 +5316,7 @@
       "robos:isUndead": false,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "\ud83d\udccb",
+      "robos:icon": "📋",
       "robos:tokenColor": "#16a34a",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -5337,7 +5337,7 @@
       "robos:replaces": "Orc",
       "robos:specialAbility": "Smear Campaign: Force reroll of one successful defend die, once per encounter",
       "robos:abilities": "Smear Campaign: Force reroll of one successful defend die, once per encounter",
-      "dcterms:description": "Replaces Orc \u2014 Smear Campaign: Force reroll of one successful defend die, once per encounter.",
+      "dcterms:description": "Replaces Orc — Smear Campaign: Force reroll of one successful defend die, once per encounter.",
       "robos:bodyPoints": 1,
       "robos:mindPoints": 2,
       "robos:attackDice": 3,
@@ -5347,7 +5347,7 @@
       "robos:isUndead": false,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "\ud83d\udd75\ufe0f",
+      "robos:icon": "🕵️",
       "robos:tokenColor": "#ca8a04",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -5368,7 +5368,7 @@
       "robos:replaces": "Skeleton",
       "robos:specialAbility": "Reelection: On death, black shield resurrects with 1 Body Point",
       "robos:abilities": "Reelection: On death, black shield resurrects with 1 Body Point",
-      "dcterms:description": "Replaces Skeleton \u2014 Reelection: On death, black shield resurrects with 1 Body Point.",
+      "dcterms:description": "Replaces Skeleton — Reelection: On death, black shield resurrects with 1 Body Point.",
       "robos:bodyPoints": 1,
       "robos:mindPoints": 0,
       "robos:attackDice": 2,
@@ -5378,7 +5378,7 @@
       "robos:isUndead": true,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "\ud83c\udfdb\ufe0f",
+      "robos:icon": "🏛️",
       "robos:tokenColor": "#94a3b8",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -5399,7 +5399,7 @@
       "robos:replaces": "Zombie",
       "robos:specialAbility": "Red Tape: Adjacent heroes roll an extra movement die and use the lowest",
       "robos:abilities": "Red Tape: Adjacent heroes roll an extra movement die and use the lowest",
-      "dcterms:description": "Replaces Zombie \u2014 Red Tape: Adjacent heroes roll an extra movement die and use the lowest.",
+      "dcterms:description": "Replaces Zombie — Red Tape: Adjacent heroes roll an extra movement die and use the lowest.",
       "robos:bodyPoints": 1,
       "robos:mindPoints": 0,
       "robos:attackDice": 2,
@@ -5409,7 +5409,7 @@
       "robos:isUndead": true,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "\ud83d\udcce",
+      "robos:icon": "📎",
       "robos:tokenColor": "#475569",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -5430,7 +5430,7 @@
       "robos:replaces": "Mummy",
       "robos:specialAbility": "Bought Influence: Force reroll of one attacking skull, once per encounter",
       "robos:abilities": "Bought Influence: Force reroll of one attacking skull, once per encounter",
-      "dcterms:description": "Replaces Mummy \u2014 Bought Influence: Force reroll of one attacking skull, once per encounter.",
+      "dcterms:description": "Replaces Mummy — Bought Influence: Force reroll of one attacking skull, once per encounter.",
       "robos:bodyPoints": 2,
       "robos:mindPoints": 0,
       "robos:attackDice": 3,
@@ -5440,7 +5440,7 @@
       "robos:isUndead": true,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "\ud83d\udcbc",
+      "robos:icon": "💼",
       "robos:tokenColor": "#d97706",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -5461,7 +5461,7 @@
       "robos:replaces": "Dread Warrior",
       "robos:specialAbility": "Polarization: +1 attack die when adjacent to another Partisan Enforcer",
       "robos:abilities": "Polarization: +1 attack die when adjacent to another Partisan Enforcer",
-      "dcterms:description": "Replaces Dread Warrior \u2014 Polarization: +1 attack die when adjacent to another Partisan Enforcer.",
+      "dcterms:description": "Replaces Dread Warrior — Polarization: +1 attack die when adjacent to another Partisan Enforcer.",
       "robos:bodyPoints": 3,
       "robos:mindPoints": 3,
       "robos:attackDice": 4,
@@ -5471,7 +5471,7 @@
       "robos:isUndead": false,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "\u2694\ufe0f",
+      "robos:icon": "⚔️",
       "robos:tokenColor": "#dc2626",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -5492,7 +5492,7 @@
       "robos:replaces": "Gargoyle",
       "robos:specialAbility": "Dark Money: Summon one Campaign Volunteer, once per encounter",
       "robos:abilities": "Dark Money: Summon one Campaign Volunteer, once per encounter",
-      "dcterms:description": "Replaces Gargoyle \u2014 Dark Money: Summon one Campaign Volunteer, once per encounter.",
+      "dcterms:description": "Replaces Gargoyle — Dark Money: Summon one Campaign Volunteer, once per encounter.",
       "robos:bodyPoints": 3,
       "robos:mindPoints": 4,
       "robos:attackDice": 4,
@@ -5502,7 +5502,7 @@
       "robos:isUndead": false,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "\ud83d\ude08",
+      "robos:icon": "😈",
       "robos:tokenColor": "#7c3aed",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -5523,7 +5523,7 @@
       "robos:replaces": "Dread Sorcerer",
       "robos:specialAbility": "Alternative Facts: Cancel one successful attack, once per encounter",
       "robos:abilities": "Alternative Facts: Cancel one successful attack, once per encounter",
-      "dcterms:description": "Replaces Dread Sorcerer \u2014 Alternative Facts: Cancel one successful attack, once per encounter.",
+      "dcterms:description": "Replaces Dread Sorcerer — Alternative Facts: Cancel one successful attack, once per encounter.",
       "robos:bodyPoints": 3,
       "robos:mindPoints": 5,
       "robos:attackDice": 3,
@@ -5535,7 +5535,7 @@
       "robos:spells": [
         "urn:robos:tabletop:spell:recount-of-the-damned"
       ],
-      "robos:icon": "\ud83c\udf00",
+      "robos:icon": "🌀",
       "robos:tokenColor": "#0284c7",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -5548,14 +5548,14 @@
         "robos:GameMonster",
         "schema:Person"
       ],
-      "dcterms:title": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra)",
+      "dcterms:title": "Talarixon (Talarico + Paxton · Texas Hydra)",
       "robos:category": "Midterms 2026",
       "robos:mirrorsMonster": "urn:robos:tabletop:monster:dragon",
       "robos:monsterArchetype": "Texas Hydra",
       "robos:archetype": "Texas Hydra",
-      "robos:specialAbility": "Holy Smite (3 dice vs visible hero) \u2022 Indictment Barrage (move die 1-3 loses action) \u2022 Divided Authority (once/battle: lose turn, 2 dice to all adjacent heroes) \u2022 Political Infighting (\u22643 BP: white shield lets heroes pick special attack)",
-      "robos:abilities": "Holy Smite: Attack a visible hero with 3 dice. | Indictment Barrage: Hero rolls movement die; 1\u20133 loses next action. | Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. | Political Infighting: At \u22643 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
-      "dcterms:description": "Talarico + Paxton \u00b7 Texas Hydra Boss \u2014 Holy Smite: Attack a visible hero with 3 dice. Indictment Barrage: Hero rolls movement die; 1\u20133 loses next action. Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. Universal Hydra Rule \u2014 Political Infighting: At \u22643 BP, on a white shield at turn start, heroes choose its special attack.",
+      "robos:specialAbility": "Holy Smite (3 dice vs visible hero) • Indictment Barrage (move die 1-3 loses action) • Divided Authority (once/battle: lose turn, 2 dice to all adjacent heroes) • Political Infighting (≤3 BP: white shield lets heroes pick special attack)",
+      "robos:abilities": "Holy Smite: Attack a visible hero with 3 dice. | Indictment Barrage: Hero rolls movement die; 1–3 loses next action. | Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. | Political Infighting: At ≤3 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
+      "dcterms:description": "Talarico + Paxton · Texas Hydra Boss — Holy Smite: Attack a visible hero with 3 dice. Indictment Barrage: Hero rolls movement die; 1–3 loses next action. Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. Universal Hydra Rule — Political Infighting: At ≤3 BP, on a white shield at turn start, heroes choose its special attack.",
       "robos:bodyPoints": 6,
       "robos:mindPoints": 5,
       "robos:attackDice": 5,
@@ -5567,7 +5567,7 @@
       "robos:spells": [
         "urn:robos:tabletop:spell:recount-of-the-damned"
       ],
-      "robos:icon": "\ud83d\udc0d",
+      "robos:icon": "🐍",
       "robos:tokenColor": "#b91c1c",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -5580,14 +5580,14 @@
         "robos:GameMonster",
         "schema:Person"
       ],
-      "dcterms:title": "El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra)",
+      "dcterms:title": "El-Rogers (El-Sayed + Rogers · Michigan Hydra)",
       "robos:category": "Midterms 2026",
       "robos:mirrorsMonster": "urn:robos:tabletop:monster:witch-lord",
       "robos:monsterArchetype": "Michigan Hydra",
       "robos:archetype": "Michigan Hydra",
-      "robos:specialAbility": "Universal Healing (recover 2 BP once/battle) \u2022 Security Lockdown (seal room doors 1 round) \u2022 Industrial Collapse (at 3 BP: 3 dice to adjacent heroes, lose 1 BP) \u2022 Political Infighting (\u22643 BP: white shield lets heroes pick special attack)",
-      "robos:abilities": "Universal Healing: Recover 2 Body Points once per battle. | Security Lockdown: Seal room doors for one round. | Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. | Political Infighting: At \u22643 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
-      "dcterms:description": "El-Sayed + Rogers \u00b7 Michigan Hydra Boss \u2014 Universal Healing: Recover 2 Body Points once per battle. Security Lockdown: Seal room doors for one round. Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. Universal Hydra Rule \u2014 Political Infighting: At \u22643 BP, on a white shield at turn start, heroes choose its special attack.",
+      "robos:specialAbility": "Universal Healing (recover 2 BP once/battle) • Security Lockdown (seal room doors 1 round) • Industrial Collapse (at 3 BP: 3 dice to adjacent heroes, lose 1 BP) • Political Infighting (≤3 BP: white shield lets heroes pick special attack)",
+      "robos:abilities": "Universal Healing: Recover 2 Body Points once per battle. | Security Lockdown: Seal room doors for one round. | Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. | Political Infighting: At ≤3 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
+      "dcterms:description": "El-Sayed + Rogers · Michigan Hydra Boss — Universal Healing: Recover 2 Body Points once per battle. Security Lockdown: Seal room doors for one round. Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. Universal Hydra Rule — Political Infighting: At ≤3 BP, on a white shield at turn start, heroes choose its special attack.",
       "robos:bodyPoints": 7,
       "robos:mindPoints": 4,
       "robos:attackDice": 5,
@@ -5599,7 +5599,7 @@
       "robos:spells": [
         "urn:robos:tabletop:spell:recount-of-the-damned"
       ],
-      "robos:icon": "\ud83d\udc32",
+      "robos:icon": "🐲",
       "robos:tokenColor": "#1d4ed8",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -5612,14 +5612,14 @@
         "robos:GameMonster",
         "schema:Person"
       ],
-      "dcterms:title": "Brownsted (Brown + Husted \u00b7 Ohio Hydra)",
+      "dcterms:title": "Brownsted (Brown + Husted · Ohio Hydra)",
       "robos:category": "Midterms 2026",
       "robos:mirrorsMonster": "urn:robos:tabletop:monster:verag-orc-warlord",
       "robos:monsterArchetype": "Ohio Hydra",
       "robos:archetype": "Ohio Hydra",
-      "robos:specialAbility": "Union Strike (3 dice to all adjacent heroes) \u2022 Budget Freeze (no hero potions for 1 round) \u2022 Bipartisan Gridlock (roll combat die each turn: black shield = lose turn, skull = +1 atk die) \u2022 Political Infighting (\u22644 BP: white shield lets heroes pick special attack)",
-      "robos:abilities": "Union Strike: Attack every adjacent hero with 3 dice. | Budget Freeze: Prevent heroes using potions for one round. | Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. | Political Infighting: At \u22644 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
-      "dcterms:description": "Brown + Husted \u00b7 Ohio Hydra Boss \u2014 Union Strike: Attack every adjacent hero with 3 dice. Budget Freeze: Prevent heroes using potions for one round. Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. Universal Hydra Rule \u2014 Political Infighting: At \u22644 BP, on a white shield at turn start, heroes choose its special attack.",
+      "robos:specialAbility": "Union Strike (3 dice to all adjacent heroes) • Budget Freeze (no hero potions for 1 round) • Bipartisan Gridlock (roll combat die each turn: black shield = lose turn, skull = +1 atk die) • Political Infighting (≤4 BP: white shield lets heroes pick special attack)",
+      "robos:abilities": "Union Strike: Attack every adjacent hero with 3 dice. | Budget Freeze: Prevent heroes using potions for one round. | Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. | Political Infighting: At ≤4 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
+      "dcterms:description": "Brown + Husted · Ohio Hydra Boss — Union Strike: Attack every adjacent hero with 3 dice. Budget Freeze: Prevent heroes using potions for one round. Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. Universal Hydra Rule — Political Infighting: At ≤4 BP, on a white shield at turn start, heroes choose its special attack.",
       "robos:bodyPoints": 8,
       "robos:mindPoints": 5,
       "robos:attackDice": 6,
@@ -5631,7 +5631,7 @@
       "robos:spells": [
         "urn:robos:tabletop:spell:recount-of-the-damned"
       ],
-      "robos:icon": "\ud83d\udc09",
+      "robos:icon": "🐉",
       "robos:tokenColor": "#9333ea",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -5647,8 +5647,8 @@
       "dcterms:title": "Attack Ad",
       "robos:category": "Midterms 2026",
       "robos:element": "fire",
-      "robos:spellCollege": "Fire \u2014 Campaign Chaos",
-      "robos:icon": "\ud83d\udcfa",
+      "robos:spellCollege": "Fire — Campaign Chaos",
+      "robos:icon": "📺",
       "dcterms:description": "Attack one visible monster with 2 combat dice.",
       "robos:effect": "damage-dice",
       "robos:val": 2,
@@ -5666,8 +5666,8 @@
       "dcterms:title": "Outrage Inferno",
       "robos:category": "Midterms 2026",
       "robos:element": "fire",
-      "robos:spellCollege": "Fire \u2014 Campaign Chaos",
-      "robos:icon": "\ud83d\udd25",
+      "robos:spellCollege": "Fire — Campaign Chaos",
+      "robos:icon": "🔥",
       "dcterms:description": "Every monster in the room rolls 1 combat die; skull = 1 damage.",
       "robos:effect": "room-damage-dice",
       "robos:val": 1,
@@ -5685,8 +5685,8 @@
       "dcterms:title": "October Surprise",
       "robos:category": "Midterms 2026",
       "robos:element": "fire",
-      "robos:spellCollege": "Fire \u2014 Campaign Chaos",
-      "robos:icon": "\ud83d\udca3",
+      "robos:spellCollege": "Fire — Campaign Chaos",
+      "robos:icon": "💣",
       "dcterms:description": "Hero makes an additional attack with +2 attack dice.",
       "robos:effect": "buff-atk",
       "robos:val": 2,
@@ -5704,9 +5704,9 @@
       "dcterms:title": "Filibuster",
       "robos:category": "Midterms 2026",
       "robos:element": "water",
-      "robos:spellCollege": "Water \u2014 Bureaucracy",
-      "robos:icon": "\u23f3",
-      "dcterms:description": "Monster loses next turn unless it rolls 5\u20136 on one movement die.",
+      "robos:spellCollege": "Water — Bureaucracy",
+      "robos:icon": "⏳",
+      "dcterms:description": "Monster loses next turn unless it rolls 5–6 on one movement die.",
       "robos:effect": "status-sleep",
       "robos:val": 1,
       "robos:package": "tabletop-game",
@@ -5723,8 +5723,8 @@
       "dcterms:title": "Executive Privilege",
       "robos:category": "Midterms 2026",
       "robos:element": "water",
-      "robos:spellCollege": "Water \u2014 Bureaucracy",
-      "robos:icon": "\ud83d\udee1\ufe0f",
+      "robos:spellCollege": "Water — Bureaucracy",
+      "robos:icon": "🛡️",
       "dcterms:description": "Hero ignores all damage from the next damaging attack.",
       "robos:effect": "buff-ignore-damage",
       "robos:val": 1,
@@ -5742,8 +5742,8 @@
       "dcterms:title": "Emergency Funding",
       "robos:category": "Midterms 2026",
       "robos:element": "water",
-      "robos:spellCollege": "Water \u2014 Bureaucracy",
-      "robos:icon": "\ud83d\udc89",
+      "robos:spellCollege": "Water — Bureaucracy",
+      "robos:icon": "💉",
       "dcterms:description": "Restore up to 4 lost Body Points.",
       "robos:effect": "heal-bp",
       "robos:val": 4,
@@ -5761,8 +5761,8 @@
       "dcterms:title": "Incumbent Protection",
       "robos:category": "Midterms 2026",
       "robos:element": "earth",
-      "robos:spellCollege": "Earth \u2014 Establishment",
-      "robos:icon": "\ud83c\udff0",
+      "robos:spellCollege": "Earth — Establishment",
+      "robos:icon": "🏰",
       "dcterms:description": "Hero gains +2 defend dice until suffering damage.",
       "robos:effect": "buff-def",
       "robos:val": 2,
@@ -5780,8 +5780,8 @@
       "dcterms:title": "Special Interest Donation",
       "robos:category": "Midterms 2026",
       "robos:element": "earth",
-      "robos:spellCollege": "Earth \u2014 Establishment",
-      "robos:icon": "\ud83d\udcb0",
+      "robos:spellCollege": "Earth — Establishment",
+      "robos:icon": "💰",
       "dcterms:description": "Gain 100 gold, or 50 if a monster is visible.",
       "robos:effect": "grant-gold",
       "robos:val": 100,
@@ -5799,8 +5799,8 @@
       "dcterms:title": "Gerrymander",
       "robos:category": "Midterms 2026",
       "robos:element": "earth",
-      "robos:spellCollege": "Earth \u2014 Establishment",
-      "robos:icon": "\ud83d\uddfa\ufe0f",
+      "robos:spellCollege": "Earth — Establishment",
+      "robos:icon": "🗺️",
       "dcterms:description": "Relocate one visible monster up to 4 legal squares.",
       "robos:effect": "relocate-monster",
       "robos:val": 4,
@@ -5818,8 +5818,8 @@
       "dcterms:title": "Polling Surge",
       "robos:category": "Midterms 2026",
       "robos:element": "air",
-      "robos:spellCollege": "Air \u2014 Public Opinion",
-      "robos:icon": "\ud83d\udcc8",
+      "robos:spellCollege": "Air — Public Opinion",
+      "robos:icon": "📈",
       "dcterms:description": "Double next movement roll.",
       "robos:effect": "buff-move",
       "robos:val": 2,
@@ -5837,8 +5837,8 @@
       "dcterms:title": "Media Frenzy",
       "robos:category": "Midterms 2026",
       "robos:element": "air",
-      "robos:spellCollege": "Air \u2014 Public Opinion",
-      "robos:icon": "\ud83c\udf99\ufe0f",
+      "robos:spellCollege": "Air — Public Opinion",
+      "robos:icon": "🎙️",
       "dcterms:description": "Monster loses next turn; Mind 4+ may resist on a 6.",
       "robos:effect": "status-freeze",
       "robos:val": 1,
@@ -5856,8 +5856,8 @@
       "dcterms:title": "Landslide Victory",
       "robos:category": "Midterms 2026",
       "robos:element": "air",
-      "robos:spellCollege": "Air \u2014 Public Opinion",
-      "robos:icon": "\ud83c\udf0a",
+      "robos:spellCollege": "Air — Public Opinion",
+      "robos:icon": "🌊",
       "dcterms:description": "Attack one visible monster with 5 combat dice.",
       "robos:effect": "damage-dice",
       "robos:val": 5,
@@ -5877,8 +5877,8 @@
       "robos:category": "Midterms 2026",
       "robos:element": "dread",
       "robos:spellCollege": "Forbidden Dread Spell",
-      "robos:icon": "\ud83d\uddf3\ufe0f",
-      "dcterms:description": "All heroes in one room roll one movement die. On 1\u20133, they lose their next action.",
+      "robos:icon": "🗳️",
+      "dcterms:description": "All heroes in one room roll one movement die. On 1–3, they lose their next action.",
       "robos:effect": "room-lose-action",
       "robos:val": 3,
       "robos:package": "tabletop-game",
@@ -5891,7 +5891,7 @@
         "robos:TabletopQuestSaveState",
         "schema:Action"
       ],
-      "dcterms:title": "Quest State \u2014 Round 3 (Barack Obama (Hero 1 of 4))",
+      "dcterms:title": "Quest State — Round 3 (Barack Obama (Hero 1 of 4))",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop",
       "robos:questSlug": "election-2026-quest-1",
@@ -5900,9 +5900,9 @@
         26,
         19
       ],
-      "robos:savedAt": "2026-10-20T13:20:31.000Z",
-      "robos:playTimeSeconds": 13616,
-      "robos:playTimeFormatted": "3h 46m 56s",
+      "robos:savedAt": "2026-10-20T14:11:52.000Z",
+      "robos:playTimeSeconds": 16697,
+      "robos:playTimeFormatted": "4h 38m 17s",
       "robos:currentRound": 3,
       "robos:currentPhase": "hero_phase",
       "robos:currentRole": "player",
@@ -6059,7 +6059,7 @@
         {
           "@type": "robos:TabletopSaveMonsterState",
           "id": "mon-brownsted-5",
-          "name": "Brownsted (Brown + Husted \u00b7 Ohio Hydra)",
+          "name": "Brownsted (Brown + Husted · Ohio Hydra)",
           "monsterType": "brownsted",
           "currentBP": 8,
           "maxBP": 8,
@@ -6114,7 +6114,7 @@
           "type": "equipment",
           "holder": "Barack Obama",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "obama-healing_potion-1",
@@ -6122,7 +6122,7 @@
           "type": "potion",
           "holder": "Barack Obama",
           "source": "Hero Inventory",
-          "icon": "\ud83e\uddea"
+          "icon": "🧪"
         },
         {
           "id": "trump-shortsword-0",
@@ -6130,7 +6130,7 @@
           "type": "equipment",
           "holder": "Donald Trump",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "trump-healing_potion-1",
@@ -6138,7 +6138,7 @@
           "type": "potion",
           "holder": "Donald Trump",
           "source": "Hero Inventory",
-          "icon": "\ud83e\uddea"
+          "icon": "🧪"
         },
         {
           "id": "hillary-clinton-shortsword-0",
@@ -6146,7 +6146,7 @@
           "type": "equipment",
           "holder": "Hillary Clinton",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "hillary-clinton-healing_potion-1",
@@ -6154,7 +6154,7 @@
           "type": "potion",
           "holder": "Hillary Clinton",
           "source": "Hero Inventory",
-          "icon": "\ud83e\uddea"
+          "icon": "🧪"
         },
         {
           "id": "bernie-sanders-dagger-0",
@@ -6162,7 +6162,7 @@
           "type": "equipment",
           "holder": "Bernie Sanders",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "bernie-sanders-staff-1",
@@ -6170,7 +6170,7 @@
           "type": "equipment",
           "holder": "Bernie Sanders",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "bernie-sanders-healing_potion-2",
@@ -6178,7 +6178,7 @@
           "type": "potion",
           "holder": "Bernie Sanders",
           "source": "Hero Inventory",
-          "icon": "\ud83e\uddea"
+          "icon": "🧪"
         }
       ],
       "robos:itemsFoundCount": 9,
@@ -6194,7 +6194,7 @@
       "robos:triggersFired": [
         {
           "id": "trigger-sw-supreme-court-brownsted",
-          "title": "Supreme Court Chamber \u2014 Brownsted (Ohio Hydra) & Bunker Rotation",
+          "title": "Supreme Court Chamber — Brownsted (Ohio Hydra) & Bunker Rotation",
           "event": "on_room_entered",
           "tile": [
             14,
@@ -6267,7 +6267,7 @@
         }
       ],
       "robos:specialAbility": "",
-      "robos:icon": "\ud83d\udee1\ufe0f",
+      "robos:icon": "🛡️",
       "robos:startingPosition": [
         1,
         1
@@ -6456,7 +6456,7 @@
           "value": 100
         }
       ],
-      "robos:icon": "\ud83d\udee1\ufe0f",
+      "robos:icon": "🛡️",
       "robos:startingPosition": [
         1,
         1
@@ -6520,7 +6520,7 @@
       "robos:tokenColor": "#2563eb",
       "robos:tokenAsset": "assets/tokens/token_bernie_sanders.png",
       "robos:portraitAsset": "assets/portraits/card_bg_bernie_sanders.png",
-      "robos:icon": "\ud83e\ude84",
+      "robos:icon": "🪄",
       "robos:startingPosition": [
         1,
         13
@@ -6730,12 +6730,12 @@
       "robos:startingWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
       "robos:equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
       "robos:equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
-      "robos:specialAbility": "Spellcaster (1 College \u2014 3 Spells)",
+      "robos:specialAbility": "Spellcaster (1 College — 3 Spells)",
       "robos:gold": 150,
       "robos:tokenColor": "#059669",
       "robos:tokenAsset": "assets/tokens/token_hillary_clinton.png",
       "robos:portraitAsset": "assets/portraits/card_bg_hillary_clinton.png",
-      "robos:icon": "\ud83c\udff9",
+      "robos:icon": "🏹",
       "robos:startingPosition": [
         0,
         13
@@ -6950,7 +6950,7 @@
       "robos:tokenColor": "#d97706",
       "robos:tokenAsset": "assets/tokens/token_trump.png",
       "robos:portraitAsset": "assets/portraits/card_bg_trump.png",
-      "robos:icon": "\ud83e\ude93",
+      "robos:icon": "🪓",
       "robos:startingPosition": [
         1,
         12
@@ -6989,7 +6989,7 @@
             "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
           },
           {
-            "text": "I took two cognitive tests \u2014 I aced them!",
+            "text": "I took two cognitive tests — I aced them!",
             "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
           },
           {
@@ -7001,7 +7001,7 @@
             "audio": "res://assets/audio/heroes/trump_quote_6.ogg"
           },
           {
-            "text": "I'm not just MAGA \u2014 I'm Dark MAGA!",
+            "text": "I'm not just MAGA — I'm Dark MAGA!",
             "audio": "res://assets/audio/heroes/trump_quote_7.ogg"
           },
           {
@@ -7165,7 +7165,7 @@
       "robos:tokenColor": "#b91c1c",
       "robos:tokenAsset": "assets/tokens/token_obama.png",
       "robos:portraitAsset": "assets/portraits/card_bg_obama.png",
-      "robos:icon": "\u2694\ufe0f",
+      "robos:icon": "⚔️",
       "robos:startingPosition": [
         0,
         12
@@ -7648,7 +7648,7 @@
       "robos:category": "Base Game",
       "robos:monsterArchetype": "Dragon",
       "robos:archetype": "Dragon",
-      "robos:icon": "\ud83d\udc09",
+      "robos:icon": "🐉",
       "robos:bodyPoints": 6,
       "robos:attackDice": 5,
       "robos:defendDice": 5,
@@ -8115,7 +8115,7 @@
         "robos:GameMap",
         "schema:Place"
       ],
-      "dcterms:title": "The Trial \u2014 Quest 1: Lair of the Orc Warlord",
+      "dcterms:title": "The Trial — Quest 1: Lair of the Orc Warlord",
       "robos:width": 26,
       "robos:height": 19,
       "robos:startingSpawn": [
@@ -8209,7 +8209,7 @@
         "robos:TabletopMapConfiguration",
         "schema:Place"
       ],
-      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28\u00d721)",
+      "dcterms:title": "HeroQuest Fan Dungeon & Cavern Citadel (28×21)",
       "robos:boardSide": "Custom",
       "robos:gridDimensions": [
         28,
@@ -8935,7 +8935,7 @@
         "robos:GameMap",
         "schema:Place"
       ],
-      "dcterms:title": "The Fortress of the Fire King \u2014 Quest 4",
+      "dcterms:title": "The Fortress of the Fire King — Quest 4",
       "robos:width": 26,
       "robos:height": 19,
       "robos:startingSpawn": [
@@ -9012,7 +9012,7 @@
       "robos:weaponType": "Weapon",
       "robos:dice": "4 Attack Dice (No Congressional Vote Required)",
       "robos:cost": "450 GP",
-      "robos:icon": "\ud83d\udca3",
+      "robos:icon": "💣",
       "dcterms:description": "Illegal presidential act #1: Bypasses Article I and the War Powers Resolution completely! Strike any dungeon room without asking Congress and call it a 'limited kinetic operation'.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -9031,7 +9031,7 @@
       "robos:weaponType": "Weapon",
       "robos:dice": "3 Attack Dice (Bathroom Chandelier & Corvette Garage Edition)",
       "robos:cost": "300 GP",
-      "robos:icon": "\ud83d\udce6",
+      "robos:icon": "📦",
       "dcterms:description": "Illegal presidential act #2: A heavy cardboard banker's box of Top Secret nuclear & war plans stashed next to a golden toilet and a vintage Corvette. Declassified telepathically!",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -9050,7 +9050,7 @@
       "robos:weaponType": "Weapon",
       "robos:dice": "3 Attack Dice (Erases All Past & Future Crimes)",
       "robos:cost": "350 GP",
-      "robos:icon": "\ud83d\udd28",
+      "robos:icon": "🔨",
       "dcterms:description": "Illegal presidential act #3: Signed at 11:59 PM on the last day in office! Preemptively pardons family members, political cronies, and campaign donors for a decade of dungeon raids.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -9069,7 +9069,7 @@
       "robos:weaponType": "Weapon",
       "robos:dice": "3 Attack Dice (Ignores Supreme Court & Congress)",
       "robos:cost": "280 GP",
-      "robos:icon": "\ud83d\udd8a\ufe0f",
+      "robos:icon": "🖊️",
       "dcterms:description": "Illegal presidential act #4: Declares a fake 'National Dungeon Emergency' to spend 500 Billion GP, levy random tariffs, and rewrite laws with a single Sharpie stroke.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -9088,7 +9088,7 @@
       "robos:weaponType": "Ranged Weapon",
       "robos:dice": "3 Attack Dice (Emoluments Clause Drain)",
       "robos:cost": "420 GP",
-      "robos:icon": "\ud83e\ude99",
+      "robos:icon": "🪙",
       "dcterms:description": "Illegal presidential act #5: Launches an official presidential crypto token 48 hours before the quest starts, draining every monster's gold purse while insiders cash out.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -9107,7 +9107,7 @@
       "robos:weaponType": "Ranged Weapon",
       "robos:dice": "3 Attack Dice (Straight-Line Lawfare)",
       "robos:cost": "350 GP",
-      "robos:icon": "\ud83c\udff9",
+      "robos:icon": "🏹",
       "dcterms:description": "Illegal presidential act #6: Fires 400-page federal indictments and retaliatory IRS audits across the corridor at political opponents during election season.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -9126,7 +9126,7 @@
       "robos:weaponType": "Armor",
       "robos:dice": "+2 Defend Dice (Total Legal Invulnerability)",
       "robos:cost": "500 GP",
-      "robos:icon": "\ud83d\udee1\ufe0f",
+      "robos:icon": "🛡️",
       "dcterms:description": "Any illegal dungeon act committed while holding this shield is automatically declared a Core Official Constitutional Act.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -9145,7 +9145,7 @@
       "robos:itemType": "potion",
       "robos:effect": "Restores 4 BP, but forces a 10-minute rant about microaggressions or woke M&Ms",
       "robos:cost": 100,
-      "robos:icon": "\u2744\ufe0f",
+      "robos:icon": "❄️",
       "dcterms:description": "Brewed from pure bipartisan fragility whenever someone encounters a joke, a pronoun, or a holiday coffee cup they slightly dislike.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -9164,7 +9164,7 @@
       "robos:itemType": "relic",
       "robos:effect": "Takes away abortion & personal healthcare choices in the room, replacing them with a politician committee",
       "robos:cost": 200,
-      "robos:icon": "\ud83d\udcdc",
+      "robos:icon": "📜",
       "dcterms:description": "Overturns 50 years of settled bodily autonomy precedent overnight while claiming 'we just sent the decision back to the dungeon states!'",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -9183,7 +9183,7 @@
       "robos:itemType": "relic",
       "robos:effect": "Supporting things 100% just because your party does! +2 Attack Dice when reversing your opinion from yesterday",
       "robos:cost": 150,
-      "robos:icon": "\ud83e\ude74",
+      "robos:icon": "🩴",
       "dcterms:description": "Lets a hero passionately cheer for the exact policy they called treason five minutes ago because their party leader just endorsed it.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -9202,8 +9202,8 @@
       "robos:itemType": "tool",
       "robos:effect": "Fear of Israel & Middle East questions: deflects press inquiries while auto-wiring 20 Billion GP",
       "robos:cost": 175,
-      "robos:icon": "\ud83d\udcfa",
-      "dcterms:description": "Activated the moment anyone brings up Israel or the Middle East\u2014sweats profusely, mutters a 15-second canned platitude, and dives out the nearest dungeon window.",
+      "robos:icon": "📺",
+      "dcterms:description": "Activated the moment anyone brings up Israel or the Middle East—sweats profusely, mutters a 15-second canned platitude, and dives out the nearest dungeon window.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
     },
@@ -9221,7 +9221,7 @@
       "robos:itemType": "artifact",
       "robos:effect": "Mints 500 GP instantly, but spawns an Inflation Spawn and makes eggs cost 25 GP",
       "robos:cost": 300,
-      "robos:icon": "\ud83d\udda8\ufe0f",
+      "robos:icon": "🖨️",
       "dcterms:description": "Bipartisan economic magic: solves high prices by printing trillions of new gold coins and calling the resulting inflation 'transitory'.",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -9233,7 +9233,7 @@
         "robos:TabletopQuestSaveState",
         "schema:Action"
       ],
-      "dcterms:title": "Quest State \u2014 Round 1 (Dwarf (Hero 2 of 4))",
+      "dcterms:title": "Quest State — Round 1 (Dwarf (Hero 2 of 4))",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop",
       "robos:questSlug": "custom-quest",
@@ -9452,7 +9452,7 @@
           "type": "equipment",
           "holder": "Barbarian",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "barbarian-healing_potion-1",
@@ -9460,7 +9460,7 @@
           "type": "potion",
           "holder": "Barbarian",
           "source": "Hero Inventory",
-          "icon": "\ud83e\uddea"
+          "icon": "🧪"
         },
         {
           "id": "dwarf-shortsword-0",
@@ -9468,7 +9468,7 @@
           "type": "equipment",
           "holder": "Dwarf",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "dwarf-healing_potion-1",
@@ -9476,7 +9476,7 @@
           "type": "potion",
           "holder": "Dwarf",
           "source": "Hero Inventory",
-          "icon": "\ud83e\uddea"
+          "icon": "🧪"
         },
         {
           "id": "elf-shortsword-0",
@@ -9484,7 +9484,7 @@
           "type": "equipment",
           "holder": "Elf",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "elf-healing_potion-1",
@@ -9492,7 +9492,7 @@
           "type": "potion",
           "holder": "Elf",
           "source": "Hero Inventory",
-          "icon": "\ud83e\uddea"
+          "icon": "🧪"
         },
         {
           "id": "wizard-dagger-0",
@@ -9500,7 +9500,7 @@
           "type": "equipment",
           "holder": "Wizard",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "wizard-staff-1",
@@ -9508,7 +9508,7 @@
           "type": "equipment",
           "holder": "Wizard",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "wizard-healing_potion-2",
@@ -9516,7 +9516,7 @@
           "type": "potion",
           "holder": "Wizard",
           "source": "Hero Inventory",
-          "icon": "\ud83e\uddea"
+          "icon": "🧪"
         }
       ],
       "robos:itemsFoundCount": 9,
@@ -9575,7 +9575,7 @@
           "tokenColor": "#b91c1c",
           "tokenAsset": "assets/tokens/token_obama.png",
           "portraitAsset": "assets/portraits/card_bg_obama.png",
-          "icon": "\u2694\ufe0f",
+          "icon": "⚔️",
           "startingPosition": [
             0,
             12
@@ -9616,7 +9616,7 @@
           "robos:equippedArmor": "Chiseled Commander Toughness (2 Defend Dice)",
           "robos:specialAbility": "Bipartisan Cleave (Melee Specialist)",
           "robos:tokenColor": "#b91c1c",
-          "robos:icon": "\u2694\ufe0f",
+          "robos:icon": "⚔️",
           "robos:startingPosition": [
             0,
             12
@@ -9867,7 +9867,7 @@
           "tokenColor": "#d97706",
           "tokenAsset": "assets/tokens/token_trump.png",
           "portraitAsset": "assets/portraits/card_bg_trump.png",
-          "icon": "\ud83e\ude93",
+          "icon": "🪓",
           "startingPosition": [
             1,
             12
@@ -9908,7 +9908,7 @@
           "robos:equippedArmor": "Gold-Plated Rune Mail (2 Defend Dice)",
           "robos:specialAbility": "Disarm Traps & Red-Tape Vaults",
           "robos:tokenColor": "#d97706",
-          "robos:icon": "\ud83e\ude93",
+          "robos:icon": "🪓",
           "robos:startingPosition": [
             1,
             12
@@ -9935,7 +9935,7 @@
           "robos:audioLines": {
             "turnStart": [
               {
-                "text": "They're eating the dogs! Sleepy Crooked Joe Biden \u2014 I really don't know what he said!",
+                "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
                 "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
               },
               {
@@ -9943,15 +9943,15 @@
                 "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
               },
               {
-                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace \u2014 I don't even know who this woman is!",
+                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
                 "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
               },
               {
-                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters \u2014 he called them garbage, no way!",
+                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
                 "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
               },
               {
-                "text": "Well, I took two tests \u2014 cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+                "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
                 "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
               },
               {
@@ -9969,7 +9969,7 @@
             ],
             "moving": [
               {
-                "text": "They're eating the dogs! Sleepy Crooked Joe Biden \u2014 I really don't know what he said!",
+                "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
                 "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
               },
               {
@@ -9977,15 +9977,15 @@
                 "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
               },
               {
-                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace \u2014 I don't even know who this woman is!",
+                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
                 "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
               },
               {
-                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters \u2014 he called them garbage, no way!",
+                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
                 "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
               },
               {
-                "text": "Well, I took two tests \u2014 cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+                "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
                 "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
               },
               {
@@ -10003,7 +10003,7 @@
             ],
             "attacking": [
               {
-                "text": "They're eating the dogs! Sleepy Crooked Joe Biden \u2014 I really don't know what he said!",
+                "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
                 "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
               },
               {
@@ -10011,15 +10011,15 @@
                 "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
               },
               {
-                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace \u2014 I don't even know who this woman is!",
+                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
                 "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
               },
               {
-                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters \u2014 he called them garbage, no way!",
+                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
                 "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
               },
               {
-                "text": "Well, I took two tests \u2014 cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+                "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
                 "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
               },
               {
@@ -10037,7 +10037,7 @@
             ],
             "attacked": [
               {
-                "text": "They're eating the dogs! Sleepy Crooked Joe Biden \u2014 I really don't know what he said!",
+                "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
                 "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
               },
               {
@@ -10045,15 +10045,15 @@
                 "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
               },
               {
-                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace \u2014 I don't even know who this woman is!",
+                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
                 "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
               },
               {
-                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters \u2014 he called them garbage, no way!",
+                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
                 "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
               },
               {
-                "text": "Well, I took two tests \u2014 cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+                "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
                 "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
               },
               {
@@ -10071,7 +10071,7 @@
             ],
             "defended": [
               {
-                "text": "They're eating the dogs! Sleepy Crooked Joe Biden \u2014 I really don't know what he said!",
+                "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
                 "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
               },
               {
@@ -10079,15 +10079,15 @@
                 "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
               },
               {
-                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace \u2014 I don't even know who this woman is!",
+                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
                 "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
               },
               {
-                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters \u2014 he called them garbage, no way!",
+                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
                 "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
               },
               {
-                "text": "Well, I took two tests \u2014 cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+                "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
                 "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
               },
               {
@@ -10105,7 +10105,7 @@
             ],
             "castingMagic": [
               {
-                "text": "They're eating the dogs! Sleepy Crooked Joe Biden \u2014 I really don't know what he said!",
+                "text": "They're eating the dogs! Sleepy Crooked Joe Biden — I really don't know what he said!",
                 "audio": "res://assets/audio/heroes/trump_quote_1.ogg"
               },
               {
@@ -10113,15 +10113,15 @@
                 "audio": "res://assets/audio/heroes/trump_quote_2.ogg"
               },
               {
-                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace \u2014 I don't even know who this woman is!",
+                "text": "A crooked New York state judge just ruled that I have to pay a fine of $355 million for having built a perfect company! It's a disgrace — I don't even know who this woman is!",
                 "audio": "res://assets/audio/heroes/trump_quote_3.ogg"
               },
               {
-                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters \u2014 he called them garbage, no way!",
+                "text": "I do like my garbage truck! Crooked Joe Biden finally said what he and Kamala really think of our supporters — he called them garbage, no way!",
                 "audio": "res://assets/audio/heroes/trump_quote_4.ogg"
               },
               {
-                "text": "Well, I took two tests \u2014 cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
+                "text": "Well, I took two tests — cognitive tests. I aced them, both of them! He took none! I'd like to see him take one, just one, a real easy one!",
                 "audio": "res://assets/audio/heroes/trump_quote_5.ogg"
               },
               {
@@ -10155,11 +10155,11 @@
           "gold": 150,
           "equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
           "equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
-          "specialAbility": "Spellcaster (1 College \u2014 3 Spells)",
+          "specialAbility": "Spellcaster (1 College — 3 Spells)",
           "tokenColor": "#059669",
           "tokenAsset": "assets/tokens/token_hillary_clinton.png",
           "portraitAsset": "assets/portraits/card_bg_hillary_clinton.png",
-          "icon": "\ud83c\udff9",
+          "icon": "🏹",
           "startingPosition": [
             0,
             13
@@ -10198,9 +10198,9 @@
           "robos:gold": 150,
           "robos:equippedWeapon": "Lothlorien Sting-Blade (2 Combat Dice)",
           "robos:equippedArmor": "Woodland Elven Cloak & Circlet (2 Defend Dice)",
-          "robos:specialAbility": "Spellcaster (1 College \u2014 3 Spells)",
+          "robos:specialAbility": "Spellcaster (1 College — 3 Spells)",
           "robos:tokenColor": "#059669",
-          "robos:icon": "\ud83c\udff9",
+          "robos:icon": "🏹",
           "robos:startingPosition": [
             0,
             13
@@ -10230,7 +10230,7 @@
               "name": "Water of Healing",
               "element": "water",
               "category": "Base Game",
-              "icon": "\ud83d\udca7",
+              "icon": "💧",
               "description": "Restores up to 4 lost Body Points to any Hero.",
               "effect": "heal-bp",
               "val": 4
@@ -10241,7 +10241,7 @@
               "name": "Sleep",
               "element": "water",
               "category": "Base Game",
-              "icon": "\ud83d\udca4",
+              "icon": "💤",
               "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
               "effect": "status-sleep",
               "val": 1
@@ -10252,7 +10252,7 @@
               "name": "Veil of Mist",
               "element": "water",
               "category": "Base Game",
-              "icon": "\ud83c\udf2b\ufe0f",
+              "icon": "🌫️",
               "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
               "effect": "status-stealth",
               "val": 1
@@ -10277,7 +10277,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
               },
               {
-                "text": "Using clean renewable energy as the key into coal country \u2014 because we're going to put a lot of coal miners and coal companies out of business!",
+                "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
                 "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
               },
               {
@@ -10289,7 +10289,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
               },
               {
-                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy \u2014 first we have to bring them to heel!",
+                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
                 "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
               }
             ],
@@ -10311,7 +10311,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
               },
               {
-                "text": "Using clean renewable energy as the key into coal country \u2014 because we're going to put a lot of coal miners and coal companies out of business!",
+                "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
                 "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
               },
               {
@@ -10323,7 +10323,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
               },
               {
-                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy \u2014 first we have to bring them to heel!",
+                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
                 "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
               }
             ],
@@ -10345,7 +10345,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
               },
               {
-                "text": "Using clean renewable energy as the key into coal country \u2014 because we're going to put a lot of coal miners and coal companies out of business!",
+                "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
                 "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
               },
               {
@@ -10357,7 +10357,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
               },
               {
-                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy \u2014 first we have to bring them to heel!",
+                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
                 "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
               }
             ],
@@ -10379,7 +10379,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
               },
               {
-                "text": "Using clean renewable energy as the key into coal country \u2014 because we're going to put a lot of coal miners and coal companies out of business!",
+                "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
                 "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
               },
               {
@@ -10391,7 +10391,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
               },
               {
-                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy \u2014 first we have to bring them to heel!",
+                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
                 "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
               }
             ],
@@ -10413,7 +10413,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
               },
               {
-                "text": "Using clean renewable energy as the key into coal country \u2014 because we're going to put a lot of coal miners and coal companies out of business!",
+                "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
                 "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
               },
               {
@@ -10425,7 +10425,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
               },
               {
-                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy \u2014 first we have to bring them to heel!",
+                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
                 "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
               }
             ],
@@ -10447,7 +10447,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_4.ogg"
               },
               {
-                "text": "Using clean renewable energy as the key into coal country \u2014 because we're going to put a lot of coal miners and coal companies out of business!",
+                "text": "Using clean renewable energy as the key into coal country — because we're going to put a lot of coal miners and coal companies out of business!",
                 "audio": "res://assets/audio/heroes/hillary_quote_5.ogg"
               },
               {
@@ -10459,7 +10459,7 @@
                 "audio": "res://assets/audio/heroes/hillary_quote_7.ogg"
               },
               {
-                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy \u2014 first we have to bring them to heel!",
+                "text": "They're children of the Great Recession and they are living in their parents' basement... No conscience, no empathy — first we have to bring them to heel!",
                 "audio": "res://assets/audio/heroes/hillary_quote_8.ogg"
               }
             ]
@@ -10485,7 +10485,7 @@
           "tokenColor": "#2563eb",
           "tokenAsset": "assets/tokens/token_bernie_sanders.png",
           "portraitAsset": "assets/portraits/card_bg_bernie_sanders.png",
-          "icon": "\ud83e\ude84",
+          "icon": "🪄",
           "startingPosition": [
             1,
             13
@@ -10526,7 +10526,7 @@
           "robos:equippedArmor": "Starry Wizard Hat & Vermont Wool Mittens (2 Defend Dice)",
           "robos:specialAbility": "Master Spellcaster (3 Colleges, 9 Spells)",
           "robos:tokenColor": "#2563eb",
-          "robos:icon": "\ud83e\ude84",
+          "robos:icon": "🪄",
           "robos:startingPosition": [
             1,
             13
@@ -10556,7 +10556,7 @@
               "name": "Heal Body",
               "element": "earth",
               "category": "Base Game",
-              "icon": "\ud83d\udc96",
+              "icon": "💖",
               "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
               "effect": "heal-bp",
               "val": 4
@@ -10567,7 +10567,7 @@
               "name": "Pass Through Rock",
               "element": "earth",
               "category": "Base Game",
-              "icon": "\ud83e\uddf1",
+              "icon": "🧱",
               "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
               "effect": "phase-walls",
               "val": 1
@@ -10578,7 +10578,7 @@
               "name": "Rock Skin",
               "element": "earth",
               "category": "Base Game",
-              "icon": "\ud83d\udee1\ufe0f",
+              "icon": "🛡️",
               "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
               "effect": "buff-def",
               "val": 1
@@ -10589,7 +10589,7 @@
               "name": "Ball of Flame",
               "element": "fire",
               "category": "Base Game",
-              "icon": "\u2604\ufe0f",
+              "icon": "☄️",
               "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
               "effect": "damage-bp",
               "val": 2
@@ -10600,7 +10600,7 @@
               "name": "Courage",
               "element": "fire",
               "category": "Base Game",
-              "icon": "\ud83e\udd81",
+              "icon": "🦁",
               "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
               "effect": "buff-atk",
               "val": 2
@@ -10611,7 +10611,7 @@
               "name": "Fire of Wrath",
               "element": "fire",
               "category": "Base Game",
-              "icon": "\ud83d\udd25",
+              "icon": "🔥",
               "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
               "effect": "damage-bp",
               "val": 1
@@ -10622,7 +10622,7 @@
               "name": "Genie",
               "element": "air",
               "category": "Base Game",
-              "icon": "\ud83e\uddde",
+              "icon": "🧞",
               "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
               "effect": "summon-attack",
               "val": 5
@@ -10633,7 +10633,7 @@
               "name": "Swift Wind",
               "element": "air",
               "category": "Base Game",
-              "icon": "\ud83d\udca8",
+              "icon": "💨",
               "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
               "effect": "buff-move",
               "val": 2
@@ -10644,7 +10644,7 @@
               "name": "Tempest",
               "element": "air",
               "category": "Base Game",
-              "icon": "\ud83c\udf2a\ufe0f",
+              "icon": "🌪️",
               "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
               "effect": "status-freeze",
               "val": 1
@@ -10653,7 +10653,7 @@
           "robos:audioLines": {
             "turnStart": [
               {
-                "text": "We live in a world today where there are several hundred million people starving to death \u2014 they're starving to death right now!",
+                "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
                 "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
               },
               {
@@ -10661,11 +10661,11 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
               },
               {
-                "text": "In Sweden, they've had socialist governments for decades \u2014 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+                "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
                 "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
               },
               {
-                "text": "They say we're getting tough on crime \u2014 if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+                "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
                 "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
               },
               {
@@ -10681,13 +10681,13 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
               },
               {
-                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time \u2014 is there any wonder why so many millions of Americans feel stressed out?!",
+                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
                 "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
               }
             ],
             "moving": [
               {
-                "text": "We live in a world today where there are several hundred million people starving to death \u2014 they're starving to death right now!",
+                "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
                 "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
               },
               {
@@ -10695,11 +10695,11 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
               },
               {
-                "text": "In Sweden, they've had socialist governments for decades \u2014 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+                "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
                 "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
               },
               {
-                "text": "They say we're getting tough on crime \u2014 if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+                "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
                 "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
               },
               {
@@ -10715,13 +10715,13 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
               },
               {
-                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time \u2014 is there any wonder why so many millions of Americans feel stressed out?!",
+                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
                 "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
               }
             ],
             "attacking": [
               {
-                "text": "We live in a world today where there are several hundred million people starving to death \u2014 they're starving to death right now!",
+                "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
                 "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
               },
               {
@@ -10729,11 +10729,11 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
               },
               {
-                "text": "In Sweden, they've had socialist governments for decades \u2014 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+                "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
                 "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
               },
               {
-                "text": "They say we're getting tough on crime \u2014 if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+                "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
                 "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
               },
               {
@@ -10749,13 +10749,13 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
               },
               {
-                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time \u2014 is there any wonder why so many millions of Americans feel stressed out?!",
+                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
                 "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
               }
             ],
             "attacked": [
               {
-                "text": "We live in a world today where there are several hundred million people starving to death \u2014 they're starving to death right now!",
+                "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
                 "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
               },
               {
@@ -10763,11 +10763,11 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
               },
               {
-                "text": "In Sweden, they've had socialist governments for decades \u2014 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+                "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
                 "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
               },
               {
-                "text": "They say we're getting tough on crime \u2014 if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+                "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
                 "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
               },
               {
@@ -10783,13 +10783,13 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
               },
               {
-                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time \u2014 is there any wonder why so many millions of Americans feel stressed out?!",
+                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
                 "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
               }
             ],
             "defended": [
               {
-                "text": "We live in a world today where there are several hundred million people starving to death \u2014 they're starving to death right now!",
+                "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
                 "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
               },
               {
@@ -10797,11 +10797,11 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
               },
               {
-                "text": "In Sweden, they've had socialist governments for decades \u2014 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+                "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
                 "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
               },
               {
-                "text": "They say we're getting tough on crime \u2014 if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+                "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
                 "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
               },
               {
@@ -10817,13 +10817,13 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
               },
               {
-                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time \u2014 is there any wonder why so many millions of Americans feel stressed out?!",
+                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
                 "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
               }
             ],
             "castingMagic": [
               {
-                "text": "We live in a world today where there are several hundred million people starving to death \u2014 they're starving to death right now!",
+                "text": "We live in a world today where there are several hundred million people starving to death — they're starving to death right now!",
                 "audio": "res://assets/audio/heroes/bernie_quote_1.ogg"
               },
               {
@@ -10831,11 +10831,11 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_2.ogg"
               },
               {
-                "text": "In Sweden, they've had socialist governments for decades \u2014 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
+                "text": "In Sweden, they've had socialist governments for decades — 80 or 90% of the people voting, strong labor unions, and a health care system guaranteeing health care to all people!",
                 "audio": "res://assets/audio/heroes/bernie_quote_3.ogg"
               },
               {
-                "text": "They say we're getting tough on crime \u2014 if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
+                "text": "They say we're getting tough on crime — if you want to get tough on crime, let's deal with the causes of crime! Let's demand that every man, woman, and child have a decent standard of living!",
                 "audio": "res://assets/audio/heroes/bernie_quote_4.ogg"
               },
               {
@@ -10851,7 +10851,7 @@
                 "audio": "res://assets/audio/heroes/bernie_quote_7.ogg"
               },
               {
-                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time \u2014 is there any wonder why so many millions of Americans feel stressed out?!",
+                "text": "Workers in the United States today are working significantly longer hours, taking less vacation time — is there any wonder why so many millions of Americans feel stressed out?!",
                 "audio": "res://assets/audio/heroes/bernie_quote_8.ogg"
               }
             ]
@@ -10865,7 +10865,7 @@
           "id": "election-2026-quest-1",
           "slug": "election-2026-quest-1",
           "title": "Quest 1: Battle for the Hill",
-          "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office\u2014defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
+          "briefing": "Enter the Capitol halls in Midterm Elections: Battle for the Hill. Storm the Briefing Room, Committee Chamber, War Room, and Oval Office—defeat the partisan bosses and the three Hydra Bosses (Talarixon, El-Rogers, and Brownsted), expose the bipartisan slush fund, and reach the Capitol exit stairs!",
           "mapConfigId": "midterm-election-capitol",
           "ruleset": "heroquest",
           "goldReward": 150,
@@ -10963,7 +10963,7 @@
           "robos:equippedArmor": "Natural Toughness (2 Defend Dice)",
           "robos:specialAbility": "Greatest strength and vitality in melee combat",
           "robos:tokenColor": "#b91c1c",
-          "robos:icon": "\u2694\ufe0f",
+          "robos:icon": "⚔️",
           "robos:startingPosition": [
             0,
             1
@@ -11041,7 +11041,7 @@
           "robos:equippedArmor": "Shield & Chainmail (+2 Defend Dice)",
           "robos:specialAbility": "Disarms traps without needing a toolkit",
           "robos:tokenColor": "#d97706",
-          "robos:icon": "\ud83e\ude93",
+          "robos:icon": "🪓",
           "robos:startingPosition": [
             1,
             0
@@ -11117,7 +11117,7 @@
           "robos:equippedArmor": "Elven Leather & Cloak (+2 Defend Dice)",
           "robos:specialAbility": "Master of blade and 1 Elemental Spell deck (3 spells)",
           "robos:tokenColor": "#15803d",
-          "robos:icon": "\ud83c\udff9",
+          "robos:icon": "🏹",
           "robos:startingPosition": [
             1,
             1
@@ -11145,7 +11145,7 @@
               "name": "Water of Healing",
               "element": "water",
               "category": "Base Game",
-              "icon": "\ud83d\udca7",
+              "icon": "💧",
               "description": "Restores up to 4 lost Body Points to any Hero.",
               "effect": "heal-bp",
               "val": 4
@@ -11156,7 +11156,7 @@
               "name": "Sleep",
               "element": "water",
               "category": "Base Game",
-              "icon": "\ud83d\udca4",
+              "icon": "💤",
               "description": "Puts a monster into magical slumber. It cannot move or attack until it rolls a 6 to wake up.",
               "effect": "status-sleep",
               "val": 1
@@ -11167,7 +11167,7 @@
               "name": "Veil of Mist",
               "element": "water",
               "category": "Base Game",
-              "icon": "\ud83c\udf2b\ufe0f",
+              "icon": "🌫️",
               "description": "Envelops the caster in thick fog, allowing movement unseen past monsters.",
               "effect": "status-stealth",
               "val": 1
@@ -11227,7 +11227,7 @@
           "robos:equippedArmor": "Wizard Cloak (2 Defend Dice)",
           "robos:specialAbility": "Wields 3 Elemental Spell decks (9 spells total)",
           "robos:tokenColor": "#7c3aed",
-          "robos:icon": "\ud83d\udd2e",
+          "robos:icon": "🔮",
           "robos:startingPosition": [
             0,
             0
@@ -11255,7 +11255,7 @@
               "name": "Heal Body",
               "element": "earth",
               "category": "Base Game",
-              "icon": "\ud83d\udc96",
+              "icon": "💖",
               "description": "Restores up to 4 lost Body Points to any Hero, including yourself.",
               "effect": "heal-bp",
               "val": 4
@@ -11266,7 +11266,7 @@
               "name": "Pass Through Rock",
               "element": "earth",
               "category": "Base Game",
-              "icon": "\ud83e\uddf1",
+              "icon": "🧱",
               "description": "Allows the caster or ally to move through solid stone walls on their next turn.",
               "effect": "phase-walls",
               "val": 1
@@ -11277,7 +11277,7 @@
               "name": "Rock Skin",
               "element": "earth",
               "category": "Base Game",
-              "icon": "\ud83d\udee1\ufe0f",
+              "icon": "🛡️",
               "description": "Hardens the caster's skin, granting +1 extra Combat Defend Die until damaged.",
               "effect": "buff-def",
               "val": 1
@@ -11288,7 +11288,7 @@
               "name": "Ball of Flame",
               "element": "fire",
               "category": "Base Game",
-              "icon": "\u2604\ufe0f",
+              "icon": "☄️",
               "description": "Hurls a blazing sphere dealing 2 BP damage. Target defends with 2 dice.",
               "effect": "damage-bp",
               "val": 2
@@ -11299,7 +11299,7 @@
               "name": "Courage",
               "element": "fire",
               "category": "Base Game",
-              "icon": "\ud83e\udd81",
+              "icon": "🦁",
               "description": "Fills a hero with magical bravado, granting +2 extra Combat Attack Dice until no monsters remain.",
               "effect": "buff-atk",
               "val": 2
@@ -11310,7 +11310,7 @@
               "name": "Fire of Wrath",
               "element": "fire",
               "category": "Base Game",
-              "icon": "\ud83d\udd25",
+              "icon": "🔥",
               "description": "Strikes any visible monster with darts of flame, causing 1 BP damage. Target defends with 1 die.",
               "effect": "damage-bp",
               "val": 1
@@ -11321,7 +11321,7 @@
               "name": "Genie",
               "element": "air",
               "category": "Base Game",
-              "icon": "\ud83e\uddde",
+              "icon": "🧞",
               "description": "Summons an ancient djinn to attack any visible monster with 5 combat dice, or to open any locked door.",
               "effect": "summon-attack",
               "val": 5
@@ -11332,7 +11332,7 @@
               "name": "Swift Wind",
               "element": "air",
               "category": "Base Game",
-              "icon": "\ud83d\udca8",
+              "icon": "💨",
               "description": "Bestows the speed of the tempest, allowing the hero to roll double movement dice (4d6).",
               "effect": "buff-move",
               "val": 2
@@ -11343,7 +11343,7 @@
               "name": "Tempest",
               "element": "air",
               "category": "Base Game",
-              "icon": "\ud83c\udf2a\ufe0f",
+              "icon": "🌪️",
               "description": "Creates a localized vortex trapping a monster for 1 turn. It misses its next turn.",
               "effect": "status-freeze",
               "val": 1
@@ -11491,7 +11491,7 @@
       "robos:replaces": "Goblin",
       "robos:specialAbility": "Door Knocker: Move through other monsters",
       "robos:abilities": "Door Knocker: Move through other monsters",
-      "dcterms:description": "Replaces Goblin \u2014 Door Knocker: Move through other monsters.",
+      "dcterms:description": "Replaces Goblin — Door Knocker: Move through other monsters.",
       "robos:bodyPoints": 1,
       "robos:mindPoints": 1,
       "robos:attackDice": 2,
@@ -11501,7 +11501,7 @@
       "robos:isUndead": false,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "\ud83d\udccb",
+      "robos:icon": "📋",
       "robos:tokenColor": "#16a34a",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -11522,7 +11522,7 @@
       "robos:replaces": "Orc",
       "robos:specialAbility": "Smear Campaign: Force reroll of one successful defend die, once per encounter",
       "robos:abilities": "Smear Campaign: Force reroll of one successful defend die, once per encounter",
-      "dcterms:description": "Replaces Orc \u2014 Smear Campaign: Force reroll of one successful defend die, once per encounter.",
+      "dcterms:description": "Replaces Orc — Smear Campaign: Force reroll of one successful defend die, once per encounter.",
       "robos:bodyPoints": 1,
       "robos:mindPoints": 2,
       "robos:attackDice": 3,
@@ -11532,7 +11532,7 @@
       "robos:isUndead": false,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "\ud83d\udd75\ufe0f",
+      "robos:icon": "🕵️",
       "robos:tokenColor": "#ca8a04",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -11553,7 +11553,7 @@
       "robos:replaces": "Skeleton",
       "robos:specialAbility": "Reelection: On death, black shield resurrects with 1 Body Point",
       "robos:abilities": "Reelection: On death, black shield resurrects with 1 Body Point",
-      "dcterms:description": "Replaces Skeleton \u2014 Reelection: On death, black shield resurrects with 1 Body Point.",
+      "dcterms:description": "Replaces Skeleton — Reelection: On death, black shield resurrects with 1 Body Point.",
       "robos:bodyPoints": 1,
       "robos:mindPoints": 0,
       "robos:attackDice": 2,
@@ -11563,7 +11563,7 @@
       "robos:isUndead": true,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "\ud83c\udfdb\ufe0f",
+      "robos:icon": "🏛️",
       "robos:tokenColor": "#94a3b8",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -11584,7 +11584,7 @@
       "robos:replaces": "Zombie",
       "robos:specialAbility": "Red Tape: Adjacent heroes roll an extra movement die and use the lowest",
       "robos:abilities": "Red Tape: Adjacent heroes roll an extra movement die and use the lowest",
-      "dcterms:description": "Replaces Zombie \u2014 Red Tape: Adjacent heroes roll an extra movement die and use the lowest.",
+      "dcterms:description": "Replaces Zombie — Red Tape: Adjacent heroes roll an extra movement die and use the lowest.",
       "robos:bodyPoints": 1,
       "robos:mindPoints": 0,
       "robos:attackDice": 2,
@@ -11594,7 +11594,7 @@
       "robos:isUndead": true,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "\ud83d\udcce",
+      "robos:icon": "📎",
       "robos:tokenColor": "#475569",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -11615,7 +11615,7 @@
       "robos:replaces": "Mummy",
       "robos:specialAbility": "Bought Influence: Force reroll of one attacking skull, once per encounter",
       "robos:abilities": "Bought Influence: Force reroll of one attacking skull, once per encounter",
-      "dcterms:description": "Replaces Mummy \u2014 Bought Influence: Force reroll of one attacking skull, once per encounter.",
+      "dcterms:description": "Replaces Mummy — Bought Influence: Force reroll of one attacking skull, once per encounter.",
       "robos:bodyPoints": 2,
       "robos:mindPoints": 0,
       "robos:attackDice": 3,
@@ -11625,7 +11625,7 @@
       "robos:isUndead": true,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "\ud83d\udcbc",
+      "robos:icon": "💼",
       "robos:tokenColor": "#d97706",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -11646,7 +11646,7 @@
       "robos:replaces": "Dread Warrior",
       "robos:specialAbility": "Polarization: +1 attack die when adjacent to another Partisan Enforcer",
       "robos:abilities": "Polarization: +1 attack die when adjacent to another Partisan Enforcer",
-      "dcterms:description": "Replaces Dread Warrior \u2014 Polarization: +1 attack die when adjacent to another Partisan Enforcer.",
+      "dcterms:description": "Replaces Dread Warrior — Polarization: +1 attack die when adjacent to another Partisan Enforcer.",
       "robos:bodyPoints": 3,
       "robos:mindPoints": 3,
       "robos:attackDice": 4,
@@ -11656,7 +11656,7 @@
       "robos:isUndead": false,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "\u2694\ufe0f",
+      "robos:icon": "⚔️",
       "robos:tokenColor": "#dc2626",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -11677,7 +11677,7 @@
       "robos:replaces": "Gargoyle",
       "robos:specialAbility": "Dark Money: Summon one Campaign Volunteer, once per encounter",
       "robos:abilities": "Dark Money: Summon one Campaign Volunteer, once per encounter",
-      "dcterms:description": "Replaces Gargoyle \u2014 Dark Money: Summon one Campaign Volunteer, once per encounter.",
+      "dcterms:description": "Replaces Gargoyle — Dark Money: Summon one Campaign Volunteer, once per encounter.",
       "robos:bodyPoints": 3,
       "robos:mindPoints": 4,
       "robos:attackDice": 4,
@@ -11687,7 +11687,7 @@
       "robos:isUndead": false,
       "robos:isSpellcaster": false,
       "robos:spells": [],
-      "robos:icon": "\ud83d\ude08",
+      "robos:icon": "😈",
       "robos:tokenColor": "#7c3aed",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -11708,7 +11708,7 @@
       "robos:replaces": "Dread Sorcerer",
       "robos:specialAbility": "Alternative Facts: Cancel one successful attack, once per encounter",
       "robos:abilities": "Alternative Facts: Cancel one successful attack, once per encounter",
-      "dcterms:description": "Replaces Dread Sorcerer \u2014 Alternative Facts: Cancel one successful attack, once per encounter.",
+      "dcterms:description": "Replaces Dread Sorcerer — Alternative Facts: Cancel one successful attack, once per encounter.",
       "robos:bodyPoints": 3,
       "robos:mindPoints": 5,
       "robos:attackDice": 3,
@@ -11720,7 +11720,7 @@
       "robos:spells": [
         "urn:robos:tabletop:spell:recount-of-the-damned"
       ],
-      "robos:icon": "\ud83c\udf00",
+      "robos:icon": "🌀",
       "robos:tokenColor": "#0284c7",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -11733,14 +11733,14 @@
         "robos:GameMonster",
         "schema:Person"
       ],
-      "dcterms:title": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra)",
+      "dcterms:title": "Talarixon (Talarico + Paxton · Texas Hydra)",
       "robos:category": "Midterms 2026",
       "robos:mirrorsMonster": "urn:robos:tabletop:monster:dragon",
       "robos:monsterArchetype": "Texas Hydra",
       "robos:archetype": "Texas Hydra",
-      "robos:specialAbility": "Holy Smite (3 dice vs visible hero) \u2022 Indictment Barrage (move die 1-3 loses action) \u2022 Divided Authority (once/battle: lose turn, 2 dice to all adjacent heroes) \u2022 Political Infighting (\u22643 BP: white shield lets heroes pick special attack)",
-      "robos:abilities": "Holy Smite: Attack a visible hero with 3 dice. | Indictment Barrage: Hero rolls movement die; 1\u20133 loses next action. | Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. | Political Infighting: At \u22643 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
-      "dcterms:description": "Talarico + Paxton \u00b7 Texas Hydra Boss \u2014 Holy Smite: Attack a visible hero with 3 dice. Indictment Barrage: Hero rolls movement die; 1\u20133 loses next action. Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. Universal Hydra Rule \u2014 Political Infighting: At \u22643 BP, on a white shield at turn start, heroes choose its special attack.",
+      "robos:specialAbility": "Holy Smite (3 dice vs visible hero) • Indictment Barrage (move die 1-3 loses action) • Divided Authority (once/battle: lose turn, 2 dice to all adjacent heroes) • Political Infighting (≤3 BP: white shield lets heroes pick special attack)",
+      "robos:abilities": "Holy Smite: Attack a visible hero with 3 dice. | Indictment Barrage: Hero rolls movement die; 1–3 loses next action. | Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. | Political Infighting: At ≤3 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
+      "dcterms:description": "Talarico + Paxton · Texas Hydra Boss — Holy Smite: Attack a visible hero with 3 dice. Indictment Barrage: Hero rolls movement die; 1–3 loses next action. Divided Authority: Once per battle, loses its turn but attacks all adjacent heroes with 2 dice. Universal Hydra Rule — Political Infighting: At ≤3 BP, on a white shield at turn start, heroes choose its special attack.",
       "robos:bodyPoints": 6,
       "robos:mindPoints": 5,
       "robos:attackDice": 5,
@@ -11752,7 +11752,7 @@
       "robos:spells": [
         "urn:robos:tabletop:spell:recount-of-the-damned"
       ],
-      "robos:icon": "\ud83d\udc0d",
+      "robos:icon": "🐍",
       "robos:tokenColor": "#b91c1c",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -11765,14 +11765,14 @@
         "robos:GameMonster",
         "schema:Person"
       ],
-      "dcterms:title": "El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra)",
+      "dcterms:title": "El-Rogers (El-Sayed + Rogers · Michigan Hydra)",
       "robos:category": "Midterms 2026",
       "robos:mirrorsMonster": "urn:robos:tabletop:monster:witch-lord",
       "robos:monsterArchetype": "Michigan Hydra",
       "robos:archetype": "Michigan Hydra",
-      "robos:specialAbility": "Universal Healing (recover 2 BP once/battle) \u2022 Security Lockdown (seal room doors 1 round) \u2022 Industrial Collapse (at 3 BP: 3 dice to adjacent heroes, lose 1 BP) \u2022 Political Infighting (\u22643 BP: white shield lets heroes pick special attack)",
-      "robos:abilities": "Universal Healing: Recover 2 Body Points once per battle. | Security Lockdown: Seal room doors for one round. | Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. | Political Infighting: At \u22643 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
-      "dcterms:description": "El-Sayed + Rogers \u00b7 Michigan Hydra Boss \u2014 Universal Healing: Recover 2 Body Points once per battle. Security Lockdown: Seal room doors for one round. Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. Universal Hydra Rule \u2014 Political Infighting: At \u22643 BP, on a white shield at turn start, heroes choose its special attack.",
+      "robos:specialAbility": "Universal Healing (recover 2 BP once/battle) • Security Lockdown (seal room doors 1 round) • Industrial Collapse (at 3 BP: 3 dice to adjacent heroes, lose 1 BP) • Political Infighting (≤3 BP: white shield lets heroes pick special attack)",
+      "robos:abilities": "Universal Healing: Recover 2 Body Points once per battle. | Security Lockdown: Seal room doors for one round. | Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. | Political Infighting: At ≤3 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
+      "dcterms:description": "El-Sayed + Rogers · Michigan Hydra Boss — Universal Healing: Recover 2 Body Points once per battle. Security Lockdown: Seal room doors for one round. Industrial Collapse: At 3 Body Points, attack all adjacent heroes with 3 dice, then lose 1 Body Point. Universal Hydra Rule — Political Infighting: At ≤3 BP, on a white shield at turn start, heroes choose its special attack.",
       "robos:bodyPoints": 7,
       "robos:mindPoints": 4,
       "robos:attackDice": 5,
@@ -11784,7 +11784,7 @@
       "robos:spells": [
         "urn:robos:tabletop:spell:recount-of-the-damned"
       ],
-      "robos:icon": "\ud83d\udc32",
+      "robos:icon": "🐲",
       "robos:tokenColor": "#1d4ed8",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -11797,14 +11797,14 @@
         "robos:GameMonster",
         "schema:Person"
       ],
-      "dcterms:title": "Brownsted (Brown + Husted \u00b7 Ohio Hydra)",
+      "dcterms:title": "Brownsted (Brown + Husted · Ohio Hydra)",
       "robos:category": "Midterms 2026",
       "robos:mirrorsMonster": "urn:robos:tabletop:monster:verag-orc-warlord",
       "robos:monsterArchetype": "Ohio Hydra",
       "robos:archetype": "Ohio Hydra",
-      "robos:specialAbility": "Union Strike (3 dice to all adjacent heroes) \u2022 Budget Freeze (no hero potions for 1 round) \u2022 Bipartisan Gridlock (roll combat die each turn: black shield = lose turn, skull = +1 atk die) \u2022 Political Infighting (\u22644 BP: white shield lets heroes pick special attack)",
-      "robos:abilities": "Union Strike: Attack every adjacent hero with 3 dice. | Budget Freeze: Prevent heroes using potions for one round. | Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. | Political Infighting: At \u22644 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
-      "dcterms:description": "Brown + Husted \u00b7 Ohio Hydra Boss \u2014 Union Strike: Attack every adjacent hero with 3 dice. Budget Freeze: Prevent heroes using potions for one round. Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. Universal Hydra Rule \u2014 Political Infighting: At \u22644 BP, on a white shield at turn start, heroes choose its special attack.",
+      "robos:specialAbility": "Union Strike (3 dice to all adjacent heroes) • Budget Freeze (no hero potions for 1 round) • Bipartisan Gridlock (roll combat die each turn: black shield = lose turn, skull = +1 atk die) • Political Infighting (≤4 BP: white shield lets heroes pick special attack)",
+      "robos:abilities": "Union Strike: Attack every adjacent hero with 3 dice. | Budget Freeze: Prevent heroes using potions for one round. | Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. | Political Infighting: At ≤4 BP, roll a combat die at start of turn; on a white shield, heroes choose which available special attack it uses.",
+      "dcterms:description": "Brown + Husted · Ohio Hydra Boss — Union Strike: Attack every adjacent hero with 3 dice. Budget Freeze: Prevent heroes using potions for one round. Bipartisan Gridlock: Roll combat die each turn. Black shield = lose turn; skull = +1 attack die. Universal Hydra Rule — Political Infighting: At ≤4 BP, on a white shield at turn start, heroes choose its special attack.",
       "robos:bodyPoints": 8,
       "robos:mindPoints": 5,
       "robos:attackDice": 6,
@@ -11816,7 +11816,7 @@
       "robos:spells": [
         "urn:robos:tabletop:spell:recount-of-the-damned"
       ],
-      "robos:icon": "\ud83d\udc09",
+      "robos:icon": "🐉",
       "robos:tokenColor": "#9333ea",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop"
@@ -11832,8 +11832,8 @@
       "dcterms:title": "Attack Ad",
       "robos:category": "Midterms 2026",
       "robos:element": "fire",
-      "robos:spellCollege": "Fire \u2014 Campaign Chaos",
-      "robos:icon": "\ud83d\udcfa",
+      "robos:spellCollege": "Fire — Campaign Chaos",
+      "robos:icon": "📺",
       "dcterms:description": "Attack one visible monster with 2 combat dice.",
       "robos:effect": "damage-dice",
       "robos:val": 2,
@@ -11851,8 +11851,8 @@
       "dcterms:title": "Outrage Inferno",
       "robos:category": "Midterms 2026",
       "robos:element": "fire",
-      "robos:spellCollege": "Fire \u2014 Campaign Chaos",
-      "robos:icon": "\ud83d\udd25",
+      "robos:spellCollege": "Fire — Campaign Chaos",
+      "robos:icon": "🔥",
       "dcterms:description": "Every monster in the room rolls 1 combat die; skull = 1 damage.",
       "robos:effect": "room-damage-dice",
       "robos:val": 1,
@@ -11870,8 +11870,8 @@
       "dcterms:title": "October Surprise",
       "robos:category": "Midterms 2026",
       "robos:element": "fire",
-      "robos:spellCollege": "Fire \u2014 Campaign Chaos",
-      "robos:icon": "\ud83d\udca3",
+      "robos:spellCollege": "Fire — Campaign Chaos",
+      "robos:icon": "💣",
       "dcterms:description": "Hero makes an additional attack with +2 attack dice.",
       "robos:effect": "buff-atk",
       "robos:val": 2,
@@ -11889,9 +11889,9 @@
       "dcterms:title": "Filibuster",
       "robos:category": "Midterms 2026",
       "robos:element": "water",
-      "robos:spellCollege": "Water \u2014 Bureaucracy",
-      "robos:icon": "\u23f3",
-      "dcterms:description": "Monster loses next turn unless it rolls 5\u20136 on one movement die.",
+      "robos:spellCollege": "Water — Bureaucracy",
+      "robos:icon": "⏳",
+      "dcterms:description": "Monster loses next turn unless it rolls 5–6 on one movement die.",
       "robos:effect": "status-sleep",
       "robos:val": 1,
       "robos:package": "tabletop-game",
@@ -11908,8 +11908,8 @@
       "dcterms:title": "Executive Privilege",
       "robos:category": "Midterms 2026",
       "robos:element": "water",
-      "robos:spellCollege": "Water \u2014 Bureaucracy",
-      "robos:icon": "\ud83d\udee1\ufe0f",
+      "robos:spellCollege": "Water — Bureaucracy",
+      "robos:icon": "🛡️",
       "dcterms:description": "Hero ignores all damage from the next damaging attack.",
       "robos:effect": "buff-ignore-damage",
       "robos:val": 1,
@@ -11927,8 +11927,8 @@
       "dcterms:title": "Emergency Funding",
       "robos:category": "Midterms 2026",
       "robos:element": "water",
-      "robos:spellCollege": "Water \u2014 Bureaucracy",
-      "robos:icon": "\ud83d\udc89",
+      "robos:spellCollege": "Water — Bureaucracy",
+      "robos:icon": "💉",
       "dcterms:description": "Restore up to 4 lost Body Points.",
       "robos:effect": "heal-bp",
       "robos:val": 4,
@@ -11946,8 +11946,8 @@
       "dcterms:title": "Incumbent Protection",
       "robos:category": "Midterms 2026",
       "robos:element": "earth",
-      "robos:spellCollege": "Earth \u2014 Establishment",
-      "robos:icon": "\ud83c\udff0",
+      "robos:spellCollege": "Earth — Establishment",
+      "robos:icon": "🏰",
       "dcterms:description": "Hero gains +2 defend dice until suffering damage.",
       "robos:effect": "buff-def",
       "robos:val": 2,
@@ -11965,8 +11965,8 @@
       "dcterms:title": "Special Interest Donation",
       "robos:category": "Midterms 2026",
       "robos:element": "earth",
-      "robos:spellCollege": "Earth \u2014 Establishment",
-      "robos:icon": "\ud83d\udcb0",
+      "robos:spellCollege": "Earth — Establishment",
+      "robos:icon": "💰",
       "dcterms:description": "Gain 100 gold, or 50 if a monster is visible.",
       "robos:effect": "grant-gold",
       "robos:val": 100,
@@ -11984,8 +11984,8 @@
       "dcterms:title": "Gerrymander",
       "robos:category": "Midterms 2026",
       "robos:element": "earth",
-      "robos:spellCollege": "Earth \u2014 Establishment",
-      "robos:icon": "\ud83d\uddfa\ufe0f",
+      "robos:spellCollege": "Earth — Establishment",
+      "robos:icon": "🗺️",
       "dcterms:description": "Relocate one visible monster up to 4 legal squares.",
       "robos:effect": "relocate-monster",
       "robos:val": 4,
@@ -12003,8 +12003,8 @@
       "dcterms:title": "Polling Surge",
       "robos:category": "Midterms 2026",
       "robos:element": "air",
-      "robos:spellCollege": "Air \u2014 Public Opinion",
-      "robos:icon": "\ud83d\udcc8",
+      "robos:spellCollege": "Air — Public Opinion",
+      "robos:icon": "📈",
       "dcterms:description": "Double next movement roll.",
       "robos:effect": "buff-move",
       "robos:val": 2,
@@ -12022,8 +12022,8 @@
       "dcterms:title": "Media Frenzy",
       "robos:category": "Midterms 2026",
       "robos:element": "air",
-      "robos:spellCollege": "Air \u2014 Public Opinion",
-      "robos:icon": "\ud83c\udf99\ufe0f",
+      "robos:spellCollege": "Air — Public Opinion",
+      "robos:icon": "🎙️",
       "dcterms:description": "Monster loses next turn; Mind 4+ may resist on a 6.",
       "robos:effect": "status-freeze",
       "robos:val": 1,
@@ -12041,8 +12041,8 @@
       "dcterms:title": "Landslide Victory",
       "robos:category": "Midterms 2026",
       "robos:element": "air",
-      "robos:spellCollege": "Air \u2014 Public Opinion",
-      "robos:icon": "\ud83c\udf0a",
+      "robos:spellCollege": "Air — Public Opinion",
+      "robos:icon": "🌊",
       "dcterms:description": "Attack one visible monster with 5 combat dice.",
       "robos:effect": "damage-dice",
       "robos:val": 5,
@@ -12062,8 +12062,8 @@
       "robos:category": "Midterms 2026",
       "robos:element": "dread",
       "robos:spellCollege": "Forbidden Dread Spell",
-      "robos:icon": "\ud83d\uddf3\ufe0f",
-      "dcterms:description": "All heroes in one room roll one movement die. On 1\u20133, they lose their next action.",
+      "robos:icon": "🗳️",
+      "dcterms:description": "All heroes in one room roll one movement die. On 1–3, they lose their next action.",
       "robos:effect": "room-lose-action",
       "robos:val": 3,
       "robos:package": "tabletop-game",
@@ -12076,7 +12076,7 @@
         "robos:TabletopQuestSaveState",
         "schema:Action"
       ],
-      "dcterms:title": "Quest State \u2014 Round 3 (Barack Obama (Hero 1 of 4))",
+      "dcterms:title": "Quest State — Round 3 (Barack Obama (Hero 1 of 4))",
       "robos:package": "tabletop-game",
       "robos:namespace": "robos.tabletop",
       "robos:questSlug": "election-2026-quest-1",
@@ -12085,9 +12085,9 @@
         26,
         19
       ],
-      "robos:savedAt": "2026-10-20T13:20:31.000Z",
-      "robos:playTimeSeconds": 13616,
-      "robos:playTimeFormatted": "3h 46m 56s",
+      "robos:savedAt": "2026-10-20T14:11:52.000Z",
+      "robos:playTimeSeconds": 16697,
+      "robos:playTimeFormatted": "4h 38m 17s",
       "robos:currentRound": 3,
       "robos:currentPhase": "hero_phase",
       "robos:currentRole": "player",
@@ -12244,7 +12244,7 @@
         {
           "@type": "robos:TabletopSaveMonsterState",
           "id": "mon-brownsted-5",
-          "name": "Brownsted (Brown + Husted \u00b7 Ohio Hydra)",
+          "name": "Brownsted (Brown + Husted · Ohio Hydra)",
           "monsterType": "brownsted",
           "currentBP": 8,
           "maxBP": 8,
@@ -12299,7 +12299,7 @@
           "type": "equipment",
           "holder": "Barack Obama",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "obama-healing_potion-1",
@@ -12307,7 +12307,7 @@
           "type": "potion",
           "holder": "Barack Obama",
           "source": "Hero Inventory",
-          "icon": "\ud83e\uddea"
+          "icon": "🧪"
         },
         {
           "id": "trump-shortsword-0",
@@ -12315,7 +12315,7 @@
           "type": "equipment",
           "holder": "Donald Trump",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "trump-healing_potion-1",
@@ -12323,7 +12323,7 @@
           "type": "potion",
           "holder": "Donald Trump",
           "source": "Hero Inventory",
-          "icon": "\ud83e\uddea"
+          "icon": "🧪"
         },
         {
           "id": "hillary-clinton-shortsword-0",
@@ -12331,7 +12331,7 @@
           "type": "equipment",
           "holder": "Hillary Clinton",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "hillary-clinton-healing_potion-1",
@@ -12339,7 +12339,7 @@
           "type": "potion",
           "holder": "Hillary Clinton",
           "source": "Hero Inventory",
-          "icon": "\ud83e\uddea"
+          "icon": "🧪"
         },
         {
           "id": "bernie-sanders-dagger-0",
@@ -12347,7 +12347,7 @@
           "type": "equipment",
           "holder": "Bernie Sanders",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "bernie-sanders-staff-1",
@@ -12355,7 +12355,7 @@
           "type": "equipment",
           "holder": "Bernie Sanders",
           "source": "Hero Inventory",
-          "icon": "\ud83d\udde1\ufe0f"
+          "icon": "🗡️"
         },
         {
           "id": "bernie-sanders-healing_potion-2",
@@ -12363,7 +12363,7 @@
           "type": "potion",
           "holder": "Bernie Sanders",
           "source": "Hero Inventory",
-          "icon": "\ud83e\uddea"
+          "icon": "🧪"
         }
       ],
       "robos:itemsFoundCount": 9,
@@ -12379,7 +12379,7 @@
       "robos:triggersFired": [
         {
           "id": "trigger-sw-supreme-court-brownsted",
-          "title": "Supreme Court Chamber \u2014 Brownsted (Ohio Hydra) & Bunker Rotation",
+          "title": "Supreme Court Chamber — Brownsted (Ohio Hydra) & Bunker Rotation",
           "event": "on_room_entered",
           "tile": [
             14,

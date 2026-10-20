@@ -17,6 +17,7 @@ extends Node
 # - POST /input        -> Inject mouse_button / mouse_motion / key events through the real input handlers
 # - POST /ui           -> Drive HUD state: local_player, hover, help, pending_ability, message, control_group, focus
 # - POST /screenshot   -> Save the current frame as PNG
+# - GET|POST /editor   -> Map Editor state / actions (only while scenes/MapEditor.tscn is active)
 
 var server: TCPServer = TCPServer.new()
 var active_port: int = 18095
@@ -192,17 +193,8 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 					RTSCommanderAI.configure_from_scenario([])
 					_send_json(client, 200, {"ok": true, "scenario": SimEngine.scenario_name, "unit_count": SimEngine.units.size()})
 					return
-				var file_path = "res://scenarios/%s.jsonld" % slug
-				if not FileAccess.file_exists(file_path):
-					file_path = "res://scenarios/%s.json" % slug
-				if FileAccess.file_exists(file_path):
-					var raw = FileAccess.get_file_as_string(file_path)
-					var parsed = JSON.parse_string(raw)
-					if typeof(parsed) == TYPE_DICTIONARY:
-						var res = SimEngine.load_scenario_dict(parsed)
-						_send_json(client, 200, res)
-						return
-				_send_json(client, 404, {"ok": false, "error": "Scenario file not found: " + slug})
+				var res = SimEngine.load_scenario_file(slug)
+				_send_json(client, 200 if bool(res.get("ok", false)) else 404, res)
 			else:
 				var res = SimEngine.load_scenario_dict(body_dict)
 				_send_json(client, 200, res)
@@ -269,6 +261,19 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 				_send_json(client, 200, {"ok": err == OK, "path": out_path, "width": img.get_width(), "height": img.get_height()})
 			else:
 				_send_json(client, 500, {"ok": false, "error": "No viewport image available"})
+
+		"/editor":
+			# Map Editor automation: GET (empty body) returns state, POST {"action": ...} edits the map.
+			var editor_node = get_tree().current_scene
+			if str(body_dict.get("action", "")) == "open":
+				if not (editor_node and editor_node.has_method("handle_control_request")):
+					get_tree().change_scene_to_file("res://scenes/MapEditor.tscn")
+				_send_json(client, 200, {"ok": true, "opening": true})
+			elif editor_node and editor_node.has_method("handle_control_request"):
+				var res = editor_node.handle_control_request(body_dict)
+				_send_json(client, 200 if bool(res.get("ok", false)) else 404, res)
+			else:
+				_send_json(client, 404, {"ok": false, "error": "Map Editor is not the active scene"})
 
 		_:
 			_send_json(client, 404, {"ok": false, "error": "Unknown endpoint: " + path})

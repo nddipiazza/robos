@@ -121,3 +121,106 @@ def step_assert_tick_reached(context, tick: int) -> None:
     obs = context.client.get_observation()
     assert obs["tick"] >= tick, f"Expected the simulation to reach tick {tick}, got {obs['tick']}"
 
+
+# ---------------------------------------------------------------------------
+# Map Editor steps (scenes/MapEditor.tscn via POST /editor)
+# ---------------------------------------------------------------------------
+
+def _editor_ok(context, action: str, **params):
+    res = context.client.editor(action, **params)
+    assert res.get("ok"), f"Editor action {action} failed: {res.get('error', res)}"
+    context.editor_state = res
+    return res
+
+
+@given("the Map Editor is open with a new {width:d}x{height:d} map")
+def step_open_map_editor(context, width: int, height: int) -> None:
+    import time
+
+    context.client.editor("open")
+    deadline = time.time() + 10.0
+    while time.time() < deadline:
+        if context.client.editor("state").get("ok"):
+            break
+        time.sleep(0.1)
+    _editor_ok(context, "new", width=width, height=height)
+
+
+@when('the editor paints a "{layer}" rect at ({x:d}, {y:d}) sized {w:d}x{h:d}')
+def step_editor_paint_rect(context, layer: str, x: int, y: int, w: int, h: int) -> None:
+    _editor_ok(context, "add_rect", layer=layer, x=x, y=y, w=w, h=h)
+
+
+@when('the editor places a "{res_type}" at ({x:d}, {y:d})')
+def step_editor_place_resource(context, res_type: str, x: int, y: int) -> None:
+    _editor_ok(context, "add_resource", type=res_type, x=x, y=y)
+
+
+@when('the editor places {count:d} "{unit_type}" units for player {player:d} at ({x:d}, {y:d})')
+def step_editor_place_units(context, count: int, unit_type: str, player: int, x: int, y: int) -> None:
+    _editor_ok(context, "add_unit", type=unit_type, owner=player, x=x, y=y, count=count)
+
+
+@when('the editor sets player {player:d} AI directive "{mode}" targeting ({x:d}, {y:d})')
+def step_editor_set_directive(context, player: int, mode: str, x: int, y: int) -> None:
+    _editor_ok(context, "set_directive", player=player, mode=mode, enabled=True, target_x=float(x), target_y=float(y))
+
+
+@when("the editor undoes the last edit")
+def step_editor_undo(context) -> None:
+    _editor_ok(context, "undo")
+
+
+@then('the editor reports {count:d} validation issue mentioning "{text}"')
+def step_editor_issue_count(context, count: int, text: str) -> None:
+    issues = context.client.editor("state")["issues"]
+    assert len(issues) == count and text in issues[0], f"Unexpected validation issues: {issues}"
+
+
+@then("the editor reports no validation issues")
+def step_editor_no_issues(context) -> None:
+    issues = context.client.editor("state")["issues"]
+    assert issues == [], f"Unexpected validation issues: {issues}"
+
+
+@when('the editor saves the map to "{path}"')
+def step_editor_save(context, path: str) -> None:
+    res = _editor_ok(context, "save", path=path, overwrite=True)
+    assert res["summary"]["dirty"] is False
+
+
+@when('the RTS scenario file "{path}" is loaded')
+def step_load_scenario_file(context, path: str) -> None:
+    res = context.client.load_scenario_slug(path)
+    assert res.get("ok"), f"Failed to load {path}: {res}"
+
+
+@then("the engine map is {width:d}x{height:d} with {features:d} terrain features")
+def step_engine_map_shape(context, width: int, height: int, features: int) -> None:
+    obs = context.client.get_observation()
+    assert int(obs["map"]["width"]) == width and int(obs["map"]["height"]) == height, obs["map"]
+    terrain = len(obs["map"].get("obstacles", [])) + len(obs["map"].get("high_ground", [])) + len(obs["map"].get("ramps", []))
+    assert terrain == features, f"Expected {features} terrain features, got {obs['map']}"
+
+
+@when("the editor playtests the map")
+def step_editor_playtest(context) -> None:
+    _editor_ok(context, "playtest")
+
+
+@when('the editor names the map "{label}"')
+def step_editor_name_map(context, label: str) -> None:
+    _editor_ok(context, "set_map", key="label", value=label)
+
+
+@then('the engine is running "{label}" at tick {min_tick:d} or later')
+def step_engine_running_map(context, label: str, min_tick: int) -> None:
+    obs = context.client.get_observation()
+    assert obs["scenario"] == label and obs["tick"] >= min_tick, f"scenario={obs['scenario']} tick={obs['tick']}"
+
+
+@then('player {player:d} has fewer than {count:d} surviving "{unit_type}" units')
+def step_player_has_fewer_units(context, player: int, count: int, unit_type: str) -> None:
+    obs = context.client.get_observation()
+    alive = len([u for u in obs["units"] if u["owner"] == player and u["unit_type"] == unit_type])
+    assert alive < count, f"Expected player {player} to have < {count} {unit_type}, found {alive}"
