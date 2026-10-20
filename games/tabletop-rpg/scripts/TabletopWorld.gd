@@ -10193,14 +10193,11 @@ func move_hero(target_pos: Vector2i, is_interactive: bool = false) -> bool:
 			spawn_floating_text(final_pos, "-%d HP PIT TRAP" % dmg, Color(1.0, 0.2, 0.2), 1.5)
 
 		if int(hero.get("current_bp", 0)) <= 0:
-			hero["is_dead"] = true
-			hero["is_on_board"] = false
 			movement_remaining = 0
 			movement_closed = true
 			has_acted_this_turn = true
 			turn_state = "turn_complete"
-			_log("[HERO SLAIN] %s has fallen to a trap!" % hero.get("name"))
-			spawn_floating_text(final_pos, "SLAIN!", Color(0.9, 0.1, 0.1))
+			_handle_hero_death(hero, "[HERO SLAIN] %s has fallen to a trap!" % hero.get("name"))
 	else:
 		movement_remaining = maxi(0, movement_remaining - actual_cost)
 
@@ -11075,8 +11072,11 @@ func oracle_reroll_dice(hero_id: String = "", roll_type: String = "") -> Diction
 		var new_wounds = maxi(0, atk_skulls - new_shields)
 
 		target_h["current_bp"] = maxi(0, prev_h_bp - new_wounds)
-		target_h["is_dead"] = int(target_h.get("current_bp", 0)) <= 0
-		target_h["is_on_board"] = int(target_h.get("current_bp", 0)) > 0
+		if int(target_h.get("current_bp", 0)) <= 0:
+			_handle_hero_death(target_h, "[HERO SLAIN] %s has fallen in battle!" % target_h.get("name"))
+		else:
+			target_h["is_dead"] = false
+			target_h["is_on_board"] = true
 
 		spawn_floating_text(hero_pos, "✨ RE-ROLL: %d SHIELDS" % new_shields, Color(0.3, 0.85, 1.0), 2.0)
 		_log("[BLESSING] %s invokes the Oracle's Blessing to re-roll defense dice! Discards first roll (%d White Shields) -> Takes second result: %d White Shields (wounds taken: %d, Remaining BP: %d). The second result must be taken!" % [
@@ -12154,12 +12154,10 @@ func dm_attack_hero(hero_id: String = "", attacker_monster: Variant = null) -> D
 		target_h["current_bp"] = maxi(0, prev_h_bp - res.wounds)
 		h_hp_subtracted = prev_h_bp - int(target_h.get("current_bp", 0))
 		_log("[HIT] %s takes %d wound(s)! Remaining HP: %d" % [target_h.get("name"), res.wounds, target_h.get("current_bp")])
-		play_hero_situation_audio(target_h, "attacked")
 		if int(target_h.get("current_bp", 0)) <= 0:
-			target_h["is_dead"] = true
-			target_h["is_on_board"] = false
-			_log("[HERO SLAIN] %s has fallen in battle!" % target_h.get("name"))
-			spawn_floating_text(h_pos, "SLAIN!", Color(0.9, 0.1, 0.1))
+			_handle_hero_death(target_h, "[HERO SLAIN] %s has fallen in battle!" % target_h.get("name"))
+		else:
+			play_hero_situation_audio(target_h, "attacked")
 		record_damage_event(
 			str(target_h.get("name", "Hero")),
 			str(target_h.get("id", "hero")),
@@ -14023,7 +14021,12 @@ func _get_election_hero_audio_dict(key: String) -> Dictionary:
 				{ "text": "Uhh... not today!", "audio": "res://assets/audio/heroes/obama_react_5.ogg" },
 				{ "text": "Uhh... folks, ouch!", "audio": "res://assets/audio/heroes/obama_react_6.ogg" }
 			]
-			return { "turnStart": turn_pool, "moving": move_pool, "attacking": atk_pool, "castingMagic": atk_pool, "attacked": react_pool, "defended": react_pool }
+			var death_pool = [
+				{ "text": "Uhh... let me be clear... even in defeat... hope... never dies.", "audio": "res://assets/audio/heroes/obama_death_1.ogg" },
+				{ "text": "Uhh... folks... carry on... the audacity... of hope... without me.", "audio": "res://assets/audio/heroes/obama_death_2.ogg" },
+				{ "text": "Uhh... tell Michelle... I fought... for change... until the last roll.", "audio": "res://assets/audio/heroes/obama_death_3.ogg" }
+			]
+			return { "turnStart": turn_pool, "moving": move_pool, "attacking": atk_pool, "castingMagic": atk_pool, "attacked": react_pool, "defended": react_pool, "death": death_pool }
 		"trump":
 			var turn_pool = [
 				{ "text": "They're eating the dogs!", "audio": "res://assets/audio/heroes/trump_quote_1.ogg" },
@@ -14059,7 +14062,12 @@ func _get_election_hero_audio_dict(key: String) -> Dictionary:
 				{ "text": "Thank you!", "audio": "res://assets/audio/heroes/trump_react_5.ogg" },
 				{ "text": "This is a persecution!", "audio": "res://assets/audio/heroes/trump_react_6.ogg" }
 			]
-			return { "turnStart": turn_pool, "moving": move_pool, "attacking": atk_pool, "castingMagic": atk_pool, "attacked": react_pool, "defended": react_pool }
+			var death_pool = [
+				{ "text": "This was never supposed to happen in America!", "audio": "res://assets/audio/heroes/trump_death_1.ogg" },
+				{ "text": "We'll be appealing this decision!", "audio": "res://assets/audio/heroes/trump_death_2.ogg" },
+				{ "text": "And this is what's happening in our country, and it's a shame!", "audio": "res://assets/audio/heroes/trump_death_3.ogg" }
+			]
+			return { "turnStart": turn_pool, "moving": move_pool, "attacking": atk_pool, "castingMagic": atk_pool, "attacked": react_pool, "defended": react_pool, "death": death_pool }
 		"hillary_clinton":
 			var turn_pool = [
 				{ "text": "But I cast it with conviction!", "audio": "res://assets/audio/heroes/hillary_quote_1.ogg" },
@@ -14095,7 +14103,12 @@ func _get_election_hero_audio_dict(key: String) -> Dictionary:
 				{ "text": "What difference?!", "audio": "res://assets/audio/heroes/hillary_react_5.ogg" },
 				{ "text": "Thank you very much!", "audio": "res://assets/audio/heroes/hillary_react_6.ogg" }
 			]
-			return { "turnStart": turn_pool, "moving": move_pool, "attacking": atk_pool, "castingMagic": atk_pool, "attacked": react_pool, "defended": react_pool }
+			var death_pool = [
+				{ "text": "Not only dead broke, but in debt! We had no money when we got there and we struggled!", "audio": "res://assets/audio/heroes/hillary_death_1.ogg" },
+				{ "text": "What difference, at this point, does it make?!", "audio": "res://assets/audio/heroes/hillary_death_2.ogg" },
+				{ "text": "We came, we saw, he died!", "audio": "res://assets/audio/heroes/hillary_death_3.ogg" }
+			]
+			return { "turnStart": turn_pool, "moving": move_pool, "attacking": atk_pool, "castingMagic": atk_pool, "attacked": react_pool, "defended": react_pool, "death": death_pool }
 		"bernie_sanders":
 			var turn_pool = [
 				{ "text": "They're starving to death right now!", "audio": "res://assets/audio/heroes/bernie_quote_1.ogg" },
@@ -14131,7 +14144,12 @@ func _get_election_hero_audio_dict(key: String) -> Dictionary:
 				{ "text": "I will be damned!", "audio": "res://assets/audio/heroes/bernie_react_5.ogg" },
 				{ "text": "Out on the street!", "audio": "res://assets/audio/heroes/bernie_react_6.ogg" }
 			]
-			return { "turnStart": turn_pool, "moving": move_pool, "attacking": atk_pool, "castingMagic": atk_pool, "attacked": react_pool, "defended": react_pool }
+			var death_pool = [
+				{ "text": "Let us give hope to people in America today who have lost hope!", "audio": "res://assets/audio/heroes/bernie_death_1.ogg" },
+				{ "text": "They're starving to death right now!", "audio": "res://assets/audio/heroes/bernie_death_2.ogg" },
+				{ "text": "The rich get richer, the poor get poorer, and ordinary Americans are shut out of the political system!", "audio": "res://assets/audio/heroes/bernie_death_3.ogg" }
+			]
+			return { "turnStart": turn_pool, "moving": move_pool, "attacking": atk_pool, "castingMagic": atk_pool, "attacked": react_pool, "defended": react_pool, "death": death_pool }
 		_:
 			return {}
 
@@ -14146,7 +14164,8 @@ func _get_default_hero_audio_lines(h: Dictionary) -> Dictionary:
 				"attacking": [{ "text": "For Grungni's beard, feel my battle-axe!", "audio": "res://assets/audio/heroes/dwarf_attacking.ogg" }],
 				"attacked": [{ "text": "Oof! Right in the chainmail!", "audio": "res://assets/audio/heroes/dwarf_attacked.ogg" }],
 				"defended": [{ "text": "Dwarven forged steel never yields!", "audio": "res://assets/audio/heroes/dwarf_defended.ogg" }],
-				"castingMagic": [{ "text": "By the runes of the anvil, awaken!", "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg" }]
+				"castingMagic": [{ "text": "By the runes of the anvil, awaken!", "audio": "res://assets/audio/heroes/dwarf_casting_magic.ogg" }],
+				"death": [{ "text": "Ancestors of the World's Edge Mountains... I return to the stone...", "audio": "res://assets/audio/heroes/dwarf_death.ogg" }]
 			}
 		"elf":
 			return {
@@ -14154,7 +14173,8 @@ func _get_default_hero_audio_lines(h: Dictionary) -> Dictionary:
 				"attacking": [{ "text": "Swift as the wind, strike true!", "audio": "res://assets/audio/heroes/elf_attacking.ogg" }],
 				"attacked": [{ "text": "Ah! Darkness stings, yet my spirit endures!", "audio": "res://assets/audio/heroes/elf_attacked.ogg" }],
 				"defended": [{ "text": "Too slow, creature! The forest shields me!", "audio": "res://assets/audio/heroes/elf_defended.ogg" }],
-				"castingMagic": [{ "text": "Ancient weave of earth and water, heed my call!", "audio": "res://assets/audio/heroes/elf_casting_magic.ogg" }]
+				"castingMagic": [{ "text": "Ancient weave of earth and water, heed my call!", "audio": "res://assets/audio/heroes/elf_casting_magic.ogg" }],
+				"death": [{ "text": "The forest fades to twilight... fight on without me...", "audio": "res://assets/audio/heroes/elf_death.ogg" }]
 			}
 		"wizard":
 			return {
@@ -14162,7 +14182,8 @@ func _get_default_hero_audio_lines(h: Dictionary) -> Dictionary:
 				"attacking": [{ "text": "Back, foul fiend, before my arcane staff!", "audio": "res://assets/audio/heroes/wizard_attacking.ogg" }],
 				"attacked": [{ "text": "Gah! My ward-cloak falters!", "audio": "res://assets/audio/heroes/wizard_attacked.ogg" }],
 				"defended": [{ "text": "My arcane barrier deflects your strike!", "audio": "res://assets/audio/heroes/wizard_defended.ogg" }],
-				"castingMagic": [{ "text": "By fire, air, and tempest, unleash the spell!", "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg" }]
+				"castingMagic": [{ "text": "By fire, air, and tempest, unleash the spell!", "audio": "res://assets/audio/heroes/wizard_casting_magic.ogg" }],
+				"death": [{ "text": "My arcane flame is extinguished... guard the realm...", "audio": "res://assets/audio/heroes/wizard_death.ogg" }]
 			}
 		_:
 			return {
@@ -14170,8 +14191,144 @@ func _get_default_hero_audio_lines(h: Dictionary) -> Dictionary:
 				"attacking": [{ "text": "Taste cold Cimmerian steel!", "audio": "res://assets/audio/heroes/barbarian_attacking.ogg" }],
 				"attacked": [{ "text": "Aagh! Only a flesh wound!", "audio": "res://assets/audio/heroes/barbarian_attacked.ogg" }],
 				"defended": [{ "text": "Ha! Your feeble blow bounces off my iron muscles!", "audio": "res://assets/audio/heroes/barbarian_defended.ogg" }],
-				"castingMagic": [{ "text": "The ancient battle-spirit surges through my blade!", "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg" }]
+				"castingMagic": [{ "text": "The ancient battle-spirit surges through my blade!", "audio": "res://assets/audio/heroes/barbarian_casting_magic.ogg" }],
+				"death": [{ "text": "By Crom... my broadsword falls... avenge me, comrades!", "audio": "res://assets/audio/heroes/barbarian_death.ogg" }]
 			}
+
+func _pick_hero_situation_entry(hero: Dictionary, situation: String) -> Dictionary:
+	if hero.is_empty():
+		return {}
+	var ident_key = _resolve_hero_identity_key(hero)
+	var default_al = _get_default_hero_audio_lines(hero)
+	var al = hero.get("audioLines", hero.get("robos:audioLines", {}))
+	if not (al is Dictionary) or al.is_empty():
+		al = default_al
+	var eff_situation = situation
+	if not al.has(eff_situation):
+		if eff_situation == "moving" and al.has("turnStart"):
+			eff_situation = "turnStart"
+		elif default_al.has(eff_situation):
+			al = default_al
+		else:
+			eff_situation = "turnStart"
+			al = default_al
+	var entries = al.get(eff_situation, [])
+	if ident_key in ["obama", "trump", "hillary_clinton", "bernie_sanders"]:
+		var sit_pool = default_al.get(eff_situation, default_al.get("turnStart", []))
+		if sit_pool is Array and sit_pool.size() > 0:
+			entries = sit_pool
+	var chosen_text = ""
+	var chosen_audio = ""
+	var state_key = "%s:%s" % [ident_key, eff_situation]
+	if entries is Array and entries.size() > 0:
+		var last_audio = str(_last_hero_quote_audio.get(state_key, _last_hero_quote_audio.get(ident_key, "")))
+		var candidates: Array = []
+		if entries.size() > 1 and last_audio != "":
+			for cand in entries:
+				var c_aud = str(cand.get("audio", "")) if cand is Dictionary else str(cand)
+				if c_aud != last_audio:
+					candidates.append(cand)
+		if candidates.is_empty():
+			candidates = entries
+		var item = candidates[randi() % candidates.size()]
+		if item is Dictionary:
+			chosen_text = str(item.get("text", ""))
+			chosen_audio = str(item.get("audio", ""))
+		elif item is String:
+			chosen_audio = str(item)
+	elif entries is Dictionary:
+		chosen_text = str(entries.get("text", ""))
+		chosen_audio = str(entries.get("audio", ""))
+	elif entries is String:
+		chosen_audio = str(entries)
+	if ident_key in ["obama", "trump", "hillary_clinton", "bernie_sanders"]:
+		if chosen_audio == "" or "/barbarian_" in chosen_audio or "/dwarf_" in chosen_audio or "/elf_" in chosen_audio or "/wizard_" in chosen_audio:
+			var sit_pool2 = default_al.get(eff_situation, default_al.get("turnStart", []))
+			if sit_pool2 is Array and sit_pool2.size() > 0:
+				var pick = sit_pool2[randi() % sit_pool2.size()]
+				chosen_text = str(pick.get("text", chosen_text))
+				chosen_audio = str(pick.get("audio", chosen_audio))
+	if chosen_audio != "":
+		_last_hero_quote_audio[state_key] = chosen_audio
+		_last_hero_quote_audio[ident_key] = chosen_audio
+	return { "text": chosen_text, "audio": chosen_audio, "identityKey": ident_key }
+
+func _trigger_hero_death_dialogue(hero: Dictionary) -> void:
+	if hero.is_empty() or hero.get("is_summon", false):
+		return
+	var entry = _pick_hero_situation_entry(hero, "death")
+	var chosen_text = str(entry.get("text", ""))
+	var chosen_audio = str(entry.get("audio", ""))
+	var ident_key = str(entry.get("identityKey", _resolve_hero_identity_key(hero)))
+	if chosen_text == "":
+		return
+	var speaker_id = str(hero.get("id", ident_key))
+	var lines: Array = [
+		{
+			"speaker": speaker_id,
+			"text": chosen_text,
+			"audio": chosen_audio,
+			"timeout": 1.2
+		}
+	]
+	match ident_key:
+		"obama":
+			lines.append({
+				"speaker": "mentor",
+				"text": "Aw shoot, Barack just bit the dust! Guess hope didn't have enough defend dice! Keep swingin', y'all!",
+				"audio": "res://assets/audio/election2026/bush_death_obama.ogg",
+				"timeout": 1.2
+			})
+		"trump":
+			lines.append({
+				"speaker": "mentor",
+				"text": "Goodness gracious, Donald just got whacked! Don't worry, I'm sure he'll demand a recount in the afterlife!",
+				"audio": "res://assets/audio/election2026/bush_death_trump.ogg",
+				"timeout": 1.2
+			})
+		"hillary_clinton":
+			lines.append({
+				"speaker": "mentor",
+				"text": "Well dang it, Hillary's down for the count! Somebody check if she left any healing potions on her private server!",
+				"audio": "res://assets/audio/election2026/bush_death_hillary.ogg",
+				"timeout": 1.2
+			})
+		"bernie_sanders":
+			lines.append({
+				"speaker": "mentor",
+				"text": "Oh boy, Bernie just ran outta body points! The top one percent of dungeon monsters just claimed ninety-nine percent of his health!",
+				"audio": "res://assets/audio/election2026/bush_death_bernie.ogg",
+				"timeout": 1.2
+			})
+	_start_dialogue_sequence(lines)
+
+func _handle_hero_death(hero: Dictionary, cause_log: String = "") -> void:
+	if hero.is_empty():
+		return
+	var was_already_dead = bool(hero.get("is_dead", false))
+	hero["current_bp"] = 0
+	hero["is_dead"] = true
+	hero["is_on_board"] = false
+	var h_pos = _to_grid_pos(hero.get("grid_pos", Vector2i(1, 1)))
+	if cause_log != "":
+		_log(cause_log)
+	spawn_floating_text(h_pos, "SLAIN!", Color(0.9, 0.1, 0.1))
+	if was_already_dead:
+		return
+	var ident_key = _resolve_hero_identity_key(hero)
+	var h_room = _get_room_at(h_pos)
+	var r_id = str(h_room.get("id", "")) if not h_room.is_empty() else ""
+	var fired = _check_event_triggers("on_hero_killed", {
+		"hero": hero,
+		"heroId": str(hero.get("id", "")),
+		"heroSlug": str(hero.get("slug", "")),
+		"heroClass": str(hero.get("heroClass", "")),
+		"identityKey": ident_key,
+		"room": r_id,
+		"tile": h_pos
+	}, hero)
+	if fired.is_empty():
+		_trigger_hero_death_dialogue(hero)
 
 func play_hero_situation_audio(hero: Dictionary, situation: String) -> void:
 	if hero.is_empty() or hero.get("is_summon", false):
@@ -14606,17 +14763,23 @@ func _execute_trigger_actions(trigger: Dictionary, hero: Dictionary, start_index
 			"dialogue":
 				var lines: Array = []
 				if act.has("lines") and (act["lines"] is Array):
-					lines = act["lines"]
+					lines = act["lines"].duplicate(true)
 				elif act.has("bubbles") and (act["bubbles"] is Array):
-					lines = act["bubbles"]
+					lines = act["bubbles"].duplicate(true)
 				elif act.has("dialogue") and (act["dialogue"] is Array):
-					lines = act["dialogue"]
+					lines = act["dialogue"].duplicate(true)
 				else:
 					var spk = str(act.get("speaker", "barbarian"))
 					var txt = str(act.get("text", act.get("line", "")))
 					var aud = str(act.get("audio", ""))
 					if txt != "":
 						lines.append({ "speaker": spk, "text": txt, "audio": aud })
+				for l_idx in range(lines.size()):
+					if lines[l_idx] is Dictionary and bool(lines[l_idx].get("useRandomDeathQuote", false)) and not hero.is_empty():
+						var d_entry = _pick_hero_situation_entry(hero, "death")
+						if str(d_entry.get("text", "")) != "":
+							lines[l_idx]["text"] = str(d_entry.get("text", ""))
+							lines[l_idx]["audio"] = str(d_entry.get("audio", ""))
 				if lines.size() > 0:
 					_start_dialogue_sequence(lines)
 					if act_idx + 1 < actions.size():
@@ -14789,6 +14952,16 @@ func _check_event_triggers(event_name: String, context: Dictionary = {}, hero: D
 				elif st_type != "" and st_type == ctx_type:
 					matches = true
 				elif st_mon == "" and st_type == "":
+					matches = true
+			"on_hero_killed", "on_hero_death":
+				var st_hero = str(st.get("heroId", st.get("target", ""))).to_lower().strip_edges().replace("-", "_")
+				var ctx_hid = str(context.get("heroId", "")).to_lower().strip_edges().replace("-", "_")
+				var ctx_hslug = str(context.get("heroSlug", "")).to_lower().strip_edges().replace("-", "_")
+				var ctx_hclass = str(context.get("heroClass", "")).to_lower().strip_edges().replace("-", "_")
+				var ctx_ident = str(context.get("identityKey", "")).to_lower().strip_edges().replace("-", "_")
+				if st_hero == "":
+					matches = true
+				elif st_hero in [ctx_hid, ctx_hslug, ctx_hclass, ctx_ident]:
 					matches = true
 
 		if matches:
@@ -15943,15 +16116,13 @@ func dm_cast_spell_on_hero(m: Dictionary, spell_id: String, target_hero: Diction
 
 	if combat_res.wounds > 0:
 		target_hero["current_bp"] = maxi(0, prev_h_bp - combat_res.wounds)
-		play_hero_situation_audio(target_hero, "attacked")
 		_log("[SPELL HIT] %s takes %d wound(s) from %s! Remaining BP: %d" % [
 			h_name, combat_res.wounds, spell_name, target_hero.get("current_bp")
 		])
 		if int(target_hero.get("current_bp", 0)) <= 0:
-			target_hero["is_dead"] = true
-			target_hero["is_on_board"] = false
-			_log("[HERO SLAIN] %s has fallen to %s's dark sorcery!" % [h_name, m_name])
-			spawn_floating_text(h_pos, "SLAIN!", Color(0.9, 0.1, 0.1))
+			_handle_hero_death(target_hero, "[HERO SLAIN] %s has fallen to %s's dark sorcery!" % [h_name, m_name])
+		else:
+			play_hero_situation_audio(target_hero, "attacked")
 		record_damage_event(
 			h_name,
 			str(target_hero.get("id", "hero")),
@@ -16336,6 +16507,10 @@ func _execute_single_monster_action(m: Dictionary) -> int:
 
 func _process_enemy_turn(delta: float) -> void:
 	if is_movie_playing:
+		return
+	if not active_story_trigger_overlay.is_empty():
+		return
+	if not active_dialogue_sequence.is_empty() and active_dialogue_sequence.get("active", false):
 		return
 	if not is_enemy_turn_waiting or active_enemy_turn_monster_id == "":
 		return
@@ -23659,6 +23834,13 @@ func _apply_pending_trap_resolution(res: Dictionary) -> void:
 			hero.get("name"), dmg, hero.get("current_bp")
 		])
 		spawn_floating_text(final_pos, "-%d HP POISON NEEDLE" % dmg, Color(0.85, 0.25, 0.85), 1.8)
+
+	if int(hero.get("current_bp", 0)) <= 0:
+		movement_remaining = 0
+		movement_closed = true
+		has_acted_this_turn = true
+		turn_state = "turn_complete"
+		_handle_hero_death(hero, "[HERO SLAIN] %s has fallen to a trap!" % hero.get("name"))
 
 	_update_ui()
 	queue_redraw_all()

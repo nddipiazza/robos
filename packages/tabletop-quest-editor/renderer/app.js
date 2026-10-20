@@ -1300,28 +1300,32 @@ function buildCartridgePayload() {
           attacking: [{ text: 'Taste cold Cimmerian steel!', audio: 'res://assets/audio/heroes/barbarian_attacking.ogg' }],
           attacked: [{ text: 'Aagh! Only a flesh wound!', audio: 'res://assets/audio/heroes/barbarian_attacked.ogg' }],
           defended: [{ text: 'Ha! Your feeble blow bounces off my iron muscles!', audio: 'res://assets/audio/heroes/barbarian_defended.ogg' }],
-          castingMagic: [{ text: 'The ancient battle-spirit surges through my blade!', audio: 'res://assets/audio/heroes/barbarian_casting_magic.ogg' }]
+          castingMagic: [{ text: 'The ancient battle-spirit surges through my blade!', audio: 'res://assets/audio/heroes/barbarian_casting_magic.ogg' }],
+          death: [{ text: 'By Crom... my broadsword falls... avenge me, comrades!', audio: 'res://assets/audio/heroes/barbarian_death.ogg' }]
         },
         dwarf: {
           turnStart: [{ text: "Stand back! Let a Dwarf of the World's Edge Mountains handle this!", audio: 'res://assets/audio/heroes/dwarf_turn_start.ogg' }],
           attacking: [{ text: "For Grungni's beard, feel my battle-axe!", audio: 'res://assets/audio/heroes/dwarf_attacking.ogg' }],
           attacked: [{ text: 'Oof! Right in the chainmail!', audio: 'res://assets/audio/heroes/dwarf_attacked.ogg' }],
           defended: [{ text: 'Dwarven forged steel never yields!', audio: 'res://assets/audio/heroes/dwarf_defended.ogg' }],
-          castingMagic: [{ text: 'By the runes of the anvil, awaken!', audio: 'res://assets/audio/heroes/dwarf_casting_magic.ogg' }]
+          castingMagic: [{ text: 'By the runes of the anvil, awaken!', audio: 'res://assets/audio/heroes/dwarf_casting_magic.ogg' }],
+          death: [{ text: "Ancestors of the World's Edge Mountains... I return to the stone...", audio: 'res://assets/audio/heroes/dwarf_death.ogg' }]
         },
         elf: {
           turnStart: [{ text: 'With elven grace, I step into the shadows.', audio: 'res://assets/audio/heroes/elf_turn_start.ogg' }],
           attacking: [{ text: 'Swift as the wind, strike true!', audio: 'res://assets/audio/heroes/elf_attacking.ogg' }],
           attacked: [{ text: 'Ah! Darkness stings, yet my spirit endures!', audio: 'res://assets/audio/heroes/elf_attacked.ogg' }],
           defended: [{ text: 'Too slow, creature! The forest shields me!', audio: 'res://assets/audio/heroes/elf_defended.ogg' }],
-          castingMagic: [{ text: 'Ancient weave of earth and water, heed my call!', audio: 'res://assets/audio/heroes/elf_casting_magic.ogg' }]
+          castingMagic: [{ text: 'Ancient weave of earth and water, heed my call!', audio: 'res://assets/audio/heroes/elf_casting_magic.ogg' }],
+          death: [{ text: 'The forest fades to twilight... fight on without me...', audio: 'res://assets/audio/heroes/elf_death.ogg' }]
         },
         wizard: {
           turnStart: [{ text: 'The winds of magic gather at my staff.', audio: 'res://assets/audio/heroes/wizard_turn_start.ogg' }],
           attacking: [{ text: 'Back, foul fiend, before my arcane staff!', audio: 'res://assets/audio/heroes/wizard_attacking.ogg' }],
           attacked: [{ text: 'Gah! My ward-cloak falters!', audio: 'res://assets/audio/heroes/wizard_attacked.ogg' }],
           defended: [{ text: 'My arcane barrier deflects your strike!', audio: 'res://assets/audio/heroes/wizard_defended.ogg' }],
-          castingMagic: [{ text: 'By fire, air, and tempest, unleash the spell!', audio: 'res://assets/audio/heroes/wizard_casting_magic.ogg' }]
+          castingMagic: [{ text: 'By fire, air, and tempest, unleash the spell!', audio: 'res://assets/audio/heroes/wizard_casting_magic.ogg' }],
+          death: [{ text: 'My arcane flame is extinguished... guard the realm...', audio: 'res://assets/audio/heroes/wizard_death.ogg' }]
         },
         obama: {
           turnStart: [
@@ -1373,6 +1377,11 @@ function buildCartridgePayload() {
             { text: "Uhh... hold on now!", audio: "res://assets/audio/heroes/obama_react_4.ogg" },
             { text: "Uhh... not today!", audio: "res://assets/audio/heroes/obama_react_5.ogg" },
             { text: "Uhh... folks, ouch!", audio: "res://assets/audio/heroes/obama_react_6.ogg" }
+          ],
+          death: [
+            { text: "Uhh... let me be clear... even in defeat... hope... never dies.", audio: "res://assets/audio/heroes/obama_death_1.ogg" },
+            { text: "Uhh... folks... carry on... the audacity... of hope... without me.", audio: "res://assets/audio/heroes/obama_death_2.ogg" },
+            { text: "Uhh... tell Michelle... I fought... for change... until the last roll.", audio: "res://assets/audio/heroes/obama_death_3.ogg" }
           ]
         },
         trump: {
@@ -1425,6 +1434,11 @@ function buildCartridgePayload() {
             { text: "He took none!", audio: "res://assets/audio/heroes/trump_react_4.ogg" },
             { text: "Thank you!", audio: "res://assets/audio/heroes/trump_react_5.ogg" },
             { text: "This is a persecution!", audio: "res://assets/audio/heroes/trump_react_6.ogg" }
+          ],
+          death: [
+            { text: "This was never supposed to happen in America!", audio: "res://assets/audio/heroes/trump_death_1.ogg" },
+            { text: "We'll be appealing this decision!", audio: "res://assets/audio/heroes/trump_death_2.ogg" },
+            { text: "And this is what's happening in our country, and it's a shame!", audio: "res://assets/audio/heroes/trump_death_3.ogg" }
           ]
         },
         'hillary-clinton': {
@@ -1477,6 +1491,11 @@ function buildCartridgePayload() {
             { text: "No personal!", audio: "res://assets/audio/heroes/hillary_react_4.ogg" },
             { text: "What difference?!", audio: "res://assets/audio/heroes/hillary_react_5.ogg" },
             { text: "Thank you very much!", audio: "res://assets/audio/heroes/hillary_react_6.ogg" }
+          ],
+          death: [
+            { text: "Not only dead broke, but in debt! We had no money when we got there and we struggled!", audio: "res://assets/audio/heroes/hillary_death_1.ogg" },
+            { text: "What difference, at this point, does it make?!", audio: "res://assets/audio/heroes/hillary_death_2.ogg" },
+            { text: "We came, we saw, he died!", audio: "res://assets/audio/heroes/hillary_death_3.ogg" }
           ]
         },
         'bernie-sanders': {
@@ -1529,6 +1548,11 @@ function buildCartridgePayload() {
             { text: "Politicians!", audio: "res://assets/audio/heroes/bernie_react_4.ogg" },
             { text: "I will be damned!", audio: "res://assets/audio/heroes/bernie_react_5.ogg" },
             { text: "Out on the street!", audio: "res://assets/audio/heroes/bernie_react_6.ogg" }
+          ],
+          death: [
+            { text: "Let us give hope to people in America today who have lost hope!", audio: "res://assets/audio/heroes/bernie_death_1.ogg" },
+            { text: "They're starving to death right now!", audio: "res://assets/audio/heroes/bernie_death_2.ogg" },
+            { text: "The rich get richer, the poor get poorer, and ordinary Americans are shut out of the political system!", audio: "res://assets/audio/heroes/bernie_death_3.ogg" }
           ]
         }
       };
