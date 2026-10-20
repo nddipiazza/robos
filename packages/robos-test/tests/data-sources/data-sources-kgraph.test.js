@@ -8,8 +8,8 @@ const { launchApp, killApp } = require('../../lib/harness');
 const { evalJS } = require('../../lib/snapshot');
 const scenarios = require('../../lib/scenarios');
 
-describe('RobOS Data Sources — Knowledge Graph Multi-Database & Storage Explorer', () => {
-  it('Inspects SQL/NoSQL/Storage schemas, executes queries, tests connections & syncs with Knowledge Graph', async () => {
+describe('RobOS Data Sources — Cloud Storage, Google Drive Mounts & Multi-Database Explorer', () => {
+  it('Inspects SQL/NoSQL/Storage schemas, connects Google Drive folders for RobOS, executes queries & syncs with Knowledge Graph', async () => {
     const app = await launchApp('data-sources', scenarios['all-good']);
     try {
       await new Promise(r => setTimeout(r, 2000));
@@ -20,6 +20,11 @@ describe('RobOS Data Sources — Knowledge Graph Multi-Database & Storage Explor
 
       const dsName = await evalJS(app.port, `document.getElementById('ds-detail-name').textContent`);
       assert.ok(dsName.includes('PostgreSQL Database'));
+
+      // Verify sidebar lists the data sources directly
+      const sidebarListHtml = await evalJS(app.port, `document.getElementById('sidebar-ds-list').innerHTML`);
+      assert.ok(sidebarListHtml.includes('Acme Petshop PostgreSQL Database'));
+      assert.ok(sidebarListHtml.includes('Google Drive SDLC Specification Hub'));
 
       // ── 2. Schema Inspector Verification: PostgreSQL Tables ─────────────────
       const treeHtml = await evalJS(app.port, `document.getElementById('schema-tree-list').innerHTML`);
@@ -86,6 +91,46 @@ describe('RobOS Data Sources — Knowledge Graph Multi-Database & Storage Explor
 
       const updatedType = await evalJS(app.port, `document.getElementById('ds-detail-type').textContent`);
       assert.ok(updatedType.includes('MYSQL'));
+
+      // ── 6. Connect Google Drive & Mount Google Drive Folders for RobOS ──────
+      await evalJS(app.port, `document.getElementById('btn-connect-gdrive').click()`);
+      await new Promise(r => setTimeout(r, 300));
+
+      const gdrivePanelVisible = await evalJS(app.port, `!document.getElementById('gdrive-setup-panel').classList.contains('hidden')`);
+      assert.strictEqual(gdrivePanelVisible, true);
+
+      await evalJS(app.port, `
+        document.getElementById('modal-ds-name').value = 'Personal Google Drive Workspace';
+        document.getElementById('modal-ds-database').value = 'https://drive.google.com/drive/folders/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms?usp=sharing';
+        document.getElementById('modal-ds-database').dispatchEvent(new Event('input'));
+        document.getElementById('btn-ds-modal-save').click();
+      `);
+      await new Promise(r => setTimeout(r, 900));
+
+      const gdriveDsName = await evalJS(app.port, `document.getElementById('ds-detail-name').textContent`);
+      assert.strictEqual(gdriveDsName, 'Personal Google Drive Workspace');
+
+      const gdriveEndpoint = await evalJS(app.port, `document.getElementById('ds-detail-endpoint').textContent`);
+      assert.strictEqual(gdriveEndpoint, 'gdrive://1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms');
+
+      // Switch to Cloud File & Folder Explorer tab and verify starter folders & folder creation
+      await evalJS(app.port, `switchTab('schema')`);
+      await new Promise(r => setTimeout(r, 400));
+
+      const gdriveTreeHtml = await evalJS(app.port, `document.getElementById('schema-tree-list').innerHTML`);
+      assert.ok(gdriveTreeHtml.includes('RobOS Workspace'));
+      assert.ok(gdriveTreeHtml.includes('Music &amp; Media'));
+
+      // Mount current Google Drive folder for RobOS apps and verify in RobOS Cloud Folders tab
+      await evalJS(app.port, `document.getElementById('btn-mount-current-folder').click()`);
+      await new Promise(r => setTimeout(r, 500));
+
+      await evalJS(app.port, `switchTab('cloud-folders')`);
+      await new Promise(r => setTimeout(r, 400));
+
+      const mountsGridHtml = await evalJS(app.port, `document.getElementById('mounted-folders-grid').innerHTML`);
+      assert.ok(mountsGridHtml.includes('Personal Google Drive Workspace'));
+      assert.ok(mountsGridHtml.includes('cloud-mounts'));
 
     } finally {
       await killApp(app);

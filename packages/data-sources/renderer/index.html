@@ -21,19 +21,23 @@
       </div>
       <div>
         <h1 class="header-title">RobOS Data Sources</h1>
-        <div class="header-subtitle">Knowledge Graph Data Sources & Database Explorer</div>
+        <div class="header-subtitle">Cloud Storage Providers, Google Drive Folders &amp; Knowledge Graph Databases</div>
       </div>
       <span class="kgraph-badge">
         <span class="pulse-dot"></span>
-        Knowledge Graph Connected (5 Sources)
+        <span id="kgraph-badge-text">Knowledge Graph Connected (5 Sources)</span>
       </span>
     </div>
 
     <div class="header-right">
       <div class="search-box">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="search-input" placeholder="Filter data sources, tables, buckets..."/>
+        <input type="text" id="search-input" placeholder="Search cloud providers, Drive folders, tables..."/>
       </div>
+      <button class="btn btn-gdrive btn-sm" id="btn-connect-gdrive" title="Connect Google Drive to use Drive folders across RobOS">
+        <span>📁</span>
+        + Connect Google Drive
+      </button>
       <button class="btn btn-primary btn-sm" id="btn-add-datasource">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         + New Data Source
@@ -41,18 +45,26 @@
     </div>
   </header>
 
+  <!-- Toast Banner -->
+  <div id="toast-banner" class="toast-banner hidden"></div>
+
   <!-- Body -->
   <div id="main-layout">
 
     <!-- Sidebar -->
     <aside id="sidebar">
       <div class="sidebar-section">
-        <div class="sidebar-heading">Data Source Categories</div>
+        <div class="sidebar-heading">Provider Categories</div>
         <nav class="sidebar-nav" id="category-nav">
           <div class="nav-item active" data-cat="all">
             <span class="nav-icon">🗄️</span>
             <span class="nav-label">All Data Sources</span>
             <span class="nav-count" id="count-all">5</span>
+          </div>
+          <div class="nav-item" data-cat="storage">
+            <span class="nav-icon">☁️</span>
+            <span class="nav-label">Cloud &amp; Object Storage</span>
+            <span class="nav-count" id="count-storage">2</span>
           </div>
           <div class="nav-item" data-cat="sql">
             <span class="nav-icon">🐘</span>
@@ -61,20 +73,37 @@
           </div>
           <div class="nav-item" data-cat="nosql">
             <span class="nav-icon">⚡</span>
-            <span class="nav-label">NoSQL & Document</span>
+            <span class="nav-label">NoSQL &amp; Document</span>
             <span class="nav-count" id="count-nosql">1</span>
-          </div>
-          <div class="nav-item" data-cat="storage">
-            <span class="nav-icon">☁️</span>
-            <span class="nav-label">Cloud & Object Storage</span>
-            <span class="nav-count" id="count-storage">2</span>
           </div>
           <div class="nav-item" data-cat="streaming">
             <span class="nav-icon">📡</span>
-            <span class="nav-label">Streaming & Queues</span>
+            <span class="nav-label">Streaming &amp; Queues</span>
             <span class="nav-count" id="count-streaming">0</span>
           </div>
         </nav>
+      </div>
+
+      <!-- Direct Data Sources Switcher List -->
+      <div class="sidebar-section sidebar-connections-section">
+        <div class="sidebar-heading-row">
+          <span class="sidebar-heading" style="margin-bottom:0;">Connections</span>
+          <button class="btn-link" id="btn-sidebar-add" title="Add Data Source">+ Add</button>
+        </div>
+        <div class="sidebar-ds-list" id="sidebar-ds-list">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- Pinned RobOS Cloud Folders Quick Access -->
+      <div class="sidebar-section">
+        <div class="sidebar-heading-row">
+          <span class="sidebar-heading" style="margin-bottom:0;">RobOS Cloud Folders</span>
+          <button class="btn-link" id="btn-sidebar-view-mounts" title="Manage Mounted Cloud Folders">Manage</button>
+        </div>
+        <div class="sidebar-mounts-list" id="sidebar-mounts-list">
+          <!-- Injected via JS -->
+        </div>
       </div>
 
       <div class="sidebar-section">
@@ -87,10 +116,10 @@
         </div>
       </div>
 
-      <div class="sidebar-section" style="margin-top:auto;padding-top:12px;border-top:1px solid #21262d;">
+      <div class="sidebar-section" style="margin-top:auto;padding-top:10px;border-top:1px solid #21262d;">
         <div class="kgraph-sync-info">
-          <div style="font-weight:600;color:#c9d1d9;margin-bottom:4px;font-size:12px;">Knowledge Graph Link</div>
-          <div style="font-size:11px;color:#8b949e;line-height:1.4;">Changes automatically sync with <code>~/.robos/knowledge-graph.jsonld</code></div>
+          <div style="font-weight:600;color:#c9d1d9;margin-bottom:2px;font-size:11px;">Knowledge Graph &amp; Cloud Sync</div>
+          <div style="font-size:10px;color:#8b949e;line-height:1.4;">Synced to <code>~/.config/robos/data-sources.json</code> &amp; <code>~/.robos/cloud-mounts/</code></div>
         </div>
       </div>
     </aside>
@@ -108,13 +137,14 @@
         <div id="ds-header-card" class="ds-header-card">
           <div class="ds-header-left">
             <div id="ds-icon-avatar" class="ds-icon-avatar">🐘</div>
-            <div>
+            <div class="ds-header-info">
               <div class="ds-title-row">
                 <h2 id="ds-detail-name">Acme Petshop PostgreSQL Database</h2>
                 <span id="ds-detail-badge" class="badge badge-green">Connected</span>
+                <span id="ds-detail-category-pill" class="badge badge-subtle">SQL / Relational</span>
               </div>
               <div class="ds-meta-row">
-                <span id="ds-detail-type" class="meta-item">Type: PostgreSQL (5432)</span>
+                <span id="ds-detail-type" class="meta-item">Type: POSTGRES</span>
                 <span id="ds-detail-endpoint" class="meta-item mono">127.0.0.1:5432/petshop</span>
                 <span id="ds-detail-latency" class="meta-item">Latency: 1.4ms</span>
               </div>
@@ -123,10 +153,20 @@
                 <span class="badge badge-cyan">petstore-api</span>
                 <span class="badge badge-cyan">vaccine-gateway</span>
               </div>
+              <!-- Cloud Mount Path Bar (visible for Cloud Storage / Google Drive sources) -->
+              <div id="ds-cloud-mount-bar" class="ds-cloud-mount-bar hidden">
+                <span class="mount-bar-label">📌 RobOS Local Folder:</span>
+                <code id="ds-cloud-mount-path" class="mount-bar-path">~/.robos/cloud-mounts/gdrive</code>
+                <button class="btn btn-xs" id="btn-copy-mount-path" title="Copy local path to use in any RobOS app">📋 Copy Path</button>
+                <button class="btn btn-xs" id="btn-open-mount-path" title="Open folder in system File Explorer">📂 Open Folder</button>
+              </div>
             </div>
           </div>
 
           <div class="ds-header-actions">
+            <button class="btn btn-sm btn-gdrive hidden" id="btn-mount-current-ds" title="Sync and mount this cloud storage root for RobOS apps">
+              📌 Mount for RobOS
+            </button>
             <button class="btn btn-sm btn-primary" id="btn-test-conn">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
               Test Connection
@@ -135,14 +175,22 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               Configure
             </button>
+            <button class="btn btn-sm btn-danger" id="btn-delete-current-ds" title="Delete this Data Source">
+              Delete
+            </button>
           </div>
         </div>
 
         <!-- Tab Navigation -->
         <div class="tab-nav">
-          <button class="tab-btn active" data-tab="schema">
+          <button class="tab-btn active" data-tab="schema" id="tab-btn-schema">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            Schema Inspector
+            <span id="tab-btn-schema-label">Schema &amp; Folder Inspector</span>
+          </button>
+          <button class="tab-btn" data-tab="cloud-folders" id="tab-btn-cloud-folders">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            RobOS Cloud Folders
+            <span class="tab-badge" id="count-mounted-folders">2</span>
           </button>
           <button class="tab-btn" data-tab="query">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -150,12 +198,42 @@
           </button>
           <button class="tab-btn" data-tab="sources-grid">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            All Data Sources Catalog
+            All Data Sources &amp; Cloud Catalog
           </button>
         </div>
 
-        <!-- Tab 1: Schema Inspector -->
+        <!-- Tab 1: Schema Inspector & Cloud File Browser -->
         <div id="tab-schema" class="tab-content active">
+
+          <!-- Cloud Explorer Action Bar (Shown when viewing Cloud Storage / Google Drive) -->
+          <div id="cloud-explorer-toolbar" class="cloud-explorer-toolbar hidden">
+            <div class="cloud-breadcrumbs" id="cloud-breadcrumbs">
+              <!-- Injected via JS -->
+            </div>
+            <div class="cloud-toolbar-actions">
+              <button class="btn btn-sm btn-gdrive" id="btn-mount-current-folder" title="Sync and pin this folder so any RobOS app can use it">
+                📌 Use This Folder in RobOS
+              </button>
+              <button class="btn btn-sm" id="btn-new-cloud-folder" title="Create a new folder here">
+                ➕ New Folder
+              </button>
+              <button class="btn btn-sm" id="btn-upload-cloud-files" title="Upload files from your computer into this folder">
+                ⬆️ Upload Files
+              </button>
+              <button class="btn btn-sm" id="btn-refresh-schema" title="Refresh folder listing">
+                🔄 Refresh
+              </button>
+            </div>
+          </div>
+
+          <!-- Inline New Folder Creation Bar -->
+          <div id="new-folder-bar" class="new-folder-bar hidden">
+            <span style="font-size:12px;font-weight:600;color:#c9d1d9;">📁 Create New Folder:</span>
+            <input type="text" id="new-folder-name-input" class="form-input mono" placeholder="e.g. Project Assets or Music" style="flex:1;max-width:320px;"/>
+            <button class="btn btn-sm btn-primary" id="btn-confirm-new-folder">Create Folder</button>
+            <button class="btn btn-sm" id="btn-cancel-new-folder">Cancel</button>
+          </div>
+
           <div class="schema-layout">
             <div class="schema-tree-pane">
               <div class="pane-title" id="schema-pane-title">Database Tables (4)</div>
@@ -165,10 +243,13 @@
             </div>
 
             <div class="schema-detail-pane">
-              <div class="pane-title" id="table-detail-title">Table: pets</div>
+              <div class="pane-title-row">
+                <div class="pane-title" id="table-detail-title" style="margin-bottom:0;">Table: pets</div>
+                <div id="table-detail-actions"></div>
+              </div>
               <div class="table-columns-wrapper" id="table-columns-wrapper">
                 <table class="data-table">
-                  <thead>
+                  <thead id="schema-table-thead">
                     <tr>
                       <th>Column Name</th>
                       <th>Data Type</th>
@@ -185,12 +266,31 @@
           </div>
         </div>
 
-        <!-- Tab 2: Interactive Query Console -->
+        <!-- Tab 2: RobOS Mounted Cloud Folders -->
+        <div id="tab-cloud-folders" class="tab-content">
+          <div class="cloud-folders-header-card">
+            <div>
+              <h3 style="font-size:15px;color:#fff;margin-bottom:4px;">📁 Google Drive &amp; Cloud Storage Folders Mounted in RobOS</h3>
+              <p style="font-size:12px;color:#8b949e;">
+                Folders mounted here are synced to <code>~/.robos/cloud-mounts/</code> so you can use them directly in <strong>RobOS Audio Player</strong>, <strong>File Explorer</strong>, <strong>Context Manager</strong>, <strong>Git Projects</strong>, and any IDE workspace.
+              </p>
+            </div>
+            <div style="display:flex;gap:8px;flex-shrink:0;">
+              <button class="btn btn-sm btn-gdrive" id="btn-mounts-add-gdrive">+ Add Google Drive</button>
+              <button class="btn btn-sm" id="btn-mounts-refresh">🔄 Refresh Mounts</button>
+            </div>
+          </div>
+          <div class="mounted-folders-grid" id="mounted-folders-grid">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- Tab 3: Interactive Query Console -->
         <div id="tab-query" class="tab-content">
           <div class="query-layout">
             <div class="query-editor-card">
               <div class="query-toolbar">
-                <span style="font-weight:600;font-size:12px;color:#8b949e;">SQL / Driver Query Console</span>
+                <span style="font-weight:600;font-size:12px;color:#8b949e;" id="query-console-title">SQL / Cloud Search Query Console</span>
                 <div class="query-actions">
                   <button class="btn btn-sm btn-primary" id="btn-run-query">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -218,8 +318,64 @@
           </div>
         </div>
 
-        <!-- Tab 3: All Data Sources Catalog -->
+        <!-- Tab 4: All Data Sources Catalog -->
         <div id="tab-sources-grid" class="tab-content">
+          <div class="quick-connect-section">
+            <div class="pane-title">Quick-Connect Cloud Storage Providers</div>
+            <div class="quick-connect-row" id="quick-connect-row">
+              <button class="quick-provider-btn" data-driver="gdrive">
+                <span class="qp-icon">📁</span>
+                <div class="qp-text">
+                  <div class="qp-name">Google Drive</div>
+                  <div class="qp-sub">Mount Drive folders in RobOS</div>
+                </div>
+              </button>
+              <button class="quick-provider-btn" data-driver="s3">
+                <span class="qp-icon">🪣</span>
+                <div class="qp-text">
+                  <div class="qp-name">Amazon S3 / R2 / MinIO</div>
+                  <div class="qp-sub">Object storage buckets</div>
+                </div>
+              </button>
+              <button class="quick-provider-btn" data-driver="dropbox">
+                <span class="qp-icon">📦</span>
+                <div class="qp-text">
+                  <div class="qp-name">Dropbox</div>
+                  <div class="qp-sub">Cloud folders &amp; media</div>
+                </div>
+              </button>
+              <button class="quick-provider-btn" data-driver="onedrive">
+                <span class="qp-icon">☁️</span>
+                <div class="qp-text">
+                  <div class="qp-name">OneDrive / SharePoint</div>
+                  <div class="qp-sub">Microsoft 365 storage</div>
+                </div>
+              </button>
+              <button class="quick-provider-btn" data-driver="webdav">
+                <span class="qp-icon">🌐</span>
+                <div class="qp-text">
+                  <div class="qp-name">Nextcloud / WebDAV</div>
+                  <div class="qp-sub">Self-hosted cloud files</div>
+                </div>
+              </button>
+              <button class="quick-provider-btn" data-driver="sftp">
+                <span class="qp-icon">⇅</span>
+                <div class="qp-text">
+                  <div class="qp-name">SFTP / SSH Storage</div>
+                  <div class="qp-sub">Remote Linux servers</div>
+                </div>
+              </button>
+              <button class="quick-provider-btn" data-driver="local">
+                <span class="qp-icon">🖧</span>
+                <div class="qp-text">
+                  <div class="qp-name">Local / NAS / GVFS Mount</div>
+                  <div class="qp-sub">SMB, NFS, or rclone mount</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div class="pane-title" style="margin-top:16px;">Configured Data Sources &amp; Cloud Connections</div>
           <div class="datasources-grid" id="datasources-grid">
             <!-- Injected via JS -->
           </div>
@@ -231,73 +387,161 @@
 
   <!-- Modal: Configure Data Source Wizard -->
   <div id="ds-modal" class="modal-overlay hidden">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-wide">
       <div class="modal-header">
         <h3 id="ds-modal-title">Configure Data Source</h3>
         <button class="modal-close" id="btn-ds-modal-close">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label">Driver / Provider Type</label>
-          <select id="modal-ds-driver" class="form-input">
-            <option value="postgres">PostgreSQL (Relational SQL)</option>
-            <option value="oracle">Oracle Database (Relational SQL)</option>
-            <option value="mysql">MySQL / MariaDB (Relational SQL)</option>
-            <option value="mssql">Microsoft SQL Server (Relational SQL)</option>
-            <option value="sqlite">SQLite / DuckDB (Embedded SQL)</option>
-            <option value="mongodb">MongoDB (NoSQL Document)</option>
-            <option value="redis">Redis (In-Memory Key-Value)</option>
-            <option value="s3">Amazon S3 / MinIO (Object Storage)</option>
-            <option value="gdrive">Google Drive / GCS (Cloud Storage)</option>
-            <option value="sftp">SFTP (SSH File Transfer)</option>
-            <option value="ftp">FTP / FTPS (File Transfer)</option>
-            <option value="kafka">Apache Kafka (Event Streaming)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Data Source Name</label>
-          <input type="text" id="modal-ds-name" class="form-input" placeholder="e.g. Acme Petshop PostgreSQL Database"/>
-        </div>
         <div class="form-row">
+          <div class="form-group" style="flex:1.2;">
+            <label class="form-label">Driver / Cloud Provider Type</label>
+            <select id="modal-ds-driver" class="form-input">
+              <optgroup label="Cloud &amp; Object Storage">
+                <option value="gdrive">Google Drive (Cloud Folders &amp; RobOS Mount)</option>
+                <option value="s3">Amazon S3 / Cloudflare R2 / MinIO (Object Storage)</option>
+                <option value="dropbox">Dropbox (Cloud Storage)</option>
+                <option value="onedrive">Microsoft OneDrive / SharePoint</option>
+                <option value="webdav">Nextcloud / ownCloud (WebDAV)</option>
+                <option value="sftp">SFTP (SSH File Transfer)</option>
+                <option value="ftp">FTP / FTPS (File Transfer)</option>
+                <option value="local">Local / NAS / GVFS / Rclone Mounted Folder</option>
+              </optgroup>
+              <optgroup label="SQL &amp; Relational Databases">
+                <option value="postgres">PostgreSQL (Relational SQL)</option>
+                <option value="mysql">MySQL / MariaDB (Relational SQL)</option>
+                <option value="oracle">Oracle Database (Relational SQL)</option>
+                <option value="mssql">Microsoft SQL Server (Relational SQL)</option>
+                <option value="sqlite">SQLite / DuckDB (Embedded SQL)</option>
+                <option value="snowflake">Snowflake / Redshift (Cloud Warehouse)</option>
+              </optgroup>
+              <optgroup label="NoSQL &amp; Streaming">
+                <option value="mongodb">MongoDB (NoSQL Document)</option>
+                <option value="redis">Redis (In-Memory Key-Value)</option>
+                <option value="dynamodb">Amazon DynamoDB (Serverless NoSQL)</option>
+                <option value="kafka">Apache Kafka (Event Streaming)</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1.2;">
+            <label class="form-label">Data Source Name</label>
+            <input type="text" id="modal-ds-name" class="form-input" placeholder="e.g. My Personal Google Drive"/>
+          </div>
+        </div>
+
+        <!-- Google Drive Dedicated Configuration Panel -->
+        <div id="gdrive-setup-panel" class="gdrive-setup-panel hidden">
+          <div class="gdrive-panel-header">
+            <span style="font-size:16px;">📁</span>
+            <div>
+              <div style="font-weight:600;color:#fff;font-size:12px;">Google Drive Integration for RobOS</div>
+              <div style="font-size:11px;color:#8b949e;">Connect a Google Drive folder or account to browse and mount folders across RobOS apps.</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Google Drive Connection Mode</label>
+            <select id="modal-gdrive-auth-mode" class="form-input">
+              <option value="workspace">RobOS Managed Cloud Folder + Google Drive Link (Instant Setup)</option>
+              <option value="oauth">Google OAuth 2.0 (Sign In with Browser or Access Token)</option>
+              <option value="service_account">Google Cloud Service Account (.json Key File)</option>
+              <option value="api_key">Shared Google Drive Folder URL + Google API Key</option>
+              <option value="local_mount">Existing Local Google Drive / GVFS / Rclone Mount</option>
+            </select>
+          </div>
+
+          <!-- Local / GVFS Mount Picker Row -->
+          <div id="gdrive-local-mount-row" class="form-group hidden">
+            <label class="form-label">Local Mounted Google Drive Directory (GVFS / Rclone / Synced Folder)</label>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="modal-ds-local-mount" class="form-input mono" style="flex:1;" placeholder="/run/user/1000/gvfs/google-drive:... or ~/Google Drive"/>
+              <button type="button" class="btn btn-sm" id="btn-browse-local-folder">📂 Browse Folder...</button>
+              <button type="button" class="btn btn-sm" id="btn-detect-gdrive">🔍 Auto-Detect</button>
+            </div>
+            <div id="detected-mounts-list" class="detected-mounts-list"></div>
+          </div>
+
+          <!-- OAuth 2.0 Browser Sign-In Row -->
+          <div id="gdrive-oauth-row" class="form-group hidden">
+            <div class="form-row">
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">Google OAuth Client ID (optional if pasting token below)</label>
+                <input type="text" id="modal-gdrive-client-id" class="form-input mono" placeholder="123456789-abc.apps.googleusercontent.com"/>
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label class="form-label">Google OAuth Client Secret</label>
+                <input type="password" id="modal-gdrive-client-secret" class="form-input mono" placeholder="GOCSPX-..."/>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+              <button type="button" class="btn btn-sm btn-gdrive" id="btn-launch-google-oauth">🔑 Sign In with Google in Browser</button>
+              <span style="font-size:11px;color:#8b949e;" id="oauth-status-label">Or paste an OAuth2 Access Token (`ya29...`) in the Token field below.</span>
+            </div>
+          </div>
+
+          <!-- Service Account JSON Row -->
+          <div id="gdrive-sa-row" class="form-group hidden">
+            <label class="form-label">Service Account JSON Key File</label>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="modal-gdrive-sa-path" class="form-input mono" style="flex:1;" placeholder="~/.config/gcloud/service-account.json"/>
+              <button type="button" class="btn btn-sm" id="btn-pick-sa-json">📄 Select JSON Key...</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row" id="row-host-port">
           <div class="form-group" style="flex:2;">
             <label class="form-label" id="lbl-ds-host">Host / Endpoint</label>
             <input type="text" id="modal-ds-host" class="form-input mono" placeholder="127.0.0.1"/>
           </div>
-          <div class="form-group" style="flex:1;">
+          <div class="form-group" style="flex:1;" id="grp-ds-port">
             <label class="form-label" id="lbl-ds-port">Port</label>
             <input type="number" id="modal-ds-port" class="form-input mono" placeholder="5432"/>
           </div>
         </div>
+
         <div class="form-group">
-          <label class="form-label" id="lbl-ds-database">Database / Bucket / Folder ID</label>
-          <input type="text" id="modal-ds-database" class="form-input mono" placeholder="petshop"/>
+          <label class="form-label" id="lbl-ds-database">Database / Bucket / Google Drive Folder URL or ID</label>
+          <input type="text" id="modal-ds-database" class="form-input mono" placeholder="petshop or https://drive.google.com/drive/folders/..."/>
+          <div id="gdrive-folder-id-preview" class="field-hint hidden"></div>
         </div>
-        <div class="form-row">
+
+        <div class="form-row" id="row-user-pass">
           <div class="form-group" style="flex:1;">
-            <label class="form-label">Username / Key ID</label>
+            <label class="form-label" id="lbl-ds-user">Username / Email / Access Key ID</label>
             <input type="text" id="modal-ds-user" class="form-input" placeholder="postgres"/>
           </div>
           <div class="form-group" style="flex:1;">
-            <label class="form-label">Password / Secret</label>
+            <label class="form-label" id="lbl-ds-password">Password / OAuth Token / API Key</label>
             <input type="password" id="modal-ds-password" class="form-input" placeholder="••••••••"/>
           </div>
         </div>
+
         <div class="form-group hidden" id="grp-ds-keyfile">
           <label class="form-label">Private Key File (optional, SFTP; password is used as passphrase)</label>
-          <input type="text" id="modal-ds-keyfile" class="form-input mono" placeholder="~/.ssh/id_ed25519"/>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="modal-ds-keyfile" class="form-input mono" style="flex:1;" placeholder="~/.ssh/id_ed25519"/>
+            <button type="button" class="btn btn-sm" id="btn-pick-ssh-key">Select Key...</button>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="flags-bool-label">
-            <input type="checkbox" id="modal-ds-ssl" class="flags-checkbox"/>
-            <span class="flags-label-text">Enable SSL / TLS Encryption</span>
-          </label>
+
+        <div class="form-row" style="align-items:center;">
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Bound Knowledge Graph Microservices (comma-separated)</label>
+            <input type="text" id="modal-ds-services" class="form-input mono" placeholder="petstore-api, vaccine-gateway"/>
+          </div>
+          <div class="form-group" style="padding-top:18px;">
+            <label class="flags-bool-label">
+              <input type="checkbox" id="modal-ds-ssl" class="flags-checkbox" checked/>
+              <span class="flags-label-text">SSL / TLS</span>
+            </label>
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Bound Knowledge Graph Microservices (comma-separated)</label>
-          <input type="text" id="modal-ds-services" class="form-input mono" placeholder="petstore-api, vaccine-gateway"/>
-        </div>
+
+        <div id="modal-test-banner" class="modal-test-banner hidden"></div>
       </div>
       <div class="modal-footer">
+        <button class="btn btn-sm" id="btn-modal-test-conn" style="margin-right:auto;">⚡ Test Connection</button>
         <button class="btn btn-sm" id="btn-ds-modal-cancel">Cancel</button>
         <button class="btn btn-primary btn-sm" id="btn-ds-modal-save">Save Data Source</button>
       </div>
@@ -314,7 +558,7 @@
       <div class="modal-body">
         <div id="test-conn-result-card" style="padding:16px;background:#161b22;border:1px solid #30363d;border-radius:6px;">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-            <span style="font-size:24px;">✓</span>
+            <span id="test-conn-icon" style="font-size:24px;">✓</span>
             <div>
               <div style="font-weight:600;color:#7ee787;font-size:15px;">Connection Successful</div>
               <div id="test-conn-latency" style="font-size:12px;color:#8b949e;">Round-trip latency: 1.4 ms</div>
