@@ -77,3 +77,10 @@ contextBridge.exposeInMainWorld('sdlcGraph', {
   exportGraph: (format, packageId) => ipcRenderer.invoke('graph-export', { format, packageId }),
   searchNodes: (query, filter) => ipcRenderer.invoke('graph-search-nodes', { query, filter }),
 });
+
+// Default answer for the textarea's quick-ask button (robos-lib/quick-ask).
+contextBridge.exposeInMainWorld('robosQuickAsk', (question, context, contextFiles, onChunk, onDone, onError) => {
+  ipcRenderer.invoke('robos-quick-ask', { question, context, contextFiles })
+    .then(r => { if (r && r.ok) { onChunk(r.text); onDone(); } else onError((r && r.error) || 'No answer'); })
+    .catch(e => onError(e.message));
+});

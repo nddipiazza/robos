@@ -74,9 +74,26 @@ contextBridge.exposeInMainWorld('robos', {
 
 Replace `<app-prefix>` with a short unique prefix for the app (e.g. `tp` for task-planner, `ap` for ai-prompt, `gp` for git-projects).
 
+Expose the quick-ask bridge so the textarea's **?** button answers questions:
+```javascript
+contextBridge.exposeInMainWorld('robosQuickAsk', (question, context, contextFiles, onChunk, onDone, onError) => {
+  ipcRenderer.invoke('robos-quick-ask', { question, context, contextFiles })
+    .then(r => { if (r && r.ok) { onChunk(r.text); onDone(); } else onError((r && r.error) || 'No answer'); })
+    .catch(e => onError(e.message));
+});
+```
+
 ---
 
 ## Step 3 — Main process (`main.js`)
+
+Register the shared quick-ask handler. It answers through `robos-lib/ai-agent`: the user's active agent CLI, or the optional API mode if they turned it on in RobOS Preferences.
+
+```javascript
+for (const p of [process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'quick-ask'), path.resolve(__dirname, '..', 'robos-lib', 'quick-ask'), '/usr/local/share/robos/robos-lib/quick-ask'].filter(Boolean)) {
+  try { require(p).registerQuickAskIPC(ipcMain); break; } catch {}
+}
+```
 
 Add the `<app-prefix>-list-path` IPC handler for `@mention` typeahead:
 
@@ -182,6 +199,7 @@ if (typeof customElements !== 'undefined') {
 - [ ] The submit / plan button is placed directly adjacent to `<robos-ai-textarea>` and **starts `disabled`**
 - [ ] Typing into `<robos-ai-textarea>` dynamically toggles the button's `disabled` state
 - [ ] `searchIndex` exposed in `preload.js`
+- [ ] `robosQuickAsk` exposed in `preload.js` and `registerQuickAskIPC(ipcMain)` called in `main.js`
 - [ ] `<app-prefix>-list-path` IPC handler added in `main.js`
 - [ ] `robos-path-query` event wired in `renderer/app.js`
 - [ ] `.value` used to get/set text

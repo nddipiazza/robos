@@ -431,6 +431,10 @@ window.generateCoPilot = async function(promptText) {
     prompt = 'Add an asynchronous email notification worker subscribed to order events with RabbitMQ';
   }
 
+  const applyBtn = document.getElementById('btn-copilot-apply');
+  if (applyBtn) applyBtn.disabled = true;
+  const pendingEl = document.getElementById('inspector-content');
+  if (pendingEl) pendingEl.innerHTML = '<div class="inspector-card"><div class="card-desc">Asking your AI agent for a proposal…</div></div>';
   const mutation = await window.sdlcGraph.copilotGenerate(prompt);
   pendingMutation = mutation;
 
@@ -445,8 +449,9 @@ window.generateCoPilot = async function(promptText) {
         <span>⚡ AI Co-Pilot Proposal (${mutation.proposedNodes.length} Nodes)</span>
         <span class="status-tag-pass">${mutation.conforms ? '100% SHACL Conforming' : 'Violations'}</span>
       </div>
-      <div class="card-desc">${mutation.summary}</div>
-      <pre class="json-pre">${JSON.stringify(mutation.proposedNodes, null, 2)}</pre>
+      <div class="card-desc">${escHtml(mutation.summary)}</div>
+      ${mutation.source === 'template' ? `<div class="card-desc">Template proposal: ${escHtml(mutation.agentError || 'no AI agent answered')}</div>` : ''}
+      <pre class="json-pre">${escHtml(JSON.stringify(mutation.proposedNodes, null, 2))}</pre>
     </div>
   `;
 

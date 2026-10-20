@@ -160,6 +160,43 @@
       ]
     },
     {
+      "@id": "urn:robos:library:robos-llm",
+      "@type": [
+        "robos:Library",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS LLM (optional API mode)",
+      "dcterms:description": "Opt-in direct model calls for quick one-shot requests and embeddings through LangChain.js: Anthropic, OpenAI, Google Gemini and local Ollama. Off by default; the coding-agent CLIs (Claude Code, Codex, Gemini CLI / Antigravity, GitHub Copilot) stay the default path and the fallback. Packages install on request into ~/.local/share/robos/llm-deps; API keys are read from pass (robos/ai/<provider>-key); prompts pass through the Prompt Security Guard; LangSmith tracing is forced off.",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.core",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:sourcePath": "packages/robos-llm",
+      "robos:technology": "Node.js 20 / LangChain.js",
+      "robos:refersFrom": "https://schema.org/SoftwareSourceCode",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://js.langchain.com/",
+      "robos:supportedProviders": [
+        "anthropic",
+        "openai",
+        "gemini",
+        "ollama"
+      ],
+      "robos:defaultEnabled": false,
+      "robos:dependsOn": [
+        "urn:robos:security:prompt-security-guard"
+      ],
+      "robos:tags": [
+        "ai",
+        "llm",
+        "api-mode",
+        "embeddings",
+        "semantic-search",
+        "langchain",
+        "optional"
+      ]
+    },
+    {
       "@id": "urn:robos:build-system:acme-monorepo-bazel",
       "@type": [
         "robos:BuildSystem",
@@ -1234,6 +1271,43 @@
         "warn",
         "audit-only",
         "off"
+      ]
+    },
+    {
+      "@id": "urn:robos:library:robos-llm",
+      "@type": [
+        "robos:Library",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS LLM (optional API mode)",
+      "dcterms:description": "Opt-in direct model calls for quick one-shot requests and embeddings through LangChain.js: Anthropic, OpenAI, Google Gemini and local Ollama. Off by default; the coding-agent CLIs (Claude Code, Codex, Gemini CLI / Antigravity, GitHub Copilot) stay the default path and the fallback. Packages install on request into ~/.local/share/robos/llm-deps; API keys are read from pass (robos/ai/<provider>-key); prompts pass through the Prompt Security Guard; LangSmith tracing is forced off.",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.core",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:sourcePath": "packages/robos-llm",
+      "robos:technology": "Node.js 20 / LangChain.js",
+      "robos:refersFrom": "https://schema.org/SoftwareSourceCode",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://js.langchain.com/",
+      "robos:supportedProviders": [
+        "anthropic",
+        "openai",
+        "gemini",
+        "ollama"
+      ],
+      "robos:defaultEnabled": false,
+      "robos:dependsOn": [
+        "urn:robos:security:prompt-security-guard"
+      ],
+      "robos:tags": [
+        "ai",
+        "llm",
+        "api-mode",
+        "embeddings",
+        "semantic-search",
+        "langchain",
+        "optional"
       ]
     },
     {

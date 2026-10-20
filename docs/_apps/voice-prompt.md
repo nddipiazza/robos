@@ -29,7 +29,7 @@ A floating HUD window shows speech bubbles and command results, and a commands d
 | Kokoro voices | The model file `~/.local/share/kokoro/kokoro-v1.0.onnx` and `python3`. |
 | Edge-TTS voices | The `edge-tts` command, which calls an online Microsoft service. |
 | Piper voices | A `piper` binary and voices in `~/.local/share/piper/voices`. |
-| Assistant answers | An AI provider configured for `robos-lib/ai-agent`. |
+| Assistant answers | An AI provider configured for `robos-lib/ai-agent`: an agent CLI set as active in RobOS Agents. See [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}). |
 
 ## Files and ports
 
