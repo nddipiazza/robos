@@ -1,0 +1,2727 @@
+{
+  "cartridge": "election-2026-quest-1",
+  "total_steps": 266,
+  "total_rounds": 15,
+  "milestones": [
+    {
+      "step": 1,
+      "round": 1,
+      "img": "m01_quest_start.jpg",
+      "thumb": "m01_quest_start_thumb.jpg",
+      "tag": "START",
+      "title": "Quest Begins at Capitol West Wing Stairs [0, 13]",
+      "desc": "The 4 bipartisan heroes (Barack Obama, Donald Trump, Hillary Clinton, Bernie Sanders) assemble at [0, 13] with starting weapons, shields, spells, and Healing Potions."
+    },
+    {
+      "step": 4,
+      "round": 1,
+      "img": "m02_obama_door_sw8.jpg",
+      "thumb": "m02_obama_door_sw8_thumb.jpg",
+      "tag": "DOOR",
+      "title": "Barack Obama Breaches Room SW-8 (TX #4)",
+      "desc": "Vanguard Barack Obama rolls movement and kicks open the door at [2, 15] <-> [2, 14], lifting the Fog of War on room-sw-8."
+    },
+    {
+      "step": 8,
+      "round": 1,
+      "img": "m03_trump_door_nw9.jpg",
+      "thumb": "m03_trump_door_nw9_thumb.jpg",
+      "tag": "DOOR",
+      "title": "Donald Trump Breaches Room NW-9 (TX #8)",
+      "desc": "Donald Trump advances north from the starting stairwell and opens the door at [2, 10] <-> [2, 9] into room-nw-9."
+    },
+    {
+      "step": 13,
+      "round": 1,
+      "img": "m04_hillary_door_sw11.jpg",
+      "thumb": "m04_hillary_door_sw11_thumb.jpg",
+      "tag": "DOOR",
+      "title": "Hillary Clinton Opens Room SW-11 & Reveals Volunteers (TX #13)",
+      "desc": "Hillary Clinton marches east along the central corridor and opens [6, 12] <-> [6, 13], revealing the first Campaign Volunteer sentries."
+    },
+    {
+      "step": 32,
+      "round": 2,
+      "img": "m05_hillary_sleep_spell.jpg",
+      "thumb": "m05_hillary_sleep_spell_thumb.jpg",
+      "tag": "SPELL",
+      "title": "Hillary Clinton Casts Sleep on Campaign Volunteer (TX #32)",
+      "desc": "Using her Elven spell deck, Hillary Clinton casts Sleep on Campaign Volunteer (mon-campaign-volunteer-1) while advancing toward the inner wing."
+    },
+    {
+      "step": 41,
+      "round": 3,
+      "img": "m06_obama_first_blood.jpg",
+      "thumb": "m06_obama_first_blood_thumb.jpg",
+      "tag": "COMBAT",
+      "title": "Barack Obama Slays Campaign Volunteer (TX #41)",
+      "desc": "Barack Obama strikes with his 4-die Broadsword (2 skulls, 0 shields), eliminating the Campaign Volunteer in room-sw-11."
+    },
+    {
+      "step": 51,
+      "round": 3,
+      "img": "m07_oval_office_breach.jpg",
+      "thumb": "m07_oval_office_breach_thumb.jpg",
+      "tag": "BOSS",
+      "title": "Breaching the Oval Office & Revealing Talarixon! (TX #50-51)",
+      "desc": "Hillary Clinton opens door [9, 9] <-> [8, 9] into the Oval Office (room-nw-10), triggering the San Antonio Diesel Plot cutscene and revealing Talarixon (Texas Hydra, 5 BP)!"
+    },
+    {
+      "step": 65,
+      "round": 4,
+      "img": "m08_supreme_court_breach.jpg",
+      "thumb": "m08_supreme_court_breach_thumb.jpg",
+      "tag": "BOSS",
+      "title": "Donald Trump Breaches Supreme Court & Reveals Brownsted! (TX #67)",
+      "desc": "Donald Trump opens door [12, 14] <-> [12, 13] into the Supreme Court Chamber (room-sw-5), revealing Brownsted (Ohio Hydra, 5 BP) and the Super PAC Demon!"
+    },
+    {
+      "step": 93,
+      "round": 5,
+      "img": "m09_bernie_ball_of_flame.jpg",
+      "thumb": "m09_bernie_ball_of_flame_thumb.jpg",
+      "tag": "SPELL",
+      "title": "Bernie Sanders Casts Ball of Flame on Spin Doctor (TX #96)",
+      "desc": "Holding rear arcane support in the corridor, Bernie Sanders hurls Ball of Flame at Spin Doctor (mon-spin-doctor-13) from line-of-sight range."
+    },
+    {
+      "step": 101,
+      "round": 6,
+      "img": "m10_trump_potion.jpg",
+      "thumb": "m10_trump_potion_thumb.jpg",
+      "tag": "POTION",
+      "title": "Donald Trump Consumes Emergency Healing Potion (TX #107)",
+      "desc": "After taking multi-headed Hydra strikes from Brownsted and Super PAC Demon, Trump drops to 4 BP and drinks a Potion of Healing (+4 BP -> 8/9 BP)."
+    },
+    {
+      "step": 120,
+      "round": 7,
+      "img": "m11_super_pac_slain.jpg",
+      "thumb": "m11_super_pac_slain_thumb.jpg",
+      "tag": "COMBAT",
+      "title": "Donald Trump Slays Super PAC Demon (TX #130)",
+      "desc": "Donald Trump rolls 2 skulls against 0 shields with his Shortsword, shattering the heavily armored Super PAC Demon (3 BP, 5 Defend Dice)."
+    },
+    {
+      "step": 128,
+      "round": 7,
+      "img": "m12_bernie_genie.jpg",
+      "thumb": "m12_bernie_genie_thumb.jpg",
+      "tag": "SPELL",
+      "title": "Bernie Sanders Summons the Genie Against Brownsted (TX #138)",
+      "desc": "Bernie Sanders unleashes his Air spell Genie to deliver a 5-dice arcane strike directly onto Brownsted (Ohio Hydra) in the Supreme Court Chamber."
+    },
+    {
+      "step": 153,
+      "round": 9,
+      "img": "m13_talarixon_slain.jpg",
+      "thumb": "m13_talarixon_slain_thumb.jpg",
+      "tag": "HYDRA 1",
+      "title": "1st Hydra Slain: Barack Obama Defeats Talarixon! (TX #167)",
+      "desc": "Barack Obama lands a decisive Broadsword strike (2 skulls, 0 shields) in the Oval Office, slaying Talarixon (Talarico + Paxton \u00b7 Texas Hydra)! Objective 1 COMPLETED!"
+    },
+    {
+      "step": 162,
+      "round": 9,
+      "img": "m14_hillary_potion.jpg",
+      "thumb": "m14_hillary_potion_thumb.jpg",
+      "tag": "POTION",
+      "title": "Hillary Clinton Drinks Healing Potion in Supreme Court (TX #175)",
+      "desc": "Wounded to 2 BP by Brownsted, Hillary Clinton triggers emergency potion triage (+4 BP -> 6/8 BP) before pressing her attack."
+    },
+    {
+      "step": 196,
+      "round": 11,
+      "img": "m15_brownsted_slain.jpg",
+      "thumb": "m15_brownsted_slain_thumb.jpg",
+      "tag": "HYDRA 2",
+      "title": "2nd Hydra Slain: Hillary Clinton Defeats Brownsted! (TX #211)",
+      "desc": "Hillary Clinton rolls 3 skulls vs 0 shields with her Shortsword, slaying Brownsted (Brown + Husted \u00b7 Ohio Hydra) in the Supreme Court Chamber! Objective 2 COMPLETED!"
+    },
+    {
+      "step": 207,
+      "round": 12,
+      "img": "m16_senate_cloakroom_breach.jpg",
+      "thumb": "m16_senate_cloakroom_breach_thumb.jpg",
+      "tag": "DOOR",
+      "title": "Barack Obama Breaches Senate Cloakroom & Reveals El-Rogers (TX #221)",
+      "desc": "With two Hydras vanquished, Barack Obama marches east and breaches [17, 13] <-> [17, 14] into the Senate Cloakroom (room-se-4), revealing El-Rogers (Michigan Hydra) and Lobbyist!"
+    },
+    {
+      "step": 232,
+      "round": 13,
+      "img": "m17_lobbyist_slain.jpg",
+      "thumb": "m17_lobbyist_slain_thumb.jpg",
+      "tag": "COMBAT",
+      "title": "Hillary Clinton Eliminates the Senate Lobbyist (TX #246)",
+      "desc": "Hillary Clinton rolls 3 skulls vs 1 shield (2 wounds) to clear the undead Mummy Lobbyist guarding El-Rogers in the Senate Cloakroom."
+    },
+    {
+      "step": 261,
+      "round": 15,
+      "img": "m18_final_hydra_assault.jpg",
+      "thumb": "m18_final_hydra_assault_thumb.jpg",
+      "tag": "COMBAT",
+      "title": "Surrounding El-Rogers & Final Potion Triage (TX #276-277)",
+      "desc": "Obama, Trump, and Hillary surround the 2-square Michigan Hydra El-Rogers in the Senate Cloakroom. Trump drinks a potion (+4 BP -> 8/9 BP) and wounds El-Rogers down to 1 BP!"
+    },
+    {
+      "step": 266,
+      "round": 15,
+      "img": "m19_el_rogers_slain_victory.jpg",
+      "thumb": "m19_el_rogers_slain_victory_thumb.jpg",
+      "tag": "VICTORY",
+      "title": "3rd Hydra Slain: El-Rogers Falls & Quest Complete! (TX #282-283)",
+      "desc": "Hillary Clinton strikes the final blow on El-Rogers (3 skulls, 2 shields, 1 wound -> 0 HP), triggering QUEST_COMPLETE with 100% hero survival (4/4 alive) and 150 gold bounty!"
+    }
+  ],
+  "transactions": [
+    {
+      "id": 1,
+      "step": 1,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Barack Obama rolled 5 movement ([4, 1])"
+    },
+    {
+      "id": 2,
+      "step": 2,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "SEARCH_TRAPS",
+      "desc": "Barack Obama searched carefully for traps and secret passageways (none found)."
+    },
+    {
+      "id": 3,
+      "step": 3,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "MOVE",
+      "desc": "Barack Obama moved from (0, 13) to (2, 14) (cost: 3, remaining: 2)"
+    },
+    {
+      "id": 4,
+      "step": 4,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "DOOR_OPEN",
+      "desc": "Barack Obama opened door between (2, 15) and (2, 14) (revealed rooms: [\"room-sw-8\"])"
+    },
+    {
+      "id": 5,
+      "step": 5,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Barack Obama. Active phase: hero_phase, round: 1"
+    },
+    {
+      "id": 6,
+      "step": 6,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Donald Trump rolled 9 movement ([4, 5])"
+    },
+    {
+      "id": 7,
+      "step": 7,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "MOVE",
+      "desc": "Donald Trump moved from (0, 13) to (2, 10) (cost: 5, remaining: 4)"
+    },
+    {
+      "id": 8,
+      "step": 8,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "DOOR_OPEN",
+      "desc": "Donald Trump opened door between (2, 10) and (2, 9) (revealed rooms: [\"room-nw-9\"])"
+    },
+    {
+      "id": 9,
+      "step": 9,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "SEARCH_TRAPS",
+      "desc": "Donald Trump searched carefully for traps and secret passageways (none found)."
+    },
+    {
+      "id": 10,
+      "step": 10,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Donald Trump. Active phase: hero_phase, round: 1"
+    },
+    {
+      "id": 11,
+      "step": 11,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Hillary Clinton rolled 6 movement ([1, 5])"
+    },
+    {
+      "id": 12,
+      "step": 12,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "MOVE",
+      "desc": "Hillary Clinton moved from (0, 13) to (6, 13) (cost: 6, remaining: 0)"
+    },
+    {
+      "id": 13,
+      "step": 13,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "DOOR_OPEN",
+      "desc": "Hillary Clinton opened door between (6, 12) and (6, 13) (revealed rooms: [\"room-sw-11\"])"
+    },
+    {
+      "id": 14,
+      "step": 14,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "SEARCH_TRAPS",
+      "desc": "Hillary Clinton searched carefully for traps and secret passageways (none found)."
+    },
+    {
+      "id": 15,
+      "step": 15,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Hillary Clinton. Active phase: hero_phase, round: 1"
+    },
+    {
+      "id": 16,
+      "step": 16,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Bernie Sanders rolled 9 movement ([6, 3])"
+    },
+    {
+      "id": 17,
+      "step": 17,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (0, 13) to (1, 14) (cost: 2, remaining: 7)"
+    },
+    {
+      "id": 18,
+      "step": 18,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (1, 14) to (3, 14) (cost: 2, remaining: 5)"
+    },
+    {
+      "id": 19,
+      "step": 19,
+      "round": 1,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "SEARCH_TRAPS",
+      "desc": "Bernie Sanders searched carefully for traps and secret passageways (none found)."
+    },
+    {
+      "id": 20,
+      "step": 20,
+      "round": 1,
+      "phase": "gm_phase",
+      "actor": "Bernie Sanders",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Bernie Sanders. Active phase: gm_phase, round: 1"
+    },
+    {
+      "id": 21,
+      "step": 21,
+      "round": 2,
+      "phase": "hero_phase",
+      "actor": "Zargon GM",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Zargon GM. Active phase: hero_phase, round: 2"
+    },
+    {
+      "id": 22,
+      "step": 22,
+      "round": 2,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Barack Obama rolled 7 movement ([1, 6])"
+    },
+    {
+      "id": 23,
+      "step": 23,
+      "round": 2,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "MOVE",
+      "desc": "Barack Obama moved from (2, 14) to (8, 13) (cost: 7, remaining: 0)"
+    },
+    {
+      "id": 24,
+      "step": 24,
+      "round": 2,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "DOOR_OPEN",
+      "desc": "Barack Obama opened door between (8, 14) and (8, 13) (revealed rooms: [\"room-sw-6\"])"
+    },
+    {
+      "id": 25,
+      "step": 25,
+      "round": 2,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Barack Obama. Active phase: hero_phase, round: 2"
+    },
+    {
+      "id": 26,
+      "step": 26,
+      "round": 2,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Donald Trump rolled 3 movement ([2, 1])"
+    },
+    {
+      "id": 27,
+      "step": 27,
+      "round": 2,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "MOVE",
+      "desc": "Donald Trump moved from (2, 10) to (4, 11) (cost: 3, remaining: 0)"
+    },
+    {
+      "id": 28,
+      "step": 28,
+      "round": 2,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "SEARCH_TRAPS",
+      "desc": "Donald Trump searched carefully for traps and secret passageways (none found)."
+    },
+    {
+      "id": 29,
+      "step": 29,
+      "round": 2,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Donald Trump. Active phase: hero_phase, round: 2"
+    },
+    {
+      "id": 30,
+      "step": 30,
+      "round": 2,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Hillary Clinton rolled 7 movement ([2, 5])"
+    },
+    {
+      "id": 31,
+      "step": 31,
+      "round": 2,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "MOVE",
+      "desc": "Hillary Clinton moved from (6, 13) to (8, 14) (cost: 3, remaining: 4)"
+    },
+    {
+      "id": 32,
+      "step": 32,
+      "round": 2,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "SPELL_CAST",
+      "desc": "Hillary Clinton cast spell 'Sleep' (target: mon-campaign-volunteer-1)"
+    },
+    {
+      "id": 33,
+      "step": 33,
+      "round": 2,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Hillary Clinton. Active phase: hero_phase, round: 2"
+    },
+    {
+      "id": 34,
+      "step": 34,
+      "round": 2,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Bernie Sanders rolled 9 movement ([3, 6])"
+    },
+    {
+      "id": 35,
+      "step": 35,
+      "round": 2,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (3, 14) to (7, 13) (cost: 5, remaining: 4)"
+    },
+    {
+      "id": 36,
+      "step": 36,
+      "round": 2,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "SEARCH_TRAPS",
+      "desc": "Bernie Sanders searched carefully for traps and secret passageways (none found)."
+    },
+    {
+      "id": 37,
+      "step": 37,
+      "round": 2,
+      "phase": "gm_phase",
+      "actor": "Bernie Sanders",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Bernie Sanders. Active phase: gm_phase, round: 2"
+    },
+    {
+      "id": 38,
+      "step": 38,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Zargon GM",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Zargon GM. Active phase: hero_phase, round: 3"
+    },
+    {
+      "id": 39,
+      "step": 39,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Barack Obama rolled 7 movement ([2, 5])"
+    },
+    {
+      "id": 40,
+      "step": 40,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "MOVE",
+      "desc": "Barack Obama moved from (8, 13) to (8, 16) (cost: 3, remaining: 4)"
+    },
+    {
+      "id": 41,
+      "step": 41,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ATTACK",
+      "desc": "Barack Obama attacked Campaign Volunteer with Broadsword (skulls: 2, shields: 0, wounds: 2, target HP: 0)"
+    },
+    {
+      "id": 42,
+      "step": 42,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Barack Obama. Active phase: hero_phase, round: 3"
+    },
+    {
+      "id": 43,
+      "step": 43,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Donald Trump rolled 6 movement ([1, 5])"
+    },
+    {
+      "id": 44,
+      "step": 44,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "MOVE",
+      "desc": "Donald Trump moved from (4, 11) to (8, 13) (cost: 6, remaining: 0)"
+    },
+    {
+      "id": 45,
+      "step": 45,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "SEARCH_TRAPS",
+      "desc": "Donald Trump searched carefully for traps and secret passageways (none found)."
+    },
+    {
+      "id": 46,
+      "step": 46,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Donald Trump. Active phase: hero_phase, round: 3"
+    },
+    {
+      "id": 47,
+      "step": 47,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Hillary Clinton rolled 5 movement ([3, 2])"
+    },
+    {
+      "id": 48,
+      "step": 48,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "SEARCH_TRAPS",
+      "desc": "Hillary Clinton searched carefully for traps and secret passageways (none found)."
+    },
+    {
+      "id": 49,
+      "step": 49,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "MOVE",
+      "desc": "Hillary Clinton moved from (8, 14) to (8, 9) (cost: 5, remaining: 0)"
+    },
+    {
+      "id": 50,
+      "step": 50,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "DOOR_OPEN",
+      "desc": "Hillary Clinton opened door between (9, 9) and (8, 9) (revealed rooms: [\"room-nw-10\"])"
+    },
+    {
+      "id": 51,
+      "step": 51,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "STORY_TRIGGER",
+      "desc": "Oval Office \u2014 Talarixon & The San Antonio Diesel Plot: Inside the Oval Office, the two heads of Talarixon (Talarico + Paxton \u00b7 Texas Hydra) are debating converting the entire city of San Antonio into crude oil to lower Texas diesel prices before Donald Trump barges in!"
+    },
+    {
+      "id": 52,
+      "step": 51,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Hillary Clinton. Active phase: hero_phase, round: 3"
+    },
+    {
+      "id": 53,
+      "step": 52,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Bernie Sanders rolled 10 movement ([5, 5])"
+    },
+    {
+      "id": 54,
+      "step": 53,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (7, 13) to (7, 16) (cost: 5, remaining: 5)"
+    },
+    {
+      "id": 55,
+      "step": 54,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (7, 16) to (8, 15) (cost: 2, remaining: 3)"
+    },
+    {
+      "id": 56,
+      "step": 55,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (8, 15) to (7, 16) (cost: 2, remaining: 1)"
+    },
+    {
+      "id": 57,
+      "step": 56,
+      "round": 3,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "SEARCH_ROOM",
+      "desc": "Bernie Sanders searched room room-sw-6: drew treasure card 'Potion of Defense' (potion)"
+    },
+    {
+      "id": 58,
+      "step": 57,
+      "round": 3,
+      "phase": "gm_phase",
+      "actor": "Bernie Sanders",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Bernie Sanders. Active phase: gm_phase, round: 3"
+    },
+    {
+      "id": 59,
+      "step": 58,
+      "round": 3,
+      "phase": "gm_phase",
+      "actor": "Political Operative",
+      "type": "MONSTER_ATTACK",
+      "desc": "Political Operative attacked Hillary Clinton (skulls: 2, shields: 0, wounds: 2, target HP: 6)"
+    },
+    {
+      "id": 60,
+      "step": 58,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Zargon GM",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Zargon GM. Active phase: hero_phase, round: 4"
+    },
+    {
+      "id": 61,
+      "step": 59,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Barack Obama rolled 6 movement ([3, 3])"
+    },
+    {
+      "id": 62,
+      "step": 60,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "MOVE",
+      "desc": "Barack Obama moved from (8, 16) to (11, 13) (cost: 6, remaining: 0)"
+    },
+    {
+      "id": 63,
+      "step": 61,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "SEARCH_TRAPS",
+      "desc": "Barack Obama searched carefully for traps and secret passageways (none found)."
+    },
+    {
+      "id": 64,
+      "step": 62,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Barack Obama. Active phase: hero_phase, round: 4"
+    },
+    {
+      "id": 65,
+      "step": 63,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Donald Trump rolled 10 movement ([6, 4])"
+    },
+    {
+      "id": 66,
+      "step": 64,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "MOVE",
+      "desc": "Donald Trump moved from (8, 13) to (12, 13) (cost: 4, remaining: 6)"
+    },
+    {
+      "id": 67,
+      "step": 65,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "DOOR_OPEN",
+      "desc": "Donald Trump opened door between (12, 14) and (12, 13) (revealed rooms: [\"room-sw-5\"])"
+    },
+    {
+      "id": 68,
+      "step": 67,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "DOOR_OPEN",
+      "desc": "Donald Trump opened door between (12, 12) and (12, 13) (revealed rooms: [\"room-nw-10\"])"
+    },
+    {
+      "id": 69,
+      "step": 68,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "MOVE",
+      "desc": "Donald Trump moved from (12, 13) to (12, 16) (cost: 3, remaining: 3)"
+    },
+    {
+      "id": 70,
+      "step": 69,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ATTACK",
+      "desc": "Donald Trump attacked Super PAC Demon with Shortsword (skulls: 0, shields: 0, wounds: 0, target HP: 3)"
+    },
+    {
+      "id": 71,
+      "step": 70,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Donald Trump. Active phase: hero_phase, round: 4"
+    },
+    {
+      "id": 72,
+      "step": 71,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Hillary Clinton rolled 8 movement ([5, 3])"
+    },
+    {
+      "id": 73,
+      "step": 72,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ATTACK",
+      "desc": "Hillary Clinton attacked Political Operative with Shortsword (skulls: 0, shields: 0, wounds: 0, target HP: 1)"
+    },
+    {
+      "id": 74,
+      "step": 73,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "MOVE",
+      "desc": "Hillary Clinton moved from (8, 9) to (12, 13) (cost: 8, remaining: 0)"
+    },
+    {
+      "id": 75,
+      "step": 74,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Hillary Clinton. Active phase: hero_phase, round: 4"
+    },
+    {
+      "id": 76,
+      "step": 75,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Bernie Sanders rolled 8 movement ([6, 2])"
+    },
+    {
+      "id": 77,
+      "step": 76,
+      "round": 4,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (7, 16) to (10, 13) (cost: 6, remaining: 2)"
+    },
+    {
+      "id": 78,
+      "step": 77,
+      "round": 4,
+      "phase": "gm_phase",
+      "actor": "Bernie Sanders",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Bernie Sanders. Active phase: gm_phase, round: 4"
+    },
+    {
+      "id": 79,
+      "step": 78,
+      "round": 4,
+      "phase": "gm_phase",
+      "actor": "Political Operative",
+      "type": "MONSTER_ATTACK",
+      "desc": "Political Operative attacked Hillary Clinton (skulls: 1, shields: 2, wounds: 0, target HP: 6)"
+    },
+    {
+      "id": 80,
+      "step": 78,
+      "round": 4,
+      "phase": "gm_phase",
+      "actor": "Super PAC Demon",
+      "type": "MONSTER_ATTACK",
+      "desc": "Super PAC Demon attacked Donald Trump (skulls: 2, shields: 1, wounds: 1, target HP: 8)"
+    },
+    {
+      "id": 81,
+      "step": 78,
+      "round": 5,
+      "phase": "hero_phase",
+      "actor": "Zargon GM",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Zargon GM. Active phase: hero_phase, round: 5"
+    },
+    {
+      "id": 82,
+      "step": 79,
+      "round": 5,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Barack Obama rolled 6 movement ([2, 4])"
+    },
+    {
+      "id": 83,
+      "step": 80,
+      "round": 5,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "MOVE",
+      "desc": "Barack Obama moved from (11, 13) to (13, 12) (cost: 3, remaining: 3)"
+    },
+    {
+      "id": 84,
+      "step": 81,
+      "round": 5,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ATTACK",
+      "desc": "Barack Obama attacked Political Operative with Broadsword (skulls: 2, shields: 1, wounds: 1, target HP: 0)"
+    },
+    {
+      "id": 85,
+      "step": 82,
+      "round": 5,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Barack Obama. Active phase: hero_phase, round: 5"
+    },
+    {
+      "id": 86,
+      "step": 83,
+      "round": 5,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Donald Trump rolled 9 movement ([6, 3])"
+    },
+    {
+      "id": 87,
+      "step": 84,
+      "round": 5,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ATTACK",
+      "desc": "Donald Trump attacked Super PAC Demon with Shortsword (skulls: 1, shields: 1, wounds: 0, target HP: 3)"
+    },
+    {
+      "id": 88,
+      "step": 85,
+      "round": 5,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "MOVE",
+      "desc": "Donald Trump moved from (12, 16) to (13, 17) (cost: 2, remaining: 7)"
+    },
+    {
+      "id": 89,
+      "step": 86,
+      "round": 5,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Donald Trump. Active phase: hero_phase, round: 5"
+    },
+    {
+      "id": 90,
+      "step": 87,
+      "round": 5,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Hillary Clinton rolled 3 movement ([1, 2])"
+    },
+    {
+      "id": 91,
+      "step": 88,
+      "round": 5,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "MOVE",
+      "desc": "Hillary Clinton moved from (12, 13) to (12, 12) (cost: 1, remaining: 2)"
+    },
+    {
+      "id": 92,
+      "step": 89,
+      "round": 5,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ATTACK",
+      "desc": "Hillary Clinton attacked Talarixon (Talarico + Paxton \u00b7 Texas Hydra) with Shortsword (skulls: 2, shields: 1, wounds: 1, target HP: 5)"
+    },
+    {
+      "id": 93,
+      "step": 90,
+      "round": 5,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Hillary Clinton. Active phase: hero_phase, round: 5"
+    },
+    {
+      "id": 94,
+      "step": 91,
+      "round": 5,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Bernie Sanders rolled 8 movement ([3, 5])"
+    },
+    {
+      "id": 95,
+      "step": 92,
+      "round": 5,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (10, 13) to (11, 13) (cost: 1, remaining: 7)"
+    },
+    {
+      "id": 96,
+      "step": 93,
+      "round": 5,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "SPELL_CAST",
+      "desc": "Bernie Sanders cast spell 'Ball of Flame' (target: mon-spin-doctor-13)"
+    },
+    {
+      "id": 97,
+      "step": 94,
+      "round": 5,
+      "phase": "gm_phase",
+      "actor": "Bernie Sanders",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Bernie Sanders. Active phase: gm_phase, round: 5"
+    },
+    {
+      "id": 98,
+      "step": 95,
+      "round": 5,
+      "phase": "gm_phase",
+      "actor": "Brownsted (Brown + Husted \u00b7 Ohio Hydra)",
+      "type": "MONSTER_ATTACK",
+      "desc": "Brownsted (Brown + Husted \u00b7 Ohio Hydra) attacked Donald Trump (skulls: 5, shields: 2, wounds: 3, target HP: 5)"
+    },
+    {
+      "id": 99,
+      "step": 95,
+      "round": 5,
+      "phase": "gm_phase",
+      "actor": "Super PAC Demon",
+      "type": "MONSTER_ATTACK",
+      "desc": "Super PAC Demon attacked Donald Trump (skulls: 2, shields: 1, wounds: 1, target HP: 4)"
+    },
+    {
+      "id": 100,
+      "step": 95,
+      "round": 5,
+      "phase": "gm_phase",
+      "actor": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra)",
+      "type": "MONSTER_ATTACK",
+      "desc": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra) attacked Hillary Clinton (skulls: 2, shields: 1, wounds: 1, target HP: 5)"
+    },
+    {
+      "id": 101,
+      "step": 95,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Zargon GM",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Zargon GM. Active phase: hero_phase, round: 6"
+    },
+    {
+      "id": 102,
+      "step": 96,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Barack Obama rolled 12 movement ([6, 6])"
+    },
+    {
+      "id": 103,
+      "step": 97,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ATTACK",
+      "desc": "Barack Obama attacked Spin Doctor with Broadsword (skulls: 1, shields: 1, wounds: 0, target HP: 1)"
+    },
+    {
+      "id": 104,
+      "step": 98,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "MOVE",
+      "desc": "Barack Obama moved from (13, 12) to (13, 11) (cost: 1, remaining: 11)"
+    },
+    {
+      "id": 105,
+      "step": 99,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Barack Obama. Active phase: hero_phase, round: 6"
+    },
+    {
+      "id": 106,
+      "step": 100,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Donald Trump rolled 5 movement ([3, 2])"
+    },
+    {
+      "id": 107,
+      "step": 101,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "USE_ITEM",
+      "desc": "Donald Trump drinks Potion of Healing (+4 BP, now 8/9 BP)!"
+    },
+    {
+      "id": 108,
+      "step": 102,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ATTACK",
+      "desc": "Donald Trump attacked Super PAC Demon with Shortsword (skulls: 3, shields: 1, wounds: 2, target HP: 1)"
+    },
+    {
+      "id": 109,
+      "step": 103,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "MOVE",
+      "desc": "Donald Trump moved from (13, 17) to (14, 16) (cost: 2, remaining: 3)"
+    },
+    {
+      "id": 110,
+      "step": 104,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Donald Trump. Active phase: hero_phase, round: 6"
+    },
+    {
+      "id": 111,
+      "step": 105,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Hillary Clinton rolled 2 movement ([1, 1])"
+    },
+    {
+      "id": 112,
+      "step": 106,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "USE_ITEM",
+      "desc": "Hillary Clinton drinks Potion of Healing (+3 BP, now 8/8 BP)!"
+    },
+    {
+      "id": 113,
+      "step": 107,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ATTACK",
+      "desc": "Hillary Clinton attacked Talarixon (Talarico + Paxton \u00b7 Texas Hydra) with Shortsword (skulls: 1, shields: 1, wounds: 0, target HP: 5)"
+    },
+    {
+      "id": 114,
+      "step": 108,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "MOVE",
+      "desc": "Hillary Clinton moved from (12, 12) to (13, 12) (cost: 1, remaining: 1)"
+    },
+    {
+      "id": 115,
+      "step": 109,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Hillary Clinton. Active phase: hero_phase, round: 6"
+    },
+    {
+      "id": 116,
+      "step": 110,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Bernie Sanders rolled 5 movement ([1, 4])"
+    },
+    {
+      "id": 117,
+      "step": 111,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (11, 13) to (12, 13) (cost: 1, remaining: 4)"
+    },
+    {
+      "id": 118,
+      "step": 112,
+      "round": 6,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "SPELL_CAST",
+      "desc": "Bernie Sanders cast spell 'Fire of Wrath' (target: mon-brownsted-5)"
+    },
+    {
+      "id": 119,
+      "step": 113,
+      "round": 6,
+      "phase": "gm_phase",
+      "actor": "Bernie Sanders",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Bernie Sanders. Active phase: gm_phase, round: 6"
+    },
+    {
+      "id": 120,
+      "step": 114,
+      "round": 6,
+      "phase": "gm_phase",
+      "actor": "Brownsted (Brown + Husted \u00b7 Ohio Hydra)",
+      "type": "MONSTER_ATTACK",
+      "desc": "Brownsted (Brown + Husted \u00b7 Ohio Hydra) attacked Donald Trump (skulls: 3, shields: 2, wounds: 1, target HP: 7)"
+    },
+    {
+      "id": 121,
+      "step": 114,
+      "round": 6,
+      "phase": "gm_phase",
+      "actor": "Spin Doctor",
+      "type": "MONSTER_ATTACK",
+      "desc": "Spin Doctor attacked Hillary Clinton (skulls: 1, shields: 1, wounds: 0, target HP: 8)"
+    },
+    {
+      "id": 122,
+      "step": 114,
+      "round": 6,
+      "phase": "gm_phase",
+      "actor": "Super PAC Demon",
+      "type": "MONSTER_ATTACK",
+      "desc": "Super PAC Demon attacked Donald Trump (skulls: 3, shields: 2, wounds: 1, target HP: 6)"
+    },
+    {
+      "id": 123,
+      "step": 114,
+      "round": 6,
+      "phase": "gm_phase",
+      "actor": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra)",
+      "type": "MONSTER_ATTACK",
+      "desc": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra) attacked Barack Obama (skulls: 2, shields: 2, wounds: 0, target HP: 10)"
+    },
+    {
+      "id": 124,
+      "step": 114,
+      "round": 7,
+      "phase": "hero_phase",
+      "actor": "Zargon GM",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Zargon GM. Active phase: hero_phase, round: 7"
+    },
+    {
+      "id": 125,
+      "step": 115,
+      "round": 7,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Barack Obama rolled 5 movement ([3, 2])"
+    },
+    {
+      "id": 126,
+      "step": 116,
+      "round": 7,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ATTACK",
+      "desc": "Barack Obama attacked Talarixon (Talarico + Paxton \u00b7 Texas Hydra) with Broadsword (skulls: 3, shields: 1, wounds: 2, target HP: 3)"
+    },
+    {
+      "id": 127,
+      "step": 117,
+      "round": 7,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "MOVE",
+      "desc": "Barack Obama moved from (13, 11) to (14, 11) (cost: 1, remaining: 4)"
+    },
+    {
+      "id": 128,
+      "step": 118,
+      "round": 7,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Barack Obama. Active phase: hero_phase, round: 7"
+    },
+    {
+      "id": 129,
+      "step": 119,
+      "round": 7,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Donald Trump rolled 4 movement ([1, 3])"
+    },
+    {
+      "id": 130,
+      "step": 120,
+      "round": 7,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ATTACK",
+      "desc": "Donald Trump attacked Super PAC Demon with Shortsword (skulls: 2, shields: 0, wounds: 2, target HP: 0)"
+    },
+    {
+      "id": 131,
+      "step": 121,
+      "round": 7,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "MOVE",
+      "desc": "Donald Trump moved from (14, 16) to (13, 17) (cost: 2, remaining: 2)"
+    },
+    {
+      "id": 132,
+      "step": 122,
+      "round": 7,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Donald Trump. Active phase: hero_phase, round: 7"
+    },
+    {
+      "id": 133,
+      "step": 123,
+      "round": 7,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Hillary Clinton rolled 10 movement ([5, 5])"
+    },
+    {
+      "id": 134,
+      "step": 124,
+      "round": 7,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ATTACK",
+      "desc": "Hillary Clinton attacked Spin Doctor with Shortsword (skulls: 3, shields: 1, wounds: 2, target HP: 0)"
+    },
+    {
+      "id": 135,
+      "step": 125,
+      "round": 7,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "MOVE",
+      "desc": "Hillary Clinton moved from (13, 12) to (13, 11) (cost: 1, remaining: 9)"
+    },
+    {
+      "id": 136,
+      "step": 126,
+      "round": 7,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Hillary Clinton. Active phase: hero_phase, round: 7"
+    },
+    {
+      "id": 137,
+      "step": 127,
+      "round": 7,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Bernie Sanders rolled 3 movement ([2, 1])"
+    },
+    {
+      "id": 138,
+      "step": 128,
+      "round": 7,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "SPELL_CAST",
+      "desc": "Bernie Sanders cast spell 'Genie' (target: mon-brownsted-5)"
+    },
+    {
+      "id": 139,
+      "step": 129,
+      "round": 7,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (12, 13) to (14, 12) (cost: 3, remaining: 0)"
+    },
+    {
+      "id": 140,
+      "step": 130,
+      "round": 7,
+      "phase": "gm_phase",
+      "actor": "Bernie Sanders",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Bernie Sanders. Active phase: gm_phase, round: 7"
+    },
+    {
+      "id": 141,
+      "step": 131,
+      "round": 7,
+      "phase": "gm_phase",
+      "actor": "Brownsted (Brown + Husted \u00b7 Ohio Hydra)",
+      "type": "MONSTER_ATTACK",
+      "desc": "Brownsted (Brown + Husted \u00b7 Ohio Hydra) attacked Donald Trump (skulls: 2, shields: 1, wounds: 1, target HP: 5)"
+    },
+    {
+      "id": 142,
+      "step": 131,
+      "round": 7,
+      "phase": "gm_phase",
+      "actor": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra)",
+      "type": "MONSTER_ATTACK",
+      "desc": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra) attacked Hillary Clinton (skulls: 3, shields: 1, wounds: 2, target HP: 6)"
+    },
+    {
+      "id": 143,
+      "step": 131,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Zargon GM",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Zargon GM. Active phase: hero_phase, round: 8"
+    },
+    {
+      "id": 144,
+      "step": 132,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Barack Obama rolled 6 movement ([5, 1])"
+    },
+    {
+      "id": 145,
+      "step": 133,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "MOVE",
+      "desc": "Barack Obama moved from (14, 11) to (12, 12) (cost: 3, remaining: 3)"
+    },
+    {
+      "id": 146,
+      "step": 134,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ATTACK",
+      "desc": "Barack Obama attacked Talarixon (Talarico + Paxton \u00b7 Texas Hydra) with Broadsword (skulls: 2, shields: 0, wounds: 2, target HP: 1)"
+    },
+    {
+      "id": 147,
+      "step": 135,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Barack Obama. Active phase: hero_phase, round: 8"
+    },
+    {
+      "id": 148,
+      "step": 136,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Donald Trump rolled 5 movement ([1, 4])"
+    },
+    {
+      "id": 149,
+      "step": 137,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "USE_ITEM",
+      "desc": "Donald Trump drinks Potion of Healing (+4 BP, now 9/9 BP)!"
+    },
+    {
+      "id": 150,
+      "step": 138,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ATTACK",
+      "desc": "Donald Trump attacked Brownsted (Brown + Husted \u00b7 Ohio Hydra) with Shortsword (skulls: 1, shields: 0, wounds: 1, target HP: 6)"
+    },
+    {
+      "id": 151,
+      "step": 139,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "MOVE",
+      "desc": "Donald Trump moved from (13, 17) to (14, 16) (cost: 2, remaining: 3)"
+    },
+    {
+      "id": 152,
+      "step": 140,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Donald Trump. Active phase: hero_phase, round: 8"
+    },
+    {
+      "id": 153,
+      "step": 141,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Hillary Clinton rolled 8 movement ([4, 4])"
+    },
+    {
+      "id": 154,
+      "step": 142,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ATTACK",
+      "desc": "Hillary Clinton attacked Talarixon (Talarico + Paxton \u00b7 Texas Hydra) with Shortsword (skulls: 1, shields: 2, wounds: 0, target HP: 1)"
+    },
+    {
+      "id": 155,
+      "step": 143,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "MOVE",
+      "desc": "Hillary Clinton moved from (13, 11) to (12, 10) (cost: 2, remaining: 6)"
+    },
+    {
+      "id": 156,
+      "step": 144,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Hillary Clinton. Active phase: hero_phase, round: 8"
+    },
+    {
+      "id": 157,
+      "step": 145,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Bernie Sanders rolled 10 movement ([5, 5])"
+    },
+    {
+      "id": 158,
+      "step": 146,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (14, 12) to (11, 12) (cost: 3, remaining: 7)"
+    },
+    {
+      "id": 159,
+      "step": 147,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (11, 12) to (13, 12) (cost: 2, remaining: 5)"
+    },
+    {
+      "id": 160,
+      "step": 148,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (13, 12) to (11, 12) (cost: 2, remaining: 3)"
+    },
+    {
+      "id": 161,
+      "step": 149,
+      "round": 8,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (11, 12) to (13, 12) (cost: 2, remaining: 1)"
+    },
+    {
+      "id": 162,
+      "step": 150,
+      "round": 8,
+      "phase": "gm_phase",
+      "actor": "Bernie Sanders",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Bernie Sanders. Active phase: gm_phase, round: 8"
+    },
+    {
+      "id": 163,
+      "step": 151,
+      "round": 8,
+      "phase": "gm_phase",
+      "actor": "Brownsted (Brown + Husted \u00b7 Ohio Hydra)",
+      "type": "MONSTER_ATTACK",
+      "desc": "Brownsted (Brown + Husted \u00b7 Ohio Hydra) attacked Donald Trump (skulls: 2, shields: 3, wounds: 0, target HP: 9)"
+    },
+    {
+      "id": 164,
+      "step": 151,
+      "round": 8,
+      "phase": "gm_phase",
+      "actor": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra)",
+      "type": "MONSTER_ATTACK",
+      "desc": "Talarixon (Talarico + Paxton \u00b7 Texas Hydra) attacked Hillary Clinton (skulls: 5, shields: 1, wounds: 4, target HP: 2)"
+    },
+    {
+      "id": 165,
+      "step": 151,
+      "round": 9,
+      "phase": "hero_phase",
+      "actor": "Zargon GM",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Zargon GM. Active phase: hero_phase, round: 9"
+    },
+    {
+      "id": 166,
+      "step": 152,
+      "round": 9,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Barack Obama rolled 4 movement ([1, 3])"
+    },
+    {
+      "id": 167,
+      "step": 153,
+      "round": 9,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ATTACK",
+      "desc": "Barack Obama attacked Talarixon (Talarico + Paxton \u00b7 Texas Hydra) with Broadsword (skulls: 1, shields: 0, wounds: 1, target HP: 0)"
+    },
+    {
+      "id": 168,
+      "step": 155,
+      "round": 9,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "MOVE",
+      "desc": "Barack Obama moved from (12, 12) to (12, 16) (cost: 4, remaining: 0)"
+    },
+    {
+      "id": 169,
+      "step": 156,
+      "round": 9,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Barack Obama. Active phase: hero_phase, round: 9"
+    },
+    {
+      "id": 170,
+      "step": 157,
+      "round": 9,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Donald Trump rolled 10 movement ([4, 6])"
+    },
+    {
+      "id": 171,
+      "step": 158,
+      "round": 9,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ATTACK",
+      "desc": "Donald Trump attacked Brownsted (Brown + Husted \u00b7 Ohio Hydra) with Shortsword (skulls: 1, shields: 1, wounds: 0, target HP: 6)"
+    },
+    {
+      "id": 172,
+      "step": 159,
+      "round": 9,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "MOVE",
+      "desc": "Donald Trump moved from (14, 16) to (13, 17) (cost: 2, remaining: 8)"
+    },
+    {
+      "id": 173,
+      "step": 160,
+      "round": 9,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Donald Trump. Active phase: hero_phase, round: 9"
+    },
+    {
+      "id": 174,
+      "step": 161,
+      "round": 9,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Hillary Clinton rolled 5 movement ([1, 4])"
+    },
+    {
+      "id": 175,
+      "step": 162,
+      "round": 9,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "USE_ITEM",
+      "desc": "Hillary Clinton drinks Potion of Healing (+4 BP, now 6/8 BP)!"
+    },
+    {
+      "id": 176,
+      "step": 163,
+      "round": 9,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "SEARCH_TRAPS",
+      "desc": "Hillary Clinton searched carefully for traps and secret passageways (none found)."
+    },
+    {
+      "id": 177,
+      "step": 164,
+      "round": 9,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "MOVE",
+      "desc": "Hillary Clinton moved from (12, 10) to (13, 14) (cost: 5, remaining: 0)"
+    },
+    {
+      "id": 178,
+      "step": 165,
+      "round": 9,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Hillary Clinton. Active phase: hero_phase, round: 9"
+    },
+    {
+      "id": 179,
+      "step": 166,
+      "round": 9,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Bernie Sanders rolled 4 movement ([1, 3])"
+    },
+    {
+      "id": 180,
+      "step": 167,
+      "round": 9,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (13, 12) to (11, 14) (cost: 4, remaining: 0)"
+    },
+    {
+      "id": 181,
+      "step": 168,
+      "round": 9,
+      "phase": "gm_phase",
+      "actor": "Bernie Sanders",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Bernie Sanders. Active phase: gm_phase, round: 9"
+    },
+    {
+      "id": 182,
+      "step": 169,
+      "round": 9,
+      "phase": "gm_phase",
+      "actor": "Brownsted (Brown + Husted \u00b7 Ohio Hydra)",
+      "type": "MONSTER_ATTACK",
+      "desc": "Brownsted (Brown + Husted \u00b7 Ohio Hydra) attacked Donald Trump (skulls: 3, shields: 0, wounds: 3, target HP: 6)"
+    },
+    {
+      "id": 183,
+      "step": 169,
+      "round": 10,
+      "phase": "hero_phase",
+      "actor": "Zargon GM",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Zargon GM. Active phase: hero_phase, round: 10"
+    },
+    {
+      "id": 184,
+      "step": 170,
+      "round": 10,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Barack Obama rolled 8 movement ([6, 2])"
+    },
+    {
+      "id": 185,
+      "step": 171,
+      "round": 10,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ATTACK",
+      "desc": "Barack Obama attacked Brownsted (Brown + Husted \u00b7 Ohio Hydra) with Broadsword (skulls: 1, shields: 0, wounds: 1, target HP: 5)"
+    },
+    {
+      "id": 186,
+      "step": 172,
+      "round": 10,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "MOVE",
+      "desc": "Barack Obama moved from (12, 16) to (13, 15) (cost: 2, remaining: 6)"
+    },
+    {
+      "id": 187,
+      "step": 173,
+      "round": 10,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Barack Obama. Active phase: hero_phase, round: 10"
+    },
+    {
+      "id": 188,
+      "step": 174,
+      "round": 10,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Donald Trump rolled 6 movement ([4, 2])"
+    },
+    {
+      "id": 189,
+      "step": 175,
+      "round": 10,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ATTACK",
+      "desc": "Donald Trump attacked Brownsted (Brown + Husted \u00b7 Ohio Hydra) with Shortsword (skulls: 1, shields: 1, wounds: 0, target HP: 5)"
+    },
+    {
+      "id": 190,
+      "step": 176,
+      "round": 10,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "MOVE",
+      "desc": "Donald Trump moved from (13, 17) to (14, 16) (cost: 2, remaining: 4)"
+    },
+    {
+      "id": 191,
+      "step": 177,
+      "round": 10,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Donald Trump. Active phase: hero_phase, round: 10"
+    },
+    {
+      "id": 192,
+      "step": 178,
+      "round": 10,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Hillary Clinton rolled 8 movement ([2, 6])"
+    },
+    {
+      "id": 193,
+      "step": 179,
+      "round": 10,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "MOVE",
+      "desc": "Hillary Clinton moved from (13, 14) to (12, 16) (cost: 3, remaining: 5)"
+    },
+    {
+      "id": 194,
+      "step": 180,
+      "round": 10,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ATTACK",
+      "desc": "Hillary Clinton attacked Brownsted (Brown + Husted \u00b7 Ohio Hydra) with Shortsword (skulls: 2, shields: 0, wounds: 2, target HP: 3)"
+    },
+    {
+      "id": 195,
+      "step": 181,
+      "round": 10,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Hillary Clinton. Active phase: hero_phase, round: 10"
+    },
+    {
+      "id": 196,
+      "step": 182,
+      "round": 10,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Bernie Sanders rolled 5 movement ([4, 1])"
+    },
+    {
+      "id": 197,
+      "step": 183,
+      "round": 10,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (11, 14) to (12, 15) (cost: 2, remaining: 3)"
+    },
+    {
+      "id": 198,
+      "step": 184,
+      "round": 10,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (12, 15) to (14, 15) (cost: 2, remaining: 1)"
+    },
+    {
+      "id": 199,
+      "step": 185,
+      "round": 10,
+      "phase": "gm_phase",
+      "actor": "Bernie Sanders",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Bernie Sanders. Active phase: gm_phase, round: 10"
+    },
+    {
+      "id": 200,
+      "step": 186,
+      "round": 10,
+      "phase": "gm_phase",
+      "actor": "Brownsted (Brown + Husted \u00b7 Ohio Hydra)",
+      "type": "MONSTER_ATTACK",
+      "desc": "Brownsted (Brown + Husted \u00b7 Ohio Hydra) attacked Donald Trump (skulls: 1, shields: 1, wounds: 0, target HP: 6)"
+    },
+    {
+      "id": 201,
+      "step": 186,
+      "round": 11,
+      "phase": "hero_phase",
+      "actor": "Zargon GM",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Zargon GM. Active phase: hero_phase, round: 11"
+    },
+    {
+      "id": 202,
+      "step": 187,
+      "round": 11,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Barack Obama rolled 7 movement ([3, 4])"
+    },
+    {
+      "id": 203,
+      "step": 188,
+      "round": 11,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ATTACK",
+      "desc": "Barack Obama attacked Brownsted (Brown + Husted \u00b7 Ohio Hydra) with Broadsword (skulls: 2, shields: 1, wounds: 1, target HP: 2)"
+    },
+    {
+      "id": 204,
+      "step": 189,
+      "round": 11,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "MOVE",
+      "desc": "Barack Obama moved from (13, 15) to (13, 17) (cost: 4, remaining: 3)"
+    },
+    {
+      "id": 205,
+      "step": 190,
+      "round": 11,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Barack Obama. Active phase: hero_phase, round: 11"
+    },
+    {
+      "id": 206,
+      "step": 191,
+      "round": 11,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Donald Trump rolled 6 movement ([4, 2])"
+    },
+    {
+      "id": 207,
+      "step": 192,
+      "round": 11,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ATTACK",
+      "desc": "Donald Trump attacked Brownsted (Brown + Husted \u00b7 Ohio Hydra) with Shortsword (skulls: 2, shields: 2, wounds: 0, target HP: 2)"
+    },
+    {
+      "id": 208,
+      "step": 193,
+      "round": 11,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "MOVE",
+      "desc": "Donald Trump moved from (14, 16) to (13, 15) (cost: 2, remaining: 4)"
+    },
+    {
+      "id": 209,
+      "step": 194,
+      "round": 11,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Donald Trump. Active phase: hero_phase, round: 11"
+    },
+    {
+      "id": 210,
+      "step": 195,
+      "round": 11,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Hillary Clinton rolled 6 movement ([5, 1])"
+    },
+    {
+      "id": 211,
+      "step": 196,
+      "round": 11,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ATTACK",
+      "desc": "Hillary Clinton attacked Brownsted (Brown + Husted \u00b7 Ohio Hydra) with Shortsword (skulls: 2, shields: 0, wounds: 2, target HP: 0)"
+    },
+    {
+      "id": 212,
+      "step": 198,
+      "round": 11,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "MOVE",
+      "desc": "Hillary Clinton moved from (12, 16) to (15, 13) (cost: 6, remaining: 0)"
+    },
+    {
+      "id": 213,
+      "step": 199,
+      "round": 11,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Hillary Clinton. Active phase: hero_phase, round: 11"
+    },
+    {
+      "id": 214,
+      "step": 200,
+      "round": 11,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Bernie Sanders rolled 5 movement ([3, 2])"
+    },
+    {
+      "id": 215,
+      "step": 201,
+      "round": 11,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "SEARCH_TRAPS",
+      "desc": "Bernie Sanders searched carefully for traps and secret passageways (none found)."
+    },
+    {
+      "id": 216,
+      "step": 202,
+      "round": 11,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (14, 15) to (12, 17) (cost: 4, remaining: 1)"
+    },
+    {
+      "id": 217,
+      "step": 203,
+      "round": 11,
+      "phase": "gm_phase",
+      "actor": "Bernie Sanders",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Bernie Sanders. Active phase: gm_phase, round: 11"
+    },
+    {
+      "id": 218,
+      "step": 204,
+      "round": 12,
+      "phase": "hero_phase",
+      "actor": "Zargon GM",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Zargon GM. Active phase: hero_phase, round: 12"
+    },
+    {
+      "id": 219,
+      "step": 205,
+      "round": 12,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Barack Obama rolled 9 movement ([4, 5])"
+    },
+    {
+      "id": 220,
+      "step": 206,
+      "round": 12,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "MOVE",
+      "desc": "Barack Obama moved from (13, 17) to (17, 13) (cost: 8, remaining: 1)"
+    },
+    {
+      "id": 221,
+      "step": 207,
+      "round": 12,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "DOOR_OPEN",
+      "desc": "Barack Obama opened door between (17, 13) and (17, 14) (revealed rooms: [\"room-se-4\"])"
+    },
+    {
+      "id": 222,
+      "step": 209,
+      "round": 12,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "MOVE",
+      "desc": "Barack Obama moved from (17, 13) to (17, 14) (cost: 1, remaining: 0)"
+    },
+    {
+      "id": 223,
+      "step": 210,
+      "round": 12,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Barack Obama. Active phase: hero_phase, round: 12"
+    },
+    {
+      "id": 224,
+      "step": 211,
+      "round": 12,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Donald Trump rolled 6 movement ([4, 2])"
+    },
+    {
+      "id": 225,
+      "step": 212,
+      "round": 12,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "MOVE",
+      "desc": "Donald Trump moved from (13, 15) to (17, 13) (cost: 6, remaining: 0)"
+    },
+    {
+      "id": 226,
+      "step": 213,
+      "round": 12,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Donald Trump. Active phase: hero_phase, round: 12"
+    },
+    {
+      "id": 227,
+      "step": 214,
+      "round": 12,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Hillary Clinton rolled 6 movement ([1, 5])"
+    },
+    {
+      "id": 228,
+      "step": 215,
+      "round": 12,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "SEARCH_TRAPS",
+      "desc": "Hillary Clinton searched carefully for traps and secret passageways (none found)."
+    },
+    {
+      "id": 229,
+      "step": 216,
+      "round": 12,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "MOVE",
+      "desc": "Hillary Clinton moved from (15, 13) to (17, 15) (cost: 4, remaining: 2)"
+    },
+    {
+      "id": 230,
+      "step": 217,
+      "round": 12,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Hillary Clinton. Active phase: hero_phase, round: 12"
+    },
+    {
+      "id": 231,
+      "step": 218,
+      "round": 12,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Bernie Sanders rolled 7 movement ([5, 2])"
+    },
+    {
+      "id": 232,
+      "step": 219,
+      "round": 12,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (12, 17) to (16, 14) (cost: 7, remaining: 0)"
+    },
+    {
+      "id": 233,
+      "step": 220,
+      "round": 12,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "SEARCH_ROOM",
+      "desc": "Bernie Sanders searched room room-sw-5: drew treasure card 'Holy Water' (potion)"
+    },
+    {
+      "id": 234,
+      "step": 221,
+      "round": 12,
+      "phase": "gm_phase",
+      "actor": "Bernie Sanders",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Bernie Sanders. Active phase: gm_phase, round: 12"
+    },
+    {
+      "id": 235,
+      "step": 222,
+      "round": 12,
+      "phase": "gm_phase",
+      "actor": "Lobbyist",
+      "type": "MONSTER_ATTACK",
+      "desc": "Lobbyist attacked Barack Obama (skulls: 2, shields: 1, wounds: 1, target HP: 9)"
+    },
+    {
+      "id": 236,
+      "step": 222,
+      "round": 13,
+      "phase": "hero_phase",
+      "actor": "Zargon GM",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Zargon GM. Active phase: hero_phase, round: 13"
+    },
+    {
+      "id": 237,
+      "step": 223,
+      "round": 13,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Barack Obama rolled 12 movement ([6, 6])"
+    },
+    {
+      "id": 238,
+      "step": 224,
+      "round": 13,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ATTACK",
+      "desc": "Barack Obama attacked Lobbyist with Broadsword (skulls: 1, shields: 1, wounds: 0, target HP: 2)"
+    },
+    {
+      "id": 239,
+      "step": 225,
+      "round": 13,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "MOVE",
+      "desc": "Barack Obama moved from (17, 14) to (18, 13) (cost: 2, remaining: 10)"
+    },
+    {
+      "id": 240,
+      "step": 226,
+      "round": 13,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Barack Obama. Active phase: hero_phase, round: 13"
+    },
+    {
+      "id": 241,
+      "step": 227,
+      "round": 13,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Donald Trump rolled 11 movement ([6, 5])"
+    },
+    {
+      "id": 242,
+      "step": 228,
+      "round": 13,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "MOVE",
+      "desc": "Donald Trump moved from (17, 13) to (17, 14) (cost: 1, remaining: 10)"
+    },
+    {
+      "id": 243,
+      "step": 229,
+      "round": 13,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ATTACK",
+      "desc": "Donald Trump attacked Lobbyist with Shortsword (skulls: 1, shields: 2, wounds: 0, target HP: 2)"
+    },
+    {
+      "id": 244,
+      "step": 230,
+      "round": 13,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Donald Trump. Active phase: hero_phase, round: 13"
+    },
+    {
+      "id": 245,
+      "step": 231,
+      "round": 13,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Hillary Clinton rolled 11 movement ([5, 6])"
+    },
+    {
+      "id": 246,
+      "step": 232,
+      "round": 13,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ATTACK",
+      "desc": "Hillary Clinton attacked Lobbyist with Shortsword (skulls: 3, shields: 1, wounds: 2, target HP: 0)"
+    },
+    {
+      "id": 247,
+      "step": 233,
+      "round": 13,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "MOVE",
+      "desc": "Hillary Clinton moved from (17, 15) to (18, 16) (cost: 2, remaining: 9)"
+    },
+    {
+      "id": 248,
+      "step": 234,
+      "round": 13,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Hillary Clinton. Active phase: hero_phase, round: 13"
+    },
+    {
+      "id": 249,
+      "step": 235,
+      "round": 13,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Bernie Sanders rolled 6 movement ([5, 1])"
+    },
+    {
+      "id": 250,
+      "step": 236,
+      "round": 13,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (16, 14) to (15, 13) (cost: 6, remaining: 0)"
+    },
+    {
+      "id": 251,
+      "step": 237,
+      "round": 13,
+      "phase": "gm_phase",
+      "actor": "Bernie Sanders",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Bernie Sanders. Active phase: gm_phase, round: 13"
+    },
+    {
+      "id": 252,
+      "step": 238,
+      "round": 13,
+      "phase": "gm_phase",
+      "actor": "El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra)",
+      "type": "MONSTER_ATTACK",
+      "desc": "El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra) attacked Hillary Clinton (skulls: 3, shields: 2, wounds: 1, target HP: 5)"
+    },
+    {
+      "id": 253,
+      "step": 238,
+      "round": 14,
+      "phase": "hero_phase",
+      "actor": "Zargon GM",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Zargon GM. Active phase: hero_phase, round: 14"
+    },
+    {
+      "id": 254,
+      "step": 239,
+      "round": 14,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Barack Obama rolled 9 movement ([6, 3])"
+    },
+    {
+      "id": 255,
+      "step": 240,
+      "round": 14,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "MOVE",
+      "desc": "Barack Obama moved from (18, 13) to (17, 15) (cost: 3, remaining: 6)"
+    },
+    {
+      "id": 256,
+      "step": 241,
+      "round": 14,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ATTACK",
+      "desc": "Barack Obama attacked El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra) with Broadsword (skulls: 1, shields: 1, wounds: 0, target HP: 7)"
+    },
+    {
+      "id": 257,
+      "step": 242,
+      "round": 14,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Barack Obama. Active phase: hero_phase, round: 14"
+    },
+    {
+      "id": 258,
+      "step": 243,
+      "round": 14,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Donald Trump rolled 6 movement ([1, 5])"
+    },
+    {
+      "id": 259,
+      "step": 244,
+      "round": 14,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ATTACK",
+      "desc": "Donald Trump attacked El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra) with Shortsword (skulls: 0, shields: 1, wounds: 0, target HP: 7)"
+    },
+    {
+      "id": 260,
+      "step": 245,
+      "round": 14,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "MOVE",
+      "desc": "Donald Trump moved from (17, 14) to (18, 14) (cost: 1, remaining: 5)"
+    },
+    {
+      "id": 261,
+      "step": 246,
+      "round": 14,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Donald Trump. Active phase: hero_phase, round: 14"
+    },
+    {
+      "id": 262,
+      "step": 247,
+      "round": 14,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Hillary Clinton rolled 11 movement ([6, 5])"
+    },
+    {
+      "id": 263,
+      "step": 248,
+      "round": 14,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "USE_ITEM",
+      "desc": "Hillary Clinton drinks Potion of Healing (+3 BP, now 8/8 BP)!"
+    },
+    {
+      "id": 264,
+      "step": 249,
+      "round": 14,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ATTACK",
+      "desc": "Hillary Clinton attacked El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra) with Shortsword (skulls: 2, shields: 1, wounds: 1, target HP: 6)"
+    },
+    {
+      "id": 265,
+      "step": 250,
+      "round": 14,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "MOVE",
+      "desc": "Hillary Clinton moved from (18, 16) to (19, 15) (cost: 2, remaining: 9)"
+    },
+    {
+      "id": 266,
+      "step": 251,
+      "round": 14,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Hillary Clinton. Active phase: hero_phase, round: 14"
+    },
+    {
+      "id": 267,
+      "step": 252,
+      "round": 14,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Bernie Sanders rolled 6 movement ([5, 1])"
+    },
+    {
+      "id": 268,
+      "step": 253,
+      "round": 14,
+      "phase": "hero_phase",
+      "actor": "Bernie Sanders",
+      "type": "MOVE",
+      "desc": "Bernie Sanders moved from (15, 13) to (16, 14) (cost: 6, remaining: 0)"
+    },
+    {
+      "id": 269,
+      "step": 254,
+      "round": 14,
+      "phase": "gm_phase",
+      "actor": "Bernie Sanders",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Bernie Sanders. Active phase: gm_phase, round: 14"
+    },
+    {
+      "id": 270,
+      "step": 255,
+      "round": 14,
+      "phase": "gm_phase",
+      "actor": "El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra)",
+      "type": "MONSTER_ATTACK",
+      "desc": "El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra) attacked Donald Trump (skulls: 2, shields: 0, wounds: 2, target HP: 4)"
+    },
+    {
+      "id": 271,
+      "step": 255,
+      "round": 15,
+      "phase": "hero_phase",
+      "actor": "Zargon GM",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Zargon GM. Active phase: hero_phase, round: 15"
+    },
+    {
+      "id": 272,
+      "step": 256,
+      "round": 15,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Barack Obama rolled 6 movement ([3, 3])"
+    },
+    {
+      "id": 273,
+      "step": 257,
+      "round": 15,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "ATTACK",
+      "desc": "Barack Obama attacked El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra) with Broadsword (skulls: 3, shields: 1, wounds: 2, target HP: 4)"
+    },
+    {
+      "id": 274,
+      "step": 258,
+      "round": 15,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "MOVE",
+      "desc": "Barack Obama moved from (17, 15) to (18, 16) (cost: 2, remaining: 4)"
+    },
+    {
+      "id": 275,
+      "step": 259,
+      "round": 15,
+      "phase": "hero_phase",
+      "actor": "Barack Obama",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Barack Obama. Active phase: hero_phase, round: 15"
+    },
+    {
+      "id": 276,
+      "step": 260,
+      "round": 15,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Donald Trump rolled 4 movement ([1, 3])"
+    },
+    {
+      "id": 277,
+      "step": 261,
+      "round": 15,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "USE_ITEM",
+      "desc": "Donald Trump drinks Potion of Healing (+4 BP, now 8/9 BP)!"
+    },
+    {
+      "id": 278,
+      "step": 262,
+      "round": 15,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "ATTACK",
+      "desc": "Donald Trump attacked El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra) with Shortsword (skulls: 3, shields: 0, wounds: 3, target HP: 1)"
+    },
+    {
+      "id": 279,
+      "step": 263,
+      "round": 15,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "MOVE",
+      "desc": "Donald Trump moved from (18, 14) to (17, 15) (cost: 2, remaining: 2)"
+    },
+    {
+      "id": 280,
+      "step": 264,
+      "round": 15,
+      "phase": "hero_phase",
+      "actor": "Donald Trump",
+      "type": "END_TURN",
+      "desc": "Concluded turn for Donald Trump. Active phase: hero_phase, round: 15"
+    },
+    {
+      "id": 281,
+      "step": 265,
+      "round": 15,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ROLL_MOVEMENT",
+      "desc": "Hillary Clinton rolled 10 movement ([6, 4])"
+    },
+    {
+      "id": 282,
+      "step": 266,
+      "round": 15,
+      "phase": "hero_phase",
+      "actor": "Hillary Clinton",
+      "type": "ATTACK",
+      "desc": "Hillary Clinton attacked El-Rogers (El-Sayed + Rogers \u00b7 Michigan Hydra) with Shortsword (skulls: 3, shields: 2, wounds: 1, target HP: 0)"
+    },
+    {
+      "id": 283,
+      "step": 266,
+      "round": 15,
+      "phase": "hero_phase",
+      "actor": "Adventuring Party",
+      "type": "QUEST_COMPLETE",
+      "desc": "Quest 'Quest 1: Battle for the Hill' successfully completed! Awarded 150 gold bounty to party."
+    }
+  ]
+}
