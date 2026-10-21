@@ -175,3 +175,21 @@ test('readRemoteRange asks Drive for a byte range and stops reading once it has 
     fs.rmSync(home, { recursive: true, force: true });
   }
 });
+
+test('files are served and cast with their real type (DJ clips are WAV)', async () => {
+  const { audioMimeType } = require(path.join(APP_DIR, 'lib', 'cast-service'));
+  assert.strictEqual(audioMimeType('/tmp/tts-abc.wav'), 'audio/wav');
+  assert.strictEqual(audioMimeType('/m/a.FLAC'), 'audio/flac');
+  assert.strictEqual(audioMimeType('/m/a.m4a'), 'audio/mp4');
+  assert.strictEqual(audioMimeType('/m/a.mp3'), 'audio/mpeg');
+  const cast = new CastService();
+  const url = cast.registerFile('/tmp/tts-abc.wav');
+  assert.match(url, /\.wav$/);
+  const id = url.split('/media/')[1].replace(/\.wav$/, '');
+  assert.strictEqual(cast.mediaRegistry.get(id).contentType, 'audio/wav');
+
+  const loads = [];
+  cast.activeConnections.set('10.0.0.6', { client: { close() {} }, sessionId: 's', player: { load: (media, opts, cb) => { loads.push({ type: media.contentType, opts }); cb(null, {}); } } });
+  await cast.castMediaUrl('10.0.0.6', url, { contentType: 'audio/wav', currentTime: 42 });
+  assert.deepStrictEqual(loads, [{ type: 'audio/wav', opts: { autoplay: true, currentTime: 42 } }]);
+});

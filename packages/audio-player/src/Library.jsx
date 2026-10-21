@@ -9,6 +9,9 @@ import {
 } from '../lib/library-index.js';
 import { useLibrary, Cover, Collage, collectionMenuItems } from './library-ui.jsx';
 import { ScrollContainerContext, VirtualGrid } from './virtual.jsx';
+import { Splitter, useLayoutPref } from './resizable.jsx';
+
+const NAV_WIDTH = 196;
 
 export const LIBRARY_SECTIONS = [
   { id: 'albums', label: 'Albums', icon: 'disc' },
@@ -71,6 +74,7 @@ export default function Library({
   const [prefs, setPrefs] = useState(loadPrefs);
   const [query, setQuery] = useState('');
   const contentRef = useRef(null);
+  const [navWidth, setNavWidth] = useLayoutPref('libNavWidth', NAV_WIDTH);
 
   useEffect(() => {
     try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch {}
@@ -141,7 +145,18 @@ export default function Library({
   }
 
   return (
-    <div className="lib">
+    <div className="lib" style={{ gridTemplateColumns: `${navWidth}px minmax(0, 1fr)` }}>
+      <Splitter
+        id="lib-nav-splitter"
+        className="overlay"
+        style={{ left: navWidth - 5 }}
+        label="Library sidebar width"
+        width={navWidth}
+        onChange={setNavWidth}
+        min={140}
+        max={420}
+        defaultWidth={NAV_WIDTH}
+      />
       <nav className="lib-nav" aria-label="Library categories">
         <div className="lib-nav-group">
           <span className="lib-nav-heading">Library</span>
