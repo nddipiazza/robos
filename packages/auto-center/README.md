@@ -56,7 +56,7 @@ The NHTSA datasets overview page returned HTTP 403 during the initial collection
 - **Checkout** (`renderer/checkout.js`): pick a finished car, issue the invoice, record payments, hand back the keys.
 - **Admin** (`lib/admin.js`, `renderer/admin.js`): team, customers, parts catalog and import, intake form, shop settings, backup to a private GitHub repository.
 
-The older **All tickets** page remains for working one ticket at a time. `npm run e2e:lifecycle` runs the Cucumber scenarios (real Electron app, video capture) and `node scripts/build-guide.js` regenerates the owner tutorial at https://rowbose.com/auto-center/ (product introduction in `guide/introduction.html`, guide chapters in `guide/*.md`, screenshots and videos taken from the run; needs Pillow and Playwright's ffmpeg).
+The older **All tickets** page remains for working one ticket at a time. `npm run e2e:lifecycle` runs the Cucumber scenarios (real Electron app, video capture) and `node scripts/build-guide.js` regenerates the owner tutorial at https://rowbose.com/auto-center/ (product introduction in `guide/introduction.html`, guide chapters in `guide/*.md`, screenshots and videos taken from the run; needs Pillow and Playwright's ffmpeg). `npm run walkthrough` records the narrated YouTube walkthrough (1920×1080 WebM, WebVTT captions and a chapter list) into `evidence/walkthrough/`, using a replayed OBD-II adapter.
 
 ## Type-ahead search
 
