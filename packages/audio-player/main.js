@@ -9,6 +9,7 @@ const { pathToFileURL } = require('url');
 const { CastService } = require('./lib/cast-service');
 const { MediaLibrary } = require('./lib/media-library');
 const cloud = require('./lib/cloud-storage');
+const { createTagQueue } = require('./lib/cloud-tags');
 const lyrics = require('./lib/lyrics');
 const { LibraryFolders } = require('./lib/library-folders');
 const aiPlaylist = require('./lib/ai-playlist');
@@ -111,7 +112,31 @@ function refreshCloudTrackUrls() {
   }
 }
 
+// ── Cloud song tags ─────────────────────────────────────────────────────────
+// Cloud songs are listed without downloading them, so their tags are read in the
+// background, fetching only the bytes that hold them (lib/cloud-tags).
+const cloudTagQueue = createTagQueue({
+  read: (track) => mediaLibrary.refreshCloudTags(track, cloud.readRemoteRange),
+  flush: () => {
+    mediaLibrary._rebuildIndexes();
+    mediaLibrary._saveCacheSoon();
+    sendToWindow('audio:library-scan-batch', { library: mediaLibrary.getLibrary() });
+  },
+  flushMs: 2500,
+  onAuthRequired: () => {}, // Data Sources already shows its "sign in" toast
+});
+
+function readCloudTagsInBackground(tracks = mediaLibrary.cloudTracksNeedingTags()) {
+  if (tracks.length) cloudTagQueue.add(tracks);
+}
+
+castService.onCloudTrackCached = (track) => cloudTagQueue.add([track]);
+
 setTimeout(refreshCloudTrackUrls, 200);
+setTimeout(() => {
+  mediaLibrary.upgradeCloudGuesses();
+  readCloudTagsInBackground();
+}, 3000);
 try { cloud.enforceCacheLimit(); } catch {}
 
 function createWindow() {
@@ -264,6 +289,22 @@ ipcMain.handle('audio:cast-file', async (_evt, { ip, filePath, metadata }) => {
         mainWindow.webContents.send('audio:speaker-status-change', { ip, status });
       }
     });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+// Downloads the next cloud song into the cache while the current one plays, so
+// the change of song doesn't wait for it (a cache miss downloads the whole file).
+ipcMain.handle('audio:prefetch-track', async (_evt, filePath) => {
+  const track = filePath && mediaLibrary.tracks.find(t => t.filePath === filePath && t.cloud);
+  if (!track) return { ok: false };
+  if (cloud.isTrackCached(track.filePath, track.cloud.size)) return { ok: true, cached: true };
+  try {
+    await cloud.ensureTrackCached(track.cloud);
+    track.cloud.cached = true;
+    cloudTagQueue.add([track]);
+    return { ok: true, cached: true };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -457,6 +498,7 @@ async function syncCloudFolders(folders) {
       results.push({ id: f.id, error: err.message });
     }
   }
+  readCloudTagsInBackground();
   return results;
 }
 
@@ -644,7 +686,11 @@ ipcMain.handle('audio:cloud-import', async (_evt, { id, paths }) => {
   try {
     const descriptors = await cloud.indexCloudAudio(id, paths || [], (p) => sendToWindow('audio:cloud-progress', p));
     const tracks = [];
+    const known = new Map(mediaLibrary.tracks.map(t => [t.filePath, t]));
     for (const desc of descriptors) {
+      // Re-importing a song whose tags were already read keeps them.
+      const had = known.get(desc.localPath);
+      if (had && had.cloud && had.cloud.tagsRead) continue;
       try {
         const trackId = mediaLibrary._generateTrackId(desc.localPath);
         const streamUrl = castService.getCloudStreamUrl(trackId, false);
@@ -652,6 +698,7 @@ ipcMain.handle('audio:cloud-import', async (_evt, { id, paths }) => {
       } catch {}
     }
     mediaLibrary.mergeTracks(tracks);
+    readCloudTagsInBackground();
     return { ok: true, added: tracks.length, library: mediaLibrary.getLibrary() };
   } catch (err) {
     return { ok: false, error: err.message };
