@@ -37,7 +37,7 @@ async function refreshReports() {
     const v = h.vehicle, s = h.stay, c = text('article', '', 'held-car'); c.dataset.vehicle = v['@id'];
     const top = text('div', '', 'vehicle-card-top');
     top.append(text('span', s['robos:parkingLocation'] || 'LOCATION UNASSIGNED', 'bay-label'), text('span', h.readyForPickup ? 'Ready for pickup' : h.jobs.length ? 'In service' : 'Checked in', h.readyForPickup ? 'vehicle-state ready' : 'vehicle-state'));
-    c.append(top, text('h3', v['dcterms:title']), text('p', [v['schema:modelDate'], v['schema:brand'], v['schema:model']].filter(Boolean).join(' '), 'vehicle-model'));
+    c.append(top, text('h3', h.label || vehicleLabel(v)), text('p', [v['schema:modelDate'], v['schema:brand'], v['schema:model']].filter(Boolean).join(' '), 'vehicle-model'));
     c.append(text('p', `${v['robos:licensePlate'] || 'No plate recorded'} ${v['robos:registrationJurisdiction'] || ''}`, 'plate-label'));
     const detail = text('dl', '', 'vehicle-facts');
     for (const [key, value] of [['Time on site', `${h.daysHeld} days`], ['Expected ready', s['robos:expectedReadyOn'] || 'Not set']]) { detail.append(text('dt', key), text('dd', value)); }
@@ -63,7 +63,7 @@ async function refreshReports() {
   const issues=[];if(r.invalid.closedJobsWithoutTimestamp)issues.push(`${r.invalid.closedJobsWithoutTimestamp} closed jobs lack a closing time and are excluded from period/turnaround counts.`);if(r.invalid.payments||r.invalid.stays)issues.push(`${r.invalid.payments} invalid payment records and ${r.invalid.stays} invalid stays excluded; review the shop records.`);$('report-quality').textContent=issues.join(' ');$('report-quality').hidden=!issues.length;
   $('daily-revenue').replaceChildren(...r.daily.map(d => tableRow([d.date, money(d.receivedMinor, r.currency), money(d.refundedMinor, r.currency), money(d.netMinor, r.currency)])));
   const jobs = state.records.filter(n => n['@type'] === 'robos:RepairOrder'), vehicles = new Map(state.records.filter(n => n['@type'] === 'robos:OwnedVehicle').map(n => [n['@id'], n]));
-  const jobLabel = j => `${j['dcterms:title']} · ${vehicles.get(j['robos:vehicle']?.['@id'])?.['dcterms:title'] || 'Vehicle not found'}`;
+  const jobLabel = j => `${j['dcterms:title']} · ${vehicleLabel(vehicles.get(j['robos:vehicle']?.['@id'])) || 'Vehicle not found'}`;
   refill($('payment-job'), jobs, jobLabel);
   const receipts = state.records.filter(n => n['@type'] === 'robos:ShopPayment' && n['robos:paymentDirection'] === 'received');
   refill($('refund-original'), receipts, p => `${p['robos:paidOn']} · ${money(p['robos:amountMinor'], p['robos:currency'])} · ${jobs.find(j => j['@id'] === p['robos:job']?.['@id'])?.['dcterms:title'] || ''}`);

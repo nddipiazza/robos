@@ -30,7 +30,7 @@ function findCustomers(service, input) {
   }).slice(0, 8).map(c => {
     const mine = vehicles.filter(v => w.linked(v, 'robos:customer') === c['@id']);
     return { id: c['@id'], name: c['schema:name'], phone: c['schema:telephone'], email: c['schema:email'], preferred: c['robos:preferredContact'] || '',
-      vehicles: mine.map(v => ({ id: v['@id'], name: v['dcterms:title'], year: v['schema:modelDate'], make: v['schema:brand'], model: v['schema:model'], plate: v['robos:licensePlate'], openTicket: jobs.find(j => w.linked(j, 'robos:vehicle') === v['@id'])?.['robos:workItemKey'] || null })) };
+      vehicles: mine.map(v => ({ id: v['@id'], name: w.vehicleLabel(v, c), year: v['schema:modelDate'], make: v['schema:brand'], model: v['schema:model'], plate: v['robos:licensePlate'], openTicket: jobs.find(j => w.linked(j, 'robos:vehicle') === v['@id'])?.['robos:workItemKey'] || null })) };
   });
 }
 function registerCustomer(service, input) { return w.addCustomer(service, { ...input, requireContact: true }); }

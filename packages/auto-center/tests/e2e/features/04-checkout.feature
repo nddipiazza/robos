@@ -5,8 +5,8 @@ Feature: Check the customer out
   Background:
     Given the shop team has "Maria Lopez" as "Master technician"
     And the customer "Sam Rivera" is on file
-    And "Sam Rivera" has the vehicle "Sam's Camry"
-    And "Sam's Camry" is taken in with the concern "Grinding noise when braking"
+    And "Sam Rivera" has the vehicle "Toyota Camry 2015"
+    And "Toyota Camry 2015 — Sam Rivera" is taken in with the concern "Grinding noise when braking"
     And an estimate with:
       | type  | description       | quantity_or_hours | price  |
       | part  | Front brake pads  | 1                 | 60.00  |

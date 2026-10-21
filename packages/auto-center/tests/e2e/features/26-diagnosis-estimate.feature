@@ -4,8 +4,8 @@ Feature: Diagnose and quote
 
   Background:
     Given the customer "Sam Rivera" is on file
-    And "Sam Rivera" has the vehicle "Sam's Camry"
-    And "Sam's Camry" is taken in with the concern "Grinding noise when braking"
+    And "Sam Rivera" has the vehicle "Toyota Camry 2015"
+    And "Toyota Camry 2015 — Sam Rivera" is taken in with the concern "Grinding noise when braking"
 
   Scenario: Record the diagnosis
     On the ticket, write up the findings and any trouble codes. The ticket moves to **Diagnosis** and the

@@ -8,8 +8,8 @@ Feature: Read the car with an OBD-II adapter
   Background:
     Given the shop team has "Maria Lopez" as "Master technician"
     And the customer "Sam Rivera" is on file
-    And "Sam Rivera" has the vehicle "Sam's Grand Caravan": year "2014", make "Dodge", model "Grand Caravan"
-    And "Sam's Grand Caravan" is taken in with the concern "Check-engine light is on"
+    And "Sam Rivera" has the vehicle "Dodge Grand Caravan 2014"
+    And "Dodge Grand Caravan 2014 — Sam Rivera" is taken in with the concern "Check-engine light is on"
 
   Scenario: Connect to the adapter and read the codes
     Open the ticket and press **Read the car (OBD)**. **Find adapters** looks for Bluetooth OBD adapters
@@ -63,8 +63,8 @@ Feature: Read the car with an OBD-II adapter
   Scenario: A scan from a different car is not saved
     If the VIN the car reports is not the VIN on the ticket, you are plugged into the wrong car. The bench
     warns you and will not save the scan on this ticket.
-    Given "Sam Rivera" has the vehicle "Sam's Accord": year "2014", make "Honda", model "Accord", VIN "1HGCR2F30EA000001"
-    And "Sam's Accord" is taken in with the concern "Oil change"
+    Given "Sam Rivera" has the vehicle "Honda Accord 2014" with VIN "1HGCR2F30EA000001"
+    And "Honda Accord 2014 — Sam Rivera" is taken in with the concern "Oil change"
     And I am at the mechanic bench
     When I sit down at the bench as "Maria Lopez"
     And I open the work ticket "RO-0002"

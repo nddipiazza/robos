@@ -1,4 +1,5 @@
 'use strict';
+const { vehicleLabel } = require('./vehicle-label');
 
 const CURRENCIES = ['USD', 'CAD', 'EUR', 'GBP'];
 const COST_CATEGORIES = ['parts', 'labor', 'supplies', 'subcontract', 'rent', 'utilities', 'insurance', 'equipment', 'fees', 'other'];
@@ -84,7 +85,7 @@ function buildReports(nodes, { now = new Date(), timeZone = Intl.DateTimeFormat(
   const held = stays.filter(s => !s['schema:endDate'] && Date.parse(s['schema:startDate']) <= now.getTime()).map(s => {
     const vehicle = vehicles.get(linked(s, 'robos:vehicle'));
     const activeJobs = openJobs.filter(j => linked(j, 'robos:vehicle') === vehicle['@id']);
-    return { stay: s, vehicle, jobs: activeJobs,
+    return { stay: s, vehicle, label: vehicleLabel(vehicle, nodes.find(n => n['@id'] === linked(vehicle, 'robos:customer'))), jobs: activeJobs,
       daysHeld: Math.max(0, Math.round((Date.parse(today) - Date.parse(dayAt(s['schema:startDate'], timeZone))) / 86400000)),
       readyForPickup: activeJobs.length > 0 && activeJobs.every(j => j['robos:jobStatus'] === 'ready'),
       pastExpectedDate: validDate(s['robos:expectedReadyOn']) && s['robos:expectedReadyOn'] < today };
