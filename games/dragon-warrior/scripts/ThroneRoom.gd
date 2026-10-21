@@ -206,7 +206,15 @@ func _hero_screen_pos() -> Vector2:
 	return Vector2(VW * 0.5 - TILE_SIZE * 0.5, VH * 0.5 - TILE_SIZE * 0.5)
 
 
-func _is_walkable(col: int, row: int) -> bool:
+func _is_walkable(col_or_pos: Variant, row_arg: int = -999) -> bool:
+	var col: int = 0
+	var row: int = 0
+	if col_or_pos is Vector2i:
+		col = (col_or_pos as Vector2i).x
+		row = (col_or_pos as Vector2i).y
+	else:
+		col = int(col_or_pos)
+		row = row_arg
 	if row < 0 or row >= MAP_GRID.size():      return false
 	if col < 0 or col >= MAP_GRID[row].size(): return false
 	var tile: int = MAP_GRID[row][col]
@@ -962,10 +970,15 @@ func _cmd_take() -> void:
 		var item: Dictionary = CHEST_ITEMS[coord]
 		if item["type"] == "gold":
 			_hero_gold += int(item.get("amount", 0))
+			if gs: gs.gold = _hero_gold
+			if PlayerState: PlayerState.gold = _hero_gold
 			_show_dialog("", ["Thou dost find\n" + item["name"] + "!"])
 		else:
 			if _inventory.size() < MAX_INVENTORY:
-				_inventory.append(item.duplicate())
+				var inv_item := item.duplicate()
+				_inventory.append(inv_item)
+				if gs: gs.inventory = _inventory.duplicate(true)
+				if PlayerState: PlayerState.inventory.append(inv_item)
 				_show_dialog("", ["Thou dost find\n" + item["name"] + "!"])
 			else:
 				_show_dialog("", ["Thy pack is full!\nThou canst carry\nno more items."])
@@ -1082,6 +1095,8 @@ func _update_hero_movement(delta: float) -> void:
 	if _move_t >= 1.0:
 		_hero_moving = false
 		_hero_ws.playing = true   # keep idle animation pulsing between steps
+		if _move_enabled and not _dialog_active and not _menu_open and not _status_open and not _item_open and not _choice_open:
+			_handle_move_input()
 
 
 # ── Music ─────────────────────────────────────────────────────────────────────
@@ -1207,10 +1222,10 @@ func _input(event: InputEvent) -> void:
 		if event.is_action_pressed("ui_cancel") or event.is_action_pressed("cmd_menu"):
 			_item_panel.visible = false
 			_item_open = false
-		elif event.is_action_pressed("ui_up"):
+		elif event.is_action_pressed("ui_up") or event.is_action_pressed("move_up"):
 			_item_index = maxi(_item_index - 1, 0)
 			_refresh_item_cursor()
-		elif event.is_action_pressed("ui_down"):
+		elif event.is_action_pressed("ui_down") or event.is_action_pressed("move_down"):
 			_item_index = mini(_item_index + 1, _inventory.size() - 1)
 			_refresh_item_cursor()
 		elif event.is_action_pressed("ui_accept"):
@@ -1256,13 +1271,13 @@ func _input(event: InputEvent) -> void:
 			_close_menu()
 		elif event.is_action_pressed("ui_accept"):
 			_execute_command()
-		elif event.is_action_pressed("ui_up"):
+		elif event.is_action_pressed("ui_up") or event.is_action_pressed("move_up"):
 			_navigate_menu(Vector2i(0,-1))
-		elif event.is_action_pressed("ui_down"):
+		elif event.is_action_pressed("ui_down") or event.is_action_pressed("move_down"):
 			_navigate_menu(Vector2i(0, 1))
-		elif event.is_action_pressed("ui_left"):
+		elif event.is_action_pressed("ui_left") or event.is_action_pressed("move_left"):
 			_navigate_menu(Vector2i(-1,0))
-		elif event.is_action_pressed("ui_right"):
+		elif event.is_action_pressed("ui_right") or event.is_action_pressed("move_right"):
 			_navigate_menu(Vector2i( 1,0))
 		get_viewport().set_input_as_handled()
 		return

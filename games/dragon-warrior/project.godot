@@ -36,6 +36,7 @@ E2EBot="*res://src/systems/E2EBot.gd"
 GameState="*res://scripts/GameState.gd"
 TileWalkability="*res://scripts/TileWalkability.gd"
 GameControlServer="*res://src/systems/GameControlServer.gd"
+AIEngine="*res://src/systems/AIEngine.gd"
 
 [display]
 

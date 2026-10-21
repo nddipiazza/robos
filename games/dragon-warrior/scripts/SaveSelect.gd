@@ -172,10 +172,10 @@ func _start_music() -> void:
 
 # ── Input ────────────────────────────────────────────────────────────────────
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("move_up"):
+	if event.is_action_pressed("move_up") or event.is_action_pressed("ui_up"):
 		_index = maxi(_index - 1, 0)
 		_refresh_list()
-	elif event.is_action_pressed("move_down"):
+	elif event.is_action_pressed("move_down") or event.is_action_pressed("ui_down"):
 		_index = mini(_index + 1, _entries.size() - 1)
 		_refresh_list()
 	elif event.is_action_pressed("ui_accept"):

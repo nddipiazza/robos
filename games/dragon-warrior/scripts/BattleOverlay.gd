@@ -37,6 +37,7 @@ var _mon_asleep       : bool   = false   # enemy sleep state
 var _mon_stopspelled  : bool   = false   # enemy can't cast spells
 var _mon_resist_sleep : bool   = false
 var _mon_pattern      : Array  = []      # action pattern from monsters.json
+var _last_enemy_action: String = ""
 
 var _hero_hp         : int    = 15
 var _hero_hp_max_val : int    = 15
@@ -172,12 +173,22 @@ func _unhandled_input(event: InputEvent) -> void:
 				_sfx.stop()
 			get_viewport().set_input_as_handled()
 		return
+	if _phase == Phase.INTRO:
+		if event.is_action_pressed("ui_accept") or event.is_action_pressed("cmd_menu"):
+			get_viewport().set_input_as_handled()
+			if _msg_q.is_empty():
+				_phase = Phase.PLAYER_MENU
+				_show_menu()
+			else:
+				_msg_t = 0.0
+				_msg_lbl.text = _msg_q.pop_front()
+		return
 	if _phase == Phase.PLAYER_MENU and _msg_q.is_empty():
-		if event.is_action_pressed("move_up") or event.is_action_pressed("move_down"):
+		if event.is_action_pressed("move_up") or event.is_action_pressed("move_down") or event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
 			_cursor = _cursor ^ 2   # toggle row: 0↔2, 1↔3
 			_update_menu_cursor()
 			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("move_left") or event.is_action_pressed("move_right"):
+		elif event.is_action_pressed("move_left") or event.is_action_pressed("move_right") or event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
 			_cursor = _cursor ^ 1   # toggle col: 0↔1, 2↔3
 			_update_menu_cursor()
 			get_viewport().set_input_as_handled()
@@ -185,11 +196,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			_execute_command()
 	elif _phase == Phase.SPELL_SELECT:
-		if event.is_action_pressed("move_up"):
+		if event.is_action_pressed("move_up") or event.is_action_pressed("ui_up"):
 			_spell_cursor = max(0, _spell_cursor - 1)
 			_update_spell_cursor()
 			get_viewport().set_input_as_handled()
-		elif event.is_action_pressed("move_down"):
+		elif event.is_action_pressed("move_down") or event.is_action_pressed("ui_down"):
 			_spell_cursor = min(_known_spells.size() - 1, _spell_cursor + 1)
 			_update_spell_cursor()
 			get_viewport().set_input_as_handled()
@@ -548,6 +559,7 @@ func _do_enemy_turn() -> void:
 			break
 
 	# ── Execute chosen action ───────────────────────────────────────────
+	_last_enemy_action = action
 	match action:
 		"fire_weak":
 			var dmg : int = randi_range(16, 23)

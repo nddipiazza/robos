@@ -10,6 +10,10 @@ var server: TCPServer = TCPServer.new()
 var active_port: int = 8080
 var api_contract_cache: String = ""
 var _active_clients: Array[StreamPeerTCP] = []
+var _demo_timer: float = 0.0
+var _demo_busy: bool = false
+var _demo_step_counter: int = 0
+var _demo_last_action: String = ""
 
 static var _chest_registry_cache: Dictionary = {}
 static var _door_registry_cache: Dictionary = {}
@@ -61,13 +65,11 @@ func _start_server() -> void:
 	push_warning("[GameControlServer] Could not bind HTTP server to any port in range %d-%d" % [active_port, active_port + 9])
 
 func _process(_delta: float) -> void:
-	if not server or not server.is_listening():
-		return
-
-	while server.is_connection_available():
-		var client: StreamPeerTCP = server.take_connection()
-		if client:
-			_handle_client(client)
+	if server and server.is_listening():
+		while server.is_connection_available():
+			var client: StreamPeerTCP = server.take_connection()
+			if client:
+				_handle_client(client)
 
 func _handle_client(client: StreamPeerTCP) -> void:
 	client.poll()
@@ -410,6 +412,61 @@ func _handle_post_command(client: StreamPeerTCP, body: Dictionary) -> void:
 					if scene.has_method("_begin_intro"):
 						scene.call("_begin_intro")
 			_send_http_response(client, 200, {"success": true, "message": "Updated GameState/scene state."})
+		"load_save_state":
+			var gs: Node = get_node_or_null("/root/GameState")
+			var data: Dictionary = {}
+			if args.has("file_path") and str(args["file_path"]) != "":
+				var fp: String = str(args["file_path"])
+				if FileAccess.file_exists(fp):
+					var f := FileAccess.open(fp, FileAccess.READ)
+					if f:
+						var parsed: Variant = JSON.parse_string(f.get_as_text())
+						if parsed is Dictionary:
+							data = parsed
+			elif args.has("state") and args["state"] is Dictionary:
+				data = args["state"]
+			else:
+				data = args
+			if gs and not data.is_empty():
+				gs.call("load_state_dict", data)
+				var sc_name: String = str(data.get("scene", "ThroneRoom"))
+				var sc_path: String = "res://scenes/%s.tscn" % sc_name
+				_send_http_response(client, 200, {"success": true, "message": "Loaded save state for scene %s" % sc_name, "scene": sc_name})
+				get_tree().call_deferred("change_scene_to_file", sc_path)
+			else:
+				_send_http_response(client, 400, {"success": false, "message": "Invalid save state payload."})
+		"export_save_state", "save_checkpoint":
+			var gs: Node = get_node_or_null("/root/GameState")
+			var sc: Node = get_tree().current_scene
+			var sc_name: String = str(sc.name) if sc else "ThroneRoom"
+			var ht: Vector2i = _extract_hero_tile(sc) if sc else Vector2i(4, 5)
+			var hf: String = _extract_hero_facing(sc) if sc else "down"
+			var exported: Dictionary = gs.call("export_state_dict", sc_name, ht, hf) if gs else {}
+			if args.has("file_path") and str(args["file_path"]) != "":
+				var out_f := FileAccess.open(str(args["file_path"]), FileAccess.WRITE)
+				if out_f:
+					out_f.store_string(JSON.stringify(exported, "  "))
+					out_f.close()
+			_send_http_response(client, 200, {"success": true, "save_state": exported})
+		"start_demo":
+			var ai: Node = get_node_or_null("/root/AIEngine")
+			if ai and ai.has_method("set_demo_mode"):
+				ai.call("set_demo_mode", true)
+			_send_http_response(client, 200, {"success": true, "demo_mode_enabled": true})
+		"stop_demo":
+			var ai: Node = get_node_or_null("/root/AIEngine")
+			if ai and ai.has_method("set_demo_mode"):
+				ai.call("set_demo_mode", false)
+			_send_http_response(client, 200, {"success": true, "demo_mode_enabled": false})
+		"ai_task":
+			var ai: Node = get_node_or_null("/root/AIEngine")
+			var task_name: String = str(args.get("task", ""))
+			var max_steps: int = int(args.get("max_steps", 400))
+			if ai and ai.has_method("start_task") and task_name != "":
+				ai.call("start_task", task_name, args, max_steps)
+				_send_http_response(client, 200, {"success": true, "task": task_name, "status": "running"})
+			else:
+				_send_http_response(client, 400, {"success": false, "message": "Invalid ai_task request."})
 		_:
 			_send_http_response(client, 400, {"success": false, "message": "Unknown command: %s" % cmd})
 
@@ -471,13 +528,22 @@ func get_full_scene_state() -> Dictionary:
 			"spells": gs_node.get("spells") if "spells" in gs_node else [],
 			"opened_chests": gs_node.get("opened_chests") if "opened_chests" in gs_node else {},
 			"unlocked_doors": gs_node.get("unlocked_doors") if "unlocked_doors" in gs_node else {},
-			"bridge_built": gs_node.get("bridge_built") if "bridge_built" in gs_node else false
+			"bridge_built": gs_node.get("bridge_built") if "bridge_built" in gs_node else false,
+			"king_intro_done": gs_node.get("king_intro_done") if "king_intro_done" in gs_node else false,
+			"demo_mode_enabled": gs_node.get("demo_mode_enabled") if "demo_mode_enabled" in gs_node else false
 		}
 	elif PlayerState:
 		game_state_info = PlayerState.serialize()
 
-	if scene and "_inventory" in scene and scene._inventory is Array and not scene._inventory.is_empty():
-		game_state_info["inventory"] = scene._inventory
+	if scene:
+		if "_inventory" in scene and scene._inventory is Array and not scene._inventory.is_empty():
+			game_state_info["inventory"] = scene._inventory
+		if "_door_unlocked" in scene and bool(scene._door_unlocked):
+			if not game_state_info.get("unlocked_doors") is Dictionary:
+				game_state_info["unlocked_doors"] = {}
+			game_state_info["unlocked_doors"]["throne_room"] = true
+		game_state_info["move_enabled"] = bool(scene.get("_move_enabled")) if scene.get("_move_enabled") != null else true
+		game_state_info["hero_moving"] = bool(scene.get("_hero_moving")) if scene.get("_hero_moving") != null else false
 
 	# 3. Dialog Box
 	var dialog_info = {
@@ -553,8 +619,19 @@ func get_full_scene_state() -> Dictionary:
 		if is_battle_scene:
 			var battle_node = bo if bo != null else scene
 			battle_info["is_battle"] = true
-			if battle_node.get("_phase") != null:
-				battle_info["phase"] = str(battle_node._phase)
+			var phase_names := ["INTRO", "PLAYER_MENU", "SPELL_SELECT", "PLAYER_ACT", "ENEMY_ACT", "VICTORY", "DEFEAT", "FLED"]
+			var p_int := int(battle_node.get("_phase")) if battle_node.get("_phase") != null else 0
+			battle_info["phase"] = str(p_int)
+			battle_info["phase_name"] = phase_names[p_int] if p_int >= 0 and p_int < phase_names.size() else str(p_int)
+			var b_cursor := int(battle_node.get("_cursor")) if battle_node.get("_cursor") != null else 0
+			var b_items: Array = battle_node.get("MENU_ITEMS") if battle_node.get("MENU_ITEMS") is Array else ["FIGHT", "SPELL", "ITEM", "RUN"]
+			var msg_lbl = battle_node.get("_msg_lbl")
+			battle_info["cursor"] = b_cursor
+			battle_info["selected_command"] = b_items[b_cursor] if b_cursor >= 0 and b_cursor < b_items.size() else "FIGHT"
+			battle_info["menu_items"] = b_items
+			battle_info["anim_lock"] = bool(battle_node.get("_anim_lock")) if battle_node.get("_anim_lock") != null else false
+			battle_info["msg_text"] = str(msg_lbl.text) if msg_lbl and "text" in msg_lbl else ""
+			battle_info["last_enemy_action"] = str(battle_node.get("_last_enemy_action")) if battle_node.get("_last_enemy_action") != null else ""
 			battle_info["battle_scene_info"] = {
 				"monster_key": battle_node.get("_mon_key") if battle_node.get("_mon_key") != null else "",
 				"monster_name": battle_node.get("_mon_name") if battle_node.get("_mon_name") != null else "",
@@ -640,6 +717,19 @@ func get_full_scene_state() -> Dictionary:
 		"light_radius": light_radius
 	}
 
+	var item_window_info = {
+		"is_showing": bool(scene.get("_item_open")) if scene and scene.get("_item_open") != null else false,
+		"selected_index": int(scene.get("_item_index")) if scene and scene.get("_item_index") != null else 0
+	}
+	var status_window_info = {
+		"is_showing": bool(scene.get("_status_open")) if scene and scene.get("_status_open") != null else false
+	}
+	var checkpoint_save: Dictionary = {}
+	if gs_node and gs_node.has_method("export_state_dict"):
+		checkpoint_save = gs_node.call("export_state_dict", str(scene_info.get("name", "ThroneRoom")), Vector2i(pos_x, pos_y), facing_str)
+	var ai_node: Node = get_node_or_null("/root/AIEngine")
+	var ai_telemetry: Dictionary = ai_node.call("get_telemetry") if ai_node and ai_node.has_method("get_telemetry") else {}
+
 	return {
 		"scene_shown": scene_info,
 		"hero_position": hero_pos,
@@ -647,9 +737,13 @@ func get_full_scene_state() -> Dictionary:
 		"dialog_box": dialog_info,
 		"choice_box": choice_info,
 		"command_window": cmd_info,
+		"item_window": item_window_info,
+		"status_window": status_window_info,
 		"battle": battle_info,
 		"encounter_rng": rng_info,
-		"light_status": light_info
+		"light_status": light_info,
+		"checkpoint_save_state": checkpoint_save,
+		"ai_engine": ai_telemetry
 	}
 
 # ── Input Event Simulation ─────────────────────────────────────────────────────
@@ -695,6 +789,10 @@ func _simulate_action(action_name: String, pressed: bool) -> void:
 	_parse_action(mapped_action, pressed)
 
 func _parse_action(act: String, pressed: bool) -> void:
+	if pressed:
+		Input.action_press(act)
+	else:
+		Input.action_release(act)
 	var ev_act = InputEventAction.new()
 	ev_act.action = act
 	ev_act.pressed = pressed
@@ -938,16 +1036,30 @@ func get_screen_contents() -> Dictionary:
 
 			# Chest on tile
 			var chest_data = null
+			var coord_str := "%d,%d" % [c, r]
+			var is_chest_open: bool = opened_chests.has(map_key + ":" + coord_str) or opened_chests.has("throne_room:" + coord_str) or opened_chests.has("castle_1f:" + coord_str) or opened_chests.has(coord_str)
 			for ch in map_chests:
 				if ch is Dictionary and int(ch.get("col", -1)) == c and int(ch.get("row", -1)) == r:
 					var chest_id: String = str(ch.get("id", ""))
-					var coord_str := "%d,%d" % [c, r]
-					var is_open: bool = opened_chests.has(map_key + ":" + coord_str) or opened_chests.has(coord_str) or opened_chests.has(chest_id)
+					var is_open: bool = is_chest_open or opened_chests.has(chest_id)
 					chest_data = {
 						"chest_id": chest_id,
 						"opened": is_open
 					}
 					break
+			if chest_data == null and scene and "CHEST_ITEMS" in scene and scene.CHEST_ITEMS is Dictionary and scene.CHEST_ITEMS.has(coord_str):
+				var ci: Dictionary = scene.CHEST_ITEMS[coord_str]
+				chest_data = {
+					"chest_id": map_key + "_" + coord_str,
+					"opened": is_chest_open,
+					"name": str(ci.get("name", "")),
+					"type": str(ci.get("type", "item"))
+				}
+			elif chest_data == null and tile_id == 30:
+				chest_data = {
+					"chest_id": map_key + "_" + coord_str,
+					"opened": is_chest_open
+				}
 
 			# Shop desk on tile
 			var shop_desk_data = null
@@ -956,15 +1068,22 @@ func get_screen_contents() -> Dictionary:
 
 			# Door on tile
 			var door_data = null
+			var scene_door_unlocked: bool = bool(scene.get("_door_unlocked")) if scene and "_door_unlocked" in scene else false
 			for dr in map_doors:
 				if dr is Dictionary and int(dr.get("col", -1)) == c and int(dr.get("row", -1)) == r:
 					var door_id: String = str(dr.get("id", ""))
-					var is_unlocked: bool = unlocked_doors.has(door_id) or unlocked_doors.has("%d,%d" % [c, r])
+					var is_unlocked: bool = scene_door_unlocked or unlocked_doors.has(door_id) or unlocked_doors.has("%d,%d" % [c, r])
 					door_data = {
 						"door_id": door_id,
 						"unlocked": is_unlocked
 					}
 					break
+			if door_data == null and tile_id == 10:
+				var is_unlocked: bool = scene_door_unlocked or unlocked_doors.has("throne_room") or unlocked_doors.has(coord_str)
+				door_data = {
+					"door_id": map_key + "_door_" + coord_str,
+					"unlocked": is_unlocked
+				}
 
 			# Stairs on tile
 			var stairs_data = null
@@ -978,6 +1097,12 @@ func get_screen_contents() -> Dictionary:
 							"to": str(st.get("to", ""))
 						}
 						break
+			if stairs_data == null and tile_id in [8, 21, 33, 34]:
+				stairs_data = {
+					"stair_id": map_key + "_stairs_" + coord_str,
+					"facing": "any",
+					"to": "Castle1F" if map_key == "tantegel-castle-2f" else ""
+				}
 
 			# Determine symbol
 			var sym_name := "FLOOR"
@@ -1057,7 +1182,125 @@ func get_screen_contents() -> Dictionary:
 		},
 		"matrix": ascii_matrix,
 		"grid": grid_2d,
-		"tiles": tiles_list
+		"tiles": tiles_list,
+		"map_overview": _build_map_overview(scene, map_key, map_w, map_h, pos_x, pos_y, opened_chests, unlocked_doors, npc_map)
+	}
+
+
+func _build_map_overview(scene: Node, map_key: String, map_w: int, map_h: int, pos_x: int, pos_y: int, opened_chests: Dictionary, unlocked_doors: Dictionary, npc_map: Dictionary) -> Dictionary:
+	var all_chests: Array = []
+	var all_doors: Array = []
+	var all_stairs: Array = []
+	var all_exits: Array = []
+	var walkable_matrix: Array = []
+	if not scene:
+		return {
+			"map_key": map_key,
+			"map_w": map_w,
+			"map_h": map_h,
+			"walkable_matrix": walkable_matrix,
+			"all_chests": all_chests,
+			"all_doors": all_doors,
+			"all_stairs": all_stairs,
+			"all_exits": all_exits
+		}
+
+	var scene_door_unlocked: bool = bool(scene.get("_door_unlocked")) if "_door_unlocked" in scene else false
+	var scan_w := mini(map_w, 40)
+	var scan_h := mini(map_h, 40)
+	var offset_x := 0
+	var offset_y := 0
+	if map_w > 40 or map_h > 40:
+		offset_x = maxi(0, mini(map_w - scan_w, pos_x - scan_w / 2))
+		offset_y = maxi(0, mini(map_h - scan_h, pos_y - scan_h / 2))
+
+	for r in range(offset_y, offset_y + scan_h):
+		var row_str := ""
+		for c in range(offset_x, offset_x + scan_w):
+			var tp := Vector2i(c, r)
+			var tid := -1
+			if "_tile_grid" in scene and scene._tile_grid is Array and r < scene._tile_grid.size() and c < scene._tile_grid[r].size():
+				tid = int(scene._tile_grid[r][c])
+			elif "MAP_GRID" in scene and scene.MAP_GRID is Array and r < scene.MAP_GRID.size() and c < scene.MAP_GRID[r].size():
+				tid = int(scene.MAP_GRID[r][c])
+			elif "_terrain" in scene and scene._terrain is Array and r < scene._terrain.size() and c < scene._terrain[r].size():
+				tid = int(scene._terrain[r][c])
+
+			var walkable := false
+			if scene.has_method("_is_walkable"):
+				walkable = scene._is_walkable(tp)
+			elif TileWalkability:
+				walkable = TileWalkability.is_walkable(tid) if tid != -1 else false
+
+			var coord_str := "%d,%d" % [c, r]
+			var is_chest_open: bool = opened_chests.has(map_key + ":" + coord_str) or opened_chests.has("throne_room:" + coord_str) or opened_chests.has("castle_1f:" + coord_str) or opened_chests.has(coord_str)
+
+			if tid == 30 or ("CHEST_ITEMS" in scene and scene.CHEST_ITEMS is Dictionary and scene.CHEST_ITEMS.has(coord_str)):
+				var cname := ""
+				var ctype := "item"
+				if "CHEST_ITEMS" in scene and scene.CHEST_ITEMS is Dictionary and scene.CHEST_ITEMS.has(coord_str):
+					var ci: Dictionary = scene.CHEST_ITEMS[coord_str]
+					cname = str(ci.get("name", ""))
+					ctype = str(ci.get("type", "item"))
+				all_chests.append({
+					"col": c,
+					"row": r,
+					"opened": is_chest_open,
+					"name": cname,
+					"type": ctype
+				})
+
+			var is_door := (tid == 10)
+			var door_unlocked := scene_door_unlocked or unlocked_doors.has("throne_room") or unlocked_doors.has(coord_str)
+			if is_door:
+				all_doors.append({
+					"col": c,
+					"row": r,
+					"unlocked": door_unlocked,
+					"door_id": map_key + "_door_" + coord_str
+				})
+
+			if tid in [8, 21, 33, 34]:
+				all_stairs.append({
+					"col": c,
+					"row": r,
+					"tile_id": tid,
+					"to": "Castle1F" if map_key == "tantegel-castle-2f" else ""
+				})
+
+			if map_key == "tantegel-castle-1f" and r == map_h - 2 and c >= 11 and c <= 12:
+				all_exits.append({
+					"col": c,
+					"row": r,
+					"direction": "down",
+					"to": "WorldMap"
+				})
+
+			var ch_sym := "." if walkable else "#"
+			if c == pos_x and r == pos_y:
+				ch_sym = "@"
+			elif npc_map.has(tp):
+				ch_sym = "N"
+			elif is_door and not door_unlocked:
+				ch_sym = "D"
+			elif tid == 30 and not is_chest_open:
+				ch_sym = "C"
+			elif tid in [8, 21, 33, 34]:
+				ch_sym = "S"
+			row_str += ch_sym
+		walkable_matrix.append(row_str)
+
+	return {
+		"map_key": map_key,
+		"map_w": map_w,
+		"map_h": map_h,
+		"offset_x": offset_x,
+		"offset_y": offset_y,
+		"walkable_matrix": walkable_matrix,
+		"all_chests": all_chests,
+		"all_doors": all_doors,
+		"all_stairs": all_stairs,
+		"all_exits": all_exits
 	}
 
 
