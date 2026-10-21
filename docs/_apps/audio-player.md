@@ -58,6 +58,24 @@ flowchart TD
 
 ## Features
 
+### Media Library Browser
+- **Browse by category**: Albums, Artists, Songs, Genres, Decades and Composers, each with its own sort options and an A–Z jump rail for large lists.
+- **Smart collections**: Loved, Recently Added, Recently Played and Most Played, driven by per-track play counts and ♥ marks stored in `~/.config/robos/audio-track-stats.json`. A play counts once a track has been heard for 30 seconds (or half of a short track).
+- **Album, artist, genre, decade and composer pages**: artwork header, Play / Shuffle / Play next / Add to queue / Love all, disc-grouped track lists, "More by this artist", "Appears on" compilations and top artists per genre.
+- **Smart album grouping**: groups by album-artist tag, or by folder when tracks have no album-artist tag. Untagged compilations stay together as *Various Artists*, `CD1`/`CD2` folders merge into one album, and two artists' "Greatest Hits" stay separate.
+- **Search everything**: `Ctrl+F` searches titles, artists, albums, genres, composers and years. Every word must match (`beatles abbey`), and results are grouped into artists, albums, genres and songs.
+- **Track lists made for playing**: double-click plays the list from that song. Click, `Ctrl`-click and `Shift`-click select several songs; `Ctrl+A` selects all and `Enter` plays the selection. Right-click or `⋯` for Play next, Add to queue, Add to playlist, Love, Go to album/artist, Track info and Show in file manager. Drag songs onto the Now Playing panel to queue them.
+- **Cover art that persists**: embedded covers and `cover.jpg` / `folder.jpg` / `front.jpg` files next to the tracks are cached once per album under `~/.cache/robos/audio-player/art/`. Libraries indexed before this cache existed recover their art the first time it is shown.
+- **Folder scope**: limit every view to a single library folder, or manage folders from *Sources → Folders*.
+- **Fast on big libraries**: lists render progressively and sort keys are cached, so a 10,000-track library stays responsive.
+
+### Now Playing Panel (VLC-style playlist)
+- **Always visible**: the play queue is docked on the right of every tab, so you can switch tracks while browsing the library, playlists, cloud storage or speakers. Collapse it to a slim rail with the *Now Playing list* button.
+- **VLC-style editing**: double-click or `Enter` jumps to a track, and the playing row is bold with a live indicator. Drag rows to reorder, `Delete` removes the selection, and clicking Title / Artist / Time sorts the queue. A filter box narrows long queues, and right-click gives Play next, Move to top/bottom and Remove.
+- **Random & repeat**: random playback avoids repeats until the whole queue has played, and *Previous* walks back through what played. Repeat cycles through off, whole queue and current track.
+- **Totals**: track count, total duration and time remaining. The queue, current position, random and repeat modes are restored on the next launch.
+- **Transport everywhere**: the bottom bar has random, previous, play/pause, next and repeat buttons, a seek bar and a ♥ button. `Space` plays/pauses, `Ctrl+→` / `Ctrl+←` skip, and media keys / GNOME media controls work through the Media Session API.
+
 ### 1. Custom Playlist Engine & Queue Management
 - **Persistent Playlists**: Create, update, reorder, and delete custom playlists persisted in `~/.config/robos/audio-playlists.json`. Pre-seeded with curated defaults like *Favorites* and *Focus & Deep Work*.
 - **Interactive Playback Queue**: Real-time queue bar with drag-and-drop ingestion, individual track removal (`✕`), queue shuffle (`🔀`), and single-click **Save Queue as Playlist** (`💾`).
@@ -98,5 +116,7 @@ The player automatically probes and connects to:
 - **App directory**: `packages/audio-player/`
 - **Playlists storage**: `~/.config/robos/audio-playlists.json`
 - **Library cache**: `~/.config/robos/audio-library.json`
+- **Play counts & loved tracks**: `~/.config/robos/audio-track-stats.json`
+- **Cover art cache**: `~/.cache/robos/audio-player/art/`
 - **Snapshot debug port**: `19196`
 - **Ephemeral stream server**: Dynamic port on host LAN interface

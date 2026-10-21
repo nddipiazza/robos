@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -100,8 +100,8 @@ try { cloud.enforceCacheLimit(); } catch {}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1040,
-    height: 720,
+    width: 1360,
+    height: 860,
     minWidth: 840,
     minHeight: 580,
     backgroundColor: '#0d1117',
@@ -401,12 +401,7 @@ ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
       quickTracks.push(track);
     } catch {}
   }
-  if (quickTracks.length > 0) {
-    const incomingFileSet = new Set(quickTracks.map(t => t.filePath));
-    mediaLibrary.tracks = mediaLibrary.tracks.filter(t => !incomingFileSet.has(t.filePath)).concat(quickTracks);
-    mediaLibrary._rebuildIndexes();
-    mediaLibrary._saveCache();
-  }
+  mediaLibrary.mergeTracks(quickTracks);
 
   if (dirs.length > 0) {
     mediaLibrary.scanFoldersInBackground(dirs, {
@@ -525,6 +520,38 @@ ipcMain.handle('audio:folders-remove', async (_evt, { id, removeTracks }) => {
 
 ipcMain.handle('audio:get-lyrics', async (_evt, track) => lyrics.getLyrics(track));
 
+// ── Library browsing: cover art, play statistics, loved tracks ─────────────
+
+async function waitForStreamPort(timeoutMs = 3000) {
+  const started = Date.now();
+  while (!castService.streamPort && Date.now() - started < timeoutMs) {
+    await new Promise(r => setTimeout(r, 50));
+  }
+  return castService.streamPort;
+}
+
+// The renderer loads art over loopback; Cast speakers need the LAN address.
+ipcMain.handle('audio:get-art-base', async () => {
+  const port = await waitForStreamPort();
+  if (!port) return { local: null, cast: null };
+  return {
+    local: `http://127.0.0.1:${port}/art/`,
+    cast: `http://${castService.hostIp}:${port}/art/`,
+  };
+});
+
+ipcMain.handle('audio:get-track-stats', async () => mediaLibrary.getStats());
+
+ipcMain.handle('audio:record-play', async (_evt, trackId) => mediaLibrary.recordPlay(trackId));
+
+ipcMain.handle('audio:set-loved', async (_evt, { ids, loved }) => mediaLibrary.setLoved(ids, loved));
+
+ipcMain.handle('audio:show-in-folder', async (_evt, filePath) => {
+  if (!filePath || typeof filePath !== 'string' || !fs.existsSync(filePath)) return { ok: false };
+  shell.showItemInFolder(filePath);
+  return { ok: true };
+});
+
 // ── RobOS cloud storage (Data Sources FTP / SFTP connections) ───────────────
 
 function sendToWindow(channel, payload) {
@@ -552,12 +579,7 @@ ipcMain.handle('audio:cloud-import', async (_evt, { id, paths }) => {
         tracks.push(await mediaLibrary.buildCloudTrack(desc, streamUrl));
       } catch {}
     }
-    if (tracks.length) {
-      const incoming = new Set(tracks.map(t => t.filePath));
-      mediaLibrary.tracks = mediaLibrary.tracks.filter(t => !incoming.has(t.filePath)).concat(tracks);
-      mediaLibrary._rebuildIndexes();
-      mediaLibrary._saveCache();
-    }
+    mediaLibrary.mergeTracks(tracks);
     return { ok: true, added: tracks.length, library: mediaLibrary.getLibrary() };
   } catch (err) {
     return { ok: false, error: err.message };
