@@ -3,26 +3,11 @@
 const { parentPort, workerData } = require('worker_threads');
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
-const { pathToFileURL } = require('url');
-
-const AUDIO_EXTENSIONS = new Set(['.mp3', '.m4a', '.flac', '.ogg', '.wav', '.aac', '.opus', '.wma']);
-
-function generateTrackId(filePath) {
-  return `trk_${crypto.createHash('sha1').update(filePath).digest('hex').slice(0, 16)}`;
-}
-
-function generateArtId(filePath) {
-  return `art_${crypto.createHash('sha1').update(filePath).digest('hex').slice(0, 16)}`;
-}
-
-function toSafeFileUrl(filePath) {
-  try {
-    return pathToFileURL(filePath).href;
-  } catch {
-    return encodeURI(`file://${filePath}`);
-  }
-}
+const {
+  AUDIO_EXTENSIONS,
+  trackFromMetadata,
+  fallbackTrack,
+} = require('./track-metadata');
 
 let mm = null;
 async function getParser() {
@@ -54,54 +39,12 @@ function walkDirectory(dir, audioFiles, shouldStop = () => false) {
   }
 }
 
-async function parseSingleFile(filePath, parser) {
+async function parseSingleFile(filePath, parser, coverCache = null) {
   try {
     const metadata = await parser.parseFile(filePath, { duration: true, skipCovers: false });
-    const common = metadata.common || {};
-    const format = metadata.format || {};
-
-    let artId = null;
-    let artBuffer = null;
-    let artFormat = null;
-    const cover = parser.selectCover(common.picture);
-    if (cover && cover.data) {
-      artId = generateArtId(filePath);
-      artBuffer = cover.data;
-      artFormat = cover.format || 'image/jpeg';
-    }
-
-    return {
-      track: {
-        id: generateTrackId(filePath),
-        filePath,
-        title: common.title || path.parse(filePath).name,
-        artist: common.artist || common.albumartist || 'Unknown Artist',
-        album: common.album || 'Unknown Album',
-        year: common.year || null,
-        genre: (common.genre && common.genre[0]) || null,
-        trackNumber: common.track?.no || null,
-        duration: format.duration || 0,
-        bitrate: format.bitrate || 0,
-        sampleRate: format.sampleRate || 0,
-        artId,
-        src: toSafeFileUrl(filePath)
-      },
-      art: artBuffer ? { artId, buffer: artBuffer, format: artFormat } : null
-    };
+    return trackFromMetadata(filePath, metadata, parser, coverCache);
   } catch (err) {
-    return {
-      track: {
-        id: generateTrackId(filePath),
-        filePath,
-        title: path.parse(filePath).name,
-        artist: 'Unknown Artist',
-        album: 'Unknown Album',
-        duration: 0,
-        src: toSafeFileUrl(filePath),
-        error: err.message
-      },
-      art: null
-    };
+    return fallbackTrack(filePath, err, coverCache);
   }
 }
 
@@ -154,53 +97,68 @@ async function runScan(folders) {
   }
 
   const parser = await getParser();
-  const allTracks = [];
-  const allArtworks = [];
   const batch = [];
   const batchArt = [];
-  const BATCH_SIZE = 5;
+  const sentArtIds = new Set();
+  const coverCache = new Map();
+  // Batch by size *or* time so the main thread merges a few times a second, not
+  // once per handful of files (a 100k-file scan would otherwise send 20k batches).
+  const BATCH_MAX = 250;
+  const BATCH_MS = 750;
+  const PROGRESS_MS = 120;
+  let lastFlush = Date.now();
+  let lastProgress = 0;
+  let parsed = 0;
+
+  const flush = (current) => {
+    if (!parentPort || (!batch.length && !batchArt.length)) return;
+    parentPort.postMessage({
+      type: 'batch',
+      tracks: batch.splice(0),
+      artworks: batchArt.splice(0),
+      current,
+      total: audioFiles.length
+    });
+    lastFlush = Date.now();
+  };
 
   for (let i = 0; i < audioFiles.length; i++) {
     if (isStopped) break;
     const filePath = audioFiles[i];
-    const { track, art } = await parseSingleFile(filePath, parser);
+    const { track, art } = await parseSingleFile(filePath, parser, coverCache);
+    parsed++;
 
-    allTracks.push(track);
     batch.push(track);
-    if (art) {
-      allArtworks.push(art);
+    // Album tracks share one cover; only ship each image across the thread boundary once.
+    if (art && !sentArtIds.has(art.artId)) {
+      sentArtIds.add(art.artId);
       batchArt.push(art);
     }
 
     if (parentPort) {
-      parentPort.postMessage({
-        type: 'progress',
-        current: i + 1,
-        total: audioFiles.length,
-        file: filePath,
-        track
-      });
-
-      if (batch.length >= BATCH_SIZE || i === audioFiles.length - 1) {
+      const now = Date.now();
+      const last = i === audioFiles.length - 1;
+      if (last || now - lastProgress >= PROGRESS_MS) {
+        lastProgress = now;
         parentPort.postMessage({
-          type: 'batch',
-          tracks: [...batch],
-          artworks: [...batchArt],
+          type: 'progress',
           current: i + 1,
-          total: audioFiles.length
+          total: audioFiles.length,
+          file: filePath,
+          track
         });
-        batch.length = 0;
-        batchArt.length = 0;
       }
+      if (last || batch.length >= BATCH_MAX || now - lastFlush >= BATCH_MS) flush(i + 1);
     }
   }
+  flush(parsed);
 
   if (parentPort) {
     parentPort.postMessage({
       type: 'done',
-      tracks: allTracks,
-      artworks: allArtworks,
-      totalFound: allTracks.length,
+      tracks: [], // already delivered with the batches
+      artworks: [],
+      totalFound: parsed,
       canceled: isStopped
     });
   }

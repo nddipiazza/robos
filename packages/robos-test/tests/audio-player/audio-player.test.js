@@ -711,5 +711,365 @@ describe('RobOS Audio Player Tests', () => {
       }
     });
   });
-});
 
+  describe('Library browsing: albums, artists, genres, decades, search & stats', () => {
+    const idx = require(path.join(APP_DIR, 'lib', 'library-index'));
+    const { trackFromMetadata } = require(path.join(APP_DIR, 'lib', 'track-metadata'));
+
+    let seq = 0;
+    const t = (over) => ({ id: `trk_fixture_${++seq}`, duration: 200, ...over });
+    const fixture = () => [
+      t({ title: 'Come Together', artist: 'The Beatles', albumArtist: 'The Beatles', album: 'Abbey Road', year: 1969, genre: 'Rock', trackNumber: 1, filePath: '/m/Beatles/Abbey Road/01.flac' }),
+      t({ title: 'Something', artist: 'The Beatles', albumArtist: 'The Beatles', album: 'Abbey Road', year: 1969, genre: 'Rock', trackNumber: 2, filePath: '/m/Beatles/Abbey Road/02.flac' }),
+      t({ title: 'Taxman', artist: 'The Beatles', album: 'Revolver', year: 1966, genre: 'Rock; Pop', trackNumber: 1, filePath: '/m/Beatles/Revolver/01.mp3' }),
+      // Compilation without album-artist tags, one folder -> one "Various Artists" album
+      t({ title: 'Hit 1', artist: 'Artist A', album: 'Summer Hits', year: 2020, genre: 'Pop', filePath: '/m/Comp/Summer Hits/1.mp3' }),
+      t({ title: 'Hit 2', artist: 'The Beatles', album: 'Summer Hits', year: 2020, genre: 'Pop', filePath: '/m/Comp/Summer Hits/2.mp3' }),
+      // Same album name by two different artists in different folders -> two albums
+      t({ title: 'Intro', artist: 'Band X', album: 'Greatest Hits', filePath: '/m/X/Greatest Hits/1.mp3' }),
+      t({ title: 'Intro', artist: 'Band Y', album: 'Greatest Hits', filePath: '/m/Y/Greatest Hits/1.mp3' }),
+      // Multi-disc album split into CD1/CD2 folders stays one album
+      t({ title: 'Disc One Song', artist: 'Pink Floyd', album: 'The Wall', year: 1979, discNumber: 1, trackNumber: 1, composer: 'Roger Waters', filePath: '/m/Floyd/The Wall/CD1/01.mp3' }),
+      t({ title: 'Disc Two Song', artist: 'Pink Floyd', album: 'The Wall', year: 1979, discNumber: 2, trackNumber: 1, composer: 'Roger Waters', filePath: '/m/Floyd/The Wall/CD2/01.mp3' }),
+    ];
+
+    it('groups tracks into albums using album artist, folder and disc folders', () => {
+      const index = idx.buildIndex(fixture());
+      const titles = index.albums.map(a => `${a.title} — ${a.artist}`);
+      assert.ok(titles.includes('Abbey Road — The Beatles'));
+      assert.ok(titles.includes('Summer Hits — Various Artists'), 'untagged compilation in one folder is one album');
+      assert.strictEqual(index.albums.filter(a => a.title === 'Greatest Hits').length, 2, 'same title by different artists stays separate');
+      const wall = index.albums.find(a => a.title === 'The Wall');
+      assert.strictEqual(wall.tracks.length, 2, 'CD1/CD2 folders merge into one album');
+      assert.strictEqual(wall.discCount, 2);
+      assert.deepStrictEqual(wall.tracks.map(x => x.title), ['Disc One Song', 'Disc Two Song'], 'ordered by disc then track');
+    });
+
+    it('builds artists with their own albums and "appears on" compilations', () => {
+      const index = idx.buildIndex(fixture());
+      const beatles = index.artistByKey.get(idx.fold('The Beatles'));
+      assert.deepStrictEqual(beatles.albums.map(a => a.title), ['Revolver', 'Abbey Road'], 'albums ordered oldest first');
+      assert.deepStrictEqual(beatles.appearsOn.map(a => a.title), ['Summer Hits']);
+      assert.strictEqual(beatles.tracks.length, 4);
+      assert.ok(!index.artistByKey.has(idx.fold('Various Artists')), 'Various Artists is not listed as an artist');
+    });
+
+    it('splits multi-value genres and groups decades and composers', () => {
+      const index = idx.buildIndex(fixture());
+      assert.deepStrictEqual(index.genres.map(g => g.name), ['Pop', 'Rock']);
+      assert.strictEqual(index.genreByKey.get('pop').tracks.length, 3, 'Revolver "Rock; Pop" counts toward Pop');
+      assert.deepStrictEqual(index.decades.map(d => d.name), ['2020s', '1970s', '1960s'], 'newest decade first');
+      assert.strictEqual(index.composerByKey.get(idx.fold('Roger Waters')).tracks.length, 2);
+    });
+
+    it('search matches every term across title, artist, album and genre', () => {
+      const index = idx.buildIndex(fixture());
+      assert.deepStrictEqual(idx.searchIndex(index, 'beatles some').tracks.map(x => x.title), ['Something']);
+      assert.ok(idx.searchIndex(index, 'abbey').albums.some(a => a.title === 'Abbey Road'));
+      assert.ok(idx.searchIndex(index, 'BEATLES').artists.some(a => a.name === 'The Beatles'), 'case-insensitive');
+      assert.strictEqual(idx.searchIndex(index, '   ').tracks.length, 0);
+    });
+
+    it('sorts tracks by play count and builds smart collections from stats', () => {
+      const tracks = fixture();
+      const stats = {
+        [tracks[1].id]: { plays: 9, lastPlayed: '2026-10-20T10:00:00Z', loved: true, lovedAt: '2026-10-01T00:00:00Z' },
+        [tracks[2].id]: { plays: 3, lastPlayed: '2026-10-21T10:00:00Z' },
+      };
+      assert.strictEqual(idx.sortTracks(tracks, 'plays', 'desc', stats)[0].title, 'Something');
+      assert.deepStrictEqual(idx.mostPlayedTracks(tracks, stats).map(x => x.title), ['Something', 'Taxman']);
+      assert.deepStrictEqual(idx.recentlyPlayedTracks(tracks, stats).map(x => x.title), ['Taxman', 'Something']);
+      assert.deepStrictEqual(idx.lovedTracks(tracks, stats).map(x => x.title), ['Something']);
+      assert.strictEqual(idx.sortTracks(tracks, 'artist', 'asc')[0].artist, 'Artist A');
+      assert.strictEqual(idx.indexLetter('The Beatles'), 'B', 'leading "The" is ignored for A–Z');
+      assert.strictEqual(idx.indexLetter('2Pac'), '#');
+    });
+
+    it('mergeTracks keeps the original date added across rescans', () => {
+      const dir = fs.mkdtempSync('/tmp/robos-lib-merge-');
+      const lib = new MediaLibrary({ configDir: dir });
+      lib.mergeTracks([{ id: 'a', filePath: '/x/a.mp3', title: 'A', addedAt: '2020-01-01T00:00:00.000Z' }]);
+      lib.mergeTracks([{ id: 'a', filePath: '/x/a.mp3', title: 'A (retagged)' }, { id: 'b', filePath: '/x/b.mp3', title: 'B' }]);
+      const a = lib.tracks.find(x => x.filePath === '/x/a.mp3');
+      assert.strictEqual(a.title, 'A (retagged)');
+      assert.strictEqual(a.addedAt, '2020-01-01T00:00:00.000Z');
+      assert.ok(lib.tracks.find(x => x.filePath === '/x/b.mp3').addedAt, 'new tracks get a date added');
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('records plays and loved tracks and persists them to audio-track-stats.json', () => {
+      const dir = fs.mkdtempSync('/tmp/robos-lib-stats-');
+      const lib = new MediaLibrary({ configDir: dir });
+      lib.recordPlay('trk_1');
+      lib.recordPlay('trk_1');
+      lib.setLoved(['trk_1', 'trk_2'], true);
+      lib.setLoved(['trk_2'], false);
+      const reloaded = new MediaLibrary({ configDir: dir });
+      assert.strictEqual(reloaded.getStats().trk_1.plays, 2);
+      assert.ok(reloaded.getStats().trk_1.lastPlayed);
+      assert.strictEqual(reloaded.getStats().trk_1.loved, true);
+      assert.strictEqual(reloaded.getStats().trk_2.loved, false);
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('persists cover art to disk so it survives a restart', () => {
+      const dir = fs.mkdtempSync('/tmp/robos-lib-art-');
+      const png = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
+      new MediaLibrary({ configDir: dir }).storeArt('art_0123456789abcdef', png, 'image/png');
+      const art = new MediaLibrary({ configDir: dir }).getArt('art_0123456789abcdef');
+      assert.ok(art, 'art reloads from the art cache directory');
+      assert.strictEqual(art.format, 'image/png');
+      assert.ok(art.buffer.equals(png));
+      assert.strictEqual(new MediaLibrary({ configDir: dir }).getArt('../../etc/passwd'), null, 'rejects path-like ids');
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('uses folder cover images and shares one art id per album', () => {
+      const dir = fs.mkdtempSync('/tmp/robos-lib-cover-');
+      fs.writeFileSync(path.join(dir, 'Cover.JPG'), Buffer.from('fake jpeg bytes'));
+      const meta = { common: { title: 'Song', album: 'Album', artist: 'Artist', albumartist: 'Artist', disk: { no: 2, of: 2 }, composer: ['Someone'] }, format: { duration: 100, codec: 'FLAC', lossless: true } };
+      const one = trackFromMetadata(path.join(dir, '01.flac'), meta, { selectCover: () => null });
+      const two = trackFromMetadata(path.join(dir, '02.flac'), meta, { selectCover: () => null });
+      assert.ok(one.art, 'cover.jpg next to the tracks is used when no embedded art exists');
+      assert.strictEqual(one.track.artId, two.track.artId, 'content-addressed art id is shared by the album');
+      assert.strictEqual(one.track.albumArtist, 'Artist');
+      assert.strictEqual(one.track.discNumber, 2);
+      assert.strictEqual(one.track.composer, 'Someone');
+      assert.strictEqual(one.track.lossless, true);
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('preload exposes library stats, art and file manager methods', () => {
+      const content = fs.readFileSync(path.join(APP_DIR, 'preload.js'), 'utf8');
+      for (const fn of ['getArtBase:', 'getTrackStats:', 'recordPlay:', 'setLoved:', 'showInFolder:']) {
+        assert.ok(content.includes(fn), `preload should expose ${fn}`);
+      }
+    });
+
+    it('bundle contains the library browser and the always-visible Now Playing panel', () => {
+      const content = fs.readFileSync(path.join(APP_DIR, 'renderer', 'bundle.js'), 'utf8');
+      for (const marker of ['lib-nav-', 'np-dock', 'btn-toggle-queue-panel', 'queue-list', 'library-search', 'btn-shuffle-library', 'context-menu']) {
+        assert.ok(content.includes(marker), `bundle should contain ${marker}`);
+      }
+    });
+  });
+
+  describe('100,000-track libraries', () => {
+    const idx = require(path.join(APP_DIR, 'lib', 'library-index'));
+    // ~9k albums of 11 tracks by ~5.7k artists: the shape of a real 100k collection.
+    const bigTrack = (i) => {
+      const album = Math.floor(i / 11);
+      const artist = Math.floor(album / 1.6);
+      return {
+        id: `trk_big_${i}`,
+        filePath: `/music/Artist ${artist}/Album ${album}/${String((i % 11) + 1).padStart(2, '0')} Song ${i}.flac`,
+        title: `Song ${i}`, artist: `Artist ${artist}`, albumArtist: `Artist ${artist}`, album: `Album ${album}`,
+        year: 1960 + (album % 60), genre: ['Rock', 'Jazz', 'Pop', 'Hip-Hop; Rap'][album % 4], trackNumber: (i % 11) + 1, duration: 200,
+      };
+    };
+    const timed = (fn) => { const t0 = Date.now(); const out = fn(); return [out, Date.now() - t0]; };
+
+    it('merges scan batches in O(batch) time and keeps the path index correct', () => {
+      const dir = fs.mkdtempSync('/tmp/robos-lib-100k-');
+      const lib = new MediaLibrary({ configDir: dir });
+      lib.mergeTracks(Array.from({ length: 50000 }, (_, i) => bigTrack(i)));
+      const [, ms] = timed(() => {
+        for (let b = 0; b < 200; b++) {
+          lib.mergeTracks(Array.from({ length: 250 }, (_, k) => bigTrack(50000 + b * 250 + k)), { deferSave: true });
+        }
+      });
+      assert.strictEqual(lib.tracks.length, 100000);
+      assert.ok(ms < 3000, `200 batches into a growing 100k library took ${ms} ms`);
+
+      // Re-scanning an existing file replaces it in place and keeps its date added.
+      const before = lib.tracks.find(t => t.filePath === bigTrack(7).filePath);
+      lib.mergeTracks([{ ...bigTrack(7), title: 'Retagged' }], { deferSave: true });
+      assert.strictEqual(lib.tracks.length, 100000);
+      const after = lib.tracks.find(t => t.filePath === bigTrack(7).filePath);
+      assert.strictEqual(after.title, 'Retagged');
+      assert.strictEqual(after.addedAt, before.addedAt);
+
+      // Callers that reassign `tracks` (folder removal) must not leave a stale index.
+      lib.tracks = lib.tracks.filter(t => !t.filePath.includes('/Artist 0/'));
+      const removed = 100000 - lib.tracks.length;
+      assert.ok(removed > 0);
+      lib.mergeTracks([bigTrack(0)], { deferSave: true });
+      assert.strictEqual(lib.tracks.length, 100000 - removed + 1);
+      assert.strictEqual(lib.tracks.filter(t => t.filePath === bigTrack(0).filePath).length, 1);
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('batches cache writes during scans and flushes them on demand', () => {
+      const dir = fs.mkdtempSync('/tmp/robos-lib-flush-');
+      const lib = new MediaLibrary({ configDir: dir });
+      const cache = path.join(dir, 'audio-library.json');
+      lib.mergeTracks([bigTrack(1)], { deferSave: true });
+      assert.ok(!fs.existsSync(cache), 'deferred merge does not write immediately');
+      lib.flush();
+      assert.strictEqual(JSON.parse(fs.readFileSync(cache, 'utf8')).tracks.length, 1);
+      assert.ok(!fs.readFileSync(cache, 'utf8').includes('\n  '), 'cache is written as compact JSON');
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('indexes, sorts and searches 100k tracks fast enough for interactive use', () => {
+      const tracks = Array.from({ length: 100000 }, (_, i) => bigTrack(i));
+      const [index, buildMs] = timed(() => idx.buildIndex(tracks));
+      assert.strictEqual(index.tracks.length, 100000);
+      assert.strictEqual(index.albums.length, Math.ceil(100000 / 11));
+      assert.ok(buildMs < 5000, `buildIndex took ${buildMs} ms`);
+      const [sorted, sortMs] = timed(() => idx.sortTracks(tracks, 'artist'));
+      assert.strictEqual(sorted[0].artist, 'Artist 0');
+      assert.ok(sortMs < 3000, `sortTracks took ${sortMs} ms`);
+      const [res, searchMs] = timed(() => idx.searchIndex(index, 'artist 4242'));
+      assert.ok(res.artists.some(a => a.name === 'Artist 4242'));
+      assert.ok(searchMs < 3000, `searchIndex took ${searchMs} ms`);
+      // Natural number order without a locale collator: "Album 2" before "Album 10".
+      assert.deepStrictEqual(idx.sortAlbums(index.albums.slice(0, 12), 'title').slice(0, 3).map(a => a.title), ['Album 0', 'Album 1', 'Album 2']);
+    });
+
+    it('scan worker groups files into a few large batches instead of one per handful', async () => {
+      const dir = fs.mkdtempSync('/tmp/robos-scan-batches-');
+      for (let i = 0; i < 600; i++) fs.writeFileSync(path.join(dir, `track-${i}.mp3`), 'ID3\x03\x00\x00\x00\x00\x00\x00not really audio');
+      const lib = new MediaLibrary({ configDir: dir });
+      let batches = 0;
+      let progressEvents = 0;
+      const done = await new Promise((resolve, reject) => {
+        lib.scanFoldersInBackground(dir, {
+          onProgress: () => { progressEvents++; },
+          onBatch: () => { batches++; },
+          onDone: resolve,
+          onError: reject,
+        });
+      });
+      assert.strictEqual(done.totalFound, 600);
+      assert.strictEqual(done.tracks.length, 600);
+      assert.strictEqual(lib.tracks.length, 600);
+      assert.ok(batches >= 1 && batches < 60, `600 files arrived in ${batches} batches`);
+      assert.ok(progressEvents < 600, `progress is throttled (${progressEvents} events)`);
+      assert.ok(fs.existsSync(path.join(dir, 'audio-library.json')), 'library is saved when the scan finishes');
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+  });
+
+  describe('AI playlists & Virtual DJ (RobOS agent)', () => {
+    const ai = require(path.join(APP_DIR, 'lib', 'ai-playlist'));
+    const lib = (n) => Array.from({ length: n }, (_, k) => ({
+      id: `trk_ai_${k}`, title: `Song ${k}`, artist: `Artist ${k % 40}`, album: `Album ${k % 90}`,
+      year: 1970 + (k % 50), genre: ['Rock', 'Jazz', 'Pop', 'Ambient'][k % 4], duration: 200,
+    }));
+    // A scripted stand-in for robos-lib/ai-agent ask().
+    const agent = (replies) => {
+      const prompts = [];
+      const ask = async (prompt) => {
+        prompts.push(prompt);
+        const reply = replies.shift();
+        return typeof reply === 'string' ? { ok: true, text: reply } : reply;
+      };
+      return { ask, prompts };
+    };
+
+    it('builds a small-library playlist in one agent call, in the agent\'s order', async () => {
+      const { ask, prompts } = agent([JSON.stringify({ name: 'Night Shift', description: 'Moody.', picks: [3, 1, 3, 999, 2] })]);
+      const res = await ai.generateAiPlaylist({ tracks: lib(30), request: 'moody night music', count: 5 }, { ask });
+      assert.strictEqual(res.ok, true);
+      assert.strictEqual(prompts.length, 1, 'libraries under the single-call limit skip the criteria step');
+      assert.ok(prompts[0].includes('moody night music'));
+      assert.deepStrictEqual(res.playlist.tracks.map(t => t.id), ['trk_ai_2', 'trk_ai_0', 'trk_ai_1'], 'duplicates and unknown numbers are dropped');
+      assert.strictEqual(res.playlist.name, 'Night Shift');
+      assert.strictEqual(res.playlist.ai.request, 'moody night music');
+      assert.strictEqual(res.playlist.dj, undefined);
+    });
+
+    it('large libraries: agent criteria, local shortlist, then the final pick', async () => {
+      const criteria = 'Here you go:\n```json\n{"name":"Jazz Hour","genres":["Jazz"],"decades":["1990s"],"artists":[],"keywords":[],"excludeArtists":["Artist 1"]}\n```';
+      const { ask, prompts } = agent([criteria, '{"name":"Jazz Hour","description":"x","picks":[1,2,3]}']);
+      const progress = [];
+      const res = await ai.generateAiPlaylist({ tracks: lib(5000), request: 'an hour of jazz', count: 3 }, { ask, onProgress: p => progress.push(p.step) });
+      assert.strictEqual(res.ok, true);
+      assert.strictEqual(prompts.length, 2);
+      assert.ok(prompts[0].includes('Genres in the library'), 'first call sees a library summary, not every song');
+      const shortlist = prompts[1].split('\n').filter(l => /^\d+ \| /.test(l));
+      assert.ok(shortlist.length <= ai.CANDIDATE_LIMIT);
+      assert.ok(shortlist.slice(0, 50).every(l => l.includes('Jazz')), 'best matches come first');
+      assert.ok(!shortlist.some(l => l.split(' | ')[1] === 'Artist 1'), 'excluded artists are filtered out');
+      assert.ok(prompts[1].length < 120 * 1024, 'prompt stays under the CLI argument limit');
+      assert.deepStrictEqual(progress, ['criteria', 'shortlist', 'done']);
+    });
+
+    it('adds the Virtual DJ script: intro plus a line before each later song', async () => {
+      const reply = JSON.stringify({
+        name: 'Late Night', description: 'd', picks: [2, 1],
+        dj: { intro: 'Good evening.', lines: [{ pick: 1, text: 'Here is Song 0.' }, { pick: 7, text: 'not in the playlist' }] },
+      });
+      const { ask, prompts } = agent([reply]);
+      const res = await ai.generateAiPlaylist(
+        { tracks: lib(10), request: 'late night', count: 2, dj: { persona: 'smooth jazz host', voice: 'kokoro:am_michael', frequency: 'alternate' } },
+        { ask }
+      );
+      assert.ok(prompts[0].includes('smooth jazz host'));
+      assert.deepStrictEqual(res.playlist.dj, {
+        persona: 'smooth jazz host', voice: 'kokoro:am_michael', frequency: 'alternate',
+        intro: 'Good evening.', lines: { trk_ai_0: 'Here is Song 0.' },
+      });
+    });
+
+    it('reads answers through robos-lib ai-json (its { ok, data } result and repairs)', async () => {
+      const { parseAIJson } = require(path.resolve(APP_DIR, '..', 'robos-lib', 'ai-json'));
+      const fenced = '```json\n{"name":"Fenced","description":"d","picks":[2,1]}\n```';
+      const res = await ai.generateAiPlaylist({ tracks: lib(5), request: 'x', count: 2 }, { ask: agent([fenced]).ask, parseJson: parseAIJson });
+      assert.strictEqual(res.ok, true);
+      assert.deepStrictEqual(res.playlist.tracks.map(t => t.id), ['trk_ai_1', 'trk_ai_0']);
+      const lines = await ai.generateDjLines({ persona: 'p', upcoming: lib(2) }, { ask: agent(['{"lines":[{"n":1,"text":"Hi"}]}']).ask, parseJson: parseAIJson });
+      assert.deepStrictEqual(lines.lines, { trk_ai_0: 'Hi' });
+    });
+
+    it('reports agent failures and unusable answers instead of throwing', async () => {
+      let res = await ai.generateAiPlaylist({ tracks: lib(5), request: 'x' }, agent([{ ok: false, error: 'claude: not logged in' }]));
+      assert.deepStrictEqual([res.ok, res.error], [false, 'claude: not logged in']);
+      res = await ai.generateAiPlaylist({ tracks: lib(5), request: 'x' }, agent(['I am not sure what you mean.']));
+      assert.strictEqual(res.ok, false);
+      assert.match(res.error, /JSON/);
+      res = await ai.generateAiPlaylist({ tracks: lib(5), request: 'x' }, agent(['{"picks":[]}']));
+      assert.strictEqual(res.ok, false);
+      res = await ai.generateAiPlaylist({ tracks: [], request: 'x' }, agent([]));
+      assert.match(res.error, /library is empty/);
+      res = await ai.generateAiPlaylist({ tracks: lib(5), request: '   ' }, agent([]));
+      assert.strictEqual(res.ok, false);
+    });
+
+    it('writes DJ lines for any upcoming songs, keyed by track id', async () => {
+      const { ask, prompts } = agent(['{"lines":[{"n":2,"text":"Next up, Song 1."},{"n":9,"text":"ignored"}]}']);
+      const res = await ai.generateDjLines({ persona: 'hype radio host', upcoming: lib(3) }, { ask });
+      assert.deepStrictEqual(res, { ok: true, lines: { trk_ai_1: 'Next up, Song 1.' } });
+      assert.ok(prompts[0].includes('hype radio host') && prompts[0].includes('Song 2'));
+      assert.deepStrictEqual(await ai.generateDjLines({ persona: '', upcoming: lib(3) }, { ask }), { ok: true, lines: {} });
+    });
+
+    it('playlists keep their AI request and DJ script when saved', () => {
+      const dir = fs.mkdtempSync('/tmp/robos-ai-pl-');
+      const lib0 = new MediaLibrary({ configDir: dir });
+      const pl = lib0.createPlaylist({ name: 'AI', tracks: [], ai: { request: 'r' }, dj: { persona: 'p', lines: {} } });
+      const again = new MediaLibrary({ configDir: dir }).getPlaylist(pl.id);
+      assert.deepStrictEqual([again.ai, again.dj], [{ request: 'r' }, { persona: 'p', lines: {} }]);
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('wires the shared RobOS agent, quick-ask and voice into the app', () => {
+      const preload = fs.readFileSync(path.join(APP_DIR, 'preload.js'), 'utf8');
+      for (const fn of ['aiPlaylistGenerate:', 'djLines:', 'djVoices:', 'djSynthesize:', 'aiAgentInfo:', "'robosQuickAsk'"]) {
+        assert.ok(preload.includes(fn), `preload should expose ${fn}`);
+      }
+      assert.ok(!preload.includes('castTTS:'), 'the Virtual DJ does not bring back the old announcer API');
+      const main = fs.readFileSync(path.join(APP_DIR, 'main.js'), 'utf8');
+      for (const mod of ["'robos-lib/ai-agent'", "'robos-lib/ai-json'", "'robos-lib/quick-ask'", "'voice-prompt/lib/tts-engine'"]) {
+        assert.ok(main.includes(mod), `main should reuse ${mod}`);
+      }
+      const html = fs.readFileSync(path.join(APP_DIR, 'renderer', 'index.html'), 'utf8');
+      assert.ok(html.includes('robos-ui/robos-ui.js'), 'renderer loads the shared robos-ui components');
+      const bundle = fs.readFileSync(path.join(APP_DIR, 'renderer', 'bundle.js'), 'utf8');
+      for (const marker of ['robos-ai-textarea', 'btn-ai-playlist', 'btn-dj-toggle', 'np-dj-banner']) {
+        assert.ok(bundle.includes(marker), `bundle should contain ${marker}`);
+      }
+    });
+  });
+});

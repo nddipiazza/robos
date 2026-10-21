@@ -210,6 +210,8 @@ class LibraryFolders {
         added.push(track);
       } catch {}
     }
+    const addedAt = new Date().toISOString();
+    for (const t of added) if (!t.addedAt) t.addedAt = addedAt;
     const before = ml.tracks.length;
     ml.tracks = ml.tracks.filter(t => !this._owns(f, t.filePath) || keep.has(t.filePath)).concat(added);
     const removed = before + added.length - ml.tracks.length;

@@ -3,42 +3,61 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const crypto = require('crypto');
-const { pathToFileURL } = require('url');
 const { Worker } = require('worker_threads');
+const {
+  generateTrackId,
+  toSafeFileUrl,
+  trackFromMetadata,
+  fallbackTrack,
+} = require('./track-metadata');
+
+const ART_MEMORY_LIMIT = 200;
+const ART_EXTENSIONS = ['jpg', 'png', 'webp'];
 
 class MediaLibrary {
+  // `tracks` is reassigned by LibraryFolders and older callers; every reassignment
+  // invalidates the filePath → position index used for O(batch) merges.
+  get tracks() {
+    return this._tracks;
+  }
+
+  set tracks(list) {
+    this._tracks = Array.isArray(list) ? list : [];
+    this._pathIndex = null;
+    this._indexesDirty = true;
+  }
+
   constructor(options = {}) {
     this.configDir = options.configDir || path.join(os.homedir(), '.config', 'robos');
     this.cacheFile = path.join(this.configDir, 'audio-library.json');
     this.playlistsFile = path.join(this.configDir, 'audio-playlists.json');
+    this.statsFile = path.join(this.configDir, 'audio-track-stats.json');
+    // Cover art lives on disk so it survives restarts; tests pass configDir to stay hermetic.
+    this.artDir = options.artDir || (options.configDir
+      ? path.join(options.configDir, 'audio-art-cache')
+      : path.join(os.homedir(), '.cache', 'robos', 'audio-player', 'art'));
     this.tracks = [];
     this.artists = new Map();
     this.albums = new Map();
-    this.albumArtRegistry = new Map(); // artId -> { buffer, format }
-    this.nextArtId = 1;
+    this.albumArtRegistry = new Map(); // artId -> { buffer, format }, small in-memory LRU over artDir
     this._mm = null;
     this.currentWorker = null;
     this.playlists = [];
+    this.stats = {}; // trackId -> { plays, lastPlayed, loved, lovedAt }
+    this.artAliases = new Map(); // legacy path-based artId -> content-based artId
+    this._saveTimer = null;
 
     this._loadCache();
     this._loadPlaylists();
+    this._loadStats();
   }
 
   _generateTrackId(filePath) {
-    return `trk_${crypto.createHash('sha1').update(filePath).digest('hex').slice(0, 16)}`;
-  }
-
-  _generateArtId(filePath) {
-    return `art_${crypto.createHash('sha1').update(filePath).digest('hex').slice(0, 16)}`;
+    return generateTrackId(filePath);
   }
 
   _toSafeFileUrl(filePath) {
-    try {
-      return pathToFileURL(filePath).href;
-    } catch {
-      return encodeURI(`file://${filePath}`);
-    }
+    return toSafeFileUrl(filePath);
   }
 
   async _getParser() {
@@ -73,6 +92,11 @@ class MediaLibrary {
               needsSave = true;
             }
           }
+          // Libraries indexed before "Recently Added" existed: use the file's mtime.
+          if (!track.addedAt) {
+            track.addedAt = this._fileTimeIso(track.filePath) || data.updatedAt || new Date().toISOString();
+            needsSave = true;
+          }
         }
         if (needsSave) {
           this._saveCache();
@@ -86,13 +110,163 @@ class MediaLibrary {
     }
   }
 
-  _saveCache() {
+  _fileTimeIso(filePath) {
+    // Stat'ing thousands of files over a GVFS (SFTP/SMB) mount would stall startup.
+    if (!filePath || filePath.includes('/gvfs/')) return null;
+    try {
+      if (fs.existsSync(filePath)) return fs.statSync(filePath).mtime.toISOString();
+    } catch {}
+    return null;
+  }
+
+  // Coalesces bursts of small library updates into one write. A 100k-track cache
+  // is ~40 MB of JSON, far too much to rewrite for every 5-track scan batch.
+  _saveCacheSoon(delayMs = 3000) {
+    if (this._saveTimer) return;
+    this._saveTimer = setTimeout(() => {
+      this._saveTimer = null;
+      this._saveCache();
+    }, delayMs);
+    if (this._saveTimer.unref) this._saveTimer.unref();
+  }
+
+  // Writes any pending debounced save now (scan finished, app quitting).
+  flush() {
+    if (this._saveTimer) this._saveCache();
+  }
+
+  _ensurePathIndex() {
+    if (!this._pathIndex) {
+      this._pathIndex = new Map();
+      this._tracks.forEach((t, i) => { if (t && t.filePath) this._pathIndex.set(t.filePath, i); });
+    }
+    return this._pathIndex;
+  }
+
+  /**
+   * Replace-or-insert tracks by filePath, keeping when each one first entered the
+   * library. Costs O(incoming), not O(library), so background scans of very large
+   * libraries stay cheap. `deferSave` batches the disk write.
+   */
+  mergeTracks(incoming = [], { deferSave = false } = {}) {
+    if (!incoming.length) return this.tracks;
+    const index = this._ensurePathIndex();
+    const list = this._tracks;
+    const now = new Date().toISOString();
+    for (const track of incoming) {
+      if (!track) continue;
+      const at = track.filePath ? index.get(track.filePath) : undefined;
+      if (at !== undefined) {
+        track.addedAt = list[at].addedAt || track.addedAt || now;
+        list[at] = track;
+      } else {
+        track.addedAt = track.addedAt || now;
+        if (track.filePath) index.set(track.filePath, list.length);
+        list.push(track);
+      }
+    }
+    this._indexesDirty = true;
+    if (deferSave) this._saveCacheSoon();
+    else this._saveCache();
+    return this.tracks;
+  }
+
+  // ── Play statistics & loved tracks ─────────────────────────────────────────
+
+  _loadStats() {
+    try {
+      if (fs.existsSync(this.statsFile)) {
+        const data = JSON.parse(fs.readFileSync(this.statsFile, 'utf8'));
+        this.stats = (data && typeof data === 'object' && data.tracks) || {};
+      }
+    } catch (err) {
+      console.warn('[MediaLibrary] Could not load track stats:', err.message);
+      this.stats = {};
+    }
+  }
+
+  _saveStats() {
     try {
       fs.mkdirSync(this.configDir, { recursive: true });
+      fs.writeFileSync(this.statsFile, JSON.stringify({ updatedAt: new Date().toISOString(), tracks: this.stats }));
+    } catch (err) {
+      console.warn('[MediaLibrary] Could not save track stats:', err.message);
+    }
+  }
+
+  getStats() {
+    return this.stats;
+  }
+
+  recordPlay(trackId) {
+    if (!trackId) return null;
+    const entry = this.stats[trackId] || {};
+    entry.plays = (entry.plays || 0) + 1;
+    entry.lastPlayed = new Date().toISOString();
+    this.stats[trackId] = entry;
+    this._saveStats();
+    return entry;
+  }
+
+  setLoved(trackIds, loved) {
+    const ids = Array.isArray(trackIds) ? trackIds : [trackIds];
+    const now = new Date().toISOString();
+    const changed = {};
+    for (const id of ids.filter(Boolean)) {
+      const entry = this.stats[id] || {};
+      entry.loved = !!loved;
+      entry.lovedAt = loved ? now : null;
+      this.stats[id] = entry;
+      changed[id] = entry;
+    }
+    this._saveStats();
+    return changed;
+  }
+
+  // ── Cover art (content-addressed, persisted under artDir) ─────────────────
+
+  _rememberArt(artId, art) {
+    this.albumArtRegistry.delete(artId);
+    this.albumArtRegistry.set(artId, art);
+    if (this.albumArtRegistry.size > ART_MEMORY_LIMIT) {
+      this.albumArtRegistry.delete(this.albumArtRegistry.keys().next().value);
+    }
+  }
+
+  storeArt(artId, buffer, format = 'image/jpeg') {
+    if (!artId || !buffer) return;
+    const buf = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+    const ext = format === 'image/png' ? 'png' : format === 'image/webp' ? 'webp' : 'jpg';
+    try {
+      const target = path.join(this.artDir, `${artId}.${ext}`);
+      if (!fs.existsSync(target)) {
+        fs.mkdirSync(this.artDir, { recursive: true });
+        fs.writeFileSync(target, buf);
+      }
+    } catch (err) {
+      console.warn('[MediaLibrary] Could not persist cover art:', err.message);
+    }
+    this._rememberArt(artId, { buffer: buf, format });
+  }
+
+  _storeWorkerArtworks(artworks = []) {
+    for (const art of artworks) {
+      if (art && art.artId && art.buffer) this.storeArt(art.artId, art.buffer, art.format);
+    }
+  }
+
+  _saveCache() {
+    if (this._saveTimer) {
+      clearTimeout(this._saveTimer);
+      this._saveTimer = null;
+    }
+    try {
+      fs.mkdirSync(this.configDir, { recursive: true });
+      // Compact JSON: indentation adds ~30% to a file that can hold 100k tracks.
       fs.writeFileSync(this.cacheFile, JSON.stringify({
         updatedAt: new Date().toISOString(),
         tracks: this.tracks
-      }, null, 2));
+      }));
     } catch (err) {
       console.warn('[MediaLibrary] Could not save library cache:', err.message);
     }
@@ -174,7 +348,15 @@ class MediaLibrary {
     }
   }
 
+  // Kept for callers that edit `tracks` directly; the summary maps are rebuilt
+  // lazily the next time they're read instead of after every change.
   _rebuildIndexes() {
+    this._indexesDirty = true;
+  }
+
+  _ensureIndexes() {
+    if (!this._indexesDirty) return;
+    this._indexesDirty = false;
     this.artists.clear();
     this.albums.clear();
 
@@ -195,48 +377,15 @@ class MediaLibrary {
    */
   async parseTrack(filePath) {
     const mm = await this._getParser();
+    let result;
     try {
       const metadata = await mm.parseFile(filePath, { duration: true, skipCovers: false });
-      const common = metadata.common || {};
-      const format = metadata.format || {};
-
-      let artId = null;
-      const cover = mm.selectCover(common.picture);
-      if (cover) {
-        artId = this._generateArtId(filePath);
-        this.albumArtRegistry.set(artId, {
-          buffer: cover.data,
-          format: cover.format || 'image/jpeg'
-        });
-      }
-
-      return {
-        id: this._generateTrackId(filePath),
-        filePath,
-        title: common.title || path.parse(filePath).name,
-        artist: common.artist || common.albumartist || 'Unknown Artist',
-        album: common.album || 'Unknown Album',
-        year: common.year || null,
-        genre: (common.genre && common.genre[0]) || null,
-        trackNumber: common.track?.no || null,
-        duration: format.duration || 0,
-        bitrate: format.bitrate || 0,
-        sampleRate: format.sampleRate || 0,
-        artId,
-        src: this._toSafeFileUrl(filePath)
-      };
+      result = trackFromMetadata(filePath, metadata, mm);
     } catch (err) {
-      return {
-        id: this._generateTrackId(filePath),
-        filePath,
-        title: path.parse(filePath).name,
-        artist: 'Unknown Artist',
-        album: 'Unknown Album',
-        duration: 0,
-        src: this._toSafeFileUrl(filePath),
-        error: err.message
-      };
+      result = fallbackTrack(filePath, err);
     }
+    if (result.art) this.storeArt(result.art.artId, result.art.buffer, result.art.format);
+    return result.track;
   }
 
   /**
@@ -286,13 +435,48 @@ class MediaLibrary {
       artist,
       album: (parentFolder && parentFolder !== '/' && parentFolder !== '.') ? parentFolder : 'Cloud Storage',
       duration: 0,
+      addedAt: new Date().toISOString(),
       cloud: cloudMeta,
       src: streamUrl || this._toSafeFileUrl(filePath),
     };
   }
 
   getArt(artId) {
-    return this.albumArtRegistry.get(artId);
+    if (!artId || !/^art_[\w-]+$/.test(artId)) return null;
+    if (this.artAliases.has(artId)) artId = this.artAliases.get(artId);
+    const cached = this.albumArtRegistry.get(artId);
+    if (cached) return cached;
+    for (const ext of ART_EXTENSIONS) {
+      const file = path.join(this.artDir, `${artId}.${ext}`);
+      try {
+        if (fs.existsSync(file)) {
+          const art = { buffer: fs.readFileSync(file), format: ext === 'jpg' ? 'image/jpeg' : `image/${ext}` };
+          this._rememberArt(artId, art);
+          return art;
+        }
+      } catch {}
+    }
+    return null;
+  }
+
+  /**
+   * Like getArt, but if the image is missing (e.g. a library indexed before art was
+   * persisted) re-read the cover from one of the tracks that references it.
+   */
+  async getArtAsync(artId) {
+    const art = this.getArt(artId);
+    if (art) return art;
+    const owner = this.tracks.find(t => t.artId === artId && t.filePath && fs.existsSync(t.filePath));
+    if (!owner) return null;
+    const fresh = await this.parseTrack(owner.filePath);
+    if (fresh.artId && fresh.artId !== artId) {
+      // Older libraries keyed art by file path; re-point every track of that album and
+      // remember the old id, since the renderer may still ask for it.
+      this.artAliases.set(artId, fresh.artId);
+      for (const t of this.tracks) if (t.artId === artId) t.artId = fresh.artId;
+      this._saveCacheSoon();
+    }
+    return fresh.artId ? this.getArt(fresh.artId) : null;
   }
 
   /**
@@ -337,11 +521,8 @@ class MediaLibrary {
       }
     }
 
-    // Merge into tracks list without duplicates
-    const fileSet = new Set(parsedTracks.map(t => t.filePath));
-    this.tracks = this.tracks.filter(t => !fileSet.has(t.filePath)).concat(parsedTracks);
-    this._rebuildIndexes();
-    this._saveCache();
+    this.mergeTracks(parsedTracks);
+    this._ensureIndexes();
 
     return {
       totalFound: audioFiles.length,
@@ -373,6 +554,14 @@ class MediaLibrary {
       workerData: { folders: normalizedFolders }
     });
     this.currentWorker = worker;
+    // Tracks found by this scan (references into the library, not copies).
+    const scanned = [];
+    const self = this;
+    const withLibrary = (payload) => Object.defineProperty(payload, 'library', {
+      // Lazy: building the full library payload is only worth it for callers that use it.
+      get() { return self.getLibrary(); },
+      enumerable: false,
+    });
 
     worker.on('message', (msg) => {
       if (!msg) return;
@@ -386,44 +575,24 @@ class MediaLibrary {
           onProgress(msg);
         }
       } else if (msg.type === 'batch') {
-        // Register artworks
-        for (const art of (msg.artworks || [])) {
-          if (art && art.artId && art.buffer) {
-            this.albumArtRegistry.set(art.artId, {
-              buffer: Buffer.from(art.buffer),
-              format: art.format || 'image/jpeg'
-            });
-          }
-        }
-        // Merge tracks
-        const incomingFileSet = new Set(msg.tracks.map(t => t.filePath));
-        this.tracks = this.tracks.filter(t => !incomingFileSet.has(t.filePath)).concat(msg.tracks);
-        this._rebuildIndexes();
-        this._saveCache();
+        this._storeWorkerArtworks(msg.artworks);
+        this.mergeTracks(msg.tracks, { deferSave: true });
+        for (const t of msg.tracks) scanned.push(t);
 
         if (typeof onBatch === 'function') {
-          onBatch({
+          onBatch(withLibrary({
             tracks: msg.tracks,
             current: msg.current,
             total: msg.total,
-            library: this.getLibrary()
-          });
+          }));
         }
       } else if (msg.type === 'done') {
-        // Register artworks
-        for (const art of (msg.artworks || [])) {
-          if (art && art.artId && art.buffer) {
-            this.albumArtRegistry.set(art.artId, {
-              buffer: Buffer.from(art.buffer),
-              format: art.format || 'image/jpeg'
-            });
-          }
+        this._storeWorkerArtworks(msg.artworks);
+        if (msg.tracks && msg.tracks.length) {
+          this.mergeTracks(msg.tracks, { deferSave: true });
+          for (const t of msg.tracks) scanned.push(t);
         }
-        // Final merge
-        const incomingFileSet = new Set(msg.tracks.map(t => t.filePath));
-        this.tracks = this.tracks.filter(t => !incomingFileSet.has(t.filePath)).concat(msg.tracks);
-        this._rebuildIndexes();
-        this._saveCache();
+        this.flush();
 
         if (this.currentWorker === worker) {
           try { worker.terminate(); } catch {}
@@ -431,11 +600,11 @@ class MediaLibrary {
         }
 
         if (typeof onDone === 'function') {
-          onDone({
+          onDone(withLibrary({
             totalFound: msg.totalFound,
-            tracks: msg.tracks,
-            library: this.getLibrary()
-          });
+            tracks: scanned,
+            canceled: !!msg.canceled,
+          }));
         }
       } else if (msg.type === 'error') {
         if (this.currentWorker === worker) {
@@ -479,6 +648,7 @@ class MediaLibrary {
   }
 
   cancelScan() {
+    this.flush();
     if (this.currentWorker) {
       try {
         this.currentWorker.postMessage({ type: 'stop' });
@@ -495,6 +665,7 @@ class MediaLibrary {
   }
 
   getLibrary() {
+    this._ensureIndexes();
     return {
       tracks: this.tracks,
       artists: Array.from(this.artists.keys()).map(name => ({
@@ -517,7 +688,7 @@ class MediaLibrary {
     return this.playlists.find(p => p.id === playlistId) || null;
   }
 
-  createPlaylist({ name, description, tracks = [] }) {
+  createPlaylist({ name, description, tracks = [], ai = null, dj = null }) {
     const id = `pl_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const playlist = {
       id,
@@ -527,6 +698,9 @@ class MediaLibrary {
       updatedAt: new Date().toISOString(),
       tracks: Array.isArray(tracks) ? [...tracks] : []
     };
+    // AI playlists remember the request, and the Virtual DJ persona and script.
+    if (ai && typeof ai === 'object') playlist.ai = ai;
+    if (dj && typeof dj === 'object') playlist.dj = dj;
     this.playlists.push(playlist);
     this._savePlaylists();
     return playlist;
