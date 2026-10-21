@@ -85,6 +85,7 @@ flowchart TD
   - With a Cast speaker selected, the DJ is cast to it too.
   - If no voice can be produced, the message names why for each engine (e.g. Kokoro model not installed, edge-tts missing). The DJ also tries the voice set up in RobOS Voice, and starts the voice engine as soon as the DJ is on, since Kokoro takes a while to load.
   - On a Cast speaker, DJ lines are sent as MP3 and the music resumes when the speaker reports the line finished.
+  - **DJ volume** (DJ settings, default 150%): each line is loudness-normalised to music level (-14 LUFS) and then set to this % of the music, with a limiter, so the DJ cuts through without turning the music up. It works the same on this computer and on Cast speakers, where the level has to be in the audio itself.
 - **DJ for any queue**: the 🎙 button in the Now Playing panel turns the Virtual DJ on for whatever is playing; the agent writes lines a few songs ahead.
 - **Announce this song**: the speaker button next to 🎙 plays the intro the DJ has ready for the next song, and right-click → *Announce this song* in the queue does the same for any song. The music pauses for it and picks up where it was. While casting, the line plays on the speaker and the song is then cast again from the same point.
 

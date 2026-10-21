@@ -258,6 +258,7 @@ async function generateAiPlaylist({ tracks, request, count = 25, dj = null }, { 
       persona: djOpts.persona,
       voice: djOpts.voice || '',
       frequency: DJ_FREQUENCIES.includes(djOpts.frequency) ? djOpts.frequency : 'every',
+      ...(Number(djOpts.level) > 0 ? { level: Math.max(50, Math.min(300, Number(djOpts.level))) } : {}),
       ...resolveDjScript(reply, candidates, picked),
     };
   }
