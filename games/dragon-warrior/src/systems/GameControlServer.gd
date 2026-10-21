@@ -256,6 +256,17 @@ func _handle_post_command(client: StreamPeerTCP, body: Dictionary) -> void:
 			if scene:
 				if "_hero_tile" in scene:
 					scene._hero_tile = Vector2i(x, y)
+				if "_cam_world" in scene:
+					if scene.has_method("_tile_center_world"):
+						scene._cam_world = scene._tile_center_world(x, y)
+					elif scene.has_method("_tile_center"):
+						scene._cam_world = scene._tile_center(Vector2i(x, y))
+					if "_cam_from" in scene:
+						scene._cam_from = scene._cam_world
+					if "_cam_to" in scene:
+						scene._cam_to = scene._cam_world
+				if scene.has_method("_draw_frame"):
+					scene._draw_frame()
 				if PlayerState:
 					PlayerState.tile_position = Vector2i(x, y)
 				await get_tree().create_timer(0.2).timeout
@@ -467,6 +478,30 @@ func _handle_post_command(client: StreamPeerTCP, body: Dictionary) -> void:
 				_send_http_response(client, 200, {"success": true, "task": task_name, "status": "running"})
 			else:
 				_send_http_response(client, 400, {"success": false, "message": "Invalid ai_task request."})
+		"capture_screenshot":
+			var out_path: String = str(args.get("file_path", args.get("path", "")))
+			if out_path != "":
+				var sc_now: Node = get_tree().current_scene
+				if sc_now and sc_now.get("_dialog_active") == true and sc_now.get("_is_typing") == true:
+					var pages: Variant = sc_now.get("_dialog_pages")
+					var cp: int = int(sc_now.get("_current_page")) if sc_now.get("_current_page") != null else 0
+					if pages is Array and cp >= 0 and cp < pages.size():
+						var full_txt := str(pages[cp])
+						sc_now.set("_char_index", full_txt.length())
+						sc_now.set("_is_typing", false)
+						var dlbl: Variant = sc_now.get("_dialog_label")
+						if dlbl and "text" in dlbl:
+							dlbl.text = full_txt
+						var plbl: Variant = sc_now.get("_prompt_label")
+						if plbl and "visible" in plbl:
+							plbl.visible = true
+				await RenderingServer.frame_post_draw
+				var img: Image = get_viewport().get_texture().get_image()
+				if img:
+					var err := img.save_png(out_path)
+					_send_http_response(client, 200 if err == OK else 500, {"success": err == OK, "file_path": out_path, "width": img.get_width(), "height": img.get_height()})
+					return
+			_send_http_response(client, 400, {"success": false, "message": "Screenshot capture failed."})
 		_:
 			_send_http_response(client, 400, {"success": false, "message": "Unknown command: %s" % cmd})
 
@@ -870,6 +905,8 @@ func _get_active_scene_map_key(scene: Node) -> String:
 		"mountaincaveb1": return "mountain-cave-b1"
 		"mountaincaveb2": return "mountain-cave-b2"
 		"swampcave": return "swamp-cave-b1"
+		"staffofraincave": return "northern-cave-b1"
+		"rainbowdropcave": return "southern-cave-b1"
 		_: return path
 
 func get_screen_contents() -> Dictionary:

@@ -51,10 +51,10 @@
     {
       "map": "kol-1f",
       "world": {
-        "x": 1,
-        "y": 15
+        "x": 20,
+        "y": 24
       },
-      "facing": "right"
+      "facing": "up"
     },
     {
       "map": "mountain-cave-b1",
@@ -75,10 +75,10 @@
     {
       "map": "rimuldar-1f",
       "world": {
-        "x": 1,
-        "y": 16
+        "x": 30,
+        "y": 15
       },
-      "facing": "right"
+      "facing": "left"
     },
     {
       "map": "southern-cave-b1",

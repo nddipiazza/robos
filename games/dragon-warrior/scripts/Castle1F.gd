@@ -17,7 +17,7 @@ const MAP_GRID := [
 	[0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 4, 0, 0, 0],
 	[0, 1, 3, 3, 3, 3, 3, 1, 0, 4, 0, 4, 4, 0, 4, 0, 1, 3, 3, 3, 3, 3, 1, 0, 1, 7, 1, 0, 0, 0, 0, 0],
 	[0, 1, 3, 3, 3, 3, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 3, 3, 3, 3, 1, 0, 1, 8, 1, 0, 0, 0, 0, 0],
-	[0, 1, 3, 3, 1, 3, 3, 1, 1, 1, 1, 3, 3, 1, 1, 1, 1, 3, 3, 1, 3, 3, 1, 0, 0, 0, 4, 4, 0, 0, 0, 0],
+	[0, 1, 3, 3, 1, 3, 3, 1, 1, 1, 1, 3, 3, 33, 1, 1, 1, 3, 3, 1, 3, 3, 1, 0, 0, 0, 4, 4, 0, 0, 0, 0],
 	[0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 4, 4, 4, 0, 0, 0, 0, 0],
 	[0, 1, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 1, 0, 0, 0, 0, 0, 11, 0, 0, 0],
 	[0, 1, 1, 1, 1, 1, 3, 1, 3, 88, 3, 3, 3, 3, 3, 3, 1, 1, 1, 10, 1, 1, 1, 1, 1, 3, 1, 1, 1, 0, 0, 0],
@@ -1165,10 +1165,10 @@ func _cmd_stairs() -> void:
 		_play_sfx("res://assets/music/mp3/stairs_down.mp3")
 		_show_dialog("", ["Thou descendest the stairs."],
 			func():
-				_save_state(Vector2i(0, 1), "castle_1f", "down")
+				_save_state(Vector2i(1, 5), "castle_1f", "down")
 				get_tree().change_scene_to_file.call_deferred("res://scenes/TantegelBasement.tscn")
 		)
-	elif _map_tile_at(_hero_tile) == 33:
+	elif _map_tile_at(_hero_tile) == 33 or _map_tile_at(_hero_tile) == 34:
 		_play_sfx("res://assets/music/mp3/stairs_up.mp3")
 		_show_dialog("", ["Thou ascendest the stairs."],
 			func():
