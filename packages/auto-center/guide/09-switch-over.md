@@ -47,6 +47,7 @@ Read this list before you decide. Some of these may matter to your shop, and non
 | Cancel a ticket without invoicing | There is no cancel. Use a diagnostic-fee estimate, as described in [Run the shop](../8-run-the-shop/). |
 | Several computers or phones at once | One shop, one computer, shared in turns. |
 | Verified part fitment | Fitment columns in a supplier file are hints only. |
+| Manufacturer scan-tool functions | The OBD-II reader shows engine and emissions codes and live data. Airbag, ABS and other manufacturer codes, and resets or programming, need the manufacturer's tool. |
 
 If one of these is a deal-breaker, keep using your current system for that one job and use Auto Center for the rest.
 
