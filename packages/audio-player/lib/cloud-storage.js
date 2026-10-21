@@ -446,6 +446,50 @@ async function streamCloudTrackToHttp(req, res, cloudMeta, onCached = null) {
   serveFromLocalCache(req, res, cachedFile, contentType, 'MISS-CACHED');
 }
 
+/**
+ * Reads bytes [start, end] of a cloud audio file without caching it (used to read
+ * tags). Resolves { buffer, totalSize }, or null for connections that cannot
+ * fetch byte ranges (FTP / SFTP).
+ */
+async function readRemoteRange({ connectionId, remotePath, driveId }, start, end) {
+  const ds = getConnection(connectionId);
+  const rs = loadRemoteStorage();
+  const open = ds.driverType === 'gdrive' ? rs.openGDriveMediaStream
+    : ds.driverType === 'onedrive' ? rs.openOneDriveMediaStream
+      : null;
+  if (typeof open !== 'function') return null;
+  const res = await open(ds, { remoteFile: remotePath, driveId: driveId || '', range: `bytes=${start}-${end}` });
+  // A server that ignores Range sends the whole file from byte 0.
+  const skip = res.status === 206 ? 0 : start;
+  const want = end - start + 1;
+  const chunks = [];
+  let seen = 0;
+  let kept = 0;
+  await new Promise((resolve, reject) => {
+    const stream = res.stream;
+    const finish = () => { stream.removeAllListeners('data'); stream.destroy(); resolve(); };
+    stream.on('data', (chunk) => {
+      let c = chunk;
+      if (seen < skip) {
+        const drop = Math.min(skip - seen, c.length);
+        seen += drop;
+        c = c.subarray(drop);
+      }
+      if (c.length) {
+        c = c.subarray(0, want - kept);
+        chunks.push(c);
+        kept += c.length;
+      }
+      if (kept >= want) finish();
+    });
+    stream.on('end', resolve);
+    stream.on('error', reject);
+  });
+  const m = /\/(\d+)\s*$/.exec(res.contentRange || '');
+  const totalSize = m ? Number(m[1]) : (res.status !== 206 && res.contentLength ? Number(res.contentLength) : null);
+  return { buffer: Buffer.concat(chunks), totalSize };
+}
+
 // Legacy alias kept for compatibility, but now indexes metadata only unless explicitly requested
 async function fetchAudio(id, remotePaths, onProgress) {
   const descriptors = await indexCloudAudio(id, remotePaths, onProgress);
@@ -463,6 +507,7 @@ module.exports = {
   fetchAudio,
   ensureTrackCached,
   streamCloudTrackToHttp,
+  readRemoteRange,
   isTrackCached,
   touchCacheFile,
   enforceCacheLimit,

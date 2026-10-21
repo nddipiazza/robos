@@ -19515,7 +19515,8 @@
         { label: "Play next", icon: "playNext", disabled: indices.includes(currentIndex), onClick: () => onMove(indices, currentIndex + 1) },
         { label: "Move to top", icon: "up", onClick: () => onMove(indices, 0) },
         { label: "Move to bottom", icon: "down", onClick: () => onMove(indices, queue.length) },
-        { label: indices.length > 1 ? `Remove ${indices.length} from queue` : "Remove from queue", icon: "x", danger: true, onClick: () => onRemove(indices) }
+        { label: indices.length > 1 ? `Remove ${indices.length} from queue` : "Remove from queue", icon: "x", danger: true, onClick: () => onRemove(indices) },
+        dj && dj.onPreview && tracks.length === 1 ? { label: "Announce this song (Virtual DJ)", icon: "mic", onClick: () => dj.onPreview(tracks[0]) } : null
       );
       openMenu(e, items);
     };
@@ -19573,7 +19574,7 @@
     const end = Math.min(rows.length, Math.ceil((scrollTop + viewport) / ROW_HEIGHT2) + OVERSCAN);
     const current = queue[currentIndex] || null;
     const dropPos = dropAt == null ? null : dropAt >= queue.length ? rows.length : rows.indexOf(dropAt);
-    return /* @__PURE__ */ import_react16.default.createElement("aside", { className: "np-dock", "aria-label": "Now Playing" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-head" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-head-title" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "list", size: 15 }), /* @__PURE__ */ import_react16.default.createElement("span", null, "Now Playing"), /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-count" }, queue.length.toLocaleString())), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-collapse-queue-panel", className: "btn-icon-only small", title: "Hide panel", onClick: onToggleCollapsed }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "chevron", size: 14 }))), current && /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-current", onDoubleClick: () => locateCurrent(true), title: "Double-click to locate in the list" }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: current.artId, name: current.album || current.title, size: 44 }), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-current-text" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-current-title" }, current.title), /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-current-sub" }, /* @__PURE__ */ import_react16.default.createElement("a", { className: "link", onClick: () => actions.goToArtist(current.artist) }, current.artist || "Unknown Artist"), current.album ? /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, " \xB7 ", /* @__PURE__ */ import_react16.default.createElement("a", { className: "link", onClick: () => actions.goToAlbumOf(current) }, current.album)) : null))), dj && dj.speaking && /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-dj-banner", role: "status" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "mic", size: 15 }), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-dj-text" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-dj-label" }, dj.speaking.warming ? "DJ is warming up\u2026" : "DJ on the mic"), /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-dj-line" }, dj.speaking.text)), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-dj-skip", className: "btn-chip", onClick: dj.onSkip, title: "Skip the DJ and play the next song" }, "Skip")), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-filter search-box" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "search", size: 13 }), /* @__PURE__ */ import_react16.default.createElement(
+    return /* @__PURE__ */ import_react16.default.createElement("aside", { className: "np-dock", "aria-label": "Now Playing" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-head" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-head-title" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "list", size: 15 }), /* @__PURE__ */ import_react16.default.createElement("span", null, "Now Playing"), /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-count" }, queue.length.toLocaleString())), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-collapse-queue-panel", className: "btn-icon-only small", title: "Hide panel", onClick: onToggleCollapsed }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "chevron", size: 14 }))), current && /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-current", onDoubleClick: () => locateCurrent(true), title: "Double-click to locate in the list" }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: current.artId, name: current.album || current.title, size: 44 }), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-current-text" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-current-title" }, current.title), /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-current-sub" }, /* @__PURE__ */ import_react16.default.createElement("a", { className: "link", onClick: () => actions.goToArtist(current.artist) }, current.artist || "Unknown Artist"), current.album ? /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, " \xB7 ", /* @__PURE__ */ import_react16.default.createElement("a", { className: "link", onClick: () => actions.goToAlbumOf(current) }, current.album)) : null))), dj && dj.speaking && /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-dj-banner", role: "status" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "mic", size: 15 }), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-dj-text" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-dj-label" }, dj.speaking.warming ? "DJ is warming up\u2026" : dj.speaking.preview ? "DJ preview" : "DJ on the mic"), /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-dj-line" }, dj.speaking.text)), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-dj-skip", className: "btn-chip", onClick: dj.onSkip, title: dj.speaking.preview ? "Stop the preview" : "Skip the DJ and play the next song" }, dj.speaking.preview ? "Stop" : "Skip")), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-filter search-box" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "search", size: 13 }), /* @__PURE__ */ import_react16.default.createElement(
       "input",
       {
         id: "queue-filter",
@@ -19634,6 +19635,16 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         onClick: dj.onSettings
       },
       /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "mic", size: 14 })
+    ), dj.enabled && /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        id: "btn-dj-preview",
+        className: "btn-icon-only small np-dj-preview",
+        title: dj.nextTrack ? `Announce the next song: hear what the DJ will say before \u201C${dj.nextTrack.title}\u201D` : "Nothing is queued after this song",
+        disabled: !dj.nextTrack || !!dj.speaking,
+        onClick: () => dj.onPreview(dj.nextTrack)
+      },
+      /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "speaker", size: 14 })
     ), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-queue-ai-playlist", className: "btn-icon-only small ai-btn-icon", title: "AI Playlist: describe it, your RobOS agent builds it", onClick: dj.onAiPlaylist }, "\u2726")), /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-footer-spacer" }), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-shuffle-queue", className: "btn-icon-only small", title: "Shuffle the order of the queue", onClick: onShuffleOrder }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "rows", size: 14 })), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-save-queue-as-playlist", className: "btn-icon-only small", title: "Save queue as a playlist", onClick: onSave, disabled: !queue.length }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "save", size: 14 })), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-clear-queue", className: "btn-icon-only small danger", title: "Clear the queue (keeps the playing track)", onClick: onClear, disabled: queue.length <= 1 }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "trash", size: 14 })))));
   }
 
@@ -19911,15 +19922,29 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
   var import_react19 = __toESM(require_react());
   var LOOKAHEAD = 3;
   var FREQUENCY_EVERY = { every: 1, alternate: 2, sometimes: 3 };
+  var LINE_WAIT_MS = 3e4;
+  var CLIP_WAIT_MS = 15e3;
   var fileUrl = (filePath) => `file://${filePath.split("/").map(encodeURIComponent).join("/")}`;
   var slim = (t) => ({ id: t.id, title: t.title, artist: t.artist, album: t.album, year: t.year, genre: t.genre, duration: t.duration });
+  var within = (promise, ms, fallback = null) => new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), ms);
+    Promise.resolve(promise).then((v) => {
+      clearTimeout(timer);
+      resolve(v);
+    }, () => {
+      clearTimeout(timer);
+      resolve(fallback);
+    });
+  });
+  var systemVoiceAvailable = () => !!(window.speechSynthesis && typeof SpeechSynthesisUtterance !== "undefined" && window.speechSynthesis.getVoices().length > 0);
   function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showStatus, getAgent }) {
     const [settings, setSettings] = (0, import_react19.useState)(() => ({ enabled: false, persona: "", voice: "", frequency: "every", ...initial || {} }));
     const [speaking, setSpeaking] = (0, import_react19.useState)(null);
     const lines = (0, import_react19.useRef)(/* @__PURE__ */ new Map());
     const clips = (0, import_react19.useRef)(/* @__PURE__ */ new Map());
-    const pendingLines = (0, import_react19.useRef)(/* @__PURE__ */ new Set());
-    const pendingClips = (0, import_react19.useRef)(/* @__PURE__ */ new Set());
+    const lineRequests = (0, import_react19.useRef)(/* @__PURE__ */ new Map());
+    const clipRequests = (0, import_react19.useRef)(/* @__PURE__ */ new Map());
+    const generation = (0, import_react19.useRef)(0);
     const transitions = (0, import_react19.useRef)(0);
     const active = (0, import_react19.useRef)(null);
     const latest = (0, import_react19.useRef)({});
@@ -19929,37 +19954,64 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       const prev = latest.current.settings;
       const next = { ...prev, ...patch };
       if (next.persona !== prev.persona) {
+        generation.current += 1;
         lines.current.clear();
         clips.current.clear();
-      } else if (next.voice !== prev.voice) clips.current.clear();
+        lineRequests.current.clear();
+        clipRequests.current.clear();
+      } else if (next.voice !== prev.voice) {
+        clips.current.clear();
+        clipRequests.current.clear();
+      }
       latest.current.settings = next;
       setSettings(next);
     }, []);
-    const prepareClip = (0, import_react19.useCallback)((track) => {
-      if (!track || !track.id) return;
-      const text = lines.current.get(track.id);
-      if (!text || clips.current.has(track.id) || pendingClips.current.has(track.id)) return;
-      pendingClips.current.add(track.id);
-      window.robosAudio.djSynthesize(text, latest.current.settings.voice).then((res) => clips.current.set(track.id, res && res.ok ? { filePath: res.filePath, durationMs: res.durationMs } : { failed: true })).catch(() => clips.current.set(track.id, { failed: true })).finally(() => pendingClips.current.delete(track.id));
+    const requestLines = (0, import_react19.useCallback)((tracks) => {
+      const missing = tracks.filter((t) => t && t.id && !lines.current.has(t.id) && !lineRequests.current.has(t.id));
+      if (!missing.length || !window.robosAudio?.djLines) return;
+      const gen = generation.current;
+      const req = window.robosAudio.djLines(latest.current.settings.persona, missing.map(slim), latest.current.getAgent()).then((res) => {
+        if (gen !== generation.current) return;
+        for (const [id, text] of Object.entries(res && res.lines || {})) lines.current.set(id, text);
+        if (res && !res.ok && res.error) latest.current.showStatus(`Virtual DJ: ${res.error}`);
+      }).catch((err) => latest.current.showStatus(`Virtual DJ: ${err.message}`)).finally(() => missing.forEach((t) => {
+        if (lineRequests.current.get(t.id) === req) lineRequests.current.delete(t.id);
+      }));
+      missing.forEach((t) => lineRequests.current.set(t.id, req));
     }, []);
+    const requestClip = (0, import_react19.useCallback)((track) => {
+      if (!track || !track.id) return Promise.resolve(null);
+      const text = lines.current.get(track.id);
+      if (!text) return Promise.resolve(null);
+      const done = clips.current.get(track.id);
+      if (done) return Promise.resolve(done);
+      if (clipRequests.current.has(track.id)) return clipRequests.current.get(track.id);
+      const gen = generation.current;
+      const req = window.robosAudio.djSynthesize(text, latest.current.settings.voice).then((res) => res && res.ok ? { filePath: res.filePath, durationMs: res.durationMs } : { failed: true, error: res && res.error || "no audio" }).catch((err) => ({ failed: true, error: err.message })).then((clip) => {
+        if (gen === generation.current) clips.current.set(track.id, clip);
+        clipRequests.current.delete(track.id);
+        return clip;
+      });
+      clipRequests.current.set(track.id, req);
+      return req;
+    }, []);
+    const lineFor = (0, import_react19.useCallback)(async (track, ms) => {
+      if (lines.current.has(track.id)) return lines.current.get(track.id);
+      if (!lineRequests.current.has(track.id)) requestLines([track]);
+      await within(lineRequests.current.get(track.id), ms);
+      return lines.current.get(track.id) || null;
+    }, [requestLines]);
     const upcomingKey = upcoming.map((t) => t && t.id).join("|");
     (0, import_react19.useEffect)(() => {
-      if (!active_ || !window.robosAudio?.djLines) return;
+      if (!active_) return;
       const next = upcoming.filter(Boolean).slice(0, LOOKAHEAD);
-      const missing = next.filter((t) => t.id && !lines.current.has(t.id) && !pendingLines.current.has(t.id));
-      if (missing.length) {
-        missing.forEach((t) => pendingLines.current.add(t.id));
-        window.robosAudio.djLines(settings.persona, missing.map(slim), latest.current.getAgent()).then((res) => {
-          for (const [id, text] of Object.entries(res && res.lines || {})) lines.current.set(id, text);
-          if (res && !res.ok && res.error) latest.current.showStatus(`Virtual DJ: ${res.error}`);
-        }).catch(() => {
-        }).finally(() => {
-          missing.forEach((t) => pendingLines.current.delete(t.id));
-          prepareClip(next[0]);
-        });
+      requestLines(next);
+      const first = next[0];
+      if (first && first.id) {
+        if (lines.current.has(first.id)) requestClip(first);
+        else if (lineRequests.current.has(first.id)) lineRequests.current.get(first.id).then(() => requestClip(first));
       }
-      prepareClip(next[0]);
-    }, [active_, upcomingKey, settings.persona, settings.voice, prepareClip]);
+    }, [active_, upcomingKey, settings.persona, settings.voice, requestLines, requestClip]);
     const stop = (0, import_react19.useCallback)(() => {
       const a = active.current;
       if (!a) return;
@@ -19974,22 +20026,19 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       setSpeaking(null);
       a.finish();
     }, []);
-    const playLine = (0, import_react19.useCallback)((text, clip, then) => {
+    const playLine = (0, import_react19.useCallback)((text, clip, then, { local = false, preview: preview2 = false, clipError = "" } = {}) => {
       const { outputTarget: target, getVolume: volume, settings: s } = latest.current;
-      const finish = () => {
-        if (active.current) {
-          active.current = null;
-          setSpeaking(null);
-        }
-        then();
-      };
       const entry = { finish: then, audio: null, timer: null };
       active.current = entry;
-      setSpeaking({ text });
+      setSpeaking({ text, preview: preview2 });
       const done = () => {
-        if (active.current === entry) finish();
+        if (active.current !== entry) return;
+        active.current = null;
+        if (entry.timer) clearTimeout(entry.timer);
+        setSpeaking(null);
+        then();
       };
-      if (clip && clip.filePath && target !== "local") {
+      if (clip && clip.filePath && target !== "local" && !local) {
         const meta = { title: "Virtual DJ", artist: s.persona.slice(0, 60) };
         Promise.resolve(target === "all" ? null : window.robosAudio.castFile(target, clip.filePath, meta)).catch(() => {
         });
@@ -20006,7 +20055,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         entry.timer = setTimeout(done, (clip.durationMs || 15e3) + 4e3);
         return;
       }
-      if (window.speechSynthesis && typeof SpeechSynthesisUtterance !== "undefined") {
+      if (systemVoiceAvailable()) {
         const u = new SpeechSynthesisUtterance(text);
         u.onend = done;
         u.onerror = done;
@@ -20014,19 +20063,44 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         entry.timer = setTimeout(done, Math.max(4e3, text.split(/\s+/).length * 450));
         return;
       }
-      done();
+      latest.current.showStatus(`Virtual DJ could not speak${clipError ? `: ${clipError}` : " (no voice available)"}. Pick another voice in the DJ settings.`);
+      entry.timer = setTimeout(done, preview2 ? 6e3 : 2500);
     }, []);
+    const speakFor = (0, import_react19.useCallback)((track, then, { local = false, preview: preview2 = false } = {}) => {
+      const waiting = { finish: then, audio: null, timer: null };
+      active.current = waiting;
+      setSpeaking({ text: `Getting the intro for \u201C${track.title || "the next song"}\u201D ready\u2026`, warming: true, preview: preview2 });
+      (async () => {
+        const text = await lineFor(track, LINE_WAIT_MS);
+        if (active.current !== waiting) return;
+        if (!text) {
+          latest.current.showStatus(`Virtual DJ had nothing ready for \u201C${track.title || "this song"}\u201D \u2014 playing on.`);
+          active.current = null;
+          setSpeaking(null);
+          then();
+          return;
+        }
+        setSpeaking({ text, warming: true, preview: preview2 });
+        const clip = await within(requestClip(track), CLIP_WAIT_MS);
+        if (active.current !== waiting) return;
+        playLine(text, clip && !clip.failed ? clip : null, then, { local, preview: preview2, clipError: clip && clip.failed ? clip.error : "" });
+      })();
+    }, [lineFor, requestClip, playLine]);
     const talkBefore = (0, import_react19.useCallback)((track, then) => {
       const { settings: s } = latest.current;
       if (!s.enabled || !s.persona.trim() || !track || !track.id) return false;
       transitions.current += 1;
       if (transitions.current % (FREQUENCY_EVERY[s.frequency] || 1) !== 0) return false;
-      const text = lines.current.get(track.id);
-      const clip = clips.current.get(track.id);
-      if (!text || pendingClips.current.has(track.id)) return false;
-      playLine(text, clip && !clip.failed ? clip : null, then);
+      speakFor(track, then);
       return true;
-    }, [playLine]);
+    }, [speakFor]);
+    const preview = (0, import_react19.useCallback)((track, then) => {
+      const { settings: s } = latest.current;
+      if (!s.persona.trim() || !track || !track.id) return false;
+      if (active.current) stop();
+      speakFor(track, then, { local: true, preview: true });
+      return true;
+    }, [speakFor, stop]);
     const announce = (0, import_react19.useCallback)(async (text, then) => {
       const { settings: s } = latest.current;
       if (!text) {
@@ -20035,12 +20109,15 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       }
       setSpeaking({ text, warming: true });
       let clip = null;
+      let clipError = "";
       try {
         const res = await window.robosAudio.djSynthesize(text, s.voice);
         if (res && res.ok) clip = { filePath: res.filePath, durationMs: res.durationMs };
-      } catch {
+        else clipError = res && res.error || "";
+      } catch (err) {
+        clipError = err.message;
       }
-      playLine(text, clip, then);
+      playLine(text, clip, then, { clipError });
     }, [playLine]);
     const loadScript = (0, import_react19.useCallback)((dj) => {
       if (!dj) return;
@@ -20053,7 +20130,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       for (const [id, text] of Object.entries(dj.lines || {})) lines.current.set(id, text);
       transitions.current = 0;
     }, [updateSettings]);
-    return { settings, setSettings: updateSettings, speaking, talkBefore, announce, loadScript, skip: stop, active: active_ };
+    return { settings, setSettings: updateSettings, speaking, talkBefore, preview, announce, loadScript, skip: stop, active: active_ };
   }
 
   // src/App.jsx
@@ -20948,6 +21025,15 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       if (next.length < 3 && repeatMode === "all") next.push(...playlist.slice(0, 3 - next.length));
       return next;
     }, [shuffleMode, plannedNextIndex, playlist, currentTrackIndex, repeatMode]);
+    const nextCloudPath = upcomingTracks[0] && upcomingTracks[0].cloud && !upcomingTracks[0].cloud.cached ? upcomingTracks[0].filePath : null;
+    (0, import_react20.useEffect)(() => {
+      if (!nextCloudPath || !isPlaying || !window.robosAudio?.prefetchTrack) return void 0;
+      const timer = setTimeout(() => {
+        window.robosAudio.prefetchTrack(nextCloudPath).catch(() => {
+        });
+      }, 5e3);
+      return () => clearTimeout(timer);
+    }, [nextCloudPath, isPlaying]);
     const dj = useVirtualDj({
       initial: playerPrefs.dj,
       upcoming: upcomingTracks,
@@ -20974,6 +21060,29 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         return;
       }
       goToIndex(idx);
+    };
+    const handleDjPreview = (track) => {
+      if (!dj.settings.persona.trim()) {
+        showStatus("Set up the Virtual DJ first: describe the DJ you want.");
+        setShowDjSettings(true);
+        return;
+      }
+      const audio = playerRef.current?.audio?.current;
+      const casting = outputTarget !== "local";
+      const wasPlaying = isPlaying && (casting ? !(activeCastSession && activeCastSession.isPaused) : !!(audio && !audio.paused));
+      if (wasPlaying) {
+        if (casting) handleToggleCastPause();
+        else audio.pause();
+      }
+      dj.preview(track, () => {
+        if (!wasPlaying) return;
+        if (casting) latestRef.current.resumeCast();
+        else {
+          playerRef.current?.audio?.current?.play().catch(() => {
+          });
+          setIsPlaying(true);
+        }
+      });
     };
     const startWithDj = (pl) => {
       dj.loadScript(pl.dj);
@@ -21114,6 +21223,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       djSpeaking: !!dj.speaking,
       aiAgent,
       skipDj: dj.skip,
+      resumeCast: () => handleToggleCastPause(),
       // After a DJ break the queue may have changed: find the planned song again.
       goToTrack: (track, fallbackIdx) => {
         const idx = playlist.indexOf(track);
@@ -21729,6 +21839,8 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             speaking: dj.speaking,
             persona: dj.settings.persona,
             onSkip: dj.skip,
+            nextTrack: upcomingTracks[0] || null,
+            onPreview: handleDjPreview,
             onSettings: () => setShowDjSettings(true),
             onAiPlaylist: () => setShowAiPlaylist(true)
           }

@@ -2400,3 +2400,5 @@ body {
 .np-dj-label { font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.1em; }
 .np-dj-line { font-size: 0.78rem; color: var(--text-main); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .agent-picker robos-agent-selector { display: block; }
+
+.np-dj-preview:disabled { opacity: 0.45; cursor: default; }

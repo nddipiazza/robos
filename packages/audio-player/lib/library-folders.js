@@ -193,6 +193,9 @@ class LibraryFolders {
           driveId: desc.driveId || (existing.cloud && existing.cloud.driveId) || null,
           size: desc.size != null ? desc.size : (existing.cloud && existing.cloud.size) || null,
           cached: !!desc.cached,
+          // Tags already read stay read across syncs.
+          ...(existing.cloud && existing.cloud.tagsRead ? { tagsRead: true } : {}),
+          ...(existing.cloud && existing.cloud.tagsFailed ? { tagsFailed: existing.cloud.tagsFailed } : {}),
         };
         if (this.castService && typeof this.castService.getCloudStreamUrl === 'function') {
           existing.src = this.castService.getCloudStreamUrl(existing.id, false);

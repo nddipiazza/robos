@@ -90,19 +90,11 @@ class CastService {
         }
 
         if (this.cloudStorage && typeof this.cloudStorage.streamCloudTrackToHttp === 'function') {
-          this.cloudStorage.streamCloudTrackToHttp(req, res, track.cloud, async (cachedFile) => {
-            if (this.mediaLibrary && cachedFile && fs.existsSync(cachedFile)) {
-              try {
-                const parsed = await this.mediaLibrary.parseTrack(cachedFile);
-                track.title = parsed.title && parsed.title !== path.parse(cachedFile).name ? parsed.title : track.title;
-                track.artist = parsed.artist && parsed.artist !== 'Unknown Artist' ? parsed.artist : track.artist;
-                track.album = parsed.album && parsed.album !== 'Unknown Album' ? parsed.album : track.album;
-                track.duration = parsed.duration || track.duration || 0;
-                track.artId = parsed.artId || track.artId || null;
-                track.cloud.cached = true;
-                this.mediaLibrary._rebuildIndexes();
-                this.mediaLibrary._saveCache();
-              } catch {}
+          this.cloudStorage.streamCloudTrackToHttp(req, res, track.cloud, (cachedFile) => {
+            if (cachedFile && fs.existsSync(cachedFile)) {
+              track.cloud.cached = true;
+              // The full file is here now: let the app re-read its tags from disk.
+              if (typeof this.onCloudTrackCached === 'function') this.onCloudTrackCached(track);
             }
           }).catch((err) => {
             console.error('[CastService] Cloud stream error:', err.message);
@@ -327,58 +319,90 @@ class CastService {
   }
 
   async castMediaUrl(ip, mediaUrl, metadata = {}, onStatusUpdate = null) {
-    await this.stopPlayback(ip);
+    const media = {
+      contentId: mediaUrl,
+      contentType: metadata.contentType || 'audio/mpeg',
+      streamType: 'BUFFERED',
+      metadata: {
+        type: 0,
+        metadataType: 0,
+        title: metadata.title || 'RobOS Audio Stream',
+        artist: metadata.artist || 'RobOS Audio Player',
+        images: metadata.images || []
+      }
+    };
+
+    // Next song on a speaker we're already casting to: load it into the same
+    // receiver session. Stopping and relaunching the receiver for every song made
+    // speakers go silent (and chime) between tracks.
+    const conn = this.activeConnections.get(ip);
+    if (conn && conn.player) {
+      try {
+        const status = await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error('Cast load timed out')), 15000);
+          conn.player.load(media, { autoplay: true }, (err, st) => {
+            clearTimeout(timer);
+            if (err) reject(err); else resolve(st);
+          });
+        });
+        conn.mediaUrl = mediaUrl;
+        conn.onStatusUpdate = onStatusUpdate;
+        return { ok: true, playerState: status?.playerState, ip, sessionId: conn.sessionId, reused: true };
+      } catch (err) {
+        // The session went away (speaker restarted, another app took over): start fresh.
+        console.warn(`[CastService] Reusing the session on ${ip} failed (${err.message}); relaunching.`);
+        this._dropConnection(ip, conn);
+      }
+    } else {
+      // First cast to this speaker: end whatever else it is playing.
+      await this.stopPlayback(ip);
+    }
 
     return new Promise((resolve, reject) => {
       const client = new Client();
+      let settled = false;
       client.connect(ip, () => {
         client.launch(DefaultMediaReceiver, (err, player) => {
           if (err) {
             client.close();
+            settled = true;
             return reject(err);
           }
-
-          const media = {
-            contentId: mediaUrl,
-            contentType: metadata.contentType || 'audio/mpeg',
-            streamType: 'BUFFERED',
-            metadata: {
-              type: 0,
-              metadataType: 0,
-              title: metadata.title || 'RobOS Audio Stream',
-              artist: metadata.artist || 'RobOS Audio Player',
-              images: metadata.images || []
-            }
-          };
 
           player.load(media, { autoplay: true }, (err, status) => {
             if (err) {
               client.close();
+              settled = true;
               return reject(err);
             }
 
             const sessionId = player.session?.sessionId;
-            this.activeConnections.set(ip, { client, player, mediaUrl, sessionId });
+            const entry = { client, player, mediaUrl, sessionId, onStatusUpdate };
+            this.activeConnections.set(ip, entry);
 
-            player.on('status', (s) => {
-              if (typeof onStatusUpdate === 'function') {
-                onStatusUpdate(s);
-              }
-              if (s.playerState === 'IDLE' && s.idleReason === 'FINISHED') {
-                this.stopPlayback(ip);
-              }
+            // One listener for the session's lifetime; each load swaps the callback.
+            player.on('status', (st) => {
+              if (typeof entry.onStatusUpdate === 'function') entry.onStatusUpdate(st);
             });
+            player.on('close', () => this._dropConnection(ip, entry));
 
+            settled = true;
             resolve({ ok: true, playerState: status?.playerState, ip, sessionId });
           });
         });
       });
 
       client.on('error', (err) => {
-        this.activeConnections.delete(ip);
-        reject(err);
+        const entry = this.activeConnections.get(ip);
+        if (entry && entry.client === client) this._dropConnection(ip, entry);
+        if (!settled) { settled = true; reject(err); }
       });
     });
+  }
+
+  _dropConnection(ip, conn) {
+    if (this.activeConnections.get(ip) === conn) this.activeConnections.delete(ip);
+    try { conn.client.close(); } catch {}
   }
 
   async stopPlayback(ip) {
