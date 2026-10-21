@@ -85,7 +85,12 @@ flowchart TD
   - With a Cast speaker selected, the DJ is cast to it too.
   - If no voice can be produced, a message says so (pick another voice) instead of a silent pause.
 - **DJ for any queue**: the 🎙 button in the Now Playing panel turns the Virtual DJ on for whatever is playing; the agent writes lines a few songs ahead.
-- **Announce this song**: the speaker button next to 🎙 plays the intro the DJ has ready for the next song, and right-click → *Announce this song* in the queue does the same for any song. The music pauses for it and picks up where it was.
+- **Announce this song**: the speaker button next to 🎙 plays the intro the DJ has ready for the next song, and right-click → *Announce this song* in the queue does the same for any song. The music pauses for it and picks up where it was. While casting, the line plays on the speaker and the song is then cast again from the same point.
+
+### Resizable layout
+- **Panes**: drag the divider beside the Now Playing list, the Library sidebar, or between the playlist list and the open playlist. Arrow keys move a focused divider (Shift for bigger steps).
+- **Columns**: drag a column border in the Library's song lists, the Now Playing list and the playlist table. The column you drag changes size and Title takes up the difference. Dragging Title's own border trades width with the column to its right.
+- Double-click a divider or a column border to go back to the default. Sizes are remembered between launches.
 
 ### Now Playing Panel (VLC-style playlist)
 - **Always visible**: the play queue is docked on the right of every tab, so you can switch tracks while browsing the library, playlists, cloud storage or speakers. Collapse it to a slim rail with the *Now Playing list* button.
@@ -109,7 +114,7 @@ flowchart TD
 
 ### 3. Zero-Cloud Google Home / Cast Smart Speaker Streaming
 - **Local TLS Streaming**: Casts audio directly across the local area network (`castv2` over port 8009 TLS) through an ephemeral, dynamic HTTP streaming server. Zero external cloud roundtrips or third-party audio subscriptions required.
-- **No gaps between songs**: one receiver session stays open while you cast, and each song is loaded into it, so the speaker doesn't stop, chime and restart at every track change.
+- **No gaps between songs**: one receiver session stays open while you cast, and each song is loaded into it once, so the speaker doesn't stop, chime and restart at every track change. Files are sent with their real type (MP3, FLAC, M4A, WAV), so speakers accept the DJ's WAV voice clips too.
 - **Network Probing**: Automatic mDNS and eureka probing (`http://<ip>:8008/setup/eureka_info`) to discover Google Nest, Google Home, and Chromecast Audio devices on the local subnet.
 - **Volume & Playback Control**: Centralized volume adjustment, pause, resume, individual speaker stop, and global `Stop All Speakers` controls.
 - **Harmonic Test Chime**: Synthesizes and broadcasts an in-memory 16-bit PCM harmonic test chime to verify speaker connectivity.

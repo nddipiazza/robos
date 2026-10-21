@@ -6,7 +6,7 @@ const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
 const { pathToFileURL } = require('url');
-const { CastService } = require('./lib/cast-service');
+const { CastService, audioMimeType } = require('./lib/cast-service');
 const { MediaLibrary } = require('./lib/media-library');
 const cloud = require('./lib/cloud-storage');
 const { createTagQueue } = require('./lib/cloud-tags');
@@ -284,7 +284,8 @@ ipcMain.handle('audio:cast-file', async (_evt, { ip, filePath, metadata }) => {
       if (!cloudTrack) throw new Error('File does not exist: ' + filePath);
       streamUrl = castService.getCloudStreamUrl(cloudTrack.id, true);
     }
-    return await castService.castMediaUrl(ip, streamUrl, metadata, (status) => {
+    const meta = { ...(metadata || {}), contentType: (metadata && metadata.contentType) || audioMimeType(filePath) };
+    return await castService.castMediaUrl(ip, streamUrl, meta, (status) => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('audio:speaker-status-change', { ip, status });
       }

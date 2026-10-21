@@ -1297,7 +1297,7 @@ body {
 
 .playlists-layout {
   display: flex;
-  gap: 16px;
+  gap: 0;
   min-height: 480px;
   height: calc(100vh - 210px);
 }
@@ -1398,6 +1398,7 @@ body {
 
 .playlist-detail-pane {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   background: var(--bg-secondary);
@@ -1496,7 +1497,8 @@ body {
 
 .playlist-table-header {
   display: grid;
-  grid-template-columns: 36px 3fr 2fr 2fr 75px 120px;
+  grid-template-columns: var(--pl-grid, 36px 3fr 2fr 2fr 75px 120px);
+  column-gap: 8px;
   background: var(--bg-tertiary);
   padding: 8px 12px;
   font-size: 0.75rem;
@@ -1512,7 +1514,8 @@ body {
 
 .playlist-table-row {
   display: grid;
-  grid-template-columns: 36px 3fr 2fr 2fr 75px 120px;
+  grid-template-columns: var(--pl-grid, 36px 3fr 2fr 2fr 75px 120px);
+  column-gap: 8px;
   padding: 8px 12px;
   font-size: 0.8rem;
   align-items: center;
@@ -2051,7 +2054,7 @@ body {
 .album-art-box .cover { border-radius: 0; font-size: 24px; }
 
 /* ── Library layout ──────────────────────────────────────────────────────── */
-.lib { flex: 1; min-height: 0; display: grid; grid-template-columns: 196px minmax(0, 1fr); }
+.lib { flex: 1; min-height: 0; display: grid; grid-template-columns: 196px minmax(0, 1fr); position: relative; }
 
 .lib-nav {
   background: var(--bg-secondary); border-right: 1px solid var(--border-color);
@@ -2232,7 +2235,7 @@ body {
 /* ── Now Playing dock (VLC-style playlist) ───────────────────────────────── */
 .np-dock {
   width: 330px; flex-shrink: 0; border-left: 1px solid var(--border-color); background: var(--bg-secondary);
-  display: flex; flex-direction: column; min-height: 0;
+  display: flex; flex-direction: column; min-height: 0; position: relative;
 }
 .np-dock.collapsed { width: 34px; }
 .np-rail {
@@ -2251,7 +2254,7 @@ body {
 .np-filter { margin: 0 12px 8px; max-width: none; flex: none; }
 .np-filter input { padding: 6px 10px 6px 30px; font-size: 0.78rem; }
 .np-cols, .np-row {
-  display: grid; grid-template-columns: 28px minmax(0, 1.4fr) minmax(0, 1fr) 44px;
+  display: grid; grid-template-columns: var(--np-grid, 28px minmax(0, 1.4fr) minmax(0, 1fr) 44px);
   align-items: center; column-gap: 8px; padding: 0 10px;
 }
 .np-cols { height: 24px; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); }
@@ -2402,3 +2405,29 @@ body {
 .agent-picker robos-agent-selector { display: block; }
 
 .np-dj-preview:disabled { opacity: 0.45; cursor: default; }
+
+/* ── Resizable panes and columns (src/resizable.jsx) ────────────────────── */
+.splitter {
+  position: relative; flex: none; width: 9px; cursor: col-resize; touch-action: none; z-index: 6;
+  align-self: stretch; outline: none;
+}
+.splitter::after {
+  content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 2px; transform: translateX(-50%);
+  background: var(--accent); opacity: 0; transition: opacity 0.12s;
+}
+.splitter:hover::after, .splitter:focus-visible::after, body.is-resizing .splitter:active::after { opacity: 0.85; }
+.splitter.overlay { position: absolute; top: 0; bottom: 0; }
+.splitter.edge-left { left: -5px; }
+.splitter.edge-right { right: -5px; }
+body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-select: none !important; }
+
+.col-resizable { position: relative; overflow: visible !important; }
+.col-border {
+  position: absolute; top: -4px; bottom: -4px; right: -9px; width: 10px; cursor: col-resize; touch-action: none; z-index: 3;
+}
+.col-border::after {
+  content: ''; position: absolute; top: 25%; bottom: 25%; left: 4px; width: 2px; border-radius: 1px;
+  background: var(--border-color); transition: background 0.12s;
+}
+.col-border:hover::after, body.is-resizing .col-border:active::after { background: var(--accent); top: 0; bottom: 0; }
+.playlists-layout > .splitter { width: 16px; }
