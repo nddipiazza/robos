@@ -508,7 +508,10 @@ ipcMain.handle('audio:get-lyrics', async (_evt, track) => lyrics.getLyrics(track
 
 // ── AI playlists & Virtual DJ (RobOS agent + RobOS voice) ──────────────────
 
-const aiAgent = requireShared('robos-lib/ai-agent');
+// The agent, model and effort come from <robos-agent-selector> (the RobOS provider
+// catalog, same as PR Review), never from a fixed default.
+const agentProviders = requireShared('robos-agent-client/providers');
+const agentOneShot = requireShared('robos-agent-client/one-shot');
 const aiJson = requireShared('robos-lib/ai-json');
 const quickAsk = requireShared('robos-lib/quick-ask');
 if (quickAsk && typeof quickAsk.registerQuickAskIPC === 'function') {
@@ -524,26 +527,26 @@ function getTtsEngine() {
   return ttsEngine;
 }
 
-const AGENT_MISSING = 'RobOS agent tools are not installed (robos-lib/ai-agent). Install RobOS or set ROBOS_LIB_PATH.';
-const askAgent = (prompt) => aiAgent.ask(prompt, { timeoutMs: 180000 });
+const AGENT_MISSING = 'RobOS agent tools are not installed (robos-agent-client). Install RobOS or set ROBOS_LIB_PATH.';
 
-ipcMain.handle('audio:ai-agent-info', async () => {
-  if (!aiAgent) return { ok: false, error: AGENT_MISSING };
-  try {
-    const info = aiAgent.listProviders();
-    return { ok: true, activeName: info.activeName, api: info.api || null };
-  } catch (err) {
-    return { ok: false, error: err.message };
-  }
+function agentAsk(agent) {
+  const { provider, model = '', effort = '' } = agent || {};
+  return (prompt) => agentOneShot.ask({ provider, model, effort, prompt, timeoutMs: 240000 });
+}
+
+ipcMain.handle('audio:agent-providers', async (_evt, options) => {
+  if (!agentProviders) return [];
+  return agentProviders.options({ refresh: options?.refresh === true });
 });
 
-ipcMain.handle('audio:ai-playlist-generate', async (_evt, { request, count, dj } = {}) => {
-  if (!aiAgent) return { ok: false, error: AGENT_MISSING };
+ipcMain.handle('audio:ai-playlist-generate', async (_evt, { request, count, dj, agent } = {}) => {
+  if (!agentOneShot) return { ok: false, error: AGENT_MISSING };
+  if (!agent || !agent.provider) return { ok: false, error: 'Choose an AI agent.' };
   try {
     return await aiPlaylist.generateAiPlaylist(
       { tracks: mediaLibrary.tracks, request, count, dj },
       {
-        ask: askAgent,
+        ask: agentAsk(agent),
         parseJson: aiJson && aiJson.parseAIJson,
         onProgress: (p) => sendToWindow('audio:ai-progress', p),
       }
@@ -553,10 +556,11 @@ ipcMain.handle('audio:ai-playlist-generate', async (_evt, { request, count, dj }
   }
 });
 
-ipcMain.handle('audio:dj-lines', async (_evt, { persona, upcoming } = {}) => {
-  if (!aiAgent) return { ok: false, error: AGENT_MISSING, lines: {} };
+ipcMain.handle('audio:dj-lines', async (_evt, { persona, upcoming, agent } = {}) => {
+  if (!agentOneShot) return { ok: false, error: AGENT_MISSING, lines: {} };
+  if (!agent || !agent.provider) return { ok: false, error: 'Choose an AI agent in the Virtual DJ settings.', lines: {} };
   try {
-    return await aiPlaylist.generateDjLines({ persona, upcoming }, { ask: askAgent, parseJson: aiJson && aiJson.parseAIJson });
+    return await aiPlaylist.generateDjLines({ persona, upcoming }, { ask: agentAsk(agent), parseJson: aiJson && aiJson.parseAIJson });
   } catch (err) {
     return { ok: false, error: err.message, lines: {} };
   }

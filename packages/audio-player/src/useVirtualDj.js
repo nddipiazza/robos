@@ -14,7 +14,7 @@ const slim = (t) => ({ id: t.id, title: t.title, artist: t.artist, album: t.albu
  * and are rendered to audio by RobOS voice while the current song plays, so the
  * transition doesn't wait on either.
  */
-export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showStatus }) {
+export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showStatus, getAgent }) {
   const [settings, setSettings] = useState(() => ({ enabled: false, persona: '', voice: '', frequency: 'every', ...(initial || {}) }));
   const [speaking, setSpeaking] = useState(null); // { text }
   const lines = useRef(new Map());   // trackId -> text
@@ -24,7 +24,7 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
   const transitions = useRef(0);
   const active = useRef(null);       // { audio, timer, finish }
   const latest = useRef({});
-  latest.current = { settings, outputTarget, getVolume, showStatus };
+  latest.current = { settings, outputTarget, getVolume, showStatus, getAgent };
 
   const active_ = settings.enabled && settings.persona.trim().length > 0;
 
@@ -57,7 +57,7 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
     const missing = next.filter(t => t.id && !lines.current.has(t.id) && !pendingLines.current.has(t.id));
     if (missing.length) {
       missing.forEach(t => pendingLines.current.add(t.id));
-      window.robosAudio.djLines(settings.persona, missing.map(slim))
+      window.robosAudio.djLines(settings.persona, missing.map(slim), latest.current.getAgent())
         .then(res => {
           for (const [id, text] of Object.entries((res && res.lines) || {})) lines.current.set(id, text);
           if (res && !res.ok && res.error) latest.current.showStatus(`Virtual DJ: ${res.error}`);

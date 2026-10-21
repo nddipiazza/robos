@@ -78,6 +78,8 @@ export default function App() {
   const [tracksForPlaylist, setTracksForPlaylist] = useState(null);
   const [showAiPlaylist, setShowAiPlaylist] = useState(false);
   const [showDjSettings, setShowDjSettings] = useState(false);
+  // Agent, model and effort picked in <robos-agent-selector>, remembered between sessions.
+  const [aiAgent, setAiAgent] = useState(playerPrefs.aiAgent || null);
   const [quickPlaylistName, setQuickPlaylistName] = useState('');
 
   const playerRef = useRef(null);
@@ -998,6 +1000,7 @@ export default function App() {
     outputTarget,
     getVolume: () => playerRef.current?.audio?.current?.volume ?? 1,
     showStatus,
+    getAgent: () => latestRef.current.aiAgent,
   });
 
   const handleTrackEnded = () => {
@@ -1170,6 +1173,7 @@ export default function App() {
     toggle: () => handleTogglePlayPause(),
     playTracks,
     djSpeaking: !!dj.speaking,
+    aiAgent,
     skipDj: dj.skip,
     // After a DJ break the queue may have changed: find the planned song again.
     goToTrack: (track, fallbackIdx) => {
@@ -1364,9 +1368,10 @@ export default function App() {
         dockCollapsed,
         librarySection: libraryNav.section,
         dj: dj.settings,
+        aiAgent,
       }));
     } catch {}
-  }, [repeatMode, shuffleMode, dockCollapsed, libraryNav.section, dj.settings]);
+  }, [repeatMode, shuffleMode, dockCollapsed, libraryNav.section, dj.settings, aiAgent]);
 
   return (
     <LibraryContext.Provider value={libraryCtx}>
@@ -2116,6 +2121,8 @@ export default function App() {
       {showAiPlaylist && (
         <AiPlaylistModal
           initialDj={dj.settings}
+          agent={aiAgent}
+          onAgentChange={setAiAgent}
           onClose={() => setShowAiPlaylist(false)}
           onPlay={handleAiPlaylistPlay}
           onSave={handleAiPlaylistSave}
@@ -2125,6 +2132,8 @@ export default function App() {
       {showDjSettings && (
         <DjSettingsModal
           value={dj.settings}
+          agent={aiAgent}
+          onAgentChange={setAiAgent}
           onClose={() => setShowDjSettings(false)}
           onSave={(next) => {
             dj.setSettings(next);
