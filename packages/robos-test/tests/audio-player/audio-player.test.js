@@ -633,6 +633,83 @@ describe('RobOS Audio Player Tests', () => {
 
       fs.rmSync(tmpDir, { recursive: true, force: true });
     });
+
+    it('remote-storage batches Google Drive subfolder queries during walk and caches directory listings and path-to-ID mappings', async () => {
+      const rs = require(path.join(APP_DIR, '..', 'data-sources', 'lib', 'remote-storage'));
+      assert.strictEqual(typeof rs.getCloudMetaCache, 'function');
+      assert.strictEqual(typeof rs.invalidateDsListingCache, 'function');
+
+      const originalFetch = global.fetch;
+      let apiCallCount = 0;
+
+      global.fetch = async (urlStr) => {
+        apiCallCount++;
+        const u = new URL(urlStr);
+        const q = u.searchParams.get('q') || '';
+        if (q.includes("'folder_root_123' in parents")) {
+          return {
+            ok: true,
+            status: 200,
+            headers: { get: () => null },
+            json: async () => ({
+              files: [
+                { id: 'sub_a', name: 'Album A', mimeType: 'application/vnd.google-apps.folder', parents: ['folder_root_123'] },
+                { id: 'sub_b', name: 'Album B', mimeType: 'application/vnd.google-apps.folder', parents: ['folder_root_123'] },
+              ],
+            }),
+          };
+        }
+        if (q.includes("'sub_a' in parents") && q.includes("'sub_b' in parents")) {
+          // Both Album A and Album B fetched in a SINGLE batched request!
+          return {
+            ok: true,
+            status: 200,
+            headers: { get: () => null },
+            json: async () => ({
+              files: [
+                { id: 'song_1', name: 'Track 1.mp3', mimeType: 'audio/mpeg', size: 1000, parents: ['sub_a'] },
+                { id: 'song_2', name: 'Track 2.mp3', mimeType: 'audio/mpeg', size: 2000, parents: ['sub_b'] },
+              ],
+            }),
+          };
+        }
+        return {
+          ok: true,
+          status: 200,
+          headers: { get: () => null },
+          json: async () => ({ files: [] }),
+        };
+      };
+
+      try {
+        const testDs = {
+          id: `gdrive-cache-test-${Date.now()}`,
+          name: 'Test GDrive Cache',
+          driverType: 'gdrive',
+          accessToken: 'ya29.real_looking_oauth_token_for_cache_test_999',
+          folders: [{ id: 'folder_root_123', label: 'Music', virtualName: 'Music' }],
+        };
+        rs.invalidateDsListingCache(testDs);
+
+        // 1st walk: 1 request for root + 1 batched request for BOTH Album A & Album B = 2 API calls total
+        const files1 = await rs.walk(testDs, '/', (n) => n.endsWith('.mp3'));
+        assert.strictEqual(files1.length, 2);
+        assert.strictEqual(apiCallCount, 2, 'Walk across root + 2 subfolders should only make 2 batched API calls');
+
+        // 2nd walk: served 100% from walkListings cache -> 0 new API calls!
+        const files2 = await rs.walk(testDs, '/', (n) => n.endsWith('.mp3'));
+        assert.strictEqual(files2.length, 2);
+        assert.strictEqual(apiCallCount, 2, 'Cached walk should make 0 additional API calls');
+
+        // Browsing into /Album A: already populated in dirListings cache -> 0 new API calls!
+        const subDir = await rs.listDir(testDs, '/Album A');
+        assert.strictEqual(subDir.entries.length, 1);
+        assert.strictEqual(subDir.entries[0].name, 'Track 1.mp3');
+        assert.strictEqual(apiCallCount, 2, 'Browsing cached subfolder should make 0 additional API calls');
+      } finally {
+        global.fetch = originalFetch;
+      }
+    });
   });
 });
 

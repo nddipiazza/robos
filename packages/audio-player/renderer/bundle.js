@@ -17447,6 +17447,7 @@
     const [progress, setProgress] = (0, import_react9.useState)(null);
     const [cacheStats, setCacheStats] = (0, import_react9.useState)(null);
     const importing = (0, import_react9.useRef)(false);
+    const dirCacheRef = (0, import_react9.useRef)(/* @__PURE__ */ new Map());
     const loadCacheStats = async () => {
       try {
         if (window.robosAudio?.cloudCacheStats) {
@@ -17455,41 +17456,47 @@
       } catch {
       }
     };
-    const loadConnections = async () => {
-      const list = await window.robosAudio.cloudConnections();
-      setConnections(list);
-      if (list.length && !list.some((c) => c.id === connId)) {
-        const first = list.find((c) => c.browsable);
-        if (first) setConnId(first.id);
+    const browse = async (id, p, force = false) => {
+      if (!id) return;
+      if (id !== connId) setConnId(id);
+      const normPath = p || "/";
+      const cacheKey = `${id}::${normPath}`;
+      if (!force && dirCacheRef.current.has(cacheKey)) {
+        setError("");
+        setSelected(/* @__PURE__ */ new Set());
+        setListing(dirCacheRef.current.get(cacheKey));
+        return;
       }
-      loadCacheStats();
-    };
-    (0, import_react9.useEffect)(() => {
-      loadConnections();
-      return window.robosAudio.onCloudProgress(setProgress);
-    }, []);
-    const browse = async (id, p) => {
-      if (id && id !== connId) setConnId(id);
       setLoading(true);
       setError("");
       setSelected(/* @__PURE__ */ new Set());
-      const res = await window.robosAudio.cloudList(id, p);
+      const res = await window.robosAudio.cloudList(id, normPath);
       setLoading(false);
       if (!res.ok) {
         setError(res.error);
         setListing(null);
         return;
       }
+      dirCacheRef.current.set(cacheKey, res);
       setListing(res);
     };
-    (0, import_react9.useEffect)(() => {
-      if (!connId) {
-        setListing(null);
-        return;
+    const loadConnections = async (forceRefresh = false) => {
+      if (forceRefresh) dirCacheRef.current.clear();
+      const list = await window.robosAudio.cloudConnections();
+      setConnections(list);
+      if (list.length) {
+        const target = list.find((c) => c.id === connId && c.browsable) || list.find((c) => c.browsable);
+        if (target) {
+          setConnId(target.id);
+          browse(target.id, target.startPath || "/", forceRefresh);
+        }
       }
-      const c = (connections || []).find((x) => x.id === connId);
-      browse(connId, c ? c.startPath : "/");
-    }, [connId]);
+      loadCacheStats();
+    };
+    (0, import_react9.useEffect)(() => {
+      loadConnections(false);
+      return window.robosAudio.onCloudProgress(setProgress);
+    }, []);
     const toggle = (p) => setSelected((prev) => {
       const next = new Set(prev);
       next.has(p) ? next.delete(p) : next.add(p);
@@ -17564,7 +17571,7 @@
       display: "flex",
       flexDirection: "column",
       gap: "12px"
-    } }, /* @__PURE__ */ import_react9.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" } }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h3", { style: { fontSize: "0.95rem", margin: 0, color: "var(--text-main)", display: "flex", alignItems: "center", gap: "8px" } }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "cloud", size: 17 }), /* @__PURE__ */ import_react9.default.createElement("span", null, "Cloud Data Sources & Linked Folders")), /* @__PURE__ */ import_react9.default.createElement("p", { style: { fontSize: "0.76rem", color: "var(--text-muted)", margin: "2px 0 0 0" } }, "Select a linked cloud folder below to browse its music or sync it directly into your Library tab")), /* @__PURE__ */ import_react9.default.createElement("div", { style: { display: "flex", gap: "8px", alignItems: "center" } }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", onClick: loadConnections, title: "Reload connections and linked folders from RobOS Data Sources" }, "Reload Data Sources"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-accent", disabled: !selected.size || !!progress, onClick: () => doImport([...selected]) }, "Add ", selected.size ? `${selected.size} selected` : "selected", " to library"), listing && listing.path !== "/" && /* @__PURE__ */ import_react9.default.createElement(
+    } }, /* @__PURE__ */ import_react9.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" } }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h3", { style: { fontSize: "0.95rem", margin: 0, color: "var(--text-main)", display: "flex", alignItems: "center", gap: "8px" } }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "cloud", size: 17 }), /* @__PURE__ */ import_react9.default.createElement("span", null, "Cloud Data Sources & Linked Folders")), /* @__PURE__ */ import_react9.default.createElement("p", { style: { fontSize: "0.76rem", color: "var(--text-muted)", margin: "2px 0 0 0" } }, "Select a linked cloud folder below to browse its music or sync it directly into your Library tab")), /* @__PURE__ */ import_react9.default.createElement("div", { style: { display: "flex", gap: "8px", alignItems: "center" } }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", onClick: () => loadConnections(true), title: "Reload connections and linked folders from RobOS Data Sources" }, "Reload Data Sources"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-accent", disabled: !selected.size || !!progress, onClick: () => doImport([...selected]) }, "Add ", selected.size ? `${selected.size} selected` : "selected", " to library"), listing && listing.path !== "/" && /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         className: "btn-secondary",

@@ -30,6 +30,7 @@ export default function CloudBrowser({ onLibrary, onFolders, showStatus }) {
   const [progress, setProgress] = useState(null);
   const [cacheStats, setCacheStats] = useState(null);
   const importing = useRef(false);
+  const dirCacheRef = useRef(new Map());
 
   const loadCacheStats = async () => {
     try {
@@ -39,37 +40,45 @@ export default function CloudBrowser({ onLibrary, onFolders, showStatus }) {
     } catch {}
   };
 
-  const loadConnections = async () => {
+  const browse = async (id, p, force = false) => {
+    if (!id) return;
+    if (id !== connId) setConnId(id);
+    const normPath = p || '/';
+    const cacheKey = `${id}::${normPath}`;
+    if (!force && dirCacheRef.current.has(cacheKey)) {
+      setError('');
+      setSelected(new Set());
+      setListing(dirCacheRef.current.get(cacheKey));
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setSelected(new Set());
+    const res = await window.robosAudio.cloudList(id, normPath);
+    setLoading(false);
+    if (!res.ok) { setError(res.error); setListing(null); return; }
+    dirCacheRef.current.set(cacheKey, res);
+    setListing(res);
+  };
+
+  const loadConnections = async (forceRefresh = false) => {
+    if (forceRefresh) dirCacheRef.current.clear();
     const list = await window.robosAudio.cloudConnections();
     setConnections(list);
-    if (list.length && !list.some(c => c.id === connId)) {
-      const first = list.find(c => c.browsable);
-      if (first) setConnId(first.id);
+    if (list.length) {
+      const target = list.find(c => c.id === connId && c.browsable) || list.find(c => c.browsable);
+      if (target) {
+        setConnId(target.id);
+        browse(target.id, target.startPath || '/', forceRefresh);
+      }
     }
     loadCacheStats();
   };
 
   useEffect(() => {
-    loadConnections();
+    loadConnections(false);
     return window.robosAudio.onCloudProgress(setProgress);
   }, []);
-
-  const browse = async (id, p) => {
-    if (id && id !== connId) setConnId(id);
-    setLoading(true);
-    setError('');
-    setSelected(new Set());
-    const res = await window.robosAudio.cloudList(id, p);
-    setLoading(false);
-    if (!res.ok) { setError(res.error); setListing(null); return; }
-    setListing(res);
-  };
-
-  useEffect(() => {
-    if (!connId) { setListing(null); return; }
-    const c = (connections || []).find(x => x.id === connId);
-    browse(connId, c ? c.startPath : '/');
-  }, [connId]);
 
   const toggle = (p) => setSelected(prev => {
     const next = new Set(prev);
@@ -162,7 +171,7 @@ export default function CloudBrowser({ onLibrary, onFolders, showStatus }) {
             </p>
           </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <button className="btn-secondary" onClick={loadConnections} title="Reload connections and linked folders from RobOS Data Sources">
+            <button className="btn-secondary" onClick={() => loadConnections(true)} title="Reload connections and linked folders from RobOS Data Sources">
               Reload Data Sources
             </button>
             <button className="btn-accent" disabled={!selected.size || !!progress} onClick={() => doImport([...selected])}>

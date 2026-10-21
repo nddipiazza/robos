@@ -442,24 +442,238 @@ async function resolveGoogleDriveAuth(ds, { forceRefresh = false } = {}) {
   return null;
 }
 
+// ── Multi-Layer Persistent Cloud Metadata & Listing Cache ───────────────────
+// Prevents redundant Google Drive / OneDrive API calls across directory browsing,
+// recursive folder syncing (walk), path-to-ID resolution, and track streaming.
+const CLOUD_META_CACHE_FILE = path.join(os.homedir(), '.cache', 'robos', 'cloud-metadata-cache.json');
+const DIR_CACHE_TTL_MS = 30 * 60 * 1000;  // 30 minutes fresh TTL for directory listings
+const WALK_CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes fresh TTL for recursive walk trees
+const URL_CACHE_TTL_MS = 5 * 60 * 1000;   // 5 minutes fresh TTL for raw GET URL responses
+
+let _cloudMetaCache = null;
+let _saveCacheTimer = null;
+const _inflightGDriveGets = new Map();
+const _gdriveUrlCache = new Map();
+let _lastGDriveRequestMs = 0;
+
+function getCloudMetaCache() {
+  if (_cloudMetaCache) return _cloudMetaCache;
+  try {
+    if (fs.existsSync(CLOUD_META_CACHE_FILE)) {
+      const parsed = JSON.parse(fs.readFileSync(CLOUD_META_CACHE_FILE, 'utf8'));
+      if (parsed && typeof parsed === 'object') {
+        _cloudMetaCache = {
+          folderIds: parsed.folderIds || {},
+          fileObjs: parsed.fileObjs || {},
+          dirListings: parsed.dirListings || {},
+          walkListings: parsed.walkListings || {},
+          folderMeta: parsed.folderMeta || {},
+        };
+        return _cloudMetaCache;
+      }
+    }
+  } catch {}
+  _cloudMetaCache = {
+    folderIds: {},
+    fileObjs: {},
+    dirListings: {},
+    walkListings: {},
+    folderMeta: {},
+  };
+  return _cloudMetaCache;
+}
+
+function scheduleSaveCloudMetaCache() {
+  if (_saveCacheTimer) return;
+  _saveCacheTimer = setTimeout(() => {
+    _saveCacheTimer = null;
+    try {
+      const cache = getCloudMetaCache();
+      fs.mkdirSync(path.dirname(CLOUD_META_CACHE_FILE), { recursive: true });
+      fs.writeFileSync(CLOUD_META_CACHE_FILE, JSON.stringify(cache), 'utf8');
+    } catch {}
+  }, 400);
+  if (_saveCacheTimer && typeof _saveCacheTimer.unref === 'function') {
+    _saveCacheTimer.unref();
+  }
+}
+
+function getDsCacheKey(ds) {
+  if (!ds) return 'default';
+  const foldersKey = Array.isArray(ds.folders) && ds.folders.length
+    ? ds.folders.map(f => (typeof f === 'object' ? (f.id || f.folderId || '') : String(f))).join(',')
+    : String(ds.folderId || ds.database || 'root');
+  return `${ds.id || ds.name || 'ds'}::${foldersKey}`;
+}
+
+function cacheFolderId(ds, normPath, folderId) {
+  if (!folderId || folderId === '__MULTI_ROOT__') return;
+  const cache = getCloudMetaCache();
+  const key = getDsCacheKey(ds);
+  if (!cache.folderIds[key]) cache.folderIds[key] = {};
+  if (cache.folderIds[key][normPath] !== folderId) {
+    cache.folderIds[key][normPath] = folderId;
+    scheduleSaveCloudMetaCache();
+  }
+}
+
+function getCachedFolderId(ds, normPath) {
+  const cache = getCloudMetaCache();
+  const key = getDsCacheKey(ds);
+  return (cache.folderIds[key] && cache.folderIds[key][normPath]) || null;
+}
+
+function cacheFileObj(ds, normPath, fileObj) {
+  if (!fileObj || !fileObj.id) return;
+  const cache = getCloudMetaCache();
+  const key = getDsCacheKey(ds);
+  if (!cache.fileObjs[key]) cache.fileObjs[key] = {};
+  cache.fileObjs[key][normPath] = {
+    id: fileObj.id,
+    name: fileObj.name || posixPath.basename(normPath),
+    mimeType: fileObj.mimeType || '',
+    size: fileObj.size != null ? Number(fileObj.size) : null,
+  };
+  scheduleSaveCloudMetaCache();
+}
+
+function getCachedFileObj(ds, normPath) {
+  const cache = getCloudMetaCache();
+  const key = getDsCacheKey(ds);
+  return (cache.fileObjs[key] && cache.fileObjs[key][normPath]) || null;
+}
+
+function cacheDirListing(ds, normPath, listing) {
+  if (!listing || !Array.isArray(listing.entries)) return;
+  const cache = getCloudMetaCache();
+  const key = getDsCacheKey(ds);
+  if (!cache.dirListings[key]) cache.dirListings[key] = {};
+  cache.dirListings[key][normPath] = {
+    ts: Date.now(),
+    listing,
+  };
+  if (listing.folderId && listing.folderId !== '__MULTI_ROOT__' && !listing.folderId.includes(',')) {
+    if (!cache.folderIds[key]) cache.folderIds[key] = {};
+    cache.folderIds[key][normPath] = listing.folderId;
+  }
+  for (const e of listing.entries) {
+    if (!e || !e.driveId || !e.path) continue;
+    if (e.type === 'dir') {
+      if (!cache.folderIds[key]) cache.folderIds[key] = {};
+      cache.folderIds[key][e.path] = e.driveId;
+    } else {
+      if (!cache.fileObjs[key]) cache.fileObjs[key] = {};
+      cache.fileObjs[key][e.path] = {
+        id: e.driveId,
+        name: e.name,
+        mimeType: e.mimeType || '',
+        size: e.size != null ? Number(e.size) : null,
+      };
+    }
+  }
+  scheduleSaveCloudMetaCache();
+}
+
+function getCachedDirListing(ds, normPath, allowStale = false) {
+  const cache = getCloudMetaCache();
+  const key = getDsCacheKey(ds);
+  const entry = cache.dirListings[key] && cache.dirListings[key][normPath];
+  if (!entry || !entry.listing) return null;
+  if (!allowStale && (Date.now() - (entry.ts || 0)) > DIR_CACHE_TTL_MS) return null;
+  return entry.listing;
+}
+
+function invalidateDsListingCache(ds, normPath = null) {
+  const cache = getCloudMetaCache();
+  const key = getDsCacheKey(ds);
+  if (normPath && cache.dirListings[key]) {
+    delete cache.dirListings[key][normPath];
+  } else {
+    delete cache.dirListings[key];
+  }
+  delete cache.walkListings[key];
+  _gdriveUrlCache.clear();
+  scheduleSaveCloudMetaCache();
+}
+
 async function gdriveFetchJson(url, auth, options = {}) {
+  const method = String(options.method || 'GET').toUpperCase();
+  const isGet = method === 'GET';
   const parsed = new URL(url);
-  const headers = { ...(options.headers || {}) };
-  if (auth.type === 'bearer') {
-    headers.Authorization = `Bearer ${auth.token}`;
-  } else if (auth.type === 'api_key') {
+  if (auth.type === 'api_key') {
     parsed.searchParams.set('key', auth.apiKey);
   }
-  const res = await fetch(parsed.toString(), {
-    ...options,
-    headers,
-    signal: AbortSignal.timeout(CONNECT_TIMEOUT_MS),
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`Google Drive API HTTP ${res.status}: ${body.slice(0, 240)}`);
+  const fullUrl = parsed.toString();
+  const cacheKey = `${auth.type === 'bearer' ? (auth.token || '').slice(-12) : 'key'}::${fullUrl}`;
+
+  if (isGet && !options.noCache) {
+    const cached = _gdriveUrlCache.get(cacheKey);
+    if (cached && (Date.now() - cached.ts) < URL_CACHE_TTL_MS) {
+      return cached.data;
+    }
+    if (_inflightGDriveGets.has(cacheKey)) {
+      return _inflightGDriveGets.get(cacheKey);
+    }
   }
-  return res.json();
+
+  const execRequest = async () => {
+    const headers = { ...(options.headers || {}) };
+    if (auth.type === 'bearer') {
+      headers.Authorization = `Bearer ${auth.token}`;
+    }
+
+    const maxRetries = 4;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      // Gentle request pacing to avoid per-second burst rate limits
+      const now = Date.now();
+      const elapsed = now - _lastGDriveRequestMs;
+      if (elapsed < 65) {
+        await new Promise(r => setTimeout(r, 65 - elapsed));
+      }
+      _lastGDriveRequestMs = Date.now();
+
+      const res = await fetch(fullUrl, {
+        ...options,
+        headers,
+        signal: AbortSignal.timeout(CONNECT_TIMEOUT_MS),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (isGet) {
+          _gdriveUrlCache.set(cacheKey, { ts: Date.now(), data });
+        }
+        return data;
+      }
+
+      const body = await res.text().catch(() => '');
+      const isRateLimit = res.status === 429 || (
+        res.status === 403 &&
+        /rateLimitExceeded|userRateLimitExceeded|quotaExceeded|Queries per minute|requests per minute/i.test(body)
+      );
+
+      if (isRateLimit && attempt < maxRetries) {
+        const retryAfterHeader = Number(res.headers.get('retry-after'));
+        const backoffMs = (Number.isFinite(retryAfterHeader) && retryAfterHeader > 0)
+          ? retryAfterHeader * 1000
+          : Math.min(12000, 1200 * Math.pow(2, attempt) + Math.floor(Math.random() * 400));
+        await new Promise(r => setTimeout(r, backoffMs));
+        continue;
+      }
+
+      throw new Error(`Google Drive API HTTP ${res.status}: ${body.slice(0, 240)}`);
+    }
+  };
+
+  if (isGet && !options.noCache) {
+    const p = execRequest().finally(() => {
+      _inflightGDriveGets.delete(cacheKey);
+    });
+    _inflightGDriveGets.set(cacheKey, p);
+    return p;
+  }
+
+  return execRequest();
 }
 
 function normalizeCloudFoldersArray(ds) {
@@ -553,6 +767,7 @@ function persistResolvedFoldersToDisk(dsId, folders) {
 async function resolveMissingGDriveFolderLabels(ds, auth) {
   const folders = normalizeCloudFoldersArray(ds);
   if (!auth) return folders;
+  const cache = getCloudMetaCache();
   let updated = false;
   const usedVirtualNames = new Set();
 
@@ -565,15 +780,22 @@ async function resolveMissingGDriveFolderLabels(ds, auth) {
       /\s\[[a-zA-Z0-9_-]{4,8}\]$/.test(f.label)
     );
     if (needsLookup) {
-      try {
-        const metaUrl = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(f.id)}?fields=id,name,modifiedTime,webViewLink&supportsAllDrives=true`;
-        const meta = await gdriveFetchJson(metaUrl, auth);
-        if (meta && meta.name) {
-          f.label = meta.name;
-          updated = true;
+      if (cache.folderMeta[f.id] && cache.folderMeta[f.id].name) {
+        f.label = cache.folderMeta[f.id].name;
+        updated = true;
+      } else {
+        try {
+          const metaUrl = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(f.id)}?fields=id,name,modifiedTime,webViewLink&supportsAllDrives=true`;
+          const meta = await gdriveFetchJson(metaUrl, auth);
+          if (meta && meta.name) {
+            f.label = meta.name;
+            cache.folderMeta[f.id] = { id: f.id, name: meta.name };
+            scheduleSaveCloudMetaCache();
+            updated = true;
+          }
+        } catch (err) {
+          if (String(err.message || '').includes('HTTP 401')) throw err;
         }
-      } catch (err) {
-        if (String(err.message || '').includes('HTTP 401')) throw err;
       }
     }
     // Strip any legacy " [1QGnPk]" suffix from label/virtualName
@@ -600,14 +822,20 @@ async function resolveMissingGDriveFolderLabels(ds, auth) {
 
 /**
  * Resolves a POSIX path like "/Engineering Specs & RFCs/Subfolder" (or a virtual multi-folder
- * path when 2+ folders are linked) to a Google Drive folder ID.
+ * path when 2+ folders are linked) to a Google Drive folder ID, using persistent path->ID cache.
  */
 async function resolveGDrivePathToFolderId(ds, auth, remotePath) {
   const folders = await resolveMissingGDriveFolderLabels(ds, auth);
   const norm = normalizeRemote(remotePath);
 
+  if (folders.length > 1 && norm === '/') {
+    return '__MULTI_ROOT__';
+  }
+
+  const cachedId = getCachedFolderId(ds, norm);
+  if (cachedId) return cachedId;
+
   if (folders.length > 1) {
-    if (norm === '/') return '__MULTI_ROOT__';
     const segments = norm.split('/').filter(Boolean);
     const firstSeg = segments[0];
     const cleanSeg = firstSeg.replace(/\s\[[a-zA-Z0-9_-]{6}\]$/, '').trim().toLowerCase();
@@ -619,7 +847,16 @@ async function resolveGDrivePathToFolderId(ds, auth, remotePath) {
       f.id === firstSeg
     ) || folders[0];
     let currentId = matched.id;
+    let currentPath = '/' + segments[0];
+    cacheFolderId(ds, currentPath, currentId);
+
     for (const seg of segments.slice(1)) {
+      currentPath = posixPath.join(currentPath, seg);
+      const segCached = getCachedFolderId(ds, currentPath);
+      if (segCached) {
+        currentId = segCached;
+        continue;
+      }
       const escapedName = seg.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
       const q = `'${currentId}' in parents and name = '${escapedName}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
       const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&pageSize=10&supportsAllDrives=true&includeItemsFromAllDrives=true`;
@@ -628,16 +865,25 @@ async function resolveGDrivePathToFolderId(ds, auth, remotePath) {
         throw new Error(`Google Drive folder not found: ${seg} (in ${norm})`);
       }
       currentId = data.files[0].id;
+      cacheFolderId(ds, currentPath, currentId);
     }
     return currentId;
   }
 
   const rootId = folders[0] ? folders[0].id : extractDriveFolderId(ds.folderId || ds.database || 'root');
+  cacheFolderId(ds, '/', rootId);
   if (norm === '/') return rootId;
 
   const segments = norm.split('/').filter(Boolean);
   let currentId = rootId;
+  let currentPath = '';
   for (const seg of segments) {
+    currentPath = posixPath.join(currentPath || '/', seg);
+    const segCached = getCachedFolderId(ds, currentPath);
+    if (segCached) {
+      currentId = segCached;
+      continue;
+    }
     const escapedName = seg.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     const q = `'${currentId}' in parents and name = '${escapedName}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
     const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&pageSize=10&supportsAllDrives=true&includeItemsFromAllDrives=true`;
@@ -646,26 +892,31 @@ async function resolveGDrivePathToFolderId(ds, auth, remotePath) {
       throw new Error(`Google Drive folder not found: ${seg} (in ${norm})`);
     }
     currentId = data.files[0].id;
+    cacheFolderId(ds, currentPath, currentId);
   }
   return currentId;
 }
 
-async function listGDriveApi(ds, auth, remotePath) {
+async function listGDriveApi(ds, auth, remotePath, options = {}) {
   const norm = normalizeRemote(remotePath);
   const folders = await resolveMissingGDriveFolderLabels(ds, auth);
 
   // If 2+ folders are linked to this Google Drive connection, root '/' shows each linked folder
   if (folders.length > 1 && norm === '/') {
-    const entries = folders.map((f) => ({
-      name: f.virtualName,
-      type: 'dir',
-      size: 0,
-      modified: null,
-      mimeType: 'application/vnd.google-apps.folder',
-      driveId: f.id,
-      webViewLink: f.id === 'root' ? 'https://drive.google.com/drive/my-drive' : `https://drive.google.com/drive/folders/${f.id}`,
-      path: posixPath.join('/', f.virtualName),
-    }));
+    const entries = folders.map((f) => {
+      const fPath = posixPath.join('/', f.virtualName);
+      cacheFolderId(ds, fPath, f.id);
+      return {
+        name: f.virtualName,
+        type: 'dir',
+        size: 0,
+        modified: null,
+        mimeType: 'application/vnd.google-apps.folder',
+        driveId: f.id,
+        webViewLink: f.id === 'root' ? 'https://drive.google.com/drive/my-drive' : `https://drive.google.com/drive/folders/${f.id}`,
+        path: fPath,
+      };
+    });
     return {
       path: '/',
       folderId: folders.map(f => f.id).join(', '),
@@ -676,41 +927,67 @@ async function listGDriveApi(ds, auth, remotePath) {
     };
   }
 
-  const folderId = await resolveGDrivePathToFolderId(ds, auth, norm);
-  const q = `'${folderId}' in parents and trashed = false`;
-  const fields = 'files(id,name,mimeType,size,modifiedTime,webViewLink,iconLink)';
-  const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=${encodeURIComponent(fields)}&pageSize=500&orderBy=folder,name&supportsAllDrives=true&includeItemsFromAllDrives=true`;
-  const data = await gdriveFetchJson(url, auth);
+  if (!options.forceRefresh) {
+    const cachedListing = getCachedDirListing(ds, norm, false);
+    if (cachedListing) {
+      return cachedListing;
+    }
+  }
 
-  const entries = (data.files || []).map(f => {
-    const isFolder = f.mimeType === 'application/vnd.google-apps.folder';
-    return {
-      name: f.name,
-      type: isFolder ? 'dir' : 'file',
-      size: f.size != null ? Number(f.size) : (isFolder ? 0 : 4096),
-      modified: f.modifiedTime || null,
-      mimeType: f.mimeType,
-      driveId: f.id,
-      webViewLink: f.webViewLink || (isFolder ? `https://drive.google.com/drive/folders/${f.id}` : `https://drive.google.com/file/d/${f.id}/view`),
-      path: posixPath.join(norm, f.name),
+  let folderId = options.folderId || getCachedFolderId(ds, norm);
+  if (!folderId) {
+    folderId = await resolveGDrivePathToFolderId(ds, auth, norm);
+  } else {
+    cacheFolderId(ds, norm, folderId);
+  }
+
+  try {
+    const q = `'${folderId}' in parents and trashed = false`;
+    const fields = 'files(id,name,mimeType,size,modifiedTime,webViewLink,iconLink)';
+    const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=${encodeURIComponent(fields)}&pageSize=1000&orderBy=folder,name&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+    const data = await gdriveFetchJson(url, auth, { noCache: !!options.forceRefresh });
+
+    const entries = (data.files || []).map(f => {
+      const isFolder = f.mimeType === 'application/vnd.google-apps.folder';
+      return {
+        name: f.name,
+        type: isFolder ? 'dir' : 'file',
+        size: f.size != null ? Number(f.size) : (isFolder ? 0 : 4096),
+        modified: f.modifiedTime || null,
+        mimeType: f.mimeType,
+        driveId: f.id,
+        webViewLink: f.webViewLink || (isFolder ? `https://drive.google.com/drive/folders/${f.id}` : `https://drive.google.com/file/d/${f.id}/view`),
+        path: posixPath.join(norm, f.name),
+      };
+    });
+
+    entries.sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name, undefined, { numeric: true }) : a.type === 'dir' ? -1 : 1));
+    const result = {
+      path: norm,
+      folderId,
+      provider: 'gdrive-api',
+      localMountPath: ensureLocalMountDir(ds),
+      entries,
     };
-  });
-
-  entries.sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name, undefined, { numeric: true }) : a.type === 'dir' ? -1 : 1));
-  return {
-    path: norm,
-    folderId,
-    provider: 'gdrive-api',
-    localMountPath: ensureLocalMountDir(ds),
-    entries,
-  };
+    cacheDirListing(ds, norm, result);
+    return result;
+  } catch (err) {
+    // If rate-limited or offline and we have a stale cached listing on disk, return it gracefully!
+    const stale = getCachedDirListing(ds, norm, true);
+    if (stale) return stale;
+    throw err;
+  }
 }
 
 async function resolveGDriveFileObj(ds, auth, remoteFile, driveId = '') {
+  const norm = normalizeRemote(remoteFile || '/');
   if (driveId && /^[A-Za-z0-9_-]{8,}$/.test(driveId)) {
-    return { id: driveId, name: posixPath.basename(normalizeRemote(remoteFile || '/')), mimeType: '' };
+    return { id: driveId, name: posixPath.basename(norm), mimeType: '' };
   }
-  const norm = normalizeRemote(remoteFile);
+  const cachedFile = getCachedFileObj(ds, norm);
+  if (cachedFile && cachedFile.id) {
+    return cachedFile;
+  }
   const parentPath = posixPath.dirname(norm);
   const fileName = posixPath.basename(norm);
   const folderId = await resolveGDrivePathToFolderId(ds, auth, parentPath);
@@ -728,6 +1005,7 @@ async function resolveGDriveFileObj(ds, auth, remoteFile, driveId = '') {
   if (!data.files || !data.files.length) {
     throw new Error(`File not found in Google Drive: ${remoteFile}`);
   }
+  cacheFileObj(ds, norm, data.files[0]);
   return data.files[0];
 }
 
@@ -1334,8 +1612,157 @@ async function listDir(ds, remotePath) {
   return listLocalMountDir(ds, remotePath);
 }
 
+async function walkGDriveBatched(ds, auth, remotePath, filter = () => true, limit = 5000, options = {}) {
+  const norm = normalizeRemote(remotePath);
+  const cache = getCloudMetaCache();
+  const dsKey = getDsCacheKey(ds);
+
+  if (!options.forceRefresh && cache.walkListings[dsKey] && cache.walkListings[dsKey][norm]) {
+    const cachedWalk = cache.walkListings[dsKey][norm];
+    if ((Date.now() - (cachedWalk.ts || 0)) < WALK_CACHE_TTL_MS && Array.isArray(cachedWalk.files)) {
+      return cachedWalk.files.filter(f => filter(f.name)).slice(0, limit);
+    }
+  }
+
+  const folders = await resolveMissingGDriveFolderLabels(ds, auth);
+  const frontier = [];
+  if (folders.length > 1 && norm === '/') {
+    for (const f of folders) {
+      const fPath = posixPath.join('/', f.virtualName);
+      cacheFolderId(ds, fPath, f.id);
+      frontier.push({ id: f.id, path: fPath });
+    }
+  } else {
+    const startId = await resolveGDrivePathToFolderId(ds, auth, norm);
+    frontier.push({ id: startId, path: norm });
+  }
+
+  const allFiles = [];
+  const visitedIds = new Set();
+
+  while (frontier.length > 0 && allFiles.length < limit) {
+    const batch = [];
+    while (frontier.length > 0 && batch.length < 25) {
+      const item = frontier.shift();
+      if (!item || !item.id || visitedIds.has(item.id)) continue;
+      visitedIds.add(item.id);
+
+      // Check if we already have a fresh cached directory listing for this folder!
+      const cachedDir = !options.forceRefresh ? getCachedDirListing(ds, item.path, false) : null;
+      if (cachedDir && Array.isArray(cachedDir.entries)) {
+        for (const e of cachedDir.entries) {
+          if (e.type === 'dir' && e.driveId) {
+            frontier.push({ id: e.driveId, path: e.path });
+          } else if (e.type === 'file') {
+            allFiles.push(e);
+          }
+        }
+      } else {
+        batch.push(item);
+      }
+    }
+
+    if (batch.length === 0) continue;
+
+    // Query up to 25 parent folders in a SINGLE Google Drive API request!
+    const parentQuery = batch.length === 1
+      ? `'${batch[0].id}' in parents`
+      : `(${batch.map(b => `'${b.id}' in parents`).join(' or ')})`;
+    const q = `${parentQuery} and trashed = false`;
+    const fields = 'nextPageToken,files(id,name,mimeType,size,modifiedTime,parents,webViewLink)';
+
+    const byParentId = new Map(batch.map(b => [b.id, []]));
+    let pageToken = '';
+    do {
+      const tokenParam = pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : '';
+      const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=${encodeURIComponent(fields)}&pageSize=1000&supportsAllDrives=true&includeItemsFromAllDrives=true${tokenParam}`;
+      const data = await gdriveFetchJson(url, auth);
+      for (const f of (data.files || [])) {
+        const pId = Array.isArray(f.parents) && f.parents[0] ? f.parents[0] : (batch.length === 1 ? batch[0].id : null);
+        if (pId && byParentId.has(pId)) {
+          byParentId.get(pId).push(f);
+        } else if (batch.length === 1) {
+          byParentId.get(batch[0].id).push(f);
+        }
+      }
+      pageToken = data.nextPageToken || '';
+    } while (pageToken && allFiles.length < limit);
+
+    for (const parentItem of batch) {
+      const rawChildren = byParentId.get(parentItem.id) || [];
+      const dirEntries = [];
+      for (const f of rawChildren) {
+        const isFolder = f.mimeType === 'application/vnd.google-apps.folder';
+        const childPath = posixPath.join(parentItem.path, f.name);
+        const entry = {
+          name: f.name,
+          type: isFolder ? 'dir' : 'file',
+          size: f.size != null ? Number(f.size) : (isFolder ? 0 : 4096),
+          modified: f.modifiedTime || null,
+          mimeType: f.mimeType,
+          driveId: f.id,
+          webViewLink: f.webViewLink || (isFolder ? `https://drive.google.com/drive/folders/${f.id}` : `https://drive.google.com/file/d/${f.id}/view`),
+          path: childPath,
+        };
+        dirEntries.push(entry);
+        if (isFolder) {
+          frontier.push({ id: f.id, path: childPath });
+        } else {
+          allFiles.push(entry);
+        }
+      }
+
+      dirEntries.sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name, undefined, { numeric: true }) : a.type === 'dir' ? -1 : 1));
+      cacheDirListing(ds, parentItem.path, {
+        path: parentItem.path,
+        folderId: parentItem.id,
+        provider: 'gdrive-api',
+        localMountPath: ensureLocalMountDir(ds),
+        entries: dirEntries,
+      });
+    }
+  }
+
+  if (!cache.walkListings[dsKey]) cache.walkListings[dsKey] = {};
+  cache.walkListings[dsKey][norm] = {
+    ts: Date.now(),
+    files: allFiles,
+  };
+  scheduleSaveCloudMetaCache();
+
+  return allFiles.filter(f => filter(f.name)).slice(0, limit);
+}
+
 // Recursively collects files under dir whose name matches `filter`.
-async function walk(ds, remotePath, filter = () => true, limit = 5000) {
+async function walk(ds, remotePath, filter = () => true, limit = 5000, options = {}) {
+  const driver = String((ds && ds.driverType) || '').toLowerCase();
+  if (
+    driver === 'gdrive' &&
+    isDataSourceAuthenticated(ds) &&
+    !(ds.localMountPath && fs.existsSync(resolveTilde(ds.localMountPath))) &&
+    !isSyntheticTestToken(ds.accessToken)
+  ) {
+    let auth = await resolveGoogleDriveAuth(ds);
+    if (auth) {
+      try {
+        return await walkGDriveBatched(ds, auth, remotePath, filter, limit, options);
+      } catch (err) {
+        if (String(err.message || '').includes('HTTP 401') && ds.refreshToken && !hasPlaceholderSecret(ds.refreshToken)) {
+          auth = await resolveGoogleDriveAuth(ds, { forceRefresh: true });
+          return await walkGDriveBatched(ds, auth, remotePath, filter, limit, options);
+        }
+        // Fallback to stale cached walk if available on rate-limit
+        const cache = getCloudMetaCache();
+        const dsKey = getDsCacheKey(ds);
+        const norm = normalizeRemote(remotePath);
+        if (cache.walkListings[dsKey] && cache.walkListings[dsKey][norm] && Array.isArray(cache.walkListings[dsKey][norm].files)) {
+          return cache.walkListings[dsKey][norm].files.filter(f => filter(f.name)).slice(0, limit);
+        }
+        throw err;
+      }
+    }
+  }
+
   const out = [];
   const queue = [normalizeRemote(remotePath)];
   while (queue.length && out.length < limit) {
@@ -1432,6 +1859,7 @@ async function upload(ds, localFile, remoteDir) {
         const txt = await res.text().catch(() => '');
         throw new Error(`Google Drive upload failed (HTTP ${res.status}): ${txt}`);
       }
+      invalidateDsListingCache(ds, normDir);
     }
   }
 
@@ -1484,7 +1912,7 @@ async function mkdir(ds, remoteDirPath) {
       const parentPath = posixPath.dirname(norm);
       const folderName = posixPath.basename(norm);
       const parentId = await resolveGDrivePathToFolderId(ds, auth, parentPath);
-      await gdriveFetchJson('https://www.googleapis.com/drive/v3/files?supportsAllDrives=true', auth, {
+      const created = await gdriveFetchJson('https://www.googleapis.com/drive/v3/files?supportsAllDrives=true', auth, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1493,6 +1921,10 @@ async function mkdir(ds, remoteDirPath) {
           parents: [parentId],
         }),
       });
+      if (created && created.id) {
+        cacheFolderId(ds, norm, created.id);
+      }
+      invalidateDsListingCache(ds, parentPath);
     }
   }
 
@@ -1773,4 +2205,6 @@ module.exports = {
   syncFolderToLocal,
   testConnection,
   normalizeRemote,
+  getCloudMetaCache,
+  invalidateDsListingCache,
 };
