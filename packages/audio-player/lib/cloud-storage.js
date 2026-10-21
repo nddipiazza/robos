@@ -390,111 +390,60 @@ async function ensureTrackCached({ connectionId, remotePath, driveId, size }) {
   return downloadPromise;
 }
 
+function serveFromLocalCache(req, res, localPath, contentType = 'audio/mpeg', cacheHeader = 'HIT') {
+  touchCacheFile(localPath);
+  const stat = fs.statSync(localPath);
+  const total = stat.size;
+  const range = req.headers && req.headers.range;
+
+  if (range) {
+    const parts = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10) || 0;
+    const end = parts[1] ? Math.min(parseInt(parts[1], 10), total - 1) : total - 1;
+    const chunksize = Math.max(0, (end - start) + 1);
+    res.writeHead(206, {
+      'Content-Range': `bytes ${start}-${end}/${total}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': chunksize,
+      'Content-Type': contentType,
+      'X-RobOS-Cache': cacheHeader,
+    });
+    fs.createReadStream(localPath, { start, end }).pipe(res);
+  } else {
+    res.writeHead(200, {
+      'Content-Length': total,
+      'Accept-Ranges': 'bytes',
+      'Content-Type': contentType,
+      'X-RobOS-Cache': cacheHeader,
+    });
+    fs.createReadStream(localPath).pipe(res);
+  }
+}
+
 /**
- * Streams a cloud track to an HTTP response (`res`) while progressive-caching
- * it to disk on play. If the track is already in the local cache, serves it
- * directly from disk with full byte-range support and updates its LRU timestamp.
+ * Streams a cloud track to an HTTP response (`res`) using single-flight caching.
+ * If the track is already in the local cache, serves it directly from disk with
+ * full byte-range support (0 API calls). On a cache miss, deduplicates concurrent
+ * browser Range requests through `ensureTrackCached` (`activeCacheWrites`) so at
+ * most ONE Google Drive / OneDrive request is made per song, then serves from disk.
  */
 async function streamCloudTrackToHttp(req, res, cloudMeta, onCached = null) {
   const { connectionId, remotePath, driveId, size, contentType = 'audio/mpeg' } = cloudMeta;
   const localPath = cachePathFor(connectionId, remotePath);
 
-  // 1. Cache Hit: serve directly from local cache with Range support & touch LRU
+  // 1. Cache Hit: serve directly from local cache with Range support & touch LRU (0 API calls)
   if (isTrackCached(localPath, size)) {
-    touchCacheFile(localPath);
-    const stat = fs.statSync(localPath);
-    const total = stat.size;
-    const range = req.headers.range;
-
-    if (range) {
-      const parts = range.replace(/bytes=/, '').split('-');
-      const start = parseInt(parts[0], 10) || 0;
-      const end = parts[1] ? Math.min(parseInt(parts[1], 10), total - 1) : total - 1;
-      const chunksize = (end - start) + 1;
-      res.writeHead(206, {
-        'Content-Range': `bytes ${start}-${end}/${total}`,
-        'Accept-Ranges': 'bytes',
-        'Content-Length': chunksize,
-        'Content-Type': contentType,
-        'X-RobOS-Cache': 'HIT',
-      });
-      fs.createReadStream(localPath, { start, end }).pipe(res);
-    } else {
-      res.writeHead(200, {
-        'Content-Length': total,
-        'Accept-Ranges': 'bytes',
-        'Content-Type': contentType,
-        'X-RobOS-Cache': 'HIT',
-      });
-      fs.createReadStream(localPath).pipe(res);
-    }
+    serveFromLocalCache(req, res, localPath, contentType, 'HIT');
     return;
   }
 
-  // 2. Cache Miss: Stream from remote storage while caching to disk in background
-  const ds = getConnection(connectionId);
-  const rs = loadRemoteStorage();
-
-  // Trigger background full-file cache write if not already running for this track
-  if (!activeCacheWrites.has(localPath)) {
-    ensureTrackCached({ connectionId, remotePath, driveId, size })
-      .then((cachedFile) => {
-        if (typeof onCached === 'function') {
-          try { onCached(cachedFile); } catch {}
-        }
-      })
-      .catch((err) => {
-        console.warn('[CloudStorage] Background cache write failed:', err.message);
-      });
-  }
-
-  // For Google Drive and Microsoft OneDrive, stream bytes immediately to the player with Range forwarding
-  const openStreamFn = ds.driverType === 'gdrive'
-    ? rs.openGDriveMediaStream
-    : ds.driverType === 'onedrive'
-      ? rs.openOneDriveMediaStream
-      : null;
-
-  if (typeof openStreamFn === 'function') {
-    const rangeHeader = req.headers.range || undefined;
-    const upstream = await openStreamFn(ds, {
-      remoteFile: remotePath,
-      driveId: driveId || null,
-      range: rangeHeader,
-    });
-
-    const resHeaders = {
-      'Content-Type': (upstream.headers && upstream.headers['content-type']) || upstream.contentType || contentType,
-      'Accept-Ranges': 'bytes',
-      'X-RobOS-Cache': 'MISS-STREAMING',
-    };
-    const cLen = (upstream.headers && upstream.headers['content-length']) || upstream.contentLength;
-    const cRange = (upstream.headers && upstream.headers['content-range']) || upstream.contentRange;
-    if (cLen) resHeaders['Content-Length'] = cLen;
-    if (cRange) resHeaders['Content-Range'] = cRange;
-
-    const status = upstream.statusCode || upstream.status || 200;
-    res.writeHead(status === 206 ? 206 : 200, resHeaders);
-    upstream.stream.pipe(res);
-    req.on('close', () => {
-      try { upstream.stream.destroy(); } catch {}
-    });
-    return;
-  }
-
-  // Fallback for non-HTTP drivers (SFTP/FTP): wait for the on-demand cache file, then serve
+  // 2. Cache Miss: Single-flight download into cache (deduplicating concurrent Range requests)
+  const wasAlreadyDownloading = activeCacheWrites.has(localPath);
   const cachedFile = await ensureTrackCached({ connectionId, remotePath, driveId, size });
-  if (typeof onCached === 'function') {
+  if (!wasAlreadyDownloading && typeof onCached === 'function') {
     try { onCached(cachedFile); } catch {}
   }
-  const stat = fs.statSync(cachedFile);
-  res.writeHead(200, {
-    'Content-Length': stat.size,
-    'Accept-Ranges': 'bytes',
-    'Content-Type': contentType,
-    'X-RobOS-Cache': 'MISS-DOWNLOADED',
-  });
-  fs.createReadStream(cachedFile).pipe(res);
+  serveFromLocalCache(req, res, cachedFile, contentType, 'MISS-CACHED');
 }
 
 // Legacy alias kept for compatibility, but now indexes metadata only unless explicitly requested
