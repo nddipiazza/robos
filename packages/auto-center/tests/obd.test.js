@@ -25,6 +25,17 @@ test('real warm-engine capture: every live reading the van supports', async () =
   assert.deepEqual(live, { rpm: '628 rpm', speed: '0 mph', coolant: '216 °F (102 °C)', voltage: '14.45 V', load: '27 %', throttle: '12 %', fuel: '32 %', intake: '100 °F (38 °C)', stft1: '1.6 %', ltft1: '0 %', runtime: '17 min 12 s' });
 });
 
+test('real 2005 Accord on ISO 9141-2: legacy framing, multi-line VIN, "NO DATA" means no codes', async () => {
+  const link = new ObdLink({ replay: fixture('accord-2005-iso9141.json') });
+  const s = await link.connect({});
+  assert.equal(s.vehicle.protocol, '3'); assert.equal(s.vehicle.protocolName, 'ISO 9141-2');
+  const codes = await link.readCodes();
+  assert.equal(codes.vin, '1HGCM66585A000001'); assert.equal(codes.modelYear, 2005);
+  assert.equal(codes.mil, false); assert.deepEqual([codes.stored, codes.pending, codes.permanent], [[], [], []]);
+  const live = Object.fromEntries((await link.live()).readings.map(r => [r.id, r.display]));
+  assert.deepEqual(live, { rpm: '785 rpm', speed: '0 mph', coolant: '154 °F (68 °C)', load: '38 %', throttle: '16 %', intake: '86 °F (30 °C)', stft1: '-2.3 %', ltft1: '-8.6 %' });
+});
+
 test('codes, pending codes and clearing them', async () => {
   const link = new ObdLink({ replay: fixture('grand-caravan-2014-codes.json') }); await link.connect({ name: 'vLinker MC-Android' });
   const before = await link.readCodes();
