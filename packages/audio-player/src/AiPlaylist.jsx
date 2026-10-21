@@ -27,7 +27,7 @@ export function AiPromptBox({ id, placeholder, initialValue = '', minHeight = 10
     el.id = id;
     el.setAttribute('show-submit', 'false');
     el.setAttribute('show-commands', 'false');
-    // Requests go to the user's active RobOS agent, not a per-box agent choice.
+    // The agent is chosen in <robos-agent-selector> next to the prompt, not per box.
     el.setAttribute('show-agent', 'false');
     el.setAttribute('placeholder', placeholder);
     el.setAttribute('min-height', String(minHeight));
@@ -65,6 +65,63 @@ export function AiPromptBox({ id, placeholder, initialValue = '', minHeight = 10
       {missing && (
         <p className="ai-note error">RobOS UI components (robos-ui) are not installed, so the prompt box can't load.</p>
       )}
+    </div>
+  );
+}
+
+/**
+ * The shared RobOS <robos-agent-selector> (robos-lib/agent-selector.js, as used by
+ * PR Review): agent, model and effort from the RobOS provider catalog. A saved
+ * choice is kept only while that agent is still available; otherwise the selector
+ * picks the first agent that is installed and signed in.
+ */
+export function AgentPicker({ value, onChange }) {
+  const hostRef = useRef(null);
+  const [error, setError] = useState('');
+  const latest = useRef(onChange);
+  latest.current = onChange;
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host || typeof customElements === 'undefined') return undefined;
+    const el = document.createElement('robos-agent-selector');
+    el.id = 'ai-agent-selector';
+    host.appendChild(el);
+    let alive = true;
+    const report = () => {
+      if (!alive) return;
+      const v = el.value || {};
+      latest.current({ provider: v.provider || '', model: v.model || '', effort: v.effort || '', ready: !!el.ready });
+    };
+    el.addEventListener('change', report);
+    const timer = setTimeout(() => {
+      if (alive && !customElements.get('robos-agent-selector')) setError('The RobOS agent selector (robos-lib) is not installed.');
+    }, 4000);
+    customElements.whenDefined('robos-agent-selector').then(async () => {
+      if (!alive) return;
+      try {
+        if (!window.robosProviders) throw new Error('The RobOS provider catalog is not available.');
+        const providers = await window.robosProviders.list();
+        const saved = value && providers.find(p => p.id === value.provider && p.available);
+        await el.load(saved ? { providers, provider: saved.id, model: value.model, effort: value.effort } : { providers });
+        if (alive && !providers.some(p => p.available)) setError('No AI agent is ready. Install and sign in to AGY or Codex in RobOS Agents.');
+      } catch (err) {
+        if (alive) setError(err.message);
+      }
+      report();
+    });
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+      el.removeEventListener('change', report);
+      el.remove();
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div className="agent-picker">
+      <div ref={hostRef} />
+      {error && <p className="ai-note error">{error}</p>}
     </div>
   );
 }
@@ -167,7 +224,7 @@ export function DjSettingsFields({ value, onChange, idPrefix = 'dj' }) {
  * "AI Playlist": describe a playlist, optionally add a Virtual DJ, and let the
  * user's RobOS agent pick and order songs from their library.
  */
-export function AiPlaylistModal({ initialDj, onClose, onPlay, onSave }) {
+export function AiPlaylistModal({ initialDj, agent: initialAgent, onAgentChange, onClose, onPlay, onSave }) {
   const [request, setRequest] = useState('');
   const [count, setCount] = useState(25);
   const [withDj, setWithDj] = useState(!!(initialDj && initialDj.enabled));
@@ -177,16 +234,20 @@ export function AiPlaylistModal({ initialDj, onClose, onPlay, onSave }) {
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
   const [name, setName] = useState('');
-  const [agent, setAgent] = useState(null);
+  const [agent, setAgent] = useState({ ...(initialAgent || {}), ready: false });
+
+  const pickAgent = (next) => {
+    setAgent(next);
+    if (next.provider) onAgentChange({ provider: next.provider, model: next.model, effort: next.effort });
+  };
 
   useEffect(() => {
-    window.robosAudio?.aiAgentInfo?.().then(setAgent).catch(() => {});
     const off = window.robosAudio?.onAiProgress?.((p) => p && p.message && setProgress(p.message));
     return () => { if (typeof off === 'function') off(); };
   }, []);
 
   const djReady = !withDj || dj.persona.trim().length > 0;
-  const canGenerate = request.trim().length > 0 && djReady && phase !== 'working';
+  const canGenerate = request.trim().length > 0 && djReady && agent.ready && phase !== 'working';
 
   const generate = async () => {
     if (!canGenerate) return;
@@ -194,7 +255,8 @@ export function AiPlaylistModal({ initialDj, onClose, onPlay, onSave }) {
     setError('');
     setProgress('Asking your RobOS agent…');
     try {
-      const res = await window.robosAudio.aiPlaylistGenerate(request.trim(), count, withDj ? dj : null);
+      const chosen = { provider: agent.provider, model: agent.model, effort: agent.effort };
+      const res = await window.robosAudio.aiPlaylistGenerate(request.trim(), count, withDj ? dj : null, chosen);
       if (res && res.ok) {
         setResult(res.playlist);
         setName(res.playlist.name);
@@ -216,12 +278,9 @@ export function AiPlaylistModal({ initialDj, onClose, onPlay, onSave }) {
       <div className="modal-card ai-modal" onClick={(e) => e.stopPropagation()}>
         <div className="ai-modal-head">
           <h3><span className="ai-spark">✦</span> AI Playlist</h3>
-          <span className="ai-note">
-            {agent && agent.ok
-              ? <>Built by your RobOS agent · <strong>{agent.api ? agent.api.label || 'API mode' : agent.activeName}</strong></>
-              : (agent && agent.error) || 'Built by your RobOS agent'}
-          </span>
+          <span className="ai-note">Your RobOS agent picks and orders songs from your library.</span>
         </div>
+        {phase !== 'result' && <AgentPicker value={initialAgent} onChange={pickAgent} />}
 
         {phase !== 'result' && (
           <>
@@ -302,8 +361,13 @@ export function AiPlaylistModal({ initialDj, onClose, onPlay, onSave }) {
 }
 
 /** Virtual DJ settings for whatever is in the play queue. */
-export function DjSettingsModal({ value, onClose, onSave }) {
+export function DjSettingsModal({ value, agent: initialAgent, onAgentChange, onClose, onSave }) {
   const [dj, setDj] = useState({ persona: '', voice: '', frequency: 'every', ...value });
+  const [agent, setAgent] = useState({ ...(initialAgent || {}), ready: false });
+  const pickAgent = (next) => {
+    setAgent(next);
+    if (next.provider) onAgentChange({ provider: next.provider, model: next.model, effort: next.effort });
+  };
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card ai-modal" onClick={(e) => e.stopPropagation()}>
@@ -311,11 +375,12 @@ export function DjSettingsModal({ value, onClose, onSave }) {
           <h3><Icon name="mic" size={16} /> Virtual DJ</h3>
           <span className="ai-note">Your RobOS agent writes a short intro before songs, spoken in the voice you pick.</span>
         </div>
+        <AgentPicker value={initialAgent} onChange={pickAgent} />
         <DjSettingsFields value={dj} onChange={setDj} idPrefix="queue-dj" />
         <div className="modal-actions">
           {value.enabled && <button className="btn-secondary" onClick={() => onSave({ ...dj, enabled: false })}>Turn DJ off</button>}
           <button className="btn-secondary" onClick={onClose}>Cancel</button>
-          <button id="btn-dj-save" className="btn-accent" disabled={!dj.persona.trim()} onClick={() => onSave({ ...dj, enabled: true })}>
+          <button id="btn-dj-save" className="btn-accent" disabled={!dj.persona.trim() || !agent.ready} onClick={() => onSave({ ...dj, enabled: true })}>
             <Icon name="mic" size={13} /> {value.enabled ? 'Save' : 'Start DJ'}
           </button>
         </div>

@@ -15,6 +15,14 @@
         document.head.appendChild(s2);
       };
       document.head.appendChild(s);
+      const a = document.createElement('script');
+      a.src = '../../robos-lib/agent-selector.js';
+      a.onerror = () => {
+        const a2 = document.createElement('script');
+        a2.src = '/usr/local/share/robos/robos-lib/agent-selector.js';
+        document.head.appendChild(a2);
+      };
+      document.head.appendChild(a);
     })();
   </script>
 </head>

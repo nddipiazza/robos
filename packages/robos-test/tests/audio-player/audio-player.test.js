@@ -1054,20 +1054,22 @@ describe('RobOS Audio Player Tests', () => {
       fs.rmSync(dir, { recursive: true, force: true });
     });
 
-    it('wires the shared RobOS agent, quick-ask and voice into the app', () => {
+    it('wires the shared agent selector, provider catalog, quick-ask and voice into the app', () => {
       const preload = fs.readFileSync(path.join(APP_DIR, 'preload.js'), 'utf8');
-      for (const fn of ['aiPlaylistGenerate:', 'djLines:', 'djVoices:', 'djSynthesize:', 'aiAgentInfo:', "'robosQuickAsk'"]) {
+      for (const fn of ['aiPlaylistGenerate:', 'djLines:', 'djVoices:', 'djSynthesize:', "'robosProviders'", "'robosQuickAsk'"]) {
         assert.ok(preload.includes(fn), `preload should expose ${fn}`);
       }
       assert.ok(!preload.includes('castTTS:'), 'the Virtual DJ does not bring back the old announcer API');
       const main = fs.readFileSync(path.join(APP_DIR, 'main.js'), 'utf8');
-      for (const mod of ["'robos-lib/ai-agent'", "'robos-lib/ai-json'", "'robos-lib/quick-ask'", "'voice-prompt/lib/tts-engine'"]) {
+      for (const mod of ["'robos-agent-client/providers'", "'robos-agent-client/one-shot'", "'robos-lib/ai-json'", "'robos-lib/quick-ask'", "'voice-prompt/lib/tts-engine'"]) {
         assert.ok(main.includes(mod), `main should reuse ${mod}`);
       }
+      assert.ok(!main.includes("'robos-lib/ai-agent'"), 'requests use the agent picked in the selector, not ai-agent\'s fixed default');
       const html = fs.readFileSync(path.join(APP_DIR, 'renderer', 'index.html'), 'utf8');
       assert.ok(html.includes('robos-ui/robos-ui.js'), 'renderer loads the shared robos-ui components');
+      assert.ok(html.includes('robos-lib/agent-selector.js'), 'renderer loads the shared <robos-agent-selector>');
       const bundle = fs.readFileSync(path.join(APP_DIR, 'renderer', 'bundle.js'), 'utf8');
-      for (const marker of ['robos-ai-textarea', 'btn-ai-playlist', 'btn-dj-toggle', 'np-dj-banner']) {
+      for (const marker of ['robos-ai-textarea', 'robos-agent-selector', 'btn-ai-playlist', 'btn-dj-toggle', 'np-dj-banner']) {
         assert.ok(bundle.includes(marker), `bundle should contain ${marker}`);
       }
     });

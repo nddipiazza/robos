@@ -27,14 +27,13 @@ contextBridge.exposeInMainWorld('robosAudio', {
   recordPlay: (trackId) => ipcRenderer.invoke('audio:record-play', trackId),
   setLoved: (ids, loved) => ipcRenderer.invoke('audio:set-loved', { ids, loved }),
   showInFolder: (filePath) => ipcRenderer.invoke('audio:show-in-folder', filePath),
-  aiAgentInfo: () => ipcRenderer.invoke('audio:ai-agent-info'),
-  aiPlaylistGenerate: (request, count, dj) => ipcRenderer.invoke('audio:ai-playlist-generate', { request, count, dj }),
+  aiPlaylistGenerate: (request, count, dj, agent) => ipcRenderer.invoke('audio:ai-playlist-generate', { request, count, dj, agent }),
   onAiProgress: (callback) => {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on('audio:ai-progress', handler);
     return () => ipcRenderer.removeListener('audio:ai-progress', handler);
   },
-  djLines: (persona, upcoming) => ipcRenderer.invoke('audio:dj-lines', { persona, upcoming }),
+  djLines: (persona, upcoming, agent) => ipcRenderer.invoke('audio:dj-lines', { persona, upcoming, agent }),
   djVoices: () => ipcRenderer.invoke('audio:dj-voices'),
   djSynthesize: (text, voice) => ipcRenderer.invoke('audio:dj-synthesize', { text, voice }),
   listFolders: () => ipcRenderer.invoke('audio:folders-list'),
@@ -104,6 +103,11 @@ contextBridge.exposeInMainWorld('robosAudio', {
     ipcRenderer.on('audio:speaker-playback-stopped', handler);
     return () => ipcRenderer.removeListener('audio:speaker-playback-stopped', handler);
   }
+});
+
+// Provider catalog for the shared <robos-agent-selector> (same API as PR Review).
+contextBridge.exposeInMainWorld('robosProviders', {
+  list: (options) => ipcRenderer.invoke('audio:agent-providers', options),
 });
 
 // Answers the <robos-ai-textarea> "?" button through the shared quick-ask handler.
