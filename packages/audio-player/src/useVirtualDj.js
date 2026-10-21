@@ -76,12 +76,13 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
     const text = lines.current.get(track.id);
     if (!text) return Promise.resolve(null);
     const done = clips.current.get(track.id);
-    if (done) return Promise.resolve(done);
+    // A failed line is tried again after a while (the voice engine may have been starting up).
+    if (done && !(done.failed && Date.now() - done.at > 20000)) return Promise.resolve(done);
     if (clipRequests.current.has(track.id)) return clipRequests.current.get(track.id);
     const gen = generation.current;
     const req = window.robosAudio.djSynthesize(text, latest.current.settings.voice)
-      .then(res => (res && res.ok ? { filePath: res.filePath, durationMs: res.durationMs } : { failed: true, error: (res && res.error) || 'no audio' }))
-      .catch(err => ({ failed: true, error: err.message }))
+      .then(res => (res && res.ok ? { filePath: res.filePath, castPath: res.castPath, durationMs: res.durationMs } : { failed: true, at: Date.now(), error: (res && res.error) || 'no audio' }))
+      .catch(err => ({ failed: true, at: Date.now(), error: err.message }))
       .then(clip => {
         if (gen === generation.current) clips.current.set(track.id, clip);
         clipRequests.current.delete(track.id);
@@ -98,6 +99,11 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
     await within(lineRequests.current.get(track.id), ms);
     return lines.current.get(track.id) || null;
   }, [requestLines]);
+
+  // Start the voice engine early: Kokoro takes a while to load its model.
+  useEffect(() => {
+    if (active_ && window.robosAudio?.djWarmup) window.robosAudio.djWarmup().catch(() => {});
+  }, [active_]);
 
   // Write lines for the next few songs and render the very next one.
   const upcomingKey = upcoming.map(t => t && t.id).join('|');
@@ -139,12 +145,20 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
     };
 
     if (clip && clip.filePath && target !== 'local') {
-      // Speakers: cast the clip, then move on once it has had time to load and play.
-      const meta = { title: 'Virtual DJ', artist: s.persona.slice(0, 60) };
-      Promise.resolve(sendToSpeaker ? sendToSpeaker(clip.filePath, meta) : null)
-        .then(res => { if (res && res.ok === false) latest.current.showStatus(`Virtual DJ: the speaker could not play the line (${res.error || 'unknown error'}).`); })
-        .catch(err => latest.current.showStatus(`Virtual DJ: the speaker could not play the line (${err.message}).`));
-      entry.timer = setTimeout(done, (clip.durationMs || 4000) + 1800);
+      // Speakers: cast the line (as MP3), then hand back when the speaker reports it
+      // finished, or once it has had time to play after loading.
+      entry.cast = true;
+      const meta = { title: 'Virtual DJ', artist: s.persona.slice(0, 60), role: 'dj' };
+      const failed = (msg) => { latest.current.showStatus(`Virtual DJ: the speaker could not play the line (${msg}).`); done(); };
+      entry.timer = setTimeout(done, (clip.durationMs || 4000) + 30000); // never stall the music
+      Promise.resolve(sendToSpeaker ? sendToSpeaker(clip.castPath || clip.filePath, meta) : null)
+        .then(res => {
+          if (active.current !== entry) return;
+          if (res && res.ok === false) { failed(res.error || 'unknown error'); return; }
+          clearTimeout(entry.timer);
+          entry.timer = setTimeout(done, (clip.durationMs || 4000) + 2500);
+        })
+        .catch(err => failed(err.message));
       return;
     }
     if (target !== 'local') {
@@ -229,7 +243,7 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
     let clipError = '';
     try {
       const res = await window.robosAudio.djSynthesize(text, s.voice);
-      if (res && res.ok) clip = { filePath: res.filePath, durationMs: res.durationMs };
+      if (res && res.ok) clip = { filePath: res.filePath, castPath: res.castPath, durationMs: res.durationMs };
       else clipError = (res && res.error) || '';
     } catch (err) { clipError = err.message; }
     playLine(text, clip, then, { clipError });
@@ -248,5 +262,15 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
     transitions.current = 0;
   }, [updateSettings]);
 
-  return { settings, setSettings: updateSettings, speaking, talkBefore, preview, announce, loadScript, skip: stop, active: active_ };
+  /** The speaker says the DJ line it was playing has finished. */
+  const castLineFinished = useCallback(() => {
+    const a = active.current;
+    if (!a || !a.cast) return;
+    active.current = null;
+    if (a.timer) clearTimeout(a.timer);
+    setSpeaking(null);
+    a.finish();
+  }, []);
+
+  return { settings, setSettings: updateSettings, speaking, talkBefore, preview, announce, loadScript, skip: stop, castLineFinished, active: active_ };
 }
