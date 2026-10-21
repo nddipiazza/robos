@@ -1,0 +1,416 @@
+'use strict';
+
+// Pure, dependency-free library browsing model shared by the renderer (bundled by
+// esbuild) and the unit tests. Groups tracks into albums, artists, genres, decades
+// and composers, and implements search and sorting.
+
+const UNKNOWN_ARTIST = 'Unknown Artist';
+const UNKNOWN_ALBUM = 'Unknown Album';
+const VARIOUS_ARTISTS = 'Various Artists';
+const PLACEHOLDER_ARTISTS = new Set(['unknown artist', 'cloud stream', 'local file', '']);
+
+function fold(value) {
+  return String(value == null ? '' : value)
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+// Sorting 10k tracks makes ~150k comparisons; normalising strings and building
+// locale options on every one of them is what makes big libraries feel slow.
+const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+const sortNameCache = new Map();
+
+// Sort key: case/diacritic-insensitive and ignoring a leading "The " / "A ".
+function sortName(value) {
+  const raw = value == null ? '' : String(value);
+  let key = sortNameCache.get(raw);
+  if (key === undefined) {
+    if (sortNameCache.size > 100000) sortNameCache.clear();
+    key = fold(raw).replace(/^(the|a|an)\s+/, '');
+    sortNameCache.set(raw, key);
+  }
+  return key;
+}
+
+function compareNames(a, b) {
+  return collator.compare(sortName(a), sortName(b));
+}
+
+// Letter used for A–Z jump bars; digits and symbols go under '#'.
+function indexLetter(name) {
+  const c = sortName(name).charAt(0).toUpperCase();
+  return c >= 'A' && c <= 'Z' ? c : '#';
+}
+
+function isPlaceholderArtist(name) {
+  return PLACEHOLDER_ARTISTS.has(fold(name));
+}
+
+function splitGenres(genre) {
+  if (!genre) return [];
+  return String(genre).split(/\s*[;|]\s*/).map(g => g.trim()).filter(Boolean);
+}
+
+function dirOf(filePath) {
+  if (!filePath) return '';
+  const parts = String(filePath).split('/');
+  parts.pop();
+  // Treat ".../Album/CD1" and ".../Album/Disc 2" as the same album folder.
+  if (parts.length > 1 && /^(cd|disc|disk)\s*\d+$/i.test(parts[parts.length - 1])) parts.pop();
+  return parts.join('/');
+}
+
+function albumKeyOf(track) {
+  const title = fold(track.album || UNKNOWN_ALBUM);
+  if (track.albumArtist) return `${title}\u0001aa:${fold(track.albumArtist)}`;
+  // Without an album-artist tag, tracks of one album normally share a folder; that
+  // keeps compilations together while separating same-named albums by different artists.
+  if (track.filePath) return `${title}\u0001dir:${dirOf(track.filePath)}`;
+  return `${title}\u0001ar:${fold(track.artist)}`;
+}
+
+function compareAlbumOrder(a, b) {
+  return (a.discNumber || 1) - (b.discNumber || 1)
+    || (a.trackNumber || 9999) - (b.trackNumber || 9999)
+    || compareNames(a.title, b.title);
+}
+
+function mostCommon(values) {
+  const counts = new Map();
+  let best = null;
+  let bestCount = 0;
+  for (const v of values) {
+    if (!v) continue;
+    const n = (counts.get(v) || 0) + 1;
+    counts.set(v, n);
+    if (n > bestCount) { best = v; bestCount = n; }
+  }
+  return best;
+}
+
+function sumDuration(tracks) {
+  let total = 0;
+  for (const t of tracks) total += t.duration || 0;
+  return total;
+}
+
+function latest(a, b) {
+  if (!a) return b || null;
+  if (!b) return a;
+  return a > b ? a : b;
+}
+
+/**
+ * Build the full browsing index for a list of tracks.
+ */
+function buildIndex(tracks = []) {
+  const albumMap = new Map();
+  for (const t of tracks) {
+    const key = albumKeyOf(t);
+    let album = albumMap.get(key);
+    if (!album) {
+      album = { key, title: t.album || UNKNOWN_ALBUM, tracks: [] };
+      albumMap.set(key, album);
+    }
+    album.tracks.push(t);
+  }
+
+  const albums = [];
+  for (const album of albumMap.values()) {
+    album.tracks.sort(compareAlbumOrder);
+    const trackArtists = new Set(album.tracks.map(t => t.artist).filter(a => a && !isPlaceholderArtist(a)));
+    const albumArtist = mostCommon(album.tracks.map(t => t.albumArtist));
+    album.artist = albumArtist
+      || (trackArtists.size === 1 ? [...trackArtists][0]
+        : trackArtists.size > 1 ? VARIOUS_ARTISTS
+          : (album.tracks[0].artist || UNKNOWN_ARTIST));
+    album.artistKey = fold(album.artist);
+    album.isCompilation = album.artist === VARIOUS_ARTISTS;
+    const years = album.tracks.map(t => t.year).filter(Boolean);
+    album.year = years.length ? Math.min(...years) : null;
+    album.genre = mostCommon(album.tracks.flatMap(t => splitGenres(t.genre)));
+    album.artId = (album.tracks.find(t => t.artId) || {}).artId || null;
+    album.duration = sumDuration(album.tracks);
+    album.discCount = new Set(album.tracks.map(t => t.discNumber || 1)).size;
+    album.addedAt = album.tracks.reduce((acc, t) => latest(acc, t.addedAt), null);
+    album.lossless = album.tracks.length > 0 && album.tracks.every(t => t.lossless);
+    album.codec = mostCommon(album.tracks.map(t => t.codec));
+    album.isUnknown = fold(album.title) === fold(UNKNOWN_ALBUM);
+    albums.push(album);
+  }
+  albums.sort((a, b) => compareNames(a.title, b.title) || compareNames(a.artist, b.artist));
+  const albumByKey = new Map(albums.map(a => [a.key, a]));
+  const albumOfTrack = new Map();
+  for (const a of albums) for (const t of a.tracks) albumOfTrack.set(t, a);
+
+  // Artists: everyone credited on a track, plus album artists.
+  const artistMap = new Map();
+  const ensureArtist = (name) => {
+    const key = fold(name);
+    let artist = artistMap.get(key);
+    if (!artist) {
+      artist = { key, name, tracks: [], albumKeys: new Set(), appearsOnKeys: new Set() };
+      artistMap.set(key, artist);
+    }
+    return artist;
+  };
+  for (const album of albums) {
+    if (!album.isCompilation && !isPlaceholderArtist(album.artist)) ensureArtist(album.artist).albumKeys.add(album.key);
+  }
+  for (const t of tracks) {
+    const name = t.artist || UNKNOWN_ARTIST;
+    const artist = ensureArtist(name);
+    artist.tracks.push(t);
+    const album = albumOfTrack.get(t);
+    if (album && album.artistKey !== artist.key) artist.appearsOnKeys.add(album.key);
+  }
+  const artists = [];
+  for (const artist of artistMap.values()) {
+    // Album artists with no own tracks under that exact name still get their albums' tracks.
+    if (!artist.tracks.length) {
+      for (const key of artist.albumKeys) artist.tracks.push(...albumByKey.get(key).tracks);
+    }
+    const ownAlbums = [...artist.albumKeys].map(k => albumByKey.get(k));
+    artist.albums = ownAlbums.sort((a, b) => (a.year || 9999) - (b.year || 9999) || compareNames(a.title, b.title));
+    artist.appearsOn = [...artist.appearsOnKeys].map(k => albumByKey.get(k))
+      .filter(a => !artist.albumKeys.has(a.key))
+      .sort((a, b) => (a.year || 9999) - (b.year || 9999));
+    delete artist.albumKeys;
+    delete artist.appearsOnKeys;
+    artist.artId = (artist.albums.find(a => a.artId) || artist.appearsOn.find(a => a.artId) || {}).artId
+      || (artist.tracks.find(t => t.artId) || {}).artId || null;
+    artist.duration = sumDuration(artist.tracks);
+    artist.genres = topValues(artist.tracks.flatMap(t => splitGenres(t.genre)), 3);
+    artist.isPlaceholder = isPlaceholderArtist(artist.name);
+    artists.push(artist);
+  }
+  artists.sort((a, b) => (a.isPlaceholder - b.isPlaceholder) || compareNames(a.name, b.name));
+  const artistByKey = new Map(artists.map(a => [a.key, a]));
+
+  const genres = groupBy(tracks, t => splitGenres(t.genre), albumOfTrack);
+  const composers = groupBy(tracks, t => (t.composer ? [t.composer] : []), albumOfTrack);
+  const decades = groupBy(tracks, t => (t.year ? [`${Math.floor(t.year / 10) * 10}s`] : []), albumOfTrack);
+  for (const d of decades) d.start = parseInt(d.name, 10);
+  decades.sort((a, b) => b.start - a.start);
+
+  return {
+    tracks,
+    albums,
+    artists,
+    genres,
+    decades,
+    composers,
+    albumByKey,
+    artistByKey,
+    genreByKey: new Map(genres.map(g => [g.key, g])),
+    decadeByKey: new Map(decades.map(d => [d.key, d])),
+    composerByKey: new Map(composers.map(c => [c.key, c])),
+    albumOfTrack,
+    totalDuration: sumDuration(tracks),
+  };
+}
+
+function topValues(values, n) {
+  const counts = new Map();
+  for (const v of values) counts.set(v, (counts.get(v) || 0) + 1);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([v]) => v);
+}
+
+function groupBy(tracks, namesOf, albumOfTrack) {
+  const map = new Map();
+  for (const t of tracks) {
+    for (const name of namesOf(t)) {
+      const key = fold(name);
+      let g = map.get(key);
+      if (!g) {
+        g = { key, name, tracks: [] };
+        map.set(key, g);
+      }
+      g.tracks.push(t);
+    }
+  }
+  const groups = [...map.values()];
+  for (const g of groups) {
+    const albums = [];
+    const seen = new Set();
+    for (const t of g.tracks) {
+      const a = albumOfTrack.get(t);
+      if (a && !seen.has(a.key)) { seen.add(a.key); albums.push(a); }
+    }
+    g.albums = albums;
+    g.artistCount = new Set(g.tracks.map(t => fold(t.artist))).size;
+    g.artIds = [...new Set(albums.map(a => a.artId).filter(Boolean))].slice(0, 4);
+    g.duration = sumDuration(g.tracks);
+  }
+  groups.sort((a, b) => compareNames(a.name, b.name));
+  return groups;
+}
+
+// ── Search ──────────────────────────────────────────────────────────────────
+
+const haystackCache = new WeakMap();
+
+function trackHaystack(t) {
+  let hay = haystackCache.get(t);
+  if (hay === undefined) {
+    hay = fold([t.title, t.artist, t.albumArtist, t.album, t.genre, t.composer, t.year].filter(Boolean).join(' '));
+    haystackCache.set(t, hay);
+  }
+  return hay;
+}
+
+/**
+ * Every whitespace-separated term must appear somewhere in the item, so
+ * "beatles abbey" finds Abbey Road tracks by The Beatles.
+ */
+function searchIndex(index, query, limits = {}) {
+  const terms = fold(query).split(/\s+/).filter(Boolean);
+  if (!terms.length) return { terms, tracks: [], albums: [], artists: [], genres: [] };
+  const matches = (hay) => terms.every(term => hay.includes(term));
+  const nameScore = (name) => {
+    const n = fold(name);
+    const q = terms.join(' ');
+    return n === q ? 0 : n.startsWith(q) ? 1 : 2;
+  };
+  const byScore = (nameOf) => (a, b) => nameScore(nameOf(a)) - nameScore(nameOf(b)) || compareNames(nameOf(a), nameOf(b));
+
+  const artists = index.artists.filter(a => matches(fold(a.name))).sort(byScore(a => a.name));
+  const albums = index.albums.filter(a => matches(fold(`${a.title} ${a.artist} ${a.year || ''}`))).sort(byScore(a => a.title));
+  const genres = index.genres.filter(g => matches(g.key)).sort(byScore(g => g.name));
+  const tracks = index.tracks.filter(t => matches(trackHaystack(t))).sort(byScore(t => t.title));
+  return {
+    terms,
+    artists: limits.artists ? artists.slice(0, limits.artists) : artists,
+    albums: limits.albums ? albums.slice(0, limits.albums) : albums,
+    genres: limits.genres ? genres.slice(0, limits.genres) : genres,
+    tracks,
+    totals: { artists: artists.length, albums: albums.length, genres: genres.length, tracks: tracks.length },
+  };
+}
+
+// ── Sorting ─────────────────────────────────────────────────────────────────
+
+const TRACK_SORTS = {
+  title: (a, b) => compareNames(a.title, b.title),
+  artist: (a, b) => compareNames(a.artist, b.artist) || compareNames(a.album, b.album) || compareAlbumOrder(a, b),
+  album: (a, b) => compareNames(a.album, b.album) || compareAlbumOrder(a, b),
+  genre: (a, b) => compareNames(a.genre || '￿', b.genre || '￿') || compareNames(a.artist, b.artist),
+  year: (a, b) => (a.year || 0) - (b.year || 0) || compareNames(a.album, b.album) || compareAlbumOrder(a, b),
+  duration: (a, b) => (a.duration || 0) - (b.duration || 0),
+  addedAt: (a, b) => String(a.addedAt || '').localeCompare(String(b.addedAt || '')),
+  trackNumber: compareAlbumOrder,
+};
+
+function sortTracks(tracks, key = 'title', dir = 'asc', stats = {}) {
+  let cmp = TRACK_SORTS[key];
+  if (key === 'plays') cmp = (a, b) => ((stats[a.id] || {}).plays || 0) - ((stats[b.id] || {}).plays || 0);
+  if (key === 'lastPlayed') cmp = (a, b) => String((stats[a.id] || {}).lastPlayed || '').localeCompare(String((stats[b.id] || {}).lastPlayed || ''));
+  if (key === 'loved') cmp = (a, b) => Number(!!(stats[a.id] || {}).loved) - Number(!!(stats[b.id] || {}).loved);
+  if (!cmp) cmp = TRACK_SORTS.title;
+  const sign = dir === 'desc' ? -1 : 1;
+  // Stable tie-break on title keeps equal rows in a predictable order.
+  return [...tracks].sort((a, b) => sign * cmp(a, b) || TRACK_SORTS.title(a, b));
+}
+
+const ALBUM_SORTS = {
+  title: (a, b) => compareNames(a.title, b.title) || compareNames(a.artist, b.artist),
+  artist: (a, b) => compareNames(a.artist, b.artist) || (a.year || 0) - (b.year || 0),
+  year: (a, b) => (b.year || 0) - (a.year || 0) || compareNames(a.title, b.title),
+  addedAt: (a, b) => String(b.addedAt || '').localeCompare(String(a.addedAt || '')),
+  tracks: (a, b) => b.tracks.length - a.tracks.length,
+};
+
+function sortAlbums(albums, key = 'title') {
+  return [...albums].sort(ALBUM_SORTS[key] || ALBUM_SORTS.title);
+}
+
+const ARTIST_SORTS = {
+  name: (a, b) => (a.isPlaceholder - b.isPlaceholder) || compareNames(a.name, b.name),
+  tracks: (a, b) => b.tracks.length - a.tracks.length || compareNames(a.name, b.name),
+  albums: (a, b) => b.albums.length - a.albums.length || compareNames(a.name, b.name),
+};
+
+function sortArtists(artists, key = 'name', stats = {}) {
+  if (key === 'plays') {
+    const plays = (a) => a.tracks.reduce((n, t) => n + ((stats[t.id] || {}).plays || 0), 0);
+    return [...artists].sort((a, b) => plays(b) - plays(a) || compareNames(a.name, b.name));
+  }
+  return [...artists].sort(ARTIST_SORTS[key] || ARTIST_SORTS.name);
+}
+
+// ── Smart collections ───────────────────────────────────────────────────────
+
+function lovedTracks(tracks, stats = {}) {
+  return tracks
+    .filter(t => (stats[t.id] || {}).loved)
+    .sort((a, b) => String((stats[b.id] || {}).lovedAt || '').localeCompare(String((stats[a.id] || {}).lovedAt || '')));
+}
+
+function recentlyAddedTracks(tracks) {
+  return sortTracks(tracks.filter(t => t.addedAt), 'addedAt', 'desc');
+}
+
+function recentlyPlayedTracks(tracks, stats = {}) {
+  return sortTracks(tracks.filter(t => (stats[t.id] || {}).lastPlayed), 'lastPlayed', 'desc', stats);
+}
+
+function mostPlayedTracks(tracks, stats = {}) {
+  return sortTracks(tracks.filter(t => (stats[t.id] || {}).plays > 0), 'plays', 'desc', stats);
+}
+
+function unplayedTracks(tracks, stats = {}) {
+  return tracks.filter(t => !((stats[t.id] || {}).plays > 0));
+}
+
+// ── Formatting ──────────────────────────────────────────────────────────────
+
+function formatDuration(sec) {
+  if (!sec || isNaN(sec)) return '--:--';
+  const total = Math.round(sec);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const ss = `${s < 10 ? '0' : ''}${s}`;
+  return h > 0 ? `${h}:${m < 10 ? '0' : ''}${m}:${ss}` : `${m}:${ss}`;
+}
+
+function formatLongDuration(sec) {
+  const totalMin = Math.round((sec || 0) / 60);
+  if (totalMin < 60) return `${totalMin} min`;
+  const days = Math.floor(totalMin / 1440);
+  const hours = Math.floor((totalMin % 1440) / 60);
+  const mins = totalMin % 60;
+  if (days > 0) return `${days}d ${hours}h`;
+  return mins ? `${hours} hr ${mins} min` : `${hours} hr`;
+}
+
+function plural(n, word, pluralWord) {
+  return `${Number(n).toLocaleString()} ${n === 1 ? word : (pluralWord || `${word}s`)}`;
+}
+
+module.exports = {
+  UNKNOWN_ARTIST,
+  UNKNOWN_ALBUM,
+  VARIOUS_ARTISTS,
+  fold,
+  sortName,
+  compareNames,
+  indexLetter,
+  splitGenres,
+  albumKeyOf,
+  buildIndex,
+  searchIndex,
+  sortTracks,
+  sortAlbums,
+  sortArtists,
+  lovedTracks,
+  recentlyAddedTracks,
+  recentlyPlayedTracks,
+  mostPlayedTracks,
+  unplayedTracks,
+  formatDuration,
+  formatLongDuration,
+  plural,
+};

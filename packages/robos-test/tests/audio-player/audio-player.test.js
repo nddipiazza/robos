@@ -711,5 +711,146 @@ describe('RobOS Audio Player Tests', () => {
       }
     });
   });
-});
 
+  describe('Library browsing: albums, artists, genres, decades, search & stats', () => {
+    const idx = require(path.join(APP_DIR, 'lib', 'library-index'));
+    const { trackFromMetadata } = require(path.join(APP_DIR, 'lib', 'track-metadata'));
+
+    let seq = 0;
+    const t = (over) => ({ id: `trk_fixture_${++seq}`, duration: 200, ...over });
+    const fixture = () => [
+      t({ title: 'Come Together', artist: 'The Beatles', albumArtist: 'The Beatles', album: 'Abbey Road', year: 1969, genre: 'Rock', trackNumber: 1, filePath: '/m/Beatles/Abbey Road/01.flac' }),
+      t({ title: 'Something', artist: 'The Beatles', albumArtist: 'The Beatles', album: 'Abbey Road', year: 1969, genre: 'Rock', trackNumber: 2, filePath: '/m/Beatles/Abbey Road/02.flac' }),
+      t({ title: 'Taxman', artist: 'The Beatles', album: 'Revolver', year: 1966, genre: 'Rock; Pop', trackNumber: 1, filePath: '/m/Beatles/Revolver/01.mp3' }),
+      // Compilation without album-artist tags, one folder -> one "Various Artists" album
+      t({ title: 'Hit 1', artist: 'Artist A', album: 'Summer Hits', year: 2020, genre: 'Pop', filePath: '/m/Comp/Summer Hits/1.mp3' }),
+      t({ title: 'Hit 2', artist: 'The Beatles', album: 'Summer Hits', year: 2020, genre: 'Pop', filePath: '/m/Comp/Summer Hits/2.mp3' }),
+      // Same album name by two different artists in different folders -> two albums
+      t({ title: 'Intro', artist: 'Band X', album: 'Greatest Hits', filePath: '/m/X/Greatest Hits/1.mp3' }),
+      t({ title: 'Intro', artist: 'Band Y', album: 'Greatest Hits', filePath: '/m/Y/Greatest Hits/1.mp3' }),
+      // Multi-disc album split into CD1/CD2 folders stays one album
+      t({ title: 'Disc One Song', artist: 'Pink Floyd', album: 'The Wall', year: 1979, discNumber: 1, trackNumber: 1, composer: 'Roger Waters', filePath: '/m/Floyd/The Wall/CD1/01.mp3' }),
+      t({ title: 'Disc Two Song', artist: 'Pink Floyd', album: 'The Wall', year: 1979, discNumber: 2, trackNumber: 1, composer: 'Roger Waters', filePath: '/m/Floyd/The Wall/CD2/01.mp3' }),
+    ];
+
+    it('groups tracks into albums using album artist, folder and disc folders', () => {
+      const index = idx.buildIndex(fixture());
+      const titles = index.albums.map(a => `${a.title} — ${a.artist}`);
+      assert.ok(titles.includes('Abbey Road — The Beatles'));
+      assert.ok(titles.includes('Summer Hits — Various Artists'), 'untagged compilation in one folder is one album');
+      assert.strictEqual(index.albums.filter(a => a.title === 'Greatest Hits').length, 2, 'same title by different artists stays separate');
+      const wall = index.albums.find(a => a.title === 'The Wall');
+      assert.strictEqual(wall.tracks.length, 2, 'CD1/CD2 folders merge into one album');
+      assert.strictEqual(wall.discCount, 2);
+      assert.deepStrictEqual(wall.tracks.map(x => x.title), ['Disc One Song', 'Disc Two Song'], 'ordered by disc then track');
+    });
+
+    it('builds artists with their own albums and "appears on" compilations', () => {
+      const index = idx.buildIndex(fixture());
+      const beatles = index.artistByKey.get(idx.fold('The Beatles'));
+      assert.deepStrictEqual(beatles.albums.map(a => a.title), ['Revolver', 'Abbey Road'], 'albums ordered oldest first');
+      assert.deepStrictEqual(beatles.appearsOn.map(a => a.title), ['Summer Hits']);
+      assert.strictEqual(beatles.tracks.length, 4);
+      assert.ok(!index.artistByKey.has(idx.fold('Various Artists')), 'Various Artists is not listed as an artist');
+    });
+
+    it('splits multi-value genres and groups decades and composers', () => {
+      const index = idx.buildIndex(fixture());
+      assert.deepStrictEqual(index.genres.map(g => g.name), ['Pop', 'Rock']);
+      assert.strictEqual(index.genreByKey.get('pop').tracks.length, 3, 'Revolver "Rock; Pop" counts toward Pop');
+      assert.deepStrictEqual(index.decades.map(d => d.name), ['2020s', '1970s', '1960s'], 'newest decade first');
+      assert.strictEqual(index.composerByKey.get(idx.fold('Roger Waters')).tracks.length, 2);
+    });
+
+    it('search matches every term across title, artist, album and genre', () => {
+      const index = idx.buildIndex(fixture());
+      assert.deepStrictEqual(idx.searchIndex(index, 'beatles some').tracks.map(x => x.title), ['Something']);
+      assert.ok(idx.searchIndex(index, 'abbey').albums.some(a => a.title === 'Abbey Road'));
+      assert.ok(idx.searchIndex(index, 'BEATLES').artists.some(a => a.name === 'The Beatles'), 'case-insensitive');
+      assert.strictEqual(idx.searchIndex(index, '   ').tracks.length, 0);
+    });
+
+    it('sorts tracks by play count and builds smart collections from stats', () => {
+      const tracks = fixture();
+      const stats = {
+        [tracks[1].id]: { plays: 9, lastPlayed: '2026-10-20T10:00:00Z', loved: true, lovedAt: '2026-10-01T00:00:00Z' },
+        [tracks[2].id]: { plays: 3, lastPlayed: '2026-10-21T10:00:00Z' },
+      };
+      assert.strictEqual(idx.sortTracks(tracks, 'plays', 'desc', stats)[0].title, 'Something');
+      assert.deepStrictEqual(idx.mostPlayedTracks(tracks, stats).map(x => x.title), ['Something', 'Taxman']);
+      assert.deepStrictEqual(idx.recentlyPlayedTracks(tracks, stats).map(x => x.title), ['Taxman', 'Something']);
+      assert.deepStrictEqual(idx.lovedTracks(tracks, stats).map(x => x.title), ['Something']);
+      assert.strictEqual(idx.sortTracks(tracks, 'artist', 'asc')[0].artist, 'Artist A');
+      assert.strictEqual(idx.indexLetter('The Beatles'), 'B', 'leading "The" is ignored for A–Z');
+      assert.strictEqual(idx.indexLetter('2Pac'), '#');
+    });
+
+    it('mergeTracks keeps the original date added across rescans', () => {
+      const dir = fs.mkdtempSync('/tmp/robos-lib-merge-');
+      const lib = new MediaLibrary({ configDir: dir });
+      lib.mergeTracks([{ id: 'a', filePath: '/x/a.mp3', title: 'A', addedAt: '2020-01-01T00:00:00.000Z' }]);
+      lib.mergeTracks([{ id: 'a', filePath: '/x/a.mp3', title: 'A (retagged)' }, { id: 'b', filePath: '/x/b.mp3', title: 'B' }]);
+      const a = lib.tracks.find(x => x.filePath === '/x/a.mp3');
+      assert.strictEqual(a.title, 'A (retagged)');
+      assert.strictEqual(a.addedAt, '2020-01-01T00:00:00.000Z');
+      assert.ok(lib.tracks.find(x => x.filePath === '/x/b.mp3').addedAt, 'new tracks get a date added');
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('records plays and loved tracks and persists them to audio-track-stats.json', () => {
+      const dir = fs.mkdtempSync('/tmp/robos-lib-stats-');
+      const lib = new MediaLibrary({ configDir: dir });
+      lib.recordPlay('trk_1');
+      lib.recordPlay('trk_1');
+      lib.setLoved(['trk_1', 'trk_2'], true);
+      lib.setLoved(['trk_2'], false);
+      const reloaded = new MediaLibrary({ configDir: dir });
+      assert.strictEqual(reloaded.getStats().trk_1.plays, 2);
+      assert.ok(reloaded.getStats().trk_1.lastPlayed);
+      assert.strictEqual(reloaded.getStats().trk_1.loved, true);
+      assert.strictEqual(reloaded.getStats().trk_2.loved, false);
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('persists cover art to disk so it survives a restart', () => {
+      const dir = fs.mkdtempSync('/tmp/robos-lib-art-');
+      const png = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex');
+      new MediaLibrary({ configDir: dir }).storeArt('art_0123456789abcdef', png, 'image/png');
+      const art = new MediaLibrary({ configDir: dir }).getArt('art_0123456789abcdef');
+      assert.ok(art, 'art reloads from the art cache directory');
+      assert.strictEqual(art.format, 'image/png');
+      assert.ok(art.buffer.equals(png));
+      assert.strictEqual(new MediaLibrary({ configDir: dir }).getArt('../../etc/passwd'), null, 'rejects path-like ids');
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('uses folder cover images and shares one art id per album', () => {
+      const dir = fs.mkdtempSync('/tmp/robos-lib-cover-');
+      fs.writeFileSync(path.join(dir, 'Cover.JPG'), Buffer.from('fake jpeg bytes'));
+      const meta = { common: { title: 'Song', album: 'Album', artist: 'Artist', albumartist: 'Artist', disk: { no: 2, of: 2 }, composer: ['Someone'] }, format: { duration: 100, codec: 'FLAC', lossless: true } };
+      const one = trackFromMetadata(path.join(dir, '01.flac'), meta, { selectCover: () => null });
+      const two = trackFromMetadata(path.join(dir, '02.flac'), meta, { selectCover: () => null });
+      assert.ok(one.art, 'cover.jpg next to the tracks is used when no embedded art exists');
+      assert.strictEqual(one.track.artId, two.track.artId, 'content-addressed art id is shared by the album');
+      assert.strictEqual(one.track.albumArtist, 'Artist');
+      assert.strictEqual(one.track.discNumber, 2);
+      assert.strictEqual(one.track.composer, 'Someone');
+      assert.strictEqual(one.track.lossless, true);
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('preload exposes library stats, art and file manager methods', () => {
+      const content = fs.readFileSync(path.join(APP_DIR, 'preload.js'), 'utf8');
+      for (const fn of ['getArtBase:', 'getTrackStats:', 'recordPlay:', 'setLoved:', 'showInFolder:']) {
+        assert.ok(content.includes(fn), `preload should expose ${fn}`);
+      }
+    });
+
+    it('bundle contains the library browser and the always-visible Now Playing panel', () => {
+      const content = fs.readFileSync(path.join(APP_DIR, 'renderer', 'bundle.js'), 'utf8');
+      for (const marker of ['lib-nav-', 'np-dock', 'btn-toggle-queue-panel', 'queue-list', 'library-search', 'btn-shuffle-library', 'context-menu']) {
+        assert.ok(content.includes(marker), `bundle should contain ${marker}`);
+      }
+    });
+  });
+});

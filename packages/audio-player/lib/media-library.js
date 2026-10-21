@@ -3,42 +3,49 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const crypto = require('crypto');
-const { pathToFileURL } = require('url');
 const { Worker } = require('worker_threads');
+const {
+  generateTrackId,
+  toSafeFileUrl,
+  trackFromMetadata,
+  fallbackTrack,
+} = require('./track-metadata');
+
+const ART_MEMORY_LIMIT = 200;
+const ART_EXTENSIONS = ['jpg', 'png', 'webp'];
 
 class MediaLibrary {
   constructor(options = {}) {
     this.configDir = options.configDir || path.join(os.homedir(), '.config', 'robos');
     this.cacheFile = path.join(this.configDir, 'audio-library.json');
     this.playlistsFile = path.join(this.configDir, 'audio-playlists.json');
+    this.statsFile = path.join(this.configDir, 'audio-track-stats.json');
+    // Cover art lives on disk so it survives restarts; tests pass configDir to stay hermetic.
+    this.artDir = options.artDir || (options.configDir
+      ? path.join(options.configDir, 'audio-art-cache')
+      : path.join(os.homedir(), '.cache', 'robos', 'audio-player', 'art'));
     this.tracks = [];
     this.artists = new Map();
     this.albums = new Map();
-    this.albumArtRegistry = new Map(); // artId -> { buffer, format }
-    this.nextArtId = 1;
+    this.albumArtRegistry = new Map(); // artId -> { buffer, format }, small in-memory LRU over artDir
     this._mm = null;
     this.currentWorker = null;
     this.playlists = [];
+    this.stats = {}; // trackId -> { plays, lastPlayed, loved, lovedAt }
+    this.artAliases = new Map(); // legacy path-based artId -> content-based artId
+    this._saveTimer = null;
 
     this._loadCache();
     this._loadPlaylists();
+    this._loadStats();
   }
 
   _generateTrackId(filePath) {
-    return `trk_${crypto.createHash('sha1').update(filePath).digest('hex').slice(0, 16)}`;
-  }
-
-  _generateArtId(filePath) {
-    return `art_${crypto.createHash('sha1').update(filePath).digest('hex').slice(0, 16)}`;
+    return generateTrackId(filePath);
   }
 
   _toSafeFileUrl(filePath) {
-    try {
-      return pathToFileURL(filePath).href;
-    } catch {
-      return encodeURI(`file://${filePath}`);
-    }
+    return toSafeFileUrl(filePath);
   }
 
   async _getParser() {
@@ -73,6 +80,11 @@ class MediaLibrary {
               needsSave = true;
             }
           }
+          // Libraries indexed before "Recently Added" existed: use the file's mtime.
+          if (!track.addedAt) {
+            track.addedAt = this._fileTimeIso(track.filePath) || data.updatedAt || new Date().toISOString();
+            needsSave = true;
+          }
         }
         if (needsSave) {
           this._saveCache();
@@ -83,6 +95,127 @@ class MediaLibrary {
     } catch (err) {
       console.warn('[MediaLibrary] Could not load library cache:', err.message);
       this.tracks = [];
+    }
+  }
+
+  _fileTimeIso(filePath) {
+    // Stat'ing thousands of files over a GVFS (SFTP/SMB) mount would stall startup.
+    if (!filePath || filePath.includes('/gvfs/')) return null;
+    try {
+      if (fs.existsSync(filePath)) return fs.statSync(filePath).mtime.toISOString();
+    } catch {}
+    return null;
+  }
+
+  // Coalesces bursts of small library updates into one write.
+  _saveCacheSoon(delayMs = 2000) {
+    if (this._saveTimer) return;
+    this._saveTimer = setTimeout(() => {
+      this._saveTimer = null;
+      this._saveCache();
+    }, delayMs);
+    if (this._saveTimer.unref) this._saveTimer.unref();
+  }
+
+  /**
+   * Replace-or-insert tracks by filePath, keeping when each one first entered the library.
+   */
+  mergeTracks(incoming = []) {
+    if (!incoming.length) return this.tracks;
+    const previous = new Map(this.tracks.map(t => [t.filePath, t]));
+    const now = new Date().toISOString();
+    for (const track of incoming) {
+      const old = previous.get(track.filePath);
+      track.addedAt = (old && old.addedAt) || track.addedAt || now;
+    }
+    const incomingSet = new Set(incoming.map(t => t.filePath));
+    this.tracks = this.tracks.filter(t => !incomingSet.has(t.filePath)).concat(incoming);
+    this._rebuildIndexes();
+    this._saveCache();
+    return this.tracks;
+  }
+
+  // ── Play statistics & loved tracks ─────────────────────────────────────────
+
+  _loadStats() {
+    try {
+      if (fs.existsSync(this.statsFile)) {
+        const data = JSON.parse(fs.readFileSync(this.statsFile, 'utf8'));
+        this.stats = (data && typeof data === 'object' && data.tracks) || {};
+      }
+    } catch (err) {
+      console.warn('[MediaLibrary] Could not load track stats:', err.message);
+      this.stats = {};
+    }
+  }
+
+  _saveStats() {
+    try {
+      fs.mkdirSync(this.configDir, { recursive: true });
+      fs.writeFileSync(this.statsFile, JSON.stringify({ updatedAt: new Date().toISOString(), tracks: this.stats }));
+    } catch (err) {
+      console.warn('[MediaLibrary] Could not save track stats:', err.message);
+    }
+  }
+
+  getStats() {
+    return this.stats;
+  }
+
+  recordPlay(trackId) {
+    if (!trackId) return null;
+    const entry = this.stats[trackId] || {};
+    entry.plays = (entry.plays || 0) + 1;
+    entry.lastPlayed = new Date().toISOString();
+    this.stats[trackId] = entry;
+    this._saveStats();
+    return entry;
+  }
+
+  setLoved(trackIds, loved) {
+    const ids = Array.isArray(trackIds) ? trackIds : [trackIds];
+    const now = new Date().toISOString();
+    const changed = {};
+    for (const id of ids.filter(Boolean)) {
+      const entry = this.stats[id] || {};
+      entry.loved = !!loved;
+      entry.lovedAt = loved ? now : null;
+      this.stats[id] = entry;
+      changed[id] = entry;
+    }
+    this._saveStats();
+    return changed;
+  }
+
+  // ── Cover art (content-addressed, persisted under artDir) ─────────────────
+
+  _rememberArt(artId, art) {
+    this.albumArtRegistry.delete(artId);
+    this.albumArtRegistry.set(artId, art);
+    if (this.albumArtRegistry.size > ART_MEMORY_LIMIT) {
+      this.albumArtRegistry.delete(this.albumArtRegistry.keys().next().value);
+    }
+  }
+
+  storeArt(artId, buffer, format = 'image/jpeg') {
+    if (!artId || !buffer) return;
+    const buf = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
+    const ext = format === 'image/png' ? 'png' : format === 'image/webp' ? 'webp' : 'jpg';
+    try {
+      const target = path.join(this.artDir, `${artId}.${ext}`);
+      if (!fs.existsSync(target)) {
+        fs.mkdirSync(this.artDir, { recursive: true });
+        fs.writeFileSync(target, buf);
+      }
+    } catch (err) {
+      console.warn('[MediaLibrary] Could not persist cover art:', err.message);
+    }
+    this._rememberArt(artId, { buffer: buf, format });
+  }
+
+  _storeWorkerArtworks(artworks = []) {
+    for (const art of artworks) {
+      if (art && art.artId && art.buffer) this.storeArt(art.artId, art.buffer, art.format);
     }
   }
 
@@ -195,48 +328,15 @@ class MediaLibrary {
    */
   async parseTrack(filePath) {
     const mm = await this._getParser();
+    let result;
     try {
       const metadata = await mm.parseFile(filePath, { duration: true, skipCovers: false });
-      const common = metadata.common || {};
-      const format = metadata.format || {};
-
-      let artId = null;
-      const cover = mm.selectCover(common.picture);
-      if (cover) {
-        artId = this._generateArtId(filePath);
-        this.albumArtRegistry.set(artId, {
-          buffer: cover.data,
-          format: cover.format || 'image/jpeg'
-        });
-      }
-
-      return {
-        id: this._generateTrackId(filePath),
-        filePath,
-        title: common.title || path.parse(filePath).name,
-        artist: common.artist || common.albumartist || 'Unknown Artist',
-        album: common.album || 'Unknown Album',
-        year: common.year || null,
-        genre: (common.genre && common.genre[0]) || null,
-        trackNumber: common.track?.no || null,
-        duration: format.duration || 0,
-        bitrate: format.bitrate || 0,
-        sampleRate: format.sampleRate || 0,
-        artId,
-        src: this._toSafeFileUrl(filePath)
-      };
+      result = trackFromMetadata(filePath, metadata, mm);
     } catch (err) {
-      return {
-        id: this._generateTrackId(filePath),
-        filePath,
-        title: path.parse(filePath).name,
-        artist: 'Unknown Artist',
-        album: 'Unknown Album',
-        duration: 0,
-        src: this._toSafeFileUrl(filePath),
-        error: err.message
-      };
+      result = fallbackTrack(filePath, err);
     }
+    if (result.art) this.storeArt(result.art.artId, result.art.buffer, result.art.format);
+    return result.track;
   }
 
   /**
@@ -286,13 +386,48 @@ class MediaLibrary {
       artist,
       album: (parentFolder && parentFolder !== '/' && parentFolder !== '.') ? parentFolder : 'Cloud Storage',
       duration: 0,
+      addedAt: new Date().toISOString(),
       cloud: cloudMeta,
       src: streamUrl || this._toSafeFileUrl(filePath),
     };
   }
 
   getArt(artId) {
-    return this.albumArtRegistry.get(artId);
+    if (!artId || !/^art_[\w-]+$/.test(artId)) return null;
+    if (this.artAliases.has(artId)) artId = this.artAliases.get(artId);
+    const cached = this.albumArtRegistry.get(artId);
+    if (cached) return cached;
+    for (const ext of ART_EXTENSIONS) {
+      const file = path.join(this.artDir, `${artId}.${ext}`);
+      try {
+        if (fs.existsSync(file)) {
+          const art = { buffer: fs.readFileSync(file), format: ext === 'jpg' ? 'image/jpeg' : `image/${ext}` };
+          this._rememberArt(artId, art);
+          return art;
+        }
+      } catch {}
+    }
+    return null;
+  }
+
+  /**
+   * Like getArt, but if the image is missing (e.g. a library indexed before art was
+   * persisted) re-read the cover from one of the tracks that references it.
+   */
+  async getArtAsync(artId) {
+    const art = this.getArt(artId);
+    if (art) return art;
+    const owner = this.tracks.find(t => t.artId === artId && t.filePath && fs.existsSync(t.filePath));
+    if (!owner) return null;
+    const fresh = await this.parseTrack(owner.filePath);
+    if (fresh.artId && fresh.artId !== artId) {
+      // Older libraries keyed art by file path; re-point every track of that album and
+      // remember the old id, since the renderer may still ask for it.
+      this.artAliases.set(artId, fresh.artId);
+      for (const t of this.tracks) if (t.artId === artId) t.artId = fresh.artId;
+      this._saveCacheSoon();
+    }
+    return fresh.artId ? this.getArt(fresh.artId) : null;
   }
 
   /**
@@ -337,11 +472,7 @@ class MediaLibrary {
       }
     }
 
-    // Merge into tracks list without duplicates
-    const fileSet = new Set(parsedTracks.map(t => t.filePath));
-    this.tracks = this.tracks.filter(t => !fileSet.has(t.filePath)).concat(parsedTracks);
-    this._rebuildIndexes();
-    this._saveCache();
+    this.mergeTracks(parsedTracks);
 
     return {
       totalFound: audioFiles.length,
@@ -386,20 +517,8 @@ class MediaLibrary {
           onProgress(msg);
         }
       } else if (msg.type === 'batch') {
-        // Register artworks
-        for (const art of (msg.artworks || [])) {
-          if (art && art.artId && art.buffer) {
-            this.albumArtRegistry.set(art.artId, {
-              buffer: Buffer.from(art.buffer),
-              format: art.format || 'image/jpeg'
-            });
-          }
-        }
-        // Merge tracks
-        const incomingFileSet = new Set(msg.tracks.map(t => t.filePath));
-        this.tracks = this.tracks.filter(t => !incomingFileSet.has(t.filePath)).concat(msg.tracks);
-        this._rebuildIndexes();
-        this._saveCache();
+        this._storeWorkerArtworks(msg.artworks);
+        this.mergeTracks(msg.tracks);
 
         if (typeof onBatch === 'function') {
           onBatch({
@@ -410,20 +529,8 @@ class MediaLibrary {
           });
         }
       } else if (msg.type === 'done') {
-        // Register artworks
-        for (const art of (msg.artworks || [])) {
-          if (art && art.artId && art.buffer) {
-            this.albumArtRegistry.set(art.artId, {
-              buffer: Buffer.from(art.buffer),
-              format: art.format || 'image/jpeg'
-            });
-          }
-        }
-        // Final merge
-        const incomingFileSet = new Set(msg.tracks.map(t => t.filePath));
-        this.tracks = this.tracks.filter(t => !incomingFileSet.has(t.filePath)).concat(msg.tracks);
-        this._rebuildIndexes();
-        this._saveCache();
+        this._storeWorkerArtworks(msg.artworks);
+        this.mergeTracks(msg.tracks);
 
         if (this.currentWorker === worker) {
           try { worker.terminate(); } catch {}

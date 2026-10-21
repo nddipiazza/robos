@@ -1,30 +1,61 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import AudioPlayer from 'react-h5-audio-player';
 import { Icon } from './Icon.jsx';
 import CloudBrowser from './CloudBrowser.jsx';
 import Lyrics from './Lyrics.jsx';
-import FolderPanel from './FolderPanel.jsx';
+import Library from './Library.jsx';
+import NowPlayingPanel from './NowPlayingPanel.jsx';
+import TrackInfo from './TrackInfo.jsx';
+import { LibraryContext, ContextMenu, LoveButton, Cover, artUrlFor } from './library-ui.jsx';
+import { albumKeyOf, fold, splitGenres, sortTracks } from '../lib/library-index.js';
+
+const DEFAULT_QUEUE = [
+  {
+    id: 'default-1',
+    title: 'RobOS Lo-Fi Synth Session',
+    artist: 'Procedural Ambient Engine',
+    album: 'RobOS Focus Series',
+    src: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3'
+  }
+];
+const QUEUE_KEY = 'robos-audio-player.queue.v1';
+const PLAYER_PREFS_KEY = 'robos-audio-player.player-prefs.v1';
+const MAX_SAVED_QUEUE = 5000;
+
+function loadJson(key) {
+  try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
+}
+
+// The queue (and position) survives restarts, like VLC's last playlist.
+function restoredQueue() {
+  const saved = loadJson(QUEUE_KEY);
+  if (saved && Array.isArray(saved.queue) && saved.queue.length) {
+    return { queue: saved.queue, index: Math.max(0, Math.min(saved.index || 0, saved.queue.length - 1)) };
+  }
+  return { queue: DEFAULT_QUEUE, index: 0 };
+}
+
+const fileUrl = (filePath) => `file://${filePath.split('/').map(encodeURIComponent).join('/')}`;
 
 export default function App() {
+  const [initial] = useState(restoredQueue);
+  const [playerPrefs] = useState(() => loadJson(PLAYER_PREFS_KEY) || {});
   const [activeTab, setActiveTab] = useState('player'); // 'player' | 'playlists' | 'library' | 'cloud' | 'ambient' | 'speakers'
-  const [playlist, setPlaylist] = useState([
-    {
-      id: 'default-1',
-      title: 'RobOS Lo-Fi Synth Session',
-      artist: 'Procedural Ambient Engine',
-      album: 'RobOS Focus Series',
-      src: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3'
-    }
-  ]);
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const [playlist, setPlaylist] = useState(initial.queue);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(initial.index);
   const [folders, setFolders] = useState([]);
-  const [folderFilter, setFolderFilter] = useState(null);
   const [syncingFolder, setSyncingFolder] = useState(null);
-  const [librarySort, setLibrarySort] = useState({ key: 'title', dir: 'asc' });
   const [outputTarget, setOutputTarget] = useState('local'); // 'local' | speaker IP | 'all'
   const [speakers, setSpeakers] = useState([]);
   const [library, setLibrary] = useState({ tracks: [], artists: [], albums: [] });
-  const [searchQuery, setSearchQuery] = useState('');
+  const [stats, setStats] = useState({});
+  const [artBase, setArtBase] = useState({ local: null, cast: null });
+  const [repeatMode, setRepeatMode] = useState(playerPrefs.repeat || 'all'); // 'off' | 'all' | 'one'
+  const [shuffleMode, setShuffleMode] = useState(!!playerPrefs.shuffle);
+  const [dockCollapsed, setDockCollapsed] = useState(!!playerPrefs.dockCollapsed);
+  const [libNav, setLibNav] = useState([{ section: playerPrefs.librarySection || 'albums' }]);
+  const [menu, setMenu] = useState(null);
+  const [infoTrack, setInfoTrack] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [isScanningLibrary, setIsScanningLibrary] = useState(false);
   const [libraryScanStatus, setLibraryScanStatus] = useState(null);
@@ -42,13 +73,17 @@ export default function App() {
   const [showSaveQueueModal, setShowSaveQueueModal] = useState(false);
   const [saveQueueName, setSaveQueueName] = useState('');
   const [saveQueueDesc, setSaveQueueDesc] = useState('');
-  const [showAddToPlaylistModal, setShowAddToPlaylistModal] = useState(false);
-  const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = useState(null);
+  const [tracksForPlaylist, setTracksForPlaylist] = useState(null);
+  const [quickPlaylistName, setQuickPlaylistName] = useState('');
 
   const playerRef = useRef(null);
   const audioCtxRef = useRef(null);
   const ambientNodeRef = useRef(null);
   const toastTimerRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const playedRef = useRef({ key: null, counted: false });
+  const shuffleHistoryRef = useRef([]);
+  const latestRef = useRef({});
 
   const formatDuration = (sec) => {
     if (!sec || isNaN(sec)) return '--:--';
@@ -82,8 +117,12 @@ export default function App() {
   useEffect(() => {
     refreshSpeakers();
     loadLibrary();
+    loadStats();
     refreshFolders();
     refreshPlaylists();
+    if (window.robosAudio?.getArtBase) {
+      window.robosAudio.getArtBase().then(base => base && setArtBase(base)).catch(() => {});
+    }
 
     const cleanups = [];
 
@@ -108,15 +147,9 @@ export default function App() {
 
     if (window.robosAudio?.onLibraryScanBatch) {
       cleanups.push(window.robosAudio.onLibraryScanBatch((batch) => {
+        // Scanned tracks go to the library only; the play queue stays what the user built.
         if (batch.library) {
           setLibrary(batch.library);
-        }
-        if (batch.tracks && batch.tracks.length > 0) {
-          setPlaylist(prev => {
-            const existingPaths = new Set(prev.map(t => t.filePath));
-            const newItems = batch.tracks.filter(t => !existingPaths.has(t.filePath));
-            return [...prev, ...newItems];
-          });
         }
       }));
     }
@@ -197,7 +230,6 @@ export default function App() {
   const handleRemoveFolder = async (id, removeTracks) => {
     const res = await window.robosAudio.removeFolder(id, removeTracks);
     applyFolderState(res);
-    if (folderFilter === id) setFolderFilter(null);
     showStatus(removeTracks ? 'Folder and its tracks removed from the library.' : 'Folder removed. Its tracks stay in the library.');
   };
 
@@ -236,6 +268,12 @@ export default function App() {
       if (lib && lib.tracks) {
         setLibrary(lib);
       }
+    } catch {}
+  };
+
+  const loadStats = async () => {
+    try {
+      if (window.robosAudio?.getTrackStats) setStats((await window.robosAudio.getTrackStats()) || {});
     } catch {}
   };
 
@@ -362,22 +400,30 @@ export default function App() {
     showStatus(`Appended ${pl.tracks.length} track(s) from "${pl.name}" to queue`);
   };
 
-  const handleCastPlaylist = (pl) => {
-    if (!pl || !pl.tracks || pl.tracks.length === 0) {
-      showStatus(`Playlist "${pl?.name || 'Playlist'}" has no tracks.`);
+  const castTracks = (tracks, label = null) => {
+    if (!tracks || tracks.length === 0) {
+      showStatus(`${label ? `"${label}"` : 'Selection'} has no tracks.`);
+      return;
+    }
+    if (!speakers.length) {
+      showStatus('No Cast speakers found yet. Use "Scan Speakers" first.');
       return;
     }
     const target = outputTarget !== 'local' ? outputTarget : (speakers[0]?.ip || 'all');
+    const list = tracks.map(t => ({ ...t }));
     setOutputTarget(target);
-    setPlaylist([...pl.tracks]);
+    setPlaylist(list);
     setCurrentTrackIndex(0);
-    castTrack(target, pl.tracks[0]);
+    shuffleHistoryRef.current = [];
+    castTrack(target, list[0]);
     if (playerRef.current?.audio?.current) {
       playerRef.current.audio.current.muted = true;
       playerRef.current.audio.current.play().catch(() => {});
     }
-    showStatus(`Casting playlist "${pl.name}" to ${getSpeakerName(target)}!`);
+    showStatus(`Casting ${label ? `"${label}"` : `${list.length} track(s)`} to ${getSpeakerName(target)}!`);
   };
+
+  const handleCastPlaylist = (pl) => castTracks(pl?.tracks, pl?.name || 'Playlist');
 
   const handleCreatePlaylist = async () => {
     if (!newPlaylistName.trim()) {
@@ -418,16 +464,38 @@ export default function App() {
     }
   };
 
-  const handleAddTrackToPlaylist = async (playlistId, track) => {
+  const handleAddTracksToPlaylist = async (playlistId, tracks) => {
+    if (!tracks || !tracks.length) return;
     try {
-      await window.robosAudio.addTracksToPlaylist(playlistId, [track]);
+      await window.robosAudio.addTracksToPlaylist(playlistId, tracks);
       await refreshPlaylists();
       const targetPl = playlists.find(p => p.id === playlistId);
-      setShowAddToPlaylistModal(false);
-      setSelectedTrackForPlaylist(null);
-      showStatus(`Added "${track.title}" to "${targetPl?.name || 'playlist'}"!`);
+      setTracksForPlaylist(null);
+      const what = tracks.length === 1 ? `"${tracks[0].title}"` : `${tracks.length} tracks`;
+      showStatus(`Added ${what} to "${targetPl?.name || 'playlist'}"!`);
     } catch (err) {
       showStatus('Error adding to playlist: ' + err.message);
+    }
+  };
+
+  const handleAddTrackToPlaylist = (playlistId, track) => handleAddTracksToPlaylist(playlistId, [track]);
+
+  const handleCreatePlaylistFromTracks = async () => {
+    const tracks = tracksForPlaylist || [];
+    const name = quickPlaylistName.trim();
+    if (!name) {
+      showStatus('Please enter a playlist name');
+      return;
+    }
+    try {
+      const created = await window.robosAudio.createPlaylist({ name, description: '', tracks });
+      await refreshPlaylists();
+      if (created) setSelectedPlaylistId(created.id);
+      setQuickPlaylistName('');
+      setTracksForPlaylist(null);
+      showStatus(`Created playlist "${name}" with ${tracks.length} track(s)!`);
+    } catch (err) {
+      showStatus('Error creating playlist: ' + err.message);
     }
   };
 
@@ -510,6 +578,55 @@ export default function App() {
     }
   };
 
+  // ── Queue editing (Now Playing panel) ────────────────────────────────────
+
+  const handleMoveInQueue = (indices, target) => {
+    const sorted = [...new Set(indices)].filter(i => i >= 0 && i < playlist.length).sort((a, b) => a - b);
+    if (!sorted.length) return;
+    const moving = sorted.map(i => playlist[i]);
+    const set = new Set(sorted);
+    const rest = playlist.filter((_, i) => !set.has(i));
+    const pos = Math.max(0, Math.min(rest.length, target - sorted.filter(i => i < target).length));
+    const next = [...rest.slice(0, pos), ...moving, ...rest.slice(pos)];
+    const current = playlist[currentTrackIndex];
+    setPlaylist(next);
+    setCurrentTrackIndex(Math.max(0, next.indexOf(current)));
+  };
+
+  const handleRemoveFromQueue = (indices) => {
+    const set = new Set(indices);
+    if (!set.size) return;
+    const next = playlist.filter((_, i) => !set.has(i));
+    const current = playlist[currentTrackIndex];
+    let idx = next.indexOf(current);
+    if (idx < 0) {
+      const removedBefore = indices.filter(i => i < currentTrackIndex).length;
+      idx = Math.min(currentTrackIndex - removedBefore, next.length - 1);
+    }
+    if (!next.length) {
+      playerRef.current?.audio?.current?.pause();
+      setIsPlaying(false);
+    }
+    setPlaylist(next);
+    setCurrentTrackIndex(Math.max(0, idx));
+    showStatus(set.size === 1 ? 'Removed track from queue' : `Removed ${set.size} tracks from queue`);
+  };
+
+  const handleInsertIntoQueue = (tracks, at) => {
+    const items = tracks.map(t => ({ ...t }));
+    const pos = Math.max(0, Math.min(playlist.length, at));
+    setPlaylist([...playlist.slice(0, pos), ...items, ...playlist.slice(pos)]);
+    if (playlist.length && pos <= currentTrackIndex) setCurrentTrackIndex(currentTrackIndex + items.length);
+    showStatus(`Added ${items.length} track(s) to the queue`);
+  };
+
+  const handleSortQueue = (key, dir) => {
+    const current = playlist[currentTrackIndex];
+    const next = sortTracks(playlist, key, dir, stats);
+    setPlaylist(next);
+    setCurrentTrackIndex(Math.max(0, next.indexOf(current)));
+  };
+
   const handleShuffleQueue = () => {
     if (playlist.length <= 1) return;
     const current = playlist[currentTrackIndex];
@@ -531,26 +648,23 @@ export default function App() {
     showStatus('Cleared other tracks from queue');
   };
 
-  const handleRemoveQueueTrack = (idxToRemove) => {
-    if (playlist.length <= 1) {
-      showStatus('Cannot remove the only track in queue');
-      return;
-    }
-    const newQueue = playlist.filter((_, idx) => idx !== idxToRemove);
-    let nextCurrent = currentTrackIndex;
-    if (idxToRemove === currentTrackIndex) {
-      nextCurrent = Math.min(currentTrackIndex, newQueue.length - 1);
-    } else if (idxToRemove < currentTrackIndex) {
-      nextCurrent = currentTrackIndex - 1;
-    }
-    setPlaylist(newQueue);
-    setCurrentTrackIndex(nextCurrent);
-    showStatus('Removed track from queue');
-  };
 
   // ── Track Selection & Routing ─────────────────────────────────────────────
 
   const currentTrack = playlist[currentTrackIndex] || playlist[0] || null;
+
+  const libraryById = useMemo(() => new Map(library.tracks.map(t => [t.id, t])), [library.tracks]);
+
+  // Cloud stream URLs embed the stream server's port, which changes every launch,
+  // so always prefer the library's fresh URL for cloud tracks.
+  const resolveSrc = (t) => {
+    if (!t) return '';
+    if (t.cloud) {
+      const fresh = libraryById.get(t.id);
+      if (fresh && fresh.src) return fresh.src;
+    }
+    return t.src || (t.filePath ? fileUrl(t.filePath) : '');
+  };
 
   const handleStopCast = async (targetIp = null) => {
     const ipToStop = targetIp || activeCastSession?.ip || (outputTarget !== 'local' ? outputTarget : null);
@@ -602,8 +716,9 @@ export default function App() {
       artist: track.artist,
       album: track.album,
     };
-    if (track.artId) {
-      metadata.images = [{ url: `http://192.168.1.34:0/art/${track.artId}.jpg` }];
+    const castArt = artUrlFor(artBase.cast, track.artId);
+    if (castArt) {
+      metadata.images = [{ url: castArt }];
     }
 
     try {
@@ -628,6 +743,78 @@ export default function App() {
     }
   };
 
+  // Routes a track that was just made current to the speaker or local output.
+  // `sameSrc` restarts the audio element when the source didn't change.
+  const beginPlayback = (trackToPlay, sameSrc = false) => {
+    const audio = playerRef.current?.audio?.current;
+    playedRef.current = { key: null, counted: false };
+    if (sameSrc && audio) audio.currentTime = 0;
+    if (outputTarget !== 'local') {
+      castTrack(outputTarget, trackToPlay);
+      if (audio) {
+        audio.muted = true;
+        setTimeout(() => { playerRef.current?.audio?.current?.play().catch(() => {}); }, 60);
+      }
+    } else {
+      if (activeCastSession) handleStopCast();
+      if (audio) {
+        audio.muted = false;
+        setTimeout(() => {
+          playerRef.current?.audio?.current?.play().catch((err) => {
+            console.warn('[AudioPlayer] Playback error:', err);
+          });
+        }, 60);
+      }
+    }
+    setIsPlaying(true);
+  };
+
+  /**
+   * Replace the queue with `tracks` and start at `startIndex` — what double-click
+   * and every "Play" button in the library do.
+   */
+  const playTracks = (tracks, startIndex = 0, { shuffle = false } = {}) => {
+    if (!tracks || !tracks.length) return;
+    const list = tracks.map(t => ({ ...t }));
+    let idx = Math.max(0, Math.min(startIndex, list.length - 1));
+    if (shuffle) {
+      for (let i = list.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [list[i], list[j]] = [list[j], list[i]];
+      }
+      idx = 0;
+    }
+    const first = list[idx];
+    if (first.filePath && !first.cloud && window.robosAudio?.ensureFileAccessible) {
+      window.robosAudio.ensureFileAccessible(first.filePath).catch(() => {});
+    }
+    const sameSrc = resolveSrc(first) === resolveSrc(currentTrack);
+    shuffleHistoryRef.current = [];
+    setPlaylist(list);
+    setCurrentTrackIndex(idx);
+    beginPlayback(first, sameSrc);
+    showStatus(list.length === 1
+      ? `Playing "${first.title}" by ${first.artist || 'Unknown'}`
+      : `${shuffle ? 'Shuffling' : 'Playing'} ${list.length} tracks — starting with "${first.title}"`);
+  };
+
+  // "Play next" inserts right after the playing track; "end" appends.
+  const queueTracks = (tracks, where = 'end') => {
+    if (!tracks || !tracks.length) return;
+    const items = tracks.map(t => ({ ...t }));
+    if (!playlist.length) {
+      setPlaylist(items);
+      setCurrentTrackIndex(0);
+    } else if (where === 'next') {
+      const at = Math.min(playlist.length, currentTrackIndex + 1);
+      setPlaylist([...playlist.slice(0, at), ...items, ...playlist.slice(at)]);
+    } else {
+      setPlaylist([...playlist, ...items]);
+    }
+    const what = items.length === 1 ? `"${items[0].title}"` : `${items.length} tracks`;
+    showStatus(where === 'next' ? `${what} will play next` : `Added ${what} to the queue`);
+  };
+
   const playTrack = async (track) => {
     if (!track) return;
 
@@ -637,8 +824,9 @@ export default function App() {
 
     let trackToPlay = { ...track };
     if (!trackToPlay.src && trackToPlay.filePath) {
-      trackToPlay.src = encodeURI(`file://${trackToPlay.filePath}`);
+      trackToPlay.src = fileUrl(trackToPlay.filePath);
     }
+    const sameSrc = resolveSrc(trackToPlay) === resolveSrc(currentTrack);
 
     const existingIdx = playlist.findIndex(t => 
       (t.id && trackToPlay.id && t.id === trackToPlay.id) || 
@@ -652,6 +840,7 @@ export default function App() {
       setPlaylist(prev => [...prev, trackToPlay]);
       setCurrentTrackIndex(playlist.length);
     }
+    if (sameSrc && playerRef.current?.audio?.current) playerRef.current.audio.current.currentTime = 0;
 
     if (outputTarget !== 'local') {
       // Cast the track to the selected speaker
@@ -723,23 +912,182 @@ export default function App() {
     }
   };
 
-  const handlePlayNext = () => {
-    if (playlist.length <= 1) return;
-    const nextIdx = (currentTrackIndex + 1) % playlist.length;
-    setCurrentTrackIndex(nextIdx);
-    if (outputTarget !== 'local') {
-      castTrack(outputTarget, playlist[nextIdx]);
+  // ── Next / previous with VLC-style random and repeat modes ────────────────
+
+  // Returns the queue index to play after the current one, or null to stop.
+  const pickNextIndex = (fromEnded) => {
+    const n = playlist.length;
+    if (!n) return null;
+    if (shuffleMode && n > 1) {
+      const played = new Set(shuffleHistoryRef.current);
+      let candidates = playlist.map((_, i) => i).filter(i => i !== currentTrackIndex && !played.has(playlist[i]));
+      if (!candidates.length) {
+        if (fromEnded && repeatMode === 'off') return null;
+        shuffleHistoryRef.current = [];
+        candidates = playlist.map((_, i) => i).filter(i => i !== currentTrackIndex);
+      }
+      return candidates[Math.floor(Math.random() * candidates.length)];
     }
+    if (currentTrackIndex + 1 < n) return currentTrackIndex + 1;
+    if (fromEnded && repeatMode === 'off') return null;
+    return 0;
+  };
+
+  const restartCurrent = () => {
+    const audio = playerRef.current?.audio?.current;
+    playedRef.current = { key: null, counted: false };
+    if (audio) {
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+    }
+    if (outputTarget !== 'local' && currentTrack) castTrack(outputTarget, currentTrack);
+  };
+
+  // Jump to a queue entry (double-click in the Now Playing panel, next/prev, auto-advance).
+  const goToIndex = (idx, { remember = true } = {}) => {
+    const track = playlist[idx];
+    if (!track) return;
+    if (remember && playlist[currentTrackIndex]) {
+      shuffleHistoryRef.current = [...shuffleHistoryRef.current.slice(-500), playlist[currentTrackIndex]];
+    }
+    if (idx === currentTrackIndex) {
+      restartCurrent();
+      return;
+    }
+    setCurrentTrackIndex(idx);
+    if (outputTarget !== 'local') castTrack(outputTarget, track);
+    else if (playerRef.current?.audio?.current) playerRef.current.audio.current.muted = false;
+    setIsPlaying(true);
+  };
+
+  const handlePlayNext = () => {
+    const idx = pickNextIndex(false);
+    if (idx != null) goToIndex(idx);
+  };
+
+  const handleTrackEnded = () => {
+    if (repeatMode === 'one') {
+      restartCurrent();
+      return;
+    }
+    const idx = pickNextIndex(true);
+    if (idx == null) {
+      setIsPlaying(false);
+      showStatus('Reached the end of the queue.');
+      return;
+    }
+    goToIndex(idx);
   };
 
   const handlePlayPrev = () => {
-    if (playlist.length <= 1) return;
-    const prevIdx = (currentTrackIndex - 1 + playlist.length) % playlist.length;
-    setCurrentTrackIndex(prevIdx);
-    if (outputTarget !== 'local') {
-      castTrack(outputTarget, playlist[prevIdx]);
+    const audio = playerRef.current?.audio?.current;
+    // Like most players: "previous" first rewinds a track that's been playing a while.
+    if (audio && audio.currentTime > 3) {
+      audio.currentTime = 0;
+      return;
     }
+    if (shuffleMode) {
+      const history = shuffleHistoryRef.current;
+      while (history.length) {
+        const idx = playlist.indexOf(history.pop());
+        if (idx >= 0) { goToIndex(idx, { remember: false }); return; }
+      }
+    }
+    if (playlist.length <= 1) return;
+    goToIndex((currentTrackIndex - 1 + playlist.length) % playlist.length, { remember: false });
   };
+
+  const cycleRepeat = () => {
+    const next = repeatMode === 'off' ? 'all' : repeatMode === 'all' ? 'one' : 'off';
+    setRepeatMode(next);
+    showStatus({ off: 'Repeat off', all: 'Repeat whole queue', one: 'Repeat current track' }[next]);
+  };
+
+  const toggleShuffleMode = () => {
+    setShuffleMode(on => {
+      shuffleHistoryRef.current = [];
+      showStatus(on ? 'Random playback off' : 'Random playback on');
+      return !on;
+    });
+  };
+
+  // ── Library navigation, loved tracks, track info ──────────────────────────
+
+  const libraryNav = libNav[libNav.length - 1];
+
+  const navigateLibrary = (view) => {
+    setActiveTab('library');
+    setLibNav(prev => {
+      const top = prev[prev.length - 1];
+      if (JSON.stringify(top) === JSON.stringify(view)) return prev;
+      return [...prev.slice(-40), view];
+    });
+  };
+
+  const libraryBack = () => setLibNav(prev => (prev.length > 1 ? prev.slice(0, -1) : prev));
+
+  const goToAlbumOf = (track) => navigateLibrary({ section: 'albums', detail: { type: 'album', key: albumKeyOf(track) } });
+  const goToArtist = (name) => navigateLibrary({ section: 'artists', detail: { type: 'artist', key: fold(name || 'Unknown Artist') } });
+  const goToGenre = (genre) => navigateLibrary({ section: 'genres', detail: { type: 'genre', key: fold(splitGenres(genre)[0] || genre) } });
+
+  const setLovedTracks = async (tracks, loved) => {
+    const ids = [...new Set((tracks || []).map(t => t.id).filter(Boolean))];
+    if (!ids.length) return;
+    const now = new Date().toISOString();
+    setStats(prev => {
+      const next = { ...prev };
+      for (const id of ids) next[id] = { ...(prev[id] || {}), loved, lovedAt: loved ? now : null };
+      return next;
+    });
+    try {
+      const changed = await window.robosAudio.setLoved(ids, loved);
+      if (changed) setStats(prev => ({ ...prev, ...changed }));
+    } catch {}
+    const what = ids.length === 1 ? `"${tracks[0].title}"` : `${ids.length} tracks`;
+    showStatus(loved ? `Added ${what} to Loved` : `Removed ${what} from Loved`);
+  };
+
+  const recordPlay = (track) => {
+    if (!track?.id || !window.robosAudio?.recordPlay) return;
+    window.robosAudio.recordPlay(track.id)
+      .then(entry => { if (entry) setStats(prev => ({ ...prev, [track.id]: entry })); })
+      .catch(() => {});
+  };
+
+  const showInFolder = async (track) => {
+    const res = await window.robosAudio.showInFolder(track.filePath).catch(() => null);
+    if (!res || !res.ok) showStatus('That file is not reachable right now.');
+  };
+
+  const openMenu = useCallback((e, items) => {
+    e.preventDefault?.();
+    e.stopPropagation?.();
+    setMenu({ x: e.clientX, y: e.clientY, items });
+  }, []);
+  const closeMenu = useCallback(() => setMenu(null), []);
+
+  const libraryCtx = {
+    artBase: artBase.local,
+    stats,
+    currentTrack,
+    isPlaying,
+    openMenu,
+    actions: {
+      playTracks,
+      queueTracks,
+      castTracks,
+      hasSpeakers: speakers.length > 0,
+      addToPlaylist: (tracks) => { setQuickPlaylistName(''); setTracksForPlaylist(tracks); },
+      setLoved: setLovedTracks,
+      showInfo: setInfoTrack,
+      showInFolder,
+      goToAlbumOf,
+      goToArtist,
+      goToGenre,
+    },
+  };
+
+  latestRef.current = { next: handlePlayNext, prev: handlePlayPrev, toggle: () => handleTogglePlayPause() };
 
   // ── Ambient Synthesizers (Web Audio) ──────────────────────────────────────
 
@@ -815,49 +1163,119 @@ export default function App() {
     showStatus(`Playing procedural ambient soundscape: ${type}`);
   };
 
-  // ── Filtered Library Tracks ───────────────────────────────────────────────
+  latestRef.current.currentTrack = currentTrack;
+  latestRef.current.currentIndex = currentTrackIndex;
+  latestRef.current.recordPlay = recordPlay;
 
-  const activeFolder = folders.find(f => f.id === folderFilter) || null;
+  // Count a play once a track has been heard for 30 s (or half of a short track).
+  useEffect(() => {
+    const audio = playerRef.current?.audio?.current;
+    if (!audio) return undefined;
+    const onTime = () => {
+      const { currentTrack: t, currentIndex } = latestRef.current;
+      if (!t) return;
+      const key = `${currentIndex}:${t.id || t.src}`;
+      if (playedRef.current.key !== key) playedRef.current = { key, counted: false };
+      if (playedRef.current.counted) return;
+      const threshold = Math.min(30, (audio.duration || 60) / 2);
+      if (audio.currentTime >= threshold) {
+        playedRef.current.counted = true;
+        latestRef.current.recordPlay(t);
+      }
+    };
+    const onEnded = () => { playedRef.current = { key: null, counted: false }; };
+    audio.addEventListener('timeupdate', onTime);
+    audio.addEventListener('ended', onEnded);
+    return () => {
+      audio.removeEventListener('timeupdate', onTime);
+      audio.removeEventListener('ended', onEnded);
+    };
+  }, []);
 
-  const folderOwnsTrack = (folder, filePath) => {
-    if (!folder || !filePath) return false;
-    if (filePath === folder.localRoot || filePath.startsWith(folder.localRoot + '/')) return true;
-    if (folder.legacyRootDir && filePath.startsWith(folder.legacyRootDir + '/')) {
-      const rel = filePath.slice(folder.legacyRootDir.length + 1);
-      if (rel && !rel.includes('/')) return true;
+  // Media keys, GNOME's media controls and MPRIS all go through the Media Session API.
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return;
+    const isPaused = () => {
+      const audio = playerRef.current?.audio?.current;
+      return !audio || audio.paused;
+    };
+    const handlers = {
+      previoustrack: () => latestRef.current.prev(),
+      nexttrack: () => latestRef.current.next(),
+      play: () => { if (isPaused()) latestRef.current.toggle(); },
+      pause: () => { if (!isPaused()) latestRef.current.toggle(); },
+    };
+    for (const [action, fn] of Object.entries(handlers)) {
+      try { navigator.mediaSession.setActionHandler(action, fn); } catch {}
     }
-    return false;
-  };
+  }, []);
 
-  const filteredLibrary = library.tracks.filter(t => {
-    if (activeFolder && !folderOwnsTrack(activeFolder, t.filePath)) return false;
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return (t.title && t.title.toLowerCase().includes(q)) ||
-           (t.artist && t.artist.toLowerCase().includes(q)) ||
-           (t.album && t.album.toLowerCase().includes(q)) ||
-           (t.genre && t.genre.toLowerCase().includes(q));
-  });
+  useEffect(() => {
+    if (!('mediaSession' in navigator) || !currentTrack || typeof MediaMetadata === 'undefined') return;
+    const art = artUrlFor(artBase.local, currentTrack.artId);
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentTrack.title || '',
+        artist: currentTrack.artist || '',
+        album: currentTrack.album || '',
+        artwork: art ? [{ src: art, sizes: '512x512' }] : [],
+      });
+    } catch {}
+  }, [currentTrack?.id, currentTrack?.title, currentTrack?.artId, artBase.local]);
 
-  const sortedLibrary = [...filteredLibrary].sort((a, b) => {
-    const { key, dir } = librarySort;
-    const av = a[key] ?? '';
-    const bv = b[key] ?? '';
-    const cmp = key === 'duration'
-      ? (av || 0) - (bv || 0)
-      : String(av).localeCompare(String(bv), undefined, { sensitivity: 'base', numeric: true });
-    return dir === 'asc' ? cmp : -cmp;
-  });
+  // Space: play/pause · Ctrl+→ / Ctrl+←: next / previous · Ctrl+F: search the library.
+  useEffect(() => {
+    const onKey = (e) => {
+      const tag = (e.target.tagName || '').toLowerCase();
+      const typing = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable;
+      const mod = e.ctrlKey || e.metaKey;
+      if (mod && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        setActiveTab('library');
+        if (searchInputRef.current) searchInputRef.current.focus();
+        else setTimeout(() => searchInputRef.current?.focus(), 30);
+        return;
+      }
+      if (typing || (e.target.closest && e.target.closest('.rhap_container'))) return;
+      if (e.code === 'Space' && tag !== 'button') {
+        e.preventDefault();
+        latestRef.current.toggle();
+      } else if (mod && e.key === 'ArrowRight') {
+        e.preventDefault();
+        latestRef.current.next();
+      } else if (mod && e.key === 'ArrowLeft') {
+        e.preventDefault();
+        latestRef.current.prev();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
-  const toggleLibrarySort = (key) => {
-    setLibrarySort(prev => prev.key === key
-      ? { key, dir: prev.dir === 'asc' ? 'desc' : 'asc' }
-      : { key, dir: 'asc' });
-  };
+  // Persist the queue and player preferences.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const queue = playlist.slice(0, MAX_SAVED_QUEUE).map(t => (t.cloud ? { ...t, src: undefined } : t));
+        localStorage.setItem(QUEUE_KEY, JSON.stringify({ queue, index: Math.min(currentTrackIndex, Math.max(0, queue.length - 1)) }));
+      } catch {}
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [playlist, currentTrackIndex]);
 
-  const sortMark = (key) => librarySort.key === key ? (librarySort.dir === 'asc' ? ' ↑' : ' ↓') : '';
+  useEffect(() => {
+    try {
+      localStorage.setItem(PLAYER_PREFS_KEY, JSON.stringify({
+        repeat: repeatMode,
+        shuffle: shuffleMode,
+        dockCollapsed,
+        librarySection: libraryNav.section,
+      }));
+    } catch {}
+  }, [repeatMode, shuffleMode, dockCollapsed, libraryNav.section]);
 
   return (
+    <LibraryContext.Provider value={libraryCtx}>
     <div
       className="react-audio-app"
       onDragOver={(e) => e.preventDefault()}
@@ -990,10 +1408,20 @@ export default function App() {
         >
           <Icon name="speaker" /><span>Speakers ({speakers.length})</span>
         </button>
+        <span className="nav-spacer" />
+        <button
+          id="btn-toggle-queue-panel"
+          className={`tab-btn ${dockCollapsed ? '' : 'active'}`}
+          onClick={() => setDockCollapsed(c => !c)}
+          title="Show or hide the Now Playing playlist"
+        >
+          <Icon name="panel" /><span>Now Playing list</span>
+        </button>
       </nav>
 
+      <div className="app-body">
       {/* Main Content Area */}
-      <main className="tab-content">
+      <main className={`tab-content ${activeTab === 'library' ? 'library-active' : ''}`}>
         {/* Background Scan Banner */}
         {isScanningLibrary && (
           <div className="scan-progress-banner">
@@ -1062,17 +1490,18 @@ export default function App() {
 
               <div className="track-hero">
                 <div className="album-art-box">
-                  {currentTrack?.artId ? (
-                    <img src={`http://192.168.1.34:0/art/${currentTrack.artId}.jpg`} alt="Album Art" />
-                  ) : (
-                    <div className="art-fallback">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#e8a33d" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="4"/></svg>
-                    </div>
-                  )}
+                  <Cover artId={currentTrack?.artId} name={currentTrack?.album || currentTrack?.title} icon={currentTrack?.artId ? null : 'disc'} />
                 </div>
                 <div className="track-details">
-                  <h2 id="track-title">{currentTrack?.title || 'No Track Selected'}</h2>
-                  <p id="track-artist">{currentTrack?.artist || 'Unknown Artist'} &bull; {currentTrack?.album || 'RobOS Library'}</p>
+                  <h2 id="track-title">
+                    {currentTrack?.title || 'No Track Selected'}
+                    {currentTrack && <LoveButton track={currentTrack} size={16} />}
+                  </h2>
+                  <p id="track-artist">
+                    <a className="link" onClick={() => currentTrack && goToArtist(currentTrack.artist)}>{currentTrack?.artist || 'Unknown Artist'}</a>
+                    {' '}&bull;{' '}
+                    <a className="link" onClick={() => currentTrack && goToAlbumOf(currentTrack)}>{currentTrack?.album || 'RobOS Library'}</a>
+                  </p>
                   <div className="track-meta-pills">
                     <span className="badge">Output: {getSpeakerName(outputTarget)}</span>
                     {activeCastSession && (
@@ -1080,7 +1509,7 @@ export default function App() {
                         {activeCastSession.isPaused ? 'Cast Paused' : 'Casting Active'}
                       </span>
                     )}
-                    {currentTrack?.genre && <span className="badge">{currentTrack.genre}</span>}
+                    {currentTrack?.genre && <span className="badge link" onClick={() => goToGenre(currentTrack.genre)}>{currentTrack.genre}</span>}
                     {currentTrack?.year && <span className="badge">{currentTrack.year}</span>}
                   </div>
                 </div>
@@ -1099,21 +1528,32 @@ export default function App() {
               <div className="react-h5-wrapper">
                 <AudioPlayer
                   ref={playerRef}
-                  src={currentTrack?.src || (currentTrack?.filePath ? `file://${currentTrack.filePath}` : '')}
+                  src={resolveSrc(currentTrack)}
                   showSkipControls={true}
                   showJumpControls={false}
                   autoPlayAfterSrcChange={true}
                   onClickNext={handlePlayNext}
                   onClickPrevious={handlePlayPrev}
-                  onEnded={handlePlayNext}
+                  onEnded={handleTrackEnded}
                   onPlay={handlePlayerPlay}
                   onPause={handlePlayerPause}
                   onError={(e) => {
+                    if (!currentTrack) return;
                     console.warn('[AudioPlayer] Audio playback error:', e);
                     setIsPlaying(false);
                     showStatus('Playback error: Track file may be missing, network drive unmounted, or format unsupported.');
                   }}
                   className="robos-rhap-theme"
+                  // Local icons: the library's defaults are fetched from api.iconify.design,
+                  // which leaves the deck without buttons on offline machines.
+                  customIcons={{
+                    play: <Icon name="play" size={34} />,
+                    pause: <Icon name="pause" size={34} />,
+                    previous: <Icon name="prev" size={24} />,
+                    next: <Icon name="next" size={24} />,
+                    volume: <Icon name="volume" size={20} />,
+                    volumeMute: <Icon name="volumeMute" size={20} />,
+                  }}
                   layout="stacked"
                   customAdditionalControls={[]}
                   muted={outputTarget !== 'local'}
@@ -1122,70 +1562,6 @@ export default function App() {
 
               <Lyrics track={currentTrack} getAudio={() => playerRef.current?.audio?.current} />
 
-              {/* Queue bar */}
-              <div className="queue-quick-peek">
-                <div className="queue-header">
-                  <div>
-                    <h4>Playback Queue ({playlist.length})</h4>
-                    <span className="queue-subtitle">Drag & drop files or save queue as a custom playlist</span>
-                  </div>
-                  <div className="queue-header-actions">
-                    <button
-                      id="btn-save-queue-as-playlist"
-                      className="btn-chip"
-                      onClick={() => setShowSaveQueueModal(true)}
-                      title="Save current playback queue as a permanent playlist"
-                    >
-                      Save as Playlist
-                    </button>
-                    <button
-                      id="btn-shuffle-queue"
-                      className="btn-chip"
-                      onClick={handleShuffleQueue}
-                      title="Shuffle queue"
-                    >
-                      Shuffle
-                    </button>
-                    <button
-                      id="btn-clear-queue"
-                      className="btn-chip btn-stop-cast"
-                      onClick={handleClearQueue}
-                      title="Clear other tracks from queue"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                </div>
-                <div className="queue-items-scroll">
-                  {playlist.map((t, idx) => (
-                    <div
-                      key={t.id || idx}
-                      className={`queue-chip ${idx === currentTrackIndex ? 'active' : ''}`}
-                      onClick={() => {
-                        setCurrentTrackIndex(idx);
-                        if (outputTarget !== 'local') castTrack(outputTarget, t);
-                      }}
-                    >
-                      <div className="queue-chip-content">
-                        <span className="queue-chip-title">{idx + 1}. {t.title}</span>
-                        <span className="queue-chip-artist">{t.artist}</span>
-                      </div>
-                      {playlist.length > 1 && (
-                        <button
-                          className="btn-remove-queue-item"
-                          title="Remove from queue"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveQueueTrack(idx);
-                          }}
-                        >
-                          <Icon name="x" size={14} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-              </div>
-            </div>
           </div>
         </div>
 
@@ -1442,54 +1818,9 @@ export default function App() {
 
         {/* TAB 2: MEDIA LIBRARY BROWSER */}
         {activeTab === 'library' && (
-          <div className="library-layout">
-          <FolderPanel
-            folders={folders}
-            activeId={folderFilter}
-            onSelect={setFolderFilter}
-            onAddLocal={handleSelectFolder}
-            onAddCloud={() => setActiveTab('cloud')}
-            onRescan={handleRescanFolder}
-            onRename={handleRenameFolder}
-            onRemove={handleRemoveFolder}
-            busyId={syncingFolder === 'all' ? '__all__' : syncingFolder}
-          />
-          <div className="media-browser-container">
-            <div className="browser-toolbar">
-              <div className="search-box">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input
-                  type="text"
-                  placeholder="Search by track, artist, album, genre..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="browser-actions">
-                <button
-                  id="btn-browse-refresh"
-                  className="btn-secondary"
-                  onClick={async () => {
-                    await loadLibrary();
-                    showStatus('Library refreshed from disk cache.');
-                  }}
-                  title="Refresh and sync library index"
-                >
-                  <span>Refresh</span>
-                </button>
-                <button id="btn-browse-add-folder" className="btn-accent" onClick={handleSelectFolder}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
-                  <span>Add folder</span>
-                </button>
-                <button className="btn-secondary" onClick={handleAddFiles}>
-                  <span>Add Files</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Active Cast Bar in Library */}
+          <div className="library-tab">
             {activeCastSession && (
-              <div className="active-cast-bar" style={{ marginBottom: '16px' }}>
+              <div className="active-cast-bar">
                 <div className="cast-bar-indicator">
                   <span
                     className="cast-pulse-dot"
@@ -1507,96 +1838,31 @@ export default function App() {
                 </div>
               </div>
             )}
-
-            {/* Dropzone Hint */}
-            <div className="dropzone-banner" onClick={handleSelectFolder}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e8a33d" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
-              <p>Click here or drag & drop any music folder from your file manager to scan and index</p>
-            </div>
-
-            {/* Library List */}
-            <div className="library-list">
-              <div className="library-list-header">
-                <span className="ll-num">#</span>
-                <button className="ll-sort ll-title" onClick={() => toggleLibrarySort('title')}>Title{sortMark('title')}</button>
-                <button className="ll-sort ll-album" onClick={() => toggleLibrarySort('album')}>Album{sortMark('album')}</button>
-                <button className="ll-sort ll-genre" onClick={() => toggleLibrarySort('genre')}>Genre{sortMark('genre')}</button>
-                <button className="ll-sort ll-dur" onClick={() => toggleLibrarySort('duration')}>Time{sortMark('duration')}</button>
-                <span className="ll-actions"></span>
-              </div>
-              {sortedLibrary.length === 0 ? (
-                <div className="empty-state">
-                  <p>{library.tracks.length ? 'No tracks match your search.' : 'No tracks indexed in media library yet.'}</p>
-                  {!library.tracks.length && (
-                    <button className="btn-accent" onClick={handleSelectFolder} style={{ marginTop: '12px' }}>
-                      Add folder Popup
-                    </button>
-                  )}
-                </div>
-              ) : (
-                sortedLibrary.map((t, idx) => {
-                  const isCurrent = currentTrack && (currentTrack.id === t.id || currentTrack.filePath === t.filePath);
-                  const isCasting = activeCastSession && (activeCastSession.trackId === t.id || activeCastSession.filePath === t.filePath);
-                  return (
-                    <div
-                      key={t.id || idx}
-                      className={`library-row ${isCurrent ? 'current' : ''}`}
-                      onDoubleClick={() => playTrack(t)}
-                    >
-                      <span className="ll-num">
-                        {isCurrent && isPlaying
-                          ? <span className="eq-bars"><i></i><i></i><i></i></span>
-                          : <span className="row-index">{idx + 1}</span>}
-                        <button className="row-play" title="Play" onClick={() => playTrack(t)}><Icon name="play" size={14} /></button>
-                      </span>
-                      <span className="ll-title">
-                        <span className="row-title" title={t.title}>{t.title}</span>
-                        <span className="row-artist" title={t.artist}>{t.artist || 'Unknown artist'}</span>
-                      </span>
-                      <span className="ll-album" title={t.album}>{t.album || '—'}</span>
-                      <span className="ll-genre">{t.genre || '—'}</span>
-                      <span className="ll-dur">{formatDuration(t.duration)}</span>
-                      <span className="ll-actions">
-                        <button
-                          className="row-btn"
-                          title="Add to current playback queue"
-                          onClick={() => {
-                            setPlaylist(prev => [...prev, t]);
-                            showStatus(`Added "${t.title}" to queue`);
-                          }}
-                        >Queue</button>
-                        <button
-                          className="row-btn"
-                          title="Add track to a custom playlist"
-                          onClick={() => {
-                            setSelectedTrackForPlaylist(t);
-                            setShowAddToPlaylistModal(true);
-                          }}
-                        >Playlist</button>
-                        {speakers.length > 0 && (isCasting ? (
-                          <button
-                            className="row-btn row-btn-stop"
-                            title="Stop playback on Google Cast speaker"
-                            onClick={() => handleStopCast(activeCastSession.ip)}
-                          >Stop cast</button>
-                        ) : (
-                          <button
-                            className="row-btn"
-                            title={`Cast to ${getSpeakerName(outputTarget !== 'local' ? outputTarget : speakers[0].ip)}`}
-                            onClick={() => {
-                              const target = outputTarget !== 'local' ? outputTarget : speakers[0].ip;
-                              if (outputTarget === 'local') setOutputTarget(target);
-                              playTrack(t);
-                            }}
-                          >Cast</button>
-                        ))}
-                      </span>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
+            <Library
+              tracks={library.tracks}
+              folders={folders}
+              nav={libraryNav}
+              onNavigate={navigateLibrary}
+              onBack={libraryBack}
+              canGoBack={libNav.length > 1}
+              searchInputRef={searchInputRef}
+              isScanning={isScanningLibrary}
+              onAddFolder={handleSelectFolder}
+              onAddFiles={handleAddFiles}
+              onRefresh={async () => {
+                await loadLibrary();
+                await loadStats();
+                showStatus('Library refreshed from disk cache.');
+              }}
+              folderProps={{
+                onAddLocal: handleSelectFolder,
+                onAddCloud: () => setActiveTab('cloud'),
+                onRescan: handleRescanFolder,
+                onRename: handleRenameFolder,
+                onRemove: handleRemoveFolder,
+                busyId: syncingFolder === 'all' ? '__all__' : syncingFolder,
+              }}
+            />
           </div>
         )}
 
@@ -1680,28 +1946,50 @@ export default function App() {
         )}
       </main>
 
+      <NowPlayingPanel
+        queue={playlist}
+        currentIndex={currentTrack ? currentTrackIndex : -1}
+        collapsed={dockCollapsed}
+        onToggleCollapsed={() => setDockCollapsed(c => !c)}
+        onPlayIndex={(idx) => goToIndex(idx)}
+        onRemove={handleRemoveFromQueue}
+        onMove={handleMoveInQueue}
+        onInsert={handleInsertIntoQueue}
+        onSort={handleSortQueue}
+        onClear={handleClearQueue}
+        onSave={() => setShowSaveQueueModal(true)}
+        onShuffleOrder={handleShuffleQueue}
+        shuffle={shuffleMode}
+        repeat={repeatMode}
+        onToggleShuffle={toggleShuffleMode}
+        onCycleRepeat={cycleRepeat}
+      />
+      </div>
+
       {/* Persistent Bottom Mini-Player when browsing library/playlists/etc */}
       {activeTab !== 'player' && currentTrack && (
         <footer className="mini-player-bar">
           <div className="mini-player-info" onClick={() => setActiveTab('player')}>
             <div className="mini-art">
-              {currentTrack?.artId ? (
-                <img src={`http://192.168.1.34:0/art/${currentTrack.artId}.jpg`} alt="" />
-              ) : (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e8a33d" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="#e8a33d"/></svg>
-              )}
+              <Cover artId={currentTrack.artId} name={currentTrack.album || currentTrack.title} size={38} />
             </div>
             <div className="mini-text">
               <span className="mini-title">{currentTrack.title}</span>
               <span className="mini-artist">{currentTrack.artist || 'Unknown'} &bull; {currentTrack.album || ''}</span>
             </div>
           </div>
-          <div className="mini-player-controls">
-            <button className="mini-ctrl-btn" title="Previous" onClick={handlePlayPrev}><Icon name="prev" size={18} /></button>
-            <button className="mini-ctrl-btn mini-btn-play" title={isPlaying ? "Pause" : "Play"} onClick={handleTogglePlayPause}>
-              <Icon name={isPlaying ? 'pause' : 'play'} size={18} />
-            </button>
-            <button className="mini-ctrl-btn" title="Next" onClick={handlePlayNext}><Icon name="next" size={18} /></button>
+          <LoveButton track={currentTrack} size={15} />
+          <div className="mini-player-center">
+            <div className="mini-player-controls">
+              <button className={`mini-ctrl-btn mini-mode ${shuffleMode ? 'on' : ''}`} title={shuffleMode ? 'Random: on' : 'Random: off'} onClick={toggleShuffleMode}><Icon name="shuffle" size={15} /></button>
+              <button className="mini-ctrl-btn" title="Previous (Ctrl+←)" onClick={handlePlayPrev}><Icon name="prev" size={18} /></button>
+              <button className="mini-ctrl-btn mini-btn-play" title={isPlaying ? "Pause (Space)" : "Play (Space)"} onClick={handleTogglePlayPause}>
+                <Icon name={isPlaying ? 'pause' : 'play'} size={18} />
+              </button>
+              <button className="mini-ctrl-btn" title="Next (Ctrl+→)" onClick={handlePlayNext}><Icon name="next" size={18} /></button>
+              <button className={`mini-ctrl-btn mini-mode ${repeatMode !== 'off' ? 'on' : ''}`} title={`Repeat: ${repeatMode}`} onClick={cycleRepeat}><Icon name={repeatMode === 'one' ? 'repeatOne' : 'repeat'} size={15} /></button>
+            </div>
+            <MiniProgress getAudio={() => playerRef.current?.audio?.current} />
           </div>
           <div className="mini-player-right">
             <span className="badge mini-badge">Output: {getSpeakerName(outputTarget)}</span>
@@ -1785,14 +2073,23 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal: Add Track to Playlist */}
-      {showAddToPlaylistModal && selectedTrackForPlaylist && (
-        <div className="modal-overlay" onClick={() => { setShowAddToPlaylistModal(false); setSelectedTrackForPlaylist(null); }}>
+      {/* Modal: Add Track(s) to Playlist */}
+      {tracksForPlaylist && tracksForPlaylist.length > 0 && (
+        <div className="modal-overlay" onClick={() => setTracksForPlaylist(null)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <h3>Add Track to Playlist</h3>
+            <h3>Add to Playlist</h3>
             <div className="modal-selected-track-info">
-              <strong>{selectedTrackForPlaylist.title}</strong>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{selectedTrackForPlaylist.artist} &bull; {selectedTrackForPlaylist.album}</span>
+              {tracksForPlaylist.length === 1 ? (
+                <>
+                  <strong>{tracksForPlaylist[0].title}</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{tracksForPlaylist[0].artist} &bull; {tracksForPlaylist[0].album}</span>
+                </>
+              ) : (
+                <>
+                  <strong>{tracksForPlaylist.length} tracks</strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{formatTotalDuration(tracksForPlaylist)}</span>
+                </>
+              )}
             </div>
             <div className="modal-input-group">
               <label>Choose Destination Playlist</label>
@@ -1804,7 +2101,7 @@ export default function App() {
                     <div
                       key={pl.id}
                       className="modal-playlist-select-item"
-                      onClick={() => handleAddTrackToPlaylist(pl.id, selectedTrackForPlaylist)}
+                      onClick={() => handleAddTracksToPlaylist(pl.id, tracksForPlaylist)}
                     >
                       <div>
                         <strong>{pl.name}</strong>
@@ -1818,23 +2115,22 @@ export default function App() {
                 </div>
               )}
             </div>
-            <div className="modal-actions" style={{ justifyContent: 'space-between' }}>
-              <button
-                className="btn-chip"
-                onClick={() => {
-                  setShowAddToPlaylistModal(false);
-                  setShowCreatePlaylistModal(true);
-                }}
-              >
-                New Playlist
-              </button>
-              <button
-                className="btn-secondary"
-                onClick={() => {
-                  setShowAddToPlaylistModal(false);
-                  setSelectedTrackForPlaylist(null);
-                }}
-              >
+            <div className="modal-input-group">
+              <label>…or create a new playlist with {tracksForPlaylist.length === 1 ? 'this track' : 'these tracks'}</label>
+              <div className="modal-inline-create">
+                <input
+                  id="input-quick-playlist-name"
+                  type="text"
+                  placeholder="New playlist name"
+                  value={quickPlaylistName}
+                  onChange={(e) => setQuickPlaylistName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleCreatePlaylistFromTracks(); }}
+                />
+                <button className="btn-accent" onClick={handleCreatePlaylistFromTracks}>Create</button>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button className="btn-secondary" onClick={() => setTracksForPlaylist(null)}>
                 Cancel
               </button>
             </div>
@@ -1842,8 +2138,59 @@ export default function App() {
         </div>
       )}
 
+      <ContextMenu menu={menu} onClose={closeMenu} />
+      {infoTrack && <TrackInfo track={infoTrack} onClose={() => setInfoTrack(null)} />}
+
       {/* Toast Notification */}
       {statusMsg && <div className="toast">{statusMsg}</div>}
+    </div>
+    </LibraryContext.Provider>
+  );
+}
+
+// Seek bar for the mini player. Subscribes to the audio element itself so the
+// rest of the app doesn't re-render on every timeupdate.
+function MiniProgress({ getAudio }) {
+  const [time, setTime] = useState({ current: 0, duration: 0 });
+  useEffect(() => {
+    const audio = getAudio();
+    if (!audio) return undefined;
+    const update = () => setTime({ current: audio.currentTime || 0, duration: audio.duration || 0 });
+    update();
+    audio.addEventListener('timeupdate', update);
+    audio.addEventListener('durationchange', update);
+    audio.addEventListener('emptied', update);
+    return () => {
+      audio.removeEventListener('timeupdate', update);
+      audio.removeEventListener('durationchange', update);
+      audio.removeEventListener('emptied', update);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const fmt = (sec) => {
+    if (!sec || !isFinite(sec)) return '0:00';
+    const m = Math.floor(sec / 60);
+    const ss = Math.floor(sec % 60);
+    return `${m}:${ss < 10 ? '0' : ''}${ss}`;
+  };
+  const pct = time.duration ? (time.current / time.duration) * 100 : 0;
+  return (
+    <div className="mini-progress">
+      <span>{fmt(time.current)}</span>
+      <input
+        type="range"
+        min="0"
+        max={time.duration || 0}
+        step="0.5"
+        value={time.current}
+        disabled={!time.duration}
+        style={{ '--pct': `${pct}%` }}
+        aria-label="Seek"
+        onChange={(e) => {
+          const audio = getAudio();
+          if (audio) audio.currentTime = Number(e.target.value);
+        }}
+      />
+      <span>{fmt(time.duration)}</span>
     </div>
   );
 }
