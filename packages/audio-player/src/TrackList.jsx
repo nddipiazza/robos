@@ -3,6 +3,7 @@ import { useViewport, scrollRootTo } from './virtual.jsx';
 import { Icon } from './Icon.jsx';
 import { formatDuration } from '../lib/library-index.js';
 import { useLibrary, sameTrack, trackMenuItems, collectionMenuItems, LoveButton, Cover, useStableArray, TRACK_DRAG_TYPE } from './library-ui.jsx';
+import { useColumns } from './resizable.jsx';
 
 // Must match `.tl-row` / `.tl-disc` height in style.css: rows are absolutely
 // positioned so only the visible slice of a 100k-track list is in the DOM.
@@ -96,6 +97,8 @@ export default function TrackList({
     if (extraColumn) cols.splice(cols.indexOf('duration'), 0, extraColumn);
     return cols;
   }, [variant, extraColumn]);
+  const columnSpec = useMemo(() => columns.map(key => ({ key, label: HEADERS[key].label, ...COLUMN_SIZES[key] })), [columns]);
+  const { template, handleFor } = useColumns(`tl-${variant}${extraColumn ? `-${extraColumn}` : ''}`, columnSpec);
 
   const selectedTracks = () => [...selected].sort((a, b) => a - b).map(i => tracks[i]).filter(Boolean);
 
@@ -158,17 +161,19 @@ export default function TrackList({
   if (!tracks.length) return <div className="empty-inline">{emptyText}</div>;
 
   const header = (
-    <div className={`tl-row tl-head tl-${variant}`} style={{ gridTemplateColumns: gridFor(columns) }}>
+    <div className={`tl-row tl-head tl-${variant}`} style={{ gridTemplateColumns: template }}>
       {columns.map(col => {
         const h = HEADERS[col];
         const sortable = onSort && h.sort;
         const active = sort && sort.key === h.sort;
+        const border = handleFor(col);
         return sortable ? (
-          <button key={col} className={`tl-cell tl-${col} tl-sort ${active ? 'active' : ''}`} onClick={() => onSort(h.sort)}>
+          <button key={col} className={`tl-cell tl-${col} tl-sort ${active ? 'active' : ''} ${border ? 'col-resizable' : ''}`} onClick={() => onSort(h.sort)}>
             {col === 'love' ? <Icon name="heart" size={12} /> : h.label}
             {active ? (sort.dir === 'asc' ? ' ↑' : ' ↓') : ''}
+            {border}
           </button>
-        ) : <span key={col} className={`tl-cell tl-${col}`}>{h.label}</span>;
+        ) : <span key={col} className={`tl-cell tl-${col} ${border ? 'col-resizable' : ''}`}>{h.label}{border}</span>;
       })}
     </div>
   );
@@ -176,7 +181,6 @@ export default function TrackList({
   // Visible slice; before the first measurement only a screenful is rendered.
   const firstRow = view ? Math.max(0, Math.floor((view.top - OVERSCAN_PX) / ROW_HEIGHT)) : 0;
   const lastRow = view ? Math.min(rowCount, Math.ceil((view.bottom + OVERSCAN_PX) / ROW_HEIGHT)) : Math.min(rowCount, 40);
-  const template = gridFor(columns);
   const rows = [];
   for (let r = firstRow; r < lastRow; r++) {
     const top = r * ROW_HEIGHT;
@@ -227,23 +231,21 @@ export default function TrackList({
   );
 }
 
-function gridFor(columns) {
-  const widths = {
-    num: '42px',
-    love: '26px',
-    art: '40px',
-    title: 'minmax(0, 3fr)',
-    album: 'minmax(0, 2fr)',
-    year: '52px',
-    genre: 'minmax(0, 1.2fr)',
-    plays: '60px',
-    added: '96px',
-    lastPlayed: '104px',
-    duration: '56px',
-    more: '34px',
-  };
-  return columns.map(c => widths[c]).join(' ');
-}
+// Default widths; the title takes what is left. Fixed columns are not resizable.
+const COLUMN_SIZES = {
+  num: { width: '42px', fixed: true },
+  love: { width: '26px', fixed: true },
+  art: { width: '40px', fixed: true },
+  title: { width: 'minmax(0, 3fr)', fill: true },
+  album: { width: 'minmax(0, 2fr)', min: 60 },
+  year: { width: '52px', min: 40 },
+  genre: { width: 'minmax(0, 1.2fr)', min: 50 },
+  plays: { width: '60px', min: 44 },
+  added: { width: '96px', min: 60 },
+  lastPlayed: { width: '104px', min: 60 },
+  duration: { width: '56px', min: 44 },
+  more: { width: '34px', fixed: true },
+};
 
 function renderCell(col, t, idx, { isCurrent, isPlaying, st, variant, albumArtist, actions, tracks, openMenu, ctx }) {
   switch (col) {

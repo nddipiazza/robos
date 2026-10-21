@@ -2,10 +2,21 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from './Icon.jsx';
 import { formatDuration, formatLongDuration, fold } from '../lib/library-index.js';
 import { useLibrary, trackMenuItems, Cover, TRACK_DRAG_TYPE } from './library-ui.jsx';
+import { Splitter, useColumns, useLayoutPref } from './resizable.jsx';
 
 const ROW_HEIGHT = 30;
 const OVERSCAN = 12;
 const QUEUE_DRAG_TYPE = 'application/x-robos-queue';
+
+const DOCK_WIDTH = 330;
+// The panel never squeezes the rest of the window below this.
+const dockMaxWidth = () => Math.max(260, Math.min(900, window.innerWidth - 520));
+const QUEUE_COLUMNS = [
+  { key: 'state', width: '28px', fixed: true },
+  { key: 'title', label: 'Title', width: 'minmax(0, 1.4fr)', fill: true },
+  { key: 'artist', label: 'Artist', width: 'minmax(0, 1fr)', min: 50 },
+  { key: 'duration', label: 'Time', width: '44px', min: 36 },
+];
 
 const REPEAT_LABEL = { off: 'Repeat: off', all: 'Repeat: whole queue', one: 'Repeat: current track' };
 
@@ -45,6 +56,8 @@ export default function NowPlayingPanel({
   const [sortState, setSortState] = useState(null);
   const anchorRef = useRef(null);
   const scrollRef = useRef(null);
+  const [dockWidth, setDockWidth] = useLayoutPref('dockWidth', DOCK_WIDTH);
+  const { template: queueGrid, handleFor } = useColumns('queue', QUEUE_COLUMNS);
 
   // Rows shown: indices into the real queue so every action maps back correctly.
   const rows = useMemo(() => {
@@ -217,7 +230,18 @@ export default function NowPlayingPanel({
   const dropPos = dropAt == null ? null : (dropAt >= queue.length ? rows.length : rows.indexOf(dropAt));
 
   return (
-    <aside className="np-dock" aria-label="Now Playing">
+    <aside className="np-dock" aria-label="Now Playing" style={{ width: Math.min(dockWidth, dockMaxWidth()), '--np-grid': queueGrid }}>
+      <Splitter
+        id="np-dock-splitter"
+        className="overlay edge-left"
+        label="Now Playing width"
+        side="right"
+        width={Math.min(dockWidth, dockMaxWidth())}
+        onChange={setDockWidth}
+        min={240}
+        max={dockMaxWidth}
+        defaultWidth={DOCK_WIDTH}
+      />
       <div className="np-head">
         <div className="np-head-title">
           <Icon name="list" size={15} />
@@ -267,8 +291,8 @@ export default function NowPlayingPanel({
 
       <div className="np-cols">
         <span className="np-col-state" />
-        <button className="np-col-title" onClick={() => sortBy('title')} title="Sort by title">Title{sortMark('title')}</button>
-        <button className="np-col-artist" onClick={() => sortBy('artist')} title="Sort by artist">Artist{sortMark('artist')}</button>
+        <button className="np-col-title col-resizable" onClick={() => sortBy('title')} title="Sort by title">Title{sortMark('title')}{handleFor('title')}</button>
+        <button className="np-col-artist col-resizable" onClick={() => sortBy('artist')} title="Sort by artist">Artist{sortMark('artist')}{handleFor('artist')}</button>
         <button className="np-col-dur" onClick={() => sortBy('duration')} title="Sort by duration">Time{sortMark('duration')}</button>
       </div>
 

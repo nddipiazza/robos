@@ -27,7 +27,7 @@ const systemVoiceAvailable = () => !!(window.speechSynthesis && typeof SpeechSyn
  * line or its audio is still being made when the song ends, the music waits for
  * it (the banner shows that, and Skip moves on).
  */
-export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showStatus, getAgent }) {
+export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showStatus, getAgent, castClip }) {
   const [settings, setSettings] = useState(() => ({ enabled: false, persona: '', voice: '', frequency: 'every', ...(initial || {}) }));
   const [speaking, setSpeaking] = useState(null); // { text, warming?, preview? }
   const lines = useRef(new Map());   // trackId -> text
@@ -38,7 +38,7 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
   const transitions = useRef(0);
   const active = useRef(null);       // { audio, timer, finish }
   const latest = useRef({});
-  latest.current = { settings, outputTarget, getVolume, showStatus, getAgent };
+  latest.current = { settings, outputTarget, getVolume, showStatus, getAgent, castClip };
 
   const active_ = settings.enabled && settings.persona.trim().length > 0;
 
@@ -124,9 +124,9 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
   }, []);
 
   // Plays a rendered clip (or the system voice as a fallback), then calls `then`.
-  // `local` keeps it in this app even when the music goes to a speaker.
-  const playLine = useCallback((text, clip, then, { local = false, preview = false, clipError = '' } = {}) => {
-    const { outputTarget: target, getVolume: volume, settings: s } = latest.current;
+  // While casting, the clip plays on the speaker(s).
+  const playLine = useCallback((text, clip, then, { preview = false, clipError = '' } = {}) => {
+    const { outputTarget: target, getVolume: volume, settings: s, castClip: sendToSpeaker } = latest.current;
     const entry = { finish: then, audio: null, timer: null };
     active.current = entry;
     setSpeaking({ text, preview });
@@ -138,12 +138,17 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
       then();
     };
 
-    if (clip && clip.filePath && target !== 'local' && !local) {
-      // Speakers: cast the clip, then move on once it has had time to play.
+    if (clip && clip.filePath && target !== 'local') {
+      // Speakers: cast the clip, then move on once it has had time to load and play.
       const meta = { title: 'Virtual DJ', artist: s.persona.slice(0, 60) };
-      Promise.resolve(target === 'all' ? null : window.robosAudio.castFile(target, clip.filePath, meta)).catch(() => {});
-      entry.timer = setTimeout(done, (clip.durationMs || 4000) + 600);
+      Promise.resolve(sendToSpeaker ? sendToSpeaker(clip.filePath, meta) : null)
+        .then(res => { if (res && res.ok === false) latest.current.showStatus(`Virtual DJ: the speaker could not play the line (${res.error || 'unknown error'}).`); })
+        .catch(err => latest.current.showStatus(`Virtual DJ: the speaker could not play the line (${err.message}).`));
+      entry.timer = setTimeout(done, (clip.durationMs || 4000) + 1800);
       return;
+    }
+    if (target !== 'local') {
+      latest.current.showStatus(`Virtual DJ: no recorded voice for the speaker${clipError ? ` (${clipError})` : ''}; speaking on this computer.`);
     }
     if (clip && clip.filePath) {
       const audio = new Audio(fileUrl(clip.filePath));
@@ -169,7 +174,7 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
   }, []);
 
   // Gets the track's line and audio ready (waiting if needed), then speaks it.
-  const speakFor = useCallback((track, then, { local = false, preview = false } = {}) => {
+  const speakFor = useCallback((track, then, { preview = false } = {}) => {
     const waiting = { finish: then, audio: null, timer: null };
     active.current = waiting;
     setSpeaking({ text: `Getting the intro for “${track.title || 'the next song'}” ready…`, warming: true, preview });
@@ -186,7 +191,7 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
       setSpeaking({ text, warming: true, preview });
       const clip = await within(requestClip(track), CLIP_WAIT_MS);
       if (active.current !== waiting) return;
-      playLine(text, clip && !clip.failed ? clip : null, then, { local, preview, clipError: clip && clip.failed ? clip.error : '' });
+      playLine(text, clip && !clip.failed ? clip : null, then, { preview, clipError: clip && clip.failed ? clip.error : '' });
     })();
   }, [lineFor, requestClip, playLine]);
 
@@ -204,14 +209,14 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
   }, [speakFor]);
 
   /**
-   * "Announce this song": speak the DJ's intro for `track` now, in this app, then
-   * call `then`. Returns false when no DJ persona is set up.
+   * "Announce this song": speak the DJ's intro for `track` now (on the speaker when
+   * casting), then call `then`. Returns false when no DJ persona is set up.
    */
   const preview = useCallback((track, then) => {
     const { settings: s } = latest.current;
     if (!s.persona.trim() || !track || !track.id) return false;
     if (active.current) stop();
-    speakFor(track, then, { local: true, preview: true });
+    speakFor(track, then, { preview: true });
     return true;
   }, [speakFor, stop]);
 
