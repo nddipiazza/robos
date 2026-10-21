@@ -121,7 +121,7 @@
     }
     box.append(nav(() => { s.step = 1; return render(); }, 'Next', async () => {
       if (s.addingVehicle) { const v = s.vehicle; if (!v.year || !v.make || !v.model) { U.say('Enter the year, make and model so we know which car we are looking at'); return; }
-        const n = await w('addCustomerVehicle', { customer: c.id, name: `${v.year} ${v.make} ${v.model}`, year: v.year, make: v.make, model: v.model, plate: v.plate, vin: v.vin }); s.vehicleId = n['@id']; c.vehicles.push({ id: n['@id'], name: n['dcterms:title'] }); s.addingVehicle = false; s.vehicle = { year: '', make: '', model: '', plate: '', vin: '' }; }
+        const n = await w('addCustomerVehicle', { customer: c.id, year: v.year, make: v.make, model: v.model, plate: v.plate, vin: v.vin }); s.vehicleId = n['@id']; c.vehicles.push({ id: n['@id'], name: `${n['dcterms:title']} — ${c.name}` }); s.addingVehicle = false; s.vehicle = { year: '', make: '', model: '', plate: '', vin: '' }; }
       else if (!s.vehicleId) { U.say('Choose a vehicle'); return; }
       U.say(''); s.step = 3; await render();
     }));
@@ -157,7 +157,7 @@
       }));
   }
   function done() {
-    draw(el('div', { class: 'card wizard-card', 'data-step': 'Done' }, el('div', { class: 'notice ok' }, el('b', { text: `Ticket ${s.result.key} is open.` }), ` ${s.customer.name}'s ${s.customer.vehicles.find(v => v.id === s.vehicleId)?.name || 'vehicle'} is checked in and the mechanics can see the details.`),
+    draw(el('div', { class: 'card wizard-card', 'data-step': 'Done' }, el('div', { class: 'notice ok' }, el('b', { text: `Ticket ${s.result.key} is open.` }), ` ${s.customer.vehicles.find(v => v.id === s.vehicleId)?.name || 'The vehicle'} is checked in and the mechanics can see the details.`),
       el('p', { class: 'lead', text: 'What next?' }), el('div', { class: 'choice-grid' }, choice('Start another intake', 'Next customer', false, () => { s = fresh(); s.view = 'wizard'; return render(); }), choice('Prepare the estimate', 'Add parts and labor for this ticket', false, () => { s.view = 'ticket'; s.ticketId = s.result.id; return render(); }), choice('Back to front desk', '', false, () => { s = fresh(); return render(); }))));
   }
   async function render() {

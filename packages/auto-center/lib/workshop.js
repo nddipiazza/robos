@@ -63,12 +63,15 @@ function addCustomer(service, input) {
   shop(service); const n = buildCustomer(service, input, nodes(service));
   commit(service, [{ op: 'add', node: n }], 'auto: add customer'); return n;
 }
+const { carName, vehicleLabel } = require('./vehicle-label');
 function buildVehicle(service, input, customer, records) {
-  const name = text(input.name, 200, 'Vehicle name');
+  const nickname = String(input.nickname || '').trim().slice(0, 100);
   if (input.vin && !/^[A-HJ-NPR-Z0-9]{17}$/i.test(input.vin)) throw new Error('Invalid VIN');
   if (input.year && !/^\d{4}$/.test(String(input.year))) throw new Error('Invalid model year');
   if (input.vin && records.some(n => n['@type'] === 'robos:OwnedVehicle' && n['schema:vehicleIdentificationNumber'] === input.vin.toUpperCase())) throw new Error('A vehicle with this VIN is already on file');
-  const n = node('OwnedVehicle', crypto.randomUUID(), name, { 'schema:name': name, 'schema:vehicleIdentificationNumber': String(input.vin || '').toUpperCase(),
+  if (!String(input.make || '').trim() || !String(input.model || '').trim()) throw new Error('Enter the make and model');
+  const name = carName(input.make, input.model, input.year) + (nickname ? ` (${nickname})` : '');
+  const n = node('OwnedVehicle', crypto.randomUUID(), name, { 'schema:name': name, 'robos:nickname': nickname, 'schema:vehicleIdentificationNumber': String(input.vin || '').toUpperCase(),
     'schema:modelDate': String(input.year || ''), 'schema:brand': String(input.make || ''), 'schema:model': String(input.model || ''), 'robos:licensePlate': String(input.plate || ''),
     'robos:ownerNotes': customer['dcterms:title'], 'robos:customer': ref(customer['@id']) });
   return n;
@@ -280,10 +283,10 @@ function importCustomers(service, input) {
       }
       if (rec.make || rec.model || rec.year || rec.vin) {
         if (!rec.make || !rec.model) throw new Error('A vehicle needs at least a make and a model');
-        const name = [rec.year, rec.make, rec.model].filter(Boolean).join(' '), vin = (rec.vin || '').toUpperCase();
-        const dup = records.find(n => n['@type'] === 'robos:OwnedVehicle' && linked(n, 'robos:customer') === customer['@id'] && ((vin && n['schema:vehicleIdentificationNumber'] === vin) || (!vin && n['dcterms:title'] === name && (n['robos:licensePlate'] || '') === (rec.plate || ''))));
+        const name = carName(rec.make, rec.model, rec.year).toLowerCase(), vin = (rec.vin || '').toUpperCase();
+        const dup = records.find(n => n['@type'] === 'robos:OwnedVehicle' && linked(n, 'robos:customer') === customer['@id'] && ((vin && n['schema:vehicleIdentificationNumber'] === vin) || (!vin && carName(n['schema:brand'], n['schema:model'], n['schema:modelDate']).toLowerCase() === name && (n['robos:licensePlate'] || '') === (rec.plate || ''))));
         if (dup) { skipped++; return; }
-        const v = buildVehicle(service, { name, year: rec.year, make: rec.make, model: rec.model, vin: rec.vin, plate: rec.plate }, customer, records);
+        const v = buildVehicle(service, { year: rec.year, make: rec.make, model: rec.model, vin: rec.vin, plate: rec.plate }, customer, records);
         records.push(v); added.push({ op: 'add', node: v }); vehiclesAdded++;
       }
     } catch (e) { errors.push(`Row ${line}: ${e.message.replace(/^Row \d+: /, '')}`); }
@@ -296,7 +299,7 @@ function board(service) {
   shop(service); const records = nodes(service);
   const jobs = records.filter(n => n['@type'] === 'robos:RepairOrder').map(job => {
     const vehicle = records.find(n => n['@id'] === linked(job, 'robos:vehicle')), customer = records.find(n => n['@id'] === linked(vehicle || {}, 'robos:customer'));
-    return { id: job['@id'], key: job['robos:workItemKey'] || '', title: job['dcterms:title'], stage: job['robos:jobStatus'], vehicle: vehicle?.['dcterms:title'], vehicleInfo: { make: vehicle?.['schema:brand'] || '', model: vehicle?.['schema:model'] || '', year: vehicle?.['schema:modelDate'] || '', vin: vehicle?.['schema:vehicleIdentificationNumber'] || '' }, customer: customer?.['dcterms:title'],
+    return { id: job['@id'], key: job['robos:workItemKey'] || '', title: job['dcterms:title'], stage: job['robos:jobStatus'], vehicle: vehicleLabel(vehicle, customer), vehicleInfo: { make: vehicle?.['schema:brand'] || '', model: vehicle?.['schema:model'] || '', year: vehicle?.['schema:modelDate'] || '', vin: vehicle?.['schema:vehicleIdentificationNumber'] || '' }, customer: customer?.['dcterms:title'],
       workItem: workItemFor(records, job['@id'])?.['robos:events'] || [], technician: job['robos:technician'] || '', priority: job['robos:priority'] || 'normal', workComplete: !!job['robos:workComplete'], completionNote: job['robos:completionNote'] || '', needsApproval: job['robos:needsApproval'] || '', intake: job['robos:intake'] || null, channel: job['robos:contactChannel'] || '', odometerIn: job['robos:odometerIn'] ?? null, customerId: customer?.['@id'] || null, vehicleId: vehicle?.['@id'] || null,
       partRequests: records.filter(n => n['@type'] === 'robos:PartRequest' && linked(n, 'robos:job') === job['@id']).map(r => ({ id: r['@id'], name: r['schema:name'], quantity: r['robos:quantity'], status: r['robos:requestStatus'], urgency: r['robos:urgency'], by: r['robos:requestedBy'], partNumber: r['robos:partNumber'], note: r['robos:note'] })),
       timers: records.filter(n => n['@type'] === 'robos:Teammate' && n['robos:activeTimer']?.job === job['@id']).map(t => ({ teammate: t['schema:name'], startedAt: t['robos:activeTimer'].startedAt })), estimates: records.filter(n => n['@type'] === 'robos:Estimate' && linked(n, 'robos:job') === job['@id']).map(e => ({ id: e['@id'], version: e['robos:version'], status: e['robos:estimateStatus'], total: e['robos:totalMinor'], currency: e['robos:currency'], lines: e['robos:lines'] })),
@@ -305,6 +308,6 @@ function board(service) {
   return { stages: STAGES.map(s => ({ id: s, label: STAGE_LABELS[s] })), jobs, teammates: records.filter(n => n['@type'] === 'robos:Teammate').map(t => ({ id: t['@id'], name: t['schema:name'], role: t['robos:role'], personId: t['robos:personId'], active: t['robos:active'] !== false, hourlyCost: t['robos:hourlyCostMinor'] ?? 0, activeTimer: t['robos:activeTimer'] || null })),
     customers: records.filter(n => n['@type'] === 'robos:Customer').map(c => ({ id: c['@id'], name: c['schema:name'], userId: c['robos:userId'], groupId: c['robos:groupId'], phone: c['schema:telephone'], email: c['schema:email'], preferred: c['robos:preferredContact'] || '' })),
     settings: (() => { const s = records.find(n => n['@type'] === 'robos:AutoShop'); return { name: s?.['schema:name'] || '', phone: s?.['schema:telephone'] || '', defaultRateMinor: s?.['robos:defaultLaborRateMinor'] ?? null, currency: s?.['robos:currency'] || 'USD' }; })(),
-    vehicles: records.filter(n => n['@type'] === 'robos:OwnedVehicle').map(v => ({ id: v['@id'], name: v['dcterms:title'], customer: linked(v, 'robos:customer'), make: v['schema:brand'] || '', model: v['schema:model'] || '', year: v['schema:modelDate'] || '', plate: v['robos:licensePlate'] || '' })), directory: directory() };
+    vehicles: records.filter(n => n['@type'] === 'robos:OwnedVehicle').map(v => ({ id: v['@id'], name: vehicleLabel(v, records.find(c => c['@id'] === linked(v, 'robos:customer'))), nickname: v['robos:nickname'] || '', customer: linked(v, 'robos:customer'), make: v['schema:brand'] || '', model: v['schema:model'] || '', year: v['schema:modelDate'] || '', plate: v['robos:licensePlate'] || '' })), directory: directory() };
 }
-module.exports = { importCustomers, buildCustomer, buildVehicle, nodes, find, event, key, stageEdit, workItemFor, linked, text, approvedEstimate, addPart, importParts, STAGES, STAGE_LABELS, directory, addTeammate, addCustomer, addCustomerVehicle, openRepair, diagnose, createEstimate, decideEstimate, usePart, logHours, issueInvoice, offboard, board, jobSummary };
+module.exports = { importCustomers, buildCustomer, buildVehicle, vehicleLabel, carName, nodes, find, event, key, stageEdit, workItemFor, linked, text, approvedEstimate, addPart, importParts, STAGES, STAGE_LABELS, directory, addTeammate, addCustomer, addCustomerVehicle, openRepair, diagnose, createEstimate, decideEstimate, usePart, logHours, issueInvoice, offboard, board, jobSummary };

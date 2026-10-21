@@ -32,8 +32,8 @@ Feature: Set up the shop (owner admin)
     Finish or hand over their tickets first, so no customer's car is left without an owner.
     Given the shop team has "Maria Lopez" as "Master technician"
     And the customer "Sam Rivera" is on file
-    And "Sam Rivera" has the vehicle "Sam's Camry"
-    And "Sam's Camry" is taken in with the concern "Grinding noise when braking"
+    And "Sam Rivera" has the vehicle "Toyota Camry 2015"
+    And "Toyota Camry 2015 — Sam Rivera" is taken in with the concern "Grinding noise when braking"
     And I am at the mechanic bench
     When I sit down at the bench as "Maria Lopez"
     And I open the work ticket "RO-0001"

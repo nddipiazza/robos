@@ -50,22 +50,24 @@ Feature: Find makes, models, parts and codes as you type
 
   Scenario: A vehicle that is not in the catalog can still be added
     The catalog covers vehicles sold in the US market. For anything else, such as a classic or an import,
-    just type it in.
-    When I add the vehicle "Grandpa's Studebaker" for "Sam Rivera" with the free-text make "Studebaker" and model "Lark"
+    just type it in. Give it a nickname if the family has one for it.
+    When I add a 1963 Studebaker Lark for "Sam Rivera" nicknamed "Grandpa's car"
     Then the customer list shows "Sam Rivera · 1 vehicle(s)"
+    When I type "grandpa" into the "intake vehicle" field
+    Then the suggestions include "Studebaker Lark 1963 (Grandpa's car) — Sam Rivera"
 
   Scenario: Look up trouble codes by number or by description
     In **Diagnosis**, type a code such as P03 or a symptom such as "misfire". Choosing a suggestion adds the
     code, and you can add several.
     Given the customer "Priya Shah" is on file
-    And "Priya Shah" has the vehicle "Priya's Camry"
-    And "Priya's Camry" is taken in with the concern "Engine shakes at idle"
+    And "Priya Shah" has the vehicle "Toyota Camry 2015"
+    And "Toyota Camry 2015 — Priya Shah" is taken in with the concern "Engine shakes at idle"
     When I type "mis" into the "trouble codes" field
     Then the suggestions include "P0300"
     And the suggestions include "Cylinder 1 Misfire Detected"
 
   Scenario: Pick the customer's vehicle when taking a car in
     Start typing the customer's name, the vehicle or the plate to find the car on file.
-    Given "Sam Rivera" has the vehicle "Sam's Camry"
+    Given "Sam Rivera" has the vehicle "Toyota Camry 2015"
     When I type "sam" into the "intake vehicle" field
-    Then the suggestions include "Sam's Camry"
+    Then the suggestions include "Toyota Camry 2015 — Sam Rivera"

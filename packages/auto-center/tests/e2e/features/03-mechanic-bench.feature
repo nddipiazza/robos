@@ -6,8 +6,8 @@ Feature: Work the ticket at the mechanic bench
     Given the shop team has "Maria Lopez" as "Master technician"
     And the shop team has "Dan Okafor" as "Technician"
     And the customer "Sam Rivera" is on file
-    And "Sam Rivera" has the vehicle "Sam's Camry"
-    And "Sam's Camry" is taken in with the concern "Grinding noise when braking"
+    And "Sam Rivera" has the vehicle "Toyota Camry 2015"
+    And "Toyota Camry 2015 — Sam Rivera" is taken in with the concern "Grinding noise when braking"
 
   Scenario: Pick your name and take a ticket
     Choose who you are, open a ticket nobody has taken, and press **Take this ticket**. It moves to **My

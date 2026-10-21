@@ -8,8 +8,8 @@ Feature: From first call to a paid, returned car
     Given the shop team has "Maria Lopez" as "Master technician" linked to the RobOS person "Maria Lopez"
     And the shop team has "Dan Okafor" as "Technician" linked to the RobOS person "Dan Okafor"
     When I add the customer "Sam Rivera" linked to the RobOS user "Sam Rivera" and the group "Fleet customers"
-    And I add the vehicle "Sam's Camry" for "Sam Rivera" — a 2015 Toyota Camry
-    And I take in "Sam's Camry" with the concern "Grinding noise when braking", odometer "84000" and parking bay "Bay 2"
+    And I add a 2015 Toyota Camry for "Sam Rivera"
+    And I take in "Toyota Camry 2015 — Sam Rivera" with the concern "Grinding noise when braking", odometer "84000" and parking bay "Bay 2"
     And I record the diagnosis "Front pads worn to the metal" with the trouble code "C1234"
     And I send an estimate with:
       | type  | description       | quantity_or_hours | price  |

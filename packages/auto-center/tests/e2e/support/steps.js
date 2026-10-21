@@ -8,7 +8,9 @@ async function addTeammate(w, name, role, person, cost) {
   await w.submit('#teammate-form');
 }
 async function addCustomer(w, name, extra = {}) { await w.drawer('ws-customer-drawer'); await w.fill('#customer-form', { name, ...extra }); await w.submit('#customer-form'); }
-async function addVehicle(w, name, customer, v = {}) { await w.drawer('ws-vehicle-drawer'); await w.fill('#wvehicle-form', { customer, name, ...v }); await w.submit('#wvehicle-form'); }
+async function addVehicle(w, customer, v = {}) { await w.drawer('ws-vehicle-drawer'); await w.fill('#wvehicle-form', { customer, ...v }); await w.submit('#wvehicle-form'); }
+// Vehicles are named the way the app shows them: "Toyota Camry 2015" (make, model, year).
+const car = label => { const m = label.match(/^(\S+)\s+(.+)\s+(\d{4})$/); if (!m) throw new Error('Name the vehicle as "Make Model Year": ' + label); return { make: m[1], model: m[2], year: m[3] }; };
 async function takeIn(w, vehicle, concern, extra = {}) {
   await w.drawer('ws-intake-drawer'); await w.fill('#intake-form', { vehicle, concern, ...extra }); await w.submit('#intake-form');
   const t = w.page.locator('article.ticket', { hasText: concern }).first();
@@ -26,9 +28,11 @@ When('I add the customer {string}', async function (name) { await addCustomer(th
 When('I add the customer {string} with phone {string} and email {string}', async function (n, phone, email) { await addCustomer(this, n, { phone, email }); });
 When('I add the customer {string} linked to the RobOS user {string} and the group {string}', async function (n, user, group) { await addCustomer(this, n, { userId: user, groupId: group }); });
 When('I add the customer {string} with the email {string}', async function (n, email) { await addCustomer(this, n, { email }); });
-Given('{string} has the vehicle {string}', async function (customer, name) { await addVehicle(this, name, customer, { year: '2015', make: 'Toyota', model: 'Camry' }); assert.equal(this.lastMessage, ''); });
-When('I add the vehicle {string} for {string} — a {int} {word} {word}', async function (name, customer, year, make, model) { await addVehicle(this, name, customer, { year: String(year), make, model }); });
-When('I add the vehicle {string} for {string} with the VIN {string}', async function (name, customer, vin) { await addVehicle(this, name, customer, { vin }); });
+Given('{string} has the vehicle {string}', async function (customer, label) { await addVehicle(this, customer, car(label)); assert.equal(this.lastMessage, ''); });
+Given('{string} has the vehicle {string} with VIN {string}', async function (customer, label, vin) { await addVehicle(this, customer, { ...car(label), vin }); assert.equal(this.lastMessage, ''); });
+When('I add a {int} {word} {word} for {string}', async function (year, make, model, customer) { await addVehicle(this, customer, { year: String(year), make, model }); });
+When('I add a {int} {word} {word} for {string} with the VIN {string}', async function (year, make, model, customer, vin) { await addVehicle(this, customer, { year: String(year), make, model, vin }); });
+When('I add a {int} {word} {word} for {string} nicknamed {string}', async function (year, make, model, customer, nickname) { await addVehicle(this, customer, { year: String(year), make, model, nickname }); });
 Then('I am told {string}', async function (text) { await this.page.waitForFunction(t => document.querySelector('#message').textContent.includes(t), text, { timeout: 8000 }).catch(async () => assert.fail(`Expected message containing "${text}" but saw "${await this.page.locator('#message').innerText()}"`)); this.focus = '#message'; });
 Then('the team roster lists {string}', async function (text) { await this.page.locator('#ws-team').filter({ hasText: text }).waitFor({ timeout: 8000 }); this.focus = '#ws-team'; });
 Then('the team roster does not list {string} twice', async function (name) { const rows = await this.page.locator('#ws-team .roster-row').allInnerTexts(); assert.equal(rows.filter(r => r.startsWith(name)).length, 1); this.focus = '#ws-team'; });
@@ -103,7 +107,6 @@ Then('the vehicle form shows year {string}, make {string} and model {string}', a
 Then('the estimate labor line shows {string} hours', async function (h) { const f = this.page.locator(`article.ticket[data-key="${this.ticket}"] .est-line[data-type="labor"] [name="hours"]`).first(); assert.equal(await f.inputValue(), h); this.focus = `article.ticket[data-key="${this.ticket}"] form.estimate-form`; });
 Then('the estimate part line shows price {string}', async function (p) { const f = this.page.locator(`article.ticket[data-key="${this.ticket}"] .est-line[data-type="part"] [name="price"]`).first(); assert.equal(await f.inputValue(), p); this.focus = `article.ticket[data-key="${this.ticket}"] form.estimate-form`; });
 Then('the parts used form shows cost {string} and supplier {string}', async function (c, s) { const f = n => this.page.locator(`#part-${this.ticket} [name="${n}"]`).inputValue(); assert.equal(await f('unitCost'), c); assert.equal(await f('supplier'), s); this.focus = `article.ticket[data-key="${this.ticket}"] [data-panel="parts"]`; });
-When('I add the vehicle {string} for {string} with the free-text make {string} and model {string}', async function (name, customer, make, model) { await addVehicle(this, name, customer, { make, model, year: '1963' }); });
 When('I add the catalog part {string} number {string} from {string} costing {string} and selling for {string}', async function (name, number, supplier, cost, price) { await this.drawer('ws-parts-drawer'); await this.fill('#part-add-form', { name, partNumber: number, supplier, cost, price }); await this.submit('#part-add-form'); });
 When('I add the catalog part {string} number {string} from {string} costing {string} and selling for {string}, fitting a {word} {word}', async function (name, number, supplier, cost, price, make, model) { await this.drawer('ws-parts-drawer'); await this.fill('#part-add-form', { name, partNumber: number, supplier, cost, price, make, model }); await this.submit('#part-add-form'); });
 When('I import this parts file:', async function (doc) { await this.drawer('ws-parts-drawer'); this.focus = '#parts-import-form'; await this.page.locator('#parts-import-form [name="csv"]').fill(doc); await this.page.locator('#parts-import-form button').click(); await this.page.waitForTimeout(900); });

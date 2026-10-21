@@ -5,7 +5,7 @@ Feature: Take the customer's call at the front desk
   Background:
     Given the shop team has "Maria Lopez" as "Master technician"
     And I add the customer "Sam Rivera" with phone "555-0100" and email "sam@example.com"
-    And "Sam Rivera" has the vehicle "Sam's Camry"
+    And "Sam Rivera" has the vehicle "Toyota Camry 2015"
 
   Scenario: A new customer phones in
     Choose how they reached you, then **New customer** and take their name and phone number. Add a vehicle
@@ -22,7 +22,7 @@ Feature: Take the customer's call at the front desk
     And I answer "When does it happen" with "Every time I brake"
     And I continue
     Then the summary shows "Priya Shah · (555) 010-0199"
-    And the summary shows "2015 Honda Civic"
+    And the summary shows "Honda Civic 2015"
     And the summary shows "Grinding"
     When I open the ticket
     Then ticket "RO-0001" is open
@@ -37,7 +37,7 @@ Feature: Take the customer's call at the front desk
     Then the matches show "Sam Rivera"
     When I pick "Sam Rivera" from the matches
     And I continue
-    And I choose the vehicle "Sam's Camry"
+    And I choose the vehicle "Toyota Camry 2015 — Sam Rivera"
     And I continue
     Then the step is "Issue"
 
@@ -120,14 +120,14 @@ Feature: Take the customer's call at the front desk
 
   Scenario: A car that already has an open ticket cannot be taken in twice
     The wizard shows which ticket the car is already on so nothing is duplicated.
-    Given "Sam's Camry" is taken in with the concern "Grinding noise when braking"
+    Given "Toyota Camry 2015 — Sam Rivera" is taken in with the concern "Grinding noise when braking"
     And I am at the front desk
     When I start an intake
     And the customer reached us by "phone call"
     And I choose the existing customer "5550100"
     And I pick "Sam Rivera" from the matches
     And I continue
-    Then the vehicle choice "Sam's Camry" is unavailable
+    Then the vehicle choice "Toyota Camry 2015 — Sam Rivera" is unavailable
 
   Scenario: Questions about the problem come from the knowledge graph
     Each problem type has its own questions, so the mechanic gets the details before touching the car. The
@@ -138,7 +138,7 @@ Feature: Take the customer's call at the front desk
     And I choose the existing customer "5550100"
     And I pick "Sam Rivera" from the matches
     And I continue
-    And I choose the vehicle "Sam's Camry"
+    And I choose the vehicle "Toyota Camry 2015 — Sam Rivera"
     And I continue
     And I choose the problem "Engine, starting or check-engine light"
     And I answer "What is the engine doing" with "Rough idle or shaking"
@@ -158,7 +158,7 @@ Feature: Take the customer's call at the front desk
     And I choose the existing customer "5550100"
     And I pick "Sam Rivera" from the matches
     And I continue
-    And I choose the vehicle "Sam's Camry"
+    And I choose the vehicle "Toyota Camry 2015 — Sam Rivera"
     And I continue
     And I choose the problem "Routine service or inspection"
     And I answer "Which services do you need" with "Oil and filter change"
@@ -175,7 +175,7 @@ Feature: Take the customer's call at the front desk
     And I choose the existing customer "5550100"
     And I pick "Sam Rivera" from the matches
     And I continue
-    And I choose the vehicle "Sam's Camry"
+    And I choose the vehicle "Toyota Camry 2015 — Sam Rivera"
     And I continue
     And I choose the problem "Brakes"
     And I answer "How urgent is it" with "Emergency or unsafe"
@@ -191,14 +191,14 @@ Feature: Take the customer's call at the front desk
     And I choose the existing customer "5550100"
     And I pick "Sam Rivera" from the matches
     And I continue
-    And I choose the vehicle "Sam's Camry"
+    And I choose the vehicle "Toyota Camry 2015 — Sam Rivera"
     And I continue
     And I continue
     Then I am asked to "Choose what the problem is about"
 
   Scenario: Log a call, text or email about a ticket
     Record every conversation on the ticket so anyone can see who said what and when.
-    Given "Sam's Camry" is taken in with the concern "Grinding noise when braking"
+    Given "Toyota Camry 2015 — Sam Rivera" is taken in with the concern "Grinding noise when braking"
     And I am at the front desk
     When I find the ticket "RO-0001" to log a conversation
     And I log that "we contacted them" by "text message": "Texted the estimate and asked for approval"
@@ -207,7 +207,7 @@ Feature: Take the customer's call at the front desk
   Scenario: Prepare the estimate and record approval from the front desk
     Open the ticket from **Estimates to prepare**, itemize parts and labor, then record how the customer
     approved: in person, phone, email or text.
-    Given "Sam's Camry" is taken in with the concern "Grinding noise when braking"
+    Given "Toyota Camry 2015 — Sam Rivera" is taken in with the concern "Grinding noise when braking"
     And I am at the front desk
     Then the front desk lists "RO-0001" under "Estimates to prepare"
     When I open ticket "RO-0001" from the front desk list
