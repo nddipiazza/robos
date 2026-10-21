@@ -1,16 +1,16 @@
 ---
 layout: default
 title: Engineering Blog
-description: "Two months of engineering in RobOS: CLI-first AI with an optional API mode, Cloud Storage & Audio Suite, Tabletop RPG & Midterm Elections 2026, RobOS Household & Tax Prep, Point of Sale, Auto Center, Starfall Command RTS, The Skill Commons, PR Review Theater, Realm of Heroes cRPG, RobOS Voice, and the Dual-State Knowledge Graph."
+description: "What changed in RobOS and why, newest first, with links to the docs and commits."
 permalink: /blog/
 extra_css: /assets/blog.css
 og_image: /assets/hero/poster.jpg
 ---
 <section class="blog-hero">
   <div class="wrap">
-    <p class="eyebrow">Engineering Log · August – October 2026</p>
-    <h1>What we built over the last two months</h1>
-    <p class="lead">Every major feature, application, game engine, and architectural milestone shipped in the RobOS repository over the past eight weeks—from the Dual-State Knowledge Graph and local-first PR Review Theater to open-source small-business apps and full Godot 4 games.</p>
+    <p class="eyebrow">RobOS</p>
+    <h1>Engineering log</h1>
+    <p class="lead">What changed in RobOS and why, newest first. Each post links to the docs and the commits behind it.</p>
   </div>
   <nav class="blog-jump" aria-label="Jump to blog post">
     <a href="#cli-agents-and-api-mode">CLI Agents &amp; API Mode</a>
