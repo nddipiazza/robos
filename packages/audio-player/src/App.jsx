@@ -6,6 +6,8 @@ import Lyrics from './Lyrics.jsx';
 import Library from './Library.jsx';
 import NowPlayingPanel from './NowPlayingPanel.jsx';
 import TrackInfo from './TrackInfo.jsx';
+import { AiPlaylistModal, DjSettingsModal } from './AiPlaylist.jsx';
+import { useVirtualDj } from './useVirtualDj.js';
 import { LibraryContext, ContextMenu, LoveButton, Cover, artUrlFor } from './library-ui.jsx';
 import { albumKeyOf, fold, splitGenres, sortTracks } from '../lib/library-index.js';
 
@@ -74,6 +76,8 @@ export default function App() {
   const [saveQueueName, setSaveQueueName] = useState('');
   const [saveQueueDesc, setSaveQueueDesc] = useState('');
   const [tracksForPlaylist, setTracksForPlaylist] = useState(null);
+  const [showAiPlaylist, setShowAiPlaylist] = useState(false);
+  const [showDjSettings, setShowDjSettings] = useState(false);
   const [quickPlaylistName, setQuickPlaylistName] = useState('');
 
   const playerRef = useRef(null);
@@ -365,6 +369,10 @@ export default function App() {
   const handlePlayPlaylist = (pl, replaceQueue = true) => {
     if (!pl || !pl.tracks || pl.tracks.length === 0) {
       showStatus(`Playlist "${pl?.name || 'Playlist'}" has no tracks to play.`);
+      return;
+    }
+    if (replaceQueue && pl.dj && pl.dj.persona) {
+      startWithDj(pl);
       return;
     }
     if (replaceQueue) {
@@ -897,6 +905,11 @@ export default function App() {
   };
 
   const handleTogglePlayPause = () => {
+    // While the DJ is talking, "play" means "get on with the music".
+    if (latestRef.current.djSpeaking) {
+      latestRef.current.skipDj();
+      return;
+    }
     if (outputTarget !== 'local') {
       handleToggleCastPause();
     } else {
@@ -965,18 +978,82 @@ export default function App() {
     if (idx != null) goToIndex(idx);
   };
 
+  // With random playback on, the next song is chosen when the current one starts,
+  // so the Virtual DJ can prepare an intro for it.
+  const plannedNextIndex = useMemo(
+    () => (shuffleMode ? pickNextIndex(true) : null),
+    [shuffleMode, currentTrackIndex, playlist, repeatMode] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
+  const upcomingTracks = useMemo(() => {
+    if (shuffleMode) return plannedNextIndex != null ? [playlist[plannedNextIndex]] : [];
+    const next = playlist.slice(currentTrackIndex + 1, currentTrackIndex + 4);
+    if (next.length < 3 && repeatMode === 'all') next.push(...playlist.slice(0, 3 - next.length));
+    return next;
+  }, [shuffleMode, plannedNextIndex, playlist, currentTrackIndex, repeatMode]);
+
+  const dj = useVirtualDj({
+    initial: playerPrefs.dj,
+    upcoming: upcomingTracks,
+    outputTarget,
+    getVolume: () => playerRef.current?.audio?.current?.volume ?? 1,
+    showStatus,
+  });
+
   const handleTrackEnded = () => {
     if (repeatMode === 'one') {
       restartCurrent();
       return;
     }
-    const idx = pickNextIndex(true);
+    const planned = shuffleMode && plannedNextIndex != null && playlist[plannedNextIndex] ? plannedNextIndex : null;
+    const idx = planned != null ? planned : pickNextIndex(true);
     if (idx == null) {
       setIsPlaying(false);
       showStatus('Reached the end of the queue.');
       return;
     }
+    const nextTrack = playlist[idx];
+    // The DJ talks between songs that end on their own (never on a manual skip),
+    // then hands over to whatever the queue holds by then.
+    if (dj.talkBefore(nextTrack, () => latestRef.current.goToTrack(nextTrack, idx))) {
+      setIsPlaying(false);
+      return;
+    }
     goToIndex(idx);
+  };
+
+  // Start a playlist that comes with a DJ script: intro first, then the music.
+  const startWithDj = (pl) => {
+    dj.loadScript(pl.dj);
+    playerRef.current?.audio?.current?.pause();
+    setIsPlaying(false);
+    showStatus(`🎙 Starting "${pl.name}" with your Virtual DJ…`);
+    dj.announce(pl.dj.intro, () => latestRef.current.playTracks(pl.tracks, 0));
+  };
+
+  const handleAiPlaylistPlay = (pl) => {
+    setShowAiPlaylist(false);
+    if (pl.dj && pl.dj.persona) startWithDj(pl);
+    else playTracks(pl.tracks, 0);
+  };
+
+  const handleAiPlaylistSave = async (pl) => {
+    try {
+      const created = await window.robosAudio.createPlaylist({
+        name: pl.name,
+        description: pl.description,
+        tracks: pl.tracks,
+        ai: pl.ai,
+        dj: pl.dj,
+      });
+      await refreshPlaylists();
+      if (created) setSelectedPlaylistId(created.id);
+      setShowAiPlaylist(false);
+      setActiveTab('playlists');
+      showStatus(`Saved AI playlist "${pl.name}" (${pl.tracks.length} songs)`);
+    } catch (err) {
+      showStatus('Error saving playlist: ' + err.message);
+    }
   };
 
   const handlePlayPrev = () => {
@@ -1087,7 +1164,20 @@ export default function App() {
     },
   };
 
-  latestRef.current = { next: handlePlayNext, prev: handlePlayPrev, toggle: () => handleTogglePlayPause() };
+  latestRef.current = {
+    next: handlePlayNext,
+    prev: handlePlayPrev,
+    toggle: () => handleTogglePlayPause(),
+    playTracks,
+    djSpeaking: !!dj.speaking,
+    skipDj: dj.skip,
+    // After a DJ break the queue may have changed: find the planned song again.
+    goToTrack: (track, fallbackIdx) => {
+      const idx = playlist.indexOf(track);
+      if (idx >= 0) goToIndex(idx);
+      else if (playlist[fallbackIdx]) goToIndex(fallbackIdx);
+    },
+  };
 
   // ── Ambient Synthesizers (Web Audio) ──────────────────────────────────────
 
@@ -1273,9 +1363,10 @@ export default function App() {
         shuffle: shuffleMode,
         dockCollapsed,
         librarySection: libraryNav.section,
+        dj: dj.settings,
       }));
     } catch {}
-  }, [repeatMode, shuffleMode, dockCollapsed, libraryNav.section]);
+  }, [repeatMode, shuffleMode, dockCollapsed, libraryNav.section, dj.settings]);
 
   return (
     <LibraryContext.Provider value={libraryCtx}>
@@ -1585,6 +1676,14 @@ export default function App() {
                   New Playlist
                 </button>
                 <button
+                  id="btn-ai-playlist"
+                  className="btn-accent ai-btn"
+                  onClick={() => setShowAiPlaylist(true)}
+                  title="Describe a playlist and let your RobOS agent build it"
+                >
+                  ✦ AI Playlist
+                </button>
+                <button
                   id="btn-import-m3u"
                   className="btn-secondary"
                   onClick={handleImportM3u}
@@ -1649,6 +1748,8 @@ export default function App() {
                           <div className="playlist-stats">
                             <span className="badge">{selectedPlaylist.tracks?.length || 0} Tracks</span>
                             <span className="badge">Duration: {formatTotalDuration(selectedPlaylist.tracks)}</span>
+                            {selectedPlaylist.ai && <span className="badge" title={selectedPlaylist.ai.request}>✦ AI playlist</span>}
+                            {selectedPlaylist.dj && <span className="badge" title={selectedPlaylist.dj.persona}>🎙 Virtual DJ</span>}
                             <span className="badge">Updated: {new Date(selectedPlaylist.updatedAt || selectedPlaylist.createdAt || Date.now()).toLocaleDateString()}</span>
                           </div>
                         </div>
@@ -1850,6 +1951,7 @@ export default function App() {
               canGoBack={libNav.length > 1}
               searchInputRef={searchInputRef}
               isScanning={isScanningLibrary}
+              onAiPlaylist={() => setShowAiPlaylist(true)}
               onAddFolder={handleSelectFolder}
               onAddFiles={handleAddFiles}
               onRefresh={async () => {
@@ -1966,6 +2068,14 @@ export default function App() {
         repeat={repeatMode}
         onToggleShuffle={toggleShuffleMode}
         onCycleRepeat={cycleRepeat}
+        dj={{
+          enabled: dj.active,
+          speaking: dj.speaking,
+          persona: dj.settings.persona,
+          onSkip: dj.skip,
+          onSettings: () => setShowDjSettings(true),
+          onAiPlaylist: () => setShowAiPlaylist(true),
+        }}
       />
       </div>
 
@@ -2001,6 +2111,27 @@ export default function App() {
             </button>
           </div>
         </footer>
+      )}
+
+      {showAiPlaylist && (
+        <AiPlaylistModal
+          initialDj={dj.settings}
+          onClose={() => setShowAiPlaylist(false)}
+          onPlay={handleAiPlaylistPlay}
+          onSave={handleAiPlaylistSave}
+        />
+      )}
+
+      {showDjSettings && (
+        <DjSettingsModal
+          value={dj.settings}
+          onClose={() => setShowDjSettings(false)}
+          onSave={(next) => {
+            dj.setSettings(next);
+            setShowDjSettings(false);
+            showStatus(next.enabled ? '🎙 Virtual DJ is on — they’ll talk between songs.' : 'Virtual DJ is off.');
+          }}
+        />
       )}
 
       {/* Modal: Create Playlist */}

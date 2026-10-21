@@ -782,7 +782,7 @@
   var require_react_dom_production = __commonJS({
     "node_modules/react-dom/cjs/react-dom.production.js"(exports) {
       "use strict";
-      var React16 = require_react();
+      var React17 = require_react();
       function formatProdErrorMessage(code) {
         var url = "https://react.dev/errors/" + code;
         if (1 < arguments.length) {
@@ -824,7 +824,7 @@
           implementation
         };
       }
-      var ReactSharedInternals = React16.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      var ReactSharedInternals = React17.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       function getCrossOriginStringAs(as, input) {
         if ("font" === as) return "";
         if ("string" === typeof input)
@@ -966,7 +966,7 @@
     "node_modules/react-dom/cjs/react-dom-client.production.js"(exports) {
       "use strict";
       var Scheduler = require_scheduler();
-      var React16 = require_react();
+      var React17 = require_react();
       var ReactDOM = require_react_dom();
       function formatProdErrorMessage(code) {
         var url = "https://react.dev/errors/" + code;
@@ -1257,7 +1257,7 @@
         return null;
       }
       var isArrayImpl = Array.isArray;
-      var ReactSharedInternals = React16.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      var ReactSharedInternals = React17.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       var ReactDOMSharedInternals = ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       var sharedNotPendingObject = {
         pending: false,
@@ -14406,7 +14406,7 @@
           0 === i && attemptExplicitHydrationTarget(target);
         }
       };
-      var isomorphicReactPackageVersion$jscomp$inline_2043 = React16.version;
+      var isomorphicReactPackageVersion$jscomp$inline_2043 = React17.version;
       if ("19.3.0" !== isomorphicReactPackageVersion$jscomp$inline_2043)
         throw Error(
           formatProdErrorMessage(
@@ -14882,7 +14882,7 @@
       function unplayedTracks(tracks, stats = {}) {
         return tracks.filter((t) => !((stats[t.id] || {}).plays > 0));
       }
-      function formatDuration4(sec) {
+      function formatDuration5(sec) {
         if (!sec || isNaN(sec)) return "--:--";
         const total = Math.round(sec);
         const h = Math.floor(total / 3600);
@@ -14891,7 +14891,7 @@
         const ss = `${s < 10 ? "0" : ""}${s}`;
         return h > 0 ? `${h}:${m < 10 ? "0" : ""}${m}:${ss}` : `${m}:${ss}`;
       }
-      function formatLongDuration3(sec) {
+      function formatLongDuration4(sec) {
         const totalMin = Math.round((sec || 0) / 60);
         if (totalMin < 60) return `${totalMin} min`;
         const days = Math.floor(totalMin / 1440);
@@ -14900,7 +14900,7 @@
         if (days > 0) return `${days}d ${hours}h`;
         return mins ? `${hours} hr ${mins} min` : `${hours} hr`;
       }
-      function plural2(n, word, pluralWord) {
+      function plural3(n, word, pluralWord) {
         return `${Number(n).toLocaleString()} ${n === 1 ? word : pluralWord || `${word}s`}`;
       }
       module.exports = {
@@ -14923,19 +14923,19 @@
         recentlyPlayedTracks: recentlyPlayedTracks2,
         mostPlayedTracks: mostPlayedTracks2,
         unplayedTracks,
-        formatDuration: formatDuration4,
-        formatLongDuration: formatLongDuration3,
-        plural: plural2
+        formatDuration: formatDuration5,
+        formatLongDuration: formatLongDuration4,
+        plural: plural3
       };
     }
   });
 
   // src/index.jsx
-  var import_react19 = __toESM(require_react());
+  var import_react21 = __toESM(require_react());
   var import_client = __toESM(require_client());
 
   // src/App.jsx
-  var import_react18 = __toESM(require_react());
+  var import_react20 = __toESM(require_react());
 
   // node_modules/react-h5-audio-player/es/index.js
   var import_react6 = __toESM(require_react());
@@ -18906,7 +18906,8 @@
     onRefresh,
     onAddFolder,
     onAddFiles,
-    isScanning
+    isScanning,
+    onAiPlaylist
   }) {
     const { stats, actions } = useLibrary();
     const [prefs, setPrefs] = (0, import_react15.useState)(loadPrefs);
@@ -18977,7 +18978,17 @@
         }
       );
     }
-    return /* @__PURE__ */ import_react15.default.createElement("div", { className: "lib" }, /* @__PURE__ */ import_react15.default.createElement("nav", { className: "lib-nav", "aria-label": "Library categories" }, /* @__PURE__ */ import_react15.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "lib-nav-heading" }, "Library"), LIBRARY_SECTIONS.map((s) => /* @__PURE__ */ import_react15.default.createElement(NavItem, { key: s.id, item: s, count: counts[s.id], active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react15.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "lib-nav-heading" }, "Collections"), LIBRARY_COLLECTIONS.map((s) => /* @__PURE__ */ import_react15.default.createElement(NavItem, { key: s.id, item: s, count: s.id === "loved" ? lovedCount : null, active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react15.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "lib-nav-heading" }, "Sources"), /* @__PURE__ */ import_react15.default.createElement(NavItem, { item: { id: "folders", label: "Folders", icon: "folder" }, count: folders.length, active: !detail && !searching && section === "folders", onClick: () => go({ section: "folders" }) })), /* @__PURE__ */ import_react15.default.createElement("div", { className: "lib-nav-footer" }, /* @__PURE__ */ import_react15.default.createElement("span", null, (0, import_library_index2.plural)(index.tracks.length, "song")), /* @__PURE__ */ import_react15.default.createElement("span", null, (0, import_library_index2.plural)(index.albums.length, "album"), " \xB7 ", (0, import_library_index2.formatLongDuration)(index.totalDuration)), /* @__PURE__ */ import_react15.default.createElement(
+    return /* @__PURE__ */ import_react15.default.createElement("div", { className: "lib" }, /* @__PURE__ */ import_react15.default.createElement("nav", { className: "lib-nav", "aria-label": "Library categories" }, /* @__PURE__ */ import_react15.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "lib-nav-heading" }, "Library"), LIBRARY_SECTIONS.map((s) => /* @__PURE__ */ import_react15.default.createElement(NavItem, { key: s.id, item: s, count: counts[s.id], active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react15.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "lib-nav-heading" }, "Collections"), LIBRARY_COLLECTIONS.map((s) => /* @__PURE__ */ import_react15.default.createElement(NavItem, { key: s.id, item: s, count: s.id === "loved" ? lovedCount : null, active: !detail && !searching && section === s.id, onClick: () => go({ section: s.id }) }))), /* @__PURE__ */ import_react15.default.createElement("div", { className: "lib-nav-group" }, /* @__PURE__ */ import_react15.default.createElement("span", { className: "lib-nav-heading" }, "Sources"), /* @__PURE__ */ import_react15.default.createElement(NavItem, { item: { id: "folders", label: "Folders", icon: "folder" }, count: folders.length, active: !detail && !searching && section === "folders", onClick: () => go({ section: "folders" }) })), /* @__PURE__ */ import_react15.default.createElement("div", { className: "lib-nav-footer" }, /* @__PURE__ */ import_react15.default.createElement("span", null, (0, import_library_index2.plural)(index.tracks.length, "song")), /* @__PURE__ */ import_react15.default.createElement("span", null, (0, import_library_index2.plural)(index.albums.length, "album"), " \xB7 ", (0, import_library_index2.formatLongDuration)(index.totalDuration)), onAiPlaylist && /* @__PURE__ */ import_react15.default.createElement(
+      "button",
+      {
+        id: "btn-library-ai-playlist",
+        className: "btn-accent ai-btn lib-shuffle-all",
+        disabled: !index.tracks.length,
+        title: "Describe a playlist and let your RobOS agent build it from your library",
+        onClick: onAiPlaylist
+      },
+      "\u2726 AI Playlist"
+    ), /* @__PURE__ */ import_react15.default.createElement(
       "button",
       {
         id: "btn-shuffle-library",
@@ -19390,7 +19401,8 @@
     shuffle,
     repeat,
     onToggleShuffle,
-    onCycleRepeat
+    onCycleRepeat,
+    dj = null
   }) {
     const ctx = useLibrary();
     const { isPlaying, actions, openMenu } = ctx;
@@ -19561,7 +19573,7 @@
     const end = Math.min(rows.length, Math.ceil((scrollTop + viewport) / ROW_HEIGHT2) + OVERSCAN);
     const current = queue[currentIndex] || null;
     const dropPos = dropAt == null ? null : dropAt >= queue.length ? rows.length : rows.indexOf(dropAt);
-    return /* @__PURE__ */ import_react16.default.createElement("aside", { className: "np-dock", "aria-label": "Now Playing" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-head" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-head-title" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "list", size: 15 }), /* @__PURE__ */ import_react16.default.createElement("span", null, "Now Playing"), /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-count" }, queue.length.toLocaleString())), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-collapse-queue-panel", className: "btn-icon-only small", title: "Hide panel", onClick: onToggleCollapsed }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "chevron", size: 14 }))), current && /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-current", onDoubleClick: () => locateCurrent(true), title: "Double-click to locate in the list" }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: current.artId, name: current.album || current.title, size: 44 }), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-current-text" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-current-title" }, current.title), /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-current-sub" }, /* @__PURE__ */ import_react16.default.createElement("a", { className: "link", onClick: () => actions.goToArtist(current.artist) }, current.artist || "Unknown Artist"), current.album ? /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, " \xB7 ", /* @__PURE__ */ import_react16.default.createElement("a", { className: "link", onClick: () => actions.goToAlbumOf(current) }, current.album)) : null))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-filter search-box" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "search", size: 13 }), /* @__PURE__ */ import_react16.default.createElement(
+    return /* @__PURE__ */ import_react16.default.createElement("aside", { className: "np-dock", "aria-label": "Now Playing" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-head" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-head-title" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "list", size: 15 }), /* @__PURE__ */ import_react16.default.createElement("span", null, "Now Playing"), /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-count" }, queue.length.toLocaleString())), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-collapse-queue-panel", className: "btn-icon-only small", title: "Hide panel", onClick: onToggleCollapsed }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "chevron", size: 14 }))), current && /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-current", onDoubleClick: () => locateCurrent(true), title: "Double-click to locate in the list" }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: current.artId, name: current.album || current.title, size: 44 }), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-current-text" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-current-title" }, current.title), /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-current-sub" }, /* @__PURE__ */ import_react16.default.createElement("a", { className: "link", onClick: () => actions.goToArtist(current.artist) }, current.artist || "Unknown Artist"), current.album ? /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, " \xB7 ", /* @__PURE__ */ import_react16.default.createElement("a", { className: "link", onClick: () => actions.goToAlbumOf(current) }, current.album)) : null))), dj && dj.speaking && /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-dj-banner", role: "status" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "mic", size: 15 }), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-dj-text" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-dj-label" }, dj.speaking.warming ? "DJ is warming up\u2026" : "DJ on the mic"), /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-dj-line" }, dj.speaking.text)), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-dj-skip", className: "btn-chip", onClick: dj.onSkip, title: "Skip the DJ and play the next song" }, "Skip")), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-filter search-box" }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "search", size: 13 }), /* @__PURE__ */ import_react16.default.createElement(
       "input",
       {
         id: "queue-filter",
@@ -19612,7 +19624,17 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-col-dur" }, (0, import_library_index3.formatDuration)(t.duration))
         );
       }), dropPos != null && dropPos >= 0 && /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-drop-line", style: { top: dropPos * ROW_HEIGHT2 - 1 } }))
-    ), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-footer" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-footer-stats" }, /* @__PURE__ */ import_react16.default.createElement("span", null, queue.length.toLocaleString(), " tracks \xB7 ", (0, import_library_index3.formatLongDuration)(totalDuration)), currentIndex >= 0 && queue.length > 1 && /* @__PURE__ */ import_react16.default.createElement("span", null, (0, import_library_index3.formatLongDuration)(remaining), " left")), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-footer-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-queue-shuffle-mode", className: `btn-icon-only small ${shuffle ? "on" : ""}`, title: shuffle ? "Random playback: on" : "Random playback: off", "aria-pressed": shuffle, onClick: onToggleShuffle }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 14 })), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-queue-repeat-mode", className: `btn-icon-only small ${repeat !== "off" ? "on" : ""}`, title: REPEAT_LABEL[repeat], onClick: onCycleRepeat }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: repeat === "one" ? "repeatOne" : "repeat", size: 14 })), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-icon-only small", title: "Locate the playing track", onClick: () => locateCurrent(true) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "locate", size: 14 })), /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-footer-spacer" }), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-shuffle-queue", className: "btn-icon-only small", title: "Shuffle the order of the queue", onClick: onShuffleOrder }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "rows", size: 14 })), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-save-queue-as-playlist", className: "btn-icon-only small", title: "Save queue as a playlist", onClick: onSave, disabled: !queue.length }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "save", size: 14 })), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-clear-queue", className: "btn-icon-only small danger", title: "Clear the queue (keeps the playing track)", onClick: onClear, disabled: queue.length <= 1 }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "trash", size: 14 })))));
+    ), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-footer" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-footer-stats" }, /* @__PURE__ */ import_react16.default.createElement("span", null, queue.length.toLocaleString(), " tracks \xB7 ", (0, import_library_index3.formatLongDuration)(totalDuration)), currentIndex >= 0 && queue.length > 1 && /* @__PURE__ */ import_react16.default.createElement("span", null, (0, import_library_index3.formatLongDuration)(remaining), " left")), /* @__PURE__ */ import_react16.default.createElement("div", { className: "np-footer-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-queue-shuffle-mode", className: `btn-icon-only small ${shuffle ? "on" : ""}`, title: shuffle ? "Random playback: on" : "Random playback: off", "aria-pressed": shuffle, onClick: onToggleShuffle }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 14 })), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-queue-repeat-mode", className: `btn-icon-only small ${repeat !== "off" ? "on" : ""}`, title: REPEAT_LABEL[repeat], onClick: onCycleRepeat }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: repeat === "one" ? "repeatOne" : "repeat", size: 14 })), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-icon-only small", title: "Locate the playing track", onClick: () => locateCurrent(true) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "locate", size: 14 })), dj && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        id: "btn-dj-toggle",
+        className: `btn-icon-only small ${dj.enabled ? "on" : ""}`,
+        title: dj.enabled ? `Virtual DJ is on: ${dj.persona}` : "Virtual DJ between songs",
+        "aria-pressed": dj.enabled,
+        onClick: dj.onSettings
+      },
+      /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "mic", size: 14 })
+    ), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-queue-ai-playlist", className: "btn-icon-only small ai-btn-icon", title: "AI Playlist: describe it, your RobOS agent builds it", onClick: dj.onAiPlaylist }, "\u2726")), /* @__PURE__ */ import_react16.default.createElement("span", { className: "np-footer-spacer" }), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-shuffle-queue", className: "btn-icon-only small", title: "Shuffle the order of the queue", onClick: onShuffleOrder }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "rows", size: 14 })), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-save-queue-as-playlist", className: "btn-icon-only small", title: "Save queue as a playlist", onClick: onSave, disabled: !queue.length }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "save", size: 14 })), /* @__PURE__ */ import_react16.default.createElement("button", { id: "btn-clear-queue", className: "btn-icon-only small danger", title: "Clear the queue (keeps the playing track)", onClick: onClear, disabled: queue.length <= 1 }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "trash", size: 14 })))));
   }
 
   // src/TrackInfo.jsx
@@ -19653,8 +19675,338 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
     } }, "Go to album"), track.filePath && !track.cloud && /* @__PURE__ */ import_react17.default.createElement("button", { className: "btn-chip", onClick: () => actions.showInFolder(track) }, "Show in file manager")))), /* @__PURE__ */ import_react17.default.createElement("dl", { className: "track-info-grid" }, rows.map(([k, v]) => /* @__PURE__ */ import_react17.default.createElement(import_react17.default.Fragment, { key: k }, /* @__PURE__ */ import_react17.default.createElement("dt", null, k), /* @__PURE__ */ import_react17.default.createElement("dd", { title: String(v) }, String(v))))), /* @__PURE__ */ import_react17.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react17.default.createElement("button", { className: "btn-secondary", onClick: onClose }, "Close"))));
   }
 
-  // src/App.jsx
+  // src/AiPlaylist.jsx
+  var import_react18 = __toESM(require_react());
   var import_library_index5 = __toESM(require_library_index());
+  var DJ_FREQUENCY_LABELS = {
+    every: "Before every song",
+    alternate: "Every other song",
+    sometimes: "Now and then (every third song)"
+  };
+  function AiPromptBox({ id, placeholder, initialValue = "", minHeight = 100, onChange, onSubmit }) {
+    const hostRef = (0, import_react18.useRef)(null);
+    const [missing, setMissing] = (0, import_react18.useState)(false);
+    const latest = (0, import_react18.useRef)({ onChange, onSubmit });
+    latest.current = { onChange, onSubmit };
+    (0, import_react18.useEffect)(() => {
+      const host = hostRef.current;
+      if (!host || typeof customElements === "undefined") return void 0;
+      const el = document.createElement("robos-ai-textarea");
+      el.id = id;
+      el.setAttribute("show-submit", "false");
+      el.setAttribute("show-commands", "false");
+      el.setAttribute("show-agent", "false");
+      el.setAttribute("placeholder", placeholder);
+      el.setAttribute("min-height", String(minHeight));
+      host.appendChild(el);
+      let alive = true;
+      const report = () => latest.current.onChange && latest.current.onChange(String(el.value || ""));
+      const onKey = (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && String(el.value || "").trim() && latest.current.onSubmit) {
+          e.preventDefault();
+          latest.current.onSubmit();
+        }
+      };
+      customElements.whenDefined("robos-ai-textarea").then(() => {
+        if (!alive) return;
+        if (initialValue && !String(el.value || "").trim()) el.value = initialValue;
+        report();
+      });
+      const timer = setTimeout(() => {
+        if (alive && !customElements.get("robos-ai-textarea")) setMissing(true);
+      }, 4e3);
+      ["input", "change", "keyup"].forEach((t) => el.addEventListener(t, report));
+      el.addEventListener("keydown", onKey);
+      return () => {
+        alive = false;
+        clearTimeout(timer);
+        ["input", "change", "keyup"].forEach((t) => el.removeEventListener(t, report));
+        el.removeEventListener("keydown", onKey);
+        el.remove();
+      };
+    }, []);
+    return /* @__PURE__ */ import_react18.default.createElement("div", { className: "ai-prompt-box" }, /* @__PURE__ */ import_react18.default.createElement("div", { ref: hostRef }), missing && /* @__PURE__ */ import_react18.default.createElement("p", { className: "ai-note error" }, "RobOS UI components (robos-ui) are not installed, so the prompt box can't load."));
+  }
+  function useDjVoices() {
+    const [voices, setVoices] = (0, import_react18.useState)(null);
+    (0, import_react18.useEffect)(() => {
+      let alive = true;
+      (window.robosAudio?.djVoices ? window.robosAudio.djVoices() : Promise.resolve({ ok: false, voices: {} })).then((res) => {
+        if (alive) setVoices(res && res.ok ? res.voices || {} : {});
+      }).catch(() => {
+        if (alive) setVoices({});
+      });
+      return () => {
+        alive = false;
+      };
+    }, []);
+    return voices;
+  }
+  var ENGINE_LABELS = { kokoro: "Kokoro (offline)", "edge-tts": "Edge neural voices (online)", piper: "Piper (offline)", "speech-dispatcher": "System speech" };
+  function defaultDjVoice(voices) {
+    if (!voices) return "";
+    for (const engine of ["kokoro", "edge-tts", "piper"]) {
+      const list = voices[engine] || [];
+      const pick = list.find((v) => v.gender === "male" && v.recommended) || list.find((v) => v.recommended) || list[0];
+      if (pick) return `${engine}:${pick.id}`;
+    }
+    return "";
+  }
+  function DjSettingsFields({ value, onChange, idPrefix = "dj" }) {
+    const voices = useDjVoices();
+    const [previewing, setPreviewing] = (0, import_react18.useState)(false);
+    const set = (patch) => onChange({ ...value, ...patch });
+    (0, import_react18.useEffect)(() => {
+      if (voices && !value.voice) set({ voice: defaultDjVoice(voices) });
+    }, [voices]);
+    const preview = async () => {
+      setPreviewing(true);
+      try {
+        const res = await window.robosAudio.djSynthesize("Hey, you're listening to the RobOS Virtual DJ. Here's what's coming up next.", value.voice);
+        if (res && res.ok) {
+          const audio = new Audio(`file://${res.filePath.split("/").map(encodeURIComponent).join("/")}`);
+          audio.onended = () => setPreviewing(false);
+          audio.onerror = () => setPreviewing(false);
+          await audio.play();
+          return;
+        }
+      } catch {
+      }
+      setPreviewing(false);
+    };
+    const engines = voices ? Object.entries(voices).filter(([, list]) => list && list.length) : [];
+    return /* @__PURE__ */ import_react18.default.createElement("div", { className: "dj-fields" }, /* @__PURE__ */ import_react18.default.createElement("label", { className: "modal-label" }, "Describe your DJ"), /* @__PURE__ */ import_react18.default.createElement(
+      AiPromptBox,
+      {
+        id: `${idPrefix}-persona`,
+        minHeight: 90,
+        initialValue: value.persona || "",
+        placeholder: "e.g. A laid-back late-night jazz radio host with a dry sense of humour who keeps it short",
+        onChange: (persona) => set({ persona })
+      }
+    ), /* @__PURE__ */ import_react18.default.createElement("div", { className: "dj-row" }, /* @__PURE__ */ import_react18.default.createElement("label", { className: "dj-field" }, /* @__PURE__ */ import_react18.default.createElement("span", null, "Voice"), engines.length ? /* @__PURE__ */ import_react18.default.createElement("select", { id: `${idPrefix}-voice`, value: value.voice || "", onChange: (e) => set({ voice: e.target.value }) }, engines.map(([engine, list]) => /* @__PURE__ */ import_react18.default.createElement("optgroup", { key: engine, label: ENGINE_LABELS[engine] || engine }, list.map((v) => /* @__PURE__ */ import_react18.default.createElement("option", { key: v.id, value: `${engine}:${v.id}` }, v.name))))) : /* @__PURE__ */ import_react18.default.createElement("span", { className: "ai-note" }, voices ? "RobOS voice is not installed; the DJ will use the system voice." : "Loading voices\u2026")), /* @__PURE__ */ import_react18.default.createElement("label", { className: "dj-field" }, /* @__PURE__ */ import_react18.default.createElement("span", null, "Talks"), /* @__PURE__ */ import_react18.default.createElement("select", { id: `${idPrefix}-frequency`, value: value.frequency || "every", onChange: (e) => set({ frequency: e.target.value }) }, Object.entries(DJ_FREQUENCY_LABELS).map(([k, label]) => /* @__PURE__ */ import_react18.default.createElement("option", { key: k, value: k }, label)))), engines.length > 0 && /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary dj-preview", onClick: preview, disabled: previewing || !value.voice }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "speaker", size: 13 }), " ", previewing ? "Playing\u2026" : "Hear voice")));
+  }
+  function AiPlaylistModal({ initialDj, onClose, onPlay, onSave }) {
+    const [request, setRequest] = (0, import_react18.useState)("");
+    const [count, setCount] = (0, import_react18.useState)(25);
+    const [withDj, setWithDj] = (0, import_react18.useState)(!!(initialDj && initialDj.enabled));
+    const [dj, setDj] = (0, import_react18.useState)({ persona: "", voice: "", frequency: "every", ...initialDj || {} });
+    const [phase, setPhase] = (0, import_react18.useState)("edit");
+    const [progress, setProgress] = (0, import_react18.useState)("");
+    const [error, setError] = (0, import_react18.useState)("");
+    const [result, setResult] = (0, import_react18.useState)(null);
+    const [name, setName] = (0, import_react18.useState)("");
+    const [agent, setAgent] = (0, import_react18.useState)(null);
+    (0, import_react18.useEffect)(() => {
+      window.robosAudio?.aiAgentInfo?.().then(setAgent).catch(() => {
+      });
+      const off = window.robosAudio?.onAiProgress?.((p) => p && p.message && setProgress(p.message));
+      return () => {
+        if (typeof off === "function") off();
+      };
+    }, []);
+    const djReady = !withDj || dj.persona.trim().length > 0;
+    const canGenerate = request.trim().length > 0 && djReady && phase !== "working";
+    const generate = async () => {
+      if (!canGenerate) return;
+      setPhase("working");
+      setError("");
+      setProgress("Asking your RobOS agent\u2026");
+      try {
+        const res = await window.robosAudio.aiPlaylistGenerate(request.trim(), count, withDj ? dj : null);
+        if (res && res.ok) {
+          setResult(res.playlist);
+          setName(res.playlist.name);
+          setPhase("result");
+        } else {
+          setError(res && res.error || "The agent did not answer.");
+          setPhase("edit");
+        }
+      } catch (err) {
+        setError(err.message);
+        setPhase("edit");
+      }
+    };
+    const final = () => ({ ...result, name: name.trim() || result.name });
+    return /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-overlay", onClick: phase === "working" ? void 0 : onClose }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-card ai-modal", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "ai-modal-head" }, /* @__PURE__ */ import_react18.default.createElement("h3", null, /* @__PURE__ */ import_react18.default.createElement("span", { className: "ai-spark" }, "\u2726"), " AI Playlist"), /* @__PURE__ */ import_react18.default.createElement("span", { className: "ai-note" }, agent && agent.ok ? /* @__PURE__ */ import_react18.default.createElement(import_react18.default.Fragment, null, "Built by your RobOS agent \xB7 ", /* @__PURE__ */ import_react18.default.createElement("strong", null, agent.api ? agent.api.label || "API mode" : agent.activeName)) : agent && agent.error || "Built by your RobOS agent")), phase !== "result" && /* @__PURE__ */ import_react18.default.createElement(import_react18.default.Fragment, null, /* @__PURE__ */ import_react18.default.createElement("label", { className: "modal-label" }, "What should it sound like?"), /* @__PURE__ */ import_react18.default.createElement(
+      AiPromptBox,
+      {
+        id: "ai-playlist-prompt",
+        placeholder: "e.g. An hour of upbeat 90s alternative rock for coding \u2014 no ballads, end with something mellow",
+        onChange: setRequest,
+        onSubmit: generate
+      }
+    ), /* @__PURE__ */ import_react18.default.createElement("div", { className: "dj-row" }, /* @__PURE__ */ import_react18.default.createElement("label", { className: "dj-field" }, /* @__PURE__ */ import_react18.default.createElement("span", null, "Songs"), /* @__PURE__ */ import_react18.default.createElement(
+      "input",
+      {
+        id: "ai-playlist-count",
+        type: "number",
+        min: "3",
+        max: "100",
+        value: count,
+        onChange: (e) => setCount(Math.max(3, Math.min(100, parseInt(e.target.value, 10) || 25)))
+      }
+    )), /* @__PURE__ */ import_react18.default.createElement("label", { className: "dj-toggle" }, /* @__PURE__ */ import_react18.default.createElement("input", { id: "ai-playlist-dj", type: "checkbox", checked: withDj, onChange: (e) => setWithDj(e.target.checked) }), /* @__PURE__ */ import_react18.default.createElement("span", null, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "mic", size: 14 }), " Virtual DJ between songs"))), withDj && /* @__PURE__ */ import_react18.default.createElement(DjSettingsFields, { value: dj, onChange: setDj, idPrefix: "ai-dj" }), error && /* @__PURE__ */ import_react18.default.createElement("p", { className: "ai-note error", role: "alert" }, error), phase === "working" && /* @__PURE__ */ import_react18.default.createElement("div", { className: "ai-progress", role: "status" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react18.default.createElement("span", null, progress)), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary", onClick: onClose, disabled: phase === "working" }, "Cancel"), /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-ai-playlist-generate", className: "btn-accent", onClick: generate, disabled: !canGenerate }, "\u2726 ", phase === "working" ? "Working\u2026" : "Generate with AI"))), phase === "result" && result && /* @__PURE__ */ import_react18.default.createElement(import_react18.default.Fragment, null, /* @__PURE__ */ import_react18.default.createElement("input", { id: "ai-playlist-name", className: "ai-name-input", value: name, onChange: (e) => setName(e.target.value), "aria-label": "Playlist name" }), /* @__PURE__ */ import_react18.default.createElement("p", { className: "ai-description" }, result.description), /* @__PURE__ */ import_react18.default.createElement("div", { className: "ai-meta" }, /* @__PURE__ */ import_react18.default.createElement("span", { className: "badge" }, (0, import_library_index5.plural)(result.tracks.length, "song")), /* @__PURE__ */ import_react18.default.createElement("span", { className: "badge" }, (0, import_library_index5.formatLongDuration)(result.tracks.reduce((n, t) => n + (t.duration || 0), 0))), result.dj && /* @__PURE__ */ import_react18.default.createElement("span", { className: "badge" }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "mic", size: 11 }), " Virtual DJ")), result.dj && result.dj.intro && /* @__PURE__ */ import_react18.default.createElement("p", { className: "ai-dj-quote" }, "\u{1F399} \u201C", result.dj.intro, "\u201D"), /* @__PURE__ */ import_react18.default.createElement("ol", { className: "ai-track-list" }, result.tracks.map((t, i) => /* @__PURE__ */ import_react18.default.createElement("li", { key: `${t.id}-${i}` }, /* @__PURE__ */ import_react18.default.createElement("span", { className: "ai-track-title" }, t.title), /* @__PURE__ */ import_react18.default.createElement("span", { className: "ai-track-sub" }, t.artist, t.album ? ` \xB7 ${t.album}` : ""), /* @__PURE__ */ import_react18.default.createElement("span", { className: "ai-track-dur" }, (0, import_library_index5.formatDuration)(t.duration))))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary", onClick: () => {
+      setPhase("edit");
+      setResult(null);
+    } }, "Start over"), /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-ai-playlist-save", className: "btn-secondary", onClick: () => onSave(final()) }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "save", size: 13 }), " Save playlist"), /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-ai-playlist-play", className: "btn-accent", onClick: () => onPlay(final()) }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "play", size: 12 }), " ", result.dj ? "Play with DJ" : "Play")))));
+  }
+  function DjSettingsModal({ value, onClose, onSave }) {
+    const [dj, setDj] = (0, import_react18.useState)({ persona: "", voice: "", frequency: "every", ...value });
+    return /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-overlay", onClick: onClose }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-card ai-modal", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "ai-modal-head" }, /* @__PURE__ */ import_react18.default.createElement("h3", null, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "mic", size: 16 }), " Virtual DJ"), /* @__PURE__ */ import_react18.default.createElement("span", { className: "ai-note" }, "Your RobOS agent writes a short intro before songs, spoken in the voice you pick.")), /* @__PURE__ */ import_react18.default.createElement(DjSettingsFields, { value: dj, onChange: setDj, idPrefix: "queue-dj" }), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-actions" }, value.enabled && /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary", onClick: () => onSave({ ...dj, enabled: false }) }, "Turn DJ off"), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary", onClick: onClose }, "Cancel"), /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-dj-save", className: "btn-accent", disabled: !dj.persona.trim(), onClick: () => onSave({ ...dj, enabled: true }) }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "mic", size: 13 }), " ", value.enabled ? "Save" : "Start DJ"))));
+  }
+
+  // src/useVirtualDj.js
+  var import_react19 = __toESM(require_react());
+  var LOOKAHEAD = 3;
+  var FREQUENCY_EVERY = { every: 1, alternate: 2, sometimes: 3 };
+  var fileUrl = (filePath) => `file://${filePath.split("/").map(encodeURIComponent).join("/")}`;
+  var slim = (t) => ({ id: t.id, title: t.title, artist: t.artist, album: t.album, year: t.year, genre: t.genre, duration: t.duration });
+  function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showStatus }) {
+    const [settings, setSettings] = (0, import_react19.useState)(() => ({ enabled: false, persona: "", voice: "", frequency: "every", ...initial || {} }));
+    const [speaking, setSpeaking] = (0, import_react19.useState)(null);
+    const lines = (0, import_react19.useRef)(/* @__PURE__ */ new Map());
+    const clips = (0, import_react19.useRef)(/* @__PURE__ */ new Map());
+    const pendingLines = (0, import_react19.useRef)(/* @__PURE__ */ new Set());
+    const pendingClips = (0, import_react19.useRef)(/* @__PURE__ */ new Set());
+    const transitions = (0, import_react19.useRef)(0);
+    const active = (0, import_react19.useRef)(null);
+    const latest = (0, import_react19.useRef)({});
+    latest.current = { settings, outputTarget, getVolume, showStatus };
+    const active_ = settings.enabled && settings.persona.trim().length > 0;
+    const updateSettings = (0, import_react19.useCallback)((patch) => {
+      const prev = latest.current.settings;
+      const next = { ...prev, ...patch };
+      if (next.persona !== prev.persona) {
+        lines.current.clear();
+        clips.current.clear();
+      } else if (next.voice !== prev.voice) clips.current.clear();
+      latest.current.settings = next;
+      setSettings(next);
+    }, []);
+    const prepareClip = (0, import_react19.useCallback)((track) => {
+      if (!track || !track.id) return;
+      const text = lines.current.get(track.id);
+      if (!text || clips.current.has(track.id) || pendingClips.current.has(track.id)) return;
+      pendingClips.current.add(track.id);
+      window.robosAudio.djSynthesize(text, latest.current.settings.voice).then((res) => clips.current.set(track.id, res && res.ok ? { filePath: res.filePath, durationMs: res.durationMs } : { failed: true })).catch(() => clips.current.set(track.id, { failed: true })).finally(() => pendingClips.current.delete(track.id));
+    }, []);
+    const upcomingKey = upcoming.map((t) => t && t.id).join("|");
+    (0, import_react19.useEffect)(() => {
+      if (!active_ || !window.robosAudio?.djLines) return;
+      const next = upcoming.filter(Boolean).slice(0, LOOKAHEAD);
+      const missing = next.filter((t) => t.id && !lines.current.has(t.id) && !pendingLines.current.has(t.id));
+      if (missing.length) {
+        missing.forEach((t) => pendingLines.current.add(t.id));
+        window.robosAudio.djLines(settings.persona, missing.map(slim)).then((res) => {
+          for (const [id, text] of Object.entries(res && res.lines || {})) lines.current.set(id, text);
+          if (res && !res.ok && res.error) latest.current.showStatus(`Virtual DJ: ${res.error}`);
+        }).catch(() => {
+        }).finally(() => {
+          missing.forEach((t) => pendingLines.current.delete(t.id));
+          prepareClip(next[0]);
+        });
+      }
+      prepareClip(next[0]);
+    }, [active_, upcomingKey, settings.persona, settings.voice, prepareClip]);
+    const stop = (0, import_react19.useCallback)(() => {
+      const a = active.current;
+      if (!a) return;
+      active.current = null;
+      if (a.audio) {
+        a.audio.onended = null;
+        a.audio.onerror = null;
+        a.audio.pause();
+      }
+      if (a.timer) clearTimeout(a.timer);
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      setSpeaking(null);
+      a.finish();
+    }, []);
+    const playLine = (0, import_react19.useCallback)((text, clip, then) => {
+      const { outputTarget: target, getVolume: volume, settings: s } = latest.current;
+      const finish = () => {
+        if (active.current) {
+          active.current = null;
+          setSpeaking(null);
+        }
+        then();
+      };
+      const entry = { finish: then, audio: null, timer: null };
+      active.current = entry;
+      setSpeaking({ text });
+      const done = () => {
+        if (active.current === entry) finish();
+      };
+      if (clip && clip.filePath && target !== "local") {
+        const meta = { title: "Virtual DJ", artist: s.persona.slice(0, 60) };
+        Promise.resolve(target === "all" ? null : window.robosAudio.castFile(target, clip.filePath, meta)).catch(() => {
+        });
+        entry.timer = setTimeout(done, (clip.durationMs || 4e3) + 600);
+        return;
+      }
+      if (clip && clip.filePath) {
+        const audio = new Audio(fileUrl(clip.filePath));
+        audio.volume = Math.max(0, Math.min(1, typeof volume === "function" ? volume() : 1));
+        audio.onended = done;
+        audio.onerror = done;
+        entry.audio = audio;
+        audio.play().catch(done);
+        entry.timer = setTimeout(done, (clip.durationMs || 15e3) + 4e3);
+        return;
+      }
+      if (window.speechSynthesis && typeof SpeechSynthesisUtterance !== "undefined") {
+        const u = new SpeechSynthesisUtterance(text);
+        u.onend = done;
+        u.onerror = done;
+        window.speechSynthesis.speak(u);
+        entry.timer = setTimeout(done, Math.max(4e3, text.split(/\s+/).length * 450));
+        return;
+      }
+      done();
+    }, []);
+    const talkBefore = (0, import_react19.useCallback)((track, then) => {
+      const { settings: s } = latest.current;
+      if (!s.enabled || !s.persona.trim() || !track || !track.id) return false;
+      transitions.current += 1;
+      if (transitions.current % (FREQUENCY_EVERY[s.frequency] || 1) !== 0) return false;
+      const text = lines.current.get(track.id);
+      const clip = clips.current.get(track.id);
+      if (!text || pendingClips.current.has(track.id)) return false;
+      playLine(text, clip && !clip.failed ? clip : null, then);
+      return true;
+    }, [playLine]);
+    const announce = (0, import_react19.useCallback)(async (text, then) => {
+      const { settings: s } = latest.current;
+      if (!text) {
+        then();
+        return;
+      }
+      setSpeaking({ text, warming: true });
+      let clip = null;
+      try {
+        const res = await window.robosAudio.djSynthesize(text, s.voice);
+        if (res && res.ok) clip = { filePath: res.filePath, durationMs: res.durationMs };
+      } catch {
+      }
+      playLine(text, clip, then);
+    }, [playLine]);
+    const loadScript = (0, import_react19.useCallback)((dj) => {
+      if (!dj) return;
+      updateSettings({
+        enabled: true,
+        persona: dj.persona || "",
+        voice: dj.voice || latest.current.settings.voice,
+        frequency: dj.frequency || "every"
+      });
+      for (const [id, text] of Object.entries(dj.lines || {})) lines.current.set(id, text);
+      transitions.current = 0;
+    }, [updateSettings]);
+    return { settings, setSettings: updateSettings, speaking, talkBefore, announce, loadScript, skip: stop, active: active_ };
+  }
+
+  // src/App.jsx
+  var import_library_index6 = __toESM(require_library_index());
   var DEFAULT_QUEUE = [
     {
       id: "default-1",
@@ -19681,52 +20033,54 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
     }
     return { queue: DEFAULT_QUEUE, index: 0 };
   }
-  var fileUrl = (filePath) => `file://${filePath.split("/").map(encodeURIComponent).join("/")}`;
+  var fileUrl2 = (filePath) => `file://${filePath.split("/").map(encodeURIComponent).join("/")}`;
   function App() {
-    const [initial] = (0, import_react18.useState)(restoredQueue);
-    const [playerPrefs] = (0, import_react18.useState)(() => loadJson(PLAYER_PREFS_KEY) || {});
-    const [activeTab, setActiveTab] = (0, import_react18.useState)("player");
-    const [playlist, setPlaylist] = (0, import_react18.useState)(initial.queue);
-    const [currentTrackIndex, setCurrentTrackIndex] = (0, import_react18.useState)(initial.index);
-    const [folders, setFolders] = (0, import_react18.useState)([]);
-    const [syncingFolder, setSyncingFolder] = (0, import_react18.useState)(null);
-    const [outputTarget, setOutputTarget] = (0, import_react18.useState)("local");
-    const [speakers, setSpeakers] = (0, import_react18.useState)([]);
-    const [library, setLibrary] = (0, import_react18.useState)({ tracks: [], artists: [], albums: [] });
-    const [stats, setStats] = (0, import_react18.useState)({});
-    const [artBase, setArtBase] = (0, import_react18.useState)({ local: null, cast: null });
-    const [repeatMode, setRepeatMode] = (0, import_react18.useState)(playerPrefs.repeat || "all");
-    const [shuffleMode, setShuffleMode] = (0, import_react18.useState)(!!playerPrefs.shuffle);
-    const [dockCollapsed, setDockCollapsed] = (0, import_react18.useState)(!!playerPrefs.dockCollapsed);
-    const [libNav, setLibNav] = (0, import_react18.useState)([{ section: playerPrefs.librarySection || "albums" }]);
-    const [menu, setMenu] = (0, import_react18.useState)(null);
-    const [infoTrack, setInfoTrack] = (0, import_react18.useState)(null);
-    const [isScanning, setIsScanning] = (0, import_react18.useState)(false);
-    const [isScanningLibrary, setIsScanningLibrary] = (0, import_react18.useState)(false);
-    const [libraryScanStatus, setLibraryScanStatus] = (0, import_react18.useState)(null);
-    const [activeCastSession, setActiveCastSession] = (0, import_react18.useState)(null);
-    const [statusMsg, setStatusMsg] = (0, import_react18.useState)("");
-    const [activeAmbient, setActiveAmbient] = (0, import_react18.useState)(null);
-    const [isPlaying, setIsPlaying] = (0, import_react18.useState)(false);
-    const [playlists, setPlaylists] = (0, import_react18.useState)([]);
-    const [selectedPlaylistId, setSelectedPlaylistId] = (0, import_react18.useState)(null);
-    const [showCreatePlaylistModal, setShowCreatePlaylistModal] = (0, import_react18.useState)(false);
-    const [newPlaylistName, setNewPlaylistName] = (0, import_react18.useState)("");
-    const [newPlaylistDesc, setNewPlaylistDesc] = (0, import_react18.useState)("");
-    const [showSaveQueueModal, setShowSaveQueueModal] = (0, import_react18.useState)(false);
-    const [saveQueueName, setSaveQueueName] = (0, import_react18.useState)("");
-    const [saveQueueDesc, setSaveQueueDesc] = (0, import_react18.useState)("");
-    const [tracksForPlaylist, setTracksForPlaylist] = (0, import_react18.useState)(null);
-    const [quickPlaylistName, setQuickPlaylistName] = (0, import_react18.useState)("");
-    const playerRef = (0, import_react18.useRef)(null);
-    const audioCtxRef = (0, import_react18.useRef)(null);
-    const ambientNodeRef = (0, import_react18.useRef)(null);
-    const toastTimerRef = (0, import_react18.useRef)(null);
-    const searchInputRef = (0, import_react18.useRef)(null);
-    const playedRef = (0, import_react18.useRef)({ key: null, counted: false });
-    const shuffleHistoryRef = (0, import_react18.useRef)([]);
-    const latestRef = (0, import_react18.useRef)({});
-    const formatDuration4 = (sec) => {
+    const [initial] = (0, import_react20.useState)(restoredQueue);
+    const [playerPrefs] = (0, import_react20.useState)(() => loadJson(PLAYER_PREFS_KEY) || {});
+    const [activeTab, setActiveTab] = (0, import_react20.useState)("player");
+    const [playlist, setPlaylist] = (0, import_react20.useState)(initial.queue);
+    const [currentTrackIndex, setCurrentTrackIndex] = (0, import_react20.useState)(initial.index);
+    const [folders, setFolders] = (0, import_react20.useState)([]);
+    const [syncingFolder, setSyncingFolder] = (0, import_react20.useState)(null);
+    const [outputTarget, setOutputTarget] = (0, import_react20.useState)("local");
+    const [speakers, setSpeakers] = (0, import_react20.useState)([]);
+    const [library, setLibrary] = (0, import_react20.useState)({ tracks: [], artists: [], albums: [] });
+    const [stats, setStats] = (0, import_react20.useState)({});
+    const [artBase, setArtBase] = (0, import_react20.useState)({ local: null, cast: null });
+    const [repeatMode, setRepeatMode] = (0, import_react20.useState)(playerPrefs.repeat || "all");
+    const [shuffleMode, setShuffleMode] = (0, import_react20.useState)(!!playerPrefs.shuffle);
+    const [dockCollapsed, setDockCollapsed] = (0, import_react20.useState)(!!playerPrefs.dockCollapsed);
+    const [libNav, setLibNav] = (0, import_react20.useState)([{ section: playerPrefs.librarySection || "albums" }]);
+    const [menu, setMenu] = (0, import_react20.useState)(null);
+    const [infoTrack, setInfoTrack] = (0, import_react20.useState)(null);
+    const [isScanning, setIsScanning] = (0, import_react20.useState)(false);
+    const [isScanningLibrary, setIsScanningLibrary] = (0, import_react20.useState)(false);
+    const [libraryScanStatus, setLibraryScanStatus] = (0, import_react20.useState)(null);
+    const [activeCastSession, setActiveCastSession] = (0, import_react20.useState)(null);
+    const [statusMsg, setStatusMsg] = (0, import_react20.useState)("");
+    const [activeAmbient, setActiveAmbient] = (0, import_react20.useState)(null);
+    const [isPlaying, setIsPlaying] = (0, import_react20.useState)(false);
+    const [playlists, setPlaylists] = (0, import_react20.useState)([]);
+    const [selectedPlaylistId, setSelectedPlaylistId] = (0, import_react20.useState)(null);
+    const [showCreatePlaylistModal, setShowCreatePlaylistModal] = (0, import_react20.useState)(false);
+    const [newPlaylistName, setNewPlaylistName] = (0, import_react20.useState)("");
+    const [newPlaylistDesc, setNewPlaylistDesc] = (0, import_react20.useState)("");
+    const [showSaveQueueModal, setShowSaveQueueModal] = (0, import_react20.useState)(false);
+    const [saveQueueName, setSaveQueueName] = (0, import_react20.useState)("");
+    const [saveQueueDesc, setSaveQueueDesc] = (0, import_react20.useState)("");
+    const [tracksForPlaylist, setTracksForPlaylist] = (0, import_react20.useState)(null);
+    const [showAiPlaylist, setShowAiPlaylist] = (0, import_react20.useState)(false);
+    const [showDjSettings, setShowDjSettings] = (0, import_react20.useState)(false);
+    const [quickPlaylistName, setQuickPlaylistName] = (0, import_react20.useState)("");
+    const playerRef = (0, import_react20.useRef)(null);
+    const audioCtxRef = (0, import_react20.useRef)(null);
+    const ambientNodeRef = (0, import_react20.useRef)(null);
+    const toastTimerRef = (0, import_react20.useRef)(null);
+    const searchInputRef = (0, import_react20.useRef)(null);
+    const playedRef = (0, import_react20.useRef)({ key: null, counted: false });
+    const shuffleHistoryRef = (0, import_react20.useRef)([]);
+    const latestRef = (0, import_react20.useRef)({});
+    const formatDuration5 = (sec) => {
       if (!sec || isNaN(sec)) return "--:--";
       const totalSec = Math.round(sec);
       const m = Math.floor(totalSec / 60);
@@ -19750,7 +20104,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       const found = speakers.find((s) => s.ip === ip);
       return found ? found.name : `Speaker (${ip})`;
     };
-    (0, import_react18.useEffect)(() => {
+    (0, import_react20.useEffect)(() => {
       refreshSpeakers();
       loadLibrary();
       loadStats();
@@ -19980,6 +20334,10 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
     const handlePlayPlaylist = (pl, replaceQueue = true) => {
       if (!pl || !pl.tracks || pl.tracks.length === 0) {
         showStatus(`Playlist "${pl?.name || "Playlist"}" has no tracks to play.`);
+        return;
+      }
+      if (replaceQueue && pl.dj && pl.dj.persona) {
+        startWithDj(pl);
         return;
       }
       if (replaceQueue) {
@@ -20220,7 +20578,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
     };
     const handleSortQueue = (key, dir) => {
       const current = playlist[currentTrackIndex];
-      const next = (0, import_library_index5.sortTracks)(playlist, key, dir, stats);
+      const next = (0, import_library_index6.sortTracks)(playlist, key, dir, stats);
       setPlaylist(next);
       setCurrentTrackIndex(Math.max(0, next.indexOf(current)));
     };
@@ -20244,14 +20602,14 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       showStatus("Cleared other tracks from queue");
     };
     const currentTrack = playlist[currentTrackIndex] || playlist[0] || null;
-    const libraryById = (0, import_react18.useMemo)(() => new Map(library.tracks.map((t) => [t.id, t])), [library.tracks]);
+    const libraryById = (0, import_react20.useMemo)(() => new Map(library.tracks.map((t) => [t.id, t])), [library.tracks]);
     const resolveSrc = (t) => {
       if (!t) return "";
       if (t.cloud) {
         const fresh = libraryById.get(t.id);
         if (fresh && fresh.src) return fresh.src;
       }
-      return t.src || (t.filePath ? fileUrl(t.filePath) : "");
+      return t.src || (t.filePath ? fileUrl2(t.filePath) : "");
     };
     const handleStopCast = async (targetIp = null) => {
       const ipToStop = targetIp || activeCastSession?.ip || (outputTarget !== "local" ? outputTarget : null);
@@ -20399,7 +20757,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       }
       let trackToPlay = { ...track };
       if (!trackToPlay.src && trackToPlay.filePath) {
-        trackToPlay.src = fileUrl(trackToPlay.filePath);
+        trackToPlay.src = fileUrl2(trackToPlay.filePath);
       }
       const sameSrc = resolveSrc(trackToPlay) === resolveSrc(currentTrack);
       const existingIdx = playlist.findIndex(
@@ -20462,6 +20820,10 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       }
     };
     const handleTogglePlayPause = () => {
+      if (latestRef.current.djSpeaking) {
+        latestRef.current.skipDj();
+        return;
+      }
       if (outputTarget !== "local") {
         handleToggleCastPause();
       } else {
@@ -20523,18 +20885,72 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       const idx = pickNextIndex(false);
       if (idx != null) goToIndex(idx);
     };
+    const plannedNextIndex = (0, import_react20.useMemo)(
+      () => shuffleMode ? pickNextIndex(true) : null,
+      [shuffleMode, currentTrackIndex, playlist, repeatMode]
+      // eslint-disable-line react-hooks/exhaustive-deps
+    );
+    const upcomingTracks = (0, import_react20.useMemo)(() => {
+      if (shuffleMode) return plannedNextIndex != null ? [playlist[plannedNextIndex]] : [];
+      const next = playlist.slice(currentTrackIndex + 1, currentTrackIndex + 4);
+      if (next.length < 3 && repeatMode === "all") next.push(...playlist.slice(0, 3 - next.length));
+      return next;
+    }, [shuffleMode, plannedNextIndex, playlist, currentTrackIndex, repeatMode]);
+    const dj = useVirtualDj({
+      initial: playerPrefs.dj,
+      upcoming: upcomingTracks,
+      outputTarget,
+      getVolume: () => playerRef.current?.audio?.current?.volume ?? 1,
+      showStatus
+    });
     const handleTrackEnded = () => {
       if (repeatMode === "one") {
         restartCurrent();
         return;
       }
-      const idx = pickNextIndex(true);
+      const planned = shuffleMode && plannedNextIndex != null && playlist[plannedNextIndex] ? plannedNextIndex : null;
+      const idx = planned != null ? planned : pickNextIndex(true);
       if (idx == null) {
         setIsPlaying(false);
         showStatus("Reached the end of the queue.");
         return;
       }
+      const nextTrack = playlist[idx];
+      if (dj.talkBefore(nextTrack, () => latestRef.current.goToTrack(nextTrack, idx))) {
+        setIsPlaying(false);
+        return;
+      }
       goToIndex(idx);
+    };
+    const startWithDj = (pl) => {
+      dj.loadScript(pl.dj);
+      playerRef.current?.audio?.current?.pause();
+      setIsPlaying(false);
+      showStatus(`\u{1F399} Starting "${pl.name}" with your Virtual DJ\u2026`);
+      dj.announce(pl.dj.intro, () => latestRef.current.playTracks(pl.tracks, 0));
+    };
+    const handleAiPlaylistPlay = (pl) => {
+      setShowAiPlaylist(false);
+      if (pl.dj && pl.dj.persona) startWithDj(pl);
+      else playTracks(pl.tracks, 0);
+    };
+    const handleAiPlaylistSave = async (pl) => {
+      try {
+        const created = await window.robosAudio.createPlaylist({
+          name: pl.name,
+          description: pl.description,
+          tracks: pl.tracks,
+          ai: pl.ai,
+          dj: pl.dj
+        });
+        await refreshPlaylists();
+        if (created) setSelectedPlaylistId(created.id);
+        setShowAiPlaylist(false);
+        setActiveTab("playlists");
+        showStatus(`Saved AI playlist "${pl.name}" (${pl.tracks.length} songs)`);
+      } catch (err) {
+        showStatus("Error saving playlist: " + err.message);
+      }
     };
     const handlePlayPrev = () => {
       const audio = playerRef.current?.audio?.current;
@@ -20577,9 +20993,9 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       });
     };
     const libraryBack = () => setLibNav((prev) => prev.length > 1 ? prev.slice(0, -1) : prev);
-    const goToAlbumOf = (track) => navigateLibrary({ section: "albums", detail: { type: "album", key: (0, import_library_index5.albumKeyOf)(track) } });
-    const goToArtist = (name) => navigateLibrary({ section: "artists", detail: { type: "artist", key: (0, import_library_index5.fold)(name || "Unknown Artist") } });
-    const goToGenre = (genre) => navigateLibrary({ section: "genres", detail: { type: "genre", key: (0, import_library_index5.fold)((0, import_library_index5.splitGenres)(genre)[0] || genre) } });
+    const goToAlbumOf = (track) => navigateLibrary({ section: "albums", detail: { type: "album", key: (0, import_library_index6.albumKeyOf)(track) } });
+    const goToArtist = (name) => navigateLibrary({ section: "artists", detail: { type: "artist", key: (0, import_library_index6.fold)(name || "Unknown Artist") } });
+    const goToGenre = (genre) => navigateLibrary({ section: "genres", detail: { type: "genre", key: (0, import_library_index6.fold)((0, import_library_index6.splitGenres)(genre)[0] || genre) } });
     const setLovedTracks = async (tracks, loved) => {
       const ids = [...new Set((tracks || []).map((t) => t.id).filter(Boolean))];
       if (!ids.length) return;
@@ -20608,12 +21024,12 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       const res = await window.robosAudio.showInFolder(track.filePath).catch(() => null);
       if (!res || !res.ok) showStatus("That file is not reachable right now.");
     };
-    const openMenu = (0, import_react18.useCallback)((e, items) => {
+    const openMenu = (0, import_react20.useCallback)((e, items) => {
       e.preventDefault?.();
       e.stopPropagation?.();
       setMenu({ x: e.clientX, y: e.clientY, items });
     }, []);
-    const closeMenu = (0, import_react18.useCallback)(() => setMenu(null), []);
+    const closeMenu = (0, import_react20.useCallback)(() => setMenu(null), []);
     const libraryCtx = {
       artBase: artBase.local,
       stats,
@@ -20637,7 +21053,20 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         goToGenre
       }
     };
-    latestRef.current = { next: handlePlayNext, prev: handlePlayPrev, toggle: () => handleTogglePlayPause() };
+    latestRef.current = {
+      next: handlePlayNext,
+      prev: handlePlayPrev,
+      toggle: () => handleTogglePlayPause(),
+      playTracks,
+      djSpeaking: !!dj.speaking,
+      skipDj: dj.skip,
+      // After a DJ break the queue may have changed: find the planned song again.
+      goToTrack: (track, fallbackIdx) => {
+        const idx = playlist.indexOf(track);
+        if (idx >= 0) goToIndex(idx);
+        else if (playlist[fallbackIdx]) goToIndex(fallbackIdx);
+      }
+    };
     const playAmbient = (type) => {
       if (activeAmbient === type) {
         if (ambientNodeRef.current) {
@@ -20716,7 +21145,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
     latestRef.current.currentTrack = currentTrack;
     latestRef.current.currentIndex = currentTrackIndex;
     latestRef.current.recordPlay = recordPlay;
-    (0, import_react18.useEffect)(() => {
+    (0, import_react20.useEffect)(() => {
       const audio = playerRef.current?.audio?.current;
       if (!audio) return void 0;
       const onTime = () => {
@@ -20741,7 +21170,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         audio.removeEventListener("ended", onEnded);
       };
     }, []);
-    (0, import_react18.useEffect)(() => {
+    (0, import_react20.useEffect)(() => {
       if (!("mediaSession" in navigator)) return;
       const isPaused = () => {
         const audio = playerRef.current?.audio?.current;
@@ -20764,7 +21193,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         }
       }
     }, []);
-    (0, import_react18.useEffect)(() => {
+    (0, import_react20.useEffect)(() => {
       if (!("mediaSession" in navigator) || !currentTrack || typeof MediaMetadata === "undefined") return;
       const art = artUrlFor(artBase.local, currentTrack.artId);
       try {
@@ -20777,7 +21206,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       } catch {
       }
     }, [currentTrack?.id, currentTrack?.title, currentTrack?.artId, artBase.local]);
-    (0, import_react18.useEffect)(() => {
+    (0, import_react20.useEffect)(() => {
       const onKey = (e) => {
         const tag = (e.target.tagName || "").toLowerCase();
         const typing = tag === "input" || tag === "textarea" || tag === "select" || e.target.isContentEditable;
@@ -20804,7 +21233,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       window.addEventListener("keydown", onKey);
       return () => window.removeEventListener("keydown", onKey);
     }, []);
-    (0, import_react18.useEffect)(() => {
+    (0, import_react20.useEffect)(() => {
       const timer = setTimeout(() => {
         try {
           const start = Math.max(0, Math.min(currentTrackIndex - 500, playlist.length - MAX_SAVED_QUEUE));
@@ -20815,25 +21244,26 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       }, 400);
       return () => clearTimeout(timer);
     }, [playlist, currentTrackIndex]);
-    (0, import_react18.useEffect)(() => {
+    (0, import_react20.useEffect)(() => {
       try {
         localStorage.setItem(PLAYER_PREFS_KEY, JSON.stringify({
           repeat: repeatMode,
           shuffle: shuffleMode,
           dockCollapsed,
-          librarySection: libraryNav.section
+          librarySection: libraryNav.section,
+          dj: dj.settings
         }));
       } catch {
       }
-    }, [repeatMode, shuffleMode, dockCollapsed, libraryNav.section]);
-    return /* @__PURE__ */ import_react18.default.createElement(LibraryContext.Provider, { value: libraryCtx }, /* @__PURE__ */ import_react18.default.createElement(
+    }, [repeatMode, shuffleMode, dockCollapsed, libraryNav.section, dj.settings]);
+    return /* @__PURE__ */ import_react20.default.createElement(LibraryContext.Provider, { value: libraryCtx }, /* @__PURE__ */ import_react20.default.createElement(
       "div",
       {
         className: "react-audio-app",
         onDragOver: (e) => e.preventDefault(),
         onDrop: handleDrop
       },
-      /* @__PURE__ */ import_react18.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react18.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react18.default.createElement("path", { d: "M3 18v-6a9 9 0 0 1 18 0v6" }), /* @__PURE__ */ import_react18.default.createElement("path", { d: "M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" }), /* @__PURE__ */ import_react18.default.createElement("polygon", { points: "10 10 15 12 10 14 10 10", fill: "#e8a33d" })), /* @__PURE__ */ import_react18.default.createElement("div", null, /* @__PURE__ */ import_react18.default.createElement("h1", null, "RobOS Audio Player"), /* @__PURE__ */ import_react18.default.createElement("span", { className: "subtitle" }, "Local library, cloud storage and Google Cast"))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react18.default.createElement(
+      /* @__PURE__ */ import_react20.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react20.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react20.default.createElement("path", { d: "M3 18v-6a9 9 0 0 1 18 0v6" }), /* @__PURE__ */ import_react20.default.createElement("path", { d: "M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" }), /* @__PURE__ */ import_react20.default.createElement("polygon", { points: "10 10 15 12 10 14 10 10", fill: "#e8a33d" })), /* @__PURE__ */ import_react20.default.createElement("div", null, /* @__PURE__ */ import_react20.default.createElement("h1", null, "RobOS Audio Player"), /* @__PURE__ */ import_react20.default.createElement("span", { className: "subtitle" }, "Local library, cloud storage and Google Cast"))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "btn-header-add-folder",
@@ -20841,9 +21271,9 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           onClick: handleSelectFolder,
           title: "Open built-in system file manager to add music folder"
         },
-        /* @__PURE__ */ import_react18.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react18.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" }), /* @__PURE__ */ import_react18.default.createElement("line", { x1: "12", y1: "10", x2: "12", y2: "16" }), /* @__PURE__ */ import_react18.default.createElement("line", { x1: "9", y1: "13", x2: "15", y2: "13" })),
-        /* @__PURE__ */ import_react18.default.createElement("span", null, "Add Folder")
-      ), /* @__PURE__ */ import_react18.default.createElement(
+        /* @__PURE__ */ import_react20.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react20.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" }), /* @__PURE__ */ import_react20.default.createElement("line", { x1: "12", y1: "10", x2: "12", y2: "16" }), /* @__PURE__ */ import_react20.default.createElement("line", { x1: "9", y1: "13", x2: "15", y2: "13" })),
+        /* @__PURE__ */ import_react20.default.createElement("span", null, "Add Folder")
+      ), /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "btn-header-add-files",
@@ -20851,9 +21281,9 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           onClick: handleAddFiles,
           title: "Open file picker to select individual audio files"
         },
-        /* @__PURE__ */ import_react18.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react18.default.createElement("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }), /* @__PURE__ */ import_react18.default.createElement("polyline", { points: "14 2 14 8 20 8" }), /* @__PURE__ */ import_react18.default.createElement("line", { x1: "12", y1: "18", x2: "12", y2: "12" }), /* @__PURE__ */ import_react18.default.createElement("line", { x1: "9", y1: "15", x2: "15", y2: "15" })),
-        /* @__PURE__ */ import_react18.default.createElement("span", null, "Add Files")
-      )), /* @__PURE__ */ import_react18.default.createElement("div", { className: "output-selector-wrapper" }, /* @__PURE__ */ import_react18.default.createElement("label", null, "Audio Output:"), /* @__PURE__ */ import_react18.default.createElement("div", { className: "select-group" }, /* @__PURE__ */ import_react18.default.createElement(
+        /* @__PURE__ */ import_react20.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react20.default.createElement("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }), /* @__PURE__ */ import_react20.default.createElement("polyline", { points: "14 2 14 8 20 8" }), /* @__PURE__ */ import_react20.default.createElement("line", { x1: "12", y1: "18", x2: "12", y2: "12" }), /* @__PURE__ */ import_react20.default.createElement("line", { x1: "9", y1: "15", x2: "15", y2: "15" })),
+        /* @__PURE__ */ import_react20.default.createElement("span", null, "Add Files")
+      )), /* @__PURE__ */ import_react20.default.createElement("div", { className: "output-selector-wrapper" }, /* @__PURE__ */ import_react20.default.createElement("label", null, "Audio Output:"), /* @__PURE__ */ import_react20.default.createElement("div", { className: "select-group" }, /* @__PURE__ */ import_react20.default.createElement(
         "select",
         {
           id: "output-select",
@@ -20877,10 +21307,10 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             showStatus(`Switched output to: ${e.target.options[e.target.selectedIndex].text}`);
           }
         },
-        /* @__PURE__ */ import_react18.default.createElement("option", { value: "local" }, "Desktop (Local Audio)"),
-        speakers.map((s) => /* @__PURE__ */ import_react18.default.createElement("option", { key: s.ip, value: s.ip }, s.name, " (", s.ip, ")")),
-        speakers.length > 0 && /* @__PURE__ */ import_react18.default.createElement("option", { value: "all" }, "Broadcast to All Speakers")
-      ), /* @__PURE__ */ import_react18.default.createElement(
+        /* @__PURE__ */ import_react20.default.createElement("option", { value: "local" }, "Desktop (Local Audio)"),
+        speakers.map((s) => /* @__PURE__ */ import_react20.default.createElement("option", { key: s.ip, value: s.ip }, s.name, " (", s.ip, ")")),
+        speakers.length > 0 && /* @__PURE__ */ import_react20.default.createElement("option", { value: "all" }, "Broadcast to All Speakers")
+      ), /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "btn-scan-speakers",
@@ -20888,64 +21318,64 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           onClick: refreshSpeakers,
           title: "Scan LAN for Google Cast speakers"
         },
-        /* @__PURE__ */ import_react18.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react18.default.createElement("path", { d: "M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" }), /* @__PURE__ */ import_react18.default.createElement("path", { d: "M3 3v5h5" }), /* @__PURE__ */ import_react18.default.createElement("path", { d: "M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" }), /* @__PURE__ */ import_react18.default.createElement("path", { d: "M16 21h5v-5" })),
-        /* @__PURE__ */ import_react18.default.createElement("span", null, "Scan Speakers")
+        /* @__PURE__ */ import_react20.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react20.default.createElement("path", { d: "M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" }), /* @__PURE__ */ import_react20.default.createElement("path", { d: "M3 3v5h5" }), /* @__PURE__ */ import_react20.default.createElement("path", { d: "M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" }), /* @__PURE__ */ import_react20.default.createElement("path", { d: "M16 21h5v-5" })),
+        /* @__PURE__ */ import_react20.default.createElement("span", null, "Scan Speakers")
       )))),
-      /* @__PURE__ */ import_react18.default.createElement("nav", { className: "nav-tabs" }, /* @__PURE__ */ import_react18.default.createElement(
+      /* @__PURE__ */ import_react20.default.createElement("nav", { className: "nav-tabs" }, /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "tab-btn-player",
           className: `tab-btn ${activeTab === "player" ? "active" : ""}`,
           onClick: () => setActiveTab("player")
         },
-        /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "note" }),
-        /* @__PURE__ */ import_react18.default.createElement("span", null, "Now Playing")
-      ), /* @__PURE__ */ import_react18.default.createElement(
+        /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "note" }),
+        /* @__PURE__ */ import_react20.default.createElement("span", null, "Now Playing")
+      ), /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "tab-btn-playlists",
           className: `tab-btn ${activeTab === "playlists" ? "active" : ""}`,
           onClick: () => setActiveTab("playlists")
         },
-        /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "list" }),
-        /* @__PURE__ */ import_react18.default.createElement("span", null, "Playlists (", playlists.length, ")")
-      ), /* @__PURE__ */ import_react18.default.createElement(
+        /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "list" }),
+        /* @__PURE__ */ import_react20.default.createElement("span", null, "Playlists (", playlists.length, ")")
+      ), /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "tab-btn-library",
           className: `tab-btn ${activeTab === "library" ? "active" : ""}`,
           onClick: () => setActiveTab("library")
         },
-        /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "library" }),
-        /* @__PURE__ */ import_react18.default.createElement("span", null, "Library (", library.tracks.length, ")")
-      ), /* @__PURE__ */ import_react18.default.createElement(
+        /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "library" }),
+        /* @__PURE__ */ import_react20.default.createElement("span", null, "Library (", library.tracks.length, ")")
+      ), /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "tab-btn-cloud",
           className: `tab-btn ${activeTab === "cloud" ? "active" : ""}`,
           onClick: () => setActiveTab("cloud")
         },
-        /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "cloud" }),
-        /* @__PURE__ */ import_react18.default.createElement("span", null, "Cloud Storage")
-      ), /* @__PURE__ */ import_react18.default.createElement(
+        /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "cloud" }),
+        /* @__PURE__ */ import_react20.default.createElement("span", null, "Cloud Storage")
+      ), /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "tab-btn-ambient",
           className: `tab-btn ${activeTab === "ambient" ? "active" : ""}`,
           onClick: () => setActiveTab("ambient")
         },
-        /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "wave" }),
-        /* @__PURE__ */ import_react18.default.createElement("span", null, "Ambient")
-      ), /* @__PURE__ */ import_react18.default.createElement(
+        /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "wave" }),
+        /* @__PURE__ */ import_react20.default.createElement("span", null, "Ambient")
+      ), /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "tab-btn-speakers",
           className: `tab-btn ${activeTab === "speakers" ? "active" : ""}`,
           onClick: () => setActiveTab("speakers")
         },
-        /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "speaker" }),
-        /* @__PURE__ */ import_react18.default.createElement("span", null, "Speakers (", speakers.length, ")")
-      ), /* @__PURE__ */ import_react18.default.createElement("span", { className: "nav-spacer" }), /* @__PURE__ */ import_react18.default.createElement(
+        /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "speaker" }),
+        /* @__PURE__ */ import_react20.default.createElement("span", null, "Speakers (", speakers.length, ")")
+      ), /* @__PURE__ */ import_react20.default.createElement("span", { className: "nav-spacer" }), /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "btn-toggle-queue-panel",
@@ -20953,10 +21383,10 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           onClick: () => setDockCollapsed((c) => !c),
           title: "Show or hide the Now Playing playlist"
         },
-        /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "panel" }),
-        /* @__PURE__ */ import_react18.default.createElement("span", null, "Now Playing list")
+        /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "panel" }),
+        /* @__PURE__ */ import_react20.default.createElement("span", null, "Now Playing list")
       )),
-      /* @__PURE__ */ import_react18.default.createElement("div", { className: "app-body" }, /* @__PURE__ */ import_react18.default.createElement("main", { className: `tab-content ${activeTab === "library" ? "library-active" : ""}` }, isScanningLibrary && /* @__PURE__ */ import_react18.default.createElement("div", { className: "scan-progress-banner" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "scan-progress-info" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react18.default.createElement("div", { className: "scan-text" }, /* @__PURE__ */ import_react18.default.createElement("strong", null, "Background Library Scanning Active"), /* @__PURE__ */ import_react18.default.createElement("span", { className: "scan-details" }, libraryScanStatus?.total > 0 ? `${libraryScanStatus.current || 0} / ${libraryScanStatus.total} files (${Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)}%)` : "Discovering audio files in folder(s)...", libraryScanStatus?.file ? ` \u2014 ${libraryScanStatus.file.split("/").slice(-2).join("/")}` : ""))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "scan-bar-container" }, /* @__PURE__ */ import_react18.default.createElement(
+      /* @__PURE__ */ import_react20.default.createElement("div", { className: "app-body" }, /* @__PURE__ */ import_react20.default.createElement("main", { className: `tab-content ${activeTab === "library" ? "library-active" : ""}` }, isScanningLibrary && /* @__PURE__ */ import_react20.default.createElement("div", { className: "scan-progress-banner" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "scan-progress-info" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react20.default.createElement("div", { className: "scan-text" }, /* @__PURE__ */ import_react20.default.createElement("strong", null, "Background Library Scanning Active"), /* @__PURE__ */ import_react20.default.createElement("span", { className: "scan-details" }, libraryScanStatus?.total > 0 ? `${libraryScanStatus.current || 0} / ${libraryScanStatus.total} files (${Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)}%)` : "Discovering audio files in folder(s)...", libraryScanStatus?.file ? ` \u2014 ${libraryScanStatus.file.split("/").slice(-2).join("/")}` : ""))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "scan-bar-container" }, /* @__PURE__ */ import_react20.default.createElement(
         "div",
         {
           className: "scan-bar-fill",
@@ -20964,16 +21394,16 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             width: `${libraryScanStatus?.total > 0 ? Math.min(100, Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)) : 100}%`
           }
         }
-      )), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelScan }, "Cancel Scan")), /* @__PURE__ */ import_react18.default.createElement("div", { className: "player-deck-container", style: { display: activeTab === "player" ? "block" : "none" } }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "deck-card" }, (outputTarget !== "local" || activeCastSession) && /* @__PURE__ */ import_react18.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react18.default.createElement(
+      )), /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelScan }, "Cancel Scan")), /* @__PURE__ */ import_react20.default.createElement("div", { className: "player-deck-container", style: { display: activeTab === "player" ? "block" : "none" } }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "deck-card" }, (outputTarget !== "local" || activeCastSession) && /* @__PURE__ */ import_react20.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react20.default.createElement(
         "span",
         {
           className: "cast-pulse-dot",
           style: { background: activeCastSession?.isPaused ? "#eab308" : "#22c55e" }
         }
-      ), /* @__PURE__ */ import_react18.default.createElement("span", null, activeCastSession ? `Casting "${currentTrack?.title || "Track"}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? " (Paused)" : " (Live)"}` : `Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`)), /* @__PURE__ */ import_react18.default.createElement("div", { className: "cast-bar-controls" }, activeCastSession && /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume cast" : "Pause cast"), activeCastSession && /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "Stop Cast"), outputTarget !== "local" && /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-chip", onClick: () => {
+      ), /* @__PURE__ */ import_react20.default.createElement("span", null, activeCastSession ? `Casting "${currentTrack?.title || "Track"}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? " (Paused)" : " (Live)"}` : `Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`)), /* @__PURE__ */ import_react20.default.createElement("div", { className: "cast-bar-controls" }, activeCastSession && /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume cast" : "Pause cast"), activeCastSession && /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "Stop Cast"), outputTarget !== "local" && /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-chip", onClick: () => {
         setOutputTarget("local");
         handleStopCast();
-      } }, "Switch to Local Desktop"))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "track-hero" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "album-art-box" }, /* @__PURE__ */ import_react18.default.createElement(Cover, { artId: currentTrack?.artId, name: currentTrack?.album || currentTrack?.title, icon: currentTrack?.artId ? null : "disc" })), /* @__PURE__ */ import_react18.default.createElement("div", { className: "track-details" }, /* @__PURE__ */ import_react18.default.createElement("h2", { id: "track-title" }, currentTrack?.title || "No Track Selected", currentTrack && /* @__PURE__ */ import_react18.default.createElement(LoveButton, { track: currentTrack, size: 16 })), /* @__PURE__ */ import_react18.default.createElement("p", { id: "track-artist" }, /* @__PURE__ */ import_react18.default.createElement("a", { className: "link", onClick: () => currentTrack && goToArtist(currentTrack.artist) }, currentTrack?.artist || "Unknown Artist"), " ", "\u2022", " ", /* @__PURE__ */ import_react18.default.createElement("a", { className: "link", onClick: () => currentTrack && goToAlbumOf(currentTrack) }, currentTrack?.album || "RobOS Library")), /* @__PURE__ */ import_react18.default.createElement("div", { className: "track-meta-pills" }, /* @__PURE__ */ import_react18.default.createElement("span", { className: "badge" }, "Output: ", getSpeakerName(outputTarget)), activeCastSession && /* @__PURE__ */ import_react18.default.createElement("span", { className: "badge", style: { color: "#22c55e", borderColor: "#22c55e" } }, activeCastSession.isPaused ? "Cast Paused" : "Casting Active"), currentTrack?.genre && /* @__PURE__ */ import_react18.default.createElement("span", { className: "badge link", onClick: () => goToGenre(currentTrack.genre) }, currentTrack.genre), currentTrack?.year && /* @__PURE__ */ import_react18.default.createElement("span", { className: "badge" }, currentTrack.year))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "hero-quick-actions" }, /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary", onClick: handleSelectFolder, title: "Add folder via file manager" }, "Add Folder"), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles, title: "Add files" }, "Add Files"))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "react-h5-wrapper" }, /* @__PURE__ */ import_react18.default.createElement(
+      } }, "Switch to Local Desktop"))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "track-hero" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "album-art-box" }, /* @__PURE__ */ import_react20.default.createElement(Cover, { artId: currentTrack?.artId, name: currentTrack?.album || currentTrack?.title, icon: currentTrack?.artId ? null : "disc" })), /* @__PURE__ */ import_react20.default.createElement("div", { className: "track-details" }, /* @__PURE__ */ import_react20.default.createElement("h2", { id: "track-title" }, currentTrack?.title || "No Track Selected", currentTrack && /* @__PURE__ */ import_react20.default.createElement(LoveButton, { track: currentTrack, size: 16 })), /* @__PURE__ */ import_react20.default.createElement("p", { id: "track-artist" }, /* @__PURE__ */ import_react20.default.createElement("a", { className: "link", onClick: () => currentTrack && goToArtist(currentTrack.artist) }, currentTrack?.artist || "Unknown Artist"), " ", "\u2022", " ", /* @__PURE__ */ import_react20.default.createElement("a", { className: "link", onClick: () => currentTrack && goToAlbumOf(currentTrack) }, currentTrack?.album || "RobOS Library")), /* @__PURE__ */ import_react20.default.createElement("div", { className: "track-meta-pills" }, /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, "Output: ", getSpeakerName(outputTarget)), activeCastSession && /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge", style: { color: "#22c55e", borderColor: "#22c55e" } }, activeCastSession.isPaused ? "Cast Paused" : "Casting Active"), currentTrack?.genre && /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge link", onClick: () => goToGenre(currentTrack.genre) }, currentTrack.genre), currentTrack?.year && /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, currentTrack.year))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "hero-quick-actions" }, /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: handleSelectFolder, title: "Add folder via file manager" }, "Add Folder"), /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles, title: "Add files" }, "Add Files"))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "react-h5-wrapper" }, /* @__PURE__ */ import_react20.default.createElement(
         es_default,
         {
           ref: playerRef,
@@ -20994,18 +21424,18 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           },
           className: "robos-rhap-theme",
           customIcons: {
-            play: /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "play", size: 34 }),
-            pause: /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "pause", size: 34 }),
-            previous: /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "prev", size: 24 }),
-            next: /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "next", size: 24 }),
-            volume: /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "volume", size: 20 }),
-            volumeMute: /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "volumeMute", size: 20 })
+            play: /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "play", size: 34 }),
+            pause: /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "pause", size: 34 }),
+            previous: /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "prev", size: 24 }),
+            next: /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "next", size: 24 }),
+            volume: /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "volume", size: 20 }),
+            volumeMute: /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "volumeMute", size: 20 })
           },
           layout: "stacked",
           customAdditionalControls: [],
           muted: outputTarget !== "local"
         }
-      )), /* @__PURE__ */ import_react18.default.createElement(Lyrics, { track: currentTrack, getAudio: () => playerRef.current?.audio?.current }))), activeTab === "playlists" && /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlists-view-container" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlists-header" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlists-title-group" }, /* @__PURE__ */ import_react18.default.createElement("h3", null, "Custom Playlists (", playlists.length, ")"), /* @__PURE__ */ import_react18.default.createElement("p", { className: "subtitle" }, "Curate custom music collections, import/export M3U playlists, and cast directly to speakers")), /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlists-header-actions" }, /* @__PURE__ */ import_react18.default.createElement(
+      )), /* @__PURE__ */ import_react20.default.createElement(Lyrics, { track: currentTrack, getAudio: () => playerRef.current?.audio?.current }))), activeTab === "playlists" && /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlists-view-container" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlists-header" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlists-title-group" }, /* @__PURE__ */ import_react20.default.createElement("h3", null, "Custom Playlists (", playlists.length, ")"), /* @__PURE__ */ import_react20.default.createElement("p", { className: "subtitle" }, "Curate custom music collections, import/export M3U playlists, and cast directly to speakers")), /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlists-header-actions" }, /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "btn-create-playlist",
@@ -21013,7 +21443,16 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           onClick: () => setShowCreatePlaylistModal(true)
         },
         "New Playlist"
-      ), /* @__PURE__ */ import_react18.default.createElement(
+      ), /* @__PURE__ */ import_react20.default.createElement(
+        "button",
+        {
+          id: "btn-ai-playlist",
+          className: "btn-accent ai-btn",
+          onClick: () => setShowAiPlaylist(true),
+          title: "Describe a playlist and let your RobOS agent build it"
+        },
+        "\u2726 AI Playlist"
+      ), /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "btn-import-m3u",
@@ -21022,16 +21461,16 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           title: "Import external .m3u or .m3u8 playlist file"
         },
         "Import M3U"
-      ))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlists-layout" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlists-sidebar" }, playlists.length === 0 ? /* @__PURE__ */ import_react18.default.createElement("div", { className: "empty-playlists-sidebar" }, /* @__PURE__ */ import_react18.default.createElement("p", null, "No playlists created yet."), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "8px" } }, "Create Playlist")) : playlists.map((pl) => /* @__PURE__ */ import_react18.default.createElement(
+      ))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlists-layout" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlists-sidebar" }, playlists.length === 0 ? /* @__PURE__ */ import_react20.default.createElement("div", { className: "empty-playlists-sidebar" }, /* @__PURE__ */ import_react20.default.createElement("p", null, "No playlists created yet."), /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "8px" } }, "Create Playlist")) : playlists.map((pl) => /* @__PURE__ */ import_react20.default.createElement(
         "div",
         {
           key: pl.id,
           className: `playlist-sidebar-card ${selectedPlaylistId === pl.id ? "active" : ""}`,
           onClick: () => setSelectedPlaylistId(pl.id)
         },
-        /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlist-sidebar-icon" }, /* @__PURE__ */ import_react18.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.5" }, /* @__PURE__ */ import_react18.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react18.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react18.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))),
-        /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlist-sidebar-info" }, /* @__PURE__ */ import_react18.default.createElement("span", { className: "playlist-sidebar-name" }, pl.name), /* @__PURE__ */ import_react18.default.createElement("span", { className: "playlist-sidebar-meta" }, pl.tracks?.length || 0, " track", (pl.tracks?.length || 0) === 1 ? "" : "s")),
-        /* @__PURE__ */ import_react18.default.createElement(
+        /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlist-sidebar-icon" }, /* @__PURE__ */ import_react20.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.5" }, /* @__PURE__ */ import_react20.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react20.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react20.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))),
+        /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlist-sidebar-info" }, /* @__PURE__ */ import_react20.default.createElement("span", { className: "playlist-sidebar-name" }, pl.name), /* @__PURE__ */ import_react20.default.createElement("span", { className: "playlist-sidebar-meta" }, pl.tracks?.length || 0, " track", (pl.tracks?.length || 0) === 1 ? "" : "s")),
+        /* @__PURE__ */ import_react20.default.createElement(
           "button",
           {
             className: "btn-playlist-quick-play",
@@ -21041,9 +21480,9 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
               handlePlayPlaylist(pl, true);
             }
           },
-          /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "play", size: 14 })
+          /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "play", size: 14 })
         )
-      ))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlist-detail-pane" }, selectedPlaylist ? /* @__PURE__ */ import_react18.default.createElement(import_react18.default.Fragment, null, /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlist-detail-header" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlist-detail-meta" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlist-cover-icon" }, /* @__PURE__ */ import_react18.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "36", height: "36", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5" }, /* @__PURE__ */ import_react18.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react18.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react18.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlist-text-meta" }, /* @__PURE__ */ import_react18.default.createElement("h2", null, selectedPlaylist.name), /* @__PURE__ */ import_react18.default.createElement("p", { className: "playlist-description" }, selectedPlaylist.description || "No description provided."), /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlist-stats" }, /* @__PURE__ */ import_react18.default.createElement("span", { className: "badge" }, selectedPlaylist.tracks?.length || 0, " Tracks"), /* @__PURE__ */ import_react18.default.createElement("span", { className: "badge" }, "Duration: ", formatTotalDuration(selectedPlaylist.tracks)), /* @__PURE__ */ import_react18.default.createElement("span", { className: "badge" }, "Updated: ", new Date(selectedPlaylist.updatedAt || selectedPlaylist.createdAt || Date.now()).toLocaleDateString())))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlist-actions-bar" }, /* @__PURE__ */ import_react18.default.createElement(
+      ))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlist-detail-pane" }, selectedPlaylist ? /* @__PURE__ */ import_react20.default.createElement(import_react20.default.Fragment, null, /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlist-detail-header" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlist-detail-meta" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlist-cover-icon" }, /* @__PURE__ */ import_react20.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "36", height: "36", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5" }, /* @__PURE__ */ import_react20.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react20.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react20.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlist-text-meta" }, /* @__PURE__ */ import_react20.default.createElement("h2", null, selectedPlaylist.name), /* @__PURE__ */ import_react20.default.createElement("p", { className: "playlist-description" }, selectedPlaylist.description || "No description provided."), /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlist-stats" }, /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, selectedPlaylist.tracks?.length || 0, " Tracks"), /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, "Duration: ", formatTotalDuration(selectedPlaylist.tracks)), selectedPlaylist.ai && /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge", title: selectedPlaylist.ai.request }, "\u2726 AI playlist"), selectedPlaylist.dj && /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge", title: selectedPlaylist.dj.persona }, "\u{1F399} Virtual DJ"), /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, "Updated: ", new Date(selectedPlaylist.updatedAt || selectedPlaylist.createdAt || Date.now()).toLocaleDateString())))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlist-actions-bar" }, /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "btn-play-all-playlist",
@@ -21053,7 +21492,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           title: "Play all tracks in order (replaces queue)"
         },
         "Play All"
-      ), /* @__PURE__ */ import_react18.default.createElement(
+      ), /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "btn-append-playlist",
@@ -21063,7 +21502,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           title: "Append all tracks to current queue"
         },
         "Append to Queue"
-      ), speakers.length > 0 && /* @__PURE__ */ import_react18.default.createElement(
+      ), speakers.length > 0 && /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "btn-cast-playlist",
@@ -21073,7 +21512,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           title: `Cast playlist to ${getSpeakerName(outputTarget !== "local" ? outputTarget : speakers[0].ip)}`
         },
         "Cast Playlist"
-      ), /* @__PURE__ */ import_react18.default.createElement(
+      ), /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "btn-export-m3u",
@@ -21082,7 +21521,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           title: "Export playlist to .m3u file"
         },
         "Export M3U"
-      ), /* @__PURE__ */ import_react18.default.createElement(
+      ), /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           id: "btn-delete-playlist",
@@ -21091,7 +21530,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           title: "Delete playlist"
         },
         "Delete"
-      ))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlist-tracks-container" }, !selectedPlaylist.tracks || selectedPlaylist.tracks.length === 0 ? /* @__PURE__ */ import_react18.default.createElement("div", { className: "empty-playlist-tracks" }, /* @__PURE__ */ import_react18.default.createElement("p", null, "This playlist has no tracks yet."), /* @__PURE__ */ import_react18.default.createElement("span", { className: "hint" }, "Choose tracks from your Media Library below or import local files."), /* @__PURE__ */ import_react18.default.createElement(
+      ))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlist-tracks-container" }, !selectedPlaylist.tracks || selectedPlaylist.tracks.length === 0 ? /* @__PURE__ */ import_react20.default.createElement("div", { className: "empty-playlist-tracks" }, /* @__PURE__ */ import_react20.default.createElement("p", null, "This playlist has no tracks yet."), /* @__PURE__ */ import_react20.default.createElement("span", { className: "hint" }, "Choose tracks from your Media Library below or import local files."), /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           className: "btn-accent",
@@ -21099,15 +21538,15 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           style: { marginTop: "12px" }
         },
         "Add Audio Files from Disk"
-      )) : /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlist-tracks-table" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlist-table-header" }, /* @__PURE__ */ import_react18.default.createElement("span", { className: "col-num" }, "#"), /* @__PURE__ */ import_react18.default.createElement("span", { className: "col-title" }, "Title"), /* @__PURE__ */ import_react18.default.createElement("span", { className: "col-artist" }, "Artist"), /* @__PURE__ */ import_react18.default.createElement("span", { className: "col-album" }, "Album"), /* @__PURE__ */ import_react18.default.createElement("span", { className: "col-duration" }, "Duration"), /* @__PURE__ */ import_react18.default.createElement("span", { className: "col-actions" }, "Actions")), /* @__PURE__ */ import_react18.default.createElement("div", { className: "playlist-table-body" }, selectedPlaylist.tracks.map((track, tIdx) => /* @__PURE__ */ import_react18.default.createElement("div", { key: track.id || tIdx, className: "playlist-table-row" }, /* @__PURE__ */ import_react18.default.createElement("span", { className: "col-num" }, tIdx + 1), /* @__PURE__ */ import_react18.default.createElement("span", { className: "col-title", title: track.title }, track.title), /* @__PURE__ */ import_react18.default.createElement("span", { className: "col-artist", title: track.artist }, track.artist), /* @__PURE__ */ import_react18.default.createElement("span", { className: "col-album", title: track.album }, track.album), /* @__PURE__ */ import_react18.default.createElement("span", { className: "col-duration" }, formatDuration4(track.duration)), /* @__PURE__ */ import_react18.default.createElement("span", { className: "col-actions" }, /* @__PURE__ */ import_react18.default.createElement(
+      )) : /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlist-tracks-table" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlist-table-header" }, /* @__PURE__ */ import_react20.default.createElement("span", { className: "col-num" }, "#"), /* @__PURE__ */ import_react20.default.createElement("span", { className: "col-title" }, "Title"), /* @__PURE__ */ import_react20.default.createElement("span", { className: "col-artist" }, "Artist"), /* @__PURE__ */ import_react20.default.createElement("span", { className: "col-album" }, "Album"), /* @__PURE__ */ import_react20.default.createElement("span", { className: "col-duration" }, "Duration"), /* @__PURE__ */ import_react20.default.createElement("span", { className: "col-actions" }, "Actions")), /* @__PURE__ */ import_react20.default.createElement("div", { className: "playlist-table-body" }, selectedPlaylist.tracks.map((track, tIdx) => /* @__PURE__ */ import_react20.default.createElement("div", { key: track.id || tIdx, className: "playlist-table-row" }, /* @__PURE__ */ import_react20.default.createElement("span", { className: "col-num" }, tIdx + 1), /* @__PURE__ */ import_react20.default.createElement("span", { className: "col-title", title: track.title }, track.title), /* @__PURE__ */ import_react20.default.createElement("span", { className: "col-artist", title: track.artist }, track.artist), /* @__PURE__ */ import_react20.default.createElement("span", { className: "col-album", title: track.album }, track.album), /* @__PURE__ */ import_react20.default.createElement("span", { className: "col-duration" }, formatDuration5(track.duration)), /* @__PURE__ */ import_react20.default.createElement("span", { className: "col-actions" }, /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           className: "btn-row-action",
           title: "Play track",
           onClick: () => playTrack(track)
         },
-        /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "play", size: 14 })
-      ), /* @__PURE__ */ import_react18.default.createElement(
+        /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "play", size: 14 })
+      ), /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           className: "btn-row-action",
@@ -21115,8 +21554,8 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           disabled: tIdx === 0,
           onClick: () => handleMoveTrackInPlaylist(selectedPlaylist.id, tIdx, tIdx - 1)
         },
-        /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "up", size: 14 })
-      ), /* @__PURE__ */ import_react18.default.createElement(
+        /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "up", size: 14 })
+      ), /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           className: "btn-row-action",
@@ -21124,16 +21563,16 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           disabled: tIdx === selectedPlaylist.tracks.length - 1,
           onClick: () => handleMoveTrackInPlaylist(selectedPlaylist.id, tIdx, tIdx + 1)
         },
-        /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "down", size: 14 })
-      ), /* @__PURE__ */ import_react18.default.createElement(
+        /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "down", size: 14 })
+      ), /* @__PURE__ */ import_react20.default.createElement(
         "button",
         {
           className: "btn-row-action btn-danger",
           title: "Remove from playlist",
           onClick: () => handleRemoveTrackFromPlaylist(selectedPlaylist.id, tIdx)
         },
-        /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "x", size: 14 })
-      )))))), library.tracks.length > 0 && /* @__PURE__ */ import_react18.default.createElement("div", { className: "quick-add-from-library" }, /* @__PURE__ */ import_react18.default.createElement("h4", null, "Add Tracks from Media Library"), /* @__PURE__ */ import_react18.default.createElement("div", { className: "quick-add-controls" }, /* @__PURE__ */ import_react18.default.createElement(
+        /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "x", size: 14 })
+      )))))), library.tracks.length > 0 && /* @__PURE__ */ import_react20.default.createElement("div", { className: "quick-add-from-library" }, /* @__PURE__ */ import_react20.default.createElement("h4", null, "Add Tracks from Media Library"), /* @__PURE__ */ import_react20.default.createElement("div", { className: "quick-add-controls" }, /* @__PURE__ */ import_react20.default.createElement(
         "select",
         {
           id: "select-track-to-add",
@@ -21148,15 +21587,15 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             }
           }
         },
-        /* @__PURE__ */ import_react18.default.createElement("option", { value: "", disabled: true }, 'Select track to add to "', selectedPlaylist.name, '"...'),
-        library.tracks.map((t, idx) => /* @__PURE__ */ import_react18.default.createElement("option", { key: t.id || idx, value: t.id || t.filePath }, t.title, " \u2014 ", t.artist, " (", formatDuration4(t.duration), ")"))
-      ), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary", onClick: handleAddFilesToSelectedPlaylist }, "Add Audio Files"))))) : /* @__PURE__ */ import_react18.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react18.default.createElement("p", null, "Select a playlist from the left or create a new one."), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "12px" } }, "Create Playlist"))))), activeTab === "library" && /* @__PURE__ */ import_react18.default.createElement("div", { className: "library-tab" }, activeCastSession && /* @__PURE__ */ import_react18.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react18.default.createElement(
+        /* @__PURE__ */ import_react20.default.createElement("option", { value: "", disabled: true }, 'Select track to add to "', selectedPlaylist.name, '"...'),
+        library.tracks.map((t, idx) => /* @__PURE__ */ import_react20.default.createElement("option", { key: t.id || idx, value: t.id || t.filePath }, t.title, " \u2014 ", t.artist, " (", formatDuration5(t.duration), ")"))
+      ), /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: handleAddFilesToSelectedPlaylist }, "Add Audio Files"))))) : /* @__PURE__ */ import_react20.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react20.default.createElement("p", null, "Select a playlist from the left or create a new one."), /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "12px" } }, "Create Playlist"))))), activeTab === "library" && /* @__PURE__ */ import_react20.default.createElement("div", { className: "library-tab" }, activeCastSession && /* @__PURE__ */ import_react20.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react20.default.createElement(
         "span",
         {
           className: "cast-pulse-dot",
           style: { background: activeCastSession.isPaused ? "#eab308" : "#22c55e" }
         }
-      ), /* @__PURE__ */ import_react18.default.createElement("span", null, "Currently casting to ", /* @__PURE__ */ import_react18.default.createElement("strong", null, getSpeakerName(activeCastSession.ip)))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "cast-bar-controls" }, /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume" : "Pause"), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "Stop Cast"))), /* @__PURE__ */ import_react18.default.createElement(
+      ), /* @__PURE__ */ import_react20.default.createElement("span", null, "Currently casting to ", /* @__PURE__ */ import_react20.default.createElement("strong", null, getSpeakerName(activeCastSession.ip)))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "cast-bar-controls" }, /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume" : "Pause"), /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "Stop Cast"))), /* @__PURE__ */ import_react20.default.createElement(
         Library,
         {
           tracks: library.tracks,
@@ -21167,6 +21606,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           canGoBack: libNav.length > 1,
           searchInputRef,
           isScanning: isScanningLibrary,
+          onAiPlaylist: () => setShowAiPlaylist(true),
           onAddFolder: handleSelectFolder,
           onAddFiles: handleAddFiles,
           onRefresh: async () => {
@@ -21183,7 +21623,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             busyId: syncingFolder === "all" ? "__all__" : syncingFolder
           }
         }
-      )), activeTab === "cloud" && /* @__PURE__ */ import_react18.default.createElement(
+      )), activeTab === "cloud" && /* @__PURE__ */ import_react20.default.createElement(
         CloudBrowser,
         {
           showStatus,
@@ -21195,14 +21635,14 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             if (lib) setLibrary(lib);
           }
         }
-      ), activeTab === "ambient" && /* @__PURE__ */ import_react18.default.createElement("div", { className: "ambient-container" }, /* @__PURE__ */ import_react18.default.createElement("h3", null, "Procedural Focus Soundscapes"), /* @__PURE__ */ import_react18.default.createElement("p", { className: "subtitle" }, "Synthesized in real-time with Web Audio API nodes (zero external files)"), /* @__PURE__ */ import_react18.default.createElement("div", { className: "ambient-grid" }, [
+      ), activeTab === "ambient" && /* @__PURE__ */ import_react20.default.createElement("div", { className: "ambient-container" }, /* @__PURE__ */ import_react20.default.createElement("h3", null, "Procedural Focus Soundscapes"), /* @__PURE__ */ import_react20.default.createElement("p", { className: "subtitle" }, "Synthesized in real-time with Web Audio API nodes (zero external files)"), /* @__PURE__ */ import_react20.default.createElement("div", { className: "ambient-grid" }, [
         { id: "rain", icon: "rain", name: "Coding Rain", desc: "Resonant filtered pink noise mimicking rainfall" },
         { id: "synth", icon: "synth", name: "Cyber Synth", desc: "Dual detuned sawtooth oscillators with analog low-pass filter" },
         { id: "pink", icon: "noise", name: "Pink Noise", desc: "Voss-McCartney noise buffer for deep technical focus" }
-      ].map((s) => /* @__PURE__ */ import_react18.default.createElement("div", { key: s.id, className: `ambient-card-item ${activeAmbient === s.id ? "active" : ""}`, onClick: () => playAmbient(s.id) }, /* @__PURE__ */ import_react18.default.createElement("span", { className: "card-emoji" }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: s.icon, size: 28 })), /* @__PURE__ */ import_react18.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react18.default.createElement("p", null, s.desc), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-accent" }, activeAmbient === s.id ? "Stop" : "Start"))))), activeTab === "speakers" && /* @__PURE__ */ import_react18.default.createElement("div", { className: "speakers-container" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "speakers-header" }, /* @__PURE__ */ import_react18.default.createElement("h3", null, "Connected Google Cast Smart Speakers"), /* @__PURE__ */ import_react18.default.createElement("div", { style: { display: "flex", gap: "8px" } }, /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast() }, "Stop All Speakers"), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary", onClick: refreshSpeakers }, "Refresh Subnet Scan"))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "speakers-grid" }, speakers.map((s) => /* @__PURE__ */ import_react18.default.createElement("div", { key: s.ip, className: "speaker-card" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "speaker-badge" }, "ONLINE"), /* @__PURE__ */ import_react18.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react18.default.createElement("p", { className: "speaker-ip" }, "IP Address: ", /* @__PURE__ */ import_react18.default.createElement("code", null, s.ip)), /* @__PURE__ */ import_react18.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model), /* @__PURE__ */ import_react18.default.createElement("div", { className: "speaker-actions" }, /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-accent", onClick: () => {
+      ].map((s) => /* @__PURE__ */ import_react20.default.createElement("div", { key: s.id, className: `ambient-card-item ${activeAmbient === s.id ? "active" : ""}`, onClick: () => playAmbient(s.id) }, /* @__PURE__ */ import_react20.default.createElement("span", { className: "card-emoji" }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: s.icon, size: 28 })), /* @__PURE__ */ import_react20.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react20.default.createElement("p", null, s.desc), /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-accent" }, activeAmbient === s.id ? "Stop" : "Start"))))), activeTab === "speakers" && /* @__PURE__ */ import_react20.default.createElement("div", { className: "speakers-container" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "speakers-header" }, /* @__PURE__ */ import_react20.default.createElement("h3", null, "Connected Google Cast Smart Speakers"), /* @__PURE__ */ import_react20.default.createElement("div", { style: { display: "flex", gap: "8px" } }, /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast() }, "Stop All Speakers"), /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: refreshSpeakers }, "Refresh Subnet Scan"))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "speakers-grid" }, speakers.map((s) => /* @__PURE__ */ import_react20.default.createElement("div", { key: s.ip, className: "speaker-card" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "speaker-badge" }, "ONLINE"), /* @__PURE__ */ import_react20.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react20.default.createElement("p", { className: "speaker-ip" }, "IP Address: ", /* @__PURE__ */ import_react20.default.createElement("code", null, s.ip)), /* @__PURE__ */ import_react20.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model), /* @__PURE__ */ import_react20.default.createElement("div", { className: "speaker-actions" }, /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-accent", onClick: () => {
         setOutputTarget(s.ip);
         setActiveTab("player");
-      } }, "Set as Output"), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(s.ip) }, "Stop Playback"), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary", onClick: async () => {
+      } }, "Set as Output"), /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(s.ip) }, "Stop Playback"), /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: async () => {
         showStatus(`Playing harmonic test chime on ${s.name}...`);
         try {
           await window.robosAudio.playTestChime(s.ip);
@@ -21210,7 +21650,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         } catch (err) {
           showStatus("Test chime error: " + err.message);
         }
-      } }, "Play Test Chime"))))))), /* @__PURE__ */ import_react18.default.createElement(
+      } }, "Play Test Chime"))))))), /* @__PURE__ */ import_react20.default.createElement(
         NowPlayingPanel,
         {
           queue: playlist,
@@ -21228,11 +21668,40 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           shuffle: shuffleMode,
           repeat: repeatMode,
           onToggleShuffle: toggleShuffleMode,
-          onCycleRepeat: cycleRepeat
+          onCycleRepeat: cycleRepeat,
+          dj: {
+            enabled: dj.active,
+            speaking: dj.speaking,
+            persona: dj.settings.persona,
+            onSkip: dj.skip,
+            onSettings: () => setShowDjSettings(true),
+            onAiPlaylist: () => setShowAiPlaylist(true)
+          }
         }
       )),
-      activeTab !== "player" && currentTrack && /* @__PURE__ */ import_react18.default.createElement("footer", { className: "mini-player-bar" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "mini-player-info", onClick: () => setActiveTab("player") }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "mini-art" }, /* @__PURE__ */ import_react18.default.createElement(Cover, { artId: currentTrack.artId, name: currentTrack.album || currentTrack.title, size: 38 })), /* @__PURE__ */ import_react18.default.createElement("div", { className: "mini-text" }, /* @__PURE__ */ import_react18.default.createElement("span", { className: "mini-title" }, currentTrack.title), /* @__PURE__ */ import_react18.default.createElement("span", { className: "mini-artist" }, currentTrack.artist || "Unknown", " \u2022 ", currentTrack.album || ""))), /* @__PURE__ */ import_react18.default.createElement(LoveButton, { track: currentTrack, size: 15 }), /* @__PURE__ */ import_react18.default.createElement("div", { className: "mini-player-center" }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "mini-player-controls" }, /* @__PURE__ */ import_react18.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${shuffleMode ? "on" : ""}`, title: shuffleMode ? "Random: on" : "Random: off", onClick: toggleShuffleMode }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "shuffle", size: 15 })), /* @__PURE__ */ import_react18.default.createElement("button", { className: "mini-ctrl-btn", title: "Previous (Ctrl+\u2190)", onClick: handlePlayPrev }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "prev", size: 18 })), /* @__PURE__ */ import_react18.default.createElement("button", { className: "mini-ctrl-btn mini-btn-play", title: isPlaying ? "Pause (Space)" : "Play (Space)", onClick: handleTogglePlayPause }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 18 })), /* @__PURE__ */ import_react18.default.createElement("button", { className: "mini-ctrl-btn", title: "Next (Ctrl+\u2192)", onClick: handlePlayNext }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "next", size: 18 })), /* @__PURE__ */ import_react18.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${repeatMode !== "off" ? "on" : ""}`, title: `Repeat: ${repeatMode}`, onClick: cycleRepeat }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: repeatMode === "one" ? "repeatOne" : "repeat", size: 15 }))), /* @__PURE__ */ import_react18.default.createElement(MiniProgress, { getAudio: () => playerRef.current?.audio?.current })), /* @__PURE__ */ import_react18.default.createElement("div", { className: "mini-player-right" }, /* @__PURE__ */ import_react18.default.createElement("span", { className: "badge mini-badge" }, "Output: ", getSpeakerName(outputTarget)), /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-mini-now-playing", className: "btn-chip", onClick: () => setActiveTab("player") }, "Now Playing"))),
-      showCreatePlaylistModal && /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-overlay", onClick: () => setShowCreatePlaylistModal(false) }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react18.default.createElement("h3", null, "Create New Playlist"), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react18.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react18.default.createElement(
+      activeTab !== "player" && currentTrack && /* @__PURE__ */ import_react20.default.createElement("footer", { className: "mini-player-bar" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "mini-player-info", onClick: () => setActiveTab("player") }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "mini-art" }, /* @__PURE__ */ import_react20.default.createElement(Cover, { artId: currentTrack.artId, name: currentTrack.album || currentTrack.title, size: 38 })), /* @__PURE__ */ import_react20.default.createElement("div", { className: "mini-text" }, /* @__PURE__ */ import_react20.default.createElement("span", { className: "mini-title" }, currentTrack.title), /* @__PURE__ */ import_react20.default.createElement("span", { className: "mini-artist" }, currentTrack.artist || "Unknown", " \u2022 ", currentTrack.album || ""))), /* @__PURE__ */ import_react20.default.createElement(LoveButton, { track: currentTrack, size: 15 }), /* @__PURE__ */ import_react20.default.createElement("div", { className: "mini-player-center" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "mini-player-controls" }, /* @__PURE__ */ import_react20.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${shuffleMode ? "on" : ""}`, title: shuffleMode ? "Random: on" : "Random: off", onClick: toggleShuffleMode }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "shuffle", size: 15 })), /* @__PURE__ */ import_react20.default.createElement("button", { className: "mini-ctrl-btn", title: "Previous (Ctrl+\u2190)", onClick: handlePlayPrev }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "prev", size: 18 })), /* @__PURE__ */ import_react20.default.createElement("button", { className: "mini-ctrl-btn mini-btn-play", title: isPlaying ? "Pause (Space)" : "Play (Space)", onClick: handleTogglePlayPause }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 18 })), /* @__PURE__ */ import_react20.default.createElement("button", { className: "mini-ctrl-btn", title: "Next (Ctrl+\u2192)", onClick: handlePlayNext }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "next", size: 18 })), /* @__PURE__ */ import_react20.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${repeatMode !== "off" ? "on" : ""}`, title: `Repeat: ${repeatMode}`, onClick: cycleRepeat }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: repeatMode === "one" ? "repeatOne" : "repeat", size: 15 }))), /* @__PURE__ */ import_react20.default.createElement(MiniProgress, { getAudio: () => playerRef.current?.audio?.current })), /* @__PURE__ */ import_react20.default.createElement("div", { className: "mini-player-right" }, /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge mini-badge" }, "Output: ", getSpeakerName(outputTarget)), /* @__PURE__ */ import_react20.default.createElement("button", { id: "btn-mini-now-playing", className: "btn-chip", onClick: () => setActiveTab("player") }, "Now Playing"))),
+      showAiPlaylist && /* @__PURE__ */ import_react20.default.createElement(
+        AiPlaylistModal,
+        {
+          initialDj: dj.settings,
+          onClose: () => setShowAiPlaylist(false),
+          onPlay: handleAiPlaylistPlay,
+          onSave: handleAiPlaylistSave
+        }
+      ),
+      showDjSettings && /* @__PURE__ */ import_react20.default.createElement(
+        DjSettingsModal,
+        {
+          value: dj.settings,
+          onClose: () => setShowDjSettings(false),
+          onSave: (next) => {
+            dj.setSettings(next);
+            setShowDjSettings(false);
+            showStatus(next.enabled ? "\u{1F399} Virtual DJ is on \u2014 they\u2019ll talk between songs." : "Virtual DJ is off.");
+          }
+        }
+      ),
+      showCreatePlaylistModal && /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-overlay", onClick: () => setShowCreatePlaylistModal(false) }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react20.default.createElement("h3", null, "Create New Playlist"), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react20.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react20.default.createElement(
         "input",
         {
           id: "input-playlist-name",
@@ -21245,7 +21714,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             if (e.key === "Enter") handleCreatePlaylist();
           }
         }
-      )), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react18.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react18.default.createElement(
+      )), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react20.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react20.default.createElement(
         "textarea",
         {
           id: "input-playlist-desc",
@@ -21254,8 +21723,8 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           value: newPlaylistDesc,
           onChange: (e) => setNewPlaylistDesc(e.target.value)
         }
-      )), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary", onClick: () => setShowCreatePlaylistModal(false) }, "Cancel"), /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-modal-create-playlist", className: "btn-accent", onClick: handleCreatePlaylist }, "Create Playlist")))),
-      showSaveQueueModal && /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-overlay", onClick: () => setShowSaveQueueModal(false) }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react18.default.createElement("h3", null, "Save Queue as Playlist"), /* @__PURE__ */ import_react18.default.createElement("p", { className: "subtitle", style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "Save all ", playlist.length, " track(s) from your current playback queue into a permanent playlist."), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react18.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react18.default.createElement(
+      )), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: () => setShowCreatePlaylistModal(false) }, "Cancel"), /* @__PURE__ */ import_react20.default.createElement("button", { id: "btn-modal-create-playlist", className: "btn-accent", onClick: handleCreatePlaylist }, "Create Playlist")))),
+      showSaveQueueModal && /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-overlay", onClick: () => setShowSaveQueueModal(false) }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react20.default.createElement("h3", null, "Save Queue as Playlist"), /* @__PURE__ */ import_react20.default.createElement("p", { className: "subtitle", style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "Save all ", playlist.length, " track(s) from your current playback queue into a permanent playlist."), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react20.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react20.default.createElement(
         "input",
         {
           id: "input-save-queue-name",
@@ -21268,7 +21737,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             if (e.key === "Enter") handleSaveQueueAsPlaylist();
           }
         }
-      )), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react18.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react18.default.createElement(
+      )), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react20.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react20.default.createElement(
         "textarea",
         {
           id: "input-save-queue-desc",
@@ -21277,17 +21746,17 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           value: saveQueueDesc,
           onChange: (e) => setSaveQueueDesc(e.target.value)
         }
-      )), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary", onClick: () => setShowSaveQueueModal(false) }, "Cancel"), /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-modal-save-queue", className: "btn-accent", onClick: handleSaveQueueAsPlaylist }, "Save Playlist")))),
-      tracksForPlaylist && tracksForPlaylist.length > 0 && /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-overlay", onClick: () => setTracksForPlaylist(null) }, /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react18.default.createElement("h3", null, "Add to Playlist"), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-selected-track-info" }, tracksForPlaylist.length === 1 ? /* @__PURE__ */ import_react18.default.createElement(import_react18.default.Fragment, null, /* @__PURE__ */ import_react18.default.createElement("strong", null, tracksForPlaylist[0].title), /* @__PURE__ */ import_react18.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, tracksForPlaylist[0].artist, " \u2022 ", tracksForPlaylist[0].album)) : /* @__PURE__ */ import_react18.default.createElement(import_react18.default.Fragment, null, /* @__PURE__ */ import_react18.default.createElement("strong", null, tracksForPlaylist.length, " tracks"), /* @__PURE__ */ import_react18.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, formatTotalDuration(tracksForPlaylist)))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react18.default.createElement("label", null, "Choose Destination Playlist"), playlists.length === 0 ? /* @__PURE__ */ import_react18.default.createElement("p", { style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "No playlists exist yet.") : /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-playlist-select-list" }, playlists.map((pl) => /* @__PURE__ */ import_react18.default.createElement(
+      )), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: () => setShowSaveQueueModal(false) }, "Cancel"), /* @__PURE__ */ import_react20.default.createElement("button", { id: "btn-modal-save-queue", className: "btn-accent", onClick: handleSaveQueueAsPlaylist }, "Save Playlist")))),
+      tracksForPlaylist && tracksForPlaylist.length > 0 && /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-overlay", onClick: () => setTracksForPlaylist(null) }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react20.default.createElement("h3", null, "Add to Playlist"), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-selected-track-info" }, tracksForPlaylist.length === 1 ? /* @__PURE__ */ import_react20.default.createElement(import_react20.default.Fragment, null, /* @__PURE__ */ import_react20.default.createElement("strong", null, tracksForPlaylist[0].title), /* @__PURE__ */ import_react20.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, tracksForPlaylist[0].artist, " \u2022 ", tracksForPlaylist[0].album)) : /* @__PURE__ */ import_react20.default.createElement(import_react20.default.Fragment, null, /* @__PURE__ */ import_react20.default.createElement("strong", null, tracksForPlaylist.length, " tracks"), /* @__PURE__ */ import_react20.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, formatTotalDuration(tracksForPlaylist)))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react20.default.createElement("label", null, "Choose Destination Playlist"), playlists.length === 0 ? /* @__PURE__ */ import_react20.default.createElement("p", { style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "No playlists exist yet.") : /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-playlist-select-list" }, playlists.map((pl) => /* @__PURE__ */ import_react20.default.createElement(
         "div",
         {
           key: pl.id,
           className: "modal-playlist-select-item",
           onClick: () => handleAddTracksToPlaylist(pl.id, tracksForPlaylist)
         },
-        /* @__PURE__ */ import_react18.default.createElement("div", null, /* @__PURE__ */ import_react18.default.createElement("strong", null, pl.name), /* @__PURE__ */ import_react18.default.createElement("span", { style: { display: "block", fontSize: "0.72rem", color: "var(--text-muted)" } }, pl.tracks?.length || 0, " track(s)")),
-        /* @__PURE__ */ import_react18.default.createElement("span", { className: "btn-chip" }, "Add")
-      )))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react18.default.createElement("label", null, "\u2026or create a new playlist with ", tracksForPlaylist.length === 1 ? "this track" : "these tracks"), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-inline-create" }, /* @__PURE__ */ import_react18.default.createElement(
+        /* @__PURE__ */ import_react20.default.createElement("div", null, /* @__PURE__ */ import_react20.default.createElement("strong", null, pl.name), /* @__PURE__ */ import_react20.default.createElement("span", { style: { display: "block", fontSize: "0.72rem", color: "var(--text-muted)" } }, pl.tracks?.length || 0, " track(s)")),
+        /* @__PURE__ */ import_react20.default.createElement("span", { className: "btn-chip" }, "Add")
+      )))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react20.default.createElement("label", null, "\u2026or create a new playlist with ", tracksForPlaylist.length === 1 ? "this track" : "these tracks"), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-inline-create" }, /* @__PURE__ */ import_react20.default.createElement(
         "input",
         {
           id: "input-quick-playlist-name",
@@ -21299,15 +21768,15 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             if (e.key === "Enter") handleCreatePlaylistFromTracks();
           }
         }
-      ), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-accent", onClick: handleCreatePlaylistFromTracks }, "Create"))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary", onClick: () => setTracksForPlaylist(null) }, "Cancel")))),
-      /* @__PURE__ */ import_react18.default.createElement(ContextMenu, { menu, onClose: closeMenu }),
-      infoTrack && /* @__PURE__ */ import_react18.default.createElement(TrackInfo, { track: infoTrack, onClose: () => setInfoTrack(null) }),
-      statusMsg && /* @__PURE__ */ import_react18.default.createElement("div", { className: "toast" }, statusMsg)
+      ), /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-accent", onClick: handleCreatePlaylistFromTracks }, "Create"))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: () => setTracksForPlaylist(null) }, "Cancel")))),
+      /* @__PURE__ */ import_react20.default.createElement(ContextMenu, { menu, onClose: closeMenu }),
+      infoTrack && /* @__PURE__ */ import_react20.default.createElement(TrackInfo, { track: infoTrack, onClose: () => setInfoTrack(null) }),
+      statusMsg && /* @__PURE__ */ import_react20.default.createElement("div", { className: "toast" }, statusMsg)
     ));
   }
   function MiniProgress({ getAudio }) {
-    const [time, setTime] = (0, import_react18.useState)({ current: 0, duration: 0 });
-    (0, import_react18.useEffect)(() => {
+    const [time, setTime] = (0, import_react20.useState)({ current: 0, duration: 0 });
+    (0, import_react20.useEffect)(() => {
       const audio = getAudio();
       if (!audio) return void 0;
       const update = () => setTime({ current: audio.currentTime || 0, duration: audio.duration || 0 });
@@ -21328,7 +21797,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       return `${m}:${ss < 10 ? "0" : ""}${ss}`;
     };
     const pct = time.duration ? time.current / time.duration * 100 : 0;
-    return /* @__PURE__ */ import_react18.default.createElement("div", { className: "mini-progress" }, /* @__PURE__ */ import_react18.default.createElement("span", null, fmt(time.current)), /* @__PURE__ */ import_react18.default.createElement(
+    return /* @__PURE__ */ import_react20.default.createElement("div", { className: "mini-progress" }, /* @__PURE__ */ import_react20.default.createElement("span", null, fmt(time.current)), /* @__PURE__ */ import_react20.default.createElement(
       "input",
       {
         type: "range",
@@ -21344,14 +21813,14 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           if (audio) audio.currentTime = Number(e.target.value);
         }
       }
-    ), /* @__PURE__ */ import_react18.default.createElement("span", null, fmt(time.duration)));
+    ), /* @__PURE__ */ import_react20.default.createElement("span", null, fmt(time.duration)));
   }
 
   // src/index.jsx
   var container = document.getElementById("root");
   if (container) {
     const root = (0, import_client.createRoot)(container);
-    root.render(/* @__PURE__ */ import_react19.default.createElement(App, null));
+    root.render(/* @__PURE__ */ import_react21.default.createElement(App, null));
   }
 })();
 /*! Bundled license information:

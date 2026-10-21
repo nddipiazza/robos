@@ -11,6 +11,22 @@ const { MediaLibrary } = require('./lib/media-library');
 const cloud = require('./lib/cloud-storage');
 const lyrics = require('./lib/lyrics');
 const { LibraryFolders } = require('./lib/library-folders');
+const aiPlaylist = require('./lib/ai-playlist');
+
+// Shared RobOS modules: the repo checkout in development, the installed copy on the VM.
+function requireShared(...relPaths) {
+  for (const rel of relPaths) {
+    const candidates = [
+      process.env.ROBOS_LIB_PATH && rel.startsWith('robos-lib/') && path.join(process.env.ROBOS_LIB_PATH, rel.slice('robos-lib/'.length)),
+      path.resolve(__dirname, '..', rel),
+      path.join('/usr/local/share/robos', rel),
+    ].filter(Boolean);
+    for (const p of candidates) {
+      try { return require(p); } catch {}
+    }
+  }
+  return null;
+}
 
 function ensureFileAccessible(filePath) {
   if (!filePath || typeof filePath !== 'string') return false;
@@ -489,6 +505,88 @@ ipcMain.handle('audio:folders-remove', async (_evt, { id, removeTracks }) => {
 });
 
 ipcMain.handle('audio:get-lyrics', async (_evt, track) => lyrics.getLyrics(track));
+
+// ── AI playlists & Virtual DJ (RobOS agent + RobOS voice) ──────────────────
+
+const aiAgent = requireShared('robos-lib/ai-agent');
+const aiJson = requireShared('robos-lib/ai-json');
+const quickAsk = requireShared('robos-lib/quick-ask');
+if (quickAsk && typeof quickAsk.registerQuickAskIPC === 'function') {
+  try { quickAsk.registerQuickAskIPC(ipcMain); } catch {}
+}
+
+let ttsEngine = null;
+function getTtsEngine() {
+  if (!ttsEngine) {
+    const mod = requireShared('voice-prompt/lib/tts-engine');
+    if (mod && mod.TTSEngine) ttsEngine = new mod.TTSEngine();
+  }
+  return ttsEngine;
+}
+
+const AGENT_MISSING = 'RobOS agent tools are not installed (robos-lib/ai-agent). Install RobOS or set ROBOS_LIB_PATH.';
+const askAgent = (prompt) => aiAgent.ask(prompt, { timeoutMs: 180000 });
+
+ipcMain.handle('audio:ai-agent-info', async () => {
+  if (!aiAgent) return { ok: false, error: AGENT_MISSING };
+  try {
+    const info = aiAgent.listProviders();
+    return { ok: true, activeName: info.activeName, api: info.api || null };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('audio:ai-playlist-generate', async (_evt, { request, count, dj } = {}) => {
+  if (!aiAgent) return { ok: false, error: AGENT_MISSING };
+  try {
+    return await aiPlaylist.generateAiPlaylist(
+      { tracks: mediaLibrary.tracks, request, count, dj },
+      {
+        ask: askAgent,
+        parseJson: aiJson && aiJson.parseAIJson,
+        onProgress: (p) => sendToWindow('audio:ai-progress', p),
+      }
+    );
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('audio:dj-lines', async (_evt, { persona, upcoming } = {}) => {
+  if (!aiAgent) return { ok: false, error: AGENT_MISSING, lines: {} };
+  try {
+    return await aiPlaylist.generateDjLines({ persona, upcoming }, { ask: askAgent, parseJson: aiJson && aiJson.parseAIJson });
+  } catch (err) {
+    return { ok: false, error: err.message, lines: {} };
+  }
+});
+
+ipcMain.handle('audio:dj-voices', async () => {
+  const tts = getTtsEngine();
+  if (!tts) return { ok: false, voices: {} };
+  try {
+    return { ok: true, voices: await tts.listVoices() };
+  } catch (err) {
+    return { ok: false, error: err.message, voices: {} };
+  }
+});
+
+// Renders a DJ line to an audio file. `voice` is "engine:voiceId" from audio:dj-voices.
+ipcMain.handle('audio:dj-synthesize', async (_evt, { text, voice } = {}) => {
+  const tts = getTtsEngine();
+  if (!tts) return { ok: false, error: 'RobOS voice (voice-prompt) is not installed.' };
+  try {
+    const [engine, ...rest] = String(voice || '').split(':');
+    const opts = engine && rest.length ? { engine, voice: rest.join(':') } : {};
+    const res = await tts.synthesize(String(text || ''), opts);
+    // The engine's last resort is a second of silence; treat that as "no voice available".
+    if (!res || !res.ok || res.engine === 'fallback') return { ok: false, error: 'No text-to-speech engine produced audio.' };
+    return { ok: true, filePath: res.filePath, durationMs: res.durationMs, engine: res.engine };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
 
 // ── Library browsing: cover art, play statistics, loved tracks ─────────────
 

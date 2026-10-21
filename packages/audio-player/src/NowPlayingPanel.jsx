@@ -33,6 +33,7 @@ export default function NowPlayingPanel({
   repeat,
   onToggleShuffle,
   onCycleRepeat,
+  dj = null,
 }) {
   const ctx = useLibrary();
   const { isPlaying, actions, openMenu } = ctx;
@@ -238,6 +239,17 @@ export default function NowPlayingPanel({
         </div>
       )}
 
+      {dj && dj.speaking && (
+        <div className="np-dj-banner" role="status">
+          <Icon name="mic" size={15} />
+          <div className="np-dj-text">
+            <span className="np-dj-label">{dj.speaking.warming ? 'DJ is warming up…' : 'DJ on the mic'}</span>
+            <span className="np-dj-line">{dj.speaking.text}</span>
+          </div>
+          <button id="btn-dj-skip" className="btn-chip" onClick={dj.onSkip} title="Skip the DJ and play the next song">Skip</button>
+        </div>
+      )}
+
       <div className="np-filter search-box">
         <Icon name="search" size={13} />
         <input
@@ -321,6 +333,22 @@ export default function NowPlayingPanel({
           <button className="btn-icon-only small" title="Locate the playing track" onClick={() => locateCurrent(true)}>
             <Icon name="locate" size={14} />
           </button>
+          {dj && (
+            <>
+              <button
+                id="btn-dj-toggle"
+                className={`btn-icon-only small ${dj.enabled ? 'on' : ''}`}
+                title={dj.enabled ? `Virtual DJ is on: ${dj.persona}` : 'Virtual DJ between songs'}
+                aria-pressed={dj.enabled}
+                onClick={dj.onSettings}
+              >
+                <Icon name="mic" size={14} />
+              </button>
+              <button id="btn-queue-ai-playlist" className="btn-icon-only small ai-btn-icon" title="AI Playlist: describe it, your RobOS agent builds it" onClick={dj.onAiPlaylist}>
+                ✦
+              </button>
+            </>
+          )}
           <span className="np-footer-spacer" />
           <button id="btn-shuffle-queue" className="btn-icon-only small" title="Shuffle the order of the queue" onClick={onShuffleOrder}>
             <Icon name="rows" size={14} />

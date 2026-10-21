@@ -27,6 +27,16 @@ contextBridge.exposeInMainWorld('robosAudio', {
   recordPlay: (trackId) => ipcRenderer.invoke('audio:record-play', trackId),
   setLoved: (ids, loved) => ipcRenderer.invoke('audio:set-loved', { ids, loved }),
   showInFolder: (filePath) => ipcRenderer.invoke('audio:show-in-folder', filePath),
+  aiAgentInfo: () => ipcRenderer.invoke('audio:ai-agent-info'),
+  aiPlaylistGenerate: (request, count, dj) => ipcRenderer.invoke('audio:ai-playlist-generate', { request, count, dj }),
+  onAiProgress: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:ai-progress', handler);
+    return () => ipcRenderer.removeListener('audio:ai-progress', handler);
+  },
+  djLines: (persona, upcoming) => ipcRenderer.invoke('audio:dj-lines', { persona, upcoming }),
+  djVoices: () => ipcRenderer.invoke('audio:dj-voices'),
+  djSynthesize: (text, voice) => ipcRenderer.invoke('audio:dj-synthesize', { text, voice }),
   listFolders: () => ipcRenderer.invoke('audio:folders-list'),
   addLocalFolder: () => ipcRenderer.invoke('audio:folders-add-local'),
   addCloudFolder: (connectionId, path, label) => ipcRenderer.invoke('audio:folders-add-cloud', { connectionId, path, label }),
@@ -94,4 +104,11 @@ contextBridge.exposeInMainWorld('robosAudio', {
     ipcRenderer.on('audio:speaker-playback-stopped', handler);
     return () => ipcRenderer.removeListener('audio:speaker-playback-stopped', handler);
   }
+});
+
+// Answers the <robos-ai-textarea> "?" button through the shared quick-ask handler.
+contextBridge.exposeInMainWorld('robosQuickAsk', (question, context, contextFiles, onChunk, onDone, onError) => {
+  ipcRenderer.invoke('robos-quick-ask', { question, context, contextFiles })
+    .then(r => { if (r && r.ok) { onChunk(r.text); onDone(); } else onError((r && r.error) || 'No answer'); })
+    .catch(e => onError(e.message));
 });
