@@ -26,7 +26,6 @@ Short lessons for the RobOS tools that plan work, run coding agents, and control
 | | [Run an agent on a task]({{ '/training/agent-tasks/run-an-agent.html' | relative_url }}) | Start Claude Code from Task Implementer on an issue and review the branch it pushes. | A task server, `claude`, `gh` |
 | | [Choose and customize agent personas]({{ '/training/agent-tasks/agent-personas.html' | relative_url }}) | Pick the role prompt an agent gets and add your own. | Task Implementer or Task Planner |
 | [Agent harness and security]({{ '/training/harness-and-security/' | relative_url }}) | [Configure the prompt security guard]({{ '/training/harness-and-security/prompt-security-guard.html' | relative_url }}) | Redact or block secrets, card numbers and injection phrases in prompts. | Node.js 20 or later |
-| | [Run tasks through the harness router]({{ '/training/harness-and-security/harness-router.html' | relative_url }}) | Send a task to Claude Code, Codex or Copilot through one interface, and tell a real run from a simulated one. | The agent CLIs you want to use |
 | | [Run commands in an ephemeral agent profile]({{ '/training/harness-and-security/agent-profiles.html' | relative_url }}) | Give an agent a throwaway home directory, and know what that does and does not isolate. | Linux, `python3`, Electron |
 
 ## Where the rest is documented

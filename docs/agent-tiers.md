@@ -9,7 +9,7 @@ permalink: /agent-tiers.html
 # Agent tiers
 {: .no_toc }
 
-What the "Agent Tiers & Prompt Optimization" settings do today, how RobOS routes a task to an agent CLI through the Unified Harness Protocol (UHP), and what is not built yet. Read this before you rely on tier-based model selection.
+What the "Agent Tiers & Prompt Optimization" settings do today, how RobOS hands a task to an agent CLI, and what is not built yet. Read this before you rely on tier-based model selection.
 {: .fs-6 }
 
 <details open markdown="block">
@@ -96,110 +96,29 @@ The estimate for that prompt was 49 tokens before and 24 after. The example also
 
 ## How tasks reach an agent CLI
 
-The routing code is in [`packages/robos-agent-client`](https://github.com/nddipiazza/robos/tree/main/packages/robos-agent-client). It speaks UHP version `2026-08-11` and has two runtimes. `getHarnessRouter()` picks one each time it is called.
+RobOS starts the agent CLIs directly. There is no router in between, and nothing picks a tier. Each app decides which CLI to run:
 
-```mermaid
-flowchart TD
-    A["getHarnessRouter()"] --> B{"GET http://127.0.0.1:3000/v1/uhp<br/>returns default_version?"}
-    B -->|yes| C["HarnessRouterClient<br/>(HarnessRouter container)"]
-    B -->|no| D["EmbeddedHarnessRouter<br/>(in-process)"]
-    D --> E["claude, codex or copilot CLI<br/>on this machine"]
-```
-
-| Runtime | Where it runs | Notes |
+| Work | Agent | Model |
 |:---|:---|:---|
-| `HarnessRouterClient` | A HarnessRouter container listening on `127.0.0.1:3000` | HTTP and server-sent events. Requires Docker. Optional bearer token. |
-| `EmbeddedHarnessRouter` | Inside the calling Node process | No Docker. Stores sessions in `~/.config/robos/harnessrouter/sessions.json`. |
+| [Task Implementer]({{ '/apps/task-implementer/' | relative_url }}) | Starts `claude` from its main process | Claude Code's configured model |
+| [Dev Central]({{ '/apps/dev-central/' | relative_url }}) work tasks | `codex` or `claude`, from `~/.config/robos/work-task-settings.json` (see below) | That CLI's configured model |
+| PR Review CI recovery | Codex, from the catalog in `robos-agent-client/providers.js` | Chosen in the panel |
+| One-shot requests: generate buttons, the text box quick-ask, the Knowledge Graph AI Co-Pilot, Import & Refine | `robos-lib/ai-agent`: the CLI set as active in RobOS Agents, or the optional API mode | The CLI's configured model, or the API model setting |
 
-Start the container with the command the install scripts use:
-
-```bash
-docker run -d --name harnessrouter --restart unless-stopped -p 127.0.0.1:3000:3000 -v harnessrouter:/data harnessrouter/harnessrouter
-```
-
-You can also install **HarnessRouter CE** from the AI category in Software Center, or use the start, restart and stop buttons described below.
-
-### What the embedded router actually runs
-
-The embedded router lists six harnesses, but it only starts a real process for three of them.
-
-| Harness id | CLI | Behavior |
-|:---|:---|:---|
-| `chrn_claude` | `claude` | Runs `claude -p <input> --output-format text` |
-| `chrn_codex` | `codex` | Runs `codex exec <input>` |
-| `chrn_copilot` | `copilot` | Runs the Copilot wrapper `packages/robos-lib/run-copilot.js` |
-| `chrn_gemini` | `gemini` or `agy` | Listed, but no process is started |
-| `chrn_hermes` | `hermes` | Listed, but no process is started |
-| `chrn_omp` | `omp` | Listed, but no process is started |
-
-For the last three, and for any of the first three whose CLI is not installed, `runTask` returns a placeholder message that starts with `[RobOS Embedded UHP Router] Executed task via` and reports success. It did not run an agent.
-
-Other limits of the embedded router:
-
-- The `model` value is stored with the session but is not passed to the CLI. The CLI uses its own configured model.
-- The model list in embedded mode is a fixed list built into the file, not a query of what your CLIs offer.
-- The `usage` numbers it returns are rough placeholders.
-- The agent runs directly in the `cwd` you pass. There is no sandbox.
-
-{: .warning }
-The embedded router starts `claude` and `codex` with `shell: true` and does not quote the prompt. Quotes, `$` and backticks in a prompt can be interpreted by the shell, so do not feed it untrusted text.
+The last row is described in [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}). The agent runs as you, in the working directory the app passes. There is no sandbox.
 
 ### Prompt scanning
 
-Before a prompt is sent, `EmbeddedHarnessRouter.runTask()` and `AgentSession.start()` run it through the prompt security guard in [`packages/robos-lib/prompt-security.js`](https://github.com/nddipiazza/robos/tree/main/packages/robos-lib). The `prompt_security_mode` setting (section "Prompt Security & Guardrails" in RobOS Preferences) accepts `redact` (default), `block`, `warn`, `audit-only` and `off`. Findings are logged to `~/.config/robos/prompt-security-audit.json`.
-
-### Call the router from code
-
-`runTask` takes `input`, `model`, `harnessId`, `stream`, `cwd`, `onDelta` and `onEvent`. This lists the harnesses and runs a prompt:
-
-```javascript
-const { getHarnessRouter } = require('/usr/local/share/robos/robos-agent-client');
-
-(async () => {
-  const router = await getHarnessRouter();
-
-  const list = await router.listHarnesses();
-  for (const h of list.data.data) console.log(h.id, h.status);
-
-  const res = await router.runTask({
-    input: 'Summarize the TODO comments in this repository.',
-    harnessId: 'chrn_claude',
-    stream: true,
-    cwd: process.cwd(),
-    onDelta: (text) => process.stdout.write(text),
-  });
-  console.log(res.ok ? 'done' : res.error);
-})();
-```
-
-The embedded router emits the events `task.queued`, `task.progress`, `task.delta`, `task.completed` and `task.failed` to `onEvent(type, data)`. `HarnessRouterClient` passes through whatever event names the server sends and treats `task.completed` or `response.done` as the final one. The client does not send `cwd`.
-
-The client calls these UHP endpoints, with the header `UHP-Version: 2026-08-11`:
-
-| Method | Path |
-|:---|:---|
-| `GET` | `/v1/uhp`, `/v1/harnesses`, `/v1/harnesses/:id`, `/v1/models`, `/v1/harnesses/:id/models`, `/v1/sessions`, `/v1/sessions/:id`, `/v1/sessions/:id/turns` |
-| `POST` | `/v1/responses`, `/v1/responses/:id/cancel`, `/v1/sessions/:id/cancel` |
-| `DELETE` | `/v1/sessions/:id` |
-
-`createSession('claude' | 'copilot' | 'harnessrouter')` from the same package builds an `AgentSession` around one of three backends: the `claude` CLI, the Copilot CLI wrapper, or the router.
+`ask()` in `robos-lib/ai-agent` runs every prompt through the prompt security guard in [`packages/robos-lib/prompt-security.js`](https://github.com/nddipiazza/robos/tree/main/packages/robos-lib) before it starts a CLI or calls an API. The `prompt_security_mode` setting (section "Prompt Security & Guardrails" in RobOS Preferences) accepts `redact` (default), `block`, `warn`, `audit-only` and `off`. A blocked prompt is not sent anywhere. Findings are logged to `~/.config/robos/prompt-security-audit.json`. Task Implementer and Dev Central start their CLIs without this scan; see [Configure the prompt security guard]({{ '/training/harness-and-security/prompt-security-guard.html' | relative_url }}).
 
 ## Where task agents are chosen today
 
-[Dev Central]({{ '/apps/dev-central/' | relative_url }}) does not use the router or the tier settings. It reads `backend` from `~/.config/robos/work-task-settings.json`, which defaults to `codex` and also accepts `claude`, and starts that CLI directly. For `codex`, design runs use `--sandbox read-only` and implementation runs use `--sandbox workspace-write` with network access on. For `claude`, design runs add `--permission-mode plan` and implementation runs add `--permission-mode acceptEdits`. The model is whatever that CLI is configured to use.
+[Dev Central]({{ '/apps/dev-central/' | relative_url }}) does not use the tier settings. It reads `backend` from `~/.config/robos/work-task-settings.json`, which defaults to `codex` and also accepts `claude`, and starts that CLI directly. For `codex`, design runs use `--sandbox read-only` and implementation runs use `--sandbox workspace-write` with network access on. For `claude`, design runs add `--permission-mode plan` and implementation runs add `--permission-mode acceptEdits`. The model is whatever that CLI is configured to use.
 
 `providers.js` in `robos-agent-client` lists Codex and AGY (Antigravity) with their model catalogs, which the PR Review CI recovery panel reads (it offers Codex only). It needs a signed-in Codex or AGY and caches each catalog for 24 hours in `~/.config/robos/provider-model-cache.json`.
 
-## HarnessRouter panel in Agents Manager
-
-Open **RobOS Agents** from the app launcher ([Agents Manager]({{ '/apps/agents-manager/' | relative_url }})) and select **HarnessRouter (UHP)** in the provider list. The panel shows:
-
-- **Router Engine & Gateway Status**: whether the router runs as a service on `:3000` or embedded, with buttons **Refresh Status**, **Start Container (Docker)**, **Restart**, **Stop** and **Open Web Console (:3000)**. Start runs the `docker run` command above, or prints "Docker not available; running embedded router".
-- **Configured Agent Harnesses**: one card per harness from `listHarnesses()`.
-- **Unified Task Runner**: pick a **Target Harness** and **Model**, type a prompt, click **Run Task via UHP**, and watch the streamed output. **Cancel Running Task** appears while it runs.
-- **Active & Archived Sessions**: each session has **Turns** and **Delete** buttons, and **Refresh Sessions** reloads the list.
-
-The same limits apply here: in embedded mode the model you pick is not passed to the CLI, and the gemini, hermes and omp harnesses return the placeholder.
+{: .note }
+Earlier versions shipped a HarnessRouter client for the Unified Harness Protocol, an in-process "embedded router", and a HarnessRouter panel in Agents Manager. No app used them for real work, and the embedded router reported success for harnesses it never started, so they were removed. Agent tasks go straight to the CLIs as described above.
 
 ## Related
 

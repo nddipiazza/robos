@@ -19,5 +19,6 @@ Pages for developers who model systems in the knowledge graph, build application
 - [KGraph parse portal]({{ '/kgraph-parse-portal.html' | relative_url }}): the web app and headless service for parsing large volumes of files.
 - [Skills]({{ site.baseurl }}{% link robos-skills.md %}): the agent skills shipped in the RobOS plugin and how to add one.
 - [Architecture]({{ site.baseurl }}{% link architecture.md %}): how the apps, shared libraries, knowledge graph, agent router and MCP servers fit together.
+- [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}): call `robos-lib/ai-agent` from an app, and what the optional `robos-llm` API mode adds.
 - [Run evidence generation]({{ site.baseurl }}{% link development/evidence-generator.md %}): generate review evidence from the command line, without opening Code Review.
 - [Refinement evidence scope]({{ site.baseurl }}{% link development/course-refinement-validation.md %}): validate graph edits without requiring new evidence on untouched nodes.

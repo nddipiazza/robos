@@ -191,6 +191,11 @@ ipcMain.handle('ap-open-login-terminal', (_, cmd) => {
   }).unref();
 });
 
+// Quick-ask "?" button in <robos-ai-textarea> (robos-lib/quick-ask)
+for (const p of [process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'quick-ask'), path.resolve(__dirname, '..', 'robos-lib', 'quick-ask'), '/usr/local/share/robos/robos-lib/quick-ask'].filter(Boolean)) {
+  try { require(p).registerQuickAskIPC(ipcMain); break; } catch {}
+}
+
 ipcMain.handle('ap-scan-prompt', (_, text) => {
   if (!promptSecurity) return { allowed: true, findings: [], redactedText: text || '', cleanText: text || '' };
   const guard = new promptSecurity.PromptSecurityGuard();

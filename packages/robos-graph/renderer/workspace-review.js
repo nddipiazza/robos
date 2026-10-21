@@ -48,10 +48,10 @@
     const brief = await window.sdlcGraph.workspaceContext(input());
     presentation.brief(el('workspace-context-output'), brief);
     el('workspace-context-details').open = true;
-    el('workspace-status').textContent = `${brief.nodes.length} of ${brief.totalMatches} matching records included. Review the evidence, then ask the configured agent or import its edits under Advanced.`;
+    el('workspace-status').textContent = `${brief.nodes.length} of ${brief.totalMatches} matching records included. Review the evidence, then ask your AI agent or import its edits under Advanced.`;
   });
   action('workspace-agent', async () => {
-    discard(); el('workspace-status').textContent = 'Preparing a proposal with the configured agent…';
+    discard(); el('workspace-status').textContent = 'Asking your AI agent for a proposal. A CLI agent can take a minute…';
     const result = await window.sdlcGraph.askWorkspaceAgent(input());
     preview(result.proposal, result.questions);
   });

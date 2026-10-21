@@ -93,7 +93,7 @@ node packages/robos-graph/bin/kgraph-cli.js <command> [options]
 
 | Command | What it does |
 |---|---|
-| `search <query>` | Text search. Options: `--type`, `--package`, `--team`, `--json`. |
+| `search <query>` | Text search. Options: `--type`, `--package`, `--team`, `--json`. `--engine semantic` ranks by meaning instead; it needs API mode and semantic search turned on (see [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}#semantic-knowledge-graph-search)) and otherwise prints the text results with a note. |
 | `get <node-id>` | Show one node with its incoming and outgoing references. |
 | `query` | Filter with `--type` and `--package`, list `--depends-on <id>`, or find a path with `--path-from` and `--path-to`. |
 | `impact <node-id>` | List dependents and dependencies. `--depth` defaults to 3. |
@@ -144,6 +144,7 @@ The `ekgraph-mcp` package serves the graph over the Model Context Protocol. Its 
 | `robos_sdlc_inspect`, `robos_sdlc_query` | `ROBOS_GRAPH_ROOT` (an absolute path) or the `graphRoot` option is set | Read-only. Results are capped at 100 nodes per page and 256 KiB. |
 | `robos_sdlc_propose`, `robos_sdlc_apply` | Same | `propose` writes a draft and changes nothing. `apply` commits a draft by id. |
 | `robos_schema_lookup`, `robos_schema_validate`, `robos_schema_synthesize` | Always listed | Look up Schema.org types, validate a JSON-LD payload and synthesize a type from a Schema.org class. They need the Schema Studio registry. |
+| `robos_kgraph_semantic_search` | Always listed | Meaning-based search over the JSON-LD graph (the `graphRoot` one when set). Works when the user turned on API mode and semantic search; otherwise returns text matches with a note saying why. |
 | `robos_ekgraph_search`, `_get_node`, `_list_children`, `_get_linked`, `_create_node`, `_update_node` | Always listed | They use a separate older store, `~/.config/robos/ekgraph/nodes.json`, not the JSON-LD graph. With a graph root that store is turned off: reads return nothing and the write tools refuse and point to propose and apply. |
 
 Start the server from code with `createEKGraphMCPServer({ graphRoot, port })` from `packages/ekgraph-mcp/server.js`. With a `port`, it answers JSON-RPC over HTTP at `http://localhost:<port>/mcp`.

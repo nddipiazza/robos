@@ -20,6 +20,20 @@ const { DevOpsIntegrationManager, DEVOPS_CATEGORIES, DEVOPS_PROVIDERS } = requir
 const { LuxirIndexer } = require('./luxir-indexer');
 
 const HOME_DIR = process.env.HOME || os.homedir();
+
+// Optional shared libraries: robos-lib (ai-agent, ai-json) and robos-llm (API mode).
+function loadRobosLib(name) {
+  for (const p of [process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, name), path.resolve(__dirname, '..', '..', 'robos-lib', name), `/usr/local/share/robos/robos-lib/${name}`].filter(Boolean)) {
+    try { return require(p); } catch {}
+  }
+  return null;
+}
+function loadRobosLlm() {
+  for (const p of [process.env.ROBOS_LLM_PATH, path.resolve(__dirname, '..', '..', 'robos-llm'), '/usr/local/share/robos/robos-llm'].filter(Boolean)) {
+    try { return require(p); } catch {}
+  }
+  return null;
+}
 const DEFAULT_GRAPH_PATH = path.join(HOME_DIR, '.robos', 'knowledge-graph.jsonld');
 
 const DEFAULT_GRAPH_DATA = {
@@ -722,6 +736,21 @@ class SDLCKnowledgeGraphStore {
   generateCoPilotMutation(prompt) {
     if (this.workspace) throw new Error('Use Import & Refine to propose evidence-backed changes in this workspace');
     return this.copilot.generateMutation(prompt, this.parser.toJSONLD());
+  }
+
+  /** Same as generateCoPilotMutation, but asks an AI agent first (see GraphCoPilot.generateMutationWithAgent). */
+  async generateCoPilotMutationWithAgent(prompt, opts = {}) {
+    if (this.workspace) throw new Error('Use Import & Refine to propose evidence-backed changes in this workspace');
+    // ROBOS_GRAPH_COPILOT=template skips the agent (used by GUI tests on machines with real CLIs).
+    if (!opts.ask && process.env.ROBOS_GRAPH_COPILOT === 'template') {
+      return { ...this.generateCoPilotMutation(prompt), source: 'template', agentError: 'Template mode (ROBOS_GRAPH_COPILOT=template).' };
+    }
+    const ai = opts.ask ? null : loadRobosLib('ai-agent');
+    const aiJson = opts.parseJson ? null : loadRobosLib('ai-json');
+    return this.copilot.generateMutationWithAgent(prompt, this.parser.toJSONLD(), {
+      ask: opts.ask || (ai && ai.ask),
+      parseJson: opts.parseJson || (aiJson && aiJson.parseAIJson),
+    });
   }
 
   applyCoPilotMutation(mutation) {
@@ -3484,6 +3513,36 @@ Knowledge Graph branch kgraph/PET-105-rabies-verification validated with 0 SHACL
       const tags = Array.isArray(node['robos:tags']) ? node['robos:tags'].join(' ').toLowerCase() : '';
       return title.includes(q) || desc.includes(q) || id.includes(q) || role.includes(q) || tags.includes(q);
     });
+  }
+
+  /**
+   * Meaning-based search with embeddings, when the user turned on API mode and
+   * semantic search in RobOS Preferences. Otherwise, or if the embeddings call
+   * fails, returns the substring results from searchNodes() with a note.
+   *
+   * @returns {Promise<{ mode: 'semantic'|'text', results: {node, score}[], note?: string }>}
+   */
+  async semanticSearchNodes(searchQuery = '', filter = {}, opts = {}) {
+    const k = opts.k || 20;
+    const textResults = note => ({ mode: 'text', results: this.searchNodes(searchQuery, filter).slice(0, k).map(node => ({ node, score: null })), note });
+    const llm = opts.llm || loadRobosLlm();
+    if (!llm) return textResults('Semantic search needs the optional API mode (robos-llm), which is not deployed.');
+    if (!opts.config && !llm.readConfig().semanticSearch) {
+      return textResults('Semantic search is off. Turn on API mode and semantic search in RobOS Preferences > AI.');
+    }
+    // Index every node so filtered searches do not evict the rest, then filter the ranking.
+    const allowed = new Set(this.searchNodes('', filter).map(n => n['@id']));
+    const res = await llm.semanticSearch({
+      nodes: this.parser.nodes, query: searchQuery, k: this.parser.nodes.length,
+      indexName: 'kgraph-' + crypto.createHash('sha256').update(this.filePath).digest('hex').slice(0, 12),
+      config: opts.config, embeddings: opts.embeddings,
+    });
+    if (!res.ok) return textResults(`Semantic search unavailable, showing text matches: ${res.error}`);
+    return {
+      mode: 'semantic',
+      results: res.results.filter(r => allowed.has(r.node['@id'])).slice(0, k),
+      indexed: res.indexed, provider: res.provider, model: res.model,
+    };
   }
 
   findPath(startId, endId, maxDepth = 6) {

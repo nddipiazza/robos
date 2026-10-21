@@ -20,6 +20,7 @@ Pages for running RobOS and working with its apps. If you have not installed any
 
 ## In this section
 
+- [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}): the agent CLIs RobOS uses by default, and the optional API mode for quick requests, Ollama and semantic search.
 - [RobOS Voice]({{ site.baseurl }}{% link voice-prompt.md %}): dictation, spoken commands and the local HTTP API.
 - [Projects]({{ site.baseurl }}{% link projects.md %}): projects built with RobOS.
 

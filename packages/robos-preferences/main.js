@@ -49,6 +49,39 @@ function saveSettings(data) {
   fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
+// Optional API mode (robos-llm). Preferences only shows its status and stores keys in pass.
+let llm = null;
+for (const p of [process.env.ROBOS_LLM_PATH, path.resolve(__dirname, '..', 'robos-llm'), '/usr/local/share/robos/robos-llm'].filter(Boolean)) {
+  try { llm = require(p); break; } catch {}
+}
+
+// Older versions saved API keys as plain text in settings.json.
+const PLAINTEXT_KEY_FIELDS = { claude_api_key: 'anthropic', openai_api_key: 'openai', gemini_api_key: 'gemini' };
+
+/**
+ * Moves plain-text API keys from settings into pass and removes them from
+ * settings. Keys stay where they are if pass cannot store them.
+ */
+function migratePlaintextApiKeys(settings, saveKey) {
+  const next = { ...settings };
+  const migrated = [], kept = [];
+  for (const [field, provider] of Object.entries(PLAINTEXT_KEY_FIELDS)) {
+    if (!(field in next)) continue;
+    if (!next[field]) { delete next[field]; continue; }
+    try { saveKey(provider, next[field]); delete next[field]; migrated.push(provider); }
+    catch { kept.push(provider); }
+  }
+  return { settings: next, migrated, kept };
+}
+
+function migrateSettingsFile() {
+  if (!llm) return;
+  const current = loadSettings();
+  if (!Object.keys(PLAINTEXT_KEY_FIELDS).some(k => k in current)) return;
+  const result = migratePlaintextApiKeys(current, llm.credentials.saveKey);
+  if (result.migrated.length || Object.keys(result.settings).length !== Object.keys(current).length) saveSettings(result.settings);
+}
+
 let SDLCKnowledgeGraphStore = null;
 try {
   const mod = require('../robos-graph');
@@ -110,13 +143,29 @@ const SETTINGS_SCHEMA = {
     {id:'code_review',label:'Code Review',fields:[{key:'default_code_reviewer_group',label:'Default code reviewer group',type:'select',options:[],default:''}]},
     {
       id: 'ai',
-      label: 'AI Provider & Models',
+      label: 'AI Agents & API Mode',
+      description: 'RobOS runs the coding-agent CLIs you install and sign in to: Claude Code, Codex, Gemini CLI / Antigravity or GitHub Copilot. Choose the default one in RobOS Agents. API mode is optional and off by default. When it is on, quick one-shot requests (drafts, summaries, Graph Copilot) go straight to a model API, and fall back to your CLI if the call fails. Agent tasks always use the CLI.',
       fields: [
-        { key: 'ai_provider', label: 'Primary AI Provider', type: 'select', options: ['claude', 'openai', 'gemini', 'local'], default: 'claude' },
-        { key: 'claude_api_key', label: 'Claude API Key', type: 'password', default: '' },
-        { key: 'openai_api_key', label: 'OpenAI API Key', type: 'password', default: '' },
-        { key: 'gemini_api_key', label: 'Google Gemini API Key', type: 'password', default: '' },
-        { key: 'ai_model', label: 'Default AI Model', type: 'text', default: 'claude-sonnet-5' },
+        { key: 'ai_api_enabled', label: 'Use direct model APIs for quick requests (optional)', type: 'checkbox', default: false },
+        { key: 'ai_api_provider', label: 'API provider', type: 'select', options: [
+          { value: 'anthropic', label: 'Anthropic (Claude)' },
+          { value: 'openai', label: 'OpenAI' },
+          { value: 'gemini', label: 'Google Gemini' },
+          { value: 'ollama', label: 'Ollama (local, no key)' },
+        ], default: 'anthropic' },
+        { key: 'ai_api_model', label: 'API model (blank for the provider default)', type: 'text', default: '' },
+        { key: 'ai_api_base_url', label: 'Server URL for Ollama or an OpenAI-compatible endpoint (blank for the default)', type: 'text', default: '' },
+        { key: 'ai_key_anthropic', provider: 'anthropic', label: 'Anthropic API key (saved in pass)', type: 'secret' },
+        { key: 'ai_key_openai', provider: 'openai', label: 'OpenAI API key (saved in pass)', type: 'secret' },
+        { key: 'ai_key_gemini', provider: 'gemini', label: 'Google Gemini API key (saved in pass)', type: 'secret' },
+        { key: 'ai_semantic_search', label: 'Semantic Knowledge Graph search with embeddings (needs API mode)', type: 'checkbox', default: false },
+        { key: 'ai_embeddings_provider', label: 'Embeddings provider', type: 'select', options: [
+          { value: '', label: 'Same as API provider' },
+          { value: 'openai', label: 'OpenAI' },
+          { value: 'gemini', label: 'Google Gemini' },
+          { value: 'ollama', label: 'Ollama (local, no key)' },
+        ], default: '' },
+        { key: 'ai_embeddings_model', label: 'Embeddings model (blank for the provider default)', type: 'text', default: '' },
       ],
     },
     {
@@ -212,6 +261,7 @@ let win = null;
 app.setName('robos-preferences');
 
 app.whenReady().then(() => {
+  try { migrateSettingsFile(); } catch {}
   win = new BrowserWindow({
     title: 'RobOS Preferences',
     width: 900,
@@ -242,14 +292,19 @@ app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
-ipcMain.handle('get-schema', () => {const schema=JSON.parse(JSON.stringify(SETTINGS_SCHEMA));schema.sections.find(s=>s.id==='code_review').fields[0].options=[{value:'',label:'Choose a group…'},...require('../robos-lib/code-reviewer-group').groups().map(g=>({value:g.id,label:g.name+' ('+g.members+' members)'}))];return schema;});
+// robos-lib/code-reviewer-group is optional: without it the reviewer group list is empty and nothing is validated.
+function reviewerGroups() { try { return require('../robos-lib/code-reviewer-group'); } catch { return null; } }
+
+ipcMain.handle('get-schema', () => {const schema=JSON.parse(JSON.stringify(SETTINGS_SCHEMA));const groups=reviewerGroups();schema.sections.find(s=>s.id==='code_review').fields[0].options=[{value:'',label:'Choose a group…'},...(groups?groups.groups():[]).map(g=>({value:g.id,label:g.name+' ('+g.members+' members)'}))];return schema;});
 
 ipcMain.handle('load-settings', () => loadSettings());
 
 ipcMain.handle('save-settings', (_, data) => {
-  if(Object.hasOwn(data,'default_code_reviewer_group'))require('../robos-lib/code-reviewer-group').validate(data.default_code_reviewer_group);
+  if(Object.hasOwn(data,'default_code_reviewer_group'))reviewerGroups()?.validate(data.default_code_reviewer_group);
   const current = loadSettings();
   const merged = { ...current, ...data };
+  // API keys belong in pass, never in settings.json.
+  for (const field of Object.keys(PLAINTEXT_KEY_FIELDS)) if (Object.hasOwn(data, field)) delete merged[field];
   saveSettings(merged);
   syncSettingsToKGraph(merged);
   return { ok: true, settings: merged };
@@ -262,13 +317,34 @@ ipcMain.handle('get-setting', (_, key) => {
 
 ipcMain.handle('set-setting', (_, key, value) => {
   const s = loadSettings();
-  if(key==='default_code_reviewer_group')require('../robos-lib/code-reviewer-group').validate(value);
+  if(key==='default_code_reviewer_group')reviewerGroups()?.validate(value);
   s[key] = value;
   saveSettings(s);
   return { ok: true };
 });
 
-module.exports = { loadSettings, saveSettings, SETTINGS_SCHEMA };
+// ── Optional API mode ────────────────────────────────────────────────────────
+
+ipcMain.handle('ai-api-status', () => {
+  if (!llm) return { ok: false, error: 'API mode support (robos-llm) is not deployed on this machine.' };
+  return { ok: true, ...llm.status(loadSettings()) };
+});
+
+ipcMain.handle('ai-api-save-key', (_, provider, value) => {
+  try {
+    if (!llm) throw new Error('API mode support (robos-llm) is not deployed on this machine.');
+    return llm.credentials.saveKey(provider, value);
+  } catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('ai-api-install', async (_, providers) => {
+  if (!llm) return { ok: false, error: 'API mode support (robos-llm) is not deployed on this machine.' };
+  const wanted = (Array.isArray(providers) ? providers : []).filter(p => llm.PROVIDERS[p]);
+  const result = await llm.installPackages(wanted.length ? wanted : Object.keys(llm.PROVIDERS));
+  return { ok: result.ok, error: result.error, packages: result.packages, log: (result.log || '').slice(-2000) };
+});
+
+module.exports = { loadSettings, saveSettings, SETTINGS_SCHEMA, migratePlaintextApiKeys };
 
 // Account selectors use the existing GitHub CLI credential store, never renderer tokens.
 ipcMain.handle('github-accounts-list', async () => {

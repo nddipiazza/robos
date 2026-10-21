@@ -9,4 +9,7 @@ contextBridge.exposeInMainWorld('api', {
   saveSettings:  (data)    => ipcRenderer.invoke('save-settings', data),
   getSetting:    (key)     => ipcRenderer.invoke('get-setting', key),
   setSetting:    (key, v)  => ipcRenderer.invoke('set-setting', key, v),
+  aiApiStatus:   ()        => ipcRenderer.invoke('ai-api-status'),
+  aiApiSaveKey:  (p, v)    => ipcRenderer.invoke('ai-api-save-key', p, v),
+  aiApiInstall:  (list)    => ipcRenderer.invoke('ai-api-install', list),
 });

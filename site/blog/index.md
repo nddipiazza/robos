@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Engineering Blog
-description: "Two months of engineering in RobOS: Cloud Storage & Audio Suite, Tabletop RPG & Midterm Elections 2026, RobOS Household & Tax Prep, Point of Sale, Auto Center, Starfall Command RTS, The Skill Commons, PR Review Theater, Realm of Heroes cRPG, RobOS Voice, and the Dual-State Knowledge Graph."
+description: "Two months of engineering in RobOS: CLI-first AI with an optional API mode, Cloud Storage & Audio Suite, Tabletop RPG & Midterm Elections 2026, RobOS Household & Tax Prep, Point of Sale, Auto Center, Starfall Command RTS, The Skill Commons, PR Review Theater, Realm of Heroes cRPG, RobOS Voice, and the Dual-State Knowledge Graph."
 permalink: /blog/
 extra_css: /assets/blog.css
 og_image: /assets/hero/poster.jpg
@@ -13,6 +13,7 @@ og_image: /assets/hero/poster.jpg
     <p class="lead">Every major feature, application, game engine, and architectural milestone shipped in the RobOS repository over the past eight weeks—from the Dual-State Knowledge Graph and local-first PR Review Theater to open-source small-business apps and full Godot 4 games.</p>
   </div>
   <nav class="blog-jump" aria-label="Jump to blog post">
+    <a href="#cli-agents-and-api-mode">CLI Agents &amp; API Mode</a>
     <a href="#cloud-storage-and-audio-suite">Cloud Storage &amp; Audio</a>
     <a href="#tabletop-rpg-and-election-2026">Tabletop RPG &amp; Election 2026</a>
     <a href="#robos-household-and-tax-prep">Household &amp; Tax Prep</a>
@@ -28,6 +29,37 @@ og_image: /assets/hero/poster.jpg
 </section>
 
 <div class="blog-feed">
+
+  <article class="blog-entry" id="cli-agents-and-api-mode">
+    <div class="blog-meta">
+      <time class="blog-date" datetime="2026-10-21">Oct 20 – Oct 21, 2026</time>
+      <span class="blog-tag">AI Agents</span>
+      <span class="blog-tag">LangChain.js</span>
+      <span class="blog-tag">Security</span>
+    </div>
+    <h2><a href="#cli-agents-and-api-mode">Bring Your Own Agent CLI: An Optional API Mode, and Why We Removed the Harness Router</a></h2>
+    <p class="blog-summary">RobOS keeps running the coding-agent CLIs you already use. We added an opt-in API mode through LangChain.js for quick requests, local Ollama models and semantic Knowledge Graph search, and deleted the Unified Harness Protocol router that nothing actually used.</p>
+    <div class="blog-body">
+      <p>The question was whether RobOS should adopt LangChain. Almost all of its AI work already goes to Claude Code, Codex, Gemini CLI / Antigravity or GitHub Copilot, which bring their own tool loops, models and sign-in. Putting a second agent runtime underneath them would duplicate that. So the rule is: install a CLI, sign in, and RobOS works. Direct model APIs are an option, never a requirement.</p>
+      <ul>
+        <li><strong>One switch point:</strong> every one-shot AI request in the apps goes through <code>robos-lib/ai-agent</code>, which runs the CLI you set as active in RobOS Agents. Gemini CLI / Antigravity joins Copilot, Claude Code and Codex as a supported provider, and Software Center can now install it.</li>
+        <li><strong>Optional API mode (<code>packages/robos-llm</code>):</strong> off by default. Turn it on in RobOS Preferences and quick requests go to Anthropic, OpenAI, Google Gemini or a local Ollama server through LangChain.js, falling back to your CLI if the call fails. The LangChain packages are not shipped with RobOS; Preferences installs them on request into <code>~/.local/share/robos/llm-deps</code>. API keys live only in <code>pass</code>, keys that older versions saved as plain text are moved there, and LangSmith tracing is forced off.</li>
+        <li><strong>Stubs that now do real work:</strong> the <strong>?</strong> quick-ask button in the AI text box was not wired into any app; it now answers in AI Prompt Studio, Git Projects and the Knowledge Graph Explorer. The Graph Explorer's AI Co-Pilot used to pick nodes by keyword; it now asks your agent and checks the answer against the SHACL shapes. Import &amp; Refine's <strong>Ask AI agent</strong> works with any signed-in CLI instead of needing a router server.</li>
+        <li><strong>Semantic Knowledge Graph search:</strong> with API mode on, <code>kgraph search --engine semantic</code> and the <code>robos_kgraph_semantic_search</code> MCP tool rank nodes by meaning, using embeddings from OpenAI, Gemini or Ollama and a local vector index that only re-embeds changed nodes.</li>
+        <li><strong>Removing the harness router:</strong> no app ran real work through <code>robos-agent-client/harness-router.js</code>. Its in-process fallback passed prompts through a shell, so quotes or <code>$(...)</code> in a prompt could run commands, and it reported success for three of its six harnesses without starting anything. We deleted it, the unused session layer and the Agents Manager panel, about 3,600 lines of code and docs. The prompt security scan moved into <code>ai-agent</code>, so every one-shot prompt is checked before it reaches a CLI or an API.</li>
+      </ul>
+      <p>Still open: answers arrive in one piece rather than streaming, and Task Implementer and Dev Central start their CLIs without the prompt scan.</p>
+      <figure class="blog-fig">
+        <img src="{{ '/v1/assets/images/screenshots/ai-api-mode-preferences.png' | relative_url }}" alt="RobOS Preferences, AI Agents and API Mode section, with API mode on, Google Gemini selected, a key saved in pass, and Ollama embeddings for semantic search" loading="lazy">
+        <figcaption>The new AI Agents &amp; API Mode section in RobOS Preferences. Key fields save straight to <code>pass</code>.</figcaption>
+      </figure>
+    </div>
+    <div class="blog-links">
+      <a href="{{ '/v1/ai-providers.html' | relative_url }}">AI agents and API mode →</a>
+      <a href="{{ '/v1/agent-tiers.html' | relative_url }}">How tasks reach an agent CLI →</a>
+      <span class="blog-commits">Commits: ac06cf5 · 232afef</span>
+    </div>
+  </article>
 
   <article class="blog-entry" id="cloud-storage-and-audio-suite">
     <div class="blog-meta">

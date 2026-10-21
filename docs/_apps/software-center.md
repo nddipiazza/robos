@@ -15,7 +15,7 @@ The list is defined in `packages/software-center/main.js`. Categories shown as f
 
 | Category | Tools |
 |---|---|
-| AI | Claude CLI, GitHub Copilot CLI, OpenAI Codex CLI, HarnessRouter CE |
+| AI | Claude CLI, GitHub Copilot CLI, OpenAI Codex CLI, Gemini CLI |
 | IDE | VS Code, IntelliJ IDEA Community, PyCharm Community, WebStorm, GoLand, CLion, Rider, RustRover |
 | Browser | Firefox, Chromium, Google Chrome |
 | Dev | GitHub CLI, GitHub Copilot CLI (gh extension), Docker, Lazygit |

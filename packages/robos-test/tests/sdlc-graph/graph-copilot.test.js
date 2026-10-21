@@ -59,7 +59,7 @@ describe('Agent-Assisted World Graph Authoring Studio (GraphCoPilot) Tests with 
   it('launches SDLC Knowledge Graph GUI, triggers AI Co-Pilot generation, and applies mutation to active graph', async () => {
     const app = await launchApp('robos-graph', {
       ...scenarios['all-good'],
-      env: { ROBOS_TEST: '1', ROBOS_DEMO_SHOW: '1' },
+      env: { ROBOS_TEST: '1', ROBOS_DEMO_SHOW: '1', ROBOS_GRAPH_COPILOT: 'template' },
     });
 
     try {

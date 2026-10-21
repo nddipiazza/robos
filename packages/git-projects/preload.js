@@ -39,3 +39,10 @@ contextBridge.exposeInMainWorld('gp', {
   logsSearch:      (opts)        => ipcRenderer.invoke('logs-search', opts),
   logsListApps:    ()            => ipcRenderer.invoke('logs-list-apps'),
 });
+
+// Default answer for the textarea's quick-ask button (robos-lib/quick-ask).
+contextBridge.exposeInMainWorld('robosQuickAsk', (question, context, contextFiles, onChunk, onDone, onError) => {
+  ipcRenderer.invoke('robos-quick-ask', { question, context, contextFiles })
+    .then(r => { if (r && r.ok) { onChunk(r.text); onDone(); } else onError((r && r.error) || 'No answer'); })
+    .catch(e => onError(e.message));
+});

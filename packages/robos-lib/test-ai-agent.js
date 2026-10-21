@@ -69,6 +69,12 @@ function checkProviderAuth(id) {
       return { installed: true, authenticated: authed, reason: authed ? '' : 'not logged in — run: codex login' };
     } catch { return { installed: false, authenticated: false, reason: 'codex not found' }; }
   }
+  if (id === 'antigravity') {
+    try {
+      cp.execSync('which gemini', { timeout: 5000 });
+      return { installed: true, authenticated: true, reason: '' };
+    } catch { return { installed: false, authenticated: false, reason: 'gemini not found on PATH' }; }
+  }
   return { installed: false, authenticated: false, reason: 'unknown provider' };
 }
 
@@ -83,6 +89,7 @@ setActiveProvider('github-copilot');
   assert('providers list excludes active',  providers.every(p => p.id !== 'github-copilot'));
   assert('providers list has claude-code',  providers.some(p => p.id === 'claude-code'));
   assert('providers list has codex',        providers.some(p => p.id === 'codex'));
+  assert('providers list has antigravity',  providers.some(p => p.id === 'antigravity'));
 }
 
 setActiveProvider('claude-code');
@@ -116,6 +123,7 @@ async function testProvider(id, name) {
   await testProvider('github-copilot', 'GitHub Copilot');
   await testProvider('claude-code',    'Claude Code');
   await testProvider('codex',          'Codex');
+  await testProvider('antigravity',    'Gemini CLI / Antigravity');
 
   console.log(`\n${'─'.repeat(50)}`);
   console.log(`Results: ${passed} passed, ${failed} failed, ${skipped} skipped`);

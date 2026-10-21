@@ -45,7 +45,8 @@ Commands:
 
 Global: --graph-root <workspace> (or ROBOS_GRAPH_ROOT), --require-evidence
   search <query>                 Full-text and semantic search across all packages
-                                 Options: --type <type>, --package <pkg>, --team <team>, --engine <luxir|memory>, --json
+                                 Options: --type <type>, --package <pkg>, --team <team>, --engine <luxir|memory|semantic>, --json
+                                 semantic needs API mode and semantic search on in RobOS Preferences
 
   index                          Index or re-index Knowledge Graph nodes into hybrid search engine
                                  Options: --engine <luxir|memory>, --json
@@ -118,7 +119,15 @@ async function main() {
       case 's': {
         const query = _[1] || flags.query || '';
         let results;
-        if (flags.engine === 'luxir') {
+        if (flags.engine === 'semantic') {
+          const res = await store.semanticSearchNodes(query, {
+            type: flags.type,
+            package: flags.package || flags.pkg,
+            ownerTeam: flags['owner-team'] || flags.team,
+          });
+          if (res.note && !isJson) console.error(`ℹ ${res.note}`);
+          results = res.results.map(r => (r.score === null ? r.node : { ...r.node, 'robos:score': r.score }));
+        } else if (flags.engine === 'luxir') {
           results = await store.searchWithLuxir(query, {
             type: flags.type,
             package: flags.package || flags.pkg,

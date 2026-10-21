@@ -99,6 +99,11 @@ app.on('window-all-closed', () => {
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
+// Quick-ask "?" button in <robos-ai-textarea> (robos-lib/quick-ask)
+for (const p of [process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'quick-ask'), path.resolve(__dirname, '..', 'robos-lib', 'quick-ask'), '/usr/local/share/robos/robos-lib/quick-ask'].filter(Boolean)) {
+  try { require(p).registerQuickAskIPC(ipcMain); break; } catch {}
+}
+
 ipcMain.handle('graph-info', () => ({
   title: store.parser.title,
   root: store.workspace?.root || path.dirname(store.filePath),
@@ -149,7 +154,7 @@ ipcMain.handle('graph-diff-branches', async (_, payload) => {
   const target = payload && payload.target ? payload.target : 'feature/TASK-101-auth';
   return store.diffBranches(base, target);
 });
-ipcMain.handle('graph-copilot-generate', async (_, prompt) => store.generateCoPilotMutation(prompt));
+ipcMain.handle('graph-copilot-generate', async (_, prompt) => store.generateCoPilotMutationWithAgent(prompt));
 ipcMain.handle('graph-copilot-apply', async (_, mutation) => store.applyCoPilotMutation(mutation));
 ipcMain.handle('graph-repo-scan', async (_, dirPath) => store.scanDirectory(dirPath));
 ipcMain.handle('graph-gherkin-parse', async (_, { text, filePath } = {}) => store.parseGherkinFeature(text || SAMPLE_GHERKIN_FEATURE, filePath));
