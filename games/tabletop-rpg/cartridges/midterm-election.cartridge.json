@@ -1487,6 +1487,7 @@
         2
       ],
       "exitStairType": "stairs_down_1x1",
+      "exitHidden": true,
       "activeRooms": [
         "room-nw-1",
         "room-nw-2",
@@ -3100,6 +3101,7 @@
         14,
         2
       ],
+      "exitHidden": true,
       "bossTarget": "talarixon",
       "primaryGoals": [
         "Defeat the Capitol Bosses & Hydra Bosses (Talarixon, El-Rogers, Brownsted, Katie Zacharia, Mitch McConnell, and Drunk JD Vance & Kamala Harris).",

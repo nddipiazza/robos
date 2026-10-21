@@ -20,7 +20,9 @@ accent: "#e0b252"
     <div><h3>Project</h3>
       <a href="{{ '/games/tabletop-rpg/' | relative_url }}"><b>Game page</b><span>→</span></a>
       <a href="https://github.com/nddipiazza/robos/tree/main/games/tabletop-rpg" target="_blank" rel="noopener"><b>Source on GitHub</b><span>↗</span></a>
-      <a href="https://github.com/nddipiazza/robos/tree/main/games/tabletop-rpg/cartridges" target="_blank" rel="noopener"><b>Cartridges</b><span>↗</span></a></div>
+      <a href="https://github.com/nddipiazza/robos/tree/main/games/tabletop-rpg/cartridges" target="_blank" rel="noopener"><b>Cartridges</b><span>↗</span></a>
+      <a href="{{ '/games/tabletop-rpg/proof-of-viability-election-2026.html' | relative_url }}"><b>Election 2026 proof of viability</b><span>→</span></a>
+      <a href="https://youtu.be/7HkZARyvqmM" target="_blank" rel="noopener"><b>Election 2026 playthrough on YouTube</b><span>↗</span></a></div>
     <div><h3>Also</h3>
       <a href="{{ '/games/' | relative_url }}"><b>All RobOS games</b><span>→</span></a>
       <a href="{{ '/games/crpg/docs/' | relative_url }}"><b>Realm of Heroes CRPG docs</b><span>→</span></a></div>

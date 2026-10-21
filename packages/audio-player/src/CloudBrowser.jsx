@@ -3,7 +3,15 @@ import { Icon } from './Icon.jsx';
 
 const formatSize = (b) => (b == null ? '' : b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
 
-export default function CloudBrowser({ onLibrary, showStatus }) {
+const CACHE_LIMIT_OPTIONS = [
+  { label: '250 MB', bytes: 250 * 1024 * 1024 },
+  { label: '500 MB (Default)', bytes: 500 * 1024 * 1024 },
+  { label: '1 GB', bytes: 1024 * 1024 * 1024 },
+  { label: '2 GB', bytes: 2048 * 1024 * 1024 },
+  { label: '5 GB', bytes: 5120 * 1024 * 1024 },
+];
+
+export default function CloudBrowser({ onLibrary, onFolders, showStatus }) {
   const [connections, setConnections] = useState(null);
   const [connId, setConnId] = useState('');
   const [listing, setListing] = useState(null); // { path, entries }
@@ -11,7 +19,16 @@ export default function CloudBrowser({ onLibrary, showStatus }) {
   const [error, setError] = useState('');
   const [selected, setSelected] = useState(new Set());
   const [progress, setProgress] = useState(null);
+  const [cacheStats, setCacheStats] = useState(null);
   const importing = useRef(false);
+
+  const loadCacheStats = async () => {
+    try {
+      if (window.robosAudio?.cloudCacheStats) {
+        setCacheStats(await window.robosAudio.cloudCacheStats());
+      }
+    } catch {}
+  };
 
   const loadConnections = async () => {
     const list = await window.robosAudio.cloudConnections();
@@ -20,6 +37,7 @@ export default function CloudBrowser({ onLibrary, showStatus }) {
       const first = list.find(c => c.browsable);
       if (first) setConnId(first.id);
     }
+    loadCacheStats();
   };
 
   useEffect(() => {
@@ -62,7 +80,36 @@ export default function CloudBrowser({ onLibrary, showStatus }) {
     if (!res.ok) { showStatus(`Cloud import failed: ${res.error}`); return; }
     onLibrary(res.library);
     setSelected(new Set());
-    showStatus(res.added ? `Added ${res.added} track${res.added === 1 ? '' : 's'} from cloud storage to your library.` : 'No audio files found in the selection.');
+    loadCacheStats();
+    showStatus(res.added ? `Indexed ${res.added} cloud track${res.added === 1 ? '' : 's'} (streamed on play, cached up to limit).` : 'No audio files found in the selection.');
+  };
+
+  const addFolder = async (p) => {
+    if (importing.current) return;
+    importing.current = true;
+    setProgress({ phase: 'scanning' });
+    const res = await window.robosAudio.addCloudFolder(connId, p);
+    importing.current = false;
+    setProgress(null);
+    if (!res.ok) { showStatus(`Could not add folder: ${res.error}`); return; }
+    onFolders(res);
+    loadCacheStats();
+    showStatus(`Cloud folder added: ${res.added} track${res.added === 1 ? '' : 's'} indexed for on-demand streaming.`);
+  };
+
+  const handleMaxCacheChange = async (e) => {
+    const bytes = Number(e.target.value);
+    if (!window.robosAudio?.cloudCacheSetMax) return;
+    const stats = await window.robosAudio.cloudCacheSetMax(bytes);
+    setCacheStats(stats);
+    showStatus(`Cloud audio LRU cache limit set to ${formatSize(stats.maxCacheBytes)}.`);
+  };
+
+  const handleClearCache = async () => {
+    if (!window.robosAudio?.cloudCacheClear) return;
+    const res = await window.robosAudio.cloudCacheClear();
+    setCacheStats(res);
+    showStatus(`Cleared ${res.removed || 0} cached cloud audio file(s). Tracks will stream on demand when played.`);
   };
 
   const usable = (connections || []).filter(c => c.browsable);
@@ -84,17 +131,49 @@ export default function CloudBrowser({ onLibrary, showStatus }) {
             Add {selected.size ? `${selected.size} selected` : 'selected'} to library
           </button>
           {listing && (
-            <button className="btn-secondary" disabled={!!progress} onClick={() => doImport([listing.path])}>
-              Add this folder
+            <button className="btn-secondary" disabled={!!progress} onClick={() => addFolder(listing.path)}
+              title="Index this cloud folder in your library; songs stream on play and cache locally">
+              Add as library folder
             </button>
           )}
         </div>
       </div>
 
+      {cacheStats && (
+        <div className="cloud-cache-bar" style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: '12px', padding: '8px 12px', marginBottom: '10px',
+          background: 'rgba(0, 188, 212, 0.06)', border: '1px solid rgba(0, 188, 212, 0.2)',
+          borderRadius: '6px', fontSize: '12px', color: '#94a3b8'
+        }}>
+          <div>
+            <strong style={{ color: '#e2e8f0' }}>On-Demand Stream &amp; LRU Cache:</strong>{' '}
+            <span>{formatSize(cacheStats.usedBytes || 0)} used of {formatSize(cacheStats.maxCacheBytes)} ({cacheStats.fileCount || 0} cached song{cacheStats.fileCount === 1 ? '' : 's'})</span>
+            <span style={{ marginLeft: '8px', opacity: 0.8 }}>· Songs stream on play and evict oldest files automatically</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <label htmlFor="cloud-cache-limit" style={{ fontSize: '11px' }}>Max Cache:</label>
+            <select
+              id="cloud-cache-limit"
+              value={cacheStats.maxCacheBytes}
+              onChange={handleMaxCacheChange}
+              style={{ padding: '3px 6px', fontSize: '11px', background: '#0d1117', color: '#e2e8f0', border: '1px solid #30363d', borderRadius: '4px' }}
+            >
+              {CACHE_LIMIT_OPTIONS.map(opt => (
+                <option key={opt.bytes} value={opt.bytes}>{opt.label}</option>
+              ))}
+            </select>
+            <button className="btn-secondary" style={{ padding: '3px 8px', fontSize: '11px' }} onClick={handleClearCache} disabled={!cacheStats.fileCount}>
+              Clear Cache
+            </button>
+          </div>
+        </div>
+      )}
+
       {connections && !connections.length && (
         <div className="empty-state">
           <p>No cloud storage is linked yet.</p>
-          <p className="hint">Open RobOS Data Sources, add a Google Drive, S3, Dropbox, SFTP, or FTP connection under Cloud &amp; Object Storage, and it will appear here.</p>
+          <p className="hint">Open RobOS Data Sources, add a Google Drive, Microsoft OneDrive, S3, Dropbox, SFTP, or FTP connection under Cloud &amp; Object Storage, and it will appear here.</p>
         </div>
       )}
       {other.length > 0 && (
@@ -103,8 +182,8 @@ export default function CloudBrowser({ onLibrary, showStatus }) {
 
       {progress && (
         <div className="cloud-progress">
-          {progress.phase === 'scanning' && 'Scanning remote folders...'}
-          {progress.phase === 'downloading' && `Downloading ${progress.done + 1} of ${progress.total}: ${progress.name}`}
+          {progress.phase === 'scanning' && 'Indexing remote cloud metadata (no bulk download)...'}
+          {progress.phase === 'downloading' && `Streaming ${progress.done + 1} of ${progress.total}: ${progress.name}`}
           {progress.phase === 'done' && 'Finishing up...'}
         </div>
       )}

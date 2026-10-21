@@ -475,12 +475,20 @@ ipcMain.on('toast-action', (event, action) => {
   logTelemetry('TOAST_ACTION', { title: action?.label || 'Action Clicked' }, 'ACTION_EXECUTED', JSON.stringify(action));
 
   if (action && action.type === 'open-app') {
-    const sockPath = process.env.ROBOS_DM_SOCKET || `/tmp/robos-dm-${process.getuid ? process.getuid() : 1000}.sock`;
+    const uid = process.getuid ? process.getuid() : 1000;
+    const runtimeSock = path.join(process.env.XDG_RUNTIME_DIR || `/run/user/${uid}`, 'robos-dm.sock');
+    const sockPath = process.env.ROBOS_DM_SOCKET || (fs.existsSync(runtimeSock) ? runtimeSock : `/tmp/robos-dm-${uid}.sock`);
     try {
+      if (action.app === 'data-sources' && (action.action || action.dsId)) {
+        const reqFile = path.join(os.homedir(), '.config', 'robos', 'data-sources-auth-request.json');
+        fs.mkdirSync(path.dirname(reqFile), { recursive: true });
+        fs.writeFileSync(reqFile, JSON.stringify({ ...action, timestamp: Date.now() }), 'utf8');
+      }
       const client = net.connect(sockPath, () => {
         client.write(JSON.stringify({ launch: action.app }));
         client.end();
       });
+      client.on('error', () => {});
     } catch {}
   }
   if (win && !win.isDestroyed()) win.close();

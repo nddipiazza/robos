@@ -51,6 +51,9 @@ var recent_events: Array[Dictionary] = []
 var command_history: Array[Dictionary] = []
 var _accum_time: float = 0.0
 
+# Map Editor <-> playtest handoff: holds the editor document while RTSMain playtests it.
+var editor_session: Dictionary = {}
+
 func _ready() -> void:
 	var env_mode = OS.get_environment("RTS_MODE")
 	if env_mode != "":
@@ -59,6 +62,13 @@ func _ready() -> void:
 		rts_mode = "backend"
 	rng.seed = rng_seed
 	load_default_scenario()
+
+	var args = OS.get_cmdline_user_args()
+	for arg in args:
+		if arg.begins_with("--scenario="):
+			var res = load_scenario_file(arg.split("=", true, 1)[1])
+			if not bool(res.get("ok", false)):
+				push_warning("[SimEngine] %s" % res.get("error", "Failed to load scenario"))
 
 func _process(delta: float) -> void:
 	if rts_mode == "backend" or paused:
@@ -204,6 +214,13 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 			float(hg.get("w", 20.0)),
 			float(hg.get("h", 20.0))
 		))
+	for rmp in map_cfg.get("ramps", []):
+		ramps.append(Rect2(
+			float(rmp.get("x", 0.0)),
+			float(rmp.get("y", 0.0)),
+			float(rmp.get("w", 10.0)),
+			float(rmp.get("h", 10.0))
+		))
 
 	var p_cfg = data.get("players", {})
 	for pid_key in p_cfg.keys():
@@ -248,6 +265,25 @@ func load_scenario_dict(data: Dictionary) -> Dictionary:
 	RTSCommanderAI.configure_from_scenario(data.get("directives", []))
 	emit_signal("scenario_loaded", scenario_name)
 	return {"ok": true, "scenario": scenario_name, "unit_count": units.size()}
+
+# Resolves a scenario slug (`scenarios/<slug>.jsonld|.json`) or an explicit file path and loads it.
+func resolve_scenario_path(slug_or_path: String) -> String:
+	if FileAccess.file_exists(slug_or_path):
+		return slug_or_path
+	for ext in [".jsonld", ".json"]:
+		var candidate = "res://scenarios/%s%s" % [slug_or_path, ext]
+		if FileAccess.file_exists(candidate):
+			return candidate
+	return ""
+
+func load_scenario_file(slug_or_path: String) -> Dictionary:
+	var file_path = resolve_scenario_path(slug_or_path)
+	if file_path == "":
+		return {"ok": false, "error": "Scenario file not found: " + slug_or_path}
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(file_path))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return {"ok": false, "error": "Scenario is not a JSON object: " + file_path}
+	return load_scenario_dict(parsed)
 
 func spawn_resource(res_type: String, pos: Vector2, amount: int = 1500, custom_id: String = "") -> Dictionary:
 	var tag = next_tag
@@ -1405,10 +1441,19 @@ func get_observation(perspective_player: int = 0) -> Dictionary:
 		"perspective_player": perspective_player,
 		"map": {
 			"width": map_width,
-			"height": map_height
+			"height": map_height,
+			"obstacles": _rects_to_dicts(terrain_obstacles),
+			"high_ground": _rects_to_dicts(high_ground_zones),
+			"ramps": _rects_to_dicts(ramps)
 		},
 		"players": players.duplicate(true),
 		"units": unit_list,
 		"resources": res_list,
 		"recent_events": recent_events.slice(max(0, recent_events.size() - 15))
 	}
+
+func _rects_to_dicts(rects: Array[Rect2]) -> Array:
+	var out: Array = []
+	for r in rects:
+		out.append({"x": r.position.x, "y": r.position.y, "w": r.size.x, "h": r.size.y})
+	return out

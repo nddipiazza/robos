@@ -537,5 +537,46 @@ describe('RobOS Audio Player Tests', () => {
       assert.ok(content.includes('playlists-view-container'), 'Bundle should contain playlists view container');
     });
   });
+
+  describe('Cloud On-Demand Streaming & Bounded LRU Cache', () => {
+    const cloud = require(path.join(APP_DIR, 'lib', 'cloud-storage'));
+
+    it('exposes metadata-only indexing, streamCloudTrackToHttp, and bounded LRU cache functions', () => {
+      assert.strictEqual(typeof cloud.indexCloudAudio, 'function');
+      assert.strictEqual(typeof cloud.streamCloudTrackToHttp, 'function');
+      assert.strictEqual(typeof cloud.enforceCacheLimit, 'function');
+      assert.strictEqual(typeof cloud.getCacheStats, 'function');
+      assert.strictEqual(typeof cloud.setMaxCacheBytes, 'function');
+      assert.strictEqual(typeof cloud.clearCache, 'function');
+    });
+
+    it('buildCloudTrack creates on-demand streamable track metadata without requiring local file on disk', async () => {
+      const tmpDir = `/tmp/robos-cloud-trk-test-${Date.now()}`;
+      fs.mkdirSync(tmpDir, { recursive: true });
+      const lib = new MediaLibrary({ configDir: tmpDir });
+      const desc = {
+        connectionId: 'gdrive-test',
+        driverType: 'gdrive',
+        remotePath: '/Soundtracks/Chrono Trigger - Corridors of Time.mp3',
+        driveId: 'file_123',
+        name: 'Chrono Trigger - Corridors of Time.mp3',
+        size: 8400000,
+        localPath: path.join(tmpDir, 'cache', 'Chrono Trigger - Corridors of Time.mp3'),
+        cached: false,
+      };
+      const streamUrl = 'http://127.0.0.1:43210/cloud-stream/trk_test.mp3';
+      const track = await lib.buildCloudTrack(desc, streamUrl);
+
+      assert.strictEqual(track.artist, 'Chrono Trigger');
+      assert.strictEqual(track.title, 'Corridors of Time');
+      assert.strictEqual(track.album, 'Soundtracks');
+      assert.strictEqual(track.src, streamUrl);
+      assert.strictEqual(track.cloud.connectionId, 'gdrive-test');
+      assert.strictEqual(track.cloud.driveId, 'file_123');
+      assert.strictEqual(track.cloud.cached, false);
+
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
+  });
 });
 
