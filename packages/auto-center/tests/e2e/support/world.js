@@ -23,7 +23,7 @@ class AutoWorld {
     this.videoDir = path.join(EVIDENCE, 'videos', '_raw', scenarioSlug); fs.rmSync(this.videoDir, { recursive: true, force: true }); fs.mkdirSync(this.videoDir, { recursive: true });
     this.app = await electron.launch({ executablePath: require(path.join(ROOT, 'node_modules/electron')), args: [path.join(ROOT, 'main.js'), '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'],
       recordVideo: { dir: this.videoDir, size: { width: 1280, height: 800 } },
-      env: { ...process.env, ROBOS_AUTO_OBD_REPLAY: path.join(ROOT, 'tests/fixtures/obd', this.obdFixture || 'grand-caravan-2014-codes.json'), ROBOS_AUTO_PRIVATE: this.privateRoot, ROBOS_AUTO_CACHE: cache, ROBOS_PEOPLE_DIR: people, ROBOS_GROUPS_DIR: groups } });
+      env: { ...process.env, ...(process.env.E2E_OBD_LIVE ? {} : { ROBOS_AUTO_OBD_REPLAY: path.join(ROOT, 'tests/fixtures/obd', this.obdFixture || 'grand-caravan-2014-codes.json') }), ROBOS_AUTO_PRIVATE: this.privateRoot, ROBOS_AUTO_CACHE: cache, ROBOS_PEOPLE_DIR: people, ROBOS_GROUPS_DIR: groups } });
     this.page = await this.app.firstWindow(); this.errors = []; this.page.on('pageerror', e => this.errors.push(e.message));
     await this.page.setViewportSize({ width: 1280, height: 800 });
     await this.page.waitForFunction(() => document.querySelector('#count')?.textContent.includes('graph entries'));

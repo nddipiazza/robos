@@ -1,0 +1,34 @@
+{
+ "_note": "Recorded 2026-10-21 by ROBOS_AUTO_OBD_RECORD in the real app: a vLinker MC+ (ELM327 v2.2) on a 2005 Honda Accord, engine running, on ISO 9141-2. The VIN is replaced with a made-up one (1HGCM66585A000001) and its frame checksums recomputed; every other reply is verbatim.",
+ "adapters": [
+  {
+   "name": "vLinker MC-Android",
+   "address": "C4:57:46:DC:88:40"
+  }
+ ],
+ "responses": {
+  "ATZ": "\r\rELM327 v2.2\r\r",
+  "ATE0": "ATE0\rOK\r\r",
+  "ATL0": "OK\r\r",
+  "ATS0": "OK\r\r",
+  "ATH1": "OK\r\r",
+  "ATSP0": "OK\r\r",
+  "ATRV": "14.3V\r\r",
+  "0100": "SEARCHING...\r486B094100BFBEA891B3\r\r",
+  "ATDPN": "A3\r\r",
+  "0120": "486B09412080001101AF\r\r",
+  "0140": "486B0941400800000045\r\r",
+  "0101": "486B0941010007E500EA\r\r",
+  "0902": "486B094902010000003139\r486B094902024847434D28\r486B0949020336363538E3\r486B0949020435413030E1\r486B0949020530303031CD\r\r",
+  "03": "NO DATA\r\r",
+  "07": "NO DATA\r\r",
+  "010C": "486B09410C0C4459\r\r",
+  "010D": "486B09410D000A\r\r",
+  "0105": "486B0941056C6E\r\r",
+  "0104": "486B0941046061\r\r",
+  "0111": "486B0941112836\r\r",
+  "010F": "486B09410F4652\r\r",
+  "0106": "486B0941067D80\r\r",
+  "0107": "486B0941077579\r\r"
+ }
+}
