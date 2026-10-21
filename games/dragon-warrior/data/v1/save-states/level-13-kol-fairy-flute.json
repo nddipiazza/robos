@@ -1,0 +1,54 @@
+{
+  "$schema": "../../../schemas/v1/save_state.schema.json",
+  "name": "Level 13 - Kol Fairy Flute",
+  "description": "Level 13 Kol milestone after claiming the Fairy Flute and assembling key quest items through Return.",
+  "scene": "Kol",
+  "tile": "13,24",
+  "facing": "down",
+  "come_from": "world_map",
+  "gold": 3500,
+  "hero_name": "ERDRICK",
+  "hero_level": 13,
+  "hero_hp": 70,
+  "hero_hp_max": 70,
+  "hero_mp": 60,
+  "hero_mp_max": 60,
+  "hero_str": 22,
+  "hero_agl": 22,
+  "hero_atk": 22,
+  "hero_def": 20,
+  "hero_exp": 5500,
+  "hero_weapon": "broad_sword",
+  "hero_armor": "full_plate",
+  "hero_spells": [
+    "heal",
+    "hurt",
+    "sleep",
+    "radiant",
+    "stopspell",
+    "outside",
+    "return"
+  ],
+  "items": [
+    {
+      "name": "Staff of Rain",
+      "id": "staff_of_rain",
+      "desc": "One of three items needed to create the Rainbow Drop"
+    },
+    {
+      "name": "Fairy Flute",
+      "id": "fairy_flute",
+      "desc": "Puts the Golem boss to sleep; required to defeat the Golem"
+    },
+    {
+      "name": "Stones of Sunlight",
+      "id": "stones_of_sunlight",
+      "desc": "One of three items needed to create the Rainbow Drop"
+    }
+  ],
+  "opened_chests": {
+    "kol_fairy_flute": true
+  },
+  "unlocked_doors": {},
+  "bridge_built": false
+}

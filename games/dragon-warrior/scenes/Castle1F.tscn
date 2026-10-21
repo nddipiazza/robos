@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dw1castle1f01"]
+
+[ext_resource type="Script" path="res://scripts/Castle1F.gd" id="1_script"]
+
+[node name="Castle1F" type="Node2D"]
+script = ExtResource("1_script")

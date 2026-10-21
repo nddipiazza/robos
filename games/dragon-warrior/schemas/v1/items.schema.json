@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dragonwarrior.org/schemas/v1/items.schema.json",
+  "title": "ItemsDataStoreV1",
+  "description": "Schema for Dragon Warrior inventory items and key quest items.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "title": "ItemEntity",
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9_]+$",
+        "description": "Unique item ID."
+      },
+      "name": {
+        "type": "string",
+        "description": "Item display name."
+      },
+      "category": {
+        "$ref": "common.schema.json#/$defs/ItemCategory"
+      },
+      "cost": {
+        "oneOf": [
+          { "type": "integer", "minimum": 0 },
+          { "type": "null" },
+          { "type": "object" }
+        ],
+        "description": "Purchase cost in Gold (integer, null if unpurchasable, or dictionary of town prices)."
+      },
+      "effect": {
+        "type": "string",
+        "description": "Item usage effect description."
+      },
+      "hp_restore_min": { "type": "integer" },
+      "hp_restore_max": { "type": "integer" },
+      "formula": { "type": "string" },
+      "sold_in": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+      "stack_max": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "duration": { "type": "string" },
+      "duration_steps": { "type": "integer" },
+      "found_description": { "type": "string" },
+      "summon_odds": { "type": "object" }
+    },
+    "required": ["id", "name", "category"]
+  }
+}

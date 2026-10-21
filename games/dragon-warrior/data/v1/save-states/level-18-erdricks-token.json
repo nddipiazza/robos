@@ -1,0 +1,59 @@
+{
+  "$schema": "../../../schemas/v1/save_state.schema.json",
+  "name": "Level 18 - Erdrick's Token",
+  "description": "Level 18 overworld milestone after claiming Erdrick's Token and assembling the Rainbow Drop quest items.",
+  "scene": "WorldMap",
+  "tile": "85,114",
+  "facing": "up",
+  "come_from": "debug",
+  "gold": 15000,
+  "hero_name": "ERDRICK",
+  "hero_level": 18,
+  "hero_hp": 115,
+  "hero_hp_max": 115,
+  "hero_mp": 100,
+  "hero_mp_max": 100,
+  "hero_str": 30,
+  "hero_agl": 32,
+  "hero_atk": 30,
+  "hero_def": 28,
+  "hero_exp": 21000,
+  "hero_weapon": "flame_sword",
+  "hero_armor": "erdricks_armor",
+  "hero_spells": [
+    "heal",
+    "hurt",
+    "sleep",
+    "radiant",
+    "stopspell",
+    "outside",
+    "return",
+    "repel",
+    "healmore"
+  ],
+  "items": [
+    {
+      "name": "Erdrick's Token",
+      "id": "erdricks_token",
+      "desc": "Proves you are Erdrick's descendant; needed for the Rainbow Drop"
+    },
+    {
+      "name": "Rainbow Drop",
+      "id": "rainbow_drop",
+      "desc": "Creates the Rainbow Bridge allowing access to Charlock Castle"
+    },
+    {
+      "name": "Stones of Sunlight",
+      "id": "stones_of_sunlight",
+      "desc": "One of three items needed to create the Rainbow Drop"
+    },
+    {
+      "name": "Staff of Rain",
+      "id": "staff_of_rain",
+      "desc": "One of three items needed to create the Rainbow Drop"
+    }
+  ],
+  "opened_chests": {},
+  "unlocked_doors": {},
+  "bridge_built": false
+}

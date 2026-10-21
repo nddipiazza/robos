@@ -1,0 +1,214 @@
+{
+  "$schema": "../../schemas/v1/sprite_frames.schema.json",
+  "comment": "DW1 sprite sheet frame positions. All coords are pixel Rects in the RGBA sheet.",
+  "characters": {
+    "sheet": "res://assets/sprites/rgba/characters-3.png",
+    "note": "16x16 sprites, 20px col stride, 20px row stride",
+    "stride": 20,
+    "size": 16,
+    "hero": {
+      "down": {
+        "row": 0,
+        "col0": 0,
+        "col1": 1
+      },
+      "left": {
+        "row": 0,
+        "col0": 2,
+        "col1": 3
+      },
+      "right": {
+        "row": 0,
+        "col0": 4,
+        "col1": 5
+      },
+      "up": {
+        "row": 0,
+        "col0": 6,
+        "col1": 7
+      }
+    },
+    "guard": {
+      "down": {
+        "row": 1,
+        "col0": 0,
+        "col1": 1
+      },
+      "left": {
+        "row": 1,
+        "col0": 2,
+        "col1": 3
+      },
+      "right": {
+        "row": 1,
+        "col0": 4,
+        "col1": 5
+      },
+      "up": {
+        "row": 1,
+        "col0": 6,
+        "col1": 7
+      }
+    },
+    "citizen": {
+      "down": {
+        "row": 2,
+        "col0": 0,
+        "col1": 1
+      },
+      "left": {
+        "row": 2,
+        "col0": 2,
+        "col1": 3
+      },
+      "right": {
+        "row": 2,
+        "col0": 4,
+        "col1": 5
+      },
+      "up": {
+        "row": 2,
+        "col0": 6,
+        "col1": 7
+      }
+    },
+    "princess": {
+      "down": {
+        "row": 3,
+        "col0": 0,
+        "col1": 1
+      },
+      "left": {
+        "row": 3,
+        "col0": 2,
+        "col1": 3
+      },
+      "right": {
+        "row": 3,
+        "col0": 4,
+        "col1": 5
+      },
+      "up": {
+        "row": 3,
+        "col0": 6,
+        "col1": 7
+      }
+    }
+  },
+  "monsters": {
+    "sheet": "res://assets/sprites/rgba/monsters-2.png",
+    "note": "Battle-screen sprites. Each monster has 2 animation frames.",
+    "slime": {
+      "frame0": {
+        "x": 8,
+        "y": 63,
+        "w": 32,
+        "h": 36
+      },
+      "frame1": {
+        "x": 68,
+        "y": 63,
+        "w": 32,
+        "h": 36
+      }
+    },
+    "skeleton": {
+      "frame0": {
+        "x": 246,
+        "y": 63,
+        "w": 36,
+        "h": 36
+      },
+      "frame1": {
+        "x": 306,
+        "y": 63,
+        "w": 36,
+        "h": 36
+      }
+    },
+    "warlock": {
+      "frame0": {
+        "x": 12,
+        "y": 117,
+        "w": 24,
+        "h": 47
+      },
+      "frame1": {
+        "x": 72,
+        "y": 117,
+        "w": 24,
+        "h": 47
+      }
+    },
+    "axe_knight": {
+      "frame0": {
+        "x": 0,
+        "y": 175,
+        "w": 48,
+        "h": 52
+      },
+      "frame1": {
+        "x": 59,
+        "y": 175,
+        "w": 50,
+        "h": 52
+      }
+    },
+    "armored_knight": {
+      "frame0": {
+        "x": 8,
+        "y": 237,
+        "w": 32,
+        "h": 47
+      },
+      "frame1": {
+        "x": 68,
+        "y": 237,
+        "w": 32,
+        "h": 47
+      }
+    },
+    "demon_knight": {
+      "frame0": {
+        "x": 6,
+        "y": 300,
+        "w": 36,
+        "h": 42
+      },
+      "frame1": {
+        "x": 66,
+        "y": 300,
+        "w": 36,
+        "h": 42
+      }
+    },
+    "dragonlord_1": {
+      "frame0": {
+        "x": 5,
+        "y": 356,
+        "w": 37,
+        "h": 101
+      },
+      "frame1": {
+        "x": 65,
+        "y": 356,
+        "w": 37,
+        "h": 101
+      }
+    },
+    "dragonlord_2": {
+      "frame0": {
+        "x": 125,
+        "y": 356,
+        "w": 37,
+        "h": 101
+      },
+      "frame1": {
+        "x": 317,
+        "y": 356,
+        "w": 74,
+        "h": 101
+      }
+    }
+  }
+}

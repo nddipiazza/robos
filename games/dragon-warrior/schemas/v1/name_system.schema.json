@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dragonwarrior.org/schemas/v1/name_system.schema.json",
+  "title": "NameSystemDataStoreV1",
+  "description": "Schema for character-to-value mapping and name modifier system determining hero stat variations.",
+  "type": "object",
+  "properties": {
+    "_source": { "type": "string" },
+    "description": { "type": "string" },
+    "char_values": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 15
+      }
+    },
+    "calculation_rules": { "type": "object" },
+    "stat_growth_table": { "type": "object" }
+  },
+  "required": ["char_values"]
+}

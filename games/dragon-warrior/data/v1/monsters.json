@@ -1,0 +1,1068 @@
+[
+  {
+    "id": 0,
+    "key": "slime",
+    "name": "Slime",
+    "strength": 5,
+    "agility": 3,
+    "hp_min": 3,
+    "hp_max": 3,
+    "xp": 1,
+    "gp_min": 1,
+    "gp_max": 1,
+    "resist_sleep": 0,
+    "resist_stopspell": 15,
+    "resist_hurt": 0,
+    "dodge": 1,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 1,
+    "key": "red_slime",
+    "name": "Red Slime",
+    "strength": 7,
+    "agility": 3,
+    "hp_min": 4,
+    "hp_max": 4,
+    "xp": 1,
+    "gp_min": 2,
+    "gp_max": 2,
+    "resist_sleep": 0,
+    "resist_stopspell": 15,
+    "resist_hurt": 0,
+    "dodge": 1,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 2,
+    "key": "drakee",
+    "name": "Drakee",
+    "strength": 9,
+    "agility": 6,
+    "hp_min": 5,
+    "hp_max": 6,
+    "xp": 2,
+    "gp_min": 2,
+    "gp_max": 2,
+    "resist_sleep": 0,
+    "resist_stopspell": 15,
+    "resist_hurt": 0,
+    "dodge": 1,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 3,
+    "key": "ghost",
+    "name": "Ghost",
+    "strength": 11,
+    "agility": 8,
+    "hp_min": 6,
+    "hp_max": 7,
+    "xp": 3,
+    "gp_min": 3,
+    "gp_max": 4,
+    "resist_sleep": 0,
+    "resist_stopspell": 15,
+    "resist_hurt": 0,
+    "dodge": 4,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 4,
+    "key": "magician",
+    "name": "Magician",
+    "strength": 11,
+    "agility": 12,
+    "hp_min": 10,
+    "hp_max": 13,
+    "xp": 4,
+    "gp_min": 9,
+    "gp_max": 11,
+    "resist_sleep": 0,
+    "resist_stopspell": 0,
+    "resist_hurt": 0,
+    "dodge": 1,
+    "pattern": [
+      {
+        "action": "spell_hurt",
+        "chance": 0.5
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 5,
+    "key": "magidrakee",
+    "name": "Magidrakee",
+    "strength": 14,
+    "agility": 14,
+    "hp_min": 12,
+    "hp_max": 15,
+    "xp": 5,
+    "gp_min": 9,
+    "gp_max": 11,
+    "resist_sleep": 0,
+    "resist_stopspell": 0,
+    "resist_hurt": 0,
+    "dodge": 1,
+    "pattern": [
+      {
+        "action": "spell_hurt",
+        "chance": 0.5
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 6,
+    "key": "scorpion",
+    "name": "Scorpion",
+    "strength": 18,
+    "agility": 16,
+    "hp_min": 16,
+    "hp_max": 20,
+    "xp": 6,
+    "gp_min": 12,
+    "gp_max": 15,
+    "resist_sleep": 0,
+    "resist_stopspell": 15,
+    "resist_hurt": 0,
+    "dodge": 1,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 7,
+    "key": "druin",
+    "name": "Druin",
+    "strength": 20,
+    "agility": 18,
+    "hp_min": 17,
+    "hp_max": 22,
+    "xp": 7,
+    "gp_min": 12,
+    "gp_max": 15,
+    "resist_sleep": 0,
+    "resist_stopspell": 15,
+    "resist_hurt": 0,
+    "dodge": 2,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 8,
+    "key": "poltergeist",
+    "name": "Poltergeist",
+    "strength": 18,
+    "agility": 20,
+    "hp_min": 18,
+    "hp_max": 23,
+    "xp": 8,
+    "gp_min": 13,
+    "gp_max": 17,
+    "resist_sleep": 0,
+    "resist_stopspell": 0,
+    "resist_hurt": 0,
+    "dodge": 6,
+    "pattern": [
+      {
+        "action": "spell_hurt",
+        "chance": 0.75
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 9,
+    "key": "droll",
+    "name": "Droll",
+    "strength": 24,
+    "agility": 24,
+    "hp_min": 19,
+    "hp_max": 25,
+    "xp": 10,
+    "gp_min": 18,
+    "gp_max": 24,
+    "resist_sleep": 0,
+    "resist_stopspell": 14,
+    "resist_hurt": 0,
+    "dodge": 2,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 10,
+    "key": "drakeema",
+    "name": "Drakeema",
+    "strength": 22,
+    "agility": 26,
+    "hp_min": 16,
+    "hp_max": 20,
+    "xp": 11,
+    "gp_min": 15,
+    "gp_max": 19,
+    "resist_sleep": 2,
+    "resist_stopspell": 0,
+    "resist_hurt": 0,
+    "dodge": 6,
+    "pattern": [
+      {
+        "action": "spell_heal",
+        "chance": 0.25,
+        "condition": "hp_below_quarter"
+      },
+      {
+        "action": "spell_hurt",
+        "chance": 0.5
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 11,
+    "key": "skeleton",
+    "name": "Skeleton",
+    "strength": 28,
+    "agility": 22,
+    "hp_min": 23,
+    "hp_max": 30,
+    "xp": 11,
+    "gp_min": 22,
+    "gp_max": 29,
+    "resist_sleep": 0,
+    "resist_stopspell": 15,
+    "resist_hurt": 0,
+    "dodge": 4,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 12,
+    "key": "warlock",
+    "name": "Warlock",
+    "strength": 28,
+    "agility": 22,
+    "hp_min": 23,
+    "hp_max": 30,
+    "xp": 13,
+    "gp_min": 26,
+    "gp_max": 34,
+    "resist_sleep": 3,
+    "resist_stopspell": 1,
+    "resist_hurt": 0,
+    "dodge": 2,
+    "pattern": [
+      {
+        "action": "spell_sleep",
+        "chance": 0.25,
+        "condition": "hero_not_asleep"
+      },
+      {
+        "action": "spell_hurt",
+        "chance": 0.5
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 13,
+    "key": "metal_scorpion",
+    "name": "Metal Scorpion",
+    "strength": 36,
+    "agility": 42,
+    "hp_min": 17,
+    "hp_max": 22,
+    "xp": 14,
+    "gp_min": 30,
+    "gp_max": 39,
+    "resist_sleep": 0,
+    "resist_stopspell": 15,
+    "resist_hurt": 0,
+    "dodge": 2,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 14,
+    "key": "wolf",
+    "name": "Wolf",
+    "strength": 40,
+    "agility": 30,
+    "hp_min": 26,
+    "hp_max": 34,
+    "xp": 16,
+    "gp_min": 37,
+    "gp_max": 49,
+    "resist_sleep": 1,
+    "resist_stopspell": 15,
+    "resist_hurt": 0,
+    "dodge": 2,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 15,
+    "key": "wraith",
+    "name": "Wraith",
+    "strength": 44,
+    "agility": 34,
+    "hp_min": 28,
+    "hp_max": 36,
+    "xp": 17,
+    "gp_min": 45,
+    "gp_max": 59,
+    "resist_sleep": 7,
+    "resist_stopspell": 0,
+    "resist_hurt": 0,
+    "dodge": 4,
+    "pattern": [
+      {
+        "action": "spell_heal",
+        "chance": 0.25,
+        "condition": "hp_below_quarter"
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 16,
+    "key": "metal_slime",
+    "name": "Metal Slime",
+    "strength": 10,
+    "agility": 255,
+    "hp_min": 4,
+    "hp_max": 4,
+    "xp": 115,
+    "gp_min": 4,
+    "gp_max": 5,
+    "resist_sleep": 15,
+    "resist_stopspell": 15,
+    "resist_hurt": 15,
+    "dodge": 1,
+    "pattern": [
+      {
+        "action": "spell_hurt",
+        "chance": 0.75
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 17,
+    "key": "specter",
+    "name": "Specter",
+    "strength": 40,
+    "agility": 38,
+    "hp_min": 28,
+    "hp_max": 36,
+    "xp": 18,
+    "gp_min": 52,
+    "gp_max": 69,
+    "resist_sleep": 3,
+    "resist_stopspell": 1,
+    "resist_hurt": 0,
+    "dodge": 4,
+    "pattern": [
+      {
+        "action": "spell_sleep",
+        "chance": 0.25,
+        "condition": "hero_not_asleep"
+      },
+      {
+        "action": "spell_hurt",
+        "chance": 0.75
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 18,
+    "key": "wolflord",
+    "name": "Wolflord",
+    "strength": 50,
+    "agility": 36,
+    "hp_min": 29,
+    "hp_max": 38,
+    "xp": 20,
+    "gp_min": 60,
+    "gp_max": 79,
+    "resist_sleep": 4,
+    "resist_stopspell": 7,
+    "resist_hurt": 0,
+    "dodge": 2,
+    "pattern": [
+      {
+        "action": "spell_stopspell",
+        "chance": 0.5,
+        "condition": "hero_spell_not_blocked"
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 19,
+    "key": "druinlord",
+    "name": "Druinlord",
+    "strength": 47,
+    "agility": 40,
+    "hp_min": 27,
+    "hp_max": 35,
+    "xp": 20,
+    "gp_min": 63,
+    "gp_max": 84,
+    "resist_sleep": 15,
+    "resist_stopspell": 0,
+    "resist_hurt": 0,
+    "dodge": 4,
+    "pattern": [
+      {
+        "action": "spell_heal",
+        "chance": 0.75,
+        "condition": "hp_below_quarter"
+      },
+      {
+        "action": "spell_hurt",
+        "chance": 0.25
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 1
+  },
+  {
+    "id": 20,
+    "key": "drollmagi",
+    "name": "Drollmagi",
+    "strength": 52,
+    "agility": 50,
+    "hp_min": 29,
+    "hp_max": 38,
+    "xp": 22,
+    "gp_min": 67,
+    "gp_max": 89,
+    "resist_sleep": 2,
+    "resist_stopspell": 2,
+    "resist_hurt": 0,
+    "dodge": 1,
+    "pattern": [
+      {
+        "action": "spell_stopspell",
+        "chance": 0.5,
+        "condition": "hero_spell_not_blocked"
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 2
+  },
+  {
+    "id": 21,
+    "key": "wyvern",
+    "name": "Wyvern",
+    "strength": 56,
+    "agility": 48,
+    "hp_min": 32,
+    "hp_max": 42,
+    "xp": 24,
+    "gp_min": 75,
+    "gp_max": 99,
+    "resist_sleep": 4,
+    "resist_stopspell": 15,
+    "resist_hurt": 0,
+    "dodge": 2,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 2
+  },
+  {
+    "id": 22,
+    "key": "rogue_scorpion",
+    "name": "Rogue Scorpion",
+    "strength": 60,
+    "agility": 90,
+    "hp_min": 27,
+    "hp_max": 35,
+    "xp": 26,
+    "gp_min": 82,
+    "gp_max": 109,
+    "resist_sleep": 7,
+    "resist_stopspell": 15,
+    "resist_hurt": 0,
+    "dodge": 2,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 2
+  },
+  {
+    "id": 23,
+    "key": "wraith_knight",
+    "name": "Wraith Knight",
+    "strength": 68,
+    "agility": 56,
+    "hp_min": 35,
+    "hp_max": 46,
+    "xp": 28,
+    "gp_min": 90,
+    "gp_max": 119,
+    "resist_sleep": 5,
+    "resist_stopspell": 0,
+    "resist_hurt": 3,
+    "dodge": 4,
+    "pattern": [
+      {
+        "action": "spell_heal",
+        "chance": 0.75,
+        "condition": "hp_below_quarter"
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 2
+  },
+  {
+    "id": 24,
+    "key": "golem",
+    "name": "Golem",
+    "strength": 120,
+    "agility": 60,
+    "hp_min": 53,
+    "hp_max": 70,
+    "xp": 5,
+    "gp_min": 7,
+    "gp_max": 9,
+    "resist_sleep": 15,
+    "resist_stopspell": 15,
+    "resist_hurt": 15,
+    "dodge": 0,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 2,
+    "is_boss": true,
+    "note": "Cannot dodge or be dodged. Fairy Flute puts him to sleep (bypasses resist)."
+  },
+  {
+    "id": 25,
+    "key": "goldman",
+    "name": "Goldman",
+    "strength": 48,
+    "agility": 40,
+    "hp_min": 38,
+    "hp_max": 50,
+    "xp": 6,
+    "gp_min": 150,
+    "gp_max": 199,
+    "resist_sleep": 13,
+    "resist_stopspell": 15,
+    "resist_hurt": 0,
+    "dodge": 1,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 2
+  },
+  {
+    "id": 26,
+    "key": "knight",
+    "name": "Knight",
+    "strength": 76,
+    "agility": 78,
+    "hp_min": 42,
+    "hp_max": 55,
+    "xp": 33,
+    "gp_min": 97,
+    "gp_max": 129,
+    "resist_sleep": 6,
+    "resist_stopspell": 7,
+    "resist_hurt": 0,
+    "dodge": 1,
+    "pattern": [
+      {
+        "action": "spell_stopspell",
+        "chance": 0.5,
+        "condition": "hero_spell_not_blocked"
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 2
+  },
+  {
+    "id": 27,
+    "key": "magiwyvern",
+    "name": "Magiwyvern",
+    "strength": 78,
+    "agility": 68,
+    "hp_min": 44,
+    "hp_max": 58,
+    "xp": 34,
+    "gp_min": 105,
+    "gp_max": 139,
+    "resist_sleep": 2,
+    "resist_stopspell": 0,
+    "resist_hurt": 0,
+    "dodge": 2,
+    "pattern": [
+      {
+        "action": "spell_sleep",
+        "chance": 0.5,
+        "condition": "hero_not_asleep"
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 2
+  },
+  {
+    "id": 28,
+    "key": "demon_knight",
+    "name": "Demon Knight",
+    "strength": 79,
+    "agility": 64,
+    "hp_min": 38,
+    "hp_max": 50,
+    "xp": 37,
+    "gp_min": 112,
+    "gp_max": 149,
+    "resist_sleep": 15,
+    "resist_stopspell": 15,
+    "resist_hurt": 15,
+    "dodge": 15,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 2
+  },
+  {
+    "id": 29,
+    "key": "werewolf",
+    "name": "Werewolf",
+    "strength": 86,
+    "agility": 70,
+    "hp_min": 46,
+    "hp_max": 60,
+    "xp": 40,
+    "gp_min": 116,
+    "gp_max": 154,
+    "resist_sleep": 7,
+    "resist_stopspell": 15,
+    "resist_hurt": 0,
+    "dodge": 7,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 2
+  },
+  {
+    "id": 30,
+    "key": "green_dragon",
+    "name": "Green Dragon",
+    "strength": 88,
+    "agility": 74,
+    "hp_min": 49,
+    "hp_max": 65,
+    "xp": 45,
+    "gp_min": 120,
+    "gp_max": 159,
+    "resist_sleep": 7,
+    "resist_stopspell": 15,
+    "resist_hurt": 2,
+    "dodge": 2,
+    "pattern": [
+      {
+        "action": "fire_weak",
+        "chance": 0.25
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 3
+  },
+  {
+    "id": 31,
+    "key": "starwyvern",
+    "name": "Starwyvern",
+    "strength": 86,
+    "agility": 80,
+    "hp_min": 49,
+    "hp_max": 65,
+    "xp": 43,
+    "gp_min": 120,
+    "gp_max": 159,
+    "resist_sleep": 8,
+    "resist_stopspell": 0,
+    "resist_hurt": 1,
+    "dodge": 2,
+    "pattern": [
+      {
+        "action": "spell_healmore",
+        "chance": 0.75,
+        "condition": "hp_below_quarter"
+      },
+      {
+        "action": "fire_weak",
+        "chance": 0.25
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 3
+  },
+  {
+    "id": 32,
+    "key": "wizard",
+    "name": "Wizard",
+    "strength": 80,
+    "agility": 70,
+    "hp_min": 49,
+    "hp_max": 65,
+    "xp": 50,
+    "gp_min": 123,
+    "gp_max": 164,
+    "resist_sleep": 15,
+    "resist_stopspell": 7,
+    "resist_hurt": 15,
+    "dodge": 2,
+    "pattern": [
+      {
+        "action": "spell_hurtmore",
+        "chance": 0.5
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 3
+  },
+  {
+    "id": 33,
+    "key": "axe_knight",
+    "name": "Axe Knight",
+    "strength": 94,
+    "agility": 82,
+    "hp_min": 53,
+    "hp_max": 70,
+    "xp": 54,
+    "gp_min": 123,
+    "gp_max": 164,
+    "resist_sleep": 15,
+    "resist_stopspell": 3,
+    "resist_hurt": 1,
+    "dodge": 1,
+    "pattern": [
+      {
+        "action": "spell_sleep",
+        "chance": 0.25,
+        "condition": "hero_not_asleep"
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 3
+  },
+  {
+    "id": 34,
+    "key": "blue_dragon",
+    "name": "Blue Dragon",
+    "strength": 98,
+    "agility": 84,
+    "hp_min": 53,
+    "hp_max": 70,
+    "xp": 60,
+    "gp_min": 112,
+    "gp_max": 149,
+    "resist_sleep": 15,
+    "resist_stopspell": 15,
+    "resist_hurt": 7,
+    "dodge": 2,
+    "pattern": [
+      {
+        "action": "fire_weak",
+        "chance": 0.25
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 3
+  },
+  {
+    "id": 35,
+    "key": "stoneman",
+    "name": "Stoneman",
+    "strength": 100,
+    "agility": 40,
+    "hp_min": 121,
+    "hp_max": 160,
+    "xp": 65,
+    "gp_min": 105,
+    "gp_max": 139,
+    "resist_sleep": 2,
+    "resist_stopspell": 15,
+    "resist_hurt": 7,
+    "dodge": 1,
+    "pattern": [
+      {
+        "action": "attack",
+        "chance": "always"
+      }
+    ],
+    "run_group": 4
+  },
+  {
+    "id": 36,
+    "key": "armored_knight",
+    "name": "Armored Knight",
+    "strength": 105,
+    "agility": 86,
+    "hp_min": 68,
+    "hp_max": 90,
+    "xp": 70,
+    "gp_min": 105,
+    "gp_max": 139,
+    "resist_sleep": 15,
+    "resist_stopspell": 7,
+    "resist_hurt": 1,
+    "dodge": 2,
+    "pattern": [
+      {
+        "action": "spell_healmore",
+        "chance": 0.75,
+        "condition": "hp_below_quarter"
+      },
+      {
+        "action": "spell_hurtmore",
+        "chance": 0.25
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 4
+  },
+  {
+    "id": 37,
+    "key": "red_dragon",
+    "name": "Red Dragon",
+    "strength": 120,
+    "agility": 90,
+    "hp_min": 76,
+    "hp_max": 100,
+    "xp": 100,
+    "gp_min": 105,
+    "gp_max": 139,
+    "resist_sleep": 15,
+    "resist_stopspell": 7,
+    "resist_hurt": 15,
+    "dodge": 2,
+    "pattern": [
+      {
+        "action": "spell_sleep",
+        "chance": 0.25,
+        "condition": "hero_not_asleep"
+      },
+      {
+        "action": "fire_weak",
+        "chance": 0.25
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 4,
+    "is_boss": true
+  },
+  {
+    "id": 38,
+    "key": "dragonlord_form1",
+    "name": "Dragonlord",
+    "strength": 90,
+    "agility": 75,
+    "hp_min": 76,
+    "hp_max": 76,
+    "xp": 0,
+    "gp_min": 0,
+    "gp_max": 0,
+    "resist_sleep": 15,
+    "resist_stopspell": 15,
+    "resist_hurt": 15,
+    "dodge": 0,
+    "pattern": [
+      {
+        "action": "spell_stopspell",
+        "chance": 0.25,
+        "condition": "hero_spell_not_blocked"
+      },
+      {
+        "action": "spell_hurtmore",
+        "chance": 0.75
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 4,
+    "is_boss": true,
+    "note": "No excellent moves possible. No dodge. Offering to join him ends game in bad ending."
+  },
+  {
+    "id": 39,
+    "key": "dragonlord_form2",
+    "name": "Dragonlord",
+    "strength": 140,
+    "agility": 200,
+    "hp_min": 130,
+    "hp_max": 130,
+    "xp": 0,
+    "gp_min": 0,
+    "gp_max": 0,
+    "resist_sleep": 15,
+    "resist_stopspell": 15,
+    "resist_hurt": 15,
+    "dodge": 0,
+    "pattern": [
+      {
+        "action": "fire_strong",
+        "chance": 0.5
+      },
+      {
+        "action": "attack",
+        "chance": "otherwise"
+      }
+    ],
+    "run_group": 4,
+    "is_boss": true,
+    "note": "True final boss. Strong fire breath does 65-72 damage (42-48 with Erdrick's Armor)."
+  }
+]

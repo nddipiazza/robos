@@ -1,0 +1,5611 @@
+{
+  "$schema": "../../schemas/v1/tiles_meta.schema.json",
+  "tile_size": 16,
+  "tiles": [
+    {
+      "id": 0,
+      "file": "tile_000.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 1354,
+      "maps": [
+        "brecconary-1f",
+        "cantlin-1f",
+        "garinham-1f",
+        "hauksness-1f",
+        "kol-1f",
+        "rimuldar-1f",
+        "tantegel-castle-1f"
+      ],
+      "avg_rgb": [
+        118,
+        204,
+        14
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 1,
+      "file": "tile_001.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 3646,
+      "maps": [
+        "brecconary-1f",
+        "cantlin-1f",
+        "charlock-castle-1f",
+        "charlock-castle-b1",
+        "charlock-castle-b2",
+        "charlock-castle-b3",
+        "charlock-castle-b4",
+        "charlock-castle-b5",
+        "charlock-castle-b6",
+        "erdricks-cave-b1",
+        "erdricks-cave-b2",
+        "garinham-1f",
+        "garinham-b1",
+        "garinham-b2",
+        "garinham-b3",
+        "garinham-b4",
+        "hauksness-1f",
+        "kol-1f",
+        "mountain-cave-b1",
+        "mountain-cave-b2",
+        "northern-cave-b1",
+        "rimuldar-1f",
+        "southern-cave-b1",
+        "swamp-cave-b1",
+        "tantegel-castle-1f",
+        "tantegel-castle-2f",
+        "tantegel-castle-b1"
+      ],
+      "avg_rgb": [
+        144,
+        144,
+        144
+      ],
+      "auto_label": "stone"
+    },
+    {
+      "id": 2,
+      "file": "tile_002.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 374,
+      "maps": [
+        "brecconary-1f",
+        "cantlin-1f",
+        "garinham-1f",
+        "hauksness-1f",
+        "kol-1f",
+        "rimuldar-1f"
+      ],
+      "avg_rgb": [
+        228,
+        195,
+        152
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 3,
+      "file": "tile_003.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 3542,
+      "maps": [
+        "brecconary-1f",
+        "cantlin-1f",
+        "charlock-castle-1f",
+        "charlock-castle-b1",
+        "charlock-castle-b2",
+        "charlock-castle-b3",
+        "charlock-castle-b4",
+        "charlock-castle-b5",
+        "charlock-castle-b6",
+        "erdricks-cave-b1",
+        "erdricks-cave-b2",
+        "garinham-1f",
+        "garinham-b1",
+        "garinham-b2",
+        "garinham-b3",
+        "garinham-b4",
+        "hauksness-1f",
+        "kol-1f",
+        "mountain-cave-b1",
+        "mountain-cave-b2",
+        "northern-cave-b1",
+        "rimuldar-1f",
+        "southern-cave-b1",
+        "swamp-cave-b1",
+        "tantegel-castle-1f",
+        "tantegel-castle-2f",
+        "tantegel-castle-b1"
+      ],
+      "avg_rgb": [
+        113,
+        47,
+        32
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 4,
+      "file": "tile_004.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 529,
+      "maps": [
+        "brecconary-1f",
+        "cantlin-1f",
+        "garinham-1f",
+        "hauksness-1f",
+        "kol-1f",
+        "rimuldar-1f",
+        "tantegel-castle-1f"
+      ],
+      "avg_rgb": [
+        51,
+        135,
+        8
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 5,
+      "file": "tile_005.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 1,
+      "maps": [
+        "brecconary-1f"
+      ],
+      "avg_rgb": [
+        147,
+        123,
+        84
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 6,
+      "file": "tile_006.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 381,
+      "maps": [
+        "brecconary-1f",
+        "cantlin-1f",
+        "garinham-1f",
+        "kol-1f",
+        "rimuldar-1f",
+        "tantegel-castle-1f"
+      ],
+      "avg_rgb": [
+        33,
+        130,
+        238
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 7,
+      "file": "tile_007.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 4,
+      "maps": [
+        "brecconary-1f",
+        "cantlin-1f",
+        "rimuldar-1f",
+        "tantegel-castle-1f"
+      ],
+      "avg_rgb": [
+        107,
+        129,
+        55
+      ],
+      "auto_label": "forest"
+    },
+    {
+      "id": 8,
+      "file": "tile_008.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 50,
+      "maps": [
+        "brecconary-1f",
+        "cantlin-1f",
+        "charlock-castle-1f",
+        "garinham-1f",
+        "hauksness-1f",
+        "kol-1f",
+        "rimuldar-1f",
+        "tantegel-castle-1f",
+        "tantegel-castle-2f"
+      ],
+      "avg_rgb": [
+        149,
+        119,
+        33
+      ],
+      "auto_label": "dirt"
+    },
+    {
+      "id": 9,
+      "file": "tile_009.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 1,
+      "maps": [
+        "brecconary-1f"
+      ],
+      "avg_rgb": [
+        102,
+        75,
+        139
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 10,
+      "file": "tile_010.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 20,
+      "maps": [
+        "brecconary-1f",
+        "cantlin-1f",
+        "charlock-castle-1f",
+        "garinham-1f",
+        "garinham-b1",
+        "kol-1f",
+        "rimuldar-1f",
+        "swamp-cave-b1",
+        "tantegel-castle-1f",
+        "tantegel-castle-2f"
+      ],
+      "avg_rgb": [
+        110,
+        82,
+        76
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 11,
+      "file": "tile_011.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 3,
+      "maps": [
+        "brecconary-1f",
+        "rimuldar-1f",
+        "tantegel-castle-1f"
+      ],
+      "avg_rgb": [
+        119,
+        153,
+        149
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 12,
+      "file": "tile_012.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 4,
+      "maps": [
+        "brecconary-1f",
+        "cantlin-1f",
+        "garinham-1f",
+        "rimuldar-1f"
+      ],
+      "avg_rgb": [
+        97,
+        73,
+        67
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 13,
+      "file": "tile_013.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 2,
+      "maps": [
+        "brecconary-1f",
+        "tantegel-castle-1f"
+      ],
+      "avg_rgb": [
+        122,
+        97,
+        152
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 14,
+      "file": "tile_014.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 5,
+      "maps": [
+        "brecconary-1f",
+        "cantlin-1f",
+        "kol-1f",
+        "rimuldar-1f"
+      ],
+      "avg_rgb": [
+        155,
+        137,
+        135
+      ],
+      "auto_label": "stone"
+    },
+    {
+      "id": 15,
+      "file": "tile_015.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 1,
+      "maps": [
+        "brecconary-1f"
+      ],
+      "avg_rgb": [
+        99,
+        130,
+        141
+      ],
+      "auto_label": "forest"
+    },
+    {
+      "id": 16,
+      "file": "tile_016.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 5,
+      "maps": [
+        "brecconary-1f",
+        "cantlin-1f",
+        "garinham-1f",
+        "kol-1f",
+        "rimuldar-1f"
+      ],
+      "avg_rgb": [
+        123,
+        75,
+        63
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 17,
+      "file": "tile_017.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 5,
+      "maps": [
+        "brecconary-1f",
+        "cantlin-1f",
+        "garinham-1f",
+        "kol-1f"
+      ],
+      "avg_rgb": [
+        108,
+        117,
+        50
+      ],
+      "auto_label": "dirt"
+    },
+    {
+      "id": 18,
+      "file": "tile_018.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 6,
+      "maps": [
+        "brecconary-1f",
+        "cantlin-1f",
+        "garinham-1f",
+        "rimuldar-1f"
+      ],
+      "avg_rgb": [
+        96,
+        117,
+        140
+      ],
+      "auto_label": "forest"
+    },
+    {
+      "id": 19,
+      "file": "tile_019.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 1,
+      "maps": [
+        "brecconary-1f"
+      ],
+      "avg_rgb": [
+        124,
+        162,
+        146
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 20,
+      "file": "tile_020.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 4,
+      "maps": [
+        "brecconary-1f",
+        "cantlin-1f",
+        "garinham-1f"
+      ],
+      "avg_rgb": [
+        108,
+        116,
+        48
+      ],
+      "auto_label": "dirt"
+    },
+    {
+      "id": 21,
+      "file": "tile_021.png",
+      "first_seen": "brecconary-1f",
+      "usage_count": 3,
+      "maps": [
+        "brecconary-1f",
+        "tantegel-castle-1f"
+      ],
+      "avg_rgb": [
+        152,
+        126,
+        123
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 22,
+      "file": "tile_022.png",
+      "first_seen": "cantlin-1f",
+      "usage_count": 1,
+      "maps": [
+        "cantlin-1f"
+      ],
+      "avg_rgb": [
+        147,
+        147,
+        147
+      ],
+      "auto_label": "stone"
+    },
+    {
+      "id": 23,
+      "file": "tile_023.png",
+      "first_seen": "cantlin-1f",
+      "usage_count": 1,
+      "maps": [
+        "cantlin-1f"
+      ],
+      "avg_rgb": [
+        111,
+        82,
+        133
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 24,
+      "file": "tile_024.png",
+      "first_seen": "cantlin-1f",
+      "usage_count": 1,
+      "maps": [
+        "cantlin-1f"
+      ],
+      "avg_rgb": [
+        154,
+        154,
+        154
+      ],
+      "auto_label": "stone"
+    },
+    {
+      "id": 25,
+      "file": "tile_025.png",
+      "first_seen": "cantlin-1f",
+      "usage_count": 2,
+      "maps": [
+        "cantlin-1f"
+      ],
+      "avg_rgb": [
+        109,
+        117,
+        50
+      ],
+      "auto_label": "dirt"
+    },
+    {
+      "id": 26,
+      "file": "tile_026.png",
+      "first_seen": "cantlin-1f",
+      "usage_count": 4,
+      "maps": [
+        "cantlin-1f",
+        "garinham-1f",
+        "tantegel-castle-1f",
+        "tantegel-castle-2f"
+      ],
+      "avg_rgb": [
+        149,
+        113,
+        109
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 27,
+      "file": "tile_027.png",
+      "first_seen": "cantlin-1f",
+      "usage_count": 1,
+      "maps": [
+        "cantlin-1f"
+      ],
+      "avg_rgb": [
+        104,
+        77,
+        140
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 28,
+      "file": "tile_028.png",
+      "first_seen": "cantlin-1f",
+      "usage_count": 1,
+      "maps": [
+        "cantlin-1f"
+      ],
+      "avg_rgb": [
+        157,
+        172,
+        133
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 29,
+      "file": "tile_029.png",
+      "first_seen": "cantlin-1f",
+      "usage_count": 2,
+      "maps": [
+        "cantlin-1f",
+        "tantegel-castle-b1"
+      ],
+      "avg_rgb": [
+        158,
+        136,
+        133
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 30,
+      "file": "tile_030.png",
+      "first_seen": "cantlin-1f",
+      "usage_count": 32,
+      "maps": [
+        "cantlin-1f",
+        "charlock-castle-b2",
+        "erdricks-cave-b2",
+        "garinham-1f",
+        "garinham-b1",
+        "garinham-b3",
+        "kol-1f",
+        "mountain-cave-b1",
+        "mountain-cave-b2",
+        "northern-cave-b1",
+        "rimuldar-1f",
+        "southern-cave-b1",
+        "tantegel-castle-1f",
+        "tantegel-castle-2f",
+        "tantegel-castle-b1"
+      ],
+      "avg_rgb": [
+        131,
+        87,
+        77
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 31,
+      "file": "tile_031.png",
+      "first_seen": "cantlin-1f",
+      "usage_count": 77,
+      "maps": [
+        "cantlin-1f",
+        "charlock-castle-1f",
+        "tantegel-castle-1f"
+      ],
+      "avg_rgb": [
+        95,
+        134,
+        105
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 32,
+      "file": "tile_032.png",
+      "first_seen": "charlock-castle-1f",
+      "usage_count": 163,
+      "maps": [
+        "charlock-castle-1f",
+        "hauksness-1f",
+        "kol-1f"
+      ],
+      "avg_rgb": [
+        16,
+        47,
+        2
+      ],
+      "auto_label": "dark"
+    },
+    {
+      "id": 33,
+      "file": "tile_033.png",
+      "first_seen": "charlock-castle-1f",
+      "usage_count": 37,
+      "maps": [
+        "charlock-castle-1f",
+        "charlock-castle-b1",
+        "charlock-castle-b2",
+        "charlock-castle-b3",
+        "charlock-castle-b4",
+        "charlock-castle-b5",
+        "charlock-castle-b6",
+        "erdricks-cave-b1",
+        "garinham-1f",
+        "garinham-b1",
+        "garinham-b2",
+        "garinham-b3",
+        "mountain-cave-b1",
+        "tantegel-castle-1f",
+        "tantegel-castle-2f"
+      ],
+      "avg_rgb": [
+        106,
+        81,
+        75
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 34,
+      "file": "tile_034.png",
+      "first_seen": "charlock-castle-b1",
+      "usage_count": 41,
+      "maps": [
+        "charlock-castle-b1",
+        "charlock-castle-b2",
+        "charlock-castle-b3",
+        "charlock-castle-b4",
+        "charlock-castle-b5",
+        "charlock-castle-b6",
+        "erdricks-cave-b1",
+        "erdricks-cave-b2",
+        "garinham-b1",
+        "garinham-b2",
+        "garinham-b3",
+        "garinham-b4",
+        "mountain-cave-b1",
+        "mountain-cave-b2",
+        "northern-cave-b1",
+        "southern-cave-b1",
+        "swamp-cave-b1",
+        "tantegel-castle-1f",
+        "tantegel-castle-b1"
+      ],
+      "avg_rgb": [
+        121,
+        110,
+        107
+      ],
+      "auto_label": "stone"
+    },
+    {
+      "id": 35,
+      "file": "tile_035.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 208,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        33,
+        130,
+        238
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 36,
+      "file": "tile_036.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 40,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        142,
+        149,
+        156
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 37,
+      "file": "tile_037.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 145,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        144,
+        144,
+        144
+      ],
+      "auto_label": "stone"
+    },
+    {
+      "id": 38,
+      "file": "tile_038.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 89,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        116,
+        50,
+        35
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 39,
+      "file": "tile_039.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 192,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        113,
+        47,
+        32
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 40,
+      "file": "tile_040.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 89,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        142,
+        142,
+        142
+      ],
+      "auto_label": "stone"
+    },
+    {
+      "id": 41,
+      "file": "tile_041.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 31,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        36,
+        126,
+        226
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 42,
+      "file": "tile_042.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 10,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        217,
+        186,
+        145
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 43,
+      "file": "tile_043.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 24,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        228,
+        195,
+        152
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 44,
+      "file": "tile_044.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 1,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        214,
+        183,
+        143
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 45,
+      "file": "tile_045.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 21,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        47,
+        135,
+        232
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 46,
+      "file": "tile_046.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 6,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        131,
+        87,
+        77
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 47,
+      "file": "tile_047.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 1,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        112,
+        85,
+        79
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 48,
+      "file": "tile_048.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 2,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        94,
+        117,
+        142
+      ],
+      "auto_label": "forest"
+    },
+    {
+      "id": 49,
+      "file": "tile_049.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 14,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        214,
+        190,
+        157
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 50,
+      "file": "tile_050.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 4,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        155,
+        154,
+        151
+      ],
+      "auto_label": "stone"
+    },
+    {
+      "id": 51,
+      "file": "tile_051.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 2,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        35,
+        130,
+        236
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 52,
+      "file": "tile_052.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 5,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        123,
+        203,
+        22
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 53,
+      "file": "tile_053.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 5,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        16,
+        51,
+        16
+      ],
+      "auto_label": "dark"
+    },
+    {
+      "id": 54,
+      "file": "tile_054.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 3,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        118,
+        204,
+        14
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 55,
+      "file": "tile_055.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 2,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        29,
+        56,
+        11
+      ],
+      "auto_label": "dark"
+    },
+    {
+      "id": 56,
+      "file": "tile_056.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 6,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        214,
+        186,
+        143
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 57,
+      "file": "tile_057.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 2,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        41,
+        136,
+        224
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 58,
+      "file": "tile_058.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 2,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        110,
+        194,
+        13
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 59,
+      "file": "tile_059.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 2,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        24,
+        57,
+        3
+      ],
+      "auto_label": "dark"
+    },
+    {
+      "id": 60,
+      "file": "tile_060.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 4,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        16,
+        47,
+        2
+      ],
+      "auto_label": "dark"
+    },
+    {
+      "id": 61,
+      "file": "tile_061.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 1,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        150,
+        155,
+        143
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 62,
+      "file": "tile_062.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 1,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        121,
+        60,
+        33
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 63,
+      "file": "tile_063.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 1,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        142,
+        144,
+        142
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 64,
+      "file": "tile_064.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 4,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        149,
+        119,
+        33
+      ],
+      "auto_label": "dirt"
+    },
+    {
+      "id": 65,
+      "file": "tile_065.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 1,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        116,
+        104,
+        183
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 66,
+      "file": "tile_066.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 1,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        154,
+        124,
+        46
+      ],
+      "auto_label": "dirt"
+    },
+    {
+      "id": 67,
+      "file": "tile_067.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 4,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        18,
+        47,
+        4
+      ],
+      "auto_label": "dark"
+    },
+    {
+      "id": 68,
+      "file": "tile_068.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 1,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        222,
+        196,
+        144
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 69,
+      "file": "tile_069.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 1,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        113,
+        102,
+        100
+      ],
+      "auto_label": "stone"
+    },
+    {
+      "id": 70,
+      "file": "tile_070.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 4,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        33,
+        126,
+        223
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 71,
+      "file": "tile_071.png",
+      "first_seen": "charlock-castle-b7",
+      "usage_count": 1,
+      "maps": [
+        "charlock-castle-b7"
+      ],
+      "avg_rgb": [
+        40,
+        130,
+        230
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 72,
+      "file": "tile_072.png",
+      "first_seen": "garinham-1f",
+      "usage_count": 1,
+      "maps": [
+        "garinham-1f"
+      ],
+      "avg_rgb": [
+        181,
+        170,
+        161
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 73,
+      "file": "tile_073.png",
+      "first_seen": "garinham-1f",
+      "usage_count": 3,
+      "maps": [
+        "garinham-1f",
+        "tantegel-castle-1f",
+        "tantegel-castle-2f"
+      ],
+      "avg_rgb": [
+        142,
+        107,
+        102
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 74,
+      "file": "tile_074.png",
+      "first_seen": "garinham-1f",
+      "usage_count": 3,
+      "maps": [
+        "garinham-1f",
+        "northern-cave-b1",
+        "rimuldar-1f"
+      ],
+      "avg_rgb": [
+        148,
+        121,
+        115
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 75,
+      "file": "tile_075.png",
+      "first_seen": "garinham-1f",
+      "usage_count": 1,
+      "maps": [
+        "garinham-1f"
+      ],
+      "avg_rgb": [
+        92,
+        128,
+        40
+      ],
+      "auto_label": "forest"
+    },
+    {
+      "id": 76,
+      "file": "tile_076.png",
+      "first_seen": "kol-1f",
+      "usage_count": 1,
+      "maps": [
+        "kol-1f"
+      ],
+      "avg_rgb": [
+        93,
+        127,
+        146
+      ],
+      "auto_label": "forest"
+    },
+    {
+      "id": 77,
+      "file": "tile_077.png",
+      "first_seen": "kol-1f",
+      "usage_count": 1,
+      "maps": [
+        "kol-1f"
+      ],
+      "avg_rgb": [
+        92,
+        128,
+        41
+      ],
+      "auto_label": "forest"
+    },
+    {
+      "id": 78,
+      "file": "tile_078.png",
+      "first_seen": "kol-1f",
+      "usage_count": 1,
+      "maps": [
+        "kol-1f"
+      ],
+      "avg_rgb": [
+        162,
+        94,
+        89
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 79,
+      "file": "tile_079.png",
+      "first_seen": "kol-1f",
+      "usage_count": 1,
+      "maps": [
+        "kol-1f"
+      ],
+      "avg_rgb": [
+        140,
+        157,
+        120
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 80,
+      "file": "tile_080.png",
+      "first_seen": "rimuldar-1f",
+      "usage_count": 1,
+      "maps": [
+        "rimuldar-1f"
+      ],
+      "avg_rgb": [
+        127,
+        162,
+        144
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 81,
+      "file": "tile_081.png",
+      "first_seen": "rimuldar-1f",
+      "usage_count": 1,
+      "maps": [
+        "rimuldar-1f"
+      ],
+      "avg_rgb": [
+        96,
+        181,
+        34
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 82,
+      "file": "tile_082.png",
+      "first_seen": "rimuldar-1f",
+      "usage_count": 1,
+      "maps": [
+        "rimuldar-1f"
+      ],
+      "avg_rgb": [
+        139,
+        120,
+        117
+      ],
+      "auto_label": "stone"
+    },
+    {
+      "id": 83,
+      "file": "tile_083.png",
+      "first_seen": "rimuldar-1f",
+      "usage_count": 1,
+      "maps": [
+        "rimuldar-1f"
+      ],
+      "avg_rgb": [
+        93,
+        76,
+        157
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 84,
+      "file": "tile_084.png",
+      "first_seen": "rimuldar-1f",
+      "usage_count": 1,
+      "maps": [
+        "rimuldar-1f"
+      ],
+      "avg_rgb": [
+        139,
+        168,
+        100
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 85,
+      "file": "tile_085.png",
+      "first_seen": "rimuldar-1f",
+      "usage_count": 1,
+      "maps": [
+        "rimuldar-1f"
+      ],
+      "avg_rgb": [
+        109,
+        116,
+        47
+      ],
+      "auto_label": "dirt"
+    },
+    {
+      "id": 86,
+      "file": "tile_086.png",
+      "first_seen": "southern-cave-b1",
+      "usage_count": 2,
+      "maps": [
+        "southern-cave-b1",
+        "tantegel-castle-1f"
+      ],
+      "avg_rgb": [
+        139,
+        111,
+        105
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 87,
+      "file": "tile_087.png",
+      "first_seen": "swamp-cave-b1",
+      "usage_count": 1,
+      "maps": [
+        "swamp-cave-b1"
+      ],
+      "avg_rgb": [
+        134,
+        92,
+        83
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 88,
+      "file": "tile_088.png",
+      "first_seen": "tantegel-castle-1f",
+      "usage_count": 1,
+      "maps": [
+        "tantegel-castle-1f"
+      ],
+      "avg_rgb": [
+        159,
+        130,
+        128
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 89,
+      "file": "tile_089.png",
+      "first_seen": "tantegel-castle-1f",
+      "usage_count": 1,
+      "maps": [
+        "tantegel-castle-1f"
+      ],
+      "avg_rgb": [
+        145,
+        109,
+        104
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 90,
+      "file": "tile_090.png",
+      "first_seen": "tantegel-castle-2f",
+      "usage_count": 44,
+      "maps": [
+        "tantegel-castle-2f"
+      ],
+      "avg_rgb": [
+        131,
+        131,
+        131
+      ],
+      "auto_label": "stone"
+    },
+    {
+      "id": 91,
+      "file": "tile_091.png",
+      "first_seen": "tantegel-castle-2f",
+      "usage_count": 1,
+      "maps": [
+        "tantegel-castle-2f"
+      ],
+      "avg_rgb": [
+        179,
+        118,
+        114
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 92,
+      "file": "tile_092.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        52,
+        149,
+        137
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 93,
+      "file": "tile_093.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        54,
+        164,
+        102
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 94,
+      "file": "tile_094.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        63,
+        172,
+        123
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 95,
+      "file": "tile_095.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        57,
+        146,
+        144
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 96,
+      "file": "tile_096.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        9,
+        135,
+        158
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 97,
+      "file": "tile_097.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        50,
+        137,
+        165
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 98,
+      "file": "tile_098.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        74,
+        156,
+        94
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 99,
+      "file": "tile_099.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        35,
+        150,
+        165
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 100,
+      "file": "tile_100.png",
+      "first_seen": "world-map",
+      "usage_count": 22,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        152,
+        180,
+        211
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 101,
+      "file": "tile_101.png",
+      "first_seen": "world-map",
+      "usage_count": 22,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        160,
+        180,
+        200
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 102,
+      "file": "tile_102.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        158,
+        185,
+        214
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 103,
+      "file": "tile_103.png",
+      "first_seen": "world-map",
+      "usage_count": 22,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        154,
+        185,
+        218
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 104,
+      "file": "tile_104.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        144,
+        180,
+        218
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 105,
+      "file": "tile_105.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        143,
+        176,
+        213
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 106,
+      "file": "tile_106.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        164,
+        179,
+        197
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 107,
+      "file": "tile_107.png",
+      "first_seen": "world-map",
+      "usage_count": 22,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        145,
+        184,
+        225
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 108,
+      "file": "tile_108.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        102,
+        188,
+        134
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 109,
+      "file": "tile_109.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        88,
+        162,
+        144
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 110,
+      "file": "tile_110.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        107,
+        177,
+        137
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 111,
+      "file": "tile_111.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        85,
+        180,
+        102
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 112,
+      "file": "tile_112.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        150,
+        185,
+        203
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 113,
+      "file": "tile_113.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        20,
+        158,
+        95
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 114,
+      "file": "tile_114.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        96,
+        190,
+        61
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 115,
+      "file": "tile_115.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        98,
+        202,
+        20
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 116,
+      "file": "tile_116.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        99,
+        196,
+        34
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 117,
+      "file": "tile_117.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        97,
+        188,
+        45
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 118,
+      "file": "tile_118.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        81,
+        166,
+        67
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 119,
+      "file": "tile_119.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        122,
+        193,
+        67
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 120,
+      "file": "tile_120.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        81,
+        165,
+        151
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 121,
+      "file": "tile_121.png",
+      "first_seen": "world-map",
+      "usage_count": 22,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        163,
+        185,
+        209
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 122,
+      "file": "tile_122.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        173,
+        182,
+        191
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 123,
+      "file": "tile_123.png",
+      "first_seen": "world-map",
+      "usage_count": 20,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        187,
+        186,
+        186
+      ],
+      "auto_label": "light_stone"
+    },
+    {
+      "id": 124,
+      "file": "tile_124.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        182,
+        186,
+        191
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 125,
+      "file": "tile_125.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        176,
+        181,
+        187
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 126,
+      "file": "tile_126.png",
+      "first_seen": "world-map",
+      "usage_count": 20,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        166,
+        174,
+        183
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 127,
+      "file": "tile_127.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        174,
+        179,
+        184
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 128,
+      "file": "tile_128.png",
+      "first_seen": "world-map",
+      "usage_count": 22,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        161,
+        184,
+        209
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 129,
+      "file": "tile_129.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        122,
+        200,
+        62
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 130,
+      "file": "tile_130.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        176,
+        187,
+        182
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 131,
+      "file": "tile_131.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        124,
+        186,
+        109
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 132,
+      "file": "tile_132.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        161,
+        187,
+        143
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 133,
+      "file": "tile_133.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        105,
+        195,
+        43
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 134,
+      "file": "tile_134.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        51,
+        174,
+        95
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 135,
+      "file": "tile_135.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        145,
+        186,
+        144
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 136,
+      "file": "tile_136.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        188,
+        186,
+        185
+      ],
+      "auto_label": "light_stone"
+    },
+    {
+      "id": 137,
+      "file": "tile_137.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        63,
+        159,
+        115
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 138,
+      "file": "tile_138.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        96,
+        159,
+        115
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 139,
+      "file": "tile_139.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        124,
+        207,
+        29
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 140,
+      "file": "tile_140.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        113,
+        161,
+        83
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 141,
+      "file": "tile_141.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        63,
+        135,
+        125
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 142,
+      "file": "tile_142.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        63,
+        178,
+        96
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 143,
+      "file": "tile_143.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        117,
+        169,
+        72
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 144,
+      "file": "tile_144.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        47,
+        149,
+        144
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 145,
+      "file": "tile_145.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        161,
+        185,
+        212
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 146,
+      "file": "tile_146.png",
+      "first_seen": "world-map",
+      "usage_count": 19,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        154,
+        172,
+        191
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 147,
+      "file": "tile_147.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        132,
+        200,
+        59
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 148,
+      "file": "tile_148.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        124,
+        164,
+        103
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 149,
+      "file": "tile_149.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        154,
+        174,
+        195
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 150,
+      "file": "tile_150.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        164,
+        185,
+        208
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 151,
+      "file": "tile_151.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        168,
+        177,
+        186
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 152,
+      "file": "tile_152.png",
+      "first_seen": "world-map",
+      "usage_count": 22,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        155,
+        184,
+        216
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 153,
+      "file": "tile_153.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        119,
+        163,
+        141
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 154,
+      "file": "tile_154.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        171,
+        186,
+        149
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 155,
+      "file": "tile_155.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        163,
+        173,
+        182
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 156,
+      "file": "tile_156.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        146,
+        168,
+        191
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 157,
+      "file": "tile_157.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        179,
+        178,
+        178
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 158,
+      "file": "tile_158.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        155,
+        171,
+        165
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 159,
+      "file": "tile_159.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        81,
+        137,
+        145
+      ],
+      "auto_label": "forest"
+    },
+    {
+      "id": 160,
+      "file": "tile_160.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        146,
+        182,
+        202
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 161,
+      "file": "tile_161.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        150,
+        172,
+        187
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 162,
+      "file": "tile_162.png",
+      "first_seen": "world-map",
+      "usage_count": 20,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        165,
+        173,
+        183
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 163,
+      "file": "tile_163.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        28,
+        148,
+        104
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 164,
+      "file": "tile_164.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        56,
+        142,
+        93
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 165,
+      "file": "tile_165.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        101,
+        182,
+        90
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 166,
+      "file": "tile_166.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        120,
+        141,
+        154
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 167,
+      "file": "tile_167.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        64,
+        139,
+        211
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 168,
+      "file": "tile_168.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        64,
+        170,
+        73
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 169,
+      "file": "tile_169.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        94,
+        153,
+        106
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 170,
+      "file": "tile_170.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        36,
+        145,
+        138
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 171,
+      "file": "tile_171.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        158,
+        181,
+        205
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 172,
+      "file": "tile_172.png",
+      "first_seen": "world-map",
+      "usage_count": 20,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        154,
+        166,
+        180
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 173,
+      "file": "tile_173.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        166,
+        185,
+        190
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 174,
+      "file": "tile_174.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        136,
+        154,
+        173
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 175,
+      "file": "tile_175.png",
+      "first_seen": "world-map",
+      "usage_count": 20,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        136,
+        175,
+        216
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 176,
+      "file": "tile_176.png",
+      "first_seen": "world-map",
+      "usage_count": 20,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        174,
+        185,
+        197
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 177,
+      "file": "tile_177.png",
+      "first_seen": "world-map",
+      "usage_count": 20,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        155,
+        168,
+        185
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 178,
+      "file": "tile_178.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        154,
+        184,
+        217
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 179,
+      "file": "tile_179.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        80,
+        154,
+        113
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 180,
+      "file": "tile_180.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        101,
+        178,
+        99
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 181,
+      "file": "tile_181.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        137,
+        154,
+        174
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 182,
+      "file": "tile_182.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        166,
+        181,
+        199
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 183,
+      "file": "tile_183.png",
+      "first_seen": "world-map",
+      "usage_count": 20,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        143,
+        158,
+        174
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 184,
+      "file": "tile_184.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        128,
+        171,
+        216
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 185,
+      "file": "tile_185.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        33,
+        148,
+        155
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 186,
+      "file": "tile_186.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        60,
+        169,
+        46
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 187,
+      "file": "tile_187.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        64,
+        168,
+        123
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 188,
+      "file": "tile_188.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        29,
+        118,
+        197
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 189,
+      "file": "tile_189.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        6,
+        120,
+        241
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 190,
+      "file": "tile_190.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        56,
+        161,
+        100
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 191,
+      "file": "tile_191.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        70,
+        179,
+        61
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 192,
+      "file": "tile_192.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        44,
+        156,
+        105
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 193,
+      "file": "tile_193.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        146,
+        182,
+        220
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 194,
+      "file": "tile_194.png",
+      "first_seen": "world-map",
+      "usage_count": 20,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        173,
+        179,
+        186
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 195,
+      "file": "tile_195.png",
+      "first_seen": "world-map",
+      "usage_count": 19,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        156,
+        182,
+        211
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 196,
+      "file": "tile_196.png",
+      "first_seen": "world-map",
+      "usage_count": 19,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        131,
+        174,
+        219
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 197,
+      "file": "tile_197.png",
+      "first_seen": "world-map",
+      "usage_count": 20,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        124,
+        180,
+        241
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 198,
+      "file": "tile_198.png",
+      "first_seen": "world-map",
+      "usage_count": 20,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        162,
+        183,
+        205
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 199,
+      "file": "tile_199.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        172,
+        180,
+        190
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 200,
+      "file": "tile_200.png",
+      "first_seen": "world-map",
+      "usage_count": 22,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        159,
+        178,
+        198
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 201,
+      "file": "tile_201.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        57,
+        162,
+        93
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 202,
+      "file": "tile_202.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        116,
+        182,
+        77
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 203,
+      "file": "tile_203.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        96,
+        185,
+        81
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 204,
+      "file": "tile_204.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        64,
+        140,
+        160
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 205,
+      "file": "tile_205.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        135,
+        154,
+        131
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 206,
+      "file": "tile_206.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        70,
+        140,
+        156
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 207,
+      "file": "tile_207.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        25,
+        152,
+        71
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 208,
+      "file": "tile_208.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        47,
+        159,
+        101
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 209,
+      "file": "tile_209.png",
+      "first_seen": "world-map",
+      "usage_count": 22,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        163,
+        181,
+        201
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 210,
+      "file": "tile_210.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        175,
+        178,
+        182
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 211,
+      "file": "tile_211.png",
+      "first_seen": "world-map",
+      "usage_count": 19,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        166,
+        178,
+        191
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 212,
+      "file": "tile_212.png",
+      "first_seen": "world-map",
+      "usage_count": 20,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        145,
+        177,
+        211
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 213,
+      "file": "tile_213.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        148,
+        155,
+        162
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 214,
+      "file": "tile_214.png",
+      "first_seen": "world-map",
+      "usage_count": 19,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        141,
+        165,
+        190
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 215,
+      "file": "tile_215.png",
+      "first_seen": "world-map",
+      "usage_count": 20,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        166,
+        179,
+        194
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 216,
+      "file": "tile_216.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        163,
+        184,
+        208
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 217,
+      "file": "tile_217.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        86,
+        149,
+        140
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 218,
+      "file": "tile_218.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        139,
+        188,
+        103
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 219,
+      "file": "tile_219.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        34,
+        147,
+        93
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 220,
+      "file": "tile_220.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        62,
+        168,
+        92
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 221,
+      "file": "tile_221.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        51,
+        154,
+        75
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 222,
+      "file": "tile_222.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        82,
+        164,
+        80
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 223,
+      "file": "tile_223.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        28,
+        140,
+        129
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 224,
+      "file": "tile_224.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        29,
+        141,
+        171
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 225,
+      "file": "tile_225.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        155,
+        179,
+        205
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 226,
+      "file": "tile_226.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        178,
+        181,
+        184
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 227,
+      "file": "tile_227.png",
+      "first_seen": "world-map",
+      "usage_count": 20,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        159,
+        176,
+        194
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 228,
+      "file": "tile_228.png",
+      "first_seen": "world-map",
+      "usage_count": 20,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        163,
+        181,
+        201
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 229,
+      "file": "tile_229.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        165,
+        177,
+        191
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 230,
+      "file": "tile_230.png",
+      "first_seen": "world-map",
+      "usage_count": 20,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        162,
+        172,
+        183
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 231,
+      "file": "tile_231.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        155,
+        184,
+        215
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 232,
+      "file": "tile_232.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        144,
+        183,
+        226
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 233,
+      "file": "tile_233.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        44,
+        133,
+        201
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 234,
+      "file": "tile_234.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        126,
+        168,
+        114
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 235,
+      "file": "tile_235.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        29,
+        137,
+        144
+      ],
+      "auto_label": "forest"
+    },
+    {
+      "id": 236,
+      "file": "tile_236.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        31,
+        153,
+        147
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 237,
+      "file": "tile_237.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        15,
+        79,
+        87
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 238,
+      "file": "tile_238.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        30,
+        92,
+        150
+      ],
+      "auto_label": "misc"
+    },
+    {
+      "id": 239,
+      "file": "tile_239.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        38,
+        125,
+        190
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 240,
+      "file": "tile_240.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        34,
+        132,
+        199
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 241,
+      "file": "tile_241.png",
+      "first_seen": "world-map",
+      "usage_count": 22,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        137,
+        182,
+        230
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 242,
+      "file": "tile_242.png",
+      "first_seen": "world-map",
+      "usage_count": 22,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        164,
+        184,
+        206
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 243,
+      "file": "tile_243.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        146,
+        175,
+        207
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 244,
+      "file": "tile_244.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        150,
+        185,
+        222
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 245,
+      "file": "tile_245.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        162,
+        181,
+        201
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 246,
+      "file": "tile_246.png",
+      "first_seen": "world-map",
+      "usage_count": 21,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        147,
+        179,
+        214
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 247,
+      "file": "tile_247.png",
+      "first_seen": "world-map",
+      "usage_count": 22,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        139,
+        181,
+        226
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 248,
+      "file": "tile_248.png",
+      "first_seen": "world-map",
+      "usage_count": 22,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        136,
+        180,
+        228
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 249,
+      "file": "tile_249.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        49,
+        152,
+        167
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 250,
+      "file": "tile_250.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        142,
+        174,
+        205
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 251,
+      "file": "tile_251.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        120,
+        171,
+        114
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 252,
+      "file": "tile_252.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        149,
+        180,
+        176
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 253,
+      "file": "tile_253.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        89,
+        178,
+        165
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 254,
+      "file": "tile_254.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        99,
+        188,
+        47
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 255,
+      "file": "tile_255.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        112,
+        175,
+        97
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 256,
+      "file": "tile_256.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        155,
+        171,
+        168
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 257,
+      "file": "tile_257.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        132,
+        191,
+        84
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 258,
+      "file": "tile_258.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        164,
+        180,
+        167
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 259,
+      "file": "tile_259.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        112,
+        181,
+        151
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 260,
+      "file": "tile_260.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        136,
+        172,
+        175
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 261,
+      "file": "tile_261.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        77,
+        184,
+        100
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 262,
+      "file": "tile_262.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        150,
+        180,
+        204
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 263,
+      "file": "tile_263.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        120,
+        168,
+        94
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 264,
+      "file": "tile_264.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        109,
+        179,
+        125
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 265,
+      "file": "tile_265.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        143,
+        173,
+        170
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 266,
+      "file": "tile_266.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        165,
+        177,
+        164
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 267,
+      "file": "tile_267.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        78,
+        165,
+        144
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 268,
+      "file": "tile_268.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        135,
+        174,
+        216
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 269,
+      "file": "tile_269.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        167,
+        182,
+        197
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 270,
+      "file": "tile_270.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        173,
+        185,
+        197
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 271,
+      "file": "tile_271.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        149,
+        165,
+        184
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 272,
+      "file": "tile_272.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        150,
+        180,
+        198
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 273,
+      "file": "tile_273.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        152,
+        165,
+        180
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 274,
+      "file": "tile_274.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        154,
+        168,
+        184
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 275,
+      "file": "tile_275.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        148,
+        181,
+        217
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 276,
+      "file": "tile_276.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        79,
+        166,
+        147
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 277,
+      "file": "tile_277.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        124,
+        170,
+        218
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 278,
+      "file": "tile_278.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        135,
+        179,
+        210
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 279,
+      "file": "tile_279.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        82,
+        155,
+        172
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 280,
+      "file": "tile_280.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        174,
+        181,
+        184
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 281,
+      "file": "tile_281.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        147,
+        169,
+        167
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 282,
+      "file": "tile_282.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        68,
+        165,
+        111
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 283,
+      "file": "tile_283.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        130,
+        155,
+        160
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 284,
+      "file": "tile_284.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        72,
+        143,
+        211
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 285,
+      "file": "tile_285.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        72,
+        174,
+        73
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 286,
+      "file": "tile_286.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        100,
+        157,
+        107
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 287,
+      "file": "tile_287.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        72,
+        164,
+        138
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 288,
+      "file": "tile_288.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        70,
+        165,
+        159
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 289,
+      "file": "tile_289.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        70,
+        171,
+        54
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 290,
+      "file": "tile_290.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        147,
+        185,
+        194
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 291,
+      "file": "tile_291.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        118,
+        177,
+        241
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 292,
+      "file": "tile_292.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        64,
+        164,
+        104
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 293,
+      "file": "tile_293.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        78,
+        181,
+        67
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 294,
+      "file": "tile_294.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        75,
+        172,
+        105
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 295,
+      "file": "tile_295.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        161,
+        183,
+        203
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 296,
+      "file": "tile_296.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        164,
+        178,
+        184
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 297,
+      "file": "tile_297.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        153,
+        177,
+        172
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 298,
+      "file": "tile_298.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        87,
+        178,
+        111
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 299,
+      "file": "tile_299.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        125,
+        160,
+        183
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 300,
+      "file": "tile_300.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        53,
+        160,
+        99
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 301,
+      "file": "tile_301.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        154,
+        181,
+        197
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 302,
+      "file": "tile_302.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        134,
+        179,
+        194
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 303,
+      "file": "tile_303.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        64,
+        156,
+        185
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 304,
+      "file": "tile_304.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        151,
+        182,
+        205
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 305,
+      "file": "tile_305.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        131,
+        173,
+        219
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 306,
+      "file": "tile_306.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        165,
+        177,
+        180
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 307,
+      "file": "tile_307.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        155,
+        182,
+        209
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 308,
+      "file": "tile_308.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        141,
+        180,
+        216
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 309,
+      "file": "tile_309.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        171,
+        179,
+        183
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 310,
+      "file": "tile_310.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        122,
+        190,
+        103
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 311,
+      "file": "tile_311.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        141,
+        176,
+        207
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 312,
+      "file": "tile_312.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        139,
+        164,
+        190
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 313,
+      "file": "tile_313.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        151,
+        175,
+        187
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 314,
+      "file": "tile_314.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        123,
+        179,
+        110
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 315,
+      "file": "tile_315.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        158,
+        178,
+        180
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 316,
+      "file": "tile_316.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        88,
+        178,
+        93
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 317,
+      "file": "tile_317.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        169,
+        182,
+        150
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 318,
+      "file": "tile_318.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        166,
+        178,
+        190
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 319,
+      "file": "tile_319.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        149,
+        174,
+        180
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 320,
+      "file": "tile_320.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        143,
+        176,
+        210
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 321,
+      "file": "tile_321.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        153,
+        167,
+        176
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 322,
+      "file": "tile_322.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        49,
+        145,
+        150
+      ],
+      "auto_label": "forest"
+    },
+    {
+      "id": 323,
+      "file": "tile_323.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        139,
+        184,
+        212
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 324,
+      "file": "tile_324.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        126,
+        168,
+        156
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 325,
+      "file": "tile_325.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        141,
+        187,
+        117
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 326,
+      "file": "tile_326.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        143,
+        172,
+        181
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 327,
+      "file": "tile_327.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        146,
+        177,
+        190
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 328,
+      "file": "tile_328.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        175,
+        182,
+        169
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 329,
+      "file": "tile_329.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        60,
+        152,
+        123
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 330,
+      "file": "tile_330.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        157,
+        181,
+        194
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 331,
+      "file": "tile_331.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        140,
+        175,
+        209
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 332,
+      "file": "tile_332.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        69,
+        141,
+        190
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 333,
+      "file": "tile_333.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        89,
+        160,
+        199
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 334,
+      "file": "tile_334.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        99,
+        161,
+        201
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 335,
+      "file": "tile_335.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        157,
+        184,
+        114
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 336,
+      "file": "tile_336.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        142,
+        174,
+        199
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 337,
+      "file": "tile_337.png",
+      "first_seen": "world-map",
+      "usage_count": 64,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        255,
+        255,
+        255
+      ],
+      "auto_label": "light_stone"
+    },
+    {
+      "id": 338,
+      "file": "tile_338.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        133,
+        148,
+        154
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 339,
+      "file": "tile_339.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        124,
+        170,
+        219
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 340,
+      "file": "tile_340.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        119,
+        178,
+        241
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 341,
+      "file": "tile_341.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        156,
+        180,
+        203
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 342,
+      "file": "tile_342.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        45,
+        126,
+        198
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 343,
+      "file": "tile_343.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        16,
+        125,
+        241
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 344,
+      "file": "tile_344.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        69,
+        141,
+        165
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 345,
+      "file": "tile_345.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        149,
+        159,
+        150
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 346,
+      "file": "tile_346.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        97,
+        150,
+        170
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 347,
+      "file": "tile_347.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        133,
+        150,
+        142
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 348,
+      "file": "tile_348.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        133,
+        162,
+        184
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 349,
+      "file": "tile_349.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        148,
+        174,
+        177
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 350,
+      "file": "tile_350.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        86,
+        168,
+        124
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 351,
+      "file": "tile_351.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        162,
+        177,
+        189
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 352,
+      "file": "tile_352.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        151,
+        170,
+        166
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 353,
+      "file": "tile_353.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        145,
+        182,
+        175
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 354,
+      "file": "tile_354.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        53,
+        155,
+        77
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 355,
+      "file": "tile_355.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        101,
+        171,
+        104
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 356,
+      "file": "tile_356.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        64,
+        155,
+        153
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 357,
+      "file": "tile_357.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        144,
+        182,
+        222
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 358,
+      "file": "tile_358.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        158,
+        178,
+        199
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 359,
+      "file": "tile_359.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        68,
+        112,
+        155
+      ],
+      "auto_label": "water"
+    },
+    {
+      "id": 360,
+      "file": "tile_360.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        68,
+        172,
+        147
+      ],
+      "auto_label": "grass"
+    },
+    {
+      "id": 361,
+      "file": "tile_361.png",
+      "first_seen": "world-map",
+      "usage_count": 1,
+      "maps": [
+        "world-map"
+      ],
+      "avg_rgb": [
+        50,
+        98,
+        89
+      ],
+      "auto_label": "misc"
+    }
+  ]
+}

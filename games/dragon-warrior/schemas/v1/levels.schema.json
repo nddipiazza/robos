@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dragonwarrior.org/schemas/v1/levels.schema.json",
+  "title": "LevelsDataStoreV1",
+  "description": "Schema for Hero level progression (levels 1-30), XP thresholds, stat growth ranges, and unlocked spells.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "title": "LevelProgressionEntry",
+    "properties": {
+      "level": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 30,
+        "description": "Hero level number."
+      },
+      "exp_required": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Total cumulative experience points required to reach this level."
+      },
+      "str_gain": {
+        "oneOf": [
+          { "type": "integer" },
+          { "type": "array", "items": { "type": "integer" } }
+        ],
+        "description": "Strength stat gain bounds upon reaching this level."
+      },
+      "agi_gain": {
+        "oneOf": [
+          { "type": "integer" },
+          { "type": "array", "items": { "type": "integer" } }
+        ],
+        "description": "Agility stat gain bounds upon reaching this level."
+      },
+      "hp_gain": {
+        "oneOf": [
+          { "type": "integer" },
+          { "type": "array", "items": { "type": "integer" } }
+        ],
+        "description": "Max HP gain bounds upon reaching this level."
+      },
+      "mp_gain": {
+        "oneOf": [
+          { "type": "integer" },
+          { "type": "array", "items": { "type": "integer" } }
+        ],
+        "description": "Max MP gain bounds upon reaching this level."
+      },
+      "spell": {
+        "type": ["string", "null"],
+        "description": "Spell unlocked at this level, if any."
+      }
+    },
+    "required": ["level", "exp_required"]
+  }
+}

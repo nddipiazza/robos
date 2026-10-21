@@ -1,0 +1,293 @@
+[
+  {
+    "id": "erdricks_cave",
+    "name": "Erdrick's Cave",
+    "type": "cave",
+    "floors": 2,
+    "description": "Small two-floor cave northwest of Tantegel Castle. Contains Erdrick's Tablet.",
+    "floor_data": [
+      {
+        "floor": 1,
+        "encounters": [],
+        "chests": []
+      },
+      {
+        "floor": 2,
+        "encounters": [],
+        "chests": [
+          {
+            "item": "erdricks_tablet",
+            "type": "quest_item"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "swamp_cave",
+    "name": "Swamp Cave",
+    "type": "cave",
+    "floors": 1,
+    "description": "South of Kol. Princess Gwaelin is held here by the Green Dragon. Two entrances/exits.",
+    "floor_data": [
+      {
+        "floor": 1,
+        "encounters": [
+          "druin",
+          "ghost",
+          "magician",
+          "scorpion"
+        ],
+        "boss": "green_dragon",
+        "chests": [],
+        "quest_reward": "gwaelins_love"
+      }
+    ]
+  },
+  {
+    "id": "mountain_cave",
+    "name": "Mountain Cave",
+    "type": "cave",
+    "floors": 2,
+    "description": "Optional cave. Fighter's Ring (useless) and rare Cursed Necklace chest.",
+    "floor_data": [
+      {
+        "floor": 1,
+        "encounters": [
+          "druin",
+          "ghost",
+          "magician",
+          "scorpion"
+        ],
+        "chests": [
+          {
+            "item": "herb",
+            "gp_min": null,
+            "gp_max": null
+          }
+        ]
+      },
+      {
+        "floor": 2,
+        "encounters": [
+          "drakeema",
+          "droll",
+          "poltergeist",
+          "skeleton",
+          "warlock"
+        ],
+        "chests": [
+          {
+            "item": "fighters_ring"
+          },
+          {
+            "item": "torch"
+          },
+          {
+            "gp_min": 10,
+            "gp_max": 17
+          },
+          {
+            "gp_min": 100,
+            "gp_max": 131,
+            "alt_item": "cursed_necklace",
+            "alt_chance": "1/32",
+            "note": "Cursed Necklace only obtainable once"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "garins_grave",
+    "name": "Garin's Grave",
+    "type": "dungeon",
+    "floors": 4,
+    "description": "Four-level dungeon beneath Garinham. Contains the Silver Harp quest item.",
+    "floor_data": [
+      {
+        "floor": 1,
+        "encounters": [
+          "drakeema",
+          "droll",
+          "poltergeist",
+          "skeleton",
+          "warlock"
+        ],
+        "chests": [
+          {
+            "gp_min": 6,
+            "gp_max": 13
+          },
+          {
+            "gp_min": 5,
+            "gp_max": 20
+          },
+          {
+            "item": "herb"
+          }
+        ]
+      },
+      {
+        "floor": 2,
+        "encounters": [
+          "metal_scorpion",
+          "skeleton",
+          "warlock",
+          "wolf"
+        ],
+        "chests": []
+      },
+      {
+        "floor": 3,
+        "encounters": [
+          "drollmagi",
+          "druinlord",
+          "specter",
+          "wolflord",
+          "wraith_knight"
+        ],
+        "chests": [
+          {
+            "item": "cursed_belt"
+          },
+          {
+            "item": "silver_harp",
+            "type": "quest_item"
+          }
+        ]
+      },
+      {
+        "floor": 4,
+        "encounters": [
+          "drollmagi",
+          "druinlord",
+          "specter",
+          "wolflord",
+          "wraith_knight"
+        ],
+        "chests": []
+      }
+    ]
+  },
+  {
+    "id": "charlock_castle",
+    "name": "Charlock Castle",
+    "type": "castle_dungeon",
+    "floors": 8,
+    "description": "The Dragonlord's fortress. Final dungeon. Requires Rainbow Bridge to access.",
+    "floor_data": [
+      {
+        "floor": 1,
+        "encounters": [
+          "axe_knight",
+          "green_dragon",
+          "starwyvern",
+          "werewolf",
+          "wizard"
+        ],
+        "chests": []
+      },
+      {
+        "floor": 2,
+        "encounters": [
+          "axe_knight",
+          "green_dragon",
+          "starwyvern",
+          "werewolf",
+          "wizard"
+        ],
+        "chests": [
+          {
+            "item": "erdricks_sword",
+            "type": "quest_weapon",
+            "note": "Erdrick's Sword — best weapon in game, found in a chest"
+          }
+        ]
+      },
+      {
+        "floor": 3,
+        "encounters": [
+          "axe_knight",
+          "blue_dragon",
+          "stoneman",
+          "wizard"
+        ],
+        "chests": []
+      },
+      {
+        "floor": 4,
+        "encounters": [
+          "axe_knight",
+          "blue_dragon",
+          "stoneman",
+          "wizard"
+        ],
+        "chests": []
+      },
+      {
+        "floor": 5,
+        "encounters": [
+          "axe_knight",
+          "blue_dragon",
+          "stoneman",
+          "wizard"
+        ],
+        "chests": []
+      },
+      {
+        "floor": 6,
+        "encounters": [
+          "axe_knight",
+          "blue_dragon",
+          "stoneman",
+          "wizard"
+        ],
+        "chests": []
+      },
+      {
+        "floor": 7,
+        "encounters": [
+          "armored_knight",
+          "red_dragon",
+          "stoneman",
+          "wizard"
+        ],
+        "chests": [
+          {
+            "item": "herb"
+          },
+          {
+            "item": "herb"
+          },
+          {
+            "gp_min": 500,
+            "gp_max": 755
+          },
+          {
+            "item": "magic_key"
+          },
+          {
+            "item": "wings"
+          },
+          {
+            "item": "cursed_belt"
+          }
+        ]
+      },
+      {
+        "floor": 8,
+        "encounters": [
+          "axe_knight",
+          "green_dragon",
+          "starwyvern",
+          "werewolf",
+          "wizard"
+        ],
+        "boss": "dragonlord_form1",
+        "boss_second_form": "dragonlord_form2",
+        "chests": []
+      }
+    ]
+  }
+]

@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../schemas/v1/save_state.schema.json",
+  "name": "Stair: Mountain Cave B1 → World Map (up exit at 1,8)",
+  "description": "Debug save state for stair transition: Mountain Cave B1 → World Map (up exit at 1,8). Hero stands on the stair tile ready to transition.",
+  "scene": "MountainCaveB1",
+  "tile": "1,8",
+  "facing": "up",
+  "come_from": "debug",
+  "gold": 1000,
+  "hero_name": "ERDRICK",
+  "hero_level": 7,
+  "hero_hp": 40,
+  "hero_hp_max": 40,
+  "hero_mp": 26,
+  "hero_mp_max": 26,
+  "hero_str": 13,
+  "hero_agl": 13,
+  "hero_atk": 13,
+  "hero_def": 12,
+  "hero_exp": 450,
+  "hero_weapon": "hand_axe",
+  "hero_armor": "chain_mail",
+  "hero_spells": [
+    "heal",
+    "hurt",
+    "sleep"
+  ],
+  "items": [
+    {
+      "name": "Torch",
+      "id": "torch",
+      "desc": "Illuminates caves"
+    }
+  ],
+  "opened_chests": {},
+  "unlocked_doors": {},
+  "bridge_built": false
+}

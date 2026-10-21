@@ -1,0 +1,34 @@
+[
+  {
+    "id": "small_shield",
+    "name": "Small Shield",
+    "type": "shield",
+    "defense": 4,
+    "cost": 90,
+    "sold_in": [
+      "Brecconary",
+      "Kol"
+    ]
+  },
+  {
+    "id": "large_shield",
+    "name": "Large Shield",
+    "type": "shield",
+    "defense": 10,
+    "cost": 800,
+    "sold_in": [
+      "Garinham",
+      "Cantlin"
+    ]
+  },
+  {
+    "id": "silver_shield",
+    "name": "Silver Shield",
+    "type": "shield",
+    "defense": 20,
+    "cost": 14800,
+    "sold_in": [
+      "Cantlin"
+    ]
+  }
+]

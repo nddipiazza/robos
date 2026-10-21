@@ -1,0 +1,116 @@
+{
+  "map_entry_points": [
+    {
+      "map": "brecconary-1f",
+      "world": {
+        "x": 1,
+        "y": 15
+      },
+      "facing": "right"
+    },
+    {
+      "map": "cantlin-1f",
+      "world": {
+        "x": 1,
+        "y": 16
+      },
+      "facing": "right"
+    },
+    {
+      "map": "charlock-castle-1f",
+      "world": {
+        "x": 10,
+        "y": 20
+      },
+      "facing": "up"
+    },
+    {
+      "map": "erdricks-cave-b1",
+      "world": {
+        "x": 1,
+        "y": 1
+      },
+      "facing": "right"
+    },
+    {
+      "map": "garinham-1f",
+      "world": {
+        "x": 1,
+        "y": 15
+      },
+      "facing": "right"
+    },
+    {
+      "map": "hauksness",
+      "world": {
+        "x": 1,
+        "y": 10
+      },
+      "facing": "right"
+    },
+    {
+      "map": "kol-1f",
+      "world": {
+        "x": 1,
+        "y": 15
+      },
+      "facing": "right"
+    },
+    {
+      "map": "mountain-cave-b1",
+      "world": {
+        "x": 1,
+        "y": 8
+      },
+      "facing": "right"
+    },
+    {
+      "map": "northern-cave-b1",
+      "world": {
+        "x": 5,
+        "y": 10
+      },
+      "facing": "right"
+    },
+    {
+      "map": "rimuldar-1f",
+      "world": {
+        "x": 1,
+        "y": 16
+      },
+      "facing": "right"
+    },
+    {
+      "map": "southern-cave-b1",
+      "world": {
+        "x": 1,
+        "y": 5
+      },
+      "facing": "right"
+    },
+    {
+      "map": "swamp-cave-b1-entry-1",
+      "world": {
+        "x": 1,
+        "y": 1
+      },
+      "facing": "down"
+    },
+    {
+      "map": "swamp-cave-b1-entry-2",
+      "world": {
+        "x": 1,
+        "y": 30
+      },
+      "facing": "up"
+    },
+    {
+      "map": "tantegel-castle-1f",
+      "world": {
+        "x": 11,
+        "y": 30
+      },
+      "facing": "up"
+    }
+  ]
+}

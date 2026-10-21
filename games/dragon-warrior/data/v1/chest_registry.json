@@ -1,0 +1,235 @@
+{
+  "cantlin-1f": [
+    {
+      "col": 28,
+      "row": 26,
+      "id": "ctnc1"
+    },
+    {
+      "col": 3,
+      "row": 28,
+      "id": "ctnc2"
+    },
+    {
+      "col": 28,
+      "row": 28,
+      "id": "ctnc3"
+    }
+  ],
+  "charlock-castle-b2": [
+    {
+      "col": 6,
+      "row": 6,
+      "id": "cb2c1"
+    }
+  ],
+  "charlock-castle-b7": [
+    {
+      "col": 11,
+      "row": 11,
+      "id": "cb7c1"
+    },
+    {
+      "col": 11,
+      "row": 12,
+      "id": "cb7c2"
+    },
+    {
+      "col": 11,
+      "row": 13,
+      "id": "cb7c3"
+    },
+    {
+      "col": 12,
+      "row": 12,
+      "id": "cb7c3"
+    },
+    {
+      "col": 12,
+      "row": 13,
+      "id": "cb7c4"
+    },
+    {
+      "col": 11,
+      "row": 12,
+      "id": "cb7c2"
+    },
+    {
+      "col": 13,
+      "row": 13,
+      "id": "cb7c4"
+    }
+  ],
+  "erdricks-cave-b2": [
+    {
+      "col": 10,
+      "row": 4,
+      "id": "er2c1"
+    }
+  ],
+  "garinham-1f": [
+    {
+      "col": 9,
+      "row": 6,
+      "id": "garc1"
+    },
+    {
+      "col": 10,
+      "row": 6,
+      "id": "garc2"
+    },
+    {
+      "col": 9,
+      "row": 7,
+      "id": "garc3"
+    }
+  ],
+  "garinham-b1": [
+    {
+      "col": 12,
+      "row": 1,
+      "id": "gh1c1"
+    },
+    {
+      "col": 13,
+      "row": 1,
+      "id": "gh1c2"
+    },
+    {
+      "col": 14,
+      "row": 1,
+      "id": "gh1c3"
+    }
+  ],
+  "garinham-b3": [
+    {
+      "col": 2,
+      "row": 2,
+      "id": "gh3c1"
+    },
+    {
+      "col": 14,
+      "row": 7,
+      "id": "gh3c2"
+    }
+  ],
+  "kol-1f": [
+    {
+      "col": 16,
+      "row": 21,
+      "id": "kolc1"
+    },
+    {
+      "col": 16,
+      "row": 22,
+      "id": "kolc2"
+    },
+    {
+      "col": 16,
+      "row": 23,
+      "id": "kolc3"
+    },
+    {
+      "col": 10,
+      "row": 7,
+      "id": "kolc_ff",
+      "hidden": true
+    }
+  ],
+  "mountain-cave-b1": [
+    {
+      "col": 14,
+      "row": 6,
+      "id": "mt1c1"
+    }
+  ],
+  "mountain-cave-b2": [
+    {
+      "col": 3,
+      "row": 3,
+      "id": "mt2c1"
+    },
+    {
+      "col": 4,
+      "row": 3,
+      "id": "mt2c2"
+    },
+    {
+      "col": 2,
+      "row": 7,
+      "id": "mt2c3"
+    },
+    {
+      "col": 11,
+      "row": 10,
+      "id": "mt2c4"
+    }
+  ],
+  "northern-cave-b1": [
+    {
+      "col": 4,
+      "row": 5,
+      "id": "nc1c1"
+    }
+  ],
+  "rimuldar-1f": [
+    {
+      "col": 25,
+      "row": 24,
+      "id": "rimc1"
+    }
+  ],
+  "southern-cave-b1": [
+    {
+      "col": 6,
+      "row": 6,
+      "id": "sc1c1"
+    }
+  ],
+  "tantegel-castle-1f": [
+    {
+      "col": 2,
+      "row": 14,
+      "id": "tanc1"
+    },
+    {
+      "col": 3,
+      "row": 15,
+      "id": "tanc2"
+    },
+    {
+      "col": 2,
+      "row": 16,
+      "id": "tanc3"
+    },
+    {
+      "col": 4,
+      "row": 16,
+      "id": "tanc4"
+    }
+  ],
+  "tantegel-castle-2f": [
+    {
+      "col": 7,
+      "row": 2,
+      "id": "ttrc1"
+    },
+    {
+      "col": 5,
+      "row": 5,
+      "id": "ttrc2"
+    },
+    {
+      "col": 6,
+      "row": 5,
+      "id": "ttrc3"
+    }
+  ],
+  "tantegel-castle-b1": [
+    {
+      "col": 5,
+      "row": 6,
+      "id": "tbac1"
+    }
+  ]
+}

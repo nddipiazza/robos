@@ -1,0 +1,632 @@
+[
+  {
+    "level": 1,
+    "exp_required": 0,
+    "str_gain": [
+      3,
+      6
+    ],
+    "agi_gain": [
+      3,
+      6
+    ],
+    "hp_gain": [
+      13,
+      16
+    ],
+    "mp_gain": [
+      0,
+      0
+    ],
+    "spell": null
+  },
+  {
+    "level": 2,
+    "exp_required": 7,
+    "str_gain": [
+      1,
+      1
+    ],
+    "agi_gain": [
+      0,
+      0
+    ],
+    "hp_gain": [
+      6,
+      7
+    ],
+    "mp_gain": [
+      0,
+      0
+    ],
+    "spell": null
+  },
+  {
+    "level": 3,
+    "exp_required": 23,
+    "str_gain": [
+      2,
+      2
+    ],
+    "agi_gain": [
+      2,
+      2
+    ],
+    "hp_gain": [
+      2,
+      2
+    ],
+    "mp_gain": [
+      4,
+      7
+    ],
+    "spell": "heal"
+  },
+  {
+    "level": 4,
+    "exp_required": 47,
+    "str_gain": [
+      0,
+      0
+    ],
+    "agi_gain": [
+      2,
+      2
+    ],
+    "hp_gain": [
+      6,
+      7
+    ],
+    "mp_gain": [
+      10,
+      11
+    ],
+    "spell": "hurt"
+  },
+  {
+    "level": 5,
+    "exp_required": 110,
+    "str_gain": [
+      4,
+      5
+    ],
+    "agi_gain": [
+      2,
+      2
+    ],
+    "hp_gain": [
+      4,
+      4
+    ],
+    "mp_gain": [
+      4,
+      4
+    ],
+    "spell": null
+  },
+  {
+    "level": 6,
+    "exp_required": 220,
+    "str_gain": [
+      4,
+      4
+    ],
+    "agi_gain": [
+      0,
+      0
+    ],
+    "hp_gain": [
+      3,
+      3
+    ],
+    "mp_gain": [
+      3,
+      4
+    ],
+    "spell": null
+  },
+  {
+    "level": 7,
+    "exp_required": 450,
+    "str_gain": [
+      2,
+      2
+    ],
+    "agi_gain": [
+      6,
+      7
+    ],
+    "hp_gain": [
+      2,
+      2
+    ],
+    "mp_gain": [
+      2,
+      2
+    ],
+    "spell": "sleep"
+  },
+  {
+    "level": 8,
+    "exp_required": 800,
+    "str_gain": [
+      3,
+      4
+    ],
+    "agi_gain": [
+      3,
+      3
+    ],
+    "hp_gain": [
+      5,
+      6
+    ],
+    "mp_gain": [
+      3,
+      3
+    ],
+    "spell": null
+  },
+  {
+    "level": 9,
+    "exp_required": 1300,
+    "str_gain": [
+      8,
+      8
+    ],
+    "agi_gain": [
+      1,
+      2
+    ],
+    "hp_gain": [
+      4,
+      4
+    ],
+    "mp_gain": [
+      6,
+      7
+    ],
+    "spell": "radiant"
+  },
+  {
+    "level": 10,
+    "exp_required": 2000,
+    "str_gain": [
+      4,
+      5
+    ],
+    "agi_gain": [
+      8,
+      9
+    ],
+    "hp_gain": [
+      3,
+      4
+    ],
+    "mp_gain": [
+      4,
+      4
+    ],
+    "spell": "stopspell"
+  },
+  {
+    "level": 11,
+    "exp_required": 2900,
+    "str_gain": [
+      5,
+      5
+    ],
+    "agi_gain": [
+      4,
+      4
+    ],
+    "hp_gain": [
+      7,
+      8
+    ],
+    "mp_gain": [
+      9,
+      10
+    ],
+    "spell": null
+  },
+  {
+    "level": 12,
+    "exp_required": 4000,
+    "str_gain": [
+      7,
+      8
+    ],
+    "agi_gain": [
+      5,
+      5
+    ],
+    "hp_gain": [
+      1,
+      1
+    ],
+    "mp_gain": [
+      7,
+      8
+    ],
+    "spell": "outside"
+  },
+  {
+    "level": 13,
+    "exp_required": 5500,
+    "str_gain": [
+      3,
+      4
+    ],
+    "agi_gain": [
+      7,
+      8
+    ],
+    "hp_gain": [
+      7,
+      7
+    ],
+    "mp_gain": [
+      5,
+      6
+    ],
+    "spell": "return"
+  },
+  {
+    "level": 14,
+    "exp_required": 7500,
+    "str_gain": [
+      8,
+      8
+    ],
+    "agi_gain": [
+      6,
+      7
+    ],
+    "hp_gain": [
+      7,
+      8
+    ],
+    "mp_gain": [
+      6,
+      6
+    ],
+    "spell": null
+  },
+  {
+    "level": 15,
+    "exp_required": 10000,
+    "str_gain": [
+      7,
+      8
+    ],
+    "agi_gain": [
+      8,
+      9
+    ],
+    "hp_gain": [
+      7,
+      8
+    ],
+    "mp_gain": [
+      1,
+      2
+    ],
+    "spell": "repel"
+  },
+  {
+    "level": 16,
+    "exp_required": 13000,
+    "str_gain": [
+      3,
+      4
+    ],
+    "agi_gain": [
+      6,
+      6
+    ],
+    "hp_gain": [
+      5,
+      6
+    ],
+    "mp_gain": [
+      21,
+      23
+    ],
+    "spell": null
+  },
+  {
+    "level": 17,
+    "exp_required": 16000,
+    "str_gain": [
+      0,
+      0
+    ],
+    "agi_gain": [
+      7,
+      8
+    ],
+    "hp_gain": [
+      8,
+      8
+    ],
+    "mp_gain": [
+      5,
+      5
+    ],
+    "spell": "healmore"
+  },
+  {
+    "level": 18,
+    "exp_required": 19000,
+    "str_gain": [
+      12,
+      13
+    ],
+    "agi_gain": [
+      5,
+      6
+    ],
+    "hp_gain": [
+      13,
+      15
+    ],
+    "mp_gain": [
+      7,
+      8
+    ],
+    "spell": null
+  },
+  {
+    "level": 19,
+    "exp_required": 22000,
+    "str_gain": [
+      2,
+      2
+    ],
+    "agi_gain": [
+      2,
+      2
+    ],
+    "hp_gain": [
+      14,
+      15
+    ],
+    "mp_gain": [
+      6,
+      7
+    ],
+    "spell": "hurtmore"
+  },
+  {
+    "level": 20,
+    "exp_required": 26000,
+    "str_gain": [
+      4,
+      5
+    ],
+    "agi_gain": [
+      2,
+      2
+    ],
+    "hp_gain": [
+      7,
+      8
+    ],
+    "mp_gain": [
+      12,
+      13
+    ],
+    "spell": null
+  },
+  {
+    "level": 21,
+    "exp_required": 30000,
+    "str_gain": [
+      3,
+      3
+    ],
+    "agi_gain": [
+      2,
+      2
+    ],
+    "hp_gain": [
+      10,
+      11
+    ],
+    "mp_gain": [
+      6,
+      7
+    ],
+    "spell": null
+  },
+  {
+    "level": 22,
+    "exp_required": 34000,
+    "str_gain": [
+      2,
+      2
+    ],
+    "agi_gain": [
+      0,
+      0
+    ],
+    "hp_gain": [
+      8,
+      9
+    ],
+    "mp_gain": [
+      10,
+      11
+    ],
+    "spell": null
+  },
+  {
+    "level": 23,
+    "exp_required": 38000,
+    "str_gain": [
+      2,
+      2
+    ],
+    "agi_gain": [
+      3,
+      4
+    ],
+    "hp_gain": [
+      6,
+      7
+    ],
+    "mp_gain": [
+      6,
+      7
+    ],
+    "spell": null
+  },
+  {
+    "level": 24,
+    "exp_required": 42000,
+    "str_gain": [
+      3,
+      4
+    ],
+    "agi_gain": [
+      4,
+      4
+    ],
+    "hp_gain": [
+      5,
+      5
+    ],
+    "mp_gain": [
+      7,
+      8
+    ],
+    "spell": null
+  },
+  {
+    "level": 25,
+    "exp_required": 46000,
+    "str_gain": [
+      9,
+      10
+    ],
+    "agi_gain": [
+      2,
+      2
+    ],
+    "hp_gain": [
+      3,
+      4
+    ],
+    "mp_gain": [
+      0,
+      0
+    ],
+    "spell": null
+  },
+  {
+    "level": 26,
+    "exp_required": 50000,
+    "str_gain": [
+      4,
+      4
+    ],
+    "agi_gain": [
+      4,
+      5
+    ],
+    "hp_gain": [
+      6,
+      6
+    ],
+    "mp_gain": [
+      7,
+      7
+    ],
+    "spell": null
+  },
+  {
+    "level": 27,
+    "exp_required": 54000,
+    "str_gain": [
+      7,
+      8
+    ],
+    "agi_gain": [
+      2,
+      2
+    ],
+    "hp_gain": [
+      8,
+      9
+    ],
+    "mp_gain": [
+      6,
+      7
+    ],
+    "spell": null
+  },
+  {
+    "level": 28,
+    "exp_required": 58000,
+    "str_gain": [
+      5,
+      5
+    ],
+    "agi_gain": [
+      7,
+      8
+    ],
+    "hp_gain": [
+      5,
+      6
+    ],
+    "mp_gain": [
+      5,
+      5
+    ],
+    "spell": null
+  },
+  {
+    "level": 29,
+    "exp_required": 62000,
+    "str_gain": [
+      4,
+      5
+    ],
+    "agi_gain": [
+      5,
+      5
+    ],
+    "hp_gain": [
+      5,
+      5
+    ],
+    "mp_gain": [
+      9,
+      10
+    ],
+    "spell": null
+  },
+  {
+    "level": 30,
+    "exp_required": 65535,
+    "str_gain": [
+      5,
+      5
+    ],
+    "agi_gain": [
+      9,
+      10
+    ],
+    "hp_gain": [
+      9,
+      10
+    ],
+    "mp_gain": [
+      9,
+      10
+    ],
+    "spell": null
+  }
+]

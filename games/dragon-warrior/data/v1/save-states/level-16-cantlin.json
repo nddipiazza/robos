@@ -1,0 +1,43 @@
+{
+  "$schema": "../../../schemas/v1/save_state.schema.json",
+  "name": "Level 16 - Cantlin",
+  "description": "Level 16 Cantlin milestone with Flame Sword, Magic Armor, and late-game prep underway.",
+  "scene": "Cantlin",
+  "tile": "16,2",
+  "facing": "down",
+  "come_from": "world_map",
+  "gold": 10000,
+  "hero_name": "ERDRICK",
+  "hero_level": 16,
+  "hero_hp": 92,
+  "hero_hp_max": 92,
+  "hero_mp": 80,
+  "hero_mp_max": 80,
+  "hero_str": 26,
+  "hero_agl": 28,
+  "hero_atk": 26,
+  "hero_def": 24,
+  "hero_exp": 13000,
+  "hero_weapon": "flame_sword",
+  "hero_armor": "magic_armor",
+  "hero_spells": [
+    "heal",
+    "hurt",
+    "sleep",
+    "radiant",
+    "stopspell",
+    "outside",
+    "return",
+    "repel"
+  ],
+  "items": [
+    {
+      "name": "Fairy Flute",
+      "id": "fairy_flute",
+      "desc": "Puts the Golem boss to sleep; required to defeat the Golem"
+    }
+  ],
+  "opened_chests": {},
+  "unlocked_doors": {},
+  "bridge_built": false
+}

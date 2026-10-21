@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://npc_eb9ca6cd33b8"]
+
+[ext_resource type="Script" path="res://scripts/NPCSprite.gd" id="1_script"]
+
+[node name="Lady" type="Node2D"]
+script = ExtResource("1_script")
+character_id = "lady"
+facing = "down"
+pixel_scale = 2.0
+toggle_time = 0.35
+playing = true

@@ -1,0 +1,45 @@
+{
+  "$schema": "../../../schemas/v1/save_state.schema.json",
+  "name": "Stair: Charlock 1F → B1 (down stairs at 11,2)",
+  "description": "Debug save state for stair transition: Charlock 1F → B1 (down stairs at 11,2). Hero stands on the stair tile ready to transition.",
+  "scene": "CharlockCastle1F",
+  "tile": "11,2",
+  "facing": "down",
+  "come_from": "debug",
+  "gold": 18000,
+  "hero_name": "ERDRICK",
+  "hero_level": 19,
+  "hero_hp": 130,
+  "hero_hp_max": 130,
+  "hero_mp": 108,
+  "hero_mp_max": 108,
+  "hero_str": 32,
+  "hero_agl": 34,
+  "hero_atk": 32,
+  "hero_def": 32,
+  "hero_exp": 25000,
+  "hero_weapon": "flame_sword",
+  "hero_armor": "erdricks_armor",
+  "hero_spells": [
+    "heal",
+    "hurt",
+    "sleep",
+    "radiant",
+    "stopspell",
+    "outside",
+    "return",
+    "repel",
+    "healmore",
+    "hurtmore"
+  ],
+  "items": [
+    {
+      "name": "Fairy Flute",
+      "id": "fairy_flute",
+      "desc": "Puts the Golem boss to sleep"
+    }
+  ],
+  "opened_chests": {},
+  "unlocked_doors": {},
+  "bridge_built": true
+}

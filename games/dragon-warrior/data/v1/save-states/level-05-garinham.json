@@ -1,0 +1,31 @@
+{
+  "$schema": "../../../schemas/v1/save_state.schema.json",
+  "name": "Level 05 - Garinham Arrival",
+  "description": "Level 5 milestone in Garinham with stronger town gear and early combat spells.",
+  "scene": "Garinham",
+  "tile": "11,20",
+  "facing": "down",
+  "come_from": "world_map",
+  "gold": 600,
+  "hero_name": "ERDRICK",
+  "hero_level": 5,
+  "hero_hp": 35,
+  "hero_hp_max": 35,
+  "hero_mp": 20,
+  "hero_mp_max": 20,
+  "hero_str": 10,
+  "hero_agl": 10,
+  "hero_atk": 10,
+  "hero_def": 8,
+  "hero_exp": 110,
+  "hero_weapon": "hand_axe",
+  "hero_armor": "chain_mail",
+  "hero_spells": [
+    "heal",
+    "hurt"
+  ],
+  "items": [],
+  "opened_chests": {},
+  "unlocked_doors": {},
+  "bridge_built": false
+}

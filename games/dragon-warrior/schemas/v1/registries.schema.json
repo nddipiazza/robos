@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dragonwarrior.org/schemas/v1/registries.schema.json",
+  "title": "SpatialRegistriesDataStoreV1",
+  "description": "Schema for map spatial placement registries: stair connections, door locations, treasure chests, NPCs, shops, and inns.",
+  "type": "object",
+  "properties": {
+    "stair_registry": {
+      "type": "object",
+      "description": "Stair links indexed by map key."
+    },
+    "door_registry": {
+      "type": "object",
+      "description": "Door positions indexed by map key."
+    },
+    "chest_registry": {
+      "type": "object",
+      "description": "Chest positions and IDs indexed by map key."
+    },
+    "npc_registry": {
+      "type": "object",
+      "description": "NPC placement and sprite roles indexed by map key."
+    },
+    "shops": {
+      "type": "array",
+      "description": "Shop keeper positions, shop types, and inventories."
+    },
+    "inns": {
+      "type": "array",
+      "description": "Inn keeper positions and stay costs."
+    }
+  }
+}

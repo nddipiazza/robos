@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dragonwarrior.org/schemas/v1/encounter_zones.schema.json",
+  "title": "EncounterZonesDataStoreV1",
+  "description": "Schema for Dragon Warrior world map and dungeon encounter zones, step rates, zone assignment grids, and monster encounter tables.",
+  "type": ["array", "object"],
+  "properties": {
+    "grid": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": { "type": "integer" }
+      }
+    },
+    "encounter_rates": {
+      "type": "object"
+    }
+  }
+}

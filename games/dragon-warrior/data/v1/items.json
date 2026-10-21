@@ -1,0 +1,123 @@
+[
+  {
+    "id": "herb",
+    "name": "Herb",
+    "category": "consumable",
+    "cost": 24,
+    "effect": "Restores 23-30 HP",
+    "hp_restore_min": 23,
+    "hp_restore_max": 30,
+    "formula": "RAND & 0x0F + 0x17",
+    "sold_in": [
+      "Brecconary",
+      "Garinham",
+      "Kol",
+      "Cantlin"
+    ],
+    "stack_max": 6
+  },
+  {
+    "id": "torch",
+    "name": "Torch",
+    "category": "consumable",
+    "cost": 8,
+    "effect": "Illuminates caves — radius 1, lasts until you exit the dungeon",
+    "duration": "Unlimited (until cave exit)",
+    "sold_in": [
+      "Brecconary",
+      "Garinham",
+      "Kol",
+      "Cantlin"
+    ],
+    "stack_max": 6
+  },
+  {
+    "id": "fairy_water",
+    "name": "Fairy Water",
+    "category": "consumable",
+    "cost": 38,
+    "effect": "Repels weaker monsters for 128 steps on the overworld",
+    "duration_steps": 128,
+    "repel_condition": "Blocks encounter if enemy_strength >> 1 <= hero_defense >> 1",
+    "note": "Identical effect to the REPEL spell",
+    "sold_in": [
+      "Brecconary",
+      "Cantlin"
+    ],
+    "stack_max": 6
+  },
+  {
+    "id": "wings",
+    "name": "Wings",
+    "category": "consumable",
+    "cost": 70,
+    "effect": "Instantly returns hero to Tantegel Castle from anywhere on the overworld",
+    "note": "Same effect as RETURN spell. Consumed on use.",
+    "sold_in": [
+      "Kol",
+      "Cantlin"
+    ],
+    "stack_max": 6
+  },
+  {
+    "id": "magic_key",
+    "name": "Magic Key",
+    "category": "consumable",
+    "cost": {
+      "Rimuldar": 53,
+      "Tantegel Castle": 85,
+      "Cantlin": 98
+    },
+    "effect": "Opens a locked door. Consumed on use.",
+    "sold_in": [
+      "Rimuldar",
+      "Tantegel Castle",
+      "Cantlin"
+    ],
+    "stack_max": 6,
+    "note": "Price varies by shop. Rimuldar is cheapest (53G)."
+  },
+  {
+    "id": "dragons_scale",
+    "name": "Dragon's Scale",
+    "category": "equipment_bonus",
+    "cost": 20,
+    "effect": "Raises hero Defense Power by 2 when equipped",
+    "defense_bonus": 2,
+    "note": "Does not count as armor — stacks with armor/shield",
+    "sold_in": [
+      "Brecconary",
+      "Garinham",
+      "Kol",
+      "Cantlin"
+    ]
+  },
+  {
+    "id": "fighters_ring",
+    "name": "Fighter's Ring",
+    "category": "equipment_bonus",
+    "cost": 30,
+    "effect": "Does nothing (appears useful but has no effect — cursed item)",
+    "sold_in": [],
+    "found_in": "Mountain Cave B2"
+  },
+  {
+    "id": "cursed_belt",
+    "name": "Cursed Belt",
+    "category": "cursed",
+    "cost": 360,
+    "effect": "Places a curse on the hero when equipped. Harmful — do not use.",
+    "sold_in": [],
+    "found_in": "Garin's Grave B3 and Charlock Castle B8"
+  },
+  {
+    "id": "cursed_necklace",
+    "name": "Cursed Necklace",
+    "category": "cursed",
+    "cost": 2400,
+    "effect": "Places a curse on the hero when equipped. Harmful — do not use.",
+    "sold_in": [],
+    "found_in": "Mountain Cave B2 (1/32 chance from gold chest)",
+    "note": "Can only be obtained once. Death Necklace in JP version."
+  }
+]

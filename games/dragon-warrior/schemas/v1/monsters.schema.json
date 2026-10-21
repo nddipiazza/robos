@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dragonwarrior.org/schemas/v1/monsters.schema.json",
+  "title": "MonstersDataStoreV1",
+  "description": "Schema for Dragon Warrior monster definitions, combat attributes, AI behavior patterns, and resistances.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "title": "MonsterEntity",
+    "description": "Represents a single monster entity in Dragon Warrior combat system.",
+    "properties": {
+      "id": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255,
+        "description": "Unique numeric identifier for the monster."
+      },
+      "key": {
+        "type": "string",
+        "pattern": "^[a-z0-9_]+$",
+        "description": "Unique machine-readable snake_case identifier."
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Display name of the monster."
+      },
+      "strength": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Physical strength statistic, determining base physical attack power."
+      },
+      "agility": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Agility statistic, determining defense and evasion thresholds."
+      },
+      "hp_min": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "Minimum starting HP range bound."
+      },
+      "hp_max": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "Maximum starting HP range bound."
+      },
+      "xp": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Experience points awarded to hero upon defeating this monster."
+      },
+      "gp_min": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Minimum Gold Pieces awarded."
+      },
+      "gp_max": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Maximum Gold Pieces awarded."
+      },
+      "resist_sleep": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 15,
+        "description": "Sleep spell resistance rate out of 16 (0 = 0% resist, 15 = ~93.75% resist)."
+      },
+      "resist_stopspell": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 15,
+        "description": "Stopspell resistance rate out of 16."
+      },
+      "resist_hurt": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 15,
+        "description": "Hurt/Hurtmore spell damage resistance rate out of 16."
+      },
+      "dodge": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 64,
+        "description": "Physical attack dodge rate out of 64."
+      },
+      "pattern": {
+        "type": "array",
+        "description": "Ordered combat action evaluation pattern list for enemy AI.",
+        "items": {
+          "type": "object",
+          "properties": {
+            "action": {
+              "type": "string",
+              "description": "Action type (attack, cast_spell, fire_breath, sleep, stopspell, heal, healmore, etc.)."
+            },
+            "chance": {
+              "type": ["string", "number"],
+              "description": "Probability threshold or descriptor (e.g. 'always', '1/4', 0.25)."
+            },
+            "spell": {
+              "type": "string",
+              "description": "Optional target spell name when action is cast_spell."
+            }
+          },
+          "required": ["action"],
+          "additionalProperties": true
+        }
+      },
+      "run_group": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Run chance formula group identifier."
+      }
+    },
+    "required": [
+      "id",
+      "key",
+      "name",
+      "strength",
+      "agility",
+      "hp_min",
+      "hp_max",
+      "xp",
+      "gp_min",
+      "gp_max",
+      "resist_sleep",
+      "resist_stopspell",
+      "resist_hurt",
+      "dodge"
+    ],
+    "additionalProperties": true
+  }
+}

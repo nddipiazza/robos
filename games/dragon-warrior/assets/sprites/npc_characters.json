@@ -1,0 +1,306 @@
+{
+  "meta": {
+    "game": "Dragon Warrior 1",
+    "source_sheet": "assets/sprites/characters-3.png",
+    "sheet_size": {
+      "w": 315,
+      "h": 136
+    },
+    "cell_size": {
+      "w": 16,
+      "h": 16
+    },
+    "cell_stride": 20,
+    "cols": 15,
+    "rows": 7,
+    "chars_per_row": 2,
+    "frames_per_char": 8,
+    "frame_order": [
+      "D1",
+      "D2",
+      "L1",
+      "L2",
+      "U1",
+      "U2",
+      "R1",
+      "R2"
+    ],
+    "frame_key": {
+      "D1": "Walk Down  \u2014 frame 1",
+      "D2": "Walk Down  \u2014 frame 2",
+      "L1": "Walk Left  \u2014 frame 1",
+      "L2": "Walk Left  \u2014 frame 2",
+      "U1": "Walk Up    \u2014 frame 1",
+      "U2": "Walk Up    \u2014 frame 2",
+      "R1": "Walk Right \u2014 frame 1",
+      "R2": "Walk Right \u2014 frame 2"
+    },
+    "notes": [
+      "Char 1 occupies cols 0-7 (frames D1..R2, all present).",
+      "Char 2 occupies cols 8-15, but col 15 (R2) is beyond the 315px sheet edge \u2014 R2 is null/missing for all right-side characters.",
+      "Row 6 char 2 is 'special': only 4 frames (cols 8-11), representing trump-guard left-facing walk and king down-facing walk.",
+      "Sprite files live in assets/sprites/npc/ as NNN_rROW_cCOL.png."
+    ]
+  },
+  "characters": [
+    {
+      "id": "hero_no_sword",
+      "display": "Hero (No Sword)",
+      "description": "The hero in base equipment, no weapon equipped",
+      "row": 0,
+      "position": "left",
+      "frames": {
+        "D1": "000_r0_c0.png",
+        "D2": "001_r0_c1.png",
+        "L1": "002_r0_c2.png",
+        "L2": "003_r0_c3.png",
+        "U1": "004_r0_c4.png",
+        "U2": "005_r0_c5.png",
+        "R1": "006_r0_c6.png",
+        "R2": "007_r0_c7.png"
+      }
+    },
+    {
+      "id": "minister",
+      "display": "Minister",
+      "description": "Royal minister / chancellor in gray robe",
+      "row": 0,
+      "position": "right",
+      "frames": {
+        "D1": "008_r0_c8.png",
+        "D2": "009_r0_c9.png",
+        "L1": "010_r0_c10.png",
+        "L2": "011_r0_c11.png",
+        "U1": "012_r0_c12.png",
+        "U2": "013_r0_c13.png",
+        "R1": "014_r0_c14.png",
+        "R2": null
+      }
+    },
+    {
+      "id": "hero_sword",
+      "display": "Hero (Sword)",
+      "description": "The hero wielding a sword",
+      "row": 1,
+      "position": "left",
+      "frames": {
+        "D1": "015_r1_c0.png",
+        "D2": "016_r1_c1.png",
+        "L1": "017_r1_c2.png",
+        "L2": "018_r1_c3.png",
+        "U1": "019_r1_c4.png",
+        "U2": "020_r1_c5.png",
+        "R1": "021_r1_c6.png",
+        "R2": "022_r1_c7.png"
+      }
+    },
+    {
+      "id": "lady",
+      "display": "Lady",
+      "description": "Female NPC \u2014 noblewoman or townswoman",
+      "row": 1,
+      "position": "right",
+      "frames": {
+        "D1": "023_r1_c8.png",
+        "D2": "024_r1_c9.png",
+        "L1": "025_r1_c10.png",
+        "L2": "026_r1_c11.png",
+        "U1": "027_r1_c12.png",
+        "U2": "028_r1_c13.png",
+        "R1": "029_r1_c14.png",
+        "R2": null
+      }
+    },
+    {
+      "id": "hero_no_sword_shield",
+      "display": "Hero (No Sword + Shield)",
+      "description": "The hero carrying a shield but no sword",
+      "row": 2,
+      "position": "left",
+      "frames": {
+        "D1": "030_r2_c0.png",
+        "D2": "031_r2_c1.png",
+        "L1": "032_r2_c2.png",
+        "L2": "033_r2_c3.png",
+        "U1": "034_r2_c4.png",
+        "U2": "035_r2_c5.png",
+        "R1": "036_r2_c6.png",
+        "R2": "037_r2_c7.png"
+      }
+    },
+    {
+      "id": "sage",
+      "display": "Sage",
+      "description": "Elder sage / wise man in gray robe",
+      "row": 2,
+      "position": "right",
+      "frames": {
+        "D1": "038_r2_c8.png",
+        "D2": "039_r2_c9.png",
+        "L1": "040_r2_c10.png",
+        "L2": "041_r2_c11.png",
+        "U1": "042_r2_c12.png",
+        "U2": "043_r2_c13.png",
+        "R1": "044_r2_c14.png",
+        "R2": null
+      }
+    },
+    {
+      "id": "hero_sword_shield",
+      "display": "Hero (Sword + Shield)",
+      "description": "The hero fully equipped with sword and shield",
+      "row": 3,
+      "position": "left",
+      "frames": {
+        "D1": "045_r3_c0.png",
+        "D2": "046_r3_c1.png",
+        "L1": "047_r3_c2.png",
+        "L2": "048_r3_c3.png",
+        "U1": "049_r3_c4.png",
+        "U2": "050_r3_c5.png",
+        "R1": "051_r3_c6.png",
+        "R2": "052_r3_c7.png"
+      }
+    },
+    {
+      "id": "sage_alt",
+      "display": "Sage (Alt)",
+      "description": "Alternate sage sprite \u2014 possibly a different sage NPC",
+      "row": 3,
+      "position": "right",
+      "frames": {
+        "D1": "053_r3_c8.png",
+        "D2": "054_r3_c9.png",
+        "L1": "055_r3_c10.png",
+        "L2": "056_r3_c11.png",
+        "U1": "057_r3_c12.png",
+        "U2": "058_r3_c13.png",
+        "R1": "059_r3_c14.png",
+        "R2": null
+      }
+    },
+    {
+      "id": "hero_sword_princess",
+      "display": "Hero (Sword, with Princess)",
+      "description": "Hero carrying or escorting the princess",
+      "row": 4,
+      "position": "left",
+      "frames": {
+        "D1": "060_r4_c0.png",
+        "D2": "061_r4_c1.png",
+        "L1": "062_r4_c2.png",
+        "L2": "063_r4_c3.png",
+        "U1": "064_r4_c4.png",
+        "U2": "065_r4_c5.png",
+        "R1": "066_r4_c6.png",
+        "R2": "067_r4_c7.png"
+      }
+    },
+    {
+      "id": "red_guard",
+      "display": "Red Guard",
+      "description": "Elite palace guard in red armor",
+      "row": 4,
+      "position": "right",
+      "frames": {
+        "D1": "068_r4_c8.png",
+        "D2": "069_r4_c9.png",
+        "L1": "070_r4_c10.png",
+        "L2": "071_r4_c11.png",
+        "U1": "072_r4_c12.png",
+        "U2": "073_r4_c13.png",
+        "R1": "074_r4_c14.png",
+        "R2": null
+      }
+    },
+    {
+      "id": "princess",
+      "display": "Princess",
+      "description": "Princess Gwaelin \u2014 the rescued princess",
+      "row": 5,
+      "position": "left",
+      "frames": {
+        "D1": "075_r5_c0.png",
+        "D2": "076_r5_c1.png",
+        "L1": "077_r5_c2.png",
+        "L2": "078_r5_c3.png",
+        "U1": "079_r5_c4.png",
+        "U2": "080_r5_c5.png",
+        "R1": "081_r5_c6.png",
+        "R2": "082_r5_c7.png"
+      }
+    },
+    {
+      "id": "dragonlord",
+      "display": "Dragonlord",
+      "description": "The Dragonlord \u2014 final boss NPC sprite",
+      "row": 5,
+      "position": "right",
+      "frames": {
+        "D1": "083_r5_c8.png",
+        "D2": "084_r5_c9.png",
+        "L1": "085_r5_c10.png",
+        "L2": "086_r5_c11.png",
+        "U1": "087_r5_c12.png",
+        "U2": "088_r5_c13.png",
+        "R1": "089_r5_c14.png",
+        "R2": null
+      }
+    },
+    {
+      "id": "guard",
+      "display": "Guard",
+      "description": "Standard blue castle guard",
+      "row": 6,
+      "position": "left",
+      "frames": {
+        "D1": "090_r6_c0.png",
+        "D2": "091_r6_c1.png",
+        "L1": "092_r6_c2.png",
+        "L2": "093_r6_c3.png",
+        "U1": "094_r6_c4.png",
+        "U2": "095_r6_c5.png",
+        "R1": "096_r6_c6.png",
+        "R2": "097_r6_c7.png"
+      }
+    },
+    {
+      "id": "special",
+      "display": "Special",
+      "description": "Partial row: trump-guard left-facing frames + king down-facing frames",
+      "row": 6,
+      "position": "right",
+      "partial": true,
+      "frames": {
+        "trump_guard_L1": "098_r6_c8.png",
+        "trump_guard_L2": "099_r6_c9.png",
+        "king_D1": "100_r6_c10.png",
+        "king_D2": "101_r6_c11.png"
+      },
+      "sub_characters": {
+        "trump_guard": {
+          "display": "Trump Guard",
+          "available_frames": [
+            "L1",
+            "L2"
+          ],
+          "frames": {
+            "L1": "098_r6_c8.png",
+            "L2": "099_r6_c9.png"
+          }
+        },
+        "king": {
+          "display": "King",
+          "available_frames": [
+            "D1",
+            "D2"
+          ],
+          "frames": {
+            "D1": "100_r6_c10.png",
+            "D2": "101_r6_c11.png"
+          }
+        }
+      }
+    }
+  ]
+}

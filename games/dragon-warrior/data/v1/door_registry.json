@@ -1,0 +1,129 @@
+{
+  "brecconary-1f": [
+    {
+      "col": 22,
+      "row": 7,
+      "id": "bred1"
+    },
+    {
+      "col": 6,
+      "row": 24,
+      "id": "bred2"
+    }
+  ],
+  "cantlin-1f": [
+    {
+      "col": 27,
+      "row": 10,
+      "id": "ctnd1"
+    },
+    {
+      "col": 5,
+      "row": 22,
+      "id": "ctnd2"
+    },
+    {
+      "col": 9,
+      "row": 26,
+      "id": "ctnd3"
+    },
+    {
+      "col": 15,
+      "row": 26,
+      "id": "ctnd4"
+    },
+    {
+      "col": 16,
+      "row": 26,
+      "id": "ctnd5"
+    }
+  ],
+  "charlock-castle-1f": [
+    {
+      "col": 5,
+      "row": 9,
+      "id": "ccfd1"
+    },
+    {
+      "col": 16,
+      "row": 9,
+      "id": "ccfd2"
+    }
+  ],
+  "garinham-1f": [
+    {
+      "col": 5,
+      "row": 7,
+      "id": "gard1"
+    },
+    {
+      "col": 18,
+      "row": 11,
+      "id": "gard2"
+    }
+  ],
+  "garinham-b1": [
+    {
+      "col": 18,
+      "row": 18,
+      "id": "gh1d1"
+    }
+  ],
+  "kol-1f": [
+    {
+      "col": 8,
+      "row": 13,
+      "id": "kold1"
+    },
+    {
+      "col": 2,
+      "row": 15,
+      "id": "kold2"
+    }
+  ],
+  "rimuldar-1f": [
+    {
+      "col": 22,
+      "row": 22,
+      "id": "rimd1"
+    },
+    {
+      "col": 23,
+      "row": 24,
+      "id": "rimd2"
+    }
+  ],
+  "swamp-cave-b1": [
+    {
+      "col": 6,
+      "row": 21,
+      "id": "sw1d1"
+    }
+  ],
+  "tantegel-castle-1f": [
+    {
+      "col": 19,
+      "row": 7,
+      "id": "tand1"
+    },
+    {
+      "col": 5,
+      "row": 14,
+      "id": "tand2"
+    }
+  ],
+  "tantegel-castle-2f": [
+    {
+      "col": 5,
+      "row": 8,
+      "id": "ttrd1"
+    }
+  ],
+  "charlock-castle-b7": [
+    {
+      "col": 17,
+      "row": 12,
+      "id": "cb7d1"
+    }
+  ]
+}

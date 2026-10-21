@@ -1,0 +1,1596 @@
+{
+  "@context": {
+    "oslc": "http://open-services.net/ns/core#",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "robos": "https://robos.dev/ns/sdlc#",
+    "game": "https://robos.dev/ns/game#",
+    "jrpg": "https://robos.dev/ns/jrpg#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:package:jrpg",
+  "@type": [
+    "oslc:ServiceProvider",
+    "robos:Package"
+  ],
+  "robos:package": "jrpg",
+  "robos:namespace": "robos.jrpg",
+  "robos:version": "1.0.0",
+  "dcterms:title": "2D JRPG Engine & Dragon Warrior Package",
+  "dcterms:description": "Complete 2D tile-based turn-based JRPG ontology, 40 monsters, spells, equipment, quest items, 29 overworld/town/dungeon locations, and procedural pixel-art asset bindings.",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:jrpg:game:dragon-warrior",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:PCGame",
+        "robos:Game",
+        "schema:VideoGame"
+      ],
+      "dcterms:title": "Dragon Warrior (RobOS 2D JRPG Engine)",
+      "dcterms:description": "Classic 2D tile-based turn-based JRPG powered by the RobOS Dual-State Knowledge Graph, Godot 4, and 100% procedural copyright-free pixel art and chiptune audio.",
+      "robos:repository": "github.com/nddipiazza/dragon-warrior",
+      "robos:technology": "Godot 4 / GDScript",
+      "robos:gameEngine": "Godot 4",
+      "robos:gameType": "jrpg",
+      "robos:combatModel": "turn-based-menu",
+      "robos:targetPlatform": "Linux, Windows, macOS",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:slime",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Slime",
+      "robos:monsterKey": "slime",
+      "robos:strength": 5,
+      "robos:agility": 3,
+      "robos:hpMin": 3,
+      "robos:hpMax": 3,
+      "robos:xpReward": 1,
+      "robos:goldMin": 1,
+      "robos:goldMax": 1,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/slime.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:red-slime",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Red Slime",
+      "robos:monsterKey": "red_slime",
+      "robos:strength": 7,
+      "robos:agility": 3,
+      "robos:hpMin": 4,
+      "robos:hpMax": 4,
+      "robos:xpReward": 1,
+      "robos:goldMin": 2,
+      "robos:goldMax": 2,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/red_slime.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:drakee",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Drakee",
+      "robos:monsterKey": "drakee",
+      "robos:strength": 9,
+      "robos:agility": 6,
+      "robos:hpMin": 5,
+      "robos:hpMax": 6,
+      "robos:xpReward": 2,
+      "robos:goldMin": 2,
+      "robos:goldMax": 2,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/drakee.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:ghost",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Ghost",
+      "robos:monsterKey": "ghost",
+      "robos:strength": 11,
+      "robos:agility": 8,
+      "robos:hpMin": 6,
+      "robos:hpMax": 7,
+      "robos:xpReward": 3,
+      "robos:goldMin": 3,
+      "robos:goldMax": 4,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/ghost.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:magician",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Magician",
+      "robos:monsterKey": "magician",
+      "robos:strength": 11,
+      "robos:agility": 12,
+      "robos:hpMin": 10,
+      "robos:hpMax": 13,
+      "robos:xpReward": 4,
+      "robos:goldMin": 9,
+      "robos:goldMax": 11,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/magician.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:magidrakee",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Magidrakee",
+      "robos:monsterKey": "magidrakee",
+      "robos:strength": 14,
+      "robos:agility": 14,
+      "robos:hpMin": 12,
+      "robos:hpMax": 15,
+      "robos:xpReward": 5,
+      "robos:goldMin": 9,
+      "robos:goldMax": 11,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/magidrakee.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:scorpion",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Scorpion",
+      "robos:monsterKey": "scorpion",
+      "robos:strength": 18,
+      "robos:agility": 16,
+      "robos:hpMin": 16,
+      "robos:hpMax": 20,
+      "robos:xpReward": 6,
+      "robos:goldMin": 12,
+      "robos:goldMax": 15,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/scorpion.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:druin",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Druin",
+      "robos:monsterKey": "druin",
+      "robos:strength": 20,
+      "robos:agility": 18,
+      "robos:hpMin": 17,
+      "robos:hpMax": 22,
+      "robos:xpReward": 7,
+      "robos:goldMin": 12,
+      "robos:goldMax": 15,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/druin.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:poltergeist",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Poltergeist",
+      "robos:monsterKey": "poltergeist",
+      "robos:strength": 18,
+      "robos:agility": 20,
+      "robos:hpMin": 18,
+      "robos:hpMax": 23,
+      "robos:xpReward": 8,
+      "robos:goldMin": 13,
+      "robos:goldMax": 17,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/poltergeist.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:droll",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Droll",
+      "robos:monsterKey": "droll",
+      "robos:strength": 24,
+      "robos:agility": 24,
+      "robos:hpMin": 19,
+      "robos:hpMax": 25,
+      "robos:xpReward": 10,
+      "robos:goldMin": 18,
+      "robos:goldMax": 24,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/droll.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:drakeema",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Drakeema",
+      "robos:monsterKey": "drakeema",
+      "robos:strength": 22,
+      "robos:agility": 26,
+      "robos:hpMin": 16,
+      "robos:hpMax": 20,
+      "robos:xpReward": 11,
+      "robos:goldMin": 15,
+      "robos:goldMax": 19,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/drakeema.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:skeleton",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Skeleton",
+      "robos:monsterKey": "skeleton",
+      "robos:strength": 28,
+      "robos:agility": 22,
+      "robos:hpMin": 23,
+      "robos:hpMax": 30,
+      "robos:xpReward": 11,
+      "robos:goldMin": 22,
+      "robos:goldMax": 29,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/skeleton.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:warlock",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Warlock",
+      "robos:monsterKey": "warlock",
+      "robos:strength": 28,
+      "robos:agility": 22,
+      "robos:hpMin": 23,
+      "robos:hpMax": 30,
+      "robos:xpReward": 13,
+      "robos:goldMin": 26,
+      "robos:goldMax": 34,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/warlock.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:metal-scorpion",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Metal Scorpion",
+      "robos:monsterKey": "metal_scorpion",
+      "robos:strength": 36,
+      "robos:agility": 42,
+      "robos:hpMin": 17,
+      "robos:hpMax": 22,
+      "robos:xpReward": 14,
+      "robos:goldMin": 30,
+      "robos:goldMax": 39,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/metal_scorpion.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:wolf",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Wolf",
+      "robos:monsterKey": "wolf",
+      "robos:strength": 40,
+      "robos:agility": 30,
+      "robos:hpMin": 26,
+      "robos:hpMax": 34,
+      "robos:xpReward": 16,
+      "robos:goldMin": 37,
+      "robos:goldMax": 49,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/wolf.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:wraith",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Wraith",
+      "robos:monsterKey": "wraith",
+      "robos:strength": 44,
+      "robos:agility": 34,
+      "robos:hpMin": 28,
+      "robos:hpMax": 36,
+      "robos:xpReward": 17,
+      "robos:goldMin": 45,
+      "robos:goldMax": 59,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/wraith.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:metal-slime",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Metal Slime",
+      "robos:monsterKey": "metal_slime",
+      "robos:strength": 10,
+      "robos:agility": 255,
+      "robos:hpMin": 4,
+      "robos:hpMax": 4,
+      "robos:xpReward": 115,
+      "robos:goldMin": 4,
+      "robos:goldMax": 5,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/metal_slime.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:specter",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Specter",
+      "robos:monsterKey": "specter",
+      "robos:strength": 40,
+      "robos:agility": 38,
+      "robos:hpMin": 28,
+      "robos:hpMax": 36,
+      "robos:xpReward": 18,
+      "robos:goldMin": 52,
+      "robos:goldMax": 69,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/specter.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:wolflord",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Wolflord",
+      "robos:monsterKey": "wolflord",
+      "robos:strength": 50,
+      "robos:agility": 36,
+      "robos:hpMin": 29,
+      "robos:hpMax": 38,
+      "robos:xpReward": 20,
+      "robos:goldMin": 60,
+      "robos:goldMax": 79,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/wolflord.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:druinlord",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Druinlord",
+      "robos:monsterKey": "druinlord",
+      "robos:strength": 47,
+      "robos:agility": 40,
+      "robos:hpMin": 27,
+      "robos:hpMax": 35,
+      "robos:xpReward": 20,
+      "robos:goldMin": 63,
+      "robos:goldMax": 84,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/druinlord.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:drollmagi",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Drollmagi",
+      "robos:monsterKey": "drollmagi",
+      "robos:strength": 52,
+      "robos:agility": 50,
+      "robos:hpMin": 29,
+      "robos:hpMax": 38,
+      "robos:xpReward": 22,
+      "robos:goldMin": 67,
+      "robos:goldMax": 89,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/drollmagi.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:wyvern",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Wyvern",
+      "robos:monsterKey": "wyvern",
+      "robos:strength": 56,
+      "robos:agility": 48,
+      "robos:hpMin": 32,
+      "robos:hpMax": 42,
+      "robos:xpReward": 24,
+      "robos:goldMin": 75,
+      "robos:goldMax": 99,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/wyvern.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:rogue-scorpion",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Rogue Scorpion",
+      "robos:monsterKey": "rogue_scorpion",
+      "robos:strength": 60,
+      "robos:agility": 90,
+      "robos:hpMin": 27,
+      "robos:hpMax": 35,
+      "robos:xpReward": 26,
+      "robos:goldMin": 82,
+      "robos:goldMax": 109,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/rogue_scorpion.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:wraith-knight",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Wraith Knight",
+      "robos:monsterKey": "wraith_knight",
+      "robos:strength": 68,
+      "robos:agility": 56,
+      "robos:hpMin": 35,
+      "robos:hpMax": 46,
+      "robos:xpReward": 28,
+      "robos:goldMin": 90,
+      "robos:goldMax": 119,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/wraith_knight.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:golem",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Golem",
+      "robos:monsterKey": "golem",
+      "robos:strength": 120,
+      "robos:agility": 60,
+      "robos:hpMin": 53,
+      "robos:hpMax": 70,
+      "robos:xpReward": 5,
+      "robos:goldMin": 7,
+      "robos:goldMax": 9,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/golem.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:goldman",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Goldman",
+      "robos:monsterKey": "goldman",
+      "robos:strength": 48,
+      "robos:agility": 40,
+      "robos:hpMin": 38,
+      "robos:hpMax": 50,
+      "robos:xpReward": 6,
+      "robos:goldMin": 150,
+      "robos:goldMax": 199,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/goldman.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:knight",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Knight",
+      "robos:monsterKey": "knight",
+      "robos:strength": 76,
+      "robos:agility": 78,
+      "robos:hpMin": 42,
+      "robos:hpMax": 55,
+      "robos:xpReward": 33,
+      "robos:goldMin": 97,
+      "robos:goldMax": 129,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/knight.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:magiwyvern",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Magiwyvern",
+      "robos:monsterKey": "magiwyvern",
+      "robos:strength": 78,
+      "robos:agility": 68,
+      "robos:hpMin": 44,
+      "robos:hpMax": 58,
+      "robos:xpReward": 34,
+      "robos:goldMin": 105,
+      "robos:goldMax": 139,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/magiwyvern.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:demon-knight",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Demon Knight",
+      "robos:monsterKey": "demon_knight",
+      "robos:strength": 79,
+      "robos:agility": 64,
+      "robos:hpMin": 38,
+      "robos:hpMax": 50,
+      "robos:xpReward": 37,
+      "robos:goldMin": 112,
+      "robos:goldMax": 149,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/demon_knight.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:werewolf",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Werewolf",
+      "robos:monsterKey": "werewolf",
+      "robos:strength": 86,
+      "robos:agility": 70,
+      "robos:hpMin": 46,
+      "robos:hpMax": 60,
+      "robos:xpReward": 40,
+      "robos:goldMin": 116,
+      "robos:goldMax": 154,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/werewolf.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:green-dragon",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Green Dragon",
+      "robos:monsterKey": "green_dragon",
+      "robos:strength": 88,
+      "robos:agility": 74,
+      "robos:hpMin": 49,
+      "robos:hpMax": 65,
+      "robos:xpReward": 45,
+      "robos:goldMin": 120,
+      "robos:goldMax": 159,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/green_dragon.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:starwyvern",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Starwyvern",
+      "robos:monsterKey": "starwyvern",
+      "robos:strength": 86,
+      "robos:agility": 80,
+      "robos:hpMin": 49,
+      "robos:hpMax": 65,
+      "robos:xpReward": 43,
+      "robos:goldMin": 120,
+      "robos:goldMax": 159,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/starwyvern.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:wizard",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Wizard",
+      "robos:monsterKey": "wizard",
+      "robos:strength": 80,
+      "robos:agility": 70,
+      "robos:hpMin": 49,
+      "robos:hpMax": 65,
+      "robos:xpReward": 50,
+      "robos:goldMin": 123,
+      "robos:goldMax": 164,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/wizard.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:axe-knight",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Axe Knight",
+      "robos:monsterKey": "axe_knight",
+      "robos:strength": 94,
+      "robos:agility": 82,
+      "robos:hpMin": 53,
+      "robos:hpMax": 70,
+      "robos:xpReward": 54,
+      "robos:goldMin": 123,
+      "robos:goldMax": 164,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/axe_knight.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:blue-dragon",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Blue Dragon",
+      "robos:monsterKey": "blue_dragon",
+      "robos:strength": 98,
+      "robos:agility": 84,
+      "robos:hpMin": 53,
+      "robos:hpMax": 70,
+      "robos:xpReward": 60,
+      "robos:goldMin": 112,
+      "robos:goldMax": 149,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/blue_dragon.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:stoneman",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Stoneman",
+      "robos:monsterKey": "stoneman",
+      "robos:strength": 100,
+      "robos:agility": 40,
+      "robos:hpMin": 121,
+      "robos:hpMax": 160,
+      "robos:xpReward": 65,
+      "robos:goldMin": 105,
+      "robos:goldMax": 139,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/stoneman.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:armored-knight",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Armored Knight",
+      "robos:monsterKey": "armored_knight",
+      "robos:strength": 105,
+      "robos:agility": 86,
+      "robos:hpMin": 68,
+      "robos:hpMax": 90,
+      "robos:xpReward": 70,
+      "robos:goldMin": 105,
+      "robos:goldMax": 139,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/armored_knight.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:red-dragon",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Red Dragon",
+      "robos:monsterKey": "red_dragon",
+      "robos:strength": 120,
+      "robos:agility": 90,
+      "robos:hpMin": 76,
+      "robos:hpMax": 100,
+      "robos:xpReward": 100,
+      "robos:goldMin": 105,
+      "robos:goldMax": 139,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/red_dragon.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:dragonlord-form1",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Dragonlord",
+      "robos:monsterKey": "dragonlord_form1",
+      "robos:strength": 90,
+      "robos:agility": 75,
+      "robos:hpMin": 76,
+      "robos:hpMax": 76,
+      "robos:xpReward": 0,
+      "robos:goldMin": 0,
+      "robos:goldMax": 0,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/dragonlord_form1.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:monster:dragonlord-form2",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameMonster",
+        "schema:Person"
+      ],
+      "dcterms:title": "Dragonlord",
+      "robos:monsterKey": "dragonlord_form2",
+      "robos:strength": 140,
+      "robos:agility": 200,
+      "robos:hpMin": 130,
+      "robos:hpMax": 130,
+      "robos:xpReward": 0,
+      "robos:goldMin": 0,
+      "robos:goldMax": 0,
+      "robos:spriteAssetRef": "res://assets/sprites/bestiary/dragonlord_form2.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:spell:heal",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "HEAL",
+      "robos:mpCost": 4,
+      "robos:levelLearned": 3,
+      "robos:targetScope": "self",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:spell:hurt",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "HURT",
+      "robos:mpCost": 2,
+      "robos:levelLearned": 4,
+      "robos:targetScope": "enemy",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:spell:sleep",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "SLEEP",
+      "robos:mpCost": 2,
+      "robos:levelLearned": 7,
+      "robos:targetScope": "enemy",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:spell:radiant",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "RADIANT",
+      "robos:mpCost": 3,
+      "robos:levelLearned": 9,
+      "robos:targetScope": "field",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:spell:stopspell",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "STOPSPELL",
+      "robos:mpCost": 2,
+      "robos:levelLearned": 10,
+      "robos:targetScope": "enemy",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:spell:outside",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "OUTSIDE",
+      "robos:mpCost": 6,
+      "robos:levelLearned": 12,
+      "robos:targetScope": "field",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:spell:return",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "RETURN",
+      "robos:mpCost": 8,
+      "robos:levelLearned": 13,
+      "robos:targetScope": "field",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:spell:repel",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "REPEL",
+      "robos:mpCost": 2,
+      "robos:levelLearned": 15,
+      "robos:targetScope": "field",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:spell:healmore",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "HEALMORE",
+      "robos:mpCost": 10,
+      "robos:levelLearned": 17,
+      "robos:targetScope": "self",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:spell:hurtmore",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameSpell",
+        "schema:Action"
+      ],
+      "dcterms:title": "HURTMORE",
+      "robos:mpCost": 5,
+      "robos:levelLearned": 19,
+      "robos:targetScope": "enemy",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:weapon:bamboo-pole",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Bamboo Pole",
+      "robos:itemCategory": "weapon",
+      "robos:cost": 10,
+      "robos:attackBonus": 2,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:weapon:club",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Club",
+      "robos:itemCategory": "weapon",
+      "robos:cost": 60,
+      "robos:attackBonus": 4,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:weapon:copper-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Copper Sword",
+      "robos:itemCategory": "weapon",
+      "robos:cost": 180,
+      "robos:attackBonus": 10,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:weapon:hand-axe",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Hand Axe",
+      "robos:itemCategory": "weapon",
+      "robos:cost": 560,
+      "robos:attackBonus": 15,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:weapon:broad-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Broad Sword",
+      "robos:itemCategory": "weapon",
+      "robos:cost": 1500,
+      "robos:attackBonus": 20,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:weapon:flame-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Flame Sword",
+      "robos:itemCategory": "weapon",
+      "robos:cost": 9800,
+      "robos:attackBonus": 28,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:weapon:erdricks-sword",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Erdrick's Sword",
+      "robos:itemCategory": "weapon",
+      "robos:cost": null,
+      "robos:attackBonus": 40,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:armor:clothes",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Clothes",
+      "robos:itemCategory": "armor",
+      "robos:cost": 10,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 2,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:armor:leather-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Leather Armor",
+      "robos:itemCategory": "armor",
+      "robos:cost": 70,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 4,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:armor:chain-mail",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Chain Mail",
+      "robos:itemCategory": "armor",
+      "robos:cost": 300,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 10,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:armor:half-plate",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Half Plate",
+      "robos:itemCategory": "armor",
+      "robos:cost": 1000,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 16,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:armor:full-plate",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Full Plate",
+      "robos:itemCategory": "armor",
+      "robos:cost": 3000,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 24,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:armor:magic-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Magic Armor",
+      "robos:itemCategory": "armor",
+      "robos:cost": 7700,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 24,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:armor:erdricks-armor",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Erdrick's Armor",
+      "robos:itemCategory": "armor",
+      "robos:cost": null,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 28,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:shield:small-shield",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Small Shield",
+      "robos:itemCategory": "shield",
+      "robos:cost": 90,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 4,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:shield:large-shield",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Large Shield",
+      "robos:itemCategory": "shield",
+      "robos:cost": 800,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 10,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:shield:silver-shield",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Silver Shield",
+      "robos:itemCategory": "shield",
+      "robos:cost": 14800,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 20,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:item:herb",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Herb",
+      "robos:itemCategory": "item",
+      "robos:cost": 24,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:item:torch",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Torch",
+      "robos:itemCategory": "item",
+      "robos:cost": 8,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:item:fairy-water",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Fairy Water",
+      "robos:itemCategory": "item",
+      "robos:cost": 38,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:item:wings",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Wings",
+      "robos:itemCategory": "item",
+      "robos:cost": 70,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:item:magic-key",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Magic Key",
+      "robos:itemCategory": "item",
+      "robos:cost": {
+        "Rimuldar": 53,
+        "Tantegel Castle": 85,
+        "Cantlin": 98
+      },
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:item:dragons-scale",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Dragon's Scale",
+      "robos:itemCategory": "item",
+      "robos:cost": 20,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:item:fighters-ring",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Fighter's Ring",
+      "robos:itemCategory": "item",
+      "robos:cost": 30,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:item:cursed-belt",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Cursed Belt",
+      "robos:itemCategory": "item",
+      "robos:cost": 360,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:item:cursed-necklace",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Cursed Necklace",
+      "robos:itemCategory": "item",
+      "robos:cost": 2400,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:quest-item:stones-of-sunlight",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Stones of Sunlight",
+      "robos:itemCategory": "quest-item",
+      "robos:cost": 0,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:quest-item:staff-of-rain",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Staff of Rain",
+      "robos:itemCategory": "quest-item",
+      "robos:cost": 0,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:quest-item:silver-harp",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Silver Harp",
+      "robos:itemCategory": "quest-item",
+      "robos:cost": 0,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:quest-item:erdricks-token",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Erdrick's Token",
+      "robos:itemCategory": "quest-item",
+      "robos:cost": 0,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:quest-item:fairy-flute",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Fairy Flute",
+      "robos:itemCategory": "quest-item",
+      "robos:cost": 0,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:quest-item:erdricks-tablet",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Erdrick's Tablet",
+      "robos:itemCategory": "quest-item",
+      "robos:cost": 0,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:quest-item:gwaelins-love",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Gwaelin's Love",
+      "robos:itemCategory": "quest-item",
+      "robos:cost": 0,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:quest-item:rainbow-drop",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Rainbow Drop",
+      "robos:itemCategory": "quest-item",
+      "robos:cost": 0,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:quest-item:ball-of-light",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:GameItem",
+        "schema:Product"
+      ],
+      "dcterms:title": "Ball of Light",
+      "robos:itemCategory": "quest-item",
+      "robos:cost": 0,
+      "robos:attackBonus": 0,
+      "robos:defenseBonus": 0,
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:location:tantegel-castle",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place"
+      ],
+      "dcterms:title": "Tantegel Castle",
+      "robos:locationType": "castle",
+      "robos:mapAsset": "res://assets/maps/tantegel-castle.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:location:brecconary",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place"
+      ],
+      "dcterms:title": "Brecconary",
+      "robos:locationType": "town",
+      "robos:mapAsset": "res://assets/maps/brecconary.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:location:garinham",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place"
+      ],
+      "dcterms:title": "Garinham",
+      "robos:locationType": "town",
+      "robos:mapAsset": "res://assets/maps/garinham.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:location:kol",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place"
+      ],
+      "dcterms:title": "Kol",
+      "robos:locationType": "town",
+      "robos:mapAsset": "res://assets/maps/kol.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:location:rimuldar",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place"
+      ],
+      "dcterms:title": "Rimuldar",
+      "robos:locationType": "town",
+      "robos:mapAsset": "res://assets/maps/rimuldar.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:location:hauksness",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place"
+      ],
+      "dcterms:title": "Hauksness",
+      "robos:locationType": "town",
+      "robos:mapAsset": "res://assets/maps/hauksness.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    },
+    {
+      "@id": "urn:robos:jrpg:location:cantlin",
+      "@type": [
+        "oslc_am:Resource",
+        "schema:Place"
+      ],
+      "dcterms:title": "Cantlin",
+      "robos:locationType": "town",
+      "robos:mapAsset": "res://assets/maps/cantlin.png",
+      "robos:package": "jrpg",
+      "robos:namespace": "robos.jrpg"
+    }
+  ]
+}

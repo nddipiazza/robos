@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dragonwarrior.org/schemas/v1/combat_formulas.schema.json",
+  "title": "CombatFormulasDataStoreV1",
+  "description": "Schema for physical combat damage algorithms, spell damage bounds, resistance calculations, and run formulas.",
+  "type": "object",
+  "properties": {
+    "_source": { "type": "string" },
+    "_note": { "type": "string" },
+    "hero_attack_power": { "type": "string" },
+    "hero_defense_power": { "type": "string" },
+    "enemy_attack_standard": { "type": "object" },
+    "enemy_attack_weak": { "type": "object" },
+    "hero_attack_standard": { "type": "object" },
+    "hero_attack_excellent": { "type": "object" },
+    "spells_hero": { "type": "object" },
+    "spells_enemy": { "type": "object" },
+    "spells_hero_heal": { "type": "object" },
+    "sleep": { "type": "object" },
+    "stopspell": { "type": "object" },
+    "running": { "type": "object" },
+    "initiative": { "type": "object" },
+    "dodge": { "type": "object" }
+  }
+}
