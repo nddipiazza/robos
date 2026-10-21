@@ -65,6 +65,7 @@ export default function Library({
   onAddFolder,
   onAddFiles,
   isScanning,
+  onAiPlaylist,
 }) {
   const { stats, actions } = useLibrary();
   const [prefs, setPrefs] = useState(loadPrefs);
@@ -161,6 +162,17 @@ export default function Library({
         <div className="lib-nav-footer">
           <span>{plural(index.tracks.length, 'song')}</span>
           <span>{plural(index.albums.length, 'album')} · {formatLongDuration(index.totalDuration)}</span>
+          {onAiPlaylist && (
+            <button
+              id="btn-library-ai-playlist"
+              className="btn-accent ai-btn lib-shuffle-all"
+              disabled={!index.tracks.length}
+              title="Describe a playlist and let your RobOS agent build it from your library"
+              onClick={onAiPlaylist}
+            >
+              ✦ AI Playlist
+            </button>
+          )}
           <button
             id="btn-shuffle-library"
             className="btn-secondary lib-shuffle-all"

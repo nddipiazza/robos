@@ -950,4 +950,126 @@ describe('RobOS Audio Player Tests', () => {
       fs.rmSync(dir, { recursive: true, force: true });
     });
   });
+
+  describe('AI playlists & Virtual DJ (RobOS agent)', () => {
+    const ai = require(path.join(APP_DIR, 'lib', 'ai-playlist'));
+    const lib = (n) => Array.from({ length: n }, (_, k) => ({
+      id: `trk_ai_${k}`, title: `Song ${k}`, artist: `Artist ${k % 40}`, album: `Album ${k % 90}`,
+      year: 1970 + (k % 50), genre: ['Rock', 'Jazz', 'Pop', 'Ambient'][k % 4], duration: 200,
+    }));
+    // A scripted stand-in for robos-lib/ai-agent ask().
+    const agent = (replies) => {
+      const prompts = [];
+      const ask = async (prompt) => {
+        prompts.push(prompt);
+        const reply = replies.shift();
+        return typeof reply === 'string' ? { ok: true, text: reply } : reply;
+      };
+      return { ask, prompts };
+    };
+
+    it('builds a small-library playlist in one agent call, in the agent\'s order', async () => {
+      const { ask, prompts } = agent([JSON.stringify({ name: 'Night Shift', description: 'Moody.', picks: [3, 1, 3, 999, 2] })]);
+      const res = await ai.generateAiPlaylist({ tracks: lib(30), request: 'moody night music', count: 5 }, { ask });
+      assert.strictEqual(res.ok, true);
+      assert.strictEqual(prompts.length, 1, 'libraries under the single-call limit skip the criteria step');
+      assert.ok(prompts[0].includes('moody night music'));
+      assert.deepStrictEqual(res.playlist.tracks.map(t => t.id), ['trk_ai_2', 'trk_ai_0', 'trk_ai_1'], 'duplicates and unknown numbers are dropped');
+      assert.strictEqual(res.playlist.name, 'Night Shift');
+      assert.strictEqual(res.playlist.ai.request, 'moody night music');
+      assert.strictEqual(res.playlist.dj, undefined);
+    });
+
+    it('large libraries: agent criteria, local shortlist, then the final pick', async () => {
+      const criteria = 'Here you go:\n```json\n{"name":"Jazz Hour","genres":["Jazz"],"decades":["1990s"],"artists":[],"keywords":[],"excludeArtists":["Artist 1"]}\n```';
+      const { ask, prompts } = agent([criteria, '{"name":"Jazz Hour","description":"x","picks":[1,2,3]}']);
+      const progress = [];
+      const res = await ai.generateAiPlaylist({ tracks: lib(5000), request: 'an hour of jazz', count: 3 }, { ask, onProgress: p => progress.push(p.step) });
+      assert.strictEqual(res.ok, true);
+      assert.strictEqual(prompts.length, 2);
+      assert.ok(prompts[0].includes('Genres in the library'), 'first call sees a library summary, not every song');
+      const shortlist = prompts[1].split('\n').filter(l => /^\d+ \| /.test(l));
+      assert.ok(shortlist.length <= ai.CANDIDATE_LIMIT);
+      assert.ok(shortlist.slice(0, 50).every(l => l.includes('Jazz')), 'best matches come first');
+      assert.ok(!shortlist.some(l => l.split(' | ')[1] === 'Artist 1'), 'excluded artists are filtered out');
+      assert.ok(prompts[1].length < 120 * 1024, 'prompt stays under the CLI argument limit');
+      assert.deepStrictEqual(progress, ['criteria', 'shortlist', 'done']);
+    });
+
+    it('adds the Virtual DJ script: intro plus a line before each later song', async () => {
+      const reply = JSON.stringify({
+        name: 'Late Night', description: 'd', picks: [2, 1],
+        dj: { intro: 'Good evening.', lines: [{ pick: 1, text: 'Here is Song 0.' }, { pick: 7, text: 'not in the playlist' }] },
+      });
+      const { ask, prompts } = agent([reply]);
+      const res = await ai.generateAiPlaylist(
+        { tracks: lib(10), request: 'late night', count: 2, dj: { persona: 'smooth jazz host', voice: 'kokoro:am_michael', frequency: 'alternate' } },
+        { ask }
+      );
+      assert.ok(prompts[0].includes('smooth jazz host'));
+      assert.deepStrictEqual(res.playlist.dj, {
+        persona: 'smooth jazz host', voice: 'kokoro:am_michael', frequency: 'alternate',
+        intro: 'Good evening.', lines: { trk_ai_0: 'Here is Song 0.' },
+      });
+    });
+
+    it('reads answers through robos-lib ai-json (its { ok, data } result and repairs)', async () => {
+      const { parseAIJson } = require(path.resolve(APP_DIR, '..', 'robos-lib', 'ai-json'));
+      const fenced = '```json\n{"name":"Fenced","description":"d","picks":[2,1]}\n```';
+      const res = await ai.generateAiPlaylist({ tracks: lib(5), request: 'x', count: 2 }, { ask: agent([fenced]).ask, parseJson: parseAIJson });
+      assert.strictEqual(res.ok, true);
+      assert.deepStrictEqual(res.playlist.tracks.map(t => t.id), ['trk_ai_1', 'trk_ai_0']);
+      const lines = await ai.generateDjLines({ persona: 'p', upcoming: lib(2) }, { ask: agent(['{"lines":[{"n":1,"text":"Hi"}]}']).ask, parseJson: parseAIJson });
+      assert.deepStrictEqual(lines.lines, { trk_ai_0: 'Hi' });
+    });
+
+    it('reports agent failures and unusable answers instead of throwing', async () => {
+      let res = await ai.generateAiPlaylist({ tracks: lib(5), request: 'x' }, agent([{ ok: false, error: 'claude: not logged in' }]));
+      assert.deepStrictEqual([res.ok, res.error], [false, 'claude: not logged in']);
+      res = await ai.generateAiPlaylist({ tracks: lib(5), request: 'x' }, agent(['I am not sure what you mean.']));
+      assert.strictEqual(res.ok, false);
+      assert.match(res.error, /JSON/);
+      res = await ai.generateAiPlaylist({ tracks: lib(5), request: 'x' }, agent(['{"picks":[]}']));
+      assert.strictEqual(res.ok, false);
+      res = await ai.generateAiPlaylist({ tracks: [], request: 'x' }, agent([]));
+      assert.match(res.error, /library is empty/);
+      res = await ai.generateAiPlaylist({ tracks: lib(5), request: '   ' }, agent([]));
+      assert.strictEqual(res.ok, false);
+    });
+
+    it('writes DJ lines for any upcoming songs, keyed by track id', async () => {
+      const { ask, prompts } = agent(['{"lines":[{"n":2,"text":"Next up, Song 1."},{"n":9,"text":"ignored"}]}']);
+      const res = await ai.generateDjLines({ persona: 'hype radio host', upcoming: lib(3) }, { ask });
+      assert.deepStrictEqual(res, { ok: true, lines: { trk_ai_1: 'Next up, Song 1.' } });
+      assert.ok(prompts[0].includes('hype radio host') && prompts[0].includes('Song 2'));
+      assert.deepStrictEqual(await ai.generateDjLines({ persona: '', upcoming: lib(3) }, { ask }), { ok: true, lines: {} });
+    });
+
+    it('playlists keep their AI request and DJ script when saved', () => {
+      const dir = fs.mkdtempSync('/tmp/robos-ai-pl-');
+      const lib0 = new MediaLibrary({ configDir: dir });
+      const pl = lib0.createPlaylist({ name: 'AI', tracks: [], ai: { request: 'r' }, dj: { persona: 'p', lines: {} } });
+      const again = new MediaLibrary({ configDir: dir }).getPlaylist(pl.id);
+      assert.deepStrictEqual([again.ai, again.dj], [{ request: 'r' }, { persona: 'p', lines: {} }]);
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('wires the shared RobOS agent, quick-ask and voice into the app', () => {
+      const preload = fs.readFileSync(path.join(APP_DIR, 'preload.js'), 'utf8');
+      for (const fn of ['aiPlaylistGenerate:', 'djLines:', 'djVoices:', 'djSynthesize:', 'aiAgentInfo:', "'robosQuickAsk'"]) {
+        assert.ok(preload.includes(fn), `preload should expose ${fn}`);
+      }
+      assert.ok(!preload.includes('castTTS:'), 'the Virtual DJ does not bring back the old announcer API');
+      const main = fs.readFileSync(path.join(APP_DIR, 'main.js'), 'utf8');
+      for (const mod of ["'robos-lib/ai-agent'", "'robos-lib/ai-json'", "'robos-lib/quick-ask'", "'voice-prompt/lib/tts-engine'"]) {
+        assert.ok(main.includes(mod), `main should reuse ${mod}`);
+      }
+      const html = fs.readFileSync(path.join(APP_DIR, 'renderer', 'index.html'), 'utf8');
+      assert.ok(html.includes('robos-ui/robos-ui.js'), 'renderer loads the shared robos-ui components');
+      const bundle = fs.readFileSync(path.join(APP_DIR, 'renderer', 'bundle.js'), 'utf8');
+      for (const marker of ['robos-ai-textarea', 'btn-ai-playlist', 'btn-dj-toggle', 'np-dj-banner']) {
+        assert.ok(bundle.includes(marker), `bundle should contain ${marker}`);
+      }
+    });
+  });
 });

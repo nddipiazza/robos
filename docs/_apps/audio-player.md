@@ -73,6 +73,17 @@ flowchart TD
   - Search runs on a deferred query so typing stays responsive.
   - Background scans merge tracks in O(batch) time, write the (compact) cache at most every few seconds, and send the renderer throttled progress and library updates instead of one per handful of files.
 
+### AI Playlists & Virtual DJ
+- **Describe it, your RobOS agent builds it**: *✦ AI Playlist* (Playlists tab, Library sidebar or the Now Playing panel) opens the shared `<robos-ai-textarea>` prompt. Describe the playlist ("an hour of upbeat 90s alternative for coding, end with something mellow") and pick how many songs. Your active RobOS agent CLI (or API mode, if you turned it on in RobOS Preferences) picks and orders songs from **your own library** through `robos-lib/ai-agent`.
+- **Scales to huge libraries**: up to 400 songs go to the agent in one call. Bigger libraries take two: the agent reads a summary (genres, decades, top artists) and answers with criteria, the player shortlists 400 matching songs locally, and the agent picks and orders from that shortlist.
+- **Preview, then play or save**: rename the result, *Play* it right away or *Save playlist*; saved AI playlists keep their request and DJ script.
+- **Virtual DJ between songs**: tick *Virtual DJ between songs* and describe your DJ ("a laid-back late-night jazz host with dry humour"). The agent writes an intro and a short line before each song, spoken with RobOS voice (Kokoro, Edge neural voices or Piper via `voice-prompt`'s `TTSEngine`) in the voice you choose. Choose how often the DJ talks: before every song, every other song, or now and then.
+  - The DJ talks only between songs that end on their own, never when you skip.
+  - Lines and audio are prepared while the current song plays, so the music doesn't wait.
+  - *Skip* (or Play/Space) cuts the DJ short.
+  - With a Cast speaker selected, the DJ is cast to it too.
+- **DJ for any queue**: the 🎙 button in the Now Playing panel turns the Virtual DJ on for whatever is playing; the agent writes lines a few songs ahead.
+
 ### Now Playing Panel (VLC-style playlist)
 - **Always visible**: the play queue is docked on the right of every tab, so you can switch tracks while browsing the library, playlists, cloud storage or speakers. Collapse it to a slim rail with the *Now Playing list* button.
 - **VLC-style editing**: double-click or `Enter` jumps to a track, and the playing row is bold with a live indicator. Drag rows to reorder, `Delete` removes the selection, and clicking Title / Artist / Time sorts the queue. A filter box narrows long queues, and right-click gives Play next, Move to top/bottom and Remove.

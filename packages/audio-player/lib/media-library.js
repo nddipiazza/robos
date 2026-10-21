@@ -688,7 +688,7 @@ class MediaLibrary {
     return this.playlists.find(p => p.id === playlistId) || null;
   }
 
-  createPlaylist({ name, description, tracks = [] }) {
+  createPlaylist({ name, description, tracks = [], ai = null, dj = null }) {
     const id = `pl_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const playlist = {
       id,
@@ -698,6 +698,9 @@ class MediaLibrary {
       updatedAt: new Date().toISOString(),
       tracks: Array.isArray(tracks) ? [...tracks] : []
     };
+    // AI playlists remember the request, and the Virtual DJ persona and script.
+    if (ai && typeof ai === 'object') playlist.ai = ai;
+    if (dj && typeof dj === 'object') playlist.dj = dj;
     this.playlists.push(playlist);
     this._savePlaylists();
     return playlist;
