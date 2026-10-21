@@ -9,7 +9,9 @@ const {
   toSafeFileUrl,
   trackFromMetadata,
   fallbackTrack,
+  guessFromRemotePath,
 } = require('./track-metadata');
+const { readCloudTags, mergeTags } = require('./cloud-tags');
 
 const ART_MEMORY_LIMIT = 200;
 const ART_EXTENSIONS = ['jpg', 'png', 'webp'];
@@ -407,6 +409,7 @@ class MediaLibrary {
 
     if (descriptor.cached && fs.existsSync(filePath)) {
       const parsed = await this.parseTrack(filePath);
+      cloudMeta.tagsRead = true;
       return {
         ...parsed,
         id,
@@ -416,29 +419,82 @@ class MediaLibrary {
       };
     }
 
-    const baseName = path.parse(descriptor.name || path.posix.basename(descriptor.remotePath)).name;
-    const parentFolder = path.posix.basename(path.posix.dirname(descriptor.remotePath));
-    let artist = 'Cloud Stream';
-    let title = baseName;
-    if (baseName.includes(' - ')) {
-      const parts = baseName.split(' - ');
-      if (parts.length >= 2 && !/^\d+$/.test(parts[0].trim())) {
-        artist = parts[0].trim();
-        title = parts.slice(1).join(' - ').trim();
-      }
-    }
-
+    // Tags are read later (lib/cloud-tags); until then, go by the folder names.
+    const guess = guessFromRemotePath(descriptor.remotePath, descriptor.name);
     return {
       id,
       filePath,
-      title,
-      artist,
-      album: (parentFolder && parentFolder !== '/' && parentFolder !== '.') ? parentFolder : 'Cloud Storage',
+      title: guess.title,
+      artist: guess.artist,
+      album: guess.album,
+      trackNumber: guess.trackNumber,
+      discNumber: guess.discNumber,
+      year: guess.year,
       duration: 0,
       addedAt: new Date().toISOString(),
       cloud: cloudMeta,
       src: streamUrl || this._toSafeFileUrl(filePath),
     };
+  }
+
+  /**
+   * Fills in a cloud track's tags: from its cached copy when there is one, else by
+   * fetching only the bytes that hold the tags (`readRange(cloud, start, end)`).
+   * Resolves true when the track changed (and should be saved / re-sent).
+   */
+  async refreshCloudTags(track, readRange) {
+    if (!track || !track.cloud) return false;
+    const fileTitle = path.parse(track.filePath).name;
+    let parsed = null;
+    if (fs.existsSync(track.filePath)) {
+      parsed = await this.parseTrack(track.filePath);
+      if (parsed.error) parsed = null;
+    } else {
+      const mm = await this._getParser();
+      let metadata = null;
+      try {
+        metadata = await readCloudTags({
+          fetchRange: (start, end) => readRange(track.cloud, start, end),
+          parser: mm,
+          name: track.cloud.remotePath || track.filePath,
+        });
+      } catch (err) {
+        if (err && err.authRequired) throw err;
+        track.cloud.tagsFailed = (track.cloud.tagsFailed || 0) + 1;
+        return true;
+      }
+      if (metadata) {
+        const result = trackFromMetadata(track.filePath, metadata, mm);
+        if (result.art) this.storeArt(result.art.artId, result.art.buffer, result.art.format);
+        parsed = result.track;
+      }
+    }
+    if (parsed) mergeTags(track, parsed, { fileTitle });
+    track.cloud.tagsRead = true;
+    delete track.cloud.tagsFailed;
+    return true;
+  }
+
+  /** Cloud tracks still waiting for their tags (a couple of failed tries gives up). */
+  cloudTracksNeedingTags() {
+    return this.tracks.filter(t => t.cloud && !t.cloud.tagsRead && (t.cloud.tagsFailed || 0) < 3);
+  }
+
+  /**
+   * Libraries from before tag reading named every un-played cloud song's artist
+   * "Cloud Stream"; give those the folder-name guess until their tags arrive.
+   */
+  upgradeCloudGuesses() {
+    let changed = 0;
+    for (const t of this.tracks) {
+      if (!t.cloud || t.cloud.tagsRead || t.artist !== 'Cloud Stream') continue;
+      const g = guessFromRemotePath(t.cloud.remotePath, path.posix.basename(t.cloud.remotePath || ''));
+      Object.assign(t, { title: g.title, artist: g.artist, album: g.album });
+      for (const k of ['trackNumber', 'discNumber', 'year']) if (g[k] && !t[k]) t[k] = g[k];
+      changed++;
+    }
+    if (changed) { this._rebuildIndexes(); this._saveCacheSoon(); }
+    return changed;
   }
 
   getArt(artId) {
