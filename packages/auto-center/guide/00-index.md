@@ -11,7 +11,7 @@ This guide is written for **you, the shop owner**. Work through the steps in ord
 2. **[Set up your shop](2-set-up-your-shop/)**: your shop details and your team.
 3. **[Bring in your data](3-bring-in-your-data/)**: import customers, vehicles and parts.
 4. **[Take the customer's call](4-front-desk/)**: the Front desk intake wizard, estimates and approvals.
-5. **[The mechanic bench](5-mechanic-bench/)**: tickets, parts requests and hours.
+5. **[The mechanic bench](5-mechanic-bench/)**: tickets, reading the car with an OBD-II adapter, parts requests and hours.
 6. **[Check the customer out](6-checkout/)**: invoice, payment and keys.
 7. **[Protect your data](7-protect-your-data/)**: backups and restoring to a new computer.
 8. **[Run the shop day to day](8-run-the-shop/)**: a daily routine, reports and awkward cases.

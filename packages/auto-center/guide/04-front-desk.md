@@ -41,7 +41,7 @@ If your customer is also in RobOS People, open **Link to RobOS user or group** t
 
 ## Step 3: Which vehicle?
 
-For an existing customer, their saved cars appear as big buttons. Pick the one they are calling about, or press **Another vehicle**.
+For an existing customer, their saved cars appear as big buttons. Pick the one they are calling about, or press **Another vehicle**. Cars are shown everywhere as make, model and year followed by the customer, such as *Toyota Camry 2015 — Sam Rivera*. A nickname is optional and appears in brackets.
 
 For a new car, type year, make and model. As you type, suggestions appear: try typing `2015 honda` in **Find year, make and model** and choose a result.
 
