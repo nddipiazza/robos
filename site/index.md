@@ -43,6 +43,33 @@ permalink: /
 
 <div class="logos"><div class="wrap">Context-efficient routing to the models you already use<div><span>Claude Code</span><span>Google Antigravity</span><span>OpenAI Codex</span><span>GitHub Copilot</span><span>Gemini CLI</span><span>Open-source models</span></div></div></div>
 
+<section class="alt" id="suites">
+  <div class="wrap">
+    <p class="eyebrow">App suites</p>
+    <h2 class="h2">Real apps for real work, built on RobOS</h2>
+    <p class="sec-p">RobOS builds more than developer tools. Each suite below was modeled in the KGraph, built by routed agents, and is verified by automated browser or gameplay tests. Use them as they are, or as a starting point for your own business.</p>
+    <div class="suite-grid">
+      <a class="card suite" href="{{ '/point-of-sale/' | relative_url }}">
+        <div class="suite-shot"><img src="{{ '/assets/point-of-sale/coffee-register-latte.jpg' | relative_url }}" alt="RobOS Point of Sale register with a customized latte order" width="1280" height="800" loading="lazy"></div>
+        <div class="suite-body"><span class="suite-tag">Retail · Cafés · Bars</span><h3>Point of Sale</h3><p>A touchscreen register with self-checkout, barcode and camera scanning, prep queues, open tabs and cash drawer reports. No subscription, data stays local.</p><span class="go">Tour Point of Sale →</span></div>
+      </a>
+      <a class="card suite" href="{{ '/auto-center/' | relative_url }}">
+        <div class="suite-shot"><img src="{{ '/assets/auto-center/shots/04-checkout--issue-the-invoice-from-the-approved-estimate-7.jpg' | relative_url }}" alt="RobOS Auto checkout screen issuing an invoice from an approved estimate" width="1000" height="625" loading="lazy"></div>
+        <div class="suite-body"><span class="suite-tag">Repair shops · Vehicle owners</span><h3>Auto Center</h3><p>Front desk intake, the mechanic bench, estimates and checkout for a repair shop, plus owner vehicle care, invoice scans and NHTSA recall remedies.</p><span class="go">Read the Auto Center guide →</span></div>
+      </a>
+      <a class="card suite" href="{{ '/family-finances/' | relative_url }}">
+        <div class="suite-shot"><img src="{{ '/assets/family-finances/02-accounts.png' | relative_url }}" alt="RobOS Household accounts view with six reconciled accounts" width="1440" height="1185" loading="lazy"></div>
+        <div class="suite-body"><span class="suite-tag">Families · Personal finance</span><h3>Household</h3><p>Statement imports and reconciliation, everyday spending categories, W-2 and 1099 field review, and a local federal tax estimate, all on your own machine.</p><span class="go">Walk through a family's year →</span></div>
+      </a>
+      <a class="card suite" href="{{ '/games/' | relative_url }}">
+        <div class="suite-shot"><img src="{{ '/assets/games/tabletop-still-intro.jpg' | relative_url }}" alt="The Chronicler narrating the opening scene of the RobOS Tabletop RPG" width="1280" height="720" loading="lazy"></div>
+        <div class="suite-body"><span class="suite-tag">cRPG · Tabletop · RTS</span><h3>Games</h3><p>Realm of Heroes, a HeroQuest-inspired Tabletop RPG and the Starfall Command RTS. Designed from a knowledge graph, written by agents and tested by playing them on camera.</p><span class="go">Choose a game →</span></div>
+      </a>
+    </div>
+    <p class="suite-more"><a href="{{ '/apps/' | relative_url }}">Browse every app in the directory →</a></p>
+  </div>
+</section>
+
 <section id="product">
   <div class="wrap">
     <p class="eyebrow">The idea</p>

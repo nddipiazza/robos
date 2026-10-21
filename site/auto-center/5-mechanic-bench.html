@@ -4,9 +4,9 @@ title: The mechanic bench · Auto Center tutorial
 permalink: /auto-center/5-mechanic-bench/
 body_class: guide
 extra_css: /assets/auto-guide.css
-description: "How your mechanics pick up a ticket, request parts, log hours and finish the job."
+description: "How your mechanics pick up a ticket, read the car with an OBD-II adapter, request parts, log hours and finish the job."
 ---
-<section class="guide-page"><div class="wrap"><div class="guide-layout"><nav class="guide-toc" aria-label="Tutorial steps"><h4><a href="{{ '/auto-center/' | relative_url }}">Auto Center tutorial</a></h4><ol><li><a href="{{ '/auto-center/1-before-you-start/' | relative_url }}">Before you start</a></li><li><a href="{{ '/auto-center/2-set-up-your-shop/' | relative_url }}">Set up your shop</a></li><li><a href="{{ '/auto-center/3-bring-in-your-data/' | relative_url }}">Bring in your data</a></li><li><a href="{{ '/auto-center/4-front-desk/' | relative_url }}">Take the customer's call</a></li><li class="here"><a href="{{ '/auto-center/5-mechanic-bench/' | relative_url }}">The mechanic bench</a></li><li><a href="{{ '/auto-center/6-checkout/' | relative_url }}">Check the customer out</a></li><li><a href="{{ '/auto-center/7-protect-your-data/' | relative_url }}">Protect your data</a></li><li><a href="{{ '/auto-center/8-run-the-shop/' | relative_url }}">Run the shop day to day</a></li><li><a href="{{ '/auto-center/9-switch-over/' | relative_url }}">Switch over from your old system</a></li><li><a href="{{ '/auto-center/tests/' | relative_url }}">How we know it works</a></li></ol></nav><article class="guide-body"><p class="eyebrow">Step 5 of 9 · about 15 minutes</p><h1 class="guide-title">The mechanic bench</h1><p class="chapter-intro">How your mechanics pick up a ticket, request parts, log hours and finish the job.</p>
+<section class="guide-page"><div class="wrap"><div class="guide-layout"><nav class="guide-toc" aria-label="Tutorial steps"><h4><a href="{{ '/auto-center/' | relative_url }}">Auto Center tutorial</a></h4><ol><li><a href="{{ '/auto-center/1-before-you-start/' | relative_url }}">Before you start</a></li><li><a href="{{ '/auto-center/2-set-up-your-shop/' | relative_url }}">Set up your shop</a></li><li><a href="{{ '/auto-center/3-bring-in-your-data/' | relative_url }}">Bring in your data</a></li><li><a href="{{ '/auto-center/4-front-desk/' | relative_url }}">Take the customer's call</a></li><li class="here"><a href="{{ '/auto-center/5-mechanic-bench/' | relative_url }}">The mechanic bench</a></li><li><a href="{{ '/auto-center/6-checkout/' | relative_url }}">Check the customer out</a></li><li><a href="{{ '/auto-center/7-protect-your-data/' | relative_url }}">Protect your data</a></li><li><a href="{{ '/auto-center/8-run-the-shop/' | relative_url }}">Run the shop day to day</a></li><li><a href="{{ '/auto-center/9-switch-over/' | relative_url }}">Switch over from your old system</a></li><li><a href="{{ '/auto-center/tests/' | relative_url }}">How we know it works</a></li></ol></nav><article class="guide-body"><p class="eyebrow">Step 5 of 9 · about 15 minutes</p><h1 class="guide-title">The mechanic bench</h1><p class="chapter-intro">How your mechanics pick up a ticket, read the car with an OBD-II adapter, request parts, log hours and finish the job.</p>
 <p>The <strong>Mechanic bench</strong> shows each mechanic what is on their plate. It has big buttons, so it works on a shared shop computer or a tablet.</p>
 <h2>Pick your name</h2>
 <p>The first time, each mechanic picks their own name. The app remembers it on that computer. Press <strong>Switch</strong> to change who is at the bench.</p>
@@ -33,6 +33,49 @@ description: "How your mechanics pick up a ticket, request parts, log hours and 
 
 
 
+<h2>Read the car with an OBD-II adapter</h2>
+<p>A Bluetooth OBD-II adapter reads the car&#39;s own report: whether the check-engine light is on, its trouble codes, its VIN and live engine data. Any ELM327-compatible Bluetooth adapter works, such as a vLinker MC+, OBDLink or Veepeak, and you do not need to pair it first. The computer needs Bluetooth and must be within a few metres of the car.</p>
+<ol>
+<li>Plug the adapter into the OBD port under the dashboard, on the driver&#39;s side.</li>
+<li>Turn the key to <strong>ON</strong> or start the engine. The port has power with the key off, but the car&#39;s computer only answers when the key is on.</li>
+<li>Close any phone app that uses the adapter. It can only talk to one device at a time.</li>
+<li>On the ticket, press <strong>Read the car (OBD)</strong>, then <strong>Find adapters</strong>, and pick yours.</li>
+</ol>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/06-read-the-car--connect-to-the-adapter-and-read-the-codes-4.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/06-read-the-car--connect-to-the-adapter-and-read-the-codes-4.jpg' | relative_url }}" alt="Connected to the adapter, with the car answering" loading="lazy" width="1000" height="625"></a><figcaption>Connected to the adapter, with the car answering</figcaption></figure>
+
+
+
+<p>Press <strong>Read codes</strong>. You see the VIN and model year, whether the check-engine light is on, and every <strong>stored</strong> code with its description. <strong>Pending</strong> codes have been seen once but the car has not confirmed them yet. <strong>Permanent</strong> codes only go away once the car confirms the repair worked.</p>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/06-read-the-car--connect-to-the-adapter-and-read-the-codes-12.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/06-read-the-car--connect-to-the-adapter-and-read-the-codes-12.jpg' | relative_url }}" alt="Codes read from the car, with their descriptions" loading="lazy" width="1000" height="625"></a><figcaption>Codes read from the car, with their descriptions</figcaption></figure>
+
+
+
+<p>Press <strong>Save scan to ticket</strong> to record what the car reported in the ticket history. If the vehicle has no VIN on file, the VIN read from the car is added to it. If the car&#39;s VIN does not match the ticket, you are plugged into the wrong car: the bench warns you and will not save the scan.</p>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/06-read-the-car--save-the-scan-on-the-ticket-10.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/06-read-the-car--save-the-scan-on-the-ticket-10.jpg' | relative_url }}" alt="The scan saved in the ticket history, with the VIN added to the vehicle" loading="lazy" width="1000" height="625"></a><figcaption>The scan saved in the ticket history, with the VIN added to the vehicle</figcaption></figure>
+
+
+
+<p><strong>Use codes in diagnosis</strong> opens <strong>Record diagnosis</strong> with the codes already filled in.</p>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/06-read-the-car--put-the-codes-in-the-diagnosis-7.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/06-read-the-car--put-the-codes-in-the-diagnosis-7.jpg' | relative_url }}" alt="The diagnosis with the codes filled in from the car" loading="lazy" width="1000" height="625"></a><figcaption>The diagnosis with the codes filled in from the car</figcaption></figure>
+
+
+
+<p><strong>Show live data</strong> reads engine speed, temperatures, battery voltage, load, throttle, fuel trims, speed and fuel level about once a second. The picture below is from a real van idling warm.</p>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/06-read-the-car--watch-live-engine-data-11.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/06-read-the-car--watch-live-engine-data-11.jpg' | relative_url }}" alt="Live engine data from a real van" loading="lazy" width="1000" height="625"></a><figcaption>Live engine data from a real van</figcaption></figure>
+
+
+
+<p>After the repair, <strong>Clear codes</strong> turns the check-engine light off. The bench asks first, because clearing also resets the emissions readiness checks: the car fails an inspection until it has been driven enough for them to finish, and the codes come back if the fault is still there. Clear with the key ON and the engine off.</p>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/06-read-the-car--clear-the-codes-after-the-repair-7.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/06-read-the-car--clear-the-codes-after-the-repair-7.jpg' | relative_url }}" alt="The bench asks before clearing codes" loading="lazy" width="1000" height="625"></a><figcaption>The bench asks before clearing codes</figcaption></figure>
+
+
+
+<blockquote>
+<p><strong>What it does not read.</strong> A generic OBD-II adapter reads the engine and emissions computer. Airbag (SRS), ABS, stability control and most transmission warnings, and the maintenance reminder, live in other computers that need the manufacturer&#39;s scan tool. If a warning light is on and <strong>Read codes</strong> finds nothing, it is probably one of those.</p>
+</blockquote>
+<blockquote>
+<p><strong>After the first time.</strong> The bench remembers your adapter and shows <strong>Connect to</strong> with its name. Some adapters stop showing up in a search a few minutes after they are plugged in, but they still connect this way.</p>
+</blockquote>
 <h2>Request parts</h2>
 <p>Press <strong>Request a part</strong>. Start typing the part, choose how soon you need it (normal, urgent, or the car is waiting) and send it.</p>
 <figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/03-mechanic-bench--request-a-part-4.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/03-mechanic-bench--request-a-part-4.jpg' | relative_url }}" alt="A part request waiting to be ordered" loading="lazy" width="1000" height="625"></a><figcaption>A part request waiting to be ordered</figcaption></figure>
@@ -79,6 +122,7 @@ description: "How your mechanics pick up a ticket, request parts, log hours and 
 <h2>You are ready when</h2>
 <ul>
 <li class="check"><span class="box" aria-hidden="true"></span><div class="check-text">Each mechanic can pick their name and take a ticket</div></li>
+<li class="check"><span class="box" aria-hidden="true"></span><div class="check-text">If you use an OBD-II adapter, you have read a car and saved the scan on its ticket</div></li>
 <li class="check"><span class="box" aria-hidden="true"></span><div class="check-text">You have requested a part and marked it ordered and received</div></li>
 <li class="check"><span class="box" aria-hidden="true"></span><div class="check-text">You have logged hours and finished a test job</div></li>
 </ul>
