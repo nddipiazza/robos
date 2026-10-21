@@ -97,19 +97,37 @@ async function runScan(folders) {
   }
 
   const parser = await getParser();
-  const allTracks = [];
   const batch = [];
   const batchArt = [];
   const sentArtIds = new Set();
   const coverCache = new Map();
-  const BATCH_SIZE = 5;
+  // Batch by size *or* time so the main thread merges a few times a second, not
+  // once per handful of files (a 100k-file scan would otherwise send 20k batches).
+  const BATCH_MAX = 250;
+  const BATCH_MS = 750;
+  const PROGRESS_MS = 120;
+  let lastFlush = Date.now();
+  let lastProgress = 0;
+  let parsed = 0;
+
+  const flush = (current) => {
+    if (!parentPort || (!batch.length && !batchArt.length)) return;
+    parentPort.postMessage({
+      type: 'batch',
+      tracks: batch.splice(0),
+      artworks: batchArt.splice(0),
+      current,
+      total: audioFiles.length
+    });
+    lastFlush = Date.now();
+  };
 
   for (let i = 0; i < audioFiles.length; i++) {
     if (isStopped) break;
     const filePath = audioFiles[i];
     const { track, art } = await parseSingleFile(filePath, parser, coverCache);
+    parsed++;
 
-    allTracks.push(track);
     batch.push(track);
     // Album tracks share one cover; only ship each image across the thread boundary once.
     if (art && !sentArtIds.has(art.artId)) {
@@ -118,34 +136,29 @@ async function runScan(folders) {
     }
 
     if (parentPort) {
-      parentPort.postMessage({
-        type: 'progress',
-        current: i + 1,
-        total: audioFiles.length,
-        file: filePath,
-        track
-      });
-
-      if (batch.length >= BATCH_SIZE || i === audioFiles.length - 1) {
+      const now = Date.now();
+      const last = i === audioFiles.length - 1;
+      if (last || now - lastProgress >= PROGRESS_MS) {
+        lastProgress = now;
         parentPort.postMessage({
-          type: 'batch',
-          tracks: [...batch],
-          artworks: [...batchArt],
+          type: 'progress',
           current: i + 1,
-          total: audioFiles.length
+          total: audioFiles.length,
+          file: filePath,
+          track
         });
-        batch.length = 0;
-        batchArt.length = 0;
       }
+      if (last || batch.length >= BATCH_MAX || now - lastFlush >= BATCH_MS) flush(i + 1);
     }
   }
+  flush(parsed);
 
   if (parentPort) {
     parentPort.postMessage({
       type: 'done',
-      tracks: allTracks,
-      artworks: [], // already delivered with the batches
-      totalFound: allTracks.length,
+      tracks: [], // already delivered with the batches
+      artworks: [],
+      totalFound: parsed,
       canceled: isStopped
     });
   }

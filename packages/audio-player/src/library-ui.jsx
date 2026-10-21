@@ -211,27 +211,4 @@ export function useStableArray(items) {
   return ref.current;
 }
 
-// Renders `items` progressively: the first `step` immediately, more as the
-// sentinel scrolls into view. Keeps 10k-track lists responsive.
-export function useProgressive(rawItems, step = 250) {
-  const items = useStableArray(rawItems);
-  const [limit, setLimit] = useState(step);
-  const sentinelRef = useRef(null);
-  useEffect(() => setLimit(step), [items, step]);
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el || limit >= items.length) return undefined;
-    const io = new IntersectionObserver((entries) => {
-      if (entries.some(e => e.isIntersecting)) setLimit(l => Math.min(items.length, l + step));
-    }, { rootMargin: '600px' });
-    io.observe(el);
-    return () => io.disconnect();
-  }, [items, limit, step]);
-  return {
-    visible: limit >= items.length ? items : items.slice(0, limit),
-    sentinel: limit < items.length ? <div ref={sentinelRef} className="progressive-sentinel" /> : null,
-    showAll: () => setLimit(items.length),
-  };
-}
-
 export const TRACK_DRAG_TYPE = 'application/x-robos-tracks';

@@ -2334,3 +2334,15 @@ body {
   .detail-cover { width: 150px; height: 150px; }
   .detail-title { font-size: 1.6rem; }
 }
+
+/* ── Virtualized lists & grids (100k-track libraries) ───────────────────── */
+.tl-body { position: relative; }
+.tl-body > .tl-row, .tl-body > .tl-disc { position: absolute; left: 0; right: 0; height: 44px; }
+.tl-body > .tl-disc { padding: 0 10px 6px; align-items: flex-end; }
+.vgrid { position: relative; }
+.vgrid.with-rail { padding-right: 26px; }
+.vgrid-row { position: absolute; left: 0; right: 0; align-content: start; }
+.vgrid.with-rail > .vgrid-row, .vgrid.with-rail > .vgrid-heading { right: 26px; }
+.vgrid-heading { position: absolute; left: 0; right: 0; height: 40px; margin: 0; display: flex; align-items: flex-end; }
+.vgrid-row .media-card { content-visibility: visible; }
+.card-grid.name-list { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 6px; }

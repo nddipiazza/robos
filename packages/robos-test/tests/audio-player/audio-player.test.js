@@ -853,4 +853,101 @@ describe('RobOS Audio Player Tests', () => {
       }
     });
   });
+
+  describe('100,000-track libraries', () => {
+    const idx = require(path.join(APP_DIR, 'lib', 'library-index'));
+    // ~9k albums of 11 tracks by ~5.7k artists: the shape of a real 100k collection.
+    const bigTrack = (i) => {
+      const album = Math.floor(i / 11);
+      const artist = Math.floor(album / 1.6);
+      return {
+        id: `trk_big_${i}`,
+        filePath: `/music/Artist ${artist}/Album ${album}/${String((i % 11) + 1).padStart(2, '0')} Song ${i}.flac`,
+        title: `Song ${i}`, artist: `Artist ${artist}`, albumArtist: `Artist ${artist}`, album: `Album ${album}`,
+        year: 1960 + (album % 60), genre: ['Rock', 'Jazz', 'Pop', 'Hip-Hop; Rap'][album % 4], trackNumber: (i % 11) + 1, duration: 200,
+      };
+    };
+    const timed = (fn) => { const t0 = Date.now(); const out = fn(); return [out, Date.now() - t0]; };
+
+    it('merges scan batches in O(batch) time and keeps the path index correct', () => {
+      const dir = fs.mkdtempSync('/tmp/robos-lib-100k-');
+      const lib = new MediaLibrary({ configDir: dir });
+      lib.mergeTracks(Array.from({ length: 50000 }, (_, i) => bigTrack(i)));
+      const [, ms] = timed(() => {
+        for (let b = 0; b < 200; b++) {
+          lib.mergeTracks(Array.from({ length: 250 }, (_, k) => bigTrack(50000 + b * 250 + k)), { deferSave: true });
+        }
+      });
+      assert.strictEqual(lib.tracks.length, 100000);
+      assert.ok(ms < 3000, `200 batches into a growing 100k library took ${ms} ms`);
+
+      // Re-scanning an existing file replaces it in place and keeps its date added.
+      const before = lib.tracks.find(t => t.filePath === bigTrack(7).filePath);
+      lib.mergeTracks([{ ...bigTrack(7), title: 'Retagged' }], { deferSave: true });
+      assert.strictEqual(lib.tracks.length, 100000);
+      const after = lib.tracks.find(t => t.filePath === bigTrack(7).filePath);
+      assert.strictEqual(after.title, 'Retagged');
+      assert.strictEqual(after.addedAt, before.addedAt);
+
+      // Callers that reassign `tracks` (folder removal) must not leave a stale index.
+      lib.tracks = lib.tracks.filter(t => !t.filePath.includes('/Artist 0/'));
+      const removed = 100000 - lib.tracks.length;
+      assert.ok(removed > 0);
+      lib.mergeTracks([bigTrack(0)], { deferSave: true });
+      assert.strictEqual(lib.tracks.length, 100000 - removed + 1);
+      assert.strictEqual(lib.tracks.filter(t => t.filePath === bigTrack(0).filePath).length, 1);
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('batches cache writes during scans and flushes them on demand', () => {
+      const dir = fs.mkdtempSync('/tmp/robos-lib-flush-');
+      const lib = new MediaLibrary({ configDir: dir });
+      const cache = path.join(dir, 'audio-library.json');
+      lib.mergeTracks([bigTrack(1)], { deferSave: true });
+      assert.ok(!fs.existsSync(cache), 'deferred merge does not write immediately');
+      lib.flush();
+      assert.strictEqual(JSON.parse(fs.readFileSync(cache, 'utf8')).tracks.length, 1);
+      assert.ok(!fs.readFileSync(cache, 'utf8').includes('\n  '), 'cache is written as compact JSON');
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('indexes, sorts and searches 100k tracks fast enough for interactive use', () => {
+      const tracks = Array.from({ length: 100000 }, (_, i) => bigTrack(i));
+      const [index, buildMs] = timed(() => idx.buildIndex(tracks));
+      assert.strictEqual(index.tracks.length, 100000);
+      assert.strictEqual(index.albums.length, Math.ceil(100000 / 11));
+      assert.ok(buildMs < 5000, `buildIndex took ${buildMs} ms`);
+      const [sorted, sortMs] = timed(() => idx.sortTracks(tracks, 'artist'));
+      assert.strictEqual(sorted[0].artist, 'Artist 0');
+      assert.ok(sortMs < 3000, `sortTracks took ${sortMs} ms`);
+      const [res, searchMs] = timed(() => idx.searchIndex(index, 'artist 4242'));
+      assert.ok(res.artists.some(a => a.name === 'Artist 4242'));
+      assert.ok(searchMs < 3000, `searchIndex took ${searchMs} ms`);
+      // Natural number order without a locale collator: "Album 2" before "Album 10".
+      assert.deepStrictEqual(idx.sortAlbums(index.albums.slice(0, 12), 'title').slice(0, 3).map(a => a.title), ['Album 0', 'Album 1', 'Album 2']);
+    });
+
+    it('scan worker groups files into a few large batches instead of one per handful', async () => {
+      const dir = fs.mkdtempSync('/tmp/robos-scan-batches-');
+      for (let i = 0; i < 600; i++) fs.writeFileSync(path.join(dir, `track-${i}.mp3`), 'ID3\x03\x00\x00\x00\x00\x00\x00not really audio');
+      const lib = new MediaLibrary({ configDir: dir });
+      let batches = 0;
+      let progressEvents = 0;
+      const done = await new Promise((resolve, reject) => {
+        lib.scanFoldersInBackground(dir, {
+          onProgress: () => { progressEvents++; },
+          onBatch: () => { batches++; },
+          onDone: resolve,
+          onError: reject,
+        });
+      });
+      assert.strictEqual(done.totalFound, 600);
+      assert.strictEqual(done.tracks.length, 600);
+      assert.strictEqual(lib.tracks.length, 600);
+      assert.ok(batches >= 1 && batches < 60, `600 files arrived in ${batches} batches`);
+      assert.ok(progressEvents < 600, `progress is throttled (${progressEvents} events)`);
+      assert.ok(fs.existsSync(path.join(dir, 'audio-library.json')), 'library is saved when the scan finishes');
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+  });
 });
