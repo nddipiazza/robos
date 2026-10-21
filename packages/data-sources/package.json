@@ -4,7 +4,8 @@
   "description": "RobOS Knowledge Graph Data Sources Explorer, Schema Inspector & Query Console",
   "main": "main.js",
   "scripts": {
-    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage"
+    "start": "electron . --no-sandbox --disable-gpu --disable-dev-shm-usage",
+    "postinstall": "find node_modules -name '*.node' -delete 2>/dev/null || true"
   },
   "keywords": [
     "robos",
