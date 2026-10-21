@@ -493,6 +493,7 @@ function normalizeCloudFoldersArray(ds) {
   }
 
   const seen = new Set();
+  const usedVirtualNames = new Set();
   const normalized = [];
   for (let i = 0; i < rawList.length; i++) {
     const raw = rawList[i];
@@ -504,21 +505,97 @@ function normalizeCloudFoldersArray(ds) {
 
     let defaultLabel;
     if (isOneDrive) {
-      defaultLabel = cleanId === '/' ? 'OneDrive Root (/)' : (posixPath.basename(cleanId) || cleanId);
+      defaultLabel = cleanId === '/' ? 'OneDrive Root' : (posixPath.basename(cleanId) || cleanId);
     } else {
-      defaultLabel = cleanId === 'root' ? 'My Drive (root)' : `Folder (${cleanId.slice(0, 10)})`;
+      defaultLabel = cleanId === 'root' ? 'My Drive' : `Folder (${cleanId.slice(0, 10)})`;
     }
-    const label = (raw.label && String(raw.label).trim()) || defaultLabel;
-    const baseName = label.replace(/\//g, ' - ').trim() || `Folder ${i + 1}`;
+    const rawLabel = raw.label && String(raw.label).trim();
+    const isRawIdLabel = rawLabel && (rawLabel === cleanId || rawLabel === raw.id);
+    const label = (rawLabel && !isRawIdLabel) ? rawLabel : defaultLabel;
+    let baseName = label.replace(/\//g, ' - ').trim() || `Folder ${i + 1}`;
+    let virtualName = baseName;
+    let dupCount = 2;
+    while (usedVirtualNames.has(virtualName.toLowerCase())) {
+      virtualName = `${baseName} (${dupCount++})`;
+    }
+    usedVirtualNames.add(virtualName.toLowerCase());
+
     normalized.push({
       id: cleanId,
       folderId: cleanId,
       label,
-      virtualName: rawList.length > 1 ? `${baseName} [${cleanId === '/' || cleanId === 'root' ? 'root' : cleanId.slice(0, 6)}]` : baseName,
+      virtualName,
     });
   }
 
   return normalized;
+}
+
+function persistResolvedFoldersToDisk(dsId, folders) {
+  if (!dsId || !Array.isArray(folders)) return;
+  try {
+    const p = getDataSourcesConfigPath();
+    if (!fs.existsSync(p)) return;
+    const list = JSON.parse(fs.readFileSync(p, 'utf8'));
+    if (!Array.isArray(list)) return;
+    const idx = list.findIndex(d => d && d.id === dsId);
+    if (idx >= 0) {
+      list[idx].folders = folders.map(f => ({
+        id: f.id,
+        label: f.label,
+        virtualName: f.virtualName,
+      }));
+      fs.writeFileSync(p, JSON.stringify(list, null, 2), { encoding: 'utf8', mode: 0o600 });
+    }
+  } catch {}
+}
+
+async function resolveMissingGDriveFolderLabels(ds, auth) {
+  const folders = normalizeCloudFoldersArray(ds);
+  if (!auth) return folders;
+  let updated = false;
+  const usedVirtualNames = new Set();
+
+  for (let i = 0; i < folders.length; i++) {
+    const f = folders[i];
+    const needsLookup = f.id !== 'root' && (
+      !f.label ||
+      f.label === f.id ||
+      f.label.startsWith('Folder (') ||
+      /\s\[[a-zA-Z0-9_-]{4,8}\]$/.test(f.label)
+    );
+    if (needsLookup) {
+      try {
+        const metaUrl = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(f.id)}?fields=id,name,modifiedTime,webViewLink&supportsAllDrives=true`;
+        const meta = await gdriveFetchJson(metaUrl, auth);
+        if (meta && meta.name) {
+          f.label = meta.name;
+          updated = true;
+        }
+      } catch (err) {
+        if (String(err.message || '').includes('HTTP 401')) throw err;
+      }
+    }
+    // Strip any legacy " [1QGnPk]" suffix from label/virtualName
+    f.label = String(f.label || f.id).replace(/\s\[[a-zA-Z0-9_-]{6}\]$/, '').trim();
+    const baseName = f.label.replace(/\//g, ' - ').trim() || `Folder ${i + 1}`;
+    let virtualName = baseName;
+    let dupCount = 2;
+    while (usedVirtualNames.has(virtualName.toLowerCase())) {
+      virtualName = `${baseName} (${dupCount++})`;
+    }
+    usedVirtualNames.add(virtualName.toLowerCase());
+    if (f.virtualName !== virtualName) {
+      f.virtualName = virtualName;
+      updated = true;
+    }
+  }
+
+  if (updated && ds && ds.id) {
+    ds.folders = folders.map(f => ({ id: f.id, label: f.label, virtualName: f.virtualName }));
+    persistResolvedFoldersToDisk(ds.id, folders);
+  }
+  return folders;
 }
 
 /**
@@ -526,16 +603,19 @@ function normalizeCloudFoldersArray(ds) {
  * path when 2+ folders are linked) to a Google Drive folder ID.
  */
 async function resolveGDrivePathToFolderId(ds, auth, remotePath) {
-  const folders = normalizeCloudFoldersArray(ds);
+  const folders = await resolveMissingGDriveFolderLabels(ds, auth);
   const norm = normalizeRemote(remotePath);
 
   if (folders.length > 1) {
     if (norm === '/') return '__MULTI_ROOT__';
     const segments = norm.split('/').filter(Boolean);
     const firstSeg = segments[0];
+    const cleanSeg = firstSeg.replace(/\s\[[a-zA-Z0-9_-]{6}\]$/, '').trim().toLowerCase();
     const matched = folders.find(f =>
-      f.virtualName === firstSeg ||
-      f.label === firstSeg ||
+      f.virtualName.toLowerCase() === firstSeg.toLowerCase() ||
+      f.virtualName.toLowerCase() === cleanSeg ||
+      f.label.toLowerCase() === firstSeg.toLowerCase() ||
+      f.label.toLowerCase() === cleanSeg ||
       f.id === firstSeg
     ) || folders[0];
     let currentId = matched.id;
@@ -572,37 +652,24 @@ async function resolveGDrivePathToFolderId(ds, auth, remotePath) {
 
 async function listGDriveApi(ds, auth, remotePath) {
   const norm = normalizeRemote(remotePath);
-  const folders = normalizeCloudFoldersArray(ds);
+  const folders = await resolveMissingGDriveFolderLabels(ds, auth);
 
   // If 2+ folders are linked to this Google Drive connection, root '/' shows each linked folder
   if (folders.length > 1 && norm === '/') {
-    const entries = await Promise.all(folders.map(async (f) => {
-      let resolvedName = f.virtualName;
-      if (f.id !== 'root' && (!f.label || f.label.startsWith('Folder ('))) {
-        try {
-          const metaUrl = `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(f.id)}?fields=id,name,modifiedTime,webViewLink&supportsAllDrives=true`;
-          const meta = await gdriveFetchJson(metaUrl, auth);
-          if (meta && meta.name) {
-            f.label = meta.name;
-            resolvedName = `${meta.name.replace(/\//g, ' - ')} [${f.id.slice(0, 6)}]`;
-            f.virtualName = resolvedName;
-          }
-        } catch {}
-      }
-      return {
-        name: resolvedName,
-        type: 'dir',
-        size: 0,
-        modified: null,
-        mimeType: 'application/vnd.google-apps.folder',
-        driveId: f.id,
-        webViewLink: f.id === 'root' ? 'https://drive.google.com/drive/my-drive' : `https://drive.google.com/drive/folders/${f.id}`,
-        path: posixPath.join('/', resolvedName),
-      };
+    const entries = folders.map((f) => ({
+      name: f.virtualName,
+      type: 'dir',
+      size: 0,
+      modified: null,
+      mimeType: 'application/vnd.google-apps.folder',
+      driveId: f.id,
+      webViewLink: f.id === 'root' ? 'https://drive.google.com/drive/my-drive' : `https://drive.google.com/drive/folders/${f.id}`,
+      path: posixPath.join('/', f.virtualName),
     }));
     return {
       path: '/',
       folderId: folders.map(f => f.id).join(', '),
+      folders,
       provider: 'gdrive-api',
       localMountPath: ensureLocalMountDir(ds),
       entries,
@@ -1687,6 +1754,7 @@ module.exports = {
   extractDriveFolderId,
   extractOneDriveFolderPath,
   normalizeCloudFoldersArray,
+  resolveMissingGDriveFolderLabels,
   detectLocalGoogleDriveMounts,
   detectLocalOneDriveMounts,
   ensureLocalMountDir,

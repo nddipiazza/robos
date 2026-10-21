@@ -1187,6 +1187,24 @@ registerIPC('ds-save-datasource', async (_, ds) => {
       normalized.database = '/';
     }
     normalized.host = normalized.host || 'drive.google.com';
+    // Automatically resolve real folder names from Google Drive API when authenticated
+    if (remoteStorage.isDataSourceAuthenticated(normalized) && typeof remoteStorage.resolveMissingGDriveFolderLabels === 'function') {
+      try {
+        let auth = await remoteStorage.resolveGoogleDriveAuth(normalized);
+        if (auth) {
+          try {
+            const resolved = await remoteStorage.resolveMissingGDriveFolderLabels(normalized, auth);
+            normalized.folders = resolved.map(f => ({ id: f.id, label: f.label, virtualName: f.virtualName }));
+          } catch (apiErr) {
+            if (String(apiErr.message || '').includes('HTTP 401') && normalized.refreshToken) {
+              auth = await remoteStorage.resolveGoogleDriveAuth(normalized, { forceRefresh: true });
+              const resolved = await remoteStorage.resolveMissingGDriveFolderLabels(normalized, auth);
+              normalized.folders = resolved.map(f => ({ id: f.id, label: f.label, virtualName: f.virtualName }));
+            }
+          }
+        }
+      } catch {}
+    }
   } else if (normalized.driverType === 'onedrive') {
     normalized.folderId = normalized.folders?.[0]?.id || remoteStorage.extractOneDriveFolderPath(normalized.folderId || normalized.database || '/');
     normalized.database = normalized.folders?.length > 1 ? '/' : (normalized.folderId || '/');
@@ -1330,7 +1348,7 @@ registerIPC('ds-inspect-schema', async (_, { id, driverType, path: remotePath })
     if (!ds) return { remote: { path: '/', entries: [], error: 'Unknown data source' } };
     try {
       const listing = await remoteStorage.listDir(ds, remotePath);
-      const response = { remote: listing };
+      const response = { remote: listing, updatedDataSources: loadDataSources() };
       if (driverType === 'gdrive' || driverType === 'onedrive') {
         response.folders = listing.entries.filter(e => e.type === 'dir').map(e => ({
           id: e.driveId || e.name,

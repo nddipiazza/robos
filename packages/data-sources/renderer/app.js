@@ -337,10 +337,10 @@ function renderLinkedFoldersBar(ds) {
     const isActive = isMulti
       ? (currentRemotePath === targetPath || currentRemotePath.startsWith(targetPath + '/'))
       : currentRemotePath === '/';
-    const displayLabel = f.label && f.label !== f.id ? `${f.label} (${f.id.slice(0, 14)}${f.id.length > 14 ? '…' : ''})` : f.id;
+    const displayLabel = (f.label && !f.label.startsWith('Folder (')) ? f.label : f.id;
     return `
-      <span style="display:inline-flex;align-items:center;gap:4px;background:${isActive ? 'rgba(88,166,255,0.22)' : 'var(--bg-card)'};border:1px solid ${isActive ? '#58a6ff' : 'var(--border)'};border-radius:14px;padding:2px 8px;font-size:11px;">
-        <button type="button" class="btn-jump-linked-folder" data-path="${esc(targetPath)}" style="background:none;border:none;color:var(--text);cursor:pointer;font-size:11px;padding:0;font-family:var(--mono);" title="Browse linked folder: ${esc(f.id)}">
+      <span style="display:inline-flex;align-items:center;gap:4px;background:${isActive ? 'rgba(88,166,255,0.22)' : 'var(--bg-card)'};border:1px solid ${isActive ? '#58a6ff' : 'var(--border)'};border-radius:14px;padding:3px 10px;font-size:11px;">
+        <button type="button" class="btn-jump-linked-folder" data-path="${esc(targetPath)}" style="background:none;border:none;color:var(--text);cursor:pointer;font-size:11px;padding:0;font-weight:${isActive ? '600' : '400'};" title="Folder ID: ${esc(f.id)}">
           📁 ${esc(displayLabel)}
         </button>
         ${isMulti ? `<button type="button" class="btn-remove-linked-folder" data-idx="${idx}" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:12px;padding:0 2px;line-height:1;" title="Unlink this folder">&times;</button>` : ''}
@@ -382,7 +382,7 @@ async function loadStorageDirectory(ds, remotePath = '/') {
   const localMountEl = document.getElementById('storage-local-mount-path');
 
   providerLabel.textContent = `Provider: ${(ds.driverType || 'Storage').toUpperCase()}`;
-  renderBreadcrumbs(currentRemotePath);
+  renderBreadcrumbs(currentRemotePath, ds);
   renderLinkedFoldersBar(ds);
 
   tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px;">Loading folder contents...</td></tr>`;
@@ -392,6 +392,21 @@ async function loadStorageDirectory(ds, remotePath = '/') {
     driverType: ds.driverType,
     path: currentRemotePath,
   });
+
+  if (Array.isArray(res?.updatedDataSources)) {
+    dsList = res.updatedDataSources;
+    const updatedDs = dsList.find(d => d.id === ds.id);
+    if (updatedDs) {
+      ds = updatedDs;
+      const endpointEl = document.getElementById('ds-detail-endpoint');
+      if (endpointEl && (ds.driverType === 'gdrive' || ds.driverType === 'onedrive')) {
+        const pLabel = ds.driverType === 'onedrive' ? 'Microsoft OneDrive' : 'Google Drive';
+        endpointEl.textContent = `${pLabel} · Account: ${ds.user || 'Not signed in'} · Linked Folders: ${formatDsFoldersSummary(ds)}`;
+      }
+      renderBreadcrumbs(currentRemotePath, ds);
+      renderLinkedFoldersBar(ds);
+    }
+  }
 
   const remote = res?.remote || { path: currentRemotePath, entries: [] };
   if (remote.localMountPath) {
@@ -484,12 +499,24 @@ async function loadStorageDirectory(ds, remotePath = '/') {
   });
 }
 
-function renderBreadcrumbs(remotePath) {
+function renderBreadcrumbs(remotePath, ds = null) {
   const wrap = document.getElementById('storage-breadcrumbs');
   if (!wrap) return;
+  const activeDs = ds || dsList.find(d => d.id === selectedDsId);
+  let rootLabel = '📁 Linked Folders';
+  if (activeDs) {
+    if (isOAuthCloudDs(activeDs)) {
+      const linked = getDsLinkedFolders(activeDs);
+      rootLabel = linked.length > 1
+        ? '📁 Linked Folders'
+        : `📁 ${(linked[0]?.label && !linked[0].label.startsWith('Folder (')) ? linked[0].label : (activeDs.name || 'Drive')}`;
+    } else {
+      rootLabel = `📁 ${activeDs.name || 'Storage'}`;
+    }
+  }
   const parts = String(remotePath || '/').split('/').filter(Boolean);
   let acc = '';
-  const crumbs = [`<span class="crumb ${parts.length === 0 ? 'active' : ''}" data-path="/">/ (Root)</span>`];
+  const crumbs = [`<span class="crumb ${parts.length === 0 ? 'active' : ''}" data-path="/">${esc(rootLabel)}</span>`];
   parts.forEach((p, idx) => {
     acc += '/' + p;
     const isLast = idx === parts.length - 1;
@@ -498,8 +525,8 @@ function renderBreadcrumbs(remotePath) {
   wrap.innerHTML = crumbs.join(' <span>/</span> ');
   wrap.querySelectorAll('.crumb').forEach(c => {
     c.addEventListener('click', () => {
-      const ds = dsList.find(d => d.id === selectedDsId);
-      if (ds) loadStorageDirectory(ds, c.dataset.path);
+      const curDs = dsList.find(d => d.id === selectedDsId);
+      if (curDs) loadStorageDirectory(curDs, c.dataset.path);
     });
   });
 }
@@ -1195,19 +1222,11 @@ function bindEvents() {
   });
 
   // Quick Link Another Folder in Storage Browser
-  document.getElementById('btn-quick-link-folder')?.addEventListener('click', async () => {
-    const ds = dsList.find(d => d.id === selectedDsId);
-    if (!ds || !isOAuthCloudDs(ds)) return;
-    const folderInp = document.getElementById('input-quick-link-folder');
-    const labelInp = document.getElementById('input-quick-link-label');
-    const newFolderRaw = (folderInp?.value || '').trim();
-    const newLabelRaw = (labelInp?.value || '').trim();
-    if (!newFolderRaw) return;
-
+  const linkFolderToDs = async (ds, rawFolder, rawLabel) => {
     const existing = getDsLinkedFolders(ds).map(f => ({ id: f.id, label: f.label }));
     existing.push({
-      id: newFolderRaw,
-      label: newLabelRaw || newFolderRaw,
+      id: rawFolder.trim(),
+      label: (rawLabel && rawLabel.trim()) || '',
     });
     const updated = {
       ...ds,
@@ -1216,10 +1235,111 @@ function bindEvents() {
     };
     dsList = await window.dataSources.saveDataSource(updated);
     cloudFolders = await window.dataSources.getCloudFolders();
-    if (folderInp) folderInp.value = '';
-    if (labelInp) labelInp.value = '';
     currentRemotePath = '/';
     renderAll();
+  };
+
+  const openLinkFolderModal = (ds) => {
+    const modal = document.getElementById('link-folder-modal');
+    if (!modal || !ds) return;
+    const isOneDrive = ds.driverType === 'onedrive';
+    const titleEl = document.getElementById('link-folder-modal-title');
+    const descEl = document.getElementById('link-folder-modal-desc');
+    const lblEl = document.getElementById('lbl-link-folder-input');
+    const idInp = document.getElementById('modal-link-folder-id');
+    const labelInp = document.getElementById('modal-link-folder-label');
+    const errEl = document.getElementById('link-folder-modal-error');
+
+    if (titleEl) titleEl.textContent = `Link ${isOneDrive ? 'Microsoft OneDrive' : 'Google Drive'} Folder`;
+    if (descEl) {
+      descEl.textContent = isOneDrive
+        ? 'Enter a Microsoft OneDrive folder path (e.g. /Music or /Documents/Specs) or sharing URL to link it to this account.'
+        : 'Paste a Google Drive folder URL (https://drive.google.com/drive/folders/...) or Folder ID to link it to this account.';
+    }
+    if (lblEl) lblEl.textContent = isOneDrive ? 'OneDrive Folder Path or URL' : 'Google Drive Folder URL or ID';
+    if (idInp) {
+      idInp.value = '';
+      idInp.placeholder = isOneDrive ? '/Music or https://onedrive.live.com/...' : 'https://drive.google.com/drive/folders/...';
+    }
+    if (labelInp) labelInp.value = '';
+    if (errEl) errEl.classList.add('hidden');
+    modal.classList.remove('hidden');
+    setTimeout(() => idInp?.focus(), 50);
+  };
+
+  const triggerQuickOrModalLinkFolder = async () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (!ds || !isOAuthCloudDs(ds)) return;
+    const folderInp = document.getElementById('input-quick-link-folder');
+    const labelInp = document.getElementById('input-quick-link-label');
+    const newFolderRaw = (folderInp?.value || '').trim();
+    const newLabelRaw = (labelInp?.value || '').trim();
+    if (!newFolderRaw) {
+      openLinkFolderModal(ds);
+      return;
+    }
+    const btn = document.getElementById('btn-quick-link-folder');
+    const origText = btn ? btn.textContent : '＋ Link Folder';
+    if (btn) { btn.textContent = '⏳ Linking...'; btn.disabled = true; }
+    try {
+      await linkFolderToDs(ds, newFolderRaw, newLabelRaw);
+      if (folderInp) folderInp.value = '';
+      if (labelInp) labelInp.value = '';
+    } finally {
+      if (btn) { btn.textContent = origText; btn.disabled = false; }
+    }
+  };
+
+  document.getElementById('btn-quick-link-folder')?.addEventListener('click', triggerQuickOrModalLinkFolder);
+  document.getElementById('input-quick-link-folder')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); triggerQuickOrModalLinkFolder(); }
+  });
+  document.getElementById('input-quick-link-label')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); triggerQuickOrModalLinkFolder(); }
+  });
+
+  document.getElementById('btn-link-folder-close')?.addEventListener('click', () => {
+    document.getElementById('link-folder-modal')?.classList.add('hidden');
+  });
+  document.getElementById('btn-link-folder-cancel')?.addEventListener('click', () => {
+    document.getElementById('link-folder-modal')?.classList.add('hidden');
+  });
+  const submitLinkModal = async () => {
+    const ds = dsList.find(d => d.id === selectedDsId);
+    if (!ds) return;
+    const idInp = document.getElementById('modal-link-folder-id');
+    const labelInp = document.getElementById('modal-link-folder-label');
+    const errEl = document.getElementById('link-folder-modal-error');
+    const submitBtn = document.getElementById('btn-link-folder-submit');
+    const rawId = (idInp?.value || '').trim();
+    const rawLabel = (labelInp?.value || '').trim();
+    if (!rawId) {
+      if (errEl) {
+        errEl.textContent = 'Please paste a folder URL, ID, or path.';
+        errEl.classList.remove('hidden');
+      }
+      idInp?.focus();
+      return;
+    }
+    if (submitBtn) { submitBtn.textContent = '⏳ Linking...'; submitBtn.disabled = true; }
+    try {
+      await linkFolderToDs(ds, rawId, rawLabel);
+      document.getElementById('link-folder-modal')?.classList.add('hidden');
+    } catch (err) {
+      if (errEl) {
+        errEl.textContent = err.message || 'Failed to link folder';
+        errEl.classList.remove('hidden');
+      }
+    } finally {
+      if (submitBtn) { submitBtn.textContent = '＋ Link Folder'; submitBtn.disabled = false; }
+    }
+  };
+  document.getElementById('btn-link-folder-submit')?.addEventListener('click', submitLinkModal);
+  document.getElementById('modal-link-folder-id')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); submitLinkModal(); }
+  });
+  document.getElementById('modal-link-folder-label')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); submitLinkModal(); }
   });
 
   // Wizard Step 2: + Add Another Folder button

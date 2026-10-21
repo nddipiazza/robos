@@ -158,7 +158,7 @@
             <div id="storage-browser-container" class="storage-browser">
               <div class="storage-toolbar">
                 <div class="storage-breadcrumbs" id="storage-breadcrumbs">
-                  <span class="crumb active" data-path="/">/ (Root)</span>
+                  <span class="crumb active" data-path="/">📁 Linked Folders</span>
                 </div>
                 <div class="storage-toolbar-actions">
                   <button class="btn btn-secondary btn-xs" id="btn-storage-up" title="Up one directory">⬆️ Up</button>
@@ -466,6 +466,34 @@
       <div class="modal-footer">
         <button class="btn btn-primary hidden" id="btn-test-conn-login">🌐 Log in with Browser</button>
         <button class="btn btn-secondary" id="btn-test-conn-ok">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Link Folder Modal -->
+  <div class="modal-overlay hidden" id="link-folder-modal">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h3 id="link-folder-modal-title">Link Cloud Folder</h3>
+        <button class="btn-close" id="btn-link-folder-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="link-folder-modal-desc" style="font-size:12px;color:var(--text-muted);margin:0 0 12px;">
+          Paste a Google Drive folder URL or folder ID to link it to this account.
+        </p>
+        <div class="form-group">
+          <label id="lbl-link-folder-input">Folder URL, ID, or Path</label>
+          <input type="text" id="modal-link-folder-id" class="form-input mono" placeholder="https://drive.google.com/drive/folders/..."/>
+        </div>
+        <div class="form-group" style="margin-top:10px;">
+          <label>Folder Label <span class="muted">(optional — auto-detected from Google Drive if blank)</span></label>
+          <input type="text" id="modal-link-folder-label" class="form-input" placeholder="e.g. Music, Soundtracks"/>
+        </div>
+        <div id="link-folder-modal-error" class="test-result-box err hidden" style="margin-top:10px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btn-link-folder-cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-link-folder-submit">＋ Link Folder</button>
       </div>
     </div>
   </div>
