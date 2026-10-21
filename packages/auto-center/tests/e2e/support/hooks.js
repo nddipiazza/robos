@@ -8,6 +8,8 @@ BeforeAll(() => { for (const d of ['videos', 'screens']) fs.rmSync(path.join(EVI
 Before(async function ({ pickle, gherkinDocument }) {
   const feature = path.basename(pickle.uri, '.feature');
   this.slug = feature + '--' + slug(pickle.name); this.shotIndex = 0; this.shots = [];
+  // Bench scenarios talk to a replayed OBD adapter; @obd-real uses a recording of a real van idling warm.
+  if (pickle.tags.some(t => t.name === '@obd-real')) this.obdFixture = 'grand-caravan-2014-warm.json';
   await this.launch(this.slug); await this.openShop();
 });
 AfterStep(async function ({ pickleStep, result }) {

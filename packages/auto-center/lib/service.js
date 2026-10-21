@@ -38,7 +38,7 @@ class AutoCenter {
   const shopParts=this.mode==='shop'?this.workspace.read()['robos:nodes'].filter(n=>n['@type']==='robos:Part').map(p=>({label:p['schema:name'],detail:[p['robos:partNumber'],p['robos:supplier'],p['robos:unitPriceMinor']!=null&&p['robos:unitPriceMinor']!==''?(p['robos:unitPriceMinor']/100).toFixed(2)+' '+(p['robos:currency']||'USD'):''].filter(Boolean).join(' · '),alias:p['robos:partNumber'],kind:'part',name:p['schema:name'],partNumber:p['robos:partNumber']||'',supplier:p['robos:supplier']||'',unitCost:p['robos:unitCostMinor']!=null?(p['robos:unitCostMinor']/100).toFixed(2):'',unitPrice:p['robos:unitPriceMinor']!=null?(p['robos:unitPriceMinor']/100).toFixed(2):'',fitsMake:p['robos:fitsMake']||'',fitsModel:p['robos:fitsModel']||'',source:'shop'})):[];
   return this.catalogIndex.search(kind,query,ctx,{parser:this.publicParser(),shopParts});
  }
- workshop(action,input={}){const mods=[require('./workshop'),require('./frontdesk'),require('./bench'),require('./admin')];const allowed=new Set(['board','addTeammate','addCustomer','addCustomerVehicle','openRepair','diagnose','createEstimate','decideEstimate','usePart','logHours','issueInvoice','offboard','addPart','importParts','importCustomers','intakeForm','findCustomers','registerCustomer','intakeRepair','logContact','claimTicket','requestPart','updatePartRequest','addWorkNote','startTimer','stopTimer','completeWork','updateTeammate','saveSettings']);if(!allowed.has(action))throw new Error('Unknown workshop action');const mod=mods.find(m=>typeof m[action]==='function');return mod[action](this,input);}
+ workshop(action,input={}){const mods=[require('./workshop'),require('./frontdesk'),require('./bench'),require('./admin')];const allowed=new Set(['board','addTeammate','addCustomer','addCustomerVehicle','openRepair','diagnose','createEstimate','decideEstimate','usePart','logHours','issueInvoice','offboard','addPart','importParts','importCustomers','intakeForm','findCustomers','registerCustomer','intakeRepair','logContact','claimTicket','requestPart','updatePartRequest','addWorkNote','startTimer','stopTimer','completeWork','saveScan','updateTeammate','saveSettings']);if(!allowed.has(action))throw new Error('Unknown workshop action');const mod=mods.find(m=>typeof m[action]==='function');return mod[action](this,input);}
  updateJob({id,status,notes,billedTotal,currency}){
   if(this.mode!=='shop'||!JOB_STATES.includes(status))throw new Error('Invalid shop job status');
   const records=this.workspace.read()['robos:nodes'];const n=records.find(n=>n['@id']===id&&n['@type']==='robos:RepairOrder');if(!n)throw new Error('Unknown repair job');
@@ -89,6 +89,16 @@ class AutoCenter {
   if(!this.pending || this.pending.proposal.id!==id) throw new Error('Import review expired; collect again');
   const result=this.pending.workspace.apply(this.pending.proposal,{expectedProposalId:id});this.pending=null;this.publicGraph=null;return result;
  }
+ // OBD adapter on the bench. The last code read is kept here so saveScan records what the car actually said.
+ async obd(action,input={}){
+  const link=this.obdLink||(this.obdLink=new (require('./obd-link').ObdLink)());
+  const describe=r=>{for(const k of ['stored','pending','permanent'])r[k]=r[k].map(c=>({...c,description:this.describeCode(c.code)}));this.lastObdScan={...r,at:this.clock().toISOString(),adapter:link.status().name};return r;};
+  const actions={scan:()=>link.scan(),connect:()=>link.connect(input),retry:()=>link.retry(),status:()=>link.status(),live:()=>link.live(),disconnect:()=>{this.lastObdScan=null;return link.disconnect();},
+   readCodes:async()=>describe(await link.readCodes()),
+   clearCodes:async()=>{if(input.confirm!==true)throw new Error('Confirm before clearing trouble codes');return describe(await link.clearCodes());}};
+  if(!actions[action])throw new Error('Unknown OBD action');return actions[action]();
+ }
+ describeCode(code){try{return this.catalog('dtc',code).find(i=>i.code===code)?.description||'';}catch{return '';}}
  async decode(vin,year) {
   if(typeof vin!=='string'||!/^[A-HJ-NPR-Z0-9]{17}$/i.test(vin)) throw new Error('Enter a 17-character VIN (without I, O or Q)');
   if(!/^\d{4}$/.test(String(year))) throw new Error('Provide the model year for VIN decoding');

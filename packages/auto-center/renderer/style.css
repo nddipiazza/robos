@@ -252,3 +252,5 @@ button.secondary{background:transparent;border:1px solid var(--line,#30363d)}
 .bench-actions{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}.bench-panel{margin:12px 0}.timer-run{font-variant-numeric:tabular-nums;font-weight:700}
 .tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin:0 0 18px;flex-wrap:wrap}.tabs button{border:0;background:none;padding:10px 14px;cursor:pointer;font:inherit;color:inherit;border-bottom:3px solid transparent}.tabs button[aria-selected="true"]{border-color:#58a6ff;font-weight:700}
 .row-card{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.02em}[data-codes] ul{margin:6px 0 10px;padding-left:20px}[data-codes] li{margin:4px 0}[data-codes] li .badge{margin-left:8px}
+#obd-live .summary-grid{grid-template-columns:minmax(200px,260px) 1fr}#obd-live dd{font-variant-numeric:tabular-nums;font-weight:600}

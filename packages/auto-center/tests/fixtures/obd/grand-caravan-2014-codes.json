@@ -1,0 +1,40 @@
+{
+ "_note": "The real 2014 Grand Caravan recording with a check-engine light added for tests: P0133 and P0420 stored, P0442 pending. Clearing codes (04) returns the van to its real no-codes state. The VIN is replaced with a made-up one (2C4RDGCG4ER100001) so the real vehicle is not published; every other reply is verbatim.",
+ "adapters": [
+  {
+   "name": "vLinker MC-Android",
+   "address": "C4:57:46:DC:88:40"
+  }
+ ],
+ "responses": {
+  "ATZ": "\r\rELM327 v2.2\r\r",
+  "ATE0": "ATE0\rOK\r\r",
+  "ATL0": "OK\r\r",
+  "ATS0": "OK\r\r",
+  "ATH1": "OK\r\r",
+  "ATSP0": "OK\r\r",
+  "ATRV": "14.7V\r\r",
+  "ATDPN": "A6\r\r",
+  "0100": "SEARCHING...\r7E8064100BFBEB993\r\r",
+  "0120": "7E80641208007E019\r\r",
+  "0140": "7E8064140FED0C000\r\r",
+  "0101": "7E80641018207E500\r\r",
+  "0902": "7E81014490201324334\r7E82152444743473445\r7E82252313030303031\r\r",
+  "03": "7E806430201330420\r\r",
+  "07": "7E80447010442\r\r",
+  "0A": "7E8024A00\r\r",
+  "0105": "7E80341053C\r\r",
+  "010C": "7E804410C100C\r\r",
+  "010D": "7E803410D00\r\r",
+  "0142": "7E80441423884\r\r",
+  "012F": "7E803412F59\r\r",
+  "04": "7E80144\r\r"
+ },
+ "after": {
+  "04": {
+   "0101": "7E80641010007E500\r\r",
+   "03": "7E8024300\r\r",
+   "07": "7E8024700\r\r"
+  }
+ }
+}

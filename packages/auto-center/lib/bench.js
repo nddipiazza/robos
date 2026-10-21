@@ -66,4 +66,17 @@ function completeWork(service, input) {
   const summary = w.text(input.summary, 2000, 'Summary of the work done');
   commit(service, [{ op: 'update', id: job['@id'], set: { 'robos:workComplete': true, 'robos:completionNote': summary, 'robos:needsApproval': '' } }, ...addEvent(service, records, job, 'work complete', `${t['schema:name']}: ${summary}`)], w.key(job) + ': work complete'); return { complete: true };
 }
-module.exports = { claimTicket, requestPart, updatePartRequest, addWorkNote, startTimer, stopTimer, completeWork };
+// Save the last OBD code read on the ticket. A VIN read from the car fills in a vehicle that has none, and a
+// different VIN stops the save so one car's codes never land on another car's ticket.
+function saveScan(service, input) {
+  shop(service); const records = w.nodes(service), t = mate(service, input.teammate), job = activeJob(service, input.job), scan = service.lastObdScan;
+  if (!scan) throw new Error('Read the codes from the car first');
+  const vehicle = records.find(n => n['@id'] === w.linked(job, 'robos:vehicle')), onFile = vehicle?.['schema:vehicleIdentificationNumber'] || '', edits = [];
+  if (scan.vin && onFile && scan.vin !== onFile) throw new Error(`This car's VIN (${scan.vin}) does not match the vehicle on this ticket (${onFile})`);
+  let vinSaved = false;
+  if (scan.vin && vehicle && !onFile && !records.some(n => n['@type'] === 'robos:OwnedVehicle' && n['schema:vehicleIdentificationNumber'] === scan.vin)) { edits.push({ op: 'update', id: vehicle['@id'], set: { 'schema:vehicleIdentificationNumber': scan.vin } }); vinSaved = true; }
+  const list = codes => codes.map(c => c.code + (c.description ? ` (${c.description})` : '')).join(', ');
+  const parts = [scan.mil == null ? null : scan.mil ? 'check-engine light ON' : 'check-engine light off', scan.stored.length ? 'stored ' + list(scan.stored) : 'no stored codes', scan.pending.length ? 'pending ' + list(scan.pending) : null, scan.permanent.length ? 'permanent ' + list(scan.permanent) : null, scan.voltage ? scan.voltage + ' V' : null, vinSaved ? 'VIN ' + scan.vin + ' saved to the vehicle' : null].filter(Boolean);
+  commit(service, [...edits, ...addEvent(service, records, job, 'OBD scan', `${t['schema:name']}: ${parts.join('; ')}`)], w.key(job) + ': OBD scan'); return { vinSaved, summary: parts.join('; ') };
+}
+module.exports = { claimTicket, requestPart, updatePartRequest, addWorkNote, startTimer, stopTimer, completeWork, saveScan };
