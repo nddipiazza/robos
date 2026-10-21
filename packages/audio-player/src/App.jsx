@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import AudioPlayer from 'react-h5-audio-player';
+import AudioPlayer, { RHAP_UI } from 'react-h5-audio-player';
 import { Icon } from './Icon.jsx';
 import CloudBrowser from './CloudBrowser.jsx';
 import Lyrics from './Lyrics.jsx';
@@ -8,6 +8,7 @@ import NowPlayingPanel from './NowPlayingPanel.jsx';
 import TrackInfo from './TrackInfo.jsx';
 import { AiPlaylistModal, DjSettingsModal } from './AiPlaylist.jsx';
 import { Splitter, useColumns, useLayoutPref } from './resizable.jsx';
+import { castClock, CastProgress, useCastPlaying } from './castClock.jsx';
 import { useVirtualDj } from './useVirtualDj.js';
 import { LibraryContext, ContextMenu, LoveButton, Cover, artUrlFor } from './library-ui.jsx';
 import { albumKeyOf, fold, splitGenres, sortTracks } from '../lib/library-index.js';
@@ -207,14 +208,35 @@ export default function App() {
 
     if (window.robosAudio?.onSpeakerStatusChange) {
       cleanups.push(window.robosAudio.onSpeakerStatusChange(({ ip, status }) => {
-        if (status?.playerState === 'IDLE' && status?.idleReason === 'FINISHED') {
-          lastCastRef.current = null; // replaying the same song must cast it again
+        if (!status) return;
+        const L = latestRef.current;
+        if (L.outputTarget === 'local' || (L.outputTarget !== 'all' && ip !== L.outputTarget)) return;
+        const finished = status.playerState === 'IDLE' && status.idleReason === 'FINISHED';
+        // A Virtual DJ line on the speaker: its end hands back to the music.
+        if (status.role === 'dj') {
+          if (finished) L.djCastLineFinished();
+          return;
+        }
+        // The speaker is the clock while casting: progress, play counts, song end.
+        if (status.currentTime != null) {
+          castClock.set({ position: status.currentTime, duration: status.duration || castClock.get().duration, playing: status.playerState === 'PLAYING' });
+          L.countCastPlay(status.currentTime, status.duration);
+        } else if (status.playerState) {
+          castClock.set({ playing: status.playerState === 'PLAYING' });
+        }
+        if (finished) {
+          const loads = songLoadsRef.current;
+          if (!loads.has(status.loadId)) return; // an earlier song, or already handled
+          loads.clear();
           setActiveCastSession(null);
+          castClock.set({ playing: false, position: castClock.get().duration || castClock.get().position });
+          L.castSongFinished();
         } else if (status?.playerState === 'PAUSED') {
           setActiveCastSession(prev => prev ? { ...prev, isPaused: true } : prev);
         } else if (status?.playerState === 'PLAYING') {
           setActiveCastSession(prev => prev ? { ...prev, isPaused: false } : prev);
         }
+        if (status.playerState === 'PLAYING' || status.playerState === 'PAUSED') setIsPlaying(status.playerState === 'PLAYING');
       }));
     }
 
@@ -440,10 +462,8 @@ export default function App() {
     setCurrentTrackIndex(0);
     shuffleHistoryRef.current = [];
     castTrack(target, list[0]);
-    if (playerRef.current?.audio?.current) {
-      playerRef.current.audio.current.muted = true;
-      playerRef.current.audio.current.play().catch(() => {});
-    }
+    playerRef.current?.audio?.current?.pause();
+    setIsPlaying(true);
     showStatus(`Casting ${label ? `"${label}"` : `${list.length} track(s)`} to ${getSpeakerName(target)}!`);
   };
 
@@ -700,7 +720,7 @@ export default function App() {
         await window.robosAudio.castStopAll();
       }
       setActiveCastSession(null);
-      lastCastRef.current = null;
+      castClock.set({ playing: false });
       if (playerRef.current?.audio?.current) {
         playerRef.current.audio.current.pause();
       }
@@ -716,16 +736,14 @@ export default function App() {
       if (activeCastSession.isPaused) {
         await window.robosAudio.castResume(activeCastSession.ip);
         setActiveCastSession(prev => ({ ...prev, isPaused: false }));
-        if (playerRef.current?.audio?.current) {
-          playerRef.current.audio.current.play().catch(() => {});
-        }
+        castClock.set({ playing: true });
+        setIsPlaying(true);
         showStatus(`Resumed cast on ${getSpeakerName(activeCastSession.ip)}`);
       } else {
         await window.robosAudio.castPause(activeCastSession.ip);
         setActiveCastSession(prev => ({ ...prev, isPaused: true }));
-        if (playerRef.current?.audio?.current) {
-          playerRef.current.audio.current.pause();
-        }
+        castClock.set({ position: castClock.now(), playing: false });
+        setIsPlaying(false);
         showStatus(`Paused cast on ${getSpeakerName(activeCastSession.ip)}`);
       }
     } catch (err) {
@@ -733,13 +751,23 @@ export default function App() {
     }
   };
 
-  // The song last sent to the speaker. The muted local copy fires "play" several
-  // times while a song starts; each one used to cast the song again, restarting it.
-  const lastCastRef = useRef(null);
+  // Where to continue locally after switching back from a speaker.
+  const pendingLocalSeekRef = useRef(null);
+  // Loads (one per speaker) of the song now playing; a speaker reports "finished"
+  // more than once, and only the first report for the current song moves on.
+  const songLoadsRef = useRef(new Set());
+
+  const handleCastSeek = (seconds) => {
+    castClock.set({ position: seconds });
+    if (outputTarget !== 'local') window.robosAudio.castSeek(outputTarget, seconds).catch(() => {});
+  };
 
   const castTrack = async (speakerIp, track, { startAt = 0 } = {}) => {
     if (!speakerIp || speakerIp === 'local' || !track) return;
-    lastCastRef.current = { ip: speakerIp, key: track.id || track.filePath || track.src };
+    castClock.set({ position: startAt || 0, duration: track.duration || 0, playing: false });
+    const loads = new Set();
+    songLoadsRef.current = loads;
+    const remember = (res) => { if (res && res.loadId != null) loads.add(res.loadId); return res; };
     showStatus(`Casting "${track.title}" to ${getSpeakerName(speakerIp)}...`);
     const metadata = {
       title: track.title,
@@ -755,15 +783,15 @@ export default function App() {
     try {
       if (speakerIp === 'all') {
         for (const s of speakers) {
-          if (track.filePath) window.robosAudio.castFile(s.ip, track.filePath, metadata);
-          else if (track.src) window.robosAudio.castUrl(s.ip, track.src, metadata);
+          if (track.filePath) window.robosAudio.castFile(s.ip, track.filePath, metadata).then(remember);
+          else if (track.src) window.robosAudio.castUrl(s.ip, track.src, metadata).then(remember);
         }
         setActiveCastSession({ ip: 'all', trackId: track.id, filePath: track.filePath, isPaused: false });
       } else {
         if (track.filePath) {
-          await window.robosAudio.castFile(speakerIp, track.filePath, metadata);
+          remember(await window.robosAudio.castFile(speakerIp, track.filePath, metadata));
         } else if (track.src) {
-          await window.robosAudio.castUrl(speakerIp, track.src, metadata);
+          remember(await window.robosAudio.castUrl(speakerIp, track.src, metadata));
         }
         setActiveCastSession({ ip: speakerIp, trackId: track.id, filePath: track.filePath, isPaused: false });
       }
@@ -781,11 +809,9 @@ export default function App() {
     playedRef.current = { key: null, counted: false };
     if (sameSrc && audio) audio.currentTime = 0;
     if (outputTarget !== 'local') {
+      // The speaker plays it; the local player stays silent and idle.
       castTrack(outputTarget, trackToPlay);
-      if (audio) {
-        audio.muted = true;
-        setTimeout(() => { playerRef.current?.audio?.current?.play().catch(() => {}); }, 60);
-      }
+      if (audio) audio.pause();
     } else {
       if (activeCastSession) handleStopCast();
       if (audio) {
@@ -902,38 +928,14 @@ export default function App() {
     showStatus(`Playing "${trackToPlay.title}" by ${trackToPlay.artist || 'Unknown'}`);
   };
 
-  // While a DJ preview swaps the song out on the speaker, the muted local copy
-  // is paused and restarted by the app itself; that must not echo to the speaker.
-  const quietCastMirrorRef = useRef(false);
-
+  // The local player's own play/pause. While casting it is idle and the speaker's
+  // status drives the play state instead.
   const handlePlayerPlay = () => {
-    setIsPlaying(true);
-    if (quietCastMirrorRef.current) return;
-    if (outputTarget !== 'local') {
-      if (playerRef.current?.audio?.current) {
-        playerRef.current.audio.current.muted = true;
-      }
-      const last = lastCastRef.current;
-      const alreadyCast = !!(currentTrack && last && last.ip === outputTarget
-        && last.key === (currentTrack.id || currentTrack.filePath || currentTrack.src));
-      if (activeCastSession && activeCastSession.isPaused) {
-        window.robosAudio.castResume(activeCastSession.ip);
-        setActiveCastSession(prev => ({ ...prev, isPaused: false }));
-        showStatus(`Resumed casting on ${getSpeakerName(activeCastSession.ip)}`);
-      } else if (currentTrack && !alreadyCast) {
-        castTrack(outputTarget, currentTrack);
-      }
-    }
+    if (outputTarget === 'local') setIsPlaying(true);
   };
 
   const handlePlayerPause = () => {
-    setIsPlaying(false);
-    if (quietCastMirrorRef.current) return;
-    if (outputTarget !== 'local' && activeCastSession) {
-      window.robosAudio.castPause(activeCastSession.ip);
-      setActiveCastSession(prev => ({ ...prev, isPaused: true }));
-      showStatus(`Paused casting on ${getSpeakerName(activeCastSession.ip)}`);
-    }
+    if (outputTarget === 'local') setIsPlaying(false);
   };
 
   const handleTogglePlayPause = () => {
@@ -981,7 +983,7 @@ export default function App() {
   const restartCurrent = () => {
     const audio = playerRef.current?.audio?.current;
     playedRef.current = { key: null, counted: false };
-    if (audio) {
+    if (audio && outputTarget === 'local') {
       audio.currentTime = 0;
       audio.play().catch(() => {});
     }
@@ -1079,18 +1081,19 @@ export default function App() {
     }
     const audio = playerRef.current?.audio?.current;
     const casting = outputTarget !== 'local';
-    const wasPlaying = isPlaying && (casting ? !(activeCastSession && activeCastSession.isPaused) : !!(audio && !audio.paused));
+    // The speaker may not have reported yet; then go by the app's play state.
+    const wasPlaying = casting
+      ? (castClock.get().playing || (isPlaying && !(activeCastSession && activeCastSession.isPaused)))
+      : !!(isPlaying && audio && !audio.paused);
     // While casting, the line replaces the song on the speaker; it is cast again
     // afterwards from where it was (the muted local copy keeps the position).
     const song = playlist[currentTrackIndex];
-    const position = audio ? audio.currentTime : 0;
-    if (casting) quietCastMirrorRef.current = true;
+    const position = casting ? castClock.now() : (audio ? audio.currentTime : 0);
     if (audio && !audio.paused) audio.pause();
     dj.preview(track, () => {
       if (casting) {
-        const release = () => setTimeout(() => { quietCastMirrorRef.current = false; }, 500);
-        if (song && (wasPlaying || position > 0)) latestRef.current.resumeCastAt(song, position, wasPlaying).finally(release);
-        else release();
+        // The line replaced the song on the speaker: always put the song back.
+        if (song) latestRef.current.resumeCastAt(song, position, wasPlaying);
         return;
       }
       if (wasPlaying) { playerRef.current?.audio?.current?.play().catch(() => {}); setIsPlaying(true); }
@@ -1134,7 +1137,9 @@ export default function App() {
   const handlePlayPrev = () => {
     const audio = playerRef.current?.audio?.current;
     // Like most players: "previous" first rewinds a track that's been playing a while.
-    if (audio && audio.currentTime > 3) {
+    if (outputTarget !== 'local') {
+      if (castClock.now() > 3) { handleCastSeek(0); return; }
+    } else if (audio && audio.currentTime > 3) {
       audio.currentTime = 0;
       return;
     }
@@ -1247,14 +1252,25 @@ export default function App() {
     djSpeaking: !!dj.speaking,
     aiAgent,
     skipDj: dj.skip,
+    // Speaker events while casting (see onSpeakerStatusChange).
+    castSongFinished: () => handleTrackEnded(),
+    djCastLineFinished: () => dj.castLineFinished(),
+    countCastPlay: (position, duration) => {
+      const t = playlist[currentTrackIndex];
+      if (!t || position == null) return;
+      const key = `${currentTrackIndex}:${t.id || t.src}`;
+      if (playedRef.current.key !== key) playedRef.current = { key, counted: false };
+      if (!playedRef.current.counted && position >= Math.min(30, (duration || t.duration || 60) / 2)) {
+        playedRef.current.counted = true;
+        recordPlay(t);
+      }
+    },
     outputTarget,
     speakers,
     // Re-cast the song after a DJ preview, from `position`; paused if it was paused.
     resumeCastAt: async (song, position, play) => {
       await castTrack(outputTarget, song, { startAt: position });
-      const a = playerRef.current?.audio?.current;
-      if (a) { a.currentTime = position; a.muted = true; }
-      if (play) { if (a) a.play().catch(() => {}); setIsPlaying(true); }
+      if (play) setIsPlaying(true);
       else if (outputTarget !== 'all') {
         await window.robosAudio.castPause(outputTarget);
         setActiveCastSession(prev => (prev ? { ...prev, isPaused: true } : prev));
@@ -1511,17 +1527,17 @@ export default function App() {
               onChange={(e) => {
                 const target = e.target.value;
                 setOutputTarget(target);
+                const audio = playerRef.current?.audio?.current;
                 if (target === 'local') {
+                  // Pick up locally where the speaker was.
+                  if (outputTarget !== 'local' && currentTrack) pendingLocalSeekRef.current = castClock.now();
                   if (activeCastSession) handleStopCast();
-                  if (playerRef.current?.audio?.current) {
-                    playerRef.current.audio.current.muted = false;
-                  }
+                  if (audio) audio.muted = false;
                 } else {
-                  if (playerRef.current?.audio?.current) {
-                    playerRef.current.audio.current.muted = true;
-                  }
+                  const from = outputTarget === 'local' && audio ? audio.currentTime : castClock.now();
+                  if (audio) { audio.pause(); audio.muted = true; }
                   if (currentTrack) {
-                    castTrack(target, currentTrack);
+                    castTrack(target, currentTrack, { startAt: from > 1 ? from : 0 });
                   }
                 }
                 showStatus(`Switched output to: ${e.target.options[e.target.selectedIndex].text}`);
@@ -1712,17 +1728,25 @@ export default function App() {
               <div className="react-h5-wrapper">
                 <AudioPlayer
                   ref={playerRef}
-                  src={resolveSrc(currentTrack)}
+                  src={outputTarget === 'local' ? resolveSrc(currentTrack) : undefined}
+                  onLoadedMetaData={() => {
+                    // Back from a speaker: continue where the speaker was.
+                    const at = pendingLocalSeekRef.current;
+                    const a = playerRef.current?.audio?.current;
+                    if (at != null && a) { pendingLocalSeekRef.current = null; a.currentTime = at; }
+                  }}
+                  customProgressBarSection={outputTarget !== 'local' ? [<CastProgress key="cast-progress" className="mini-progress rhap-cast-progress" id="cast-progress" onSeek={handleCastSeek} />] : undefined}
+                  customControlsSection={outputTarget !== 'local' ? [RHAP_UI.ADDITIONAL_CONTROLS, <CastControls key="cast-controls" onPrev={handlePlayPrev} onToggle={handleTogglePlayPause} onNext={handlePlayNext} />, <div key="cast-spacer" className="rhap_volume-controls" />] : undefined}
                   showSkipControls={true}
                   showJumpControls={false}
                   autoPlayAfterSrcChange={true}
                   onClickNext={handlePlayNext}
                   onClickPrevious={handlePlayPrev}
-                  onEnded={handleTrackEnded}
+                  onEnded={() => { if (outputTarget === 'local') handleTrackEnded(); }}
                   onPlay={handlePlayerPlay}
                   onPause={handlePlayerPause}
                   onError={(e) => {
-                    if (!currentTrack) return;
+                    if (!currentTrack || outputTarget !== 'local') return;
                     console.warn('[AudioPlayer] Audio playback error:', e);
                     setIsPlaying(false);
                     showStatus('Playback error: Track file may be missing, network drive unmounted, or format unsupported.');
@@ -1744,7 +1768,14 @@ export default function App() {
                 />
               </div>
 
-              <Lyrics track={currentTrack} getAudio={() => playerRef.current?.audio?.current} />
+              <Lyrics
+                track={currentTrack}
+                getTime={() => (outputTarget !== 'local' ? castClock.now() : playerRef.current?.audio?.current?.currentTime ?? null)}
+                onSeek={(t) => {
+                  if (outputTarget !== 'local') handleCastSeek(t);
+                  else if (playerRef.current?.audio?.current) playerRef.current.audio.current.currentTime = t;
+                }}
+              />
 
           </div>
         </div>
@@ -2204,7 +2235,9 @@ export default function App() {
               <button className="mini-ctrl-btn" title="Next (Ctrl+→)" onClick={handlePlayNext}><Icon name="next" size={18} /></button>
               <button className={`mini-ctrl-btn mini-mode ${repeatMode !== 'off' ? 'on' : ''}`} title={`Repeat: ${repeatMode}`} onClick={cycleRepeat}><Icon name={repeatMode === 'one' ? 'repeatOne' : 'repeat'} size={15} /></button>
             </div>
-            <MiniProgress getAudio={() => playerRef.current?.audio?.current} />
+            {outputTarget !== 'local'
+              ? <CastProgress onSeek={handleCastSeek} />
+              : <MiniProgress getAudio={() => playerRef.current?.audio?.current} />}
           </div>
           <div className="mini-player-right">
             <span className="badge mini-badge">Output: {getSpeakerName(outputTarget)}</span>
@@ -2385,6 +2418,20 @@ export default function App() {
       {statusMsg && <div className="toast">{statusMsg}</div>}
     </div>
     </LibraryContext.Provider>
+  );
+}
+
+// Prev / play-pause / next for the deck while casting (the local player is idle).
+function CastControls({ onPrev, onToggle, onNext }) {
+  const playing = useCastPlaying();
+  return (
+    <div className="rhap_main-controls">
+      <button type="button" className="rhap_button-clear rhap_main-controls-button rhap_skip-button" aria-label="Previous" onClick={onPrev}><Icon name="prev" size={24} /></button>
+      <button type="button" id="cast-play-pause" className="rhap_button-clear rhap_main-controls-button rhap_play-pause-button" aria-label={playing ? 'Pause' : 'Play'} onClick={onToggle}>
+        <Icon name={playing ? 'pause' : 'play'} size={34} />
+      </button>
+      <button type="button" className="rhap_button-clear rhap_main-controls-button rhap_skip-button" aria-label="Next" onClick={onNext}><Icon name="next" size={24} /></button>
+    </div>
   );
 }
 

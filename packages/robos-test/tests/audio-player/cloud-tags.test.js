@@ -193,3 +193,46 @@ test('files are served and cast with their real type (DJ clips are WAV)', async 
   await cast.castMediaUrl('10.0.0.6', url, { contentType: 'audio/wav', currentTime: 42 });
   assert.deepStrictEqual(loads, [{ type: 'audio/wav', opts: { autoplay: true, currentTime: 42 } }]);
 });
+
+test('while casting, the speaker reports its position every second, tagged song or DJ line', async () => {
+  const cast = new CastService();
+  const updates = [];
+  let loads = 0;
+  const player = {
+    load: (media, opts, cb) => { loads++; cb(null, { playerState: 'PLAYING', media: { duration: 245 } }); },
+    getStatus: (cb) => cb(null, { playerState: 'PLAYING', currentTime: 12.5 }),
+    seek: (t, cb) => { player.seekedTo = t; cb(null); },
+  };
+  cast.activeConnections.set('10.0.0.7', { client: { close() {} }, sessionId: 's', player });
+  await cast.castMediaUrl('10.0.0.7', 'http://h/media/1.mp3', { title: 'Song' }, st => updates.push(st));
+  await new Promise(r => setTimeout(r, 1150));
+  const last = updates[updates.length - 1];
+  assert.deepStrictEqual([last.playerState, last.currentTime, last.duration, last.role], ['PLAYING', 12.5, 245, 'song']);
+  await cast.castMediaUrl('10.0.0.7', 'http://h/media/dj.mp3', { title: 'Virtual DJ', role: 'dj' }, st => updates.push(st));
+  await new Promise(r => setTimeout(r, 1100));
+  assert.strictEqual(updates[updates.length - 1].role, 'dj');
+  assert.deepStrictEqual(await cast.seekPlayback('10.0.0.7', 61), { ok: true });
+  assert.strictEqual(player.seekedTo, 61);
+  await cast.stopPlayback('10.0.0.7');
+  const n = updates.length;
+  await new Promise(r => setTimeout(r, 1100));
+  assert.strictEqual(updates.length, n, 'no more polling after stop');
+});
+
+test('the real audio type is sniffed from the file (an MP3 saved as .wav goes out as MP3)', () => {
+  const fs = require('fs');
+  const os = require('os');
+  const { sniffAudioType } = require(path.join(APP_DIR, 'lib', 'cast-service'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-sniff-'));
+  const write = (name, bytes) => { const f = path.join(dir, name); fs.writeFileSync(f, Buffer.concat([Buffer.from(bytes), Buffer.alloc(64)])); return f; };
+  try {
+    assert.strictEqual(sniffAudioType(write('voice.wav', [0x49, 0x44, 0x33, 4, 0])), 'audio/mpeg');
+    assert.strictEqual(sniffAudioType(write('voice2.wav', [0xff, 0xf3, 0x84, 0xc4])), 'audio/mpeg');
+    assert.strictEqual(sniffAudioType(write('real.wav', [...Buffer.from('RIFF'), 0, 0, 0, 0, ...Buffer.from('WAVE')])), 'audio/wav');
+    assert.strictEqual(sniffAudioType(write('x.mp3', [...Buffer.from('fLaC')])), 'audio/flac');
+    const cast = new CastService();
+    assert.match(cast.registerFile(path.join(dir, 'voice.wav')), /\.mp3$/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});

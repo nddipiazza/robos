@@ -17,9 +17,45 @@ function audioMimeType(filePath) {
   return AUDIO_MIME[path.extname(String(filePath || '')).toLowerCase()] || 'audio/mpeg';
 }
 
+// The file's real type from its first bytes (an MP3 saved as .wav, e.g. by a voice
+// cache, must still go out as audio/mpeg); falls back to the extension.
+function sniffAudioType(filePath) {
+  let head = null;
+  try {
+    const fd = fs.openSync(filePath, 'r');
+    head = Buffer.alloc(12);
+    fs.readSync(fd, head, 0, 12, 0);
+    fs.closeSync(fd);
+  } catch { return audioMimeType(filePath); }
+  const tag = head.toString('latin1', 0, 4);
+  if (tag === 'RIFF' && head.toString('latin1', 8, 12) === 'WAVE') return 'audio/wav';
+  if (tag.startsWith('ID3') || (head[0] === 0xff && (head[1] & 0xe0) === 0xe0 && (head[1] & 0x06) !== 0)) return 'audio/mpeg';
+  if (tag === 'fLaC') return 'audio/flac';
+  if (tag === 'OggS') return 'audio/ogg';
+  if (head.toString('latin1', 4, 8) === 'ftyp') return 'audio/mp4';
+  if (head[0] === 0xff && (head[1] & 0xf6) === 0xf0) return 'audio/aac';
+  return audioMimeType(filePath);
+}
+
+const EXT_FOR_MIME = { 'audio/mpeg': 'mp3', 'audio/wav': 'wav', 'audio/flac': 'flac', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/aac': 'aac', 'audio/webm': 'webm' };
+
+// What the app needs from a speaker's media status, plus which load it is about.
+function normalizeStatus(st, conn) {
+  if (!st) return null;
+  return {
+    playerState: st.playerState,
+    idleReason: st.idleReason || null,
+    currentTime: typeof st.currentTime === 'number' ? st.currentTime : null,
+    duration: (st.media && st.media.duration) || conn.duration || null,
+    role: conn.role,
+    loadId: conn.loadId,
+  };
+}
+
 class CastService {
   constructor() {
     this.speakers = new Map(); // ip -> speaker info
+    this.loadCounter = 0;
     this.activeConnections = new Map(); // ip -> { client, player, currentMedia, mediaServer }
     this.mediaRegistry = new Map(); // id -> { filePath, buffer, contentType, length }
     this.nextMediaId = 1;
@@ -181,12 +217,9 @@ class CastService {
   // The real type matters: speakers may refuse a WAV (e.g. a DJ voice clip) sent as MP3.
   registerFile(filePath, contentType = null) {
     const id = `f_${this.nextMediaId++}_${Date.now()}`;
-    const ext = (path.extname(filePath).slice(1) || 'mp3').toLowerCase();
-    this.mediaRegistry.set(id, {
-      filePath,
-      contentType: contentType || audioMimeType(filePath),
-    });
-    return `http://${this.hostIp}:${this.streamPort}/media/${id}.${ext}`;
+    const type = contentType || sniffAudioType(filePath);
+    this.mediaRegistry.set(id, { filePath, contentType: type });
+    return `http://${this.hostIp}:${this.streamPort}/media/${id}.${EXT_FOR_MIME[type] || 'mp3'}`;
   }
 
   registerBuffer(buffer, contentType = 'audio/mp3') {
@@ -346,6 +379,9 @@ class CastService {
     // `currentTime` starts the song part-way (resuming after a DJ preview).
     const loadOpts = { autoplay: true };
     if (metadata.currentTime > 0) loadOpts.currentTime = metadata.currentTime;
+    // 'song' or 'dj' (a Virtual DJ line): status updates say which load they are about.
+    const role = metadata.role || 'song';
+    const loadId = ++this.loadCounter;
 
     // Next song on a speaker we're already casting to: load it into the same
     // receiver session. Stopping and relaunching the receiver for every song made
@@ -360,9 +396,9 @@ class CastService {
             if (err) reject(err); else resolve(st);
           });
         });
-        conn.mediaUrl = mediaUrl;
-        conn.onStatusUpdate = onStatusUpdate;
-        return { ok: true, playerState: status?.playerState, ip, sessionId: conn.sessionId, reused: true };
+        Object.assign(conn, { mediaUrl, onStatusUpdate, role, loadId, duration: status?.media?.duration || null });
+        this._startProgress(ip, conn);
+        return { ok: true, playerState: status?.playerState, ip, sessionId: conn.sessionId, reused: true, loadId, duration: conn.duration };
       } catch (err) {
         // The session went away (speaker restarted, another app took over): start fresh.
         console.warn(`[CastService] Reusing the session on ${ip} failed (${err.message}); relaunching.`);
@@ -392,17 +428,20 @@ class CastService {
             }
 
             const sessionId = player.session?.sessionId;
-            const entry = { client, player, mediaUrl, sessionId, onStatusUpdate };
+            const entry = { client, player, mediaUrl, sessionId, onStatusUpdate, role, loadId, duration: status?.media?.duration || null };
             this.activeConnections.set(ip, entry);
 
             // One listener for the session's lifetime; each load swaps the callback.
             player.on('status', (st) => {
-              if (typeof entry.onStatusUpdate === 'function') entry.onStatusUpdate(st);
+              if (st && st.media && st.media.duration) entry.duration = st.media.duration;
+              const out = normalizeStatus(st, entry);
+              if (out && typeof entry.onStatusUpdate === 'function') entry.onStatusUpdate(out);
             });
             player.on('close', () => this._dropConnection(ip, entry));
+            this._startProgress(ip, entry);
 
             settled = true;
-            resolve({ ok: true, playerState: status?.playerState, ip, sessionId });
+            resolve({ ok: true, playerState: status?.playerState, ip, sessionId, loadId, duration: entry.duration });
           });
         });
       });
@@ -415,8 +454,35 @@ class CastService {
     });
   }
 
+  // Speakers only report their position on state changes; ask every second so
+  // the app's progress bar follows the speaker.
+  _startProgress(ip, conn) {
+    if (conn.progressTimer) return;
+    conn.progressTimer = setInterval(() => {
+      if (this.activeConnections.get(ip) !== conn) { clearInterval(conn.progressTimer); conn.progressTimer = null; return; }
+      try {
+        conn.player.getStatus((err, st) => {
+          if (err || !st) return;
+          if (st.media && st.media.duration) conn.duration = st.media.duration;
+          const out = normalizeStatus(st, conn);
+          if (out && typeof conn.onStatusUpdate === 'function') conn.onStatusUpdate(out);
+        });
+      } catch {}
+    }, 1000);
+    if (conn.progressTimer.unref) conn.progressTimer.unref();
+  }
+
+  seekPlayback(ip, seconds) {
+    const conn = this.activeConnections.get(ip);
+    if (!conn || !conn.player) return Promise.resolve({ ok: false });
+    return new Promise((resolve) => {
+      conn.player.seek(Math.max(0, Number(seconds) || 0), (err) => resolve(err ? { ok: false, error: err.message } : { ok: true }));
+    });
+  }
+
   _dropConnection(ip, conn) {
     if (this.activeConnections.get(ip) === conn) this.activeConnections.delete(ip);
+    if (conn.progressTimer) { clearInterval(conn.progressTimer); conn.progressTimer = null; }
     try { conn.client.close(); } catch {}
   }
 
@@ -426,6 +492,7 @@ class CastService {
     const conn = this.activeConnections.get(ip);
     if (conn) {
       this.activeConnections.delete(ip);
+      if (conn.progressTimer) { clearInterval(conn.progressTimer); conn.progressTimer = null; }
       try {
         const sessionId = conn.player?.session?.sessionId || conn.sessionId;
         if (conn.client && conn.client.receiver && sessionId) {
@@ -559,4 +626,4 @@ class CastService {
   }
 }
 
-module.exports = { CastService, audioMimeType };
+module.exports = { CastService, audioMimeType, sniffAudioType };

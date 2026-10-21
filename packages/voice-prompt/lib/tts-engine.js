@@ -136,6 +136,8 @@ class TTSEngine extends EventEmitter {
     const volume = options.volume != null ? options.volume : this.prefs.volume;
 
     const tmpId = `robos-tts-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    // Why each engine failed, returned with the silent fallback so callers can say why.
+    const errors = [];
 
     // Fast path: check pre-cached audio (instant 0ms playback for greetings or prior speech)
     let cachedFilePath = null;
@@ -168,7 +170,8 @@ class TTSEngine extends EventEmitter {
     if (engine === 'kokoro') {
       try {
         const outWav = path.join(os.tmpdir(), `${tmpId}.wav`);
-        await this._synthesizeKokoro(cleanText, outWav, { voice, speed });
+        if (!fs.existsSync(KOKORO_MODEL)) throw new Error(`model not installed (${KOKORO_MODEL})`);
+        await this._synthesizeKokoro(cleanText, outWav, { voice, speed, timeoutMs: options.kokoroTimeoutMs });
         if (fs.existsSync(outWav) && fs.statSync(outWav).size > 100) {
           if (cachedFilePath) {
             try { fs.copyFileSync(outWav, cachedFilePath); } catch {}
@@ -178,6 +181,7 @@ class TTSEngine extends EventEmitter {
         }
       } catch (err) {
         console.warn('[tts-engine] Kokoro synthesis error, falling back:', err.message);
+        errors.push({ engine: 'kokoro', error: err.message });
       }
     }
 
@@ -185,7 +189,9 @@ class TTSEngine extends EventEmitter {
     if (engine === 'edge-tts' || engine === 'kokoro') {
       try {
         const outMp3 = path.join(os.tmpdir(), `${tmpId}.mp3`);
-        await this._synthesizeEdgeTTS(cleanText, outMp3, { voice, speed, pitch, volume });
+        // Falling back from Kokoro: its voice ids mean nothing to Edge.
+        const edgeVoice = engine === 'edge-tts' ? voice : 'en-US-AndrewMultilingualNeural';
+        await this._synthesizeEdgeTTS(cleanText, outMp3, { voice: edgeVoice, speed, pitch, volume });
         if (fs.existsSync(outMp3) && fs.statSync(outMp3).size > 100) {
           if (cachedFilePath) {
             try { fs.copyFileSync(outMp3, cachedFilePath); } catch {}
@@ -195,6 +201,7 @@ class TTSEngine extends EventEmitter {
         }
       } catch (err) {
         console.warn('[tts-engine] Edge-TTS synthesis error, falling back:', err.message);
+        errors.push({ engine: 'edge-tts', error: err.code === 'ENOENT' ? 'edge-tts is not installed' : err.message });
       }
     }
 
@@ -202,13 +209,14 @@ class TTSEngine extends EventEmitter {
     if (engine === 'piper' || fs.existsSync(PIPER_DEFAULT_MODEL)) {
       try {
         const outWav = path.join(os.tmpdir(), `${tmpId}.wav`);
-        await this._synthesizePiper(cleanText, outWav, { voice, speed });
+        await this._synthesizePiper(cleanText, outWav, { voice: /^(?:af_|am_|bf_|bm_|en-)/.test(voice) ? 'en_US-lessac-medium' : voice, speed });
         if (fs.existsSync(outWav) && fs.statSync(outWav).size > 100) {
           const durationMs = this._getAudioDurationMs(outWav);
           return { ok: true, filePath: outWav, durationMs, engine: 'piper' };
         }
       } catch (err) {
         console.warn('[tts-engine] Piper synthesis error, falling back:', err.message);
+        errors.push({ engine: 'piper', error: err.message });
       }
     }
 
@@ -221,7 +229,7 @@ class TTSEngine extends EventEmitter {
           else reject(new Error('ffmpeg fallback failed'));
         });
       });
-      return { ok: true, filePath: fallbackWav, durationMs: 1000, engine: 'fallback' };
+      return { ok: true, filePath: fallbackWav, durationMs: 1000, engine: 'fallback', errors };
     } catch {
       throw new Error(`Failed to synthesize text: ${cleanText.slice(0, 30)}...`);
     }
@@ -371,7 +379,7 @@ class TTSEngine extends EventEmitter {
     return this.kokoroWorker;
   }
 
-  _synthesizeKokoro(text, outWav, { voice = 'af_heart', speed = 1.0 } = {}) {
+  _synthesizeKokoro(text, outWav, { voice = 'af_heart', speed = 1.0, timeoutMs = 12000 } = {}) {
     const worker = this._getKokoroWorker();
     if (worker && worker.stdin && !worker.killed) {
       return new Promise((resolve, reject) => {
@@ -379,7 +387,7 @@ class TTSEngine extends EventEmitter {
         const timeout = setTimeout(() => {
           this.kokoroPending.delete(id);
           reject(new Error('Kokoro worker timeout'));
-        }, 12000);
+        }, timeoutMs || 12000);
         this.kokoroPending.set(id, {
           resolve: () => { clearTimeout(timeout); resolve(); },
           reject: (err) => { clearTimeout(timeout); reject(err); },
