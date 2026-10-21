@@ -95,8 +95,8 @@ const HERO_STATS := {
 # ── Chest contents  "col,row" → item ─────────────────────────────────────────
 const CHEST_ITEMS := {
 	"7,2": { "name": "120 Gold Pieces", "type": "gold", "amount": 120, "desc": "Starting funds for weapons and armor in town." },
-	"5,5": { "name": "Torch",           "type": "item",               "desc": "Lights dark dungeons early in thy quest." },
-	"6,5": { "name": "Magic Key",       "type": "key",                "desc": "Opens the door at the bottom of the room." },
+	"5,5": { "name": "Torch",           "id": "torch",     "type": "tool", "desc": "Lights dark dungeons early in thy quest." },
+	"6,5": { "name": "Magic Key",       "id": "magic_key", "type": "key",  "desc": "Opens the door at the bottom of the room." },
 }
 const MAX_INVENTORY := 8
 
@@ -728,6 +728,15 @@ func _execute_command() -> void:
 
 # ── Command implementations ───────────────────────────────────────────────────
 
+func _count_pack_tools() -> int:
+	var n := 0
+	for it in _inventory:
+		if it is Dictionary and str(it.get("type", "tool")) in ["weapon", "armor", "shield", "quest"]:
+			continue
+		n += 1
+	return n
+
+
 func _cmd_talk() -> void:
 	var ft  := _facing_tile()
 	var key := _npc_key(ft)
@@ -758,10 +767,26 @@ func _cmd_talk_king() -> void:
 	else:
 		exp_msg = "Thou hast attained the highest\nlevel of experience!"
 
-	_show_dialog("King Lorik", [
-		"I am greatly pleased that thou\nhast returned, Hero.",
-		exp_msg
-	], func():
+	var pages: Array = ["I am greatly pleased that thou\nhast returned, Hero."]
+	if gs and "dragonlord_defeated" in gs and gs.dragonlord_defeated:
+		# Ending: the quest is complete.
+		pages = [
+			"Thou hast defeated the\nDragonlord and restored\npeace to Alefgard!",
+			"The Ball of Light shines\nonce more upon the land.",
+			"Thy name shall be\nremembered for all time,\ndescendant of Erdrick.",
+			"Thus ends the quest\nof the Dragon Warrior.",
+		]
+		if "game_completed" in gs:
+			gs.game_completed = true
+	elif gs and "gwaelin_rescued" in gs and gs.gwaelin_rescued and not gs.gwaelin_returned:
+		gs.gwaelin_returned = true
+		pages.append("Thou hast rescued my\ndaughter Gwaelin!\nI am forever grateful.")
+		pages.append("Gwaelin: Take this\nGwaelin's Love as a\ntoken of my affection.")
+		if _inventory.size() < MAX_INVENTORY:
+			_inventory.append({"name": "Gwaelin's Love", "id": "gwaelins_love", "type": "quest", "desc": "A token from Princess Gwaelin. Reveals the way to Charlock."})
+			gs.inventory = _inventory.duplicate(true)
+	pages.append(exp_msg)
+	_show_dialog("King Lorik", pages, func():
 		_ask_king_save()
 	)
 
@@ -892,17 +917,17 @@ func _cmd_search() -> void:
 	if _map_tile_at(_hero_tile) == 30:
 		var coord := str(_hero_tile.x) + "," + str(_hero_tile.y)
 		var map_key := "throne_room:" + coord
-		if _opened_chests.has(map_key) or _opened_chests.has(coord):
+		if _opened_chests.has(map_key):
 			_show_dialog("", ["The chest is\nalready empty."])
 			return
 		_opened_chests[map_key] = true
-		_opened_chests[coord] = true
+		_opened_chests["tantegel-castle-2f:" + coord] = true
 		_blit_tile_to_bg(_floor_tile_img, _hero_tile)
 		_play_sfx("res://assets/music/mp3/open_treasure.mp3")
 		var gs := get_node_or_null("/root/GameState")
 		if gs:
 			gs.opened_chests[map_key] = true
-			gs.opened_chests[coord] = true
+			gs.opened_chests["tantegel-castle-2f:" + coord] = true
 		if CHEST_ITEMS.has(coord):
 			var item: Dictionary = CHEST_ITEMS[coord]
 			if item["type"] == "gold":
@@ -955,17 +980,17 @@ func _cmd_take() -> void:
 		return
 	var coord := str(_hero_tile.x) + "," + str(_hero_tile.y)
 	var map_key := "throne_room:" + coord
-	if _opened_chests.has(map_key) or _opened_chests.has(coord):
+	if _opened_chests.has(map_key):
 		_show_dialog("", ["The chest is\nalready empty."])
 		return
 	_opened_chests[map_key] = true
-	_opened_chests[coord] = true
+	_opened_chests["tantegel-castle-2f:" + coord] = true
 	_blit_tile_to_bg(_floor_tile_img, _hero_tile)
 	_play_sfx("res://assets/music/mp3/open_treasure.mp3")
 	var gs := get_node_or_null("/root/GameState")
 	if gs:
 		gs.opened_chests[map_key] = true
-		gs.opened_chests[coord] = true
+		gs.opened_chests["tantegel-castle-2f:" + coord] = true
 	if CHEST_ITEMS.has(coord):
 		var item: Dictionary = CHEST_ITEMS[coord]
 		if item["type"] == "gold":
@@ -974,7 +999,7 @@ func _cmd_take() -> void:
 			if PlayerState: PlayerState.gold = _hero_gold
 			_show_dialog("", ["Thou dost find\n" + item["name"] + "!"])
 		else:
-			if _inventory.size() < MAX_INVENTORY:
+			if _count_pack_tools() < MAX_INVENTORY:
 				var inv_item := item.duplicate()
 				_inventory.append(inv_item)
 				if gs: gs.inventory = _inventory.duplicate(true)

@@ -262,7 +262,7 @@ func _map_tile_at(pos: Vector2i) -> int:
 	if pos.y < 0 or pos.y >= MAP_H or pos.x < 0 or pos.x >= MAP_W:
 		return -1
 	var coord := str(pos.x) + "," + str(pos.y)
-	if _opened_chests.has("castle_1f:" + coord) or _opened_chests.has(coord):
+	if _opened_chests.has("castle_1f:" + coord):
 		return 3
 	return MAP_GRID[pos.y][pos.x]
 
@@ -1062,13 +1062,7 @@ func _handle_shop_input(event: InputEvent) -> void:
 			if _hero_gold < item["price"]:
 				_show_dialog("", ["Thou hast not\nenough gold!"])
 			else:
-				_hero_gold -= item["price"]
-				_inventory.append({"name": item["name"], "id": item["id"], "desc": "Purchased in a shop."})
-				var gs := get_node_or_null("/root/GameState")
-				if gs:
-					gs.gold = _hero_gold
-					gs.inventory = _inventory.duplicate(true)
-				_show_dialog("", ["Thou hast purchased\nthe %s!" % item["name"]])
+				_purchase_item(item)
 		var on_no := func():
 			_show_dialog("", ["Very well."])
 		_open_choice(prompt, on_yes, on_no)
@@ -1076,6 +1070,43 @@ func _handle_shop_input(event: InputEvent) -> void:
 		_shop_panel.visible = false
 		_shop_open = false
 		_show_dialog("", ["Come again!"])
+
+## Mirrors DungeonMap._purchase_item: equipment is equipped immediately and the old piece sold back.
+func _purchase_item(item: Dictionary) -> void:
+	var gs := get_node_or_null("/root/GameState")
+	var iid := str(item.get("id", ""))
+	var iname := str(item.get("name", iid))
+	_hero_gold -= int(item.get("price", 0))
+	var pages: Array = ["Thou hast purchased\nthe %s!" % iname]
+	var slot := ""
+	if gs and gs.has_method("equipment_slot"):
+		slot = str(gs.equipment_slot(iid))
+	if slot != "":
+		var previous: String = str(gs.equip_item(iid))
+		if previous != "" and previous != iid:
+			for i in range(_inventory.size() - 1, -1, -1):
+				if str(gs.equipment_id_for(_inventory[i])) == previous:
+					_inventory.remove_at(i)
+					break
+			var prev_info: Dictionary = gs.equipment_info(previous)
+			var refund := int(int(prev_info.get("cost", 0)) / 2)
+			if refund > 0:
+				_hero_gold += refund
+				pages.append("Then I will buy thy %s\nfor %d gold." % [str(prev_info.get("name", previous)), refund])
+		var kept := false
+		for inv_it in _inventory:
+			if str(gs.equipment_id_for(inv_it)) == iid:
+				kept = true
+				break
+		if not kept:
+			_inventory.append({"name": iname, "id": iid, "type": slot, "desc": "Purchased in a shop."})
+		pages.append("%s is now equipped." % iname)
+	else:
+		_inventory.append({"name": iname, "id": iid, "type": "key" if "key" in iid else "tool", "desc": "Purchased in a shop."})
+	if gs:
+		gs.gold = _hero_gold
+		gs.inventory = _inventory.duplicate(true)
+	_show_dialog("", pages)
 
 func _open_choice(prompt: String, on_yes: Callable, on_no: Callable) -> void:
 	_choice_prompt = prompt
@@ -1221,17 +1252,18 @@ func _cmd_take() -> void:
 		return
 	var coord := str(_hero_tile.x) + "," + str(_hero_tile.y)
 	var map_key := "castle_1f:" + coord
-	if _opened_chests.has(map_key) or _opened_chests.has(coord):
+	if _opened_chests.has(map_key):
 		_show_dialog("", ["The chest is already\nempty."])
 		return
 	var gold_amount := 10 + randi() % 50
 	_hero_gold += gold_amount
 	_opened_chests[map_key] = true
-	_opened_chests[coord] = true
+	_opened_chests["tantegel-castle-1f:" + coord] = true
 	var gs := get_node_or_null("/root/GameState")
 	if gs:
+		gs.gold = _hero_gold
 		gs.opened_chests[map_key] = true
-		gs.opened_chests[coord] = true
+		gs.opened_chests["tantegel-castle-1f:" + coord] = true
 	_play_sfx("res://assets/music/mp3/open_treasure.mp3")
 	_open_chest_visual(_hero_tile)
 	_show_dialog("", ["Thou dost find\n" + str(gold_amount) + " Gold Pieces!"])

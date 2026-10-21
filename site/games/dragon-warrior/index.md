@@ -105,7 +105,11 @@ python3 games/dragon-warrior/tests/test_map_completeness.py
 python3 games/dragon-warrior/tests/test_map_completeness.py --screenshots
 
 # Run the Chained Cucumber Checkpoint E2E Scenarios (Throne Room -> Key -> Door -> Castle 1F -> World Map)
-xvfb-run -a behave games/dragon-warrior/tests/e2e/features/king_to_world_map.feature</code></pre>
+xvfb-run -a behave games/dragon-warrior/tests/e2e/features/king_to_world_map.feature
+
+# Let the robos-jrpg AI play the ENTIRE game as a user would ("play the game" mode: real inputs + IPC state only)
+python3 games/dragon-warrior/tests/e2e/play_full_game.py</code></pre>
+      <p class="sec-p">The BFS audit proves every tile is reachable; the <strong>AI full-game playthrough</strong> proves the game is beatable. <code>PlayGameBrain.gd</code> takes over the controller and seeks the next entry of an ordered milestone registry (<code>data/v1/milestones.json</code>: every weapon and armor purchase, every treasure chest, each quest, the Dragonlord, the ending) from King Lorik's throne room to the credits &mdash; no teleports, no stat edits. A Python driver watches over the IPC web service, asserts invariants (never standing on water, HP never negative) and writes a JSON report with a screenshot per milestone.</p>
       <div class="cta" style="justify-content:flex-start;margin-top:18px">
         <a class="btn" href="{{ '/v1/projects/dragon-warrior/' | relative_url }}">Engine &amp; Architecture Guide</a>
         <a class="btn btn-ghost" href="{{ '/games/dragon-warrior/proof-of-viability.html' | relative_url }}">Interactive 20-Slide Report</a>

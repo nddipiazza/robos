@@ -41,7 +41,36 @@ python3 games/dragon-warrior/tests/test_map_completeness.py --screenshots
 
 # Run Chained Cucumber Checkpoint E2E Suite (King -> Key -> Door -> Castle 1F -> World Map)
 xvfb-run -a behave games/dragon-warrior/tests/e2e/features/king_to_world_map.feature
+
+# Let the robos-jrpg AI play the ENTIRE game as a user would (milestone by milestone, real inputs only)
+python3 games/dragon-warrior/tests/e2e/play_full_game.py
+python3 games/dragon-warrior/tests/e2e/play_full_game.py --until 18   # stop after milestone 18
 ```
+
+## AI Full-Game Playthrough ("Play the Game" mode)
+
+The BFS audit proves every tile is *reachable*; the playthrough proves the game is *beatable*. `PlayGameBrain.gd`
+(`src/systems/`) is a "play the game" mode of the robos-jrpg AI engine: it takes over the controller and plays from
+King Lorik's throne room to the ending credits using nothing a human player does not have — real game inputs, and the
+IPC web service (`GameControlServer.gd`, `/api/v1/state`) to read what is on screen.
+
+- **Milestone registry** — `tools/gen_milestones.py` generates `data/v1/milestones.json`: an ordered list of
+  objectives (every weapon, armor and shield purchase, every treasure chest, each quest item and quest, level gates
+  before dangerous zones, the Dragonlord and the ending). The brain simply seeks the next milestone, forever.
+- **Route planning** — `RoutePlanner.gd` plans multi-map routes (stairs, doors, bridges, the Rainbow Bridge) over the
+  real walkability grids; the brain only follows them step by step.
+- **Survival policy** — kill-before-die battle maths from `combat_formulas.json`, zone-aware heal thresholds (heal
+  early enough to survive two worst-case hits from the local encounter pool), SLEEP/STOPSPELL use, inn trips only
+  when out of heal MP and herbs, MP conservation inside Charlock and HEALMORE-only healing against the Dragonlord.
+- **NES rules respected** — eight tool slots and no dropping (a full pack skips a non-gold chest), herbs are burned
+  rather than wasted, Erdrick's Armor regenerates 1 HP per step and dampens fire breath.
+- **Python driver** — `tests/e2e/play_full_game.py` boots the game headless, enables the mode, polls state, asserts
+  invariants (hero never on water or mountains, HP never negative, no stuck loops) and writes
+  `tests/e2e/reports/playthrough/playthrough.json` plus a screenshot per milestone.
+
+Every bug the brain hit while learning to finish the game was a game bug: Charlock 1F's exit gate unwalkable, boss
+fights not syncing the pack, chest duplicates, missing level-up curves, incorrect enemy flee factors and spell
+resistances. The game data is now faithful enough that the AI beats the Dragonlord at level 24 with zero deaths.
 
 ## Global Map Completeness & Pathfinding Architecture
 

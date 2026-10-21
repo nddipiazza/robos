@@ -79,6 +79,25 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   python run_cucumber_tests.py
   ```
 
+### 4. AI Full-Game Playthrough ("play the game" mode)
+- `src/systems/PlayGameBrain.gd` is the robos-jrpg brain that plays the **whole game as a user would**: it only
+  presses real game inputs and reads state through the IPC web service (`GameControlServer.gd`, `/api/v1/state`).
+  It continuously seeks the next entry of the ordered milestone registry `data/v1/milestones.json`
+  (every weapon/armor/shield purchase, every treasure chest, each quest item, level gates, Dragonlord, ending).
+- Regenerate milestones after changing shops, chests or quests: `python3 tools/gen_milestones.py`.
+- Drive it from Python (the driver is the user: no teleports, no stat edits; it asserts invariants such as
+  "hero never stands on water" and writes `tests/e2e/reports/playthrough/playthrough.json` + screenshots):
+  ```bash
+  python3 tests/e2e/play_full_game.py                 # whole game, headless (~2-3 h at time-scale 6)
+  python3 tests/e2e/play_full_game.py --until 18      # stop after milestone 18
+  DW_HEADED=1 python3 tests/e2e/play_full_game.py     # watch it on the desktop
+  ```
+- IPC commands: `start_play_game {time_scale, start_index}`, `stop_play_game`, `get_milestones` (report with
+  `status`, `index`, `done`, `skipped`, `battles`, `deaths` and the brain's event log).
+- Survival rules live in `PlayGameBrain._decide_survival` / `_decide_battle` (kill-before-die battle policy,
+  zone-aware heal thresholds, MP conservation inside Charlock, HEALMORE-only boss healing, NES pack rules:
+  8 tool slots, no dropping). Bugs the brain exposes are almost always *game* bugs — fix the game, not the brain.
+
 ---
 
 ## 🔄 Schema & Data Model Regeneration
