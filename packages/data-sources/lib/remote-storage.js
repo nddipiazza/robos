@@ -1457,31 +1457,81 @@ function listLocalMountDir(ds, remotePath) {
 
 // ── SFTP & FTP Drivers ──────────────────────────────────────────────────────
 
+function requireModuleWithFallback(modName) {
+  if (modName === 'ssh2-sftp-client') {
+    // Remove optional native NAN addons (cpufeatures.node, sshcrypto.node) if built for
+    // host Node ABI instead of Electron ABI, preventing SIGSEGV while using ssh2's built-in Node crypto.
+    const unsafeNodes = [
+      path.resolve(__dirname, '..', 'node_modules', 'cpu-features', 'build', 'Release', 'cpufeatures.node'),
+      path.resolve(__dirname, '..', 'node_modules', 'ssh2', 'lib', 'protocol', 'crypto', 'build', 'Release', 'sshcrypto.node'),
+    ];
+    for (const n of unsafeNodes) {
+      try { if (fs.existsSync(n)) fs.unlinkSync(n); } catch {}
+    }
+  }
+  const candidates = [
+    modName,
+    path.resolve(__dirname, '..', 'node_modules', modName),
+    path.resolve(__dirname, '..', '..', 'audio-player', 'node_modules', modName),
+    `/usr/local/share/robos/data-sources/node_modules/${modName}`,
+    `/usr/local/share/robos/audio-player/node_modules/${modName}`,
+  ];
+  let lastErr = null;
+  for (const c of candidates) {
+    try { return require(c); } catch (err) { lastErr = err; }
+  }
+  throw lastErr || new Error(`Cannot find module '${modName}'`);
+}
+
 function sftpOptions(ds) {
   const opts = {
     host: ds.host,
     port: Number(ds.port) || 22,
-    username: ds.user || undefined,
+    username: ds.user || os.userInfo().username || undefined,
     readyTimeout: CONNECT_TIMEOUT_MS,
   };
   if (ds.privateKeyPath) {
-    opts.privateKey = fs.readFileSync(resolveTilde(ds.privateKeyPath));
+    const keyPath = resolveTilde(ds.privateKeyPath);
+    if (fs.existsSync(keyPath)) {
+      opts.privateKey = fs.readFileSync(keyPath);
+    }
     if (ds.password && !hasPlaceholderSecret(ds.password)) opts.passphrase = ds.password;
   } else if (ds.password && !hasPlaceholderSecret(ds.password)) {
     opts.password = ds.password;
+    opts.tryKeyboard = true;
+  } else {
+    // Support SSH agent and standard ~/.ssh keys automatically when password/key path is omitted
+    if (process.env.SSH_AUTH_SOCK) {
+      opts.agent = process.env.SSH_AUTH_SOCK;
+    }
+    const defaultKeys = ['~/.ssh/id_ed25519', '~/.ssh/id_rsa', '~/.ssh/id_ecdsa'];
+    for (const k of defaultKeys) {
+      const kp = resolveTilde(k);
+      if (fs.existsSync(kp)) {
+        try { opts.privateKey = fs.readFileSync(kp); break; } catch {}
+      }
+    }
   }
   return opts;
 }
 
 async function withSftp(ds, fn) {
-  const Client = require('ssh2-sftp-client');
+  const Client = requireModuleWithFallback('ssh2-sftp-client');
   const client = new Client();
-  await client.connect(sftpOptions(ds));
+  const opts = sftpOptions(ds);
+  if (opts.password) {
+    const respondKeyboard = (_name, _instructions, _instructionsLang, prompts, finish) => {
+      finish((prompts || []).map(() => opts.password));
+    };
+    if (typeof client.on === 'function') client.on('keyboard-interactive', respondKeyboard);
+    if (client.client && typeof client.client.on === 'function') client.client.on('keyboard-interactive', respondKeyboard);
+  }
+  await client.connect(opts);
   try { return await fn(client); } finally { await client.end().catch(() => {}); }
 }
 
 async function withFtp(ds, fn) {
-  const ftp = require('basic-ftp');
+  const ftp = requireModuleWithFallback('basic-ftp');
   const client = new ftp.Client(CONNECT_TIMEOUT_MS);
   try {
     await client.access({
@@ -1506,13 +1556,17 @@ function withClient(ds, fn) {
 
 // ── Unified Public Operations ───────────────────────────────────────────────
 
-async function listDir(ds, remotePath) {
+async function listDir(ds, remotePath, options = {}) {
   if (!ds) throw new Error('Data source is required');
   const driver = String(ds.driverType || '').toLowerCase();
 
   if (driver === 'sftp' || driver === 'ftp') {
     const startDefault = ds.database || '/';
     const dir = normalizeRemote(remotePath || startDefault);
+    if (!options.forceRefresh) {
+      const cached = getCachedDirListing(ds, dir, false);
+      if (cached) return cached;
+    }
     const entries = await withClient(ds, async (c) => {
       if (driver === 'sftp') {
         const list = await c.list(dir);
@@ -1532,11 +1586,13 @@ async function listDir(ds, remotePath) {
       }));
     });
     entries.sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name, undefined, { numeric: true }) : a.type === 'dir' ? -1 : 1));
-    return {
+    const result = {
       path: dir,
       provider: driver,
       entries: entries.filter(e => e.name !== '.' && e.name !== '..').map(e => ({ ...e, path: posixPath.join(dir, e.name) })),
     };
+    cacheDirListing(ds, dir, result);
+    return result;
   }
 
   if (driver === 'gdrive') {
