@@ -1948,6 +1948,11 @@ body {
 }
 
 .lyrics-src { text-transform: none; letter-spacing: 0; }
+.lyrics-head { align-items: center; }
+.lyrics-tools { display: inline-flex; align-items: center; gap: 8px; }
+.lyrics-btn { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; text-transform: none; letter-spacing: 0; font-size: 0.68rem; color: var(--text-muted); }
+.lyrics-btn.on { color: var(--accent); border-color: rgba(232, 163, 61, 0.55); }
+.lyrics-panel.off .lyrics-head { border-bottom: none; }
 
 .lyrics-scroll { height: 240px; overflow-y: auto; padding: 90px 20px; text-align: center; scroll-behavior: smooth; }
 
@@ -2431,3 +2436,8 @@ body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-selec
 }
 .col-border:hover::after, body.is-resizing .col-border:active::after { background: var(--accent); top: 0; bottom: 0; }
 .playlists-layout > .splitter { width: 16px; }
+
+/* Deck seek bar while casting: follows the speaker (src/castClock.jsx). */
+.rhap-cast-progress { font-size: 0.8rem; gap: 14px; padding: 4px 0 6px; }
+.rhap-cast-progress input[type=range] { height: 5px; }
+.rhap-cast-progress input[type=range]::-webkit-slider-thumb { width: 14px; height: 14px; }

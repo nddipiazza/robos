@@ -5,8 +5,9 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
+const { spawn } = require('child_process');
 const { pathToFileURL } = require('url');
-const { CastService, audioMimeType } = require('./lib/cast-service');
+const { CastService, audioMimeType, sniffAudioType } = require('./lib/cast-service');
 const { MediaLibrary } = require('./lib/media-library');
 const cloud = require('./lib/cloud-storage');
 const { createTagQueue } = require('./lib/cloud-tags');
@@ -284,7 +285,7 @@ ipcMain.handle('audio:cast-file', async (_evt, { ip, filePath, metadata }) => {
       if (!cloudTrack) throw new Error('File does not exist: ' + filePath);
       streamUrl = castService.getCloudStreamUrl(cloudTrack.id, true);
     }
-    const meta = { ...(metadata || {}), contentType: (metadata && metadata.contentType) || audioMimeType(filePath) };
+    const meta = { ...(metadata || {}), contentType: (metadata && metadata.contentType) || (fs.existsSync(filePath) ? sniffAudioType(filePath) : audioMimeType(filePath)) };
     return await castService.castMediaUrl(ip, streamUrl, meta, (status) => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('audio:speaker-status-change', { ip, status });
@@ -338,6 +339,14 @@ ipcMain.handle('audio:cast-pause', async (_evt, ip) => {
 
 ipcMain.handle('audio:cast-resume', async (_evt, ip) => {
   return castService.resumePlayback(ip);
+});
+
+ipcMain.handle('audio:cast-seek', async (_evt, { ip, seconds } = {}) => {
+  if (!ip || ip === 'all') {
+    const results = await Promise.all([...castService.activeConnections.keys()].map(i => castService.seekPlayback(i, seconds)));
+    return { ok: results.some(r => r.ok) };
+  }
+  return castService.seekPlayback(ip, seconds);
 });
 
 ipcMain.handle('audio:cast-stop', async (_evt, ip) => {
@@ -619,20 +628,58 @@ ipcMain.handle('audio:dj-voices', async () => {
   }
 });
 
+// The voice the user set up in RobOS Voice ("engine:voiceId"), tried when the DJ's
+// own voice can't be produced.
+function robosVoicePref() {
+  try {
+    const file = process.env.ROBOS_VOICE_PREFS_FILE || path.join(os.homedir(), '.config', 'robos', 'voice-prompt-prefs.json');
+    const tts = (JSON.parse(fs.readFileSync(file, 'utf8')) || {}).tts || {};
+    return tts.engine ? `${tts.engine}:${tts.voice || ''}` : '';
+  } catch { return ''; }
+}
+
+// Speakers play MP3 everywhere; voice engines write WAV (sometimes float), and the
+// voice cache stores MP3s under .wav names. Lines sent to a speaker are converted.
+const castClipDir = path.join(os.tmpdir(), 'robos-dj-cast');
+function castableClip(filePath) {
+  return new Promise((resolve) => {
+    try {
+      fs.mkdirSync(castClipDir, { recursive: true });
+      const out = path.join(castClipDir, `${crypto.createHash('md5').update(filePath + ':' + fs.statSync(filePath).mtimeMs).digest('hex').slice(0, 16)}.mp3`);
+      if (fs.existsSync(out) && fs.statSync(out).size > 0) return resolve(out);
+      const ff = spawn('ffmpeg', ['-y', '-hide_banner', '-loglevel', 'error', '-i', filePath, '-ac', '2', '-ar', '44100', '-codec:a', 'libmp3lame', '-b:a', '160k', out], { stdio: 'ignore' });
+      ff.on('error', () => resolve(filePath));
+      ff.on('close', (code) => resolve(code === 0 && fs.existsSync(out) ? out : filePath));
+    } catch { resolve(filePath); }
+  });
+}
+
+// Start the voice engine (Kokoro loads its model in the background) before the
+// first line is needed.
+ipcMain.handle('audio:dj-warmup', async () => ({ ok: !!getTtsEngine() }));
+
 // Renders a DJ line to an audio file. `voice` is "engine:voiceId" from audio:dj-voices.
 ipcMain.handle('audio:dj-synthesize', async (_evt, { text, voice } = {}) => {
   const tts = getTtsEngine();
   if (!tts) return { ok: false, error: 'RobOS voice (voice-prompt) is not installed.' };
-  try {
-    const [engine, ...rest] = String(voice || '').split(':');
-    const opts = engine && rest.length ? { engine, voice: rest.join(':') } : {};
-    const res = await tts.synthesize(String(text || ''), opts);
-    // The engine's last resort is a second of silence; treat that as "no voice available".
-    if (!res || !res.ok || res.engine === 'fallback') return { ok: false, error: 'No text-to-speech engine produced audio.' };
-    return { ok: true, filePath: res.filePath, durationMs: res.durationMs, engine: res.engine };
-  } catch (err) {
-    return { ok: false, error: err.message };
+  const attempts = [String(voice || ''), robosVoicePref()].filter((v, i, a) => a.indexOf(v) === i);
+  const problems = [];
+  for (const choice of attempts) {
+    try {
+      const [engine, ...rest] = choice.split(':');
+      const opts = engine ? { engine, voice: rest.join(':') || undefined, kokoroTimeoutMs: 60000 } : { kokoroTimeoutMs: 60000 };
+      const res = await tts.synthesize(String(text || ''), opts);
+      // The engine's last resort is a second of silence; treat that as "no voice".
+      if (res && res.ok && res.engine !== 'fallback') {
+        return { ok: true, filePath: res.filePath, castPath: await castableClip(res.filePath), durationMs: res.durationMs, engine: res.engine };
+      }
+      for (const e of (res && res.errors) || []) problems.push(`${e.engine}: ${String(e.error).split('\n')[0].slice(0, 160)}`);
+    } catch (err) {
+      problems.push(err.message);
+    }
   }
+  const unique = [...new Set(problems)];
+  return { ok: false, error: `No text-to-speech engine produced audio${unique.length ? ` — ${unique.join('; ')}` : ''}.` };
 });
 
 // ── Library browsing: cover art, play statistics, loved tracks ─────────────
