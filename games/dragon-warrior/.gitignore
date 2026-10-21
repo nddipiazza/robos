@@ -12,9 +12,10 @@
 ~*.dll
 
 # ==========================================
-# Godot 3 Legacy Caches (Just in case)
+# Godot 3 Legacy Caches & Generated Asset Imports
 # ==========================================
 .import/
+*.import
 
 # ==========================================
 # Build & Export Outputs

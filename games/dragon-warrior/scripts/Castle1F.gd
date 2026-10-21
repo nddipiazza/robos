@@ -721,6 +721,8 @@ func _process(delta: float) -> void:
 		_cam_world = _cam_from.lerp(_cam_to, _move_t)
 		if _move_t >= 1.0:
 			_hero_moving = false
+			if _move_enabled and not _dialog_active and not _menu_open and not _status_open and not _item_open:
+				_poll_move_input()
 	elif _move_enabled and not _dialog_active and not _menu_open and not _status_open and not _item_open:
 		_poll_move_input()
 	_draw_frame()
@@ -847,6 +849,11 @@ func _handle_move_input(event: InputEvent) -> void:
 		_hero_ws.step()
 
 	var dest := _hero_tile + dir
+	# South exit: walking off row 30 cols 11-12 → World Map at Tantegel (0x2D,0x2D)
+	if dest.y >= MAP_H - 1 and dest.x >= 11 and dest.x <= 12:
+		_save_state(Vector2i(0x2d, 0x2d), "castle_1f", "down")
+		get_tree().change_scene_to_file.call_deferred("res://scenes/WorldMap.tscn")
+		return
 	if not _is_walkable(dest):
 		return
 
@@ -877,16 +884,16 @@ func _handle_dialog_input(event: InputEvent) -> void:
 
 
 func _handle_menu_input(event: InputEvent) -> void:
-	if event.is_action_pressed("move_up"):
+	if event.is_action_pressed("move_up") or event.is_action_pressed("ui_up"):
 		_menu_index = (_menu_index - MENU_COLS + MENU_ITEMS.size()) % MENU_ITEMS.size()
 		_refresh_menu()
-	elif event.is_action_pressed("move_down"):
+	elif event.is_action_pressed("move_down") or event.is_action_pressed("ui_down"):
 		_menu_index = (_menu_index + MENU_COLS) % MENU_ITEMS.size()
 		_refresh_menu()
-	elif event.is_action_pressed("move_left"):
+	elif event.is_action_pressed("move_left") or event.is_action_pressed("ui_left"):
 		_menu_index = (_menu_index - 1 + MENU_ITEMS.size()) % MENU_ITEMS.size()
 		_refresh_menu()
-	elif event.is_action_pressed("move_right"):
+	elif event.is_action_pressed("move_right") or event.is_action_pressed("ui_right"):
 		_menu_index = (_menu_index + 1) % MENU_ITEMS.size()
 		_refresh_menu()
 	elif event.is_action_pressed("ui_accept"):
@@ -904,10 +911,10 @@ func _handle_item_input(event: InputEvent) -> void:
 			_item_panel.visible = false
 			_item_open          = false
 		return
-	if event.is_action_pressed("move_up"):
+	if event.is_action_pressed("move_up") or event.is_action_pressed("ui_up"):
 		_item_index = maxi(_item_index - 1, 0)
 		_refresh_item_cursor()
-	elif event.is_action_pressed("move_down"):
+	elif event.is_action_pressed("move_down") or event.is_action_pressed("ui_down"):
 		_item_index = mini(_item_index + 1, _inventory.size() - 1)
 		_refresh_item_cursor()
 	elif event.is_action_pressed("ui_accept"):

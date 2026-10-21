@@ -317,14 +317,36 @@ MENU_COMMAND_COORDINATES = {
 
 def perform_user_input_select_command(cmd_name: str, port: int):
     target_cmd = "DOOR" if "door" in cmd_name.lower() or "key" in cmd_name.lower() else cmd_name.upper()
-    print(f" Executing command '{target_cmd}' via Web Service on port {port}...")
-    try:
-        send_web_service_command("select_command", {"cmd": target_cmd}, port=port)
-    except Exception as e:
-        print(f" [Warning] select_command hit exception: {e}, retrying...")
-        time.sleep(0.5)
-        send_web_service_command("select_command", {"cmd": target_cmd}, port=port)
-    time.sleep(0.5)
+    print(f" Navigating command menu via real user inputs to '{target_cmd}' on port {port}...")
+    state = get_web_service_state(port=port)
+    if not state.get("command_window", {}).get("is_showing", False):
+        send_web_service_input({"action": "cmd_menu"}, port=port)
+        time.sleep(0.25)
+    for _ in range(12):
+        state = get_web_service_state(port=port)
+        cmd_win = state.get("command_window", {})
+        if not cmd_win.get("is_showing", False):
+            send_web_service_input({"action": "cmd_menu"}, port=port)
+            time.sleep(0.25)
+            continue
+        items = cmd_win.get("menu_items") or ["TALK", "DOOR", "STATUS", "TAKE", "STAIRS", "SPELL", "SEARCH", "ITEM"]
+        cur_idx = int(cmd_win.get("selected_index", 0))
+        target_idx = items.index(target_cmd) if target_cmd in items else 0
+        if cur_idx == target_idx:
+            send_web_service_input({"action": "ui_accept"}, port=port)
+            time.sleep(0.35)
+            return
+        cur_col, cur_row = cur_idx % 2, cur_idx // 2
+        tgt_col, tgt_row = target_idx % 2, target_idx // 2
+        if cur_col < tgt_col:
+            send_web_service_input({"action": "move_right"}, port=port)
+        elif cur_col > tgt_col:
+            send_web_service_input({"action": "move_left"}, port=port)
+        elif cur_row < tgt_row:
+            send_web_service_input({"action": "move_down"}, port=port)
+        else:
+            send_web_service_input({"action": "move_up"}, port=port)
+        time.sleep(0.2)
 
 @when('the hero walks to the chest in the throne room')
 def step_hero_walks_to_chest(context):
@@ -1011,5 +1033,201 @@ def step_verify_dialog_speaker_and_text(context, speaker, pattern):
     assert matched_text, (
         f"Expected pattern '{pattern}' not found in dialogue text! Full dialogue: '{clean_full_text}'"
     )
+
+
+# ── In-Engine AIEngine & Checkpoint Playthrough Step Definitions ──────────────
+
+CHECKPOINT_SAVE_DIR = os.path.join(PROJECT_DIR, "tests", "e2e", "reports", "checkpoints")
+
+
+def _ensure_game_running_for_checkpoint(context, initial_scene="TitleScreen.tscn", save_state_file=None):
+    proc = getattr(context, "godot_proc", None)
+    if proc is not None and proc.poll() is None:
+        return getattr(context, "web_port", 8080)
+
+    target_port = resolve_worker_port(context)
+    env = os.environ.copy()
+    env["DW_WEB_SERVICE_PORT"] = str(target_port)
+    if save_state_file:
+        env["DW_SAVE_STATE_FILE"] = save_state_file
+    else:
+        env.pop("DW_SAVE_STATE_FILE", None)
+    if sys.platform != "win32":
+        env["DISPLAY"] = getattr(context, "display_num", resolve_default_display())
+
+    godot_cmd = [GODOT_BIN, "--path", PROJECT_DIR]
+    avi_path = getattr(context, "avi_path", None)
+    if avi_path:
+        godot_cmd.extend(["--write-movie", avi_path])
+    if getattr(context, "use_xvfb", False) and sys.platform != "win32":
+        godot_cmd.extend(["--rendering-driver", "opengl3"])
+    if initial_scene and initial_scene != "TitleScreen.tscn":
+        scene_path = initial_scene if initial_scene.startswith("res://") else f"res://scenes/{initial_scene}"
+        godot_cmd.append(scene_path)
+    godot_cmd.extend(["--", f"--web-service-port={target_port}"])
+
+    context.godot_proc = subprocess.Popen(godot_cmd, env=env)
+    active_port = find_and_wait_for_web_service(target_port, timeout=20.0)
+    assert active_port is not None, f"Web Service failed to start on port {target_port}!"
+    context.web_port = active_port
+    send_web_service_command("toggle_tile_debug", {"enabled": True}, port=active_port)
+    return active_port
+
+
+def _run_in_engine_ai_task(context, task_name: str, task_args: dict = None, timeout: float = 45.0):
+    port = resolve_worker_port(context)
+    args = dict(task_args or {})
+    args["task"] = task_name
+    res = send_web_service_command("ai_task", args, port=port)
+    assert res.get("success"), f"Failed to start in-engine AI task '{task_name}': {res}"
+
+    deadline = time.monotonic() + timeout
+    last_ai = {}
+    while time.monotonic() < deadline:
+        state = get_web_service_state(port=port)
+        last_ai = state.get("ai_engine", {})
+        status = last_ai.get("task_status", "")
+        if status == "completed":
+            print(
+                f"[AIEngine] Completed task '{task_name}' in {last_ai.get('task_steps_taken', 0)} user inputs "
+                f"(recent inputs: {last_ai.get('recent_inputs', [])[-8:]})"
+            )
+            return state
+        if status == "failed":
+            raise AssertionError(f"In-engine AI task '{task_name}' failed: {last_ai.get('task_error')}")
+        time.sleep(0.12)
+    raise AssertionError(f"Timed out waiting for in-engine AI task '{task_name}'. Last AI state: {last_ai}")
+
+
+@given(r'(?:a )?fresh game(?: is created)?')
+@when(r'(?:a )?fresh game(?: is created)?')
+@given(r'create fresh game')
+@when(r'create fresh game')
+def step_create_fresh_game(context):
+    port = _ensure_game_running_for_checkpoint(context, initial_scene="TitleScreen.tscn")
+    state = get_web_service_state(port=port)
+    if state.get("scene_shown", {}).get("name") != "ThroneRoom":
+        _run_in_engine_ai_task(context, "start_fresh_game", {"max_steps": 30}, timeout=15.0)
+    state = get_web_service_state(port=port)
+    assert state.get("scene_shown", {}).get("name") == "ThroneRoom", (
+        f"Expected fresh game to enter ThroneRoom, got {state.get('scene_shown')}"
+    )
+
+
+@given(r'(?:the )?game state is loaded from checkpoint "(?P<checkpoint_name>[^"]+)"')
+@when(r'(?:the )?game state is loaded from checkpoint "(?P<checkpoint_name>[^"]+)"')
+def step_load_from_checkpoint(context, checkpoint_name):
+    os.makedirs(CHECKPOINT_SAVE_DIR, exist_ok=True)
+    ckpt_file = os.path.join(CHECKPOINT_SAVE_DIR, f"{checkpoint_name}.json")
+    if not os.path.exists(ckpt_file):
+        alt = os.path.join(PROJECT_DIR, "data", "v1", "save-states", f"{checkpoint_name}.json")
+        if os.path.exists(alt):
+            ckpt_file = alt
+    assert os.path.exists(ckpt_file), f"Checkpoint save state file not found: {ckpt_file}"
+    port = _ensure_game_running_for_checkpoint(context, save_state_file=ckpt_file)
+    send_web_service_command("load_save_state", {"file_path": ckpt_file}, port=port)
+    time.sleep(0.5)
+
+
+@when(r'save game state to checkpoint "(?P<checkpoint_name>[^"]+)"')
+@then(r'save game state to checkpoint "(?P<checkpoint_name>[^"]+)"')
+def step_save_to_checkpoint(context, checkpoint_name):
+    os.makedirs(CHECKPOINT_SAVE_DIR, exist_ok=True)
+    ckpt_file = os.path.join(CHECKPOINT_SAVE_DIR, f"{checkpoint_name}.json")
+    port = resolve_worker_port(context)
+    res = send_web_service_command("save_checkpoint", {"file_path": ckpt_file}, port=port)
+    assert res.get("success") and os.path.exists(ckpt_file), f"Failed to save checkpoint to {ckpt_file}: {res}"
+    print(f"[Checkpoint] Saved game state checkpoint to {ckpt_file}")
+
+
+@when(r'(?:the player )?completes? dialog(?: with [Kk]ing(?: Lorik)?)?')
+def step_complete_dialog_with_king(context):
+    _run_in_engine_ai_task(context, "complete_dialog", {"max_steps": 50}, timeout=20.0)
+
+
+@when(r'(?:the hero )?moves? to pos(?:ition)? \((?P<tile_x>\d+),\s*(?P<tile_y>\d+)\)(?: facing "(?P<facing>[^"]+)")?')
+def step_ai_move_to_pos(context, tile_x, tile_y, facing=None):
+    args = {"x": int(tile_x), "y": int(tile_y), "max_steps": 160}
+    if facing:
+        args["facing"] = facing.strip().lower()
+    _run_in_engine_ai_task(context, "move_to_pos", args, timeout=35.0)
+
+
+@when(r'(?:the hero )?obtains?(?: the)? chest')
+def step_ai_obtain_chest(context):
+    _run_in_engine_ai_task(context, "obtain_chest", {"command": "TAKE", "max_steps": 40}, timeout=15.0)
+
+
+@when(r'(?:the hero )?opens?(?: the)? door')
+def step_ai_open_door(context):
+    _run_in_engine_ai_task(context, "open_door", {"max_steps": 40}, timeout=15.0)
+
+
+@when(r'(?:the hero )?(?:takes?(?: the)? )?stairs')
+def step_ai_take_stairs(context):
+    _run_in_engine_ai_task(context, "take_stairs", {"max_steps": 40}, timeout=15.0)
+
+
+@when(r'(?:the )?(?:in-engine AI|demo mode) plays until checkpoint "(?P<checkpoint>[^"]+)"')
+def step_ai_play_until_checkpoint(context, checkpoint):
+    _run_in_engine_ai_task(context, "play_to_checkpoint", {"checkpoint": checkpoint, "max_steps": 350}, timeout=60.0)
+
+
+def _assert_expected_game_state(state: dict, expected: dict):
+    scene_name = state.get("scene_shown", {}).get("name", "")
+    hero_pos = state.get("hero_position", {})
+    gs = state.get("game_state", {})
+    dlg = state.get("dialog_box", {})
+
+    for key, val in expected.items():
+        k = str(key).strip()
+        v = str(val).strip()
+        if k == "scene":
+            assert scene_name == v, f"Expected scene '{v}', got '{scene_name}'"
+        elif k in ("tile", "pos", "position"):
+            parts = [int(p.strip()) for p in v.strip("()").split(",")]
+            actual = (int(hero_pos.get("x", -1)), int(hero_pos.get("y", -1)))
+            assert actual == (parts[0], parts[1]), f"Expected tile {(parts[0], parts[1])}, got {actual}"
+        elif k == "facing":
+            assert hero_pos.get("facing") == v, f"Expected facing '{v}', got '{hero_pos.get('facing')}'"
+        elif k in ("king_intro_done", "kingIntroDone"):
+            exp_b = v.lower() == "true"
+            assert bool(gs.get("king_intro_done")) == exp_b, f"Expected king_intro_done={exp_b}, got {gs.get('king_intro_done')}"
+        elif k == "dialog_showing":
+            exp_b = v.lower() == "true"
+            assert bool(dlg.get("is_showing")) == exp_b, f"Expected dialog_showing={exp_b}, got {dlg.get('is_showing')}"
+        elif k == "has_item":
+            inv = gs.get("inventory", [])
+            found = any(
+                (isinstance(it, dict) and v.lower() in str(it.get("name", "")).lower())
+                or (isinstance(it, str) and v.lower() in it.lower())
+                for it in inv
+            )
+            assert found, f"Expected item '{v}' in inventory, got {inv}"
+        elif k == "door_unlocked":
+            unlocked = gs.get("unlocked_doors", {})
+            assert bool(unlocked.get(v) or unlocked.get("throne_room")), f"Expected door '{v}' unlocked, got {unlocked}"
+
+
+@then(r'verify that game state is (?P<expected_json>\{.+\})')
+def step_verify_game_state_json(context, expected_json):
+    port = resolve_worker_port(context)
+    state = get_web_service_state(port=port)
+    expected = json.loads(expected_json)
+    _assert_expected_game_state(state, expected)
+
+
+@then(r'verify that game state is:')
+def step_verify_game_state_table(context):
+    port = resolve_worker_port(context)
+    state = get_web_service_state(port=port)
+    expected = {}
+    if context.table:
+        if len(context.table.headings) == 2:
+            expected[context.table.headings[0]] = context.table.headings[1]
+        for row in context.table:
+            expected[row[0]] = row[1]
+    _assert_expected_game_state(state, expected)
+
 
 

@@ -46,10 +46,29 @@ var armor:  String = ""   # e.g. "chain_mail"
 # King Lorik dialogue state
 var king_intro_done: bool = false
 var tile_debug_enabled: bool = false
+var initial_scene_override: String = ""
+var demo_mode_enabled: bool = false
 
 # Developer QoL hotkey toggles
 var encounters_disabled: bool = false
 var double_speed: bool = false
+
+func _ready() -> void:
+	var demo_env := OS.get_environment("DW_DEMO").to_lower()
+	if demo_env in ["1", "true", "yes"]:
+		demo_mode_enabled = true
+	_apply_save_state_override_from_env()
+	_parse_cmdline_args()
+	if initial_scene_override != "":
+		var target_path := "res://scenes/%s.tscn" % initial_scene_override
+		if ResourceLoader.exists(target_path):
+			call_deferred("_jump_to_override_scene", target_path)
+
+func _jump_to_override_scene(target_path: String) -> void:
+	var tree := get_tree()
+	if tree and tree.current_scene and tree.current_scene.name == "TitleScreen":
+		print("[GameState] Jumping directly to save-state scene: ", target_path)
+		tree.change_scene_to_file(target_path)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -80,15 +99,18 @@ func _show_hotkey_toast(msg: String) -> void:
 	tween.tween_property(label, "modulate:a", 0.0, 0.5)
 	tween.tween_callback(canvas.queue_free)
 
-	_apply_save_state_override_from_env()
-	_parse_cmdline_args()
-
 func _parse_cmdline_args() -> void:
 	var args := OS.get_cmdline_user_args() + OS.get_cmdline_args()
 	for i in range(args.size()):
 		var arg := str(args[i])
 		if arg == "--king-intro-done":
 			king_intro_done = true
+		elif arg == "--demo" or arg == "-d":
+			demo_mode_enabled = true
+		elif arg == "--save-state-file" and i + 1 < args.size():
+			_load_save_state_from_path(str(args[i + 1]))
+		elif arg.begins_with("--save-state-file="):
+			_load_save_state_from_path(arg.split("=")[1])
 		elif arg == "--tile-debug" or arg == "--debug-tiles":
 			tile_debug_enabled = true
 		elif arg == "--tile" and i + 1 < args.size():
@@ -110,6 +132,9 @@ func _apply_save_state_override_from_env() -> void:
 	var save_state_path := OS.get_environment(SAVE_STATE_ENV)
 	if save_state_path == "":
 		return
+	_load_save_state_from_path(save_state_path)
+
+func _load_save_state_from_path(save_state_path: String) -> void:
 	if not FileAccess.file_exists(save_state_path):
 		push_warning("Save state override file missing: %s" % save_state_path)
 		return
@@ -125,12 +150,16 @@ func _apply_save_state_override_from_env() -> void:
 	print("[GameState] loaded save state override: %s" % save_state_path)
 
 func _apply_save_state_override(data: Dictionary) -> void:
+	if data.has("scene") and str(data.get("scene", "")) != "":
+		initial_scene_override = str(data.get("scene", ""))
 	if data.has("gold"):
 		gold = int(data.get("gold", 0))
 	if data.has("come_from"):
 		come_from = str(data.get("come_from", ""))
 	elif data.has("from"):
 		come_from = str(data.get("from", ""))
+	elif bool(data.get("kingIntroDone", data.get("king_intro_done", false))) or str(data.get("scene", "ThroneRoom")) != "ThroneRoom":
+		come_from = "save"
 	if data.has("facing"):
 		spawn_facing = str(data.get("facing", spawn_facing))
 	if data.has("tile"):
@@ -277,6 +306,38 @@ func get_exp_to_next_level() -> int:
 		return max(0, req_exp - current_exp)
 
 	return -1
+
+func export_state_dict(scene_name: String = "ThroneRoom", current_tile: Vector2i = Vector2i(-1, -1), current_facing: String = "") -> Dictionary:
+	var t := current_tile if current_tile != Vector2i(-1, -1) else spawn_tile
+	var f := current_facing if current_facing != "" else spawn_facing
+	return {
+		"name": str(hero_stats.get("name", "ERDRICK")) + " - Lv." + str(hero_stats.get("level", 1)),
+		"description": "Checkpoint at %s (%d,%d)" % [scene_name, t.x, t.y],
+		"scene": scene_name,
+		"tile": str(t.x) + "," + str(t.y),
+		"facing": f,
+		"come_from": come_from if come_from != "" else "save",
+		"gold": gold,
+		"heroName": str(hero_stats.get("name", "ERDRICK")),
+		"heroLevel": int(hero_stats.get("level", 1)),
+		"heroHp": int(hero_stats.get("hp", 15)),
+		"heroHpMax": int(hero_stats.get("hp_max", 15)),
+		"heroMp": int(hero_stats.get("mp", 0)),
+		"heroMpMax": int(hero_stats.get("mp_max", 0)),
+		"heroStr": int(hero_stats.get("str", 4)),
+		"heroAgl": int(hero_stats.get("agl", 4)),
+		"heroAtk": int(hero_stats.get("atk", 4)),
+		"heroDef": int(hero_stats.get("def", 2)),
+		"heroExp": int(hero_stats.get("exp", 0)),
+		"heroWeapon": weapon,
+		"heroArmor": armor,
+		"heroSpells": spells.duplicate(true),
+		"items": inventory.duplicate(true),
+		"openedChests": opened_chests.duplicate(true),
+		"unlockedDoors": unlocked_doors.duplicate(true),
+		"bridgeBuilt": bridge_built,
+		"kingIntroDone": king_intro_done,
+	}
 
 func save_to_disk(filename: String = "adventure_log.json") -> bool:
 	var dir_path := "user://saves"

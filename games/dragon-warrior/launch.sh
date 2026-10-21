@@ -53,8 +53,15 @@ if [[ ! -x "$GODOT" ]]; then
   exit 1
 fi
 
+if [[ ! -d "$PROJECT/.godot/imported" ]]; then
+  "$GODOT" --headless --path "$PROJECT" --import >/dev/null 2>&1 || true
+fi
+
 IS_DEBUG=false
+IS_DEMO="${DW_DEMO:-0}"
+IS_HEADLESS=false
 SAVE_STATE_FILE="${DW_SAVE_STATE_FILE:-}"
+WEB_PORT="${DW_WEB_SERVICE_PORT:-}"
 SCENE="Castle1F"
 TILE="8,8"
 FACING=""
@@ -68,7 +75,12 @@ DEBUG_ARGS=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --debug) IS_DEBUG=true; shift ;;
-    --save-state-file) SAVE_STATE_FILE="$2"; shift 2 ;;
+    --demo|-d) IS_DEMO="1"; shift ;;
+    --headless) IS_HEADLESS=true; shift ;;
+    --save-state-file|--save-state) SAVE_STATE_FILE="$2"; shift 2 ;;
+    --save-state-file=*|--save-state=*) SAVE_STATE_FILE="${1#*=}"; shift ;;
+    --port|--web-service-port) WEB_PORT="$2"; shift 2 ;;
+    --port=*|--web-service-port=*) WEB_PORT="${1#*=}"; shift ;;
     --scene) IS_DEBUG=true; SCENE="$2"; shift 2 ;;
     --tile) IS_DEBUG=true; TILE="$2"; shift 2 ;;
     --facing) IS_DEBUG=true; FACING="$2"; shift 2 ;;
@@ -81,6 +93,15 @@ while [[ $# -gt 0 ]]; do
 done
 
 export DW_SAVE_STATE_FILE="$SAVE_STATE_FILE"
+export DW_DEMO="$IS_DEMO"
+if [[ -n "$WEB_PORT" ]]; then
+  export DW_WEB_SERVICE_PORT="$WEB_PORT"
+fi
+
+HEADLESS_FLAGS=""
+if [[ "$IS_HEADLESS" == true ]]; then
+  HEADLESS_FLAGS="--headless --audio-driver Dummy"
+fi
 
 if [[ "$IS_DEBUG" == true ]]; then
   ARGS="--scene $SCENE --tile $TILE --gold $GOLD"
@@ -88,6 +109,7 @@ if [[ "$IS_DEBUG" == true ]]; then
   if [[ -n "$ITEMS" ]]; then ARGS="$ARGS --items $ITEMS"; fi
   if [[ -n "$MONSTER" ]]; then ARGS="$ARGS --monster $MONSTER"; fi
   if [[ -n "$HERO_LEVEL" ]]; then ARGS="$ARGS --hero-level $HERO_LEVEL"; fi
+  if [[ "$IS_DEMO" == "1" ]]; then ARGS="$ARGS --demo"; fi
   if [[ -n "$DEBUG_ARGS" ]]; then ARGS="$ARGS $DEBUG_ARGS"; fi
 
   echo "Starting Dragon Warrior in DEBUG mode..."
@@ -96,20 +118,26 @@ if [[ "$IS_DEBUG" == true ]]; then
   fi
   echo " -> Scene: $SCENE (Tile: $TILE)"
 
-  DISPLAY="${DISPLAY:-:0}" "$GODOT" \
+  DISPLAY="${DISPLAY:-:0}" "$GODOT" $HEADLESS_FLAGS \
     --no-sandbox --disable-gpu --disable-dev-shm-usage \
     --path "$PROJECT" \
     res://scenes/DebugLaunch.tscn \
     -- $ARGS &
 else
   echo "Starting Dragon Warrior..."
+  if [[ "$IS_DEMO" == "1" ]]; then
+    echo " -> Autonomous Demo Mode (Player AI + Enemy AI): ENABLED"
+  fi
   if [[ -n "$SAVE_STATE_FILE" ]]; then
     echo " -> Save State File: $SAVE_STATE_FILE"
   fi
 
-  DISPLAY="${DISPLAY:-:0}" "$GODOT" \
+  EXTRA_USER_ARGS=""
+  if [[ "$IS_DEMO" == "1" ]]; then EXTRA_USER_ARGS="-- --demo"; fi
+
+  DISPLAY="${DISPLAY:-:0}" "$GODOT" $HEADLESS_FLAGS \
     --no-sandbox --disable-gpu --disable-dev-shm-usage \
-    --path "$PROJECT" &
+    --path "$PROJECT" $EXTRA_USER_ARGS &
 fi
 
 echo "Game started with PID=$!"
