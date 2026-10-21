@@ -17,20 +17,20 @@
   "robos:package": "jrpg",
   "robos:namespace": "robos.jrpg",
   "robos:version": "1.0.0",
-  "dcterms:title": "2D JRPG Engine & Dragon Warrior Package",
+  "dcterms:title": "2D JRPG Engine & Quest: Warrior Dragon Package",
   "dcterms:description": "Complete 2D tile-based turn-based JRPG ontology, 40 monsters, spells, equipment, quest items, 29 overworld/town/dungeon locations, and procedural pixel-art asset bindings.",
   "robos:nodes": [
     {
-      "@id": "urn:robos:jrpg:game:dragon-warrior",
+      "@id": "urn:robos:jrpg:game:quest-warrior-dragon",
       "@type": [
         "oslc_am:Resource",
         "robos:PCGame",
         "robos:Game",
         "schema:VideoGame"
       ],
-      "dcterms:title": "Dragon Warrior (RobOS 2D JRPG Engine)",
+      "dcterms:title": "Quest: Warrior Dragon (RobOS 2D JRPG Engine)",
       "dcterms:description": "Classic 2D tile-based turn-based JRPG powered by the RobOS Dual-State Knowledge Graph, Godot 4, and 100% procedural copyright-free pixel art and chiptune audio.",
-      "robos:repository": "github.com/nddipiazza/dragon-warrior",
+      "robos:repository": "github.com/nddipiazza/quest-warrior-dragon",
       "robos:technology": "Godot 4 / GDScript",
       "robos:gameEngine": "Godot 4",
       "robos:gameType": "jrpg",

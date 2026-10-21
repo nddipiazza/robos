@@ -1,0 +1,12 @@
+{
+  "name": "dw-debug-launcher",
+  "version": "1.0.0",
+  "description": "Quest: Warrior Dragon debug launcher — launch game at preset states",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^22.0.0"
+  }
+}

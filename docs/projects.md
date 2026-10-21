@@ -26,6 +26,7 @@ The sample projects in the RobOS repository: one web app and three games, each w
 | [Tabletop RPG]({{ '/projects/tabletop-rpg/' | relative_url }}) | Game, Godot 4.3 | `games/tabletop-rpg` | A turn-based dungeon crawler modelled on HeroQuest, with data-driven cartridges and an HTTP API that the tests use to play the game. |
 | [Tactical cRPG Realm]({{ '/projects/crpg-realm/' | relative_url }}) | Game, Godot 4.3 | `games/crpg-realm` | A party-based, Infinity Engine-style RPG using D&D 5e SRD rules, tested end to end with Cucumber. |
 | [RobOS RTS]({{ '/projects/robos-rts/' | relative_url }}) | Game, Godot 4.3 | `games/robos-rts` | A real-time strategy game with three asymmetric factions, an angled 3D camera, a deterministic 64 Hz simulation and an HTTP bot API. |
+| [Quest: Warrior Dragon]({{ '/projects/quest-warrior-dragon/' | relative_url }}) | Game, Godot 4.3 | `games/quest-warrior-dragon` | An 8-bit 2D console RPG across 29 connected maps in Alefgard with in-engine Stride AI, chained Cucumber checkpoint tests, and a 100% verified headless BFS map completeness audit. |
 
 For how to build your own, see [Building apps]({{ site.baseurl }}{% link app-development-flow.md %}) and [Game development]({{ '/game-development.html' | relative_url }}).
 
