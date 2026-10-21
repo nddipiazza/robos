@@ -116,3 +116,23 @@ When('I try to connect the backup to {string}', async function (repo) { await fi
 Then('I am told {string} in the admin', async function (text) { await msgHas(this, text); });
 When('I import these customers in admin:', async function (doc) { await fillName(this, 'csv', doc, `${AD} #admin-customer-import-form`); this.focus = `${AD} #admin-customer-import-form`; await press(this, 'Import customers', AD); });
 When('I choose to prepare the estimate', async function () { await clickChoice(this, 'Prepare the estimate'); });
+// ---- reading the car with an OBD adapter (a replayed vLinker; see tests/fixtures/obd)
+const OBD = `${MB} .bench-panel[data-panel="obd"]`;
+Given('{string} has the vehicle {string}: year {string}, make {string}, model {string}', async function (customer, name, year, make, model) { await this.drawer('ws-vehicle-drawer'); await this.fill('#wvehicle-form', { customer, name, year, make, model }); await this.submit('#wvehicle-form'); assert.equal(this.lastMessage, ''); });
+Given('{string} has the vehicle {string}: year {string}, make {string}, model {string}, VIN {string}', async function (customer, name, year, make, model, vin) { await this.drawer('ws-vehicle-drawer'); await this.fill('#wvehicle-form', { customer, name, year, make, model, vin }); await this.submit('#wvehicle-form'); assert.equal(this.lastMessage, ''); });
+When('I open Read the car', async function () { await bench(this, 'Read the car (OBD)'); await this.page.locator(OBD).waitFor(); this.focus = OBD; });
+When('I find adapters and connect to {string}', async function (name) { await this.page.locator(`${OBD} button`, { hasText: 'Find adapters' }).click(); await this.page.locator(`${OBD} #obd-adapters .choice`, { hasText: name }).click(); await this.page.locator('#obd-connected').waitFor({ timeout: 15000 }); this.focus = OBD; });
+When('I read the codes', async function () { await this.page.locator(`${OBD} button`, { hasText: 'Read codes' }).click(); await this.page.locator('#obd-scan').waitFor({ timeout: 15000 }); this.focus = '#obd-scan'; });
+Then('the OBD panel shows {string}', async function (text) { await this.page.locator(OBD).filter({ hasText: text }).first().waitFor({ timeout: 8000 }); });
+Then('the OBD panel does not show {string}', async function (text) { await wait(300); assert.ok(!(await this.page.locator(OBD).innerText()).includes(text)); });
+Then('{string} is listed under {string} as {string}', async function (code, list, description) { const li = this.page.locator(`${OBD} [data-codes="${list}"] li`, { hasText: code }); await li.waitFor({ timeout: 8000 }); assert.match(await li.innerText(), new RegExp(description.replace(/[()]/g, '\\$&'))); });
+When('I save the scan to the ticket', async function () { await press(this, 'Save scan to ticket', OBD); });
+When('I use the codes in the diagnosis', async function () { await this.page.locator(`${OBD} button`, { hasText: 'Use codes in diagnosis' }).click(); await wait(500); this.focus = `${MB} .bench-panel`; });
+Then('the diagnosis trouble codes are {string}', async function (codes) { assert.equal(await this.page.locator(`${MB} .bench-panel [name="codes"]`).inputValue(), codes); });
+When('I save the diagnosis {string}', async function (f) { await fillName(this, 'findings', f, `${MB} .bench-panel`); await press(this, 'Save diagnosis', MB); });
+When('I ask to clear the codes', async function () { await this.page.locator(`${OBD} button`, { hasText: 'Clear codes' }).click(); await this.page.locator('#obd-clear-confirm').waitFor(); this.focus = '#obd-clear-confirm'; });
+When('I confirm clearing the codes', async function () { await this.page.locator('#obd-clear-confirm button', { hasText: 'Yes, clear the codes' }).click(); await this.page.locator('#obd-scan').waitFor(); await wait(400); this.focus = '#obd-scan'; });
+When('I show live data', async function () { await this.page.locator(`${OBD} button`, { hasText: 'Show live data' }).click(); await this.page.locator('#obd-live [data-reading]').first().waitFor({ timeout: 10000 }); this.focus = '#obd-live'; });
+Then('live data shows {string} as {string}', async function (label, value) { await this.page.waitForFunction(([l, v]) => [...document.querySelectorAll('#obd-live dt')].some(dt => dt.textContent === l && dt.nextElementSibling?.textContent === v), [label, value], { timeout: 8000 }); });
+When('I stop live data', async function () { await this.page.locator(`${OBD} button`, { hasText: 'Stop live data' }).click(); await wait(400); });
+When('I disconnect the adapter', async function () { await this.page.locator(`${OBD} button`, { hasText: 'Disconnect' }).click(); await wait(400); });
