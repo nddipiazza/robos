@@ -49,7 +49,7 @@ Install RobOS first (see [Get started]({{ site.baseurl }}{% link getting-started
 | 5 | SSH Keypair Setup | Runs `ssh-keygen -t ed25519`. |
 | 6 | Google Chrome Browser | Installs Chrome and can set it as the default browser. |
 | 7 | GitHub Auth (Optional) | Starts `gh auth login --web` or logs in with a token. |
-| 8 | AI Agents | Embeds the Agents Manager to configure agent CLIs and providers. |
+| 8 | AI Agents | Embeds the Agents Manager to configure agent CLIs and providers. Any API keys entered here are saved in `pass` and used only by the optional API mode ([AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %})). |
 | 9 | Git Projects (Optional) | Embeds Git Projects to clone repositories. |
 | 10 | Dev Apps (Optional) | Embeds Software Center to install tools and IDEs. |
 | 11 | Complete & Provision | Writes `~/.config/robos/onboarding-completed.json`. |
@@ -72,7 +72,7 @@ It only handles GitHub. It also changes your global git config: if the identity 
 
 ## Step 2: Define teams as groups
 
-Open **RobOS Group Manager**. Click the plus button above the group list, enter a Group ID, Name and Description, and save. You can also use **Create with AI** to describe a group in a sentence; that needs an AI provider configured for RobOS.
+Open **RobOS Group Manager**. Click the plus button above the group list, enter a Group ID, Name and Description, and save. You can also use **Create with AI** to describe a group in a sentence; that needs an agent CLI set as active in RobOS Agents ([AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %})).
 
 Each group has seven sections:
 

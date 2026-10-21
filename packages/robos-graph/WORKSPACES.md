@@ -31,11 +31,11 @@ an explicit reviewed migration of nodes and incoming references.
 
 Open Graph Explorer with the same environment and choose **Import & Refine**.
 Prepare a scoped agent brief, use it with your coding agent, paste JSON edits,
-preview their evidence and diff, and save or discard. The optional **Ask configured
-agent** action requires `ROBOS_GRAPH_AGENT_URL`, `ROBOS_GRAPH_AGENT_HARNESS`, and
-`ROBOS_GRAPH_AGENT_MODEL`. It uses the HTTP HarnessRouter client and fails visibly
-if unavailable or if output is malformed. It has no generated-example fallback.
-The HTTP adapter contract test uses a local response fixture; the Electron test
+preview their evidence and diff, and save or discard. The optional **Ask AI agent**
+action sends the brief to the user's active coding-agent CLI (or the optional API
+mode) through `robos-lib/ai-agent`. It fails visibly if no agent answers or if the
+output is malformed. It has no generated-example fallback.
+The agent contract test uses a stub `ask()` with fixed answers; the Electron test
 proves actual proposal/save/reopen behavior, not LLM reasoning quality.
 
 CLI commands are `init`, `inspect`, `context`, `propose`, `apply`, and `recover`.

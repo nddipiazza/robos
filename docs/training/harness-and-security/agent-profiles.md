@@ -3,7 +3,7 @@ title: Run commands in an ephemeral agent profile
 layout: default
 parent: Agent harness and security
 grand_parent: Training
-nav_order: 3
+nav_order: 2
 permalink: /training/harness-and-security/agent-profiles.html
 redirect_from:
   - /training/agent-harness-engineering/03-ephemeral-sandboxes-and-custom-personas.html

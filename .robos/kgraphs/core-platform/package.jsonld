@@ -99,36 +99,6 @@
       "robos:status": "active"
     },
     {
-      "@id": "urn:robos:agent-router:harnessrouter",
-      "@type": [
-        "robos:AgentRouter",
-        "robos:HarnessRouter",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "HarnessRouter & Unified Harness Protocol (UHP) Engine",
-      "dcterms:description": "Unified AI agent execution runtime, session gateway, and routing harness conforming to UHP 2026-08-11 Draft standard. 100% Free and Open Source (Apache-2.0) with local embedded fallback.",
-      "robos:protocol": "UHP",
-      "robos:protocolVersion": "2026-08-11",
-      "robos:conformanceClass": "Full",
-      "robos:openSource": true,
-      "robos:license": "Apache-2.0",
-      "robos:defaultEndpoint": "http://127.0.0.1:3000",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://unifiedharnessprotocol.dev/",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://harnessrouter.ai/",
-      "robos:supportedHarnesses": [
-        "claude-code",
-        "codex",
-        "github-copilot",
-        "gemini-cli",
-        "hermes",
-        "oh-my-pi"
-      ]
-    },
-    {
       "@id": "urn:robos:security:prompt-security-guard",
       "@type": [
         "robos:SecurityGuard",
@@ -157,6 +127,43 @@
         "warn",
         "audit-only",
         "off"
+      ]
+    },
+    {
+      "@id": "urn:robos:library:robos-llm",
+      "@type": [
+        "robos:Library",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS LLM (optional API mode)",
+      "dcterms:description": "Opt-in direct model calls for quick one-shot requests and embeddings through LangChain.js: Anthropic, OpenAI, Google Gemini and local Ollama. Off by default; the coding-agent CLIs (Claude Code, Codex, Gemini CLI / Antigravity, GitHub Copilot) stay the default path and the fallback. Packages install on request into ~/.local/share/robos/llm-deps; API keys are read from pass (robos/ai/<provider>-key); prompts pass through the Prompt Security Guard; LangSmith tracing is forced off.",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.core",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:sourcePath": "packages/robos-llm",
+      "robos:technology": "Node.js 20 / LangChain.js",
+      "robos:refersFrom": "https://schema.org/SoftwareSourceCode",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://js.langchain.com/",
+      "robos:supportedProviders": [
+        "anthropic",
+        "openai",
+        "gemini",
+        "ollama"
+      ],
+      "robos:defaultEnabled": false,
+      "robos:dependsOn": [
+        "urn:robos:security:prompt-security-guard"
+      ],
+      "robos:tags": [
+        "ai",
+        "llm",
+        "api-mode",
+        "embeddings",
+        "semantic-search",
+        "langchain",
+        "optional"
       ]
     },
     {
@@ -1176,36 +1183,6 @@
       "robos:status": "active"
     },
     {
-      "@id": "urn:robos:agent-router:harnessrouter",
-      "@type": [
-        "robos:AgentRouter",
-        "robos:HarnessRouter",
-        "oslc:Resource",
-        "schema:SoftwareApplication"
-      ],
-      "dcterms:title": "HarnessRouter & Unified Harness Protocol (UHP) Engine",
-      "dcterms:description": "Unified AI agent execution runtime, session gateway, and routing harness conforming to UHP 2026-08-11 Draft standard. 100% Free and Open Source (Apache-2.0) with local embedded fallback.",
-      "robos:protocol": "UHP",
-      "robos:protocolVersion": "2026-08-11",
-      "robos:conformanceClass": "Full",
-      "robos:openSource": true,
-      "robos:license": "Apache-2.0",
-      "robos:defaultEndpoint": "http://127.0.0.1:3000",
-      "robos:package": "core-platform",
-      "robos:namespace": "robos.platform",
-      "robos:refersFrom": "https://unifiedharnessprotocol.dev/",
-      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
-      "robos:domainStandard": "https://harnessrouter.ai/",
-      "robos:supportedHarnesses": [
-        "claude-code",
-        "codex",
-        "github-copilot",
-        "gemini-cli",
-        "hermes",
-        "oh-my-pi"
-      ]
-    },
-    {
       "@id": "urn:robos:security:prompt-security-guard",
       "@type": [
         "robos:SecurityGuard",
@@ -1234,6 +1211,43 @@
         "warn",
         "audit-only",
         "off"
+      ]
+    },
+    {
+      "@id": "urn:robos:library:robos-llm",
+      "@type": [
+        "robos:Library",
+        "oslc:Resource",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS LLM (optional API mode)",
+      "dcterms:description": "Opt-in direct model calls for quick one-shot requests and embeddings through LangChain.js: Anthropic, OpenAI, Google Gemini and local Ollama. Off by default; the coding-agent CLIs (Claude Code, Codex, Gemini CLI / Antigravity, GitHub Copilot) stay the default path and the fallback. Packages install on request into ~/.local/share/robos/llm-deps; API keys are read from pass (robos/ai/<provider>-key); prompts pass through the Prompt Security Guard; LangSmith tracing is forced off.",
+      "robos:package": "core-platform",
+      "robos:namespace": "robos.core",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:sourcePath": "packages/robos-llm",
+      "robos:technology": "Node.js 20 / LangChain.js",
+      "robos:refersFrom": "https://schema.org/SoftwareSourceCode",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://js.langchain.com/",
+      "robos:supportedProviders": [
+        "anthropic",
+        "openai",
+        "gemini",
+        "ollama"
+      ],
+      "robos:defaultEnabled": false,
+      "robos:dependsOn": [
+        "urn:robos:security:prompt-security-guard"
+      ],
+      "robos:tags": [
+        "ai",
+        "llm",
+        "api-mode",
+        "embeddings",
+        "semantic-search",
+        "langchain",
+        "optional"
       ]
     },
     {

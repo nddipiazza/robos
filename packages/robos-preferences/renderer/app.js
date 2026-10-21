@@ -13,7 +13,7 @@ async function init() {
   _settings = await window.api.loadSettings();
   renderSidebar();
   renderSections();
-  await loadGithubAccounts();
+  await Promise.all([loadGithubAccounts(), loadAiApiStatus()]);
 }
 
 function renderSidebar() {
@@ -64,6 +64,10 @@ function renderSections() {
       let input = '';
       if (f.type === 'text' || f.type === 'password') {
         input = `<input type="${f.type}" id="field-${f.key}" class="text-input" data-key="${f.key}" value="${esc(val)}" />`;
+      } else if (f.type === 'secret') {
+        // Saved straight to pass; never part of settings.json.
+        input = `<div class="secret-input"><input type="password" id="field-${f.key}" class="text-input" data-secret="${esc(f.provider)}" autocomplete="off" placeholder="Not set" />` +
+          `<button type="button" class="btn" data-save-secret="${esc(f.provider)}">Save</button></div>`;
       } else if (f.type === 'checkbox') {
         input = `<input type="checkbox" id="field-${f.key}" data-key="${f.key}" ${val ? 'checked' : ''} />`;
       } else if (f.type === 'select') {
@@ -79,7 +83,9 @@ function renderSections() {
 
     return `<div class="section" id="section-${section.id}">` +
       `<h2 class="section-title">${esc(section.label)}</h2>` +
+      (section.description ? `<p class="section-description">${esc(section.description)}</p>` : '') +
       fields +
+      (section.id === 'ai' ? aiApiPanel() : '') +
     `</div>`;
   }).join('');
 }
@@ -184,3 +190,66 @@ async function loadGithubAccounts() {
   };
 }
 window.api.onShowGithubAccounts(() => document.getElementById('section-github_accounts')?.scrollIntoView());
+
+// ── Optional API mode ────────────────────────────────────────────────────────
+
+function aiApiPanel() {
+  return `<div class="section-actions"><button type="button" class="btn" id="ai-api-install">Install API packages</button></div>
+    <p class="section-status" id="ai-api-status" role="status" aria-live="polite">Checking API mode…</p>`;
+}
+
+function selectedApiProviders() {
+  const api = document.getElementById('field-ai_api_provider')?.value;
+  const emb = document.getElementById('field-ai_embeddings_provider')?.value;
+  return [...new Set([api, emb].filter(Boolean))];
+}
+
+function describeAiApi(status) {
+  if (!status.ok) return status.error;
+  const chosen = selectedApiProviders();
+  const missing = chosen.filter(p => !status.providers[p]?.installed).map(p => status.providers[p].label);
+  const noKey = chosen.filter(p => status.providers[p]?.needsKey && !status.providers[p].keyConfigured).map(p => status.providers[p].label);
+  const on = document.getElementById('field-ai_api_enabled')?.checked;
+  if (!on) return 'API mode is off. RobOS uses your agent CLIs.' + (missing.length ? '' : ' API packages are installed.');
+  const parts = [status.enabled ? 'API mode is on.' : 'API mode turns on when you save.'];
+  parts.push(missing.length ? `Packages not installed for ${missing.join(', ')}: click Install API packages.` : 'Packages installed for the selected providers.');
+  if (noKey.length) parts.push(`No API key saved for ${noKey.join(', ')}.`);
+  if (!status.passReady) parts.push('The password store is not set up, so keys cannot be saved. Run Security Setup first.');
+  return parts.join(' ');
+}
+
+async function loadAiApiStatus() {
+  const statusEl = document.getElementById('ai-api-status');
+  if (!statusEl) return;
+  let status;
+  try { status = await window.api.aiApiStatus(); } catch (error) { status = { ok: false, error: error.message }; }
+  statusEl.textContent = describeAiApi(status);
+  const installBtn = document.getElementById('ai-api-install');
+  installBtn.disabled = !status.ok;
+  if (status.ok) {
+    for (const input of document.querySelectorAll('[data-secret]')) {
+      input.placeholder = status.providers[input.dataset.secret]?.keyConfigured ? 'Saved in pass' : 'Not set';
+    }
+  }
+  for (const id of ['field-ai_api_enabled', 'field-ai_api_provider', 'field-ai_embeddings_provider']) {
+    const el = document.getElementById(id);
+    if (el) el.onchange = () => { statusEl.textContent = describeAiApi(status); };
+  }
+  installBtn.onclick = async () => {
+    installBtn.disabled = true;
+    statusEl.textContent = 'Installing API packages with npm. This can take a minute…';
+    const result = await window.api.aiApiInstall(selectedApiProviders());
+    if (!result.ok) { statusEl.textContent = `Install failed: ${result.error}`; installBtn.disabled = false; return; }
+    await loadAiApiStatus();
+  };
+  for (const btn of document.querySelectorAll('[data-save-secret]')) {
+    btn.onclick = async () => {
+      const input = document.querySelector(`[data-secret="${btn.dataset.saveSecret}"]`);
+      const result = await window.api.aiApiSaveKey(btn.dataset.saveSecret, input.value);
+      if (!result.ok) { statusEl.textContent = result.error; return; }
+      input.value = '';
+      await loadAiApiStatus();
+      statusEl.textContent = `Key saved in pass at ${result.passPath}. ` + statusEl.textContent;
+    };
+  }
+}

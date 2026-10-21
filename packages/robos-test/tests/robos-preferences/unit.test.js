@@ -74,4 +74,28 @@ describe('robos-preferences unit tests', () => {
     assert.strictEqual(result.theme, 'dark');
     fs.rmSync(tmp, { recursive: true });
   });
+
+  it('moves plain-text API keys from settings into pass', () => {
+    const { migratePlaintextApiKeys } = require('../../../robos-preferences/main.js');
+    const saved = [];
+    const { settings, migrated, kept } = migratePlaintextApiKeys(
+      { theme: 'dark', claude_api_key: 'sk-ant-1', openai_api_key: '', gemini_api_key: 'g-1' },
+      (provider, value) => { if (provider === 'gemini') throw new Error('pass not ready'); saved.push([provider, value]); },
+    );
+    assert.deepStrictEqual(saved, [['anthropic', 'sk-ant-1']]);
+    assert.deepStrictEqual(migrated, ['anthropic']);
+    assert.deepStrictEqual(kept, ['gemini']);
+    assert.deepStrictEqual(settings, { theme: 'dark', gemini_api_key: 'g-1' }, 'migrated and empty keys are removed; unsaved keys stay');
+  });
+
+  it('AI section keeps API mode off by default and stores keys as pass-backed secrets', () => {
+    const { SETTINGS_SCHEMA } = require('../../../robos-preferences/main.js');
+    const ai = SETTINGS_SCHEMA.sections.find(s => s.id === 'ai');
+    const field = key => ai.fields.find(f => f.key === key);
+    assert.strictEqual(field('ai_api_enabled').default, false);
+    assert.strictEqual(field('ai_semantic_search').default, false);
+    assert.deepStrictEqual(ai.fields.filter(f => f.type === 'secret').map(f => f.provider), ['anthropic', 'openai', 'gemini']);
+    assert.ok(!ai.fields.some(f => f.type === 'password'), 'no API key is saved through settings.json');
+  });
 });
+

@@ -75,7 +75,7 @@ scripts/install-local.sh</code></pre>
     <h2 class="h2">FAQ</h2>
     <div style="margin-top:28px;max-width:760px">
       <details><summary>Is RobOS really free?</summary><p>Yes. It is open source under Apache-2.0 with no SaaS subscription or proprietary cloud dependency.</p></details>
-      <details><summary>Which agents does it work with?</summary><p>Claude Code, Google Antigravity / Gemini CLI, OpenAI Codex, GitHub Copilot and more, through the Unified Harness Protocol router.</p></details>
+      <details><summary>Which agents does it work with?</summary><p>Claude Code, Google Antigravity / Gemini CLI, OpenAI Codex and GitHub Copilot. Install the CLI you use and sign in; RobOS runs it. An optional API mode can also call Anthropic, OpenAI, Gemini or a local Ollama server directly.</p></details>
       <details><summary>Do I need to replace my IDE?</summary><p>No. RobOS integrates with IntelliJ IDEA and VS Code, and can open pull request reviews directly in them.</p></details>
     </div>
   </div>

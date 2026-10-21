@@ -29,11 +29,11 @@ RobOS does not create your accounts. You create the GitHub organization, reposit
 3. **Create the first project.** Open **RobOS Create Project & App Wizard** and follow [New app wizard]({{ site.baseurl }}{% link new-app-wizard.md %}) to scaffold code from an archetype, or the import mode for a folder that already has code.
 4. **Record your teams.** Create `.robos/teams.yaml` in the repository, using the format in [Company setup]({{ '/existing-company-setup.html' | relative_url }}#step-5-record-teams-and-people). Then create one group per team in **RobOS Group Manager** and list the repository URLs in each group's Git Projects section.
 5. **Add the repositories to Git Projects.** In **RobOS Git Projects**, click **Add Dev Group Repos** and choose the group, or **Add GitHub Org**.
-6. **Choose the agent.** Open **RobOS Agents**, select Claude Code, GitHub Copilot or Codex, sign in, and click **Set as Active**. The choice is saved in `~/.config/robos/ai-provider.json`. The shared AI library behind buttons such as Group Manager's **Create with AI** reads that file, supports only those three providers, and uses GitHub Copilot when nothing is set.
+6. **Choose the agent.** Open **RobOS Agents**, select Claude Code, GitHub Copilot, Codex or Antigravity / Gemini CLI, sign in, and click **Set as Active**. The choice is saved in `~/.config/robos/ai-provider.json`. The shared AI library behind buttons such as Group Manager's **Create with AI** reads that file and uses GitHub Copilot when nothing is set. See [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}).
 7. **Connect the tracker.** Add a Jira, GitHub Issues or other server in **RobOS Task Servers**. See [Company setup]({{ '/existing-company-setup.html' | relative_url }}#step-4-connect-your-task-tracker).
 
 {: .note }
-RobOS Preferences has an "AI Provider & Models" section with fields for Claude, OpenAI and Gemini API keys. No RobOS app reads those fields today. The "Agent Tiers & Prompt Optimization" section is similar; see [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}).
+API keys are optional. RobOS Preferences has an "AI Agents & API Mode" section where you can turn on direct model APIs (Anthropic, OpenAI, Gemini or local Ollama) for quick requests. Keys entered there are saved in `pass`. Leave it off to use only the agent CLI from step 6; see [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}). The "Agent Tiers & Prompt Optimization" section is still not read by any app; see [Agent tiers]({{ site.baseurl }}{% link agent-tiers.md %}).
 
 ## What the Bootstrap button does
 

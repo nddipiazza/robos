@@ -30,7 +30,7 @@ h1, h2, p { margin: 0; }
 #sections, .status-msg { max-width: 980px; margin-inline: auto; }
 .section { container-type: inline-size; margin-bottom: 20px; padding: 22px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 .section-title { font-size: 16px; line-height: 1.4; font-weight: 650; margin-bottom: 16px; letter-spacing: -.15px; }
-.section-description { color: var(--muted); margin-bottom: 8px; max-width: 72ch; font-size: 13px; }
+.section-description { color: var(--muted); margin-bottom: 8px; max-width: 72ch; font-size: 13px; line-height: 1.55; }
 
 .field-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 250px); align-items: center; gap: 12px 24px; padding: 16px 0; border-bottom: 1px solid #29323e; }
 .field-row:last-child { border-bottom: 0; padding-bottom: 0; }
@@ -38,6 +38,8 @@ h1, h2, p { margin: 0; }
 .field-input { min-width: 0; display: flex; align-items: center; }
 .field-description { color: var(--muted); font-size: 13px; line-height: 1.5; margin-top: 6px; overflow-wrap: anywhere; }
 .field-copy { min-width: 0; }
+.secret-input { display: flex; gap: 8px; width: 100%; min-width: 0; }
+.secret-input .text-input { flex: 1; }
 .field-row:has(.field-copy) { align-items: start; }
 .field-row:has(input[type='checkbox']) { grid-template-columns: minmax(0, 1fr) auto; }
 .text-input, .select-input { display: block; width: 100%; min-width: 0; min-height: 38px; padding: 8px 10px; border: 1px solid #475569; border-radius: 6px; background: var(--control); color: var(--text); font-size: 13px; line-height: 1.4; }

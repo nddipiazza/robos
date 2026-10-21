@@ -24,7 +24,7 @@ The Setup Wizard prepares a fresh Linux account for RobOS. Most steps run a norm
 | 5. SSH Keypair Setup | Generates an Ed25519 key (`~/.ssh/id_ed25519`), shows the public key with **Copy Public Key**, and has **Test GitHub SSH Connection**. |
 | 6. Google Chrome Browser | Checks for Chrome. **Install / Reinstall Google Chrome** downloads the `.deb` from `dl.google.com` and installs it with `sudo`. Also **Set Chrome as Default Browser**. |
 | 7. GitHub Auth (optional) | Starts `gh auth login --web` and opens the GitHub device page in Chrome, or accepts a personal access token. **Upload SSH Key to GitHub** is also offered. You can skip this step. |
-| 8. AI Agents | Optional. Saves provider choices to `~/.config/robos/preferences.json` and stores any API keys you enter in `pass` under `robos/ai/anthropic-key`, `robos/ai/openai-key` or `robos/ai/gemini-key`. A test button checks that the Copilot, Claude or Gemini CLI or key is present. |
+| 8. AI Agents | Optional. Saves provider choices to `~/.config/robos/preferences.json` and stores any API keys you enter in `pass` under `robos/ai/anthropic-key`, `robos/ai/openai-key` or `robos/ai/gemini-key`. A test button checks that the Copilot, Claude or Gemini CLI or key is present. The keys are used only if you later turn on the optional API mode in RobOS Preferences ([AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %})). |
 | 9. Git Projects (optional) | Points you to the Git Projects app. |
 | 10. Dev Apps (optional) | Points you to the Software Center. |
 | 11. Complete & Provision | Writes `~/.config/robos/onboarding-completed.json`, turns GNOME notification banners back on, and launches Dev Central through the desktop manager socket. |

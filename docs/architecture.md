@@ -37,8 +37,8 @@ flowchart LR
   ui["robos-ui"]
   rgraph["robos-graph"]
   kg[".robos/kgraphs/*/package.jsonld"]
-  client["robos-agent-client"]
-  clis["claude, codex, copilot CLIs"]
+  llm["robos-llm (optional API mode)"]
+  clis["claude, codex, gemini, copilot CLIs"]
   servers["MCP servers (*-mcp)"]
   mcplib["robos-mcp-lib"]
   registry["~/.config/robos/mcp/servers.json"]
@@ -49,15 +49,16 @@ flowchart LR
   apps --> ui
   apps --> rgraph
   rgraph --> kg
-  apps --> client
-  client --> clis
+  apps --> clis
+  lib --> clis
+  lib -.-> llm
   servers --> mcplib
   mcplib --> registry
   router --> registry
   mcpclient --> router
 ```
 
-Each arrow is a `require`, a file read or a spawned process in the source. The exception is the MCP client, which you point at the router with a generated configuration (see MCP servers below). For example `packages/app-wizard/main.js` requires `robos-lib` and `robos-graph`, its HTML loads `robos-ui`, and `packages/robos-mcp-lib/server.js` registers each server in `servers.json`. Of the MCP servers, `ekgraph-mcp` uses `robos-graph`, through its `robos_sdlc_*` tools.
+Each arrow is a `require`, a file read or a spawned process in the source. The dotted arrow is used only when the user turns on API mode. The exception is the MCP client, which you point at the router with a generated configuration (see MCP servers below). For example `packages/app-wizard/main.js` requires `robos-lib` and `robos-graph`, its HTML loads `robos-ui`, and `packages/robos-mcp-lib/server.js` registers each server in `servers.json`. Of the MCP servers, `ekgraph-mcp` uses `robos-graph`, through its `robos_sdlc_*` tools.
 
 ## Repository layout
 
@@ -88,11 +89,12 @@ Libraries are not npm dependencies. On a RobOS machine they are copied to `/usr/
 
 | Package | What it is |
 |:---|:---|
-| `robos-lib` | `.desktop` parsing and app categories, the DOM snapshot server and CLI, logging, the prompt security guard, and other helpers. |
+| `robos-lib` | `.desktop` parsing and app categories, the DOM snapshot server and CLI, logging, the prompt security guard, `ai-agent` (one-shot requests to the active agent CLI) and `quick-ask`, and other helpers. |
+| `robos-llm` | Optional API mode, off by default: direct calls to Anthropic, OpenAI, Gemini or Ollama through LangChain.js, plus embeddings for semantic graph search. Its LangChain packages are installed on request from RobOS Preferences into `~/.local/share/robos/llm-deps`, not with RobOS. See [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}). |
 | `robos-ui` | Web components for renderer pages, such as `<robos-ai-textarea>`. |
 | `robos-icons` | The SVG icon registry for built-in apps. |
 | `robos-graph` | The knowledge graph engine, and also the Knowledge Graph Explorer app. |
-| `robos-agent-client` | Agent session management and the HarnessRouter client. |
+| `robos-agent-client` | Agent CLI invocations for Dev Central work tasks and the Codex and AGY model catalogs. |
 | `robos-mcp-lib`, `robos-mcp-router` | The MCP server framework and the router. |
 | `robos-event-bus`, `robos-scheduler`, `robos-rule-engine`, `robos-action-registry` | A Unix-socket pub/sub bus, a cron and event-triggered scheduler, an event-driven rule engine and a pluggable action registry. |
 | `robos-task-client` | One adapter over Jira and GitHub Issues. |
@@ -116,11 +118,11 @@ Two limits to know about:
 
 ## Agents
 
-`robos-agent-client` has three backends: Claude Code (`claude`), GitHub Copilot CLI (through `gh`) and `harnessrouter`. The HarnessRouter backend speaks the Unified Harness Protocol (version `2026-08-11`) to a server at `http://127.0.0.1:3000` by default. If no server answers, `getHarnessRouter()` falls back to an embedded router that runs inside the process and stores sessions in `~/.config/robos/harnessrouter/sessions.json`.
+Apps start the coding-agent CLIs themselves; there is no router process in between. Task Implementer runs `claude`. Dev Central runs `codex` or `claude` with the invocations in `robos-agent-client/work-task/backend.js`. PR Review's CI recovery reads the Codex and AGY model catalogs from `robos-agent-client/providers.js`.
 
-The embedded router lists six harnesses: Claude Code, OpenAI Codex, GitHub Copilot CLI, Gemini CLI, Hermes and Oh My Pi. It runs a task only through `claude -p`, `codex exec` or Copilot. For the others, or when the CLI is not installed, it returns a placeholder response without running anything. Check the response text before you trust a result.
+One-shot requests (generate buttons, the text box quick-ask, the Knowledge Graph AI Co-Pilot and Import & Refine) use `robos-lib/ai-agent`, which runs the active CLI from `~/.config/robos/ai-provider.json` (Copilot, Claude Code, Codex or Gemini CLI). If the user turned on API mode, the request goes to `robos-llm` first and falls back to that CLI when the call fails. Agent tasks never use API mode. See [AI agents and API mode]({{ site.baseurl }}{% link ai-providers.md %}).
 
-The embedded router scans each prompt with the prompt security guard in `robos-lib` before running it. The mode is `redact` by default, or `block`, `warn`, `audit-only` or `off` from the preferences setting. Events are logged to `~/.config/robos/prompt-security-audit.json`.
+`ai-agent` scans each prompt with the prompt security guard in `robos-lib` before it starts a CLI or calls an API. The mode is `redact` by default, or `block`, `warn`, `audit-only` or `off` from the preferences setting. Events are logged to `~/.config/robos/prompt-security-audit.json`.
 
 Two daemons manage per-agent working state. `robos-profiled` (CLI `robos-profile`, plus `robos-run-as` to run a command) and `robos-agentd` (CLI `robos-agent`) keep their state under `~/.config/robos/` and take commands over Unix sockets. `robos-profiled` gives each agent its own home directory, mounted as a 2 GB tmpfs when the daemon runs as root and a plain directory otherwise, and forwards the host's SSH agent and Git identity into it. `robos-run-as` runs the command as the same operating-system user with `HOME` pointed at that directory. Neither daemon creates a separate Linux account or enforces isolation, so treat them as environment setup, not a security boundary.
 
@@ -143,6 +145,6 @@ The output points the client at `/usr/local/share/robos/robos-mcp-router/cli.js`
 | Location | Contents |
 |:---|:---|
 | `.robos/` in a repository | The knowledge graph and catalogs for that repository. |
-| `~/.config/robos/` | App settings and data: `git-projects.json`, `mcp/servers.json`, `harnessrouter/`, `profiled/`, `agentd/`, `prompt-security-audit.json`, and an Electron `userData` folder per app. |
+| `~/.config/robos/` | App settings and data: `git-projects.json`, `mcp/servers.json`, `ai-provider.json`, `profiled/`, `agentd/`, `prompt-security-audit.json`, and an Electron `userData` folder per app. |
 | `/usr/local/share/robos/` | Installed apps and libraries on a RobOS machine. |
 | `~/.password-store/` | Secrets, in the Unix `pass` store. The graph stores references to them, not the values. |
