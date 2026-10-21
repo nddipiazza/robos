@@ -13,6 +13,7 @@ og_image: /assets/hero/poster.jpg
     <p class="lead">What changed in RobOS and why, newest first. Each post links to the docs and the commits behind it.</p>
   </div>
   <nav class="blog-jump" aria-label="Jump to blog post">
+    <a href="#auto-center-obd">Auto Center OBD-II</a>
     <a href="#cli-agents-and-api-mode">CLI Agents &amp; API Mode</a>
     <a href="#cloud-storage-and-audio-suite">Cloud Storage &amp; Audio</a>
     <a href="#tabletop-rpg-and-election-2026">Tabletop RPG &amp; Election 2026</a>
@@ -29,6 +30,43 @@ og_image: /assets/hero/poster.jpg
 </section>
 
 <div class="blog-feed">
+
+  <article class="blog-entry" id="auto-center-obd">
+    <div class="blog-meta">
+      <time class="blog-date" datetime="2026-10-21">Oct 21, 2026</time>
+      <span class="blog-tag">Auto Center</span>
+      <span class="blog-tag">OBD-II</span>
+      <span class="blog-tag">Bluetooth</span>
+    </div>
+    <h2><a href="#auto-center-obd">Auto Center Reads the Car: Bluetooth OBD-II at the Mechanic Bench</a></h2>
+    <p class="blog-summary">Plug a $30 Bluetooth OBD-II adapter into the port under the dash and the mechanic bench reads the check-engine light, trouble codes, the VIN and live engine data, then saves the scan on the work ticket. We built it against a real van with a vLinker MC+ plugged in.</p>
+    <div class="blog-body">
+      <p>Until now Auto Center knew what trouble codes <em>mean</em> (the python-OBD definitions are in its catalog) but a mechanic still had to read them off a separate scan tool and type them in. A ticket on the <strong>Mechanic Bench</strong> now has a <strong>Read the car (OBD)</strong> panel that talks to any ELM327-compatible Bluetooth adapter: vLinker, OBDLink, Veepeak, Vgate and the many clones.</p>
+      <ul>
+        <li><strong>Read codes:</strong> the check-engine light, stored, pending and permanent codes with their descriptions, the VIN and the model year it encodes. Engine and transmission codes are labeled by module.</li>
+        <li><strong>On the ticket:</strong> <strong>Save scan to ticket</strong> writes what the car reported into the ticket history. If the vehicle has no VIN on file, the VIN read from the car fills it in. If the car's VIN does not match the ticket, the bench says you are plugged into the wrong car and will not save the scan. <strong>Use codes in diagnosis</strong> opens the diagnosis with the codes already filled in.</li>
+        <li><strong>Live data:</strong> engine speed, coolant and intake temperature, battery voltage, load, throttle, fuel level, fuel trims, speed and time since start, about once a second. Only readings the car reports as supported are asked for.</li>
+        <li><strong>Clearing codes</strong> asks first. Clearing also resets the emissions readiness checks, so a car cleared just before an inspection will fail it.</li>
+      </ul>
+      <p>Under the hood, <code>lib/obd.js</code> frames the adapter's replies for CAN (11- and 29-bit, including multi-frame replies like the VIN) and the older J1850, ISO 9141 and KWP buses. Node has no Bluetooth serial sockets, so a 60-line <code>obd_bridge.py</code> uses the Bluetooth support built into Python and passes commands over stdin and stdout. There are no native modules to build.</p>
+      <p>Testing on a real 2014 Dodge Grand Caravan turned up things a datasheet would not tell you. The first read failed with <code>UNABLE TO CONNECT</code> even though the adapter's lights were flashing, because the OBD port is powered with the key off but the engine computer is asleep. The bench now says "turn the key to ON" and has a <strong>Try the car again</strong> button. The vLinker MC+ shows up as two Bluetooth devices: <code>vLinker MC-Android</code> (classic serial, which is what we use) and <code>vLinker MC-IOS</code> (Bluetooth LE). The scan hides the LE one. Bluetooth pairing failed, but none is needed. A few minutes after power-up the adapter stopped showing up in scans while still accepting connections, so the bench remembers your adapter for a one-click reconnect. It also remembers the car's protocol, which cut reconnecting from 11 to 7 seconds.</p>
+      <p>The tests replay verbatim recordings of that van, cold and warm (with the VIN replaced), through the real app. Setting <code>ROBOS_AUTO_OBD_RECORD</code> captures another car the same way.</p>
+      <div class="blog-fig-grid">
+        <figure class="blog-fig">
+          <img src="{{ '/assets/auto-center/shots/06-read-the-car--read-codes.jpg' | relative_url }}" alt="Mechanic bench Read the car panel connected to a vLinker MC-Android adapter, showing the VIN, check-engine light on, stored codes P0133 and P0420 and pending code P0442" loading="lazy">
+          <figcaption>Codes read from the car, with descriptions from the catalog and buttons to save the scan, use the codes in the diagnosis or clear them.</figcaption>
+        </figure>
+        <figure class="blog-fig">
+          <img src="{{ '/assets/auto-center/shots/06-read-the-car--live-data.jpg' | relative_url }}" alt="Live engine data from a 2014 Grand Caravan idling warm: 628 rpm, coolant 216 °F, 14.45 V, fuel trims and time since start" loading="lazy">
+          <figcaption>Live data from the real van idling 17 minutes after start.</figcaption>
+        </figure>
+      </div>
+    </div>
+    <div class="blog-links">
+      <a href="{{ '/auto-center/' | relative_url }}">Read the Auto Center shop &amp; owner guide →</a>
+      <span class="blog-commits">Commits: b1c62e83</span>
+    </div>
+  </article>
 
   <article class="blog-entry" id="cli-agents-and-api-mode">
     <div class="blog-meta">
