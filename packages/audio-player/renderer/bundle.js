@@ -19943,314 +19943,12 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
   }
 
   // src/AiPlaylist.jsx
-  var import_react19 = __toESM(require_react());
-  var import_library_index5 = __toESM(require_library_index());
-  var DJ_FREQUENCY_LABELS = {
-    every: "Before every song",
-    alternate: "Every other song",
-    sometimes: "Now and then (every third song)"
-  };
-  function AiPromptBox({ id, placeholder, initialValue = "", minHeight = 100, onChange, onSubmit }) {
-    const hostRef = (0, import_react19.useRef)(null);
-    const [missing, setMissing] = (0, import_react19.useState)(false);
-    const latest = (0, import_react19.useRef)({ onChange, onSubmit });
-    latest.current = { onChange, onSubmit };
-    (0, import_react19.useEffect)(() => {
-      const host = hostRef.current;
-      if (!host || typeof customElements === "undefined") return void 0;
-      const el = document.createElement("robos-ai-textarea");
-      el.id = id;
-      el.setAttribute("show-submit", "false");
-      el.setAttribute("show-commands", "false");
-      el.setAttribute("show-agent", "false");
-      el.setAttribute("placeholder", placeholder);
-      el.setAttribute("min-height", String(minHeight));
-      host.appendChild(el);
-      let alive = true;
-      const report = () => latest.current.onChange && latest.current.onChange(String(el.value || ""));
-      const onKey = (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && String(el.value || "").trim() && latest.current.onSubmit) {
-          e.preventDefault();
-          latest.current.onSubmit();
-        }
-      };
-      customElements.whenDefined("robos-ai-textarea").then(() => {
-        if (!alive) return;
-        if (initialValue && !String(el.value || "").trim()) el.value = initialValue;
-        report();
-      });
-      const timer = setTimeout(() => {
-        if (alive && !customElements.get("robos-ai-textarea")) setMissing(true);
-      }, 4e3);
-      ["input", "change", "keyup"].forEach((t) => el.addEventListener(t, report));
-      el.addEventListener("keydown", onKey);
-      return () => {
-        alive = false;
-        clearTimeout(timer);
-        ["input", "change", "keyup"].forEach((t) => el.removeEventListener(t, report));
-        el.removeEventListener("keydown", onKey);
-        el.remove();
-      };
-    }, []);
-    return /* @__PURE__ */ import_react19.default.createElement("div", { className: "ai-prompt-box" }, /* @__PURE__ */ import_react19.default.createElement("div", { ref: hostRef }), missing && /* @__PURE__ */ import_react19.default.createElement("p", { className: "ai-note error" }, "RobOS UI components (robos-ui) are not installed, so the prompt box can't load."));
-  }
-  function AgentPicker({ value, onChange }) {
-    const hostRef = (0, import_react19.useRef)(null);
-    const [error, setError] = (0, import_react19.useState)("");
-    const latest = (0, import_react19.useRef)(onChange);
-    latest.current = onChange;
-    (0, import_react19.useEffect)(() => {
-      const host = hostRef.current;
-      if (!host || typeof customElements === "undefined") return void 0;
-      const el = document.createElement("robos-agent-selector");
-      el.id = "ai-agent-selector";
-      host.appendChild(el);
-      let alive = true;
-      const report = () => {
-        if (!alive) return;
-        const v = el.value || {};
-        latest.current({ provider: v.provider || "", model: v.model || "", effort: v.effort || "", ready: !!el.ready });
-      };
-      el.addEventListener("change", report);
-      const timer = setTimeout(() => {
-        if (alive && !customElements.get("robos-agent-selector")) setError("The RobOS agent selector (robos-lib) is not installed.");
-      }, 4e3);
-      customElements.whenDefined("robos-agent-selector").then(async () => {
-        if (!alive) return;
-        try {
-          if (!window.robosProviders) throw new Error("The RobOS provider catalog is not available.");
-          const providers = await window.robosProviders.list();
-          const saved = value && providers.find((p) => p.id === value.provider && p.available);
-          await el.load(saved ? { providers, provider: saved.id, model: value.model, effort: value.effort } : { providers });
-          if (alive && !providers.some((p) => p.available)) setError("No AI agent is ready. Install and sign in to AGY or Codex in RobOS Agents.");
-        } catch (err) {
-          if (alive) setError(err.message);
-        }
-        report();
-      });
-      return () => {
-        alive = false;
-        clearTimeout(timer);
-        el.removeEventListener("change", report);
-        el.remove();
-      };
-    }, []);
-    return /* @__PURE__ */ import_react19.default.createElement("div", { className: "agent-picker" }, /* @__PURE__ */ import_react19.default.createElement("div", { ref: hostRef }), error && /* @__PURE__ */ import_react19.default.createElement("p", { className: "ai-note error" }, error));
-  }
-  function useDjVoices() {
-    const [voices, setVoices] = (0, import_react19.useState)(null);
-    (0, import_react19.useEffect)(() => {
-      let alive = true;
-      (window.robosAudio?.djVoices ? window.robosAudio.djVoices() : Promise.resolve({ ok: false, voices: {} })).then((res) => {
-        if (alive) setVoices(res && res.ok ? res.voices || {} : {});
-      }).catch(() => {
-        if (alive) setVoices({});
-      });
-      return () => {
-        alive = false;
-      };
-    }, []);
-    return voices;
-  }
-  var ENGINE_LABELS = { kokoro: "Kokoro (offline)", "edge-tts": "Edge neural voices (online)", piper: "Piper (offline)", "speech-dispatcher": "System speech" };
-  function defaultDjVoice(voices) {
-    if (!voices) return "";
-    for (const engine of ["kokoro", "edge-tts", "piper"]) {
-      const list = voices[engine] || [];
-      const pick = list.find((v) => v.gender === "male" && v.recommended) || list.find((v) => v.recommended) || list[0];
-      if (pick) return `${engine}:${pick.id}`;
-    }
-    return "";
-  }
-  function DjSettingsFields({ value, onChange, idPrefix = "dj" }) {
-    const voices = useDjVoices();
-    const [previewing, setPreviewing] = (0, import_react19.useState)(false);
-    const set = (patch) => onChange({ ...value, ...patch });
-    (0, import_react19.useEffect)(() => {
-      if (voices && !value.voice) set({ voice: defaultDjVoice(voices) });
-    }, [voices]);
-    const preview = async () => {
-      setPreviewing(true);
-      try {
-        const res = await window.robosAudio.djSynthesize("Hey, you're listening to the RobOS Virtual DJ. Here's what's coming up next.", value.voice);
-        if (res && res.ok) {
-          const audio = new Audio(`file://${res.filePath.split("/").map(encodeURIComponent).join("/")}`);
-          audio.onended = () => setPreviewing(false);
-          audio.onerror = () => setPreviewing(false);
-          await audio.play();
-          return;
-        }
-      } catch {
-      }
-      setPreviewing(false);
-    };
-    const engines = voices ? Object.entries(voices).filter(([, list]) => list && list.length) : [];
-    return /* @__PURE__ */ import_react19.default.createElement("div", { className: "dj-fields" }, /* @__PURE__ */ import_react19.default.createElement("label", { className: "modal-label" }, "Describe your DJ"), /* @__PURE__ */ import_react19.default.createElement(
-      AiPromptBox,
-      {
-        id: `${idPrefix}-persona`,
-        minHeight: 90,
-        initialValue: value.persona || "",
-        placeholder: "e.g. A laid-back late-night jazz radio host with a dry sense of humour who keeps it short",
-        onChange: (persona) => set({ persona })
-      }
-    ), /* @__PURE__ */ import_react19.default.createElement("div", { className: "dj-row" }, /* @__PURE__ */ import_react19.default.createElement("label", { className: "dj-field" }, /* @__PURE__ */ import_react19.default.createElement("span", null, "Voice"), engines.length ? /* @__PURE__ */ import_react19.default.createElement("select", { id: `${idPrefix}-voice`, value: value.voice || "", onChange: (e) => set({ voice: e.target.value }) }, engines.map(([engine, list]) => /* @__PURE__ */ import_react19.default.createElement("optgroup", { key: engine, label: ENGINE_LABELS[engine] || engine }, list.map((v) => /* @__PURE__ */ import_react19.default.createElement("option", { key: v.id, value: `${engine}:${v.id}` }, v.name))))) : /* @__PURE__ */ import_react19.default.createElement("span", { className: "ai-note" }, voices ? "RobOS voice is not installed; the DJ will use the system voice." : "Loading voices\u2026")), /* @__PURE__ */ import_react19.default.createElement("label", { className: "dj-field" }, /* @__PURE__ */ import_react19.default.createElement("span", null, "Talks"), /* @__PURE__ */ import_react19.default.createElement("select", { id: `${idPrefix}-frequency`, value: value.frequency || "every", onChange: (e) => set({ frequency: e.target.value }) }, Object.entries(DJ_FREQUENCY_LABELS).map(([k, label]) => /* @__PURE__ */ import_react19.default.createElement("option", { key: k, value: k }, label)))), engines.length > 0 && /* @__PURE__ */ import_react19.default.createElement("button", { className: "btn-secondary dj-preview", onClick: preview, disabled: previewing || !value.voice }, /* @__PURE__ */ import_react19.default.createElement(Icon2, { name: "speaker", size: 13 }), " ", previewing ? "Playing\u2026" : "Hear voice")));
-  }
-  function AiPlaylistModal({ initialDj, agent: initialAgent, onAgentChange, onClose, onPlay, onSave }) {
-    const [request, setRequest] = (0, import_react19.useState)("");
-    const [count, setCount] = (0, import_react19.useState)(25);
-    const [withDj, setWithDj] = (0, import_react19.useState)(!!(initialDj && initialDj.enabled));
-    const [dj, setDj] = (0, import_react19.useState)({ persona: "", voice: "", frequency: "every", ...initialDj || {} });
-    const [phase, setPhase] = (0, import_react19.useState)("edit");
-    const [progress, setProgress] = (0, import_react19.useState)("");
-    const [error, setError] = (0, import_react19.useState)("");
-    const [result, setResult] = (0, import_react19.useState)(null);
-    const [name, setName] = (0, import_react19.useState)("");
-    const [agent, setAgent] = (0, import_react19.useState)({ ...initialAgent || {}, ready: false });
-    const pickAgent = (next) => {
-      setAgent(next);
-      if (next.provider) onAgentChange({ provider: next.provider, model: next.model, effort: next.effort });
-    };
-    (0, import_react19.useEffect)(() => {
-      const off = window.robosAudio?.onAiProgress?.((p) => p && p.message && setProgress(p.message));
-      return () => {
-        if (typeof off === "function") off();
-      };
-    }, []);
-    const djReady = !withDj || dj.persona.trim().length > 0;
-    const canGenerate = request.trim().length > 0 && djReady && agent.ready && phase !== "working";
-    const generate = async () => {
-      if (!canGenerate) return;
-      setPhase("working");
-      setError("");
-      setProgress("Asking your RobOS agent\u2026");
-      try {
-        const chosen = { provider: agent.provider, model: agent.model, effort: agent.effort };
-        const res = await window.robosAudio.aiPlaylistGenerate(request.trim(), count, withDj ? dj : null, chosen);
-        if (res && res.ok) {
-          setResult(res.playlist);
-          setName(res.playlist.name);
-          setPhase("result");
-        } else {
-          setError(res && res.error || "The agent did not answer.");
-          setPhase("edit");
-        }
-      } catch (err) {
-        setError(err.message);
-        setPhase("edit");
-      }
-    };
-    const final = () => ({ ...result, name: name.trim() || result.name });
-    return /* @__PURE__ */ import_react19.default.createElement("div", { className: "modal-overlay", onClick: phase === "working" ? void 0 : onClose }, /* @__PURE__ */ import_react19.default.createElement("div", { className: "modal-card ai-modal", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react19.default.createElement("div", { className: "ai-modal-head" }, /* @__PURE__ */ import_react19.default.createElement("h3", null, /* @__PURE__ */ import_react19.default.createElement("span", { className: "ai-spark" }, "\u2726"), " AI Playlist"), /* @__PURE__ */ import_react19.default.createElement("span", { className: "ai-note" }, "Your RobOS agent picks and orders songs from your library.")), phase !== "result" && /* @__PURE__ */ import_react19.default.createElement(AgentPicker, { value: initialAgent, onChange: pickAgent }), phase !== "result" && /* @__PURE__ */ import_react19.default.createElement(import_react19.default.Fragment, null, /* @__PURE__ */ import_react19.default.createElement("label", { className: "modal-label" }, "What should it sound like?"), /* @__PURE__ */ import_react19.default.createElement(
-      AiPromptBox,
-      {
-        id: "ai-playlist-prompt",
-        placeholder: "e.g. An hour of upbeat 90s alternative rock for coding \u2014 no ballads, end with something mellow",
-        onChange: setRequest,
-        onSubmit: generate
-      }
-    ), /* @__PURE__ */ import_react19.default.createElement("div", { className: "dj-row" }, /* @__PURE__ */ import_react19.default.createElement("label", { className: "dj-field" }, /* @__PURE__ */ import_react19.default.createElement("span", null, "Songs"), /* @__PURE__ */ import_react19.default.createElement(
-      "input",
-      {
-        id: "ai-playlist-count",
-        type: "number",
-        min: "3",
-        max: "100",
-        value: count,
-        onChange: (e) => setCount(Math.max(3, Math.min(100, parseInt(e.target.value, 10) || 25)))
-      }
-    )), /* @__PURE__ */ import_react19.default.createElement("label", { className: "dj-toggle" }, /* @__PURE__ */ import_react19.default.createElement("input", { id: "ai-playlist-dj", type: "checkbox", checked: withDj, onChange: (e) => setWithDj(e.target.checked) }), /* @__PURE__ */ import_react19.default.createElement("span", null, /* @__PURE__ */ import_react19.default.createElement(Icon2, { name: "mic", size: 14 }), " Virtual DJ between songs"))), withDj && /* @__PURE__ */ import_react19.default.createElement(DjSettingsFields, { value: dj, onChange: setDj, idPrefix: "ai-dj" }), error && /* @__PURE__ */ import_react19.default.createElement("p", { className: "ai-note error", role: "alert" }, error), phase === "working" && /* @__PURE__ */ import_react19.default.createElement("div", { className: "ai-progress", role: "status" }, /* @__PURE__ */ import_react19.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react19.default.createElement("span", null, progress)), /* @__PURE__ */ import_react19.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react19.default.createElement("button", { className: "btn-secondary", onClick: onClose, disabled: phase === "working" }, "Cancel"), /* @__PURE__ */ import_react19.default.createElement("button", { id: "btn-ai-playlist-generate", className: "btn-accent", onClick: generate, disabled: !canGenerate }, "\u2726 ", phase === "working" ? "Working\u2026" : "Generate with AI"))), phase === "result" && result && /* @__PURE__ */ import_react19.default.createElement(import_react19.default.Fragment, null, /* @__PURE__ */ import_react19.default.createElement("input", { id: "ai-playlist-name", className: "ai-name-input", value: name, onChange: (e) => setName(e.target.value), "aria-label": "Playlist name" }), /* @__PURE__ */ import_react19.default.createElement("p", { className: "ai-description" }, result.description), /* @__PURE__ */ import_react19.default.createElement("div", { className: "ai-meta" }, /* @__PURE__ */ import_react19.default.createElement("span", { className: "badge" }, (0, import_library_index5.plural)(result.tracks.length, "song")), /* @__PURE__ */ import_react19.default.createElement("span", { className: "badge" }, (0, import_library_index5.formatLongDuration)(result.tracks.reduce((n, t) => n + (t.duration || 0), 0))), result.dj && /* @__PURE__ */ import_react19.default.createElement("span", { className: "badge" }, /* @__PURE__ */ import_react19.default.createElement(Icon2, { name: "mic", size: 11 }), " Virtual DJ")), result.dj && result.dj.intro && /* @__PURE__ */ import_react19.default.createElement("p", { className: "ai-dj-quote" }, "\u{1F399} \u201C", result.dj.intro, "\u201D"), /* @__PURE__ */ import_react19.default.createElement("ol", { className: "ai-track-list" }, result.tracks.map((t, i) => /* @__PURE__ */ import_react19.default.createElement("li", { key: `${t.id}-${i}` }, /* @__PURE__ */ import_react19.default.createElement("span", { className: "ai-track-title" }, t.title), /* @__PURE__ */ import_react19.default.createElement("span", { className: "ai-track-sub" }, t.artist, t.album ? ` \xB7 ${t.album}` : ""), /* @__PURE__ */ import_react19.default.createElement("span", { className: "ai-track-dur" }, (0, import_library_index5.formatDuration)(t.duration))))), /* @__PURE__ */ import_react19.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react19.default.createElement("button", { className: "btn-secondary", onClick: () => {
-      setPhase("edit");
-      setResult(null);
-    } }, "Start over"), /* @__PURE__ */ import_react19.default.createElement("button", { id: "btn-ai-playlist-save", className: "btn-secondary", onClick: () => onSave(final()) }, /* @__PURE__ */ import_react19.default.createElement(Icon2, { name: "save", size: 13 }), " Save playlist"), /* @__PURE__ */ import_react19.default.createElement("button", { id: "btn-ai-playlist-play", className: "btn-accent", onClick: () => onPlay(final()) }, /* @__PURE__ */ import_react19.default.createElement(Icon2, { name: "play", size: 12 }), " ", result.dj ? "Play with DJ" : "Play")))));
-  }
-  function DjSettingsModal({ value, agent: initialAgent, onAgentChange, onClose, onSave }) {
-    const [dj, setDj] = (0, import_react19.useState)({ persona: "", voice: "", frequency: "every", ...value });
-    const [agent, setAgent] = (0, import_react19.useState)({ ...initialAgent || {}, ready: false });
-    const pickAgent = (next) => {
-      setAgent(next);
-      if (next.provider) onAgentChange({ provider: next.provider, model: next.model, effort: next.effort });
-    };
-    return /* @__PURE__ */ import_react19.default.createElement("div", { className: "modal-overlay", onClick: onClose }, /* @__PURE__ */ import_react19.default.createElement("div", { className: "modal-card ai-modal", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react19.default.createElement("div", { className: "ai-modal-head" }, /* @__PURE__ */ import_react19.default.createElement("h3", null, /* @__PURE__ */ import_react19.default.createElement(Icon2, { name: "mic", size: 16 }), " Virtual DJ"), /* @__PURE__ */ import_react19.default.createElement("span", { className: "ai-note" }, "Your RobOS agent writes a short intro before songs, spoken in the voice you pick.")), /* @__PURE__ */ import_react19.default.createElement(AgentPicker, { value: initialAgent, onChange: pickAgent }), /* @__PURE__ */ import_react19.default.createElement(DjSettingsFields, { value: dj, onChange: setDj, idPrefix: "queue-dj" }), /* @__PURE__ */ import_react19.default.createElement("div", { className: "modal-actions" }, value.enabled && /* @__PURE__ */ import_react19.default.createElement("button", { className: "btn-secondary", onClick: () => onSave({ ...dj, enabled: false }) }, "Turn DJ off"), /* @__PURE__ */ import_react19.default.createElement("button", { className: "btn-secondary", onClick: onClose }, "Cancel"), /* @__PURE__ */ import_react19.default.createElement("button", { id: "btn-dj-save", className: "btn-accent", disabled: !dj.persona.trim() || !agent.ready, onClick: () => onSave({ ...dj, enabled: true }) }, /* @__PURE__ */ import_react19.default.createElement(Icon2, { name: "mic", size: 13 }), " ", value.enabled ? "Save" : "Start DJ"))));
-  }
-
-  // src/castClock.jsx
   var import_react20 = __toESM(require_react());
-  var state = { position: 0, duration: 0, playing: false, at: 0 };
-  var listeners = /* @__PURE__ */ new Set();
-  var castClock = {
-    get: () => state,
-    set(patch) {
-      state = { ...state, ...patch, at: Date.now() };
-      listeners.forEach((fn) => fn());
-    },
-    now() {
-      if (!state.playing) return state.position;
-      const t = state.position + (Date.now() - state.at) / 1e3;
-      return state.duration ? Math.min(state.duration, t) : t;
-    },
-    subscribe(fn) {
-      listeners.add(fn);
-      return () => listeners.delete(fn);
-    }
-  };
-  function useCastTime() {
-    const s = (0, import_react20.useSyncExternalStore)(castClock.subscribe, castClock.get);
-    const [, tick] = (0, import_react20.useState)(0);
-    (0, import_react20.useEffect)(() => {
-      if (!s.playing) return void 0;
-      const timer = setInterval(() => tick((n) => n + 1), 250);
-      return () => clearInterval(timer);
-    }, [s.playing]);
-    return { current: castClock.now(), duration: s.duration, playing: s.playing };
-  }
-  var fmt = (sec) => {
-    if (!sec || !isFinite(sec)) return "0:00";
-    const m = Math.floor(sec / 60);
-    const ss = Math.floor(sec % 60);
-    return `${m}:${ss < 10 ? "0" : ""}${ss}`;
-  };
-  function CastProgress({ onSeek, className = "mini-progress", id }) {
-    const { current, duration } = useCastTime();
-    const [dragging, setDragging] = (0, import_react20.useState)(null);
-    const commitTimer = (0, import_react20.useRef)(null);
-    const value = dragging != null ? dragging : current;
-    const pct = duration ? Math.min(value, duration) / duration * 100 : 0;
-    const commit = (v) => {
-      clearTimeout(commitTimer.current);
-      commitTimer.current = setTimeout(() => {
-        castClock.set({ position: v });
-        setDragging(null);
-        onSeek(v);
-      }, 250);
-    };
-    (0, import_react20.useEffect)(() => () => clearTimeout(commitTimer.current), []);
-    return /* @__PURE__ */ import_react20.default.createElement("div", { className: `cast-progress ${className}`, id }, /* @__PURE__ */ import_react20.default.createElement("span", null, fmt(value)), /* @__PURE__ */ import_react20.default.createElement(
-      "input",
-      {
-        type: "range",
-        min: "0",
-        max: duration || 0,
-        step: "0.5",
-        value: Math.min(value, duration || 0),
-        disabled: !duration,
-        style: { "--pct": `${pct}%` },
-        "aria-label": "Seek on the speaker",
-        onChange: (e) => {
-          const v = Number(e.target.value);
-          setDragging(v);
-          commit(v);
-        }
-      }
-    ), /* @__PURE__ */ import_react20.default.createElement("span", null, fmt(duration)));
-  }
-  function useCastPlaying() {
-    return (0, import_react20.useSyncExternalStore)(castClock.subscribe, () => castClock.get().playing);
-  }
 
   // src/useVirtualDj.js
-  var import_react21 = __toESM(require_react());
+  var import_react19 = __toESM(require_react());
   var LOOKAHEAD = 3;
+  var DJ_LEVEL_DEFAULT = 150;
   var FREQUENCY_EVERY = { every: 1, alternate: 2, sometimes: 3 };
   var LINE_WAIT_MS = 3e4;
   var CLIP_WAIT_MS = 15e3;
@@ -20268,19 +19966,19 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
   });
   var systemVoiceAvailable = () => !!(window.speechSynthesis && typeof SpeechSynthesisUtterance !== "undefined" && window.speechSynthesis.getVoices().length > 0);
   function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showStatus, getAgent, castClip }) {
-    const [settings, setSettings] = (0, import_react21.useState)(() => ({ enabled: false, persona: "", voice: "", frequency: "every", ...initial || {} }));
-    const [speaking, setSpeaking] = (0, import_react21.useState)(null);
-    const lines = (0, import_react21.useRef)(/* @__PURE__ */ new Map());
-    const clips = (0, import_react21.useRef)(/* @__PURE__ */ new Map());
-    const lineRequests = (0, import_react21.useRef)(/* @__PURE__ */ new Map());
-    const clipRequests = (0, import_react21.useRef)(/* @__PURE__ */ new Map());
-    const generation = (0, import_react21.useRef)(0);
-    const transitions = (0, import_react21.useRef)(0);
-    const active = (0, import_react21.useRef)(null);
-    const latest = (0, import_react21.useRef)({});
+    const [settings, setSettings] = (0, import_react19.useState)(() => ({ enabled: false, persona: "", voice: "", frequency: "every", level: DJ_LEVEL_DEFAULT, ...initial || {} }));
+    const [speaking, setSpeaking] = (0, import_react19.useState)(null);
+    const lines = (0, import_react19.useRef)(/* @__PURE__ */ new Map());
+    const clips = (0, import_react19.useRef)(/* @__PURE__ */ new Map());
+    const lineRequests = (0, import_react19.useRef)(/* @__PURE__ */ new Map());
+    const clipRequests = (0, import_react19.useRef)(/* @__PURE__ */ new Map());
+    const generation = (0, import_react19.useRef)(0);
+    const transitions = (0, import_react19.useRef)(0);
+    const active = (0, import_react19.useRef)(null);
+    const latest = (0, import_react19.useRef)({});
     latest.current = { settings, outputTarget, getVolume, showStatus, getAgent, castClip };
     const active_ = settings.enabled && settings.persona.trim().length > 0;
-    const updateSettings = (0, import_react21.useCallback)((patch) => {
+    const updateSettings = (0, import_react19.useCallback)((patch) => {
       const prev = latest.current.settings;
       const next = { ...prev, ...patch };
       if (next.persona !== prev.persona) {
@@ -20289,14 +19987,14 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         clips.current.clear();
         lineRequests.current.clear();
         clipRequests.current.clear();
-      } else if (next.voice !== prev.voice) {
+      } else if (next.voice !== prev.voice || next.level !== prev.level) {
         clips.current.clear();
         clipRequests.current.clear();
       }
       latest.current.settings = next;
       setSettings(next);
     }, []);
-    const requestLines = (0, import_react21.useCallback)((tracks) => {
+    const requestLines = (0, import_react19.useCallback)((tracks) => {
       const missing = tracks.filter((t) => t && t.id && !lines.current.has(t.id) && !lineRequests.current.has(t.id));
       if (!missing.length || !window.robosAudio?.djLines) return;
       const gen = generation.current;
@@ -20309,7 +20007,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       }));
       missing.forEach((t) => lineRequests.current.set(t.id, req));
     }, []);
-    const requestClip = (0, import_react21.useCallback)((track) => {
+    const requestClip = (0, import_react19.useCallback)((track) => {
       if (!track || !track.id) return Promise.resolve(null);
       const text = lines.current.get(track.id);
       if (!text) return Promise.resolve(null);
@@ -20317,7 +20015,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       if (done && !(done.failed && Date.now() - done.at > 2e4)) return Promise.resolve(done);
       if (clipRequests.current.has(track.id)) return clipRequests.current.get(track.id);
       const gen = generation.current;
-      const req = window.robosAudio.djSynthesize(text, latest.current.settings.voice).then((res) => res && res.ok ? { filePath: res.filePath, castPath: res.castPath, durationMs: res.durationMs } : { failed: true, at: Date.now(), error: res && res.error || "no audio" }).catch((err) => ({ failed: true, at: Date.now(), error: err.message })).then((clip) => {
+      const req = window.robosAudio.djSynthesize(text, latest.current.settings.voice, latest.current.settings.level).then((res) => res && res.ok ? { filePath: res.filePath, castPath: res.castPath, durationMs: res.durationMs } : { failed: true, at: Date.now(), error: res && res.error || "no audio" }).catch((err) => ({ failed: true, at: Date.now(), error: err.message })).then((clip) => {
         if (gen === generation.current) clips.current.set(track.id, clip);
         clipRequests.current.delete(track.id);
         return clip;
@@ -20325,18 +20023,18 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       clipRequests.current.set(track.id, req);
       return req;
     }, []);
-    const lineFor = (0, import_react21.useCallback)(async (track, ms) => {
+    const lineFor = (0, import_react19.useCallback)(async (track, ms) => {
       if (lines.current.has(track.id)) return lines.current.get(track.id);
       if (!lineRequests.current.has(track.id)) requestLines([track]);
       await within(lineRequests.current.get(track.id), ms);
       return lines.current.get(track.id) || null;
     }, [requestLines]);
-    (0, import_react21.useEffect)(() => {
+    (0, import_react19.useEffect)(() => {
       if (active_ && window.robosAudio?.djWarmup) window.robosAudio.djWarmup().catch(() => {
       });
     }, [active_]);
     const upcomingKey = upcoming.map((t) => t && t.id).join("|");
-    (0, import_react21.useEffect)(() => {
+    (0, import_react19.useEffect)(() => {
       if (!active_) return;
       const next = upcoming.filter(Boolean).slice(0, LOOKAHEAD);
       requestLines(next);
@@ -20345,8 +20043,8 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         if (lines.current.has(first.id)) requestClip(first);
         else if (lineRequests.current.has(first.id)) lineRequests.current.get(first.id).then(() => requestClip(first));
       }
-    }, [active_, upcomingKey, settings.persona, settings.voice, requestLines, requestClip]);
-    const stop = (0, import_react21.useCallback)(() => {
+    }, [active_, upcomingKey, settings.persona, settings.voice, settings.level, requestLines, requestClip]);
+    const stop = (0, import_react19.useCallback)(() => {
       const a = active.current;
       if (!a) return;
       active.current = null;
@@ -20360,7 +20058,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       setSpeaking(null);
       a.finish();
     }, []);
-    const playLine = (0, import_react21.useCallback)((text, clip, then, { preview: preview2 = false, clipError = "" } = {}) => {
+    const playLine = (0, import_react19.useCallback)((text, clip, then, { preview: preview2 = false, clipError = "" } = {}) => {
       const { outputTarget: target, getVolume: volume, settings: s, castClip: sendToSpeaker } = latest.current;
       const entry = { finish: then, audio: null, timer: null };
       active.current = entry;
@@ -20415,7 +20113,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       latest.current.showStatus(`Virtual DJ could not speak${clipError ? `: ${clipError}` : " (no voice available)"}. Pick another voice in the DJ settings.`);
       entry.timer = setTimeout(done, preview2 ? 6e3 : 2500);
     }, []);
-    const speakFor = (0, import_react21.useCallback)((track, then, { preview: preview2 = false } = {}) => {
+    const speakFor = (0, import_react19.useCallback)((track, then, { preview: preview2 = false } = {}) => {
       const waiting = { finish: then, audio: null, timer: null };
       active.current = waiting;
       setSpeaking({ text: `Getting the intro for \u201C${track.title || "the next song"}\u201D ready\u2026`, warming: true, preview: preview2 });
@@ -20435,7 +20133,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         playLine(text, clip && !clip.failed ? clip : null, then, { preview: preview2, clipError: clip && clip.failed ? clip.error : "" });
       })();
     }, [lineFor, requestClip, playLine]);
-    const talkBefore = (0, import_react21.useCallback)((track, then) => {
+    const talkBefore = (0, import_react19.useCallback)((track, then) => {
       const { settings: s } = latest.current;
       if (!s.enabled || !s.persona.trim() || !track || !track.id) return false;
       transitions.current += 1;
@@ -20443,14 +20141,14 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       speakFor(track, then);
       return true;
     }, [speakFor]);
-    const preview = (0, import_react21.useCallback)((track, then) => {
+    const preview = (0, import_react19.useCallback)((track, then) => {
       const { settings: s } = latest.current;
       if (!s.persona.trim() || !track || !track.id) return false;
       if (active.current) stop();
       speakFor(track, then, { preview: true });
       return true;
     }, [speakFor, stop]);
-    const announce = (0, import_react21.useCallback)(async (text, then) => {
+    const announce = (0, import_react19.useCallback)(async (text, then) => {
       const { settings: s } = latest.current;
       if (!text) {
         then();
@@ -20460,7 +20158,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       let clip = null;
       let clipError = "";
       try {
-        const res = await window.robosAudio.djSynthesize(text, s.voice);
+        const res = await window.robosAudio.djSynthesize(text, s.voice, s.level);
         if (res && res.ok) clip = { filePath: res.filePath, castPath: res.castPath, durationMs: res.durationMs };
         else clipError = res && res.error || "";
       } catch (err) {
@@ -20468,18 +20166,19 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       }
       playLine(text, clip, then, { clipError });
     }, [playLine]);
-    const loadScript = (0, import_react21.useCallback)((dj) => {
+    const loadScript = (0, import_react19.useCallback)((dj) => {
       if (!dj) return;
       updateSettings({
         enabled: true,
         persona: dj.persona || "",
         voice: dj.voice || latest.current.settings.voice,
-        frequency: dj.frequency || "every"
+        frequency: dj.frequency || "every",
+        level: dj.level || latest.current.settings.level || DJ_LEVEL_DEFAULT
       });
       for (const [id, text] of Object.entries(dj.lines || {})) lines.current.set(id, text);
       transitions.current = 0;
     }, [updateSettings]);
-    const castLineFinished = (0, import_react21.useCallback)(() => {
+    const castLineFinished = (0, import_react19.useCallback)(() => {
       const a = active.current;
       if (!a || !a.cast) return;
       active.current = null;
@@ -20488,6 +20187,323 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       a.finish();
     }, []);
     return { settings, setSettings: updateSettings, speaking, talkBefore, preview, announce, loadScript, skip: stop, castLineFinished, active: active_ };
+  }
+
+  // src/AiPlaylist.jsx
+  var import_library_index5 = __toESM(require_library_index());
+  var DJ_FREQUENCY_LABELS = {
+    every: "Before every song",
+    alternate: "Every other song",
+    sometimes: "Now and then (every third song)"
+  };
+  function AiPromptBox({ id, placeholder, initialValue = "", minHeight = 100, onChange, onSubmit }) {
+    const hostRef = (0, import_react20.useRef)(null);
+    const [missing, setMissing] = (0, import_react20.useState)(false);
+    const latest = (0, import_react20.useRef)({ onChange, onSubmit });
+    latest.current = { onChange, onSubmit };
+    (0, import_react20.useEffect)(() => {
+      const host = hostRef.current;
+      if (!host || typeof customElements === "undefined") return void 0;
+      const el = document.createElement("robos-ai-textarea");
+      el.id = id;
+      el.setAttribute("show-submit", "false");
+      el.setAttribute("show-commands", "false");
+      el.setAttribute("show-agent", "false");
+      el.setAttribute("placeholder", placeholder);
+      el.setAttribute("min-height", String(minHeight));
+      host.appendChild(el);
+      let alive = true;
+      const report = () => latest.current.onChange && latest.current.onChange(String(el.value || ""));
+      const onKey = (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && String(el.value || "").trim() && latest.current.onSubmit) {
+          e.preventDefault();
+          latest.current.onSubmit();
+        }
+      };
+      customElements.whenDefined("robos-ai-textarea").then(() => {
+        if (!alive) return;
+        if (initialValue && !String(el.value || "").trim()) el.value = initialValue;
+        report();
+      });
+      const timer = setTimeout(() => {
+        if (alive && !customElements.get("robos-ai-textarea")) setMissing(true);
+      }, 4e3);
+      ["input", "change", "keyup"].forEach((t) => el.addEventListener(t, report));
+      el.addEventListener("keydown", onKey);
+      return () => {
+        alive = false;
+        clearTimeout(timer);
+        ["input", "change", "keyup"].forEach((t) => el.removeEventListener(t, report));
+        el.removeEventListener("keydown", onKey);
+        el.remove();
+      };
+    }, []);
+    return /* @__PURE__ */ import_react20.default.createElement("div", { className: "ai-prompt-box" }, /* @__PURE__ */ import_react20.default.createElement("div", { ref: hostRef }), missing && /* @__PURE__ */ import_react20.default.createElement("p", { className: "ai-note error" }, "RobOS UI components (robos-ui) are not installed, so the prompt box can't load."));
+  }
+  function AgentPicker({ value, onChange }) {
+    const hostRef = (0, import_react20.useRef)(null);
+    const [error, setError] = (0, import_react20.useState)("");
+    const latest = (0, import_react20.useRef)(onChange);
+    latest.current = onChange;
+    (0, import_react20.useEffect)(() => {
+      const host = hostRef.current;
+      if (!host || typeof customElements === "undefined") return void 0;
+      const el = document.createElement("robos-agent-selector");
+      el.id = "ai-agent-selector";
+      host.appendChild(el);
+      let alive = true;
+      const report = () => {
+        if (!alive) return;
+        const v = el.value || {};
+        latest.current({ provider: v.provider || "", model: v.model || "", effort: v.effort || "", ready: !!el.ready });
+      };
+      el.addEventListener("change", report);
+      const timer = setTimeout(() => {
+        if (alive && !customElements.get("robos-agent-selector")) setError("The RobOS agent selector (robos-lib) is not installed.");
+      }, 4e3);
+      customElements.whenDefined("robos-agent-selector").then(async () => {
+        if (!alive) return;
+        try {
+          if (!window.robosProviders) throw new Error("The RobOS provider catalog is not available.");
+          const providers = await window.robosProviders.list();
+          const saved = value && providers.find((p) => p.id === value.provider && p.available);
+          await el.load(saved ? { providers, provider: saved.id, model: value.model, effort: value.effort } : { providers });
+          if (alive && !providers.some((p) => p.available)) setError("No AI agent is ready. Install and sign in to AGY or Codex in RobOS Agents.");
+        } catch (err) {
+          if (alive) setError(err.message);
+        }
+        report();
+      });
+      return () => {
+        alive = false;
+        clearTimeout(timer);
+        el.removeEventListener("change", report);
+        el.remove();
+      };
+    }, []);
+    return /* @__PURE__ */ import_react20.default.createElement("div", { className: "agent-picker" }, /* @__PURE__ */ import_react20.default.createElement("div", { ref: hostRef }), error && /* @__PURE__ */ import_react20.default.createElement("p", { className: "ai-note error" }, error));
+  }
+  function useDjVoices() {
+    const [voices, setVoices] = (0, import_react20.useState)(null);
+    (0, import_react20.useEffect)(() => {
+      let alive = true;
+      (window.robosAudio?.djVoices ? window.robosAudio.djVoices() : Promise.resolve({ ok: false, voices: {} })).then((res) => {
+        if (alive) setVoices(res && res.ok ? res.voices || {} : {});
+      }).catch(() => {
+        if (alive) setVoices({});
+      });
+      return () => {
+        alive = false;
+      };
+    }, []);
+    return voices;
+  }
+  var ENGINE_LABELS = { kokoro: "Kokoro (offline)", "edge-tts": "Edge neural voices (online)", piper: "Piper (offline)", "speech-dispatcher": "System speech" };
+  function defaultDjVoice(voices) {
+    if (!voices) return "";
+    for (const engine of ["kokoro", "edge-tts", "piper"]) {
+      const list = voices[engine] || [];
+      const pick = list.find((v) => v.gender === "male" && v.recommended) || list.find((v) => v.recommended) || list[0];
+      if (pick) return `${engine}:${pick.id}`;
+    }
+    return "";
+  }
+  function DjSettingsFields({ value, onChange, idPrefix = "dj" }) {
+    const voices = useDjVoices();
+    const [previewing, setPreviewing] = (0, import_react20.useState)(false);
+    const set = (patch) => onChange({ ...value, ...patch });
+    (0, import_react20.useEffect)(() => {
+      if (voices && !value.voice) set({ voice: defaultDjVoice(voices) });
+    }, [voices]);
+    const preview = async () => {
+      setPreviewing(true);
+      try {
+        const res = await window.robosAudio.djSynthesize("Hey, you're listening to the RobOS Virtual DJ. Here's what's coming up next.", value.voice, value.level || DJ_LEVEL_DEFAULT);
+        if (res && res.ok) {
+          const audio = new Audio(`file://${res.filePath.split("/").map(encodeURIComponent).join("/")}`);
+          audio.onended = () => setPreviewing(false);
+          audio.onerror = () => setPreviewing(false);
+          await audio.play();
+          return;
+        }
+      } catch {
+      }
+      setPreviewing(false);
+    };
+    const engines = voices ? Object.entries(voices).filter(([, list]) => list && list.length) : [];
+    return /* @__PURE__ */ import_react20.default.createElement("div", { className: "dj-fields" }, /* @__PURE__ */ import_react20.default.createElement("label", { className: "modal-label" }, "Describe your DJ"), /* @__PURE__ */ import_react20.default.createElement(
+      AiPromptBox,
+      {
+        id: `${idPrefix}-persona`,
+        minHeight: 90,
+        initialValue: value.persona || "",
+        placeholder: "e.g. A laid-back late-night jazz radio host with a dry sense of humour who keeps it short",
+        onChange: (persona) => set({ persona })
+      }
+    ), /* @__PURE__ */ import_react20.default.createElement("div", { className: "dj-row" }, /* @__PURE__ */ import_react20.default.createElement("label", { className: "dj-field" }, /* @__PURE__ */ import_react20.default.createElement("span", null, "Voice"), engines.length ? /* @__PURE__ */ import_react20.default.createElement("select", { id: `${idPrefix}-voice`, value: value.voice || "", onChange: (e) => set({ voice: e.target.value }) }, engines.map(([engine, list]) => /* @__PURE__ */ import_react20.default.createElement("optgroup", { key: engine, label: ENGINE_LABELS[engine] || engine }, list.map((v) => /* @__PURE__ */ import_react20.default.createElement("option", { key: v.id, value: `${engine}:${v.id}` }, v.name))))) : /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-note" }, voices ? "RobOS voice is not installed; the DJ will use the system voice." : "Loading voices\u2026")), /* @__PURE__ */ import_react20.default.createElement("label", { className: "dj-field" }, /* @__PURE__ */ import_react20.default.createElement("span", null, "Talks"), /* @__PURE__ */ import_react20.default.createElement("select", { id: `${idPrefix}-frequency`, value: value.frequency || "every", onChange: (e) => set({ frequency: e.target.value }) }, Object.entries(DJ_FREQUENCY_LABELS).map(([k, label]) => /* @__PURE__ */ import_react20.default.createElement("option", { key: k, value: k }, label)))), /* @__PURE__ */ import_react20.default.createElement("label", { className: "dj-field dj-level" }, /* @__PURE__ */ import_react20.default.createElement("span", null, "DJ volume ", /* @__PURE__ */ import_react20.default.createElement("em", null, value.level || DJ_LEVEL_DEFAULT, "% of the music")), /* @__PURE__ */ import_react20.default.createElement(
+      "input",
+      {
+        id: `${idPrefix}-level`,
+        type: "range",
+        min: "50",
+        max: "300",
+        step: "10",
+        value: value.level || DJ_LEVEL_DEFAULT,
+        title: "How loud the DJ is next to the music: 100% is about as loud as a song",
+        onChange: (e) => set({ level: Number(e.target.value) })
+      }
+    )), engines.length > 0 && /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary dj-preview", onClick: preview, disabled: previewing || !value.voice }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "speaker", size: 13 }), " ", previewing ? "Playing\u2026" : "Hear voice")));
+  }
+  function AiPlaylistModal({ initialDj, agent: initialAgent, onAgentChange, onClose, onPlay, onSave }) {
+    const [request, setRequest] = (0, import_react20.useState)("");
+    const [count, setCount] = (0, import_react20.useState)(25);
+    const [withDj, setWithDj] = (0, import_react20.useState)(!!(initialDj && initialDj.enabled));
+    const [dj, setDj] = (0, import_react20.useState)({ persona: "", voice: "", frequency: "every", level: DJ_LEVEL_DEFAULT, ...initialDj || {} });
+    const [phase, setPhase] = (0, import_react20.useState)("edit");
+    const [progress, setProgress] = (0, import_react20.useState)("");
+    const [error, setError] = (0, import_react20.useState)("");
+    const [result, setResult] = (0, import_react20.useState)(null);
+    const [name, setName] = (0, import_react20.useState)("");
+    const [agent, setAgent] = (0, import_react20.useState)({ ...initialAgent || {}, ready: false });
+    const pickAgent = (next) => {
+      setAgent(next);
+      if (next.provider) onAgentChange({ provider: next.provider, model: next.model, effort: next.effort });
+    };
+    (0, import_react20.useEffect)(() => {
+      const off = window.robosAudio?.onAiProgress?.((p) => p && p.message && setProgress(p.message));
+      return () => {
+        if (typeof off === "function") off();
+      };
+    }, []);
+    const djReady = !withDj || dj.persona.trim().length > 0;
+    const canGenerate = request.trim().length > 0 && djReady && agent.ready && phase !== "working";
+    const generate = async () => {
+      if (!canGenerate) return;
+      setPhase("working");
+      setError("");
+      setProgress("Asking your RobOS agent\u2026");
+      try {
+        const chosen = { provider: agent.provider, model: agent.model, effort: agent.effort };
+        const res = await window.robosAudio.aiPlaylistGenerate(request.trim(), count, withDj ? dj : null, chosen);
+        if (res && res.ok) {
+          setResult(res.playlist);
+          setName(res.playlist.name);
+          setPhase("result");
+        } else {
+          setError(res && res.error || "The agent did not answer.");
+          setPhase("edit");
+        }
+      } catch (err) {
+        setError(err.message);
+        setPhase("edit");
+      }
+    };
+    const final = () => ({ ...result, name: name.trim() || result.name });
+    return /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-overlay", onClick: phase === "working" ? void 0 : onClose }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-card ai-modal", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "ai-modal-head" }, /* @__PURE__ */ import_react20.default.createElement("h3", null, /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-spark" }, "\u2726"), " AI Playlist"), /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-note" }, "Your RobOS agent picks and orders songs from your library.")), phase !== "result" && /* @__PURE__ */ import_react20.default.createElement(AgentPicker, { value: initialAgent, onChange: pickAgent }), phase !== "result" && /* @__PURE__ */ import_react20.default.createElement(import_react20.default.Fragment, null, /* @__PURE__ */ import_react20.default.createElement("label", { className: "modal-label" }, "What should it sound like?"), /* @__PURE__ */ import_react20.default.createElement(
+      AiPromptBox,
+      {
+        id: "ai-playlist-prompt",
+        placeholder: "e.g. An hour of upbeat 90s alternative rock for coding \u2014 no ballads, end with something mellow",
+        onChange: setRequest,
+        onSubmit: generate
+      }
+    ), /* @__PURE__ */ import_react20.default.createElement("div", { className: "dj-row" }, /* @__PURE__ */ import_react20.default.createElement("label", { className: "dj-field" }, /* @__PURE__ */ import_react20.default.createElement("span", null, "Songs"), /* @__PURE__ */ import_react20.default.createElement(
+      "input",
+      {
+        id: "ai-playlist-count",
+        type: "number",
+        min: "3",
+        max: "100",
+        value: count,
+        onChange: (e) => setCount(Math.max(3, Math.min(100, parseInt(e.target.value, 10) || 25)))
+      }
+    )), /* @__PURE__ */ import_react20.default.createElement("label", { className: "dj-toggle" }, /* @__PURE__ */ import_react20.default.createElement("input", { id: "ai-playlist-dj", type: "checkbox", checked: withDj, onChange: (e) => setWithDj(e.target.checked) }), /* @__PURE__ */ import_react20.default.createElement("span", null, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "mic", size: 14 }), " Virtual DJ between songs"))), withDj && /* @__PURE__ */ import_react20.default.createElement(DjSettingsFields, { value: dj, onChange: setDj, idPrefix: "ai-dj" }), error && /* @__PURE__ */ import_react20.default.createElement("p", { className: "ai-note error", role: "alert" }, error), phase === "working" && /* @__PURE__ */ import_react20.default.createElement("div", { className: "ai-progress", role: "status" }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react20.default.createElement("span", null, progress)), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: onClose, disabled: phase === "working" }, "Cancel"), /* @__PURE__ */ import_react20.default.createElement("button", { id: "btn-ai-playlist-generate", className: "btn-accent", onClick: generate, disabled: !canGenerate }, "\u2726 ", phase === "working" ? "Working\u2026" : "Generate with AI"))), phase === "result" && result && /* @__PURE__ */ import_react20.default.createElement(import_react20.default.Fragment, null, /* @__PURE__ */ import_react20.default.createElement("input", { id: "ai-playlist-name", className: "ai-name-input", value: name, onChange: (e) => setName(e.target.value), "aria-label": "Playlist name" }), /* @__PURE__ */ import_react20.default.createElement("p", { className: "ai-description" }, result.description), /* @__PURE__ */ import_react20.default.createElement("div", { className: "ai-meta" }, /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, (0, import_library_index5.plural)(result.tracks.length, "song")), /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, (0, import_library_index5.formatLongDuration)(result.tracks.reduce((n, t) => n + (t.duration || 0), 0))), result.dj && /* @__PURE__ */ import_react20.default.createElement("span", { className: "badge" }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "mic", size: 11 }), " Virtual DJ")), result.dj && result.dj.intro && /* @__PURE__ */ import_react20.default.createElement("p", { className: "ai-dj-quote" }, "\u{1F399} \u201C", result.dj.intro, "\u201D"), /* @__PURE__ */ import_react20.default.createElement("ol", { className: "ai-track-list" }, result.tracks.map((t, i) => /* @__PURE__ */ import_react20.default.createElement("li", { key: `${t.id}-${i}` }, /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-track-title" }, t.title), /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-track-sub" }, t.artist, t.album ? ` \xB7 ${t.album}` : ""), /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-track-dur" }, (0, import_library_index5.formatDuration)(t.duration))))), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: () => {
+      setPhase("edit");
+      setResult(null);
+    } }, "Start over"), /* @__PURE__ */ import_react20.default.createElement("button", { id: "btn-ai-playlist-save", className: "btn-secondary", onClick: () => onSave(final()) }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "save", size: 13 }), " Save playlist"), /* @__PURE__ */ import_react20.default.createElement("button", { id: "btn-ai-playlist-play", className: "btn-accent", onClick: () => onPlay(final()) }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "play", size: 12 }), " ", result.dj ? "Play with DJ" : "Play")))));
+  }
+  function DjSettingsModal({ value, agent: initialAgent, onAgentChange, onClose, onSave }) {
+    const [dj, setDj] = (0, import_react20.useState)({ persona: "", voice: "", frequency: "every", level: DJ_LEVEL_DEFAULT, ...value });
+    const [agent, setAgent] = (0, import_react20.useState)({ ...initialAgent || {}, ready: false });
+    const pickAgent = (next) => {
+      setAgent(next);
+      if (next.provider) onAgentChange({ provider: next.provider, model: next.model, effort: next.effort });
+    };
+    return /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-overlay", onClick: onClose }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-card ai-modal", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "ai-modal-head" }, /* @__PURE__ */ import_react20.default.createElement("h3", null, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "mic", size: 16 }), " Virtual DJ"), /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-note" }, "Your RobOS agent writes a short intro before songs, spoken in the voice you pick.")), /* @__PURE__ */ import_react20.default.createElement(AgentPicker, { value: initialAgent, onChange: pickAgent }), /* @__PURE__ */ import_react20.default.createElement(DjSettingsFields, { value: dj, onChange: setDj, idPrefix: "queue-dj" }), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-actions" }, value.enabled && /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: () => onSave({ ...dj, enabled: false }) }, "Turn DJ off"), /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: onClose }, "Cancel"), /* @__PURE__ */ import_react20.default.createElement("button", { id: "btn-dj-save", className: "btn-accent", disabled: !dj.persona.trim() || !agent.ready, onClick: () => onSave({ ...dj, enabled: true }) }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "mic", size: 13 }), " ", value.enabled ? "Save" : "Start DJ"))));
+  }
+
+  // src/castClock.jsx
+  var import_react21 = __toESM(require_react());
+  var state = { position: 0, duration: 0, playing: false, at: 0 };
+  var listeners = /* @__PURE__ */ new Set();
+  var castClock = {
+    get: () => state,
+    set(patch) {
+      state = { ...state, ...patch, at: Date.now() };
+      listeners.forEach((fn) => fn());
+    },
+    now() {
+      if (!state.playing) return state.position;
+      const t = state.position + (Date.now() - state.at) / 1e3;
+      return state.duration ? Math.min(state.duration, t) : t;
+    },
+    subscribe(fn) {
+      listeners.add(fn);
+      return () => listeners.delete(fn);
+    }
+  };
+  function useCastTime() {
+    const s = (0, import_react21.useSyncExternalStore)(castClock.subscribe, castClock.get);
+    const [, tick] = (0, import_react21.useState)(0);
+    (0, import_react21.useEffect)(() => {
+      if (!s.playing) return void 0;
+      const timer = setInterval(() => tick((n) => n + 1), 250);
+      return () => clearInterval(timer);
+    }, [s.playing]);
+    return { current: castClock.now(), duration: s.duration, playing: s.playing };
+  }
+  var fmt = (sec) => {
+    if (!sec || !isFinite(sec)) return "0:00";
+    const m = Math.floor(sec / 60);
+    const ss = Math.floor(sec % 60);
+    return `${m}:${ss < 10 ? "0" : ""}${ss}`;
+  };
+  function CastProgress({ onSeek, className = "mini-progress", id }) {
+    const { current, duration } = useCastTime();
+    const [dragging, setDragging] = (0, import_react21.useState)(null);
+    const commitTimer = (0, import_react21.useRef)(null);
+    const value = dragging != null ? dragging : current;
+    const pct = duration ? Math.min(value, duration) / duration * 100 : 0;
+    const commit = (v) => {
+      clearTimeout(commitTimer.current);
+      commitTimer.current = setTimeout(() => {
+        castClock.set({ position: v });
+        setDragging(null);
+        onSeek(v);
+      }, 250);
+    };
+    (0, import_react21.useEffect)(() => () => clearTimeout(commitTimer.current), []);
+    return /* @__PURE__ */ import_react21.default.createElement("div", { className: `cast-progress ${className}`, id }, /* @__PURE__ */ import_react21.default.createElement("span", null, fmt(value)), /* @__PURE__ */ import_react21.default.createElement(
+      "input",
+      {
+        type: "range",
+        min: "0",
+        max: duration || 0,
+        step: "0.5",
+        value: Math.min(value, duration || 0),
+        disabled: !duration,
+        style: { "--pct": `${pct}%` },
+        "aria-label": "Seek on the speaker",
+        onChange: (e) => {
+          const v = Number(e.target.value);
+          setDragging(v);
+          commit(v);
+        }
+      }
+    ), /* @__PURE__ */ import_react21.default.createElement("span", null, fmt(duration)));
+  }
+  function useCastPlaying() {
+    return (0, import_react21.useSyncExternalStore)(castClock.subscribe, () => castClock.get().playing);
   }
 
   // src/App.jsx

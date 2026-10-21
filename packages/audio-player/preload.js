@@ -37,7 +37,7 @@ contextBridge.exposeInMainWorld('robosAudio', {
   },
   djLines: (persona, upcoming, agent) => ipcRenderer.invoke('audio:dj-lines', { persona, upcoming, agent }),
   djVoices: () => ipcRenderer.invoke('audio:dj-voices'),
-  djSynthesize: (text, voice) => ipcRenderer.invoke('audio:dj-synthesize', { text, voice }),
+  djSynthesize: (text, voice, level) => ipcRenderer.invoke('audio:dj-synthesize', { text, voice, level }),
   djWarmup: () => ipcRenderer.invoke('audio:dj-warmup'),
   listFolders: () => ipcRenderer.invoke('audio:folders-list'),
   addLocalFolder: () => ipcRenderer.invoke('audio:folders-add-local'),

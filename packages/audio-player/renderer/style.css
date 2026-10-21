@@ -2441,3 +2441,6 @@ body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-selec
 .rhap-cast-progress { font-size: 0.8rem; gap: 14px; padding: 4px 0 6px; }
 .rhap-cast-progress input[type=range] { height: 5px; }
 .rhap-cast-progress input[type=range]::-webkit-slider-thumb { width: 14px; height: 14px; }
+.dj-field.dj-level { min-width: 190px; }
+.dj-field.dj-level em { font-style: normal; color: var(--accent); margin-left: 4px; }
+.dj-field.dj-level input[type=range] { padding: 0; accent-color: var(--accent); }

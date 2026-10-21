@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const LOOKAHEAD = 3;
+// DJ voice level in % of the music's loudness (lines are loudness-normalised).
+export const DJ_LEVEL_DEFAULT = 150;
 const FREQUENCY_EVERY = { every: 1, alternate: 2, sometimes: 3 };
 // How long a song change may wait for a line or its audio that is still being made.
 const LINE_WAIT_MS = 30000;
@@ -28,7 +30,7 @@ const systemVoiceAvailable = () => !!(window.speechSynthesis && typeof SpeechSyn
  * it (the banner shows that, and Skip moves on).
  */
 export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showStatus, getAgent, castClip }) {
-  const [settings, setSettings] = useState(() => ({ enabled: false, persona: '', voice: '', frequency: 'every', ...(initial || {}) }));
+  const [settings, setSettings] = useState(() => ({ enabled: false, persona: '', voice: '', frequency: 'every', level: DJ_LEVEL_DEFAULT, ...(initial || {}) }));
   const [speaking, setSpeaking] = useState(null); // { text, warming?, preview? }
   const lines = useRef(new Map());   // trackId -> text
   const clips = useRef(new Map());   // trackId -> { filePath, durationMs } | { failed: true, error }
@@ -49,7 +51,7 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
     if (next.persona !== prev.persona) {
       generation.current += 1;
       lines.current.clear(); clips.current.clear(); lineRequests.current.clear(); clipRequests.current.clear();
-    } else if (next.voice !== prev.voice) { clips.current.clear(); clipRequests.current.clear(); }
+    } else if (next.voice !== prev.voice || next.level !== prev.level) { clips.current.clear(); clipRequests.current.clear(); }
     latest.current.settings = next;
     setSettings(next);
   }, []);
@@ -80,7 +82,7 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
     if (done && !(done.failed && Date.now() - done.at > 20000)) return Promise.resolve(done);
     if (clipRequests.current.has(track.id)) return clipRequests.current.get(track.id);
     const gen = generation.current;
-    const req = window.robosAudio.djSynthesize(text, latest.current.settings.voice)
+    const req = window.robosAudio.djSynthesize(text, latest.current.settings.voice, latest.current.settings.level)
       .then(res => (res && res.ok ? { filePath: res.filePath, castPath: res.castPath, durationMs: res.durationMs } : { failed: true, at: Date.now(), error: (res && res.error) || 'no audio' }))
       .catch(err => ({ failed: true, at: Date.now(), error: err.message }))
       .then(clip => {
@@ -116,7 +118,7 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
       if (lines.current.has(first.id)) requestClip(first);
       else if (lineRequests.current.has(first.id)) lineRequests.current.get(first.id).then(() => requestClip(first));
     }
-  }, [active_, upcomingKey, settings.persona, settings.voice, requestLines, requestClip]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [active_, upcomingKey, settings.persona, settings.voice, settings.level, requestLines, requestClip]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stop = useCallback(() => {
     const a = active.current;
@@ -242,7 +244,7 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
     let clip = null;
     let clipError = '';
     try {
-      const res = await window.robosAudio.djSynthesize(text, s.voice);
+      const res = await window.robosAudio.djSynthesize(text, s.voice, s.level);
       if (res && res.ok) clip = { filePath: res.filePath, castPath: res.castPath, durationMs: res.durationMs };
       else clipError = (res && res.error) || '';
     } catch (err) { clipError = err.message; }
@@ -257,6 +259,7 @@ export function useVirtualDj({ initial, upcoming, outputTarget, getVolume, showS
       persona: dj.persona || '',
       voice: dj.voice || latest.current.settings.voice,
       frequency: dj.frequency || 'every',
+      level: dj.level || latest.current.settings.level || DJ_LEVEL_DEFAULT,
     });
     for (const [id, text] of Object.entries(dj.lines || {})) lines.current.set(id, text);
     transitions.current = 0;

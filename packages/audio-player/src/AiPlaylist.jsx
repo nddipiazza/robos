@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Icon } from './Icon.jsx';
+import { DJ_LEVEL_DEFAULT } from './useVirtualDj.js';
 import { formatDuration, formatLongDuration, plural } from '../lib/library-index.js';
 
 export const DJ_FREQUENCY_LABELS = {
@@ -166,7 +167,7 @@ export function DjSettingsFields({ value, onChange, idPrefix = 'dj' }) {
   const preview = async () => {
     setPreviewing(true);
     try {
-      const res = await window.robosAudio.djSynthesize("Hey, you're listening to the RobOS Virtual DJ. Here's what's coming up next.", value.voice);
+      const res = await window.robosAudio.djSynthesize("Hey, you're listening to the RobOS Virtual DJ. Here's what's coming up next.", value.voice, value.level || DJ_LEVEL_DEFAULT);
       if (res && res.ok) {
         const audio = new Audio(`file://${res.filePath.split('/').map(encodeURIComponent).join('/')}`);
         audio.onended = () => setPreviewing(false);
@@ -210,6 +211,19 @@ export function DjSettingsFields({ value, onChange, idPrefix = 'dj' }) {
             {Object.entries(DJ_FREQUENCY_LABELS).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
           </select>
         </label>
+        <label className="dj-field dj-level">
+          <span>DJ volume <em>{value.level || DJ_LEVEL_DEFAULT}% of the music</em></span>
+          <input
+            id={`${idPrefix}-level`}
+            type="range"
+            min="50"
+            max="300"
+            step="10"
+            value={value.level || DJ_LEVEL_DEFAULT}
+            title="How loud the DJ is next to the music: 100% is about as loud as a song"
+            onChange={(e) => set({ level: Number(e.target.value) })}
+          />
+        </label>
         {engines.length > 0 && (
           <button className="btn-secondary dj-preview" onClick={preview} disabled={previewing || !value.voice}>
             <Icon name="speaker" size={13} /> {previewing ? 'Playing…' : 'Hear voice'}
@@ -228,7 +242,7 @@ export function AiPlaylistModal({ initialDj, agent: initialAgent, onAgentChange,
   const [request, setRequest] = useState('');
   const [count, setCount] = useState(25);
   const [withDj, setWithDj] = useState(!!(initialDj && initialDj.enabled));
-  const [dj, setDj] = useState({ persona: '', voice: '', frequency: 'every', ...(initialDj || {}) });
+  const [dj, setDj] = useState({ persona: '', voice: '', frequency: 'every', level: DJ_LEVEL_DEFAULT, ...(initialDj || {}) });
   const [phase, setPhase] = useState('edit'); // edit | working | result
   const [progress, setProgress] = useState('');
   const [error, setError] = useState('');
@@ -362,7 +376,7 @@ export function AiPlaylistModal({ initialDj, agent: initialAgent, onAgentChange,
 
 /** Virtual DJ settings for whatever is in the play queue. */
 export function DjSettingsModal({ value, agent: initialAgent, onAgentChange, onClose, onSave }) {
-  const [dj, setDj] = useState({ persona: '', voice: '', frequency: 'every', ...value });
+  const [dj, setDj] = useState({ persona: '', voice: '', frequency: 'every', level: DJ_LEVEL_DEFAULT, ...value });
   const [agent, setAgent] = useState({ ...(initialAgent || {}), ready: false });
   const pickAgent = (next) => {
     setAgent(next);
