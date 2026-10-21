@@ -3,24 +3,34 @@
     {
       "col": 28,
       "row": 26,
-      "id": "ctnc1"
+      "id": "ctnc1",
+      "item": "gold",
+      "gp_min": 50,
+      "gp_max": 50
     },
     {
       "col": 3,
       "row": 28,
-      "id": "ctnc2"
+      "id": "ctnc2",
+      "item": "herb",
+      "type": "tool"
     },
     {
       "col": 28,
       "row": 28,
-      "id": "ctnc3"
+      "id": "ctnc3",
+      "item": "gold",
+      "gp_min": 120,
+      "gp_max": 120
     }
   ],
   "charlock-castle-b2": [
     {
       "col": 6,
       "row": 6,
-      "id": "cb2c1"
+      "id": "cb2c1",
+      "item": "erdricks_sword",
+      "type": "quest_weapon"
     }
   ],
   "charlock-castle-b7": [
@@ -42,22 +52,17 @@
     {
       "col": 12,
       "row": 12,
-      "id": "cb7c3"
+      "id": "cb7c4"
     },
     {
       "col": 12,
       "row": 13,
-      "id": "cb7c4"
-    },
-    {
-      "col": 11,
-      "row": 12,
-      "id": "cb7c2"
+      "id": "cb7c5"
     },
     {
       "col": 13,
       "row": 13,
-      "id": "cb7c4"
+      "id": "cb7c6"
     }
   ],
   "erdricks-cave-b2": [
@@ -71,17 +76,24 @@
     {
       "col": 9,
       "row": 6,
-      "id": "garc1"
+      "id": "garc1",
+      "item": "gold",
+      "gp_min": 10,
+      "gp_max": 17
     },
     {
       "col": 10,
       "row": 6,
-      "id": "garc2"
+      "id": "garc2",
+      "item": "herb",
+      "type": "tool"
     },
     {
       "col": 9,
       "row": 7,
-      "id": "garc3"
+      "id": "garc3",
+      "item": "torch",
+      "type": "tool"
     }
   ],
   "garinham-b1": [
@@ -117,17 +129,24 @@
     {
       "col": 16,
       "row": 21,
-      "id": "kolc1"
+      "id": "kolc1",
+      "item": "gold",
+      "gp_min": 100,
+      "gp_max": 100
     },
     {
       "col": 16,
       "row": 22,
-      "id": "kolc2"
+      "id": "kolc2",
+      "item": "herb",
+      "type": "tool"
     },
     {
       "col": 16,
       "row": 23,
-      "id": "kolc3"
+      "id": "kolc3",
+      "item": "magic_key",
+      "type": "key"
     },
     {
       "col": 10,
@@ -169,21 +188,31 @@
     {
       "col": 4,
       "row": 5,
-      "id": "nc1c1"
+      "id": "nc1c1",
+      "item": "staff_of_rain",
+      "type": "quest_item",
+      "requires": "silver_harp",
+      "requires_msg": "The chest will not open\nuntil the Silver Harp\nhas been played."
     }
   ],
   "rimuldar-1f": [
     {
       "col": 25,
       "row": 24,
-      "id": "rimc1"
+      "id": "rimc1",
+      "item": "wings",
+      "type": "tool"
     }
   ],
   "southern-cave-b1": [
     {
       "col": 6,
       "row": 6,
-      "id": "sc1c1"
+      "id": "sc1c1",
+      "item": "rainbow_drop",
+      "type": "quest_item",
+      "requires": "erdricks_token",
+      "requires_msg": "The chest is sealed.\nOnly a descendant of\nErdrick may open it."
     }
   ],
   "tantegel-castle-1f": [
@@ -229,7 +258,9 @@
     {
       "col": 5,
       "row": 6,
-      "id": "tbac1"
+      "id": "tbac1",
+      "item": "stones_of_sunlight",
+      "type": "quest_item"
     }
   ]
 }

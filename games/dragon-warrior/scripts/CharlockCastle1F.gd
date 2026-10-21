@@ -18,8 +18,9 @@ func _get_music_path() -> String:
 func _is_walkable(tile: Vector2i) -> bool:
     if tile.x < 0 or tile.y < 0 or tile.x >= MAP_W or tile.y >= MAP_H:
         return false
+    # Bottom gate: the grid marks it as wall but it is the castle's only exit.
     if (tile == Vector2i(10, MAP_H - 1)):
-        return _pixel_is_walkable(tile)
+        return true
     return super._is_walkable(tile)
 
 func _check_transitions() -> void:

@@ -6,7 +6,7 @@ Dragon Warrior — Headless Map Completeness & Global Pathfinding Test Runner
 1. Runs `godot --headless --path games/dragon-warrior -s tests/test_map_completeness.gd`
    to execute the full Breadth-First Search (BFS) connectivity audit from the
    New Game start tile (`tantegel-castle-2f` at `(3, 5)`) across all 29 maps,
-   86 staircase transitions, 21 locked doors, 40 treasure chests, and 14 quest milestones.
+   86 staircase transitions, 21 locked doors, 39 treasure chests, and 14 quest milestones.
 2. When `--screenshots` or `DW_CAPTURE_SLIDESHOW=1` is provided, launches the live
    Godot engine under Xvfb and drives the hero along 20 pathfinding & quest milestones,
    capturing crisp 512x480 PNG screenshots for the rowbose.com interactive slideshow.
@@ -537,7 +537,9 @@ def main() -> int:
     assert report["maps_reached_count"] == 29, f"Expected 29/29 maps reachable, got {report['maps_reached_count']}"
     assert report["stairs_verified_count"] == 86, f"Expected 86/86 stairs verified, got {report['stairs_verified_count']}"
     assert report["doors_verified_count"] == 21, f"Expected 21/21 doors verified, got {report['doors_verified_count']}"
-    assert report["chests_reached_count"] == 40, f"Expected 40/40 chests reachable, got {report['chests_reached_count']}"
+    chests_total = report["chests_total_count"]
+    assert chests_total == 39, f"Expected 39 unique chests in chest_registry.json, got {chests_total}"
+    assert report["chests_reached_count"] == chests_total, f"Expected {chests_total}/{chests_total} chests reachable, got {report['chests_reached_count']}"
     assert report["milestones_reached_count"] == 14, f"Expected 14/14 milestones reachable, got {report['milestones_reached_count']}"
     assert len(report["failures"]) == 0, f"Unexpected failures: {report['failures']}"
 

@@ -293,6 +293,9 @@ func _process(delta: float) -> void:
 		_cam_world = _cam_from.lerp(_cam_to, _move_t)
 		if _move_t >= 1.0:
 			_hero_moving = false
+			var gs_regen = get_node_or_null("/root/GameState")
+			if gs_regen and gs_regen.has_method("apply_step_regen"):
+				gs_regen.apply_step_regen()
 			_check_map_trigger()
 	elif not _dialog_active and not _menu_open and not _status_open and not _item_open:
 		_poll_move_input()
@@ -456,6 +459,10 @@ func _get_monster(key: String) -> Dictionary:
 
 func _start_battle(mon_key: String, mon_data: Dictionary) -> void:
 	_battle_active = true
+	# The battle overlay reads/consumes herbs from GameState: sync the scene copy first.
+	var gs_pre: Node = get_node_or_null("/root/GameState")
+	if gs_pre:
+		gs_pre.inventory = _inventory.duplicate(true)
 	if _music and _music.playing:
 		_music.stop()
 
@@ -501,6 +508,10 @@ func _start_battle(mon_key: String, mon_data: Dictionary) -> void:
 	overlay.connect("battle_ended", func(result: String):
 		overlay.queue_free()
 		_battle_active = false
+		var gs_after: Node = get_node_or_null("/root/GameState")
+		if gs_after:
+			_hero_gold = int(gs_after.gold)   # battle rewards live in GameState
+			_inventory = gs_after.inventory.duplicate(true)   # herbs used in battle
 		if _music:
 			_music.play()
 		if result == "lost":
@@ -518,6 +529,7 @@ func _on_defeat() -> void:
 		gs.spawn_tile = Vector2i(11, 30)
 		gs.spawn_facing = "down"
 		gs.come_from = "defeat"
+		gs.deaths = int(gs.deaths) + 1
 	get_tree().change_scene_to_file.call_deferred("res://scenes/Castle1F.tscn")
 
 func _load_terrain() -> void:
@@ -996,7 +1008,7 @@ func _execute_menu_item(cmd: String) -> void:
 				_:
 					_show_dialog("", ["There are no stairs here."])
 		"SPELL":
-			_show_dialog("", ["Thou hast no spells\nto cast."])
+			_cmd_spell()
 		"SEARCH":
 			_cmd_search()
 		"ITEM":
@@ -1010,9 +1022,13 @@ func _cmd_search() -> void:
 	if _hero_tile == ERDRICK_TOKEN and not _has_inventory_item("Erdrick's Token"):
 		_inventory.append({
 			"name": "Erdrick's Token",
+			"id": "erdricks_token",
 			"type": "quest",
 			"desc": "A small token buried in the southern swamp."
 		})
+		var gs_t := get_node_or_null("/root/GameState")
+		if gs_t:
+			gs_t.inventory = _inventory.duplicate(true)
 		_show_dialog("", ["Thou hast found\nErdrick's Token!"])
 	else:
 		_show_dialog("", ["Thou dost not find\nanything of interest."])
@@ -1035,15 +1051,59 @@ func _use_item(idx: int) -> void:
 			if _bridge_built:
 				_show_dialog("", ["The rainbow bridge\nalready spans\nthe waters."])
 				return
-			if _hero_tile != BRIDGE_TILE:
+			# The bridge tile itself is open water: the drop is used from either shore.
+			var on_shore := _hero_tile == BRIDGE_TILE + Vector2i(-1, 0) or _hero_tile == BRIDGE_TILE + Vector2i(1, 0)
+			if _hero_tile != BRIDGE_TILE and not on_shore:
 				_show_dialog("", ["This is not the\nplace to use it."])
 				return
 			_inventory.remove_at(idx)
 			_bridge_rect.visible = true
 			_bridge_animating = true
 			_bridge_anim_t = 0.0
+		"Herb", "Medical Herb":
+			var gs_h := get_node_or_null("/root/GameState")
+			if gs_h:
+				var hp := int(gs_h.hero_stats.get("hp", 0))
+				var hp_max := int(gs_h.hero_stats.get("hp_max", 1))
+				if hp >= hp_max:
+					_show_dialog("", ["Thy HP is already\nfull."])
+					return
+				var amt := 23 + (randi() % 8)
+				gs_h.hero_stats["hp"] = mini(hp_max, hp + amt)
+				_inventory.remove_at(idx)
+				gs_h.inventory = _inventory.duplicate(true)
+				_item_panel.visible = false
+				_item_open = false
+				_show_dialog("", ["Thou hast eaten the\nMedical Herb.\nHP restored by %d." % mini(amt, hp_max - hp)])
 		_:
 			_show_dialog("", [str(item.get("desc", "Thou usest the item."))])
+
+## Field magic on the overworld: HEALMORE / HEAL when wounded.
+func _cmd_spell() -> void:
+	var gs := get_node_or_null("/root/GameState")
+	var known: Array = gs.spells if gs and gs.spells is Array else []
+	if known.is_empty():
+		_show_dialog("", ["Thou hast no spells\nto cast."])
+		return
+	var mp := int(gs.hero_stats.get("mp", 0))
+	var hp := int(gs.hero_stats.get("hp", 0))
+	var hp_max := int(gs.hero_stats.get("hp_max", 1))
+	var missing := hp_max - hp
+	if missing <= 0:
+		_show_dialog("", ["There is no need to\ncast a spell here."])
+		return
+	if gs.has_spell("healmore") and mp >= 10 and missing > 30:
+		gs.hero_stats["mp"] = mp - 10
+		gs.hero_stats["hp"] = hp_max
+		_show_dialog("", ["Thou hast cast HEALMORE!\nThy wounds are fully healed."])
+		return
+	if gs.has_spell("heal") and mp >= 4:
+		var amt := 10 + (randi() % 8)
+		gs.hero_stats["mp"] = mp - 4
+		gs.hero_stats["hp"] = mini(hp_max, hp + amt)
+		_show_dialog("", ["Thou hast cast HEAL!\nHP restored by %d." % mini(amt, missing)])
+		return
+	_show_dialog("", ["Thou hast not enough\nMagic Points!"])
 
 func _show_dialog(speaker: String, pages: Array[String], on_done: Callable = Callable()) -> void:
 	_dialog_pages = pages
