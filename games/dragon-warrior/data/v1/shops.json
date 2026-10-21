@@ -1,0 +1,500 @@
+[
+  {
+    "id": "tan001",
+    "location_id": "tantegel_castle",
+    "location_name": "Tantegel Castle",
+    "type": "key_shop",
+    "inventory": [
+      {
+        "item_id": "magic_key",
+        "price": 85
+      }
+    ],
+    "map_key": "tantegel-castle-1f",
+    "npc_type": "merchant",
+    "npc_facing": "down",
+    "npc_tile": [
+      25,
+      2
+    ],
+    "desk_tile": [
+      25,
+      3
+    ]
+  },
+  {
+    "id": "bre001",
+    "location_id": "brecconary",
+    "location_name": "Brecconary",
+    "type": "weapon_armor_shop",
+    "npc_type": "merchant",
+    "npc_facing": "down",
+    "inventory": [
+      {
+        "item_id": "bamboo_pole",
+        "price": 10
+      },
+      {
+        "item_id": "club",
+        "price": 60
+      },
+      {
+        "item_id": "copper_sword",
+        "price": 180
+      },
+      {
+        "item_id": "clothes",
+        "price": 20
+      },
+      {
+        "item_id": "leather_armor",
+        "price": 70
+      },
+      {
+        "item_id": "small_shield",
+        "price": 90
+      }
+    ],
+    "map_key": "brecconary-1f",
+    "npc_tile": [
+      6,
+      5
+    ],
+    "desk_tile": [
+      6,
+      6
+    ]
+  },
+  {
+    "id": "bre002",
+    "location_id": "brecconary",
+    "location_name": "Brecconary",
+    "type": "item_shop",
+    "npc_type": "merchant",
+    "npc_facing": "left",
+    "inventory": [
+      {
+        "item_id": "herb",
+        "price": 24
+      },
+      {
+        "item_id": "torch",
+        "price": 8
+      },
+      {
+        "item_id": "dragons_scale",
+        "price": 20
+      }
+    ],
+    "map_key": "brecconary-1f",
+    "npc_tile": [
+      26,
+      26
+    ],
+    "desk_tile": [
+      25,
+      26
+    ]
+  },
+  {
+    "id": "bre003",
+    "location_id": "brecconary",
+    "location_name": "Brecconary",
+    "type": "remove_curse_shop",
+    "npc_type": "lady",
+    "npc_facing": "left",
+    "inventory": [
+      {
+        "item_id": "remove_curse",
+        "price": 0
+      }
+    ],
+    "map_key": "brecconary-1f",
+    "npc_tile": [
+      25,
+      5
+    ],
+    "desk_tile": [
+      24,
+      5
+    ]
+  },
+  {
+    "id": "bre003",
+    "location_id": "brecconary",
+    "location_name": "Brecconary",
+    "npc_type": "",
+    "npc_facing": "",
+    "type": "item_shop",
+    "inventory": [
+      {
+        "item_id": "fairy_water",
+        "price": 38
+      }
+    ],
+    "map_key": "brecconary-1f",
+    "npc_tile": null
+  },
+  {
+    "id": "gar001",
+    "location_id": "garinham",
+    "location_name": "Garinham",
+    "npc_type": "",
+    "npc_facing": "",
+    "type": "item_shop",
+    "inventory": [
+      {
+        "item_id": "herb",
+        "price": 24
+      },
+      {
+        "item_id": "torch",
+        "price": 8
+      },
+      {
+        "item_id": "dragons_scale",
+        "price": 20
+      }
+    ],
+    "map_key": "garinham-1f",
+    "npc_tile": [
+      6,
+      12
+    ],
+    "desk_tile": [
+      5,
+      12
+    ]
+  },
+  {
+    "id": "gar002",
+    "location_id": "garinham",
+    "location_name": "Garinham",
+    "type": "weapon_armor_shop",
+    "npc_type": "",
+    "npc_facing": "",
+    "inventory": [
+      {
+        "item_id": "club",
+        "price": 60
+      },
+      {
+        "item_id": "copper_sword",
+        "price": 180
+      },
+      {
+        "item_id": "hand_axe",
+        "price": 560
+      },
+      {
+        "item_id": "leather_armor",
+        "price": 70
+      },
+      {
+        "item_id": "chain_mail",
+        "price": 300
+      },
+      {
+        "item_id": "half_plate",
+        "price": 1000
+      },
+      {
+        "item_id": "large_shield",
+        "price": 800
+      }
+    ],
+    "map_key": "garinham-1f",
+    "npc_tile": [
+      11,
+      19
+    ],
+    "desk_tile": [
+      11,
+      18
+    ]
+  },
+  {
+    "id": "kol001",
+    "location_id": "kol",
+    "location_name": "Kol",
+    "type": "weapon_armor_shop",
+    "npc_type": "",
+    "npc_facing": "",
+    "inventory": [
+      {
+        "item_id": "copper_sword",
+        "price": 180
+      },
+      {
+        "item_id": "hand_axe",
+        "price": 560
+      },
+      {
+        "item_id": "half_plate",
+        "price": 1000
+      },
+      {
+        "item_id": "full_plate",
+        "price": 3000
+      },
+      {
+        "item_id": "small_shield",
+        "price": 90
+      }
+    ],
+    "map_key": "kol-1f",
+    "npc_tile": [
+      23,
+      13
+    ],
+    "desk_tile": [
+      22,
+      13
+    ]
+  },
+  {
+    "id": "kol002",
+    "location_id": "kol",
+    "location_name": "Kol",
+    "type": "item_shop",
+    "npc_type": "",
+    "npc_facing": "",
+    "inventory": [
+      {
+        "item_id": "herb",
+        "price": 24
+      },
+      {
+        "item_id": "torch",
+        "price": 8
+      },
+      {
+        "item_id": "dragons_scale",
+        "price": 20
+      },
+      {
+        "item_id": "wings",
+        "price": 70
+      }
+    ],
+    "map_key": "kol-1f",
+    "npc_tile": [
+      15,
+      22
+    ],
+    "desk_tile": [
+      14,
+      22
+    ]
+  },
+  {
+    "id": "rim001",
+    "location_id": "rimuldar",
+    "location_name": "Rimuldar",
+    "type": "weapon_armor_shop",
+    "npc_type": "",
+    "npc_facing": "",
+    "inventory": [
+      {
+        "item_id": "copper_sword",
+        "price": 180
+      },
+      {
+        "item_id": "hand_axe",
+        "price": 560
+      },
+      {
+        "item_id": "broad_sword",
+        "price": 1500
+      },
+      {
+        "item_id": "half_plate",
+        "price": 1000
+      },
+      {
+        "item_id": "full_plate",
+        "price": 3000
+      },
+      {
+        "item_id": "magic_armor",
+        "price": 7700
+      }
+    ],
+    "map_key": "rimuldar-1f",
+    "npc_tile": [
+      24,
+      8
+    ],
+    "desk_tile": [
+      24,
+      9
+    ]
+  },
+  {
+    "id": "rim002",
+    "location_id": "rimuldar",
+    "location_name": "Rimuldar",
+    "type": "key_shop",
+    "npc_type": "",
+    "npc_facing": "",
+    "inventory": [
+      {
+        "item_id": "magic_key",
+        "price": 53
+      }
+    ],
+    "map_key": "rimuldar-1f",
+    "npc_tile": [
+      5,
+      8
+    ],
+    "desk_tile": [
+      5,
+      7
+    ]
+  },
+  {
+    "id": "can001",
+    "location_id": "cantlin",
+    "location_name": "Cantlin",
+    "type": "weapon_armor_shop",
+    "npc_type": "",
+    "npc_facing": "",
+    "inventory": [
+      {
+        "item_id": "bamboo_pole",
+        "price": 10
+      },
+      {
+        "item_id": "club",
+        "price": 60
+      },
+      {
+        "item_id": "copper_sword",
+        "price": 180
+      },
+      {
+        "item_id": "leather_armor",
+        "price": 70
+      },
+      {
+        "item_id": "chain_mail",
+        "price": 300
+      },
+      {
+        "item_id": "large_shield",
+        "price": 180
+      }
+    ],
+    "map_key": "cantlin-1f",
+    "npc_tile": [
+      23,
+      5
+    ],
+    "desk_tile": [
+      22,
+      5
+    ]
+  },
+  {
+    "id": "can002",
+    "location_id": "cantlin",
+    "location_name": "Cantlin",
+    "type": "weapon_armor_shop",
+    "npc_type": "",
+    "npc_facing": "",
+    "inventory": [
+      {
+        "item_id": "flame_sword",
+        "price": 9800
+      },
+      {
+        "item_id": "silver_shield",
+        "price": 14800
+      }
+    ],
+    "map_key": "cantlin-1f",
+    "npc_tile": [
+      25,
+      13
+    ],
+    "desk_tile": [
+      26,
+      13
+    ]
+  },
+  {
+    "id": "can004",
+    "location_id": "cantlin",
+    "location_name": "Cantlin",
+    "type": "key_shop",
+    "npc_type": "",
+    "npc_facing": "",
+    "inventory": [
+      {
+        "item_id": "magic_key",
+        "price": 98
+      }
+    ],
+    "map_key": "cantlin-1f",
+    "npc_tile": [
+      28,
+      7
+    ],
+    "desk_tile": [
+      28,
+      8
+    ]
+  },
+  {
+    "id": "can005",
+    "location_id": "cantlin",
+    "location_name": "Cantlin",
+    "type": "item_shop",
+    "npc_type": "",
+    "npc_facing": "",
+    "inventory": [
+      {
+        "item_id": "fairy_water",
+        "price": 38
+      },
+      {
+        "item_id": "dragons_scale",
+        "price": 20
+      },
+      {
+        "item_id": "wings",
+        "price": 70
+      }
+    ],
+    "map_key": "cantlin-1f",
+    "npc_tile": [
+      28,
+      27
+    ],
+    "desk_tile": [
+      27,
+      27
+    ]
+  },
+  {
+    "id": "can007",
+    "location_id": "cantlin",
+    "location_name": "Cantlin",
+    "type": "item_shop",
+    "npc_type": "",
+    "npc_facing": "",
+    "inventory": [
+
+    ],
+    "map_key": "cantlin-1f",
+    "npc_tile": [
+      3,
+      8
+    ],
+    "desk_tile": [
+      4,
+      8
+    ]
+  }
+]

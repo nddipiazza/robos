@@ -1,0 +1,351 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Dragon Warrior Game Control Service API",
+    "description": "Contract-based HTTP web service for controlling the Dragon Warrior Godot game, querying scene state, hero position, dialogue text, command window visibility, combat info, and encounter RNG data.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Local Godot Game Control Server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "description": "Server health status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contract": {
+      "get": {
+        "summary": "API Contract Specification",
+        "operationId": "getContract",
+        "responses": {
+          "200": {
+            "description": "OpenAPI 3.0 Specification JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/screen": {
+      "get": {
+        "summary": "Get Display Screen Contents",
+        "operationId": "getScreenContents",
+        "responses": {
+          "200": {
+            "description": "Grid snapshot of all currently displayed tiles with hero, NPCs, chests, shop desks, doors, and stairs info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenContentsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/screen": {
+      "get": {
+        "summary": "Get Display Screen Contents",
+        "operationId": "getScreenContentsV1",
+        "responses": {
+          "200": {
+            "description": "Grid snapshot of all currently displayed tiles with hero, NPCs, chests, shop desks, doors, and stairs info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreenContentsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/state": {
+      "get": {
+        "summary": "Get Current Game and Scene State",
+        "operationId": "getGameState",
+        "responses": {
+          "200": {
+            "description": "Complete snapshot of scene, hero, dialogue, menu, battle, and encounter RNG state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameStateResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/input": {
+      "post": {
+        "summary": "Inject Keyboard / Action Input Event",
+        "operationId": "sendInput",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InputRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Input processed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/command": {
+      "post": {
+        "summary": "Execute High-Level Game Command",
+        "operationId": "sendCommand",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommandRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Command executed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "ok" },
+          "version": { "type": "string", "example": "1.0.0" },
+          "game_running": { "type": "boolean", "example": true },
+          "fps": { "type": "number", "example": 60.0 }
+        },
+        "required": ["status", "version", "game_running"]
+      },
+      "GameStateResponse": {
+        "type": "object",
+        "properties": {
+          "scene_shown": {
+            "type": "object",
+            "properties": {
+              "path": { "type": "string", "example": "res://scenes/WorldMap.tscn" },
+              "name": { "type": "string", "example": "WorldMap" }
+            }
+          },
+          "hero_position": {
+            "type": "object",
+            "properties": {
+              "x": { "type": "integer", "example": 45 },
+              "y": { "type": "integer", "example": 45 },
+              "facing": { "type": "string", "example": "down" },
+              "location_id": { "type": "string", "example": "overworld" },
+              "floor_id": { "type": "string", "example": "main" }
+            }
+          },
+          "game_state": {
+            "type": "object",
+            "properties": {
+              "hero_name": { "type": "string", "example": "ERDRICK" },
+              "level": { "type": "integer", "example": 1 },
+              "hp": { "type": "integer", "example": 15 },
+              "hp_max": { "type": "integer", "example": 15 },
+              "mp": { "type": "integer", "example": 0 },
+              "mp_max": { "type": "integer", "example": 0 },
+              "gold": { "type": "integer", "example": 120 },
+              "inventory": { "type": "array", "items": { "type": "string" } },
+              "equipment": {
+                "type": "object",
+                "properties": {
+                  "weapon": { "type": "string" },
+                  "armor": { "type": "string" },
+                  "shield": { "type": "string" }
+                }
+              },
+              "spells": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "dialog_box": {
+            "type": "object",
+            "properties": {
+              "is_showing": { "type": "boolean", "example": false },
+              "text": { "type": "string", "example": "" },
+              "speaker": { "type": "string", "example": "" },
+              "current_page": { "type": "integer", "example": 0 },
+              "total_pages": { "type": "integer", "example": 0 }
+            }
+          },
+          "command_window": {
+            "type": "object",
+            "properties": {
+              "is_showing": { "type": "boolean", "example": false },
+              "selected_index": { "type": "integer", "example": 0 },
+              "menu_items": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "battle": {
+            "type": "object",
+            "properties": {
+              "is_battle": { "type": "boolean", "example": false },
+              "phase": { "type": "string", "example": "INACTIVE" },
+              "battle_scene_info": {
+                "type": "object",
+                "properties": {
+                  "monster_name": { "type": "string" },
+                  "monster_hp": { "type": "integer" },
+                  "monster_max_hp": { "type": "integer" },
+                  "monster_atk": { "type": "integer" },
+                  "monster_def": { "type": "integer" }
+                }
+              }
+            }
+          },
+          "encounter_rng": {
+            "type": "object",
+            "properties": {
+              "zone_id": { "type": "integer", "example": 0 },
+              "rate_key": { "type": "string", "example": "grass" },
+              "denominator": { "type": "integer", "example": 24 },
+              "last_roll": { "type": "integer", "example": 15 },
+              "step_count": { "type": "integer", "example": 12 }
+            }
+          }
+        }
+      },
+      "InputRequest": {
+        "type": "object",
+        "properties": {
+          "action": { "type": "string", "description": "Action name like move_up, move_down, move_left, move_right, ui_accept, ui_cancel, cmd_menu", "example": "move_down" },
+          "key": { "type": "string", "description": "Physical key name like z, x, up, down, left, right, enter, space", "example": "z" },
+          "pressed": { "type": "boolean", "default": true },
+          "duration": { "type": "number", "default": 0.15, "description": "Hold duration in seconds" },
+          "actions": {
+            "type": "array",
+            "description": "Optional list of action items to execute sequentially",
+            "items": { "type": "object" }
+          }
+        }
+      },
+      "CommandRequest": {
+        "type": "object",
+        "properties": {
+          "command": { "type": "string", "example": "load_scene" },
+          "args": { "type": "object", "example": { "path": "res://scenes/ThroneRoom.tscn" } }
+        },
+        "required": ["command"]
+      },
+      "ActionResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Input event processed successfully" }
+        }
+      },
+      "ScreenContentsResponse": {
+        "type": "object",
+        "properties": {
+          "viewport": {
+            "type": "object",
+            "properties": {
+              "width": { "type": "integer", "example": 512 },
+              "height": { "type": "integer", "example": 480 },
+              "tile_size": { "type": "integer", "example": 32 }
+            }
+          },
+          "camera": {
+            "type": "object",
+            "properties": {
+              "x": { "type": "number", "example": 1456.0 },
+              "y": { "type": "number", "example": 1456.0 }
+            }
+          },
+          "bounds": {
+            "type": "object",
+            "properties": {
+              "min_col": { "type": "integer", "example": 37 },
+              "min_row": { "type": "integer", "example": 37 },
+              "max_col": { "type": "integer", "example": 53 },
+              "max_row": { "type": "integer", "example": 52 },
+              "cols": { "type": "integer", "example": 17 },
+              "rows": { "type": "integer", "example": 16 }
+            }
+          },
+          "hero": {
+            "type": "object",
+            "properties": {
+              "col": { "type": "integer", "example": 45 },
+              "row": { "type": "integer", "example": 45 },
+              "facing": { "type": "string", "example": "down" }
+            }
+          },
+          "tiles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "col": { "type": "integer" },
+                "row": { "type": "integer" },
+                "tile_id": { "type": "integer" },
+                "walkable": { "type": "boolean" },
+                "is_hero": { "type": "boolean" },
+                "npc": { "type": "object", "nullable": true },
+                "chest": { "type": "object", "nullable": true },
+                "shop_desk": { "type": "object", "nullable": true },
+                "door": { "type": "object", "nullable": true },
+                "stairs": { "type": "object", "nullable": true }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

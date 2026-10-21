@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://dvfvdwwnd51s1"]
+
+[ext_resource type="Script" uid="uid://6gy4lt6h21d2" path="res://scripts/NPCSpriteFiles.gd" id="1_script"]
+
+[node name="Merchant" type="Node2D"]
+script = ExtResource("1_script")
+down_frame_1 = "res://assets/sprites/npc/053_r3_c8.png"
+down_frame_2 = "res://assets/sprites/npc/054_r3_c9.png"
+left_frame_1 = "res://assets/sprites/npc/055_r3_c10.png"
+left_frame_2 = "res://assets/sprites/npc/056_r3_c11.png"
+up_frame_1 = "res://assets/sprites/npc/057_r3_c12.png"
+up_frame_2 = "res://assets/sprites/npc/058_r3_c13.png"
+right_frame_1 = "res://assets/sprites/npc/059_r3_c14.png"
+right_frame_2 = "res://assets/sprites/npc/059_r3_c14.png"

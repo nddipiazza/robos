@@ -1,0 +1,58 @@
+{
+  "game": "Dragon Warrior (NES)",
+  "source": "https://guides.gamercorner.net/dw/",
+  "sections": [
+    {
+      "slug": "arms",
+      "label": "Arms"
+    },
+    {
+      "slug": "items",
+      "label": "Items"
+    },
+    {
+      "slug": "monsters",
+      "label": "Monsters"
+    },
+    {
+      "slug": "spells",
+      "label": "Spells"
+    },
+    {
+      "slug": "locations",
+      "label": "Locations"
+    },
+    {
+      "slug": "encounters",
+      "label": "Encounters"
+    },
+    {
+      "slug": "bosses",
+      "label": "Bosses"
+    },
+    {
+      "slug": "levels",
+      "label": "Levels"
+    },
+    {
+      "slug": "location-floors",
+      "label": "Location Floors"
+    },
+    {
+      "slug": "treasures",
+      "label": "Treasures"
+    },
+    {
+      "slug": "shops",
+      "label": "Shops"
+    },
+    {
+      "slug": "doors",
+      "label": "Doors"
+    },
+    {
+      "slug": "name-stats",
+      "label": "Name Stats"
+    }
+  ]
+}

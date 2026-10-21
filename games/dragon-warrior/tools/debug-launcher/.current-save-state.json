@@ -1,0 +1,44 @@
+{
+  "name": "Level 19 - Charlock Entrance",
+  "description": "Level 19 Charlock entrance preset with Hurtmore unlocked and the Rainbow Bridge already built.",
+  "scene": "CharlockCastle1F",
+  "tile": "11,20",
+  "facing": "up",
+  "come_from": "world_map",
+  "gold": 18000,
+  "heroName": "ERDRICK",
+  "heroLevel": 19,
+  "heroHp": 130,
+  "heroHpMax": 130,
+  "heroMp": 108,
+  "heroMpMax": 108,
+  "heroStr": 32,
+  "heroAgl": 34,
+  "heroAtk": 32,
+  "heroDef": 32,
+  "heroExp": 25000,
+  "heroWeapon": "flame_sword",
+  "heroArmor": "erdricks_armor",
+  "heroSpells": [
+    "heal",
+    "hurt",
+    "sleep",
+    "radiant",
+    "stopspell",
+    "outside",
+    "return",
+    "repel",
+    "healmore",
+    "hurtmore"
+  ],
+  "items": [
+    {
+      "name": "Fairy Flute",
+      "id": "fairy_flute",
+      "desc": "Puts the Golem boss to sleep; required to defeat the Golem"
+    }
+  ],
+  "openedChests": {},
+  "unlockedDoors": {},
+  "bridgeBuilt": true
+}

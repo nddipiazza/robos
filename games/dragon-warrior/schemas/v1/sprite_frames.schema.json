@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dragonwarrior.org/schemas/v1/sprite_frames.schema.json",
+  "title": "SpriteFramesDataStoreV1",
+  "description": "Schema for character and monster sprite animation sheets, pixel bounding rects, and directional animation frame metadata.",
+  "type": "object",
+  "properties": {
+    "comment": { "type": "string" },
+    "characters": {
+      "type": "object",
+      "properties": {
+        "sheet": { "type": "string" },
+        "stride": { "type": "integer" },
+        "size": { "type": "integer" }
+      },
+      "required": ["sheet"]
+    },
+    "monsters": {
+      "type": "object",
+      "properties": {
+        "sheet": { "type": "string" }
+      },
+      "required": ["sheet"]
+    }
+  }
+}

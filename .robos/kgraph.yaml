@@ -81,6 +81,12 @@ packages:
     description: "Party-based tactical isometric cRPG ontology nodes, D&D 5e SRD entities, Flare RPG asset bindings, and map zones."
     path: "kgraphs/crpg/package.jsonld"
 
+  - id: "jrpg"
+    namespace: "robos.jrpg"
+    title: "2D JRPG Engine & Dragon Warrior Package"
+    description: "Classic 2D tile-based turn-based JRPG ontology nodes, 40 monsters, spells, equipment, quest items, 29 overworld/town/dungeon locations, and procedural copyright-free pixel-art assets."
+    path: "kgraphs/jrpg/package.jsonld"
+
   - id: "tabletop-game"
     namespace: "robos.tabletop"
     title: "Tabletop Dungeon Crawler & HeroQuest Ruleset Package"

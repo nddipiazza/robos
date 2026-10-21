@@ -1,0 +1,3 @@
+# Enforce Unix LF line endings for shell scripts and git configuration
+*.sh text eol=lf
+*.bash text eol=lf

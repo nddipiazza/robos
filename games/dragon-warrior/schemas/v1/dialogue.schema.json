@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dragonwarrior.org/schemas/v1/dialogue.schema.json",
+  "title": "DialogueDataStoreV1",
+  "description": "Schema for NPC dialogue strings, dialogue tree nodes, conditional dialogue triggers, and audio track references.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" }
+  },
+  "additionalProperties": {
+    "type": "object",
+    "properties": {
+      "music": { "type": "string" },
+      "npcs": {
+        "type": "object",
+        "additionalProperties": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            { "type": "object" }
+          ]
+        }
+      }
+    }
+  }
+}

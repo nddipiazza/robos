@@ -1,0 +1,133 @@
+{
+  "$schema": "../../schemas/v1/combat_formulas.schema.json",
+  "_source": "Ryan8bit Formula Guide v1.0 (GameFAQs #61640)",
+  "_note": "All resist values are out of 16; dodge values are out of 64",
+  "hero_attack_power": "hero_strength + weapon_attack",
+  "hero_defense_power": "floor(hero_agility / 2) + armor_defense + shield_defense + dragons_scale_bonus",
+  "enemy_attack_standard": {
+    "description": "Normal enemy physical attack when hero defense < enemy strength",
+    "damage_min": "(enemy_strength - floor(hero_defense / 2)) / 4",
+    "damage_max": "(enemy_strength - floor(hero_defense / 2)) / 2"
+  },
+  "enemy_attack_weak": {
+    "description": "Enemy attack when hero_defense >= enemy_strength",
+    "damage_min": 0,
+    "damage_max": "floor((enemy_strength + 4) / 6)"
+  },
+  "hero_attack_standard": {
+    "description": "Normal hero physical attack",
+    "damage_min": "floor((hero_attack - floor(enemy_agility / 2)) / 4)",
+    "damage_max": "floor((hero_attack - floor(enemy_agility / 2)) / 2)",
+    "note": "If result < 1: 50% chance to deal 0, 50% chance to deal 1"
+  },
+  "hero_attack_excellent": {
+    "description": "Critical hit — 1/32 chance per attack. Ignores enemy defense.",
+    "chance": "1/32",
+    "damage_min": "floor(hero_attack / 2)",
+    "damage_max": "hero_attack",
+    "note": "Not possible against Golem or either Dragonlord form"
+  },
+  "spells_hero": {
+    "hurt": {
+      "damage_min": 5,
+      "damage_max": 12
+    },
+    "hurtmore": {
+      "damage_min": 58,
+      "damage_max": 65
+    }
+  },
+  "spells_enemy": {
+    "hurt": {
+      "damage_min": 3,
+      "damage_max": 10,
+      "vs_magic_armor_min": 2,
+      "vs_magic_armor_max": 6
+    },
+    "hurtmore": {
+      "damage_min": 30,
+      "damage_max": 45,
+      "vs_magic_armor_min": 20,
+      "vs_magic_armor_max": 30
+    },
+    "heal": {
+      "hp_min": 20,
+      "hp_max": 27
+    },
+    "healmore": {
+      "hp_min": 85,
+      "hp_max": 100
+    },
+    "fire_weak": {
+      "damage_min": 16,
+      "damage_max": 23,
+      "vs_erdricks_armor_min": 10,
+      "vs_erdricks_armor_max": 14
+    },
+    "fire_strong": {
+      "damage_min": 65,
+      "damage_max": 72,
+      "vs_erdricks_armor_min": 42,
+      "vs_erdricks_armor_max": 48,
+      "note": "Only Dragonlord second form uses strong fire"
+    }
+  },
+  "spells_hero_heal": {
+    "herb": {
+      "hp_min": 23,
+      "hp_max": 30,
+      "formula": "RAND & 0x0F + 0x17"
+    },
+    "heal": {
+      "hp_min": 10,
+      "hp_max": 17,
+      "formula": "RAND & 0x07 + 0x0A"
+    },
+    "healmore": {
+      "hp_min": 85,
+      "hp_max": 100,
+      "formula": "RAND & 0x0F + 0x55"
+    }
+  },
+  "sleep": {
+    "hero_vs_enemy": "Blocked by enemy resist_sleep (X/16 chance to resist). If lands: guaranteed 1 turn, then 1/3 chance to wake each turn. Max 6 turns due to RNG limits.",
+    "enemy_vs_hero": "Always lands (no resistance). 50/50 chance to wake each turn. Max 6 turns."
+  },
+  "stopspell": {
+    "hero_vs_enemy": "Blocked by enemy resist_stopspell (X/16). Never loses effect once landed.",
+    "enemy_vs_hero": "50% chance to work. Erdrick's Armor: immune to stopspell."
+  },
+  "running": {
+    "enemy_runs": "If hero_strength >= 2 * enemy_strength: 25% chance enemy runs each turn (also checked at encounter start)",
+    "hero_runs": {
+      "formula": "If hero_agility * RAND < enemy_agility * RAND * group_factor: blocked",
+      "rand_range": "0-255",
+      "group_factors": {
+        "group_1": {
+          "monsters": "id 0-19",
+          "factor": 0.25
+        },
+        "group_2": {
+          "monsters": "id 20-29",
+          "factor": 0.375
+        },
+        "group_3": {
+          "monsters": "id 30-34",
+          "factor": 0.5
+        },
+        "group_4": {
+          "monsters": "id 35-39",
+          "factor": 1.0
+        }
+      },
+      "note": "Can always run from sleeping monsters. Can run from Dragonlord (restarts fight)."
+    }
+  },
+  "initiative": {
+    "description": "Same formula as hero running vs Group 1 enemies. If blocked, enemy goes first."
+  },
+  "dodge": {
+    "description": "Enemy dodge chance is dodge_value / 64 per hero attack. Applies to excellent moves too.",
+    "note": "Golem and Dragonlord have 0 dodge. Hero cannot dodge."
+  }
+}

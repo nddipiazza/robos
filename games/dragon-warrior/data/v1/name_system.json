@@ -1,0 +1,349 @@
+{
+  "$schema": "../../schemas/v1/name_system.schema.json",
+  "_source": "Ryan8bit Formula Guide v1.0",
+  "description": "The first 4 letters of the hero's name affect stats. Each character maps to a value 0-15.",
+  "char_values": {
+    "a": 0,
+    "b": 1,
+    "c": 2,
+    "d": 3,
+    "e": 4,
+    "f": 5,
+    "g": 6,
+    "h": 7,
+    "i": 8,
+    "j": 9,
+    "k": 10,
+    "l": 11,
+    "m": 12,
+    "n": 13,
+    "o": 14,
+    "p": 15,
+    "q": 0,
+    "r": 1,
+    "s": 2,
+    "t": 3,
+    "u": 4,
+    "v": 5,
+    "w": 6,
+    "x": 7,
+    "y": 8,
+    "z": 9,
+    "A": 10,
+    "B": 11,
+    "C": 12,
+    "D": 13,
+    "E": 14,
+    "F": 15,
+    "G": 0,
+    "H": 1,
+    "I": 2,
+    "J": 3,
+    "K": 4,
+    "L": 5,
+    "M": 6,
+    "N": 7,
+    "O": 8,
+    "P": 9,
+    "Q": 10,
+    "R": 11,
+    "S": 12,
+    "T": 13,
+    "U": 14,
+    "V": 15,
+    "W": 0,
+    "X": 1,
+    "Y": 2,
+    "Z": 3,
+    "'": 4,
+    ".": 9,
+    ",": 10,
+    "-": 11,
+    " ": 12,
+    "?": 13,
+    "!": 14,
+    ")": 0,
+    "(": 1
+  },
+  "steps": [
+    "Sum the values of the first 4 characters: name_sum = char_val[0] + char_val[1] + char_val[2] + char_val[3]",
+    "growth_type = name_sum % 4",
+    "bonus = floor(name_sum / 4) % 4"
+  ],
+  "growth_types": {
+    "0": {
+      "long_term": [
+        "hp",
+        "mp"
+      ],
+      "short_term": [
+        "strength",
+        "agility"
+      ]
+    },
+    "1": {
+      "long_term": [
+        "strength",
+        "hp"
+      ],
+      "short_term": [
+        "agility",
+        "mp"
+      ]
+    },
+    "2": {
+      "long_term": [
+        "agility",
+        "mp"
+      ],
+      "short_term": [
+        "strength",
+        "hp"
+      ]
+    },
+    "3": {
+      "long_term": [
+        "strength",
+        "agility"
+      ],
+      "short_term": [
+        "hp",
+        "mp"
+      ]
+    }
+  },
+  "stat_formula": {
+    "long_term_stat": "base_stat (unchanged from table)",
+    "short_term_stat": "floor(base_stat * 9 / 10) + bonus"
+  },
+  "base_stat_table": [
+    {
+      "level": 1,
+      "strength": 4,
+      "agility": 4,
+      "hp": 15,
+      "mp": 0
+    },
+    {
+      "level": 2,
+      "strength": 5,
+      "agility": 4,
+      "hp": 22,
+      "mp": 0
+    },
+    {
+      "level": 3,
+      "strength": 7,
+      "agility": 6,
+      "hp": 24,
+      "mp": 5
+    },
+    {
+      "level": 4,
+      "strength": 7,
+      "agility": 8,
+      "hp": 31,
+      "mp": 16
+    },
+    {
+      "level": 5,
+      "strength": 12,
+      "agility": 10,
+      "hp": 35,
+      "mp": 20
+    },
+    {
+      "level": 6,
+      "strength": 16,
+      "agility": 10,
+      "hp": 38,
+      "mp": 24
+    },
+    {
+      "level": 7,
+      "strength": 18,
+      "agility": 17,
+      "hp": 40,
+      "mp": 26
+    },
+    {
+      "level": 8,
+      "strength": 22,
+      "agility": 20,
+      "hp": 46,
+      "mp": 29
+    },
+    {
+      "level": 9,
+      "strength": 30,
+      "agility": 22,
+      "hp": 50,
+      "mp": 36
+    },
+    {
+      "level": 10,
+      "strength": 35,
+      "agility": 31,
+      "hp": 54,
+      "mp": 40
+    },
+    {
+      "level": 11,
+      "strength": 40,
+      "agility": 35,
+      "hp": 62,
+      "mp": 50
+    },
+    {
+      "level": 12,
+      "strength": 48,
+      "agility": 40,
+      "hp": 63,
+      "mp": 58
+    },
+    {
+      "level": 13,
+      "strength": 52,
+      "agility": 48,
+      "hp": 70,
+      "mp": 64
+    },
+    {
+      "level": 14,
+      "strength": 60,
+      "agility": 55,
+      "hp": 78,
+      "mp": 70
+    },
+    {
+      "level": 15,
+      "strength": 68,
+      "agility": 64,
+      "hp": 86,
+      "mp": 72
+    },
+    {
+      "level": 16,
+      "strength": 72,
+      "agility": 70,
+      "hp": 92,
+      "mp": 95
+    },
+    {
+      "level": 17,
+      "strength": 72,
+      "agility": 78,
+      "hp": 100,
+      "mp": 100
+    },
+    {
+      "level": 18,
+      "strength": 85,
+      "agility": 84,
+      "hp": 115,
+      "mp": 108
+    },
+    {
+      "level": 19,
+      "strength": 87,
+      "agility": 86,
+      "hp": 130,
+      "mp": 115
+    },
+    {
+      "level": 20,
+      "strength": 92,
+      "agility": 88,
+      "hp": 138,
+      "mp": 128
+    },
+    {
+      "level": 21,
+      "strength": 95,
+      "agility": 90,
+      "hp": 149,
+      "mp": 135
+    },
+    {
+      "level": 22,
+      "strength": 97,
+      "agility": 90,
+      "hp": 158,
+      "mp": 146
+    },
+    {
+      "level": 23,
+      "strength": 99,
+      "agility": 94,
+      "hp": 165,
+      "mp": 153
+    },
+    {
+      "level": 24,
+      "strength": 103,
+      "agility": 98,
+      "hp": 170,
+      "mp": 161
+    },
+    {
+      "level": 25,
+      "strength": 113,
+      "agility": 100,
+      "hp": 174,
+      "mp": 161
+    },
+    {
+      "level": 26,
+      "strength": 117,
+      "agility": 105,
+      "hp": 180,
+      "mp": 168
+    },
+    {
+      "level": 27,
+      "strength": 125,
+      "agility": 107,
+      "hp": 189,
+      "mp": 175
+    },
+    {
+      "level": 28,
+      "strength": 130,
+      "agility": 115,
+      "hp": 195,
+      "mp": 180
+    },
+    {
+      "level": 29,
+      "strength": 135,
+      "agility": 120,
+      "hp": 200,
+      "mp": 190
+    },
+    {
+      "level": 30,
+      "strength": 140,
+      "agility": 130,
+      "hp": 210,
+      "mp": 200
+    }
+  ],
+  "example": {
+    "name": "Erdrick",
+    "used_chars": "Erdr",
+    "char_values": {
+      "E": 4,
+      "r": 1,
+      "d": 3
+    },
+    "name_sum": 43,
+    "growth_type": 3,
+    "bonus": 2,
+    "level_20_result": {
+      "strength": 92,
+      "agility": 88,
+      "hp": 126,
+      "mp": 117
+    }
+  }
+}

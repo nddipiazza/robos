@@ -1,0 +1,200 @@
+openapi: 3.0.3
+info:
+  title: Dragon Warrior Game Control Service API
+  description: Contract-based HTTP web service for controlling the Dragon Warrior Godot game, querying scene state, hero position, dialogue text, command window visibility, combat info, and encounter RNG data.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local Godot Game Control Server
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      operationId: getHealth
+      responses:
+        '200':
+          description: Server health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /contract:
+    get:
+      summary: API Contract Specification
+      operationId: getContract
+      responses:
+        '200':
+          description: OpenAPI 3.0 Specification JSON
+
+  /screen:
+    get:
+      summary: Get Display Screen Contents
+      operationId: getScreenContents
+      responses:
+        '200':
+          description: Grid snapshot of all currently displayed tiles with hero, NPCs, chests, shop desks, doors, and stairs info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreenContentsResponse'
+
+  /api/v1/screen:
+    get:
+      summary: Get Display Screen Contents
+      operationId: getScreenContentsV1
+      responses:
+        '200':
+          description: Grid snapshot of all currently displayed tiles with hero, NPCs, chests, shop desks, doors, and stairs info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreenContentsResponse'
+
+  /api/v1/state:
+    get:
+      summary: Get Current Game and Scene State
+      operationId: getGameState
+      responses:
+        '200':
+          description: Complete snapshot of scene, hero, dialogue, menu, battle, and encounter RNG state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameStateResponse'
+
+  /api/v1/input:
+    post:
+      summary: Inject Keyboard / Action Input Event
+      operationId: sendInput
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InputRequest'
+      responses:
+        '200':
+          description: Input processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResponse'
+
+  /api/v1/command:
+    post:
+      summary: Execute High-Level Game Command
+      operationId: sendCommand
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+      responses:
+        '200':
+          description: Command executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionResponse'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        version:
+          type: string
+        game_running:
+          type: boolean
+        fps:
+          type: number
+      required:
+        - status
+        - version
+        - game_running
+
+    GameStateResponse:
+      type: object
+      properties:
+        scene_shown:
+          type: object
+          properties:
+            path:
+              type: string
+            name:
+              type: string
+        hero_position:
+          type: object
+          properties:
+            x:
+              type: integer
+            y:
+              type: integer
+            facing:
+              type: string
+            location_id:
+              type: string
+            floor_id:
+              type: string
+        game_state:
+          type: object
+        dialog_box:
+          type: object
+        command_window:
+          type: object
+        battle:
+          type: object
+        encounter_rng:
+          type: object
+
+    InputRequest:
+      type: object
+      properties:
+        action:
+          type: string
+        key:
+          type: string
+        pressed:
+          type: boolean
+        duration:
+          type: number
+
+    CommandRequest:
+      type: object
+      properties:
+        command:
+          type: string
+        args:
+          type: object
+      required:
+        - command
+
+    ActionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    ScreenContentsResponse:
+      type: object
+      properties:
+        viewport:
+          type: object
+        camera:
+          type: object
+        bounds:
+          type: object
+        hero:
+          type: object
+        tiles:
+          type: array
+          items:
+            type: object
+

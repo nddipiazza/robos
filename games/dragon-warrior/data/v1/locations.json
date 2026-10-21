@@ -1,0 +1,458 @@
+[
+  {
+    "id": "tantegel_castle",
+    "name": "Tantegel Castle",
+    "type": "castle",
+    "description": "Starting location. Home of King Loric and the stolen Ball of Light.",
+    "inn_price": null,
+    "has_save": true,
+    "npcs": [
+      {
+        "label": "King Loric",
+        "action": "saves your game"
+      },
+      {
+        "label": "Old Man",
+        "action": "restores all MP for free"
+      }
+    ],
+    "shops": [
+      {
+        "type": "key_shop",
+        "inventory": [
+          {
+            "item_id": "magic_key",
+            "price": 85
+          }
+        ]
+      }
+    ],
+    "chests": [
+      {
+        "contents": "120 G"
+      },
+      {
+        "contents": "Torch"
+      },
+      {
+        "contents": "Magic Key"
+      },
+      {
+        "contents": "6-13 G"
+      },
+      {
+        "contents": "6-13 G"
+      }
+    ],
+    "quest_items": [
+      "stones_of_sunlight"
+    ],
+    "encounters": [],
+    "connected_to": [
+      "overworld"
+    ]
+  },
+  {
+    "id": "brecconary",
+    "name": "Brecconary",
+    "type": "town",
+    "description": "The first town outside Tantegel Castle. Starting gear and supplies are available here.",
+    "inn_price": 6,
+    "has_curse_removal": true,
+    "shops": [
+      {
+        "type": "weapon_armor_shop",
+        "inventory": [
+          {
+            "item_id": "bamboo_pole",
+            "price": 10
+          },
+          {
+            "item_id": "club",
+            "price": 60
+          },
+          {
+            "item_id": "copper_sword",
+            "price": 180
+          },
+          {
+            "item_id": "clothes",
+            "price": 20
+          },
+          {
+            "item_id": "leather_armor",
+            "price": 70
+          },
+          {
+            "item_id": "small_shield",
+            "price": 90
+          }
+        ]
+      },
+      {
+        "type": "item_shop",
+        "inventory": [
+          {
+            "item_id": "herb",
+            "price": 24
+          },
+          {
+            "item_id": "torch",
+            "price": 8
+          },
+          {
+            "item_id": "dragons_scale",
+            "price": 20
+          }
+        ]
+      },
+      {
+        "type": "item_shop",
+        "inventory": [
+          {
+            "item_id": "fairy_water",
+            "price": 38
+          }
+        ]
+      }
+    ],
+    "chests": [],
+    "encounters": [],
+    "connected_to": [
+      "overworld",
+      "tantegel_castle"
+    ]
+  },
+  {
+    "id": "garinham",
+    "name": "Garinham",
+    "type": "town",
+    "description": "Town in the northern part of Alefgard. Entrance to Garin's Grave (dungeon) is inside.",
+    "inn_price": 25,
+    "shops": [
+      {
+        "type": "item_shop",
+        "inventory": [
+          {
+            "item_id": "herb",
+            "price": 24
+          },
+          {
+            "item_id": "torch",
+            "price": 8
+          },
+          {
+            "item_id": "dragons_scale",
+            "price": 20
+          }
+        ]
+      },
+      {
+        "type": "weapon_armor_shop",
+        "inventory": [
+          {
+            "item_id": "club",
+            "price": 60
+          },
+          {
+            "item_id": "copper_sword",
+            "price": 180
+          },
+          {
+            "item_id": "hand_axe",
+            "price": 560
+          },
+          {
+            "item_id": "leather_armor",
+            "price": 70
+          },
+          {
+            "item_id": "chain_mail",
+            "price": 300
+          },
+          {
+            "item_id": "half_plate",
+            "price": 1000
+          },
+          {
+            "item_id": "large_shield",
+            "price": 800
+          }
+        ]
+      }
+    ],
+    "chests": [
+      {
+        "contents": "10-16 G"
+      },
+      {
+        "contents": "Torch"
+      },
+      {
+        "contents": "Herb"
+      }
+    ],
+    "encounters": [],
+    "dungeon_entrance": "garins_grave",
+    "connected_to": [
+      "overworld"
+    ]
+  },
+  {
+    "id": "kol",
+    "name": "Kol",
+    "type": "town",
+    "description": "Town in the northeast. Fairy Flute is found here (4 steps south of the bath).",
+    "inn_price": 20,
+    "quest_items": [
+      "fairy_flute"
+    ],
+    "shops": [
+      {
+        "type": "weapon_armor_shop",
+        "inventory": [
+          {
+            "item_id": "copper_sword",
+            "price": 180
+          },
+          {
+            "item_id": "hand_axe",
+            "price": 560
+          },
+          {
+            "item_id": "half_plate",
+            "price": 1000
+          },
+          {
+            "item_id": "full_plate",
+            "price": 3000
+          },
+          {
+            "item_id": "small_shield",
+            "price": 90
+          }
+        ]
+      },
+      {
+        "type": "item_shop",
+        "inventory": [
+          {
+            "item_id": "herb",
+            "price": 24
+          },
+          {
+            "item_id": "torch",
+            "price": 8
+          },
+          {
+            "item_id": "dragons_scale",
+            "price": 20
+          },
+          {
+            "item_id": "wings",
+            "price": 70
+          }
+        ]
+      }
+    ],
+    "chests": [],
+    "encounters": [],
+    "connected_to": [
+      "overworld"
+    ]
+  },
+  {
+    "id": "rimuldar",
+    "name": "Rimuldar",
+    "type": "town",
+    "description": "Town in the southeast. The cheapest Magic Keys are sold here (53 G).",
+    "inn_price": 55,
+    "shops": [
+      {
+        "type": "weapon_armor_shop",
+        "inventory": [
+          {
+            "item_id": "copper_sword",
+            "price": 180
+          },
+          {
+            "item_id": "hand_axe",
+            "price": 560
+          },
+          {
+            "item_id": "broad_sword",
+            "price": 1500
+          },
+          {
+            "item_id": "half_plate",
+            "price": 1000
+          },
+          {
+            "item_id": "full_plate",
+            "price": 3000
+          },
+          {
+            "item_id": "magic_armor",
+            "price": 7700
+          }
+        ]
+      },
+      {
+        "type": "key_shop",
+        "inventory": [
+          {
+            "item_id": "magic_key",
+            "price": 53
+          }
+        ]
+      }
+    ],
+    "chests": [
+      {
+        "contents": "Wings"
+      }
+    ],
+    "encounters": [],
+    "connected_to": [
+      "overworld"
+    ]
+  },
+  {
+    "id": "hauksness",
+    "name": "Hauksness",
+    "type": "town",
+    "description": "Ruined town. Erdrick's Armor is under a tree here, guarded by an Axe Knight.",
+    "inn_price": null,
+    "shops": [],
+    "chests": [],
+    "quest_items": [
+      "erdricks_armor"
+    ],
+    "encounters": [
+      "green_dragon",
+      "starwyvern",
+      "werewolf",
+      "wizard"
+    ],
+    "connected_to": [
+      "overworld"
+    ]
+  },
+  {
+    "id": "cantlin",
+    "name": "Cantlin",
+    "type": "town",
+    "description": "Largest town; guarded by the Golem boss. Has the best equipment in the game.",
+    "inn_price": 100,
+    "boss_encounter": "golem",
+    "shops": [
+      {
+        "type": "weapon_armor_shop",
+        "inventory": [
+          {
+            "item_id": "bamboo_pole",
+            "price": 10
+          },
+          {
+            "item_id": "club",
+            "price": 60
+          },
+          {
+            "item_id": "copper_sword",
+            "price": 180
+          },
+          {
+            "item_id": "leather_armor",
+            "price": 70
+          },
+          {
+            "item_id": "chain_mail",
+            "price": 300
+          },
+          {
+            "item_id": "large_shield",
+            "price": 180
+          }
+        ]
+      },
+      {
+        "type": "weapon_armor_shop",
+        "inventory": [
+          {
+            "item_id": "flame_sword",
+            "price": 9800
+          },
+          {
+            "item_id": "silver_shield",
+            "price": 14800
+          }
+        ]
+      },
+      {
+        "type": "weapon_armor_shop",
+        "inventory": [
+          {
+            "item_id": "hand_axe",
+            "price": 560
+          },
+          {
+            "item_id": "broad_sword",
+            "price": 1500
+          },
+          {
+            "item_id": "full_plate",
+            "price": 3000
+          },
+          {
+            "item_id": "magic_armor",
+            "price": 7700
+          }
+        ]
+      },
+      {
+        "type": "key_shop",
+        "inventory": [
+          {
+            "item_id": "magic_key",
+            "price": 98
+          }
+        ]
+      },
+      {
+        "type": "item_shop",
+        "inventory": [
+          {
+            "item_id": "fairy_water",
+            "price": 38
+          },
+          {
+            "item_id": "dragons_scale",
+            "price": 20
+          },
+          {
+            "item_id": "wings",
+            "price": 70
+          }
+        ]
+      },
+      {
+        "type": "item_shop",
+        "inventory": [
+          {
+            "item_id": "herb",
+            "price": 24
+          },
+          {
+            "item_id": "torch",
+            "price": 8
+          }
+        ]
+      }
+    ],
+    "chests": [],
+    "encounters": [],
+    "connected_to": [
+      "overworld"
+    ]
+  }
+]

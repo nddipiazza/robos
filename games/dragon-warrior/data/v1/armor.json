@@ -1,0 +1,81 @@
+[
+  {
+    "id": "clothes",
+    "name": "Clothes",
+    "type": "armor",
+    "defense": 2,
+    "cost": 10,
+    "sold_in": [
+      "Brecconary"
+    ]
+  },
+  {
+    "id": "leather_armor",
+    "name": "Leather Armor",
+    "type": "armor",
+    "defense": 4,
+    "cost": 70,
+    "sold_in": [
+      "Brecconary",
+      "Garinham",
+      "Cantlin"
+    ]
+  },
+  {
+    "id": "chain_mail",
+    "name": "Chain Mail",
+    "type": "armor",
+    "defense": 10,
+    "cost": 300,
+    "sold_in": [
+      "Garinham",
+      "Cantlin"
+    ]
+  },
+  {
+    "id": "half_plate",
+    "name": "Half Plate",
+    "type": "armor",
+    "defense": 16,
+    "cost": 1000,
+    "sold_in": [
+      "Garinham",
+      "Kol",
+      "Rimuldar"
+    ]
+  },
+  {
+    "id": "full_plate",
+    "name": "Full Plate",
+    "type": "armor",
+    "defense": 24,
+    "cost": 3000,
+    "sold_in": [
+      "Kol",
+      "Rimuldar",
+      "Cantlin"
+    ]
+  },
+  {
+    "id": "magic_armor",
+    "name": "Magic Armor",
+    "type": "armor",
+    "defense": 24,
+    "cost": 7700,
+    "sold_in": [
+      "Cantlin"
+    ],
+    "special": "Restores 1 HP per step taken on the overworld"
+  },
+  {
+    "id": "erdricks_armor",
+    "name": "Erdrick's Armor",
+    "type": "armor",
+    "defense": 28,
+    "cost": null,
+    "sold_in": [],
+    "found_in": "Hauksness",
+    "found_description": "Under a tree in Hauksness, guarded by an Axe Knight",
+    "special": "Restores 1 HP per step; protects from swamp and barrier damage"
+  }
+]

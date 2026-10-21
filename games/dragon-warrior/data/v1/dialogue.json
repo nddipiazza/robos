@@ -1,0 +1,223 @@
+{
+  "$schema": "../../schemas/v1/dialogue.schema.json",
+  "charlock-castle-1f": {
+    "music": "dungeon",
+    "npcs": {}
+  },
+  "charlock-castle-b1": {
+    "music": "dungeon",
+    "npcs": {}
+  },
+  "charlock-castle-b2": {
+    "music": "dungeon",
+    "npcs": {}
+  },
+  "charlock-castle-b3": {
+    "music": "dungeon",
+    "npcs": {}
+  },
+  "charlock-castle-b4": {
+    "music": "dungeon",
+    "npcs": {}
+  },
+  "charlock-castle-b5": {
+    "music": "dungeon",
+    "npcs": {}
+  },
+  "charlock-castle-b6": {
+    "music": "dungeon",
+    "npcs": {}
+  },
+  "charlock-castle-b7": {
+    "music": "dragonlord",
+    "npcs": {
+      "dragonlord_intro": [
+        "Welcome, Hero. I am the\nDragonlord. I have been\nwaiting for thee.",
+        "I am the master of these\nlands, ruler of all darkness.",
+        "If thou wilt join me, I will\ngive unto thee half of the\nworld.",
+        "What sayest thou? Wilt thou\ntake my offer?"
+      ],
+      "dragonlord_yes": [
+        "Truly? Then the world is\nours! But first, sleep a\nwhile...",
+        "Gwahahaha! Thy quest ends\nin eternal darkness!"
+      ],
+      "dragonlord_no": [
+        "Foolish boy! Thy refusal\nshall cost thee thy life!",
+        "Come, feel the power of\nthe Dragonlord!"
+      ]
+    }
+  },
+  "erdricks-cave-b1": {
+    "music": "dungeon",
+    "npcs": {}
+  },
+  "erdricks-cave-b2": {
+    "music": "dungeon",
+    "npcs": {
+      "erdricks_tablet": [
+        "I am Erdrick and thou art\nmy descendant.",
+        "Three items hast thou need\nof to reach the Castle of\nthe Dragonlord.",
+        "I shall relate to thee\ntheir hiding places.",
+        "The first is the Stone of\nSunlight, which can be\nfound in Tantegel Castle.",
+        "The second is the Staff of\nRain, hidden in a shrine\nnear Kol.",
+        "The third is the Erdrick's\nToken, dropped by me where\nthe northern light meets the\nsouthern light.",
+        "Go now, my descendant, and\nbring peace back to Alefgard."
+      ]
+    }
+  },
+  "garinham-1f": {
+    "music": "peaceful_village",
+    "npcs": {
+      "old_man_shop": "Garin, a wandering minstrel of\nlegendary fame, is said to have\nbuilt this town.",
+      "old_man_sw": "Many believe that Princess\nGwaelin is hidden away in a cave.",
+      "soldier_middle": "I have heard of one named\nNester. Dost thou know such one?",
+      "man_middle": "It is said that the Princess\nwas kidnapped and taken eastward.",
+      "woman_middle": "Welcome to Garinham. May\nthy stay be a peaceful one.",
+      "man_north_locked": "Behind this dark building\nlies the tomb of Garin. But\nthou must have a key to pass."
+    }
+  },
+  "garinham-b1": {
+    "music": "dungeon",
+    "npcs": {}
+  },
+  "garinham-b2": {
+    "music": "dungeon",
+    "npcs": {}
+  },
+  "garinham-b3": {
+    "music": "dungeon",
+    "npcs": {}
+  },
+  "garinham-b4": {
+    "music": "dungeon",
+    "npcs": {
+      "tomb_sage": "Thou hast braved the dark\ntomb. Take this Silver Harp\nof Garin. Its music draws\nmonsters near."
+    }
+  },
+  "mountain-cave-b1": {
+    "music": "dungeon",
+    "npcs": {}
+  },
+  "mountain-cave-b2": {
+    "music": "dungeon",
+    "npcs": {}
+  },
+  "swamp-cave-b1": {
+    "music": "dungeon",
+    "npcs": {
+      "princess_gwaelin_rescue": [
+        "Ah! I have waited so long\nfor this day!",
+        "Thou hast saved me! I am\nGwaelin, daughter of King\nLorik.",
+        "Dost thou love me, Hero?"
+      ],
+      "princess_gwaelin_no": "But... I love thee so!\nPlease say thou dost love\nme!",
+      "princess_gwaelin_yes": "I am so happy! Let us\nreturn to Tantegel Castle\nat once."
+    }
+  },
+  "tantegel-castle-1f": {
+    "music": "tantegel_castle",
+    "npcs": {
+      "guard_left": "East of this castle is a town\nwhere armor, weapons, and many\nother items may be purchased.\nReturn to the Inn if thou art\nwounded. Sleep heals all.",
+      "guard_right": "If thou hast collected all the\nTreasure Chests, a key will be\nfound. Once used, the key will\ndisappear, but the door will be\nopen and thou may pass through.",
+      "man_courtyard": "There was a time when\nBrecconary was a paradise.\nThen the Dragonlord's minions\ncame.",
+      "woman_courtyard": "Where oh where can I find\nPrincess Gwaelin?",
+      "merchant_sw_1": "We are merchants who have\ntraveled much in this land.\nMany of our colleagues have\nbeen killed by servants of\nthe Dragonlord.",
+      "merchant_sw_2": "Rumor has it that entire towns\nhave been destroyed by the\nDragonlord's servants.",
+      "man_west": "To become strong enough to\nface future trials thou must\nfirst battle many foes.",
+      "guard_northeast": "Thou must have a key to\nopen a door.",
+      "guard_cave": "When entering the cave, take\nwith thee a torch.",
+      "guard_alcove": "Where oh where can I find\nPrincess Gwaelin?",
+      "old_man_southeast": "Hero's coming was foretold by\nlegend. May the light shine\nupon this brave warrior.",
+      "guard_entrance": "Welcome to Tantegel Castle.",
+      "old_man_mp_restore": "When thy Magic Points are\nlow, come back to me. I\nshall restore them."
+    }
+  },
+  "tantegel-castle-2f": {
+    "music": "tantegel_castle",
+    "king_lorik_intro": [
+      "Descendant of Erdrick, listen\nnow to my words. It is told\nthat in ages past Erdrick fought\ndemons with a Ball of Light.",
+      "Then came the Dragonlord who\nstole the precious globe and\nhid it in the darkness.",
+      "Now, Hero, thou must help us\nrecover the Ball of Light and\nrestore peace to our land.\nThe Dragonlord must be defeated.",
+      "Take now whatever thou may find\nin these Treasure Chests to aid\nthee in thy quest.",
+      "Then speak with the guards, for\nthey have much knowledge that\nmay aid thee.",
+      "May the light shine upon\nthee, Hero."
+    ],
+    "king_lorik_save": [
+      "I am greatly pleased that thou\nhast returned, Hero.",
+      "Wilt thou tell me now of thy\ndeeds so they won't be forgotten?"
+    ],
+    "king_lorik_farewell": "Goodbye now, Hero. Take care\nand tempt not the Fates.",
+    "king_lorik_rest": "Rest then for awhile.",
+    "king_lorik_scrolls": "Thy deeds have been recorded\non the Imperial Scrolls of Honor.",
+    "king_lorik_continue": "Dost thou wish to continue\nthy quest?",
+    "npcs": {
+      "guard_patrol": "Dost thou know about\nPrincess Gwaelin?",
+      "guard_patrol_no": "Half a year now hath passed\nsince the Princess was kidnapped\nby the enemy. Never does the\nKing speak of it, but he must\nbe suffering much. Hero,\nplease save the Princess.",
+      "guard_patrol_yes": "Hero, please save the Princess.",
+      "guard_stairs_bottom": "If thou art planning to take\na rest, first see King Lorik.",
+      "guard_stairs_top": "King Lorik will record thy\ndeeds in his Imperial Scroll\nso thou may return to thy\nquest later.",
+      "chancellor": "The King is deeply worried\nabout Princess Gwaelin. She\nwas taken by monsters."
+    }
+  },
+  "tantegel-castle-b1": {
+    "music": "tantegel_castle",
+    "npcs": {
+      "basement_sage": "Thou hast found me! I guard\nthe Stone of Sunlight. Take\nit, descendant of Erdrick!"
+    }
+  },
+  "brecconary-1f": {
+    "music": "peaceful_village",
+    "npcs": {
+      "man_entrance": "Thou art most welcome\nin Brecconary.",
+      "woman_armory": "Welcome! Enter the shop and\nspeak to its keeper across\nthe desk.",
+      "old_man_armory": "Watch thy Hit Points\nwhen in the Poisonous Marsh.",
+      "man_inn": "Go north to the seashore, then\nfollow the coastline west until\nthou hath reached Garinham.",
+      "soldier_middle": "Art thou the descendant\nof Erdrick? Hast thou\nany proof?",
+      "woman_east_inn": "No, I am not Princess Gwaelin.",
+      "man_east_shop": "Within sight of Tantegel Castle\nto the south is Charlock, the\nfortress of the Dragonlord.",
+      "guard_east": "See King Lorik when thy\nexperience levels are raised.",
+      "old_man_east": "If thou art cursed, come again.",
+      "man_magic": "There is a town where magic\nkeys can be purchased.",
+      "soldier_town": "Many have been the warriors\nwho have perished on this quest.\nBut for thee I wish success,\nHero.",
+      "merchant_north": "Please, save us from the\nminions of the Dragonlord.",
+      "soldier_northeast": "Beware the bridges! Danger\ngrows when thou crosses.",
+      "guard_inn": "Tell King Lorik that the\nsearch for his daughter hath\nfailed. I am almost gone...."
+    }
+  },
+  "cantlin-1f": {
+    "music": "peaceful_village",
+    "npcs": {
+      "gatekeeper": "This is Cantlin, the walled\ncity. We built these walls\nto keep out the terrible\nmonsters.",
+      "scholar": "Erdrick's armor is hidden\nsomewhere in the ruined town\nof Hauksness. It was buried\nbehind a shop.",
+      "merchant": "I sell the finest shields\nand armor in all of Alefgard!\nThe Flame Sword is also\navailable here.",
+      "old_man": "To create the Rainbow Bridge,\nthou wilt need the Stone of\nSunlight, the Staff of Rain,\nand the Sacred Amulet."
+    }
+  },
+  "kol-1f": {
+    "music": "peaceful_village",
+    "npcs": {
+      "old_man_entrance": "This is the village of Kol.",
+      "woman_middle": "Please, save us from the\nminions of the Dragonlord.",
+      "man_middle": "Dreadful is the South Island.\nGreat strength and skill and wit\nonly will bring thee back\nfrom that place.",
+      "guard_middle": "Golem is afraid of the music\nof the flute, so 'tis said.",
+      "soldier_armory": "East of Hauksness there is a\ntown, 'tis said, where one may\npurchase weapons of extraordinary\nquality.",
+      "old_man_armory": "In legends it is said that\nfairies know how to put\nGolem to sleep.",
+      "woman_bath": "This bath cures rheumatism.",
+      "soldier_bath": "Hast thou seen Nester? I\nthink he may need help.",
+      "old_man_nw": "Though thou art as brave as thy\nancestor, Hero, thou cannot\ndefeat the great Dragonlord with\nsuch weapons. Thou shouldst\ncome here again.",
+      "man_west": "Art thou the descendant\nof Erdrick? Hast thou any proof?",
+      "guard_sw": "Rimuldar is the place\nto buy keys.",
+      "girl_bath": "Have you heard of the Fairy\nFlute? Someone lost it\nnear the village bath."
+    }
+  },
+  "rimuldar-1f": {
+    "music": "peaceful_village",
+    "npcs": {
+      "townsman_entrance": "This is Rimuldar, the city\nof water. We are famous\nfor selling Magic Keys.",
+      "key_shop_keeper": "Welcome! I sell Magic Keys.\nThey are 16 gold coins\neach. How many wilt thou buy?",
+      "prophetic_man": "Over the western sea lies\na holy shrine. An old sage\nlives there, waiting for\nsomeone with a special harp.",
+      "innkeeper": "Resting here costs 50 gold.\nWilt thou stay the night?",
+      "woman_nw": "To the south lies a sacred\nshrine where the Staff of\nRain is safely kept."
+    }
+  }
+}

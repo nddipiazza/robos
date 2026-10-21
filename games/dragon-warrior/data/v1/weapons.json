@@ -1,0 +1,83 @@
+[
+  {
+    "id": "bamboo_pole",
+    "name": "Bamboo Pole",
+    "type": "weapon",
+    "attack": 2,
+    "cost": 10,
+    "sold_in": [
+      "Brecconary",
+      "Cantlin"
+    ]
+  },
+  {
+    "id": "club",
+    "name": "Club",
+    "type": "weapon",
+    "attack": 4,
+    "cost": 60,
+    "sold_in": [
+      "Brecconary",
+      "Garinham",
+      "Cantlin"
+    ]
+  },
+  {
+    "id": "copper_sword",
+    "name": "Copper Sword",
+    "type": "weapon",
+    "attack": 10,
+    "cost": 180,
+    "sold_in": [
+      "Brecconary",
+      "Garinham",
+      "Kol",
+      "Rimuldar",
+      "Cantlin"
+    ]
+  },
+  {
+    "id": "hand_axe",
+    "name": "Hand Axe",
+    "type": "weapon",
+    "attack": 15,
+    "cost": 560,
+    "sold_in": [
+      "Garinham",
+      "Kol",
+      "Rimuldar",
+      "Cantlin"
+    ]
+  },
+  {
+    "id": "broad_sword",
+    "name": "Broad Sword",
+    "type": "weapon",
+    "attack": 20,
+    "cost": 1500,
+    "sold_in": [
+      "Rimuldar",
+      "Cantlin"
+    ]
+  },
+  {
+    "id": "flame_sword",
+    "name": "Flame Sword",
+    "type": "weapon",
+    "attack": 28,
+    "cost": 9800,
+    "sold_in": [
+      "Cantlin"
+    ]
+  },
+  {
+    "id": "erdricks_sword",
+    "name": "Erdrick's Sword",
+    "type": "weapon",
+    "attack": 40,
+    "cost": null,
+    "sold_in": [],
+    "found_in": "Charlock Castle",
+    "found_description": "Chest on B6 of Charlock Castle"
+  }
+]

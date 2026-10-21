@@ -1,0 +1,482 @@
+{
+  "$schema": "../../schemas/v1/npcs.schema.json",
+  "kol-1f": [
+    {
+      "id": "kol01",
+      "role": "woman",
+      "col": 13,
+      "row": 2,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "tree"
+    },
+    {
+      "id": "kol02",
+      "role": "red_guard",
+      "col": 21,
+      "row": 14,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "kol03",
+      "role": "guard",
+      "col": 2,
+      "row": 24,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "tree"
+    },
+    {
+      "id": "kol04",
+      "role": "sage",
+      "col": 2,
+      "row": 2,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "brick",
+      "desk_tile": [
+        2,
+        3
+      ]
+    }
+  ],
+  "northern-cave-b1": [
+    {
+      "id": "nor01",
+      "role": "sage",
+      "col": 5,
+      "row": 5,
+      "facing": "right",
+      "interaction_type": "talk",
+      "tile": "brick"
+    }
+  ],
+  "rimuldar-1f": [
+    {
+      "id": "rim01",
+      "role": "minister",
+      "col": 28,
+      "row": 1,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "grass"
+    },
+    {
+      "id": "rim02",
+      "role": "sage",
+      "col": 21,
+      "row": 24,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "rim03",
+      "role": "sage",
+      "col": 7,
+      "row": 14,
+      "facing": "left",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "rim04",
+      "role": "merchant",
+      "col": 3,
+      "row": 5,
+      "facing": "up",
+      "interaction_type": "talk",
+      "tile": "grass"
+    },
+    {
+      "id": "rim05",
+      "role": "sage",
+      "col": 4,
+      "row": 24,
+      "facing": "right",
+      "interaction_type": "talk",
+      "tile": "brick",
+      "desk_tile": [
+        5,
+        24
+      ]
+    },
+    {
+      "id": "npc_007",
+      "role": "lady",
+      "col": 1,
+      "row": 27,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "npc_008",
+      "role": "lady",
+      "col": 16,
+      "row": 9,
+      "facing": "up",
+      "interaction_type": "talk",
+      "tile": "brick"
+    }
+  ],
+  "southern-cave-b1": [
+    {
+      "id": "sou01",
+      "role": "sage",
+      "col": 5,
+      "row": 6,
+      "facing": "left",
+      "interaction_type": "talk",
+      "tile": "brick"
+    }
+  ],
+  "swamp-cave-b1": [
+    {
+      "id": "swa01",
+      "role": "princess",
+      "col": 6,
+      "row": 19,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "brick"
+    }
+  ],
+  "tantegel-castle-1f": [
+    {
+      "id": "tan01",
+      "role": "guard",
+      "col": 21,
+      "row": 16,
+      "facing": "up",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "tan02",
+      "role": "guard",
+      "col": 16,
+      "row": 21,
+      "facing": "right",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "tan03",
+      "role": "guard",
+      "col": 10,
+      "row": 28,
+      "facing": "right",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "tan04",
+      "role": "guard",
+      "col": 13,
+      "row": 28,
+      "facing": "left",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "tan05",
+      "role": "minister",
+      "col": 3,
+      "row": 9,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "tan06",
+      "role": "guard",
+      "col": 9,
+      "row": 7,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "tan07",
+      "role": "guard",
+      "col": 9,
+      "row": 9,
+      "facing": "up",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "tan08",
+      "role": "lady",
+      "col": 28,
+      "row": 6,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "grass"
+    },
+    {
+      "id": "tan09",
+      "role": "sage",
+      "col": 21,
+      "row": 27,
+      "facing": "left",
+      "interaction_type": "talk",
+      "tile": "brick",
+      "desk_tile": [
+        20,
+        27
+      ]
+    },
+    {
+      "id": "tan10",
+      "role": "guard",
+      "col": 27,
+      "row": 16,
+      "facing": "up",
+      "interaction_type": "talk",
+      "tile": "brick"
+    }
+  ],
+  "tantegel-castle-2f": [
+    {
+      "id": "tanb201",
+      "role": "king",
+      "col": 4,
+      "row": 4,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "tanb202",
+      "role": "guard",
+      "col": 4,
+      "row": 7,
+      "facing": "right",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "tanb203",
+      "role": "guard",
+      "col": 6,
+      "row": 7,
+      "facing": "left",
+      "interaction_type": "talk",
+      "tile": "brick"
+    }
+  ],
+  "tantegel-castle-b1": [
+    {
+      "id": "tanb11",
+      "role": "sage",
+      "col": 5,
+      "row": 7,
+      "facing": "left",
+      "interaction_type": "talk",
+      "tile": "brick"
+    }
+  ],
+  "brecconary-1f": [
+    {
+      "id": "bre01",
+      "role": "pilgrim",
+      "col": 2,
+      "row": 14,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "tree"
+    },
+    {
+      "id": "bre02",
+      "role": "pilgrim",
+      "col": 21,
+      "row": 11,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "bre03",
+      "role": "sage",
+      "col": 25,
+      "row": 11,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "bre04",
+      "role": "red_guard",
+      "col": 29,
+      "row": 2,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "tree"
+    },
+    {
+      "id": "bre05",
+      "role": "pilgrim",
+      "col": 21,
+      "row": 24,
+      "facing": "up",
+      "interaction_type": "talk",
+      "tile": "grass"
+    },
+    {
+      "id": "bre06",
+      "role": "guard",
+      "col": 11,
+      "row": 27,
+      "facing": "up",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "bre07",
+      "role": "lady",
+      "col": 5,
+      "row": 8,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "grass"
+    }
+  ],
+  "cantlin-1f": [
+    {
+      "id": "can01",
+      "role": "merchant",
+      "col": 3,
+      "row": 13,
+      "facing": "right",
+      "interaction_type": "talk",
+      "tile": "brick",
+      "desk_tile": [
+        4,
+        13
+      ]
+    },
+    {
+      "id": "can02",
+      "role": "merchant",
+      "col": 8,
+      "row": 13,
+      "facing": "left",
+      "interaction_type": "talk",
+      "tile": "brick",
+      "desk_tile": [
+        7,
+        13
+      ]
+    },
+    {
+      "id": "can04",
+      "role": "sage",
+      "col": 16,
+      "row": 17,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "grass"
+    },
+    {
+      "id": "can05",
+      "role": "sage",
+      "col": 16,
+      "row": 29,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "can06",
+      "role": "sage",
+      "col": 23,
+      "row": 23,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "brick",
+      "desk_tile": [
+        23,
+        24
+      ]
+    },
+    {
+      "id": "can07",
+      "role": "lady",
+      "col": 23,
+      "row": 14,
+      "facing": "left",
+      "interaction_type": "talk",
+      "tile": "brick",
+      "desk_tile": [
+        22,
+        14
+      ]
+    },
+    {
+      "id": "can08",
+      "role": "merchant",
+      "col": 5,
+      "row": 27,
+      "facing": "right",
+      "interaction_type": "talk",
+      "tile": "brick",
+      "desk_tile": [
+        6,
+        27
+      ]
+    }
+  ],
+  "charlock-castle-b7": [
+    {
+      "id": "char01",
+      "role": "dragonlord",
+      "col": 16,
+      "row": 24,
+      "facing": "left",
+      "interaction_type": "talk",
+      "tile": "brick"
+    }
+  ],
+  "garinham-1f": [
+    {
+      "id": "gar01",
+      "role": "guard",
+      "col": 6,
+      "row": 6,
+      "facing": "left",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "gar02",
+      "role": "guard",
+      "col": 4,
+      "row": 6,
+      "facing": "right",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "gar03",
+      "role": "sage",
+      "col": 3,
+      "row": 18,
+      "facing": "right",
+      "interaction_type": "talk",
+      "tile": "brick"
+    },
+    {
+      "id": "gar04",
+      "role": "sage",
+      "col": 15,
+      "row": 2,
+      "facing": "down",
+      "interaction_type": "talk",
+      "tile": "desert"
+    }
+  ]
+}

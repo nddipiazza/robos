@@ -1,0 +1,92 @@
+[
+  {
+    "id": "stones_of_sunlight",
+    "name": "Stones of Sunlight",
+    "category": "quest",
+    "effect": "One of three items needed to create the Rainbow Drop",
+    "found_description": "Southeast corner of Tantegel Castle"
+  },
+  {
+    "id": "staff_of_rain",
+    "name": "Staff of Rain",
+    "category": "quest",
+    "effect": "One of three items needed to create the Rainbow Drop",
+    "found_description": "Give the Silver Harp to the man in a cave west of Kol"
+  },
+  {
+    "id": "silver_harp",
+    "name": "Silver Harp",
+    "category": "quest",
+    "effect": "Summons monsters when used; exchange it for the Staff of Rain",
+    "found_description": "Garin's Grave (northeast corner of Garinham dungeon)",
+    "summon_odds": {
+      "slime": {
+        "probability": "5504/32768",
+        "percent": 16.8
+      },
+      "red_slime": {
+        "probability": "5472/32768",
+        "percent": 16.7
+      },
+      "drakee": {
+        "probability": "5504/32768",
+        "percent": 16.8
+      },
+      "ghost": {
+        "probability": "5440/32768",
+        "percent": 16.6
+      },
+      "magician": {
+        "probability": "5472/32768",
+        "percent": 16.7
+      },
+      "scorpion": {
+        "probability": "5376/32768",
+        "percent": 16.4
+      }
+    },
+    "note": "Summons one of 6 monsters with near-equal odds (~16.4-16.8% each)"
+  },
+  {
+    "id": "erdricks_token",
+    "name": "Erdrick's Token",
+    "category": "quest",
+    "effect": "Proves you are Erdrick's descendant; needed for the Rainbow Drop",
+    "found_description": "70 steps south and 40 steps east of Tantegel Castle (use Gwaelin's Love to locate)"
+  },
+  {
+    "id": "fairy_flute",
+    "name": "Fairy Flute",
+    "category": "quest",
+    "effect": "Puts the Golem boss to sleep; required to defeat the Golem",
+    "found_description": "Four steps south of the bath in Kol"
+  },
+  {
+    "id": "erdricks_tablet",
+    "name": "Erdrick's Tablet",
+    "category": "quest",
+    "effect": "Words of advice from Erdrick (lore item)",
+    "found_description": "Erdrick's Cave, northwest of Tantegel Castle"
+  },
+  {
+    "id": "gwaelins_love",
+    "name": "Gwaelin's Love",
+    "category": "quest",
+    "effect": "Gwaelin tells you EXP needed to level up and your distance from Tantegel Castle",
+    "found_description": "Obtained by rescuing Princess Gwaelin from the Green Dragon in the Swamp Cave south of Kol"
+  },
+  {
+    "id": "rainbow_drop",
+    "name": "Rainbow Drop",
+    "category": "quest",
+    "effect": "Creates the Rainbow Bridge allowing access to Charlock Castle",
+    "found_description": "Bring the Stones of Sunlight, Staff of Rain, and Erdrick's Token to a man in a cave south of Rimuldar"
+  },
+  {
+    "id": "ball_of_light",
+    "name": "Ball of Light",
+    "category": "quest",
+    "effect": "Destroys all the monsters in Alefgard; ending of the game",
+    "found_description": "Defeat the Dragonlord (true form)"
+  }
+]

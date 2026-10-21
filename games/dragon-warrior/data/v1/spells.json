@@ -1,0 +1,118 @@
+[
+  {
+    "id": "heal",
+    "name": "HEAL",
+    "mp_cost": 4,
+    "level_learned": 3,
+    "target": "self",
+    "effect": "Restores 10-17 HP",
+    "hp_restore_min": 10,
+    "hp_restore_max": 17,
+    "formula": "RAND & 0x07 + 0x0A"
+  },
+  {
+    "id": "hurt",
+    "name": "HURT",
+    "mp_cost": 2,
+    "level_learned": 4,
+    "target": "enemy",
+    "effect": "Deals 5-12 magic damage to one enemy",
+    "damage_min": 5,
+    "damage_max": 12,
+    "blocked_by": "resist_hurt (X/16)",
+    "note": "Magic Armor and Erdrick's Armor do NOT reduce hero HURT damage to enemies"
+  },
+  {
+    "id": "sleep",
+    "name": "SLEEP",
+    "mp_cost": 2,
+    "level_learned": 7,
+    "target": "enemy",
+    "effect": "Puts one enemy to sleep",
+    "blocked_by": "resist_sleep (X/16)",
+    "mechanics": "Guaranteed 1 attack turn minimum. Enemy wakes on 1/3 chance each subsequent turn. Max 6 turns due to RNG cycle."
+  },
+  {
+    "id": "radiant",
+    "name": "RADIANT",
+    "mp_cost": 3,
+    "level_learned": 9,
+    "target": "field",
+    "effect": "Illuminates caves — radius shrinks over 200 total steps",
+    "duration_steps": 200,
+    "radius_stages": [
+      {
+        "radius": 3,
+        "steps": 80
+      },
+      {
+        "radius": 2,
+        "steps": 60
+      },
+      {
+        "radius": 1,
+        "steps": 60
+      }
+    ],
+    "note": "Torch sets a fixed radius of 1 and lasts until you leave the cave"
+  },
+  {
+    "id": "stopspell",
+    "name": "STOPSPELL",
+    "mp_cost": 2,
+    "level_learned": 10,
+    "target": "enemy",
+    "effect": "Permanently blocks enemy from casting spells for the battle",
+    "blocked_by": "resist_stopspell (X/16)",
+    "note": "Never loses effect once landed"
+  },
+  {
+    "id": "outside",
+    "name": "OUTSIDE",
+    "mp_cost": 6,
+    "level_learned": 12,
+    "target": "field",
+    "effect": "Exits the current cave, warping to the dungeon entrance on the overworld"
+  },
+  {
+    "id": "return",
+    "name": "RETURN",
+    "mp_cost": 8,
+    "level_learned": 13,
+    "target": "field",
+    "effect": "Instantly warps back to Tantegel Castle from anywhere on the overworld"
+  },
+  {
+    "id": "repel",
+    "name": "REPEL",
+    "mp_cost": 2,
+    "level_learned": 15,
+    "target": "field",
+    "effect": "Repels weaker monsters for 128 steps on the overworld",
+    "duration_steps": 128,
+    "repel_condition": "Blocks encounter if enemy_strength >> 1 <= hero_defense >> 1",
+    "note": "Fairy Water has the exact same effect and duration"
+  },
+  {
+    "id": "healmore",
+    "name": "HEALMORE",
+    "mp_cost": 10,
+    "level_learned": 17,
+    "target": "self",
+    "effect": "Restores 85-100 HP",
+    "hp_restore_min": 85,
+    "hp_restore_max": 100,
+    "formula": "RAND & 0x0F + 0x55"
+  },
+  {
+    "id": "hurtmore",
+    "name": "HURTMORE",
+    "mp_cost": 5,
+    "level_learned": 19,
+    "target": "enemy",
+    "effect": "Deals 58-65 magic damage to one enemy",
+    "damage_min": 58,
+    "damage_max": 65,
+    "blocked_by": "resist_hurt (X/16)"
+  }
+]

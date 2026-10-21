@@ -1,0 +1,808 @@
+{
+  "_scenes": {
+    "tantegel-castle-1f": "Castle1F",
+    "tantegel-castle-2f": "ThroneRoom",
+    "tantegel-castle-b1": "TantegelBasement",
+    "erdricks-cave-b1": "ErdricksCaveB1",
+    "erdricks-cave-b2": "ErdricksCaveB2",
+    "garinham-1f": "Garinham",
+    "garinham-b1": "GarinhamB1",
+    "garinham-b2": "GarinhamB2",
+    "garinham-b3": "GarinhamB3",
+    "garinham-b4": "GarinhamB4",
+    "mountain-cave-b1": "MountainCaveB1",
+    "mountain-cave-b2": "MountainCaveB2",
+    "swamp-cave-b1": "SwampCave",
+    "charlock-castle-1f": "CharlockCastle1F",
+    "charlock-castle-b1": "CharlockCastleB1",
+    "charlock-castle-b2": "CharlockCastleB2",
+    "charlock-castle-b3": "CharlockCastleB3",
+    "charlock-castle-b4": "CharlockCastleB4",
+    "charlock-castle-b5": "CharlockCastleB5",
+    "charlock-castle-b6": "CharlockCastleB6",
+    "charlock-castle-b7": "CharlockThroneRoom",
+    "world-map": "WorldMap"
+  },
+  "charlock-castle-1f": [
+    {
+      "id": "charlock1f-to-b1-a",
+      "tile": {
+        "col": 11,
+        "row": 2
+      },
+      "to": "charlockb1-to-1f-a",
+      "facing": "down"
+    },
+    {
+      "id": "charlock1f-to-b1-b",
+      "tile": {
+        "col": 5,
+        "row": 15
+      },
+      "to": "charlockb1-to-1f-b",
+      "facing": "down"
+    },
+    {
+      "id": "charlock1f-to-b1-c",
+      "tile": {
+        "col": 16,
+        "row": 15
+      },
+      "to": "charlockb1-to-1f-c",
+      "facing": "down"
+    }
+  ],
+  "charlock-castle-b1": [
+    {
+      "id": "charlockb1-to-1f-a",
+      "tile": {
+        "col": 10,
+        "row": 1
+      },
+      "to": "charlock1f-to-b1-a",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb1-to-1f-b",
+      "tile": {
+        "col": 9,
+        "row": 14
+      },
+      "to": "charlock1f-to-b1-b",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb1-to-1f-c",
+      "tile": {
+        "col": 18,
+        "row": 16
+      },
+      "to": "charlock1f-to-b1-c",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb1-to-b2-a",
+      "tile": {
+        "col": 16,
+        "row": 2
+      },
+      "to": "charlockb2-to-b1-c",
+      "facing": "down"
+    },
+    {
+      "id": "charlockb1-to-b2-b",
+      "tile": {
+        "col": 3,
+        "row": 5
+      },
+      "to": "charlockb2-to-b1-a",
+      "facing": "down"
+    },
+    {
+      "id": "charlockb1-to-b2-c",
+      "tile": {
+        "col": 14,
+        "row": 8
+      },
+      "to": "charlockb2-to-b1-e",
+      "facing": "down"
+    },
+    {
+      "id": "charlockb1-to-b2-d",
+      "tile": {
+        "col": 20,
+        "row": 8
+      },
+      "to": "charlockb2-to-b1-f",
+      "facing": "down"
+    },
+    {
+      "id": "charlockb1-to-b2-e",
+      "tile": {
+        "col": 15,
+        "row": 10
+      },
+      "to": "charlockb2-to-b1-g",
+      "facing": "down"
+    },
+    {
+      "id": "charlockb1-to-b2-f",
+      "tile": {
+        "col": 3,
+        "row": 15
+      },
+      "to": "charlockb2-to-b1-d",
+      "facing": "down"
+    },
+    {
+      "id": "charlockb1-to-b2-g",
+      "tile": {
+        "col": 9,
+        "row": 20
+      },
+      "to": "charlockb2-to-b1-b",
+      "facing": "down"
+    }
+  ],
+  "charlock-castle-b2": [
+    {
+      "id": "charlockb2-to-b1-a",
+      "tile": {
+        "col": 1,
+        "row": 1
+      },
+      "to": "charlockb1-to-b2-b",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb2-to-b1-b",
+      "tile": {
+        "col": 6,
+        "row": 1
+      },
+      "to": "charlockb1-to-b2-g",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb2-to-b1-c",
+      "tile": {
+        "col": 9,
+        "row": 1
+      },
+      "to": "charlockb1-to-b2-a",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb2-to-b1-d",
+      "tile": {
+        "col": 1,
+        "row": 2
+      },
+      "to": "charlockb1-to-b2-f",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb2-to-b1-e",
+      "tile": {
+        "col": 5,
+        "row": 5
+      },
+      "to": "charlockb1-to-b2-c",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb2-to-b1-f",
+      "tile": {
+        "col": 10,
+        "row": 9
+      },
+      "to": "charlockb1-to-b2-d",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb2-to-b1-g",
+      "tile": {
+        "col": 9,
+        "row": 10
+      },
+      "to": "charlockb1-to-b2-e",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb2-to-b3-a",
+      "tile": {
+        "col": 4,
+        "row": 1
+      },
+      "to": "charlockb3-to-b2-a",
+      "facing": "down"
+    },
+    {
+      "id": "charlockb2-to-b3-b",
+      "tile": {
+        "col": 10,
+        "row": 2
+      },
+      "to": "charlockb3-to-b2-a",
+      "facing": "down"
+    },
+    {
+      "id": "charlockb2-to-b3-c",
+      "tile": {
+        "col": 1,
+        "row": 9
+      },
+      "to": "charlockb3-to-b2-c",
+      "facing": "down"
+    },
+    {
+      "id": "charlockb2-to-b3-d",
+      "tile": {
+        "col": 2,
+        "row": 10
+      },
+      "to": "charlockb3-to-b2-b",
+      "facing": "down"
+    }
+  ],
+  "charlock-castle-b3": [
+    {
+      "id": "charlockb3-to-b2-a",
+      "tile": {
+        "col": 8,
+        "row": 1
+      },
+      "to": "charlockb2-to-b3-a",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb3-to-b2-b",
+      "tile": {
+        "col": 3,
+        "row": 3
+      },
+      "to": "charlockb2-to-b3-d",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb3-to-b2-c",
+      "tile": {
+        "col": 6,
+        "row": 5
+      },
+      "to": "charlockb2-to-b3-c",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb3-to-b2-d",
+      "tile": {
+        "col": 1,
+        "row": 10
+      },
+      "to": "charlockb2-to-b3-d",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb3-to-b4-a",
+      "tile": {
+        "col": 2,
+        "row": 7
+      },
+      "to": "charlockb4-to-b3-b",
+      "facing": "down"
+    },
+    {
+      "id": "charlockb3-to-b4-b",
+      "tile": {
+        "col": 8,
+        "row": 8
+      },
+      "to": "charlockb4-to-b3-a",
+      "facing": "down"
+    }
+  ],
+  "charlock-castle-b4": [
+    {
+      "id": "charlockb4-to-b3-a",
+      "tile": {
+        "col": 8,
+        "row": 8
+      },
+      "to": "charlockb3-to-b4-b",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb4-to-b3-b",
+      "tile": {
+        "col": 1,
+        "row": 10
+      },
+      "to": "charlockb3-to-b4-a",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb4-to-b5-a",
+      "tile": {
+        "col": 9,
+        "row": 2
+      },
+      "to": "charlockb5-to-b4-a",
+      "facing": "down"
+    },
+    {
+      "id": "charlockb4-to-b5-b",
+      "tile": {
+        "col": 3,
+        "row": 3
+      },
+      "to": "charlockb5-to-b4-b",
+      "facing": "down"
+    }
+  ],
+  "charlock-castle-b5": [
+    {
+      "id": "charlockb5-to-b4-a",
+      "tile": {
+        "col": 5,
+        "row": 1
+      },
+      "to": "charlockb4-to-b5-a",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb5-to-b4-b",
+      "tile": {
+        "col": 10,
+        "row": 1
+      },
+      "to": "charlockb4-to-b5-b",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb5-to-b6-a",
+      "tile": {
+        "col": 1,
+        "row": 1
+      },
+      "to": "charlockb6-to-b5-b",
+      "facing": "down"
+    },
+    {
+      "id": "charlockb5-to-b6-b",
+      "tile": {
+        "col": 6,
+        "row": 6
+      },
+      "to": "charlockb6-to-b5-a",
+      "facing": "down"
+    }
+  ],
+  "charlock-castle-b6": [
+    {
+      "id": "charlockb6-to-b5-a",
+      "tile": {
+        "col": 1,
+        "row": 1
+      },
+      "to": "charlockb5-to-b6-a",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb6-to-b5-b",
+      "tile": {
+        "col": 1,
+        "row": 7
+      },
+      "to": "charlockb5-to-b6-a",
+      "facing": "up"
+    },
+    {
+      "id": "charlockb6-to-b7-a",
+      "tile": {
+        "col": 10,
+        "row": 1
+      },
+      "to": "charlockb4-to-b5-b",
+      "facing": "down"
+    },
+    {
+      "id": "charlockb6-to-b7-b",
+      "tile": {
+        "col": 10,
+        "row": 7
+      },
+      "to": "charlockthroneroom-to-b6",
+      "facing": "down"
+    }
+  ],
+  "charlock-castle-b7": [
+    {
+      "id": "charlockthroneroom-to-b6",
+      "tile": {
+        "col": 10,
+        "row": 29
+      },
+      "to": "charlockb6-to-b7-b",
+      "facing": "up"
+    }
+  ],
+  "erdricks-cave-b1": [
+    {
+      "id": "erdricks-b1-exit",
+      "tile": {
+        "col": 1,
+        "row": 1
+      },
+      "to": "worldmap-erdricks-b1",
+      "facing": "up"
+    },
+    {
+      "id": "erdricks-b1-to-b2",
+      "tile": {
+        "col": 10,
+        "row": 10
+      },
+      "to": "erdricks-b2-to-b1",
+      "facing": "down"
+    }
+  ],
+  "erdricks-cave-b2": [
+    {
+      "id": "erdricks-b2-to-b1",
+      "tile": {
+        "col": 9,
+        "row": 10
+      },
+      "to": "erdricks-b1-to-b2",
+      "facing": "up"
+    }
+  ],
+  "garinham-1f": [
+    {
+      "id": "garinham-to-b1",
+      "tile": {
+        "col": 20,
+        "row": 1
+      },
+      "to": "garinhamb1-to-garinham",
+      "facing": "down"
+    }
+  ],
+  "garinham-b1": [
+    {
+      "id": "garinhamb1-to-garinham",
+      "tile": {
+        "col": 7,
+        "row": 12
+      },
+      "to": "garinham-to-b1",
+      "facing": "up"
+    },
+    {
+      "id": "garinhamb1-to-b2",
+      "tile": {
+        "col": 2,
+        "row": 19
+      },
+      "to": "garinhamb2-to-b1",
+      "facing": "down"
+    }
+  ],
+  "garinham-b2": [
+    {
+      "id": "garinhamb2-to-b1",
+      "tile": {
+        "col": 12,
+        "row": 3
+      },
+      "to": "garinhamb1-to-garinham",
+      "facing": "up"
+    },
+    {
+      "id": "garinhamb2-to-b3-a",
+      "tile": {
+        "col": 2,
+        "row": 2
+      },
+      "to": "garinhamb3-to-b2-a",
+      "facing": "down"
+    },
+    {
+      "id": "garinhamb2-to-b3-b",
+      "tile": {
+        "col": 13,
+        "row": 2
+      },
+      "to": "garinhamb3-to-b2-b",
+      "facing": "down"
+    },
+    {
+      "id": "garinhamb2-to-b3-c",
+      "tile": {
+        "col": 6,
+        "row": 7
+      },
+      "to": "garinhamb3-to-b2-c",
+      "facing": "down"
+    },
+    {
+      "id": "garinhamb2-to-b3-d",
+      "tile": {
+        "col": 2,
+        "row": 11
+      },
+      "to": "garinhamb3-to-b2-e",
+      "facing": "down"
+    },
+    {
+      "id": "garinhamb2-to-b3-e",
+      "tile": {
+        "col": 13,
+        "row": 11
+      },
+      "to": "garinhamb3-to-b2-d",
+      "facing": "down"
+    }
+  ],
+  "garinham-b3": [
+    {
+      "id": "garinhamb3-to-b2-a",
+      "tile": {
+        "col": 15,
+        "row": 2
+      },
+      "to": "garinhamb2-to-b3-a",
+      "facing": "up"
+    },
+    {
+      "id": "garinhamb3-to-b2-b",
+      "tile": {
+        "col": 19,
+        "row": 2
+      },
+      "to": "garinhamb2-to-b3-b",
+      "facing": "up"
+    },
+    {
+      "id": "garinhamb3-to-b2-c",
+      "tile": {
+        "col": 7,
+        "row": 12
+      },
+      "to": "garinhamb2-to-b3-c",
+      "facing": "up"
+    },
+    {
+      "id": "garinhamb3-to-b2-d",
+      "tile": {
+        "col": 19,
+        "row": 14
+      },
+      "to": "garinhamb2-to-b3-e",
+      "facing": "up"
+    },
+    {
+      "id": "garinhamb3-to-b2-e",
+      "tile": {
+        "col": 3,
+        "row": 18
+      },
+      "to": "garinhamb2-to-b3-d",
+      "facing": "up"
+    },
+    {
+      "id": "garinhamb3-to-b4-a",
+      "tile": {
+        "col": 10,
+        "row": 6
+      },
+      "to": "garinhamb4-to-b3-a",
+      "facing": "down"
+    },
+    {
+      "id": "garinhamb3-to-b4-b",
+      "tile": {
+        "col": 11,
+        "row": 10
+      },
+      "to": "garinhamb4-to-b3-b",
+      "facing": "down"
+    }
+  ],
+  "garinham-b4": [
+    {
+      "id": "garinhamb4-to-b3-a",
+      "tile": {
+        "col": 1,
+        "row": 5
+      },
+      "to": "garinhamb3-to-b4-a",
+      "facing": "up"
+    },
+    {
+      "id": "garinhamb4-to-b3-b",
+      "tile": {
+        "col": 6,
+        "row": 5
+      },
+      "to": "garinhamb3-to-b4-b",
+      "facing": "up"
+    }
+  ],
+  "mountain-cave-b1": [
+    {
+      "id": "mountaincave-b1-to-b2-a",
+      "tile": {
+        "col": 1,
+        "row": 1
+      },
+      "to": "mountaincave-b2-to-b1-a",
+      "facing": "down"
+    },
+    {
+      "id": "mountaincave-b1-to-b2-b",
+      "tile": {
+        "col": 7,
+        "row": 6
+      },
+      "to": "mountaincave-b2-to-b1-b",
+      "facing": "down"
+    },
+    {
+      "id": "mountaincave-b1-to-b2-c",
+      "tile": {
+        "col": 13,
+        "row": 13
+      },
+      "to": "mountaincave-b2-to-b1-c",
+      "facing": "down"
+    },
+    {
+      "id": "mountaincave-b1-exit",
+      "tile": {
+        "col": 1,
+        "row": 8
+      },
+      "to": "worldmap-mountain-b1",
+      "facing": "up"
+    }
+  ],
+  "mountain-cave-b2": [
+    {
+      "id": "mountaincave-b2-to-b1-a",
+      "tile": {
+        "col": 1,
+        "row": 1
+      },
+      "to": "mountaincave-b1-to-b2-a",
+      "facing": "up"
+    },
+    {
+      "id": "mountaincave-b2-to-b1-b",
+      "tile": {
+        "col": 7,
+        "row": 6
+      },
+      "to": "mountaincave-b1-to-b2-b",
+      "facing": "up"
+    },
+    {
+      "id": "mountaincave-b2-to-b1-c",
+      "tile": {
+        "col": 13,
+        "row": 13
+      },
+      "to": "mountaincave-b1-to-b2-c",
+      "facing": "up"
+    }
+  ],
+  "swamp-cave-b1": [
+    {
+      "id": "swampcave-north-exit",
+      "tile": {
+        "col": 1,
+        "row": 1
+      },
+      "to": "worldmap-swampcave-north",
+      "facing": "down"
+    },
+    {
+      "id": "swampcave-south-exit",
+      "tile": {
+        "col": 1,
+        "row": 30
+      },
+      "to": "worldmap-swampcave-south",
+      "facing": "down"
+    }
+  ],
+  "tantegel-castle-1f": [
+    {
+      "id": "castle1f-to-throne",
+      "tile": {
+        "col": 30,
+        "row": 30
+      },
+      "to": "throne-to-castle1f",
+      "facing": "up"
+    },
+    {
+      "id": "castle1f-to-basement",
+      "tile": {
+        "col": 13,
+        "row": 4
+      },
+      "to": "basement-to-castle1f",
+      "facing": "down"
+    },
+    {
+      "id": "castle1f-arrive-from-throne",
+      "tile": {
+        "col": 8,
+        "row": 8
+      },
+      "to": "throne-to-castle1f",
+      "facing": "down"
+    }
+  ],
+  "tantegel-castle-2f": [
+    {
+      "id": "throne-to-castle1f",
+      "tile": {
+        "col": 9,
+        "row": 9
+      },
+      "to": "castle1f-arrive-from-throne",
+      "facing": "down"
+    }
+  ],
+  "tantegel-castle-b1": [
+    {
+      "id": "basement-to-castle1f",
+      "tile": {
+        "col": 1,
+        "row": 5
+      },
+      "to": "castle1f-to-throne",
+      "facing": "up"
+    }
+  ],
+  "world-map": [
+    {
+      "id": "worldmap-erdricks-b1",
+      "tile": {
+        "col": 42,
+        "row": 28
+      },
+      "to": "erdricks-b1-exit",
+      "facing": "up"
+    },
+    {
+      "id": "worldmap-mountain-b1",
+      "tile": {
+        "col": 38,
+        "row": 62
+      },
+      "to": "mountaincave-b1-exit",
+      "facing": "up"
+    },
+    {
+      "id": "worldmap-swampcave-north",
+      "tile": {
+        "col": 106,
+        "row": 46
+      },
+      "to": "swampcave-north-exit",
+      "facing": "down"
+    },
+    {
+      "id": "worldmap-swampcave-south",
+      "tile": {
+        "col": 106,
+        "row": 51
+      },
+      "to": "swampcave-south-exit",
+      "facing": "down"
+    }
+  ]
+}

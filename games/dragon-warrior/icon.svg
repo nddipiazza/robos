@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <rect width="128" height="128" fill="#000080"/>
+  <rect x="4" y="4" width="120" height="120" fill="none" stroke="#FFD700" stroke-width="3"/>
+  <text x="64" y="52" font-family="serif" font-size="28" font-weight="bold" text-anchor="middle" fill="#FFD700">DRAGON</text>
+  <text x="64" y="82" font-family="serif" font-size="28" font-weight="bold" text-anchor="middle" fill="#FFD700">WARRIOR</text>
+  <text x="64" y="108" font-family="serif" font-size="16" text-anchor="middle" fill="#FFFFFF">I</text>
+</svg>

@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://npc_dd7ada2106d4"]
+
+[ext_resource type="Script" path="res://scripts/NPCSprite.gd" id="1_script"]
+
+[node name="HeroNoSwordShield" type="Node2D"]
+script = ExtResource("1_script")
+character_id = "hero_no_sword_shield"
+facing = "down"
+pixel_scale = 2.0
+toggle_time = 0.35
+playing = true

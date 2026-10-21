@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../schemas/v1/save_state.schema.json",
+  "name": "Level 08 - Swamp Cave Approach",
+  "description": "Level 8 swamp-region approach preset with an early Radiant included for cave prep.",
+  "scene": "WorldMap",
+  "tile": "94,28",
+  "facing": "up",
+  "come_from": "debug",
+  "gold": 1200,
+  "hero_name": "ERDRICK",
+  "hero_level": 8,
+  "hero_hp": 46,
+  "hero_hp_max": 46,
+  "hero_mp": 29,
+  "hero_mp_max": 29,
+  "hero_str": 13,
+  "hero_agl": 13,
+  "hero_atk": 13,
+  "hero_def": 12,
+  "hero_exp": 800,
+  "hero_weapon": "hand_axe",
+  "hero_armor": "chain_mail",
+  "hero_spells": [
+    "heal",
+    "hurt",
+    "sleep",
+    "radiant"
+  ],
+  "items": [],
+  "opened_chests": {},
+  "unlocked_doors": {},
+  "bridge_built": false
+}

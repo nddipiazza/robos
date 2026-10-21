@@ -1,0 +1,45 @@
+{
+  "$schema": "../../../schemas/v1/save_state.schema.json",
+  "name": "Level 10 - Rimuldar",
+  "description": "Level 10 Rimuldar milestone with Stopspell unlocked and two Magic Keys stocked.",
+  "scene": "Rimuldar",
+  "tile": "2,16",
+  "facing": "right",
+  "come_from": "world_map",
+  "gold": 2000,
+  "hero_name": "ERDRICK",
+  "hero_level": 10,
+  "hero_hp": 54,
+  "hero_hp_max": 54,
+  "hero_mp": 40,
+  "hero_mp_max": 40,
+  "hero_str": 16,
+  "hero_agl": 16,
+  "hero_atk": 16,
+  "hero_def": 16,
+  "hero_exp": 2000,
+  "hero_weapon": "broad_sword",
+  "hero_armor": "half_plate",
+  "hero_spells": [
+    "heal",
+    "hurt",
+    "sleep",
+    "radiant",
+    "stopspell"
+  ],
+  "items": [
+    {
+      "name": "Magic Key",
+      "id": "magic_key",
+      "desc": "Opens a locked door. Consumed on use."
+    },
+    {
+      "name": "Magic Key",
+      "id": "magic_key",
+      "desc": "Opens a locked door. Consumed on use."
+    }
+  ],
+  "opened_chests": {},
+  "unlocked_doors": {},
+  "bridge_built": false
+}

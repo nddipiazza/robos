@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dragonwarrior.org/schemas/v1/tiles_meta.schema.json",
+  "title": "TilesMetaDataStoreV1",
+  "description": "Schema for tile metadata registry, auto labels, RGB color signatures, and walkability properties.",
+  "type": "object",
+  "properties": {
+    "tile_size": {
+      "type": "integer",
+      "const": 16
+    },
+    "tiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "minimum": 0 },
+          "file": { "type": "string" },
+          "first_seen": { "type": "string" },
+          "usage_count": { "type": "integer", "minimum": 0 },
+          "maps": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "avg_rgb": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0, "maximum": 255 },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "auto_label": {
+            "$ref": "common.schema.json#/$defs/TileType"
+          }
+        },
+        "required": ["id", "file"]
+      }
+    }
+  },
+  "required": ["tile_size", "tiles"]
+}

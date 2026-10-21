@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../schemas/v1/save_state.schema.json",
+  "name": "Level 03 - Erdrick's Cave",
+  "description": "Level 3 preset inside Erdrick's Cave with Heal learned and early gear upgrades.",
+  "scene": "ErdricksCaveB2",
+  "tile": "1,1",
+  "facing": "down",
+  "come_from": "erdricks_cave_b1",
+  "gold": 300,
+  "hero_name": "ERDRICK",
+  "hero_level": 3,
+  "hero_hp": 24,
+  "hero_hp_max": 24,
+  "hero_mp": 5,
+  "hero_mp_max": 5,
+  "hero_str": 7,
+  "hero_agl": 6,
+  "hero_atk": 7,
+  "hero_def": 4,
+  "hero_exp": 23,
+  "hero_weapon": "copper_sword",
+  "hero_armor": "leather_armor",
+  "hero_spells": [
+    "heal"
+  ],
+  "items": [],
+  "opened_chests": {},
+  "unlocked_doors": {},
+  "bridge_built": false
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../schemas/v1/save_state.schema.json",
+  "name": "Level 09 - Swamp Cave",
+  "description": "Level 9 preset inside Swamp Cave with Half Plate and the normal Radiant unlock.",
+  "scene": "SwampCave",
+  "tile": "4,1",
+  "facing": "down",
+  "come_from": "world_map",
+  "gold": 1500,
+  "hero_name": "ERDRICK",
+  "hero_level": 9,
+  "hero_hp": 50,
+  "hero_hp_max": 50,
+  "hero_mp": 36,
+  "hero_mp_max": 36,
+  "hero_str": 15,
+  "hero_agl": 15,
+  "hero_atk": 15,
+  "hero_def": 12,
+  "hero_exp": 1300,
+  "hero_weapon": "hand_axe",
+  "hero_armor": "half_plate",
+  "hero_spells": [
+    "heal",
+    "hurt",
+    "sleep",
+    "radiant"
+  ],
+  "items": [],
+  "opened_chests": {},
+  "unlocked_doors": {},
+  "bridge_built": false
+}

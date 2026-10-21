@@ -1,0 +1,31 @@
+{
+  "$schema": "../../../schemas/v1/save_state.schema.json",
+  "name": "Level 06 - Kol Journey",
+  "description": "Level 6 overworld checkpoint north of Garinham while pushing toward Kol.",
+  "scene": "WorldMap",
+  "tile": "10,8",
+  "facing": "up",
+  "come_from": "debug",
+  "gold": 800,
+  "hero_name": "ERDRICK",
+  "hero_level": 6,
+  "hero_hp": 38,
+  "hero_hp_max": 38,
+  "hero_mp": 24,
+  "hero_mp_max": 24,
+  "hero_str": 11,
+  "hero_agl": 10,
+  "hero_atk": 11,
+  "hero_def": 8,
+  "hero_exp": 220,
+  "hero_weapon": "hand_axe",
+  "hero_armor": "chain_mail",
+  "hero_spells": [
+    "heal",
+    "hurt"
+  ],
+  "items": [],
+  "opened_chests": {},
+  "unlocked_doors": {},
+  "bridge_built": false
+}

@@ -1,0 +1,118 @@
+[
+  {
+    "id": "tantegel_area",
+    "name": "Area Around Tantegel Castle",
+    "type": "overworld",
+    "note": "Half the normal encounter rate. Easiest area in the game.",
+    "monsters": [
+      "slime",
+      "red_slime",
+      "drakee",
+      "ghost",
+      "magician",
+      "magidrakee"
+    ]
+  },
+  {
+    "id": "southern_bridge",
+    "name": "South of Brecconary Bridge",
+    "type": "overworld",
+    "monsters": [
+      "slime",
+      "red_slime",
+      "drakee",
+      "ghost",
+      "magician",
+      "magidrakee",
+      "scorpion"
+    ]
+  },
+  {
+    "id": "garinham_road",
+    "name": "Road to Garinham",
+    "type": "overworld",
+    "monsters": [
+      "drakee",
+      "ghost",
+      "magician",
+      "magidrakee",
+      "scorpion",
+      "druin",
+      "poltergeist"
+    ]
+  },
+  {
+    "id": "kol_area",
+    "name": "Area Around Kol",
+    "type": "overworld",
+    "monsters": [
+      "droll",
+      "drakeema",
+      "skeleton",
+      "warlock",
+      "metal_scorpion",
+      "wolf"
+    ]
+  },
+  {
+    "id": "rimuldar_area",
+    "name": "Area Around Rimuldar",
+    "type": "overworld",
+    "monsters": [
+      "warlock",
+      "wolf",
+      "metal_scorpion",
+      "skeleton",
+      "wraith",
+      "specter"
+    ]
+  },
+  {
+    "id": "southern_desert",
+    "name": "Southwest Desert",
+    "type": "overworld",
+    "note": "Triple encounter rate. Goldman enemies here drop massive gold.",
+    "monsters": [
+      "goldman",
+      "scorpion",
+      "red_slime",
+      "drakee"
+    ]
+  },
+  {
+    "id": "hauksness_area",
+    "name": "Area Around Hauksness",
+    "type": "overworld",
+    "monsters": [
+      "green_dragon",
+      "starwyvern",
+      "werewolf",
+      "wizard"
+    ]
+  },
+  {
+    "id": "cantlin_area",
+    "name": "Area Around Cantlin",
+    "type": "overworld",
+    "monsters": [
+      "knight",
+      "wyvern",
+      "rogue_scorpion",
+      "wraith_knight",
+      "demon_knight",
+      "magiwyvern"
+    ]
+  },
+  {
+    "id": "charlock_approach",
+    "name": "Charlock Castle Approach",
+    "type": "overworld",
+    "monsters": [
+      "armored_knight",
+      "red_dragon",
+      "stoneman",
+      "blue_dragon",
+      "axe_knight"
+    ]
+  }
+]

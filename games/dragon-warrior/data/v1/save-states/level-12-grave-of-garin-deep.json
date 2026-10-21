@@ -1,0 +1,41 @@
+{
+  "$schema": "../../../schemas/v1/save_state.schema.json",
+  "name": "Level 12 - Grave of Garin Deep",
+  "description": "Deep Garin's Grave milestone using the GarinhamB1 scene placeholder, with Outside learned and the Silver Harp acquired.",
+  "scene": "GarinhamB4",
+  "tile": "1,1",
+  "facing": "right",
+  "come_from": "garinham_b3",
+  "gold": 3000,
+  "hero_name": "ERDRICK",
+  "hero_level": 12,
+  "hero_hp": 63,
+  "hero_hp_max": 63,
+  "hero_mp": 50,
+  "hero_mp_max": 50,
+  "hero_str": 20,
+  "hero_agl": 20,
+  "hero_atk": 20,
+  "hero_def": 16,
+  "hero_exp": 4000,
+  "hero_weapon": "broad_sword",
+  "hero_armor": "full_plate",
+  "hero_spells": [
+    "heal",
+    "hurt",
+    "sleep",
+    "radiant",
+    "stopspell",
+    "outside"
+  ],
+  "items": [
+    {
+      "name": "Silver Harp",
+      "id": "silver_harp",
+      "desc": "Summons monsters when used; exchange it for the Staff of Rain"
+    }
+  ],
+  "opened_chests": {},
+  "unlocked_doors": {},
+  "bridge_built": false
+}
