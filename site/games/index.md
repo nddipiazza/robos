@@ -27,6 +27,9 @@ accent: "#e0b252"
       <a href="{{ '/games/robos-rts/' | relative_url }}" style="background-image:url('{{ '/assets/games/rts-bg-poster.jpg' | relative_url }}');--accent:#58b4ff">
         <div class="in"><h2>Starfall Command</h2><p>A three-faction real-time strategy game with an angled 3D camera, a deterministic 64 Hz sim and a bot API.</p><span class="go">Take command →</span></div>
       </a>
+      <a href="{{ '/games/dragon-warrior/' | relative_url }}" style="background-image:url('{{ '/assets/games/dragon-warrior/05_world_map_alefgard_overworld.png' | relative_url }}');--accent:#00bcd4">
+        <div class="in"><h2>Dragon Warrior</h2><p>An NES-authentic 2D console RPG across 29 maps in Alefgard with in-engine Stride AI and 100% verified BFS map completeness.</p><span class="go">Begin the quest →</span></div>
+      </a>
     </div>
   </div>
 </section>

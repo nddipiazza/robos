@@ -1270,7 +1270,35 @@ func _cmd_talk() -> void:
 	_show_dialog("", ["There is no one there."])
 
 func _cmd_door() -> void:
-	_show_dialog("", ["There is no door\nin that direction."])
+	var ft := _hero_tile + _hero_facing
+	var is_door := false
+	if not _tile_grid.is_empty() and ft.y >= 0 and ft.y < _tile_grid.size() and ft.x >= 0 and ft.x < _tile_grid[ft.y].size():
+		if int(_tile_grid[ft.y][ft.x]) == 10:
+			is_door = true
+	if is_door:
+		var key_idx := -1
+		for i in range(_inventory.size()):
+			var it = _inventory[i]
+			if it is Dictionary and (str(it.get("type", "")) == "key" or str(it.get("name", "")) == "Magic Key" or str(it.get("id", "")) == "magic_key"):
+				key_idx = i
+				break
+			elif it is String and (it == "Magic Key" or it == "magic_key"):
+				key_idx = i
+				break
+		if key_idx >= 0:
+			_inventory.remove_at(key_idx)
+			if not _tile_grid.is_empty():
+				_tile_grid[ft.y][ft.x] = 3
+			var gs := get_node_or_null("/root/GameState")
+			if gs:
+				gs.inventory = _inventory.duplicate(true)
+				gs.unlocked_doors[_get_map_key() + ":" + str(ft.x) + "," + str(ft.y)] = true
+			_play_sfx("res://assets/music/mp3/open_door.mp3")
+			_show_dialog("", ["The door clicks open."])
+		else:
+			_show_dialog("", ["Thou dost not have\na Magic Key."])
+	else:
+		_show_dialog("", ["There is no door\nin that direction."])
 
 func _cmd_status() -> void:
 	_refresh_status_panel()

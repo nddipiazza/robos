@@ -44,6 +44,8 @@ const SCENE_MAP := {
 	"CharlockCastleB5":      "res://scenes/CharlockCastleB5.tscn",
 	"CharlockCastleB6":      "res://scenes/CharlockCastleB6.tscn",
 	"CharlockThroneRoom":    "res://scenes/CharlockThroneRoom.tscn",
+	"StaffOfRainCave":       "res://scenes/StaffOfRainCave.tscn",
+	"RainbowDropCave":       "res://scenes/RainbowDropCave.tscn",
 }
 
 const MAP_POSITIONS := [

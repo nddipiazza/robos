@@ -21,7 +21,9 @@
     "charlock-castle-b5": "CharlockCastleB5",
     "charlock-castle-b6": "CharlockCastleB6",
     "charlock-castle-b7": "CharlockThroneRoom",
-    "world-map": "WorldMap"
+    "world-map": "WorldMap",
+    "northern-cave-b1": "StaffOfRainCave",
+    "southern-cave-b1": "RainbowDropCave"
   },
   "charlock-castle-1f": [
     {
@@ -223,7 +225,7 @@
         "col": 10,
         "row": 2
       },
-      "to": "charlockb3-to-b2-a",
+      "to": "charlockb3-to-b2-d",
       "facing": "down"
     },
     {
@@ -279,7 +281,7 @@
         "col": 1,
         "row": 10
       },
-      "to": "charlockb2-to-b3-d",
+      "to": "charlockb2-to-b3-b",
       "facing": "up"
     },
     {
@@ -495,7 +497,7 @@
         "col": 12,
         "row": 3
       },
-      "to": "garinhamb1-to-garinham",
+      "to": "garinhamb1-to-b2",
       "facing": "up"
     },
     {
@@ -763,7 +765,7 @@
         "col": 1,
         "row": 5
       },
-      "to": "castle1f-to-throne",
+      "to": "castle1f-to-basement",
       "facing": "up"
     }
   ],
@@ -771,8 +773,8 @@
     {
       "id": "worldmap-erdricks-b1",
       "tile": {
-        "col": 42,
-        "row": 28
+        "col": 30,
+        "row": 14
       },
       "to": "erdricks-b1-exit",
       "facing": "up"
@@ -780,8 +782,8 @@
     {
       "id": "worldmap-mountain-b1",
       "tile": {
-        "col": 38,
-        "row": 62
+        "col": 31,
+        "row": 59
       },
       "to": "mountaincave-b1-exit",
       "facing": "up"
@@ -803,6 +805,46 @@
       },
       "to": "swampcave-south-exit",
       "facing": "down"
+    },
+    {
+      "id": "worldmap-northerncave",
+      "tile": {
+        "col": 83,
+        "row": 3
+      },
+      "to": "northerncave-exit",
+      "facing": "down"
+    },
+    {
+      "id": "worldmap-southerncave",
+      "tile": {
+        "col": 110,
+        "row": 111
+      },
+      "to": "southerncave-exit",
+      "facing": "down"
+    }
+  ],
+  "northern-cave-b1": [
+    {
+      "id": "northerncave-exit",
+      "tile": {
+        "col": 5,
+        "row": 10
+      },
+      "to": "worldmap-northerncave",
+      "facing": "up"
+    }
+  ],
+  "southern-cave-b1": [
+    {
+      "id": "southerncave-exit",
+      "tile": {
+        "col": 1,
+        "row": 5
+      },
+      "to": "worldmap-southerncave",
+      "facing": "up"
     }
   ]
 }

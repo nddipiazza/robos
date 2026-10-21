@@ -24,9 +24,9 @@ func _is_walkable(tile: Vector2i) -> bool:
 
 func _check_transitions() -> void:
     if _hero_tile == Vector2i(3, 0):
-        _transition_to("res://scenes/WorldMap.tscn", Vector2i(97, 30), _vec_to_facing(_hero_facing), "world_map")
+        _transition_to("res://scenes/WorldMap.tscn", Vector2i(106, 46), _vec_to_facing(_hero_facing), "world_map")
         return
     if _hero_tile == Vector2i(3, MAP_H - 1):
-        _transition_to("res://scenes/WorldMap.tscn", Vector2i(97, 38), _vec_to_facing(_hero_facing), "world_map")
+        _transition_to("res://scenes/WorldMap.tscn", Vector2i(106, 51), _vec_to_facing(_hero_facing), "world_map")
         return
 

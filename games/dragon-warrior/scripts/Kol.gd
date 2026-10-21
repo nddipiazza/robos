@@ -33,6 +33,11 @@ func _is_walkable(tile: Vector2i) -> bool:
         return false
     if tile.x == 0 or tile.x == MAP_W - 1 or tile.y == 0 or tile.y == MAP_H - 1:
         return _pixel_is_walkable(tile)
+    for npc in _npc_data:
+        if npc.get("tile", Vector2i(-1, -1)) == tile:
+            return false
+    if not _tile_grid.is_empty() and int(_tile_grid[tile.y][tile.x]) == 32:
+        return true
     return super._is_walkable(tile)
 
 func _check_transitions() -> void:
