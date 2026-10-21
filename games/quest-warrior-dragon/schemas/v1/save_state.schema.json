@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dragonwarrior.org/schemas/v1/save_state.schema.json",
+  "title": "SaveStateDataStoreV1",
+  "description": "Schema for Quest: Warrior Dragon hero save states, game state milestones, hero statistics, inventory, equipment, quest flags, and boss defeat states.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": {
+      "type": "string",
+      "description": "Display title / label of the save state milestone."
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable summary of hero progress or state context."
+    },
+    "scene": {
+      "type": "string",
+      "description": "Current active scene name (e.g. ThroneRoom, WorldMap, Brecconary)."
+    },
+    "tile": {
+      "type": "string",
+      "pattern": "^\\d+,\\d+$",
+      "description": "Player hero tile coordinates in 'col,row' format."
+    },
+    "facing": {
+      "$ref": "common.schema.json#/$defs/FacingDirection"
+    },
+    "come_from": {
+      "type": "string",
+      "description": "Previous scene origin identifier."
+    },
+    "gold": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Carried Gold Pieces."
+    },
+    "hero_name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Hero character name."
+    },
+    "hero_level": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30,
+      "description": "Hero level (1–30)."
+    },
+    "hero_hp": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Current Health Points."
+    },
+    "hero_hp_max": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Maximum Health Points."
+    },
+    "hero_mp": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Current Magic Points."
+    },
+    "hero_mp_max": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Maximum Magic Points."
+    },
+    "hero_str": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Hero Strength statistic."
+    },
+    "hero_agl": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Hero Agility statistic."
+    },
+    "hero_atk": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Hero Attack Power."
+    },
+    "hero_def": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Hero Defense Power."
+    },
+    "hero_exp": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Cumulative Experience Points."
+    },
+    "hero_weapon": {
+      "type": ["string", "null"],
+      "description": "Equipped weapon ID."
+    },
+    "hero_armor": {
+      "type": ["string", "null"],
+      "description": "Equipped armor ID."
+    },
+    "hero_shield": {
+      "type": ["string", "null"],
+      "description": "Equipped shield ID."
+    },
+    "hero_spells": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Unlocked spell IDs."
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "id": { "type": "string" },
+              "desc": { "type": "string" }
+            },
+            "required": ["id"]
+          }
+        ]
+      },
+      "description": "Carried inventory items."
+    },
+    "opened_chests": {
+      "type": "object",
+      "description": "Dictionary of chest ID -> opened boolean."
+    },
+    "unlocked_doors": {
+      "type": "object",
+      "description": "Dictionary of door ID -> unlocked boolean."
+    },
+    "bridge_built": {
+      "type": "boolean",
+      "description": "Overworld Rainbow Bridge quest flag."
+    },
+    "king_intro_done": {
+      "type": "boolean",
+      "description": "King Lorik intro dialogue flag."
+    },
+    "princess_rescued": {
+      "type": "boolean",
+      "description": "Princess Gwaelin rescue story flag."
+    },
+    "green_dragon_defeated": {
+      "type": "boolean",
+      "description": "Green Dragon boss defeat flag."
+    },
+    "golem_defeated": {
+      "type": "boolean",
+      "description": "Golem boss defeat flag."
+    },
+    "axe_knight_defeated": {
+      "type": "boolean",
+      "description": "Axe Knight boss defeat flag."
+    },
+    "dragonlord_defeated": {
+      "type": "boolean",
+      "description": "Dragonlord final boss defeat flag."
+    }
+  },
+  "required": [
+    "name",
+    "scene",
+    "tile",
+    "facing",
+    "gold",
+    "hero_name",
+    "hero_level",
+    "hero_hp",
+    "hero_hp_max",
+    "hero_mp",
+    "hero_mp_max",
+    "hero_exp"
+  ]
+}

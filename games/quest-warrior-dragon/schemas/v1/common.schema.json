@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dragonwarrior.org/schemas/v1/common.schema.json",
+  "title": "DragonWarriorV1CommonDefinitions",
+  "description": "Shared schema enumerations and common data structures for Quest: Warrior Dragon v1 Data Store.",
+  "$defs": {
+    "NpcRole": {
+      "type": "string",
+      "enum": [
+        "dragonlord",
+        "guard",
+        "king",
+        "lady",
+        "merchant",
+        "minister",
+        "pilgrim",
+        "princess",
+        "red_guard",
+        "sage",
+        "sage_alt",
+        "woman",
+        "man",
+        "soldier",
+        "trump_guard"
+      ],
+      "description": "Standardized character role / sprite class enumeration."
+    },
+    "TileType": {
+      "type": "string",
+      "enum": [
+        "barrier",
+        "brick",
+        "chest",
+        "dark",
+        "desert",
+        "dirt",
+        "door",
+        "forest",
+        "grass",
+        "hills",
+        "light_stone",
+        "misc",
+        "mountain",
+        "plains",
+        "roof",
+        "shore",
+        "stairs",
+        "stone",
+        "swamp",
+        "tree",
+        "wall",
+        "water"
+      ],
+      "description": "Standardized map terrain / tile label enumeration."
+    },
+    "FacingDirection": {
+      "type": "string",
+      "enum": ["up", "down", "left", "right"],
+      "description": "Cardinal compass facing direction enumeration."
+    },
+    "EquipmentType": {
+      "type": "string",
+      "enum": ["weapon", "armor", "shield"],
+      "description": "Equipment type classification enumeration."
+    },
+    "ItemCategory": {
+      "type": "string",
+      "enum": ["consumable", "quest", "tool", "key_item", "equipment_bonus", "cursed"],
+      "description": "Inventory and quest item category enumeration."
+    },
+    "LocationType": {
+      "type": "string",
+      "enum": ["castle", "town", "cave", "shrine", "dungeon", "castle_dungeon"],
+      "description": "World location type classification enumeration."
+    },
+    "SpellTarget": {
+      "type": "string",
+      "enum": ["self", "enemy", "field"],
+      "description": "Spell targeting scope enumeration."
+    },
+    "InteractionType": {
+      "type": "string",
+      "enum": ["talk", "save_game", "restore_mp", "shop", "inn", "princess_rescue"],
+      "description": "NPC interaction behavior enumeration."
+    }
+  }
+}

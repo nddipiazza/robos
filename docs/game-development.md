@@ -28,6 +28,7 @@ All three are Godot 4.3 projects (`config/features` in each `project.godot` list
 | `games/crpg-realm` | Realm of Heroes: A Night Without Memory | A party-based cRPG with D&D 5e SRD rules. It has its own `AGENTS.md` describing the test layers. |
 | `games/tabletop-rpg` | RobOS Tabletop RPG: HeroQuest | A HeroQuest-style turn-based dungeon crawler. Its content is modeled in the `tabletop-game` graph package. `play.sh` accepts options such as `--cartridge`, `--quest`, `--demo` and `--hard`. |
 | `games/robos-rts` | Starfall Command | A real-time strategy game with three factions, an angled 3D camera and a deterministic 64 Hz simulation. A Python SDK and HTTP API drive it for bots and Cucumber tests. See [RobOS RTS]({{ '/projects/robos-rts/' | relative_url }}). |
+| `games/quest-warrior-dragon` | Quest: Warrior Dragon | An 8-bit 2D console RPG across 29 maps with in-engine Stride AI, chained Cucumber checkpoint tests, and headless BFS map completeness verification. See [Quest: Warrior Dragon]({{ '/projects/quest-warrior-dragon/' | relative_url }}). |
 
 Each has a launcher script. It finds Godot from `GODOT_BIN`, then `godot4` or `godot` on your `PATH` (they also check `~/apps/godot4`, and the tabletop script checks `~/.local/bin/godot`):
 

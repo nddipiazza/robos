@@ -83,7 +83,7 @@ packages:
 
   - id: "jrpg"
     namespace: "robos.jrpg"
-    title: "2D JRPG Engine & Dragon Warrior Package"
+    title: "2D JRPG Engine & Quest: Warrior Dragon Package"
     description: "Classic 2D tile-based turn-based JRPG ontology nodes, 40 monsters, spells, equipment, quest items, 29 overworld/town/dungeon locations, and procedural copyright-free pixel-art assets."
     path: "kgraphs/jrpg/package.jsonld"
 

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dragonwarrior.org/schemas/v1/dragon_warrior_v1.schema.json",
+  "title": "DragonWarriorV1MasterSchema",
+  "description": "Master JSON Schema defining the complete Quest: Warrior Dragon (NES) v1 Data Store domain specifications for modern AI generative engines and game systems.",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "v1.0.0",
+      "description": "Data store schema version identifier."
+    },
+    "data_store_name": {
+      "type": "string",
+      "const": "Quest: Warrior Dragon NES V1 Data Store",
+      "description": "Human-readable data store identifier."
+    },
+    "domains": {
+      "type": "object",
+      "description": "Map of data domains included in the v1 data store.",
+      "properties": {
+        "common": { "$ref": "common.schema.json" },
+        "monsters": { "$ref": "monsters.schema.json" },
+        "spells": { "$ref": "spells.schema.json" },
+        "levels": { "$ref": "levels.schema.json" },
+        "equipment": { "$ref": "equipment.schema.json" },
+        "items": { "$ref": "items.schema.json" },
+        "locations": { "$ref": "locations.schema.json" },
+        "encounter_zones": { "$ref": "encounter_zones.schema.json" },
+        "map_grids": { "$ref": "map_grids.schema.json" },
+        "tiles_meta": { "$ref": "tiles_meta.schema.json" },
+        "registries": { "$ref": "registries.schema.json" },
+        "npcs": { "$ref": "npcs.schema.json" },
+        "dialogue": { "$ref": "dialogue.schema.json" },
+        "combat_formulas": { "$ref": "combat_formulas.schema.json" },
+        "name_system": { "$ref": "name_system.schema.json" },
+        "sprite_frames": { "$ref": "sprite_frames.schema.json" },
+        "save_state": { "$ref": "save_state.schema.json" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["version", "data_store_name", "domains"],
+  "additionalProperties": false
+}
