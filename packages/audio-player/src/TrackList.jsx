@@ -1,7 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useViewport, scrollRootTo } from './virtual.jsx';
 import { Icon } from './Icon.jsx';
 import { formatDuration } from '../lib/library-index.js';
-import { useLibrary, sameTrack, trackMenuItems, collectionMenuItems, LoveButton, Cover, useProgressive, useStableArray, TRACK_DRAG_TYPE } from './library-ui.jsx';
+import { useLibrary, sameTrack, trackMenuItems, collectionMenuItems, LoveButton, Cover, useStableArray, TRACK_DRAG_TYPE } from './library-ui.jsx';
+
+// Must match `.tl-row` / `.tl-disc` height in style.css: rows are absolutely
+// positioned so only the visible slice of a 100k-track list is in the DOM.
+const ROW_HEIGHT = 44;
+const OVERSCAN_PX = 500;
+const HEADER_HEIGHT = 30;
 
 const relativeDate = (iso) => {
   if (!iso) return '—';
@@ -58,7 +65,29 @@ export default function TrackList({
   const [selected, setSelected] = useState(() => new Set());
   const anchorRef = useRef(null);
   const listRef = useRef(null);
-  const { visible, sentinel, showAll } = useProgressive(tracks);
+  const view = useViewport(listRef, tracks.length > 0);
+
+  // Disc headings occupy a row of their own; without them row i is track i.
+  const discRows = useMemo(() => {
+    if (!showDiscs) return null;
+    const rows = [];
+    let last = null;
+    tracks.forEach((t, idx) => {
+      const disc = t.discNumber || 1;
+      if (disc !== last) { rows.push({ disc }); last = disc; }
+      rows.push({ idx });
+    });
+    return rows;
+  }, [tracks, showDiscs]);
+  const rowCount = discRows ? discRows.length : tracks.length;
+  const rowOfTrack = (idx) => (discRows ? discRows.findIndex(r => r.idx === idx) : idx);
+
+  const ensureVisible = (idx) => {
+    if (!view) return;
+    const y = rowOfTrack(idx) * ROW_HEIGHT;
+    if (y < view.top + HEADER_HEIGHT) scrollRootTo(view, listRef, y, HEADER_HEIGHT + 8);
+    else if (y + ROW_HEIGHT > view.bottom) scrollRootTo(view, listRef, y + ROW_HEIGHT, view.bottom - view.top);
+  };
 
   useEffect(() => { setSelected(new Set()); anchorRef.current = null; }, [tracks]);
 
@@ -101,7 +130,6 @@ export default function TrackList({
     if (e.target !== listRef.current) return;
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
       e.preventDefault();
-      showAll();
       setSelected(new Set(tracks.map((_, i) => i)));
     } else if (e.key === 'Escape') {
       setSelected(new Set());
@@ -116,8 +144,7 @@ export default function TrackList({
       const nextIdx = Math.max(0, Math.min(tracks.length - 1, cur + (e.key === 'ArrowDown' ? 1 : -1)));
       anchorRef.current = nextIdx;
       setSelected(new Set([nextIdx]));
-      const row = listRef.current.querySelector(`[data-idx="${nextIdx}"]`);
-      if (row) row.scrollIntoView({ block: 'nearest' });
+      ensureVisible(nextIdx);
     }
   };
 
@@ -146,24 +173,28 @@ export default function TrackList({
     </div>
   );
 
-  let lastDisc = null;
+  // Visible slice; before the first measurement only a screenful is rendered.
+  const firstRow = view ? Math.max(0, Math.floor((view.top - OVERSCAN_PX) / ROW_HEIGHT)) : 0;
+  const lastRow = view ? Math.min(rowCount, Math.ceil((view.bottom + OVERSCAN_PX) / ROW_HEIGHT)) : Math.min(rowCount, 40);
+  const template = gridFor(columns);
   const rows = [];
-  visible.forEach((t, idx) => {
-    if (showDiscs) {
-      const disc = t.discNumber || 1;
-      if (disc !== lastDisc) {
-        rows.push(<div key={`disc-${disc}`} className="tl-disc"><Icon name="disc" size={13} /> Disc {disc}</div>);
-        lastDisc = disc;
-      }
+  for (let r = firstRow; r < lastRow; r++) {
+    const top = r * ROW_HEIGHT;
+    const entry = discRows ? discRows[r] : null;
+    if (entry && entry.disc != null) {
+      rows.push(<div key={`disc-${entry.disc}`} className="tl-disc" style={{ top }}><Icon name="disc" size={13} /> Disc {entry.disc}</div>);
+      continue;
     }
+    const idx = entry ? entry.idx : r;
+    const t = tracks[idx];
     const isCurrent = sameTrack(currentTrack, t);
     const st = stats[t.id] || {};
     rows.push(
       <div
-        key={t.id || `${t.filePath}-${idx}`}
+        key={`${idx}-${t.id || t.filePath}`}
         data-idx={idx}
         className={`tl-row tl-${variant} ${isCurrent ? 'current' : ''} ${selected.has(idx) ? 'selected' : ''}`}
-        style={{ gridTemplateColumns: gridFor(columns) }}
+        style={{ gridTemplateColumns: template, top }}
         draggable
         onDragStart={(e) => handleDragStart(e, idx)}
         onClick={(e) => handleClick(e, idx)}
@@ -173,7 +204,7 @@ export default function TrackList({
         {columns.map(col => renderCell(col, t, idx, { isCurrent, isPlaying, st, variant, albumArtist, actions, tracks, openMenu, ctx }))}
       </div>
     );
-  });
+  }
 
   return (
     <div className="track-list" id={id}>
@@ -189,9 +220,8 @@ export default function TrackList({
         </div>
       )}
       {header}
-      <div className="tl-body" ref={listRef} tabIndex={0} onKeyDown={handleKeyDown}>
+      <div className="tl-body" ref={listRef} tabIndex={0} onKeyDown={handleKeyDown} style={{ height: rowCount * ROW_HEIGHT }}>
         {rows}
-        {sentinel}
       </div>
     </div>
   );

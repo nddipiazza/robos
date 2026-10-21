@@ -9,38 +9,52 @@ const UNKNOWN_ALBUM = 'Unknown Album';
 const VARIOUS_ARTISTS = 'Various Artists';
 const PLACEHOLDER_ARTISTS = new Set(['unknown artist', 'cloud stream', 'local file', '']);
 
+// Artist, album and genre strings repeat thousands of times in a big library, so
+// the (slow) Unicode normalisation is cached per distinct string.
+const foldCache = new Map();
+const FOLD_CACHE_LIMIT = 300000;
+
 function fold(value) {
-  return String(value == null ? '' : value)
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim();
+  const raw = value == null ? '' : String(value);
+  let out = foldCache.get(raw);
+  if (out === undefined) {
+    if (foldCache.size > FOLD_CACHE_LIMIT) foldCache.clear();
+    out = raw.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    foldCache.set(raw, out);
+  }
+  return out;
 }
 
-// Sorting 10k tracks makes ~150k comparisons; normalising strings and building
-// locale options on every one of them is what makes big libraries feel slow.
-const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+// Sorting 100k tracks makes ~1.7M comparisons, so names are reduced once to a
+// key that compares correctly as a plain string: case- and accent-folded, without
+// a leading "The"/"A", and with numbers zero-padded so "Track 2" < "Track 10".
 const sortNameCache = new Map();
 
-// Sort key: case/diacritic-insensitive and ignoring a leading "The " / "A ".
+// Display/grouping form: folded, without a leading article.
 function sortName(value) {
+  return sortKey(value).replace(/\d{12}/g, d => String(Number(d)));
+}
+
+function sortKey(value) {
   const raw = value == null ? '' : String(value);
   let key = sortNameCache.get(raw);
   if (key === undefined) {
-    if (sortNameCache.size > 100000) sortNameCache.clear();
-    key = fold(raw).replace(/^(the|a|an)\s+/, '');
+    if (sortNameCache.size > FOLD_CACHE_LIMIT) sortNameCache.clear();
+    key = fold(raw).replace(/^(the|a|an)\s+/, '').replace(/\d+/g, d => d.padStart(12, '0'));
     sortNameCache.set(raw, key);
   }
   return key;
 }
 
 function compareNames(a, b) {
-  return collator.compare(sortName(a), sortName(b));
+  const ka = sortKey(a);
+  const kb = sortKey(b);
+  return ka < kb ? -1 : ka > kb ? 1 : 0;
 }
 
 // Letter used for A–Z jump bars; digits and symbols go under '#'.
 function indexLetter(name) {
-  const c = sortName(name).charAt(0).toUpperCase();
+  const c = sortKey(name).charAt(0).toUpperCase();
   return c >= 'A' && c <= 'Z' ? c : '#';
 }
 
@@ -117,27 +131,62 @@ function buildIndex(tracks = []) {
     album.tracks.push(t);
   }
 
+  // One pass per album with no per-album temporary collections: a 100k-track
+  // library can have tens of thousands of albums.
   const albums = [];
   for (const album of albumMap.values()) {
-    album.tracks.sort(compareAlbumOrder);
-    const trackArtists = new Set(album.tracks.map(t => t.artist).filter(a => a && !isPlaceholderArtist(a)));
-    const albumArtist = mostCommon(album.tracks.map(t => t.albumArtist));
+    const list = album.tracks;
+    if (list.length > 1) list.sort(compareAlbumOrder);
+    let trackArtist = null;
+    let multipleArtists = false;
+    let albumArtist = null;
+    let mixedAlbumArtists = false;
+    let year = null;
+    let artId = null;
+    let duration = 0;
+    let addedAt = null;
+    let lossless = true;
+    let discCount = 0;
+    let lastDisc = null;
+    let genre = null;
+    let mixedGenres = false;
+    let codec = null;
+    for (const t of list) {
+      if (t.artist && !isPlaceholderArtist(t.artist)) {
+        if (trackArtist === null) trackArtist = t.artist;
+        else if (t.artist !== trackArtist) multipleArtists = true;
+      }
+      if (t.albumArtist) {
+        if (albumArtist === null) albumArtist = t.albumArtist;
+        else if (t.albumArtist !== albumArtist) mixedAlbumArtists = true;
+      }
+      if (t.year && (year === null || t.year < year)) year = t.year;
+      if (!artId && t.artId) artId = t.artId;
+      duration += t.duration || 0;
+      if (t.addedAt && (!addedAt || t.addedAt > addedAt)) addedAt = t.addedAt;
+      if (!t.lossless) lossless = false;
+      const disc = t.discNumber || 1;
+      if (disc !== lastDisc) { discCount++; lastDisc = disc; }
+      if (t.genre) {
+        if (genre === null) genre = t.genre;
+        else if (t.genre !== genre) mixedGenres = true;
+      }
+      if (!codec && t.codec) codec = t.codec;
+    }
+    if (mixedAlbumArtists) albumArtist = mostCommon(list.map(t => t.albumArtist));
     album.artist = albumArtist
-      || (trackArtists.size === 1 ? [...trackArtists][0]
-        : trackArtists.size > 1 ? VARIOUS_ARTISTS
-          : (album.tracks[0].artist || UNKNOWN_ARTIST));
+      || (multipleArtists ? VARIOUS_ARTISTS : (trackArtist || list[0].artist || UNKNOWN_ARTIST));
     album.artistKey = fold(album.artist);
     album.isCompilation = album.artist === VARIOUS_ARTISTS;
-    const years = album.tracks.map(t => t.year).filter(Boolean);
-    album.year = years.length ? Math.min(...years) : null;
-    album.genre = mostCommon(album.tracks.flatMap(t => splitGenres(t.genre)));
-    album.artId = (album.tracks.find(t => t.artId) || {}).artId || null;
-    album.duration = sumDuration(album.tracks);
-    album.discCount = new Set(album.tracks.map(t => t.discNumber || 1)).size;
-    album.addedAt = album.tracks.reduce((acc, t) => latest(acc, t.addedAt), null);
-    album.lossless = album.tracks.length > 0 && album.tracks.every(t => t.lossless);
-    album.codec = mostCommon(album.tracks.map(t => t.codec));
-    album.isUnknown = fold(album.title) === fold(UNKNOWN_ALBUM);
+    album.year = year;
+    album.genre = mixedGenres ? mostCommon(list.flatMap(t => splitGenres(t.genre))) : (splitGenres(genre)[0] || null);
+    album.artId = artId;
+    album.duration = duration;
+    album.discCount = discCount;
+    album.addedAt = addedAt;
+    album.lossless = list.length > 0 && lossless;
+    album.codec = codec;
+    album.isUnknown = fold(album.title) === 'unknown album';
     albums.push(album);
   }
   albums.sort((a, b) => compareNames(a.title, b.title) || compareNames(a.artist, b.artist));
@@ -252,6 +301,15 @@ function groupBy(tracks, namesOf, albumOfTrack) {
 
 const haystackCache = new WeakMap();
 
+function cachedHaystack(item, text) {
+  let hay = haystackCache.get(item);
+  if (hay === undefined) {
+    hay = fold(text());
+    haystackCache.set(item, hay);
+  }
+  return hay;
+}
+
 function trackHaystack(t) {
   let hay = haystackCache.get(t);
   if (hay === undefined) {
@@ -277,7 +335,7 @@ function searchIndex(index, query, limits = {}) {
   const byScore = (nameOf) => (a, b) => nameScore(nameOf(a)) - nameScore(nameOf(b)) || compareNames(nameOf(a), nameOf(b));
 
   const artists = index.artists.filter(a => matches(fold(a.name))).sort(byScore(a => a.name));
-  const albums = index.albums.filter(a => matches(fold(`${a.title} ${a.artist} ${a.year || ''}`))).sort(byScore(a => a.title));
+  const albums = index.albums.filter(a => matches(cachedHaystack(a, () => `${a.title} ${a.artist} ${a.year || ''}`))).sort(byScore(a => a.title));
   const genres = index.genres.filter(g => matches(g.key)).sort(byScore(g => g.name));
   const tracks = index.tracks.filter(t => matches(trackHaystack(t))).sort(byScore(t => t.title));
   return {

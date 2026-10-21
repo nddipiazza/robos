@@ -146,9 +146,61 @@ app.whenReady().then(() => {
   });
 });
 
+// Large libraries batch their cache writes; make sure the last one lands.
+app.on('before-quit', () => {
+  try { mediaLibrary.flush(); } catch {}
+});
+
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
+
+// ── Background scan → renderer updates ─────────────────────────────────────
+
+// Library payloads are large (100k tracks ≈ 30 MB over IPC) and rebuilding the
+// renderer's browse index costs a few hundred ms, so during a scan the renderer
+// receives progress a few times per second and the library itself only every few
+// seconds, scaled to the library size.
+const PROGRESS_INTERVAL_MS = 150;
+
+function libraryPushInterval() {
+  const n = mediaLibrary.tracks.length;
+  return n < 5000 ? 1000 : n < 30000 ? 3000 : 6000;
+}
+
+function scanUpdates({ onDone } = {}) {
+  let lastProgress = 0;
+  let lastLibraryPush = 0;
+  let pendingLibrary = null;
+  const pushLibrary = () => {
+    if (pendingLibrary) { clearTimeout(pendingLibrary); pendingLibrary = null; }
+    lastLibraryPush = Date.now();
+    sendToWindow('audio:library-scan-batch', { library: mediaLibrary.getLibrary() });
+  };
+  return {
+    onDiscovered: (data) => sendToWindow('audio:library-scan-discovered', data),
+    onProgress: (progress) => {
+      const now = Date.now();
+      if (now - lastProgress < PROGRESS_INTERVAL_MS && progress.current !== progress.total) return;
+      lastProgress = now;
+      sendToWindow('audio:library-scan-progress', { current: progress.current, total: progress.total, file: progress.file });
+    },
+    onBatch: () => {
+      const wait = libraryPushInterval() - (Date.now() - lastLibraryPush);
+      if (wait <= 0) pushLibrary();
+      else if (!pendingLibrary) pendingLibrary = setTimeout(pushLibrary, wait);
+    },
+    onDone: (done) => {
+      if (pendingLibrary) { clearTimeout(pendingLibrary); pendingLibrary = null; }
+      if (onDone) onDone(done);
+      sendToWindow('audio:library-scan-complete', { totalFound: done.totalFound, canceled: done.canceled, library: mediaLibrary.getLibrary() });
+    },
+    onError: (err) => {
+      if (pendingLibrary) { clearTimeout(pendingLibrary); pendingLibrary = null; }
+      sendToWindow('audio:library-scan-error', { error: err.message });
+    },
+  };
+}
 
 // ── IPC Handlers ────────────────────────────────────────────────────────────
 
@@ -304,33 +356,7 @@ ipcMain.handle('audio:select-library-folder', async () => {
   }
 
   // Launch background scan worker off the main thread
-  mediaLibrary.scanFoldersInBackground(res.filePaths, {
-    onDiscovered: (data) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:library-scan-discovered', data);
-      }
-    },
-    onProgress: (progress) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:library-scan-progress', progress);
-      }
-    },
-    onBatch: (batch) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:library-scan-batch', batch);
-      }
-    },
-    onDone: (doneData) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:library-scan-complete', doneData);
-      }
-    },
-    onError: (err) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:library-scan-error', { error: err.message });
-      }
-    }
-  });
+  mediaLibrary.scanFoldersInBackground(res.filePaths, scanUpdates());
 
   return {
     canceled: false,
@@ -341,33 +367,7 @@ ipcMain.handle('audio:select-library-folder', async () => {
 
 ipcMain.handle('audio:scan-folders', async (_evt, folders) => {
   if (!Array.isArray(folders) || !folders.length) return { canceled: true };
-  mediaLibrary.scanFoldersInBackground(folders, {
-    onDiscovered: (data) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:library-scan-discovered', data);
-      }
-    },
-    onProgress: (progress) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:library-scan-progress', progress);
-      }
-    },
-    onBatch: (batch) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:library-scan-batch', batch);
-      }
-    },
-    onDone: (doneData) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:library-scan-complete', doneData);
-      }
-    },
-    onError: (err) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:library-scan-error', { error: err.message });
-      }
-    }
-  });
+  mediaLibrary.scanFoldersInBackground(folders, scanUpdates());
   return { started: true, folders };
 });
 
@@ -404,33 +404,7 @@ ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
   mediaLibrary.mergeTracks(quickTracks);
 
   if (dirs.length > 0) {
-    mediaLibrary.scanFoldersInBackground(dirs, {
-      onDiscovered: (data) => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('audio:library-scan-discovered', data);
-        }
-      },
-      onProgress: (progress) => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('audio:library-scan-progress', progress);
-        }
-      },
-      onBatch: (batch) => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('audio:library-scan-batch', batch);
-        }
-      },
-      onDone: (doneData) => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('audio:library-scan-complete', doneData);
-        }
-      },
-      onError: (err) => {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.send('audio:library-scan-error', { error: err.message });
-        }
-      }
-    });
+    mediaLibrary.scanFoldersInBackground(dirs, scanUpdates());
   }
 
   return {
@@ -443,23 +417,19 @@ ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
 
 // ── Managed library folders (local + cloud) ────────────────────────────────
 
-function folderState() {
-  return { folders: libraryFolders.list(), library: mediaLibrary.getLibrary() };
+// Only attach the (potentially huge) library when the call changed tracks.
+function folderState({ withLibrary = false } = {}) {
+  const state = { folders: libraryFolders.list() };
+  if (withLibrary) state.library = mediaLibrary.getLibrary();
+  return state;
 }
 
 function scanLocalFolders(folders) {
   const paths = folders.filter(f => f.kind === 'local' && fs.existsSync(f.path)).map(f => f.path);
   if (!paths.length) return;
-  mediaLibrary.scanFoldersInBackground(paths, {
-    onDiscovered: (d) => sendToWindow('audio:library-scan-discovered', d),
-    onProgress: (p) => sendToWindow('audio:library-scan-progress', p),
-    onBatch: (b) => sendToWindow('audio:library-scan-batch', b),
-    onDone: (done) => {
-      folders.forEach(f => f.kind === 'local' && libraryFolders.markSynced(f.id));
-      sendToWindow('audio:library-scan-complete', done);
-    },
-    onError: (err) => sendToWindow('audio:library-scan-error', { error: err.message }),
-  });
+  mediaLibrary.scanFoldersInBackground(paths, scanUpdates({
+    onDone: () => folders.forEach(f => f.kind === 'local' && libraryFolders.markSynced(f.id)),
+  }));
 }
 
 async function syncCloudFolders(folders) {
@@ -493,8 +463,8 @@ ipcMain.handle('audio:folders-add-cloud', async (_evt, { connectionId, path: rem
   try {
     const folder = libraryFolders.add({ kind: 'cloud', connectionId, path: remotePath, label });
     const [result] = await syncCloudFolders([folder]);
-    if (result && result.error) return { ok: false, error: result.error, ...folderState() };
-    return { ok: true, ...result, ...folderState() };
+    if (result && result.error) return { ok: false, error: result.error, ...folderState({ withLibrary: true }) };
+    return { ok: true, ...result, ...folderState({ withLibrary: true }) };
   } catch (err) {
     return { ok: false, error: err.message, ...folderState() };
   }
@@ -505,7 +475,7 @@ ipcMain.handle('audio:folders-rescan', async (_evt, id) => {
   scanLocalFolders(targets);
   const results = await syncCloudFolders(targets);
   const failed = results.filter(r => r.error);
-  return { ok: !failed.length, error: failed.map(r => r.error).join('; ') || undefined, ...folderState() };
+  return { ok: !failed.length, error: failed.map(r => r.error).join('; ') || undefined, ...folderState({ withLibrary: true }) };
 });
 
 ipcMain.handle('audio:folders-rename', async (_evt, { id, label }) => {
@@ -515,7 +485,7 @@ ipcMain.handle('audio:folders-rename', async (_evt, { id, label }) => {
 
 ipcMain.handle('audio:folders-remove', async (_evt, { id, removeTracks }) => {
   libraryFolders.remove(id, !!removeTracks);
-  return folderState();
+  return folderState({ withLibrary: !!removeTracks });
 });
 
 ipcMain.handle('audio:get-lyrics', async (_evt, track) => lyrics.getLyrics(track));
@@ -605,33 +575,7 @@ ipcMain.handle('audio:scan-default-library', async () => {
   if (!fs.existsSync(musicDir)) {
     fs.mkdirSync(musicDir, { recursive: true });
   }
-  mediaLibrary.scanFoldersInBackground([musicDir], {
-    onDiscovered: (data) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:library-scan-discovered', data);
-      }
-    },
-    onProgress: (progress) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:library-scan-progress', progress);
-      }
-    },
-    onBatch: (batch) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:library-scan-batch', batch);
-      }
-    },
-    onDone: (doneData) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:library-scan-complete', doneData);
-      }
-    },
-    onError: (err) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:library-scan-error', { error: err.message });
-      }
-    }
-  });
+  mediaLibrary.scanFoldersInBackground([musicDir], scanUpdates());
   return { started: true, folder: musicDir };
 });
 

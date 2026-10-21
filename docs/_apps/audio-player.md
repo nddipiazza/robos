@@ -67,7 +67,11 @@ flowchart TD
 - **Track lists made for playing**: double-click plays the list from that song. Click, `Ctrl`-click and `Shift`-click select several songs; `Ctrl+A` selects all and `Enter` plays the selection. Right-click or `⋯` for Play next, Add to queue, Add to playlist, Love, Go to album/artist, Track info and Show in file manager. Drag songs onto the Now Playing panel to queue them.
 - **Cover art that persists**: embedded covers and `cover.jpg` / `folder.jpg` / `front.jpg` files next to the tracks are cached once per album under `~/.cache/robos/audio-player/art/`. Libraries indexed before this cache existed recover their art the first time it is shown.
 - **Folder scope**: limit every view to a single library folder, or manage folders from *Sources → Folders*.
-- **Fast on big libraries**: lists render progressively and sort keys are cached, so a 10,000-track library stays responsive.
+- **Built for 100,000-track libraries**:
+  - Song lists, album grids, artist grids and A–Z sections are virtualized: only the rows on screen are in the DOM, however far you scroll.
+  - Sorted and filtered views are memoized, so playback and notifications don't re-sort the library, and sort keys are precomputed.
+  - Search runs on a deferred query so typing stays responsive.
+  - Background scans merge tracks in O(batch) time, write the (compact) cache at most every few seconds, and send the renderer throttled progress and library updates instead of one per handful of files.
 
 ### Now Playing Panel (VLC-style playlist)
 - **Always visible**: the play queue is docked on the right of every tab, so you can switch tracks while browsing the library, playlists, cloud storage or speakers. Collapse it to a slim rail with the *Now Playing list* button.

@@ -14,6 +14,7 @@ const AUDIO_EXTENSIONS = new Set(['.mp3', '.m4a', '.flac', '.ogg', '.wav', '.aac
 const FOLDER_COVER_NAMES = ['cover', 'folder', 'front', 'album', 'albumart'];
 const FOLDER_COVER_EXTS = ['.jpg', '.jpeg', '.png', '.webp'];
 const MAX_FOLDER_COVER_BYTES = 8 * 1024 * 1024;
+const FOLDER_COVER_CACHE_SIZE = 32;
 
 function generateTrackId(filePath) {
   return `trk_${crypto.createHash('sha1').update(filePath).digest('hex').slice(0, 16)}`;
@@ -40,7 +41,7 @@ function imageFormatForExt(ext) {
 
 /**
  * Look for cover.jpg / folder.png / ... beside a track. Results are memoised
- * per directory in `cache` (a Map) so a 20-track album costs one readdir.
+ * per directory in `cache` (a small LRU Map) so a 20-track album costs one readdir.
  */
 function findFolderCover(dir, cache = null) {
   if (cache && cache.has(dir)) return cache.get(dir);
@@ -61,7 +62,12 @@ function findFolderCover(dir, cache = null) {
       }
     }
   } catch {}
-  if (cache) cache.set(dir, found);
+  if (cache) {
+    // Scans visit one folder at a time, so a few recent folders are all that's worth
+    // keeping; caching every folder's image would hold ~1 GB for a 100k-track library.
+    if (cache.size >= FOLDER_COVER_CACHE_SIZE) cache.delete(cache.keys().next().value);
+    cache.set(dir, found);
+  }
   return found;
 }
 

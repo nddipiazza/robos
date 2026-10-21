@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from './Icon.jsx';
 import FolderPanel from './FolderPanel.jsx';
 import TrackList from './TrackList.jsx';
@@ -7,7 +7,8 @@ import {
   lovedTracks, recentlyAddedTracks, recentlyPlayedTracks, mostPlayedTracks,
   formatLongDuration, plural, VARIOUS_ARTISTS,
 } from '../lib/library-index.js';
-import { useLibrary, Cover, Collage, collectionMenuItems, useProgressive } from './library-ui.jsx';
+import { useLibrary, Cover, Collage, collectionMenuItems } from './library-ui.jsx';
+import { ScrollContainerContext, VirtualGrid } from './virtual.jsx';
 
 export const LIBRARY_SECTIONS = [
   { id: 'albums', label: 'Albums', icon: 'disc' },
@@ -27,6 +28,8 @@ export const LIBRARY_COLLECTIONS = [
 
 const PREFS_KEY = 'robos-audio-player.library-prefs.v1';
 const LETTER_SECTION_MIN = 40;
+const ALBUM_GRID = { minWidth: 150, textHeight: 46 };
+const ARTIST_GRID = { minWidth: 132, textHeight: 46 };
 
 function loadPrefs() {
   try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || {}; } catch { return {}; }
@@ -90,20 +93,22 @@ export default function Library({
   const section = nav.section || 'albums';
   const detail = nav.detail || null;
 
-  const counts = {
+  const counts = useMemo(() => ({
     albums: index.albums.length,
     artists: index.artists.filter(a => !a.isPlaceholder).length,
     songs: index.tracks.length,
     genres: index.genres.length,
     decades: index.decades.length,
     composers: index.composers.length,
-    loved: index.tracks.filter(t => (stats[t.id] || {}).loved).length,
-  };
+  }), [index]);
+  const lovedCount = useMemo(() => index.tracks.filter(t => (stats[t.id] || {}).loved).length, [index, stats]);
 
+  // Typing stays responsive on 100k tracks: results follow the deferred query.
   const searching = query.trim().length > 0;
+  const deferredQuery = useDeferredValue(query);
   const results = useMemo(
-    () => (searching ? searchIndex(index, query, { artists: 12, albums: 12, genres: 8 }) : null),
-    [index, query, searching]
+    () => (deferredQuery.trim() ? searchIndex(index, deferredQuery, { artists: 12, albums: 12, genres: 8 }) : null),
+    [index, deferredQuery]
   );
 
   const pageTitle = searching ? `Results for “${query.trim()}”` : titleFor(nav, index);
@@ -112,7 +117,7 @@ export default function Library({
   if (!tracks.length) {
     body = <EmptyLibrary onAddFolder={onAddFolder} onAddFiles={onAddFiles} onCloud={folderProps.onAddCloud} isScanning={isScanning} />;
   } else if (searching) {
-    body = <SearchResults results={results} go={go} />;
+    body = results ? <SearchResults results={results} go={go} /> : null;
   } else if (detail) {
     body = <DetailView detail={detail} index={index} go={go} stats={stats} />;
   } else {
@@ -146,7 +151,7 @@ export default function Library({
         <div className="lib-nav-group">
           <span className="lib-nav-heading">Collections</span>
           {LIBRARY_COLLECTIONS.map(s => (
-            <NavItem key={s.id} item={s} count={s.id === 'loved' ? counts.loved : null} active={!detail && !searching && section === s.id} onClick={() => go({ section: s.id })} />
+            <NavItem key={s.id} item={s} count={s.id === 'loved' ? lovedCount : null} active={!detail && !searching && section === s.id} onClick={() => go({ section: s.id })} />
           ))}
         </div>
         <div className="lib-nav-group">
@@ -208,7 +213,9 @@ export default function Library({
           </button>
         </div>
         <div className="lib-content" ref={contentRef}>
-          {body}
+          <ScrollContainerContext.Provider value={contentRef}>
+            {body}
+          </ScrollContainerContext.Provider>
         </div>
       </div>
     </div>
@@ -285,139 +292,184 @@ function SectionHeader({ title, subtitle, tracks, children }) {
   );
 }
 
-function SectionView({ section, index, go, prefs, setPref, stats, folders, folderProps }) {
+function SectionView({ section, ...props }) {
   switch (section) {
-    case 'albums': {
-      const sortKey = prefs.albumSort || 'title';
-      const albums = sortAlbums(index.albums, sortKey);
-      return (
-        <>
-          <SectionHeader subtitle={`${plural(albums.length, 'album')}`} tracks={index.tracks}>
-            <SortSelect id="album-sort" value={sortKey} onChange={(v) => setPref('albumSort', v)} options={[['title', 'Title'], ['artist', 'Artist'], ['year', 'Year (newest)'], ['addedAt', 'Recently added'], ['tracks', 'Most tracks']]} />
-          </SectionHeader>
-          {sortKey === 'title' || sortKey === 'artist'
-            ? <LetterSections items={albums} letterOf={(a) => indexLetter(sortKey === 'title' ? a.title : a.artist)} render={(items) => <AlbumGrid albums={items} go={go} />} />
-            : <AlbumGrid albums={albums} go={go} progressive />}
-        </>
-      );
-    }
-    case 'artists': {
-      const sortKey = prefs.artistSort || 'name';
-      const artists = sortArtists(index.artists, sortKey, stats);
-      return (
-        <>
-          <SectionHeader subtitle={plural(artists.length, 'artist')} tracks={index.tracks}>
-            <SortSelect id="artist-sort" value={sortKey} onChange={(v) => setPref('artistSort', v)} options={[['name', 'Name'], ['tracks', 'Most songs'], ['albums', 'Most albums'], ['plays', 'Most played']]} />
-          </SectionHeader>
-          {sortKey === 'name'
-            ? <LetterSections items={artists} letterOf={(a) => (a.isPlaceholder ? '?' : indexLetter(a.name))} render={(items) => <ArtistGrid artists={items} go={go} />} />
-            : <ArtistGrid artists={artists} go={go} />}
-        </>
-      );
-    }
-    case 'songs': {
-      const sort = prefs.songSort || { key: 'artist', dir: 'asc' };
-      const sorted = sortTracks(index.tracks, sort.key, sort.dir, stats);
-      return (
-        <>
-          <SectionHeader subtitle={`${plural(sorted.length, 'song')} · ${formatLongDuration(index.totalDuration)}`} tracks={sorted} />
-          <TrackList id="library-songs" tracks={sorted} sort={sort} onSort={(key) => setPref('songSort', toggleSort(sort, key))} />
-        </>
-      );
-    }
-    case 'genres': {
-      const sortKey = prefs.genreSort || 'name';
-      const genres = sortKey === 'tracks' ? [...index.genres].sort((a, b) => b.tracks.length - a.tracks.length) : index.genres;
-      return (
-        <>
-          <SectionHeader subtitle={plural(genres.length, 'genre')}>
-            <SortSelect id="genre-sort" value={sortKey} onChange={(v) => setPref('genreSort', v)} options={[['name', 'Name'], ['tracks', 'Most songs']]} />
-          </SectionHeader>
-          {genres.length ? <GroupGrid groups={genres} type="genre" go={go} /> : <div className="empty-inline">No genre tags found in your music.</div>}
-        </>
-      );
-    }
-    case 'decades':
-      return (
-        <>
-          <SectionHeader subtitle={plural(index.decades.length, 'decade')} />
-          {index.decades.length ? <GroupGrid groups={index.decades} type="decade" go={go} big /> : <div className="empty-inline">No release years found in your music tags.</div>}
-        </>
-      );
-    case 'composers':
-      return (
-        <>
-          <SectionHeader subtitle={plural(index.composers.length, 'composer')} />
-          {index.composers.length ? (
-            <div className="name-list">
-              {index.composers.map(c => (
-                <button key={c.key} className="name-list-item" onClick={() => go({ section: 'composers', detail: { type: 'composer', key: c.key } })}>
-                  <Icon name="pen" size={14} />
-                  <span className="name-list-name">{c.name}</span>
-                  <span className="name-list-meta">{plural(c.tracks.length, 'song')}</span>
-                </button>
-              ))}
-            </div>
-          ) : <div className="empty-inline">No composer tags found in your music.</div>}
-        </>
-      );
-    case 'loved': {
-      const loved = lovedTracks(index.tracks, stats);
-      return (
-        <>
-          <SectionHeader subtitle={`${plural(loved.length, 'loved song')} · newest first`} tracks={loved} />
-          <TrackList id="library-loved" tracks={loved} emptyText="Tap the ♥ on any track to keep it here." />
-        </>
-      );
-    }
-    case 'recent': {
-      const recentAlbums = sortAlbums(index.albums, 'addedAt').slice(0, 12);
-      const recentTracks = recentlyAddedTracks(index.tracks).slice(0, 500);
-      return (
-        <>
-          <SectionHeader title="Recently added albums" />
-          <AlbumGrid albums={recentAlbums} go={go} />
-          <SectionHeader title="Recently added songs" subtitle={recentTracks.length >= 500 ? 'Latest 500' : null} tracks={recentTracks} />
-          <TrackList id="library-recent" tracks={recentTracks} extraColumn="added" />
-        </>
-      );
-    }
-    case 'history': {
-      const played = recentlyPlayedTracks(index.tracks, stats).slice(0, 500);
-      return (
-        <>
-          <SectionHeader subtitle="Songs you listened to for at least 30 seconds" tracks={played} />
-          <TrackList id="library-history" tracks={played} extraColumn="lastPlayed" emptyText="Nothing played yet — your listening history will show up here." />
-        </>
-      );
-    }
-    case 'top': {
-      const top = mostPlayedTracks(index.tracks, stats).slice(0, 200);
-      const topArtists = sortArtists(index.artists.filter(a => !a.isPlaceholder), 'plays', stats)
-        .filter(a => a.tracks.some(t => (stats[t.id] || {}).plays)).slice(0, 8);
-      return (
-        <>
-          {topArtists.length > 0 && (
-            <>
-              <SectionHeader title="Top artists" />
-              <ArtistGrid artists={topArtists} go={go} />
-            </>
-          )}
-          <SectionHeader title="Top songs" subtitle={top.length ? `Top ${top.length}` : null} tracks={top} />
-          <TrackList id="library-top" tracks={top} emptyText="Play some music and your favourites will rise to the top." />
-        </>
-      );
-    }
-    case 'folders':
-      return (
-        <div className="lib-folders">
-          <p className="section-sub">Folders feed the library. Pick one to browse only its music, or use “All folders” in the toolbar.</p>
-          <FolderPanel folders={folders} {...folderProps} />
-        </div>
-      );
-    default:
-      return null;
+    case 'albums': return <AlbumsSection {...props} />;
+    case 'artists': return <ArtistsSection {...props} />;
+    case 'songs': return <SongsSection {...props} />;
+    case 'genres': return <GenresSection {...props} />;
+    case 'decades': return <DecadesSection {...props} />;
+    case 'composers': return <ComposersSection {...props} />;
+    case 'loved': return <LovedSection {...props} />;
+    case 'recent': return <RecentSection {...props} />;
+    case 'history': return <HistorySection {...props} />;
+    case 'top': return <TopSection {...props} />;
+    case 'folders': return <FoldersSection {...props} />;
+    default: return null;
   }
+}
+
+// Sorts that read play counts / loved marks must re-run when stats change; the
+// others only when the library does, so playback events don't re-sort 100k songs.
+const STATS_SORTS = new Set(['plays', 'lastPlayed', 'loved']);
+const statsDep = (key, stats) => (STATS_SORTS.has(key) ? stats : null);
+
+const albumLetter = (a) => indexLetter(a.title);
+const albumArtistLetter = (a) => indexLetter(a.artist);
+const artistLetter = (a) => (a.isPlaceholder ? '?' : indexLetter(a.name));
+
+function AlbumsSection({ index, go, prefs, setPref }) {
+  const sortKey = prefs.albumSort || 'title';
+  const albums = useMemo(() => sortAlbums(index.albums, sortKey), [index, sortKey]);
+  const lettered = (sortKey === 'title' || sortKey === 'artist') && albums.length >= LETTER_SECTION_MIN;
+  return (
+    <>
+      <SectionHeader subtitle={plural(albums.length, 'album')} tracks={index.tracks}>
+        <SortSelect id="album-sort" value={sortKey} onChange={(v) => setPref('albumSort', v)} options={[['title', 'Title'], ['artist', 'Artist'], ['year', 'Year (newest)'], ['addedAt', 'Recently added'], ['tracks', 'Most tracks']]} />
+      </SectionHeader>
+      <AlbumGrid albums={albums} go={go} letterOf={lettered ? (sortKey === 'title' ? albumLetter : albumArtistLetter) : null} />
+    </>
+  );
+}
+
+function ArtistsSection({ index, go, prefs, setPref, stats }) {
+  const sortKey = prefs.artistSort || 'name';
+  const artists = useMemo(() => sortArtists(index.artists, sortKey, stats), [index, sortKey, statsDep(sortKey, stats)]); // eslint-disable-line react-hooks/exhaustive-deps
+  const lettered = sortKey === 'name' && artists.length >= LETTER_SECTION_MIN;
+  return (
+    <>
+      <SectionHeader subtitle={plural(artists.length, 'artist')} tracks={index.tracks}>
+        <SortSelect id="artist-sort" value={sortKey} onChange={(v) => setPref('artistSort', v)} options={[['name', 'Name'], ['tracks', 'Most songs'], ['albums', 'Most albums'], ['plays', 'Most played']]} />
+      </SectionHeader>
+      <ArtistGrid artists={artists} go={go} letterOf={lettered ? artistLetter : null} />
+    </>
+  );
+}
+
+function SongsSection({ index, prefs, setPref, stats }) {
+  const sort = prefs.songSort || { key: 'artist', dir: 'asc' };
+  const sorted = useMemo(
+    () => sortTracks(index.tracks, sort.key, sort.dir, stats),
+    [index, sort.key, sort.dir, statsDep(sort.key, stats)] // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  return (
+    <>
+      <SectionHeader subtitle={`${plural(sorted.length, 'song')} · ${formatLongDuration(index.totalDuration)}`} tracks={sorted} />
+      <TrackList id="library-songs" tracks={sorted} sort={sort} onSort={(key) => setPref('songSort', toggleSort(sort, key))} />
+    </>
+  );
+}
+
+function GenresSection({ index, go, prefs, setPref }) {
+  const sortKey = prefs.genreSort || 'name';
+  const genres = useMemo(
+    () => (sortKey === 'tracks' ? [...index.genres].sort((a, b) => b.tracks.length - a.tracks.length) : index.genres),
+    [index, sortKey]
+  );
+  return (
+    <>
+      <SectionHeader subtitle={plural(genres.length, 'genre')}>
+        <SortSelect id="genre-sort" value={sortKey} onChange={(v) => setPref('genreSort', v)} options={[['name', 'Name'], ['tracks', 'Most songs']]} />
+      </SectionHeader>
+      {genres.length ? <GroupGrid groups={genres} type="genre" go={go} /> : <div className="empty-inline">No genre tags found in your music.</div>}
+    </>
+  );
+}
+
+function DecadesSection({ index, go }) {
+  return (
+    <>
+      <SectionHeader subtitle={plural(index.decades.length, 'decade')} />
+      {index.decades.length ? <GroupGrid groups={index.decades} type="decade" go={go} big /> : <div className="empty-inline">No release years found in your music tags.</div>}
+    </>
+  );
+}
+
+function ComposersSection({ index, go }) {
+  return (
+    <>
+      <SectionHeader subtitle={plural(index.composers.length, 'composer')} />
+      {index.composers.length ? (
+        <VirtualGrid
+          items={index.composers}
+          keyOf={(c) => c.key}
+          className="name-list"
+          minWidth={240}
+          gapX={6}
+          gapY={6}
+          itemHeight={42}
+          letterOf={index.composers.length >= LETTER_SECTION_MIN ? (c) => indexLetter(c.name) : null}
+          renderItem={(c) => (
+            <button className="name-list-item" onClick={() => go({ section: 'composers', detail: { type: 'composer', key: c.key } })}>
+              <Icon name="pen" size={14} />
+              <span className="name-list-name">{c.name}</span>
+              <span className="name-list-meta">{plural(c.tracks.length, 'song')}</span>
+            </button>
+          )}
+        />
+      ) : <div className="empty-inline">No composer tags found in your music.</div>}
+    </>
+  );
+}
+
+function LovedSection({ index, stats }) {
+  const loved = useMemo(() => lovedTracks(index.tracks, stats), [index, stats]);
+  return (
+    <>
+      <SectionHeader subtitle={`${plural(loved.length, 'loved song')} · newest first`} tracks={loved} />
+      <TrackList id="library-loved" tracks={loved} emptyText="Tap the ♥ on any track to keep it here." />
+    </>
+  );
+}
+
+function RecentSection({ index, go }) {
+  const recentAlbums = useMemo(() => sortAlbums(index.albums, 'addedAt').slice(0, 12), [index]);
+  const recentTracks = useMemo(() => recentlyAddedTracks(index.tracks).slice(0, 500), [index]);
+  return (
+    <>
+      <SectionHeader title="Recently added albums" />
+      <AlbumGrid albums={recentAlbums} go={go} />
+      <SectionHeader title="Recently added songs" subtitle={recentTracks.length >= 500 ? 'Latest 500' : null} tracks={recentTracks} />
+      <TrackList id="library-recent" tracks={recentTracks} extraColumn="added" />
+    </>
+  );
+}
+
+function HistorySection({ index, stats }) {
+  const played = useMemo(() => recentlyPlayedTracks(index.tracks, stats).slice(0, 500), [index, stats]);
+  return (
+    <>
+      <SectionHeader subtitle="Songs you listened to for at least 30 seconds" tracks={played} />
+      <TrackList id="library-history" tracks={played} extraColumn="lastPlayed" emptyText="Nothing played yet — your listening history will show up here." />
+    </>
+  );
+}
+
+function TopSection({ index, go, stats }) {
+  const top = useMemo(() => mostPlayedTracks(index.tracks, stats).slice(0, 200), [index, stats]);
+  const topArtists = useMemo(() => sortArtists(index.artists.filter(a => !a.isPlaceholder), 'plays', stats)
+    .filter(a => a.tracks.some(t => (stats[t.id] || {}).plays)).slice(0, 8), [index, stats]);
+  return (
+    <>
+      {topArtists.length > 0 && (
+        <>
+          <SectionHeader title="Top artists" />
+          <ArtistGrid artists={topArtists} go={go} />
+        </>
+      )}
+      <SectionHeader title="Top songs" subtitle={top.length ? `Top ${top.length}` : null} tracks={top} />
+      <TrackList id="library-top" tracks={top} emptyText="Play some music and your favourites will rise to the top." />
+    </>
+  );
+}
+
+function FoldersSection({ folders, folderProps }) {
+  return (
+    <div className="lib-folders">
+      <p className="section-sub">Folders feed the library. Pick one to browse only its music, or use “All folders” in the toolbar.</p>
+      <FolderPanel folders={folders} {...folderProps} />
+    </div>
+  );
 }
 
 function toggleSort(sort, key) {
@@ -426,64 +478,18 @@ function toggleSort(sort, key) {
   return { key, dir: descFirst.includes(key) ? 'desc' : 'asc' };
 }
 
-/**
- * Splits a sorted list under A–Z headings with a jump rail.
- */
-function LetterSections({ items, letterOf, render }) {
-  const { visible, sentinel, showAll } = useProgressive(items, 240);
-  const letters = useMemo(() => [...new Set(items.map(letterOf))], [items]); // eslint-disable-line react-hooks/exhaustive-deps
-  const groups = useMemo(() => {
-    const out = [];
-    for (const item of visible) {
-      const letter = letterOf(item);
-      if (!out.length || out[out.length - 1].letter !== letter) out.push({ letter, items: [] });
-      out[out.length - 1].items.push(item);
-    }
-    return out;
-  }, [visible]); // eslint-disable-line react-hooks/exhaustive-deps
-  const rootRef = useRef(null);
-  const jump = (letter) => {
-    const scroll = () => {
-      const el = rootRef.current && rootRef.current.querySelector(`[data-letter="${CSS.escape(letter)}"]`);
-      if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    };
-    if (!groups.some(g => g.letter === letter)) {
-      showAll();
-      setTimeout(scroll, 60);
-    } else {
-      scroll();
-    }
-  };
-  // Headings only pay off once there's enough to scroll through.
-  if (letters.length < 2 || items.length < LETTER_SECTION_MIN) return render(items);
-  return (
-    <div className="letter-sections" ref={rootRef}>
-      <div className="letter-rail-track">
-        <div className="letter-rail">
-          {letters.map(l => <button key={l} title={`Jump to ${l}`} onClick={() => jump(l)}>{l}</button>)}
-        </div>
-      </div>
-      {groups.map(g => (
-        <section key={g.letter} data-letter={g.letter} className="letter-section">
-          <h4 className="letter-heading">{g.letter}</h4>
-          {render(g.items)}
-        </section>
-      ))}
-      {sentinel}
-    </div>
-  );
-}
-
 // ── Cards & grids ───────────────────────────────────────────────────────────
 
-function AlbumGrid({ albums, go, progressive = false, showArtist = true }) {
-  const { visible, sentinel } = useProgressive(albums, progressive ? 120 : Math.max(albums.length, 1));
+function AlbumGrid({ albums, go, showArtist = true, letterOf = null }) {
   if (!albums.length) return <div className="empty-inline">No albums.</div>;
   return (
-    <div className="card-grid">
-      {visible.map(a => <AlbumCard key={a.key} album={a} go={go} showArtist={showArtist} />)}
-      {sentinel}
-    </div>
+    <VirtualGrid
+      items={albums}
+      keyOf={(a) => a.key}
+      letterOf={letterOf}
+      {...ALBUM_GRID}
+      renderItem={(a) => <AlbumCard album={a} go={go} showArtist={showArtist} />}
+    />
   );
 }
 
@@ -515,29 +521,37 @@ function AlbumCard({ album, go, showArtist }) {
   );
 }
 
-function ArtistGrid({ artists, go }) {
+function ArtistGrid({ artists, go, letterOf = null }) {
+  return (
+    <VirtualGrid
+      items={artists}
+      keyOf={(a) => a.key}
+      letterOf={letterOf}
+      className="artists"
+      {...ARTIST_GRID}
+      renderItem={(a) => <ArtistCard artist={a} go={go} />}
+    />
+  );
+}
+
+function ArtistCard({ artist: a, go }) {
   const ctx = useLibrary();
   return (
-    <div className="card-grid artists">
-      {artists.map(a => (
-        <div
-          key={a.key}
-          className="media-card artist-card"
-          onClick={() => go({ section: 'artists', detail: { type: 'artist', key: a.key } })}
-          onContextMenu={(e) => { e.preventDefault(); ctx.openMenu(e, collectionMenuItems(a.tracks, ctx, { label: a.name })); }}
-        >
-          <div className="media-card-art">
-            <Cover artId={a.artId} name={a.name} round />
-            <button className="card-play" title={`Play ${a.name}`} onClick={(e) => { e.stopPropagation(); ctx.actions.playTracks(a.tracks, 0, { shuffle: true }); }}>
-              <Icon name="shuffle" size={16} />
-            </button>
-          </div>
-          <span className="media-card-title">{a.name}</span>
-          <span className="media-card-sub">
-            {a.albums.length ? `${plural(a.albums.length, 'album')} · ` : ''}{plural(a.tracks.length, 'song')}
-          </span>
-        </div>
-      ))}
+    <div
+      className="media-card artist-card"
+      onClick={() => go({ section: 'artists', detail: { type: 'artist', key: a.key } })}
+      onContextMenu={(e) => { e.preventDefault(); ctx.openMenu(e, collectionMenuItems(a.tracks, ctx, { label: a.name })); }}
+    >
+      <div className="media-card-art">
+        <Cover artId={a.artId} name={a.name} round />
+        <button className="card-play" title={`Play ${a.name}`} onClick={(e) => { e.stopPropagation(); ctx.actions.playTracks(a.tracks, 0, { shuffle: true }); }}>
+          <Icon name="shuffle" size={16} />
+        </button>
+      </div>
+      <span className="media-card-title">{a.name}</span>
+      <span className="media-card-sub">
+        {a.albums.length ? `${plural(a.albums.length, 'album')} · ` : ''}{plural(a.tracks.length, 'song')}
+      </span>
     </div>
   );
 }
@@ -546,10 +560,14 @@ function GroupGrid({ groups, type, go, big = false }) {
   const ctx = useLibrary();
   const section = type === 'genre' ? 'genres' : 'decades';
   return (
-    <div className={`card-grid groups ${big ? 'big' : ''}`}>
-      {groups.map(g => (
+    <VirtualGrid
+      items={groups}
+      keyOf={(g) => g.key}
+      className={`groups ${big ? 'big' : ''}`}
+      minWidth={big ? 210 : 170}
+      textHeight={24}
+      renderItem={(g) => (
         <div
-          key={g.key}
           className="media-card group-card"
           onClick={() => go({ section, detail: { type, key: g.key } })}
           onContextMenu={(e) => { e.preventDefault(); ctx.openMenu(e, collectionMenuItems(g.tracks, ctx, { label: g.name })); }}
@@ -563,8 +581,8 @@ function GroupGrid({ groups, type, go, big = false }) {
           </div>
           <span className="media-card-sub">{plural(g.tracks.length, 'song')} · {plural(g.artistCount, 'artist')}</span>
         </div>
-      ))}
-    </div>
+      )}
+    />
   );
 }
 
@@ -630,139 +648,148 @@ function NotFound({ go }) {
 }
 
 function DetailView({ detail, index, go, stats }) {
-  const { actions } = useLibrary();
   const { type, key } = detail;
-
   if (type === 'album') {
     const album = index.albumByKey.get(key);
-    if (!album) return <NotFound go={go} />;
-    const artist = index.artistByKey.get(album.artistKey);
-    const more = artist ? artist.albums.filter(a => a.key !== album.key) : [];
-    const codec = [album.codec, album.lossless ? 'Lossless' : null].filter(Boolean).join(' · ');
-    return (
-      <>
-        <DetailHeader
-          cover={<Cover artId={album.artId} name={album.title} />}
-          eyebrow={album.isCompilation ? 'Compilation' : 'Album'}
-          title={album.title}
-          subtitle={album.artist === VARIOUS_ARTISTS
-            ? <span>{album.artist}</span>
-            : <a className="link strong" onClick={() => actions.goToArtist(album.artist)}>{album.artist}</a>}
-          meta={[
-            album.year,
-            album.genre && <a className="link" onClick={() => actions.goToGenre(album.genre)}>{album.genre}</a>,
-            plural(album.tracks.length, 'song'),
-            formatLongDuration(album.duration),
-            codec,
-          ]}
-          tracks={album.tracks}
-          menuLabel={album.title}
-        />
-        <TrackList id="album-tracks" tracks={album.tracks} variant="album" albumArtist={album.artist} showDiscs={album.discCount > 1} />
-        {more.length > 0 && (
-          <>
-            <SectionHeader title={`More by ${album.artist}`} />
-            <AlbumGrid albums={more} go={go} showArtist={false} />
-          </>
-        )}
-      </>
-    );
+    return album ? <AlbumDetail album={album} index={index} go={go} /> : <NotFound go={go} />;
   }
-
   if (type === 'artist') {
     const artist = index.artistByKey.get(key);
-    if (!artist) return <NotFound go={go} />;
-    const allSongs = sortTracks(artist.tracks, 'year', 'asc');
-    const top = mostPlayedTracks(artist.tracks, stats).slice(0, 5);
-    return (
-      <>
-        <DetailHeader
-          cover={<Cover artId={artist.artId} name={artist.name} round />}
-          eyebrow="Artist"
-          title={artist.name}
-          subtitle={artist.genres.length ? (
-            <span className="detail-genres">
-              {artist.genres.map(g => <a key={g} className="link" onClick={() => actions.goToGenre(g)}>{g}</a>)}
-            </span>
-          ) : null}
-          meta={[
-            artist.albums.length ? plural(artist.albums.length, 'album') : null,
-            plural(artist.tracks.length, 'song'),
-            formatLongDuration(artist.duration),
-          ]}
-          tracks={allSongs}
-          menuLabel={artist.name}
-        />
-        {top.length > 0 && (
-          <>
-            <SectionHeader title="Most played" />
-            <TrackList tracks={top} variant="compact" />
-          </>
-        )}
-        {artist.albums.length > 0 && (
-          <>
-            <SectionHeader title="Albums" subtitle="Oldest first" />
-            <AlbumGrid albums={artist.albums} go={go} showArtist={false} />
-          </>
-        )}
-        {artist.appearsOn.length > 0 && (
-          <>
-            <SectionHeader title="Appears on" />
-            <AlbumGrid albums={artist.appearsOn} go={go} />
-          </>
-        )}
-        <SectionHeader title="All songs" subtitle={plural(allSongs.length, 'song')} />
-        <TrackList id="artist-tracks" tracks={allSongs} />
-      </>
-    );
+    return artist ? <ArtistDetail artist={artist} go={go} stats={stats} /> : <NotFound go={go} />;
   }
-
   if (type === 'genre' || type === 'decade') {
     const group = (type === 'genre' ? index.genreByKey : index.decadeByKey).get(key);
-    if (!group) return <NotFound go={go} />;
-    const songs = sortTracks(group.tracks, 'artist', 'asc');
-    const years = type === 'decade' ? [...new Set(group.tracks.map(t => t.year).filter(Boolean))].sort() : [];
-    return (
-      <>
-        <DetailHeader
-          cover={<Collage artIds={group.artIds} name={group.name} />}
-          eyebrow={type === 'genre' ? 'Genre' : 'Decade'}
-          title={group.name}
-          subtitle={years.length ? <span className="detail-genres">{years.map(y => <span key={y}>{y}</span>)}</span> : null}
-          meta={[plural(group.albums.length, 'album'), plural(group.tracks.length, 'song'), plural(group.artistCount, 'artist'), formatLongDuration(group.duration)]}
-          tracks={songs}
-          menuLabel={group.name}
-        />
-        <SectionHeader title="Artists" />
-        <ArtistChips tracks={group.tracks} index={index} go={go} />
-        <SectionHeader title="Albums" />
-        <AlbumGrid albums={sortAlbums(group.albums, type === 'decade' ? 'year' : 'artist')} go={go} progressive />
-        <SectionHeader title="Songs" />
-        <TrackList id={`${type}-tracks`} tracks={songs} />
-      </>
-    );
+    return group ? <GroupDetail group={group} type={type} index={index} go={go} /> : <NotFound go={go} />;
   }
-
   if (type === 'composer') {
     const composer = index.composerByKey.get(key);
-    if (!composer) return <NotFound go={go} />;
-    const songs = sortTracks(composer.tracks, 'album', 'asc');
-    return (
-      <>
-        <DetailHeader
-          cover={<Cover name={composer.name} round icon="pen" />}
-          eyebrow="Composer"
-          title={composer.name}
-          meta={[plural(composer.albums.length, 'album'), plural(songs.length, 'song'), formatLongDuration(composer.duration)]}
-          tracks={songs}
-          menuLabel={composer.name}
-        />
-        <TrackList id="composer-tracks" tracks={songs} />
-      </>
-    );
+    return composer ? <ComposerDetail composer={composer} /> : <NotFound go={go} />;
   }
-
   return <NotFound go={go} />;
+}
+
+function AlbumDetail({ album, index, go }) {
+  const { actions } = useLibrary();
+  const artist = index.artistByKey.get(album.artistKey);
+  const more = useMemo(() => (artist ? artist.albums.filter(a => a.key !== album.key) : []), [artist, album]);
+  const codec = [album.codec, album.lossless ? 'Lossless' : null].filter(Boolean).join(' · ');
+  return (
+    <>
+      <DetailHeader
+        cover={<Cover artId={album.artId} name={album.title} />}
+        eyebrow={album.isCompilation ? 'Compilation' : 'Album'}
+        title={album.title}
+        subtitle={album.artist === VARIOUS_ARTISTS
+          ? <span>{album.artist}</span>
+          : <a className="link strong" onClick={() => actions.goToArtist(album.artist)}>{album.artist}</a>}
+        meta={[
+          album.year,
+          album.genre && <a className="link" onClick={() => actions.goToGenre(album.genre)}>{album.genre}</a>,
+          plural(album.tracks.length, 'song'),
+          formatLongDuration(album.duration),
+          codec,
+        ]}
+        tracks={album.tracks}
+        menuLabel={album.title}
+      />
+      <TrackList id="album-tracks" tracks={album.tracks} variant="album" albumArtist={album.artist} showDiscs={album.discCount > 1} />
+      {more.length > 0 && (
+        <>
+          <SectionHeader title={`More by ${album.artist}`} />
+          <AlbumGrid albums={more} go={go} showArtist={false} />
+        </>
+      )}
+    </>
+  );
+}
+
+function ArtistDetail({ artist, go, stats }) {
+  const { actions } = useLibrary();
+  const allSongs = useMemo(() => sortTracks(artist.tracks, 'year', 'asc'), [artist]);
+  const top = useMemo(() => mostPlayedTracks(artist.tracks, stats).slice(0, 5), [artist, stats]);
+  return (
+    <>
+      <DetailHeader
+        cover={<Cover artId={artist.artId} name={artist.name} round />}
+        eyebrow="Artist"
+        title={artist.name}
+        subtitle={artist.genres.length ? (
+          <span className="detail-genres">
+            {artist.genres.map(g => <a key={g} className="link" onClick={() => actions.goToGenre(g)}>{g}</a>)}
+          </span>
+        ) : null}
+        meta={[
+          artist.albums.length ? plural(artist.albums.length, 'album') : null,
+          plural(artist.tracks.length, 'song'),
+          formatLongDuration(artist.duration),
+        ]}
+        tracks={allSongs}
+        menuLabel={artist.name}
+      />
+      {top.length > 0 && (
+        <>
+          <SectionHeader title="Most played" />
+          <TrackList tracks={top} variant="compact" />
+        </>
+      )}
+      {artist.albums.length > 0 && (
+        <>
+          <SectionHeader title="Albums" subtitle="Oldest first" />
+          <AlbumGrid albums={artist.albums} go={go} showArtist={false} />
+        </>
+      )}
+      {artist.appearsOn.length > 0 && (
+        <>
+          <SectionHeader title="Appears on" />
+          <AlbumGrid albums={artist.appearsOn} go={go} />
+        </>
+      )}
+      <SectionHeader title="All songs" subtitle={plural(allSongs.length, 'song')} />
+      <TrackList id="artist-tracks" tracks={allSongs} />
+    </>
+  );
+}
+
+function GroupDetail({ group, type, index, go }) {
+  const songs = useMemo(() => sortTracks(group.tracks, 'artist', 'asc'), [group]);
+  const albums = useMemo(() => sortAlbums(group.albums, type === 'decade' ? 'year' : 'artist'), [group, type]);
+  const years = useMemo(() => (type === 'decade' ? [...new Set(group.tracks.map(t => t.year).filter(Boolean))].sort() : []), [group, type]);
+  return (
+    <>
+      <DetailHeader
+        cover={<Collage artIds={group.artIds} name={group.name} />}
+        eyebrow={type === 'genre' ? 'Genre' : 'Decade'}
+        title={group.name}
+        subtitle={years.length ? <span className="detail-genres">{years.map(y => <span key={y}>{y}</span>)}</span> : null}
+        meta={[plural(group.albums.length, 'album'), plural(group.tracks.length, 'song'), plural(group.artistCount, 'artist'), formatLongDuration(group.duration)]}
+        tracks={songs}
+        menuLabel={group.name}
+      />
+      <SectionHeader title="Artists" />
+      <ArtistChips tracks={group.tracks} index={index} go={go} />
+      <SectionHeader title="Albums" subtitle={plural(albums.length, 'album')} />
+      <AlbumGrid albums={albums} go={go} />
+      <SectionHeader title="Songs" subtitle={plural(songs.length, 'song')} />
+      <TrackList id={`${type}-tracks`} tracks={songs} />
+    </>
+  );
+}
+
+function ComposerDetail({ composer }) {
+  const songs = useMemo(() => sortTracks(composer.tracks, 'album', 'asc'), [composer]);
+  return (
+    <>
+      <DetailHeader
+        cover={<Cover name={composer.name} round icon="pen" />}
+        eyebrow="Composer"
+        title={composer.name}
+        meta={[plural(composer.albums.length, 'album'), plural(songs.length, 'song'), formatLongDuration(composer.duration)]}
+        tracks={songs}
+        menuLabel={composer.name}
+      />
+      <TrackList id="composer-tracks" tracks={songs} />
+    </>
+  );
 }
 
 // ── Search ──────────────────────────────────────────────────────────────────
@@ -777,13 +804,13 @@ function SearchResults({ results, go }) {
     <div className="search-results">
       {artists.length > 0 && (
         <>
-          <SectionHeader title="Artists" subtitle={totals.artists > artists.length ? `Top ${artists.length} of ${totals.artists}` : null} />
+          <SectionHeader title="Artists" subtitle={totals.artists > artists.length ? `Top ${artists.length} of ${totals.artists.toLocaleString()}` : null} />
           <ArtistGrid artists={artists} go={go} />
         </>
       )}
       {albums.length > 0 && (
         <>
-          <SectionHeader title="Albums" subtitle={totals.albums > albums.length ? `Top ${albums.length} of ${totals.albums}` : null} />
+          <SectionHeader title="Albums" subtitle={totals.albums > albums.length ? `Top ${albums.length} of ${totals.albums.toLocaleString()}` : null} />
           <AlbumGrid albums={albums} go={go} />
         </>
       )}

@@ -1256,8 +1256,11 @@ export default function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
-        const queue = playlist.slice(0, MAX_SAVED_QUEUE).map(t => (t.cloud ? { ...t, src: undefined } : t));
-        localStorage.setItem(QUEUE_KEY, JSON.stringify({ queue, index: Math.min(currentTrackIndex, Math.max(0, queue.length - 1)) }));
+        // Huge queues (e.g. "Shuffle library" on 100k tracks) keep a window around the
+        // playing track so the restored position is right and localStorage stays small.
+        const start = Math.max(0, Math.min(currentTrackIndex - 500, playlist.length - MAX_SAVED_QUEUE));
+        const queue = playlist.slice(start, start + MAX_SAVED_QUEUE).map(t => (t.cloud ? { ...t, src: undefined } : t));
+        localStorage.setItem(QUEUE_KEY, JSON.stringify({ queue, index: Math.min(currentTrackIndex - start, Math.max(0, queue.length - 1)) }));
       } catch {}
     }, 400);
     return () => clearTimeout(timer);
