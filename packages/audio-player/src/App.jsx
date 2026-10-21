@@ -994,6 +994,14 @@ export default function App() {
     return next;
   }, [shuffleMode, plannedNextIndex, playlist, currentTrackIndex, repeatMode]);
 
+  // Cloud songs download whole on a cache miss; fetch the next one ahead of time.
+  const nextCloudPath = upcomingTracks[0] && upcomingTracks[0].cloud && !upcomingTracks[0].cloud.cached ? upcomingTracks[0].filePath : null;
+  useEffect(() => {
+    if (!nextCloudPath || !isPlaying || !window.robosAudio?.prefetchTrack) return undefined;
+    const timer = setTimeout(() => { window.robosAudio.prefetchTrack(nextCloudPath).catch(() => {}); }, 5000);
+    return () => clearTimeout(timer);
+  }, [nextCloudPath, isPlaying]);
+
   const dj = useVirtualDj({
     initial: playerPrefs.dj,
     upcoming: upcomingTracks,
@@ -1023,6 +1031,28 @@ export default function App() {
       return;
     }
     goToIndex(idx);
+  };
+
+  // "Announce this song": hear the DJ's intro for a track now. The music pauses
+  // for it and picks up where it was.
+  const handleDjPreview = (track) => {
+    if (!dj.settings.persona.trim()) {
+      showStatus('Set up the Virtual DJ first: describe the DJ you want.');
+      setShowDjSettings(true);
+      return;
+    }
+    const audio = playerRef.current?.audio?.current;
+    const casting = outputTarget !== 'local';
+    const wasPlaying = isPlaying && (casting ? !(activeCastSession && activeCastSession.isPaused) : !!(audio && !audio.paused));
+    if (wasPlaying) {
+      if (casting) handleToggleCastPause();
+      else audio.pause();
+    }
+    dj.preview(track, () => {
+      if (!wasPlaying) return;
+      if (casting) latestRef.current.resumeCast();
+      else { playerRef.current?.audio?.current?.play().catch(() => {}); setIsPlaying(true); }
+    });
   };
 
   // Start a playlist that comes with a DJ script: intro first, then the music.
@@ -1175,6 +1205,7 @@ export default function App() {
     djSpeaking: !!dj.speaking,
     aiAgent,
     skipDj: dj.skip,
+    resumeCast: () => handleToggleCastPause(),
     // After a DJ break the queue may have changed: find the planned song again.
     goToTrack: (track, fallbackIdx) => {
       const idx = playlist.indexOf(track);
@@ -2078,6 +2109,8 @@ export default function App() {
           speaking: dj.speaking,
           persona: dj.settings.persona,
           onSkip: dj.skip,
+          nextTrack: upcomingTracks[0] || null,
+          onPreview: handleDjPreview,
           onSettings: () => setShowDjSettings(true),
           onAiPlaylist: () => setShowAiPlaylist(true),
         }}

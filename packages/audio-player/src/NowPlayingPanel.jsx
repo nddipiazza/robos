@@ -151,6 +151,9 @@ export default function NowPlayingPanel({
       { label: 'Move to top', icon: 'up', onClick: () => onMove(indices, 0) },
       { label: 'Move to bottom', icon: 'down', onClick: () => onMove(indices, queue.length) },
       { label: indices.length > 1 ? `Remove ${indices.length} from queue` : 'Remove from queue', icon: 'x', danger: true, onClick: () => onRemove(indices) },
+      dj && dj.onPreview && tracks.length === 1
+        ? { label: 'Announce this song (Virtual DJ)', icon: 'mic', onClick: () => dj.onPreview(tracks[0]) }
+        : null,
     );
     openMenu(e, items);
   };
@@ -243,10 +246,10 @@ export default function NowPlayingPanel({
         <div className="np-dj-banner" role="status">
           <Icon name="mic" size={15} />
           <div className="np-dj-text">
-            <span className="np-dj-label">{dj.speaking.warming ? 'DJ is warming up…' : 'DJ on the mic'}</span>
+            <span className="np-dj-label">{dj.speaking.warming ? 'DJ is warming up…' : dj.speaking.preview ? 'DJ preview' : 'DJ on the mic'}</span>
             <span className="np-dj-line">{dj.speaking.text}</span>
           </div>
-          <button id="btn-dj-skip" className="btn-chip" onClick={dj.onSkip} title="Skip the DJ and play the next song">Skip</button>
+          <button id="btn-dj-skip" className="btn-chip" onClick={dj.onSkip} title={dj.speaking.preview ? 'Stop the preview' : 'Skip the DJ and play the next song'}>{dj.speaking.preview ? 'Stop' : 'Skip'}</button>
         </div>
       )}
 
@@ -344,6 +347,17 @@ export default function NowPlayingPanel({
               >
                 <Icon name="mic" size={14} />
               </button>
+              {dj.enabled && (
+                <button
+                  id="btn-dj-preview"
+                  className="btn-icon-only small np-dj-preview"
+                  title={dj.nextTrack ? `Announce the next song: hear what the DJ will say before “${dj.nextTrack.title}”` : 'Nothing is queued after this song'}
+                  disabled={!dj.nextTrack || !!dj.speaking}
+                  onClick={() => dj.onPreview(dj.nextTrack)}
+                >
+                  <Icon name="speaker" size={14} />
+                </button>
+              )}
               <button id="btn-queue-ai-playlist" className="btn-icon-only small ai-btn-icon" title="AI Playlist: describe it, your RobOS agent builds it" onClick={dj.onAiPlaylist}>
                 ✦
               </button>

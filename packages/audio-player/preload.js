@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('robosAudio', {
   castPause: (ip) => ipcRenderer.invoke('audio:cast-pause', ip),
   castResume: (ip) => ipcRenderer.invoke('audio:cast-resume', ip),
   castStop: (ip) => ipcRenderer.invoke('audio:cast-stop', ip),
+  prefetchTrack: (filePath) => ipcRenderer.invoke('audio:prefetch-track', filePath),
   castStopAll: () => ipcRenderer.invoke('audio:cast-stop-all'),
   playTestChime: (ip) => ipcRenderer.invoke('audio:play-test-chime', ip),
   openFileDialog: () => ipcRenderer.invoke('audio:open-file-dialog'),

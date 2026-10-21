@@ -80,10 +80,12 @@ flowchart TD
 - **Preview, then play or save**: rename the result, *Play* it right away or *Save playlist*; saved AI playlists keep their request and DJ script.
 - **Virtual DJ between songs**: tick *Virtual DJ between songs* and describe your DJ ("a laid-back late-night jazz host with dry humour"). The agent writes an intro and a short line before each song, spoken with RobOS voice (Kokoro, Edge neural voices or Piper via `voice-prompt`'s `TTSEngine`) in the voice you choose. Choose how often the DJ talks: before every song, every other song, or now and then.
   - The DJ talks only between songs that end on their own, never when you skip.
-  - Lines and audio are prepared while the current song plays, so the music doesn't wait.
+  - Lines and audio are prepared while the current song plays. If a line is still being written when the song ends, the music waits for it ("DJ is warming up…"); if the agent fails, the reason is shown and the music carries on.
   - *Skip* (or Play/Space) cuts the DJ short.
   - With a Cast speaker selected, the DJ is cast to it too.
+  - If no voice can be produced, a message says so (pick another voice) instead of a silent pause.
 - **DJ for any queue**: the 🎙 button in the Now Playing panel turns the Virtual DJ on for whatever is playing; the agent writes lines a few songs ahead.
+- **Announce this song**: the speaker button next to 🎙 plays the intro the DJ has ready for the next song, and right-click → *Announce this song* in the queue does the same for any song. The music pauses for it and picks up where it was.
 
 ### Now Playing Panel (VLC-style playlist)
 - **Always visible**: the play queue is docked on the right of every tab, so you can switch tracks while browsing the library, playlists, cloud storage or speakers. Collapse it to a slim rail with the *Now Playing list* button.
@@ -97,6 +99,7 @@ flowchart TD
 - **Interactive Playback Queue**: Real-time queue bar with drag-and-drop ingestion, individual track removal (`✕`), queue shuffle (`🔀`), and single-click **Save Queue as Playlist** (`💾`).
 - **M3U / M3U8 Import & Export**: Full compatibility with external media players via standard `#EXTM3U` and `#EXTINF` format export and import.
 - **Media Library Cross-Linking**: Add any indexed track from the Media Library browser directly to existing playlists with the `📑 Playlist` button or quick-select picker.
+- **Cloud songs (Google Drive / OneDrive)**: songs are listed without downloading them. Their tags (artist, album, title, track number, cover) are read in the background by fetching only the bytes that hold them: the ID3 tag at the start of an MP3, FLAC's metadata blocks, an M4A's `moov` box. Until then, artist and album are guessed from the folders (`Artist/Album (Year)/03 - Song.mp3`). The next cloud song in the queue is downloaded while the current one plays, so changing songs doesn't wait for it.
 - **Playlist Casting**: Broadcast entire playlists in order directly to any discovered Google Cast speaker or all speakers simultaneously with one click.
 
 ### 2. React H5 Audio Deck & Local Playback
@@ -106,6 +109,7 @@ flowchart TD
 
 ### 3. Zero-Cloud Google Home / Cast Smart Speaker Streaming
 - **Local TLS Streaming**: Casts audio directly across the local area network (`castv2` over port 8009 TLS) through an ephemeral, dynamic HTTP streaming server. Zero external cloud roundtrips or third-party audio subscriptions required.
+- **No gaps between songs**: one receiver session stays open while you cast, and each song is loaded into it, so the speaker doesn't stop, chime and restart at every track change.
 - **Network Probing**: Automatic mDNS and eureka probing (`http://<ip>:8008/setup/eureka_info`) to discover Google Nest, Google Home, and Chromecast Audio devices on the local subnet.
 - **Volume & Playback Control**: Centralized volume adjustment, pause, resume, individual speaker stop, and global `Stop All Speakers` controls.
 - **Harmonic Test Chime**: Synthesizes and broadcasts an in-memory 16-bit PCM harmonic test chime to verify speaker connectivity.

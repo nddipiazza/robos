@@ -143,7 +143,61 @@ function fallbackTrack(filePath, err, coverCache = null) {
   };
 }
 
+// Folder names that say nothing about the artist ("Music/Album/01 Song.mp3").
+const GENERIC_FOLDERS = new Set(['', '.', '/', 'music', 'my music', 'mp3', 'mp3s', 'audio', 'songs', 'albums', 'my drive',
+  'drive', 'onedrive', 'cloud', 'media', 'downloads', 'library', 'itunes', 'itunes media', 'itunes music', 'shared with me',
+  'flac', 'misc', 'various', 'unsorted', 'new folder', 'sync', 'documents']);
+const DISC_FOLDER = /^(cd|disc|disk)\s*(\d+)$/i;
+
+/**
+ * Best guess at title / artist / album from a cloud file's path, used until its
+ * tags have been read: ".../Artist/Album (1999)/03 - Song.mp3",
+ * ".../Artist - Album/Song.mp3", ".../Artist - Song.mp3".
+ */
+function guessFromRemotePath(remotePath, name = '') {
+  const parts = String(remotePath || '').split('/').filter(Boolean);
+  const file = name || parts[parts.length - 1] || '';
+  let title = path.parse(file).name.replace(/_/g, ' ').trim();
+  const out = { title, artist: 'Unknown Artist', album: 'Unknown Album', trackNumber: null, discNumber: null, year: null };
+
+  // "1-03 Song", "03 - Song", "03. Song", "03 Song"
+  const num = /^(?:(\d{1,2})[-.])?(\d{1,3})(?:\s*[-.)_]\s*|\s+)(.+)$/.exec(title);
+  if (num && Number(num[2]) > 0 && Number(num[2]) < 200) {
+    out.trackNumber = Number(num[2]);
+    if (num[1]) out.discNumber = Number(num[1]);
+    title = num[3].trim();
+  }
+  // "Artist - Song" (but not "Song - Live" when the folders name the artist anyway)
+  const dash = title.split(' - ');
+  if (dash.length >= 2 && dash[0].trim() && !/^\d+$/.test(dash[0].trim())) {
+    out.artist = dash[0].trim();
+    title = dash.slice(1).join(' - ').trim();
+  }
+  out.title = title || out.title;
+
+  const dirs = parts.slice(0, -1);
+  if (dirs.length && DISC_FOLDER.test(dirs[dirs.length - 1])) {
+    out.discNumber = out.discNumber || Number(DISC_FOLDER.exec(dirs[dirs.length - 1])[2]);
+    dirs.pop();
+  }
+  let albumDir = dirs[dirs.length - 1] || '';
+  const artistDir = dirs[dirs.length - 2] || '';
+  if (albumDir && !GENERIC_FOLDERS.has(albumDir.toLowerCase())) {
+    const year = /\s*[([]((?:19|20)\d\d)[)\]]\s*/.exec(albumDir) || /^((?:19|20)\d\d)\s*-\s*/.exec(albumDir);
+    if (year) { out.year = Number(year[1]); albumDir = albumDir.replace(year[0], ' ').trim(); }
+    const split = albumDir.split(' - ');
+    if (split.length >= 2 && !/^\d+$/.test(split[0].trim())) {
+      if (out.artist === 'Unknown Artist') out.artist = split[0].trim();
+      albumDir = split.slice(1).join(' - ').trim();
+    }
+    out.album = albumDir || out.album;
+    if (out.artist === 'Unknown Artist' && artistDir && !GENERIC_FOLDERS.has(artistDir.toLowerCase())) out.artist = artistDir;
+  }
+  return out;
+}
+
 module.exports = {
+  guessFromRemotePath,
   AUDIO_EXTENSIONS,
   generateTrackId,
   generateArtId,
