@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 from typing import Any, Dict, List, Optional
+import urllib.error
 import urllib.request
 
 
@@ -42,6 +43,13 @@ class RTSClient:
 
     def load_scenario_slug(self, slug: str) -> Dict[str, Any]:
         return self._request("POST", "/scenario", {"slug": slug})
+
+    def editor(self, action: str = "state", **params: Any) -> Dict[str, Any]:
+        """Drive the Map Editor (`scenes/MapEditor.tscn`); action="open" switches the game into it."""
+        try:
+            return self._request("POST", "/editor", {"action": action, **params})
+        except urllib.error.HTTPError as err:
+            return json.loads(err.read().decode("utf-8"))
 
     def command(
         self,

@@ -10,6 +10,7 @@ const { CastService } = require('./lib/cast-service');
 const { MediaLibrary } = require('./lib/media-library');
 const cloud = require('./lib/cloud-storage');
 const lyrics = require('./lib/lyrics');
+const { LibraryFolders } = require('./lib/library-folders');
 
 function ensureFileAccessible(filePath) {
   if (!filePath || typeof filePath !== 'string') return false;
@@ -51,9 +52,51 @@ app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
 
 let mainWindow = null;
-const mediaLibrary = new MediaLibrary();
 const castService = new CastService();
+const mediaLibrary = new MediaLibrary();
 castService.mediaLibrary = mediaLibrary;
+castService.cloudStorage = cloud;
+const libraryFolders = new LibraryFolders({ mediaLibrary, cloud, castService });
+
+// Refresh cloud track stream URLs once CastService streamServer allocates its port,
+// and migrate any legacy cloud tracks stored under ~/.cache/robos/audio-player/cloud/
+function refreshCloudTrackUrls() {
+  if (!castService.streamPort) return;
+  let updated = false;
+  for (const track of mediaLibrary.tracks) {
+    if (!track.cloud && track.filePath && track.filePath.startsWith(cloud.CACHE_ROOT + path.sep)) {
+      const rel = path.relative(cloud.CACHE_ROOT, track.filePath);
+      const parts = rel.split(path.sep);
+      if (parts.length >= 2) {
+        const connId = parts[0];
+        const remotePath = '/' + parts.slice(1).join('/');
+        track.cloud = {
+          connectionId: connId,
+          driverType: 'gdrive',
+          remotePath,
+          driveId: null,
+          size: fs.existsSync(track.filePath) ? fs.statSync(track.filePath).size : null,
+          cached: fs.existsSync(track.filePath),
+        };
+        updated = true;
+      }
+    }
+    if (track.cloud) {
+      track.cloud.cached = cloud.isTrackCached(track.filePath, track.cloud.size);
+      const nextSrc = castService.getCloudStreamUrl(track.id, false);
+      if (track.src !== nextSrc) {
+        track.src = nextSrc;
+        updated = true;
+      }
+    }
+  }
+  if (updated) {
+    mediaLibrary._saveCache();
+  }
+}
+
+setTimeout(refreshCloudTrackUrls, 200);
+try { cloud.enforceCacheLimit(); } catch {}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -136,8 +179,18 @@ ipcMain.handle('audio:set-speaker-volume', async (_evt, { ip, level, muted }) =>
 
 ipcMain.handle('audio:cast-file', async (_evt, { ip, filePath, metadata }) => {
   try {
-    if (!fs.existsSync(filePath)) throw new Error('File does not exist: ' + filePath);
-    const streamUrl = castService.registerFile(filePath);
+    let streamUrl;
+    if (fs.existsSync(filePath)) {
+      if (filePath.startsWith(cloud.CACHE_ROOT + path.sep)) {
+        cloud.touchCacheFile(filePath);
+      }
+      streamUrl = castService.registerFile(filePath);
+    } else {
+      // Check if it's a cloud track that should be streamed on demand
+      const cloudTrack = mediaLibrary.tracks.find(t => t.filePath === filePath && t.cloud);
+      if (!cloudTrack) throw new Error('File does not exist: ' + filePath);
+      streamUrl = castService.getCloudStreamUrl(cloudTrack.id, true);
+    }
     return await castService.castMediaUrl(ip, streamUrl, metadata, (status) => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('audio:speaker-status-change', { ip, status });
@@ -224,10 +277,17 @@ ipcMain.handle('audio:open-file-dialog', async () => {
 });
 
 ipcMain.handle('audio:ensure-file-accessible', async (_evt, filePath) => {
+  if (filePath && filePath.startsWith(cloud.CACHE_ROOT + path.sep) && fs.existsSync(filePath)) {
+    cloud.touchCacheFile(filePath);
+    return true;
+  }
+  const cloudTrack = mediaLibrary.tracks.find(t => t.filePath === filePath && t.cloud);
+  if (cloudTrack) return true; // Will be streamed on demand via /cloud-stream/:trackId
   return ensureFileAccessible(filePath);
 });
 
 ipcMain.handle('audio:get-library', async () => {
+  refreshCloudTrackUrls();
   return mediaLibrary.getLibrary();
 });
 
@@ -386,6 +446,83 @@ ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
   };
 });
 
+// ── Managed library folders (local + cloud) ────────────────────────────────
+
+function folderState() {
+  return { folders: libraryFolders.list(), library: mediaLibrary.getLibrary() };
+}
+
+function scanLocalFolders(folders) {
+  const paths = folders.filter(f => f.kind === 'local' && fs.existsSync(f.path)).map(f => f.path);
+  if (!paths.length) return;
+  mediaLibrary.scanFoldersInBackground(paths, {
+    onDiscovered: (d) => sendToWindow('audio:library-scan-discovered', d),
+    onProgress: (p) => sendToWindow('audio:library-scan-progress', p),
+    onBatch: (b) => sendToWindow('audio:library-scan-batch', b),
+    onDone: (done) => {
+      folders.forEach(f => f.kind === 'local' && libraryFolders.markSynced(f.id));
+      sendToWindow('audio:library-scan-complete', done);
+    },
+    onError: (err) => sendToWindow('audio:library-scan-error', { error: err.message }),
+  });
+}
+
+async function syncCloudFolders(folders) {
+  const results = [];
+  for (const f of folders.filter(x => x.kind === 'cloud')) {
+    try {
+      results.push({ id: f.id, ...(await libraryFolders.syncCloud(f.id, (p) => sendToWindow('audio:cloud-progress', { ...p, folder: f.label }))) });
+    } catch (err) {
+      results.push({ id: f.id, error: err.message });
+    }
+  }
+  return results;
+}
+
+ipcMain.handle('audio:folders-list', async () => folderState());
+
+ipcMain.handle('audio:folders-add-local', async () => {
+  if (!mainWindow) return { canceled: true };
+  const res = await dialog.showOpenDialog(mainWindow, {
+    title: 'Add Music Folder(s) to Library',
+    buttonLabel: 'Add Folder',
+    properties: ['openDirectory', 'multiSelections', 'dontAddToRecent'],
+  });
+  if (res.canceled || !res.filePaths.length) return { canceled: true };
+  const added = res.filePaths.map(p => libraryFolders.add({ kind: 'local', path: p }));
+  scanLocalFolders(added);
+  return { canceled: false, ...folderState() };
+});
+
+ipcMain.handle('audio:folders-add-cloud', async (_evt, { connectionId, path: remotePath, label }) => {
+  try {
+    const folder = libraryFolders.add({ kind: 'cloud', connectionId, path: remotePath, label });
+    const [result] = await syncCloudFolders([folder]);
+    if (result && result.error) return { ok: false, error: result.error, ...folderState() };
+    return { ok: true, ...result, ...folderState() };
+  } catch (err) {
+    return { ok: false, error: err.message, ...folderState() };
+  }
+});
+
+ipcMain.handle('audio:folders-rescan', async (_evt, id) => {
+  const targets = id ? [libraryFolders.get(id)].filter(Boolean) : libraryFolders.folders.slice();
+  scanLocalFolders(targets);
+  const results = await syncCloudFolders(targets);
+  const failed = results.filter(r => r.error);
+  return { ok: !failed.length, error: failed.map(r => r.error).join('; ') || undefined, ...folderState() };
+});
+
+ipcMain.handle('audio:folders-rename', async (_evt, { id, label }) => {
+  libraryFolders.rename(id, label);
+  return folderState();
+});
+
+ipcMain.handle('audio:folders-remove', async (_evt, { id, removeTracks }) => {
+  libraryFolders.remove(id, !!removeTracks);
+  return folderState();
+});
+
 ipcMain.handle('audio:get-lyrics', async (_evt, track) => lyrics.getLyrics(track));
 
 // ── RobOS cloud storage (Data Sources FTP / SFTP connections) ───────────────
@@ -406,10 +543,14 @@ ipcMain.handle('audio:cloud-list', async (_evt, { id, path: remotePath }) => {
 
 ipcMain.handle('audio:cloud-import', async (_evt, { id, paths }) => {
   try {
-    const localFiles = await cloud.fetchAudio(id, paths || [], (p) => sendToWindow('audio:cloud-progress', p));
+    const descriptors = await cloud.indexCloudAudio(id, paths || [], (p) => sendToWindow('audio:cloud-progress', p));
     const tracks = [];
-    for (const f of localFiles) {
-      try { tracks.push(await mediaLibrary.parseTrack(f)); } catch {}
+    for (const desc of descriptors) {
+      try {
+        const trackId = mediaLibrary._generateTrackId(desc.localPath);
+        const streamUrl = castService.getCloudStreamUrl(trackId, false);
+        tracks.push(await mediaLibrary.buildCloudTrack(desc, streamUrl));
+      } catch {}
     }
     if (tracks.length) {
       const incoming = new Set(tracks.map(t => t.filePath));
@@ -421,6 +562,20 @@ ipcMain.handle('audio:cloud-import', async (_evt, { id, paths }) => {
   } catch (err) {
     return { ok: false, error: err.message };
   }
+});
+
+ipcMain.handle('audio:cloud-cache-stats', async () => cloud.getCacheStats());
+
+ipcMain.handle('audio:cloud-cache-set-max', async (_evt, maxBytes) => {
+  const stats = cloud.setMaxCacheBytes(maxBytes);
+  refreshCloudTrackUrls();
+  return stats;
+});
+
+ipcMain.handle('audio:cloud-cache-clear', async () => {
+  const res = cloud.clearCache();
+  refreshCloudTrackUrls();
+  return res;
 });
 
 ipcMain.handle('audio:scan-default-library', async () => {

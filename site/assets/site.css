@@ -11,7 +11,7 @@ h1,h2,h3{line-height:1.1;letter-spacing:-.03em;margin:0}
 .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.1rem}
 .links{display:flex;gap:26px;font-size:.92rem;color:var(--muted)}.links a:hover{color:var(--fg)}
 .nav-r{display:flex;align-items:center;gap:10px}
-.icon-btn{background:none;border:1px solid var(--line);color:var(--fg);border-radius:8px;width:34px;height:34px;cursor:pointer}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;background:none;border:1px solid var(--line);color:var(--fg);border-radius:8px;width:34px;height:34px;cursor:pointer;transition:border-color .15s}.icon-btn:hover{border-color:var(--accent)}.icon-btn img{display:block;width:18px;height:18px}
 /* buttons */
 .btn{display:inline-flex;align-items:center;gap:8px;background:var(--fg);color:var(--bg);font-weight:600;padding:12px 22px;border-radius:999px;border:1px solid var(--fg);cursor:pointer;transition:transform .15s,opacity .15s}
 .btn:hover{transform:translateY(-1px);opacity:.92}.btn-sm{padding:7px 16px;font-size:.88rem}

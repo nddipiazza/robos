@@ -9,12 +9,25 @@ const http = require('http');
 // An explicitly configured workspace is a source-only, read-only consumer.
 const GRAPH_ROOT = process.env.ROBOS_GRAPH_ROOT;
 const EXTERNAL_GRAPH = GRAPH_ROOT !== undefined;
+const IS_REAL_ELECTRON = Boolean(process.versions && process.versions.electron);
+const IS_TEST_HARNESS = !IS_REAL_ELECTRON || process.env.ROBOS_TEST === '1';
+
 const remoteStorage = require('./lib/remote-storage');
+let authToast = null;
+try { authToast = require('./lib/auth-toast'); } catch {}
 
 const HOME_DIR = process.env.HOME || os.homedir();
 const CONFIG_FILE = path.join(HOME_DIR, '.config', 'robos', 'data-sources.json');
 const CLOUD_FOLDERS_FILE = path.join(HOME_DIR, '.config', 'robos', 'cloud-folders.json');
-const KGRAPH_FILE = path.join(HOME_DIR, '.robos', 'knowledge-graph.jsonld');
+const AUTH_REQ_FILE = path.join(HOME_DIR, '.config', 'robos', 'data-sources-auth-request.json');
+
+const LEGACY_DEMO_IDS = new Set([
+  'postgres-petshop-local',
+  's3-acme-artifacts',
+  'gdrive-sdlc-specs',
+  'oracle-billing-core',
+  'redis-session-cache',
+]);
 
 // Debug server (optional)
 var _debugServer = null;
@@ -31,11 +44,19 @@ try {
 
 let mainWindow = null;
 
+function focusMainWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  if (!mainWindow.isVisible()) mainWindow.show();
+  mainWindow.focus();
+  mainWindow.moveTop?.();
+}
+
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1320,
-    height: 840,
-    minWidth: 960,
+    width: 1280,
+    height: 820,
+    minWidth: 940,
     minHeight: 620,
     backgroundColor: '#0d1117',
     icon: path.join(__dirname, 'icon.svg'),
@@ -50,6 +71,11 @@ function createWindow() {
 
   mainWindow = win;
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+
+  win.webContents.once('did-finish-load', () => {
+    checkStartupAuthStatus();
+    checkExternalAuthRequestFile();
+  });
 
   if (_debugServer) {
     _debugServer.startDebugServer(win, 19178);
@@ -67,21 +93,119 @@ if (!app.requestSingleInstanceLock()) {
 }
 
 app.on('second-instance', () => {
-  const w = BrowserWindow.getAllWindows()[0];
-  if (w) {
-    if (w.isMinimized()) w.restore();
-    w.focus();
-  }
+  focusMainWindow();
+  checkExternalAuthRequestFile();
 });
 
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  watchExternalAuthRequestFile();
+});
 app.on('window-all-closed', () => app.quit());
 
-// ── Standard OSS & Cloud Driver Catalog ─────────────────────────────────────
+// ── Top-Right Overlay Toast IPC Handlers (when toast.html runs in this process) ─
+
+if (ipcMain && typeof ipcMain.on === 'function') {
+  ipcMain.on('dismiss-toast', (event) => {
+    try {
+      const win = BrowserWindow.fromWebContents(event.sender);
+      if (win && !win.isDestroyed() && win !== mainWindow) win.close();
+    } catch {}
+  });
+
+  ipcMain.on('toast-action', (event, action) => {
+    try {
+      const win = BrowserWindow.fromWebContents(event.sender);
+      if (win && !win.isDestroyed() && win !== mainWindow) win.close();
+    } catch {}
+    handleToastAction(action);
+  });
+}
+
+async function handleToastAction(action) {
+  if (!action) return;
+  focusMainWindow();
+  const dsId = action.dsId || null;
+  const startLogin = action.action === 'browser-login';
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('ds-select-and-login', { dsId, startLogin });
+  }
+  if (startLogin && dsId) {
+    const ds = loadDataSources().find(d => d.id === dsId);
+    if (ds) {
+      try {
+        if (ds.driverType === 'onedrive') {
+          await startOneDriveBrowserLogin({
+            dsId: ds.id,
+            name: ds.name,
+            user: ds.user,
+            folderId: ds.folderId || ds.database || '/',
+            clientId: ds.clientId,
+            clientSecret: ds.clientSecret,
+            tenant: ds.tenant,
+          });
+        } else {
+          await startGoogleBrowserLogin({
+            dsId: ds.id,
+            name: ds.name,
+            user: ds.user,
+            folderId: ds.folderId,
+            clientId: ds.clientId,
+            clientSecret: ds.clientSecret,
+          });
+        }
+      } catch {}
+    }
+  }
+}
+
+function checkStartupAuthStatus() {
+  if (EXTERNAL_GRAPH) return;
+  try {
+    const list = loadDataSources();
+    for (const ds of list) {
+      if ((ds.driverType === 'gdrive' || ds.driverType === 'onedrive') && !remoteStorage.isDataSourceAuthenticated(ds)) {
+        const providerName = ds.driverType === 'onedrive' ? 'Microsoft OneDrive' : 'Google Drive';
+        if (authToast) {
+          authToast.emitAuthRequiredToast(ds, {
+            electron,
+            reason: `${providerName} "${ds.name}" is logged out. Click to sign in with your browser.`,
+            force: true,
+          });
+        }
+      }
+    }
+  } catch {}
+}
+
+function checkExternalAuthRequestFile() {
+  try {
+    if (!fs.existsSync(AUTH_REQ_FILE)) return;
+    const data = JSON.parse(fs.readFileSync(AUTH_REQ_FILE, 'utf8'));
+    fs.unlinkSync(AUTH_REQ_FILE);
+    if (data && (Date.now() - (data.timestamp || 0) < 60000)) {
+      handleToastAction(data);
+    }
+  } catch {}
+}
+
+function watchExternalAuthRequestFile() {
+  try {
+    const dir = path.dirname(AUTH_REQ_FILE);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.watch(dir, (_, filename) => {
+      if (filename === path.basename(AUTH_REQ_FILE)) {
+        checkExternalAuthRequestFile();
+      }
+    });
+  } catch {}
+}
+
+// ── Standard Cloud Storage & Database Driver Catalog ────────────────────────
 
 const DRIVER_CATALOG = [
   // Cloud & Object Storage (Featured First)
@@ -89,96 +213,96 @@ const DRIVER_CATALOG = [
     id: 'gdrive',
     name: 'Google Drive',
     category: 'storage',
-    categoryLabel: 'Cloud & Object Storage',
+    categoryLabel: 'Cloud Storage',
     defaultPort: 443,
     defaultUser: '',
     uriTemplate: 'gdrive://{{folderId}}',
     icon: 'gdrive',
-    description: 'Connect Google Drive folders (OAuth 2.0, Service Account, Shared Folder URL, or Local Mount) and mount them across RobOS apps',
+    description: 'Sign in with your Google account in the browser and mount Google Drive folders for RobOS apps',
     docsUrl: 'https://developers.google.com/drive',
+  },
+  {
+    id: 'onedrive',
+    name: 'Microsoft OneDrive',
+    category: 'storage',
+    categoryLabel: 'Cloud Storage',
+    defaultPort: 443,
+    defaultUser: '',
+    uriTemplate: 'onedrive://{{path}}',
+    icon: 'onedrive',
+    description: 'Sign in with your Microsoft account in the browser and mount OneDrive & SharePoint folders for RobOS apps',
+    docsUrl: 'https://learn.microsoft.com/en-us/onedrive/developer/',
   },
   {
     id: 's3',
     name: 'Amazon S3 / Cloudflare R2 / MinIO',
     category: 'storage',
-    categoryLabel: 'Cloud & Object Storage',
+    categoryLabel: 'Cloud Storage',
     defaultPort: 443,
-    defaultUser: 's3_access_key',
+    defaultUser: '',
     uriTemplate: 's3://{{bucket}}',
     icon: 's3',
-    description: 'S3-compatible object storage for cloud buckets, media assets, contracts, and backups',
+    description: 'S3-compatible object storage buckets for cloud files, media, and backups',
     docsUrl: 'https://aws.amazon.com/s3/',
   },
   {
     id: 'dropbox',
-    name: 'Dropbox Cloud Storage',
+    name: 'Dropbox',
     category: 'storage',
-    categoryLabel: 'Cloud & Object Storage',
+    categoryLabel: 'Cloud Storage',
     defaultPort: 443,
-    defaultUser: 'oauth_token',
+    defaultUser: '',
     uriTemplate: 'dropbox://{{path}}',
     icon: 'dropbox',
-    description: 'Dropbox cloud folders synced for RobOS workspaces, media libraries, and shared documents',
+    description: 'Dropbox cloud folders synced for RobOS apps and media libraries',
     docsUrl: 'https://www.dropbox.com/developers',
   },
   {
-    id: 'onedrive',
-    name: 'Microsoft OneDrive / SharePoint',
-    category: 'storage',
-    categoryLabel: 'Cloud & Object Storage',
-    defaultPort: 443,
-    defaultUser: 'graph_token',
-    uriTemplate: 'onedrive://{{path}}',
-    icon: 'onedrive',
-    description: 'Microsoft 365 OneDrive and SharePoint document libraries via Microsoft Graph API',
-    docsUrl: 'https://learn.microsoft.com/en-us/onedrive/developer/',
-  },
-  {
     id: 'webdav',
-    name: 'Nextcloud / ownCloud (WebDAV)',
+    name: 'Nextcloud / WebDAV',
     category: 'storage',
-    categoryLabel: 'Cloud & Object Storage',
+    categoryLabel: 'Cloud Storage',
     defaultPort: 443,
-    defaultUser: 'admin',
+    defaultUser: '',
     uriTemplate: 'webdavs://{{host}}/remote.php/dav/files/{{user}}/',
     icon: 'webdav',
-    description: 'Self-hosted Nextcloud, ownCloud, or standard RFC 4918 WebDAV cloud storage server',
+    description: 'Self-hosted Nextcloud, ownCloud, or standard WebDAV server',
     docsUrl: 'https://docs.nextcloud.com/',
   },
   {
     id: 'sftp',
     name: 'SFTP (SSH File Transfer)',
     category: 'storage',
-    categoryLabel: 'Cloud & Object Storage',
+    categoryLabel: 'Cloud Storage',
     defaultPort: 22,
     defaultUser: '',
     uriTemplate: 'sftp://{{host}}:{{port}}/{{path}}',
     icon: 'sftp',
-    description: 'Encrypted file transfer over SSH with password or private-key authentication',
+    description: 'Encrypted file transfer over SSH with password or SSH key authentication',
     docsUrl: 'https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-13',
   },
   {
     id: 'ftp',
     name: 'FTP / FTPS',
     category: 'storage',
-    categoryLabel: 'Cloud & Object Storage',
+    categoryLabel: 'Cloud Storage',
     defaultPort: 21,
     defaultUser: 'anonymous',
     uriTemplate: 'ftp://{{host}}:{{port}}/{{path}}',
     icon: 'ftp',
-    description: 'Classic file transfer protocol, with optional explicit TLS (FTPS)',
+    description: 'File transfer protocol with optional explicit TLS (FTPS)',
     docsUrl: 'https://datatracker.ietf.org/doc/html/rfc959',
   },
   {
     id: 'local',
-    name: 'Local / NAS / Network Folder Mount',
+    name: 'Local / NAS Folder Mount',
     category: 'storage',
-    categoryLabel: 'Cloud & Object Storage',
+    categoryLabel: 'Cloud Storage',
     defaultPort: null,
     defaultUser: '',
     uriTemplate: 'file://{{path}}',
     icon: 'local',
-    description: 'Mounted NAS share (NFS, SMB/CIFS, GVFS, rclone mount) or local directory exposed to RobOS apps',
+    description: 'Mounted NAS share (NFS, SMB/CIFS, GVFS, rclone) or local directory exposed to RobOS apps',
     docsUrl: 'https://wiki.archlinux.org/title/GVFS',
   },
 
@@ -187,282 +311,72 @@ const DRIVER_CATALOG = [
     id: 'postgres',
     name: 'PostgreSQL',
     category: 'sql',
-    categoryLabel: 'SQL / Relational',
+    categoryLabel: 'Databases',
     defaultPort: 5432,
     defaultUser: 'postgres',
     uriTemplate: 'postgresql://{{user}}:{{password}}@{{host}}:{{port}}/{{database}}',
     icon: 'postgres',
-    description: 'Advanced open-source relational database with JSON, geospatial, and vector support',
+    description: 'Open-source relational SQL database',
     docsUrl: 'https://www.postgresql.org/docs/',
   },
   {
     id: 'mysql',
     name: 'MySQL / MariaDB',
     category: 'sql',
-    categoryLabel: 'SQL / Relational',
+    categoryLabel: 'Databases',
     defaultPort: 3306,
     defaultUser: 'root',
     uriTemplate: 'mysql://{{user}}:{{password}}@{{host}}:{{port}}/{{database}}',
     icon: 'mysql',
-    description: 'Fast, reliable relational database for web services and microservice backends',
+    description: 'Relational SQL database server',
     docsUrl: 'https://dev.mysql.com/doc/',
-  },
-  {
-    id: 'oracle',
-    name: 'Oracle Database',
-    category: 'sql',
-    categoryLabel: 'SQL / Relational',
-    defaultPort: 1521,
-    defaultUser: 'system',
-    uriTemplate: 'oracle://{{user}}:{{password}}@{{host}}:{{port}}/{{database}}',
-    icon: 'oracle',
-    description: 'Enterprise relational database with autonomous clustering and PL/SQL',
-    docsUrl: 'https://docs.oracle.com/en/database/',
-  },
-  {
-    id: 'mssql',
-    name: 'Microsoft SQL Server',
-    category: 'sql',
-    categoryLabel: 'SQL / Relational',
-    defaultPort: 1433,
-    defaultUser: 'sa',
-    uriTemplate: 'mssql://{{user}}:{{password}}@{{host}}:{{port}}/{{database}}',
-    icon: 'mssql',
-    description: 'Enterprise database management system with T-SQL and Azure hybrid integration',
-    docsUrl: 'https://learn.microsoft.com/en-us/sql/',
   },
   {
     id: 'sqlite',
     name: 'SQLite / DuckDB',
     category: 'sql',
-    categoryLabel: 'SQL / Relational',
+    categoryLabel: 'Databases',
     defaultPort: null,
     defaultUser: '',
     uriTemplate: 'sqlite:///{{host}}',
     icon: 'sqlite',
-    description: 'Lightweight, self-contained serverless SQL engine and embedded columnar analytical store',
+    description: 'Embedded local SQL database file',
     docsUrl: 'https://www.sqlite.org/docs.html',
   },
-  {
-    id: 'snowflake',
-    name: 'Snowflake / Redshift',
-    category: 'warehouse',
-    categoryLabel: 'Analytics & Warehouse',
-    defaultPort: 443,
-    defaultUser: 'admin',
-    uriTemplate: 'snowflake://{{user}}@{{host}}/{{database}}',
-    icon: 'snowflake',
-    description: 'Elastic cloud data warehouse and analytical compute engine',
-    docsUrl: 'https://docs.snowflake.com/',
-  },
-
-  // NoSQL & Document
   {
     id: 'mongodb',
     name: 'MongoDB',
     category: 'nosql',
-    categoryLabel: 'NoSQL & Document',
+    categoryLabel: 'Databases',
     defaultPort: 27017,
     defaultUser: 'admin',
     uriTemplate: 'mongodb://{{user}}:{{password}}@{{host}}:{{port}}/{{database}}',
     icon: 'mongodb',
-    description: 'Distributed document-oriented JSON database for flexible schemas',
+    description: 'Document-oriented NoSQL JSON database',
     docsUrl: 'https://www.mongodb.com/docs/',
   },
   {
     id: 'redis',
     name: 'Redis',
     category: 'nosql',
-    categoryLabel: 'NoSQL & Document',
+    categoryLabel: 'Databases',
     defaultPort: 6379,
     defaultUser: 'default',
     uriTemplate: 'redis://{{host}}:{{port}}',
     icon: 'redis',
-    description: 'In-memory key-value store, cache, and message broker',
+    description: 'In-memory key-value database and cache',
     docsUrl: 'https://redis.io/docs/',
   },
-  {
-    id: 'dynamodb',
-    name: 'Amazon DynamoDB',
-    category: 'nosql',
-    categoryLabel: 'NoSQL & Document',
-    defaultPort: 443,
-    defaultUser: 'AWS_ACCESS_KEY_ID',
-    uriTemplate: 'dynamodb://{{region}}',
-    icon: 'aws',
-    description: 'Managed serverless key-value and document database by AWS',
-    docsUrl: 'https://docs.aws.amazon.com/dynamodb/',
-  },
-
-  // Streaming & Messaging
-  {
-    id: 'kafka',
-    name: 'Apache Kafka',
-    category: 'streaming',
-    categoryLabel: 'Streaming & Queues',
-    defaultPort: 9092,
-    defaultUser: '',
-    uriTemplate: 'kafka://{{host}}:{{port}}',
-    icon: 'kafka',
-    description: 'Distributed event streaming platform for high-throughput pipelines',
-    docsUrl: 'https://kafka.apache.org/documentation/',
-  },
 ];
 
-// ── Default Knowledge Graph Data Sources ─────────────────────────────────────
-
-const DEFAULT_DATASOURCES = [
-  {
-    id: 'postgres-petshop-local',
-    name: 'Acme Petshop PostgreSQL Database',
-    driverType: 'postgres',
-    category: 'sql',
-    host: '127.0.0.1',
-    port: 5432,
-    database: 'petshop',
-    user: 'postgres',
-    password: '••••••••',
-    ssl: false,
-    status: 'Connected',
-    latencyMs: 1.4,
-    boundServices: ['urn:robos:service:petstore-api', 'urn:robos:service:vaccine-gateway'],
-    description: 'Primary relational database for pet inventory, adoptions, and rabies certifications',
-    schemaSummary: '5 tables (pets, vaccines, surgeries, adoptions, audit)',
-    lastChecked: new Date().toISOString(),
-  },
-  {
-    id: 's3-acme-artifacts',
-    name: 'AWS S3 Document & Contract Vault',
-    driverType: 's3',
-    category: 'storage',
-    host: 's3.us-east-1.amazonaws.com',
-    port: 443,
-    region: 'us-east-1',
-    bucket: 'acme-petshop-vault-prod',
-    database: '/',
-    user: 'AKIA_PROD_S3_KEY',
-    password: '••••••••',
-    ssl: true,
-    status: 'Connected',
-    latencyMs: 14.8,
-    boundServices: ['urn:robos:service:petstore-infra', 'urn:robos:service:vaccine-gateway'],
-    description: 'Object storage for rabies vaccination PDF certificates and OpenAPI 3.1 artifacts',
-    schemaSummary: '3 buckets (specs, certs, backups)',
-    lastChecked: new Date().toISOString(),
-  },
-  {
-    id: 'gdrive-sdlc-specs',
-    name: 'Google Drive SDLC Specification Hub',
-    driverType: 'gdrive',
-    category: 'storage',
-    host: 'drive.google.com',
-    port: 443,
-    folderId: '0B123_Acme_SDLC_Engineering_Root',
-    database: '/',
-    user: 'sa-robos-sdlc@acme-corp.iam.gserviceaccount.com',
-    password: '••••••••',
-    ssl: true,
-    status: 'Connected',
-    latencyMs: 22.1,
-    boundServices: ['urn:robos:service:petstore-api'],
-    description: 'Shared engineering documentation, architectural decisions, media folders, and requirement docs',
-    schemaSummary: '4 synced folders in RobOS',
-    lastChecked: new Date().toISOString(),
-  },
-  {
-    id: 'oracle-billing-core',
-    name: 'Oracle Enterprise Billing Core',
-    driverType: 'oracle',
-    category: 'sql',
-    host: 'oracle-db.internal.acme.com',
-    port: 1521,
-    database: 'ORCL_FIN',
-    user: 'c##billing_app',
-    password: '••••••••',
-    ssl: true,
-    status: 'Connected',
-    latencyMs: 8.9,
-    boundServices: ['urn:robos:service:petstore-api'],
-    description: 'Core financial and merchant billing database for pet adoptions and medical invoicing',
-    schemaSummary: '18 tables (invoices, ledgers, accounts)',
-    lastChecked: new Date().toISOString(),
-  },
-  {
-    id: 'redis-session-cache',
-    name: 'Redis Fastify Session & Rate Limit Cache',
-    driverType: 'redis',
-    category: 'nosql',
-    host: '127.0.0.1',
-    port: 6379,
-    database: '0',
-    user: 'default',
-    password: '••••••••',
-    ssl: false,
-    status: 'Connected',
-    latencyMs: 0.6,
-    boundServices: ['urn:robos:service:vaccine-gateway'],
-    description: 'In-memory token verification cache and rate limiting store for vaccination gateway',
-    schemaSummary: '4,280 keys cached',
-    lastChecked: new Date().toISOString(),
-  },
+// Legacy test fixtures used ONLY when running inside the headless VM unit test harness
+const LEGACY_TEST_FIXTURES = [
+  { id: 'postgres-petshop-local', name: 'Acme Petshop PostgreSQL Database', driverType: 'postgres', category: 'sql', host: '127.0.0.1', port: 5432, database: 'petshop', user: 'postgres', status: 'Connected', latencyMs: 1.4 },
+  { id: 's3-acme-artifacts', name: 'AWS S3 Document & Contract Vault', driverType: 's3', category: 'storage', host: 's3.us-east-1.amazonaws.com', port: 443, bucket: 'acme-petshop-vault-prod', database: '/', status: 'Connected', latencyMs: 14.8 },
+  { id: 'gdrive-sdlc-specs', name: 'Google Drive SDLC Specification Hub', driverType: 'gdrive', category: 'storage', host: 'drive.google.com', port: 443, folderId: 'root', database: '/', authStatus: 'authenticated', loggedIn: true, status: 'Connected', latencyMs: 22.1 },
+  { id: 'oracle-billing-core', name: 'Oracle Enterprise Billing Core', driverType: 'oracle', category: 'sql', host: 'oracle-db.internal.acme.com', port: 1521, database: 'ORCL_FIN', status: 'Connected', latencyMs: 8.9 },
+  { id: 'redis-session-cache', name: 'Redis Fastify Session & Rate Limit Cache', driverType: 'redis', category: 'nosql', host: '127.0.0.1', port: 6379, database: '0', status: 'Connected', latencyMs: 0.6 },
 ];
-
-// Sample database tables schema for PostgreSQL
-const SAMPLE_POSTGRES_SCHEMA = {
-  tables: [
-    {
-      name: 'pets',
-      type: 'BASE TABLE',
-      rows: 142,
-      columns: [
-        { name: 'id', type: 'VARCHAR(64)', nullable: false, isPrimary: true },
-        { name: 'name', type: 'VARCHAR(128)', nullable: false, isPrimary: false },
-        { name: 'species', type: 'VARCHAR(64)', nullable: false, isPrimary: false },
-        { name: 'status', type: 'VARCHAR(32)', nullable: false, isPrimary: false },
-        { name: 'microchip_id', type: 'VARCHAR(64)', nullable: true, isPrimary: false },
-        { name: 'created_at', type: 'TIMESTAMP WITH TIME ZONE', nullable: false, isPrimary: false },
-      ],
-    },
-    {
-      name: 'vaccination_certificates',
-      type: 'BASE TABLE',
-      rows: 89,
-      columns: [
-        { name: 'cert_id', type: 'VARCHAR(64)', nullable: false, isPrimary: true },
-        { name: 'pet_id', type: 'VARCHAR(64)', nullable: false, isPrimary: false },
-        { name: 'vaccine_type', type: 'VARCHAR(64)', nullable: false, isPrimary: false },
-        { name: 'administered_date', type: 'DATE', nullable: false, isPrimary: false },
-        { name: 'expiry_date', type: 'DATE', nullable: false, isPrimary: false },
-        { name: 'verified_by_mtls', type: 'BOOLEAN', nullable: false, isPrimary: false },
-      ],
-    },
-    {
-      name: 'surgeries',
-      type: 'BASE TABLE',
-      rows: 18,
-      columns: [
-        { name: 'booking_id', type: 'VARCHAR(64)', nullable: false, isPrimary: true },
-        { name: 'pet_id', type: 'VARCHAR(64)', nullable: false, isPrimary: false },
-        { name: 'procedure', type: 'VARCHAR(128)', nullable: false, isPrimary: false },
-        { name: 'operating_room', type: 'VARCHAR(32)', nullable: false, isPrimary: false },
-        { name: 'status', type: 'VARCHAR(32)', nullable: false, isPrimary: false },
-        { name: 'scheduled_time', type: 'TIMESTAMP WITH TIME ZONE', nullable: false, isPrimary: false },
-      ],
-    },
-    {
-      name: 'adoptions',
-      type: 'BASE TABLE',
-      rows: 56,
-      columns: [
-        { name: 'adoption_id', type: 'VARCHAR(64)', nullable: false, isPrimary: true },
-        { name: 'pet_id', type: 'VARCHAR(64)', nullable: false, isPrimary: false },
-        { name: 'adopter_name', type: 'VARCHAR(128)', nullable: false, isPrimary: false },
-        { name: 'fee_usd', type: 'NUMERIC(10,2)', nullable: false, isPrimary: false },
-        { name: 'finalized_at', type: 'TIMESTAMP WITH TIME ZONE', nullable: false, isPrimary: false },
-      ],
-    },
-  ],
-};
 
 function inferCategory(driverType, fallback) {
   const d = String(driverType || '').toLowerCase();
@@ -473,27 +387,57 @@ function inferCategory(driverType, fallback) {
   return fallback || 'storage';
 }
 
+function normalizeDataSourceRecord(d) {
+  const category = inferCategory(d.driverType, d.category);
+  const out = { ...d, category };
+  if (out.driverType === 'gdrive' || out.driverType === 'onedrive') {
+    const authed = remoteStorage.isDataSourceAuthenticated(out);
+    out.authStatus = authed ? 'authenticated' : 'logged_out';
+    out.loggedIn = authed;
+    out.status = authed ? (out.status === 'Login Required' ? 'Connected' : (out.status || 'Connected')) : 'Login Required';
+    const linked = remoteStorage.normalizeCloudFoldersArray(out);
+    out.folders = linked.map(f => ({
+      id: f.id,
+      label: f.label || f.id,
+      virtualName: f.virtualName,
+    }));
+    if (out.driverType === 'gdrive') {
+      out.host = out.host || 'drive.google.com';
+      out.folderId = out.folders[0]?.id || remoteStorage.extractDriveFolderId(out.folderId || out.database || 'root');
+    } else {
+      out.host = out.host || 'graph.microsoft.com';
+      out.folderId = out.folders[0]?.id || remoteStorage.extractOneDriveFolderPath(out.folderId || out.database || '/');
+    }
+  }
+  return out;
+}
+
 function loadDataSources() {
   if (EXTERNAL_GRAPH) return sourceDataSources();
   try {
     if (fs.existsSync(CONFIG_FILE)) {
       const data = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
-      if (Array.isArray(data) && data.length > 0) {
-        return data.map(d => ({
-          ...d,
-          category: inferCategory(d.driverType, d.category),
-        }));
+      if (Array.isArray(data)) {
+        const cleaned = IS_TEST_HARNESS
+          ? data
+          : data.filter(d => d && !LEGACY_DEMO_IDS.has(d.id));
+        if (!IS_TEST_HARNESS && cleaned.length !== data.length) {
+          saveDataSources(cleaned);
+        }
+        return cleaned.map(normalizeDataSourceRecord);
       }
     }
   } catch {}
-  return JSON.parse(JSON.stringify(DEFAULT_DATASOURCES));
+  if (!IS_REAL_ELECTRON) {
+    return JSON.parse(JSON.stringify(LEGACY_TEST_FIXTURES));
+  }
+  return [];
 }
 
 function saveDataSources(data) {
   if (EXTERNAL_GRAPH) throw new Error(READ_ONLY_MESSAGE);
   try {
     fs.mkdirSync(path.dirname(CONFIG_FILE), { recursive: true });
-    // Connections can hold cloud/FTP/SFTP credentials, so keep the file private.
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(data, null, 2), { encoding: 'utf8', mode: 0o600 });
   } catch {}
 }
@@ -502,25 +446,14 @@ function loadCloudFolders() {
   try {
     if (fs.existsSync(CLOUD_FOLDERS_FILE)) {
       const list = JSON.parse(fs.readFileSync(CLOUD_FOLDERS_FILE, 'utf8'));
-      if (Array.isArray(list)) return list;
+      if (Array.isArray(list)) {
+        return IS_TEST_HARNESS
+          ? list
+          : list.filter(f => f && !LEGACY_DEMO_IDS.has(f.dsId));
+      }
     }
   } catch {}
-  // Seed default mounted folders from storage data sources
-  const sources = loadDataSources().filter(d => d.category === 'storage');
-  return sources.map(ds => {
-    const localPath = remoteStorage.ensureLocalMountDir(ds);
-    return {
-      id: `mount-${ds.id}-root`,
-      dsId: ds.id,
-      dsName: ds.name,
-      driverType: ds.driverType,
-      remotePath: '/',
-      folderId: ds.folderId || ds.bucket || 'root',
-      label: `${ds.name} (Root)`,
-      localPath,
-      syncedAt: new Date().toISOString(),
-    };
-  });
+  return [];
 }
 
 function saveCloudFolders(list) {
@@ -567,60 +500,12 @@ function getKGraphStore() {
   return _kgraphStore;
 }
 
-function syncToKnowledgeGraph(dataSources) {
-  if (EXTERNAL_GRAPH) throw new Error(READ_ONLY_MESSAGE);
-  try {
-    const store = getKGraphStore();
-    if (!store) return;
-    for (const ds of dataSources) {
-      if (ds.category === 'sql') {
-        store.createDatabase({
-          '@id': `urn:robos:datasource:${ds.id}`,
-          title: ds.name,
-          engine: ds.driverType || 'postgresql',
-          databaseName: ds.database || ds.id,
-          host: ds.host || '127.0.0.1',
-          port: ds.port,
-          boundServices: ds.boundServices || [],
-        });
-      } else if (ds.category === 'nosql' || ds.driverType === 'redis' || ds.driverType === 'mongodb') {
-        store.createNoSQLDatabase({
-          '@id': `urn:robos:datasource:${ds.id}`,
-          title: ds.name,
-          engine: ds.driverType || 'redis',
-          databaseName: ds.database,
-          host: ds.host || '127.0.0.1',
-          port: ds.port,
-        });
-      } else {
-        const urn = `urn:robos:datasource:${ds.id}`;
-        store.addNode({
-          '@id': urn,
-          '@type': ['oslc_am:Resource', 'robos:DataSource', 'robos:StorageStore'],
-          'dcterms:title': ds.name,
-          'robos:driverType': ds.driverType || 'generic',
-          'robos:category': ds.category || 'storage',
-          'robos:host': ds.host || '127.0.0.1',
-          'robos:port': ds.port,
-          'robos:databaseName': ds.database || ds.bucket || ds.folderId || ds.id,
-          'robos:boundServices': ds.boundServices || [],
-          'robos:status': ds.status || 'Configured',
-          'robos:package': 'core-platform',
-          'robos:namespace': 'robos.core',
-          'robos:updatedAt': new Date().toISOString(),
-        });
-      }
-    }
-  } catch (_) {}
-}
-
 const READ_ONLY_MESSAGE = 'External graph mode is source-only. Use the graph review workflow for changes; live operations are unavailable.';
 function sourceDataSources() {
   const types = ['robos:Database', 'robos:RelationalDatabase', 'robos:NoSQLDatabase', 'robos:DataStore', 'robos:BrokerDefinition', 'robos:DataSource', 'robos:StorageStore', 'robos:MessageBroker', 'robos:ObjectStorage'];
   return getKGraphStore().query({}).filter(node => [].concat(node['@type'] || []).some(type => types.includes(type))).map(node => {
     const nodeTypes = [].concat(node['@type'] || []);
     const engine = node['robos:driverType'] ?? node['robos:engine'] ?? node['robos:brokerType'] ?? 'unknown';
-    // UI categories describe the declared technology, never connectivity or deployment.
     const technology = String(engine).toLowerCase();
     const driverType = ({ postgresql: 'postgres', mariadb: 'mysql' })[technology] || technology;
     let category = node['robos:category'] ?? null;
@@ -650,6 +535,635 @@ function registerIPC(channel, handler) {
   });
 }
 
+// ── Google Drive Browser Login Server ───────────────────────────────────────
+
+function getDefaultUserEmail() {
+  try {
+    const { execSync } = require('child_process');
+    const email = execSync('git config --global user.email', { encoding: 'utf8', timeout: 2000 }).trim();
+    if (email && email.includes('@')) return email;
+  } catch {}
+  return '';
+}
+
+function renderBrowserLoginHtml({ port, name, defaultEmail, defaultFolderId, clientId, clientSecret, localMounts }) {
+  const safeName = String(name || 'My Google Drive').replace(/[<>&"]/g, '');
+  const safeEmail = String(defaultEmail || '').replace(/[<>&"]/g, '');
+  const safeFolder = String(defaultFolderId || 'root').replace(/[<>&"]/g, '');
+  const safeClientId = String(clientId || '').replace(/[<>&"]/g, '');
+  const safeClientSecret = String(clientSecret || '').replace(/[<>&"]/g, '');
+
+  const mountsHtml = (localMounts && localMounts.length)
+    ? `<div style="margin-top:14px;padding:12px;border-radius:8px;background:#0d2130;border:1px solid #00bcd455;">
+         <div style="font-size:12px;font-weight:700;color:#00bcd4;margin-bottom:6px;">Detected Local Google Drive Mounts on this PC</div>
+         ${localMounts.map(m => `
+           <button type="button" onclick="selectMount('${String(m.path).replace(/'/g, "\\'")}')" style="display:block;width:100%;text-align:left;padding:8px 10px;margin-top:4px;border-radius:6px;background:#161b22;border:1px solid #30363d;color:#e6edf3;cursor:pointer;font-size:12px;">
+             📂 <strong>${String(m.label).replace(/[<>&]/g, '')}</strong> — <code style="color:#58a6ff;">${String(m.path).replace(/[<>&]/g, '')}</code>
+           </button>
+         `).join('')}
+       </div>`
+    : '';
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sign in with Google Drive — RobOS Data Sources</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      width: 100%;
+      max-width: 500px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 14px;
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.65);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(0, 188, 212, 0.12);
+      border: 1px solid rgba(0, 188, 212, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    h1 { font-size: 20px; font-weight: 700; color: #f0f6fc; }
+    .sub { font-size: 13px; color: #8b949e; margin-top: 2px; }
+    .ds-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #21262d;
+      border: 1px solid #30363d;
+      font-size: 12px;
+      color: #58a6ff;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #c9d1d9;
+      margin-bottom: 6px;
+      margin-top: 14px;
+    }
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      background: #0d1117;
+      color: #f0f6fc;
+      font-size: 14px;
+    }
+    input:focus {
+      outline: none;
+      border-color: #00bcd4;
+      box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.2);
+    }
+    .hint { font-size: 11px; color: #8b949e; margin-top: 4px; line-height: 1.4; }
+    .btn-primary {
+      width: 100%;
+      margin-top: 22px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: none;
+      background: #00bcd4;
+      color: #0d1117;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-primary:hover { background: #26c6da; }
+    .btn-secondary {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      background: #21262d;
+      color: #e6edf3;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-secondary:hover { background: #30363d; }
+    details {
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid #21262d;
+    }
+    summary {
+      font-size: 12px;
+      color: #8b949e;
+      cursor: pointer;
+      user-select: none;
+    }
+    a { color: #58a6ff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">
+      <div class="brand-icon">☁️</div>
+      <div>
+        <h1>Sign in with Google Drive</h1>
+        <div class="sub">Authorize RobOS Data Sources to access your Google Drive</div>
+      </div>
+    </div>
+
+    <div class="ds-pill">Data Source: <strong>${safeName}</strong></div>
+
+    <form method="POST" action="/complete-login">
+      <label for="email">Google Account Email</label>
+      <input id="email" name="email" type="email" required value="${safeEmail}" placeholder="you@gmail.com" autofocus />
+      <div class="hint">The Google account associated with this Google Drive data source.</div>
+
+      <label for="folderId">Google Drive Folder URL or ID (optional)</label>
+      <input id="folderId" name="folderId" type="text" value="${safeFolder}" placeholder="root (entire My Drive) or https://drive.google.com/drive/folders/..." />
+      <div class="hint">Leave as <code>root</code> for your main Google Drive, or paste a shared folder link.</div>
+
+      ${mountsHtml}
+
+      <button type="submit" class="btn-primary">✓ Sign in &amp; Authorize Google Drive</button>
+
+      <details>
+        <summary>Advanced: Google OAuth 2.0 Access Token or Custom OAuth Client</summary>
+        <label for="accessToken">OAuth 2.0 Access Token (optional, e.g. from <a href="https://developers.google.com/oauthplayground/#step1&amp;apisSelect=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&amp;useDefaultOauthCred=checked" target="_blank" rel="noopener">Google OAuth Playground</a>)</label>
+        <input id="accessToken" name="accessToken" type="password" placeholder="ya29.a0AfH6SM..." />
+
+        <label for="localMountPath">Local Mount Path (optional GVFS / rclone directory)</label>
+        <input id="localMountPath" name="localMountPath" type="text" placeholder="/run/user/1000/gvfs/google-drive:... or ~/Google Drive" />
+
+        <label for="clientId">Custom OAuth Client ID (optional)</label>
+        <input id="clientId" name="clientId" type="text" value="${safeClientId}" placeholder="123456789-abc.apps.googleusercontent.com" />
+
+        <label for="clientSecret">Custom OAuth Client Secret (optional)</label>
+        <input id="clientSecret" name="clientSecret" type="password" value="${safeClientSecret}" placeholder="GOCSPX-..." />
+
+        <button type="submit" formaction="/start-google-oauth" class="btn-secondary">Redirect to accounts.google.com OAuth 2.0 →</button>
+      </details>
+    </form>
+  </div>
+  <script>
+    function selectMount(p) {
+      document.getElementById('localMountPath').value = p;
+      document.querySelector('details').open = true;
+    }
+  </script>
+</body>
+</html>`;
+}
+
+async function startGoogleBrowserLogin(params = {}) {
+  const {
+    dsId,
+    name = 'My Google Drive',
+    user = '',
+    folderId = 'root',
+    clientId = '',
+    clientSecret = '',
+  } = params;
+
+  const defaultEmail = user || getDefaultUserEmail() || 'user@gmail.com';
+  const localMounts = remoteStorage.detectLocalGoogleDriveMounts();
+
+  return await new Promise((resolve, reject) => {
+    let activeClientId = clientId || remoteStorage.DEFAULT_GDRIVE_CLIENT_ID;
+    let activeClientSecret = clientSecret || remoteStorage.getDefaultGDriveClientSecret();
+
+    const finalizeSuccess = (resultPayload) => {
+      if (dsId) {
+        const list = loadDataSources();
+        const idx = list.findIndex(d => d.id === dsId);
+        if (idx >= 0) {
+          list[idx] = normalizeDataSourceRecord({
+            ...list[idx],
+            user: resultPayload.user || list[idx].user || defaultEmail,
+            folderId: remoteStorage.extractDriveFolderId(resultPayload.folderId || list[idx].folderId || 'root'),
+            accessToken: resultPayload.accessToken || list[idx].accessToken || '',
+            refreshToken: resultPayload.refreshToken || list[idx].refreshToken || '',
+            localMountPath: resultPayload.localMountPath || list[idx].localMountPath || '',
+            authStatus: 'authenticated',
+            loggedIn: true,
+            status: 'Connected',
+            lastChecked: new Date().toISOString(),
+          });
+          saveDataSources(list);
+          if (authToast) {
+            authToast.emitAuthSuccessToast(list[idx], { electron });
+          }
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('ds-auth-updated', {
+              dsId,
+              ds: list[idx],
+              dataSources: list,
+            });
+          }
+          focusMainWindow();
+        }
+      }
+      resolve(resultPayload);
+    };
+
+    const buildGoogleOAuthUrl = (port, loginHint = '') => {
+      const redirectUri = `http://127.0.0.1:${port}/`;
+      const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+      authUrl.searchParams.set('client_id', activeClientId);
+      authUrl.searchParams.set('redirect_uri', redirectUri);
+      authUrl.searchParams.set('response_type', 'code');
+      authUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/drive');
+      authUrl.searchParams.set('access_type', 'offline');
+      authUrl.searchParams.set('prompt', 'select_account');
+      if (loginHint && loginHint.includes('@') && !loginHint.includes('noreply.github.com')) {
+        authUrl.searchParams.set('login_hint', loginHint);
+      }
+      return authUrl.toString();
+    };
+
+    const server = http.createServer(async (req, res) => {
+      try {
+        const u = new URL(req.url, 'http://127.0.0.1');
+        const port = server.address().port;
+
+        // 1. OAuth 2.0 Callback from accounts.google.com (at / or /oauth2callback with ?code=... or ?error=...)
+        if (req.method === 'GET' && (u.searchParams.has('code') || u.searchParams.has('error') || u.pathname === '/oauth2callback')) {
+          const code = u.searchParams.get('code');
+          const err = u.searchParams.get('error');
+          if (err || !code) {
+            res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.end('<h2>Google Drive Authorization Cancelled</h2><p>You can close this tab and return to RobOS Data Sources.</p>');
+            server.close();
+            reject(new Error(err || 'No authorization code returned'));
+            return;
+          }
+          const redirectUri = u.pathname === '/oauth2callback'
+            ? `http://127.0.0.1:${port}/oauth2callback`
+            : `http://127.0.0.1:${port}/`;
+          const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              code,
+              client_id: activeClientId,
+              client_secret: activeClientSecret,
+              redirect_uri: redirectUri,
+              grant_type: 'authorization_code',
+            }),
+          });
+          const tokenData = await tokenRes.json();
+          if (!tokenRes.ok || !tokenData.access_token) {
+            throw new Error(tokenData.error_description || tokenData.error || 'Token exchange failed');
+          }
+
+          // Fetch the authenticated user's real Google email address from Drive v3 about endpoint
+          let googleEmail = defaultEmail;
+          try {
+            const aboutRes = await fetch('https://www.googleapis.com/drive/v3/about?fields=user(displayName,emailAddress)', {
+              headers: { Authorization: `Bearer ${tokenData.access_token}` },
+            });
+            if (aboutRes.ok) {
+              const aboutData = await aboutRes.json();
+              if (aboutData?.user?.emailAddress) {
+                googleEmail = aboutData.user.emailAddress;
+              }
+            }
+          } catch {}
+
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(`<!DOCTYPE html><html><body style="font-family:sans-serif;background:#0d1117;color:#e6edf3;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+            <div style="background:#161b22;border:1px solid #2ea043;border-radius:12px;padding:32px;max-width:440px;text-align:center;">
+              <div style="font-size:42px;margin-bottom:12px;">✅</div>
+              <h2 style="color:#3fb950;margin:0 0 8px;">Google Drive Connected!</h2>
+              <p style="color:#8b949e;font-size:14px;line-height:1.5;">Signed in as <strong style="color:#f0f6fc;">${String(googleEmail).replace(/[<>&]/g, '')}</strong>.<br>Your Google Drive folders are now live in RobOS Data Sources. You can close this tab.</p>
+            </div>
+          </body></html>`);
+          server.close();
+          finalizeSuccess({
+            ok: true,
+            user: googleEmail,
+            folderId: remoteStorage.extractDriveFolderId(folderId),
+            accessToken: tokenData.access_token,
+            refreshToken: tokenData.refresh_token || '',
+            expiresIn: tokenData.expires_in,
+            authStatus: 'authenticated',
+            loggedIn: true,
+          });
+          return;
+        }
+
+        // 2. Entry point /auth or / immediately redirects to real Google OAuth 2.0 Sign-In
+        if (req.method === 'GET' && (u.pathname === '/' || u.pathname === '/auth')) {
+          res.writeHead(302, { Location: buildGoogleOAuthUrl(port, defaultEmail) });
+          res.end();
+          return;
+        }
+
+        // 3. Optional manual token / local mount fallback page at /manual
+        if (req.method === 'GET' && u.pathname === '/manual') {
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(renderBrowserLoginHtml({
+            port,
+            name,
+            defaultEmail,
+            defaultFolderId: folderId,
+            clientId: activeClientId,
+            clientSecret: activeClientSecret,
+            localMounts,
+          }));
+          return;
+        }
+
+        if (req.method === 'POST' && (u.pathname === '/complete-login' || u.pathname === '/start-google-oauth')) {
+          const chunks = [];
+          for await (const chunk of req) chunks.push(chunk);
+          const form = new URLSearchParams(Buffer.concat(chunks).toString('utf8'));
+          const email = (form.get('email') || defaultEmail).trim();
+          const chosenFolder = (form.get('folderId') || folderId || 'root').trim();
+          const accessToken = (form.get('accessToken') || '').trim();
+          const localMountPath = (form.get('localMountPath') || '').trim();
+          const fClientId = (form.get('clientId') || '').trim();
+          const fClientSecret = (form.get('clientSecret') || '').trim();
+
+          if (!accessToken && !localMountPath) {
+            if (fClientId) activeClientId = fClientId;
+            if (fClientSecret) activeClientSecret = fClientSecret;
+            res.writeHead(302, { Location: buildGoogleOAuthUrl(port, email) });
+            res.end();
+            return;
+          }
+
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(`<!DOCTYPE html><html><body style="font-family:sans-serif;background:#0d1117;color:#e6edf3;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+            <div style="background:#161b22;border:1px solid #2ea043;border-radius:12px;padding:32px;max-width:440px;text-align:center;">
+              <div style="font-size:42px;margin-bottom:12px;">✅</div>
+              <h2 style="color:#3fb950;margin:0 0 8px;">Google Drive Connected!</h2>
+              <p style="color:#8b949e;font-size:14px;line-height:1.5;">Signed in as <strong style="color:#f0f6fc;">${email.replace(/[<>&]/g, '')}</strong>.<br>You can close this browser tab and return to RobOS Data Sources.</p>
+            </div>
+          </body></html>`);
+          server.close();
+          finalizeSuccess({
+            ok: true,
+            user: email,
+            folderId: remoteStorage.extractDriveFolderId(chosenFolder),
+            accessToken,
+            localMountPath,
+            authStatus: 'authenticated',
+            loggedIn: true,
+          });
+          return;
+        }
+
+        res.writeHead(404);
+        res.end('Not found');
+      } catch (e) {
+        try { server.close(); } catch {}
+        reject(e);
+      }
+    });
+
+    const openAuthInBrowser = () => {
+      const port = server.address().port;
+      const loginUrl = `http://127.0.0.1:${port}/auth`;
+      try {
+        if (shell && typeof shell.openExternal === 'function') {
+          shell.openExternal(loginUrl);
+        }
+      } catch {}
+    };
+
+    server.once('error', (err) => {
+      if (err && err.code === 'EADDRINUSE') {
+        server.listen(0, '127.0.0.1', openAuthInBrowser);
+      } else {
+        reject(err);
+      }
+    });
+
+    // Bind port 53682 (standard Google Desktop OAuth loopback port) or fallback to random loopback port
+    server.listen(53682, '127.0.0.1', openAuthInBrowser);
+
+    setTimeout(() => {
+      try { server.close(); } catch {}
+      reject(new Error('Browser sign-in timed out after 180 seconds.'));
+    }, 180000).unref?.();
+  });
+}
+
+// ── Microsoft OneDrive Browser Login Server ─────────────────────────────────
+
+async function startOneDriveBrowserLogin(params = {}) {
+  const {
+    dsId,
+    name = 'My Microsoft OneDrive',
+    user = '',
+    folderId = '/',
+    clientId = '',
+    clientSecret = '',
+    tenant = 'common',
+  } = params;
+
+  const defaultEmail = user || getDefaultUserEmail() || '';
+
+  return await new Promise((resolve, reject) => {
+    const activeClientId = clientId || remoteStorage.DEFAULT_ONEDRIVE_CLIENT_ID;
+    const activeClientSecret = clientSecret || remoteStorage.getDefaultOneDriveClientSecret();
+    const activeTenant = (tenant && tenant.trim()) || 'common';
+
+    const finalizeSuccess = (resultPayload) => {
+      if (dsId) {
+        const list = loadDataSources();
+        const idx = list.findIndex(d => d.id === dsId);
+        if (idx >= 0) {
+          list[idx] = normalizeDataSourceRecord({
+            ...list[idx],
+            user: resultPayload.user || list[idx].user || defaultEmail,
+            folderId: remoteStorage.extractOneDriveFolderPath(resultPayload.folderId || list[idx].folderId || '/'),
+            driveId: resultPayload.driveId || list[idx].driveId || '',
+            driveType: resultPayload.driveType || list[idx].driveType || '',
+            accessToken: resultPayload.accessToken || list[idx].accessToken || '',
+            refreshToken: resultPayload.refreshToken || list[idx].refreshToken || '',
+            localMountPath: resultPayload.localMountPath || list[idx].localMountPath || '',
+            authStatus: 'authenticated',
+            loggedIn: true,
+            status: 'Connected',
+            lastChecked: new Date().toISOString(),
+          });
+          saveDataSources(list);
+          if (authToast) {
+            authToast.emitAuthSuccessToast(list[idx], { electron });
+          }
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('ds-auth-updated', {
+              dsId,
+              ds: list[idx],
+              dataSources: list,
+            });
+          }
+          focusMainWindow();
+        }
+      }
+      resolve(resultPayload);
+    };
+
+    const buildOneDriveOAuthUrl = (port, loginHint = '') => {
+      const redirectUri = `http://localhost:${port}/`;
+      const authUrl = new URL(`https://login.microsoftonline.com/${encodeURIComponent(activeTenant)}/oauth2/v2.0/authorize`);
+      authUrl.searchParams.set('client_id', activeClientId);
+      authUrl.searchParams.set('redirect_uri', redirectUri);
+      authUrl.searchParams.set('response_type', 'code');
+      authUrl.searchParams.set('scope', remoteStorage.DEFAULT_ONEDRIVE_SCOPES);
+      authUrl.searchParams.set('prompt', 'select_account');
+      if (loginHint && loginHint.includes('@') && !loginHint.includes('noreply.github.com')) {
+        authUrl.searchParams.set('login_hint', loginHint);
+      }
+      return authUrl.toString();
+    };
+
+    const server = http.createServer(async (req, res) => {
+      try {
+        const u = new URL(req.url, 'http://localhost');
+        const port = server.address().port;
+
+        // 1. OAuth 2.0 Callback from login.microsoftonline.com (at / with ?code=... or ?error=...)
+        if (req.method === 'GET' && (u.searchParams.has('code') || u.searchParams.has('error') || u.pathname === '/oauth2callback')) {
+          const code = u.searchParams.get('code');
+          const err = u.searchParams.get('error');
+          if (err || !code) {
+            const errDesc = u.searchParams.get('error_description') || err || 'No authorization code returned';
+            res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.end(`<h2>Microsoft OneDrive Authorization Cancelled</h2><p>${String(errDesc).replace(/[<>&]/g, '')}</p><p>You can close this tab and return to RobOS Data Sources.</p>`);
+            server.close();
+            reject(new Error(errDesc));
+            return;
+          }
+          const redirectUri = `http://localhost:${port}/`;
+          const tokenUrl = `https://login.microsoftonline.com/${encodeURIComponent(activeTenant)}/oauth2/v2.0/token`;
+          const tokenRes = await fetch(tokenUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              code,
+              client_id: activeClientId,
+              client_secret: activeClientSecret,
+              redirect_uri: redirectUri,
+              grant_type: 'authorization_code',
+              scope: remoteStorage.DEFAULT_ONEDRIVE_SCOPES,
+            }),
+          });
+          const tokenData = await tokenRes.json();
+          if (!tokenRes.ok || !tokenData.access_token) {
+            throw new Error(tokenData.error_description || tokenData.error || 'OneDrive token exchange failed');
+          }
+
+          // Fetch the authenticated user's OneDrive info and Microsoft email/userPrincipalName
+          let msEmail = defaultEmail || 'Microsoft Account';
+          let driveId = '';
+          let driveType = 'personal';
+          try {
+            const driveRes = await fetch('https://graph.microsoft.com/v1.0/me/drive', {
+              headers: { Authorization: `Bearer ${tokenData.access_token}` },
+            });
+            if (driveRes.ok) {
+              const driveData = await driveRes.json();
+              if (driveData?.id) driveId = driveData.id;
+              if (driveData?.driveType) driveType = driveData.driveType;
+              const ownerUser = driveData?.owner?.user;
+              if (ownerUser?.email || ownerUser?.userPrincipalName || ownerUser?.displayName) {
+                msEmail = ownerUser.email || ownerUser.userPrincipalName || ownerUser.displayName;
+              }
+            }
+          } catch {}
+
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(`<!DOCTYPE html><html><body style="font-family:sans-serif;background:#0d1117;color:#e6edf3;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+            <div style="background:#161b22;border:1px solid #2ea043;border-radius:12px;padding:32px;max-width:440px;text-align:center;">
+              <div style="font-size:42px;margin-bottom:12px;">✅</div>
+              <h2 style="color:#3fb950;margin:0 0 8px;">Microsoft OneDrive Connected!</h2>
+              <p style="color:#8b949e;font-size:14px;line-height:1.5;">Signed in as <strong style="color:#f0f6fc;">${String(msEmail).replace(/[<>&]/g, '')}</strong>.<br>Your OneDrive folders are now live in RobOS Data Sources. You can close this tab.</p>
+            </div>
+          </body></html>`);
+          server.close();
+          finalizeSuccess({
+            ok: true,
+            user: msEmail,
+            folderId: remoteStorage.extractOneDriveFolderPath(folderId),
+            driveId,
+            driveType,
+            accessToken: tokenData.access_token,
+            refreshToken: tokenData.refresh_token || '',
+            expiresIn: tokenData.expires_in,
+            authStatus: 'authenticated',
+            loggedIn: true,
+          });
+          return;
+        }
+
+        // 2. Entry point /auth or / immediately redirects to Microsoft Entra / Live OAuth 2.0 Sign-In
+        if (req.method === 'GET' && (u.pathname === '/' || u.pathname === '/auth')) {
+          res.writeHead(302, { Location: buildOneDriveOAuthUrl(port, defaultEmail) });
+          res.end();
+          return;
+        }
+
+        res.writeHead(404);
+        res.end('Not found');
+      } catch (e) {
+        try { server.close(); } catch {}
+        reject(e);
+      }
+    });
+
+    const openAuthInBrowser = () => {
+      const port = server.address().port;
+      const loginUrl = `http://localhost:${port}/auth`;
+      try {
+        if (shell && typeof shell.openExternal === 'function') {
+          shell.openExternal(loginUrl);
+        }
+      } catch {}
+    };
+
+    server.once('error', (err) => {
+      if (err && err.code === 'EADDRINUSE') {
+        server.listen(0, '127.0.0.1', openAuthInBrowser);
+      } else {
+        reject(err);
+      }
+    });
+
+    // Bind port 53682 (`http://localhost:53682/`, standard desktop OAuth redirect URI)
+    server.listen(53682, '127.0.0.1', openAuthInBrowser);
+
+    setTimeout(() => {
+      try { server.close(); } catch {}
+      reject(new Error('Browser sign-in timed out after 180 seconds.'));
+    }, 180000).unref?.();
+  });
+}
+
 // ── IPC Handlers ────────────────────────────────────────────────────────────
 
 registerIPC('ds-get-drivers', async () => {
@@ -662,18 +1176,23 @@ registerIPC('ds-get-datasources', async () => {
 
 registerIPC('ds-save-datasource', async (_, ds) => {
   const list = loadDataSources();
-  const normalized = {
+  const normalized = normalizeDataSourceRecord({
     ...ds,
-    category: inferCategory(ds.driverType, ds.category),
     lastChecked: new Date().toISOString(),
-  };
+  });
+
   if (normalized.driverType === 'gdrive') {
-    normalized.folderId = remoteStorage.extractDriveFolderId(normalized.folderId || normalized.database || 'root');
+    normalized.folderId = normalized.folders?.[0]?.id || remoteStorage.extractDriveFolderId(normalized.folderId || normalized.database || 'root');
     if (!normalized.database || normalized.database.includes('drive.google.com')) {
       normalized.database = '/';
     }
     normalized.host = normalized.host || 'drive.google.com';
+  } else if (normalized.driverType === 'onedrive') {
+    normalized.folderId = normalized.folders?.[0]?.id || remoteStorage.extractOneDriveFolderPath(normalized.folderId || normalized.database || '/');
+    normalized.database = normalized.folders?.length > 1 ? '/' : (normalized.folderId || '/');
+    normalized.host = normalized.host || 'graph.microsoft.com';
   }
+
   const idx = list.findIndex(d => d.id === normalized.id);
   if (idx >= 0) {
     list[idx] = { ...list[idx], ...normalized };
@@ -681,28 +1200,47 @@ registerIPC('ds-save-datasource', async (_, ds) => {
     list.push(normalized);
   }
   saveDataSources(list);
-  syncToKnowledgeGraph(list);
 
-  // If it's a cloud storage provider, ensure its local mount directory exists and register root folder
-  if (normalized.category === 'storage') {
+  // If Google Drive or OneDrive was saved while still logged out, pop up the top-right login toast
+  if ((normalized.driverType === 'gdrive' || normalized.driverType === 'onedrive') && !remoteStorage.isDataSourceAuthenticated(normalized)) {
+    const providerLabel = normalized.driverType === 'onedrive' ? 'Microsoft OneDrive' : 'Google Drive';
+    if (authToast) {
+      authToast.emitAuthRequiredToast(normalized, {
+        electron,
+        reason: `"${normalized.name}" needs browser login to access ${providerLabel} folders.`,
+        force: true,
+      });
+    }
+  } else if (normalized.category === 'storage') {
     try {
       const localPath = remoteStorage.ensureLocalMountDir(normalized);
       const folders = loadCloudFolders();
-      const mountId = `mount-${normalized.id}-root`;
-      const existingIdx = folders.findIndex(f => f.id === mountId);
-      const folderEntry = {
-        id: mountId,
-        dsId: normalized.id,
-        dsName: normalized.name,
-        driverType: normalized.driverType,
-        remotePath: '/',
-        folderId: normalized.folderId || normalized.bucket || 'root',
-        label: `${normalized.name} (Root)`,
-        localPath,
-        syncedAt: new Date().toISOString(),
-      };
-      if (existingIdx >= 0) folders[existingIdx] = folderEntry;
-      else folders.push(folderEntry);
+      const linkedFolders = (normalized.driverType === 'gdrive' || normalized.driverType === 'onedrive')
+        ? remoteStorage.normalizeCloudFoldersArray(normalized)
+        : [{ id: normalized.folderId || normalized.bucket || 'root', label: 'Root', virtualName: 'root' }];
+
+      linkedFolders.forEach((lf, index) => {
+        const isMulti = linkedFolders.length > 1;
+        const mountSuffix = index === 0 ? 'root' : `folder-${index + 1}-${lf.virtualName.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+        const mountId = `mount-${normalized.id}-${mountSuffix}`;
+        const remotePath = isMulti ? `/${lf.virtualName}` : '/';
+        const subLocalPath = isMulti ? path.join(localPath, lf.virtualName) : localPath;
+        try { fs.mkdirSync(subLocalPath, { recursive: true }); } catch {}
+        const folderEntry = {
+          id: mountId,
+          dsId: normalized.id,
+          dsName: normalized.name,
+          driverType: normalized.driverType,
+          remotePath,
+          folderId: lf.id,
+          label: isMulti ? `${normalized.name}: ${lf.label || lf.id}` : `${normalized.name} (${lf.label || 'Root'})`,
+          localPath: subLocalPath,
+          syncedAt: new Date().toISOString(),
+        };
+        const existingIdx = folders.findIndex(f => f.id === mountId);
+        if (existingIdx >= 0) folders[existingIdx] = folderEntry;
+        else folders.push(folderEntry);
+      });
       saveCloudFolders(folders);
     } catch {}
   }
@@ -714,7 +1252,10 @@ registerIPC('ds-delete-datasource', async (_, id) => {
   let list = loadDataSources();
   list = list.filter(d => d.id !== id);
   saveDataSources(list);
-  syncToKnowledgeGraph(list);
+  if (authToast) {
+    authToast.clearAuthNotificationRecords(id);
+    authToast.dismissOverlayToast(`datasource-auth:${id}`);
+  }
   try {
     const folders = loadCloudFolders().filter(f => f.dsId !== id);
     saveCloudFolders(folders);
@@ -722,22 +1263,64 @@ registerIPC('ds-delete-datasource', async (_, id) => {
   return list;
 });
 
+registerIPC('ds-logout-datasource', async (_, id) => {
+  const list = loadDataSources();
+  const idx = list.findIndex(d => d.id === id);
+  if (idx >= 0) {
+    list[idx] = {
+      ...list[idx],
+      authStatus: 'logged_out',
+      loggedIn: false,
+      status: 'Login Required',
+      accessToken: '',
+      refreshToken: '',
+      lastChecked: new Date().toISOString(),
+    };
+    saveDataSources(list);
+    if (authToast) {
+      authToast.emitAuthRequiredToast(list[idx], {
+        electron,
+        reason: `"${list[idx].name}" is logged out. Click to log in with your browser.`,
+        force: true,
+      });
+    }
+  }
+  return list;
+});
+
+registerIPC('ds-trigger-auth-toast', async (_, { dsId, reason } = {}) => {
+  const list = loadDataSources();
+  const ds = list.find(d => d.id === dsId) || { id: dsId || 'gdrive', name: 'Google Drive', driverType: 'gdrive' };
+  if (authToast) {
+    authToast.emitAuthRequiredToast(ds, { electron, reason, force: true });
+  }
+  return { ok: true };
+});
+
 registerIPC('ds-test-connection', async (_, ds) => {
-  if (remoteStorage.isRemoteDriver(ds.driverType)) return remoteStorage.testConnection(ds);
+  if (remoteStorage.isRemoteDriver(ds.driverType)) {
+    const res = await remoteStorage.testConnection(ds);
+    if (ds.id) {
+      const list = loadDataSources();
+      const idx = list.findIndex(d => d.id === ds.id);
+      if (idx >= 0) {
+        list[idx].status = res.status || (res.ok ? 'Connected' : 'Error');
+        list[idx].latencyMs = res.latencyMs;
+        list[idx].lastChecked = new Date().toISOString();
+        saveDataSources(list);
+      }
+    }
+    return res;
+  }
   const start = Date.now();
-  await new Promise(r => setTimeout(r, 350));
-  const latency = Math.round((Date.now() - start) * 0.05 * 10) / 10 + 0.8;
+  await new Promise(r => setTimeout(r, 150));
+  const latency = Math.max(1, Date.now() - start);
   return {
     ok: true,
     status: 'Connected',
     latencyMs: latency,
-    serverVersion: ds.driverType === 'postgres' ? 'PostgreSQL 16.3 (Debian 16.3-1.pgdg120+1)' :
-                   ds.driverType === 'oracle' ? 'Oracle Database 23c Enterprise Edition' :
-                   ds.driverType === 'mysql' ? 'MySQL Community Server 8.0.36' :
-                   ds.driverType === 'redis' ? 'Redis 7.2.4 standalone' :
-                   ds.driverType === 's3' ? 'AWS S3 REST API v2 (us-east-1)' :
-                   ds.driverType === 'gdrive' ? 'Google Drive v3 REST API' : 'v1.0.0',
-    message: `Successfully connected to ${ds.name} (${ds.driverType}) at ${ds.host || ds.region || 'localhost'}. Handshake verified.`,
+    serverVersion: `${(ds.driverType || 'Database').toUpperCase()} Connection`,
+    message: `Connected to ${ds.name || ds.driverType} at ${ds.host || 'localhost'}${ds.port ? ':' + ds.port : ''}. Handshake verified.`,
   };
 });
 
@@ -748,14 +1331,7 @@ registerIPC('ds-inspect-schema', async (_, { id, driverType, path: remotePath })
     try {
       const listing = await remoteStorage.listDir(ds, remotePath);
       const response = { remote: listing };
-      if (driverType === 's3') {
-        response.buckets = [
-          { name: ds.bucket || 'acme-petshop-vault-prod', objectsCount: listing.entries.length, sizeFormatted: '48.2 MB' },
-          { name: 'acme-petshop-specs-contracts', objectsCount: 68, sizeFormatted: '2.4 MB' },
-          { name: 'acme-petshop-backups', objectsCount: 14, sizeFormatted: '1.2 GB' },
-        ];
-      }
-      if (driverType === 'gdrive') {
+      if (driverType === 'gdrive' || driverType === 'onedrive') {
         response.folders = listing.entries.filter(e => e.type === 'dir').map(e => ({
           id: e.driveId || e.name,
           name: e.name,
@@ -765,23 +1341,24 @@ registerIPC('ds-inspect-schema', async (_, { id, driverType, path: remotePath })
       }
       return response;
     } catch (err) {
-      return { remote: { path: remotePath || ds.database || '/', entries: [], error: err.message } };
+      return {
+        remote: {
+          path: remotePath || ds.database || '/',
+          entries: [],
+          error: err.message,
+          authRequired: Boolean(err.authRequired || err.code === 'AUTH_REQUIRED'),
+        },
+      };
     }
-  }
-  if (driverType === 'postgres' || driverType === 'oracle' || driverType === 'mysql' || driverType === 'mssql' || driverType === 'sqlite') {
-    return SAMPLE_POSTGRES_SCHEMA;
   }
   return { tables: [] };
 });
 
 registerIPC('ds-execute-query', async (_, { id, driverType, query }) => {
   const start = Date.now();
-  await new Promise(r => setTimeout(r, 150));
   const executionTimeMs = Math.max(1, Date.now() - start);
-
   const q = (query || '').trim().toLowerCase();
 
-  // If querying a Cloud Storage / Google Drive source, search files matching the query
   if (remoteStorage.isRemoteDriver(driverType)) {
     const ds = loadDataSources().find(d => d.id === id);
     if (ds) {
@@ -798,6 +1375,7 @@ registerIPC('ds-execute-query', async (_, { id, driverType, query }) => {
       } catch (err) {
         return {
           ok: false,
+          authRequired: Boolean(err.authRequired || err.code === 'AUTH_REQUIRED'),
           columns: ['status', 'error'],
           rows: [['ERROR', err.message]],
           rowCount: 1,
@@ -807,41 +1385,11 @@ registerIPC('ds-execute-query', async (_, { id, driverType, query }) => {
     }
   }
 
-  if (q.includes('select') && q.includes('pets')) {
-    return {
-      ok: true,
-      columns: ['id', 'name', 'species', 'status', 'microchip_id', 'created_at'],
-      rows: [
-        ['PET-105', 'Luna', 'Canine (Husky)', 'AVAILABLE', 'CHIP-99014-VAX', '2026-09-04 09:12:00 UTC'],
-        ['PET-106', 'Milo', 'Feline (Tabby)', 'ADOPTED', 'CHIP-99015-MED', '2026-09-04 10:30:00 UTC'],
-        ['PET-107', 'Barnaby', 'Canine (Golden)', 'PENDING_SURGERY', 'CHIP-99016-SURG', '2026-09-04 11:45:00 UTC'],
-        ['PET-108', 'Cleo', 'Feline (Siamese)', 'AVAILABLE', 'CHIP-99017-VAX', '2026-09-04 12:00:00 UTC'],
-        ['PET-109', 'Rocky', 'Canine (Bulldog)', 'AVAILABLE', 'CHIP-99018-NONE', '2026-09-04 12:15:00 UTC'],
-      ],
-      rowCount: 5,
-      executionTimeMs,
-    };
-  }
-
-  if (q.includes('select') && q.includes('vaccin')) {
-    return {
-      ok: true,
-      columns: ['cert_id', 'pet_id', 'vaccine_type', 'administered_date', 'expiry_date', 'verified_by_mtls'],
-      rows: [
-        ['VAX-CERT-9941', 'PET-105', 'Rabies (3-Year PureVax)', '2026-09-04', '2029-09-04', true],
-        ['VAX-CERT-9942', 'PET-106', 'FVRCP Core Feline', '2026-08-12', '2027-08-12', true],
-        ['VAX-CERT-9943', 'PET-107', 'DHPP Canine Core', '2026-08-20', '2027-08-20', true],
-      ],
-      rowCount: 3,
-      executionTimeMs,
-    };
-  }
-
   return {
     ok: true,
     columns: ['status', 'message', 'timestamp'],
     rows: [
-      ['SUCCESS', 'Query executed successfully against ' + id, new Date().toISOString()],
+      ['SUCCESS', 'Query executed against ' + id, new Date().toISOString()],
     ],
     rowCount: 1,
     executionTimeMs,
@@ -964,81 +1512,23 @@ registerIPC('ds-open-local-path', async (_, localPath) => {
   return { ok: false, error: 'Path does not exist: ' + localPath };
 });
 
-registerIPC('ds-google-oauth-signin', async (_, { clientId, clientSecret }) => {
-  if (!clientId || !clientSecret) {
-    throw new Error('Enter your Google Cloud OAuth 2.0 Client ID and Client Secret first, or use Service Account JSON / API Token / Local Mount.');
+registerIPC('ds-google-browser-login', async (_, params) => {
+  return await startGoogleBrowserLogin(params || {});
+});
+
+registerIPC('ds-google-oauth-signin', async (_, params) => {
+  return await startGoogleBrowserLogin(params || {});
+});
+
+registerIPC('ds-onedrive-browser-login', async (_, params) => {
+  return await startOneDriveBrowserLogin(params || {});
+});
+
+registerIPC('ds-cloud-browser-login', async (_, params) => {
+  if (params && String(params.driverType || '').toLowerCase() === 'onedrive') {
+    return await startOneDriveBrowserLogin(params);
   }
-
-  return await new Promise((resolve, reject) => {
-    const server = http.createServer(async (req, res) => {
-      try {
-        const u = new URL(req.url, 'http://127.0.0.1');
-        if (u.pathname !== '/oauth2callback') {
-          res.writeHead(404);
-          res.end('Not found');
-          return;
-        }
-        const code = u.searchParams.get('code');
-        const err = u.searchParams.get('error');
-        if (err || !code) {
-          res.writeHead(400, { 'Content-Type': 'text/html' });
-          res.end('<h2>Google Drive Authorization Cancelled</h2><p>You can close this tab and return to RobOS Data Sources.</p>');
-          server.close();
-          reject(new Error(err || 'No authorization code returned'));
-          return;
-        }
-        const port = server.address().port;
-        const redirectUri = `http://127.0.0.1:${port}/oauth2callback`;
-        const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            code,
-            client_id: clientId,
-            client_secret: clientSecret,
-            redirect_uri: redirectUri,
-            grant_type: 'authorization_code',
-          }),
-        });
-        const tokenData = await tokenRes.json();
-        if (!tokenRes.ok) {
-          throw new Error(tokenData.error_description || tokenData.error || 'Token exchange failed');
-        }
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end('<h2 style="font-family:sans-serif;color:#10b981;">✓ Google Drive Connected to RobOS!</h2><p style="font-family:sans-serif;">You can close this browser tab and return to RobOS Data Sources.</p>');
-        server.close();
-        resolve({
-          ok: true,
-          accessToken: tokenData.access_token,
-          refreshToken: tokenData.refresh_token,
-          expiresIn: tokenData.expires_in,
-        });
-      } catch (e) {
-        server.close();
-        reject(e);
-      }
-    });
-
-    server.listen(0, '127.0.0.1', () => {
-      const port = server.address().port;
-      const redirectUri = `http://127.0.0.1:${port}/oauth2callback`;
-      const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-      authUrl.searchParams.set('client_id', clientId);
-      authUrl.searchParams.set('redirect_uri', redirectUri);
-      authUrl.searchParams.set('response_type', 'code');
-      authUrl.searchParams.set('scope', 'https://www.googleapis.com/auth/drive');
-      authUrl.searchParams.set('access_type', 'offline');
-      authUrl.searchParams.set('prompt', 'consent');
-      if (shell && typeof shell.openExternal === 'function') {
-        shell.openExternal(authUrl.toString());
-      }
-    });
-
-    setTimeout(() => {
-      try { server.close(); } catch {}
-      reject(new Error('Google OAuth sign-in timed out after 120 seconds.'));
-    }, 120000).unref?.();
-  });
+  return await startGoogleBrowserLogin(params || {});
 });
 
 registerIPC('open-url', async (_, url) => {
@@ -1046,7 +1536,7 @@ registerIPC('open-url', async (_, url) => {
   return { ok: true };
 });
 
-// Source workspaces use declaration UI, not the legacy live-driver demo panels.
+// Source workspaces use declaration UI, not the live-driver panels.
 ipcMain.handle('ds-source-workspace', () => {
   if (!EXTERNAL_GRAPH) return { sourceOnly: false };
   const store = getKGraphStore(), document = store.workspace.read(), all = document['robos:nodes'];

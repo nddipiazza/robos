@@ -732,6 +732,11 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 			RTSCommanderAI.set_directive(3, "phase_skirmisher_micro", not cur3)
 			push_message("Aurelian Concord AI %s." % ("enabled" if not cur3 else "disabled"), "info")
 			return
+		KEY_F10:
+			if SimEngine.editor_session.has("doc"):
+				SimEngine.paused = true
+				get_tree().change_scene_to_file("res://scenes/MapEditor.tscn")
+			return
 
 	if ke.ctrl_pressed or ke.alt_pressed:
 		return
