@@ -7,6 +7,7 @@ import Library from './Library.jsx';
 import NowPlayingPanel from './NowPlayingPanel.jsx';
 import TrackInfo from './TrackInfo.jsx';
 import { AiPlaylistModal, DjSettingsModal } from './AiPlaylist.jsx';
+import { Splitter, useColumns, useLayoutPref } from './resizable.jsx';
 import { useVirtualDj } from './useVirtualDj.js';
 import { LibraryContext, ContextMenu, LoveButton, Cover, artUrlFor } from './library-ui.jsx';
 import { albumKeyOf, fold, splitGenres, sortTracks } from '../lib/library-index.js';
@@ -39,6 +40,16 @@ function restoredQueue() {
 
 const fileUrl = (filePath) => `file://${filePath.split('/').map(encodeURIComponent).join('/')}`;
 
+const PLAYLIST_SIDEBAR_WIDTH = 270;
+const PLAYLIST_COLUMNS = [
+  { key: 'num', width: '36px', fixed: true },
+  { key: 'title', label: 'Title', width: 'minmax(0, 3fr)', fill: true },
+  { key: 'artist', label: 'Artist', width: 'minmax(0, 2fr)', min: 60 },
+  { key: 'album', label: 'Album', width: 'minmax(0, 2fr)', min: 60 },
+  { key: 'duration', label: 'Duration', width: '75px', min: 56 },
+  { key: 'actions', width: '120px', fixed: true },
+];
+
 export default function App() {
   const [initial] = useState(restoredQueue);
   const [playerPrefs] = useState(() => loadJson(PLAYER_PREFS_KEY) || {});
@@ -55,6 +66,8 @@ export default function App() {
   const [repeatMode, setRepeatMode] = useState(playerPrefs.repeat || 'all'); // 'off' | 'all' | 'one'
   const [shuffleMode, setShuffleMode] = useState(!!playerPrefs.shuffle);
   const [dockCollapsed, setDockCollapsed] = useState(!!playerPrefs.dockCollapsed);
+  const [playlistSidebarWidth, setPlaylistSidebarWidth] = useLayoutPref('playlistSidebarWidth', PLAYLIST_SIDEBAR_WIDTH);
+  const playlistColumns = useColumns('playlist', PLAYLIST_COLUMNS);
   const [libNav, setLibNav] = useState([{ section: playerPrefs.librarySection || 'albums' }]);
   const [menu, setMenu] = useState(null);
   const [infoTrack, setInfoTrack] = useState(null);
@@ -195,6 +208,7 @@ export default function App() {
     if (window.robosAudio?.onSpeakerStatusChange) {
       cleanups.push(window.robosAudio.onSpeakerStatusChange(({ ip, status }) => {
         if (status?.playerState === 'IDLE' && status?.idleReason === 'FINISHED') {
+          lastCastRef.current = null; // replaying the same song must cast it again
           setActiveCastSession(null);
         } else if (status?.playerState === 'PAUSED') {
           setActiveCastSession(prev => prev ? { ...prev, isPaused: true } : prev);
@@ -686,6 +700,7 @@ export default function App() {
         await window.robosAudio.castStopAll();
       }
       setActiveCastSession(null);
+      lastCastRef.current = null;
       if (playerRef.current?.audio?.current) {
         playerRef.current.audio.current.pause();
       }
@@ -718,14 +733,20 @@ export default function App() {
     }
   };
 
-  const castTrack = async (speakerIp, track) => {
+  // The song last sent to the speaker. The muted local copy fires "play" several
+  // times while a song starts; each one used to cast the song again, restarting it.
+  const lastCastRef = useRef(null);
+
+  const castTrack = async (speakerIp, track, { startAt = 0 } = {}) => {
     if (!speakerIp || speakerIp === 'local' || !track) return;
+    lastCastRef.current = { ip: speakerIp, key: track.id || track.filePath || track.src };
     showStatus(`Casting "${track.title}" to ${getSpeakerName(speakerIp)}...`);
     const metadata = {
       title: track.title,
       artist: track.artist,
       album: track.album,
     };
+    if (startAt > 0) metadata.currentTime = startAt;
     const castArt = artUrlFor(artBase.cast, track.artId);
     if (castArt) {
       metadata.images = [{ url: castArt }];
@@ -881,17 +902,25 @@ export default function App() {
     showStatus(`Playing "${trackToPlay.title}" by ${trackToPlay.artist || 'Unknown'}`);
   };
 
+  // While a DJ preview swaps the song out on the speaker, the muted local copy
+  // is paused and restarted by the app itself; that must not echo to the speaker.
+  const quietCastMirrorRef = useRef(false);
+
   const handlePlayerPlay = () => {
     setIsPlaying(true);
+    if (quietCastMirrorRef.current) return;
     if (outputTarget !== 'local') {
       if (playerRef.current?.audio?.current) {
         playerRef.current.audio.current.muted = true;
       }
+      const last = lastCastRef.current;
+      const alreadyCast = !!(currentTrack && last && last.ip === outputTarget
+        && last.key === (currentTrack.id || currentTrack.filePath || currentTrack.src));
       if (activeCastSession && activeCastSession.isPaused) {
         window.robosAudio.castResume(activeCastSession.ip);
         setActiveCastSession(prev => ({ ...prev, isPaused: false }));
         showStatus(`Resumed casting on ${getSpeakerName(activeCastSession.ip)}`);
-      } else if (currentTrack) {
+      } else if (currentTrack && !alreadyCast) {
         castTrack(outputTarget, currentTrack);
       }
     }
@@ -899,6 +928,7 @@ export default function App() {
 
   const handlePlayerPause = () => {
     setIsPlaying(false);
+    if (quietCastMirrorRef.current) return;
     if (outputTarget !== 'local' && activeCastSession) {
       window.robosAudio.castPause(activeCastSession.ip);
       setActiveCastSession(prev => ({ ...prev, isPaused: true }));
@@ -1009,6 +1039,12 @@ export default function App() {
     getVolume: () => playerRef.current?.audio?.current?.volume ?? 1,
     showStatus,
     getAgent: () => latestRef.current.aiAgent,
+    // DJ lines go to the speaker(s) the music is cast to.
+    castClip: (filePath, meta) => {
+      const target = latestRef.current.outputTarget;
+      if (target === 'all') return Promise.all(latestRef.current.speakers.map(sp => window.robosAudio.castFile(sp.ip, filePath, meta))).then(r => r.find(x => x && x.ok === false) || { ok: true });
+      return window.robosAudio.castFile(target, filePath, meta);
+    },
   });
 
   const handleTrackEnded = () => {
@@ -1044,14 +1080,20 @@ export default function App() {
     const audio = playerRef.current?.audio?.current;
     const casting = outputTarget !== 'local';
     const wasPlaying = isPlaying && (casting ? !(activeCastSession && activeCastSession.isPaused) : !!(audio && !audio.paused));
-    if (wasPlaying) {
-      if (casting) handleToggleCastPause();
-      else audio.pause();
-    }
+    // While casting, the line replaces the song on the speaker; it is cast again
+    // afterwards from where it was (the muted local copy keeps the position).
+    const song = playlist[currentTrackIndex];
+    const position = audio ? audio.currentTime : 0;
+    if (casting) quietCastMirrorRef.current = true;
+    if (audio && !audio.paused) audio.pause();
     dj.preview(track, () => {
-      if (!wasPlaying) return;
-      if (casting) latestRef.current.resumeCast();
-      else { playerRef.current?.audio?.current?.play().catch(() => {}); setIsPlaying(true); }
+      if (casting) {
+        const release = () => setTimeout(() => { quietCastMirrorRef.current = false; }, 500);
+        if (song && (wasPlaying || position > 0)) latestRef.current.resumeCastAt(song, position, wasPlaying).finally(release);
+        else release();
+        return;
+      }
+      if (wasPlaying) { playerRef.current?.audio?.current?.play().catch(() => {}); setIsPlaying(true); }
     });
   };
 
@@ -1205,7 +1247,19 @@ export default function App() {
     djSpeaking: !!dj.speaking,
     aiAgent,
     skipDj: dj.skip,
-    resumeCast: () => handleToggleCastPause(),
+    outputTarget,
+    speakers,
+    // Re-cast the song after a DJ preview, from `position`; paused if it was paused.
+    resumeCastAt: async (song, position, play) => {
+      await castTrack(outputTarget, song, { startAt: position });
+      const a = playerRef.current?.audio?.current;
+      if (a) { a.currentTime = position; a.muted = true; }
+      if (play) { if (a) a.play().catch(() => {}); setIsPlaying(true); }
+      else if (outputTarget !== 'all') {
+        await window.robosAudio.castPause(outputTarget);
+        setActiveCastSession(prev => (prev ? { ...prev, isPaused: true } : prev));
+      }
+    },
     // After a DJ break the queue may have changed: find the planned song again.
     goToTrack: (track, fallbackIdx) => {
       const idx = playlist.indexOf(track);
@@ -1732,7 +1786,7 @@ export default function App() {
 
             <div className="playlists-layout">
               {/* Left Sidebar: Playlists List */}
-              <div className="playlists-sidebar">
+              <div className="playlists-sidebar" style={{ width: playlistSidebarWidth }}>
                 {playlists.length === 0 ? (
                   <div className="empty-playlists-sidebar">
                     <p>No playlists created yet.</p>
@@ -1768,6 +1822,16 @@ export default function App() {
                   ))
                 )}
               </div>
+
+              <Splitter
+                id="playlists-splitter"
+                label="Playlist list width"
+                width={playlistSidebarWidth}
+                onChange={setPlaylistSidebarWidth}
+                min={180}
+                max={() => Math.max(220, Math.min(560, window.innerWidth - 700))}
+                defaultWidth={PLAYLIST_SIDEBAR_WIDTH}
+              />
 
               {/* Right Detail Pane: Playlist View */}
               <div className="playlist-detail-pane">
@@ -1855,12 +1919,12 @@ export default function App() {
                           </button>
                         </div>
                       ) : (
-                        <div className="playlist-tracks-table">
+                        <div className="playlist-tracks-table" style={{ '--pl-grid': playlistColumns.template }}>
                           <div className="playlist-table-header">
                             <span className="col-num">#</span>
-                            <span className="col-title">Title</span>
-                            <span className="col-artist">Artist</span>
-                            <span className="col-album">Album</span>
+                            <span className="col-title col-resizable">Title{playlistColumns.handleFor('title')}</span>
+                            <span className="col-artist col-resizable">Artist{playlistColumns.handleFor('artist')}</span>
+                            <span className="col-album col-resizable">Album{playlistColumns.handleFor('album')}</span>
                             <span className="col-duration">Duration</span>
                             <span className="col-actions">Actions</span>
                           </div>

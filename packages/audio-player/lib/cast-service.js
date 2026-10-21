@@ -8,6 +8,15 @@ const os = require('os');
 const net = require('net');
 const { Client, DefaultMediaReceiver } = require('castv2-client');
 
+const AUDIO_MIME = {
+  '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.aac': 'audio/aac', '.flac': 'audio/flac',
+  '.ogg': 'audio/ogg', '.opus': 'audio/ogg', '.wav': 'audio/wav', '.webm': 'audio/webm',
+};
+
+function audioMimeType(filePath) {
+  return AUDIO_MIME[path.extname(String(filePath || '')).toLowerCase()] || 'audio/mpeg';
+}
+
 class CastService {
   constructor() {
     this.speakers = new Map(); // ip -> speaker info
@@ -169,13 +178,15 @@ class CastService {
     });
   }
 
-  registerFile(filePath, contentType = 'audio/mpeg') {
+  // The real type matters: speakers may refuse a WAV (e.g. a DJ voice clip) sent as MP3.
+  registerFile(filePath, contentType = null) {
     const id = `f_${this.nextMediaId++}_${Date.now()}`;
+    const ext = (path.extname(filePath).slice(1) || 'mp3').toLowerCase();
     this.mediaRegistry.set(id, {
       filePath,
-      contentType,
+      contentType: contentType || audioMimeType(filePath),
     });
-    return `http://${this.hostIp}:${this.streamPort}/media/${id}.mp3`;
+    return `http://${this.hostIp}:${this.streamPort}/media/${id}.${ext}`;
   }
 
   registerBuffer(buffer, contentType = 'audio/mp3') {
@@ -332,6 +343,10 @@ class CastService {
       }
     };
 
+    // `currentTime` starts the song part-way (resuming after a DJ preview).
+    const loadOpts = { autoplay: true };
+    if (metadata.currentTime > 0) loadOpts.currentTime = metadata.currentTime;
+
     // Next song on a speaker we're already casting to: load it into the same
     // receiver session. Stopping and relaunching the receiver for every song made
     // speakers go silent (and chime) between tracks.
@@ -340,7 +355,7 @@ class CastService {
       try {
         const status = await new Promise((resolve, reject) => {
           const timer = setTimeout(() => reject(new Error('Cast load timed out')), 15000);
-          conn.player.load(media, { autoplay: true }, (err, st) => {
+          conn.player.load(media, loadOpts, (err, st) => {
             clearTimeout(timer);
             if (err) reject(err); else resolve(st);
           });
@@ -369,7 +384,7 @@ class CastService {
             return reject(err);
           }
 
-          player.load(media, { autoplay: true }, (err, status) => {
+          player.load(media, loadOpts, (err, status) => {
             if (err) {
               client.close();
               settled = true;
@@ -544,4 +559,4 @@ class CastService {
   }
 }
 
-module.exports = { CastService };
+module.exports = { CastService, audioMimeType };
