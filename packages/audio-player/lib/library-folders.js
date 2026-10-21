@@ -38,17 +38,90 @@ class LibraryFolders {
   }
 
   _owns(folder, filePath) {
+    if (!filePath) return false;
     const root = this.localRoot(folder);
-    return filePath === root || filePath.startsWith(root + path.sep);
+    if (filePath === root || filePath.startsWith(root + path.sep)) return true;
+    // If this folder was migrated from a legacy single-folder "/" root, tracks previously
+    // indexed directly at the connection cache root belong to this primary linked folder.
+    if (folder.kind === 'cloud' && folder.isPrimaryLinkedFolder && this.cloud && typeof this.cloud.localDirFor === 'function') {
+      const connRoot = this.cloud.localDirFor(folder.connectionId, '/');
+      if (path.dirname(filePath) === connRoot) return true;
+    }
+    return false;
+  }
+
+  _syncWithDataSources(connections) {
+    if (!Array.isArray(connections) || !connections.length) return;
+    let changed = false;
+
+    for (const conn of connections) {
+      if (!conn.browsable || !Array.isArray(conn.folders) || !conn.folders.length) continue;
+
+      // Migrate legacy generic "/" folder entry to the first linked folder
+      const legacyRoot = this.folders.find(
+        f => f.kind === 'cloud' && f.connectionId === conn.id && f.path === '/' && (f.label === '/' || f.label === 'root')
+      );
+      if (legacyRoot) {
+        const firstLf = conn.folders[0];
+        const alreadyHasFirst = this.folders.some(
+          f => f !== legacyRoot && f.kind === 'cloud' && f.connectionId === conn.id && f.path === firstLf.remotePath
+        );
+        if (alreadyHasFirst) {
+          this.folders = this.folders.filter(f => f !== legacyRoot);
+        } else {
+          legacyRoot.label = firstLf.label;
+          legacyRoot.path = firstLf.remotePath;
+          legacyRoot.isPrimaryLinkedFolder = true;
+        }
+        changed = true;
+      }
+
+      // Ensure every linked folder from Data Sources appears in the Library folder list
+      conn.folders.forEach((lf, idx) => {
+        if (!lf || !lf.remotePath) return;
+        const existing = this.folders.find(
+          f => f.kind === 'cloud' && f.connectionId === conn.id && f.path === lf.remotePath
+        );
+        if (existing) {
+          if (idx === 0 && !existing.isPrimaryLinkedFolder) {
+            existing.isPrimaryLinkedFolder = true;
+            changed = true;
+          }
+          if (existing.label === '/' || existing.label === 'root' || existing.label === lf.folderId) {
+            existing.label = lf.label;
+            changed = true;
+          }
+        } else {
+          this.folders.push({
+            id: `fld_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}${idx}`,
+            label: lf.label || path.basename(lf.remotePath) || lf.remotePath,
+            addedAt: new Date().toISOString(),
+            lastSynced: null,
+            kind: 'cloud',
+            connectionId: conn.id,
+            path: lf.remotePath,
+            isPrimaryLinkedFolder: idx === 0,
+          });
+          changed = true;
+        }
+      });
+    }
+
+    if (changed) this._save();
   }
 
   list() {
     const connections = this.cloud.listConnections();
+    this._syncWithDataSources(connections);
     return this.folders.map(f => {
       const conn = f.kind === 'cloud' ? connections.find(c => c.id === f.connectionId) : null;
+      const legacyRootDir = (f.kind === 'cloud' && f.isPrimaryLinkedFolder && this.cloud && typeof this.cloud.localDirFor === 'function')
+        ? this.cloud.localDirFor(f.connectionId, '/')
+        : null;
       return {
         ...f,
         localRoot: this.localRoot(f),
+        legacyRootDir,
         trackCount: this.mediaLibrary.tracks.filter(t => this._owns(f, t.filePath)).length,
         connectionName: conn ? conn.name : null,
         connectionMissing: f.kind === 'cloud' && !conn,

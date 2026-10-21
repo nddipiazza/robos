@@ -715,7 +715,14 @@ async function resolveGDriveFileObj(ds, auth, remoteFile, driveId = '') {
   const fileName = posixPath.basename(norm);
   const folderId = await resolveGDrivePathToFolderId(ds, auth, parentPath);
   const escapedName = fileName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-  const q = `'${folderId}' in parents and name = '${escapedName}' and trashed = false`;
+  let parentClause = `'${folderId}' in parents`;
+  if (folderId === '__MULTI_ROOT__') {
+    const folders = normalizeCloudFoldersArray(ds);
+    parentClause = folders.length > 0
+      ? `(${folders.map(f => `'${f.id}' in parents`).join(' or ')})`
+      : `'root' in parents`;
+  }
+  const q = `${parentClause} and name = '${escapedName}' and trashed = false`;
   const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,size)&pageSize=5&supportsAllDrives=true&includeItemsFromAllDrives=true`;
   const data = await gdriveFetchJson(url, auth);
   if (!data.files || !data.files.length) {
