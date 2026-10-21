@@ -17429,6 +17429,14 @@
     { label: "2 GB", bytes: 2048 * 1024 * 1024 },
     { label: "5 GB", bytes: 5120 * 1024 * 1024 }
   ];
+  var providerBadge = (driverType) => {
+    const d = (driverType || "").toLowerCase();
+    if (d === "gdrive") return { label: "Google Drive", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.12)" };
+    if (d === "onedrive") return { label: "OneDrive", color: "#60a5fa", bg: "rgba(96, 165, 250, 0.12)" };
+    if (d === "dropbox") return { label: "Dropbox", color: "#818cf8", bg: "rgba(129, 140, 248, 0.12)" };
+    if (d === "s3") return { label: "Amazon S3", color: "#fbbf24", bg: "rgba(251, 191, 36, 0.12)" };
+    return { label: (driverType || "Cloud").toUpperCase(), color: "#e8a33d", bg: "rgba(232, 163, 61, 0.12)" };
+  };
   function CloudBrowser({ onLibrary, onFolders, showStatus }) {
     const [connections, setConnections] = (0, import_react9.useState)(null);
     const [connId, setConnId] = (0, import_react9.useState)("");
@@ -17461,6 +17469,7 @@
       return window.robosAudio.onCloudProgress(setProgress);
     }, []);
     const browse = async (id, p) => {
+      if (id && id !== connId) setConnId(id);
       setLoading(true);
       setError("");
       setSelected(/* @__PURE__ */ new Set());
@@ -17504,11 +17513,11 @@
       loadCacheStats();
       showStatus(res.added ? `Indexed ${res.added} cloud track${res.added === 1 ? "" : "s"} (streamed on play, cached up to limit).` : "No audio files found in the selection.");
     };
-    const addFolder = async (p) => {
+    const addFolder = async (p, targetConnId = connId) => {
       if (importing.current) return;
       importing.current = true;
       setProgress({ phase: "scanning" });
-      const res = await window.robosAudio.addCloudFolder(connId, p);
+      const res = await window.robosAudio.addCloudFolder(targetConnId, p);
       importing.current = false;
       setProgress(null);
       if (!res.ok) {
@@ -17517,7 +17526,7 @@
       }
       onFolders(res);
       loadCacheStats();
-      showStatus(`Cloud folder added: ${res.added} track${res.added === 1 ? "" : "s"} indexed for on-demand streaming.`);
+      showStatus(`Cloud folder synced: ${res.added} track${res.added === 1 ? "" : "s"} indexed for on-demand streaming.`);
     };
     const handleMaxCacheChange = async (e) => {
       const bytes = Number(e.target.value);
@@ -17534,16 +17543,136 @@
     };
     const usable = (connections || []).filter((c) => c.browsable);
     const other = (connections || []).filter((c) => !c.browsable);
-    return /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-browser" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-toolbar" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-conn" }, /* @__PURE__ */ import_react9.default.createElement("label", { htmlFor: "cloud-conn-select" }, "Connection"), /* @__PURE__ */ import_react9.default.createElement("select", { id: "cloud-conn-select", value: connId, onChange: (e) => setConnId(e.target.value), disabled: !usable.length }, !usable.length && /* @__PURE__ */ import_react9.default.createElement("option", { value: "" }, "No Cloud Storage connections"), usable.map((c) => /* @__PURE__ */ import_react9.default.createElement("option", { key: c.id, value: c.id }, c.name, " (", c.driverType.toUpperCase(), " ", c.host, ")"))), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", onClick: loadConnections }, "Reload")), /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-import-actions" }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-accent", disabled: !selected.size || !!progress, onClick: () => doImport([...selected]) }, "Add ", selected.size ? `${selected.size} selected` : "selected", " to library"), listing && /* @__PURE__ */ import_react9.default.createElement(
+    const activeConn = usable.find((c) => c.id === connId) || usable[0] || null;
+    const currentPath = listing ? listing.path : "/";
+    return /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-browser" }, /* @__PURE__ */ import_react9.default.createElement(
+      "select",
+      {
+        id: "cloud-conn-select",
+        style: { display: "none" },
+        value: connId,
+        onChange: (e) => setConnId(e.target.value),
+        disabled: !usable.length
+      },
+      !usable.length && /* @__PURE__ */ import_react9.default.createElement("option", { value: "" }, "No Cloud Storage connections"),
+      usable.map((c) => /* @__PURE__ */ import_react9.default.createElement("option", { key: c.id, value: c.id }, c.name, " (", c.driverType.toUpperCase(), ")"))
+    ), /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-sources-panel", style: {
+      background: "var(--bg-secondary)",
+      border: "1px solid var(--border-color)",
+      borderRadius: "8px",
+      padding: "14px 16px",
+      display: "flex",
+      flexDirection: "column",
+      gap: "12px"
+    } }, /* @__PURE__ */ import_react9.default.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" } }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h3", { style: { fontSize: "0.95rem", margin: 0, color: "var(--text-main)", display: "flex", alignItems: "center", gap: "8px" } }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "cloud", size: 17 }), /* @__PURE__ */ import_react9.default.createElement("span", null, "Cloud Data Sources & Linked Folders")), /* @__PURE__ */ import_react9.default.createElement("p", { style: { fontSize: "0.76rem", color: "var(--text-muted)", margin: "2px 0 0 0" } }, "Select a linked cloud folder below to browse its music or sync it directly into your Library tab")), /* @__PURE__ */ import_react9.default.createElement("div", { style: { display: "flex", gap: "8px", alignItems: "center" } }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", onClick: loadConnections, title: "Reload connections and linked folders from RobOS Data Sources" }, "Reload Data Sources"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-accent", disabled: !selected.size || !!progress, onClick: () => doImport([...selected]) }, "Add ", selected.size ? `${selected.size} selected` : "selected", " to library"), listing && listing.path !== "/" && /* @__PURE__ */ import_react9.default.createElement(
       "button",
       {
         className: "btn-secondary",
         disabled: !!progress,
-        onClick: () => addFolder(listing.path),
+        onClick: () => addFolder(listing.path, connId),
         title: "Index this cloud folder in your library; songs stream on play and cache locally"
       },
-      "Add as library folder"
-    ))), cacheStats && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-cache-bar", style: {
+      "+ Sync Current Folder to Library"
+    ))), usable.length > 0 && /* @__PURE__ */ import_react9.default.createElement("div", { style: { display: "flex", flexDirection: "column", gap: "10px" } }, usable.map((c) => {
+      const badge = providerBadge(c.driverType);
+      const isConnActive = c.id === connId;
+      const linkedFolders = Array.isArray(c.folders) ? c.folders : [];
+      return /* @__PURE__ */ import_react9.default.createElement(
+        "div",
+        {
+          key: c.id,
+          style: {
+            background: "var(--bg-primary)",
+            border: `1px solid ${isConnActive ? "rgba(232, 163, 61, 0.45)" : "var(--border-color)"}`,
+            borderRadius: "6px",
+            padding: "10px 12px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px"
+          }
+        },
+        /* @__PURE__ */ import_react9.default.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" } }, /* @__PURE__ */ import_react9.default.createElement(
+          "div",
+          {
+            style: { display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" },
+            onClick: () => browse(c.id, "/")
+          },
+          /* @__PURE__ */ import_react9.default.createElement("span", { style: {
+            fontSize: "0.7rem",
+            fontWeight: 700,
+            padding: "2px 8px",
+            borderRadius: "999px",
+            color: badge.color,
+            background: badge.bg,
+            border: `1px solid ${badge.color}33`
+          } }, badge.label),
+          /* @__PURE__ */ import_react9.default.createElement("strong", { style: { fontSize: "0.88rem", color: "var(--text-main)" } }, c.name),
+          c.user && /* @__PURE__ */ import_react9.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, "(", c.user, ")")
+        ), /* @__PURE__ */ import_react9.default.createElement("span", { style: { fontSize: "0.73rem", color: "var(--text-muted)" } }, linkedFolders.length, " linked folder", linkedFolders.length === 1 ? "" : "s")),
+        /* @__PURE__ */ import_react9.default.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "8px" } }, linkedFolders.length > 1 && /* @__PURE__ */ import_react9.default.createElement(
+          "div",
+          {
+            onClick: () => browse(c.id, "/"),
+            style: {
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "8px",
+              padding: "8px 10px",
+              borderRadius: "6px",
+              cursor: "pointer",
+              background: isConnActive && currentPath === "/" ? "rgba(232, 163, 61, 0.14)" : "var(--bg-secondary)",
+              border: `1px solid ${isConnActive && currentPath === "/" ? "var(--accent)" : "var(--border-color)"}`,
+              transition: "all 0.15s"
+            }
+          },
+          /* @__PURE__ */ import_react9.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px", minWidth: 0 } }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "folder", size: 16 }), /* @__PURE__ */ import_react9.default.createElement("div", { style: { display: "flex", flexDirection: "column", minWidth: 0 } }, /* @__PURE__ */ import_react9.default.createElement("span", { style: { fontSize: "0.82rem", fontWeight: 600, color: "var(--text-main)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, "All Linked Folders (", linkedFolders.length, ")"), /* @__PURE__ */ import_react9.default.createElement("span", { style: { fontSize: "0.7rem", color: "var(--text-muted)" } }, "Overview of all linked folders")))
+        ), linkedFolders.map((lf) => {
+          const isFolderSelected = isConnActive && (currentPath === lf.remotePath || currentPath.startsWith(lf.remotePath + "/") || linkedFolders.length === 1 && currentPath === "/");
+          return /* @__PURE__ */ import_react9.default.createElement(
+            "div",
+            {
+              key: lf.id || lf.remotePath,
+              onClick: () => browse(c.id, lf.remotePath),
+              style: {
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "8px",
+                padding: "8px 10px",
+                borderRadius: "6px",
+                cursor: "pointer",
+                background: isFolderSelected ? "rgba(232, 163, 61, 0.14)" : "var(--bg-secondary)",
+                border: `1px solid ${isFolderSelected ? "var(--accent)" : "var(--border-color)"}`,
+                transition: "all 0.15s"
+              }
+            },
+            /* @__PURE__ */ import_react9.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px", minWidth: 0, flex: 1 } }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "folder", size: 16 }), /* @__PURE__ */ import_react9.default.createElement("div", { style: { display: "flex", flexDirection: "column", minWidth: 0, flex: 1 } }, /* @__PURE__ */ import_react9.default.createElement(
+              "span",
+              {
+                style: { fontSize: "0.84rem", fontWeight: 600, color: "var(--text-main)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" },
+                title: lf.label
+              },
+              lf.label
+            ), /* @__PURE__ */ import_react9.default.createElement("span", { style: { fontSize: "0.7rem", color: "var(--text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, lf.remotePath))),
+            /* @__PURE__ */ import_react9.default.createElement(
+              "button",
+              {
+                className: "row-btn",
+                style: { flexShrink: 0, fontSize: "0.72rem", padding: "3px 8px" },
+                disabled: !!progress,
+                title: `Sync "${lf.label}" into your Library`,
+                onClick: (ev) => {
+                  ev.stopPropagation();
+                  addFolder(lf.remotePath, c.id);
+                }
+              },
+              "Sync"
+            )
+          );
+        }))
+      );
+    }))), cacheStats && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-cache-bar", style: {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
@@ -17564,7 +17693,7 @@
         style: { padding: "3px 6px", fontSize: "11px", background: "#0d1117", color: "#e2e8f0", border: "1px solid #30363d", borderRadius: "4px" }
       },
       CACHE_LIMIT_OPTIONS.map((opt) => /* @__PURE__ */ import_react9.default.createElement("option", { key: opt.bytes, value: opt.bytes }, opt.label))
-    ), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", style: { padding: "3px 8px", fontSize: "11px" }, onClick: handleClearCache, disabled: !cacheStats.fileCount }, "Clear Cache"))), connections && !connections.length && /* @__PURE__ */ import_react9.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react9.default.createElement("p", null, "No cloud storage is linked yet."), /* @__PURE__ */ import_react9.default.createElement("p", { className: "hint" }, "Open RobOS Data Sources, add a Google Drive, Microsoft OneDrive, S3, Dropbox, SFTP, or FTP connection under Cloud & Object Storage, and it will appear here.")), other.length > 0 && /* @__PURE__ */ import_react9.default.createElement("p", { className: "cloud-note" }, other.map((c) => c.name).join(", "), ": browsing ", other.length === 1 ? "this" : "these", " storage type", other.length === 1 ? " is" : "s are", " not supported yet."), progress && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-progress" }, progress.phase === "scanning" && "Indexing remote cloud metadata (no bulk download)...", progress.phase === "downloading" && `Streaming ${progress.done + 1} of ${progress.total}: ${progress.name}`, progress.phase === "done" && "Finishing up..."), listing && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-listing" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-path" }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/") }, "root"), crumbs.map((c, i) => /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, { key: i }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "crumb-sep" }, "/"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/" + crumbs.slice(0, i + 1).join("/")) }, c)))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-rows" }, parentPath && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-row", onClick: () => browse(connId, parentPath) }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-check" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "up", size: 14 }), " Parent folder"), /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-size" })), listing.entries.length === 0 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-empty" }, "No folders or audio files here."), listing.entries.map((e) => /* @__PURE__ */ import_react9.default.createElement(
+    ), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", style: { padding: "3px 8px", fontSize: "11px" }, onClick: handleClearCache, disabled: !cacheStats.fileCount }, "Clear Cache"))), connections && !connections.length && /* @__PURE__ */ import_react9.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react9.default.createElement("p", null, "No cloud storage is linked yet."), /* @__PURE__ */ import_react9.default.createElement("p", { className: "hint" }, "Open RobOS Data Sources, add a Google Drive, Microsoft OneDrive, S3, Dropbox, SFTP, or FTP connection under Cloud & Object Storage, and it will appear here.")), other.length > 0 && /* @__PURE__ */ import_react9.default.createElement("p", { className: "cloud-note" }, other.map((c) => c.name).join(", "), ": browsing ", other.length === 1 ? "this" : "these", " storage type", other.length === 1 ? " is" : "s are", " not supported yet."), progress && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-progress" }, progress.phase === "scanning" && "Indexing remote cloud metadata (no bulk download)...", progress.phase === "downloading" && `Streaming ${progress.done + 1} of ${progress.total}: ${progress.name}`, progress.phase === "done" && "Finishing up..."), listing && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-listing" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-path" }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/") }, activeConn && Array.isArray(activeConn.folders) && activeConn.folders.length === 1 ? activeConn.folders[0].label : "Linked Folders"), crumbs.map((c, i) => /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, { key: i }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "crumb-sep" }, "/"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/" + crumbs.slice(0, i + 1).join("/")) }, c)))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-rows" }, parentPath && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-row", onClick: () => browse(connId, parentPath) }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-check" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "up", size: 14 }), " Parent folder"), /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-size" })), listing.entries.length === 0 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-empty" }, "No folders or audio files here."), listing.entries.map((e) => /* @__PURE__ */ import_react9.default.createElement(
       "div",
       {
         key: e.path,
@@ -17576,7 +17705,20 @@
         toggle(e.path);
       } }, /* @__PURE__ */ import_react9.default.createElement("input", { type: "checkbox", readOnly: true, checked: selected.has(e.path), "aria-label": `Select ${e.name}` })),
       /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: e.type === "dir" ? "folder" : "note", size: 15 }), " ", e.name),
-      /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-size" }, e.type === "dir" ? "" : formatSize(e.size))
+      /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-size" }, e.type === "dir" ? /* @__PURE__ */ import_react9.default.createElement(
+        "button",
+        {
+          className: "row-btn",
+          style: { fontSize: "0.7rem", padding: "2px 7px" },
+          disabled: !!progress,
+          title: `Sync folder "${e.name}" to Library`,
+          onClick: (ev) => {
+            ev.stopPropagation();
+            addFolder(e.path, connId);
+          }
+        },
+        "+ Library"
+      ) : formatSize(e.size))
     )))), loading && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-progress" }, "Loading..."), error && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-error" }, error));
   }
 
@@ -17657,9 +17799,17 @@
   // src/FolderPanel.jsx
   var import_react11 = __toESM(require_react());
   var when = (iso) => {
-    if (!iso) return "Never synced";
+    if (!iso) return "Not indexed yet";
     const d = new Date(iso);
     return `Synced ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  };
+  var providerLabel = (protocol) => {
+    const p = (protocol || "").toLowerCase();
+    if (p === "gdrive") return "Google Drive";
+    if (p === "onedrive") return "OneDrive";
+    if (p === "dropbox") return "Dropbox";
+    if (p === "s3") return "S3";
+    return p ? p.toUpperCase() : "Cloud";
   };
   function FolderPanel({ folders, activeId, onSelect, onAddLocal, onAddCloud, onRescan, onRename, onRemove, busyId }) {
     const [confirmId, setConfirmId] = (0, import_react11.useState)(null);
@@ -17670,7 +17820,7 @@
       if (editValue.trim()) onRename(id, editValue);
       setEditId(null);
     };
-    return /* @__PURE__ */ import_react11.default.createElement("aside", { className: "folder-panel" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "folder-panel-head" }, /* @__PURE__ */ import_react11.default.createElement("span", null, "Folders"), /* @__PURE__ */ import_react11.default.createElement("div", { className: "folder-head-actions" }, /* @__PURE__ */ import_react11.default.createElement("button", { className: "row-btn", title: "Add a folder from this computer", onClick: onAddLocal }, "+ Local"), /* @__PURE__ */ import_react11.default.createElement("button", { className: "row-btn", title: "Add a folder from an SFTP / FTP connection", onClick: onAddCloud }, "+ Cloud"), /* @__PURE__ */ import_react11.default.createElement("button", { className: "row-btn", title: "Rescan and sync every folder", onClick: () => onRescan(null), disabled: !folders.length }, "Sync all"))), /* @__PURE__ */ import_react11.default.createElement("div", { className: `folder-row ${activeId === null ? "active" : ""}`, onClick: () => onSelect(null) }, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "library", size: 15 }), /* @__PURE__ */ import_react11.default.createElement("div", { className: "folder-text" }, /* @__PURE__ */ import_react11.default.createElement("span", { className: "folder-name" }, "All tracks"))), folders.length === 0 && /* @__PURE__ */ import_react11.default.createElement("p", { className: "folder-empty" }, "No folders yet. Add a local folder or a folder from your cloud storage (SFTP, FTP) and RobOS keeps it in sync."), folders.map((f) => /* @__PURE__ */ import_react11.default.createElement("div", { key: f.id, className: `folder-item ${activeId === f.id ? "active" : ""} ${f.available ? "" : "unavailable"}` }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "folder-row", onClick: () => onSelect(f.id) }, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: f.kind === "cloud" ? "cloud" : "folder", size: 15 }), /* @__PURE__ */ import_react11.default.createElement("div", { className: "folder-text" }, editId === f.id ? /* @__PURE__ */ import_react11.default.createElement(
+    return /* @__PURE__ */ import_react11.default.createElement("aside", { className: "folder-panel" }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "folder-panel-head" }, /* @__PURE__ */ import_react11.default.createElement("span", null, "Library Folders (", folders.length, ")"), /* @__PURE__ */ import_react11.default.createElement("div", { className: "folder-head-actions" }, /* @__PURE__ */ import_react11.default.createElement("button", { className: "row-btn", title: "Add a folder from this computer", onClick: onAddLocal }, "+ Local"), /* @__PURE__ */ import_react11.default.createElement("button", { className: "row-btn", title: "Browse Cloud Storage folders", onClick: onAddCloud }, "+ Cloud"), /* @__PURE__ */ import_react11.default.createElement("button", { className: "row-btn", title: "Rescan and sync every folder", onClick: () => onRescan(null), disabled: !folders.length }, "Sync all"))), /* @__PURE__ */ import_react11.default.createElement("div", { className: `folder-row ${activeId === null ? "active" : ""}`, onClick: () => onSelect(null) }, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "library", size: 15 }), /* @__PURE__ */ import_react11.default.createElement("div", { className: "folder-text" }, /* @__PURE__ */ import_react11.default.createElement("span", { className: "folder-name" }, "All Library Tracks"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "folder-sub" }, "Combined view across all folders"))), folders.length === 0 && /* @__PURE__ */ import_react11.default.createElement("p", { className: "folder-empty" }, "No folders linked yet. Add a local folder or link folders in RobOS Data Sources (Google Drive, OneDrive, SFTP, FTP)."), folders.map((f) => /* @__PURE__ */ import_react11.default.createElement("div", { key: f.id, className: `folder-item ${activeId === f.id ? "active" : ""} ${f.available ? "" : "unavailable"}` }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "folder-row", onClick: () => onSelect(f.id) }, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: f.kind === "cloud" ? "cloud" : "folder", size: 15 }), /* @__PURE__ */ import_react11.default.createElement("div", { className: "folder-text" }, editId === f.id ? /* @__PURE__ */ import_react11.default.createElement(
       "input",
       {
         className: "folder-edit",
@@ -17687,7 +17837,16 @@
     ) : /* @__PURE__ */ import_react11.default.createElement("span", { className: "folder-name", onDoubleClick: () => {
       setEditId(f.id);
       setEditValue(f.label);
-    }, title: "Double-click to rename" }, f.label), /* @__PURE__ */ import_react11.default.createElement("span", { className: "folder-sub", title: f.kind === "cloud" ? `${f.protocol ? f.protocol.toUpperCase() : "Cloud"} ${f.connectionName || ""}${f.path}` : f.path }, f.kind === "cloud" ? f.connectionMissing ? "Connection removed from Data Sources" : `${(f.protocol || "").toUpperCase()} \xB7 ${f.connectionName} \xB7 ${f.path}` : f.available ? f.path : `${f.path} (not found)`), /* @__PURE__ */ import_react11.default.createElement("span", { className: "folder-sub" }, f.trackCount, " track", f.trackCount === 1 ? "" : "s", " \xB7 ", when(f.lastSynced)))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "folder-actions" }, /* @__PURE__ */ import_react11.default.createElement("button", { className: "row-btn", onClick: () => onRescan(f.id), disabled: busyId === f.id || f.connectionMissing }, busyId === f.id ? "Syncing..." : "Sync"), /* @__PURE__ */ import_react11.default.createElement("button", { className: "row-btn row-btn-stop", onClick: () => {
+    }, title: "Double-click to rename" }, f.label), /* @__PURE__ */ import_react11.default.createElement("span", { className: "folder-sub", title: f.kind === "cloud" ? `${providerLabel(f.protocol)} \xB7 ${f.connectionName || ""} (${f.path})` : f.path }, f.kind === "cloud" ? f.connectionMissing ? "Connection removed from Data Sources" : `${providerLabel(f.protocol)} \xB7 ${f.connectionName}` : f.available ? f.path : `${f.path} (not found)`), /* @__PURE__ */ import_react11.default.createElement("span", { className: "folder-sub" }, /* @__PURE__ */ import_react11.default.createElement("strong", null, f.trackCount, " track", f.trackCount === 1 ? "" : "s"), " \xB7 ", when(f.lastSynced)))), /* @__PURE__ */ import_react11.default.createElement("div", { className: "folder-actions" }, /* @__PURE__ */ import_react11.default.createElement(
+      "button",
+      {
+        className: "row-btn",
+        style: f.trackCount === 0 && !f.lastSynced ? { color: "#00bcd4", borderColor: "rgba(0,188,212,0.4)" } : void 0,
+        onClick: () => onRescan(f.id),
+        disabled: busyId === f.id || f.connectionMissing
+      },
+      busyId === f.id ? "Syncing..." : f.trackCount === 0 && !f.lastSynced ? "Sync Tracks" : "Sync"
+    ), /* @__PURE__ */ import_react11.default.createElement("button", { className: "row-btn row-btn-stop", onClick: () => {
       setConfirmId(confirmId === f.id ? null : f.id);
       setAlsoTracks(true);
     } }, "Remove")), confirmId === f.id && /* @__PURE__ */ import_react11.default.createElement("div", { className: "folder-confirm" }, /* @__PURE__ */ import_react11.default.createElement("label", null, /* @__PURE__ */ import_react11.default.createElement("input", { type: "checkbox", checked: alsoTracks, onChange: (e) => setAlsoTracks(e.target.checked) }), "Also remove its ", f.trackCount, " track", f.trackCount === 1 ? "" : "s", " from the library", f.kind === "cloud" ? " and delete the downloaded copies" : ""), /* @__PURE__ */ import_react11.default.createElement("div", { className: "folder-confirm-actions" }, /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-secondary", onClick: () => setConfirmId(null) }, "Cancel"), /* @__PURE__ */ import_react11.default.createElement("button", { className: "btn-accent", onClick: () => {
@@ -18448,8 +18607,17 @@
       showStatus(`Playing procedural ambient soundscape: ${type}`);
     };
     const activeFolder = folders.find((f) => f.id === folderFilter) || null;
+    const folderOwnsTrack = (folder, filePath) => {
+      if (!folder || !filePath) return false;
+      if (filePath === folder.localRoot || filePath.startsWith(folder.localRoot + "/")) return true;
+      if (folder.legacyRootDir && filePath.startsWith(folder.legacyRootDir + "/")) {
+        const rel = filePath.slice(folder.legacyRootDir.length + 1);
+        if (rel && !rel.includes("/")) return true;
+      }
+      return false;
+    };
     const filteredLibrary = library.tracks.filter((t) => {
-      if (activeFolder && !(t.filePath === activeFolder.localRoot || (t.filePath || "").startsWith(activeFolder.localRoot + "/"))) return false;
+      if (activeFolder && !folderOwnsTrack(activeFolder, t.filePath)) return false;
       if (!searchQuery) return true;
       const q = searchQuery.toLowerCase();
       return t.title && t.title.toLowerCase().includes(q) || t.artist && t.artist.toLowerCase().includes(q) || t.album && t.album.toLowerCase().includes(q) || t.genre && t.genre.toLowerCase().includes(q);

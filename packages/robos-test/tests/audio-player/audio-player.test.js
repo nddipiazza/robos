@@ -577,6 +577,62 @@ describe('RobOS Audio Player Tests', () => {
 
       fs.rmSync(tmpDir, { recursive: true, force: true });
     });
+
+    it('LibraryFolders automatically populates all linked folders from Cloud Data Sources and migrates legacy root entries', () => {
+      const { LibraryFolders } = require(path.join(APP_DIR, 'lib', 'library-folders'));
+      const tmpDir = `/tmp/robos-lib-folders-test-${Date.now()}`;
+      fs.mkdirSync(tmpDir, { recursive: true });
+
+      const mockCacheRoot = path.join(tmpDir, 'cache', 'gdrive-test');
+      // Write a legacy "/" entry in audio-folders.json
+      fs.writeFileSync(path.join(tmpDir, 'audio-folders.json'), JSON.stringify([
+        {
+          id: 'fld_legacy1',
+          label: '/',
+          addedAt: '2026-10-20T00:00:00.000Z',
+          lastSynced: '2026-10-20T00:00:00.000Z',
+          kind: 'cloud',
+          connectionId: 'gdrive-test',
+          path: '/'
+        }
+      ], null, 2));
+
+      const mockMediaLibrary = {
+        tracks: [
+          { id: 't1', filePath: path.join(mockCacheRoot, 'LegacyRootSong.mp3') },
+          { id: 't2', filePath: path.join(mockCacheRoot, 'Music', 'NewFolderSong.mp3') },
+        ]
+      };
+
+      const mockCloud = {
+        localDirFor: (connId, p) => path.join(tmpDir, 'cache', connId, (p || '').replace(/^\/+/, '')),
+        listConnections: () => [
+          {
+            id: 'gdrive-test',
+            name: 'My Google Drive',
+            driverType: 'gdrive',
+            browsable: true,
+            folders: [
+              { id: 'lf1', folderId: 'id_vgm', label: 'video game music', virtualName: 'video game music', remotePath: '/video game music' },
+              { id: 'lf2', folderId: 'id_music', label: 'Music', virtualName: 'Music', remotePath: '/Music' },
+            ]
+          }
+        ]
+      };
+
+      const lf = new LibraryFolders({ mediaLibrary: mockMediaLibrary, cloud: mockCloud, configDir: tmpDir });
+      const listed = lf.list();
+
+      assert.strictEqual(listed.length, 2, 'Should surface both linked folders from Data Sources');
+      assert.strictEqual(listed[0].label, 'video game music');
+      assert.strictEqual(listed[0].path, '/video game music');
+      assert.strictEqual(listed[0].trackCount, 1, 'Primary folder should retain legacy root tracks');
+      assert.strictEqual(listed[1].label, 'Music');
+      assert.strictEqual(listed[1].path, '/Music');
+      assert.strictEqual(listed[1].trackCount, 1, 'Second linked folder should count its own tracks');
+
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
   });
 });
 

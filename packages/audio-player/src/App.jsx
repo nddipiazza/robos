@@ -819,8 +819,18 @@ export default function App() {
 
   const activeFolder = folders.find(f => f.id === folderFilter) || null;
 
+  const folderOwnsTrack = (folder, filePath) => {
+    if (!folder || !filePath) return false;
+    if (filePath === folder.localRoot || filePath.startsWith(folder.localRoot + '/')) return true;
+    if (folder.legacyRootDir && filePath.startsWith(folder.legacyRootDir + '/')) {
+      const rel = filePath.slice(folder.legacyRootDir.length + 1);
+      if (rel && !rel.includes('/')) return true;
+    }
+    return false;
+  };
+
   const filteredLibrary = library.tracks.filter(t => {
-    if (activeFolder && !(t.filePath === activeFolder.localRoot || (t.filePath || '').startsWith(activeFolder.localRoot + '/'))) return false;
+    if (activeFolder && !folderOwnsTrack(activeFolder, t.filePath)) return false;
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return (t.title && t.title.toLowerCase().includes(q)) ||
