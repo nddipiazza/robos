@@ -59,13 +59,33 @@ def log(msg):
     print(time.strftime("[%H:%M:%S] ") + msg, flush=True)
 
 
+def _assets_newer_than_import_cache():
+    """A PNG regenerated after its ``.godot/imported/*.ctex`` would otherwise
+    keep rendering the stale import at runtime (``--import`` is editor-only)."""
+    imported = os.path.join(PROJECT_DIR, ".godot", "imported")
+    if not os.path.isdir(imported):
+        return True
+    newest_cache = max(
+        (os.path.getmtime(os.path.join(imported, f)) for f in os.listdir(imported)),
+        default=0.0,
+    )
+    assets = os.path.join(PROJECT_DIR, "assets")
+    for root, _dirs, files in os.walk(assets):
+        for f in files:
+            if f.endswith(".import"):
+                continue
+            if os.path.getmtime(os.path.join(root, f)) > newest_cache:
+                return True
+    return False
+
+
 def ensure_import_cache():
     """Godot resolves ``class_name`` scripts through ``.godot/``; a fresh
     checkout has none and every autoload silently fails to parse."""
     cache = os.path.join(PROJECT_DIR, ".godot", "global_script_class_cache.cfg")
-    if os.path.exists(cache):
+    if os.path.exists(cache) and not _assets_newer_than_import_cache():
         return
-    log("No .godot import cache — running `godot --headless --import` once")
+    log("Import cache missing or stale — running `godot --headless --import`")
     subprocess.run(
         [GODOT_BIN, "--headless", "--path", PROJECT_DIR, "--import"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=600,

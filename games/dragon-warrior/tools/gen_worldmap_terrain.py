@@ -19,6 +19,11 @@ TILES   = 124  # 1984 / 16
 # 0=water  1=forest_dk  2=forest_md  3=grass  4=plains
 # 5=desert 6=mountain   7=swamp      8=hills  9=wall (impassable)
 
+# Charlock Castle (50,50) is ringed by poisonous swamp (2 HP per step without Erdrick's Armor).
+CHARLOCK = (50, 50)
+CHARLOCK_SWAMP_TILES = {
+    (x, y) for x in range(49, 52) for y in range(49, 52) if (x, y) != CHARLOCK
+}
 # Cantlin's wall ring: the only way in is the grass gate tile at (75,102), guarded by the Golem.
 CANTLIN_GATE = (75, 102)
 CANTLIN_WALL_TILES = {
@@ -59,7 +64,12 @@ for ty in range(TILES):
     for tx in range(TILES):
         cx = tx * TILE_PX + TILE_PX // 2
         cy = ty * TILE_PX + TILE_PX // 2
-        t  = 9 if (tx, ty) in CANTLIN_WALL_TILES else classify(*img.getpixel((cx, cy)))
+        if (tx, ty) in CANTLIN_WALL_TILES:
+            t = 9
+        elif (tx, ty) in CHARLOCK_SWAMP_TILES:
+            t = 7
+        else:
+            t = classify(*img.getpixel((cx, cy)))
         row.append(t)
         out.putpixel((tx, ty), TERRAIN_COLORS[t])
     grid.append(row)

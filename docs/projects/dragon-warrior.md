@@ -105,6 +105,9 @@ IPC web service (`GameControlServer.gd`, `/api/v1/state`) to read what is on scr
   HURT bounces off). The Fairy Flute dug up in Kol works as a battle item: it puts the Golem to
   sleep every time, and the brain plays it whenever the Golem wakes and swings only while it sleeps. Winning once
   opens the town for good; fleeing shoves the hero back off the gate to try again.
+- **Poisonous swamp around Charlock** — the Dragonlord's castle is ringed by swamp tiles that drain 2 HP per step
+  (with a red flash and the swamp sting), can kill a careless hero, are nullified by Erdrick's Armor, and dry up once
+  the Dragonlord falls.
 - **NES-faithful ending** — the hero carries Princess Gwaelin in his arms until she is home, the Dragonlord's
   defeat hands over the Ball of Light with a flash that warps the hero outside a monster-free Charlock, every town
   celebrates, and King Lorik offers his throne; the hero declines, Gwaelin insists on coming along ("But thou

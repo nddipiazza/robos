@@ -170,6 +170,14 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   `resist_sleep`, "Quietly Golem closes his eyes and settles into sleep…"); the brain picks ITEM whenever the Golem
   is awake and the pack holds `fairy_flute`, swings while it sleeps, and never spends a herb on it (heal spells
   instead). `search-fairy-flute` in Kol is a required milestone that precedes it.
+- Charlock swamp ring (`CHARLOCK_SWAMP_TILES` in both generators): the 8 tiles around Charlock (50, 50) are
+  poisonous swamp (terrain id 7, the only swamp on the map). `WorldMap._apply_swamp_damage` runs after every
+  completed step: −`SWAMP_DAMAGE` (2) HP with `swamp.mp3` and a red `_flash_hurt` tween, skipped when
+  `GameState.armor == "erdricks_armor"` or after the Dragonlord is beaten (the swamps "dry up"); HP reaching 0 is a
+  normal `_on_defeat`. Swamp stays walkable for `RoutePlanner` (unweighted BFS), the brain just never idles on it.
+- Regenerated PNGs need a Godot reimport: the runtime loads `.godot/imported/*.ctex`, not the PNG, so patching
+  `dw1-over2.png` in place shows nothing until `godot4 --headless --path . --import` runs. The driver's
+  `ensure_import_cache()` reimports whenever anything under `assets/` is newer than the import cache.
 - NES ending (`game_completed` is only set when the credits finish, so the last milestone covers the whole sequence):
   the Dragonlord's death text ("Thou hast done well…", "…obtains the Ball of Light"), `CharlockThroneRoom.
   _ball_of_light_warp` (white flash, warp outside Charlock, encounters off), victory-lap NPC lines in every town

@@ -305,6 +305,8 @@ func _process(delta: float) -> void:
 				gs_regen.apply_step_regen()
 			if gs_regen and "radiant_steps_left" in gs_regen and int(gs_regen.radiant_steps_left) > 0:
 				gs_regen.radiant_steps_left = int(gs_regen.radiant_steps_left) - 1
+			if _apply_swamp_damage():
+				return
 			_check_map_trigger()
 	elif not _dialog_active and not _menu_open and not _status_open and not _item_open:
 		_poll_move_input()
@@ -434,6 +436,43 @@ func _check_map_trigger() -> void:
 			get_tree().change_scene_to_file.call_deferred("res://scenes/TantegelBasement.tscn")
 		_:
 			_check_encounter()
+
+const SWAMP_DAMAGE := 2
+
+## NES: every step in a poisonous swamp costs 2 HP unless Erdrick's Armor is worn, and the
+## swamps dry up once the Dragonlord falls. Returns true when the hero died to it.
+func _apply_swamp_damage() -> bool:
+	if _terrain.is_empty() or int(_terrain[_hero_tile.y][_hero_tile.x]) != 7:
+		return false
+	var gs = get_node_or_null("/root/GameState")
+	if not gs:
+		return false
+	if gs.armor == "erdricks_armor" or ("dragonlord_defeated" in gs and gs.dragonlord_defeated):
+		return false
+	var hp := int(gs.hero_stats.get("hp", 0))
+	if hp <= 0:
+		return false
+	gs.hero_stats["hp"] = maxi(0, hp - SWAMP_DAMAGE)
+	_play_sfx("res://assets/music/mp3/swamp.mp3")
+	_flash_hurt()
+	if int(gs.hero_stats["hp"]) <= 0:
+		_on_defeat()
+		return true
+	return false
+
+var _hurt_flash: ColorRect = null
+
+func _flash_hurt() -> void:
+	if not _hurt_flash:
+		_hurt_flash = ColorRect.new()
+		_hurt_flash.color = Color(1, 0, 0, 0)
+		_hurt_flash.size = Vector2(VW, VH)
+		_hurt_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_hurt_flash.z_index = 50
+		add_child(_hurt_flash)
+	_hurt_flash.color = Color(1, 0, 0, 0.45)
+	var tw := create_tween()
+	tw.tween_property(_hurt_flash, "color:a", 0.0, 0.25)
 
 func _check_encounter() -> void:
 	var gs = get_node_or_null("/root/GameState")
