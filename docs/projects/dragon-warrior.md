@@ -72,6 +72,10 @@ IPC web service (`GameControlServer.gd`, `/api/v1/state`) to read what is on scr
   `tests/e2e/reports/playthrough/playthrough.json` plus a screenshot per milestone. `--stepped` records one
   video per milestone (`videos/NN-<id>.mp4`) and saves a game checkpoint after each one, so `--only N` replays and
   re-records a single milestone from its checkpoint in seconds.
+- **Live dashboard** — stepped/recorded runs launch `tools/playthrough-dashboard` (Electron): a tray icon with a
+  progress ring and run summary menu, and a window showing live IPC game state with screenshots, the brain's event
+  log and the milestone list; every finished milestone becomes a clickable card that plays its video and shows the
+  checkpoint saved after it, so a two-hour run can be followed and reviewed milestone by milestone.
 - **Deadlock detection** — the brain's wall-clock progress watchdog (90 s without any change in
   milestone/battles/level/gold/position/herbs/HP) drops the current objective, blacklists unreachable shops and
   after three stalls on one milestone skips it or fails the run; the driver's `--stall-timeout` (10 min) ends a
