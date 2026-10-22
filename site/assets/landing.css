@@ -96,3 +96,22 @@
 /* the "your idea" suite card: a drawn prompt and graph instead of a screenshot */
 .suite-idea{display:flex;flex-direction:column;justify-content:center;gap:14px;padding:24px 28px;background:repeating-linear-gradient(0deg,transparent 0 23px,color-mix(in srgb,var(--line) 70%,transparent) 23px 24px),var(--bg2)}
 .suite-idea .prompt{min-height:0;font-size:.9rem;color:var(--muted)}
+
+/* hero: the three things you do with the suite */
+.l-three{list-style:none;margin:0 0 30px;padding:0;display:grid;gap:8px}
+.l-three li{padding-left:26px;position:relative;color:var(--muted)}
+.l-three li:before{content:'✓';position:absolute;left:0;color:var(--accent);font-weight:700}
+.l-three b{color:var(--fg)}
+/* hero: a mosaic of the suite's apps, with an empty tile for yours */
+.l-mosaic{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.l-mosaic a{position:relative;display:block;aspect-ratio:4/3;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg2);transition:border-color .2s,transform .2s}
+.l-mosaic a:hover{border-color:var(--accent);transform:translateY(-2px)}
+.l-mosaic img{width:100%;height:100%;object-fit:cover;object-position:top left;display:block}
+.l-mosaic span{position:absolute;left:0;right:0;bottom:0;padding:18px 10px 8px;font-size:.8rem;font-weight:600;color:#fff;background:linear-gradient(transparent,rgba(10,10,10,.82))}
+.l-mosaic-new a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-style:dashed;border-width:2px;color:var(--muted)}
+.l-mosaic-new b{font-size:2rem;line-height:1;color:var(--accent);font-weight:500}
+.l-mosaic-new span{position:static;background:none;color:var(--fg);padding:0}
+.landing #product .grid3 .card .go{display:inline-block}
+.l-ask{margin-top:28px;max-width:760px}
+#ai .l-show{margin-bottom:44px}
+@media(max-width:600px){.l-mosaic{grid-template-columns:repeat(2,minmax(0,1fr))}}

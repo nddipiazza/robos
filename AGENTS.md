@@ -2,17 +2,32 @@
 
 This file provides guidance to AI coding agents (Claude Code, OpenAI Codex, Google Antigravity, GitHub Copilot, Gemini CLI, Cursor, etc.) when working with code in this repository.
 
-# RobOS — AI-First SDLC Platform & Autonomous Agent Governance Harness
+# RobOS — App Suite You Can Customize and Build On (KGraph & Context Engineering)
 
-RobOS is the AI-First SDLC platform and autonomous agent governance harness engineered for Knowledge Graph-First (KGraph-First) Application Generation and Agent Review-Based Development. It equips developers and AI agents (Claude Code, Google Antigravity, GitHub Copilot, OpenAI Codex) with automated 1080p video proof-of-work, semantic blast-radius diffs, disposable in-memory sandboxes, and a 30+ native developer tool suite.
+RobOS is an app suite built on a knowledge graph (KGraph). Users do three things with it: **use** the ready-made suites (Point of Sale, Auto Center, Household, games, Audio Player, developer tools), **customize** any existing app by describing the change, and **build** new apps from context engineering principles: describe it, model it in the KGraph, let routed agents build it, and keep the proof (tests and a narrated walkthrough). Separately, actions inside the apps have optional AI-powered features; for example, the Audio Player can run a Virtual DJ or build an AI Playlist. The apps work fully without AI.
+
+The same platform carries the developer lifecycle that builds the suites: planning, agent implementation, Code Review Theater with recorded evidence, semantic blast-radius diffs, disposable sandboxes and IDE review. It works with the agents users already run (Claude Code, OpenAI Codex, GitHub Copilot, Gemini CLI / Google Antigravity) or with local Ollama models.
 
 ## Vision
 
-Every developer interaction — picking up a ticket, understanding a bug, reviewing a fix, shipping code — is governed and augmented by AI. RobOS eliminates blind trust in AI diffs through automated proof-of-work, prevents machine pollution through ephemeral sandboxes, and protects system architecture through Knowledge Graph blast-radius checks. Human engineers act as **Lead System Architects**, guiding the system and reviewing proof-of-work while agents carry out the grueling background labor.
+Software should bend to the person using it. Every RobOS app is a starting point: because each one is described in the KGraph, a change is a request rather than a rewrite. The request becomes an edit to the app's KGraph, an agent implements it on a branch, and tests plus a narrated walkthrough prove it before the user keeps it. New apps are built the same way. Because the context is written down once, building and rebuilding is cheap work that routed, lower-cost models can carry. Inside the apps, AI features are optional extras grounded in the user's data and the app's KGraph slice. Humans decide what they want and review the evidence; agents do the labor.
 
 ## Major Components
 
-### 1. Autonomous Agent Governance Harness & Sandboxes
+### 1. App Suites: Use, Customize, Build
+
+End-user suites, each modeled in the KGraph, built by agents and verified by browser or gameplay tests:
+- **Point of Sale**: retail, café and bar register with self-checkout, scanning, prep queues, tabs and an open checkout-session API.
+- **Auto Center**: repair-shop front desk, mechanic bench with Bluetooth OBD-II, estimates and checkout, plus owner vehicle care.
+- **Household**: statement imports, reconciliation, spending categories and a local tax estimate.
+- **Games**: Realm of Heroes cRPG, a HeroQuest-inspired Tabletop RPG and the Starfall Command RTS (`games/`).
+- **Audio Player & Home Speaker**: a large music library with lyrics and zero-cloud Google Cast streaming, plus optional AI features: **AI Playlists** (describe a mood, the agent picks and orders songs) and a **Virtual DJ** (the agent writes short song intros a few songs ahead, spoken with RobOS Voice).
+- **Developer suite**: planning, Code Review Theater, git, issues, databases, API clients and the KGraph tools (see App Suite below).
+- **App Wizard**: build a new app from a description or by importing existing repositories into the KGraph.
+
+Any of these apps can be customized by describing the change (KGraph edit → agent implementation → tests and walkthrough). AI features inside the apps are always optional (see **Optional AI in every app** under Conventions).
+
+### 2. Autonomous Agent Governance Harness & Sandboxes
 
 The core execution and verification fabric:
 - **Video Proof-of-Work Engine**: Autonomous headless execution in virtual framebuffers generating 1080p narrated video walkthroughs and Piper TTS audio.
@@ -21,7 +36,7 @@ The core execution and verification fabric:
 - **Bring-Your-Own Agent CLIs**: Users install and sign in to the coding-agent CLIs they already use (GitHub Copilot, Claude Code, Codex, Gemini CLI / Antigravity) and RobOS runs them directly. There is no router layer: task apps spawn their CLI, and one-shot requests go through `robos-lib/ai-agent` with the CLI set as active in RobOS Agents. An optional, off-by-default API mode (`robos-llm`, LangChain.js) can answer one-shot requests with Anthropic, OpenAI, Gemini or local Ollama instead.
 - **Zero-Data-Leak Prompt Security Guard (Gitleaks, TruffleHog, Presidio, OWASP LLM01)**: Built-in pre-flight prompt security engine protecting agents against sensitive data leakage, credentials exposure, PII violations, and prompt injections. Intercepts prompts at the UI `<robos-ai-textarea>`, in `robos-lib/ai-agent` (before any CLI or API call) and in `robos-llm`. Supports 5 policy modes (`redact`, `block`, `warn`, `audit-only`, `off`), Shannon entropy checks, Luhn checksums, and audit logging to `~/.config/robos/prompt-security-audit.json`.
 
-### 2. Optional Dedicated Appliance OS & Virtual Machine
+### 3. Optional Dedicated Appliance OS & Virtual Machine
 
 For teams requiring total physical isolation or air-gapped workstations, RobOS provides a turnkey Ubuntu 26.04 LTS OS image and QEMU/KVM virtual machine:
 
@@ -36,14 +51,14 @@ For teams requiring total physical isolation or air-gapped workstations, RobOS p
 - **Desktop Panels** — GNOME panel with RobOS app launchers and systray widgets
 - **Custom Desktop Widgets** — sprint status, PR health, calendar, blocker radar
 - **Background Tasks** — agent scheduler, toast daemon, clipboard sync, notification engine
-- **Suite of Apps** — 30+ Electron apps covering the full SDLC (see App Suite below)
+- **Suite of Apps** — the generative app suites and the developer apps (see App Suite below)
 
 **VM Specs:**
 - 16 GB RAM, all host CPUs, 100 GB sparse qcow2 disk
 - SSH (port 2224), VNC (port 5910), SPICE (port 5932)
 - Fully reproducible via cloud-init (stateless first-boot provisioning)
 
-### 2. RobOS IDE & PR Review Integration
+### 4. RobOS IDE & PR Review Integration
 
 RobOS seamlessly integrates with existing developer IDEs (IntelliJ IDEA, VS Code):
 
@@ -123,7 +138,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **RobOS cRPG Editor** | Unified cRPG game editor for campaign management, character sheets, party inventory, and 5-ft blockmap level design |
 | **Tabletop Blockmap Creator** | Visual calibration tool for dungeon board images: tile size, offset X/Y, static corridor draw tool, and room boundary authoring |
 | **Tabletop Quest Map Editor** | Layer 2 quest scenario designer on blockmaps: doors, monsters, furniture, traps, stairs, and playable cartridge export |
-| **RobOS Audio Player** | Open-source Howler.js audio player, procedural focus soundscapes, and zero-cloud Google Home / Cast smart speaker streaming |
+| **RobOS Audio Player** | Open-source Howler.js audio player with a 100,000-song library (local, Google Drive, OneDrive), AI Playlists, a Virtual DJ spoken with RobOS Voice, lyrics, procedural focus soundscapes, and zero-cloud Google Home / Cast smart speaker streaming |
 | **RobOS Home Speaker** | Smart speaker intercom, push-to-talk voice notes, neural TTS broadcast, custom audio streaming, and soundboard controller |
 | **RobOS Point of Sale** | Open-source cash register for retail, cafés and bars: touchscreen worker order entry, self-checkout kiosk, inventory and menu input, cash drawer administration, tabs/tips/split payments, prep queue, and an open checkout-session API. Barcode and QR scanning by gun or webcam. Sample businesses: retail store, coffee shop, bar (`packages/point-of-sale`) |
 | **GNOME Desktop App Installer** | Install, manage, and repair GNOME Desktop shortcuts (`~/Desktop`), App Grid `.desktop` launchers, multi-scale hicolor icons, and GNOME Dock favorites for all RobOS apps |
@@ -252,6 +267,7 @@ See [plugins/README.md](plugins/README.md) for full installation and usage instr
 - **Icons**: 48×48 SVG, Lucide style, `stroke="#00bcd4"`, `stroke-width="1.5"`, `stroke-linecap="round"`, `stroke-linejoin="round"`
 - **Documentation Diagrams & Visuals**: When creating RobOS documentation diagrams, always generate and include Gemini 3.8 AI-generated images/illustrations alongside Mermaid syntax. Diagrams must be very professional, developer-friendly, clean, functional, and extremely easy to read (no chaotic AI "wow bling" or cluttered decorative fluff; focus on crisp, structured technical architecture, clear flow schematics, and legible labels).
 - **Docs site (`docs/`, published to rowbose.com)**: Every app has its own page in `docs/_apps/` (run `node scripts/sync-app-docs.js` after adding an app). Don't state totals of things that grow — write "the app suite", not "30+ apps"; "the Big Wins", not "21 Big Wins"; "SHACL shapes", not "98 SHACL shapes". Counts go stale and contradict each other across pages. The `/future` page and whitepaper live in `site/future/` and are rebuilt with `scripts/build-future-whitepaper.sh` (see `site/README.md`); the old `/v1/future.html` and `/v1/whitepaper-turing-skills.html` pages are deleted, and the front site's `future.html` and `whitepaper-turing-skills.html` forward the legacy root URLs to the new pages (so they never route through `/v1/`).
+- **Optional AI in every app**: AI features are opt-in additions, never requirements. An app must stay fully usable with no agent configured. Put AI behind an explicit action (a `<robos-ai-textarea>` with an adjacent `✦` button that starts disabled), let the user pick the agent with the shared `<robos-agent-selector>` (`packages/robos-lib/agent-selector.js`), send one-shot requests through `robos-lib/ai-agent` (which applies the Prompt Security Guard), and ground the prompt in the app's own data and KGraph slice rather than generic text. Never make a feature depend on the opt-in API mode. Audio Player's AI Playlists and Virtual DJ are the reference implementation.
 - **Logging**: `pino` JSON logging
 - **Walkthrough Archives**: All text-narrated demo recordings, WebVTT captions, and step-by-step markdown summaries are automatically archived to `~/.robos/development/walkthroughs/<slug>/` (with timestamped historical snapshots under `history/<timestamp>/`).
 
