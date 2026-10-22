@@ -297,6 +297,8 @@ func _handle_post_command(client: StreamPeerTCP, body: Dictionary) -> void:
 				if spell_name == "radiant":
 					if "_radiant_steps_left" in scene:
 						scene._radiant_steps_left = 200
+					if scene.has_method("_sync_light_state"):
+						scene.call("_sync_light_state")
 					if scene.has_method("_update_darkness_mask"):
 						scene.call("_update_darkness_mask")
 				_send_http_response(client, 200, {"success": true, "message": "Spell %s cast." % spell_name})

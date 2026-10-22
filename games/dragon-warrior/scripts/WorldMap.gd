@@ -138,10 +138,11 @@ func _ready() -> void:
 		_hero_gold = gs.gold
 		_opened_chests = gs.opened_chests.duplicate(true)
 		_bridge_built = gs.bridge_built
-		# Stepping outside puts the torch out and ends RADIANT.
+		# Stepping outside puts the torch out. RADIANT is a step counter on the
+		# NES and keeps ticking out here (see the move handler), so a hero who
+		# lit the Swamp Cave and walks on to the next cave is still lit.
 		if "torch_active" in gs:
 			gs.torch_active = false
-			gs.radiant_steps_left = 0
 		if gs.come_from != "" or gs.spawn_tile != spawn_tile:
 			_hero_tile = gs.spawn_tile
 			_hero_facing = _facing_to_vec(gs.spawn_facing)
@@ -300,6 +301,8 @@ func _process(delta: float) -> void:
 			var gs_regen = get_node_or_null("/root/GameState")
 			if gs_regen and gs_regen.has_method("apply_step_regen"):
 				gs_regen.apply_step_regen()
+			if gs_regen and "radiant_steps_left" in gs_regen and int(gs_regen.radiant_steps_left) > 0:
+				gs_regen.radiant_steps_left = int(gs_regen.radiant_steps_left) - 1
 			_check_map_trigger()
 	elif not _dialog_active and not _menu_open and not _status_open and not _item_open:
 		_poll_move_input()

@@ -718,15 +718,15 @@ func _get_current_light_radius() -> int:
 
 func _build_darkness_overlay() -> void:
 	var gs := get_node_or_null("/root/GameState")
-	if not _is_dark():
-		# Leaving the dungeon puts the torch out and ends RADIANT.
-		if gs and "torch_active" in gs:
-			gs.torch_active = false
-			gs.radiant_steps_left = 0
-		return
 	if gs and "torch_active" in gs:
 		_torch_active = bool(gs.torch_active)
 		_radiant_steps_left = int(gs.radiant_steps_left)
+	if not _is_dark():
+		# Lit floors (Garinham town above its cave, Charlock 1F above its
+		# basements) need no overlay, but the light must survive the detour:
+		# RADIANT keeps counting steps and the torch stays lit, exactly as on
+		# the NES, so the hero is not blind when the stairs lead back down.
+		return
 	_darkness_layer = CanvasLayer.new()
 	_darkness_layer.name = "DarknessLayer"
 	_darkness_layer.layer = 8
@@ -1643,12 +1643,19 @@ func _cmd_spell() -> void:
 	var hp := int(gs.hero_stats.get("hp", 0))
 	var hp_max := int(gs.hero_stats.get("hp_max", 1))
 	var missing := hp_max - hp
-	# Field casting picks the most useful spell: RADIANT when blind in a cave,
+	# Field casting picks the most useful spell: RADIANT when blind in a cave
+	# (or when the light is down to a torch's glow and HP is healthy),
 	# HEALMORE / HEAL when wounded, otherwise RADIANT to refresh a fading light.
-	var blind: bool = _is_dark() and _get_current_light_radius() <= 0
-	if blind and gs.has_spell("radiant") and mp >= 3 and missing < hp_max / 2:
-		_cast_radiant(gs, mp)
-		return
+	var radius := _get_current_light_radius()
+	var blind: bool = _is_dark() and radius <= 0
+	var dim: bool = _is_dark() and radius <= 1
+	if gs.has_spell("radiant") and mp >= 3:
+		if blind and missing < hp_max / 2:
+			_cast_radiant(gs, mp)
+			return
+		if dim and missing < hp_max / 4:
+			_cast_radiant(gs, mp)
+			return
 	if missing > 0:
 		if gs.has_spell("healmore") and mp >= 10 and missing > 30:
 			gs.hero_stats["mp"] = mp - 10
