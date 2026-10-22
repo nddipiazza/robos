@@ -28,6 +28,8 @@ test('native builds include the ready suite and produce distinct portable and NS
   assert.equal(config.extraResources[0].from, suite);
   assert.ok(config.extraResources[0].filter.includes('packages/**/*'));
   assert.ok(config.extraResources[0].filter.includes('runtime/**/*'));
+  assert.ok(config.extraResources[0].filter.includes('!packages/robos-test/run{,/**}'));
+  assert.ok(config.extraResources[0].filter.includes('!games/tabletop-rpg/run.sh'));
   assert.ok(!config.extraResources[0].filter.includes('tools/**/*'));
   assert.match(fs.readFileSync(path.join(config.directories.app, 'windows/main.cjs'), 'utf8'), /process.resourcesPath/);
   fs.writeFileSync(report, JSON.stringify({ failures: [{ id: 'failed-app' }] }));
