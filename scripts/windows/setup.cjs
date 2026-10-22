@@ -32,7 +32,7 @@ function setup(source, target) {
   }
   fs.cpSync(path.join(source, 'scripts/windows'), path.join(target, 'windows'), { recursive: true });
   fs.copyFileSync(path.join(source, 'site/assets/logo-mark.png'), path.join(target, 'windows/logo.png'));
-  fs.copyFileSync(path.join(source, 'docs/assets/images/favicon.ico'), path.join(target, 'windows/robos.ico'));
+  fs.copyFileSync(path.join(source, 'scripts/windows/robos.ico'), path.join(target, 'windows/robos.ico'));
   fs.copyFileSync(path.join(source, 'docs/assets/images/logo-sidebar.png'), path.join(target, 'windows/wordmark.png'));
   const npm = path.join(target, 'runtime/node_modules/npm/bin/npm-cli.js');
   const node = path.join(target, 'runtime/node.exe');

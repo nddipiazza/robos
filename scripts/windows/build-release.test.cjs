@@ -22,6 +22,9 @@ test('native builds include the ready suite and produce distinct portable and NS
   assert.equal(config.nsis.perMachine, false);
   assert.equal(config.nsis.allowToChangeInstallationDirectory, true);
   assert.equal(config.nsis.deleteAppDataOnUninstall, false);
+  const icon = fs.readFileSync(config.win.icon);
+  const entries = icon.readUInt16LE(4);
+  assert.ok(Array.from({ length: entries }, (_, i) => i).some(i => icon[6 + i * 16] === 0 && icon[7 + i * 16] === 0), 'Windows EXE icon needs a 256px image');
   assert.equal(config.extraResources[0].from, suite);
   assert.ok(config.extraResources[0].filter.includes('packages/**/*'));
   assert.ok(config.extraResources[0].filter.includes('runtime/**/*'));

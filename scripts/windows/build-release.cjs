@@ -30,7 +30,7 @@ function configuration(suite, output) {
       '!**/node_modules/.cache/**', '!**/node_modules/electron/**', '!**/node_modules/playwright-core/**',
     ] }],
     win: { target: [{ target: 'portable', arch: ['x64'] }, { target: 'nsis', arch: ['x64'] }],
-      icon: path.join(repo, 'docs/assets/images/favicon.ico'), executableName: 'RobOS' },
+      icon: path.join(repo, 'scripts/windows/robos.ico'), executableName: 'RobOS' },
     portable: { artifactName: 'RobOS-v${version}-Windows-Portable.${ext}', requestExecutionLevel: 'user' },
     nsis: { artifactName: 'RobOS-v${version}-Windows-Setup.${ext}', oneClick: false, perMachine: false,
       allowElevation: false, allowToChangeInstallationDirectory: true, createDesktopShortcut: true,
