@@ -18,6 +18,8 @@ process.env.ROBOS_LIB_PATH = path.join(root, 'packages/robos-lib');
 process.env.ROBOS_APP_BASE = path.join(root, 'packages');
 process.env.ROBOS_WINDOWS_HOST = __dirname;
 if (process.platform === 'win32') {
+  // Software Center's private npm prefix and WinGet portable command aliases.
+  require(path.join(root, 'packages/robos-lib/windows-path')).refreshWindowsPath(root);
   process.env.ROBOS_DM_SOCKET ||= require(path.join(root, 'packages/robos-lib/local-ipc-path')).localIpcPath('desktop-manager');
 }
 // Older apps use the appliance's shared-library prefix. Resolve it inside this installation.

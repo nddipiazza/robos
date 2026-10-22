@@ -9,6 +9,50 @@ permissions:
   contents: write
 
 jobs:
+  release-windows-apps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify Windows setup
+        run: node --test scripts/windows/setup.test.cjs scripts/windows/compatibility.test.cjs packages/software-center/windows-tools.test.js
+      - name: Prepare native Windows setup
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          mkdir -p native-windows
+          python3 - <<'PY'
+          import os, pathlib
+          tag = os.environ['RELEASE_TAG']
+          assert tag == 'v' + pathlib.Path('VERSION').read_text().strip()
+          source = pathlib.Path('site/downloads/Install-RobOS.ps1').read_text()
+          pathlib.Path('native-windows/Install-RobOS.ps1').write_text(source.replace("$SourceRef = 'main'", "$SourceRef = '" + tag + "'"))
+          launcher = pathlib.Path('site/downloads/Install-RobOS.cmd').read_text()
+          launcher = launcher.replace('https://rowbose.com/downloads/Install-RobOS.ps1', f'https://github.com/nddipiazza/robos/releases/download/{tag}/Install-RobOS.ps1')
+          pathlib.Path('native-windows/Install-RobOS.cmd').write_bytes(launcher.replace('\n', '\r\n').encode())
+          PY
+          cd native-windows
+          sha256sum Install-RobOS.* > WINDOWS-SHA256SUMS
+      - name: Publish native Windows setup
+        uses: softprops/action-gh-release@v2
+        with:
+          name: RobOS ${{ github.ref_name }}
+          generate_release_notes: true
+          body: |
+            ## Install RobOS on Windows
+            Download **Install-RobOS.cmd** and run it to install the native app suite in your user RobOS folder. No USB drive or Linux installation is required. This installer uses this release's source tag.
+
+            Software Center now uses native Windows packages and npm: install, update, uninstall, installed-state checks, and portable command shortcuts. Godot 4 and FFmpeg are included in its catalog. Linux-only tools are clearly identified.
+
+            Validation: Windows setup and compatibility tests, Software Center regression tests, live Godot/FFmpeg/Codex installs, and a jq install/uninstall cycle. The complete Windows catalog was checked against WinGet and npm. The Dragon Warrior startup scenario passed; the full gameplay suite was started separately.
+
+            **Optional Linux GNOME distro:** the RobOS-Installer executable and Linux ISO/VM assets are for installing the Linux distro. Those larger artifacts are added by the separate image build jobs when ready.
+          files: |
+            native-windows/Install-RobOS.cmd
+            native-windows/Install-RobOS.ps1
+            native-windows/WINDOWS-SHA256SUMS
   test:
     runs-on: ubuntu-latest
     steps:
@@ -188,7 +232,9 @@ jobs:
             echo ""
             echo "### Install RobOS"
             echo ""
-            echo "**Easiest: Use the RobOS Installer app** (recommended)"
+            echo "**Windows native apps:** download Install-RobOS.cmd and run it. This installs the app suite in your RobOS folder without a USB drive or Linux."
+            echo ""
+            echo "**Optional: Install the RobOS Linux GNOME distro using the USB flasher**"
             echo ""
             echo "Download the installer for your OS, run it, select your USB drive, and click Flash:"
             echo ""
@@ -196,7 +242,7 @@ jobs:
             echo "|:---|:---------|"
             echo "| Linux | \`RobOS-Installer-v${VERSION}-linux.AppImage\` or \`.deb\` |"
             echo "| macOS | \`RobOS-Installer-v${VERSION}-mac.dmg\` |"
-            echo "| Windows | \`RobOS-Installer-v${VERSION}-win.exe\` |"
+            echo "| Windows USB flasher (Linux distro) | \`RobOS-Installer-v${VERSION}-win.exe\` |"
             echo ""
             echo "**Alternative: Flash the ISO manually**"
             echo ""

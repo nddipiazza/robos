@@ -1,6 +1,10 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const { spawn, execSync } = require('child_process');
+const { WindowsTools } = require('./windows-tools');
+const windowsTools = process.platform === 'win32' ? new WindowsTools({
+  root: process.env.ROBOS_APP_BASE ? path.dirname(process.env.ROBOS_APP_BASE) : undefined,
+}) : null;
 
 app.commandLine.appendSwitch('no-sandbox');
 app.commandLine.appendSwitch('disable-gpu');
@@ -375,11 +379,12 @@ function checkInstalled(tool) {
   }
 }
 
-function getToolsWithStatus() {
-  return TOOLS.map(t => ({
+async function getToolsWithStatus(force = false) {
+  const tools = windowsTools ? await windowsTools.status(TOOLS, force) : TOOLS.map(t => ({ ...t, installed: checkInstalled(t), supported: true }));
+  return tools.map(t => ({
     ...t,
-    installed: checkInstalled(t),
     installing: !!installLogs[t.id]?.installing,
+    action: installLogs[t.id]?.action,
   }));
 }
 
@@ -414,6 +419,7 @@ function makeSudoCmd(cmd) {
 }
 
 function runInstall(tool, action) {
+  if (installLogs[tool.id]?.installing) throw new Error('This installer is already running.');
   const cmd = action === 'uninstall' ? tool.uninstallCmd : tool.installCmd;
   const src = tool.source ? ` from ${tool.source}` : '';
   const label = action === 'uninstall'
@@ -429,6 +435,11 @@ function runInstall(tool, action) {
 
   const fullCmd = makeSudoCmd(cmd);
   const proc = spawn('bash', ['-c', fullCmd], { env: { ...process.env, DEBIAN_FRONTEND: 'noninteractive' } });
+  proc.on('error', error => {
+    installLogs[tool.id].log += `\n${error.message}\n`;
+    installLogs[tool.id].installing = false;
+    mainWindow?.webContents.send('install-progress', { toolId: tool.id, text: `${error.message}\n`, done: true, success: false, action });
+  });
 
   proc.stdout.on('data', (data) => {
     const text = data.toString();
@@ -471,6 +482,30 @@ function runInstall(tool, action) {
   });
 }
 
+async function requestInstall(toolId, action) {
+  const tool = (await getToolsWithStatus()).find(t => t.id === toolId);
+  if (!tool) return { error: 'Unknown software package.' };
+  if (tool.installing) return { error: 'This installer is already running.' };
+  if (!windowsTools) { runInstall(tool, action); return { started: true }; }
+  if (!tool.supported) return { error: tool.unavailableReason };
+  if (windowsTools.busy) return { error: 'Another installer is running. Wait for it to finish, then retry.' };
+  const state = installLogs[tool.id] = { installing: true, log: '', action };
+  const emit = (text, extra = {}) => {
+    state.log += text;
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('install-progress', { toolId, text, action, done: false, ...extra });
+  };
+  emit(`${action === 'install' ? 'Installing' : 'Uninstalling'} ${tool.name}…\n`);
+  // Return immediately so the renderer remains usable while progress streams.
+  windowsTools.perform(tool, action, emit).then(() => {
+    state.installing = false;
+    emit(`\n${action === 'install' ? 'Install' : 'Uninstall'} completed and verified.\n`, { done: true, success: true });
+  }).catch(error => {
+    state.installing = false;
+    emit(`\n${error.message}\n`, { done: true, success: false });
+  });
+  return { started: true };
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 900,
@@ -488,15 +523,10 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  ipcMain.handle('get-tools', () => getToolsWithStatus());
-  ipcMain.handle('install-tool', (_e, toolId) => {
-    const tool = TOOLS.find(t => t.id === toolId);
-    if (tool) runInstall(tool, 'install');
-  });
-  ipcMain.handle('uninstall-tool', (_e, toolId) => {
-    const tool = TOOLS.find(t => t.id === toolId);
-    if (tool) runInstall(tool, 'uninstall');
-  });
+  ipcMain.handle('get-tools', (_e, force) => getToolsWithStatus(force === true));
+  ipcMain.handle('install-tool', (_e, toolId) => requestInstall(toolId, 'install'));
+  ipcMain.handle('uninstall-tool', (_e, toolId) => requestInstall(toolId, 'uninstall'));
+  ipcMain.handle('manage-windows-software', () => process.platform === 'win32' && shell.openExternal('ms-settings:appsfeatures'));
   ipcMain.handle('get-install-log', (_e, toolId) => {
     return installLogs[toolId]?.log || '';
   });
