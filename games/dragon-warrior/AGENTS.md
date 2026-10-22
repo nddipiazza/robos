@@ -117,15 +117,26 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   `screenshots/stall.png` and the AI log tail when done/battles/level/gold/exp stop changing.
 - Dark caves: the brain never walks blind. It stocks torches at item shops (two before RADIANT, one spare after,
   only while dark maps are among the upcoming milestones; `_torch_target`), lights a torch or casts RADIANT as soon
-  as `light_status.light_radius` is 0 and refreshes a fading RADIANT while HP is full (`_decide_survival`, "light"
-  log events). Game side, torch/RADIANT state lives in `GameState.torch_active` / `radiant_steps_left` so stairs
-  between floors keep the light (it ends on the overworld), the field SPELL command casts RADIANT before HEAL when
-  blind, and checkpoints carry `torchActive` / `radiantStepsLeft`.
+  as `light_status.light_radius` is 0 and refreshes a fading RADIANT (radius 1, at most 50 steps left) while HP
+  is above three quarters (`_decide_survival`, "light" log events). Game side, torch/RADIANT state lives in
+  `GameState.torch_active` / `radiant_steps_left`: RADIANT is a step counter as on the NES, so it survives stairs
+  through lit floors (Garinham town above its cave, Charlock 1F above its basements) and keeps ticking on the
+  overworld, while the torch goes out when the hero steps outside. The field SPELL command casts RADIANT before
+  HEAL when blind (HP above half) or when the light is dim (HP above three quarters), and checkpoints carry
+  `torchActive` / `radiantStepsLeft`.
 - Adaptive grinding: grind zones come from `_zone_tier_for_level(_grind_level())` where `_grind_level` is the hero
   level minus two per recent death (`_grind_tier_penalty`) plus two per promotion (`_grind_tier_boost`). The brain
-  keeps a six-battle window of HP lost per grind battle (`_record_grind_damage`, heals counted as damage); when the
-  average is at most 8% of max HP and the next tier's worst hit times three fits in max HP it moves up a tier
-  ("barely scratched" grind log event), at 35% or more it steps back down, and a death resets the boost.
+  keeps a six-battle window of HP lost per grind battle (`_record_grind_damage`, heals counted as damage); only
+  battles fought in the grind cell's own zone count (`_battle_zone`), so fights met while still walking there
+  through easier zones cannot promote the tier twice in a row. When the average is at most 8% of max HP and the
+  next tier's worst hit times four fits in max HP it moves up a tier ("barely scratched" grind log event), at 35%
+  or more it steps back down, and a death resets the boost.
+  The grind cell itself (`_pick_grind_cell`) is chosen by planner walking distance from where the hero stands
+  (plus half the distance to the nearest inn) and is only kept while the hero is within ~24 tiles of it or no other
+  cell is more than 20 tiles closer; death clears it. When the nearest cell of the tier is more than
+  `GRIND_FAR_WALK` (80) tiles away, nearer cells of the tier above (if its worst hit times four fits in max HP) or
+  the tier below (40-tile handicap) are allowed, so a Tantegel respawn grinds nearby instead of trekking back
+  across the Swamp Cave to a cell it picked on another continent.
 - Battle policy vs hard hitters (Starwyvern & co.): SLEEP on a monster that may resist it is only tried while two
   more hits cannot kill the hero; otherwise the brain heals or runs. HEALMORE counts as sustain (`winnable_with_heals`
   in `_decide_battle`: n casts must keep HP above the damage taken over `turns_to_kill + 2n` turns) and is always

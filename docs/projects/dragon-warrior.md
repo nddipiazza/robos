@@ -81,11 +81,17 @@ IPC web service (`GameControlServer.gd`, `/api/v1/state`) to read what is on scr
   after three stalls on one milestone skips it or fails the run; the driver's `--stall-timeout` (10 min) ends a
   run that has stopped making progress with a `stalled` status, a screenshot and the AI event-log tail.
 - **Light in the caves** — the brain buys torches before every dark dungeon while RADIANT is unknown (and keeps a
-  spare afterwards), lights up the moment the IPC `light_status` reports no light, and refreshes a fading RADIANT;
-  the game keeps torch and RADIANT alive across stairs and casts RADIANT ahead of HEAL when the hero is blind.
+  spare afterwards), lights up the moment the IPC `light_status` reports no light, and re-casts RADIANT as soon
+  as it fades to a torch's glow; the game treats RADIANT as a step counter like the NES did, so it survives stairs
+  through lit floors and the walk between caves, and the field SPELL command casts RADIANT ahead of HEAL when the
+  hero is blind or the light is dim.
 - **Aggressive grinding** — the brain watches how much HP the last six grind battles cost; when monsters barely
-  scratch the hero it moves up to the next zone tier (as long as the worst hit there is survivable three times
-  over), steps back down when fights get expensive, and drops the boost after a death.
+  scratch the hero it moves up to the next zone tier (as long as the worst hit there is survivable four times
+  over), steps back down when fights get expensive, and drops the boost after a death. Only fights inside the
+  chosen grind zone count, so random battles on the way there can no longer trigger a promotion. Grind spots are
+  picked by walking distance from wherever the hero is — falling back to a nearer zone one tier up or down when
+  the usual zone is a long trek away — so a death, an inn stop or a milestone on another continent no longer sends
+  it trekking back through the Swamp Cave to the old spot.
 - **Surviving hard hitters** — against Starwyverns and other monsters that can take a third of the hero's HP per
   turn, the brain no longer gambles on a resistible SLEEP at low HP; it casts HEALMORE when that keeps it ahead of
   the damage and runs when it cannot.

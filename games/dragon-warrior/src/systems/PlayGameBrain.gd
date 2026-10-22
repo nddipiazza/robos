@@ -871,9 +871,11 @@ func _decide_survival(state: Dictionary) -> Dictionary:
 			if radiant_ok:
 				_light_fail_ticks = 20
 				return _open_command("SPELL")
-		elif radius <= 1 and radiant_ok and hp == hp_max and mp >= 8 and not conserving \
+		elif radius <= 1 and radiant_ok and hp_max - hp < hp_max / 4 and mp >= 6 and not conserving \
 				and int(light.get("radiant_steps_left", 0)) <= 50:
-			# Fading RADIANT (or a dim torch): refresh while HP is full so SPELL does not heal instead.
+			# Fading RADIANT (or a dim torch): the field SPELL command casts RADIANT
+			# rather than HEAL while the light is dim and HP is above three quarters,
+			# so refresh now instead of waiting to go blind.
 			_light_fail_ticks = 20
 			_log_event("light", "refreshing RADIANT in %s" % _cur_map(state))
 			return _open_command("SPELL")
