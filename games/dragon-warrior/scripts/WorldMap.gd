@@ -70,7 +70,7 @@ const FR_RIGHT := [Rect2(120, 0, 16, 16), Rect2(140, 0, 16, 16)]
 
 const BLOCKED_TERRAIN := {0: true, 6: true, 9: true}  # water, mountain, wall
 const TERRAIN_RATE_KEY := {
-	0: "none", 1: "forest", 2: "forest",
+	0: "none", 1: "forest", 2: "none",
 	3: "grass", 4: "plains", 5: "desert",
 	6: "none", 7: "swamp", 8: "hills", 9: "none"
 }
@@ -816,7 +816,7 @@ func _update_debug_overlay() -> void:
 			# Terrain label
 			lbl.position = screen_pos + Vector2(2, 2)
 			var tid := int(_terrain[wr][wc]) if not _terrain.is_empty() else -1
-			const TNAMES := ["~", "Fk", "Fm", "Gr", "Pl", "De", "Mt", "Sw", "Hi"]
+			const TNAMES := ["~", "Fk", "Br", "Gr", "Pl", "De", "Mt", "Sw", "Hi", "Wa"]
 			var tname: String = TNAMES[tid] if tid >= 0 and tid < TNAMES.size() else "?"
 			var tlbl := _transition_label(tile)
 			lbl.text = "%s,%s\n%s%s" % [_fmt(wc), _fmt(wr), tname, (" [" + tlbl + "]") if tlbl != "" else ""]
