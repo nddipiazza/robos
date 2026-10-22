@@ -46,7 +46,7 @@ from game_steps import (  # noqa: E402
 REPORTS_DIR = os.environ.get(
     "REPORTS_DIR", os.path.join(PROJECT_DIR, "tests", "e2e", "reports", "playthrough")
 )
-WORLD_BLOCKED_TERRAIN = {0, 6}  # water, mountain (mirrors WorldMap.BLOCKED_TERRAIN)
+WORLD_BLOCKED_TERRAIN = {0, 6, 9}  # water, mountain, wall (mirrors WorldMap.BLOCKED_TERRAIN)
 # Window = 2x the 512x480 game viewport plus the play-game HUD band the engine adds
 # below it (PlayGameHUD.BAND_H viewport px); the capture must cover both.
 HUD_BAND_H = 88

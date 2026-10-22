@@ -20,7 +20,7 @@ extends RefCounted
 
 const WORLD_KEY := "world-map"
 const BRIDGE_TILE := Vector2i(66, 51)
-const BLOCKED_WORLD_TERRAIN := [0, 6]
+const BLOCKED_WORLD_TERRAIN := [0, 6, 9]  # water, mountain, wall
 ## Cost of one scene transition (stairs / warp) relative to walking one tile.
 const TRANSITION_COST := 12
 const TOWN_MAPS := ["brecconary-1f", "garinham-1f", "kol-1f", "rimuldar-1f", "cantlin-1f", "hauksness-1f"]

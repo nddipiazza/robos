@@ -24,6 +24,7 @@ const GARINHAM       := Vector2i(4,   4)    # Garinham town
 const KOL            := Vector2i(106, 12)   # Kol town
 const RIMULDAR       := Vector2i(104, 74)   # Rimuldar town
 const CANTLIN        := Vector2i(75,  104)  # Cantlin town
+const CANTLIN_GATE   := Vector2i(75,  102)  # grass gap in Cantlin's wall ring; the Golem waits here
 const HAUKSNESS      := Vector2i(27,  91)   # Hauksness ruins
 const CHARLOCK       := Vector2i(50,  50)   # Charlock Castle entrance
 const ERDRICK_CAVE   := Vector2i(30,  14)   # Erdrick's Cave entrance
@@ -67,11 +68,11 @@ const FR_LEFT  := [Rect2( 40, 0, 16, 16), Rect2( 60, 0, 16, 16)]
 const FR_UP    := [Rect2( 80, 0, 16, 16), Rect2(100, 0, 16, 16)]
 const FR_RIGHT := [Rect2(120, 0, 16, 16), Rect2(140, 0, 16, 16)]
 
-const BLOCKED_TERRAIN := {0: true, 6: true}
+const BLOCKED_TERRAIN := {0: true, 6: true, 9: true}  # water, mountain, wall
 const TERRAIN_RATE_KEY := {
 	0: "none", 1: "forest", 2: "forest",
 	3: "grass", 4: "plains", 5: "desert",
-	6: "none", 7: "swamp", 8: "hills"
+	6: "none", 7: "swamp", 8: "hills", 9: "none"
 }
 const BATTLE_SCENE := "res://scenes/BattleOverlay.tscn"
 
@@ -388,11 +389,16 @@ func _check_map_trigger() -> void:
 			var s = _spawn_for("rimuldar-1f", RIMULDAR_SPAWN, "right")
 			_save_state(s[0], s[1], "world_map")
 			get_tree().change_scene_to_file.call_deferred("res://scenes/Rimuldar.tscn")
+		CANTLIN_GATE:
+			# Cantlin is walled; this grass tile is the only way in and the Golem
+			# guards it until it is destroyed once.
+			if _golem_guards_gate():
+				_golem_gate_battle()
+				return
+			_check_encounter()
 		CANTLIN:
-			# NES: the Golem guards Cantlin's gate until it is destroyed once.
-			var gs_g = get_node_or_null("/root/GameState")
-			if gs_g and "golem_defeated" in gs_g and not gs_g.golem_defeated \
-					and not ("dragonlord_defeated" in gs_g and gs_g.dragonlord_defeated):
+			# Fallback for saves placed inside the wall before the Golem fell.
+			if _golem_guards_gate():
 				_golem_gate_battle()
 				return
 			var s = _spawn_for("cantlin-1f", CANTLIN_SPAWN, "down")
@@ -470,29 +476,46 @@ func _check_encounter() -> void:
 
 ## Cantlin's gatekeeper. Winning opens the town for good; fleeing (or dying)
 ## leaves the hero on the gate tile so stepping on it again re-triggers the fight.
+func _golem_guards_gate() -> bool:
+	var gs = get_node_or_null("/root/GameState")
+	if not gs or not ("golem_defeated" in gs) or gs.golem_defeated:
+		return false
+	return not ("dragonlord_defeated" in gs and gs.dragonlord_defeated)
+
 func _golem_gate_battle() -> void:
 	var mon := _get_monster("golem")
 	if mon.is_empty():
 		mon = {"name": "Golem", "hp_min": 70, "hp_max": 70, "strength": 120, "agility": 60, "is_boss": true}
 	_golem_gate_pending = true
+	_golem_gate_from = Vector2i(posmod(_hero_tile.x - _hero_facing.x, MAP_TILES), posmod(_hero_tile.y - _hero_facing.y, MAP_TILES))
 	_start_battle("golem", mon)
 
 var _golem_gate_pending := false
+var _golem_gate_from := Vector2i(-1, -1)
 
 func _on_golem_gate_result(result: String) -> void:
 	if not _golem_gate_pending:
 		return
 	_golem_gate_pending = false
 	if result != "won":
+		# Fled: the Golem shoves the hero back off the gate tile.
+		if _golem_gate_from.x >= 0 and _is_walkable(_golem_gate_from) and _hero_tile == CANTLIN_GATE:
+			_hero_tile = _golem_gate_from
+			_cam_world = _tile_center(_hero_tile)
+			_cam_from = _cam_world
+			_cam_to = _cam_world
 		return
 	var gs = get_node_or_null("/root/GameState")
 	if gs and "golem_defeated" in gs:
 		gs.golem_defeated = true
-	_show_dialog("", ["The Golem crumbles to dust.\nThe gate of Cantlin\nstands open."], func():
-		var s = _spawn_for("cantlin-1f", CANTLIN_SPAWN, "down")
-		_save_state(s[0], s[1], "world_map")
-		get_tree().change_scene_to_file.call_deferred("res://scenes/Cantlin.tscn")
-	)
+	if _hero_tile == CANTLIN:
+		_show_dialog("", ["The Golem crumbles to dust.\nThe gate of Cantlin\nstands open."], func():
+			var s = _spawn_for("cantlin-1f", CANTLIN_SPAWN, "down")
+			_save_state(s[0], s[1], "world_map")
+			get_tree().change_scene_to_file.call_deferred("res://scenes/Cantlin.tscn")
+		)
+	else:
+		_show_dialog("", ["The Golem crumbles to dust.\nThe gate of Cantlin\nstands open."])
 
 func _get_monster(key: String) -> Dictionary:
 	for m in _monsters_db:
