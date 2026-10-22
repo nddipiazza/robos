@@ -237,6 +237,10 @@ chest_milestone("northern-cave-b1", "nc1c1", P, min_level=15)
 # kill a level-16 hero outright: wait for level 17 like the NES guides advise.
 add("search-erdricks-token", "Dig up Erdrick's Token", P, "search", "world-map", (85, 114),
     {"kind": "has_item", "item_id": "erdricks_token"}, min_level=17, item_id="erdricks_token")
+# The Golem guards Cantlin's gate: stepping on the town tile starts the fight and the
+# Fairy Flute (dug up in Kol) puts it to sleep. Winning once opens the town for good.
+add("defeat-golem", "Destroy the Golem at Cantlin's gate", P, "step", "world-map", (75, 104),
+    {"kind": "flag", "flag": "golem_defeated"}, min_level=17)
 for cid in ("ctnc1", "ctnc2", "ctnc3"):
     chest_milestone("cantlin-1f", cid, P, min_level=17)
 buy_milestone("can002", "silver_shield", P, min_level=17)

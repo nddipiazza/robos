@@ -602,6 +602,7 @@ func get_full_scene_state() -> Dictionary:
 			"gwaelin_rescued": gs_node.get("gwaelin_rescued") if "gwaelin_rescued" in gs_node else false,
 			"gwaelin_returned": gs_node.get("gwaelin_returned") if "gwaelin_returned" in gs_node else false,
 			"dragonlord_defeated": gs_node.get("dragonlord_defeated") if "dragonlord_defeated" in gs_node else false,
+			"golem_defeated": gs_node.get("golem_defeated") if "golem_defeated" in gs_node else false,
 			"game_completed": gs_node.get("game_completed") if "game_completed" in gs_node else false,
 			"spells": gs_node.get("spells") if "spells" in gs_node else [],
 			"opened_chests": gs_node.get("opened_chests") if "opened_chests" in gs_node else {},

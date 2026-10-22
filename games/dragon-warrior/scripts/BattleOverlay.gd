@@ -773,8 +773,32 @@ func _after_enemy_act() -> void:
 		_show_menu()
 
 
+func _has_fairy_flute() -> bool:
+	var gs : Node = get_node_or_null("/root/GameState")
+	if not gs:
+		return false
+	for it in gs.inventory:
+		if it is Dictionary and str(it.get("id", "")).to_lower() == "fairy_flute":
+			return true
+	return false
+
+
 func _do_item() -> void:
 	var gs   : Node = get_node_or_null("/root/GameState")
+	# NES: the Fairy Flute's melody puts the Golem to sleep, bypassing its resistance.
+	# Against anything else it is just a pretty tune.
+	if _mon_key == "golem" and _has_fairy_flute():
+		_play_sfx("fairy_flute")
+		_set_msg("%s plays the Fairy Flute." % _hero_name())
+		await _wait_delay(1.2)
+		if _mon_asleep:
+			_set_msg("The Golem is already asleep.")
+		else:
+			_mon_asleep = true
+			_set_msg("Quietly Golem closes his eyes\nand settles into sleep.\nThe Golem is asleep.")
+		await _wait_delay(1.3)
+		_after_player_act()
+		return
 	var herb : int  = -1
 	if gs:
 		for i in range(gs.inventory.size()):

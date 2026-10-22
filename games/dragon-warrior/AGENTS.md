@@ -150,7 +150,15 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   from every item shop listed in `milestones.json` `item_shops`, and NES pack rules: 8 tool slots, six per
   consumable stack, no dropping). Each death outside grinding raises the current milestone's required level by one.
   Bugs the brain exposes are almost always *game* bugs — fix the game, not the brain.
-- NES ending (`game_completed` is only set when the credits finish, so milestone 70 covers the whole sequence):
+- Cantlin Golem (`milestones.json` `defeat-golem`, a `step` milestone on the world-map town tile (75, 104)):
+  `WorldMap._check_map_trigger` starts a `golem` battle (`_golem_gate_battle`) whenever the hero steps on Cantlin
+  before `GameState.golem_defeated` is set; winning sets the flag (saved as `golemDefeated`), shows "The Golem
+  crumbles to dust…" and enters the town, fleeing leaves the hero on the tile so stepping off and back retries.
+  In battle, ITEM against the Golem plays the Fairy Flute (`BattleOverlay._do_item`: not consumed, bypasses
+  `resist_sleep`, "Quietly Golem closes his eyes and settles into sleep…"); the brain picks ITEM whenever the Golem
+  is awake and the pack holds `fairy_flute`, swings while it sleeps, and never spends a herb on it (heal spells
+  instead). `search-fairy-flute` in Kol is a required milestone that precedes it.
+- NES ending (`game_completed` is only set when the credits finish, so the last milestone covers the whole sequence):
   the Dragonlord's death text ("Thou hast done well…", "…obtains the Ball of Light"), `CharlockThroneRoom.
   _ball_of_light_warp` (white flash, warp outside Charlock, encounters off), victory-lap NPC lines in every town
   (`DungeonMap.VICTORY_LAP_LINES`) and the throne room finale (`ThroneRoom._begin_ending`: the King offers the
