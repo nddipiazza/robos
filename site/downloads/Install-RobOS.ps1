@@ -30,12 +30,6 @@ try {
     if (!(Test-Path "$InstallDir\runtime\node.exe")) {
         Move-Item -LiteralPath "$work\node\node-v$nodeVersion-win-x64" -Destination "$InstallDir\runtime"
     }
-    if (!$SourceRoot) {
-        Write-Host 'Downloading the RobOS app suite...'
-        Invoke-WebRequest 'https://github.com/nddipiazza/robos/archive/refs/heads/main.zip' -UseBasicParsing -OutFile "$work\source.zip"
-        Expand-Archive "$work\source.zip" "$work\source"
-        $SourceRoot = "$work\source\robos-main"
-    }
     $env:PATH = "$InstallDir\runtime;$env:PATH"
     if (!(Test-Path "$InstallDir\runtime\git\cmd\git.exe")) {
         Write-Host 'Installing private Git tools for the developer apps...'
@@ -46,6 +40,15 @@ try {
         Expand-Archive "$work\git.zip" "$InstallDir\runtime\git"
     }
     $env:PATH = "$InstallDir\runtime\git\cmd;$env:PATH"
+    if (!$SourceRoot) {
+        Write-Host 'Downloading RobOS applications and game assets...'
+        $git = "$InstallDir\runtime\git\cmd\git.exe"
+        & $git -c core.longpaths=true -c credential.interactive=false clone --depth 1 --filter=blob:none --sparse https://github.com/nddipiazza/robos.git "$work\source"
+        if ($LASTEXITCODE -ne 0) { throw 'Unable to download the RobOS source.' }
+        & $git -C "$work\source" sparse-checkout set --no-cone /packages/ /games/ /.robos/ /scripts/windows/ /site/assets/logo-mark.png /docs/assets/images/favicon.ico /docs/assets/images/logo-sidebar.png
+        if ($LASTEXITCODE -ne 0) { throw 'Unable to download the RobOS app files.' }
+        $SourceRoot = "$work\source"
+    }
     & "$InstallDir\runtime\node.exe" (Join-Path $SourceRoot 'scripts\windows\setup.cjs') $SourceRoot $InstallDir
     if ($LASTEXITCODE -ne 0) { throw 'App setup failed. See the errors above; setup did not report success.' }
     $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path ([Environment]::GetFolderPath('Programs')) 'RobOS.lnk'))
