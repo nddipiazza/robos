@@ -33,7 +33,7 @@ function configuration(suite, output) {
     ] }],
     win: { target: [{ target: 'portable', arch: ['x64'] }, { target: 'nsis', arch: ['x64'] }],
       icon: path.join(repo, 'scripts/windows/robos.ico'), executableName: 'RobOS' },
-    portable: { artifactName: 'RobOS-v${version}-Windows-Portable.${ext}', requestExecutionLevel: 'user' },
+    portable: { artifactName: 'RobOS-v${version}-Windows-Portable.${ext}', requestExecutionLevel: 'user', unpackDirName: false },
     nsis: { artifactName: 'RobOS-v${version}-Windows-Setup.${ext}', oneClick: false, perMachine: false,
       allowElevation: false, allowToChangeInstallationDirectory: true, createDesktopShortcut: true,
       createStartMenuShortcut: true, shortcutName: 'RobOS', deleteAppDataOnUninstall: false,
