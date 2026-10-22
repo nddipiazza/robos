@@ -9,6 +9,12 @@ The local build and Pages workflow run this automatically. Use `site.data.releas
 instead of hardcoding versions. Native Windows setup assets are linked directly; Linux distro
 downloads lead to the release asset list so pending image builds do not produce broken links.
 
+`.github/workflows/windows-release.yml` builds a clean native suite, bundles portable and
+NSIS EXEs with `scripts/windows/build-release.cjs`, tests the packaged apps, and publishes
+both EXEs, checksums and source provenance. It runs on version tags; its manual dispatch
+can add EXEs to an existing release matching `VERSION`. These EXEs are separate from
+the Linux-distro USB flasher built by `release.yml`.
+
 ## Hero video
 
 The hero on the home page is a recording of the real apps. Regenerate it with the steps in

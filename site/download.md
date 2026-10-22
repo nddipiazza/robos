@@ -78,9 +78,11 @@ scripts/install-local.sh</code></pre>
   <div class="wrap">
     <p class="eyebrow">Release assets</p>
     <h2 class="h2">{{ site.data.release.tag }} downloads</h2>
-    <p>The native Windows setup is available now. Linux distro, USB flasher and VM artifacts appear on <a href="{{ site.data.release.url }}">the release page</a> when their builds finish. Check the available assets there before following the ISO or VM examples.</p>
+    <p>Windows EXEs, Linux distro, USB flasher and VM artifacts appear on <a href="{{ site.data.release.url }}">the release page</a> after their builds and checks finish. The Windows scripts are available as alternatives. Check the available assets before downloading.</p>
     <table class="t">
       <tr><th>Artifact</th><th>File</th><th>Purpose</th></tr>
+      <tr><td>Windows installer</td><td><a href="{{ site.data.release.url }}">RobOS-v{{ site.data.release.version }}-Windows-Setup.exe</a></td><td>Install the native app suite with a folder chooser and shortcuts</td></tr>
+      <tr><td>Windows portable EXE</td><td><a href="{{ site.data.release.url }}">RobOS-v{{ site.data.release.version }}-Windows-Portable.exe</a></td><td>Run the bundled app suite without an installation wizard</td></tr>
       <tr><td>Windows app setup</td><td><a href="{{ site.data.release.download }}/Install-RobOS.cmd">Install-RobOS.cmd</a></td><td>Install the native Windows app suite</td></tr>
       <tr><td>Windows PowerShell setup</td><td><a href="{{ site.data.release.download }}/Install-RobOS.ps1">Install-RobOS.ps1</a></td><td>Custom install folder or repair</td></tr>
       <tr><td>Windows checksums</td><td><a href="{{ site.data.release.download }}/WINDOWS-SHA256SUMS">WINDOWS-SHA256SUMS</a></td><td>Verify the Windows setup downloads</td></tr>
