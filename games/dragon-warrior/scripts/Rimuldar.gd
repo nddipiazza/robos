@@ -17,14 +17,14 @@ func _get_music_path() -> String:
 
 func _get_npcs() -> Array:
     return [
-        {tile=Vector2i(28,12), sprite_id="sage_alt", facing="down",  speaker="Key Merchant",  pages=["Magic Keys unlock any door.\nBuy some before exploring\nthe dungeons."]},
+        {tile=Vector2i(27,13), sprite_id="sage_alt", facing="down",  speaker="Key Merchant",  pages=["Magic Keys unlock any door.\nBuy some before exploring\nthe dungeons."]},
         {tile=Vector2i(12,22), sprite_id="sage_alt", facing="down",  speaker="Weapon Dealer", pages=["A warrior without a good sword\nis no warrior at all.\nBrowse my finest wares."]},
         {tile=Vector2i(6,6),   sprite_id="minister", facing="down",  speaker="Innkeeper",     pages=["Rest here and restore\nthy strength, weary traveler."], inn_cost=6},
         {tile=Vector2i(15,5),  sprite_id="guard",    facing="down",  speaker="Guard",         pages=["Rimuldar is the only place\nto buy Magic Keys in all\nof Alefgard."]},
         {tile=Vector2i(22,15), sprite_id="lady",     facing="left",  speaker="Villager",      pages=["The swamps to the north\nare treacherous. Watch\nthy step, Hero."]},
-        {tile=Vector2i(8,28),  sprite_id="sage",     facing="up",    speaker="Elder",         pages=["The Golem blocks the path\nto Cantlin. Find the Silver\nFlute to pass."]},
-        {tile=Vector2i(26,25), sprite_id="sage",     facing="down",  speaker="Wise Man",      pages=["The Stones of Sunlight\nand Rain will reveal a\npath across the sea."]},
-        {tile=Vector2i(18,28), sprite_id="guard",    facing="right", speaker="Soldier",       pages=["Keys of magic can open\nany lock. Buy them here\nin Rimuldar."]},
+        {tile=Vector2i(7,27),  sprite_id="sage",     facing="up",    speaker="Elder",         pages=["The Golem blocks the path\nto Cantlin. Find the Silver\nFlute to pass."]},
+        {tile=Vector2i(28,25), sprite_id="sage",     facing="down",  speaker="Wise Man",      pages=["The Stones of Sunlight\nand Rain will reveal a\npath across the sea."]},
+        {tile=Vector2i(18,27), sprite_id="guard",    facing="right", speaker="Soldier",       pages=["Keys of magic can open\nany lock. Buy them here\nin Rimuldar."]},
         {tile=Vector2i(24,8),  sprite_id="sage_alt", facing="down",  speaker="Merchant",      shop_id="rim001"},
         {tile=Vector2i(5,8),   sprite_id="sage_alt", facing="down",  speaker="Shopkeeper",    shop_id="rim002"},
     ]
