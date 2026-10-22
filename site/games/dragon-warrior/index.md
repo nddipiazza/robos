@@ -14,6 +14,7 @@ accent: "#00bcd4"
     <a class="btn" href="#play">Play it</a>
     <a class="btn btn-ghost" href="#proof-of-viability">Proof of Viability</a>
     <a class="btn btn-ghost" href="{{ '/games/dragon-warrior/proof-of-viability.html' | relative_url }}">Interactive 20-Slide Tour</a>
+    <a class="btn btn-ghost" href="{{ '/games/dragon-warrior/ai-playthrough/' | relative_url }}">AI Playthrough</a>
     <a class="btn btn-ghost" href="{{ '/games/dragon-warrior/docs/' | relative_url }}">Read the docs</a>
   </div>
   <span class="scroll">Scroll ↓</span>
@@ -91,6 +92,28 @@ accent: "#00bcd4"
   </div>
 </section>
 
+<section class="g-sec" id="ai-playthrough">
+  <div class="wrap">
+    <div class="panel-g">
+      <p class="eyebrow">AI Playthrough</p>
+      <h2 class="h2">Reachable is not beatable &mdash; so the engine plays the whole game</h2>
+      <p class="sec-p">The BFS audit proves every tile can be reached. The <strong>AI Playthrough</strong> proves the game can be <em>won</em>: <code>PlayGameBrain.gd</code> takes over the controller and plays from King Lorik's throne room to the Dragonlord using only real inputs and the IPC state feed, seeking the next entry of a 70-milestone registry (every chest, every purchase, every quest item, every level gate). A Python driver cuts one video and one save checkpoint per milestone, deadlock watchdogs in the brain and in the driver catch hangs, and a GNOME tray icon with a progress ring plus a live dashboard let you follow a two-hour run at a glance. Every bug it hit so far was a game bug.</p>
+      <div class="shots" style="margin-top:22px">
+        <figure><img loading="lazy" src="{{ '/assets/games/dragon-warrior/playthrough/dashboard-live.png' | relative_url }}" alt="Playthrough dashboard live view with progress bar, stat chips, live game screenshot and brain event log"><figcaption>The live dashboard 43 minutes in: 45 / 70 milestones, level 11, 861 battles, 0 deaths.</figcaption></figure>
+        <figure><img loading="lazy" src="{{ '/assets/games/dragon-warrior/playthrough/dashboard-milestone-46.png' | relative_url }}" alt="Milestone card for Buy Broad Sword with its video and save checkpoint"><figcaption>Every finished milestone is a card with its own video and the checkpoint saved after it.</figcaption></figure>
+        <figure><img loading="lazy" src="{{ '/assets/games/dragon-warrior/playthrough/m44-swamp-cave-gwaelin.png' | relative_url }}" alt="Princess Gwaelin's cell in the Swamp Cave"><figcaption>Milestone #44: Princess Gwaelin rescued at level 10.</figcaption></figure>
+        <figure><img loading="lazy" src="{{ '/assets/games/dragon-warrior/playthrough/v-hurt-spell-skeleton.png' | relative_url }}" alt="Erdrick casts HURT on a Skeleton"><figcaption>From a milestone video: HURT on a Skeleton while grinding for level 10.</figcaption></figure>
+        <figure><img loading="lazy" src="{{ '/assets/games/dragon-warrior/playthrough/m46-rimuldar-broad-sword.png' | relative_url }}" alt="Rimuldar weapon shop buying the Broad Sword"><figcaption>Milestone #46: 1500 gold for the Broad Sword at Rimuldar.</figcaption></figure>
+        <figure><img loading="lazy" src="{{ '/assets/games/dragon-warrior/playthrough/tray-menu.png' | relative_url }}" alt="GNOME tray icon with progress ring and context menu"><figcaption>The tray icon: status, milestones, level, battles, deaths, current objective, stop run, open latest video.</figcaption></figure>
+      </div>
+      <div class="cta" style="justify-content:flex-start;margin-top:24px">
+        <a class="btn" href="{{ '/games/dragon-warrior/ai-playthrough/' | relative_url }}">Read the AI Playthrough docs &amp; see the full screenshot gallery →</a>
+        <a class="btn btn-ghost" href="{{ '/blog/' | relative_url }}#ai-playthrough-dragon-warrior">Blog post</a>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="g-sec" id="play">
   <div class="wrap">
     <div class="panel-g">
@@ -108,8 +131,9 @@ python3 games/dragon-warrior/tests/test_map_completeness.py --screenshots
 xvfb-run -a behave games/dragon-warrior/tests/e2e/features/king_to_world_map.feature
 
 # Let the robos-jrpg AI play the ENTIRE game as a user would ("play the game" mode: real inputs + IPC state only)
-python3 games/dragon-warrior/tests/e2e/play_full_game.py</code></pre>
-      <p class="sec-p">The BFS audit proves every tile is reachable; the <strong>AI full-game playthrough</strong> proves the game is beatable. <code>PlayGameBrain.gd</code> takes over the controller and seeks the next entry of an ordered milestone registry (<code>data/v1/milestones.json</code>: every weapon and armor purchase, every treasure chest, each quest, the Dragonlord, the ending) from King Lorik's throne room to the credits &mdash; no teleports, no stat edits. A Python driver watches over the IPC web service, asserts invariants (never standing on water, HP never negative) and writes a JSON report with a screenshot per milestone.</p>
+python3 games/dragon-warrior/tests/e2e/play_full_game.py
+python3 games/dragon-warrior/tests/e2e/play_full_game.py --stepped   # one video + checkpoint per milestone, tray icon + dashboard</code></pre>
+      <p class="sec-p">The BFS audit proves every tile is reachable; the <strong><a href="{{ '/games/dragon-warrior/ai-playthrough/' | relative_url }}">AI full-game playthrough</a></strong> proves the game is beatable. <code>PlayGameBrain.gd</code> takes over the controller and seeks the next entry of an ordered milestone registry (<code>data/v1/milestones.json</code>: every weapon and armor purchase, every treasure chest, each quest, the Dragonlord, the ending) from King Lorik's throne room to the credits &mdash; no teleports, no stat edits. A Python driver watches over the IPC web service, asserts invariants (never standing on water, HP never negative) and writes a JSON report with a video, a save checkpoint and a screenshot per milestone.</p>
       <div class="cta" style="justify-content:flex-start;margin-top:18px">
         <a class="btn" href="{{ '/v1/projects/dragon-warrior/' | relative_url }}">Engine &amp; Architecture Guide</a>
         <a class="btn btn-ghost" href="{{ '/games/dragon-warrior/proof-of-viability.html' | relative_url }}">Interactive 20-Slide Report</a>
