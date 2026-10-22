@@ -7,7 +7,7 @@ nav_order: 2
 # Get started
 {: .no_toc }
 
-How to run RobOS apps from a clone of the repository, install them into the GNOME launcher, or boot the RobOS appliance from a USB drive or a QEMU virtual machine. Read this before your first run.
+How to install the Windows app suite, run RobOS apps from a clone of the repository, install them into the GNOME launcher, or boot the RobOS appliance from a USB drive or a QEMU virtual machine. Read this before your first run.
 {: .fs-6 }
 
 <details open markdown="block">
@@ -21,7 +21,7 @@ How to run RobOS apps from a clone of the repository, install them into the GNOM
 
 [Download Windows setup](https://rowbose.com/download/#windows) and open `Install-RobOS.cmd`. It downloads a private Node.js/Electron runtime and the app suite into `%USERPROFILE%\RobOS`, installs runtime dependencies, and creates a RobOS Start menu shortcut. No WSL, USB flash drive or administrator access is required. Open RobOS to search and launch apps; `RobOS.cmd --app=point-of-sale` also opens one directly.
 
-Native Windows support is in testing. GNOME, KVM, UNIX pass and X11 integrations still require Linux. Setup does not install coding-agent CLIs or enable optional AI/API features. Keep the setup console open until completion. Dependency failures are recorded in `install-report.json` and cause setup to fail, so a partial install is never reported as complete. Use an empty install directory; existing app data under `%USERPROFILE%\.config\robos` is preserved.
+The native Windows app suite has passed its startup audit. GNOME, KVM, UNIX pass and X11 integrations still require Linux. Use RobOS Software Center to install or update Windows tools, Godot 4, FFmpeg and coding-agent CLIs. AI features remain optional; sign in to an installed agent when you choose to use it. Third-party tool installers may request administrator approval or a restart. Keep the setup console open until completion. Dependency failures are recorded in `install-report.json` and cause setup to fail, so a partial install is never reported as complete. Use an empty install directory; existing app data under `%USERPROFILE%\.config\robos` is preserved.
 
 For a custom folder, download `Install-RobOS.ps1` from the download page and run `powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-RobOS.ps1 -InstallDir "D:\RobOS"`. The execution policy applies only to that setup process. This setup installs apps on Windows. The USB flasher below is a separate option for installing the Linux GNOME operating system on a target PC.
 
@@ -29,13 +29,14 @@ For a custom folder, download `Install-RobOS.ps1` from the download page and run
 
 | Method | Where it runs | You need | What you get |
 |---|---|---|---|
-| [Run from source](#run-from-source) | Linux. The README also lists macOS and Windows with WSL2, but nothing in the repository tests them. | Node.js 20 or newer, Git, a desktop session | One app window per command |
+| [Windows app suite](#windows-app-suite) | Windows | Internet access during setup | Native apps in `%USERPROFILE%\RobOS` and a Start menu launcher |
+| [Run from source](#run-from-source) | Linux desktop; the shell scripts can also be used in a suitable macOS or WSL environment. Use native setup above for Windows. | Node.js 20 or newer, Git, a desktop session | One app window per command |
 | [GNOME launcher](#add-the-apps-to-the-gnome-launcher) | Ubuntu with GNOME | The same as above | A launcher entry for each app in your clone |
 | [USB installer](#install-the-appliance-from-a-usb-drive) | The installer app runs on Linux, macOS or Windows (it cannot flash on Windows, see below); the target is an x86_64 PC | A USB drive of 4 GB or more | The RobOS appliance on the target PC |
 | [Virtual machine](#boot-the-appliance-in-qemu) | A Linux host with QEMU | QEMU, 16 GB of RAM for the guest | The appliance in a QEMU window |
 
 {: .note }
-The `.dmg`, `.exe`, `.AppImage` and `.deb` files on the [download page](https://rowbose.com/download/) are the USB installer. These versioned appliance files do not install the app suite on macOS or Windows. The Windows app-suite setup is the separate download described above. To run apps on your current machine, use "Run from source".
+The `.dmg`, `.exe`, `.AppImage` and `.deb` files on the [download page](https://rowbose.com/download/) are the USB installer. These versioned appliance files do not install the app suite on macOS or Windows. The Windows app-suite setup is the separate download described above. On Windows, use the native app-suite setup above. For a Linux source checkout, use "Run from source".
 
 ## Run from source
 
@@ -108,15 +109,15 @@ On a machine without `apt-get` the script prints a warning and skips the system 
 
 ## Install the appliance from a USB drive
 
-The appliance is a RobOS desktop image that installs unattended on an x86_64 PC. The release notes list 16 GB of RAM, 100 GB of disk and a USB drive of 4 GB or more as requirements. The installer app and the ISO are release assets on [GitHub Releases](https://github.com/nddipiazza/robos/releases/latest). File names include the version, for example `RobOS-Installer-v0.0.7-mac.dmg`.
+The appliance is a RobOS desktop image that installs unattended on an x86_64 PC. The release notes list 16 GB of RAM, 100 GB of disk and a USB drive of 4 GB or more as requirements. The installer app and the ISO are release assets on [GitHub Releases](https://github.com/nddipiazza/robos/releases/latest). File names include the version, for example `RobOS-Installer-v{{ site.data.release.version }}-mac.dmg`.
 
 | Platform | Installer file |
 |---|---|
-| Linux | `RobOS-Installer-<version>-linux.AppImage` or `.deb` |
-| macOS | `RobOS-Installer-<version>-mac.dmg` |
-| Windows | `RobOS-Installer-<version>-win.exe` |
+| Linux | `RobOS-Installer-v<version>-linux.AppImage` or `.deb` |
+| macOS | `RobOS-Installer-v<version>-mac.dmg` |
+| Windows | `RobOS-Installer-v<version>-win.exe` |
 
-The installer is an Electron app (source in [`installer/`](https://github.com/nddipiazza/robos/tree/main/installer)). Its screens are:
+The installer is an Electron app (source in [`installer/`](https://github.com/nddipiazza/robos/tree/main/installer)). Linux distro artifacts may still be building for the current release; check the available release assets first. Its screens are:
 
 1. **Select USB Drive**. It lists removable and USB drives. Choose one and click **Next: Download RobOS**.
 2. **Download RobOS**. It downloads the `.iso` asset of the latest GitHub release into your temporary directory and reuses the file if it is already there.
@@ -126,10 +127,10 @@ The installer is an Electron app (source in [`installer/`](https://github.com/nd
 {: .warning }
 Flashing erases the selected drive. On Linux and macOS the installer unmounts the drive and runs `sudo dd` with a 4M block size. On Windows the installer cannot flash: it reports that flashing requires administrator rights and tells you to use Rufus or balenaEtcher with the downloaded ISO.
 
-To skip the installer app, download `robos-<version>.iso` from the release and write it yourself. Replace `/dev/sdX` with your USB device and check it twice.
+To skip the installer app, download `robos-v<version>.iso` from the release and write it yourself. Replace `/dev/sdX` with your USB device and check it twice.
 
 ```bash
-sudo dd if=robos-v0.0.7.iso of=/dev/sdX bs=4M status=progress
+sudo dd if=robos-v{{ site.data.release.version }}.iso of=/dev/sdX bs=4M status=progress
 ```
 
 Then:
@@ -144,8 +145,8 @@ The release includes a prebuilt disk image and a cloud-init seed ISO. You need Q
 
 ```bash
 qemu-system-x86_64 -m 16G -smp $(nproc) -enable-kvm -cpu host \
-  -drive file=robos-v0.0.7.qcow2,format=qcow2 \
-  -cdrom robos-v0.0.7-seed.iso \
+  -drive file=robos-v{{ site.data.release.version }}.qcow2,format=qcow2 \
+  -cdrom robos-v{{ site.data.release.version }}-seed.iso \
   -net nic -net user,hostfwd=tcp::2224-:22
 ```
 

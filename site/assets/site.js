@@ -12,7 +12,7 @@
   var os = /Windows/i.test(ua) ? 'win' : /Mac/i.test(ua) ? 'mac' : 'linux';
   var names = { win: 'Windows', mac: 'macOS', linux: 'Linux' };
   document.querySelectorAll('[data-dl-label]').forEach(function (el) {
-    el.textContent = 'Download for ' + names[os];
+    el.textContent = os === 'win' ? 'Download for Windows' : 'USB installer for ' + names[os];
   });
   document.querySelectorAll('[data-dl-href]').forEach(function (el) {
     var h = el.getAttribute('data-' + os);

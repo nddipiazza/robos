@@ -20,7 +20,7 @@ test('download buttons distinguish native Windows apps from USB flasher', () => 
   assert.match(home, /data-win="[^"\n]*Install-RobOS.cmd/);
   const download = fs.readFileSync(path.join(site, 'download.md'), 'utf8');
   assert.match(download, /id="linux-distro"/);
-  assert.match(download, /Download Windows USB flasher/);
+  assert.match(download, /(?:View|Download) Windows USB flasher/);
   assert.match(download, /Native Windows app suite/);
   assert.ok(fs.existsSync(path.join(site, 'downloads/Install-RobOS.cmd')));
 });

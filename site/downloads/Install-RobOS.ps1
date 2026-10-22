@@ -3,7 +3,7 @@
 param(
     [string]$InstallDir = (Join-Path $env:USERPROFILE 'RobOS'),
     [string]$SourceRoot,
-    [string]$SourceRef = 'main',
+    [string]$SourceRef = 'v0.0.8',
     [switch]$NoLaunch,
     [switch]$Repair
 )
