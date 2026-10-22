@@ -18,6 +18,7 @@ test('native builds include the ready suite and produce distinct portable and NS
   const config = configuration(suite, path.join(root, 'output'));
   assert.deepEqual(config.win.target.map(t => t.target), ['portable', 'nsis']);
   assert.match(config.portable.artifactName, /Windows-Portable/);
+  assert.equal(config.portable.unpackDirName, false, 'Concurrent portable launches must not overwrite each other');
   assert.match(config.nsis.artifactName, /Windows-Setup/);
   assert.equal(config.nsis.perMachine, false);
   assert.equal(config.nsis.allowToChangeInstallationDirectory, true);

@@ -55,6 +55,7 @@ if (id) {
   } else require(path.join(dir, 'main.js'));
 } else {
   app.setName('RobOS');
+  const lifetime = require('./portable-lifetime.cjs').portableLifetime(app, BrowserWindow, !!process.env.PORTABLE_EXECUTABLE_FILE);
   app.whenReady().then(() => {
     ipcMain.handle('apps:list', () => apps);
     ipcMain.handle('apps:launch', (_event, appId) => {
@@ -67,11 +68,10 @@ if (id) {
       fs.closeSync(log);
       child.on('error', error => dialog.showErrorBox('Unable to launch app', error.message));
       child.once('exit', code => { if (code) dialog.showErrorBox('App exited with an error', `${appId}: see ${logPath}`); });
-      child.unref();
+      lifetime.watch(child);
     });
     const win = new BrowserWindow({ width: 1220, height: 900, minWidth: 900, minHeight: 650, backgroundColor: '#10141c', autoHideMenuBar: true, icon: path.join(__dirname, 'robos.ico'),
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false } });
     win.loadFile(path.join(__dirname, 'index.html'));
   });
-  app.on('window-all-closed', () => app.quit());
 }
