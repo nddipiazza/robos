@@ -425,6 +425,7 @@ func _make_walk_sprite(sheet_path: String, f0: Rect2, f1: Rect2, px_scale: float
 func _build_hero_sprite() -> void:
 	var fr := _facing_to_frames_from_vec(_hero_facing)
 	_hero_ws             = _make_walk_sprite("res://assets/sprites/rgba/characters-3.png", fr[0], fr[1])
+	_hero_ws.is_hero     = true
 	_hero_ws.toggle_time = 0.5
 	_hero_ws.name        = "Hero"
 	add_child(_hero_ws)

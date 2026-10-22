@@ -352,6 +352,7 @@ func _build_sprites() -> void:
 		Vector2i(-1,  0): hero_f0 = FR_LEFT[0];  hero_f1 = FR_LEFT[1]
 		Vector2i( 1,  0): hero_f0 = FR_RIGHT[0]; hero_f1 = FR_RIGHT[1]
 	_hero_ws = _make_walk_sprite(hero_sheet, hero_f0, hero_f1, 2.0)
+	_hero_ws.is_hero = true
 	_hero_ws.name = "Hero"
 	add_child(_hero_ws)
 
@@ -362,6 +363,8 @@ func _update_scene_positions() -> void:
 	_guard_l_ws.position = _npc_screen_pos(4, 7, 32, 32)
 	_guard_r_ws.position = _npc_screen_pos(6, 7, 32, 32)
 	_hero_ws.position    = _hero_screen_pos()
+	if _gwaelin_ws:
+		_gwaelin_ws.position = _gwaelin_screen_pos()
 	_update_debug_overlay()
 
 
@@ -744,13 +747,31 @@ func _cmd_talk() -> void:
 		_cmd_talk_king()
 	elif NPC_DIALOGS.has(key):
 		var data: Dictionary = NPC_DIALOGS[key]
-		_show_dialog(data["speaker"], data["pages"])
+		var gs := get_node_or_null("/root/GameState")
+		if gs and "dragonlord_defeated" in gs and gs.dragonlord_defeated:
+			_show_dialog(data["speaker"], ["Hurrah! Hurrah!\nLong live %s!\nThe Dragonlord is no more." % _hero_name()])
+		else:
+			_show_dialog(data["speaker"], data["pages"])
 	else:
 		_show_dialog("", ["There is no one there."])
 
 
+func _hero_name() -> String:
+	var gs := get_node_or_null("/root/GameState")
+	if gs:
+		return str(gs.hero_stats.get("name", "Erdrick"))
+	return "Erdrick"
+
+
 func _cmd_talk_king() -> void:
 	var gs := get_node_or_null("/root/GameState")
+	if gs and "dragonlord_defeated" in gs and gs.dragonlord_defeated:
+		gs.king_intro_done = true
+		gs.inventory = _inventory.duplicate(true)
+		gs.gold = _hero_gold
+		gs.opened_chests = _opened_chests.duplicate(true)
+		_begin_ending(gs)
+		return
 	if gs:
 		gs.king_intro_done = true
 		gs.inventory = _inventory.duplicate(true)
@@ -768,17 +789,7 @@ func _cmd_talk_king() -> void:
 		exp_msg = "Thou hast attained the highest\nlevel of experience!"
 
 	var pages: Array = ["I am greatly pleased that thou\nhast returned, Hero."]
-	if gs and "dragonlord_defeated" in gs and gs.dragonlord_defeated:
-		# Ending: the quest is complete.
-		pages = [
-			"Thou hast defeated the\nDragonlord and restored\npeace to Alefgard!",
-			"The Ball of Light shines\nonce more upon the land.",
-			"Thy name shall be\nremembered for all time,\ndescendant of Erdrick.",
-			"Thus ends the quest\nof the Dragon Warrior.",
-		]
-		if "game_completed" in gs:
-			gs.game_completed = true
-	elif gs and "gwaelin_rescued" in gs and gs.gwaelin_rescued and not gs.gwaelin_returned:
+	if gs and "gwaelin_rescued" in gs and gs.gwaelin_rescued and not gs.gwaelin_returned:
 		gs.gwaelin_returned = true
 		pages.append("Thou hast rescued my\ndaughter Gwaelin!\nI am forever grateful.")
 		pages.append("Gwaelin: Take this\nGwaelin's Love as a\ntoken of my affection.")
@@ -832,6 +843,164 @@ func _ask_king_continue() -> void:
 				get_tree().change_scene_to_file("res://scenes/TitleScreen.tscn")
 			)
 	)
+
+
+# ── Ending (NES epilogue) ────────────────────────────────────────────────────
+# King Lorik offers the throne, the hero declines, Princess Gwaelin (if she was
+# brought home) insists on coming along, and the pair walk out of the throne
+# room. `game_completed` is only set once the Ending scene's credits finish so
+# the whole sequence is captured by the playthrough recorder.
+
+var _ending_active := false
+var _gwaelin_ws: NPCSprite = null
+var _gwaelin_tile := Vector2i(-1, -1)
+var _gwaelin_from := Vector2.ZERO
+var _gwaelin_to   := Vector2.ZERO
+var _gwaelin_t    := 1.0
+
+func _begin_ending(gs: Node) -> void:
+	_ending_active = true
+	_move_enabled  = false
+	var hero := _hero_name()
+	_show_dialog("King Lorik", [
+		"Thou hast done well in\ndefeating the Dragonlord,\n%s." % hero,
+		"The Ball of Light shines\nonce more upon Alefgard,\nand peace has returned\nto our land.",
+		"Come, %s, I shall\ngive up my throne to thee." % hero,
+	], func():
+		_show_dialog("", [
+			"%s replies:\n'If there is a country\nwhere I can rule, I shall\nfind it myself.'" % hero,
+		], func():
+			if "gwaelin_returned" in gs and gs.gwaelin_returned:
+				_gwaelin_steps_forward()
+			else:
+				_show_dialog("King Lorik", [
+					"Then go, %s, with\nmy blessing. May thy\njourney be a glorious one." % hero,
+				], Callable(self, "_ending_walk_out"))
+		)
+	)
+
+
+func _gwaelin_steps_forward() -> void:
+	_gwaelin_ws = NPCSprite.new()
+	_gwaelin_ws.character_id = "princess"
+	_gwaelin_ws.facing       = "left"
+	_gwaelin_ws.pixel_scale  = 2.0
+	_gwaelin_ws.name         = "Gwaelin"
+	add_child(_gwaelin_ws)
+	# She steps down from beside the throne to the hero's side.
+	_gwaelin_tile = Vector2i(5, 5)
+	_gwaelin_from = Vector2(5 * TILE_SIZE, 4 * TILE_SIZE)
+	_gwaelin_to   = Vector2(5 * TILE_SIZE, 5 * TILE_SIZE)
+	_gwaelin_t    = 0.0
+	_update_scene_positions()
+	var tw := create_tween()
+	tw.tween_method(func(v: float):
+		_gwaelin_t = v
+		_update_scene_positions(), 0.0, 1.0, MOVE_DURATION * 2.0)
+	await tw.finished
+	_gwaelin_ws.set_facing("left")
+	_ask_gwaelin()
+
+
+func _ask_gwaelin() -> void:
+	_show_dialog("Princess Gwaelin", [
+		"Wait a minute, please.\nI wish to accompany thee\non thy journey. May I?",
+	])
+	call_deferred("_open_choice",
+		func():
+			_close_choice()
+			_show_dialog("Princess Gwaelin", [
+				"I am so happy.\nTogether we shall travel\nthe wide world to build up\na great power and spirit.",
+			], Callable(self, "_ending_walk_out")),
+		func():
+			_close_choice()
+			_show_dialog("Princess Gwaelin", ["But thou must!"], Callable(self, "_ask_gwaelin"))
+	)
+
+
+func _ending_walk_out() -> void:
+	_play_sfx("res://assets/music/mp3/heroes_fanfare.mp3")
+	await get_tree().create_timer(0.6).timeout
+	# Hero stands at (4,5), (3,4) or (5,4) when talking to the king: line up on
+	# column 4 first, then down through the door and along the bottom hall.
+	var path: Array = []
+	var t := _hero_tile
+	while t.y < 6:
+		t.y += 1
+		path.append(t)
+	while t.x != 4:
+		t.x += 1 if t.x < 4 else -1
+		path.append(t)
+	for step in [Vector2i(5, 6), Vector2i(5, 7), Vector2i(5, 8), Vector2i(5, 9),
+			Vector2i(6, 9), Vector2i(7, 9), Vector2i(8, 9), Vector2i(9, 9)]:
+		path.append(step)
+	for dest in path:
+		await _scripted_step(dest)
+	await get_tree().create_timer(0.3).timeout
+	_play_sfx("res://assets/music/mp3/stairs_down.mp3")
+	var layer := CanvasLayer.new()
+	layer.layer = 15
+	add_child(layer)
+	var rect := ColorRect.new()
+	rect.color = Color(0, 0, 0, 0)
+	rect.size = Vector2(VW, VH)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(rect)
+	var tw := create_tween()
+	tw.tween_property(rect, "color", Color.BLACK, 1.0)
+	await tw.finished
+	get_tree().change_scene_to_file.call_deferred("res://scenes/Ending.tscn")
+
+
+func _scripted_step(dest: Vector2i) -> void:
+	var dir := dest - _hero_tile
+	var prev := _hero_tile
+	_set_hero_facing(dir)
+	_hero_tile = dest
+	_cam_from  = _cam_world
+	_cam_to    = _tile_center_world(dest.x, dest.y)
+	if _gwaelin_ws:
+		var gdir := prev - _gwaelin_tile
+		_gwaelin_ws.set_facing(_facing_name(gdir))
+		_gwaelin_from = Vector2(_gwaelin_tile.x * TILE_SIZE, _gwaelin_tile.y * TILE_SIZE)
+		_gwaelin_to   = Vector2(prev.x * TILE_SIZE, prev.y * TILE_SIZE)
+		_gwaelin_tile = prev
+	var t := 0.0
+	var dur := MOVE_DURATION * 2.0
+	while t < 1.0:
+		await get_tree().process_frame
+		t = minf(t + get_process_delta_time() / dur, 1.0)
+		_cam_world = _cam_from.lerp(_cam_to, t)
+		_gwaelin_t = t
+		_update_scene_positions()
+	if _hero_ws:
+		_hero_ws.step()
+
+
+func _set_hero_facing(dir: Vector2i) -> void:
+	if dir == Vector2i.ZERO or dir == _hero_facing:
+		return
+	_hero_facing = dir
+	var f0 := FR_DOWN[0]
+	var f1 := FR_DOWN[1]
+	match dir:
+		Vector2i( 0, -1): f0 = FR_UP[0];    f1 = FR_UP[1]
+		Vector2i(-1,  0): f0 = FR_LEFT[0];  f1 = FR_LEFT[1]
+		Vector2i( 1,  0): f0 = FR_RIGHT[0]; f1 = FR_RIGHT[1]
+	if _hero_ws:
+		_hero_ws.set_frames(f0, f1)
+
+
+func _facing_name(dir: Vector2i) -> String:
+	if dir == Vector2i(0, -1): return "up"
+	if dir == Vector2i(-1, 0): return "left"
+	if dir == Vector2i(1, 0):  return "right"
+	return "down"
+
+
+func _gwaelin_screen_pos() -> Vector2:
+	var tl := _gwaelin_from.lerp(_gwaelin_to, _gwaelin_t)
+	return _w2s(tl + Vector2((TILE_SIZE - 32) * 0.5, TILE_SIZE - 32))
 
 
 func _cmd_status() -> void:

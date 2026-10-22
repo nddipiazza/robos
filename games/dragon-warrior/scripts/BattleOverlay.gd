@@ -443,6 +443,8 @@ func _after_player_act() -> void:
 			if _mon_key == "dragonlord_form2" and "dragonlord_defeated" in gs:
 				gs.dragonlord_defeated = true
 		var msg := "Thou hast done well!\n%s earns %d XP and %d GP." % [_hero_name(), _mon_xp, _mon_gp]
+		if _mon_key == "dragonlord_form2":
+			msg = "Thou hast done well in\ndefeating the Dragonlord.\nFrom the hand of the Dragonlord,\n%s obtains the Ball of Light." % _hero_name()
 		for lu in level_ups:
 			if lu is Dictionary:
 				msg += "\nCourage and wit have served thee well.\nThou hast been promoted to level %d!" % int(lu.get("level", 0))

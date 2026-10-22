@@ -82,11 +82,34 @@ func _on_battle_won(mon_key: String) -> void:
             _npc_sprites[i].queue_free()
     _npc_sprites.clear()
     _npc_data = []
+    var hero := "Erdrick"
+    if gs:
+        hero = str(gs.hero_stats.get("name", hero))
     _show_dialog("", [
-        "The Dragonlord has\nbeen defeated!",
-        "Light returns to the\nland of Alefgard.",
+        "%s holds the Ball of\nLight aloft." % hero,
+        "A brilliant flash covers\nAlefgard. The darkness\nof Charlock is no more.",
         "Return to Tantegel\nCastle and tell King\nLorik of thy victory!",
-    ])
+    ], Callable(self, "_ball_of_light_warp"))
+
+## NES: after the Dragonlord falls the screen flashes white and the hero is
+## standing outside Charlock Castle on a peaceful, monster-free Alefgard.
+func _ball_of_light_warp() -> void:
+    _move_enabled = false
+    var layer := CanvasLayer.new()
+    layer.layer = 15
+    add_child(layer)
+    var rect := ColorRect.new()
+    rect.color = Color.TRANSPARENT
+    rect.size = Vector2(VW, VH)
+    rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    layer.add_child(rect)
+    _play_sfx("res://assets/music/mp3/special_item.mp3")
+    var tw := create_tween()
+    tw.tween_property(rect, "color", Color.WHITE, 0.4)
+    tw.tween_interval(0.8)
+    tw.tween_property(rect, "color", Color.BLACK, 0.6)
+    await tw.finished
+    _transition_to("res://scenes/WorldMap.tscn", Vector2i(50, 50), "down", "world_map")
 
 func _check_transitions() -> void:
     pass

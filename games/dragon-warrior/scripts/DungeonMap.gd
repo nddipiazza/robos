@@ -516,6 +516,7 @@ func _build_background() -> void:
 
 func _build_hero_sprite() -> void:
 	_hero_ws = WalkSprite.new()
+	_hero_ws.is_hero = true
 	_hero_ws.pixel_scale = 2.0
 	_hero_ws.toggle_time = 0.35
 	_hero_ws.texture = load("res://assets/sprites/rgba/characters-3.png") as Texture2D
@@ -1340,11 +1341,36 @@ func _cmd_talk() -> void:
 				call(str(npc.get("on_talk")))
 				return
 			var pages: Array = []
-			for p in npc.get("pages", ["..."]):
-				pages.append(str(p))
+			var gs := get_node_or_null("/root/GameState")
+			if gs and "dragonlord_defeated" in gs and gs.dragonlord_defeated:
+				pages = _victory_lap_pages(npc)
+			else:
+				for p in npc.get("pages", ["..."]):
+					pages.append(str(p))
 			_show_dialog(str(npc.get("speaker", "")), pages)
 			return
 	_show_dialog("", ["There is no one there."])
+
+## NES epilogue: once the Ball of Light is recovered every townsperson has new
+## lines thanking the hero by name. Picked per NPC so a town is not all one line.
+const VICTORY_LAP_LINES := [
+	"Hurrah! Hurrah!\nLong live %s!",
+	"Thou hast defeated the\nDragonlord! Peace has\nreturned to Alefgard.",
+	"The monsters are gone\nfrom the land. We owe\nthee everything, %s.",
+	"The Ball of Light shines\nonce more. Thank thee,\nbrave %s!",
+	"Erdrick's descendant has\nsaved us all! Praise be\nto %s!",
+	"I can walk the fields\nagain without fear.\nThank thee, %s.",
+	"The swamps have dried and\nthe skies are bright.\nAll hail %s!",
+]
+
+func _victory_lap_pages(npc: Dictionary) -> Array:
+	var gs := get_node_or_null("/root/GameState")
+	var hero := "Erdrick"
+	if gs:
+		hero = str(gs.hero_stats.get("name", hero))
+	var tile: Vector2i = npc.get("tile", Vector2i(0, 0))
+	var line: String = VICTORY_LAP_LINES[(tile.x * 7 + tile.y * 3 + _npc_data.find(npc)) % VICTORY_LAP_LINES.size()]
+	return [line % hero if "%s" in line else line]
 
 func _cmd_door() -> void:
 	var ft := _hero_tile + _hero_facing

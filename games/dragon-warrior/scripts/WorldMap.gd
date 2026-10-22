@@ -238,6 +238,7 @@ func _build_map() -> void:
 
 func _build_hero() -> void:
 	_hero_ws = WalkSprite.new()
+	_hero_ws.is_hero = true
 	_hero_ws.pixel_scale = 2.0
 	_hero_ws.toggle_time = 0.35
 	_hero_ws.texture = load("res://assets/sprites/rgba/characters-3.png") as Texture2D
