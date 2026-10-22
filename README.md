@@ -1,21 +1,33 @@
 # RobOS
 
-RobOS is a platform for working with coding agents. It combines a suite of desktop developer apps, a knowledge graph of your system, and a recorded run of every agent change, so you review evidence instead of a bare diff.
+RobOS is an app suite you can customize and build on. It ships ready-made desktop apps (a point of sale, an auto repair shop, household finances, games, an audio player and a developer suite), all described in one knowledge graph (KGraph). Use the apps as they are, customize any of them by describing the change, or describe a new app and have agents build it from that context, with tests and a recorded walkthrough as proof.
+
+Actions inside the apps also have optional AI-powered features. The Audio Player, for example, can create a Virtual DJ that introduces each song, or build a playlist from a description of a mood. These use the agent you already have (Claude Code, Codex, Copilot, Gemini CLI / Antigravity, or a local Ollama model), and every app works without them.
 
 It is free and open source under the [Apache License 2.0](LICENSE). The current release is [v0.0.7](https://github.com/nddipiazza/robos/releases/tag/v0.0.7).
 
 [Website](https://rowbose.com/) | [Documentation](https://rowbose.com/docs/) | [Future](https://rowbose.com/future/) | [Blog](https://rowbose.com/blog/) | [Download](https://rowbose.com/download/) | [Releases](https://github.com/nddipiazza/robos/releases) | [Discord](https://discord.gg/6PjxzkHujE)
 
 <p align="center">
-  <img src="site/assets/hero/slides/15-evidence-updated.jpg" alt="Code Review Theater showing before and after evidence for a branch an agent pushed" width="900">
+  <img src="site/assets/point-of-sale/coffee-register-latte.jpg" alt="RobOS Point of Sale register with a customized latte order" width="440">
+  <img src="site/assets/family-finances/02-accounts.png" alt="RobOS Household accounts view with reconciled accounts" width="440">
 </p>
 
-*Code Review Theater showing before-and-after evidence for a branch an agent pushed. Recorded against a demo repository: GitHub, the agent and CI results are scripted stand-ins, while the repository, tests, diff and evidence are real.*
+*Two of the suites: Point of Sale and Household. Each was modeled in the KGraph, built by agents and is verified by automated browser tests.*
+
+## Three ways to use it
+
+1. **Use the suites.** Ready-made apps that run on your machine and keep your data local. See the [app directory](https://rowbose.com/apps/).
+2. **Customize any app.** Describe the change. It becomes an edit to the app's KGraph, an agent implements it on a branch, and tests plus a narrated walkthrough show the result before you keep it.
+3. **Build a new app.** Describe it, or import the repositories, APIs and docs you already have. RobOS models it in the KGraph and routed agents build it the same way the suites were built.
+
+Separately, AI-powered features inside the apps are optional extras you switch on, grounded in your own data. The Audio Player's [Virtual DJ and AI Playlists](https://rowbose.com/blog/#audio-player-virtual-dj) are the reference example.
 
 ## What is in this repository
 
-- **Desktop apps.** Electron apps covering the development lifecycle: planning, code review, git and issues, databases and API clients, Kubernetes, builds, documentation and eLearning. See the [app directory](https://rowbose.com/apps/).
-- **Knowledge graph.** Services, contracts, databases, teams and work items stored as JSON-LD under `.robos/` and validated with SHACL. Two states of the graph (`main` and a feature branch) can be diffed to see what a change touches before it merges.
+- **App suites.** Point of Sale, Auto Center, Household, Audio Player and Home Speaker, and games (a cRPG, a tabletop RPG and an RTS), each with optional AI features.
+- **Developer suite.** Electron apps covering the development lifecycle that builds and changes the apps: planning, code review, git and issues, databases and API clients, Kubernetes, builds, documentation and eLearning. See the [app directory](https://rowbose.com/apps/).
+- **Knowledge graph.** Apps, services, contracts, databases, teams and work items stored as JSON-LD under `.robos/` and validated with SHACL. Two states of the graph (`main` and a feature branch) can be diffed to see what a change touches before it merges.
 - **Agent harness.** Runs the agent CLIs you have installed (Claude Code, Codex, Copilot, Gemini CLI / Antigravity), scans prompts for secrets and personal data, runs agents in disposable profiles, and captures test and UI evidence for review. No API keys are needed. An optional API mode can send quick requests to Anthropic, OpenAI, Gemini or a local Ollama server instead ([AI agents and API mode](https://rowbose.com/v1/ai-providers.html)).
 - **Skills and plugins.** Skills and slash commands that let coding agents operate RobOS and work on this repository.
 - **Appliance OS (optional).** An Ubuntu desktop image for QEMU/KVM with the whole suite preinstalled.
@@ -27,7 +39,7 @@ The installers on the [download page](https://rowbose.com/download/) set up the 
 ```sh
 git clone https://github.com/nddipiazza/robos.git
 cd robos
-scripts/dev-launch.sh pr-review
+scripts/dev-launch.sh point-of-sale
 ```
 
 `dev-launch.sh` installs the app's dependencies on first run, then starts it. Run it with no argument to list the apps. On GNOME, `scripts/install-local.sh` adds the apps to the application launcher instead.
@@ -35,6 +47,9 @@ scripts/dev-launch.sh pr-review
 For the Ubuntu desktop setup, the VM image and per-platform notes, see the [installation guide](https://rowbose.com/v1/getting-started.html). To model another repository in a knowledge graph, see the [graph workspace guide](packages/robos-graph/WORKSPACES.md).
 
 ## How a change moves through RobOS
+
+Customizing an app and building a new one follow the same path:
+
 
 1. **Plan.** `task-planner` turns a request into tracked issues with acceptance criteria and test cases.
 2. **Implement.** An agent (`task-implementer`) works on a branch, commits and pushes. It does not open the pull request.
@@ -49,6 +64,8 @@ Each app is a directory under `packages/`, launched with `scripts/dev-launch.sh 
 
 | Area | Packages |
 |---|---|
+| App suites | `point-of-sale`, `auto-center`, `household`, `audio-player`, `home-speaker`, `robos-tabletop` |
+| Building apps | `app-wizard`, `robos-graph` (Knowledge Graph Explorer) |
 | Planning and tasks | `task-planner`, `task-implementer`, `task-board`, `issue-manager`, `dev-central` |
 | Review and delivery | `pr-review`, `ci-monitor`, `deploy-tracker` |
 | Architecture and graph | `robos-graph` (Knowledge Graph Explorer), `topology-manager`, `schema-studio`, `contract-studio` |

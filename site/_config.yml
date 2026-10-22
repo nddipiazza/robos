@@ -1,5 +1,5 @@
 title: RobOS
-description: "RobOS is a context-engineering toolset and app suite for AI development: a standard knowledge graph (KGraph) for everything, context-efficient routing to any LLM provider, and a complete SDLC from planning to merge."
+description: "RobOS is an open-source app suite built on one knowledge graph: use the apps, customize any of them, or build new ones from context engineering principles. AI features inside the apps are optional."
 url: "https://rowbose.com"
 baseurl: ""
 
