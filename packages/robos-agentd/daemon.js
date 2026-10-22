@@ -10,7 +10,7 @@ const { VirtualDisplayEngine } = require('./display-engine');
 const HOME_DIR = process.env.HOME || os.homedir();
 const RUN_DIR  = path.join(HOME_DIR, '.config', 'robos', 'agentd');
 const STATE_FILE = path.join(RUN_DIR, 'agents.json');
-const SOCKET_PATH = path.join(RUN_DIR, 'agentd.sock');
+const SOCKET_PATH = require('../robos-lib/local-ipc-path').localIpcPath('agentd', path.join(RUN_DIR, 'agentd.sock'));
 const AGENT_HOMES_DIR = path.join(RUN_DIR, 'homes');
 const ARCHIVES_DIR = path.join(RUN_DIR, 'archives');
 

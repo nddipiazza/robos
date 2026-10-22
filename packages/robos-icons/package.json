@@ -2,5 +2,6 @@
   "name": "robos-icons",
   "version": "0.0.5",
   "description": "RobOS SVG icon registry for built-in apps",
-  "main": "index.js"
+  "main": "index.js",
+  "scripts": { "postinstall": "node build-browser.js" }
 }

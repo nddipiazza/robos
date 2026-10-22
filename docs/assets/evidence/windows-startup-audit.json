@@ -1,0 +1,739 @@
+{
+  "auditedOn": "2026-10-22",
+  "platform": "win32",
+  "windowsBuild": "10.0.26200",
+  "electron": "33.4.11",
+  "scope": "Startup and initial rendering with isolated app profiles",
+  "initial": {
+    "tested": 89,
+    "passed": 78,
+    "failed": 11
+  },
+  "final": {
+    "tested": 90,
+    "passed": 90,
+    "failed": 0
+  },
+  "apps": [
+    {
+      "id": "launcher",
+      "title": "RobOS",
+      "passed": true,
+      "controls": 101,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "adapter-studio",
+      "title": "RobOS Open-Source Ecosystem Adapter Suite",
+      "passed": true,
+      "controls": 4,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "agent-autoconfig",
+      "title": "RobOS Universal AI Agent Auto-Configuration Console",
+      "passed": true,
+      "controls": 2,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "agent-chat",
+      "title": "RobOS Agent Chat",
+      "passed": true,
+      "controls": 16,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "agent-sidebar",
+      "title": "RobOS Agent Workflow Sidebar",
+      "passed": true,
+      "controls": 2,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "agents-manager",
+      "title": "RobOS Agents",
+      "passed": true,
+      "controls": 38,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "ai-prompt",
+      "title": "RobOS AI Prompt",
+      "passed": true,
+      "controls": 17,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "app-wizard",
+      "title": "RobOS App Wizard",
+      "passed": true,
+      "controls": 63,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "audio-player",
+      "title": "RobOS Audio Player",
+      "passed": true,
+      "controls": 36,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "auto-center",
+      "title": "RobOS Auto Center",
+      "passed": true,
+      "controls": 99,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "automation-studio",
+      "title": "Automation Studio",
+      "passed": true,
+      "controls": 23,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "ci-monitor",
+      "title": "RobOS CI Monitor",
+      "passed": true,
+      "controls": 20,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "ci-monitor-mcp",
+      "title": "RobOS CI Monitor MCP Server Console",
+      "passed": true,
+      "controls": 3,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "context-manager",
+      "title": "RobOS Context Manager",
+      "passed": true,
+      "controls": 38,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "contract-studio",
+      "title": "RobOS API Contract & Governance Engine",
+      "passed": true,
+      "controls": 28,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "crpg-editor",
+      "title": "RobOS cRPG Editor — Campaign, Character, Inventory & Maps Studio",
+      "passed": true,
+      "controls": 612,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "crpg-game-builder-elearning",
+      "title": "RobOS cRPG Game Builder & Tactical Engine Academy — RobOS Interactive eLearning",
+      "passed": true,
+      "controls": 60,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "data-sources",
+      "title": "RobOS Data Sources",
+      "passed": true,
+      "controls": 64,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "db-manager",
+      "title": "RobOS Relational Database Management",
+      "passed": true,
+      "controls": 12,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "deploy-tracker",
+      "title": "Deploy Tracker",
+      "passed": true,
+      "controls": 2,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "desktop-agents",
+      "title": "RobOS Desktop Agents Viewer",
+      "passed": true,
+      "controls": 6,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "desktop-customizer",
+      "title": "Desktop Customizer",
+      "passed": true,
+      "controls": 5,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "desktop-dashboard",
+      "title": "RobOS Desktop",
+      "passed": true,
+      "controls": 0,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "desktop-manager",
+      "title": "RobOS Desktop Manager",
+      "passed": true,
+      "controls": 62,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "desktop-widgets",
+      "title": "RobOS Desktop Widgets",
+      "passed": true,
+      "controls": 1,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "dev-central",
+      "title": "Dev Central",
+      "passed": true,
+      "controls": 64,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "dev-discussions",
+      "title": "RobOS Dev Discussions",
+      "passed": true,
+      "controls": 37,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "dev-tools-mcp",
+      "title": "RobOS Dev Tools MCP Server Console",
+      "passed": true,
+      "controls": 3,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "docu-vault-desktop",
+      "title": "DocuVault Desktop",
+      "passed": true,
+      "controls": 0,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "ekgraph-mcp",
+      "title": "RobOS EKGraph MCP Server Console",
+      "passed": true,
+      "controls": 4,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "git-login-manager",
+      "title": "RobOS Git Login Manager",
+      "passed": true,
+      "controls": 26,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "git-projects",
+      "title": "RobOS Git Projects",
+      "passed": true,
+      "controls": 167,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "gitea-browser",
+      "title": "Google Chrome - robos/acme-petshop: Issues · Gitea",
+      "passed": true,
+      "controls": 20,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "graphql-client",
+      "title": "RobOS GraphQL Client",
+      "passed": true,
+      "controls": 4,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "group-manager",
+      "title": "RobOS Group Developer Settings",
+      "passed": true,
+      "controls": 42,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "grpc-client",
+      "title": "RobOS gRPC Client",
+      "passed": true,
+      "controls": 3,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "home-speaker",
+      "title": "RobOS Home Speaker",
+      "passed": true,
+      "controls": 52,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "icon-manager",
+      "title": "RobOS Icon Manager",
+      "passed": true,
+      "controls": 3,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "ide-bridge-mcp",
+      "title": "RobOS IDE Bridge MCP Server Console",
+      "passed": true,
+      "controls": 6,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "intellij-idea",
+      "title": "RobOS Task Workspace & IDE — Acme Petshop",
+      "passed": true,
+      "controls": 3,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "issue-manager",
+      "title": "RobOS Issue Manager",
+      "passed": true,
+      "controls": 14,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "kgraph-parse-portal",
+      "title": "RobOS KGraph Parse Portal",
+      "passed": true,
+      "controls": 33,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "kube-studio",
+      "title": "RobOS Kube Studio",
+      "passed": true,
+      "controls": 53,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "manager-dashboard",
+      "title": "Manager Dashboard",
+      "passed": true,
+      "controls": 2,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "mcp-manager",
+      "title": "RobOS MCP Server Manager",
+      "passed": true,
+      "controls": 17,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "nosql-manager",
+      "title": "RobOS NoSQL Database Management",
+      "passed": true,
+      "controls": 5,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "notifications",
+      "title": "RobOS Notifications",
+      "passed": true,
+      "controls": 24,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "package-manager",
+      "title": "RobOS App, Package & Runtime Manager",
+      "passed": true,
+      "controls": 8,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "pass-manager",
+      "title": "RobOS Pass Manager",
+      "passed": true,
+      "controls": 24,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "people-directory",
+      "title": "RobOS People Directory",
+      "passed": true,
+      "controls": 28,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "people-manager",
+      "title": "RobOS Human & AI Agent Personnel Roster",
+      "passed": true,
+      "controls": 5,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "point-of-sale",
+      "title": "RobOS Point of Sale",
+      "passed": true,
+      "controls": 3,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "pr-review",
+      "title": "Open a task — Code Review",
+      "passed": true,
+      "controls": 2,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "remote-execution-studio",
+      "title": "RobOS Remote Execution Studio",
+      "passed": true,
+      "controls": 29,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "report-builder",
+      "title": "Report Builder",
+      "passed": true,
+      "controls": 6,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "rest-client",
+      "title": "RobOS REST API Client (Bruno)",
+      "passed": true,
+      "controls": 38,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "robos-agent-session",
+      "title": "RobOS Agent Session Client Demo",
+      "passed": true,
+      "controls": 5,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "robos-agentd",
+      "title": "RobOS Desktop Agents Manager",
+      "passed": true,
+      "controls": 9,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "robos-cli",
+      "title": "RobOS CLI Console",
+      "passed": true,
+      "controls": 23,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "robos-documentation",
+      "title": "RobOS Documentation Hub & Living Architecture Verifier",
+      "passed": true,
+      "controls": 16,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "robos-elearning",
+      "title": "RobOS eLearning Player",
+      "passed": true,
+      "controls": 37,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "robos-graph",
+      "title": "RobOS Knowledge Graph Explorer",
+      "passed": true,
+      "controls": 150,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "robos-logs",
+      "title": "RobOS Logs",
+      "passed": true,
+      "controls": 5,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "robos-mcp-lib",
+      "title": "RobOS MCP Server Inspector & Framework",
+      "passed": true,
+      "controls": 2,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "robos-mcp-router",
+      "title": "RobOS Unified MCP Router Console",
+      "passed": true,
+      "controls": 3,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "robos-onboarding",
+      "title": "RobOS Setup Wizard",
+      "passed": true,
+      "controls": 38,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "robos-preferences",
+      "title": "RobOS Preferences",
+      "passed": true,
+      "controls": 63,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "robos-profiled",
+      "title": "RobOS Ephemeral Profile Manager",
+      "passed": true,
+      "controls": 9,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "robos-tabletop",
+      "title": "RobOS Tabletop Studio",
+      "passed": true,
+      "controls": 223,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "robos-toast",
+      "title": "RobOS Toast Notification Console",
+      "passed": true,
+      "controls": 65,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "schema-studio",
+      "title": "RobOS Schema Studio & Definitive Registry",
+      "passed": true,
+      "controls": 33,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "search-index",
+      "title": "RobOS Search Index",
+      "passed": true,
+      "controls": 9,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "security-setup",
+      "title": "RobOS Security Setup",
+      "passed": true,
+      "controls": 15,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "skills-manager",
+      "title": "RobOS Skills Manager",
+      "passed": true,
+      "controls": 94,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "software-center",
+      "title": "RobOS Software Center",
+      "passed": true,
+      "controls": 37,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "stage-demo",
+      "title": "RobOS Stage Demo Viewer",
+      "passed": true,
+      "controls": 8,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "system-mcp",
+      "title": "RobOS System MCP Server Console",
+      "passed": true,
+      "controls": 3,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "tabletop-blockmap-creator",
+      "title": "RobOS Tabletop Blockmap Creator — Static Board Studio",
+      "passed": true,
+      "controls": 63,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "tabletop-quest-editor",
+      "title": "RobOS Tabletop Quest Map Editor",
+      "passed": true,
+      "controls": 129,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "task-board",
+      "title": "RobOS Task Board",
+      "passed": true,
+      "controls": 6,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "task-implementer",
+      "title": "RobOS Task Implementer",
+      "passed": true,
+      "controls": 51,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "task-manager-mcp",
+      "title": "RobOS Task Manager MCP Server Console",
+      "passed": true,
+      "controls": 3,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "task-planner",
+      "title": "RobOS Task Explorer",
+      "passed": true,
+      "controls": 72,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "task-servers",
+      "title": "RobOS Task Servers",
+      "passed": true,
+      "controls": 3,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "topology-manager",
+      "title": "RobOS System Topology & Backstage C4 Studio",
+      "passed": true,
+      "controls": 20,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "voice-prompt",
+      "title": "RobOS Voice",
+      "passed": true,
+      "controls": 7,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "workflow-studio",
+      "title": "RobOS Workflow Studio",
+      "passed": true,
+      "controls": 30,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "workspace-manager",
+      "title": "RobOS Workspace Manager",
+      "passed": true,
+      "controls": 5,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "workspace-manager-mcp",
+      "title": "RobOS Workspace Manager MCP Server Console",
+      "passed": true,
+      "controls": 7,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    },
+    {
+      "id": "household",
+      "title": "RobOS Household · family year",
+      "passed": true,
+      "controls": 16,
+      "rendererErrors": [],
+      "failedLocalResources": []
+    }
+  ]
+}

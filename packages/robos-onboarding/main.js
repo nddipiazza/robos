@@ -767,6 +767,14 @@ function readGitProjects() { try { return JSON.parse(fs.readFileSync(GIT_PROJECT
 function writeGitProjects(d) { fs.mkdirSync(path.dirname(GIT_PROJECTS_DATA), { recursive: true }); fs.writeFileSync(GIT_PROJECTS_DATA, JSON.stringify(d, null, 2)); }
 
 ipcMain.handle('read-projects', () => readGitProjects());
+ipcMain.handle('list-groups', () => {
+  const dir = path.join(os.homedir(), '.config', 'robos', 'groups');
+  if (!fs.existsSync(dir)) return { ok: true, groups: [] };
+  const groups = fs.readdirSync(dir).filter(name => name.endsWith('.json')).flatMap(name => {
+    try { return [JSON.parse(fs.readFileSync(path.join(dir, name), 'utf8'))]; } catch { return []; }
+  });
+  return { ok: true, groups };
+});
 ipcMain.handle('write-projects', (_, data) => writeGitProjects(data));
 ipcMain.handle('parse-url', (_, url) => {
   let u = (url || '').trim().replace(/\.git$/, '');
