@@ -18,7 +18,7 @@ extra_css: /assets/landing.css
         <li><b>Build</b> new apps from context, with proof they work</li>
       </ul>
       <div class="cta">
-        <a class="btn" data-dl-href data-win="{{ site.data.release.download }}/Install-RobOS.cmd" data-mac="/download/#linux-distro" data-linux="/download/#linux-distro" href="{{ '/download/' | relative_url }}"><img class="btn-ic" src="/assets/icons/download.svg" alt="" width="18" height="18"> <span data-dl-label>Download RobOS</span></a>
+        <a class="btn" data-dl-href data-win="{{ site.data.release.url }}" data-win-asset="RobOS-v{{ site.data.release.version }}-Windows-Setup.exe" data-release-tag="{{ site.data.release.tag }}" data-mac="/download/#linux-distro" data-linux="/download/#linux-distro" href="{{ '/download/' | relative_url }}"><img class="btn-ic" src="/assets/icons/download.svg" alt="" width="18" height="18"> <span data-dl-label>Download RobOS</span></a>
         <a class="btn btn-ghost" href="#suites">Browse the suites</a>
       </div>
       <p class="sub">Free &amp; open source · macOS, Linux, Windows · <a href="{{ '/download/' | relative_url }}">Other install options</a></p>

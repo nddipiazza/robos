@@ -12,7 +12,7 @@ description: Download RobOS for macOS, Linux and Windows, or run it from source 
   <div class="wrap">
     <div class="os-grid">
       <div class="card os" data-os="mac"><h3>macOS</h3><p class="muted">Appliance installer (.dmg)</p><a class="btn" href="{{ site.data.release.url }}">View macOS USB flasher</a></div>
-      <div class="card os" data-os="win"><h3>Windows</h3><p class="muted">Native Windows app suite</p><a class="btn" href="{{ site.data.release.download }}/Install-RobOS.cmd" download>Download for Windows</a><p class="small">Open the downloaded setup file. Installs into your user folder with a Start menu launcher.</p></div>
+      <div class="card os" data-os="win"><h3>Windows</h3><p class="muted">Native Windows app suite</p><a class="btn" href="{{ site.data.release.url }}" data-release-tag="{{ site.data.release.tag }}" data-release-asset="RobOS-v{{ site.data.release.version }}-Windows-Setup.exe">Download Windows installer</a><a class="alt-l" href="{{ site.data.release.url }}" data-release-tag="{{ site.data.release.tag }}" data-release-asset="RobOS-v{{ site.data.release.version }}-Windows-Portable.exe">Portable EXE</a><p class="small">Both bundle the apps and runtime. See the release assets while builds are pending.</p></div>
       <div class="card os" data-os="linux"><h3>Linux</h3><p class="muted">Appliance installer (AppImage or .deb)</p><a class="btn" href="{{ site.data.release.url }}">View Linux USB flasher</a><a class="alt-l" href="{{ site.data.release.url }}">AppImage and .deb release files</a></div>
     </div>
     <p class="muted small" style="text-align:center;margin-top:18px">Appliance release files and checksums are on <a style="text-decoration:underline" href="https://github.com/nddipiazza/robos/releases/tag/v{{ site.data.release.version }}" target="_blank" rel="noopener">GitHub Releases</a>. The Windows setup above installs the apps directly. The .dmg, AppImage and .deb downloads create appliance USB drives.</p>
@@ -22,7 +22,8 @@ description: Download RobOS for macOS, Linux and Windows, or run it from source 
 <section id="windows">
   <div class="wrap">
     <h2 class="h2">Run RobOS on Windows</h2>
-    <p>Download and open <strong>Install-RobOS.cmd</strong>. Setup downloads a private Node.js and Electron runtime, the RobOS apps and their dependencies, then adds <strong>RobOS</strong> to your Start menu. Windows stays your operating system. No WSL, USB drive or administrator account is needed.</p>
+    <p>Use the Windows installer to choose a folder and add shortcuts, or the portable EXE to run without an installation wizard. Both bundle the app suite and runtime.</p>
+    <p>As a script alternative, download <a href="{{ site.data.release.download }}/Install-RobOS.cmd">Install-RobOS.cmd</a> and open it. Script setup downloads a private Node.js and Electron runtime, the apps and dependencies, then adds <strong>RobOS</strong> to your Start menu. No WSL, USB drive or administrator account is needed.</p>
     <p>The default folder is <code>%USERPROFILE%\RobOS</code>. You can also open <code>RobOS.cmd</code> inside that folder to search and launch apps. Internet access is needed during setup. Keep the setup window open until it finishes; failures are reported rather than hidden.</p>
     <p class="muted">The Windows app suite has passed its startup audit. Linux-specific integrations such as GNOME shell controls, UNIX pass, KVM and X11 automation require their Linux environment. Agent features are optional; install your preferred agent in RobOS Software Center, then sign in to it.</p>
     <p>Software Center installs Windows tools through WinGet and coding-agent CLIs through the private Node.js runtime. It also offers Godot 4 and FFmpeg. Tools installed through WinGet use their Windows installation locations; CLI packages live under <code>%USERPROFILE%\RobOS\tools\npm</code>. Some third-party installers may request administrator approval or a restart.</p>
@@ -81,11 +82,12 @@ scripts/install-local.sh</code></pre>
     <p>Windows EXEs, Linux distro, USB flasher and VM artifacts appear on <a href="{{ site.data.release.url }}">the release page</a> after their builds and checks finish. The Windows scripts are available as alternatives. Check the available assets before downloading.</p>
     <table class="t">
       <tr><th>Artifact</th><th>File</th><th>Purpose</th></tr>
-      <tr><td>Windows installer</td><td><a href="{{ site.data.release.url }}">RobOS-v{{ site.data.release.version }}-Windows-Setup.exe</a></td><td>Install the native app suite with a folder chooser and shortcuts</td></tr>
-      <tr><td>Windows portable EXE</td><td><a href="{{ site.data.release.url }}">RobOS-v{{ site.data.release.version }}-Windows-Portable.exe</a></td><td>Run the bundled app suite without an installation wizard</td></tr>
+      <tr><td>Windows installer</td><td><a href="{{ site.data.release.url }}" data-release-tag="{{ site.data.release.tag }}" data-release-asset="RobOS-v{{ site.data.release.version }}-Windows-Setup.exe">RobOS-v{{ site.data.release.version }}-Windows-Setup.exe</a></td><td>Install the native app suite with a folder chooser and shortcuts</td></tr>
+      <tr><td>Windows portable EXE</td><td><a href="{{ site.data.release.url }}" data-release-tag="{{ site.data.release.tag }}" data-release-asset="RobOS-v{{ site.data.release.version }}-Windows-Portable.exe">RobOS-v{{ site.data.release.version }}-Windows-Portable.exe</a></td><td>Run the bundled app suite without an installation wizard</td></tr>
       <tr><td>Windows app setup</td><td><a href="{{ site.data.release.download }}/Install-RobOS.cmd">Install-RobOS.cmd</a></td><td>Install the native Windows app suite</td></tr>
       <tr><td>Windows PowerShell setup</td><td><a href="{{ site.data.release.download }}/Install-RobOS.ps1">Install-RobOS.ps1</a></td><td>Custom install folder or repair</td></tr>
-      <tr><td>Windows checksums</td><td><a href="{{ site.data.release.download }}/WINDOWS-SHA256SUMS">WINDOWS-SHA256SUMS</a></td><td>Verify the Windows setup downloads</td></tr>
+      <tr><td>Windows EXE checksums</td><td><a href="{{ site.data.release.url }}">WINDOWS-EXE-SHA256SUMS</a></td><td>Verify the installer and portable EXE</td></tr>
+      <tr><td>Windows script checksums</td><td><a href="{{ site.data.release.download }}/WINDOWS-SHA256SUMS">WINDOWS-SHA256SUMS</a></td><td>Verify the Windows setup downloads</td></tr>
       <tr><td>Linux installer</td><td><code>RobOS-Installer-v{{ site.data.release.version }}-linux.AppImage</code></td><td>USB flash GUI</td></tr>
       <tr><td>macOS installer</td><td><code>RobOS-Installer-v{{ site.data.release.version }}-mac.dmg</code></td><td>USB flash GUI</td></tr>
       <tr><td>Windows USB flasher (Linux distro)</td><td><code>RobOS-Installer-v{{ site.data.release.version }}-win.exe</code></td><td>USB flash GUI</td></tr>
