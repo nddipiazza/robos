@@ -138,6 +138,10 @@ func _ready() -> void:
 		_hero_gold = gs.gold
 		_opened_chests = gs.opened_chests.duplicate(true)
 		_bridge_built = gs.bridge_built
+		# Stepping outside puts the torch out and ends RADIANT.
+		if "torch_active" in gs:
+			gs.torch_active = false
+			gs.radiant_steps_left = 0
 		if gs.come_from != "" or gs.spawn_tile != spawn_tile:
 			_hero_tile = gs.spawn_tile
 			_hero_facing = _facing_to_vec(gs.spawn_facing)

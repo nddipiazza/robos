@@ -122,6 +122,7 @@ func _on_step() -> void:
 		gs_regen.apply_step_regen()
 	if _radiant_steps_left > 0:
 		_radiant_steps_left -= 1
+		_sync_light_state()
 		_update_darkness_mask()
 	_check_transitions()
 	_check_encounter()
@@ -697,6 +698,12 @@ func _is_dark() -> bool:
 	var key := _get_map_key()
 	return key.begins_with("erdricks-cave") or key.begins_with("mountain-cave") or key.begins_with("garinham-b") or key.begins_with("charlock-castle-b") or key.begins_with("swamp-cave")
 
+func _sync_light_state() -> void:
+	var gs := get_node_or_null("/root/GameState")
+	if gs and "torch_active" in gs:
+		gs.torch_active = _torch_active
+		gs.radiant_steps_left = _radiant_steps_left
+
 func _get_current_light_radius() -> int:
 	if _radiant_steps_left > 100:
 		return 3  # 7x7 square
@@ -710,8 +717,16 @@ func _get_current_light_radius() -> int:
 		return 0  # 1x1 hero tile square
 
 func _build_darkness_overlay() -> void:
+	var gs := get_node_or_null("/root/GameState")
 	if not _is_dark():
+		# Leaving the dungeon puts the torch out and ends RADIANT.
+		if gs and "torch_active" in gs:
+			gs.torch_active = false
+			gs.radiant_steps_left = 0
 		return
+	if gs and "torch_active" in gs:
+		_torch_active = bool(gs.torch_active)
+		_radiant_steps_left = int(gs.radiant_steps_left)
 	_darkness_layer = CanvasLayer.new()
 	_darkness_layer.name = "DarknessLayer"
 	_darkness_layer.layer = 8
@@ -1628,7 +1643,12 @@ func _cmd_spell() -> void:
 	var hp := int(gs.hero_stats.get("hp", 0))
 	var hp_max := int(gs.hero_stats.get("hp_max", 1))
 	var missing := hp_max - hp
-	# Field casting picks the most useful spell: HEALMORE / HEAL when wounded, RADIANT in the dark.
+	# Field casting picks the most useful spell: RADIANT when blind in a cave,
+	# HEALMORE / HEAL when wounded, otherwise RADIANT to refresh a fading light.
+	var blind: bool = _is_dark() and _get_current_light_radius() <= 0
+	if blind and gs.has_spell("radiant") and mp >= 3 and missing < hp_max / 2:
+		_cast_radiant(gs, mp)
+		return
 	if missing > 0:
 		if gs.has_spell("healmore") and mp >= 10 and missing > 30:
 			gs.hero_stats["mp"] = mp - 10
@@ -1645,15 +1665,19 @@ func _cmd_spell() -> void:
 		if mp < 3:
 			_show_dialog("", ["Thou hast not enough\nMagic Points!"])
 			return
-		gs.hero_stats["mp"] = mp - 3
-		_radiant_steps_left = 200
-		_update_darkness_mask()
-		_show_dialog("", ["Thou hast cast Radiant!\nA bright light fills the cavern."])
+		_cast_radiant(gs, mp)
 		return
 	if missing > 0:
 		_show_dialog("", ["Thou hast not enough\nMagic Points!"])
 	else:
 		_show_dialog("", ["There is no need to\ncast a spell here."])
+
+func _cast_radiant(gs: Node, mp: int) -> void:
+	gs.hero_stats["mp"] = mp - 3
+	_radiant_steps_left = 200
+	_sync_light_state()
+	_update_darkness_mask()
+	_show_dialog("", ["Thou hast cast Radiant!\nA bright light fills the cavern."])
 
 func _is_chest_opened(col: int, row: int) -> bool:
 	# Keys are namespaced per map ("<map_key>:<col>,<row>") so chests sharing coordinates
@@ -1693,6 +1717,7 @@ func _use_item(idx: int) -> void:
 
 	if item_id == "torch" or item_name == "torch" or "torch" in item_id or "torch" in item_name:
 		_torch_active = true
+		_sync_light_state()
 		_update_darkness_mask()
 		_show_dialog("", ["Thou hast lit a Torch.\nA warm glow fills the area!"])
 		_inventory.remove_at(idx)

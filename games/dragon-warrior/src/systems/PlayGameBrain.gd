@@ -19,6 +19,9 @@ const MAX_GOAL_FAILURES := 12
 const HEAL_RATIO := 0.4
 const INN_RATIO := 0.65
 const HERB_TARGET := 4
+const TORCH_TARGET := 2       # spare torches to carry into caves before RADIANT is learned
+const TORCH_PRICE := 8
+const DARK_MAP_PREFIXES := ["erdricks-cave", "mountain-cave", "garinham-b", "charlock-castle-b", "swamp-cave"]
 const MAX_PACK_TOOLS := 8
 
 # Towns that have an inn, by map key -> {tile, face, cost, world}
@@ -72,6 +75,7 @@ var _objective: Dictionary = {}
 var _grind_target: Dictionary = {}
 var _grind_cell: Vector2i = Vector2i(-1, -1)
 var _light_fail_ticks: int = 0
+var _shop_missing: Dictionary = {}  # map_key -> {item_id: true} items a shop turned out not to sell
 var _last_gold: int = -1
 var _battle_heals: int = 0
 var _battle_sleeps: int = 0
@@ -107,6 +111,7 @@ func start(args: Dictionary) -> Dictionary:
 	_skipped.clear()
 	_log.clear()
 	_goal_failures.clear()
+	_shop_missing.clear()
 	_plan_legs.clear()
 	_plan_goal = ""
 	_objective = {}
@@ -447,6 +452,11 @@ func _handle_ui(state: Dictionary) -> Dictionary:
 		if want_idx < 0:
 			if _pending_shop_item != "":
 				_log_event("shop", "%s not sold here" % _pending_shop_item)
+				if str(_objective.get("kind", "")) == "supply":
+					var smap := str(_objective.get("map", ""))
+					if not _shop_missing.has(smap):
+						_shop_missing[smap] = {}
+					_shop_missing[smap][_pending_shop_item] = true
 				_fail_objective("shop lacks " + _pending_shop_item)
 			_pending_shop_item = ""
 			return _tap("ui_cancel")
@@ -809,17 +819,33 @@ func _decide_survival(state: Dictionary) -> Dictionary:
 			return _open_command("ITEM")
 
 	# Light up dark caves like a player would: RADIANT if known, else a torch.
+	# Never walk blind: a torch goes on even when RADIANT is affordable but HP is
+	# low enough that the field SPELL command would heal instead of lighting.
 	var light: Dictionary = state.get("light_status", {})
 	if _light_fail_ticks > 0:
 		_light_fail_ticks -= 1
-	if bool(light.get("is_dark", false)) and int(light.get("light_radius", 0)) <= 0 and _light_fail_ticks == 0:
-		if gs.has_spell("radiant") and mp >= 3 and not (low and gs.has_spell("heal") and mp >= 4):
+	var radius := int(light.get("light_radius", 0))
+	if bool(light.get("is_dark", false)) and _light_fail_ticks == 0:
+		var radiant_ok: bool = gs.has_spell("radiant") and mp >= 3
+		if radius <= 0:
+			if radiant_ok and hp_max - hp < hp_max / 2 and not (low and gs.has_spell("heal") and mp >= 4):
+				_light_fail_ticks = 20
+				_log_event("light", "casting RADIANT in %s" % _cur_map(state))
+				return _open_command("SPELL")
+			if _count_item("torch") > 0:
+				_light_fail_ticks = 20
+				_log_event("light", "lighting a torch in %s" % _cur_map(state))
+				_pending_item_id = "torch"
+				return _open_command("ITEM")
+			if radiant_ok:
+				_light_fail_ticks = 20
+				return _open_command("SPELL")
+		elif radius <= 1 and radiant_ok and hp == hp_max and mp >= 8 and not conserving \
+				and int(light.get("radiant_steps_left", 0)) <= 50:
+			# Fading RADIANT (or a dim torch): refresh while HP is full so SPELL does not heal instead.
 			_light_fail_ticks = 20
+			_log_event("light", "refreshing RADIANT in %s" % _cur_map(state))
 			return _open_command("SPELL")
-		if _count_item("torch") > 0:
-			_light_fail_ticks = 20
-			_pending_item_id = "torch"
-			return _open_command("ITEM")
 
 	# Top up with magic while MP is plentiful instead of trekking back to an inn.
 	var topup: bool = hp <= int(float(hp_max) * INN_RATIO) and mp >= maxi(10, int(float(_mp_max()) * 0.3))
@@ -866,17 +892,26 @@ func _decide_survival(state: Dictionary) -> Dictionary:
 				return _pursue_objective(state, {})
 	_heading_to_inn = false
 
-	# Keep a stock of herbs when we are in a town with an item shop and have spare gold.
+	# Keep a stock of herbs (and torches before RADIANT) when we are in a town
+	# with an item shop and have spare gold.
 	var cur_map2 := _cur_map(state)
-	if _item_shops.has(cur_map2) and _count_item("herb") < _herb_target() \
-			and (_count_item("herb") > 0 or _count_pack_tools() < MAX_PACK_TOOLS):
+	if _item_shops.has(cur_map2):
 		var shop: Dictionary = _item_shops[cur_map2]
 		var reserve := _gold_needed_for_next_buy()
-		if _gold() - int(shop.get("price", 24)) >= reserve:
-			_pending_shop_item = "herb"
+		var missing_here: Dictionary = _shop_missing.get(cur_map2, {})
+		for want in [["torch", _torch_target(), TORCH_PRICE], ["herb", _herb_target(), int(shop.get("price", 24))]]:
+			var item_id: String = want[0]
+			if missing_here.has(item_id) or _count_item(item_id) >= int(want[1]):
+				continue
+			if _count_item(item_id) == 0 and _count_pack_tools() >= MAX_PACK_TOOLS:
+				continue
+			# Torches are cheap and walking blind is worse than a slightly later weapon.
+			if _gold() - int(want[2]) < (0 if item_id == "torch" else reserve):
+				continue
+			_pending_shop_item = item_id
 			_objective = {
-				"kind": "supply", "label": "buy herb", "map": cur_map2, "tile": shop.get("tile", Vector2i()),
-				"face": str(shop.get("face", "up")), "action": "buy", "item_id": "herb",
+				"kind": "supply", "label": "buy " + item_id, "map": cur_map2, "tile": shop.get("tile", Vector2i()),
+				"face": str(shop.get("face", "up")), "action": "buy", "item_id": item_id,
 			}
 			return _pursue_objective(state, {})
 	return {}
@@ -916,6 +951,18 @@ func _gold_needed_for_next_buy() -> int:
 			if n >= 3:
 				break
 	return total
+
+
+## Torches to carry when dark maps are among the upcoming milestones: a pair
+## before RADIANT is known, a single backup for when MP runs dry afterwards
+## (a torch burns out when leaving a dungeon).
+func _torch_target() -> int:
+	for i in range(_index, mini(_milestones.size(), _index + 12)):
+		var mkey := str(_milestones[i].get("map", ""))
+		for prefix: String in DARK_MAP_PREFIXES:
+			if mkey.begins_with(prefix):
+				return 1 if _gs().has_spell("radiant") else TORCH_TARGET
+	return 0
 
 
 func _herb_target() -> int:

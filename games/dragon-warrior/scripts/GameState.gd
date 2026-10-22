@@ -36,6 +36,11 @@ var unlocked_doors: Dictionary = {}
 # Rainbow bridge — set when Rainbow Drop is used at the correct overworld tile
 var bridge_built: bool = false
 
+# Dungeon light. A lit torch lasts until the hero leaves the dungeon and RADIANT
+# fades over steps, so both survive stairs between floors (DungeonMap syncs them).
+var torch_active: bool = false
+var radiant_steps_left: int = 0
+
 # Battle debug: set by DebugLaunch when launching BattleTest scene
 var battle_monster: String = "slime"
 
@@ -176,6 +181,8 @@ func _apply_save_state_override(data: Dictionary) -> void:
 			spawn_tile = parsed_tile
 	if data.has("bridgeBuilt"):
 		bridge_built = bool(data.get("bridgeBuilt", false))
+	torch_active = bool(data.get("torchActive", false))
+	radiant_steps_left = int(data.get("radiantStepsLeft", 0))
 	if data.has("kingIntroDone"):
 		king_intro_done = bool(data.get("kingIntroDone", false))
 	elif data.has("king_intro_done"):
@@ -560,6 +567,8 @@ func export_state_dict(scene_name: String = "ThroneRoom", current_tile: Vector2i
 		"unlockedDoors": unlocked_doors.duplicate(true),
 		"bridgeBuilt": bridge_built,
 		"kingIntroDone": king_intro_done,
+		"torchActive": torch_active,
+		"radiantStepsLeft": radiant_steps_left,
 	}
 
 func save_to_disk(filename: String = "adventure_log.json") -> bool:

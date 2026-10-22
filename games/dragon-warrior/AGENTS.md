@@ -115,6 +115,12 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   and plan, blacklists an unreachable supply shop, and after 3 stalls on one milestone skips it (optional) or fails
   the run; the driver's `--stall-timeout` (default 600 s, `DW_STALL_TIMEOUT`) ends the run with status `stalled`,
   `screenshots/stall.png` and the AI log tail when done/battles/level/gold/exp stop changing.
+- Dark caves: the brain never walks blind. It stocks torches at item shops (two before RADIANT, one spare after,
+  only while dark maps are among the upcoming milestones; `_torch_target`), lights a torch or casts RADIANT as soon
+  as `light_status.light_radius` is 0 and refreshes a fading RADIANT while HP is full (`_decide_survival`, "light"
+  log events). Game side, torch/RADIANT state lives in `GameState.torch_active` / `radiant_steps_left` so stairs
+  between floors keep the light (it ends on the overworld), the field SPELL command casts RADIANT before HEAL when
+  blind, and checkpoints carry `torchActive` / `radiantStepsLeft`.
 - IPC commands: `start_play_game {time_scale, from_milestone}`, `stop_play_game`, `get_milestones` (report with
   `status`, `index`, `done`, `skipped`, `battles`, `deaths` and the brain's event log), `export_save_state` /
   `load_save_state {file_path}`.
