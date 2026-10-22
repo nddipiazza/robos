@@ -42,7 +42,9 @@ jobs:
           generate_release_notes: true
           body: |
             ## Install RobOS on Windows
-            Download **Install-RobOS.cmd** and run it to install the native app suite in your user RobOS folder. No USB drive or Linux installation is required. This installer uses this release's source tag.
+            Choose **RobOS-${{ github.ref_name }}-Windows-Setup.exe** for a Windows installation wizard, or **RobOS-${{ github.ref_name }}-Windows-Portable.exe** to run without an installation wizard. Both bundle the native app suite and runtime. The separate Windows EXE workflow adds these files after packaging and smoke tests pass.
+
+            **Install-RobOS.cmd** and **Install-RobOS.ps1** remain script alternatives and are available while EXEs are building. No USB drive or Linux installation is required.
 
             Software Center now uses native Windows packages and npm: install, update, uninstall, installed-state checks, and portable command shortcuts. Godot 4 and FFmpeg are included in its catalog. Linux-only tools are clearly identified.
 
@@ -232,7 +234,7 @@ jobs:
             echo ""
             echo "### Install RobOS"
             echo ""
-            echo "**Windows native apps:** download Install-RobOS.cmd and run it. This installs the app suite in your RobOS folder without a USB drive or Linux."
+            echo "**Windows native apps:** use RobOS-v${VERSION}-Windows-Setup.exe (installation wizard) or RobOS-v${VERSION}-Windows-Portable.exe (no installation wizard). These are published by the separate native Windows build after its checks pass. Install-RobOS.cmd and Install-RobOS.ps1 remain script alternatives."
             echo ""
             echo "**Optional: Install the RobOS Linux GNOME distro using the USB flasher**"
             echo ""
@@ -269,6 +271,10 @@ jobs:
             echo ""
             echo "| File | Description |"
             echo "|:-----|:------------|"
+            echo "| RobOS-v${VERSION}-Windows-Setup.exe | Native Windows app-suite installer |"
+            echo "| RobOS-v${VERSION}-Windows-Portable.exe | Portable native Windows app suite |"
+            echo "| WINDOWS-EXE-SHA256SUMS | Checksums for the native Windows EXEs |"
+            echo "| Install-RobOS.cmd / Install-RobOS.ps1 | Script alternatives for native Windows setup |"
             echo "| \`RobOS-Installer-*\` | GUI installer app (Linux AppImage/deb, macOS dmg, Windows exe) |"
             echo "| \`robos-v${VERSION}.iso*\` | Bootable installer ISO — flash to USB, installs RobOS unattended |"
             echo "| \`robos-v${VERSION}.qcow2\` | Ready-to-boot VM disk image |"
