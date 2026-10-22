@@ -57,6 +57,14 @@ var unlocked_doors: Dictionary = {}
 ## When true, locked doors are planned through (the brain must then hold enough
 ## Magic Keys — see `count_locked_doors`). When false, locked doors are walls.
 var allow_locked_doors: bool = true
+## map_key -> Array[Vector2i] of tiles occupied by (stationary) NPCs. NPCs are
+## walls for planning, except the plan goal itself (inn / talk targets are the
+## NPC's own tile; the brain stops adjacent to it).
+var npc_tiles: Dictionary = {}
+
+
+func is_npc_tile(map_key: String, pos: Vector2i) -> bool:
+	return npc_tiles.has(map_key) and pos in npc_tiles[map_key]
 
 
 func load_data() -> bool:
@@ -310,6 +318,8 @@ func plan(from_map: String, from_pos: Vector2i, to_map: String, to_pos: Vector2i
 				break
 			var nxt: Vector2i = cpos + d
 			if not is_tile_walkable(cmap, nxt, bridge_built):
+				continue
+			if is_npc_tile(cmap, nxt) and not (cmap == to_map and nxt == to_pos):
 				continue
 			var nk := _skey(cmap, nxt)
 			var nd := bi + 1

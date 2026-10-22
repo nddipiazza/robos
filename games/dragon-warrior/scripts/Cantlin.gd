@@ -25,7 +25,7 @@ func _get_npcs() -> Array:
         {tile=Vector2i(8,20),  sprite_id="sage",     facing="right", speaker="Elder",         pages=["The Dragonlord's castle\nlies on an island to the\nnorth. Take heed, Hero."]},
         {tile=Vector2i(20,20), sprite_id="sage",     facing="up",    speaker="Wise Man",      pages=["With the Rainbow Drop thou\ncanst build a bridge to\nCharlock Castle."]},
         {tile=Vector2i(12,28), sprite_id="guard",    facing="down",  speaker="Soldier",       pages=["We stand guard against\nthe forces of evil.\nThey will not pass!"]},
-        {tile=Vector2i(28,5),  sprite_id="red_guard",facing="left",  speaker="Guard Captain", pages=["All of Cantlin's warriors\nstand ready to defend\nagainst the Dragonlord."]},
+        {tile=Vector2i(26,5),  sprite_id="red_guard",facing="left",  speaker="Guard Captain", pages=["All of Cantlin's warriors\nstand ready to defend\nagainst the Dragonlord."]},
         {tile=Vector2i(23,5),  sprite_id="sage_alt", facing="down",  speaker="Merchant",      shop_id="can001"},
         {tile=Vector2i(25,13), sprite_id="sage_alt", facing="down",  speaker="Merchant",      shop_id="can002"},
         {tile=Vector2i(28,7),  sprite_id="sage_alt", facing="down",  speaker="Shopkeeper",    shop_id="can004"},

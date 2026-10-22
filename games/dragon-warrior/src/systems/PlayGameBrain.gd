@@ -111,6 +111,7 @@ func setup(tree: SceneTree) -> void:
 	_rng.randomize()
 	_planner = preload("res://src/systems/RoutePlanner.gd").new()
 	_planner.call("load_data")
+	_planner.set("npc_tiles", _collect_static_npc_tiles())
 
 
 func start(args: Dictionary) -> Dictionary:
@@ -1109,6 +1110,89 @@ func _objective_for_current(state: Dictionary) -> Dictionary:
 	}
 
 
+# ── NPC obstacles ───────────────────────────────────────────────────────────
+
+## Scene scripts whose `_get_npcs()` is the source of truth for NPC tiles.
+const NPC_SCENE_SCRIPTS := {
+	"brecconary-1f": "res://scripts/Brecconary.gd",
+	"cantlin-1f": "res://scripts/Cantlin.gd",
+	"charlock-castle-b7": "res://scripts/CharlockThroneRoom.gd",
+	"garinham-1f": "res://scripts/Garinham.gd",
+	"hauksness-1f": "res://scripts/Hauksness.gd",
+	"kol-1f": "res://scripts/Kol.gd",
+	"southern-cave-b1": "res://scripts/RainbowDropCave.gd",
+	"rimuldar-1f": "res://scripts/Rimuldar.gd",
+	"northern-cave-b1": "res://scripts/StaffOfRainCave.gd",
+	"swamp-cave-b1": "res://scripts/SwampCave.gd",
+}
+
+
+## NPCs never move, so their tiles can be read once from the scene scripts
+## without instancing any scene: the planner treats them as walls.
+func _collect_static_npc_tiles() -> Dictionary:
+	var out: Dictionary = {}
+	for mk in NPC_SCENE_SCRIPTS:
+		var scr = load(NPC_SCENE_SCRIPTS[mk])
+		if scr == null:
+			continue
+		var inst: Object = scr.new()
+		var tiles: Array = []
+		if inst.has_method("_get_npcs"):
+			for npc in inst.call("_get_npcs"):
+				if npc is Dictionary and npc.has("tile"):
+					tiles.append(npc["tile"])
+		if inst is Node:
+			(inst as Node).free()
+		out[mk] = tiles
+	var castle = load("res://scripts/Castle1F.gd")
+	if castle != null:
+		var c: Object = castle.new()
+		var tiles: Array = []
+		if c.has_method("_build_npc_positions"):
+			c.call("_build_npc_positions")
+			tiles = (c.get("_npc_positions") as Dictionary).keys()
+		if c is Node:
+			(c as Node).free()
+		out["tantegel-castle-1f"] = tiles
+	var throne = load("res://scripts/ThroneRoom.gd")
+	if throne != null:
+		var t: Variant = throne.get("NPC_TILES")
+		if t == null:
+			var ti: Object = throne.new()
+			t = ti.get("NPC_TILES")
+			if ti is Node:
+				(ti as Node).free()
+		out["tantegel-castle-2f"] = Array(t) if t != null else []
+	return out
+
+
+## Refresh the planner's NPC tiles for the current map from the live scene
+## (covers scenes not listed in NPC_SCENE_SCRIPTS).
+func _sync_live_npc_tiles(cur_map: String) -> void:
+	var sc: Node = _scene()
+	if sc == null or cur_map == WORLD_KEY:
+		return
+	var tiles: Array = []
+	var data: Variant = sc.get("_npc_data")
+	if data is Array:
+		for npc in data:
+			if npc is Dictionary and npc.has("tile"):
+				tiles.append(npc["tile"])
+	else:
+		var posd: Variant = sc.get("_npc_positions")
+		if posd is Dictionary:
+			tiles = (posd as Dictionary).keys()
+		else:
+			var nt: Variant = sc.get("NPC_TILES")
+			if nt is Array:
+				tiles = Array(nt)
+			else:
+				return
+	var all: Dictionary = _planner.get("npc_tiles")
+	all[cur_map] = tiles
+	_planner.set("npc_tiles", all)
+
+
 # ── Magic Keys & locked doors ───────────────────────────────────────────────
 
 ## Plan a route, preferring one that avoids locked doors; only when none exists
@@ -1116,6 +1200,7 @@ func _objective_for_current(state: Dictionary) -> Dictionary:
 func _plan_route(cur_map: String, hero: Vector2i, tgt_map: String, tgt: Vector2i) -> Array:
 	var gs: Node = _gs()
 	_planner.set("unlocked_doors", gs.unlocked_doors if gs else {})
+	_sync_live_npc_tiles(cur_map)
 	_planner.set("allow_locked_doors", false)
 	var legs: Array = _planner.call("plan", cur_map, hero, tgt_map, tgt, _bridge_built())
 	if legs.is_empty():
@@ -1642,9 +1727,9 @@ func _navigate(state: Dictionary, cur_map: String, hero: Vector2i, tgt_map: Stri
 
 	var sc: Node = _scene()
 	var path: Array = []
+	var extra: Array = [leg_target]
 	if sc and sc.has_method("_is_walkable"):
 		var size: Vector2i = _map_size(cur_map, sc)
-		var extra: Array = [leg_target]
 		var blocked: Array = []
 		# Locked doors on this leg are passable for pathing: we unlock them on arrival.
 		for dpos in leg.get("doors", []):
@@ -1667,10 +1752,16 @@ func _navigate(state: Dictionary, cur_map: String, hero: Vector2i, tgt_map: Stri
 			blocked.erase(leg_target)
 		path = _planner.call("bfs_live", hero, leg_target, size.x, size.y, Callable(sc, "_is_walkable"), extra, blocked)
 	if path.size() < 2:
-		# Live map disagrees with the planner; fall back to the planned path.
+		# Live map disagrees with the planner; fall back to the planned path,
+		# but never step into a tile the live scene says is blocked (an NPC,
+		# say) — that would spam the same move forever. Replan instead.
 		var planned: Array = leg.get("path", [])
 		var at := planned.find(hero)
+		var nxt_ok := false
 		if at >= 0 and at + 1 < planned.size():
+			var nxt: Vector2i = planned[at + 1]
+			nxt_ok = nxt in extra or cur_map == WORLD_KEY or sc == null or not sc.has_method("_is_walkable") or bool(sc.call("_is_walkable", nxt))
+		if nxt_ok:
 			path = [hero, planned[at + 1]]
 		else:
 			_plan_legs.clear()

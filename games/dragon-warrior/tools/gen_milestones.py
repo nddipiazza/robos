@@ -295,7 +295,7 @@ add("ending", "Report victory to King Lorik", "ending", "talk", "tantegel-castle
 
 inns = {
     "brecconary-1f": inn_entry("brecconary-1f", (5, 5), 6),
-    "garinham-1f": inn_entry("garinham-1f", (4, 2), 6),
+    "garinham-1f": inn_entry("garinham-1f", (4, 15), 6),
     "kol-1f": inn_entry("kol-1f", (22, 6), 0),
     "rimuldar-1f": inn_entry("rimuldar-1f", (6, 6), 6),
     "cantlin-1f": inn_entry("cantlin-1f", (4, 26), 6),

@@ -1650,7 +1650,7 @@
       "map": "garinham-1f",
       "tile": {
         "col": 4,
-        "row": 3
+        "row": 16
       },
       "face": "up",
       "cost": 6

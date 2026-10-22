@@ -17,7 +17,7 @@ func _get_music_path() -> String:
 
 func _get_npcs() -> Array:
     return [
-        {tile=Vector2i(27,13), sprite_id="sage_alt", facing="down",  speaker="Key Merchant",  pages=["Magic Keys unlock any door.\nBuy some before exploring\nthe dungeons."]},
+        {tile=Vector2i(27,14), sprite_id="sage_alt", facing="down",  speaker="Key Merchant",  pages=["Magic Keys unlock any door.\nBuy some before exploring\nthe dungeons."]},
         {tile=Vector2i(12,22), sprite_id="sage_alt", facing="down",  speaker="Weapon Dealer", pages=["A warrior without a good sword\nis no warrior at all.\nBrowse my finest wares."]},
         {tile=Vector2i(6,6),   sprite_id="minister", facing="down",  speaker="Innkeeper",     pages=["Rest here and restore\nthy strength, weary traveler."], inn_cost=6},
         {tile=Vector2i(15,5),  sprite_id="guard",    facing="down",  speaker="Guard",         pages=["Rimuldar is the only place\nto buy Magic Keys in all\nof Alefgard."]},
