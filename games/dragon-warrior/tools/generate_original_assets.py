@@ -441,6 +441,25 @@ def draw_swamp_tile_16x16() -> Image.Image:
     return swp
 
 
+def draw_bridge_tile_16x16() -> Image.Image:
+    """Wooden plank bridge spanning a one-tile river crossing (terrain code 2)."""
+    img = Image.new("RGBA", (16, 16), (28, 82, 196, 255))
+    px = img.load()
+    plank = (176, 118, 56, 255)
+    plank_hi = (206, 150, 84, 255)
+    seam = (104, 66, 30, 255)
+    rail = (72, 44, 20, 255)
+    for y in range(2, 14):
+        for x in range(16):
+            if y in (2, 13):
+                px[x, y] = rail
+            elif (x + 1) % 4 == 0:
+                px[x, y] = seam
+            else:
+                px[x, y] = plank_hi if y in (3, 8) else plank
+    return img
+
+
 def draw_wall_tile_16x16() -> Image.Image:
     """Terracotta brick wall for Cantlin's barrier (terrain code 9)."""
     img = Image.new("RGBA", (16, 16), (150, 94, 58, 255))
@@ -464,12 +483,12 @@ def generate_overworld_map() -> None:
     n_tiles = int(tdata.get("tiles", 124))
     terrain = tdata["terrain"]
 
-    # Build 16x16 terrain tiles for each terrain code (0..8)
-    # 0=water, 1=forest, 2=forest, 3=grass, 4=plains, 5=desert, 6=mountain, 7=swamp, 8=hills, 9=wall
+    # Build 16x16 terrain tiles for each terrain code (0..9)
+    # 0=water, 1=forest, 2=bridge, 3=grass, 4=plains, 5=desert, 6=mountain, 7=swamp, 8=hills, 9=wall
     t_sprites: dict[int, Image.Image] = {
         0: draw_tile_16x16(6, "water", [28, 82, 196], False),
         1: draw_tile_16x16(4, "forest", [34, 136, 36], True),
-        2: draw_tile_16x16(4, "forest", [28, 120, 32], True),
+        2: draw_bridge_tile_16x16(),
         3: draw_tile_16x16(0, "grass", [56, 168, 44], True),
         4: draw_tile_16x16(2, "grass", [92, 184, 52], True),
         5: draw_tile_16x16(5, "dirt", [218, 186, 96], True),
