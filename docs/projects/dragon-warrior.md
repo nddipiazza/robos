@@ -80,6 +80,9 @@ IPC web service (`GameControlServer.gd`, `/api/v1/state`) to read what is on scr
   milestone/battles/level/gold/position/herbs/HP) drops the current objective, blacklists unreachable shops and
   after three stalls on one milestone skips it or fails the run; the driver's `--stall-timeout` (10 min) ends a
   run that has stopped making progress with a `stalled` status, a screenshot and the AI event-log tail.
+- **Light in the caves** — the brain buys torches before every dark dungeon while RADIANT is unknown (and keeps a
+  spare afterwards), lights up the moment the IPC `light_status` reports no light, and refreshes a fading RADIANT;
+  the game keeps torch and RADIANT alive across stairs and casts RADIANT ahead of HEAL when the hero is blind.
 
 Every bug the brain hit while learning to finish the game was a game bug: Charlock 1F's exit gate unwalkable, boss
 fights not syncing the pack, chest duplicates, missing level-up curves, incorrect enemy flee factors and spell
