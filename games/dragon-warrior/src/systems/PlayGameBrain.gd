@@ -1417,6 +1417,16 @@ func _fail_objective(reason: String) -> void:
 		_heading_to_inn = false
 		_heal_fail_ticks = 200
 		return
+	if str(_objective.get("kind", "")) == "supply":
+		# A shop we cannot reach: stop trying it this run and move on.
+		if int(_goal_failures[key]) >= 3:
+			var bad_map := str(_objective.get("map", ""))
+			_item_shops.erase(bad_map)
+			_log_event("supply", "giving up on the %s item shop" % bad_map)
+		_objective = {}
+		_plan_legs.clear()
+		_plan_goal = ""
+		return
 	if str(_objective.get("label", "")).ends_with(" (revisit)"):
 		# Revisiting a skipped optional purchase: give up quietly, keep grinding.
 		_objective = {}

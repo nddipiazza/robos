@@ -45,6 +45,7 @@ xvfb-run -a behave games/dragon-warrior/tests/e2e/features/king_to_world_map.fea
 # Let the robos-jrpg AI play the ENTIRE game as a user would (milestone by milestone, real inputs only)
 python3 games/dragon-warrior/tests/e2e/play_full_game.py
 python3 games/dragon-warrior/tests/e2e/play_full_game.py --until 18   # stop after milestone 18
+python3 games/dragon-warrior/tests/e2e/play_full_game.py --record     # also record playthrough.mp4 + 12x time-lapse
 ```
 
 ## AI Full-Game Playthrough ("Play the Game" mode)
