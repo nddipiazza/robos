@@ -57,9 +57,8 @@ def draw_tile_16x16(tid: int, label: str, avg_rgb: list[int], walkable: bool) ->
     if tid in (10,):  # Door
         _draw_door_tile(px)
         return img
-    if tid in (18,):  # Chest
-        _draw_chest_tile(px, (110, 110, 125))
-        return img
+    if tid in (18,):  # Wooden bridge over a town moat / river
+        return draw_bridge_tile_16x16()
     if tid in (8, 21, 33, 34):  # Stairs
         _draw_stair_tile(px, down=(tid in (8, 34)))
         return img
