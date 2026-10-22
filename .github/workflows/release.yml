@@ -24,11 +24,11 @@ jobs:
         run: |
           mkdir -p native-windows
           python3 - <<'PY'
-          import os, pathlib
+          import os, pathlib, re
           tag = os.environ['RELEASE_TAG']
           assert tag == 'v' + pathlib.Path('VERSION').read_text().strip()
           source = pathlib.Path('site/downloads/Install-RobOS.ps1').read_text()
-          pathlib.Path('native-windows/Install-RobOS.ps1').write_text(source.replace("$SourceRef = 'main'", "$SourceRef = '" + tag + "'"))
+          pathlib.Path('native-windows/Install-RobOS.ps1').write_text(re.sub(r"\$SourceRef = '[^']+'", "$SourceRef = '" + tag + "'", source))
           launcher = pathlib.Path('site/downloads/Install-RobOS.cmd').read_text()
           launcher = launcher.replace('https://rowbose.com/downloads/Install-RobOS.ps1', f'https://github.com/nddipiazza/robos/releases/download/{tag}/Install-RobOS.ps1')
           pathlib.Path('native-windows/Install-RobOS.cmd').write_bytes(launcher.replace('\n', '\r\n').encode())

@@ -26,7 +26,7 @@ og_image: /assets/hero/poster.jpg
     <a href="#pr-review-theater-and-dev-central">PR Review Theater</a>
     <a href="#realm-of-heroes-crpg">Realm of Heroes cRPG</a>
     <a href="#robos-voice-and-parse-portal">RobOS Voice &amp; Luxir</a>
-    <a href="#dual-state-kgraph-and-sdlc">Dual-State KGraph &amp; v0.0.7</a>
+    <a href="#dual-state-kgraph-and-sdlc">Dual-State KGraph foundations</a>
   </nav>
 </section>
 
@@ -465,12 +465,12 @@ og_image: /assets/hero/poster.jpg
       <time class="blog-date" datetime="2026-09-18">Aug 25 – Sep 18, 2026</time>
       <span class="blog-tag">Knowledge Graph</span>
       <span class="blog-tag">SDLC Platform</span>
-      <span class="blog-tag">v0.0.7 Release</span>
+      <span class="blog-tag">Foundation release</span>
     </div>
-    <h2><a href="#dual-state-kgraph-and-sdlc">Modular Dual-State Knowledge Graph, 16-Step SDLC Tool Suite, and RobOS v0.0.7</a></h2>
-    <p class="blog-summary">Laid the foundation of RobOS: a multi-package JSON-LD Knowledge Graph validated by W3C SHACL shapes, a complete desktop SDLC suite from C4 topology modeling to Kind Kubernetes auto-deploy, and the v0.0.7 release.</p>
+    <h2><a href="#dual-state-kgraph-and-sdlc">Modular Dual-State Knowledge Graph, 16-Step SDLC Tool Suite, and the RobOS foundation release</a></h2>
+    <p class="blog-summary">Laid the foundation of RobOS: a multi-package JSON-LD Knowledge Graph validated by W3C SHACL shapes, a complete desktop SDLC suite from C4 topology modeling to Kind Kubernetes auto-deploy, and the foundation release.</p>
     <div class="blog-body">
-      <p>The first month of this two-month sprint established the core thesis of RobOS—that the <strong>Knowledge Graph is the product</strong>—and delivered the <strong>v0.0.7</strong> release across the desktop appliance VM and native app suite:</p>
+      <p>The first month of this two-month sprint established the core thesis of RobOS—that the <strong>Knowledge Graph is the product</strong>—and delivered the <strong>foundation</strong> release across the desktop appliance VM and native app suite:</p>
       <ul>
         <li><strong>Modular Dual-State Knowledge Graph (<code>.robos/kgraphs/</code>):</strong> Replaced monolithic config files with namespaced JSON-LD packages validated by W3C SHACL shapes and aligned with Schema.org, backed by <strong>Knowledge Graph Explorer</strong> (with an embedded Swagger-UI OpenAPI console and reviewed workspace imports), <strong>Schema Studio</strong>, and the <code>kgraph-*</code> skills CLI for semantic blast-radius diffing between <code>main</code> and feature branches.</li>
         <li><strong>16-Step Verified SDLC &amp; Cloud-Init Onboarding:</strong> Automated first-boot QEMU/KVM provisioning with <code>robos-splash</code> and unified GitHub onboarding; verified the 16-step Acme Petshop lifecycle across <strong>Task Planner</strong>, <strong>System Topology Studio</strong> (C4 + OpenAPI 3.1 synthesis), <strong>Git Projects</strong>, <strong>Bruno REST API Client</strong>, and <strong>Kube Studio</strong> (with real local Kind Kubernetes clusters and zero-click KGraph auto-deployment).</li>
@@ -490,7 +490,7 @@ og_image: /assets/hero/poster.jpg
     <div class="blog-links">
       <a href="{{ '/v1/knowledge-graph.html' | relative_url }}">Knowledge Graph architecture →</a>
       <a href="{{ '/v1/walkthroughs.html' | relative_url }}">16-Step SDLC walkthroughs →</a>
-      <a href="{{ '/download/' | relative_url }}">Download RobOS v0.0.7 →</a>
+      <a href="{{ '/download/' | relative_url }}">Download RobOS {{ site.data.release.tag }} →</a>
       <span class="blog-commits">Commits: 73cb6441 · 194e2c8a · a90ae3f7 · 6f0e1605 · 1143d01c</span>
     </div>
   </article>

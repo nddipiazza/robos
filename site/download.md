@@ -11,11 +11,11 @@ description: Download RobOS for macOS, Linux and Windows, or run it from source 
 <section style="padding-top:20px">
   <div class="wrap">
     <div class="os-grid">
-      <div class="card os" data-os="mac"><h3>macOS</h3><p class="muted">Appliance installer (.dmg)</p><a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-mac.dmg">Download for macOS</a></div>
-      <div class="card os" data-os="win"><h3>Windows</h3><p class="muted">Native Windows app suite</p><a class="btn" href="{{ '/downloads/Install-RobOS.cmd' | relative_url }}" download>Download for Windows</a><p class="small">Open the downloaded setup file. Installs into your user folder with a Start menu launcher.</p></div>
-      <div class="card os" data-os="linux"><h3>Linux</h3><p class="muted">Appliance installer (AppImage or .deb)</p><a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-linux.AppImage">Download AppImage</a><a class="alt-l" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-linux.deb">or the .deb package</a></div>
+      <div class="card os" data-os="mac"><h3>macOS</h3><p class="muted">Appliance installer (.dmg)</p><a class="btn" href="{{ site.data.release.url }}">View macOS USB flasher</a></div>
+      <div class="card os" data-os="win"><h3>Windows</h3><p class="muted">Native Windows app suite</p><a class="btn" href="{{ site.data.release.download }}/Install-RobOS.cmd" download>Download for Windows</a><p class="small">Open the downloaded setup file. Installs into your user folder with a Start menu launcher.</p></div>
+      <div class="card os" data-os="linux"><h3>Linux</h3><p class="muted">Appliance installer (AppImage or .deb)</p><a class="btn" href="{{ site.data.release.url }}">View Linux USB flasher</a><a class="alt-l" href="{{ site.data.release.url }}">AppImage and .deb release files</a></div>
     </div>
-    <p class="muted small" style="text-align:center;margin-top:18px">Appliance release files and checksums are on <a style="text-decoration:underline" href="https://github.com/nddipiazza/robos/releases/tag/v0.0.7" target="_blank" rel="noopener">GitHub Releases</a>. The Windows setup above installs the apps directly. The .dmg, AppImage and .deb downloads create appliance USB drives.</p>
+    <p class="muted small" style="text-align:center;margin-top:18px">Appliance release files and checksums are on <a style="text-decoration:underline" href="https://github.com/nddipiazza/robos/releases/tag/v{{ site.data.release.version }}" target="_blank" rel="noopener">GitHub Releases</a>. The Windows setup above installs the apps directly. The .dmg, AppImage and .deb downloads create appliance USB drives.</p>
   </div>
 </section>
 
@@ -24,16 +24,18 @@ description: Download RobOS for macOS, Linux and Windows, or run it from source 
     <h2 class="h2">Run RobOS on Windows</h2>
     <p>Download and open <strong>Install-RobOS.cmd</strong>. Setup downloads a private Node.js and Electron runtime, the RobOS apps and their dependencies, then adds <strong>RobOS</strong> to your Start menu. Windows stays your operating system. No WSL, USB drive or administrator account is needed.</p>
     <p>The default folder is <code>%USERPROFILE%\RobOS</code>. You can also open <code>RobOS.cmd</code> inside that folder to search and launch apps. Internet access is needed during setup. Keep the setup window open until it finishes; failures are reported rather than hidden.</p>
-    <p class="muted">Native Windows support is being tested. Linux-specific integrations such as GNOME shell controls, UNIX pass, KVM and X11 automation require their Linux environment. Agent features are optional; install and sign in to your preferred agent separately.</p>
-    <details><summary>Choose another install folder</summary><p>Download <a href="{{ '/downloads/Install-RobOS.ps1' | relative_url }}" download>the PowerShell setup script</a>, then run it from PowerShell:</p><pre class="code"><code>powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-RobOS.ps1 -InstallDir "$env:USERPROFILE\RobOS"</code></pre><p>Use an empty folder. Setup leaves an existing installation untouched. App data lives separately under <code>%USERPROFILE%\.config\robos</code>.</p></details>
+    <p class="muted">The Windows app suite has passed its startup audit. Linux-specific integrations such as GNOME shell controls, UNIX pass, KVM and X11 automation require their Linux environment. Agent features are optional; install your preferred agent in RobOS Software Center, then sign in to it.</p>
+    <p>Software Center installs Windows tools through WinGet and coding-agent CLIs through the private Node.js runtime. It also offers Godot 4 and FFmpeg. Tools installed through WinGet use their Windows installation locations; CLI packages live under <code>%USERPROFILE%\RobOS\tools\npm</code>. Some third-party installers may request administrator approval or a restart.</p>
+    <details><summary>Choose another install folder</summary><p>Download <a href="{{ site.data.release.download }}/Install-RobOS.ps1" download>the PowerShell setup script</a>, then run it from PowerShell:</p><pre class="code"><code>powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-RobOS.ps1 -InstallDir "$env:USERPROFILE\RobOS"</code></pre><p>Use an empty folder. Setup leaves an existing installation untouched. App data lives separately under <code>%USERPROFILE%\.config\robos</code>.</p></details>
+    <details><summary>Update an existing RobOS folder</summary><p>Close RobOS apps, download the PowerShell setup above, and run:</p><pre class="code"><code>powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-RobOS.ps1 -InstallDir "$env:USERPROFILE\RobOS" -Repair</code></pre><p>Use the folder containing your existing RobOS installation. Your app settings remain in <code>%USERPROFILE%\.config\robos</code>.</p></details>
   </div>
 </section>
 <section id="linux-distro" class="alt">
   <div class="wrap">
     <h2 class="h2">Install the RobOS Linux GNOME distro</h2>
     <p>This is a separate installation option: create a bootable USB drive and install the RobOS Linux appliance on a dedicated PC. Flashing erases the selected USB drive, and the unattended OS installation can erase the target PC.</p>
-    <p><a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-win.exe">Download Windows USB flasher</a> <a href="{{ '/v1/getting-started.html#install-the-appliance-from-a-usb-drive' | relative_url }}">Linux distro installation guide</a></p>
-    <p class="muted">The v0.0.7 Windows flasher cannot write the drive itself. Use <a href="https://rufus.ie/">Rufus</a> with <a href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/robos-v0.0.7.iso">the bootable ISO</a> to finish on Windows.</p>
+    <p><a class="btn" href="{{ site.data.release.url }}">View Windows USB flasher</a> <a href="{{ '/v1/getting-started.html#install-the-appliance-from-a-usb-drive' | relative_url }}">Linux distro installation guide</a></p>
+    <p class="muted">The Windows USB flasher cannot write the drive itself. Use <a href="https://rufus.ie/">Rufus</a> with <a href="{{ site.data.release.url }}">the bootable ISO</a> to finish on Windows.</p>
   </div>
 </section>
 
@@ -63,8 +65,8 @@ scripts/install-local.sh</code></pre>
       <div class="panel" id="p3" role="tabpanel" aria-labelledby="t3" hidden>
         <p>Boot the prebuilt appliance image in QEMU. KVM is recommended, and the guest is given 16 GB of RAM. Default login <code>robos</code> / <code>robos</code>; SSH is forwarded to port 2224.</p>
         <pre class="code"><button data-copy>Copy</button><code>qemu-system-x86_64 -m 16G -smp $(nproc) -enable-kvm -cpu host \
-  -drive file=robos-v0.0.7.qcow2,format=qcow2 \
-  -cdrom robos-v0.0.7-seed.iso \
+  -drive file=robos-v{{ site.data.release.version }}.qcow2,format=qcow2 \
+  -cdrom robos-v{{ site.data.release.version }}-seed.iso \
   -net nic -net user,hostfwd=tcp::2224-:22</code></pre>
       </div>
     </div>
@@ -75,15 +77,19 @@ scripts/install-local.sh</code></pre>
 <section>
   <div class="wrap">
     <p class="eyebrow">Release assets</p>
-    <h2 class="h2">v0.0.7 downloads</h2>
+    <h2 class="h2">{{ site.data.release.tag }} downloads</h2>
+    <p>The native Windows setup is available now. Linux distro, USB flasher and VM artifacts appear on <a href="{{ site.data.release.url }}">the release page</a> when their builds finish. Check the available assets there before following the ISO or VM examples.</p>
     <table class="t">
       <tr><th>Artifact</th><th>File</th><th>Purpose</th></tr>
-      <tr><td>Linux installer</td><td><code>RobOS-Installer-v0.0.7-linux.AppImage</code></td><td>USB flash GUI</td></tr>
-      <tr><td>macOS installer</td><td><code>RobOS-Installer-v0.0.7-mac.dmg</code></td><td>USB flash GUI</td></tr>
-      <tr><td>Windows USB flasher (Linux distro)</td><td><code>RobOS-Installer-v0.0.7-win.exe</code></td><td>USB flash GUI</td></tr>
-      <tr><td>Bootable ISO</td><td><code>robos-v0.0.7.iso</code></td><td>Unattended bare-metal install</td></tr>
-      <tr><td>VM disk</td><td><code>robos-v0.0.7.qcow2</code></td><td>Ready-to-boot QEMU/KVM image</td></tr>
-      <tr><td>Packages bundle</td><td><code>robos-v0.0.7-packages.tar.gz</code></td><td>All Electron app packages</td></tr>
+      <tr><td>Windows app setup</td><td><a href="{{ site.data.release.download }}/Install-RobOS.cmd">Install-RobOS.cmd</a></td><td>Install the native Windows app suite</td></tr>
+      <tr><td>Windows PowerShell setup</td><td><a href="{{ site.data.release.download }}/Install-RobOS.ps1">Install-RobOS.ps1</a></td><td>Custom install folder or repair</td></tr>
+      <tr><td>Windows checksums</td><td><a href="{{ site.data.release.download }}/WINDOWS-SHA256SUMS">WINDOWS-SHA256SUMS</a></td><td>Verify the Windows setup downloads</td></tr>
+      <tr><td>Linux installer</td><td><code>RobOS-Installer-v{{ site.data.release.version }}-linux.AppImage</code></td><td>USB flash GUI</td></tr>
+      <tr><td>macOS installer</td><td><code>RobOS-Installer-v{{ site.data.release.version }}-mac.dmg</code></td><td>USB flash GUI</td></tr>
+      <tr><td>Windows USB flasher (Linux distro)</td><td><code>RobOS-Installer-v{{ site.data.release.version }}-win.exe</code></td><td>USB flash GUI</td></tr>
+      <tr><td>Bootable ISO</td><td><code>robos-v{{ site.data.release.version }}.iso</code></td><td>Unattended bare-metal install</td></tr>
+      <tr><td>VM disk</td><td><code>robos-v{{ site.data.release.version }}.qcow2</code></td><td>Ready-to-boot QEMU/KVM image</td></tr>
+      <tr><td>Packages bundle</td><td><code>robos-v{{ site.data.release.version }}-packages.tar.gz</code></td><td>All Electron app packages</td></tr>
     </table>
   </div>
 </section>

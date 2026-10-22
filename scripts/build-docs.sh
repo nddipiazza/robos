@@ -6,7 +6,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 OUT="${1:-_site}"
+node scripts/stage-release-data.cjs
 scripts/stage-site-data.sh
 jekyll build -s site -d "$OUT"
 (cd docs && bundle exec jekyll build -d "../$OUT/v1")
+node scripts/check-install-docs.cjs "$OUT"
 echo "Built $OUT/ (front) and $OUT/v1/ (classic docs)"

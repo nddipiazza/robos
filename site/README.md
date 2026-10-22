@@ -3,6 +3,12 @@
 Jekyll site served at `https://rowbose.com/`. The classic docs live in `../docs`
 and are published under `/v1/`. Build both with `scripts/build-docs.sh`.
 
+Release labels and download URLs come from `VERSION`. `node scripts/stage-release-data.cjs`
+updates both sites' `_data/release.json` and pins the website's Windows bootstrap to that tag.
+The local build and Pages workflow run this automatically. Use `site.data.release` in Liquid
+instead of hardcoding versions. Native Windows setup assets are linked directly; Linux distro
+downloads lead to the release asset list so pending image builds do not produce broken links.
+
 ## Hero video
 
 The hero on the home page is a recording of the real apps. Regenerate it with the steps in
