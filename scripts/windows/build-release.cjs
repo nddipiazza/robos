@@ -27,6 +27,8 @@ function configuration(suite, output) {
     extraResources: [{ from: suite, to: 'suite', filter: [
       'apps.json', 'install-report.json', 'packages/**/*', 'games/**/*', '.robos/**/*', 'runtime/**/*', 'windows/**/*',
       '!**/.git/**', '!**/.godot/**', '!**/__pycache__/**', '!**/tests/e2e/reports/**', '!**/*.log',
+      '!packages/robos-test/run{,/**}', '!games/tabletop-rpg/run.sh',
+      '!**/SingletonCookie', '!**/SingletonLock', '!**/SingletonSocket',
       '!**/node_modules/.cache/**', '!**/node_modules/electron/**', '!**/node_modules/playwright-core/**',
     ] }],
     win: { target: [{ target: 'portable', arch: ['x64'] }, { target: 'nsis', arch: ['x64'] }],
