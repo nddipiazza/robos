@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; img-src 'self' file: data:; media-src 'self' file:; style-src 'self' 'unsafe-inline'">
+  <title>Dragon Warrior — AI Playthrough</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header id="header">
+    <div class="title-row">
+      <h1>Dragon Warrior — AI Playthrough</h1>
+      <span id="status" class="pill pending">waiting</span>
+      <span id="elapsed" class="muted"></span>
+      <span class="spacer"></span>
+      <button id="btn-live" class="primary">Live view</button>
+      <button id="btn-videos">Videos folder</button>
+      <button id="btn-stop" class="danger" disabled>Stop run</button>
+    </div>
+    <div class="progress"><div id="progress-bar"></div><span id="progress-text">0 / 0</span></div>
+    <div id="chips" class="chips"></div>
+    <div id="objective" class="objective"></div>
+  </header>
+
+  <main>
+    <aside id="milestones">
+      <div class="aside-head">
+        <span>Milestones</span>
+        <label class="follow"><input type="checkbox" id="follow" checked> follow run</label>
+      </div>
+      <ol id="milestone-list"></ol>
+    </aside>
+
+    <section id="viewer">
+      <div id="view-live" class="view">
+        <div class="view-head">
+          <h2>Live game</h2>
+          <span id="live-scene" class="muted"></span>
+        </div>
+        <div class="live-grid">
+          <div class="screen"><img id="live-shot" alt="live screenshot"><div id="live-shot-msg" class="muted">connecting to game…</div></div>
+          <div class="panel">
+            <h3>Battle</h3>
+            <div id="live-battle" class="kv"></div>
+            <h3>Equipment &amp; pack</h3>
+            <div id="live-pack" class="kv"></div>
+            <h3>AI inputs</h3>
+            <div id="live-inputs" class="inputs"></div>
+          </div>
+        </div>
+        <h3>Brain event log</h3>
+        <pre id="live-log" class="log"></pre>
+        <div id="live-violations"></div>
+      </div>
+
+      <div id="view-milestone" class="view hidden">
+        <div class="view-head">
+          <h2 id="ms-title"></h2>
+          <span id="ms-meta" class="muted"></span>
+          <span class="spacer"></span>
+          <button id="ms-reveal" class="small">Reveal video</button>
+          <button id="ms-replay" class="small" title="copies the command to replay this milestone">Replay command</button>
+        </div>
+        <div id="ms-video-wrap">
+          <video id="ms-video" controls preload="metadata"></video>
+          <div id="ms-video-msg" class="muted"></div>
+        </div>
+        <div class="ms-grid">
+          <div class="panel">
+            <h3>Checkpoint after this milestone</h3>
+            <div id="ms-checkpoint" class="kv"></div>
+          </div>
+          <div class="panel">
+            <h3>Screenshot</h3>
+            <img id="ms-shot" alt="milestone screenshot">
+          </div>
+        </div>
+        <pre id="ms-replay-cmd" class="log small"></pre>
+      </div>
+    </section>
+  </main>
+
+  <canvas id="tray-canvas" width="32" height="32" hidden></canvas>
+  <script src="app.js"></script>
+</body>
+</html>

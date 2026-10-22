@@ -100,6 +100,16 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   game via `export_save_state` to `reports/playthrough/checkpoints/NN-<id>.json`; `--from`/`--only` load that
   checkpoint with `load_save_state` and start the brain at the matching milestone id, so a single milestone can be
   re-recorded in seconds instead of re-running the ~2 h game.
+- `--stepped`/`--record` runs also start the **playthrough dashboard** (`tools/playthrough-dashboard`, Electron;
+  `--dashboard on|off|auto`, `DW_DASHBOARD`): a GNOME tray icon whose progress ring and context menu follow the run
+  (status, milestones, level, battles, deaths, current objective; stop the run; open the latest video) and a window
+  with live IPC game state (stats, battle, pack, AI inputs, brain event log, 1.5 s screenshots via
+  `capture_screenshot`) plus the milestone list, where each finished milestone is clickable and plays its
+  `videos/NN-<id>.mp4` with the checkpoint summary. The driver feeds it through
+  `reports/playthrough/live.json` (rewritten once a second); the dashboard also runs standalone:
+  `cd tools/playthrough-dashboard && npm install && npx electron --no-sandbox . [--reports DIR] [--port N]`
+  (`--snapshot out.png` / `--select N` are debug aids for headless agents). It stays open after the run — quit it
+  from the tray menu.
 - Deadlock detection runs on both sides: the brain's progress watchdog (`PlayGameBrain._check_progress_watchdog`,
   wall-clock, 90 s without any change in milestone/battles/level/gold/map/tile/herbs/HP) drops the current objective
   and plan, blacklists an unreachable supply shop, and after 3 stalls on one milestone skips it (optional) or fails

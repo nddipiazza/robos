@@ -127,6 +127,9 @@ class Playthrough:
         self.base = max(0, args.from_milestone - 1)   # milestones already done before this run
         self.ids = []
         self.until = 0
+        self.dashboard = None
+        self.live_t = 0.0
+        self.registry = []
         self.violations = []
         self.done_seen = []
         self.last_index = -1
@@ -222,6 +225,77 @@ class Playthrough:
         if getattr(self, "boot_log", None):
             self.boot_log.close()
 
+    # ── dashboard ──────────────────────────────────────────────────────────
+    def start_dashboard(self):
+        """Tray icon + live dashboard (tools/playthrough-dashboard) on the host display."""
+        if self.args.dashboard == "off" or not os.environ.get("DISPLAY"):
+            return
+        app_dir = os.path.join(PROJECT_DIR, "tools", "playthrough-dashboard")
+        electron = os.path.join(app_dir, "node_modules", ".bin", "electron")
+        if not os.path.exists(electron) and shutil.which("npm"):
+            log("Installing dashboard dependencies (npm install) ...")
+            subprocess.run(["npm", "install", "--quiet", "--no-audit", "--no-fund"], cwd=app_dir,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=600)
+        if not os.path.exists(electron):
+            log("Dashboard skipped: electron not available in tools/playthrough-dashboard")
+            return
+        cmd = [electron, "--no-sandbox", app_dir, "--reports", REPORTS_DIR, "--port", str(self.port)]
+        self.dashboard = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                          start_new_session=True)
+        log("Dashboard started (tray icon) — it stays open after the run; quit it from the tray menu")
+
+    def write_live(self, state, ms, status, error="", force=False):
+        """Everything the dashboard shows, refreshed once a second to reports/playthrough/live.json."""
+        now = time.time()
+        if not force and now - self.live_t < 1.0:
+            return
+        self.live_t = now
+        gs = state.get("game_state", {}) or {}
+        done = set(ms.get("done", [])) | set(self.done_seen)
+        skipped = set(ms.get("skipped", []))
+        cur_idx = int(ms.get("index", -1))
+        rows = []
+        for i, m in enumerate(self.registry):
+            mid = m["id"]
+            idx = i + 1
+            st = "done" if mid in done else "skipped" if mid in skipped else "current" if i == cur_idx else "pending"
+            row = {"index": idx, "id": mid, "name": m.get("name", mid), "type": m.get("type", ""),
+                   "map": m.get("map", ""), "optional": bool(m.get("optional", False)), "state": st}
+            for key, path in (("video", self.segment_path(idx, mid)),
+                              ("checkpoint", self.checkpoint_path(idx, mid)),
+                              ("screenshot", os.path.join(REPORTS_DIR, "screenshots", f"{idx:02d}-{mid}.png"))):
+                if os.path.exists(path):
+                    row[key] = os.path.relpath(path, REPORTS_DIR)
+            rows.append(row)
+        hp = state.get("hero_position", {}) or {}
+        live = {
+            "updated_at": now, "started_at": self.t0, "elapsed_sec": round(now - self.t0, 1),
+            "status": status, "error": error, "port": self.port, "driver_pid": os.getpid(),
+            "godot_pid": self.godot.pid if self.godot else None,
+            "time_scale": self.args.time_scale, "stepped": bool(self.args.stepped),
+            "recording": os.path.relpath(self.record_path, REPORTS_DIR) if self.ffmpeg and self.record_path else None,
+            "total": len(self.registry), "until": self.until, "base": self.base,
+            "done_count": len(self.done_seen), "index": cur_idx,
+            "battles": ms.get("battles"), "deaths": ms.get("deaths"),
+            "stats": {"level": gs.get("level"), "hp": gs.get("hp"), "hp_max": gs.get("hp_max"),
+                      "mp": gs.get("mp"), "mp_max": gs.get("mp_max"), "gold": gs.get("gold"), "exp": gs.get("exp"),
+                      "scene": (state.get("scene_shown") or {}).get("name"),
+                      "map": (state.get("scene_shown") or {}).get("map_key"),
+                      "tile": [hp.get("x"), hp.get("y")], "facing": hp.get("facing"),
+                      "attack": gs.get("attack"), "defense": gs.get("defense"),
+                      "equipment": gs.get("equipment"), "inventory": gs.get("inventory")},
+            "battle": state.get("battle"),
+            "objective": ms.get("objective"),
+            "ai": {k: (state.get("ai_engine") or {}).get(k) for k in ("recent_inputs", "stride_target", "last_action")},
+            "log": (ms.get("log") or [])[-40:],
+            "violations": self.violations[-20:],
+            "milestones": rows,
+        }
+        tmp = os.path.join(REPORTS_DIR, "live.json.tmp")
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(live, f)
+        os.replace(tmp, os.path.join(REPORTS_DIR, "live.json"))
+
     # ── observation ────────────────────────────────────────────────────────
     def check_invariants(self, state):
         gs = state.get("game_state", {})
@@ -300,10 +374,13 @@ class Playthrough:
 
     # ── main loop ──────────────────────────────────────────────────────────
     def run(self):
-        self.launch()
+        self.t0 = time.time()
         with open(os.path.join(PROJECT_DIR, "data", "v1", "milestones.json"), encoding="utf-8") as f:
-            ids = [m["id"] for m in json.load(f)["milestones"]]
+            self.registry = json.load(f)["milestones"]
+        ids = [m["id"] for m in self.registry]
         self.ids = ids
+        self.launch()
+        self.start_dashboard()
         total = len(ids)
         self.until = self.args.until if self.args.until > 0 else total
         if self.args.only:
@@ -332,7 +409,8 @@ class Playthrough:
         log(f"Play mode started: {total} milestones, running #{self.base + 1}..#{until}")
         progress_sig, progress_t = None, time.time()
 
-        t0 = time.time()
+        t0 = self.t0
+        self.write_live({}, {}, "running", force=True)
         last_log = 0
         status = "running"
         error = ""
@@ -352,6 +430,7 @@ class Playthrough:
                 self.record_milestones(ms)
                 status = ms.get("status", "running")
                 error = ms.get("error", "")
+                self.write_live(state, ms, status, error)
                 if len(self.done_seen) >= until or status in ("done", "failed", "stopped"):
                     break
                 gs = state.get("game_state", {})
@@ -400,6 +479,10 @@ class Playthrough:
         })
         with open(os.path.join(REPORTS_DIR, "playthrough.json"), "w", encoding="utf-8") as f:
             json.dump(self.report, f, indent=2)
+        try:
+            self.write_live({}, ms, status, error, force=True)
+        except Exception:
+            pass
         log(f"RESULT ok={ok} status={status} done={len(self.done_seen)}/{total} "
             f"battles={ms.get('battles')} deaths={ms.get('deaths')} violations={len(self.violations)} {error}")
         return 0 if ok else 1
@@ -427,7 +510,11 @@ def main():
     ap.add_argument("--stall-timeout", type=float, default=float(os.environ.get("DW_STALL_TIMEOUT", "600")),
                     help="fail when milestones, battles, level, gold and exp all stop changing for this long")
     ap.add_argument("--timelapse-speed", type=int, default=12, help="speed factor for the time-lapse cut (1 = none)")
+    ap.add_argument("--dashboard", choices=["auto", "on", "off"], default=os.environ.get("DW_DASHBOARD", "auto"),
+                    help="tray icon + live dashboard on the host display (auto = when --stepped/--record)")
     args = ap.parse_args()
+    if args.dashboard == "auto":
+        args.dashboard = "on" if (args.stepped or args.record) else "off"
     return Playthrough(args).run()
 
 
