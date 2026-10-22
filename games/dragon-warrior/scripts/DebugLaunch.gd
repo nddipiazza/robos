@@ -217,6 +217,10 @@ func _run_cli(args: Array) -> void:
 			"--tile-debug":
 				tile_debug_enabled = true
 				i += 1
+			"--mute":
+				# Headless / e2e runs: silence every bus (the recording uses -an anyway).
+				AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), true)
+				i += 1
 			_: i += 1
 	_apply_game_state(tile, facing, gold, items, from, all_chests, unlocked_doors,
 		bridge_built, monster, hero_name, hero_level, hero_hp, hero_hp_max, hero_mp,

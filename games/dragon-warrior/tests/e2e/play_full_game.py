@@ -16,6 +16,7 @@ Usage:
     python3 tests/e2e/play_full_game.py --until 18      # stop after milestone 18
     python3 tests/e2e/play_full_game.py --time-scale 8 --timeout 7200
     DW_HEADED=1 python3 tests/e2e/play_full_game.py     # watch it on your desktop
+    DW_E2E_SOUND=1 python3 tests/e2e/play_full_game.py  # game audio on (muted by default)
     python3 tests/e2e/play_full_game.py --record        # + playthrough.mp4 and a 12x time-lapse cut
     python3 tests/e2e/play_full_game.py --stepped       # one video + checkpoint per milestone
     python3 tests/e2e/play_full_game.py --stepped --from 45   # resume at milestone 45 from checkpoint 44
@@ -211,6 +212,9 @@ class Playthrough:
             "--scene", "ThroneRoom",
             f"--web-service-port={self.args.port}",
         ])
+        # Silent by default (shared machines, CI); DW_E2E_SOUND=1 lets the game play audio.
+        if env.get("DW_E2E_SOUND", "0") != "1":
+            cmd.append("--mute")
         RUNTIME["cmd"] = list(cmd)
         log("Launching: " + " ".join(cmd))
         self.boot_log = open(os.path.join(REPORTS_DIR, "godot.log"), "w", encoding="utf-8")
