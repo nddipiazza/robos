@@ -14,20 +14,27 @@ if ($Repair) {
     $marker = Join-Path $InstallDir 'windows\package.json'
     if (!(Test-Path $marker) -or (Get-Content $marker -Raw | ConvertFrom-Json).name -ne 'robos-windows-launcher') { throw 'Repair requires an existing RobOS installation folder.' }
 }
+function Expand-RobOSArchive([string]$Archive, [string]$Destination) {
+    New-Item -ItemType Directory -Force $Destination | Out-Null
+    if (Get-Command tar.exe -ErrorAction SilentlyContinue) {
+        & tar.exe -xf $Archive -C $Destination
+        if ($LASTEXITCODE -ne 0) { throw "Unable to extract $Archive" }
+    } else { Expand-Archive $Archive $Destination }
+}
 New-Item -ItemType Directory -Force $InstallDir | Out-Null
 $work = Join-Path $env:TEMP ('robos-setup-' + [guid]::NewGuid())
 New-Item -ItemType Directory $work | Out-Null
 try {
-    Write-Host 'Installing the private Node.js runtime...'
     $nodeVersion = '22.22.0'
-    $archive = "node-v$nodeVersion-win-x64.zip"
-    $base = "https://nodejs.org/dist/v$nodeVersion"
-    Invoke-WebRequest "$base/$archive" -UseBasicParsing -OutFile "$work\node.zip"
-    $sums = (Invoke-WebRequest "$base/SHASUMS256.txt" -UseBasicParsing).Content
-    $expected = ($sums -split "`n" | Where-Object { $_.Trim().EndsWith(" $archive") }).Trim().Split(' ')[0]
-    if (!$expected -or (Get-FileHash "$work\node.zip" -Algorithm SHA256).Hash -ne $expected) { throw 'Node.js checksum verification failed.' }
-    Expand-Archive "$work\node.zip" "$work\node"
     if (!(Test-Path "$InstallDir\runtime\node.exe")) {
+        Write-Host 'Installing the private Node.js runtime...'
+        $archive = "node-v$nodeVersion-win-x64.zip"
+        $base = "https://nodejs.org/dist/v$nodeVersion"
+        Invoke-WebRequest "$base/$archive" -UseBasicParsing -OutFile "$work\node.zip" -TimeoutSec 180
+        $sums = (Invoke-WebRequest "$base/SHASUMS256.txt" -UseBasicParsing -TimeoutSec 60).Content
+        $expected = ($sums -split "`n" | Where-Object { $_.Trim().EndsWith(" $archive") }).Trim().Split(' ')[0]
+        if (!$expected -or (Get-FileHash "$work\node.zip" -Algorithm SHA256).Hash -ne $expected) { throw 'Node.js checksum verification failed.' }
+        Expand-RobOSArchive "$work\node.zip" "$work\node"
         Move-Item -LiteralPath "$work\node\node-v$nodeVersion-win-x64" -Destination "$InstallDir\runtime"
     }
     $env:PATH = "$InstallDir\runtime;$env:PATH"
@@ -37,7 +44,7 @@ try {
         $gitAsset = $gitRelease.assets | Where-Object { $_.name -match '^MinGit-[\d.]+(?:\(\d+\))?-64-bit.zip$' } | Select-Object -First 1
         if (!$gitAsset) { throw 'The official Git for Windows release has no MinGit x64 archive.' }
         Invoke-WebRequest $gitAsset.browser_download_url -UseBasicParsing -OutFile "$work\git.zip"
-        Expand-Archive "$work\git.zip" "$InstallDir\runtime\git"
+        Expand-RobOSArchive "$work\git.zip" "$InstallDir\runtime\git"
     }
     $env:PATH = "$InstallDir\runtime\git\cmd;$env:PATH"
     if (!$SourceRoot) {
