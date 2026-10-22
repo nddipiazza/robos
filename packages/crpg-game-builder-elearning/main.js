@@ -1,6 +1,7 @@
 'use strict';
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -15,7 +16,8 @@ function createWindow() {
   });
 
   const localDoc = path.join(__dirname, '../../docs/projects/crpg-realm/create-your-own-game/elearning/index.html');
-  win.loadFile(localDoc);
+  const bundledDoc = path.join(__dirname, 'renderer', 'course.html');
+  win.loadFile(fs.existsSync(bundledDoc) ? bundledDoc : localDoc);
 }
 
 app.whenReady().then(createWindow);

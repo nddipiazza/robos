@@ -10,7 +10,8 @@ let collapsedSet = new Set();   // collapsed tree node keys
 const monacoEditors = {};  // key → monaco editor instance
 
 function initMonacoEditors() {
-  require.config({ paths: { vs: '../node_modules/monaco-editor/min/vs' } });
+  const monacoBase = new URL('../node_modules/monaco-editor/min/vs/', document.baseURI).href;
+  require.config({ paths: { vs: monacoBase.slice(0, -1) } });
   require(['vs/editor/editor.main'], () => {
     const SCRIPT_KEYS = [
       { key: 'setup',         containerId: 'monaco-setup',         textareaId: 'devsetup-script',        language: 'shell'    },

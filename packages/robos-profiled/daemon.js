@@ -10,7 +10,7 @@ const { IdentityForwarder } = require('./identity-forwarder');
 const HOME_DIR = process.env.HOME || os.homedir();
 const RUN_DIR  = path.join(HOME_DIR, '.config', 'robos', 'profiled');
 const STATE_FILE = path.join(RUN_DIR, 'profiles.json');
-const SOCKET_PATH = path.join(RUN_DIR, 'profiled.sock');
+const SOCKET_PATH = require('../robos-lib/local-ipc-path').localIpcPath('profiled', path.join(RUN_DIR, 'profiled.sock'));
 const AGENT_HOMES_DIR = path.join(RUN_DIR, 'homes');
 
 class ProfileDaemon {

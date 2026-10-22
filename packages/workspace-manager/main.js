@@ -7,7 +7,7 @@ const net  = require('net');
 
 const SETTINGS_FILE = path.join(process.env.HOME, '.config', 'robos', 'settings.json');
 const DESKTOPS_DIR = path.join(process.env.HOME, '.config', 'robos', 'desktops');
-const WM_SOCKET_PATH = `/run/user/${process.getuid ? process.getuid() : 1000}/robos-wm.sock`;
+const WM_SOCKET_PATH = require('../robos-lib/local-ipc-path').localIpcPath('workspace-manager', `/run/user/${process.getuid ? process.getuid() : 1000}/robos-wm.sock`);
 
 // Debug server (optional) — checks env override, local dev path, then VM install path
 var _debugServer = null;
@@ -407,10 +407,12 @@ ipcMain.handle('ws-open-ide', async (_evt, ideName) => {
 app.whenReady().then(() => {
   try {
     if (fs.existsSync(WM_SOCKET_PATH)) fs.unlinkSync(WM_SOCKET_PATH);
-    const server = net.createServer((sock) => {
+    const server = net.createServer({ allowHalfOpen: true }, (sock) => {
       let data = '';
+      sock.on('error', error => { if (!['EPIPE', 'ECONNRESET'].includes(error.code)) console.error(error); });
       sock.on('data', c => { data += c; });
       sock.on('end', () => {
+        if (!data.trim() || sock.destroyed || !sock.writable) { sock.end(); return; }
         try {
           const msg = JSON.parse(data);
           if (msg.listDesktops) {

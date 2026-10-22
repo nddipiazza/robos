@@ -29,8 +29,14 @@ async function sendMcpToolCall(name, args) {
 }
 
 async function load() {
-  runs = await window.ciMcp.listRuns();
-  render();
+  try {
+    runs = await window.ciMcp.listRuns();
+    render();
+  } catch (error) {
+    runs = [];
+    render();
+    document.getElementById('runs-list').textContent = error.message.replace(/^Error invoking remote method '[^']+': Error:\s*/, '');
+  }
 }
 
 function render() {

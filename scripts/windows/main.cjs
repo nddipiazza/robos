@@ -1,4 +1,9 @@
 'use strict';
+if (process.env.ROBOS_WINDOWS_AUDIT) {
+  const fail = error => { console.error(error?.stack || error); process.exit(1); };
+  process.on('uncaughtException', fail);
+  process.on('unhandledRejection', fail);
+}
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -10,6 +15,11 @@ const apps = JSON.parse(fs.readFileSync(path.join(root, 'apps.json')));
 const id = process.argv.find(a => a.startsWith('--app='))?.slice(6);
 process.env.HOME ||= os.homedir();
 process.env.ROBOS_LIB_PATH = path.join(root, 'packages/robos-lib');
+process.env.ROBOS_APP_BASE = path.join(root, 'packages');
+process.env.ROBOS_WINDOWS_HOST = __dirname;
+if (process.platform === 'win32') {
+  process.env.ROBOS_DM_SOCKET ||= require(path.join(root, 'packages/robos-lib/local-ipc-path')).localIpcPath('desktop-manager');
+}
 // Older apps use the appliance's shared-library prefix. Resolve it inside this installation.
 const Module = require('node:module');
 const resolve = Module._resolveFilename;

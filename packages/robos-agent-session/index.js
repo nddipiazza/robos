@@ -10,7 +10,7 @@ class RobOSAgentSession extends EventEmitter {
   constructor(options = {}) {
     super();
     this.homeDir = options.homeDir || process.env.HOME || os.homedir();
-    this.socketPath = options.socketPath || path.join(this.homeDir, '.config', 'robos', 'agentd', 'agentd.sock');
+    this.socketPath = options.socketPath || require('../robos-lib/local-ipc-path').localIpcPath('agentd', path.join(this.homeDir, '.config', 'robos', 'agentd', 'agentd.sock'), { home: this.homeDir });
     this.fallbackDaemon = options.daemon || null;
     this.eddRunner = new AutonomousEDDRunner();
   }

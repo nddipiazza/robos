@@ -49,6 +49,7 @@ if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
 
 function getSocketPath() {
   if (process.env.ROBOS_DM_SOCKET) return process.env.ROBOS_DM_SOCKET;
+  if (process.platform === 'win32') return require('../robos-lib/local-ipc-path').localIpcPath('desktop-manager');
   const runtimeDir = process.env.XDG_RUNTIME_DIR || (process.getuid ? `/run/user/${process.getuid()}` : '/run/user/1000');
   if (fs.existsSync(runtimeDir)) return path.join(runtimeDir, 'robos-dm.sock');
   const uid = process.getuid ? process.getuid() : 1000;
@@ -196,6 +197,11 @@ const KEEP_ALIVE_DELAY_MS = 3000;
 function launchApp(appId) {
   const cfg = APP_BINS[appId];
   if (!cfg) return { error: `unknown app: ${appId}` };
+  if (process.platform === 'win32' && process.env.ROBOS_WINDOWS_HOST) {
+    if (!fs.existsSync(path.join(APP_BASE, appId, 'main.js'))) return { error: `${appId} is not installed` };
+    cfg.bin = process.execPath;
+    cfg.args = [process.env.ROBOS_WINDOWS_HOST, `--app=${appId}`];
+  }
 
   const childEnv = { ...process.env };
   if (!childEnv.DISPLAY) childEnv.DISPLAY = ':0';
@@ -436,7 +442,7 @@ app.whenReady().then(() => {
   // Create status window for debug server & testing
   statusWin = new BrowserWindow({
     width: 900, height: 620,
-    show: process.env.ROBOS_DEMO_SHOW === '1' || process.env.ROBOS_TEST === '1',
+    show: process.platform === 'win32' || process.env.ROBOS_DEMO_SHOW === '1' || process.env.ROBOS_TEST === '1',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -449,6 +455,8 @@ app.whenReady().then(() => {
 
   watchNotifications();
   startSocketServer();
+  // Windows uses its native launcher and session, rather than GNOME panel daemons.
+  if (process.platform === 'win32') return;
   startPassLockMonitor();
 
   // Auto-launch keepAlive apps
@@ -548,14 +556,14 @@ function startSocketServer() {
   if (fs.existsSync(SOCKET_PATH)) {
     try { fs.unlinkSync(SOCKET_PATH); } catch {}
   }
-  const server = net.createServer((sock) => {
+  const server = net.createServer({ allowHalfOpen: true }, (sock) => {
     let data = '';
     sock.on('error', (err) => {
       // Ignore broken client pipe / connection reset
       if (err.code === 'EPIPE' || err.code === 'ECONNRESET') return;
     });
     sock.on('data', c => { data += c; });
-    sock.on('end', () => {
+    sock.on('end', async () => {
       try {
         if (!data.trim()) { sock.end(); return; }
         const msg = JSON.parse(data.trim());
