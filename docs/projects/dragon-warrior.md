@@ -95,6 +95,12 @@ IPC web service (`GameControlServer.gd`, `/api/v1/state`) to read what is on scr
 - **Surviving hard hitters** — against Starwyverns and other monsters that can take a third of the hero's HP per
   turn, the brain no longer gambles on a resistible SLEEP at low HP; it casts HEALMORE when that keeps it ahead of
   the damage and runs when it cannot.
+- **NES-faithful ending** — the hero carries Princess Gwaelin in his arms until she is home, the Dragonlord's
+  defeat hands over the Ball of Light with a flash that warps the hero outside a monster-free Charlock, every town
+  celebrates, and King Lorik offers his throne; the hero declines, Gwaelin insists on coming along ("But thou
+  must!"), the two walk out of Tantegel onto the overworld, "And thus the story ends…" appears and the credits
+  roll before the title screen returns. The last milestone completes only when the credits finish, so the recorded
+  run includes the whole epilogue.
 
 Every bug the brain hit while learning to finish the game was a game bug: Charlock 1F's exit gate unwalkable, boss
 fights not syncing the pack, chest duplicates, missing level-up curves, incorrect enemy flee factors and spell

@@ -150,6 +150,15 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   from every item shop listed in `milestones.json` `item_shops`, and NES pack rules: 8 tool slots, six per
   consumable stack, no dropping). Each death outside grinding raises the current milestone's required level by one.
   Bugs the brain exposes are almost always *game* bugs — fix the game, not the brain.
+- NES ending (`game_completed` is only set when the credits finish, so milestone 70 covers the whole sequence):
+  the Dragonlord's death text ("Thou hast done well…", "…obtains the Ball of Light"), `CharlockThroneRoom.
+  _ball_of_light_warp` (white flash, warp outside Charlock, encounters off), victory-lap NPC lines in every town
+  (`DungeonMap.VICTORY_LAP_LINES`) and the throne room finale (`ThroneRoom._begin_ending`: the King offers the
+  throne, the hero declines, Gwaelin — if she was brought home — steps down and asks to come along with the
+  "But thou must!" loop, then the pair walk out). `scenes/Ending.tscn` (`scripts/Ending.gd`) then shows them
+  leaving Tantegel onto the overworld, the "And thus the story ends…" box, the credits, and returns to the title.
+  Ending.gd forces `Engine.time_scale = 1` so recordings capture it at real speed. While Gwaelin is rescued but not
+  yet returned every hero `WalkSprite` with `is_hero = true` draws the `hero_sword_princess` row (carry sprite).
 
 ---
 
