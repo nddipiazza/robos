@@ -611,6 +611,103 @@
       </div>
     </section>
 
+    <!-- Section 1B: Complete 362-Tile Atlas, Overworld Archetypes & 29-Map Side-by-Side Audit Gallery -->
+    <section id="tiles-and-maps-presentation">
+      <div class="section-header">
+        <h2 class="section-title">Complete 362-Tile Atlas, 26 Overworld Archetypes &amp; 29-Map Full Audit</h2>
+        <span class="badge badge-success">362 / 362 Tiles · 29 / 29 Clean Maps Verified</span>
+      </div>
+
+      <p class="header-subtitle" style="margin-bottom: 20px;">
+        Every individual 16×16 tile (<code>tile_000.png</code>..<code>tile_361.png</code>), all 26 overworld 16×16 terrain &amp; landmark archetypes (<code>K0..K25</code> in <code>dw1-over2.png</code>), and all 29 full map images have been audited 1:1 against the reference layouts. Static NPC sprites that were previously baked into the legacy map images have been cleanly stripped to their underlying ground tiles (<code>#0</code> grass, <code>#2</code> sand, <code>#3</code> brick) so live animated <code>NPCSprite</code> nodes render without ghost duplicates. Click any sheet below to inspect full-resolution in the lightbox.
+      </p>
+
+      <div class="pillars-grid" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); margin-bottom: 28px;">
+        <div class="pillar-card" style="padding: 16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 class="pillar-title" style="margin:0;">1. Core 92-Tile Semantic Audit (After Fix)</h3>
+            <span class="badge badge-success">1:1 Semantic Match</span>
+          </div>
+          <img src="/assets/games/quest-warrior-dragon/tile_audit_after.png" alt="Core 92-Tile Audit After Fix" style="width:100%; height:auto; border-radius:8px; border:1px solid var(--border-color); cursor:zoom-in; image-rendering:pixelated;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/tile_audit_after.png')">
+          <p class="pillar-desc" style="margin-top:10px;">
+            Left of each pair: original reference tile (<code>0..91</code>). Right of each pair: clean-room procedural replacement. Fixes bridges (<code>#18, #25</code>), twin trees (<code>#1</code>), diagonal stairs (<code>#8, #10, #16, #19</code>), doors (<code>#11</code>), chests (<code>#12</code>), counters (<code>#13</code>), shop signs (<code>#9, #15</code>), and NPC composite ground backgrounds.
+          </p>
+        </div>
+
+        <div class="pillar-card" style="padding: 16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 class="pillar-title" style="margin:0;">2. Overworld 26 Terrain &amp; Landmark Clusters + Regions</h3>
+            <span class="badge badge-cyan">124×124 Overworld</span>
+          </div>
+          <img src="/assets/games/quest-warrior-dragon/overworld_clusters.png" alt="26 Overworld Terrain and Landmark Clusters" style="width:100%; height:auto; border-radius:8px; border:1px solid var(--border-color); cursor:zoom-in; image-rendering:pixelated; margin-bottom:10px;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/overworld_clusters.png')">
+          <img src="/assets/games/quest-warrior-dragon/overworld_audit_after.png" alt="Overworld Close-Up Regions Comparison" style="width:100%; height:auto; border-radius:8px; border:1px solid var(--border-color); cursor:zoom-in; image-rendering:pixelated;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/overworld_audit_after.png')">
+          <p class="pillar-desc" style="margin-top:10px;">
+            All 26 unique 16×16 overworld tile clusters (<code>K0..K25</code>: ocean, stippled grass, twin-tree forest, hills, mountains, desert, poison swamp, wooden bridges, Tantegel Castle, Charlock Castle, 6 towns, caves, and shrines) and 1:1 regional close-ups.
+          </p>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 28px; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; background: #0d131f;">
+        <img src="/assets/games/quest-warrior-dragon/overworld_full_comparison.png" alt="Full 124x124 Alefgard Overworld Comparison" style="width: 100%; height: auto; display: block; cursor: zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/overworld_full_comparison.png')">
+        <div style="padding: 10px 16px; font-size: 0.82rem; color: var(--text-muted); font-family: var(--font-mono); background: #080d16; border-top: 1px solid var(--border-color);">
+          Full 124×124 Alefgard Overworld (<code>dw1-over2.png</code>) — Original Reference (Left) vs New Clean Procedural Overworld (Right). Click to zoom.
+        </div>
+      </div>
+
+      <div class="pillars-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-bottom: 28px;">
+        <div class="pillar-card" style="padding: 14px;">
+          <h3 class="pillar-title">Hero (Unarmed/Armed/Carry) &amp; 8 NPC Sprites</h3>
+          <img src="/assets/games/quest-warrior-dragon/hero_npc_sheet.png" alt="Hero and NPC Sprite Sheet" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in; image-rendering:pixelated;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/hero_npc_sheet.png')">
+        </div>
+        <div class="pillar-card" style="padding: 14px;">
+          <h3 class="pillar-title">40 Clean-Room Monster Battle Sprites (Part 1)</h3>
+          <img src="/assets/games/quest-warrior-dragon/monster_sheet_1.png" alt="Monsters Part 1" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in; image-rendering:pixelated;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/monster_sheet_1.png')">
+        </div>
+        <div class="pillar-card" style="padding: 14px;">
+          <h3 class="pillar-title">40 Clean-Room Monster Battle Sprites (Part 2)</h3>
+          <img src="/assets/games/quest-warrior-dragon/monster_sheet_2.png" alt="Monsters Part 2" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in; image-rendering:pixelated;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/monster_sheet_2.png')">
+        </div>
+      </div>
+
+      <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 14px;">
+        All 29 Full Maps Side-by-Side Review (Original w/ Static Baked NPCs vs New Clean Procedural Map)
+      </h3>
+      <div class="pillars-grid" style="grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));">
+        <div class="pillar-card" style="padding: 12px;">
+          <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px;">Batch 01 · Brecconary, Cantlin, Charlock 1F &amp; B1</div>
+          <img src="/assets/games/quest-warrior-dragon/map_review_batch_01.png" alt="Map Review Batch 01" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/map_review_batch_01.png')">
+        </div>
+        <div class="pillar-card" style="padding: 12px;">
+          <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px;">Batch 02 · Charlock Castle B2, B3, B4 &amp; B5</div>
+          <img src="/assets/games/quest-warrior-dragon/map_review_batch_02.png" alt="Map Review Batch 02" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/map_review_batch_02.png')">
+        </div>
+        <div class="pillar-card" style="padding: 12px;">
+          <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px;">Batch 03 · Charlock B6–B7, Overworld &amp; Erdrick B1</div>
+          <img src="/assets/games/quest-warrior-dragon/map_review_batch_03.png" alt="Map Review Batch 03" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/map_review_batch_03.png')">
+        </div>
+        <div class="pillar-card" style="padding: 12px;">
+          <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px;">Batch 04 · Erdrick B2, Garinham 1F &amp; Grave B1–B2</div>
+          <img src="/assets/games/quest-warrior-dragon/map_review_batch_04.png" alt="Map Review Batch 04" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/map_review_batch_04.png')">
+        </div>
+        <div class="pillar-card" style="padding: 12px;">
+          <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px;">Batch 05 · Garin's Grave B3–B4, Hauksness &amp; Kol</div>
+          <img src="/assets/games/quest-warrior-dragon/map_review_batch_05.png" alt="Map Review Batch 05" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/map_review_batch_05.png')">
+        </div>
+        <div class="pillar-card" style="padding: 12px;">
+          <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px;">Batch 06 · Mountain Cave B1–B2, N. Shrine &amp; Rimuldar</div>
+          <img src="/assets/games/quest-warrior-dragon/map_review_batch_06.png" alt="Map Review Batch 06" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/map_review_batch_06.png')">
+        </div>
+        <div class="pillar-card" style="padding: 12px;">
+          <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px;">Batch 07 · S. Shrine, Swamp Cave, Tantegel 1F &amp; 2F</div>
+          <img src="/assets/games/quest-warrior-dragon/map_review_batch_07.png" alt="Map Review Batch 07" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/map_review_batch_07.png')">
+        </div>
+        <div class="pillar-card" style="padding: 12px;">
+          <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px;">Batch 08 · Tantegel Castle Basement (Sunlight Shrine)</div>
+          <img src="/assets/games/quest-warrior-dragon/map_review_batch_08.png" alt="Map Review Batch 08" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/map_review_batch_08.png')">
+        </div>
+      </div>
+    </section>
+
     <!-- Section 2: Key Architectural Innovations -->
     <section>
       <div class="section-header">
