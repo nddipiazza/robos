@@ -43,251 +43,608 @@ def _tint(rgb: tuple[int, int, int], delta: int) -> tuple[int, int, int, int]:
     return (_clamp(rgb[0] + delta), _clamp(rgb[1] + delta), _clamp(rgb[2] + delta), 255)
 
 
-def draw_tile_16x16(tid: int, label: str, avg_rgb: list[int], walkable: bool) -> Image.Image:
-    img = Image.new("RGBA", (16, 16), (0, 0, 0, 255))
-    px = img.load()
-    r, g, b = avg_rgb[0], avg_rgb[1], avg_rgb[2]
-    # Ensure walkable fallback luminance > 0.05 even on dark floors
-    if walkable and (r * 0.2126 + g * 0.7152 + b * 0.0722) < 28:
-        r, g, b = max(r, 36), max(g, 36), max(b, 44)
-    base = (r, g, b)
-    rng = random.Random(tid * 1337 + 42)
-
-    # Special well-known tile IDs in Castle1F / ThroneRoom / Dungeons
-    if tid in (10,):  # Door
-        _draw_door_tile(px)
-        return img
-    if tid in (18,):  # Chest
-        _draw_chest_tile(px, (110, 110, 125))
-        return img
-    if tid in (8, 33, 34):  # Stairs
-        _draw_stair_tile(px, down=(tid in (8, 34)))
-        return img
-    if tid in (21, 30, 31):  # Royal carpet / ornate floor / dais
-        _draw_carpet_tile(px, tid)
-        return img
-    if tid in (13, 14):  # Barrier tile
-        _draw_barrier_tile(px, tid)
-        return img
-
-    if label == "grass" or tid == 0:
-        grass_base = (56, 168, 44) if tid == 0 else (_clamp(r * 0.7 + 20), _clamp(max(g, 130)), _clamp(b * 0.7 + 15))
-        for y in range(16):
-            for x in range(16):
-                n = ((x * 7 + y * 13 + tid) % 5) - 2
-                px[x, y] = _tint(grass_base, n * 4)
-        # Grass blades
-        blade_col = _tint(grass_base, 28)
-        shadow_col = _tint(grass_base, -22)
-        for bx, by in [(2, 3), (9, 2), (5, 8), (12, 7), (3, 13), (10, 12)]:
-            px[(bx + tid) % 15, by] = blade_col
-            px[(bx + tid + 1) % 15, by - 1] = blade_col
-            px[(bx + tid) % 15, min(15, by + 1)] = shadow_col
-
-    elif label == "forest" or tid == 4:
-        trunk = (92, 60, 28, 255)
-        leaf_dark = (24, 108, 28, 255)
-        leaf_mid = (44, 148, 38, 255)
-        leaf_hi = (78, 188, 56, 255)
-        bg = (42, 136, 36, 255)
-        for y in range(16):
-            for x in range(16):
-                px[x, y] = bg
-        for y in range(2, 13):
-            for x in range(2, 14):
-                dist = abs(x - 7.5) + abs(y - 6.5)
-                if dist < 6.5:
-                    px[x, y] = leaf_hi if (x + y < 12) else (leaf_mid if dist < 5.0 else leaf_dark)
-        for y in range(11, 15):
-            for x in range(6, 10):
-                px[x, y] = trunk
-
-    elif label == "water" or tid == 6:
-        water_base = (28, 82, 196)
-        wave_hi = (110, 175, 250, 255)
-        wave_mid = (52, 118, 224, 255)
-        for y in range(16):
-            for x in range(16):
-                px[x, y] = _tint(water_base, ((x + y) % 3 - 1) * 5)
-        for wy in (3, 8, 13):
-            ox = (wy * 3 + tid) % 6
-            for wx in range(ox, ox + 5):
-                px[wx % 16, wy] = wave_hi
-                px[(wx + 1) % 16, min(15, wy + 1)] = wave_mid
-
-    elif not walkable and (label in ("stone", "light_stone", "dark", "misc") or tid == 1):
-        # Solid masonry brick wall
-        brick_col = (128, 132, 146) if label != "dark" else (78, 72, 92)
-        if r > 140 and b < 100:
-            brick_col = (156, 98, 64)
-        mortar = _tint(brick_col, -48)
-        hi = _tint(brick_col, 24)
-        lo = _tint(brick_col, -20)
-        for y in range(16):
-            row_idx = y // 4
-            offset = (row_idx % 2) * 4
-            for x in range(16):
-                if y % 4 == 0 or (x + offset) % 8 == 0:
-                    px[x, y] = mortar
-                elif y % 4 == 1 or (x + offset) % 8 == 1:
-                    px[x, y] = hi
-                elif y % 4 == 3 or (x + offset) % 8 == 7:
-                    px[x, y] = lo
-                else:
-                    px[x, y] = _tint(brick_col, rng.randint(-4, 4))
-
-    elif walkable and label in ("stone", "light_stone", "misc", "dark"):
-        # Walkable stone paver floor
-        floor_col = (148, 152, 164) if label == "light_stone" or tid == 3 else (112, 116, 128)
-        grout = _tint(floor_col, -24)
-        hi = _tint(floor_col, 14)
-        for y in range(16):
-            for x in range(16):
-                if x == 0 or y == 0 or (x == 8 and y > 0) or (y == 8 and x > 0):
-                    px[x, y] = grout
-                elif x == 1 or y == 1:
-                    px[x, y] = hi
-                else:
-                    px[x, y] = _tint(floor_col, ((x * 3 + y * 5 + tid) % 5) - 2)
-
-    else:
-        # Dirt / desert / general terrain
-        col = (max(40, r), max(40, g), max(35, b))
-        for y in range(16):
-            for x in range(16):
-                n = rng.randint(-10, 10)
-                px[x, y] = _tint(col, n)
-        if not walkable:
-            # Draw border frame to indicate obstacle
-            border = _tint(col, -35)
-            for i in range(16):
-                px[i, 0] = border
-                px[i, 15] = border
-                px[0, i] = border
-                px[15, i] = border
-
-    return img
+NPC_TILE_SPECS: dict[int, tuple[int, str, str]] = {
+    5:  (0, "red_guard", "down"),
+    7:  (3, "sage_alt", "down"),
+    9:  (3, "lady", "left"),
+    11: (0, "lady", "down"),
+    13: (3, "minister", "down"),
+    14: (3, "sage", "down"),
+    15: (0, "minister", "down"),
+    17: (3, "sage_alt", "right"),
+    19: (0, "minister", "up"),
+    20: (3, "sage_alt", "left"),
+    21: (3, "guard", "up"),
+    23: (3, "minister", "right"),
+    25: (3, "sage_alt", "right"),
+    26: (3, "guard", "right"),
+    27: (3, "lady", "left"),
+    28: (0, "sage", "down"),
+    29: (3, "sage", "down"),
+    65: (3, "dragonlord", "down"),
+    72: (2, "sage", "down"),
+    73: (3, "guard", "left"),
+    74: (3, "guard", "right"),
+    75: (3, "sage_alt", "up"),
+    76: (0, "lady", "down"),
+    77: (3, "sage_alt", "up"),
+    78: (3, "red_guard", "down"),
+    79: (0, "guard", "down"),
+    80: (0, "minister", "down"),
+    81: (0, "sage_alt", "up"),
+    82: (3, "trump_guard", "left"),
+    83: (3, "minister", "up"),
+    84: (0, "sage", "right"),
+    85: (3, "sage_alt", "right"),
+    86: (3, "sage", "down"),
+    87: (3, "princess", "down"),
+    88: (3, "guard", "down"),
+    89: (3, "guard", "right"),
+    91: (3, "king", "down"),
+}
 
 
-def _draw_door_tile(px) -> None:
-    wood = (142, 78, 32, 255)
-    wood_dark = (94, 48, 16, 255)
-    iron = (72, 76, 88, 255)
-    gold = (238, 196, 56, 255)
+def _draw_grass_tile(px, tid: int = 0) -> None:
+    base = (116, 204, 20, 255)
+    mid = (104, 192, 16, 255)
+    hi = (140, 220, 36, 255)
+    tuft_dk = (24, 108, 12, 255)
+    tuft_md = (44, 144, 16, 255)
     for y in range(16):
         for x in range(16):
-            if x in (0, 1, 14, 15) or y in (0, 1):
-                px[x, y] = iron
-            elif x in (4, 8, 11):
-                px[x, y] = wood_dark
-            else:
-                px[x, y] = wood
-    # Iron straps & keyhole
-    for x in range(2, 14):
-        px[x, 4] = iron
-        px[x, 12] = iron
-    px[11, 8] = gold
-    px[11, 9] = gold
+            v = (x * 5 + y * 9 + tid) % 7
+            px[x, y] = hi if v == 0 else (mid if v in (2, 5) else base)
+    for bx, by in [(2, 2), (10, 1), (6, 4), (13, 5), (1, 7), (11, 9), (4, 11), (14, 12), (7, 14), (2, 14)]:
+        px[bx, by] = tuft_dk
+        if bx + 1 < 16:
+            px[bx + 1, by] = tuft_md
+    px[8, 8] = base
 
 
-def _draw_chest_tile(px, bg_rgb: tuple[int, int, int]) -> None:
-    for y in range(16):
-        for x in range(16):
-            px[x, y] = _tint(bg_rgb, ((x + y) % 3 - 1) * 4)
-    wood = (168, 86, 28, 255)
-    wood_hi = (204, 118, 46, 255)
-    gold = (244, 204, 52, 255)
-    outline = (36, 22, 12, 255)
-    for y in range(3, 14):
-        for x in range(2, 14):
-            if x in (2, 13) or y in (3, 13):
-                px[x, y] = outline
-            elif y in (6, 7) or x in (3, 12):
-                px[x, y] = gold
-            elif y < 6:
-                px[x, y] = wood_hi
-            else:
-                px[x, y] = wood
-    px[7, 7] = (255, 245, 160, 255)
-    px[8, 7] = (255, 245, 160, 255)
-
-
-def _draw_stair_tile(px, down: bool = True) -> None:
-    bg = (40, 42, 54, 255) if down else (120, 124, 138, 255)
-    step_hi = (196, 200, 214, 255)
-    step_mid = (146, 150, 166, 255)
-    step_lo = (78, 82, 96, 255)
-    for y in range(16):
-        for x in range(16):
-            px[x, y] = bg
-    for s in range(4):
-        sy = 2 + s * 3
-        sx0 = 2 + (s * 2 if down else (3 - s) * 2)
-        for x in range(sx0, 14):
-            px[x, sy] = step_hi
-            px[x, sy + 1] = step_mid
-            px[x, sy + 2] = step_lo
-
-
-def _draw_carpet_tile(px, tid: int) -> None:
-    crimson = (178, 28, 42)
-    gold = (236, 192, 58, 255)
+def _draw_stone_block_tile(px, water_top: bool = False) -> None:
+    face = (168, 172, 180, 255)
+    hi = (206, 210, 218, 255)
+    lo = (128, 132, 142, 255)
+    dark = (22, 24, 30, 255)
     for y in range(16):
         for x in range(16):
             if x in (0, 15) or y in (0, 15):
-                px[x, y] = gold
-            elif (x + y) % 4 == 0:
-                px[x, y] = _tint(crimson, 18)
+                px[x, y] = lo
+            elif x == 1 or y == 1:
+                px[x, y] = hi
+            elif x == 14 or y == 14:
+                px[x, y] = lo
             else:
-                px[x, y] = _tint(crimson, -6)
+                px[x, y] = face
+    # Corner and mid-edge sculpted boulder crevices (matching classic DW1 stone block)
+    crevices = [
+        (0, 0), (1, 0), (0, 1), (14, 0), (15, 0), (15, 1),
+        (0, 14), (0, 15), (1, 15), (14, 15), (15, 14), (15, 15),
+        (7, 0), (8, 0), (0, 7), (0, 8), (15, 7), (15, 8), (7, 15), (8, 15),
+        (3, 3), (4, 3), (3, 4), (2, 5),
+        (11, 3), (12, 3), (12, 4), (13, 5),
+        (3, 11), (3, 12), (4, 12), (2, 10),
+        (12, 11), (11, 12), (12, 12), (13, 10),
+    ]
+    for cx, cy in crevices:
+        px[cx, cy] = dark
+    for hx, hy in [(4, 4), (5, 4), (4, 5), (10, 4), (11, 4), (4, 10), (5, 10), (10, 11), (11, 11)]:
+        px[hx, hy] = hi
+    if water_top:
+        for x in range(16):
+            px[x, 0] = (32, 128, 240, 255)
+    px[8, 8] = face
 
 
-def _draw_barrier_tile(px, tid: int) -> None:
+def _draw_sand_tile(px, tid: int = 2) -> None:
+    sand = (240, 210, 160, 255)
+    sand_hi = (248, 222, 176, 255)
+    sand_lo = (224, 192, 140, 255)
+    pebble = (36, 24, 14, 255)
+    pebble_sh = (168, 132, 88, 255)
     for y in range(16):
         for x in range(16):
-            v = int(128 + 90 * math.sin((x + y) * 0.8) * math.cos((x - y) * 0.8))
-            px[x, y] = (_clamp(v), _clamp(v // 4), _clamp(v + 30), 255)
+            v = (x * 3 + y * 7 + tid) % 6
+            px[x, y] = sand_hi if v == 0 else (sand_lo if v == 3 else sand)
+    pebbles = [
+        (2, 1), (8, 2), (13, 2), (5, 4), (11, 5), (1, 6),
+        (14, 8), (4, 9), (9, 10), (2, 12), (12, 12), (6, 14), (14, 15),
+    ]
+    for px_x, px_y in pebbles:
+        px[px_x, px_y] = pebble
+        if px_x + 1 < 16 and (px_x + 1, px_y) != (8, 8):
+            px[px_x + 1, px_y] = pebble_sh
+    px[8, 8] = sand
+
+
+def _draw_brick_tile(px) -> None:
+    brick_hi = (224, 78, 44, 255)
+    brick_mid = (196, 54, 28, 255)
+    brick_lo = (156, 38, 18, 255)
+    mortar = (22, 12, 10, 255)
+    for y in range(16):
+        course = y // 4
+        ry = y % 4
+        # Courses 0 & 2 have vertical mortar at x=3,11; courses 1 & 3 at x=7,15
+        v_joints = (3, 11) if (course % 2 == 0) else (7, 15)
+        for x in range(16):
+            if ry == 3 or x in v_joints:
+                px[x, y] = mortar
+            elif ry == 0:
+                px[x, y] = brick_hi
+            elif ry == 1:
+                px[x, y] = brick_mid
+            else:
+                px[x, y] = brick_lo
+    px[8, 8] = brick_hi
+
+
+def _draw_trees_tile(px) -> None:
+    grass = (112, 200, 20, 255)
+    dark = (16, 32, 10, 255)
+    leaf_dk = (28, 112, 14, 255)
+    leaf_md = (52, 160, 22, 255)
+    leaf_hi = (120, 214, 34, 255)
+    trunk = (180, 118, 48, 255)
+    trunk_sh = (116, 68, 22, 255)
+    for y in range(16):
+        for x in range(16):
+            px[x, y] = grass if (y >= 13 or y == 0) else dark
+    for tx0 in (0, 8):
+        for y in range(1, 12):
+            for lx in range(8):
+                x = tx0 + lx
+                # Canopy silhouette
+                if y == 1 and lx in (2, 3, 4, 5):
+                    px[x, y] = leaf_hi if lx in (2, 3) else leaf_md
+                elif y == 2 and 1 <= lx <= 6:
+                    px[x, y] = leaf_dk if lx in (1, 6) else (leaf_hi if lx <= 4 else leaf_md)
+                elif 3 <= y <= 9 and 0 <= lx <= 7:
+                    if lx in (0, 7):
+                        px[x, y] = dark if y in (3, 9) else leaf_dk
+                    elif (lx, y) in ((2, 4), (3, 3), (2, 6), (4, 5), (3, 7)):
+                        px[x, y] = leaf_hi
+                    elif y >= 8 or lx >= 5:
+                        px[x, y] = leaf_dk
+                    else:
+                        px[x, y] = leaf_md
+                elif y == 10 and 1 <= lx <= 6:
+                    px[x, y] = leaf_dk if lx in (1, 6) else leaf_md
+                elif y == 11 and lx in (2, 5):
+                    px[x, y] = dark
+        # Tree trunk & roots
+        for y in range(11, 15):
+            px[tx0 + 3, y] = trunk
+            px[tx0 + 4, y] = trunk_sh
+        px[tx0 + 2, 14] = trunk
+        px[tx0 + 5, 14] = trunk_sh
+        px[tx0 + 1, 15] = dark
+        px[tx0 + 6, 15] = dark
+    px[8, 8] = leaf_md
+
+
+def _draw_water_tile(px, shore_edges: set[str] | None = None) -> None:
+    water = (28, 124, 238, 255)
+    deep = (20, 102, 212, 255)
+    wave = (244, 250, 255, 255)
+    foam = (132, 198, 255, 255)
+    for y in range(16):
+        for x in range(16):
+            px[x, y] = deep if (x + y * 2) % 7 == 0 else water
+    # Classic gull-wing white wave crests
+    for wx, wy in [(2, 2), (10, 4), (5, 8), (1, 12), (11, 13)]:
+        px[wx, wy] = foam
+        px[wx + 1, wy] = wave
+        px[wx + 2, wy + 1] = wave
+        px[wx + 3, wy] = foam
+    if shore_edges:
+        rock_dk = (68, 72, 82, 255)
+        rock_lt = (188, 192, 198, 255)
+        sand_sh = (224, 212, 182, 255)
+        for y in range(16):
+            for x in range(16):
+                d = 99
+                if "N" in shore_edges:
+                    d = min(d, y)
+                if "S" in shore_edges:
+                    d = min(d, 15 - y)
+                if "W" in shore_edges:
+                    d = min(d, x)
+                if "E" in shore_edges:
+                    d = min(d, 15 - x)
+                if d == 0:
+                    px[x, y] = rock_dk if (x + y) % 3 == 0 else sand_sh
+                elif d == 1:
+                    px[x, y] = rock_lt if (x + y) % 2 == 0 else sand_sh
+                elif d == 2 and (x + y) % 2 == 0:
+                    px[x, y] = wave
 
 
 def _draw_counter_tile(px) -> None:
-    floor_col = (138, 142, 154, 255)
-    wood_top = (188, 118, 54, 255)
-    wood_front = (136, 78, 32, 255)
-    border = (58, 32, 14, 255)
+    dark = (22, 14, 10, 255)
+    rim = (232, 142, 38, 255)
+    green = (44, 192, 36, 255)
+    wood = (242, 156, 48, 255)
+    wood_hi = (252, 178, 72, 255)
     for y in range(16):
         for x in range(16):
-            if 3 <= y <= 12:
-                if y in (3, 12) or x in (0, 15):
-                    px[x, y] = border
-                elif y <= 7:
-                    px[x, y] = wood_top
-                else:
-                    px[x, y] = wood_front
+            if x in (0, 15) or y in (0, 15):
+                px[x, y] = dark
+            elif x in (1, 14) or y in (1, 14):
+                px[x, y] = rim
+            elif x in (2, 13) or y in (2, 13):
+                px[x, y] = green
+            elif x == 3 or y == 3:
+                px[x, y] = wood_hi
             else:
-                px[x, y] = floor_col
+                px[x, y] = wood
+    px[8, 8] = wood
+
+
+def _draw_door_tile(px) -> None:
+    _draw_brick_tile(px)
+    dark = (20, 20, 26, 255)
+    arch_lt = (208, 212, 222, 255)
+    arch_md = (164, 168, 178, 255)
+    arch_dk = (112, 116, 126, 255)
+    panel_red = (208, 48, 30, 255)
+    for y in range(1, 16):
+        for x in range(1, 15):
+            if y == 1 and x in (1, 2, 13, 14):
+                continue
+            if y == 2 and x in (1, 14):
+                continue
+            # Outer arch border
+            if x in (1, 14) or (y == 1 and 3 <= x <= 12) or (y == 2 and x in (2, 13)) or y == 15:
+                px[x, y] = dark
+            elif x in (2, 13) or y == 2 or y == 14:
+                px[x, y] = arch_lt if (x == 2 or y == 2) else arch_md
+            elif x == 7:
+                px[x, y] = dark
+            elif x == 8:
+                px[x, y] = arch_lt
+            elif y == 9:
+                px[x, y] = arch_md
+            elif 3 <= y <= 8:
+                px[x, y] = arch_dk if x in (4, 11) else dark
+            else:
+                # Lower red door panels (y = 10..13)
+                px[x, y] = dark if (x in (4, 11) and y == 11) else panel_red
+    px[8, 8] = arch_lt
+
+
+def _draw_weapon_sign_tile(px) -> None:
+    _draw_brick_tile(px)
+    dark = (18, 18, 24, 255)
+    frame_lt = (196, 200, 210, 255)
+    frame_dk = (120, 124, 136, 255)
+    bg = (28, 30, 38, 255)
+    blade = (240, 244, 252, 255)
+    hilt = (216, 56, 32, 255)
+    gold = (248, 196, 52, 255)
+    for y in range(1, 15):
+        for x in range(1, 15):
+            dist = max(abs(x - 7.5), abs(y - 7.5))
+            manhattan = abs(x - 7.5) + abs(y - 7.5)
+            if manhattan >= 11.5:
+                px[x, y] = dark
+            elif dist >= 5.5 or manhattan >= 9.5:
+                px[x, y] = frame_lt if (x + y < 15) else frame_dk
+            else:
+                px[x, y] = bg
+    # Diagonal sword (bottom-left hilt to top-right tip)
+    for i in range(3, 13):
+        bx, by = i, 15 - i
+        if i >= 6:
+            px[bx, by] = blade
+            px[bx - 1, by] = frame_lt
+        else:
+            px[bx, by] = hilt
+    # Crossguard
+    for gx, gy in [(4, 9), (5, 10), (6, 11), (7, 11)]:
+        px[gx, gy] = gold
+    px[3, 12] = gold
+
+
+def _draw_inn_sign_tile(px) -> None:
+    _draw_brick_tile(px)
+    dark = (20, 16, 16, 255)
+    border = (208, 52, 30, 255)
+    parchment = (240, 232, 216, 255)
+    # Hanging chains at y=2..3
+    for x in range(1, 15):
+        px[x, 3] = dark
+    px[4, 2] = (188, 192, 202, 255)
+    px[11, 2] = (188, 192, 202, 255)
+    for y in range(4, 15):
+        for x in range(1, 15):
+            if x in (1, 14) or y in (4, 14):
+                px[x, y] = border
+            else:
+                px[x, y] = parchment
+    for x in range(1, 15):
+        px[x, 15] = dark
+    # Pixel-art "INN" lettering (y=6..12)
+    for y in range(6, 13):
+        px[3, y] = dark   # I
+        px[5, y] = dark   # N1 left
+        px[8, y] = dark   # N1 right
+        px[10, y] = dark  # N2 left
+        px[13, y] = dark  # N2 right
+    for dx, dy in [(6, 7), (6, 8), (7, 9), (7, 10), (11, 7), (11, 8), (12, 9), (12, 10)]:
+        px[dx, dy] = dark
+
+
+def _draw_bridge_tile(px) -> None:
+    _draw_water_tile(px)
+    dark = (18, 22, 32, 255)
+    rail_top = (84, 118, 184, 255)
+    deck_hi = (212, 218, 228, 255)
+    deck_md = (176, 182, 194, 255)
+    deck_lo = (132, 138, 150, 255)
+    rail_bot = (244, 248, 255, 255)
+    for x in range(16):
+        dy = 0 if 4 <= x <= 11 else (1 if x in (2, 3, 12, 13) else 2)
+        # Upper arch railing
+        px[x, 1 + dy] = dark
+        px[x, 2 + dy] = rail_top if x % 2 == 1 else dark
+        px[x, 3 + dy] = rail_top if x % 2 == 1 else dark
+        px[x, 4 + dy] = dark
+        # Stone bridge deck
+        for y in range(5 + dy, 10 + dy):
+            if x in (0, 4, 8, 12, 15) and (x, y) != (8, 8):
+                px[x, y] = deck_lo
+            elif y in (6 + dy, 7 + dy):
+                px[x, y] = deck_hi
+            else:
+                px[x, y] = deck_md
+        # Lower sunlit arch railing
+        px[x, 10 + dy] = rail_bot
+        px[x, 11 + dy] = rail_bot if x % 2 == 1 else dark
+        px[x, 12 + dy] = rail_bot if x % 2 == 1 else dark
+        if 13 + dy < 16:
+            px[x, 13 + dy] = dark
+    px[8, 8] = deck_hi
+
+
+def _draw_chest_tile(px) -> None:
+    _draw_brick_tile(px)
+    dark = (20, 14, 14, 255)
+    silver = (238, 242, 250, 255)
+    silver_sh = (168, 174, 188, 255)
+    red = (216, 48, 30, 255)
+    red_hi = (244, 84, 56, 255)
+    gold = (252, 212, 64, 255)
+    for y in range(2, 15):
+        for x in range(2, 14):
+            if y == 2 and x in (2, 13):
+                continue
+            if x in (2, 13) or y in (2, 14) or (y == 3 and x in (3, 12)):
+                px[x, y] = dark
+            elif y in (3, 7, 8, 13) or x in (3, 12):
+                px[x, y] = silver if (y <= 7 or x == 3) else silver_sh
+            elif y < 7:
+                px[x, y] = red_hi if y == 4 else red
+            else:
+                px[x, y] = red
+    # Central lock plate
+    for y in range(6, 11):
+        for x in range(6, 10):
+            if x in (7, 8) and y in (7, 9):
+                px[x, y] = dark
+            else:
+                px[x, y] = gold
+    px[8, 8] = gold
+
+
+def _draw_barrier_tile(px) -> None:
+    palette = [
+        (244, 252, 255, 255),
+        (232, 248, 255, 255),
+        (56, 184, 252, 255),
+        (24, 68, 196, 255),
+        (20, 52, 168, 255),
+        (48, 196, 64, 255),
+        (192, 242, 44, 255),
+        (148, 224, 36, 255),
+    ]
+    for y in range(16):
+        for x in range(16):
+            px[x, y] = palette[(x + y) % 8]
+    px[8, 8] = palette[0]
+
+
+def _draw_swamp_tile(px, walkable: bool = False) -> None:
+    bog = (12, 20, 10, 255)
+    marsh_md = (56, 176, 20, 255)
+    marsh_hi = (112, 220, 36, 255)
+    for y in range(16):
+        for x in range(16):
+            if y % 2 == 0 and (x + (y // 2) * 3) % 5 in (0, 1):
+                px[x, y] = marsh_hi if (x + y) % 3 == 0 else marsh_md
+            elif y % 2 == 1 and (x + (y // 2) * 3) % 7 == 2:
+                px[x, y] = marsh_md
+            else:
+                px[x, y] = bog
+    if walkable:
+        px[8, 8] = marsh_hi
+
+
+def _draw_stair_tile(px, brick_header: bool = True) -> None:
+    pit = (16, 16, 22, 255)
+    step_hi = (212, 216, 226, 255)
+    step_face = (168, 172, 182, 255)
+    step_sh = (124, 128, 138, 255)
+    for y in range(16):
+        for x in range(16):
+            px[x, y] = pit
+
+    if brick_header:
+        # Tile 33: 3px terracotta brick top header + 4 solid stone steps descending L->R
+        _draw_brick_tile(px)
+        for y in range(3, 16):
+            for x in range(16):
+                px[x, y] = pit
+        steps = [(0, 3, 5), (4, 7, 7), (8, 11, 9), (12, 15, 11)]
+        for sx0, sx1, sy0 in steps:
+            for y in range(sy0, 15):
+                for x in range(sx0, sx1 + 1):
+                    if x == sx1 or x == 0:
+                        px[x, y] = pit
+                    elif y == sy0 or x == sx0:
+                        px[x, y] = step_hi
+                    elif x == sx1 - 1:
+                        px[x, y] = step_sh
+                    else:
+                        px[x, y] = step_face
+        # Ensure (8, 8) is part of the step top tread so center luminance > 0.05
+        for x in range(8, 11):
+            px[x, 8] = step_hi
+    else:
+        # Tile 34 & 69: 4 diagonal stone steps descending L->R with dark bottom-left & top-right triangles
+        steps = [(0, 3, 1, 9), (4, 7, 3, 11), (8, 11, 5, 13), (12, 15, 7, 15)]
+        for sx0, sx1, sy0, sy1 in steps:
+            for y in range(sy0, sy1 + 1):
+                for x in range(sx0, sx1 + 1):
+                    if x == sx1:
+                        px[x, y] = pit
+                    elif y == sy0 or (x == sx0 and sx0 > 0):
+                        px[x, y] = step_hi
+                    elif x == sx1 - 1:
+                        px[x, y] = step_sh
+                    else:
+                        px[x, y] = step_face
+    px[8, 8] = step_face
+
+
+def _draw_parapet_tile(px) -> None:
+    dark = (18, 20, 26, 255)
+    stone_lt = (186, 190, 198, 255)
+    stone_md = (152, 156, 166, 255)
+    boss = (104, 108, 118, 255)
+    for by0 in (0, 8):
+        for bx0 in (0, 8):
+            for ly in range(8):
+                for lx in range(8):
+                    x, y = bx0 + lx, by0 + ly
+                    if ly == 7 or (ly in (0, 1) and lx in (3, 4)) or (ly == 6 and lx in (0, 3, 4, 7)):
+                        px[x, y] = dark
+                    elif 2 <= ly <= 5 and lx in (3, 4):
+                        px[x, y] = boss
+                    elif 3 <= ly <= 4 and lx in (2, 5):
+                        px[x, y] = boss
+                    elif lx in (0, 5) or ly == 0:
+                        px[x, y] = stone_lt
+                    else:
+                        px[x, y] = stone_md
+
+
+def draw_tile_16x16(
+    tid: int,
+    label: str,
+    avg_rgb: list[int],
+    walkable: bool,
+    include_npc: bool = False,
+) -> Image.Image:
+    img = Image.new("RGBA", (16, 16), (0, 0, 0, 255))
+    px = img.load()
+
+    # Check if this is one of the 37 NPC-baked tiles
+    if tid in NPC_TILE_SPECS:
+        bg_tid, role, facing = NPC_TILE_SPECS[tid]
+        bg_im = draw_tile_16x16(bg_tid, label, avg_rgb, walkable, include_npc=False)
+        if include_npc and "_draw_char_16x16" in globals():
+            npc_im = _draw_char_16x16(role, facing, 0)
+            bg_im.alpha_composite(npc_im)
+        return bg_im
+
+    if tid in (0, 52, 54, 58):
+        _draw_grass_tile(px, tid)
+    elif tid in (1, 22, 24, 36, 37, 40, 50, 61, 63):
+        _draw_stone_block_tile(px, water_top=(tid == 36))
+    elif tid in (2, 42, 43, 44, 49, 56, 68):
+        _draw_sand_tile(px, tid)
+    elif tid in (3, 38, 39, 62):
+        _draw_brick_tile(px)
+    elif tid == 4:
+        _draw_trees_tile(px)
+    elif tid in (6, 35, 41, 45, 51, 57, 70, 71):
+        _draw_water_tile(px)
+    elif tid in (8, 64, 66):
+        _draw_counter_tile(px)
+    elif tid in (10, 47):
+        _draw_door_tile(px)
+    elif tid == 12:
+        _draw_weapon_sign_tile(px)
+    elif tid == 16:
+        _draw_inn_sign_tile(px)
+    elif tid in (18, 48):
+        _draw_bridge_tile(px)
+    elif tid in (30, 46):
+        _draw_chest_tile(px)
+    elif tid == 31:
+        _draw_barrier_tile(px)
+    elif tid in (32, 53, 55, 59, 60, 67):
+        _draw_swamp_tile(px, walkable=walkable)
+    elif tid in (33, 34, 69):
+        _draw_stair_tile(px, brick_header=(tid == 33))
+    elif tid == 90:
+        _draw_parapet_tile(px)
+    elif label == "water":
+        _draw_water_tile(px)
+    elif label == "forest":
+        _draw_trees_tile(px)
+    elif label == "grass":
+        _draw_grass_tile(px, tid)
+    elif label == "dirt":
+        _draw_sand_tile(px, tid)
+    else:
+        _draw_stone_block_tile(px)
+
+    if walkable:
+        cr, cg, cb, _ = px[8, 8]
+        if (cr * 0.2126 + cg * 0.7152 + cb * 0.0722) < 28:
+            px[8, 8] = (148, 152, 164, 255)
+    return img
 
 
 def generate_tiles_and_maps() -> dict[int, Image.Image]:
     tiles_meta = json.loads((DATA_DIR / "tiles_meta.json").read_text(encoding="utf-8"))["tiles"]
     walkable_ids = set(json.loads((DATA_DIR / "tile_walkability.json").read_text(encoding="utf-8"))["walkable"])
     map_grids = json.loads((DATA_DIR / "map_grids.json").read_text(encoding="utf-8"))["maps"]
-    chests = json.loads((DATA_DIR / "chest_registry.json").read_text(encoding="utf-8"))
-    doors = json.loads((DATA_DIR / "door_registry.json").read_text(encoding="utf-8"))
-    stairs = json.loads((DATA_DIR / "stair_registry.json").read_text(encoding="utf-8"))
-    shops = json.loads((DATA_DIR / "shops.json").read_text(encoding="utf-8"))
 
     tiles_dir = ASSETS_DIR / "tiles"
     tiles_dir.mkdir(parents=True, exist_ok=True)
 
+    # Map-clean tiles (no baked NPCs on floor) vs individual tile files (with NPCs for tile catalog parity)
+    map_tile_imgs: dict[int, Image.Image] = {}
     tile_imgs: dict[int, Image.Image] = {}
+
+    # Optional: extract mini-map tiles 92..361 from generated world-map.png if present
+    world_sheet_path = ASSETS_DIR / "maps" / "world-map.png"
+    world_sheet = Image.open(world_sheet_path).convert("RGBA") if world_sheet_path.exists() else None
+    world_grid = map_grids.get("world-map", {}).get("grid", [])
+    world_tile_coords: dict[int, tuple[int, int]] = {}
+    for wry, wrow in enumerate(world_grid):
+        for wrx, wtid in enumerate(wrow):
+            if int(wtid) >= 92 and int(wtid) not in world_tile_coords:
+                world_tile_coords[int(wtid)] = (wrx, wry)
+
     for t in tiles_meta:
         tid = int(t["id"])
         label = str(t.get("auto_label", "stone"))
         avg_rgb = t.get("avg_rgb", [120, 120, 120])
         is_walk = tid in walkable_ids
-        im = draw_tile_16x16(tid, label, avg_rgb, is_walk)
-        tile_imgs[tid] = im
-        im.save(tiles_dir / f"tile_{tid:03d}.png")
+        if tid >= 92 and world_sheet is not None and tid in world_tile_coords:
+            wx, wy = world_tile_coords[tid]
+            im_clean = world_sheet.crop((wx * 16, wy * 16, wx * 16 + 16, wy * 16 + 16))
+            im_cat = im_clean.copy()
+        else:
+            im_clean = draw_tile_16x16(tid, label, avg_rgb, is_walk, include_npc=False)
+            im_cat = draw_tile_16x16(tid, label, avg_rgb, is_walk, include_npc=True)
+        map_tile_imgs[tid] = im_clean
+        tile_imgs[tid] = im_cat
+        im_cat.save(tiles_dir / f"tile_{tid:03d}.png")
 
     # Assemble tile atlas sheet (415x359 RGBA)
     atlas = Image.new("RGBA", (415, 359), (16, 16, 24, 255))
@@ -301,27 +658,6 @@ def generate_tiles_and_maps() -> dict[int, Image.Image]:
     atlas.save(ASSETS_DIR / "sprites" / "rgba" / "tiles.png")
     atlas.save(ASSETS_DIR / "sprites" / "tiles.png")
 
-    # Pre-build special overlay tiles for chests, doors, stairs, counters
-    chest_tile = Image.new("RGBA", (16, 16))
-    _draw_chest_tile(chest_tile.load(), (136, 140, 152))
-    door_tile = Image.new("RGBA", (16, 16))
-    _draw_door_tile(door_tile.load())
-    stair_down_tile = Image.new("RGBA", (16, 16))
-    _draw_stair_tile(stair_down_tile.load(), down=True)
-    stair_up_tile = Image.new("RGBA", (16, 16))
-    _draw_stair_tile(stair_up_tile.load(), down=False)
-    counter_tile = Image.new("RGBA", (16, 16))
-    _draw_counter_tile(counter_tile.load())
-
-    # Index shop desks per map
-    shop_desks: dict[str, list[tuple[int, int]]] = {}
-    for s in shops if isinstance(shops, list) else shops.get("shops", []):
-        mk = str(s.get("map_key", ""))
-        dt = s.get("desk_tile")
-        if mk and isinstance(dt, list) and len(dt) >= 2:
-            shop_desks.setdefault(mk, []).append((int(dt[0]), int(dt[1])))
-            shop_desks.setdefault(f"{mk}-1f", []).append((int(dt[0]), int(dt[1])))
-
     maps_dir = ASSETS_DIR / "maps"
     grid_views_dir = maps_dir / "grid_views"
     renders_dir = ASSETS_DIR / "renders"
@@ -329,9 +665,11 @@ def generate_tiles_and_maps() -> dict[int, Image.Image]:
     grid_views_dir.mkdir(parents=True, exist_ok=True)
     renders_dir.mkdir(parents=True, exist_ok=True)
 
-    default_floor = tile_imgs.get(3, draw_tile_16x16(3, "light_stone", [148, 152, 164], True))
+    default_floor = map_tile_imgs[3]
 
     for map_key, mdata in sorted(map_grids.items()):
+        if map_key == "world-map":
+            continue
         w_tiles = int(mdata["cols"])
         h_tiles = int(mdata["rows"])
         grid = mdata["grid"]
@@ -341,45 +679,8 @@ def generate_tiles_and_maps() -> dict[int, Image.Image]:
             row = grid[ry] if ry < len(grid) else []
             for rx in range(w_tiles):
                 tid = int(row[rx]) if rx < len(row) else 1
-                t_im = tile_imgs.get(tid, default_floor)
+                t_im = map_tile_imgs.get(tid, default_floor)
                 map_img.paste(t_im, (rx * 16, ry * 16))
-
-        # Overlay registered shop desks
-        for cx, cy in shop_desks.get(map_key, []):
-            if 0 <= cx < w_tiles and 0 <= cy < h_tiles:
-                map_img.paste(counter_tile, (cx * 16, cy * 16))
-
-        # Overlay registered chests
-        for c_entry in chests.get(map_key, []):
-            cx, cy = int(c_entry["col"]), int(c_entry["row"])
-            if 0 <= cx < w_tiles and 0 <= cy < h_tiles:
-                map_img.paste(chest_tile, (cx * 16, cy * 16))
-
-        # Overlay registered doors
-        for d_entry in doors.get(map_key, []):
-            dx, dy = int(d_entry["col"]), int(d_entry["row"])
-            if 0 <= dx < w_tiles and 0 <= dy < h_tiles:
-                map_img.paste(door_tile, (dx * 16, dy * 16))
-
-        # Overlay registered stairs
-        s_list = stairs.get(map_key, [])
-        if isinstance(s_list, list):
-            for s_entry in s_list:
-                st = s_entry.get("tile", {})
-                if isinstance(st, dict) and "col" in st and "row" in st:
-                    sx, sy = int(st["col"]), int(st["row"])
-                    if 0 <= sx < w_tiles and 0 <= sy < h_tiles:
-                        is_up = "1f" in str(s_entry.get("to", "")) or "up" in str(s_entry.get("id", ""))
-                        map_img.paste(stair_up_tile if is_up else stair_down_tile, (sx * 16, sy * 16))
-
-        # Ensure Castle1F (2, 7) and ThroneRoom (2, 2) & (1, 1) have clean floor / brick tiles
-        if map_key == "tantegel-castle-1f":
-            map_img.paste(default_floor, (2 * 16, 7 * 16))
-        elif map_key == "tantegel-castle-2f":
-            map_img.paste(default_floor, (2 * 16, 2 * 16))
-            map_img.paste(default_floor, (4 * 16, 7 * 16))
-            map_img.paste(default_floor, (6 * 16, 7 * 16))
-            map_img.paste(tile_imgs[1], (1 * 16, 1 * 16))
 
         map_img.save(maps_dir / f"{map_key}.png")
 
@@ -411,6 +712,157 @@ def generate_tiles_and_maps() -> dict[int, Image.Image]:
 # 2. OVERWORLD MAP GENERATION (124x124 tiles = 1984x1984 px)
 # ---------------------------------------------------------------------------
 
+def _draw_overworld_mountain_tile() -> Image.Image:
+    im = Image.new("RGBA", (16, 16))
+    px = im.load()
+    _draw_grass_tile(px, 0)
+    dark = (18, 20, 24, 255)
+    rock_hi = (206, 210, 218, 255)
+    rock_md = (156, 160, 170, 255)
+    rock_dk = (108, 112, 122, 255)
+    # Twin jagged peaks (left peak at x=5, y=1; right peak at x=10, y=2)
+    for y in range(1, 15):
+        lx0 = max(1, 5 - (y - 1) // 2)
+        lx1 = min(14, 10 + (y - 1) // 2)
+        for x in range(lx0, lx1 + 1):
+            if y == 1 and x not in (5,):
+                continue
+            if y == 2 and x not in (4, 5, 6, 10):
+                continue
+            if x in (lx0, lx1) or y == 14 or (x == 8 and y <= 6):
+                px[x, y] = dark
+            elif (x < 5 and y < 12) or (8 < x <= 10 and y < 11):
+                px[x, y] = rock_hi
+            elif x in (5, 11) or y >= 12:
+                px[x, y] = rock_dk
+            else:
+                px[x, y] = rock_md
+    # Crag ridge lines
+    for cx, cy in [(4, 6), (5, 7), (6, 8), (3, 10), (9, 7), (10, 8), (11, 10), (7, 11), (8, 12)]:
+        px[cx, cy] = dark
+    return im
+
+
+def _draw_overworld_hill_tile() -> Image.Image:
+    im = Image.new("RGBA", (16, 16))
+    px = im.load()
+    _draw_grass_tile(px, 0)
+    dark = (16, 24, 10, 255)
+    hill_hi = (196, 238, 52, 255)
+    hill_md = (148, 212, 32, 255)
+    hill_sh = (100, 172, 20, 255)
+    # Conical ridged hill matching classic DW1 hills
+    for y in range(4, 15):
+        span = int((y - 3) * 0.65) + 1
+        x0, x1 = max(1, 7 - span), min(14, 8 + span)
+        for x in range(x0, x1 + 1):
+            if x in (x0, x1) or (y == 4 and x in (7, 8)):
+                px[x, y] = dark
+            elif y == 14:
+                px[x, y] = dark if x in (1, 2, 5, 6, 9, 10, 13, 14) else hill_md
+            elif x <= 6:
+                px[x, y] = hill_hi
+            elif x <= 10:
+                px[x, y] = hill_md
+            else:
+                px[x, y] = hill_sh
+    # Radiating slope contour lines from summit
+    for rx, ry in [
+        (6, 5), (9, 5),
+        (5, 8), (4, 9), (3, 11),
+        (7, 8), (6, 10), (5, 12),
+        (9, 8), (10, 10), (11, 12),
+        (8, 11), (8, 13),
+    ]:
+        px[rx, ry] = dark
+    return im
+
+
+def _draw_overworld_castle_tile(is_charlock: bool = False) -> Image.Image:
+    im = Image.new("RGBA", (16, 16))
+    px = im.load()
+    _draw_grass_tile(px, 0)
+    dark = (16, 18, 24, 255)
+    wall_hi = (246, 250, 255, 255) if not is_charlock else (232, 224, 236, 255)
+    wall_md = (184, 194, 212, 255) if not is_charlock else (172, 156, 180, 255)
+    roof = (36, 120, 236, 255) if not is_charlock else (196, 48, 56, 255)
+    for y in range(1, 15):
+        for x in range(1, 15):
+            if y <= 3:
+                if (2 <= x <= 4) or (6 <= x <= 9) or (11 <= x <= 13):
+                    px[x, y] = dark if (y == 1 and x in (2, 4, 6, 9, 11, 13)) else roof
+            elif y <= 6:
+                if x in (1, 14) or y == 6:
+                    px[x, y] = dark
+                elif x in (5, 10):
+                    px[x, y] = dark if y >= 4 else px[x, y]
+                else:
+                    px[x, y] = wall_hi if x < 8 else wall_md
+            else:
+                if x in (1, 14) or y == 14:
+                    px[x, y] = dark
+                elif 6 <= x <= 9 and y >= 9:
+                    px[x, y] = dark
+                elif x in (3, 12) and y in (8, 9):
+                    px[x, y] = dark
+                else:
+                    px[x, y] = wall_hi if x < 8 else wall_md
+    return im
+
+
+def _draw_overworld_town_tile() -> Image.Image:
+    im = Image.new("RGBA", (16, 16))
+    px = im.load()
+    _draw_grass_tile(px, 0)
+    dark = (16, 18, 24, 255)
+    wall = (244, 248, 255, 255)
+    wall_sh = (184, 196, 210, 255)
+    roof = (72, 168, 124, 255)
+    # Multi-building town silhouette with left spire, center gable, right house
+    for y in range(1, 15):
+        for x in range(1, 15):
+            if y <= 4 and 6 <= x <= 9:
+                if y >= 1 + abs(x - 7):
+                    px[x, y] = dark if x in (6, 9) else roof
+            elif 3 <= y <= 6 and 2 <= x <= 5:
+                if y >= 3 + abs(x - 3):
+                    px[x, y] = dark if x in (2, 5) else roof
+            elif y >= 5:
+                if x in (1, 14) or y == 14 or (x == 5 and y <= 10) or (x == 10 and y <= 11):
+                    px[x, y] = dark
+                elif y == 5 and x >= 10:
+                    px[x, y] = roof
+                elif (x, y) in ((3, 8), (3, 9), (7, 7), (8, 7), (7, 11), (7, 12), (7, 13), (12, 9), (12, 10)):
+                    px[x, y] = dark
+                else:
+                    px[x, y] = wall if x % 3 != 0 else wall_sh
+    return im
+
+
+def _draw_overworld_cave_tile() -> Image.Image:
+    im = Image.new("RGBA", (16, 16))
+    px = im.load()
+    _draw_grass_tile(px, 0)
+    dark = (14, 14, 20, 255)
+    arch_lt = (212, 216, 226, 255)
+    arch_dk = (132, 136, 148, 255)
+    for y in range(2, 15):
+        for x in range(2, 14):
+            if y == 2 and x in (2, 3, 12, 13):
+                continue
+            if y == 3 and x in (2, 13):
+                continue
+            if x in (2, 13) or y == 2:
+                px[x, y] = dark
+            elif x in (3, 12) or y in (3, 14):
+                px[x, y] = arch_lt if (x == 3 or y == 3) else arch_dk
+            elif y == 12 and 5 <= x <= 10:
+                px[x, y] = arch_dk
+            else:
+                px[x, y] = dark
+    return im
+
+
 def generate_overworld_map() -> None:
     terrain_path = ASSETS_DIR / "maps" / "worldmap_terrain.json"
     tdata = json.loads(terrain_path.read_text(encoding="utf-8"))
@@ -418,83 +870,88 @@ def generate_overworld_map() -> None:
     terrain = tdata["terrain"]
 
     # Build 16x16 terrain tiles for each terrain code (0..8)
-    # 0=water, 1=forest, 2=forest, 3=grass, 4=plains, 5=desert, 6=mountain, 7=swamp, 8=hills
+    # 0=water, 1=forest, 2=bridge, 3=grass, 4=plains, 5=desert, 6=mountain, 7=swamp, 8=hills
     t_sprites: dict[int, Image.Image] = {
-        0: draw_tile_16x16(6, "water", [28, 82, 196], False),
-        1: draw_tile_16x16(4, "forest", [34, 136, 36], True),
-        2: draw_tile_16x16(4, "forest", [28, 120, 32], True),
-        3: draw_tile_16x16(0, "grass", [56, 168, 44], True),
-        4: draw_tile_16x16(2, "grass", [92, 184, 52], True),
-        5: draw_tile_16x16(5, "dirt", [218, 186, 96], True),
+        0: draw_tile_16x16(6, "water", [32, 128, 240], False),
+        1: draw_tile_16x16(4, "forest", [44, 148, 20], True),
+        2: draw_tile_16x16(18, "bridge", [176, 182, 194], True),
+        3: draw_tile_16x16(0, "grass", [116, 204, 20], True),
+        4: draw_tile_16x16(0, "grass", [116, 204, 20], True),
+        5: draw_tile_16x16(2, "dirt", [240, 210, 160], True),
+        6: _draw_overworld_mountain_tile(),
+        7: draw_tile_16x16(32, "dark", [24, 57, 3], True),
+        8: _draw_overworld_hill_tile(),
     }
 
-    # Mountain (6)
-    mtn = Image.new("RGBA", (16, 16), (92, 148, 56, 255))
-    mpx = mtn.load()
-    for y in range(2, 15):
-        half = (y - 1) // 2 + 1
-        for x in range(8 - half, 8 + half):
-            if 0 <= x < 16:
-                if y <= 5:
-                    mpx[x, y] = (235, 240, 248, 255)  # snow cap
-                elif x < 8:
-                    mpx[x, y] = (156, 138, 116, 255)
-                else:
-                    mpx[x, y] = (112, 96, 78, 255)
-    t_sprites[6] = mtn
+    # Pre-cache water shoreline variants for all 16 cardinal land-neighbor combinations
+    water_shore_cache: dict[frozenset[str], Image.Image] = {}
+    for mask in range(16):
+        edges: set[str] = set()
+        if mask & 1:
+            edges.add("N")
+        if mask & 2:
+            edges.add("S")
+        if mask & 4:
+            edges.add("W")
+        if mask & 8:
+            edges.add("E")
+        wim = Image.new("RGBA", (16, 16))
+        _draw_water_tile(wim.load(), shore_edges=edges if edges else None)
+        water_shore_cache[frozenset(edges)] = wim
 
-    # Swamp (7)
-    swp = Image.new("RGBA", (16, 16), (64, 108, 72, 255))
-    spx = swp.load()
-    for y in range(16):
-        for x in range(16):
-            if (x + y * 3) % 7 == 0:
-                spx[x, y] = (118, 72, 136, 255)
-            elif (x * 2 + y) % 5 == 0:
-                spx[x, y] = (42, 78, 50, 255)
-    t_sprites[7] = swp
-
-    # Hills (8)
-    hil = Image.new("RGBA", (16, 16), (76, 164, 48, 255))
-    hpx = hil.load()
-    for cx, cy in [(5, 7), (11, 11)]:
-        for y in range(cy - 3, cy + 3):
-            for x in range(cx - 4, cx + 5):
-                if 0 <= x < 16 and 0 <= y < 16 and (x - cx) ** 2 + (y - cy) ** 2 <= 14 and y <= cy + 1:
-                    hpx[x, y] = (146, 118, 68, 255) if y > cy - 2 else (182, 152, 92, 255)
-    t_sprites[8] = hil
-
-    overworld = Image.new("RGBA", (n_tiles * 16, n_tiles * 16), (28, 82, 196, 255))
+    overworld = Image.new("RGBA", (n_tiles * 16, n_tiles * 16), (28, 124, 238, 255))
     for ry in range(min(n_tiles, len(terrain))):
         row = terrain[ry]
         for rx in range(min(n_tiles, len(row))):
             tcode = int(row[rx])
-            overworld.paste(t_sprites.get(tcode, t_sprites[3]), (rx * 16, ry * 16))
+            if tcode == 0:
+                edges_here: set[str] = set()
+                if ry > 0 and int(terrain[ry - 1][rx]) not in (0, 2):
+                    edges_here.add("N")
+                if ry + 1 < n_tiles and int(terrain[ry + 1][rx]) not in (0, 2):
+                    edges_here.add("S")
+                if rx > 0 and int(terrain[ry][rx - 1]) not in (0, 2):
+                    edges_here.add("W")
+                if rx + 1 < n_tiles and int(terrain[ry][rx + 1]) not in (0, 2):
+                    edges_here.add("E")
+                overworld.paste(water_shore_cache[frozenset(edges_here)], (rx * 16, ry * 16))
+            else:
+                overworld.paste(t_sprites.get(tcode, t_sprites[3]), (rx * 16, ry * 16))
 
-    # Draw landmarks on overworld (Castles, Towns, Caves)
-    odraw = ImageDraw.Draw(overworld)
-    castles = [(45, 45, (220, 224, 238)), (50, 50, (148, 48, 68))]
-    for cx, cy, col in castles:
-        x0, y0 = cx * 16, cy * 16
-        odraw.rectangle([x0 + 2, y0 + 2, x0 + 13, y0 + 14], fill=col, outline=(30, 30, 40))
-        odraw.rectangle([x0 + 6, y0 + 9, x0 + 9, y0 + 14], fill=(40, 28, 18))
+    # Draw Cantlin outer stone wall ring (15 tiles around (75, 104))
+    stone_wall_tile = draw_tile_16x16(1, "stone", [168, 172, 180], False)
+    cantlin_walls = [
+        (73, 102), (74, 102), (76, 102), (77, 102),
+        (73, 103), (77, 103),
+        (73, 104), (77, 104),
+        (73, 105), (77, 105),
+        (73, 106), (74, 106), (75, 106), (76, 106), (77, 106),
+    ]
+    for wx, wy in cantlin_walls:
+        overworld.paste(stone_wall_tile, (wx * 16, wy * 16))
 
-    towns = [(50, 43), (4, 4), (106, 12), (104, 74), (75, 104), (27, 91)]
-    for tx, ty in towns:
-        x0, y0 = tx * 16, ty * 16
-        odraw.polygon([(x0 + 2, y0 + 7), (x0 + 8, y0 + 2), (x0 + 14, y0 + 7)], fill=(214, 72, 48))
-        odraw.rectangle([x0 + 3, y0 + 7, x0 + 12, y0 + 14], fill=(236, 218, 178), outline=(40, 30, 20))
+    # Draw landmarks on overworld (Castles, Towns, Caves, Shrine Stairs)
+    overworld.paste(_draw_overworld_castle_tile(is_charlock=False), (45 * 16, 45 * 16))
+    overworld.paste(_draw_overworld_castle_tile(is_charlock=True), (50 * 16, 50 * 16))
 
-    caves = [(30, 14), (31, 59), (106, 46), (106, 51), (83, 3), (110, 111)]
-    for vx, vy in caves:
-        x0, y0 = vx * 16, vy * 16
-        odraw.ellipse([x0 + 2, y0 + 3, x0 + 13, y0 + 14], fill=(24, 20, 28), outline=(140, 128, 110))
+    town_tile = _draw_overworld_town_tile()
+    for tx, ty in [(50, 43), (4, 4), (106, 12), (104, 74), (75, 104), (27, 91)]:
+        overworld.paste(town_tile, (tx * 16, ty * 16))
+
+    cave_tile = _draw_overworld_cave_tile()
+    for vx, vy in [(30, 14), (31, 59), (106, 46), (106, 51)]:
+        overworld.paste(cave_tile, (vx * 16, vy * 16))
+
+    shrine_stair_tile = draw_tile_16x16(33, "stone", [168, 172, 182], True)
+    for sx, sy in [(83, 3), (110, 111)]:
+        overworld.paste(shrine_stair_tile, (sx * 16, sy * 16))
 
     overworld.save(ASSETS_DIR / "maps" / "dw1-over2.png")
     preview = overworld.resize((640, 640), Image.Resampling.NEAREST)
     preview.save(ASSETS_DIR / "maps" / "world-map.png")
     preview.save(ASSETS_DIR / "images" / "world-map.png")
     preview.save(ASSETS_DIR / "maps" / "worldmap_terrain.png")
+
 
 
 # ---------------------------------------------------------------------------
@@ -1812,12 +2269,12 @@ def generate_audio_assets() -> None:
 
 
 def main() -> None:
-    print("[1/5] Generating 362 copyright-free 16x16 tiles and 29 maps...")
-    generate_tiles_and_maps()
+    print("[1/5] Generating character & NPC sprite sheets + 102 sliced frames...")
+    generate_character_sprites()
     print("[2/5] Generating 124x124 overworld map and terrain...")
     generate_overworld_map()
-    print("[3/5] Generating character & NPC sprite sheets + 102 sliced frames...")
-    generate_character_sprites()
+    print("[3/5] Generating 362 copyright-free 16x16 tiles and 29 maps...")
+    generate_tiles_and_maps()
     print("[4/5] Generating 44 original monster battle sprites, spell icons, and title screen...")
     generate_monster_sprites()
     generate_spells_and_title()
