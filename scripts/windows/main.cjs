@@ -10,16 +10,17 @@ const path = require('node:path');
 const os = require('node:os');
 const { spawn } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
-const root = path.resolve(__dirname, '..');
+const root = app.isPackaged ? path.join(process.resourcesPath, 'suite') : path.resolve(__dirname, '..');
 const apps = JSON.parse(fs.readFileSync(path.join(root, 'apps.json')));
 const id = process.argv.find(a => a.startsWith('--app='))?.slice(6);
 process.env.HOME ||= os.homedir();
 process.env.ROBOS_LIB_PATH = path.join(root, 'packages/robos-lib');
 process.env.ROBOS_APP_BASE = path.join(root, 'packages');
-process.env.ROBOS_WINDOWS_HOST = __dirname;
+process.env.ROBOS_WINDOWS_HOST = app.isPackaged ? path.join(root, 'windows') : __dirname;
+process.env.ROBOS_TOOL_ROOT = app.isPackaged ? path.join(os.homedir(), 'RobOS') : root;
 if (process.platform === 'win32') {
   // Software Center's private npm prefix and WinGet portable command aliases.
-  require(path.join(root, 'packages/robos-lib/windows-path')).refreshWindowsPath(root);
+  require(path.join(root, 'packages/robos-lib/windows-path')).refreshWindowsPath(root, process.env, process.env.ROBOS_TOOL_ROOT);
   process.env.ROBOS_DM_SOCKET ||= require(path.join(root, 'packages/robos-lib/local-ipc-path')).localIpcPath('desktop-manager');
 }
 // Older apps use the appliance's shared-library prefix. Resolve it inside this installation.

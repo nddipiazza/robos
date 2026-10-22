@@ -1,0 +1,62 @@
+name: Native Windows EXE release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Existing release to receive builds from this ref (must match VERSION)'
+        required: true
+        default: 'v0.0.8'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify release inputs
+        shell: pwsh
+        run: |
+          if ($env:RELEASE_TAG -ne "v$((Get-Content VERSION).Trim())") { throw 'Release tag does not match VERSION' }
+          node --test scripts/windows/setup.test.cjs scripts/windows/compatibility.test.cjs packages/software-center/windows-tools.test.js scripts/windows/build-release.test.cjs
+      - name: Prepare a clean native suite
+        shell: pwsh
+        run: ./site/downloads/Install-RobOS.ps1 -SourceRoot $pwd -InstallDir "$env:RUNNER_TEMP\RobOS-suite" -NoLaunch
+      - name: Install build tools and test driver
+        shell: pwsh
+        run: |
+          npm ci --prefix installer --no-audit --no-fund
+          npm install --prefix "$env:RUNNER_TEMP\RobOS-suite\packages\robos-test" --omit=dev --no-audit --no-fund
+      - name: Build portable EXE and Windows installer
+        shell: pwsh
+        run: node scripts/windows/build-release.cjs "$env:RUNNER_TEMP\RobOS-suite" release/windows-native
+      - name: Test packaged apps
+        shell: pwsh
+        run: node scripts/windows/smoke-packaged.cjs release/windows-native/win-unpacked/RobOS.exe "$env:RUNNER_TEMP\RobOS-suite\packages\robos-test\node_modules\playwright-core"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-windows-exe-evidence
+          path: |
+            run/windows-packaged-smoke/
+            release/windows-native/*.exe
+            release/windows-native/WINDOWS-EXE-SHA256SUMS
+            release/windows-native/windows-build.json
+      - name: Publish native Windows EXEs
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          files: |
+            release/windows-native/RobOS-v*-Windows-Portable.exe
+            release/windows-native/RobOS-v*-Windows-Setup.exe
+            release/windows-native/WINDOWS-EXE-SHA256SUMS
+            release/windows-native/windows-build.json
+          fail_on_unmatched_files: true

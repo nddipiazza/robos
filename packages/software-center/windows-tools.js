@@ -134,9 +134,10 @@ function explainExit(code) {
 }
 
 class WindowsTools {
-  constructor({ root = path.join(os.homedir(), 'RobOS'), run = runProcess } = {}) {
+  constructor({ root = path.join(os.homedir(), 'RobOS'), toolsRoot = process.env.ROBOS_TOOL_ROOT || root, run = runProcess } = {}) {
     this.root = root;
-    this.prefix = path.join(root, 'tools', 'npm');
+    this.toolsRoot = toolsRoot;
+    this.prefix = path.join(toolsRoot, 'tools', 'npm');
     this.run = run;
     this.snapshot = null;
     this.pending = null;
@@ -207,12 +208,20 @@ class WindowsTools {
           path.join(process.env.ProgramFiles || 'C:\\Program Files', 'WinGet/Packages')];
         const dirs = bases.flatMap(base => fs.existsSync(base) ? fs.readdirSync(base)
           .filter(name => name.toLowerCase().startsWith(`${tool.packageId}_`.toLowerCase())).map(name => path.join(base, name)) : []);
-        const wrappers = commandWrappers(this.root, tool, action, dirs);
+        const wrappers = commandWrappers(this.toolsRoot, tool, action, dirs);
         if (wrappers.length) onOutput(`\nWindows commands: ${wrappers.join(', ')}\n`);
       } else {
         if (NPM_PACKAGES[tool.id] !== tool.npmPackage) throw new Error('Unknown npm package.');
-        const node = path.join(this.root, 'runtime', 'node.exe');
-        const npm = path.join(this.root, 'runtime', 'node_modules', 'npm', 'bin', 'npm-cli.js');
+        // Portable EXEs unpack into a temporary directory. Keep the CLI's Node
+        // runtime with its persistent user tools so terminal commands survive exit.
+        if (this.toolsRoot !== this.root) {
+          const persistent = path.join(this.toolsRoot, 'runtime');
+          fs.mkdirSync(persistent, { recursive: true });
+          if (!fs.existsSync(path.join(persistent, 'node.exe'))) fs.copyFileSync(path.join(this.root, 'runtime/node.exe'), path.join(persistent, 'node.exe'));
+          if (!fs.existsSync(path.join(persistent, 'node_modules/npm/bin/npm-cli.js'))) fs.cpSync(path.join(this.root, 'runtime/node_modules/npm'), path.join(persistent, 'node_modules/npm'), { recursive: true });
+        }
+        const node = path.join(this.toolsRoot, 'runtime', 'node.exe');
+        const npm = path.join(this.toolsRoot, 'runtime', 'node_modules', 'npm', 'bin', 'npm-cli.js');
         onOutput(`Installing into ${this.prefix}\n`);
         result = await this.run(node, [npm, action === 'install' ? 'install' : 'uninstall', '--global',
           '--prefix', this.prefix, tool.npmPackage, '--no-fund', '--no-audit', '--ignore-scripts=false'],
@@ -237,7 +246,7 @@ class WindowsTools {
         try {
           const update = await this.run('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', ADD_USER_PATH],
             { onOutput, timeout: 15000, env: { ...process.env, ROBOS_NPM_PREFIX: this.prefix,
-              ROBOS_NODE_DIR: path.join(this.root, 'runtime'), ROBOS_TOOL_BIN: path.join(this.root, 'tools/bin') } });
+              ROBOS_NODE_DIR: path.join(this.toolsRoot, 'runtime'), ROBOS_TOOL_BIN: path.join(this.toolsRoot, 'tools/bin') } });
           if (update.code !== 0) throw new Error('Could not update user PATH.');
         } catch { onOutput(`\nThe tool is available in RobOS. To use it in other terminals, add ${path.join(this.root, 'tools/bin')}, ${this.prefix} and ${path.join(this.root, 'runtime')} to your user PATH.\n`); }
       }
