@@ -1127,7 +1127,7 @@
         "row": 114
       },
       "optional": false,
-      "min_level": 16,
+      "min_level": 17,
       "done_when": {
         "kind": "has_item",
         "item_id": "erdricks_token"
@@ -1146,7 +1146,7 @@
         "row": 26
       },
       "optional": false,
-      "min_level": 16,
+      "min_level": 17,
       "done_when": {
         "kind": "chest",
         "map": "cantlin-1f",
@@ -1168,7 +1168,7 @@
         "row": 28
       },
       "optional": false,
-      "min_level": 16,
+      "min_level": 17,
       "done_when": {
         "kind": "chest",
         "map": "cantlin-1f",
@@ -1190,7 +1190,7 @@
         "row": 28
       },
       "optional": false,
-      "min_level": 16,
+      "min_level": 17,
       "done_when": {
         "kind": "chest",
         "map": "cantlin-1f",
@@ -1212,7 +1212,7 @@
         "row": 13
       },
       "optional": false,
-      "min_level": 16,
+      "min_level": 17,
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "shield",
@@ -1237,7 +1237,7 @@
         "row": 13
       },
       "optional": true,
-      "min_level": 16,
+      "min_level": 17,
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "weapon",
@@ -1252,8 +1252,8 @@
     },
     {
       "seq": 57,
-      "id": "level-17",
-      "name": "Reach level 17",
+      "id": "level-18",
+      "name": "Reach level 18",
       "phase": "relics",
       "type": "level",
       "map": "world-map",
@@ -1265,7 +1265,7 @@
       "min_level": 1,
       "done_when": {
         "kind": "level",
-        "value": 17
+        "value": 18
       },
       "grind_anchor": "cantlin-1f"
     },
@@ -1281,7 +1281,7 @@
         "row": 13
       },
       "optional": false,
-      "min_level": 17,
+      "min_level": 18,
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "armor",
@@ -1301,7 +1301,7 @@
         "row": 6
       },
       "optional": false,
-      "min_level": 17,
+      "min_level": 18,
       "done_when": {
         "kind": "chest",
         "map": "southern-cave-b1",
@@ -1323,7 +1323,7 @@
         "row": 51
       },
       "optional": false,
-      "min_level": 17,
+      "min_level": 18,
       "done_when": {
         "kind": "flag",
         "flag": "bridge_built"
@@ -1333,8 +1333,8 @@
     },
     {
       "seq": 61,
-      "id": "level-18",
-      "name": "Reach level 18",
+      "id": "level-21",
+      "name": "Reach level 21",
       "phase": "charlock",
       "type": "level",
       "map": "world-map",
@@ -1346,7 +1346,7 @@
       "min_level": 1,
       "done_when": {
         "kind": "level",
-        "value": 18
+        "value": 21
       },
       "grind_anchor": "tantegel-castle-1f"
     },
@@ -1362,7 +1362,7 @@
         "row": 6
       },
       "optional": false,
-      "min_level": 18,
+      "min_level": 21,
       "done_when": {
         "kind": "chest",
         "map": "charlock-castle-b2",
@@ -1384,7 +1384,7 @@
         "row": 11
       },
       "optional": false,
-      "min_level": 18,
+      "min_level": 21,
       "done_when": {
         "kind": "chest",
         "map": "charlock-castle-b7",
@@ -1406,7 +1406,7 @@
         "row": 12
       },
       "optional": false,
-      "min_level": 18,
+      "min_level": 21,
       "done_when": {
         "kind": "chest",
         "map": "charlock-castle-b7",
@@ -1428,7 +1428,7 @@
         "row": 13
       },
       "optional": false,
-      "min_level": 18,
+      "min_level": 21,
       "done_when": {
         "kind": "chest",
         "map": "charlock-castle-b7",
@@ -1450,7 +1450,7 @@
         "row": 12
       },
       "optional": false,
-      "min_level": 18,
+      "min_level": 21,
       "done_when": {
         "kind": "chest",
         "map": "charlock-castle-b7",
@@ -1472,7 +1472,7 @@
         "row": 13
       },
       "optional": false,
-      "min_level": 18,
+      "min_level": 21,
       "done_when": {
         "kind": "chest",
         "map": "charlock-castle-b7",
@@ -1494,7 +1494,7 @@
         "row": 13
       },
       "optional": false,
-      "min_level": 18,
+      "min_level": 21,
       "done_when": {
         "kind": "chest",
         "map": "charlock-castle-b7",
@@ -1516,7 +1516,7 @@
         "row": 24
       },
       "optional": false,
-      "min_level": 20,
+      "min_level": 21,
       "done_when": {
         "kind": "flag",
         "flag": "dragonlord_defeated"
@@ -1588,6 +1588,44 @@
       },
       "face": "up",
       "cost": 6
+    }
+  },
+  "item_shops": {
+    "brecconary-1f": {
+      "shop_id": "bre002",
+      "tile": {
+        "col": 24,
+        "row": 26
+      },
+      "face": "right",
+      "price": 24
+    },
+    "garinham-1f": {
+      "shop_id": "gar001",
+      "tile": {
+        "col": 4,
+        "row": 12
+      },
+      "face": "right",
+      "price": 24
+    },
+    "kol-1f": {
+      "shop_id": "kol002",
+      "tile": {
+        "col": 13,
+        "row": 22
+      },
+      "face": "right",
+      "price": 24
+    },
+    "cantlin-1f": {
+      "shop_id": "can007",
+      "tile": {
+        "col": 5,
+        "row": 8
+      },
+      "face": "left",
+      "price": 24
     }
   }
 }

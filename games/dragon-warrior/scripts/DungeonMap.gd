@@ -199,6 +199,9 @@ func _check_encounter() -> void:
 	var gs = get_node_or_null("/root/GameState")
 	if gs and gs.encounters_disabled:
 		return
+	# NES: once the Dragonlord falls the monsters vanish from Alefgard.
+	if gs and "dragonlord_defeated" in gs and gs.dragonlord_defeated:
+		return
 	if _battle_active or _dialog_active or _menu_open or _status_open or _item_open or _shop_open or _choice_open:
 		return
 	if not _encounters_enabled():
@@ -1448,9 +1451,11 @@ func _get_chest_entry(col: int, row: int) -> Dictionary:
 
 ## NES rule: only tools (herbs, torches, keys, wings...) fill the 8 pack slots.
 ## Equipment and quest relics are carried separately and never block a chest.
+## Stackable consumables (herbs, keys, wings, torches: items.json `stack_max`) share one slot per kind.
 func _count_pack_tools() -> int:
 	var gs := get_node_or_null("/root/GameState")
 	var n := 0
+	var stacks := {}
 	for it in _inventory:
 		if not (it is Dictionary):
 			n += 1
@@ -1460,8 +1465,28 @@ func _count_pack_tools() -> int:
 			continue
 		if gs and gs.has_method("equipment_id_for") and str(gs.equipment_id_for(it)) != "":
 			continue
+		var iid := str(it.get("id", it.get("name", ""))).to_lower()
+		if iid != "" and _stack_max_for(iid) > 1:
+			stacks[iid] = int(stacks.get(iid, 0)) + 1
+			continue
 		n += 1
+	for iid in stacks:
+		n += int(ceil(float(stacks[iid]) / float(_stack_max_for(iid))))
 	return n
+
+var _stack_max_cache: Dictionary = {}
+func _stack_max_for(item_id: String) -> int:
+	if _stack_max_cache.is_empty():
+		var f := FileAccess.open("res://data/v1/items.json", FileAccess.READ)
+		if f:
+			var parsed: Variant = JSON.parse_string(f.get_as_text())
+			if parsed is Array:
+				for e in parsed:
+					if e is Dictionary and e.has("id"):
+						_stack_max_cache[str(e["id"]).to_lower()] = int(e.get("stack_max", 1))
+		if _stack_max_cache.is_empty():
+			_stack_max_cache["_none"] = 1
+	return int(_stack_max_cache.get(item_id, 1))
 
 func _pack_is_full_for(item_id: String) -> bool:
 	var gs := get_node_or_null("/root/GameState")
@@ -1469,6 +1494,15 @@ func _pack_is_full_for(item_id: String) -> bool:
 		return false
 	for q in _quest_item_ids():
 		if q == item_id:
+			return false
+	# Consumables join an existing stack while it has room (NES: six per slot).
+	var smax := _stack_max_for(item_id)
+	if smax > 1:
+		var held := 0
+		for it in _inventory:
+			if it is Dictionary and str(it.get("id", it.get("name", ""))).to_lower() == item_id.to_lower():
+				held += 1
+		if held > 0 and held % smax != 0:
 			return false
 	return _count_pack_tools() >= MAX_INVENTORY
 

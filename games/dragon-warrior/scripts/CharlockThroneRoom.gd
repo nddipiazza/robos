@@ -71,6 +71,9 @@ func _on_battle_won(mon_key: String) -> void:
     var gs := get_node_or_null("/root/GameState")
     if gs:
         gs.dragonlord_defeated = true
+        # NES: the Ball of Light restores the hero fully for the walk home.
+        gs.hero_stats["hp"] = int(gs.hero_stats.get("hp_max", 1))
+        gs.hero_stats["mp"] = int(gs.hero_stats.get("mp_max", 0))
         gs.inventory = _inventory.duplicate(true)
         gs.opened_chests = _opened_chests.duplicate(true)
     # Remove the Dragonlord from the throne room.

@@ -71,6 +71,7 @@ var _battle_sleeps: int = 0
 var _battle_stopspells: int = 0
 var _deaths_seen: int = 0
 var _grind_tier_penalty: int = 0   # zones stepped down after deaths; eased by level-ups
+var _death_level_bump: Dictionary = {}   # milestone id -> level to reach before trying it again
 var _penalty_level: int = 0
 var _heal_fail_ticks: int = 0
 var _last_heal_kind: String = ""
@@ -107,6 +108,7 @@ func start(args: Dictionary) -> Dictionary:
 	_battles = 0
 	_deaths = 0
 	_grind_tier_penalty = 0
+	_death_level_bump = {}
 	_penalty_level = 0
 	_deaths_seen = int(_gs().get("deaths")) if _gs() and _gs().get("deaths") != null else 0
 	_last_gold = -1
@@ -198,8 +200,17 @@ func _load_milestones() -> void:
 			"face": str(inn.get("face", "up")),
 			"cost": int(inn.get("cost", 6)),
 		}
+	var shops: Dictionary = parsed.get("item_shops", {})
+	for key: String in shops:
+		var shop: Dictionary = shops[key]
+		var stile: Dictionary = shop.get("tile", {})
+		_item_shops[key] = {
+			"tile": Vector2i(int(stile.get("col", 0)), int(stile.get("row", 0))),
+			"face": str(shop.get("face", "up")),
+			"price": int(shop.get("price", 24)),
+		}
 	for m in _milestones:
-		if str(m.get("type", "")) == "buy" and str(m.get("item_id", "")) == "herb":
+		if str(m.get("type", "")) == "buy" and str(m.get("item_id", "")) == "herb" and not _item_shops.has(str(m.get("map", ""))):
 			var tile: Dictionary = m.get("tile", {})
 			_item_shops[str(m.get("map", ""))] = {
 				"tile": Vector2i(int(tile.get("col", 0)), int(tile.get("row", 0))),
@@ -589,9 +600,16 @@ func _decide_battle(state: Dictionary, battle: Dictionary) -> Dictionary:
 	elif can_finish and not (critical and boss):
 		target = 0
 	elif ((critical and not boss) or (not winning and not boss)) and heal_useful and has_heal and _battle_heals < 4:
-		if _has_spell_mp(known, "healmore", mp) and hp_max - hp > 40:
+		# Cheapest heal that still out-paces the monster: HEAL (10-17) only vs weak hitters,
+		# a herb (23-30) next, HEALMORE (85+) when the deficit or the damage demands it.
+		var deficit := hp_max - hp
+		if _has_spell_mp(known, "heal", mp) and avg_hit < 12.0 and deficit <= 30:
+			_pending_spell = "heal"
+		elif herbs > 0 and avg_hit < 22.0 and deficit <= 45:
+			target = 2
+		elif _has_spell_mp(known, "healmore", mp):
 			_pending_spell = "healmore"
-		elif herbs > 0 and not _has_spell_mp(known, "heal", mp):
+		elif herbs > 0:
 			target = 2
 		elif _has_spell_mp(known, "heal", mp):
 			_pending_spell = "heal"
@@ -606,7 +624,7 @@ func _decide_battle(state: Dictionary, battle: Dictionary) -> Dictionary:
 		_battle_stopspells += 1
 		target = 1
 	elif not winning and not asleep and _battle_sleeps < 2 and int(mon_data.get("resist_sleep", 16)) <= 8 \
-			and _has_spell_mp(known, "sleep", mp):
+			and (not critical or int(mon_data.get("resist_sleep", 16)) <= 2) and _has_spell_mp(known, "sleep", mp):
 		_pending_spell = "sleep"
 		_battle_sleeps += 1
 		target = 1
@@ -673,7 +691,8 @@ func _conserving_mp(state: Dictionary) -> bool:
 
 ## MP the Dragonlord fight realistically needs: ~11 hits with HEALMORE (10 MP) every other turn.
 func _boss_mp_bar() -> int:
-	return mini(_mp_max(), 100) if _mp_max() >= 100 else int(float(_mp_max()) * 0.9)
+	# The Dragonlord's second form is an MP race (~10 HEALMOREs): set out nearly full.
+	return _mp_max() - 5 if _mp_max() >= 100 else int(float(_mp_max()) * 0.9)
 
 
 func _monster_spell_hit(mon: String) -> int:
@@ -703,7 +722,14 @@ func _track_deaths(_state: Dictionary) -> void:
 		_last_gold = _gold()
 		_grind_tier_penalty = mini(_grind_tier_penalty + 1, 3)
 		_penalty_level = _level()
-		_log_event("death", "hero fell; back at Tantegel with %d gold (grind tier -%d)" % [_gold(), _grind_tier_penalty])
+		var note := ""
+		# Dying on the way to a milestone means we went too early: level up once more before retrying.
+		if str(_objective.get("kind", "")) != "grind" and _index < _milestones.size():
+			var mid := str(_milestones[_index].get("id", ""))
+			var bump := maxi(int(_death_level_bump.get(mid, 0)), _level() + 1)
+			_death_level_bump[mid] = bump
+			note = "; retry %s at L%d" % [mid, bump]
+		_log_event("death", "hero fell; back at Tantegel with %d gold (grind tier -%d%s)" % [_gold(), _grind_tier_penalty, note])
 
 func _track_gold(state: Dictionary) -> void:
 	var g := _gold()
@@ -809,6 +835,17 @@ func _decide_survival(state: Dictionary) -> Dictionary:
 				_boss_committed = false
 			else:
 				_heading_to_inn = true
+				# Wings fly us to the Tantegel gate: use them when the walk home is long
+				# (Brecconary's inn is next door). Frees a pack slot too.
+				if cur_map == WORLD_KEY and _count_item("wings") > 0 and _heal_fail_ticks == 0 \
+						and str(inn.get("map", "")).begins_with("brecconary"):
+					var here := _hero_tile(state)
+					if abs(here.x - 45) + abs(here.y - 45) > 30:
+						_heal_fail_ticks = 6
+						_last_heal_kind = "wings"
+						_pending_item_id = "wings"
+						_log_event("wings", "flying back to Tantegel from (%d, %d)" % [here.x, here.y])
+						return _open_command("ITEM")
 				_objective = {
 					"kind": "inn", "label": "rest at inn (%s)" % str(inn.get("map", "")),
 					"map": str(inn.get("map", "")), "tile": inn.get("tile", Vector2i()),
@@ -819,7 +856,8 @@ func _decide_survival(state: Dictionary) -> Dictionary:
 
 	# Keep a stock of herbs when we are in a town with an item shop and have spare gold.
 	var cur_map2 := _cur_map(state)
-	if _item_shops.has(cur_map2) and _count_item("herb") < _herb_target() and _count_pack_tools() < MAX_PACK_TOOLS - 1:
+	if _item_shops.has(cur_map2) and _count_item("herb") < _herb_target() \
+			and (_count_item("herb") > 0 or _count_pack_tools() < MAX_PACK_TOOLS):
 		var shop: Dictionary = _item_shops[cur_map2]
 		var reserve := _gold_needed_for_next_buy()
 		if _gold() - int(shop.get("price", 24)) >= reserve:
@@ -869,7 +907,12 @@ func _gold_needed_for_next_buy() -> int:
 
 
 func _herb_target() -> int:
-	return 2 if _level() < 5 else HERB_TARGET
+	if _level() < 5:
+		return 2
+	# A full stack for the Dragonlord's castle: herbs save HEALMORE MP for the boss.
+	if _index < _milestones.size() and str(_milestones[_index].get("map", "")).begins_with("charlock"):
+		return 6
+	return HERB_TARGET
 
 
 # ── Objective selection ─────────────────────────────────────────────────────
@@ -881,7 +924,7 @@ func _objective_for_current(state: Dictionary) -> Dictionary:
 	var mtype := str(m.get("type", ""))
 	var mid := str(m.get("id", ""))
 	var lvl := _level()
-	var min_level := int(m.get("min_level", 1))
+	var min_level := maxi(int(m.get("min_level", 1)), int(_death_level_bump.get(mid, 0)))
 
 	if mtype == "level" or lvl < min_level:
 		# While grinding, go back for any optional gear we skipped as unaffordable.
@@ -902,7 +945,10 @@ func _objective_for_current(state: Dictionary) -> Dictionary:
 	if mtype == "chest" and _count_pack_tools() >= MAX_PACK_TOOLS:
 		var contents := _chest_contents(state, m)
 		var is_gold: bool = contents.has("gp_min") or str(contents.get("item", "")) == "gold"
-		if not is_gold:
+		var citem := str(contents.get("item", ""))
+		# Consumables slide into a stack we already carry (six per slot).
+		var stacks: bool = citem in ["herb", "torch", "fairy_water", "wings", "magic_key"] 			and _count_item(citem) > 0 and _count_item(citem) % 6 != 0
+		if not is_gold and not stacks:
 			# Burn a tool so the chest can be taken.
 			if _count_item("herb") > 0 and _hp() < _hp_max():
 				_pending_item_id = "herb"
@@ -919,7 +965,7 @@ func _objective_for_current(state: Dictionary) -> Dictionary:
 		_log_event("expedition", "resting before Charlock for %s (hp %d/%d mp %d/%d)" % [mid, _hp(), _hp_max(), _mp(), _mp_max()])
 	if mtype == "boss" and not _heading_to_inn and _cur_map(state) == str(m.get("map", "")):
 		# Commit once we arrive with enough MP for the fight; door heals may then dip below the bar.
-		if not _boss_committed and _mp_max() > 0 and _mp() < _boss_mp_bar() - 20:
+		if not _boss_committed and _mp_max() > 0 and _mp() + 3 * _count_item("herb") < _boss_mp_bar() - 20:
 			_heading_to_inn = true
 			_log_event("boss", "not ready for %s (hp %d/%d mp %d/%d); resting first" % [mid, _hp(), _hp_max(), _mp(), _mp_max()])
 		else:
@@ -1030,8 +1076,8 @@ func _zone_tier_for_level(lvl: int) -> Array:
 	if lvl <= 11: return [5, 6]
 	if lvl <= 13: return [7, 8]
 	if lvl <= 15: return [8, 9]
-	if lvl <= 17: return [10, 11]
-	return [12, 11]
+	if lvl <= 17: return [9, 10]   # knights/demon knights; starwyvern country waits for Erdrick's Armor
+	return [11, 12]
 
 
 func _pick_grind_cell(state: Dictionary) -> Vector2i:
@@ -1509,10 +1555,17 @@ func _count_pack_tools() -> int:
 	if sc and sc.has_method("_count_pack_tools"):
 		return int(sc.call("_count_pack_tools"))
 	var n := 0
+	var stacks := {}
 	for it in _inventory():
 		if it is Dictionary and str(it.get("type", "tool")) in ["weapon", "armor", "shield", "quest"]:
 			continue
+		var iid := str(it.get("id", "")).to_lower() if it is Dictionary else str(it).to_lower()
+		if iid in ["herb", "torch", "fairy_water", "wings", "magic_key"]:
+			stacks[iid] = int(stacks.get(iid, 0)) + 1
+			continue
 		n += 1
+	for iid in stacks:
+		n += int(ceil(float(stacks[iid]) / 6.0))
 	return n
 
 
