@@ -74,6 +74,7 @@ var _nudge_dir: int = 0
 var _objective: Dictionary = {}
 var _grind_target: Dictionary = {}
 var _grind_cell: Vector2i = Vector2i(-1, -1)
+var _grind_cell_tier: Array = []     # zone tier `_grind_cell` was picked under (adjacent-tier picks stay sticky)
 var _light_fail_ticks: int = 0
 var _shop_missing: Dictionary = {}  # map_key -> {item_id: true} items a shop turned out not to sell
 var _last_gold: int = -1
@@ -86,8 +87,10 @@ var _grind_tier_boost: int = 0     # zones stepped up when grind battles barely 
 var _recent_dmg: Array = []        # HP lost per recent grind battle (sliding window)
 var _battle_open: bool = false
 var _battle_hp_start: int = 0
+var _battle_zone: int = -1          # world zone the current battle started in (-1 = not on the world map)
 const GRIND_DMG_WINDOW := 6
 const GRIND_BOOST_MAX := 4
+const GRIND_FAR_WALK := 80          # beyond this many tiles, nearer cells of adjacent tiers win
 var _death_level_bump: Dictionary = {}   # milestone id -> level to reach before trying it again
 var _penalty_level: int = 0
 var _heal_fail_ticks: int = 0
@@ -548,6 +551,7 @@ func _decide_battle(state: Dictionary, battle: Dictionary) -> Dictionary:
 			_battle_no_herb = false
 			_battle_open = true
 			_battle_hp_start = int(battle.get("battle_scene_info", {}).get("hero_hp", _hp()))
+			_battle_zone = _hero_zone(state)
 		if phase != "INTRO":
 			_in_battle_counted = false
 		if phase in ["VICTORY", "FLED", "DEFEAT"] and _battle_open:
@@ -767,6 +771,7 @@ func _track_deaths(_state: Dictionary) -> void:
 		_plan_legs.clear()
 		_plan_goal = ""
 		_grind_target = {}
+		_grind_cell = Vector2i(-1, -1)
 		_last_gold = _gold()
 		_grind_tier_penalty = mini(_grind_tier_penalty + 1, 3)
 		_penalty_level = _level()
@@ -1179,29 +1184,89 @@ func _pick_grind_cell(state: Dictionary) -> Vector2i:
 	var here: Vector2i = _hero_tile(state) if cur_map == WORLD_KEY else _planner.call("world_tile_for_map", cur_map)
 	if here == Vector2i(-1, -1):
 		here = Vector2i(45, 45)
-	if _grind_cell != Vector2i(-1, -1) and zones.has(int(grid[_grind_cell.y][_grind_cell.x])):
+	var sticky_ok := _grind_cell != Vector2i(-1, -1) and (zones.has(int(grid[_grind_cell.y][_grind_cell.x])) or _grind_cell_tier == zones)
+	# Stay in the cell we are grinding in while we are still around it. Once a death,
+	# an inn trip or a milestone has carried us far away, re-pick from where we stand
+	# by *walking* distance so the brain never treks back across the world (through
+	# the Swamp Cave and easy zones) to a cell it happened to choose earlier.
+	if sticky_ok and _cell_distance(here, _grind_cell) <= 24:
 		return _grind_cell
-	var best := Vector2i(2, 2)
+	var best := Vector2i(-1, -1)
 	var best_score := 1 << 30
-	for r in range(8):
-		for c in range(8):
-			var z := int(grid[r][c])
-			if not zones.has(z):
-				continue
-			var center := Vector2i(int((c + 0.5) * 15.5), int((r + 0.5) * 15.5))
-			if _random_tile_in_cell(Vector2i(c, r)) == Vector2i(-1, -1):
-				continue
-			var d: int = abs(center.x - here.x) + abs(center.y - here.y)
-			var inn_d := _inn_distance(center)
-			var score := d + inn_d / 2
-			if _planner.call("plan", WORLD_KEY, Vector2i(45, 45), WORLD_KEY, _random_tile_in_cell(Vector2i(c, r)), _bridge_built()).is_empty():
-				continue
-			if score < best_score:
-				best_score = score
-				best = Vector2i(c, r)
+	var sticky_score := 1 << 30
+	# Candidate zones: the current tier at no penalty. When its nearest cell is a
+	# long trek away (typically after a respawn at Tantegel while grinding on the
+	# Rimuldar continent), nearer cells of the tier above (if survivable) or the
+	# tier below (+40 tiles handicap) are allowed so we grind where we stand.
+	var penalties := {}
+	for z in zones:
+		penalties[int(z)] = 0
+	var hp_max := _hp_max()
+	for pass_idx in range(2):
+		for r in range(8):
+			for c in range(8):
+				var cell := Vector2i(c, r)
+				var z := int(grid[r][c])
+				if not penalties.has(z):
+					continue
+				var penalty: int = penalties[z]
+				if _cell_distance(here, cell) + penalty > best_score:
+					continue   # Manhattan is a lower bound on the walk: cannot beat the best
+				var walk := _walk_distance_to_cell(here, cell)
+				if walk < 0:
+					continue
+				var center := Vector2i(int((c + 0.5) * 15.5), int((r + 0.5) * 15.5))
+				var score := walk + _inn_distance(center) / 2 + penalty
+				if cell == _grind_cell:
+					sticky_score = score
+				if score < best_score:
+					best_score = score
+					best = cell
+		if pass_idx == 0:
+			if best != Vector2i(-1, -1) and best_score <= GRIND_FAR_WALK:
+				break
+			var up: Array = _zone_tier_for_level(_grind_level() + 2)
+			if up != zones and _worst_hit_for_zones(up) * 4 <= hp_max:
+				for z in up:
+					if not penalties.has(int(z)):
+						penalties[int(z)] = 0
+			for z in _zone_tier_for_level(_grind_level() - 2):
+				if not penalties.has(int(z)):
+					penalties[int(z)] = 40
+	if best == Vector2i(-1, -1):
+		return _grind_cell if _grind_cell != Vector2i(-1, -1) else Vector2i(2, 2)
+	if sticky_ok and sticky_score <= best_score + 20:
+		return _grind_cell
+	if sticky_ok:
+		_log_event("grind", "zone cell %s is %d tiles away: switching to nearer cell %s (zone %d)" % [str(_grind_cell), sticky_score, str(best), int(grid[best.y][best.x])])
+	else:
+		_log_event("grind", "grinding in zone cell %s (zone %d, %d tiles away)" % [str(best), int(grid[best.y][best.x]), best_score])
+	if best != _grind_cell:
+		_recent_dmg.clear()
 	_grind_cell = best
-	_log_event("grind", "grinding in zone cell %s (zone %d)" % [str(best), int(grid[best.y][best.x])])
+	_grind_cell_tier = zones.duplicate()
 	return best
+
+
+func _cell_distance(from: Vector2i, cell: Vector2i) -> int:
+	var center := Vector2i(int((cell.x + 0.5) * 15.5), int((cell.y + 0.5) * 15.5))
+	return abs(center.x - from.x) + abs(center.y - from.y)
+
+
+## Tiles walked from `from` to a reachable tile of the cell, -1 when none is reachable.
+func _walk_distance_to_cell(from: Vector2i, cell: Vector2i) -> int:
+	for _attempt in range(3):
+		var cand: Vector2i = _random_tile_in_cell(cell)
+		if cand == Vector2i(-1, -1):
+			return -1
+		var legs: Array = _planner.call("plan", WORLD_KEY, from, WORLD_KEY, cand, _bridge_built())
+		if legs.is_empty():
+			continue
+		var steps := 0
+		for leg in legs:
+			steps += (leg.get("path", []) as Array).size()
+		return steps
+	return -1
 
 
 ## Level the zone table is read at: deaths pull it down, easy grinding pushes it up.
@@ -1217,6 +1282,11 @@ func _record_grind_damage(hp_end: int, phase: String) -> void:
 		if phase == "DEFEAT":
 			_grind_tier_boost = 0
 			_recent_dmg.clear()
+		return
+	# Only fights inside the chosen grind cell's zone count: battles met while
+	# still walking there (through easier zones) would otherwise read as "barely
+	# scratched" and promote the tier twice in a row before a single real fight.
+	if _grind_cell != Vector2i(-1, -1) and _battle_zone != _zone_of_cell(_grind_cell):
 		return
 	# Heals cast mid-fight hide damage: count each as a meaningful chunk.
 	var dmg: int = maxi(0, _battle_hp_start - hp_end) + _battle_heals * maxi(15, _hp_max() / 4)
@@ -1235,7 +1305,7 @@ func _record_grind_damage(hp_end: int, phase: String) -> void:
 		if next_zones == _zone_tier_for_level(_grind_level()):
 			return
 		var worst := _worst_hit_for_zones(next_zones)
-		if worst * 3 <= hp_max:
+		if worst * 4 <= hp_max:
 			_grind_tier_boost += 1
 			_recent_dmg.clear()
 			_grind_cell = Vector2i(-1, -1)
@@ -1334,14 +1404,31 @@ func _worst_hit_for_monsters(keys: Array) -> int:
 	return worst
 
 
+## Zone id of a grid cell, -1 when unknown.
+func _zone_of_cell(cell: Vector2i) -> int:
+	var grid: Array = _zone_grid()
+	if cell.y < 0 or cell.y >= grid.size() or cell.x < 0 or cell.x >= (grid[cell.y] as Array).size():
+		return -1
+	return int(grid[cell.y][cell.x])
+
+
+## Zone id under the hero on the world map, -1 in towns and dungeons.
+func _hero_zone(state: Dictionary) -> int:
+	if _cur_map(state) != WORLD_KEY:
+		return -1
+	var hero := _hero_tile(state)
+	return _zone_of_cell(Vector2i(int(hero.x / 15.5), int(hero.y / 15.5)))
+
+
 func _zone_grid() -> Array:
-	var f := FileAccess.open("res://data/v1/worldmap_zones.json", FileAccess.READ)
-	if not f:
-		return []
-	var parsed: Variant = JSON.parse_string(f.get_as_text())
-	if parsed is Dictionary:
-		return parsed.get("grid", [])
-	return []
+	if _zone_data_cache.is_empty():
+		var f := FileAccess.open("res://data/v1/worldmap_zones.json", FileAccess.READ)
+		if not f:
+			return []
+		var parsed: Variant = JSON.parse_string(f.get_as_text())
+		if parsed is Dictionary:
+			_zone_data_cache = parsed
+	return _zone_data_cache.get("grid", [])
 
 
 # ── Pursuing an objective ───────────────────────────────────────────────────
