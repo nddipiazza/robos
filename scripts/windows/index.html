@@ -1,4 +1,25 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><title>RobOS Apps</title>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
-<style>body{background:#0d1117;color:#e6edf3;font:16px 'Segoe UI',sans-serif;margin:36px}h1{color:#00bcd4}input{box-sizing:border-box;width:100%;padding:14px;background:#161b22;color:inherit;border:1px solid #30363d;border-radius:8px}#apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:24px}button{background:#161b22;border:1px solid #30363d;color:inherit;text-align:left;padding:20px;border-radius:10px;cursor:pointer;font:inherit}button:hover{border-color:#00bcd4}small{display:block;color:#9ba5b4;margin-top:8px}#status{color:#00bcd4}</style>
-<header style="display:flex;align-items:center;gap:18px"><img src="logo.png" alt="RobOS" width="72" height="72" style="box-sizing:border-box;background:#f5f7ff;padding:8px;border-radius:12px"><h1>RobOS Apps</h1></header><p>Your app suite, on Windows.</p><input id="search" type="search" placeholder="Find an app" aria-label="Find an app"><p id="status" role="status"></p><div id="apps"></div><script src="renderer.js"></script></html>
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>RobOS</title><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'"><link rel="stylesheet" href="launcher.css"></head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><img src="wordmark.png" alt="RobOS"></div>
+    <nav aria-label="App collections">
+      <button class="nav-item active" data-filter="all"><span class="nav-symbol">▦</span>All applications</button>
+      <button class="nav-item" data-filter="recent"><span class="nav-symbol">◷</span>Recently opened</button>
+      <div class="nav-caption">COLLECTIONS</div>
+      <button class="nav-item" data-filter="suites"><span class="nav-dot cyan"></span>Everyday & business</button>
+      <button class="nav-item" data-filter="developer"><span class="nav-dot violet"></span>Developer tools</button>
+      <button class="nav-item" data-filter="system"><span class="nav-dot amber"></span>System & agents</button>
+    </nav>
+    <div class="sidebar-footer"><span class="online-dot"></span>Installed on this computer</div>
+  </aside>
+  <main>
+    <header class="toolbar"><div><div class="eyebrow">WORKSPACE</div><h1 id="view-title">Library</h1></div><div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><input id="search" type="search" placeholder="Search applications" aria-label="Find an app"><kbd>Ctrl K</kbd></div></header>
+    <div class="content">
+      <section id="suite-section"><div class="section-heading"><h2>Suites</h2></div><div id="suites" class="suite-grid"></div></section>
+      <section class="directory"><div class="section-heading"><h2 id="directory-title">All applications</h2><span id="app-count"></span></div><div id="apps" class="app-grid"></div><p id="empty" hidden>No applications found.</p></section>
+    </div>
+    <div id="status" role="status" hidden></div>
+  </main><script src="renderer.js"></script>
+</body></html>
