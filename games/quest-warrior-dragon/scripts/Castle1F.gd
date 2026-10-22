@@ -399,7 +399,7 @@ func _build_background() -> void:
 			ProjectSettings.globalize_path("res://assets/maps/tantegel-castle-1f.png"))
 		if map_src:
 			# Grab a known floor tile pixel region for chest-open visuals
-			var floor_px := map_src.get_region(Rect2i(2 * 16, 7 * 16, 16, 16))
+			var floor_px := map_src.get_region(Rect2i(2 * 16, 6 * 16, 16, 16))
 			_floor_tile_img = floor_px.duplicate()
 			_floor_tile_img.resize(TILE_SIZE, TILE_SIZE, Image.INTERPOLATE_NEAREST)
 	_bg.stretch_mode = TextureRect.STRETCH_KEEP
