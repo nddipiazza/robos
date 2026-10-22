@@ -56,7 +56,7 @@ if (id) {
       child.once('exit', code => { if (code) dialog.showErrorBox('App exited with an error', `${appId}: see ${logPath}`); });
       child.unref();
     });
-    const win = new BrowserWindow({ width: 1050, height: 800, backgroundColor: '#0d1117', autoHideMenuBar: true, icon: path.join(__dirname, 'robos.ico'),
+    const win = new BrowserWindow({ width: 1220, height: 900, minWidth: 900, minHeight: 650, backgroundColor: '#10141c', autoHideMenuBar: true, icon: path.join(__dirname, 'robos.ico'),
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false } });
     win.loadFile(path.join(__dirname, 'index.html'));
   });

@@ -12,7 +12,7 @@ function catalog(root) {
     // GNOME shell helpers are replaced by the native Windows launcher.
     if (['app-launcher', 'robos-desktop', 'gnome-desktop-installer', 'pass-unlock'].includes(id)) return [];
     const entry = registry.find(a => a.appId === id);
-    return [{ id, label: entry?.label || id, category: entry?.category || 'Apps' }];
+    return [{ id, label: entry?.label || id, category: entry?.category || 'Apps', iconSvg: entry?.iconSvg || null }];
   }).concat([{ id: 'household', label: 'Household', category: 'Household' }]);
 }
 
@@ -33,6 +33,7 @@ function setup(source, target) {
   fs.cpSync(path.join(source, 'scripts/windows'), path.join(target, 'windows'), { recursive: true });
   fs.copyFileSync(path.join(source, 'site/assets/logo-mark.png'), path.join(target, 'windows/logo.png'));
   fs.copyFileSync(path.join(source, 'docs/assets/images/favicon.ico'), path.join(target, 'windows/robos.ico'));
+  fs.copyFileSync(path.join(source, 'docs/assets/images/logo-sidebar.png'), path.join(target, 'windows/wordmark.png'));
   const npm = path.join(target, 'runtime/node_modules/npm/bin/npm-cli.js');
   const node = path.join(target, 'runtime/node.exe');
   fs.writeFileSync(path.join(target, 'package.json'), JSON.stringify({ private: true, dependencies: { electron: '33.4.11', esbuild: '0.28.2' } }));
