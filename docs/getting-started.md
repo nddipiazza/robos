@@ -19,6 +19,10 @@ How to install the Windows app suite, run RobOS apps from a clone of the reposit
 
 ## Windows app suite
 
+The native Windows release also provides **RobOS-v{{ site.data.release.version }}-Windows-Setup.exe** (a per-user installer with a folder chooser and shortcuts) and **RobOS-v{{ site.data.release.version }}-Windows-Portable.exe** (the bundled suite without an installation wizard). Both include the runtime and app dependencies. Check [the release assets]({{ site.data.release.url }}) for availability after the Windows build completes. The PowerShell and command scripts below remain alternatives.
+
+Settings stay in `%USERPROFILE%\.config\robos` for either EXE. Tools installed through Software Center stay under `%USERPROFILE%\RobOS\tools` or their WinGet-managed locations; they are separate from the portable extraction folder.
+
 [Download Windows setup](https://rowbose.com/download/#windows) and open `Install-RobOS.cmd`. It downloads a private Node.js/Electron runtime and the app suite into `%USERPROFILE%\RobOS`, installs runtime dependencies, and creates a RobOS Start menu shortcut. No WSL, USB flash drive or administrator access is required. Open RobOS to search and launch apps; `RobOS.cmd --app=point-of-sale` also opens one directly.
 
 The native Windows app suite has passed its startup audit. GNOME, KVM, UNIX pass and X11 integrations still require Linux. Use RobOS Software Center to install or update Windows tools, Godot 4, FFmpeg and coding-agent CLIs. AI features remain optional; sign in to an installed agent when you choose to use it. Third-party tool installers may request administrator approval or a restart. Keep the setup console open until completion. Dependency failures are recorded in `install-report.json` and cause setup to fail, so a partial install is never reported as complete. Use an empty install directory; existing app data under `%USERPROFILE%\.config\robos` is preserved.
