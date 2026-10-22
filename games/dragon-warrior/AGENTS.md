@@ -92,9 +92,22 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   python3 tests/e2e/play_full_game.py --until 18      # stop after milestone 18
   DW_HEADED=1 python3 tests/e2e/play_full_game.py     # watch it on the desktop
   python3 tests/e2e/play_full_game.py --record        # + reports/playthrough/playthrough.mp4 and a 12x time-lapse
+  python3 tests/e2e/play_full_game.py --stepped       # one video + save checkpoint per milestone (videos/NN-<id>.mp4)
+  python3 tests/e2e/play_full_game.py --stepped --only 42   # replay milestone 42 from checkpoints/41-<id>.json
+  python3 tests/e2e/play_full_game.py --stepped --from 42   # resume from checkpoint 41 to the end
   ```
-- IPC commands: `start_play_game {time_scale, start_index}`, `stop_play_game`, `get_milestones` (report with
-  `status`, `index`, `done`, `skipped`, `battles`, `deaths` and the brain's event log).
+- `--stepped` cuts the ffmpeg capture at every milestone (`reports/playthrough/videos/NN-<id>.mp4`) and saves the
+  game via `export_save_state` to `reports/playthrough/checkpoints/NN-<id>.json`; `--from`/`--only` load that
+  checkpoint with `load_save_state` and start the brain at the matching milestone id, so a single milestone can be
+  re-recorded in seconds instead of re-running the ~2 h game.
+- Deadlock detection runs on both sides: the brain's progress watchdog (`PlayGameBrain._check_progress_watchdog`,
+  wall-clock, 90 s without any change in milestone/battles/level/gold/map/tile/herbs/HP) drops the current objective
+  and plan, blacklists an unreachable supply shop, and after 3 stalls on one milestone skips it (optional) or fails
+  the run; the driver's `--stall-timeout` (default 600 s, `DW_STALL_TIMEOUT`) ends the run with status `stalled`,
+  `screenshots/stall.png` and the AI log tail when done/battles/level/gold/exp stop changing.
+- IPC commands: `start_play_game {time_scale, from_milestone}`, `stop_play_game`, `get_milestones` (report with
+  `status`, `index`, `done`, `skipped`, `battles`, `deaths` and the brain's event log), `export_save_state` /
+  `load_save_state {file_path}`.
 - Survival rules live in `PlayGameBrain._decide_survival` / `_decide_battle` (kill-before-die battle policy,
   zone-aware heal thresholds, tiered healing (HEAL/herb/HEALMORE by incoming damage), MP conservation inside
   Charlock, HEALMORE-only boss healing, a Charlock MP commit bar with wings home to rest when short, herb restock

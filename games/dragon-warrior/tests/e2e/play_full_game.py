@@ -17,6 +17,9 @@ Usage:
     python3 tests/e2e/play_full_game.py --time-scale 8 --timeout 7200
     DW_HEADED=1 python3 tests/e2e/play_full_game.py     # watch it on your desktop
     python3 tests/e2e/play_full_game.py --record        # + playthrough.mp4 and a 12x time-lapse cut
+    python3 tests/e2e/play_full_game.py --stepped       # one video + checkpoint per milestone
+    python3 tests/e2e/play_full_game.py --stepped --from 45   # resume at milestone 45 from checkpoint 44
+    python3 tests/e2e/play_full_game.py --stepped --only 45   # replay just milestone 45 and re-record it
 
 Exit code is 0 only when every required milestone up to ``--until`` is done.
 """
@@ -119,6 +122,11 @@ class Playthrough:
         self.godot = None
         self.xvfb = None
         self.ffmpeg = None
+        self.display = None
+        self.record_path = None
+        self.base = max(0, args.from_milestone - 1)   # milestones already done before this run
+        self.ids = []
+        self.until = 0
         self.violations = []
         self.done_seen = []
         self.last_index = -1
@@ -160,8 +168,12 @@ class Playthrough:
         self.port = find_and_wait_for_web_service(self.args.port, timeout=60.0)
         if self.port is None:
             raise SystemExit("Game web service never came up")
-        if self.args.record and self.xvfb and shutil.which("ffmpeg"):
-            self.start_recording(env["DISPLAY"])
+        if (self.args.record or self.args.stepped) and self.xvfb and shutil.which("ffmpeg"):
+            if self.args.stepped:
+                os.makedirs(os.path.join(REPORTS_DIR, "videos"), exist_ok=True)
+                self.start_recording(env["DISPLAY"], os.path.join(REPORTS_DIR, "videos", "_current.mp4"))
+            else:
+                self.start_recording(env["DISPLAY"])
         for _ in range(100):
             st = get_web_service_state(port=self.port)
             if st.get("scene_shown", {}).get("name", "") not in ("", "DebugLaunch"):
@@ -169,16 +181,17 @@ class Playthrough:
             time.sleep(0.1)
         log(f"Game online on port {self.port}")
 
-    def start_recording(self, display):
+    def start_recording(self, display, path=None):
         """Capture the Xvfb screen with ffmpeg (h264, small) instead of Godot's giant MJPEG writer."""
-        self.record_path = os.path.join(REPORTS_DIR, "playthrough.mp4")
+        self.display = display
+        self.record_path = path or os.path.join(REPORTS_DIR, "playthrough.mp4")
         cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "x11grab", "-framerate", str(self.args.record_fps),
                "-video_size", f"{WIDTH}x{HEIGHT}", "-i", display,
                "-c:v", "libx264", "-preset", "veryfast", "-crf", "26", "-pix_fmt", "yuv420p", self.record_path]
         self.ffmpeg = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         log(f"Recording screen to {self.record_path} at {self.args.record_fps} fps")
 
-    def stop_recording(self):
+    def stop_recording(self, timelapse=True):
         if not self.ffmpeg:
             return
         try:
@@ -190,7 +203,7 @@ class Playthrough:
         self.ffmpeg = None
         # A watchable cut: every milestone is still visible, at a time-lapse pace.
         speed = max(1, int(self.args.timelapse_speed))
-        if speed > 1 and os.path.exists(self.record_path):
+        if timelapse and speed > 1 and os.path.exists(self.record_path):
             out = os.path.join(REPORTS_DIR, "playthrough-timelapse.mp4")
             subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", self.record_path,
                             "-vf", f"setpts=PTS/{speed},fps=30", "-an",
@@ -234,30 +247,90 @@ class Playthrough:
         log(f"VIOLATION {kind}: {detail}")
         self.violations.append({"key": key, "kind": kind, "detail": detail, "at": time.time()})
 
+    def segment_path(self, idx, mid):
+        return os.path.join(REPORTS_DIR, "videos", f"{idx:02d}-{mid}.mp4")
+
+    def checkpoint_path(self, idx, mid):
+        return os.path.join(REPORTS_DIR, "checkpoints", f"{idx:02d}-{mid}.json")
+
+    def save_checkpoint(self, idx, mid):
+        path = self.checkpoint_path(idx, mid)
+        try:
+            res = send_web_service_command("export_save_state", {"file_path": os.path.abspath(path)}, port=self.port)
+            return path if res.get("success") and os.path.exists(path) else None
+        except Exception:
+            return None
+
     def record_milestones(self, ms):
-        done = ms.get("done", [])
-        for mid in done[len(self.done_seen):]:
+        seen = set(self.done_seen)
+        new = [mid for mid in ms.get("done", []) if mid not in seen]
+        for mid in new:
             self.done_seen.append(mid)
-            idx = len(self.done_seen)
+            idx = self.ids.index(mid) + 1 if mid in self.ids else len(self.done_seen)
             shot = os.path.join(REPORTS_DIR, "screenshots", f"{idx:02d}-{mid}.png")
             fetch_screenshot(self.port, shot)
             entry = {"index": idx, "id": mid, "elapsed_sec": ms.get("elapsed_sec"),
                      "battles": ms.get("battles"), "deaths": ms.get("deaths")}
+            if self.args.stepped:
+                # One video per milestone (a burst of milestones finished in the same
+                # poll shares the segment) plus a checkpoint to replay from.
+                entry["video"] = os.path.relpath(self.segment_path(idx, mid), REPORTS_DIR)
+                entry["checkpoint"] = os.path.relpath(self.checkpoint_path(idx, mid), REPORTS_DIR)
             self.report["milestones"].append(entry)
             log(f"MILESTONE {idx}/{ms.get('total')} {mid} (battles={ms.get('battles')} deaths={ms.get('deaths')})")
+        if new and self.args.stepped:
+            last_mid = new[-1]
+            last_idx = self.ids.index(last_mid) + 1 if last_mid in self.ids else len(self.done_seen)
+            if self.ffmpeg:
+                self.stop_recording(timelapse=False)
+                os.makedirs(os.path.join(REPORTS_DIR, "videos"), exist_ok=True)
+                os.replace(self.record_path, self.segment_path(last_idx, last_mid))
+                for mid in new[:-1]:
+                    # Hard-link the shared segment under every milestone finished in the burst.
+                    link = self.segment_path(self.ids.index(mid) + 1 if mid in self.ids else 0, mid)
+                    if not os.path.exists(link):
+                        os.link(self.segment_path(last_idx, last_mid), link)
+            os.makedirs(os.path.join(REPORTS_DIR, "checkpoints"), exist_ok=True)
+            ckpt = self.save_checkpoint(last_idx, last_mid)
+            for mid in new[:-1]:
+                if ckpt:
+                    shutil.copyfile(ckpt, self.checkpoint_path(self.ids.index(mid) + 1 if mid in self.ids else 0, mid))
+            if self.display and len(self.done_seen) < self.until:
+                self.start_recording(self.display, os.path.join(REPORTS_DIR, "videos", "_current.mp4"))
 
     # ── main loop ──────────────────────────────────────────────────────────
     def run(self):
         self.launch()
+        with open(os.path.join(PROJECT_DIR, "data", "v1", "milestones.json"), encoding="utf-8") as f:
+            ids = [m["id"] for m in json.load(f)["milestones"]]
+        self.ids = ids
+        total = len(ids)
+        self.until = self.args.until if self.args.until > 0 else total
+        if self.args.only:
+            self.args.from_milestone = self.args.only
+            self.until = self.args.only
+            self.base = self.args.only - 1
+        if self.base > 0:
+            prev = ids[self.base - 1]
+            ckpt = self.checkpoint_path(self.base, prev)
+            if not os.path.exists(ckpt):
+                raise SystemExit(f"no checkpoint for milestone {self.base} ({ckpt}); run the earlier milestones first")
+            res = send_web_service_command("load_save_state", {"file_path": os.path.abspath(ckpt)}, port=self.port)
+            if not res.get("success"):
+                raise SystemExit(f"load_save_state failed: {res}")
+            self.done_seen = ids[:self.base]
+            self.report["resumed_from"] = os.path.relpath(ckpt, REPORTS_DIR)
+            time.sleep(2.0)
+            log(f"Resumed from checkpoint {self.base} ({prev})")
         res = send_web_service_command("start_play_game", {
             "time_scale": self.args.time_scale,
-            "from_milestone": 1,
+            "from_milestone": ids[self.base] if self.base > 0 else 1,
         }, port=self.port)
         if not res.get("success"):
             raise SystemExit(f"start_play_game failed: {res}")
-        total = int(res.get("play_game", {}).get("milestones", 0))
-        until = self.args.until if self.args.until > 0 else total
-        log(f"Play mode started: {total} milestones, running until #{until}")
+        until = self.until
+        log(f"Play mode started: {total} milestones, running #{self.base + 1}..#{until}")
+        progress_sig, progress_t = None, time.time()
 
         t0 = time.time()
         last_log = 0
@@ -281,6 +354,17 @@ class Playthrough:
                 error = ms.get("error", "")
                 if len(self.done_seen) >= until or status in ("done", "failed", "stopped"):
                     break
+                gs = state.get("game_state", {})
+                sig = (len(self.done_seen), ms.get("battles"), gs.get("level"), gs.get("gold"), gs.get("exp"))
+                if sig != progress_sig:
+                    progress_sig, progress_t = sig, time.time()
+                elif time.time() - progress_t > self.args.stall_timeout:
+                    obj = (ms.get("objective") or {}).get("label", "")
+                    status, error = "stalled", (f"no progress for {int(self.args.stall_timeout)}s "
+                                                f"(objective: {obj}, scene={state.get('scene_shown', {}).get('name')})")
+                    fetch_screenshot(self.port, os.path.join(REPORTS_DIR, "screenshots", "stall.png"))
+                    self.violations.append({"kind": "stall", "detail": error, "ai_log_tail": (ms.get("log") or [])[-20:]})
+                    break
                 if time.time() - last_log > 30:
                     last_log = time.time()
                     gs = state.get("game_state", {})
@@ -300,8 +384,13 @@ class Playthrough:
             fetch_screenshot(self.port, os.path.join(REPORTS_DIR, "screenshots", "final.png"))
             self.shutdown()
 
+        if self.args.stepped and self.ffmpeg:
+            self.stop_recording(timelapse=False)
+            if os.path.exists(self.record_path):
+                tail = os.path.join(REPORTS_DIR, "videos", f"{int(ms.get('index', len(self.done_seen))) + 1:02d}-{status}.mp4")
+                os.replace(self.record_path, tail)
         required_until = until
-        ok = status != "crashed" and len(self.done_seen) >= required_until and not any(
+        ok = status not in ("crashed", "stalled") and len(self.done_seen) >= required_until and not any(
             v["kind"] == "hero_on_blocked_terrain" for v in self.violations)
         self.report.update({
             "status": status, "error": error, "ok": ok,
@@ -329,6 +418,14 @@ def main():
                     help="record the Xvfb screen with ffmpeg to reports/playthrough/playthrough.mp4 "
                          "(plus a sped-up playthrough-timelapse.mp4)")
     ap.add_argument("--record-fps", type=int, default=15)
+    ap.add_argument("--stepped", action="store_true", default=os.environ.get("DW_STEPPED", "0") == "1",
+                    help="one video per milestone under reports/playthrough/videos/ and a checkpoint per "
+                         "milestone under reports/playthrough/checkpoints/ (implies --record)")
+    ap.add_argument("--from", dest="from_milestone", type=int, default=1,
+                    help="resume from this milestone number using the checkpoint saved after the previous one")
+    ap.add_argument("--only", type=int, default=0, help="replay exactly this milestone from its checkpoint")
+    ap.add_argument("--stall-timeout", type=float, default=float(os.environ.get("DW_STALL_TIMEOUT", "600")),
+                    help="fail when milestones, battles, level, gold and exp all stop changing for this long")
     ap.add_argument("--timelapse-speed", type=int, default=12, help="speed factor for the time-lapse cut (1 = none)")
     args = ap.parse_args()
     return Playthrough(args).run()
