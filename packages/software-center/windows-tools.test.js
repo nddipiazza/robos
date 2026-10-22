@@ -140,3 +140,33 @@ test('portable commands work without symlinks and removal preserves other files'
   commandWrappers(f.root, tool, 'uninstall', []);
   assert.equal(fs.readFileSync(wrapper, 'utf8'), '@echo This belongs to the user');
 });
+
+test('bundled apps keep CLI packages and Node outside the extracted application', async t => {
+  const f = fixture(t);
+  const runtime = path.join(f.root, 'runtime');
+  fs.mkdirSync(path.join(runtime, 'node_modules/npm/bin'), { recursive: true });
+  fs.writeFileSync(path.join(runtime, 'node.exe'), 'bundled runtime');
+  fs.writeFileSync(path.join(runtime, 'node_modules/npm/bin/npm-cli.js'), 'bundled npm');
+  const toolsRoot = path.join(f.root, 'persistent-user-folder');
+  const prefix = path.join(toolsRoot, 'tools/npm');
+  const node = path.join(toolsRoot, 'runtime/node.exe');
+  const service = new WindowsTools({ root: f.root, toolsRoot, run: async (file, args) => {
+    if (file === node) {
+      assert.ok(fs.existsSync(node));
+      if (!args.includes('--version')) {
+        assert.equal(args[0], path.join(toolsRoot, 'runtime/node_modules/npm/bin/npm-cli.js'));
+        const dir = path.join(prefix, 'node_modules/@openai/codex');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ bin: 'cli.js' }));
+        fs.writeFileSync(path.join(dir, 'cli.js'), '');
+      }
+      return { code: 0, output: 'test CLI' };
+    }
+    return f.run(file, args);
+  } });
+  const tool = (await service.status([{ id: 'openai-codex' }])).find(t => t.id === 'openai-codex');
+  await service.perform(tool, 'install', () => {});
+  assert.equal(fs.readFileSync(node, 'utf8'), 'bundled runtime');
+  assert.equal(service.prefix, prefix);
+  assert.ok(fs.existsSync(path.join(prefix, 'node_modules/@openai/codex/cli.js')));
+});
