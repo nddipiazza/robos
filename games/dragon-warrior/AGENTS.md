@@ -126,6 +126,10 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   keeps a six-battle window of HP lost per grind battle (`_record_grind_damage`, heals counted as damage); when the
   average is at most 8% of max HP and the next tier's worst hit times three fits in max HP it moves up a tier
   ("barely scratched" grind log event), at 35% or more it steps back down, and a death resets the boost.
+- Battle policy vs hard hitters (Starwyvern & co.): SLEEP on a monster that may resist it is only tried while two
+  more hits cannot kill the hero; otherwise the brain heals or runs. HEALMORE counts as sustain (`winnable_with_heals`
+  in `_decide_battle`: n casts must keep HP above the damage taken over `turns_to_kill + 2n` turns) and is always
+  worth casting when the next hit could be fatal, instead of swinging and dying.
 - IPC commands: `start_play_game {time_scale, from_milestone}`, `stop_play_game`, `get_milestones` (report with
   `status`, `index`, `done`, `skipped`, `battles`, `deaths` and the brain's event log), `export_save_state` /
   `load_save_state {file_path}`.

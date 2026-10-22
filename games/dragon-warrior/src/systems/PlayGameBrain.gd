@@ -628,7 +628,18 @@ func _decide_battle(state: Dictionary, battle: Dictionary) -> Dictionary:
 		heal_amount = 23
 	elif _has_spell_mp(known, "heal", mp):
 		heal_amount = 10
-	var heal_useful := heal_amount > int(avg_hit) and (boss or winnable_at_full)
+	# HEALMORE sustain: n casts buy n*heal HP but cost n turns of damage. The fight is
+	# winnable with heals if some affordable n keeps us above zero until the monster dies.
+	var winnable_with_heals := false
+	if _has_spell_mp(known, "healmore", mp):
+		var max_casts := mini(4 - _battle_heals, mp / 10)
+		for n in range(1, max_casts + 1):
+			if float(hp) + float(n * heal_amount) > float(turns_to_kill + 2 * n) * avg_hit:
+				winnable_with_heals = true
+				break
+	# When the next hit could kill us, any heal that out-paces the damage is worth it:
+	# it keeps us alive for another swing or another attempt to run.
+	var heal_useful := heal_amount > int(avg_hit) and (boss or winnable_at_full or winnable_with_heals or (critical and heal_amount > max_hit))
 	var casts := spell_hit > 0 or str(mon_data.get("pattern", "")).contains("spell_")
 	var target := 0  # FIGHT
 	if asleep and not critical:
@@ -660,7 +671,8 @@ func _decide_battle(state: Dictionary, battle: Dictionary) -> Dictionary:
 		_battle_stopspells += 1
 		target = 1
 	elif not winning and not asleep and _battle_sleeps < 2 and int(mon_data.get("resist_sleep", 16)) <= 8 \
-			and (not critical or int(mon_data.get("resist_sleep", 16)) <= 2) and _has_spell_mp(known, "sleep", mp):
+			and (hp > 2 * max_hit + 4 or int(mon_data.get("resist_sleep", 16)) <= 2) and _has_spell_mp(known, "sleep", mp):
+		# A SLEEP that may be resisted is only a fair gamble while two more hits cannot kill us.
 		_pending_spell = "sleep"
 		_battle_sleeps += 1
 		target = 1
