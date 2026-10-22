@@ -16,6 +16,7 @@ Usage:
     python3 tests/e2e/play_full_game.py --until 18      # stop after milestone 18
     python3 tests/e2e/play_full_game.py --time-scale 8 --timeout 7200
     DW_HEADED=1 python3 tests/e2e/play_full_game.py     # watch it on your desktop
+    python3 tests/e2e/play_full_game.py --record        # + playthrough.mp4 and a 12x time-lapse cut
 
 Exit code is 0 only when every required milestone up to ``--until`` is done.
 """
@@ -117,6 +118,7 @@ class Playthrough:
         self.port = None
         self.godot = None
         self.xvfb = None
+        self.ffmpeg = None
         self.violations = []
         self.done_seen = []
         self.last_index = -1
@@ -140,7 +142,8 @@ class Playthrough:
                 self.xvfb = start_xvfb(display)
                 if self.xvfb:
                     env["DISPLAY"] = display
-                    cmd.extend(["--rendering-driver", "opengl3"])
+                    # No window manager on Xvfb: pin the window to the origin so a screen capture sees all of it.
+                    cmd.extend(["--rendering-driver", "opengl3", "--position", "0,0"])
                 else:
                     cmd.append("--headless")
             if self.args.movie:
@@ -157,6 +160,8 @@ class Playthrough:
         self.port = find_and_wait_for_web_service(self.args.port, timeout=60.0)
         if self.port is None:
             raise SystemExit("Game web service never came up")
+        if self.args.record and self.xvfb and shutil.which("ffmpeg"):
+            self.start_recording(env["DISPLAY"])
         for _ in range(100):
             st = get_web_service_state(port=self.port)
             if st.get("scene_shown", {}).get("name", "") not in ("", "DebugLaunch"):
@@ -164,7 +169,36 @@ class Playthrough:
             time.sleep(0.1)
         log(f"Game online on port {self.port}")
 
+    def start_recording(self, display):
+        """Capture the Xvfb screen with ffmpeg (h264, small) instead of Godot's giant MJPEG writer."""
+        self.record_path = os.path.join(REPORTS_DIR, "playthrough.mp4")
+        cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "x11grab", "-framerate", str(self.args.record_fps),
+               "-video_size", f"{WIDTH}x{HEIGHT}", "-i", display,
+               "-c:v", "libx264", "-preset", "veryfast", "-crf", "26", "-pix_fmt", "yuv420p", self.record_path]
+        self.ffmpeg = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        log(f"Recording screen to {self.record_path} at {self.args.record_fps} fps")
+
+    def stop_recording(self):
+        if not self.ffmpeg:
+            return
+        try:
+            self.ffmpeg.stdin.write(b"q")
+            self.ffmpeg.stdin.flush()
+            self.ffmpeg.wait(timeout=60)
+        except Exception:
+            self.ffmpeg.kill()
+        self.ffmpeg = None
+        # A watchable cut: every milestone is still visible, at a time-lapse pace.
+        speed = max(1, int(self.args.timelapse_speed))
+        if speed > 1 and os.path.exists(self.record_path):
+            out = os.path.join(REPORTS_DIR, "playthrough-timelapse.mp4")
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", self.record_path,
+                            "-vf", f"setpts=PTS/{speed},fps=30", "-an",
+                            "-c:v", "libx264", "-preset", "veryfast", "-crf", "24", "-pix_fmt", "yuv420p", out])
+            log(f"Time-lapse ({speed}x) written to {out}")
+
     def shutdown(self):
+        self.stop_recording()
         for proc in (self.godot, self.xvfb):
             if proc and proc.poll() is None:
                 try:
@@ -291,6 +325,11 @@ def main():
     ap.add_argument("--timeout", type=float, default=float(os.environ.get("DW_PLAY_TIMEOUT", "10800")))
     ap.add_argument("--poll", type=float, default=0.5)
     ap.add_argument("--movie", default=os.environ.get("DW_MOVIE", ""), help="write a Godot movie (.avi) of the run")
+    ap.add_argument("--record", action="store_true", default=os.environ.get("DW_RECORD", "0") == "1",
+                    help="record the Xvfb screen with ffmpeg to reports/playthrough/playthrough.mp4 "
+                         "(plus a sped-up playthrough-timelapse.mp4)")
+    ap.add_argument("--record-fps", type=int, default=15)
+    ap.add_argument("--timelapse-speed", type=int, default=12, help="speed factor for the time-lapse cut (1 = none)")
     args = ap.parse_args()
     return Playthrough(args).run()
 

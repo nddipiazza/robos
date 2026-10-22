@@ -91,6 +91,7 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   python3 tests/e2e/play_full_game.py                 # whole game, headless (~2-3 h at time-scale 6)
   python3 tests/e2e/play_full_game.py --until 18      # stop after milestone 18
   DW_HEADED=1 python3 tests/e2e/play_full_game.py     # watch it on the desktop
+  python3 tests/e2e/play_full_game.py --record        # + reports/playthrough/playthrough.mp4 and a 12x time-lapse
   ```
 - IPC commands: `start_play_game {time_scale, start_index}`, `stop_play_game`, `get_milestones` (report with
   `status`, `index`, `done`, `skipped`, `battles`, `deaths` and the brain's event log).
