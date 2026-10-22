@@ -16,11 +16,16 @@ async function smoke(root) {
       await page.waitForFunction(() => document.body.innerText.trim().length > 100, { timeout: 15000 });
       if (!id) {
         await page.locator('.suite-card').first().waitFor();
+        await page.waitForFunction(() => document.querySelector('.brand img').naturalWidth > 0);
         await page.screenshot({ path: path.resolve('run/windows-install/launcher.png') });
         await page.locator('#search').fill('Point of Sale');
         await page.getByRole('button', { name: /Point of Sale/ }).waitFor();
         await page.screenshot({ path: path.resolve('run/windows-install/search.png') });
         await page.locator('#search').fill('');
+        await page.locator('[data-filter="developer"]').click();
+        await page.getByRole('heading', { name: 'Developer tools', exact: true }).first().waitFor();
+        if (await page.locator('.app-tile[aria-label="Point of Sale"]').count()) throw new Error('Collection filter failed');
+        await page.locator('[data-filter="all"]').click();
       }
       await page.screenshot({ path: path.resolve(`run/windows-install/${id || 'launcher'}.png`) });
       results.push({ app: id || 'launcher', ok: true, title: await page.title() });
