@@ -409,6 +409,12 @@ def generate_tiles_and_maps() -> dict[int, Image.Image]:
 # 2. OVERWORLD MAP GENERATION (124x124 tiles = 1984x1984 px)
 # ---------------------------------------------------------------------------
 
+# Charlock Castle is ringed by poisonous swamp tiles (terrain 7).
+CHARLOCK_TOWN = (50, 50)
+CHARLOCK_SWAMP_TILES = frozenset(
+    (x, y) for x in range(49, 52) for y in range(49, 52) if (x, y) != CHARLOCK_TOWN
+)
+
 # Cantlin is walled on the overworld: a ring of impassable wall tiles (terrain 9) with a
 # single grass "gate" tile on its north side where the Golem waits.
 CANTLIN_TOWN = (75, 104)
@@ -419,6 +425,19 @@ CANTLIN_WALL_TILES = frozenset(
     for y in range(102, 107)
     if (x in (73, 77) or y in (102, 106)) and (x, y) != CANTLIN_GATE
 )
+
+
+def draw_swamp_tile_16x16() -> Image.Image:
+    """Poisonous swamp (terrain code 7): murky green with purple bubbles."""
+    swp = Image.new("RGBA", (16, 16), (64, 108, 72, 255))
+    spx = swp.load()
+    for y in range(16):
+        for x in range(16):
+            if (x + y * 3) % 7 == 0:
+                spx[x, y] = (118, 72, 136, 255)
+            elif (x * 2 + y) % 5 == 0:
+                spx[x, y] = (42, 78, 50, 255)
+    return swp
 
 
 def draw_wall_tile_16x16() -> Image.Image:
@@ -471,15 +490,7 @@ def generate_overworld_map() -> None:
     t_sprites[6] = mtn
 
     # Swamp (7)
-    swp = Image.new("RGBA", (16, 16), (64, 108, 72, 255))
-    spx = swp.load()
-    for y in range(16):
-        for x in range(16):
-            if (x + y * 3) % 7 == 0:
-                spx[x, y] = (118, 72, 136, 255)
-            elif (x * 2 + y) % 5 == 0:
-                spx[x, y] = (42, 78, 50, 255)
-    t_sprites[7] = swp
+    t_sprites[7] = draw_swamp_tile_16x16()
 
     # Hills (8)
     hil = Image.new("RGBA", (16, 16), (76, 164, 48, 255))
