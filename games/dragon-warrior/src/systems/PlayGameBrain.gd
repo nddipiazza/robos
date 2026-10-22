@@ -34,6 +34,13 @@ var status: String = "idle"  # idle | running | completed | failed
 var error: String = ""
 var _started_msec: int = 0
 var _ticks: int = 0
+# Deadlock watchdog: wall-clock seconds with no visible progress before the
+# current objective is abandoned (Engine.time_scale does not affect it).
+const STALL_SEC := 90.0
+const MAX_STALLS_PER_MILESTONE := 3
+var _wd_sig: Array = []
+var _wd_last_ms: int = 0
+var _stall_counts: Dictionary = {}  # milestone id -> stalls
 var _battles: int = 0
 var _deaths: int = 0
 var _max_inputs: int = 0
@@ -109,6 +116,9 @@ func start(args: Dictionary) -> Dictionary:
 	_deaths = 0
 	_grind_tier_penalty = 0
 	_death_level_bump = {}
+	_stall_counts = {}
+	_wd_sig = []
+	_wd_last_ms = 0
 	_penalty_level = 0
 	_deaths_seen = int(_gs().get("deaths")) if _gs() and _gs().get("deaths") != null else 0
 	_last_gold = -1
@@ -367,6 +377,8 @@ func decide(state: Dictionary, screen: Dictionary) -> Dictionary:
 	_track_gold(state)
 	_advance_milestones()
 	if status != "running":
+		return _none()
+	if _check_progress_watchdog(state):
 		return _none()
 	if _max_inputs > 0 and _ticks > _max_inputs:
 		status = "failed"
@@ -1403,6 +1415,45 @@ func _update_stuck(cur_map: String, hero: Vector2i) -> void:
 
 func _reset_stuck() -> void:
 	_stuck_ticks = 0
+
+
+func _check_progress_watchdog(state: Dictionary) -> bool:
+	var battle: Dictionary = state.get("battle", {})
+	var sig: Array = [_index, _battles, _level(), _gold(), _cur_map(state), _hero_tile(state),
+		_count_item("herb"), _hp(), str(battle.get("msg_text", ""))]
+	var now := Time.get_ticks_msec()
+	if sig != _wd_sig or _wd_last_ms == 0:
+		_wd_sig = sig
+		_wd_last_ms = now
+		return false
+	if now - _wd_last_ms < int(STALL_SEC * 1000.0):
+		return false
+	_wd_last_ms = now
+	var m: Dictionary = _milestones[_index] if _index < _milestones.size() else {}
+	var mid := str(m.get("id", ""))
+	_stall_counts[mid] = int(_stall_counts.get(mid, 0)) + 1
+	var what := str(_objective.get("label", "no objective"))
+	_log_event("deadlock", "no progress for %ds on '%s' at %s %s (stall %d/%d for %s)" % [
+		int(STALL_SEC), what, _cur_map(state), str(_hero_tile(state)), int(_stall_counts[mid]), MAX_STALLS_PER_MILESTONE, mid])
+	if str(_objective.get("kind", "")) == "supply":
+		_item_shops.erase(str(_objective.get("map", "")))
+	_objective = {}
+	_plan_legs.clear()
+	_plan_goal = ""
+	_pending_cmd = ""
+	_pending_shop_item = ""
+	_pending_item_id = ""
+	_heading_to_inn = false
+	_grind_target = {}
+	_grind_cell = Vector2i(-1, -1)
+	if int(_stall_counts[mid]) >= MAX_STALLS_PER_MILESTONE and not m.is_empty():
+		if bool(m.get("optional", false)):
+			_skip_current("deadlocked %d times" % MAX_STALLS_PER_MILESTONE)
+		else:
+			status = "failed"
+			error = "deadlock: no progress on %s after %d stalls (last objective: %s)" % [mid, MAX_STALLS_PER_MILESTONE, what]
+			Engine.time_scale = 1.0
+	return true
 
 
 func _fail_objective(reason: String) -> void:

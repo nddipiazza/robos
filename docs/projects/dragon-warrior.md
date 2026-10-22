@@ -46,6 +46,8 @@ xvfb-run -a behave games/dragon-warrior/tests/e2e/features/king_to_world_map.fea
 python3 games/dragon-warrior/tests/e2e/play_full_game.py
 python3 games/dragon-warrior/tests/e2e/play_full_game.py --until 18   # stop after milestone 18
 python3 games/dragon-warrior/tests/e2e/play_full_game.py --record     # also record playthrough.mp4 + 12x time-lapse
+python3 games/dragon-warrior/tests/e2e/play_full_game.py --stepped    # one video + checkpoint per milestone (videos/NN-<id>.mp4)
+python3 games/dragon-warrior/tests/e2e/play_full_game.py --stepped --only 42   # re-record milestone 42 from its checkpoint
 ```
 
 ## AI Full-Game Playthrough ("Play the Game" mode)
@@ -67,7 +69,13 @@ IPC web service (`GameControlServer.gd`, `/api/v1/state`) to read what is on scr
   rather than wasted, Erdrick's Armor regenerates 1 HP per step and dampens fire breath.
 - **Python driver** — `tests/e2e/play_full_game.py` boots the game headless, enables the mode, polls state, asserts
   invariants (hero never on water or mountains, HP never negative, no stuck loops) and writes
-  `tests/e2e/reports/playthrough/playthrough.json` plus a screenshot per milestone.
+  `tests/e2e/reports/playthrough/playthrough.json` plus a screenshot per milestone. `--stepped` records one
+  video per milestone (`videos/NN-<id>.mp4`) and saves a game checkpoint after each one, so `--only N` replays and
+  re-records a single milestone from its checkpoint in seconds.
+- **Deadlock detection** — the brain's wall-clock progress watchdog (90 s without any change in
+  milestone/battles/level/gold/position/herbs/HP) drops the current objective, blacklists unreachable shops and
+  after three stalls on one milestone skips it or fails the run; the driver's `--stall-timeout` (10 min) ends a
+  run that has stopped making progress with a `stalled` status, a screenshot and the AI event-log tail.
 
 Every bug the brain hit while learning to finish the game was a game bug: Charlock 1F's exit gate unwalkable, boss
 fights not syncing the pack, chest duplicates, missing level-up curves, incorrect enemy flee factors and spell
