@@ -1,0 +1,117 @@
+/* Home page (rowbose.com/). Layered on site.css; everything is scoped to body.landing
+   and uses the site tokens (--bg, --card, --line, --fg, --muted, --accent), so the
+   light and dark themes work without overrides. */
+
+/* hero: copy on the left, the "ask" panel on the right */
+.landing .l-hero{padding:80px 0 72px}
+.l-hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:56px;align-items:center}
+.l-hero h1{font-size:clamp(2.3rem,4.6vw,3.7rem);font-weight:600;letter-spacing:-.035em;line-height:1.06;max-width:15ch}
+.l-hero h1 em{font-style:normal;color:var(--accent)}
+.l-hero .lead{font-size:1.14rem;color:var(--muted);max-width:52ch;margin:22px 0 30px}
+.l-hero .cta{justify-content:flex-start}
+.l-hero .sub{margin-top:14px;font-size:.84rem;color:var(--muted)}.l-hero .sub a{text-decoration:underline}
+
+/* the "ask" panel: a mock of <robos-ai-textarea> with an example answer */
+.ask{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.ask .tabs{margin:0;padding:0 10px;background:var(--bg2);gap:0}
+.ask .tabs button{padding:12px 12px;font-size:.84rem}
+.ask .panel{padding:20px 22px 22px}
+.ask-app{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.78rem;color:var(--muted);margin-bottom:10px}
+.ask-app b{color:var(--fg);font-weight:600}
+.tag{display:inline-block;font-size:.7rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--muted);white-space:nowrap}
+.tag.live{color:#15803d;border-color:color-mix(in srgb,#15803d 40%,transparent)}
+[data-theme=dark] .tag.live{color:#6fd3a0;border-color:color-mix(in srgb,#6fd3a0 40%,transparent)}
+.prompt{border:1px solid color-mix(in srgb,var(--accent) 55%,var(--line));border-radius:8px;background:var(--bg);padding:12px 14px 10px;font-size:.95rem;min-height:72px;display:flex;flex-direction:column;justify-content:space-between;gap:8px}
+.prompt small{align-self:flex-end;font-size:.72rem;color:var(--muted)}
+.ask-go{display:flex;justify-content:flex-end;margin:10px 0 16px}
+.ask-go span{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:var(--btn-fg);font-weight:600;font-size:.82rem;border-radius:6px;padding:6px 12px}
+.out{border-top:1px dashed var(--line);padding-top:14px;font-size:.88rem}
+.out-h{font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.out ol{margin:0;padding-left:1.4em}.out li{margin:3px 0}.out li span{color:var(--muted)}
+.out blockquote{margin:0;padding:10px 14px;border-left:3px solid var(--accent);background:var(--bg2);border-radius:0 6px 6px 0;font-style:italic}
+.out .meta{margin-top:8px;font-size:.78rem;color:var(--muted)}
+.out code{font-size:.8rem;color:var(--accent)}
+.nodes{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.nodes li{margin:0;border:1px solid var(--line);border-radius:6px;padding:3px 9px;font:.78rem 'Fira Code',monospace;background:var(--bg2)}
+.nodes li b{color:var(--accent);font-weight:500}
+.ask-note{margin:12px 2px 0;font-size:.78rem;color:var(--muted)}
+
+/* principles */
+.l-grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:44px}
+
+/* a shipping example: copy beside two real screenshots */
+.l-show{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:56px;align-items:center;margin-top:44px}
+.l-show p{color:var(--muted)}
+.l-show h3{font-size:clamp(1.4rem,2.4vw,1.9rem);margin-bottom:12px}
+.l-shots{display:grid;gap:16px}
+.l-shots figure{margin:0}
+.l-shots img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:#14120b}
+.l-shots figcaption{margin-top:8px;font-size:.82rem;color:var(--muted)}
+
+/* "try asking" prompt cards */
+.asks{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px}
+.asks .card{display:flex;flex-direction:column;gap:10px}
+.asks .app{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.asks q{display:block;font-size:1.02rem;line-height:1.5;color:var(--fg);quotes:'\201C' '\201D'}
+.asks .card p{font-size:.88rem}
+.l-note{margin-top:22px;font-size:.88rem;color:var(--muted);max-width:78ch}
+
+/* build: four steps from a description to a tested app */
+.l-steps{list-style:none;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:0;margin:44px 0 0;counter-reset:s}
+.l-steps li{counter-increment:s;border:1px solid var(--line);border-radius:10px;padding:20px;background:var(--card)}
+.l-steps li:before{content:counter(s);display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--btn-fg);font-weight:600;font-size:.8rem;margin-bottom:12px}
+.l-steps b{display:block;margin-bottom:4px}.l-steps span{color:var(--muted);font-size:.9rem}
+.landing #build .player{margin-top:56px}
+
+@media(max-width:960px){
+  .l-hero-grid,.l-show{grid-template-columns:1fr;gap:36px}
+  .l-grid4,.l-steps{grid-template-columns:repeat(2,1fr)}
+  .asks{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .landing .l-hero{padding:48px 0 52px}
+  .l-grid4,.l-steps,.asks{grid-template-columns:1fr}
+  .ask .tabs button{padding:10px 8px;font-size:.78rem}
+  .ask .panel{padding:16px}
+}
+
+/* demo player controls (the slideshow script in site.js drives these) */
+.landing .stage{cursor:pointer}.landing .stage.is-video{cursor:auto}
+.landing .stage:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.stage-state{position:absolute;top:10px;right:10px;padding:4px 10px;border-radius:4px;font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;background:rgba(13,17,23,.82);color:#e8ecf2;border:1px solid rgba(148,163,184,.35);opacity:0;transform:translateY(-4px);transition:opacity .2s,transform .2s;pointer-events:none}
+.player.is-paused .stage-state{opacity:1;transform:none}
+.player.is-paused .stage-progress i{opacity:.45}
+.player-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 12px;border-top:1px solid var(--line);background:var(--bg2)}
+.player-controls[hidden]{display:none}
+.ctl{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:34px;height:32px;padding:0 10px;background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:6px;font:inherit;font-size:.8rem;cursor:pointer;transition:border-color .15s}
+.ctl:hover{border-color:var(--accent)}
+.ctl:focus-visible,.ctl-speed select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ctl-play .ic-play{display:none}.ctl-play[aria-pressed=true] .ic-play{display:block}.ctl-play[aria-pressed=true] .ic-pause{display:none}
+.count{font:.76rem 'Fira Code',monospace;color:var(--muted);font-variant-numeric:tabular-nums;margin-left:4px}
+.ctl-speed{margin-left:auto;display:inline-flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted)}
+.ctl-speed select{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;font:inherit;font-size:.78rem;cursor:pointer}
+@media(max-width:600px){.ctl-label{display:none}.ctl-speed{margin-left:0;width:100%;justify-content:space-between}}
+
+.landing .h2{text-wrap:balance}
+/* the "your idea" suite card: a drawn prompt and graph instead of a screenshot */
+.suite-idea{display:flex;flex-direction:column;justify-content:center;gap:14px;padding:24px 28px;background:repeating-linear-gradient(0deg,transparent 0 23px,color-mix(in srgb,var(--line) 70%,transparent) 23px 24px),var(--bg2)}
+.suite-idea .prompt{min-height:0;font-size:.9rem;color:var(--muted)}
+
+/* hero: the three things you do with the suite */
+.l-three{list-style:none;margin:0 0 30px;padding:0;display:grid;gap:8px}
+.l-three li{padding-left:26px;position:relative;color:var(--muted)}
+.l-three li:before{content:'✓';position:absolute;left:0;color:var(--accent);font-weight:700}
+.l-three b{color:var(--fg)}
+/* hero: a mosaic of the suite's apps, with an empty tile for yours */
+.l-mosaic{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.l-mosaic a{position:relative;display:block;aspect-ratio:4/3;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg2);transition:border-color .2s,transform .2s}
+.l-mosaic a:hover{border-color:var(--accent);transform:translateY(-2px)}
+.l-mosaic img{width:100%;height:100%;object-fit:cover;object-position:top left;display:block}
+.l-mosaic span{position:absolute;left:0;right:0;bottom:0;padding:18px 10px 8px;font-size:.8rem;font-weight:600;color:#fff;background:linear-gradient(transparent,rgba(10,10,10,.82))}
+.l-mosaic-new a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-style:dashed;border-width:2px;color:var(--muted)}
+.l-mosaic-new b{font-size:2rem;line-height:1;color:var(--accent);font-weight:500}
+.l-mosaic-new span{position:static;background:none;color:var(--fg);padding:0}
+.landing #product .grid3 .card .go{display:inline-block}
+.l-ask{margin-top:28px;max-width:760px}
+#ai .l-show{margin-bottom:44px}
+@media(max-width:600px){.l-mosaic{grid-template-columns:repeat(2,minmax(0,1fr))}}
