@@ -127,7 +127,7 @@ var _inventory: Array = []
 var _hero_gold := 0
 var _opened_chests: Dictionary = {}
 var _bridge_built := false
-var _bridge_rect: ColorRect
+var _bridge_rect: TextureRect
 var _bridge_animating := false
 var _bridge_anim_t := 0.0
 const BRIDGE_ANIM_DURATION := 2.5  # seconds of rainbow flash
@@ -253,9 +253,11 @@ func _build_sfx_player() -> void:
 	add_child(_sfx)
 
 func _build_bridge_overlay() -> void:
-	_bridge_rect = ColorRect.new()
-	_bridge_rect.size = Vector2(TILE_SIZE * MAP_SCALE, TILE_SIZE * MAP_SCALE)
-	_bridge_rect.color = Color(0.55, 0.35, 0.15, 1.0)  # wooden bridge brown
+	_bridge_rect = TextureRect.new()
+	_bridge_rect.texture = load("res://assets/tiles/tile_018.png")  # wooden plank bridge
+	_bridge_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_bridge_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	_bridge_rect.size = Vector2(TILE_SIZE, TILE_SIZE)
 	_bridge_rect.z_index = 1
 	_bridge_rect.visible = _bridge_built
 	add_child(_bridge_rect)
@@ -281,11 +283,11 @@ func _process(delta: float) -> void:
 	if _bridge_animating:
 		_bridge_anim_t += delta
 		var frac := fmod(_bridge_anim_t * 4.0, 1.0)  # cycle hue 4×/sec
-		_bridge_rect.color = Color.from_hsv(frac, 1.0, 1.0, 1.0)
+		_bridge_rect.modulate = Color.from_hsv(frac, 0.8, 1.0, 1.0)
 		if _bridge_anim_t >= BRIDGE_ANIM_DURATION:
 			_bridge_animating = false
 			_bridge_built = true
-			_bridge_rect.color = Color(0.55, 0.35, 0.15, 1.0)
+			_bridge_rect.modulate = Color.WHITE
 			_bridge_rect.visible = true
 			var gs := get_node_or_null("/root/GameState")
 			if gs:
@@ -975,9 +977,14 @@ func _refresh_item_panel() -> void:
 			_item_panel.add_child(lbl)
 			_item_labels.append(lbl)
 
+	# Grow the box with the inventory so long lists never spill past the border.
+	var list_h: int = maxi(_inventory.size(), 1) * 20 + 36
+	var panel_h: int = maxi(220, list_h + 44)
+	_item_panel.size = Vector2(280, panel_h)
+	_item_panel.position = Vector2((VW - 280) / 2, maxi(8, (VH - panel_h) / 2))
 	var desc := _make_label("", 12, Color(0.7, 0.9, 1.0))
 	desc.name = "ItemDesc"
-	desc.position = Vector2(16, 180)
+	desc.position = Vector2(16, panel_h - 40)
 	desc.size = Vector2(248, 36)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_item_panel.add_child(desc)
