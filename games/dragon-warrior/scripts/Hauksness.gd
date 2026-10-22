@@ -19,7 +19,7 @@ func _get_music_path() -> String:
 
 func _get_npcs() -> Array:
 	return [
-		{tile=Vector2i(10,10), sprite_id="guard",    facing="down",  speaker="Warrior",   pages=["This town was destroyed by\nthe Dragonlord's forces.\nOnly ruins remain."]},
+		{tile=Vector2i(10,8), sprite_id="guard",    facing="down",  speaker="Warrior",   pages=["This town was destroyed by\nthe Dragonlord's forces.\nOnly ruins remain."]},
 		{tile=Vector2i(5,8),   sprite_id="sage",     facing="right", speaker="Wanderer",  pages=["Erdrick's Armor is hidden\nsomewhere in this ruined town.\nSeek it out, Hero."]},
 		{tile=Vector2i(15,14), sprite_id="lady",     facing="left",  speaker="Survivor",  pages=["We have lost so much to\nthe Dragonlord's minions.\nAvenge us, Hero."]},
 	]

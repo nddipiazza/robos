@@ -18,7 +18,7 @@ func _get_music_path() -> String:
 func _get_npcs() -> Array:
     return [
         {tile=Vector2i(18,8),  sprite_id="sage_alt", facing="down",  speaker="Shopkeeper", pages=["Welcome! Enter the shop and\nspeak to its keeper across\nthe desk."]},
-        {tile=Vector2i(9,22),  sprite_id="sage_alt", facing="down",  speaker="Merchant",   pages=["Watch thy Hit Points\nwhen in the Poisonous Marsh."]},
+        {tile=Vector2i(9,18),  sprite_id="sage_alt", facing="down",  speaker="Merchant",   pages=["Watch thy Hit Points\nwhen in the Poisonous Marsh."]},
         {tile=Vector2i(5,5),   sprite_id="minister", facing="down",  speaker="Innkeeper",  pages=["Go north to the seashore, then\nfollow the coastline west until\nthou hath reached Garinham."], inn_cost=6},
         {tile=Vector2i(6,5),   sprite_id="sage_alt", facing="down",  speaker="Merchant",   shop_id="bre001"},
         {tile=Vector2i(26,26), sprite_id="sage_alt", facing="left",  speaker="Merchant",   shop_id="bre002"},
@@ -26,10 +26,10 @@ func _get_npcs() -> Array:
         {tile=Vector2i(15,2),  sprite_id="guard",    facing="down",  speaker="Guard",      pages=["Thou art most welcome\nin Brecconary."]},
         {tile=Vector2i(20,15), sprite_id="lady",     facing="down",  speaker="Villager",   pages=["No, I am not Princess Gwaelin."]},
         {tile=Vector2i(25,22), sprite_id="guard",    facing="left",  speaker="Soldier",    pages=["Many have been the warriors\nwho have perished on this quest.\nBut for thee I wish success,\nHero."]},
-        {tile=Vector2i(7,26),  sprite_id="sage",     facing="down",  speaker="Old Man",    pages=["If thou art cursed, come again."]},
-        {tile=Vector2i(22,8),  sprite_id="minister", facing="down",  speaker="Wise Man",   pages=["There is a town where magic\nkeys can be purchased."]},
+        {tile=Vector2i(10,26),  sprite_id="sage",     facing="down",  speaker="Old Man",    pages=["If thou art cursed, come again."]},
+        {tile=Vector2i(21,8),  sprite_id="minister", facing="down",  speaker="Wise Man",   pages=["There is a town where magic\nkeys can be purchased."]},
         {tile=Vector2i(4,18),  sprite_id="lady",     facing="right", speaker="Villager",   pages=["Art thou the descendant\nof Erdrick? Hast thou\nany proof?"]},
-        {tile=Vector2i(28,26), sprite_id="guard",    facing="left",  speaker="Soldier",    pages=["Beware the bridges! Danger\ngrows when thou crosses."]},
+        {tile=Vector2i(28,24), sprite_id="guard",    facing="left",  speaker="Soldier",    pages=["Beware the bridges! Danger\ngrows when thou crosses."]},
     ]
 
 func _is_walkable(tile: Vector2i) -> bool:
