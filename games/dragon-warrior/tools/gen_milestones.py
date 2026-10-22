@@ -237,15 +237,16 @@ chest_milestone("northern-cave-b1", "nc1c1", P, min_level=15)
 # kill a level-16 hero outright: wait for level 17 like the NES guides advise.
 add("search-erdricks-token", "Dig up Erdrick's Token", P, "search", "world-map", (85, 114),
     {"kind": "has_item", "item_id": "erdricks_token"}, min_level=17, item_id="erdricks_token")
-# The Golem guards Cantlin's gate: stepping on the town tile starts the fight and the
-# Fairy Flute (dug up in Kol) puts it to sleep. Winning once opens the town for good.
-add("defeat-golem", "Destroy the Golem at Cantlin's gate", P, "step", "world-map", (75, 104),
+# Cantlin is walled; the grass gate tile north of town is the only way in and the Golem
+# attacks when the hero steps on it. The Fairy Flute (dug up in Kol) puts it to sleep and
+# winning once opens the town for good.
+add("defeat-golem", "Destroy the Golem at Cantlin's gate", P, "step", "world-map", (75, 102),
     {"kind": "flag", "flag": "golem_defeated"}, min_level=17)
 for cid in ("ctnc1", "ctnc2", "ctnc3"):
     chest_milestone("cantlin-1f", cid, P, min_level=17)
 buy_milestone("can002", "silver_shield", P, min_level=17)
 buy_milestone("can002", "flame_sword", P, min_level=17, optional=True)
-add("level-18", "Reach level 18", P, "level", "world-map", (73, 102),
+add("level-18", "Reach level 18", P, "level", "world-map", (75, 100),
     {"kind": "level", "value": 18}, grind_anchor="cantlin-1f")
 add("erdricks-armor", "Claim Erdrick's Armor in Hauksness", P, "step", "hauksness-1f", (19, 13),
     {"kind": "equipped_at_least", "slot": "armor", "value": armor["erdricks_armor"]["defense"]},

@@ -1143,7 +1143,7 @@
       "map": "world-map",
       "tile": {
         "col": 75,
-        "row": 104
+        "row": 102
       },
       "optional": false,
       "min_level": 17,
@@ -1276,8 +1276,8 @@
       "type": "level",
       "map": "world-map",
       "tile": {
-        "col": 73,
-        "row": 102
+        "col": 75,
+        "row": 100
       },
       "optional": false,
       "min_level": 1,

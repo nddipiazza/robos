@@ -158,10 +158,14 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   from every item shop listed in `milestones.json` `item_shops`, and NES pack rules: 8 tool slots, six per
   consumable stack, no dropping). Each death outside grinding raises the current milestone's required level by one.
   Bugs the brain exposes are almost always *game* bugs — fix the game, not the brain.
-- Cantlin Golem (`milestones.json` `defeat-golem`, a `step` milestone on the world-map town tile (75, 104)):
-  `WorldMap._check_map_trigger` starts a `golem` battle (`_golem_gate_battle`) whenever the hero steps on Cantlin
-  before `GameState.golem_defeated` is set; winning sets the flag (saved as `golemDefeated`), shows "The Golem
-  crumbles to dust…" and enters the town, fleeing leaves the hero on the tile so stepping off and back retries.
+- Cantlin wall + Golem (`milestones.json` `defeat-golem`, a `step` milestone on the world-map gate tile (75, 102)):
+  Cantlin (75, 104) sits inside a ring of impassable wall tiles (terrain id 9 — blocked in `WorldMap.BLOCKED_TERRAIN`,
+  `RoutePlanner.BLOCKED_WORLD_TERRAIN` and the driver's `WORLD_BLOCKED_TERRAIN`; `CANTLIN_WALL_TILES` in
+  `tools/gen_worldmap_terrain.py` and `tools/generate_original_assets.py`, which draws the brick tile) whose only gap
+  is the grass gate tile (75, 102). `WorldMap._check_map_trigger` starts a `golem` battle (`_golem_gate_battle`)
+  when the hero steps on the gate before `GameState.golem_defeated` is set; winning sets the flag (saved as
+  `golemDefeated`) and shows "The Golem crumbles to dust…", fleeing shoves the hero back onto the tile it came
+  from (`_golem_gate_from`), so stepping on the gate again retries. The town tile keeps the check as a fallback.
   In battle, ITEM against the Golem plays the Fairy Flute (`BattleOverlay._do_item`: not consumed, bypasses
   `resist_sleep`, "Quietly Golem closes his eyes and settles into sleep…"); the brain picks ITEM whenever the Golem
   is awake and the pack holds `fairy_flute`, swings while it sleeps, and never spends a herb on it (heal spells

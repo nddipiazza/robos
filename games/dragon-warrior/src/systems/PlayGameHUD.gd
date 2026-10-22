@@ -182,7 +182,7 @@ func _refresh() -> void:
 		var ratio := float(hp) / float(maxi(1, hp_max))
 		_stat_lbls["hp"].add_theme_color_override("font_color", COL_HP_OK if ratio > 0.5 else (COL_HP_MID if ratio > 0.25 else COL_HP_LOW))
 		_stat_lbls["mp"].text = "MP %d/%d" % [int(hs.get("mp", 0)), int(hs.get("mp_max", 0))]
-		_stat_lbls["gold"].text = "G %d" % int(hs.get("gold", 0))
+		_stat_lbls["gold"].text = "G %d" % int(gs.gold)
 		_stat_lbls["exp"].text = "XP %d" % int(hs.get("exp", 0))
 		_stat_lbls["atk"].text = "ATK %d" % int(hs.get("atk", 0))
 		_stat_lbls["def"].text = "DEF %d" % int(hs.get("def", 0))

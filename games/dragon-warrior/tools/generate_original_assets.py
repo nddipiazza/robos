@@ -409,6 +409,35 @@ def generate_tiles_and_maps() -> dict[int, Image.Image]:
 # 2. OVERWORLD MAP GENERATION (124x124 tiles = 1984x1984 px)
 # ---------------------------------------------------------------------------
 
+# Cantlin is walled on the overworld: a ring of impassable wall tiles (terrain 9) with a
+# single grass "gate" tile on its north side where the Golem waits.
+CANTLIN_TOWN = (75, 104)
+CANTLIN_GATE = (75, 102)
+CANTLIN_WALL_TILES = frozenset(
+    (x, y)
+    for x in range(73, 78)
+    for y in range(102, 107)
+    if (x in (73, 77) or y in (102, 106)) and (x, y) != CANTLIN_GATE
+)
+
+
+def draw_wall_tile_16x16() -> Image.Image:
+    """Terracotta brick wall for Cantlin's barrier (terrain code 9)."""
+    img = Image.new("RGBA", (16, 16), (150, 94, 58, 255))
+    px = img.load()
+    mortar = (92, 56, 34, 255)
+    light = (184, 124, 80, 255)
+    for y in range(16):
+        for x in range(16):
+            if y % 4 == 3:
+                px[x, y] = mortar
+            elif ((x + (4 if (y // 4) % 2 else 0)) % 8) == 7:
+                px[x, y] = mortar
+            elif y % 4 == 0:
+                px[x, y] = light
+    return img
+
+
 def generate_overworld_map() -> None:
     terrain_path = ASSETS_DIR / "maps" / "worldmap_terrain.json"
     tdata = json.loads(terrain_path.read_text(encoding="utf-8"))
@@ -416,7 +445,7 @@ def generate_overworld_map() -> None:
     terrain = tdata["terrain"]
 
     # Build 16x16 terrain tiles for each terrain code (0..8)
-    # 0=water, 1=forest, 2=forest, 3=grass, 4=plains, 5=desert, 6=mountain, 7=swamp, 8=hills
+    # 0=water, 1=forest, 2=forest, 3=grass, 4=plains, 5=desert, 6=mountain, 7=swamp, 8=hills, 9=wall
     t_sprites: dict[int, Image.Image] = {
         0: draw_tile_16x16(6, "water", [28, 82, 196], False),
         1: draw_tile_16x16(4, "forest", [34, 136, 36], True),
@@ -461,6 +490,9 @@ def generate_overworld_map() -> None:
                 if 0 <= x < 16 and 0 <= y < 16 and (x - cx) ** 2 + (y - cy) ** 2 <= 14 and y <= cy + 1:
                     hpx[x, y] = (146, 118, 68, 255) if y > cy - 2 else (182, 152, 92, 255)
     t_sprites[8] = hil
+
+    # Wall (9) — Cantlin's barrier
+    t_sprites[9] = draw_wall_tile_16x16()
 
     overworld = Image.new("RGBA", (n_tiles * 16, n_tiles * 16), (28, 82, 196, 255))
     for ry in range(min(n_tiles, len(terrain))):

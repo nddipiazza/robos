@@ -15,9 +15,18 @@ img     = Image.open(SRC_PNG).convert("RGB")
 TILE_PX = 16
 TILES   = 124  # 1984 / 16
 
-# Terrain IDs  (must match WorldMap.gd WALKABLE_TERRAIN)
+# Terrain IDs  (must match WorldMap.gd BLOCKED_TERRAIN / RoutePlanner.BLOCKED_WORLD_TERRAIN)
 # 0=water  1=forest_dk  2=forest_md  3=grass  4=plains
-# 5=desert 6=mountain   7=swamp      8=hills
+# 5=desert 6=mountain   7=swamp      8=hills  9=wall (impassable)
+
+# Cantlin's wall ring: the only way in is the grass gate tile at (75,102), guarded by the Golem.
+CANTLIN_GATE = (75, 102)
+CANTLIN_WALL_TILES = {
+    (x, y)
+    for x in range(73, 78)
+    for y in range(102, 107)
+    if (x in (73, 77) or y in (102, 106)) and (x, y) != CANTLIN_GATE
+}
 def classify(r, g, b) -> int:
     if b > 150 and b > g * 1.3 and b > r * 5:      return 0  # water
     if r < 10  and g < 50  and b < 20:              return 1  # forest dark
@@ -40,6 +49,7 @@ TERRAIN_COLORS = {
     6: (125, 127, 131, 255),
     7: (80,  140, 130, 255),
     8: (197, 227, 71,  255),
+    9: (150, 94,  58,  255),
 }
 
 out  = Image.new("RGBA", (TILES, TILES))
@@ -49,7 +59,7 @@ for ty in range(TILES):
     for tx in range(TILES):
         cx = tx * TILE_PX + TILE_PX // 2
         cy = ty * TILE_PX + TILE_PX // 2
-        t  = classify(*img.getpixel((cx, cy)))
+        t  = 9 if (tx, ty) in CANTLIN_WALL_TILES else classify(*img.getpixel((cx, cy)))
         row.append(t)
         out.putpixel((tx, ty), TERRAIN_COLORS[t])
     grid.append(row)

@@ -992,7 +992,7 @@ func _update_status_bar() -> void:
 		_ailment_lbl.text = _hero_ailment
 	var gs: Node = get_node_or_null("/root/GameState")
 	if gs:
-		_gold_lbl.text = "G %d" % int(gs.hero_stats.get("gold", 0))
+		_gold_lbl.text = "G %d" % int(gs.gold)
 		_exp_lbl.text  = "E %d" % int(gs.hero_stats.get("exp", 0))
 	# HP color: green when healthy, yellow at half, red at low
 	var ratio : float = float(_hero_hp) / float(max(1, _hero_hp_max()))
