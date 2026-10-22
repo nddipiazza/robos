@@ -70,6 +70,8 @@ var _battle_heals: int = 0
 var _battle_sleeps: int = 0
 var _battle_stopspells: int = 0
 var _deaths_seen: int = 0
+var _grind_tier_penalty: int = 0   # zones stepped down after deaths; eased by level-ups
+var _penalty_level: int = 0
 var _heal_fail_ticks: int = 0
 var _last_heal_kind: String = ""
 var _battle_no_herb: bool = false
@@ -104,6 +106,8 @@ func start(args: Dictionary) -> Dictionary:
 	_ticks = 0
 	_battles = 0
 	_deaths = 0
+	_grind_tier_penalty = 0
+	_penalty_level = 0
 	_deaths_seen = int(_gs().get("deaths")) if _gs() and _gs().get("deaths") != null else 0
 	_last_gold = -1
 	_started_msec = Time.get_ticks_msec()
@@ -243,7 +247,11 @@ func _is_milestone_done(m: Dictionary) -> bool:
 				return false
 			var info: Dictionary = gs.equipment_info(eq)
 			var stat: int = int(info.get("attack", 0)) if slot == "weapon" else int(info.get("defense", 0))
-			return stat >= int(dw.get("value", 0))
+			var want_id := str(dw.get("item_id", ""))
+			if want_id != "" and eq == want_id:
+				return true
+			# Equal stats are not equal gear (Full Plate vs Magic Armor): a tie needs the item itself.
+			return stat > int(dw.get("value", 0)) or (want_id == "" and stat >= int(dw.get("value", 0)))
 		"has_item":
 			return _has_item_id(str(dw.get("item_id", "")))
 		"level":
@@ -285,10 +293,18 @@ func _buy_is_pointless(m: Dictionary) -> bool:
 	var eq := str(gs.get_equipped(slot))
 	if eq == "":
 		return false
+	var want_id := str(m.get("item_id", ""))
+	if eq == want_id:
+		return true
 	var cur: Dictionary = gs.equipment_info(eq)
-	var want: Dictionary = gs.equipment_info(str(m.get("item_id", "")))
+	var want: Dictionary = gs.equipment_info(want_id)
 	var key := "attack" if slot == "weapon" else "defense"
-	return int(cur.get(key, 0)) >= int(want.get(key, 0))
+	var cur_v := int(cur.get(key, 0))
+	var want_v := int(want.get(key, 0))
+	if cur_v != want_v:
+		return cur_v > want_v
+	# A stat tie is still an upgrade when the target piece has a special the current one lacks (Magic Armor regen).
+	return str(want.get("special", "")) == "" or str(cur.get("special", "")) != ""
 
 
 ## Returns the inventory item id of a weapon/armor/shield that beats what is equipped, or "".
@@ -646,7 +662,18 @@ func _has_spell_mp(known: Array, spell_id: String, mp: int) -> bool:
 ## True while walking the Dragonlord's castle towards the boss (not on an inn trip):
 ## every MP spent on the way is one less HEALMORE in the final fight.
 func _conserving_mp(state: Dictionary) -> bool:
-	return _cur_map(state).begins_with("charlock") and not _heading_to_inn
+	if _heading_to_inn:
+		return false
+	if _cur_map(state).begins_with("charlock"):
+		return true
+	# Also on the road to Charlock: every HURTMORE spent on a wyvern is a HEALMORE missing against the Dragonlord.
+	var m: Dictionary = _milestones[_index] if _index < _milestones.size() else {}
+	return str(m.get("map", "")).begins_with("charlock")
+
+
+## MP the Dragonlord fight realistically needs: ~11 hits with HEALMORE (10 MP) every other turn.
+func _boss_mp_bar() -> int:
+	return mini(_mp_max(), 100) if _mp_max() >= 100 else int(float(_mp_max()) * 0.9)
 
 
 func _monster_spell_hit(mon: String) -> int:
@@ -674,7 +701,9 @@ func _track_deaths(_state: Dictionary) -> void:
 		_plan_goal = ""
 		_grind_target = {}
 		_last_gold = _gold()
-		_log_event("death", "hero fell; back at Tantegel with %d gold" % _gold())
+		_grind_tier_penalty = mini(_grind_tier_penalty + 1, 3)
+		_penalty_level = _level()
+		_log_event("death", "hero fell; back at Tantegel with %d gold (grind tier -%d)" % [_gold(), _grind_tier_penalty])
 
 func _track_gold(state: Dictionary) -> void:
 	var g := _gold()
@@ -882,9 +911,15 @@ func _objective_for_current(state: Dictionary) -> Dictionary:
 				# Same rule as the NES game: eight tool slots, no dropping. Leave it.
 				_skip_current("pack full; cannot carry %s" % str(contents.get("item", "?")))
 				return _objective_for_current(state)
+	# Never set off for the Dragonlord's castle worn down: a player rests up before the final dungeon.
+	var target_map := str(m.get("map", ""))
+	if target_map.begins_with("charlock") and not _cur_map(state).begins_with("charlock") and not _heading_to_inn \
+			and _mp_max() > 0 and (_mp() < _boss_mp_bar() or _hp() < int(float(_hp_max()) * 0.8)):
+		_heading_to_inn = true
+		_log_event("expedition", "resting before Charlock for %s (hp %d/%d mp %d/%d)" % [mid, _hp(), _hp_max(), _mp(), _mp_max()])
 	if mtype == "boss" and not _heading_to_inn and _cur_map(state) == str(m.get("map", "")):
 		# Commit once we arrive with enough MP for the fight; door heals may then dip below the bar.
-		if not _boss_committed and _mp_max() > 0 and _mp() < mini(int(float(_mp_max()) * 0.5), 60):
+		if not _boss_committed and _mp_max() > 0 and _mp() < _boss_mp_bar() - 20:
 			_heading_to_inn = true
 			_log_event("boss", "not ready for %s (hp %d/%d mp %d/%d); resting first" % [mid, _hp(), _hp_max(), _mp(), _mp_max()])
 		else:
@@ -933,12 +968,23 @@ func _affordable_skipped_buy() -> Dictionary:
 		var label := str(m.get("name", mid)) + " (revisit)"
 		if _buy_is_pointless(m) or _gold() < int(m.get("price", 0)) or int(_goal_failures.get(label, 0)) >= MAX_GOAL_FAILURES:
 			continue
+		if _upgrade_pending_for_slot(str(m.get("slot", "")), i):
+			continue   # a later, better piece for this slot is still ahead: save the gold for it
+
 		return {
 			"kind": "milestone", "id": mid, "label": label,
 			"map": str(m.get("map", "")), "tile": _m_tile(m), "face": str(m.get("face", "")), "action": "buy",
 			"item_id": str(m.get("item_id", "")), "shop_id": str(m.get("shop_id", "")),
 		}
 	return {}
+
+
+## True when the milestone we are currently grinding for is a better piece for the same slot.
+func _upgrade_pending_for_slot(slot: String, _before: int) -> bool:
+	if slot == "" or _index >= _milestones.size():
+		return false
+	var cur: Dictionary = _milestones[_index]
+	return str(cur.get("type", "")) == "buy" and str(cur.get("slot", "")) == slot and not _buy_is_pointless(cur)
 
 
 ## Pick a world tile in an encounter zone suited to our level and wander there.
@@ -989,7 +1035,10 @@ func _zone_tier_for_level(lvl: int) -> Array:
 
 
 func _pick_grind_cell(state: Dictionary) -> Vector2i:
-	var zones: Array = _zone_tier_for_level(_level())
+	if _grind_tier_penalty > 0 and _level() > _penalty_level:
+		_grind_tier_penalty -= 1
+		_penalty_level = _level()
+	var zones: Array = _zone_tier_for_level(maxi(1, _level() - 2 * _grind_tier_penalty))
 	var grid: Array = _zone_grid()
 	if grid.is_empty():
 		return Vector2i(2, 2)

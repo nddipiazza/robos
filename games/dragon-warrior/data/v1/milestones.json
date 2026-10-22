@@ -232,7 +232,8 @@
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "weapon",
-        "value": 2
+        "value": 2,
+        "item_id": "bamboo_pole"
       },
       "face": "up",
       "item_id": "bamboo_pole",
@@ -256,7 +257,8 @@
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "weapon",
-        "value": 4
+        "value": 4,
+        "item_id": "club"
       },
       "face": "up",
       "item_id": "club",
@@ -280,7 +282,8 @@
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "armor",
-        "value": 2
+        "value": 2,
+        "item_id": "clothes"
       },
       "face": "up",
       "item_id": "clothes",
@@ -346,7 +349,8 @@
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "armor",
-        "value": 4
+        "value": 4,
+        "item_id": "leather_armor"
       },
       "face": "up",
       "item_id": "leather_armor",
@@ -370,7 +374,8 @@
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "shield",
-        "value": 4
+        "value": 4,
+        "item_id": "small_shield"
       },
       "face": "up",
       "item_id": "small_shield",
@@ -394,7 +399,8 @@
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "weapon",
-        "value": 10
+        "value": 10,
+        "item_id": "copper_sword"
       },
       "face": "up",
       "item_id": "copper_sword",
@@ -506,7 +512,8 @@
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "armor",
-        "value": 10
+        "value": 10,
+        "item_id": "chain_mail"
       },
       "face": "down",
       "item_id": "chain_mail",
@@ -549,7 +556,8 @@
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "weapon",
-        "value": 15
+        "value": 15,
+        "item_id": "hand_axe"
       },
       "face": "down",
       "item_id": "hand_axe",
@@ -683,7 +691,8 @@
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "shield",
-        "value": 10
+        "value": 10,
+        "item_id": "large_shield"
       },
       "face": "down",
       "item_id": "large_shield",
@@ -707,7 +716,8 @@
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "armor",
-        "value": 16
+        "value": 16,
+        "item_id": "half_plate"
       },
       "face": "down",
       "item_id": "half_plate",
@@ -816,7 +826,8 @@
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "armor",
-        "value": 24
+        "value": 24,
+        "item_id": "full_plate"
       },
       "face": "right",
       "item_id": "full_plate",
@@ -1010,7 +1021,8 @@
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "weapon",
-        "value": 20
+        "value": 20,
+        "item_id": "broad_sword"
       },
       "face": "up",
       "item_id": "broad_sword",
@@ -1034,7 +1046,8 @@
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "armor",
-        "value": 24
+        "value": 24,
+        "item_id": "magic_armor"
       },
       "face": "up",
       "item_id": "magic_armor",
@@ -1203,7 +1216,8 @@
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "shield",
-        "value": 20
+        "value": 20,
+        "item_id": "silver_shield"
       },
       "face": "left",
       "item_id": "silver_shield",
@@ -1227,7 +1241,8 @@
       "done_when": {
         "kind": "equipped_at_least",
         "slot": "weapon",
-        "value": 28
+        "value": 28,
+        "item_id": "flame_sword"
       },
       "face": "left",
       "item_id": "flame_sword",
@@ -1501,7 +1516,7 @@
         "row": 24
       },
       "optional": false,
-      "min_level": 18,
+      "min_level": 20,
       "done_when": {
         "kind": "flag",
         "flag": "dragonlord_defeated"

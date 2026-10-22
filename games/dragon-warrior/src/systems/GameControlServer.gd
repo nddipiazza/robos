@@ -237,7 +237,12 @@ func _handle_post_command(client: StreamPeerTCP, body: Dictionary) -> void:
 			var monster = args.get("monster", "slime")
 			var scene = get_tree().current_scene
 			if scene and scene.has_method("_start_battle"):
-				scene._start_battle(monster, {"name": monster.capitalize(), "hp": 5, "str": 4, "ag": 3})
+				var mon_data: Dictionary = {}
+				if DataManager and DataManager.has_method("get_monster"):
+					mon_data = DataManager.get_monster(monster)
+				if mon_data.is_empty():
+					mon_data = {"name": monster.capitalize(), "hp_min": 5, "hp_max": 5, "strength": 4, "agility": 3}
+				scene._start_battle(monster, mon_data)
 				await get_tree().create_timer(0.5).timeout
 				_send_http_response(client, 200, {"success": true, "message": "Encounter triggered against %s" % monster})
 			elif CombatEngine:
@@ -412,6 +417,10 @@ func _handle_post_command(client: StreamPeerTCP, body: Dictionary) -> void:
 						gs.hero_stats["mp"] = int(args[k])
 					elif k_str in ["hero_mp_max", "heroMpMax"]:
 						gs.hero_stats["mp_max"] = int(args[k])
+					elif k_str == "hero_stats" and args[k] is Dictionary and gs.hero_stats is Dictionary:
+						# Partial update: {"hero_stats": {"mp": 70}} must not wipe the other stats.
+						for sk in args[k]:
+							gs.hero_stats[sk] = args[k][sk]
 					else:
 						gs.set(k, args[k])
 				if gs.has_method("recompute_derived_stats"):

@@ -391,7 +391,8 @@ func unequip_slot(slot: String) -> void:
 
 ## Erdrick's Armor restores 1 HP per step taken on any map (NES behaviour).
 func apply_step_regen() -> void:
-	if armor != "erdricks_armor":
+	# NES rule: Magic Armor and Erdrick's Armor both restore 1 HP per step.
+	if armor != "erdricks_armor" and armor != "magic_armor":
 		return
 	var hp := int(hero_stats.get("hp", 0))
 	var hp_max := int(hero_stats.get("hp_max", 0))

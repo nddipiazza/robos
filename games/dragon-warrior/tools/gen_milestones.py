@@ -140,7 +140,7 @@ def buy_milestone(shop_id, item_id, phase, min_level=1, optional=False):
     else:
         slot, value, nm = None, None, items[item_id]["name"]
     done = (
-        {"kind": "equipped_at_least", "slot": slot, "value": value}
+        {"kind": "equipped_at_least", "slot": slot, "value": value, "item_id": item_id}
         if slot else {"kind": "has_item", "item_id": item_id}
     )
     add(
@@ -256,7 +256,7 @@ chest_milestone("charlock-castle-b2", "cb2c1", P, min_level=18)
 for cid in ("cb7c1", "cb7c2", "cb7c3", "cb7c4", "cb7c5", "cb7c6"):
     chest_milestone("charlock-castle-b7", cid, P, min_level=18)
 add("defeat-dragonlord", "Defeat the Dragonlord", P, "boss", "charlock-castle-b7", (15, 24),
-    {"kind": "flag", "flag": "dragonlord_defeated"}, face="right", min_level=18)
+    {"kind": "flag", "flag": "dragonlord_defeated"}, face="right", min_level=20)
 add("ending", "Report victory to King Lorik", "ending", "talk", "tantegel-castle-2f", (4, 5),
     {"kind": "flag", "flag": "game_completed"}, face="up", min_level=18)
 
