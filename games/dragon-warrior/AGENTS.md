@@ -95,8 +95,11 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
 - IPC commands: `start_play_game {time_scale, start_index}`, `stop_play_game`, `get_milestones` (report with
   `status`, `index`, `done`, `skipped`, `battles`, `deaths` and the brain's event log).
 - Survival rules live in `PlayGameBrain._decide_survival` / `_decide_battle` (kill-before-die battle policy,
-  zone-aware heal thresholds, MP conservation inside Charlock, HEALMORE-only boss healing, NES pack rules:
-  8 tool slots, no dropping). Bugs the brain exposes are almost always *game* bugs — fix the game, not the brain.
+  zone-aware heal thresholds, tiered healing (HEAL/herb/HEALMORE by incoming damage), MP conservation inside
+  Charlock, HEALMORE-only boss healing, a Charlock MP commit bar with wings home to rest when short, herb restock
+  from every item shop listed in `milestones.json` `item_shops`, and NES pack rules: 8 tool slots, six per
+  consumable stack, no dropping). Each death outside grinding raises the current milestone's required level by one.
+  Bugs the brain exposes are almost always *game* bugs — fix the game, not the brain.
 
 ---
 

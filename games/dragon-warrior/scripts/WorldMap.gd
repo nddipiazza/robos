@@ -419,6 +419,9 @@ func _check_encounter() -> void:
 	var gs = get_node_or_null("/root/GameState")
 	if gs and gs.encounters_disabled:
 		return
+	# NES: once the Dragonlord falls the monsters vanish from Alefgard.
+	if gs and "dragonlord_defeated" in gs and gs.dragonlord_defeated:
+		return
 	if _terrain.is_empty() or _zone_data.is_empty():
 		return
 	var tid := int(_terrain[_hero_tile.y][_hero_tile.x])
@@ -1075,6 +1078,20 @@ func _use_item(idx: int) -> void:
 				_item_panel.visible = false
 				_item_open = false
 				_show_dialog("", ["Thou hast eaten the\nMedical Herb.\nHP restored by %d." % mini(amt, hp_max - hp)])
+		"Wings":
+			# NES: same as RETURN — fly back to the Tantegel gate; the wings are used up.
+			_inventory.remove_at(idx)
+			var gs_w := get_node_or_null("/root/GameState")
+			if gs_w:
+				gs_w.inventory = _inventory.duplicate(true)
+			_item_panel.visible = false
+			_item_open = false
+			_hero_tile = TANTEGEL_TILE + Vector2i(0, 1)
+			_cam_world = _tile_center(_hero_tile)
+			_cam_from = _cam_world
+			_cam_to = _cam_world
+			_draw_frame()
+			_show_dialog("", ["Thou hast spread the\nWings and soared back\nto Tantegel Castle!"])
 		_:
 			_show_dialog("", [str(item.get("desc", "Thou usest the item."))])
 

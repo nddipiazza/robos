@@ -70,7 +70,9 @@ IPC web service (`GameControlServer.gd`, `/api/v1/state`) to read what is on scr
 
 Every bug the brain hit while learning to finish the game was a game bug: Charlock 1F's exit gate unwalkable, boss
 fights not syncing the pack, chest duplicates, missing level-up curves, incorrect enemy flee factors and spell
-resistances. The game data is now faithful enough that the AI beats the Dragonlord at level 24 with zero deaths.
+resistances, a Cantlin item shop with no stock, Wings doing nothing on the overworld, consumables refusing to
+stack. The game data is now faithful enough that the AI clears all 70 milestones and beats the Dragonlord at
+level 21–22 in one or two Charlock expeditions with at most a single death on the way.
 
 ## Global Map Completeness & Pathfinding Architecture
 

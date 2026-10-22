@@ -482,10 +482,21 @@
     "location_id": "cantlin",
     "location_name": "Cantlin",
     "type": "item_shop",
-    "npc_type": "",
+    "npc_type": "merchant",
     "npc_facing": "",
     "inventory": [
-
+      {
+        "item_id": "herb",
+        "price": 24
+      },
+      {
+        "item_id": "torch",
+        "price": 8
+      },
+      {
+        "item_id": "fairy_water",
+        "price": 38
+      }
     ],
     "map_key": "cantlin-1f",
     "npc_tile": [
