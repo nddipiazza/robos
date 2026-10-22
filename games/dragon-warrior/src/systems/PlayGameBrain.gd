@@ -82,6 +82,12 @@ var _battle_sleeps: int = 0
 var _battle_stopspells: int = 0
 var _deaths_seen: int = 0
 var _grind_tier_penalty: int = 0   # zones stepped down after deaths; eased by level-ups
+var _grind_tier_boost: int = 0     # zones stepped up when grind battles barely scratch us
+var _recent_dmg: Array = []        # HP lost per recent grind battle (sliding window)
+var _battle_open: bool = false
+var _battle_hp_start: int = 0
+const GRIND_DMG_WINDOW := 6
+const GRIND_BOOST_MAX := 4
 var _death_level_bump: Dictionary = {}   # milestone id -> level to reach before trying it again
 var _penalty_level: int = 0
 var _heal_fail_ticks: int = 0
@@ -120,6 +126,9 @@ func start(args: Dictionary) -> Dictionary:
 	_battles = 0
 	_deaths = 0
 	_grind_tier_penalty = 0
+	_grind_tier_boost = 0
+	_recent_dmg.clear()
+	_battle_open = false
 	_death_level_bump = {}
 	_stall_counts = {}
 	_wd_sig = []
@@ -537,8 +546,13 @@ func _decide_battle(state: Dictionary, battle: Dictionary) -> Dictionary:
 			_battle_sleeps = 0
 			_battle_stopspells = 0
 			_battle_no_herb = false
+			_battle_open = true
+			_battle_hp_start = int(battle.get("battle_scene_info", {}).get("hero_hp", _hp()))
 		if phase != "INTRO":
 			_in_battle_counted = false
+		if phase in ["VICTORY", "FLED", "DEFEAT"] and _battle_open:
+			_battle_open = false
+			_record_grind_damage(int(battle.get("battle_scene_info", {}).get("hero_hp", _hp())), phase)
 		return _tap("ui_accept")
 
 	if str(battle.get("msg_text", "")).begins_with("Nothing to use"):
@@ -1145,7 +1159,7 @@ func _pick_grind_cell(state: Dictionary) -> Vector2i:
 	if _grind_tier_penalty > 0 and _level() > _penalty_level:
 		_grind_tier_penalty -= 1
 		_penalty_level = _level()
-	var zones: Array = _zone_tier_for_level(maxi(1, _level() - 2 * _grind_tier_penalty))
+	var zones: Array = _zone_tier_for_level(_grind_level())
 	var grid: Array = _zone_grid()
 	if grid.is_empty():
 		return Vector2i(2, 2)
@@ -1176,6 +1190,64 @@ func _pick_grind_cell(state: Dictionary) -> Vector2i:
 	_grind_cell = best
 	_log_event("grind", "grinding in zone cell %s (zone %d)" % [str(best), int(grid[best.y][best.x])])
 	return best
+
+
+## Level the zone table is read at: deaths pull it down, easy grinding pushes it up.
+func _grind_level() -> int:
+	return maxi(1, _level() - 2 * _grind_tier_penalty + 2 * _grind_tier_boost)
+
+
+## Called when a battle ends. While grinding, keep a sliding window of HP lost
+## per fight and move the grind up a tier when the local monsters barely
+## scratch us (and the next tier is survivable), or back down when they hurt.
+func _record_grind_damage(hp_end: int, phase: String) -> void:
+	if str(_objective.get("kind", "")) != "grind" or phase == "DEFEAT":
+		if phase == "DEFEAT":
+			_grind_tier_boost = 0
+			_recent_dmg.clear()
+		return
+	# Heals cast mid-fight hide damage: count each as a meaningful chunk.
+	var dmg: int = maxi(0, _battle_hp_start - hp_end) + _battle_heals * maxi(15, _hp_max() / 4)
+	_recent_dmg.append(dmg)
+	while _recent_dmg.size() > GRIND_DMG_WINDOW:
+		_recent_dmg.pop_front()
+	if _recent_dmg.size() < GRIND_DMG_WINDOW:
+		return
+	var total := 0
+	for d in _recent_dmg:
+		total += int(d)
+	var avg := float(total) / float(_recent_dmg.size())
+	var hp_max := _hp_max()
+	if avg <= float(hp_max) * 0.08 and _grind_tier_boost < GRIND_BOOST_MAX:
+		var next_zones: Array = _zone_tier_for_level(_grind_level() + 2)
+		if next_zones == _zone_tier_for_level(_grind_level()):
+			return
+		var worst := _worst_hit_for_zones(next_zones)
+		if worst * 3 <= hp_max:
+			_grind_tier_boost += 1
+			_recent_dmg.clear()
+			_grind_cell = Vector2i(-1, -1)
+			_grind_target = {}
+			_log_event("grind", "barely scratched (avg %.0f dmg/battle of %d hp): moving up to zones %s (worst hit %d)" % [avg, hp_max, str(next_zones), worst])
+	elif avg >= float(hp_max) * 0.35 and _grind_tier_boost > 0:
+		_grind_tier_boost -= 1
+		_recent_dmg.clear()
+		_grind_cell = Vector2i(-1, -1)
+		_grind_target = {}
+		_log_event("grind", "taking %.0f dmg/battle of %d hp: dropping back to zones %s" % [avg, hp_max, str(_zone_tier_for_level(_grind_level()))])
+
+
+func _worst_hit_for_zones(zones: Array) -> int:
+	if _zone_data_cache.is_empty():
+		var f := FileAccess.open("res://data/v1/worldmap_zones.json", FileAccess.READ)
+		if f:
+			var parsed: Variant = JSON.parse_string(f.get_as_text())
+			if parsed is Dictionary:
+				_zone_data_cache = parsed
+	var keys: Array = []
+	for z in zones:
+		keys.append_array(_zone_data_cache.get("monster_sets", {}).get(str(int(z)), []))
+	return _worst_hit_for_monsters(keys)
 
 
 func _inn_distance(pos: Vector2i) -> int:
@@ -1232,6 +1304,10 @@ func _zone_worst_hit(state: Dictionary) -> int:
 		var sc: Node = _scene()
 		if sc and sc.has_method("_get_encounter_pool"):
 			keys = sc.call("_get_encounter_pool")
+	return _worst_hit_for_monsters(keys)
+
+
+func _worst_hit_for_monsters(keys: Array) -> int:
 	if keys.is_empty():
 		return 0
 	var my_def := int(_gs().hero_stats.get("def", 2))
