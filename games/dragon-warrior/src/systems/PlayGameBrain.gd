@@ -985,6 +985,11 @@ func _objective_for_current(state: Dictionary) -> Dictionary:
 	var lvl := _level()
 	var min_level := maxi(int(m.get("min_level", 1)), int(_death_level_bump.get(mid, 0)))
 
+	# Optional gear we cannot afford is skipped right away (never grind levels first for it);
+	# later grinds revisit it through _affordable_skipped_buy once the gold is there.
+	if mtype == "buy" and bool(m.get("optional", false)) and _gold() < int(m.get("price", 0)):
+		_skip_current("cannot afford optional %s (%dG)" % [str(m.get("item_id", "")), int(m.get("price", 0))])
+		return _objective_for_current(state)
 	if mtype == "level" or lvl < min_level:
 		# While grinding, go back for any optional gear we skipped as unaffordable.
 		var revisit := _affordable_skipped_buy()
@@ -997,9 +1002,6 @@ func _objective_for_current(state: Dictionary) -> Dictionary:
 	if mtype == "buy":
 		var price := int(m.get("price", 0))
 		if _gold() < price:
-			if bool(m.get("optional", false)):
-				_skip_current("cannot afford optional %s (%dG)" % [str(m.get("item_id", "")), price])
-				return _objective_for_current(state)
 			return _grind_objective(state, "%d gold for %s" % [price, str(m.get("item_id", ""))])
 	if mtype == "chest" and _count_pack_tools() >= MAX_PACK_TOOLS:
 		var contents := _chest_contents(state, m)
