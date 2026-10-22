@@ -108,116 +108,6 @@
     },
     {
       "seq": 6,
-      "id": "chest-tantegel-castle-1f-tanc1",
-      "name": "Open chest tanc1 (Gold) in tantegel-castle-1f",
-      "phase": "tantegel",
-      "type": "chest",
-      "map": "tantegel-castle-1f",
-      "tile": {
-        "col": 2,
-        "row": 14
-      },
-      "optional": false,
-      "min_level": 1,
-      "done_when": {
-        "kind": "chest",
-        "map": "tantegel-castle-1f",
-        "col": 2,
-        "row": 14
-      },
-      "item_id": null,
-      "requires": null
-    },
-    {
-      "seq": 7,
-      "id": "chest-tantegel-castle-1f-tanc2",
-      "name": "Open chest tanc2 (Gold) in tantegel-castle-1f",
-      "phase": "tantegel",
-      "type": "chest",
-      "map": "tantegel-castle-1f",
-      "tile": {
-        "col": 3,
-        "row": 15
-      },
-      "optional": false,
-      "min_level": 1,
-      "done_when": {
-        "kind": "chest",
-        "map": "tantegel-castle-1f",
-        "col": 3,
-        "row": 15
-      },
-      "item_id": null,
-      "requires": null
-    },
-    {
-      "seq": 8,
-      "id": "chest-tantegel-castle-1f-tanc3",
-      "name": "Open chest tanc3 (Gold) in tantegel-castle-1f",
-      "phase": "tantegel",
-      "type": "chest",
-      "map": "tantegel-castle-1f",
-      "tile": {
-        "col": 2,
-        "row": 16
-      },
-      "optional": false,
-      "min_level": 1,
-      "done_when": {
-        "kind": "chest",
-        "map": "tantegel-castle-1f",
-        "col": 2,
-        "row": 16
-      },
-      "item_id": null,
-      "requires": null
-    },
-    {
-      "seq": 9,
-      "id": "chest-tantegel-castle-1f-tanc4",
-      "name": "Open chest tanc4 (Gold) in tantegel-castle-1f",
-      "phase": "tantegel",
-      "type": "chest",
-      "map": "tantegel-castle-1f",
-      "tile": {
-        "col": 4,
-        "row": 16
-      },
-      "optional": false,
-      "min_level": 1,
-      "done_when": {
-        "kind": "chest",
-        "map": "tantegel-castle-1f",
-        "col": 4,
-        "row": 16
-      },
-      "item_id": null,
-      "requires": null
-    },
-    {
-      "seq": 10,
-      "id": "chest-tantegel-castle-b1-tbac1",
-      "name": "Open chest tbac1 (Stones of Sunlight) in tantegel-castle-b1",
-      "phase": "tantegel",
-      "type": "chest",
-      "map": "tantegel-castle-b1",
-      "tile": {
-        "col": 5,
-        "row": 6
-      },
-      "optional": false,
-      "min_level": 1,
-      "done_when": {
-        "kind": "chest",
-        "map": "tantegel-castle-b1",
-        "col": 5,
-        "row": 6
-      },
-      "item_id": "stones_of_sunlight",
-      "requires": null
-    },
-    {
-      "seq": 11,
       "id": "buy-bamboo_pole-bre001",
       "name": "Buy Bamboo Pole at Brecconary (10G)",
       "phase": "brecconary",
@@ -242,7 +132,7 @@
       "slot": "weapon"
     },
     {
-      "seq": 12,
+      "seq": 7,
       "id": "buy-club-bre001",
       "name": "Buy Club at Brecconary (60G)",
       "phase": "brecconary",
@@ -267,7 +157,7 @@
       "slot": "weapon"
     },
     {
-      "seq": 13,
+      "seq": 8,
       "id": "buy-clothes-bre001",
       "name": "Buy Clothes at Brecconary (20G)",
       "phase": "brecconary",
@@ -292,7 +182,7 @@
       "slot": "armor"
     },
     {
-      "seq": 14,
+      "seq": 9,
       "id": "buy-herb-bre002",
       "name": "Buy Herb at Brecconary (24G)",
       "phase": "brecconary",
@@ -315,7 +205,7 @@
       "slot": null
     },
     {
-      "seq": 15,
+      "seq": 10,
       "id": "level-3",
       "name": "Reach level 3 (HEAL)",
       "phase": "brecconary",
@@ -334,7 +224,7 @@
       "grind_anchor": "brecconary-1f"
     },
     {
-      "seq": 16,
+      "seq": 11,
       "id": "buy-leather_armor-bre001",
       "name": "Buy Leather Armor at Brecconary (70G)",
       "phase": "brecconary",
@@ -359,7 +249,7 @@
       "slot": "armor"
     },
     {
-      "seq": 17,
+      "seq": 12,
       "id": "buy-small_shield-bre001",
       "name": "Buy Small Shield at Brecconary (90G)",
       "phase": "brecconary",
@@ -384,7 +274,7 @@
       "slot": "shield"
     },
     {
-      "seq": 18,
+      "seq": 13,
       "id": "buy-copper_sword-bre001",
       "name": "Buy Copper Sword at Brecconary (180G)",
       "phase": "brecconary",
@@ -409,7 +299,7 @@
       "slot": "weapon"
     },
     {
-      "seq": 19,
+      "seq": 14,
       "id": "chest-erdricks-cave-b2-er2c1",
       "name": "Open chest er2c1 (treasure) in erdricks-cave-b2",
       "phase": "erdricks-cave",
@@ -431,7 +321,7 @@
       "requires": null
     },
     {
-      "seq": 20,
+      "seq": 15,
       "id": "chest-garinham-1f-garc1",
       "name": "Open chest garc1 (Gold) in garinham-1f",
       "phase": "garinham",
@@ -453,7 +343,7 @@
       "requires": null
     },
     {
-      "seq": 21,
+      "seq": 16,
       "id": "chest-garinham-1f-garc2",
       "name": "Open chest garc2 (Herb) in garinham-1f",
       "phase": "garinham",
@@ -475,7 +365,7 @@
       "requires": null
     },
     {
-      "seq": 22,
+      "seq": 17,
       "id": "chest-garinham-1f-garc3",
       "name": "Open chest garc3 (Torch) in garinham-1f",
       "phase": "garinham",
@@ -497,7 +387,7 @@
       "requires": null
     },
     {
-      "seq": 23,
+      "seq": 18,
       "id": "buy-chain_mail-gar002",
       "name": "Buy Chain Mail at Garinham (300G)",
       "phase": "garinham",
@@ -522,7 +412,7 @@
       "slot": "armor"
     },
     {
-      "seq": 24,
+      "seq": 19,
       "id": "level-7",
       "name": "Reach level 7 (SLEEP)",
       "phase": "garinham",
@@ -541,7 +431,7 @@
       "grind_anchor": "garinham-1f"
     },
     {
-      "seq": 25,
+      "seq": 20,
       "id": "buy-hand_axe-gar002",
       "name": "Buy Hand Axe at Garinham (560G)",
       "phase": "garinham",
@@ -566,7 +456,7 @@
       "slot": "weapon"
     },
     {
-      "seq": 26,
+      "seq": 21,
       "id": "chest-garinham-b1-gh1c1",
       "name": "Open chest gh1c1 (treasure) in garinham-b1",
       "phase": "garinham",
@@ -588,7 +478,7 @@
       "requires": null
     },
     {
-      "seq": 27,
+      "seq": 22,
       "id": "chest-garinham-b1-gh1c2",
       "name": "Open chest gh1c2 (treasure) in garinham-b1",
       "phase": "garinham",
@@ -610,7 +500,7 @@
       "requires": null
     },
     {
-      "seq": 28,
+      "seq": 23,
       "id": "chest-garinham-b1-gh1c3",
       "name": "Open chest gh1c3 (treasure) in garinham-b1",
       "phase": "garinham",
@@ -632,51 +522,7 @@
       "requires": null
     },
     {
-      "seq": 29,
-      "id": "chest-garinham-b3-gh3c1",
-      "name": "Open chest gh3c1 (treasure) in garinham-b3",
-      "phase": "garinham",
-      "type": "chest",
-      "map": "garinham-b3",
-      "tile": {
-        "col": 2,
-        "row": 2
-      },
-      "optional": false,
-      "min_level": 8,
-      "done_when": {
-        "kind": "chest",
-        "map": "garinham-b3",
-        "col": 2,
-        "row": 2
-      },
-      "item_id": null,
-      "requires": null
-    },
-    {
-      "seq": 30,
-      "id": "chest-garinham-b3-gh3c2",
-      "name": "Open chest gh3c2 (treasure) in garinham-b3",
-      "phase": "garinham",
-      "type": "chest",
-      "map": "garinham-b3",
-      "tile": {
-        "col": 14,
-        "row": 7
-      },
-      "optional": false,
-      "min_level": 8,
-      "done_when": {
-        "kind": "chest",
-        "map": "garinham-b3",
-        "col": 14,
-        "row": 7
-      },
-      "item_id": null,
-      "requires": null
-    },
-    {
-      "seq": 31,
+      "seq": 24,
       "id": "buy-large_shield-gar002",
       "name": "Buy Large Shield at Garinham (800G)",
       "phase": "garinham",
@@ -701,7 +547,7 @@
       "slot": "shield"
     },
     {
-      "seq": 32,
+      "seq": 25,
       "id": "buy-half_plate-gar002",
       "name": "Buy Half Plate at Garinham (1000G)",
       "phase": "garinham",
@@ -726,7 +572,7 @@
       "slot": "armor"
     },
     {
-      "seq": 33,
+      "seq": 26,
       "id": "chest-kol-1f-kolc1",
       "name": "Open chest kolc1 (Gold) in kol-1f",
       "phase": "kol",
@@ -748,7 +594,7 @@
       "requires": null
     },
     {
-      "seq": 34,
+      "seq": 27,
       "id": "chest-kol-1f-kolc2",
       "name": "Open chest kolc2 (Herb) in kol-1f",
       "phase": "kol",
@@ -770,7 +616,7 @@
       "requires": null
     },
     {
-      "seq": 35,
+      "seq": 28,
       "id": "chest-kol-1f-kolc3",
       "name": "Open chest kolc3 (Magic Key) in kol-1f",
       "phase": "kol",
@@ -792,7 +638,7 @@
       "requires": null
     },
     {
-      "seq": 36,
+      "seq": 29,
       "id": "search-fairy-flute",
       "name": "Find the Fairy Flute in Kol",
       "phase": "kol",
@@ -811,7 +657,7 @@
       "item_id": "fairy_flute"
     },
     {
-      "seq": 37,
+      "seq": 30,
       "id": "buy-full_plate-kol001",
       "name": "Buy Full Plate at Kol (3000G)",
       "phase": "kol",
@@ -836,7 +682,7 @@
       "slot": "armor"
     },
     {
-      "seq": 38,
+      "seq": 31,
       "id": "level-10",
       "name": "Reach level 10 (STOPSPELL)",
       "phase": "mountain-cave",
@@ -855,7 +701,7 @@
       "grind_anchor": "tantegel-castle-1f"
     },
     {
-      "seq": 39,
+      "seq": 32,
       "id": "chest-mountain-cave-b1-mt1c1",
       "name": "Open chest mt1c1 (treasure) in mountain-cave-b1",
       "phase": "mountain-cave",
@@ -877,7 +723,7 @@
       "requires": null
     },
     {
-      "seq": 40,
+      "seq": 33,
       "id": "chest-mountain-cave-b2-mt2c1",
       "name": "Open chest mt2c1 (treasure) in mountain-cave-b2",
       "phase": "mountain-cave",
@@ -899,7 +745,7 @@
       "requires": null
     },
     {
-      "seq": 41,
+      "seq": 34,
       "id": "chest-mountain-cave-b2-mt2c2",
       "name": "Open chest mt2c2 (treasure) in mountain-cave-b2",
       "phase": "mountain-cave",
@@ -921,7 +767,7 @@
       "requires": null
     },
     {
-      "seq": 42,
+      "seq": 35,
       "id": "chest-mountain-cave-b2-mt2c3",
       "name": "Open chest mt2c3 (treasure) in mountain-cave-b2",
       "phase": "mountain-cave",
@@ -943,7 +789,7 @@
       "requires": null
     },
     {
-      "seq": 43,
+      "seq": 36,
       "id": "chest-mountain-cave-b2-mt2c4",
       "name": "Open chest mt2c4 (treasure) in mountain-cave-b2",
       "phase": "mountain-cave",
@@ -965,26 +811,32 @@
       "requires": null
     },
     {
-      "seq": 44,
-      "id": "rescue-gwaelin",
-      "name": "Rescue Princess Gwaelin in the Swamp Cave",
+      "seq": 37,
+      "id": "buy-magic_key-rim002-x6",
+      "name": "Stock up on Magic Keys at Rimuldar (53G each, carry 6)",
       "phase": "gwaelin",
-      "type": "talk",
-      "map": "swamp-cave-b1",
+      "type": "buy",
+      "map": "rimuldar-1f",
       "tile": {
-        "col": 6,
-        "row": 20
+        "col": 5,
+        "row": 6
       },
       "optional": false,
       "min_level": 10,
       "done_when": {
-        "kind": "flag",
-        "flag": "gwaelin_rescued"
+        "kind": "has_count",
+        "item_id": "magic_key",
+        "value": 6
       },
-      "face": "up"
+      "face": "down",
+      "item_id": "magic_key",
+      "price": 53,
+      "shop_id": "rim002",
+      "slot": null,
+      "count": 6
     },
     {
-      "seq": 45,
+      "seq": 38,
       "id": "chest-rimuldar-1f-rimc1",
       "name": "Open chest rimc1 (Wings) in rimuldar-1f",
       "phase": "gwaelin",
@@ -1006,7 +858,7 @@
       "requires": null
     },
     {
-      "seq": 46,
+      "seq": 39,
       "id": "buy-broad_sword-rim001",
       "name": "Buy Broad Sword at Rimuldar (1500G)",
       "phase": "gwaelin",
@@ -1031,7 +883,7 @@
       "slot": "weapon"
     },
     {
-      "seq": 47,
+      "seq": 40,
       "id": "buy-magic_armor-rim001",
       "name": "Buy Magic Armor at Rimuldar (7700G)",
       "phase": "gwaelin",
@@ -1056,7 +908,26 @@
       "slot": "armor"
     },
     {
-      "seq": 48,
+      "seq": 41,
+      "id": "rescue-gwaelin",
+      "name": "Rescue Princess Gwaelin in the Swamp Cave",
+      "phase": "gwaelin",
+      "type": "talk",
+      "map": "swamp-cave-b1",
+      "tile": {
+        "col": 6,
+        "row": 20
+      },
+      "optional": false,
+      "min_level": 10,
+      "done_when": {
+        "kind": "flag",
+        "flag": "gwaelin_rescued"
+      },
+      "face": "up"
+    },
+    {
+      "seq": 42,
       "id": "return-gwaelin",
       "name": "Return Gwaelin to King Lorik",
       "phase": "gwaelin",
@@ -1075,7 +946,186 @@
       "face": "up"
     },
     {
+      "seq": 43,
+      "id": "chest-tantegel-castle-1f-tanc1",
+      "name": "Open chest tanc1 (Gold) in tantegel-castle-1f",
+      "phase": "gwaelin",
+      "type": "chest",
+      "map": "tantegel-castle-1f",
+      "tile": {
+        "col": 2,
+        "row": 14
+      },
+      "optional": false,
+      "min_level": 10,
+      "done_when": {
+        "kind": "chest",
+        "map": "tantegel-castle-1f",
+        "col": 2,
+        "row": 14
+      },
+      "item_id": null,
+      "requires": null
+    },
+    {
+      "seq": 44,
+      "id": "chest-tantegel-castle-1f-tanc2",
+      "name": "Open chest tanc2 (Gold) in tantegel-castle-1f",
+      "phase": "gwaelin",
+      "type": "chest",
+      "map": "tantegel-castle-1f",
+      "tile": {
+        "col": 3,
+        "row": 15
+      },
+      "optional": false,
+      "min_level": 10,
+      "done_when": {
+        "kind": "chest",
+        "map": "tantegel-castle-1f",
+        "col": 3,
+        "row": 15
+      },
+      "item_id": null,
+      "requires": null
+    },
+    {
+      "seq": 45,
+      "id": "chest-tantegel-castle-1f-tanc3",
+      "name": "Open chest tanc3 (Gold) in tantegel-castle-1f",
+      "phase": "gwaelin",
+      "type": "chest",
+      "map": "tantegel-castle-1f",
+      "tile": {
+        "col": 2,
+        "row": 16
+      },
+      "optional": false,
+      "min_level": 10,
+      "done_when": {
+        "kind": "chest",
+        "map": "tantegel-castle-1f",
+        "col": 2,
+        "row": 16
+      },
+      "item_id": null,
+      "requires": null
+    },
+    {
+      "seq": 46,
+      "id": "chest-tantegel-castle-1f-tanc4",
+      "name": "Open chest tanc4 (Gold) in tantegel-castle-1f",
+      "phase": "gwaelin",
+      "type": "chest",
+      "map": "tantegel-castle-1f",
+      "tile": {
+        "col": 4,
+        "row": 16
+      },
+      "optional": false,
+      "min_level": 10,
+      "done_when": {
+        "kind": "chest",
+        "map": "tantegel-castle-1f",
+        "col": 4,
+        "row": 16
+      },
+      "item_id": null,
+      "requires": null
+    },
+    {
+      "seq": 47,
+      "id": "chest-tantegel-castle-b1-tbac1",
+      "name": "Open chest tbac1 (Stones of Sunlight) in tantegel-castle-b1",
+      "phase": "gwaelin",
+      "type": "chest",
+      "map": "tantegel-castle-b1",
+      "tile": {
+        "col": 5,
+        "row": 6
+      },
+      "optional": false,
+      "min_level": 10,
+      "done_when": {
+        "kind": "chest",
+        "map": "tantegel-castle-b1",
+        "col": 5,
+        "row": 6
+      },
+      "item_id": "stones_of_sunlight",
+      "requires": null
+    },
+    {
+      "seq": 48,
+      "id": "buy-magic_key-tan001-x3",
+      "name": "Stock up on Magic Keys at Tantegel Castle (85G each, carry 3)",
+      "phase": "gwaelin",
+      "type": "buy",
+      "map": "tantegel-castle-1f",
+      "tile": {
+        "col": 25,
+        "row": 4
+      },
+      "optional": false,
+      "min_level": 10,
+      "done_when": {
+        "kind": "has_count",
+        "item_id": "magic_key",
+        "value": 3
+      },
+      "face": "up",
+      "item_id": "magic_key",
+      "price": 85,
+      "shop_id": "tan001",
+      "slot": null,
+      "count": 3
+    },
+    {
       "seq": 49,
+      "id": "chest-garinham-b3-gh3c1",
+      "name": "Open chest gh3c1 (treasure) in garinham-b3",
+      "phase": "gwaelin",
+      "type": "chest",
+      "map": "garinham-b3",
+      "tile": {
+        "col": 2,
+        "row": 2
+      },
+      "optional": false,
+      "min_level": 10,
+      "done_when": {
+        "kind": "chest",
+        "map": "garinham-b3",
+        "col": 2,
+        "row": 2
+      },
+      "item_id": null,
+      "requires": null
+    },
+    {
+      "seq": 50,
+      "id": "chest-garinham-b3-gh3c2",
+      "name": "Open chest gh3c2 (treasure) in garinham-b3",
+      "phase": "gwaelin",
+      "type": "chest",
+      "map": "garinham-b3",
+      "tile": {
+        "col": 14,
+        "row": 7
+      },
+      "optional": false,
+      "min_level": 10,
+      "done_when": {
+        "kind": "chest",
+        "map": "garinham-b3",
+        "col": 14,
+        "row": 7
+      },
+      "item_id": null,
+      "requires": null
+    },
+    {
+      "seq": 51,
       "id": "level-15",
       "name": "Reach level 15 (REPEL)",
       "phase": "relics",
@@ -1094,7 +1144,32 @@
       "grind_anchor": "rimuldar-1f"
     },
     {
-      "seq": 50,
+      "seq": 52,
+      "id": "buy-magic_key-rim002-x4",
+      "name": "Stock up on Magic Keys at Rimuldar (53G each, carry 4)",
+      "phase": "relics",
+      "type": "buy",
+      "map": "rimuldar-1f",
+      "tile": {
+        "col": 5,
+        "row": 6
+      },
+      "optional": false,
+      "min_level": 15,
+      "done_when": {
+        "kind": "has_count",
+        "item_id": "magic_key",
+        "value": 4
+      },
+      "face": "down",
+      "item_id": "magic_key",
+      "price": 53,
+      "shop_id": "rim002",
+      "slot": null,
+      "count": 4
+    },
+    {
+      "seq": 53,
       "id": "chest-northern-cave-b1-nc1c1",
       "name": "Open chest nc1c1 (Staff of Rain) in northern-cave-b1",
       "phase": "relics",
@@ -1116,7 +1191,7 @@
       "requires": "silver_harp"
     },
     {
-      "seq": 51,
+      "seq": 54,
       "id": "search-erdricks-token",
       "name": "Dig up Erdrick's Token",
       "phase": "relics",
@@ -1135,7 +1210,7 @@
       "item_id": "erdricks_token"
     },
     {
-      "seq": 52,
+      "seq": 55,
       "id": "defeat-golem",
       "name": "Destroy the Golem at Cantlin's gate",
       "phase": "relics",
@@ -1153,7 +1228,7 @@
       }
     },
     {
-      "seq": 53,
+      "seq": 56,
       "id": "chest-cantlin-1f-ctnc1",
       "name": "Open chest ctnc1 (Gold) in cantlin-1f",
       "phase": "relics",
@@ -1175,7 +1250,7 @@
       "requires": null
     },
     {
-      "seq": 54,
+      "seq": 57,
       "id": "chest-cantlin-1f-ctnc2",
       "name": "Open chest ctnc2 (Herb) in cantlin-1f",
       "phase": "relics",
@@ -1197,7 +1272,7 @@
       "requires": null
     },
     {
-      "seq": 55,
+      "seq": 58,
       "id": "chest-cantlin-1f-ctnc3",
       "name": "Open chest ctnc3 (Gold) in cantlin-1f",
       "phase": "relics",
@@ -1219,7 +1294,7 @@
       "requires": null
     },
     {
-      "seq": 56,
+      "seq": 59,
       "id": "buy-silver_shield-can002",
       "name": "Buy Silver Shield at Cantlin (14800G)",
       "phase": "relics",
@@ -1244,7 +1319,7 @@
       "slot": "shield"
     },
     {
-      "seq": 57,
+      "seq": 60,
       "id": "buy-flame_sword-can002",
       "name": "Buy Flame Sword at Cantlin (9800G)",
       "phase": "relics",
@@ -1269,7 +1344,7 @@
       "slot": "weapon"
     },
     {
-      "seq": 58,
+      "seq": 61,
       "id": "level-18",
       "name": "Reach level 18",
       "phase": "relics",
@@ -1288,7 +1363,7 @@
       "grind_anchor": "cantlin-1f"
     },
     {
-      "seq": 59,
+      "seq": 62,
       "id": "erdricks-armor",
       "name": "Claim Erdrick's Armor in Hauksness",
       "phase": "relics",
@@ -1308,7 +1383,7 @@
       "item_id": "erdricks_armor"
     },
     {
-      "seq": 60,
+      "seq": 63,
       "id": "chest-southern-cave-b1-sc1c1",
       "name": "Open chest sc1c1 (Rainbow Drop) in southern-cave-b1",
       "phase": "relics",
@@ -1330,7 +1405,7 @@
       "requires": "erdricks_token"
     },
     {
-      "seq": 61,
+      "seq": 64,
       "id": "rainbow-bridge",
       "name": "Span the sea with the Rainbow Drop",
       "phase": "relics",
@@ -1350,7 +1425,7 @@
       "item_id": "rainbow_drop"
     },
     {
-      "seq": 62,
+      "seq": 65,
       "id": "level-21",
       "name": "Reach level 21",
       "phase": "charlock",
@@ -1369,7 +1444,7 @@
       "grind_anchor": "tantegel-castle-1f"
     },
     {
-      "seq": 63,
+      "seq": 66,
       "id": "chest-charlock-castle-b2-cb2c1",
       "name": "Open chest cb2c1 (Erdrick's Sword) in charlock-castle-b2",
       "phase": "charlock",
@@ -1391,7 +1466,7 @@
       "requires": null
     },
     {
-      "seq": 64,
+      "seq": 67,
       "id": "chest-charlock-castle-b7-cb7c1",
       "name": "Open chest cb7c1 (treasure) in charlock-castle-b7",
       "phase": "charlock",
@@ -1413,7 +1488,7 @@
       "requires": null
     },
     {
-      "seq": 65,
+      "seq": 68,
       "id": "chest-charlock-castle-b7-cb7c2",
       "name": "Open chest cb7c2 (treasure) in charlock-castle-b7",
       "phase": "charlock",
@@ -1435,7 +1510,7 @@
       "requires": null
     },
     {
-      "seq": 66,
+      "seq": 69,
       "id": "chest-charlock-castle-b7-cb7c3",
       "name": "Open chest cb7c3 (treasure) in charlock-castle-b7",
       "phase": "charlock",
@@ -1457,7 +1532,7 @@
       "requires": null
     },
     {
-      "seq": 67,
+      "seq": 70,
       "id": "chest-charlock-castle-b7-cb7c4",
       "name": "Open chest cb7c4 (treasure) in charlock-castle-b7",
       "phase": "charlock",
@@ -1479,7 +1554,7 @@
       "requires": null
     },
     {
-      "seq": 68,
+      "seq": 71,
       "id": "chest-charlock-castle-b7-cb7c5",
       "name": "Open chest cb7c5 (treasure) in charlock-castle-b7",
       "phase": "charlock",
@@ -1501,7 +1576,7 @@
       "requires": null
     },
     {
-      "seq": 69,
+      "seq": 72,
       "id": "chest-charlock-castle-b7-cb7c6",
       "name": "Open chest cb7c6 (treasure) in charlock-castle-b7",
       "phase": "charlock",
@@ -1523,7 +1598,7 @@
       "requires": null
     },
     {
-      "seq": 70,
+      "seq": 73,
       "id": "defeat-dragonlord",
       "name": "Defeat the Dragonlord",
       "phase": "charlock",
@@ -1542,7 +1617,7 @@
       "face": "right"
     },
     {
-      "seq": 71,
+      "seq": 74,
       "id": "ending",
       "name": "Report victory to King Lorik",
       "phase": "ending",
@@ -1574,8 +1649,8 @@
     "garinham-1f": {
       "map": "garinham-1f",
       "tile": {
-        "col": 6,
-        "row": 4
+        "col": 4,
+        "row": 3
       },
       "face": "up",
       "cost": 6
@@ -1583,7 +1658,7 @@
     "kol-1f": {
       "map": "kol-1f",
       "tile": {
-        "col": 21,
+        "col": 22,
         "row": 7
       },
       "face": "up",
@@ -1602,7 +1677,7 @@
       "map": "cantlin-1f",
       "tile": {
         "col": 4,
-        "row": 26
+        "row": 27
       },
       "face": "up",
       "cost": 6

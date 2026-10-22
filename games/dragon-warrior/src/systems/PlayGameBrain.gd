@@ -56,6 +56,10 @@ var _pending_item_id: String = ""
 var _equip_fail_ticks: int = 0
 var _boss_committed: bool = false
 var _pending_shop_item: String = ""
+## Route-planning caches for Magic Key logic (keyed by map + unlocked doors).
+var _doors_cache: Dictionary = {}
+var _key_shop_cache: Dictionary = {}
+var _key_warned: Dictionary = {}
 var _pending_spell: String = ""
 var _choice_answer: String = "YES"
 
@@ -293,6 +297,8 @@ func _is_milestone_done(m: Dictionary) -> bool:
 			return stat > int(dw.get("value", 0)) or (want_id == "" and stat >= int(dw.get("value", 0)))
 		"has_item":
 			return _has_item_id(str(dw.get("item_id", "")))
+		"has_count":
+			return _count_item(str(dw.get("item_id", ""))) >= int(dw.get("value", 1))
 		"level":
 			return _level() >= int(dw.get("value", 1))
 	return false
@@ -996,7 +1002,8 @@ func _gold_needed_for_next_buy() -> int:
 	for i in range(_index, mini(_milestones.size(), _index + 8)):
 		var m: Dictionary = _milestones[i]
 		if str(m.get("type", "")) == "buy" and not bool(m.get("optional", false)) and str(m.get("item_id", "")) != "herb":
-			total += int(m.get("price", 0))
+			var copies := maxi(1, int(m.get("count", 1)) - _count_item(str(m.get("item_id", ""))))
+			total += int(m.get("price", 0)) * copies
 			n += 1
 			if n >= 3:
 				break
@@ -1053,6 +1060,10 @@ func _objective_for_current(state: Dictionary) -> Dictionary:
 		var price := int(m.get("price", 0))
 		if _gold() < price:
 			return _grind_objective(state, "%d gold for %s" % [price, str(m.get("item_id", ""))])
+	# Locked doors on the way: make sure we carry enough Magic Keys first.
+	var keys_obj := _keys_prerequisite(state, m)
+	if not keys_obj.is_empty():
+		return keys_obj
 	if mtype == "chest" and _count_pack_tools() >= MAX_PACK_TOOLS:
 		var contents := _chest_contents(state, m)
 		var is_gold: bool = contents.has("gp_min") or str(contents.get("item", "")) == "gold"
@@ -1096,6 +1107,93 @@ func _objective_for_current(state: Dictionary) -> Dictionary:
 		"map": str(m.get("map", "")), "tile": _m_tile(m), "face": face, "action": action,
 		"item_id": str(m.get("item_id", "")), "shop_id": str(m.get("shop_id", "")),
 	}
+
+
+# ── Magic Keys & locked doors ───────────────────────────────────────────────
+
+## Plan a route, preferring one that avoids locked doors; only when none exists
+## does the route go through doors (one Magic Key each, see leg["doors"]).
+func _plan_route(cur_map: String, hero: Vector2i, tgt_map: String, tgt: Vector2i) -> Array:
+	var gs: Node = _gs()
+	_planner.set("unlocked_doors", gs.unlocked_doors if gs else {})
+	_planner.set("allow_locked_doors", false)
+	var legs: Array = _planner.call("plan", cur_map, hero, tgt_map, tgt, _bridge_built())
+	if legs.is_empty():
+		_planner.set("allow_locked_doors", true)
+		legs = _planner.call("plan", cur_map, hero, tgt_map, tgt, _bridge_built())
+	_planner.set("allow_locked_doors", true)
+	return legs
+
+
+## Number of still-locked doors between the hero and `tgt` (0 when unreachable).
+func _locked_doors_to(state: Dictionary, tgt_map: String, tgt: Vector2i) -> int:
+	var cur_map := _cur_map(state)
+	var gs: Node = _gs()
+	var ck := "%s|%s:%d,%d|%d" % [cur_map, tgt_map, tgt.x, tgt.y, gs.unlocked_doors.size() if gs else 0]
+	if _doors_cache.has(ck):
+		return int(_doors_cache[ck])
+	var legs := _plan_route(cur_map, _hero_tile(state), tgt_map, tgt)
+	var n := int(_planner.call("count_locked_doors", legs))
+	_doors_cache[ck] = n
+	return n
+
+
+## Milestones behind locked doors need one Magic Key per door. Returns a
+## sub-objective (buy keys at a reachable key shop, or grind for the gold) or
+## {} when the hero already carries enough keys.
+func _keys_prerequisite(state: Dictionary, m: Dictionary) -> Dictionary:
+	var tgt_map := str(m.get("map", ""))
+	if tgt_map == "" or tgt_map == WORLD_KEY or str(m.get("type", "")) in ["level", "door"]:
+		return {}
+	var needed := _locked_doors_to(state, tgt_map, _m_tile(m))
+	var have := _count_item("magic_key")
+	if needed <= have:
+		return {}
+	var mid := str(m.get("id", ""))
+	var shop := _reachable_key_shop(state, have)
+	if shop.is_empty():
+		if not _key_warned.has(mid):
+			_key_warned[mid] = true
+			_log_event("keys", "%s is behind %d locked door(s) but no key shop is reachable" % [mid, needed])
+		return {}
+	var price := int(shop.get("price", 0))
+	if _gold() < price:
+		return _grind_objective(state, "%d gold for magic_key (%d door(s) to %s)" % [price, needed, mid])
+	return {
+		"kind": "milestone", "id": str(shop.get("id", "")),
+		"label": "Buy Magic Key for %s (%d/%d)" % [mid, have, needed],
+		"map": str(shop.get("map", "")), "tile": _m_tile(shop), "face": str(shop.get("face", "")),
+		"action": "buy", "item_id": "magic_key", "shop_id": str(shop.get("shop_id", "")),
+	}
+
+
+## The key-shop milestone (any phase) the hero can reach with the keys in hand,
+## nearest first. Key shops are declared as `buy-magic_key-<shop>` milestones.
+func _reachable_key_shop(state: Dictionary, have: int) -> Dictionary:
+	var gs: Node = _gs()
+	var ck := "%s|%d|%d" % [_cur_map(state), have, gs.unlocked_doors.size() if gs else 0]
+	if _key_shop_cache.has(ck):
+		return _key_shop_cache[ck]
+	var best: Dictionary = {}
+	var best_len := 1 << 30
+	for m in _milestones:
+		if str(m.get("type", "")) != "buy" or str(m.get("item_id", "")) != "magic_key":
+			continue
+		var smap := str(m.get("map", ""))
+		var stile := _m_tile(m)
+		if _locked_doors_to(state, smap, stile) > have:
+			continue
+		var legs := _plan_route(_cur_map(state), _hero_tile(state), smap, stile)
+		if legs.is_empty():
+			continue
+		var length := 0
+		for leg in legs:
+			length += (leg.get("path", []) as Array).size()
+		if length < best_len:
+			best_len = length
+			best = m
+	_key_shop_cache[ck] = best
+	return best
 
 
 ## Contents of a chest milestone, known only while standing in its map (the scene owns the tables).
@@ -1512,7 +1610,7 @@ func _perform_action(action: String) -> Dictionary:
 func _navigate(state: Dictionary, cur_map: String, hero: Vector2i, tgt_map: String, tgt: Vector2i) -> Dictionary:
 	var goal_key := "%s:%d,%d" % [tgt_map, tgt.x, tgt.y]
 	if goal_key != _plan_goal or _plan_legs.is_empty() or not _plan_has_map(cur_map):
-		_plan_legs = _planner.call("plan", cur_map, hero, tgt_map, tgt, _bridge_built())
+		_plan_legs = _plan_route(cur_map, hero, tgt_map, tgt)
 		_plan_goal = goal_key
 		_plan_leg_idx = -1
 		if _plan_legs.is_empty():
@@ -1548,6 +1646,10 @@ func _navigate(state: Dictionary, cur_map: String, hero: Vector2i, tgt_map: Stri
 		var size: Vector2i = _map_size(cur_map, sc)
 		var extra: Array = [leg_target]
 		var blocked: Array = []
+		# Locked doors on this leg are passable for pathing: we unlock them on arrival.
+		for dpos in leg.get("doors", []):
+			if _planner.call("is_locked_door", cur_map, dpos):
+				extra.append(dpos)
 		if cur_map == WORLD_KEY:
 			if _bridge_built():
 				extra.append(Vector2i(66, 51))
@@ -1575,10 +1677,21 @@ func _navigate(state: Dictionary, cur_map: String, hero: Vector2i, tgt_map: Stri
 			return _nudge(hero)
 
 	var first_dir: Vector2i = path[1] - hero
+	if cur_map != WORLD_KEY and _planner.call("is_locked_door", cur_map, path[1]):
+		# A locked door bars the way: face it and use a Magic Key on it.
+		if _count_item("magic_key") <= 0:
+			_plan_legs.clear()
+			_fail_objective("locked door at %s %s and no Magic Key" % [cur_map, str(path[1])])
+			return _nudge(hero)
+		var facing := str(state.get("hero_position", {}).get("facing", "down"))
+		if facing != _dir_action(first_dir).substr(5):
+			return _tap(_dir_action(first_dir))
+		_log_event("door", "unlocking door at %s %s (%d key(s) left)" % [cur_map, str(path[1]), _count_item("magic_key")])
+		return _open_command("DOOR")
 	var end: Vector2i = path[1]
 	var length := 1
 	for i in range(2, path.size()):
-		if path[i] - path[i - 1] == first_dir:
+		if path[i] - path[i - 1] == first_dir and not (cur_map != WORLD_KEY and _planner.call("is_locked_door", cur_map, path[i])):
 			end = path[i]
 			length += 1
 		else:

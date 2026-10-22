@@ -1,11 +1,10 @@
 {
-  "_comment": "Tile IDs that the player hero can walk on. All others are impassable.",
+  "_comment": "Tile IDs that the player hero can walk on without a Magic Key. All others are impassable. `door` (tile 10) is impassable until unlocked with a Magic Key (recorded in GameState.unlocked_doors).",
   "walkable": [
     0,
     2,
     3,
     4,
-    10,
     13,
     14,
     18,
@@ -35,5 +34,6 @@
     66,
     68,
     69
-  ]
+  ],
+  "door": 10
 }

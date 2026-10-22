@@ -24,7 +24,10 @@ def load(name, sub=DATA):
 
 
 grids = load("map_grids.json")["maps"]
-walkable_ids = set(load("tile_walkability.json")["walkable"])
+_tw = load("tile_walkability.json")
+DOOR_TILE = int(_tw.get("door", 10))
+# Doors are passable with a Magic Key; the brain buys keys before door-gated goals.
+walkable_ids = set(_tw["walkable"]) | {DOOR_TILE}
 chests = load("chest_registry.json")
 shops = load("shops.json")
 weapons = {w["id"]: w for w in load("weapons.json")}
@@ -119,7 +122,9 @@ def shop_by_id(shop_id):
     raise SystemExit(f"shop {shop_id} missing")
 
 
-def buy_milestone(shop_id, item_id, phase, min_level=1, optional=False):
+def buy_milestone(shop_id, item_id, phase, min_level=1, optional=False, count=None):
+    """`count` turns the purchase into "own at least N of item" (Magic Keys): the
+    brain keeps buying one per visit until the stack reaches N."""
     s = shop_by_id(shop_id)
     price = next(e["price"] for e in s["inventory"] if e["item_id"] == item_id)
     npc = tuple(s["npc_tile"])
@@ -139,15 +144,23 @@ def buy_milestone(shop_id, item_id, phase, min_level=1, optional=False):
         slot, value, nm = "shield", shields[item_id]["defense"], shields[item_id]["name"]
     else:
         slot, value, nm = None, None, items[item_id]["name"]
-    done = (
-        {"kind": "equipped_at_least", "slot": slot, "value": value, "item_id": item_id}
-        if slot else {"kind": "has_item", "item_id": item_id}
-    )
+    if count:
+        done = {"kind": "has_count", "item_id": item_id, "value": int(count)}
+        label = f"Stock up on {nm}s at {s['location_name']} ({price}G each, carry {count})"
+    elif slot:
+        done = {"kind": "equipped_at_least", "slot": slot, "value": value, "item_id": item_id}
+        label = f"Buy {nm} at {s['location_name']} ({price}G)"
+    else:
+        done = {"kind": "has_item", "item_id": item_id}
+        label = f"Buy {nm} at {s['location_name']} ({price}G)"
+    extra = {}
+    if count:
+        extra["count"] = int(count)
     add(
-        f"buy-{item_id}-{shop_id}", f"Buy {nm} at {s['location_name']} ({price}G)",
+        f"buy-{item_id}-{shop_id}" + (f"-x{count}" if count else ""), label,
         phase, "buy", s["map_key"], tile, done, face=face,
         item_id=item_id, price=price, shop_id=shop_id, min_level=min_level,
-        optional=optional, slot=slot,
+        optional=optional, slot=slot, **extra,
     )
 
 
@@ -165,9 +178,8 @@ chest_milestone("tantegel-castle-2f", "ttrc2", P, label="Torch")
 chest_milestone("tantegel-castle-2f", "ttrc3", P, label="Magic Key")
 add("open-throne-door", "Unlock the throne room gate", P, "door", "tantegel-castle-2f", (5, 7),
     {"kind": "door", "key": "throne_room"}, face="down")
-for cid in ("tanc1", "tanc2", "tanc3", "tanc4"):
-    chest_milestone("tantegel-castle-1f", cid, P, label="Gold")
-chest_milestone("tantegel-castle-b1", "tbac1", P)
+# The throne-room chest key is spent on that gate. Tantegel's treasury, key shop and the
+# Stones of Sunlight basement sit behind more locked doors and wait for keys from Rimuldar.
 
 # ── Phase 2: Brecconary & first gear ──────────────────────────────────────────
 P = "brecconary"
@@ -195,8 +207,7 @@ add("level-7", "Reach level 7 (SLEEP)", P, "level", "world-map", (4, 4),
 buy_milestone("gar002", "hand_axe", P, min_level=7)
 for cid in ("gh1c1", "gh1c2", "gh1c3"):
     chest_milestone("garinham-b1", cid, P, min_level=7)
-chest_milestone("garinham-b3", "gh3c1", P, min_level=8)
-chest_milestone("garinham-b3", "gh3c2", P, min_level=8)
+# gh3c1 / gh3c2 lie past the locked door on B1: they come back after Rimuldar's keys.
 buy_milestone("gar002", "large_shield", P, min_level=8)
 buy_milestone("gar002", "half_plate", P, min_level=8)
 
@@ -218,18 +229,31 @@ for cid in ("mt2c1", "mt2c2", "mt2c3", "mt2c4"):
 
 # ── Phase 7: Swamp Cave, Gwaelin & Rimuldar ───────────────────────────────────
 P = "gwaelin"
-add("rescue-gwaelin", "Rescue Princess Gwaelin in the Swamp Cave", P, "talk", "swamp-cave-b1", (6, 20),
-    {"kind": "flag", "flag": "gwaelin_rescued"}, face="up", min_level=10)
+# Rimuldar sells the first Magic Keys (53G). Every locked door eats one, so fill the
+# six-key stack here before the door-gated goals: Rimuldar's Wings chest (2 doors),
+# Gwaelin's cell (1), Tantegel's treasury (1), the Stones basement (1), Garin's Grave (1).
+buy_milestone("rim002", "magic_key", P, min_level=10, count=6)
 chest_milestone("rimuldar-1f", "rimc1", P, min_level=10)
 buy_milestone("rim001", "broad_sword", P, min_level=10)
 buy_milestone("rim001", "magic_armor", P, min_level=12, optional=True)
+add("rescue-gwaelin", "Rescue Princess Gwaelin in the Swamp Cave", P, "talk", "swamp-cave-b1", (6, 20),
+    {"kind": "flag", "flag": "gwaelin_rescued"}, face="up", min_level=10)
 add("return-gwaelin", "Return Gwaelin to King Lorik", P, "talk", "tantegel-castle-2f", (4, 5),
     {"kind": "flag", "flag": "gwaelin_returned"}, face="up", min_level=10)
+# Back home with keys: the treasury, its key shop and the Stones of Sunlight.
+for cid in ("tanc1", "tanc2", "tanc3", "tanc4"):
+    chest_milestone("tantegel-castle-1f", cid, P, min_level=10, label="Gold")
+chest_milestone("tantegel-castle-b1", "tbac1", P, min_level=10)
+buy_milestone("tan001", "magic_key", P, min_level=10, count=3)
+chest_milestone("garinham-b3", "gh3c1", P, min_level=10)
+chest_milestone("garinham-b3", "gh3c2", P, min_level=10)
 
 # ── Phase 8: Hauksness & the shrines ──────────────────────────────────────────
 P = "relics"
 add("level-15", "Reach level 15 (REPEL)", P, "level", "world-map", (104, 74),
     {"kind": "level", "value": 15}, grind_anchor="rimuldar-1f")
+# Cantlin's inner chest and armoury are behind doors: restock keys while grinding at Rimuldar.
+buy_milestone("rim002", "magic_key", P, min_level=15, count=4)
 chest_milestone("northern-cave-b1", "nc1c1", P, min_level=15)
 # Cantlin gear before Hauksness: the ruined town's werewolves / starwyverns
 # (strength 86) shred a level-15 hero in half plate.
@@ -271,10 +295,10 @@ add("ending", "Report victory to King Lorik", "ending", "talk", "tantegel-castle
 
 inns = {
     "brecconary-1f": inn_entry("brecconary-1f", (5, 5), 6),
-    "garinham-1f": inn_entry("garinham-1f", (6, 3), 6),
-    "kol-1f": inn_entry("kol-1f", (21, 6), 0),
+    "garinham-1f": inn_entry("garinham-1f", (4, 2), 6),
+    "kol-1f": inn_entry("kol-1f", (22, 6), 0),
     "rimuldar-1f": inn_entry("rimuldar-1f", (6, 6), 6),
-    "cantlin-1f": inn_entry("cantlin-1f", (4, 25), 6),
+    "cantlin-1f": inn_entry("cantlin-1f", (4, 26), 6),
 }
 
 # Every tool shop that stocks herbs: the AI restocks wherever it happens to be.

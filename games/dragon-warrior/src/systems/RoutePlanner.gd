@@ -49,6 +49,15 @@ var _stairs_at: Dictionary = {}      # "map:x,y" -> Array[{map,pos,via}]
 var _entry_points: Dictionary = {}   # entry id -> {map, pos}
 var _loaded: bool = false
 
+## Tile id of a locked door (impassable until opened with a Magic Key).
+var door_tile: int = 10
+## GameState.unlocked_doors snapshot ("<map_key>:x,y" and "throne_room" keys).
+## The brain refreshes this before every `plan()` call.
+var unlocked_doors: Dictionary = {}
+## When true, locked doors are planned through (the brain must then hold enough
+## Magic Keys — see `count_locked_doors`). When false, locked doors are walls.
+var allow_locked_doors: bool = true
+
 
 func load_data() -> bool:
 	if _loaded:
@@ -69,6 +78,7 @@ func load_data() -> bool:
 	_grids[WORLD_KEY] = {"w": (terrain[0] as Array).size() if terrain.size() > 0 else 0, "h": terrain.size(), "grid": terrain}
 	for tid in tw.get("walkable", []):
 		_walkable_ids[int(tid)] = true
+	door_tile = int(tw.get("door", 10))
 
 	var by_id: Dictionary = {}
 	for map_key: String in sr:
@@ -145,7 +155,32 @@ func is_tile_walkable(map_key: String, pos: Vector2i, bridge_built: bool) -> boo
 		return false
 	if tid == 32 and map_key in ["hauksness-1f", "kol-1f"]:
 		return true
+	if tid == door_tile:
+		return allow_locked_doors or is_door_unlocked(map_key, pos)
 	return _walkable_ids.has(tid)
+
+
+## True when `pos` on `map_key` is a door tile that has not been unlocked yet.
+func is_locked_door(map_key: String, pos: Vector2i) -> bool:
+	return tile_id(map_key, pos) == door_tile and not is_door_unlocked(map_key, pos)
+
+
+func is_door_unlocked(map_key: String, pos: Vector2i) -> bool:
+	if unlocked_doors.has(_skey(map_key, pos)):
+		return true
+	# ThroneRoom.gd records its single gate under the legacy "throne_room" key.
+	if map_key == "tantegel-castle-2f" and bool(unlocked_doors.get("throne_room", false)):
+		return true
+	return false
+
+
+## Number of still-locked doors a planned route (from `plan()`) walks through,
+## i.e. how many Magic Keys the hero needs to follow it.
+func count_locked_doors(legs: Array) -> int:
+	var n := 0
+	for leg in legs:
+		n += (leg.get("doors", []) as Array).size()
+	return n
 
 
 func _skey(map_key: String, pos: Vector2i) -> String:
@@ -181,7 +216,7 @@ func _transitions(map_key: String, pos: Vector2i) -> Array:
 		"tantegel-castle-1f":
 			if pos == Vector2i(8, 8) or pos == Vector2i(30, 30):
 				out.append({"map": "tantegel-castle-2f", "pos": Vector2i(9, 9), "via": "stairs"})
-			if pos == Vector2i(13, 4):
+			if pos == Vector2i(13, 3):
 				out.append({"map": "tantegel-castle-b1", "pos": Vector2i(1, 5), "via": "stairs"})
 			if pos.y >= h - 2 and (pos.x == 11 or pos.x == 12):
 				out.append({"map": WORLD_KEY, "pos": Vector2i(45, 45), "via": "step:down"})
@@ -190,7 +225,7 @@ func _transitions(map_key: String, pos: Vector2i) -> Array:
 				out.append({"map": "tantegel-castle-1f", "pos": Vector2i(8, 8), "via": "stairs"})
 		"tantegel-castle-b1":
 			if pos == Vector2i(1, 5):
-				out.append({"map": "tantegel-castle-1f", "pos": Vector2i(13, 4), "via": "stairs"})
+				out.append({"map": "tantegel-castle-1f", "pos": Vector2i(13, 3), "via": "stairs"})
 		"brecconary-1f", "garinham-1f", "kol-1f", "rimuldar-1f", "cantlin-1f", "hauksness-1f":
 			if pos.x == 0 or pos.y == 0 or pos.x == w - 1 or pos.y == h - 1:
 				var world_tile := _world_tile_for_map(map_key)
@@ -339,6 +374,13 @@ func plan(from_map: String, from_pos: Vector2i, to_map: String, to_pos: Vector2i
 		"next_pos": Vector2i(-1, -1),
 		"path": leg_path,
 	})
+	for leg in legs:
+		var doors: Array = []
+		var lm: String = leg["map"]
+		for p in leg["path"]:
+			if is_locked_door(lm, p):
+				doors.append(p)
+		leg["doors"] = doors
 	return legs
 
 

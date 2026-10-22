@@ -91,6 +91,7 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   python3 tests/e2e/play_full_game.py                 # whole game, headless (~2-3 h at time-scale 6)
   python3 tests/e2e/play_full_game.py --until 18      # stop after milestone 18
   DW_HEADED=1 python3 tests/e2e/play_full_game.py     # watch it on the desktop
+  DW_E2E_SOUND=1 python3 tests/e2e/play_full_game.py  # game audio on (the e2e passes --mute by default)
   python3 tests/e2e/play_full_game.py --record        # + reports/playthrough/playthrough.mp4 and a 12x time-lapse
   python3 tests/e2e/play_full_game.py --stepped       # one video + save checkpoint per milestone (videos/NN-<id>.mp4)
   python3 tests/e2e/play_full_game.py --stepped --only 42   # replay milestone 42 from checkpoints/41-<id>.json
@@ -175,6 +176,18 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   completed step: −`SWAMP_DAMAGE` (2) HP with `swamp.mp3` and a red `_flash_hurt` tween, skipped when
   `GameState.armor == "erdricks_armor"` or after the Dragonlord is beaten (the swamps "dry up"); HP reaching 0 is a
   normal `_on_defeat`. Swamp stays walkable for `RoutePlanner` (unweighted BFS), the brain just never idles on it.
+- Locked doors & Magic Keys: door tile 10 is *not* in `data/v1/tile_walkability.json` `walkable` (it is the
+  `door` id). `Castle1F._is_walkable` / `DungeonMap` treat a door as a wall until `GameState.unlocked_doors` has
+  `"<map_key>:<col>,<row>"` (the throne gate keeps its legacy `"throne_room"` key). `DOOR` (or ITEM → Magic Key)
+  facing a door consumes one key (`_unlock_door_with_key`), records the door and blits a floor tile over it
+  (`_open_door_visual`); re-entering a map replays the unlocks (`_apply_unlocked_doors` / `_restore_unlocked_door_visuals`).
+  Tantegel's treasury (`tand2`), key shop (`tand1`) and the Stones of Sunlight stairs — moved into the walled courtyard at
+  (13, 3) behind door `tand3` (13, 4) — are therefore *not* opening-phase milestones: `gen_milestones.py` buys six
+  keys at Rimuldar (`rim002`, 53G, `has_count` done_when, the brain buys one per TALK until the stack is full) and
+  only then visits Rimuldar's Wings chest (2 doors), Gwaelin's cell, Tantegel, Garin's Grave B2+ and Cantlin's inner
+  rooms. `RoutePlanner.plan()` lists the still-locked doors per leg (`doors`) and prefers door-free routes
+  (`allow_locked_doors=false` first); `PlayGameBrain._keys_prerequisite` turns a door-gated goal into "buy a key at the
+  nearest reachable key shop" (Tantegel 85G is itself behind `tand1`, Cantlin 98G behind its door) or a gold grind.
 - Regenerated PNGs need a Godot reimport: the runtime loads `.godot/imported/*.ctex`, not the PNG, so patching
   `dw1-over2.png` in place shows nothing until `godot4 --headless --path . --import` runs. The driver's
   `ensure_import_cache()` reimports whenever anything under `assets/` is newer than the import cache.
