@@ -6,16 +6,34 @@ description: Download RobOS for macOS, Linux and Windows, or run it from source 
 ---
 <div class="page-h wrap">
   <h1>Download RobOS</h1>
-  <p>Version 0.0.7. These downloads are the installer for the RobOS appliance: it writes a bootable USB drive. To run the apps on the machine you already have, run them from source.</p>
+  <p>Install the app suite on your current computer, or choose the separate Linux GNOME distro installation below.</p>
 </div>
 <section style="padding-top:20px">
   <div class="wrap">
     <div class="os-grid">
       <div class="card os" data-os="mac"><h3>macOS</h3><p class="muted">Appliance installer (.dmg)</p><a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-mac.dmg">Download for macOS</a></div>
-      <div class="card os" data-os="win"><h3>Windows</h3><p class="muted">Appliance installer (.exe)</p><a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-win.exe">Download for Windows</a></div>
+      <div class="card os" data-os="win"><h3>Windows</h3><p class="muted">Native Windows app suite</p><a class="btn" href="{{ '/downloads/Install-RobOS.cmd' | relative_url }}" download>Download for Windows</a><p class="small">Open the downloaded setup file. Installs into your user folder with a Start menu launcher.</p></div>
       <div class="card os" data-os="linux"><h3>Linux</h3><p class="muted">Appliance installer (AppImage or .deb)</p><a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-linux.AppImage">Download AppImage</a><a class="alt-l" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-linux.deb">or the .deb package</a></div>
     </div>
-    <p class="muted small" style="text-align:center;margin-top:18px">All files and checksums are on <a style="text-decoration:underline" href="https://github.com/nddipiazza/robos/releases/tag/v0.0.7" target="_blank" rel="noopener">GitHub Releases</a>. The installer is the 3-click USB flasher for the RobOS appliance OS; to run the app suite on your current machine use one of the methods below.</p>
+    <p class="muted small" style="text-align:center;margin-top:18px">Appliance release files and checksums are on <a style="text-decoration:underline" href="https://github.com/nddipiazza/robos/releases/tag/v0.0.7" target="_blank" rel="noopener">GitHub Releases</a>. The Windows setup above installs the apps directly. The .dmg, AppImage and .deb downloads create appliance USB drives.</p>
+  </div>
+</section>
+
+<section id="windows">
+  <div class="wrap">
+    <h2 class="h2">Run RobOS on Windows</h2>
+    <p>Download and open <strong>Install-RobOS.cmd</strong>. Setup downloads a private Node.js and Electron runtime, the RobOS apps and their dependencies, then adds <strong>RobOS</strong> to your Start menu. Windows stays your operating system. No WSL, USB drive or administrator account is needed.</p>
+    <p>The default folder is <code>%USERPROFILE%\RobOS</code>. You can also open <code>RobOS.cmd</code> inside that folder to search and launch apps. Internet access is needed during setup. Keep the setup window open until it finishes; failures are reported rather than hidden.</p>
+    <p class="muted">Native Windows support is being tested. Linux-specific integrations such as GNOME shell controls, UNIX pass, KVM and X11 automation require their Linux environment. Agent features are optional; install and sign in to your preferred agent separately.</p>
+    <details><summary>Choose another install folder</summary><p>Download <a href="{{ '/downloads/Install-RobOS.ps1' | relative_url }}" download>the PowerShell setup script</a>, then run it from PowerShell:</p><pre class="code"><code>powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-RobOS.ps1 -InstallDir "$env:USERPROFILE\RobOS"</code></pre><p>Use an empty folder. Setup leaves an existing installation untouched. App data lives separately under <code>%USERPROFILE%\.config\robos</code>.</p></details>
+  </div>
+</section>
+<section id="linux-distro" class="alt">
+  <div class="wrap">
+    <h2 class="h2">Install the RobOS Linux GNOME distro</h2>
+    <p>This is a separate installation option: create a bootable USB drive and install the RobOS Linux appliance on a dedicated PC. Flashing erases the selected USB drive, and the unattended OS installation can erase the target PC.</p>
+    <p><a class="btn" href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/RobOS-Installer-v0.0.7-win.exe">Download Windows USB flasher</a> <a href="{{ '/v1/getting-started.html#install-the-appliance-from-a-usb-drive' | relative_url }}">Linux distro installation guide</a></p>
+    <p class="muted">The v0.0.7 Windows flasher cannot write the drive itself. Use <a href="https://rufus.ie/">Rufus</a> with <a href="https://github.com/nddipiazza/robos/releases/download/v0.0.7/robos-v0.0.7.iso">the bootable ISO</a> to finish on Windows.</p>
   </div>
 </section>
 
@@ -62,7 +80,7 @@ scripts/install-local.sh</code></pre>
       <tr><th>Artifact</th><th>File</th><th>Purpose</th></tr>
       <tr><td>Linux installer</td><td><code>RobOS-Installer-v0.0.7-linux.AppImage</code></td><td>USB flash GUI</td></tr>
       <tr><td>macOS installer</td><td><code>RobOS-Installer-v0.0.7-mac.dmg</code></td><td>USB flash GUI</td></tr>
-      <tr><td>Windows installer</td><td><code>RobOS-Installer-v0.0.7-win.exe</code></td><td>USB flash GUI</td></tr>
+      <tr><td>Windows USB flasher (Linux distro)</td><td><code>RobOS-Installer-v0.0.7-win.exe</code></td><td>USB flash GUI</td></tr>
       <tr><td>Bootable ISO</td><td><code>robos-v0.0.7.iso</code></td><td>Unattended bare-metal install</td></tr>
       <tr><td>VM disk</td><td><code>robos-v0.0.7.qcow2</code></td><td>Ready-to-boot QEMU/KVM image</td></tr>
       <tr><td>Packages bundle</td><td><code>robos-v0.0.7-packages.tar.gz</code></td><td>All Electron app packages</td></tr>

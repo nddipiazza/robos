@@ -1,0 +1,36 @@
+name: Windows app suite
+on:
+  push:
+    branches: [main]
+    paths: ['scripts/windows/**', 'site/downloads/**', 'packages/data-sources/**', '.github/workflows/windows-apps.yml']
+  pull_request:
+    paths: ['scripts/windows/**', 'site/downloads/**', 'packages/data-sources/**', '.github/workflows/windows-apps.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  install:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test catalog and download routing
+        run: node --test scripts/windows/setup.test.cjs
+      - name: Install the native app suite
+        shell: pwsh
+        run: ./site/downloads/Install-RobOS.ps1 -SourceRoot $pwd -InstallDir "$env:RUNNER_TEMP\RobOS" -NoLaunch
+      - name: Install smoke-test driver
+        shell: pwsh
+        run: npm install --prefix "$env:RUNNER_TEMP\RobOS\packages\robos-test" --omit=dev --no-audit --no-fund
+      - name: Exercise installed apps
+        shell: pwsh
+        run: node scripts/windows/smoke.cjs "$env:RUNNER_TEMP\RobOS"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-install-evidence
+          path: |
+            run/windows-install/
+            ${{ runner.temp }}/RobOS/install-report.json

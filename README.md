@@ -34,7 +34,7 @@ Separately, AI-powered features inside the apps are optional extras you switch o
 
 ## Getting started
 
-The installers on the [download page](https://rowbose.com/download/) set up the appliance OS. To use the apps on the machine you already have, run them from source. You need Node.js 20+ and Git, on macOS, Linux or Windows (WSL2).
+On Windows, [download the app-suite setup](https://rowbose.com/download/#windows) to install the apps and a private runtime into `%USERPROFILE%\RobOS`, with a Start menu launcher. This is native Windows setup; Linux-specific integrations still need Linux. The separate USB flasher installs the optional Linux GNOME distro. To run from source instead, use Node.js 20+ and Git on Linux or macOS, or use WSL2 on Windows.
 
 ```sh
 git clone https://github.com/nddipiazza/robos.git
