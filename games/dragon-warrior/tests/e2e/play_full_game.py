@@ -47,7 +47,10 @@ REPORTS_DIR = os.environ.get(
     "REPORTS_DIR", os.path.join(PROJECT_DIR, "tests", "e2e", "reports", "playthrough")
 )
 WORLD_BLOCKED_TERRAIN = {0, 6}  # water, mountain (mirrors WorldMap.BLOCKED_TERRAIN)
-WIDTH, HEIGHT = "1024", "960"
+# Window = 2x the 512x480 game viewport plus the play-game HUD band the engine adds
+# below it (PlayGameHUD.BAND_H viewport px); the capture must cover both.
+HUD_BAND_H = 88
+WIDTH, HEIGHT = "1024", str(960 + 2 * HUD_BAND_H)
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
@@ -139,7 +142,31 @@ class Playthrough:
             "milestones": [],
             "violations": self.violations,
         }
+        if self.base == 0 and not args.only and not args.no_archive:
+            self.archive_previous_run()
         os.makedirs(os.path.join(REPORTS_DIR, "screenshots"), exist_ok=True)
+
+    def archive_previous_run(self):
+        """A fresh run never overwrites the last one: move its videos, checkpoints and
+        report to reports/archive/<started_at>-<status>/ first."""
+        prev = os.path.join(REPORTS_DIR, "playthrough.json")
+        if not os.path.exists(prev):
+            return
+        try:
+            with open(prev, encoding="utf-8") as f:
+                meta = json.load(f)
+        except Exception:
+            meta = {}
+        stamp = str(meta.get("started_at") or time.strftime("%Y-%m-%dT%H:%M:%S")).replace(":", "-")
+        status = str(meta.get("status") or "unknown")
+        dest = os.path.join(os.path.dirname(REPORTS_DIR), "archive", f"{stamp}-{status}")
+        n = 1
+        while os.path.exists(dest):
+            n += 1
+            dest = os.path.join(os.path.dirname(REPORTS_DIR), "archive", f"{stamp}-{status}-{n}")
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        shutil.move(REPORTS_DIR, dest)
+        log(f"Archived previous run to {dest}")
 
     # ── lifecycle ──────────────────────────────────────────────────────────
     def launch(self):
@@ -510,6 +537,8 @@ def main():
     ap.add_argument("--stall-timeout", type=float, default=float(os.environ.get("DW_STALL_TIMEOUT", "600")),
                     help="fail when milestones, battles, level, gold and exp all stop changing for this long")
     ap.add_argument("--timelapse-speed", type=int, default=12, help="speed factor for the time-lapse cut (1 = none)")
+    ap.add_argument("--no-archive", action="store_true",
+                    help="overwrite reports/playthrough instead of moving the previous run to reports/archive/")
     ap.add_argument("--dashboard", choices=["auto", "on", "off"], default=os.environ.get("DW_DASHBOARD", "auto"),
                     help="tray icon + live dashboard on the host display (auto = when --stepped/--record)")
     args = ap.parse_args()

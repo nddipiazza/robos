@@ -100,6 +100,14 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   game via `export_save_state` to `reports/playthrough/checkpoints/NN-<id>.json`; `--from`/`--only` load that
   checkpoint with `load_save_state` and start the brain at the matching milestone id, so a single milestone can be
   re-recorded in seconds instead of re-running the ~2 h game.
+- While play-game mode is on, `src/systems/PlayGameHUD.gd` (created by `AIEngine.start_play_game`, `hud: false`
+  disables it) grows the window by 88 viewport px (`CONTENT_SCALE_ASPECT_KEEP_WIDTH`, 1024x1136 at 2x) and draws
+  a band *under* the 512x480 game: milestone N/total + name, a Given/When/Then line from the registry entry, the
+  brain's live objective, wall-clock timer + `xN` time scale, and the dashboard's chips (level, HP, MP, gold, XP,
+  ATK/DEF, battles, deaths, inputs, gear, pack, map tile). The driver's Xvfb/ffmpeg sizes (`HUD_BAND_H`) match,
+  so every recording and `capture_screenshot` carries that context without covering game UI. The battle status
+  bar also shows gold and EXP top-right. A fresh full run moves the previous `reports/playthrough/` to
+  `reports/archive/<started>-<status>/` first (`--no-archive` to skip; `--only`/`--from` never archive).
 - `--stepped`/`--record` runs also start the **playthrough dashboard** (`tools/playthrough-dashboard`, Electron;
   `--dashboard on|off|auto`, `DW_DASHBOARD`): a GNOME tray icon whose progress ring and context menu follow the run
   (status, milestones, level, battles, deaths, current objective; stop the run; open the latest video) and a window

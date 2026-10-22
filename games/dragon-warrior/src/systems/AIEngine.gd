@@ -45,6 +45,7 @@ var task_max_steps: int = 400
 var _task_initial_scene: String = ""
 
 var _play_brain: RefCounted = null
+var _play_hud: CanvasLayer = null
 
 var input_history: Array[String] = []
 var total_inputs_sent: int = 0
@@ -134,12 +135,30 @@ func start_play_game(args: Dictionary = {}) -> Dictionary:
 	task_max_steps = int(args.get("max_steps", 2000000))
 	step_interval = float(args.get("step_interval", 0.08))
 	_step_timer = step_interval
+	if bool(args.get("hud", true)):
+		_show_play_hud()
 	return result
+
+
+## Objective / timer / stats band under the game viewport, captured by recordings and screenshots.
+func _show_play_hud() -> void:
+	if _play_hud and is_instance_valid(_play_hud):
+		return
+	_play_hud = preload("res://src/systems/PlayGameHUD.gd").new()
+	_play_hud.name = "PlayGameHUD"
+	add_child(_play_hud)
+
+
+func _hide_play_hud() -> void:
+	if _play_hud and is_instance_valid(_play_hud):
+		_play_hud.queue_free()
+	_play_hud = null
 
 
 func stop_play_game() -> void:
 	if _play_brain:
 		_play_brain.call("stop")
+	_hide_play_hud()
 	if task_type == "play_game" and task_status == "running":
 		task_status = "idle"
 	if _stride_active:
