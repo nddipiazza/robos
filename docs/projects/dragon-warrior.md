@@ -86,6 +86,9 @@ IPC web service (`GameControlServer.gd`, `/api/v1/state`) to read what is on scr
 - **Aggressive grinding** — the brain watches how much HP the last six grind battles cost; when monsters barely
   scratch the hero it moves up to the next zone tier (as long as the worst hit there is survivable three times
   over), steps back down when fights get expensive, and drops the boost after a death.
+- **Surviving hard hitters** — against Starwyverns and other monsters that can take a third of the hero's HP per
+  turn, the brain no longer gambles on a resistible SLEEP at low HP; it casts HEALMORE when that keeps it ahead of
+  the damage and runs when it cannot.
 
 Every bug the brain hit while learning to finish the game was a game bug: Charlock 1F's exit gate unwalkable, boss
 fights not syncing the pack, chest duplicates, missing level-up curves, incorrect enemy flee factors and spell
