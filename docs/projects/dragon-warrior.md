@@ -90,6 +90,11 @@ resistances, a Cantlin item shop with no stock, Wings doing nothing on the overw
 stack. The game data is now faithful enough that the AI clears all 70 milestones and beats the Dragonlord at
 level 21–22 in one or two Charlock expeditions with at most a single death on the way.
 
+**Live dashboard & screenshots** — the front-site page
+[AI Playthrough](https://rowbose.com/games/dragon-warrior/ai-playthrough/) walks through every panel of the tray
+icon and dashboard with screenshots, shows milestone screenshots and video frames from a live run, a filmstrip of
+the per-milestone videos, and an architecture diagram of driver ↔ IPC web service ↔ `PlayGameBrain` ↔ dashboard.
+
 ## Global Map Completeness & Pathfinding Architecture
 
 ```mermaid
