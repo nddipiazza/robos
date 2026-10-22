@@ -92,7 +92,7 @@ SLIDESHOW_MILESTONES = [
         "mp": 6,
         "king_intro_done": True,
         "action": "search",
-        "caption": "Via `castle1f-to-basement` @ `(13,4)` -> `tantegel-castle-b1 (1,5)`, the hero reaches chest `tbac1 (5,6)` to claim the Stones of Sunlight.",
+        "caption": "Via `castle1f-to-basement` @ `(13,3)` -> `tantegel-castle-b1 (1,5)`, the hero reaches chest `tbac1 (5,6)` to claim the Stones of Sunlight.",
     },
     {
         "num": 5,

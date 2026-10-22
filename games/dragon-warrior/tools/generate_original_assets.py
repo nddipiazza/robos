@@ -269,7 +269,8 @@ def _draw_counter_tile(px) -> None:
 
 def generate_tiles_and_maps() -> dict[int, Image.Image]:
     tiles_meta = json.loads((DATA_DIR / "tiles_meta.json").read_text(encoding="utf-8"))["tiles"]
-    walkable_ids = set(json.loads((DATA_DIR / "tile_walkability.json").read_text(encoding="utf-8"))["walkable"])
+    _tw = json.loads((DATA_DIR / "tile_walkability.json").read_text(encoding="utf-8"))
+    walkable_ids = set(_tw["walkable"]) | {int(_tw.get("door", 10))}
     map_grids = json.loads((DATA_DIR / "map_grids.json").read_text(encoding="utf-8"))["maps"]
     chests = json.loads((DATA_DIR / "chest_registry.json").read_text(encoding="utf-8"))
     doors = json.loads((DATA_DIR / "door_registry.json").read_text(encoding="utf-8"))

@@ -108,6 +108,11 @@ IPC web service (`GameControlServer.gd`, `/api/v1/state`) to read what is on scr
 - **Poisonous swamp around Charlock** — the Dragonlord's castle is ringed by swamp tiles that drain 2 HP per step
   (with a red flash and the swamp sting), can kill a careless hero, are nullified by Erdrick's Armor, and dry up once
   the Dragonlord falls.
+- **Magic Keys are consumed** — every locked door eats one key, and the only key the opening hands out is spent
+  on the throne-room gate. Tantegel's treasury, its 85G key shop and the Stones of Sunlight basement (now behind a
+  locked perimeter door in the walled courtyard) wait until the hero buys keys in Rimuldar (53G each, six per
+  stack). The route planner prefers door-free routes and the brain turns any door-gated goal into "buy a key at the
+  nearest reachable shop" before walking there.
 - **NES-faithful ending** — the hero carries Princess Gwaelin in his arms until she is home, the Dragonlord's
   defeat hands over the Ball of Light with a flash that warps the hero outside a monster-free Charlock, every town
   celebrates, and King Lorik offers his throne; the hero declines, Gwaelin insists on coming along ("But thou

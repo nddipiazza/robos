@@ -1372,33 +1372,76 @@ func _victory_lap_pages(npc: Dictionary) -> Array:
 	var line: String = VICTORY_LAP_LINES[(tile.x * 7 + tile.y * 3 + _npc_data.find(npc)) % VICTORY_LAP_LINES.size()]
 	return [line % hero if "%s" in line else line]
 
+func _is_door_tile(ft: Vector2i) -> bool:
+	if _tile_grid.is_empty() or ft.y < 0 or ft.y >= _tile_grid.size() or ft.x < 0 or ft.x >= _tile_grid[ft.y].size():
+		return false
+	return int(_tile_grid[ft.y][ft.x]) == 10
+
+
+## Consumes one Magic Key and permanently unlocks the door at `ft`.
+## Returns false (without a dialog) when the hero has no key.
+func _unlock_door_with_key(ft: Vector2i) -> bool:
+	var key_idx := -1
+	for i in range(_inventory.size()):
+		var it = _inventory[i]
+		if it is Dictionary and (str(it.get("type", "")) == "key" or str(it.get("name", "")) == "Magic Key" or str(it.get("id", "")) == "magic_key"):
+			key_idx = i
+			break
+		elif it is String and (it == "Magic Key" or it == "magic_key"):
+			key_idx = i
+			break
+	if key_idx < 0:
+		return false
+	_inventory.remove_at(key_idx)
+	if not _tile_grid.is_empty():
+		_tile_grid[ft.y][ft.x] = 3
+	var gs := get_node_or_null("/root/GameState")
+	if gs:
+		gs.inventory = _inventory.duplicate(true)
+		gs.unlocked_doors[_get_map_key() + ":" + str(ft.x) + "," + str(ft.y)] = true
+	_play_sfx("res://assets/music/mp3/open_door.mp3")
+	_open_door_visual(ft)
+	_show_dialog("", ["The door clicks open."])
+	return true
+
+
+## Paints the nearest floor tile over an unlocked door so it reads as open.
+func _open_door_visual(pos: Vector2i) -> void:
+	if not _map_image or _tile_grid.is_empty():
+		return
+	var w := _get_map_w()
+	var h := _get_map_h()
+	if w <= 0 or h <= 0:
+		return
+	var px: int = int(_map_image.get_width() / w)
+	var py: int = int(_map_image.get_height() / h)
+	if px <= 0 or py <= 0:
+		return
+	var src := Vector2i(-1, -1)
+	for d in [Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 0), Vector2i(-1, 0)]:
+		var n: Vector2i = pos + d
+		if n.y >= 0 and n.y < _tile_grid.size() and n.x >= 0 and n.x < _tile_grid[n.y].size() and int(_tile_grid[n.y][n.x]) == 3:
+			src = n
+			break
+	if src.x < 0:
+		for y in range(_tile_grid.size()):
+			for x in range(_tile_grid[y].size()):
+				if int(_tile_grid[y][x]) == 3:
+					src = Vector2i(x, y)
+					break
+			if src.x >= 0:
+				break
+	if src.x < 0:
+		return
+	_map_image.blit_rect(_map_image, Rect2i(src.x * px, src.y * py, px, py), Vector2i(pos.x * px, pos.y * py))
+	if _bg:
+		_bg.texture = ImageTexture.create_from_image(_map_image)
+
+
 func _cmd_door() -> void:
 	var ft := _hero_tile + _hero_facing
-	var is_door := false
-	if not _tile_grid.is_empty() and ft.y >= 0 and ft.y < _tile_grid.size() and ft.x >= 0 and ft.x < _tile_grid[ft.y].size():
-		if int(_tile_grid[ft.y][ft.x]) == 10:
-			is_door = true
-	if is_door:
-		var key_idx := -1
-		for i in range(_inventory.size()):
-			var it = _inventory[i]
-			if it is Dictionary and (str(it.get("type", "")) == "key" or str(it.get("name", "")) == "Magic Key" or str(it.get("id", "")) == "magic_key"):
-				key_idx = i
-				break
-			elif it is String and (it == "Magic Key" or it == "magic_key"):
-				key_idx = i
-				break
-		if key_idx >= 0:
-			_inventory.remove_at(key_idx)
-			if not _tile_grid.is_empty():
-				_tile_grid[ft.y][ft.x] = 3
-			var gs := get_node_or_null("/root/GameState")
-			if gs:
-				gs.inventory = _inventory.duplicate(true)
-				gs.unlocked_doors[_get_map_key() + ":" + str(ft.x) + "," + str(ft.y)] = true
-			_play_sfx("res://assets/music/mp3/open_door.mp3")
-			_show_dialog("", ["The door clicks open."])
-		else:
+	if _is_door_tile(ft):
+		if not _unlock_door_with_key(ft):
 			_show_dialog("", ["Thou dost not have\na Magic Key."])
 	else:
 		_show_dialog("", ["There is no door\nin that direction."])
@@ -1786,7 +1829,11 @@ func _use_item(idx: int) -> void:
 
 	match item.get("type", ""):
 		"key":
-			_show_dialog("", ["There is no door\nin that direction."])
+			var ft := _hero_tile + _hero_facing
+			if _is_door_tile(ft):
+				_unlock_door_with_key(ft)
+			else:
+				_show_dialog("", ["There is no door\nin that direction."])
 		_:
 			var desc := str(item.get("desc", "Thou usest the %s." % item_name))
 			_show_dialog("", [desc])
@@ -1905,7 +1952,30 @@ func _load_tile_grid() -> void:
 	if not maps.has(key):
 		push_warning("DungeonMap: no tile grid for map key: " + key)
 		return
-	_tile_grid = maps[key]["grid"]
+	# Deep-copy so unlocking a door only mutates this scene's grid; the
+	# persistent record lives in GameState.unlocked_doors and is re-applied here.
+	_tile_grid = (maps[key]["grid"] as Array).duplicate(true)
+	_apply_unlocked_doors()
+
+
+## Re-opens every door on this map that was already unlocked with a Magic Key.
+func _apply_unlocked_doors() -> void:
+	var gs := get_node_or_null("/root/GameState")
+	if not gs or _tile_grid.is_empty():
+		return
+	var prefix := _get_map_key() + ":"
+	for k in gs.unlocked_doors.keys():
+		var ks := str(k)
+		if not ks.begins_with(prefix):
+			continue
+		var parts := ks.substr(prefix.length()).split(",")
+		if parts.size() != 2:
+			continue
+		var x := int(parts[0])
+		var y := int(parts[1])
+		if y >= 0 and y < _tile_grid.size() and x >= 0 and x < _tile_grid[y].size() and int(_tile_grid[y][x]) == 10:
+			_tile_grid[y][x] = 3
+			_open_door_visual(Vector2i(x, y))
 
 func _pixel_is_walkable(tile: Vector2i) -> bool:
 	if not _tile_grid.is_empty():
