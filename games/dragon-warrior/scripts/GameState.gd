@@ -54,6 +54,7 @@ var shield: String = ""   # e.g. "small_shield"
 var gwaelin_rescued: bool = false     # Princess Gwaelin found in the Swamp Cave
 var gwaelin_returned: bool = false    # Princess Gwaelin brought back to King Lorik
 var dragonlord_defeated: bool = false # Final boss beaten — the game is won
+var golem_defeated: bool = false      # Cantlin's gatekeeper destroyed — the town is open
 var game_completed: bool = false      # Victory reported to King Lorik (credits)
 
 # King Lorik dialogue state
@@ -233,6 +234,8 @@ func _apply_save_state_override(data: Dictionary) -> void:
 		gwaelin_returned = bool(data.get("gwaelinReturned", false))
 	if data.has("dragonlordDefeated"):
 		dragonlord_defeated = bool(data.get("dragonlordDefeated", false))
+	if data.has("golemDefeated"):
+		golem_defeated = bool(data.get("golemDefeated", false))
 	# Explicit heroAtk/heroDef in a save state win over the equipment formula (debug fixtures rely on this).
 	if not data.has("heroAtk") and not data.has("heroDef"):
 		recompute_derived_stats()
@@ -307,6 +310,7 @@ func reset_to_new_game() -> void:
 	gwaelin_rescued = false
 	gwaelin_returned = false
 	dragonlord_defeated = false
+	golem_defeated = false
 	game_completed = false
 	king_intro_done = false
 	recompute_derived_stats()
@@ -561,6 +565,7 @@ func export_state_dict(scene_name: String = "ThroneRoom", current_tile: Vector2i
 		"gwaelinRescued": gwaelin_rescued,
 		"gwaelinReturned": gwaelin_returned,
 		"dragonlordDefeated": dragonlord_defeated,
+		"golemDefeated": golem_defeated,
 		"heroSpells": spells.duplicate(true),
 		"items": inventory.duplicate(true),
 		"openedChests": opened_chests.duplicate(true),
@@ -602,6 +607,7 @@ func save_to_disk(filename: String = "adventure_log.json") -> bool:
 		"gwaelinRescued": gwaelin_rescued,
 		"gwaelinReturned": gwaelin_returned,
 		"dragonlordDefeated": dragonlord_defeated,
+		"golemDefeated": golem_defeated,
 		"heroSpells": spells.duplicate(true),
 		"items": inventory.duplicate(true),
 		"openedChests": opened_chests.duplicate(true),

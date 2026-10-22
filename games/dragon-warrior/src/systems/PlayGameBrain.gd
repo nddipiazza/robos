@@ -646,7 +646,11 @@ func _decide_battle(state: Dictionary, battle: Dictionary) -> Dictionary:
 	var heal_useful := heal_amount > int(avg_hit) and (boss or winnable_at_full or winnable_with_heals or (critical and heal_amount > max_hit))
 	var casts := spell_hit > 0 or str(mon_data.get("pattern", "")).contains("spell_")
 	var target := 0  # FIGHT
-	if asleep and not critical:
+	var golem_flute := mon == "golem" and _count_item("fairy_flute") > 0
+	if golem_flute and not asleep:
+		# NES: the Fairy Flute puts the Golem to sleep every time; swing only while it sleeps.
+		target = 2
+	elif asleep and not critical:
 		target = 0
 	elif can_finish and not (critical and boss):
 		target = 0
@@ -704,8 +708,20 @@ func _decide_battle(state: Dictionary, battle: Dictionary) -> Dictionary:
 		target = 1
 	if target == 1 and _pending_spell == "":
 		target = 0
+	if mon == "golem" and target == 2 and not golem_flute:
+		target = 0   # battle ITEM vs the Golem is the flute, never a herb
+	elif mon == "golem" and target == 2 and asleep:
+		# Wanted a herb while it sleeps: ITEM would just replay the flute. Use a heal spell or swing.
+		if _has_spell_mp(known, "healmore", mp):
+			_pending_spell = "healmore"
+			target = 1
+		elif _has_spell_mp(known, "heal", mp):
+			_pending_spell = "heal"
+			target = 1
+		else:
+			target = 0
 	if target in [1, 2] and cur_cursor_is(battle, target):
-		_log_event("cast", "%s vs %s (hp %d/%d mp %d)" % [_pending_spell if target == 1 else "herb", mon, hp, hp_max, mp])
+		_log_event("cast", "%s vs %s (hp %d/%d mp %d)" % [_pending_spell if target == 1 else ("fairy_flute" if golem_flute else "herb"), mon, hp, hp_max, mp])
 	var cur_cursor := int(battle.get("cursor", 0))
 	if cur_cursor == target:
 		return _tap("ui_accept")

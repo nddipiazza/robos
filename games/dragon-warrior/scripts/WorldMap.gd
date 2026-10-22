@@ -389,6 +389,12 @@ func _check_map_trigger() -> void:
 			_save_state(s[0], s[1], "world_map")
 			get_tree().change_scene_to_file.call_deferred("res://scenes/Rimuldar.tscn")
 		CANTLIN:
+			# NES: the Golem guards Cantlin's gate until it is destroyed once.
+			var gs_g = get_node_or_null("/root/GameState")
+			if gs_g and "golem_defeated" in gs_g and not gs_g.golem_defeated \
+					and not ("dragonlord_defeated" in gs_g and gs_g.dragonlord_defeated):
+				_golem_gate_battle()
+				return
 			var s = _spawn_for("cantlin-1f", CANTLIN_SPAWN, "down")
 			_save_state(s[0], s[1], "world_map")
 			get_tree().change_scene_to_file.call_deferred("res://scenes/Cantlin.tscn")
@@ -462,6 +468,32 @@ func _check_encounter() -> void:
 		return
 	_start_battle(mon_key, mon_data)
 
+## Cantlin's gatekeeper. Winning opens the town for good; fleeing (or dying)
+## leaves the hero on the gate tile so stepping on it again re-triggers the fight.
+func _golem_gate_battle() -> void:
+	var mon := _get_monster("golem")
+	if mon.is_empty():
+		mon = {"name": "Golem", "hp_min": 70, "hp_max": 70, "strength": 120, "agility": 60, "is_boss": true}
+	_golem_gate_pending = true
+	_start_battle("golem", mon)
+
+var _golem_gate_pending := false
+
+func _on_golem_gate_result(result: String) -> void:
+	if not _golem_gate_pending:
+		return
+	_golem_gate_pending = false
+	if result != "won":
+		return
+	var gs = get_node_or_null("/root/GameState")
+	if gs and "golem_defeated" in gs:
+		gs.golem_defeated = true
+	_show_dialog("", ["The Golem crumbles to dust.\nThe gate of Cantlin\nstands open."], func():
+		var s = _spawn_for("cantlin-1f", CANTLIN_SPAWN, "down")
+		_save_state(s[0], s[1], "world_map")
+		get_tree().change_scene_to_file.call_deferred("res://scenes/Cantlin.tscn")
+	)
+
 func _get_monster(key: String) -> Dictionary:
 	for m in _monsters_db:
 		if m.get("key", "") == key:
@@ -526,7 +558,10 @@ func _start_battle(mon_key: String, mon_data: Dictionary) -> void:
 		if _music:
 			_music.play()
 		if result == "lost":
+			_golem_gate_pending = false
 			_on_defeat()
+		elif _golem_gate_pending:
+			_on_golem_gate_result(result)
 	)
 
 func _on_defeat() -> void:

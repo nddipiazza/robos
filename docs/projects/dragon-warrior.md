@@ -95,6 +95,10 @@ IPC web service (`GameControlServer.gd`, `/api/v1/state`) to read what is on scr
 - **Surviving hard hitters** — against Starwyverns and other monsters that can take a third of the hero's HP per
   turn, the brain no longer gambles on a resistible SLEEP at low HP; it casts HEALMORE when that keeps it ahead of
   the damage and runs when it cannot.
+- **The Golem at Cantlin's gate** — stepping onto Cantlin before the Golem is destroyed starts the gatekeeper
+  fight (strength 120, HURT bounces off). The Fairy Flute dug up in Kol works as a battle item: it puts the Golem to
+  sleep every time, and the brain plays it whenever the Golem wakes and swings only while it sleeps. Winning once
+  opens the town for good; fleeing leaves the hero on the gate tile to try again.
 - **NES-faithful ending** — the hero carries Princess Gwaelin in his arms until she is home, the Dragonlord's
   defeat hands over the Ball of Light with a flash that warps the hero outside a monster-free Charlock, every town
   celebrates, and King Lorik offers his throne; the hero declines, Gwaelin insists on coming along ("But thou
@@ -105,7 +109,7 @@ IPC web service (`GameControlServer.gd`, `/api/v1/state`) to read what is on scr
 Every bug the brain hit while learning to finish the game was a game bug: Charlock 1F's exit gate unwalkable, boss
 fights not syncing the pack, chest duplicates, missing level-up curves, incorrect enemy flee factors and spell
 resistances, a Cantlin item shop with no stock, Wings doing nothing on the overworld, consumables refusing to
-stack. The game data is now faithful enough that the AI clears all 70 milestones and beats the Dragonlord at
+stack. The game data is now faithful enough that the AI clears every milestone and beats the Dragonlord at
 level 21–22 in one or two Charlock expeditions with at most a single death on the way.
 
 **Live dashboard & screenshots** — the front-site page

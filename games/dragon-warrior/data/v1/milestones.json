@@ -1136,6 +1136,24 @@
     },
     {
       "seq": 52,
+      "id": "defeat-golem",
+      "name": "Destroy the Golem at Cantlin's gate",
+      "phase": "relics",
+      "type": "step",
+      "map": "world-map",
+      "tile": {
+        "col": 75,
+        "row": 104
+      },
+      "optional": false,
+      "min_level": 17,
+      "done_when": {
+        "kind": "flag",
+        "flag": "golem_defeated"
+      }
+    },
+    {
+      "seq": 53,
       "id": "chest-cantlin-1f-ctnc1",
       "name": "Open chest ctnc1 (Gold) in cantlin-1f",
       "phase": "relics",
@@ -1157,7 +1175,7 @@
       "requires": null
     },
     {
-      "seq": 53,
+      "seq": 54,
       "id": "chest-cantlin-1f-ctnc2",
       "name": "Open chest ctnc2 (Herb) in cantlin-1f",
       "phase": "relics",
@@ -1179,7 +1197,7 @@
       "requires": null
     },
     {
-      "seq": 54,
+      "seq": 55,
       "id": "chest-cantlin-1f-ctnc3",
       "name": "Open chest ctnc3 (Gold) in cantlin-1f",
       "phase": "relics",
@@ -1201,7 +1219,7 @@
       "requires": null
     },
     {
-      "seq": 55,
+      "seq": 56,
       "id": "buy-silver_shield-can002",
       "name": "Buy Silver Shield at Cantlin (14800G)",
       "phase": "relics",
@@ -1226,7 +1244,7 @@
       "slot": "shield"
     },
     {
-      "seq": 56,
+      "seq": 57,
       "id": "buy-flame_sword-can002",
       "name": "Buy Flame Sword at Cantlin (9800G)",
       "phase": "relics",
@@ -1251,7 +1269,7 @@
       "slot": "weapon"
     },
     {
-      "seq": 57,
+      "seq": 58,
       "id": "level-18",
       "name": "Reach level 18",
       "phase": "relics",
@@ -1270,7 +1288,7 @@
       "grind_anchor": "cantlin-1f"
     },
     {
-      "seq": 58,
+      "seq": 59,
       "id": "erdricks-armor",
       "name": "Claim Erdrick's Armor in Hauksness",
       "phase": "relics",
@@ -1290,7 +1308,7 @@
       "item_id": "erdricks_armor"
     },
     {
-      "seq": 59,
+      "seq": 60,
       "id": "chest-southern-cave-b1-sc1c1",
       "name": "Open chest sc1c1 (Rainbow Drop) in southern-cave-b1",
       "phase": "relics",
@@ -1312,7 +1330,7 @@
       "requires": "erdricks_token"
     },
     {
-      "seq": 60,
+      "seq": 61,
       "id": "rainbow-bridge",
       "name": "Span the sea with the Rainbow Drop",
       "phase": "relics",
@@ -1332,7 +1350,7 @@
       "item_id": "rainbow_drop"
     },
     {
-      "seq": 61,
+      "seq": 62,
       "id": "level-21",
       "name": "Reach level 21",
       "phase": "charlock",
@@ -1351,7 +1369,7 @@
       "grind_anchor": "tantegel-castle-1f"
     },
     {
-      "seq": 62,
+      "seq": 63,
       "id": "chest-charlock-castle-b2-cb2c1",
       "name": "Open chest cb2c1 (Erdrick's Sword) in charlock-castle-b2",
       "phase": "charlock",
@@ -1373,7 +1391,7 @@
       "requires": null
     },
     {
-      "seq": 63,
+      "seq": 64,
       "id": "chest-charlock-castle-b7-cb7c1",
       "name": "Open chest cb7c1 (treasure) in charlock-castle-b7",
       "phase": "charlock",
@@ -1395,7 +1413,7 @@
       "requires": null
     },
     {
-      "seq": 64,
+      "seq": 65,
       "id": "chest-charlock-castle-b7-cb7c2",
       "name": "Open chest cb7c2 (treasure) in charlock-castle-b7",
       "phase": "charlock",
@@ -1417,7 +1435,7 @@
       "requires": null
     },
     {
-      "seq": 65,
+      "seq": 66,
       "id": "chest-charlock-castle-b7-cb7c3",
       "name": "Open chest cb7c3 (treasure) in charlock-castle-b7",
       "phase": "charlock",
@@ -1439,7 +1457,7 @@
       "requires": null
     },
     {
-      "seq": 66,
+      "seq": 67,
       "id": "chest-charlock-castle-b7-cb7c4",
       "name": "Open chest cb7c4 (treasure) in charlock-castle-b7",
       "phase": "charlock",
@@ -1461,7 +1479,7 @@
       "requires": null
     },
     {
-      "seq": 67,
+      "seq": 68,
       "id": "chest-charlock-castle-b7-cb7c5",
       "name": "Open chest cb7c5 (treasure) in charlock-castle-b7",
       "phase": "charlock",
@@ -1483,7 +1501,7 @@
       "requires": null
     },
     {
-      "seq": 68,
+      "seq": 69,
       "id": "chest-charlock-castle-b7-cb7c6",
       "name": "Open chest cb7c6 (treasure) in charlock-castle-b7",
       "phase": "charlock",
@@ -1505,7 +1523,7 @@
       "requires": null
     },
     {
-      "seq": 69,
+      "seq": 70,
       "id": "defeat-dragonlord",
       "name": "Defeat the Dragonlord",
       "phase": "charlock",
@@ -1524,7 +1542,7 @@
       "face": "right"
     },
     {
-      "seq": 70,
+      "seq": 71,
       "id": "ending",
       "name": "Report victory to King Lorik",
       "phase": "ending",
