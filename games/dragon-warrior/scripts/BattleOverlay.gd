@@ -76,6 +76,8 @@ var _status_panel   : Panel
 var _spell_overlay  : TextureRect
 var _hp_lbl         : Label
 var _mp_lbl         : Label
+var _gold_lbl: Label
+var _exp_lbl: Label
 var _ailment_lbl    : Label
 
 
@@ -988,6 +990,10 @@ func _update_status_bar() -> void:
 		_ailment_lbl.text = ""
 	else:
 		_ailment_lbl.text = _hero_ailment
+	var gs: Node = get_node_or_null("/root/GameState")
+	if gs:
+		_gold_lbl.text = "G %d" % int(gs.hero_stats.get("gold", 0))
+		_exp_lbl.text  = "E %d" % int(gs.hero_stats.get("exp", 0))
 	# HP color: green when healthy, yellow at half, red at low
 	var ratio : float = float(_hero_hp) / float(max(1, _hero_hp_max()))
 	if ratio > 0.5:
@@ -1059,11 +1065,27 @@ func _build_ui() -> void:
 	_status_panel.add_child(_mp_lbl)
 
 	_ailment_lbl          = Label.new()
-	_ailment_lbl.position = Vector2(390, 8)
-	_ailment_lbl.size     = Vector2(120, 22)
+	_ailment_lbl.position = Vector2(300, 8)
+	_ailment_lbl.size     = Vector2(90, 22)
 	_ailment_lbl.add_theme_font_size_override("font_size", 14)
 	_ailment_lbl.add_theme_color_override("font_color", Color(1.0, 0.5, 0.1))
 	_status_panel.add_child(_ailment_lbl)
+
+	_gold_lbl                      = Label.new()
+	_gold_lbl.position             = Vector2(392, 2)
+	_gold_lbl.size                 = Vector2(114, 16)
+	_gold_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_gold_lbl.add_theme_font_size_override("font_size", 12)
+	_gold_lbl.add_theme_color_override("font_color", Color(1.0, 0.82, 0.3))
+	_status_panel.add_child(_gold_lbl)
+
+	_exp_lbl                      = Label.new()
+	_exp_lbl.position             = Vector2(392, 18)
+	_exp_lbl.size                 = Vector2(114, 16)
+	_exp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_exp_lbl.add_theme_font_size_override("font_size", 12)
+	_exp_lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.95))
+	_status_panel.add_child(_exp_lbl)
 
 	# ── Enemy sprite + label ─────────────────────────────────────────────
 	_enemy_sprite                = TextureRect.new()

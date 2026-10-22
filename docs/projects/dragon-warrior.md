@@ -72,6 +72,11 @@ IPC web service (`GameControlServer.gd`, `/api/v1/state`) to read what is on scr
   `tests/e2e/reports/playthrough/playthrough.json` plus a screenshot per milestone. `--stepped` records one
   video per milestone (`videos/NN-<id>.mp4`) and saves a game checkpoint after each one, so `--only N` replays and
   re-records a single milestone from its checkpoint in seconds.
+- **Recording HUD** — while the AI plays, a band under the game viewport (never over dialogs) shows the current
+  milestone with a Given/When/Then summary, the brain's live objective, a wall-clock timer with the time scale, and
+  the condensed hero stats, gear, pack and map tile, so videos and screenshots explain themselves; the battle
+  status bar shows gold and EXP. Each new full run archives the previous run's reports and videos instead of
+  overwriting them.
 - **Live dashboard** — stepped/recorded runs launch `tools/playthrough-dashboard` (Electron): a tray icon with a
   progress ring and run summary menu, and a window showing live IPC game state with screenshots, the brain's event
   log and the milestone list; every finished milestone becomes a clickable card that plays its video and shows the
