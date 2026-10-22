@@ -17,6 +17,14 @@ How to run RobOS apps from a clone of the repository, install them into the GNOM
 {:toc}
 </details>
 
+## Windows app suite
+
+[Download Windows setup](https://rowbose.com/download/#windows) and open `Install-RobOS.cmd`. It downloads a private Node.js/Electron runtime and the app suite into `%USERPROFILE%\RobOS`, installs runtime dependencies, and creates a RobOS Start menu shortcut. No WSL, USB flash drive or administrator access is required. Open RobOS to search and launch apps; `RobOS.cmd --app=point-of-sale` also opens one directly.
+
+Native Windows support is in testing. GNOME, KVM, UNIX pass and X11 integrations still require Linux. Setup does not install coding-agent CLIs or enable optional AI/API features. Keep the setup console open until completion. Dependency failures are recorded in `install-report.json` and cause setup to fail, so a partial install is never reported as complete. Use an empty install directory; existing app data under `%USERPROFILE%\.config\robos` is preserved.
+
+For a custom folder, download `Install-RobOS.ps1` from the download page and run `powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-RobOS.ps1 -InstallDir "D:\RobOS"`. The execution policy applies only to that setup process. This setup installs apps on Windows. The USB flasher below is a separate option for installing the Linux GNOME operating system on a target PC.
+
 ## Pick a method
 
 | Method | Where it runs | You need | What you get |
@@ -27,7 +35,7 @@ How to run RobOS apps from a clone of the repository, install them into the GNOM
 | [Virtual machine](#boot-the-appliance-in-qemu) | A Linux host with QEMU | QEMU, 16 GB of RAM for the guest | The appliance in a QEMU window |
 
 {: .note }
-The `.dmg`, `.exe`, `.AppImage` and `.deb` files on the [download page](https://rowbose.com/download/) are the USB installer. They do not install the app suite on macOS or Windows. To run apps on your current machine, use "Run from source".
+The `.dmg`, `.exe`, `.AppImage` and `.deb` files on the [download page](https://rowbose.com/download/) are the USB installer. These versioned appliance files do not install the app suite on macOS or Windows. The Windows app-suite setup is the separate download described above. To run apps on your current machine, use "Run from source".
 
 ## Run from source
 
