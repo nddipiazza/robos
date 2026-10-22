@@ -83,6 +83,9 @@ IPC web service (`GameControlServer.gd`, `/api/v1/state`) to read what is on scr
 - **Light in the caves** — the brain buys torches before every dark dungeon while RADIANT is unknown (and keeps a
   spare afterwards), lights up the moment the IPC `light_status` reports no light, and refreshes a fading RADIANT;
   the game keeps torch and RADIANT alive across stairs and casts RADIANT ahead of HEAL when the hero is blind.
+- **Aggressive grinding** — the brain watches how much HP the last six grind battles cost; when monsters barely
+  scratch the hero it moves up to the next zone tier (as long as the worst hit there is survivable three times
+  over), steps back down when fights get expensive, and drops the boost after a death.
 
 Every bug the brain hit while learning to finish the game was a game bug: Charlock 1F's exit gate unwalkable, boss
 fights not syncing the pack, chest duplicates, missing level-up curves, incorrect enemy flee factors and spell

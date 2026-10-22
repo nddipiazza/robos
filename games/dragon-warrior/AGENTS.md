@@ -121,6 +121,11 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   log events). Game side, torch/RADIANT state lives in `GameState.torch_active` / `radiant_steps_left` so stairs
   between floors keep the light (it ends on the overworld), the field SPELL command casts RADIANT before HEAL when
   blind, and checkpoints carry `torchActive` / `radiantStepsLeft`.
+- Adaptive grinding: grind zones come from `_zone_tier_for_level(_grind_level())` where `_grind_level` is the hero
+  level minus two per recent death (`_grind_tier_penalty`) plus two per promotion (`_grind_tier_boost`). The brain
+  keeps a six-battle window of HP lost per grind battle (`_record_grind_damage`, heals counted as damage); when the
+  average is at most 8% of max HP and the next tier's worst hit times three fits in max HP it moves up a tier
+  ("barely scratched" grind log event), at 35% or more it steps back down, and a death resets the boost.
 - IPC commands: `start_play_game {time_scale, from_milestone}`, `stop_play_game`, `get_milestones` (report with
   `status`, `index`, `done`, `skipped`, `battles`, `deaths` and the brain's event log), `export_save_state` /
   `load_save_state {file_path}`.
