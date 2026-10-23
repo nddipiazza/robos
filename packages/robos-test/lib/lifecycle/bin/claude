@@ -9,6 +9,10 @@ const world = require('../world');
 
 const args = process.argv.slice(2);
 if (args.includes('--version')) { console.log('Claude Code 2.0.0 (scripted demo agent)'); process.exit(0); }
+if (args[0] === 'auth' && args[1] === 'status') {   // Agents Manager's sign-in check
+  console.log(JSON.stringify({ loggedIn: true, authMethod: 'oauth_token', account: { emailAddress: 'dana@acme-corp.example' } }));
+  process.exit(0);
+}
 
 const emit = (text) => console.log(JSON.stringify({ type: 'assistant', message: { content: [{ type: 'text', text: text + '\n' }] } }));
 const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);

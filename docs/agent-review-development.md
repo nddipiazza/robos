@@ -26,6 +26,8 @@ An agent does the implementation. A person decides whether the result is good en
 | 6. Approve | Review window, reviewer mode | A reviewer reads the diff and submits Approve, Request Changes or a comment through `gh pr review`. |
 | 7. Merge | GitHub | The author merges. The review window has no merge button. |
 
+For a step-by-step version of this loop, see the Build apps guides: [on your own](/build-apps/solo/) or [as a team](/build-apps/teams/).
+
 The apps are described on their own pages: [Task Planner]({{ '/apps/task-planner/' | relative_url }}), [Task Implementer]({{ '/apps/task-implementer/' | relative_url }}) and [Agent Code Review & PR Review Theater]({{ '/apps/pr-review/' | relative_url }}).
 
 ## How review and proof of work fit together

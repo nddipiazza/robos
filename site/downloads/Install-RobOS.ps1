@@ -3,6 +3,7 @@
 param(
     [string]$InstallDir = (Join-Path $env:USERPROFILE 'RobOS'),
     [string]$SourceRoot,
+    [string]$SourceRef = 'v0.0.8',
     [switch]$NoLaunch,
     [switch]$Repair
 )
@@ -50,7 +51,7 @@ try {
     if (!$SourceRoot) {
         Write-Host 'Downloading RobOS applications and game assets...'
         $git = "$InstallDir\runtime\git\cmd\git.exe"
-        & $git -c core.longpaths=true -c credential.interactive=false clone --depth 1 --filter=blob:none --sparse https://github.com/nddipiazza/robos.git "$work\source"
+        & $git -c core.longpaths=true -c credential.interactive=false clone --branch $SourceRef --depth 1 --filter=blob:none --sparse https://github.com/nddipiazza/robos.git "$work\source"
         if ($LASTEXITCODE -ne 0) { throw 'Unable to download the RobOS source.' }
         & $git -C "$work\source" sparse-checkout set --no-cone /packages/ /games/ /.robos/ /scripts/windows/ /site/assets/logo-mark.png /docs/assets/images/favicon.ico /docs/assets/images/logo-sidebar.png
         if ($LASTEXITCODE -ne 0) { throw 'Unable to download the RobOS app files.' }

@@ -9,6 +9,8 @@ description: "Lists tasks from the active task server, builds a prompt from the 
 
 Task Implementer launches one `claude` process per task. The agent is the Claude Code CLI; other agents are not selectable in this app.
 
+For how this app fits with the others when you build an app, see the Build apps guides: [on your own](/build-apps/solo/) or [as a team](/build-apps/teams/).
+
 {: .warning }
 The app runs `claude -p <prompt> --output-format stream-json --verbose --dangerously-skip-permissions` as your user, in the app's working directory. The agent can read and write files and run commands without asking. The app does not create a sandbox, a temporary account or a virtual display. Use it only on repositories and machines where that is acceptable. The prompt asks the agent to create a feature branch, commit and push it, and not to open a pull request.
 

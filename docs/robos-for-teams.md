@@ -23,6 +23,7 @@ Start here if you are a tech lead or evaluator deciding whether RobOS fits your 
 
 ## Set up a team
 
+- [Build apps as a team](/build-apps/teams/) walks a team through planning, implementing, reviewing and merging with Task Planner, Task Implementer and Agent Code Review.
 - [Company setup]({{ site.baseurl }}{% link existing-company-setup.md %}) is for a team with existing repositories and a task tracker.
 - [New company]({{ '/new-company-setup.html' | relative_url }}) is for a team starting from nothing.
 - [Personas]({{ site.baseurl }}{% link personas.md %}) lists which apps to open first for four common jobs.

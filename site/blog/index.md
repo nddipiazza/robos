@@ -13,6 +13,7 @@ og_image: /assets/hero/poster.jpg
     <p class="lead">What changed in RobOS and why, newest first. Each post links to the docs and the commits behind it.</p>
   </div>
   <nav class="blog-jump" aria-label="Jump to blog post">
+    <a href="#quest-warrior-dragon-ai-walkthrough">Quest: Warrior Dragon AI</a>
     <a href="#ai-playthrough-quest-warrior-dragon">AI Playthrough</a>
     <a href="#audio-player-virtual-dj">Audio Player Virtual DJ</a>
     <a href="#auto-center-obd">Auto Center OBD-II</a>
@@ -27,11 +28,124 @@ og_image: /assets/hero/poster.jpg
     <a href="#pr-review-theater-and-dev-central">PR Review Theater</a>
     <a href="#realm-of-heroes-crpg">Realm of Heroes cRPG</a>
     <a href="#robos-voice-and-parse-portal">RobOS Voice &amp; Luxir</a>
-    <a href="#dual-state-kgraph-and-sdlc">Dual-State KGraph &amp; v0.0.7</a>
+    <a href="#dual-state-kgraph-and-sdlc">Dual-State KGraph foundations</a>
   </nav>
 </section>
 
 <div class="blog-feed">
+
+  <article class="blog-entry" id="quest-warrior-dragon-ai-walkthrough">
+    <div class="blog-meta">
+      <time class="blog-date" datetime="2026-10-23">Oct 23, 2026</time>
+      <span class="blog-tag">Quest: Warrior Dragon</span>
+      <span class="blog-tag">Game AI</span>
+      <span class="blog-tag">Godot 4</span>
+    </div>
+    <h2><a href="#quest-warrior-dragon-ai-walkthrough">Quest: Warrior Dragon Plays Itself: From the King's Throne Room to the Dragonlord's True Form</a></h2>
+    <p class="blog-summary">Start Quest: Warrior Dragon with <code>--demo</code> and nobody touches the controller. The in-engine AI picks New Quest, listens to King Lorik, opens the treasure chest, takes the Magic Key to the locked door, walks down through Tantegel Castle and out into Alefgard, then fights whatever jumps out of the grass. Point it at the Dragonlord and it wins that fight too. Everything below was recorded from the game running headless on a virtual display, with no human input.</p>
+    <div class="blog-body">
+      <figure class="blog-fig pixel">
+        <video poster="{{ '/assets/blog/quest-warrior-dragon-ai/king-lorik.png' | relative_url }}" autoplay muted loop playsinline controls preload="metadata" width="512" height="480">
+          <source src="{{ '/assets/blog/quest-warrior-dragon-ai/ai-walkthrough.webm' | relative_url }}" type="video/webm">
+          <source src="{{ '/assets/blog/quest-warrior-dragon-ai/ai-walkthrough.mp4' | relative_url }}" type="video/mp4">
+        </video>
+        <figcaption>42 seconds, real time, no human input: King Lorik, the Magic Key, the throne-room door, Tantegel Castle, the overworld and the first Slime and Drakee fights.</figcaption>
+      </figure>
+      <div class="blog-stats">
+        <div><b>~12 s</b><span>New Quest to the overworld</span></div>
+        <div><b>0</b><span>human button presses</span></div>
+        <div><b>5 / 6</b><span>boss-tier battle tests won</span></div>
+        <div><b>36 / 220</b><span>HP left after the Dragonlord</span></div>
+      </div>
+      <p><strong>It plays with the same buttons you do.</strong> <code>AIEngine.gd</code> is an autoload inside the Godot game. It can only send the input actions a player can (<code>move_up</code>, <code>move_down</code>, <code>move_left</code>, <code>move_right</code>, <code>ui_accept</code>, <code>ui_cancel</code>, <code>cmd_menu</code>), so it opens the command window and moves the cursor to <em>TAKE</em> or <em>DOOR</em> like a person would. It never teleports and never sets the game state directly. Each tick it reads the same JSON the game's HTTP control server publishes (<code>/state</code> for the hero, dialog, menus and battle, <code>/screen</code> for a walkable map of the visible tiles with every chest, door and staircase marked). It runs a breadth-first search to its next goal and walks there in <strong>strides</strong>: on a straight run it holds the direction down across several tiles and lets go as the hero steps onto the last one, instead of tapping once per tile.</p>
+      <p>A run from New Quest reads like this (taken from the state log the capture script recorded):</p>
+      <div class="blog-log">SaveSelect   ▶ BEGIN A NEW QUEST
+ThroneRoom   King Lorik: "Then speak with the guards, for they have much knowledge…"
+ThroneRoom   cmd_menu → TAKE         "Thou dost find Magic Key!"
+ThroneRoom   cmd_menu → DOOR         "The door clicks open."
+ThroneRoom   stride → stairs (9,9)  cmd_menu → STAIRS
+Castle1F     stride → south gate (11,30)
+WorldMap     (44,45)  ⚔ Slime        HP 15 → 12
+WorldMap     (44,45)  ⚔ Red Slime
+WorldMap     (44,46)  ⚔ Red Slime    HP 9 → 6</div>
+      <div class="blog-fig-grid three">
+        <figure class="blog-fig pixel">
+          <img src="{{ '/assets/blog/quest-warrior-dragon-ai/save-select.png' | relative_url }}" alt="Save select screen with BEGIN A NEW QUEST highlighted above seven checkpoint saves" loading="lazy" width="512" height="480">
+          <figcaption>The AI picks <em>Begin a New Quest</em>.</figcaption>
+        </figure>
+        <figure class="blog-fig pixel">
+          <img src="{{ '/assets/blog/quest-warrior-dragon-ai/king-lorik.png' | relative_url }}" alt="Throne room with King Lorik speaking: Then speak with the guards, for they have much knowledge that may aid thee." loading="lazy" width="512" height="480">
+          <figcaption>King Lorik gives his speech; the AI reads every page.</figcaption>
+        </figure>
+        <figure class="blog-fig pixel">
+          <img src="{{ '/assets/blog/quest-warrior-dragon-ai/magic-key.png' | relative_url }}" alt="Throne room with the dialog: Thou dost find Magic Key!" loading="lazy" width="512" height="480">
+          <figcaption>TAKE on the chest: <em>Thou dost find Magic Key!</em></figcaption>
+        </figure>
+        <figure class="blog-fig pixel">
+          <img src="{{ '/assets/blog/quest-warrior-dragon-ai/castle-1f.png' | relative_url }}" alt="Tantegel Castle first floor with the hero walking toward the south gate" loading="lazy" width="512" height="480">
+          <figcaption>Down the stairs and through Tantegel Castle.</figcaption>
+        </figure>
+        <figure class="blog-fig pixel">
+          <img src="{{ '/assets/blog/quest-warrior-dragon-ai/overworld.png' | relative_url }}" alt="Alefgard overworld with the hero just outside Tantegel Castle by the river" loading="lazy" width="512" height="480">
+          <figcaption>Out into Alefgard.</figcaption>
+        </figure>
+        <figure class="blog-fig pixel">
+          <img src="{{ '/assets/blog/quest-warrior-dragon-ai/slime-battle.png' | relative_url }}" alt="Battle screen: a Slime, with the message The Slime takes 3 damage!" loading="lazy" width="512" height="480">
+          <figcaption>First blood: <em>The Slime takes 3 damage!</em></figcaption>
+        </figure>
+      </div>
+      <p><strong>The bug it found for us.</strong> The first time we ran it this week, the hero opened the chest, unlocked the door and then walked into the throne-room counter forever. Yesterday's tile audit (85c4559f) made tile 8 the counter around King Lorik, and a floor tile in every town, but the control server still listed tiles 8 and 21 as staircases in <code>/screen</code>. The AI treated the counter at (5,3) as the nearest staircase. Only tiles 33 and 34 are staircases; mapped stairs come from <code>stair_registry.json</code>. With that fixed in 4f6bbe3d, the same run gets from New Quest to the overworld in about twelve seconds. No test caught this; an AI player did, just by trying to play.</p>
+      <p><strong>Boss fights.</strong> The <em>Enemy AI</em> side of demo mode is the game's normal monster logic: attack patterns, spells and fire breath from <code>monsters.json</code>. To show the <em>Player AI</em> against the strongest monsters we used the debug launcher's battle test, which starts a fight against any of the 40 monsters with whatever hero stats you give it:</p>
+      <div class="blog-log">./launch.sh --demo --scene BattleTest --monster dragonlord_form1 \
+  --hero-level 30 --hero-hp 220 --hero-hp-max 220 --hero-atk 150 --hero-def 170</div>
+      <p>A level-15 hero with 90 HP lost to the <strong>Golem</strong>. At level 20 the AI beat it twice, and at level 30 it beat the <strong>Green Dragon</strong>, the Dragonlord's final form on its own (<code>dragonlord_form2</code>) and the full two-stage <strong>Dragonlord</strong> fight. That last fight is below, about seven seconds from <em>A Dragonlord draws near!</em> to the final blow:</p>
+      <figure class="blog-fig pixel">
+        <video poster="{{ '/assets/blog/quest-warrior-dragon-ai/dragonlord-true-form.png' | relative_url }}" autoplay muted loop playsinline controls preload="metadata" width="512" height="480">
+          <source src="{{ '/assets/blog/quest-warrior-dragon-ai/dragonlord-fight.webm' | relative_url }}" type="video/webm">
+          <source src="{{ '/assets/blog/quest-warrior-dragon-ai/dragonlord-fight.mp4' | relative_url }}" type="video/mp4">
+        </video>
+        <figcaption>The AI against both stages of the Dragonlord: HURTMORE, “Foolish hero…”, the transformation, fire breath, and a win with 36 of 220 HP left.</figcaption>
+      </figure>
+      <div class="blog-fig-grid three">
+        <figure class="blog-fig pixel">
+          <img src="{{ '/assets/blog/quest-warrior-dragon-ai/dragonlord-hurtmore.png' | relative_url }}" alt="Battle screen: The Dragonlord casts HURTMORE!" loading="lazy" width="512" height="480">
+          <figcaption>The wizard opens with HURTMORE: 34 damage.</figcaption>
+        </figure>
+        <figure class="blog-fig pixel">
+          <img src="{{ '/assets/blog/quest-warrior-dragon-ai/dragonlord-foolish-hero.png' | relative_url }}" alt="Battle screen with the Dragonlord fading: Foolish hero... You cannot defeat me that easily!" loading="lazy" width="512" height="480">
+          <figcaption>“Foolish hero… You cannot defeat me that easily!”</figcaption>
+        </figure>
+        <figure class="blog-fig pixel">
+          <img src="{{ '/assets/blog/quest-warrior-dragon-ai/dragonlord-true-form.png' | relative_url }}" alt="Battle screen with the winged dragon form: BEHOLD MY TRUE FORM!" loading="lazy" width="512" height="480">
+          <figcaption><em>BEHOLD MY TRUE FORM!</em></figcaption>
+        </figure>
+        <figure class="blog-fig pixel">
+          <img src="{{ '/assets/blog/quest-warrior-dragon-ai/dragonlord-breathes-fire.png' | relative_url }}" alt="Battle screen: The Dragonlord breathes fire! with hero HP 149 of 220" loading="lazy" width="512" height="480">
+          <figcaption>Fire breath: 66 damage a time.</figcaption>
+        </figure>
+        <figure class="blog-fig pixel">
+          <img src="{{ '/assets/blog/quest-warrior-dragon-ai/hero-at-36-hp.png' | relative_url }}" alt="Battle screen with hero HP at 36 of 220 in red: ERDRICK takes 47 damage!" loading="lazy" width="512" height="480">
+          <figcaption>Down to 36 HP. The AI keeps swinging.</figcaption>
+        </figure>
+        <figure class="blog-fig pixel">
+          <img src="{{ '/assets/blog/quest-warrior-dragon-ai/dragonlord-final-blow.png' | relative_url }}" alt="Battle screen: The Dragonlord takes 41 damage!" loading="lazy" width="512" height="480">
+          <figcaption>The final blow: 41 damage, and Alefgard is safe.</figcaption>
+        </figure>
+      </div>
+      <p><strong>What it can't do yet</strong>, which is the to-do list:</p>
+      <ul>
+        <li><strong>The overworld has no goal.</strong> The AI has routes for the throne room and the castle's first floor. Outside, it walks a right, down, left, up loop next to the castle, which is enough to trigger random encounters but not to reach Brecconary. It wanders back through the castle gate now and then, and the castle logic walks it straight back out.</li>
+      <li><strong>It never casts spells.</strong> In battle it chooses FIGHT, or ITEM to use a Herb when HP falls under 35%. The hero in the Dragonlord fight had 190 MP and HEALMORE but no Herb, so at 36 HP it attacked again. It got lucky.</li>
+        <li><strong>Boss fights start from the debug launcher.</strong> The new-game run can't reach Charlock yet, so the boss footage uses a hand-picked hero level, not one the AI earned.</li>
+      </ul>
+      <p><strong>Watch it yourself.</strong> From <code>games/quest-warrior-dragon</code>, run <code>./launch.sh --demo</code>, or set <code>DW_DEMO=1</code>. In a running game, <code>POST /command</code> with <code>start_demo</code> or <code>stop_demo</code> switches the AI on or off, and <code>capture_screenshot</code> saves the frame exactly as the game draws it, which is how the stills above were taken. The videos are an <code>ffmpeg</code> recording of the Xvfb display the game ran on.</p>
+    </div>
+    <div class="blog-links">
+      <a href="{{ '/games/quest-warrior-dragon/' | relative_url }}">Play Quest: Warrior Dragon →</a>
+      <a href="{{ '/games/quest-warrior-dragon/docs/' | relative_url }}">Read the game docs →</a>
+      <span class="blog-commits">Commits: 4f6bbe3d · 5591ffe1 · 85c4559f</span>
+    </div>
+  </article>
 
   <article class="blog-entry" id="ai-playthrough-quest-warrior-dragon">
     <div class="blog-meta">
@@ -542,7 +656,7 @@ og_image: /assets/hero/poster.jpg
       <ul>
         <li><strong>Unified cRPG Editor &amp; Topological Quest DAGs:</strong> Features Campaign Studio, a topological Quest Scenario Tree DAG editor with choice-anchored curves and transition triggers, a Story Flow page turner, Spells/Abilities/Item Studios, a first-class Enemies Bestiary, graphical drag-and-drop inventory bags with encumbrance meters, and exported Player Cartridges.</li>
         <li><strong>3D Miniatures, Equipment Sockets &amp; 22-Spell BDD Suite:</strong> Upgraded characters and monsters to 3D models with dynamic weapon, armor, and shield socket attachment and real-time AC recalculation. Added 3D particle VFX and BDD verification for 22 spells including 8d6 Fireball, Magic Missile, Blizzard (with ground ice and prone slipping), Stinking Cloud, and Invisibility.</li>
-        <li><strong>Elevation, Pathfinding &amp; Playable Campaigns:</strong> Implemented AStarGrid2D pathfinding with string-pulling funnel smoothing, multi-tier house porch and stairs elevation transitions, Infinity Engine social aggro and trap detection, and playable <em>Quest: Warrior Dragon 1</em> and <em>Rescue the Princess</em> campaigns.</li>
+        <li><strong>Elevation, Pathfinding &amp; Playable Campaigns:</strong> Implemented AStarGrid2D pathfinding with string-pulling funnel smoothing, multi-tier house porch and stairs elevation transitions, Infinity Engine social aggro and trap detection, and playable <em>Dragon Warrior 1</em> and <em>Rescue the Princess</em> campaigns.</li>
       </ul>
       <figure class="blog-fig">
         <img src="{{ '/assets/games/crpg-bg-poster.jpg' | relative_url }}" alt="Realm of Heroes cRPG tactical party combat in Godot 4" loading="lazy">
@@ -596,12 +710,12 @@ og_image: /assets/hero/poster.jpg
       <time class="blog-date" datetime="2026-09-18">Aug 25 – Sep 18, 2026</time>
       <span class="blog-tag">Knowledge Graph</span>
       <span class="blog-tag">SDLC Platform</span>
-      <span class="blog-tag">v0.0.7 Release</span>
+      <span class="blog-tag">Foundation release</span>
     </div>
-    <h2><a href="#dual-state-kgraph-and-sdlc">Modular Dual-State Knowledge Graph, 16-Step SDLC Tool Suite, and RobOS v0.0.7</a></h2>
-    <p class="blog-summary">Laid the foundation of RobOS: a multi-package JSON-LD Knowledge Graph validated by W3C SHACL shapes, a complete desktop SDLC suite from C4 topology modeling to Kind Kubernetes auto-deploy, and the v0.0.7 release.</p>
+    <h2><a href="#dual-state-kgraph-and-sdlc">Modular Dual-State Knowledge Graph, 16-Step SDLC Tool Suite, and the RobOS foundation release</a></h2>
+    <p class="blog-summary">Laid the foundation of RobOS: a multi-package JSON-LD Knowledge Graph validated by W3C SHACL shapes, a complete desktop SDLC suite from C4 topology modeling to Kind Kubernetes auto-deploy, and the foundation release.</p>
     <div class="blog-body">
-      <p>The first month of this two-month sprint established the core thesis of RobOS—that the <strong>Knowledge Graph is the product</strong>—and delivered the <strong>v0.0.7</strong> release across the desktop appliance VM and native app suite:</p>
+      <p>The first month of this two-month sprint established the core thesis of RobOS—that the <strong>Knowledge Graph is the product</strong>—and delivered the <strong>foundation</strong> release across the desktop appliance VM and native app suite:</p>
       <ul>
         <li><strong>Modular Dual-State Knowledge Graph (<code>.robos/kgraphs/</code>):</strong> Replaced monolithic config files with namespaced JSON-LD packages validated by W3C SHACL shapes and aligned with Schema.org, backed by <strong>Knowledge Graph Explorer</strong> (with an embedded Swagger-UI OpenAPI console and reviewed workspace imports), <strong>Schema Studio</strong>, and the <code>kgraph-*</code> skills CLI for semantic blast-radius diffing between <code>main</code> and feature branches.</li>
         <li><strong>16-Step Verified SDLC &amp; Cloud-Init Onboarding:</strong> Automated first-boot QEMU/KVM provisioning with <code>robos-splash</code> and unified GitHub onboarding; verified the 16-step Acme Petshop lifecycle across <strong>Task Planner</strong>, <strong>System Topology Studio</strong> (C4 + OpenAPI 3.1 synthesis), <strong>Git Projects</strong>, <strong>Bruno REST API Client</strong>, and <strong>Kube Studio</strong> (with real local Kind Kubernetes clusters and zero-click KGraph auto-deployment).</li>
@@ -621,7 +735,7 @@ og_image: /assets/hero/poster.jpg
     <div class="blog-links">
       <a href="{{ '/v1/knowledge-graph.html' | relative_url }}">Knowledge Graph architecture →</a>
       <a href="{{ '/v1/walkthroughs.html' | relative_url }}">16-Step SDLC walkthroughs →</a>
-      <a href="{{ '/download/' | relative_url }}">Download RobOS v0.0.7 →</a>
+      <a href="{{ '/download/' | relative_url }}">Download RobOS {{ site.data.release.tag }} →</a>
       <span class="blog-commits">Commits: 73cb6441 · 194e2c8a · a90ae3f7 · 6f0e1605 · 1143d01c</span>
     </div>
   </article>
