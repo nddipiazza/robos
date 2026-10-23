@@ -70,6 +70,15 @@ app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-dev-shm-usage');
 
 let mainWindow = null;
+app.on('second-instance', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    if (app.isReady()) createWindow();
+    return;
+  }
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+});
 const castService = new CastService();
 const mediaLibrary = new MediaLibrary();
 castService.mediaLibrary = mediaLibrary;

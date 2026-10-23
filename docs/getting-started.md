@@ -23,7 +23,9 @@ The native Windows release also provides **RobOS-v{{ site.data.release.version }
 
 Settings stay in `%USERPROFILE%\.config\robos` for either EXE. Tools installed through Software Center stay under `%USERPROFILE%\RobOS\tools` or their WinGet-managed locations; they are separate from the portable extraction folder.
 
-The Windows launcher stays ready in the system tray when its window is closed. Reopening it reuses the loaded app grid. Use **Enable Win + Shift + Space** for quick access, or **Run at Windows sign-in** to start it in the background after logging in. Windows or another app may already own that shortcut; the launcher reports a conflict if it cannot register it. Use the tray menu's **Quit RobOS launcher** to stop the background launcher. A portable launcher waits for apps it opened to exit before removing its extracted files.
+The Windows launcher stays ready in the system tray when its window is closed. Reopening it reuses the loaded app grid. Use **Enable Win + Shift** for quick access, or **Run at Windows sign-in** to start it in the background after logging in. The modifier-only shortcut fires when you release Win or Shift without pressing another key, preserving shortcuts such as Win + Shift + S. Use the tray menu's **Quit RobOS launcher** to stop the background launcher. A portable launcher waits for apps it opened to exit before removing its extracted files.
+
+Search recognizes app names, everyday terms, prefixes, and small typos. For example, **music** finds Audio Player, **cash register** finds Point of Sale, and **car repair** finds Auto Center. Results rank name and intent matches ahead of broad category matches. Search runs locally without an AI provider.
 
 [Download Windows setup](https://rowbose.com/download/#windows) and open `Install-RobOS.cmd`. It downloads a private Node.js/Electron runtime and the app suite into `%USERPROFILE%\RobOS`, installs runtime dependencies, and creates a RobOS Start menu shortcut. No WSL, USB flash drive or administrator access is required. Open RobOS to search and launch apps; `RobOS.cmd --app=point-of-sale` also opens one directly.
 

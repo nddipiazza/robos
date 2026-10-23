@@ -2,14 +2,15 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
+const os = require('node:os');
 
 function launchCommand(executable, host, packaged, id, env = process.env) {
   const childEnv = { ...env };
   delete childEnv.ELECTRON_RUN_AS_NODE;
-  return { executable, args: [...(packaged ? [] : [host]), `--app=${id}`], env: childEnv };
+  return { executable, args: [...(packaged ? [] : [host]), `--app=${id}`, `--robos-owner=${childEnv.HOME || childEnv.USERPROFILE || os.homedir()}`], env: childEnv };
 }
 
-function launchApp({ executable, host, packaged, id, logDir, env, watch = () => {} }) {
+async function launchApp({ executable, host, packaged, id, logDir, env, watch = () => {}, focusExisting = async () => null, retry = true }) {
   fs.mkdirSync(logDir, { recursive: true });
   const logPath = path.join(logDir, `${id}-windows.log`);
   const log = fs.openSync(logPath, 'a');
@@ -35,12 +36,23 @@ function launchApp({ executable, host, packaged, id, logDir, env, watch = () => 
         finish(null, { pid: child.pid, title: message.title, visible: true });
     };
     const onError = error => finish(error.message);
-    const onExit = code => code === 0 ? finish(null, { existing: true }) : finish(`App exited before opening a window (${code})`);
+    const onExit = code => finish(code === 0 ? 'An existing app did not confirm an open window' : `App exited before opening a window (${code})`);
     const timer = setTimeout(() => finish('The app did not open a window within 30 seconds'), 30000);
     child.on('message', onMessage);
     child.once('error', onError);
     child.once('exit', onExit);
   });
-  return ready;
+  try { return await ready; }
+  catch (error) {
+    if (child.exitCode !== 0) throw error;
+    const existing = await focusExisting();
+    if (existing) return existing;
+    // A window can close just before the old process releases its lock.
+    if (retry) {
+      await new Promise(resolve => setTimeout(resolve, 400));
+      return launchApp({ executable, host, packaged, id, logDir, env, watch, focusExisting, retry: false });
+    }
+    throw error;
+  }
 }
 module.exports = { launchCommand, launchApp };
