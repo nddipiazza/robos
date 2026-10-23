@@ -330,102 +330,11 @@
       border-color: var(--accent-cyan);
     }
 
-    .pillars-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-    }
-
-    .pillar-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 24px;
-      position: relative;
-    }
-
-    .pillar-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 8px;
-    }
-
-    .pillar-desc {
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-
-    .pillar-code {
-      margin-top: 12px;
-      background: #080c14;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 8px 12px;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      color: var(--accent-cyan);
-      overflow-x: auto;
-    }
-
-    .ledger-controls {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .search-input {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      color: #fff;
-      padding: 8px 14px;
-      border-radius: 6px;
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      width: 300px;
-    }
-
-    .search-input:focus {
-      outline: none;
-      border-color: var(--accent-cyan);
-      box-shadow: 0 0 8px var(--accent-cyan-glow);
-    }
-
-    .filter-pills {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .filter-pill {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      color: var(--text-muted);
-      padding: 5px 12px;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-family: var(--font-mono);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .filter-pill:hover, .filter-pill.active {
-      color: #fff;
-      border-color: var(--accent-cyan);
-      background: rgba(0, 188, 212, 0.15);
-    }
-
     .table-container {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: 10px;
       overflow-x: auto;
-      max-height: 580px;
-      position: relative;
     }
 
     table {
@@ -461,18 +370,6 @@
     tbody td {
       padding: 10px 16px;
       vertical-align: middle;
-    }
-
-    .td-id {
-      font-family: var(--font-mono);
-      color: var(--text-muted);
-      width: 60px;
-    }
-
-    .td-step {
-      font-family: var(--font-mono);
-      color: var(--accent-cyan);
-      width: 90px;
     }
 
     .td-actor {
@@ -611,186 +508,36 @@
       </div>
     </section>
 
-    <!-- Section 1B: Complete 362-Tile Atlas, Overworld Archetypes & 29-Map Side-by-Side Audit Gallery -->
-    <section id="tiles-and-maps-presentation">
-      <div class="section-header">
-        <h2 class="section-title">Complete 362-Tile Atlas, 26 Overworld Archetypes &amp; 29-Map Full Audit</h2>
-        <span class="badge badge-success">362 / 362 Tiles · 29 / 29 Clean Maps Verified</span>
-      </div>
-
-      <p class="header-subtitle" style="margin-bottom: 20px;">
-        Every individual 16×16 tile (<code>tile_000.png</code>..<code>tile_361.png</code>), all 26 overworld 16×16 terrain &amp; landmark archetypes (<code>K0..K25</code> in <code>dw1-over2.png</code>), and all 29 full map images have been audited 1:1 against the reference layouts. Static NPC sprites that were previously baked into the legacy map images have been cleanly stripped to their underlying ground tiles (<code>#0</code> grass, <code>#2</code> sand, <code>#3</code> brick) so live animated <code>NPCSprite</code> nodes render without ghost duplicates. Click any sheet below to inspect full-resolution in the lightbox.
-      </p>
-
-      <div class="pillars-grid" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); margin-bottom: 28px;">
-        <div class="pillar-card" style="padding: 16px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 class="pillar-title" style="margin:0;">1. Core 92-Tile Semantic Audit (After Fix)</h3>
-            <span class="badge badge-success">1:1 Semantic Match</span>
-          </div>
-          <img src="/assets/games/quest-warrior-dragon/tile_audit_after.png" alt="Core 92-Tile Audit After Fix" style="width:100%; height:auto; border-radius:8px; border:1px solid var(--border-color); cursor:zoom-in; image-rendering:pixelated;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/tile_audit_after.png')">
-          <p class="pillar-desc" style="margin-top:10px;">
-            Left of each pair: original reference tile (<code>0..91</code>). Right of each pair: clean-room procedural replacement. Fixes bridges (<code>#18, #25</code>), twin trees (<code>#1</code>), diagonal stairs (<code>#8, #10, #16, #19</code>), doors (<code>#11</code>), chests (<code>#12</code>), counters (<code>#13</code>), shop signs (<code>#9, #15</code>), and NPC composite ground backgrounds.
-          </p>
-        </div>
-
-        <div class="pillar-card" style="padding: 16px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h3 class="pillar-title" style="margin:0;">2. Overworld 26 Terrain &amp; Landmark Clusters + Regions</h3>
-            <span class="badge badge-cyan">124×124 Overworld</span>
-          </div>
-          <img src="/assets/games/quest-warrior-dragon/overworld_clusters.png" alt="26 Overworld Terrain and Landmark Clusters" style="width:100%; height:auto; border-radius:8px; border:1px solid var(--border-color); cursor:zoom-in; image-rendering:pixelated; margin-bottom:10px;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/overworld_clusters.png')">
-          <img src="/assets/games/quest-warrior-dragon/overworld_audit_after.png" alt="Overworld Close-Up Regions Comparison" style="width:100%; height:auto; border-radius:8px; border:1px solid var(--border-color); cursor:zoom-in; image-rendering:pixelated;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/overworld_audit_after.png')">
-          <p class="pillar-desc" style="margin-top:10px;">
-            All 26 unique 16×16 overworld tile clusters (<code>K0..K25</code>: ocean, stippled grass, twin-tree forest, hills, mountains, desert, poison swamp, wooden bridges, Tantegel Castle, Charlock Castle, 6 towns, caves, and shrines) and 1:1 regional close-ups.
-          </p>
-        </div>
-      </div>
-
-      <div style="margin-bottom: 28px; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; background: #0d131f;">
-        <img src="/assets/games/quest-warrior-dragon/overworld_full_comparison.png" alt="Full 124x124 Alefgard Overworld Comparison" style="width: 100%; height: auto; display: block; cursor: zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/overworld_full_comparison.png')">
-        <div style="padding: 10px 16px; font-size: 0.82rem; color: var(--text-muted); font-family: var(--font-mono); background: #080d16; border-top: 1px solid var(--border-color);">
-          Full 124×124 Alefgard Overworld (<code>dw1-over2.png</code>) — Original Reference (Left) vs New Clean Procedural Overworld (Right). Click to zoom.
-        </div>
-      </div>
-
-      <div class="pillars-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-bottom: 28px;">
-        <div class="pillar-card" style="padding: 14px;">
-          <h3 class="pillar-title">Hero (Unarmed/Armed/Carry) &amp; 8 NPC Sprites</h3>
-          <img src="/assets/games/quest-warrior-dragon/hero_npc_sheet.png" alt="Hero and NPC Sprite Sheet" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in; image-rendering:pixelated;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/hero_npc_sheet.png')">
-        </div>
-        <div class="pillar-card" style="padding: 14px;">
-          <h3 class="pillar-title">40 Clean-Room Monster Battle Sprites (Part 1)</h3>
-          <img src="/assets/games/quest-warrior-dragon/monster_sheet_1.png" alt="Monsters Part 1" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in; image-rendering:pixelated;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/monster_sheet_1.png')">
-        </div>
-        <div class="pillar-card" style="padding: 14px;">
-          <h3 class="pillar-title">40 Clean-Room Monster Battle Sprites (Part 2)</h3>
-          <img src="/assets/games/quest-warrior-dragon/monster_sheet_2.png" alt="Monsters Part 2" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in; image-rendering:pixelated;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/monster_sheet_2.png')">
-        </div>
-      </div>
-
-      <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 14px;">
-        All 29 Full Maps Side-by-Side Review (Original w/ Static Baked NPCs vs New Clean Procedural Map)
-      </h3>
-      <div class="pillars-grid" style="grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));">
-        <div class="pillar-card" style="padding: 12px;">
-          <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px;">Batch 01 · Brecconary, Cantlin, Charlock 1F &amp; B1</div>
-          <img src="/assets/games/quest-warrior-dragon/map_review_batch_01.png" alt="Map Review Batch 01" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/map_review_batch_01.png')">
-        </div>
-        <div class="pillar-card" style="padding: 12px;">
-          <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px;">Batch 02 · Charlock Castle B2, B3, B4 &amp; B5</div>
-          <img src="/assets/games/quest-warrior-dragon/map_review_batch_02.png" alt="Map Review Batch 02" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/map_review_batch_02.png')">
-        </div>
-        <div class="pillar-card" style="padding: 12px;">
-          <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px;">Batch 03 · Charlock B6–B7, Overworld &amp; Erdrick B1</div>
-          <img src="/assets/games/quest-warrior-dragon/map_review_batch_03.png" alt="Map Review Batch 03" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/map_review_batch_03.png')">
-        </div>
-        <div class="pillar-card" style="padding: 12px;">
-          <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px;">Batch 04 · Erdrick B2, Garinham 1F &amp; Grave B1–B2</div>
-          <img src="/assets/games/quest-warrior-dragon/map_review_batch_04.png" alt="Map Review Batch 04" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/map_review_batch_04.png')">
-        </div>
-        <div class="pillar-card" style="padding: 12px;">
-          <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px;">Batch 05 · Garin's Grave B3–B4, Hauksness &amp; Kol</div>
-          <img src="/assets/games/quest-warrior-dragon/map_review_batch_05.png" alt="Map Review Batch 05" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/map_review_batch_05.png')">
-        </div>
-        <div class="pillar-card" style="padding: 12px;">
-          <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px;">Batch 06 · Mountain Cave B1–B2, N. Shrine &amp; Rimuldar</div>
-          <img src="/assets/games/quest-warrior-dragon/map_review_batch_06.png" alt="Map Review Batch 06" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/map_review_batch_06.png')">
-        </div>
-        <div class="pillar-card" style="padding: 12px;">
-          <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px;">Batch 07 · S. Shrine, Swamp Cave, Tantegel 1F &amp; 2F</div>
-          <img src="/assets/games/quest-warrior-dragon/map_review_batch_07.png" alt="Map Review Batch 07" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/map_review_batch_07.png')">
-        </div>
-        <div class="pillar-card" style="padding: 12px;">
-          <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--accent-cyan); margin-bottom:8px;">Batch 08 · Tantegel Castle Basement (Sunlight Shrine)</div>
-          <img src="/assets/games/quest-warrior-dragon/map_review_batch_08.png" alt="Map Review Batch 08" style="width:100%; height:auto; border-radius:6px; border:1px solid var(--border-color); cursor:zoom-in;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/map_review_batch_08.png')">
-        </div>
-      </div>
-    </section>
-
-    <!-- Section 2: Key Architectural Innovations -->
     <section>
       <div class="section-header">
-        <h2 class="section-title">Global Pathfinding &amp; Autonomous Stride AI Architecture</h2>
-      </div>
-
-      <div style="margin-bottom: 26px; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; background: #0d131f;">
-        <img src="/assets/games/quest-warrior-dragon/dw_pathfinding_pipeline.jpg" alt="RobOS Quest: Warrior Dragon Multi-Map BFS Pathfinding & Completeness Pipeline" style="width: 100%; height: auto; display: block; cursor: pointer; image-rendering: auto;" onclick="openLightboxImg('/assets/games/quest-warrior-dragon/dw_pathfinding_pipeline.jpg')">
-        <div style="padding: 10px 16px; font-size: 0.82rem; color: var(--text-muted); font-family: var(--font-mono); background: #080d16; border-top: 1px solid var(--border-color);">
-          Figure 1: RobOS Quest: Warrior Dragon Multi-Map BFS Pathfinding &amp; Completeness Verification Pipeline — Declarative World Graph Registries ➔ Headless Godot 4 BFS Verifier (<code>test_map_completeness.gd</code>) ➔ 100% Reachability Audit &amp; 20-Slide Visual Proof.
-        </div>
-      </div>
-
-      <div class="pillars-grid">
-        <div class="pillar-card">
-          <h3 class="pillar-title">1. Unified 15,227-State Multi-Map BFS Graph</h3>
-          <p class="pillar-desc">
-            <code>tests/test_map_completeness.gd</code> constructs a unified state space across all 28 interior maps in <code>map_grids.json</code> plus the 124×124 Alefgard overworld in <code>worldmap_terrain.json</code>, proving every map, stair, door, and chest is reachable from <code>tantegel-castle-2f (3,5)</code>.
-          </p>
-          <div class="pillar-code">godot --headless --path games/quest-warrior-dragon -s tests/test_map_completeness.gd</div>
-        </div>
-
-        <div class="pillar-card">
-          <h3 class="pillar-title">2. Continuous Multi-Tile Stride AI</h3>
-          <p class="pillar-desc">
-            <code>src/systems/AIEngine.gd</code> computes shortest paths via BFS and groups collinear steps into continuous multi-tile <strong>strides</strong> — holding <code>move_up/down/left/right</code> smoothly across straightaways instead of stopping on every tile.
-          </p>
-          <div class="pillar-code">stride(move_down, len=6 -&gt; 9,8) · 50% fewer discrete input events</div>
-        </div>
-
-        <div class="pillar-card">
-          <h3 class="pillar-title">3. Charlock B1–B3–B2 Multi-Floor Sword Loop</h3>
-          <p class="pillar-desc">
-            Erdrick's Sword (<code>cb2c1 @ 6,6</code> on <code>charlock-castle-b2</code>) sits in an isolated inner vault reachable only by descending <code>B1 -&gt; B2 -&gt; B3</code> and ascending <code>charlockb3-to-b2-d -&gt; charlockb2-to-b1-c -&gt; charlockb1-to-b2-g</code>.
-          </p>
-          <div class="pillar-code">Verified reachable in 470 min steps from ThroneRoom (3,5)</div>
-        </div>
-
-        <div class="pillar-card">
-          <h3 class="pillar-title">4. Chained Cucumber Checkpoint E2E Suite</h3>
-          <p class="pillar-desc">
-            Cucumber scenarios in <code>features/king_to_world_map.feature</code> chain JSON save-state checkpoints (King Lorik ➔ Magic Key ➔ Door Unlock ➔ Castle 1F ➔ WorldMap) using strictly legal player inputs and zero teleportation cheats.
-          </p>
-          <div class="pillar-code">5/5 Scenarios Passed · 33/33 Steps Passed · 0 Non-User Actions</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Section 3: Filterable Global Reachability Ledger -->
-    <section>
-      <div class="section-header">
-        <h2 class="section-title">Global BFS Reachability Audit Ledger (Maps, Milestones, Chests &amp; Doors)</h2>
-        <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-cyan);" id="txCounter">
-          Showing 104 / 104 Verified Nodes
-        </div>
-      </div>
-
-      <div class="ledger-controls">
-        <input type="text" id="txSearch" class="search-input" placeholder="Search maps, relics, chests, doors (e.g. charlock, sword, flute)..." oninput="filterTransactions()">
-
-        <div class="filter-pills">
-          <button class="filter-pill active" onclick="setTypeFilter('ALL')">All (104)</button>
-          <button class="filter-pill" onclick="setTypeFilter('MAP')">Maps (29)</button>
-          <button class="filter-pill" onclick="setTypeFilter('MILESTONE')">Quest Milestones (14)</button>
-          <button class="filter-pill" onclick="setTypeFilter('CHEST')">Treasure Chests (40)</button>
-          <button class="filter-pill" onclick="setTypeFilter('DOOR')">Locked Doors (21)</button>
-        </div>
+        <h2 class="section-title">How It's Verified</h2>
       </div>
 
       <div class="table-container">
         <table>
           <thead>
             <tr>
-              <th style="width: 70px;">#</th>
-              <th style="width: 110px;">Min Steps</th>
-              <th style="width: 140px;">Category</th>
-              <th style="width: 210px;">Map / Node ID</th>
-              <th style="width: 110px;">Coord</th>
-              <th>Shortest Pathfinding Route &amp; Verification Details</th>
+              <th style="width: 200px;">Check</th>
+              <th>What it proves</th>
             </tr>
           </thead>
-          <tbody id="txTableBody">
-            <!-- Populated by JS -->
+          <tbody>
+            <tr>
+              <td class="td-actor">Map completeness</td>
+              <td class="td-desc">A headless BFS over all 29 maps (<code>tests/test_map_completeness.gd</code>) reaches every map, stair, locked door and chest from King Lorik's throne room.<br><code>godot --headless --path games/quest-warrior-dragon -s tests/test_map_completeness.gd</code></td>
+            </tr>
+            <tr>
+              <td class="td-actor">Stride AI</td>
+              <td class="td-desc"><code>src/systems/AIEngine.gd</code> walks BFS shortest paths and holds a direction across straight runs instead of stepping tile by tile.</td>
+            </tr>
+            <tr>
+              <td class="td-actor">Charlock sword loop</td>
+              <td class="td-desc">Erdrick's Sword sits in a vault on B2 that's only reachable by going down to B3 and back up. The verifier finds it in 470 steps.</td>
+            </tr>
+            <tr>
+              <td class="td-actor">E2E checkpoints</td>
+              <td class="td-desc">Cucumber scenarios in <code>tests/e2e/features/</code> chain save-state checkpoints using real player inputs only. Nothing gets teleported.</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -828,84 +575,8 @@
       {"step": 560, "slide": 20, "img": "20_charlock_b7_dragonlord_battle.png", "tag": "FINAL BOSS", "title": "Charlock B7 — Dragonlord's Altar & Final Confrontation (560 Steps)", "desc": "Descending through Charlock B1..B6 into charlock-castle-b7 unlocks cb7d1 (17,12), reaches the 6 treasury chests, and confronts Dragonlord Form 2 at (20,12)."}
     ];
 
-    const ledgerEntries = [
-      {"id": 1, "steps": 0, "cat": "MAP", "node": "tantegel-castle-2f", "coord": "(3,5)", "desc": "44 reachable tiles · Route: tantegel-castle-2f (New Game Start)"},
-      {"id": 2, "steps": 11, "cat": "MAP", "node": "tantegel-castle-1f", "coord": "(8,8)", "desc": "549 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f"},
-      {"id": 3, "steps": 39, "cat": "MAP", "node": "world-map", "coord": "(45,45)", "desc": "9,039 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map"},
-      {"id": 4, "steps": 47, "cat": "MAP", "node": "brecconary-1f", "coord": "(1,15)", "desc": "709 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> brecconary-1f"},
-      {"id": 5, "steps": 49, "cat": "MAP", "node": "tantegel-castle-b1", "coord": "(1,5)", "desc": "82 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> tantegel-castle-b1"},
-      {"id": 6, "steps": 86, "cat": "MAP", "node": "erdricks-cave-b1", "coord": "(1,1)", "desc": "62 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> erdricks-cave-b1"},
-      {"id": 7, "steps": 105, "cat": "MAP", "node": "erdricks-cave-b2", "coord": "(9,9)", "desc": "63 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> erdricks-cave-b1 -> erdricks-cave-b2"},
-      {"id": 8, "steps": 122, "cat": "MAP", "node": "garinham-1f", "coord": "(1,15)", "desc": "298 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> garinham-1f"},
-      {"id": 9, "steps": 140, "cat": "MAP", "node": "swamp-cave-b1", "coord": "(1,1)", "desc": "116 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> swamp-cave-b1"},
-      {"id": 10, "steps": 158, "cat": "MAP", "node": "garinham-b1", "coord": "(0,13)", "desc": "237 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> garinham-1f -> garinham-b1"},
-      {"id": 11, "steps": 160, "cat": "MAP", "node": "kol-1f", "coord": "(20,24)", "desc": "512 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> kol-1f"},
-      {"id": 12, "steps": 164, "cat": "MAP", "node": "mountain-cave-b1", "coord": "(1,8)", "desc": "122 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> mountain-cave-b1"},
-      {"id": 13, "steps": 180, "cat": "MAP", "node": "mountain-cave-b2", "coord": "(1,1)", "desc": "121 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> mountain-cave-b1 -> mountain-cave-b2"},
-      {"id": 14, "steps": 188, "cat": "MAP", "node": "northern-cave-b1", "coord": "(5,10)", "desc": "69 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> northern-cave-b1"},
-      {"id": 15, "steps": 208, "cat": "MAP", "node": "hauksness-1f", "coord": "(1,10)", "desc": "380 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> hauksness-1f"},
-      {"id": 16, "steps": 209, "cat": "MAP", "node": "garinham-b2", "coord": "(11,2)", "desc": "111 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> garinham-1f -> garinham-b1 -> garinham-b2"},
-      {"id": 17, "steps": 212, "cat": "MAP", "node": "garinham-b3", "coord": "(18,2)", "desc": "235 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> garinham-1f -> garinham-b1 -> garinham-b2 -> garinham-b3"},
-      {"id": 18, "steps": 229, "cat": "MAP", "node": "rimuldar-1f", "coord": "(30,15)", "desc": "721 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> swamp-cave-b1 -> world-map -> rimuldar-1f"},
-      {"id": 19, "steps": 256, "cat": "MAP", "node": "garinham-b4", "coord": "(5,5)", "desc": "32 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> garinham-1f -> garinham-b1 -> garinham-b2 -> garinham-b3 -> garinham-b4"},
-      {"id": 20, "steps": 269, "cat": "MAP", "node": "charlock-castle-1f", "coord": "(10,20)", "desc": "181 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> swamp-cave-b1 -> world-map -> charlock-castle-1f"},
-      {"id": 21, "steps": 276, "cat": "MAP", "node": "southern-cave-b1", "coord": "(1,5)", "desc": "65 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> swamp-cave-b1 -> world-map -> southern-cave-b1"},
-      {"id": 22, "steps": 305, "cat": "MAP", "node": "charlock-castle-b1", "coord": "(10,1)", "desc": "232 reachable tiles · Route: tantegel-castle-2f -> ... -> charlock-castle-1f -> charlock-castle-b1"},
-      {"id": 23, "steps": 325, "cat": "MAP", "node": "cantlin-1f", "coord": "(1,16)", "desc": "681 reachable tiles · Route: tantegel-castle-2f -> tantegel-castle-1f -> world-map -> cantlin-1f"},
-      {"id": 24, "steps": 325, "cat": "MAP", "node": "charlock-castle-b2", "coord": "(1,1)", "desc": "55 reachable tiles · Route: tantegel-castle-2f -> ... -> charlock-castle-1f -> charlock-castle-b1 -> charlock-castle-b2"},
-      {"id": 25, "steps": 423, "cat": "MAP", "node": "charlock-castle-b3", "coord": "(8,1)", "desc": "60 reachable tiles · Route: tantegel-castle-2f -> ... -> charlock-castle-b1 -> charlock-castle-b2 -> charlock-castle-b3"},
-      {"id": 26, "steps": 446, "cat": "MAP", "node": "charlock-castle-b4", "coord": "(8,1)", "desc": "65 reachable tiles · Route: tantegel-castle-2f -> ... -> charlock-castle-b2 -> charlock-castle-b3 -> charlock-castle-b4"},
-      {"id": 27, "steps": 456, "cat": "MAP", "node": "charlock-castle-b5", "coord": "(9,1)", "desc": "59 reachable tiles · Route: tantegel-castle-2f -> ... -> charlock-castle-b3 -> charlock-castle-b4 -> charlock-castle-b5"},
-      {"id": 28, "steps": 483, "cat": "MAP", "node": "charlock-castle-b6", "coord": "(1,1)", "desc": "52 reachable tiles · Route: tantegel-castle-2f -> ... -> charlock-castle-b4 -> charlock-castle-b5 -> charlock-castle-b6"},
-      {"id": 29, "steps": 495, "cat": "MAP", "node": "charlock-castle-b7", "coord": "(4,4)", "desc": "275 reachable tiles · Route: tantegel-castle-2f -> ... -> charlock-castle-b5 -> charlock-castle-b6 -> charlock-castle-b7"},
-      {"id": 30, "steps": 0, "cat": "MILESTONE", "node": "King Lorik (Throne Room)", "coord": "(3,5)", "desc": "tantegel-castle-2f · Royal audience and quest initialization"},
-      {"id": 31, "steps": 3, "cat": "MILESTONE", "node": "Throne Room Key Chest", "coord": "(6,5)", "desc": "tantegel-castle-2f · Magic Key chest ttrc3 opens throne room door ttrd1"},
-      {"id": 32, "steps": 58, "cat": "MILESTONE", "node": "Stones of Sunlight Chest", "coord": "(5,6)", "desc": "tantegel-castle-b1 · Chest tbac1 in Tantegel Basement"},
-      {"id": 33, "steps": 148, "cat": "MILESTONE", "node": "Erdrick's Tablet Chest", "coord": "(10,4)", "desc": "erdricks-cave-b2 · Chest er2c1 guiding the hero to the Staff of Rain & Stones of Sunlight"},
-      {"id": 34, "steps": 172, "cat": "MILESTONE", "node": "Princess Gwaelin Chamber", "coord": "(6,20)", "desc": "swamp-cave-b1 · Locked behind door sw1d1 (6,21) guarded by Green Dragon"},
-      {"id": 35, "steps": 187, "cat": "MILESTONE", "node": "Fairy Flute (Kol)", "coord": "(10,7)", "desc": "kol-1f · Hidden ground search item kolc_ff near hot springs"},
-      {"id": 36, "steps": 202, "cat": "MILESTONE", "node": "Staff of Rain Shrine Chest", "coord": "(4,5)", "desc": "northern-cave-b1 · Chest nc1c1 inside Northern Shrine (world-map 83,3)"},
-      {"id": 37, "steps": 217, "cat": "MILESTONE", "node": "Rainbow Bridge (World Map)", "coord": "(66,51)", "desc": "world-map · Using Rainbow Drop spans the channel to Charlock Island"},
-      {"id": 38, "steps": 220, "cat": "MILESTONE", "node": "Fighter's Ring (Mtn B2)", "coord": "(3,3)", "desc": "mountain-cave-b2 · Chest mt2c1 in Mountain Cave B2"},
-      {"id": 39, "steps": 233, "cat": "MILESTONE", "node": "Erdrick's Armor (Hauksness)", "coord": "(19,13)", "desc": "hauksness-1f · Guarded by the Axe Knight behind barrier tiles (17,13)..(18,13)"},
-      {"id": 40, "steps": 265, "cat": "MILESTONE", "node": "Silver Harp (Garin's B4)", "coord": "(6,1)", "desc": "garinham-b4 · Deepest crypt altar in Garin's Grave B4"},
-      {"id": 41, "steps": 284, "cat": "MILESTONE", "node": "Rainbow Drop Shrine Chest", "coord": "(6,6)", "desc": "southern-cave-b1 · Chest sc1c1 inside Southern Sanctum (world-map 110,111)"},
-      {"id": 42, "steps": 470, "cat": "MILESTONE", "node": "Erdrick's Sword (Charlock)", "coord": "(6,6)", "desc": "charlock-castle-b2 · Chest cb2c1 reached via B1->B2->B3->B2(10,2)->B1(16,2)->B2(6,1)"},
-      {"id": 43, "steps": 560, "cat": "MILESTONE", "node": "Dragonlord's Altar", "coord": "(20,12)", "desc": "charlock-castle-b7 · Final Boss encounter in Charlock Throne Room"},
-      {"id": 44, "steps": 2, "cat": "CHEST", "node": "ttrc2 (tantegel-castle-2f)", "coord": "(5,5)", "desc": "Torch chest in King Lorik's Throne Room"},
-      {"id": 45, "steps": 3, "cat": "CHEST", "node": "ttrc3 (tantegel-castle-2f)", "coord": "(6,5)", "desc": "Magic Key chest in King Lorik's Throne Room"},
-      {"id": 46, "steps": 7, "cat": "CHEST", "node": "ttrc1 (tantegel-castle-2f)", "coord": "(7,2)", "desc": "120 Gold chest in King Lorik's Throne Room"},
-      {"id": 47, "steps": 22, "cat": "CHEST", "node": "tanc1..tanc4 (tantegel-castle-1f)", "coord": "(2,14..4,16)", "desc": "4 Tantegel Castle 1F treasury chests behind door tand2 (5,14)"},
-      {"id": 48, "steps": 58, "cat": "CHEST", "node": "tbac1 (tantegel-castle-b1)", "coord": "(5,6)", "desc": "Stones of Sunlight chest in Tantegel Basement"},
-      {"id": 49, "steps": 148, "cat": "CHEST", "node": "er2c1 (erdricks-cave-b2)", "coord": "(10,4)", "desc": "Erdrick's Tablet chest in Erdrick's Cave B2"},
-      {"id": 50, "steps": 150, "cat": "CHEST", "node": "garc1..garc3 (garinham-1f)", "coord": "(9,6..10,6)", "desc": "3 Garinham treasury chests behind door gard1 (5,7)"},
-      {"id": 51, "steps": 173, "cat": "CHEST", "node": "gh1c1..gh1c3 (garinham-b1)", "coord": "(12,1..14,1)", "desc": "3 Garin's Grave B1 chests"},
-      {"id": 52, "steps": 176, "cat": "CHEST", "node": "kolc1..kolc3 (kol-1f)", "coord": "(16,21..16,23)", "desc": "3 Kol vault chests & kolc_ff (10,7) Fairy Flute"},
-      {"id": 53, "steps": 184, "cat": "CHEST", "node": "mt1c1 (mountain-cave-b1)", "coord": "(14,6)", "desc": "Mountain Cave B1 chest"},
-      {"id": 54, "steps": 202, "cat": "CHEST", "node": "nc1c1 (northern-cave-b1)", "coord": "(4,5)", "desc": "Staff of Rain Shrine chest"},
-      {"id": 55, "steps": 220, "cat": "CHEST", "node": "mt2c1..mt2c4 (mountain-cave-b2)", "coord": "(3,3..11,10)", "desc": "4 Mountain Cave B2 chests including Fighter's Ring"},
-      {"id": 56, "steps": 229, "cat": "CHEST", "node": "gh3c1..gh3c2 (garinham-b3)", "coord": "(2,2..14,7)", "desc": "2 Garin's Grave B3 chests"},
-      {"id": 57, "steps": 245, "cat": "CHEST", "node": "rimc1 (rimuldar-1f)", "coord": "(25,24)", "desc": "Rimuldar inn chest behind doors rimd1 (22,22) & rimd2 (23,24)"},
-      {"id": 58, "steps": 284, "cat": "CHEST", "node": "sc1c1 (southern-cave-b1)", "coord": "(6,6)", "desc": "Rainbow Drop Shrine chest"},
-      {"id": 59, "steps": 365, "cat": "CHEST", "node": "ctnc1..ctnc3 (cantlin-1f)", "coord": "(28,26..3,28)", "desc": "3 Cantlin treasury chests"},
-      {"id": 60, "steps": 470, "cat": "CHEST", "node": "cb2c1 (charlock-castle-b2)", "coord": "(6,6)", "desc": "Erdrick's Sword chest in Charlock B2 inner sanctum"},
-      {"id": 61, "steps": 540, "cat": "CHEST", "node": "cb7c1..cb7c4 (charlock-castle-b7)", "coord": "(11,11..13,13)", "desc": "6 Charlock B7 treasury chests behind door cb7d1 (17,12)"},
-      {"id": 62, "steps": 5, "cat": "DOOR", "node": "ttrd1 (tantegel-castle-2f)", "coord": "(5,8)", "desc": "Throne Room exit door leading to stairs (9,9)"},
-      {"id": 63, "steps": 18, "cat": "DOOR", "node": "tand1 & tand2 (tantegel-castle-1f)", "coord": "(19,7) & (5,14)", "desc": "Tantegel Castle 1F courtyard and treasury doors"},
-      {"id": 64, "steps": 75, "cat": "DOOR", "node": "bred1 & bred2 (brecconary-1f)", "coord": "(22,7) & (6,24)", "desc": "Brecconary locked chamber doors"},
-      {"id": 65, "steps": 140, "cat": "DOOR", "node": "gard1 & gard2 (garinham-1f)", "coord": "(5,7) & (18,11)", "desc": "Garinham treasury door & Garin's Grave entrance door"},
-      {"id": 66, "steps": 171, "cat": "DOOR", "node": "sw1d1 (swamp-cave-b1)", "coord": "(6,21)", "desc": "Princess Gwaelin prison cell door in Swamp Cave B1"},
-      {"id": 67, "steps": 182, "cat": "DOOR", "node": "kold1 & kold2 (kol-1f)", "coord": "(8,13) & (2,15)", "desc": "Kol village locked doors"},
-      {"id": 68, "steps": 195, "cat": "DOOR", "node": "gh1d1 (garinham-b1)", "coord": "(18,18)", "desc": "Garin's Grave B1 locked passage door"},
-      {"id": 69, "steps": 241, "cat": "DOOR", "node": "rimd1 & rimd2 (rimuldar-1f)", "coord": "(22,22) & (23,24)", "desc": "Rimuldar inn & southern chamber doors"},
-      {"id": 70, "steps": 282, "cat": "DOOR", "node": "ccfd1 & ccfd2 (charlock-castle-1f)", "coord": "(5,9) & (16,9)", "desc": "Charlock Castle 1F twin inner doors"},
-      {"id": 71, "steps": 342, "cat": "DOOR", "node": "ctnd1..ctnd5 (cantlin-1f)", "coord": "(27,10..16,26)", "desc": "5 Cantlin fortress locked doors"},
-      {"id": 72, "steps": 548, "cat": "DOOR", "node": "cb7d1 (charlock-castle-b7)", "coord": "(17,12)", "desc": "Charlock B7 Dragonlord treasury & altar door"}
-    ];
-
     let currentSlide = 0;
     let autoPlayInterval = null;
-    let currentTypeFilter = 'ALL';
 
     function initRail() {
       const rail = document.getElementById('thumbRail');
@@ -977,54 +648,8 @@
       document.getElementById('lightbox').classList.remove('active');
     }
 
-    function getBadgeClass(cat) {
-      if (cat === 'MILESTONE') return 'badge-success';
-      if (cat === 'CHEST') return 'badge-amber';
-      if (cat === 'DOOR') return 'badge-purple';
-      return 'badge-cyan';
-    }
-
-    function renderTable(list) {
-      const tbody = document.getElementById('txTableBody');
-      tbody.innerHTML = list.map(item => `
-        <tr>
-          <td class="td-id">#${item.id}</td>
-          <td class="td-step">${item.steps} steps</td>
-          <td><span class="badge ${getBadgeClass(item.cat)}">${item.cat}</span></td>
-          <td class="td-actor">${item.node}</td>
-          <td class="td-id">${item.coord}</td>
-          <td class="td-desc">${item.desc}</td>
-        </tr>
-      `).join('');
-      document.getElementById('txCounter').innerText = `Showing ${list.length} / ${ledgerEntries.length} Verified Audit Entries`;
-    }
-
-    function setTypeFilter(f) {
-      currentTypeFilter = f;
-      document.querySelectorAll('.filter-pill').forEach(btn => {
-        btn.classList.toggle('active', btn.innerText.toUpperCase().startsWith(f));
-      });
-      filterTransactions();
-    }
-
-    function filterTransactions() {
-      const search = document.getElementById('txSearch').value.toLowerCase();
-      const filtered = ledgerEntries.filter(item => {
-        if (currentTypeFilter !== 'ALL' && item.cat !== currentTypeFilter) {
-          return false;
-        }
-        if (search) {
-          const text = (item.node + ' ' + item.cat + ' ' + item.coord + ' ' + item.desc).toLowerCase();
-          if (!text.includes(search)) return false;
-        }
-        return true;
-      });
-      renderTable(filtered);
-    }
-
     initRail();
     updateViewer();
-    renderTable(ledgerEntries);
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight') nextSlide();
