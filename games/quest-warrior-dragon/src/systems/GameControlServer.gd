@@ -827,8 +827,16 @@ func get_full_scene_state() -> Dictionary:
 
 	var item_window_info = {
 		"is_showing": bool(scene.get("_item_open")) if scene and scene.get("_item_open") != null else false,
-		"selected_index": int(scene.get("_item_index")) if scene and scene.get("_item_index") != null else 0
+		"selected_index": int(scene.get("_item_index")) if scene and scene.get("_item_index") != null else 0,
+		"items": []
 	}
+	# Rows as drawn (stacked per kind); selected_index indexes these rows.
+	var irows: Variant = scene.get("_item_rows") if scene else null
+	if irows is Array:
+		for r in irows:
+			if r is Dictionary:
+				item_window_info["items"].append({"id": str(r.get("id", "")), "name": str(r.get("text", "")),
+					"count": int(r.get("count", 1)), "inventory_index": int(r.get("index", 0))})
 	var shop_window_info = {"is_showing": false, "selected_index": 0, "items": []}
 	if scene and scene.get("_shop_open") == true:
 		shop_window_info["is_showing"] = true

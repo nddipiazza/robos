@@ -121,6 +121,8 @@ var _menu_labels:   Array
 var _status_panel:  Panel
 var _item_panel:    Panel
 var _item_labels:   Array
+var _item_rows:     Array = []   # MenuKit.stack_inventory rows shown in the ITEM window
+var _item_scroll   := 0
 var _music:         AudioStreamPlayer
 var _sfx:           AudioStreamPlayer
 
@@ -422,179 +424,74 @@ func _build_dialog_ui(canvas: CanvasLayer) -> void:
 	_dialog_panel.position = Vector2(DIALOG_MARGIN, VH - DIALOG_H - DIALOG_MARGIN)
 	_dialog_panel.size     = Vector2(VW - DIALOG_MARGIN * 2, DIALOG_H)
 	_dialog_panel.visible  = false
-	_dialog_panel.add_theme_stylebox_override("panel",
-		_make_box_style(Color(0.0, 0.0, 0.28, 0.95), Color(1.0, 0.85, 0.1)))
-	_dialog_panel.clip_contents = true
+	MenuKit.skin(_dialog_panel)
 	canvas.add_child(_dialog_panel)
 
-	_speaker_label = Label.new()
-	_speaker_label.position = Vector2(12, 6)
-	_speaker_label.size     = Vector2(300, 22)
-	_speaker_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.1))
-	_speaker_label.add_theme_font_size_override("font_size", 15)
+	_speaker_label = MenuKit.label("", 13, MenuKit.TITLE)
+	_speaker_label.position = Vector2(14, 8)
+	_speaker_label.size     = Vector2(300, 20)
 	_dialog_panel.add_child(_speaker_label)
 
-	var divider := ColorRect.new()
-	divider.position = Vector2(8, 28)
-	divider.size     = Vector2(VW - DIALOG_MARGIN * 2 - 16, 2)
-	divider.color    = Color(1.0, 0.85, 0.1, 0.6)
-	_dialog_panel.add_child(divider)
-
-	_dialog_label = Label.new()
-	_dialog_label.position      = Vector2(12, 34)
-	_dialog_label.size          = Vector2(VW - DIALOG_MARGIN * 2 - 24, DIALOG_H - 50)
+	_dialog_label = MenuKit.label("", 14)
+	_dialog_label.position      = Vector2(14, 28)
 	_dialog_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_dialog_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
-	_dialog_label.add_theme_font_size_override("font_size", 14)
+	_dialog_label.size          = Vector2(VW - DIALOG_MARGIN * 2 - 28, DIALOG_H - 40)
+	_dialog_label.clip_text     = true
 	_dialog_panel.add_child(_dialog_label)
 
-	_prompt_label = Label.new()
-	_prompt_label.text     = "▼"
-	_prompt_label.position = Vector2(VW - DIALOG_MARGIN * 2 - 32, DIALOG_H - 28)
-	_prompt_label.add_theme_color_override("font_color", Color(1.0, 1.0, 0.3))
-	_prompt_label.add_theme_font_size_override("font_size", 18)
+	_prompt_label = MenuKit.label("▼", 13, MenuKit.DESC)
+	_prompt_label.position = Vector2(VW - DIALOG_MARGIN * 2 - 24, DIALOG_H - 24)
 	_prompt_label.visible = false
 	_dialog_panel.add_child(_prompt_label)
 
 
 func _build_menu_ui(canvas: CanvasLayer) -> void:
-	const ITEM_W  := 90
-	const ITEM_H  := 24
-	const PAD     := 10
-	const PANEL_W := ITEM_W * MENU_COLS + PAD * 3
-	const PANEL_H := ITEM_H * MENU_ROWS + PAD * 2 + 22
-
 	_menu_panel = Panel.new()
-	_menu_panel.name     = "CommandMenu"
-	_menu_panel.size     = Vector2(PANEL_W, PANEL_H)
-	_menu_panel.position = Vector2(VW - PANEL_W - DIALOG_MARGIN, DIALOG_MARGIN)
-	_menu_panel.visible  = false
-	_menu_panel.add_theme_stylebox_override("panel",
-		_make_box_style(Color(0.0, 0.0, 0.28, 0.97), Color(1.0, 0.85, 0.1)))
+	_menu_panel.name    = "CommandMenu"
+	_menu_panel.visible = false
+	MenuKit.skin(_menu_panel)
 	canvas.add_child(_menu_panel)
-
-	var title := Label.new()
-	title.text     = "COMMAND"
-	title.position = Vector2(PAD, 5)
-	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.1))
-	title.add_theme_font_size_override("font_size", 13)
-	_menu_panel.add_child(title)
-
-	var title_div := ColorRect.new()
-	title_div.position = Vector2(PAD, 22)
-	title_div.size     = Vector2(PANEL_W - PAD * 2, 2)
-	title_div.color    = Color(1.0, 0.85, 0.1, 0.5)
-	_menu_panel.add_child(title_div)
-
 	_menu_labels = []
-	for i in range(MENU_ITEMS.size()):
-		var col := i % MENU_COLS
-		var row := i / MENU_COLS
-		var lbl := Label.new()
-		lbl.text     = MENU_ITEMS[i]
-		lbl.position = Vector2(PAD + col * (ITEM_W + PAD), 28 + row * ITEM_H)
-		lbl.size     = Vector2(ITEM_W, ITEM_H)
-		lbl.add_theme_font_size_override("font_size", 14)
-		_menu_panel.add_child(lbl)
-		_menu_labels.append(lbl)
-
 	_update_menu_cursor()
 
 
 func _build_status_ui(canvas: CanvasLayer) -> void:
-	const SW := 280
-	const SH := 220
 	_status_panel = Panel.new()
-	_status_panel.name     = "StatusPanel"
-	_status_panel.size     = Vector2(SW, SH)
-	_status_panel.position = Vector2((VW - SW) / 2.0, (VH - SH) / 2.0)
-	_status_panel.visible  = false
-	_status_panel.add_theme_stylebox_override("panel",
-		_make_box_style(Color(0.0, 0.0, 0.28, 0.97), Color(1.0, 0.85, 0.1)))
+	_status_panel.name    = "StatusPanel"
+	_status_panel.visible = false
+	MenuKit.skin(_status_panel)
 	canvas.add_child(_status_panel)
 
 
 func _build_item_ui(canvas: CanvasLayer) -> void:
 	_item_panel = Panel.new()
-	_item_panel.name     = "ItemPanel"
-	_item_panel.size     = Vector2(280, 220)
-	_item_panel.position = Vector2((VW - 280) / 2.0, (VH - 220) / 2.0)
-	_item_panel.visible  = false
-	_item_panel.add_theme_stylebox_override("panel",
-		_make_box_style(Color(0.0, 0.0, 0.28, 0.97), Color(1.0, 0.85, 0.1)))
+	_item_panel.name    = "ItemPanel"
+	_item_panel.visible = false
+	MenuKit.skin(_item_panel)
 	canvas.add_child(_item_panel)
 	_item_labels = []
 
 
 func _refresh_item_panel() -> void:
-	for child in _item_panel.get_children():
-		_item_panel.remove_child(child)
-		child.queue_free()
-	_item_labels = []
-
-	var title := Label.new()
-	title.text = "ITEMS"
-	title.position = Vector2(16, 10)
-	title.add_theme_font_size_override("font_size", 14)
-	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.1))
-	_item_panel.add_child(title)
-
-	if _inventory.is_empty():
-		var empty := Label.new()
-		empty.text = "Nothing."
-		empty.position = Vector2(16, 36)
-		empty.add_theme_font_size_override("font_size", 13)
-		empty.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-		_item_panel.add_child(empty)
-	else:
-		for i in _inventory.size():
-			var lbl := Label.new()
-			lbl.text = _inventory[i]["name"]
-			lbl.position = Vector2(28, 36 + i * 20)
-			lbl.add_theme_font_size_override("font_size", 13)
-			_item_panel.add_child(lbl)
-			_item_labels.append(lbl)
-
-	var desc := Label.new()
-	desc.name = "ItemDesc"
-	desc.position = Vector2(16, 180)
-	desc.size = Vector2(248, 36)
-	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc.add_theme_font_size_override("font_size", 12)
-	desc.add_theme_color_override("font_color", Color(0.7, 0.9, 1.0))
-	_item_panel.add_child(desc)
+	_item_rows = MenuKit.stack_inventory(_inventory)
+	_item_index = clampi(_item_index, 0, maxi(_item_rows.size() - 1, 0))
+	var desc := str(_item_rows[_item_index].get("desc", "")) if not _item_rows.is_empty() else ""
+	_item_scroll = MenuKit.render_list(_item_panel, {
+		"title": "ITEMS", "rows": _item_rows, "index": _item_index, "width": 250,
+		"max_rows": 10, "scroll": _item_scroll, "desc": desc, "empty_text": "Nothing."})
+	_item_panel.position = Vector2(VW - _item_panel.size.x - 8, 8)
 
 
 func _refresh_item_cursor() -> void:
-	for i in _item_labels.size():
-		var color := Color(1.0, 0.85, 0.1) if i == _item_index else Color.WHITE
-		_item_labels[i].add_theme_color_override("font_color", color)
-	var desc_node := _item_panel.get_node_or_null("ItemDesc") as Label
-	if desc_node and _item_index < _inventory.size():
-		desc_node.text = _inventory[_item_index].get("desc", "")
+	_refresh_item_panel()
 
 
 func _build_choice_ui(canvas: CanvasLayer) -> void:
-	const CW := 130
-	const CH := 72
 	_choice_panel = Panel.new()
-	_choice_panel.name = "ChoiceBox"
-	_choice_panel.size = Vector2(CW, CH)
-	_choice_panel.position = Vector2(VW - CW - DIALOG_MARGIN - 20, VH - DIALOG_H - DIALOG_MARGIN - CH - 10)
+	_choice_panel.name    = "ChoiceBox"
 	_choice_panel.visible = false
-	_choice_panel.add_theme_stylebox_override("panel",
-		_make_box_style(Color(0.0, 0.0, 0.28, 0.97), Color(1.0, 0.85, 0.1)))
+	MenuKit.skin(_choice_panel)
 	canvas.add_child(_choice_panel)
-
-	_choice_yes_lbl = Label.new()
-	_choice_yes_lbl.position = Vector2(14, 10)
-	_choice_yes_lbl.add_theme_font_size_override("font_size", 14)
-	_choice_panel.add_child(_choice_yes_lbl)
-
-	_choice_no_lbl = Label.new()
-	_choice_no_lbl.position = Vector2(14, 38)
-	_choice_no_lbl.add_theme_font_size_override("font_size", 14)
-	_choice_panel.add_child(_choice_no_lbl)
 
 
 func _open_choice(on_yes: Callable, on_no: Callable) -> void:
@@ -608,16 +505,10 @@ func _open_choice(on_yes: Callable, on_no: Callable) -> void:
 
 
 func _update_choice_cursor() -> void:
-	if _choice_index == 0:
-		_choice_yes_lbl.text = "► YES"
-		_choice_yes_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 0.0))
-		_choice_no_lbl.text  = "  NO"
-		_choice_no_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
-	else:
-		_choice_yes_lbl.text = "  YES"
-		_choice_yes_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
-		_choice_no_lbl.text  = "► NO"
-		_choice_no_lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 0.0))
+	# The question is in the dialog box; this small window only holds the answers.
+	MenuKit.render_choice(_choice_panel, "", ["YES", "NO"], _choice_index, 110.0)
+	_choice_panel.position = Vector2(VW - _choice_panel.size.x - DIALOG_MARGIN - 12,
+		VH - DIALOG_H - DIALOG_MARGIN - _choice_panel.size.y - 6)
 
 
 func _close_choice() -> void:
@@ -695,14 +586,8 @@ func _close_menu() -> void:
 
 
 func _update_menu_cursor() -> void:
-	for i in range(_menu_labels.size()):
-		var lbl: Label = _menu_labels[i]
-		if i == _menu_index:
-			lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 0.0))
-			lbl.text = "► " + MENU_ITEMS[i]
-		else:
-			lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
-			lbl.text = "  " + MENU_ITEMS[i]
+	MenuKit.render_grid(_menu_panel, MENU_ITEMS, _menu_index, MENU_COLS)
+	_menu_panel.position = Vector2(VW - _menu_panel.size.x - 8, 8)
 
 
 func _navigate_menu(dir: Vector2i) -> void:
@@ -1032,47 +917,11 @@ func _gwaelin_screen_pos() -> Vector2:
 
 
 func _cmd_status() -> void:
-	for child in _status_panel.get_children():
-		_status_panel.remove_child(child)
-		child.free()
-
-	var s := HERO_STATS
-	var lines: Array[String] = [
-		"NAME:   " + s["name"],
-		"LEVEL:  " + str(s["level"]),
-		"",
-		"HP:     " + str(s["hp"]) + " / " + str(s["hp_max"]),
-		"MP:     " + str(s["mp"]) + " / " + str(s["mp_max"]),
-		"",
-		"STR:    " + str(s["str"]) + "    AGL:  " + str(s["agl"]),
-		"ATK:    " + str(s["atk"]) + "    DEF:  " + str(s["def"]),
-		"",
-		"EXP:    " + str(s["exp"]),
-		"GOLD:   " + str(s["gold"]) + "G",
-	]
-
-	var title := Label.new()
-	title.text     = "── STATUS ──"
-	title.position = Vector2(10, 8)
-	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.1))
-	title.add_theme_font_size_override("font_size", 14)
-	_status_panel.add_child(title)
-
-	for i in range(lines.size()):
-		var lbl := Label.new()
-		lbl.text     = lines[i]
-		lbl.position = Vector2(14, 30 + i * 17)
-		lbl.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
-		lbl.add_theme_font_size_override("font_size", 13)
-		_status_panel.add_child(lbl)
-
-	var hint := Label.new()
-	hint.text     = "[ Press B or Esc to close ]"
-	hint.position = Vector2(10, 195)
-	hint.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-	hint.add_theme_font_size_override("font_size", 11)
-	_status_panel.add_child(hint)
-
+	var gs := get_node_or_null("/root/GameState")
+	var stats: Dictionary = gs.hero_stats if gs else HERO_STATS
+	var gold: int = int(gs.gold) if gs else int(HERO_STATS.get("gold", 0))
+	MenuKit.render_table(_status_panel, "STATUS", MenuKit.status_rows(stats, gold), 230.0)
+	MenuKit.centered(_status_panel, VW, VH)
 	_status_open          = true
 	_status_panel.visible = true
 
@@ -1209,15 +1058,38 @@ func _cmd_take() -> void:
 
 
 func _cmd_spell() -> void:
-	_show_dialog("", ["Thou hast not yet\nlearned any magic spells."])
+	var gs := get_node_or_null("/root/GameState")
+	var known: Array = gs.spells if gs and gs.spells is Array else []
+	if known.is_empty():
+		_show_dialog("", ["Thou hast not yet\nlearned any magic spells."])
+		return
+	var mp := int(gs.hero_stats.get("mp", 0))
+	var hp := int(gs.hero_stats.get("hp", 0))
+	var hp_max := int(gs.hero_stats.get("hp_max", 1))
+	var missing := hp_max - hp
+	if missing <= 0:
+		_show_dialog("", ["There is no need to\ncast a spell here."])
+		return
+	if gs.has_spell("healmore") and mp >= 10 and missing > 30:
+		gs.hero_stats["mp"] = mp - 10
+		gs.hero_stats["hp"] = hp_max
+		_show_dialog("", ["Thou hast cast HEALMORE!\nThy wounds are fully healed."])
+		return
+	if gs.has_spell("heal") and mp >= 4:
+		var amt := 10 + (randi() % 8)
+		gs.hero_stats["mp"] = mp - 4
+		gs.hero_stats["hp"] = mini(hp_max, hp + amt)
+		_show_dialog("", ["Thou hast cast HEAL!\nHP restored by %d." % mini(amt, missing)])
+		return
+	_show_dialog("", ["Thou hast not enough\nMagic Points!"])
 
 
 func _cmd_item() -> void:
-	_refresh_item_panel()
 	_item_index = 0
+	_item_scroll = 0
+	_refresh_item_panel()
 	_item_open  = true
 	_item_panel.visible = true
-	_refresh_item_cursor()
 
 
 func _use_item(idx: int) -> void:
@@ -1465,10 +1337,16 @@ func _input(event: InputEvent) -> void:
 			_item_index = maxi(_item_index - 1, 0)
 			_refresh_item_cursor()
 		elif event.is_action_pressed("ui_down") or event.is_action_pressed("move_down"):
-			_item_index = mini(_item_index + 1, _inventory.size() - 1)
+			_item_index = mini(_item_index + 1, maxi(_item_rows.size() - 1, 0))
 			_refresh_item_cursor()
 		elif event.is_action_pressed("ui_accept"):
-			_use_item(_item_index)
+			if _item_rows.is_empty():
+				_item_panel.visible = false
+				_item_open = false
+			else:
+				_use_item(int(_item_rows[_item_index].get("index", 0)))
+				if _item_open:
+					_refresh_item_panel()
 		get_viewport().set_input_as_handled()
 		return
 

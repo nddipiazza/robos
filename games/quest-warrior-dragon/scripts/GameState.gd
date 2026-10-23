@@ -163,7 +163,28 @@ func _load_save_state_from_path(save_state_path: String) -> void:
 	_apply_save_state_override(parsed)
 	print("[GameState] loaded save state override: %s" % save_state_path)
 
-func _apply_save_state_override(data: Dictionary) -> void:
+## Save files come in two spellings: camelCase (export_state_dict / save_to_disk) and the
+## snake_case used by the bundled data/v1/save-states fixtures. Accept both.
+const _SNAKE_SAVE_KEYS := {
+	"hero_name": "heroName", "hero_level": "heroLevel", "hero_hp": "heroHp", "hero_hp_max": "heroHpMax",
+	"hero_mp": "heroMp", "hero_mp_max": "heroMpMax", "hero_str": "heroStr", "hero_agl": "heroAgl",
+	"hero_atk": "heroAtk", "hero_def": "heroDef", "hero_exp": "heroExp", "hero_weapon": "heroWeapon",
+	"hero_armor": "heroArmor", "hero_shield": "heroShield", "hero_spells": "heroSpells",
+	"opened_chests": "openedChests", "unlocked_doors": "unlockedDoors", "bridge_built": "bridgeBuilt",
+	"gwaelin_rescued": "gwaelinRescued", "gwaelin_returned": "gwaelinReturned",
+	"dragonlord_defeated": "dragonlordDefeated", "golem_defeated": "golemDefeated",
+}
+
+static func normalize_save_keys(data: Dictionary) -> Dictionary:
+	var out := data.duplicate(true)
+	for snake in _SNAKE_SAVE_KEYS:
+		var camel: String = _SNAKE_SAVE_KEYS[snake]
+		if out.has(snake) and not out.has(camel):
+			out[camel] = out[snake]
+	return out
+
+func _apply_save_state_override(raw: Dictionary) -> void:
+	var data := normalize_save_keys(raw)
 	if data.has("scene") and str(data.get("scene", "")) != "":
 		initial_scene_override = str(data.get("scene", ""))
 	if data.has("gold"):
