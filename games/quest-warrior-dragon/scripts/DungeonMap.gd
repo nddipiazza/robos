@@ -440,6 +440,7 @@ func _ready() -> void:
 	_build_ui()
 	_build_sfx_player()
 	_build_npcs()
+	_restore_opened_chest_visuals()
 	_start_music()
 
 	Input.action_release("move_up")
@@ -516,6 +517,8 @@ func _build_background() -> void:
 
 	var abs_path := ProjectSettings.globalize_path(_map_image_path())
 	_map_image = Image.load_from_file(abs_path)
+	if _map_image and _get_map_w() > 0:
+		MapBackdrop.attach(_bg, _map_image, _map_image.get_width() / _get_map_w(), TILE_SIZE)
 
 func _build_hero_sprite() -> void:
 	_hero_ws = WalkSprite.new()
@@ -617,7 +620,9 @@ func _clean_npc_bg_tiles() -> void:
 		if tile.x >= 0 and tile.y >= 0:
 			npc_tiles[tile] = true
 
-	var ground_tiles: Array[int] = [3, 0, 4, 8, 30, 31, 33, 34, 18, 21]
+	# Plain floors only: copying a counter, bridge or stairs tile under an NPC drew it as
+	# standing on a counter (Brecconary's weapon merchant sat on a framed box).
+	var ground_tiles: Array[int] = [3, 0, 2, 30, 31]
 	var image_modified := false
 
 	for npc in _npc_data:
@@ -1248,10 +1253,12 @@ func _execute_menu_item(cmd: String) -> void:
 
 func _cmd_talk() -> void:
 	var face_tile := _hero_tile + _hero_facing
+	# NES: facing a counter talks to whoever stands on its far side (innkeepers, merchants).
+	var across := face_tile + _hero_facing if _is_counter_tile(face_tile) else Vector2i(-1, -1)
 	for npc in _npc_data:
 		var npc_tile: Vector2i = npc.get("tile", Vector2i(-1, -1))
 		var desk_tile: Vector2i = npc.get("desk_tile", Vector2i(-1, -1))
-		if face_tile == npc_tile or (desk_tile != Vector2i(-1, -1) and face_tile == desk_tile):
+		if face_tile == npc_tile or npc_tile == across or (desk_tile != Vector2i(-1, -1) and face_tile == desk_tile):
 			if npc.has("shop_id"):
 				_open_shop(str(npc.get("shop_id")))
 				return
@@ -1271,6 +1278,11 @@ func _cmd_talk() -> void:
 			_show_dialog(str(npc.get("speaker", "")), pages)
 			return
 	_show_dialog("", ["There is no one there."])
+
+func _is_counter_tile(t: Vector2i) -> bool:
+	if _tile_grid.is_empty() or t.y < 0 or t.y >= _tile_grid.size() or t.x < 0 or t.x >= (_tile_grid[t.y] as Array).size():
+		return false
+	return int(_tile_grid[t.y][t.x]) in [8, 64, 66]
 
 ## NES epilogue: once the Ball of Light is recovered every townsperson has new
 ## lines thanking the hero by name. Picked per NPC so a town is not all one line.
@@ -1578,6 +1590,7 @@ func _cmd_take() -> void:
 		return
 
 	_mark_chest_opened(target_tile.x, target_tile.y)
+	_clear_chest_visual(target_tile)
 	_play_sfx("res://assets/music/mp3/open_treasure.mp3")
 
 	if is_gold_chest:
@@ -1681,6 +1694,43 @@ func _is_chest_opened(col: int, row: int) -> bool:
 	# on different floors never collide.
 	var key := _get_map_key() + ":" + str(col) + "," + str(row)
 	return _opened_chests.has(key)
+
+## NES: an opened chest disappears and its tile shows the floor around it.
+const CHEST_TILE_IDS := [30, 46]
+const FLOOR_PREFERENCE := [3, 39, 38, 2, 0, 31, 62]
+
+func _clear_chest_visual(t: Vector2i) -> void:
+	if not _map_image or _tile_grid.is_empty() or _get_map_w() <= 0:
+		return
+	var tw: int = _map_image.get_width() / _get_map_w()
+	var best := Vector2i(-1, -1)
+	var best_rank := 1 << 20
+	for d in [Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1)]:
+		var n: Vector2i = t + d
+		if n.y < 0 or n.y >= _tile_grid.size() or n.x < 0 or n.x >= (_tile_grid[n.y] as Array).size():
+			continue
+		var rank := FLOOR_PREFERENCE.find(int(_tile_grid[n.y][n.x]))
+		if rank >= 0 and rank < best_rank:
+			best_rank = rank
+			best = n
+	if best == Vector2i(-1, -1):
+		return
+	_map_image.blit_rect(_map_image, Rect2i(best.x * tw, best.y * tw, tw, tw), Vector2i(t.x * tw, t.y * tw))
+	if _bg:
+		_bg.texture = ImageTexture.create_from_image(_map_image)
+
+## Re-entering a map: chests opened earlier stay gone.
+func _restore_opened_chest_visuals() -> void:
+	if _tile_grid.is_empty():
+		return
+	var prefix := _get_map_key() + ":"
+	for key in _opened_chests.keys():
+		var k := str(key)
+		if not k.begins_with(prefix):
+			continue
+		var parts := k.substr(prefix.length()).split(",")
+		if parts.size() == 2:
+			_clear_chest_visual(Vector2i(int(parts[0]), int(parts[1])))
 
 func _mark_chest_opened(col: int, row: int) -> void:
 	var key := _get_map_key() + ":" + str(col) + "," + str(row)

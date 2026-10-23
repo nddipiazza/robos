@@ -19,7 +19,7 @@ func _get_npcs() -> Array:
     return [
         {tile=Vector2i(18,8),  sprite_id="sage_alt", facing="down",  speaker="Shopkeeper", pages=["Welcome! Enter the shop and\nspeak to its keeper across\nthe desk."]},
         {tile=Vector2i(9,18),  sprite_id="sage_alt", facing="down",  speaker="Merchant",   pages=["Watch thy Hit Points\nwhen in the Poisonous Marsh."]},
-        {tile=Vector2i(5,5),   sprite_id="minister", facing="down",  speaker="Innkeeper",  pages=["Go north to the seashore, then\nfollow the coastline west until\nthou hath reached Garinham."], inn_cost=6},
+        {tile=Vector2i(11,22),   sprite_id="sage_alt", facing="left",  speaker="Innkeeper",  pages=["Go north to the seashore, then\nfollow the coastline west until\nthou hath reached Garinham."], inn_cost=6},
         {tile=Vector2i(6,5),   sprite_id="sage_alt", facing="down",  speaker="Merchant",   shop_id="bre001"},
         {tile=Vector2i(26,26), sprite_id="sage_alt", facing="left",  speaker="Merchant",   shop_id="bre002"},
         {tile=Vector2i(25,5),  sprite_id="lady",     facing="left",  speaker="Lady",       shop_id="bre003"},

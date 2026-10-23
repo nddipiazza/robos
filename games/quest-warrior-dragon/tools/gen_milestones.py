@@ -164,8 +164,12 @@ def buy_milestone(shop_id, item_id, phase, min_level=1, optional=False, count=No
     )
 
 
-def inn_entry(map_key, npc_tile, cost):
-    tile, face = stand_facing(map_key, npc_tile, prefer="up")
+def inn_entry(map_key, npc_tile, cost, desk=None):
+    """Like a shop: with a `desk` the hero stands across the counter from the innkeeper."""
+    if desk:
+        tile, face = stand_facing(map_key, desk, avoid=npc_tile)
+    else:
+        tile, face = stand_facing(map_key, npc_tile, prefer="up")
     return {"map": map_key, "tile": {"col": tile[0], "row": tile[1]}, "face": face, "cost": cost}
 
 
@@ -293,12 +297,13 @@ add("defeat-dragonlord", "Defeat the Dragonlord", P, "boss", "charlock-castle-b7
 add("ending", "Report victory to King Lorik", "ending", "talk", "tantegel-castle-2f", (4, 5),
     {"kind": "flag", "flag": "game_completed"}, face="up", min_level=18)
 
+# Innkeepers stand behind the inn counter, where the original map has them (next to the INN sign).
 inns = {
-    "brecconary-1f": inn_entry("brecconary-1f", (5, 5), 6),
-    "garinham-1f": inn_entry("garinham-1f", (4, 15), 6),
-    "kol-1f": inn_entry("kol-1f", (22, 6), 0),
-    "rimuldar-1f": inn_entry("rimuldar-1f", (6, 6), 6),
-    "cantlin-1f": inn_entry("cantlin-1f", (4, 26), 6),
+    "brecconary-1f": inn_entry("brecconary-1f", (11, 22), 6, desk=(10, 22)),
+    "garinham-1f": inn_entry("garinham-1f", (18, 16), 6, desk=(17, 16)),
+    "kol-1f": inn_entry("kol-1f", (20, 5), 0, desk=(20, 4)),
+    "rimuldar-1f": inn_entry("rimuldar-1f", (17, 19), 6, desk=(18, 19)),
+    "cantlin-1f": inn_entry("cantlin-1f", (9, 4), 6, desk=(9, 5)),
 }
 
 # Every tool shop that stocks herbs: the AI restocks wherever it happens to be.

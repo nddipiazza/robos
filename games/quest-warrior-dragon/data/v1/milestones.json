@@ -1640,44 +1640,44 @@
     "brecconary-1f": {
       "map": "brecconary-1f",
       "tile": {
-        "col": 5,
-        "row": 6
+        "col": 9,
+        "row": 22
       },
-      "face": "up",
+      "face": "right",
       "cost": 6
     },
     "garinham-1f": {
       "map": "garinham-1f",
       "tile": {
-        "col": 4,
+        "col": 16,
         "row": 16
       },
-      "face": "up",
+      "face": "right",
       "cost": 6
     },
     "kol-1f": {
       "map": "kol-1f",
       "tile": {
-        "col": 22,
-        "row": 7
+        "col": 20,
+        "row": 3
       },
-      "face": "up",
+      "face": "down",
       "cost": 0
     },
     "rimuldar-1f": {
       "map": "rimuldar-1f",
       "tile": {
-        "col": 6,
-        "row": 5
+        "col": 19,
+        "row": 19
       },
-      "face": "down",
+      "face": "left",
       "cost": 6
     },
     "cantlin-1f": {
       "map": "cantlin-1f",
       "tile": {
-        "col": 4,
-        "row": 27
+        "col": 9,
+        "row": 6
       },
       "face": "up",
       "cost": 6
