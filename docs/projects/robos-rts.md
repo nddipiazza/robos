@@ -4,7 +4,7 @@ layout: default
 parent: Projects
 permalink: /projects/robos-rts/
 nav_order: 4
-description: "Starfall Command: a three-faction real-time strategy game in Godot 4 with an angled 3D camera, a deterministic 64 Hz simulation and an HTTP bot API."
+description: "Starfall Command: 1 player vs AI on Frontier Hunters, a 256×256 map with eight starts, unlimited deposits, a Godot 4 map editor and live gameplay tests."
 ---
 
 # RobOS RTS: Starfall Command
@@ -20,11 +20,11 @@ A real-time strategy game in Godot 4.3, in `games/robos-rts`. The default mode i
 {:toc}
 </details>
 
-![Starfall Canyon at the start of a match: the Meridian Guard base on the western plateau]({{ '/assets/images/robos-rts/01-starfall-canyon-start.jpg' | relative_url }}){: .robos-zoomable-img }
+![Frontier Hunters combat: the player's Riflemen attack the Hard Siege AI base](/assets/games/rts/frontier-hunters-live.jpg){: .robos-zoomable-img }
 
-*The start of a match on Starfall Canyon. The player's base is on the western plateau; the ramp in the middle is the only way down to the low ground.*
+*A frame from the live Rush versus Hard Siege test on Frontier Hunters. The older canyon and three-faction screenshots below illustrate isolated engine mechanics.*
 
-The game takes its conventions from the RTS genre in general: base building, a worker economy, control groups, a minimap and a command card. Open-source RTS projects such as OpenRA, 0 A.D., Warzone 2100 and Beyond All Reason are good references for the genre. Every name, model and rule here is original to this repository.
+The game takes its conventions from the RTS genre in general: base building, a worker economy, control groups, a minimap and a command card. Open-source RTS projects such as OpenRA, 0 A.D., Warzone 2100 and Beyond All Reason are good references for the genre. Names and models are original to this repository; the map editor credits its reused open-source brush and fill cores below.
 
 ## Run it
 
@@ -82,6 +82,27 @@ The live suite uses the map editor to modify, save and reload each map, then sta
 Real-time simulation retains fixed 64 Hz ticks but yields after an 8 ms frame budget, allowing input and drawing during fast-forward overload. Requested 8× playback can run slower when CPU capacity is exhausted. Static terrain, decoration and unlimited crystal facets are combined in spatial chunks; human units use shared MultiMesh batches. Offscreen units and combat effects are culled conservatively, and effect allocation is capped. Static minimap terrain/resources render once into a cached viewport, while unit markers and camera bounds remain live. Navigation smoothing uses bounded visibility searches, steering reuses each tick's nearby-unit query, target acquisition searches hostile spatial grids, and harvesting uses cached town-hall/extractor links.
 
 The control server buffers incomplete requests and partial responses without sleeping on the frame thread. Capture encoding runs on a worker when `/screenshot` receives `"async":true`; `/capture` reports completion. Live recording uses JPEG frames to avoid PNG encoding stalls, while screenshots can still use PNG. GPU readback remains on the frame thread and is measured separately. `GET /performance` reports frame percentiles, simulation/HUD time, rendering draw counts, navigation/steering totals and readback cost. The responsiveness feature checks that incomplete clients and asynchronous PNG encoding keep the live clock moving without a 100 ms frame stall. `tests/e2e/performance_probe.py --warmup=180 --speed=1` measures normal play after a paid army build. `tests/test_render_batches.gd` verifies constant body batch counts from one to eighty units and prevents geometry accumulating across map reloads within one frame.
+
+### Verified run: October 23, 2026
+
+| Check | Result |
+|:---|:---|
+| Complete backend suite | 20 scenarios, 128 steps passed |
+| Live frame-clock suite, headless rendering | 6 scenarios, 40 steps passed; zero manual step requests |
+| Rendered match and responsiveness | 2 scenarios, 13 steps passed |
+| Normal-speed paid army, 180-second warm-up | Roughly 80 units; observed 49–60 FPS; final rolling frame p95 26.952 ms, max 72.047 ms |
+| Rendered Rush vs Hard Siege, seed 29 | Structure-elimination victory at 259.55 game seconds; requested 8×, achieved 2.58× during recording |
+
+The normal-speed probe used Godot 4.7.2's compatibility renderer on a GTX 1050 Ti at 1920×1080 and passed its p95 ≤33.34 ms and maximum ≤100 ms budgets. Results depend on hardware and workload. The recorded test had a worst frame of 55.773 ms and a maximum per-window p95 of 40.133 ms. Navigation between all starting sites, spatial queries against brute force, editor document round trips and render batching regressions also passed.
+
+<video controls playsinline preload="metadata" poster="/assets/games/rts/frontier-hunters-live.jpg" style="width:100%;height:auto">
+  <source src="/assets/games/rts/frontier-hunters-live.mp4" type="video/mp4">
+  <track kind="captions" src="/assets/games/rts/frontier-hunters-live.vtt" srclang="en" label="English walkthrough" default>
+</video>
+
+*The complete live match, captured at 1080p and 10 FPS with on-screen step narration. These media files are served by the front site at `/assets/games/rts/`; the guide itself lives under `/v1/`.*
+
+Download the [recorded match proof](/assets/games/rts/frontier-hunters-live-proof.json) and [normal-speed frame samples](/assets/games/rts/frontier-hunters-performance.json). The match proof includes paid commands, progression events, the terminal observation and frame measurements from the video run.
 
 ## Map editor
 
