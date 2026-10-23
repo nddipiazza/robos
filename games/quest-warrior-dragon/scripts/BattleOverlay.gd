@@ -294,16 +294,14 @@ func _close_spell_menu() -> void:
 
 
 func _update_spell_cursor() -> void:
-	for idx in range(_spell_lbls.size()):
-		var lbl : Label = _spell_lbls[idx]
-		var sp  : Dictionary = _known_spells[idx]
-		var enough : bool = _hero_mp >= int(sp.get("mp_cost", 0))
-		if idx == _spell_cursor:
-			lbl.add_theme_color_override("font_color", Color.YELLOW if enough else Color(1,0.5,0))
-			lbl.text = "▶%-10s%2dMP" % [sp.get("name","?"), sp.get("mp_cost", 0)]
-		else:
-			lbl.add_theme_color_override("font_color", Color.WHITE if enough else Color(0.5,0.5,0.5))
-			lbl.text = "  %-10s%2dMP" % [sp.get("name","?"), sp.get("mp_cost", 0)]
+	var rows: Array = []
+	for sp in _known_spells:
+		var cost := int(sp.get("mp_cost", 0))
+		rows.append({"text": str(sp.get("name", "?")), "value": "%dMP" % cost, "disabled": _hero_mp < cost})
+	# Right-hand column under the status bar, clear of the monster and its name.
+	MenuKit.render_list(_spell_panel, {"title": "SPELL", "rows": rows, "index": _spell_cursor,
+		"width": 170, "max_rows": 9})
+	_spell_panel.position = Vector2(VW - _spell_panel.size.x - 8, 44)
 
 
 func _cast_spell(sp: Dictionary) -> void:
@@ -918,23 +916,8 @@ func _load_known_spells(spell_ids: Array) -> Array:
 
 
 func _rebuild_spell_panel() -> void:
-	# Clear old labels
-	for lbl in _spell_lbls:
-		lbl.queue_free()
 	_spell_lbls.clear()
-
-	var row_h : int = 22
-	var panel_h : int = max(40, _known_spells.size() * row_h + 12)
-	_spell_panel.size = Vector2(200, panel_h)
-	_spell_panel.position = Vector2(VW - 216, VH - 140 - panel_h - 4)
-
-	for idx in range(_known_spells.size()):
-		var lbl : Label = Label.new()
-		lbl.position = Vector2(8, 6 + idx * row_h)
-		lbl.size = Vector2(184, row_h)
-		lbl.add_theme_font_size_override("font_size", 13)
-		_spell_panel.add_child(lbl)
-		_spell_lbls.append(lbl)
+	_update_spell_cursor()
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────
@@ -1048,6 +1031,11 @@ func _build_ui() -> void:
 	_status_panel          = Panel.new()
 	_status_panel.position = Vector2(0, 0)
 	_status_panel.size     = Vector2(VW, 36)
+	var bar := StyleBoxFlat.new()
+	bar.bg_color = MenuKit.BG
+	bar.border_color = MenuKit.BORDER
+	bar.border_width_bottom = 2
+	_status_panel.add_theme_stylebox_override("panel", bar)
 	add_child(_status_panel)
 
 	_hp_lbl          = Label.new()
@@ -1116,41 +1104,28 @@ func _build_ui() -> void:
 	_msg_box          = Panel.new()
 	_msg_box.position = Vector2(8, VH - 140)
 	_msg_box.size     = Vector2(VW - 16, 128)
+	MenuKit.skin(_msg_box)
 	add_child(_msg_box)
 
 	_msg_lbl               = Label.new()
-	_msg_lbl.position      = Vector2(12, 8)
-	_msg_lbl.size          = Vector2(VW - 40, 110)
+	_msg_lbl.position      = Vector2(14, 10)
+	_msg_lbl.size          = Vector2(VW - 44, 108)
+	_msg_lbl.clip_text     = true
 	_msg_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_msg_lbl.add_theme_color_override("font_color", Color.WHITE)
 	_msg_lbl.add_theme_font_size_override("font_size", 16)
 	_msg_box.add_child(_msg_lbl)
 
-	# 2×2 command menu — FIGHT/SPELL on top, ITEM/RUN on bottom
-	_menu_box          = Panel.new()
-	_menu_box.position = Vector2(VW - 220, VH - 210)
-	_menu_box.size     = Vector2(208, 56)
-	_menu_box.visible  = false
+	# 2×2 command menu — FIGHT/SPELL on top, ITEM/RUN on bottom (drawn by MenuKit)
+	_menu_box         = Panel.new()
+	_menu_box.visible = false
+	MenuKit.skin(_menu_box)
 	add_child(_menu_box)
-
-	# Positions within the menu panel: col0=x14, col1=x110; row0=y8, row1=y30
-	var col_x : Array = [14, 110]
-	var row_y : Array = [8,  30]
-	for idx in range(4):
-		var lbl : Label = Label.new()
-		var col : int   = idx & 1
-		var row : int   = idx >> 1
-		lbl.position = Vector2(col_x[col], row_y[row])
-		lbl.size     = Vector2(90, 20)
-		lbl.add_theme_color_override("font_color", Color.WHITE)
-		lbl.add_theme_font_size_override("font_size", 14)
-		lbl.text = MENU_ITEMS[idx]
-		_menu_box.add_child(lbl)
-		_menu_lbls.append(lbl)
 
 	# Spell submenu panel (positioned above command menu, hidden by default)
 	_spell_panel         = Panel.new()
 	_spell_panel.visible = false
+	MenuKit.skin(_spell_panel)
 	add_child(_spell_panel)   # size/position set dynamically in _rebuild_spell_panel
 
 
@@ -1160,11 +1135,7 @@ func _show_menu() -> void:
 
 
 func _update_menu_cursor() -> void:
-	for idx in range(_menu_lbls.size()):
-		var lbl : Label = _menu_lbls[idx]
-		if idx == _cursor:
-			lbl.add_theme_color_override("font_color", Color.YELLOW)
-			lbl.text = "▶" + MENU_ITEMS[idx]
-		else:
-			lbl.add_theme_color_override("font_color", Color.WHITE)
-			lbl.text = MENU_ITEMS[idx]
+	MenuKit.render_grid(_menu_box, MENU_ITEMS, _cursor, 2, "", 92.0)
+	_menu_box.position = Vector2(VW - _menu_box.size.x - 8, _msg_box.position.y - _menu_box.size.y - 6)
+
+

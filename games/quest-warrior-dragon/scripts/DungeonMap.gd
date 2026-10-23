@@ -34,6 +34,9 @@ var _menu_labels: Array = []
 var _status_panel: Panel
 var _item_panel: Panel
 var _item_labels: Array = []
+var _item_rows: Array = []      # MenuKit.stack_inventory rows shown in the ITEM window
+var _item_scroll := 0
+var _shop_scroll := 0
 
 var _monsters_db: Array = []
 var _dungeons_db: Array = []
@@ -827,41 +830,32 @@ func _build_dialog_panel(canvas: CanvasLayer) -> void:
 	_dialog_panel = Panel.new()
 	_dialog_panel.size = Vector2(VW - DIALOG_MARGIN * 2, DIALOG_H)
 	_dialog_panel.position = Vector2(DIALOG_MARGIN, VH - DIALOG_H - DIALOG_MARGIN)
-	_dialog_panel.add_theme_stylebox_override("panel", _make_box_style(Color(0.04, 0.06, 0.15, 0.95), Color(0.6, 0.8, 1.0)))
+	MenuKit.skin(_dialog_panel)
 	_dialog_panel.visible = false
 
-	_speaker_label = _make_label("", 13, Color(1.0, 0.85, 0.3))
-	_speaker_label.position = Vector2(12, 8)
+	_speaker_label = _make_label("", 13, MenuKit.TITLE)
+	_speaker_label.position = Vector2(14, 8)
 	_dialog_panel.add_child(_speaker_label)
 
 	_dialog_label = _make_label("", 14)
-	_dialog_label.position = Vector2(12, 28)
-	_dialog_label.size = Vector2(_dialog_panel.size.x - 24, 90)
+	_dialog_label.position = Vector2(14, 28)
 	_dialog_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_dialog_label.size = Vector2(_dialog_panel.size.x - 28, DIALOG_H - 40)
+	_dialog_label.clip_text = true
 	_dialog_panel.add_child(_dialog_label)
 
-	_prompt_label = _make_label("▼", 13, Color(0.7, 0.9, 1.0))
-	_prompt_label.position = Vector2(_dialog_panel.size.x - 24, DIALOG_H - 26)
+	_prompt_label = _make_label("▼", 13, MenuKit.DESC)
+	_prompt_label.position = Vector2(_dialog_panel.size.x - 24, DIALOG_H - 24)
 	_dialog_panel.add_child(_prompt_label)
 	canvas.add_child(_dialog_panel)
 
 func _build_menu_panel(canvas: CanvasLayer) -> void:
-	var pw := 180
-	var ph := 140
 	_menu_panel = Panel.new()
-	_menu_panel.size = Vector2(pw, ph)
-	_menu_panel.position = Vector2(VW - pw - 8, 8)
-	_menu_panel.add_theme_stylebox_override("panel", _make_box_style(Color(0.04, 0.06, 0.15, 0.97), Color(0.6, 0.8, 1.0)))
+	MenuKit.skin(_menu_panel)
 	_menu_panel.visible = false
 	_menu_labels = []
-	for i in range(MENU_ITEMS.size()):
-		var col := i % MENU_COLS
-		var row := i / MENU_COLS
-		var lbl := _make_label(MENU_ITEMS[i], 14)
-		lbl.position = Vector2(16 + col * 82, 12 + row * 28)
-		_menu_panel.add_child(lbl)
-		_menu_labels.append(lbl)
 	canvas.add_child(_menu_panel)
+	_refresh_menu()
 
 func _clear_panel(panel: Control) -> void:
 	for child in panel.get_children():
@@ -870,48 +864,20 @@ func _clear_panel(panel: Control) -> void:
 
 func _build_status_panel(canvas: CanvasLayer) -> void:
 	_status_panel = Panel.new()
-	_status_panel.size = Vector2(240, 220)
-	_status_panel.position = Vector2((VW - 240) / 2, (VH - 220) / 2)
-	_status_panel.add_theme_stylebox_override("panel", _make_box_style(Color(0.04, 0.06, 0.15, 0.97), Color(0.6, 0.8, 1.0)))
+	MenuKit.skin(_status_panel)
 	_status_panel.visible = false
 	canvas.add_child(_status_panel)
 	_refresh_status_panel()
 
 func _refresh_status_panel() -> void:
-	_clear_panel(_status_panel)
 	var gs := get_node_or_null("/root/GameState")
-	var stats: Dictionary = {
-		"name": "ERDRICK", "level": 1,
-		"hp": 15, "hp_max": 15, "mp": 0, "mp_max": 0,
-		"str": 4, "agl": 4, "atk": 4, "def": 2, "exp": 0
-	}
-	if gs:
-		stats = gs.hero_stats
-	var rows_data := [
-		["NAME", stats.get("name", "ERDRICK")],
-		["LEVEL", str(stats.get("level", 1))],
-		["HP", "%d / %d" % [stats.get("hp", 15), stats.get("hp_max", 15)]],
-		["MP", "%d / %d" % [stats.get("mp", 0), stats.get("mp_max", 0)]],
-		["STR", str(stats.get("str", 4))],
-		["AGL", str(stats.get("agl", 4))],
-		["ATK", str(stats.get("atk", 4))],
-		["DEF", str(stats.get("def", 2))],
-		["EXP", str(stats.get("exp", 0))],
-		["GOLD", str(_hero_gold)],
-	]
-	for i in range(rows_data.size()):
-		var kl := _make_label(rows_data[i][0], 13, Color(1.0, 0.85, 0.3))
-		kl.position = Vector2(16, 12 + i * 19)
-		_status_panel.add_child(kl)
-		var vl := _make_label(rows_data[i][1], 13)
-		vl.position = Vector2(110, 12 + i * 19)
-		_status_panel.add_child(vl)
+	var stats: Dictionary = gs.hero_stats if gs else {"name": "ERDRICK", "level": 1, "hp": 15, "hp_max": 15}
+	MenuKit.render_table(_status_panel, "STATUS", MenuKit.status_rows(stats, _hero_gold), 230.0)
+	MenuKit.centered(_status_panel, VW, VH)
 
 func _build_item_panel(canvas: CanvasLayer) -> void:
 	_item_panel = Panel.new()
-	_item_panel.size = Vector2(280, 220)
-	_item_panel.position = Vector2((VW - 280) / 2, (VH - 220) / 2)
-	_item_panel.add_theme_stylebox_override("panel", _make_box_style(Color(0.04, 0.06, 0.15, 0.97), Color(0.6, 0.8, 1.0)))
+	MenuKit.skin(_item_panel)
 	_item_panel.visible = false
 	canvas.add_child(_item_panel)
 	_refresh_item_panel()
@@ -953,17 +919,13 @@ func _load_shops_db() -> void:
 
 func _build_shop_panel(canvas: CanvasLayer) -> void:
 	_shop_panel = Panel.new()
-	_shop_panel.size = Vector2(300, 260)
-	_shop_panel.position = Vector2((VW - 300) / 2, (VH - 260) / 2)
-	_shop_panel.add_theme_stylebox_override("panel", _make_box_style(Color(0.04, 0.06, 0.15, 0.97), Color(0.6, 0.8, 1.0)))
+	MenuKit.skin(_shop_panel)
 	_shop_panel.visible = false
 	canvas.add_child(_shop_panel)
 
 func _build_choice_panel(canvas: CanvasLayer) -> void:
 	_choice_panel = Panel.new()
-	_choice_panel.size = Vector2(220, 100)
-	_choice_panel.position = Vector2((VW - 220) / 2, (VH - 100) / 2)
-	_choice_panel.add_theme_stylebox_override("panel", _make_box_style(Color(0.04, 0.06, 0.15, 0.97), Color(0.6, 0.8, 1.0)))
+	MenuKit.skin(_choice_panel)
 	_choice_panel.visible = false
 	canvas.add_child(_choice_panel)
 
@@ -984,6 +946,7 @@ func _open_shop(shop_id: String) -> void:
 		var nm: String = str(_item_name_db.get(iid, iid.replace("_", " ").capitalize()))
 		_shop_items.append({"id": iid, "name": nm, "price": price})
 	_shop_index = 0
+	_shop_scroll = 0
 	_menu_panel.visible = false
 	_menu_open = false
 	_refresh_shop_panel()
@@ -1035,20 +998,13 @@ func _purchase_item(item: Dictionary) -> void:
 	_show_dialog("", pages)
 
 func _refresh_shop_panel() -> void:
-	_clear_panel(_shop_panel)
-	var title := _make_label("WHAT DOST THOU WANT?", 13, Color(1.0, 0.85, 0.3))
-	title.position = Vector2(12, 10)
-	_shop_panel.add_child(title)
-	var gold_lbl := _make_label("GOLD: %d" % _hero_gold, 12, Color(0.6, 1.0, 0.6))
-	gold_lbl.position = Vector2(12, 240)
-	_shop_panel.add_child(gold_lbl)
-	for i in range(_shop_items.size()):
-		var item: Dictionary = _shop_items[i]
-		var color := Color(1.0, 0.85, 0.3) if i == _shop_index else Color.WHITE
-		var cursor := "▶ " if i == _shop_index else "  "
-		var lbl := _make_label("%s%-18s %4dG" % [cursor, item["name"], item["price"]], 13, color)
-		lbl.position = Vector2(12, 34 + i * 22)
-		_shop_panel.add_child(lbl)
+	var rows: Array = []
+	for item in _shop_items:
+		rows.append({"text": str(item["name"]), "value": "%dG" % int(item["price"])})
+	_shop_scroll = MenuKit.render_list(_shop_panel, {
+		"title": "WHAT DOST THOU WANT?", "rows": rows, "index": _shop_index, "width": 270,
+		"max_rows": 8, "scroll": _shop_scroll, "footer": "GOLD", "footer_value": "%dG" % _hero_gold})
+	MenuKit.centered(_shop_panel, VW, VH - DIALOG_H)
 
 func _handle_shop_input(event: InputEvent) -> void:
 	if event.is_action_pressed("move_up"):
@@ -1081,36 +1037,20 @@ func _open_choice(prompt: String, on_yes: Callable, on_no: Callable) -> void:
 	_choice_prompt = prompt
 	_choice_index = 0
 	_choice_callback = Callable()
-	_clear_panel(_choice_panel)
-	var plbl := _make_label(prompt, 12)
-	plbl.position = Vector2(12, 8)
-	plbl.size = Vector2(196, 60)
-	plbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_choice_panel.add_child(plbl)
-	var yes_lbl := _make_label("▶ YES", 13, Color(1.0, 0.85, 0.3))
-	yes_lbl.name = "ChoiceYes"
-	yes_lbl.position = Vector2(20, 68)
-	_choice_panel.add_child(yes_lbl)
-	var no_lbl := _make_label("  NO", 13, Color.WHITE)
-	no_lbl.name = "ChoiceNo"
-	no_lbl.position = Vector2(20, 82)
-	_choice_panel.add_child(no_lbl)
+	_refresh_choice()
 	_choice_panel.visible = true
 	_choice_open = true
 	_choice_panel.set_meta("on_yes", on_yes)
 	_choice_panel.set_meta("on_no", on_no)
 
+func _refresh_choice() -> void:
+	MenuKit.render_choice(_choice_panel, _choice_prompt, ["YES", "NO"], _choice_index, 240.0)
+	MenuKit.centered(_choice_panel, VW, VH - DIALOG_H)
+
 func _handle_choice_input(event: InputEvent) -> void:
-	var yes_lbl := _choice_panel.get_node_or_null("ChoiceYes") as Label
-	var no_lbl := _choice_panel.get_node_or_null("ChoiceNo") as Label
 	if event.is_action_pressed("move_up") or event.is_action_pressed("move_down"):
 		_choice_index = 1 - _choice_index
-		if yes_lbl:
-			yes_lbl.text = "▶ YES" if _choice_index == 0 else "  YES"
-			yes_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3) if _choice_index == 0 else Color.WHITE)
-		if no_lbl:
-			no_lbl.text = "▶ NO" if _choice_index == 1 else "  NO"
-			no_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3) if _choice_index == 1 else Color.WHITE)
+		_refresh_choice()
 	elif event.is_action_pressed("ui_accept"):
 		_choice_panel.visible = false
 		_choice_open = false
@@ -1155,31 +1095,13 @@ func _open_inn(cost: int) -> void:
 	_open_choice("The inn will cost\nthee %d gold.\nWilt thou stay?" % cost, on_yes, on_no)
 
 func _refresh_item_panel() -> void:
-	_clear_panel(_item_panel)
-	_item_labels = []
-
-	var title := _make_label("ITEMS", 14, Color(1.0, 0.85, 0.3))
-	title.position = Vector2(16, 10)
-	_item_panel.add_child(title)
-
-	if _inventory.is_empty():
-		var empty := _make_label("Nothing.", 13, Color(0.7, 0.7, 0.7))
-		empty.position = Vector2(16, 36)
-		_item_panel.add_child(empty)
-	else:
-		for i in range(_inventory.size()):
-			var name := str(_inventory[i].get("name", "Item"))
-			var lbl := _make_label(name, 13)
-			lbl.position = Vector2(28, 36 + i * 20)
-			_item_panel.add_child(lbl)
-			_item_labels.append(lbl)
-
-	var desc := _make_label("", 12, Color(0.7, 0.9, 1.0))
-	desc.name = "ItemDesc"
-	desc.position = Vector2(16, 180)
-	desc.size = Vector2(248, 36)
-	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_item_panel.add_child(desc)
+	_item_rows = MenuKit.stack_inventory(_inventory)
+	_item_index = clampi(_item_index, 0, maxi(_item_rows.size() - 1, 0))
+	var desc := str(_item_rows[_item_index].get("desc", "")) if not _item_rows.is_empty() else ""
+	_item_scroll = MenuKit.render_list(_item_panel, {
+		"title": "ITEMS", "rows": _item_rows, "index": _item_index, "width": 250,
+		"max_rows": 10, "scroll": _item_scroll, "desc": desc, "empty_text": "Nothing."})
+	_item_panel.position = Vector2(VW - _item_panel.size.x - 8, 8)
 
 func _draw_frame() -> void:
 	if _bg:
@@ -1273,19 +1195,21 @@ func _handle_menu_input(event: InputEvent) -> void:
 		_menu_open = false
 
 func _handle_item_input(event: InputEvent) -> void:
-	if _inventory.is_empty():
-		if event.is_action_pressed("ui_cancel") or event.is_action_pressed("cmd_menu"):
+	if _item_rows.is_empty():
+		if event.is_action_pressed("ui_cancel") or event.is_action_pressed("cmd_menu") or event.is_action_pressed("ui_accept"):
 			_item_panel.visible = false
 			_item_open = false
 		return
-	if event.is_action_pressed("move_up"):
+	if event.is_action_pressed("move_up") or event.is_action_pressed("ui_up"):
 		_item_index = maxi(_item_index - 1, 0)
 		_refresh_item_cursor()
-	elif event.is_action_pressed("move_down"):
-		_item_index = mini(_item_index + 1, _inventory.size() - 1)
+	elif event.is_action_pressed("move_down") or event.is_action_pressed("ui_down"):
+		_item_index = mini(_item_index + 1, _item_rows.size() - 1)
 		_refresh_item_cursor()
 	elif event.is_action_pressed("ui_accept"):
-		_use_item(_item_index)
+		_use_item(int(_item_rows[_item_index].get("index", 0)))
+		if _item_open:
+			_refresh_item_panel()
 	elif event.is_action_pressed("ui_cancel") or event.is_action_pressed("cmd_menu"):
 		_item_panel.visible = false
 		_item_open = false
@@ -1297,17 +1221,11 @@ func _open_menu() -> void:
 	_menu_panel.visible = true
 
 func _refresh_menu() -> void:
-	for i in range(_menu_labels.size()):
-		var color := Color(1.0, 0.85, 0.3) if i == _menu_index else Color.WHITE
-		(_menu_labels[i] as Label).add_theme_color_override("font_color", color)
+	MenuKit.render_grid(_menu_panel, MENU_ITEMS, _menu_index, MENU_COLS)
+	_menu_panel.position = Vector2(VW - _menu_panel.size.x - 8, 8)
 
 func _refresh_item_cursor() -> void:
-	for i in range(_item_labels.size()):
-		var color := Color(1.0, 0.85, 0.3) if i == _item_index else Color.WHITE
-		(_item_labels[i] as Label).add_theme_color_override("font_color", color)
-	var desc_node := _item_panel.get_node_or_null("ItemDesc") as Label
-	if desc_node and _item_index < _inventory.size():
-		desc_node.text = str(_inventory[_item_index].get("desc", ""))
+	_refresh_item_panel()
 
 func _execute_menu_item(cmd: String) -> void:
 	match cmd:
@@ -1780,11 +1698,11 @@ func _cmd_search() -> void:
 		_show_dialog("", ["Thou dost not find\nanything of interest."])
 
 func _cmd_item() -> void:
-	_refresh_item_panel()
 	_item_index = 0
+	_item_scroll = 0
+	_refresh_item_panel()
 	_item_panel.visible = true
 	_item_open = true
-	_refresh_item_cursor()
 
 func _use_item(idx: int) -> void:
 	if idx >= _inventory.size():

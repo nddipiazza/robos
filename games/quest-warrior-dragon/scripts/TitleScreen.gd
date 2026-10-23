@@ -45,7 +45,7 @@ func _build_ui() -> void:
 	_prompt_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_prompt_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_prompt_label.size = Vector2(300, 30)
-	_prompt_label.position = Vector2((VW - 300) / 2, 380)
+	_prompt_label.position = Vector2((VW - 300) / 2, 392)
 	_prompt_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
 	layer.add_child(_prompt_label)
 
@@ -53,8 +53,10 @@ func _build_ui() -> void:
 	copy.name = "CopyrightLabel"
 	copy.text = COPYRIGHT_TEXT
 	copy.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	copy.size = Vector2(VW, 20)
-	copy.position = Vector2(0, 440)
+	copy.size = Vector2(VW - 32, 20)
+	copy.position = Vector2(16, 446)
+	copy.clip_text = true
+	copy.add_theme_font_size_override("font_size", 11)
 	copy.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 	layer.add_child(copy)
 

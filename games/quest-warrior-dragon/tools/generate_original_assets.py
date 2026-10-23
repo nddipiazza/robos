@@ -2125,28 +2125,33 @@ def generate_spells_and_title() -> None:
     # Distant mountain & castle silhouette
     td.polygon([(0, 340), (90, 260), (190, 320), (290, 240), (410, 310), (512, 250), (512, 360), (0, 360)], fill=(26, 32, 64, 255))
     # Banner frame
-    td.rectangle([56, 56, 456, 216], fill=(22, 36, 88, 255), outline=(244, 198, 64, 255), width=4)
-    td.rectangle([64, 64, 448, 208], outline=(168, 124, 32, 255), width=2)
+    td.rectangle([48, 36, 464, 244], fill=(22, 36, 88, 255), outline=(244, 198, 64, 255), width=4)
+    td.rectangle([56, 44, 456, 236], outline=(168, 124, 32, 255), width=2)
 
-    # Central Dragon Crest & Sword emblem inside banner
-    dragon_emblem = draw_monster_sprite("dragonlord").resize((96, 96), Image.Resampling.NEAREST)
-    title.paste(dragon_emblem, (208, 88), dragon_emblem)
+    # Crest in the upper half of the banner: the sword behind the Dragonlord, clear of the lettering.
+    td.line([(256, 50), (256, 150)], fill=(230, 238, 252, 255), width=6)
+    td.rectangle([232, 66, 280, 73], fill=(244, 198, 64, 255))
+    dragon_emblem = draw_monster_sprite("dragonlord").resize((80, 80), Image.Resampling.NEAREST)
+    title.paste(dragon_emblem, (216, 66), dragon_emblem)
 
-    # Sword & Shield crest
-    td.line([(256, 36), (256, 236)], fill=(230, 238, 252, 255), width=6)
-    td.rectangle([232, 72, 280, 80], fill=(244, 198, 64, 255))
-
-    # Clean pixel text banner
+    # Clean pixel text banner, centred under the crest
     try:
-        font_lg = ImageFont.load_default(size=24)
-        font_sm = ImageFont.load_default(size=16)
+        font_lg = ImageFont.load_default(size=26)
+        font_sm = ImageFont.load_default(size=15)
     except TypeError:
         font_lg = ImageFont.load_default()
         font_sm = ImageFont.load_default()
 
-    td.text((84, 120), "QUEST: WARRIOR DRAGON", fill=(24, 16, 12, 255), font=font_lg)
-    td.text((82, 118), "QUEST: WARRIOR DRAGON", fill=(252, 214, 68, 255), font=font_lg)
-    td.text((138, 168), "ROBOS 2D JRPG ENGINE", fill=(140, 218, 252, 255), font=font_sm)
+    def _centred(text: str, y: int, font, fill, shadow=None) -> None:
+        w = td.textlength(text, font=font)
+        x = int((512 - w) / 2)
+        if shadow:
+            td.text((x + 2, y + 2), text, fill=shadow, font=font)
+        td.text((x, y), text, fill=fill, font=font)
+
+    _centred("QUEST: WARRIOR DRAGON", 162, font_lg, (252, 214, 68, 255), shadow=(24, 16, 12, 255))
+    td.line([(150, 198), (362, 198)], fill=(168, 124, 32, 255), width=2)
+    _centred("ROBOS 2D JRPG ENGINE", 208, font_sm, (140, 218, 252, 255))
 
     title.convert("RGB").save(ASSETS_DIR / "title-screen.png")
     title.convert("RGB").save(ASSETS_DIR / "sprites" / "title.png")
