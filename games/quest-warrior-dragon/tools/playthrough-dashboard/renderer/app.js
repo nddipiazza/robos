@@ -259,3 +259,51 @@ async function init() {
 }
 
 init();
+
+// ── Resizable column dividers ─────────────────────────────────────────────────
+// "aside": milestone list | viewer; "grid": game screen | side panel (live + milestone views).
+// Widths are remembered per viewer; double-click a divider to reset it.
+function setupSplitters() {
+  const root = document.documentElement;
+  const KEY = 'dw-dashboard-splits';
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (_) { saved = {}; }
+  const apply = () => {
+    if (saved.aside) root.style.setProperty('--aside-w', `${saved.aside}px`); else root.style.removeProperty('--aside-w');
+    if (saved.grid) root.style.setProperty('--grid-left', `${saved.grid}px`); else root.style.removeProperty('--grid-left');
+  };
+  const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (_) { /* storage unavailable */ } };
+  apply();
+  document.querySelectorAll('.splitter').forEach((el) => {
+    const kind = el.dataset.split;
+    el.addEventListener('dblclick', () => { delete saved[kind]; apply(); persist(); });
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      el.setPointerCapture(e.pointerId);
+      el.classList.add('dragging');
+      document.body.classList.add('resizing');
+      const left = el.previousElementSibling;
+      const startX = e.clientX;
+      const startW = left.getBoundingClientRect().width;
+      const container = el.parentElement.getBoundingClientRect().width;
+      const move = (ev) => {
+        const min = kind === 'aside' ? 200 : 160;
+        const max = container - (kind === 'aside' ? 320 : 200);
+        saved[kind] = Math.round(Math.max(min, Math.min(max, startW + ev.clientX - startX)));
+        apply();
+      };
+      const up = () => {
+        el.classList.remove('dragging');
+        document.body.classList.remove('resizing');
+        el.removeEventListener('pointermove', move);
+        el.removeEventListener('pointerup', up);
+        el.removeEventListener('pointercancel', up);
+        persist();
+      };
+      el.addEventListener('pointermove', move);
+      el.addEventListener('pointerup', up);
+      el.addEventListener('pointercancel', up);
+    });
+  });
+}
+setupSplitters();
