@@ -23,7 +23,7 @@ test('container cannot inherit host network, Docker socket, host home, or app ca
   assert(args.includes('--cap-drop=ALL'));
   assert(args.includes('--security-opt=no-new-privileges:true'));
   assert(args.includes('--read-only'));
-  assert(args.includes('127.0.0.1:18080:8080/tcp'));
+  assert(args.includes('127.0.0.1:18080:18080/tcp'));
   assert(!args.some(value => /docker.sock|network=host|privileged|type=bind/.test(value)));
   assert.throws(() => runArguments('qbittorrent;sh'));
 });

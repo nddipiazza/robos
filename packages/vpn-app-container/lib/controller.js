@@ -78,7 +78,7 @@ function runArguments(id) {
     '--tmpfs=/run:rw,nosuid,nodev,noexec,mode=755',
     '--tmpfs=/tmp:rw,nosuid,nodev,noexec,mode=1777',
     '--mount', `type=volume,source=${name}-data,target=/data`,
-    '--publish', `127.0.0.1:${port}:8080/tcp`, '--pids-limit=256',
+    '--publish', `127.0.0.1:${port}:18080/tcp`, '--pids-limit=256',
     '--memory=1g', IMAGE];
 }
 

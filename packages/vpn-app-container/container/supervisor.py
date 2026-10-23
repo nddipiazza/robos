@@ -19,8 +19,8 @@ import time
 APP_UID = 10000
 RUN = Path('/run/vpn')
 APPS = {
-    'qbittorrent': ['/usr/bin/qbittorrent-nox', '--webui-port=8080'],
-    'transmission': ['/usr/bin/transmission-daemon', '--foreground', '--port', '8080',
+    'qbittorrent': ['/usr/bin/qbittorrent-nox', '--webui-port=18080'],
+    'transmission': ['/usr/bin/transmission-daemon', '--foreground', '--port', '18080',
                      '--config-dir', '/data/config/transmission'],
 }
 
@@ -53,8 +53,8 @@ def firewall(endpoint, port, protocol, web_gateway):
          '-p', protocol, '--dport', str(port), '-j', 'ACCEPT'],
         ['INPUT', '-s', endpoint, '-p', protocol, '--sport', str(port),
          '-m', 'conntrack', '--ctstate', 'ESTABLISHED', '-j', 'ACCEPT'],
-        ['INPUT', '-i', 'eth0', '-s', web_gateway, '-p', 'tcp', '--dport', '8080', '-j', 'ACCEPT'],
-        ['OUTPUT', '-o', 'eth0', '-d', web_gateway, '-p', 'tcp', '--sport', '8080',
+        ['INPUT', '-i', 'eth0', '-s', web_gateway, '-p', 'tcp', '--dport', '18080', '-j', 'ACCEPT'],
+        ['OUTPUT', '-o', 'eth0', '-d', web_gateway, '-p', 'tcp', '--sport', '18080',
          '-m', 'conntrack', '--ctstate', 'ESTABLISHED', '--ctdir', 'REPLY', '-j', 'ACCEPT'],
     ]
     for rule in rules:
@@ -124,7 +124,7 @@ def app_config(data):
         for key, value in {
             'WebUI\\Username': 'admin', 'WebUI\\Password_PBKDF2': f'"@ByteArray({password})"',
             'WebUI\\LocalHostAuth': 'true', 'WebUI\\AuthSubnetWhitelistEnabled': 'false',
-            'WebUI\\Address': '*', 'WebUI\\Port': '8080',
+            'WebUI\\Address': '*', 'WebUI\\Port': '18080',
             'Downloads\\SavePath': '/data/downloads/',
         }.items():
             config.set('Preferences', key, value)
@@ -137,7 +137,7 @@ def app_config(data):
         if target.is_symlink():
             raise ValueError('App configuration cannot be a symlink')
         config = json.loads(target.read_text()) if target.exists() else {}
-        config.update({'rpc-enabled': True, 'rpc-bind-address': '0.0.0.0', 'rpc-port': 8080,
+        config.update({'rpc-enabled': True, 'rpc-bind-address': '0.0.0.0', 'rpc-port': 18080,
                        'rpc-authentication-required': True, 'rpc-username': 'admin',
                        'rpc-password': data['webPassword'], 'rpc-whitelist-enabled': False,
                        'download-dir': '/data/downloads'})

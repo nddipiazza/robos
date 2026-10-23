@@ -70,7 +70,7 @@ class ProtectionTests(unittest.TestCase):
         for row in accepts:
             if 'ESTABLISHED' in row:
                 self.assertIn('REPLY', row)
-                self.assertIn('8080', row)
+                self.assertIn('18080', row)
                 self.assertIn('172.17.0.1', row)
 
     def test_any_firewall_install_failure_aborts_setup(self):

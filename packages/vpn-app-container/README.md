@@ -35,7 +35,7 @@ endpoint and port. The app runs as UID 10000 with all capability sets removed an
 credentials, or acquire privileges. DNS is 1.1.1.1 through the tunnel. Docker's
 127.0.0.11 resolver is excluded from loopback allowances.
 
-App traffic is allowed on `tun0`. Local loopback and replies to the TCP 8080 Web UI
+App traffic is allowed on `tun0`. Local loopback and replies to the TCP 18080 Web UI
 are also allowed; only 127.0.0.1:18080 (qBittorrent) or :18081 (Transmission) is
 published on the host. There is no generic established-output allowance that could
 preserve a stale direct connection. No torrent peer ports are published.
