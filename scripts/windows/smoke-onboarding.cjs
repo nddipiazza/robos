@@ -39,7 +39,9 @@ async function main() {
     let timer;
     await Promise.race([app.close().catch(() => {}), new Promise(resolve => { timer = setTimeout(resolve, 1500); })]);
     clearTimeout(timer);
-    if (child.exitCode === null) spawnSync('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
+    if (child.exitCode === null) spawnSync('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore', timeout: 5000 });
   }
 }
-main().catch(error => { console.error(error); process.exitCode = 1; });
+// Playwright can retain a Windows pipe after Electron has exited. This is a
+// terminal test runner: once bounded cleanup finishes, report the result and exit.
+main().then(() => process.exit(0), error => { console.error(error); process.exit(1); });
