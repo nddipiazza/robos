@@ -154,6 +154,7 @@ class Playthrough:
         self.dashboard = None
         self.live_t = 0.0
         self.registry = []
+        self.grinded = set()
         self.violations = []
         self.done_seen = []
         self.last_index = -1
@@ -304,13 +305,14 @@ class Playthrough:
         gs = state.get("game_state", {}) or {}
         done = set(ms.get("done", [])) | set(self.done_seen)
         skipped = set(ms.get("skipped", []))
+        self.grinded |= set(ms.get("grinded", []))
         cur_idx = int(ms.get("index", -1))
         rows = []
         for i, m in enumerate(self.registry):
             mid = m["id"]
             idx = i + 1
             st = "done" if mid in done else "skipped" if mid in skipped else "current" if i == cur_idx else "pending"
-            row = {"index": idx, "id": mid, "name": m.get("name", mid), "type": m.get("type", ""),
+            row = {"index": idx, "id": mid, "name": self.display_name(m), "type": m.get("type", ""),
                    "map": m.get("map", ""), "optional": bool(m.get("optional", False)), "state": st}
             for key, path in (("video", self.segment_path(idx, mid)),
                               ("checkpoint", self.checkpoint_path(idx, mid)),
@@ -386,7 +388,13 @@ class Playthrough:
         except Exception:
             return None
 
+    def display_name(self, m):
+        """Registry name, prefixed "Grind + " when the brain had to grind to reach the milestone."""
+        name = m.get("name", m["id"])
+        return f"Grind + {name}" if m["id"] in self.grinded else name
+
     def record_milestones(self, ms):
+        self.grinded |= set(ms.get("grinded", []))
         seen = set(self.done_seen)
         new = [mid for mid in ms.get("done", []) if mid not in seen]
         for mid in new:
@@ -394,7 +402,9 @@ class Playthrough:
             idx = self.ids.index(mid) + 1 if mid in self.ids else len(self.done_seen)
             shot = os.path.join(REPORTS_DIR, "screenshots", f"{idx:02d}-{mid}.png")
             fetch_screenshot(self.port, shot)
-            entry = {"index": idx, "id": mid, "elapsed_sec": ms.get("elapsed_sec"),
+            reg = self.registry[idx - 1] if 0 < idx <= len(self.registry) else {"id": mid}
+            entry = {"index": idx, "id": mid, "name": self.display_name(reg), "grind": mid in self.grinded,
+                     "elapsed_sec": ms.get("elapsed_sec"),
                      "battles": ms.get("battles"), "deaths": ms.get("deaths")}
             if self.args.stepped:
                 # One video per milestone (a burst of milestones finished in the same
@@ -402,7 +412,7 @@ class Playthrough:
                 entry["video"] = os.path.relpath(self.segment_path(idx, mid), REPORTS_DIR)
                 entry["checkpoint"] = os.path.relpath(self.checkpoint_path(idx, mid), REPORTS_DIR)
             self.report["milestones"].append(entry)
-            log(f"MILESTONE {idx}/{ms.get('total')} {mid} (battles={ms.get('battles')} deaths={ms.get('deaths')})")
+            log(f"MILESTONE {idx}/{ms.get('total')} {mid}{' [grind]' if mid in self.grinded else ''} (battles={ms.get('battles')} deaths={ms.get('deaths')})")
         if new and self.args.stepped:
             last_mid = new[-1]
             last_idx = self.ids.index(last_mid) + 1 if last_mid in self.ids else len(self.done_seen)

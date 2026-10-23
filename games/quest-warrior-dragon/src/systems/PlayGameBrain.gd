@@ -31,6 +31,8 @@ var _item_shops: Dictionary = {}  # map_key -> {tile, face, price}
 var _milestones: Array = []
 var _index: int = 0
 var _done: Dictionary = {}
+# Milestones the brain had to grind for (levels or gold) before it could reach them.
+var _grinded: Dictionary = {}
 var _skipped: Dictionary = {}
 var _log: Array = []
 var status: String = "idle"  # idle | running | completed | failed
@@ -122,6 +124,7 @@ func start(args: Dictionary) -> Dictionary:
 		return {"ok": false, "error": error}
 	_index = 0
 	_done.clear()
+	_grinded.clear()
 	_skipped.clear()
 	_log.clear()
 	_goal_failures.clear()
@@ -186,10 +189,11 @@ func report() -> Dictionary:
 		"error": error,
 		"index": _index,
 		"total": _milestones.size(),
-		"current": {"id": cur.get("id", ""), "name": cur.get("name", ""), "type": cur.get("type", ""), "map": cur.get("map", ""), "tile": cur.get("tile", {}),
+		"current": {"id": cur.get("id", ""), "name": _display_name(cur), "type": cur.get("type", ""), "map": cur.get("map", ""), "tile": cur.get("tile", {}),
 			"item_id": cur.get("item_id", ""), "done_when": cur.get("done_when", {}), "optional": cur.get("optional", false), "min_level": cur.get("min_level", 0)},
 		"done": done_ids,
 		"skipped": skipped_ids,
+		"grinded": _grinded.keys(),
 		"objective": _objective_summary(),
 		"ticks": _ticks,
 		"battles": _battles,
@@ -198,6 +202,12 @@ func report() -> Dictionary:
 		"time_scale": Engine.time_scale,
 		"log": _log.slice(maxi(0, _log.size() - 40), _log.size()),
 	}
+
+
+## Registry name, prefixed "Grind + " once the brain had to grind for this milestone.
+func _display_name(m: Dictionary) -> String:
+	var n := str(m.get("name", m.get("id", "")))
+	return ("Grind + " + n) if _grinded.has(str(m.get("id", ""))) else n
 
 
 func _objective_summary() -> Dictionary:
@@ -312,7 +322,7 @@ func _advance_milestones() -> void:
 		if _is_milestone_done(m):
 			if not _done.has(mid):
 				_done[mid] = true
-				_log_event("done", "%d/%d %s" % [_index + 1, _milestones.size(), str(m.get("name", mid))])
+				_log_event("done", "%d/%d %s" % [_index + 1, _milestones.size(), _display_name(m)])
 			_index += 1
 			_objective = {}
 			_plan_legs.clear()
@@ -493,6 +503,14 @@ func _handle_ui(state: Dictionary) -> Dictionary:
 		var inv: Array = _inventory()
 		var idx := int(item_win.get("selected_index", 0))
 		var want_idx := _inventory_index_of(_pending_item_id)
+		# The window lists one row per kind of item: aim at the row, not the raw pack slot.
+		var win_rows: Array = item_win.get("items", [])
+		if not win_rows.is_empty():
+			want_idx = -1
+			for i in range(win_rows.size()):
+				if _item_matches(win_rows[i], _pending_item_id):
+					want_idx = i
+					break
 		if want_idx < 0 or inv.is_empty():
 			_pending_item_id = ""
 			return _tap("ui_cancel")
@@ -1329,6 +1347,8 @@ func _upgrade_pending_for_slot(slot: String, _before: int) -> bool:
 
 ## Pick a world tile in an encounter zone suited to our level and wander there.
 func _grind_objective(state: Dictionary, why: String) -> Dictionary:
+	if _index < _milestones.size():
+		_grinded[str(_milestones[_index].get("id", ""))] = true
 	var cur_map := _cur_map(state)
 	var hero := _hero_tile(state)
 	if not _grind_target.is_empty():
