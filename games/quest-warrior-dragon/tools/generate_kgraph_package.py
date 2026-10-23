@@ -44,7 +44,18 @@ def build_package() -> dict:
             "robos:targetPlatform": "Linux, Windows, macOS",
             "robos:package": "jrpg",
             "robos:namespace": "robos.jrpg",
-        }
+        },
+        {
+            "@id": "urn:robos:desktop-app:game-playthrough",
+            "@type": ["oslc_am:Resource", "robos:DesktopApp"],
+            "dcterms:title": "RobOS Game Playthrough",
+            "dcterms:description": "Runs and watches the end-to-end AI playthrough of Quest: Warrior Dragon: start, resume or replay runs, live game state, per-milestone videos and checkpoints, run history.",
+            "robos:repository": "packages/game-playthrough",
+            "robos:technology": "Electron 30",
+            "robos:playsGame": {"@id": "urn:robos:jrpg:game:quest-warrior-dragon"},
+            "robos:package": "jrpg",
+            "robos:namespace": "robos.jrpg",
+        },
     ]
 
     # Monsters

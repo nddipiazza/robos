@@ -138,6 +138,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **RobOS cRPG Editor** | Unified cRPG game editor for campaign management, character sheets, party inventory, and 5-ft blockmap level design |
 | **Tabletop Blockmap Creator** | Visual calibration tool for dungeon board images: tile size, offset X/Y, static corridor draw tool, and room boundary authoring |
 | **Tabletop Quest Map Editor** | Layer 2 quest scenario designer on blockmaps: doors, monsters, furniture, traps, stairs, and playable cartridge export |
+| **RobOS Game Playthrough** | Run and watch the Quest: Warrior Dragon end-to-end AI playthrough: start, resume or replay runs, live game state, per-milestone videos and checkpoints, run history |
 | **RobOS Audio Player** | Open-source Howler.js audio player with a 100,000-song library (local, Google Drive, OneDrive), AI Playlists, a Virtual DJ spoken with RobOS Voice, lyrics, procedural focus soundscapes, and zero-cloud Google Home / Cast smart speaker streaming |
 | **RobOS Home Speaker** | Smart speaker intercom, push-to-talk voice notes, neural TTS broadcast, custom audio streaming, and soundboard controller |
 | **RobOS Point of Sale** | Open-source cash register for retail, cafés and bars: touchscreen worker order entry, self-checkout kiosk, inventory and menu input, cash drawer administration, tabs/tips/split payments, prep queue, and an open checkout-session API. Barcode and QR scanning by gun or webcam. Sample businesses: retail store, coffee shop, bar (`packages/point-of-sale`) |

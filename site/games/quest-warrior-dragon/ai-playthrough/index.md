@@ -87,7 +87,7 @@ flowchart LR
     W <--> B
     W <--> G
   end
-  subgraph Dash["tools/playthrough-dashboard (Electron)"]
+  subgraph Dash["RobOS Game Playthrough app (packages/game-playthrough)"]
     T["GNOME tray icon<br>progress ring + menu"]
     V["Dashboard window<br>live state · screenshots · milestone cards"]
   end
@@ -157,7 +157,7 @@ python3 tools/gen_milestones.py</code></pre>
     <div class="panel-g">
       <p class="eyebrow">Following a run</p>
       <h2 class="h2">The tray icon and the live dashboard</h2>
-      <p class="sec-p">A two-hour autonomous run has a visibility problem: you want to know <em>at a glance</em> whether it is still alive, how far along it is, and what it is doing, without a terminal scrolling JSON. <code>tools/playthrough-dashboard</code> is a small Electron app that stepped and recorded runs start automatically (<code>--dashboard on|off|auto</code>). It stays open after the run; quit it from the tray menu.</p>
+      <p class="sec-p">A two-hour autonomous run has a visibility problem: you want to know <em>at a glance</em> whether it is still alive, how far along it is, and what it is doing, without a terminal scrolling JSON. The RobOS <a href="{{ '/apps/game-playthrough/' | relative_url }}">Game Playthrough</a> app (<code>packages/game-playthrough</code>) is a small Electron app that stepped and recorded runs start automatically (<code>--dashboard on|off|auto</code>). It stays open after the run; quit it from the tray menu.</p>
 
       <div class="pt-step">
         <figure><img loading="lazy" src="{{ '/assets/games/quest-warrior-dragon/playthrough/tray-menu.png' | relative_url }}" alt="GNOME top bar with the Quest: Warrior Dragon tray icon and its context menu"><figcaption>The tray icon's progress ring and context menu, rendered from a live <code>live.json</code> exactly as the dashboard draws them.</figcaption></figure>
@@ -201,8 +201,8 @@ python3 tools/gen_milestones.py</code></pre>
         <figcaption>#46 Buy Broad Sword at Rimuldar (1500G) &mdash; the card's video shows the shop dialog; the checkpoint confirms <code>broad_sword</code> equipped and gold down from 2387 to 1045.</figcaption>
       </figure>
       <pre class="code" style="margin-top:26px"><button data-copy>Copy</button><code># Run the dashboard on its own against any reports folder / game port
-cd games/quest-warrior-dragon/tools/playthrough-dashboard && npm install
-npx electron --no-sandbox . --reports ../../tests/e2e/reports/playthrough --port 19260
+cd packages/game-playthrough && npm install
+npx electron --no-sandbox . --reports ../../games/quest-warrior-dragon/tests/e2e/reports/playthrough --port 19260
 
 # Debug aids for headless agents
 npx electron --no-sandbox . --snapshot out.png               # write a PNG of the window after 5 s

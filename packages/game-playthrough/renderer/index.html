@@ -3,17 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; img-src 'self' file: data:; media-src 'self' file:; style-src 'self' 'unsafe-inline'">
-  <title>Quest: Warrior Dragon — AI Playthrough</title>
+  <title>RobOS Game Playthrough</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header id="header">
     <div class="title-row">
-      <h1>Quest: Warrior Dragon — AI Playthrough</h1>
+      <h1>Game Playthrough <span class="muted game-name">Quest: Warrior Dragon</span></h1>
       <span id="status" class="pill pending">waiting</span>
       <span id="elapsed" class="muted"></span>
       <span class="spacer"></span>
-      <button id="btn-live" class="primary">Live view</button>
+      <span id="viewing" class="pill viewing hidden"></span>
+      <button id="btn-new-run" class="primary">New run</button>
+      <button id="btn-runs">Runs</button>
+      <button id="btn-live">Live view</button>
       <button id="btn-videos">Videos folder</button>
       <button id="btn-stop" class="danger" disabled>Stop run</button>
     </div>
@@ -55,6 +58,21 @@
         <div id="live-violations"></div>
       </div>
 
+      <div id="view-runs" class="view hidden">
+        <div class="view-head">
+          <h2>Runs</h2>
+          <span id="game-dir" class="muted"></span>
+          <span class="spacer"></span>
+          <button id="btn-game-dir" class="small">Game folder…</button>
+        </div>
+        <table class="runs">
+          <thead><tr><th>Run</th><th>Status</th><th>Milestones</th><th>Battles</th><th>Deaths</th><th>Time</th><th>Videos</th><th></th></tr></thead>
+          <tbody id="runs-body"></tbody>
+        </table>
+        <h3>Driver output</h3>
+        <pre id="run-log" class="log"></pre>
+      </div>
+
       <div id="view-milestone" class="view hidden">
         <div class="view-head">
           <h2 id="ms-title"></h2>
@@ -82,6 +100,29 @@
       </div>
     </section>
   </main>
+
+  <dialog id="run-dialog">
+    <form method="dialog" id="run-form">
+      <h2>New playthrough run</h2>
+      <p class="muted">Runs <code>tests/e2e/play_full_game.py --stepped</code>: one video and one checkpoint per milestone.</p>
+      <fieldset>
+        <label><input type="radio" name="mode" value="full" checked> Whole game from the throne room</label>
+        <label><input type="radio" name="mode" value="resume"> Resume from milestone <select id="run-from"></select></label>
+        <label><input type="radio" name="mode" value="only"> Replay only milestone <select id="run-only"></select></label>
+      </fieldset>
+      <div class="form-grid">
+        <label>Speed <select id="run-speed"><option value="1">×1</option><option value="4">×4</option><option value="8" selected>×8</option><option value="12">×12</option></select></label>
+        <label>Stop after milestone <input id="run-until" type="number" min="0" max="999" value="0"> <span class="muted">0 = to the ending</span></label>
+        <label><input id="run-headed" type="checkbox"> Show the game window</label>
+        <label><input id="run-sound" type="checkbox"> Game sound</label>
+      </div>
+      <p id="run-error" class="violation"></p>
+      <div class="dialog-buttons">
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button id="run-go" value="go" class="primary">Start run</button>
+      </div>
+    </form>
+  </dialog>
 
   <canvas id="tray-canvas" width="32" height="32" hidden></canvas>
   <script src="app.js"></script>

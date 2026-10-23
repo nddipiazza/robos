@@ -47,6 +47,8 @@ header { padding: 10px 14px 8px; border-bottom: 1px solid var(--border); backgro
 .pill.running { color: var(--accent); border-color: var(--accent); }
 .pill.done { color: var(--ok); border-color: var(--ok); }
 .pill.failed, .pill.crashed, .pill.stalled, .pill.timeout { color: var(--bad); border-color: var(--bad); }
+.pill.passed { color: var(--ok); border-color: var(--ok); }
+.pill.interrupted, .pill.stopped { color: var(--warn); border-color: var(--warn); }
 .pill.stopped { color: var(--warn); border-color: var(--warn); }
 
 .progress {
@@ -133,3 +135,19 @@ pre.log.small { max-height: 80px; margin-top: 10px; }
 .splitter:hover, .splitter.dragging { background: var(--accent); padding: 0 1px; }
 body.resizing { cursor: col-resize; user-select: none; }
 body.resizing video, body.resizing img { pointer-events: none; }
+
+/* Run control */
+.game-name { font-weight: normal; font-size: 13px; margin-left: 6px; }
+.pill.viewing { background: #2d2a12; color: var(--warn); border-color: var(--warn); }
+table.runs { width: 100%; border-collapse: collapse; font-size: 12px; }
+table.runs th { text-align: left; color: var(--muted); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+table.runs td { padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+table.runs td.err { white-space: normal; color: var(--bad); max-width: 360px; }
+table.runs tr.current td:first-child { color: var(--accent); font-weight: 600; }
+dialog#run-dialog { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); border-radius: 8px; width: 520px; max-width: calc(100vw - 32px); padding: 18px 20px; }
+dialog#run-dialog::backdrop { background: rgba(0, 0, 0, .55); }
+dialog#run-dialog fieldset { border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; margin: 10px 0; display: grid; gap: 6px; }
+dialog#run-dialog select, dialog#run-dialog input[type=number] { background: var(--bg-primary); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; max-width: 260px; }
+dialog#run-dialog input[type=number] { width: 70px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin: 6px 0 4px; }
+.dialog-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }

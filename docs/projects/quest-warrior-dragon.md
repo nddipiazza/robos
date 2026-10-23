@@ -77,7 +77,7 @@ IPC web service (`GameControlServer.gd`, `/api/v1/state`) to read what is on scr
   the condensed hero stats, gear, pack and map tile, so videos and screenshots explain themselves; the battle
   status bar shows gold and EXP. Each new full run archives the previous run's reports and videos instead of
   overwriting them.
-- **Live dashboard** — stepped/recorded runs launch `tools/playthrough-dashboard` (Electron): a tray icon with a
+- **Live dashboard** — stepped/recorded runs open the RobOS **Game Playthrough** app (`packages/game-playthrough`, Electron; it can also start, resume and stop runs): a tray icon with a
   progress ring and run summary menu, and a window showing live IPC game state with screenshots, the brain's event
   log and the milestone list; every finished milestone becomes a clickable card that plays its video and shows the
   checkpoint saved after it, so a two-hour run can be followed and reviewed milestone by milestone.

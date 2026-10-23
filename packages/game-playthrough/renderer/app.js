@@ -1,5 +1,5 @@
-/* Renderer for the Quest: Warrior Dragon AI playthrough dashboard. Polls live.json written by
-   tests/e2e/play_full_game.py and the game's IPC web service; draws the tray icon. */
+/* Renderer for RobOS Game Playthrough. Polls live.json written by tests/e2e/play_full_game.py
+   and the game's IPC web service, draws the tray icon, and starts / stops runs. */
 const $ = (id) => document.getElementById(id);
 
 const state = {
@@ -26,12 +26,12 @@ function renderHeader(live) {
   pill.textContent = status;
   pill.className = `pill ${status}`;
   $('elapsed').textContent = live ? `${fmtTime(live.elapsed_sec)} elapsed · ×${live.time_scale}` +
-    (live.driver_alive === false && status === 'running' ? ' · driver gone' : '') : '';
+    '' : '';
   const total = live ? live.total : state.registry.length;
   const done = live ? live.done_count : 0;
   $('progress-bar').style.width = total ? `${(100 * done) / total}%` : '0';
   $('progress-text').textContent = `${done} / ${total} milestones` + (live && live.until && live.until < total ? ` (until #${live.until})` : '');
-  $('btn-stop').disabled = !(live && status === 'running' && live.driver_alive !== false);
+  $('btn-stop').disabled = !(state.run && state.run.running);
 
   const s = (live && live.stats) || {};
   const chips = [
@@ -48,7 +48,7 @@ function renderHeader(live) {
   const obj = live && live.objective ? live.objective.label : '';
   $('objective').innerHTML = cur
     ? `Now: <b>#${cur.index} ${esc(cur.name)}</b>${obj ? ` — ${esc(obj)}` : ''}${live.error ? ` <span class="violation">${esc(live.error)}</span>` : ''}`
-    : (live && live.error ? `<span class="violation">${esc(live.error)}</span>` : 'Run tests/e2e/play_full_game.py --stepped to start a run.');
+    : (live && live.error ? `<span class="violation">${esc(live.error)}</span>` : 'No run yet — press New run to start the AI playthrough.');
 }
 
 // ── milestone list ────────────────────────────────────────────────────────
@@ -89,8 +89,8 @@ async function selectMilestone(index) {
   if (!m || (m.state !== 'done' && m.state !== 'current')) return;
   state.selected = index;
   $('follow').checked = false;
-  $('view-live').classList.add('hidden');
-  $('view-milestone').classList.remove('hidden');
+  state.showingRuns = false;
+  setView('view-milestone');
   $('ms-title').textContent = `#${m.index} ${m.name}`;
   $('ms-meta').textContent = `${m.id} · ${m.type}${m.map ? ' · ' + m.map : ''}${m.optional ? ' · optional' : ''}`;
   const video = $('ms-video');
@@ -138,10 +138,10 @@ async function selectMilestone(index) {
 }
 
 function showLive() {
+  state.showingRuns = false;
   state.selected = null;
   $('ms-video').pause();
-  $('view-milestone').classList.add('hidden');
-  $('view-live').classList.remove('hidden');
+  setView('view-live');
   renderList();
 }
 
@@ -180,7 +180,11 @@ function renderLive(live) {
 async function refreshScreenshot() {
   if (state.selected !== null || state.shotBusy || document.hidden) return;
   if (!state.live || state.live.status !== 'running') {
-    $('live-shot-msg').textContent = state.live ? `run ${state.live.status} — game closed` : 'no run';
+    // Not running (or viewing an archived run): show the last screenshot that run saved, if any.
+    const last = state.live ? await window.dash.screenshot() : null;
+    if (last) $('live-shot').src = last;
+    else $('live-shot').removeAttribute('src');
+    $('live-shot-msg').textContent = state.live ? `run ${state.live.status} — last screenshot` : 'no run';
     return;
   }
   state.shotBusy = true;
@@ -223,11 +227,13 @@ function updateTray(live) {
 
 // ── poll loop ─────────────────────────────────────────────────────────────
 async function tick() {
+  state.run = await window.dash.runStatus();
   const live = await window.dash.live();
   state.live = live;
   renderHeader(live);
   renderList();
-  if (state.selected === null) renderLive(live);
+  if (state.showingRuns) renderRuns();
+  else if (state.selected === null) renderLive(live);
   updateTray(live);
   if (live && live.done_count !== state.lastDoneCount) {
     // A milestone just landed: refresh a selected-but-still-recording card so its video appears.
@@ -243,19 +249,108 @@ async function init() {
   $('btn-videos').addEventListener('click', () => window.dash.open('videos'));
   $('btn-stop').addEventListener('click', async () => {
     if (confirm('Stop the AI run now? The driver will write its report and shut the game down.')) {
-      await window.dash.command('stop_play_game', {});
+      await window.dash.stopRun();
     }
   });
+  $('btn-new-run').addEventListener('click', openRunDialog);
+  $('btn-runs').addEventListener('click', showRuns);
+  $('btn-game-dir').addEventListener('click', async () => {
+    const res = await window.dash.chooseGameDir();
+    if (res && res.error) alert(res.error);
+    state.registry = await window.dash.registry();
+    showRuns();
+  });
+  $('run-form').addEventListener('submit', startFromDialog);
   $('ms-reveal').addEventListener('click', () => {
     const m = milestoneRows().find((r) => r.index === state.selected);
     if (m && m.video) window.dash.reveal(m.video);
   });
   $('ms-replay').addEventListener('click', () => navigator.clipboard.writeText($('ms-replay-cmd').textContent));
+  renderViewing();
   await tick();
   if (state.config.select) selectMilestone(state.config.select);
   setInterval(tick, 1000);
   setInterval(refreshScreenshot, 1500);
   refreshScreenshot();
+}
+
+// ── runs ──────────────────────────────────────────────────────────────────
+function setView(name) {
+  for (const v of ['view-live', 'view-milestone', 'view-runs']) $(v).classList.toggle('hidden', v !== name);
+}
+
+async function showRuns() {
+  state.selected = null;
+  state.showingRuns = true;
+  setView('view-runs');
+  await renderRuns();
+}
+
+async function renderRuns() {
+  const runs = await window.dash.runs();
+  const run = state.run || (await window.dash.runStatus());
+  $('game-dir').textContent = run.gameDir ? run.gameDir : 'Game folder not found — choose it';
+  const viewing = state.config.viewing || '';
+  $('runs-body').innerHTML = runs.map((r, i) => `<tr class="${r.live ? 'current' : ''}">
+      <td title="${esc(r.started_at)}">${esc(r.name)}${r.resumed_from ? ' <span class="muted">(resumed)</span>' : ''}</td>
+      <td><span class="pill ${esc(r.status)}">${esc(r.status)}</span></td>
+      <td>${r.done}${r.total ? ` / ${r.total}` : ''}</td><td>${r.battles}</td><td>${r.deaths}</td>
+      <td>${fmtTime(r.elapsed_sec)}</td><td>${r.videos}</td>
+      <td><button class="small" data-run="${i}">${(r.live ? !viewing : viewing === r.name) ? 'Viewing' : 'View'}</button></td>
+    </tr>${r.error ? `<tr><td></td><td colspan="7" class="err">${esc(r.error)}</td></tr>` : ''}`).join('');
+  $('runs-body').querySelectorAll('button[data-run]').forEach((b) => b.addEventListener('click', async () => {
+    const r = runs[parseInt(b.dataset.run, 10)];
+    await window.dash.viewRun(r.live ? '' : r.dir);
+    state.config = await window.dash.config();
+    state.lastDoneCount = -1;
+    renderViewing();
+    showLive();
+  }));
+  $('run-log').textContent = (run.log || []).join('\n') || (run.running ? 'Run started outside this app.' : 'No run started from this app yet.');
+}
+
+function renderViewing() {
+  const v = state.config.viewing;
+  $('viewing').classList.toggle('hidden', !v);
+  $('viewing').textContent = v ? `Viewing ${v}` : '';
+}
+
+async function openRunDialog() {
+  const reg = state.registry;
+  const cps = new Set((await window.dash.checkpoints()).map((c) => c.index));
+  const opt = (i, needCp) => {
+    const m = reg[i - 1];
+    const ok = !needCp || cps.has(i - 1) || i === 1;
+    return `<option value="${i}" ${ok ? '' : 'disabled'}>#${i} ${esc(m ? m.name : '')}</option>`;
+  };
+  $('run-from').innerHTML = reg.map((_, k) => opt(k + 1, true)).slice(1).join('');
+  $('run-only').innerHTML = reg.map((_, k) => opt(k + 1, true)).join('');
+  $('run-error').textContent = state.run && state.run.running ? 'A run is already in progress.' : '';
+  $('run-go').disabled = !!(state.run && state.run.running);
+  $('run-dialog').showModal();
+}
+
+async function startFromDialog(e) {
+  if (e.submitter && e.submitter.value !== 'go') return;
+  e.preventDefault();
+  const mode = document.querySelector('input[name=mode]:checked').value;
+  const opts = {
+    mode,
+    milestone: mode === 'resume' ? $('run-from').value : mode === 'only' ? $('run-only').value : 0,
+    timeScale: $('run-speed').value,
+    until: $('run-until').value,
+    headed: $('run-headed').checked,
+    sound: $('run-sound').checked,
+  };
+  const res = await window.dash.startRun(opts);
+  if (!res || !res.ok) {
+    $('run-error').textContent = (res && res.error) || 'Could not start the run.';
+    return;
+  }
+  $('run-dialog').close();
+  state.config = await window.dash.config();
+  renderViewing();
+  showLive();
 }
 
 init();
