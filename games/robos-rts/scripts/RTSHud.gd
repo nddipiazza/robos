@@ -35,6 +35,7 @@ func _draw() -> void:
 	_draw_bottom_panel()
 	_draw_tooltip()
 	_draw_caption()
+	_draw_match_status()
 	if main.show_help:
 		_draw_help()
 
@@ -44,6 +45,18 @@ func _draw() -> void:
 func _text(pos: Vector2, s: String, size: int, col: Color = C_TEXT, align: int = HORIZONTAL_ALIGNMENT_LEFT, width: float = -1.0) -> void:
 	draw_string(font, pos + Vector2(1, 1), s, align, width, size, Color(0, 0, 0, 0.7))
 	draw_string(font, pos, s, align, width, size, col)
+
+func _draw_match_status() -> void:
+	var state: Dictionary = SimEngine.match_state
+	if state.is_empty():
+		return
+	_text(Vector2(32, 55), "1 vs AI · %s · %s · %.0f×   |   F8 Match menu" % [str(state.get("difficulty", "normal")).capitalize(), str(state.get("strategy", "balanced")).capitalize(), SimEngine.sim_speed], 17, C_MUTED)
+	if state.status == "finished":
+		_frame(Rect2(650, 345, 620, 180))
+		var result = "VICTORY" if int(state.winner) == 1 else ("DRAW" if int(state.winner) == 0 else "DEFEAT")
+		_text(Vector2(650, 410), result, 42, C_GOLD, HORIZONTAL_ALIGNMENT_CENTER, 620)
+		_text(Vector2(650, 455), "Surrender" if state.reason == "surrender" else "All opposing structures destroyed", 20, C_TEXT, HORIZONTAL_ALIGNMENT_CENTER, 620)
+		_text(Vector2(650, 494), "F8 — Play again", 19, C_MUTED, HORIZONTAL_ALIGNMENT_CENTER, 620)
 
 func _text_r(right: float, y: float, s: String, size: int, col: Color = C_TEXT) -> void:
 	_text(Vector2(right - _text_w(s, size), y), s, size, col)
@@ -248,6 +261,16 @@ func _draw_minimap() -> void:
 	var sx := mm.size.x / SimEngine.map_width
 	var sy := mm.size.y / SimEngine.map_height
 	draw_rect(mm, Color("#56683a"))
+	for water in SimEngine.water_polygons:
+		var points = PackedVector2Array()
+		for point in water:
+			points.append(mm.position + point * Vector2(sx, sy))
+		draw_colored_polygon(points, Color("#16364f"))
+	for bridge in SimEngine.land_bridges:
+		draw_rect(Rect2(mm.position + bridge.position * Vector2(sx, sy), bridge.size * Vector2(sx, sy)), Color("#94815d"))
+	for tile in SimEngine.terrain_tiles:
+		var color: Color = {"land": Color("#56683a"), "water": Color("#16364f"), "cliff": Color("#3a3029"), "plateau": Color("#a8946b")}.get(str(tile.terrain), Color.WHITE)
+		draw_rect(Rect2(mm.position + Vector2(float(tile.x), float(tile.y)) * Vector2(sx, sy), Vector2(4, 4) * Vector2(sx, sy)), color)
 	for hg in SimEngine.high_ground_zones:
 		draw_rect(Rect2(mm.position + hg.position * Vector2(sx, sy), hg.size * Vector2(sx, sy)), Color("#a8946b"))
 	for rmp in SimEngine.ramps:
@@ -683,6 +706,9 @@ func _draw_help() -> void:
 		["F2", "Switch the viewed faction"],
 		["F5  F6  F7", "Toggle the built-in AI for each faction"],
 	]
+	if not SimEngine.match_state.is_empty():
+		right[6] = ["F8", "Match setup, speed, restart and surrender"]
+		right[7] = ["Victory", "Destroy every enemy structure"]
 	for i in range(left.size()):
 		var y := r.position.y + 106.0 + float(i) * 56.0
 		_text(Vector2(r.position.x + 28, y), str(left[i][0]), 19, C_GOLD)

@@ -12,11 +12,17 @@ const MapCanvasScript = preload("res://scripts/editor/MapCanvas.gd")
 
 const TOOLS = [
 	{"id": "select", "label": "Select / Move", "key": KEY_Q},
+	{"id": "terrain_brush", "label": "Terrain Brush", "key": KEY_B},
+	{"id": "terrain_fill", "label": "Bucket Fill", "key": KEY_V},
+	{"id": "terrain_sample", "label": "Sample Terrain", "key": KEY_I},
+	{"id": "starts", "label": "Start Location", "key": KEY_S},
+	{"id": "expansions", "label": "Expansion Site", "key": KEY_A},
+	{"id": "bridges", "label": "Land Crossing", "key": KEY_C},
 	{"id": "obstacles", "label": "Cliff Wall", "key": KEY_W},
 	{"id": "high_ground", "label": "High Ground", "key": KEY_E},
 	{"id": "ramps", "label": "Ramp", "key": KEY_R},
-	{"id": "mineral_field", "label": "Mineral Field", "key": KEY_M},
-	{"id": "vespene_geyser", "label": "Vespene Geyser", "key": KEY_G},
+	{"id": "crystal_field", "label": "Crystal Field", "key": KEY_M},
+	{"id": "aether_vent", "label": "Aether Vent", "key": KEY_G},
 	{"id": "unit", "label": "Unit / Structure", "key": KEY_U},
 	{"id": "target", "label": "AI Target", "key": KEY_T},
 	{"id": "erase", "label": "Erase", "key": KEY_X}
@@ -54,6 +60,16 @@ var _cursor_label: Label
 
 var _confirm: ConfirmationDialog
 var _pending_confirm: Callable
+var _save_as: FileDialog
+var _open_file: FileDialog
+var _mode_opt: OptionButton
+var _unlimited_chk: CheckBox
+var _scenario_controls: VBoxContainer
+var _skirmish_controls: VBoxContainer
+var _difficulty_opt: OptionButton
+var _strategy_opt: OptionButton
+var _terrain_opt: OptionButton
+var _brush_size_spin: SpinBox
 
 func _ready() -> void:
 	SimEngine.paused = true
@@ -65,6 +81,8 @@ func _ready() -> void:
 	else:
 		doc = RTSMapDocument.new()
 		var start = _cmdline_map_arg()
+		if start == "":
+			start = "frontier-hunters"
 		if start != "":
 			var path = SimEngine.resolve_scenario_path(start)
 			if path != "":
@@ -77,6 +95,10 @@ func _ready() -> void:
 	_on_doc_changed()
 	_on_selection_changed({})
 	_select_tool("select")
+	call_deferred("_pause_for_editing")
+
+func _pause_for_editing() -> void:
+	SimEngine.paused = true
 
 func _cmdline_map_arg() -> String:
 	var args = OS.get_cmdline_user_args()
@@ -117,6 +139,9 @@ func _build_ui() -> void:
 	canvas.selection_changed.connect(_on_selection_changed)
 	canvas.cursor_moved.connect(_on_cursor_moved)
 	canvas.target_picked.connect(_on_target_picked)
+	canvas.terrain_sampled.connect(func(terrain):
+		_terrain_opt.select(RTSMapDocument.TERRAIN_TYPES.find(terrain))
+		_select_tool("terrain_brush"))
 	body.add_child(_wrap_panel(_build_tool_panel(), 230))
 	body.add_child(canvas)
 	body.add_child(_wrap_panel(_build_properties_panel(), 340))
@@ -138,6 +163,22 @@ func _build_ui() -> void:
 	_confirm.title = "Map Editor"
 	_confirm.confirmed.connect(func(): if _pending_confirm.is_valid(): _pending_confirm.call())
 	add_child(_confirm)
+	_save_as = FileDialog.new()
+	_save_as.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+	_save_as.access = FileDialog.ACCESS_FILESYSTEM
+	_save_as.add_filter("*.jsonld", "RTS map")
+	_save_as.file_selected.connect(func(path): _do_save(path))
+	add_child(_save_as)
+	_open_file = FileDialog.new()
+	_open_file.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	_open_file.access = FileDialog.ACCESS_FILESYSTEM
+	_open_file.add_filter("*.jsonld,*.json", "RTS map")
+	_open_file.file_selected.connect(func(path):
+		if doc.dirty:
+			_ask("Discard unsaved edits and open this map?", func(): _open_path(path))
+		else:
+			_open_path(path))
+	add_child(_open_file)
 
 func _panel_style(col: Color, margin: int) -> StyleBoxFlat:
 	var s = StyleBoxFlat.new()
@@ -173,11 +214,16 @@ func _build_top_bar() -> Control:
 	h.add_child(VSeparator.new())
 
 	h.add_child(_button("New", _on_new_pressed, "Ctrl+N"))
+	h.add_child(_button("Hunters Template", _on_template_pressed))
 	_open_opt = OptionButton.new()
 	_open_opt.custom_minimum_size.x = 260
 	h.add_child(_open_opt)
 	h.add_child(_button("Open", _on_open_pressed))
+	h.add_child(_button("Open File…", func(): _open_file.popup_centered(Vector2i(1000, 700))))
 	h.add_child(_button("Save", _on_save_pressed, "Ctrl+S — writes scenarios/<map id>.jsonld"))
+	h.add_child(_button("Save As…", func():
+		_save_as.current_path = ProjectSettings.globalize_path(doc.default_save_path())
+		_save_as.popup_centered(Vector2i(1000, 700))))
 	h.add_child(VSeparator.new())
 	_undo_btn = _button("Undo", func(): doc.undo(), "Ctrl+Z")
 	_redo_btn = _button("Redo", func(): doc.redo(), "Ctrl+Shift+Z / Ctrl+Y")
@@ -258,6 +304,23 @@ func _build_tool_panel() -> Control:
 	_snap_opt.select(SNAP_OPTIONS.find(1.0))
 	_snap_opt.item_selected.connect(func(i): canvas.snap = SNAP_OPTIONS[i])
 	_row(v, "Snap", _snap_opt)
+	var terrain = OptionButton.new()
+	for kind in RTSMapDocument.TERRAIN_TYPES:
+		terrain.add_item(kind.capitalize())
+	terrain.selected = 1
+	_terrain_opt = terrain
+	terrain.item_selected.connect(func(i): canvas.terrain_brush = RTSMapDocument.TERRAIN_TYPES[i])
+	_row(v, "Terrain", terrain)
+	_brush_size_spin = _spin(1, 12, 1, 3, func(value): canvas.brush_size = int(value))
+	_row(v, "Brush cells", _brush_size_spin)
+	_section(v, "VISIBLE LAYERS")
+	for layer in ["grid", "resources", "units", "markers"]:
+		var check = CheckBox.new()
+		check.text = layer.capitalize()
+		check.button_pressed = true
+		var layer_name: String = layer
+		check.toggled.connect(func(on): canvas.visible_layers[layer_name] = on; canvas.queue_redraw())
+		v.add_child(check)
 
 	v.add_child(HSeparator.new())
 	_section(v, "UNIT BRUSH")
@@ -285,7 +348,7 @@ func _build_tool_panel() -> Control:
 	_unit_harvest_chk.text = "auto-harvest (workers)"
 	_unit_harvest_chk.toggled.connect(func(on): canvas.unit_auto_harvest = on)
 	v.add_child(_unit_harvest_chk)
-	_set_brush_type("marine")
+	_set_brush_type("rifleman")
 
 	v.add_child(HSeparator.new())
 	_section(v, "AI TARGET TOOL")
@@ -338,26 +401,52 @@ func _build_properties_panel() -> Control:
 	_map_fields["seed"] = _row(v, "Seed", _spin(0, 999999, 1, 42, func(val): doc.set_map_property("seed", int(val))))
 	_map_fields["width"] = _row(v, "Width", _spin(32, 512, 8, 128, func(val): doc.set_map_property("width", float(val)); canvas.fit_to_view()))
 	_map_fields["height"] = _row(v, "Height", _spin(32, 512, 8, 96, func(val): doc.set_map_property("height", float(val)); canvas.fit_to_view()))
+	_mode_opt = OptionButton.new()
+	_mode_opt.add_item("Scenario / Campaign")
+	_mode_opt.add_item("1 Player vs AI")
+	_mode_opt.item_selected.connect(func(index): doc.set_map_property("mode", "skirmish" if index == 1 else "scenario"))
+	_row(v, "Play mode", _mode_opt)
+	_unlimited_chk = CheckBox.new()
+	_unlimited_chk.text = "Unlimited crystal and aether"
+	_unlimited_chk.toggled.connect(func(on): doc.set_map_property("unlimited_resources", on))
+	v.add_child(_unlimited_chk)
+	_skirmish_controls = VBoxContainer.new()
+	v.add_child(_skirmish_controls)
+	_difficulty_opt = OptionButton.new()
+	for level in ["easy", "normal", "hard"]:
+		_difficulty_opt.add_item(level.capitalize())
+	_difficulty_opt.item_selected.connect(func(index): doc.set_map_property("difficulty", ["easy", "normal", "hard"][index]))
+	_row(_skirmish_controls, "Difficulty", _difficulty_opt)
+	_strategy_opt = OptionButton.new()
+	for build in ["rush", "balanced", "economy", "siege"]:
+		_strategy_opt.add_item(build.capitalize())
+	_strategy_opt.item_selected.connect(func(index): doc.set_map_property("strategy", ["rush", "balanced", "economy", "siege"][index]))
+	_row(_skirmish_controls, "AI build", _strategy_opt)
+	var opening = Label.new()
+	opening.text = "Both sides: Meridian Guard\n1 main base · 12 workers · 50 crystal"
+	_skirmish_controls.add_child(opening)
 
 	v.add_child(HSeparator.new())
-	_section(v, "PLAYERS & AI DIRECTIVES")
+	_scenario_controls = VBoxContainer.new()
+	v.add_child(_scenario_controls)
+	_section(_scenario_controls, "SCENARIO PLAYERS & AI DIRECTIVES")
 	for pid in [1, 2, 3]:
 		var p_id = pid
 		var head = Label.new()
 		head.text = "Player %d" % pid
 		head.add_theme_color_override("font_color", MapCanvasScript.OWNER_COLORS[pid])
-		v.add_child(head)
+		_scenario_controls.add_child(head)
 		var fac = OptionButton.new()
 		for f in RTSMapDocument.FACTIONS:
 			fac.add_item(FACTION_LABELS[f])
 		fac.item_selected.connect(func(i): doc.set_player_property(p_id, "faction", RTSMapDocument.FACTIONS[i]))
-		_player_fields["%d:faction" % pid] = _row(v, "Faction", fac)
+		_player_fields["%d:faction" % pid] = _row(_scenario_controls, "Faction", fac)
 		var res = HBoxContainer.new()
-		_player_fields["%d:minerals" % pid] = _spin(0, 99999, 25, 400, func(val): doc.set_player_property(p_id, "minerals", int(val)))
-		_player_fields["%d:vespene" % pid] = _spin(0, 99999, 25, 150, func(val): doc.set_player_property(p_id, "vespene", int(val)))
-		res.add_child(_player_fields["%d:minerals" % pid])
-		res.add_child(_player_fields["%d:vespene" % pid])
-		_row(v, "Min / Gas", res)
+		_player_fields["%d:crystal" % pid] = _spin(0, 99999, 25, 400, func(val): doc.set_player_property(p_id, "crystal", int(val)))
+		_player_fields["%d:aether" % pid] = _spin(0, 99999, 25, 150, func(val): doc.set_player_property(p_id, "aether", int(val)))
+		res.add_child(_player_fields["%d:crystal" % pid])
+		res.add_child(_player_fields["%d:aether" % pid])
+		_row(_scenario_controls, "Crystal / Gas", res)
 
 		var dh = HBoxContainer.new()
 		var en = CheckBox.new()
@@ -372,7 +461,7 @@ func _build_properties_panel() -> Control:
 		mode.item_selected.connect(func(i): doc.set_directive(p_id, {"mode": RTSMapDocument.DIRECTIVE_MODES[i]}))
 		_directive_fields["%d:mode" % pid] = mode
 		dh.add_child(mode)
-		_row(v, "Directive", dh)
+		_row(_scenario_controls, "Directive", dh)
 		var th = HBoxContainer.new()
 		_directive_fields["%d:target_x" % pid] = _spin(0, 512, 0.5, 64, func(val): doc.set_directive(p_id, {"target_x": float(val)}))
 		_directive_fields["%d:target_y" % pid] = _spin(0, 512, 0.5, 48, func(val): doc.set_directive(p_id, {"target_y": float(val)}))
@@ -380,7 +469,7 @@ func _build_properties_panel() -> Control:
 		th.add_child(_directive_fields["%d:target_y" % pid])
 		var pick = _button("Pick", func(): _target_player_opt.select(p_id - 1); canvas.target_player = p_id; _select_tool("target"), "Click the map to set this target")
 		th.add_child(pick)
-		_row(v, "Target", th)
+		_row(_scenario_controls, "Target", th)
 
 	v.add_child(HSeparator.new())
 	_section(v, "SELECTION")
@@ -467,6 +556,8 @@ func _on_selection_changed(ref: Dictionary) -> void:
 		_inspector_fields["id"] = _row(_inspector_box, "Id", _line(func(t): _set_field("id", t.strip_edges())))
 		_add_xy_fields()
 		_inspector_fields["amount"] = _row(_inspector_box, "Amount", _spin(0, 100000, 50, 1500, func(val): _set_field("amount", int(val))))
+	elif layer in ["starts", "expansions"]:
+		_add_xy_fields()
 	else:
 		_add_xy_fields()
 		_inspector_fields["w"] = _row(_inspector_box, "Width", _spin(1, 512, 0.5, 4, func(val): _set_field("w", float(val))))
@@ -524,6 +615,12 @@ func _refresh_inspector_values() -> void:
 
 func _on_doc_changed() -> void:
 	var d = doc.data
+	_mode_opt.select(1 if d.mode == "skirmish" else 0)
+	_unlimited_chk.set_pressed_no_signal(bool(d.unlimited_resources))
+	_scenario_controls.visible = d.mode != "skirmish"
+	_skirmish_controls.visible = d.mode == "skirmish"
+	_difficulty_opt.select(maxi(0, ["easy", "normal", "hard"].find(str(d.difficulty))))
+	_strategy_opt.select(maxi(0, ["rush", "balanced", "economy", "siege"].find(str(d.strategy))))
 	for key in ["label", "id"]:
 		var le: LineEdit = _map_fields[key]
 		if not le.has_focus():
@@ -533,8 +630,8 @@ func _on_doc_changed() -> void:
 	for pid in [1, 2, 3]:
 		var p: Dictionary = d["players"][str(pid)]
 		(_player_fields["%d:faction" % pid] as OptionButton).select(max(0, RTSMapDocument.FACTIONS.find(str(p["faction"]))))
-		(_player_fields["%d:minerals" % pid] as SpinBox).set_value_no_signal(float(p["minerals"]))
-		(_player_fields["%d:vespene" % pid] as SpinBox).set_value_no_signal(float(p["vespene"]))
+		(_player_fields["%d:crystal" % pid] as SpinBox).set_value_no_signal(float(p["crystal"]))
+		(_player_fields["%d:aether" % pid] as SpinBox).set_value_no_signal(float(p["aether"]))
 		var dv = doc.get_directive(pid)
 		(_directive_fields["%d:enabled" % pid] as CheckBox).set_pressed_no_signal(bool(dv["enabled"]))
 		(_directive_fields["%d:mode" % pid] as OptionButton).select(max(0, RTSMapDocument.DIRECTIVE_MODES.find(str(dv["mode"]))))
@@ -602,10 +699,22 @@ func _on_new_pressed() -> void:
 		_do_new()
 
 func _do_new() -> void:
-	doc.new_blank()
+	doc.new_blank(256, 256)
 	canvas.set_document(doc)
 	canvas.select({})
 	_set_status("New blank map — set its Map id before saving.")
+
+func _on_template_pressed() -> void:
+	if doc.dirty:
+		_ask("Discard unsaved edits and create a Hunters map?", _new_hunters_template)
+	else:
+		_new_hunters_template()
+
+func _new_hunters_template() -> void:
+	_open_path("res://scenarios/frontier-hunters.jsonld")
+	doc.file_path = ""
+	doc.set_map_property("id", "custom-hunters")
+	doc.set_map_property("label", "Custom Hunters")
 
 func _refresh_open_list() -> void:
 	_open_opt.clear()
@@ -669,6 +778,10 @@ func _nudge_selected(delta: Vector2) -> void:
 	doc.move_item_to(canvas.selected, Vector2(float(item["x"]), float(item["y"])) + delta)
 
 func _playtest() -> Dictionary:
+	var issues = doc.validate()
+	if not issues.is_empty():
+		_set_status("Fix validation issues before playtesting: " + issues[0])
+		return {"ok": false, "error": issues[0], "issues": issues}
 	SimEngine.editor_session = {"doc": doc}
 	var res = SimEngine.load_scenario_dict(doc.to_scenario())
 	SimEngine.paused = false
@@ -691,7 +804,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_Y:
 				doc.redo()
 			KEY_S:
-				_on_save_pressed()
+				if ke.shift_pressed:
+					_save_as.current_path = ProjectSettings.globalize_path(doc.default_save_path())
+					_save_as.popup_centered(Vector2i(1000, 700))
+				else:
+					_on_save_pressed()
+			KEY_O:
+				_open_file.popup_centered(Vector2i(1000, 700))
 			KEY_N:
 				_on_new_pressed()
 			KEY_D:
@@ -756,8 +875,21 @@ func handle_control_request(req: Dictionary) -> Dictionary:
 			doc.set_directive(int(req["player"]), fields)
 		"add_rect":
 			out["ref"] = doc.add_rect(str(req["layer"]), Rect2(float(req["x"]), float(req["y"]), float(req["w"]), float(req["h"])))
+		"add_marker":
+			out["ref"] = doc.add_marker(str(req.get("layer", "starts")), Vector2(float(req["x"]), float(req["y"])))
+		"paint_terrain":
+			out["changed"] = doc.paint_terrain(Vector2(float(req["x"]), float(req["y"])), str(req.get("terrain", "water")), clampi(int(req.get("size", 1)), 1, 12))
+		"fill_terrain":
+			out["changed_cells"] = doc.fill_terrain(Vector2(float(req["x"]), float(req["y"])), str(req.get("terrain", "land")))
+		"tool":
+			_select_tool(str(req.get("tool", "select")))
+			canvas.terrain_brush = str(req.get("terrain", canvas.terrain_brush))
+			canvas.brush_size = clampi(int(req.get("size", canvas.brush_size)), 1, 12)
+			_terrain_opt.select(maxi(0, RTSMapDocument.TERRAIN_TYPES.find(canvas.terrain_brush)))
+			_brush_size_spin.set_value_no_signal(canvas.brush_size)
+			out["ui"] = ui_state()
 		"add_resource":
-			out["ref"] = doc.add_resource(str(req.get("type", "mineral_field")), Vector2(float(req["x"]), float(req["y"])), int(req.get("amount", -1)))
+			out["ref"] = doc.add_resource(str(req.get("type", "crystal_field")), Vector2(float(req["x"]), float(req["y"])), int(req.get("amount", -1)))
 		"add_unit":
 			out["ref"] = doc.add_unit(str(req["type"]), int(req.get("owner", 1)), Vector2(float(req["x"]), float(req["y"])),
 				int(req.get("count", 1)), float(req.get("spread", 2.1)), bool(req.get("auto_harvest", false)))
@@ -791,3 +923,41 @@ func handle_control_request(req: Dictionary) -> Dictionary:
 	out["issues"] = doc.validate()
 	out["scenario"] = doc.to_scenario()
 	return out
+
+func ui_state() -> Dictionary:
+	var rect = canvas.get_global_rect()
+	return {"tool": canvas.tool, "terrain": canvas.terrain_brush, "brush_size": canvas.brush_size,
+		"canvas_rect": [rect.position.x, rect.position.y, rect.size.x, rect.size.y],
+		"canvas_scale": canvas.view_scale, "canvas_offset": [canvas.view_offset.x, canvas.view_offset.y]}
+
+func inject_input(data_in: Dictionary) -> void:
+	var pos = Vector2(float(data_in.get("x", 0)), float(data_in.get("y", 0)))
+	match str(data_in.get("type", "")):
+		"mouse_button":
+			var event = InputEventMouseButton.new()
+			event.position = pos
+			event.global_position = pos
+			event.button_index = int(data_in.get("button", 1))
+			event.pressed = bool(data_in.get("pressed", true))
+			_inject_editor_event(event, pos)
+		"mouse_motion":
+			var event = InputEventMouseMotion.new()
+			event.position = pos
+			event.global_position = pos
+			_inject_editor_event(event, pos)
+		"key":
+			var event = InputEventKey.new()
+			event.keycode = OS.find_keycode_from_string(str(data_in.get("key", "")))
+			event.pressed = bool(data_in.get("pressed", true))
+			event.ctrl_pressed = bool(data_in.get("ctrl", false))
+			event.shift_pressed = bool(data_in.get("shift", false))
+			_inject_editor_event(event, pos)
+
+func _inject_editor_event(event: InputEvent, global_pos: Vector2) -> void:
+	if DisplayServer.get_name() != "headless":
+		get_viewport().push_input(event)
+	elif event is InputEventKey:
+		_unhandled_input(event)
+	elif canvas.get_global_rect().has_point(global_pos):
+		event.position = global_pos - canvas.get_global_rect().position
+		canvas._gui_input(event)
