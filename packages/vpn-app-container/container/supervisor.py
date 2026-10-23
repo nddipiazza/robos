@@ -19,7 +19,7 @@ import time
 APP_UID = 10000
 RUN = Path('/run/vpn')
 APPS = {
-    'qbittorrent': ['/usr/bin/qbittorrent-nox', '--confirm-legal-notice', '--webui-port=8080'],
+    'qbittorrent': ['/usr/bin/qbittorrent-nox', '--webui-port=8080'],
     'transmission': ['/usr/bin/transmission-daemon', '--foreground', '--port', '8080',
                      '--config-dir', '/data/config/transmission'],
 }
