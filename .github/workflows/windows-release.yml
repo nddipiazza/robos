@@ -26,7 +26,7 @@ jobs:
         shell: pwsh
         run: |
           if ($env:RELEASE_TAG -ne "v$((Get-Content VERSION).Trim())") { throw 'Release tag does not match VERSION' }
-          node --test scripts/windows/setup.test.cjs scripts/windows/compatibility.test.cjs packages/software-center/windows-tools.test.js scripts/windows/build-release.test.cjs scripts/windows/portable-lifetime.test.cjs scripts/windows/launcher.test.cjs
+          node --test scripts/windows/setup.test.cjs scripts/windows/compatibility.test.cjs packages/software-center/windows-tools.test.js scripts/windows/build-release.test.cjs scripts/windows/portable-lifetime.test.cjs scripts/windows/launcher.test.cjs scripts/windows/native-integration.test.cjs packages/robos-lib/app-search.test.js
       - name: Prepare a clean native suite
         shell: pwsh
         run: ./site/downloads/Install-RobOS.ps1 -SourceRoot $pwd -InstallDir "$env:RUNNER_TEMP\RobOS-suite" -NoLaunch

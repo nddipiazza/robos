@@ -55,10 +55,15 @@ window.robos.list().then(apps => {
     const description = document.createElement('span'); description.className = 'suite-description'; description.textContent = info[1];
     button.append(top, name, description); button.addEventListener('click', () => launch(app)); suites.append(button);
   }
-  function render() {
+  let renderVersion = 0;
+  async function render() {
+    const version = ++renderVersion;
     const query = document.getElementById('search').value.trim().toLowerCase();
-    const list = (filter === 'recent' ? recent.map(id => apps.find(a => a.id === id)).filter(Boolean) : apps)
-      .filter(a => (filter === 'all' || filter === 'recent' || group(a) === filter) && `${a.label} ${a.id} ${a.category}`.toLowerCase().includes(query));
+    const matches = query ? await window.robos.search(query) : null;
+    if (version !== renderVersion) return;
+    const base = matches ? matches.map(id => apps.find(app => app.id === id)).filter(Boolean)
+      : filter === 'recent' ? recent.map(id => apps.find(a => a.id === id)).filter(Boolean) : apps;
+    const list = base.filter(a => (filter !== 'recent' || recent.includes(a.id)) && (filter === 'all' || filter === 'recent' || group(a) === filter));
     document.getElementById('suite-section').hidden = filter !== 'all' || !!query;
     document.getElementById('view-title').textContent = titles[filter];
     document.getElementById('directory-title').textContent = query ? 'Search results' : filter === 'all' ? 'All applications' : titles[filter];
@@ -73,7 +78,7 @@ window.robos.list().then(apps => {
   }));
   document.getElementById('search').addEventListener('input', render);
   const search = document.getElementById('search');
-  window.robos.onShown(() => { search.focus(); search.select(); });
+  window.robos.onShown(() => { search.focus(); search.select(); window.robos.launcherState().then(showSettings); });
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape') window.robos.hide();
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); search.focus(); }
@@ -85,7 +90,7 @@ window.robos.list().then(apps => {
     settings = value;
     shortcut.disabled = false; login.disabled = false;
     shortcut.setAttribute('aria-pressed', String(value.shortcutActive));
-    shortcut.textContent = value.shortcutActive ? 'Win + Shift + Space enabled' : 'Enable Win + Shift + Space';
+    shortcut.textContent = value.shortcutActive ? 'Win + Shift enabled' : 'Enable Win + Shift';
     login.setAttribute('aria-pressed', String(value.startAtLogin));
     login.textContent = value.startAtLogin ? 'Starts at Windows sign-in' : 'Run at Windows sign-in';
     document.getElementById('launcher-hint').textContent = value.shortcutError || 'Close the window to keep RobOS ready in the tray.';
@@ -99,5 +104,6 @@ window.robos.list().then(apps => {
   shortcut.addEventListener('click', () => setting(shortcut, () => window.robos.setShortcut(!settings?.shortcutActive)));
   login.addEventListener('click', () => setting(login, () => window.robos.setStartAtLogin(!settings?.startAtLogin)));
   window.robos.launcherState().then(showSettings);
+  window.robos.onLauncherState(showSettings);
   render();
 }).catch(error => { const status = document.getElementById('status'); status.hidden = false; status.textContent = error.message; });
