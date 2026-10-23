@@ -17,6 +17,7 @@ This guide is written for **you, the shop owner**. Work through the steps in ord
 8. **[Run the shop day to day](8-run-the-shop/)**: a daily routine, reports and awkward cases.
 9. **[Switch over from your old system](9-switch-over/)**: the plan, and what is not included yet.
 10. **[Run a tow service](10-tow-desk/)**: for shops with their own trucks. Take tow and roadside calls, dispatch, and bill them at Checkout.
+11. **[Order parts and keep stock](11-orders/)**: suppliers, purchase orders for the parts the mechanics ask for, and stock on your shelves.
 
 ## At a glance
 

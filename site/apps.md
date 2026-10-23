@@ -34,12 +34,12 @@ description: Every RobOS desktop app, domain sandbox, game studio and MCP server
           <p>Touchscreen cash register for retail stores, cafés and bars: self-checkout kiosk, barcode gun &amp; webcam QR scanning, cash drawer Z-reports and an open checkout API.</p>
         </div>
       </a>
-      <a class="card app-card" href="{{ '/auto-center/' | relative_url }}" data-s="robos auto center auto-center vehicle owner maintenance invoice ocr nhtsa recall remedies repair shop floor profit reports tow truck towing roadside dispatch">
+      <a class="card app-card" href="{{ '/auto-center/' | relative_url }}" data-s="robos auto center auto-center vehicle owner maintenance invoice ocr nhtsa recall remedies repair shop floor profit reports tow truck towing roadside dispatch purchase orders inventory stock suppliers">
         <img src="{{ '/v1/assets/images/icons/auto-center.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
         <div>
           <h3>RobOS Auto Center</h3>
           <code class="app-pkg">Walkthrough · /auto-center/</code>
-          <p>Owner vehicle care and invoice scans, private Git-backed repair shop workflows, a tow desk for tow and roadside calls, shop-floor &amp; per-job profit reports, and source-backed NHTSA recall remedies.</p>
+          <p>Owner vehicle care and invoice scans, private Git-backed repair shop workflows, a tow desk for tow and roadside calls, parts orders and stock, shop-floor &amp; per-job profit reports, and source-backed NHTSA recall remedies.</p>
         </div>
       </a>
       <a class="card app-card" href="{{ '/family-finances/' | relative_url }}" data-s="robos household family finances checking savings credit card loan statement reconciliation spending categories split transactions w-2 1099 pdf tax estimate opentaxsolver tenforty">

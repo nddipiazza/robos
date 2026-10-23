@@ -74,6 +74,8 @@ Press **Request a part**. Start typing the part, choose how soon you need it (no
 
 The request appears under **Parts requested**. When the part is ordered, enter the supplier and press **Mark ordered**. When it arrives, enter what it cost and press **Mark received**. A received part is added to the ticket's parts cost automatically.
 
+If someone else buys the parts, they can order the request from the **Orders** menu instead, or take it from stock. A part on a purchase order is received there, not at the bench. See [Order parts and keep stock](../11-orders/).
+
 ::shot[order-and-receive-the-part|7|A part that has been ordered and received]
 
 ## Log your hours

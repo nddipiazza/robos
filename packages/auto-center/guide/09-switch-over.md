@@ -41,7 +41,7 @@ Read this list before you decide. Some of these may matter to your shop, and non
 | Print or email an invoice | The invoice is shown on screen. There is no printable invoice yet. |
 | Appointments and a calendar | Not included. Use your current calendar. |
 | Sales tax | Not calculated. Enter prices the way you charge them. |
-| Stock counts for parts | The parts catalog suggests parts and prices. It does not track how many you have. |
+| Stock counts for parts | **Orders → Stock** tracks what is on the shelf, with reorder points. It does not scan barcodes or value stock by FIFO or average cost. |
 | Import past repair history | Not included. Keep your old system as an archive. |
 | Import jobs that are open today | Not included. Finish them in the old system, or re-enter them as new tickets. |
 | Cancel a ticket without invoicing | There is no cancel. Use a diagnostic-fee estimate, as described in [Run the shop](../8-run-the-shop/). |

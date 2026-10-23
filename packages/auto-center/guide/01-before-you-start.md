@@ -15,7 +15,7 @@ This tutorial walks you through everything you need to do to **stop using your c
 | Keep a customer and vehicle list | **Admin**, Customers, and the intake wizard |
 | Write estimates and get approval | **Front desk**, open the ticket |
 | Hand a job card to a mechanic | **Mechanic bench**, work ticket |
-| Track parts you ordered | **Mechanic bench**, parts requested |
+| Order parts and track stock | **Orders**, with requests from the **Mechanic bench** |
 | Track mechanic hours | **Mechanic bench**, log hours or timer |
 | Write the invoice and take payment | **Checkout** |
 | Take tow calls and dispatch your trucks | **Tow desk**, then **Checkout** for the bill |
@@ -34,11 +34,12 @@ This tutorial walks you through everything you need to do to **stop using your c
 
 Open Auto Center. In the left menu, set **Workspace** to **Maintenance center**. This is the shop side of the app. (The other choice, *Vehicle owner*, is a personal garage for someone's own car and keeps its records separate.)
 
-Under **Shop desk** you now have five menus:
+Under **Shop desk** you now have six menus:
 
 - **Front desk** is for whoever answers the phone, texts and the door.
 - **Tow desk** is for tow and roadside calls, if you run trucks. See [Run a tow service](../10-tow-desk/).
 - **Mechanic bench** is for the people fixing cars.
+- **Orders** is for whoever buys parts: suppliers, purchase orders and stock. See [Order parts and keep stock](../11-orders/).
 - **Checkout** is for taking payment and handing back keys.
 - **Admin** is for you, the owner.
 
