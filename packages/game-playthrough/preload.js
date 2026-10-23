@@ -21,4 +21,11 @@ contextBridge.exposeInMainWorld('dash', {
   checkpoints: () => ipcRenderer.invoke('run:checkpoints'),
   viewRun: (dir) => ipcRenderer.invoke('run:view', dir),
   chooseGameDir: () => ipcRenderer.invoke('run:choose-game-dir'),
+  // Export to MP4 (runs in the background in the main process).
+  exportPlan: () => ipcRenderer.invoke('export:plan'),
+  exportStart: (opts) => ipcRenderer.invoke('export:start', opts),
+  exportStatus: () => ipcRenderer.invoke('export:status'),
+  exportCancel: () => ipcRenderer.invoke('export:cancel'),
+  exportShow: (file) => ipcRenderer.invoke('export:show', file),
+  exportPlay: (file) => ipcRenderer.invoke('export:play', file),
 });
