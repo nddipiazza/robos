@@ -18,7 +18,7 @@ signal unit_damaged(owner_id: int, pos: Vector2)
 
 const TICK_RATE: int = 64
 const TICK_DT: float = 1.0 / float(TICK_RATE)
-const SPATIAL_CELL_SIZE: float = 4.0
+const SPATIAL_CELL_SIZE: float = 8.0
 const PATH_CELL_SIZE: float = 2.0
 
 var tick: int = 0
@@ -30,6 +30,7 @@ var decor_enabled: bool = true
 var last_step_count: int = 1
 var rts_mode: String = "human"
 var sim_speed: float = 1.0
+var manual_step_requests: int = 0
 
 var map_width: float = 128.0
 var map_height: float = 96.0
@@ -49,6 +50,7 @@ var next_tag: int = 1001
 var units: Dictionary = {}
 var resources: Dictionary = {}
 var spatial_grid: Dictionary = {}
+var _spatial_by_owner: Dictionary = {}
 var astar_grid: AStarGrid2D = AStarGrid2D.new()
 var nav_dirty: bool = true
 
@@ -59,6 +61,14 @@ var _accum_time: float = 0.0
 # Map Editor <-> playtest handoff: holds the editor document while RTSMain playtests it.
 var editor_session: Dictionary = {}
 var match_state: Dictionary = {}
+var frame_sim_usec: int = 0
+var frame_sim_ticks: int = 0
+var profile_usec: Dictionary = {"navigation": 0, "orders": 0, "steering": 0, "ai": 0}
+var _static_structures: Array[Dictionary] = []
+var _max_unit_radius: float = 4.5
+var _town_halls: Array[Dictionary] = []
+var _gas_source_by_tap: Dictionary = {}
+var _gas_tap_by_vent: Dictionary = {}
 
 func _ready() -> void:
 	var env_mode = OS.get_environment("RTS_MODE")
@@ -80,15 +90,25 @@ func _load_startup_scenario() -> void:
 				push_warning("[SimEngine] %s" % res.get("error", "Failed to load scenario"))
 
 func _process(delta: float) -> void:
+	frame_sim_usec = 0
+	frame_sim_ticks = 0
 	if rts_mode == "backend" or paused or match_state.get("status", "") == "finished":
 		return
-	_accum_time += delta * sim_speed
+	var started = Time.get_ticks_usec()
+	# Keep input/rendering responsive when fast-forward or a slow capture exhausts
+	# the CPU. The fixed simulation tick is unchanged; overload slows wall-clock
+	# playback instead of creating an unbounded catch-up frame.
+	_accum_time = minf(_accum_time + delta * sim_speed, 1.0)
 	var max_steps = 64
 	var steps = 0
 	while _accum_time >= TICK_DT and steps < max_steps:
 		_accum_time -= TICK_DT
 		step_ticks(1)
 		steps += 1
+		if Time.get_ticks_usec() - started >= 8000:
+			break
+	frame_sim_usec = Time.get_ticks_usec() - started
+	frame_sim_ticks = steps
 
 func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0) -> void:
 	tick = 0
@@ -114,6 +134,7 @@ func reset_state(new_seed: int = 42, width: float = 128.0, height: float = 96.0)
 	match_state.clear()
 	_accum_time = 0.0
 	sim_speed = 1.0
+	manual_step_requests = 0
 	paused = false
 	decor_enabled = true
 
@@ -645,12 +666,15 @@ func _step_single_tick() -> void:
 	_rebuild_spatial_grid()
 
 	if tick % 8 == 0:
+		var ai_started = Time.get_ticks_usec()
 		RTSCommanderAI.step_ai(TICK_DT * 8.0)
+		profile_usec.ai += Time.get_ticks_usec() - ai_started
 
 	_update_structures(TICK_DT)
 
 	var all_tags = units.keys()
 	all_tags.sort()
+	var orders_started = Time.get_ticks_usec()
 	for tag in all_tags:
 		if not units.has(tag):
 			continue
@@ -661,11 +685,18 @@ func _step_single_tick() -> void:
 			continue
 		_update_unit_orders(u, TICK_DT)
 
+	profile_usec.orders += Time.get_ticks_usec() - orders_started
+	var steering_started = Time.get_ticks_usec()
 	_apply_steering_and_push_resolution(all_tags, TICK_DT)
+	profile_usec.steering += Time.get_ticks_usec() - steering_started
 	_check_match_result()
 	emit_signal("simulation_ticked", tick)
 
 func _rebuild_astar_grid() -> void:
+	_static_structures.clear()
+	_town_halls.clear()
+	_gas_source_by_tap.clear()
+	_gas_tap_by_vent.clear()
 	var cols = int(ceil(map_width / PATH_CELL_SIZE))
 	var rows = int(ceil(map_height / PATH_CELL_SIZE))
 	astar_grid.region = Rect2i(0, 0, cols, rows)
@@ -681,7 +712,15 @@ func _rebuild_astar_grid() -> void:
 		astar_grid.set_point_solid(cell, true)
 
 	for u in units.values():
+		if u.is_structure and bool(RTSData.get_unit_def(u.unit_type).get("is_town_hall", false)):
+			_town_halls.append(u)
+		if u.unit_type == "aether_tap":
+			for resource in resources.values():
+				if resource.resource_type == "aether_vent" and resource.pos.distance_squared_to(u.pos) < 1.0:
+					_gas_source_by_tap[u.tag] = resource.tag
+					_gas_tap_by_vent[Vector2i(u.owner, resource.tag)] = u.tag
 		if u["is_structure"] and not u["is_walkable_structure"]:
+			_static_structures.append(u)
 			var r = u["radius"]
 			var rect = Rect2(u["pos"].x - r, u["pos"].y - r, r * 2.0, r * 2.0)
 			_set_rect_solid(rect, true)
@@ -698,6 +737,12 @@ func _set_rect_solid(rect: Rect2, solid: bool) -> void:
 			astar_grid.set_point_solid(Vector2i(x, y), solid)
 
 func compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: float = 0.85) -> Array[Vector2]:
+	var started = Time.get_ticks_usec()
+	var result = _compute_smooth_path(start_pos, end_pos, unit_radius)
+	profile_usec.navigation += Time.get_ticks_usec() - started
+	return result
+
+func _compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: float) -> Array[Vector2]:
 	if _has_clear_line_of_walk(start_pos, end_pos, unit_radius):
 		return [end_pos]
 
@@ -733,10 +778,26 @@ func compute_smooth_path(start_pos: Vector2, end_pos: Vector2, unit_radius: floa
 		# Always advance at least one waypoint; without this a unit hugging a cliff corner (no clear
 		# line to any later waypoint) would loop here forever.
 		var furthest = idx + 1
-		for mote in range(waypoints.size() - 1, idx + 1, -1):
-			if _has_clear_line_of_walk(anchor, waypoints[mote], unit_radius):
-				furthest = mote
+		# Grow visibility probes exponentially, then bisect the blocked interval.
+		# Reverse-scanning a long cross-map path repeated hundreds of ray tests.
+		var stride = 2
+		var blocked = waypoints.size()
+		while idx + stride < waypoints.size():
+			var probe = idx + stride
+			if not _has_clear_line_of_walk(anchor, waypoints[probe], unit_radius):
+				blocked = probe
 				break
+			furthest = probe
+			stride *= 2
+		var low = furthest + 1
+		var high = mini(blocked - 1, waypoints.size() - 1)
+		while low <= high:
+			var probe = (low + high) / 2
+			if _has_clear_line_of_walk(anchor, waypoints[probe], unit_radius):
+				furthest = probe
+				low = probe + 1
+			else:
+				high = probe - 1
 		smoothed.append(waypoints[furthest])
 		anchor = waypoints[furthest]
 		idx = furthest
@@ -779,35 +840,54 @@ func _is_point_blocked_by_static(p: Vector2, radius: float) -> bool:
 		var expanded = obs.grow(radius * 0.75)
 		if expanded.has_point(p):
 			return true
-	for u in units.values():
-		if u["is_structure"] and not u["is_walkable_structure"]:
-			if p.distance_to(u["pos"]) < (u["radius"] + radius * 0.65):
-				return true
+	for u in _static_structures:
+		if p.distance_squared_to(u["pos"]) < pow(float(u["radius"]) + radius * 0.65, 2):
+			return true
 	return false
 
 func _rebuild_spatial_grid() -> void:
 	spatial_grid.clear()
+	_spatial_by_owner.clear()
+	_max_unit_radius = 0.0
 	for tag in units.keys():
 		var u = units[tag]
+		_max_unit_radius = maxf(_max_unit_radius, u.radius)
 		var cell = Vector2i(int(floor(u["pos"].x / SPATIAL_CELL_SIZE)), int(floor(u["pos"].y / SPATIAL_CELL_SIZE)))
 		if not spatial_grid.has(cell):
 			spatial_grid[cell] = []
 		spatial_grid[cell].append(tag)
+		if not _spatial_by_owner.has(u.owner):
+			_spatial_by_owner[u.owner] = {}
+		var owner_grid: Dictionary = _spatial_by_owner[u.owner]
+		if not owner_grid.has(cell):
+			owner_grid[cell] = []
+		owner_grid[cell].append(tag)
 
-func query_units_in_radius(center: Vector2, radius: float) -> Array[Dictionary]:
+func query_units_in_radius(center: Vector2, radius: float, exclude_owner: int = 0) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
-	var rad_cells = int(ceil((radius + 4.5) / SPATIAL_CELL_SIZE))
-	var cx = int(floor(center.x / SPATIAL_CELL_SIZE))
-	var cy = int(floor(center.y / SPATIAL_CELL_SIZE))
-	for dx in range(-rad_cells, rad_cells + 1):
-		for dy in range(-rad_cells, rad_cells + 1):
-			var cell = Vector2i(cx + dx, cy + dy)
-			if spatial_grid.has(cell):
-				for tag in spatial_grid[cell]:
-					if units.has(tag):
-						var u = units[tag]
-						if center.distance_to(u["pos"]) <= radius + u["radius"]:
-							result.append(u)
+	var reach = radius + _max_unit_radius
+	var x0 = int(floor((center.x - reach) / SPATIAL_CELL_SIZE))
+	var x1 = int(floor((center.x + reach) / SPATIAL_CELL_SIZE))
+	var y0 = int(floor((center.y - reach) / SPATIAL_CELL_SIZE))
+	var y1 = int(floor((center.y + reach) / SPATIAL_CELL_SIZE))
+	var grids: Array = [spatial_grid]
+	if exclude_owner != 0:
+		grids.clear()
+		for owner_id in _spatial_by_owner:
+			if owner_id != exclude_owner:
+				grids.append(_spatial_by_owner[owner_id])
+	for grid_value in grids:
+		var grid: Dictionary = grid_value
+		for x in range(x0, x1 + 1):
+			for y in range(y0, y1 + 1):
+				var cell = Vector2i(x, y)
+				if grid.has(cell):
+					for tag in grid[cell]:
+						if units.has(tag):
+							var u: Dictionary = units[tag]
+							var combined_radius: float = radius + u["radius"]
+							if center.distance_squared_to(u["pos"]) <= combined_radius * combined_radius:
+								result.append(u)
 	return result
 
 func _update_structures(dt: float) -> void:
@@ -1006,16 +1086,14 @@ func _process_worker_harvest_order(u: Dictionary, order: Dictionary, dt: float) 
 	var dist = u["pos"].distance_to(target_entity["pos"]) - (u["radius"] + float(target_entity.get("radius", 1.8)))
 	var source_tag = res_tag
 	if is_gas:
-		var extractor_found = false
-		for extractor in units.values():
-			if extractor.unit_type == "aether_tap" and extractor.owner == u.owner and extractor.build_progress >= 1.0 and extractor.pos.distance_to(target_entity.pos) < 1.0:
-				extractor_found = true
-		if not extractor_found:
+		# Links change only when structures change. Scanning the whole army and
+		# every map deposit for each gas worker at 64 Hz dominated late-game CPU.
+		var tap_tag = res_tag if units.has(res_tag) else int(_gas_tap_by_vent.get(Vector2i(u.owner, res_tag), 0))
+		var extractor: Dictionary = units.get(tap_tag, {})
+		if extractor.is_empty() or extractor.owner != u.owner or extractor.build_progress < 1.0:
 			u.orders.pop_front()
 			return
-		for resource in resources.values():
-			if resource.resource_type == "aether_vent" and resource.pos.distance_to(target_entity.pos) < 1.0:
-				source_tag = resource.tag
+		source_tag = int(_gas_source_by_tap.get(tap_tag, res_tag))
 	if resources.has(source_tag) and int(resources[source_tag].amount) <= 0 and not unlimited_resources:
 		u.orders.pop_front()
 		issue_SmartHarvest(u.tag)
@@ -1153,27 +1231,35 @@ func _should_settle_in_group_arrival(u: Dictionary, target_pos: Vector2, base_ar
 	return false
 
 func _apply_steering_and_push_resolution(all_tags: Array, dt: float) -> void:
+	var neighbors_by_tag: Dictionary = {}
 	for tag in all_tags:
 		if not units.has(tag):
 			continue
-		var u = units[tag]
+		var u: Dictionary = units[tag]
 		if u["is_structure"] or u["is_immobile"]:
 			continue
 
+		var position: Vector2 = u["pos"]
+		var radius: float = u["radius"]
+		var speed: float = u["speed"]
+		var owner_id: int = u["owner"]
 		var desired_vel: Vector2 = u["vel"]
 		var is_moving: bool = desired_vel.length_squared() > 0.05
-		var neighbors = query_units_in_radius(u["pos"], u["radius"] + 2.6)
+		var neighbors = query_units_in_radius(position, radius + 2.6)
+		neighbors_by_tag[tag] = neighbors
 
 		var steer_force: Vector2 = Vector2.ZERO
-		for n in neighbors:
-			if n["tag"] == u["tag"]:
+		for neighbor in neighbors:
+			var n: Dictionary = neighbor
+			if n["tag"] == tag:
 				continue
 			if n["is_structure"] and n["is_walkable_structure"]:
 				continue
 
-			var delta_p: Vector2 = u["pos"] - n["pos"]
+			var neighbor_position: Vector2 = n["pos"]
+			var delta_p: Vector2 = position - neighbor_position
 			var dist: float = delta_p.length()
-			var min_sep: float = u["radius"] + n["radius"]
+			var min_sep: float = radius + float(n["radius"])
 			if dist < 0.001:
 				var angle = float((u["tag"] * 73) % 360) * PI / 180.0
 				delta_p = Vector2(cos(angle), sin(angle))
@@ -1184,34 +1270,36 @@ func _apply_steering_and_push_resolution(all_tags: Array, dt: float) -> void:
 			if is_moving and not n["is_structure"]:
 				if dist < min_sep * 1.55:
 					var overlap_ratio = (min_sep * 1.55 - dist) / (min_sep * 1.55)
-					steer_force += normal * overlap_ratio * u["speed"] * 0.85
+					steer_force += normal * overlap_ratio * speed * 0.85
 
-				if n["owner"] == u["owner"] and n["orders"].is_empty() and n["attack_state"] == "idle" and not n["is_immobile"]:
+				if n["owner"] == owner_id and n["orders"].is_empty() and n["attack_state"] == "idle" and not n["is_immobile"]:
 					if u["push_priority"] >= n["push_priority"] and dist < min_sep * 1.25:
 						var move_dir = desired_vel.normalized()
 						var perp = Vector2(-move_dir.y, move_dir.x)
-						if perp.dot(n["pos"] - u["pos"]) < 0.0:
+						if perp.dot(neighbor_position - position) < 0.0:
 							perp = -perp
 						var push_vec = (perp * 0.75 + (-normal) * 0.25).normalized()
-						n["pos"] = _clamp_to_walkable(n["pos"] + push_vec * u["speed"] * dt * 0.9, n["radius"], n["unit_type"] == "spire_walker")
+						n["pos"] = _clamp_to_walkable(neighbor_position + push_vec * speed * dt * 0.9, n["radius"], n["unit_type"] == "spire_walker")
 						n["pushed_timer"] = 0.35
 
 		var final_vel = desired_vel + steer_force
-		var max_spd = u["speed"] * (1.5 if u["surge_timer"] > 0.0 else 1.0) * (1.8 if u["charge_timer"] > 0.0 else 1.0) * (0.5 if u["slow_timer"] > 0.0 else 1.0)
+		var max_spd: float = speed * (1.5 if u["surge_timer"] > 0.0 else 1.0) * (1.8 if u["charge_timer"] > 0.0 else 1.0) * (0.5 if u["slow_timer"] > 0.0 else 1.0)
 		if final_vel.length() > max_spd and max_spd > 0.0:
 			final_vel = final_vel.normalized() * max_spd
 
 		if final_vel.length_squared() > 0.001:
-			u["pos"] = _clamp_to_walkable(u["pos"] + final_vel * dt, u["radius"], u["unit_type"] == "spire_walker")
+			u["pos"] = _clamp_to_walkable(position + final_vel * dt, radius, u["unit_type"] == "spire_walker")
 			u["vel"] = final_vel
 
 	for tag in all_tags:
 		if not units.has(tag):
 			continue
-		var u = units[tag]
+		var u: Dictionary = units[tag]
 		if u["is_structure"]:
 			continue
-		var neighbors = query_units_in_radius(u["pos"], u["radius"] + 1.8)
+		# Structures never moved between the passes; nearby mobiles moved by less
+		# than a tick. The wider steering query already covers collision contacts.
+		var neighbors: Array = neighbors_by_tag[tag] if neighbors_by_tag.has(tag) else query_units_in_radius(u["pos"], u["radius"] + 1.8)
 		for n in neighbors:
 			if n["tag"] <= u["tag"]:
 				continue
@@ -1276,7 +1364,7 @@ func _find_best_attack_target(u: Dictionary, range_only: bool) -> Dictionary:
 	var min_range = float(wpn.get("min_range", 0.0))
 	var scan_rad = wpn_range if range_only else max(wpn_range, float(u["sight_range"]))
 
-	var candidates = query_units_in_radius(u["pos"], scan_rad + 2.5)
+	var candidates = query_units_in_radius(u["pos"], scan_rad + 2.5, u["owner"])
 	var best: Dictionary = {}
 	var best_score: float = -999999.0
 
@@ -1673,14 +1761,12 @@ func _recompute_supplies() -> void:
 func _find_nearest_town_hall(owner_id: int, pos: Vector2) -> Dictionary:
 	var best: Dictionary = {}
 	var best_d: float = 999999.0
-	for u in units.values():
-		if u["owner"] == owner_id and u["is_structure"] and u["build_progress"] >= 1.0:
-			var def = RTSData.get_unit_def(u["unit_type"])
-			if bool(def.get("is_town_hall", false)):
-				var d = pos.distance_to(u["pos"])
-				if d < best_d:
-					best_d = d
-					best = u
+	for u in _town_halls:
+		if u.owner == owner_id and u.build_progress >= 1.0 and u.hp > 0:
+			var d = pos.distance_squared_to(u.pos)
+			if d < best_d:
+				best_d = d
+				best = u
 	return best
 
 func _find_nearest_crystal(pos: Vector2) -> Dictionary:

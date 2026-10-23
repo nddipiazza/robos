@@ -10,6 +10,36 @@ extends Node2D
 
 var main: Node2D
 var font: Font
+var draw_ms: float = 0.0
+var _minimap_viewport: SubViewport
+
+class MinimapTerrain extends Node2D:
+	var hud: Node2D
+	func _draw() -> void:
+		hud._draw_minimap_terrain(self)
+
+func _ready() -> void:
+	SimEngine.scenario_loaded.connect(_invalidate_minimap)
+
+func _invalidate_minimap(_scenario_name: String = "") -> void:
+	if _minimap_viewport:
+		remove_child(_minimap_viewport)
+		_minimap_viewport.queue_free()
+		_minimap_viewport = null
+
+func _minimap_texture() -> Texture2D:
+	if not _minimap_viewport:
+		_minimap_viewport = SubViewport.new()
+		_minimap_viewport.size = Vector2i(main.MINIMAP.size)
+		_minimap_viewport.disable_3d = true
+		_minimap_viewport.transparent_bg = true
+		_minimap_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+		add_child(_minimap_viewport)
+		var terrain = MinimapTerrain.new()
+		terrain.hud = self
+		terrain.position = -main.MINIMAP.position
+		_minimap_viewport.add_child(terrain)
+	return _minimap_viewport.get_texture()
 
 const C_TOP := Color("#1b2029")
 const C_BOT := Color("#0e1217")
@@ -23,6 +53,7 @@ const C_AETHER := Color("#52e08a")
 const C_RED := Color("#f0645a")
 
 func _draw() -> void:
+	var started = Time.get_ticks_usec()
 	if main == null:
 		return
 	font = ThemeDB.fallback_font
@@ -38,6 +69,7 @@ func _draw() -> void:
 	_draw_match_status()
 	if main.show_help:
 		_draw_help()
+	draw_ms = (Time.get_ticks_usec() - started) / 1000.0
 
 # ---------------------------------------------------------------------------
 # Drawing helpers
@@ -258,28 +290,36 @@ func _draw_minimap() -> void:
 	var mm: Rect2 = main.MINIMAP
 	draw_rect(mm.grow(6.0), Color("#07090c"))
 	draw_rect(mm.grow(6.0), C_EDGE_HI, false, 1.5)
+	draw_texture_rect(_minimap_texture(), mm, false)
+	_draw_minimap_units()
+
+func _draw_minimap_terrain(canvas: Node2D) -> void:
+	var mm: Rect2 = main.MINIMAP
 	var sx := mm.size.x / SimEngine.map_width
 	var sy := mm.size.y / SimEngine.map_height
-	draw_rect(mm, Color("#56683a"))
+	canvas.draw_rect(mm, Color("#56683a"))
 	for water in SimEngine.water_polygons:
 		var points = PackedVector2Array()
 		for point in water:
 			points.append(mm.position + point * Vector2(sx, sy))
-		draw_colored_polygon(points, Color("#16364f"))
+		canvas.draw_colored_polygon(points, Color("#16364f"))
 	for bridge in SimEngine.land_bridges:
-		draw_rect(Rect2(mm.position + bridge.position * Vector2(sx, sy), bridge.size * Vector2(sx, sy)), Color("#94815d"))
+		canvas.draw_rect(Rect2(mm.position + bridge.position * Vector2(sx, sy), bridge.size * Vector2(sx, sy)), Color("#94815d"))
 	for tile in SimEngine.terrain_tiles:
 		var color: Color = {"land": Color("#56683a"), "water": Color("#16364f"), "cliff": Color("#3a3029"), "plateau": Color("#a8946b")}.get(str(tile.terrain), Color.WHITE)
-		draw_rect(Rect2(mm.position + Vector2(float(tile.x), float(tile.y)) * Vector2(sx, sy), Vector2(4, 4) * Vector2(sx, sy)), color)
+		canvas.draw_rect(Rect2(mm.position + Vector2(float(tile.x), float(tile.y)) * Vector2(sx, sy), Vector2(4, 4) * Vector2(sx, sy)), color)
 	for hg in SimEngine.high_ground_zones:
-		draw_rect(Rect2(mm.position + hg.position * Vector2(sx, sy), hg.size * Vector2(sx, sy)), Color("#a8946b"))
+		canvas.draw_rect(Rect2(mm.position + hg.position * Vector2(sx, sy), hg.size * Vector2(sx, sy)), Color("#a8946b"))
 	for rmp in SimEngine.ramps:
-		draw_rect(Rect2(mm.position + rmp.position * Vector2(sx, sy), rmp.size * Vector2(sx, sy)), Color("#bba97d"))
+		canvas.draw_rect(Rect2(mm.position + rmp.position * Vector2(sx, sy), rmp.size * Vector2(sx, sy)), Color("#bba97d"))
 	for obs in SimEngine.terrain_obstacles:
-		draw_rect(Rect2(mm.position + obs.position * Vector2(sx, sy), obs.size * Vector2(sx, sy)), Color("#3a3029"))
+		canvas.draw_rect(Rect2(mm.position + obs.position * Vector2(sx, sy), obs.size * Vector2(sx, sy)), Color("#3a3029"))
 	for r in SimEngine.resources.values():
 		var p: Vector2 = main.world_to_minimap(r["pos"])
-		draw_circle(p, 2.4, C_CRYSTAL if r["resource_type"] == "crystal_field" else C_AETHER)
+		canvas.draw_circle(p, 2.4, C_CRYSTAL if r["resource_type"] == "crystal_field" else C_AETHER)
+
+func _draw_minimap_units() -> void:
+	var mm: Rect2 = main.MINIMAP
 	for u in SimEngine.units.values():
 		var up: Vector2 = main.world_to_minimap(u["pos"])
 		var col := RTSData.get_player_color(int(u["owner"]))

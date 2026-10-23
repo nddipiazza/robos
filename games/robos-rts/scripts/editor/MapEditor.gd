@@ -777,14 +777,14 @@ func _nudge_selected(delta: Vector2) -> void:
 	doc.checkpoint()
 	doc.move_item_to(canvas.selected, Vector2(float(item["x"]), float(item["y"])) + delta)
 
-func _playtest() -> Dictionary:
+func _playtest(start_paused: bool = false) -> Dictionary:
 	var issues = doc.validate()
 	if not issues.is_empty():
 		_set_status("Fix validation issues before playtesting: " + issues[0])
 		return {"ok": false, "error": issues[0], "issues": issues}
 	SimEngine.editor_session = {"doc": doc}
 	var res = SimEngine.load_scenario_dict(doc.to_scenario())
-	SimEngine.paused = false
+	SimEngine.paused = start_paused
 	get_tree().change_scene_to_file("res://scenes/RTSMain.tscn")
 	return res
 
@@ -916,7 +916,7 @@ func handle_control_request(req: Dictionary) -> Dictionary:
 				return {"ok": false, "error": "%s exists; pass overwrite=true" % target}
 			out = _do_save(target)
 		"playtest":
-			out = _playtest()
+			out = _playtest(bool(req.get("paused", false)))
 		_:
 			return {"ok": false, "error": "Unknown editor action: " + action}
 	out["summary"] = doc.summary()
