@@ -21,11 +21,19 @@ jobs:
           node --test packages/vpn-app-container/test/controller.test.js
           python3 -m unittest discover -s packages/vpn-app-container/test -p 'test_*.py'
       - name: Real OpenVPN and qBittorrent packet isolation
-        run: node packages/vpn-app-container/test/fixture.js
+        env:
+          ROBOS_PLAYWRIGHT_MODULE: /tmp/robos-vpn-recorder/node_modules/playwright
+          ROBOS_VPN_RECORD_PROOF: '1'
+        run: |
+          npm install --prefix /tmp/robos-vpn-recorder playwright@1.56.1
+          /tmp/robos-vpn-recorder/node_modules/.bin/playwright install --with-deps chromium
+          node packages/vpn-app-container/test/fixture.js
       - name: Preserve real network test evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: vpn-app-container-proof
-          path: packages/vpn-app-container/test/live-proof.json
+          path: |
+            packages/vpn-app-container/test/live-proof.json
+            packages/vpn-app-container/test/proof/
           if-no-files-found: ignore

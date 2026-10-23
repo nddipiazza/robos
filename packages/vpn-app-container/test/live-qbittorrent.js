@@ -12,8 +12,16 @@ const { Controller, execute, parseProfile } = require('../lib/controller');
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 const name = 'robos-vpn-qbittorrent';
 const records = [];
+let recorder;
 async function step(title, fn) {
-  await fn(); records.push({ title, passed: true }); console.log(`PASS: ${title}`);
+  try {
+    await fn(); records.push({ title, passed: true }); console.log(`PASS: ${title}`);
+    if (recorder) await recorder.result(title);
+  } catch (error) {
+    records.push({ title, passed: false, error: error.message });
+    if (recorder) await recorder.result(title, false);
+    throw error;
+  }
 }
 async function waitFor(fn, timeout = 80000) {
   const until = Date.now() + timeout;
@@ -42,6 +50,7 @@ async function main() {
   }
   await controller.build();
   let created = false;
+  let completed = false;
   try {
     // The fixed name refuses to overwrite any existing user session.
     let login;
@@ -56,6 +65,7 @@ async function main() {
     const asApp = code => execute('docker', ['exec', '--user', '10000:10000', name, 'python3', '-c', code]);
     await step('Real qBittorrent Web API authenticates through loopback only', async () => {
       let responseDetails = '';
+      let sessionCookie;
       try {
       await waitFor(async () => {
         try {
@@ -64,9 +74,14 @@ async function main() {
             body: new URLSearchParams({ username: 'admin', password: login.webPassword }) });
           const text = await response.text();
           responseDetails = `${response.status}: ${text.slice(0, 200)}`;
+          if (response.ok && text === 'Ok.') sessionCookie = response.headers.get('set-cookie')?.match(/SID=([^;]+)/)?.[1];
           return response.ok && text === 'Ok.';
         } catch (error) { responseDetails = error.message; return false; }
       }, 15000);
+      if (process.env.ROBOS_VPN_RECORD_PROOF === '1') {
+        assert(sessionCookie, 'Successful login must return a session cookie');
+        recorder = await require('./record-proof').record(sessionCookie);
+      }
       } catch (error) { throw new Error(`${error.message}: ${responseDetails}`); }
     });
     await step('App UID has no effective/bounding/ambient capabilities and cannot read VPN credentials', async () => {
@@ -108,9 +123,9 @@ try:s.connect(('2606:4700:4700::1111',443))
 except OSError:pass
 else:raise AssertionError('IPv6 bypass')`);
     });
-    await step('Removing the tunnel kills qBittorrent and exits the container', async () => {
+    await step('Bringing the tunnel down kills qBittorrent and exits the container', async () => {
       const before = Date.now();
-      await execute('docker', ['exec', name, 'ip', 'link', 'delete', 'tun0']);
+      await execute('docker', ['exec', name, 'ip', 'link', 'set', 'tun0', 'down']);
       await waitFor(async () => !(await controller.inspect('qbittorrent')).State.Running, 4000);
       assert(Date.now() - before < 4000, 'Failure handling exceeded test deadline');
       assert.match((await controller.status('qbittorrent')).logs, /tunnel lost/);
@@ -132,6 +147,7 @@ else:raise AssertionError('IPv6 bypass')`);
       assert.match(status.logs, /app never launched/);
       assert(!status.logs.includes('"state": "running"'));
     });
+    completed = true;
   } finally {
     credentials.password = '';
     if (created) console.log('Final app container status:', JSON.stringify(await controller.status('qbittorrent')));
@@ -141,8 +157,9 @@ else:raise AssertionError('IPv6 bypass')`);
       }
     }
     if (created) await controller.stop('qbittorrent');
+    if (recorder) await recorder.close();
     const target = process.env.ROBOS_VPN_PROOF || path.join(__dirname, 'live-proof.json');
-    fs.writeFileSync(target, JSON.stringify({ timestamp: new Date().toISOString(), records }, null, 2));
+    fs.writeFileSync(target, JSON.stringify({ timestamp: new Date().toISOString(), completed, records }, null, 2));
   }
 }
 if (require.main === module) main().catch(error => { console.error(error.message); process.exitCode = 1; });
