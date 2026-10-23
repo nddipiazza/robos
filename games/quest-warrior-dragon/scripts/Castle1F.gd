@@ -101,7 +101,7 @@ const NPC_DIALOGS := {
 	2127: {
 		"speaker": "Wise Man",
 		"pages": [
-			"Welcome, descendant of\nErdrick. The town of\nBrecconary lies to the\nsouth of the castle.",
+			"Welcome, descendant of\nErdrick. The town of\nBrecconary lies just\neast of the castle.",
 			"Thou wilt find merchants\nthere who can outfit thee\nfor thy quest.",
 		]
 	},
@@ -1243,6 +1243,11 @@ func _use_item(idx: int) -> void:
 	if idx >= _inventory.size():
 		return
 	var item = _inventory[idx]
+	if QuestLore.is_tablet(item):
+		_item_panel.visible = false
+		_item_open = false
+		_show_dialog("Erdrick's Tablet", QuestLore.tablet_pages())
+		return
 	var item_type := ""
 	var item_name := ""
 	if item is Dictionary:

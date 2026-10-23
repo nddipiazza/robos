@@ -1124,6 +1124,11 @@ func _use_item(idx: int) -> void:
 	if idx >= _inventory.size():
 		return
 	var item: Dictionary = _inventory[idx]
+	if QuestLore.is_tablet(item):
+		_item_panel.visible = false
+		_item_open = false
+		_show_dialog("Erdrick's Tablet", QuestLore.tablet_pages())
+		return
 	var item_name := str(item.get("name", ""))
 	match item_name:
 		"Rainbow Drop":

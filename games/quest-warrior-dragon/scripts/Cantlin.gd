@@ -18,7 +18,7 @@ func _get_music_path() -> String:
 func _get_npcs() -> Array:
     return [
         {tile=Vector2i(23,25), sprite_id="sage_alt", facing="down",  speaker="Weapon Dealer", pages=["My shop carries the finest\nweapons in all Alefgard.\nOnly the bravest warriors\nshop here."]},
-        {tile=Vector2i(9,11),  sprite_id="sage_alt", facing="down",  speaker="Armor Dealer",  pages=["Erdrick's Shield can block\nany blow. But that which\nyou seek lies elsewhere."]},
+        {tile=Vector2i(9,11),  sprite_id="sage_alt", facing="down",  speaker="Armor Dealer",  pages=["Erdrick's Armor lies hidden\nin the ruins of Hauksness,\nwest of Cantlin."]},
         {tile=Vector2i(5,5),   sprite_id="minister", facing="down",  speaker="Innkeeper",     pages=["Many brave souls have rested\nhere before setting forth\nto face the Dragonlord."]},
         {tile=Vector2i(15,5),  sprite_id="guard",    facing="down",  speaker="Guard",         pages=["Cantlin is the last town\nbefore the Dragonlord's lair.\nBe prepared, Hero."]},
         {tile=Vector2i(25,10), sprite_id="lady",     facing="left",  speaker="Villager",      pages=["The warriors here are brave.\nThey have vowed to fight\nthe Dragonlord's forces."]},
