@@ -21,6 +21,14 @@ The hero on the home page is a recording of the real apps. Regenerate it with th
 `packages/robos-test/lib/lifecycle/README.md`; `publish-hero.js` writes `assets/hero/*` and
 `_data/hero.json` (the step list and start times).
 
+## Build apps guides (`/build-apps/`)
+
+`build-apps/index.html` is the overview of the Task Planner, Task Implementer and Agent Code Review loop;
+`solo.html` and `teams.html` are the two step-by-step guides. Their screenshots are the hero slides in
+`assets/hero/slides/`, so when the hero is regenerated, check that the slide files the guides name still exist
+and still show the same step. The home-page tile image, `assets/build-apps/planner-tile.jpg`, is a crop of
+`03-planner-generated.jpg`.
+
 ## The future page and whitepaper (`/future/`)
 
 `future/index.md` is the plain-English page, `future/whitepaper.md` is the whitepaper, and
