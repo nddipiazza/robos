@@ -12,6 +12,9 @@ has_toc: false
 Pages for developers who model systems in the knowledge graph, build applications with the App Wizard, and write skills for agents.
 {: .fs-6 }
 
+{: .tip }
+To take an app from a plan to merged pull requests with Task Planner, Task Implementer and Agent Code Review, follow the Build apps guides on rowbose.com: [on your own](/build-apps/solo/) or [as a team](/build-apps/teams/).
+
 - [Knowledge graph]({{ site.baseurl }}{% link knowledge-graph.md %}): how RobOS stores a system model as linked data under `.robos/`.
 - [Schemas]({{ site.baseurl }}{% link schemas.md %}): the node types and validation shapes the graph accepts.
 - [Building apps]({{ site.baseurl }}{% link app-development-flow.md %}): create or import an application project, then work on it with the other RobOS apps.

@@ -14,12 +14,17 @@ RobOS is a desktop suite of developer apps, a knowledge graph of your system, an
 <div class="rb-home-actions">
   <a href="{{ site.baseurl }}{% link getting-started.md %}" class="btn btn-primary">Get started</a>
   <a href="{{ site.baseurl }}{% link apps.md %}" class="btn">Browse the apps</a>
+  <a href="/build-apps/" class="btn">Build apps</a>
   <a href="https://github.com/nddipiazza/robos" class="btn" target="_blank" rel="noopener">Source on GitHub</a>
 </div>
 
 ## Where to start
 
 <div class="rb-links">
+  <a class="rb-link" href="/build-apps/">
+    <strong>Build apps</strong>
+    <span>Plan tasks in Task Planner, implement them with Task Implementer, and review each branch in Agent Code Review. Guides for solo developers and teams.</span>
+  </a>
   <a class="rb-link" href="{{ site.baseurl }}{% link use-robos.md %}">
     <strong>Use RobOS</strong>
     <span>Install it, tour the apps, and follow a task from idea to merged pull request.</span>

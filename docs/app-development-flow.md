@@ -13,6 +13,9 @@ permalink: /app-development-flow.html
 Two different tasks are called "building an app" in RobOS: starting an application project of your own, and adding an app to the RobOS desktop suite. This page tells you which tool does which and what to run next.
 {: .fs-6 }
 
+{: .tip }
+To take an app from a plan to merged pull requests with Task Planner, Task Implementer and Agent Code Review, follow the Build apps guides on rowbose.com: [on your own](/build-apps/solo/) or [as a team](/build-apps/teams/).
+
 ## Start a project of your own
 
 The App Wizard (`packages/app-wizard`) is the entry point. It has two modes, selected by the **Create New Project** and **Import Existing Code** buttons in its header.
