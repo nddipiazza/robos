@@ -25,6 +25,7 @@ extra_css: /assets/landing.css
     </div>
 
     <ul class="l-mosaic" aria-label="Apps in the RobOS suite">
+      <li class="l-mosaic-build"><a href="{{ '/build-apps/' | relative_url }}"><img src="{{ '/assets/build-apps/planner-tile.jpg' | relative_url }}" alt="" width="400" height="300"><span>Build apps</span></a></li>
       <li><a href="{{ '/point-of-sale/' | relative_url }}"><img src="{{ '/assets/point-of-sale/coffee-register-latte.jpg' | relative_url }}" alt="" width="1280" height="800"><span>Point of Sale</span></a></li>
       <li><a href="{{ '/auto-center/' | relative_url }}"><img src="{{ '/assets/auto-center/shots/04-checkout--issue-the-invoice-from-the-approved-estimate-7.jpg' | relative_url }}" alt="" width="1000" height="625"><span>Auto Center</span></a></li>
       <li><a href="{{ '/family-finances/' | relative_url }}"><img src="{{ '/assets/family-finances/02-accounts.png' | relative_url }}" alt="" width="1440" height="1185"><span>Household</span></a></li>
@@ -184,6 +185,7 @@ extra_css: /assets/landing.css
       <li><b>Build</b><span>Agents get only the slice they need and write the code on a branch.</span></li>
       <li><b>Prove</b><span>The real app runs headlessly; you get a narrated walkthrough and test evidence to review.</span></li>
     </ol>
+    <div class="cta l-build-cta"><a class="btn" href="{{ '/build-apps/' | relative_url }}">Read the Build apps guides</a><a class="btn btn-ghost" href="{{ '/build-apps/solo/' | relative_url }}">On your own</a><a class="btn btn-ghost" href="{{ '/build-apps/teams/' | relative_url }}">As a team</a></div>
 
     <div class="player" id="hero-player" data-slides="{{ site.data.hero.slides | size }}">
       <div class="player-frame">
@@ -285,7 +287,7 @@ extra_css: /assets/landing.css
     <h2 class="h2">Pick your path</h2>
     <div class="grid3">
       <a class="card" href="{{ '/v1/use-robos.html' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/desktop.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Use the apps</h3><p>Install RobOS, tour the suites, and turn on AI wherever you want it.</p><span class="go">Start using →</span></a>
-      <a class="card" href="{{ '/v1/build-on-robos.html' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/wizard.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Build your own</h3><p>Model an app in the KGraph, generate it, and write skills agents can run.</p><span class="go">Start building →</span></a>
+      <a class="card" href="{{ '/build-apps/' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/wizard.svg" alt="" width="48" height="48" loading="lazy"></div><h3>Build apps</h3><p>Plan tasks, let an agent implement them, and review every branch before it becomes a pull request. Guides for solo developers and teams.</p><span class="go">Start building →</span></a>
       <a class="card" href="{{ '/v1/robos-for-teams.html' | relative_url }}"><div class="ic"><img class="ic-img" src="/assets/icons/building.svg" alt="" width="48" height="48" loading="lazy"></div><h3>RobOS for Teams</h3><p>Govern coding agents and roll RobOS out across your org.</p><span class="go">See why →</span></a>
     </div>
   </div>

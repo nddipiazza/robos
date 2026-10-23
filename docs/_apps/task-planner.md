@@ -9,6 +9,8 @@ description: "Also called Task Explorer in its window and launcher. It generates
 
 Task Planner (the window and `.desktop` entry are named **RobOS Task Explorer**) turns a plain-language description into a list of epics and tasks, lets you edit it, and creates the tickets on your task server.
 
+For how this app fits with the others when you build an app, see the Build apps guides: [on your own](/build-apps/solo/) or [as a team](/build-apps/teams/).
+
 ## Requirements
 
 - A task server in `~/.config/robos/settings.json`. GitHub needs the `gh` CLI signed in. Jira needs its URL, a username and an API token in `pass` (`token_pass_path`). If none is set the window shows **Open Task Servers**; see [Task Servers]({{ '/apps/task-servers/' | relative_url }}).

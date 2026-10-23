@@ -11,6 +11,8 @@ related:
 
 This is the app behind the review flow described in [PR Review Theater]({{ site.baseurl }}{% link pr-review-theater.md %}). It reads pull requests with the `gh` CLI, so it needs `gh` signed in and a GitHub task server (see [Task Servers]({{ '/apps/task-servers/' | relative_url }})).
 
+For how this app fits with the others when you build an app, see the Build apps guides: [on your own](/build-apps/solo/) or [as a team](/build-apps/teams/).
+
 ## How it opens
 
 | Start | What you get |

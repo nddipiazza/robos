@@ -1,0 +1,93 @@
+---
+layout: default
+title: Build apps
+permalink: /build-apps/
+body_class: guide
+extra_css: /assets/build-guide.css
+description: "Build apps with RobOS: plan the work in Task Planner, let an agent implement each task in Task Implementer, and review the branch in Agent Code Review before you open the pull request. Guides for a solo developer and for a team."
+---
+<section class="auto-intro" aria-labelledby="build-apps-title">
+  <div class="wrap">
+    <div class="auto-intro-grid">
+      <div class="auto-intro-copy">
+        <p class="eyebrow">Build apps</p>
+        <h1 id="build-apps-title">Plan it, let an agent build it, review it yourself</h1>
+        <p class="auto-intro-lead">Three RobOS apps take a task from an idea to a reviewed pull request.</p>
+        <p><strong>Task Planner</strong> turns what you want into issues with acceptance criteria. <strong>Task Implementer</strong> runs a coding agent on one issue at a time, on its own branch. <strong>Agent Code Review</strong> shows you the diff, the evidence and a walkthrough before anything becomes a pull request.</p>
+        <a class="btn" href="#choose">Choose your guide <span aria-hidden="true">↓</span></a>
+      </div>
+      <div class="auto-intro-demo">
+        <figure class="guide-video">
+          <video controls muted playsinline preload="none" poster="{{ '/assets/hero/poster.jpg' | relative_url }}" aria-label="Recording of RobOS taking one task from creation, through implementation, review and CI, to a merged pull request">
+            <source src="{{ '/assets/hero/hero.webm' | relative_url }}" type="video/webm">
+            <source src="{{ '/assets/hero/hero.mp4' | relative_url }}" type="video/mp4">
+          </video>
+          <figcaption>One task, from the plan to a merged pull request, in the real apps. GitHub, the coding agent and CI are scripted stand-ins; the repository, tests, diff and evidence are real. <a href="{{ '/v1/day-in-the-life.html' | relative_url }}">Read what is real in the recording</a></figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="guide-page"><div class="wrap">
+<div class="guide-layout">
+<nav class="guide-toc" aria-label="Build apps guides"><h4><a href="{{ '/build-apps/' | relative_url }}">Build apps</a></h4><ol><li class="here"><a href="{{ '/build-apps/' | relative_url }}">How the loop works</a></li><li><a href="{{ '/build-apps/solo/' | relative_url }}">Guide: building on your own</a></li><li><a href="{{ '/build-apps/teams/' | relative_url }}">Guide: building as a team</a></li></ol></nav>
+<article class="guide-body">
+<p class="eyebrow">Overview</p>
+<h2 class="guide-title" style="margin-top:0">How the loop works</h2>
+<p class="chapter-intro">Each app owns one step. The agent writes the code, and a person decides what gets published and merged.</p>
+
+<table>
+<thead><tr><th>Step</th><th>App</th><th>What happens</th></tr></thead>
+<tbody>
+<tr><td>1. Plan</td><td>Task Planner (its window is titled <strong>Task Explorer</strong>)</td><td>You describe the work or fill in a template. An agent drafts epics and tasks, each with acceptance criteria and a developer persona. You edit them and create them as issues on GitHub or Jira.</td></tr>
+<tr><td>2. Implement</td><td>Task Implementer</td><td>You pick an issue and click <strong>Start Agent</strong>. The agent creates a branch (<code>codex/&lt;task-key&gt;</code> by default), implements and tests the task, commits and pushes. It does not open a pull request.</td></tr>
+<tr><td>3. Review</td><td>Agent Code Review (PR Review Theater)</td><td>You read the diff, ask for changes in plain language, check the evidence and take an agent-led walkthrough of the changed behavior.</td></tr>
+<tr><td>4. Publish</td><td>Agent Code Review, <strong>Pull Request</strong> tab</td><td>You check the description and click <strong>Create PR</strong>, as a draft if you like, then watch CI from the same window.</td></tr>
+<tr><td>5. Merge</td><td>GitHub</td><td>The author merges on GitHub. RobOS has no merge button.</td></tr>
+</tbody>
+</table>
+
+<div class="guide-shots">
+<figure class="guide-shot"><a href="{{ '/assets/hero/slides/03-planner-generated.jpg' | relative_url }}"><img src="{{ '/assets/hero/slides/03-planner-generated.jpg' | relative_url }}" alt="Task Explorer with a generated epic and task, each assigned a developer persona" loading="lazy" width="1280" height="720"></a><figcaption>Plan: a generated epic and task in Task Planner.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ '/assets/hero/slides/06-implementer-running.jpg' | relative_url }}"><img src="{{ '/assets/hero/slides/06-implementer-running.jpg' | relative_url }}" alt="Task Implementer streaming the agent's output while it creates the branch and runs the tests" loading="lazy" width="1280" height="720"></a><figcaption>Implement: the agent's output streams into Task Implementer.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ '/assets/hero/slides/08-changes-diff.jpg' | relative_url }}"><img src="{{ '/assets/hero/slides/08-changes-diff.jpg' | relative_url }}" alt="The Changes tab of the review window, with the file tree and the diff of the pushed branch" loading="lazy" width="1280" height="720"></a><figcaption>Review: the full diff of the pushed branch, before any PR exists.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ '/assets/hero/slides/23-ci-passed.jpg' | relative_url }}"><img src="{{ '/assets/hero/slides/23-ci-passed.jpg' | relative_url }}" alt="The draft pull request in the review window with CI checks passing" loading="lazy" width="1280" height="720"></a><figcaption>Publish: the draft PR and its CI checks, in the same window.</figcaption></figure>
+</div>
+
+<h2 id="choose">Choose your guide</h2>
+<p>Both guides use the same three apps. The team guide adds shared review defaults, picking up assigned work, and reviewing someone else's pull request.</p>
+<div class="role-cards">
+<a class="role-card" href="{{ '/build-apps/solo/' | relative_url }}"><b>Building on your own →</b><span>You plan, implement, review and merge. Set up one repository and take a task all the way to a merged PR.</span></a>
+<a class="role-card" href="{{ '/build-apps/teams/' | relative_url }}"><b>Building as a team →</b><span>A lead plans, developers implement and review their own branches, and a teammate approves the PR before it merges.</span></a>
+</div>
+
+<h2 id="what-you-need">What you need</h2>
+<p>RobOS runs the agent CLIs you already have and are signed in to. It does not include a model.</p>
+<table>
+<thead><tr><th>You need</th><th>Used by</th></tr></thead>
+<tbody>
+<tr><td>RobOS, installed or run from a clone. See <a href="{{ '/v1/getting-started.html' | relative_url }}">Get started</a>.</td><td>All steps</td></tr>
+<tr><td>The GitHub CLI, <code>gh</code>, signed in</td><td>Creating issues, listing them, reading the diff, creating the PR, reading CI and submitting reviews</td></tr>
+<tr><td>The <code>gh copilot</code> extension</td><td>Task Planner, to draft the tasks</td></tr>
+<tr><td>The Claude Code CLI, <code>claude</code>, signed in</td><td>Task Implementer, which runs one <code>claude</code> process per task</td></tr>
+<tr><td>The Codex CLI, <code>codex</code> (optional)</td><td>The review window's walkthrough and evidence agents. Without it, those tabs have no agent to run.</td></tr>
+<tr><td>A task server: a GitHub repository, or a Jira project</td><td>Task Planner and Task Implementer. The review and PR steps need the code on GitHub.</td></tr>
+<tr><td>A local clone of the repository, with <code>origin</code> on GitHub</td><td>Task Implementer and the review window</td></tr>
+</tbody>
+</table>
+
+<blockquote><p><strong>Read this before you start an agent.</strong> Task Implementer runs <code>claude</code> with <code>--dangerously-skip-permissions</code> as your user. The agent can read and write files and run commands without asking, and the app does not create a sandbox. Use it only on repositories and machines where that is acceptable.</p></blockquote>
+
+<h2 id="reference">Reference</h2>
+<ul>
+<li><a href="{{ '/v1/apps/task-planner/' | relative_url }}">Task Planner</a>, <a href="{{ '/v1/apps/task-implementer/' | relative_url }}">Task Implementer</a> and <a href="{{ '/v1/apps/pr-review/' | relative_url }}">Agent Code Review</a>: one page per app.</li>
+<li><a href="{{ '/v1/pr-review-theater.html' | relative_url }}">PR Review Theater</a>: every tab of the review window, the launch manifest and the walkthrough process format.</li>
+<li><a href="{{ '/v1/day-in-the-life.html' | relative_url }}">A day with RobOS</a>: the recording above, written out step by step.</li>
+<li><a href="{{ '/v1/app-development-flow.html' | relative_url }}">Building apps</a>: starting a new project with the App Wizard, or importing one you already have.</li>
+</ul>
+
+<div class="guide-pager"><a class="next" href="{{ '/build-apps/solo/' | relative_url }}"><small>Next</small>Guide: building on your own →</a></div>
+</article>
+</div>
+</div></section>

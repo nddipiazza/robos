@@ -9,7 +9,9 @@ h1,h2,h3{line-height:1.1;letter-spacing:-.03em;margin:0}
 .nav{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .nav-in{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
 .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.1rem}
-.links{display:flex;gap:26px;font-size:.92rem;color:var(--muted)}.links a:hover{color:var(--fg)}
+.links{display:flex;gap:26px;font-size:.92rem;color:var(--muted)}.links a:hover{color:var(--fg)}.links a{white-space:nowrap}
+@media(max-width:1120px){.links{gap:14px;font-size:.88rem}}
+@media(max-width:960px){.links{gap:10px;font-size:.85rem}}
 .nav-r{display:flex;align-items:center;gap:10px}
 .icon-btn{display:inline-flex;align-items:center;justify-content:center;background:none;border:1px solid var(--line);color:var(--fg);border-radius:8px;width:34px;height:34px;cursor:pointer;transition:border-color .15s}.icon-btn:hover{border-color:var(--accent)}.icon-btn img{display:block;width:18px;height:18px}
 /* buttons */
