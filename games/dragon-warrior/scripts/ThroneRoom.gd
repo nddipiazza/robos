@@ -731,13 +731,41 @@ func _execute_command() -> void:
 
 # ── Command implementations ───────────────────────────────────────────────────
 
+## NES rule: only tools fill the 8 pack slots; stackable consumables
+## (items.json `stack_max`) share one slot per kind. Mirrors DungeonMap.
 func _count_pack_tools() -> int:
 	var n := 0
+	var stacks := {}
 	for it in _inventory:
-		if it is Dictionary and str(it.get("type", "tool")) in ["weapon", "armor", "shield", "quest"]:
+		if not (it is Dictionary):
+			n += 1
+			continue
+		if str(it.get("type", "tool")) in ["weapon", "armor", "shield", "quest"]:
+			continue
+		var iid := str(it.get("id", it.get("name", ""))).to_lower()
+		if iid != "" and _stack_max_for(iid) > 1:
+			stacks[iid] = int(stacks.get(iid, 0)) + 1
 			continue
 		n += 1
+	for iid in stacks:
+		n += int(ceil(float(stacks[iid]) / float(_stack_max_for(iid))))
 	return n
+
+
+var _stack_max_cache: Dictionary = {}
+
+func _stack_max_for(item_id: String) -> int:
+	if _stack_max_cache.is_empty():
+		var f := FileAccess.open("res://data/v1/items.json", FileAccess.READ)
+		if f:
+			var parsed: Variant = JSON.parse_string(f.get_as_text())
+			if parsed is Array:
+				for e in parsed:
+					if e is Dictionary and e.has("id"):
+						_stack_max_cache[str(e["id"]).to_lower()] = int(e.get("stack_max", 1))
+		if _stack_max_cache.is_empty():
+			_stack_max_cache["_none"] = 1
+	return int(_stack_max_cache.get(item_id, 1))
 
 
 func _cmd_talk() -> void:
@@ -793,7 +821,7 @@ func _cmd_talk_king() -> void:
 		gs.gwaelin_returned = true
 		pages.append("Thou hast rescued my\ndaughter Gwaelin!\nI am forever grateful.")
 		pages.append("Gwaelin: Take this\nGwaelin's Love as a\ntoken of my affection.")
-		if _inventory.size() < MAX_INVENTORY:
+		if _count_pack_tools() < MAX_INVENTORY:
 			_inventory.append({"name": "Gwaelin's Love", "id": "gwaelins_love", "type": "quest", "desc": "A token from Princess Gwaelin. Reveals the way to Charlock."})
 			gs.inventory = _inventory.duplicate(true)
 	pages.append(exp_msg)
@@ -1205,6 +1233,23 @@ func _use_item(idx: int) -> void:
 		item_name = str(item)
 		if item_name == "Magic Key":
 			item_type = "key"
+
+	if item is Dictionary and (str(item.get("id", "")).to_lower() == "herb" or item_name in ["Herb", "Medical Herb"]):
+		var gs_h := get_node_or_null("/root/GameState")
+		if gs_h:
+			var hp := int(gs_h.hero_stats.get("hp", 0))
+			var hp_max := int(gs_h.hero_stats.get("hp_max", 1))
+			if hp >= hp_max:
+				_show_dialog("", ["Thy HP is already\nfull."])
+				return
+			var amt := 23 + (randi() % 8)
+			gs_h.hero_stats["hp"] = mini(hp_max, hp + amt)
+			_inventory.remove_at(idx)
+			gs_h.inventory = _inventory.duplicate(true)
+			_item_panel.visible = false
+			_item_open = false
+			_show_dialog("", ["Thou hast eaten the\nMedical Herb.\nHP restored by %d." % mini(amt, hp_max - hp)])
+		return
 
 	if item_type == "key" or item_name == "Magic Key":
 		var ft := _facing_tile()
