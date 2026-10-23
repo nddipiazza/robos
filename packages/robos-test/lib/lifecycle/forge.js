@@ -53,6 +53,18 @@ function handle(ctx) {
     return out(jq ? login + '\n' : { login });
   }
 
+  // REST issue listing used by Dev Central (robos-task-client listHierarchy) -----
+  if (a === 'api' && /^repos\/[^/]+\/[^/]+\/issues/.test(String(b))) {
+    const url = new URL('https://api.github.com/' + b);
+    if (/\/sub_issues$/.test(url.pathname)) return out([]);
+    if (Number(url.searchParams.get('page') || 1) > 1) return out([]);
+    const want = url.searchParams.get('state') || 'open';
+    const rows = state.issues.filter(i => want === 'all' || i.state.toLowerCase() === want).sort((x, y) => y.number - x.number);
+    return out(rows.map(i => ({ number: i.number, title: i.title, body: i.body, state: i.state.toLowerCase(), html_url: issueUrl(i.number),
+      labels: i.labels.map(name => ({ name })), assignees: i.assignees.map(login => ({ login: login === '@me' ? state.user : login })),
+      created_at: i.createdAt, updated_at: i.updatedAt })));
+  }
+
   // labels --------------------------------------------------------------------
   if (a === 'label' && b === 'create') {
     const name = args[2];

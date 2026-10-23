@@ -4,109 +4,114 @@ title: Build apps as a team
 permalink: /build-apps/teams/
 body_class: guide
 extra_css: /assets/build-guide.css
-description: "A step-by-step guide for teams: a lead plans the work in Task Planner, each developer runs Task Implementer on their own tasks and reviews the branch in Agent Code Review, and a teammate approves the pull request before the author merges."
+description: "A step-by-step guide for teams, with screenshots of the real apps: set up every machine, share review defaults, plan in Task Planner, pick up work in Dev Central, implement with Task Implementer, review the branch, and get a teammate's approval before the author merges."
 ---
+{%- assign shots = '/assets/build-apps/shots/' | relative_url -%}
 <section class="guide-page"><div class="wrap"><div class="guide-layout">
-<nav class="guide-toc" aria-label="Build apps guides"><h4><a href="{{ '/build-apps/' | relative_url }}">Build apps</a></h4><ol><li><a href="{{ '/build-apps/' | relative_url }}">How the loop works</a></li><li><a href="{{ '/build-apps/solo/' | relative_url }}">Guide: building on your own</a></li><li class="here"><a href="{{ '/build-apps/teams/' | relative_url }}">Guide: building as a team</a></li><li><a href="#roles">Who does what</a></li><li><a href="#setup">1. Set up every machine</a></li><li><a href="#defaults">2. Share review defaults</a></li><li><a href="#plan">3. Plan and hand out work</a></li><li><a href="#implement">4. Pick up and implement</a></li><li><a href="#publish">5. Review your branch, open the PR</a></li><li><a href="#approve">6. Review a teammate's PR</a></li><li><a href="#merge">7. Merge and follow up</a></li><li><a href="#limits">Before you roll it out</a></li></ol></nav>
+<nav class="guide-toc" aria-label="Build apps guides"><h4><a href="{{ '/build-apps/' | relative_url }}">Build apps</a></h4><ol><li><a href="{{ '/build-apps/' | relative_url }}">How the loop works</a></li><li><a href="{{ '/build-apps/solo/' | relative_url }}">Guide: building on your own</a></li><li class="here"><a href="{{ '/build-apps/teams/' | relative_url }}">Guide: building as a team</a></li><li><a href="#roles">Who does what</a></li><li><a href="#setup">1. Set up every machine</a></li><li><a href="#defaults">2. Agree on review defaults</a></li><li><a href="#plan">3. Plan the work</a></li><li><a href="#pickup">4. Pick up a task</a></li><li><a href="#publish">5. Review your branch, open the PR</a></li><li><a href="#approve">6. Review a teammate's PR</a></li><li><a href="#merge">7. Merge and follow up</a></li><li><a href="#limits">Before you roll it out</a></li></ol></nav>
 <article class="guide-body">
 <p class="eyebrow">Guide · for a team</p>
 <h1 class="guide-title">Build apps as a team</h1>
-<p class="chapter-intro">A lead turns the goal into tasks. Each developer has an agent implement their tasks and reviews the branch before anyone else sees it. A teammate approves the pull request, and the author merges.</p>
-<p>Every step a developer takes on their own task is the same as in the <a href="{{ '/build-apps/solo/' | relative_url }}">solo guide</a>. This guide covers what changes when several people share one repository and one task tracker.</p>
+<p class="chapter-intro">A lead turns the goal into tasks. Each developer has their agent implement a task and reviews the branch before anyone else sees it. A teammate approves the pull request, and the author merges.</p>
+<p>A developer working on one task follows the same steps as the <a href="{{ '/build-apps/solo/' | relative_url }}">solo guide</a>. This guide covers what changes when several people share one repository and one task tracker.</p>
+
+<blockquote><p><strong>About the screenshots.</strong> They are the real RobOS apps, run on a sample project, <code>acme-corp/pawfinder-api</code>, with Dana as the author and Priya as the reviewer. The repository, tests, diff and evidence are real; GitHub, CI results and the agents' replies are scripted stand-ins.</p></blockquote>
 
 <h2 id="roles">Who does what</h2>
 <table>
 <thead><tr><th>Role</th><th>Apps</th><th>Responsible for</th></tr></thead>
 <tbody>
 <tr><td>Lead or architect</td><td>Task Planner</td><td>Breaking the goal into small tasks with acceptance criteria, choosing a persona for each, and creating the issues.</td></tr>
-<tr><td>Developer (the author)</td><td>Dev Central, Task Implementer, Agent Code Review</td><td>Picking up a task, running the agent, reviewing its branch, opening the PR, getting CI green and merging.</td></tr>
-<tr><td>Reviewer</td><td>Agent Code Review in reviewer mode, or GitHub</td><td>Reading the diff of a teammate's PR and approving it or requesting changes.</td></tr>
+<tr><td>Developer (the author)</td><td>Dev Central, Task Implementer, Agent Code Review</td><td>Picking up a task, running the agent, reviewing its branch, opening the pull request, getting CI green, and merging.</td></tr>
+<tr><td>Reviewer</td><td>Agent Code Review in reviewer mode, or GitHub</td><td>Reading a teammate's pull request and approving it or requesting changes.</td></tr>
 </tbody>
 </table>
-<p>One person can hold more than one role. The rule that matters is that the author is never the only person who reads the change.</p>
+<p>One person can hold more than one role. What matters is that the author is never the only person who reads the change.</p>
 
 <h2 id="setup">Step 1: Set up every machine</h2>
-<p>RobOS has no shared server for team settings. Each developer's settings live in files on their own machine, so everyone does this once.</p>
+<p>RobOS has no shared server for team settings. Each person's settings are files on their own machine, so everyone does this once.</p>
 <ol>
-<li>Install RobOS and run <strong>RobOS Setup Wizard</strong>. It sets up <code>pass</code> for tokens, your git identity, SSH keys, <code>gh</code> sign-in and the agent CLIs. See <a href="{{ '/v1/existing-company-setup.html' | relative_url }}">Company setup</a>.</li>
-<li>Install and sign in to <code>claude</code> (Task Implementer), the <code>gh copilot</code> extension (Task Planner) and, optionally, <code>codex</code> (walkthrough and evidence in the review window).</li>
-<li>In <strong>RobOS Task Servers</strong>, add the <em>same</em> task server as everyone else:
+<li>Install RobOS and run <strong>RobOS Setup Wizard</strong>. It sets up <code>pass</code> for tokens, your git identity, SSH keys and <code>gh</code> sign-in. See <a href="{{ '/v1/existing-company-setup.html' | relative_url }}">Company setup</a>.</li>
+<li>In <strong>RobOS Agents</strong>, sign in to your agent and click <strong>Set as Active</strong>, as in <a href="{{ '/build-apps/solo/#agent' | relative_url }}">the solo guide</a>. Everyone uses their own sign-in. Agree as a team which agents you use, and check <a href="{{ '/build-apps/#agents' | relative_url }}">which agent each app runs</a> so everyone installs the same CLIs.</li>
+<li>In <strong>RobOS Task Servers</strong>, add the <em>same</em> task server as everyone else.
 <ul>
-<li><strong>GitHub Issues</strong>: the team's repository, using each person's own <code>gh</code> login.</li>
-<li><strong>Jira</strong>: the Jira URL, your username, the project keys, and a <code>pass</code> entry that holds your own API token. Click <strong>Test Connection</strong>.</li>
+<li><strong>GitHub Issues</strong>: the team's repository, with each person's own <code>gh</code> sign-in (<strong>Use Git client account</strong>).</li>
+<li><strong>Jira</strong>: the Jira URL, your username, the project keys, and a <code>pass</code> entry holding your own API token. Click <strong>Test Connection</strong>.</li>
 </ul></li>
-<li>Clone the repository. Developers who will run more than one agent at a time need one clone (or <code>git worktree</code>) per running task.</li>
+<li>Clone the repository. Anyone running more than one agent at a time needs one clone (or <code>git worktree</code>) per running task.</li>
 </ol>
-<p>Task Planner and Task Implementer work with GitHub and Jira. The review window, the PR and CI steps work with GitHub, so the code must be on GitHub even when the tasks are in Jira.</p>
+<figure class="guide-shot"><a href="{{ shots }}servers-1-github.jpg"><img src="{{ shots }}servers-1-github.jpg" alt="Task Servers with the team's GitHub repository configured, using the Git client account" loading="lazy" width="1280" height="720"></a><figcaption>Every machine points at the same repository, each with its owner's own sign-in.</figcaption></figure>
+<p>Task Planner and Task Implementer work with GitHub and Jira. The review window, pull requests and CI need the code on GitHub, even when the tasks are in Jira.</p>
 
-<h2 id="defaults">Step 2: Share review defaults</h2>
-<p>Two kinds of settings shape review. Agree on them once, then set them on each machine.</p>
+<h2 id="defaults">Step 2: Agree on review defaults</h2>
+<p>Two settings shape review. Agree on them once, then set them on each machine.</p>
 <h3>Per repository, in Git Projects</h3>
-<p>Open <strong>RobOS Git Projects</strong>, select the repository, and use its review tabs:</p>
+<p>Open <strong>RobOS Git Projects</strong>, select the repository and open <strong>PR template</strong>:</p>
 <ul>
-<li><strong>PR template</strong>: <strong>Default GitHub PR reviewers</strong> (usernames or <code>organization/team</code>, comma-separated) and the PR description template. The reviewers are filled in when an author moves a draft PR to ready, and can be changed per PR.</li>
-<li><strong>Team messaging</strong>: the workspace, channel and notification template for "please review" messages. It needs a workspace configured in Team Chat Servers first; reviewer mentions need Slack.</li>
+<li><strong>Default GitHub PR reviewers</strong>: usernames or <code>organization/team</code>, separated by commas. They are filled in when an author moves a draft to ready, and can be changed for each pull request.</li>
+<li><strong>PR description template</strong>: the outline every pull request description starts from, with fields such as <code>{% raw %}{{url}}{% endraw %}</code> and <code>{% raw %}{{description}}{% endraw %}</code>.</li>
 </ul>
-<p>These are saved under <code>~/.robos/project-review-settings/</code> on each machine. They are not synced, so every author sets the same values.</p>
+<figure class="guide-shot"><a href="{{ shots }}gitprojects-1-review-defaults.jpg"><img src="{{ shots }}gitprojects-1-review-defaults.jpg" alt="Git Projects with the pawfinder-api repository selected and the PR template tab open: Default GitHub PR reviewers set to priya-raman, and a PR description template with What changed and How it was verified sections" loading="lazy" width="1600" height="1091"></a><figcaption>The repository's review defaults: Priya reviews by default, and every description starts from the same outline.</figcaption></figure>
+<p><strong>Team messaging</strong>, next to it, sets the workspace, channel and message for "please review" notifications. It needs a workspace in Team Chat Servers first, and reviewer mentions need Slack. These settings are saved under <code>~/.robos/project-review-settings/</code> and are not synced, so every author sets the same values.</p>
 <h3>Per team, in the review window</h3>
-<p>In reviewer mode, <strong>Review settings</strong> opens the team policy: which review stages are on, which are required gates, the quiz pass mark, the default diff mode and the preferred IDE. It is stored as <code>robos:prReviewTheaterConfig</code> on the team's <code>robos:Team</code> node in the knowledge graph.</p>
+<p>In reviewer mode, <strong>Review settings</strong> opens the team policy: which review stages are on, which are required gates, the quiz pass mark, the default diff mode and the preferred IDE. It is stored on the team's node in the knowledge graph.</p>
+<figure class="guide-shot"><a href="{{ shots }}reviewer-1-settings.jpg"><img src="{{ shots }}reviewer-1-settings.jpg" alt="The review policy editor: workflow policies, and for each review stage a checkbox to enable it, a Required Gate box and stage options such as the minimum quiz score and the default diff mode" loading="lazy" width="1600" height="1029"></a><figcaption>The team review policy. Clear <strong>Required Gate</strong> on stages your team does not want to enforce.</figcaption></figure>
 
-<h2 id="plan">Step 3: Plan and hand out the work</h2>
-<p>The lead does this in Task Planner, exactly as in the <a href="{{ '/build-apps/solo/#plan' | relative_url }}">solo guide</a>, with a few additions:</p>
+<h2 id="plan">Step 3: Plan the work</h2>
+<p>The lead plans in Task Planner, as in <a href="{{ '/build-apps/solo/#plan' | relative_url }}">the solo guide</a>, with a few additions for a team:</p>
 <ul>
-<li>Put the team's architecture, services and conventions in the planning context. Every task is drafted against it.</li>
-<li>For Jira, set <strong>Parent Epic</strong> to attach the tasks to an existing epic.</li>
-<li>Give each task the persona that matches who, or which kind of agent, should do it: Software Architect, Frontend Web Developer, Backend Systems Developer and so on. On GitHub the persona becomes a <code>role:&lt;persona&gt;</code> label, so developers can filter by it, and Task Implementer picks the persona from it.</li>
-<li>Make dependencies explicit, so nobody starts a task whose groundwork is not merged yet. On Jira, sync creates <strong>Blocks</strong> links between dependent tasks, and Task Implementer marks a task whose blockers are still open with a lock and a "Blocked by" warning. GitHub issues are created without links, so name the issues that must merge first in the task body.</li>
-<li>Keep tasks small enough that one person can review the branch in one sitting.</li>
+<li>Put the team's architecture, services and conventions in the project's context. Every task is drafted against it.</li>
+<li>Give each task the persona that fits the work: Software Architect, Frontend Web Developer, Backend Systems Developer and so on. On GitHub it becomes a <code>role:&lt;persona&gt;</code> label, so developers can filter by it, and Task Implementer picks the persona from it.</li>
+<li>For Jira, set <strong>Parent Epic</strong> to file the tasks under an existing epic. Sync also creates <strong>Blocks</strong> links between dependent tasks, and Task Implementer marks a task whose blockers are still open. GitHub issues are created without links, so name the issues that must merge first in the task's body.</li>
+<li>Keep each task small enough for one person to review in one sitting.</li>
 </ul>
-<p>Then click <strong>Sync All to Server</strong>. Custom templates and edited personas are saved on the lead's machine (<code>~/.config/robos/task-planner/custom-templates/</code> and <code>~/.config/robos/agent-personas.json</code>); copy those files to teammates who should use the same ones.</p>
-<figure class="guide-shot"><a href="{{ '/assets/hero/slides/03-planner-generated.jpg' | relative_url }}"><img src="{{ '/assets/hero/slides/03-planner-generated.jpg' | relative_url }}" alt="Task Explorer with an epic assigned to the Software Architect persona and a task assigned to Backend Systems Developer" loading="lazy" width="1280" height="720"></a><figcaption>Each task carries a persona. On GitHub it becomes the task's <code>role:</code> label.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ shots }}planner-4-synced.jpg"><img src="{{ shots }}planner-4-synced.jpg" alt="Task Explorer after Sync All to Server: the epic with the Software Architect persona is issue 41, and the task with the Backend Systems Developer persona is issue 42" loading="lazy" width="1600" height="1135"></a><figcaption>The plan, synced: each card shows its persona and its new issue number.</figcaption></figure>
+<p>Custom templates and edited personas are saved on the lead's machine (<code>~/.config/robos/task-planner/custom-templates/</code> and <code>~/.config/robos/agent-personas.json</code>). Copy those files to teammates who should use the same ones.</p>
 
-<h2 id="implement">Step 4: Pick up a task and implement it</h2>
-<p><strong>Dev Central</strong> is where a developer finds work. Its views include <strong>Assigned to me</strong>, <strong>Unassigned</strong> and one per workflow stage. Press <code>/</code> to search every task on your task servers, and <code>a</code> to assign the highlighted task to yourself. Assigning first tells the team the task is taken.</p>
-<p>Then implement it in Task Implementer, as in the <a href="{{ '/build-apps/solo/#implement' | relative_url }}">solo guide</a>:</p>
-<ol>
-<li>Start Task Implementer from the clone you will work in. The agent works in the folder the app was started from.</li>
-<li>Select your task. Check the persona and its <strong>Directives</strong>, and add context only you know.</li>
-<li>Click <strong>Start Agent</strong>. The agent works on its own branch, <code>codex/&lt;task-key&gt;</code>, so two developers' tasks never share a branch. It commits and pushes, and does not open a PR.</li>
-</ol>
-<blockquote><p>Each agent runs <code>claude</code> with <code>--dangerously-skip-permissions</code> as the developer's own user, with no sandbox. Agree as a team which repositories and machines that is acceptable on.</p></blockquote>
+<h2 id="pickup">Step 4: Pick up a task and implement it</h2>
+<p><strong>Dev Central</strong> is where developers find work. The <strong>Unassigned</strong> view lists tasks nobody has taken; <strong>Assigned to me</strong> lists yours. Press <code>/</code> to search every task on your task servers, and <code>a</code> to assign the highlighted task to yourself, so the team knows it is taken.</p>
+<figure class="guide-shot"><a href="{{ shots }}devcentral-1-tasks.jpg"><img src="{{ shots }}devcentral-1-tasks.jpg" alt="Dev Central's Unassigned view filtered to species: issues 42 and 41, both not started and unassigned" loading="lazy" width="1600" height="1093"></a><figcaption>The two new issues in Dev Central's <strong>Unassigned</strong> view, ready to pick up.</figcaption></figure>
+<p>Then implement it in Task Implementer, as in <a href="{{ '/build-apps/solo/#implement' | relative_url }}">the solo guide</a>: start the app from the clone you will work in, select the task, check the persona and its directives, add context only you know, and click <strong>Start Agent</strong>. Each task gets its own branch, <code>codex/&lt;task-key&gt;</code> by default, so two developers never share one.</p>
+<figure class="guide-shot"><a href="{{ shots }}implementer-1-task.jpg"><img src="{{ shots }}implementer-1-task.jpg" alt="Task Implementer with issue 42 selected and the Backend Systems Developer persona taken from its role label" loading="lazy" width="1600" height="1067"></a><figcaption>The persona the lead chose arrives with the task.</figcaption></figure>
+<blockquote><p>Task Implementer runs the agent as the developer's own user with permission prompts turned off, and no sandbox. Agree as a team which repositories and machines that is acceptable on.</p></blockquote>
 
-<h2 id="publish">Step 5: Review your own branch, then open the PR</h2>
-<p>The author reviews first, before asking anyone else for time. Click <strong>Review branch…</strong> and follow <a href="{{ '/build-apps/solo/#review' | relative_url }}">Step 4 of the solo guide</a>: read the diff, ask the agent for changes, check the evidence and take the walkthrough.</p>
-<p>Then open the PR as a draft, so nobody is asked to review until CI is green:</p>
+<h2 id="publish">Step 5: Review your own branch, then open the pull request</h2>
+<p>The author reviews first, before asking for anyone else's time. Click <strong>Review branch…</strong> and work through <a href="{{ '/build-apps/solo/#review' | relative_url }}">Step 5 of the solo guide</a>: read the diff, ask the agent for changes, check the evidence and take the walkthrough.</p>
+<p>Then open the pull request as a draft, so nobody is asked to review until CI is green:</p>
 <ol>
 <li>In the <strong>Pull Request</strong> tab, tick <strong>Create as draft</strong> and click <strong>Create PR</strong>. If team messaging is set up, a <strong>Send PR review notification</strong> option appears.</li>
-<li>Watch the CI banner until the checks pass. <strong>Get CI back to green</strong> can start an agent repair in an isolated checkout; you review and push its fix.</li>
-<li>Click <strong>Move PR to Ready</strong>. The dialog fills <strong>Request GitHub reviews</strong> from the defaults in Step 2. RobOS checks the head commit, that you are the author, the draft state and CI before it changes anything, and refuses while CI is red.</li>
+<li>Wait for every check to pass. <strong>Get CI back to green</strong> can start an agent repair in a separate checkout; you review and push its fix.</li>
+<li>Click <strong>Move PR to Ready</strong>. <strong>Request GitHub reviews</strong> is filled in from Step 2. RobOS checks the head commit, that you are the author, the draft state and CI before it changes anything, and refuses while CI is red.</li>
 </ol>
-<figure class="guide-shot"><a href="{{ '/assets/hero/slides/24-ready-dialog.jpg' | relative_url }}"><img src="{{ '/assets/hero/slides/24-ready-dialog.jpg' | relative_url }}" alt="The Ready for review dialog with Request GitHub reviews ticked and a reviewer filled in from Git Projects" loading="lazy" width="1280" height="720"></a><figcaption>Reviewers come from the repository's review defaults, and can be changed for this PR.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ shots }}review-8-ready-dialog.jpg"><img src="{{ shots }}review-8-ready-dialog.jpg" alt="The Ready for review dialog over the draft PR: Request GitHub reviews is ticked and the reviewer priya-raman is filled in from Git Projects" loading="lazy" width="1600" height="1029"></a><figcaption>Moving the draft to ready. The reviewer comes from the repository's defaults and can be changed for this pull request.</figcaption></figure>
 
 <h2 id="approve">Step 6: Review a teammate's pull request</h2>
-<p>The reviewer can review on GitHub as usual, or open the PR in the review window's reviewer mode:</p>
+<p>Reviewers can use GitHub as usual, or open the pull request in the review window's reviewer mode:</p>
 <pre><code>ROBOS_REVIEW_URL=https://github.com/OWNER/REPO/pull/NUMBER \
   ~/robos/scripts/dev-launch.sh pr-review</code></pre>
-<p>The legacy Dev Central dashboard (<code>--v1</code>) also has <strong>Open code review</strong> on each pull request.</p>
+<p>The older Dev Central dashboard (<code>--v1</code>) also has <strong>Open code review</strong> on each pull request.</p>
 <ol>
 <li>Read the <strong>Description</strong> and the diff on the <strong>Changes</strong> tab.</li>
+</ol>
+<figure class="guide-shot"><a href="{{ shots }}reviewer-2-changes.jpg"><img src="{{ shots }}reviewer-2-changes.jpg" alt="Reviewer mode on PR 43: the reviewer's tab bar, a CI status banner and the diff of public/index.html" loading="lazy" width="1600" height="1029"></a><figcaption>Priya reads the same diff Dana reviewed, in reviewer mode.</figcaption></figure>
+<ol start="2">
 <li>In <strong>Approve</strong>, choose <strong>Approve</strong>, <strong>Request Changes</strong> or <strong>Submit Comment Only</strong>, write your notes and click <strong>Submit review</strong>. RobOS runs <code>gh pr review</code>. Approving does not merge.</li>
 </ol>
-<figure class="guide-shot"><a href="{{ '/assets/hero/slides/27-reviewer-approved.jpg' | relative_url }}"><img src="{{ '/assets/hero/slides/27-reviewer-approved.jpg' | relative_url }}" alt="The Approve step in reviewer mode with the decision options, the reviewer's notes and a confirmation that the PR was approved" loading="lazy" width="1280" height="720"></a><figcaption>The approval is recorded on the PR. The author merges next.</figcaption></figure>
-<blockquote><p><strong>Know what reviewer mode shows today.</strong> Description, Changes and Approve use the real pull request. The Overview, Documentation, Open in IDE, Evidence and Walkthrough tabs show built-in sample content, not content from the PR. With the default policy, Changes and Approve stay locked until the sample Overview quiz is passed; clear those locks in <strong>Review settings</strong> if your team does not want them. Details: <a href="{{ '/v1/pr-review-theater.html#review-someone-elses-pr' | relative_url }}">PR Review Theater</a>.</p></blockquote>
-<p>When the reviewer requests changes, the author goes back to their local review, asks the agent for the change with <strong>Suggest changes</strong>, checks it, and pushes the new commits to the same branch. The PR picks them up, and the reviewer looks again.</p>
+<figure class="guide-shot"><a href="{{ shots }}reviewer-3-approved.jpg"><img src="{{ shots }}reviewer-3-approved.jpg" alt="The Approve step with Approve selected, the reviewer's notes, and a confirmation that PR 43 was approved and the author can now merge it" loading="lazy" width="1600" height="1029"></a><figcaption>The approval is recorded on the pull request. The author merges next.</figcaption></figure>
+<blockquote><p><strong>Know what reviewer mode shows today.</strong> Description, Changes and Approve use the real pull request. The Overview, Documentation, Open in IDE, Evidence and Walkthrough tabs show built-in sample content, not content from the pull request. With the default policy, Changes and Approve stay locked until the sample Overview quiz is passed; turn those locks off in <strong>Review settings</strong> if your team does not want them. Details: <a href="{{ '/v1/pr-review-theater.html#review-someone-elses-pr' | relative_url }}">PR Review Theater</a>.</p></blockquote>
+<p>When the reviewer requests changes, the author goes back to their local review, asks the agent for the change with <strong>Suggest changes</strong>, checks it, and pushes the new commits to the same branch. The pull request picks them up and the reviewer looks again.</p>
 
 <h2 id="merge">Step 7: Merge and follow up</h2>
-<p>The author merges on GitHub once the PR is approved and CI is green. RobOS has no merge button. If CI on <code>main</code> fails after the merge, or the review left work for later, the lead files a follow-up in Task Planner and it goes through the same loop.</p>
+<p>The author merges on GitHub once the pull request is approved and CI is green. RobOS has no merge button. If CI on <code>main</code> fails after the merge, or the review left work for later, the lead plans a follow-up in Task Planner and it goes through the same loop.</p>
 
 <h2 id="limits">Before you roll it out</h2>
 <table>
 <thead><tr><th>Question</th><th>Answer today</th></tr></thead>
 <tbody>
-<tr><td>Is there a shared server for team settings?</td><td>No. Task servers, personas, templates and review defaults are files on each machine. Share them by agreeing on values or copying the files.</td></tr>
-<tr><td>Which agent implements tasks?</td><td>Task Implementer runs Claude Code only. Each developer uses their own sign-in.</td></tr>
+<tr><td>Is there a shared server for team settings?</td><td>No. Task servers, personas, templates and review defaults are files on each machine. Agree on the values, or copy the files.</td></tr>
+<tr><td>Which agents can we use?</td><td>The ones in RobOS Agents, each with the developer's own sign-in. Some apps call a specific agent CLI; see <a href="{{ '/build-apps/#agents' | relative_url }}">which agent each app runs</a>.</td></tr>
 <tr><td>Are agents sandboxed?</td><td>Not by Task Implementer. The agent runs as the developer's user without permission prompts.</td></tr>
-<tr><td>Does RobOS choose a cheaper model for easy tasks?</td><td>Not yet. See <a href="{{ '/v1/agent-tiers.html' | relative_url }}">Agent tiers</a>.</td></tr>
+<tr><td>Does RobOS pick a cheaper model for easy tasks?</td><td>Not yet. See <a href="{{ '/v1/agent-tiers.html' | relative_url }}">Agent tiers</a>.</td></tr>
 <tr><td>Can reviewers rely on every reviewer-mode tab?</td><td>Not yet. Use Description, Changes and Approve; the other tabs hold sample content.</td></tr>
 </tbody>
 </table>

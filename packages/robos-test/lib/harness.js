@@ -272,7 +272,7 @@ async function launchApp(appId, scenarioConfig) {
   setupHome(sandboxHome, scenarioConfig);
 
   const display = process.env.ROBOS_DISPLAY || process.env.XVFB_DISPLAY || (process.env.ROBOS_TEST === '1' || process.env.ROBOS_HEADLESS === '1' ? ':99' : (process.env.DISPLAY || ':99'));
-  const electronArgs = [appDir, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'];
+  const electronArgs = [appDir, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage', ...(scenarioConfig.electronArgs || [])];
 
   const useRealBinaries = scenarioConfig.useRealBinaries || process.env.ROBOS_REAL_BINARIES === '1';
   const pathEnv = useRealBinaries ? process.env.PATH : `${SANDBOX_BIN}:${process.env.PATH}`;

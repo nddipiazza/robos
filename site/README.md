@@ -24,10 +24,20 @@ The hero on the home page is a recording of the real apps. Regenerate it with th
 ## Build apps guides (`/build-apps/`)
 
 `build-apps/index.html` is the overview of the Task Planner, Task Implementer and Agent Code Review loop;
-`solo.html` and `teams.html` are the two step-by-step guides. Their screenshots are the hero slides in
-`assets/hero/slides/`, so when the hero is regenerated, check that the slide files the guides name still exist
-and still show the same step. The home-page tile image, `assets/build-apps/planner-tile.jpg`, is a crop of
-`03-planner-generated.jpg`.
+`solo.html` and `teams.html` are the two step-by-step guides. Their screenshots, `assets/build-apps/shots/*.jpg`,
+are clean captures of the real apps driven through the same sample project as the hero recording, so regenerate
+them rather than editing them by hand:
+
+```bash
+Xvfb :99 -screen 0 1920x1080x24 &
+DISPLAY=:99 node packages/robos-test/demos/build-apps-guide-shots.js /tmp/guide --world=/home/dana/src
+node packages/robos-test/demos/build-apps-guide-shots.js --publish /tmp/guide   # PNG -> site JPGs (needs Pillow)
+```
+
+`--only=agents,servers,gitprojects,planner,devcentral,implementer,review,reviewer` reruns part of the set, and
+`--world` picks the folder the sample clone lives in, which shows in Git Projects. When an app's layout changes,
+check the guide captions still match. The home-page tile image, `assets/build-apps/planner-tile.jpg`, is a crop of
+the hero slide `03-planner-generated.jpg`.
 
 ## The future page and whitepaper (`/future/`)
 
