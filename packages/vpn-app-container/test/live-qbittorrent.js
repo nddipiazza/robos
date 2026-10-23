@@ -128,6 +128,7 @@ else:raise AssertionError('IPv6 bypass')`);
     });
   } finally {
     credentials.password = '';
+    if (created) console.log('Final app container status:', JSON.stringify(await controller.status('qbittorrent')));
     if (created) await controller.stop('qbittorrent');
     const target = process.env.ROBOS_VPN_PROOF || path.join(__dirname, 'live-proof.json');
     fs.writeFileSync(target, JSON.stringify({ timestamp: new Date().toISOString(), records }, null, 2));
