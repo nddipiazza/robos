@@ -112,11 +112,12 @@
 .l-mosaic-new a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-style:dashed;border-width:2px;color:var(--muted)}
 .l-mosaic-new b{font-size:2rem;line-height:1;color:var(--accent);font-weight:500}
 .l-mosaic-new span{position:static;background:none;color:var(--fg);padding:0}
-/* "Build apps" leads the mosaic; "Your app" becomes a full-width strip under the tiles */
+/* "Build apps" leads the mosaic; under the tiles, a full-width row of two buttons: More apps, Add your own app */
 .l-mosaic-build a{border-color:var(--accent)}
-.l-mosaic-new{grid-column:1/-1}
-.l-mosaic-new a{aspect-ratio:auto;flex-direction:row;gap:10px;padding:12px}
+.l-mosaic-new{grid-column:1/-1;display:flex;gap:12px}
+.l-mosaic-new a{flex:1;aspect-ratio:auto;flex-direction:row;gap:10px;padding:12px}
 .l-mosaic-new b{font-size:1.5rem}
+.l-mosaic-new .l-mosaic-more{border-style:solid;border-width:1px}
 .landing #product .grid3 .card .go{display:inline-block}
 .l-ask{margin-top:28px;max-width:760px}
 #ai .l-show{margin-bottom:44px}

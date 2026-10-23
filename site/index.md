@@ -31,7 +31,7 @@ extra_css: /assets/landing.css
       <li><a href="{{ '/family-finances/' | relative_url }}"><img src="{{ '/assets/family-finances/02-accounts.png' | relative_url }}" alt="" width="1440" height="1185"><span>Household</span></a></li>
       <li><a href="{{ '/games/' | relative_url }}"><img src="{{ '/assets/games/tabletop-still-intro.jpg' | relative_url }}" alt="" width="1280" height="720"><span>Games</span></a></li>
       <li><a href="{{ '/v1/apps/audio-player/' | relative_url }}"><img src="{{ '/assets/audio-player/casting-deck.jpg' | relative_url }}" alt="" width="780" height="290"><span>Audio Player</span></a></li>
-      <li class="l-mosaic-new"><a href="#build"><b>+</b><span>Your app</span></a></li>
+      <li class="l-mosaic-new"><a class="l-mosaic-more" href="{{ '/apps/' | relative_url }}"><span>More apps</span><b aria-hidden="true">→</b></a><a href="{{ '/build-apps/' | relative_url }}"><b aria-hidden="true">+</b><span>Add your own app</span></a></li>
     </ul>
   </div>
 </section>
