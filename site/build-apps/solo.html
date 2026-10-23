@@ -4,102 +4,136 @@ title: Build apps on your own
 permalink: /build-apps/solo/
 body_class: guide
 extra_css: /assets/build-guide.css
-description: "A step-by-step guide for a solo developer: plan an app in Task Planner, have Task Implementer's agent build each task on its own branch, review the branch in Agent Code Review, then open the pull request and merge."
+description: "A step-by-step guide for a solo developer, with screenshots of the real apps: set up your agent, plan an app in Task Planner, let the agent build each task in Task Implementer, review the branch in Agent Code Review, then open the pull request and merge."
 ---
+{%- assign shots = '/assets/build-apps/shots/' | relative_url -%}
 <section class="guide-page"><div class="wrap"><div class="guide-layout">
-<nav class="guide-toc" aria-label="Build apps guides"><h4><a href="{{ '/build-apps/' | relative_url }}">Build apps</a></h4><ol><li><a href="{{ '/build-apps/' | relative_url }}">How the loop works</a></li><li class="here"><a href="{{ '/build-apps/solo/' | relative_url }}">Guide: building on your own</a></li><li><a href="#before">Before you start</a></li><li><a href="#connect">1. Connect your repository</a></li><li><a href="#plan">2. Plan the work</a></li><li><a href="#implement">3. Implement a task</a></li><li><a href="#review">4. Review the branch</a></li><li><a href="#publish">5. Open the pull request</a></li><li><a href="#merge">6. Merge and plan the next task</a></li><li><a href="#tips">Tips and fixes</a></li><li><a href="{{ '/build-apps/teams/' | relative_url }}">Guide: building as a team</a></li></ol></nav>
+<nav class="guide-toc" aria-label="Build apps guides"><h4><a href="{{ '/build-apps/' | relative_url }}">Build apps</a></h4><ol><li><a href="{{ '/build-apps/' | relative_url }}">How the loop works</a></li><li class="here"><a href="{{ '/build-apps/solo/' | relative_url }}">Guide: building on your own</a></li><li><a href="#before">Before you start</a></li><li><a href="#agent">1. Set up your agent</a></li><li><a href="#connect">2. Connect your repository</a></li><li><a href="#plan">3. Plan the work</a></li><li><a href="#implement">4. Implement a task</a></li><li><a href="#review">5. Review the branch</a></li><li><a href="#publish">6. Open the pull request</a></li><li><a href="#merge">7. Merge and keep going</a></li><li><a href="#tips">Tips and fixes</a></li><li><a href="{{ '/build-apps/teams/' | relative_url }}">Guide: building as a team</a></li></ol></nav>
 <article class="guide-body">
 <p class="eyebrow">Guide · for a solo developer</p>
 <h1 class="guide-title">Build apps on your own</h1>
-<p class="chapter-intro">You are the planner, the reviewer and the person who merges. The agent writes the code. This guide takes one task from a sentence to a merged pull request, then shows you how to keep going.</p>
+<p class="chapter-intro">You plan, review and merge. Your agent writes the code. This guide takes one feature from a sentence to a merged pull request, then shows you how to keep going.</p>
+
+<blockquote><p><strong>About the screenshots.</strong> Every screen below is the real RobOS app, run on a sample project: <code>acme-corp/pawfinder-api</code>, a small pet-adoption search API. The repository, its tests, the diff and the evidence are real. GitHub, CI results and the agents' replies are scripted stand-ins so the run is repeatable. The script that takes them is <a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-test/demos/build-apps-guide-shots.js">in the repository</a>.</p></blockquote>
 
 <h2 id="before">Before you start</h2>
 <ul>
-<li class="check"><span class="box"></span><span>RobOS installed, or a clone of the RobOS repository you can run apps from. See <a href="{{ '/v1/getting-started.html' | relative_url }}">Get started</a>.</span></li>
-<li class="check"><span class="box"></span><span><code>gh</code> installed and signed in (<code>gh auth login</code>), with the <code>gh copilot</code> extension for planning.</span></li>
-<li class="check"><span class="box"></span><span><code>claude</code> installed and signed in. Task Implementer uses no other agent.</span></li>
-<li class="check"><span class="box"></span><span>Optional: <code>codex</code> on your <code>PATH</code>, for the review window's walkthrough and evidence agents.</span></li>
-<li class="check"><span class="box"></span><span>A GitHub repository for the app, cloned on this machine.</span></li>
+<li class="check"><span class="box"></span><span>RobOS installed, or a clone of the RobOS repository you run the apps from. See <a href="{{ '/v1/getting-started.html' | relative_url }}">Get started</a>.</span></li>
+<li class="check"><span class="box"></span><span>The GitHub CLI, <code>gh</code>, signed in (<code>gh auth login</code>).</span></li>
+<li class="check"><span class="box"></span><span>Your coding agent's CLI, installed and signed in. Step 1 checks it.</span></li>
+<li class="check"><span class="box"></span><span>A GitHub repository for your app, cloned on this machine.</span></li>
 </ul>
-<p><strong>Starting a brand-new app?</strong> Create the repository on GitHub with a first commit so it has a <code>main</code> branch, and clone it. Then either make the first task you plan "scaffold the project", or generate a starter project with the <a href="{{ '/v1/new-app-wizard.html' | relative_url }}">App Wizard</a> and commit it before you plan the features.</p>
+<p><strong>Starting a brand-new app?</strong> Create the repository on GitHub with a first commit so it has a <code>main</code> branch, and clone it. Then either make "scaffold the project" the first task you plan, or generate a starter project with the <a href="{{ '/v1/new-app-wizard.html' | relative_url }}">App Wizard</a> and commit it before you plan features.</p>
 
-<h2 id="connect">Step 1: Connect your repository</h2>
+<h2 id="agent">Step 1: Set up your agent in RobOS Agents</h2>
+<p>RobOS does not ship a model. It runs the coding agent you already use. Open <strong>RobOS Agents</strong> from the app launcher.</p>
+<ol>
+<li>The <strong>AI Providers</strong> list shows every agent RobOS can drive, with a dot for its state: green is installed and signed in, yellow is installed but signed out, red is not installed.</li>
+<li>Select your agent and click the gear button. The settings page shows the installed version and who is signed in, with <strong>Login</strong> or <strong>Logout</strong>.</li>
+<li>Click <strong>Set as Active</strong>. The badge changes to <strong>Active provider</strong>, and the bottom of the list shows your choice.</li>
+</ol>
+<figure class="guide-shot"><a href="{{ shots }}agents-1-settings.jpg"><img src="{{ shots }}agents-1-settings.jpg" alt="RobOS Agents with four providers in the sidebar and the settings page of one agent, showing its version, the signed-in account, MCP servers and a Set as Active button" loading="lazy" width="1600" height="1047"></a><figcaption>An agent's settings page: version, signed-in account, its MCP servers, and <strong>Set as Active</strong> in the top right.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ shots }}agents-2-active.jpg"><img src="{{ shots }}agents-2-active.jpg" alt="The same settings page after Set as Active, with an Active provider badge and the active provider shown at the bottom of the sidebar" loading="lazy" width="1600" height="1047"></a><figcaption>After <strong>Set as Active</strong>: the badge, and the active provider at the bottom left.</figcaption></figure>
+<p>Some apps call a specific agent CLI rather than the active one. <a href="{{ '/build-apps/#agents' | relative_url }}">Which agent each app runs</a> lists them, so you know which CLIs to install and sign in to.</p>
+
+<h2 id="connect">Step 2: Connect your repository in Task Servers</h2>
 <p>Task Planner and Task Implementer read and write issues on a <em>task server</em>. For a solo project, that is your GitHub repository.</p>
 <ol>
-<li>Open <strong>RobOS Task Servers</strong> and click the plus button.</li>
-<li>Choose <strong>GitHub Issues</strong>. Leave the API URL blank for github.com, tick <strong>Use Git client account</strong> to use your <code>gh</code> login, and add your repository as an owner and repository pair.</li>
-<li>Click <strong>Test Connection</strong>. The entry is saved to <code>~/.config/robos/settings.json</code>.</li>
+<li>Open <strong>RobOS Task Servers</strong>, click the plus button and choose <strong>GitHub Issues</strong>.</li>
+<li>Leave the API URL as it is for github.com, tick <strong>Use Git client account</strong> to use your <code>gh</code> sign-in, and add your repository as an owner and repository pair.</li>
+<li>Click <strong>Test Connection</strong>, then <strong>Save</strong>.</li>
 </ol>
-<p>The apps use the first server in the list unless <code>active_task_server</code> in that file names another one. The active server appears in the top right of Task Planner and Task Implementer. Details: <a href="{{ '/v1/apps/task-servers/' | relative_url }}">Task Servers</a>.</p>
+<figure class="guide-shot"><a href="{{ shots }}servers-1-github.jpg"><img src="{{ shots }}servers-1-github.jpg" alt="Task Servers with a GitHub server selected: the API URL, Use Git client account ticked, one repository, label filters, and Test Connection and Save buttons" loading="lazy" width="1280" height="720"></a><figcaption>A GitHub task server for one repository, using your <code>gh</code> sign-in.</figcaption></figure>
+<p>The entry is saved to <code>~/.config/robos/settings.json</code>. The apps use the first server in the list unless <code>active_task_server</code> in that file names another, and they show the active server in their top right corner. Details: <a href="{{ '/v1/apps/task-servers/' | relative_url }}">Task Servers</a>.</p>
 
-<h2 id="plan">Step 2: Plan the work in Task Planner</h2>
-<p>Task Planner's window is titled <strong>Task Explorer</strong>. Open it from the app launcher, or with <code>scripts/dev-launch.sh task-planner</code> from a RobOS clone.</p>
+<h2 id="plan">Step 3: Plan the work in Task Planner</h2>
+<p>Open <strong>Task Planner</strong>; its window is titled <strong>Task Explorer</strong>.</p>
 <ol>
-<li>Create a project in the <strong>Projects</strong> list, or pick one, and click <strong>+ Plan New Feature</strong>. Fill in the tech stack and architecture context. This is the background the agent plans against, so write what you would tell a new developer.</li>
-<li>Describe the feature in the prompt box and click <strong>Generate with AI</strong>, or choose a template from the chips above it. <strong>Browse All Templates</strong> opens the full library.</li>
+<li>Pick a project in the <strong>Projects</strong> list, or create one with the plus button. Fill in <strong>Tech stack &amp; architecture context</strong>. The agent plans against it, so write what you would tell a new developer: languages, frameworks, where the tests are, conventions.</li>
+<li>Describe the feature in the prompt box and click <strong>Generate with AI</strong>. You can also start from a template: the chips above the prompt, or <strong>Browse All Templates</strong>.</li>
 <li>If the agent asks follow-up questions, answer them and click <strong>Generate Epics &amp; Tasks</strong>.</li>
-<li>Read every task. Each one should be small enough for one branch and have acceptance criteria you could check yourself. Edit the text, add or remove tasks with <strong>+ Add Task</strong>, and change the persona on any task.</li>
-<li>Click <strong>Save to Project</strong> to keep the plan, then <strong>Sync All to Server</strong> to create the issues. On GitHub each issue gets a <code>role:&lt;persona&gt;</code> label and the persona's directives in its body. GitHub issues are created without links between them, so note which tasks have to be done first.</li>
 </ol>
-<figure class="guide-shot"><a href="{{ '/assets/hero/slides/03-planner-generated.jpg' | relative_url }}"><img src="{{ '/assets/hero/slides/03-planner-generated.jpg' | relative_url }}" alt="Task Explorer showing an epic and a task generated from one sentence, each with a persona selector" loading="lazy" width="1280" height="720"></a><figcaption>One sentence became an epic and a task. The task holds acceptance criteria plus a happy-path, a negative and an edge case.</figcaption></figure>
-<p>Generation runs <code>gh copilot</code> and gives up after 3 minutes. More on templates, personas and KGraph project plans: <a href="{{ '/v1/apps/task-planner/' | relative_url }}">Task Planner</a>.</p>
+<figure class="guide-shot"><a href="{{ shots }}planner-2-prompt.jpg"><img src="{{ shots }}planner-2-prompt.jpg" alt="Task Explorer with the project's architecture context, the task template chips, and a one-sentence feature description in the prompt box" loading="lazy" width="1600" height="1135"></a><figcaption>One sentence is enough to start. The project context above it travels with every request.</figcaption></figure>
+<ol start="4">
+<li>Read every task. Each should be small enough for one branch and have acceptance criteria you could check yourself. Edit the text, add or remove tasks with <strong>+ Add Task</strong>, and change the persona on any task.</li>
+<li>Click <strong>Save to Project</strong>, then <strong>Sync All to Server</strong>. Each task becomes a GitHub issue with a <code>role:&lt;persona&gt;</code> label and the persona's directives in its body.</li>
+</ol>
+<figure class="guide-shot"><a href="{{ shots }}planner-3-generated.jpg"><img src="{{ shots }}planner-3-generated.jpg" alt="The generated plan: an epic assigned to the Software Architect persona and a task assigned to Backend Systems Developer, with acceptance criteria and happy-path, negative and edge cases" loading="lazy" width="1600" height="1135"></a><figcaption>The plan: an epic and a task, each with a persona. The task has acceptance criteria plus a happy-path, a negative and an edge case.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ shots }}planner-4-synced.jpg"><img src="{{ shots }}planner-4-synced.jpg" alt="After Sync All to Server, each card shows its new issue number, #41 and #42, and the status reads Synced 2 tasks" loading="lazy" width="1600" height="1135"></a><figcaption>Synced: the epic is issue #41 and the task is #42.</figcaption></figure>
+<p>GitHub issues are created without links between them, so note which tasks have to be done first. Generation gives up after 3 minutes. More on templates, personas and project plans: <a href="{{ '/v1/apps/task-planner/' | relative_url }}">Task Planner</a>.</p>
 
-<h2 id="implement">Step 3: Implement a task in Task Implementer</h2>
-<p>The agent works in the folder Task Implementer was started from. You do not pick the folder in the window, so start the app from your repository's clone:</p>
+<h2 id="implement">Step 4: Implement a task in Task Implementer</h2>
+<p>The agent works in the folder Task Implementer was started from; the window has no folder picker. Start it from your clone:</p>
 <pre><code>cd ~/src/my-app
 ~/robos/scripts/dev-launch.sh task-implementer</code></pre>
-<p>Replace the paths with your clone and your RobOS checkout. If you open the app from the launcher instead, name the clone's full path in the extra-context box so the agent knows where to work.</p>
+<p>Use your own clone and RobOS paths. If you open the app from the launcher instead, put the clone's full path in the extra-context box so the agent knows where to work.</p>
 <ol>
-<li>In the <strong>Tasks</strong> tab, choose <strong>Open</strong> and select the task. Start with one that does not depend on another. Task Implementer shows no links between GitHub issues, so follow the order from your plan.</li>
-<li>Check the persona in the header. It comes from the issue's <code>role:</code> label. <strong>Directives</strong> shows the guidance the agent gets for that persona, and you can edit it for this run.</li>
-<li>Add hints in the extra-context box: files to look at, commands that run the tests, things not to touch.</li>
-<li>Click <strong>Start Agent</strong> and watch <strong>Agent Output</strong>. The agent creates <code>codex/&lt;task-key&gt;</code>, makes the change, runs the tests, commits and pushes. It does not open a pull request. <strong>Stop</strong> ends it.</li>
+<li>In the <strong>Tasks</strong> tab, select the task. Start with one that does not depend on another.</li>
+<li>Check the persona in the header. It comes from the issue's <code>role:</code> label. <strong>Directives</strong> shows the guidance the agent gets for that persona; you can edit it for this run.</li>
+<li>Add hints in the extra-context box: files to look at, the command that runs the tests, things not to touch.</li>
 </ol>
-<figure class="guide-shot"><a href="{{ '/assets/hero/slides/06-implementer-running.jpg' | relative_url }}"><img src="{{ '/assets/hero/slides/06-implementer-running.jpg' | relative_url }}" alt="Task Implementer with issue 42 selected, the Backend Systems Developer persona, and the agent's output streaming" loading="lazy" width="1280" height="720"></a><figcaption>The agent's output streams in as it branches, edits, tests and pushes. <strong>Review branch…</strong> sits next to <strong>Start Agent</strong>.</figcaption></figure>
-<blockquote><p>The agent runs with <code>--dangerously-skip-permissions</code> as your user, with no sandbox. Run one agent per clone at a time: two agents in the same folder share one working tree.</p></blockquote>
+<figure class="guide-shot"><a href="{{ shots }}implementer-1-task.jpg"><img src="{{ shots }}implementer-1-task.jpg" alt="Task Implementer with issue 42 selected: the Backend Systems Developer persona, Directives, the extra-context box, the task description and the Start Agent and Review branch buttons" loading="lazy" width="1600" height="1067"></a><figcaption>Issue #42, with the persona from its <code>role:</code> label and an empty box for extra context.</figcaption></figure>
+<ol start="4">
+<li>Click <strong>Start Agent</strong> and watch <strong>Agent Output</strong>. The agent creates a branch (<code>codex/&lt;task-key&gt;</code> by default), makes the change, runs the tests, commits and pushes. It does not open a pull request. <strong>Stop</strong> ends it.</li>
+</ol>
+<figure class="guide-shot"><a href="{{ shots }}implementer-2-done.jpg"><img src="{{ shots }}implementer-2-done.jpg" alt="Agent Output after the run: the agent read the task, created branch codex/42, ran the tests with 8 passing, committed and pushed without creating a pull request" loading="lazy" width="1600" height="1067"></a><figcaption>Done: branch <code>codex/42</code> is pushed, 8 tests pass, and no pull request exists yet.</figcaption></figure>
+<blockquote><p>Task Implementer runs the agent as your user with permission prompts turned off, and does not create a sandbox. Run one agent per clone at a time, because two agents in one folder share a working tree.</p></blockquote>
 
-<h2 id="review">Step 4: Review the branch before it becomes a PR</h2>
-<p>When the agent has finished, click <strong>Review branch…</strong> and choose your clone. RobOS writes a review manifest under <code>~/.robos/local-reviews/</code> and opens the review window on the branch. The diff is the branch against the remote's default branch. Uncommitted changes are not part of it.</p>
+<h2 id="review">Step 5: Review the branch before it becomes a pull request</h2>
+<p>Click <strong>Review branch…</strong> and choose your clone. The review window opens on the branch, diffed against your default branch. Uncommitted changes are not part of the diff.</p>
 <h3>Changes</h3>
-<p>Read the diff file by file and tick <strong>Viewed</strong> as you go. When something should change, click <strong>Suggest changes</strong> and say so in plain language, for example "remove the comments that only restate the code". The agent edits the checkout, runs the tests, commits, and the diff reloads.</p>
-<figure class="guide-shot"><a href="{{ '/assets/shots/review-changes.jpg' | relative_url }}"><img src="{{ '/assets/shots/review-changes.jpg' | relative_url }}" alt="The Changes tab: a tree of changed files on the left and the diff on the right, with Unified and Split views" loading="lazy" width="1280" height="520"></a><figcaption>The Changes tab shows the full diff of the pushed branch, not a summary.</figcaption></figure>
+<p>Read the diff file by file and tick <strong>Viewed</strong> as you go. <strong>Unified</strong> and <strong>Split</strong> switch the layout.</p>
+<figure class="guide-shot"><a href="{{ shots }}review-1-changes.jpg"><img src="{{ shots }}review-1-changes.jpg" alt="The Changes tab: the changed files in a tree on the left and the diff of src/pets.js on the right" loading="lazy" width="1600" height="1029"></a><figcaption>The full diff of the pushed branch, file by file.</figcaption></figure>
+<p>When something should change, click <strong>Suggest changes</strong> and say so in plain language. The agent edits the clone, runs the tests and commits, and the diff reloads.</p>
+<figure class="guide-shot"><a href="{{ shots }}review-2-suggest-changes.jpg"><img src="{{ shots }}review-2-suggest-changes.jpg" alt="The agent discussion pane beside the diff: the agent removed six comments that restated the code, ran the tests and committed, and the diff has refreshed" loading="lazy" width="1600" height="1029"></a><figcaption>Asked to drop comments that restate the code, the agent removed six, ran the tests and committed. The diff updated on its own.</figcaption></figure>
 <h3>Evidence</h3>
-<p>The Evidence tab shows before and after results captured at one commit. When a newer commit lands, the old evidence is marked stale, so ask for fresh evidence after every change you request. If the task has no evidence bundle, the tab says so.</p>
+<p>The Evidence tab shows before-and-after results for each scenario, captured at one commit. A newer commit marks them stale, so ask for fresh evidence after each change you request. You can ask for new cases too.</p>
+<figure class="guide-shot"><a href="{{ shots }}review-3-evidence.jpg"><img src="{{ shots }}review-3-evidence.jpg" alt="The Evidence tab with four captured scenarios; the new one, text search and species filter combine, is open, showing the call and its results on main and on the branch" loading="lazy" width="1600" height="1029"></a><figcaption>Fresh evidence for the latest commit, including a case added on request: the same call on <code>main</code> and on the branch.</figcaption></figure>
 <h3>Walkthrough</h3>
-<p>Click <strong>Start</strong>. An agent demonstrates the change one checkpoint at a time and pauses, so you can try it yourself. Send a message at any checkpoint to ask for a change. <strong>How it used to work</strong>, in the <strong>More</strong> menu, runs the same checkpoints on <code>main</code> in a separate checkout. Finishing the walkthrough does not approve or merge anything.</p>
-<p>The walkthrough needs <code>codex</code>. Every tab is described in <a href="{{ '/v1/pr-review-theater.html' | relative_url }}">PR Review Theater</a>.</p>
+<p>Click <strong>Start</strong>. The agent demonstrates the change one checkpoint at a time and waits for you, so you can try it yourself. Ask for a change at any checkpoint. <strong>How it used to work</strong>, in the <strong>More</strong> menu, runs the same checkpoints on <code>main</code>. Finishing the walkthrough does not approve or merge anything.</p>
+<figure class="guide-shot"><a href="{{ shots }}review-4-walkthrough.jpg"><img src="{{ shots }}review-4-walkthrough.jpg" alt="The Walkthrough tab at step 1 of 2, Understand the change, with Explain this step and Next step buttons, and the agent's summary of the changed files" loading="lazy" width="1600" height="1029"></a><figcaption>Checkpoint 1 of 2. You move on with <strong>Next step</strong> when you are ready.</figcaption></figure>
+<p>Every tab is described in <a href="{{ '/v1/pr-review-theater.html' | relative_url }}">PR Review Theater</a>.</p>
 
-<h2 id="publish">Step 5: Open the pull request and get CI green</h2>
+<h2 id="publish">Step 6: Open the pull request and get CI green</h2>
 <ol>
-<li>Open the <strong>Description</strong> tab. <strong>Edit with agent</strong> drafts the description from the diff and the evidence; edit it until it says what changed and how you checked it.</li>
-<li>Open the <strong>Pull Request</strong> tab, check the title and click <strong>Create PR</strong>. Tick <strong>Create as draft</strong> if you want CI to run before you call it ready. RobOS pushes the branch head, then runs <code>gh pr create</code>.</li>
-<li>Watch the CI banner. <strong>Refresh CI</strong> reads the checks again. If CI fails, <strong>Get CI back to green</strong> starts an agent repair in an isolated checkout; you review its fix and push it yourself.</li>
-<li>For a draft, click <strong>Move PR to Ready</strong> once CI has passed. RobOS refuses while CI is red.</li>
+<li>Open <strong>Description</strong>. <strong>Edit with agent</strong> drafts it from the diff and the evidence. Edit it until it says what changed and how you checked it.</li>
 </ol>
-<figure class="guide-shot"><a href="{{ '/assets/hero/slides/20-pr-form.jpg' | relative_url }}"><img src="{{ '/assets/hero/slides/20-pr-form.jpg' | relative_url }}" alt="The Pull Request tab with the title, Edit description, a Create as draft checkbox and the Create PR button" loading="lazy" width="1280" height="720"></a><figcaption>The PR is created from the reviewed branch, with the description you checked.</figcaption></figure>
-<p><strong>Create PR</strong> refuses when the clone has uncommitted changes (the <strong>Resolve uncommitted changes</strong> button asks the agent to deal with them), when the branch is <code>main</code>, or when <code>origin</code> is not the repository in the review.</p>
+<figure class="guide-shot"><a href="{{ shots }}review-5-description.jpg"><img src="{{ shots }}review-5-description.jpg" alt="The Description tab with Edit with agent, the WYSIWYG and Markdown modes, and a short description of the change" loading="lazy" width="1600" height="1029"></a><figcaption>The PR description, saved locally as you type.</figcaption></figure>
+<ol start="2">
+<li>Open the <strong>Pull Request</strong> tab, check the title and click <strong>Create PR</strong>. Tick <strong>Create as draft</strong> if you want CI to run before anyone is asked to look.</li>
+</ol>
+<figure class="guide-shot"><a href="{{ shots }}review-6-create-pr.jpg"><img src="{{ shots }}review-6-create-pr.jpg" alt="The Create pull request form: the repository and branch, the title, Edit description, Create as draft ticked and the Create PR button" loading="lazy" width="1600" height="1029"></a><figcaption>Creating the pull request from the reviewed branch, as a draft.</figcaption></figure>
+<ol start="3">
+<li>Watch the CI banner; <strong>Refresh CI</strong> reads the checks again. If CI fails, <strong>Get CI back to green</strong> starts an agent repair in a separate checkout, and you review and push its fix yourself.</li>
+<li>For a draft, click <strong>Move PR to Ready</strong> once every check passes. RobOS refuses while CI is red.</li>
+</ol>
+<figure class="guide-shot"><a href="{{ shots }}review-7-ci-passed.jpg"><img src="{{ shots }}review-7-ci-passed.jpg" alt="The draft PR #43 with a green CI checks passed banner, 4 of 4 checks passing, and the Move PR to Ready button" loading="lazy" width="1600" height="1029"></a><figcaption>Draft PR #43 with all four checks passing, ready to leave draft.</figcaption></figure>
+<p><strong>Create PR</strong> refuses when the clone has uncommitted changes (<strong>Resolve uncommitted changes</strong> asks the agent to deal with them), when the branch is <code>main</code>, or when <code>origin</code> is not the repository in the review.</p>
 
-<h2 id="merge">Step 6: Merge and plan the next task</h2>
-<p>Merge the pull request on GitHub; the review window has no merge button. If your branch protection requires an approving review, that needs a second GitHub account, so for a solo repository leave that rule off or follow the <a href="{{ '/build-apps/teams/' | relative_url }}">team guide</a>.</p>
-<p>Then go back to Task Implementer for the next task. Pull <code>main</code> into your clone first, so the next branch starts from the merged code. If something broke after the merge, or the review turned up work for later, file it from Task Planner as a new task and the loop starts again.</p>
+<h2 id="merge">Step 7: Merge and keep going</h2>
+<p>Merge on GitHub; the review window has no merge button. If your branch protection requires an approving review, GitHub will not let you approve your own pull request, so for a solo repository leave that rule off, or follow the <a href="{{ '/build-apps/teams/' | relative_url }}">team guide</a>.</p>
+<p>Pull <code>main</code> into your clone so the next branch starts from the merged code, then pick the next task in Task Implementer. If something broke after the merge, or the review turned up work for later, plan it in Task Planner and the loop starts again.</p>
 
 <h2 id="tips">Tips and fixes</h2>
 <h3>Keep the agent on track</h3>
 <ul>
 <li>Small tasks review faster and fail less. If a task touches many unrelated files, split it in Task Planner before you start the agent.</li>
 <li>Acceptance criteria are what you check in review, so make them concrete: inputs, expected results, error cases.</li>
-<li>If the same advice goes into every run, put it in the persona's directives with <strong>Agent Personas</strong> instead of the extra-context box. Personas are saved in <code>~/.config/robos/agent-personas.json</code>.</li>
+<li>Advice you give on every run belongs in the persona's directives (<strong>Agent Personas</strong>), not the extra-context box. Personas are saved in <code>~/.config/robos/agent-personas.json</code>.</li>
+<li>Templates save typing for work you repeat. <strong>Browse All Templates</strong> opens the library, and <strong>Create Custom Template</strong> saves your own.</li>
 </ul>
+<figure class="guide-shot"><a href="{{ shots }}planner-5-templates.jpg"><img src="{{ shots }}planner-5-templates.jpg" alt="The Task Templates Library: a search box, category filters and template cards such as back-end web service, gRPC microservice and GraphQL API service" loading="lazy" width="1600" height="1135"></a><figcaption>The template library. A template opens a short form and plans from your answers.</figcaption></figure>
 <h3>When something does not work</h3>
 <table>
 <thead><tr><th>You see</th><th>What to do</th></tr></thead>
 <tbody>
-<tr><td><strong>Open Task Servers</strong> instead of a task list</td><td>No task server is configured. Do <a href="#connect">Step 1</a>.</td></tr>
-<tr><td><strong>Generate with AI</strong> fails or times out</td><td>Check that <code>gh copilot</code> runs in a terminal. Generation gives up after 3 minutes; try a shorter prompt.</td></tr>
-<tr><td>The agent changed the wrong folder</td><td>Task Implementer was started somewhere else. Start it from your clone, as in <a href="#implement">Step 3</a>.</td></tr>
+<tr><td>A red or yellow dot next to your agent in RobOS Agents</td><td>Install it or sign in from its settings page, as in <a href="#agent">Step 1</a>.</td></tr>
+<tr><td><strong>Open Task Servers</strong> instead of a task list</td><td>No task server is configured. Do <a href="#connect">Step 2</a>.</td></tr>
+<tr><td><strong>Generate with AI</strong> fails or times out</td><td>Check that the planning agent runs in a terminal (see <a href="{{ '/build-apps/#agents' | relative_url }}">which agent each app runs</a>). Generation gives up after 3 minutes; try a shorter prompt.</td></tr>
+<tr><td>The agent changed the wrong folder</td><td>Task Implementer was started somewhere else. Start it from your clone, as in <a href="#implement">Step 4</a>.</td></tr>
 <tr><td><strong>Review branch…</strong> says to wait</td><td>The agent for that task is still running. Wait for it, or click <strong>Stop</strong>.</td></tr>
-<tr><td>The Walkthrough tab has no agent</td><td>No <code>codex</code> binary was found when you clicked <strong>Review branch…</strong>. Install it and open the review again.</td></tr>
-<tr><td><strong>Create PR</strong> is refused</td><td>Commit or discard local changes, make sure you are on the task branch, and check that <code>origin</code> points at the GitHub repository.</td></tr>
+<tr><td>The Walkthrough tab has no agent</td><td>The review agent was not found when you clicked <strong>Review branch…</strong>. Install it, then open the review again.</td></tr>
+<tr><td><strong>Create PR</strong> is refused</td><td>Commit or discard local changes, check you are on the task branch, and check that <code>origin</code> is the GitHub repository.</td></tr>
 </tbody>
 </table>
 

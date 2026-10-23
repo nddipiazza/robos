@@ -14,8 +14,8 @@ const { buildEvidence } = require('./evidence');
 const LIFE_BIN = path.join(__dirname, 'bin');
 const SANDBOX_BIN = path.resolve(__dirname, '../../sandbox/bin');
 
-function createContext(root) {
-  const w = world.createWorld(path.join(root, 'world'));
+function createContext(root, { worldDir } = {}) {
+  const w = world.createWorld(worldDir || path.join(root, 'world'));
   const stateFile = path.join(root, 'forge-state.json');
   const logFile = path.join(root, 'forge-calls.log');
   fs.writeFileSync(logFile, '');

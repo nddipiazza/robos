@@ -49,10 +49,10 @@ description: "Build apps with RobOS: plan the work in Task Planner, let an agent
 </table>
 
 <div class="guide-shots">
-<figure class="guide-shot"><a href="{{ '/assets/hero/slides/03-planner-generated.jpg' | relative_url }}"><img src="{{ '/assets/hero/slides/03-planner-generated.jpg' | relative_url }}" alt="Task Explorer with a generated epic and task, each assigned a developer persona" loading="lazy" width="1280" height="720"></a><figcaption>Plan: a generated epic and task in Task Planner.</figcaption></figure>
-<figure class="guide-shot"><a href="{{ '/assets/hero/slides/06-implementer-running.jpg' | relative_url }}"><img src="{{ '/assets/hero/slides/06-implementer-running.jpg' | relative_url }}" alt="Task Implementer streaming the agent's output while it creates the branch and runs the tests" loading="lazy" width="1280" height="720"></a><figcaption>Implement: the agent's output streams into Task Implementer.</figcaption></figure>
-<figure class="guide-shot"><a href="{{ '/assets/hero/slides/08-changes-diff.jpg' | relative_url }}"><img src="{{ '/assets/hero/slides/08-changes-diff.jpg' | relative_url }}" alt="The Changes tab of the review window, with the file tree and the diff of the pushed branch" loading="lazy" width="1280" height="720"></a><figcaption>Review: the full diff of the pushed branch, before any PR exists.</figcaption></figure>
-<figure class="guide-shot"><a href="{{ '/assets/hero/slides/23-ci-passed.jpg' | relative_url }}"><img src="{{ '/assets/hero/slides/23-ci-passed.jpg' | relative_url }}" alt="The draft pull request in the review window with CI checks passing" loading="lazy" width="1280" height="720"></a><figcaption>Publish: the draft PR and its CI checks, in the same window.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ '/assets/build-apps/shots/' | relative_url }}planner-3-generated.jpg"><img src="{{ '/assets/build-apps/shots/' | relative_url }}planner-3-generated.jpg" alt="Task Explorer with a generated epic and task, each assigned a developer persona" loading="lazy" width="1600" height="1135"></a><figcaption>Plan: an epic and a task drafted from one sentence.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ '/assets/build-apps/shots/' | relative_url }}implementer-2-done.jpg"><img src="{{ '/assets/build-apps/shots/' | relative_url }}implementer-2-done.jpg" alt="Task Implementer after the agent created a branch, ran the tests, committed and pushed" loading="lazy" width="1600" height="1067"></a><figcaption>Implement: the agent branches, tests, commits and pushes.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ '/assets/build-apps/shots/' | relative_url }}review-1-changes.jpg"><img src="{{ '/assets/build-apps/shots/' | relative_url }}review-1-changes.jpg" alt="The Changes tab of the review window, with the file tree and the diff of the pushed branch" loading="lazy" width="1600" height="1029"></a><figcaption>Review: the full diff of the branch, before any pull request exists.</figcaption></figure>
+<figure class="guide-shot"><a href="{{ '/assets/build-apps/shots/' | relative_url }}review-7-ci-passed.jpg"><img src="{{ '/assets/build-apps/shots/' | relative_url }}review-7-ci-passed.jpg" alt="The draft pull request in the review window with all CI checks passing" loading="lazy" width="1600" height="1029"></a><figcaption>Publish: the draft pull request and its CI checks.</figcaption></figure>
 </div>
 
 <h2 id="choose">Choose your guide</h2>
@@ -63,21 +63,31 @@ description: "Build apps with RobOS: plan the work in Task Planner, let an agent
 </div>
 
 <h2 id="what-you-need">What you need</h2>
-<p>RobOS runs the agent CLIs you already have and are signed in to. It does not include a model.</p>
+<p>RobOS does not ship a model. It runs the coding agent you already use, with your own sign-in.</p>
 <table>
 <thead><tr><th>You need</th><th>Used by</th></tr></thead>
 <tbody>
 <tr><td>RobOS, installed or run from a clone. See <a href="{{ '/v1/getting-started.html' | relative_url }}">Get started</a>.</td><td>All steps</td></tr>
-<tr><td>The GitHub CLI, <code>gh</code>, signed in</td><td>Creating issues, listing them, reading the diff, creating the PR, reading CI and submitting reviews</td></tr>
-<tr><td>The <code>gh copilot</code> extension</td><td>Task Planner, to draft the tasks</td></tr>
-<tr><td>The Claude Code CLI, <code>claude</code>, signed in</td><td>Task Implementer, which runs one <code>claude</code> process per task</td></tr>
-<tr><td>The Codex CLI, <code>codex</code> (optional)</td><td>The review window's walkthrough and evidence agents. Without it, those tabs have no agent to run.</td></tr>
-<tr><td>A task server: a GitHub repository, or a Jira project</td><td>Task Planner and Task Implementer. The review and PR steps need the code on GitHub.</td></tr>
+<tr><td>Your agent, installed, signed in and set as active in <strong>RobOS Agents</strong></td><td>Planning, implementing, and the review window's chat, evidence and walkthrough</td></tr>
+<tr><td>The GitHub CLI, <code>gh</code>, signed in</td><td>Creating and listing issues, reading the diff, creating the pull request, reading CI and submitting reviews</td></tr>
+<tr><td>A task server: a GitHub repository or a Jira project</td><td>Task Planner and Task Implementer. The review and pull request steps need the code on GitHub.</td></tr>
 <tr><td>A local clone of the repository, with <code>origin</code> on GitHub</td><td>Task Implementer and the review window</td></tr>
 </tbody>
 </table>
 
-<blockquote><p><strong>Read this before you start an agent.</strong> Task Implementer runs <code>claude</code> with <code>--dangerously-skip-permissions</code> as your user. The agent can read and write files and run commands without asking, and the app does not create a sandbox. Use it only on repositories and machines where that is acceptable.</p></blockquote>
+<h3 id="agents">Which agent each app runs</h3>
+<p>RobOS Agents lists every agent RobOS can drive, and other apps' quick AI requests use the one you set as active. Some apps in this loop call a specific agent CLI instead. Install and sign in to the ones for the apps you use:</p>
+<table>
+<thead><tr><th>App</th><th>Agent CLI it runs today</th></tr></thead>
+<tbody>
+<tr><td>Task Planner, <strong>Generate with AI</strong></td><td>GitHub Copilot, through <code>gh copilot</code></td></tr>
+<tr><td>Task Implementer, <strong>Start Agent</strong></td><td>Claude Code, <code>claude</code></td></tr>
+<tr><td>Review window: <strong>Suggest changes</strong>, <strong>Edit with agent</strong>, evidence, walkthrough and <strong>Get CI back to green</strong></td><td>Codex, <code>codex</code>. Without it, those features have no agent to run.</td></tr>
+<tr><td>Dev Central, <strong>Design</strong> and <strong>Implement</strong></td><td>Codex by default, or Claude Code when configured</td></tr>
+</tbody>
+</table>
+
+<blockquote><p><strong>Read this before you start an agent.</strong> Task Implementer runs the agent as your user with permission prompts turned off. The agent can read and write files and run commands without asking, and the app does not create a sandbox. Use it only on repositories and machines where that is acceptable.</p></blockquote>
 
 <h2 id="reference">Reference</h2>
 <ul>
