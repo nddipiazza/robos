@@ -17,7 +17,8 @@ function chromiumPath() {
   const root = process.env.PLAYWRIGHT_BROWSERS_PATH || '/opt/pw-browsers';
   if (fs.existsSync(root)) {
     const dir = fs.readdirSync(root).filter(d => /^chromium-\d+$/.test(d)).sort().pop();
-    if (dir) return path.join(root, dir, 'chrome-linux', 'chrome');
+    // Newer Playwright builds put Chrome in chrome-linux64/, older ones in chrome-linux/.
+    if (dir) return ['chrome-linux64', 'chrome-linux'].map(d => path.join(root, dir, d, 'chrome')).find(f => fs.existsSync(f));
   }
   return undefined; // let Playwright find its own
 }
