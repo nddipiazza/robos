@@ -13,4 +13,12 @@ contextBridge.exposeInMainWorld('dash', {
   open: (rel) => ipcRenderer.invoke('dash:open', rel),
   reveal: (rel) => ipcRenderer.invoke('dash:reveal', rel),
   setTray: (dataUrl, sig) => ipcRenderer.invoke('dash:set-tray', dataUrl, sig),
+  // Run control: start / stop the e2e driver, browse earlier runs.
+  runStatus: () => ipcRenderer.invoke('run:status'),
+  startRun: (opts) => ipcRenderer.invoke('run:start', opts),
+  stopRun: () => ipcRenderer.invoke('run:stop'),
+  runs: () => ipcRenderer.invoke('run:list'),
+  checkpoints: () => ipcRenderer.invoke('run:checkpoints'),
+  viewRun: (dir) => ipcRenderer.invoke('run:view', dir),
+  chooseGameDir: () => ipcRenderer.invoke('run:choose-game-dir'),
 });

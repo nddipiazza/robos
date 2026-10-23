@@ -109,14 +109,14 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   so every recording and `capture_screenshot` carries that context without covering game UI. The battle status
   bar also shows gold and EXP top-right. A fresh full run moves the previous `reports/playthrough/` to
   `reports/archive/<started>-<status>/` first (`--no-archive` to skip; `--only`/`--from` never archive).
-- `--stepped`/`--record` runs also start the **playthrough dashboard** (`tools/playthrough-dashboard`, Electron;
+- `--stepped`/`--record` runs also start the **playthrough dashboard** — the RobOS **Game Playthrough** app (`packages/game-playthrough`, Electron;
   `--dashboard on|off|auto`, `DW_DASHBOARD`): a GNOME tray icon whose progress ring and context menu follow the run
   (status, milestones, level, battles, deaths, current objective; stop the run; open the latest video) and a window
   with live IPC game state (stats, battle, pack, AI inputs, brain event log, 1.5 s screenshots via
   `capture_screenshot`) plus the milestone list, where each finished milestone is clickable and plays its
   `videos/NN-<id>.mp4` with the checkpoint summary. The driver feeds it through
   `reports/playthrough/live.json` (rewritten once a second); the dashboard also runs standalone:
-  `cd tools/playthrough-dashboard && npm install && npx electron --no-sandbox . [--reports DIR] [--port N]`
+  `cd ../../packages/game-playthrough && npm install && npx electron --no-sandbox . [--reports DIR] [--port N]`; it can also start, resume, replay and stop runs itself (New run / Runs) and browse archived runs
   (`--snapshot out.png` / `--select N` are debug aids for headless agents). It stays open after the run — quit it
   from the tray menu.
 - Deadlock detection runs on both sides: the brain's progress watchdog (`PlayGameBrain._check_progress_watchdog`,

@@ -279,17 +279,18 @@ class Playthrough:
 
     # ── dashboard ──────────────────────────────────────────────────────────
     def start_dashboard(self):
-        """Tray icon + live dashboard (tools/playthrough-dashboard) on the host display."""
+        """Tray icon + live dashboard on the host display: the RobOS Game Playthrough app
+        (packages/game-playthrough). If it is already open it just comes to the front."""
         if self.args.dashboard == "off" or not os.environ.get("DISPLAY"):
             return
-        app_dir = os.path.join(PROJECT_DIR, "tools", "playthrough-dashboard")
+        app_dir = os.path.join(PROJECT_DIR, "..", "..", "packages", "game-playthrough")
         electron = os.path.join(app_dir, "node_modules", ".bin", "electron")
         if not os.path.exists(electron) and shutil.which("npm"):
             log("Installing dashboard dependencies (npm install) ...")
             subprocess.run(["npm", "install", "--quiet", "--no-audit", "--no-fund"], cwd=app_dir,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=600)
         if not os.path.exists(electron):
-            log("Dashboard skipped: electron not available in tools/playthrough-dashboard")
+            log("Dashboard skipped: electron not available in packages/game-playthrough")
             return
         cmd = [electron, "--no-sandbox", app_dir, "--reports", REPORTS_DIR, "--port", str(self.port)]
         self.dashboard = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
