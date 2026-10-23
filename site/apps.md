@@ -34,7 +34,7 @@ description: Every RobOS desktop app, domain sandbox, game studio and MCP server
           <p>Touchscreen cash register for retail stores, cafés and bars: self-checkout kiosk, barcode gun &amp; webcam QR scanning, cash drawer Z-reports and an open checkout API.</p>
         </div>
       </a>
-      <a class="card app-card" href="{{ '/auto-center/' | relative_url }}" data-s="robos auto center auto-center vehicle owner maintenance invoice ocr nhtsa recall remedies repair shop floor profit reports tow truck towing roadside dispatch purchase orders inventory stock suppliers">
+      <a class="card app-card" href="{{ '/auto-center/' | relative_url }}" data-s="robos auto center auto-center vehicle owner maintenance invoice ocr nhtsa recall remedies repair shop floor profit reports tow truck towing roadside dispatch purchase orders inventory stock suppliers plugins services tires body collision alignment parts counter point of sale">
         <img src="{{ '/v1/assets/images/icons/auto-center.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
         <div>
           <h3>RobOS Auto Center</h3>

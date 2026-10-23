@@ -18,6 +18,7 @@ This guide is written for **you, the shop owner**. Work through the steps in ord
 9. **[Switch over from your old system](9-switch-over/)**: the plan, and what is not included yet.
 10. **[Run a tow service](10-tow-desk/)**: for shops with their own trucks. Take tow and roadside calls, dispatch, and bill them at Checkout.
 11. **[Order parts and keep stock](11-orders/)**: suppliers, purchase orders for the parts the mechanics ask for, and stock on your shelves.
+12. **[Choose your services](12-services/)**: tick what your shop does, such as towing, parts sales, tires or body work, and Auto Center adds the menus and questions for it.
 
 ## At a glance
 
@@ -31,7 +32,7 @@ A repair moves through five stages, and each stage has an owner:
 | 4. Invoice and take payment | Checkout | Checkout |
 | 5. Hand back the keys | Checkout | Checkout |
 
-If you run tow trucks, the **Tow desk** takes tow and roadside calls and sends a truck. A car that cannot be driven can come in on your own truck, straight from a Front desk intake.
+Each service your shop offers is a plugin you turn on in **Admin → Services**: auto repair (on from the start), towing, auto parts sales, and starters for tires, body work, alignments and more. If you run tow trucks, the **Tow desk** takes tow and roadside calls and sends a truck. A car that cannot be driven can come in on your own truck, straight from a Front desk intake.
 
 ## Before you commit
 

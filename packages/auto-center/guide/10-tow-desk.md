@@ -5,7 +5,7 @@ minutes: 20
 ---
 If your shop runs its own tow trucks, the **Tow desk** handles the calls. It takes a tow or roadside call, quotes it from your rates while the caller is on the phone, sends a truck that can carry the vehicle, and follows the truck until the vehicle is dropped off. You bill the call at **Checkout**, the same way you bill a repair.
 
-Skip this page if you do not tow. The Tow desk stays empty and nothing else changes.
+Skip this page if you do not tow. Towing is a service you turn on: open **Admin → Services** and tick **We do towing**. The **Tow desk** menu appears, along with the **Tow trucks** tab in Admin. Until then nothing about towing shows anywhere. See [Choose your services](../12-services/).
 
 ## Set up your trucks and rates
 
@@ -101,7 +101,7 @@ At checkout, the repair invoice reminds you if the tow that brought the car in s
 
 ## Change the questions
 
-The tow call questions come from the shop knowledge graph, in `data/tow-form.jsonld`. To change them, copy that file to your shop data folder as `tow-form.jsonld` and edit the services and questions. **Admin → Tow trucks** lists the questions in use.
+The tow call questions come from the shop knowledge graph, in `packages/robos-auto-plugins/tow/data/tow-form.jsonld`. To change them, copy that file to your shop data folder as `tow-form.jsonld` and edit the services and questions. **Admin → Tow trucks** lists the questions in use.
 
 ## What the Tow desk does not do yet
 

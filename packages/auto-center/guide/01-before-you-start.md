@@ -34,14 +34,15 @@ This tutorial walks you through everything you need to do to **stop using your c
 
 Open Auto Center. In the left menu, set **Workspace** to **Maintenance center**. This is the shop side of the app. (The other choice, *Vehicle owner*, is a personal garage for someone's own car and keeps its records separate.)
 
-Under **Shop desk** you now have six menus:
+Under **Shop desk**, the menus depend on the services your shop offers. A new shop does auto repair, so you have:
 
 - **Front desk** is for whoever answers the phone, texts and the door.
-- **Tow desk** is for tow and roadside calls, if you run trucks. See [Run a tow service](../10-tow-desk/).
 - **Mechanic bench** is for the people fixing cars.
 - **Orders** is for whoever buys parts: suppliers, purchase orders and stock. See [Order parts and keep stock](../11-orders/).
 - **Checkout** is for taking payment and handing back keys.
 - **Admin** is for you, the owner.
+
+If you also tow or sell parts over the counter, turn those services on in **Admin → Services**. They add a **Tow desk** and a **Parts counter**. See [Choose your services](../12-services/).
 
 ::shot[a-new-customer-phones-in|1|The Front desk menu, with its first step ready]
 

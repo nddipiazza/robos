@@ -51,7 +51,7 @@ When someone calls about a problem, the Front desk asks a short set of questions
 
 ::shot[review-the-questions-the-front-desk-asks|4|The intake form lists each kind of problem and its questions]
 
-You can change them later. Copy `data/intake-form.jsonld` to your shop data folder as `intake-form.jsonld` and edit the categories and questions. Your copy is used instead of the built-in one.
+You can change them later. Copy `packages/robos-auto-plugins/repair/data/intake-form.jsonld` to your shop data folder as `intake-form.jsonld` and edit the categories and questions. Your copy is used instead of the built-in one.
 
 ## You are ready when
 

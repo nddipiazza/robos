@@ -22,6 +22,8 @@ Choose **Maintenance center** for customer vehicles and a repair queue from inta
 
 ![Maintenance center with a test repair job and actual local Git history]({{ '/assets/images/screenshots/auto-maintenance-center.png' | relative_url }})
 
+Each service a shop offers is a plugin you tick in **Admin → Services** ("What does your shop do?"). **Auto repair** (Front desk, Mechanic bench) is on from the start. **Towing** adds the Tow desk. **Auto parts sales** embeds RobOS Point of Sale as the parts counter. Starters for body work, tires, alignments, oil changes, inspections, glass, exhaust, EVs, detailing, mobile repairs and keys add their questions and labor to the repair desk. See [Choose your services](https://rowbose.com/auto-center/12-services/).
+
 The **Orders** menu keeps suppliers, purchase orders and the parts on your shelves. Parts the mechanics request at the bench appear there to order or take from stock, and a received delivery puts each part on its repair ticket at the invoice cost. It is built on the shared RobOS Orders and RobOS Inventory components. See [Order parts and keep stock](https://rowbose.com/auto-center/11-orders/).
 
 Shops that run tow trucks use the **Tow desk**: take a tow or roadside call (jump start, lockout, tire change, fuel, winch-out), quote it from the shop's rate card, dispatch a truck that can carry the vehicle and a free driver, and record each step to the drop-off. Vehicles dropped at the shop or yard are checked in, and tow invoices and payments go through **Checkout**. A Front desk intake for a car that must be towed can send the shop's own truck. See [Run a tow service](https://rowbose.com/auto-center/10-tow-desk/).
