@@ -59,7 +59,7 @@ func _ready() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--scenario="):
 			explicit_scenario = true
-	if not explicit_scenario and SimEngine.rts_mode != "backend":
+	if not explicit_scenario and SimEngine.rts_mode != "backend" and not SimEngine.editor_session.has("doc"):
 		call_deferred("toggle")
 
 func _option(box: VBoxContainer, label_text: String, choices: Array, selected: int) -> OptionButton:

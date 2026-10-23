@@ -66,6 +66,23 @@ python run_cucumber_tests.py --backend --name="Frontier|Build orders|unattended|
 
 Additional checks cover deterministic seeded replay, selection of every start site, an unattended human defeat, surrender/restart, invalid production and building placement, and a base-race fixture proving that an unfinished expansion keeps its owner alive even after the main base falls.
 
+### Live gameplay and frame performance tests
+
+```bash
+cd games/robos-rts
+python run_cucumber_tests.py --realtime-headless --speed=8
+python run_cucumber_tests.py --realtime --speed=8 --record
+python run_cucumber_tests.py --realtime --tags=@performance
+```
+
+The live suite uses the map editor to modify, save and reload each map, then starts a paused F5 playtest and checks the standard opening. A player-side controller builds Rush, Siege or Economy through paid commands against the built-in opponent. Only the live frame clock advances time: the live SDK rejects `/step`, and the engine reports a counter proving no manual step requests occurred. Matches must reach an actual structure-elimination result, including the unattended-player defeat case. The deterministic suite remains useful for smaller mechanics fixtures.
+
+`--record` needs ffmpeg and a rendered game; `--show-window` displays the test window on Windows, and `--keep-open` leaves it at the result for manual play through F8. Each run writes its authored map, action log, game-state samples, frame timings and, when rendered, a result screenshot under `tests/e2e/reports/realtime/`. Recording adds a captioned MP4 and WebVTT. Finished artifacts are also archived in `~/.robos/development/walkthroughs/rts-live-<scenario>/`, with timestamped history. The proof records both requested speed and achieved game seconds per wall second.
+
+Real-time simulation retains fixed 64 Hz ticks but yields after an 8 ms frame budget, allowing input and drawing during fast-forward overload. Requested 8× playback can run slower when CPU capacity is exhausted. Static terrain, decoration and unlimited crystal facets are combined in spatial chunks; human units use shared MultiMesh batches. Offscreen units and combat effects are culled conservatively, and effect allocation is capped. Static minimap terrain/resources render once into a cached viewport, while unit markers and camera bounds remain live. Navigation smoothing uses bounded visibility searches, steering reuses each tick's nearby-unit query, target acquisition searches hostile spatial grids, and harvesting uses cached town-hall/extractor links.
+
+The control server buffers incomplete requests and partial responses without sleeping on the frame thread. Capture encoding runs on a worker when `/screenshot` receives `"async":true`; `/capture` reports completion. Live recording uses JPEG frames to avoid PNG encoding stalls, while screenshots can still use PNG. GPU readback remains on the frame thread and is measured separately. `GET /performance` reports frame percentiles, simulation/HUD time, rendering draw counts, navigation/steering totals and readback cost. The responsiveness feature checks that incomplete clients and asynchronous PNG encoding keep the live clock moving without a 100 ms frame stall. `tests/e2e/performance_probe.py --warmup=180 --speed=1` measures normal play after a paid army build. `tests/test_render_batches.gd` verifies constant body batch counts from one to eighty units and prevents geometry accumulating across map reloads within one frame.
+
 ## Map editor
 
 Choose **Map editor** from the F8 menu, or run:
@@ -290,11 +307,12 @@ The game runs an HTTP/JSON server (port 18095, or `RTS_WEB_SERVICE_PORT`). The C
 | `GET /health`, `POST /observation` | Status; full observation of units, resources and players |
 | `POST /action` | Issue a command to unit tags, or to every unit of a type and owner |
 | `POST /step`, `POST /pause` | Advance ticks; pause real-time play (`/step` still works) |
+| `POST /playback`, `GET /performance` | Control live speed/pause without stepping; inspect frame timings |
 | `POST /scenario` | Load a scenario by slug (`default` for the main map) or an inline definition |
 | `POST /directive` | Turn a built-in AI mode on or off for a player |
 | `POST /select`, `POST /camera`, `POST /ui` | Selection, camera and HUD state |
 | `POST /input` | Inject mouse and key events through the real input handlers |
-| `POST /screenshot` | Save the current frame as PNG |
+| `POST /screenshot`, `GET /capture` | Save a frame; optionally encode asynchronously and poll completion |
 
 ```python
 from robos_rts_bot_sdk import RTSClient
@@ -310,7 +328,7 @@ Scenarios are JSON-LD files in `games/robos-rts/scenarios`. Besides units, resou
 
 ## Tests
 
-`games/robos-rts/tests/e2e/features/engine` holds six Cucumber scenarios: crowd steering through a gate, stutter-step kiting, Howitzer splash defense, Phase Step and cliff walking, the crystal-to-Riflemen economy, and a three-AI battle that guards against a pathfinding stall. They run headless in a few seconds.
+`games/robos-rts/tests/e2e/features/engine` covers combat mechanics, paid skirmish builds and map authoring. `features/realtime` plays editor-authored matches on the live clock and checks frame responsiveness during control traffic and capture. Full build orders take longer than isolated mechanics fixtures.
 
 ## Regenerating these screenshots
 

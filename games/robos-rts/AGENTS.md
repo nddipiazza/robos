@@ -33,6 +33,10 @@ The map editor supports painting, bounded fill, sampling, numbered starts/expans
 
 `tests/e2e/features/engine/03_frontier_hunters.feature` and `tests/e2e/frontier_bot.py` play complete accelerated build orders through the public API. Keep this controller free of state injection, free units and forced winner flags; small explicit fixtures may isolate victory-rule regressions. Reports contain progression telemetry and final observations.
 
+`features/realtime` creates maps through the editor, saves/reloads, enters a paused playtest, then plays paid builds to annihilation on the live frame clock. Run `python run_cucumber_tests.py --realtime-headless --speed=8` or `--realtime --record` for rendered MP4/VTT proof. Never use `/step` in these tests. Keep player commands restricted to player 1; the opponent must run independently. The test harness uses an isolated port and owns/terminates the actual Windows engine process, bypassing its console wrapper.
+
+Keep network reads/writes nonblocking in the frame loop. Real-time catch-up yields after 8 ms; backend manual stepping stays deterministic. Requested fast-forward speed may exceed achieved playback under CPU load, so report both. Preserve static geometry batching, human MultiMesh instances, cached minimap terrain, hostile spatial grids and harvesting links. Detach old terrain before batching a replacement, even when multiple loads occur in one frame. Verify `tests/test_render_batches.gd` and `tests/test_spatial_query.gd` when changing these paths. Use asynchronous capture encoding for live recordings, measure the remaining GPU readback cost, and run `--realtime --tags=@performance`. `/performance` exposes frame/tick/HUD timings and draw counts; `tests/e2e/performance_probe.py --warmup=180 --speed=1` runs a paid-build workload before measuring normal play. Full-match proofs include frame samples and archive to `~/.robos/development/walkthroughs/`.
+
 ```bash
 # Launch interactive 2.5D Angled 3D RTS game
 ./play.sh
@@ -43,7 +47,7 @@ The map editor supports painting, bounded fill, sampling, numbered starts/expans
 # Launch the game directly into a scenario
 ./play.sh -- --scenario=siege-canyon-defense
 
-# Run headless deterministic 3-faction Cucumber E2E test suite (~5s for all 6 scenarios)
+# Run headless deterministic mechanics, skirmish and authoring tests
 ./run_cucumber_tests.py --backend
 ```
 

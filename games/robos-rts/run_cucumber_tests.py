@@ -22,11 +22,27 @@ def main() -> int:
     os.environ.setdefault("RTS_MODE", "backend")
     forward_args = []
 
+    realtime = False
     for arg in sys.argv[1:]:
         if arg in ("--backend", "--fast"):
             os.environ["RTS_MODE"] = "backend"
         elif arg in ("--human", "--prove"):
             os.environ["RTS_MODE"] = "human"
+        elif arg in ("--realtime", "--realtime-headless"):
+            realtime = True
+            os.environ["RTS_MODE"] = "realtime"
+            os.environ["RTS_HEADLESS"] = "1" if arg == "--realtime-headless" else "0"
+        elif arg.startswith("--speed="):
+            speed = arg.split("=", 1)[1]
+            if speed not in ("1", "2", "4", "8"):
+                raise SystemExit("--speed must be 1, 2, 4 or 8")
+            os.environ["RTS_TEST_SPEED"] = speed
+        elif arg == "--record":
+            os.environ["RTS_RECORD"] = "1"
+        elif arg == "--show-window":
+            os.environ["RTS_SHOW_WINDOW"] = "1"
+        elif arg == "--keep-open":
+            os.environ["RTS_KEEP_OPEN"] = "1"
         elif arg == "--engine":
             pass
         else:
@@ -36,7 +52,7 @@ def main() -> int:
         sys.executable,
         "-m",
         "behave",
-        str(FEATURES_DIR),
+        str(FEATURES_DIR.parent / "realtime" if realtime else FEATURES_DIR),
         *forward_args,
     ]
     print(f"🚀 Running RobOS RTS Cucumber E2E Suite (RTS_MODE={os.environ['RTS_MODE']})...")

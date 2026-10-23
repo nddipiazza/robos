@@ -35,6 +35,10 @@ class RTSClient:
     def pause(self, paused: bool = True) -> Dict[str, Any]:
         return self._request("POST", "/pause", {"paused": paused})
 
+    def set_playback(self, paused: bool = False, speed: float = 1.0) -> Dict[str, Any]:
+        """Control the live frame clock without manually advancing simulation ticks."""
+        return self._request("POST", "/playback", {"paused": paused, "speed": speed})
+
     def step(self, ticks: int = 16) -> Dict[str, Any]:
         return self._request("POST", "/step", {"count": ticks})
 
@@ -109,8 +113,11 @@ class RTSClient:
     def set_camera(self, x: float = 64.0, y: float = 68.0, z: float = 92.0) -> Dict[str, Any]:
         return self._request("POST", "/camera", {"x": x, "y": y, "z": z})
 
-    def screenshot(self, path: str) -> Dict[str, Any]:
-        return self._request("POST", "/screenshot", {"path": path})
+    def screenshot(self, path: str, asynchronous: bool = False) -> Dict[str, Any]:
+        return self._request("POST", "/screenshot", {"path": path, "async": asynchronous})
+
+    def capture_status(self) -> Dict[str, Any]:
+        return self._request("GET", "/capture")
 
     def focus_camera(self, x: float, y: float, height: float = 50.0) -> Dict[str, Any]:
         return self._request("POST", "/camera", {"focus_x": x, "focus_y": y, "height": height})
