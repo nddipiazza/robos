@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: '22'
       - name: Test catalog and download routing
-        run: node --test scripts/windows/setup.test.cjs scripts/windows/compatibility.test.cjs packages/software-center/windows-tools.test.js
+        run: node --test scripts/windows/setup.test.cjs scripts/windows/compatibility.test.cjs packages/software-center/windows-tools.test.js packages/robos-onboarding/read-command.test.cjs
       - name: Install the native app suite
         shell: pwsh
         run: ./site/downloads/Install-RobOS.ps1 -SourceRoot $pwd -InstallDir "$env:RUNNER_TEMP\RobOS" -NoLaunch

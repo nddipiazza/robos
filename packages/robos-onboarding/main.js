@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { exec, execSync, spawn, spawnSync } = require('child_process');
+const { readCommand } = require('./read-command.cjs');
 
 // Require onboarding-state from robos-lib
 let onboardingState = null;
@@ -125,8 +126,9 @@ ipcMain.handle('save-onboarding-step', async (_, { stepId, data }) => {
 
 // ── Prerequisite check for pass ──
 ipcMain.handle('check-pass-prerequisite', async () => {
-  const passVer = runSync('pass --version');
-  const gpgVer = runSync('gpg --version');
+  const [passVer, gpgVer] = await Promise.all([
+    readCommand('pass', ['--version']), readCommand('gpg', ['--version']),
+  ]);
   const passInstalled = !!(passVer && passVer.includes('password-store'));
   const gpgInstalled = !!(gpgVer && gpgVer.includes('GnuPG'));
 
@@ -169,7 +171,7 @@ ipcMain.handle('get-security-status', async () => {
     }
   }
 
-  const gpgKeys = runSync('gpg --list-secret-keys --keyid-format LONG 2>&1');
+  const gpgKeys = await readCommand('gpg', ['--list-secret-keys', '--keyid-format', 'LONG']);
   const hasGpgKey = !!(gpgKeys && /sec\s+[a-z0-9]+/i.test(gpgKeys));
   let keyId = null;
   let keyName = null;
@@ -352,8 +354,11 @@ ipcMain.handle('test-ssh-connection', async () => {
 
 // ── Step 3: Git Config IPC ──
 ipcMain.handle('get-git-config', async () => {
-  const name = runSync('git config --global user.name') || '';
-  const email = runSync('git config --global user.email') || '';
+  const [nameValue, emailValue] = await Promise.all([
+    readCommand('git', ['config', '--global', 'user.name']),
+    readCommand('git', ['config', '--global', 'user.email']),
+  ]);
+  const name = nameValue || '', email = emailValue || '';
   return { name, email, configured: !!(name && email) };
 });
 
