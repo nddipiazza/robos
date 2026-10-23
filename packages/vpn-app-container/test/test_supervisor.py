@@ -90,6 +90,10 @@ class ProtectionTests(unittest.TestCase):
             self.assertIn('route-nopull', config)
             self.assertNotIn('test-secret', config)
             self.assertEqual((Path(temporary) / 'auth').read_text(), 'alice\ntest-secret\n')
+            data['protocol'] = 'tcp'
+            with patch.object(s, 'RUN', Path(temporary)):
+                s.write_config(data)
+            self.assertIn('proto tcp-client', (Path(temporary) / 'client.ovpn').read_text())
 
     def test_timeout_during_connectivity_probe_is_failure(self):
         with patch.object(s, 'command', side_effect=subprocess.TimeoutExpired('curl', 2)):

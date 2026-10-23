@@ -60,23 +60,32 @@ proof of an IPVanish exit IP; verify the reported exit address/provider separate
 ```
 npm test
 python3 -m unittest discover -s test -p 'test_*.py'
+node test/fixture.js
 ROBOS_VPN_PROFILE=/absolute/path/server.ovpn node test/live-qbittorrent.js
 ```
 
 The live test builds the actual image and starts real qBittorrent with the supplied
 VPN account. It verifies Web API authentication, actual process UID/capabilities,
 credential isolation, successful tunnel traffic, blocked direct IPv4/Docker DNS,
-blocked IPv6, and termination after tunnel deletion. It never overwrites an existing
+blocked IPv6, the root-only VPN endpoint exception, termination after tunnel
+shutdown, termination on connectivity blackholes, and refusal to launch without a
+VPN. It never overwrites an existing
 container or downloads copyrighted material. It writes `test/live-proof.json` and
 removes its container on completion; its download volume remains. Run it on the
 Docker engine host because its Web API check uses localhost.
 
-**Not yet live verified:** the development host is Windows without Docker, WSL or a
-reachable RobOS VM. Node/Python tests exercise controller and supervisor failure
-paths, but do not prove real kernel packet isolation. The live test currently
-fails its prerequisite check with `spawn docker ENOENT`. A narrated UI scenario is
-provided in `packages/robos-test/demos/vpn-app-container-demo.js`; a video must be
-recorded on Linux with the normal RobOS E2E harness.
+**Verified with real qBittorrent and OpenVPN on Linux CI:** the disposable
+`test/fixture.js` creates its own CA and VPN server and runs the checks above
+without a user account. The Windows development host has no Docker, WSL or
+reachable RobOS VM, so it cannot run this container locally. Provider-specific
+verification with an IPVanish account is still pending. Transmission is a preset
+and has not received the live qBittorrent test sequence.
+
+Linux CI records the real qBittorrent Web UI with on-screen test outcomes and
+produces WebM video, WebVTT captions, a walkthrough summary and JSON proof as the
+`vpn-app-container-proof` workflow artifact. The video is supporting evidence;
+packet and process assertions determine test success. A RobOS launcher scenario
+also lives in `packages/robos-test/demos/vpn-app-container-demo.js`.
 
 ## KGraph registration
 

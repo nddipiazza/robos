@@ -168,9 +168,9 @@ else:raise AssertionError('IPv6 bypass')`);
       }
     }
     if (created) await controller.stop('qbittorrent');
-    if (recorder) await recorder.close();
     const target = process.env.ROBOS_VPN_PROOF || path.join(__dirname, 'live-proof.json');
     fs.writeFileSync(target, JSON.stringify({ timestamp: new Date().toISOString(), completed, records }, null, 2));
+    if (recorder) await recorder.close();
   }
 }
 if (require.main === module) main().catch(error => { console.error(error.message); process.exitCode = 1; });

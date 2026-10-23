@@ -87,7 +87,7 @@ def write_config(data):
     (RUN / 'auth').chmod(0o600)
     # Never execute a supplied .ovpn file. Every option below is generated.
     config = [
-        'client', 'dev tun0', f"proto {data['protocol']}",
+        'client', 'dev tun0', f"proto {'tcp-client' if data['protocol'] == 'tcp' else 'udp'}",
         f"remote {data['endpoint']} {data['port']}",
         'nobind', 'auth-nocache', 'remote-cert-tls server',
         'ca /run/vpn/ca.crt', 'auth-user-pass /run/vpn/auth',

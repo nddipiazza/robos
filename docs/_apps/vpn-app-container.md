@@ -21,7 +21,10 @@ Use **Build app container**, import the profile and adjacent CA certificate, the
 local Web UI. Its generated login appears in the launcher. **Stop container**
 terminates it while retaining downloads and preferences.
 
-The initial implementation has controller and supervisor tests. Live qBittorrent
-network isolation and VPN failure tests require a Linux runtime and VPN credentials;
-they have not been executed on the Windows development host. See the package README
-for the live test and the pending KGraph registration request.
+Real qBittorrent/OpenVPN Linux CI tests verify blocked direct IPv4, Docker DNS,
+IPv6 and app access to the supervisor's VPN endpoint exception. Tests also verify
+termination after tunnel or connectivity failure and refusal to launch without a
+VPN. The CI fixture uses a disposable local VPN server; verification with an
+IPVanish account remains pending. The Windows development host needs a Linux
+container runtime before local use. See the package README for testing instructions
+and the pending KGraph registration request.
