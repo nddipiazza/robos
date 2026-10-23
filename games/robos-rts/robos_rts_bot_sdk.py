@@ -44,6 +44,15 @@ class RTSClient:
     def load_scenario_slug(self, slug: str) -> Dict[str, Any]:
         return self._request("POST", "/scenario", {"slug": slug})
 
+    def new_match(self, difficulty: str = "normal", strategy: str = "balanced", seed: Optional[int] = None) -> Dict[str, Any]:
+        payload = {"difficulty": difficulty, "strategy": strategy}
+        if seed is not None:
+            payload["seed"] = seed
+        return self._request("POST", "/match", payload)
+
+    def surrender(self, player: int = 1) -> Dict[str, Any]:
+        return self._request("POST", "/match", {"action": "surrender", "player": player})
+
     def editor(self, action: str = "state", **params: Any) -> Dict[str, Any]:
         """Drive the Map Editor (`scenes/MapEditor.tscn`); action="open" switches the game into it."""
         try:

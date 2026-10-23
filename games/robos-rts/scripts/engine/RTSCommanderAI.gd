@@ -1,5 +1,10 @@
 extends Node
 
+var skirmish_ai = preload("res://scripts/engine/RTSSkirmishAI.gd").new()
+
+func set_skirmish_directive(pid: int, difficulty: String, strategy: String) -> void:
+	player_directives[pid] = {"enabled": true, "mode": "skirmish", "difficulty": difficulty, "strategy": strategy}
+
 # RTSCommanderAI.gd — Built-in scripted AI director (the same directives are exposed over the bot API)
 # Supports all 3 Factions (Player 1 = Humans, Player 2 = Monsters, Player 3 = Aliens):
 # - "stutter_step_kite": Humans Riflemen/Breachers fire (`damage_point`), immediately cancel `backswing` (recovery) by stepping
@@ -49,6 +54,8 @@ func step_ai(_dt: float) -> void:
 			continue
 		var mode = str(cfg.get("mode", "idle"))
 		match mode:
+			"skirmish":
+				skirmish_ai.step_player(pid, cfg)
 			"stutter_step_kite", "kiting":
 				_run_stutter_step_kite(pid, bool(cfg.get("use_surge", true)))
 			"phase_skirmisher_micro", "alien_micro", "phase_micro":
