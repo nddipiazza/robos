@@ -111,10 +111,21 @@ r=subprocess.run(['curl','--silent','--noproxy','*','--interface','eth0','--max-
 assert r.returncode!=0,'Direct Internet escaped'
 # The Docker DNS address is deliberately excluded from loopback allow rules.
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);s.settimeout(1)
-s.sendto(bytes.fromhex('123401000001000000000000076578616d706c6503636f6d0000010001'),('127.0.0.11',53))
-try:s.recv(4096)
+try:
+ s.sendto(bytes.fromhex('123401000001000000000000076578616d706c6503636f6d0000010001'),('127.0.0.11',53))
+ s.recv(4096)
 except (TimeoutError,OSError):pass
 else:raise AssertionError('Docker DNS bypass')`);
+    });
+    await step('App UID cannot use the root-only direct VPN endpoint exception', async () => {
+      const remote = await execute('docker', ['exec', name, 'python3', '-c',
+        "from pathlib import Path; print(next(l for l in Path('/run/vpn/client.ovpn').read_text().splitlines() if l.startswith('remote ')))"]);
+      const [, endpoint, port] = remote.split(' ');
+      await asApp(`import socket
+s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM);s.settimeout(1)
+try:s.sendto(b'ROBOS_DIRECT_LEAK_TEST',(${JSON.stringify(endpoint)},${Number(port)}))
+except PermissionError:pass
+else:raise AssertionError('App packet accepted on root-only VPN endpoint')`);
     });
     await step('IPv6 cannot connect outside the container', async () => {
       await asApp(`import socket
