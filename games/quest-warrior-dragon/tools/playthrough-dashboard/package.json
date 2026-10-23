@@ -1,0 +1,12 @@
+{
+  "name": "dw-playthrough-dashboard",
+  "version": "1.0.0",
+  "description": "Quest: Warrior Dragon AI playthrough — tray icon and live dashboard for tests/e2e/play_full_game.py",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron --no-sandbox ."
+  },
+  "devDependencies": {
+    "electron": "30.5.1"
+  }
+}

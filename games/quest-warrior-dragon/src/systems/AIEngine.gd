@@ -44,6 +44,9 @@ var task_steps_taken: int = 0
 var task_max_steps: int = 400
 var _task_initial_scene: String = ""
 
+var _play_brain: RefCounted = null
+var _play_hud: CanvasLayer = null
+
 var input_history: Array[String] = []
 var total_inputs_sent: int = 0
 var last_action: String = ""
@@ -111,8 +114,65 @@ func start_task(new_task_type: String, args: Dictionary = {}, max_steps: int = 4
 	_step_timer = step_interval
 
 
+## "Play the game" mode: the AI seeks every milestone in data/v1/milestones.json.
+func start_play_game(args: Dictionary = {}) -> Dictionary:
+	if _stride_active:
+		_release_stride()
+	if _play_brain == null:
+		_play_brain = preload("res://src/systems/PlayGameBrain.gd").new()
+		_play_brain.call("setup", get_tree())
+	var result: Dictionary = _play_brain.call("start", args)
+	if not bool(result.get("ok", false)):
+		task_status = "failed"
+		task_error = str(result.get("error", "play_game failed to start"))
+		return result
+	demo_mode = false
+	task_type = "play_game"
+	task_args = args.duplicate(true)
+	task_status = "running"
+	task_error = ""
+	task_steps_taken = 0
+	task_max_steps = int(args.get("max_steps", 2000000))
+	step_interval = float(args.get("step_interval", 0.08))
+	_step_timer = step_interval
+	if bool(args.get("hud", true)):
+		_show_play_hud()
+	return result
+
+
+## Objective / timer / stats band under the game viewport, captured by recordings and screenshots.
+func _show_play_hud() -> void:
+	if _play_hud and is_instance_valid(_play_hud):
+		return
+	_play_hud = preload("res://src/systems/PlayGameHUD.gd").new()
+	_play_hud.name = "PlayGameHUD"
+	add_child(_play_hud)
+
+
+func _hide_play_hud() -> void:
+	if _play_hud and is_instance_valid(_play_hud):
+		_play_hud.queue_free()
+	_play_hud = null
+
+
+func stop_play_game() -> void:
+	if _play_brain:
+		_play_brain.call("stop")
+	_hide_play_hud()
+	if task_type == "play_game" and task_status == "running":
+		task_status = "idle"
+	if _stride_active:
+		_release_stride()
+
+
+func get_milestone_report() -> Dictionary:
+	if _play_brain == null:
+		return {"status": "idle", "index": 0, "total": 0, "done": [], "skipped": [], "log": []}
+	return _play_brain.call("report")
+
+
 func get_telemetry() -> Dictionary:
-	return {
+	var tel := {
 		"demo_mode": demo_mode,
 		"stride_active": _stride_active,
 		"stride_action": _stride_action,
@@ -126,6 +186,15 @@ func get_telemetry() -> Dictionary:
 		"last_action": last_action,
 		"recent_inputs": input_history.slice(maxi(0, input_history.size() - 25), input_history.size()),
 	}
+	if _play_brain != null:
+		var rep: Dictionary = _play_brain.call("report")
+		tel["milestones"] = {
+			"status": rep.get("status", ""), "index": rep.get("index", 0), "total": rep.get("total", 0),
+			"current": rep.get("current", {}), "done_count": (rep.get("done", []) as Array).size(),
+			"skipped_count": (rep.get("skipped", []) as Array).size(), "objective": rep.get("objective", {}),
+			"battles": rep.get("battles", 0), "deaths": rep.get("deaths", 0),
+		}
+	return tel
 
 
 func _tick_ai() -> void:
@@ -134,6 +203,27 @@ func _tick_ai() -> void:
 		return
 	var state: Dictionary = ctrl.call("get_full_scene_state")
 	var screen: Dictionary = ctrl.call("get_screen_contents")
+
+	if task_status == "running" and task_type == "play_game" and _play_brain != null:
+		var pg: Dictionary = _play_brain.call("decide", state, screen)
+		var pg_status := str(_play_brain.get("status"))
+		if pg_status == "completed":
+			task_status = "completed"
+			print("[AIEngine] play_game completed in ", task_steps_taken, " inputs.")
+			return
+		if pg_status == "failed":
+			task_status = "failed"
+			task_error = str(_play_brain.get("error"))
+			return
+		var pg_kind: String = str(pg.get("kind", "tap"))
+		var pg_action: String = str(pg.get("action", ""))
+		if pg_action == "":
+			return
+		if pg_kind == "stride":
+			_start_stride(pg_action, pg.get("target", Vector2i(-1, -1)), int(pg.get("len", 1)))
+		else:
+			await _emit_user_input(pg_action)
+		return
 
 	if task_status == "running":
 		if _is_task_complete(state, screen):

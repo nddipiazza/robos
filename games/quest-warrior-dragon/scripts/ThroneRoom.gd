@@ -95,8 +95,8 @@ const HERO_STATS := {
 # ── Chest contents  "col,row" → item ─────────────────────────────────────────
 const CHEST_ITEMS := {
 	"7,2": { "name": "120 Gold Pieces", "type": "gold", "amount": 120, "desc": "Starting funds for weapons and armor in town." },
-	"5,5": { "name": "Torch",           "type": "item",               "desc": "Lights dark dungeons early in thy quest." },
-	"6,5": { "name": "Magic Key",       "type": "key",                "desc": "Opens the door at the bottom of the room." },
+	"5,5": { "name": "Torch",           "id": "torch",     "type": "tool", "desc": "Lights dark dungeons early in thy quest." },
+	"6,5": { "name": "Magic Key",       "id": "magic_key", "type": "key",  "desc": "Opens the door at the bottom of the room." },
 }
 const MAX_INVENTORY := 8
 
@@ -352,6 +352,7 @@ func _build_sprites() -> void:
 		Vector2i(-1,  0): hero_f0 = FR_LEFT[0];  hero_f1 = FR_LEFT[1]
 		Vector2i( 1,  0): hero_f0 = FR_RIGHT[0]; hero_f1 = FR_RIGHT[1]
 	_hero_ws = _make_walk_sprite(hero_sheet, hero_f0, hero_f1, 2.0)
+	_hero_ws.is_hero = true
 	_hero_ws.name = "Hero"
 	add_child(_hero_ws)
 
@@ -362,6 +363,8 @@ func _update_scene_positions() -> void:
 	_guard_l_ws.position = _npc_screen_pos(4, 7, 32, 32)
 	_guard_r_ws.position = _npc_screen_pos(6, 7, 32, 32)
 	_hero_ws.position    = _hero_screen_pos()
+	if _gwaelin_ws:
+		_gwaelin_ws.position = _gwaelin_screen_pos()
 	_update_debug_overlay()
 
 
@@ -728,6 +731,43 @@ func _execute_command() -> void:
 
 # ── Command implementations ───────────────────────────────────────────────────
 
+## NES rule: only tools fill the 8 pack slots; stackable consumables
+## (items.json `stack_max`) share one slot per kind. Mirrors DungeonMap.
+func _count_pack_tools() -> int:
+	var n := 0
+	var stacks := {}
+	for it in _inventory:
+		if not (it is Dictionary):
+			n += 1
+			continue
+		if str(it.get("type", "tool")) in ["weapon", "armor", "shield", "quest"]:
+			continue
+		var iid := str(it.get("id", it.get("name", ""))).to_lower()
+		if iid != "" and _stack_max_for(iid) > 1:
+			stacks[iid] = int(stacks.get(iid, 0)) + 1
+			continue
+		n += 1
+	for iid in stacks:
+		n += int(ceil(float(stacks[iid]) / float(_stack_max_for(iid))))
+	return n
+
+
+var _stack_max_cache: Dictionary = {}
+
+func _stack_max_for(item_id: String) -> int:
+	if _stack_max_cache.is_empty():
+		var f := FileAccess.open("res://data/v1/items.json", FileAccess.READ)
+		if f:
+			var parsed: Variant = JSON.parse_string(f.get_as_text())
+			if parsed is Array:
+				for e in parsed:
+					if e is Dictionary and e.has("id"):
+						_stack_max_cache[str(e["id"]).to_lower()] = int(e.get("stack_max", 1))
+		if _stack_max_cache.is_empty():
+			_stack_max_cache["_none"] = 1
+	return int(_stack_max_cache.get(item_id, 1))
+
+
 func _cmd_talk() -> void:
 	var ft  := _facing_tile()
 	var key := _npc_key(ft)
@@ -735,13 +775,31 @@ func _cmd_talk() -> void:
 		_cmd_talk_king()
 	elif NPC_DIALOGS.has(key):
 		var data: Dictionary = NPC_DIALOGS[key]
-		_show_dialog(data["speaker"], data["pages"])
+		var gs := get_node_or_null("/root/GameState")
+		if gs and "dragonlord_defeated" in gs and gs.dragonlord_defeated:
+			_show_dialog(data["speaker"], ["Hurrah! Hurrah!\nLong live %s!\nThe Dragonlord is no more." % _hero_name()])
+		else:
+			_show_dialog(data["speaker"], data["pages"])
 	else:
 		_show_dialog("", ["There is no one there."])
 
 
+func _hero_name() -> String:
+	var gs := get_node_or_null("/root/GameState")
+	if gs:
+		return str(gs.hero_stats.get("name", "Erdrick"))
+	return "Erdrick"
+
+
 func _cmd_talk_king() -> void:
 	var gs := get_node_or_null("/root/GameState")
+	if gs and "dragonlord_defeated" in gs and gs.dragonlord_defeated:
+		gs.king_intro_done = true
+		gs.inventory = _inventory.duplicate(true)
+		gs.gold = _hero_gold
+		gs.opened_chests = _opened_chests.duplicate(true)
+		_begin_ending(gs)
+		return
 	if gs:
 		gs.king_intro_done = true
 		gs.inventory = _inventory.duplicate(true)
@@ -758,10 +816,16 @@ func _cmd_talk_king() -> void:
 	else:
 		exp_msg = "Thou hast attained the highest\nlevel of experience!"
 
-	_show_dialog("King Lorik", [
-		"I am greatly pleased that thou\nhast returned, Hero.",
-		exp_msg
-	], func():
+	var pages: Array = ["I am greatly pleased that thou\nhast returned, Hero."]
+	if gs and "gwaelin_rescued" in gs and gs.gwaelin_rescued and not gs.gwaelin_returned:
+		gs.gwaelin_returned = true
+		pages.append("Thou hast rescued my\ndaughter Gwaelin!\nI am forever grateful.")
+		pages.append("Gwaelin: Take this\nGwaelin's Love as a\ntoken of my affection.")
+		if _count_pack_tools() < MAX_INVENTORY:
+			_inventory.append({"name": "Gwaelin's Love", "id": "gwaelins_love", "type": "quest", "desc": "A token from Princess Gwaelin. Reveals the way to Charlock."})
+			gs.inventory = _inventory.duplicate(true)
+	pages.append(exp_msg)
+	_show_dialog("King Lorik", pages, func():
 		_ask_king_save()
 	)
 
@@ -807,6 +871,164 @@ func _ask_king_continue() -> void:
 				get_tree().change_scene_to_file("res://scenes/TitleScreen.tscn")
 			)
 	)
+
+
+# ── Ending (NES epilogue) ────────────────────────────────────────────────────
+# King Lorik offers the throne, the hero declines, Princess Gwaelin (if she was
+# brought home) insists on coming along, and the pair walk out of the throne
+# room. `game_completed` is only set once the Ending scene's credits finish so
+# the whole sequence is captured by the playthrough recorder.
+
+var _ending_active := false
+var _gwaelin_ws: NPCSprite = null
+var _gwaelin_tile := Vector2i(-1, -1)
+var _gwaelin_from := Vector2.ZERO
+var _gwaelin_to   := Vector2.ZERO
+var _gwaelin_t    := 1.0
+
+func _begin_ending(gs: Node) -> void:
+	_ending_active = true
+	_move_enabled  = false
+	var hero := _hero_name()
+	_show_dialog("King Lorik", [
+		"Thou hast done well in\ndefeating the Dragonlord,\n%s." % hero,
+		"The Ball of Light shines\nonce more upon Alefgard,\nand peace has returned\nto our land.",
+		"Come, %s, I shall\ngive up my throne to thee." % hero,
+	], func():
+		_show_dialog("", [
+			"%s replies:\n'If there is a country\nwhere I can rule, I shall\nfind it myself.'" % hero,
+		], func():
+			if "gwaelin_returned" in gs and gs.gwaelin_returned:
+				_gwaelin_steps_forward()
+			else:
+				_show_dialog("King Lorik", [
+					"Then go, %s, with\nmy blessing. May thy\njourney be a glorious one." % hero,
+				], Callable(self, "_ending_walk_out"))
+		)
+	)
+
+
+func _gwaelin_steps_forward() -> void:
+	_gwaelin_ws = NPCSprite.new()
+	_gwaelin_ws.character_id = "princess"
+	_gwaelin_ws.facing       = "left"
+	_gwaelin_ws.pixel_scale  = 2.0
+	_gwaelin_ws.name         = "Gwaelin"
+	add_child(_gwaelin_ws)
+	# She steps down from beside the throne to the hero's side.
+	_gwaelin_tile = Vector2i(5, 5)
+	_gwaelin_from = Vector2(5 * TILE_SIZE, 4 * TILE_SIZE)
+	_gwaelin_to   = Vector2(5 * TILE_SIZE, 5 * TILE_SIZE)
+	_gwaelin_t    = 0.0
+	_update_scene_positions()
+	var tw := create_tween()
+	tw.tween_method(func(v: float):
+		_gwaelin_t = v
+		_update_scene_positions(), 0.0, 1.0, MOVE_DURATION * 2.0)
+	await tw.finished
+	_gwaelin_ws.set_facing("left")
+	_ask_gwaelin()
+
+
+func _ask_gwaelin() -> void:
+	_show_dialog("Princess Gwaelin", [
+		"Wait a minute, please.\nI wish to accompany thee\non thy journey. May I?",
+	])
+	call_deferred("_open_choice",
+		func():
+			_close_choice()
+			_show_dialog("Princess Gwaelin", [
+				"I am so happy.\nTogether we shall travel\nthe wide world to build up\na great power and spirit.",
+			], Callable(self, "_ending_walk_out")),
+		func():
+			_close_choice()
+			_show_dialog("Princess Gwaelin", ["But thou must!"], Callable(self, "_ask_gwaelin"))
+	)
+
+
+func _ending_walk_out() -> void:
+	_play_sfx("res://assets/music/mp3/heroes_fanfare.mp3")
+	await get_tree().create_timer(0.6).timeout
+	# Hero stands at (4,5), (3,4) or (5,4) when talking to the king: line up on
+	# column 4 first, then down through the door and along the bottom hall.
+	var path: Array = []
+	var t := _hero_tile
+	while t.y < 6:
+		t.y += 1
+		path.append(t)
+	while t.x != 4:
+		t.x += 1 if t.x < 4 else -1
+		path.append(t)
+	for step in [Vector2i(5, 6), Vector2i(5, 7), Vector2i(5, 8), Vector2i(5, 9),
+			Vector2i(6, 9), Vector2i(7, 9), Vector2i(8, 9), Vector2i(9, 9)]:
+		path.append(step)
+	for dest in path:
+		await _scripted_step(dest)
+	await get_tree().create_timer(0.3).timeout
+	_play_sfx("res://assets/music/mp3/stairs_down.mp3")
+	var layer := CanvasLayer.new()
+	layer.layer = 15
+	add_child(layer)
+	var rect := ColorRect.new()
+	rect.color = Color(0, 0, 0, 0)
+	rect.size = Vector2(VW, VH)
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(rect)
+	var tw := create_tween()
+	tw.tween_property(rect, "color", Color.BLACK, 1.0)
+	await tw.finished
+	get_tree().change_scene_to_file.call_deferred("res://scenes/Ending.tscn")
+
+
+func _scripted_step(dest: Vector2i) -> void:
+	var dir := dest - _hero_tile
+	var prev := _hero_tile
+	_set_hero_facing(dir)
+	_hero_tile = dest
+	_cam_from  = _cam_world
+	_cam_to    = _tile_center_world(dest.x, dest.y)
+	if _gwaelin_ws:
+		var gdir := prev - _gwaelin_tile
+		_gwaelin_ws.set_facing(_facing_name(gdir))
+		_gwaelin_from = Vector2(_gwaelin_tile.x * TILE_SIZE, _gwaelin_tile.y * TILE_SIZE)
+		_gwaelin_to   = Vector2(prev.x * TILE_SIZE, prev.y * TILE_SIZE)
+		_gwaelin_tile = prev
+	var t := 0.0
+	var dur := MOVE_DURATION * 2.0
+	while t < 1.0:
+		await get_tree().process_frame
+		t = minf(t + get_process_delta_time() / dur, 1.0)
+		_cam_world = _cam_from.lerp(_cam_to, t)
+		_gwaelin_t = t
+		_update_scene_positions()
+	if _hero_ws:
+		_hero_ws.step()
+
+
+func _set_hero_facing(dir: Vector2i) -> void:
+	if dir == Vector2i.ZERO or dir == _hero_facing:
+		return
+	_hero_facing = dir
+	var f0 := FR_DOWN[0]
+	var f1 := FR_DOWN[1]
+	match dir:
+		Vector2i( 0, -1): f0 = FR_UP[0];    f1 = FR_UP[1]
+		Vector2i(-1,  0): f0 = FR_LEFT[0];  f1 = FR_LEFT[1]
+		Vector2i( 1,  0): f0 = FR_RIGHT[0]; f1 = FR_RIGHT[1]
+	if _hero_ws:
+		_hero_ws.set_frames(f0, f1)
+
+
+func _facing_name(dir: Vector2i) -> String:
+	if dir == Vector2i(0, -1): return "up"
+	if dir == Vector2i(-1, 0): return "left"
+	if dir == Vector2i(1, 0):  return "right"
+	return "down"
+
+
+func _gwaelin_screen_pos() -> Vector2:
+	var tl := _gwaelin_from.lerp(_gwaelin_to, _gwaelin_t)
+	return _w2s(tl + Vector2((TILE_SIZE - 32) * 0.5, TILE_SIZE - 32))
 
 
 func _cmd_status() -> void:
@@ -892,17 +1114,17 @@ func _cmd_search() -> void:
 	if _map_tile_at(_hero_tile) == 30:
 		var coord := str(_hero_tile.x) + "," + str(_hero_tile.y)
 		var map_key := "throne_room:" + coord
-		if _opened_chests.has(map_key) or _opened_chests.has(coord):
+		if _opened_chests.has(map_key):
 			_show_dialog("", ["The chest is\nalready empty."])
 			return
 		_opened_chests[map_key] = true
-		_opened_chests[coord] = true
+		_opened_chests["tantegel-castle-2f:" + coord] = true
 		_blit_tile_to_bg(_floor_tile_img, _hero_tile)
 		_play_sfx("res://assets/music/mp3/open_treasure.mp3")
 		var gs := get_node_or_null("/root/GameState")
 		if gs:
 			gs.opened_chests[map_key] = true
-			gs.opened_chests[coord] = true
+			gs.opened_chests["tantegel-castle-2f:" + coord] = true
 		if CHEST_ITEMS.has(coord):
 			var item: Dictionary = CHEST_ITEMS[coord]
 			if item["type"] == "gold":
@@ -955,17 +1177,17 @@ func _cmd_take() -> void:
 		return
 	var coord := str(_hero_tile.x) + "," + str(_hero_tile.y)
 	var map_key := "throne_room:" + coord
-	if _opened_chests.has(map_key) or _opened_chests.has(coord):
+	if _opened_chests.has(map_key):
 		_show_dialog("", ["The chest is\nalready empty."])
 		return
 	_opened_chests[map_key] = true
-	_opened_chests[coord] = true
+	_opened_chests["tantegel-castle-2f:" + coord] = true
 	_blit_tile_to_bg(_floor_tile_img, _hero_tile)
 	_play_sfx("res://assets/music/mp3/open_treasure.mp3")
 	var gs := get_node_or_null("/root/GameState")
 	if gs:
 		gs.opened_chests[map_key] = true
-		gs.opened_chests[coord] = true
+		gs.opened_chests["tantegel-castle-2f:" + coord] = true
 	if CHEST_ITEMS.has(coord):
 		var item: Dictionary = CHEST_ITEMS[coord]
 		if item["type"] == "gold":
@@ -974,7 +1196,7 @@ func _cmd_take() -> void:
 			if PlayerState: PlayerState.gold = _hero_gold
 			_show_dialog("", ["Thou dost find\n" + item["name"] + "!"])
 		else:
-			if _inventory.size() < MAX_INVENTORY:
+			if _count_pack_tools() < MAX_INVENTORY:
 				var inv_item := item.duplicate()
 				_inventory.append(inv_item)
 				if gs: gs.inventory = _inventory.duplicate(true)
@@ -1011,6 +1233,23 @@ func _use_item(idx: int) -> void:
 		item_name = str(item)
 		if item_name == "Magic Key":
 			item_type = "key"
+
+	if item is Dictionary and (str(item.get("id", "")).to_lower() == "herb" or item_name in ["Herb", "Medical Herb"]):
+		var gs_h := get_node_or_null("/root/GameState")
+		if gs_h:
+			var hp := int(gs_h.hero_stats.get("hp", 0))
+			var hp_max := int(gs_h.hero_stats.get("hp_max", 1))
+			if hp >= hp_max:
+				_show_dialog("", ["Thy HP is already\nfull."])
+				return
+			var amt := 23 + (randi() % 8)
+			gs_h.hero_stats["hp"] = mini(hp_max, hp + amt)
+			_inventory.remove_at(idx)
+			gs_h.inventory = _inventory.duplicate(true)
+			_item_panel.visible = false
+			_item_open = false
+			_show_dialog("", ["Thou hast eaten the\nMedical Herb.\nHP restored by %d." % mini(amt, hp_max - hp)])
+		return
 
 	if item_type == "key" or item_name == "Magic Key":
 		var ft := _facing_tile()

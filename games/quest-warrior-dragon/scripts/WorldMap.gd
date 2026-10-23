@@ -24,6 +24,7 @@ const GARINHAM       := Vector2i(4,   4)    # Garinham town
 const KOL            := Vector2i(106, 12)   # Kol town
 const RIMULDAR       := Vector2i(104, 74)   # Rimuldar town
 const CANTLIN        := Vector2i(75,  104)  # Cantlin town
+const CANTLIN_GATE   := Vector2i(75,  102)  # grass gap in Cantlin's wall ring; the Golem waits here
 const HAUKSNESS      := Vector2i(27,  91)   # Hauksness ruins
 const CHARLOCK       := Vector2i(50,  50)   # Charlock Castle entrance
 const ERDRICK_CAVE   := Vector2i(30,  14)   # Erdrick's Cave entrance
@@ -67,11 +68,11 @@ const FR_LEFT  := [Rect2( 40, 0, 16, 16), Rect2( 60, 0, 16, 16)]
 const FR_UP    := [Rect2( 80, 0, 16, 16), Rect2(100, 0, 16, 16)]
 const FR_RIGHT := [Rect2(120, 0, 16, 16), Rect2(140, 0, 16, 16)]
 
-const BLOCKED_TERRAIN := {0: true, 6: true}
+const BLOCKED_TERRAIN := {0: true, 6: true, 9: true}  # water, mountain, wall
 const TERRAIN_RATE_KEY := {
-	0: "none", 1: "forest", 2: "forest",
+	0: "none", 1: "forest", 2: "none",
 	3: "grass", 4: "plains", 5: "desert",
-	6: "none", 7: "swamp", 8: "hills"
+	6: "none", 7: "swamp", 8: "hills", 9: "none"
 }
 const BATTLE_SCENE := "res://scenes/BattleOverlay.tscn"
 
@@ -126,7 +127,7 @@ var _inventory: Array = []
 var _hero_gold := 0
 var _opened_chests: Dictionary = {}
 var _bridge_built := false
-var _bridge_rect: ColorRect
+var _bridge_rect: TextureRect
 var _bridge_animating := false
 var _bridge_anim_t := 0.0
 const BRIDGE_ANIM_DURATION := 2.5  # seconds of rainbow flash
@@ -138,6 +139,11 @@ func _ready() -> void:
 		_hero_gold = gs.gold
 		_opened_chests = gs.opened_chests.duplicate(true)
 		_bridge_built = gs.bridge_built
+		# Stepping outside puts the torch out. RADIANT is a step counter on the
+		# NES and keeps ticking out here (see the move handler), so a hero who
+		# lit the Swamp Cave and walks on to the next cave is still lit.
+		if "torch_active" in gs:
+			gs.torch_active = false
 		if gs.come_from != "" or gs.spawn_tile != spawn_tile:
 			_hero_tile = gs.spawn_tile
 			_hero_facing = _facing_to_vec(gs.spawn_facing)
@@ -233,6 +239,7 @@ func _build_map() -> void:
 
 func _build_hero() -> void:
 	_hero_ws = WalkSprite.new()
+	_hero_ws.is_hero = true
 	_hero_ws.pixel_scale = 2.0
 	_hero_ws.toggle_time = 0.35
 	_hero_ws.texture = load("res://assets/sprites/rgba/characters-3.png") as Texture2D
@@ -246,9 +253,11 @@ func _build_sfx_player() -> void:
 	add_child(_sfx)
 
 func _build_bridge_overlay() -> void:
-	_bridge_rect = ColorRect.new()
-	_bridge_rect.size = Vector2(TILE_SIZE * MAP_SCALE, TILE_SIZE * MAP_SCALE)
-	_bridge_rect.color = Color(0.55, 0.35, 0.15, 1.0)  # wooden bridge brown
+	_bridge_rect = TextureRect.new()
+	_bridge_rect.texture = load("res://assets/tiles/tile_018.png")  # wooden plank bridge
+	_bridge_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_bridge_rect.stretch_mode = TextureRect.STRETCH_SCALE
+	_bridge_rect.size = Vector2(TILE_SIZE, TILE_SIZE)
 	_bridge_rect.z_index = 1
 	_bridge_rect.visible = _bridge_built
 	add_child(_bridge_rect)
@@ -274,11 +283,11 @@ func _process(delta: float) -> void:
 	if _bridge_animating:
 		_bridge_anim_t += delta
 		var frac := fmod(_bridge_anim_t * 4.0, 1.0)  # cycle hue 4×/sec
-		_bridge_rect.color = Color.from_hsv(frac, 1.0, 1.0, 1.0)
+		_bridge_rect.modulate = Color.from_hsv(frac, 0.8, 1.0, 1.0)
 		if _bridge_anim_t >= BRIDGE_ANIM_DURATION:
 			_bridge_animating = false
 			_bridge_built = true
-			_bridge_rect.color = Color(0.55, 0.35, 0.15, 1.0)
+			_bridge_rect.modulate = Color.WHITE
 			_bridge_rect.visible = true
 			var gs := get_node_or_null("/root/GameState")
 			if gs:
@@ -293,6 +302,13 @@ func _process(delta: float) -> void:
 		_cam_world = _cam_from.lerp(_cam_to, _move_t)
 		if _move_t >= 1.0:
 			_hero_moving = false
+			var gs_regen = get_node_or_null("/root/GameState")
+			if gs_regen and gs_regen.has_method("apply_step_regen"):
+				gs_regen.apply_step_regen()
+			if gs_regen and "radiant_steps_left" in gs_regen and int(gs_regen.radiant_steps_left) > 0:
+				gs_regen.radiant_steps_left = int(gs_regen.radiant_steps_left) - 1
+			if _apply_swamp_damage():
+				return
 			_check_map_trigger()
 	elif not _dialog_active and not _menu_open and not _status_open and not _item_open:
 		_poll_move_input()
@@ -377,7 +393,18 @@ func _check_map_trigger() -> void:
 			var s = _spawn_for("rimuldar-1f", RIMULDAR_SPAWN, "right")
 			_save_state(s[0], s[1], "world_map")
 			get_tree().change_scene_to_file.call_deferred("res://scenes/Rimuldar.tscn")
+		CANTLIN_GATE:
+			# Cantlin is walled; this grass tile is the only way in and the Golem
+			# guards it until it is destroyed once.
+			if _golem_guards_gate():
+				_golem_gate_battle()
+				return
+			_check_encounter()
 		CANTLIN:
+			# Fallback for saves placed inside the wall before the Golem fell.
+			if _golem_guards_gate():
+				_golem_gate_battle()
+				return
 			var s = _spawn_for("cantlin-1f", CANTLIN_SPAWN, "down")
 			_save_state(s[0], s[1], "world_map")
 			get_tree().change_scene_to_file.call_deferred("res://scenes/Cantlin.tscn")
@@ -412,9 +439,49 @@ func _check_map_trigger() -> void:
 		_:
 			_check_encounter()
 
+const SWAMP_DAMAGE := 2
+
+## NES: every step in a poisonous swamp costs 2 HP unless Erdrick's Armor is worn, and the
+## swamps dry up once the Dragonlord falls. Returns true when the hero died to it.
+func _apply_swamp_damage() -> bool:
+	if _terrain.is_empty() or int(_terrain[_hero_tile.y][_hero_tile.x]) != 7:
+		return false
+	var gs = get_node_or_null("/root/GameState")
+	if not gs:
+		return false
+	if gs.armor == "erdricks_armor" or ("dragonlord_defeated" in gs and gs.dragonlord_defeated):
+		return false
+	var hp := int(gs.hero_stats.get("hp", 0))
+	if hp <= 0:
+		return false
+	gs.hero_stats["hp"] = maxi(0, hp - SWAMP_DAMAGE)
+	_play_sfx("res://assets/music/mp3/swamp.mp3")
+	_flash_hurt()
+	if int(gs.hero_stats["hp"]) <= 0:
+		_on_defeat()
+		return true
+	return false
+
+var _hurt_flash: ColorRect = null
+
+func _flash_hurt() -> void:
+	if not _hurt_flash:
+		_hurt_flash = ColorRect.new()
+		_hurt_flash.color = Color(1, 0, 0, 0)
+		_hurt_flash.size = Vector2(VW, VH)
+		_hurt_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_hurt_flash.z_index = 50
+		add_child(_hurt_flash)
+	_hurt_flash.color = Color(1, 0, 0, 0.45)
+	var tw := create_tween()
+	tw.tween_property(_hurt_flash, "color:a", 0.0, 0.25)
+
 func _check_encounter() -> void:
 	var gs = get_node_or_null("/root/GameState")
 	if gs and gs.encounters_disabled:
+		return
+	# NES: once the Dragonlord falls the monsters vanish from Alefgard.
+	if gs and "dragonlord_defeated" in gs and gs.dragonlord_defeated:
 		return
 	if _terrain.is_empty() or _zone_data.is_empty():
 		return
@@ -448,6 +515,49 @@ func _check_encounter() -> void:
 		return
 	_start_battle(mon_key, mon_data)
 
+## Cantlin's gatekeeper. Winning opens the town for good; fleeing (or dying)
+## leaves the hero on the gate tile so stepping on it again re-triggers the fight.
+func _golem_guards_gate() -> bool:
+	var gs = get_node_or_null("/root/GameState")
+	if not gs or not ("golem_defeated" in gs) or gs.golem_defeated:
+		return false
+	return not ("dragonlord_defeated" in gs and gs.dragonlord_defeated)
+
+func _golem_gate_battle() -> void:
+	var mon := _get_monster("golem")
+	if mon.is_empty():
+		mon = {"name": "Golem", "hp_min": 70, "hp_max": 70, "strength": 120, "agility": 60, "is_boss": true}
+	_golem_gate_pending = true
+	_golem_gate_from = Vector2i(posmod(_hero_tile.x - _hero_facing.x, MAP_TILES), posmod(_hero_tile.y - _hero_facing.y, MAP_TILES))
+	_start_battle("golem", mon)
+
+var _golem_gate_pending := false
+var _golem_gate_from := Vector2i(-1, -1)
+
+func _on_golem_gate_result(result: String) -> void:
+	if not _golem_gate_pending:
+		return
+	_golem_gate_pending = false
+	if result != "won":
+		# Fled: the Golem shoves the hero back off the gate tile.
+		if _golem_gate_from.x >= 0 and _is_walkable(_golem_gate_from) and _hero_tile == CANTLIN_GATE:
+			_hero_tile = _golem_gate_from
+			_cam_world = _tile_center(_hero_tile)
+			_cam_from = _cam_world
+			_cam_to = _cam_world
+		return
+	var gs = get_node_or_null("/root/GameState")
+	if gs and "golem_defeated" in gs:
+		gs.golem_defeated = true
+	if _hero_tile == CANTLIN:
+		_show_dialog("", ["The Golem crumbles to dust.\nThe gate of Cantlin\nstands open."], func():
+			var s = _spawn_for("cantlin-1f", CANTLIN_SPAWN, "down")
+			_save_state(s[0], s[1], "world_map")
+			get_tree().change_scene_to_file.call_deferred("res://scenes/Cantlin.tscn")
+		)
+	else:
+		_show_dialog("", ["The Golem crumbles to dust.\nThe gate of Cantlin\nstands open."])
+
 func _get_monster(key: String) -> Dictionary:
 	for m in _monsters_db:
 		if m.get("key", "") == key:
@@ -456,6 +566,10 @@ func _get_monster(key: String) -> Dictionary:
 
 func _start_battle(mon_key: String, mon_data: Dictionary) -> void:
 	_battle_active = true
+	# The battle overlay reads/consumes herbs from GameState: sync the scene copy first.
+	var gs_pre: Node = get_node_or_null("/root/GameState")
+	if gs_pre:
+		gs_pre.inventory = _inventory.duplicate(true)
 	if _music and _music.playing:
 		_music.stop()
 
@@ -501,10 +615,17 @@ func _start_battle(mon_key: String, mon_data: Dictionary) -> void:
 	overlay.connect("battle_ended", func(result: String):
 		overlay.queue_free()
 		_battle_active = false
+		var gs_after: Node = get_node_or_null("/root/GameState")
+		if gs_after:
+			_hero_gold = int(gs_after.gold)   # battle rewards live in GameState
+			_inventory = gs_after.inventory.duplicate(true)   # herbs used in battle
 		if _music:
 			_music.play()
 		if result == "lost":
+			_golem_gate_pending = false
 			_on_defeat()
+		elif _golem_gate_pending:
+			_on_golem_gate_result(result)
 	)
 
 func _on_defeat() -> void:
@@ -518,6 +639,7 @@ func _on_defeat() -> void:
 		gs.spawn_tile = Vector2i(11, 30)
 		gs.spawn_facing = "down"
 		gs.come_from = "defeat"
+		gs.deaths = int(gs.deaths) + 1
 	get_tree().change_scene_to_file.call_deferred("res://scenes/Castle1F.tscn")
 
 func _load_terrain() -> void:
@@ -712,7 +834,7 @@ func _update_debug_overlay() -> void:
 			# Terrain label
 			lbl.position = screen_pos + Vector2(2, 2)
 			var tid := int(_terrain[wr][wc]) if not _terrain.is_empty() else -1
-			const TNAMES := ["~", "Fk", "Fm", "Gr", "Pl", "De", "Mt", "Sw", "Hi"]
+			const TNAMES := ["~", "Fk", "Br", "Gr", "Pl", "De", "Mt", "Sw", "Hi", "Wa"]
 			var tname: String = TNAMES[tid] if tid >= 0 and tid < TNAMES.size() else "?"
 			var tlbl := _transition_label(tile)
 			lbl.text = "%s,%s\n%s%s" % [_fmt(wc), _fmt(wr), tname, (" [" + tlbl + "]") if tlbl != "" else ""]
@@ -871,9 +993,14 @@ func _refresh_item_panel() -> void:
 			_item_panel.add_child(lbl)
 			_item_labels.append(lbl)
 
+	# Grow the box with the inventory so long lists never spill past the border.
+	var list_h: int = maxi(_inventory.size(), 1) * 20 + 36
+	var panel_h: int = maxi(220, list_h + 44)
+	_item_panel.size = Vector2(280, panel_h)
+	_item_panel.position = Vector2((VW - 280) / 2, maxi(8, (VH - panel_h) / 2))
 	var desc := _make_label("", 12, Color(0.7, 0.9, 1.0))
 	desc.name = "ItemDesc"
-	desc.position = Vector2(16, 180)
+	desc.position = Vector2(16, panel_h - 40)
 	desc.size = Vector2(248, 36)
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_item_panel.add_child(desc)
@@ -1012,7 +1139,7 @@ func _execute_menu_item(cmd: String) -> void:
 				_:
 					_show_dialog("", ["There are no stairs here."])
 		"SPELL":
-			_show_dialog("", ["Thou hast no spells\nto cast."])
+			_cmd_spell()
 		"SEARCH":
 			_cmd_search()
 		"ITEM":
@@ -1026,9 +1153,13 @@ func _cmd_search() -> void:
 	if _hero_tile == ERDRICK_TOKEN and not _has_inventory_item("Erdrick's Token"):
 		_inventory.append({
 			"name": "Erdrick's Token",
+			"id": "erdricks_token",
 			"type": "quest",
 			"desc": "A small token buried in the southern swamp."
 		})
+		var gs_t := get_node_or_null("/root/GameState")
+		if gs_t:
+			gs_t.inventory = _inventory.duplicate(true)
 		_show_dialog("", ["Thou hast found\nErdrick's Token!"])
 	else:
 		_show_dialog("", ["Thou dost not find\nanything of interest."])
@@ -1051,15 +1182,73 @@ func _use_item(idx: int) -> void:
 			if _bridge_built:
 				_show_dialog("", ["The rainbow bridge\nalready spans\nthe waters."])
 				return
-			if _hero_tile != BRIDGE_TILE:
+			# The bridge tile itself is open water: the drop is used from either shore.
+			var on_shore := _hero_tile == BRIDGE_TILE + Vector2i(-1, 0) or _hero_tile == BRIDGE_TILE + Vector2i(1, 0)
+			if _hero_tile != BRIDGE_TILE and not on_shore:
 				_show_dialog("", ["This is not the\nplace to use it."])
 				return
 			_inventory.remove_at(idx)
 			_bridge_rect.visible = true
 			_bridge_animating = true
 			_bridge_anim_t = 0.0
+		"Herb", "Medical Herb":
+			var gs_h := get_node_or_null("/root/GameState")
+			if gs_h:
+				var hp := int(gs_h.hero_stats.get("hp", 0))
+				var hp_max := int(gs_h.hero_stats.get("hp_max", 1))
+				if hp >= hp_max:
+					_show_dialog("", ["Thy HP is already\nfull."])
+					return
+				var amt := 23 + (randi() % 8)
+				gs_h.hero_stats["hp"] = mini(hp_max, hp + amt)
+				_inventory.remove_at(idx)
+				gs_h.inventory = _inventory.duplicate(true)
+				_item_panel.visible = false
+				_item_open = false
+				_show_dialog("", ["Thou hast eaten the\nMedical Herb.\nHP restored by %d." % mini(amt, hp_max - hp)])
+		"Wings":
+			# NES: same as RETURN — fly back to the Tantegel gate; the wings are used up.
+			_inventory.remove_at(idx)
+			var gs_w := get_node_or_null("/root/GameState")
+			if gs_w:
+				gs_w.inventory = _inventory.duplicate(true)
+			_item_panel.visible = false
+			_item_open = false
+			_hero_tile = TANTEGEL_TILE + Vector2i(0, 1)
+			_cam_world = _tile_center(_hero_tile)
+			_cam_from = _cam_world
+			_cam_to = _cam_world
+			_draw_frame()
+			_show_dialog("", ["Thou hast spread the\nWings and soared back\nto Tantegel Castle!"])
 		_:
 			_show_dialog("", [str(item.get("desc", "Thou usest the item."))])
+
+## Field magic on the overworld: HEALMORE / HEAL when wounded.
+func _cmd_spell() -> void:
+	var gs := get_node_or_null("/root/GameState")
+	var known: Array = gs.spells if gs and gs.spells is Array else []
+	if known.is_empty():
+		_show_dialog("", ["Thou hast no spells\nto cast."])
+		return
+	var mp := int(gs.hero_stats.get("mp", 0))
+	var hp := int(gs.hero_stats.get("hp", 0))
+	var hp_max := int(gs.hero_stats.get("hp_max", 1))
+	var missing := hp_max - hp
+	if missing <= 0:
+		_show_dialog("", ["There is no need to\ncast a spell here."])
+		return
+	if gs.has_spell("healmore") and mp >= 10 and missing > 30:
+		gs.hero_stats["mp"] = mp - 10
+		gs.hero_stats["hp"] = hp_max
+		_show_dialog("", ["Thou hast cast HEALMORE!\nThy wounds are fully healed."])
+		return
+	if gs.has_spell("heal") and mp >= 4:
+		var amt := 10 + (randi() % 8)
+		gs.hero_stats["mp"] = mp - 4
+		gs.hero_stats["hp"] = mini(hp_max, hp + amt)
+		_show_dialog("", ["Thou hast cast HEAL!\nHP restored by %d." % mini(amt, missing)])
+		return
+	_show_dialog("", ["Thou hast not enough\nMagic Points!"])
 
 func _show_dialog(speaker: String, pages: Array[String], on_done: Callable = Callable()) -> void:
 	_dialog_pages = pages

@@ -732,7 +732,7 @@
       "id": "castle1f-to-basement",
       "tile": {
         "col": 13,
-        "row": 4
+        "row": 3
       },
       "to": "basement-to-castle1f",
       "facing": "down"

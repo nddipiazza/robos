@@ -31,11 +31,15 @@ var _mon_str          : int    = 0
 var _mon_agl          : int    = 0
 var _mon_def          : int    = 0
 var _mon_dodge        : int    = 1
+var _mon_run_group    : int    = 1       # flee difficulty group (combat_formulas.json "running")
+var _mon_is_boss      : bool   = false
 var _mon_xp           : int    = 0
 var _mon_gp           : int    = 0
 var _mon_asleep       : bool   = false   # enemy sleep state
 var _mon_stopspelled  : bool   = false   # enemy can't cast spells
-var _mon_resist_sleep : bool   = false
+var _mon_resist_sleep : int    = 0       # X/16 chance to shrug off SLEEP
+var _mon_resist_stop  : int    = 0       # X/16 chance to shrug off STOPSPELL
+var _mon_resist_hurt  : int    = 0       # X/16 chance to shrug off HURT / HURTMORE
 var _mon_pattern      : Array  = []      # action pattern from monsters.json
 var _last_enemy_action: String = ""
 
@@ -46,6 +50,7 @@ var _hero_mp_max     : int    = 0
 var _hero_atk        : int    = 4
 var _hero_def        : int    = 2
 var _hero_agi        : int    = 4
+var _hero_str        : int    = 4
 var _hero_ailment    : String = ""
 var _hero_stopspelled : bool  = false   # hero's spells blocked by enemy
 var _hero_armor       : String = ""     # e.g. "Erdrick's Armor"
@@ -71,6 +76,8 @@ var _status_panel   : Panel
 var _spell_overlay  : TextureRect
 var _hp_lbl         : Label
 var _mp_lbl         : Label
+var _gold_lbl: Label
+var _exp_lbl: Label
 var _ailment_lbl    : Label
 
 
@@ -124,11 +131,15 @@ func start_battle(monster_key: String, monster_data: Dictionary) -> void:
 	_mon_agl          = int(monster_data.get("agility", 5))
 	_mon_def          = int(monster_data.get("agility", 5))
 	_mon_dodge        = int(monster_data.get("dodge", 1))
+	_mon_run_group    = clampi(int(monster_data.get("run_group", 1)), 1, 4)
+	_mon_is_boss      = bool(monster_data.get("is_boss", false)) or monster_key.begins_with("dragonlord") or monster_key == "golem"
 	_mon_xp           = int(monster_data.get("xp", 1))
 	_mon_gp           = _roll(int(monster_data.get("gp_min", 1)), int(monster_data.get("gp_max", 5)))
 	_mon_asleep       = false
 	_mon_stopspelled  = false
-	_mon_resist_sleep = bool(monster_data.get("resist_sleep", false))
+	_mon_resist_sleep = int(monster_data.get("resist_sleep", 0))
+	_mon_resist_stop  = int(monster_data.get("resist_stopspell", 0))
+	_mon_resist_hurt  = int(monster_data.get("resist_hurt", 0))
 	_mon_pattern      = monster_data.get("pattern", [])
 	_hero_stopspelled = false
 	_hero_ailment     = ""
@@ -142,6 +153,7 @@ func start_battle(monster_key: String, monster_data: Dictionary) -> void:
 		_hero_atk         = int(gs.hero_stats.get("atk",     4))
 		_hero_def         = int(gs.hero_stats.get("def",     2))
 		_hero_agi         = int(gs.hero_stats.get("agl",     4))
+		_hero_str         = int(gs.hero_stats.get("str",     4))
 		_known_spells     = _load_known_spells(gs.spells)
 		_hero_armor       = gs.armor
 
@@ -330,17 +342,21 @@ func _cast_spell(sp: Dictionary) -> void:
 			var dmg : int = randi_range(lo, hi)
 			_set_msg("%s casts %s!" % [_hero_name(), sp.get("name","HURT")])
 			await _show_spell_anim("hurt")
-			_flash_enemy()
-			_play_sfx("receive_damage")
-			_mon_hp = max(0, _mon_hp - dmg)
-			_set_msg("The %s takes %d damage!" % [_mon_name, dmg])
-			await _wait_sfx()
+			if randi() % 16 < _mon_resist_hurt:
+				_set_msg("But %s resisted!" % _mon_name)
+				await _wait_delay(1.1)
+			else:
+				_flash_enemy()
+				_play_sfx("receive_damage")
+				_mon_hp = max(0, _mon_hp - dmg)
+				_set_msg("The %s takes %d damage!" % [_mon_name, dmg])
+				await _wait_sfx()
 			_after_player_act()
 
 		"sleep":
 			_set_msg("%s casts SLEEP!" % _hero_name())
 			await _show_spell_anim("sleep")
-			if _mon_resist_sleep or randi() % 16 < 8:
+			if randi() % 16 < _mon_resist_sleep:
 				_set_msg("But %s resisted!" % _mon_name)
 			else:
 				_mon_asleep = true
@@ -351,7 +367,7 @@ func _cast_spell(sp: Dictionary) -> void:
 		"stopspell":
 			_set_msg("%s casts STOPSPELL!" % _hero_name())
 			await _show_spell_anim("stopspell")
-			if randi() % 16 < 5:
+			if randi() % 16 < _mon_resist_stop:
 				_set_msg("But %s resisted!" % _mon_name)
 			else:
 				_mon_stopspelled = true
@@ -372,12 +388,21 @@ func _do_fight() -> void:
 
 	# DW1 dodge check: randi() % 64 < monster.dodge
 	var missed : bool = randi() % 64 < _mon_dodge
-	var dmg    : int  = 0 if missed else _calc_dmg(_hero_atk, _mon_def)
+	# Excellent move: 1/32, ignores defence; never against Golem / Dragonlord.
+	var excellent : bool = not missed and not _mon_is_boss and randi() % 32 == 0
+	var dmg    : int  = 0
+	if excellent:
+		dmg = randi_range(maxi(1, _hero_atk / 2), _hero_atk)
+	elif not missed:
+		dmg = _calc_dmg(_hero_atk, _mon_def)
 
 	# 1 — hero commits to strike: play attack sound immediately
 	_set_msg("%s attacks %s!" % [_hero_name(), _mon_name])
 	_play_sfx("attack")
 	await _wait_sfx()
+	if excellent:
+		_set_msg("Excellent move!")
+		await _wait_delay(0.6)
 
 	# 2 — resolve hit/miss
 	if dmg <= 0 or missed:
@@ -401,15 +426,39 @@ func _after_player_act() -> void:
 			await _dragonlord_transform()
 			return
 		_phase = Phase.VICTORY
+		_anim_lock = true             # keep A from ending the battle before rewards are granted
 		_stop_music()
 		_play_sfx("victory")          # start victory music immediately as fade begins
 		await _fade_enemy()           # fade sprite over 1 second in background
+		if not is_inside_tree():
+			return
 		var gs : Node = get_node_or_null("/root/GameState")
+		var level_ups : Array = []
 		if gs:
-			gs.hero_stats["exp"] = int(gs.hero_stats.get("exp", 0)) + _mon_xp
+			gs.hero_stats["hp"] = _hero_hp
+			gs.hero_stats["mp"] = _hero_mp
+			if gs.has_method("add_exp"):
+				level_ups = gs.add_exp(_mon_xp)
+			else:
+				gs.hero_stats["exp"] = int(gs.hero_stats.get("exp", 0)) + _mon_xp
 			gs.gold              = int(gs.gold) + _mon_gp
-		_set_msg("Thou hast done well!\n%s earns %d XP and %d GP.\n\nPress A to continue." \
-			% [_hero_name(), _mon_xp, _mon_gp])
+			if _mon_key == "dragonlord_form2" and "dragonlord_defeated" in gs:
+				gs.dragonlord_defeated = true
+		var msg := "Thou hast done well!\n%s earns %d XP and %d GP." % [_hero_name(), _mon_xp, _mon_gp]
+		if _mon_key == "dragonlord_form2":
+			msg = "Thou hast done well in\ndefeating the Dragonlord.\nFrom the hand of the Dragonlord,\n%s obtains the Ball of Light." % _hero_name()
+		for lu in level_ups:
+			if lu is Dictionary:
+				msg += "\nCourage and wit have served thee well.\nThou hast been promoted to level %d!" % int(lu.get("level", 0))
+				var sp := str(lu.get("spell", ""))
+				if sp != "":
+					msg += "\nThou hast learned %s!" % sp.to_upper()
+				_hero_hp_max_val = int(gs.hero_stats.get("hp_max", _hero_hp_max_val))
+				_hero_hp = int(gs.hero_stats.get("hp", _hero_hp))
+				_hero_mp = int(gs.hero_stats.get("mp", _hero_mp))
+				_hero_mp_max = int(gs.hero_stats.get("mp_max", _hero_mp_max))
+		_update_status_bar()
+		_set_msg(msg + "\n\nPress A to continue.")
 		_menu_box.visible = false
 		_anim_lock = false
 	else:
@@ -535,6 +584,17 @@ func _do_enemy_turn() -> void:
 		_after_enemy_act()
 		return
 
+	# Outclassed monsters (hero strength >= 2x theirs) run 25% of turns.
+	if not _mon_is_boss and _hero_str >= 2 * _mon_str and randi() % 4 == 0:
+		_set_msg("The %s is running away." % _mon_name)
+		_play_sfx("stairs_down")
+		await _wait_sfx()
+		_phase = Phase.FLED
+		_anim_lock = false
+		_set_msg("The %s ran away!\n\nPress A to continue." % _mon_name)
+		_menu_box.visible = false
+		return
+
 	# ── Select action from pattern ──────────────────────────────────────
 	var action : String = "attack"
 	for entry in _mon_pattern:
@@ -562,7 +622,7 @@ func _do_enemy_turn() -> void:
 	_last_enemy_action = action
 	match action:
 		"fire_weak":
-			var dmg : int = randi_range(16, 23)
+			var dmg : int = randi_range(10, 14) if _wearing_erdricks_armor() else randi_range(16, 23)
 			_set_msg("The %s breathes fire!" % _mon_name)
 			_play_sfx("breathe_fire")
 			await _wait_sfx()
@@ -571,7 +631,7 @@ func _do_enemy_turn() -> void:
 			await _wait_sfx()
 
 		"fire_strong":
-			var dmg : int = randi_range(65, 72)
+			var dmg : int = randi_range(42, 48) if _wearing_erdricks_armor() else randi_range(65, 72)
 			_set_msg("The %s breathes fire!" % _mon_name)
 			_play_sfx("breathe_fire")
 			await _wait_sfx()
@@ -584,7 +644,7 @@ func _do_enemy_turn() -> void:
 				_set_msg("The %s tries to cast HURT!\nBut the spell is blocked!" % _mon_name)
 				await _wait_delay(1.0)
 			else:
-				var dmg : int = randi_range(5, 12)
+				var dmg : int = randi_range(2, 6) if _wearing_magic_armor() else randi_range(3, 10)
 				_set_msg("The %s casts HURT!" % _mon_name)
 				_play_sfx("cast_spell")
 				await _wait_sfx()
@@ -597,7 +657,7 @@ func _do_enemy_turn() -> void:
 				_set_msg("The %s tries to cast HURTMORE!\nBut the spell is blocked!" % _mon_name)
 				await _wait_delay(1.0)
 			else:
-				var dmg : int = randi_range(30, 45)
+				var dmg : int = randi_range(20, 30) if _wearing_magic_armor() else randi_range(30, 45)
 				_set_msg("The %s casts HURTMORE!" % _mon_name)
 				_play_sfx("cast_spell")
 				await _wait_sfx()
@@ -645,7 +705,7 @@ func _do_enemy_turn() -> void:
 				await _wait_delay(1.0)
 
 		"spell_stopspell":
-			var erdrick_blocks := _hero_armor.to_lower().replace("'", "").replace(" ", "_") == "erdricks_armor"
+			var erdrick_blocks := _wearing_erdricks_armor()
 			if _mon_stopspelled or _hero_stopspelled or erdrick_blocks:
 				var reason := "But the spell fails!"
 				if erdrick_blocks:
@@ -661,7 +721,11 @@ func _do_enemy_turn() -> void:
 				await _wait_delay(1.0)
 
 		_:  # "attack" or fallback
-			var dmg : int = _calc_dmg(_mon_str, _hero_def)
+			var dmg : int = 0
+			if _hero_def >= _mon_str:
+				dmg = randi_range(0, (_mon_str + 4) / 6)   # enemy_attack_weak
+			else:
+				dmg = _calc_dmg(_mon_str, _hero_def)
 			_set_msg("The %s attacks %s!" % [_mon_name, _hero_name()])
 			_play_sfx("prepare_to_attack")
 			await _wait_sfx()
@@ -678,6 +742,16 @@ func _do_enemy_turn() -> void:
 
 
 # Apply damage to hero and play sound + flash
+func _armor_id() -> String:
+	return _hero_armor.to_lower().replace("'", "").replace(" ", "_")
+
+func _wearing_erdricks_armor() -> bool:
+	return _armor_id() == "erdricks_armor"
+
+## Magic Armor and Erdrick's Armor both reduce HURT / HURTMORE damage by a third (NES).
+func _wearing_magic_armor() -> bool:
+	return _armor_id() in ["magic_armor", "erdricks_armor"]
+
 func _apply_hero_damage(dmg: int) -> void:
 	_play_sfx("receive_damage")
 	_hero_hp = max(0, _hero_hp - dmg)
@@ -701,8 +775,32 @@ func _after_enemy_act() -> void:
 		_show_menu()
 
 
+func _has_fairy_flute() -> bool:
+	var gs : Node = get_node_or_null("/root/GameState")
+	if not gs:
+		return false
+	for it in gs.inventory:
+		if it is Dictionary and str(it.get("id", "")).to_lower() == "fairy_flute":
+			return true
+	return false
+
+
 func _do_item() -> void:
 	var gs   : Node = get_node_or_null("/root/GameState")
+	# NES: the Fairy Flute's melody puts the Golem to sleep, bypassing its resistance.
+	# Against anything else it is just a pretty tune.
+	if _mon_key == "golem" and _has_fairy_flute():
+		_play_sfx("fairy_flute")
+		_set_msg("%s plays the Fairy Flute." % _hero_name())
+		await _wait_delay(1.2)
+		if _mon_asleep:
+			_set_msg("The Golem is already asleep.")
+		else:
+			_mon_asleep = true
+			_set_msg("Quietly Golem closes his eyes\nand settles into sleep.\nThe Golem is asleep.")
+		await _wait_delay(1.3)
+		_after_player_act()
+		return
 	var herb : int  = -1
 	if gs:
 		for i in range(gs.inventory.size()):
@@ -728,9 +826,15 @@ func _do_item() -> void:
 		_show_menu()
 
 
+const RUN_GROUP_FACTORS : Array = [0.25, 0.375, 0.5, 1.0]
+
+
 func _do_run() -> void:
-	var flee_chance : float = float(_hero_agi) / float(_hero_agi + _mon_agl) * 1.5
-	if randf() < flee_chance:
+	# Blocked when hero_agility * RAND < enemy_agility * RAND * group_factor
+	# (RAND 0-255). Sleeping monsters never block an escape.
+	var factor : float = RUN_GROUP_FACTORS[_mon_run_group - 1]
+	var escaped : bool = _mon_asleep or float(_hero_agi * (randi() % 256)) >= float(_mon_agl * (randi() % 256)) * factor
+	if escaped:
 		_phase = Phase.FLED
 		_play_sfx("stairs_down")
 		_set_msg("%s fled the battle!\n\nPress A to continue." % _hero_name())
@@ -855,12 +959,13 @@ func _wait_delay(secs: float) -> void:
 
 
 ## DW1 damage formula: rand(base/2 .. base), base = atk - def/2
+# data/v1/combat_formulas.json: damage in [(atk - def/2)/4, (atk - def/2)/2];
+# when the maximum is below 1 the blow does 0 or 1 (coin flip).
 func _calc_dmg(atk: int, def: int) -> int:
 	var base : int = atk - def / 2
-	if base <= 0:
-		return 0
-	var lo : int = max(1, base / 2)
-	return randi_range(lo, base)
+	if base / 2 < 1:
+		return randi() % 2
+	return randi_range(base / 4, base / 2)
 
 
 func _hero_name() -> String:
@@ -885,6 +990,10 @@ func _update_status_bar() -> void:
 		_ailment_lbl.text = ""
 	else:
 		_ailment_lbl.text = _hero_ailment
+	var gs: Node = get_node_or_null("/root/GameState")
+	if gs:
+		_gold_lbl.text = "G %d" % int(gs.gold)
+		_exp_lbl.text  = "E %d" % int(gs.hero_stats.get("exp", 0))
 	# HP color: green when healthy, yellow at half, red at low
 	var ratio : float = float(_hero_hp) / float(max(1, _hero_hp_max()))
 	if ratio > 0.5:
@@ -956,11 +1065,27 @@ func _build_ui() -> void:
 	_status_panel.add_child(_mp_lbl)
 
 	_ailment_lbl          = Label.new()
-	_ailment_lbl.position = Vector2(390, 8)
-	_ailment_lbl.size     = Vector2(120, 22)
+	_ailment_lbl.position = Vector2(300, 8)
+	_ailment_lbl.size     = Vector2(90, 22)
 	_ailment_lbl.add_theme_font_size_override("font_size", 14)
 	_ailment_lbl.add_theme_color_override("font_color", Color(1.0, 0.5, 0.1))
 	_status_panel.add_child(_ailment_lbl)
+
+	_gold_lbl                      = Label.new()
+	_gold_lbl.position             = Vector2(392, 2)
+	_gold_lbl.size                 = Vector2(114, 16)
+	_gold_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_gold_lbl.add_theme_font_size_override("font_size", 12)
+	_gold_lbl.add_theme_color_override("font_color", Color(1.0, 0.82, 0.3))
+	_status_panel.add_child(_gold_lbl)
+
+	_exp_lbl                      = Label.new()
+	_exp_lbl.position             = Vector2(392, 18)
+	_exp_lbl.size                 = Vector2(114, 16)
+	_exp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_exp_lbl.add_theme_font_size_override("font_size", 12)
+	_exp_lbl.add_theme_color_override("font_color", Color(0.85, 0.85, 0.95))
+	_status_panel.add_child(_exp_lbl)
 
 	# ── Enemy sprite + label ─────────────────────────────────────────────
 	_enemy_sprite                = TextureRect.new()

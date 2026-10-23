@@ -117,8 +117,12 @@ func _check_transitions() -> void:
 	pass
 
 func _on_step() -> void:
+	var gs_regen := get_node_or_null("/root/GameState")
+	if gs_regen and gs_regen.has_method("apply_step_regen"):
+		gs_regen.apply_step_regen()
 	if _radiant_steps_left > 0:
 		_radiant_steps_left -= 1
+		_sync_light_state()
 		_update_darkness_mask()
 	_check_transitions()
 	_check_encounter()
@@ -196,6 +200,9 @@ func _check_encounter() -> void:
 	var gs = get_node_or_null("/root/GameState")
 	if gs and gs.encounters_disabled:
 		return
+	# NES: once the Dragonlord falls the monsters vanish from Alefgard.
+	if gs and "dragonlord_defeated" in gs and gs.dragonlord_defeated:
+		return
 	if _battle_active or _dialog_active or _menu_open or _status_open or _item_open or _shop_open or _choice_open:
 		return
 	if not _encounters_enabled():
@@ -224,6 +231,10 @@ func _get_monster(key: String) -> Dictionary:
 func _start_battle(mon_key: String, mon_data: Dictionary) -> void:
 	_battle_active = true
 	_move_enabled = false
+	# The battle overlay reads/consumes herbs from GameState: sync the scene copy first.
+	var gs_pre: Node = get_node_or_null("/root/GameState")
+	if gs_pre:
+		gs_pre.inventory = _inventory.duplicate(true)
 	if _music and _music.playing:
 		_music.stop()
 
@@ -270,12 +281,22 @@ func _start_battle(mon_key: String, mon_data: Dictionary) -> void:
 		overlay.queue_free()
 		_battle_active = false
 		_move_enabled = true
+		var gs_after: Node = get_node_or_null("/root/GameState")
+		if gs_after:
+			_hero_gold = int(gs_after.gold)
+			_inventory = gs_after.inventory.duplicate(true)   # herbs used in battle
 		if result == "lost":
 			_on_defeat()
 		else:
 			if _music:
 				_music.play()
+			if result == "won":
+				_on_battle_won(mon_key)
 	)
+
+## Hook for scripted boss fights (e.g. the Dragonlord). Default: nothing.
+func _on_battle_won(_mon_key: String) -> void:
+	pass
 
 func _on_defeat() -> void:
 	var gs: Node = get_node_or_null("/root/GameState")
@@ -287,6 +308,7 @@ func _on_defeat() -> void:
 		gs.spawn_tile = Vector2i(11, 30)
 		gs.spawn_facing = "down"
 		gs.come_from = "defeat"
+		gs.deaths = int(gs.deaths) + 1
 	get_tree().change_scene_to_file.call_deferred("res://scenes/Castle1F.tscn")
 
 func _load_databases() -> void:
@@ -494,6 +516,7 @@ func _build_background() -> void:
 
 func _build_hero_sprite() -> void:
 	_hero_ws = WalkSprite.new()
+	_hero_ws.is_hero = true
 	_hero_ws.pixel_scale = 2.0
 	_hero_ws.toggle_time = 0.35
 	_hero_ws.texture = load("res://assets/sprites/rgba/characters-3.png") as Texture2D
@@ -620,7 +643,7 @@ func _clean_npc_bg_tiles() -> void:
 				var row: Array = _tile_grid[ry]
 				for rx in range(row.size()):
 					var pos := Vector2i(rx, ry)
-					if not npc_tiles.has(pos) and row[rx] in ground_tiles:
+					if not npc_tiles.has(pos) and int(row[rx]) in ground_tiles:
 						var dist: int = abs(rx - tile.x) + abs(ry - tile.y)
 						if dist < min_dist:
 							min_dist = dist
@@ -679,6 +702,12 @@ func _is_dark() -> bool:
 	var key := _get_map_key()
 	return key.begins_with("erdricks-cave") or key.begins_with("mountain-cave") or key.begins_with("garinham-b") or key.begins_with("charlock-castle-b") or key.begins_with("swamp-cave")
 
+func _sync_light_state() -> void:
+	var gs := get_node_or_null("/root/GameState")
+	if gs and "torch_active" in gs:
+		gs.torch_active = _torch_active
+		gs.radiant_steps_left = _radiant_steps_left
+
 func _get_current_light_radius() -> int:
 	if _radiant_steps_left > 100:
 		return 3  # 7x7 square
@@ -692,7 +721,15 @@ func _get_current_light_radius() -> int:
 		return 0  # 1x1 hero tile square
 
 func _build_darkness_overlay() -> void:
+	var gs := get_node_or_null("/root/GameState")
+	if gs and "torch_active" in gs:
+		_torch_active = bool(gs.torch_active)
+		_radiant_steps_left = int(gs.radiant_steps_left)
 	if not _is_dark():
+		# Lit floors (Garinham town above its cave, Charlock 1F above its
+		# basements) need no overlay, but the light must survive the detour:
+		# RADIANT keeps counting steps and the torch stays lit, exactly as on
+		# the NES, so the hero is not blind when the stairs lead back down.
 		return
 	_darkness_layer = CanvasLayer.new()
 	_darkness_layer.name = "DarknessLayer"
@@ -953,6 +990,50 @@ func _open_shop(shop_id: String) -> void:
 	_shop_panel.visible = true
 	_shop_open = true
 
+## Buys `item` ({id, name, price}). Weapons, armor and shields are equipped on the spot and the
+## previously equipped piece of the same slot is sold back for half its shop price (NES behaviour),
+## so the 8-slot pack is never clogged by obsolete gear.
+func _purchase_item(item: Dictionary) -> void:
+	var gs := get_node_or_null("/root/GameState")
+	var price := int(item.get("price", 0))
+	var iid := str(item.get("id", ""))
+	var iname := str(item.get("name", iid))
+	_hero_gold -= price
+	var pages: Array = ["Thou hast purchased\nthe %s!" % iname]
+	var slot := ""
+	if gs and gs.has_method("equipment_slot"):
+		slot = str(gs.equipment_slot(iid))
+	if slot != "":
+		var previous: String = str(gs.equip_item(iid))
+		var kept := false
+		if previous != "" and previous != iid:
+			for i in range(_inventory.size() - 1, -1, -1):
+				var inv_it = _inventory[i]
+				if str(gs.equipment_id_for(inv_it)) == previous:
+					_inventory.remove_at(i)
+					break
+			var prev_info: Dictionary = gs.equipment_info(previous)
+			var refund := int(int(prev_info.get("cost", 0)) / 2)
+			if refund > 0:
+				_hero_gold += refund
+				pages.append("Then I will buy thy %s\nfor %d gold." % [str(prev_info.get("name", previous)), refund])
+		for inv_it in _inventory:
+			if str(gs.equipment_id_for(inv_it)) == iid:
+				kept = true
+				break
+		if not kept:
+			_inventory.append({"name": iname, "id": iid, "type": slot, "desc": "Purchased in a shop."})
+		pages.append("%s is now equipped." % iname)
+	else:
+		var item_type := "tool"
+		if iid == "magic_key" or "key" in iid:
+			item_type = "key"
+		_inventory.append({"name": iname, "id": iid, "type": item_type, "desc": "Purchased in a shop."})
+	if gs:
+		gs.gold = _hero_gold
+		gs.inventory = _inventory.duplicate(true)
+	_show_dialog("", pages)
+
 func _refresh_shop_panel() -> void:
 	_clear_panel(_shop_panel)
 	var title := _make_label("WHAT DOST THOU WANT?", 13, Color(1.0, 0.85, 0.3))
@@ -987,13 +1068,7 @@ func _handle_shop_input(event: InputEvent) -> void:
 			if _hero_gold < item["price"]:
 				_show_dialog("", ["Thou hast not\nenough gold!"])
 			else:
-				_hero_gold -= item["price"]
-				_inventory.append({"name": item["name"], "id": item["id"], "desc": "Purchased in a shop."})
-				var gs := get_node_or_null("/root/GameState")
-				if gs:
-					gs.gold = _hero_gold
-					gs.inventory = _inventory.duplicate(true)
-				_show_dialog("", ["Thou hast purchased\nthe %s!" % item["name"]])
+				_purchase_item(item)
 		var on_no := func():
 			_show_dialog("", ["Very well."])
 		_open_choice(prompt, on_yes, on_no)
@@ -1265,40 +1340,111 @@ func _cmd_talk() -> void:
 			if npc.has("inn_cost"):
 				_open_inn(int(npc.get("inn_cost", 6)))
 				return
+			if npc.has("on_talk") and has_method(str(npc.get("on_talk"))):
+				call(str(npc.get("on_talk")))
+				return
 			var pages: Array = []
-			for p in npc.get("pages", ["..."]):
-				pages.append(str(p))
+			var gs := get_node_or_null("/root/GameState")
+			if gs and "dragonlord_defeated" in gs and gs.dragonlord_defeated:
+				pages = _victory_lap_pages(npc)
+			else:
+				for p in npc.get("pages", ["..."]):
+					pages.append(str(p))
 			_show_dialog(str(npc.get("speaker", "")), pages)
 			return
 	_show_dialog("", ["There is no one there."])
 
+## NES epilogue: once the Ball of Light is recovered every townsperson has new
+## lines thanking the hero by name. Picked per NPC so a town is not all one line.
+const VICTORY_LAP_LINES := [
+	"Hurrah! Hurrah!\nLong live %s!",
+	"Thou hast defeated the\nDragonlord! Peace has\nreturned to Alefgard.",
+	"The monsters are gone\nfrom the land. We owe\nthee everything, %s.",
+	"The Ball of Light shines\nonce more. Thank thee,\nbrave %s!",
+	"Erdrick's descendant has\nsaved us all! Praise be\nto %s!",
+	"I can walk the fields\nagain without fear.\nThank thee, %s.",
+	"The swamps have dried and\nthe skies are bright.\nAll hail %s!",
+]
+
+func _victory_lap_pages(npc: Dictionary) -> Array:
+	var gs := get_node_or_null("/root/GameState")
+	var hero := "Erdrick"
+	if gs:
+		hero = str(gs.hero_stats.get("name", hero))
+	var tile: Vector2i = npc.get("tile", Vector2i(0, 0))
+	var line: String = VICTORY_LAP_LINES[(tile.x * 7 + tile.y * 3 + _npc_data.find(npc)) % VICTORY_LAP_LINES.size()]
+	return [line % hero if "%s" in line else line]
+
+func _is_door_tile(ft: Vector2i) -> bool:
+	if _tile_grid.is_empty() or ft.y < 0 or ft.y >= _tile_grid.size() or ft.x < 0 or ft.x >= _tile_grid[ft.y].size():
+		return false
+	return int(_tile_grid[ft.y][ft.x]) == 10
+
+
+## Consumes one Magic Key and permanently unlocks the door at `ft`.
+## Returns false (without a dialog) when the hero has no key.
+func _unlock_door_with_key(ft: Vector2i) -> bool:
+	var key_idx := -1
+	for i in range(_inventory.size()):
+		var it = _inventory[i]
+		if it is Dictionary and (str(it.get("type", "")) == "key" or str(it.get("name", "")) == "Magic Key" or str(it.get("id", "")) == "magic_key"):
+			key_idx = i
+			break
+		elif it is String and (it == "Magic Key" or it == "magic_key"):
+			key_idx = i
+			break
+	if key_idx < 0:
+		return false
+	_inventory.remove_at(key_idx)
+	if not _tile_grid.is_empty():
+		_tile_grid[ft.y][ft.x] = 3
+	var gs := get_node_or_null("/root/GameState")
+	if gs:
+		gs.inventory = _inventory.duplicate(true)
+		gs.unlocked_doors[_get_map_key() + ":" + str(ft.x) + "," + str(ft.y)] = true
+	_play_sfx("res://assets/music/mp3/open_door.mp3")
+	_open_door_visual(ft)
+	_show_dialog("", ["The door clicks open."])
+	return true
+
+
+## Paints the nearest floor tile over an unlocked door so it reads as open.
+func _open_door_visual(pos: Vector2i) -> void:
+	if not _map_image or _tile_grid.is_empty():
+		return
+	var w := _get_map_w()
+	var h := _get_map_h()
+	if w <= 0 or h <= 0:
+		return
+	var px: int = int(_map_image.get_width() / w)
+	var py: int = int(_map_image.get_height() / h)
+	if px <= 0 or py <= 0:
+		return
+	var src := Vector2i(-1, -1)
+	for d in [Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 0), Vector2i(-1, 0)]:
+		var n: Vector2i = pos + d
+		if n.y >= 0 and n.y < _tile_grid.size() and n.x >= 0 and n.x < _tile_grid[n.y].size() and int(_tile_grid[n.y][n.x]) == 3:
+			src = n
+			break
+	if src.x < 0:
+		for y in range(_tile_grid.size()):
+			for x in range(_tile_grid[y].size()):
+				if int(_tile_grid[y][x]) == 3:
+					src = Vector2i(x, y)
+					break
+			if src.x >= 0:
+				break
+	if src.x < 0:
+		return
+	_map_image.blit_rect(_map_image, Rect2i(src.x * px, src.y * py, px, py), Vector2i(pos.x * px, pos.y * py))
+	if _bg:
+		_bg.texture = ImageTexture.create_from_image(_map_image)
+
+
 func _cmd_door() -> void:
 	var ft := _hero_tile + _hero_facing
-	var is_door := false
-	if not _tile_grid.is_empty() and ft.y >= 0 and ft.y < _tile_grid.size() and ft.x >= 0 and ft.x < _tile_grid[ft.y].size():
-		if int(_tile_grid[ft.y][ft.x]) == 10:
-			is_door = true
-	if is_door:
-		var key_idx := -1
-		for i in range(_inventory.size()):
-			var it = _inventory[i]
-			if it is Dictionary and (str(it.get("type", "")) == "key" or str(it.get("name", "")) == "Magic Key" or str(it.get("id", "")) == "magic_key"):
-				key_idx = i
-				break
-			elif it is String and (it == "Magic Key" or it == "magic_key"):
-				key_idx = i
-				break
-		if key_idx >= 0:
-			_inventory.remove_at(key_idx)
-			if not _tile_grid.is_empty():
-				_tile_grid[ft.y][ft.x] = 3
-			var gs := get_node_or_null("/root/GameState")
-			if gs:
-				gs.inventory = _inventory.duplicate(true)
-				gs.unlocked_doors[_get_map_key() + ":" + str(ft.x) + "," + str(ft.y)] = true
-			_play_sfx("res://assets/music/mp3/open_door.mp3")
-			_show_dialog("", ["The door clicks open."])
-		else:
+	if _is_door_tile(ft):
+		if not _unlock_door_with_key(ft):
 			_show_dialog("", ["Thou dost not have\na Magic Key."])
 	else:
 		_show_dialog("", ["There is no door\nin that direction."])
@@ -1329,9 +1475,17 @@ func _get_chest_entry(col: int, row: int) -> Dictionary:
 		if int(c.get("col", -1)) == col and int(c.get("row", -1)) == row:
 			chest_index = i
 			break
-	print("[DungeonMap] _get_chest_entry col=", col, " row=", row, " key=", key, " map_chests=", map_chests, " chest_index=", chest_index, " _dungeons_db.size()=", _dungeons_db.size())
 	if chest_index < 0:
 		return {}
+	# Registry entries may carry their own contents (town / shrine chests that have no
+	# dungeons.json floor_data). Those win over the dungeon lookup below.
+	var reg_entry: Dictionary = map_chests[chest_index]
+	if reg_entry.has("item") or reg_entry.has("gp_min"):
+		var direct: Dictionary = {}
+		for k in ["item", "type", "gp_min", "gp_max", "requires", "requires_msg"]:
+			if reg_entry.has(k):
+				direct[k] = reg_entry[k]
+		return direct
 
 	var dungeon_id := ""
 	var floor_idx := 1
@@ -1382,6 +1536,90 @@ func _get_chest_entry(col: int, row: int) -> Dictionary:
 							return res
 	return {}
 
+## NES rule: only tools (herbs, torches, keys, wings...) fill the 8 pack slots.
+## Equipment and quest relics are carried separately and never block a chest.
+## Stackable consumables (herbs, keys, wings, torches: items.json `stack_max`) share one slot per kind.
+func _count_pack_tools() -> int:
+	var gs := get_node_or_null("/root/GameState")
+	var n := 0
+	var stacks := {}
+	for it in _inventory:
+		if not (it is Dictionary):
+			n += 1
+			continue
+		var t := str(it.get("type", "tool"))
+		if t in ["weapon", "armor", "shield", "quest"]:
+			continue
+		if gs and gs.has_method("equipment_id_for") and str(gs.equipment_id_for(it)) != "":
+			continue
+		var iid := str(it.get("id", it.get("name", ""))).to_lower()
+		if iid != "" and _stack_max_for(iid) > 1:
+			stacks[iid] = int(stacks.get(iid, 0)) + 1
+			continue
+		n += 1
+	for iid in stacks:
+		n += int(ceil(float(stacks[iid]) / float(_stack_max_for(iid))))
+	return n
+
+var _stack_max_cache: Dictionary = {}
+func _stack_max_for(item_id: String) -> int:
+	if _stack_max_cache.is_empty():
+		var f := FileAccess.open("res://data/v1/items.json", FileAccess.READ)
+		if f:
+			var parsed: Variant = JSON.parse_string(f.get_as_text())
+			if parsed is Array:
+				for e in parsed:
+					if e is Dictionary and e.has("id"):
+						_stack_max_cache[str(e["id"]).to_lower()] = int(e.get("stack_max", 1))
+		if _stack_max_cache.is_empty():
+			_stack_max_cache["_none"] = 1
+	return int(_stack_max_cache.get(item_id, 1))
+
+func _pack_is_full_for(item_id: String) -> bool:
+	var gs := get_node_or_null("/root/GameState")
+	if gs and gs.has_method("equipment_slot") and str(gs.equipment_slot(item_id)) != "":
+		return false
+	for q in _quest_item_ids():
+		if q == item_id:
+			return false
+	# Consumables join an existing stack while it has room (NES: six per slot).
+	var smax := _stack_max_for(item_id)
+	if smax > 1:
+		var held := 0
+		for it in _inventory:
+			if it is Dictionary and str(it.get("id", it.get("name", ""))).to_lower() == item_id.to_lower():
+				held += 1
+		if held > 0 and held % smax != 0:
+			return false
+	return _count_pack_tools() >= MAX_INVENTORY
+
+var _quest_ids_cache: Array = []
+func _quest_item_ids() -> Array:
+	if _quest_ids_cache.is_empty():
+		var f := FileAccess.open("res://data/v1/quest_items.json", FileAccess.READ)
+		if f:
+			var parsed: Variant = JSON.parse_string(f.get_as_text())
+			if parsed is Array:
+				for q in parsed:
+					if q is Dictionary:
+						_quest_ids_cache.append(str(q.get("id", "")))
+	return _quest_ids_cache
+
+func _has_inventory_item_id(item_id: String) -> bool:
+	var want := item_id.to_lower()
+	for it in _inventory:
+		if it is Dictionary:
+			var iid := str(it.get("id", "")).to_lower()
+			var nm := str(it.get("name", "")).to_lower().replace("'", "").replace(" ", "_")
+			if iid == want or nm == want:
+				return true
+		elif str(it).to_lower().replace("'", "").replace(" ", "_") == want:
+			return true
+	var gs := get_node_or_null("/root/GameState")
+	if gs and (gs.weapon == want or gs.armor == want or ("shield" in gs and gs.shield == want)):
+		return true
+	return false
+
 func _find_target_chest_tile() -> Vector2i:
 	var info := _get_chest_entry(_hero_tile.x, _hero_tile.y)
 	if not info.is_empty():
@@ -1407,14 +1645,24 @@ func _cmd_take() -> void:
 		_show_dialog("", ["The chest is\nalready empty."])
 		return
 
-	_mark_chest_opened(target_tile.x, target_tile.y)
-	_play_sfx("res://assets/music/mp3/open_treasure.mp3")
+	var required := str(chest_info.get("requires", ""))
+	if required != "" and not _has_inventory_item_id(required):
+		_show_dialog("", [str(chest_info.get("requires_msg", "The chest is sealed\nby an ancient magic."))])
+		return
 
 	var item_id: String = str(chest_info.get("item", ""))
 	var gp_min = chest_info.get("gp_min", null)
 	var gp_max = chest_info.get("gp_max", null)
+	var is_gold_chest := item_id == "gold" or (gp_min != null and gp_max != null)
+	# Check the pack before the chest is marked opened so a full pack never loses the item.
+	if not is_gold_chest and item_id != "" and _pack_is_full_for(item_id):
+		_show_dialog("", ["Thy pack is full!\nThou canst carry\nno more items."])
+		return
 
-	if item_id == "gold" or (gp_min != null and gp_max != null):
+	_mark_chest_opened(target_tile.x, target_tile.y)
+	_play_sfx("res://assets/music/mp3/open_treasure.mp3")
+
+	if is_gold_chest:
 		var min_val := int(gp_min) if gp_min != null else 10
 		var max_val := int(gp_max) if gp_max != null else 50
 		var amount := min_val
@@ -1428,19 +1676,25 @@ func _cmd_take() -> void:
 	elif item_id != "":
 		_load_item_name_db()
 		var item_name: String = str(_item_name_db.get(item_id, item_id.replace("_", " ").capitalize()))
+		var ctype := str(chest_info.get("type", ""))
+		var inv_type := "tool"
+		if ctype == "quest_item":
+			inv_type = "quest"
+		elif item_id == "magic_key":
+			inv_type = "key"
+		var gs_eq := get_node_or_null("/root/GameState")
+		if gs_eq and gs_eq.has_method("equipment_slot") and str(gs_eq.equipment_slot(item_id)) != "":
+			inv_type = str(gs_eq.equipment_slot(item_id))
 		var item_dict := {
 			"id": item_id,
 			"name": item_name,
-			"type": "quest" if chest_info.get("type", "") == "quest_item" else "tool"
+			"type": inv_type
 		}
-		if _inventory.size() < MAX_INVENTORY:
-			_inventory.append(item_dict)
-			var gs := get_node_or_null("/root/GameState")
-			if gs:
-				gs.inventory = _inventory.duplicate(true)
-			_show_dialog("", ["Thou dost find\nthe " + item_name + "!"])
-		else:
-			_show_dialog("", ["Thy pack is full!\nThou canst carry\nno more items."])
+		_inventory.append(item_dict)
+		var gs := get_node_or_null("/root/GameState")
+		if gs:
+			gs.inventory = _inventory.duplicate(true)
+		_show_dialog("", ["Thou dost find\nthe " + item_name + "!"])
 	else:
 		_show_dialog("", ["The chest is empty."])
 
@@ -1450,39 +1704,72 @@ func _cmd_stairs() -> void:
 
 func _cmd_spell() -> void:
 	var gs := get_node_or_null("/root/GameState")
-	var spells: Array = gs.hero_spells if (gs and gs.hero_spells != null) else []
-	var has_radiant := false
-	for s in spells:
-		if str(s).to_lower() == "radiant":
-			has_radiant = true
-			break
-	if has_radiant or (gs and gs.hero_mp >= 3):
-		if gs and gs.hero_mp < 3:
+	if not gs:
+		_show_dialog("", ["Thou hast no spells\nto cast."])
+		return
+	var known: Array = gs.spells if gs.spells is Array else []
+	if known.is_empty():
+		_show_dialog("", ["Thou hast no spells\nto cast."])
+		return
+	var mp := int(gs.hero_stats.get("mp", 0))
+	var hp := int(gs.hero_stats.get("hp", 0))
+	var hp_max := int(gs.hero_stats.get("hp_max", 1))
+	var missing := hp_max - hp
+	# Field casting picks the most useful spell: RADIANT when blind in a cave
+	# (or when the light is down to a torch's glow and HP is healthy),
+	# HEALMORE / HEAL when wounded, otherwise RADIANT to refresh a fading light.
+	var radius := _get_current_light_radius()
+	var blind: bool = _is_dark() and radius <= 0
+	var dim: bool = _is_dark() and radius <= 1
+	if gs.has_spell("radiant") and mp >= 3:
+		if blind and missing < hp_max / 2:
+			_cast_radiant(gs, mp)
+			return
+		if dim and missing < hp_max / 4:
+			_cast_radiant(gs, mp)
+			return
+	if missing > 0:
+		if gs.has_spell("healmore") and mp >= 10 and missing > 30:
+			gs.hero_stats["mp"] = mp - 10
+			gs.hero_stats["hp"] = hp_max
+			_show_dialog("", ["Thou hast cast HEALMORE!\nThy wounds are fully healed."])
+			return
+		if gs.has_spell("heal") and mp >= 4:
+			var amt := 10 + (randi() % 8)
+			gs.hero_stats["mp"] = mp - 4
+			gs.hero_stats["hp"] = mini(hp_max, hp + amt)
+			_show_dialog("", ["Thou hast cast HEAL!\nHP restored by %d." % mini(amt, missing)])
+			return
+	if gs.has_spell("radiant") and _is_dark():
+		if mp < 3:
 			_show_dialog("", ["Thou hast not enough\nMagic Points!"])
 			return
-		if gs: gs.hero_mp -= 3
-		_radiant_steps_left = 200
-		_update_darkness_mask()
-		_show_dialog("", ["Thou hast cast Radiant!\nA bright light fills the cavern."])
+		_cast_radiant(gs, mp)
+		return
+	if missing > 0:
+		_show_dialog("", ["Thou hast not enough\nMagic Points!"])
 	else:
-		_show_dialog("", ["Thou hast no spells\nto cast."])
+		_show_dialog("", ["There is no need to\ncast a spell here."])
+
+func _cast_radiant(gs: Node, mp: int) -> void:
+	gs.hero_stats["mp"] = mp - 3
+	_radiant_steps_left = 200
+	_sync_light_state()
+	_update_darkness_mask()
+	_show_dialog("", ["Thou hast cast Radiant!\nA bright light fills the cavern."])
 
 func _is_chest_opened(col: int, row: int) -> bool:
-	var map_key := _get_map_key()
-	var coord := str(col) + "," + str(row)
-	var key := map_key + ":" + coord
-	return _opened_chests.has(key) or _opened_chests.has(coord)
+	# Keys are namespaced per map ("<map_key>:<col>,<row>") so chests sharing coordinates
+	# on different floors never collide.
+	var key := _get_map_key() + ":" + str(col) + "," + str(row)
+	return _opened_chests.has(key)
 
 func _mark_chest_opened(col: int, row: int) -> void:
-	var map_key := _get_map_key()
-	var coord := str(col) + "," + str(row)
-	var key := map_key + ":" + coord
+	var key := _get_map_key() + ":" + str(col) + "," + str(row)
 	_opened_chests[key] = true
-	_opened_chests[coord] = true
 	var gs := get_node_or_null("/root/GameState")
 	if gs:
 		gs.opened_chests[key] = true
-		gs.opened_chests[coord] = true
 
 func _cmd_search() -> void:
 	print("[DungeonMap] _cmd_search hero_tile=", _hero_tile)
@@ -1509,42 +1796,50 @@ func _use_item(idx: int) -> void:
 
 	if item_id == "torch" or item_name == "torch" or "torch" in item_id or "torch" in item_name:
 		_torch_active = true
+		_sync_light_state()
 		_update_darkness_mask()
 		_show_dialog("", ["Thou hast lit a Torch.\nA warm glow fills the area!"])
 		_inventory.remove_at(idx)
 		if gs: gs.inventory = _inventory.duplicate(true)
 		return
 
-	var is_weapon: bool = ("sword" in item_id or "club" in item_id or "axe" in item_id or "staff" in item_id or String(item.get("type", "")) == "weapon")
-	var is_armor: bool = ("armor" in item_id or "clothes" in item_id or "mail" in item_id or "plate" in item_id or String(item.get("type", "")) == "armor")
-	var is_shield: bool = ("shield" in item_id or String(item.get("type", "")) == "shield")
-
-	if is_weapon:
-		if gs and gs.weapon == item_id:
-			gs.weapon = ""
+	# Equipment: toggle equip / unequip through GameState so ATK/DEF are recomputed.
+	var equip_id := ""
+	if gs and gs.has_method("equipment_id_for"):
+		equip_id = str(gs.equipment_id_for(item))
+	if equip_id != "":
+		var slot := str(gs.equipment_slot(equip_id))
+		if gs.get_equipped(slot) == equip_id:
+			gs.unequip_slot(slot)
 			_show_dialog("", ["Thou hast unequipped\nthe %s." % item.get("name", item_id)])
 		else:
-			if gs: gs.weapon = item_id
+			gs.equip_item(equip_id)
 			_show_dialog("", ["Thou hast equipped\nthe %s!" % item.get("name", item_id)])
 		if _hero_ws:
 			var fr := _facing_frames(_hero_facing)
 			_hero_ws.set_frames(fr[0], fr[1])
 		return
-	elif is_armor or is_shield:
-		if gs and gs.armor == item_id:
-			gs.armor = ""
-			_show_dialog("", ["Thou hast unequipped\nthe %s." % item.get("name", item_id)])
-		else:
-			if gs: gs.armor = item_id
-			_show_dialog("", ["Thou hast equipped\nthe %s!" % item.get("name", item_id)])
-		if _hero_ws:
-			var fr := _facing_frames(_hero_facing)
-			_hero_ws.set_frames(fr[0], fr[1])
+	if item_id == "herb" or item_name == "medical herb" or item_name == "herb":
+		if gs:
+			var hp := int(gs.hero_stats.get("hp", 0))
+			var hp_max := int(gs.hero_stats.get("hp_max", 1))
+			if hp >= hp_max:
+				_show_dialog("", ["Thy HP is already\nfull."])
+				return
+			var amt := 23 + (randi() % 8)
+			gs.hero_stats["hp"] = mini(hp_max, hp + amt)
+			_inventory.remove_at(idx)
+			gs.inventory = _inventory.duplicate(true)
+			_show_dialog("", ["Thou hast eaten the\nMedical Herb.\nHP restored by %d." % mini(amt, hp_max - hp)])
 		return
 
 	match item.get("type", ""):
 		"key":
-			_show_dialog("", ["There is no door\nin that direction."])
+			var ft := _hero_tile + _hero_facing
+			if _is_door_tile(ft):
+				_unlock_door_with_key(ft)
+			else:
+				_show_dialog("", ["There is no door\nin that direction."])
 		_:
 			var desc := str(item.get("desc", "Thou usest the %s." % item_name))
 			_show_dialog("", [desc])
@@ -1663,7 +1958,30 @@ func _load_tile_grid() -> void:
 	if not maps.has(key):
 		push_warning("DungeonMap: no tile grid for map key: " + key)
 		return
-	_tile_grid = maps[key]["grid"]
+	# Deep-copy so unlocking a door only mutates this scene's grid; the
+	# persistent record lives in GameState.unlocked_doors and is re-applied here.
+	_tile_grid = (maps[key]["grid"] as Array).duplicate(true)
+	_apply_unlocked_doors()
+
+
+## Re-opens every door on this map that was already unlocked with a Magic Key.
+func _apply_unlocked_doors() -> void:
+	var gs := get_node_or_null("/root/GameState")
+	if not gs or _tile_grid.is_empty():
+		return
+	var prefix := _get_map_key() + ":"
+	for k in gs.unlocked_doors.keys():
+		var ks := str(k)
+		if not ks.begins_with(prefix):
+			continue
+		var parts := ks.substr(prefix.length()).split(",")
+		if parts.size() != 2:
+			continue
+		var x := int(parts[0])
+		var y := int(parts[1])
+		if y >= 0 and y < _tile_grid.size() and x >= 0 and x < _tile_grid[y].size() and int(_tile_grid[y][x]) == 10:
+			_tile_grid[y][x] = 3
+			_open_door_visual(Vector2i(x, y))
 
 func _pixel_is_walkable(tile: Vector2i) -> bool:
 	if not _tile_grid.is_empty():

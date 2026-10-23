@@ -19,9 +19,9 @@ func _get_music_path() -> String:
 
 func _get_npcs() -> Array:
 	return [
-		{tile=Vector2i(10,10), sprite_id="guard",    facing="down",  speaker="Warrior",   pages=["This town was destroyed by\nthe Dragonlord's forces.\nOnly ruins remain."]},
+		{tile=Vector2i(10,8), sprite_id="guard",    facing="down",  speaker="Warrior",   pages=["This town was destroyed by\nthe Dragonlord's forces.\nOnly ruins remain."]},
 		{tile=Vector2i(5,8),   sprite_id="sage",     facing="right", speaker="Wanderer",  pages=["Erdrick's Armor is hidden\nsomewhere in this ruined town.\nSeek it out, Hero."]},
-		{tile=Vector2i(16,14), sprite_id="lady",     facing="left",  speaker="Survivor",  pages=["We have lost so much to\nthe Dragonlord's minions.\nAvenge us, Hero."]},
+		{tile=Vector2i(15,14), sprite_id="lady",     facing="left",  speaker="Survivor",  pages=["We have lost so much to\nthe Dragonlord's minions.\nAvenge us, Hero."]},
 	]
 
 func _ready() -> void:
@@ -100,10 +100,17 @@ func _trigger_axe_knight_battle() -> void:
 		overlay.queue_free()
 		_battle_active = false
 		_move_enabled = true
+		var gs_after: Node = get_node_or_null("/root/GameState")
+		if gs_after:
+			_hero_gold = int(gs_after.gold)
+		if result == "lost":
+			_on_defeat()
+			return
 		if result == "won":
 			_opened_chests[ERDRICKS_ARMOR_CHEST] = true
 			_inventory.append({
 				"name":  "Erdrick's Armor",
+				"id":    "erdricks_armor",
 				"type":  "armor",
 				"desc":  "Legendary armor worn by Erdrick.\nReduces damage and protects\nagainst swamp poison.",
 				"def":   7,
@@ -113,7 +120,9 @@ func _trigger_axe_knight_battle() -> void:
 			if gs:
 				gs.inventory     = _inventory.duplicate(true)
 				gs.opened_chests = _opened_chests.duplicate(true)
-			_show_dialog("", ["Thou hast found\nErdrick's Armor!"])
+				if gs.has_method("equip_item"):
+					gs.equip_item("erdricks_armor")
+			_show_dialog("", ["Thou hast found\nErdrick's Armor!", "Thou art now wearing\nErdrick's Armor."])
 		if _music:
 			_music.play()
 	)

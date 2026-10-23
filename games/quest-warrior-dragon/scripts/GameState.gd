@@ -19,6 +19,7 @@ var hero_stats := {
 }
 
 var gold:      int   = 0
+var deaths: int = 0   # times the hero fell in battle (for playthrough telemetry)
 var inventory: Array = []   # Array of { name, type, desc, ... }
 
 # Where to spawn the hero on the next scene load
@@ -35,6 +36,11 @@ var unlocked_doors: Dictionary = {}
 # Rainbow bridge — set when Rainbow Drop is used at the correct overworld tile
 var bridge_built: bool = false
 
+# Dungeon light. A lit torch lasts until the hero leaves the dungeon and RADIANT
+# fades over steps, so both survive stairs between floors (DungeonMap syncs them).
+var torch_active: bool = false
+var radiant_steps_left: int = 0
+
 # Battle debug: set by DebugLaunch when launching BattleTest scene
 var battle_monster: String = "slime"
 
@@ -42,6 +48,14 @@ var battle_monster: String = "slime"
 var spells: Array  = []   # spell IDs: ["heal", "hurt", ...]
 var weapon: String = ""   # e.g. "copper_sword"
 var armor:  String = ""   # e.g. "chain_mail"
+var shield: String = ""   # e.g. "small_shield"
+
+# Quest progression flags
+var gwaelin_rescued: bool = false     # Princess Gwaelin found in the Swamp Cave
+var gwaelin_returned: bool = false    # Princess Gwaelin brought back to King Lorik
+var dragonlord_defeated: bool = false # Final boss beaten — the game is won
+var golem_defeated: bool = false      # Cantlin's gatekeeper destroyed — the town is open
+var game_completed: bool = false      # Victory reported to King Lorik (credits)
 
 # King Lorik dialogue state
 var king_intro_done: bool = false
@@ -175,6 +189,8 @@ func _apply_save_state_override(data: Dictionary) -> void:
 		bridge_built = bool(data.get("bridgeBuilt", false))
 	elif data.has("bridge_built"):
 		bridge_built = bool(data.get("bridge_built", false))
+	torch_active = bool(data.get("torchActive", false))
+	radiant_steps_left = int(data.get("radiantStepsLeft", 0))
 	if data.has("kingIntroDone"):
 		king_intro_done = bool(data.get("kingIntroDone", false))
 	elif data.has("king_intro_done"):
@@ -225,6 +241,19 @@ func _apply_save_state_override(data: Dictionary) -> void:
 		armor = str(data.get("heroArmor", ""))
 	elif data.has("armor"):
 		armor = str(data.get("armor", ""))
+	if data.has("heroShield"):
+		shield = str(data.get("heroShield", ""))
+	if data.has("gwaelinRescued"):
+		gwaelin_rescued = bool(data.get("gwaelinRescued", false))
+	if data.has("gwaelinReturned"):
+		gwaelin_returned = bool(data.get("gwaelinReturned", false))
+	if data.has("dragonlordDefeated"):
+		dragonlord_defeated = bool(data.get("dragonlordDefeated", false))
+	if data.has("golemDefeated"):
+		golem_defeated = bool(data.get("golemDefeated", false))
+	# Explicit heroAtk/heroDef in a save state win over the equipment formula (debug fixtures rely on this).
+	if not data.has("heroAtk") and not data.has("heroDef"):
+		recompute_derived_stats()
 
 func _parse_tile(tile_text: String) -> Variant:
 	var parts := tile_text.split(",")
@@ -292,7 +321,208 @@ func reset_to_new_game() -> void:
 	spells          = []
 	weapon          = ""
 	armor           = ""
+	shield          = ""
+	gwaelin_rescued = false
+	gwaelin_returned = false
+	dragonlord_defeated = false
+	golem_defeated = false
+	game_completed = false
 	king_intro_done = false
+	recompute_derived_stats()
+
+# ── Equipment & progression ──────────────────────────────────────────────────
+
+var _equip_db: Dictionary = {}   # item_id -> {"slot": "weapon"|"armor"|"shield", "attack"/"defense": int, "cost": int, "name": String}
+
+func _load_equip_db() -> void:
+	if not _equip_db.is_empty():
+		return
+	var sources := {
+		"weapon": "res://data/v1/weapons.json",
+		"armor": "res://data/v1/armor.json",
+		"shield": "res://data/v1/shields.json",
+	}
+	for slot: String in sources:
+		var f := FileAccess.open(sources[slot], FileAccess.READ)
+		if not f:
+			continue
+		var parsed: Variant = JSON.parse_string(f.get_as_text())
+		var records: Array = []
+		if parsed is Array:
+			records = parsed
+		elif parsed is Dictionary:
+			for k in ["weapons", "armor", "shields", "items", "records"]:
+				if parsed.get(k) is Array:
+					records = parsed[k]
+					break
+		for rec in records:
+			if rec is Dictionary and rec.has("id"):
+				var entry: Dictionary = rec.duplicate(true)
+				entry["slot"] = slot
+				_equip_db[str(rec["id"])] = entry
+
+## Normalises an inventory entry to an equipment id (e.g. "Erdrick's Armor" -> "erdricks_armor").
+func equipment_id_for(item: Variant) -> String:
+	_load_equip_db()
+	var raw_id := ""
+	var raw_name := ""
+	if item is Dictionary:
+		raw_id = str(item.get("id", "")).to_lower()
+		raw_name = str(item.get("name", "")).to_lower()
+	else:
+		raw_name = str(item).to_lower()
+	if raw_id != "" and _equip_db.has(raw_id):
+		return raw_id
+	var norm := raw_name.replace("'", "").replace(" ", "_")
+	if _equip_db.has(norm):
+		return norm
+	norm = raw_id.replace("'", "").replace(" ", "_")
+	if _equip_db.has(norm):
+		return norm
+	return ""
+
+func equipment_slot(item_id: String) -> String:
+	_load_equip_db()
+	return str(_equip_db.get(item_id, {}).get("slot", ""))
+
+func equipment_info(item_id: String) -> Dictionary:
+	_load_equip_db()
+	return _equip_db.get(item_id, {})
+
+func get_equipped(slot: String) -> String:
+	match slot:
+		"weapon": return weapon
+		"armor": return armor
+		"shield": return shield
+	return ""
+
+## Equips `item_id` into its slot and returns the previously equipped id ("" if none).
+func equip_item(item_id: String) -> String:
+	var slot := equipment_slot(item_id)
+	var previous := get_equipped(slot)
+	match slot:
+		"weapon": weapon = item_id
+		"armor": armor = item_id
+		"shield": shield = item_id
+		_: return ""
+	recompute_derived_stats()
+	return previous
+
+func unequip_slot(slot: String) -> void:
+	match slot:
+		"weapon": weapon = ""
+		"armor": armor = ""
+		"shield": shield = ""
+	recompute_derived_stats()
+
+## Erdrick's Armor restores 1 HP per step taken on any map (NES behaviour).
+func apply_step_regen() -> void:
+	# NES rule: Magic Armor and Erdrick's Armor both restore 1 HP per step.
+	if armor != "erdricks_armor" and armor != "magic_armor":
+		return
+	var hp := int(hero_stats.get("hp", 0))
+	var hp_max := int(hero_stats.get("hp_max", 0))
+	if hp > 0 and hp < hp_max:
+		hero_stats["hp"] = hp + 1
+
+## Attack = Strength + weapon; Defense = Agility / 2 + armor + shield (NES Quest: Warrior Dragon formulas).
+func recompute_derived_stats() -> void:
+	_load_equip_db()
+	var str_v := int(hero_stats.get("str", 4))
+	var agl_v := int(hero_stats.get("agl", 4))
+	var atk := str_v + int(_equip_db.get(weapon, {}).get("attack", 0))
+	var def := int(agl_v / 2) + int(_equip_db.get(armor, {}).get("defense", 0)) + int(_equip_db.get(shield, {}).get("defense", 0))
+	hero_stats["atk"] = maxi(1, atk)
+	hero_stats["def"] = maxi(0, def)
+
+func _level_table() -> Array:
+	if DataManager and DataManager.is_loaded and not DataManager.levels.is_empty():
+		return DataManager.levels
+	var f := FileAccess.open("res://data/v1/levels.json", FileAccess.READ)
+	if not f:
+		return []
+	var parsed: Variant = JSON.parse_string(f.get_as_text())
+	if parsed is Array:
+		return parsed
+	if parsed is Dictionary and parsed.get("levels") is Array:
+		return parsed["levels"]
+	return []
+
+func _level_entry(level: int) -> Dictionary:
+	for entry in _level_table():
+		var lv: int = 0
+		var as_dict: Dictionary = {}
+		if entry is Dictionary:
+			as_dict = entry
+			lv = int(entry.get("level", 0))
+		elif entry is Object:
+			lv = int(entry.get("level"))
+			for k in ["level", "exp_required", "str_gain", "agi_gain", "hp_gain", "mp_gain", "spell"]:
+				var v = entry.get(k)
+				if v != null:
+					as_dict[k] = v
+		if lv == level:
+			return as_dict
+	return {}
+
+func _roll_gain(v: Variant) -> int:
+	if v is Array and v.size() >= 2:
+		var lo := int(v[0])
+		var hi := int(v[1])
+		return lo if hi <= lo else lo + (randi() % (hi - lo + 1))
+	if v is Array and v.size() == 1:
+		return int(v[0])
+	if v == null:
+		return 0
+	return int(v)
+
+## Adds experience and applies every level-up the new total unlocks.
+## Returns an Array of {level, str_gain, agi_gain, hp_gain, mp_gain, spell} dictionaries.
+func add_exp(amount: int) -> Array:
+	hero_stats["exp"] = int(hero_stats.get("exp", 0)) + maxi(0, amount)
+	var gained: Array = []
+	while true:
+		var cur_level := int(hero_stats.get("level", 1))
+		var next_entry := _level_entry(cur_level + 1)
+		if next_entry.is_empty():
+			break
+		if int(hero_stats.get("exp", 0)) < int(next_entry.get("exp_required", 2147483647)):
+			break
+		var sg := _roll_gain(next_entry.get("str_gain", 0))
+		var ag := _roll_gain(next_entry.get("agi_gain", 0))
+		var hg := _roll_gain(next_entry.get("hp_gain", 0))
+		var mg := _roll_gain(next_entry.get("mp_gain", 0))
+		hero_stats["level"] = cur_level + 1
+		hero_stats["str"] = int(hero_stats.get("str", 4)) + sg
+		hero_stats["agl"] = int(hero_stats.get("agl", 4)) + ag
+		hero_stats["hp_max"] = int(hero_stats.get("hp_max", 15)) + hg
+		hero_stats["mp_max"] = int(hero_stats.get("mp_max", 0)) + mg
+		hero_stats["hp"] = mini(int(hero_stats.get("hp_max", 15)), int(hero_stats.get("hp", 15)) + hg)
+		hero_stats["mp"] = mini(int(hero_stats.get("mp_max", 0)), int(hero_stats.get("mp", 0)) + mg)
+		var spell_id := ""
+		if next_entry.get("spell") != null:
+			spell_id = str(next_entry.get("spell"))
+			if spell_id != "" and not spells.has(spell_id):
+				spells.append(spell_id)
+		gained.append({
+			"level": cur_level + 1,
+			"str_gain": sg,
+			"agi_gain": ag,
+			"hp_gain": hg,
+			"mp_gain": mg,
+			"spell": spell_id,
+		})
+	recompute_derived_stats()
+	return gained
+
+func has_spell(spell_id: String) -> bool:
+	for s in spells:
+		if str(s).to_lower() == spell_id.to_lower():
+			return true
+	return false
+
+func is_game_won() -> bool:
+	return dragonlord_defeated
 
 func get_exp_to_next_level() -> int:
 	var current_level: int = int(hero_stats.get("level", 1))
@@ -346,12 +576,19 @@ func export_state_dict(scene_name: String = "ThroneRoom", current_tile: Vector2i
 		"heroExp": int(hero_stats.get("exp", 0)),
 		"heroWeapon": weapon,
 		"heroArmor": armor,
+		"heroShield": shield,
+		"gwaelinRescued": gwaelin_rescued,
+		"gwaelinReturned": gwaelin_returned,
+		"dragonlordDefeated": dragonlord_defeated,
+		"golemDefeated": golem_defeated,
 		"heroSpells": spells.duplicate(true),
 		"items": inventory.duplicate(true),
 		"openedChests": opened_chests.duplicate(true),
 		"unlockedDoors": unlocked_doors.duplicate(true),
 		"bridgeBuilt": bridge_built,
 		"kingIntroDone": king_intro_done,
+		"torchActive": torch_active,
+		"radiantStepsLeft": radiant_steps_left,
 	}
 
 func save_to_disk(filename: String = "adventure_log.json") -> bool:
@@ -381,6 +618,11 @@ func save_to_disk(filename: String = "adventure_log.json") -> bool:
 		"heroExp": int(hero_stats.get("exp", 0)),
 		"heroWeapon": weapon,
 		"heroArmor": armor,
+		"heroShield": shield,
+		"gwaelinRescued": gwaelin_rescued,
+		"gwaelinReturned": gwaelin_returned,
+		"dragonlordDefeated": dragonlord_defeated,
+		"golemDefeated": golem_defeated,
 		"heroSpells": spells.duplicate(true),
 		"items": inventory.duplicate(true),
 		"openedChests": opened_chests.duplicate(true),
