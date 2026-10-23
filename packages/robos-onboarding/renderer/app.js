@@ -119,6 +119,11 @@ document.addEventListener('DOMContentLoaded', () => {
         panel.classList.add('active');
         panel.removeAttribute('inert');
         panel.setAttribute('aria-hidden', 'false');
+        // Optional apps start when their step is opened, after the wizard is usable.
+        panel.querySelectorAll('iframe[data-src]').forEach(frame => {
+          frame.src = frame.dataset.src;
+          frame.removeAttribute('data-src');
+        });
       } else {
         panel.classList.remove('active');
         panel.setAttribute('inert', '');

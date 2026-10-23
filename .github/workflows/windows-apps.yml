@@ -33,6 +33,9 @@ jobs:
       - name: Audit every installed app
         shell: pwsh
         run: node scripts/windows/audit.cjs "$env:RUNNER_TEMP\RobOS"
+      - name: Check onboarding startup and embedded steps
+        shell: pwsh
+        run: node scripts/windows/smoke-onboarding.cjs "$env:RUNNER_TEMP\RobOS"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -41,4 +44,5 @@ jobs:
             run/windows-install/
             run/windows-audit/*.json
             run/windows-audit/*.png
+            run/onboarding-startup-regression.png
             ${{ runner.temp }}/RobOS/install-report.json

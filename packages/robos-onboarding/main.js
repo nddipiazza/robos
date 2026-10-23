@@ -600,9 +600,13 @@ const SOFTWARE_TOOLS = [
 ];
 
 const installLogs = {};
-function checkToolInstalled(t) { try { execSync(t.checkCmd, { stdio: 'pipe' }); return true; } catch { return false; } }
+function checkToolInstalled(t) {
+  return new Promise(resolve => {
+    exec(t.checkCmd, { timeout: 5000, windowsHide: true }, error => resolve(!error));
+  });
+}
 
-ipcMain.handle('get-tools', () => SOFTWARE_TOOLS.map(t => ({ ...t, installed: checkToolInstalled(t), installing: !!installLogs[t.id]?.installing })));
+ipcMain.handle('get-tools', () => Promise.all(SOFTWARE_TOOLS.map(async t => ({ ...t, installed: await checkToolInstalled(t), installing: !!installLogs[t.id]?.installing }))));
 ipcMain.handle('install-tool', (_e, toolId) => {
   const tool = SOFTWARE_TOOLS.find(t => t.id === toolId);
   if (!tool) return;
@@ -857,7 +861,7 @@ ipcMain.handle('gp-ai-create-repos', async (_, { prompt }) => ({ ok: false, erro
 
 // ── Step 8, 9, 10: Catalog & Projects Legacy Helpers ──
 ipcMain.handle('get-dev-apps-catalog', async () => {
-  return SOFTWARE_TOOLS.map(t => ({ id: t.id, name: t.name, category: t.category, installed: checkToolInstalled(t) }));
+  return Promise.all(SOFTWARE_TOOLS.map(async t => ({ id: t.id, name: t.name, category: t.category, installed: await checkToolInstalled(t) })));
 });
 
 ipcMain.handle('get-git-projects-list', async () => {
