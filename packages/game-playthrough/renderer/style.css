@@ -151,3 +151,16 @@ dialog#run-dialog select, dialog#run-dialog input[type=number] { background: var
 dialog#run-dialog input[type=number] { width: 70px; }
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin: 6px 0 4px; }
 .dialog-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+
+/* Export to MP4 */
+.export-bar { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 6px 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; font-size: 12px; }
+.export-track { flex: 1; height: 8px; background: var(--bg-primary); border-radius: 4px; overflow: hidden; min-width: 120px; }
+#export-fill { height: 100%; width: 0; background: linear-gradient(90deg, #00838f, var(--accent)); transition: width .4s; }
+.export-bar.done #export-fill { background: var(--ok); }
+.export-bar.failed #export-fill { background: var(--bad); }
+dialog#export-dialog { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); border-radius: 8px; width: 560px; max-width: calc(100vw - 32px); padding: 18px 20px; }
+dialog#export-dialog::backdrop { background: rgba(0, 0, 0, .55); }
+#export-options { border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; display: grid; gap: 6px; }
+#export-options label { display: grid; grid-template-columns: 18px 1fr auto auto; gap: 10px; align-items: center; }
+#export-options .est { color: var(--accent); font-variant-numeric: tabular-nums; }
+.small-note { font-size: 11px; }

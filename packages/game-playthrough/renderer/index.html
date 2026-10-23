@@ -18,11 +18,22 @@
       <button id="btn-runs">Runs</button>
       <button id="btn-live">Live view</button>
       <button id="btn-videos">Videos folder</button>
+      <button id="btn-export" title="Join this run's milestone videos into one MP4 with a chapter per milestone">Export to MP4</button>
       <button id="btn-stop" class="danger" disabled>Stop run</button>
     </div>
     <div class="progress"><div id="progress-bar"></div><span id="progress-text">0 / 0</span></div>
     <div id="chips" class="chips"></div>
     <div id="objective" class="objective"></div>
+    <div id="export-bar" class="export-bar hidden">
+      <span id="export-phase"></span>
+      <div class="export-track"><div id="export-fill"></div></div>
+      <span id="export-pct"></span>
+      <span id="export-eta" class="muted"></span>
+      <button id="export-cancel" class="small">Cancel</button>
+      <button id="export-show" class="small hidden">Show in folder</button>
+      <button id="export-play" class="small hidden">Play</button>
+      <button id="export-dismiss" class="small hidden">×</button>
+    </div>
   </header>
 
   <main>
@@ -120,6 +131,20 @@
       <div class="dialog-buttons">
         <button value="cancel" formnovalidate>Cancel</button>
         <button id="run-go" value="go" class="primary">Start run</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="export-dialog">
+    <form method="dialog" id="export-form">
+      <h2>Export to MP4</h2>
+      <p id="export-summary" class="muted">Measuring this machine…</p>
+      <fieldset id="export-options"></fieldset>
+      <p id="export-system" class="muted small-note"></p>
+      <p id="export-error" class="violation"></p>
+      <div class="dialog-buttons">
+        <button value="cancel" formnovalidate>Cancel</button>
+        <button id="export-go" value="go" class="primary" disabled>Export</button>
       </div>
     </form>
   </dialog>

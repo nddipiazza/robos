@@ -48,7 +48,10 @@ function renderHeader(live) {
   const obj = live && live.objective ? live.objective.label : '';
   $('objective').innerHTML = cur
     ? `Now: <b>#${cur.index} ${esc(cur.name)}</b>${obj ? ` — ${esc(obj)}` : ''}${live.error ? ` <span class="violation">${esc(live.error)}</span>` : ''}`
-    : (live && live.error ? `<span class="violation">${esc(live.error)}</span>` : 'No run yet — press New run to start the AI playthrough.');
+    : (live && live.error ? `<span class="violation">${esc(live.error)}</span>`
+      : live && live.status === 'completed' ? `Run completed: all ${live.total} milestones in ${fmtTime(live.elapsed_sec)}.`
+      : live ? `Run ${esc(live.status)} at ${live.done_count} / ${live.total} milestones.`
+      : 'No run yet — press New run to start the AI playthrough.');
 }
 
 // ── milestone list ────────────────────────────────────────────────────────
@@ -253,6 +256,11 @@ async function init() {
     }
   });
   $('btn-new-run').addEventListener('click', openRunDialog);
+  $('btn-export').addEventListener('click', openExportDialog);
+  $('export-form').addEventListener('submit', startExportFromDialog);
+  $('export-cancel').addEventListener('click', () => window.dash.exportCancel());
+  $('export-dismiss').addEventListener('click', () => $('export-bar').classList.add('hidden'));
+  window.dash.exportStatus().then((st) => { if (st) watchExport(); });
   $('btn-runs').addEventListener('click', showRuns);
   $('btn-game-dir').addEventListener('click', async () => {
     const res = await window.dash.chooseGameDir();
@@ -313,6 +321,97 @@ function renderViewing() {
   const v = state.config.viewing;
   $('viewing').classList.toggle('hidden', !v);
   $('viewing').textContent = v ? `Viewing ${v}` : '';
+}
+
+// ── export to mp4 ─────────────────────────────────────────────────────────
+// The export itself runs in the main process; this only plans it and draws progress.
+let exportPlan = null;
+let exportTimer = null;
+
+const fmtDur = (sec) => {
+  if (sec == null || !isFinite(sec)) return '—';
+  sec = Math.max(0, Math.round(sec));
+  if (sec < 60) return `${sec}s`;
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  return h ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m ${String(s).padStart(2, '0')}s`;
+};
+
+async function openExportDialog() {
+  const st = await window.dash.exportStatus();
+  if (st && !st.done) { alert('An export is already running — see the progress bar.'); return; }
+  $('export-go').disabled = true;
+  $('export-error').textContent = '';
+  $('export-options').innerHTML = '';
+  $('export-system').textContent = '';
+  $('export-summary').textContent = 'Reading the milestone videos and measuring this machine…';
+  $('export-dialog').showModal();
+  exportPlan = await window.dash.exportPlan();
+  if (!exportPlan || !exportPlan.ok) {
+    $('export-summary').textContent = '';
+    $('export-error').textContent = (exportPlan && exportPlan.error) || 'Nothing to export.';
+    return;
+  }
+  const p = exportPlan;
+  $('export-summary').textContent = `${p.name}: ${p.clips} milestone videos, ${fmtDur(p.seconds)} of recording, ${(p.mb / 1024).toFixed(2)} GB.`;
+  $('export-options').innerHTML = p.options.map((o, i) => `<label>
+      <input type="radio" name="export-mode" value="${i}" ${i === 0 ? 'checked' : ''}>
+      <span>${esc(o.label)} <span class="muted">→ ${fmtDur(o.outSeconds)} video, ~${o.estMB < 1024 ? `${Math.round(o.estMB)} MB` : `${(o.estMB / 1024).toFixed(1)} GB`}</span></span>
+      <span class="muted">takes</span><span class="est">~${fmtDur(o.estSec)}</span>
+    </label>`).join('');
+  const sys = p.system;
+  $('export-system').textContent = `Estimates from this machine: ${sys.cores} CPU threads (${sys.model.trim()}), ` +
+    `disk read ${Math.round(sys.readMBs)} MB/s, x264 ${sys.encodeFps ? Math.round(sys.encodeFps) : '?'} frames/s at this size, ` +
+    `${sys.freeGB.toFixed(1)} GB RAM free. The export runs in the background; you can keep using the app.`;
+  $('export-go').disabled = false;
+}
+
+async function startExportFromDialog(e) {
+  if (e.submitter && e.submitter.value !== 'go') return;
+  e.preventDefault();
+  const o = exportPlan.options[parseInt(document.querySelector('input[name=export-mode]:checked').value, 10)];
+  const res = await window.dash.exportStart({ mode: o.mode, speed: o.speed, estSec: o.estSec });
+  if (!res || !res.ok) { $('export-error').textContent = (res && res.error) || 'Export failed to start.'; return; }
+  $('export-dialog').close();
+  watchExport();
+}
+
+function watchExport() {
+  clearInterval(exportTimer);
+  const bar = $('export-bar');
+  bar.classList.remove('hidden', 'done', 'failed');
+  ['export-show', 'export-play', 'export-dismiss'].forEach((id) => $(id).classList.add('hidden'));
+  $('export-cancel').classList.remove('hidden');
+  $('btn-export').disabled = true;
+  const draw = async () => {
+    const st = await window.dash.exportStatus();
+    if (!st) return;
+    $('export-fill').style.width = `${Math.round(st.progress * 100)}%`;
+    $('export-pct').textContent = `${Math.round(st.progress * 100)}%`;
+    if (!st.done) {
+      $('export-phase').textContent = st.phase;
+      $('export-eta').textContent = `${fmtDur(st.elapsed)} elapsed · ${st.remaining != null ? `~${fmtDur(st.remaining)} left` : 'estimating…'}`;
+      return;
+    }
+    clearInterval(exportTimer);
+    $('btn-export').disabled = false;
+    $('export-cancel').classList.add('hidden');
+    $('export-dismiss').classList.remove('hidden');
+    if (st.error) {
+      bar.classList.add('failed');
+      $('export-phase').textContent = st.error === 'Cancelled' ? 'Export cancelled' : `Export failed: ${st.error}`;
+      $('export-eta').textContent = '';
+    } else {
+      bar.classList.add('done');
+      $('export-phase').textContent = `Saved ${st.out.split('/').pop()}`;
+      $('export-eta').textContent = `${fmtDur(st.outSeconds)} video · ${(st.size / 1048576).toFixed(0)} MB · took ${fmtDur(st.elapsed)}`;
+      $('export-show').classList.remove('hidden');
+      $('export-play').classList.remove('hidden');
+      $('export-show').onclick = () => window.dash.exportShow(st.out);
+      $('export-play').onclick = () => window.dash.exportPlay(st.out);
+    }
+  };
+  draw();
+  exportTimer = setInterval(draw, 700);
 }
 
 async function openRunDialog() {
