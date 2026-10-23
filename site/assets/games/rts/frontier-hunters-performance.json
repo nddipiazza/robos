@@ -1,0 +1,184 @@
+{
+  "backlog_seconds": 0.0129198253968255,
+  "capture_ms": 0.0,
+  "draw_calls": 609.0,
+  "fps": 49.0,
+  "frame": {
+    "count": 600,
+    "max_ms": 72.047,
+    "p50_ms": 16.821,
+    "p95_ms": 26.952,
+    "p99_ms": 34.623
+  },
+  "hud_ms": 1.269,
+  "objects": 879.0,
+  "ok": true,
+  "process_ms": 38.763,
+  "profile_usec": {
+    "ai": 10909,
+    "navigation": 542437,
+    "orders": 2363741,
+    "steering": 2839568
+  },
+  "readback_ms": 0.0,
+  "simulation": {
+    "count": 600,
+    "max_ms": 62.39,
+    "p50_ms": 3.481,
+    "p95_ms": 10.647,
+    "p99_ms": 12.914
+  },
+  "sync_ms": 1.689,
+  "tick": 12831,
+  "units": 80,
+  "samples": [
+    {
+      "backlog_seconds": 0.00784500000000002,
+      "capture_ms": 0.0,
+      "draw_calls": 642.0,
+      "fps": 51.0,
+      "frame": {
+        "count": 25,
+        "max_ms": 23.302,
+        "p50_ms": 17.384,
+        "p95_ms": 20.218,
+        "p99_ms": 20.316
+      },
+      "hud_ms": 1.664,
+      "objects": 885.0,
+      "ok": true,
+      "process_ms": 26.812,
+      "profile_usec": {
+        "ai": 59,
+        "navigation": 1145,
+        "orders": 35368,
+        "steering": 65900
+      },
+      "readback_ms": 0.0,
+      "simulation": {
+        "count": 25,
+        "max_ms": 8.734,
+        "p50_ms": 3.379,
+        "p95_ms": 7.394,
+        "p99_ms": 7.61
+      },
+      "sync_ms": 1.594,
+      "tick": 11573,
+      "units": 79,
+      "wall_time": 0.07800000000133878,
+      "sim_time": 180.47
+    },
+    {
+      "backlog_seconds": 0.00664311111111118,
+      "capture_ms": 0.0,
+      "draw_calls": 651.0,
+      "fps": 54.0,
+      "frame": {
+        "count": 271,
+        "max_ms": 39.362,
+        "p50_ms": 17.494,
+        "p95_ms": 29.635,
+        "p99_ms": 37.818
+      },
+      "hud_ms": 1.51,
+      "objects": 943.0,
+      "ok": true,
+      "process_ms": 29.955,
+      "profile_usec": {
+        "ai": 2792,
+        "navigation": 108781,
+        "orders": 625060,
+        "steering": 810790
+      },
+      "readback_ms": 0.0,
+      "simulation": {
+        "count": 271,
+        "max_ms": 27.309,
+        "p50_ms": 4.075,
+        "p95_ms": 12.425,
+        "p99_ms": 15.745
+      },
+      "sync_ms": 1.424,
+      "tick": 11872,
+      "units": 82,
+      "wall_time": 5.078000000001339,
+      "sim_time": 185.45
+    },
+    {
+      "backlog_seconds": 0.0145843333333334,
+      "capture_ms": 0.0,
+      "draw_calls": 626.0,
+      "fps": 60.0,
+      "frame": {
+        "count": 551,
+        "max_ms": 71.858,
+        "p50_ms": 16.864,
+        "p95_ms": 28.144,
+        "p99_ms": 36.141
+      },
+      "hud_ms": 1.398,
+      "objects": 863.0,
+      "ok": true,
+      "process_ms": 22.898,
+      "profile_usec": {
+        "ai": 4192,
+        "navigation": 252022,
+        "orders": 1254578,
+        "steering": 1481810
+      },
+      "readback_ms": 0.0,
+      "simulation": {
+        "count": 551,
+        "max_ms": 57.843,
+        "p50_ms": 3.817,
+        "p95_ms": 11.898,
+        "p99_ms": 13.775
+      },
+      "sync_ms": 1.529,
+      "tick": 12196,
+      "units": 79,
+      "wall_time": 10.140999999995984,
+      "sim_time": 190.53
+    },
+    {
+      "backlog_seconds": 0.00727922222222146,
+      "capture_ms": 0.0,
+      "draw_calls": 605.0,
+      "fps": 57.0,
+      "frame": {
+        "count": 600,
+        "max_ms": 72.047,
+        "p50_ms": 16.652,
+        "p95_ms": 27.316,
+        "p99_ms": 34.807
+      },
+      "hud_ms": 1.517,
+      "objects": 827.0,
+      "ok": true,
+      "process_ms": 35.018,
+      "profile_usec": {
+        "ai": 7142,
+        "navigation": 446298,
+        "orders": 1839444,
+        "steering": 2114401
+      },
+      "readback_ms": 0.0,
+      "simulation": {
+        "count": 600,
+        "max_ms": 62.39,
+        "p50_ms": 3.629,
+        "p95_ms": 10.431,
+        "p99_ms": 13.621
+      },
+      "sync_ms": 1.935,
+      "tick": 12516,
+      "units": 78,
+      "wall_time": 15.140999999995984,
+      "sim_time": 195.52
+    }
+  ],
+  "captures_ms": [],
+  "wall_time": 20.07800000000134,
+  "initial_game_time": 180.44,
+  "sim_time": 200.52
+}

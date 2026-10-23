@@ -21,6 +21,7 @@ __pycache__/
 !docs/assets/videos/*.vtt
 !site/assets/hero/*.mp4
 !site/assets/hero/*.webm
+!site/assets/games/rts/frontier-hunters-live.mp4
 
 # Editor files
 *.swp
