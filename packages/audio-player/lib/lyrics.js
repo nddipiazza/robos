@@ -36,22 +36,80 @@ function cacheFile(track) {
   return path.join(CACHE_DIR, key + '.json');
 }
 
+// Placeholders the library fills in when tags are missing; sending them to
+// LRCLIB only guarantees a miss.
+const PLACEHOLDER = /^(unknown (artist|album)|cloud stream)$/i;
+// LRCLIB rejects durations outside 1..3600s with a 400; anything that long is
+// a compilation/OST rip rather than a song with lyrics anyway.
+const MAX_DURATION = 3600;
+const RETRY_DELAYS_MS = [600, 1500];
+
 async function fetchJson(url) {
-  const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS), headers: { 'User-Agent': 'RobOS Audio Player' } });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`Lyrics service returned ${res.status}`);
-  return res.json();
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS), headers: { 'User-Agent': 'RobOS Audio Player' } });
+    if (res.status === 404) return null;
+    // LRCLIB answers 503 "ServerOverloaded" (and 429) intermittently; retry briefly.
+    if ((res.status === 503 || res.status === 429) && attempt < RETRY_DELAYS_MS.length) {
+      await new Promise(r => setTimeout(r, RETRY_DELAYS_MS[attempt]));
+      continue;
+    }
+    if (!res.ok) throw new Error(`Lyrics service returned ${res.status}`);
+    return res.json();
+  }
+}
+
+// Strip placeholder tags so the query matches what LRCLIB stores. Cloud tracks
+// often carry the artist only in the folder-derived album ("Artist - Album (2016)").
+// `titles` holds the title as tagged plus, when it has a filename-style track
+// number ("12 Song", "01 - Song"), a stripped variant to try second.
+function normalizeQuery(track) {
+  const clean = v => (v && !PLACEHOLDER.test(String(v).trim()) ? String(v).trim() : '');
+  let artist = clean(track.artist);
+  let album = clean(track.album);
+  const title = String(track.title || '').trim();
+  const stripped = title.replace(/^\d{1,3}(\s*[-.]\s*|\s+)(?=\S)/, '').trim();
+  const titles = stripped && stripped !== title ? [title, stripped] : [title];
+  if (!artist && album) {
+    const m = album.match(/^(.+?)\s+-\s+(.+?)(?:\s*[([]\d{4}[)\]])?$/);
+    if (m) { artist = m[1]; album = m[2]; }
+  }
+  const duration = track.duration > 0 && track.duration <= MAX_DURATION ? Math.round(track.duration) : 0;
+  return { artist, album, titles, duration };
 }
 
 async function fromLrclib(track) {
-  const q = new URLSearchParams({ artist_name: track.artist || '', track_name: track.title || '' });
-  if (track.album) q.set('album_name', track.album);
-  if (track.duration) q.set('duration', String(Math.round(track.duration)));
-  let hit = await fetchJson(`${LRCLIB}/get?${q}`);
+  const { titles, ...rest } = normalizeQuery(track);
+  let hit = null;
+  for (const title of titles) {
+    hit = await queryLrclib({ ...rest, title });
+    if (hit && (hit.syncedLyrics || hit.plainLyrics)) break;
+  }
+  return hit;
+}
+
+async function queryLrclib({ artist, album, title, duration }) {
+  let hit = null;
+  // /get needs an artist; without one go straight to search.
+  if (artist) {
+    const q = new URLSearchParams({ artist_name: artist, track_name: title });
+    if (album) q.set('album_name', album);
+    if (duration) q.set('duration', String(duration));
+    hit = await fetchJson(`${LRCLIB}/get?${q}`);
+  }
   if (!hit || !hit.syncedLyrics) {
-    const results = await fetchJson(`${LRCLIB}/search?${new URLSearchParams({ artist_name: track.artist || '', track_name: track.title || '' })}`);
-    const close = (results || []).filter(r => r.syncedLyrics && (!track.duration || Math.abs(r.duration - track.duration) <= 5));
-    hit = close[0] || hit;
+    const q = new URLSearchParams({ track_name: title });
+    if (artist) q.set('artist_name', artist);
+    let results;
+    try {
+      results = await fetchJson(`${LRCLIB}/search?${q}`);
+    } catch (err) {
+      // Keep a plain-lyrics /get hit rather than failing the whole lookup.
+      if (hit) return hit;
+      throw err;
+    }
+    const usable = (results || []).filter(r => r.syncedLyrics || r.plainLyrics);
+    const close = usable.filter(r => !duration || Math.abs(r.duration - duration) <= 5);
+    hit = close.find(r => r.syncedLyrics) || (hit && hit.plainLyrics ? hit : close[0]) || hit;
   }
   return hit;
 }
@@ -69,6 +127,7 @@ async function getLyrics(track) {
 
   const cached = cacheFile(track);
   try { return JSON.parse(fs.readFileSync(cached, 'utf8')); } catch {}
+  if (track.duration > MAX_DURATION) return { found: false };
 
   let hit;
   try {
@@ -91,4 +150,4 @@ async function getLyrics(track) {
   return result;
 }
 
-module.exports = { getLyrics, parseLrc };
+module.exports = { getLyrics, parseLrc, normalizeQuery };
