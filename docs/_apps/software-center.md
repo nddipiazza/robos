@@ -3,39 +3,30 @@ title: "Software Center"
 package: software-center
 category: core-desktop
 icon: software-center.svg
-summary: "Install and uninstall a fixed list of developer tools (AI CLIs, IDEs, browsers, CLI utilities) on a Debian or Ubuntu machine."
-description: "A catalog of about thirty tools, each with a check command and an install script. Installs run through bash with sudo, and the output appears in an install log."
+summary: "Install and manage coding-agent CLIs, IDEs, browsers, game tools and utilities on Windows or Linux."
+description: "Native Windows installers through WinGet and a private npm prefix, with progress logs, updates and installation checks. Debian and Ubuntu use their Linux installers."
 ---
 
-Software Center is a tool installer. It checks whether each tool in its built-in list is present, and runs a shell script to install or remove it. It does not manage language runtimes, compilers or cloud SDKs; those are not in the list.
+Software Center installs tools from its built-in catalog. Open it from the RobOS launcher, choose a category, and click **Install**. Progress and errors appear in the log panel. **Refresh** checks the current installation state.
 
-## What is in the catalog
+## Windows
 
-The list is defined in `packages/software-center/main.js`. Categories shown as filter buttons:
+Install the [Windows app suite](https://rowbose.com/download/#windows) first. Software Center uses Windows Package Manager (WinGet) for desktop tools and utilities, and RobOS's private Node.js runtime for Claude Code, Codex, Gemini CLI and GitHub Copilot CLI. No Bash, apt or sudo is used for Windows installations.
 
-| Category | Tools |
-|---|---|
-| AI | Claude CLI, GitHub Copilot CLI, OpenAI Codex CLI, Gemini CLI |
-| IDE | VS Code, IntelliJ IDEA Community, PyCharm Community, WebStorm, GoLand, CLion, Rider, RustRover |
-| Browser | Firefox, Chromium, Google Chrome |
-| Dev | GitHub CLI, GitHub Copilot CLI (gh extension), Docker, Lazygit |
-| Media | Flameshot, Kazam, VLC |
-| CLI | ripgrep, fd, bat, jq, fzf, htop, SQLite3 |
+The catalog includes IDEs, browsers, GitHub CLI, Docker Desktop, Lazygit, Flameshot, VLC, command-line utilities, **Godot 4**, **FFmpeg**, **OBS Studio** and **Process Explorer**. Kazam and htop are Linux-only and show the available Windows alternatives.
 
-## Use it
+- **Install, Update and Uninstall:** actions stream their output and verify the resulting installed state. Coding-agent installs also check that the CLI starts.
+- **Folders:** script installs default to `%USERPROFILE%\RobOS\packages`; EXE builds bundle the apps with their runtime. In EXE builds, agent CLI packages stay in `%USERPROFILE%\RobOS\tools\npm`, with command shortcuts in `tools\bin`, outside the portable extraction folder. Script installs use the same relative tool folders inside their chosen RobOS folder. WinGet tools use their Windows installation locations.
+- **Commands:** setup adds the private CLI/runtime directories to your user PATH. Open a new terminal after installing a tool. RobOS refreshes Windows PATH when starting an app.
+- **Existing software:** vendor-installed copies detected outside WinGet have a **Windows settings** button, rather than an uninstall action that assumes WinGet owns them.
+- **Requirements:** internet access and Microsoft's App Installer (WinGet). If WinGet is missing or fails, the cards explain the problem; install or update App Installer and click **Refresh**. Some tools require administrator approval, virtualization support or a restart. Software Center reports cancellations and failures.
 
-1. Open **RobOS Software Center**. Each card shows the tool, its category and **Installed** or **Not installed**, which comes from running that tool's check command (for example `which code`).
-2. Click **Install** or **Uninstall**. An install log panel opens and streams the script output. Close it with the X.
-3. Choose a category button to narrow the list.
+Installing a coding agent does not sign you in or enable optional AI features. Start the installed agent and complete its sign-in when you want to use it.
 
-## What an install does
+## Debian and Ubuntu
 
-Each install runs a `bash -c` script with `DEBIAN_FRONTEND=noninteractive`. Typical scripts use `apt-get`, `npm install -g`, or download a `.deb` or tarball from the vendor (for example `dl.google.com` for Chrome or `download-cdn.jetbrains.com` for IntelliJ). Read the script in `main.js` before installing anything you are unsure about.
+Linux entries use their existing Bash installers: apt, npm, vendor downloads or Snap depending on the tool. Administrative operations use sudo, with a Zenity password dialog when passwordless sudo is unavailable. Some entries configure desktop integration afterward. Docker's Linux script targets the RobOS VM account.
 
-- **Administrator rights.** `sudo` is run with `-A`. It first tries passwordless sudo (`sudo -n`, which the RobOS VM allows) and otherwise shows a `zenity` password dialog. The password is not written to disk.
-- **Requirements.** Network access, `apt`/`dpkg` on the host, and `zenity` for the password dialog. Docker's script adds the user `robos` to the `docker` group, so it is written for the RobOS VM account.
-- Some entries run extra steps afterwards. For example Flameshot is also added to `~/.config/autostart`.
+## Catalog and verification
 
-## Run it
-
-Launch **RobOS Software Center** from the app launcher. The [RobOS Setup Wizard]({{ '/apps/robos-onboarding/' | relative_url }}) has its own smaller copy of this installer for a few tools.
+The Linux catalog is in `packages/software-center/main.js`; Windows package IDs and providers are in `packages/software-center/windows-tools.js`. Run `node scripts/windows/audit-software-center.cjs` on Windows to check current WinGet and npm catalog availability without installing anything.

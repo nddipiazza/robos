@@ -40,6 +40,13 @@ aux_links:
 
 aux_links_new_tab: true
 
+# Shown at the bottom of the sidebar. The guides live on the front site, not under /v1/.
+nav_external_links:
+  - title: "Build apps guides"
+    url: "https://rowbose.com/build-apps/"
+    hide_icon: true
+    opens_in_new_tab: false
+
 heading_anchors: true
 
 nav_sort: case_insensitive

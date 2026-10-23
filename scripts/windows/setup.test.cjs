@@ -17,10 +17,10 @@ test('setup refuses to mutate the source checkout', () => {
 test('download buttons distinguish native Windows apps from USB flasher', () => {
   const site = path.resolve(__dirname, '../../site');
   const home = fs.readFileSync(path.join(site, 'index.md'), 'utf8');
-  assert.match(home, /data-win="[^"\n]*Install-RobOS.cmd/);
+  assert.match(home, /data-win-asset="[^"\n]*Windows-Setup.exe/);
   const download = fs.readFileSync(path.join(site, 'download.md'), 'utf8');
   assert.match(download, /id="linux-distro"/);
-  assert.match(download, /Download Windows USB flasher/);
+  assert.match(download, /(?:View|Download) Windows USB flasher/);
   assert.match(download, /Native Windows app suite/);
   assert.ok(fs.existsSync(path.join(site, 'downloads/Install-RobOS.cmd')));
 });

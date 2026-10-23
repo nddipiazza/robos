@@ -10,14 +10,17 @@ const path = require('node:path');
 const os = require('node:os');
 const { spawn } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
-const root = path.resolve(__dirname, '..');
+const root = app.isPackaged ? path.join(process.resourcesPath, 'suite') : path.resolve(__dirname, '..');
 const apps = JSON.parse(fs.readFileSync(path.join(root, 'apps.json')));
 const id = process.argv.find(a => a.startsWith('--app='))?.slice(6);
 process.env.HOME ||= os.homedir();
 process.env.ROBOS_LIB_PATH = path.join(root, 'packages/robos-lib');
 process.env.ROBOS_APP_BASE = path.join(root, 'packages');
-process.env.ROBOS_WINDOWS_HOST = __dirname;
+process.env.ROBOS_WINDOWS_HOST = app.isPackaged ? path.join(root, 'windows') : __dirname;
+process.env.ROBOS_TOOL_ROOT = app.isPackaged ? path.join(os.homedir(), 'RobOS') : root;
 if (process.platform === 'win32') {
+  // Software Center's private npm prefix and WinGet portable command aliases.
+  require(path.join(root, 'packages/robos-lib/windows-path')).refreshWindowsPath(root, process.env, process.env.ROBOS_TOOL_ROOT);
   process.env.ROBOS_DM_SOCKET ||= require(path.join(root, 'packages/robos-lib/local-ipc-path')).localIpcPath('desktop-manager');
 }
 // Older apps use the appliance's shared-library prefix. Resolve it inside this installation.
@@ -52,6 +55,7 @@ if (id) {
   } else require(path.join(dir, 'main.js'));
 } else {
   app.setName('RobOS');
+  const lifetime = require('./portable-lifetime.cjs').portableLifetime(app, BrowserWindow, !!process.env.PORTABLE_EXECUTABLE_FILE);
   app.whenReady().then(() => {
     ipcMain.handle('apps:list', () => apps);
     ipcMain.handle('apps:launch', (_event, appId) => {
@@ -64,11 +68,10 @@ if (id) {
       fs.closeSync(log);
       child.on('error', error => dialog.showErrorBox('Unable to launch app', error.message));
       child.once('exit', code => { if (code) dialog.showErrorBox('App exited with an error', `${appId}: see ${logPath}`); });
-      child.unref();
+      lifetime.watch(child);
     });
     const win = new BrowserWindow({ width: 1220, height: 900, minWidth: 900, minHeight: 650, backgroundColor: '#10141c', autoHideMenuBar: true, icon: path.join(__dirname, 'robos.ico'),
       webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false } });
     win.loadFile(path.join(__dirname, 'index.html'));
   });
-  app.on('window-all-closed', () => app.quit());
 }

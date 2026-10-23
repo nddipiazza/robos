@@ -9,6 +9,8 @@ description: "Also called Task Explorer in its window and launcher. It generates
 
 Task Planner (the window and `.desktop` entry are named **RobOS Task Explorer**) turns a plain-language description into a list of epics and tasks, lets you edit it, and creates the tickets on your task server.
 
+For how this app fits with the others when you build an app, see the Build apps guides: [on your own](/build-apps/solo/) or [as a team](/build-apps/teams/).
+
 ## Requirements
 
 - A task server in `~/.config/robos/settings.json`. GitHub needs the `gh` CLI signed in. Jira needs its URL, a username and an API token in `pass` (`token_pass_path`). If none is set the window shows **Open Task Servers**; see [Task Servers]({{ '/apps/task-servers/' | relative_url }}).
@@ -20,7 +22,7 @@ Task Planner (the window and `.desktop` entry are named **RobOS Task Explorer**)
 2. Either describe the work in the prompt box and click **Generate with AI**, or choose a template. **Browse All Templates** opens the library; there are 67 built-in templates in ten categories (Services & APIs, Front-End Applications, Game Development, Mobile Applications, Libraries & SDKs, Knowledge Graph & Schemas, Data & Storage, Cloud & Infrastructure, DevOps & Observability, RobOS Platform & Agent Extensions). A template opens a form, and **Generate Task Plan** turns your answers into tasks. **Create Custom Template** saves your own under `~/.config/robos/task-planner/custom-templates/`.
 3. The AI may ask follow-up questions as an "Interactive Architecture Form" (Previous / Next Question) before **Generate Epics & Tasks**.
 4. The result appears under **Project Tasks & Epics**. Use **+ Add Epic** and **+ Add Task** to edit it, and **Save to Project** to keep it locally in `~/.config/robos/task-planner/projects/`.
-5. **Sync All to Server** creates the issues: `gh issue create` for GitHub (with a `role:<persona>` label added), or the Jira REST API. A link between a blocker and a blocked task is created too.
+5. **Sync All to Server** creates the issues: `gh issue create` for GitHub (with a `role:<persona>` label added), or the Jira REST API. For Jira, a "Blocks" link is also created between each task and the tasks it depends on. GitHub issues are created without links between them.
 
 ## Personas
 

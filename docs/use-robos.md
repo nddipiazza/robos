@@ -17,6 +17,7 @@ Pages for running RobOS and working with its apps. If you have not installed any
 1. [Get started]({{ site.baseurl }}{% link getting-started.md %}): run the apps from a clone, add them to the GNOME launcher, or boot the appliance.
 2. [Apps]({{ site.baseurl }}{% link apps.md %}): the app catalog, with one page per app.
 3. [A day with RobOS]({{ site.baseurl }}{% link day-in-the-life.md %}): one task taken from a plan to a merged pull request.
+4. [Build apps](/build-apps/): guides for building your own apps with Task Planner, Task Implementer and Agent Code Review, on your own or as a team.
 
 ## In this section
 

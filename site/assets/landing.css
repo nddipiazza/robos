@@ -61,6 +61,7 @@
 .l-steps li{counter-increment:s;border:1px solid var(--line);border-radius:10px;padding:20px;background:var(--card)}
 .l-steps li:before{content:counter(s);display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--btn-fg);font-weight:600;font-size:.8rem;margin-bottom:12px}
 .l-steps b{display:block;margin-bottom:4px}.l-steps span{color:var(--muted);font-size:.9rem}
+.l-build-cta{margin-top:28px}
 .landing #build .player{margin-top:56px}
 
 @media(max-width:960px){
@@ -111,6 +112,12 @@
 .l-mosaic-new a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-style:dashed;border-width:2px;color:var(--muted)}
 .l-mosaic-new b{font-size:2rem;line-height:1;color:var(--accent);font-weight:500}
 .l-mosaic-new span{position:static;background:none;color:var(--fg);padding:0}
+/* "Build apps" leads the mosaic; under the tiles, a full-width row of two buttons: More apps, Add your own app */
+.l-mosaic-build a{border-color:var(--accent)}
+.l-mosaic-new{grid-column:1/-1;display:flex;gap:12px}
+.l-mosaic-new a{flex:1;aspect-ratio:auto;flex-direction:row;gap:10px;padding:12px}
+.l-mosaic-new b{font-size:1.5rem}
+.l-mosaic-new .l-mosaic-more{border-style:solid;border-width:1px}
 .landing #product .grid3 .card .go{display:inline-block}
 .l-ask{margin-top:28px;max-width:760px}
 #ai .l-show{margin-bottom:44px}

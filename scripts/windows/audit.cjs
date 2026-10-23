@@ -18,6 +18,8 @@ async function worker(id) {
   const errors = [], failedRequests = [];
   let stderr = '';
   const result = { id, ok: false };
+  const started = Date.now();
+  let page;
   try {
     instance = await _electron.launch({ executablePath: path.join(root, 'node_modules/electron/dist/electron.exe'),
       args: ['--no-sandbox', '--disable-gpu', path.join(root, 'windows'), ...(id === 'launcher' ? [] : [`--app=${id}`])], timeout: 12000,
@@ -26,7 +28,8 @@ async function worker(id) {
         PATH: `${path.join(root, 'runtime')};${path.join(root, 'runtime/git/cmd')};${process.env.PATH}` } });
     instance.process().stderr.on('data', data => stderr += data);
     instance.on('window', page => page.on('pageerror', error => errors.push(error.message)));
-    const page = await instance.firstWindow({ timeout: 12000 });
+    page = await instance.firstWindow({ timeout: 12000 });
+    result.firstWindowMs = Date.now() - started;
     page.on('pageerror', error => errors.push(error.message));
     page.on('requestfailed', req => failedRequests.push({ url: req.url(), error: req.failure()?.errorText }));
     await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
@@ -37,8 +40,17 @@ async function worker(id) {
     Object.assign(result, state, { errors, failedRequests });
     result.ok = state.text.trim().length > 30 && !errors.length && !failedRequests.some(r => !/^https?:/.test(r.url));
     await page.screenshot({ path: path.join(output, `${id}.png`) });
-  } catch (error) { result.error = error.message; }
+  } catch (error) {
+    result.error = error.message;
+    result.errors = errors;
+    result.failedRequests = failedRequests;
+    if (page) {
+      result.url = page.url();
+      await page.screenshot({ path: path.join(output, `${id}-failure.png`), timeout: 1500 }).catch(() => {});
+    }
+  }
   finally {
+    result.elapsedMs = Date.now() - started;
     result.stderr = stderr;
     fs.writeFileSync(path.join(output, `${id}.json`), JSON.stringify(result, null, 2));
     if (instance) {

@@ -4,6 +4,8 @@ const logPanel = document.getElementById('log-panel');
 const logOutput = document.getElementById('log-output');
 const logTitle = document.getElementById('log-title');
 const logClose = document.getElementById('log-close');
+const catalogMessage = document.getElementById('catalog-message');
+const refreshButton = document.getElementById('refresh-tools');
 
 let tools = [];
 let activeLogTool = null;
@@ -51,7 +53,8 @@ function renderTools() {
 
     const statusClass = tool.installing ? 'status-installing'
       : tool.installed ? 'status-installed' : 'status-not-installed';
-    const statusText = tool.installing ? 'Installing...'
+    const statusText = tool.installing ? (tool.action === 'uninstall' ? 'Uninstalling…' : 'Installing…')
+      : tool.supported === false ? 'Unavailable'
       : tool.installed ? 'Installed' : 'Not installed';
 
     card.innerHTML = `
@@ -66,23 +69,46 @@ function renderTools() {
     `;
 
     const btnContainer = card.querySelector('.tool-status');
+    const source = document.createElement('div');
+    source.className = 'tool-desc tool-source';
+    source.textContent = tool.unavailableReason || tool.source || '';
+    card.querySelector('.tool-info').appendChild(source);
 
-    if (tool.installing) {
+    if (tool.supported === false) {
+      card.classList.add('unsupported');
+    } else if (tool.installing) {
       const logBtn = document.createElement('button');
       logBtn.className = 'tool-btn log-btn';
       logBtn.textContent = 'View Log';
       logBtn.addEventListener('click', () => showLog(tool));
       btnContainer.appendChild(logBtn);
+    } else if (tool.externallyManaged) {
+      const btn = document.createElement('button');
+      btn.className = 'tool-btn';
+      btn.textContent = 'Windows settings';
+      btn.title = 'This copy was installed outside WinGet.';
+      btn.addEventListener('click', () => getRobosApi().manageWindowsSoftware());
+      btnContainer.appendChild(btn);
     } else if (tool.installed) {
+      if (tool.packageId || tool.npmPackage) {
+        const update = document.createElement('button');
+        update.className = 'tool-btn install';
+        update.textContent = 'Update';
+        update.disabled = tools.some(t => t.installing);
+        update.addEventListener('click', () => doInstall(tool.id, 'install'));
+        btnContainer.appendChild(update);
+      }
       const btn = document.createElement('button');
       btn.className = 'tool-btn uninstall';
       btn.textContent = 'Uninstall';
+      btn.disabled = tools.some(t => t.installing);
       btn.addEventListener('click', () => doInstall(tool.id, 'uninstall'));
       btnContainer.appendChild(btn);
     } else {
       const btn = document.createElement('button');
       btn.className = 'tool-btn install';
       btn.textContent = 'Install';
+      btn.disabled = tools.some(t => t.installing);
       btn.addEventListener('click', () => doInstall(tool.id, 'install'));
       btnContainer.appendChild(btn);
     }
@@ -110,6 +136,7 @@ async function doInstall(toolId, action) {
   const tool = tools.find(t => t.id === toolId);
   if (!tool) return;
   tool.installing = true;
+  tool.action = action;
   renderTools();
 
   logTitle.textContent = `${tool.name} — ${action === 'uninstall' ? 'Uninstall' : 'Install'} Log`;
@@ -117,12 +144,30 @@ async function doInstall(toolId, action) {
   logPanel.classList.remove('hidden');
   activeLogTool = toolId;
 
-  if (action === 'uninstall') {
-    await api.uninstallTool(toolId);
-  } else {
-    await api.installTool(toolId);
+  try {
+    const result = action === 'uninstall' ? await api.uninstallTool(toolId) : await api.installTool(toolId);
+    if (result?.error) throw new Error(result.error);
+  } catch (error) {
+    tool.installing = false;
+    logOutput.textContent += `${error.message}\n`;
+    renderTools();
   }
 }
+
+async function refreshTools(force = false) {
+  refreshButton.disabled = true;
+  catalogMessage.textContent = 'Checking installed software…';
+  try {
+    tools = await getRobosApi().getTools(force);
+    catalogMessage.textContent = tools.some(t => /WinGet is unavailable/.test(t.unavailableReason || ''))
+      ? 'Windows Package Manager needs attention. See the package details below.'
+      : 'Choose software to install. Installation progress appears below.';
+    renderCategoryBar();
+    renderTools();
+  } catch (error) { catalogMessage.textContent = `Could not load software: ${error.message}. Click Refresh to retry.`; }
+  finally { refreshButton.disabled = false; }
+}
+refreshButton.addEventListener('click', () => refreshTools(true));
 
 function initSoftwareCenter() {
   const api = getRobosApi();
@@ -138,20 +183,12 @@ function initSoftwareCenter() {
         logOutput.scrollTop = logOutput.scrollHeight;
       }
       if (done) {
-        api.getTools().then(t => {
-          tools = t;
-          renderCategoryBar();
-          renderTools();
-        });
+        refreshTools();
       }
     });
   }
 
-  api.getTools().then(t => {
-    tools = t;
-    renderCategoryBar();
-    renderTools();
-  });
+  refreshTools();
 }
 
 initSoftwareCenter();
