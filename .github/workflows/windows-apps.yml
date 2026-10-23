@@ -30,12 +30,13 @@ jobs:
       - name: Exercise installed apps
         shell: pwsh
         run: node scripts/windows/smoke.cjs "$env:RUNNER_TEMP\RobOS"
+      - name: Check onboarding startup and embedded steps
+        timeout-minutes: 2
+        shell: pwsh
+        run: node scripts/windows/smoke-onboarding.cjs "$env:RUNNER_TEMP\RobOS"
       - name: Audit every installed app
         shell: pwsh
         run: node scripts/windows/audit.cjs "$env:RUNNER_TEMP\RobOS"
-      - name: Check onboarding startup and embedded steps
-        shell: pwsh
-        run: node scripts/windows/smoke-onboarding.cjs "$env:RUNNER_TEMP\RobOS"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
