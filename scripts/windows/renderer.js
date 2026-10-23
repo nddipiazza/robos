@@ -23,12 +23,13 @@ window.robos.list().then(apps => {
   }
   async function launch(app) {
     const status = document.getElementById('status'); clearTimeout(statusTimer);
+    status.hidden = false; status.textContent = `Starting ${app.label}…`;
     try {
       await window.robos.launch(app.id);
       recent = [app.id, ...recent.filter(id => id !== app.id)].slice(0, 16);
       try { localStorage.setItem('robos-recent', JSON.stringify(recent)); } catch {}
       status.textContent = `Opening ${app.label}`;
-    } catch (error) { status.textContent = error.message; }
+    } catch (error) { status.textContent = error.message; return; }
     status.hidden = false; statusTimer = setTimeout(() => { status.hidden = true; }, 3500);
   }
   function group(app) {
@@ -71,6 +72,32 @@ window.robos.list().then(apps => {
     document.querySelectorAll('[data-filter]').forEach(b => b.classList.toggle('active', b === button)); render();
   }));
   document.getElementById('search').addEventListener('input', render);
-  document.addEventListener('keydown', event => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); document.getElementById('search').focus(); } });
+  const search = document.getElementById('search');
+  window.robos.onShown(() => { search.focus(); search.select(); });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') window.robos.hide();
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); search.focus(); }
+  });
+  let settings;
+  const shortcut = document.getElementById('shortcut-toggle');
+  const login = document.getElementById('login-toggle');
+  function showSettings(value) {
+    settings = value;
+    shortcut.disabled = false; login.disabled = false;
+    shortcut.setAttribute('aria-pressed', String(value.shortcutActive));
+    shortcut.textContent = value.shortcutActive ? 'Win + Shift + Space enabled' : 'Enable Win + Shift + Space';
+    login.setAttribute('aria-pressed', String(value.startAtLogin));
+    login.textContent = value.startAtLogin ? 'Starts at Windows sign-in' : 'Run at Windows sign-in';
+    document.getElementById('launcher-hint').textContent = value.shortcutError || 'Close the window to keep RobOS ready in the tray.';
+  }
+  async function setting(button, update) {
+    button.disabled = true;
+    try { showSettings(await update()); }
+    catch (error) { document.getElementById('launcher-hint').textContent = error.message; }
+    finally { button.disabled = false; }
+  }
+  shortcut.addEventListener('click', () => setting(shortcut, () => window.robos.setShortcut(!settings?.shortcutActive)));
+  login.addEventListener('click', () => setting(login, () => window.robos.setStartAtLogin(!settings?.startAtLogin)));
+  window.robos.launcherState().then(showSettings);
   render();
 }).catch(error => { const status = document.getElementById('status'); status.hidden = false; status.textContent = error.message; });

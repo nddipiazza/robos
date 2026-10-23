@@ -26,7 +26,7 @@ jobs:
         shell: pwsh
         run: |
           if ($env:RELEASE_TAG -ne "v$((Get-Content VERSION).Trim())") { throw 'Release tag does not match VERSION' }
-          node --test scripts/windows/setup.test.cjs scripts/windows/compatibility.test.cjs packages/software-center/windows-tools.test.js scripts/windows/build-release.test.cjs scripts/windows/portable-lifetime.test.cjs
+          node --test scripts/windows/setup.test.cjs scripts/windows/compatibility.test.cjs packages/software-center/windows-tools.test.js scripts/windows/build-release.test.cjs scripts/windows/portable-lifetime.test.cjs scripts/windows/launcher.test.cjs
       - name: Prepare a clean native suite
         shell: pwsh
         run: ./site/downloads/Install-RobOS.ps1 -SourceRoot $pwd -InstallDir "$env:RUNNER_TEMP\RobOS-suite" -NoLaunch
@@ -46,12 +46,18 @@ jobs:
       - name: Test packaged apps
         shell: pwsh
         run: node scripts/windows/smoke-packaged.cjs release/windows-native/win-unpacked/RobOS.exe "$env:RUNNER_TEMP\RobOS-suite\packages\robos-test\node_modules\playwright-core"
+      - name: Launch apps through the packaged launcher
+        timeout-minutes: 3
+        shell: pwsh
+        run: node scripts/windows/smoke-launcher.cjs "$env:RUNNER_TEMP\RobOS-suite" release/windows-native/win-unpacked/RobOS.exe
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: native-windows-exe-evidence
           path: |
             run/windows-packaged-smoke/
+            run/windows-launcher-smoke/results.json
+            run/windows-launcher-smoke/launcher.png
             release/windows-native/*.exe
             release/windows-native/WINDOWS-EXE-SHA256SUMS
             release/windows-native/windows-build.json
