@@ -42,8 +42,8 @@ function recordPayment(service, input) {
   shop(service);
   if (!/^[a-f0-9-]{36}$/i.test(input.requestId || '')) throw new Error('Payment needs a valid submission identifier');
   const records = service.workspace.read()['robos:nodes'];
-  const job = records.find(n => n['@id'] === input.job && n['@type'] === 'robos:RepairOrder');
-  if (!job) throw new Error('Select a repair job');
+  const job = records.find(n => n['@id'] === input.job && ['robos:RepairOrder', 'robos:TowJob'].includes(n['@type']));
+  if (!job) throw new Error('Select a repair job or tow call');
   const amount = amountMinor(input.amount, { positive: true });
   const currency = input.currency, direction = input.direction;
   if (!CURRENCIES.includes(currency) || !['received', 'refund'].includes(direction)) throw new Error('Invalid payment currency or direction');

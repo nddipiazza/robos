@@ -18,7 +18,7 @@ Software should bend to the person using it. Every RobOS app is a starting point
 
 End-user suites, each modeled in the KGraph, built by agents and verified by browser or gameplay tests:
 - **Point of Sale**: retail, café and bar register with self-checkout, scanning, prep queues, tabs and an open checkout-session API.
-- **Auto Center**: repair-shop front desk, mechanic bench with Bluetooth OBD-II, estimates and checkout, plus owner vehicle care.
+- **Auto Center**: repair-shop front desk, tow desk (tow and roadside calls, truck dispatch, tow invoices), mechanic bench with Bluetooth OBD-II, estimates and checkout, plus owner vehicle care.
 - **Household**: statement imports, reconciliation, spending categories and a local tax estimate.
 - **Games**: Realm of Heroes cRPG, a HeroQuest-inspired Tabletop RPG and the Starfall Command RTS (`games/`).
 - **Audio Player & Home Speaker**: a large music library with lyrics and zero-cloud Google Cast streaming, plus optional AI features: **AI Playlists** (describe a mood, the agent picks and orders songs) and a **Virtual DJ** (the agent writes short song intros a few songs ahead, spoken with RobOS Voice).

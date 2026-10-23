@@ -11,6 +11,8 @@ You see every car that is finished and ready to be billed. Cars still being work
 
 ::shot[only-finished-cars-are-ready-for-checkout|2|Only finished cars are ready for checkout]
 
+Finished tow calls are listed below the cars, under **Tow calls to bill**. They have their own four steps; see [Run a tow service](../10-tow-desk/).
+
 ## Step 2: Invoice
 
 The invoice shows the approved estimate, the hours worked and the cost of the parts. The total comes from the estimate the customer approved. Press **Issue invoice**.

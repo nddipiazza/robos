@@ -38,7 +38,8 @@ function buildReports(nodes, { now = new Date(), timeZone = Intl.DateTimeFormat(
   const periods = { day: asOf, week: shiftDay(asOf, -(weekday + 6) % 7), month: asOf.slice(0, 7) + '-01' };
   const ofType = type => nodes.filter(n => n['@type'] === 'robos:' + type);
   const vehicles = new Map(ofType('OwnedVehicle').map(n => [n['@id'], n]));
-  const jobs = ofType('RepairOrder'), jobIndex = new Map(jobs.map(n => [n['@id'], n]));
+  // Tow calls are billed and paid like repair jobs, so payments, balances and profit count both.
+  const jobs = ofType('RepairOrder'), tows = ofType('TowJob'), billable = [...jobs, ...tows], jobIndex = new Map(billable.map(n => [n['@id'], n]));
   const invalid = { payments: 0, closedJobsWithoutTimestamp: 0, stays: 0 };
   const candidatePayments = ofType('ShopPayment').filter(p => {
     const valid = jobIndex.has(linked(p, 'robos:job')) && Number.isSafeInteger(p['robos:amountMinor']) &&
@@ -96,7 +97,7 @@ function buildReports(nodes, { now = new Date(), timeZone = Intl.DateTimeFormat(
   }]));
   const balances = Object.fromEntries(CURRENCIES.map(code => {
     let outstanding = 0n, credit = 0n; let billedJobs = 0;
-    for (const job of jobs) {
+    for (const job of billable) {
       if (job['robos:billingCurrency'] !== code || !Number.isSafeInteger(job['robos:billedMinor']) || job['robos:billedMinor'] < 0) continue;
       billedJobs++;
       const net = BigInt(sums(payments.filter(p => linked(p, 'robos:job') === job['@id'] && p['robos:currency'] === code && p['robos:paidOn'] <= today)).netMinor);
@@ -108,8 +109,15 @@ function buildReports(nodes, { now = new Date(), timeZone = Intl.DateTimeFormat(
   const technicians = new Map();
   for (const job of openJobs) { const name = job['robos:technician']?.trim() || 'Unassigned'; technicians.set(name, (technicians.get(name) || 0) + 1); }
   const plans = ofType('MaintenanceSchedule').filter(s => s['robos:scheduleStatus'] !== 'completed');
-  const profit = require('./profit').buildProfit(nodes, { jobs, today, asOf, periods, currency, validDate, currencies: CURRENCIES, categories: COST_CATEGORIES });
-  return { profit, asOf, today, timeZone, currency, periods, money, revenue: money[currency], balances,
+  const profit = require('./profit').buildProfit(nodes, { jobs: billable, today, asOf, periods, currency, validDate, currencies: CURRENCIES, categories: COST_CATEGORIES });
+  const towDelivered = tows.filter(t => validInstant(t['robos:deliveredAt']) && Date.parse(t['robos:deliveredAt']) <= now.getTime());
+  const towCalls = Object.fromEntries(Object.entries(periods).map(([key, start]) => {
+    const done = towDelivered.filter(t => inPeriod(dayAt(t['robos:deliveredAt'], timeZone), start));
+    return [key, { completed: done.length, loadedMiles: Math.round(done.reduce((s, t) => s + (Number(t['robos:loadedMiles']) || 0), 0) * 10) / 10 }];
+  }));
+  const towing = { open: tows.filter(t => !['closed', 'cancelled'].includes(t['robos:jobStatus'])).length, waiting: tows.filter(t => t['robos:jobStatus'] === 'requested').length,
+    onTheRoad: tows.filter(t => ['dispatched', 'on-scene', 'in-tow'].includes(t['robos:jobStatus'])).length, toInvoice: tows.filter(t => t['robos:jobStatus'] === 'delivered').length, periods: towCalls };
+  return { towing, profit, asOf, today, timeZone, currency, periods, money, revenue: money[currency], balances,
     balance: balances[currency], held, heldCount: held.length, readyForPickup: held.filter(h => h.readyForPickup).length,
     pastExpected: held.filter(h => h.pastExpectedDate).length, statuses, openJobs: openJobs.length, completions, custody,
     cycleHours: cycleHours.length ? Math.round(cycleHours.reduce((a, b) => a + b, 0) / cycleHours.length * 10) / 10 : null,

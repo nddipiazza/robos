@@ -67,6 +67,8 @@ For routine service, choose every service they want, such as an oil change and a
 
 > **Urgent cars.** If the customer says the car is unsafe, or must be towed, the ticket is marked **Urgent** and appears first for the mechanics.
 
+If the car must be towed and you run your own trucks, the confirm step asks **Send our tow truck?** Say yes and enter where the car is: the tow call opens with the ticket. See [Run a tow service](../10-tow-desk/).
+
 ## Step 5: Check and open the ticket
 
 You see a summary of everything you entered. Add the odometer reading and where the car is parked if you know, then press **Open ticket**.

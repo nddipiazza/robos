@@ -892,6 +892,170 @@
       ]
     },
     {
+      "@id": "https://robos.dev/ns/sdlc#TowJob",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TowJob",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Order"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Order"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#TowJobShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#TowJob"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#vehicle"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#workItemKey"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#jobStatus"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#pickupAddress"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#TowTruck",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TowTruck",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Vehicle"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Vehicle"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#TowTruckShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#TowTruck"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/name"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#truckType"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#TowRateCard",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TowRateCard",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/PriceSpecification"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/PriceSpecification"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#TowRateCardShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#TowRateCard"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#currency"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#TowService",
+      "@type": "rdfs:Class",
+      "rdfs:label": "TowService",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Service"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Service"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#TowServiceShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#TowService"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/name"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#serviceKind"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#order"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
       "@id": "https://robos.dev/ns/sdlc#PartFitment",
       "@type": "rdfs:Class",
       "rdfs:label": "PartFitment",

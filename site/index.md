@@ -9,7 +9,7 @@ extra_css: /assets/landing.css
 <section class="l-hero">
   <div class="wrap l-hero-grid">
     <div>
-      <a class="pill" href="{{ '/blog/' | relative_url }}"><b>New</b> · OBD-II in Auto Center, a Virtual DJ in Audio Player →</a>
+      <a class="pill" href="{{ '/blog/' | relative_url }}"><b>New</b> · A tow desk in Auto Center, OBD-II at the mechanic bench →</a>
       <h1>One app suite. <em>Make it yours.</em></h1>
       <p class="lead">RobOS is a suite of desktop apps, from a point of sale and an auto shop to household finances, games, music and developer tools, all built on one knowledge graph. Use the apps as they are, customize any of them to fit how you work, or describe a new app and RobOS builds it.</p>
       <ul class="l-three">
@@ -108,7 +108,7 @@ extra_css: /assets/landing.css
       </a>
       <a class="card suite" href="{{ '/auto-center/' | relative_url }}">
         <div class="suite-shot"><img src="{{ '/assets/auto-center/shots/04-checkout--issue-the-invoice-from-the-approved-estimate-7.jpg' | relative_url }}" alt="RobOS Auto checkout screen issuing an invoice from an approved estimate" width="1000" height="625" loading="lazy"></div>
-        <div class="suite-body"><span class="suite-tag">Repair shops · Vehicle owners</span><h3>Auto Center</h3><p>Front desk intake, the mechanic bench with Bluetooth OBD-II, estimates and checkout, plus owner vehicle care, invoice scans and recall remedies.</p><span class="go">Read the Auto Center guide →</span></div>
+        <div class="suite-body"><span class="suite-tag">Repair shops · Vehicle owners</span><h3>Auto Center</h3><p>Front desk intake, a tow desk that dispatches your trucks, the mechanic bench with Bluetooth OBD-II, estimates and checkout, plus owner vehicle care, invoice scans and recall remedies.</p><span class="go">Read the Auto Center guide →</span></div>
       </a>
       <a class="card suite" href="{{ '/family-finances/' | relative_url }}">
         <div class="suite-shot"><img src="{{ '/assets/family-finances/02-accounts.png' | relative_url }}" alt="RobOS Household accounts view with six reconciled accounts" width="1440" height="1185" loading="lazy"></div>

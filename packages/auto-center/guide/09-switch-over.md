@@ -57,4 +57,4 @@ If one of these is a deal-breaker, keep using your current system for that one j
 - [ ] The last old job is closed
 - [ ] Your backup runs every day
 
-Questions about how any step was tested? See [How we know it works](../tests/).
+If you run tow trucks, read [Run a tow service](../10-tow-desk/) next. Questions about how any step was tested? See [How we know it works](../tests/).

@@ -1,0 +1,337 @@
+{
+ "@context": {
+  "robos": "https://robos.dev/ns/sdlc#",
+  "dcterms": "http://purl.org/dc/terms/",
+  "schema": "https://schema.org/"
+ },
+ "@graph": [
+  {
+   "@id": "urn:robos:auto:TowService:tow",
+   "@type": "robos:TowService",
+   "dcterms:title": "Tow",
+   "schema:name": "Tow",
+   "schema:description": "Take the vehicle to our shop, our yard or another address",
+   "robos:serviceKind": "tow",
+   "robos:order": 0,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tow-tow-reason",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Why does it need a tow?",
+   "schema:name": "Why does it need a tow?",
+   "robos:questionKey": "reason",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Broke down",
+    "Accident",
+    "Won't start",
+    "Overheated",
+    "Flat tire, no spare",
+    "Parked illegally or impound",
+    "Other"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:form": "tow",
+   "robos:towService": {
+    "@id": "urn:robos:auto:TowService:tow"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tow-tow-rolls",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Do all four wheels turn freely?",
+   "schema:name": "Do all four wheels turn freely?",
+   "robos:questionKey": "rolls",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Yes",
+    "No, a wheel is locked or damaged",
+    "Not sure"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:form": "tow",
+   "robos:towService": {
+    "@id": "urn:robos:auto:TowService:tow"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tow-tow-drivetrain",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Is it all-wheel or four-wheel drive?",
+   "schema:name": "Is it all-wheel or four-wheel drive?",
+   "robos:questionKey": "drivetrain",
+   "robos:questionType": "single",
+   "robos:options": [
+    "No, two-wheel drive",
+    "Yes, AWD or 4x4",
+    "Electric or hybrid",
+    "Not sure"
+   ],
+   "robos:order": 2,
+   "robos:package": "auto",
+   "robos:form": "tow",
+   "robos:towService": {
+    "@id": "urn:robos:auto:TowService:tow"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tow-tow-keys",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Will the keys be with the vehicle?",
+   "schema:name": "Will the keys be with the vehicle?",
+   "robos:questionKey": "keys",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Yes, the customer is with it",
+    "Keys left in a drop box",
+    "No keys"
+   ],
+   "robos:order": 3,
+   "robos:package": "auto",
+   "robos:form": "tow",
+   "robos:towService": {
+    "@id": "urn:robos:auto:TowService:tow"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:TowService:jump-start",
+   "@type": "robos:TowService",
+   "dcterms:title": "Jump start",
+   "schema:name": "Jump start",
+   "schema:description": "Battery is flat; we bring a booster",
+   "robos:serviceKind": "roadside",
+   "robos:order": 1,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tow-jump-crank",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What happens when they turn the key?",
+   "schema:name": "What happens when they turn the key?",
+   "robos:questionKey": "crank",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Clicking",
+    "Nothing at all",
+    "Cranks slowly",
+    "Starts then dies"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:form": "tow",
+   "robos:towService": {
+    "@id": "urn:robos:auto:TowService:jump-start"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:TowService:lockout",
+   "@type": "robos:TowService",
+   "dcterms:title": "Lockout",
+   "schema:name": "Lockout",
+   "schema:description": "Keys are locked inside the vehicle",
+   "robos:serviceKind": "roadside",
+   "robos:order": 2,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tow-lockout-keys",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Where are the keys?",
+   "schema:name": "Where are the keys?",
+   "robos:questionKey": "keysWhere",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Locked inside",
+    "Locked in the trunk",
+    "Lost"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:form": "tow",
+   "robos:towService": {
+    "@id": "urn:robos:auto:TowService:lockout"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:TowService:flat-tire",
+   "@type": "robos:TowService",
+   "dcterms:title": "Flat tire change",
+   "schema:name": "Flat tire change",
+   "schema:description": "Fit the customer's spare at the roadside",
+   "robos:serviceKind": "roadside",
+   "robos:order": 3,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tow-flat-spare",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Is there a usable spare and jack?",
+   "schema:name": "Is there a usable spare and jack?",
+   "robos:questionKey": "spare",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Yes",
+    "No spare",
+    "Not sure"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:form": "tow",
+   "robos:towService": {
+    "@id": "urn:robos:auto:TowService:flat-tire"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tow-flat-count",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "How many tires are flat?",
+   "schema:name": "How many tires are flat?",
+   "robos:questionKey": "flats",
+   "robos:questionType": "single",
+   "robos:options": [
+    "One",
+    "More than one"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:form": "tow",
+   "robos:towService": {
+    "@id": "urn:robos:auto:TowService:flat-tire"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:TowService:fuel",
+   "@type": "robos:TowService",
+   "dcterms:title": "Fuel delivery",
+   "schema:name": "Fuel delivery",
+   "schema:description": "Out of fuel; we bring enough to reach a station",
+   "robos:serviceKind": "roadside",
+   "robos:order": 4,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tow-fuel-type",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Which fuel does it take?",
+   "schema:name": "Which fuel does it take?",
+   "robos:questionKey": "fuel",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Gasoline",
+    "Diesel"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:form": "tow",
+   "robos:towService": {
+    "@id": "urn:robos:auto:TowService:fuel"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:TowService:winch-out",
+   "@type": "robos:TowService",
+   "dcterms:title": "Winch-out",
+   "schema:name": "Winch-out",
+   "schema:description": "Stuck in a ditch, mud, snow or sand",
+   "robos:serviceKind": "winch",
+   "robos:order": 5,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tow-winch-where",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Where is it stuck?",
+   "schema:name": "Where is it stuck?",
+   "robos:questionKey": "stuckIn",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Ditch",
+    "Mud",
+    "Snow or ice",
+    "Sand",
+    "Other"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:form": "tow",
+   "robos:towService": {
+    "@id": "urn:robos:auto:TowService:winch-out"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tow-winch-distance",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "How far is it from solid ground?",
+   "schema:name": "How far is it from solid ground?",
+   "robos:questionKey": "distance",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Less than 10 feet",
+    "10 to 50 feet",
+    "More than 50 feet"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:form": "tow",
+   "robos:towService": {
+    "@id": "urn:robos:auto:TowService:winch-out"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tow-safety",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Where is the vehicle right now?",
+   "schema:name": "Where is the vehicle right now?",
+   "robos:questionKey": "safety",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Safe place, off the road",
+    "Road shoulder or busy street",
+    "Highway lane, or someone is in danger"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:form": "tow",
+   "robos:appliesToAll": true
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tow-riders",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Will anyone ride in the truck?",
+   "schema:name": "Will anyone ride in the truck?",
+   "robos:questionKey": "riders",
+   "robos:questionType": "single",
+   "robos:options": [
+    "No one",
+    "One person",
+    "Two people"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:form": "tow",
+   "robos:appliesToAll": true
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tow-lowered",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Anything unusual about the vehicle?",
+   "schema:name": "Anything unusual about the vehicle?",
+   "robos:questionKey": "lowered",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "Lowered or low front spoiler",
+    "Lifted or oversized tires",
+    "Trailer attached",
+    "Large van or pickup",
+    "None"
+   ],
+   "robos:order": 2,
+   "robos:package": "auto",
+   "robos:form": "tow",
+   "robos:appliesToAll": true
+  }
+ ]
+}

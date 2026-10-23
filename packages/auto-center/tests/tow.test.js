@@ -1,0 +1,116 @@
+'use strict';
+const { test } = require('node:test'), assert = require('node:assert/strict');
+const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
+const { AutoCenter } = require('../lib/service');
+const { truckNeed, towLines } = require('../lib/tow');
+function shop() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'auto-tow-')); const s = new AutoCenter({ root: path.join(dir, 'c'), privateRoot: path.join(dir, 'p') }); s.setMode('shop');
+  const W = (a, i) => s.workshop(a, i); return { s, W };
+}
+const RATES = { hookup: '95.00', perMile: '4.50', includedMiles: '5', roadside: '75.00', winchPerHour: '120.00', afterHours: '50.00', storagePerDay: '40.00', currency: 'USD' };
+function fleet(W) {
+  W('saveTowRates', RATES);
+  const flatbed = W('saveTowTruck', { name: 'Truck 1', truckType: 'flatbed', plate: 'TOW 1' });
+  const lift = W('saveTowTruck', { name: 'Truck 2', truckType: 'wheel-lift' });
+  const dana = W('addTeammate', { name: 'Dana Wells', role: 'Tow driver' }), maria = W('addTeammate', { name: 'Maria Lopez', role: 'Technician' });
+  const c = W('registerCustomer', { name: 'Jim Parker', phone: '(555) 010-0142' });
+  const v = W('addCustomerVehicle', { customer: c['@id'], year: '2005', make: 'Honda', model: 'Accord' });
+  return { flatbed, lift, dana, maria, c, v };
+}
+const call = (v, extra = {}) => ({ vehicle: v['@id'], service: 'tow', pickupAddress: 'I-90 eastbound, exit 12 shoulder', destination: 'shop', estimatedMiles: '15', answers: { reason: 'Broke down', rolls: 'Yes', drivetrain: 'No, two-wheel drive' }, ...extra });
+test('truck needs follow from the answers', () => {
+  assert.equal(truckNeed({ rolls: 'Yes', drivetrain: 'No, two-wheel drive' }).needs, 'any');
+  assert.deepEqual(truckNeed({ drivetrain: 'Yes, AWD or 4x4', reason: 'Accident' }), { needs: 'flatbed', reasons: ['All-wheel or four-wheel drive', 'Accident damage'] });
+  assert.equal(truckNeed({ lowered: ['Trailer attached'] }).needs, 'heavy-duty');
+  const rates = { hookup: 9500, perMile: 450, includedMiles: 5, roadside: 7500, winchPerHour: 12000, afterHours: 5000, storagePerDay: 4000, currency: 'USD' };
+  assert.equal(towLines(rates, { kind: 'tow', miles: 15 }).totalMinor, 9500 + 10 * 450);
+  assert.equal(towLines(rates, { kind: 'tow', miles: 3 }).lines.length, 1, 'included miles are not billed');
+  assert.equal(towLines(rates, { kind: 'roadside', serviceLabel: 'Jump start', afterHours: true }).totalMinor, 12500);
+});
+test('a tow call is quoted, dispatched, delivered to the shop, invoiced, paid and closed', () => {
+  const { s, W } = shop(); const { lift, dana, v } = fleet(W);
+  const q = W('quoteTow', { service: 'tow', estimatedMiles: '15', afterHours: true, answers: { drivetrain: 'Electric or hybrid' } });
+  assert.equal(q.quote.totalMinor, 9500 + 4500 + 5000); assert.equal(q.need.needs, 'flatbed');
+  const tow = W('takeTowCall', call(v, { afterHours: true, answers: { reason: 'Broke down', safety: 'Highway lane, or someone is in danger' } }));
+  assert.equal(tow['robos:workItemKey'], 'TW-0001'); assert.equal(tow['robos:quotedMinor'], 19000); assert.equal(tow['robos:priority'], 'urgent');
+  assert.throws(() => W('takeTowCall', call(v)), /already has an open tow call/);
+  assert.throws(() => W('arriveTow', { tow: tow['@id'] }), /on the way first/);
+  W('dispatchTow', { tow: tow['@id'], truck: lift['@id'], driver: dana['@id'], etaMinutes: '25' });
+  let b = W('towBoard'); assert.equal(b.tows[0].stage, 'dispatched'); assert.equal(b.trucks.find(t => t.name === 'Truck 2').onCall, 'TW-0001'); assert.equal(b.drivers.find(d => d.name === 'Dana Wells').onCall, 'TW-0001');
+  assert.throws(() => W('saveTowTruck', { id: lift['@id'], active: false }), /out on a call/);
+  W('arriveTow', { tow: tow['@id'] });
+  assert.throws(() => W('hookTow', { tow: tow['@id'] }), /Condition before towing/);
+  W('hookTow', { tow: tow['@id'], condition: 'Scuff on rear bumper', odometer: '184200' });
+  assert.throws(() => W('deliverTow', { tow: tow['@id'] }), /loaded miles/);
+  assert.equal(W('deliverTow', { tow: tow['@id'], loadedMiles: '17', location: 'Lot B' }).checkedIn, true);
+  const stay = s.workspace.read()['robos:nodes'].find(n => n['@type'] === 'robos:VehicleStay');
+  assert.equal(stay['robos:parkingLocation'], 'Lot B');
+  assert.throws(() => W('issueTowInvoice', { tow: tow['@id'], storageDays: '2' }), /only charged for vehicles held in our yard/);
+  assert.throws(() => W('issueTowInvoice', { tow: tow['@id'], extra: '12.00' }), /extra charge is for/);
+  const inv = W('issueTowInvoice', { tow: tow['@id'], extra: '12.00', extraNote: 'Highway toll' });
+  assert.equal(inv['robos:totalMinor'], 9500 + 12 * 450 + 5000 + 1200);
+  assert.throws(() => W('closeTow', { tow: tow['@id'] }), /balance of 211\.00 USD/);
+  s.recordPayment({ requestId: '00000000-0000-4000-8000-000000000001', job: tow['@id'], amount: '211.00', currency: 'USD', direction: 'received', method: 'card', paidOn: new Date().toLocaleDateString('en-CA') });
+  W('closeTow', { tow: tow['@id'] });
+  b = W('towBoard'); assert.equal(b.tows[0].stage, 'closed'); assert.equal(b.tows[0].summary.balance, 0);
+  assert.ok(s.workspace.read()['robos:nodes'].find(n => n['@type'] === 'robos:VehicleStay' && !n['schema:endDate']), 'the car stays checked in at the shop');
+  const r = s.reports({}); assert.equal(r.revenue.day.netMinor, '21100'); assert.equal(r.towing.periods.month.completed, 1); assert.equal(r.towing.periods.month.loadedMiles, 17);
+  assert.ok(r.profit.jobs.some(j => j.job['robos:workItemKey'] === 'TW-0001'));
+  assert.match(require('node:child_process').execFileSync('git', ['log', '--format=%s'], { cwd: path.join(s.privateRoot, 'shop'), encoding: 'utf8' }), /TW-0001: dispatched Truck 2/);
+});
+test('dispatch checks the truck type, and busy trucks and drivers', () => {
+  const { W } = shop(); const { flatbed, lift, dana, maria, v, c } = fleet(W);
+  const awd = W('takeTowCall', call(v, { answers: { drivetrain: 'Yes, AWD or 4x4' } }));
+  assert.throws(() => W('dispatchTow', { tow: awd['@id'], truck: lift['@id'], driver: dana['@id'] }), /needs a flatbed \(All-wheel or four-wheel drive\); Truck 2 is a wheel-lift/);
+  W('dispatchTow', { tow: awd['@id'], truck: flatbed['@id'], driver: dana['@id'] });
+  const v2 = W('addCustomerVehicle', { customer: c['@id'], year: '2018', make: 'Ford', model: 'F-150' });
+  const jump = W('takeTowCall', { vehicle: v2['@id'], service: 'jump-start', pickupAddress: '12 Elm St driveway', answers: { crank: 'Clicking' } });
+  assert.equal(jump['robos:destinationKind'], 'roadside');
+  assert.throws(() => W('dispatchTow', { tow: jump['@id'], truck: flatbed['@id'], driver: maria['@id'] }), /Truck 1 is already out on TW-0001/);
+  assert.throws(() => W('dispatchTow', { tow: jump['@id'], truck: lift['@id'], driver: dana['@id'] }), /Dana Wells is already driving TW-0001/);
+  W('dispatchTow', { tow: jump['@id'], truck: lift['@id'], driver: maria['@id'] }); W('arriveTow', { tow: jump['@id'] });
+  assert.throws(() => W('hookTow', { tow: jump['@id'], condition: 'ok' }), /Service done/);
+  W('deliverTow', { tow: jump['@id'] });
+  assert.equal(W('issueTowInvoice', { tow: jump['@id'] })['robos:totalMinor'], 7500);
+});
+test('yard storage is charged per day and the vehicle is released when the call closes', () => {
+  const { s, W } = shop(); const { lift, dana, v } = fleet(W);
+  const tow = W('takeTowCall', call(v, { destination: 'yard', billTo: 'police or city', billToName: 'Springfield PD', authorization: 'PD-4471' }));
+  assert.throws(() => W('takeTowCall', call(v, { destination: 'nowhere' })), /open tow call/);
+  for (const [a, i] of [['dispatchTow', { truck: lift['@id'], driver: dana['@id'] }], ['arriveTow', {}], ['hookTow', { condition: 'No visible damage' }], ['deliverTow', { loadedMiles: '4' }]]) W(a, { tow: tow['@id'], ...i });
+  const inv = W('issueTowInvoice', { tow: tow['@id'], storageDays: '3' });
+  assert.equal(inv['robos:totalMinor'], 9500 + 3 * 4000); assert.equal(inv['robos:billToName'], 'Springfield PD');
+  s.recordPayment({ requestId: '00000000-0000-4000-8000-000000000002', job: tow['@id'], amount: '215.00', currency: 'USD', direction: 'received', method: 'check', paidOn: new Date().toLocaleDateString('en-CA'), notes: 'PD-4471' });
+  assert.throws(() => W('closeTow', { tow: tow['@id'] }), /person collecting/);
+  W('closeTow', { tow: tow['@id'], releasedTo: 'Jim Parker' });
+  assert.ok(s.workspace.read()['robos:nodes'].filter(n => n['@type'] === 'robos:VehicleStay').every(n => n['schema:endDate']));
+});
+test('calls are validated against the KGraph tow form and can be cancelled', () => {
+  const { W } = shop(); const { lift, dana, v } = fleet(W);
+  assert.throws(() => W('takeTowCall', call(v, { pickupAddress: '' })), /Pickup location is required/);
+  assert.throws(() => W('takeTowCall', call(v, { service: 'teleport' })), /what the caller needs/);
+  assert.throws(() => W('takeTowCall', call(v, { answers: { rolls: 'Sometimes' } })), /not a choice/);
+  assert.throws(() => W('takeTowCall', call(v, { destination: 'other' })), /Drop-off address is required/);
+  assert.throws(() => W('takeTowCall', call(v, { billTo: 'motor club' })), /Name of the motor club is required/);
+  const f = W('towForm'); assert.deepEqual(f.services.map(s => s.id), ['tow', 'jump-start', 'lockout', 'flat-tire', 'fuel', 'winch-out']); assert.ok(f.common.some(q => q.key === 'safety'));
+  const tow = W('takeTowCall', call(v)); W('dispatchTow', { tow: tow['@id'], truck: lift['@id'], driver: dana['@id'] });
+  assert.throws(() => W('cancelTow', { tow: tow['@id'] }), /Reason for cancelling/);
+  W('cancelTow', { tow: tow['@id'], reason: 'Customer got a jump from a friend' });
+  assert.equal(W('towBoard').trucks.find(t => t.name === 'Truck 2').onCall, null);
+  W('takeTowCall', call(v));
+});
+test('the front desk can send our tow truck with a repair intake', () => {
+  const { s, W } = shop(); const { lift, dana, v } = fleet(W);
+  assert.throws(() => W('intakeRepair', { vehicle: v['@id'], channel: 'phone call', category: 'engine', answers: { driveable: 'Not sure' }, tow: { pickupAddress: 'Home' } }), /needs to be towed/);
+  assert.throws(() => W('intakeRepair', { vehicle: v['@id'], channel: 'phone call', category: 'engine', answers: { driveable: 'No, it needs to be towed' }, tow: {} }), /Pickup location/);
+  assert.equal(W('board').jobs.length, 0, 'nothing is saved when the tow is invalid');
+  const r = W('intakeRepair', { vehicle: v['@id'], channel: 'phone call', category: 'engine', answers: { driveable: 'No, it needs to be towed' }, tow: { pickupAddress: '88 Oak Ave', estimatedMiles: '6' } });
+  assert.equal(r.tow['robos:workItemKey'], 'TW-0001'); assert.equal(r.job['robos:priority'], 'urgent');
+  const nodes = () => s.workspace.read()['robos:nodes'];
+  assert.equal(nodes().filter(n => n['@type'] === 'robos:VehicleStay').length, 0, 'not checked in until the truck drops it off');
+  let job = W('board').jobs[0]; assert.equal(job.tow.key, 'TW-0001'); assert.equal(job.tow.stage, 'requested');
+  for (const [a, i] of [['dispatchTow', { truck: lift['@id'], driver: dana['@id'] }], ['arriveTow', {}], ['hookTow', { condition: 'No visible damage' }], ['deliverTow', { loadedMiles: '6.4' }]]) W(a, { tow: r.tow['@id'], ...i });
+  assert.equal(nodes().filter(n => n['@type'] === 'robos:VehicleStay' && !n['schema:endDate']).length, 1);
+  job = W('board').jobs[0]; assert.ok(job.workItem.some(e => e.detail === 'Arrived on TW-0001 (6.4 mi)')); assert.equal(job.tow.stage, 'delivered');
+  assert.equal(W('towBoard').tows[0].repairKey, 'RO-0001');
+});

@@ -94,8 +94,10 @@ function openRepair(service, input) {
   const job = node('RepairOrder', crypto.randomUUID(), concern, { 'robos:vehicle': ref(vehicle['@id']), 'robos:jobStatus': 'received', 'robos:repairNotes': '', 'robos:technician': '', 'schema:orderDate': service.clock().toISOString(), 'robos:workItemKey': key, 'robos:odometerIn': input.odometer === '' || input.odometer === undefined ? null : Number(input.odometer), 'robos:intake': intake, 'robos:contactChannel': intake?.channel || '', 'robos:priority': intake?.urgent ? 'urgent' : 'normal' });
   const wi = node('RepairTicket', key, key + ' · ' + concern, { 'robos:job': ref(job['@id']), 'robos:workItemKey': key, 'robos:workItemStatus': 'received', 'robos:events': [event(service, 'created', (intake?.channel ? 'Request received by ' + intake.channel + '. ' : '') + 'Customer concern: ' + concern)] });
   const edits = [{ op: 'add', node: job }, { op: 'add', node: wi }];
-  if (!records.some(s => s['@type'] === 'robos:VehicleStay' && linked(s, 'robos:vehicle') === vehicle['@id'] && !s['schema:endDate'])) edits.push({ op: 'add', node: require('./shop-operations').checkInNode(service, { vehicle: vehicle['@id'], location: input.location }, records) });
-  commit(service, edits, key + ': vehicle received'); return { job, workItem: wi };
+  // A car that is coming in on our tow truck is checked in when the truck drops it off.
+  if (input.tow) { const tow = input.tow(job['@id'], records); job['robos:towJob'] = ref(tow['@id']); wi['robos:events'][0].detail += ` Coming in on tow ${tow['robos:workItemKey']}.`; edits.push({ op: 'add', node: tow }); }
+  else if (!records.some(s => s['@type'] === 'robos:VehicleStay' && linked(s, 'robos:vehicle') === vehicle['@id'] && !s['schema:endDate'])) edits.push({ op: 'add', node: require('./shop-operations').checkInNode(service, { vehicle: vehicle['@id'], location: input.location }, records) });
+  commit(service, edits, key + (input.tow ? ': tow requested' : ': vehicle received')); return { job, workItem: wi, tow: edits.find(e => e.node?.['@type'] === 'robos:TowJob')?.node || null };
 }
 function stageEdit(service, records, job, status, detail) {
   const wi = workItemFor(records, job['@id']); const set = { 'robos:jobStatus': status };
@@ -295,6 +297,11 @@ function importCustomers(service, input) {
   if (added.length) commit(service, added, `auto: import ${customersAdded} customers and ${vehiclesAdded} vehicles`);
   return { customersAdded, customersExisting, vehiclesAdded, skipped };
 }
+function towFor(records, job) {
+  const t = records.find(n => n['@type'] === 'robos:TowJob' && linked(n, 'robos:repairJob') === job['@id']); if (!t) return null;
+  const { STAGE_LABELS, towSummary } = require('./tow'), s = towSummary(records, t);
+  return { id: t['@id'], key: t['robos:workItemKey'], stage: t['robos:jobStatus'], stageLabel: STAGE_LABELS[t['robos:jobStatus']], billed: s.billed, balance: s.balance, currency: s.currency };
+}
 function board(service) {
   shop(service); const records = nodes(service);
   const jobs = records.filter(n => n['@type'] === 'robos:RepairOrder').map(job => {
@@ -303,7 +310,7 @@ function board(service) {
       workItem: workItemFor(records, job['@id'])?.['robos:events'] || [], technician: job['robos:technician'] || '', priority: job['robos:priority'] || 'normal', workComplete: !!job['robos:workComplete'], completionNote: job['robos:completionNote'] || '', needsApproval: job['robos:needsApproval'] || '', intake: job['robos:intake'] || null, channel: job['robos:contactChannel'] || '', odometerIn: job['robos:odometerIn'] ?? null, customerId: customer?.['@id'] || null, vehicleId: vehicle?.['@id'] || null,
       partRequests: records.filter(n => n['@type'] === 'robos:PartRequest' && linked(n, 'robos:job') === job['@id']).map(r => ({ id: r['@id'], name: r['schema:name'], quantity: r['robos:quantity'], status: r['robos:requestStatus'], urgency: r['robos:urgency'], by: r['robos:requestedBy'], partNumber: r['robos:partNumber'], note: r['robos:note'] })),
       timers: records.filter(n => n['@type'] === 'robos:Teammate' && n['robos:activeTimer']?.job === job['@id']).map(t => ({ teammate: t['schema:name'], startedAt: t['robos:activeTimer'].startedAt })), estimates: records.filter(n => n['@type'] === 'robos:Estimate' && linked(n, 'robos:job') === job['@id']).map(e => ({ id: e['@id'], version: e['robos:version'], status: e['robos:estimateStatus'], total: e['robos:totalMinor'], currency: e['robos:currency'], lines: e['robos:lines'] })),
-      parts: records.filter(n => n['@type'] === 'robos:PartUsage' && linked(n, 'robos:job') === job['@id']).map(p => ({ name: p['schema:name'], quantity: p['robos:quantity'], unitCost: p['robos:unitCostMinor'] })), summary: jobSummary(records, job) };
+      parts: records.filter(n => n['@type'] === 'robos:PartUsage' && linked(n, 'robos:job') === job['@id']).map(p => ({ name: p['schema:name'], quantity: p['robos:quantity'], unitCost: p['robos:unitCostMinor'] })), summary: jobSummary(records, job), tow: towFor(records, job) };
   });
   return { stages: STAGES.map(s => ({ id: s, label: STAGE_LABELS[s] })), jobs, teammates: records.filter(n => n['@type'] === 'robos:Teammate').map(t => ({ id: t['@id'], name: t['schema:name'], role: t['robos:role'], personId: t['robos:personId'], active: t['robos:active'] !== false, hourlyCost: t['robos:hourlyCostMinor'] ?? 0, activeTimer: t['robos:activeTimer'] || null })),
     customers: records.filter(n => n['@type'] === 'robos:Customer').map(c => ({ id: c['@id'], name: c['schema:name'], userId: c['robos:userId'], groupId: c['robos:groupId'], phone: c['schema:telephone'], email: c['schema:email'], preferred: c['robos:preferredContact'] || '' })),

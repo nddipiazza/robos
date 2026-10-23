@@ -16,6 +16,7 @@ This guide is written for **you, the shop owner**. Work through the steps in ord
 7. **[Protect your data](7-protect-your-data/)**: backups and restoring to a new computer.
 8. **[Run the shop day to day](8-run-the-shop/)**: a daily routine, reports and awkward cases.
 9. **[Switch over from your old system](9-switch-over/)**: the plan, and what is not included yet.
+10. **[Run a tow service](10-tow-desk/)**: for shops with their own trucks. Take tow and roadside calls, dispatch, and bill them at Checkout.
 
 ## At a glance
 
@@ -28,6 +29,8 @@ A repair moves through five stages, and each stage has an owner:
 | 3. Fix the car | Mechanic | Mechanic bench |
 | 4. Invoice and take payment | Checkout | Checkout |
 | 5. Hand back the keys | Checkout | Checkout |
+
+If you run tow trucks, the **Tow desk** takes tow and roadside calls and sends a truck. A car that cannot be driven can come in on your own truck, straight from a Front desk intake.
 
 ## Before you commit
 

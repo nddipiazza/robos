@@ -56,7 +56,15 @@ function intakeRepair(service, input) {
   const concern = summarize(form, category, Object.fromEntries(category.questions.map(q => [q.key, clean[q.key]])), notes);
   const urgent = clean.urgency === 'Emergency or unsafe' || clean.driveable === 'No, it needs to be towed';
   const intake = { channel: input.channel, category: category.label, categoryId: category.id, answers: labels, notes, urgent, warningLights: clean.warning || [], driveable: clean.driveable || '', urgency: clean.urgency || '', dropOff: clean.dropoff || '', takenAt: service.clock().toISOString() };
-  return w.openRepair(service, { vehicle: input.vehicle, concern, odometer: input.odometer, location: input.location, intake });
+  // "Needs to be towed" can send our own truck: the tow call is opened with the ticket and drops the car at the shop.
+  let tow;
+  if (input.tow) {
+    if (clean.driveable !== 'No, it needs to be towed') throw new Error('Choose "No, it needs to be towed" to send a tow truck');
+    const call = { ...input.tow, vehicle: input.vehicle, service: 'tow', destination: 'shop', urgent, notes: concern };
+    require('./tow').buildTowCall(service, call, w.nodes(service)); // fail before anything is saved
+    tow = (jobId, records) => require('./tow').buildTowCall(service, call, records, jobId);
+  }
+  return w.openRepair(service, { vehicle: input.vehicle, concern, odometer: input.odometer, location: input.location, intake, tow });
 }
 function logContact(service, input) {
   shop(service); const records = w.nodes(service), job = w.find(service, 'RepairOrder', input.job, 'Select a repair');

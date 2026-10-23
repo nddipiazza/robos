@@ -46,7 +46,8 @@ function front(file) {
 // ---- pages
 const files = fs.readdirSync(path.join(root, 'guide')).filter(f => f.endsWith('.md')).sort();
 const pages = files.map(f => { const n = f.replace(/\.md$/, ''), { meta, body } = front(path.join(root, 'guide', f)); const isIndex = n === '00-index'; return { file: f, slug: isIndex ? '' : n.replace(/^0/, ''), step: isIndex ? 0 : Number(n.slice(0, 2)), title: meta.title, summary: meta.summary, minutes: Number(meta.minutes || 0), body, url: isIndex ? '/auto-center/' : `/auto-center/${n.replace(/^0/, '')}/` }; });
-const testsPage = { slug: 'tests', step: 10, title: 'How we know it works', summary: 'The test report, recordings and the list of scenarios behind this tutorial.', minutes: 0, url: '/auto-center/tests/' };
+const chapters = pages.filter(p => p.step > 0).length;
+const testsPage = { slug: 'tests', step: chapters + 1, title: 'How we know it works', summary: 'The test report, recordings and the list of scenarios behind this tutorial.', minutes: 0, url: '/auto-center/tests/' };
 const all = [...pages, testsPage];
 function nav(current) {
   const steps = all.filter(p => p.step > 0), idx = all.indexOf(current), prev = all[idx - 1], next = all[idx + 1];
@@ -67,7 +68,7 @@ body_class: guide
 extra_css: /assets/auto-guide.css${isIndex ? '?v=auto-intro-20261019' : ''}
 description: "${esc(isIndex ? 'Vehicle care for owners and repair operations for independent shops, with the RobOS Auto Guide.' : p.summary)}"
 ---
-${hero || introduction}<section class="guide-page"><div class="wrap">${guideHeading}<div class="guide-layout">${isIndex ? list.replace('>Auto Center tutorial<', '>RobOS Auto Guide<') : list}<article class="guide-body"><p class="eyebrow">${p.step && p.step < 10 ? `Step ${p.step} of 9${p.minutes ? ` · about ${p.minutes} minutes` : ''}` : isIndex ? 'For the shop owner' : 'Tutorial'}</p><${isIndex ? 'h3' : 'h1'} class="guide-title">${esc(p.title)}</${isIndex ? 'h3' : 'h1'}><p class="chapter-intro">${esc(p.summary)}</p>
+${hero || introduction}<section class="guide-page"><div class="wrap">${guideHeading}<div class="guide-layout">${isIndex ? list.replace('>Auto Center tutorial<', '>RobOS Auto Guide<') : list}<article class="guide-body"><p class="eyebrow">${p.step && p.step <= chapters ? `Step ${p.step} of ${chapters}${p.minutes ? ` · about ${p.minutes} minutes` : ''}` : isIndex ? 'For the shop owner' : 'Tutorial'}</p><${isIndex ? 'h3' : 'h1'} class="guide-title">${esc(p.title)}</${isIndex ? 'h3' : 'h1'}><p class="chapter-intro">${esc(p.summary)}</p>
 ${body}
 ${pager}</article></div></div></section>
 `;

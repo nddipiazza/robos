@@ -6,6 +6,9 @@ function money(minor, currency) {
   const symbol = new Intl.NumberFormat('en-US', { style: 'currency', currency }).formatToParts(0).find(p => p.type === 'currency').value;
   return `${value < 0n ? '−' : ''}${symbol}${(amount / 100n).toLocaleString('en-US')}.${String(amount % 100n).padStart(2, '0')}`;
 }
+// Repair jobs and tow calls are both billed, paid and costed.
+function billableJobs() { return state.records.filter(n => ['robos:RepairOrder', 'robos:TowJob'].includes(n['@type'])); }
+function jobTitle(j) { return j['@type'] === 'robos:TowJob' ? `${j['robos:workItemKey']} · ${j['dcterms:title']}` : j['dcterms:title']; }
 function metric(label, value, note = '') { const c = text('article', '', 'metric'); c.append(text('span', label), text('strong', value), text('small', note)); return c; }
 function tableRow(values) { const row = text('tr', ''); values.forEach(v => row.append(text('td', String(v)))); return row; }
 function refill(select, nodes, label, value = n => n['@id']) {
@@ -24,6 +27,7 @@ async function refreshReports() {
   const operationMetrics = [
     metric('Vehicles at the center', r.heldCount, `${r.readyForPickup} ready for pickup · ${r.pastExpected} past expected date`),
     metric('Open repair jobs', r.openJobs, `${r.statuses['awaiting-approval']} awaiting approval · ${r.statuses['in-progress']} in progress`),
+    metric('Open tow calls', r.towing.open, `${r.towing.waiting} waiting for a truck · ${r.towing.onTheRoad} on the road · ${r.towing.toInvoice} to invoice`),
     metric('Outstanding billed balance', money(r.balance.outstandingMinor, r.currency), `${r.unbilledJobs} jobs have no charge total recorded`),
     metric('Customer credit', money(r.balance.creditMinor, r.currency), 'Received beyond recorded charge totals'),
     metric('Jobs closed this month', r.completions.month, 'Currently closed jobs with recorded closing times'),
@@ -32,7 +36,7 @@ async function refreshReports() {
     metric('Maintenance overdue by date', r.overdueMaintenance, `${r.maintenanceDueSoon} due within seven days`),
   ];
   $('floor-count').textContent = `${r.heldCount} on site / ${r.openJobs} open jobs`;
-  $('operation-cards').replaceChildren(...operationMetrics.slice(0,4));$('extra-operation-cards').replaceChildren(...operationMetrics.slice(4));
+  $('operation-cards').replaceChildren(...operationMetrics.slice(0,5));$('extra-operation-cards').replaceChildren(...operationMetrics.slice(5), metric('Tow calls completed this month', r.towing.periods.month.completed, `${r.towing.periods.month.loadedMiles} loaded miles · ${r.towing.periods.week.completed} this week`));
   $('held-cars').replaceChildren(...r.held.map(h => {
     const v = h.vehicle, s = h.stay, c = text('article', '', 'held-car'); c.dataset.vehicle = v['@id'];
     const top = text('div', '', 'vehicle-card-top');
@@ -62,14 +66,14 @@ async function refreshReports() {
   $('maintenance-report').replaceChildren(text('p', `${r.overdueMaintenance} overdue plans by date · ${r.maintenanceDueSoon} due within seven days. ${r.mileageOnlyPlans} mileage-only plans need an odometer check.`));
   const issues=[];if(r.invalid.closedJobsWithoutTimestamp)issues.push(`${r.invalid.closedJobsWithoutTimestamp} closed jobs lack a closing time and are excluded from period/turnaround counts.`);if(r.invalid.payments||r.invalid.stays)issues.push(`${r.invalid.payments} invalid payment records and ${r.invalid.stays} invalid stays excluded; review the shop records.`);$('report-quality').textContent=issues.join(' ');$('report-quality').hidden=!issues.length;
   $('daily-revenue').replaceChildren(...r.daily.map(d => tableRow([d.date, money(d.receivedMinor, r.currency), money(d.refundedMinor, r.currency), money(d.netMinor, r.currency)])));
-  const jobs = state.records.filter(n => n['@type'] === 'robos:RepairOrder'), vehicles = new Map(state.records.filter(n => n['@type'] === 'robos:OwnedVehicle').map(n => [n['@id'], n]));
-  const jobLabel = j => `${j['dcterms:title']} · ${vehicleLabel(vehicles.get(j['robos:vehicle']?.['@id'])) || 'Vehicle not found'}`;
+  const jobs = billableJobs(), vehicles = new Map(state.records.filter(n => n['@type'] === 'robos:OwnedVehicle').map(n => [n['@id'], n]));
+  const jobLabel = j => `${jobTitle(j)} · ${vehicleLabel(vehicles.get(j['robos:vehicle']?.['@id'])) || 'Vehicle not found'}`;
   refill($('payment-job'), jobs, jobLabel);
   const receipts = state.records.filter(n => n['@type'] === 'robos:ShopPayment' && n['robos:paymentDirection'] === 'received');
-  refill($('refund-original'), receipts, p => `${p['robos:paidOn']} · ${money(p['robos:amountMinor'], p['robos:currency'])} · ${jobs.find(j => j['@id'] === p['robos:job']?.['@id'])?.['dcterms:title'] || ''}`);
+  refill($('refund-original'), receipts, p => `${p['robos:paidOn']} · ${money(p['robos:amountMinor'], p['robos:currency'])} · ${(j => j ? jobTitle(j) : '')(jobs.find(j => j['@id'] === p['robos:job']?.['@id']))}`);
   selectPaymentJob();
   if (!$('payment-date').value) $('payment-date').value = r.today; $('payment-date').max = r.today;
-  $('recent-payments').replaceChildren(...r.recentPayments.map(p => tableRow([p['robos:paidOn'], jobs.find(j => j['@id'] === p['robos:job']?.['@id'])?.['dcterms:title'] || '', p['robos:paymentDirection'], `${p['robos:currency']} ${money(p['robos:amountMinor'], p['robos:currency'])}`, p['robos:paymentMethod']])));
+  $('recent-payments').replaceChildren(...r.recentPayments.map(p => tableRow([p['robos:paidOn'], (j => j ? jobTitle(j) : '')(jobs.find(j => j['@id'] === p['robos:job']?.['@id'])), p['robos:paymentDirection'], `${p['robos:currency']} ${money(p['robos:amountMinor'], p['robos:currency'])}`, p['robos:paymentMethod']])));
 }
 $('report-filters').onsubmit = e => { e.preventDefault(); safely(refreshReports); };
 $('check-in-form').onsubmit = e => { e.preventDefault(); safely(async () => { const data = Object.fromEntries(new FormData(e.target)); if (data.checkedInAt) data.checkedInAt = new Date(data.checkedInAt).toISOString(); await window.auto.checkIn(data); e.target.reset(); await refresh(); message('Vehicle checked in and committed to private shop history.'); }); };
@@ -88,14 +92,14 @@ $('payment-form').onsubmit = e => {
 function renderProfit(r) {
   $('profit-cards').replaceChildren(...Object.entries(r.profit.periods).map(([period, p]) => { const card = metric(`Profit this ${period}`, money(p.profitMinor, r.currency), `${money(p.salesMinor, r.currency)} earned − ${money(p.costsMinor, r.currency)} costs (includes ${money(p.overheadMinor, r.currency)} overhead)`); card.dataset.loss = String(BigInt(p.profitMinor) < 0n); return card; }));
   $('profit-quality').textContent = `Entered costs only: ${r.profit.unrecognizedJobs} closed jobs have no earned sales recorded; ${r.profit.jobsWithoutCosts} jobs have no costs recorded. ${r.profit.invalidEntries} invalid financial entries excluded. Review coverage before treating these totals as complete.`;
-  $('job-profit').replaceChildren(...r.profit.jobs.map(p => tableRow([p.job['dcterms:title'], p.job['robos:jobStatus'], money(p.salesMinor, r.currency), money(p.costsMinor, r.currency), money(p.profitMinor, r.currency), p.marginPercent === null ? '—' : `${p.marginPercent}%`, [!p.salesEntries ? 'No earned sales' : '', !p.expenseEntries ? 'No costs recorded' : ''].filter(Boolean).join(' · ') || 'Review cost completeness'])));
+  $('job-profit').replaceChildren(...r.profit.jobs.map(p => tableRow([jobTitle(p.job), p.job['robos:jobStatus'], money(p.salesMinor, r.currency), money(p.costsMinor, r.currency), money(p.profitMinor, r.currency), p.marginPercent === null ? '—' : `${p.marginPercent}%`, [!p.salesEntries ? 'No earned sales' : '', !p.expenseEntries ? 'No costs recorded' : ''].filter(Boolean).join(' · ') || 'Review cost completeness'])));
   $('cost-categories').replaceChildren(...Object.entries(r.profit.categories).map(([category, amount]) => tableRow([category, money(amount, r.currency)])));
-  const jobs = state.records.filter(n => n['@type'] === 'robos:RepairOrder');
-  refill($('finance-job'), [{'@id': '', 'dcterms:title': 'Shared shop overhead (no job)'}, ...jobs], n => n['dcterms:title']);
+  const jobs = billableJobs();
+  refill($('finance-job'), [{'@id': '', 'dcterms:title': 'Shared shop overhead (no job)'}, ...jobs], jobTitle);
   const originals = state.records.filter(n => n['@type'] === 'robos:ShopFinanceEntry' && n['robos:entryDirection'] === 'charge');
   refill($('finance-original'), originals, n => `${n['robos:effectiveOn']} · ${n['robos:entryKind']} · ${n['robos:currency']} ${money(n['robos:amountMinor'], n['robos:currency'])} · ${n['schema:description']}`);
   if (!$('finance-date').value) $('finance-date').value = r.today; $('finance-date').max = r.today;
-  $('finance-entries').replaceChildren(...r.profit.recentEntries.map(n => tableRow([n['robos:effectiveOn'], jobs.find(j => j['@id'] === n['robos:job']?.['@id'])?.['dcterms:title'] || 'Shared overhead', n['robos:entryKind'] + ' ' + n['robos:entryDirection'], n['robos:costCategory'], money(n['robos:amountMinor'], r.currency), n['schema:description'], n['robos:documentReference'] || '—'])));
+  $('finance-entries').replaceChildren(...r.profit.recentEntries.map(n => tableRow([n['robos:effectiveOn'], (j => j ? jobTitle(j) : 'Shared overhead')(jobs.find(j => j['@id'] === n['robos:job']?.['@id'])), n['robos:entryKind'] + ' ' + n['robos:entryDirection'], n['robos:costCategory'], money(n['robos:amountMinor'], r.currency), n['schema:description'], n['robos:documentReference'] || '—'])));
 }
 function selectFinanceCredit() {
   const credit = $('finance-direction').value === 'credit'; $('finance-credit-picker').hidden = !credit;
