@@ -164,8 +164,8 @@ WorldMap     (44,46)  ⚔ Red Slime    HP 9 → 6</div>
       <p>The <a href="{{ '/games/quest-warrior-dragon/proof-of-viability.html' | relative_url }}">BFS proof of viability</a> was the first verification layer for the Quest: Warrior Dragon port: a headless walk over every connected <code>(map, col, row)</code> state that shows every chest, door, staircase and the Dragonlord's altar is reachable from the throne room. It caught real routing bugs. It also said nothing about whether the game is <em>beatable</em>. Can a level-1 hero with 120 gold earn the 1500 for a Broad Sword before the Swamp Cave kills him? Does the pack ever fill up so that a quest chest has to be skipped? Does Charlock's basement let you out again after Erdrick's Sword? Those are economy and combat-formula questions, and the only honest test is to play.</p>
 
       <figure class="blog-fig">
-        <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/filmstrip-milestone-videos.jpg' | relative_url }}" alt="Filmstrip: one frame from each of the per-milestone videos recorded in a live Quest: Warrior Dragon AI playthrough" loading="lazy" style="object-fit:contain;max-height:none">
-        <figcaption>One frame from each per-milestone video of a live run, with the milestone id and clip length. Chests take a second; "Buy Half Plate" took 342 seconds of grinding.</figcaption>
+        <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/filmstrip-milestone-videos.jpg' | relative_url }}" alt="Filmstrip: one frame from each of the 74 milestone videos of the winning run, with each clip's length" loading="lazy" style="object-fit:contain;max-height:none">
+        <figcaption>One frame from each per-milestone video of the winning run, with the milestone id and clip length. Chests take a second; digging up Erdrick's Token took 22 minutes of grinding first.</figcaption>
       </figure>
 
       <h3>A brain that only wants the next milestone</h3>
@@ -178,20 +178,20 @@ WorldMap     (44,46)  ⚔ Red Slime    HP 9 → 6</div>
       </ul>
       <div class="blog-fig-grid">
         <figure class="blog-fig">
-          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m01-throne-room-king-lorik.png' | relative_url }}" alt="King Lorik's throne room: the first chest holds 120 gold" loading="lazy">
+          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m01-throne-room-king-lorik.png' | relative_url }}" alt="Throne room: King Lorik tells how the Dragonlord stole the Ball of Light" loading="lazy">
           <figcaption>Milestone #1. The run starts exactly where a new game starts.</figcaption>
         </figure>
         <figure class="blog-fig">
-          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/replay-m12-brecconary-shop-window.png' | relative_url }}" alt="Brecconary weapon shop window: What dost thou want?" loading="lazy">
-          <figcaption>Milestone #12, Buy Club: the brain works a real shop menu with <code>ui_accept</code> and the cursor keys.</figcaption>
+          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/replay-m12-brecconary-shop-window.png' | relative_url }}" alt="Brecconary shop window with 112 gold" loading="lazy">
+          <figcaption>The brain works a real shop menu with <code>ui_accept</code> and the cursor keys.</figcaption>
         </figure>
         <figure class="blog-fig">
-          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m29-garins-grave-b3-wolflord.png' | relative_url }}" alt="Wolflord battle in Garin's Grave B3 with SPELL selected" loading="lazy">
-          <figcaption>Garin's Grave B3: the battle policy picks SPELL against a Wolflord.</figcaption>
+          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m29-garins-grave-b3-wolflord.png' | relative_url }}" alt="Wolflord battle with the FIGHT / SPELL menu" loading="lazy">
+          <figcaption>A Wolflord: the battle policy has FIGHT and SPELL to choose from.</figcaption>
         </figure>
         <figure class="blog-fig">
-          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m41-mountain-cave-items-pack.png' | relative_url }}" alt="The ITEMS window mid-Mountain Cave: herbs, quest items and equipment" loading="lazy">
-          <figcaption>The pack mid-Mountain Cave. Herbs stack to six now; before that fix they filled all eight slots.</figcaption>
+          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m41-mountain-cave-items-pack.png' | relative_url }}" alt="The ITEMS window in Erdrick's Cave: Torch x2, Leather Armor, Small Shield, Copper Sword" loading="lazy">
+          <figcaption>The ITEMS window. Herbs and torches stack to six; before that fix they filled all eight slots.</figcaption>
         </figure>
       </div>
 
@@ -199,30 +199,30 @@ WorldMap     (44,46)  ⚔ Red Slime    HP 9 → 6</div>
       <p>At time-scale 8 a full run takes about two hours and roughly 800 random battles. Nobody watches that, and a single two-hour MP4 is nearly useless when you want to know why milestone 42 took ten minutes. So the Python driver (<code>tests/e2e/play_full_game.py</code>) got a <code>--stepped</code> mode: it cuts the ffmpeg capture at every milestone boundary into <code>videos/NN-&lt;id&gt;.mp4</code>, asks the game to <code>export_save_state</code> into <code>checkpoints/NN-&lt;id&gt;.json</code>, and saves <code>screenshots/NN-&lt;id&gt;.png</code>. Because every milestone has a checkpoint, <code>--only N</code> loads checkpoint N-1 and replays just that milestone, so a fix to the Kol item shop can be verified in twenty seconds instead of ninety minutes. <code>--from N</code> resumes a run from a checkpoint to the ending.</p>
       <p>Then the tray icon. Stepped and recorded runs now start <code>tools/playthrough-dashboard</code>, a small Electron app that reads the <code>live.json</code> the driver rewrites once a second. In the GNOME top bar it draws a 32-pixel progress ring (cyan running, green done, red crashed or stalled) whose context menu, rebuilt every three seconds, shows status, done/total milestones, level, HP, gold, battles, deaths, the current milestone and the brain's sub-objective, plus <em>Open latest milestone video</em> and <em>Stop run</em> (which sends <code>stop_play_game</code> over IPC). Click it and the dashboard window opens.</p>
       <figure class="blog-fig">
-        <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/tray-menu.png' | relative_url }}" alt="GNOME top bar with the Quest: Warrior Dragon progress-ring tray icon and its context menu" loading="lazy" style="object-fit:contain;max-height:none">
-        <figcaption>The tray icon and its menu, rendered from a live <code>live.json</code> the way the dashboard draws them: 45 / 70 milestones, level 11, 885 battles, 0 deaths, grinding for level 12 before Magic Armor.</figcaption>
+        <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/tray-menu.png' | relative_url }}" alt="GNOME top bar with the Game Playthrough tray icon and its context menu after the winning run" loading="lazy" style="object-fit:contain;max-height:none">
+        <figcaption>The tray icon and its menu after the winning run: 74 / 74 milestones, level 21, 2,621 battles, 6 deaths.</figcaption>
       </figure>
       <figure class="blog-fig">
-        <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/dashboard-live.png' | relative_url }}" alt="Playthrough dashboard live view: header with progress bar and stat chips, milestone list, live game screenshot of a Scorpion battle, battle panel, equipment and pack, AI inputs, brain event log" loading="lazy" style="object-fit:contain;max-height:none">
-        <figcaption>The dashboard's live view 43 minutes in. Left: all 70 milestones with their type and whether a checkpoint exists. Right: a game screenshot refreshed every 1.5 s, the current battle, equipment and pack with stacks collapsed, the last inputs the brain pressed, and the brain's own event log.</figcaption>
+        <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/dashboard-live.png' | relative_url }}" alt="Game Playthrough live view after the winning run: 74 / 74 milestones and the closing credits" loading="lazy" style="object-fit:contain;max-height:none">
+        <figcaption>The live view at the end of the winning run. Left: all 74 milestones with their type and whether a checkpoint exists. Right: the game screen, battle, equipment and pack, AI inputs and the brain's event log.</figcaption>
       </figure>
       <p>Every finished milestone in the list is a card. Click it and the dashboard plays that milestone's video, shows the checkpoint saved right after it (location, level, EXP, gold, HP/MP, ATK/DEF, equipment), the milestone screenshot, and a <em>Replay command</em> button that copies the exact <code>--stepped --only N</code> command line. Reviewing a run became: skim the filmstrip, click the milestone that looks slow, watch sixty seconds, read the checkpoint.</p>
       <div class="blog-fig-grid">
         <figure class="blog-fig">
-          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/dashboard-milestone-1.png' | relative_url }}" alt="Milestone card #1 Hear King Lorik's quest with its two-second video and the checkpoint: ThroneRoom (5,5), level 1, 120 gold" loading="lazy">
-          <figcaption>#1 Hear King Lorik's quest: a two-second clip and the first checkpoint.</figcaption>
+          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/dashboard-milestone-1.png' | relative_url }}" alt="Milestone card #1 Hear King Lorik's quest with its video and the checkpoint: ThroneRoom, level 1" loading="lazy">
+          <figcaption>#1 Hear King Lorik's quest: a four-second clip and the first checkpoint.</figcaption>
         </figure>
         <figure class="blog-fig">
-          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/dashboard-milestone-38.png' | relative_url }}" alt="Milestone card #38 Reach level 10 with a Scorpion battle frame and the checkpoint at WorldMap (116,32), level 10, 1310 gold" loading="lazy">
-          <figcaption>#38 Reach level 10 (STOPSPELL): 309 seconds in the desert, checkpoint at 1310 gold.</figcaption>
+          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/dashboard-milestone-31.png' | relative_url }}" alt="Milestone card #31 Grind + Reach level 10 with its video and checkpoint: WorldMap (6,60), level 10, 617 gold" loading="lazy">
+          <figcaption>#31 Reach level 10 (STOPSPELL): 143 seconds on the overworld, checkpoint at 617 gold.</figcaption>
         </figure>
         <figure class="blog-fig">
-          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/dashboard-milestone-44.png' | relative_url }}" alt="Milestone card #44 Rescue Princess Gwaelin with a Poltergeist battle frame and the checkpoint at SwampCave (5,15)" loading="lazy">
-          <figcaption>#44 Rescue Princess Gwaelin: the Swamp Cave clip and its checkpoint.</figcaption>
+          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/dashboard-milestone-41.png' | relative_url }}" alt="Milestone card #41 Rescue Princess Gwaelin with a Wolf battle frame and checkpoint: SwampCave (3,22), level 11" loading="lazy">
+          <figcaption>#41 Rescue Princess Gwaelin: the Swamp Cave clip and its checkpoint.</figcaption>
         </figure>
         <figure class="blog-fig">
-          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/dashboard-milestone-46.png' | relative_url }}" alt="Milestone card #46 Buy Broad Sword at Rimuldar with the shop dialog video and the checkpoint showing broad_sword equipped and 1045 gold" loading="lazy">
-          <figcaption>#46 Buy Broad Sword: the checkpoint confirms <code>broad_sword</code> equipped and gold down from 2387 to 1045.</figcaption>
+          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/dashboard-milestone-39.png' | relative_url }}" alt="Milestone card #39 Grind + Buy Broad Sword at Rimuldar with its video and checkpoint: broad_sword, 746 gold" loading="lazy">
+          <figcaption>#39 Buy Broad Sword: the checkpoint confirms <code>broad_sword</code> equipped with 746 gold left.</figcaption>
         </figure>
       </div>
 
@@ -230,12 +230,12 @@ WorldMap     (44,46)  ⚔ Red Slime    HP 9 → 6</div>
       <p>Autonomous runs do not fail loudly; they stall. The brain got a wall-clock progress watchdog: 90 seconds with no change in milestone, battle count, level, gold, map, tile, herbs or HP and it drops the current objective and plan, blacklists an unreachable supply shop, and after three stalls on the same milestone skips it if optional or fails the run. The driver got <code>--stall-timeout</code> (600 s by default): when the done-count, battles, level, gold and EXP all stop moving, it ends the run with status <code>stalled</code>, a <code>stall.png</code> and the tail of the brain's event log. The first thing the pair caught was a wandering villager in Kol who parked himself in the one-tile item-shop doorway and deadlocked the herb restock forever.</p>
       <div class="blog-fig-grid">
         <figure class="blog-fig">
-          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m33-kol-chest.png' | relative_url }}" alt="Kol village chest with the TAKE command menu" loading="lazy">
+          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m33-kol-chest.png' | relative_url }}" alt="Kol village with the command menu open at a chest" loading="lazy">
           <figcaption>Kol. The NPC that blocked the item-shop door now wanders elsewhere, and shop retries are capped.</figcaption>
         </figure>
         <figure class="blog-fig">
-          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/v-hurt-spell-skeleton.png' | relative_url }}" alt="Erdrick casts HURT on a Skeleton" loading="lazy">
-          <figcaption>From the level-10 video: HURT on a Skeleton. The battle policy casts when a spell is cheaper than the sword rounds it saves.</figcaption>
+          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/v-hurt-spell-skeleton.png' | relative_url }}" alt="Battle spell list with HURT selected against a Druin" loading="lazy">
+          <figcaption>HURT picked from the battle spell list. The battle policy casts when a spell is cheaper than the sword rounds it saves.</figcaption>
         </figure>
       </div>
 
@@ -243,33 +243,33 @@ WorldMap     (44,46)  ⚔ Red Slime    HP 9 → 6</div>
       <p>The rule in the game's <code>AGENTS.md</code> is "fix the game, not the brain", and it held. The playthrough found the Charlock 1F exit gate unwalkable (reachable on the BFS grid, impassable in play), boss fights not syncing the pack, duplicate chests, missing level-up curves, incorrect enemy flee factors and spell resistances, a Cantlin item shop with no stock, Wings that did nothing on the overworld, consumables that refused to stack, and a Magic Armor / Erdrick's Armor tie that made the brain re-buy armor it already outclassed. None of these were visible to the BFS audit or to the chained Cucumber checkpoints, because they only appear when a hero with the real economy and real stats tries to progress.</p>
       <div class="blog-fig-grid">
         <figure class="blog-fig">
-          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m19-erdricks-cave-b2-tablet.png' | relative_url }}" alt="Erdrick's Cave B2 in darkness with the torch radius" loading="lazy">
-          <figcaption>Erdrick's Tablet in the dark. The brain buys torches before every dark dungeon until it knows RADIANT.</figcaption>
+          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m19-erdricks-cave-b2-tablet.png' | relative_url }}" alt="Erdrick's Cave B2 in darkness with a one-tile torch radius" loading="lazy">
+          <figcaption>Erdrick's Cave in the dark. The brain buys torches before every dark dungeon until it knows RADIANT.</figcaption>
         </figure>
         <figure class="blog-fig">
-          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m44-swamp-cave-gwaelin.png' | relative_url }}" alt="Princess Gwaelin's cell at the end of the Swamp Cave" loading="lazy">
-          <figcaption>Gwaelin's cell at level 10.</figcaption>
+          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m44-swamp-cave-gwaelin.png' | relative_url }}" alt="Swamp Cave: Princess Gwaelin asks to be taken back to her father" loading="lazy">
+          <figcaption>Gwaelin's cell at level 11.</figcaption>
         </figure>
         <figure class="blog-fig">
-          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m45-rimuldar-wings-chest.png' | relative_url }}" alt="Rimuldar chest holding Wings" loading="lazy">
+          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m45-rimuldar-wings-chest.png' | relative_url }}" alt="Rimuldar: Thou dost find the Wings!" loading="lazy">
           <figcaption>Wings from Rimuldar, the brain's way home from Charlock when its MP commit bar is short.</figcaption>
         </figure>
         <figure class="blog-fig">
-          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m50-northern-cave-staff-of-rain.png' | relative_url }}" alt="The northern shrine with the Staff of Rain" loading="lazy">
-          <figcaption>Staff of Rain in the northern shrine, from an earlier run that went on to beat the Dragonlord.</figcaption>
+          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m50-northern-cave-staff-of-rain.png' | relative_url }}" alt="Northern shrine, the Staff of Rain chest" loading="lazy">
+          <figcaption>Staff of Rain in the northern shrine.</figcaption>
         </figure>
       </div>
 
       <h3>Results, and how to run it</h3>
-      <p>With the game data fixed, the brain clears all 70 milestones and beats the Dragonlord at level 21–22 in one or two Charlock expeditions with at most a single death; the run in these screenshots had 0 deaths after 45 milestones and 861 battles. The <code>playthrough.json</code> report, the per-milestone videos and the checkpoints are the proof of work. To try it: <code>python3 games/quest-warrior-dragon/tests/e2e/play_full_game.py --stepped</code> runs the whole game headless with the tray icon and dashboard; <code>--until 18</code> stops after the Copper Sword, <code>--only 42</code> replays one milestone, <code>DW_HEADED=1</code> shows the game on your desktop. The dashboard also runs on its own against any reports folder (<code>npx electron --no-sandbox . --reports ... --port ...</code>) and has <code>--snapshot out.png</code> and <code>--select N</code> flags so headless agents can screenshot it, which is how the dashboard images in this post were taken.</p>
+      <p>With the game data fixed, the brain clears all 70 milestones and beats the Dragonlord at level 21–22 in one or two Charlock expeditions with at most a single death; the screenshots in this post are from a later run that cleared all 74 milestones with 2,621 battles and 6 deaths. The <code>playthrough.json</code> report, the per-milestone videos and the checkpoints are the proof of work. To try it: <code>python3 games/quest-warrior-dragon/tests/e2e/play_full_game.py --stepped</code> runs the whole game headless with the tray icon and dashboard; <code>--until 18</code> stops after the Copper Sword, <code>--only 42</code> replays one milestone, <code>DW_HEADED=1</code> shows the game on your desktop. The dashboard also runs on its own against any reports folder (<code>npx electron --no-sandbox . --reports ... --port ...</code>) and has <code>--snapshot out.png</code> and <code>--select N</code> flags so headless agents can screenshot it, which is how the dashboard images in this post were taken.</p>
       <div class="blog-fig-grid">
         <figure class="blog-fig">
-          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m38-level-10-desert.png' | relative_url }}" alt="Alefgard desert overworld at level 10" loading="lazy">
-          <figcaption>Level 10 in the desert east of Kol.</figcaption>
+          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m38-level-10-desert.png' | relative_url }}" alt="Desert overworld while grinding for level 15" loading="lazy">
+          <figcaption>The desert on the way to level 15.</figcaption>
         </figure>
         <figure class="blog-fig">
-          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m47-return-gwaelin-king-lorik.png' | relative_url }}" alt="King Lorik: Thou hast rescued my daughter Gwaelin" loading="lazy">
-          <figcaption>Gwaelin returned to King Lorik, from an earlier run.</figcaption>
+          <img src="{{ '/assets/games/quest-warrior-dragon/playthrough/m47-return-gwaelin-king-lorik.png' | relative_url }}" alt="King Lorik: Thou hast rescued my daughter Gwaelin! I am forever grateful." loading="lazy">
+          <figcaption>Gwaelin returned to King Lorik.</figcaption>
         </figure>
       </div>
     </div>
