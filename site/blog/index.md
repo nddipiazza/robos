@@ -93,7 +93,7 @@ WorldMap     (44,46)  ⚔ Red Slime    HP 9 → 6</div>
           <figcaption>First blood: <em>The Slime takes 3 damage!</em></figcaption>
         </figure>
       </div>
-      <p><strong>The bug it found for us.</strong> The first time we ran it this week, the hero opened the chest, unlocked the door and then walked into the throne-room counter forever. Yesterday's tile audit (85c4559f) made tile 8 the counter around King Lorik, and a floor tile in every town, but the control server still listed tiles 8 and 21 as staircases in <code>/screen</code>. The AI treated the counter at (5,3) as the nearest staircase. Only tiles 33 and 34 are staircases; mapped stairs come from <code>stair_registry.json</code>. With that fixed in 3ce87afd, the same run gets from New Quest to the overworld in about twelve seconds. No test caught this; an AI player did, just by trying to play.</p>
+      <p><strong>The bug it found for us.</strong> The first time we ran it this week, the hero opened the chest, unlocked the door and then walked into the throne-room counter forever. Yesterday's tile audit (85c4559f) made tile 8 the counter around King Lorik, and a floor tile in every town, but the control server still listed tiles 8 and 21 as staircases in <code>/screen</code>. The AI treated the counter at (5,3) as the nearest staircase. Only tiles 33 and 34 are staircases; mapped stairs come from <code>stair_registry.json</code>. With that fixed in 4f6bbe3d, the same run gets from New Quest to the overworld in about twelve seconds. No test caught this; an AI player did, just by trying to play.</p>
       <p><strong>Boss fights.</strong> The <em>Enemy AI</em> side of demo mode is the game's normal monster logic: attack patterns, spells and fire breath from <code>monsters.json</code>. To show the <em>Player AI</em> against the strongest monsters we used the debug launcher's battle test, which starts a fight against any of the 40 monsters with whatever hero stats you give it:</p>
       <div class="blog-log">./launch.sh --demo --scene BattleTest --monster dragonlord_form1 \
   --hero-level 30 --hero-hp 220 --hero-hp-max 220 --hero-atk 150 --hero-def 170</div>
@@ -142,7 +142,7 @@ WorldMap     (44,46)  ⚔ Red Slime    HP 9 → 6</div>
     <div class="blog-links">
       <a href="{{ '/games/quest-warrior-dragon/' | relative_url }}">Play Quest: Warrior Dragon →</a>
       <a href="{{ '/games/quest-warrior-dragon/docs/' | relative_url }}">Read the game docs →</a>
-      <span class="blog-commits">Commits: 3ce87afd · 5591ffe1 · 85c4559f</span>
+      <span class="blog-commits">Commits: 4f6bbe3d · 5591ffe1 · 85c4559f</span>
     </div>
   </article>
 
