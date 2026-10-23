@@ -1,0 +1,10 @@
+{
+  "name": "robos-orders",
+  "version": "1.0.0",
+  "description": "RobOS Orders: suppliers and purchase orders that receive into RobOS Inventory, plus a reusable Orders / Stock / Suppliers UI",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "robos-inventory",
+  "version": "1.0.0",
+  "description": "RobOS Inventory: stock items and a movement ledger over a pluggable store (KGraph workspace or JSON file)",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}

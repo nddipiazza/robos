@@ -27,6 +27,7 @@ function requestPart(service, input) {
 function updatePartRequest(service, input) {
   shop(service); const records = w.nodes(service), r = w.find(service, 'PartRequest', input.id, 'Select a part request'), job = records.find(n => n['@id'] === w.linked(r, 'robos:job'));
   const status = input.status, from = r['robos:requestStatus'];
+  if (r['robos:purchaseOrder']?.['@id'] && from === 'ordered') { const po = records.find(n => n['@id'] === r['robos:purchaseOrder']['@id']); throw new Error(`This part is on ${po?.['robos:orderNumber'] || 'a purchase order'}; receive or cancel it under Orders`); }
   const allowed = { requested: ['ordered', 'received', 'cancelled'], ordered: ['received', 'cancelled'], received: [], cancelled: [] };
   if (!(allowed[from] || []).includes(status)) throw new Error(`A ${from} part request cannot become ${status}`);
   const set = { 'robos:requestStatus': status }, edits = [];

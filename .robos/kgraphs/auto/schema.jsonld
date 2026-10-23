@@ -1056,6 +1056,164 @@
       ]
     },
     {
+      "@id": "https://robos.dev/ns/sdlc#Supplier",
+      "@type": "rdfs:Class",
+      "rdfs:label": "Supplier",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Organization"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Organization"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#SupplierShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#Supplier"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/name"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#PurchaseOrder",
+      "@type": "rdfs:Class",
+      "rdfs:label": "PurchaseOrder",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Order"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Order"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#PurchaseOrderShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#PurchaseOrder"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#orderNumber"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#orderStatus"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#supplier"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#InventoryItem",
+      "@type": "rdfs:Class",
+      "rdfs:label": "InventoryItem",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Product"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Product"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#InventoryItemShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#InventoryItem"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/name"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#StockMovement",
+      "@type": "rdfs:Class",
+      "rdfs:label": "StockMovement",
+      "rdfs:subClassOf": {
+        "@id": "https://schema.org/Action"
+      },
+      "robos:refersFrom": {
+        "@id": "https://schema.org/Action"
+      }
+    },
+    {
+      "@id": "https://robos.dev/ns/sdlc#StockMovementShape",
+      "@type": "sh:NodeShape",
+      "sh:targetClass": {
+        "@id": "https://robos.dev/ns/sdlc#StockMovement"
+      },
+      "sh:property": [
+        {
+          "sh:path": {
+            "@id": "http://purl.org/dc/terms/title"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#item"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#movementKind"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://robos.dev/ns/sdlc#quantity"
+          },
+          "sh:minCount": 1
+        },
+        {
+          "sh:path": {
+            "@id": "https://schema.org/startTime"
+          },
+          "sh:minCount": 1
+        }
+      ]
+    },
+    {
       "@id": "https://robos.dev/ns/sdlc#PartFitment",
       "@type": "rdfs:Class",
       "rdfs:label": "PartFitment",

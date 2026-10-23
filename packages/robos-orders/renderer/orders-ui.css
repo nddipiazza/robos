@@ -1,0 +1,20 @@
+/* RobOS Orders & Inventory UI. Uses the host app's --line and --surface colors when it defines them. */
+.ro .ro-tabs { margin-bottom: 14px; }
+.ro .ro-group { margin: 22px 0; }
+.ro .ro-order, .ro .ro-item { margin: 10px 0; }
+.ro .ro-order-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+.ro .ro-table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: .92rem; }
+.ro .ro-table th, .ro .ro-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line, #d0d7de); vertical-align: middle; }
+.ro .ro-table td input, .ro .ro-table td select { width: 100%; min-width: 70px; }
+.ro .ro-table tfoot th { font-weight: 700; }
+.ro .ro-add-line, .ro .ro-place { margin: 8px 0; align-items: end; }
+.ro .ro-receive { border-top: 1px solid var(--line, #d0d7de); margin-top: 10px; padding-top: 6px; }
+.ro .ro-receive h4, .ro .ro-item-actions h4 { margin: 6px 0; }
+.ro .ro-cancel, .ro .ro-moves { margin-top: 8px; }
+.ro .ro-drawer { margin: 12px 0; }
+.ro .ro-drawer > summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
+.ro .ro-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.ro .ro-item.low { border-left: 4px solid #d29922; }
+.ro .ro-item-actions { display: flex; flex-direction: column; gap: 4px; }
+.ro .ro-item-actions details > summary { cursor: pointer; }
+.ro .ro-metrics { margin: 0 0 16px; }
