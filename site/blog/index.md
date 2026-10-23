@@ -44,6 +44,10 @@ og_image: /assets/hero/poster.jpg
     <h2><a href="#quest-warrior-dragon-ai-walkthrough">Quest: Warrior Dragon Plays Itself: From the King's Throne Room to the Dragonlord's True Form</a></h2>
     <p class="blog-summary">Start Quest: Warrior Dragon with <code>--demo</code> and nobody touches the controller. The in-engine AI picks New Quest, listens to King Lorik, opens the treasure chest, takes the Magic Key to the locked door, walks down through Tantegel Castle and out into Alefgard, then fights whatever jumps out of the grass. Point it at the Dragonlord and it wins that fight too. Everything below was recorded from the game running headless on a virtual display, with no human input.</p>
     <div class="blog-body">
+      <figure class="blog-fig video-embed">
+        <iframe src="https://www.youtube-nocookie.com/embed/o6RHKMKD2AU" title="Quest: Warrior Dragon: the RobOS AI plays the whole game, throne room to Dragonlord" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        <figcaption>The whole game in one uninterrupted run: all 74 milestones from King Lorik's throne room to the Dragonlord, hero level 21, 2,621 battles, 6 deaths. Chapters in the description jump to each milestone. Recorded with the full-game play mode, which goes further than the <code>--demo</code> run below. <a href="https://www.youtube.com/watch?v=o6RHKMKD2AU">Watch on YouTube</a></figcaption>
+      </figure>
       <figure class="blog-fig pixel">
         <video poster="{{ '/assets/blog/quest-warrior-dragon-ai/king-lorik.png' | relative_url }}" autoplay muted loop playsinline controls preload="metadata" width="512" height="480">
           <source src="{{ '/assets/blog/quest-warrior-dragon-ai/ai-walkthrough.webm' | relative_url }}" type="video/webm">
@@ -132,7 +136,7 @@ WorldMap     (44,46)  ⚔ Red Slime    HP 9 → 6</div>
           <figcaption>The final blow: 41 damage, and Alefgard is safe.</figcaption>
         </figure>
       </div>
-      <p><strong>What it can't do yet</strong>, which is the to-do list:</p>
+      <p><strong>What the <code>--demo</code> mode can't do yet</strong>, which is the to-do list. The full-game play mode in the video above does all of it: it routes across Alefgard, casts spells and earns its level before Charlock (<a href="{{ '/games/quest-warrior-dragon/ai-playthrough/' | relative_url }}">how that mode works</a>).</p>
       <ul>
         <li><strong>The overworld has no goal.</strong> The AI has routes for the throne room and the castle's first floor. Outside, it walks a right, down, left, up loop next to the castle, which is enough to trigger random encounters but not to reach Brecconary. It wanders back through the castle gate now and then, and the castle logic walks it straight back out.</li>
       <li><strong>It never casts spells.</strong> In battle it chooses FIGHT, or ITEM to use a Herb when HP falls under 35%. The hero in the Dragonlord fight had 190 MP and HEALMORE but no Herb, so at 36 HP it attacked again. It got lucky.</li>
