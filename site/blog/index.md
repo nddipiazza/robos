@@ -13,6 +13,7 @@ og_image: /assets/hero/poster.jpg
     <p class="lead">What changed in RobOS and why, newest first. Each post links to the docs and the commits behind it.</p>
   </div>
   <nav class="blog-jump" aria-label="Jump to blog post">
+    <a href="#auto-center-tow-desk">Auto Center Tow Desk</a>
     <a href="#quest-warrior-dragon-ai-walkthrough">Quest: Warrior Dragon AI</a>
     <a href="#ai-playthrough-quest-warrior-dragon">AI Playthrough</a>
     <a href="#audio-player-virtual-dj">Audio Player Virtual DJ</a>
@@ -33,6 +34,52 @@ og_image: /assets/hero/poster.jpg
 </section>
 
 <div class="blog-feed">
+
+  <article class="blog-entry" id="auto-center-tow-desk">
+    <div class="blog-meta">
+      <time class="blog-date" datetime="2026-10-23">Oct 23, 2026</time>
+      <span class="blog-tag">Auto Center</span>
+      <span class="blog-tag">Towing</span>
+      <span class="blog-tag">KGraph</span>
+    </div>
+    <h2><a href="#auto-center-tow-desk">Auto Center Gets a Tow Desk: From the Roadside Call to the Paid Invoice</a></h2>
+    <p class="blog-summary">Plenty of independent shops run a truck or two. Auto Center now has a <strong>Tow desk</strong>: take the call, quote it while the caller is still on the phone, send a truck that can actually carry the car, follow it to the drop-off, and bill it at Checkout next to your repairs.</p>
+    <div class="blog-body">
+      <p>Until now a car that "needs to be towed" was just an answer on the Front desk intake: the ticket was marked urgent and someone phoned a tow company. For a shop with its own trucks that call is revenue, and it has its own rules. The new menu sits under <strong>Shop desk</strong> between Front desk and Mechanic bench.</p>
+      <ul>
+        <li><strong>The call:</strong> five steps, <em>Caller, Vehicle, Service, Pickup, Quote</em>. The services are <em>Tow</em>, <em>Jump start</em>, <em>Lockout</em>, <em>Flat tire change</em>, <em>Fuel delivery</em> and <em>Winch-out</em>, each with its own questions: why it needs a tow, whether the wheels turn, the drivetrain, where the keys are, whether anyone is in a highway lane. Like the repair intake, the questions live in the shop's knowledge graph (<code>data/tow-form.jsonld</code>), so a shop can change them without touching code.</li>
+        <li><strong>The quote:</strong> hook-up plus the loaded miles beyond those the hook-up includes, or a flat roadside price, plus an after-hours surcharge that is preset from the time of day. The call keeps the rates it was quoted with, so changing prices at lunchtime does not change a morning call's invoice.</li>
+        <li><strong>The right truck:</strong> the answers decide what the call needs. A wheel-lift tows a car on two wheels, which damages an all-wheel-drive or electric drivetrain, so the desk refuses to send one to an AWD, electric, accident-damaged, lowered or locked-wheel car, and asks for a heavy-duty wrecker if a trailer is attached. It also will not send a truck or a driver who is already out on another call.</li>
+        <li><strong>The run:</strong> <em>Driver is at the vehicle</em>, a written condition check before the car goes on the truck (pre-existing damage is the classic tow dispute), then the drop-off with the loaded miles. A car dropped at the shop or the storage yard is checked in, so it shows up on the shop floor.</li>
+        <li><strong>The bill:</strong> Checkout lists finished tows under <em>Tow calls to bill</em>: tow invoice, payment, release. The invoice uses the quoted rates and the miles actually driven, plus winching and yard storage days. It can go to the customer, a motor club, an insurer, the police or a fleet account, with the authorization number carried onto the payment. A vehicle in the yard is released to a named person when the call closes.</li>
+      </ul>
+      <p><strong>One call, two jobs.</strong> The part we like best is the hand-off. When the Front desk intake says <em>No, it needs to be towed</em>, the confirm step now asks <em>Send our tow truck?</em>. Saying yes opens the repair ticket and a linked tow call in one Git commit. The car is not checked in until the truck drops it off, and the repair ticket's history records <em>Arrived on TW-0001 (6.4 mi)</em>. The tow keeps its own invoice, because a motor club often pays for the tow while the customer pays for the repair. The repair checkout reminds you if the tow still has a balance.</p>
+      <p>Under the hood a call is a <code>robos:TowJob</code> in the private shop graph, with its own stages (requested, dispatched, on-scene, in-tow, delivered, invoiced, closed, or cancelled) and a <code>TW-0001</code> key. Trucks are <code>robos:TowTruck</code> and the prices are a <code>robos:TowRateCard</code>; all three are in the Auto schema with SHACL shapes. Every step is a commit in the shop's private Git history (<code>TW-0001: dispatched Truck 2</code>). Tow payments go through the same immutable payment ledger as repairs, so Center reports count them in collections, balances and per-job profit, and the shop floor shows open tow calls.</p>
+      <div class="blog-fig-grid">
+        <figure class="blog-fig">
+          <img src="{{ '/assets/blog/auto-center-tow/quote.jpg' | relative_url }}" alt="Tow desk quote step: caller Jim Parker, Honda Accord 2005, pickup Route 9 northbound mile marker 14, drop-off Our shop, hook-up $95.00 plus loaded miles $31.50, quote $126.50" loading="lazy">
+          <figcaption>The quote to read back to the caller: hook-up plus the miles beyond the five included.</figcaption>
+        </figure>
+        <figure class="blog-fig">
+          <img src="{{ '/assets/blog/auto-center-tow/needs-flatbed.jpg' | relative_url }}" alt="Tow desk refusing to dispatch: This vehicle needs a flatbed (All-wheel or four-wheel drive); Truck 2 is a wheel-lift" loading="lazy">
+          <figcaption>Sending the wheel-lift to an all-wheel-drive car is refused, with the reason.</figcaption>
+        </figure>
+        <figure class="blog-fig">
+          <img src="{{ '/assets/blog/auto-center-tow/front-desk-tow.jpg' | relative_url }}" alt="Front desk confirm step: Send our tow truck? Yes, send our truck, with the pickup address 88 Oak Ave, in the driveway" loading="lazy">
+          <figcaption>A Front desk intake can send the shop's own truck.</figcaption>
+        </figure>
+        <figure class="blog-fig">
+          <img src="{{ '/assets/blog/auto-center-tow/tow-invoice.jpg' | relative_url }}" alt="Checkout tow invoice step for TW-0001: tow from Route 9 to our shop, 13 loaded miles, condition at pickup no visible damage, quoted $126.50" loading="lazy">
+          <figcaption>The tow invoice at Checkout uses the quoted rates and the miles driven.</figcaption>
+        </figure>
+      </div>
+      <p>It is tested the same way as the rest of Auto Center: six unit tests over the backend (truck rules, yard storage, cancelling, the Front desk hand-off) and seven Cucumber scenarios that drive the real Electron app, from setting up trucks to closing a paid call. The screenshots above and in the new guide chapter come from those runs. Still not included: live truck locations, a driver app, mileage lookup between addresses and motor-club claim submission. The desk records what the driver reports; it does not track the truck.</p>
+    </div>
+    <div class="blog-links">
+      <a href="{{ '/auto-center/10-tow-desk/' | relative_url }}">Read the new guide chapter: Run a tow service →</a>
+      <span class="blog-commits">Commits: eed5a08</span>
+    </div>
+  </article>
 
   <article class="blog-entry" id="quest-warrior-dragon-ai-walkthrough">
     <div class="blog-meta">
