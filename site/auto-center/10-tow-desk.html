@@ -1,0 +1,153 @@
+---
+layout: default
+title: Run a tow service · Auto Center tutorial
+permalink: /auto-center/10-tow-desk/
+body_class: guide
+extra_css: /assets/auto-guide.css
+description: "Take tow and roadside calls, quote them, send a truck, then bill the call at Checkout. For shops with their own trucks."
+---
+<section class="guide-page"><div class="wrap"><div class="guide-layout"><nav class="guide-toc" aria-label="Tutorial steps"><h4><a href="{{ '/auto-center/' | relative_url }}">Auto Center tutorial</a></h4><ol><li><a href="{{ '/auto-center/1-before-you-start/' | relative_url }}">Before you start</a></li><li><a href="{{ '/auto-center/2-set-up-your-shop/' | relative_url }}">Set up your shop</a></li><li><a href="{{ '/auto-center/3-bring-in-your-data/' | relative_url }}">Bring in your data</a></li><li><a href="{{ '/auto-center/4-front-desk/' | relative_url }}">Take the customer's call</a></li><li><a href="{{ '/auto-center/5-mechanic-bench/' | relative_url }}">The mechanic bench</a></li><li><a href="{{ '/auto-center/6-checkout/' | relative_url }}">Check the customer out</a></li><li><a href="{{ '/auto-center/7-protect-your-data/' | relative_url }}">Protect your data</a></li><li><a href="{{ '/auto-center/8-run-the-shop/' | relative_url }}">Run the shop day to day</a></li><li><a href="{{ '/auto-center/9-switch-over/' | relative_url }}">Switch over from your old system</a></li><li class="here"><a href="{{ '/auto-center/10-tow-desk/' | relative_url }}">Run a tow service</a></li><li><a href="{{ '/auto-center/11-orders/' | relative_url }}">Order parts and keep stock</a></li><li><a href="{{ '/auto-center/tests/' | relative_url }}">How we know it works</a></li></ol></nav><article class="guide-body"><p class="eyebrow">Step 10 of 11 · about 20 minutes</p><h1 class="guide-title">Run a tow service</h1><p class="chapter-intro">Take tow and roadside calls, quote them, send a truck, then bill the call at Checkout. For shops with their own trucks.</p>
+<p>If your shop runs its own tow trucks, the <strong>Tow desk</strong> handles the calls. It takes a tow or roadside call, quotes it from your rates while the caller is on the phone, sends a truck that can carry the vehicle, and follows the truck until the vehicle is dropped off. You bill the call at <strong>Checkout</strong>, the same way you bill a repair.</p>
+<p>Skip this page if you do not tow. The Tow desk stays empty and nothing else changes.</p>
+<h2>Set up your trucks and rates</h2>
+<p>Open <strong>Admin → Tow trucks</strong>.</p>
+<ol>
+<li><strong>Add each truck</strong> with a name, its type and its plate. The type matters:<ul>
+<li>A <strong>flatbed</strong> (rollback) carries the whole vehicle. Use it for all-wheel-drive, electric and damaged cars, and cars with a low front end.</li>
+<li>A <strong>wheel-lift</strong> lifts two wheels and tows the car on the other two. It is quicker, but it damages an all-wheel-drive or electric drivetrain.</li>
+<li>A <strong>heavy-duty wrecker</strong> can take anything, including a vehicle with a trailer.</li>
+</ul>
+</li>
+<li><strong>Enter your tow rates</strong>: the hook-up fee, the price per loaded mile and how many miles the hook-up includes, a flat price for roadside help (jump start, lockout, tire change, fuel), winching per hour, an after-hours surcharge, and yard storage per day.</li>
+<li><strong>Add your drivers</strong> on the <strong>Team</strong> tab, with a role such as <em>Tow driver</em>. Any active team member can drive.</li>
+</ol>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/07-tow-desk--set-up-your-trucks-and-tow-rates-3.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/07-tow-desk--set-up-your-trucks-and-tow-rates-3.jpg' | relative_url }}" alt="Admin → Tow trucks: your trucks and the rates every quote and tow invoice uses" loading="lazy" width="1000" height="625"></a><figcaption>Admin → Tow trucks: your trucks and the rates every quote and tow invoice uses</figcaption></figure>
+
+
+
+<blockquote>
+<p><strong>Good to know.</strong> A call keeps the rates it was quoted with. If you change your rates in the afternoon, a call taken that morning is still invoiced at the morning&#39;s prices.</p>
+</blockquote>
+<h2>Take the call</h2>
+<p>Press <strong>Take a tow or roadside call</strong> and follow the steps along the top: <strong>Caller, Vehicle, Service, Pickup, Quote</strong>.</p>
+<ol>
+<li><strong>Caller.</strong> Find them by phone number, email or name, or take a new caller&#39;s name and <strong>callback number</strong>. Get the number first, in case the call drops.</li>
+<li><strong>Vehicle.</strong> Pick their vehicle, or add it with its year, make and model so the driver knows what to look for.</li>
+<li><strong>Service.</strong> Choose <strong>Tow</strong>, <strong>Jump start</strong>, <strong>Lockout</strong>, <strong>Flat tire change</strong>, <strong>Fuel delivery</strong> or <strong>Winch-out</strong>, then answer the questions. They tell the driver which truck to bring.</li>
+</ol>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/07-tow-desk--a-stranded-driver-calls-for-a-tow-10.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/07-tow-desk--a-stranded-driver-calls-for-a-tow-10.jpg' | relative_url }}" alt="The questions for a tow: why, whether the wheels turn, the drivetrain, the keys and where the vehicle is" loading="lazy" width="1000" height="625"></a><figcaption>The questions for a tow: why, whether the wheels turn, the drivetrain, the keys and where the vehicle is</figcaption></figure>
+
+
+
+<ol start="4">
+<li><strong>Pickup.</strong> Enter where the vehicle is, with anything that helps the driver find it. For a tow, choose where it is going: <strong>Our shop</strong>, <strong>Our storage yard</strong> or <strong>Another address</strong>, and how many miles that is. Then choose <strong>who pays</strong>: the customer, a motor club, an insurer, the police or city, or a fleet account. For anyone but the customer, enter their name and the authorization or PO number they gave you.</li>
+<li><strong>Quote.</strong> Check the summary and read the quote back to the caller. Turn <strong>After-hours call</strong> on or off. It is set for you from the time of day, but you decide.</li>
+</ol>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/07-tow-desk--a-stranded-driver-calls-for-a-tow-16.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/07-tow-desk--a-stranded-driver-calls-for-a-tow-16.jpg' | relative_url }}" alt="The quote: hook-up plus the miles beyond those included" loading="lazy" width="1000" height="625"></a><figcaption>The quote: hook-up plus the miles beyond those included</figcaption></figure>
+
+
+
+<p>Press <strong>Take the call</strong>. The call gets a number, such as <strong>TW-0001</strong>, and waits for a truck.</p>
+<blockquote>
+<p><strong>Safety net.</strong> If the caller says the vehicle is in a highway lane or someone is in danger, the call is marked <strong>Urgent</strong> and goes to the top of the board. Tell them to stay well away from traffic, and to call 911 if anyone is hurt.</p>
+</blockquote>
+<h3>Roadside help and motor clubs</h3>
+<p>A jump start, lockout, tire change or fuel delivery is charged at your roadside price. When a motor club such as AAA sends the job, choose <strong>Motor club</strong> under <em>Who pays</em> and enter its name and the authorization number. The invoice goes to them, not the customer.</p>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/07-tow-desk--a-jump-start-billed-to-a-motor-club-13.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/07-tow-desk--a-jump-start-billed-to-a-motor-club-13.jpg' | relative_url }}" alt="A jump start for a motor club member, quoted at the roadside price" loading="lazy" width="1000" height="625"></a><figcaption>A jump start for a motor club member, quoted at the roadside price</figcaption></figure>
+
+
+
+<h2>Send a truck</h2>
+<p>The board lists every call under <strong>Waiting for a truck</strong>, <strong>On the road</strong> and <strong>Ready to bill</strong>, with your trucks along the top showing which are free.</p>
+<p>On a waiting call, choose the <strong>truck</strong>, the <strong>driver</strong> and how many minutes away they are, and press <strong>Dispatch</strong>. The board shows when they should get there.</p>
+<blockquote>
+<p><strong>Safety net.</strong> The Tow desk works out which truck the vehicle needs from the caller&#39;s answers. It will not send a wheel-lift to an all-wheel-drive, electric, damaged or lowered car, and it will not send a truck or driver who is already out on another call.</p>
+</blockquote>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/07-tow-desk--an-all-wheel-drive-car-needs-a-flatbed-2.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/07-tow-desk--an-all-wheel-drive-car-needs-a-flatbed-2.jpg' | relative_url }}" alt="A wheel-lift cannot be sent for an all-wheel-drive car" loading="lazy" width="1000" height="625"></a><figcaption>A wheel-lift cannot be sent for an all-wheel-drive car</figcaption></figure>
+
+
+
+<h2>Follow the call</h2>
+<p>Record each step as the driver reports in:</p>
+<ol>
+<li><strong>Driver is at the vehicle</strong> when they arrive.</li>
+<li>Before the vehicle goes on the truck, the driver walks around it and notes any damage that is already there, then you press <strong>Vehicle is on the truck</strong>. Write <em>No visible damage</em> if there is none. This note protects you and the customer.</li>
+<li>At the drop-off, enter the <strong>loaded miles</strong>, any winch time and where it is parked, and press <strong>Dropped off</strong>. For roadside help, press <strong>Service done</strong> instead.</li>
+</ol>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/07-tow-desk--follow-the-truck-to-the-drop-off-3.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/07-tow-desk--follow-the-truck-to-the-drop-off-3.jpg' | relative_url }}" alt="The driver notes the condition before towing" loading="lazy" width="1000" height="625"></a><figcaption>The driver notes the condition before towing</figcaption></figure>
+
+
+
+<p>A vehicle dropped at your shop or your yard is <strong>checked in</strong> automatically, so it shows on the shop floor in <strong>Center reports</strong>.</p>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/07-tow-desk--follow-the-truck-to-the-drop-off-6.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/07-tow-desk--follow-the-truck-to-the-drop-off-6.jpg' | relative_url }}" alt="Dropped off and ready to bill" loading="lazy" width="1000" height="625"></a><figcaption>Dropped off and ready to bill</figcaption></figure>
+
+
+
+<p>If the caller no longer needs you, open <strong>Cancel this call</strong> and give the reason. A call can be cancelled until the driver reaches the vehicle.</p>
+<h2>Bill the call at Checkout</h2>
+<p>Press <strong>Invoice at Checkout</strong> on the call, or open <strong>Checkout</strong>, where finished tows are listed under <strong>Tow calls to bill</strong>. Checkout has four steps for a tow: <strong>Pick a call, Tow invoice, Payment, Release</strong>.</p>
+<p>The tow invoice uses the rates the call was quoted with and the <strong>miles actually driven</strong>, plus the after-hours charge and any winching. For a vehicle in your yard, enter the <strong>storage days</strong>. Add an extra charge, such as a toll, with a note saying what it is for, then press <strong>Issue tow invoice</strong>.</p>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/07-tow-desk--bill-the-tow-at-checkout-6.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/07-tow-desk--bill-the-tow-at-checkout-6.jpg' | relative_url }}" alt="The tow invoice step: what was done, and who pays" loading="lazy" width="1000" height="625"></a><figcaption>The tow invoice step: what was done, and who pays</figcaption></figure>
+
+
+
+<p>Take payment exactly as for a repair. For a motor club or insurer, record their payment when it arrives; the authorization number goes on the payment.</p>
+<p><strong>Release.</strong> A vehicle in your yard is released to whoever collects it: check their ID, enter their name and press <strong>Release vehicle and close call</strong>. A vehicle towed to your shop stays checked in for its repair, so you simply press <strong>Close tow call</strong>.</p>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/07-tow-desk--bill-the-tow-at-checkout-12.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/07-tow-desk--bill-the-tow-at-checkout-12.jpg' | relative_url }}" alt="The tow call is closed" loading="lazy" width="1000" height="625"></a><figcaption>The tow call is closed</figcaption></figure>
+
+
+
+<p>Tow payments and invoices count in <strong>Center reports</strong> alongside repairs. The shop floor shows open tow calls, and the performance tab shows tows completed this month and their loaded miles.</p>
+<h2>A car that cannot be driven in</h2>
+<p>When a customer calls the <strong>Front desk</strong> and answers <em>No, it needs to be towed</em>, the confirm step asks <strong>Send our tow truck?</strong> Choose <strong>Yes, send our truck</strong> and enter where the car is. Opening the ticket also opens the tow call, linked to it. The car is checked in when the truck drops it off, and the repair ticket&#39;s history records its arrival.</p>
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/07-tow-desk--a-car-that-cannot-be-driven-comes-in-on-our-tow-truck-11.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/07-tow-desk--a-car-that-cannot-be-driven-comes-in-on-our-tow-truck-11.jpg' | relative_url }}" alt="The Front desk offers to send your truck" loading="lazy" width="1000" height="625"></a><figcaption>The Front desk offers to send your truck</figcaption></figure>
+
+
+
+
+
+<figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/07-tow-desk--a-car-that-cannot-be-driven-comes-in-on-our-tow-truck-15.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/07-tow-desk--a-car-that-cannot-be-driven-comes-in-on-our-tow-truck-15.jpg' | relative_url }}" alt="The repair ticket and its tow call, waiting for a truck" loading="lazy" width="1000" height="625"></a><figcaption>The repair ticket and its tow call, waiting for a truck</figcaption></figure>
+
+
+
+<p>At checkout, the repair invoice reminds you if the tow that brought the car in still has a balance. The tow has its own invoice, so a motor club or insurer can pay for the tow while the customer pays for the repair.</p>
+<h2>Change the questions</h2>
+<p>The tow call questions come from the shop knowledge graph, in <code>data/tow-form.jsonld</code>. To change them, copy that file to your shop data folder as <code>tow-form.jsonld</code> and edit the services and questions. <strong>Admin → Tow trucks</strong> lists the questions in use.</p>
+<h2>What the Tow desk does not do yet</h2>
+<table>
+<thead>
+<tr>
+<th>You might expect</th>
+<th>What happens today</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Live truck locations on a map</td>
+<td>Not included. The board shows each truck&#39;s status and ETA as you record it.</td>
+</tr>
+<tr>
+<td>A driver app on a phone</td>
+<td>Not included. The driver calls or radios in, and the desk records each step.</td>
+</tr>
+<tr>
+<td>Look up mileage between addresses</td>
+<td>Enter the miles from your map app or the truck&#39;s odometer.</td>
+</tr>
+<tr>
+<td>Submit claims to motor clubs</td>
+<td>Record the authorization number and the club&#39;s payment. Submit the claim on the club&#39;s own site.</td>
+</tr>
+<tr>
+<td>Police rotation lists and impound paperwork</td>
+<td>Not included. Bill the police or city as a fleet-style account.</td>
+</tr>
+</tbody></table>
+<h2>You are ready when</h2>
+<ul>
+<li class="check"><span class="box" aria-hidden="true"></span><div class="check-text">Your trucks and rates are set up under <strong>Admin → Tow trucks</strong></div></li>
+<li class="check"><span class="box" aria-hidden="true"></span><div class="check-text">You have taken a test call, dispatched a truck and dropped the vehicle off</div></li>
+<li class="check"><span class="box" aria-hidden="true"></span><div class="check-text">You have billed a test tow at <strong>Checkout</strong> and closed the call</div></li>
+</ul>
+<p>Back to the start: <a href="../">the tutorial index</a>.</p>
+
+<div class="guide-pager"><a class="prev" href="{{ '/auto-center/9-switch-over/' | relative_url }}"><small>Previous</small><b>Switch over from your old system</b></a><a class="next" href="{{ '/auto-center/11-orders/' | relative_url }}"><small>Next</small><b>Order parts and keep stock</b></a></div></article></div></div></section>
