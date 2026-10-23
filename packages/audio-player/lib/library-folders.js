@@ -14,6 +14,7 @@ class LibraryFolders {
     this.castService = castService || null;
     this.file = path.join(configDir || path.join(process.env.HOME || os.homedir(), '.config', 'robos'), 'audio-folders.json');
     this.folders = this._load();
+    this.syncs = new Map();
   }
 
   _load() {
@@ -34,12 +35,13 @@ class LibraryFolders {
 
   // Directory on this machine that holds the folder's audio files.
   localRoot(folder) {
-    return folder.kind === 'cloud' ? this.cloud.localDirFor(folder.connectionId, folder.path) : folder.path;
+    return path.resolve(folder.kind === 'cloud' ? this.cloud.localDirFor(folder.connectionId, folder.path) : folder.path);
   }
 
   _owns(folder, filePath) {
     if (!filePath) return false;
     const root = this.localRoot(folder);
+    if (folder.aliasRoots?.some(r => filePath === r || filePath.startsWith(r + path.sep))) return true;
     if (filePath === root || filePath.startsWith(root + path.sep)) return true;
     // If this folder was migrated from a legacy single-folder "/" root, tracks previously
     // indexed directly at the connection cache root belong to this primary linked folder.
@@ -79,9 +81,7 @@ class LibraryFolders {
       // Ensure every linked folder from Data Sources appears in the Library folder list
       conn.folders.forEach((lf, idx) => {
         if (!lf || !lf.remotePath) return;
-        const existing = this.folders.find(
-          f => f.kind === 'cloud' && f.connectionId === conn.id && f.path === lf.remotePath
-        );
+        const existing = this.folders.find(f => this._sameCloudFolder(f, conn.id, lf.remotePath, connections));
         if (existing) {
           if (idx === 0 && !existing.isPrimaryLinkedFolder) {
             existing.isPrimaryLinkedFolder = true;
@@ -101,6 +101,7 @@ class LibraryFolders {
             connectionId: conn.id,
             path: lf.remotePath,
             isPrimaryLinkedFolder: idx === 0,
+            syncEnabled: false,
           });
           changed = true;
         }
@@ -113,6 +114,18 @@ class LibraryFolders {
   list() {
     const connections = this.cloud.listConnections();
     this._syncWithDataSources(connections);
+    // Collapse old duplicate records without deleting their music or cache files.
+    const unique = new Map();
+    this.folders = this.folders.filter(f => {
+      const key = f.kind === 'cloud' ? this.cloudIdentity(f.connectionId, f.path, connections) : `local:${f.path}`;
+      const kept = unique.get(key);
+      if (!kept) { unique.set(key, f); return true; }
+      kept.aliasRoots = [...new Set([...(kept.aliasRoots || []), this.localRoot(f), ...(f.aliasRoots || [])])];
+      kept.syncEnabled = kept.syncEnabled !== false || f.syncEnabled !== false;
+      if (!kept.lastSynced) kept.lastSynced = f.lastSynced;
+      return false;
+    });
+    this._save();
     return this.folders.map(f => {
       const conn = f.kind === 'cloud' ? connections.find(c => c.id === f.connectionId) : null;
       const legacyRootDir = (f.kind === 'cloud' && f.isPrimaryLinkedFolder && this.cloud && typeof this.cloud.localDirFor === 'function')
@@ -120,6 +133,7 @@ class LibraryFolders {
         : null;
       return {
         ...f,
+        cloudKey: f.kind === 'cloud' ? this.cloudIdentity(f.connectionId, f.path, connections) : null,
         localRoot: this.localRoot(f),
         legacyRootDir,
         trackCount: this.mediaLibrary.tracks.filter(t => this._owns(f, t.filePath)).length,
@@ -135,13 +149,17 @@ class LibraryFolders {
     const norm = spec.kind === 'cloud'
       ? { kind: 'cloud', connectionId: spec.connectionId, path: path.posix.normalize('/' + (spec.path || '/')) }
       : { kind: 'local', path: path.resolve(spec.path) };
-    const existing = this.folders.find(f => f.kind === norm.kind && f.path === norm.path && f.connectionId === norm.connectionId);
-    if (existing) return existing;
+    const connections = this.cloud.listConnections();
+    const existing = this.folders.find(f => norm.kind === 'cloud'
+      ? this._sameCloudFolder(f, norm.connectionId, norm.path, connections)
+      : f.kind === norm.kind && f.path === norm.path);
+    if (existing) { existing.syncEnabled = true; this._save(); return existing; }
     const folder = {
       id: `fld_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
       label: spec.label || (path.basename(norm.path) || norm.path),
       addedAt: new Date().toISOString(),
       lastSynced: null,
+      syncEnabled: true,
       ...norm,
     };
     this.folders.push(folder);
@@ -151,6 +169,30 @@ class LibraryFolders {
 
   get(id) {
     return this.folders.find(f => f.id === id) || null;
+  }
+
+  // Google folder IDs are stable across duplicate Data Sources connections.
+  // My Drive's special "root" ID is scoped to its account instead.
+  cloudIdentity(connectionId, remotePath, connections) {
+    const conn = connections.find(c => c.id === connectionId);
+    const normalized = path.posix.normalize('/' + (remotePath || '/')).replace(/\/$/, '') || '/';
+    const linked = conn?.folders?.find(lf => (lf.remotePath.replace(/\/$/, '') || '/') === normalized);
+    if (conn?.driverType === 'gdrive' && linked?.folderId && linked.folderId !== 'root') return `gdrive:${linked.folderId}`;
+    if (conn?.driverType === 'gdrive' && conn.user) return `gdrive:${conn.user.toLowerCase()}:${linked?.folderId || normalized}`;
+    return `${connectionId}:${normalized}`;
+  }
+
+  _sameCloudFolder(folder, connectionId, remotePath, connections) {
+    return folder.kind === 'cloud' && this.cloudIdentity(folder.connectionId, folder.path, connections)
+      === this.cloudIdentity(connectionId, remotePath, connections);
+  }
+
+  setEnabled(id, enabled) {
+    const folder = this.get(id);
+    if (!folder) throw new Error('Folder not found');
+    folder.syncEnabled = !!enabled;
+    this._save();
+    return folder;
   }
 
   markSynced(id) {
@@ -165,11 +207,22 @@ class LibraryFolders {
 
   // Indexes remote audio files for a cloud folder (metadata only, NO bulk downloads)
   // and drops tracks whose remote file is gone.
-  async syncCloud(id, onProgress) {
+  syncCloud(id, onProgress) {
+    if (this.syncs.has(id)) return this.syncs.get(id);
+    const pending = this._syncCloud(id, onProgress).catch(err => {
+      const folder = this.get(id);
+      if (folder) { folder.syncError = err.message; this._save(); }
+      throw err;
+    }).finally(() => this.syncs.delete(id));
+    this.syncs.set(id, pending);
+    return pending;
+  }
+
+  async _syncCloud(id, onProgress) {
     const f = this.get(id);
     if (!f || f.kind !== 'cloud') throw new Error('Not a cloud folder');
     const descriptors = typeof this.cloud.indexCloudAudio === 'function'
-      ? await this.cloud.indexCloudAudio(f.connectionId, [f.path], onProgress)
+      ? await this.cloud.indexCloudAudio(f.connectionId, [f.path], onProgress, { forceRefresh: true, strict: true })
       : (await this.cloud.fetchAudio(f.connectionId, [f.path], onProgress)).map(localPath => ({
           connectionId: f.connectionId,
           remotePath: f.path,
@@ -183,19 +236,33 @@ class LibraryFolders {
     const existingByPath = new Map(ml.tracks.map(t => [t.filePath, t]));
 
     const added = [];
+    const seen = new Set();
     for (const desc of descriptors) {
+      if (seen.has(desc.localPath)) continue;
+      seen.add(desc.localPath);
       const existing = existingByPath.get(desc.localPath);
       if (existing) {
+        const changed = existing.cloud && ((desc.modified && existing.cloud.modified && desc.modified !== existing.cloud.modified)
+          || (desc.size != null && existing.cloud.size != null && desc.size !== existing.cloud.size));
+        if (changed) {
+          // A replaced remote song must not keep playing the old cached bytes.
+          const cacheRoot = this.localRoot(f);
+          if (desc.localPath.startsWith(cacheRoot + path.sep)) {
+            try { fs.unlinkSync(desc.localPath); } catch {}
+          }
+          desc.cached = false;
+        }
         existing.cloud = {
           connectionId: desc.connectionId,
           driverType: desc.driverType || (existing.cloud && existing.cloud.driverType) || 'gdrive',
           remotePath: desc.remotePath,
           driveId: desc.driveId || (existing.cloud && existing.cloud.driveId) || null,
           size: desc.size != null ? desc.size : (existing.cloud && existing.cloud.size) || null,
+          modified: desc.modified || null,
           cached: !!desc.cached,
           // Tags already read stay read across syncs.
-          ...(existing.cloud && existing.cloud.tagsRead ? { tagsRead: true } : {}),
-          ...(existing.cloud && existing.cloud.tagsFailed ? { tagsFailed: existing.cloud.tagsFailed } : {}),
+          ...(!changed && existing.cloud && existing.cloud.tagsRead ? { tagsRead: true } : {}),
+          ...(!changed && existing.cloud && existing.cloud.tagsFailed ? { tagsFailed: existing.cloud.tagsFailed } : {}),
         };
         if (this.castService && typeof this.castService.getCloudStreamUrl === 'function') {
           existing.src = this.castService.getCloudStreamUrl(existing.id, false);
@@ -220,6 +287,7 @@ class LibraryFolders {
     const removed = before + added.length - ml.tracks.length;
     ml._rebuildIndexes();
     ml._saveCache();
+    delete f.syncError;
     this.markSynced(id);
     return { added: added.length, removed };
   }

@@ -40,9 +40,13 @@ function loadPrefs() {
 
 export function folderOwnsTrack(folder, filePath) {
   if (!folder || !filePath) return false;
-  if (filePath === folder.localRoot || filePath.startsWith(folder.localRoot + '/')) return true;
-  if (folder.legacyRootDir && filePath.startsWith(folder.legacyRootDir + '/')) {
-    const rel = filePath.slice(folder.legacyRootDir.length + 1);
+  const normalize = p => String(p || '').replace(/\\/g, '/').replace(/\/$/, '');
+  filePath = normalize(filePath);
+  if ([folder.localRoot, ...(folder.aliasRoots || [])].some(root => root &&
+    (filePath === normalize(root) || filePath.startsWith(normalize(root) + '/')))) return true;
+  const legacyRoot = normalize(folder.legacyRootDir);
+  if (legacyRoot && filePath.startsWith(legacyRoot + '/')) {
+    const rel = filePath.slice(legacyRoot.length + 1);
     if (rel && !rel.includes('/')) return true;
   }
   return false;

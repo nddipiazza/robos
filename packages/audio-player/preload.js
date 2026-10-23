@@ -40,13 +40,19 @@ contextBridge.exposeInMainWorld('robosAudio', {
   djSynthesize: (text, voice, level) => ipcRenderer.invoke('audio:dj-synthesize', { text, voice, level }),
   djWarmup: () => ipcRenderer.invoke('audio:dj-warmup'),
   listFolders: () => ipcRenderer.invoke('audio:folders-list'),
+  setFolderEnabled: (id, enabled) => ipcRenderer.invoke('audio:folders-set-enabled', { id, enabled }),
+  onFoldersUpdated: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:folders-updated', handler);
+    return () => ipcRenderer.removeListener('audio:folders-updated', handler);
+  },
   addLocalFolder: () => ipcRenderer.invoke('audio:folders-add-local'),
   addCloudFolder: (connectionId, path, label) => ipcRenderer.invoke('audio:folders-add-cloud', { connectionId, path, label }),
   rescanFolders: (id) => ipcRenderer.invoke('audio:folders-rescan', id),
   renameFolder: (id, label) => ipcRenderer.invoke('audio:folders-rename', { id, label }),
   removeFolder: (id, removeTracks) => ipcRenderer.invoke('audio:folders-remove', { id, removeTracks }),
   cloudConnections: () => ipcRenderer.invoke('audio:cloud-connections'),
-  cloudList: (id, path) => ipcRenderer.invoke('audio:cloud-list', { id, path }),
+  cloudList: (id, path, forceRefresh = false) => ipcRenderer.invoke('audio:cloud-list', { id, path, forceRefresh }),
   cloudImport: (id, paths) => ipcRenderer.invoke('audio:cloud-import', { id, paths }),
   cloudCacheStats: () => ipcRenderer.invoke('audio:cloud-cache-stats'),
   cloudCacheSetMax: (maxBytes) => ipcRenderer.invoke('audio:cloud-cache-set-max', maxBytes),

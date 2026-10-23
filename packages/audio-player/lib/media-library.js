@@ -404,6 +404,7 @@ class MediaLibrary {
       remotePath: descriptor.remotePath,
       driveId: descriptor.driveId || null,
       size: descriptor.size != null ? descriptor.size : null,
+      modified: descriptor.modified || null,
       cached: !!descriptor.cached,
     };
 

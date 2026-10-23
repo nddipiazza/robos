@@ -1435,7 +1435,22 @@ function bindEvents() {
   // Save Data Source
   document.getElementById('btn-ds-modal-save')?.addEventListener('click', async () => {
     const payload = buildWizardCandidatePayload();
-    dsList = await window.dataSources.saveDataSource(payload);
+    document.querySelector('#add-ds-modal [data-save-error]')?.remove();
+    try {
+      dsList = await window.dataSources.saveDataSource(payload);
+    } catch (err) {
+      const modal = document.getElementById('add-ds-modal');
+      let message = modal.querySelector('[data-save-error]');
+      if (!message) {
+        message = document.createElement('p');
+        message.dataset.saveError = 'true';
+        message.setAttribute('role', 'alert');
+        message.style.cssText = 'color:#f87171;margin:12px;white-space:normal';
+        document.getElementById('btn-ds-modal-save').parentElement.before(message);
+      }
+      message.textContent = err.message.replace(/^Error invoking remote method '[^']+': Error: /, '');
+      return;
+    }
     cloudFolders = await window.dataSources.getCloudFolders();
     selectedDsId = payload.id;
     document.getElementById('add-ds-modal').classList.add('hidden');
