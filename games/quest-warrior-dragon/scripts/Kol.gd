@@ -17,14 +17,14 @@ func _get_music_path() -> String:
 
 func _get_npcs() -> Array:
     return [
-        {tile=Vector2i(10,17), sprite_id="sage_alt", facing="down",  speaker="Shopkeeper", pages=["East of Hauksness there is a\ntown, 'tis said, where one may\npurchase weapons of extraordinary\nquality."]},
-        {tile=Vector2i(21,6),  sprite_id="minister", facing="down",  speaker="Innkeeper",  pages=["This bath cures rheumatism.\nRest and be refreshed,\nweary traveler."], inn_cost=0},
+        {tile=Vector2i(10,16), sprite_id="sage_alt", facing="down",  speaker="Shopkeeper", pages=["East of Hauksness there is a\ntown, 'tis said, where one may\npurchase weapons of extraordinary\nquality."]},
+        {tile=Vector2i(22,6),  sprite_id="minister", facing="down",  speaker="Innkeeper",  pages=["This bath cures rheumatism.\nRest and be refreshed,\nweary traveler."], inn_cost=0},
         {tile=Vector2i(2,2),   sprite_id="sage",     facing="right", speaker="Elder",      pages=["This is the village of Kol."]},
         {tile=Vector2i(23,13), sprite_id="sage_alt", facing="down",  speaker="Shopkeeper", shop_id="kol001"},
         {tile=Vector2i(15,22), sprite_id="sage_alt", facing="down",  speaker="Shopkeeper", shop_id="kol002"},
         {tile=Vector2i(18,14), sprite_id="lady",     facing="left",  speaker="Villager",   pages=["Please, save us from the\nminions of the Dragonlord."]},
-        {tile=Vector2i(6,20),  sprite_id="sage",     facing="up",    speaker="Wise Man",   pages=["In legends it is said that\nfairies know how to put\nGolem to sleep."]},
-        {tile=Vector2i(22,20), sprite_id="guard",    facing="down",  speaker="Soldier",    pages=["Hast thou seen Nester? I\nthink he may need help."]},
+        {tile=Vector2i(8,23),  sprite_id="sage",     facing="up",    speaker="Wise Man",   pages=["In legends it is said that\nfairies know how to put\nGolem to sleep."]},
+        {tile=Vector2i(23,20), sprite_id="guard",    facing="down",  speaker="Soldier",    pages=["Hast thou seen Nester? I\nthink he may need help."]},
         {tile=Vector2i(4,12),  sprite_id="lady",     facing="right", speaker="Villager",   pages=["Art thou the descendant\nof Erdrick? Hast thou\nany proof?"]},
     ]
 

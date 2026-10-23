@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dw1ending0001"]
+
+[ext_resource type="Script" path="res://scripts/Ending.gd" id="1_script"]
+
+[node name="Ending" type="Node2D"]
+script = ExtResource("1_script")

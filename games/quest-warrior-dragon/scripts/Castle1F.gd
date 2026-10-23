@@ -16,8 +16,8 @@ const MAP_GRID := [
 	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 	[0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 4, 0, 0, 0],
 	[0, 1, 3, 3, 3, 3, 3, 1, 0, 4, 0, 4, 4, 0, 4, 0, 1, 3, 3, 3, 3, 3, 1, 0, 1, 7, 1, 0, 0, 0, 0, 0],
-	[0, 1, 3, 3, 3, 3, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 3, 3, 3, 3, 1, 0, 1, 8, 1, 0, 0, 0, 0, 0],
-	[0, 1, 3, 3, 1, 3, 3, 1, 1, 1, 1, 3, 3, 33, 1, 1, 1, 3, 3, 1, 3, 3, 1, 0, 0, 0, 4, 4, 0, 0, 0, 0],
+	[0, 1, 3, 3, 3, 3, 3, 1, 0, 0, 0, 0, 0, 33, 0, 0, 1, 3, 3, 3, 3, 3, 1, 0, 1, 8, 1, 0, 0, 0, 0, 0],
+	[0, 1, 3, 3, 1, 3, 3, 1, 1, 1, 1, 1, 1, 10, 1, 1, 1, 3, 3, 1, 3, 3, 1, 0, 0, 0, 4, 4, 0, 0, 0, 0],
 	[0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 4, 4, 4, 0, 0, 0, 0, 0],
 	[0, 1, 3, 3, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3, 1, 0, 0, 0, 0, 0, 11, 0, 0, 0],
 	[0, 1, 1, 1, 1, 1, 3, 1, 3, 88, 3, 3, 3, 3, 3, 3, 1, 1, 1, 10, 1, 1, 1, 1, 1, 3, 1, 1, 1, 0, 0, 0],
@@ -262,9 +262,49 @@ func _map_tile_at(pos: Vector2i) -> int:
 	if pos.y < 0 or pos.y >= MAP_H or pos.x < 0 or pos.x >= MAP_W:
 		return -1
 	var coord := str(pos.x) + "," + str(pos.y)
-	if _opened_chests.has("castle_1f:" + coord) or _opened_chests.has(coord):
+	if _opened_chests.has("castle_1f:" + coord):
 		return 3
-	return MAP_GRID[pos.y][pos.x]
+	var t: int = MAP_GRID[pos.y][pos.x]
+	if t == 10 and _is_door_unlocked(pos):
+		return 3
+	return t
+
+
+func _door_key(pos: Vector2i) -> String:
+	return "tantegel-castle-1f:" + str(pos.x) + "," + str(pos.y)
+
+
+func _is_door_unlocked(pos: Vector2i) -> bool:
+	var gs := get_node_or_null("/root/GameState")
+	return gs != null and gs.unlocked_doors.has(_door_key(pos))
+
+
+## Consumes one Magic Key from the inventory and permanently unlocks the door
+## at `ft`. Returns false (without a dialog) when the hero has no key.
+func _unlock_door_with_key(ft: Vector2i) -> bool:
+	var key_idx := -1
+	for i in range(_inventory.size()):
+		var it = _inventory[i]
+		var is_key := false
+		if it is Dictionary:
+			if it.get("type", "") == "key" or it.get("id", "") == "magic_key" or it.get("name", "") == "Magic Key":
+				is_key = true
+		elif it is String and (it == "Magic Key" or it == "magic_key"):
+			is_key = true
+		if is_key:
+			key_idx = i
+			break
+	if key_idx < 0:
+		return false
+	_inventory.remove_at(key_idx)
+	var gs := get_node_or_null("/root/GameState")
+	if gs:
+		gs.inventory = _inventory.duplicate(true)
+		gs.unlocked_doors[_door_key(ft)] = true
+	_play_sfx("res://assets/music/mp3/open_door.mp3")
+	_show_dialog("", ["The door clicks open."],
+		func(): _open_door_visual(ft))
+	return true
 
 func _is_walkable(pos: Vector2i) -> bool:
 	# Outer map boundary is always void — never walkable regardless of tile
@@ -402,9 +442,18 @@ func _build_background() -> void:
 			var floor_px := map_src.get_region(Rect2i(2 * 16, 6 * 16, 16, 16))
 			_floor_tile_img = floor_px.duplicate()
 			_floor_tile_img.resize(TILE_SIZE, TILE_SIZE, Image.INTERPOLATE_NEAREST)
+			_restore_unlocked_door_visuals()
 	_bg.stretch_mode = TextureRect.STRETCH_KEEP
 	_bg.size         = Vector2(MAP_W * TILE_SIZE, MAP_H * TILE_SIZE)
 	add_child(_bg)
+
+
+func _restore_unlocked_door_visuals() -> void:
+	for y in range(MAP_H):
+		for x in range(MAP_W):
+			var p := Vector2i(x, y)
+			if MAP_GRID[y][x] == 10 and _is_door_unlocked(p):
+				_open_door_visual(p)
 
 
 func _make_walk_sprite(sheet_path: String, f0: Rect2, f1: Rect2, px_scale: float = 2.0, x_off: float = 0.0) -> WalkSprite:
@@ -425,6 +474,7 @@ func _make_walk_sprite(sheet_path: String, f0: Rect2, f1: Rect2, px_scale: float
 func _build_hero_sprite() -> void:
 	var fr := _facing_to_frames_from_vec(_hero_facing)
 	_hero_ws             = _make_walk_sprite("res://assets/sprites/rgba/characters-3.png", fr[0], fr[1])
+	_hero_ws.is_hero     = true
 	_hero_ws.toggle_time = 0.5
 	_hero_ws.name        = "Hero"
 	add_child(_hero_ws)
@@ -1062,13 +1112,7 @@ func _handle_shop_input(event: InputEvent) -> void:
 			if _hero_gold < item["price"]:
 				_show_dialog("", ["Thou hast not\nenough gold!"])
 			else:
-				_hero_gold -= item["price"]
-				_inventory.append({"name": item["name"], "id": item["id"], "desc": "Purchased in a shop."})
-				var gs := get_node_or_null("/root/GameState")
-				if gs:
-					gs.gold = _hero_gold
-					gs.inventory = _inventory.duplicate(true)
-				_show_dialog("", ["Thou hast purchased\nthe %s!" % item["name"]])
+				_purchase_item(item)
 		var on_no := func():
 			_show_dialog("", ["Very well."])
 		_open_choice(prompt, on_yes, on_no)
@@ -1076,6 +1120,43 @@ func _handle_shop_input(event: InputEvent) -> void:
 		_shop_panel.visible = false
 		_shop_open = false
 		_show_dialog("", ["Come again!"])
+
+## Mirrors DungeonMap._purchase_item: equipment is equipped immediately and the old piece sold back.
+func _purchase_item(item: Dictionary) -> void:
+	var gs := get_node_or_null("/root/GameState")
+	var iid := str(item.get("id", ""))
+	var iname := str(item.get("name", iid))
+	_hero_gold -= int(item.get("price", 0))
+	var pages: Array = ["Thou hast purchased\nthe %s!" % iname]
+	var slot := ""
+	if gs and gs.has_method("equipment_slot"):
+		slot = str(gs.equipment_slot(iid))
+	if slot != "":
+		var previous: String = str(gs.equip_item(iid))
+		if previous != "" and previous != iid:
+			for i in range(_inventory.size() - 1, -1, -1):
+				if str(gs.equipment_id_for(_inventory[i])) == previous:
+					_inventory.remove_at(i)
+					break
+			var prev_info: Dictionary = gs.equipment_info(previous)
+			var refund := int(int(prev_info.get("cost", 0)) / 2)
+			if refund > 0:
+				_hero_gold += refund
+				pages.append("Then I will buy thy %s\nfor %d gold." % [str(prev_info.get("name", previous)), refund])
+		var kept := false
+		for inv_it in _inventory:
+			if str(gs.equipment_id_for(inv_it)) == iid:
+				kept = true
+				break
+		if not kept:
+			_inventory.append({"name": iname, "id": iid, "type": slot, "desc": "Purchased in a shop."})
+		pages.append("%s is now equipped." % iname)
+	else:
+		_inventory.append({"name": iname, "id": iid, "type": "key" if "key" in iid else "tool", "desc": "Purchased in a shop."})
+	if gs:
+		gs.gold = _hero_gold
+		gs.inventory = _inventory.duplicate(true)
+	_show_dialog("", pages)
 
 func _open_choice(prompt: String, on_yes: Callable, on_no: Callable) -> void:
 	_choice_prompt = prompt
@@ -1161,7 +1242,7 @@ func _cmd_status() -> void:
 
 
 func _cmd_stairs() -> void:
-	if _hero_tile == Vector2i(13, 4):
+	if _hero_tile == Vector2i(13, 3):
 		_play_sfx("res://assets/music/mp3/stairs_down.mp3")
 		_show_dialog("", ["Thou descendest the stairs."],
 			func():
@@ -1189,27 +1270,7 @@ func _cmd_search() -> void:
 func _cmd_door() -> void:
 	var ft := _facing_tile()
 	if _map_tile_at(ft) == 10:
-		var key_idx := -1
-		for i in range(_inventory.size()):
-			var it = _inventory[i]
-			var is_key := false
-			if it is Dictionary:
-				if it.get("type", "") == "key" or it.get("name", "") == "Magic Key":
-					is_key = true
-			elif it is String and it == "Magic Key":
-				is_key = true
-			if is_key:
-				key_idx = i
-				break
-		if key_idx >= 0:
-			_inventory.remove_at(key_idx)
-			var gs := get_node_or_null("/root/GameState")
-			if gs:
-				gs.inventory = _inventory.duplicate(true)
-			_play_sfx("res://assets/music/mp3/open_door.mp3")
-			_show_dialog("", ["The door clicks open."],
-				func(): _open_door_visual(ft))
-		else:
+		if not _unlock_door_with_key(ft):
 			_show_dialog("", ["Thou dost not have\na Magic Key."])
 	else:
 		_show_dialog("", ["There is no door\nin that direction."])
@@ -1221,17 +1282,18 @@ func _cmd_take() -> void:
 		return
 	var coord := str(_hero_tile.x) + "," + str(_hero_tile.y)
 	var map_key := "castle_1f:" + coord
-	if _opened_chests.has(map_key) or _opened_chests.has(coord):
+	if _opened_chests.has(map_key):
 		_show_dialog("", ["The chest is already\nempty."])
 		return
 	var gold_amount := 10 + randi() % 50
 	_hero_gold += gold_amount
 	_opened_chests[map_key] = true
-	_opened_chests[coord] = true
+	_opened_chests["tantegel-castle-1f:" + coord] = true
 	var gs := get_node_or_null("/root/GameState")
 	if gs:
+		gs.gold = _hero_gold
 		gs.opened_chests[map_key] = true
-		gs.opened_chests[coord] = true
+		gs.opened_chests["tantegel-castle-1f:" + coord] = true
 	_play_sfx("res://assets/music/mp3/open_treasure.mp3")
 	_open_chest_visual(_hero_tile)
 	_show_dialog("", ["Thou dost find\n" + str(gold_amount) + " Gold Pieces!"])
@@ -1263,18 +1325,29 @@ func _use_item(idx: int) -> void:
 		if item_name == "Magic Key":
 			item_type = "key"
 
-	if item_type == "key" or item_name == "Magic Key":
+	if item is Dictionary and (str(item.get("id", "")).to_lower() == "herb" or item_name in ["Herb", "Medical Herb"]):
+		var gs_h := get_node_or_null("/root/GameState")
+		if gs_h:
+			var hp := int(gs_h.hero_stats.get("hp", 0))
+			var hp_max := int(gs_h.hero_stats.get("hp_max", 1))
+			if hp >= hp_max:
+				_show_dialog("", ["Thy HP is already\nfull."])
+				return
+			var amt := 23 + (randi() % 8)
+			gs_h.hero_stats["hp"] = mini(hp_max, hp + amt)
+			_inventory.remove_at(idx)
+			gs_h.inventory = _inventory.duplicate(true)
+			_item_panel.visible = false
+			_item_open = false
+			_show_dialog("", ["Thou hast eaten the\nMedical Herb.\nHP restored by %d." % mini(amt, hp_max - hp)])
+		return
+
+	if item_type == "key" or item_name == "Magic Key" or item_name == "magic_key" or (item is Dictionary and str(item.get("id", "")) == "magic_key"):
 		var ft := _facing_tile()
 		if _map_tile_at(ft) == 10:
-			_inventory.remove_at(idx)
-			var gs := get_node_or_null("/root/GameState")
-			if gs:
-				gs.inventory = _inventory.duplicate(true)
 			_item_panel.visible = false
 			_item_open          = false
-			_play_sfx("res://assets/music/mp3/open_door.mp3")
-			_show_dialog("", ["The door clicks open."],
-				func(): _open_door_visual(ft))
+			_unlock_door_with_key(ft)
 		else:
 			_show_dialog("", ["There is no door\nin that direction."])
 	else:

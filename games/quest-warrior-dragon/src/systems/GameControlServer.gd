@@ -247,7 +247,12 @@ func _handle_post_command(client: StreamPeerTCP, body: Dictionary) -> void:
 			var monster = args.get("monster", "slime")
 			var scene = get_tree().current_scene
 			if scene and scene.has_method("_start_battle"):
-				scene._start_battle(monster, {"name": monster.capitalize(), "hp": 5, "str": 4, "ag": 3})
+				var mon_data: Dictionary = {}
+				if DataManager and DataManager.has_method("get_monster"):
+					mon_data = DataManager.get_monster(monster)
+				if mon_data.is_empty():
+					mon_data = {"name": monster.capitalize(), "hp_min": 5, "hp_max": 5, "strength": 4, "agility": 3}
+				scene._start_battle(monster, mon_data)
 				await get_tree().create_timer(0.5).timeout
 				_send_http_response(client, 200, {"success": true, "message": "Encounter triggered against %s" % monster})
 			elif CombatEngine:
@@ -307,6 +312,8 @@ func _handle_post_command(client: StreamPeerTCP, body: Dictionary) -> void:
 				if spell_name == "radiant":
 					if "_radiant_steps_left" in scene:
 						scene._radiant_steps_left = 200
+					if scene.has_method("_sync_light_state"):
+						scene.call("_sync_light_state")
 					if scene.has_method("_update_darkness_mask"):
 						scene.call("_update_darkness_mask")
 				_send_http_response(client, 200, {"success": true, "message": "Spell %s cast." % spell_name})
@@ -427,8 +434,14 @@ func _handle_post_command(client: StreamPeerTCP, body: Dictionary) -> void:
 						gs.hero_stats["mp"] = int(args[k])
 					elif k_str in ["hero_mp_max", "heroMpMax"]:
 						gs.hero_stats["mp_max"] = int(args[k])
+					elif k_str == "hero_stats" and args[k] is Dictionary and gs.hero_stats is Dictionary:
+						# Partial update: {"hero_stats": {"mp": 70}} must not wipe the other stats.
+						for sk in args[k]:
+							gs.hero_stats[sk] = args[k][sk]
 					else:
 						gs.set(k, args[k])
+				if gs.has_method("recompute_derived_stats"):
+					gs.recompute_derived_stats()
 			var scene = get_tree().current_scene
 			if scene:
 				for k in args:
@@ -493,6 +506,24 @@ func _handle_post_command(client: StreamPeerTCP, body: Dictionary) -> void:
 				_send_http_response(client, 200, {"success": true, "task": task_name, "status": "running"})
 			else:
 				_send_http_response(client, 400, {"success": false, "message": "Invalid ai_task request."})
+		"start_play_game":
+			var ai: Node = get_node_or_null("/root/AIEngine")
+			if ai and ai.has_method("start_play_game"):
+				var info: Dictionary = ai.call("start_play_game", args)
+				_send_http_response(client, 200, {"success": true, "play_game": info})
+			else:
+				_send_http_response(client, 400, {"success": false, "message": "AIEngine play_game unavailable."})
+		"stop_play_game":
+			var ai: Node = get_node_or_null("/root/AIEngine")
+			if ai and ai.has_method("stop_play_game"):
+				ai.call("stop_play_game")
+			_send_http_response(client, 200, {"success": true})
+		"get_milestones":
+			var ai: Node = get_node_or_null("/root/AIEngine")
+			if ai and ai.has_method("get_milestone_report"):
+				_send_http_response(client, 200, {"success": true, "milestones": ai.call("get_milestone_report")})
+			else:
+				_send_http_response(client, 400, {"success": false, "message": "AIEngine unavailable."})
 		"capture_screenshot":
 			var out_path: String = str(args.get("file_path", args.get("path", "")))
 			if out_path != "":
@@ -528,7 +559,8 @@ func get_full_scene_state() -> Dictionary:
 	
 	var scene_info = {
 		"path": scene.scene_file_path if scene else "",
-		"name": scene.name if scene else ""
+		"name": scene.name if scene else "",
+		"map_key": _get_active_scene_map_key(scene) if scene else ""
 	}
 
 	# 1. Hero Position
@@ -570,11 +602,23 @@ func get_full_scene_state() -> Dictionary:
 			"mp": hero_stats.get("mp", 0),
 			"mp_max": hero_stats.get("mp_max", 0),
 			"gold": gs_node.get("gold") if "gold" in gs_node else 0,
+			"deaths": gs_node.get("deaths") if "deaths" in gs_node else 0,
 			"inventory": gs_node.get("inventory") if "inventory" in gs_node else [],
 			"equipment": {
 				"weapon": gs_node.get("weapon") if "weapon" in gs_node else "",
-				"armor": gs_node.get("armor") if "armor" in gs_node else ""
+				"armor": gs_node.get("armor") if "armor" in gs_node else "",
+				"shield": gs_node.get("shield") if "shield" in gs_node else ""
 			},
+			"exp": hero_stats.get("exp", 0),
+			"str": hero_stats.get("str", 0),
+			"agl": hero_stats.get("agl", 0),
+			"attack": hero_stats.get("atk", hero_stats.get("attack", 0)),
+			"defense": hero_stats.get("def", hero_stats.get("defense", 0)),
+			"gwaelin_rescued": gs_node.get("gwaelin_rescued") if "gwaelin_rescued" in gs_node else false,
+			"gwaelin_returned": gs_node.get("gwaelin_returned") if "gwaelin_returned" in gs_node else false,
+			"dragonlord_defeated": gs_node.get("dragonlord_defeated") if "dragonlord_defeated" in gs_node else false,
+			"golem_defeated": gs_node.get("golem_defeated") if "golem_defeated" in gs_node else false,
+			"game_completed": gs_node.get("game_completed") if "game_completed" in gs_node else false,
 			"spells": gs_node.get("spells") if "spells" in gs_node else [],
 			"opened_chests": gs_node.get("opened_chests") if "opened_chests" in gs_node else {},
 			"unlocked_doors": gs_node.get("unlocked_doors") if "unlocked_doors" in gs_node else {},
@@ -586,7 +630,10 @@ func get_full_scene_state() -> Dictionary:
 		game_state_info = PlayerState.serialize()
 
 	if scene:
-		if "_inventory" in scene and scene._inventory is Array and not scene._inventory.is_empty():
+		# During a battle the overlay consumes herbs from GameState.inventory; the
+		# scene's copy is only re-synced when the fight ends, so prefer the live one.
+		var in_battle: bool = bool(scene.get("_battle_active")) if scene.get("_battle_active") != null else false
+		if not in_battle and "_inventory" in scene and scene._inventory is Array and not scene._inventory.is_empty():
 			game_state_info["inventory"] = scene._inventory
 		if "_door_unlocked" in scene and bool(scene._door_unlocked):
 			if not game_state_info.get("unlocked_doors") is Dictionary:
@@ -682,6 +729,17 @@ func get_full_scene_state() -> Dictionary:
 			battle_info["anim_lock"] = bool(battle_node.get("_anim_lock")) if battle_node.get("_anim_lock") != null else false
 			battle_info["msg_text"] = str(msg_lbl.text) if msg_lbl and "text" in msg_lbl else ""
 			battle_info["last_enemy_action"] = str(battle_node.get("_last_enemy_action")) if battle_node.get("_last_enemy_action") != null else ""
+			battle_info["spell_cursor"] = int(battle_node.get("_spell_cursor")) if battle_node.get("_spell_cursor") != null else 0
+			battle_info["hero_stopspelled"] = bool(battle_node.get("_hero_stopspelled")) if battle_node.get("_hero_stopspelled") != null else false
+			battle_info["monster_asleep"] = bool(battle_node.get("_mon_asleep")) if battle_node.get("_mon_asleep") != null else false
+			battle_info["monster_stopspelled"] = bool(battle_node.get("_mon_stopspelled")) if battle_node.get("_mon_stopspelled") != null else false
+			var known_sp: Array = []
+			var ks: Variant = battle_node.get("_known_spells")
+			if ks is Array:
+				for sp in ks:
+					if sp is Dictionary:
+						known_sp.append({"id": str(sp.get("id", "")), "name": str(sp.get("name", "")), "mp_cost": int(sp.get("mp_cost", 0))})
+			battle_info["known_spells"] = known_sp
 			battle_info["battle_scene_info"] = {
 				"monster_key": battle_node.get("_mon_key") if battle_node.get("_mon_key") != null else "",
 				"monster_name": battle_node.get("_mon_name") if battle_node.get("_mon_name") != null else "",
@@ -771,6 +829,13 @@ func get_full_scene_state() -> Dictionary:
 		"is_showing": bool(scene.get("_item_open")) if scene and scene.get("_item_open") != null else false,
 		"selected_index": int(scene.get("_item_index")) if scene and scene.get("_item_index") != null else 0
 	}
+	var shop_window_info = {"is_showing": false, "selected_index": 0, "items": []}
+	if scene and scene.get("_shop_open") == true:
+		shop_window_info["is_showing"] = true
+		shop_window_info["selected_index"] = int(scene.get("_shop_index")) if scene.get("_shop_index") != null else 0
+		var sitems: Variant = scene.get("_shop_items")
+		if sitems is Array:
+			shop_window_info["items"] = sitems.duplicate(true)
 	var status_window_info = {
 		"is_showing": bool(scene.get("_status_open")) if scene and scene.get("_status_open") != null else false
 	}
@@ -788,6 +853,7 @@ func get_full_scene_state() -> Dictionary:
 		"choice_box": choice_info,
 		"command_window": cmd_info,
 		"item_window": item_window_info,
+		"shop_window": shop_window_info,
 		"status_window": status_window_info,
 		"battle": battle_info,
 		"encounter_rng": rng_info,
@@ -906,7 +972,7 @@ func _get_active_scene_map_key(scene: Node) -> String:
 		"castle1f": return "tantegel-castle-1f"
 		"throneroom": return "tantegel-castle-2f"
 		"tantegelbasement": return "tantegel-castle-b1"
-		"worldmap": return "world_map"
+		"worldmap": return "world-map"
 		"brecconary": return "brecconary-1f"
 		"garinham": return "garinham-1f"
 		"kol": return "kol-1f"
@@ -1034,8 +1100,8 @@ func get_screen_contents() -> Dictionary:
 	var grid_2d: Array = []
 	var ascii_matrix: Array = []
 
-	var map_w := 124 if map_key == "world_map" else 32
-	var map_h := 124 if map_key == "world_map" else 32
+	var map_w := 124 if map_key == "world-map" else 32
+	var map_h := 124 if map_key == "world-map" else 32
 	if scene:
 		if scene.has_method("_get_map_w"): map_w = scene._get_map_w()
 		elif "MAP_W" in scene: map_w = scene.MAP_W
@@ -1089,7 +1155,7 @@ func get_screen_contents() -> Dictionary:
 			# Chest on tile
 			var chest_data = null
 			var coord_str := "%d,%d" % [c, r]
-			var is_chest_open: bool = opened_chests.has(map_key + ":" + coord_str) or opened_chests.has("throne_room:" + coord_str) or opened_chests.has("castle_1f:" + coord_str) or opened_chests.has(coord_str)
+			var is_chest_open: bool = opened_chests.has(map_key + ":" + coord_str) or opened_chests.has("throne_room:" + coord_str) or opened_chests.has("castle_1f:" + coord_str)
 			for ch in map_chests:
 				if ch is Dictionary and int(ch.get("col", -1)) == c and int(ch.get("row", -1)) == r:
 					var chest_id: String = str(ch.get("id", ""))
@@ -1285,7 +1351,7 @@ func _build_map_overview(scene: Node, map_key: String, map_w: int, map_h: int, p
 				walkable = TileWalkability.is_walkable(tid) if tid != -1 else false
 
 			var coord_str := "%d,%d" % [c, r]
-			var is_chest_open: bool = opened_chests.has(map_key + ":" + coord_str) or opened_chests.has("throne_room:" + coord_str) or opened_chests.has("castle_1f:" + coord_str) or opened_chests.has(coord_str)
+			var is_chest_open: bool = opened_chests.has(map_key + ":" + coord_str) or opened_chests.has("throne_room:" + coord_str) or opened_chests.has("castle_1f:" + coord_str)
 
 			if tid == 30 or ("CHEST_ITEMS" in scene and scene.CHEST_ITEMS is Dictionary and scene.CHEST_ITEMS.has(coord_str)):
 				var cname := ""

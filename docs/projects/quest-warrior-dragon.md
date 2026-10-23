@@ -41,7 +41,95 @@ python3 games/quest-warrior-dragon/tests/test_map_completeness.py --screenshots
 
 # Run Chained Cucumber Checkpoint E2E Suite (King -> Key -> Door -> Castle 1F -> World Map)
 xvfb-run -a behave games/quest-warrior-dragon/tests/e2e/features/king_to_world_map.feature
+
+# Let the robos-jrpg AI play the ENTIRE game as a user would (milestone by milestone, real inputs only)
+python3 games/quest-warrior-dragon/tests/e2e/play_full_game.py
+python3 games/quest-warrior-dragon/tests/e2e/play_full_game.py --until 18   # stop after milestone 18
+python3 games/quest-warrior-dragon/tests/e2e/play_full_game.py --record     # also record playthrough.mp4 + 12x time-lapse
+python3 games/quest-warrior-dragon/tests/e2e/play_full_game.py --stepped    # one video + checkpoint per milestone (videos/NN-<id>.mp4)
+python3 games/quest-warrior-dragon/tests/e2e/play_full_game.py --stepped --only 42   # re-record milestone 42 from its checkpoint
 ```
+
+## AI Full-Game Playthrough ("Play the Game" mode)
+
+The BFS audit proves every tile is *reachable*; the playthrough proves the game is *beatable*. `PlayGameBrain.gd`
+(`src/systems/`) is a "play the game" mode of the robos-jrpg AI engine: it takes over the controller and plays from
+King Lorik's throne room to the ending credits using nothing a human player does not have — real game inputs, and the
+IPC web service (`GameControlServer.gd`, `/api/v1/state`) to read what is on screen.
+
+- **Milestone registry** — `tools/gen_milestones.py` generates `data/v1/milestones.json`: an ordered list of
+  objectives (every weapon, armor and shield purchase, every treasure chest, each quest item and quest, level gates
+  before dangerous zones, the Dragonlord and the ending). The brain simply seeks the next milestone, forever.
+- **Route planning** — `RoutePlanner.gd` plans multi-map routes (stairs, doors, bridges, the Rainbow Bridge) over the
+  real walkability grids; the brain only follows them step by step.
+- **Survival policy** — kill-before-die battle maths from `combat_formulas.json`, zone-aware heal thresholds (heal
+  early enough to survive two worst-case hits from the local encounter pool), SLEEP/STOPSPELL use, inn trips only
+  when out of heal MP and herbs, MP conservation inside Charlock and HEALMORE-only healing against the Dragonlord.
+- **NES rules respected** — eight tool slots and no dropping (a full pack skips a non-gold chest), herbs are burned
+  rather than wasted, Erdrick's Armor regenerates 1 HP per step and dampens fire breath.
+- **Python driver** — `tests/e2e/play_full_game.py` boots the game headless, enables the mode, polls state, asserts
+  invariants (hero never on water or mountains, HP never negative, no stuck loops) and writes
+  `tests/e2e/reports/playthrough/playthrough.json` plus a screenshot per milestone. `--stepped` records one
+  video per milestone (`videos/NN-<id>.mp4`) and saves a game checkpoint after each one, so `--only N` replays and
+  re-records a single milestone from its checkpoint in seconds.
+- **Recording HUD** — while the AI plays, a band under the game viewport (never over dialogs) shows the current
+  milestone with a Given/When/Then summary, the brain's live objective, a wall-clock timer with the time scale, and
+  the condensed hero stats, gear, pack and map tile, so videos and screenshots explain themselves; the battle
+  status bar shows gold and EXP. Each new full run archives the previous run's reports and videos instead of
+  overwriting them.
+- **Live dashboard** — stepped/recorded runs launch `tools/playthrough-dashboard` (Electron): a tray icon with a
+  progress ring and run summary menu, and a window showing live IPC game state with screenshots, the brain's event
+  log and the milestone list; every finished milestone becomes a clickable card that plays its video and shows the
+  checkpoint saved after it, so a two-hour run can be followed and reviewed milestone by milestone.
+- **Deadlock detection** — the brain's wall-clock progress watchdog (90 s without any change in
+  milestone/battles/level/gold/position/herbs/HP) drops the current objective, blacklists unreachable shops and
+  after three stalls on one milestone skips it or fails the run; the driver's `--stall-timeout` (10 min) ends a
+  run that has stopped making progress with a `stalled` status, a screenshot and the AI event-log tail.
+- **Light in the caves** — the brain buys torches before every dark dungeon while RADIANT is unknown (and keeps a
+  spare afterwards), lights up the moment the IPC `light_status` reports no light, and re-casts RADIANT as soon
+  as it fades to a torch's glow; the game treats RADIANT as a step counter like the NES did, so it survives stairs
+  through lit floors and the walk between caves, and the field SPELL command casts RADIANT ahead of HEAL when the
+  hero is blind or the light is dim.
+- **Aggressive grinding** — the brain watches how much HP the last six grind battles cost; when monsters barely
+  scratch the hero it moves up to the next zone tier (as long as the worst hit there is survivable four times
+  over), steps back down when fights get expensive, and drops the boost after a death. Only fights inside the
+  chosen grind zone count, so random battles on the way there can no longer trigger a promotion. Grind spots are
+  picked by walking distance from wherever the hero is — falling back to a nearer zone one tier up or down when
+  the usual zone is a long trek away — so a death, an inn stop or a milestone on another continent no longer sends
+  it trekking back through the Swamp Cave to the old spot.
+- **Surviving hard hitters** — against Starwyverns and other monsters that can take a third of the hero's HP per
+  turn, the brain no longer gambles on a resistible SLEEP at low HP; it casts HEALMORE when that keeps it ahead of
+  the damage and runs when it cannot.
+- **The Golem at Cantlin's gate** — Cantlin is ringed by an impassable brick wall with a single grass gate tile on
+  its north side; stepping onto that gate before the Golem is destroyed starts the gatekeeper fight (strength 120,
+  HURT bounces off). The Fairy Flute dug up in Kol works as a battle item: it puts the Golem to
+  sleep every time, and the brain plays it whenever the Golem wakes and swings only while it sleeps. Winning once
+  opens the town for good; fleeing shoves the hero back off the gate to try again.
+- **Poisonous swamp around Charlock** — the Dragonlord's castle is ringed by swamp tiles that drain 2 HP per step
+  (with a red flash and the swamp sting), can kill a careless hero, are nullified by Erdrick's Armor, and dry up once
+  the Dragonlord falls.
+- **Magic Keys are consumed** — every locked door eats one key, and the only key the opening hands out is spent
+  on the throne-room gate. Tantegel's treasury, its 85G key shop and the Stones of Sunlight basement (now behind a
+  locked perimeter door in the walled courtyard) wait until the hero buys keys in Rimuldar (53G each, six per
+  stack). The route planner prefers door-free routes and the brain turns any door-gated goal into "buy a key at the
+  nearest reachable shop" before walking there.
+- **NES-faithful ending** — the hero carries Princess Gwaelin in his arms until she is home, the Dragonlord's
+  defeat hands over the Ball of Light with a flash that warps the hero outside a monster-free Charlock, every town
+  celebrates, and King Lorik offers his throne; the hero declines, Gwaelin insists on coming along ("But thou
+  must!"), the two walk out of Tantegel onto the overworld, "And thus the story ends…" appears and the credits
+  roll before the title screen returns. The last milestone completes only when the credits finish, so the recorded
+  run includes the whole epilogue.
+
+Every bug the brain hit while learning to finish the game was a game bug: Charlock 1F's exit gate unwalkable, boss
+fights not syncing the pack, chest duplicates, missing level-up curves, incorrect enemy flee factors and spell
+resistances, a Cantlin item shop with no stock, Wings doing nothing on the overworld, consumables refusing to
+stack. The game data is now faithful enough that the AI clears every milestone and beats the Dragonlord at
+level 21–22 in one or two Charlock expeditions with at most a single death on the way.
+
+**Live dashboard & screenshots** — the front-site page
+[AI Playthrough](https://rowbose.com/games/quest-warrior-dragon/ai-playthrough/) walks through every panel of the tray
+icon and dashboard with screenshots, shows milestone screenshots and video frames from a live run, a filmstrip of
+the per-milestone videos, and an architecture diagram of driver ↔ IPC web service ↔ `PlayGameBrain` ↔ dashboard.
 
 ## Global Map Completeness & Pathfinding Architecture
 

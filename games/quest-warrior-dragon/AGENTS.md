@@ -79,6 +79,128 @@ Consult the matching skill document under `.agents/skills/<skill-name>/SKILL.md`
   python run_cucumber_tests.py
   ```
 
+### 4. AI Full-Game Playthrough ("play the game" mode)
+- `src/systems/PlayGameBrain.gd` is the robos-jrpg brain that plays the **whole game as a user would**: it only
+  presses real game inputs and reads state through the IPC web service (`GameControlServer.gd`, `/api/v1/state`).
+  It continuously seeks the next entry of the ordered milestone registry `data/v1/milestones.json`
+  (every weapon/armor/shield purchase, every treasure chest, each quest item, level gates, Dragonlord, ending).
+- Regenerate milestones after changing shops, chests or quests: `python3 tools/gen_milestones.py`.
+- Drive it from Python (the driver is the user: no teleports, no stat edits; it asserts invariants such as
+  "hero never stands on water" and writes `tests/e2e/reports/playthrough/playthrough.json` + screenshots):
+  ```bash
+  python3 tests/e2e/play_full_game.py                 # whole game, headless (~2-3 h at time-scale 6)
+  python3 tests/e2e/play_full_game.py --until 18      # stop after milestone 18
+  DW_HEADED=1 python3 tests/e2e/play_full_game.py     # watch it on the desktop
+  DW_E2E_SOUND=1 python3 tests/e2e/play_full_game.py  # game audio on (the e2e passes --mute by default)
+  python3 tests/e2e/play_full_game.py --record        # + reports/playthrough/playthrough.mp4 and a 12x time-lapse
+  python3 tests/e2e/play_full_game.py --stepped       # one video + save checkpoint per milestone (videos/NN-<id>.mp4)
+  python3 tests/e2e/play_full_game.py --stepped --only 42   # replay milestone 42 from checkpoints/41-<id>.json
+  python3 tests/e2e/play_full_game.py --stepped --from 42   # resume from checkpoint 41 to the end
+  ```
+- `--stepped` cuts the ffmpeg capture at every milestone (`reports/playthrough/videos/NN-<id>.mp4`) and saves the
+  game via `export_save_state` to `reports/playthrough/checkpoints/NN-<id>.json`; `--from`/`--only` load that
+  checkpoint with `load_save_state` and start the brain at the matching milestone id, so a single milestone can be
+  re-recorded in seconds instead of re-running the ~2 h game.
+- While play-game mode is on, `src/systems/PlayGameHUD.gd` (created by `AIEngine.start_play_game`, `hud: false`
+  disables it) grows the window by 88 viewport px (`CONTENT_SCALE_ASPECT_KEEP_WIDTH`, 1024x1136 at 2x) and draws
+  a band *under* the 512x480 game: milestone N/total + name, a Given/When/Then line from the registry entry, the
+  brain's live objective, wall-clock timer + `xN` time scale, and the dashboard's chips (level, HP, MP, gold, XP,
+  ATK/DEF, battles, deaths, inputs, gear, pack, map tile). The driver's Xvfb/ffmpeg sizes (`HUD_BAND_H`) match,
+  so every recording and `capture_screenshot` carries that context without covering game UI. The battle status
+  bar also shows gold and EXP top-right. A fresh full run moves the previous `reports/playthrough/` to
+  `reports/archive/<started>-<status>/` first (`--no-archive` to skip; `--only`/`--from` never archive).
+- `--stepped`/`--record` runs also start the **playthrough dashboard** (`tools/playthrough-dashboard`, Electron;
+  `--dashboard on|off|auto`, `DW_DASHBOARD`): a GNOME tray icon whose progress ring and context menu follow the run
+  (status, milestones, level, battles, deaths, current objective; stop the run; open the latest video) and a window
+  with live IPC game state (stats, battle, pack, AI inputs, brain event log, 1.5 s screenshots via
+  `capture_screenshot`) plus the milestone list, where each finished milestone is clickable and plays its
+  `videos/NN-<id>.mp4` with the checkpoint summary. The driver feeds it through
+  `reports/playthrough/live.json` (rewritten once a second); the dashboard also runs standalone:
+  `cd tools/playthrough-dashboard && npm install && npx electron --no-sandbox . [--reports DIR] [--port N]`
+  (`--snapshot out.png` / `--select N` are debug aids for headless agents). It stays open after the run — quit it
+  from the tray menu.
+- Deadlock detection runs on both sides: the brain's progress watchdog (`PlayGameBrain._check_progress_watchdog`,
+  wall-clock, 90 s without any change in milestone/battles/level/gold/map/tile/herbs/HP) drops the current objective
+  and plan, blacklists an unreachable supply shop, and after 3 stalls on one milestone skips it (optional) or fails
+  the run; the driver's `--stall-timeout` (default 600 s, `DW_STALL_TIMEOUT`) ends the run with status `stalled`,
+  `screenshots/stall.png` and the AI log tail when done/battles/level/gold/exp stop changing.
+- Dark caves: the brain never walks blind. It stocks torches at item shops (two before RADIANT, one spare after,
+  only while dark maps are among the upcoming milestones; `_torch_target`), lights a torch or casts RADIANT as soon
+  as `light_status.light_radius` is 0 and refreshes a fading RADIANT (radius 1, at most 50 steps left) while HP
+  is above three quarters (`_decide_survival`, "light" log events). Game side, torch/RADIANT state lives in
+  `GameState.torch_active` / `radiant_steps_left`: RADIANT is a step counter as on the NES, so it survives stairs
+  through lit floors (Garinham town above its cave, Charlock 1F above its basements) and keeps ticking on the
+  overworld, while the torch goes out when the hero steps outside. The field SPELL command casts RADIANT before
+  HEAL when blind (HP above half) or when the light is dim (HP above three quarters), and checkpoints carry
+  `torchActive` / `radiantStepsLeft`.
+- Adaptive grinding: grind zones come from `_zone_tier_for_level(_grind_level())` where `_grind_level` is the hero
+  level minus two per recent death (`_grind_tier_penalty`) plus two per promotion (`_grind_tier_boost`). The brain
+  keeps a six-battle window of HP lost per grind battle (`_record_grind_damage`, heals counted as damage); only
+  battles fought in the grind cell's own zone count (`_battle_zone`), so fights met while still walking there
+  through easier zones cannot promote the tier twice in a row. When the average is at most 8% of max HP and the
+  next tier's worst hit times four fits in max HP it moves up a tier ("barely scratched" grind log event), at 35%
+  or more it steps back down, and a death resets the boost.
+  The grind cell itself (`_pick_grind_cell`) is chosen by planner walking distance from where the hero stands
+  (plus half the distance to the nearest inn) and is only kept while the hero is within ~24 tiles of it or no other
+  cell is more than 20 tiles closer; death clears it. When the nearest cell of the tier is more than
+  `GRIND_FAR_WALK` (80) tiles away, nearer cells of the tier above (if its worst hit times four fits in max HP) or
+  the tier below (40-tile handicap) are allowed, so a Tantegel respawn grinds nearby instead of trekking back
+  across the Swamp Cave to a cell it picked on another continent.
+- Battle policy vs hard hitters (Starwyvern & co.): SLEEP on a monster that may resist it is only tried while two
+  more hits cannot kill the hero; otherwise the brain heals or runs. HEALMORE counts as sustain (`winnable_with_heals`
+  in `_decide_battle`: n casts must keep HP above the damage taken over `turns_to_kill + 2n` turns) and is always
+  worth casting when the next hit could be fatal, instead of swinging and dying.
+- IPC commands: `start_play_game {time_scale, from_milestone}`, `stop_play_game`, `get_milestones` (report with
+  `status`, `index`, `done`, `skipped`, `battles`, `deaths` and the brain's event log), `export_save_state` /
+  `load_save_state {file_path}`.
+- Survival rules live in `PlayGameBrain._decide_survival` / `_decide_battle` (kill-before-die battle policy,
+  zone-aware heal thresholds, tiered healing (HEAL/herb/HEALMORE by incoming damage), MP conservation inside
+  Charlock, HEALMORE-only boss healing, a Charlock MP commit bar with wings home to rest when short, herb restock
+  from every item shop listed in `milestones.json` `item_shops`, and NES pack rules: 8 tool slots, six per
+  consumable stack, no dropping). Each death outside grinding raises the current milestone's required level by one.
+  Bugs the brain exposes are almost always *game* bugs — fix the game, not the brain.
+- Cantlin wall + Golem (`milestones.json` `defeat-golem`, a `step` milestone on the world-map gate tile (75, 102)):
+  Cantlin (75, 104) sits inside a ring of impassable wall tiles (terrain id 9 — blocked in `WorldMap.BLOCKED_TERRAIN`,
+  `RoutePlanner.BLOCKED_WORLD_TERRAIN` and the driver's `WORLD_BLOCKED_TERRAIN`; `CANTLIN_WALL_TILES` in
+  `tools/gen_worldmap_terrain.py` and `tools/generate_original_assets.py`, which draws the brick tile) whose only gap
+  is the grass gate tile (75, 102). `WorldMap._check_map_trigger` starts a `golem` battle (`_golem_gate_battle`)
+  when the hero steps on the gate before `GameState.golem_defeated` is set; winning sets the flag (saved as
+  `golemDefeated`) and shows "The Golem crumbles to dust…", fleeing shoves the hero back onto the tile it came
+  from (`_golem_gate_from`), so stepping on the gate again retries. The town tile keeps the check as a fallback.
+  In battle, ITEM against the Golem plays the Fairy Flute (`BattleOverlay._do_item`: not consumed, bypasses
+  `resist_sleep`, "Quietly Golem closes his eyes and settles into sleep…"); the brain picks ITEM whenever the Golem
+  is awake and the pack holds `fairy_flute`, swings while it sleeps, and never spends a herb on it (heal spells
+  instead). `search-fairy-flute` in Kol is a required milestone that precedes it.
+- Charlock swamp ring (`CHARLOCK_SWAMP_TILES` in both generators): the 8 tiles around Charlock (50, 50) are
+  poisonous swamp (terrain id 7, the only swamp on the map). `WorldMap._apply_swamp_damage` runs after every
+  completed step: −`SWAMP_DAMAGE` (2) HP with `swamp.mp3` and a red `_flash_hurt` tween, skipped when
+  `GameState.armor == "erdricks_armor"` or after the Dragonlord is beaten (the swamps "dry up"); HP reaching 0 is a
+  normal `_on_defeat`. Swamp stays walkable for `RoutePlanner` (unweighted BFS), the brain just never idles on it.
+- Locked doors & Magic Keys: door tile 10 is *not* in `data/v1/tile_walkability.json` `walkable` (it is the
+  `door` id). `Castle1F._is_walkable` / `DungeonMap` treat a door as a wall until `GameState.unlocked_doors` has
+  `"<map_key>:<col>,<row>"` (the throne gate keeps its legacy `"throne_room"` key). `DOOR` (or ITEM → Magic Key)
+  facing a door consumes one key (`_unlock_door_with_key`), records the door and blits a floor tile over it
+  (`_open_door_visual`); re-entering a map replays the unlocks (`_apply_unlocked_doors` / `_restore_unlocked_door_visuals`).
+  Tantegel's treasury (`tand2`), key shop (`tand1`) and the Stones of Sunlight stairs — moved into the walled courtyard at
+  (13, 3) behind door `tand3` (13, 4) — are therefore *not* opening-phase milestones: `gen_milestones.py` buys six
+  keys at Rimuldar (`rim002`, 53G, `has_count` done_when, the brain buys one per TALK until the stack is full) and
+  only then visits Rimuldar's Wings chest (2 doors), Gwaelin's cell, Tantegel, Garin's Grave B2+ and Cantlin's inner
+  rooms. `RoutePlanner.plan()` lists the still-locked doors per leg (`doors`) and prefers door-free routes
+  (`allow_locked_doors=false` first); `PlayGameBrain._keys_prerequisite` turns a door-gated goal into "buy a key at the
+  nearest reachable key shop" (Tantegel 85G is itself behind `tand1`, Cantlin 98G behind its door) or a gold grind.
+- Regenerated PNGs need a Godot reimport: the runtime loads `.godot/imported/*.ctex`, not the PNG, so patching
+  `dw1-over2.png` in place shows nothing until `godot4 --headless --path . --import` runs. The driver's
+  `ensure_import_cache()` reimports whenever anything under `assets/` is newer than the import cache.
+- NES ending (`game_completed` is only set when the credits finish, so the last milestone covers the whole sequence):
+  the Dragonlord's death text ("Thou hast done well…", "…obtains the Ball of Light"), `CharlockThroneRoom.
+  _ball_of_light_warp` (white flash, warp outside Charlock, encounters off), victory-lap NPC lines in every town
+  (`DungeonMap.VICTORY_LAP_LINES`) and the throne room finale (`ThroneRoom._begin_ending`: the King offers the
+  throne, the hero declines, Gwaelin — if she was brought home — steps down and asks to come along with the
+  "But thou must!" loop, then the pair walk out). `scenes/Ending.tscn` (`scripts/Ending.gd`) then shows them
+  leaving Tantegel onto the overworld, the "And thus the story ends…" box, the credits, and returns to the title.
+  Ending.gd forces `Engine.time_scale = 1` so recordings capture it at real speed. While Gwaelin is rescued but not
+  yet returned every hero `WalkSprite` with `is_hero = true` draws the `hero_sword_princess` row (carry sprite).
+
 ---
 
 ## 🔄 Schema & Data Model Regeneration

@@ -126,6 +126,9 @@ func _load_all_data() -> bool:
 		}
 	for tid in tw.get("walkable", []):
 		_walkable_ids[int(tid)] = true
+	# Locked doors are passable once the hero has a Magic Key, so treat them as
+	# walkable for reachability purposes.
+	_walkable_ids[int(tw.get("door", 10))] = true
 
 	_stair_registry = sr
 	for map_key: String in sr:
@@ -228,7 +231,7 @@ func _get_neighbors(map_key: String, pos: Vector2i, stairs_at: Dictionary) -> Ar
 	if map_key == "tantegel-castle-1f":
 		if pos == Vector2i(8, 8) or pos == Vector2i(30, 30):
 			result.append({"map": "tantegel-castle-2f", "pos": Vector2i(9, 9), "via": "stairs:throne"})
-		if pos == Vector2i(13, 4):
+		if pos == Vector2i(13, 3):
 			result.append({"map": "tantegel-castle-b1", "pos": Vector2i(1, 5), "via": "stairs:basement"})
 		if pos.y >= h - 2 and (pos.x == 11 or pos.x == 12):
 			result.append({"map": "world-map", "pos": Vector2i(45, 45), "via": "exit:world-map"})

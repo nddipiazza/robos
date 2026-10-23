@@ -10,6 +10,7 @@ const KNOWN_ITEMS := {
 	"Fairy Water":    { "name": "Fairy Water",     "type": "item",      "desc": "Repels weak monsters." },
 	"Wings":          { "name": "Wings",           "type": "item",      "desc": "Warp to Tantegel." },
 	"Dragon's Scale": { "name": "Dragon's Scale",  "type": "armor_acc", "desc": "Raises defense by 2." },
+	"Rainbow Drop":   { "id": "rainbow_drop",   "name": "Rainbow Drop",    "type": "quest",     "desc": "Spans the sea to Charlock." },
 	"Fighter's Ring": { "name": "Fighter's Ring",  "type": "ring",      "desc": "Raises attack by 2." },
 }
 
@@ -216,6 +217,10 @@ func _run_cli(args: Array) -> void:
 				i += 1
 			"--tile-debug":
 				tile_debug_enabled = true
+				i += 1
+			"--mute":
+				# Headless / e2e runs: silence every bus (the recording uses -an anyway).
+				AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), true)
 				i += 1
 			_: i += 1
 	_apply_game_state(tile, facing, gold, items, from, all_chests, unlocked_doors,
