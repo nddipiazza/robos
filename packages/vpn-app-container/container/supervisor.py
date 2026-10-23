@@ -34,8 +34,9 @@ def command(argv, **kwargs):
     return subprocess.run(argv, check=True, timeout=5, **kwargs)
 
 
-def firewall(endpoint, port, protocol):
+def firewall(endpoint, port, protocol, web_gateway):
     ipaddress.IPv4Address(endpoint)
+    ipaddress.IPv4Address(web_gateway)
     if protocol not in ('udp', 'tcp') or not 1 <= int(port) <= 65535:
         raise ValueError('Invalid VPN endpoint')
     # Policies become DROP before flushing or adding any allow rule.
@@ -52,8 +53,8 @@ def firewall(endpoint, port, protocol):
          '-p', protocol, '--dport', str(port), '-j', 'ACCEPT'],
         ['INPUT', '-s', endpoint, '-p', protocol, '--sport', str(port),
          '-m', 'conntrack', '--ctstate', 'ESTABLISHED', '-j', 'ACCEPT'],
-        ['INPUT', '-i', 'eth0', '-p', 'tcp', '--dport', '8080', '-j', 'ACCEPT'],
-        ['OUTPUT', '-o', 'eth0', '-p', 'tcp', '--sport', '8080',
+        ['INPUT', '-i', 'eth0', '-s', web_gateway, '-p', 'tcp', '--dport', '8080', '-j', 'ACCEPT'],
+        ['OUTPUT', '-o', 'eth0', '-d', web_gateway, '-p', 'tcp', '--sport', '8080',
          '-m', 'conntrack', '--ctstate', 'ESTABLISHED', '--ctdir', 'REPLY', '-j', 'ACCEPT'],
     ]
     for rule in rules:
@@ -161,7 +162,8 @@ def tunnel_exists():
         result = subprocess.run(['ip', '-j', 'addr', 'show', 'dev', 'tun0'],
                                 check=True, timeout=0.2, capture_output=True)
         links = json.loads(result.stdout)
-        return any(a.get('family') == 'inet' for link in links for a in link.get('addr_info', []))
+        return any(a.get('family') == 'inet' for link in links if 'UP' in link.get('flags', [])
+                   for a in link.get('addr_info', []))
     except (subprocess.SubprocessError, ValueError):
         return False
 
@@ -225,7 +227,8 @@ def main():
         time.sleep(0.1)
     data = validate_bootstrap(json.loads((RUN / 'bootstrap.json').read_text()))
     (RUN / 'bootstrap.json').unlink()
-    firewall(data['endpoint'], data['port'], data['protocol'])
+    routes = json.loads(command(['ip', '-j', 'route', 'show', 'default'], capture_output=True).stdout)
+    firewall(data['endpoint'], data['port'], data['protocol'], routes[0]['gateway'])
     event('locked', message='IPv4 default deny; IPv6 denied; app can use tun0 only')
     write_config(data)
     safe_directory(Path('/data/config'))

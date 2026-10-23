@@ -58,7 +58,7 @@ class ProtectionTests(unittest.TestCase):
     def test_firewall_has_no_app_exception_for_vpn_endpoint_or_dns(self):
         calls = []
         with patch.object(s, 'command', side_effect=lambda argv: calls.append(argv)):
-            s.firewall('203.0.113.1', 1194, 'udp')
+            s.firewall('203.0.113.1', 1194, 'udp', '172.17.0.1')
         for family in ('iptables', 'ip6tables'):
             for chain in ('INPUT', 'OUTPUT', 'FORWARD'):
                 self.assertIn([family, '-w', '-P', chain, 'DROP'], calls)
@@ -71,11 +71,12 @@ class ProtectionTests(unittest.TestCase):
             if 'ESTABLISHED' in row:
                 self.assertIn('REPLY', row)
                 self.assertIn('8080', row)
+                self.assertIn('172.17.0.1', row)
 
     def test_any_firewall_install_failure_aborts_setup(self):
         with patch.object(s, 'command', side_effect=subprocess.CalledProcessError(1, 'iptables')):
             with self.assertRaises(subprocess.CalledProcessError):
-                s.firewall('203.0.113.1', 1194, 'udp')
+                s.firewall('203.0.113.1', 1194, 'udp', '172.17.0.1')
 
     def test_generated_openvpn_config_cannot_run_user_scripts(self):
         data = {'endpoint': '203.0.113.1', 'port': 1194, 'protocol': 'udp',
@@ -93,6 +94,11 @@ class ProtectionTests(unittest.TestCase):
     def test_timeout_during_connectivity_probe_is_failure(self):
         with patch.object(s, 'command', side_effect=subprocess.TimeoutExpired('curl', 2)):
             self.assertFalse(s.probe())
+
+    def test_assigned_address_on_down_interface_is_not_healthy(self):
+        result = Mock(stdout=b'[{"flags":[],"addr_info":[{"family":"inet"}]}]')
+        with patch.object(s.subprocess, 'run', return_value=result):
+            self.assertFalse(s.tunnel_exists())
 
 
 if __name__ == '__main__':
