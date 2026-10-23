@@ -35,13 +35,20 @@ description: "Tick what your shop does, such as auto repair, towing, parts sales
 
 
 
-<p>The first time, it asks you to set it up: load the <strong>Retail store</strong> sample to look around, or add your own staff PINs, parts and prices in its back office. After that, the <strong>Parts counter</strong> page shows the day&#39;s counter sales, and so does <strong>Center reports</strong>.</p>
+<p>The first time, it asks you to set it up: load the <strong>Auto parts counter</strong> sample to look around (oil, filters, brake pads, wipers, bulbs and batteries), or add your own staff PINs, parts and prices in its back office. After that, the <strong>Parts counter</strong> page shows the day&#39;s counter sales, and so does <strong>Center reports</strong>.</p>
 <figure class="guide-shot"><a href="{{ '/assets/auto-center/shots/09-services--sell-parts-at-the-counter-with-robos-point-of-sale-5.jpg' | relative_url }}"><img src="{{ '/assets/auto-center/shots/09-services--sell-parts-at-the-counter-with-robos-point-of-sale-5.jpg' | relative_url }}" alt="The day’s counter sales in Auto Center" loading="lazy" width="1000" height="625"></a><figcaption>The day’s counter sales in Auto Center</figcaption></figure>
 
 
 
+<h3>One stock count for the whole shop</h3>
+<p>The counter sells from the same stock as <strong>Orders → Stock</strong>. A part sold at the counter, used on a repair or received on a purchase order comes off, or goes onto, the same shelf count. Each counter sale and return appears in the part&#39;s <strong>Stock history</strong> with its sale number and the cashier, and a part that runs low at the counter shows up under <strong>Running low</strong> in Orders.</p>
+<ul>
+<li><strong>Parts you already stock:</strong> if you add a counter item with the same part number (SKU) as a stock item, it <em>is</em> that item, so it is never counted twice. That is how the sample&#39;s <em>Front brake pads</em> (BP-100) sell from your shop&#39;s brake pads.</li>
+<li><strong>Receiving and counts at the register:</strong> these also go to Orders → Stock.</li>
+<li><strong>Running out:</strong> when a repair takes the last one, the register says <em>Not enough in stock</em> until a delivery arrives.</li>
+</ul>
 <blockquote>
-<p><strong>Good to know.</strong> The register&#39;s data is kept in your shop folder and backed up with the rest of your records. For now the counter keeps its own stock and price list, separate from <strong>Orders → Stock</strong>, so a part sold at the counter does not come off the repair stock count. Sharing one stock count is the first item under <em>Coming next</em>.</p>
+<p><strong>Good to know.</strong> The register&#39;s own records (sales, staff PINs, prices) are kept in your shop folder and backed up with the rest of your records. The register keeps its own price list; the parts catalog&#39;s prices are not shared yet.</p>
 </blockquote>
 <h2>Turning a service off</h2>
 <p>Untick it. Its menus disappear and its questions leave the Front desk. Nothing is deleted: its records stay in your shop history, and they come back when you tick it again. Auto Center will not turn off auto repair while a starter that needs it is still on.</p>
