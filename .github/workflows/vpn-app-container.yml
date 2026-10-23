@@ -1,0 +1,31 @@
+name: VPN App Container isolation
+on:
+  push:
+    branches: ['codex/vpn-app-container']
+    paths: ['packages/vpn-app-container/**', '.github/workflows/vpn-app-container.yml']
+  pull_request:
+    paths: ['packages/vpn-app-container/**', '.github/workflows/vpn-app-container.yml']
+permissions:
+  contents: read
+jobs:
+  linux-isolation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Controller and supervisor failure tests
+        run: |
+          node --test packages/vpn-app-container/test/controller.test.js
+          python3 -m unittest discover -s packages/vpn-app-container/test -p 'test_*.py'
+      - name: Real OpenVPN and qBittorrent packet isolation
+        run: node packages/vpn-app-container/test/fixture.js
+      - name: Preserve real network test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vpn-app-container-proof
+          path: packages/vpn-app-container/test/live-proof.json
+          if-no-files-found: ignore

@@ -133,6 +133,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **RobOS Voice** | Bi-directional voice assistant: natural Kokoro/Edge-TTS speech, continuous stream listening, wake-word detection, Whisper STT, and desktop assistant |
 | **Toast Daemon** | System-wide overlay toast notifications |
 | **Security Setup** | First-run GPG + SSH key initialization |
+| **VPN App Container** | Launch separate qBittorrent or Transmission containers with VPN-only networking and process termination on detected VPN failure |
 | **Search Index** | File system indexer for @-search in AI textareas |
 | **RobOS Preferences** | System-wide settings (credentials, AI model prefs) |
 | **RobOS cRPG Editor** | Unified cRPG game editor for campaign management, character sheets, party inventory, and 5-ft blockmap level design |

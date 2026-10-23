@@ -1,0 +1,23 @@
+{
+  "mode": "refine",
+  "prompt": "Register the VPN App Container and its VPN-only application execution boundary. Apply after resolving the existing canonical package/aggregate mismatch.",
+  "edits": [{
+    "op": "add",
+    "node": {
+      "@id": "urn:robos:app:vpn-app-container",
+      "@type": ["robos:DesktopApp", "schema:SoftwareApplication", "oslc_am:Resource", "c4:Container"],
+      "dcterms:title": "VPN App Container",
+      "dcterms:description": "Container copies of designated apps use a default-deny firewall, IPv6 blocking and an unprivileged app UID. A root supervisor checks VPN connectivity and kills the application process group on failure. qBittorrent and Transmission presets; real Linux VPN verification required before security claims.",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications",
+      "robos:repository": "github.com/nddipiazza/robos",
+      "robos:technology": "Electron / Vanilla JavaScript / Python / Docker / OpenVPN / iptables",
+      "robos:desktopFramework": "Electron",
+      "robos:sourcePath": "packages/vpn-app-container/main.js",
+      "robos:apiPort": 19232,
+      "robos:refersFrom": "https://schema.org/SoftwareApplication",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication",
+      "robos:domainStandard": "https://schema.org/SoftwareApplication"
+    }
+  }]
+}

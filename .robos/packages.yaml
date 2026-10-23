@@ -1,5 +1,10 @@
 kind: PackagesCatalog
 packages:
+  - id: "urn:robos:app:vpn-app-container"
+    title: "VPN App Container"
+    type: "robos:DesktopApp"
+    repository: "github.com/nddipiazza/robos"
+    technology: "Electron / Python / Docker / OpenVPN / iptables"
   - id: "urn:robos:service:order-processing-java-service"
     title: "Order Processing Java Service Service"
     type: "robos:Microservice"

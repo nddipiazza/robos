@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>RobOS VPN App Container</title><link rel="stylesheet" href="style.css"></head>
+<body><main>
+<header><span class="eyebrow">ROBOS · SECURITY</span><h1>VPN App Container</h1>
+<p>Selected apps get a VPN-only connection. If the VPN fails, their processes are killed.</p></header>
+<section><h2>1. Prepare the container</h2><p id="runtime">Checking Linux Docker engine…</p>
+<button id="build" disabled>Build app container</button><span id="build-state"></span></section>
+<section><h2>2. Connect your VPN</h2><button id="import">Import IPVanish .ovpn profile</button>
+<p id="profile">Select a profile with its CA certificate in the same folder. Credentials stay in memory.</p>
+<div class="fields"><label>VPN username<input id="username" autocomplete="off"></label>
+<label>VPN password<input id="password" type="password" autocomplete="off"></label></div></section>
+<section><h2>3. Designate a protected app</h2>
+<label>App<select id="app"><option value="qbittorrent">qBittorrent</option><option value="transmission">Transmission</option></select></label>
+<div class="actions"><button id="start" disabled>Launch with VPN protection</button><button id="stop">Stop container</button><button id="open" disabled>Open app</button></div>
+<p id="state" role="status">Not running</p><p id="web-auth"></p>
+<p class="muted">This launches a separate container copy. Existing host installations are unaffected.</p></section>
+<section><h2>Protection status</h2><p>IPv4 default deny · IPv6 blocked · no host network · no app network privileges</p>
+<p class="muted">Tunnel checks run every 250 ms. Connectivity checks run every 2 seconds with a 2-second timeout. The firewall blocks direct traffic throughout detection. Closing this window leaves protection running.</p>
+<pre id="logs">No container started.</pre></section>
+<p id="error" role="alert"></p>
+</main><script src="app.js"></script></body></html>

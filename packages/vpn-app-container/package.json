@@ -1,0 +1,12 @@
+{
+  "name": "robos-vpn-app-container",
+  "version": "0.1.0",
+  "description": "Run selected applications behind an enforced VPN firewall",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "test:linux": "python3 -m unittest discover -s test -p 'test_*.py'"
+  },
+  "dependencies": { "electron": "^33.2.1" }
+}

@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS VPN App Container
+Comment=Run selected applications with VPN-only networking and automatic termination on VPN failure
+Exec=/usr/bin/electron /usr/local/share/robos/vpn-app-container/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/vpn-app-container/icon.svg
+Terminal=false
+Categories=Network;Security;
+X-RobOS-Category=Security
+StartupWMClass=robos-vpn-app-container
