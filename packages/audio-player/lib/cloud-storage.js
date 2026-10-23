@@ -103,9 +103,9 @@ function listConnections() {
   });
 }
 
-async function list(id, remotePath) {
+async function list(id, remotePath, options = {}) {
   const ds = getConnection(id);
-  const listing = await loadRemoteStorage().listDir(ds, remotePath);
+  const listing = await loadRemoteStorage().listDir(ds, remotePath, options);
   return {
     path: listing.path,
     entries: listing.entries.filter(e => e.type === 'dir' || AUDIO_EXTENSIONS.has(path.extname(e.name).toLowerCase())),
@@ -280,7 +280,7 @@ function isTrackCached(localPath, expectedSize = null) {
  * audio files upfront. Returns track metadata descriptors pointing to their
  * future local cache path.
  */
-async function indexCloudAudio(id, remotePaths, onProgress) {
+async function indexCloudAudio(id, remotePaths, onProgress, options = {}) {
   const ds = getConnection(id);
   const rs = loadRemoteStorage();
   const isAudio = (n) => AUDIO_EXTENSIONS.has(path.extname(n).toLowerCase());
@@ -303,7 +303,7 @@ async function indexCloudAudio(id, remotePaths, onProgress) {
       continue;
     }
     onProgress && onProgress({ phase: 'scanning', path: rp });
-    const walked = await rs.walk(ds, rp, isAudio);
+    const walked = await rs.walk(ds, rp, isAudio, Number.MAX_SAFE_INTEGER, options);
     for (const e of walked) {
       const localPath = cachePathFor(id, e.path);
       descriptors.push({

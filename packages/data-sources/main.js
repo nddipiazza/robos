@@ -1182,6 +1182,8 @@ registerIPC('ds-save-datasource', async (_, ds) => {
   });
 
   if (normalized.driverType === 'gdrive') {
+    const duplicate = remoteStorage.findDuplicateGoogleSource(list, normalized);
+    if (duplicate) throw new Error(`These Google Drive folders are already linked in "${duplicate.name}". Use the existing source to browse or refresh them.`);
     normalized.folderId = normalized.folders?.[0]?.id || remoteStorage.extractDriveFolderId(normalized.folderId || normalized.database || 'root');
     if (!normalized.database || normalized.database.includes('drive.google.com')) {
       normalized.database = '/';

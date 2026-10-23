@@ -16,7 +16,7 @@ const providerLabel = (protocol) => {
   return p ? p.toUpperCase() : 'Cloud';
 };
 
-export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, onAddCloud, onRescan, onRename, onRemove, busyId }) {
+export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, onAddCloud, onRescan, onRename, onRemove, onEnabled, busyId }) {
   const [confirmId, setConfirmId] = useState(null);
   const [alsoTracks, setAlsoTracks] = useState(true);
   const [editId, setEditId] = useState(null);
@@ -34,7 +34,7 @@ export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, o
         <div className="folder-head-actions">
           <button className="row-btn" title="Add a folder from this computer" onClick={onAddLocal}>+ Local</button>
           <button className="row-btn" title="Browse Cloud Storage folders" onClick={onAddCloud}>+ Cloud</button>
-          <button className="row-btn" title="Rescan and sync every folder" onClick={() => onRescan(null)} disabled={!folders.length}>Sync all</button>
+          <button className="row-btn" title="Refresh folders marked Keep synced" onClick={() => onRescan(null)} disabled={!folders.length || !!busyId}>Refresh all</button>
         </div>
       </div>
 
@@ -77,16 +77,21 @@ export default function FolderPanel({ folders, activeId, onSelect, onAddLocal, o
             </div>
           </div>
           <div className="folder-actions">
+            <label className="folder-sub" title="Keep this folder synced and check for updates at startup">
+              <input type="checkbox" aria-label={`Keep ${f.label} synced`} checked={f.syncEnabled !== false}
+                disabled={!!busyId} onChange={e => onEnabled(f.id, e.target.checked)} /> Keep synced
+            </label>
             <button
               className="row-btn"
               style={f.trackCount === 0 && !f.lastSynced ? { color: '#00bcd4', borderColor: 'rgba(0,188,212,0.4)' } : undefined}
               onClick={() => onRescan(f.id)}
-              disabled={busyId === f.id || f.connectionMissing}
+              disabled={!!busyId || f.connectionMissing || f.syncEnabled === false}
             >
-              {busyId === f.id ? 'Syncing...' : (f.trackCount === 0 && !f.lastSynced ? 'Sync Tracks' : 'Sync')}
+              {busyId === f.id ? 'Syncing...' : 'Refresh'}
             </button>
             <button className="row-btn row-btn-stop" onClick={() => { setConfirmId(confirmId === f.id ? null : f.id); setAlsoTracks(true); }}>Remove</button>
           </div>
+          {f.syncError && <p className="cloud-error" role="status">Could not check for updates: {f.syncError}. Existing tracks are available; refresh to retry.</p>}
           {confirmId === f.id && (
             <div className="folder-confirm">
               <label>

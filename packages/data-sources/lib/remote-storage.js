@@ -973,6 +973,7 @@ async function listGDriveApi(ds, auth, remotePath, options = {}) {
     return result;
   } catch (err) {
     // If rate-limited or offline and we have a stale cached listing on disk, return it gracefully!
+    if (options.strict) throw err;
     const stale = getCachedDirListing(ds, norm, true);
     if (stale) return stale;
     throw err;
@@ -1614,11 +1615,11 @@ async function listDir(ds, remotePath, options = {}) {
         throw createAuthRequiredError(ds, `Google Drive "${ds.name}" requires Google OAuth sign-in. Click "Sign in with Browser" to authorize access.`);
       }
       try {
-        return await listGDriveApi(ds, auth, remotePath);
+        return await listGDriveApi(ds, auth, remotePath, options);
       } catch (apiErr) {
         if (String(apiErr.message || '').includes('HTTP 401') && ds.refreshToken && !hasPlaceholderSecret(ds.refreshToken)) {
           auth = await resolveGoogleDriveAuth(ds, { forceRefresh: true });
-          return await listGDriveApi(ds, auth, remotePath);
+          return await listGDriveApi(ds, auth, remotePath, options);
         }
         throw apiErr;
       }
@@ -1732,7 +1733,7 @@ async function walkGDriveBatched(ds, auth, remotePath, filter = () => true, limi
     do {
       const tokenParam = pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : '';
       const url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=${encodeURIComponent(fields)}&pageSize=1000&supportsAllDrives=true&includeItemsFromAllDrives=true${tokenParam}`;
-      const data = await gdriveFetchJson(url, auth);
+      const data = await gdriveFetchJson(url, auth, { noCache: !!options.forceRefresh });
       for (const f of (data.files || [])) {
         const pId = Array.isArray(f.parents) && f.parents[0] ? f.parents[0] : (batch.length === 1 ? batch[0].id : null);
         if (pId && byParentId.has(pId)) {
@@ -1807,6 +1808,7 @@ async function walk(ds, remotePath, filter = () => true, limit = 5000, options =
           auth = await resolveGoogleDriveAuth(ds, { forceRefresh: true });
           return await walkGDriveBatched(ds, auth, remotePath, filter, limit, options);
         }
+        if (options.strict) throw err;
         // Fallback to stale cached walk if available on rate-limit
         const cache = getCloudMetaCache();
         const dsKey = getDsCacheKey(ds);
@@ -1823,7 +1825,7 @@ async function walk(ds, remotePath, filter = () => true, limit = 5000, options =
   const queue = [normalizeRemote(remotePath)];
   while (queue.length && out.length < limit) {
     const dir = queue.shift();
-    const { entries } = await listDir(ds, dir);
+    const { entries } = await listDir(ds, dir, options);
     for (const e of entries) {
       if (e.type === 'dir') queue.push(e.path);
       else if (filter(e.name)) out.push(e);
@@ -2231,7 +2233,20 @@ async function testConnection(ds) {
   }
 }
 
+function findDuplicateGoogleSource(list, candidate) {
+  if (candidate.driverType !== 'gdrive') return null;
+  const key = ds => {
+    const ids = [...new Set(normalizeCloudFoldersArray(ds).map(f => f.id))].sort();
+    // Root is account-relative. Without account identity, don't conflate users.
+    if (ids.includes('root') && !ds.user) return null;
+    return JSON.stringify([ids, ids.includes('root') ? ds.user.toLowerCase() : '']);
+  };
+  const candidateKey = key(candidate);
+  return candidateKey && list.find(ds => ds.id !== candidate.id && ds.driverType === 'gdrive' && key(ds) === candidateKey);
+}
+
 module.exports = {
+  findDuplicateGoogleSource,
   DEFAULT_GDRIVE_CLIENT_ID,
   getDefaultGDriveClientSecret,
   DEFAULT_ONEDRIVE_CLIENT_ID,

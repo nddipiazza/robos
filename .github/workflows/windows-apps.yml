@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: '22'
       - name: Test catalog and download routing
-        run: node --test scripts/windows/setup.test.cjs scripts/windows/compatibility.test.cjs scripts/windows/launcher.test.cjs scripts/windows/native-integration.test.cjs scripts/windows/portable-lifetime.test.cjs packages/robos-lib/app-search.test.js packages/software-center/windows-tools.test.js packages/robos-onboarding/read-command.test.cjs
+        run: node --test packages/audio-player/lib/library-folders.test.js packages/audio-player/lib/remote-sync.test.js scripts/windows/setup.test.cjs scripts/windows/compatibility.test.cjs scripts/windows/launcher.test.cjs scripts/windows/native-integration.test.cjs scripts/windows/portable-lifetime.test.cjs packages/robos-lib/app-search.test.js packages/software-center/windows-tools.test.js packages/robos-onboarding/read-command.test.cjs
       - name: Install the native app suite
         shell: pwsh
         run: ./site/downloads/Install-RobOS.ps1 -SourceRoot $pwd -InstallDir "$env:RUNNER_TEMP\RobOS" -NoLaunch
@@ -30,6 +30,10 @@ jobs:
       - name: Exercise installed apps
         shell: pwsh
         run: node scripts/windows/smoke.cjs "$env:RUNNER_TEMP\RobOS"
+      - name: Verify cloud music sync survives restart
+        timeout-minutes: 2
+        shell: pwsh
+        run: node scripts/windows/smoke-audio-sync.cjs "$env:RUNNER_TEMP\RobOS"
       - name: Launch apps through the resident Windows launcher
         timeout-minutes: 3
         shell: pwsh
@@ -52,4 +56,5 @@ jobs:
             run/onboarding-startup-regression.png
             run/windows-launcher-smoke/results.json
             run/windows-launcher-smoke/launcher.png
+            run/audio-sync-smoke/cloud-sync.png
             ${{ runner.temp }}/RobOS/install-report.json

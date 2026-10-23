@@ -191,6 +191,15 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
+  // Wait until the renderer subscribes; checks run without blocking first paint.
+  mainWindow.webContents.once('did-finish-load', () => {
+    libraryFolders.list();
+    const targets = libraryFolders.folders.filter(f => f.syncEnabled !== false);
+    scanLocalFolders(targets);
+    syncCloudFolders(targets).then(() => {
+      sendToWindow('audio:folders-updated', folderState({ withLibrary: true }));
+    }).catch(err => console.error('Startup folder check failed:', err.message));
+  });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -514,6 +523,7 @@ async function syncCloudFolders(folders) {
     try {
       results.push({ id: f.id, ...(await libraryFolders.syncCloud(f.id, (p) => sendToWindow('audio:cloud-progress', { ...p, folder: f.label }))) });
     } catch (err) {
+      f.syncError = err.message;
       results.push({ id: f.id, error: err.message });
     }
   }
@@ -522,6 +532,16 @@ async function syncCloudFolders(folders) {
 }
 
 ipcMain.handle('audio:folders-list', async () => folderState());
+
+ipcMain.handle('audio:folders-set-enabled', async (_evt, { id, enabled }) => {
+  try {
+    const folder = libraryFolders.setEnabled(id, enabled);
+    const results = enabled ? await syncCloudFolders([folder]) : [];
+    if (enabled) scanLocalFolders([folder]);
+    const failed = results.find(r => r.error);
+    return { ok: !failed, error: failed?.error, ...folderState({ withLibrary: true }) };
+  } catch (err) { return { ok: false, error: err.message, ...folderState() }; }
+});
 
 ipcMain.handle('audio:folders-add-local', async () => {
   if (!mainWindow) return { canceled: true };
@@ -548,7 +568,7 @@ ipcMain.handle('audio:folders-add-cloud', async (_evt, { connectionId, path: rem
 });
 
 ipcMain.handle('audio:folders-rescan', async (_evt, id) => {
-  const targets = id ? [libraryFolders.get(id)].filter(Boolean) : libraryFolders.folders.slice();
+  const targets = id ? [libraryFolders.get(id)].filter(Boolean) : libraryFolders.folders.filter(f => f.syncEnabled !== false);
   scanLocalFolders(targets);
   const results = await syncCloudFolders(targets);
   const failed = results.filter(r => r.error);
@@ -740,11 +760,16 @@ function sendToWindow(channel, payload) {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload);
 }
 
-ipcMain.handle('audio:cloud-connections', async () => cloud.listConnections());
+ipcMain.handle('audio:cloud-connections', async () => {
+  const connections = cloud.listConnections();
+  return connections.map(c => ({ ...c, folders: c.folders.map(f => ({ ...f,
+    cloudKey: libraryFolders.cloudIdentity(c.id, f.remotePath, connections),
+  })) }));
+});
 
-ipcMain.handle('audio:cloud-list', async (_evt, { id, path: remotePath }) => {
+ipcMain.handle('audio:cloud-list', async (_evt, { id, path: remotePath, forceRefresh }) => {
   try {
-    return { ok: true, ...(await cloud.list(id, remotePath)) };
+    return { ok: true, ...(await cloud.list(id, remotePath, { forceRefresh: !!forceRefresh, strict: !!forceRefresh })) };
   } catch (err) {
     return { ok: false, error: err.message };
   }

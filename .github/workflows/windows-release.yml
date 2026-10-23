@@ -26,7 +26,7 @@ jobs:
         shell: pwsh
         run: |
           if ($env:RELEASE_TAG -ne "v$((Get-Content VERSION).Trim())") { throw 'Release tag does not match VERSION' }
-          node --test scripts/windows/setup.test.cjs scripts/windows/compatibility.test.cjs packages/software-center/windows-tools.test.js scripts/windows/build-release.test.cjs scripts/windows/portable-lifetime.test.cjs scripts/windows/launcher.test.cjs scripts/windows/native-integration.test.cjs packages/robos-lib/app-search.test.js
+          node --test packages/audio-player/lib/library-folders.test.js packages/audio-player/lib/remote-sync.test.js scripts/windows/setup.test.cjs scripts/windows/compatibility.test.cjs packages/software-center/windows-tools.test.js scripts/windows/build-release.test.cjs scripts/windows/portable-lifetime.test.cjs scripts/windows/launcher.test.cjs scripts/windows/native-integration.test.cjs packages/robos-lib/app-search.test.js
       - name: Prepare a clean native suite
         shell: pwsh
         run: ./site/downloads/Install-RobOS.ps1 -SourceRoot $pwd -InstallDir "$env:RUNNER_TEMP\RobOS-suite" -NoLaunch
@@ -43,6 +43,10 @@ jobs:
       - name: Build portable EXE and Windows installer
         shell: pwsh
         run: node scripts/windows/build-release.cjs "$env:RUNNER_TEMP\RobOS-suite" release/windows-native
+      - name: Verify cloud music sync survives restart
+        timeout-minutes: 2
+        shell: pwsh
+        run: node scripts/windows/smoke-audio-sync.cjs "$env:RUNNER_TEMP\RobOS-suite"
       - name: Test packaged apps
         shell: pwsh
         run: node scripts/windows/smoke-packaged.cjs release/windows-native/win-unpacked/RobOS.exe "$env:RUNNER_TEMP\RobOS-suite\packages\robos-test\node_modules\playwright-core"
@@ -58,6 +62,7 @@ jobs:
             run/windows-packaged-smoke/
             run/windows-launcher-smoke/results.json
             run/windows-launcher-smoke/launcher.png
+            run/audio-sync-smoke/cloud-sync.png
             release/windows-native/*.exe
             release/windows-native/WINDOWS-EXE-SHA256SUMS
             release/windows-native/windows-build.json

@@ -145,6 +145,7 @@ export default function App() {
     }
 
     const cleanups = [];
+    if (window.robosAudio?.onFoldersUpdated) cleanups.push(window.robosAudio.onFoldersUpdated(applyFolderState));
 
     if (window.robosAudio?.onLibraryScanDiscovered) {
       cleanups.push(window.robosAudio.onLibraryScanDiscovered((info) => {
@@ -261,13 +262,25 @@ export default function App() {
   const handleRescanFolder = async (id) => {
     setSyncingFolder(id || 'all');
     showStatus(id ? 'Syncing folder...' : 'Syncing all folders...');
-    const res = await window.robosAudio.rescanFolders(id);
-    setSyncingFolder(null);
-    applyFolderState(res);
-    showStatus(res.ok ? 'Folder sync finished.' : `Sync problem: ${res.error}`);
+    try {
+      const res = await window.robosAudio.rescanFolders(id);
+      applyFolderState(res);
+      showStatus(res.ok ? 'Folder sync finished.' : `Sync problem: ${res.error}`);
+    } catch (err) { showStatus(`Sync problem: ${err.message}`); }
+    finally { setSyncingFolder(null); }
   };
 
   const handleRenameFolder = async (id, label) => applyFolderState(await window.robosAudio.renameFolder(id, label));
+
+  const handleFolderEnabled = async (id, enabled) => {
+    setSyncingFolder(id);
+    try {
+      const res = await window.robosAudio.setFolderEnabled(id, enabled);
+      applyFolderState(res);
+      showStatus(res.ok ? (enabled ? 'Folder synced. Updates will be checked at startup.' : 'Folder sync paused. Existing music stays in your library.') : `Sync problem: ${res.error}`);
+    } catch (err) { showStatus(`Sync problem: ${err.message}`); }
+    finally { setSyncingFolder(null); }
+  };
 
   const handleRemoveFolder = async (id, removeTracks) => {
     const res = await window.robosAudio.removeFolder(id, removeTracks);
@@ -2094,6 +2107,7 @@ export default function App() {
                 onAddLocal: handleSelectFolder,
                 onAddCloud: () => setActiveTab('cloud'),
                 onRescan: handleRescanFolder,
+                onEnabled: handleFolderEnabled,
                 onRename: handleRenameFolder,
                 onRemove: handleRemoveFolder,
                 busyId: syncingFolder === 'all' ? '__all__' : syncingFolder,
@@ -2105,8 +2119,12 @@ export default function App() {
         {/* TAB: CLOUD STORAGE (Data Sources FTP / SFTP) */}
         {activeTab === 'cloud' && (
           <CloudBrowser
+            folders={folders}
+            onEnabled={handleFolderEnabled}
+            onRescan={handleRescanFolder}
+            busyId={syncingFolder}
             showStatus={showStatus}
-            onFolders={(res) => { applyFolderState(res); setActiveTab('library'); }}
+            onFolders={applyFolderState}
             onLibrary={(lib) => { if (lib) setLibrary(lib); }}
           />
         )}
