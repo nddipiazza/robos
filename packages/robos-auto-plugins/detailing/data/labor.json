@@ -1,0 +1,22 @@
+[
+ {
+  "name": "Full interior detail",
+  "hours": 3.0
+ },
+ {
+  "name": "Exterior wash and wax",
+  "hours": 1.5
+ },
+ {
+  "name": "Paint correction (one step)",
+  "hours": 4.0
+ },
+ {
+  "name": "Ceramic coating",
+  "hours": 6.0
+ },
+ {
+  "name": "Headlight restoration",
+  "hours": 1.0
+ }
+]

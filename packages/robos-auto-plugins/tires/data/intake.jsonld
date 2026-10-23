@@ -1,0 +1,89 @@
+{
+ "@context": {
+  "robos": "https://robos.dev/ns/sdlc#",
+  "dcterms": "http://purl.org/dc/terms/",
+  "schema": "https://schema.org/"
+ },
+ "@graph": [
+  {
+   "@id": "urn:robos:auto:IntakeCategory:tires",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Tires",
+   "schema:name": "Tires",
+   "schema:description": "New tires, flat repair, rotation, seasonal swap",
+   "robos:order": 41,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tires-need",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What do they need?",
+   "schema:name": "What do they need?",
+   "robos:questionKey": "need",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "New tires",
+    "Flat repair",
+    "Rotation",
+    "Balance",
+    "Seasonal swap",
+    "Tire pressure light"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:tires"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tires-size",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Tire size from the sidewall, such as 225/45R17",
+   "schema:name": "Tire size from the sidewall, such as 225/45R17",
+   "robos:questionKey": "size",
+   "robos:questionType": "text",
+   "robos:options": [],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:tires"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tires-count",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "How many tires?",
+   "schema:name": "How many tires?",
+   "robos:questionKey": "count",
+   "robos:questionType": "single",
+   "robos:options": [
+    "One",
+    "Two",
+    "Four",
+    "Not sure"
+   ],
+   "robos:order": 2,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:tires"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:tires-storage",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Should we store their other set?",
+   "schema:name": "Should we store their other set?",
+   "robos:questionKey": "storage",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Yes, please",
+    "No"
+   ],
+   "robos:order": 3,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:tires"
+   }
+  }
+ ]
+}

@@ -1,0 +1,74 @@
+{
+ "@context": {
+  "robos": "https://robos.dev/ns/sdlc#",
+  "dcterms": "http://purl.org/dc/terms/",
+  "schema": "https://schema.org/"
+ },
+ "@graph": [
+  {
+   "@id": "urn:robos:auto:IntakeCategory:mobile",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Service at your location",
+   "schema:name": "Service at your location",
+   "schema:description": "We come to the car",
+   "robos:order": 49,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:mobile-where",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Where is the car?",
+   "schema:name": "Where is the car?",
+   "robos:questionKey": "where",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Home",
+    "Work",
+    "Roadside"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:mobile"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:mobile-parking",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Where is it parked?",
+   "schema:name": "Where is it parked?",
+   "robos:questionKey": "parking",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Driveway",
+    "Street",
+    "Parking garage"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:mobile"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:mobile-job",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What does it need?",
+   "schema:name": "What does it need?",
+   "robos:questionKey": "job",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "Battery",
+    "Brakes",
+    "Oil change",
+    "Diagnosis",
+    "Something else"
+   ],
+   "robos:order": 2,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:mobile"
+   }
+  }
+ ]
+}

@@ -1,0 +1,18 @@
+[
+ {
+  "name": "Four-wheel alignment",
+  "hours": 1.0
+ },
+ {
+  "name": "Thrust-angle alignment",
+  "hours": 0.8
+ },
+ {
+  "name": "Alignment check",
+  "hours": 0.3
+ },
+ {
+  "name": "ADAS camera calibration after alignment",
+  "hours": 1.0
+ }
+]

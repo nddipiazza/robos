@@ -1,0 +1,18 @@
+{
+  "id": "alignment",
+  "name": "Wheel alignment",
+  "offer": "We do alignments",
+  "summary": "Four-wheel alignments and ADAS calibration. Adds a \"Wheel alignment\" intake and alignment labor operations.",
+  "status": "starter",
+  "order": 42,
+  "requires": [
+    "repair"
+  ],
+  "intake": "data/intake.jsonld",
+  "labor": "data/labor.json",
+  "roadmap": [
+    "Before and after readings from the alignment machine on the ticket",
+    "Printable alignment report for the customer",
+    "ADAS calibration records"
+  ]
+}

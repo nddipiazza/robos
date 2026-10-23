@@ -1,0 +1,22 @@
+[
+ {
+  "name": "Oil and filter change (synthetic)",
+  "hours": 0.5
+ },
+ {
+  "name": "Engine air filter replace",
+  "hours": 0.2
+ },
+ {
+  "name": "Cabin air filter replace",
+  "hours": 0.3
+ },
+ {
+  "name": "Wiper blades replace",
+  "hours": 0.2
+ },
+ {
+  "name": "Fluid top-off",
+  "hours": 0.1
+ }
+]

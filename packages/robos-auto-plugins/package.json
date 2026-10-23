@@ -1,0 +1,9 @@
+{
+  "name": "robos-auto-plugins",
+  "version": "1.0.0",
+  "description": "RobOS Auto service plugins: auto repair, towing, parts sales (RobOS Point of Sale) and the other service lines a shop can turn on",
+  "private": true,
+  "scripts": {
+    "test": "node --test */tests/*.test.js"
+  }
+}

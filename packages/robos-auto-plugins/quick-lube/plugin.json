@@ -1,0 +1,18 @@
+{
+  "id": "quick-lube",
+  "name": "Oil change & quick lube",
+  "offer": "We do oil changes",
+  "summary": "Oil changes and quick services while the customer waits. Adds an \"Oil change\" intake and quick-service labor operations.",
+  "status": "starter",
+  "order": 43,
+  "requires": [
+    "repair"
+  ],
+  "intake": "data/intake.jsonld",
+  "labor": "data/labor.json",
+  "roadmap": [
+    "Express lane queue with times",
+    "Next-service window sticker",
+    "Oil-life reminders by date or mileage"
+  ]
+}

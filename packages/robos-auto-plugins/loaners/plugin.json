@@ -1,0 +1,14 @@
+{
+  "id": "loaners",
+  "name": "Loaner & courtesy cars",
+  "offer": "We lend courtesy cars",
+  "summary": "Lend a car while the customer's car is in the shop.",
+  "status": "planned",
+  "order": 61,
+  "roadmap": [
+    "Your loaner cars with their status",
+    "Check-out and check-in with fuel, mileage and damage photos",
+    "A signed loaner agreement",
+    "Linked to the repair ticket, and returned before the repair is closed"
+  ]
+}

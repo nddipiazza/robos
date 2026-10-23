@@ -1,0 +1,17 @@
+{
+  "id": "exhaust",
+  "name": "Exhaust & mufflers",
+  "offer": "We do exhaust work",
+  "summary": "Mufflers, pipes and catalytic converters. Adds an \"Exhaust or muffler\" intake and exhaust labor operations.",
+  "status": "starter",
+  "order": 46,
+  "requires": [
+    "repair"
+  ],
+  "intake": "data/intake.jsonld",
+  "labor": "data/labor.json",
+  "roadmap": [
+    "Custom pipe bending jobs",
+    "Catalytic converter compliance records (such as CARB)"
+  ]
+}

@@ -1,0 +1,74 @@
+{
+ "@context": {
+  "robos": "https://robos.dev/ns/sdlc#",
+  "dcterms": "http://purl.org/dc/terms/",
+  "schema": "https://schema.org/"
+ },
+ "@graph": [
+  {
+   "@id": "urn:robos:auto:IntakeCategory:ev",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Electric or hybrid system",
+   "schema:name": "Electric or hybrid system",
+   "schema:description": "Range, charging, high-voltage battery warnings",
+   "robos:order": 47,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:ev-type",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What kind of vehicle?",
+   "schema:name": "What kind of vehicle?",
+   "robos:questionKey": "type",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Battery electric",
+    "Plug-in hybrid",
+    "Hybrid"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:ev"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:ev-symptom",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What do they notice?",
+   "schema:name": "What do they notice?",
+   "robos:questionKey": "symptom",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "Less range",
+    "Will not charge",
+    "Warning light",
+    "Less power",
+    "Battery temperature warning"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:ev"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:ev-charging",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "How do they charge?",
+   "schema:name": "How do they charge?",
+   "robos:questionKey": "charging",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Home charger",
+    "Public chargers only",
+    "Does not plug in"
+   ],
+   "robos:order": 2,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:ev"
+   }
+  }
+ ]
+}

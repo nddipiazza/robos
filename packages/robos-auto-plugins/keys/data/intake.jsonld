@@ -1,0 +1,55 @@
+{
+ "@context": {
+  "robos": "https://robos.dev/ns/sdlc#",
+  "dcterms": "http://purl.org/dc/terms/",
+  "schema": "https://schema.org/"
+ },
+ "@graph": [
+  {
+   "@id": "urn:robos:auto:IntakeCategory:keys",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Keys and remotes",
+   "schema:name": "Keys and remotes",
+   "schema:description": "Spare keys, lost keys, remotes that stopped working",
+   "robos:order": 50,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:keys-need",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What do they need?",
+   "schema:name": "What do they need?",
+   "robos:questionKey": "need",
+   "robos:questionType": "single",
+   "robos:options": [
+    "A spare key",
+    "All keys are lost",
+    "Remote stopped working",
+    "Program a new key"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:keys"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:keys-kind",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What kind of key?",
+   "schema:name": "What kind of key?",
+   "robos:questionKey": "kind",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Metal key",
+    "Remote fob",
+    "Push-button start"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:keys"
+   }
+  }
+ ]
+}

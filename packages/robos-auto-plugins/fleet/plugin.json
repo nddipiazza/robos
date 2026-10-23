@@ -1,0 +1,14 @@
+{
+  "id": "fleet",
+  "name": "Fleet accounts",
+  "offer": "We service fleets",
+  "summary": "Business customers with many vehicles, monthly invoicing and scheduled maintenance.",
+  "status": "planned",
+  "order": 60,
+  "roadmap": [
+    "Business accounts with monthly statements instead of paying per visit",
+    "Purchase orders and spending limits per driver or vehicle",
+    "Scheduled maintenance for every vehicle in the fleet",
+    "Fleet reports: cost per vehicle and per mile"
+  ]
+}

@@ -1,0 +1,69 @@
+{
+ "@context": {
+  "robos": "https://robos.dev/ns/sdlc#",
+  "dcterms": "http://purl.org/dc/terms/",
+  "schema": "https://schema.org/"
+ },
+ "@graph": [
+  {
+   "@id": "urn:robos:auto:IntakeCategory:inspection",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "State inspection or emissions test",
+   "schema:name": "State inspection or emissions test",
+   "schema:description": "Safety inspection, emissions test, re-inspection",
+   "robos:order": 44,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:inspection-kind",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Which test?",
+   "schema:name": "Which test?",
+   "robos:questionKey": "kind",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Safety inspection",
+    "Emissions test",
+    "Both",
+    "Re-inspection"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:inspection"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:inspection-due",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "When is it due?",
+   "schema:name": "When is it due?",
+   "robos:questionKey": "due",
+   "robos:questionType": "single",
+   "robos:options": [
+    "This month",
+    "Overdue",
+    "Just checking"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:inspection"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:inspection-expiry",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Registration expiry month",
+   "schema:name": "Registration expiry month",
+   "robos:questionKey": "expiry",
+   "robos:questionType": "text",
+   "robos:options": [],
+   "robos:order": 2,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:inspection"
+   }
+  }
+ ]
+}

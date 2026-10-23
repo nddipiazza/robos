@@ -1,0 +1,75 @@
+{
+ "@context": {
+  "robos": "https://robos.dev/ns/sdlc#",
+  "dcterms": "http://purl.org/dc/terms/",
+  "schema": "https://schema.org/"
+ },
+ "@graph": [
+  {
+   "@id": "urn:robos:auto:IntakeCategory:alignment",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Wheel alignment",
+   "schema:name": "Wheel alignment",
+   "schema:description": "Pulls, crooked steering wheel, uneven tire wear",
+   "robos:order": 42,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:alignment-symptom",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What do they notice?",
+   "schema:name": "What do they notice?",
+   "robos:questionKey": "symptom",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "Pulls left",
+    "Pulls right",
+    "Steering wheel off-center",
+    "Uneven tire wear",
+    "Wanders on the highway"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:alignment"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:alignment-recent",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Anything recent?",
+   "schema:name": "Anything recent?",
+   "robos:questionKey": "recent",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "New tires",
+    "Hit a pothole or curb",
+    "Suspension work",
+    "Nothing"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:alignment"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:alignment-adas",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Does it have lane-keeping or a front camera?",
+   "schema:name": "Does it have lane-keeping or a front camera?",
+   "robos:questionKey": "adas",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Yes",
+    "No",
+    "Not sure"
+   ],
+   "robos:order": 2,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:alignment"
+   }
+  }
+ ]
+}

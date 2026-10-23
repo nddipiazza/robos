@@ -1,0 +1,18 @@
+{
+  "id": "glass",
+  "name": "Auto glass",
+  "offer": "We do auto glass",
+  "summary": "Windshield chip repair and glass replacement with camera calibration. Adds a \"Windshield or glass\" intake and glass labor operations.",
+  "status": "starter",
+  "order": 45,
+  "requires": [
+    "repair"
+  ],
+  "intake": "data/intake.jsonld",
+  "labor": "data/labor.json",
+  "roadmap": [
+    "Glass part lookup by VIN",
+    "Mobile installation appointments",
+    "Insurance glass claims"
+  ]
+}

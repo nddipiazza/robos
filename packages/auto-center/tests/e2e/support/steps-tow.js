@@ -80,3 +80,23 @@ When('I close the tow call', async function () { await press(this, 'Close tow ca
 // ---- front desk
 When('I send our tow truck from {string}', async function (where) { await chip(this, 'Yes, send our truck', FD); await fill(this, 'towPickup', where, FD); await fill(this, 'towMiles', '8', FD); this.focus = `${FD} [data-question="send-tow"]`; });
 When('I dispatch the tow truck from the front desk', async function () { await choose(this, 'Dispatch the tow truck', FD); await this.page.locator(`${TW} h2`).first().waitFor({ timeout: 8000 }); this.towKey = 'TW-0001'; this.focus = TW; });
+// ---- services (plugins)
+async function servicesTab(w) { await go(w, 'admin', AD); await w.page.locator(`${AD} .tabs button`, { hasText: 'Services' }).click(); await w.page.locator(`${AD} input[data-service]`).first().waitFor(); w.focus = `${AD} [data-services="ready"]`; }
+const serviceBox = (w, offer) => w.page.locator(`${AD} input[data-service][aria-label="${offer}"]`);
+Then('{string} is ticked', async function (offer) { assert.equal(await serviceBox(this, offer).isChecked(), true); });
+Then('{string} is not ticked', async function (offer) { assert.equal(await serviceBox(this, offer).isChecked(), false); });
+Then('{string} cannot be ticked yet', async function (offer) { assert.equal(await serviceBox(this, offer).isDisabled(), true); this.focus = `${AD} [data-services="planned"]`; });
+When('I stop offering {string}', async function (offer) {
+  await servicesTab(this); await serviceBox(this, offer).uncheck();
+  await this.page.waitForFunction(o => document.querySelector('#message').textContent.includes(o + ': turned off'), offer, { timeout: 8000 });
+});
+Then('the menu shows {string}', async function (label) { await this.page.locator('nav button:visible', { hasText: label }).waitFor({ timeout: 6000 }); this.focus = 'nav'; });
+Then('the menu does not show {string}', async function (label) { await this.page.waitForFunction(l => ![...document.querySelectorAll('nav button')].some(b => !b.hidden && b.textContent.includes(l)), label, { timeout: 6000 }); this.focus = 'nav'; });
+Given('I am at the parts counter', async function () { await go(this, 'parts-counter', '#parts-counter'); });
+When('I open the parts counter register', async function () {
+  const opened = this.app.waitForEvent('window'); await this.page.locator('#parts-counter button', { hasText: 'Open the register' }).click();
+  this.register = await opened; await this.register.waitForLoadState('domcontentloaded'); await this.register.setViewportSize({ width: 1280, height: 800 }).catch(() => {});
+});
+Then('the register window shows {string}', async function (text) { await this.register.locator('body', { hasText: text }).waitFor({ timeout: 10000 }); this.shotPage = this.register; this.afterShot = async () => { this.shotPage = null; }; });
+When('I load the {string} sample in the register', async function (profile) { await this.register.locator(`[data-testid="setup-${profile}"]`).click(); await this.register.waitForFunction(() => !document.querySelector('[data-testid^="setup-"]'), null, { timeout: 10000 }); this.shotPage = this.register; this.afterShot = async () => { this.shotPage = null; }; });
+Then('the parts counter shows {string}', async function (text) { await this.page.locator('#parts-counter', { hasText: text }).waitFor({ timeout: 8000 }); this.focus = '#parts-counter'; });

@@ -1,0 +1,18 @@
+{
+  "id": "mobile",
+  "name": "Mobile mechanic",
+  "offer": "We do mobile repairs",
+  "summary": "Repairs at the customer's home, work or roadside. Adds a \"Service at your location\" intake and call-out labor.",
+  "status": "starter",
+  "order": 49,
+  "requires": [
+    "repair"
+  ],
+  "intake": "data/intake.jsonld",
+  "labor": "data/labor.json",
+  "roadmap": [
+    "Send the service van from the Tow desk dispatch board",
+    "Travel fee by distance",
+    "Take payment on site"
+  ]
+}

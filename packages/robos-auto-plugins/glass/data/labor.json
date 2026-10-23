@@ -1,0 +1,22 @@
+[
+ {
+  "name": "Windshield chip repair",
+  "hours": 0.5
+ },
+ {
+  "name": "Windshield replacement",
+  "hours": 1.5
+ },
+ {
+  "name": "Side window replacement",
+  "hours": 1.2
+ },
+ {
+  "name": "Rear window replacement",
+  "hours": 1.8
+ },
+ {
+  "name": "Windshield camera (ADAS) calibration",
+  "hours": 1.0
+ }
+]

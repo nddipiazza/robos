@@ -1,0 +1,59 @@
+{
+ "@context": {
+  "robos": "https://robos.dev/ns/sdlc#",
+  "dcterms": "http://purl.org/dc/terms/",
+  "schema": "https://schema.org/"
+ },
+ "@graph": [
+  {
+   "@id": "urn:robos:auto:IntakeCategory:detailing",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Detailing or car wash",
+   "schema:name": "Detailing or car wash",
+   "schema:description": "Wash, interior, paint correction, coating",
+   "robos:order": 48,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:detailing-package",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What would they like?",
+   "schema:name": "What would they like?",
+   "robos:questionKey": "package",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Exterior wash",
+    "Interior clean",
+    "Full detail",
+    "Paint correction",
+    "Ceramic coating",
+    "Headlight restoration"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:detailing"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:detailing-condition",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Anything to know?",
+   "schema:name": "Anything to know?",
+   "robos:questionKey": "condition",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "Pet hair",
+    "Stains",
+    "Smell",
+    "Swirl marks",
+    "None"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:detailing"
+   }
+  }
+ ]
+}

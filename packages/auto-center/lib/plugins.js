@@ -74,7 +74,7 @@ function action(service, name) {
 // a repair job, front-desk intake add-ons, intake questions and labor operations.
 const hooks = (service, key, { all = false } = {}) => (all ? discover() : enabled(service)).map(p => ({ p, h: backend(p)?.[key] })).filter(x => x.h);
 function billableTypes(service) { return ['robos:RepairOrder', ...hooks(service, 'billableTypes', { all: true }).flatMap(x => x.h)]; }
-function reportCards(service, nodes, ctx) { return hooks(service, 'reportCards').flatMap(({ p, h }) => h(nodes, ctx).map(c => ({ plugin: p.id, ...c }))); }
+function reportCards(service, nodes, ctx) { return hooks(service, 'reportCards').flatMap(({ p, h }) => h(nodes, { ...ctx, service }).map(c => ({ plugin: p.id, ...c }))); }
 function jobLinks(service, nodes, job) { return Object.fromEntries(hooks(service, 'jobLinks').map(({ p, h }) => [p.id, h(nodes, job)]).filter(([, v]) => v)); }
 function intakeAddon(service, key) { const hit = hooks(service, 'intakeAddons').find(x => x.h[key]); if (!hit) throw new Error(`Turn on the service for "${key}" in Admin → Services first`); return hit.h[key]; }
 function intakeFragments(service) { return enabled(service).filter(p => p.intake).map(p => ({ plugin: p.id, graph: JSON.parse(fs.readFileSync(path.join(p.dir, p.intake), 'utf8'))['@graph'] })); }

@@ -1,0 +1,22 @@
+[
+ {
+  "name": "Muffler replacement",
+  "hours": 1.0
+ },
+ {
+  "name": "Exhaust pipe section replacement",
+  "hours": 1.2
+ },
+ {
+  "name": "Catalytic converter replacement",
+  "hours": 1.5
+ },
+ {
+  "name": "Exhaust hanger replacement",
+  "hours": 0.4
+ },
+ {
+  "name": "Exhaust leak diagnosis",
+  "hours": 0.5
+ }
+]

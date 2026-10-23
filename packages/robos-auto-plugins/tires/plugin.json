@@ -1,0 +1,19 @@
+{
+  "id": "tires",
+  "name": "Tires",
+  "offer": "We do tires",
+  "summary": "New tires, flat repairs, rotations, balancing and seasonal swaps. Adds a \"Tires\" intake with the tire size and tire labor operations.",
+  "status": "starter",
+  "order": 41,
+  "requires": [
+    "repair"
+  ],
+  "intake": "data/intake.jsonld",
+  "labor": "data/labor.json",
+  "roadmap": [
+    "Tire catalog by size, brand and price tier",
+    "Seasonal tire storage with rack locations",
+    "DOT numbers on the ticket",
+    "Tire disposal fees"
+  ]
+}

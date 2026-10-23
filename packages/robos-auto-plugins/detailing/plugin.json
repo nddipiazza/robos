@@ -1,0 +1,18 @@
+{
+  "id": "detailing",
+  "name": "Detailing",
+  "offer": "We do detailing",
+  "summary": "Washes, interior cleaning, paint correction and coatings. Adds a \"Detailing\" intake and detailing labor operations.",
+  "status": "starter",
+  "order": 48,
+  "requires": [
+    "repair"
+  ],
+  "intake": "data/intake.jsonld",
+  "labor": "data/labor.json",
+  "roadmap": [
+    "Wash bay schedule",
+    "Detail packages with set prices",
+    "Memberships"
+  ]
+}

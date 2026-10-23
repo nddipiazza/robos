@@ -1,0 +1,18 @@
+{
+  "id": "inspection",
+  "name": "State inspection & emissions",
+  "offer": "We do state inspections",
+  "summary": "Safety inspections and emissions tests. Adds a \"State inspection\" intake and inspection labor operations.",
+  "status": "starter",
+  "order": 44,
+  "requires": [
+    "repair"
+  ],
+  "intake": "data/intake.jsonld",
+  "labor": "data/labor.json",
+  "roadmap": [
+    "Pass and fail checklist for your state",
+    "Sticker and certificate numbers",
+    "Results reported to the state program where allowed"
+  ]
+}

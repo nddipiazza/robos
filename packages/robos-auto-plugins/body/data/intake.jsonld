@@ -1,0 +1,111 @@
+{
+ "@context": {
+  "robos": "https://robos.dev/ns/sdlc#",
+  "dcterms": "http://purl.org/dc/terms/",
+  "schema": "https://schema.org/"
+ },
+ "@graph": [
+  {
+   "@id": "urn:robos:auto:IntakeCategory:body",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Body or collision damage",
+   "schema:name": "Body or collision damage",
+   "schema:description": "Dents, scratches, accident damage, paint",
+   "robos:order": 40,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:body-damage",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Where is the damage?",
+   "schema:name": "Where is the damage?",
+   "robos:questionKey": "damage",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "Front bumper",
+    "Rear bumper",
+    "Hood",
+    "Doors",
+    "Fenders",
+    "Roof",
+    "Trunk or tailgate",
+    "Paint only"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:body"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:body-cause",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What happened?",
+   "schema:name": "What happened?",
+   "robos:questionKey": "cause",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Accident with another car",
+    "Hit an object",
+    "Parking lot dent",
+    "Hail",
+    "Vandalism",
+    "Rust or wear"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:body"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:body-airbags",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Did any airbags go off?",
+   "schema:name": "Did any airbags go off?",
+   "robos:questionKey": "airbags",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Yes",
+    "No"
+   ],
+   "robos:order": 2,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:body"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:body-payer",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Who is paying?",
+   "schema:name": "Who is paying?",
+   "robos:questionKey": "payer",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Insurance claim",
+    "Paying myself",
+    "Not sure yet"
+   ],
+   "robos:order": 3,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:body"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:body-claim",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Insurance company and claim number",
+   "schema:name": "Insurance company and claim number",
+   "robos:questionKey": "claim",
+   "robos:questionType": "text",
+   "robos:options": [],
+   "robos:order": 4,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:body"
+   }
+  }
+ ]
+}

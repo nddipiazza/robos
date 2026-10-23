@@ -1,0 +1,19 @@
+{
+  "id": "body",
+  "name": "Body & collision",
+  "offer": "We do body work",
+  "summary": "Dents, scratches, accident damage and paint. Adds a \"Body or collision damage\" intake with the insurance claim, and body labor operations.",
+  "status": "starter",
+  "order": 40,
+  "requires": [
+    "repair"
+  ],
+  "intake": "data/intake.jsonld",
+  "labor": "data/labor.json",
+  "roadmap": [
+    "Insurance estimates in the industry formats (CCC, Mitchell) and supplements",
+    "Damage photos on the ticket",
+    "Paint codes and mixing records",
+    "Rental car coordination with the insurer"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "ev",
+  "name": "EV & hybrid service",
+  "offer": "We service EVs and hybrids",
+  "summary": "Electric and hybrid vehicles. Adds an \"Electric or hybrid system\" intake and EV labor operations.",
+  "status": "starter",
+  "order": 47,
+  "requires": [
+    "repair"
+  ],
+  "intake": "data/intake.jsonld",
+  "labor": "data/labor.json",
+  "roadmap": [
+    "High-voltage safety checklist and lockout record on the ticket",
+    "Battery state-of-health report for the customer",
+    "Technician EV training records"
+  ]
+}

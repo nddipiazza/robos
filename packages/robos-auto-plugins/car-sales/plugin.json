@@ -1,0 +1,14 @@
+{
+  "id": "car-sales",
+  "name": "Used car sales",
+  "offer": "We sell used cars",
+  "summary": "Buy, recondition and sell used vehicles.",
+  "status": "planned",
+  "order": 62,
+  "roadmap": [
+    "Vehicles for sale, with reconditioning work as repair tickets",
+    "Listings with photos and price",
+    "Buyer's guide and deal sheet with taxes and fees",
+    "Deposits taken with RobOS Point of Sale"
+  ]
+}

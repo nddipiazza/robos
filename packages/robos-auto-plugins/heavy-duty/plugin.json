@@ -1,0 +1,13 @@
+{
+  "id": "heavy-duty",
+  "name": "Heavy truck & RV",
+  "offer": "We service heavy trucks and RVs",
+  "summary": "Commercial trucks, buses and motorhomes.",
+  "status": "planned",
+  "order": 63,
+  "roadmap": [
+    "Heavy-duty diagnostic codes (J1939)",
+    "DOT annual inspections",
+    "RV systems: generators, slide-outs, water and propane"
+  ]
+}

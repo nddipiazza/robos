@@ -1,0 +1,21 @@
+'use strict';
+const { test } = require('node:test'), assert = require('node:assert/strict');
+const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
+const { AutoCenter } = require('../../../auto-center/lib/service');
+test('the parts counter is RobOS Point of Sale, served locally with its data in the shop’s plugin folder', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'auto-parts-')), s = new AutoCenter({ root: path.join(dir, 'c'), privateRoot: path.join(dir, 'p') }); s.setMode('shop');
+  const W = (a, i) => s.workshop(a, i), opened = [];
+  assert.throws(() => W('partsCounter'), /Turn on "We do auto parts sales"/);
+  W('setService', { plugin: 'parts-sales', enabled: true });
+  assert.equal(W('partsCounter').setUp, false);
+  await assert.rejects(W('openPartsCounter', {}), /opens in its own window/);
+  s.ui = { openWindow: (url, o) => opened.push({ url, ...o }) };
+  await W('openPartsCounter', { screen: 'register' });
+  const { url, origin } = opened[0]; assert.match(url, /^http:\/\/127\.0\.0\.1:\d+\/$/); assert.equal(url, origin + '/');
+  const setup = await (await fetch(origin + '/api/setup')).json(); assert.equal(setup.needsSetup, true);
+  const loaded = await fetch(origin + '/api/setup/retail', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' }); assert.equal(loaded.status, 200);
+  const t = W('partsCounter'); assert.equal(t.setUp, true); assert.ok(t.items > 0);
+  assert.ok(fs.existsSync(path.join(s.dataRoot, 'plugins/parts-sales/store.json')), 'the register data is in the shop folder');
+  assert.ok(s.reports({}).pluginCards.some(c => c.label === 'Parts counter sales today'));
+  await W('openPartsCounter', { screen: 'kiosk' }); assert.equal(opened[1].url, origin + '/kiosk');
+});

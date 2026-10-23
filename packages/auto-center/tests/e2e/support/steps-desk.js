@@ -33,7 +33,7 @@ When('I add a vehicle by searching {string} and choosing {string}', async functi
 When('I add another vehicle', async function () { await clickChoice(this, 'Another vehicle'); });
 When('I enter the vehicle year {string}, make {string} and model {string}', async function (y, m, mo) { await fillName(this, 'year', y); await fillName(this, 'make', m); await fillName(this, 'model', mo); await this.page.keyboard.press('Escape'); });
 When('I enter the plate {string}', async function (p) { await fillName(this, 'plate', p); });
-When('I choose the problem {string}', async function (cat) { await clickChoice(this, cat); });
+When('I choose the problem {string}', async function (cat) { await this.page.locator(`${FD} .choice`).filter({ has: this.page.locator('b', { hasText: new RegExp(`^${cat.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`) }) }).first().click(); await wait(350); });
 When('I answer {string} with {string}', async function (q, answer) { await this.page.locator(`${FD} .q-block`, { hasText: q }).locator('.chip', { hasText: answer }).first().click(); await wait(250); this.focus = `${FD} .q-block:has-text("${q}")`; });
 When('I add the customer\'s words {string}', async function (text) { await fillName(this, 'notes', text); });
 When('I note the odometer {string} and bay {string}', async function (o, b) { await fillName(this, 'odometer', o); await fillName(this, 'location', b); });

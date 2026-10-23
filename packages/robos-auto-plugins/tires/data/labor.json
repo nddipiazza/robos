@@ -1,0 +1,26 @@
+[
+ {
+  "name": "Mount and balance (per tire)",
+  "hours": 0.3
+ },
+ {
+  "name": "Flat repair (plug and patch)",
+  "hours": 0.5
+ },
+ {
+  "name": "Seasonal tire swap (on rims)",
+  "hours": 0.8
+ },
+ {
+  "name": "Seasonal tire swap (mount and balance 4)",
+  "hours": 1.4
+ },
+ {
+  "name": "Tire pressure sensor (TPMS) replace",
+  "hours": 0.4
+ },
+ {
+  "name": "Road-force balance (4)",
+  "hours": 1.2
+ }
+]

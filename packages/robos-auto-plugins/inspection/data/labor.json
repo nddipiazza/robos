@@ -1,0 +1,14 @@
+[
+ {
+  "name": "State safety inspection",
+  "hours": 0.7
+ },
+ {
+  "name": "Emissions test (OBD)",
+  "hours": 0.4
+ },
+ {
+  "name": "Re-inspection",
+  "hours": 0.3
+ }
+]

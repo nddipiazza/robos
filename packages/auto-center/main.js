@@ -1,5 +1,5 @@
 'use strict';
-const {app,BrowserWindow,ipcMain,shell,dialog}=require('electron');
+const {app,BrowserWindow,ipcMain,shell,dialog,session}=require('electron');
 const path=require('node:path');
 const {AutoCenter}=require('./lib/service');
 app.setName('robos-auto-center');
@@ -8,6 +8,17 @@ app.commandLine.appendSwitch('js-flags','--max-old-space-size=8192');
 let win,service;
 app.whenReady().then(()=>{
  service=new AutoCenter();
+ // Plugins that bring their own screens (the parts counter is RobOS Point of Sale) open them in a separate window with
+ // its own session. It may only navigate within its local origin, and only that origin may use the camera (barcode scanning).
+ service.ui={openWindow(url,{title='RobOS Auto',origin,fullscreen=false}={}){
+  const partition='persist:robos-auto-plugins',ses=session.fromPartition(partition),ours=u=>!!u&&String(u).startsWith(origin);
+  ses.setPermissionRequestHandler((_wc,permission,callback,details)=>callback(permission==='media'&&ours(details.requestingUrl)&&(details.mediaTypes||[]).every(t=>t==='video')));
+  ses.setPermissionCheckHandler((_wc,permission,requestingOrigin)=>permission==='media'&&ours(requestingOrigin));
+  const w=new BrowserWindow({width:1280,height:800,title,fullscreen,autoHideMenuBar:true,backgroundColor:'#0d1117',webPreferences:{partition,contextIsolation:true,nodeIntegration:false,sandbox:true}});
+  w.webContents.on('will-navigate',(e,u)=>{if(!ours(u)){e.preventDefault();shell.openExternal(u);}});
+  w.webContents.setWindowOpenHandler(({url:u})=>{if(ours(u))return {action:'allow'};shell.openExternal(u);return {action:'deny'};});
+  w.loadURL(url);return w;
+ }};
  const sourceUrls=new Set(require('./sources.json').map(s=>s.url));
  ipcMain.handle('auto:openSource',(_event,url)=>{const official=typeof url==='string'&&(/^https:\/\/static\.nhtsa\.gov\/odi\/ffdd\/rcl\/(?:FLAT_RCL_POST_2010\.zip|RCL\.txt)$/.test(url)||/^https:\/\/api\.nhtsa\.gov\/recalls\/recallsByCampaignNumber\?campaignNumber=[A-Za-z0-9]+$/.test(url));if(!sourceUrls.has(url)&&!official)throw new Error('Unknown source link');return shell.openExternal(url);});
  ipcMain.handle('auto:openInvoice',async(_event,id)=>{const error=await shell.openPath(service.invoicePath(id));if(error)throw new Error(error);});

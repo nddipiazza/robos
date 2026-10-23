@@ -1,0 +1,17 @@
+{
+  "id": "keys",
+  "name": "Keys & remotes",
+  "offer": "We do keys and remotes",
+  "summary": "Spare keys, lost keys and remote programming. Adds a \"Keys and remotes\" intake and key labor operations.",
+  "status": "starter",
+  "order": 50,
+  "requires": [
+    "repair"
+  ],
+  "intake": "data/intake.jsonld",
+  "labor": "data/labor.json",
+  "roadmap": [
+    "Key blank stock in Orders → Stock",
+    "Proof of ownership check on the ticket"
+  ]
+}

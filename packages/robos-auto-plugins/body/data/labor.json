@@ -1,0 +1,34 @@
+[
+ {
+  "name": "Collision damage appraisal",
+  "hours": 0.5
+ },
+ {
+  "name": "Paintless dent repair (per panel)",
+  "hours": 1.0
+ },
+ {
+  "name": "Bumper cover repair and refinish",
+  "hours": 2.5
+ },
+ {
+  "name": "Bumper cover replace and paint",
+  "hours": 3.5
+ },
+ {
+  "name": "Door panel refinish",
+  "hours": 3.0
+ },
+ {
+  "name": "Fender replace and paint",
+  "hours": 4.0
+ },
+ {
+  "name": "Scratch buff and polish",
+  "hours": 1.0
+ },
+ {
+  "name": "Frame measurement",
+  "hours": 1.5
+ }
+]

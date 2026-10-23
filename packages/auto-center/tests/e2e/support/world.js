@@ -45,7 +45,7 @@ class AutoWorld {
     if (!this.page) return null;
     try { if (this.focus) await this.page.locator(this.focus).first().scrollIntoViewIfNeeded({ timeout: 1500 }); } catch {}
     const file = path.join(EVIDENCE, 'screens', name + '.jpg'); fs.mkdirSync(path.dirname(file), { recursive: true });
-    const buf = await this.page.screenshot({ type: 'jpeg', quality: 82 }); fs.writeFileSync(file, buf); return { file, buf };
+    const buf = await (this.shotPage || this.page).screenshot({ type: 'jpeg', quality: 82 }); fs.writeFileSync(file, buf); return { file, buf };
   }
   gitLog() { return execFileSync('git', ['log', '--format=%s'], { cwd: path.join(this.privateRoot, 'shop'), encoding: 'utf8' }); }
 }

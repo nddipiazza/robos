@@ -1,0 +1,56 @@
+{
+ "@context": {
+  "robos": "https://robos.dev/ns/sdlc#",
+  "dcterms": "http://purl.org/dc/terms/",
+  "schema": "https://schema.org/"
+ },
+ "@graph": [
+  {
+   "@id": "urn:robos:auto:IntakeCategory:exhaust",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Exhaust or muffler",
+   "schema:name": "Exhaust or muffler",
+   "schema:description": "Loud exhaust, rattles, failed emissions",
+   "robos:order": 46,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:exhaust-symptom",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "What do they notice?",
+   "schema:name": "What do they notice?",
+   "robos:questionKey": "symptom",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "Loud exhaust",
+    "Rattle underneath",
+    "Exhaust smell inside",
+    "Failed emissions",
+    "Pipe hanging down"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:exhaust"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:exhaust-since",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Did it start after hitting something?",
+   "schema:name": "Did it start after hitting something?",
+   "robos:questionKey": "since",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Yes",
+    "No",
+    "Not sure"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:exhaust"
+   }
+  }
+ ]
+}

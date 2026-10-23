@@ -1,0 +1,90 @@
+{
+ "@context": {
+  "robos": "https://robos.dev/ns/sdlc#",
+  "dcterms": "http://purl.org/dc/terms/",
+  "schema": "https://schema.org/"
+ },
+ "@graph": [
+  {
+   "@id": "urn:robos:auto:IntakeCategory:glass",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Windshield or glass",
+   "schema:name": "Windshield or glass",
+   "schema:description": "Chips, cracks, broken windows",
+   "robos:order": 45,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:glass-glass",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Which glass?",
+   "schema:name": "Which glass?",
+   "robos:questionKey": "glass",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Windshield",
+    "Side window",
+    "Rear window",
+    "Mirror"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:glass"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:glass-damage",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "How bad is it?",
+   "schema:name": "How bad is it?",
+   "robos:questionKey": "damage",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Chip smaller than a quarter",
+    "Crack",
+    "Shattered"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:glass"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:glass-camera",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Is there a camera behind the windshield?",
+   "schema:name": "Is there a camera behind the windshield?",
+   "robos:questionKey": "camera",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Yes",
+    "No",
+    "Not sure"
+   ],
+   "robos:order": 2,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:glass"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:glass-payer",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Who is paying?",
+   "schema:name": "Who is paying?",
+   "robos:questionKey": "payer",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Glass insurance claim",
+    "Paying myself"
+   ],
+   "robos:order": 3,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:glass"
+   }
+  }
+ ]
+}

@@ -1,0 +1,74 @@
+{
+ "@context": {
+  "robos": "https://robos.dev/ns/sdlc#",
+  "dcterms": "http://purl.org/dc/terms/",
+  "schema": "https://schema.org/"
+ },
+ "@graph": [
+  {
+   "@id": "urn:robos:auto:IntakeCategory:oil-change",
+   "@type": "robos:IntakeCategory",
+   "dcterms:title": "Oil change",
+   "schema:name": "Oil change",
+   "schema:description": "Oil and filter, fluids, while-you-wait service",
+   "robos:order": 43,
+   "robos:package": "auto"
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:oil-change-oil",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Which oil?",
+   "schema:name": "Which oil?",
+   "robos:questionKey": "oil",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Conventional",
+    "Synthetic blend",
+    "Full synthetic",
+    "What the manual says"
+   ],
+   "robos:order": 0,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:oil-change"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:oil-change-extras",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Anything else while it is here?",
+   "schema:name": "Anything else while it is here?",
+   "robos:questionKey": "extras",
+   "robos:questionType": "multi",
+   "robos:options": [
+    "Engine air filter",
+    "Cabin air filter",
+    "Wiper blades",
+    "Top off fluids",
+    "Tire pressure check"
+   ],
+   "robos:order": 1,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:oil-change"
+   }
+  },
+  {
+   "@id": "urn:robos:auto:IntakeQuestion:oil-change-wait",
+   "@type": "robos:IntakeQuestion",
+   "dcterms:title": "Waiting or dropping off?",
+   "schema:name": "Waiting or dropping off?",
+   "robos:questionKey": "wait",
+   "robos:questionType": "single",
+   "robos:options": [
+    "Waiting",
+    "Dropping off"
+   ],
+   "robos:order": 2,
+   "robos:package": "auto",
+   "robos:category": {
+    "@id": "urn:robos:auto:IntakeCategory:oil-change"
+   }
+  }
+ ]
+}
