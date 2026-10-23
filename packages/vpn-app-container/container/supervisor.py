@@ -210,6 +210,7 @@ def supervise(vpn, launch, healthy=tunnel_exists, connectivity=probe,
                     raise RuntimeError('VPN connectivity check failed')
                 next_probe = now() + 2
             sleep(0.25)
+        event('stopped', message='Application exited', exitCode=child.returncode)
     finally:
         # No grace period or restart after a failure. Kill descendants too.
         kill_group(child)

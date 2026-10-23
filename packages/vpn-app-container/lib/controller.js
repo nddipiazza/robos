@@ -12,7 +12,7 @@ const containerName = id => {
   return `robos-vpn-${id}`;
 };
 
-function execute(binary, args, { input, timeout = 30000 } = {}) {
+function execute(binary, args, { input, timeout = 30000, combineOutput = false } = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(binary, args, { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
     let output = '', errors = '';
@@ -23,7 +23,7 @@ function execute(binary, args, { input, timeout = 30000 } = {}) {
     child.stdin.on('error', () => {});
     child.on('close', code => {
       clearTimeout(timer);
-      if (code === 0) resolve(output.trim());
+      if (code === 0) resolve((output + (combineOutput ? errors : '')).trim());
       else reject(new Error(errors.trim() || `${binary} exited ${code}`));
     });
     child.stdin.end(input);
@@ -136,7 +136,7 @@ class Controller {
   async status(id) {
     try {
       const info = await this.inspect(id);
-      const logs = await this.run('docker', ['logs', '--tail', '15', containerName(id)]);
+      const logs = await this.run('docker', ['logs', '--tail', '15', containerName(id)], { combineOutput: true });
       let state = info.State.Running ? 'starting' : 'stopped';
       for (const line of logs.split('\n')) {
         try { const item = JSON.parse(line); if (item.state) state = item.state; } catch {}
