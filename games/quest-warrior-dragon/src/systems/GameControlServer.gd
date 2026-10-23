@@ -1149,7 +1149,7 @@ func get_screen_contents() -> Dictionary:
 							"to": str(st.get("to", ""))
 						}
 						break
-			if stairs_data == null and tile_id in [8, 21, 33, 34]:
+			if stairs_data == null and tile_id in [33, 34]:
 				stairs_data = {
 					"stair_id": map_key + "_stairs_" + coord_str,
 					"facing": "any",
@@ -1312,7 +1312,7 @@ func _build_map_overview(scene: Node, map_key: String, map_w: int, map_h: int, p
 					"door_id": map_key + "_door_" + coord_str
 				})
 
-			if tid in [8, 21, 33, 34]:
+			if tid in [33, 34]:
 				all_stairs.append({
 					"col": c,
 					"row": r,
@@ -1337,7 +1337,7 @@ func _build_map_overview(scene: Node, map_key: String, map_w: int, map_h: int, p
 				ch_sym = "D"
 			elif tid == 30 and not is_chest_open:
 				ch_sym = "C"
-			elif tid in [8, 21, 33, 34]:
+			elif tid in [33, 34]:
 				ch_sym = "S"
 			row_str += ch_sym
 		walkable_matrix.append(row_str)
