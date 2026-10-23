@@ -12,6 +12,7 @@ const CAM_PITCH_DEG := 56.0
 const CAM_MIN_H := 28.0
 const CAM_MAX_H := 320.0
 const GROUND_TOP := 2.2
+const MAX_ACTIVE_FX := 192
 
 var camera_3d: Camera3D
 var dir_light: DirectionalLight3D
@@ -28,9 +29,12 @@ var resource_nodes: Dictionary = {} # tag -> Node3D
 var active_fx: Array[Dictionary] = []
 var cam_height: float = 50.0
 var anim_time: float = 0.0
+var sync_ms: float = 0.0
 
 var mat_cache: Dictionary = {}
 var _last_pos: Dictionary = {}
+var _unit_mesh_cache: Dictionary = {}
+var _unit_batches: Dictionary = {}
 
 func _ready() -> void:
 	_setup_environment_and_camera()
@@ -160,6 +164,9 @@ func _on_scenario_loaded(_name: String) -> void:
 
 func _clear_children(n: Node) -> void:
 	for c in n.get_children():
+		# Rebuilds may happen twice in one frame. Detach immediately so batching
+		# cannot bake a queued-for-deletion map into its replacement.
+		n.remove_child(c)
 		c.queue_free()
 
 func _terrain_box(size: Vector3, pos: Vector3, m: Material) -> MeshInstance3D:
@@ -210,6 +217,7 @@ func _rebuild_static_3d_map() -> void:
 	_clear_children(units_root)
 	_clear_children(fx_root)
 	unit_nodes.clear()
+	_unit_batches.clear()
 	resource_nodes.clear()
 	active_fx.clear()
 	_last_pos.clear()
@@ -325,6 +333,58 @@ func _rebuild_static_3d_map() -> void:
 			terrain_root.add_child(boulder)
 
 	_scatter_decor()
+	_batch_static_geometry(decor_root)
+	_batch_static_geometry(terrain_root)
+	if SimEngine.unlimited_resources:
+		# Unlimited crystal fields never shrink or disappear. Bake their facets
+		# into the same spatial batches; finite deposits retain independent meshes.
+		for tag in SimEngine.resources:
+			var resource: Dictionary = SimEngine.resources[tag]
+			if resource.resource_type != "crystal_field":
+				continue
+			var node = Models.build_resource(resource.resource_type, tag)
+			resources_root.add_child(node)
+			node.position = Vector3(resource.pos.x, SimEngine.get_elevation_at(resource.pos), resource.pos.y)
+			resource_nodes[tag] = node
+		_batch_static_geometry(resources_root)
+
+func _batch_static_geometry(root: Node3D, chunked: bool = true) -> void:
+	# Merge static surfaces by material in small world chunks. Hundreds of tiny
+	# boulders/trees previously submitted separate draws in every shadow pass.
+	# Chunks retain frustum culling, unlike a single mesh for the entire 256 map.
+	var batches: Dictionary = {}
+	var pending: Array[Node] = [root]
+	var sources: Array[MeshInstance3D] = []
+	while not pending.is_empty():
+		var node = pending.pop_back()
+		pending.append_array(node.get_children())
+		if not node is MeshInstance3D or not node.mesh:
+			continue
+		var instance: MeshInstance3D = node
+		var transform = instance.transform
+		var parent = instance.get_parent()
+		while parent != root:
+			transform = parent.transform * transform
+			parent = parent.get_parent()
+		var chunk = Vector2i(int(floor(transform.origin.x / 32.0)), int(floor(transform.origin.z / 32.0))) if chunked else Vector2i.ZERO
+		for surface in range(instance.mesh.get_surface_count()):
+			var material = instance.get_active_material(surface)
+			var key = "%s:%s:%s" % [chunk, material.get_instance_id() if material else 0, instance.cast_shadow]
+			if not batches.has(key):
+				var tool = SurfaceTool.new()
+				tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+				batches[key] = {"tool": tool, "material": material, "shadow": instance.cast_shadow}
+			batches[key].tool.append_from(instance.mesh, surface, transform)
+		sources.append(instance)
+	for batch in batches.values():
+		var instance = MeshInstance3D.new()
+		instance.mesh = batch.tool.commit()
+		instance.material_override = batch.material
+		instance.cast_shadow = batch.shadow
+		root.add_child(instance)
+	for instance in sources:
+		instance.get_parent().remove_child(instance)
+		instance.queue_free()
 
 func _scatter_decor() -> void:
 	if not SimEngine.decor_enabled:
@@ -408,6 +468,7 @@ func _scatter_decor() -> void:
 # Per-frame sync with the sim
 # ---------------------------------------------------------------------------
 func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int = 1) -> void:
+	var sync_started = Time.get_ticks_usec()
 	anim_time += delta
 
 	# Resources
@@ -435,6 +496,7 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 	# Units and structures
 	var own_ring := Models.mat("ring_own", Color("#3fd97a"), Color("#22c55e"), 0.45, 0.0, 0.5)
 	var foe_ring := Models.mat("ring_foe", Color("#f0645a"), Color("#ef4444"), 0.45, 0.0, 0.5)
+	var human_transforms: Dictionary = {}
 	for u_tag in SimEngine.units.keys():
 		var u: Dictionary = SimEngine.units[u_tag]
 		var u_node: Node3D
@@ -446,6 +508,12 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 			unit_nodes[u_tag] = u_node
 		else:
 			u_node = unit_nodes[u_tag]
+
+		# A generous camera margin retains edge shadows while preventing units
+		# across the map from participating in every directional shadow pass.
+		u_node.visible = _effect_near_view(u["pos"])
+		if not u_node.visible:
+			continue
 
 		var elev := SimEngine.get_elevation_at(u["pos"])
 		var moving := false
@@ -483,6 +551,11 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 		var shield_sphere: MeshInstance3D = u_node.get_node_or_null("ShieldBubble")
 		if shield_sphere:
 			shield_sphere.visible = u["shields"] > 0.5 and float(u["out_of_combat_timer"]) < 1.4
+		if u.faction == "humans":
+			var key = "%s:%s" % [u.unit_type, u.owner]
+			if not human_transforms.has(key):
+				human_transforms[key] = []
+			human_transforms[key].append(u_node.transform)
 
 	for u_tag in unit_nodes.keys():
 		if not SimEngine.units.has(u_tag):
@@ -490,11 +563,53 @@ func sync_3d_entities(selected_tags: Array[int], delta: float, local_player: int
 			unit_nodes.erase(u_tag)
 			_last_pos.erase(u_tag)
 
+	_sync_human_batches(human_transforms)
 	_update_fx(delta)
+	sync_ms = (Time.get_ticks_usec() - sync_started) / 1000.0
+
+func _sync_human_batches(transforms: Dictionary) -> void:
+	for key in transforms:
+		if not _unit_batches.has(key):
+			var batches: Array = []
+			for part in _unit_mesh_cache[key]:
+				var instance = MultiMeshInstance3D.new()
+				var mesh = MultiMesh.new()
+				mesh.transform_format = MultiMesh.TRANSFORM_3D
+				mesh.mesh = part.mesh
+				instance.multimesh = mesh
+				instance.material_override = part.material
+				instance.cast_shadow = part.shadow
+				units_root.add_child(instance)
+				batches.append(instance)
+			_unit_batches[key] = batches
+	for key in _unit_batches:
+		var poses: Array = transforms.get(key, [])
+		for instance in _unit_batches[key]:
+			var mesh: MultiMesh = instance.multimesh
+			if mesh.instance_count < poses.size():
+				# Grow geometrically rather than reallocating GPU storage per recruit.
+				mesh.instance_count = maxi(16, int(pow(2, ceil(log(float(poses.size())) / log(2.0)))))
+			mesh.visible_instance_count = poses.size()
+			for i in range(poses.size()):
+				mesh.set_instance_transform(i, poses[i])
 
 func _create_unit_node_3d(u: Dictionary) -> Node3D:
 	var rad := float(u["radius"])
-	var root := Models.build(str(u["unit_type"]), int(u["owner"]))
+	var cache_key = "%s:%s" % [u.unit_type, u.owner]
+	var root: Node3D
+	if u.faction == "humans":
+		root = Node3D.new()
+		if not _unit_mesh_cache.has(cache_key):
+			var model = Models.build(str(u["unit_type"]), int(u["owner"]))
+			_batch_static_geometry(model, false)
+			var parts: Array = []
+			for child in model.get_children():
+				if child is MeshInstance3D:
+					parts.append({"mesh": child.mesh, "material": child.material_override, "shadow": child.cast_shadow})
+			_unit_mesh_cache[cache_key] = parts
+			model.free()
+	else:
+		root = Models.build(str(u["unit_type"]), int(u["owner"]))
 	root.set_meta("unit_type", u["unit_type"])
 
 	var sel_mi := MeshInstance3D.new()
@@ -508,6 +623,7 @@ func _create_unit_node_3d(u: Dictionary) -> Node3D:
 	sel_mi.scale = Vector3(1.0, 0.25, 1.0)
 	sel_mi.position = Vector3(0.0, 0.08, 0.0)
 	sel_mi.visible = false
+	sel_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root.add_child(sel_mi)
 
 	if u["max_shields"] > 0.0:
@@ -520,6 +636,7 @@ func _create_unit_node_3d(u: Dictionary) -> Node3D:
 		sh_mi.position = Vector3(0.0, rad * (1.1 if not u["is_structure"] else 0.6), 0.0)
 		sh_mi.material_override = Models.mat("shield_bubble", Color("#7dd3fc"), Color("#38bdf8"), 0.9, 0.0, 0.2, 0.2)
 		sh_mi.visible = false
+		sh_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(sh_mi)
 	return root
 
@@ -535,6 +652,8 @@ func _fx_mat(col: Color) -> StandardMaterial3D:
 	return m
 
 func _spawn_burst(pos: Vector3, col: Color, radius: float, ttl: float, grow: float = 2.6) -> void:
+	if active_fx.size() >= MAX_ACTIVE_FX:
+		return
 	var mi := MeshInstance3D.new()
 	var s := SphereMesh.new()
 	s.radius = radius
@@ -551,6 +670,8 @@ func _spawn_burst(pos: Vector3, col: Color, radius: float, ttl: float, grow: flo
 	active_fx.append({"node": mi, "mat": m, "ttl": start_ttl, "max": ttl, "kind": "burst", "col": col, "grow": grow})
 
 func _spawn_scorch(pos: Vector3, radius: float) -> void:
+	if active_fx.size() >= MAX_ACTIVE_FX:
+		return
 	var mi := MeshInstance3D.new()
 	var c := CylinderMesh.new()
 	c.top_radius = radius
@@ -607,7 +728,7 @@ func _weapon_color(owner_id: int, is_splash: bool) -> Color:
 		_: return Color("#ffe27a")
 
 func _on_projectile_fired(from_pos: Vector2, to_pos: Vector2, _weapon_name: String, is_splash: bool, owner_id: int) -> void:
-	if _skip_transient_fx():
+	if _skip_transient_fx() or active_fx.size() >= MAX_ACTIVE_FX or (not _effect_near_view(from_pos) and not _effect_near_view(to_pos)):
 		return
 	var p1 := Vector3(from_pos.x, SimEngine.get_elevation_at(from_pos) + 1.3, from_pos.y)
 	var p2 := Vector3(to_pos.x, SimEngine.get_elevation_at(to_pos) + 1.0, to_pos.y)
@@ -636,6 +757,8 @@ func _on_unit_phased(from_pos: Vector2, to_pos: Vector2, _tag: int) -> void:
 
 func _on_unit_destroyed(dead: Dictionary) -> void:
 	var p: Vector2 = dead["pos"]
+	if not _effect_near_view(p):
+		return
 	var base := Vector3(p.x, SimEngine.get_elevation_at(p), p.y)
 	var rad := float(dead["radius"])
 	var col := Color(1.0, 0.7, 0.3, 0.9)
@@ -647,6 +770,11 @@ func _on_unit_destroyed(dead: Dictionary) -> void:
 		if dead["is_structure"]:
 			_spawn_burst(base + Vector3(rad * 0.3, rad * 1.2, 0), Color(1.0, 0.85, 0.5, 0.8), rad * 0.8, 0.8, 2.2)
 	_spawn_scorch(base, rad * (1.1 if dead["is_structure"] else 0.8))
+
+func _effect_near_view(pos: Vector2) -> bool:
+	# Conservative margin includes beams crossing the view and tall structures.
+	# Offscreen combat still runs fully in the simulation, without allocating FX.
+	return get_focus().distance_squared_to(pos) <= pow(cam_height * 1.5 + 12.0, 2)
 
 # ---------------------------------------------------------------------------
 # Projection helpers
