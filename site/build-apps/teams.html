@@ -57,7 +57,7 @@ description: "A step-by-step guide for teams: a lead plans the work in Task Plan
 <li>Put the team's architecture, services and conventions in the planning context. Every task is drafted against it.</li>
 <li>For Jira, set <strong>Parent Epic</strong> to attach the tasks to an existing epic.</li>
 <li>Give each task the persona that matches who, or which kind of agent, should do it: Software Architect, Frontend Web Developer, Backend Systems Developer and so on. On GitHub the persona becomes a <code>role:&lt;persona&gt;</code> label, so developers can filter by it, and Task Implementer picks the persona from it.</li>
-<li>Make dependencies explicit. Blocking links are created on sync, so nobody starts a task whose groundwork is not merged yet.</li>
+<li>Make dependencies explicit, so nobody starts a task whose groundwork is not merged yet. On Jira, sync creates <strong>Blocks</strong> links between dependent tasks, and Task Implementer marks a task whose blockers are still open with a lock and a "Blocked by" warning. GitHub issues are created without links, so name the issues that must merge first in the task body.</li>
 <li>Keep tasks small enough that one person can review the branch in one sitting.</li>
 </ul>
 <p>Then click <strong>Sync All to Server</strong>. Custom templates and edited personas are saved on the lead's machine (<code>~/.config/robos/task-planner/custom-templates/</code> and <code>~/.config/robos/agent-personas.json</code>); copy those files to teammates who should use the same ones.</p>

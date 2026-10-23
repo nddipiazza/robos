@@ -39,7 +39,7 @@ description: "A step-by-step guide for a solo developer: plan an app in Task Pla
 <li>Describe the feature in the prompt box and click <strong>Generate with AI</strong>, or choose a template from the chips above it. <strong>Browse All Templates</strong> opens the full library.</li>
 <li>If the agent asks follow-up questions, answer them and click <strong>Generate Epics &amp; Tasks</strong>.</li>
 <li>Read every task. Each one should be small enough for one branch and have acceptance criteria you could check yourself. Edit the text, add or remove tasks with <strong>+ Add Task</strong>, and change the persona on any task.</li>
-<li>Click <strong>Save to Project</strong> to keep the plan, then <strong>Sync All to Server</strong> to create the issues. On GitHub each issue gets a <code>role:&lt;persona&gt;</code> label, and blocking tasks are linked.</li>
+<li>Click <strong>Save to Project</strong> to keep the plan, then <strong>Sync All to Server</strong> to create the issues. On GitHub each issue gets a <code>role:&lt;persona&gt;</code> label and the persona's directives in its body. GitHub issues are created without links between them, so note which tasks have to be done first.</li>
 </ol>
 <figure class="guide-shot"><a href="{{ '/assets/hero/slides/03-planner-generated.jpg' | relative_url }}"><img src="{{ '/assets/hero/slides/03-planner-generated.jpg' | relative_url }}" alt="Task Explorer showing an epic and a task generated from one sentence, each with a persona selector" loading="lazy" width="1280" height="720"></a><figcaption>One sentence became an epic and a task. The task holds acceptance criteria plus a happy-path, a negative and an edge case.</figcaption></figure>
 <p>Generation runs <code>gh copilot</code> and gives up after 3 minutes. More on templates, personas and KGraph project plans: <a href="{{ '/v1/apps/task-planner/' | relative_url }}">Task Planner</a>.</p>
@@ -50,7 +50,7 @@ description: "A step-by-step guide for a solo developer: plan an app in Task Pla
 ~/robos/scripts/dev-launch.sh task-implementer</code></pre>
 <p>Replace the paths with your clone and your RobOS checkout. If you open the app from the launcher instead, name the clone's full path in the extra-context box so the agent knows where to work.</p>
 <ol>
-<li>In the <strong>Tasks</strong> tab, choose <strong>Open</strong> and select the task. Start with one that nothing else blocks; the <strong>Dependencies</strong> tab shows the links.</li>
+<li>In the <strong>Tasks</strong> tab, choose <strong>Open</strong> and select the task. Start with one that does not depend on another. Task Implementer shows no links between GitHub issues, so follow the order from your plan.</li>
 <li>Check the persona in the header. It comes from the issue's <code>role:</code> label. <strong>Directives</strong> shows the guidance the agent gets for that persona, and you can edit it for this run.</li>
 <li>Add hints in the extra-context box: files to look at, commands that run the tests, things not to touch.</li>
 <li>Click <strong>Start Agent</strong> and watch <strong>Agent Output</strong>. The agent creates <code>codex/&lt;task-key&gt;</code>, makes the change, runs the tests, commits and pushes. It does not open a pull request. <strong>Stop</strong> ends it.</li>
