@@ -62,7 +62,7 @@ const NPC_DIALOGS := {
 	607: {
 		"speaker": "Guard",
 		"pages": [
-			"The town of Brecconary\nlies to the south. The\npeople there may help\nthee on thy quest."
+			"The town of Brecconary\nlies just east of the\ncastle. The people there\nmay help thee on thy quest."
 		]
 	},
 }
@@ -1097,6 +1097,11 @@ func _use_item(idx: int) -> void:
 	if idx >= _inventory.size():
 		return
 	var item = _inventory[idx]
+	if QuestLore.is_tablet(item):
+		_item_panel.visible = false
+		_item_open = false
+		_show_dialog("Erdrick's Tablet", QuestLore.tablet_pages())
+		return
 	var item_type := ""
 	var item_name := ""
 	if item is Dictionary:

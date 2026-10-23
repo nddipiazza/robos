@@ -1625,7 +1625,13 @@ func _cmd_take() -> void:
 		var gs := get_node_or_null("/root/GameState")
 		if gs:
 			gs.inventory = _inventory.duplicate(true)
-		_show_dialog("", ["Thou dost find\nthe " + item_name + "!"])
+		if item_id == QuestLore.TABLET_ID:
+			item_dict["desc"] = "Erdrick's message. Use it\nto read it again."
+			if gs:
+				gs.inventory = _inventory.duplicate(true)
+			_show_dialog("", ["Thou dost find\nthe " + item_name + "!", "Words are carved\nupon it..."] + QuestLore.tablet_pages())
+		else:
+			_show_dialog("", ["Thou dost find\nthe " + item_name + "!"])
 	else:
 		_show_dialog("", ["The chest is empty."])
 
@@ -1758,6 +1764,11 @@ func _use_item(idx: int) -> void:
 	if idx >= _inventory.size():
 		return
 	var item: Dictionary = _inventory[idx]
+	if QuestLore.is_tablet(item):
+		_item_panel.visible = false
+		_item_open = false
+		_show_dialog("Erdrick's Tablet", QuestLore.tablet_pages())
+		return
 	var item_id := str(item.get("id", "")).to_lower()
 	var item_name := str(item.get("name", item_id)).to_lower()
 	var gs := get_node_or_null("/root/GameState")

@@ -22,7 +22,7 @@ func _get_npcs() -> Array:
         {tile=Vector2i(8,4),   sprite_id="sage",     facing="right", speaker="Elder",      pages=["Many believe that Princess\nGwaelin is hidden away in a cave."]},
         {tile=Vector2i(10,12), sprite_id="guard",    facing="down",  speaker="Soldier",    pages=["I have heard of one named\nNester. Dost thou know such one?"]},
         {tile=Vector2i(16,9), sprite_id="lady",     facing="left",  speaker="Villager",   pages=["It is said that the Princess\nwas kidnapped and taken eastward."]},
-        {tile=Vector2i(17,14), sprite_id="guard",    facing="down",  speaker="Guard",      pages=["Garin's Grave lies to the east.\nOnly the brave dare enter."]},
+        {tile=Vector2i(17,14), sprite_id="guard",    facing="down",  speaker="Guard",      pages=["Garin's Grave lies beneath\nthe north-east corner of\nthis town. Only the brave\ndare enter."]},
         {tile=Vector2i(11,19), sprite_id="sage_alt", facing="down",  speaker="Merchant",   shop_id="gar002"},
         {tile=Vector2i(6,12),  sprite_id="sage_alt", facing="down",  speaker="Shopkeeper", shop_id="gar001"},
         {tile=Vector2i(4,8),   sprite_id="minister", facing="down",  speaker="Gravekeeper", pages=["Beyond lies the grave of\nGarin, who founded this town."]},
