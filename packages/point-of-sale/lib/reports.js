@@ -46,7 +46,7 @@ module.exports = {
   inventoryCsv() {
     const q = v => `"${String(v).replace(/"/g, '""')}"`;
     const rows = [['sku', 'name', 'unit', 'on_hand', 'reorder_point', 'cost_cents']];
-    for (const i of this.state.inventory.filter(x => x.active !== false)) rows.push([i.sku, i.name, i.unit, i.onHand, i.reorderPoint, i.cost]);
+    for (const i of this.inv.list().filter(x => x.active !== false)) rows.push([i.sku, i.name, i.unit, i.onHand, i.reorderPoint, i.cost]);
     return rows.map(r => r.map(q).join(',')).join('\n') + '\n';
   },
 };

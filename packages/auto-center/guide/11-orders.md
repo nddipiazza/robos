@@ -52,6 +52,7 @@ If a requested part is in Stock, its row shows **Take from stock**. One click ta
 - **Count.** After a shelf count, enter the number you counted and a reason. The difference is recorded, not overwritten.
 - **Receive without an order.** For a part bought at the counter, add it straight to Stock.
 - **Stock history.** Every change is listed with its date, the order or ticket, and who did it.
+- **Parts counter.** If you sell parts over the counter, the register sells from this same stock. Each counter sale shows in the history as *Counter sale #12*. See [Choose your services](../12-services/).
 
 ::shot[running-low-turns-into-a-draft-order|1|Running low, with how many to order from each supplier]
 

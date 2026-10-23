@@ -2,13 +2,22 @@
 // Auto parts sales plugin: the parts counter is RobOS Point of Sale itself (packages/point-of-sale), embedded, not
 // rebuilt. Its register, back office, barcode scanning, cash drawer and reports run on a loopback-only server
 // started inside Auto Center, with the register's data in the shop's plugin folder so it is backed up with the shop.
+// It sells from the shop's stock: the register is given the same RobOS Inventory as Orders → Stock, so a part sold at
+// the counter, used on a repair or received on a purchase order comes off one shelf count, and every sale and return
+// is a movement in that ledger.
 const path = require('node:path');
 const POS = path.join(__dirname, '../../../point-of-sale/lib');
 module.exports = core => {
   const counters = new Map(); // data folder -> { pos, origin }
   function pos(service) {
     const dir = core.host.dataDir(service, 'parts-sales');
-    if (!counters.has(dir)) { const { PointOfSale } = require(path.join(POS, 'pos')); counters.set(dir, { pos: new PointOfSale({ dir, now: () => service.clock() }), origin: null }); }
+    if (!counters.has(dir)) {
+      const { PointOfSale } = require(path.join(POS, 'pos')), { createInventory } = require('../../../robos-inventory');
+      const currency = core.workshop.nodes(service).find(n => n['@type'] === 'robos:AutoShop')?.['robos:currency'] || 'USD';
+      // The register checks stock against its own setting before a sale, so the shared ledger accepts what it sells.
+      const inventory = createInventory({ store: core.host.shopStore(service), namespace: 'auto', clock: service.clock, currency, allowNegative: true });
+      counters.set(dir, { pos: new PointOfSale({ dir, now: () => service.clock(), inventory }), origin: null });
+    }
     return counters.get(dir);
   }
   async function serve(service) {

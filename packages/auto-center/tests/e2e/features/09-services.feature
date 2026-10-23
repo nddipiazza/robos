@@ -43,11 +43,14 @@ Feature: Choose the services your shop offers
 
   Scenario: Sell parts at the counter with RobOS Point of Sale
     The parts counter is RobOS Point of Sale. It opens in its own window, with the register, back office and
-    barcode scanning.
+    barcode scanning, and it sells from the shop's stock under Orders → Stock.
     Given the shop offers "We do auto parts sales"
     And I am at the parts counter
     When I open the parts counter register
-    Then the register window shows "Point of Sale"
-    When I load the "retail" sample in the register
+    Then the register window shows "Auto parts counter"
+    When I load the "auto-parts" sample in the register
     And I am at the parts counter
     Then the parts counter shows "Counter items"
+    When I am at orders
+    And I open the "Stock" orders tab
+    Then the stock item "Full synthetic 5W-30, 5 qt" shows "12 each"

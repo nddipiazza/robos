@@ -47,6 +47,7 @@ function createInventory({ store, namespace = 'app', clock = () => new Date(), c
   }
   function updateItem(input) {
     const n = find(input.id), set = {};
+    if (input.sku !== undefined) { const sku = text(input.sku, 100, 'SKU or part number', false), same = sku && of('InventoryItem').find(x => x['@id'] !== n['@id'] && (x['robos:sku'] || '').toLowerCase() === sku.toLowerCase()); if (same) throw new Error(`An item with SKU ${same['robos:sku']} already exists (${same['schema:name']})`); set['robos:sku'] = sku; }
     for (const [k, p, max] of [['name', 'schema:name', 200], ['location', 'robos:location', 100], ['supplier', 'robos:supplierName', 200], ['unit', 'robos:unit', 30]]) if (input[k] !== undefined) set[p] = text(input[k], max, k, k === 'name');
     if (input.reorderPoint !== undefined) set['robos:reorderPoint'] = String(input.reorderPoint).trim() === '' ? null : quantity(input.reorderPoint, 'Reorder point', { allowZero: true });
     if (input.reorderQty !== undefined) set['robos:reorderQty'] = String(input.reorderQty).trim() === '' ? null : quantity(input.reorderQty, 'Reorder quantity');
@@ -82,11 +83,17 @@ function createInventory({ store, namespace = 'app', clock = () => new Date(), c
     if (kind === 'receive' && unitCost != null && unitCost !== item['robos:unitCostMinor']) edits.push({ op: 'update', id: item['@id'], set: { 'robos:unitCostMinor': unitCost } });
     return { edits, movement: m, item };
   }
+  // Several movements saved as one change, such as every part on a counter sale: [{ item, kind, ...input }].
+  function apply(changes, message) {
+    const edits = [], moved = [];
+    for (const c of changes) { const r = movementEdits(c, c.kind); edits.push(...r.edits); moved.push(r.movement['@id']); }
+    if (edits.length) store.commit(edits, message || `inventory: ${changes.length} stock movement(s)`); return moved;
+  }
   const save = kind => input => { const { edits, movement: m, item } = movementEdits(input, kind); store.commit(edits, `inventory: ${kind} ${Math.abs(m['robos:quantity'])} × ${item['schema:name']}`); return { movement: m['@id'], onHand: onHandOf(item['@id']) }; };
   function items({ includeInactive = false } = {}) { return of('InventoryItem').filter(n => includeInactive || n['robos:active'] !== false).map(view).sort((a, b) => a.name.localeCompare(b.name)); }
   function bySku(sku) { const s = String(sku || '').trim().toLowerCase(); if (!s) return null; const n = of('InventoryItem').find(n => (n['robos:sku'] || '').toLowerCase() === s); return n ? view(n) : null; }
   function movements(id, limit = 50) { find(id); return movementsOf(id).reverse().slice(0, limit).map(m => ({ id: m['@id'], kind: m['robos:movementKind'], qty: m['robos:quantity'], unitCost: m['robos:unitCostMinor'], at: m['schema:startTime'], reason: m['robos:reason'] || '', by: m['robos:performedBy'] || '', reference: linked(m, 'robos:reference'), referenceLabel: m['robos:referenceLabel'] || '' })); }
   function summary() { const list = items(); return { items: list.length, low: list.filter(i => i.low).length, value: list.reduce((s, i) => s + (i.value || 0), 0), currency }; }
-  return { addItem, updateItem, receive: save('receive'), issue: save('issue'), adjust: save('adjust'), movementEdits, items, item: id => view(find(id)), bySku, onHand: onHandOf, movements, lowStock: () => items().filter(i => i.low), summary };
+  return { addItem, updateItem, apply, receive: save('receive'), issue: save('issue'), adjust: save('adjust'), movementEdits, items, item: id => view(find(id)), bySku, onHand: onHandOf, movements, lowStock: () => items().filter(i => i.low), summary };
 }
 module.exports = { createInventory, minor, quantity, KINDS };

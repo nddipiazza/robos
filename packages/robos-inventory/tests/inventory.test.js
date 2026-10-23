@@ -33,3 +33,14 @@ test('the JSON file store persists across instances', () => {
   const b = createInventory({ store: jsonStore(file) }); assert.equal(b.item(i.id).onHand, 6);
   assert.equal(fs.statSync(file).mode & 0o777, 0o600);
 });
+test('several movements can be saved as one change, and an item’s SKU can change', () => {
+  const store = memoryStore(), inv = createInventory({ store });
+  const oil = inv.addItem({ name: '5W-30 oil', sku: 'OIL-5W30', onHand: 10 }), wipers = inv.addItem({ name: 'Wiper blade', sku: 'WB-20', onHand: 4 });
+  const before = store.log.length;
+  inv.apply([{ item: oil.id, kind: 'issue', qty: 2, referenceLabel: 'Counter sale #1' }, { item: wipers.id, kind: 'issue', qty: 1 }], 'counter sale #1');
+  assert.equal(store.log.length, before + 1); assert.equal(inv.onHand(oil.id), 8); assert.equal(inv.onHand(wipers.id), 3);
+  assert.throws(() => inv.apply([{ item: oil.id, kind: 'issue', qty: 1 }, { item: wipers.id, kind: 'issue', qty: 9 }]), /Only 3/);
+  assert.equal(inv.onHand(oil.id), 8, 'nothing is saved when one movement fails');
+  inv.updateItem({ id: wipers.id, sku: 'WB-22' }); assert.equal(inv.bySku('wb-22').id, wipers.id);
+  assert.throws(() => inv.updateItem({ id: wipers.id, sku: 'oil-5w30' }), /SKU OIL-5W30 already exists/);
+});

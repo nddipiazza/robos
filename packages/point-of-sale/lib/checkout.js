@@ -31,7 +31,7 @@ module.exports = {
 
   isSoldOut(item) {
     if (this.settings.inventory.allowNegativeStock) return false;
-    const enough = (id, qty) => { const rec = this.state.inventory.find(i => i.id === id); return !rec || rec.onHand >= qty; };
+    const enough = (id, qty) => { const rec = this.inv.get(id); return !rec || rec.onHand >= qty; };
     if (item.variants.length) return item.variants.every(v => v.inventoryId && !enough(v.inventoryId, 1));
     if (item.inventoryId && !enough(item.inventoryId, 1)) return true;
     return item.recipe.some(r => !enough(r.inventoryId, r.qty));

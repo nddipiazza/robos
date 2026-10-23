@@ -137,10 +137,42 @@ function bar(pos) {
   pos.upsert('priceRules', { name: 'Happy Hour -25%', percentOff: 25, categoryIds: [beer, cocktails, wine], days: [1, 2, 3, 4, 5], start: '16:00', end: '18:00' });
 }
 
+// An auto parts counter, as RobOS Auto Center's parts counter uses it. Inside Auto Center the register sells from
+// the shop's shared stock, so a part already in stock (same SKU, such as BP-100) is linked rather than counted twice.
+function autoParts(pos) {
+  const { cat, tax, item } = helpers(pos);
+  Object.assign(pos.state.settings.business, { name: 'Parts counter', type: 'retail', address: '' });
+  Object.assign(pos.state.settings, { orderTypes: ['retail'], autoSendOnPay: false });
+  pos.state.settings.kiosk.allowPayAtCounter = true;
+  pos.state.settings.card.provider = 'mock';
+  const salesTax = tax('Sales tax', 825);
+  const fluids = cat('Oil & fluids', '#f59e0b'), filters = cat('Filters', '#3b82f6'), brakes = cat('Brakes', '#ef4444'), vision = cat('Wipers & lights', '#14b8a6'), electrical = cat('Batteries & electrical', '#22c55e'), extras = cat('Accessories', '#7c3aed');
+  let n = 500;
+  const part = (name, categoryId, price, stock, sku, emoji, cost = Math.round(price * 0.55)) => item({ name, categoryId, price, taxId: salesTax, barcode: upc(++n), stock, cost, emoji, sku });
+  part('Full synthetic 5W-30, 5 qt', fluids, 3299, 12, 'OIL-5W30-5Q', '🛢️');
+  part('Full synthetic 0W-20, 5 qt', fluids, 3499, 10, 'OIL-0W20-5Q', '🛢️');
+  part('Coolant 50/50, 1 gal', fluids, 1899, 8, 'FL-COOL-1G', '🧴');
+  part('DOT 3 brake fluid, 12 oz', fluids, 899, 10, 'FL-DOT3', '🧴');
+  part('Windshield washer fluid, 1 gal', fluids, 499, 20, 'FL-WASH-1G', '🧴');
+  part('Oil filter (most domestic)', filters, 899, 15, 'FLT-OIL-01', '🛞');
+  part('Engine air filter', filters, 1999, 6, 'FLT-AIR-01', '🌬️');
+  part('Cabin air filter', filters, 2199, 6, 'FLT-CAB-01', '🌬️');
+  part('Front brake pads', brakes, 6499, 4, 'BP-100', '🛑', 3000);
+  part('Rear brake pads', brakes, 5499, 4, 'BP-200', '🛑');
+  part('Wiper blade, 22 in', vision, 1899, 10, 'WB-22', '🌧️');
+  part('Wiper blade, 18 in', vision, 1699, 10, 'WB-18', '🌧️');
+  part('Headlight bulb H11', vision, 2499, 6, 'BLB-H11', '💡');
+  part('Car battery, group 35', electrical, 18999, 3, 'BAT-35', '🔋', 11000);
+  part('Mini fuse assortment', electrical, 799, 12, 'FUSE-MINI', '🔌');
+  part('Tire pressure gauge', extras, 999, 8, 'ACC-GAUGE', '🧰');
+  part('Microfiber towels, 6 pack', extras, 1299, 10, 'ACC-TOWEL6', '🧽');
+}
+
 const PROFILES = {
   retail: { title: 'Retail store', summary: 'Any shop: sized apparel, home goods, electronics, groceries; barcode and QR scanning, returns, self-checkout', build: retail },
   coffee: { title: 'Coffee shop', summary: 'Food and drinks: modifiers, recipes, prep queue, tips, self-checkout', build: coffee },
   bar: { title: 'Bar', summary: 'Open tabs, happy hour, age checks, comps, split checks, tips', build: bar },
+  'auto-parts': { title: 'Auto parts counter', summary: 'Oil, filters, brake pads, wipers, bulbs and batteries; barcode scanning, returns and self-checkout', build: autoParts },
 };
 
 // Replaces the shop's data with a sample business. Allowed when empty, or for an admin.

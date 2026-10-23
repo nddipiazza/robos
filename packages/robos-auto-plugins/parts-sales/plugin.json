@@ -2,14 +2,28 @@
   "id": "parts-sales",
   "name": "Auto parts sales",
   "offer": "We do auto parts sales",
-  "summary": "Sell parts over the counter with RobOS Point of Sale: barcode scanning, cash drawer, card and cash payments, receipts and sales reports, in its own window.",
+  "summary": "Sell parts over the counter with RobOS Point of Sale: barcode scanning, cash drawer, card and cash payments, receipts and sales reports, in its own window. It sells from the shop's stock under Orders → Stock.",
   "status": "ready",
   "order": 30,
   "backend": "lib/index.js",
-  "renderer": { "scripts": ["renderer/parts-counter.js"] },
+  "renderer": {
+    "scripts": [
+      "renderer/parts-counter.js"
+    ]
+  },
   "menus": [
-    { "view": "parts-counter", "label": "Parts counter", "order": 45, "icon": "M6 6h15l-2 9H8z M6 6L5 3H2 M9 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2z M18 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" }
+    {
+      "view": "parts-counter",
+      "label": "Parts counter",
+      "order": 45,
+      "icon": "M6 6h15l-2 9H8z M6 6L5 3H2 M9 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2z M18 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"
+    }
   ],
   "guide": "12-services",
-  "roadmap": ["Share one stock count with Orders → Stock, so parts sold at the counter and parts used on repairs come off the same shelf", "Look up parts by vehicle (make, model, year) at the register", "Sell a part straight onto a repair ticket", "Core charges and returns of old parts"]
+  "roadmap": [
+    "Look up parts by vehicle (make, model, year) at the register",
+    "Sell a part straight onto a repair ticket",
+    "Core charges and returns of old parts",
+    "One price list shared with the parts catalog"
+  ]
 }

@@ -81,5 +81,8 @@ function intakeFragments(service) { return enabled(service).filter(p => p.intake
 function labor(service) { return enabled(service).filter(p => p.labor).flatMap(p => JSON.parse(fs.readFileSync(path.join(p.dir, p.labor), 'utf8')).map(l => ({ ...l, plugin: p.id }))); }
 // A private folder for a plugin's own files (such as the parts counter's register data), backed up with the shop.
 function dataDir(service, id) { const dir = path.join(service.dataRoot, 'plugins', id); fs.mkdirSync(dir, { recursive: true, mode: 0o700 }); return dir; }
+// The shop KGraph as a store for shared RobOS components (RobOS Inventory, RobOS Orders): commits are validated,
+// saved and snapshotted in the shop's private Git history.
+function shopStore(service) { const { nodes } = require('./workshop'), { commit } = require('./shop-operations'); return { nodes: () => nodes(service), commit: (edits, message) => commit(service, edits, message) }; }
 function plugin(id) { return discover().find(p => p.id === id) || null; }
-module.exports = { ROOT, STATUSES, discover, list, enabled, enabledIds, setService, action, backend, billableTypes, reportCards, jobLinks, intakeAddon, intakeFragments, labor, dataDir, plugin, reset: () => { found = null; backends.clear(); } };
+module.exports = { ROOT, STATUSES, discover, list, enabled, enabledIds, setService, action, backend, billableTypes, reportCards, jobLinks, intakeAddon, intakeFragments, labor, dataDir, shopStore, plugin, reset: () => { found = null; backends.clear(); } };

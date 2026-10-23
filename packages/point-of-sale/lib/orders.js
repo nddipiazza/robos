@@ -274,7 +274,7 @@ module.exports = {
   assertStock(order) {
     if (this.settings.inventory.allowNegativeStock) return;
     for (const [id, qty] of this.requirements(order)) {
-      const rec = this.state.inventory.find(i => i.id === id);
+      const rec = this.inv.get(id);
       if (rec && rec.onHand < qty) throw new PosError('out_of_stock', `Not enough ${rec.name} in stock (${rec.onHand} left)`, 409);
     }
   },
@@ -396,10 +396,7 @@ module.exports = {
   },
 
   finalize(order, staff) {
-    for (const [id, qty] of this.requirements(order)) {
-      const rec = this.state.inventory.find(i => i.id === id);
-      if (rec) rec.onHand = round3(rec.onHand - qty);
-    }
+    this.inv.move([...this.requirements(order)].filter(([id]) => this.inv.get(id)).map(([id, qty]) => ({ id, delta: -qty, kind: 'sale', reference: `Counter sale #${order.number}`, by: staff && staff.name })), `point of sale: sale #${order.number}`);
     order.status = 'paid';
     order.paidAt = this.iso();
     order.awaitingPayment = false;
@@ -455,9 +452,10 @@ module.exports = {
           const item = line.itemId && this.state.items.find(i => i.id === line.itemId);
           const variant = item && line.variantId && item.variants.find(v => v.id === line.variantId);
           const invId = item && (variant && variant.inventoryId || item.inventoryId);
-          if (invId) { const rec = this.state.inventory.find(i => i.id === invId); rec.onHand = round3(rec.onHand + d.qty); restocked.push({ inventoryId: invId, qty: d.qty }); }
+          if (invId && this.inv.get(invId)) restocked.push({ inventoryId: invId, qty: d.qty });
         }
       }
+      this.inv.move(restocked.map(r => ({ id: r.inventoryId, delta: r.qty, kind: 'return', reason: `Returned on sale #${order.number}: ${String(input.reason).trim()}`, reference: `Counter sale #${order.number}`, by: staff && staff.name })), `point of sale: return on sale #${order.number}`);
       order.refunds.push({ id: this.id('rf'), at: this.iso(), staffId: staff.id, approvedBy: approver.id, reason: String(input.reason).trim(), lines: detail, amount, parts, restocked });
       order.status = fully ? 'refunded' : 'partially_refunded';
       this.audit(staff, 'order.refund', orderId, `${amount} ${input.reason}`);

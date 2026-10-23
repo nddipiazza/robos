@@ -20,6 +20,8 @@ A store is `{ nodes(), commit(edits, message) }`. Records are JSON-LD nodes (`ro
 - **`jsonStore(file)`:** one JSON file, replaced atomically, mode `0600`.
 - **`memoryStore()`:** for tests.
 
+`apply([{ item, kind, ...input }], message)` saves several movements as one change; if one fails, none are saved. RobOS Point of Sale uses it for each sale when it sells from a shared inventory (`new PointOfSale({ inventory })`).
+
 `movementEdits(input, kind)` returns the edits for a movement without saving them, so an app can save its own records in the same commit, such as a repair job's part usage.
 
 ## Rules

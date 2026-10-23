@@ -6,6 +6,7 @@ const { permsFor, emptyState, defaultSettings } = require('./defaults');
 const { isValidGtin } = require('./gtin');
 const { assertCents } = require('./money');
 const scancode = require('./scancode');
+const { localStore, sharedStore, round3: roundQty } = require('./inventory-store');
 
 const SESSION_MS = 12 * 60 * 60 * 1000;
 const LOCKOUT_AFTER = 5;
@@ -14,7 +15,8 @@ const LOCKOUT_MS = 60 * 1000;
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 
 class PointOfSale {
-  constructor({ dir = null, now = () => new Date(), providers = {} } = {}) {
+  // inventory: a RobOS Inventory (packages/robos-inventory) to sell from instead of the register's own stock records.
+  constructor({ dir = null, now = () => new Date(), providers = {}, inventory = null } = {}) {
     this.store = new Store(dir);
     this.now = now;
     this.state = this.store.load() || emptyState();
@@ -22,6 +24,23 @@ class PointOfSale {
     this.failures = { count: 0, until: 0 };
     this.providers = {};
     for (const [id, provider] of Object.entries(providers)) this.providers[id] = provider;
+    this.inv = inventory ? sharedStore(inventory) : localStore(this);
+    if (this.inv.shared && this.state.inventory.length) this.moveStockToShared();
+  }
+
+  // A register that kept its own stock and is now connected to a shared inventory: each stock record joins the
+  // shared one (matched by SKU, otherwise added with its count) and the catalog points at it.
+  moveStockToShared() {
+    const ids = new Map();
+    for (const rec of this.state.inventory) {
+      const same = rec.sku && this.inv.bySku(rec.sku);
+      ids.set(rec.id, (same || this.inv.create({ ...rec, onHand: rec.active === false ? 0 : rec.onHand })).id);
+    }
+    const remap = r => ({ ...r, inventoryId: ids.get(r.inventoryId) || r.inventoryId });
+    for (const item of this.state.items) { if (item.inventoryId) item.inventoryId = ids.get(item.inventoryId) || item.inventoryId; item.recipe = item.recipe.map(remap); for (const v of item.variants) if (v.inventoryId) v.inventoryId = ids.get(v.inventoryId) || v.inventoryId; }
+    for (const g of this.state.modifierGroups) for (const o of g.options) o.recipe = o.recipe.map(remap);
+    this.audit(null, 'inventory.shared', null, `${ids.size} stock records moved to the shared inventory`);
+    this.state.inventory = []; this.save();
   }
 
   // ---- plumbing -----------------------------------------------------------
@@ -34,7 +53,7 @@ class PointOfSale {
   }
   get settings() { return this.state.settings; }
   find(collection, id, label = collection) {
-    const found = this.state[collection].find(x => x.id === id);
+    const found = collection === 'inventory' ? this.inv.get(id) : this.state[collection].find(x => x.id === id);
     if (!found) throw new PosError('not_found', `Unknown ${label}`, 404);
     return found;
   }
@@ -161,16 +180,18 @@ class PointOfSale {
   // ---- catalog ------------------------------------------------------------
   list(collection) {
     if (!['categories', 'items', 'modifierGroups', 'taxes', 'promotions', 'priceRules', 'inventory'].includes(collection)) throw new PosError('not_found', 'Unknown collection', 404);
-    return clone(this.state[collection].filter(x => x.active !== false));
+    return clone((collection === 'inventory' ? this.inv.list() : this.state[collection]).filter(x => x.active !== false));
   }
 
   upsert(collection, data, actor) {
     const normalize = this[`normalize_${collection}`];
     if (!normalize) throw new PosError('not_found', 'Unknown collection', 404);
-    const existing = data.id ? this.state[collection].find(x => x.id === data.id) : null;
+    const stock = collection === 'inventory';
+    const existing = data.id ? (stock ? this.inv.get(data.id) : this.state[collection].find(x => x.id === data.id)) : null;
     if (data.id && !existing) throw new PosError('not_found', 'Unknown record', 404);
-    const record = normalize.call(this, { ...(existing || {}), ...data }, existing);
-    if (existing) Object.assign(existing, record);
+    let record = normalize.call(this, { ...(existing || {}), ...data }, existing);
+    if (stock) record = existing ? this.inv.update(existing.id, record) : this.inv.create(record);
+    else if (existing) Object.assign(existing, record);
     else this.state[collection].push(record);
     this.audit(actor, `${collection}.${existing ? 'update' : 'create'}`, record.id);
     this.save();
@@ -179,7 +200,8 @@ class PointOfSale {
 
   remove(collection, id, actor) {
     const record = this.find(collection, id);
-    record.active = false;
+    if (collection === 'inventory') this.inv.update(id, { ...record, active: false });
+    else record.active = false;
     this.audit(actor, `${collection}.remove`, id);
     this.save();
   }
@@ -234,7 +256,7 @@ class PointOfSale {
   normalize_inventory(data, existing) {
     const name = this.requireName(data, 'inventory');
     if (data.sku) {
-      const dup = this.state.inventory.find(i => i.sku === data.sku && i.id !== data.id);
+      const dup = this.inv.list().find(i => i.sku === data.sku && i.id !== data.id);
       if (dup) throw new PosError('duplicate_sku', `SKU ${data.sku} is already used by ${dup.name}`);
     }
     const onHand = existing ? existing.onHand : (data.onHand ?? 0);
@@ -285,20 +307,19 @@ class PointOfSale {
 
   normalizedInventoryFor(name, sku, onHand, cost) {
     if (Number.isNaN(onHand) || onHand < 0) throw new PosError('invalid_inventory', 'Opening stock must be zero or more');
-    const rec = this.normalize_inventory({ name, sku, onHand, cost: cost || 0 }, null);
-    this.state.inventory.push(rec);
-    return rec.id;
+    // With a shared inventory, a part the business already stocks is sold from that stock rather than counted twice.
+    const same = this.inv.shared && sku && this.inv.bySku(sku); if (same) return same.id;
+    return this.inv.create(this.normalize_inventory({ name, sku, onHand, cost: cost || 0 }, null)).id;
   }
 
   // ---- inventory input ----------------------------------------------------
   receiveStock(id, { qty, cost, note }, actor) {
     const rec = this.find('inventory', id, 'inventory record');
     if (!(qty > 0)) throw new PosError('invalid_quantity', 'Quantity received must be more than zero');
-    rec.onHand = round3(rec.onHand + qty);
-    if (cost !== undefined) rec.cost = cost;
+    this.inv.move([{ id, delta: qty, kind: 'receive', cost, reason: note || 'Received at the counter', by: actor && actor.name }], `point of sale: received ${qty} × ${rec.name}`);
     this.audit(actor, 'inventory.receive', id, `${qty} ${note || ''}`.trim());
     this.save();
-    return clone(rec);
+    return clone(this.inv.get(id));
   }
 
   adjustStock(id, { delta, counted, reason }, actor) {
@@ -307,9 +328,9 @@ class PointOfSale {
     const next = counted !== undefined ? Number(counted) : round3(rec.onHand + Number(delta));
     if (Number.isNaN(next)) throw new PosError('invalid_quantity', 'Enter a number');
     this.audit(actor, 'inventory.adjust', id, `${rec.onHand} -> ${next}: ${reason}`);
-    rec.onHand = round3(next);
+    this.inv.move([{ id, delta: roundQty(round3(next) - rec.onHand), kind: 'adjust', reason: String(reason).trim(), by: actor && actor.name }], `point of sale: counted ${rec.name}`);
     this.save();
-    return clone(rec);
+    return clone(this.inv.get(id));
   }
 
   importInventoryCsv(text, actor) {
@@ -322,16 +343,16 @@ class PointOfSale {
       const row = Object.fromEntries(header.map((h, i) => [h, cells[i]]));
       const qty = Number(row.qty);
       if (!row.name || Number.isNaN(qty) || qty < 0) throw new PosError('invalid_csv', `Bad row: ${line}`);
-      const existing = row.sku ? this.state.inventory.find(i => i.sku === row.sku) : this.state.inventory.find(i => i.name === row.name);
+      const existing = row.sku ? this.inv.bySku(row.sku) : this.inv.list().find(i => i.name === row.name);
       if (existing) { if (qty > 0) { this.receiveStock(existing.id, { qty, note: 'csv' }, actor); received.push(existing.id); } }
       else created.push(this.upsert('inventory', { name: row.name, sku: row.sku, onHand: qty, unit: row.unit, reorderPoint: Number(row.reorder) || 0, cost: row.cost ? Math.round(Number(row.cost) * 100) : 0 }, actor).id);
     }
     return { created: created.length, received: received.length };
   }
 
-  lowStock() { return this.state.inventory.filter(i => i.active !== false && i.onHand <= i.reorderPoint).map(clone); }
+  lowStock() { return this.inv.list().filter(i => i.active !== false && i.onHand <= i.reorderPoint).map(clone); }
 
-  inventoryValue() { return this.state.inventory.filter(i => i.active !== false).reduce((sum, i) => sum + Math.round(i.onHand * i.cost), 0); }
+  inventoryValue() { return this.inv.list().filter(i => i.active !== false).reduce((sum, i) => sum + Math.round(i.onHand * i.cost), 0); }
 
   // Find an item by anything a scanner can produce: SKU, UPC/EAN/GTIN in any padding, UPC-E, GS1 Digital Link, GS1 element string.
   findItem(code) {

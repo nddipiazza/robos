@@ -11,7 +11,7 @@ npm test                       # unit + HTTP API end-to-end suites (node:test)
 npm run test:e2e               # touch-driven browser suites (needs playwright-core and Chromium)
 ```
 
-On first launch pick a sample business (a general retail store, a coffee shop or a bar) or start empty. Sample PINs: owner `1111`, manager `2222`, cashier `3333`.
+On first launch pick a sample business (a general retail store, a coffee shop, a bar or an auto parts counter) or start empty. Sample PINs: owner `1111`, manager `2222`, cashier `3333`.
 
 ## Screens
 
@@ -68,6 +68,23 @@ The full contract is at `/api/openapi.json`. This is *modelled on* the protocol,
 
 Cash is built in. Cards go through a provider object `{ authorize({amount, currency, order, token, reference}), refund({reference, amount}) }`, sync or async. Two ship in the box: `manual` (a standalone terminal; the worker keys in its approval code) and `mock` (test gateway, no real charges, `tok_decline` declines). Add a real gateway by passing `providers: { stripe: {...} }` to `new PointOfSale(...)` and choosing it in *Settings > Card payments*. The app never sees or stores card numbers.
 
+## Selling from a shared inventory
+
+On its own, the register keeps stock records in its own `store.json`. Another RobOS app can embed it and hand it a [RobOS Inventory](../robos-inventory/README.md) instead:
+
+```js
+const pos = new PointOfSale({ dir, inventory: createInventory({ store, allowNegative: true }) });
+```
+
+The register then sells from the business's shared stock (`lib/inventory-store.js`):
+
+- **Movements:** a sale is an *issue* movement and a returned item is an *adjust* movement. Receiving, counting and CSV import also become movements, each with the sale number and the cashier.
+- **Back office:** stock edits update the shared items, and removing a stock item retires it.
+- **SKU links:** a catalog item created with opening stock and a SKU the business already stocks is linked to that item, and is not counted twice.
+- **Moving an existing register over:** a register that kept its own stock moves it into the shared inventory once, matched by SKU. Its catalog then points at the shared items.
+
+The register still checks stock against its own *allow negative stock* setting before a sale. RobOS Auto Center's parts counter uses this, so the counter, repair jobs and purchase orders share one shelf count. Without `inventory`, nothing changes.
+
 ## Standards used
 
 Integer cents and ISO 4217 currency codes; GS1 GTIN check digits for barcodes (UPC-A, EAN-8/13, GTIN-14); GS1 Digital Link and element strings from QR and Data Matrix codes; schema.org `Order` JSON-LD receipts (`/api/orders/{id}/receipt.jsonld`); plain-text receipts that print to ESC/POS thermal printers; CSV import/export; OpenAPI 3.1.
@@ -79,7 +96,7 @@ Gift cards and loyalty, multi-location sync, employee time clocks, hardware driv
 ## Layout
 
 ```
-lib/        pos.js (catalog, inventory, auth) · orders.js · cash.js · reports.js · checkout.js (kiosk + open API) · scancode.js
+lib/        pos.js (catalog, inventory, auth) · inventory-store.js (own or shared stock) · orders.js · cash.js · reports.js · checkout.js (kiosk + open API) · scancode.js
             providers.js · receipt.js · samples.js · server.js · openapi.js · money.js · gtin.js · store.js
 renderer/   index.html (staff) · kiosk.html · ready.html · register.js · backoffice.js · camera.js · common.js · vendor/ (ZXing)
 tests/      *.api.test.js (HTTP, per business) · *.e2e.js (touch-driven Chromium, per business)

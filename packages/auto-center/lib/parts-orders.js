@@ -20,7 +20,7 @@ function requestReceivedEdits(service, records, r, { unitCostMinor, supplier, vi
 }
 function components(service) {
   shop(service);
-  const store = { nodes: () => w.nodes(service), commit: (edits, message) => commit(service, edits, message) }, currency = currencyOf(service);
+  const store = require('./plugins').shopStore(service), currency = currencyOf(service);
   const inventory = createInventory({ store, namespace: 'auto', clock: service.clock, currency });
   const onReceive = ({ order, received }) => {
     const records = w.nodes(service), edits = [];

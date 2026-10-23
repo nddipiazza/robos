@@ -35,11 +35,19 @@ Tick **We do auto parts sales** and a **Parts counter** menu appears. The counte
 
 ::shot[sell-parts-at-the-counter-with-robos-point-of-sale|2|The parts counter opens RobOS Point of Sale in its own window]
 
-The first time, it asks you to set it up: load the **Retail store** sample to look around, or add your own staff PINs, parts and prices in its back office. After that, the **Parts counter** page shows the day's counter sales, and so does **Center reports**.
+The first time, it asks you to set it up: load the **Auto parts counter** sample to look around (oil, filters, brake pads, wipers, bulbs and batteries), or add your own staff PINs, parts and prices in its back office. After that, the **Parts counter** page shows the day's counter sales, and so does **Center reports**.
 
 ::shot[sell-parts-at-the-counter-with-robos-point-of-sale|5|The day’s counter sales in Auto Center]
 
-> **Good to know.** The register's data is kept in your shop folder and backed up with the rest of your records. For now the counter keeps its own stock and price list, separate from **Orders → Stock**, so a part sold at the counter does not come off the repair stock count. Sharing one stock count is the first item under *Coming next*.
+### One stock count for the whole shop
+
+The counter sells from the same stock as **Orders → Stock**. A part sold at the counter, used on a repair or received on a purchase order comes off, or goes onto, the same shelf count. Each counter sale and return appears in the part's **Stock history** with its sale number and the cashier, and a part that runs low at the counter shows up under **Running low** in Orders.
+
+- **Parts you already stock:** if you add a counter item with the same part number (SKU) as a stock item, it *is* that item, so it is never counted twice. That is how the sample's *Front brake pads* (BP-100) sell from your shop's brake pads.
+- **Receiving and counts at the register:** these also go to Orders → Stock.
+- **Running out:** when a repair takes the last one, the register says *Not enough in stock* until a delivery arrives.
+
+> **Good to know.** The register's own records (sales, staff PINs, prices) are kept in your shop folder and backed up with the rest of your records. The register keeps its own price list; the parts catalog's prices are not shared yet.
 
 ## Turning a service off
 
