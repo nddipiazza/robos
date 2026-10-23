@@ -55,13 +55,19 @@ async function main() {
     });
     const asApp = code => execute('docker', ['exec', '--user', '10000:10000', name, 'python3', '-c', code]);
     await step('Real qBittorrent Web API authenticates through loopback only', async () => {
+      let responseDetails = '';
+      try {
       await waitFor(async () => {
         try {
           const response = await fetch('http://127.0.0.1:18080/api/v2/auth/login', { method: 'POST',
+            headers: { Referer: 'http://127.0.0.1:18080/' }, signal: AbortSignal.timeout(1500),
             body: new URLSearchParams({ username: 'admin', password: login.webPassword }) });
-          return response.ok && await response.text() === 'Ok.';
-        } catch { return false; }
+          const text = await response.text();
+          responseDetails = `${response.status}: ${text.slice(0, 200)}`;
+          return response.ok && text === 'Ok.';
+        } catch (error) { responseDetails = error.message; return false; }
       }, 15000);
+      } catch (error) { throw new Error(`${error.message}: ${responseDetails}`); }
     });
     await step('App UID has no effective/bounding/ambient capabilities and cannot read VPN credentials', async () => {
       await asApp(`from pathlib import Path
@@ -129,6 +135,11 @@ else:raise AssertionError('IPv6 bypass')`);
   } finally {
     credentials.password = '';
     if (created) console.log('Final app container status:', JSON.stringify(await controller.status('qbittorrent')));
+    if (created && (await controller.inspect('qbittorrent')).State.Running) {
+      for (const args of [['iptables', '-nvL'], ['ip', 'route'], ['ss', '-ltn']]) {
+        console.log(await execute('docker', ['exec', name, ...args]));
+      }
+    }
     if (created) await controller.stop('qbittorrent');
     const target = process.env.ROBOS_VPN_PROOF || path.join(__dirname, 'live-proof.json');
     fs.writeFileSync(target, JSON.stringify({ timestamp: new Date().toISOString(), records }, null, 2));
