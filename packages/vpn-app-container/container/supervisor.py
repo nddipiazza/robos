@@ -10,6 +10,7 @@ import configparser
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import signal
 import subprocess
@@ -68,7 +69,7 @@ def validate_bootstrap(data):
     for key in ('username', 'password'):
         if not isinstance(data[key], str) or not data[key] or any(c in data[key] for c in '\r\n\0'):
             raise ValueError('Credentials must be nonempty single lines')
-    if not isinstance(data.get('webPassword'), str) or not 16 <= len(data['webPassword']) <= 128 or not data['webPassword'].isalnum() and any(c not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_' for c in data['webPassword']):
+    if not isinstance(data.get('webPassword'), str) or not re.fullmatch(r'[A-Za-z0-9_-]{16,128}', data['webPassword']):
         raise ValueError('A generated Web UI password is required')
     if '-----BEGIN CERTIFICATE-----' not in data['ca']:
         raise ValueError('CA certificate is required')

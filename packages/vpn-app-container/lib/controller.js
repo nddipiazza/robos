@@ -72,7 +72,7 @@ function runArguments(id) {
   return ['run', '--detach', '--name', name,
     '--label', 'dev.robos.vpn-app-container=true', '--restart=no',
     '--network=bridge', '--read-only', '--cap-drop=ALL',
-    ...['NET_ADMIN', 'SETUID', 'SETGID', 'SETPCAP', 'KILL', 'CHOWN'].map(cap => `--cap-add=${cap}`),
+    ...['NET_ADMIN', 'SETUID', 'SETGID', 'SETPCAP', 'KILL', 'CHOWN', 'DAC_OVERRIDE'].map(cap => `--cap-add=${cap}`),
     '--security-opt=no-new-privileges:true', '--device=/dev/net/tun',
     '--sysctl=net.ipv6.conf.all.disable_ipv6=1', '--dns=1.1.1.1',
     '--tmpfs=/run:rw,nosuid,nodev,noexec,mode=755',
