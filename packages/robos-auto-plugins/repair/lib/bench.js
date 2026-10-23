@@ -1,10 +1,8 @@
 'use strict';
 // Mechanic bench: claim a ticket, request parts, log work and time, flag extra work, finish the job.
 const crypto = require('node:crypto');
-const w = require('./workshop');
-const { node, ref } = require('./importer');
-const { shop, commit } = require('./shop-operations');
-const { amountMinor } = require('./reports');
+module.exports = core => {
+const w = core.workshop, { node, ref } = core.importer, { shop, commit } = core.shop, { amountMinor } = core.reports;
 const mate = (service, id) => { const t = w.find(service, 'Teammate', id, 'Choose who you are'); if (t['robos:active'] === false) throw new Error('This teammate is no longer active'); return t; };
 const addEvent = (service, records, job, kind, detail) => { const wi = w.workItemFor(records, job['@id']); return wi ? [{ op: 'update', id: wi['@id'], set: { 'robos:events': [...(wi['robos:events'] || []), w.event(service, kind, detail)] } }] : []; };
 function activeJob(service, id, allowed = ['received', 'diagnosing', 'awaiting-approval', 'in-progress']) {
@@ -80,4 +78,5 @@ function saveScan(service, input) {
   const parts = [scan.mil == null ? null : scan.mil ? 'check-engine light ON' : 'check-engine light off', scan.stored.length ? 'stored ' + list(scan.stored) : 'no stored codes', scan.pending.length ? 'pending ' + list(scan.pending) : null, scan.permanent.length ? 'permanent ' + list(scan.permanent) : null, scan.voltage ? scan.voltage + ' V' : null, vinSaved ? 'VIN ' + scan.vin + ' saved to the vehicle' : null].filter(Boolean);
   commit(service, [...edits, ...addEvent(service, records, job, 'OBD scan', `${t['schema:name']}: ${parts.join('; ')}`)], w.key(job) + ': OBD scan'); return { vinSaved, summary: parts.join('; ') };
 }
-module.exports = { claimTicket, requestPart, updatePartRequest, addWorkNote, startTimer, stopTimer, completeWork, saveScan };
+return { claimTicket, requestPart, updatePartRequest, addWorkNote, startTimer, stopTimer, completeWork, saveScan };
+};

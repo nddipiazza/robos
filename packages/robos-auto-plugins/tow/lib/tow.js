@@ -3,10 +3,6 @@
 // follow it to the drop-off, then invoice, take payment and release the vehicle. Questions come from the
 // KGraph form in data/tow-form.jsonld (or an edited tow-form.jsonld in the shop's data folder).
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
-const w = require('./workshop');
-const { node, ref } = require('./importer');
-const { shop, commit, checkInNode } = require('./shop-operations');
-const { amountMinor, CURRENCIES } = require('./reports');
 const STAGES = ['requested', 'dispatched', 'on-scene', 'in-tow', 'delivered', 'invoiced', 'closed'];
 const STAGE_LABELS = { requested: 'Call taken', dispatched: 'Truck on the way', 'on-scene': 'Truck at the vehicle', 'in-tow': 'Vehicle on the truck', delivered: 'Dropped off / done', invoiced: 'Invoiced', closed: 'Paid and closed', cancelled: 'Cancelled' };
 const ACTIVE = ['dispatched', 'on-scene', 'in-tow'], DONE = ['closed', 'cancelled'];
@@ -14,19 +10,6 @@ const TRUCK_TYPES = { flatbed: 'Flatbed (rollback)', 'wheel-lift': 'Wheel-lift',
 const DESTINATIONS = { shop: 'Our shop', yard: 'Our storage yard', other: 'Another address' };
 const BILL_TO = ['customer', 'motor club', 'insurance', 'police or city', 'fleet account'];
 const RATE_FIELDS = { hookup: 'robos:hookupMinor', perMile: 'robos:perMileMinor', roadside: 'robos:roadsideMinor', winchPerHour: 'robos:winchPerHourMinor', afterHours: 'robos:afterHoursMinor', storagePerDay: 'robos:storagePerDayMinor' };
-function formDocument(service) {
-  const custom = path.join(service.dataRoot, 'tow-form.jsonld');
-  return JSON.parse(fs.readFileSync(fs.existsSync(custom) ? custom : path.join(__dirname, '../data/tow-form.jsonld'), 'utf8'));
-}
-function towForm(service) {
-  shop(service);
-  const graph = formDocument(service)['@graph'], byOrder = (a, b) => a['robos:order'] - b['robos:order'];
-  const question = n => ({ key: n['robos:questionKey'], label: n['schema:name'], type: n['robos:questionType'], options: n['robos:options'] || [] });
-  const all = graph.filter(n => n['@type'] === 'robos:IntakeQuestion');
-  return { destinations: DESTINATIONS, billTo: BILL_TO, truckTypes: TRUCK_TYPES,
-    services: graph.filter(n => n['@type'] === 'robos:TowService').sort(byOrder).map(s => ({ id: s['@id'].split(':').pop(), label: s['schema:name'], description: s['schema:description'] || '', kind: s['robos:serviceKind'], questions: all.filter(q => q['robos:towService']?.['@id'] === s['@id']).sort(byOrder).map(question) })),
-    common: all.filter(q => q['robos:appliesToAll']).sort(byOrder).map(question) };
-}
 // Which truck the call needs, and why. A wheel-lift drags the car on two wheels, which damages AWD and
 // electric drivetrains, locked wheels and low bodywork; a trailer needs a heavy-duty wrecker.
 function truckNeed(answers = {}) {
@@ -40,8 +23,6 @@ function truckNeed(answers = {}) {
   return { needs: reasons.length ? 'flatbed' : 'any', reasons };
 }
 const canCarry = (type, needs) => needs === 'any' || type === 'heavy-duty' || (needs === 'flatbed' && type === 'flatbed');
-function rateCard(records) { return records.find(n => n['@type'] === 'robos:TowRateCard') || null; }
-function rateSnapshot(card) { return card ? { ...Object.fromEntries(Object.entries(RATE_FIELDS).map(([k, p]) => [k, card[p] ?? 0])), includedMiles: card['robos:includedMiles'] ?? 0, currency: card['robos:currency'] || 'USD' } : null; }
 // Itemized charges from a rate snapshot. All amounts are integer cents.
 function towLines(rates, { kind, serviceLabel, miles = 0, winchHours = 0, afterHours = false, storageDays = 0, extraMinor = 0, extraNote = '' }) {
   const lines = [], add = (description, quantity, unitMinor) => { if (quantity > 0) lines.push({ description, quantity, unitMinor, amountMinor: Math.round(quantity * unitMinor) }); };
@@ -56,6 +37,23 @@ function towLines(rates, { kind, serviceLabel, miles = 0, winchHours = 0, afterH
   if (extraMinor) add(extraNote, 1, extraMinor);
   return { lines, totalMinor: lines.reduce((s, l) => s + l.amountMinor, 0), currency: rates.currency };
 }
+function createTow(core) {
+const w = core.workshop, { node, ref } = core.importer, { shop, commit, checkInNode } = core.shop, { amountMinor, CURRENCIES } = core.reports;
+function formDocument(service) {
+  const custom = path.join(service.dataRoot, 'tow-form.jsonld');
+  return JSON.parse(fs.readFileSync(fs.existsSync(custom) ? custom : path.join(__dirname, '../data/tow-form.jsonld'), 'utf8'));
+}
+function towForm(service) {
+  shop(service);
+  const graph = formDocument(service)['@graph'], byOrder = (a, b) => a['robos:order'] - b['robos:order'];
+  const question = n => ({ key: n['robos:questionKey'], label: n['schema:name'], type: n['robos:questionType'], options: n['robos:options'] || [] });
+  const all = graph.filter(n => n['@type'] === 'robos:IntakeQuestion');
+  return { destinations: DESTINATIONS, billTo: BILL_TO, truckTypes: TRUCK_TYPES,
+    services: graph.filter(n => n['@type'] === 'robos:TowService').sort(byOrder).map(s => ({ id: s['@id'].split(':').pop(), label: s['schema:name'], description: s['schema:description'] || '', kind: s['robos:serviceKind'], questions: all.filter(q => q['robos:towService']?.['@id'] === s['@id']).sort(byOrder).map(question) })),
+    common: all.filter(q => q['robos:appliesToAll']).sort(byOrder).map(question) };
+}
+function rateCard(records) { return records.find(n => n['@type'] === 'robos:TowRateCard') || null; }
+function rateSnapshot(card) { return card ? { ...Object.fromEntries(Object.entries(RATE_FIELDS).map(([k, p]) => [k, card[p] ?? 0])), includedMiles: card['robos:includedMiles'] ?? 0, currency: card['robos:currency'] || 'USD' } : null; }
 const num = (v, label, max, { integer = false } = {}) => {
   if (v === undefined || v === null || String(v).trim() === '') return 0;
   const n = Number(v); if (!Number.isFinite(n) || n < 0 || n > max || (integer && !Number.isInteger(n))) throw new Error(`${label} must be ${integer ? 'a whole number ' : ''}between 0 and ${max}`);
@@ -238,4 +236,6 @@ function quoteTow(service, input) {
   const rates = rateSnapshot(rateCard(w.nodes(service))), need = svc.kind === 'tow' ? truckNeed(input.answers || {}) : { needs: 'any', reasons: [] };
   return { need, quote: rates ? towLines(rates, { kind: svc.kind, serviceLabel: svc.label, miles: svc.kind === 'tow' ? num(input.estimatedMiles, 'Estimated miles', 1000) : 0, afterHours: input.afterHours === true }) : null };
 }
-module.exports = { STAGES, STAGE_LABELS, TRUCK_TYPES, truckNeed, towLines, buildTowCall, towForm, towBoard, takeTowCall, quoteTow, dispatchTow, arriveTow, hookTow, deliverTow, cancelTow, issueTowInvoice, closeTow, saveTowTruck, saveTowRates, towSummary };
+return { buildTowCall, towForm, towBoard, takeTowCall, quoteTow, dispatchTow, arriveTow, hookTow, deliverTow, cancelTow, issueTowInvoice, closeTow, saveTowTruck, saveTowRates, towSummary };
+};
+module.exports = Object.assign(createTow, { STAGES, STAGE_LABELS, TRUCK_TYPES, truckNeed, canCarry, towLines });

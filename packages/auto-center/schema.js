@@ -1,4 +1,6 @@
 'use strict';
+// Plugin types (packages/robos-auto-plugins/*/plugin.json) are registered first so the schema includes them.
+require('./lib/plugins').discover();
 const {AUTO_TYPES}=require('../robos-graph/lib/auto-shapes');
 const ns='https://robos.dev/ns/sdlc#';
 const expand=value=>value.replace(/^robos:/,ns).replace(/^schema:/,'https://schema.org/').replace(/^dcterms:/,'http://purl.org/dc/terms/');

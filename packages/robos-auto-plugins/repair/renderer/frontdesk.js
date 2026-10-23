@@ -6,7 +6,7 @@
   const fail = e => { U.say(U.clean(e.message)); };
   const STEPS = ['Contact', 'Customer', 'Vehicle', 'Issue', 'Confirm'];
   const CHANNEL_HINTS = { 'phone call': 'They called the shop', 'text message': 'They texted us', email: 'They emailed us', 'walk-in': 'They are here in person', website: 'They used our website', other: 'Some other way' };
-  const fresh = () => ({ view: 'home', step: 0, channel: '', mode: '', customer: null, found: [], query: '', draft: { name: '', phone: '', email: '', preferred: '', userId: '', groupId: '' }, addingVehicle: false, vehicle: { year: '', make: '', model: '', plate: '', vin: '' }, vehicleId: '', category: '', answers: {}, notes: '', odometer: '', location: '', sendTow: false, tow: { pickupAddress: '', estimatedMiles: '' }, result: null, form: null });
+  const fresh = () => ({ view: 'home', step: 0, channel: '', mode: '', customer: null, found: [], query: '', draft: { name: '', phone: '', email: '', preferred: '', userId: '', groupId: '' }, addingVehicle: false, vehicle: { year: '', make: '', model: '', plate: '', vin: '' }, vehicleId: '', category: '', answers: {}, notes: '', odometer: '', location: '', addons: {}, addonState: {}, result: null, form: null });
   let s = fresh(), board = null;
   const btn = (label, onClick, cls = '') => { const b = el('button', { type: 'button', class: cls, text: label }); b.onclick = () => Promise.resolve(onClick()).catch(fail); return b; };
   const choice = (title, sub, pressed, onClick, disabled) => { const b = el('button', { type: 'button', class: 'choice', 'aria-pressed': String(!!pressed) }, el('b', { text: title }), sub ? el('small', { text: sub }) : null); if (disabled) b.disabled = true; else b.onclick = () => Promise.resolve(onClick()).catch(fail); return b; };
@@ -26,7 +26,7 @@
     const jobs = board.jobs, open = jobs.filter(j => j.stage !== 'closed');
     const needEstimate = open.filter(j => ['received', 'diagnosing'].includes(j.stage)), waiting = open.filter(j => j.stage === 'awaiting-approval'), extra = open.filter(j => j.needsApproval);
     draw(el('div', { class: 'card wizard-card' }, el('h2', { text: 'What would you like to do?' }), el('p', { class: 'lead', text: 'Start with a customer, log a conversation, or work through the follow-ups below.' }),
-      el('div', { class: 'choice-grid' }, choice('Start an intake', 'A customer is calling, texting, emailing or standing here', false, () => { s = fresh(); s.view = 'wizard'; return render(); }), choice('Log a call, text or email', 'Record a conversation about a ticket', false, () => { s.view = 'contact'; return render(); }), choice('Dispatch a tow truck', 'Breakdowns, accidents, jump starts, lockouts and other roadside help', false, () => window.towDesk.startCall()))),
+      el('div', { class: 'choice-grid' }, choice('Start an intake', 'A customer is calling, texting, emailing or standing here', false, () => { s = fresh(); s.view = 'wizard'; return render(); }), choice('Log a call, text or email', 'Record a conversation about a ticket', false, () => { s.view = 'contact'; return render(); }), ...window.autoPlugins.of('frontDeskChoices').map(h => h()).filter(Boolean).map(c => choice(c.title, c.sub, false, c.onClick)))),
       followUps('Estimates to prepare', needEstimate, 'Add an itemized estimate once the car has been looked at.'), followUps('Waiting for the customer to approve', waiting, 'Call, text or email the customer, then record their answer.'), followUps('Mechanic recommends more work', extra, 'The mechanic found something else. Contact the customer before more work is done.'));
   }
   function followUps(title, jobs, hint) {
@@ -45,7 +45,7 @@
     await loadBoard(); const job = board.jobs.find(j => j.id === s.ticketId); if (!job) { s.view = 'home'; return render(); }
     const c = board.customers.find(c => c.id === job.customerId) || {};
     draw(el('div', { class: 'card wizard-card' }, el('h2', { text: `${job.key} · ${job.title}` }), el('p', { class: 'lead', text: `${job.customer || ''} · ${job.vehicle || ''}${c.phone ? ' · ' + c.phone : ''}${c.email ? ' · ' + c.email : ''}` }),
-      job.tow ? el('div', { class: 'notice', 'data-tow': job.tow.key }, `Coming in on tow ${job.tow.key}: ${job.tow.stageLabel.toLowerCase()}. `, btn('Open the tow desk', () => window.towDesk.show(), 'secondary')) : null,
+      ...window.autoPlugins.of('ticketNotices').map(h => h(job, { el, btn })),
       ['received', 'diagnosing', 'awaiting-approval'].includes(job.stage) ? U.estimatePanel(job) : el('p', { class: 'notice', text: 'This ticket is already approved. Use Mechanic bench and Checkout from here.' }),
       contactPanel(job.id), el('details', {}, el('summary', { text: 'Ticket history' }), el('ol', { class: 'timeline' }, ...job.workItem.slice().reverse().map(ev => el('li', {}, el('b', { text: ev.kind }), ' ', el('span', { text: ev.detail }))))), nav(() => { s.view = 'home'; return render(); })));
   }
@@ -148,25 +148,22 @@
     const rows = [['Contacted by', s.channel], ['Customer', `${s.customer.name}${s.customer.phone ? ' · ' + s.customer.phone : ''}`], ['Vehicle', veh?.name || ''], ['Problem', cat.label]];
     for (const q of [...cat.questions, ...s.form.common]) { const a = s.answers[q.key]; if (a && a.length) rows.push([q.label.replace(/\?$/, ''), answerLine(a)]); }
     if (s.notes) rows.push(['Customer says', s.notes]);
-    const urgent = s.answers.urgency === 'Emergency or unsafe' || s.answers.driveable === 'No, it needs to be towed', needsTow = s.answers.driveable === 'No, it needs to be towed';
+    const urgent = s.answers.urgency === 'Emergency or unsafe' || s.answers.driveable === 'No, it needs to be towed';
+    // Enabled plugins can add to the confirm step, such as sending our tow truck for a car that cannot be driven.
+    const addons = window.autoPlugins.of('intakeConfirm').map(h => h(s, { el, chip, input, render })).filter(Boolean);
     return el('div', {}, el('h2', { text: 'Check and open the ticket' }), urgent ? el('div', { class: 'notice warn', text: 'This looks urgent or unsafe. The ticket will be marked Urgent.' }) : null,
       el('dl', { class: 'summary-grid' }, ...rows.flatMap(([k, v]) => [el('dt', { text: k }), el('dd', { text: v })])),
-      needsTow ? towOffer() : null,
-      el('div', { class: 'row' }, input('Odometer (optional)', s.odometer, v => { s.odometer = v; }, { name: 'odometer', ph: '84000' }), needsTow && s.sendTow ? null : input('Where is the car parked? (optional)', s.location, v => { s.location = v; }, { name: 'location', ph: 'Bay 2' })),
+      ...addons.map(a => a.element),
+      el('div', { class: 'row' }, input('Odometer (optional)', s.odometer, v => { s.odometer = v; }, { name: 'odometer', ph: '84000' }), addons.some(a => a.hidesLocation) ? null : input('Where is the car parked? (optional)', s.location, v => { s.location = v; }, { name: 'location', ph: 'Bay 2' })),
       nav(() => { s.step = 3; return render(); }, 'Open ticket', async () => {
-        const r = await w('intakeRepair', { vehicle: s.vehicleId, channel: s.channel, category: s.category, answers: s.answers, notes: s.notes, odometer: s.odometer, location: s.location, tow: needsTow && s.sendTow ? s.tow : undefined });
-        s.result = { key: r.job['robos:workItemKey'], id: r.job['@id'], tow: r.tow?.['robos:workItemKey'] || null }; U.say(''); await render();
+        const r = await w('intakeRepair', { vehicle: s.vehicleId, channel: s.channel, category: s.category, answers: s.answers, notes: s.notes, odometer: s.odometer, location: s.location, addons: s.addons });
+        s.result = { key: r.job['robos:workItemKey'], id: r.job['@id'], addons: r.addons || {} }; U.say(''); await render();
       }));
   }
-  // The car cannot be driven in: offer our own tow truck. The tow call opens with the ticket.
-  function towOffer() {
-    const box = el('div', { class: 'q-block', 'data-question': 'send-tow' }, el('h4', { text: 'Send our tow truck?' }), el('div', { class: 'chips' }, chip('Yes, send our truck', s.sendTow, () => { s.sendTow = true; render(); }), chip('No, they will arrange it', !s.sendTow, () => { s.sendTow = false; render(); })));
-    if (s.sendTow) box.append(el('div', { class: 'row' }, input('Where is the car now?', s.tow.pickupAddress, v => { s.tow.pickupAddress = v; }, { name: 'towPickup', ph: '88 Oak Ave, in the driveway' }), input('Estimated miles to the shop', s.tow.estimatedMiles, v => { s.tow.estimatedMiles = v; }, { name: 'towMiles', ph: '8' })), el('p', { class: 'note', text: 'The tow desk picks the truck and driver. The car is checked in when the truck drops it off.' }));
-    return box;
-  }
   function done() {
-    draw(el('div', { class: 'card wizard-card', 'data-step': 'Done' }, el('div', { class: 'notice ok' }, el('b', { text: `Ticket ${s.result.key} is open.` }), s.result.tow ? ` Tow ${s.result.tow} is waiting for a truck; the car is checked in when it is dropped off.` : ` ${s.customer.vehicles.find(v => v.id === s.vehicleId)?.name || 'The vehicle'} is checked in and the mechanics can see the details.`),
-      el('p', { class: 'lead', text: 'What next?' }), el('div', { class: 'choice-grid' }, s.result.tow ? choice('Dispatch the tow truck', 'Open the tow desk', false, () => window.towDesk.show()) : null, choice('Start another intake', 'Next customer', false, () => { s = fresh(); s.view = 'wizard'; return render(); }), choice('Prepare the estimate', 'Add parts and labor for this ticket', false, () => { s.view = 'ticket'; s.ticketId = s.result.id; return render(); }), choice('Back to front desk', '', false, () => { s = fresh(); return render(); }))));
+    const extra = window.autoPlugins.of('intakeDone').map(h => h(s.result)).filter(Boolean);
+    draw(el('div', { class: 'card wizard-card', 'data-step': 'Done' }, el('div', { class: 'notice ok' }, el('b', { text: `Ticket ${s.result.key} is open.` }), extra.length ? extra.map(x => ' ' + x.notice).join('') : ` ${s.customer.vehicles.find(v => v.id === s.vehicleId)?.name || 'The vehicle'} is checked in and the mechanics can see the details.`),
+      el('p', { class: 'lead', text: 'What next?' }), el('div', { class: 'choice-grid' }, ...extra.filter(x => x.choice).map(x => choice(x.choice.title, x.choice.sub, false, x.choice.onClick)), choice('Start another intake', 'Next customer', false, () => { s = fresh(); s.view = 'wizard'; return render(); }), choice('Prepare the estimate', 'Add parts and labor for this ticket', false, () => { s.view = 'ticket'; s.ticketId = s.result.id; return render(); }), choice('Back to front desk', '', false, () => { s = fresh(); return render(); }))));
   }
   async function render() {
     try { U.say(''); if (s.view === 'home') await home(); else if (s.view === 'wizard') await wizardView(); else if (s.view === 'contact') await contactLog(); else if (s.view === 'ticket') await ticket(); } catch (e) { fail(e); }

@@ -1,0 +1,21 @@
+{
+  "id": "tow",
+  "name": "Towing & roadside",
+  "offer": "We do towing",
+  "summary": "Take tow and roadside calls, quote them from your rates, dispatch a truck that can carry the vehicle, follow it to the drop-off, and bill the call at Checkout.",
+  "status": "ready",
+  "order": 20,
+  "backend": "lib/index.js",
+  "renderer": { "scripts": ["renderer/tow.js", "renderer/hooks.js"], "styles": ["renderer/tow.css"] },
+  "menus": [
+    { "view": "tow", "label": "Tow desk", "order": 20, "icon": "M2 7h11v9H2z M13 10h4l3 3v3h-7 M6 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M17 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" }
+  ],
+  "types": [
+    ["TowJob", "Order", ["robos:vehicle", "robos:workItemKey", "robos:jobStatus", "robos:pickupAddress"]],
+    ["TowTruck", "Vehicle", ["schema:name", "robos:truckType"]],
+    ["TowRateCard", "PriceSpecification", ["robos:currency"]],
+    ["TowService", "Service", ["schema:name", "robos:serviceKind", "robos:order"]]
+  ],
+  "guide": "10-tow-desk",
+  "roadmap": ["Live truck locations", "A driver app", "Mileage lookup between addresses", "Motor-club claim submission"]
+}

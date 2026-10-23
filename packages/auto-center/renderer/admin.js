@@ -1,10 +1,11 @@
 'use strict';
-// Admin for the shop owner: team, customers, parts catalog, intake form, shop settings and backups.
+// Admin for the shop owner: team, customers, parts catalog, the services the shop offers (plugins), intake form,
+// shop settings and backups. Enabled plugins add their own tabs (window.autoPlugins.on('adminTabs', …)).
 (() => {
   const U = window.workshopUI, el = U.el, root = document.getElementById('admin');
   const w = (action, input) => window.auto.workshop({ action, input });
   const fail = e => U.say(U.clean(e.message));
-  const TABS = [['team', 'Team'], ['customers', 'Customers'], ['parts', 'Parts catalog'], ['intake', 'Intake form'], ['tow', 'Tow trucks'], ['settings', 'Shop settings'], ['backup', 'Backup']];
+  const TABS = [['team', 'Team'], ['customers', 'Customers'], ['parts', 'Parts catalog'], ['services', 'Services'], ['intake', 'Intake form'], ['settings', 'Shop settings'], ['backup', 'Backup']];
   let tab = 'team', board = null;
   const btn = (label, onClick, cls = '') => { const b = el('button', { type: 'button', class: cls, text: label }); b.onclick = () => Promise.resolve(onClick()).catch(fail); return b; };
   const input = (label, value, name, o = {}) => { const c = o.area ? el('textarea', { rows: '4' }) : el('input', { type: o.type || 'text', placeholder: o.ph || '' }); c.value = value || ''; c.name = name; const l = el('label', {}, label, c); if (o.ta) window.typeahead.attach(c, o.ta); return l; };
@@ -12,8 +13,11 @@
   const read = form => Object.fromEntries([...form.querySelectorAll('[name]')].map(c => [c.name, c.value]));
   const money = minor => minor == null ? '' : (minor / 100).toFixed(2);
   async function render() {
-    try { U.say(''); board = await w('board'); const tabs = el('div', { class: 'tabs', role: 'tablist' }, ...TABS.map(([id, label]) => { const b = el('button', { type: 'button', role: 'tab', 'aria-selected': String(tab === id), text: label }); b.onclick = () => { tab = id; render(); }; return b; }));
-      const body = await ({ team, customers, parts, intake, tow, settings, backup }[tab])(); root.replaceChildren(el('div', { class: 'card wizard-card' }, el('h2', { text: 'Shop admin' }), el('p', { class: 'lead', text: 'Set up your team, your catalog and your shop. Day-to-day work happens in Front desk, Mechanic bench and Checkout.' }), tabs, body)); } catch (e) { fail(e); }
+    try { U.say(''); board = await w('board'); const all = [...TABS.slice(0, -2), ...window.autoPlugins.of('adminTabs').map(t => [t.id, t.label]), ...TABS.slice(-2)];
+      const tabs = el('div', { class: 'tabs', role: 'tablist' }, ...all.map(([id, label]) => { const b = el('button', { type: 'button', role: 'tab', 'aria-selected': String(tab === id), text: label }); b.onclick = () => { tab = id; render(); }; return b; }));
+      const extra = window.autoPlugins.of('adminTabs'); if (!TABS.some(([id]) => id === tab) && !extra.some(t => t.id === tab)) tab = 'team';
+      const core = { team, customers, parts, services, intake, settings, backup }, hit = extra.find(t => t.id === tab);
+      const body = await (hit ? hit.render({ el, btn, input, read, money, w, board, render, say: U.say }) : core[tab]()); root.replaceChildren(el('div', { class: 'card wizard-card' }, el('h2', { text: 'Shop admin' }), el('p', { class: 'lead', text: 'Set up your team, your catalog and your shop. Day-to-day work happens in Front desk, Mechanic bench and Checkout.' }), tabs, body)); } catch (e) { fail(e); }
   }
   function team() {
     const rows = board.teammates.map(t => {
@@ -43,30 +47,24 @@
     return el('div', {}, find, add, imp);
   }
   async function intake() {
+    if (!window.autoPlugins.isOn('repair')) return el('p', { class: 'note', text: 'Turn on auto repair in Services to use the Front desk intake form.' });
     const f = await w('intakeForm', {});
     return el('div', {}, el('h3', { text: 'Issue intake form' }), el('p', { class: 'note', text: 'Front desk asks these questions, taken from the shop knowledge graph (data/intake-form.jsonld). To customise it, copy that file to your shop data folder as intake-form.jsonld and edit the categories and questions.' }),
       ...f.categories.map(c => el('details', { class: 'card' }, el('summary', { text: `${c.label} (${c.questions.length} questions)` }), el('p', { class: 'note', text: c.description }), el('ul', {}, ...c.questions.map(q => el('li', { text: `${q.label}${q.options.length ? ' — ' + q.options.join(', ') : ''}` }))))),
       el('details', { class: 'card' }, el('summary', { text: `Asked for every problem (${f.common.length})` }), el('ul', {}, ...f.common.map(q => el('li', { text: `${q.label} — ${q.options.join(', ')}` })))));
   }
-  // Tow trucks, the rate card every tow quote and invoice uses, and the tow call questions.
-  async function tow() {
-    const [b, f] = await Promise.all([w('towBoard'), w('towForm')]), r = b.rates || {};
-    const rows = b.trucks.map(t => el('div', { class: 'row-card', 'data-truck': t.name }, el('div', {}, el('b', { text: t.name }), t.active ? null : el('span', { class: 'badge', text: 'Out of service' }), el('div', { class: 'note', text: [t.typeLabel, t.plate, t.onCall ? 'out on ' + t.onCall : ''].filter(Boolean).join(' · ') })),
-      btn(t.active ? 'Take out of service' : 'Back in service', async () => { await w('saveTowTruck', { id: t.id, active: !t.active }); await render(); }, 'secondary')));
-    const type = el('select', { name: 'truckType' }, ...Object.entries(b.truckTypes).map(([v, t]) => el('option', { value: v, text: t })));
-    const add = el('form', { id: 'admin-truck-form' }, el('h3', { text: 'Add a truck' }), input('Truck name', '', 'name', { ph: 'Truck 1' }), el('label', {}, 'Type', type), input('Plate (optional)', '', 'plate'),
-      el('p', { class: 'note', text: 'Flatbeds carry all-wheel-drive, electric, damaged and lowered cars. A wheel-lift lifts two wheels and tows the car on the other two. A heavy-duty wrecker handles anything, including trailers.' }),
-      btn('Add truck', async () => { await w('saveTowTruck', read(add)); await render(); U.say('Truck added.'); }, 'big-btn'));
-    const cur = el('select', { name: 'currency' }, ...['USD', 'CAD', 'EUR', 'GBP'].map(c => el('option', { value: c, text: c }))); cur.value = r.currency || board.settings.currency;
-    const rates = el('form', { id: 'admin-tow-rates-form' }, el('h3', { text: 'Tow rates' }), el('p', { class: 'note', text: 'Quotes on the call and tow invoices use these rates. A call keeps the rates it was quoted with, even if you change them later.' }),
-      el('div', { class: 'row' }, input('Hook-up fee', money(r.hookup), 'hookup', { ph: '95.00' }), input('Per loaded mile', money(r.perMile), 'perMile', { ph: '4.50' }), input('Miles included in hook-up', r.includedMiles ?? '', 'includedMiles', { ph: '5' })),
-      el('div', { class: 'row' }, input('Roadside service (jump, lockout, tire, fuel)', money(r.roadside), 'roadside', { ph: '75.00' }), input('Winching per hour', money(r.winchPerHour), 'winchPerHour', { ph: '120.00' })),
-      el('div', { class: 'row' }, input('After-hours surcharge', money(r.afterHours), 'afterHours', { ph: '50.00' }), input('Yard storage per day', money(r.storagePerDay), 'storagePerDay', { ph: '40.00' }), el('label', {}, 'Currency', cur)),
-      btn('Save tow rates', async () => { await w('saveTowRates', read(rates)); await render(); U.say('Tow rates saved.'); }, 'big-btn'));
-    const questions = el('details', { class: 'card' }, el('summary', { text: `Tow call questions (${f.services.length} services)` }), el('p', { class: 'note', text: 'The Tow desk asks these questions, taken from the shop knowledge graph (data/tow-form.jsonld). Copy it to your shop data folder as tow-form.jsonld to change them.' }),
-      ...f.services.map(s => el('div', {}, el('b', { text: s.label }), el('ul', {}, ...s.questions.map(q => el('li', { text: `${q.label} — ${q.options.join(', ')}` }))))), el('b', { text: 'Asked on every call' }), el('ul', {}, ...f.common.map(q => el('li', { text: `${q.label} — ${q.options.join(', ')}` }))));
-    return el('div', {}, el('h3', { text: `Trucks (${b.trucks.filter(t => t.active).length} in service)` }), ...(rows.length ? rows : [el('p', { class: 'note', text: 'No trucks yet.' })]), add, rates, questions,
-      el('p', { class: 'note', text: 'Tow drivers are team members. Add them on the Team tab with a role such as "Tow driver".' }));
+  // "What does your shop do?" Each line is a plugin from packages/robos-auto-plugins. Turning one on adds its menus.
+  async function services() {
+    const list = await w('services'), groups = [['ready', 'Ready to use'], ['starter', 'Starters: add their questions and labor to the repair desk'], ['planned', 'Planned']];
+    const row = p => {
+      const box = el('input', { type: 'checkbox', 'data-service': p.id, 'aria-label': p.offer }); box.checked = p.enabled; if (p.status === 'planned') box.disabled = true;
+      box.onchange = () => Promise.resolve().then(async () => { await w('setService', { plugin: p.id, enabled: box.checked }); await refresh(); await render(); U.say(`${p.offer}: ${box.checked ? 'turned on' : 'turned off'}.`); }).catch(e => { box.checked = !box.checked; fail(e); });
+      const needs = p.requires.map(r => list.find(x => x.id === r)?.name).filter(Boolean);
+      return el('div', { class: 'row-card service-row', 'data-plugin': p.id }, el('label', { class: 'check-label' }, box, el('span', {}, el('b', { text: p.offer }), el('span', { class: 'badge', text: p.statusLabel }), el('div', { class: 'note', text: p.summary + (needs.length ? ` Needs ${needs.join(' and ')}.` : '') }))),
+        p.roadmap.length ? el('details', {}, el('summary', { text: p.status === 'planned' ? 'What it will do' : 'Coming next' }), el('ul', {}, ...p.roadmap.map(r => el('li', { text: r })))) : null);
+    };
+    return el('div', {}, el('h3', { text: 'What does your shop do?' }), el('p', { class: 'note', text: 'Tick the services you offer. Each one adds its own menus, questions and reports, and you can turn it off again at any time; its records are kept.' }),
+      ...groups.map(([status, title]) => { const items = list.filter(p => p.status === status); return items.length ? el('div', { 'data-services': status }, el('h4', { text: title }), ...items.map(row)) : null; }));
   }
   function settings() {
     const s = board.settings, f = el('form', { id: 'admin-settings-form' }, el('h3', { text: 'Shop settings' }), input('Shop name', s.name, 'name'), input('Shop phone', s.phone, 'phone', { type: 'tel' }));

@@ -9,8 +9,8 @@ function recordFinance(service, input) {
   shop(service);
   if (!/^[a-f0-9-]{36}$/i.test(input.requestId || '')) throw new Error('Entry needs a valid submission identifier');
   const records = service.workspace.read()['robos:nodes'];
-  const job = input.job ? records.find(n => ['robos:RepairOrder', 'robos:TowJob'].includes(n['@type']) && n['@id'] === input.job) : null;
-  if (input.job && !job) throw new Error('Select a saved repair job or tow call');
+  const job = input.job ? records.find(n => require('./plugins').billableTypes(service).includes(n['@type']) && n['@id'] === input.job) : null;
+  if (input.job && !job) throw new Error('Select a saved job');
   if (!['expense', 'sale'].includes(input.kind) || !['charge', 'credit'].includes(input.direction)) throw new Error('Choose an entry type and direction');
   if (input.kind === 'sale' && !job) throw new Error('Earned sales require a repair job');
   if (!CURRENCIES.includes(input.currency)) throw new Error('Invalid currency');

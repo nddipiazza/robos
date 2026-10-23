@@ -57,7 +57,13 @@ class Catalog {
     };
     return this.common;
   }
-  search(kind, query, ctx, { parser, shopParts = [] }) {
+  // Labor operations from the shop's enabled plugins (tires, alignment…), indexed once per set of plugins.
+  pluginLabor(list) {
+    const key = JSON.stringify(list.map(l => l.plugin + ':' + l.name));
+    if (this.laborKey !== key) { this.laborKey = key; this.laborIndex = new Index(list.map(l => ({ label: l.name, detail: `typically about ${l.hours} h — adjust to the job`, kind: 'labor', name: l.name, hours: String(l.hours), source: l.plugin }))); }
+    return this.laborIndex;
+  }
+  search(kind, query, ctx, { parser, shopParts = [], pluginLabor = [] }) {
     query = String(query ?? '').slice(0, 100); ctx = ctx || {};
     if (kind === 'make') return this.vehicles(parser).make.search(query);
     if (kind === 'model') { const m = norm(ctx.make); return this.vehicles(parser).model.search(query, { filter: m ? i => norm(i.make) === m : undefined }); }
@@ -73,7 +79,7 @@ class Catalog {
       const mine = own.search(query, { boost: fits }), seen = new Set(mine.map(p => norm(p.name)));
       return [...mine, ...this.commonIndexes().part.search(query).filter(p => !seen.has(norm(p.name)))].slice(0, 12);
     }
-    if (kind === 'labor') return this.commonIndexes().labor.search(query);
+    if (kind === 'labor') { const extra = this.pluginLabor(pluginLabor).search(query), seen = new Set(extra.map(l => norm(l.name))); return [...extra, ...this.commonIndexes().labor.search(query).filter(l => !seen.has(norm(l.name)))].slice(0, 12); }
     throw new Error('Unknown catalog search');
   }
 }

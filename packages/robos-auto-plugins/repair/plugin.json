@@ -1,0 +1,17 @@
+{
+  "id": "repair",
+  "name": "Auto repair",
+  "offer": "We do auto repair",
+  "summary": "Take the customer's call at the Front desk, quote and approve the work, and fix the car at the Mechanic bench, with Bluetooth OBD-II.",
+  "status": "ready",
+  "order": 10,
+  "defaultEnabled": true,
+  "backend": "lib/index.js",
+  "renderer": { "scripts": ["renderer/frontdesk.js", "renderer/mechanic.js", "renderer/checkout-repair.js"] },
+  "menus": [
+    { "view": "frontdesk", "label": "Front desk", "order": 10, "icon": "M4 5h16v11H8l-4 4z M8 9h8 M8 12h5" },
+    { "view": "mechanic", "label": "Mechanic bench", "order": 30, "icon": "M14 6l4 4 M3 21l8-8 M14 3a6 6 0 0 0-7 7l-5 7 5 5 7-5a6 6 0 0 0 7-7l-4 4-5-5z" }
+  ],
+  "guide": "4-front-desk",
+  "roadmap": ["Appointments and a bay calendar", "Printable estimates and invoices", "Manufacturer labor times from a licensed source"]
+}

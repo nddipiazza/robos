@@ -63,8 +63,8 @@
       box.append(el('h4', { text: t.kind === 'tow' ? 'Drop-off' : 'Finish the service' }), el('div', { class: 'row' }, t.kind === 'tow' ? input('Loaded miles', '', v => { miles = v; }, { name: 'miles', ph: String(t.estimatedMiles || '') }) : null, t.kind !== 'roadside' ? input('Winch time (hours, if any)', '', v => { winch = v; }, { name: 'winch', ph: '0' }) : null,
         t.kind === 'tow' && t.destination !== 'other' ? input(t.destination === 'yard' ? 'Spot in the yard' : 'Where it is parked', '', v => { location = v; }, { name: 'location', ph: t.destination === 'yard' ? 'Yard row C' : 'Lot B' }) : null), input('Note (optional)', '', v => { note = v; }, { name: 'note' }),
         btn(done, () => act('deliverTow', { tow: t.id, loadedMiles: miles, winchHours: winch, note, location }, t.kind === 'tow' && t.destination !== 'other' ? `${t.key} dropped off and checked in.` : `${t.key} done.`), 'big-btn'));
-    } else if (t.stage === 'delivered') box.append(btn('Invoice at Checkout', () => window.checkoutTow(t.id), 'big-btn'));
-    else if (t.stage === 'invoiced') box.append(btn('Take payment at Checkout', () => window.checkoutTow(t.id), 'big-btn'));
+    } else if (t.stage === 'delivered') box.append(btn('Invoice at Checkout', () => window.autoCheckout.open('tow', t.id), 'big-btn'));
+    else if (t.stage === 'invoiced') box.append(btn('Take payment at Checkout', () => window.autoCheckout.open('tow', t.id), 'big-btn'));
     return box;
   }
   function section(title, tows, hint) {

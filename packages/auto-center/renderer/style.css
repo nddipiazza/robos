@@ -254,7 +254,3 @@ button.secondary{background:transparent;border:1px solid var(--line,#30363d)}
 .row-card{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;margin:8px 0}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.02em}[data-codes] ul{margin:6px 0 10px;padding-left:20px}[data-codes] li{margin:4px 0}[data-codes] li .badge{margin-left:8px}
 #obd-live .summary-grid{grid-template-columns:minmax(200px,260px) 1fr}#obd-live dd{font-variant-numeric:tabular-nums;font-weight:600}
-/* Tow desk */
-.tow-fleet{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 4px}.tow-truck{display:flex;flex-direction:column;gap:2px;min-width:150px;padding:10px 14px;border:1px solid var(--line);border-left:4px solid #3fb950;border-radius:8px}.tow-truck.busy{border-left-color:#d29922}.tow-truck small{opacity:.7}.tow-truck span{font-size:.85rem}
-.tow-section{margin:22px 0}.tow-card{margin:10px 0}.tow-card-top{display:flex;flex-wrap:wrap;align-items:center;gap:4px}.tow-card-top b{margin-right:6px}.tow-card .tow-vehicle{margin:6px 0}.tow-actions h4{margin:6px 0}.tow-cancel{margin-top:10px}
-.tow-quote{width:100%;border-collapse:collapse;margin:10px 0}.tow-quote td,.tow-quote th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}.tow-quote td:last-child,.tow-quote th:last-child{text-align:right;font-variant-numeric:tabular-nums}.tow-quote .total th{font-size:1.05rem}

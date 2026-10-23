@@ -29,16 +29,24 @@ class AutoCenter {
  async detail(id){return await this.recalls.detail(id)||{node:this.publicParser().getNode(id)};}
  sourceRow(id){return this.recalls.source(id);}
  async vehicleRecalls(vehicleId){const v=this.workspace.read()['robos:nodes'].find(n=>n['@id']===vehicleId&&n['@type']==='robos:OwnedVehicle');if(!v)throw new Error('Select a saved vehicle');if(!v['schema:modelDate']||!v['schema:brand']||!v['schema:model'])throw new Error('Vehicle needs year, make and model');return this.recalls.search({type:'robos:RecallApplicability',vehicle:{year:v['schema:modelDate'],make:v['schema:brand'],model:v['schema:model']}});}
- reports(options={}){shopOperations.shop(this);return reports.buildReports(this.workspace.read()['robos:nodes'],{...options,now:this.clock(),timeZone:this.reportTimeZone});}
+ reports(options={}){shopOperations.shop(this);const plugins=require('./plugins');return reports.buildReports(this.workspace.read()['robos:nodes'],{...options,now:this.clock(),timeZone:this.reportTimeZone,billableTypes:plugins.billableTypes(this),cards:(nodes,ctx)=>plugins.reportCards(this,nodes,ctx)});}
  checkIn(input){return shopOperations.checkIn(this,input);}
  checkOut(input){return shopOperations.checkOut(this,input);}
  recordFinance(input){return require('./finance').recordFinance(this,input);}
  recordPayment(input){return shopOperations.recordPayment(this,input);}
  catalog(kind,query,ctx){
   const shopParts=this.mode==='shop'?this.workspace.read()['robos:nodes'].filter(n=>n['@type']==='robos:Part').map(p=>({label:p['schema:name'],detail:[p['robos:partNumber'],p['robos:supplier'],p['robos:unitPriceMinor']!=null&&p['robos:unitPriceMinor']!==''?(p['robos:unitPriceMinor']/100).toFixed(2)+' '+(p['robos:currency']||'USD'):''].filter(Boolean).join(' · '),alias:p['robos:partNumber'],kind:'part',name:p['schema:name'],partNumber:p['robos:partNumber']||'',supplier:p['robos:supplier']||'',unitCost:p['robos:unitCostMinor']!=null?(p['robos:unitCostMinor']/100).toFixed(2):'',unitPrice:p['robos:unitPriceMinor']!=null?(p['robos:unitPriceMinor']/100).toFixed(2):'',fitsMake:p['robos:fitsMake']||'',fitsModel:p['robos:fitsModel']||'',source:'shop'})):[];
-  return this.catalogIndex.search(kind,query,ctx,{parser:this.publicParser(),shopParts});
+  return this.catalogIndex.search(kind,query,ctx,{parser:this.publicParser(),shopParts,pluginLabor:kind==='labor'&&this.mode==='shop'?require('./plugins').labor(this):[]});
  }
- workshop(action,input={}){const mods=[require('./workshop'),require('./frontdesk'),require('./bench'),require('./admin'),require('./tow'),require('./parts-orders')];const allowed=new Set(['board','addTeammate','addCustomer','addCustomerVehicle','openRepair','diagnose','createEstimate','decideEstimate','usePart','logHours','issueInvoice','offboard','addPart','importParts','importCustomers','intakeForm','findCustomers','registerCustomer','intakeRepair','logContact','claimTicket','requestPart','updatePartRequest','addWorkNote','startTimer','stopTimer','completeWork','saveScan','updateTeammate','saveSettings','towForm','towBoard','takeTowCall','quoteTow','dispatchTow','arriveTow','hookTow','deliverTow','cancelTow','issueTowInvoice','closeTow','saveTowTruck','saveTowRates','orders']);if(!allowed.has(action))throw new Error('Unknown workshop action');const mod=mods.find(m=>typeof m[action]==='function');return mod[action](this,input);}
+ // Core shop actions, then whatever the shop's enabled plugins add (see lib/plugins.js).
+ workshop(action,input={}){
+  const plugins=require('./plugins');
+  if(action==='services'){require('./shop-operations').shop(this);return plugins.list(this);}
+  if(action==='setService')return plugins.setService(this,input);
+  const mods=[require('./workshop'),require('./admin'),require('./parts-orders')];const core=new Set(['board','addTeammate','addCustomer','addCustomerVehicle','findCustomers','registerCustomer','openRepair','diagnose','createEstimate','decideEstimate','usePart','logHours','issueInvoice','offboard','addPart','importParts','importCustomers','updateTeammate','saveSettings','orders']);
+  if(core.has(action))return mods.find(m=>typeof m[action]==='function')[action](this,input);
+  const fn=typeof action==='string'&&/^[a-z][A-Za-z]*$/.test(action)?plugins.action(this,action):null;if(!fn)throw new Error('Unknown workshop action');return fn(this,input);
+ }
  updateJob({id,status,notes,billedTotal,currency}){
   if(this.mode!=='shop'||!JOB_STATES.includes(status))throw new Error('Invalid shop job status');
   const records=this.workspace.read()['robos:nodes'];const n=records.find(n=>n['@id']===id&&n['@type']==='robos:RepairOrder');if(!n)throw new Error('Unknown repair job');
@@ -62,7 +70,7 @@ class AutoCenter {
   const p=this.publicParser(), counts={}; for(const n of p.nodes) counts[n['@type']]=(counts[n['@type']]||0)+1;
   const manifest=fs.existsSync(path.join(this.root,'manifest.json'))?JSON.parse(fs.readFileSync(path.join(this.root,'manifest.json'))):{sources:[]};
   const recalls=this.recalls.current();for(const [type,count] of Object.entries(recalls?.counts||{}))counts[type]=(counts[type]||0)+count;
-  return {schemaTypes:require('../../robos-graph/lib/auto-shapes').AUTO_TYPES.map(([name])=>name),mode:this.mode,counts,total:p.nodes.length+(recalls?.nodes||0),recalls:recalls?{nodes:recalls.nodes,records:recalls.records,retrievedAt:recalls.source.retrievedAt,outdated:manifest.sources.find(s=>s.id==='recalls-bulk')?.sha256!==recalls.archiveSha256}:null,sources:manifest.sources,cache:this.root,privateRoot:this.dataRoot,gitops:this.mode==='shop'?new PrivateGit(this.dataRoot).status():null,records:this.workspace.read()['robos:nodes']};
+  return {schemaTypes:require('../../robos-graph/lib/auto-shapes').AUTO_TYPES.map(([name])=>name),mode:this.mode,counts,total:p.nodes.length+(recalls?.nodes||0),recalls:recalls?{nodes:recalls.nodes,records:recalls.records,retrievedAt:recalls.source.retrievedAt,outdated:manifest.sources.find(s=>s.id==='recalls-bulk')?.sha256!==recalls.archiveSha256}:null,sources:manifest.sources,cache:this.root,privateRoot:this.dataRoot,plugins:this.mode==='shop'?require('./plugins').list(this):[],billableTypes:require('./plugins').billableTypes(this),gitops:this.mode==='shop'?new PrivateGit(this.dataRoot).status():null,records:this.workspace.read()['robos:nodes']};
  }
  async search({query='',type=''}={}) {
   if(typeof query!=='string'||query.length>200||typeof type!=='string') throw new Error('Invalid search');

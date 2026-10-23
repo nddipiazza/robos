@@ -13,6 +13,14 @@ const card = (w, key = w.towKey || 'TW-0001') => w.page.locator(`${TW} article.t
 async function adminTowTab(w) { await go(w, 'admin', AD); await w.page.locator(`${AD} .tabs button`, { hasText: 'Tow trucks' }).click(); await w.page.locator('#admin-truck-form').waitFor(); }
 async function pickOption(select, label) { const opts = await select.locator('option').allInnerTexts(); const hit = opts.find(o => o.startsWith(label)); if (!hit) throw new Error(`No option "${label}" in [${opts.join(' | ')}]`); await select.selectOption({ label: hit }); }
 // ---- setup
+// "We do towing" and friends: tick the service in Admin → Services.
+Given('the shop offers {string}', async function (offer) {
+  await go(this, 'admin', AD); await this.page.locator(`${AD} .tabs button`, { hasText: 'Services' }).click();
+  const box = this.page.locator(`${AD} input[data-service][aria-label="${offer}"]`); await box.waitFor({ timeout: 6000 });
+  if (!(await box.isChecked())) { await box.check(); await this.page.waitForFunction(o => document.querySelector('#message').textContent.includes(o + ': turned on'), offer, { timeout: 8000 }); }
+  // Back to where setup steps add the team and customers.
+  await this.page.locator('[data-view="workshop"]').click(); await this.page.locator('#ws-pipeline .pipe-step').first().waitFor();
+});
 Given('the tow desk has the truck {string} as a {string}', async function (name, type) {
   await adminTowTab(this); await fill(this, 'name', name, '#admin-truck-form'); await pickOption(this.page.locator('#admin-truck-form [name="truckType"]'), type);
   await press(this, 'Add truck', AD); assert.equal(this.lastMessage, 'Truck added.');

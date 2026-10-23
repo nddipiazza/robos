@@ -23,10 +23,6 @@ const AUTO_TYPES = [
  ['IntakeQuestion','Question',['schema:name','robos:questionKey','robos:questionType']],
  ['PartRequest','Order',['robos:job','schema:name','robos:quantity','robos:requestStatus']],
  ['RepairTicket','Action',['robos:job','robos:workItemKey','robos:workItemStatus']],
- ['TowJob','Order',['robos:vehicle','robos:workItemKey','robos:jobStatus','robos:pickupAddress']],
- ['TowTruck','Vehicle',['schema:name','robos:truckType']],
- ['TowRateCard','PriceSpecification',['robos:currency']],
- ['TowService','Service',['schema:name','robos:serviceKind','robos:order']],
  ['Supplier','Organization',['schema:name']],
  ['PurchaseOrder','Order',['robos:orderNumber','robos:orderStatus','robos:supplier']],
  ['InventoryItem','Product',['schema:name']],
@@ -48,9 +44,26 @@ const AUTO_TYPES = [
  ['AutoVocabularyTerm','DefinedTerm',['schema:url']],
  ['AutoSoftware','SoftwareApplication',['schema:url']],
 ];
-const AUTO_SHAPES = AUTO_TYPES.map(([name, upstream, required]) => ({
+const shapeOf = ([name, upstream, required]) => ({
  shapeId: `urn:robos:shape:${name}Shape`, targetClass: `robos:${name}`,
  refersFrom: `https://schema.org/${upstream}`, schemaOrgType: `https://schema.org/${upstream}`,
  properties: ['dcterms:title', ...required].map(path => ({path,minCount:1})),
-}));
-module.exports = { AUTO_TYPES, AUTO_SHAPES };
+});
+const AUTO_SHAPES = AUTO_TYPES.map(shapeOf);
+// RobOS Auto plugins (packages/robos-auto-plugins) add their own types, such as robos:TowJob, when they load.
+// The types join the Auto schema and their shapes join the built-in SHACL shapes every workspace validates with.
+function registerAutoTypes(types) {
+ const { BUILTIN_SHACL_SHAPES } = require('./shacl-validator'), { resolveSchemaElement } = require('./classification');
+ for (const type of types) {
+  if (!Array.isArray(type) || !/^[A-Z][A-Za-z0-9]*$/.test(type[0]) || typeof type[1] !== 'string' || !Array.isArray(type[2])) throw new Error('An Auto type is [Name, schema.org type, [required properties]]');
+  const known = AUTO_TYPES.find(([name]) => name === type[0]);
+  if (known) { if (JSON.stringify(known) !== JSON.stringify(type)) throw new Error(`Auto type ${type[0]} is already defined differently`); continue; }
+  const shape = shapeOf(type); AUTO_TYPES.push(type); AUTO_SHAPES.push(shape);
+  if (!BUILTIN_SHACL_SHAPES.some(s => s.shapeId === shape.shapeId)) {
+   shape['robos:classification'] = resolveSchemaElement(shape.targetClass);
+   for (const property of shape.properties) property['robos:classification'] = resolveSchemaElement(property.path);
+   BUILTIN_SHACL_SHAPES.push(shape);
+  }
+ }
+}
+module.exports = { AUTO_TYPES, AUTO_SHAPES, registerAutoTypes };

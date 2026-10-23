@@ -1,7 +1,7 @@
 'use strict';
 const { test } = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
-const { AutoCenter } = require('../lib/service');
+const { AutoCenter } = require('../../../auto-center/lib/service');
 function shop() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'auto-desk-')); const s = new AutoCenter({ root: path.join(dir, 'c'), privateRoot: path.join(dir, 'p') }); s.setMode('shop');
   const W = (a, i) => s.workshop(a, i); return { s, W };

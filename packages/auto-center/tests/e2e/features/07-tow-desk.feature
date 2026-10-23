@@ -3,7 +3,8 @@ Feature: Run the tow desk
   follows each call until the vehicle is dropped off. Tow invoices and payments go through Checkout.
 
   Background:
-    Given the shop team has "Dana Wells" as "Tow driver"
+    Given the shop offers "We do towing"
+    And the shop team has "Dana Wells" as "Tow driver"
     And I add the customer "Jim Parker" with phone "555-0142" and email "jim@example.com"
     And "Jim Parker" has the vehicle "Honda Accord 2005"
     And the tow desk has the truck "Truck 1" as a "Flatbed (rollback)"

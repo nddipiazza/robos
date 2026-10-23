@@ -1,11 +1,11 @@
 'use strict';
 const { test } = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), os = require('node:os'), path = require('node:path');
-const { AutoCenter } = require('../lib/service');
+const { AutoCenter } = require('../../../auto-center/lib/service');
 const { truckNeed, towLines } = require('../lib/tow');
 function shop() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'auto-tow-')); const s = new AutoCenter({ root: path.join(dir, 'c'), privateRoot: path.join(dir, 'p') }); s.setMode('shop');
-  const W = (a, i) => s.workshop(a, i); return { s, W };
+  const W = (a, i) => s.workshop(a, i); W('setService', { plugin: 'tow', enabled: true }); return { s, W };
 }
 const RATES = { hookup: '95.00', perMile: '4.50', includedMiles: '5', roadside: '75.00', winchPerHour: '120.00', afterHours: '50.00', storagePerDay: '40.00', currency: 'USD' };
 function fleet(W) {
@@ -54,7 +54,7 @@ test('a tow call is quoted, dispatched, delivered to the shop, invoiced, paid an
   W('closeTow', { tow: tow['@id'] });
   b = W('towBoard'); assert.equal(b.tows[0].stage, 'closed'); assert.equal(b.tows[0].summary.balance, 0);
   assert.ok(s.workspace.read()['robos:nodes'].find(n => n['@type'] === 'robos:VehicleStay' && !n['schema:endDate']), 'the car stays checked in at the shop');
-  const r = s.reports({}); assert.equal(r.revenue.day.netMinor, '21100'); assert.equal(r.towing.periods.month.completed, 1); assert.equal(r.towing.periods.month.loadedMiles, 17);
+  const r = s.reports({}); assert.equal(r.revenue.day.netMinor, '21100'); const card = r.pluginCards.find(c => c.label === 'Tow calls completed this month'); assert.equal(card.value, '1'); assert.match(card.note, /^17 loaded miles/);
   assert.ok(r.profit.jobs.some(j => j.job['robos:workItemKey'] === 'TW-0001'));
   assert.match(require('node:child_process').execFileSync('git', ['log', '--format=%s'], { cwd: path.join(s.privateRoot, 'shop'), encoding: 'utf8' }), /TW-0001: dispatched Truck 2/);
 });
@@ -101,16 +101,16 @@ test('calls are validated against the KGraph tow form and can be cancelled', () 
 });
 test('the front desk can send our tow truck with a repair intake', () => {
   const { s, W } = shop(); const { lift, dana, v } = fleet(W);
-  assert.throws(() => W('intakeRepair', { vehicle: v['@id'], channel: 'phone call', category: 'engine', answers: { driveable: 'Not sure' }, tow: { pickupAddress: 'Home' } }), /needs to be towed/);
-  assert.throws(() => W('intakeRepair', { vehicle: v['@id'], channel: 'phone call', category: 'engine', answers: { driveable: 'No, it needs to be towed' }, tow: {} }), /Pickup location/);
+  assert.throws(() => W('intakeRepair', { vehicle: v['@id'], channel: 'phone call', category: 'engine', answers: { driveable: 'Not sure' }, addons: { tow: { pickupAddress: 'Home' } } }), /needs to be towed/);
+  assert.throws(() => W('intakeRepair', { vehicle: v['@id'], channel: 'phone call', category: 'engine', answers: { driveable: 'No, it needs to be towed' }, addons: { tow: {} } }), /Pickup location/);
   assert.equal(W('board').jobs.length, 0, 'nothing is saved when the tow is invalid');
-  const r = W('intakeRepair', { vehicle: v['@id'], channel: 'phone call', category: 'engine', answers: { driveable: 'No, it needs to be towed' }, tow: { pickupAddress: '88 Oak Ave', estimatedMiles: '6' } });
-  assert.equal(r.tow['robos:workItemKey'], 'TW-0001'); assert.equal(r.job['robos:priority'], 'urgent');
+  const r = W('intakeRepair', { vehicle: v['@id'], channel: 'phone call', category: 'engine', answers: { driveable: 'No, it needs to be towed' }, addons: { tow: { pickupAddress: '88 Oak Ave', estimatedMiles: '6' } } });
+  assert.equal(r.addons.tow['robos:workItemKey'], 'TW-0001'); assert.equal(r.job['robos:priority'], 'urgent');
   const nodes = () => s.workspace.read()['robos:nodes'];
   assert.equal(nodes().filter(n => n['@type'] === 'robos:VehicleStay').length, 0, 'not checked in until the truck drops it off');
-  let job = W('board').jobs[0]; assert.equal(job.tow.key, 'TW-0001'); assert.equal(job.tow.stage, 'requested');
-  for (const [a, i] of [['dispatchTow', { truck: lift['@id'], driver: dana['@id'] }], ['arriveTow', {}], ['hookTow', { condition: 'No visible damage' }], ['deliverTow', { loadedMiles: '6.4' }]]) W(a, { tow: r.tow['@id'], ...i });
+  let job = W('board').jobs[0]; assert.equal(job.links.tow.key, 'TW-0001'); assert.equal(job.links.tow.stage, 'requested');
+  for (const [a, i] of [['dispatchTow', { truck: lift['@id'], driver: dana['@id'] }], ['arriveTow', {}], ['hookTow', { condition: 'No visible damage' }], ['deliverTow', { loadedMiles: '6.4' }]]) W(a, { tow: r.addons.tow['@id'], ...i });
   assert.equal(nodes().filter(n => n['@type'] === 'robos:VehicleStay' && !n['schema:endDate']).length, 1);
-  job = W('board').jobs[0]; assert.ok(job.workItem.some(e => e.detail === 'Arrived on TW-0001 (6.4 mi)')); assert.equal(job.tow.stage, 'delivered');
+  job = W('board').jobs[0]; assert.ok(job.workItem.some(e => e.detail === 'Arrived on TW-0001 (6.4 mi)')); assert.equal(job.links.tow.stage, 'delivered');
   assert.equal(W('towBoard').tows[0].repairKey, 'RO-0001');
 });

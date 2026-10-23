@@ -7,8 +7,8 @@ function money(minor, currency) {
   return `${value < 0n ? '−' : ''}${symbol}${(amount / 100n).toLocaleString('en-US')}.${String(amount % 100n).padStart(2, '0')}`;
 }
 // Repair jobs and tow calls are both billed, paid and costed.
-function billableJobs() { return state.records.filter(n => ['robos:RepairOrder', 'robos:TowJob'].includes(n['@type'])); }
-function jobTitle(j) { return j['@type'] === 'robos:TowJob' ? `${j['robos:workItemKey']} · ${j['dcterms:title']}` : j['dcterms:title']; }
+function billableJobs() { return state.records.filter(n => (state.billableTypes || ['robos:RepairOrder']).includes(n['@type'])); }
+function jobTitle(j) { return j['@type'] !== 'robos:RepairOrder' && j['robos:workItemKey'] ? `${j['robos:workItemKey']} · ${j['dcterms:title']}` : j['dcterms:title']; }
 function metric(label, value, note = '') { const c = text('article', '', 'metric'); c.append(text('span', label), text('strong', value), text('small', note)); return c; }
 function tableRow(values) { const row = text('tr', ''); values.forEach(v => row.append(text('td', String(v)))); return row; }
 function refill(select, nodes, label, value = n => n['@id']) {
@@ -27,7 +27,6 @@ async function refreshReports() {
   const operationMetrics = [
     metric('Vehicles at the center', r.heldCount, `${r.readyForPickup} ready for pickup · ${r.pastExpected} past expected date`),
     metric('Open repair jobs', r.openJobs, `${r.statuses['awaiting-approval']} awaiting approval · ${r.statuses['in-progress']} in progress`),
-    metric('Open tow calls', r.towing.open, `${r.towing.waiting} waiting for a truck · ${r.towing.onTheRoad} on the road · ${r.towing.toInvoice} to invoice`),
     metric('Outstanding billed balance', money(r.balance.outstandingMinor, r.currency), `${r.unbilledJobs} jobs have no charge total recorded`),
     metric('Customer credit', money(r.balance.creditMinor, r.currency), 'Received beyond recorded charge totals'),
     metric('Jobs closed this month', r.completions.month, 'Currently closed jobs with recorded closing times'),
@@ -36,7 +35,9 @@ async function refreshReports() {
     metric('Maintenance overdue by date', r.overdueMaintenance, `${r.maintenanceDueSoon} due within seven days`),
   ];
   $('floor-count').textContent = `${r.heldCount} on site / ${r.openJobs} open jobs`;
-  $('operation-cards').replaceChildren(...operationMetrics.slice(0,5));$('extra-operation-cards').replaceChildren(...operationMetrics.slice(5), metric('Tow calls completed this month', r.towing.periods.month.completed, `${r.towing.periods.month.loadedMiles} loaded miles · ${r.towing.periods.week.completed} this week`));
+  // Enabled plugins add cards to the shop floor and performance panels (such as open tow calls).
+  const cardsFor = panel => r.pluginCards.filter(c => c.panel === panel).map(c => metric(c.label, c.value, c.note));
+  $('operation-cards').replaceChildren(...operationMetrics.slice(0,4), ...cardsFor('floor'));$('extra-operation-cards').replaceChildren(...operationMetrics.slice(4), ...cardsFor('performance'));
   $('held-cars').replaceChildren(...r.held.map(h => {
     const v = h.vehicle, s = h.stay, c = text('article', '', 'held-car'); c.dataset.vehicle = v['@id'];
     const top = text('div', '', 'vehicle-card-top');
