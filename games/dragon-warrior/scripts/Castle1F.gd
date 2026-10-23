@@ -1325,6 +1325,23 @@ func _use_item(idx: int) -> void:
 		if item_name == "Magic Key":
 			item_type = "key"
 
+	if item is Dictionary and (str(item.get("id", "")).to_lower() == "herb" or item_name in ["Herb", "Medical Herb"]):
+		var gs_h := get_node_or_null("/root/GameState")
+		if gs_h:
+			var hp := int(gs_h.hero_stats.get("hp", 0))
+			var hp_max := int(gs_h.hero_stats.get("hp_max", 1))
+			if hp >= hp_max:
+				_show_dialog("", ["Thy HP is already\nfull."])
+				return
+			var amt := 23 + (randi() % 8)
+			gs_h.hero_stats["hp"] = mini(hp_max, hp + amt)
+			_inventory.remove_at(idx)
+			gs_h.inventory = _inventory.duplicate(true)
+			_item_panel.visible = false
+			_item_open = false
+			_show_dialog("", ["Thou hast eaten the\nMedical Herb.\nHP restored by %d." % mini(amt, hp_max - hp)])
+		return
+
 	if item_type == "key" or item_name == "Magic Key" or item_name == "magic_key" or (item is Dictionary and str(item.get("id", "")) == "magic_key"):
 		var ft := _facing_tile()
 		if _map_tile_at(ft) == 10:
