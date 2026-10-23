@@ -18,7 +18,7 @@ func _get_music_path() -> String:
 func _get_npcs() -> Array:
     return [
         {tile=Vector2i(13,8),  sprite_id="sage_alt", facing="down",  speaker="Shopkeeper", pages=["Garin, a wandering minstrel of\nlegendary fame, is said to have\nbuilt this town."]},
-        {tile=Vector2i(4,15),  sprite_id="minister", facing="down",  speaker="Innkeeper",  pages=["Welcome to Garinham. May\nthy stay be a peaceful one."], inn_cost=6},
+        {tile=Vector2i(18,16),  sprite_id="sage_alt", facing="left",  speaker="Innkeeper",  pages=["Welcome to Garinham. May\nthy stay be a peaceful one."], inn_cost=6},
         {tile=Vector2i(8,4),   sprite_id="sage",     facing="right", speaker="Elder",      pages=["Many believe that Princess\nGwaelin is hidden away in a cave."]},
         {tile=Vector2i(10,12), sprite_id="guard",    facing="down",  speaker="Soldier",    pages=["I have heard of one named\nNester. Dost thou know such one?"]},
         {tile=Vector2i(16,9), sprite_id="lady",     facing="left",  speaker="Villager",   pages=["It is said that the Princess\nwas kidnapped and taken eastward."]},

@@ -31,7 +31,7 @@ func _get_npcs() -> Array:
         {tile=Vector2i(28,7),  sprite_id="sage_alt", facing="down",  speaker="Shopkeeper",    shop_id="can004"},
         {tile=Vector2i(28,27), sprite_id="sage_alt", facing="down",  speaker="Shopkeeper",    shop_id="can005"},
         {tile=Vector2i(3,8),   sprite_id="sage_alt", facing="down",  speaker="Shopkeeper",    shop_id="can007"},
-        {tile=Vector2i(4,26),  sprite_id="minister", facing="down",  speaker="Innkeeper",     inn_cost=6},
+        {tile=Vector2i(9,4),  sprite_id="sage_alt", facing="down",  speaker="Innkeeper",     inn_cost=6},
     ]
 
 func _is_walkable(tile: Vector2i) -> bool:

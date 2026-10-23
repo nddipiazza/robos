@@ -366,6 +366,13 @@ func _ready() -> void:
 
 	_build_npc_positions()
 	_build_background()
+	# Chests opened on an earlier visit stay gone (NES).
+	for key in _opened_chests.keys():
+		var k := str(key)
+		if k.begins_with("castle_1f:"):
+			var parts := k.substr(10).split(",")
+			if parts.size() == 2:
+				_open_chest_visual(Vector2i(int(parts[0]), int(parts[1])))
 	_build_hero_sprite()
 	_build_npc_sprites()
 	_build_debug_overlay()
@@ -396,7 +403,8 @@ func _clean_npc_bg_tiles() -> void:
 
 	var tile_w: int = TILE_SIZE
 	var tile_h: int = TILE_SIZE
-	var ground_tiles: Array[int] = [3, 0, 4, 8, 10, 18, 21, 30, 31]
+	# Plain floors only: never paint a counter or door under an NPC.
+	var ground_tiles: Array[int] = [3, 0, 2, 30, 31]
 	var neighbors: Array[Vector2i] = [
 		Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0),
 		Vector2i(-1, -1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(1, 1)
@@ -449,6 +457,7 @@ func _build_background() -> void:
 	_bg.stretch_mode = TextureRect.STRETCH_KEEP
 	_bg.size         = Vector2(MAP_W * TILE_SIZE, MAP_H * TILE_SIZE)
 	add_child(_bg)
+	MapBackdrop.attach(_bg, _bg_image, TILE_SIZE, TILE_SIZE)
 
 
 func _restore_unlocked_door_visuals() -> void:

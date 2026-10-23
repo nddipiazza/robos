@@ -18,7 +18,7 @@ func _get_music_path() -> String:
 func _get_npcs() -> Array:
     return [
         {tile=Vector2i(10,16), sprite_id="sage_alt", facing="down",  speaker="Shopkeeper", pages=["East of Hauksness there is a\ntown, 'tis said, where one may\npurchase weapons of extraordinary\nquality."]},
-        {tile=Vector2i(22,6),  sprite_id="minister", facing="down",  speaker="Innkeeper",  pages=["This bath cures rheumatism.\nRest and be refreshed,\nweary traveler."], inn_cost=0},
+        {tile=Vector2i(20,5),  sprite_id="sage_alt", facing="up",  speaker="Innkeeper",  pages=["This bath cures rheumatism.\nRest and be refreshed,\nweary traveler."], inn_cost=0},
         {tile=Vector2i(2,2),   sprite_id="sage",     facing="right", speaker="Elder",      pages=["This is the village of Kol."]},
         {tile=Vector2i(23,13), sprite_id="sage_alt", facing="down",  speaker="Shopkeeper", shop_id="kol001"},
         {tile=Vector2i(15,22), sprite_id="sage_alt", facing="down",  speaker="Shopkeeper", shop_id="kol002"},

@@ -391,6 +391,7 @@ func _build_background() -> void:
 	_bg.stretch_mode = TextureRect.STRETCH_KEEP
 	_bg.size = Vector2(MAP_W * TILE_SIZE, MAP_H * TILE_SIZE)
 	add_child(_bg)
+	MapBackdrop.attach(_bg, _bg_image, TILE_SIZE, TILE_SIZE)
 
 
 func _make_box_style(bg: Color, border: Color, radius: int = 4) -> StyleBoxFlat:
