@@ -12,7 +12,13 @@
       <button class="nav-item" data-filter="developer"><span class="nav-dot violet"></span>Developer tools</button>
       <button class="nav-item" data-filter="system"><span class="nav-dot amber"></span>System & agents</button>
     </nav>
-    <div class="sidebar-footer"><span class="online-dot"></span>Installed on this computer</div>
+    <section class="launcher-controls" aria-label="Launcher settings">
+      <div class="nav-caption">QUICK ACCESS</div>
+      <button id="shortcut-toggle" class="launcher-setting" aria-pressed="false" disabled>Enable Win + Shift + Space</button>
+      <button id="login-toggle" class="launcher-setting" aria-pressed="false" disabled>Run at Windows sign-in</button>
+      <p id="launcher-hint">Close the window to keep RobOS ready in the tray.</p>
+    </section>
+    <div class="sidebar-footer"><span class="online-dot"></span>Ready in the background</div>
   </aside>
   <main>
     <header class="toolbar"><div><div class="eyebrow">WORKSPACE</div><h1 id="view-title">Library</h1></div><div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><input id="search" type="search" placeholder="Search applications" aria-label="Find an app"><kbd>Ctrl K</kbd></div></header>

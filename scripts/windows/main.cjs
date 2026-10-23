@@ -4,15 +4,19 @@ if (process.env.ROBOS_WINDOWS_AUDIT) {
   process.on('uncaughtException', fail);
   process.on('unhandledRejection', fail);
 }
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const electron = require('electron');
+const { app, BrowserWindow } = electron;
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
-const { spawn } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
 const root = app.isPackaged ? path.join(process.resourcesPath, 'suite') : path.resolve(__dirname, '..');
 const apps = JSON.parse(fs.readFileSync(path.join(root, 'apps.json')));
 const id = process.argv.find(a => a.startsWith('--app='))?.slice(6);
+if (!id) {
+  app.setName('RobOS');
+  if (!app.requestSingleInstanceLock()) { app.quit(); process.exit(0); }
+}
 process.env.HOME ||= os.homedir();
 process.env.ROBOS_LIB_PATH = path.join(root, 'packages/robos-lib');
 process.env.ROBOS_APP_BASE = path.join(root, 'packages');
@@ -20,7 +24,8 @@ process.env.ROBOS_WINDOWS_HOST = app.isPackaged ? path.join(root, 'windows') : _
 process.env.ROBOS_TOOL_ROOT = app.isPackaged ? path.join(os.homedir(), 'RobOS') : root;
 if (process.platform === 'win32') {
   // Software Center's private npm prefix and WinGet portable command aliases.
-  require(path.join(root, 'packages/robos-lib/windows-path')).refreshWindowsPath(root, process.env, process.env.ROBOS_TOOL_ROOT);
+  const inherited = Date.now() - Number(process.env.ROBOS_WINDOWS_PATH_UPDATED || 0) < 120000;
+  require(path.join(root, 'packages/robos-lib/windows-path')).refreshWindowsPath(root, process.env, process.env.ROBOS_TOOL_ROOT, { readRegistry: !!id && !inherited });
   process.env.ROBOS_DM_SOCKET ||= require(path.join(root, 'packages/robos-lib/local-ipc-path')).localIpcPath('desktop-manager');
 }
 // Older apps use the appliance's shared-library prefix. Resolve it inside this installation.
@@ -44,6 +49,22 @@ if (id) {
   process.chdir(dir);
   app.setPath('userData', path.join(os.homedir(), '.config/robos/electron', id));
   app.setAppPath(dir);
+  const showExisting = () => {
+    for (const win of BrowserWindow.getAllWindows()) {
+      if (win.isDestroyed()) continue;
+      if (win.isMinimized()) win.restore();
+      win.show(); win.focus();
+    }
+  };
+  app.on('second-instance', showExisting);
+  let announced = false;
+  app.on('browser-window-created', (_event, win) => {
+    win.webContents.once('did-finish-load', () => {
+      if (announced || win.isDestroyed()) return;
+      win.show(); win.focus(); announced = true;
+      if (process.connected) process.send({ type: 'robos:window-ready', id, title: win.getTitle(), visible: win.isVisible() });
+    });
+  });
   if (id === 'household') {
     app.whenReady().then(async () => {
       const server = await require(path.join(dir, 'server.js')).start(0);
@@ -54,24 +75,5 @@ if (id) {
     app.on('window-all-closed', () => app.quit());
   } else require(path.join(dir, 'main.js'));
 } else {
-  app.setName('RobOS');
-  const lifetime = require('./portable-lifetime.cjs').portableLifetime(app, BrowserWindow, !!process.env.PORTABLE_EXECUTABLE_FILE);
-  app.whenReady().then(() => {
-    ipcMain.handle('apps:list', () => apps);
-    ipcMain.handle('apps:launch', (_event, appId) => {
-      if (!apps.some(a => a.id === appId)) throw new Error('Unknown app');
-      const logDir = path.join(os.homedir(), '.config/robos/logs');
-      fs.mkdirSync(logDir, { recursive: true });
-      const logPath = path.join(logDir, `${appId}-windows.log`);
-      const log = fs.openSync(logPath, 'a');
-      const child = spawn(process.execPath, [__dirname, `--app=${appId}`], { detached: true, stdio: ['ignore', log, log], windowsHide: true });
-      fs.closeSync(log);
-      child.on('error', error => dialog.showErrorBox('Unable to launch app', error.message));
-      child.once('exit', code => { if (code) dialog.showErrorBox('App exited with an error', `${appId}: see ${logPath}`); });
-      lifetime.watch(child);
-    });
-    const win = new BrowserWindow({ width: 1220, height: 900, minWidth: 900, minHeight: 650, backgroundColor: '#10141c', autoHideMenuBar: true, icon: path.join(__dirname, 'robos.ico'),
-      webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false } });
-    win.loadFile(path.join(__dirname, 'index.html'));
-  });
+  require('./launcher-host.cjs').startLauncher(electron, { root, apps, host: __dirname });
 }
