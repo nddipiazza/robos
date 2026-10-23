@@ -10,7 +10,7 @@ description: "Starfall Command: a three-faction real-time strategy game in Godot
 # RobOS RTS: Starfall Command
 {: .no_toc }
 
-A real-time strategy game in Godot 4.3, in `games/robos-rts`. Three asymmetric factions fight over crystal and aether on a canyon map. The simulation is deterministic and runs at a fixed 64 ticks per second, separately from rendering, so the same game can be played by a person, driven by a script, or run headless in tests.
+A real-time strategy game in Godot 4.3, in `games/robos-rts`. The default mode is **Frontier Hunters: one human versus one AI**, building from scratch on a rich eight-start map. The engine also contains three asymmetric factions and isolated mechanics scenarios. The simulation is deterministic and runs at a fixed 64 ticks per second, separately from rendering, so the same game can be played by a person, driven by a script, or run headless in tests.
 {: .fs-6 }
 
 <details open markdown="block">
@@ -41,7 +41,57 @@ cd games/robos-rts
 ./run_cucumber_tests.py --backend
 ```
 
-The window opens on the Meridian Guard base. Press **F1** in the game for the controls overlay.
+The window opens with match setup. Choose Easy, Normal or Hard AI, its Rush, Balanced, Economy or Siege strategy, and a speed from 1× to 8×. Press **F8** during play to resume, start a new match, or surrender; **F1** opens the controls overlay.
+
+## Frontier Hunters
+
+This mode focuses on a Meridian Guard mirror match on a **256×256** map. Two distinct starting sites are selected randomly from the map's eight perimeter bases. Each commander starts with one Colony Hub, **12 Pioneers**, 50 crystal and no aether or army. Workers immediately gather. Crystal fields and aether vents are **inexhaustible**. Winding waterways divide the outer bases and interior expansion sites, with land crossings connecting the battlefield. Pathfinding, building placement, the 3D view and the minimap share this terrain.
+
+![Frontier Hunters: the full 256×256 battlefield with waterways, crossings and expansion resources]({{ '/assets/images/robos-rts/34-frontier-hunters-map.png' | relative_url }}){: .robos-zoomable-img }
+
+**Win by destroying every opposing structure**, including expansions and unfinished construction, or by accepting the opponent's surrender. Losing a main base or all workers alone does not end the match. The terminal result freezes the simulation and rejects further commands. Supply is capped at 200. Construction and training use the unit registry's full durations; accelerated play advances the same simulation faster.
+
+The AI harvests, builds supply and production, trains workers and armies, then attacks and searches for remaining structures. Economy saves for a second base; Siege builds gas extraction and a Workshop for Howitzers. Difficulty changes decision frequency, worker targets and production capacity. All difficulties use paid engine commands with identical starting resources, costs and combat statistics.
+
+The bot API starts a replayable match with `POST /match {"seed":42,"difficulty":"hard","strategy":"rush"}`. Omit the seed for a fresh random assignment. `POST /match {"action":"surrender","player":1}` concedes. Observations include match status, winner, reason, seed and starting-site assignments. Existing mechanics scenarios remain available by slug; `starfall-canyon` loads the older three-faction showcase.
+
+### Accelerated build-order tests
+
+```bash
+cd games/robos-rts
+python run_cucumber_tests.py --backend --name="Frontier|Build orders|unattended|Destroying|Surrender|Illegal|Seeded"
+```
+
+`tests/e2e/features/engine/03_frontier_hunters.feature` plays Rush, Siege and Economy builds against different AI difficulties through the public observation/action/step API. The player controller starts with the same opening as a person and pays for every building and unit. Tests advance four game seconds per request, with a bounded game-time budget; reaching the budget is a failure, never an invented victory. JSON progression traces and final observations are written under `tests/e2e/reports/`.
+
+Additional checks cover deterministic seeded replay, selection of every start site, an unattended human defeat, surrender/restart, invalid production and building placement, and a base-race fixture proving that an unfinished expansion keeps its owner alive even after the main base falls.
+
+## Map editor
+
+Choose **Map editor** from the F8 menu, or run:
+
+```bash
+games/robos-rts/map-editor.sh frontier-hunters
+```
+
+The editor opens the playable map with terrain, resources, start locations and expansion markers. **Hunters Template** creates a custom copy; **New** starts a blank 256×256 map. Open File and Save As support maps outside the built-in scenario folder. Saves replace the file atomically, and opening another map prompts before discarding unsaved edits.
+
+![The Frontier Hunters map open in the editor with terrain tools, numbered starts, expansion sites and validation]({{ '/assets/images/robos-rts/35-frontier-map-editor.png' | relative_url }}){: .robos-zoomable-img }
+
+| Tool | Use |
+|:---|:---|
+| Terrain Brush (B) | Paint land, water, cliffs or plateaus with an adjustable brush; right-drag paints land. A full drag is one undo step. |
+| Bucket Fill (V), Sample (I) | Fill a connected terrain region, or sample terrain into the brush. |
+| Start Location (S), Expansion (A) | Place and move numbered base sites. Skirmishes support two to eight possible starts. |
+| Land Crossing (C) | Drag a crossing across a waterway; select and resize its rectangle. |
+| Resource and unit tools | Place, move, duplicate and inspect deposits, units and structures. |
+| Layer toggles | Show or hide grid, resources, units and start/expansion markers. |
+| Ctrl+Z / Ctrl+Y | Undo and redo edits, including whole brush strokes and fills. |
+| F5 / F10 | Playtest the current map, then return with the document and undo history intact. |
+
+Validation blocks playtests with invalid starting locations or resources in impassable terrain. The same authored terrain changes navigation and the rendered game. Switching the play mode to **Scenario / Campaign** uses explicit unit placements; **1 Player vs AI** uses random starts and the standard opening. Campaign objectives and future multiplayer metadata are retained during save/reload, including fields the current editor does not interpret. Campaign scripting and network multiplayer execution remain separate engine work.
+
+The terrain brush and bounded bucket-fill cores reuse MIT-licensed code from [Crusade RTS](https://github.com/saman-mb/crusade-rts), with its license and pinned source revision in `games/robos-rts/third_party/crusade/`. Rendering, map persistence and simulation integration remain native to RobOS. The editor authoring tests exercise a mouse stroke, undo/redo, save, playtest, return and validation gates. `tests/test_map_editor_document.gd` verifies preservation of campaign and multiplayer metadata; `tests/test_frontier_navigation.gd` checks routes between every pair of starts.
 
 ## The screen
 
@@ -227,8 +277,9 @@ When something of yours is hit, the minimap pings and the game says so; **Space*
 | Space | Jump to the last attack alert, or home |
 | Esc | Cancel placement or targeting |
 | F1 | Controls overlay |
-| F2 | Switch the viewed faction |
-| F5, F6, F7 | Toggle the built-in AI for the Meridian Guard, Gnarl Brood and Aurelian Concord |
+| F8 | Match menu: settings, new game, surrender and map editor |
+| F2 | Switch the viewed faction in showcase scenarios |
+| F5, F6, F7 | Toggle the faction AIs in showcase scenarios |
 
 ## Scripting and bots
 

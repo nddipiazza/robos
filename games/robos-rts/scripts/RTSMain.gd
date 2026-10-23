@@ -19,6 +19,7 @@ const IDLE_BTN := Rect2(26.0, 786.0, 96.0, 48.0)
 var world_3d: Node3D
 var icons: Node
 var hud: Node2D
+var match_menu: CanvasLayer
 
 var local_player: int = 1
 var selected_tags: Array[int] = []
@@ -63,9 +64,15 @@ func _ready() -> void:
 	hud.name = "RTSHud"
 	hud.main = self
 	add_child(hud)
+	match_menu = preload("res://scripts/RTSMatchMenu.gd").new()
+	add_child(match_menu)
 	_on_scenario_loaded(SimEngine.scenario_name)
 
 func _on_scenario_loaded(_name: String) -> void:
+	if match_menu:
+		match_menu.panel.hide()
+	if not SimEngine.match_state.is_empty():
+		local_player = 1
 	selected_tags.clear()
 	pending_ability = ""
 	control_groups.clear()
@@ -276,6 +283,10 @@ func _select_next_idle_worker() -> void:
 # Input
 # ---------------------------------------------------------------------------
 func _unhandled_input(event: InputEvent) -> void:
+	if match_menu and match_menu.panel.visible:
+		if event is InputEventKey and event.pressed and event.keycode == KEY_F8:
+			match_menu.toggle()
+		return
 	if event is InputEventMouseButton:
 		_on_mouse_button(event as InputEventMouseButton)
 	elif event is InputEventMouseMotion:
@@ -679,6 +690,10 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 		return
 
 	match ke.keycode:
+		KEY_F8:
+			if match_menu:
+				match_menu.toggle()
+			return
 		KEY_ESCAPE:
 			if show_help:
 				show_help = false
@@ -703,6 +718,8 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 				active_type = types[(i + 1) % types.size()]
 			return
 		KEY_F2:
+			if not SimEngine.match_state.is_empty():
+				return
 			local_player = local_player % 3 + 1
 			selected_tags.clear()
 			pending_ability = ""
@@ -718,16 +735,22 @@ func _handle_hotkey(ke: InputEventKey) -> void:
 			_select_next_idle_worker()
 			return
 		KEY_F5:
+			if not SimEngine.match_state.is_empty():
+				return
 			var cur := bool(RTSCommanderAI.player_directives[1].get("enabled", false))
 			RTSCommanderAI.set_directive(1, "macro_build", not cur)
 			push_message("Meridian Guard AI %s." % ("enabled" if not cur else "disabled"), "info")
 			return
 		KEY_F6:
+			if not SimEngine.match_state.is_empty():
+				return
 			var cur2 := bool(RTSCommanderAI.player_directives[2].get("enabled", false))
 			RTSCommanderAI.set_directive(2, "swarm_rush", not cur2)
 			push_message("Gnarl Brood AI %s." % ("enabled" if not cur2 else "disabled"), "info")
 			return
 		KEY_F7:
+			if not SimEngine.match_state.is_empty():
+				return
 			var cur3 := bool(RTSCommanderAI.player_directives[3].get("enabled", false))
 			RTSCommanderAI.set_directive(3, "phase_skirmisher_micro", not cur3)
 			push_message("Aurelian Concord AI %s." % ("enabled" if not cur3 else "disabled"), "info")
@@ -804,6 +827,7 @@ func ui_state() -> Dictionary:
 		tags.append(t)
 	var f: Vector2 = world_3d.get_focus() if world_3d else Vector2.ZERO
 	return {
+		"match_menu_visible": match_menu != null and match_menu.panel.visible,
 		"local_player": local_player,
 		"selected": tags,
 		"primary_type": primary_type(),
@@ -827,20 +851,29 @@ func inject_input(d: Dictionary) -> void:
 		mb.double_click = bool(d.get("double", false))
 		mb.shift_pressed = bool(d.get("shift", false))
 		mb.ctrl_pressed = bool(d.get("ctrl", false))
-		_unhandled_input(mb)
+		if DisplayServer.get_name() == "headless":
+			_unhandled_input(mb)
+		else:
+			get_viewport().push_input(mb)
 	elif kind == "mouse_motion":
 		var mm := InputEventMouseMotion.new()
 		mm.position = pos
 		mm.global_position = pos
 		mm.relative = Vector2(float(d.get("dx", 0.0)), float(d.get("dy", 0.0)))
-		_unhandled_input(mm)
+		if DisplayServer.get_name() == "headless":
+			_unhandled_input(mm)
+		else:
+			get_viewport().push_input(mm)
 	elif kind == "key":
 		var ke := InputEventKey.new()
 		ke.keycode = OS.find_keycode_from_string(str(d.get("key", "")))
 		ke.pressed = bool(d.get("pressed", true))
 		ke.shift_pressed = bool(d.get("shift", false))
 		ke.ctrl_pressed = bool(d.get("ctrl", false))
-		_unhandled_input(ke)
+		if DisplayServer.get_name() == "headless":
+			_unhandled_input(ke)
+		else:
+			get_viewport().push_input(ke)
 
 # ---------------------------------------------------------------------------
 # In-world 2D overlays (unit bars, orders, markers, build ghost, selection box)

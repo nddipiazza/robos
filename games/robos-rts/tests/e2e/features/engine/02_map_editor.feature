@@ -9,10 +9,10 @@ Feature: Starfall Command Map Editor authors playable RTS maps
     When the editor paints a "high_ground" rect at (0, 0) sized 30x64
     And the editor paints a "ramps" rect at (26, 26) sized 10x12
     And the editor paints a "obstacles" rect at (48, 0) sized 6x22
-    And the editor places a "mineral_field" at (6, 30)
-    And the editor places 6 "marine" units for player 1 at (40, 30)
-    And the editor places 8 "swarmling" units for player 2 at (70, 30)
-    And the editor places 1 "zealot" units for player 2 at (70, 50)
+    And the editor places a "crystal_field" at (6, 30)
+    And the editor places 6 "rifleman" units for player 1 at (40, 30)
+    And the editor places 8 "skitterling" units for player 2 at (70, 30)
+    And the editor places 1 "sunblade" units for player 2 at (70, 50)
     Then the editor reports 1 validation issue mentioning "player 2 is monsters"
     When the editor undoes the last edit
     And the editor sets player 2 AI directive "swarm_rush" targeting (40, 30)
@@ -20,8 +20,8 @@ Feature: Starfall Command Map Editor authors playable RTS maps
     When the editor saves the map to "user://e2e_editor_map.jsonld"
     And the RTS scenario file "user://e2e_editor_map.jsonld" is loaded
     Then the engine map is 96x64 with 3 terrain features
-    And player 1 has at least 6 surviving "marine" units
+    And player 1 has at least 6 surviving "rifleman" units
     When the editor playtests the map
     And the simulation advances 480 ticks
     Then the engine is running "Editor Proving Grounds" at tick 480 or later
-    And player 2 has fewer than 8 surviving "swarmling" units
+    And player 2 has fewer than 8 surviving "skitterling" units

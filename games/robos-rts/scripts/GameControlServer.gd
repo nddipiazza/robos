@@ -189,8 +189,11 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 			if body_dict.has("slug"):
 				var slug = str(body_dict.get("slug"))
 				if slug == "default" or slug == "starfall-canyon":
-					SimEngine.load_default_scenario()
-					RTSCommanderAI.configure_from_scenario([])
+					if slug == "default":
+						SimEngine.load_default_scenario()
+					else:
+						SimEngine.load_legacy_scenario()
+						RTSCommanderAI.configure_from_scenario([])
 					_send_json(client, 200, {"ok": true, "scenario": SimEngine.scenario_name, "unit_count": SimEngine.units.size()})
 					return
 				var res = SimEngine.load_scenario_file(slug)
@@ -198,6 +201,16 @@ func _process_http_request(client: StreamPeerTCP, raw_req: String) -> void:
 			else:
 				var res = SimEngine.load_scenario_dict(body_dict)
 				_send_json(client, 200, res)
+
+		"/match":
+			if str(body_dict.get("action", "new")) == "surrender":
+				_send_json(client, 200, SimEngine.surrender(int(body_dict.get("player", 1))))
+			else:
+				var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://scenarios/frontier-hunters.jsonld"))
+				for key in ["seed", "difficulty", "strategy"]:
+					if body_dict.has(key):
+						data[key] = body_dict[key]
+				_send_json(client, 200, SimEngine.load_scenario_dict(data))
 
 		"/pause":
 			SimEngine.paused = bool(body_dict.get("paused", true))

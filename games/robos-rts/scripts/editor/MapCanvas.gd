@@ -8,10 +8,11 @@ extends Control
 signal selection_changed(ref: Dictionary)
 signal cursor_moved(world_pos: Vector2)
 signal target_picked(player_id: int, world_pos: Vector2)
+signal terrain_sampled(terrain: String)
 
 const OWNER_COLORS = {1: Color("#22d3ee"), 2: Color("#c084fc"), 3: Color("#facc15")}
 const COLOR_BG = Color("#070b14")
-const COLOR_LOW = Color("#0f172a")
+const COLOR_LOW = Color("#365034")
 const COLOR_HIGH = Color("#1e3a5f")
 const COLOR_RAMP = Color("#3b6e8f")
 const COLOR_CLIFF = Color("#475569")
@@ -23,15 +24,19 @@ const COLOR_SELECT = Color("#ffffff")
 const HANDLE_PX = 9.0
 
 var doc: RTSMapDocument
-var tool: String = "select"          # select | obstacles | high_ground | ramps | mineral_field | vespene_geyser | unit | erase | target
+var tool: String = "select"          # select | obstacles | high_ground | ramps | crystal_field | aether_vent | unit | erase | target
 var snap: float = 1.0
-var unit_type: String = "marine"
+var unit_type: String = "rifleman"
 var unit_owner: int = 1
 var unit_count: int = 1
 var unit_spread: float = 2.1
 var unit_auto_harvest: bool = false
 var target_player: int = 2
 var selected: Dictionary = {}
+var terrain_brush: String = "water"
+var brush_size: int = 3
+var visible_layers: Dictionary = {"grid": true, "resources": true, "units": true, "markers": true}
+var _brush_erasing: bool = false
 
 var view_scale: float = 8.0          # pixels per world unit
 var view_offset: Vector2 = Vector2(40, 40)
@@ -111,11 +116,18 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 		return
 
 	if mb.button_index == MOUSE_BUTTON_RIGHT and mb.pressed:
+		if tool == "terrain_brush":
+			_begin_brush(wpos, true)
+			accept_event()
+			return
 		# Right-click erases whatever is under the cursor, in any tool.
 		var hit = doc.hit_test(wpos)
 		if not hit.is_empty():
 			_erase(hit)
 		accept_event()
+		return
+	if mb.button_index == MOUSE_BUTTON_RIGHT and not mb.pressed and _drag_mode == "brush":
+		_on_left_release()
 		return
 
 	if mb.button_index != MOUSE_BUTTON_LEFT:
@@ -130,19 +142,29 @@ func _on_mouse_button(mb: InputEventMouseButton) -> void:
 func _on_left_press(wpos: Vector2, spos: Vector2) -> void:
 	var sp = snap_point(wpos)
 	match tool:
+		"terrain_brush":
+			_begin_brush(wpos, false)
+		"terrain_fill":
+			doc.fill_terrain(sp, terrain_brush)
+		"terrain_sample":
+			terrain_brush = doc.terrain_at(Vector2i(int(sp.x / RTSMapDocument.TERRAIN_CELL_SIZE), int(sp.y / RTSMapDocument.TERRAIN_CELL_SIZE)))
+			tool = "terrain_brush"
+			emit_signal("terrain_sampled", terrain_brush)
+		"starts", "expansions":
+			select(doc.add_marker(tool, sp))
 		"select":
-			if not selected.is_empty() and selected["layer"] in RTSMapDocument.RECT_LAYERS and _resize_handle_hit(spos):
+			if not selected.is_empty() and (selected["layer"] in RTSMapDocument.RECT_LAYERS or selected["layer"] == "bridges") and _resize_handle_hit(spos):
 				_begin_item_drag("resize", wpos)
 				return
 			var hit = doc.hit_test(wpos)
 			select(hit)
 			if not hit.is_empty():
 				_begin_item_drag("move", wpos)
-		"obstacles", "high_ground", "ramps":
+		"obstacles", "high_ground", "ramps", "bridges":
 			_drag_mode = "paint"
 			_drag_start_world = sp
 			_paint_rect = Rect2(sp, Vector2.ZERO)
-		"mineral_field", "vespene_geyser":
+		"crystal_field", "aether_vent":
 			select(doc.add_resource(tool, sp))
 		"unit":
 			select(doc.add_unit(unit_type, unit_owner, sp, unit_count, unit_spread, unit_auto_harvest))
@@ -153,6 +175,13 @@ func _on_left_press(wpos: Vector2, spos: Vector2) -> void:
 		"target":
 			emit_signal("target_picked", target_player, sp)
 	queue_redraw()
+
+func _begin_brush(pos: Vector2, erasing: bool) -> void:
+	_drag_mode = "brush"
+	_drag_snapshot = doc.data.duplicate(true)
+	_drag_start_world = pos
+	_brush_erasing = erasing
+	_drag_moved = doc.paint_terrain(pos, "land" if erasing else terrain_brush, brush_size, false)
 
 func _begin_item_drag(mode: String, wpos: Vector2) -> void:
 	var item = doc.get_item(selected)
@@ -168,7 +197,7 @@ func _on_left_release() -> void:
 			var r = _paint_rect.abs()
 			if r.size.x >= 1.0 and r.size.y >= 1.0:
 				select(doc.add_rect(tool, r))
-		"move", "resize":
+		"move", "resize", "brush":
 			if _drag_moved:
 				doc.commit_snapshot(_drag_snapshot)
 	_drag_mode = ""
@@ -179,6 +208,13 @@ func _on_mouse_motion(mm: InputEventMouseMotion) -> void:
 	_hover_world = screen_to_world(mm.position)
 	emit_signal("cursor_moved", _hover_world)
 	match _drag_mode:
+		"brush":
+			var distance = _drag_start_world.distance_to(_hover_world)
+			var steps = maxi(1, int(ceil(distance / (RTSMapDocument.TERRAIN_CELL_SIZE * 0.5))))
+			for i in range(1, steps + 1):
+				var point = _drag_start_world.lerp(_hover_world, float(i) / float(steps))
+				_drag_moved = doc.paint_terrain(point, "land" if _brush_erasing else terrain_brush, brush_size, false) or _drag_moved
+			_drag_start_world = _hover_world
 		"pan":
 			view_offset += mm.relative
 		"paint":
@@ -224,7 +260,20 @@ func _draw() -> void:
 	var d = doc.data
 	var map_rect = Rect2(world_to_screen(Vector2.ZERO), Vector2(float(d["width"]), float(d["height"])) * view_scale)
 	draw_rect(map_rect, COLOR_LOW)
-	_draw_grid(map_rect)
+	if visible_layers.grid:
+		_draw_grid(map_rect)
+	for polygon in doc.water_polygons():
+		var points = PackedVector2Array()
+		for point in polygon:
+			points.append(world_to_screen(point))
+		draw_colored_polygon(points, Color("#204967"))
+	for i in range(d.bridges.size()):
+		_draw_zone(d.bridges[i], Color("#8e7750"), "CROSSING", font, {"layer": "bridges", "index": i})
+	for key in d.terrain_tiles:
+		var coords = str(key).split(",")
+		var pos = Vector2(float(coords[0]), float(coords[1])) * RTSMapDocument.TERRAIN_CELL_SIZE
+		var color: Color = {"land": COLOR_LOW, "water": Color("#204967"), "cliff": COLOR_CLIFF, "plateau": COLOR_HIGH}.get(str(d.terrain_tiles[key]), COLOR_LOW)
+		draw_rect(Rect2(world_to_screen(pos), Vector2.ONE * RTSMapDocument.TERRAIN_CELL_SIZE * view_scale), color)
 
 	for i in range(d["high_ground"].size()):
 		_draw_zone(d["high_ground"][i], COLOR_HIGH, "HIGH GROUND", font, {"layer": "high_ground", "index": i})
@@ -234,9 +283,21 @@ func _draw() -> void:
 		_draw_cliff(d["obstacles"][i], {"layer": "obstacles", "index": i})
 
 	for i in range(d["resources"].size()):
-		_draw_resource(d["resources"][i], {"layer": "resources", "index": i})
+		if visible_layers.resources:
+			_draw_resource(d["resources"][i], {"layer": "resources", "index": i})
 	for i in range(d["units"].size()):
-		_draw_unit_entry(d["units"][i], font, {"layer": "units", "index": i})
+		if visible_layers.units:
+			_draw_unit_entry(d["units"][i], font, {"layer": "units", "index": i})
+	if visible_layers.markers:
+		for layer in ["starts", "expansions"]:
+			for i in range(d[layer].size()):
+				var marker: Dictionary = d[layer][i]
+				var center = world_to_screen(Vector2(float(marker.x), float(marker.y)))
+				var color = Color("#f8cf69") if layer == "starts" else Color("#7be2a3")
+				draw_arc(center, 5 * view_scale, 0, TAU, 32, color, 2.0)
+				draw_string(font, center + Vector2(8, -8), "%s %d" % ["START" if layer == "starts" else "EXP", i + 1], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, color)
+				if _is_selected({"layer": layer, "index": i}):
+					draw_arc(center, 6 * view_scale, 0, TAU, 32, Color.WHITE, 2.0)
 	for dv in d["directives"]:
 		_draw_directive(dv, font)
 
@@ -352,7 +413,7 @@ func _clip_segment_to_rect(a: Vector2, b: Vector2, r: Rect2) -> Array:
 func _draw_resource(item: Dictionary, ref: Dictionary) -> void:
 	var c = world_to_screen(Vector2(float(item["x"]), float(item["y"])))
 	var rad = float(RTSMapDocument.RESOURCE_RADIUS.get(item["type"], 2.0)) * view_scale
-	if item["type"] == "mineral_field":
+	if item["type"] == "crystal_field":
 		var pts = PackedVector2Array([c + Vector2(0, -rad), c + Vector2(rad * 0.8, 0), c + Vector2(0, rad), c + Vector2(-rad * 0.8, 0)])
 		draw_colored_polygon(pts, COLOR_MINERAL)
 		pts.append(pts[0])
@@ -415,13 +476,19 @@ func _draw_tool_ghost(font: Font) -> void:
 		return
 	var c = world_to_screen(snap_point(_hover_world))
 	match tool:
+		"terrain_brush", "terrain_fill", "terrain_sample":
+			var cell = Vector2(floor(_hover_world.x / RTSMapDocument.TERRAIN_CELL_SIZE), floor(_hover_world.y / RTSMapDocument.TERRAIN_CELL_SIZE))
+			var corner = (cell - Vector2.ONE * int(brush_size / 2)) * RTSMapDocument.TERRAIN_CELL_SIZE
+			draw_rect(Rect2(world_to_screen(corner), Vector2.ONE * brush_size * RTSMapDocument.TERRAIN_CELL_SIZE * view_scale), Color(0.5, 0.85, 1, 0.2))
+		"starts", "expansions":
+			draw_arc(c, 5 * view_scale, 0, TAU, 24, Color("#f8cf69"), 2)
 		"unit":
 			var preview = {"type": unit_type, "x": snap_point(_hover_world).x, "y": snap_point(_hover_world).y, "count": unit_count, "spread": unit_spread}
 			var rad = RTSMapDocument.unit_radius(unit_type) * view_scale
 			var col: Color = OWNER_COLORS.get(unit_owner, Color.WHITE)
 			for p in RTSMapDocument.unit_spawn_positions(preview):
 				draw_arc(world_to_screen(p), max(rad, 2.5), 0, TAU, 16, Color(col, 0.7), 1.5)
-		"mineral_field", "vespene_geyser":
+		"crystal_field", "aether_vent":
 			var rad2 = float(RTSMapDocument.RESOURCE_RADIUS[tool]) * view_scale
 			draw_arc(c, rad2, 0, TAU, 20, Color(1, 1, 1, 0.5), 1.5)
 		"target":

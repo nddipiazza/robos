@@ -48,11 +48,12 @@ def before_all(context) -> None:
     if context.rts_mode == "backend":
         cmd.insert(1, "--headless")
 
+    context.engine_log = (context.reports_dir / "engine.log").open("w", encoding="utf-8")
     context.godot_proc = subprocess.Popen(
         cmd,
         cwd=str(PROJECT_DIR),
         env=env,
-        stdout=subprocess.PIPE,
+        stdout=context.engine_log,
         stderr=subprocess.STDOUT,
         text=True,
     )
@@ -70,10 +71,8 @@ def before_all(context) -> None:
             time.sleep(0.15)
 
     if not connected:
-        if context.godot_proc.poll() is not None and context.godot_proc.stdout:
-            out = context.godot_proc.stdout.read()
-            raise RuntimeError(f"Godot exited prematurely:\n{out}")
-        raise RuntimeError(f"Timed out waiting for RobOS RTS GameControlServer on port {context.port}")
+        out = (context.reports_dir / "engine.log").read_text(encoding="utf-8", errors="replace")
+        raise RuntimeError(f"Could not connect to RTS port {context.port}:\n{out}")
 
 
 def after_scenario(context, scenario) -> None:
@@ -95,3 +94,11 @@ def after_all(context) -> None:
             proc.wait(timeout=3.0)
         except subprocess.TimeoutExpired:
             proc.kill()
+            proc.wait(timeout=3.0)
+    log_handle = getattr(context, "engine_log", None)
+    if log_handle:
+        log_handle.close()
+        log = (context.reports_dir / "engine.log").read_text(encoding="utf-8", errors="replace")
+        errors = [line for line in log.splitlines() if "SCRIPT ERROR:" in line or line.startswith("ERROR:")]
+        if errors:
+            raise RuntimeError("Godot runtime errors:\n" + "\n".join(errors[:10]))

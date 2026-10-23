@@ -44,7 +44,7 @@ Feature: Deterministic RTS engine mechanics (Humans, Monsters, Aliens)
     And player 1 has at least 2 surviving "rifleman" units
 
   Scenario: A Gnarl Brood swarm rush across the Starfall Canyon ramp never stalls the simulation
-    Given the RTS test scenario "default" from the knowledge graph
+    Given the RTS test scenario "starfall-canyon" from the knowledge graph
     When player 2 enables the "swarm_rush" AI directive
     And player 3 enables the "phase_skirmisher_micro" AI directive
     And the simulation advances 900 ticks

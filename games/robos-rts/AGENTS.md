@@ -25,6 +25,14 @@ An open-source deterministic 64Hz Real-Time Strategy (RTS) game and engine built
 
 ## Running the Game & E2E Tests
 
+The default playable mode is **Frontier Hunters**, one human versus one AI using Meridian Guard units. `scenarios/frontier-hunters.jsonld` defines the rich eight-start map. Each seat gets a distinct seeded random start, one Colony Hub, 12 Pioneers, 50 crystal and no aether. `SimEngine.match_state` tracks annihilation/surrender and freezes completed matches. `RTSSkirmishAI.gd` builds through paid commands; difficulty affects decisions, not resources. The F8 match menu selects difficulty, strategy and game speed. `starfall-canyon` retains the three-faction mechanics showcase.
+
+Frontier Hunters is 256×256 with unlimited crystal/aether, waterways, land crossings and interior expansions. `terrain_tiles` are 4-unit brush overrides shared by rendering, collision, pathfinding and map persistence. Do not let resource amounts stand in for infinity: the `unlimited_resources` rule prevents depletion for both resources.
+
+The map editor supports painting, bounded fill, sampling, numbered starts/expansions, crossings, editable deposits and unit placements, layers, atomic saves and F5/F10 playtest return. Campaign and future multiplayer metadata must survive round-trips even when the editor does not interpret it. Brush/fill primitives are vendored from Crusade RTS under MIT; retain `third_party/crusade/LICENSE` and its pinned provenance notice. Verify `tests/test_map_editor_document.gd`, `tests/test_frontier_navigation.gd` and the Cucumber authoring feature when changing map semantics.
+
+`tests/e2e/features/engine/03_frontier_hunters.feature` and `tests/e2e/frontier_bot.py` play complete accelerated build orders through the public API. Keep this controller free of state injection, free units and forced winner flags; small explicit fixtures may isolate victory-rule regressions. Reports contain progression telemetry and final observations.
+
 ```bash
 # Launch interactive 2.5D Angled 3D RTS game
 ./play.sh

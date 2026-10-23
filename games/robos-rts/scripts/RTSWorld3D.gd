@@ -10,7 +10,7 @@ const Models = preload("res://scripts/RTSModels.gd")
 
 const CAM_PITCH_DEG := 56.0
 const CAM_MIN_H := 28.0
-const CAM_MAX_H := 84.0
+const CAM_MAX_H := 320.0
 const GROUND_TOP := 2.2
 
 var camera_3d: Camera3D
@@ -77,7 +77,7 @@ func _setup_environment_and_camera() -> void:
 	camera_3d = Camera3D.new()
 	camera_3d.fov = 42.0
 	camera_3d.near = 1.0
-	camera_3d.far = 420.0
+	camera_3d.far = 1200.0
 	camera_3d.rotation_degrees = Vector3(-CAM_PITCH_DEG, 0.0, 0.0)
 	camera_3d.current = true
 	add_child(camera_3d)
@@ -172,6 +172,21 @@ func _terrain_box(size: Vector3, pos: Vector3, m: Material) -> MeshInstance3D:
 	terrain_root.add_child(mi)
 	return mi
 
+func _terrain_polygon(polygon: PackedVector2Array, height: float, material: Material) -> void:
+	var indices = Geometry2D.triangulate_polygon(polygon)
+	if indices.is_empty():
+		return
+	var surface = SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for index in indices:
+		var point = polygon[index]
+		surface.set_normal(Vector3.UP)
+		surface.add_vertex(Vector3(point.x, height, point.y))
+	var mesh = MeshInstance3D.new()
+	mesh.mesh = surface.commit()
+	mesh.material_override = material
+	terrain_root.add_child(mesh)
+
 func _subtract_rect(r: Rect2, hole: Rect2) -> Array[Rect2]:
 	var out: Array[Rect2] = []
 	var inter := r.intersection(hole)
@@ -208,6 +223,19 @@ func _rebuild_static_3d_map() -> void:
 
 	# Low ground
 	_terrain_box(Vector3(mw, 1.0, mh), Vector3(mw * 0.5, -0.5, mh * 0.5), low)
+	var water = _noise_mat("river_water", Color("#102c4b"), Color("#39718b"), 0.04, 16.0)
+	water.cull_mode = BaseMaterial3D.CULL_DISABLED
+	water.roughness = 0.35
+	var shore = _noise_mat("river_bank", Color("#34352f"), Color("#8c8772"), 0.08, 10.0)
+	shore.cull_mode = BaseMaterial3D.CULL_DISABLED
+	for polygon in SimEngine.water_polygons:
+		for bank in Geometry2D.offset_polygon(polygon, 1.1, Geometry2D.JOIN_ROUND):
+			_terrain_polygon(bank, 0.025, shore)
+		_terrain_polygon(polygon, 0.055, water)
+	for bridge in SimEngine.land_bridges:
+		_terrain_box(Vector3(bridge.size.x, 0.16, bridge.size.y), Vector3(bridge.get_center().x, 0.08, bridge.get_center().y), path)
+	for rect in SimEngine.merged_terrain_rects("land"):
+		_terrain_box(Vector3(rect.size.x, 0.16, rect.size.y), Vector3(rect.get_center().x, 0.08, rect.get_center().y), low)
 
 	# Rock rim around the map so the camera never sees the void
 	var rim := 18.0
@@ -324,6 +352,14 @@ func _scatter_decor() -> void:
 		if placed >= max_decor:
 			break
 		var p := Vector2(rng.randf_range(2.0, SimEngine.map_width - 2.0), rng.randf_range(2.0, SimEngine.map_height - 2.0))
+		if SimEngine.is_water_at(p, 3.0):
+			continue
+		var on_crossing = false
+		for bridge in SimEngine.land_bridges:
+			if bridge.grow(1.0).has_point(p):
+				on_crossing = true
+		if on_crossing:
+			continue
 		var blocked := false
 		for o in keep_out:
 			if p.distance_to(Vector2(o.x, o.y)) < o.z:

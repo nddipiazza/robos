@@ -10,12 +10,18 @@ signal changed
 const SCENARIOS_DIR = "res://scenarios"
 const RECT_LAYERS = ["obstacles", "high_ground", "ramps"]
 const ITEM_LAYERS = ["units", "resources", "ramps", "high_ground", "obstacles"] # hit-test order (topmost first)
-const RESOURCE_TYPES = ["mineral_field", "vespene_geyser"]
-const RESOURCE_RADIUS = {"mineral_field": 1.8, "vespene_geyser": 2.6}
-const RESOURCE_DEFAULT_AMOUNT = {"mineral_field": 1500, "vespene_geyser": 2250}
+const RESOURCE_TYPES = ["crystal_field", "aether_vent"]
+const RESOURCE_RADIUS = {"crystal_field": 1.8, "aether_vent": 2.6}
+const RESOURCE_DEFAULT_AMOUNT = {"crystal_field": 1500, "aether_vent": 2250}
 const FACTIONS = ["humans", "monsters", "aliens"]
-const DIRECTIVE_MODES = ["idle", "swarm_rush", "stutter_step_kite", "blink_stalker_micro", "macro_build", "siege_defend"]
+const DIRECTIVE_MODES = ["idle", "swarm_rush", "stutter_step_kite", "phase_skirmisher_micro", "macro_build", "emplace_defend"]
 const MAX_UNDO = 200
+const TERRAIN_CELL_SIZE = 4.0
+const TERRAIN_TYPES = ["land", "water", "cliff", "plateau"]
+const Brush = preload("res://third_party/crusade/brush_core.gd")
+const Fill = preload("res://third_party/crusade/flood_fill.gd")
+var _water_cache: Array[PackedVector2Array] = []
+var _water_hash: int = 0
 
 var data: Dictionary = {}
 var file_path: String = ""
@@ -46,6 +52,7 @@ func new_blank(width: float = 128.0, height: float = 96.0) -> void:
 		"players": _default_players(),
 		"directives": []
 	}
+	_init_map_extensions({}, {})
 	file_path = ""
 	dirty = false
 	_undo_stack.clear()
@@ -54,9 +61,9 @@ func new_blank(width: float = 128.0, height: float = 96.0) -> void:
 
 func _default_players() -> Dictionary:
 	return {
-		"1": {"faction": "humans", "minerals": 400, "vespene": 150},
-		"2": {"faction": "monsters", "minerals": 400, "vespene": 150},
-		"3": {"faction": "aliens", "minerals": 400, "vespene": 150}
+		"1": {"faction": "humans", "crystal": 400, "aether": 150},
+		"2": {"faction": "monsters", "crystal": 400, "aether": 150},
+		"3": {"faction": "aliens", "crystal": 400, "aether": 150}
 	}
 
 func load_scenario(scn: Dictionary, path: String = "") -> void:
@@ -78,19 +85,24 @@ func load_scenario(scn: Dictionary, path: String = "") -> void:
 		"players": _default_players(),
 		"directives": []
 	}
+	_init_map_extensions(scn, map_cfg)
 	for r in scn.get("resources", []):
-		var rtype = str(r.get("type", "mineral_field"))
-		data["resources"].append({
+		var rtype = str(r.get("type", "crystal_field"))
+		var resource_entry: Dictionary = r.duplicate(true)
+		resource_entry.merge({
 			"id": str(r.get("id", "")),
 			"type": rtype,
 			"x": float(r.get("x", 20.0)),
 			"y": float(r.get("y", 20.0)),
 			"amount": int(r.get("amount", RESOURCE_DEFAULT_AMOUNT.get(rtype, 1500)))
-		})
+		}, true)
+		data["resources"].append(resource_entry)
+	if data.mode == "skirmish" and not scn.has("resources"):
+		_generate_site_resources()
 	for u in scn.get("units", []):
 		var entry = {
 			"id": str(u.get("id", "")),
-			"type": str(u.get("type", "marine")),
+			"type": str(u.get("type", "rifleman")),
 			"owner": int(u.get("owner", u.get("player", 1))),
 			"count": int(u.get("count", 1)),
 			"x": float(u.get("x", 30.0)),
@@ -102,17 +114,21 @@ func load_scenario(scn: Dictionary, path: String = "") -> void:
 			entry["hp"] = float(u["hp"])
 		if u.has("shields"):
 			entry["shields"] = float(u["shields"])
-		data["units"].append(entry)
+		var preserved_unit: Dictionary = u.duplicate(true)
+		preserved_unit.merge(entry, true)
+		data["units"].append(preserved_unit)
 	var p_cfg: Dictionary = scn.get("players", {})
 	for key in p_cfg.keys():
 		var pid = str(int(key))
 		if data["players"].has(pid):
 			var pd: Dictionary = p_cfg[key]
-			data["players"][pid] = {
+			var player_data: Dictionary = pd.duplicate(true)
+			player_data.merge({
 				"faction": str(pd.get("faction", data["players"][pid]["faction"])),
-				"minerals": int(pd.get("minerals", 400)),
-				"vespene": int(pd.get("vespene", 150))
-			}
+				"crystal": int(pd.get("crystal", 400)),
+				"aether": int(pd.get("aether", 150))
+			}, true)
+			data["players"][pid] = player_data
 	for d in scn.get("directives", []):
 		var pid = int(d.get("player", d.get("owner", 2)))
 		set_directive(pid, {
@@ -126,6 +142,138 @@ func load_scenario(scn: Dictionary, path: String = "") -> void:
 	_undo_stack.clear()
 	_redo_stack.clear()
 	emit_signal("changed")
+
+func _init_map_extensions(scenario: Dictionary, map_cfg: Dictionary) -> void:
+	data["source"] = scenario.duplicate(true)
+	data["mode"] = scenario.get("mode", "scenario")
+	data["difficulty"] = scenario.get("difficulty", "normal")
+	data["strategy"] = scenario.get("strategy", "balanced")
+	data["unlimited_resources"] = scenario.get("unlimited_resources", false)
+	data["starts"] = map_cfg.get("starts", []).duplicate(true)
+	data["expansions"] = map_cfg.get("expansions", []).duplicate(true)
+	data["water_channels"] = map_cfg.get("water_channels", []).duplicate(true)
+	data["bridges"] = map_cfg.get("bridges", []).duplicate(true)
+	data["terrain_tiles"] = {}
+	for tile in map_cfg.get("terrain_tiles", []):
+		var cell = Vector2i(int(float(tile.x) / TERRAIN_CELL_SIZE), int(float(tile.y) / TERRAIN_CELL_SIZE))
+		data.terrain_tiles[_cell_key(cell)] = str(tile.terrain)
+	_water_hash = 0
+
+func _cell_key(cell: Vector2i) -> String:
+	return "%d,%d" % [cell.x, cell.y]
+
+func _generate_site_resources() -> void:
+	var sites: Array = data.starts + data.expansions
+	for index in range(sites.size()):
+		var site: Dictionary = sites[index]
+		var base = Vector2(float(site.x), float(site.y))
+		var outward = (base - Vector2(float(data.width), float(data.height)) * 0.5).normalized()
+		var tangent = Vector2(-outward.y, outward.x)
+		for i in range(8):
+			var pos = _resource_land(base + outward * 13 + tangent * (float(i) - 3.5) * 3.6)
+			data.resources.append({"id": "start_%d_crystal_%d" % [index, i], "type": "crystal_field", "x": pos.x, "y": pos.y, "amount": 50000})
+		for side in [-1, 1]:
+			var pos = _resource_land(base + tangent * side * 17)
+			data.resources.append({"id": "start_%d_aether_%d" % [index, side], "type": "aether_vent", "x": pos.x, "y": pos.y, "amount": 50000})
+
+func _resource_land(pos: Vector2) -> Vector2:
+	for radius in range(0, 24, 2):
+		for i in range(16):
+			var point = pos + Vector2.from_angle(TAU * float(i) / 16.0) * radius
+			var clear = point.x > 4 and point.y > 4 and point.x < float(data.width) - 4 and point.y < float(data.height) - 4
+			for offset in [Vector2.ZERO, Vector2.LEFT * 4, Vector2.RIGHT * 4, Vector2.UP * 4, Vector2.DOWN * 4]:
+				var sample: Vector2 = point + offset
+				if terrain_at(Vector2i(int(sample.x / TERRAIN_CELL_SIZE), int(sample.y / TERRAIN_CELL_SIZE))) in ["water", "cliff"]:
+					clear = false
+			if clear:
+				return point
+	return pos
+
+func terrain_at(cell: Vector2i) -> String:
+	var key = _cell_key(cell)
+	if data.terrain_tiles.has(key):
+		return data.terrain_tiles[key]
+	var pos = (Vector2(cell) + Vector2(0.5, 0.5)) * TERRAIN_CELL_SIZE
+	for bridge in data.bridges:
+		if item_rect(bridge).has_point(pos):
+			return "land"
+	for rect in data.obstacles:
+		if item_rect(rect).has_point(pos):
+			return "cliff"
+	for polygon in water_polygons():
+		if Geometry2D.is_point_in_polygon(pos, polygon):
+			return "water"
+	for rect in data.high_ground:
+		if item_rect(rect).has_point(pos):
+			return "plateau"
+	return "land"
+
+func water_polygons() -> Array[PackedVector2Array]:
+	var signature = hash(data.water_channels)
+	if signature != _water_hash:
+		_water_hash = signature
+		_water_cache.clear()
+		for channel in data.water_channels:
+			var points = PackedVector2Array()
+			for point in channel.points:
+				points.append(Vector2(float(point[0]), float(point[1])))
+			if points.size() >= 2:
+				for polygon in Geometry2D.offset_polyline(points, float(channel.width) * 0.5, Geometry2D.JOIN_ROUND, Geometry2D.END_ROUND):
+					_water_cache.append(polygon)
+	return _water_cache
+
+func paint_terrain(pos: Vector2, terrain: String, brush_size: int = 1, record_undo: bool = true) -> bool:
+	if not terrain in TERRAIN_TYPES:
+		return false
+	var center = Vector2i(int(floor(pos.x / TERRAIN_CELL_SIZE)), int(floor(pos.y / TERRAIN_CELL_SIZE)))
+	var changed = false
+	var half = int(brush_size / 2)
+	for x in range(center.x - half, center.x - half + brush_size):
+		for y in range(center.y - half, center.y - half + brush_size):
+			var cell = Vector2i(x, y)
+			if not _terrain_bounds().has_point(cell):
+				continue
+			var current = TERRAIN_TYPES.find(terrain_at(cell))
+			var decision = Brush.resolve(Brush.Mode.PAINT, current, Vector2i.ZERO, TERRAIN_TYPES.find(terrain), Vector2i.ZERO)
+			if decision.action == Brush.Action.WRITE:
+				if not changed and record_undo:
+					checkpoint()
+				data.terrain_tiles[_cell_key(cell)] = terrain
+				changed = true
+	if changed:
+		emit_signal("changed")
+	return changed
+
+func _terrain_bounds() -> Rect2i:
+	return Rect2i(0, 0, int(ceil(float(data.width) / TERRAIN_CELL_SIZE)), int(ceil(float(data.height) / TERRAIN_CELL_SIZE)))
+
+func _read_terrain(cell: Vector2i) -> Dictionary:
+	return {"src": TERRAIN_TYPES.find(terrain_at(cell)), "atlas": Vector2i.ZERO}
+
+func _terrain_neighbors(cell: Vector2i) -> Array[Vector2i]:
+	return [cell + Vector2i.LEFT, cell + Vector2i.RIGHT, cell + Vector2i.UP, cell + Vector2i.DOWN]
+
+func fill_terrain(pos: Vector2, terrain: String) -> int:
+	if not terrain in TERRAIN_TYPES:
+		return 0
+	var seed = Vector2i(int(floor(pos.x / TERRAIN_CELL_SIZE)), int(floor(pos.y / TERRAIN_CELL_SIZE)))
+	if not _terrain_bounds().has_point(seed) or terrain_at(seed) == terrain:
+		return 0
+	var cells = Fill.compute(seed, TERRAIN_TYPES.find(terrain_at(seed)), Vector2i.ZERO, _terrain_bounds(), _read_terrain, _terrain_neighbors, _terrain_bounds().get_area())
+	if not cells.is_empty():
+		checkpoint()
+		for cell in cells:
+			data.terrain_tiles[_cell_key(cell)] = terrain
+		emit_signal("changed")
+	return cells.size()
+
+func add_marker(layer: String, pos: Vector2) -> Dictionary:
+	if not layer in ["starts", "expansions"]:
+		return {}
+	checkpoint()
+	data[layer].append({"x": pos.x, "y": pos.y})
+	emit_signal("changed")
+	return {"layer": layer, "index": data[layer].size() - 1}
 
 func _read_rects(arr: Array, default_size: float) -> Array:
 	var out: Array = []
@@ -154,11 +302,16 @@ func save_file(path: String = "") -> Dictionary:
 	if path == "":
 		path = default_save_path()
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(path.get_base_dir()))
-	var f = FileAccess.open(path, FileAccess.WRITE)
+	var temporary = path + ".tmp"
+	var f = FileAccess.open(temporary, FileAccess.WRITE)
 	if f == null:
 		return {"ok": false, "error": "Cannot write %s (error %d)" % [path, FileAccess.get_open_error()]}
 	f.store_string(JSON.stringify(to_scenario(), "  ", false) + "\n")
+	f.flush()
 	f.close()
+	var save_error = DirAccess.rename_absolute(ProjectSettings.globalize_path(temporary), ProjectSettings.globalize_path(path))
+	if save_error != OK:
+		return {"ok": false, "error": "Could not replace map file (error %d); saved data remains in %s" % [save_error, temporary]}
 	file_path = path
 	dirty = false
 	emit_signal("changed")
@@ -170,16 +323,27 @@ func to_scenario() -> Dictionary:
 	var map_cfg = {
 		"width": data["width"],
 		"height": data["height"],
-		"obstacles": data["obstacles"].duplicate(true)
+		"obstacles": data["obstacles"].duplicate(true),
+		"high_ground": data["high_ground"].duplicate(true),
+		"ramps": data["ramps"].duplicate(true)
 	}
 	if not data["high_ground"].is_empty():
 		map_cfg["high_ground"] = data["high_ground"].duplicate(true)
 	if not data["ramps"].is_empty():
 		map_cfg["ramps"] = data["ramps"].duplicate(true)
+	for field in ["starts", "expansions", "water_channels", "bridges"]:
+		map_cfg[field] = data[field].duplicate(true)
+	map_cfg["terrain_tiles"] = []
+	for key in data.terrain_tiles:
+		var coords = str(key).split(",")
+		map_cfg.terrain_tiles.append({"x": int(coords[0]) * TERRAIN_CELL_SIZE, "y": int(coords[1]) * TERRAIN_CELL_SIZE, "terrain": data.terrain_tiles[key]})
+	var preserved_map: Dictionary = data.source.get("map", {}).duplicate(true)
+	preserved_map.merge(map_cfg, true)
+	map_cfg = preserved_map
 
 	var units_out: Array = []
 	for u in data["units"]:
-		var e: Dictionary = {}
+		var e: Dictionary = u.duplicate(true)
 		if str(u["id"]) != "":
 			e["id"] = u["id"]
 		e["type"] = u["type"]
@@ -198,7 +362,7 @@ func to_scenario() -> Dictionary:
 
 	var res_out: Array = []
 	for r in data["resources"]:
-		var e: Dictionary = {}
+		var e: Dictionary = r.duplicate(true)
 		if str(r["id"]) != "":
 			e["id"] = r["id"]
 		e["type"] = r["type"]
@@ -219,15 +383,25 @@ func to_scenario() -> Dictionary:
 		"@id": "urn:robos:rts:scenario:%s" % slug,
 		"@type": "robos:RTSTestScenario",
 		"rdfs:label": data["label"],
+		"name": data["label"],
 		"seed": data["seed"],
 		"map": map_cfg,
 		"players": data["players"].duplicate(true)
 	}
-	if not res_out.is_empty():
-		scn["resources"] = res_out
+	scn["resources"] = res_out
 	scn["units"] = units_out
 	scn["directives"] = dir_out
-	return scn
+	var preserved: Dictionary = data.source.duplicate(true)
+	preserved.merge(scn, true)
+	preserved["mode"] = data.mode
+	preserved["difficulty"] = data.difficulty
+	preserved["strategy"] = data.strategy
+	preserved["unlimited_resources"] = data.unlimited_resources
+	var saved_players: Dictionary = data.source.get("players", {}).duplicate(true)
+	saved_players.merge(data.players.duplicate(true), true)
+	preserved["players"] = saved_players
+	preserved["format_version"] = int(data.source.get("format_version", 1))
+	return preserved
 
 static func slugify(text: String) -> String:
 	var out = ""
@@ -342,7 +516,7 @@ func set_directive(pid: int, fields: Dictionary, record_undo: bool = true) -> vo
 		emit_signal("changed")
 
 func add_rect(layer: String, rect: Rect2) -> Dictionary:
-	assert(layer in RECT_LAYERS)
+	assert(layer in RECT_LAYERS or layer == "bridges")
 	checkpoint()
 	var r = rect.abs()
 	data[layer].append({"x": r.position.x, "y": r.position.y, "w": r.size.x, "h": r.size.y})
@@ -463,11 +637,14 @@ static func unit_spawn_positions(u: Dictionary) -> Array[Vector2]:
 	return out
 
 func hit_test(pos: Vector2) -> Dictionary:
-	for layer in ITEM_LAYERS:
+	for layer in ["starts", "expansions", "bridges"] + ITEM_LAYERS:
 		var arr: Array = data[layer]
 		for i in range(arr.size() - 1, -1, -1):
 			var item: Dictionary = arr[i]
-			if layer == "units":
+			if layer in ["starts", "expansions"]:
+				if pos.distance_to(Vector2(float(item.x), float(item.y))) <= 4:
+					return {"layer": layer, "index": i}
+			elif layer == "units":
 				var rad = unit_radius(str(item["type"])) + 0.4
 				for p in unit_spawn_positions(item):
 					if p.distance_to(pos) <= rad:
@@ -510,13 +687,17 @@ func validate() -> Array[String]:
 		if str(def.get("faction", "")) != faction:
 			issues.append("%s is a %s unit but player %d is %s" % [label, def.get("faction", "?"), int(u["owner"]), faction])
 		var rad = float(def.get("radius", 0.85))
-		var walks_cliffs = str(u["type"]) == "colossus"
+		var walks_cliffs = str(u["type"]) == "spire_walker"
 		for p in unit_spawn_positions(u):
 			if not bounds.grow(-rad).has_point(p):
 				issues.append("%s spawns outside the map at (%.1f, %.1f)" % [label, p.x, p.y])
 				break
 			if not walks_cliffs and _point_in_any(p, obstacles):
 				issues.append("%s spawns inside a cliff wall at (%.1f, %.1f)" % [label, p.x, p.y])
+				break
+			var terrain = terrain_at(Vector2i(int(p.x / TERRAIN_CELL_SIZE), int(p.y / TERRAIN_CELL_SIZE)))
+			if terrain == "water" or (terrain == "cliff" and not walks_cliffs):
+				issues.append("%s spawns in impassable terrain at (%.1f, %.1f)" % [label, p.x, p.y])
 				break
 		if str(u["id"]) != "":
 			if ids.has(u["id"]):
@@ -532,6 +713,8 @@ func validate() -> Array[String]:
 			issues.append("%s #%d is outside the map" % [r["type"], i + 1])
 		elif _point_in_any(p, obstacles):
 			issues.append("%s #%d sits inside a cliff wall" % [r["type"], i + 1])
+		elif terrain_at(Vector2i(int(p.x / TERRAIN_CELL_SIZE), int(p.y / TERRAIN_CELL_SIZE))) in ["water", "cliff"]:
+			issues.append("%s #%d needs clear land" % [r["type"], i + 1])
 		if str(r["id"]) != "":
 			if ids.has(r["id"]):
 				issues.append("duplicate id '%s'" % r["id"])
@@ -542,7 +725,24 @@ func validate() -> Array[String]:
 		if bool(d["enabled"]) and not owners_with_units.has(pid):
 			issues.append("player %d has an enabled '%s' directive but no units" % [pid, d["mode"]])
 
-	if data["units"].is_empty():
+	if data.mode == "skirmish":
+		if data.starts.size() < 2 or data.starts.size() > 8:
+			issues.append("skirmish maps need between 2 and 8 starting locations")
+		for i in range(data.starts.size()):
+			var start: Dictionary = data.starts[i]
+			var pos = Vector2(float(start.x), float(start.y))
+			var terrain = terrain_at(Vector2i(int(pos.x / TERRAIN_CELL_SIZE), int(pos.y / TERRAIN_CELL_SIZE)))
+			if not bounds.grow(-8).has_point(pos) or terrain in ["water", "cliff"]:
+				issues.append("start #%d needs clear land for a base and workers" % [i + 1])
+			for j in range(i):
+				var other: Dictionary = data.starts[j]
+				if pos.distance_to(Vector2(float(other.x), float(other.y))) < 24:
+					issues.append("starting locations #%d and #%d are too close" % [j + 1, i + 1])
+	for layer in ["starts", "expansions"]:
+		for marker in data[layer]:
+			if not bounds.has_point(Vector2(float(marker.x), float(marker.y))):
+				issues.append("%s marker is outside the map" % layer)
+	if data.mode != "skirmish" and data["units"].is_empty():
 		issues.append("map has no units")
 	return issues
 
@@ -569,5 +769,6 @@ func summary() -> Dictionary:
 		"resources": data["resources"].size(),
 		"unit_entries": data["units"].size(),
 		"unit_total": unit_total,
-		"directives": data["directives"].size()
+		"directives": data["directives"].size(),
+		"starts": data.starts.size(), "expansions": data.expansions.size(), "terrain_tiles": data.terrain_tiles.size(), "mode": data.mode
 	}
