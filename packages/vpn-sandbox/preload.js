@@ -12,6 +12,8 @@ contextBridge.exposeInMainWorld('robos', {
   verifyVpnTraffic: opts => ipcRenderer.invoke('verify-vpn-traffic', opts),
   listSessions: () => ipcRenderer.invoke('list-sessions'),
   stopSession: sessionId => ipcRenderer.invoke('stop-session', sessionId),
+  deleteSession: sessionId => ipcRenderer.invoke('delete-session', sessionId),
+  clearStoppedSessions: () => ipcRenderer.invoke('clear-stopped-sessions'),
   emergencyKillAll: () => ipcRenderer.invoke('emergency-kill-all'),
   openVpnServers: () => ipcRenderer.invoke('open-vpn-servers'),
 });

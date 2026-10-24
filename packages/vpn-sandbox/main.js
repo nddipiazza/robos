@@ -226,6 +226,22 @@ ipcMain.handle('stop-session', async (_, sessionId) => {
   }
 });
 
+ipcMain.handle('delete-session', async (_, sessionId) => {
+  try {
+    return sandboxEngine.deleteSession(sessionId);
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('clear-stopped-sessions', async () => {
+  try {
+    return sandboxEngine.clearStoppedSessions();
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 ipcMain.handle('emergency-kill-all', async () => {
   try {
     return sandboxEngine.emergencyKillAll();

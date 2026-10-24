@@ -1002,6 +1002,27 @@ function createVpnSandboxEngine(options = {}) {
     return serializeSession(session);
   }
 
+  function deleteSession(sessionId) {
+    const session = activeSessions.get(sessionId);
+    if (!session) return { ok: true, sessions: listSessions() };
+    if (session.status === 'running') {
+      try {
+        stopSession(sessionId);
+      } catch {}
+    }
+    activeSessions.delete(sessionId);
+    return { ok: true, deletedId: sessionId, sessions: listSessions() };
+  }
+
+  function clearStoppedSessions() {
+    for (const [id, session] of activeSessions.entries()) {
+      if (session.status !== 'running') {
+        activeSessions.delete(id);
+      }
+    }
+    return { ok: true, sessions: listSessions() };
+  }
+
   function emergencyKillAll() {
     const stopped = [];
     for (const id of activeSessions.keys()) {
@@ -1153,6 +1174,8 @@ function createVpnSandboxEngine(options = {}) {
     listSessions,
     getSession,
     stopSession,
+    deleteSession,
+    clearStoppedSessions,
     emergencyKillAll,
     runLeakAudit,
     verifyVpnTraffic,
