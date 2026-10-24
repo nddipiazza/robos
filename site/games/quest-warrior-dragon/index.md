@@ -5,6 +5,9 @@ permalink: /games/quest-warrior-dragon/
 description: "A clean-room NES-authentic 2D JRPG in Godot 4 featuring 29 interconnected maps, 40 monsters, 10 spells, in-engine Stride AI, Cucumber checkpoint E2E tests, and 100% verified global map reachability."
 bg_poster: /assets/games/quest-warrior-dragon/05_world_map_alefgard_overworld.png
 accent: "#00bcd4"
+og_image_alt: "Quest: Warrior Dragon — NES-authentic 2D JRPG in Godot 4"
+schema_type: VideoGame
+keywords: "Quest Warrior Dragon, RobOS 2D JRPG, Dragon Warrior clean-room RPG, Godot 4 8-bit RPG, Alefgard overworld, autonomous AI playthrough"
 ---
 <section class="g-hero wrap">
   <p class="kicker">RobOS 2D RPG Engine · Godot 4.3</p>

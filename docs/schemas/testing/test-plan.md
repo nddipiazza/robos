@@ -5,6 +5,7 @@ parent: "Testing, Quality & BDD (robos.testing)"
 grand_parent: Schemas
 nav_order: 19
 permalink: /schemas/testing/test-plan.html
+description: "Validation shape for robos:TestPlan nodes in the testing package group."
 ---
 
 # robos:TestPlan

@@ -5,6 +5,7 @@ parent: "DevOps & Cloud (robos.devops)"
 grand_parent: Schemas
 nav_order: 10
 permalink: /schemas/devops/kubernetes-ingress.html
+description: "Validation shape for robos:KubernetesIngress nodes in the devops package group."
 ---
 
 # robos:KubernetesIngress

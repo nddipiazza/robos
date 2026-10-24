@@ -5,6 +5,7 @@ parent: "Testing, Quality & BDD (robos.testing)"
 grand_parent: Schemas
 nav_order: 14
 permalink: /schemas/testing/examples-table.html
+description: "Validation shape for robos:ExamplesTable nodes in the testing package group."
 ---
 
 # robos:ExamplesTable

@@ -3,6 +3,12 @@ layout: default
 title: Apps
 permalink: /apps/
 description: Every RobOS desktop app, domain sandbox, game studio and MCP server, grouped by what it does.
+og_image: /assets/og.png
+og_image_width: 1200
+og_image_height: 630
+og_image_alt: "RobOS App Directory — Desktop applications, domain sandboxes, game studios and MCP servers"
+schema_type: CollectionPage
+keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto Center, Household, Audio Player, Dev Central, Task Planner, Agent Code Review, Knowledge Graph Explorer, MCP servers"
 ---
 <div class="page-h wrap">
   <p class="eyebrow">App Directory</p>

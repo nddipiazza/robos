@@ -2,6 +2,7 @@
 title: "Proposal: RobOS Household"
 layout: default
 nav_exclude: true
+description: "Family finances, accounting, and US taxes in one place."
 ---
 
 # RobOS Household

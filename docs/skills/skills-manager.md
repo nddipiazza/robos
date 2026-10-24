@@ -4,6 +4,7 @@ layout: default
 parent: Skills
 grand_parent: Build on RobOS
 nav_order: 3
+description: "The Skills Manager (packages/skills-manager) is an Electron app that lists shell commands for common workstation tasks, lets you add your own, and imports prompt packs from GitHub."
 ---
 
 # Skills Manager Desktop App

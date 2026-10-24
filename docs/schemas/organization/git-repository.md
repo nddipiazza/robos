@@ -5,6 +5,7 @@ parent: "Organization & Teams (robos.org)"
 grand_parent: Schemas
 nav_order: 13
 permalink: /schemas/organization/git-repository.html
+description: "Validation shape for robos:GitRepository nodes in the organization package group."
 ---
 
 # robos:GitRepository

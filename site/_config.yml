@@ -2,6 +2,12 @@ title: RobOS
 description: "RobOS is an open-source app suite built on one knowledge graph: use the apps, customize any of them, or build new ones from context engineering principles. AI features inside the apps are optional."
 url: "https://rowbose.com"
 baseurl: ""
+author: "RobOS Project"
+og_image: "/assets/og.png"
+keywords: "RobOS, Rowbose, rowbose.com, www.rowbose.com, open-source app suite, knowledge graph, KGraph, context engineering, Point of Sale, Auto Center, Household finances, Audio Player, Virtual DJ, Godot 4 games, AI coding agents, developer tools"
+
+plugins:
+  - jekyll-sitemap
 
 # This is the front site at https://rowbose.com/. The classic (v1) docs are
 # a separate Jekyll site in ../docs, built with baseurl /v1 and published

@@ -5,6 +5,7 @@ parent: "Testing, Quality & BDD (robos.testing)"
 grand_parent: Schemas
 nav_order: 12
 permalink: /schemas/testing/gherkin-rule.html
+description: "Validation shape for robos:GherkinRule nodes in the testing package group."
 ---
 
 # robos:GherkinRule

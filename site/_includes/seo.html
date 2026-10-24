@@ -1,0 +1,136 @@
+{%- assign seo_site_name = include.site_name | default: site.title | default: 'RobOS' -%}
+{%- if page.seo_title -%}
+  {%- assign seo_title = page.seo_title -%}
+{%- elsif page.url == '/' -%}
+  {%- assign seo_title = 'RobOS — One app suite. Make it yours.' -%}
+{%- elsif page.layout == 'game' -%}
+  {%- assign seo_title = page.title | append: ' · RobOS Games' -%}
+{%- elsif page.title -%}
+  {%- assign seo_title = page.title | append: ' · ' | append: seo_site_name -%}
+{%- else -%}
+  {%- assign seo_title = seo_site_name -%}
+{%- endif -%}
+{%- assign seo_description = page.description | default: site.description | strip_html | normalize_whitespace -%}
+{%- assign seo_url = page.canonical_url | default: page.url | absolute_url -%}
+{%- assign seo_image_path = page.og_image | default: page.bg_poster | default: site.og_image | default: '/assets/og.png' -%}
+{%- assign seo_image = seo_image_path | absolute_url -%}
+{%- assign seo_image_alt = page.og_image_alt | default: seo_title -%}
+{%- assign seo_type = page.og_type | default: 'website' -%}
+{%- assign seo_schema_type = page.schema_type | default: 'WebPage' -%}
+{%- assign seo_robots = page.robots | default: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' -%}
+{%- if page.keywords and site.keywords -%}
+  {%- assign seo_keywords = page.keywords | append: ', ' | append: site.keywords -%}
+{%- else -%}
+  {%- assign seo_keywords = page.keywords | default: site.keywords -%}
+{%- endif -%}
+  <title>{{ seo_title | escape }}</title>
+  <meta name="description" content="{{ seo_description | escape }}">
+  {%- if seo_keywords %}
+  <meta name="keywords" content="{{ seo_keywords | escape }}">
+  {%- endif %}
+  <meta name="author" content="{{ page.author | default: site.author | default: 'RobOS Project' | escape }}">
+  <meta name="creator" content="RobOS">
+  <meta name="publisher" content="RobOS">
+  <meta name="application-name" content="RobOS">
+  <meta name="apple-mobile-web-app-title" content="RobOS">
+  <meta name="robots" content="{{ seo_robots }}">
+  <meta name="googlebot" content="{{ seo_robots }}">
+  <meta name="bingbot" content="{{ seo_robots }}">
+  <meta name="theme-color" content="{{ page.theme_color | default: '#0b0f19' }}">
+  <link rel="canonical" href="{{ seo_url }}">
+  <link rel="alternate" hreflang="en" href="{{ seo_url }}">
+  <link rel="alternate" hreflang="x-default" href="{{ seo_url }}">
+  <link rel="sitemap" type="application/xml" title="Sitemap" href="{{ '/sitemap.xml' | absolute_url }}">
+  <link rel="alternate" type="text/plain" title="LLM-readable site summary" href="{{ '/llms.txt' | absolute_url }}">
+  <meta property="og:type" content="{{ seo_type }}">
+  <meta property="og:site_name" content="{{ seo_site_name | escape }}">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:url" content="{{ seo_url }}">
+  <meta property="og:title" content="{{ seo_title | escape }}">
+  <meta property="og:description" content="{{ seo_description | escape }}">
+  <meta property="og:image" content="{{ seo_image }}">
+  <meta property="og:image:alt" content="{{ seo_image_alt | escape }}">
+  {%- if page.og_image_width %}
+  <meta property="og:image:width" content="{{ page.og_image_width }}">
+  {%- endif %}
+  {%- if page.og_image_height %}
+  <meta property="og:image:height" content="{{ page.og_image_height }}">
+  {%- endif %}
+  <meta name="twitter:card" content="{{ page.twitter_card | default: 'summary_large_image' }}">
+  <meta name="twitter:url" content="{{ seo_url }}">
+  <meta name="twitter:title" content="{{ seo_title | escape }}">
+  <meta name="twitter:description" content="{{ seo_description | escape }}">
+  <meta name="twitter:image" content="{{ seo_image }}">
+  <meta name="twitter:image:alt" content="{{ seo_image_alt | escape }}">
+  <link rel="icon" href="{{ '/v1/assets/images/favicon.svg' | relative_url }}" type="image/svg+xml">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ '/v1/assets/images/favicon-32x32.png' | relative_url }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ '/v1/assets/images/favicon-16x16.png' | relative_url }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ '/v1/assets/images/apple-touch-icon.png' | relative_url }}">
+  <link rel="shortcut icon" href="{{ '/v1/assets/images/favicon.ico' | relative_url }}">
+  <link rel="manifest" href="{{ '/v1/site.webmanifest' | relative_url }}">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "{{ '/' | absolute_url }}#organization",
+        "name": "RobOS",
+        "alternateName": ["Rowbose", "rowbose.com", "www.rowbose.com"],
+        "url": {{ '/' | absolute_url | jsonify }},
+        "logo": {
+          "@type": "ImageObject",
+          "url": {{ '/assets/logo-mark.png' | absolute_url | jsonify }}
+        },
+        "sameAs": [
+          "https://github.com/nddipiazza/robos",
+          "https://discord.gg/6PjxzkHujE"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "{{ '/' | absolute_url }}#website",
+        "url": {{ '/' | absolute_url | jsonify }},
+        "name": "RobOS",
+        "alternateName": ["Rowbose", "rowbose.com", "www.rowbose.com"],
+        "description": {{ site.description | jsonify }},
+        "inLanguage": "en-US",
+        "publisher": { "@id": "{{ '/' | absolute_url }}#organization" }
+      },
+      {%- if page.url == '/' %}
+      {
+        "@type": "SoftwareApplication",
+        "@id": "{{ '/' | absolute_url }}#software",
+        "name": "RobOS",
+        "operatingSystem": "Windows, Linux, macOS",
+        "applicationCategory": "DeveloperApplication, BusinessApplication, GameApplication",
+        "description": {{ seo_description | jsonify }},
+        "url": {{ seo_url | jsonify }},
+        "downloadUrl": {{ '/download/' | absolute_url | jsonify }},
+        "softwareVersion": {{ site.data.release.version | jsonify }},
+        "license": "https://www.apache.org/licenses/LICENSE-2.0",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      },
+      {%- endif %}
+      {
+        "@type": {{ seo_schema_type | jsonify }},
+        "@id": "{{ seo_url }}#webpage",
+        "url": {{ seo_url | jsonify }},
+        "name": {{ seo_title | jsonify }},
+        "headline": {{ page.title | default: seo_title | jsonify }},
+        "description": {{ seo_description | jsonify }},
+        "inLanguage": "en-US",
+        "isPartOf": { "@id": "{{ '/' | absolute_url }}#website" },
+        "about": { "@id": "{{ '/' | absolute_url }}#organization" },
+        "primaryImageOfPage": {
+          "@type": "ImageObject",
+          "url": {{ seo_image | jsonify }}
+        }
+      }
+    ]
+  }
+  </script>

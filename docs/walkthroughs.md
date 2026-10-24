@@ -3,6 +3,7 @@ title: Walkthroughs and proof of work
 layout: default
 parent: "Review & governance"
 nav_order: 2
+description: "What RobOS treats as proof that a change works, and which recorded walkthroughs and tests in the repository back that up."
 ---
 
 # Walkthroughs and proof of work

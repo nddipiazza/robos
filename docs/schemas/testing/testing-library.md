@@ -5,6 +5,7 @@ parent: "Testing, Quality & BDD (robos.testing)"
 grand_parent: Schemas
 nav_order: 18
 permalink: /schemas/testing/testing-library.html
+description: "Validation shape for robos:TestingLibrary nodes in the testing package group."
 ---
 
 # robos:TestingLibrary

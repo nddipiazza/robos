@@ -2,6 +2,7 @@
 title: "Proposal: prompt lineage in the knowledge graph"
 layout: default
 nav_exclude: true
+description: "Record every prompt as a node in the knowledge graph, so a reviewer can trace a commit or plan back to the prompt that produced it."
 ---
 
 # Proposal: prompt lineage in the knowledge graph

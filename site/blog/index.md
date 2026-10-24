@@ -5,6 +5,9 @@ description: "What changed in RobOS and why, newest first, with links to the doc
 permalink: /blog/
 extra_css: /assets/blog.css
 og_image: /assets/hero/poster.jpg
+og_image_alt: "RobOS Engineering Blog — What changed in RobOS and why"
+schema_type: Blog
+keywords: "RobOS engineering blog, release notes, OBD-II Auto Center, Audio Player Virtual DJ, Quest Warrior Dragon AI playthrough, KGraph updates"
 ---
 <section class="blog-hero">
   <div class="wrap">

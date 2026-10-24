@@ -3,6 +3,7 @@ title: Inspector schema coverage
 layout: default
 parent: Build on RobOS
 nav_order: 8
+description: "The Knowledge Graph Explorer adds type-specific tabs to its object inspector, such as Database or MCP Server."
 ---
 
 # Inspector schema coverage

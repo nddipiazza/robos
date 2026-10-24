@@ -5,6 +5,7 @@ parent: "Testing, Quality & BDD (robos.testing)"
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/testing/crpg-combatant.html
+description: "Validation shape for robos:CRPGCombatant nodes in the testing package group."
 ---
 
 # robos:CRPGCombatant

@@ -7,6 +7,7 @@ nav_order: 2
 permalink: /training/harness-and-security/agent-profiles.html
 redirect_from:
   - /training/agent-harness-engineering/03-ephemeral-sandboxes-and-custom-personas.html
+description: "packages/robos-profiled creates a throwaway home directory with its own environment, runs a command in it, and deletes the directory afterwards."
 ---
 
 # Run commands in an ephemeral agent profile

@@ -5,6 +5,7 @@ parent: Build on RobOS
 nav_order: 2
 has_children: true
 permalink: /schemas.html
+description: "Reference for the node types (classes) in the RobOS knowledge graph. Use it to see which properties a node needs before you add it, and what the validator rejects."
 ---
 
 # Schemas

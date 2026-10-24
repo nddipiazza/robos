@@ -5,6 +5,7 @@ parent: "Services & Contracts (robos.services)"
 grand_parent: Schemas
 nav_order: 1
 permalink: /schemas/services/microservice.html
+description: "Validation shape for robos:Microservice nodes in the services package group."
 ---
 
 # robos:Microservice

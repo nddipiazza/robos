@@ -6,6 +6,9 @@ description: "Starfall Command: one player versus AI on a 256×256 battlefield, 
 bg_video: /assets/games/rts-bg.mp4
 bg_poster: /assets/games/rts-bg-poster.jpg
 accent: "#58b4ff"
+og_image_alt: "Starfall Command (RobOS RTS) — Real-time strategy on a 256x256 battlefield in Godot 4"
+schema_type: VideoGame
+keywords: "Starfall Command, RobOS RTS, Godot 4 real-time strategy game, Frontier Hunters map, RTS map editor, AI skirmish"
 ---
 <section class="g-hero wrap">
   <p class="kicker">RobOS RTS</p>

@@ -5,6 +5,11 @@ description: "RobOS is an open-source app suite built on one knowledge graph. Us
 permalink: /
 body_class: landing
 extra_css: /assets/landing.css
+og_image: /assets/og.png
+og_image_width: 1200
+og_image_height: 630
+og_image_alt: "RobOS — One app suite. Make it yours."
+keywords: "RobOS, Rowbose, rowbose.com, open-source app suite, knowledge graph, KGraph, context engineering, Point of Sale, Auto Center, Household finances, Audio Player Virtual DJ, Godot 4 AI games, developer tools, coding agents"
 ---
 <section class="l-hero">
   <div class="wrap l-hero-grid">

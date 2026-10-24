@@ -5,6 +5,7 @@ parent: Schemas
 nav_order: 2
 has_children: true
 permalink: /schemas/organization.html
+description: "Teams, projects and work items, Git organizations, repositories, branches, pull requests and commits, agent personas, task servers and review comments."
 ---
 
 # Organization & Teams (robos.org)

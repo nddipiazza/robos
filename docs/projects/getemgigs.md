@@ -7,6 +7,7 @@ permalink: /projects/getemgigs/
 nav_order: 2
 redirect_from:
   - /projects/getemgigs/venue-stay-to-play-economics.html
+description: "A Next.js web app for local bands, kept in the RobOS repository at packages/getemgigs. The App Wizard's web template was distilled from it."
 ---
 
 # Get 'Em Gigs

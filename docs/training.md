@@ -9,6 +9,7 @@ redirect_from:
   - /training/review-based-development/01-death-of-lgtm-rubber-stamping.html
   - /training/review-based-development/02-pr-review-theater-workflow.html
   - /training/review-based-development/03-ide-review-bridge-and-breakpoint-debugging.html
+description: "Short lessons for the RobOS tools that plan work, run coding agents, and control what agents send and run."
 ---
 
 # Training

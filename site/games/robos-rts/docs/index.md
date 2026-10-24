@@ -6,6 +6,10 @@ description: Guides and reference for the RobOS RTS game, Starfall Command.
 bg_video: /assets/games/rts-bg.mp4
 bg_poster: /assets/games/rts-bg-poster.jpg
 accent: "#58b4ff"
+og_image_alt: "Starfall Command RTS Documentation and Map Editor Guide"
+og_type: article
+schema_type: TechArticle
+keywords: "Starfall Command docs, RobOS RTS documentation, Frontier Hunters map editor walkthrough, Godot 4 RTS"
 ---
 <section class="game-doc wrap">
   <p class="eyebrow" style="color:var(--accent)">Starfall Command</p>

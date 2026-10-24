@@ -10,6 +10,7 @@ redirect_from:
   - /training/systems-architects/01-living-graph-vs-dead-confluence.html
   - /training/systems-architects/02-declarative-modeling-and-shacl-shapes.html
   - /training/systems-architects/03-dual-state-time-machine-and-blast-radius.html
+description: "The knowledge graph that Knowledge Graph Explorer shows can also be queried from a terminal."
 ---
 
 # Check impact with the kgraph CLI

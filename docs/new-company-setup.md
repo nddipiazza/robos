@@ -5,6 +5,7 @@ parent: Company setup
 grand_parent: RobOS for Teams
 nav_order: 1
 permalink: /new-company-setup.html
+description: "How a new team with no repositories or task tracker yet gets RobOS working, and what the Group Manager \"Bootstrap\" button does and does not create."
 ---
 
 # New company

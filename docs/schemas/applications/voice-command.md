@@ -5,6 +5,7 @@ parent: "Applications (robos.apps)"
 grand_parent: Schemas
 nav_order: 11
 permalink: /schemas/applications/voice-command.html
+description: "Validation shape for robos:VoiceCommand nodes in the applications package group."
 ---
 
 # robos:VoiceCommand

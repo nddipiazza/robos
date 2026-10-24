@@ -5,6 +5,7 @@ parent: "DevOps & Cloud (robos.devops)"
 grand_parent: Schemas
 nav_order: 2
 permalink: /schemas/devops/remote-execution-cluster.html
+description: "Validation shape for robos:RemoteExecutionCluster nodes in the devops package group."
 ---
 
 # robos:RemoteExecutionCluster

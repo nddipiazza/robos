@@ -5,6 +5,7 @@ parent: "Organization & Teams (robos.org)"
 grand_parent: Schemas
 nav_order: 19
 permalink: /schemas/organization/discussion-thread.html
+description: "Validation shape for robos:DiscussionThread nodes in the organization package group."
 ---
 
 # robos:DiscussionThread

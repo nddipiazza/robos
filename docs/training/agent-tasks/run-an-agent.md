@@ -7,6 +7,7 @@ nav_order: 3
 permalink: /training/agent-tasks/run-an-agent.html
 redirect_from:
   - /training/for-non-developers/04-task-implementer-and-sandboxes.html
+description: "Task Implementer (packages/task-implementer) lists the issues on your task server, builds a prompt from the issue and a persona, and starts the Claude Code CLI on it."
 ---
 
 # Run an agent on a task

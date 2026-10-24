@@ -3,6 +3,7 @@ title: Home
 layout: default
 nav_order: 1
 permalink: /
+description: "RobOS is a desktop suite of developer apps, a knowledge graph of your system, and review tools that show what a coding agent changed and prove it works."
 ---
 
 # RobOS documentation

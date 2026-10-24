@@ -3,6 +3,8 @@ tagline: Developer apps, a knowledge graph of your system, and reviewable agent 
 description: "Documentation for RobOS: a desktop suite of developer apps, a knowledge graph of your system, and review tools that show what coding agents changed and prove it works."
 url: "https://rowbose.com"
 baseurl: "/v1"
+author: "RobOS Project"
+keywords: "RobOS, Rowbose, rowbose.com, www.rowbose.com, RobOS documentation, knowledge graph, KGraph, SHACL schemas, Electron developer apps, PR Review Theater, autonomous coding agents, MCP servers"
 
 # Open Graph / LinkedIn / Twitter preview
 image:
@@ -24,6 +26,7 @@ plugins:
   - jekyll-remote-theme
   - jekyll-redirect-from
   - jekyll-seo-tag
+  - jekyll-sitemap
 
 color_scheme: robos
 

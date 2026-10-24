@@ -5,6 +5,7 @@ parent: "Organization & Teams (robos.org)"
 grand_parent: Schemas
 nav_order: 20
 permalink: /schemas/organization/review-comment.html
+description: "Validation shape for robos:ReviewComment nodes in the organization package group."
 ---
 
 # robos:ReviewComment

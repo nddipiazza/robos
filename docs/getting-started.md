@@ -2,6 +2,7 @@
 title: Get started
 layout: default
 nav_order: 2
+description: "How to install the Windows app suite, run RobOS apps from a clone of the repository, install them into the GNOME launcher, or boot the RobOS appliance from a USB drive or a QEMU virtual machine."
 ---
 
 # Get started

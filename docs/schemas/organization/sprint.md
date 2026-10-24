@@ -5,6 +5,7 @@ parent: "Organization & Teams (robos.org)"
 grand_parent: Schemas
 nav_order: 11
 permalink: /schemas/organization/sprint.html
+description: "Validation shape for robos:Sprint nodes in the organization package group."
 ---
 
 # robos:Sprint

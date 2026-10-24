@@ -5,6 +5,7 @@ parent: "Core Platform (robos.platform)"
 grand_parent: Schemas
 nav_order: 3
 permalink: /schemas/core-platform/nosql-database.html
+description: "Validation shape for robos:NoSQLDatabase nodes in the core-platform package group."
 ---
 
 # robos:NoSQLDatabase

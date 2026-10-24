@@ -5,6 +5,7 @@ parent: "Testing, Quality & BDD (robos.testing)"
 grand_parent: Schemas
 nav_order: 7
 permalink: /schemas/testing/infinity-ai-directive.html
+description: "Validation shape for robos:InfinityAIDirective nodes in the testing package group."
 ---
 
 # robos:InfinityAIDirective

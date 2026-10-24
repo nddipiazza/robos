@@ -4,6 +4,7 @@ layout: default
 nav_order: 3
 has_children: true
 has_toc: false
+description: "Pages for running RobOS and working with its apps. If you have not installed anything yet, start with Get started."
 ---
 
 # Use RobOS

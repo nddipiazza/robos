@@ -5,6 +5,7 @@ parent: Schemas
 nav_order: 11
 has_children: true
 permalink: /schemas/tabletop-game.html
+description: "Tabletop dungeon-crawler content: heroes, monsters, summons, quest maps, turn steps and AI directives."
 ---
 
 # Tabletop Game (robos.tabletop)

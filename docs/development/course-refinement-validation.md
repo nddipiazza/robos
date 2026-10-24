@@ -3,6 +3,7 @@ title: Refinement evidence scope
 layout: default
 parent: Build on RobOS
 nav_order: 10
+description: "How to validate an edit to an existing knowledge graph, such as a revised course, when other nodes in the graph have no source evidence."
 ---
 
 # Refinement evidence scope

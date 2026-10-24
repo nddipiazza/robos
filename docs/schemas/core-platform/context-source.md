@@ -5,6 +5,7 @@ parent: "Core Platform (robos.platform)"
 grand_parent: Schemas
 nav_order: 8
 permalink: /schemas/core-platform/context-source.html
+description: "Validation shape for robos:ContextSource nodes in the core-platform package group."
 ---
 
 # robos:ContextSource

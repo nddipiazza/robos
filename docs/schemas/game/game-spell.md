@@ -5,6 +5,7 @@ parent: "Game Rules (robos.game)"
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/game/game-spell.html
+description: "Validation shape for robos:GameSpell nodes in the game package group."
 ---
 
 # robos:GameSpell

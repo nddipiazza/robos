@@ -3,12 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ page.title }} · RobOS Games</title>
-  <meta name="description" content="{{ page.description }}">
-  <meta property="og:title" content="{{ page.title }} · RobOS Games">
-  <meta property="og:description" content="{{ page.description }}">
-  <meta property="og:image" content="{{ page.bg_poster | absolute_url }}">
-  <link rel="icon" href="{{ '/v1/assets/images/favicon.svg' | relative_url }}" type="image/svg+xml">
+{% include seo.html site_name="RobOS Games" %}
   <link rel="preload" as="image" href="{{ page.bg_poster | relative_url }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

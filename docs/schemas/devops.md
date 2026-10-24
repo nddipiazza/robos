@@ -5,6 +5,7 @@ parent: Schemas
 nav_order: 5
 has_children: true
 permalink: /schemas/devops.html
+description: "Kubernetes clusters, environments, GitOps deployments, CI/CD pipelines, remote-execution clusters and data pipelines."
 ---
 
 # DevOps & Cloud (robos.devops)

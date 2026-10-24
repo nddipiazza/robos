@@ -3,6 +3,7 @@ title: A day with RobOS
 layout: default
 parent: Use RobOS
 nav_order: 3
+description: "One task, taken from a plan to a merged pull request and a follow-up task, using the RobOS apps."
 ---
 
 # A day with RobOS

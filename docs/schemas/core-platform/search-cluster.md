@@ -5,6 +5,7 @@ parent: "Core Platform (robos.platform)"
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/core-platform/search-cluster.html
+description: "Validation shape for robos:SearchCluster nodes in the core-platform package group."
 ---
 
 # robos:SearchCluster

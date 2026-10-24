@@ -4,6 +4,7 @@ layout: default
 parent: "Get 'Em Gigs"
 grand_parent: Projects
 nav_order: 1
+description: "How Get 'Em Gigs holds deposits for a Buddy Gig, confirms attendance with a QR scan at the door, and settles no-shows the next morning. Read this if you want to change or reuse the deal logic."
 ---
 
 # Buddy Gig scan-in and escrow

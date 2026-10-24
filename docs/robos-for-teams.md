@@ -4,6 +4,7 @@ layout: default
 nav_order: 6
 has_children: true
 has_toc: false
+description: "Start here if you are a tech lead or evaluator deciding whether RobOS fits your team. These pages cover what problem RobOS targets, what is built today, and how a team sets it up."
 ---
 
 # RobOS for Teams

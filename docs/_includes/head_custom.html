@@ -44,6 +44,27 @@
   });
 </script>
 
+<!-- Search engine & AI crawler discovery metadata (complements jekyll-seo-tag) -->
+{%- assign doc_robots = page.robots | default: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' -%}
+{%- if page.keywords and site.keywords -%}
+  {%- assign doc_keywords = page.keywords | append: ', ' | append: site.keywords -%}
+{%- elsif page.title and site.keywords -%}
+  {%- assign doc_keywords = page.title | append: ', ' | append: site.keywords -%}
+{%- else -%}
+  {%- assign doc_keywords = site.keywords -%}
+{%- endif -%}
+<meta name="robots" content="{{ doc_robots }}">
+<meta name="googlebot" content="{{ doc_robots }}">
+<meta name="bingbot" content="{{ doc_robots }}">
+<meta name="keywords" content="{{ doc_keywords | escape }}">
+<meta name="author" content="{{ page.author | default: site.author | default: 'RobOS Project' | escape }}">
+<meta name="application-name" content="RobOS">
+<meta name="apple-mobile-web-app-title" content="RobOS">
+<link rel="alternate" hreflang="en" href="{{ page.url | absolute_url }}">
+<link rel="alternate" hreflang="x-default" href="{{ page.url | absolute_url }}">
+<link rel="sitemap" type="application/xml" title="Sitemap" href="https://rowbose.com/sitemap.xml">
+<link rel="alternate" type="text/plain" title="LLM-readable site summary" href="https://rowbose.com/llms.txt">
+
 <!-- Favicon & app icons -->
 <link rel="icon" type="image/svg+xml" href="{{ '/assets/images/favicon.svg' | relative_url }}">
 <link rel="icon" type="image/png" sizes="32x32" href="{{ '/assets/images/favicon-32x32.png' | relative_url }}">

@@ -5,6 +5,7 @@ parent: Plan and run agent tasks
 grand_parent: Training
 nav_order: 4
 permalink: /training/agent-tasks/agent-personas.html
+description: "A persona is a role prompt. Task Implementer adds it to the issue text before it starts an agent, and Task Planner labels each planned task with one. This lesson shows how a persona is chosen for..."
 ---
 
 # Choose and customize agent personas

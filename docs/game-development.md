@@ -4,6 +4,7 @@ layout: default
 parent: Building apps
 grand_parent: Build on RobOS
 nav_order: 4
+description: "What RobOS contains for games today: three Godot projects you can run and read, editor apps for their content, graph packages and shapes for game projects, and six Task Planner templates."
 ---
 
 # Game development

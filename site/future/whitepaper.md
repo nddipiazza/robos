@@ -9,6 +9,12 @@ pdf: /future/skill-commons-whitepaper.pdf
 extra_css: /assets/future.css
 body_class: future-page
 og_image: /assets/future/og.png
+og_image_width: 1200
+og_image_height: 630
+og_image_alt: "The Skill Commons Whitepaper — Less AI Strain on Data Centers, If Done Right"
+og_type: article
+schema_type: ScholarlyArticle
+keywords: "The Skill Commons whitepaper, AI energy efficiency, verified skill catalog, small language models, context engineering"
 ---
 
 ## In plain words

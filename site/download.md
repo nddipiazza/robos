@@ -3,6 +3,11 @@ layout: default
 title: Download
 permalink: /download/
 description: Download RobOS for macOS, Linux and Windows, or run it from source or in a VM.
+og_image: /assets/og.png
+og_image_width: 1200
+og_image_height: 630
+og_image_alt: "Download RobOS for Windows, Linux and macOS"
+keywords: "download RobOS, Windows installer, Linux app suite, macOS install, Ubuntu appliance ISO, QEMU VM, open-source desktop apps"
 ---
 <div class="page-h wrap">
   <h1>Download RobOS</h1>

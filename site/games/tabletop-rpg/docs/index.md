@@ -6,6 +6,10 @@ description: Engine guide, cartridge format and editor docs for the RobOS Tablet
 bg_video: /assets/games/tabletop-bg.mp4
 bg_poster: /assets/games/tabletop-bg-poster.jpg
 accent: "#e0b252"
+og_image_alt: "RobOS Tabletop RPG Documentation, Cartridge Format and Editors"
+og_type: article
+schema_type: TechArticle
+keywords: "Tabletop RPG documentation, HeroQuest cartridge format, Tabletop Blockmap Creator, Tabletop Quest Map Editor"
 ---
 <section class="game-doc wrap">
   <p class="eyebrow" style="color:var(--accent)">Tabletop RPG</p>

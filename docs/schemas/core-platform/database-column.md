@@ -5,6 +5,7 @@ parent: "Core Platform (robos.platform)"
 grand_parent: Schemas
 nav_order: 12
 permalink: /schemas/core-platform/database-column.html
+description: "Validation shape for robos:DatabaseColumn nodes in the core-platform package group."
 ---
 
 # robos:DatabaseColumn

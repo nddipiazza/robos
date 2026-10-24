@@ -5,6 +5,7 @@ parent: "Testing, Quality & BDD (robos.testing)"
 grand_parent: Schemas
 nav_order: 15
 permalink: /schemas/testing/step-definition.html
+description: "Validation shape for robos:StepDefinition nodes in the testing package group."
 ---
 
 # robos:StepDefinition

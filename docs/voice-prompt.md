@@ -4,6 +4,7 @@ layout: default
 parent: Use RobOS
 nav_order: 2
 permalink: /voice-prompt.html
+description: "RobOS Voice is a desktop app that transcribes your speech on the machine, runs spoken commands, speaks replies, and exposes a local HTTP API and a robos-voice command."
 ---
 
 # RobOS Voice

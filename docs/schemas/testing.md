@@ -5,6 +5,7 @@ parent: Schemas
 nav_order: 8
 has_children: true
 permalink: /schemas/testing.html
+description: "Gherkin features, scenarios, step definitions, test plans, suites, execution records, testing libraries and game test scenarios."
 ---
 
 # Testing, Quality & BDD (robos.testing)

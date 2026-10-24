@@ -5,6 +5,7 @@ parent: "eLearning Curriculums (robos.learning)"
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/learning/quiz-assessment.html
+description: "Validation shape for robos:QuizAssessment nodes in the learning package group."
 ---
 
 # robos:QuizAssessment

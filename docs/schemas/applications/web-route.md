@@ -5,6 +5,7 @@ parent: "Applications (robos.apps)"
 grand_parent: Schemas
 nav_order: 8
 permalink: /schemas/applications/web-route.html
+description: "Validation shape for robos:WebRoute nodes in the applications package group."
 ---
 
 # robos:WebRoute

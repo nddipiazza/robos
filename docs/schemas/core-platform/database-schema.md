@@ -5,6 +5,7 @@ parent: "Core Platform (robos.platform)"
 grand_parent: Schemas
 nav_order: 10
 permalink: /schemas/core-platform/database-schema.html
+description: "Validation shape for robos:DatabaseSchema nodes in the core-platform package group."
 ---
 
 # robos:DatabaseSchema

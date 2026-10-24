@@ -5,6 +5,7 @@ parent: "Services & Contracts (robos.services)"
 grand_parent: Schemas
 nav_order: 8
 permalink: /schemas/services/data-model.html
+description: "Validation shape for robos:DataModel nodes in the services package group."
 ---
 
 # robos:DataModel

@@ -5,6 +5,7 @@ parent: Schemas
 nav_order: 10
 has_children: true
 permalink: /schemas/crpg.html
+description: "Party-based tactical cRPG content: abilities, campaigns, map transitions, game events and story flows."
 ---
 
 # cRPG (robos.crpg)

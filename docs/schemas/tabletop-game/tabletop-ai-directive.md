@@ -5,6 +5,7 @@ parent: "Tabletop Game (robos.tabletop)"
 grand_parent: Schemas
 nav_order: 10
 permalink: /schemas/tabletop-game/tabletop-ai-directive.html
+description: "Validation shape for robos:TabletopAIDirective nodes in the tabletop-game package group."
 ---
 
 # robos:TabletopAIDirective

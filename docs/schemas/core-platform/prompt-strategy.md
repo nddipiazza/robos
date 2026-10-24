@@ -5,6 +5,7 @@ parent: "Core Platform (robos.platform)"
 grand_parent: Schemas
 nav_order: 9
 permalink: /schemas/core-platform/prompt-strategy.html
+description: "Validation shape for robos:PromptStrategy nodes in the core-platform package group."
 ---
 
 # robos:PromptStrategy

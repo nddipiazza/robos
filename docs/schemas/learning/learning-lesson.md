@@ -5,6 +5,7 @@ parent: "eLearning Curriculums (robos.learning)"
 grand_parent: Schemas
 nav_order: 4
 permalink: /schemas/learning/learning-lesson.html
+description: "Validation shape for robos:LearningLesson nodes in the learning package group."
 ---
 
 # robos:LearningLesson

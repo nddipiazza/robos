@@ -5,6 +5,7 @@ parent: "eLearning Curriculums (robos.learning)"
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/learning/hands-on-lab.html
+description: "Validation shape for robos:HandsOnLab nodes in the learning package group."
 ---
 
 # robos:HandsOnLab

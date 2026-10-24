@@ -6,6 +6,9 @@ description: "Games built by AI agents inside RobOS, including Starfall Command:
 bg_video: /assets/games/tabletop-bg.mp4
 bg_poster: /assets/games/tabletop-bg-poster.jpg
 accent: "#e0b252"
+og_image_alt: "RobOS Games — Games built by AI agents in Godot 4"
+schema_type: CollectionPage
+keywords: "RobOS Games, AI-built games, Godot 4 games, Realm of Heroes CRPG, Tabletop RPG, Starfall Command RTS, Quest Warrior Dragon JRPG, autonomous game testing"
 ---
 <section class="g-hero wrap">
   <p class="kicker">Built by agents · Verified on video</p>

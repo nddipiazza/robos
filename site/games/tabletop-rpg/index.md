@@ -6,6 +6,9 @@ description: "A HeroQuest-inspired tabletop dungeon crawler featuring Quest 1: C
 bg_video: /assets/games/tabletop-bg.mp4
 bg_poster: /assets/games/tabletop-bg-poster.jpg
 accent: "#e0b252"
+og_image_alt: "RobOS Tabletop RPG — HeroQuest-inspired dungeon crawler in Godot 4"
+schema_type: VideoGame
+keywords: "RobOS Tabletop RPG, HeroQuest dungeon crawler, Godot 4 tabletop game, Election 2026 Battle for the Hill, blockmap creator, quest map editor"
 ---
 <section class="g-hero wrap">
   <p class="kicker">RobOS Tabletop RPG</p>

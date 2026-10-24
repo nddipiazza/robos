@@ -5,6 +5,7 @@ parent: "Organization & Teams (robos.org)"
 grand_parent: Schemas
 nav_order: 10
 permalink: /schemas/organization/bug.html
+description: "Validation shape for robos:Bug nodes in the organization package group."
 ---
 
 # robos:Bug

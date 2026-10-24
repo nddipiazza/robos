@@ -217,10 +217,23 @@ ${uniqueRedirects.map(r => `  - ${r}`).join('\n')}
 
   <!-- Open Graph / Meta -->
   <meta name="description" content="${(courseDesc || '').replace(/"/g, '&quot;')}">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="author" content="RobOS Project">
+  <link rel="canonical" href="https://rowbose.com/v1${permalink}">
+  <link rel="sitemap" type="application/xml" title="Sitemap" href="https://rowbose.com/sitemap.xml">
+  <meta property="og:site_name" content="RobOS">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:url" content="https://rowbose.com/v1${permalink}">
   <meta property="og:title" content="${courseTitle.replace(/"/g, '&quot;')}">
   <meta property="og:description" content="${(courseDesc || '').replace(/"/g, '&quot;')}">
   <meta property="og:type" content="article">
-  <meta property="og:image" content="/v1/assets/images/crpg-realm/village_square_overview.png">
+  <meta property="og:image" content="https://rowbose.com/v1/assets/images/crpg-realm/village_square_overview.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://rowbose.com/v1${permalink}">
+  <meta name="twitter:title" content="${courseTitle.replace(/"/g, '&quot;')}">
+  <meta name="twitter:description" content="${(courseDesc || '').replace(/"/g, '&quot;')}">
+  <meta name="twitter:image" content="https://rowbose.com/v1/assets/images/crpg-realm/village_square_overview.png">
 
   <!-- Mermaid.js for Interactive Diagrams -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>

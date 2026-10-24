@@ -5,6 +5,7 @@ parent: "Services & Contracts (robos.services)"
 grand_parent: Schemas
 nav_order: 3
 permalink: /schemas/services/requirement.html
+description: "Validation shape for oslcrm:Requirement nodes in the services package group."
 ---
 
 # oslc_rm:Requirement

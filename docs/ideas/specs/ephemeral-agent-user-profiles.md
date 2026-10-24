@@ -4,6 +4,7 @@ layout: default
 nav_exclude: true
 redirect_from:
   - /ideas/specs/robos-desktop-agents.html
+description: "Run each agent as its own Linux user, and let you watch what it is doing on screen."
 ---
 
 # Proposal: agent Linux accounts and live agent desktops

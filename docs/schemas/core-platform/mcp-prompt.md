@@ -5,6 +5,7 @@ parent: "Core Platform (robos.platform)"
 grand_parent: Schemas
 nav_order: 19
 permalink: /schemas/core-platform/mcp-prompt.html
+description: "Validation shape for robos:MCPPrompt nodes in the core-platform package group."
 ---
 
 # robos:MCPPrompt

@@ -12,6 +12,7 @@ redirect_from:
   - /ideas/specs/robos-elearning-and-interactive-reviewer.html
   - /ideas/specs/robos-kgraph-crawler.html
   - /ideas/specs/robos-onboarding-setup-flow.html
+description: "Written proposals for features that are not built, or only partly built. Each page says what exists in the repository today. For a status summary of everything, see the Roadmap."
 ---
 
 # Ideas

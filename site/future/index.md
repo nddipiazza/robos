@@ -5,6 +5,12 @@ permalink: /future/
 description: "Done right, AI puts less strain on data centers. A proposal: solve each software task once, keep it in a shared catalog, and let a small AI on your own computer snap finished pieces together."
 extra_css: /assets/future.css
 og_image: /assets/future/og.png
+og_image_width: 1200
+og_image_height: 630
+og_image_alt: "The Skill Commons — Less AI strain on data centers, if done right"
+og_type: article
+schema_type: TechArticle
+keywords: "The Skill Commons, AI data center energy, local AI models, reusable compiled skills, future of RobOS"
 ---
 <section class="hero future-hero">
   <div class="wrap">

@@ -4,6 +4,7 @@ layout: default
 parent: Building apps
 grand_parent: Build on RobOS
 nav_order: 1
+description: "How to create a starter project with the App Wizard (packages/app-wizard): what each step asks, which template you get, which files it writes, and where it stops short."
 ---
 
 # New app wizard

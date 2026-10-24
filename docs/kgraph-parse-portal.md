@@ -7,6 +7,7 @@ has_children: true
 permalink: /kgraph-parse-portal.html
 redirect_from:
   - /kgraph-crawler/tika-grpc-service.html
+description: "A local HTTP server and desktop window that scan files into knowledge graph nodes, parse single documents, keep a search index, and generate Buildbarn Helm values."
 ---
 
 # KGraph parse portal

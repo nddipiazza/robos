@@ -5,6 +5,7 @@ parent: "eLearning Curriculums (robos.learning)"
 grand_parent: Schemas
 nav_order: 7
 permalink: /schemas/learning/agent-skill.html
+description: "Validation shape for robos:AgentSkill nodes in the learning package group."
 ---
 
 # robos:AgentSkill

@@ -6,6 +6,10 @@ description: Guides, tutorials and reference for the RobOS Realm of Heroes CRPG.
 bg_video: /assets/games/crpg-bg.mp4
 bg_poster: /assets/games/crpg-bg-poster.jpg
 accent: "#5ec8e5"
+og_image_alt: "Realm of Heroes CRPG Documentation and Guides"
+og_type: article
+schema_type: TechArticle
+keywords: "Realm of Heroes CRPG docs, cRPG level editor, Godot 4 cRPG tutorials, Infinity AI test scenarios"
 ---
 <section class="game-doc wrap">
   <p class="eyebrow" style="color:var(--accent)">Realm of Heroes CRPG</p>
