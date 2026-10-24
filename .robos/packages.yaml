@@ -315,4 +315,9 @@ packages:
     type: "robos:DesktopApp"
     repository: "packages/vpn-sandbox"
     technology: "Electron 28 / OpenVPN / Linux ip-netns / iptables"
+  - id: "urn:robos:desktop-app:vpn-servers"
+    title: "RobOS VPN Servers"
+    type: "robos:DesktopApp"
+    repository: "packages/vpn-servers"
+    technology: "Electron 28 / OpenVPN / Pass"
 

@@ -27,7 +27,6 @@ const cp = require('node:child_process');
 const HOME_DIR = process.env.HOME || os.homedir();
 const CONFIG_DIR = process.env.ROBOS_CONFIG_DIR || path.join(HOME_DIR, '.config', 'robos');
 
-// Optional DOM snapshot debug server
 let _debugServer = null;
 try {
   const libPaths = [
@@ -43,7 +42,6 @@ try {
   }
 } catch {}
 
-// Load ovpn-providers & vpn-sandbox-engine from robos-lib
 let ovpnModule = null;
 let sandboxModule = null;
 for (const base of [
@@ -85,10 +83,10 @@ app.whenReady?.().then(() => {
   const iconPng = path.join(__dirname, 'icon.png');
   mainWindow = new BrowserWindow({
     title: 'RobOS VPN Sandbox',
-    width: 1180,
-    height: 780,
-    minWidth: 840,
-    minHeight: 560,
+    width: 1020,
+    height: 700,
+    minWidth: 760,
+    minHeight: 520,
     backgroundColor: '#0d1117',
     icon: fs.existsSync(iconPng) ? iconPng : path.join(__dirname, 'icon.svg'),
     show: true,
@@ -126,110 +124,25 @@ app.on?.('second-instance', () => {
   }
 });
 
-// ── IPC Handlers: OpenVPN Providers & Accounts ───────────────────────────────
-
 ipcMain.handle('get-initial-state', async () => {
   try {
     const accountsState = ovpnManager.listAccounts();
     const savedApps = sandboxEngine.listSavedAppProfiles();
     const sessions = sandboxEngine.listSessions();
-    const capabilities = sandboxEngine.checkSystemCapabilities();
     const hostNet = sandboxModule.detectHostNetworkInfo();
-    const audit = await sandboxEngine.runLeakAudit({});
+    const transmissionInstalled = Boolean(sandboxEngine.detectInstalledTransmission());
     return {
       ok: true,
       ...accountsState,
       savedApps,
       sessions,
-      capabilities,
       hostNet,
-      audit,
+      transmissionInstalled,
     };
   } catch (err) {
     return { ok: false, error: err.message };
   }
 });
-
-ipcMain.handle('ovpn-list-accounts', async () => {
-  try {
-    return { ok: true, ...ovpnManager.listAccounts() };
-  } catch (err) {
-    return { ok: false, error: err.message };
-  }
-});
-
-ipcMain.handle('ovpn-save-account', async (_, input) => {
-  try {
-    return { ok: true, ...ovpnManager.saveAccount(input) };
-  } catch (err) {
-    return { ok: false, error: err.message };
-  }
-});
-
-ipcMain.handle('ovpn-delete-account', async (_, accountId) => {
-  try {
-    return { ok: true, ...ovpnManager.deleteAccount(accountId) };
-  } catch (err) {
-    return { ok: false, error: err.message };
-  }
-});
-
-ipcMain.handle('ovpn-set-default-account', async (_, accountId) => {
-  try {
-    return { ok: true, ...ovpnManager.setDefaultAccount(accountId) };
-  } catch (err) {
-    return { ok: false, error: err.message };
-  }
-});
-
-ipcMain.handle('ovpn-add-provider', async (_, providerInput) => {
-  try {
-    const provider = ovpnManager.addCustomProvider(providerInput);
-    return { ok: true, provider, ...ovpnManager.listAccounts() };
-  } catch (err) {
-    return { ok: false, error: err.message };
-  }
-});
-
-ipcMain.handle('ovpn-sync-profiles', async (_, providerId) => {
-  try {
-    const syncRes = await ovpnManager.syncProviderProfiles(providerId || 'ipvanish');
-    return { ...syncRes, ...ovpnManager.listAccounts() };
-  } catch (err) {
-    return { ok: false, error: err.message };
-  }
-});
-
-ipcMain.handle('ovpn-import-profile', async (_, payload) => {
-  try {
-    let filePath = payload?.filePath;
-    if (!filePath && !payload?.content && dialog?.showOpenDialog) {
-      const picked = await dialog.showOpenDialog(mainWindow, {
-        title: 'Import OpenVPN (.ovpn) Profile',
-        filters: [
-          { name: 'OpenVPN Profiles', extensions: ['ovpn', 'conf'] },
-          { name: 'All Files', extensions: ['*'] },
-        ],
-        properties: ['openFile'],
-      });
-      if (picked.canceled || !picked.filePaths?.[0]) {
-        return { ok: false, canceled: true };
-      }
-      filePath = picked.filePaths[0];
-    }
-    const imported = ovpnManager.importOvpnProfile({
-      providerId: payload?.providerId || 'ipvanish',
-      filePath,
-      filename: payload?.filename,
-      content: payload?.content,
-    });
-    return { ...imported, ...ovpnManager.listAccounts() };
-  } catch (err) {
-    return { ok: false, error: err.message };
-  }
-});
-
-// ── IPC Handlers: Sandbox App Profiles & Executable Launcher ─────────────────
 
 ipcMain.handle('discover-executables', async (_, query) => {
   try {
@@ -242,7 +155,7 @@ ipcMain.handle('discover-executables', async (_, query) => {
 ipcMain.handle('browse-executable', async () => {
   try {
     const picked = await dialog.showOpenDialog(mainWindow, {
-      title: 'Select Executable to Launch in OpenVPN Sandbox',
+      title: 'Select Application Executable',
       defaultPath: '/usr/bin',
       properties: ['openFile'],
     });
@@ -272,9 +185,23 @@ ipcMain.handle('delete-app-profile', async (_, profileId) => {
 ipcMain.handle('launch-sandboxed-app', async (_, launchInput) => {
   try {
     const session = await sandboxEngine.launchSandboxedExecutable(launchInput);
+    const verification = await sandboxEngine.verifyVpnTraffic({ sessionId: session.id });
     return {
       ok: true,
-      session,
+      session: sandboxEngine.getSession(session.id),
+      verification,
+      sessions: sandboxEngine.listSessions(),
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('verify-vpn-traffic', async (_, opts) => {
+  try {
+    const verification = await sandboxEngine.verifyVpnTraffic(opts || {});
+    return {
+      ...verification,
       sessions: sandboxEngine.listSessions(),
     };
   } catch (err) {
@@ -307,28 +234,20 @@ ipcMain.handle('emergency-kill-all', async () => {
   }
 });
 
-ipcMain.handle('run-leak-audit', async (_, opts) => {
+ipcMain.handle('open-vpn-servers', async () => {
   try {
-    return await sandboxEngine.runLeakAudit(opts || {});
-  } catch (err) {
-    return { ok: false, error: err.message };
-  }
-});
-
-ipcMain.handle('open-preferences', async () => {
-  try {
-    const prefsDir = [
-      path.resolve(__dirname, '..', 'robos-preferences'),
-      '/usr/local/share/robos/robos-preferences',
+    const serversDir = [
+      path.resolve(__dirname, '..', 'vpn-servers'),
+      '/usr/local/share/robos/vpn-servers',
     ].find(d => fs.existsSync(path.join(d, 'main.js')));
-    if (!prefsDir) throw new Error('robos-preferences package not found.');
+    if (!serversDir) throw new Error('vpn-servers package not found.');
     const bin = [process.versions.electron && process.execPath, '/usr/bin/electron'].find(
       p => typeof p === 'string' && fs.existsSync(p)
     );
     if (bin) {
       const env = { ...process.env };
       delete env.ELECTRON_RUN_AS_NODE;
-      cp.spawn(bin, [prefsDir, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'], {
+      cp.spawn(bin, [serversDir, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'], {
         env,
         detached: true,
         stdio: 'ignore',

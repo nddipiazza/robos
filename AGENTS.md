@@ -144,6 +144,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **RobOS Point of Sale** | Open-source cash register for retail, cafés and bars: touchscreen worker order entry, self-checkout kiosk, inventory and menu input, cash drawer administration, tabs/tips/split payments, prep queue, and an open checkout-session API. Barcode and QR scanning by gun or webcam. Sample businesses: retail store, coffee shop, bar (`packages/point-of-sale`) |
 | **GNOME Desktop App Installer** | Install, manage, and repair GNOME Desktop shortcuts (`~/Desktop`), App Grid `.desktop` launchers, multi-scale hicolor icons, and GNOME Dock favorites for all RobOS apps |
 | **RobOS VPN Sandbox** | Zero-leak OpenVPN provider & account manager (IPVanish built-in) that sandbox-launches executables inside isolated Linux network namespaces (`ip netns`) with dual-layer `iptables` / `ip6tables` kill-switch enforcement (`packages/vpn-sandbox`) |
+| **RobOS VPN Servers** | Manage OpenVPN providers (IPVanish built-in), VPN accounts, and server locations (`.ovpn` profiles) (`packages/vpn-servers`) |
 
 ## Shared Libraries
 

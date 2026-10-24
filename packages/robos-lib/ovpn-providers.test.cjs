@@ -186,3 +186,32 @@ test('RobOS Preferences schema includes ovpn_accounts section', () => {
     'SETTINGS_SCHEMA in robos-preferences must include ovpn_accounts section'
   );
 });
+
+test('Transmission default profile is created automatically when Transmission is installed', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'robos-vpn-transmission-test-'));
+  try {
+    const ovpnManager = createOvpnManager({ configDir: tmpDir, usePass: false });
+    const engineWithTransmission = createVpnSandboxEngine({
+      configDir: tmpDir,
+      ovpnManager,
+      usePass: false,
+      transmissionBinary: 'transmission-gtk',
+    });
+    const profiles = engineWithTransmission.listSavedAppProfiles();
+    const tr = profiles.find(p => p.id === 'sandbox-transmission');
+    assert.ok(tr, 'Transmission profile must be present when transmission is installed');
+    assert.equal(tr.name, 'Transmission');
+    assert.equal(tr.executable, 'transmission-gtk');
+
+    const engineWithoutTransmission = createVpnSandboxEngine({
+      configDir: tmpDir,
+      ovpnManager,
+      usePass: false,
+      transmissionBinary: null,
+    });
+    const profilesWithout = engineWithoutTransmission.listSavedAppProfiles();
+    assert.ok(!profilesWithout.some(p => p.id === 'sandbox-transmission'));
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});

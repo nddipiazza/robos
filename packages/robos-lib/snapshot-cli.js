@@ -124,6 +124,7 @@ const PORT_REGISTRY = {
   'point-of-sale':     19202,
   'game-playthrough':  19203,
   'vpn-sandbox':       19204,
+  'vpn-servers':       19205,
 };
 
 

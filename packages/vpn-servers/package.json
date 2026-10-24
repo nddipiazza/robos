@@ -1,0 +1,9 @@
+{
+  "name": "robos-vpn-servers",
+  "version": "0.1.0",
+  "description": "Manage OpenVPN providers, IPVanish accounts, and VPN server locations (.ovpn profiles) for RobOS.",
+  "main": "main.js",
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}
