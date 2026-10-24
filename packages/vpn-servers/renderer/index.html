@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';" />
+  <title>RobOS VPN Servers</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div>
+        <h1 class="title">VPN Servers &amp; Accounts</h1>
+        <p class="subtitle">Manage your VPN accounts (IPVanish built-in) and choose which server location to connect through.</p>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn" id="btn-sync-servers">Refresh IPVanish Servers</button>
+        <button type="button" class="btn" id="btn-import-ovpn">Import .ovpn File…</button>
+        <button type="button" class="btn btn-primary" id="btn-open-sandbox">Open VPN App Launcher →</button>
+      </div>
+    </header>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <main class="content">
+      <!-- Left Column: Accounts -->
+      <section class="panel">
+        <h2 class="section-title">1. Your VPN Accounts</h2>
+        <div id="accounts-list" class="list"></div>
+
+        <div class="divider"></div>
+
+        <h3 class="form-title">Add or Update Account</h3>
+        <div class="field">
+          <label for="acc-provider">Provider</label>
+          <select id="acc-provider" class="select"></select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="acc-label">Account Name (optional)</label>
+            <input type="text" id="acc-label" class="input" placeholder="My IPVanish" />
+          </div>
+          <div class="field">
+            <label for="acc-protocol">Protocol</label>
+            <select id="acc-protocol" class="select">
+              <option value="udp">UDP (Fastest)</option>
+              <option value="tcp">TCP</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="acc-username">OpenVPN Username</label>
+            <input type="text" id="acc-username" class="input" autocomplete="off" placeholder="Username" />
+          </div>
+          <div class="field">
+            <label for="acc-password">OpenVPN Password</label>
+            <input type="password" id="acc-password" class="input" autocomplete="off" placeholder="Password" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="acc-default-profile">Default Server Location</label>
+          <select id="acc-default-profile" class="select"></select>
+        </div>
+        <button type="button" class="btn btn-primary full-width" id="btn-save-account">Save Account</button>
+      </section>
+
+      <!-- Right Column: Server Locations -->
+      <section class="panel">
+        <div class="panel-header">
+          <h2 class="section-title">2. Server Locations</h2>
+          <input type="search" id="server-search" class="input search-input" placeholder="Filter by country or city…" />
+        </div>
+        <div id="servers-list" class="list servers-scroll"></div>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

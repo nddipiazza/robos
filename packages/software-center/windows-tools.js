@@ -59,6 +59,7 @@ const PACKAGES = {
   rider: 'JetBrains.Rider', rustrover: 'JetBrains.RustRover',
   firefox: 'Mozilla.Firefox', chromium: 'Hibbiki.Chromium', 'google-chrome': 'Google.Chrome',
   'gh-cli': 'GitHub.cli', docker: 'Docker.DockerDesktop', lazygit: 'JesseDuffield.lazygit',
+  transmission: 'Transmission.Transmission',
   flameshot: 'Flameshot.Flameshot', vlc: 'VideoLAN.VLC',
   ripgrep: 'BurntSushi.ripgrep.MSVC', 'fd-find': 'sharkdp.fd', bat: 'sharkdp.bat',
   jq: 'jqlang.jq', fzf: 'junegunn.fzf', sqlite3: 'SQLite.SQLite',

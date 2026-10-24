@@ -262,6 +262,16 @@ const TOOLS = [
     installCmd: 'LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep \'"tag_name"\' | sed -E \'s/.*"v([^"]+)".*/\\1/\') && curl -Lo /tmp/lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz" && cd /tmp && tar xf lazygit.tar.gz lazygit && sudo install lazygit /usr/local/bin/',
     uninstallCmd: 'sudo rm -f /usr/local/bin/lazygit',
   },
+  {
+    id: 'transmission',
+    name: 'Transmission',
+    description: 'Fast, easy, and free BitTorrent client (transmission-gtk)',
+    category: 'Dev',
+    source: 'apt (transmission-gtk)',
+    checkCmd: 'which transmission-gtk || which transmission-qt || which transmission-cli',
+    installCmd: 'sudo apt-get update -qq && sudo apt-get install -y transmission-gtk',
+    uninstallCmd: 'sudo apt-get remove -y transmission-gtk',
+  },
 
   // ── Screen Capture ──
   {

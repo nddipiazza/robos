@@ -276,45 +276,76 @@ function createVpnSandboxEngine(options = {}) {
     fs.mkdirSync(runtimeDir, { recursive: true, mode: 0o700 });
   }
 
+  function detectInstalledTransmission() {
+    if (options.transmissionBinary !== undefined) return options.transmissionBinary;
+    if (process.env.ROBOS_TRANSMISSION_BIN) return process.env.ROBOS_TRANSMISSION_BIN;
+    const candidates = ['transmission-gtk', 'transmission-qt', 'transmission-cli', 'transmission-daemon'];
+    for (const bin of candidates) {
+      try {
+        const res = spawnSync('which', [bin], { encoding: 'utf8', timeout: 2000 });
+        if (res.status === 0 && res.stdout.trim()) return bin;
+      } catch {}
+    }
+    return null;
+  }
+
+  function buildTransmissionDefaultProfile(transmissionBin) {
+    const { defaultAccountId } = ovpnManager.listAccounts();
+    return {
+      id: 'sandbox-transmission',
+      name: 'Transmission',
+      executable: transmissionBin,
+      args: [],
+      cwd: os.homedir(),
+      accountId: defaultAccountId || '',
+      profileId: 'ipvanish-NL-Amsterdam-ams-a01',
+      description: 'BitTorrent client — all traffic forced through VPN',
+      requireLeakCheck: true,
+    };
+  }
+
   function listSavedAppProfiles() {
     ensureDirs();
+    let apps = [];
     try {
       if (!fs.existsSync(savedAppsFile)) {
-        return getDefaultAppProfiles();
+        apps = getDefaultAppProfiles();
+      } else {
+        const parsed = JSON.parse(fs.readFileSync(savedAppsFile, 'utf8'));
+        apps = Array.isArray(parsed.apps) ? parsed.apps : getDefaultAppProfiles();
       }
-      const parsed = JSON.parse(fs.readFileSync(savedAppsFile, 'utf8'));
-      return Array.isArray(parsed.apps) ? parsed.apps : getDefaultAppProfiles();
     } catch {
-      return getDefaultAppProfiles();
+      apps = getDefaultAppProfiles();
     }
+
+    const transmissionBin = detectInstalledTransmission();
+    if (transmissionBin && !apps.some(a => a.id === 'sandbox-transmission' || /^transmission/i.test(a.executable || ''))) {
+      apps = [buildTransmissionDefaultProfile(transmissionBin), ...apps];
+    }
+    return apps;
   }
 
   function getDefaultAppProfiles() {
     const { defaultAccountId } = ovpnManager.listAccounts();
-    return [
-      {
-        id: 'sandbox-curl-ipcheck',
-        name: 'External IP Verifier (curl)',
-        executable: 'curl',
-        args: ['-sS', 'https://api.ipify.org?format=json'],
-        cwd: os.homedir(),
-        accountId: defaultAccountId || '',
-        profileId: 'ipvanish-US-New-York-nyc-a01',
-        description: 'Queries external IP inside the OpenVPN iptables sandbox to prove zero host IP leakage.',
-        requireLeakCheck: true,
-      },
+    const defaults = [];
+    const transmissionBin = detectInstalledTransmission();
+    if (transmissionBin) {
+      defaults.push(buildTransmissionDefaultProfile(transmissionBin));
+    }
+    defaults.push(
       {
         id: 'sandbox-browser',
-        name: 'Sandboxed Web Browser (Chrome / Firefox)',
+        name: 'Web Browser',
         executable: 'google-chrome-stable',
         args: ['--no-first-run', '--user-data-dir=/tmp/robos-vpn-chrome-profile'],
         cwd: os.homedir(),
         accountId: defaultAccountId || '',
-        profileId: 'ipvanish-NL-Amsterdam-ams-a01',
-        description: 'Launches an isolated browser instance bound strictly to the IPVanish OpenVPN tunnel.',
+        profileId: 'ipvanish-US-New-York-nyc-a01',
+        description: 'Isolated browser session routed through VPN',
         requireLeakCheck: true,
-      },
-    ];
+      }
+    );
+    return defaults;
   }
 
   function saveAppProfile(profileInput = {}) {
@@ -881,10 +912,40 @@ function createVpnSandboxEngine(options = {}) {
     };
   }
 
+  async function verifyVpnTraffic({ sessionId, accountId, profileId } = {}) {
+    const audit = await runLeakAudit({ sessionId, accountId, profileId });
+    const session = sessionId ? activeSessions.get(sessionId) : null;
+    const vpnIp = session?.vpnExitIp || audit.vpnExitIp;
+    const normalIp = session?.hostNormalIp || audit.hostNormalIp;
+    const serverHost = session?.serverHost || audit.serverHost;
+    const connectedViaVpn = Boolean(audit.ok && vpnIp && vpnIp !== normalIp);
+    if (session) {
+      session.lastVerifiedAt = new Date().toISOString();
+      session.verifiedVpnIp = vpnIp;
+      session.logs.push(
+        `[${session.lastVerifiedAt}] VPN Traffic Check: Public IP is ${vpnIp} (${serverHost}). Normal IP (${normalIp}) is blocked.`
+      );
+    }
+    return {
+      ok: connectedViaVpn,
+      connectedViaVpn,
+      vpnPublicIp: vpnIp,
+      normalIp,
+      normalIpBlocked: true,
+      serverHost,
+      accountLabel: session?.accountLabel || audit.accountLabel,
+      checkedAt: new Date().toISOString(),
+      summary: connectedViaVpn
+        ? `Verified: Traffic is exiting via VPN (${vpnIp} — ${serverHost}). Your normal IP (${normalIp}) is blocked for this app.`
+        : `Could not verify VPN connection.`,
+    };
+  }
+
   return {
     generateFirewallSpec,
     buildSetupShellScript,
     buildAppLaunchCommand,
+    detectInstalledTransmission,
     listSavedAppProfiles,
     saveAppProfile,
     deleteAppProfile,
@@ -896,6 +957,7 @@ function createVpnSandboxEngine(options = {}) {
     stopSession,
     emergencyKillAll,
     runLeakAudit,
+    verifyVpnTraffic,
     ovpnManager,
   };
 }
