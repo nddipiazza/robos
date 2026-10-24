@@ -535,12 +535,20 @@ function createVpnSandboxEngine(options = {}) {
     // Write ephemeral 0600 credentials file
     fs.writeFileSync(authFilePath, `${creds.username}\n${creds.password}\n`, { mode: 0o600 });
 
-    // Rewrite relative ca path in ovpn config to absolute path so openvpn can run from any directory
+    // Rewrite relative ca path in ovpn config to absolute path and strip OpenVPN 2.6+ removed 'keysize' directive
     const profileDir = path.dirname(ovpnPath);
-    const normalizedOvpn = ovpnContent.replace(/^ca\s+["']?([^"'\r\n]+)["']?/m, (match, caRef) => {
-      if (path.isAbsolute(caRef)) return `ca "${caRef}"`;
-      return `ca "${path.join(profileDir, caRef)}"`;
-    });
+    const sanitizedLines = ovpnContent
+      .replace(/^ca\s+["']?([^"'\r\n]+)["']?/m, (match, caRef) => {
+        if (path.isAbsolute(caRef)) return `ca "${caRef}"`;
+        return `ca "${path.join(profileDir, caRef)}"`;
+      })
+      .split(/\r?\n/)
+      .filter(l => !l.trim().startsWith('keysize '));
+    if (!sanitizedLines.some(l => l.trim().startsWith('data-ciphers '))) {
+      sanitizedLines.push('data-ciphers AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-256-CBC');
+      sanitizedLines.push('data-ciphers-fallback AES-256-CBC');
+    }
+    const normalizedOvpn = sanitizedLines.join('\n') + '\n';
     fs.writeFileSync(ovpnRuntimePath, normalizedOvpn, { mode: 0o600 });
 
     const setupScript = buildSetupShellScript(spec, {
@@ -559,12 +567,26 @@ function createVpnSandboxEngine(options = {}) {
           .split(/\s+/)
           .filter(Boolean);
 
+    const runtimeUserDir = process.env.XDG_RUNTIME_DIR || `/run/user/${spec.targetUid}`;
+    let resolvedXauth = process.env.XAUTHORITY || '';
+    if (!resolvedXauth || !fs.existsSync(resolvedXauth)) {
+      try {
+        const mutterFiles = fs.readdirSync(runtimeUserDir).filter(f => f.startsWith('.mutter-Xwaylandauth.'));
+        if (mutterFiles.length > 0) {
+          resolvedXauth = path.join(runtimeUserDir, mutterFiles[0]);
+        }
+      } catch {}
+    }
+    if (!resolvedXauth) {
+      resolvedXauth = path.join(os.homedir(), '.Xauthority');
+    }
+
     const launchEnv = {
       DISPLAY: process.env.DISPLAY || ':0',
-      WAYLAND_DISPLAY: process.env.WAYLAND_DISPLAY || '',
-      XAUTHORITY: process.env.XAUTHORITY || path.join(os.homedir(), '.Xauthority'),
-      XDG_RUNTIME_DIR: process.env.XDG_RUNTIME_DIR || `/run/user/${spec.targetUid}`,
-      DBUS_SESSION_BUS_ADDRESS: process.env.DBUS_SESSION_BUS_ADDRESS || '',
+      WAYLAND_DISPLAY: process.env.WAYLAND_DISPLAY || 'wayland-0',
+      XAUTHORITY: resolvedXauth,
+      XDG_RUNTIME_DIR: runtimeUserDir,
+      DBUS_SESSION_BUS_ADDRESS: process.env.DBUS_SESSION_BUS_ADDRESS || `unix:path=${runtimeUserDir}/bus`,
       PULSE_SERVER: process.env.PULSE_SERVER || '',
       HOME: os.homedir(),
       USER: spec.targetUser,
@@ -583,7 +605,7 @@ function createVpnSandboxEngine(options = {}) {
     });
 
     const caps = checkSystemCapabilities();
-    const forceReal = process.env.ROBOS_VPN_REAL_EXEC === '1';
+    const allowReal = !simulateIfNoTun && process.env.ROBOS_VPN_REAL_EXEC !== '0';
     let mode = 'enforced-netns';
     let proc = null;
     const logs = [
@@ -602,15 +624,15 @@ function createVpnSandboxEngine(options = {}) {
       } catch {}
     };
 
-    if (forceReal && caps.hasIp && caps.hasIptables && caps.hasOpenvpn && caps.passwordlessSudo) {
+    if (allowReal && caps.hasIp && caps.hasIptables && caps.hasOpenvpn && (caps.passwordlessSudo || caps.isRoot)) {
       // Execute real network namespace + iptables + openvpn setup
       const sudoPrefix = caps.isRoot ? [] : ['sudo', '-n'];
       const setupRes = spawnSync(sudoPrefix[0] || 'bash', [...sudoPrefix.slice(1), 'bash', setupScriptPath], {
         encoding: 'utf8',
         timeout: 15000,
       });
-      cleanupAuthFile();
       if (setupRes.status !== 0) {
+        cleanupAuthFile();
         // Clean up any partial namespace state immediately so zero traffic can ever escape
         spawnSync(sudoPrefix[0] || 'bash', [...sudoPrefix.slice(1), 'bash', teardownScriptPath], { timeout: 5000 });
         throw new Error(`Failed to initialize isolated VPN network namespace: ${(setupRes.stderr || setupRes.stdout || '').trim()}`);
@@ -618,6 +640,7 @@ function createVpnSandboxEngine(options = {}) {
 
       // Wait for tun0 interface inside namespace before launching executable
       let tunReady = false;
+      let authFailed = false;
       for (let i = 0; i < 30; i++) {
         const checkTun = spawnSync(
           sudoPrefix[0] || 'ip',
@@ -628,13 +651,36 @@ function createVpnSandboxEngine(options = {}) {
           tunReady = true;
           break;
         }
+        try {
+          if (fs.existsSync(ovpnLogPath)) {
+            const logTxt = fs.readFileSync(ovpnLogPath, 'utf8');
+            if (logTxt.includes('AUTH_FAILED')) {
+              authFailed = true;
+              break;
+            }
+          }
+        } catch {}
         await new Promise(r => setTimeout(r, 500));
       }
+      cleanupAuthFile();
 
       if (!tunReady && !simulateIfNoTun) {
+        let logTail = '';
+        try {
+          if (fs.existsSync(ovpnLogPath)) {
+            logTail = fs.readFileSync(ovpnLogPath, 'utf8').trim().split('\n').slice(-4).join(' | ');
+          }
+        } catch {}
         spawnSync(sudoPrefix[0] || 'bash', [...sudoPrefix.slice(1), 'bash', teardownScriptPath], { timeout: 5000 });
-        throw new Error('OpenVPN tunnel (tun0) did not come up within 15s. Sandboxed executable was NOT launched (Kill Switch active).');
+        if (authFailed) {
+          throw new Error('OpenVPN authentication failed (AUTH_FAILED). Please check your IPVanish OpenVPN service username and password in RobOS VPN Servers.');
+        }
+        throw new Error(`OpenVPN tunnel (tun0) did not come up within 15s. Sandboxed executable was NOT launched (Kill Switch active). ${logTail ? 'Log: ' + logTail : ''}`);
       }
+
+      const envArgs = Object.entries(launchEnv)
+        .filter(([, v]) => v !== undefined && v !== null && v !== '')
+        .map(([k, v]) => `${k}=${v}`);
 
       proc = spawn(
         sudoPrefix[0] || 'ip',
@@ -647,6 +693,8 @@ function createVpnSandboxEngine(options = {}) {
           'sudo',
           '-u',
           spec.targetUser,
+          'env',
+          ...envArgs,
           cleanExec,
           ...parsedArgs,
         ],

@@ -35,23 +35,23 @@ const BUILTIN_OVPN_PROVIDERS = {
     cipher: 'AES-256-CBC',
     authDigest: 'SHA256',
     dnsServers: ['198.18.0.1', '198.18.0.2', '1.1.1.1', '9.9.9.9'],
-    description: 'IPVanish high-speed OpenVPN network with 2,400+ servers across 90+ locations.',
+    description: 'IPVanish high-speed OpenVPN network with 3,598 server configs across 90+ locations (from https://configs.ipvanish.com/configs/).',
     credentialHelp: 'Enter your IPVanish OpenVPN username and password (found in your IPVanish Account Dashboard under Service Credentials / OpenVPN).',
     curatedServers: [
-      { id: 'ipvanish-US-New-York-nyc-a01', country: 'US', city: 'New York', hostname: 'nyc-a01.ipvanish.com', ip: '64.145.73.10', port: 443, proto: 'udp' },
-      { id: 'ipvanish-US-Chicago-chi-a01', country: 'US', city: 'Chicago', hostname: 'chi-a01.ipvanish.com', ip: '209.107.216.10', port: 443, proto: 'udp' },
-      { id: 'ipvanish-US-Los-Angeles-lax-a01', country: 'US', city: 'Los Angeles', hostname: 'lax-a01.ipvanish.com', ip: '64.145.64.10', port: 443, proto: 'udp' },
-      { id: 'ipvanish-US-Dallas-dal-a01', country: 'US', city: 'Dallas', hostname: 'dal-a01.ipvanish.com', ip: '209.197.27.10', port: 443, proto: 'udp' },
-      { id: 'ipvanish-US-Seattle-sea-a01', country: 'US', city: 'Seattle', hostname: 'sea-a01.ipvanish.com', ip: '64.145.79.10', port: 443, proto: 'udp' },
-      { id: 'ipvanish-US-Miami-mia-a01', country: 'US', city: 'Miami', hostname: 'mia-a01.ipvanish.com', ip: '69.4.89.10', port: 443, proto: 'udp' },
-      { id: 'ipvanish-UK-London-lon-a01', country: 'UK', city: 'London', hostname: 'lon-a01.ipvanish.com', ip: '212.102.63.10', port: 443, proto: 'udp' },
-      { id: 'ipvanish-NL-Amsterdam-ams-a01', country: 'NL', city: 'Amsterdam', hostname: 'ams-a01.ipvanish.com', ip: '81.171.29.10', port: 443, proto: 'udp' },
-      { id: 'ipvanish-DE-Frankfurt-fra-a01', country: 'DE', city: 'Frankfurt', hostname: 'fra-a01.ipvanish.com', ip: '195.201.94.10', port: 443, proto: 'udp' },
-      { id: 'ipvanish-CA-Toronto-tor-a01', country: 'CA', city: 'Toronto', hostname: 'tor-a01.ipvanish.com', ip: '209.58.147.10', port: 443, proto: 'udp' },
-      { id: 'ipvanish-CH-Zurich-zur-a01', country: 'CH', city: 'Zurich', hostname: 'zur-a01.ipvanish.com', ip: '179.43.156.10', port: 443, proto: 'udp' },
-      { id: 'ipvanish-SG-Singapore-sin-a01', country: 'SG', city: 'Singapore', hostname: 'sin-a01.ipvanish.com', ip: '103.216.220.10', port: 443, proto: 'udp' },
-      { id: 'ipvanish-JP-Tokyo-nrt-a01', country: 'JP', city: 'Tokyo', hostname: 'nrt-a01.ipvanish.com', ip: '103.125.235.10', port: 443, proto: 'udp' },
-      { id: 'ipvanish-AU-Sydney-syd-a01', country: 'AU', city: 'Sydney', hostname: 'syd-a01.ipvanish.com', ip: '103.231.90.10', port: 443, proto: 'udp' },
+      { id: 'ipvanish-US-New-York-nyc-a01', country: 'US', city: 'New York', hostname: 'nyc-a01.ipvanish.com', ip: '173.255.160.9', port: 443, proto: 'udp' },
+      { id: 'ipvanish-US-Chicago-chi-b01', country: 'US', city: 'Chicago', hostname: 'chi-b01.ipvanish.com', ip: '216.131.76.3', port: 443, proto: 'udp' },
+      { id: 'ipvanish-US-Los-Angeles-lax-b01', country: 'US', city: 'Los Angeles', hostname: 'lax-b01.ipvanish.com', ip: '216.131.80.3', port: 443, proto: 'udp' },
+      { id: 'ipvanish-US-Dallas-dal-b01', country: 'US', city: 'Dallas', hostname: 'dal-b01.ipvanish.com', ip: '216.131.78.2', port: 443, proto: 'udp' },
+      { id: 'ipvanish-US-Seattle-sea-a01', country: 'US', city: 'Seattle', hostname: 'sea-a01.ipvanish.com', ip: '209.107.214.7', port: 443, proto: 'udp' },
+      { id: 'ipvanish-US-Miami-mia-b01', country: 'US', city: 'Miami', hostname: 'mia-b01.ipvanish.com', ip: '216.131.87.3', port: 443, proto: 'udp' },
+      { id: 'ipvanish-UK-London-lon-a01', country: 'UK', city: 'London', hostname: 'lon-a01.ipvanish.com', ip: '185.91.122.6', port: 443, proto: 'udp' },
+      { id: 'ipvanish-NL-Amsterdam-ams-a01', country: 'NL', city: 'Amsterdam', hostname: 'ams-a01.ipvanish.com', ip: '176.67.80.6', port: 443, proto: 'udp' },
+      { id: 'ipvanish-DE-Frankfurt-fra-a01', country: 'DE', city: 'Frankfurt', hostname: 'fra-a01.ipvanish.com', ip: '216.131.114.6', port: 443, proto: 'udp' },
+      { id: 'ipvanish-CA-Toronto-tor-b01', country: 'CA', city: 'Toronto', hostname: 'tor-b01.ipvanish.com', ip: '104.36.180.35', port: 443, proto: 'udp' },
+      { id: 'ipvanish-CH-Zurich-zrh-c01', country: 'CH', city: 'Zurich', hostname: 'zrh-c01.ipvanish.com', ip: '216.131.108.2', port: 443, proto: 'udp' },
+      { id: 'ipvanish-SG-Singapore-sin-a01', country: 'SG', city: 'Singapore', hostname: 'sin-a01.ipvanish.com', ip: '108.171.108.6', port: 443, proto: 'udp' },
+      { id: 'ipvanish-JP-Tokyo-nrt-a01', country: 'JP', city: 'Tokyo', hostname: 'nrt-a01.ipvanish.com', ip: '64.145.90.6', port: 443, proto: 'udp' },
+      { id: 'ipvanish-AU-Sydney-syd-b01', country: 'AU', city: 'Sydney', hostname: 'syd-b01.ipvanish.com', ip: '173.245.209.4', port: 443, proto: 'udp' },
     ],
   },
   protonvpn: {
@@ -120,25 +120,34 @@ const BUILTIN_OVPN_PROVIDERS = {
   },
 };
 
-// Official IPVanish Root CA Certificate (standard public CA distributed in configs.ipvanish.com/configs/configs.zip)
+// Official IPVanish Root CA Certificate (distributed in https://configs.ipvanish.com/openvpn/v2.6.0-0/configs.zip)
 const IPVANISH_CA_CERT = `-----BEGIN CERTIFICATE-----
-MIIEJTCCAw2gAwIBAgIJAKc9rM5eJ8zHMA0GCSqGSIb3DQEBCwUAMIGYMQswCQYD
-VQQGEwJVUzELMAkGA1UECBMCV1kxEjAQBgNVBAcTCUNoZXllbm5lMRkwFwYDVQQK
-ExBJUHZhbmlzaC5jb20gSW5jMRswGQYDVQQLExJJUHZhbmlzaC5jb20gQ0EgVjEx
-FDASBgNVBAMTC0lQdmFuaXNoIENBMSAwHgYJKoZIhvcNAQkBFhFjYUBpcHZhbmlz
-aC5jb20wHhcNMTUwMjI0MTcxMzM5WhcNMzUwMjE5MTcxMzM5WjCBmDELMAkGA1UE
-BhMCVVMxCzAJBgNVBAgTAldZMRIwEAYDVQQHEwlDaGV5ZW5uZTEZMBcGA1UEChMQ
-SVB2YW5pc2guY29tIEluYzEbMBkGA1UECxMSSVB2YW5pc2guY29tIENBIFYxMRQw
-EgYDVQQDEwtJUHZhbmlzaCBDQTEgMB4GCSqGSIb3DQEJARYRY2FAaXB2YW5pc2gu
-Y29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAy0f8S7+8e1sN+f6Q
-vL6D8w5y7d8G3qO9K1x0zZ5Z0k8U8b2N4e4vP1j5S9n7W2y6X3m1L8p4V7r9C0t2
-QIDAQABo4IBDTCCAQkwHQYDVR0OBBYEFN8j4K2y9L1m3P5r7T9v1X3z5B7dMIHJ
-BgNVHSMEgcEwgb6AFN8j4K2y9L1m3P5r7T9v1X3z5B7doYGepIGbMIGYMQswCQYD
-VQQGEwJVUzELMAkGA1UECBMCV1kxEjAQBgNVBAcTCUNoZXllbm5lMRkwFwYDVQQK
-ExBJUHZhbmlzaC5jb20gSW5jMRswGQYDVQQLExJJUHZhbmlzaC5jb20gQ0EgVjEx
-FDASBgNVBAMTC0lQdmFuaXNoIENBMSAwHgYJKoZIhvcNAQkBFhFjYUBpcHZhbmlz
-aC5jb20CCQCnPazOXifMxzAMBgNVHRMEBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IB
-AQA1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6A7B8C9D0E1
+MIIErzCCA5egAwIBAgIJAMYKzSS8uPKDMA0GCSqGSIb3DQEBDQUAMIGVMQswCQYD
+VQQGEwJVUzELMAkGA1UECBMCRkwxFDASBgNVBAcTC1dpbnRlciBQYXJrMREwDwYD
+VQQKEwhJUFZhbmlzaDEVMBMGA1UECxMMSVBWYW5pc2ggVlBOMRQwEgYDVQQDEwtJ
+UFZhbmlzaCBDQTEjMCEGCSqGSIb3DQEJARYUc3VwcG9ydEBpcHZhbmlzaC5jb20w
+IBcNMjIwNTA5MjAyMDQ1WhgPMjA4MjA0MjQyMDIwNDVaMIGVMQswCQYDVQQGEwJV
+UzELMAkGA1UECBMCRkwxFDASBgNVBAcTC1dpbnRlciBQYXJrMREwDwYDVQQKEwhJ
+UFZhbmlzaDEVMBMGA1UECxMMSVBWYW5pc2ggVlBOMRQwEgYDVQQDEwtJUFZhbmlz
+aCBDQTEjMCEGCSqGSIb3DQEJARYUc3VwcG9ydEBpcHZhbmlzaC5jb20wggEiMA0G
+CSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC30MFY2v8go65jdOYM/nHu9hlHQMbE
+ttdTxPIDMFuNS0UUxuHGUeJdVCtkeaDOKH3jHsGBczu1amYwphVv6A1qox1YTrzR
+Cbec7CaHL926VcOQQcDAPTmL+JPHhlpR21Xa+woHFGDW90LgASLAPtupXgc6LXfF
+wb3vVpDnkyPUp4J0DRo2+lq3UtbHaONbGx8jyzYu/kWSiLUc7X69OedoSwlmsGAC
+Qteki2o/b0uKTf84Ei+QEjGUquGJU+LETmo2IP55I+KuyZE6+zIiiegm25jgPDkr
+qlw2UrJiLCjUg4VhTdjF9/AUmT5tJbhZUGGx1/l0bGr+44ea7PmB3DELAgMBAAGj
+gf0wgfowDAYDVR0TBAUwAwEB/zAdBgNVHQ4EFgQUS/0UJYkd58Fwg9f2nxEcJU4Z
+7q4wgcoGA1UdIwSBwjCBv4AUS/0UJYkd58Fwg9f2nxEcJU4Z7q6hgZukgZgwgZUx
+CzAJBgNVBAYTAlVTMQswCQYDVQQIEwJGTDEUMBIGA1UEBxMLV2ludGVyIFBhcmsx
+ETAPBgNVBAoTCElQVmFuaXNoMRUwEwYDVQQLEwxJUFZhbmlzaCBWUE4xFDASBgNV
+BAMTC0lQVmFuaXNoIENBMSMwIQYJKoZIhvcNAQkBFhRzdXBwb3J0QGlwdmFuaXNo
+LmNvbYIJAMYKzSS8uPKDMA0GCSqGSIb3DQEBDQUAA4IBAQCc9JV7IR8BfBrF/BQT
+Xg0SZMZyyMAxR2jfW9qMHKSeJuZVVjfHiqoynEgBCNbn71wZWv3OF/Thu9BJ4GiY
+J2Bc9nIa90D1NGYgiOVYLGXfUUqy5FgfrsWh0Go5oYm9l7W9pWfIifwsaZynkY0r
+TIHn32FF0H3+wZrGrEUzVL6qi+KD8iR3cBbLT+xUzulMTBp4JYaQnxpV4fZNS0Zs
+NrWKFWz4Iz1SSBcsnvUhfWs1aKx4yOJQx33Pc+KwpUI+meTlMjoh+AoTriooKU2M
+bOqLQl32y3pR0MP3fX4HDVFRylxdckEc+VryGNHQLUJiIBKBCORih/YiRhtEhpoB
+xmkw
 -----END CERTIFICATE-----
 `;
 
@@ -155,18 +164,21 @@ function buildIpvanishOvpnContent(server, caCertPath) {
     ...(server.ip ? [`# Resolved Fallback IP: ${server.ip}`] : []),
     `resolv-retry infinite`,
     `nobind`,
-    `persist-key`,
     `persist-tun`,
     `persist-remote-ip`,
-    `ca "${caCertPath}"`,
+    ...(caCertPath ? [`ca "${caCertPath}"`] : []),
     `verify-x509-name ${server.hostname} name`,
     `auth-user-pass`,
     `comp-lzo`,
     `verb 3`,
     `auth SHA256`,
-    `cipher AES-256-CBC`,
-    `keysize 256`,
+    `data-ciphers AES-256-GCM:AES-256-CBC`,
+    `data-ciphers-fallback AES-256-CBC`,
     `tls-cipher TLS-DHE-RSA-WITH-AES-256-CBC-SHA:TLS-DHE-DSS-WITH-AES-256-CBC-SHA:TLS-RSA-WITH-AES-256-CBC-SHA`,
+    `setenv CLIENT_CERT 0`,
+    `<ca>`,
+    IPVANISH_CA_CERT.trim(),
+    `</ca>`,
     ``,
   ].join('\n');
 }
@@ -248,14 +260,43 @@ function createOvpnManager(options = {}) {
     fs.mkdirSync(profilesRoot, { recursive: true });
   }
 
+  function patchDirForModernOpenvpn(dirPath) {
+    try {
+      const files = fs.readdirSync(dirPath).filter(f => f.endsWith('.ovpn'));
+      for (const file of files) {
+        const p = path.join(dirPath, file);
+        const raw = fs.readFileSync(p, 'utf8');
+        if (raw.includes('\nkeysize ') || raw.startsWith('keysize ')) {
+          const lines = raw.split(/\r?\n/).filter(l => !l.trim().startsWith('keysize '));
+          if (!lines.some(l => l.trim().startsWith('data-ciphers '))) {
+            lines.push('data-ciphers AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-256-CBC');
+            lines.push('data-ciphers-fallback AES-256-CBC');
+          }
+          fs.writeFileSync(p, lines.join('\n') + '\n', { mode: 0o644 });
+        }
+      }
+    } catch {}
+  }
+
   function ensureIpvanishProfiles() {
     ensureDirs();
     const ipvDir = path.join(profilesRoot, 'ipvanish');
     fs.mkdirSync(ipvDir, { recursive: true });
     const caPath = path.join(ipvDir, BUILTIN_OVPN_PROVIDERS.ipvanish.caCertFilename);
-    if (!fs.existsSync(caPath)) {
-      fs.writeFileSync(caPath, IPVANISH_CA_CERT, { mode: 0o644 });
+    fs.writeFileSync(caPath, IPVANISH_CA_CERT, { mode: 0o644 });
+
+    // Extract bundled full 3,598-server IPVanish archive if present and directory isn't populated yet
+    const bundleArchive = path.join(__dirname, 'assets', 'ipvanish-configs.tar.xz');
+    const isCustomTestDir = Boolean(options.configDir && options.extractFullBundle !== true);
+    if (!isCustomTestDir && fs.existsSync(bundleArchive)) {
+      try {
+        const existingCount = fs.readdirSync(ipvDir).filter(f => f.endsWith('.ovpn')).length;
+        if (existingCount < 100) {
+          spawnSync('tar', ['-xJf', bundleArchive, '-C', ipvDir], { timeout: 15000 });
+        }
+      } catch {}
     }
+
     for (const server of BUILTIN_OVPN_PROVIDERS.ipvanish.curatedServers) {
       const ovpnPath = path.join(ipvDir, `${server.id}.ovpn`);
       if (!fs.existsSync(ovpnPath)) {
@@ -475,17 +516,37 @@ function createOvpnManager(options = {}) {
     return files.map(filename => {
       const id = filename.slice(0, -5);
       const fullPath = path.join(dir, filename);
+      const curated = curatedMap.get(id);
+      // Fast-path for standard IPVanish naming convention: ipvanish-US-New-York-nyc-a01
+      const ipvMatch = id.match(/^ipvanish-([A-Z]{2})-(.+)-([a-z]{3}-[a-z0-9]+)$/i);
+      if (ipvMatch && files.length > 50) {
+        const country = ipvMatch[1].toUpperCase();
+        const city = ipvMatch[2].replace(/---/g, ' - ').replace(/-/g, ' ');
+        const serverCode = ipvMatch[3].toLowerCase();
+        const hostname = curated?.hostname || `${serverCode}.ipvanish.com`;
+        return {
+          id,
+          filename,
+          path: fullPath,
+          providerId,
+          country,
+          city,
+          hostname,
+          ip: curated?.ip || null,
+          port: curated?.port || 443,
+          proto: curated?.proto || 'udp',
+          label: `${country} — ${city} (${hostname})`,
+        };
+      }
+
       let parsed = { remotes: [], proto: 'udp', port: 443 };
       try {
         parsed = parseOvpnConfig(fs.readFileSync(fullPath, 'utf8'));
       } catch {}
-      const curated = curatedMap.get(id);
       const remote = parsed.remotes[0] || {};
-      // Parse IPVanish naming convention: ipvanish-US-New-York-nyc-a01
-      const ipvMatch = id.match(/^ipvanish-([A-Z]{2})-(.+)-([a-z]{3}-[a-z0-9]+)$/i);
       const country = curated?.country || (ipvMatch ? ipvMatch[1].toUpperCase() : '');
-      const city = curated?.city || (ipvMatch ? ipvMatch[2].replace(/-/g, ' ') : '');
-      const hostname = remote.host || curated?.hostname || '';
+      const city = curated?.city || (ipvMatch ? ipvMatch[2].replace(/---/g, ' - ').replace(/-/g, ' ') : '');
+      const hostname = remote.host || curated?.hostname || (ipvMatch ? `${ipvMatch[3].toLowerCase()}.ipvanish.com` : '');
       return {
         id,
         filename,
@@ -570,6 +631,7 @@ function createOvpnManager(options = {}) {
 
         const unzipRes = spawnSync('unzip', ['-o', '-q', tmpZip, '-d', ipvDir], { timeout: 20000 });
         try { fs.unlinkSync(tmpZip); } catch {}
+        patchDirForModernOpenvpn(ipvDir);
         const profiles = listProfiles('ipvanish');
         return {
           ok: true,
