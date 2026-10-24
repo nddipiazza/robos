@@ -48,22 +48,27 @@ function renderHeaderAndSelectors() {
       .join('');
   }
 
-  const updateServers = () => {
+  const updateServers = (forceRebuild = false) => {
     const acc = accounts.find(a => a.id === accSelect.value) || accounts[0];
     const providerId = acc ? acc.providerId : 'ipvanish';
     const provider = (state.providers || []).find(p => p.id === providerId) || state.providers?.[0];
     const profiles = provider?.profiles || [];
+    const sig = `${providerId}:${profiles.length}`;
     const currentSrv = srvSelect.value && profiles.some(p => p.id === srvSelect.value)
       ? srvSelect.value
       : (acc?.defaultProfile || profiles[0]?.id || '');
 
+    if (!forceRebuild && srvSelect.dataset.sig === sig && srvSelect.options.length > 0) {
+      return;
+    }
+    srvSelect.dataset.sig = sig;
     srvSelect.innerHTML = profiles
       .map(p => `<option value="${esc(p.id)}"${p.id === currentSrv ? ' selected' : ''}>${esc(p.country ? `${p.country} — ${p.city} (${p.hostname})` : p.label)}</option>`)
       .join('');
   };
 
   updateServers();
-  accSelect.onchange = updateServers;
+  accSelect.onchange = () => updateServers(true);
 }
 
 function renderSavedApps() {

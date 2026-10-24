@@ -98,6 +98,26 @@ function renderFormSelects() {
   const defAcc = defaultAccount();
   const selectedProf = defAcc?.defaultProfile || profiles[0]?.id || '';
 
+  const countrySelect = document.getElementById('server-country');
+  if (countrySelect) {
+    const prevCountry = countrySelect.value || '';
+    const counts = new Map();
+    for (const p of profiles) {
+      const c = p.country || 'OTHER';
+      counts.set(c, (counts.get(c) || 0) + 1);
+    }
+    const sortedCountries = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    countrySelect.innerHTML =
+      `<option value="">All Countries (${profiles.length})</option>` +
+      sortedCountries
+        .map(([c, n]) => `<option value="${esc(c)}"${c === prevCountry ? ' selected' : ''}>${esc(c)} (${n})</option>`)
+        .join('');
+    countrySelect.onchange = () => {
+      window._serverLimit = 150;
+      renderServers();
+    };
+  }
+
   profSelect.innerHTML = profiles
     .map(p => `<option value="${esc(p.id)}"${p.id === selectedProf ? ' selected' : ''}>${esc(p.label)}</option>`)
     .join('');
@@ -110,12 +130,16 @@ function renderFormSelects() {
 
 function renderServers() {
   const listEl = document.getElementById('servers-list');
+  const headingEl = document.getElementById('servers-heading');
   const q = (document.getElementById('server-search')?.value || '').trim().toLowerCase();
+  const countryFilter = document.getElementById('server-country')?.value || '';
   const prov = activeProvider();
   const defAcc = defaultAccount();
-  const currentServerId = defAcc?.defaultProfile || '';
+  const currentServerId = defAcc?.defaultProfile || document.getElementById('acc-default-profile')?.value || '';
+  const allProfiles = prov?.profiles || [];
 
-  const profiles = (prov?.profiles || []).filter(p => {
+  const profiles = allProfiles.filter(p => {
+    if (countryFilter && (p.country || 'OTHER') !== countryFilter) return false;
     if (!q) return true;
     return (
       (p.label || '').toLowerCase().includes(q) ||
@@ -125,15 +149,27 @@ function renderServers() {
     );
   });
 
+  if (headingEl) {
+    headingEl.textContent = `2. Server Locations (${profiles.length.toLocaleString()} of ${allProfiles.length.toLocaleString()})`;
+  }
+
   if (!profiles.length) {
     listEl.innerHTML = `<div class="row-card"><div class="row-sub">No matching servers found.</div></div>`;
     return;
   }
 
-  listEl.innerHTML = profiles
-    .map(p => {
-      const isSelected = p.id === currentServerId;
-      return `
+  const limit = window._serverLimit || 150;
+  const visible = profiles.slice(0, limit);
+  const selectedObj = allProfiles.find(p => p.id === currentServerId);
+  if (selectedObj && !visible.some(p => p.id === selectedObj.id)) {
+    visible.unshift(selectedObj);
+  }
+
+  listEl.innerHTML =
+    visible
+      .map(p => {
+        const isSelected = p.id === currentServerId;
+        return `
         <div class="row-card ${isSelected ? 'active' : ''}" data-server-id="${esc(p.id)}">
           <div>
             <div class="row-title">
@@ -151,8 +187,19 @@ function renderServers() {
           </div>
         </div>
       `;
-    })
-    .join('');
+      })
+      .join('') +
+    (profiles.length > limit
+      ? `<button type="button" class="btn full-width" id="btn-show-more-servers">Show More (${(profiles.length - limit).toLocaleString()} remaining)…</button>`
+      : '');
+
+  const moreBtn = document.getElementById('btn-show-more-servers');
+  if (moreBtn) {
+    moreBtn.onclick = () => {
+      window._serverLimit = limit + 250;
+      renderServers();
+    };
+  }
 
   listEl.querySelectorAll('[data-select-server]').forEach(btn => {
     btn.onclick = async () => {

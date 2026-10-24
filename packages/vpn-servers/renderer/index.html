@@ -68,8 +68,11 @@
       <!-- Right Column: Server Locations -->
       <section class="panel">
         <div class="panel-header">
-          <h2 class="section-title">2. Server Locations</h2>
-          <input type="search" id="server-search" class="input search-input" placeholder="Filter by country or city…" />
+          <h2 class="section-title" id="servers-heading">2. Server Locations</h2>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <select id="server-country" class="select" style="width:150px;"></select>
+            <input type="search" id="server-search" class="input search-input" placeholder="Search city or server (e.g. chi, nyc)…" />
+          </div>
         </div>
         <div id="servers-list" class="list servers-scroll"></div>
       </section>
