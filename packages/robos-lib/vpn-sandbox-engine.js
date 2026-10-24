@@ -300,14 +300,15 @@ function buildSetupShellScript(spec, { ovpnConfigPath, authFilePath, logFilePath
     `# ── 5. Apply Host-Side FORWARD & NAT Lock (Only VPN Server Endpoint Allowed) ──`,
     ...spec.hostIptablesRules,
     ``,
-    `# ── 6. Start OpenVPN Daemon Inside ${spec.netnsName} ──`,
+    `# ── 6. Start OpenVPN Daemon Inside ${spec.netnsName} (Isolated from Host D-Bus / systemd-resolved) ──`,
     `touch "${logFilePath}"`,
     `chmod 0644 "${logFilePath}"`,
-    `OVPN_DNS_FLAGS=()`,
-    `if openvpn --help 2>&1 | grep -q -- "--dns-updown"; then`,
+    `OVPN_DNS_FLAGS=(--pull-filter ignore "dhcp-option")`,
+    `OVPN_HELP="$(openvpn --help 2>&1 || true)"`,
+    `if grep -q -- "--dns-updown" <<<"$OVPN_HELP"; then`,
     `  OVPN_DNS_FLAGS+=(--dns-updown disable)`,
     `fi`,
-    `ip netns exec ${spec.netnsName} openvpn \\`,
+    `ip netns exec ${spec.netnsName} env DBUS_SYSTEM_BUS_ADDRESS=unix:path=/dev/null openvpn \\`,
     `  --config "${ovpnConfigPath}" \\`,
     `  --auth-user-pass "${authFilePath}" \\`,
     `  --auth-nocache \\`,
@@ -628,6 +629,9 @@ function createVpnSandboxEngine(options = {}) {
     if (!sanitizedLines.some(l => l.trim().startsWith('data-ciphers '))) {
       sanitizedLines.push('data-ciphers AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-256-CBC');
       sanitizedLines.push('data-ciphers-fallback AES-256-CBC');
+    }
+    if (!sanitizedLines.some(l => l.trim().startsWith('pull-filter ignore "dhcp-option"'))) {
+      sanitizedLines.push('pull-filter ignore "dhcp-option"');
     }
     const normalizedOvpn = sanitizedLines.join('\n') + '\n';
     fs.writeFileSync(ovpnRuntimePath, normalizedOvpn, { mode: 0o600 });

@@ -897,6 +897,9 @@ function createOvpnManager(options = {}) {
       sanitized.push('data-ciphers AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-256-CBC');
       sanitized.push('data-ciphers-fallback AES-256-CBC');
     }
+    if (!sanitized.some(l => l.trim().startsWith('pull-filter ignore "dhcp-option"'))) {
+      sanitized.push('pull-filter ignore "dhcp-option"');
+    }
     fs.writeFileSync(tmpOvpn, sanitized.join('\n') + '\n', { mode: 0o600 });
 
     const cleanup = () => {
@@ -913,10 +916,16 @@ function createOvpnManager(options = {}) {
           '--config', tmpOvpn,
           '--auth-user-pass', tmpAuth,
           '--auth-nocache',
+          '--ifconfig-noexec',
+          '--route-noexec',
+          '--pull-filter', 'ignore', 'dhcp-option',
           '--connect-retry-max', '1',
           '--hand-window', '10',
         ],
-        { stdio: ['ignore', 'pipe', 'pipe'] }
+        {
+          stdio: ['ignore', 'pipe', 'pipe'],
+          env: { ...process.env, DBUS_SYSTEM_BUS_ADDRESS: 'unix:path=/dev/null' },
+        }
       );
 
       let output = '';
