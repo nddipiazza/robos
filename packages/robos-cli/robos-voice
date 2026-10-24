@@ -1,35 +1,321 @@
-#!/usr/bin/env bash
-set -e
+#!/usr/bin/env node
+'use strict';
 
-ROBOS_ROOT="/home/ndipiazza/source/robos"
-if [ -d "/home/ndipiazza/source/robos/packages/voice-prompt" ]; then
-  APP_DIR="/home/ndipiazza/source/robos/packages/voice-prompt"
-elif [ -d "/usr/local/share/robos/robos-voice" ]; then
-  APP_DIR="/usr/local/share/robos/robos-voice"
-else
-  echo "Error: RobOS app directory not found for robos-voice" >&2
-  exit 1
-fi
+/**
+ * robos-voice — CLI tool to interact with RobOS Voice Subsystem
+ *
+ * Usage:
+ *   robos-voice status
+ *   robos-voice context
+ *   robos-voice speak "Hello from RobOS Voice" [--engine <engine>] [--voice <voice>]
+ *   robos-voice stop-speaking
+ *   robos-voice voices
+ *   robos-voice assistant "What is the git status?"
+ *   robos-voice background <start|stop>
+ *   robos-voice dictate "Refactor user authentication service"
+ *   robos-voice activate
+ *   robos-voice deactivate
+ *   robos-voice list [--app <appId>] [--limit <n>]
+ *   robos-voice clear
+ */
 
-# Locate Electron binary across local package, shared workspace packages, or system
-if [ -x "$APP_DIR/node_modules/.bin/electron" ]; then
-  ELECTRON_BIN="$APP_DIR/node_modules/.bin/electron"
-elif [ -x "$ROBOS_ROOT/packages/app-launcher/node_modules/.bin/electron" ]; then
-  ELECTRON_BIN="$ROBOS_ROOT/packages/app-launcher/node_modules/.bin/electron"
-elif [ -x "$ROBOS_ROOT/packages/robos-test/node_modules/.bin/electron" ]; then
-  ELECTRON_BIN="$ROBOS_ROOT/packages/robos-test/node_modules/.bin/electron"
-elif [ -x "$ROBOS_ROOT/packages/crpg-editor/node_modules/.bin/electron" ]; then
-  ELECTRON_BIN="$ROBOS_ROOT/packages/crpg-editor/node_modules/.bin/electron"
-elif [ -x "$ROBOS_ROOT/packages/robos-tabletop/node_modules/.bin/electron" ]; then
-  ELECTRON_BIN="$ROBOS_ROOT/packages/robos-tabletop/node_modules/.bin/electron"
-elif command -v electron >/dev/null 2>&1; then
-  ELECTRON_BIN="$(command -v electron)"
-elif [ -x "/usr/bin/electron" ]; then
-  ELECTRON_BIN="/usr/bin/electron"
-else
-  echo "Error: Electron binary not found." >&2
-  exit 1
-fi
+const http = require('http');
+const path = require('path');
+const fs = require('fs');
 
-cd "$APP_DIR"
-exec "$ELECTRON_BIN" "$APP_DIR" --no-sandbox --disable-gpu --disable-dev-shm-usage "$@"
+let voiceClient = null;
+try {
+  const lib = require('../robos-lib');
+  voiceClient = lib.voiceClient;
+} catch {
+  try {
+    const { RobOSVoiceClient } = require('../robos-lib/voice');
+    voiceClient = new RobOSVoiceClient();
+  } catch {}
+}
+
+const API_PORT = parseInt(process.env.ROBOS_VOICE_PORT || '19188', 10);
+const API_BASE = `http://127.0.0.1:${API_PORT}`;
+
+function request(method, pathname, body = null) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(pathname, API_BASE);
+    const req = http.request(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      timeout: 15000,
+    }, (res) => {
+      let data = '';
+      res.on('data', c => { data += c; });
+      res.on('end', () => {
+        try {
+          resolve({ status: res.statusCode, data: JSON.parse(data) });
+        } catch {
+          resolve({ status: res.statusCode, data });
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      reject(err);
+    });
+
+    if (body) {
+      req.write(typeof body === 'string' ? body : JSON.stringify(body));
+    }
+    req.end();
+  });
+}
+
+function getLocalFallback() {
+  try {
+    const contextProvider = require('../voice-prompt/lib/context-provider');
+    const promptStore = require('../voice-prompt/lib/prompt-store');
+    const { TTSEngine } = require('../voice-prompt/lib/tts-engine');
+    return { contextProvider, promptStore, ttsEngine: new TTSEngine() };
+  } catch {
+    return null;
+  }
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+  const command = args[0] || 'status';
+
+  if (command === '--help' || command === '-h' || command === 'help') {
+    console.log(`
+RobOS Voice CLI
+
+Usage:
+  robos-voice status                  Check RobOS Voice running status and modes
+  robos-voice context                 Query context of RobOS apps in use right now
+  robos-voice speak <text>            Speak text out loud in natural human voice (Kokoro/Edge-TTS)
+  robos-voice stop-speaking           Stop ongoing speech playback immediately
+  robos-voice voices                  List available natural voice models
+  robos-voice assistant <query>       Ask RobOS Desktop Assistant with active context & speech reply
+  robos-voice background <start|stop> Toggle continuous background streaming topic mode
+  robos-voice dictate <prompt text>   Dictate a voice prompt with real-time app context
+  robos-voice activate                Activate microphone listening
+  robos-voice deactivate              Deactivate microphone listening
+  robos-voice list [--app <id>]       List recorded voice prompts
+  robos-voice clear                   Clear recorded voice prompts
+`);
+    process.exit(0);
+  }
+
+  try {
+    if (command === 'status') {
+      if (voiceClient) {
+        const res = await voiceClient.getStatus();
+        console.log(JSON.stringify(res, null, 2));
+      } else {
+        const res = await request('GET', '/api/status');
+        console.log(JSON.stringify(res.data, null, 2));
+      }
+      return;
+    }
+
+    if (command === 'speak') {
+      let engine = null;
+      let voice = null;
+      const textParts = [];
+      for (let i = 1; i < args.length; i++) {
+        if (args[i] === '--engine' && args[i + 1]) {
+          engine = args[++i];
+        } else if (args[i] === '--voice' && args[i + 1]) {
+          voice = args[++i];
+        } else {
+          textParts.push(args[i]);
+        }
+      }
+      const text = textParts.join(' ').trim();
+      if (!text) {
+        console.error('Error: Text to speak is required. Usage: robos-voice speak "text" [--engine <eng>] [--voice <v>]');
+        process.exit(1);
+      }
+
+      console.log(`Speaking: "${text}"...`);
+      if (voiceClient) {
+        const res = await voiceClient.speak(text, { engine, voice });
+        console.log(JSON.stringify(res, null, 2));
+      } else {
+        const res = await request('POST', '/api/speak', { text, engine, voice });
+        console.log(JSON.stringify(res.data, null, 2));
+      }
+      return;
+    }
+
+    if (command === 'stop-speaking') {
+      if (voiceClient) {
+        const res = await voiceClient.stopSpeaking();
+        console.log(JSON.stringify(res, null, 2));
+      } else {
+        const res = await request('POST', '/api/stop-speaking');
+        console.log(JSON.stringify(res.data, null, 2));
+      }
+      return;
+    }
+
+    if (command === 'voices') {
+      if (voiceClient) {
+        const res = await voiceClient.getVoices();
+        console.log(JSON.stringify(res, null, 2));
+      } else {
+        const res = await request('GET', '/api/voices');
+        console.log(JSON.stringify(res.data, null, 2));
+      }
+      return;
+    }
+
+    if (command === 'assistant') {
+      const query = args.slice(1).join(' ').trim();
+      if (!query) {
+        console.error('Error: Query is required. Usage: robos-voice assistant "What is the git status?"');
+        process.exit(1);
+      }
+      console.log(`Asking RobOS Desktop Assistant: "${query}"...`);
+      if (voiceClient) {
+        const res = await voiceClient.askAssistant(query);
+        console.log(JSON.stringify(res, null, 2));
+      } else {
+        const res = await request('POST', '/api/assistant/chat', { message: query });
+        console.log(JSON.stringify(res.data, null, 2));
+      }
+      return;
+    }
+
+    if (command === 'background') {
+      const sub = (args[1] || '').toLowerCase();
+      if (sub === 'start') {
+        const res = voiceClient ? await voiceClient.startBackgroundStream() : (await request('POST', '/api/background/start')).data;
+        console.log('Background stream topic started:', res);
+        return;
+      }
+      if (sub === 'stop') {
+        const res = voiceClient ? await voiceClient.stopBackgroundStream() : (await request('POST', '/api/background/stop')).data;
+        console.log('Background stream topic stopped:', res);
+        return;
+      }
+      console.error('Usage: robos-voice background <start|stop>');
+      process.exit(1);
+    }
+
+    if (command === 'context') {
+      try {
+        const res = await request('GET', '/api/context');
+        console.log(JSON.stringify(res.data.context, null, 2));
+      } catch {
+        const local = getLocalFallback();
+        if (local) {
+          const ctx = await local.contextProvider.getAggregatedContext();
+          console.log(JSON.stringify(ctx, null, 2));
+        } else {
+          console.error('Error: Could not query context and local fallback not found.');
+          process.exit(1);
+        }
+      }
+      return;
+    }
+
+    if (command === 'dictate') {
+      const text = args.slice(1).join(' ').trim();
+      if (!text) {
+        console.error('Error: Dictation text is required. Usage: robos-voice dictate "<text>"');
+        process.exit(1);
+      }
+
+      try {
+        const res = await request('POST', '/api/dictate', { text });
+        console.log('Voice prompt recorded:');
+        console.log(JSON.stringify(res.data.prompt, null, 2));
+      } catch {
+        const local = getLocalFallback();
+        if (local) {
+          const context = await local.contextProvider.getAggregatedContext();
+          const saved = local.promptStore.savePrompt({
+            text,
+            durationMs: 1500,
+            device: 'cli',
+            status: 'recorded',
+            metadata: {
+              ...context,
+              source: 'robos-voice-cli',
+            },
+          });
+          console.log('Voice prompt saved via local fallback:');
+          console.log(JSON.stringify(saved, null, 2));
+        } else {
+          console.error('Error: Failed to record voice prompt.');
+          process.exit(1);
+        }
+      }
+      return;
+    }
+
+    if (command === 'activate') {
+      try {
+        const res = await request('POST', '/api/activate');
+        console.log('RobOS Voice activated (listening):', res.data);
+      } catch (e) {
+        console.error('Error connecting to Voice daemon:', e.message);
+      }
+      return;
+    }
+
+    if (command === 'deactivate') {
+      try {
+        const res = await request('POST', '/api/deactivate');
+        console.log('RobOS Voice deactivated:', res.data);
+      } catch (e) {
+        console.error('Error connecting to Voice daemon:', e.message);
+      }
+      return;
+    }
+
+    if (command === 'list') {
+      let appFilter = null;
+      const appIdx = args.indexOf('--app');
+      if (appIdx !== -1 && args[appIdx + 1]) appFilter = args[appIdx + 1];
+
+      try {
+        const pathUrl = appFilter ? `/api/prompts?app=${encodeURIComponent(appFilter)}` : '/api/prompts';
+        const res = await request('GET', pathUrl);
+        console.log(JSON.stringify(res.data, null, 2));
+      } catch {
+        const local = getLocalFallback();
+        if (local) {
+          let prompts = local.promptStore.loadPrompts();
+          if (appFilter) {
+            prompts = prompts.filter(p => p.metadata?.activeApp?.appId === appFilter);
+          }
+          console.log(JSON.stringify({ ok: true, count: prompts.length, prompts }, null, 2));
+        }
+      }
+      return;
+    }
+
+    if (command === 'clear') {
+      try {
+        const res = await request('DELETE', '/api/prompts');
+        console.log('Cleared voice prompts:', res.data);
+      } catch {
+        const local = getLocalFallback();
+        if (local) {
+          local.promptStore.clearPrompts();
+          console.log('Cleared voice prompts via local fallback.');
+        }
+      }
+      return;
+    }
+
+    console.error(`Unknown command: ${command}. Use robos-voice --help for usage.`);
+    process.exit(1);
+  } catch (err) {
+    console.error('Error:', err.message);
+    process.exit(1);
+  }
+}
+
+main();
