@@ -135,6 +135,14 @@ ipcMain.handle('get-account-credentials', async (_, accountId) => {
   }
 });
 
+ipcMain.handle('test-account', async (_, payload) => {
+  try {
+    return await ovpnManager.testAccountConnection(payload || {});
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 ipcMain.handle('save-account', async (_, input) => {
   try {
     return { ok: true, ...ovpnManager.saveAccount(input) };

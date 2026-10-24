@@ -55,6 +55,7 @@ function renderAccounts() {
         </div>
         <div style="display:flex;gap:6px;">
           ${!acc.isDefault ? `<button type="button" class="btn" data-use-acc="${esc(acc.id)}">Use</button>` : ''}
+          <button type="button" class="btn" data-test-acc="${esc(acc.id)}">Test</button>
           <button type="button" class="btn" data-edit-acc="${esc(acc.id)}">Edit</button>
           <button type="button" class="btn btn-danger" data-del-acc="${esc(acc.id)}">✕</button>
         </div>
@@ -71,6 +72,19 @@ function renderAccounts() {
         renderAll();
         await loadAccountIntoForm(btn.dataset.useAcc);
       }
+    };
+  });
+
+  listEl.querySelectorAll('[data-test-acc]').forEach(btn => {
+    btn.onclick = async () => {
+      const orig = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Testing…';
+      showToast('Testing OpenVPN handshake & authentication…');
+      const res = await window.robos.testAccount({ accountId: btn.dataset.testAcc });
+      btn.disabled = false;
+      btn.textContent = orig;
+      showToast(res.ok ? res.message : (res.error || 'Connection test failed.'), !res.ok);
     };
   });
 
@@ -302,6 +316,29 @@ async function init() {
     renderAll();
     showToast(`Saved ${saved.account.label}.`);
   };
+
+  const testBtn = document.getElementById('btn-test-account');
+  if (testBtn) {
+    testBtn.onclick = async () => {
+      const providerId = document.getElementById('acc-provider').value || 'ipvanish';
+      const username = document.getElementById('acc-username').value.trim();
+      const password = document.getElementById('acc-password').value;
+      const profileId = document.getElementById('acc-default-profile').value;
+      const orig = testBtn.textContent;
+      testBtn.disabled = true;
+      testBtn.textContent = 'Testing…';
+      showToast('Testing OpenVPN handshake & authentication…');
+      const res = await window.robos.testAccount({
+        providerId,
+        username,
+        password,
+        profileId,
+      });
+      testBtn.disabled = false;
+      testBtn.textContent = orig;
+      showToast(res.ok ? res.message : (res.error || 'Connection test failed.'), !res.ok);
+    };
+  }
 
   document.getElementById('btn-sync-servers').onclick = async () => {
     showToast('Refreshing IPVanish server list…');

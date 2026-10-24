@@ -240,6 +240,7 @@ function ovpnAccountSection() {
     </div>
     <div class="section-actions">
       <button type="button" class="btn btn-primary" id="btn-save-ovpn-account">Add / Save VPN Account</button>
+      <button type="button" class="btn" id="btn-test-ovpn-account">Test Connection</button>
       <button type="button" class="btn" id="btn-sync-ovpn-profiles">Sync IPVanish Server Profiles</button>
     </div>
     <p class="section-status" id="ovpn-accounts-status" role="status" aria-live="polite">Loading OpenVPN providers and accounts…</p>
@@ -290,6 +291,7 @@ function renderOvpnSection(state) {
           </div>
           <div style="display:flex;gap:6px;flex:none;">
             ${!acc.isDefault ? `<button type="button" class="btn" data-ovpn-default="${esc(acc.id)}">Set Default</button>` : ''}
+            <button type="button" class="btn" data-ovpn-test="${esc(acc.id)}">Test</button>
             <button type="button" class="btn" data-ovpn-delete="${esc(acc.id)}">Remove</button>
           </div>
         </div>
@@ -300,6 +302,18 @@ function renderOvpnSection(state) {
       btn.onclick = async () => {
         const res = await window.api.setDefaultOvpnAccount(btn.dataset.ovpnDefault);
         if (res.ok) renderOvpnSection(res);
+      };
+    });
+    listWrap.querySelectorAll('[data-ovpn-test]').forEach(btn => {
+      btn.onclick = async () => {
+        const statusEl = document.getElementById('ovpn-accounts-status');
+        btn.disabled = true;
+        btn.textContent = 'Testing…';
+        if (statusEl) statusEl.textContent = 'Testing OpenVPN handshake & authentication…';
+        const res = await window.api.testOvpnAccount({ accountId: btn.dataset.ovpnTest });
+        btn.disabled = false;
+        btn.textContent = 'Test';
+        if (statusEl) statusEl.textContent = res.ok ? res.message : `Error: ${res.error}`;
       };
     });
     listWrap.querySelectorAll('[data-ovpn-delete]').forEach(btn => {
@@ -357,6 +371,23 @@ async function loadOvpnAccounts() {
       document.getElementById('ovpn-password').value = '';
       renderOvpnSection(res);
       statusEl.textContent = `✓ Saved ${res.account?.label || username} (${providerId}) and stored password securely.`;
+    };
+  }
+
+  const testBtn = document.getElementById('btn-test-ovpn-account');
+  if (testBtn) {
+    testBtn.onclick = async () => {
+      const providerId = document.getElementById('ovpn-provider').value || 'ipvanish';
+      const username = document.getElementById('ovpn-username').value.trim();
+      const password = document.getElementById('ovpn-password').value;
+      const profileId = document.getElementById('ovpn-default-profile').value;
+      testBtn.disabled = true;
+      testBtn.textContent = 'Testing…';
+      statusEl.textContent = 'Testing OpenVPN handshake & authentication…';
+      const res = await window.api.testOvpnAccount({ providerId, username, password, profileId });
+      testBtn.disabled = false;
+      testBtn.textContent = 'Test Connection';
+      statusEl.textContent = res.ok ? res.message : `Error: ${res.error}`;
     };
   }
 
