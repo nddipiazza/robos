@@ -123,6 +123,7 @@ const PORT_REGISTRY = {
   'gnome-desktop-installer': 19201,
   'point-of-sale':     19202,
   'game-playthrough':  19203,
+  'vpn-sandbox':       19204,
 };
 
 

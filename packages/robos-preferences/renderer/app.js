@@ -13,7 +13,7 @@ async function init() {
   _settings = await window.api.loadSettings();
   renderSidebar();
   renderSections();
-  await Promise.all([loadGithubAccounts(), loadAiApiStatus()]);
+  await Promise.all([loadGithubAccounts(), loadOvpnAccounts(), loadAiApiStatus()]);
 }
 
 function renderSidebar() {
@@ -59,6 +59,7 @@ function renderSections() {
   const el = document.getElementById('sections');
   el.innerHTML = _schema.sections.map(section => {
     if (section.id === 'github_accounts') return githubAccountSection();
+    if (section.id === 'ovpn_accounts') return ovpnAccountSection();
     const fields = section.fields.map(f => {
       const val = _settings[f.key] !== undefined ? _settings[f.key] : f.default;
       let input = '';
@@ -190,6 +191,175 @@ async function loadGithubAccounts() {
   };
 }
 window.api.onShowGithubAccounts(() => document.getElementById('section-github_accounts')?.scrollIntoView());
+
+// ── OpenVPN Providers & Accounts (IPVanish + Custom OVPN) ────────────────────
+let _ovpnState = { providers: [], accounts: [], defaultAccountId: null };
+
+function ovpnAccountSection() {
+  return `<section class="section" id="section-ovpn_accounts">
+    <h2 class="section-title">OpenVPN &amp; VPN Accounts</h2>
+    <p class="section-description">Manage tracked OpenVPN providers (IPVanish built-in) and credentials for the RobOS VPN App Sandbox. Passwords are stored encrypted in <code>pass</code> (never in plaintext settings).</p>
+    <div id="ovpn-accounts-list-wrap" style="margin-top:12px;"></div>
+    <div class="field-row">
+      <div class="field-copy">
+        <label class="field-label" for="ovpn-provider">OpenVPN Provider</label>
+        <p class="field-description" id="ovpn-provider-help">IPVanish is pre-configured with 14+ regional gateways and official CA certificates.</p>
+      </div>
+      <div class="field-input"><select class="select-input" id="ovpn-provider"></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field-copy">
+        <label class="field-label" for="ovpn-account-label">Account Label</label>
+        <p class="field-description">Friendly name shown in RobOS VPN Sandbox (e.g. "My IPVanish").</p>
+      </div>
+      <div class="field-input"><input type="text" class="text-input" id="ovpn-account-label" placeholder="My IPVanish Account" /></div>
+    </div>
+    <div class="field-row">
+      <div class="field-copy">
+        <label class="field-label" for="ovpn-username">OpenVPN Username</label>
+        <p class="field-description">Your IPVanish or OpenVPN service username.</p>
+      </div>
+      <div class="field-input"><input type="text" class="text-input" id="ovpn-username" autocomplete="off" placeholder="username@example.com" /></div>
+    </div>
+    <div class="field-row">
+      <div class="field-copy">
+        <label class="field-label" for="ovpn-password">OpenVPN Password</label>
+        <p class="field-description">Stored encrypted in <code>robos/ovpn/&lt;provider&gt;/&lt;account&gt;</code>.</p>
+      </div>
+      <div class="field-input"><input type="password" class="text-input" id="ovpn-password" autocomplete="off" placeholder="Enter OpenVPN service password" /></div>
+    </div>
+    <div class="field-row">
+      <div class="field-copy">
+        <label class="field-label" for="ovpn-default-profile">Default Server Profile (.ovpn)</label>
+        <p class="field-description">Default VPN gateway used when sandboxing applications.</p>
+      </div>
+      <div class="field-input"><select class="select-input" id="ovpn-default-profile"></select></div>
+    </div>
+    <div class="section-actions">
+      <button type="button" class="btn btn-primary" id="btn-save-ovpn-account">Add / Save VPN Account</button>
+      <button type="button" class="btn" id="btn-sync-ovpn-profiles">Sync IPVanish Server Profiles</button>
+    </div>
+    <p class="section-status" id="ovpn-accounts-status" role="status" aria-live="polite">Loading OpenVPN providers and accounts…</p>
+  </section>`;
+}
+
+function renderOvpnSection(state) {
+  _ovpnState = state;
+  const providerSelect = document.getElementById('ovpn-provider');
+  const profileSelect = document.getElementById('ovpn-default-profile');
+  const helpEl = document.getElementById('ovpn-provider-help');
+  const listWrap = document.getElementById('ovpn-accounts-list-wrap');
+  if (!providerSelect || !profileSelect || !listWrap) return;
+
+  const currentProviderId = providerSelect.value || 'ipvanish';
+  providerSelect.innerHTML = (state.providers || []).map(p =>
+    `<option value="${esc(p.id)}"${p.id === currentProviderId ? ' selected' : ''}>${esc(p.name)}${p.builtin ? ' (Built-in)' : ''}</option>`
+  ).join('');
+
+  const updateProfilesForProvider = (pid) => {
+    const prov = (state.providers || []).find(p => p.id === pid) || state.providers?.[0];
+    if (helpEl && prov) helpEl.textContent = prov.credentialHelp || prov.description || '';
+    const profiles = prov?.profiles || [];
+    profileSelect.innerHTML = profiles.length
+      ? profiles.map(pr => `<option value="${esc(pr.id)}">${esc(pr.label)}</option>`).join('')
+      : `<option value="">Default profile</option>`;
+  };
+
+  updateProfilesForProvider(providerSelect.value || 'ipvanish');
+  providerSelect.onchange = () => updateProfilesForProvider(providerSelect.value);
+
+  const accounts = state.accounts || [];
+  if (!accounts.length) {
+    listWrap.innerHTML = `<div style="padding:10px 12px;border:1px solid #29323e;border-radius:6px;color:var(--muted);font-size:13px;margin-bottom:8px;">No OpenVPN accounts saved yet. Add your <strong>IPVanish</strong> account below to use it in the RobOS VPN App Sandbox.</div>`;
+  } else {
+    listWrap.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">` +
+      accounts.map(acc => `
+        <div class="ovpn-account-row" data-account-id="${esc(acc.id)}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border:1px solid ${acc.isDefault ? '#2e5964' : '#29323e'};background:${acc.isDefault ? '#112229' : '#0d1117'};border-radius:6px;">
+          <div>
+            <div style="font-weight:600;font-size:13.5px;">
+              ${esc(acc.label)}
+              <span style="font-size:11px;padding:2px 7px;border-radius:10px;background:#1f2937;color:#55d6e5;margin-left:6px;">${esc(acc.providerName)}</span>
+              ${acc.isDefault ? `<span style="font-size:11px;padding:2px 7px;border-radius:10px;background:#153626;color:#94e6b5;margin-left:4px;">Default</span>` : ''}
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-top:3px;">
+              User: <code>${esc(acc.username)}</code> · Server: <code>${esc(acc.defaultProfile || 'default')}</code> · Secret: <code>${esc(acc.passPath)}</code> (${acc.secretConfigured ? '✓ encrypted' : 'missing'})
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex:none;">
+            ${!acc.isDefault ? `<button type="button" class="btn" data-ovpn-default="${esc(acc.id)}">Set Default</button>` : ''}
+            <button type="button" class="btn" data-ovpn-delete="${esc(acc.id)}">Remove</button>
+          </div>
+        </div>
+      `).join('') +
+      `</div>`;
+
+    listWrap.querySelectorAll('[data-ovpn-default]').forEach(btn => {
+      btn.onclick = async () => {
+        const res = await window.api.setDefaultOvpnAccount(btn.dataset.ovpnDefault);
+        if (res.ok) renderOvpnSection(res);
+      };
+    });
+    listWrap.querySelectorAll('[data-ovpn-delete]').forEach(btn => {
+      btn.onclick = async () => {
+        const res = await window.api.deleteOvpnAccount(btn.dataset.ovpnDelete);
+        if (res.ok) renderOvpnSection(res);
+      };
+    });
+  }
+}
+
+async function loadOvpnAccounts() {
+  const statusEl = document.getElementById('ovpn-accounts-status');
+  if (!statusEl || !window.api.ovpnAccounts) return;
+  try {
+    const res = await window.api.ovpnAccounts();
+    if (!res.ok) throw new Error(res.error || 'Could not load OpenVPN accounts');
+    renderOvpnSection(res);
+    statusEl.textContent = `${res.providers?.length || 0} OpenVPN providers registered (IPVanish built-in). ${res.accounts?.length || 0} account(s) tracked.`;
+  } catch (err) {
+    statusEl.textContent = err.message;
+  }
+
+  const saveBtn = document.getElementById('btn-save-ovpn-account');
+  if (saveBtn) {
+    saveBtn.onclick = async () => {
+      const providerId = document.getElementById('ovpn-provider').value || 'ipvanish';
+      const label = document.getElementById('ovpn-account-label').value.trim();
+      const username = document.getElementById('ovpn-username').value.trim();
+      const password = document.getElementById('ovpn-password').value;
+      const defaultProfile = document.getElementById('ovpn-default-profile').value;
+      statusEl.textContent = 'Saving OpenVPN account and encrypting credentials…';
+      const res = await window.api.saveOvpnAccount({
+        providerId,
+        label,
+        username,
+        password,
+        defaultProfile,
+        setDefault: true,
+      });
+      if (!res.ok) {
+        statusEl.textContent = `Error: ${res.error}`;
+        return;
+      }
+      document.getElementById('ovpn-password').value = '';
+      renderOvpnSection(res);
+      statusEl.textContent = `✓ Saved ${res.account?.label || username} (${providerId}) and stored password securely.`;
+    };
+  }
+
+  const syncBtn = document.getElementById('btn-sync-ovpn-profiles');
+  if (syncBtn) {
+    syncBtn.onclick = async () => {
+      syncBtn.disabled = true;
+      statusEl.textContent = 'Syncing IPVanish .ovpn profiles…';
+      const res = await window.api.syncOvpnProfiles('ipvanish');
+      syncBtn.disabled = false;
+      const fresh = await window.api.ovpnAccounts();
+      if (fresh.ok) renderOvpnSection(fresh);
+      statusEl.textContent = res.message || 'Synced IPVanish profiles.';
+    };
+  }
+}
 
 // ── Optional API mode ────────────────────────────────────────────────────────
 

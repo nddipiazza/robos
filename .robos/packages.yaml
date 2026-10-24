@@ -310,4 +310,9 @@ packages:
     type: "robos:DesktopApp"
     repository: "packages/gnome-desktop-installer"
     technology: "Electron 28 / FreeDesktop 1.5 / GIO / GSettings"
+  - id: "urn:robos:desktop-app:vpn-sandbox"
+    title: "RobOS VPN Sandbox"
+    type: "robos:DesktopApp"
+    repository: "packages/vpn-sandbox"
+    technology: "Electron 28 / OpenVPN / Linux ip-netns / iptables"
 
