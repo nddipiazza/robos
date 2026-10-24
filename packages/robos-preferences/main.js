@@ -416,3 +416,8 @@ ipcMain.handle('ovpn-profiles-sync', async (_, providerId) => {
   try { return await ovpnProviders().syncProviderProfiles(providerId || 'ipvanish'); }
   catch (error) { return { ok: false, error: error.message }; }
 });
+
+ipcMain.handle('ovpn-accounts-test', async (_, payload) => {
+  try { return await ovpnProviders().testAccountConnection(payload || {}); }
+  catch (error) { return { ok: false, error: error.message }; }
+});
