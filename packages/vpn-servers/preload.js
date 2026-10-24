@@ -4,6 +4,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('robos', {
   getState: () => ipcRenderer.invoke('get-state'),
+  getAccountCredentials: accountId => ipcRenderer.invoke('get-account-credentials', accountId),
   saveAccount: input => ipcRenderer.invoke('save-account', input),
   deleteAccount: accountId => ipcRenderer.invoke('delete-account', accountId),
   setDefaultAccount: accountId => ipcRenderer.invoke('set-default-account', accountId),

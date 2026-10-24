@@ -151,6 +151,34 @@ h1, h2, h3, p { margin: 0; }
   font: inherit;
 }
 
+.password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input {
+  padding-right: 58px;
+}
+
+.pw-toggle {
+  position: absolute;
+  right: 5px;
+  padding: 4px 9px;
+  border-radius: 4px;
+  border: 1px solid #3b4654;
+  background: #212832;
+  color: #c9d1d9;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pw-toggle:hover {
+  background: #2c3542;
+  color: #fff;
+}
+
 .search-input {
   max-width: 240px;
 }
