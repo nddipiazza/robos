@@ -29,8 +29,11 @@ function renderHeaderAndSelectors() {
   document.getElementById('normal-ip-value').textContent = state.hostNet?.localIp || '—';
 
   const running = (state.sessions || []).filter(s => s.status === 'running');
+  const stopped = (state.sessions || []).filter(s => s.status !== 'running');
   const stopAllBtn = document.getElementById('btn-stop-all');
   stopAllBtn.classList.toggle('hidden', running.length === 0);
+  const clearStoppedBtn = document.getElementById('btn-clear-stopped');
+  if (clearStoppedBtn) clearStoppedBtn.classList.toggle('hidden', stopped.length === 0);
   document.getElementById('running-count').textContent = `${running.length} running`;
 
   const accSelect = document.getElementById('select-account');
@@ -146,6 +149,7 @@ function renderSessions() {
             <div style="display:flex;gap:6px;">
               <button type="button" class="btn" data-verify-session="${esc(s.id)}">Check VPN Traffic</button>
               ${isRunning ? `<button type="button" class="btn btn-danger" data-stop-session="${esc(s.id)}">Stop</button>` : ''}
+              <button type="button" class="btn btn-danger" data-delete-session="${esc(s.id)}" title="Delete from list">✕</button>
             </div>
           </div>
 
@@ -181,6 +185,18 @@ function renderSessions() {
         renderHeaderAndSelectors();
         renderSessions();
         showBanner('Stopped app and closed its VPN connection.');
+      }
+    };
+  });
+
+  el.querySelectorAll('[data-delete-session]').forEach(btn => {
+    btn.onclick = async () => {
+      const res = await window.robos.deleteSession(btn.dataset.deleteSession);
+      if (res.ok) {
+        state.sessions = res.sessions;
+        renderHeaderAndSelectors();
+        renderSessions();
+        showBanner('Removed app from Running VPN Apps.');
       }
     };
   });
@@ -285,6 +301,19 @@ async function init() {
       showBanner('Stopped all VPN apps.');
     }
   };
+
+  const clearStoppedBtn = document.getElementById('btn-clear-stopped');
+  if (clearStoppedBtn) {
+    clearStoppedBtn.onclick = async () => {
+      const res = await window.robos.clearStoppedSessions();
+      if (res.ok) {
+        state.sessions = res.sessions;
+        renderHeaderAndSelectors();
+        renderSessions();
+        showBanner('Cleared stopped apps from list.');
+      }
+    };
+  }
 
   setInterval(async () => {
     const fresh = await window.robos.getInitialState();
