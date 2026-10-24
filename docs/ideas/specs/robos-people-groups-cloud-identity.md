@@ -2,6 +2,7 @@
 title: "Proposal: linked accounts and guided OAuth"
 layout: default
 nav_exclude: true
+description: "Let one person in People Directory link several cloud accounts, and connect each provider through a guided OAuth setup inside RobOS."
 ---
 
 # Proposal: linked accounts and guided OAuth

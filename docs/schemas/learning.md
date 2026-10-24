@@ -5,6 +5,7 @@ parent: Schemas
 nav_order: 6
 has_children: true
 permalink: /schemas/learning.html
+description: "eLearning courses, modules, lessons, labs, quizzes, completion certificates and agent skills."
 ---
 
 # eLearning Curriculums (robos.learning)

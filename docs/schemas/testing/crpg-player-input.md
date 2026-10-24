@@ -5,6 +5,7 @@ parent: "Testing, Quality & BDD (robos.testing)"
 grand_parent: Schemas
 nav_order: 8
 permalink: /schemas/testing/crpg-player-input.html
+description: "Validation shape for robos:CRPGPlayerInput nodes in the testing package group."
 ---
 
 # robos:CRPGPlayerInput

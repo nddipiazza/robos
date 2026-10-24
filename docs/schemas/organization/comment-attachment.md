@@ -5,6 +5,7 @@ parent: "Organization & Teams (robos.org)"
 grand_parent: Schemas
 nav_order: 21
 permalink: /schemas/organization/comment-attachment.html
+description: "Validation shape for robos:CommentAttachment nodes in the organization package group."
 ---
 
 # robos:CommentAttachment

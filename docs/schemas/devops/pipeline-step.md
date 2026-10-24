@@ -5,6 +5,7 @@ parent: "DevOps & Cloud (robos.devops)"
 grand_parent: Schemas
 nav_order: 13
 permalink: /schemas/devops/pipeline-step.html
+description: "Validation shape for robos:PipelineStep nodes in the devops package group."
 ---
 
 # robos:PipelineStep

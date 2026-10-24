@@ -5,6 +5,7 @@ parent: "DevOps & Cloud (robos.devops)"
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/devops/gitops-deployment.html
+description: "Validation shape for robos:GitOpsDeployment nodes in the devops package group."
 ---
 
 # robos:GitOpsDeployment

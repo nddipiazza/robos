@@ -2,6 +2,7 @@
 title: "Proposal: session context inspector"
 layout: default
 nav_exclude: true
+description: "Show what fills the context of a long agent session, which tool calls were the largest, and what could be trimmed."
 ---
 
 # Proposal: session context inspector

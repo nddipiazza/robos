@@ -5,6 +5,7 @@ parent: "Core Platform (robos.platform)"
 grand_parent: Schemas
 nav_order: 1
 permalink: /schemas/core-platform/build-system.html
+description: "Validation shape for robos:BuildSystem nodes in the core-platform package group."
 ---
 
 # robos:BuildSystem

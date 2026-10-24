@@ -5,6 +5,7 @@ parent: Schemas
 nav_order: 4
 has_children: true
 permalink: /schemas/applications.html
+description: "Front-end, desktop, console and mobile applications, games, libraries, web routes, CLI commands and voice commands."
 ---
 
 # Applications (robos.apps)

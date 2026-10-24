@@ -5,6 +5,7 @@ parent: Schemas
 nav_order: 3
 has_children: true
 permalink: /schemas/services.html
+description: "Microservices, API contracts (OpenAPI, Protobuf, GraphQL), endpoints, data models, requirements and features."
 ---
 
 # Services & Contracts (robos.services)

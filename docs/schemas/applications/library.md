@@ -5,6 +5,7 @@ parent: "Applications (robos.apps)"
 grand_parent: Schemas
 nav_order: 4
 permalink: /schemas/applications/library.html
+description: "Validation shape for robos:Library nodes in the applications package group."
 ---
 
 # robos:Library

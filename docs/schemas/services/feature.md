@@ -5,6 +5,7 @@ parent: "Services & Contracts (robos.services)"
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/services/feature.html
+description: "Validation shape for robos:Feature nodes in the services package group."
 ---
 
 # robos:Feature

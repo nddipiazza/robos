@@ -5,6 +5,7 @@ parent: "Testing, Quality & BDD (robos.testing)"
 grand_parent: Schemas
 nav_order: 17
 permalink: /schemas/testing/doc-string.html
+description: "Validation shape for robos:DocString nodes in the testing package group."
 ---
 
 # robos:DocString

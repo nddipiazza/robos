@@ -5,6 +5,7 @@ parent: "Documentation & Diagrams (robos.docs)"
 grand_parent: Schemas
 nav_order: 4
 permalink: /schemas/documentation/architecture-decision-record.html
+description: "Validation shape for robos:ArchitectureDecisionRecord nodes in the documentation package group."
 ---
 
 # robos:ArchitectureDecisionRecord

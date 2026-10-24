@@ -4,6 +4,7 @@ layout: default
 nav_exclude: true
 redirect_from:
   - /ideas/specs/robos-elearning-creation-and-organization-ux-audit.html
+description: "Add course creation, folders and search, and per-team assignments and completion reports to the eLearning Hub."
 ---
 
 # Proposal: eLearning authoring and team assignments

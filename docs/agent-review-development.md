@@ -4,6 +4,7 @@ layout: default
 nav_order: 4
 has_children: true
 permalink: /agent-review-development.html
+description: "How RobOS reviews code that an agent wrote: where the work is checked, what counts as evidence, and which parts of governance are not built yet."
 ---
 
 # Review & governance

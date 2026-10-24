@@ -2,6 +2,7 @@
 title: "Proposal: Gitea forge for E2E tests"
 layout: default
 nav_exclude: true
+description: "A local Git forge inside the E2E container, so apps that talk to a Git host can be tested without GitHub or network access."
 ---
 
 # Proposal: Gitea forge for E2E tests

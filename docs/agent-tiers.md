@@ -4,6 +4,7 @@ layout: default
 parent: "Review & governance"
 nav_order: 3
 permalink: /agent-tiers.html
+description: "What the \"Agent Tiers & Prompt Optimization\" settings do today, how RobOS hands a task to an agent CLI, and what is not built yet. Read this before you rely on tier-based model selection."
 ---
 
 # Agent tiers

@@ -5,6 +5,7 @@ parent: "Applications (robos.apps)"
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/applications/pc-game.html
+description: "Validation shape for robos:PCGame nodes in the applications package group."
 ---
 
 # robos:PCGame

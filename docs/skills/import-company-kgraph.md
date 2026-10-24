@@ -4,6 +4,7 @@ layout: default
 parent: Skills
 grand_parent: Build on RobOS
 nav_order: 2
+description: "The import-company-kgraph skill builds a source-backed knowledge graph from Git checkouts that you name."
 ---
 
 # Company KGraph Import Skill

@@ -4,6 +4,7 @@ layout: default
 parent: Skills
 grand_parent: Build on RobOS
 nav_order: 1
+description: "Every agent skill in plugins/robos/skills/, with what it does and how to invoke it. Read this when you want to know which RobOS tasks an agent can already do from a single command."
 ---
 
 # Skills catalog

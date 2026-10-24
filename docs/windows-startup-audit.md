@@ -2,6 +2,7 @@
 title: Windows startup audit
 layout: default
 nav_order: 90
+description: "This audit covers every application in the native Windows install's apps."
 ---
 
 # Windows startup audit — October 22, 2026

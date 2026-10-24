@@ -7,6 +7,7 @@ nav_order: 1
 permalink: /training/harness-and-security/prompt-security-guard.html
 redirect_from:
   - /training/agent-harness-engineering/02-zero-leak-prompt-security-guard.html
+description: "The prompt security guard (packages/robos-lib/prompt-security."
 ---
 
 # Configure the prompt security guard

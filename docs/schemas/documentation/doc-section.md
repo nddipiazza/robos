@@ -5,6 +5,7 @@ parent: "Documentation & Diagrams (robos.docs)"
 grand_parent: Schemas
 nav_order: 7
 permalink: /schemas/documentation/doc-section.html
+description: "Validation shape for robos:DocSection nodes in the documentation package group."
 ---
 
 # robos:DocSection

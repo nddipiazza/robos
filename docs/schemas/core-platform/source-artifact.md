@@ -5,6 +5,7 @@ parent: "Core Platform (robos.platform)"
 grand_parent: Schemas
 nav_order: 23
 permalink: /schemas/core-platform/source-artifact.html
+description: "Validation shape for robos:SourceArtifact nodes in the core-platform package group."
 ---
 
 # robos:SourceArtifact

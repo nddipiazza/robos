@@ -5,6 +5,10 @@ permalink: /games/quest-warrior-dragon/ai-playthrough/
 description: "The robos-jrpg engine plays the whole of Quest: Warrior Dragon, from King Lorik's throne room to the Dragonlord, using only real inputs: a 70-entry milestone registry, a route-planning survival brain, per-milestone videos and checkpoints, deadlock watchdogs, and a GNOME tray icon + live dashboard."
 bg_poster: /assets/games/quest-warrior-dragon/playthrough/m38-level-10-desert.png
 accent: "#00bcd4"
+og_image_alt: "Quest: Warrior Dragon autonomous AI playthrough from King Lorik's throne room to the Dragonlord"
+og_type: article
+schema_type: TechArticle
+keywords: "Quest Warrior Dragon AI playthrough, autonomous RPG playthrough, 74 milestone playthrough, Dragonlord boss fight, robos-jrpg survival brain"
 ---
 <style>
   .pt-grid{grid-template-columns:repeat(4,1fr)}

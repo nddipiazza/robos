@@ -2,6 +2,7 @@
 title: "Proposal: local task server"
 layout: default
 nav_exclude: true
+description: "A task tracker that runs on the developer's machine, so Task Board and agents keep working offline and without a Jira or GitHub account."
 ---
 
 # Proposal: local task server

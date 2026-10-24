@@ -5,6 +5,7 @@ parent: "Tabletop Game (robos.tabletop)"
 grand_parent: Schemas
 nav_order: 3
 permalink: /schemas/tabletop-game/tabletop-monster.html
+description: "Validation shape for robos:TabletopMonster nodes in the tabletop-game package group."
 ---
 
 # robos:TabletopMonster

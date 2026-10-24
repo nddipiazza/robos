@@ -5,6 +5,7 @@ parent: "eLearning Curriculums (robos.learning)"
 grand_parent: Schemas
 nav_order: 2
 permalink: /schemas/learning/certificate-of-completion.html
+description: "Validation shape for robos:CertificateOfCompletion nodes in the learning package group."
 ---
 
 # robos:CertificateOfCompletion

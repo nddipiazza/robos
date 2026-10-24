@@ -5,6 +5,7 @@ parent: "Testing, Quality & BDD (robos.testing)"
 grand_parent: Schemas
 nav_order: 2
 permalink: /schemas/testing/scenario-step.html
+description: "Validation shape for robos:ScenarioStep nodes in the testing package group."
 ---
 
 # robos:ScenarioStep

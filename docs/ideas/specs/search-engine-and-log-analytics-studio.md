@@ -2,6 +2,7 @@
 title: "Proposal: Search Studio"
 layout: default
 nav_exclude: true
+description: "A desktop app for working with search engines, log indexes and vector stores, next to the existing database managers."
 ---
 
 # Proposal: Search Studio

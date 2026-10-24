@@ -12,6 +12,7 @@ redirect_from:
   - /training/for-non-developers/05-project-getemgigs-web-app.html
   - /training/for-non-developers/06-project-crpg-realm-game.html
   - /training/for-non-developers/07-review-theater-and-running-apps.html
+description: "Four lessons on the path from an idea to a pushed branch: split the work into issues, check what a change touches, run an agent on one issue, and choose the role prompt it gets."
 ---
 
 # Plan and run agent tasks

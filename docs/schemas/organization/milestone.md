@@ -5,6 +5,7 @@ parent: "Organization & Teams (robos.org)"
 grand_parent: Schemas
 nav_order: 12
 permalink: /schemas/organization/milestone.html
+description: "Validation shape for robos:Milestone nodes in the organization package group."
 ---
 
 # robos:Milestone

@@ -5,6 +5,7 @@ parent: "DevOps & Cloud (robos.devops)"
 grand_parent: Schemas
 nav_order: 9
 permalink: /schemas/devops/kubernetes-service.html
+description: "Validation shape for robos:KubernetesService nodes in the devops package group."
 ---
 
 # robos:KubernetesService

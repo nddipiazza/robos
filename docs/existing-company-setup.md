@@ -5,6 +5,7 @@ parent: RobOS for Teams
 nav_order: 3
 has_children: true
 permalink: /existing-company-setup.html
+description: "How to set up RobOS for a team that already has GitHub repositories, a task tracker and developers with their own machines: what each developer does once, what you define once per team, and what..."
 ---
 
 # Company setup

@@ -5,6 +5,7 @@ parent: "Applications (robos.apps)"
 grand_parent: Schemas
 nav_order: 10
 permalink: /schemas/applications/cli-flag.html
+description: "Validation shape for robos:CLIFlag nodes in the applications package group."
 ---
 
 # robos:CLIFlag

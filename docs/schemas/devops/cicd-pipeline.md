@@ -5,6 +5,7 @@ parent: "DevOps & Cloud (robos.devops)"
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/devops/cicd-pipeline.html
+description: "Validation shape for robos:CICDPipeline nodes in the devops package group."
 ---
 
 # robos:CICDPipeline

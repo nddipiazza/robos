@@ -4,6 +4,7 @@ layout: default
 nav_order: 5
 has_children: true
 has_toc: false
+description: "Pages for developers who model systems in the knowledge graph, build applications with the App Wizard, and write skills for agents."
 ---
 
 # Build on RobOS

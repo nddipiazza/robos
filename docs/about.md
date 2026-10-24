@@ -3,6 +3,7 @@ title: About
 layout: default
 nav_order: 9
 permalink: /about.html
+description: "What RobOS is, how it is licensed, and where the code and the community are."
 ---
 
 # About

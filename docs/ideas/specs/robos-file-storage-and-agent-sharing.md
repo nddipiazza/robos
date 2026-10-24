@@ -2,6 +2,7 @@
 title: "Proposal: cloud file storage and sharing"
 layout: default
 nav_exclude: true
+description: "A desktop app for browsing cloud object storage, plus MCP tools that let an agent upload a file and share it with people from the People Directory."
 ---
 
 # Proposal: cloud file storage and sharing

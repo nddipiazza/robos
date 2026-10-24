@@ -5,6 +5,7 @@ parent: "Organization & Teams (robos.org)"
 grand_parent: Schemas
 nav_order: 3
 permalink: /schemas/organization/epic.html
+description: "Validation shape for robos:Epic nodes in the organization package group."
 ---
 
 # robos:Epic

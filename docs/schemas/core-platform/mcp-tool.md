@@ -5,6 +5,7 @@ parent: "Core Platform (robos.platform)"
 grand_parent: Schemas
 nav_order: 17
 permalink: /schemas/core-platform/mcp-tool.html
+description: "Validation shape for robos:MCPTool nodes in the core-platform package group."
 ---
 
 # robos:MCPTool

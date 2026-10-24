@@ -5,6 +5,7 @@ parent: "Tabletop Game (robos.tabletop)"
 grand_parent: Schemas
 nav_order: 7
 permalink: /schemas/tabletop-game/tabletop-turn-dag.html
+description: "Validation shape for robos:TabletopTurnDAG nodes in the tabletop-game package group."
 ---
 
 # robos:TabletopTurnDAG

@@ -2,6 +2,7 @@
 layout: default
 title: Ideas folder
 nav_exclude: true
+description: "Proposals for RobOS features that are not built, or only partly built. The published index is the Ideas page. The Roadmap summarizes what is built, in progress and planned."
 ---
 
 # Ideas folder

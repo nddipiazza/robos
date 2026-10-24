@@ -5,6 +5,7 @@ parent: "Testing, Quality & BDD (robos.testing)"
 grand_parent: Schemas
 nav_order: 20
 permalink: /schemas/testing/test-suite.html
+description: "Validation shape for robos:TestSuite nodes in the testing package group."
 ---
 
 # robos:TestSuite

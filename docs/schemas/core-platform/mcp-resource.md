@@ -5,6 +5,7 @@ parent: "Core Platform (robos.platform)"
 grand_parent: Schemas
 nav_order: 18
 permalink: /schemas/core-platform/mcp-resource.html
+description: "Validation shape for robos:MCPResource nodes in the core-platform package group."
 ---
 
 # robos:MCPResource

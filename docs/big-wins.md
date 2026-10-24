@@ -30,6 +30,7 @@ redirect_from:
   - /big-wins/modular-kgraph-packages.html
   - /big-wins/remote-execution-studio.html
   - /big-wins/video-proof-of-work.html
+description: "The parts of RobOS that go beyond running a coding agent in a terminal, described as they exist in the source today, including what is partial or not built."
 ---
 
 # What sets RobOS apart

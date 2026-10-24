@@ -5,6 +5,7 @@ parent: "Services & Contracts (robos.services)"
 grand_parent: Schemas
 nav_order: 7
 permalink: /schemas/services/api-endpoint.html
+description: "Validation shape for robos:APIEndpoint nodes in the services package group."
 ---
 
 # robos:APIEndpoint

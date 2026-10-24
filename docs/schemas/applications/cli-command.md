@@ -5,6 +5,7 @@ parent: "Applications (robos.apps)"
 grand_parent: Schemas
 nav_order: 9
 permalink: /schemas/applications/cli-command.html
+description: "Validation shape for robos:CLICommand nodes in the applications package group."
 ---
 
 # robos:CLICommand

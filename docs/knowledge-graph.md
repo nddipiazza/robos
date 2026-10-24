@@ -3,6 +3,7 @@ title: Knowledge graph
 layout: default
 parent: Build on RobOS
 nav_order: 1
+description: "The knowledge graph is a set of JSON-LD files that describe a software organization: services, applications, contracts, databases, teams, pipelines and the links between them."
 ---
 
 # Knowledge graph

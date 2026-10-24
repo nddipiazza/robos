@@ -6,6 +6,9 @@ description: "Realm of Heroes CRPG: A Night Without Memory — a party-based, re
 bg_video: /assets/games/crpg-bg.mp4
 bg_poster: /assets/games/crpg-bg-poster.jpg
 accent: "#5ec8e5"
+og_image_alt: "Realm of Heroes CRPG — Party-based tactical RPG in Godot 4"
+schema_type: VideoGame
+keywords: "Realm of Heroes CRPG, RobOS cRPG, A Night Without Memory, real-time with pause RPG, Godot 4 cRPG, D&D 5e SRD, Infinity AI"
 ---
 <section class="g-hero wrap">
   <p class="kicker">RobOS cRPG</p>

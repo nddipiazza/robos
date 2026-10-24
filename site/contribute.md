@@ -3,6 +3,9 @@ layout: default
 title: Contribute
 permalink: /contribute/
 description: Learn context engineering by contributing to RobOS, an open-source project built by people steering coding agents. Every merged pull request is public work you can point to.
+og_image: /assets/build-apps/shots/review-4-walkthrough.jpg
+og_image_alt: "Contributing to RobOS with recorded walkthrough evidence"
+keywords: "contribute to RobOS, open-source AI project, context engineering internship, coding agents, pull requests"
 ---
 <section class="hero">
   <div class="wrap">

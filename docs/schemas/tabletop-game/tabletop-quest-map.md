@@ -5,6 +5,7 @@ parent: "Tabletop Game (robos.tabletop)"
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/tabletop-game/tabletop-quest-map.html
+description: "Validation shape for robos:TabletopQuestMap nodes in the tabletop-game package group."
 ---
 
 # robos:TabletopQuestMap

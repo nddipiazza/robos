@@ -5,6 +5,7 @@ parent: Build on RobOS
 nav_order: 6
 has_children: true
 permalink: /robos-skills.html
+description: "A skill is a folder of instructions that a coding agent follows to do one RobOS task, such as starting the VM or importing a knowledge graph."
 ---
 
 # Skills

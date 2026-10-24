@@ -5,6 +5,7 @@ parent: "cRPG (robos.crpg)"
 grand_parent: Schemas
 nav_order: 2
 permalink: /schemas/crpg/crpg-story-flow.html
+description: "Validation shape for robos:CRPGStoryFlow nodes in the crpg package group."
 ---
 
 # robos:CRPGStoryFlow

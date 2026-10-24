@@ -7,6 +7,7 @@ has_children: true
 permalink: /training/harness-and-security/
 redirect_from:
   - /training/agent-harness-engineering/
+description: "Two lessons on the parts of RobOS that sit between you and a coding agent: a guard that scans prompts, and a daemon that gives an agent a separate home directory."
 ---
 
 # Agent harness and security

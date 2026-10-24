@@ -5,6 +5,7 @@ parent: "Organization & Teams (robos.org)"
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/organization/agent-persona.html
+description: "Validation shape for robos:AgentPersona nodes in the organization package group."
 ---
 
 # robos:AgentPersona

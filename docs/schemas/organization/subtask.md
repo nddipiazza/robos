@@ -5,6 +5,7 @@ parent: "Organization & Teams (robos.org)"
 grand_parent: Schemas
 nav_order: 9
 permalink: /schemas/organization/subtask.html
+description: "Validation shape for robos:Subtask nodes in the organization package group."
 ---
 
 # robos:Subtask

@@ -3,6 +3,7 @@ title: Run evidence generation
 layout: default
 parent: Build on RobOS
 nav_order: 9
+description: "How to run the evidence generator from the command line instead of from PR Review. It is for contributors who want to produce or refresh a review's evidence bundle in a script."
 ---
 
 # Run evidence generation

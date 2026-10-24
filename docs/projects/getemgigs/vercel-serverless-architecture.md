@@ -4,6 +4,7 @@ layout: default
 parent: "Get 'Em Gigs"
 grand_parent: Projects
 nav_order: 2
+description: "How the app in packages/getemgigs is structured, where it stores data, how it is deployed to Vercel, and which abuse controls it applies. Read this if you are deploying it or reusing the same stack."
 ---
 
 # Get 'Em Gigs architecture

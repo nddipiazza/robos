@@ -1,0 +1,63 @@
+# RobOS (rowbose.com / www.rowbose.com)
+
+> RobOS is an open-source app suite built on one knowledge graph (KGraph). Users do three things with it: use the ready-made suites (Point of Sale, Auto Center, Household, Games, Audio Player & Home Speaker, and Developer Tools), customize any existing app by describing the change, and build new apps from context engineering principles with automated tests and narrated video walkthroughs. AI features inside the apps are optional.
+
+## Main Site Sections
+- [Home](https://rowbose.com/): Product overview, app suites, context-engineering customization, and SDLC workflow
+- [App Directory](https://rowbose.com/apps/): Searchable catalog of all RobOS desktop applications, domain sandboxes, game studios, and MCP servers
+- [Build Apps](https://rowbose.com/build-apps/): Overview of the Task Planner, Task Implementer, and Agent Code Review loop
+- [Build Apps on Your Own (Solo Guide)](https://rowbose.com/build-apps/solo/): Step-by-step solo developer guide with real app screenshots
+- [Build Apps as a Team (Team Guide)](https://rowbose.com/build-apps/teams/): Step-by-step team workflow guide with Dev Central and Reviewer mode
+- [Documentation Hub](https://rowbose.com/docs/): Entry point to RobOS user guides, architecture, schemas, and reference docs
+- [Download](https://rowbose.com/download/): Install RobOS on Windows, Linux, and macOS, or boot the Ubuntu appliance VM/USB
+- [Engineering Blog](https://rowbose.com/blog/): What changed in RobOS and why, with links to docs, recordings, and commits
+- [Contribute](https://rowbose.com/contribute/): How to contribute to RobOS and learn context engineering
+- [The Future of RobOS](https://rowbose.com/future/): Plain-English summary of The Skill Commons proposal for energy-efficient local AI assembly
+- [The Skill Commons Whitepaper](https://rowbose.com/future/whitepaper/): Full technical whitepaper and PDF edition
+
+## App Suite Guides & Walkthroughs
+- [Point of Sale Guide](https://rowbose.com/point-of-sale/): Open-source touchscreen cash register for retail stores, cafés, and bars
+- [Point of Sale — Retail Store Tutorial](https://rowbose.com/point-of-sale/retail/): Barcode scanning, size variants, promotions, inventory, and manager-approved returns
+- [Point of Sale — Coffee Shop Tutorial](https://rowbose.com/point-of-sale/coffee/): Drink modifiers, cash drawer counts, and barista prep queue
+- [Point of Sale — Bar Tutorial](https://rowbose.com/point-of-sale/bar/): Named bar tabs, age verification, prep stations, split payments, and tips
+- [RobOS Auto Center Guide](https://rowbose.com/auto-center/): Repair-shop operations and vehicle owner care with Bluetooth OBD-II diagnostics
+- [Auto Center — 1. Before You Start](https://rowbose.com/auto-center/1-before-you-start/)
+- [Auto Center — 2. Set Up Your Shop](https://rowbose.com/auto-center/2-set-up-your-shop/)
+- [Auto Center — 3. Bring In Your Data](https://rowbose.com/auto-center/3-bring-in-your-data/)
+- [Auto Center — 4. Take the Customer's Call (Front Desk)](https://rowbose.com/auto-center/4-front-desk/)
+- [Auto Center — 5. The Mechanic Bench & OBD-II](https://rowbose.com/auto-center/5-mechanic-bench/)
+- [Auto Center — 6. Check the Customer Out](https://rowbose.com/auto-center/6-checkout/)
+- [Auto Center — 7. Protect Your Data](https://rowbose.com/auto-center/7-protect-your-data/)
+- [Auto Center — 8. Run the Shop Day to Day](https://rowbose.com/auto-center/8-run-the-shop/)
+- [Auto Center — 9. Switch Over From Your Old System](https://rowbose.com/auto-center/9-switch-over/)
+- [Auto Center — How We Know It Works (Tests)](https://rowbose.com/auto-center/tests/)
+- [Family Finances (Household Walkthrough)](https://rowbose.com/family-finances/): Automated walkthrough of a family's financial year across six accounts and tax prep
+
+## Games Built by AI Agents in RobOS
+- [RobOS Games Hub](https://rowbose.com/games/): Overview of games designed in the KGraph and built in Godot 4
+- [Realm of Heroes CRPG](https://rowbose.com/games/crpg/): Party-based real-time-with-pause isometric cRPG
+- [Realm of Heroes CRPG Docs](https://rowbose.com/games/crpg/docs/): Guides, tutorials, and reference for the cRPG engine
+- [Tabletop RPG](https://rowbose.com/games/tabletop-rpg/): HeroQuest-inspired tactical dungeon crawler in Godot 4
+- [Tabletop RPG Docs](https://rowbose.com/games/tabletop-rpg/docs/): Engine guide, cartridge format, and editor documentation
+- [Tabletop RPG Proof of Viability](https://rowbose.com/games/tabletop-rpg/proof-of-viability.html): Autonomous verification report for Quest 1
+- [Tabletop RPG Election 2026 Proof of Viability](https://rowbose.com/games/tabletop-rpg/proof-of-viability-election-2026.html): Autonomous verification report for Election 2026: Battle for the Hill
+- [Starfall Command (RobOS RTS)](https://rowbose.com/games/robos-rts/): 256×256 real-time strategy game and map editor in Godot 4
+- [Starfall Command Docs](https://rowbose.com/games/robos-rts/docs/): RTS gameplay, map editor walkthrough, and verified test results
+- [Quest: Warrior Dragon](https://rowbose.com/games/quest-warrior-dragon/): Clean-room NES-authentic 2D JRPG in Godot 4
+- [Quest: Warrior Dragon Docs](https://rowbose.com/games/quest-warrior-dragon/docs/): Player guide, AI route planner, and reachability verification
+- [Quest: Warrior Dragon AI Playthrough](https://rowbose.com/games/quest-warrior-dragon/ai-playthrough/): Full 70-milestone autonomous playthrough from throne room to Dragonlord
+- [Quest: Warrior Dragon Proof of Viability](https://rowbose.com/games/quest-warrior-dragon/proof-of-viability.html): Global map completeness and pathfinding proof of viability
+
+## Classic Documentation & Reference (/v1/)
+- [Classic Docs Index](https://rowbose.com/v1/): Complete RobOS v1 documentation, architecture, and 85+ app reference pages
+- [Get Started & Installation](https://rowbose.com/v1/getting-started.html): Windows, Linux, GNOME, and QEMU VM setup
+- [Architecture](https://rowbose.com/v1/architecture.html): Electron apps, shared libraries, KGraph, and MCP servers
+- [Knowledge Graph](https://rowbose.com/v1/knowledge-graph.html): Dual-state OSLC JSON-LD graph and W3C SHACL validation
+- [Schemas Reference](https://rowbose.com/v1/schemas.html): All KGraph packages and SHACL shape definitions
+- [PR Review Theater](https://rowbose.com/v1/pr-review-theater.html): Autonomous pull request review and video proof-of-work
+- [Training Courses](https://rowbose.com/v1/training/): Non-developer and developer training tracks
+
+## Sitemaps & Source
+- [Main Sitemap](https://rowbose.com/sitemap.xml)
+- [Documentation Sitemap](https://rowbose.com/v1/sitemap.xml)
+- [GitHub Repository](https://github.com/nddipiazza/robos)

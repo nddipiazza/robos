@@ -5,6 +5,7 @@ parent: "cRPG (robos.crpg)"
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/crpg/crpg-map-transition.html
+description: "Validation shape for robos:CRPGMapTransition nodes in the crpg package group."
 ---
 
 # robos:CRPGMapTransition

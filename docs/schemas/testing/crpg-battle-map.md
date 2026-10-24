@@ -5,6 +5,7 @@ parent: "Testing, Quality & BDD (robos.testing)"
 grand_parent: Schemas
 nav_order: 4
 permalink: /schemas/testing/crpg-battle-map.html
+description: "Validation shape for robos:CRPGBattleMap nodes in the testing package group."
 ---
 
 # robos:CRPGBattleMap

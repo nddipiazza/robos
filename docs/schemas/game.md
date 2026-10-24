@@ -5,6 +5,7 @@ parent: Schemas
 nav_order: 9
 has_children: true
 permalink: /schemas/game.html
+description: "Rules-engine building blocks shared by games: games, classes, items, spells and monsters."
 ---
 
 # Game Rules (robos.game)

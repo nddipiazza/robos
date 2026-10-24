@@ -5,6 +5,7 @@ parent: Schemas
 nav_order: 1
 has_children: true
 permalink: /schemas/core-platform.html
+description: "Databases, message brokers, search indexes, MCP servers, build systems, context sources, prompt strategies and source declarations."
 ---
 
 # Core Platform (robos.platform)

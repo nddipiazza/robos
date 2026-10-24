@@ -5,6 +5,7 @@ parent: "Documentation & Diagrams (robos.docs)"
 grand_parent: Schemas
 nav_order: 8
 permalink: /schemas/documentation/adr-option.html
+description: "Validation shape for robos:ADROption nodes in the documentation package group."
 ---
 
 # robos:ADROption

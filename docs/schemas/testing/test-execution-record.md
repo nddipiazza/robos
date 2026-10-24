@@ -5,6 +5,7 @@ parent: "Testing, Quality & BDD (robos.testing)"
 grand_parent: Schemas
 nav_order: 21
 permalink: /schemas/testing/test-execution-record.html
+description: "Validation shape for robos:TestExecutionRecord nodes in the testing package group."
 ---
 
 # robos:TestExecutionRecord

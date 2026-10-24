@@ -5,6 +5,7 @@ parent: "Core Platform (robos.platform)"
 grand_parent: Schemas
 nav_order: 21
 permalink: /schemas/core-platform/data-store.html
+description: "Validation shape for robos:DataStore nodes in the core-platform package group."
 ---
 
 # robos:DataStore

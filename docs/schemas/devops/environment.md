@@ -5,6 +5,7 @@ parent: "DevOps & Cloud (robos.devops)"
 grand_parent: Schemas
 nav_order: 4
 permalink: /schemas/devops/environment.html
+description: "Validation shape for robos:Environment nodes in the devops package group."
 ---
 
 # robos:Environment

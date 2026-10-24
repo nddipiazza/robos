@@ -5,6 +5,7 @@ parent: "Services & Contracts (robos.services)"
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/services/graphql-contract.html
+description: "Validation shape for robos:GraphQLContract nodes in the services package group."
 ---
 
 # robos:GraphQLContract

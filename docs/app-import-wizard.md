@@ -4,6 +4,7 @@ layout: default
 parent: Building apps
 grand_parent: Build on RobOS
 nav_order: 2
+description: "How to bring an existing codebase, or a list of repositories and services, into RobOS with the App Wizard's import mode."
 ---
 
 # Import an existing app

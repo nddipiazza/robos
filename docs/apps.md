@@ -4,6 +4,7 @@ layout: default
 parent: Use RobOS
 nav_order: 2
 permalink: /apps.html
+description: "Every RobOS desktop app, each with its own page. They're built with Electron and plain JavaScript, and they all share the same knowledge graph."
 ---
 
 # App Directory

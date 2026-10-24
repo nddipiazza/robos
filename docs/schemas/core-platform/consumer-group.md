@@ -5,6 +5,7 @@ parent: "Core Platform (robos.platform)"
 grand_parent: Schemas
 nav_order: 16
 permalink: /schemas/core-platform/consumer-group.html
+description: "Validation shape for robos:ConsumerGroup nodes in the core-platform package group."
 ---
 
 # robos:ConsumerGroup

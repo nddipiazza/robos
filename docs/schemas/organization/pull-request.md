@@ -5,6 +5,7 @@ parent: "Organization & Teams (robos.org)"
 grand_parent: Schemas
 nav_order: 15
 permalink: /schemas/organization/pull-request.html
+description: "Validation shape for robos:PullRequest nodes in the organization package group."
 ---
 
 # robos:PullRequest

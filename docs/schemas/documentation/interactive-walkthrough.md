@@ -5,6 +5,7 @@ parent: "Documentation & Diagrams (robos.docs)"
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/documentation/interactive-walkthrough.html
+description: "Validation shape for robos:InteractiveWalkthrough nodes in the documentation package group."
 ---
 
 # robos:InteractiveWalkthrough

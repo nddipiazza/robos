@@ -5,6 +5,7 @@ parent: Schemas
 nav_order: 7
 has_children: true
 permalink: /schemas/documentation.html
+description: "Documentation pages, architecture decision records, flow diagrams, walkthroughs and code snippets."
 ---
 
 # Documentation & Diagrams (robos.docs)

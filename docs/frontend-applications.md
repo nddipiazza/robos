@@ -4,6 +4,7 @@ layout: default
 parent: Building apps
 grand_parent: Build on RobOS
 nav_order: 3
+description: "What RobOS gives you for a web application: the Next."
 ---
 
 # Front-end apps

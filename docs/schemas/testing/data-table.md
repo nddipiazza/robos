@@ -5,6 +5,7 @@ parent: "Testing, Quality & BDD (robos.testing)"
 grand_parent: Schemas
 nav_order: 16
 permalink: /schemas/testing/data-table.html
+description: "Validation shape for robos:DataTable nodes in the testing package group."
 ---
 
 # robos:DataTable

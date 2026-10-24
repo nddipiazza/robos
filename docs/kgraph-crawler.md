@@ -9,6 +9,7 @@ redirect_from:
   - /kgraph-crawler/pipes-iterators-fetchers.html
   - /kgraph-crawler/emitters-and-schema-inference.html
   - /kgraph-crawler/datasources-guide.html
+description: "How to scan a local directory into knowledge graph nodes, what the nodes contain, and what the crawler does not do."
 ---
 
 # KGraph crawler

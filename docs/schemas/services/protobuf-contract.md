@@ -5,6 +5,7 @@ parent: "Services & Contracts (robos.services)"
 grand_parent: Schemas
 nav_order: 4
 permalink: /schemas/services/protobuf-contract.html
+description: "Validation shape for robos:ProtobufContract nodes in the services package group."
 ---
 
 # robos:ProtobufContract

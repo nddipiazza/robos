@@ -5,6 +5,10 @@ permalink: /games/quest-warrior-dragon/docs/
 description: How to play Quest: Warrior Dragon, how the RobOS AI beats it, and how the game is checked to be finishable.
 bg_poster: /assets/games/quest-warrior-dragon/05_world_map_alefgard_overworld.png
 accent: "#00bcd4"
+og_image_alt: "Quest: Warrior Dragon Documentation and Player Guide"
+og_type: article
+schema_type: TechArticle
+keywords: "Quest Warrior Dragon docs, 2D JRPG guide, AI route planner, map reachability verification"
 ---
 <section class="game-doc wrap">
   <p class="eyebrow" style="color:var(--accent)">Quest: Warrior Dragon · 2D RPG Engine</p>

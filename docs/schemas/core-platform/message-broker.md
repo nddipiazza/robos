@@ -5,6 +5,7 @@ parent: "Core Platform (robos.platform)"
 grand_parent: Schemas
 nav_order: 6
 permalink: /schemas/core-platform/message-broker.html
+description: "Validation shape for robos:MessageBroker nodes in the core-platform package group."
 ---
 
 # robos:MessageBroker

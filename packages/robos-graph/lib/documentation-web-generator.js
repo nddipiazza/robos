@@ -225,6 +225,7 @@ function buildStandaloneDocsHtml({ items, permalink, title }) {
   return `---
 layout: null
 title: ${title}
+description: "Official living system documentation and architectural specifications exported from the RobOS Dual-State Knowledge Graph."
 permalink: ${permalink}
 parent: System Architecture
 grand_parent: RobOS Platform
@@ -236,6 +237,23 @@ grand_parent: RobOS Platform
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title} — RobOS</title>
   <meta name="description" content="Official living system documentation and architectural specifications exported from the RobOS Dual-State Knowledge Graph.">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="author" content="RobOS Project">
+  <link rel="canonical" href="https://rowbose.com/v1${permalink}">
+  <link rel="sitemap" type="application/xml" title="Sitemap" href="https://rowbose.com/sitemap.xml">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="RobOS">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:url" content="https://rowbose.com/v1${permalink}">
+  <meta property="og:title" content="${title} — RobOS">
+  <meta property="og:description" content="Official living system documentation and architectural specifications exported from the RobOS Dual-State Knowledge Graph.">
+  <meta property="og:image" content="https://rowbose.com/v1/assets/images/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://rowbose.com/v1${permalink}">
+  <meta name="twitter:title" content="${title} — RobOS">
+  <meta name="twitter:description" content="Official living system documentation and architectural specifications exported from the RobOS Dual-State Knowledge Graph.">
+  <meta name="twitter:image" content="https://rowbose.com/v1/assets/images/og.png">
   <link rel="icon" type="image/svg+xml" href="https://rowbose.com/assets/images/icons/robos-elearning.svg">
   <!-- Mermaid for client-side diagrams -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>

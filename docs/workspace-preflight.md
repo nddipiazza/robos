@@ -3,6 +3,7 @@ title: Workspace preflight
 layout: default
 parent: "Review & governance"
 nav_order: 4
+description: "Workspace preflight checks your Git checkout before an agent works on it."
 ---
 
 # Workspace preflight

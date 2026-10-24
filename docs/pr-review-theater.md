@@ -4,6 +4,7 @@ layout: default
 parent: "Review & governance"
 nav_order: 1
 permalink: /pr-review-theater.html
+description: "PR Review Theater is the review window of the Agent Code Review Platform app."
 ---
 
 # PR Review Theater

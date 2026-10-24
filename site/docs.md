@@ -5,6 +5,12 @@ permalink: /docs/
 description: Guides, architecture and reference for RobOS.
 extra_css: /assets/home.css
 body_class: home
+og_image: /assets/og.png
+og_image_width: 1200
+og_image_height: 630
+og_image_alt: "RobOS Documentation Hub — Guides, architecture and reference"
+schema_type: CollectionPage
+keywords: "RobOS documentation, developer guides, knowledge graph reference, PR Review Theater, SHACL schemas, agent skills, installation guide"
 ---
 <section class="h-sec" style="padding-bottom:40px">
   <div class="wrap">
@@ -39,6 +45,10 @@ body_class: home
       <div class="h-index-row">
         <h3>Use RobOS</h3>
         <p><a href="{{ '/v1/use-robos.html' | relative_url }}">Overview</a>, <a href="{{ '/apps/' | relative_url }}">App directory</a>, <a href="{{ '/v1/voice-prompt.html' | relative_url }}">RobOS Voice</a>, <a href="{{ '/v1/day-in-the-life.html' | relative_url }}">A day with RobOS</a>, <a href="{{ '/v1/projects/' | relative_url }}">Projects</a></p>
+      </div>
+      <div class="h-index-row">
+        <h3>App suite guides</h3>
+        <p><a href="{{ '/point-of-sale/' | relative_url }}">Point of Sale</a> (<a href="{{ '/point-of-sale/retail/' | relative_url }}">Retail</a>, <a href="{{ '/point-of-sale/coffee/' | relative_url }}">Coffee shop</a>, <a href="{{ '/point-of-sale/bar/' | relative_url }}">Bar</a>), <a href="{{ '/auto-center/' | relative_url }}">Auto Center</a>, <a href="{{ '/family-finances/' | relative_url }}">Family finances</a>, <a href="{{ '/games/' | relative_url }}">Games</a></p>
       </div>
       <div class="h-index-row">
         <h3>Build apps</h3>

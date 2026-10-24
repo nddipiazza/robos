@@ -5,6 +5,7 @@ parent: "Core Platform (robos.platform)"
 grand_parent: Schemas
 nav_order: 20
 permalink: /schemas/core-platform/curriculum-definition.html
+description: "Validation shape for robos:CurriculumDefinition nodes in the core-platform package group."
 ---
 
 # robos:CurriculumDefinition

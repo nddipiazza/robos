@@ -5,6 +5,7 @@ parent: "Documentation & Diagrams (robos.docs)"
 grand_parent: Schemas
 nav_order: 1
 permalink: /schemas/documentation/flow-diagram.html
+description: "Validation shape for robos:FlowDiagram nodes in the documentation package group."
 ---
 
 # robos:FlowDiagram

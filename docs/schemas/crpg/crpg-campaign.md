@@ -5,6 +5,7 @@ parent: "cRPG (robos.crpg)"
 grand_parent: Schemas
 nav_order: 5
 permalink: /schemas/crpg/crpg-campaign.html
+description: "Validation shape for robos:CRPGCampaign nodes in the crpg package group."
 ---
 
 # robos:CRPGCampaign

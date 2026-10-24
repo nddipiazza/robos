@@ -7,6 +7,7 @@ nav_order: 1
 permalink: /training/agent-tasks/plan-a-feature.html
 redirect_from:
   - /training/for-non-developers/03-visual-task-planning.html
+description: "Task Planner (packages/task-planner) turns a template form or a written description into an epic with child tasks, lets you edit them, and creates the issues on your task server."
 ---
 
 # Plan a feature in Task Planner

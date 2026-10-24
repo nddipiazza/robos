@@ -5,6 +5,7 @@ parent: "Core Platform (robos.platform)"
 grand_parent: Schemas
 nav_order: 7
 permalink: /schemas/core-platform/mcp-server.html
+description: "Validation shape for robos:MCPServer nodes in the core-platform package group."
 ---
 
 # robos:MCPServer

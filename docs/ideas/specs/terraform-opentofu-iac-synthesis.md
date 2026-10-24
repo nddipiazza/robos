@@ -2,6 +2,7 @@
 title: "Proposal: OpenTofu and Terraform synthesis"
 layout: default
 nav_exclude: true
+description: "Model cloud resources in the knowledge graph, generate OpenTofu or Terraform files from them, and show reviewers what a plan would change."
 ---
 
 # Proposal: OpenTofu and Terraform synthesis

@@ -5,6 +5,7 @@ parent: Build on RobOS
 nav_order: 3
 has_children: true
 permalink: /app-development-flow.html
+description: "Two different tasks are called \"building an app\" in RobOS: starting an application project of your own, and adding an app to the RobOS desktop suite."
 ---
 
 # Building apps

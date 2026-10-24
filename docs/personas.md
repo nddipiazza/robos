@@ -5,6 +5,7 @@ parent: Company setup
 grand_parent: RobOS for Teams
 nav_order: 2
 permalink: /personas.html
+description: "Which RobOS apps to open first for four common jobs on an engineering team. This is a grouping, not a permission system: any user can open any app."
 ---
 
 # Personas

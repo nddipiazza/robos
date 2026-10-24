@@ -5,6 +5,7 @@ parent: "Organization & Teams (robos.org)"
 grand_parent: Schemas
 nav_order: 7
 permalink: /schemas/organization/user-story.html
+description: "Validation shape for robos:UserStory nodes in the organization package group."
 ---
 
 # robos:UserStory

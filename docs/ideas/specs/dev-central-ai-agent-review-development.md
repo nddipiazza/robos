@@ -2,6 +2,7 @@
 title: "Proposal: Dev Central as an agent review hub"
 layout: default
 nav_exclude: true
+description: "Turn Dev Central from a personal dashboard into the place where you hand goals to agents, review their plans, and watch them work."
 ---
 
 # Proposal: Dev Central as an agent review hub

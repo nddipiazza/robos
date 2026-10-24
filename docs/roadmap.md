@@ -4,6 +4,7 @@ layout: default
 nav_order: 7
 has_children: true
 permalink: /roadmap.html
+description: "What is built, what is partly built, and what is only proposed. Read it before relying on a feature that the other pages do not describe."
 ---
 
 # Roadmap

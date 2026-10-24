@@ -4,6 +4,7 @@ layout: default
 parent: RobOS for Teams
 nav_order: 1
 permalink: /why-robos.html
+description: "The problem RobOS is built around, the approach it takes, what exists in the repository today, and where it falls short. Read this if you are deciding whether to evaluate RobOS."
 ---
 
 # Why RobOS

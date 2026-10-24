@@ -5,6 +5,7 @@ parent: "Game Rules (robos.game)"
 grand_parent: Schemas
 nav_order: 3
 permalink: /schemas/game/game-monster.html
+description: "Validation shape for robos:GameMonster nodes in the game package group."
 ---
 
 # robos:GameMonster

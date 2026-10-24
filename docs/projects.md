@@ -10,6 +10,7 @@ redirect_from:
   - /projects/docu-vault-desktop/
   - /projects/pulse-metrics-cli/
   - /projects/urban-plant-tracker/
+description: "The sample projects in the RobOS repository: one web app and three games, each with its own pages, and four starter projects produced by the App Wizard's one-click presets."
 ---
 
 # Projects
