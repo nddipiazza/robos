@@ -512,7 +512,7 @@ function createVpnSandboxEngine(options = {}) {
     accountId,
     profileId,
     customOvpnPath,
-    simulateIfNoTun = true,
+    simulateIfNoTun = false,
   }) {
     ensureDirs();
     const cleanExec = String(executable || '').trim();
@@ -696,18 +696,26 @@ function createVpnSandboxEngine(options = {}) {
         ].join('\n') + '\n',
         { mode: 0o700 }
       );
-      spawnSync('pkexec', ['bash', polkitScript], {
+      const pkEnv = {
+        ...process.env,
+        DISPLAY: launchEnv.DISPLAY,
+        WAYLAND_DISPLAY: launchEnv.WAYLAND_DISPLAY,
+        XAUTHORITY: launchEnv.XAUTHORITY,
+        XDG_RUNTIME_DIR: launchEnv.XDG_RUNTIME_DIR,
+        DBUS_SESSION_BUS_ADDRESS: `unix:path=${runtimeUserDir}/bus`,
+      };
+      const pkRes = spawnSync('systemd-run', ['--user', '--scope', 'pkexec', 'bash', polkitScript], {
         encoding: 'utf8',
         timeout: 60000,
-        env: {
-          ...process.env,
-          DISPLAY: launchEnv.DISPLAY,
-          WAYLAND_DISPLAY: launchEnv.WAYLAND_DISPLAY,
-          XAUTHORITY: launchEnv.XAUTHORITY,
-          XDG_RUNTIME_DIR: launchEnv.XDG_RUNTIME_DIR,
-          DBUS_SESSION_BUS_ADDRESS: `unix:path=${runtimeUserDir}/bus`,
-        },
+        env: pkEnv,
       });
+      if (pkRes.status !== 0) {
+        spawnSync('pkexec', ['bash', polkitScript], {
+          encoding: 'utf8',
+          timeout: 60000,
+          env: pkEnv,
+        });
+      }
       caps = checkSystemCapabilities();
     }
 
