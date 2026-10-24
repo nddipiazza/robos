@@ -55,7 +55,10 @@
           </div>
           <div class="field">
             <label for="acc-password">OpenVPN Password</label>
-            <input type="password" id="acc-password" class="input" autocomplete="off" placeholder="Password" />
+            <div class="password-wrap">
+              <input type="password" id="acc-password" class="input password-input" autocomplete="off" placeholder="Password" />
+              <button type="button" class="pw-toggle" id="btn-toggle-password" aria-label="Show password">Show</button>
+            </div>
           </div>
         </div>
         <div class="field">

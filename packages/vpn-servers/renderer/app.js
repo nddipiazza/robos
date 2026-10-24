@@ -55,6 +55,7 @@ function renderAccounts() {
         </div>
         <div style="display:flex;gap:6px;">
           ${!acc.isDefault ? `<button type="button" class="btn" data-use-acc="${esc(acc.id)}">Use</button>` : ''}
+          <button type="button" class="btn" data-edit-acc="${esc(acc.id)}">Edit</button>
           <button type="button" class="btn btn-danger" data-del-acc="${esc(acc.id)}">✕</button>
         </div>
       </div>
@@ -68,7 +69,14 @@ function renderAccounts() {
       if (res.ok) {
         state = { ...state, ...res };
         renderAll();
+        await loadAccountIntoForm(btn.dataset.useAcc);
       }
+    };
+  });
+
+  listEl.querySelectorAll('[data-edit-acc]').forEach(btn => {
+    btn.onclick = async () => {
+      await loadAccountIntoForm(btn.dataset.editAcc);
     };
   });
 
@@ -82,6 +90,25 @@ function renderAccounts() {
       }
     };
   });
+}
+
+async function loadAccountIntoForm(accountId) {
+  const acc = (state.accounts || []).find(a => a.id === accountId) || defaultAccount();
+  if (!acc) return;
+  document.getElementById('acc-provider').value = acc.providerId || 'ipvanish';
+  renderFormSelects();
+  document.getElementById('acc-label').value = acc.label || '';
+  document.getElementById('acc-username').value = acc.username || '';
+  document.getElementById('acc-protocol').value = acc.protocol || 'udp';
+  if (acc.defaultProfile) {
+    document.getElementById('acc-default-profile').value = acc.defaultProfile;
+  }
+  if (typeof window.robos.getAccountCredentials === 'function') {
+    const creds = await window.robos.getAccountCredentials(acc.id);
+    if (creds?.ok && creds.password) {
+      document.getElementById('acc-password').value = creds.password;
+    }
+  }
 }
 
 function renderFormSelects() {
@@ -229,6 +256,20 @@ async function init() {
   const res = await window.robos.getState();
   if (res.ok) state = { ...state, ...res };
   renderAll();
+  if (defaultAccount()) {
+    await loadAccountIntoForm(defaultAccount().id);
+  }
+
+  const pwInput = document.getElementById('acc-password');
+  const pwToggle = document.getElementById('btn-toggle-password');
+  if (pwInput && pwToggle) {
+    pwToggle.onclick = () => {
+      const showing = pwInput.type === 'text';
+      pwInput.type = showing ? 'password' : 'text';
+      pwToggle.textContent = showing ? 'Show' : 'Hide';
+      pwToggle.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    };
+  }
 
   document.getElementById('server-search').oninput = renderServers;
 
@@ -253,7 +294,10 @@ async function init() {
       showToast(saved.error || 'Could not save account.', true);
       return;
     }
-    document.getElementById('acc-password').value = '';
+    if (pwInput && pwToggle) {
+      pwInput.type = 'password';
+      pwToggle.textContent = 'Show';
+    }
     state = { ...state, ...saved };
     renderAll();
     showToast(`Saved ${saved.account.label}.`);

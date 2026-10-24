@@ -226,7 +226,10 @@ function ovpnAccountSection() {
         <label class="field-label" for="ovpn-password">OpenVPN Password</label>
         <p class="field-description">Stored encrypted in <code>robos/ovpn/&lt;provider&gt;/&lt;account&gt;</code>.</p>
       </div>
-      <div class="field-input"><input type="password" class="text-input" id="ovpn-password" autocomplete="off" placeholder="Enter OpenVPN service password" /></div>
+      <div class="field-input" style="display:flex;gap:6px;align-items:center;">
+        <input type="password" class="text-input" id="ovpn-password" autocomplete="off" placeholder="Enter OpenVPN service password" style="flex:1;" />
+        <button type="button" class="btn" id="btn-toggle-ovpn-password">Show</button>
+      </div>
     </div>
     <div class="field-row">
       <div class="field-copy">
@@ -318,6 +321,16 @@ async function loadOvpnAccounts() {
     statusEl.textContent = `${res.providers?.length || 0} OpenVPN providers registered (IPVanish built-in). ${res.accounts?.length || 0} account(s) tracked.`;
   } catch (err) {
     statusEl.textContent = err.message;
+  }
+
+  const pwInput = document.getElementById('ovpn-password');
+  const pwToggle = document.getElementById('btn-toggle-ovpn-password');
+  if (pwInput && pwToggle) {
+    pwToggle.onclick = () => {
+      const showing = pwInput.type === 'text';
+      pwInput.type = showing ? 'password' : 'text';
+      pwToggle.textContent = showing ? 'Show' : 'Hide';
+    };
   }
 
   const saveBtn = document.getElementById('btn-save-ovpn-account');

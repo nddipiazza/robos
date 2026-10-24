@@ -126,6 +126,15 @@ ipcMain.handle('get-state', async () => {
   }
 });
 
+ipcMain.handle('get-account-credentials', async (_, accountId) => {
+  try {
+    const creds = ovpnManager.getAccountCredentials(accountId);
+    return { ok: true, username: creds.username, password: creds.password, account: creds.account };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 ipcMain.handle('save-account', async (_, input) => {
   try {
     return { ok: true, ...ovpnManager.saveAccount(input) };
