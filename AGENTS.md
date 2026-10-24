@@ -257,6 +257,8 @@ RobOS includes a cross-agent plugin marketplace and standard skills under `plugi
 - `sync-kgraph-docs` — Inspect RobOS Knowledge Graph object updates, discern documentation impacts, and synchronize living docs
 - `test-container` — Run containerized headless E2E tests in Docker + Xvfb
 - `update-app-icon` — Update an app's SVG icon
+- `vpn-sandbox` — Configure OpenVPN accounts/servers, launch apps inside isolated `ip netns` namespaces, and run the live 5-step E2E mid-session VPN drop kill-switch proof
+- `publish-blog-post` — Write and publish a new Engineering Blog entry in `site/blog/index.md` with jump navigation, E2E visual evidence, docs links, and commit hashes
 
 See [plugins/README.md](plugins/README.md) for full installation and usage instructions across Claude, Codex, Antigravity, Copilot, and Gemini.
 

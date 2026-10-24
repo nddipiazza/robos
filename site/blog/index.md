@@ -16,6 +16,7 @@ keywords: "RobOS engineering blog, release notes, OBD-II Auto Center, Audio Play
     <p class="lead">What changed in RobOS and why, newest first. Each post links to the docs and the commits behind it.</p>
   </div>
   <nav class="blog-jump" aria-label="Jump to blog post">
+    <a href="#vpn-sandbox-and-killswitch-proof">VPN Sandbox &amp; Kill-Switch Proof</a>
     <a href="#frontier-hunters-live-map-editor">RTS: Frontier Hunters &amp; Map Editor</a>
     <a href="#quest-warrior-dragon-ai-walkthrough">Quest: Warrior Dragon AI</a>
     <a href="#ai-playthrough-quest-warrior-dragon">AI Playthrough</a>
@@ -37,6 +38,45 @@ keywords: "RobOS engineering blog, release notes, OBD-II Auto Center, Audio Play
 </section>
 
 <div class="blog-feed">
+
+  <article class="blog-entry" id="vpn-sandbox-and-killswitch-proof">
+    <div class="blog-meta">
+      <time class="blog-date" datetime="2026-10-24">Oct 24, 2026</time>
+      <span class="blog-tag">RobOS VPN Sandbox</span>
+      <span class="blog-tag">RobOS VPN Servers</span>
+      <span class="blog-tag">Linux ip-netns &amp; iptables</span>
+      <span class="blog-tag">Security Proof</span>
+    </div>
+    <h2><a href="#vpn-sandbox-and-killswitch-proof">RobOS VPN Sandbox &amp; VPN Servers: Per-App Linux Network Namespaces and a Live Kernel Kill-Switch Proof</a></h2>
+    <p class="blog-summary">Two new desktop apps—<strong>RobOS VPN Servers</strong> (<code>packages/vpn-servers</code>) and <strong>RobOS VPN Sandbox</strong> (<code>packages/vpn-sandbox</code>)—let you launch individual desktop or CLI applications (such as Firefox, Transmission, or <code>curl</code>) inside an isolated Linux network namespace (<code>ip netns</code>) routed exclusively through OpenVPN (with all 3,598 official IPVanish server profiles bundled out of the box). An automated 5-step fault-injection proof kills the OpenVPN daemon mid-flight and verifies at the kernel packet counter level that zero bytes ever fall back to your normal public IP.</p>
+    <div class="blog-body">
+      <figure class="blog-fig">
+        <img src="{{ '/assets/security/vpn-sandbox-killswitch-proven.png' | relative_url }}" alt="RobOS VPN Sandbox showing Firefox running inside an isolated VPN namespace and the live 5-step Kill-Switch Proof banner" loading="lazy">
+        <figcaption><strong>RobOS VPN Sandbox</strong> running on Ubuntu 26.04 LTS: Firefox is confined to an isolated namespace exiting through IPVanish Atlanta (<code>216.131.74.203</code>) while the host's normal public IP (<code>134.215.148.43</code>) is blocked, and the top banner reports the live 5-step mid-session OpenVPN drop proof.</figcaption>
+      </figure>
+      <p><strong>3,598 IPVanish profiles and GPG-encrypted credentials.</strong> <strong>RobOS VPN Servers</strong> bundles the complete IPVanish `.ovpn` server catalog (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/assets/ipvanish-configs.tar.xz"><code>packages/robos-lib/assets/ipvanish-configs.tar.xz</code></a>), pre-sanitized for OpenVPN 2.6/2.7 compatibility by stripping deprecated <code>keysize</code> directives and negotiating <code>AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-256-CBC</code>. Account passwords are encrypted in <code>pass</code> (<code>robos/ovpn/&lt;provider&gt;/&lt;account&gt;</code>) with an automatic AES-256-GCM local vault fallback, and a one-click <strong>Test</strong> button performs a live TLS 1.3 handshake to verify <code>PUSH_REPLY</code> and the assigned tunnel IP before launching any app.</p>
+      <div class="blog-fig-grid">
+        <figure class="blog-fig"><img src="{{ '/assets/security/vpn-servers-verified.png' | relative_url }}" alt="RobOS VPN Servers managing an IPVanish account and 3,605 server locations" loading="lazy"><figcaption><strong>RobOS VPN Servers</strong>: account management, live credential testing, and country/city filtering across 3,600+ locations.</figcaption></figure>
+        <figure class="blog-fig"><img src="{{ '/assets/security/vpn-killswitch-architecture.png' | relative_url }}" alt="3-Barrier Kernel Kill-Switch Architecture diagram for RobOS VPN Sandbox" loading="lazy"><figcaption>The 3-Barrier Linux Kernel Kill-Switch inside <code>robos_vpn_&lt;id&gt;</code>.</figcaption></figure>
+      </div>
+      <p><strong>Three kernel barriers when OpenVPN stops.</strong> Unlike OS-wide VPN clients that share the host routing table and fall back to the default gateway when <code>tun0</code> drops, <strong>RobOS VPN Sandbox</strong> places each launched app inside its own network namespace (<code>robos_vpn_&lt;id&gt;</code>) as an unprivileged user (<code>uid 1000</code>, <code>setpriv --inh-caps=-net_admin,-net_raw</code>). Inside the namespace, <code>iptables -P OUTPUT DROP</code> and <code>ip6tables -P OUTPUT DROP</code> block all egress except <code>-o tun+</code>; on the virtual Ethernet link (<code>veth_n_&lt;id&gt;</code>), only <code>-m owner --uid-owner 0</code> (the root OpenVPN daemon) to the exact VPN server IP and port is permitted, followed by <code>-A OUTPUT -o veth_n_&lt;id&gt; -j DROP</code>. On the host side, both the <code>FORWARD</code> chain (<code>ROBOS_VPN_FWD_&lt;id&gt;</code>) and the <code>POSTROUTING</code> <code>MASQUERADE</code> rule are locked strictly to the VPN server IP and port. Namespace-specific <code>/etc/netns/robos_vpn_&lt;id&gt;/resolv.conf</code> and <code>nsswitch.conf</code> (<code>hosts: files dns</code>) paired with <code>openvpn --dns-updown disable</code> ensure DNS queries travel exclusively through <code>tun0</code> without touching host <code>systemd-resolved</code>.</p>
+      <p><strong>Proving zero leak on mid-session VPN crash.</strong> The new <strong>/security/</strong> section debuts with our live 5-phase E2E fault-injection test (<a href="https://github.com/nddipiazza/robos/blob/main/tests/e2e/vpn-sandbox-killswitch-proof.test.cjs"><code>tests/e2e/vpn-sandbox-killswitch-proof.test.cjs</code></a>, also runnable via the <strong>Prove Kill-Switch</strong> button in the app). It records the host's real public IP (<code>134.215.148.43</code>), verifies the sandboxed app reaches <code>https://api.ipify.org</code> via the IPVanish tunnel IP (<code>216.131.74.203</code>), sends <code>kill -9</code> to the OpenVPN daemon while leaving <code>robos_vpn_&lt;id&gt;</code> and its <code>veth</code> default route up, fires four egress probes from the unprivileged app (HTTPS, direct TCP to <code>1.1.1.1:80</code>, direct UDP to <code>8.8.8.8:53</code>, and direct UDP to the VPN server IP as <code>uid 1000</code>), and verifies via kernel <code>iptables -L OUTPUT -v -n -x</code> counters that 100% of post-drop packets are dropped in the kernel with zero bytes leaked.</p>
+      <div class="blog-log"># Launch the apps
+scripts/dev-launch.sh vpn-servers
+scripts/dev-launch.sh vpn-sandbox
+
+# Run unit tests and live kernel E2E kill-switch proof
+node --test packages/robos-lib/ovpn-providers.test.cjs
+ROBOS_VPN_LIVE_E2E=1 node --test tests/e2e/vpn-sandbox-killswitch-proof.test.cjs</div>
+    </div>
+    <div class="blog-links">
+      <a href="{{ '/security/#zero-leak-vpn-app-sandbox' | relative_url }}">Full security proof &amp; architecture →</a>
+      <a href="{{ '/v1/apps/vpn-sandbox/' | relative_url }}">RobOS VPN Sandbox docs →</a>
+      <a href="{{ '/v1/apps/vpn-servers/' | relative_url }}">RobOS VPN Servers docs →</a>
+      <a href="https://github.com/nddipiazza/robos/blob/main/tests/e2e/vpn-sandbox-killswitch-proof.test.cjs">E2E Kill-Switch test →</a>
+      <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/b0215d20">b0215d20</a> · <a href="https://github.com/nddipiazza/robos/commit/a0cc08a3">a0cc08a3</a> · <a href="https://github.com/nddipiazza/robos/commit/45e1f139">45e1f139</a> · <a href="https://github.com/nddipiazza/robos/commit/3e7aec51">3e7aec51</a></span>
+    </div>
+  </article>
 
   <article class="blog-entry" id="frontier-hunters-live-map-editor">
     <div class="blog-meta">

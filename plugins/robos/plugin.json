@@ -44,7 +44,9 @@
     "vm-status",
     "robos-voice",
     "manage-agent-personas",
-    "robos-github-auth"
+    "robos-github-auth",
+    "vpn-sandbox",
+    "publish-blog-post"
   ],
   "commands": [
     "view-task-plan",
@@ -81,7 +83,9 @@
     "vm-status",
     "robos-voice",
     "manage-agent-personas",
-    "robos-github-auth"
+    "robos-github-auth",
+    "vpn-sandbox",
+    "publish-blog-post"
   ],
   "compatibility": {
     "claude": ">=1.0.0",
