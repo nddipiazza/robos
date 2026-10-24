@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline';" />
+  <title>RobOS VPN Sandbox — Zero-Leak OpenVPN App Launcher &amp; Provider Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Header -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M24 4L8 11v12c0 11.2 6.8 20.6 16 23 9.2-2.4 16-11.8 16-23V11L24 4z"/>
+            <rect x="17" y="21" width="14" height="11" rx="2"/>
+            <path d="M20 21v-3a4 4 0 0 1 8 0v3"/>
+            <circle cx="24" cy="26" r="1.5" fill="#00bcd4"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">RobOS VPN Sandbox</h1>
+          <p class="brand-subtitle">Zero-Leak OpenVPN App Launcher · IPVanish &amp; OVPN Accounts · Linux <code>ip netns</code> + <code>iptables</code> Kill Switch</p>
+        </div>
+      </div>
+
+      <div class="topbar-metrics">
+        <div class="metric-pill">
+          <span class="metric-label">Host Normal IP (Blocked in Sandbox)</span>
+          <strong id="metric-host-ip">—</strong>
+        </div>
+        <div class="metric-pill accent">
+          <span class="metric-label">Default OVPN Account</span>
+          <strong id="metric-default-account">None configured</strong>
+        </div>
+        <div class="metric-pill">
+          <span class="metric-label">Active Sandboxes</span>
+          <strong id="metric-active-count">0</strong>
+        </div>
+        <button type="button" class="btn btn-danger" id="btn-emergency-kill" title="Immediately terminate all sandboxed apps and destroy VPN namespaces">
+          Emergency Kill All
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabbar" role="tablist" aria-label="VPN Sandbox Sections">
+      <button type="button" class="tab-btn active" id="tab-btn-launcher" data-tab="launcher" role="tab" aria-selected="true">
+        1. Sandbox App Launcher
+      </button>
+      <button type="button" class="tab-btn" id="tab-btn-sessions" data-tab="sessions" role="tab" aria-selected="false">
+        2. Active Sandboxed Processes (<span id="tab-session-badge">0</span>)
+      </button>
+      <button type="button" class="tab-btn" id="tab-btn-accounts" data-tab="accounts" role="tab" aria-selected="false">
+        3. OVPN Providers &amp; Accounts (IPVanish)
+      </button>
+      <button type="button" class="tab-btn" id="tab-btn-firewall" data-tab="firewall" role="tab" aria-selected="false">
+        4. Zero-Leak <code>iptables</code> Auditor
+      </button>
+    </nav>
+
+    <!-- Status Banner -->
+    <div id="global-toast" class="global-toast hidden" role="status" aria-live="polite"></div>
+
+    <!-- Main Content Panels -->
+    <main class="main-area">
+      <!-- TAB 1: SANDBOX APP LAUNCHER -->
+      <section class="tab-panel active" id="panel-launcher" role="tabpanel">
+        <div class="grid-two">
+          <!-- Left Card: Launch Any Executable in OpenVPN Sandbox -->
+          <div class="card">
+            <div class="card-header">
+              <h2>Sandbox Launch Executable via OpenVPN</h2>
+              <span class="badge badge-cyan">5-Layer Zero-Leak Enforced</span>
+            </div>
+            <p class="card-desc">
+              Enter any executable name (e.g. <code>firefox</code>, <code>curl</code>, <code>transmission-gtk</code>) or path. RobOS spawns it inside an isolated Linux network namespace (<code>ip netns</code>) locked with dual-layer <code>iptables</code> + <code>ip6tables</code> rules so it is <strong>impossible</strong> for your normal IP to ever carry traffic from that app.
+            </p>
+
+            <div class="form-group">
+              <label for="launch-executable">Executable Name or Path</label>
+              <div class="input-group">
+                <input type="text" id="launch-executable" class="input" placeholder="e.g. firefox, curl, /usr/bin/google-chrome-stable" value="curl" />
+                <button type="button" class="btn" id="btn-browse-exe">Browse…</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="picker-installed-exe">Or Pick Installed App / Binary from <code>$PATH</code></label>
+              <select id="picker-installed-exe" class="select">
+                <option value="">Select an installed executable to autofill…</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="launch-args">Command Arguments (optional)</label>
+                <input type="text" id="launch-args" class="input" placeholder="e.g. -sS https://api.ipify.org?format=json" value="-sS https://api.ipify.org?format=json" />
+              </div>
+              <div class="form-group">
+                <label for="launch-profile-name">Save Profile Name (optional)</label>
+                <input type="text" id="launch-profile-name" class="input" placeholder="e.g. My Sandboxed App" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="launch-account">OpenVPN Account</label>
+                <select id="launch-account" class="select"></select>
+              </div>
+              <div class="form-group">
+                <label for="launch-ovpn-profile">VPN Gateway Server (<code>.ovpn</code>)</label>
+                <select id="launch-ovpn-profile" class="select"></select>
+              </div>
+            </div>
+
+            <div class="guarantee-box">
+              <div class="guarantee-title">Zero-Host-IP Leak Guarantee (Enforced Before Exec):</div>
+              <ul class="guarantee-list">
+                <li><strong>No Host Interface Access:</strong> Physical interface (<code id="guarantee-host-iface">eth0</code>) does not exist inside namespace <code>robos_vpn_*</code>.</li>
+                <li><strong>In-Namespace <code>iptables -P OUTPUT DROP</code>:</strong> App UID is blocked on <code>veth</code> (<code>-m owner --uid-owner 0</code> only) and can ONLY transmit over <code>tun+</code>.</li>
+                <li><strong>Host Kernel <code>FORWARD</code> Lock:</strong> Host drops all packets from the sandbox unless destined to the exact OpenVPN server IP &amp; port.</li>
+                <li><strong>IPv6 &amp; DNS Locked:</strong> <code>ip6tables -P OUTPUT DROP</code> + namespace-bound <code>/etc/netns/&lt;ns&gt;/resolv.conf</code> over <code>tun0</code>.</li>
+              </ul>
+            </div>
+
+            <div class="card-actions">
+              <button type="button" class="btn btn-primary btn-lg" id="btn-launch-sandbox">
+                Launch in OpenVPN Sandbox
+              </button>
+              <button type="button" class="btn" id="btn-save-app-profile">
+                Save Executable Profile
+              </button>
+              <button type="button" class="btn" id="btn-jump-add-account">
+                + Add IPVanish Account
+              </button>
+            </div>
+          </div>
+
+          <!-- Right Card: Saved Sandboxed App Profiles & Quick Output -->
+          <div class="col-stack">
+            <div class="card">
+              <div class="card-header">
+                <h2>Saved Sandboxed Executable Profiles</h2>
+                <span class="badge" id="saved-apps-count">0 profiles</span>
+              </div>
+              <div id="saved-apps-list" class="item-list"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h2>Latest Sandbox Execution Log</h2>
+                <span class="badge badge-green" id="latest-session-badge">Idle</span>
+              </div>
+              <pre id="latest-launch-log" class="code-box">Select an OpenVPN account (e.g. IPVanish) and click "Launch in OpenVPN Sandbox" to start an isolated application session.</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: ACTIVE SANDBOXED PROCESSES -->
+      <section class="tab-panel" id="panel-sessions" role="tabpanel">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Sandboxed Application Sessions &amp; Live Tunnel Monitor</h2>
+              <p class="card-desc">Every process below is isolated inside its own <code>robos_vpn_*</code> network namespace with strict <code>iptables</code> kill-switch enforcement.</p>
+            </div>
+            <button type="button" class="btn" id="btn-refresh-sessions">Refresh Sessions</button>
+          </div>
+          <div id="sessions-list" class="item-list"></div>
+        </div>
+      </section>
+
+      <!-- TAB 3: OVPN PROVIDERS & ACCOUNTS (IPVANISH BUILT-IN) -->
+      <section class="tab-panel" id="panel-accounts" role="tabpanel">
+        <div class="grid-two">
+          <!-- Left: Add / Edit Tracked OpenVPN Account -->
+          <div class="card">
+            <div class="card-header">
+              <h2>Add / Update OpenVPN Account</h2>
+              <span class="badge badge-cyan">Encrypted in Pass</span>
+            </div>
+            <p class="card-desc" id="account-provider-help">
+              IPVanish is pre-configured as a first-class RobOS provider. Add your IPVanish OpenVPN service username and password below; accounts are tracked across RobOS and RobOS Preferences.
+            </p>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="acc-provider">OpenVPN Provider</label>
+                <select id="acc-provider" class="select"></select>
+              </div>
+              <div class="form-group">
+                <label for="acc-label">Account Display Name</label>
+                <input type="text" id="acc-label" class="input" placeholder="My IPVanish Account" />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="acc-username">OpenVPN Service Username</label>
+                <input type="text" id="acc-username" class="input" autocomplete="off" placeholder="e.g. your_ipvanish_username" />
+              </div>
+              <div class="form-group">
+                <label for="acc-password">OpenVPN Service Password</label>
+                <input type="password" id="acc-password" class="input" autocomplete="off" placeholder="Encrypted in robos/ovpn/..." />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="acc-default-profile">Default Server Gateway (<code>.ovpn</code>)</label>
+                <select id="acc-default-profile" class="select"></select>
+              </div>
+              <div class="form-group">
+                <label for="acc-protocol">Transport Protocol</label>
+                <select id="acc-protocol" class="select">
+                  <option value="udp">UDP (Port 443 — Recommended)</option>
+                  <option value="tcp">TCP (Port 443)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="card-actions">
+              <button type="button" class="btn btn-primary" id="btn-save-account">
+                Save OpenVPN Account
+              </button>
+              <button type="button" class="btn" id="btn-sync-ipvanish">
+                Sync IPVanish <code>.ovpn</code> Configs
+              </button>
+              <button type="button" class="btn" id="btn-import-ovpn">
+                Import Custom <code>.ovpn</code> File…
+              </button>
+              <button type="button" class="btn" id="btn-open-prefs">
+                Open in RobOS Preferences
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Tracked Accounts & Registered Providers -->
+          <div class="col-stack">
+            <div class="card">
+              <div class="card-header">
+                <h2>Tracked OpenVPN Accounts in RobOS</h2>
+                <span class="badge" id="accounts-count-badge">0 accounts</span>
+              </div>
+              <div id="accounts-list" class="item-list"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h2>Registered OpenVPN Providers</h2>
+                <span class="badge badge-cyan" id="providers-count-badge">5 providers</span>
+              </div>
+              <div id="providers-list" class="item-list"></div>
+
+              <details class="custom-provider-details">
+                <summary>+ Register Additional OpenVPN Provider</summary>
+                <div class="form-row" style="margin-top:10px;">
+                  <div class="form-group">
+                    <label for="new-prov-name">Provider Name</label>
+                    <input type="text" id="new-prov-name" class="input" placeholder="e.g. AirVPN or Corporate OVPN" />
+                  </div>
+                  <div class="form-group">
+                    <label for="new-prov-url">Website / Config URL</label>
+                    <input type="text" id="new-prov-url" class="input" placeholder="https://..." />
+                  </div>
+                </div>
+                <button type="button" class="btn" id="btn-add-provider">Add Provider</button>
+              </details>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: ZERO-LEAK IPTABLES AUDITOR -->
+      <section class="tab-panel" id="panel-firewall" role="tabpanel">
+        <div class="grid-two">
+          <div class="card">
+            <div class="card-header">
+              <h2>6-Point Zero-Leak Isolation Audit</h2>
+              <button type="button" class="btn btn-primary" id="btn-run-audit">Re-Run Audit Now</button>
+            </div>
+            <p class="card-desc">
+              Verifies that every network namespace, <code>iptables</code>, <code>ip6tables</code>, DNS, and capability rule prevents your normal IP from ever being used by a sandboxed application.
+            </p>
+            <div id="audit-checks-list" class="item-list"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Generated <code>ip netns</code> &amp; <code>iptables</code> Enforcement Script</h2>
+              <span class="badge badge-cyan">Deterministic Kill Switch</span>
+            </div>
+            <p class="card-desc">
+              Exact kernel commands executed for each sandbox session:
+            </p>
+            <pre id="firewall-script-preview" class="code-box code-box-tall"></pre>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS VPN Sandbox
+Comment=Zero-leak OpenVPN provider & account manager (IPVanish built-in) that sandbox-launches executables via Linux network namespaces and strict iptables kill-switch rules
+Exec=/usr/bin/electron /usr/local/share/robos/vpn-sandbox/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/vpn-sandbox/icon.svg
+Terminal=false
+Categories=Security;Network;
+X-RobOS-Category=Security
+StartupWMClass=robos-vpn-sandbox

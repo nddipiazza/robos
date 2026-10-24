@@ -119,6 +119,8 @@ const { GitOpsSDLCParser } = require('./gitops-parser');
 const promptSecurity = require('./prompt-security');
 const agentPersonas = require('./agent-personas');
 const voiceModule = require('./voice');
+const ovpnProviders = require('./ovpn-providers');
+const vpnSandboxEngine = require('./vpn-sandbox-engine');
 
 module.exports = {
   CATEGORIES,
@@ -142,6 +144,8 @@ module.exports = {
   RobOSVoiceClient: voiceModule.RobOSVoiceClient,
   voice: voiceModule.voice,
   voiceClient: voiceModule.voiceClient,
+  ovpnProviders,
+  vpnSandboxEngine,
 };
 
 

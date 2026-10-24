@@ -573,6 +573,12 @@ const BUILTIN_APPS = [
     iconSvg: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"48\" height=\"48\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#3b82f6\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"8\" y=\"2\" width=\"8\" height=\"5\" rx=\"1\"/><rect x=\"2\" y=\"15\" width=\"7\" height=\"6\" rx=\"1\"/><rect x=\"15\" y=\"15\" width=\"7\" height=\"6\" rx=\"1\"/><path d=\"M12 7v4\"/><path d=\"M5.5 15v-4h13v4\"/><circle cx=\"12\" cy=\"11\" r=\"1.2\" fill=\"#3b82f6\"/></svg>"
   },
   {
+    appId: 'vpn-sandbox',
+    label: 'RobOS VPN Sandbox',
+    category: 'Security',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M24 4L8 11v12c0 11.2 6.8 20.6 16 23 9.2-2.4 16-11.8 16-23V11L24 4z"/><rect x="17" y="21" width="14" height="11" rx="2"/><path d="M20 21v-3a4 4 0 0 1 8 0v3"/><circle cx="24" cy="26" r="1.5" fill="#00bcd4"/><path d="M24 27.5V30"/></svg>'
+  },
+  {
     appId: 'workspace-manager-mcp',
     label: "Workspace Manager MCP Server",
     category: "services",

@@ -1,0 +1,9 @@
+{
+  "name": "robos-vpn-sandbox",
+  "version": "0.1.0",
+  "description": "Zero-leak OpenVPN application sandbox launcher and provider account manager (IPVanish built-in) using Linux network namespaces and strict iptables kill-switch enforcement.",
+  "main": "main.js",
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

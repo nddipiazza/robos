@@ -140,6 +140,7 @@ function syncSettingsToKGraph(settings) {
 const SETTINGS_SCHEMA = {
   sections: [
     { id: 'github_accounts', label: 'GitHub accounts', fields: [] },
+    { id: 'ovpn_accounts', label: 'OpenVPN & VPN Accounts', fields: [] },
     {id:'code_review',label:'Code Review',fields:[{key:'default_code_reviewer_group',label:'Default code reviewer group',type:'select',options:[],default:''}]},
     {
       id: 'ai',
@@ -370,4 +371,48 @@ ipcMain.handle('github-accounts-add', async () => {
       child.on('error', reject); child.on('spawn', () => { child.unref(); resolve({ ok: true }); });
     });
   } catch (error) { return { ok: false, error: error.message }; }
+});
+
+// ── OpenVPN Providers & Accounts (IPVanish + Custom OVPN) ────────────────────
+function ovpnProviders() {
+  for (const p of [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'ovpn-providers'),
+    path.resolve(__dirname, '..', 'robos-lib', 'ovpn-providers'),
+    '/usr/local/share/robos/robos-lib/ovpn-providers',
+  ].filter(Boolean)) {
+    try { return require(p); } catch {}
+  }
+  throw new Error('ovpn-providers library is not available.');
+}
+
+ipcMain.handle('ovpn-accounts-list', async () => {
+  try { return { ok: true, ...ovpnProviders().listAccounts() }; }
+  catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('ovpn-accounts-save', async (_, accountInput) => {
+  try { return { ok: true, ...ovpnProviders().saveAccount(accountInput) }; }
+  catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('ovpn-accounts-delete', async (_, accountId) => {
+  try { return { ok: true, ...ovpnProviders().deleteAccount(accountId) }; }
+  catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('ovpn-accounts-set-default', async (_, accountId) => {
+  try { return { ok: true, ...ovpnProviders().setDefaultAccount(accountId) }; }
+  catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('ovpn-providers-add', async (_, providerInput) => {
+  try {
+    const provider = ovpnProviders().addCustomProvider(providerInput);
+    return { ok: true, provider, ...ovpnProviders().listAccounts() };
+  } catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('ovpn-profiles-sync', async (_, providerId) => {
+  try { return await ovpnProviders().syncProviderProfiles(providerId || 'ipvanish'); }
+  catch (error) { return { ok: false, error: error.message }; }
 });
