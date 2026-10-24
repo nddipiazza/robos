@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: vpn-sandbox
+  title: RobOS VPN Sandbox
+  description: Zero-leak OpenVPN application launcher that runs executables inside isolated Linux network namespaces (ip netns) with a 3-barrier iptables/ip6tables kill-switch.
+  tags:
+    - electron
+    - security
+    - openvpn
+    - netns
+    - iptables
+spec:
+  type: desktop-app
+  lifecycle: production
+  owner: platform-security-squad
+  system: robos-desktop

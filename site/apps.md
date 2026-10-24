@@ -64,6 +64,14 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
           <p>Realm of Heroes party cRPG, the HeroQuest-inspired Tabletop RPG, and Starfall Command RTS — modeled in the KGraph and tested on camera.</p>
         </div>
       </a>
+      <a class="card app-card" href="{{ '/security/#zero-leak-vpn-app-sandbox' | relative_url }}" data-s="robos vpn sandbox vpn servers openvpn ipvanish network namespace ip netns iptables kill switch zero leak firefox transmission">
+        <img src="{{ '/v1/assets/images/icons/vpn-sandbox.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
+        <div>
+          <h3>RobOS VPN Sandbox &amp; VPN Servers</h3>
+          <code class="app-pkg">Security Proof · /security/</code>
+          <p>Launch any app inside an isolated Linux network namespace (<code>ip netns</code>) routed through OpenVPN (3,598 IPVanish profiles built in) with a live E2E-proven 3-barrier kernel kill-switch.</p>
+        </div>
+      </a>
     </div>
   </div>
 

@@ -6,7 +6,7 @@ Actions inside the apps also have optional AI-powered features. The Audio Player
 
 It is free and open source under the [Apache License 2.0](LICENSE). The current release is [v0.0.8](https://github.com/nddipiazza/robos/releases/tag/v0.0.8).
 
-[Website](https://rowbose.com/) | [Documentation](https://rowbose.com/docs/) | [Future](https://rowbose.com/future/) | [Blog](https://rowbose.com/blog/) | [Download](https://rowbose.com/download/) | [Releases](https://github.com/nddipiazza/robos/releases) | [Discord](https://discord.gg/6PjxzkHujE)
+[Website](https://rowbose.com/) | [Documentation](https://rowbose.com/docs/) | [Security](https://rowbose.com/security/) | [Future](https://rowbose.com/future/) | [Blog](https://rowbose.com/blog/) | [Download](https://rowbose.com/download/) | [Releases](https://github.com/nddipiazza/robos/releases) | [Discord](https://discord.gg/6PjxzkHujE)
 
 <p align="center">
   <img src="site/assets/point-of-sale/coffee-register-latte.jpg" alt="RobOS Point of Sale register with a customized latte order" width="440">
@@ -70,7 +70,7 @@ Each app is a directory under `packages/`, launched with `scripts/dev-launch.sh 
 | Review and delivery | `pr-review`, `ci-monitor`, `deploy-tracker` |
 | Architecture and graph | `robos-graph` (Knowledge Graph Explorer), `topology-manager`, `schema-studio`, `contract-studio` |
 | Data and APIs | `db-manager`, `nosql-manager`, `rest-client`, `grpc-client`, `graphql-client`, `data-sources` |
-| Infrastructure and secrets | `kube-studio`, `remote-execution-studio`, `pass-manager` |
+| Infrastructure and secrets | `kube-studio`, `remote-execution-studio`, `pass-manager`, `vpn-sandbox`, `vpn-servers` |
 | Agents | `agents-manager`, `agent-chat`, `mcp-manager` |
 
 Every app has a page in [`docs/_apps/`](docs/_apps/) and an entry in the [app directory](https://rowbose.com/apps/).

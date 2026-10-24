@@ -859,6 +859,36 @@
       "robos:repository": "packages/gnome-desktop-installer",
       "robos:technology": "Electron 28 / FreeDesktop 1.5 / GIO / GSettings",
       "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:desktop-app:vpn-sandbox",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS VPN Sandbox",
+      "dcterms:description": "Zero-leak OpenVPN application launcher that runs any desktop or CLI executable inside an isolated Linux network namespace (ip netns) with a 3-barrier iptables/ip6tables kill-switch so your normal public IP is never exposed.",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications",
+      "robos:repository": "packages/vpn-sandbox",
+      "robos:technology": "Electron 28 / OpenVPN 2.7 / Linux ip-netns / iptables",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
+    },
+    {
+      "@id": "urn:robos:desktop-app:vpn-servers",
+      "@type": [
+        "oslc_am:Resource",
+        "robos:DesktopApp",
+        "schema:SoftwareApplication"
+      ],
+      "dcterms:title": "RobOS VPN Servers",
+      "dcterms:description": "Manage OpenVPN providers (IPVanish built-in with 3,598 server profiles), GPG/AES-256-GCM encrypted VPN accounts, live TLS 1.3 credential verification, and server locations across RobOS.",
+      "robos:package": "applications",
+      "robos:namespace": "robos.applications",
+      "robos:repository": "packages/vpn-servers",
+      "robos:technology": "Electron 28 / OpenVPN 2.7 / Pass / AES-256-GCM",
+      "robos:schemaOrgType": "https://schema.org/SoftwareApplication"
     }
   ]
 }
