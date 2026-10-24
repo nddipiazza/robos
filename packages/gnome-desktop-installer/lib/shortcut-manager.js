@@ -468,15 +468,20 @@ class ShortcutManager {
   generateWrapperScript(app) {
     const pkgDir = app.packageDir || path.join(this.packagesDir, app.packageName || app.appId);
     const sysDir = path.join(this.systemRobosDir, app.packageName || app.appId);
+    const wrapperPath = path.join(this.binDir, app.appId);
 
     if (app.customExec && !app.packageDir) {
-      const cleanExec = app.customExec.replace(/\s+%[uUfF]\s*$/, '');
-      return [
-        '#!/usr/bin/env bash',
-        'set -e',
-        `exec ${cleanExec} "$@"`,
-        '',
-      ].join('\n');
+      const cleanExec = app.customExec.replace(/\s+%[uUfF]\s*$/, '').trim();
+      const execBin = cleanExec.split(/\s+/)[0];
+      // Prevent self-referential `exec ~/.local/bin/<appId>` infinite loops
+      if (execBin && path.resolve(execBin) !== path.resolve(wrapperPath)) {
+        return [
+          '#!/usr/bin/env bash',
+          'set -e',
+          `exec ${cleanExec} "$@"`,
+          '',
+        ].join('\n');
+      }
     }
 
     return [
@@ -658,11 +663,29 @@ class ShortcutManager {
 
     try {
       // 1. Write executable wrapper in ~/.local/bin/<appId>
+      //    If wrapperPath is already a valid symlink into the RobOS repository,
+      //    preserve it instead of writing through the symlink and corrupting tracked source files.
       fs.mkdirSync(this.binDir, { recursive: true });
-      const wrapperContent = this.generateWrapperScript(app);
       const wrapperPath = path.join(this.binDir, app.appId);
-      fs.writeFileSync(wrapperPath, wrapperContent, 'utf8');
-      fs.chmodSync(wrapperPath, 0o755);
+      let preserveRepoSymlink = false;
+      try {
+        const lstat = fs.lstatSync(wrapperPath);
+        if (lstat.isSymbolicLink()) {
+          const realTarget = fs.realpathSync(wrapperPath);
+          if (realTarget.startsWith(this.robosRoot + path.sep) && fs.existsSync(realTarget)) {
+            preserveRepoSymlink = true;
+          } else {
+            fs.unlinkSync(wrapperPath);
+          }
+        }
+      } catch {
+        try { fs.unlinkSync(wrapperPath); } catch {}
+      }
+      if (!preserveRepoSymlink) {
+        const wrapperContent = this.generateWrapperScript(app);
+        fs.writeFileSync(wrapperPath, wrapperContent, 'utf8');
+        fs.chmodSync(wrapperPath, 0o755);
+      }
 
       // 2. Install SVG + multi-scale PNG icons
       this.installAppIcons(app);

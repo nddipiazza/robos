@@ -202,18 +202,26 @@ echo "======================================================================"
 FINAL_EXEC="$EXEC_CMD"
 if [[ "$CREATE_WRAPPER" = true ]]; then
   WRAPPER_SCRIPT="${BIN_DIR}/${APP_ID}"
-  echo "Creating executable launcher wrapper at: ${WRAPPER_SCRIPT}..."
-  if [[ "$DRY_RUN" = false ]]; then
-    ${SUDO_PREFIX} mkdir -p "${BIN_DIR}"
-    cat << EOFWRAP | ${SUDO_PREFIX} tee "${WRAPPER_SCRIPT}" > /dev/null
+  EXEC_BIN="${EXEC_CMD%% *}"
+  if [[ "$EXEC_BIN" == "$WRAPPER_SCRIPT" ]]; then
+    echo "Skipping wrapper generation: EXEC_CMD already targets ${WRAPPER_SCRIPT}"
+  else
+    echo "Creating executable launcher wrapper at: ${WRAPPER_SCRIPT}..."
+    if [[ "$DRY_RUN" = false ]]; then
+      ${SUDO_PREFIX} mkdir -p "${BIN_DIR}"
+      if [[ -L "${WRAPPER_SCRIPT}" ]]; then
+        ${SUDO_PREFIX} rm -f "${WRAPPER_SCRIPT}"
+      fi
+      cat << EOFWRAP | ${SUDO_PREFIX} tee "${WRAPPER_SCRIPT}" > /dev/null
 #!/usr/bin/env bash
 set -e
 ${WORK_DIR:+cd "$WORK_DIR"}
 exec $EXEC_CMD "\$@"
 EOFWRAP
-    ${SUDO_PREFIX} chmod +x "${WRAPPER_SCRIPT}"
-  else
-    echo "[DRY-RUN] Create script ${WRAPPER_SCRIPT} with command: ${EXEC_CMD}"
+      ${SUDO_PREFIX} chmod +x "${WRAPPER_SCRIPT}"
+    else
+      echo "[DRY-RUN] Create script ${WRAPPER_SCRIPT} with command: ${EXEC_CMD}"
+    fi
   fi
   FINAL_EXEC="${WRAPPER_SCRIPT} %U"
 fi
