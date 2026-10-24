@@ -82,6 +82,7 @@ let mainWindow = null;
 app.setName?.('robos-vpn-sandbox');
 
 app.whenReady?.().then(() => {
+  const iconPng = path.join(__dirname, 'icon.png');
   mainWindow = new BrowserWindow({
     title: 'RobOS VPN Sandbox',
     width: 1180,
@@ -89,7 +90,7 @@ app.whenReady?.().then(() => {
     minWidth: 840,
     minHeight: 560,
     backgroundColor: '#0d1117',
-    icon: path.join(__dirname, 'icon.svg'),
+    icon: fs.existsSync(iconPng) ? iconPng : path.join(__dirname, 'icon.svg'),
     show: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
