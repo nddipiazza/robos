@@ -288,6 +288,28 @@ async function init() {
     showBanner(res.summary || 'VPN connection verified.', !res.ok);
   };
 
+  const proveBtn = document.getElementById('btn-prove-killswitch');
+  if (proveBtn) {
+    proveBtn.onclick = async () => {
+      const accountId = document.getElementById('select-account').value;
+      const profileId = document.getElementById('select-server').value;
+      const origText = proveBtn.textContent;
+      proveBtn.disabled = true;
+      proveBtn.textContent = 'Running Kill-Switch Proof…';
+      showBanner('Running live 5-step Kill-Switch Proof: starting tunnel, verifying VPN IP, killing OpenVPN mid-flight, and testing leak resistance…');
+      const res = await window.robos.proveKillSwitch({ accountId, profileId });
+      proveBtn.disabled = false;
+      proveBtn.textContent = origText;
+      if (!res.ok) {
+        showBanner(res.error || 'Kill-Switch proof failed.', true);
+        return;
+      }
+      showBanner(
+        `✓ Kill-Switch Proven (${res.mode}): Before drop VPN IP=${res.vpnExitIpBeforeDrop}; after killing OpenVPN (tun0 down), all 4 egress probes were blocked by kernel (${res.droppedPacketsInKernel} pkts dropped) and 0 bytes leaked to ${res.normalPublicIp}.`
+      );
+    };
+  }
+
   document.getElementById('btn-open-vpn-servers').onclick = () => {
     window.robos.openVpnServers();
   };

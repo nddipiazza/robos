@@ -174,6 +174,14 @@ test('Zero-Leak Firewall Spec & Sandbox Engine enforce strict ip netns + dual-la
 
     const stopped = engine.stopSession(session.id);
     assert.equal(stopped.status, 'stopped');
+
+    // 8. Prove Kill-Switch when OpenVPN drops mid-session
+    const proof = await engine.proveKillSwitchOnVpnDrop({ simulateIfNoTun: true });
+    assert.equal(proof.ok, true);
+    assert.equal(proof.ipLeakedAfterDrop, false);
+    assert.equal(proof.tun0DestroyedAfterKill, true);
+    assert.equal(proof.steps.length, 5);
+    assert.ok(proof.steps.every(s => s.passed));
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }

@@ -209,6 +209,18 @@ ipcMain.handle('verify-vpn-traffic', async (_, opts) => {
   }
 });
 
+ipcMain.handle('prove-kill-switch', async (_, opts) => {
+  try {
+    const proof = await sandboxEngine.proveKillSwitchOnVpnDrop(opts || {});
+    return {
+      ...proof,
+      sessions: sandboxEngine.listSessions(),
+    };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 ipcMain.handle('list-sessions', async () => {
   try {
     return { ok: true, sessions: sandboxEngine.listSessions() };

@@ -36,8 +36,9 @@
           <label for="select-server">VPN Server Location</label>
           <select id="select-server" class="select"></select>
         </div>
-        <div class="field-action">
+        <div class="field-action" style="display:flex;gap:8px;">
           <button type="button" class="btn" id="btn-check-vpn">Test VPN Connection</button>
+          <button type="button" class="btn" id="btn-prove-killswitch" title="Launch isolated namespace, verify VPN IP, force-kill OpenVPN mid-flight, and prove 0 packets leak to your normal IP">Prove Kill-Switch</button>
         </div>
       </section>
 
