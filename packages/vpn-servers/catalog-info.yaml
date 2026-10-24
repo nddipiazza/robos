@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: vpn-servers
+  title: RobOS VPN Servers
+  description: Manage OpenVPN providers (IPVanish built-in with 3,598 server profiles), encrypted VPN accounts, live TLS 1.3 credential tests, and server locations.
+  tags:
+    - electron
+    - security
+    - openvpn
+    - ipvanish
+    - pass
+spec:
+  type: desktop-app
+  lifecycle: production
+  owner: platform-security-squad
+  system: robos-desktop
