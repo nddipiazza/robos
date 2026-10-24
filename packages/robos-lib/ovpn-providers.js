@@ -857,11 +857,41 @@ function createOvpnManager(options = {}) {
 
     const profileDir = path.dirname(profile.path);
     const rawOvpn = fs.readFileSync(profile.path, 'utf8');
+    const parsed = parseOvpnConfig(rawOvpn);
+    const remoteHost = parsed.remotes[0]?.host || profile.hostname || 'atl-a01.ipvanish.com';
+    const remotePort = parsed.remotes[0]?.port || profile.port || 443;
+    const resolvedIp = await new Promise(resolve => {
+      if (/^\d+\.\d+\.\d+\.\d+$/.test(remoteHost)) return resolve(remoteHost);
+      const dnsMod = require('node:dns');
+      dnsMod.resolve4(remoteHost, (err, addrs) => {
+        if (!err && Array.isArray(addrs) && addrs.length) return resolve(addrs[0]);
+        try {
+          const pub = new dnsMod.Resolver();
+          pub.setServers(['1.1.1.1', '8.8.8.8', '9.9.9.9']);
+          pub.resolve4(remoteHost, (e2, addrs2) => {
+            if (!e2 && Array.isArray(addrs2) && addrs2.length) return resolve(addrs2[0]);
+            return resolve(profile.ip || remoteHost);
+          });
+        } catch {
+          return resolve(profile.ip || remoteHost);
+        }
+      });
+    });
+
     const sanitized = rawOvpn
-      .replace(/^ca\s+["']?([^"'\r\n]+)["']?/m, (m, ref) =>
-        path.isAbsolute(ref) ? `ca "${ref}"` : `ca "${path.join(profileDir, ref)}"`
-      )
       .split(/\r?\n/)
+      .map(line => {
+        const trimmed = line.trim();
+        const caMatch = trimmed.match(/^ca\s+["']?([^"'\r\n]+)["']?$/);
+        if (caMatch) {
+          const ref = caMatch[1];
+          return path.isAbsolute(ref) ? `ca "${ref}"` : `ca "${path.join(profileDir, ref)}"`;
+        }
+        if (/^remote\s+\S+/.test(trimmed)) {
+          return `remote ${resolvedIp} ${remotePort}`;
+        }
+        return line;
+      })
       .filter(l => !l.trim().startsWith('keysize '));
     if (!sanitized.some(l => l.trim().startsWith('data-ciphers '))) {
       sanitized.push('data-ciphers AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-256-CBC');

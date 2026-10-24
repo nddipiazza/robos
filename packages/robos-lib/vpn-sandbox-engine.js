@@ -38,11 +38,25 @@ function resolveHostnameToIpv4(hostname, fallbackIp = null) {
   return new Promise(resolve => {
     dns.resolve4(hostname, (err, addresses) => {
       if (!err && Array.isArray(addresses) && addresses.length > 0) {
-        resolve(addresses);
-      } else if (fallbackIp && /^\d+\.\d+\.\d+\.\d+$/.test(fallbackIp)) {
-        resolve([fallbackIp]);
-      } else {
-        resolve(['64.145.73.10']);
+        return resolve(addresses);
+      }
+      try {
+        const publicResolver = new dns.Resolver();
+        publicResolver.setServers(['1.1.1.1', '8.8.8.8', '9.9.9.9']);
+        publicResolver.resolve4(hostname, (err2, pubAddresses) => {
+          if (!err2 && Array.isArray(pubAddresses) && pubAddresses.length > 0) {
+            return resolve(pubAddresses);
+          }
+          if (fallbackIp && /^\d+\.\d+\.\d+\.\d+$/.test(fallbackIp)) {
+            return resolve([fallbackIp]);
+          }
+          return resolve(['216.131.74.202']);
+        });
+      } catch {
+        if (fallbackIp && /^\d+\.\d+\.\d+\.\d+$/.test(fallbackIp)) {
+          return resolve([fallbackIp]);
+        }
+        return resolve(['216.131.74.202']);
       }
     });
   });
@@ -261,11 +275,24 @@ function buildSetupShellScript(spec, { ovpnConfigPath, authFilePath, logFilePath
     `ip netns exec ${spec.netnsName} ip link set ${spec.vethNs} up`,
     `ip netns exec ${spec.netnsName} ip route add default via ${spec.hostVethIp} dev ${spec.vethNs}`,
     ``,
-    `# ── 3. Bind namespace-isolated DNS (/etc/netns/${spec.netnsName}/resolv.conf) ──`,
+    `# ── 3. Bind namespace-isolated DNS (/etc/netns/${spec.netnsName}/resolv.conf & nsswitch.conf) ──`,
     `mkdir -p /etc/netns/${spec.netnsName}`,
     `cat <<'DNSEOF' > /etc/netns/${spec.netnsName}/resolv.conf`,
     dnsLines,
     `DNSEOF`,
+    `cat <<'NSSEOF' > /etc/netns/${spec.netnsName}/nsswitch.conf`,
+    `passwd: files systemd`,
+    `group: files systemd`,
+    `shadow: files systemd`,
+    `gshadow: files systemd`,
+    `hosts: files dns`,
+    `networks: files`,
+    `protocols: db files`,
+    `services: db files`,
+    `ethers: db files`,
+    `rpc: db files`,
+    `netgroup: nis`,
+    `NSSEOF`,
     ``,
     `# ── 4. Apply In-Namespace Default-DROP Kill-Switch Firewall ──`,
     ...spec.namespaceIptablesRules,
@@ -274,10 +301,17 @@ function buildSetupShellScript(spec, { ovpnConfigPath, authFilePath, logFilePath
     ...spec.hostIptablesRules,
     ``,
     `# ── 6. Start OpenVPN Daemon Inside ${spec.netnsName} ──`,
+    `touch "${logFilePath}"`,
+    `chmod 0644 "${logFilePath}"`,
+    `OVPN_DNS_FLAGS=()`,
+    `if openvpn --help 2>&1 | grep -q -- "--dns-updown"; then`,
+    `  OVPN_DNS_FLAGS+=(--dns-updown disable)`,
+    `fi`,
     `ip netns exec ${spec.netnsName} openvpn \\`,
     `  --config "${ovpnConfigPath}" \\`,
     `  --auth-user-pass "${authFilePath}" \\`,
     `  --auth-nocache \\`,
+    `  "\${OVPN_DNS_FLAGS[@]}" \\`,
     `  --daemon \\`,
     `  --writepid "${pidFilePath}" \\`,
     `  --log "${logFilePath}"`,
@@ -546,8 +580,8 @@ function createVpnSandboxEngine(options = {}) {
     const resolvedIps = await resolveHostnameToIpv4(primaryRemote.host, primaryRemote.ip || profile?.ip);
     const hostNet = detectHostNetworkInfo();
 
-    sessionCounter = (sessionCounter % 200) + 1;
     const shortId = crypto.randomBytes(2).toString('hex');
+    sessionCounter = ((parseInt(shortId, 16) + sessionCounter) % 220) + 20;
     const spec = generateFirewallSpec({
       sessionId: shortId,
       subnetOctet: sessionCounter,
@@ -577,12 +611,19 @@ function createVpnSandboxEngine(options = {}) {
     // (so OpenVPN does not require pre-tunnel DNS over vethNs), and strip OpenVPN 2.6+ removed 'keysize' directive
     const profileDir = path.dirname(ovpnPath);
     const sanitizedLines = ovpnContent
-      .replace(/^ca\s+["']?([^"'\r\n]+)["']?/m, (match, caRef) => {
-        if (path.isAbsolute(caRef)) return `ca "${caRef}"`;
-        return `ca "${path.join(profileDir, caRef)}"`;
-      })
-      .replace(/^remote\s+\S+(\s+\d+)?(\s+\S+)?/m, `remote ${resolvedIps[0]} ${spec.vpnPort}`)
       .split(/\r?\n/)
+      .map(line => {
+        const trimmed = line.trim();
+        const caMatch = trimmed.match(/^ca\s+["']?([^"'\r\n]+)["']?$/);
+        if (caMatch) {
+          const caRef = caMatch[1];
+          return `ca "${path.isAbsolute(caRef) ? caRef : path.join(profileDir, caRef)}"`;
+        }
+        if (/^remote\s+\S+/.test(trimmed)) {
+          return `remote ${resolvedIps[0]} ${spec.vpnPort}`;
+        }
+        return line;
+      })
       .filter(l => !l.trim().startsWith('keysize '));
     if (!sanitizedLines.some(l => l.trim().startsWith('data-ciphers '))) {
       sanitizedLines.push('data-ciphers AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305:AES-256-CBC');
@@ -960,6 +1001,12 @@ function createVpnSandboxEngine(options = {}) {
         session.exitCode = code;
         session.status = 'exited';
         session.endedAt = new Date().toISOString();
+        if (allowReal && session.teardownScriptPath && fs.existsSync(session.teardownScriptPath)) {
+          try {
+            const sudoPrefix = caps.isRoot ? [] : ['sudo', '-n'];
+            spawnSync(sudoPrefix[0] || 'bash', [...sudoPrefix.slice(1), 'bash', session.teardownScriptPath], { timeout: 5000 });
+          } catch {}
+        }
         session.logs.push(`[${session.endedAt}] Process exited (code ${code ?? 0}). Kill-switch teardown complete.`);
       });
     }
