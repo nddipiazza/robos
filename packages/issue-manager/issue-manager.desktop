@@ -8,4 +8,4 @@ Exec=/usr/bin/electron /usr/local/share/robos/issue-manager/main.js --no-sandbox
 Icon=/usr/local/share/robos/issue-manager/icon.svg
 Terminal=false
 Categories=Development;
-StartupWMClass=robos-issue-manager
+StartupWMClass=issue-manager

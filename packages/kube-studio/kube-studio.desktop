@@ -6,3 +6,4 @@ Icon=/usr/local/share/robos/kube-studio/icon.svg
 Terminal=false
 Type=Application
 Categories=Development;Cloud;RobOS;
+StartupWMClass=kube-studio

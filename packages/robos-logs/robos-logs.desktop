@@ -5,4 +5,4 @@ Exec=/usr/local/share/robos/robos-logs/node_modules/electron/dist/electron /usr/
 Icon=/usr/local/share/robos/robos-logs/icon.svg
 Type=Application
 Categories=Development;
-StartupWMClass=robos-robos-logs.robos-robos-logs
+StartupWMClass=robos-robos-logs

@@ -423,7 +423,7 @@ let tray;
 let statusWin = null;
 
 app.whenReady().then(() => {
-  app.setName('RobOS');
+  app.setName('desktop-manager');
 
   try {
     const iconPath = path.join(__dirname, 'tray-icon.png');

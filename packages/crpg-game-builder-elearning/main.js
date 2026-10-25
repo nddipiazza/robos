@@ -3,6 +3,8 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+app.setName?.('robos-crpg-game-builder-elearning');
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1400,

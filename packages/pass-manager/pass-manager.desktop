@@ -8,4 +8,4 @@ Icon=/usr/local/share/robos/pass-manager/icon.svg
 Terminal=false
 Type=Application
 Categories=Utility;Security;
-StartupWMClass=robos-pass-manager
+StartupWMClass=pass-manager

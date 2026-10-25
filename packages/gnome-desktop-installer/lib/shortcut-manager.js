@@ -226,14 +226,14 @@ class ShortcutManager {
    * Detect StartupWMClass for an app package directory.
    */
   detectWMClass(packageDir, appId, desktopEntry) {
-    if (desktopEntry && desktopEntry.wmClass) return desktopEntry.wmClass;
     if (packageDir && fs.existsSync(path.join(packageDir, 'main.js'))) {
       try {
         const mainCode = fs.readFileSync(path.join(packageDir, 'main.js'), 'utf8');
-        const m = mainCode.match(/app\.setName\(['"]([^'"]+)['"]\)/);
+        const m = mainCode.match(/app\.setName(?:\?\.)?\(['"]([^'"]+)['"]\)/);
         if (m && m[1]) return m[1];
       } catch {}
     }
+    if (desktopEntry && desktopEntry.wmClass) return desktopEntry.wmClass;
     if (packageDir && fs.existsSync(path.join(packageDir, 'package.json'))) {
       try {
         const pkg = JSON.parse(fs.readFileSync(path.join(packageDir, 'package.json'), 'utf8'));
@@ -519,6 +519,7 @@ class ShortcutManager {
       'fi',
       '',
       'cd "$APP_DIR"',
+      `export CHROME_DESKTOP="${app.appId}.desktop"`,
       'exec "$ELECTRON_BIN" "$APP_DIR" --no-sandbox --disable-gpu --disable-dev-shm-usage "$@"',
       '',
     ].join('\n');
@@ -571,10 +572,13 @@ class ShortcutManager {
    * Install SVG and multi-scale PNG icons for an app and its StartupWMClass alias.
    */
   installAppIcons(app) {
-    const aliases = [app.appId];
-    if (app.wmClass && app.wmClass !== app.appId && !app.wmClass.includes(' ')) {
-      aliases.push(app.wmClass);
+    const strippedId = app.appId.replace(/^robos-/, '');
+    const prefixedId = `robos-${strippedId}`;
+    const rawAliases = [app.appId, strippedId, prefixedId];
+    if (app.wmClass && !app.wmClass.includes(' ')) {
+      rawAliases.push(app.wmClass);
     }
+    const aliases = [...new Set(rawAliases.filter(Boolean))];
 
     const svgContent = app.iconSvg || DEFAULT_FALLBACK_SVG;
     const scalableDir = path.join(this.iconsBaseDir, 'scalable', 'apps');

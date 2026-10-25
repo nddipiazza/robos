@@ -271,6 +271,7 @@ app.whenReady().then(() => {
     minHeight: 400,
     backgroundColor: '#0d1117',
     show: true,
+    icon: fs.existsSync(path.join(__dirname, 'icon.png')) ? path.join(__dirname, 'icon.png') : undefined,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

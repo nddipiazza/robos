@@ -8,4 +8,4 @@ Icon=/usr/local/share/robos/git-login-manager/icon.svg
 Terminal=false
 Type=Application
 Categories=Utility;Network;
-StartupWMClass=robos-git-login-manager
+StartupWMClass=git-login-manager

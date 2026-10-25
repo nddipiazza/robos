@@ -521,6 +521,7 @@ function createWindow() {
     width: 900,
     height: 650,
     backgroundColor: '#0d1117',
+    icon: fs.existsSync(path.join(__dirname, 'icon.png')) ? path.join(__dirname, 'icon.png') : undefined,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

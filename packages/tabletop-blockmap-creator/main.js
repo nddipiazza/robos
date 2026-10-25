@@ -54,6 +54,8 @@ function parseArgs() {
 parseArgs();
 
 function createWindow() {
+  const iconPng = path.join(__dirname, 'icon.png');
+  const iconSvg = path.join(__dirname, 'icon.svg');
   mainWindow = new BrowserWindow({
     width: 1560,
     height: 980,
@@ -61,6 +63,7 @@ function createWindow() {
     minHeight: 720,
     title: 'RobOS Tabletop Blockmap Creator',
     backgroundColor: '#0a0e17',
+    icon: fs.existsSync(iconPng) ? iconPng : (fs.existsSync(iconSvg) ? iconSvg : undefined),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -88,7 +91,7 @@ function createWindow() {
   });
 }
 
-app.setName('RobOS Tabletop Blockmap Creator');
+app.setName('robos-tabletop-blockmap-creator');
 
 app.whenReady().then(createWindow);
 

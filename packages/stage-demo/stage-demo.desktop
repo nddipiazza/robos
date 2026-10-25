@@ -8,4 +8,4 @@ Exec=/usr/bin/electron /usr/local/share/robos/stage-demo/main.js --no-sandbox --
 Icon=/usr/local/share/robos/stage-demo/icon.svg
 Terminal=false
 Categories=Development;
-StartupWMClass=robos-stage-demo
+StartupWMClass=stage-demo

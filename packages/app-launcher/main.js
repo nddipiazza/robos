@@ -222,6 +222,7 @@ function createWindow() {
     frame: false,
     resizable: false,
     skipTaskbar: true,
+    icon: fs.existsSync(path.join(__dirname, 'icon.png')) ? path.join(__dirname, 'icon.png') : undefined,
     type: 'utility',
     title: WINDOW_TITLE,
     backgroundColor: '#0d1117',
