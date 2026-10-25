@@ -36,7 +36,7 @@ keywords: "RobOS security, OpenVPN network namespace sandbox, ip netns kill swit
     <div class="blog-body">
       <figure class="blog-fig">
         <img src="{{ '/assets/security/vpn-sandbox-killswitch-proven.png' | relative_url }}" alt="RobOS VPN Sandbox showing Firefox running inside an isolated VPN namespace and the live 5-step Kill-Switch Proof banner" loading="lazy">
-        <figcaption>E2E capture of <strong>RobOS VPN Sandbox</strong> on Ubuntu 26.04 LTS: Firefox is confined to an isolated namespace routing through IPVanish Atlanta (<code>216.131.74.203</code>) while the normal public IP (<code>134.215.148.43</code>) is blocked, and the top banner reports the live 5-step mid-session OpenVPN drop kill-switch proof.</figcaption>
+        <figcaption>E2E capture of <strong>RobOS VPN Sandbox</strong> on Ubuntu 26.04 LTS: Firefox is confined to an isolated namespace routing through IPVanish Atlanta (<code>216.131.74.203</code>) while the normal public IP (<code>198.51.100.42</code>) is blocked, and the top banner reports the live 5-step mid-session OpenVPN drop kill-switch proof.</figcaption>
       </figure>
 
       <div class="blog-fig-grid">
@@ -79,7 +79,7 @@ flowchart LR
     IPT_NS -->|uid=0 ONLY to 216.131.74.202:443| VETH_N
   end
 
-  subgraph HOST["Host Kernel (enp2s0 — Normal Public IP 134.215.148.43)"]
+  subgraph HOST["Host Kernel (enp2s0 — Normal Public IP 198.51.100.42)"]
     VETH_H["veth_h_25db (10.203.41.1/30)"]
     IPT_FWD["Barrier 2: Host FORWARD Chain (ROBOS_VPN_FWD_25db)<br/>ACCEPT only 10.203.41.2 -> 216.131.74.202:443/udp<br/>DROP all other packets from veth_h_25db"]
     IPT_NAT["Barrier 3: Host NAT POSTROUTING<br/>MASQUERADE only -s 10.203.41.2 -d 216.131.74.202:443/udp<br/>No NAT rule exists for any other destination"]
@@ -90,7 +90,7 @@ flowchart LR
 
   subgraph EXT["External Internet"]
     VPNSRV["IPVanish Server (atl-a01)<br/>216.131.74.202:443/udp<br/>Exit IP: 216.131.74.203"]
-    REALIP["Direct Host Egress (134.215.148.43)<br/>UNREACHABLE FROM SANDBOX"]
+    REALIP["Direct Host Egress (198.51.100.42)<br/>UNREACHABLE FROM SANDBOX"]
     IPT_NAT -->|Encrypted OpenVPN Carrier| VPNSRV
     IPT_FWD -.->|0 packets allowed| REALIP
   end
@@ -106,8 +106,8 @@ flowchart LR
       <p>To prove that stopping OpenVPN mid-session never exposes the host's real IP, the automated E2E test suite (<a href="https://github.com/nddipiazza/robos/blob/main/tests/e2e/vpn-sandbox-killswitch-proof.test.cjs"><code>tests/e2e/vpn-sandbox-killswitch-proof.test.cjs</code></a>) executes <code>proveKillSwitchOnVpnDrop()</code> against the live Linux kernel:</p>
 
       <ol>
-        <li><strong>Phase 1 — Host Baseline:</strong> Queries <code>https://api.ipify.org</code> on the host outside the sandbox and records the real public IP (<code>134.215.148.43</code>).</li>
-        <li><strong>Phase 2 — In-Namespace Egress While OpenVPN (<code>tun0</code>) is UP:</strong> Starts an isolated namespace (<code>robos_vpn_25db</code>) connected to IPVanish Atlanta (<code>atl-a01.ipvanish.com</code>). Running inside <code>robos_vpn_25db</code> as unprivileged user <code>uid 1000</code> with <code>CAP_NET_ADMIN</code> stripped, the test queries <code>https://api.ipify.org</code> and verifies the returned IP is the VPN exit IP (<code>216.131.74.203</code>, tunnel IP <code>172.21.23.221</code>) and never <code>134.215.148.43</code>.</li>
+        <li><strong>Phase 1 — Host Baseline:</strong> Queries <code>https://api.ipify.org</code> on the host outside the sandbox and records the real public IP (<code>198.51.100.42</code>).</li>
+        <li><strong>Phase 2 — In-Namespace Egress While OpenVPN (<code>tun0</code>) is UP:</strong> Starts an isolated namespace (<code>robos_vpn_25db</code>) connected to IPVanish Atlanta (<code>atl-a01.ipvanish.com</code>). Running inside <code>robos_vpn_25db</code> as unprivileged user <code>uid 1000</code> with <code>CAP_NET_ADMIN</code> stripped, the test queries <code>https://api.ipify.org</code> and verifies the returned IP is the VPN exit IP (<code>216.131.74.203</code>, tunnel IP <code>172.21.23.221</code>) and never <code>198.51.100.42</code>.</li>
         <li><strong>Phase 3 — Force-Kill OpenVPN Mid-Flight (<code>kill -9</code>):</strong> Sends <code>SIGKILL</code> to the OpenVPN daemon inside <code>robos_vpn_25db</code> while leaving the namespace, the running app, and the fallback default route (<code>default via 10.203.41.1 dev veth_n_25db</code>) up. Verifies <code>tun0</code> is destroyed.</li>
         <li><strong>Phase 4 — 4 Post-Kill Egress Probes from the Running App:</strong> With <code>tun0</code> gone and the <code>veth_n_25db</code> default route active, the unprivileged app inside <code>robos_vpn_25db</code> attempts four distinct egress connections:
           <ul>
@@ -117,7 +117,7 @@ flowchart LR
             <li><strong>Probe D (Direct UDP to Whitelisted VPN Server IP as App UID):</strong> <code>dgram.send('216.131.74.202', 443)</code> as <code>uid 1000</code> → <code>leaked: false</code> (blocked immediately by kernel: <code>EPERM</code> because <code>-m owner --uid-owner 0</code> only allows <code>uid 0</code>).</li>
           </ul>
         </li>
-        <li><strong>Phase 5 — Kernel <code>iptables</code> Packet Counter Proof:</strong> Inspects <code>ip netns exec robos_vpn_25db iptables -L OUTPUT -v -n -x</code> and verifies that <code>14</code> packets (<code>1,070</code> bytes) were intercepted and dropped by <code>-A OUTPUT -o veth_n_25db -j DROP</code>, with <code>0</code> packets leaking to <code>134.215.148.43</code>.</li>
+        <li><strong>Phase 5 — Kernel <code>iptables</code> Packet Counter Proof:</strong> Inspects <code>ip netns exec robos_vpn_25db iptables -L OUTPUT -v -n -x</code> and verifies that <code>14</code> packets (<code>1,070</code> bytes) were intercepted and dropped by <code>-A OUTPUT -o veth_n_25db -j DROP</code>, with <code>0</code> packets leaking to <code>198.51.100.42</code>.</li>
       </ol>
 
       <div class="blog-log"># Run the live kernel E2E kill-switch proof
@@ -128,7 +128,7 @@ ROBOS_VPN_LIVE_E2E=1 node --test tests/e2e/vpn-sandbox-killswitch-proof.test.cjs
   "ok": true,
   "mode": "live-kernel-proof",
   "netnsName": "robos_vpn_25db",
-  "normalPublicIp": "134.215.148.43",
+  "normalPublicIp": "198.51.100.42",
   "vpnExitIpBeforeDrop": "216.131.74.203",
   "tunnelIpBeforeDrop": "172.21.23.221",
   "tun0DestroyedAfterKill": true,
