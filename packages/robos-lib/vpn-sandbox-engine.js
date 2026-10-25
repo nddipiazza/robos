@@ -33,6 +33,15 @@ const crypto = require('node:crypto');
 const { spawn, spawnSync, execSync } = require('node:child_process');
 const { createOvpnManager, parseOvpnConfig } = require('./ovpn-providers');
 
+function maskIp(ip) {
+  const s = String(ip || '').trim();
+  if (!s || s === '—') return '—';
+  const m = s.match(/^(\d+)\.\d+\.\d+\.\d+$/);
+  if (m) return `${m[1]}.***.***.***`;
+  if (s.includes(':')) return `${s.split(':')[0]}:****`;
+  return s;
+}
+
 function resolveHostnameToIpv4(hostname, fallbackIp = null) {
   if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) return Promise.resolve([hostname]);
   return new Promise(resolve => {
@@ -1217,7 +1226,7 @@ function createVpnSandboxEngine(options = {}) {
       accountLabel: session?.accountLabel || audit.accountLabel,
       checkedAt: new Date().toISOString(),
       summary: connectedViaVpn
-        ? `Verified: Traffic is exiting via VPN (${vpnIp} — ${serverHost}). Your normal IP (${normalIp}) is blocked for this app.`
+        ? `Verified: Traffic is exiting via VPN (${vpnIp} — ${serverHost}). Your normal IP (${maskIp(normalIp)}) is blocked for this app.`
         : `Could not verify VPN connection.`,
     };
   }

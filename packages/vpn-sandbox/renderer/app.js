@@ -7,7 +7,21 @@ let state = {
   savedApps: [],
   sessions: [],
   hostNet: { defaultIface: 'eth0', localIp: '—' },
+  showNormalIp: false,
 };
+
+function maskIp(ip) {
+  const s = String(ip || '').trim();
+  if (!s || s === '—') return '—';
+  const m = s.match(/^(\d+)\.\d+\.\d+\.\d+$/);
+  if (m) return `${m[1]}.***.***.***`;
+  if (s.includes(':')) return `${s.split(':')[0]}:****`;
+  return s;
+}
+
+function formatNormalIp(ip) {
+  return state.showNormalIp ? (ip || '—') : maskIp(ip);
+}
 
 function esc(s) {
   return String(s ?? '')
@@ -26,7 +40,11 @@ function showBanner(msg, isError = false) {
 }
 
 function renderHeaderAndSelectors() {
-  document.getElementById('normal-ip-value').textContent = state.hostNet?.localIp || '—';
+  document.getElementById('normal-ip-value').textContent = formatNormalIp(state.hostNet?.localIp || '—');
+  const toggleBtn = document.getElementById('btn-toggle-normal-ip');
+  if (toggleBtn) {
+    toggleBtn.textContent = state.showNormalIp ? 'Hide' : 'Show';
+  }
 
   const running = (state.sessions || []).filter(s => s.status === 'running');
   const stopped = (state.sessions || []).filter(s => s.status !== 'running');
@@ -159,7 +177,7 @@ function renderSessions() {
               <strong>✓ ${esc(s.vpnExitIp)}</strong> (${esc(s.serverHost)})
             </div>
             <div class="traffic-box">
-              <span class="traffic-label">Your Normal IP (${esc(s.hostNormalIp)})</span>
+              <span class="traffic-label">Your Normal IP (${esc(formatNormalIp(s.hostNormalIp))})</span>
               <strong>Blocked for this app</strong>
             </div>
           </div>
@@ -305,8 +323,17 @@ async function init() {
         return;
       }
       showBanner(
-        `✓ Kill-Switch Proven (${res.mode}): Before drop VPN IP=${res.vpnExitIpBeforeDrop}; after killing OpenVPN (tun0 down), all 4 egress probes were blocked by kernel (${res.droppedPacketsInKernel} pkts dropped) and 0 bytes leaked to ${res.normalPublicIp}.`
+        `✓ Kill-Switch Proven (${res.mode}): Before drop VPN IP=${res.vpnExitIpBeforeDrop}; after killing OpenVPN (tun0 down), all 4 egress probes were blocked by kernel (${res.droppedPacketsInKernel} pkts dropped) and 0 bytes leaked to ${formatNormalIp(res.normalPublicIp)}.`
       );
+    };
+  }
+
+  const toggleNormalIpBtn = document.getElementById('btn-toggle-normal-ip');
+  if (toggleNormalIpBtn) {
+    toggleNormalIpBtn.onclick = () => {
+      state.showNormalIp = !state.showNormalIp;
+      renderHeaderAndSelectors();
+      renderSessions();
     };
   }
 
