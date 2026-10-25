@@ -58,7 +58,7 @@ flowchart LR
     IPT_NS -->|uid=0 ONLY to 216.131.74.202:443| VETH_N
   end
 
-  subgraph HOST["Host Kernel (enp2s0 — Normal Public IP 134.215.148.43)"]
+  subgraph HOST["Host Kernel (enp2s0 — Normal Public IP 198.51.100.42)"]
     VETH_H["veth_h_25db (10.203.41.1/30)"]
     IPT_FWD["Barrier 2: Host FORWARD Chain (ROBOS_VPN_FWD_25db)<br/>ACCEPT only 10.203.41.2 -> 216.131.74.202:443/udp<br/>DROP all other packets from veth_h_25db"]
     IPT_NAT["Barrier 3: Host NAT POSTROUTING<br/>MASQUERADE only -s 10.203.41.2 -d 216.131.74.202:443/udp<br/>No NAT rule exists for any other destination"]
@@ -69,7 +69,7 @@ flowchart LR
 
   subgraph EXT["External Internet"]
     VPNSRV["IPVanish Server (atl-a01)<br/>216.131.74.202:443/udp<br/>Exit IP: 216.131.74.203"]
-    REALIP["Direct Host Egress (134.215.148.43)<br/>UNREACHABLE FROM SANDBOX"]
+    REALIP["Direct Host Egress (198.51.100.42)<br/>UNREACHABLE FROM SANDBOX"]
     IPT_NAT -->|Encrypted OpenVPN Carrier| VPNSRV
     IPT_FWD -.->|0 packets allowed| REALIP
   end
@@ -83,7 +83,7 @@ flowchart LR
 2. **Barrier 2 — Host Kernel `FORWARD` Chain (`ROBOS_VPN_FWD_<id>`)**:
    - The host kernel only forwards packets arriving on `veth_h_<id>` (`10.203.X.2/32`) if they are addressed to `<vpn_server_ip>/32:<vpn_port>` and drops all other packets before NAT.
 3. **Barrier 3 — Destination-Scoped Host `POSTROUTING` NAT**:
-   - The `MASQUERADE` rule in `nat POSTROUTING` only matches `-s 10.203.X.2/32 -d <vpn_server_ip>/32 -p udp --dport 443`. No NAT translation rule exists to translate namespace packets to the normal host IP (`134.215.148.43`) for any other destination.
+   - The `MASQUERADE` rule in `nat POSTROUTING` only matches `-s 10.203.X.2/32 -d <vpn_server_ip>/32 -p udp --dport 443`. No NAT translation rule exists to translate namespace packets to the normal host IP (`198.51.100.42`) for any other destination.
 
 ### Reproducing the Live 5-Phase Kill-Switch E2E Proof
 
@@ -93,7 +93,7 @@ ROBOS_VPN_LIVE_E2E=1 node --test tests/e2e/vpn-sandbox-killswitch-proof.test.cjs
 
 | Phase | Verification Step | Result |
 |:---|:---|:---|
-| **1. Host Baseline** | Query `https://api.ipify.org` outside the sandbox | Normal public IP is `134.215.148.43` |
+| **1. Host Baseline** | Query `https://api.ipify.org` outside the sandbox | Normal public IP is `198.51.100.42` |
 | **2. Tunnel UP Egress** | Query `https://api.ipify.org` inside `robos_vpn_25db` as `uid 1000` while `tun0` is UP | Returns VPN exit IP `216.131.74.203` (`tun0 = 172.21.23.221`) |
 | **3. Force-Kill OpenVPN** | `kill -9` OpenVPN PID while keeping `robos_vpn_25db` and `veth_n_25db` default route UP | `tun0` destroyed (`true`), `default via 10.203.41.1 dev veth_n_25db` still UP (`true`) |
 | **4. Post-Kill Egress Probes** | Attempt HTTPS (`api.ipify.org`), direct TCP (`1.1.1.1:80`), direct UDP (`8.8.8.8:53`), and direct UDP to VPN server IP as `uid 1000` | All 4 blocked (`EAI_AGAIN`, `ETIMEDOUT`, `EPERM`, `EPERM`) — `ipLeakedAfterDrop: false` |
