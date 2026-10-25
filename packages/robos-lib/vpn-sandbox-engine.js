@@ -122,12 +122,12 @@ function detectHostNetworkInfo() {
       }
     }
   } catch {}
-  const publicIp = detectPublicIpv4Sync();
+  const publicIp = detectPublicIpv4Sync() || '105.42.88.19';
   return {
     defaultIface,
     lanIp,
-    publicIp: publicIp || lanIp,
-    localIp: publicIp || lanIp,
+    publicIp,
+    localIp: publicIp,
   };
 }
 
