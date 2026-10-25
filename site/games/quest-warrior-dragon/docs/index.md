@@ -2,7 +2,7 @@
 layout: game
 title: "Quest: Warrior Dragon Docs"
 permalink: /games/quest-warrior-dragon/docs/
-description: How to play Quest: Warrior Dragon, how the RobOS AI beats it, and how the game is checked to be finishable.
+description: "How to play Quest: Warrior Dragon, how the RobOS AI beats it, and how the game is checked to be finishable."
 bg_poster: /assets/games/quest-warrior-dragon/05_world_map_alefgard_overworld.png
 accent: "#00bcd4"
 og_image_alt: "Quest: Warrior Dragon Documentation and Player Guide"

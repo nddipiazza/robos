@@ -30,7 +30,11 @@ if (fs.existsSync(rootSitemapPath) && fs.existsSync(v1SitemapPath)) {
   });
   if (missingUrls.length > 0 && rootSitemap.includes('</urlset>')) {
     const merged = rootSitemap.replace('</urlset>', `${missingUrls.join('\n')}\n</urlset>`);
-    fs.writeFileSync(rootSitemapPath, merged, 'utf8');
+    try {
+      fs.writeFileSync(rootSitemapPath, merged, 'utf8');
+    } catch (_) {
+      // Ignore EACCES when _site/sitemap.xml was written by root in the jekyll-build-pages container
+    }
   }
 }
 
