@@ -1,6 +1,7 @@
 'use strict';
 const { app, BrowserWindow, Menu, ipcMain, shell, session } = require('electron');
 const os = require('node:os');
+const fs = require('node:fs');
 const path = require('node:path');
 const { PointOfSale } = require('./lib/pos');
 const { createServer, listen } = require('./lib/server');
@@ -14,8 +15,11 @@ let origin;
 let mainWindow;
 
 function open(route, { fullscreen = false, title } = {}) {
+  const iconPng = path.join(__dirname, 'icon.png');
+  const iconSvg = path.join(__dirname, 'icon.svg');
   const win = new BrowserWindow({
     width: 1280, height: 800, backgroundColor: '#0d1117', fullscreen, autoHideMenuBar: true, title: title || 'RobOS Point of Sale',
+    icon: fs.existsSync(iconPng) ? iconPng : (fs.existsSync(iconSvg) ? iconSvg : undefined),
     webPreferences: { contextIsolation: true, nodeIntegration: false, preload: path.join(__dirname, 'preload.js') },
   });
   // The UI only ever talks to its own local server; anything else opens in the system browser.

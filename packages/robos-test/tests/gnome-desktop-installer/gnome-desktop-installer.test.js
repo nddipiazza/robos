@@ -153,7 +153,27 @@ describe('RobOS GNOME Desktop App Installer', () => {
       const parsed = parseDesktopContent(desktopContent);
       assert.strictEqual(parsed.isRobOS, true);
       assert.strictEqual(parsed.icon, 'gnome-desktop-installer');
+      assert.strictEqual(parsed.wmClass, 'robos-gnome-desktop-installer');
       assert.ok(parsed.exec.includes(res.app.wrapperPath));
+
+      // Verify both <appId> and <wmClass> icon aliases are installed in scalable/apps
+      const scalableDir = path.join(tmpDir, '.local', 'share', 'icons', 'hicolor', 'scalable', 'apps');
+      assert.ok(fs.existsSync(path.join(scalableDir, 'gnome-desktop-installer.svg')));
+      assert.ok(fs.existsSync(path.join(scalableDir, 'robos-gnome-desktop-installer.svg')));
+    });
+
+    it('detectWMClass handles optional chaining app.setName?.() and prioritizes runtime main.js over stale .desktop', () => {
+      const apps = manager.discoverApps();
+      const vpnServers = apps.find(a => a.appId === 'vpn-servers');
+      const vpnSandbox = apps.find(a => a.appId === 'vpn-sandbox');
+      assert.ok(vpnServers, 'Should discover vpn-servers');
+      assert.ok(vpnSandbox, 'Should discover vpn-sandbox');
+      assert.strictEqual(vpnServers.wmClass, 'robos-vpn-servers');
+      assert.strictEqual(vpnSandbox.wmClass, 'robos-vpn-sandbox');
+
+      // Even if a stale desktopEntry has StartupWMClass=vpn-servers, detectWMClass must return robos-vpn-servers from main.js
+      const detected = manager.detectWMClass(vpnServers.packageDir, 'vpn-servers', { wmClass: 'vpn-servers' });
+      assert.strictEqual(detected, 'robos-vpn-servers');
     });
 
     it('setDesktopShortcut creates and removes executable ~/Desktop shortcut', () => {

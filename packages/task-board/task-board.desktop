@@ -8,4 +8,4 @@ Exec=/usr/bin/electron /usr/local/share/robos/task-board/main.js --no-sandbox --
 Icon=/usr/local/share/robos/task-board/icon.svg
 Terminal=false
 Categories=Development;
-StartupWMClass=robos-task-board
+StartupWMClass=task-board

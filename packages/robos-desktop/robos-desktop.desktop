@@ -8,3 +8,4 @@ Categories=RobOS;System;
 NoDisplay=false
 StartupNotify=false
 X-RobOS-Category=RobOS System
+StartupWMClass=robos-desktop

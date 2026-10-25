@@ -198,7 +198,101 @@ echo "Installing GNOME Desktop Entry: ${APP_NAME} (${APP_ID})"
 echo "Scope: ${SCOPE} | Target: ${DESKTOP_FILE_PATH}"
 echo "======================================================================"
 
-# Step 1: Optional Wrapper Generation
+# Step 1: Resolve Package Directory, Icon, and StartupWMClass Auto-Detection
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_ROBOS_ROOT="$(cd "${SCRIPT_DIR}/../../../../.." 2>/dev/null && pwd || true)"
+STRIPPED_APP_ID="${APP_ID#robos-}"
+PREF_APP_ID="robos-${STRIPPED_APP_ID}"
+
+DETECT_DIR="${WORK_DIR:-}"
+if [[ -z "$DETECT_DIR" && -n "$EXEC_CMD" ]]; then
+  for token in $EXEC_CMD; do
+    if [[ -d "$token" && ( -f "$token/package.json" || -f "$token/main.js" ) ]]; then
+      DETECT_DIR="$token"
+      break
+    elif [[ -f "$token" && "$token" == *"/main.js" ]]; then
+      DETECT_DIR="$(dirname "$token")"
+      break
+    elif [[ -f "$token" ]] && grep -Iq . "$token" 2>/dev/null; then
+      # Inspect shell wrapper script (e.g. ~/.local/bin/<app-id>) for APP_DIR / ROBOS_ROOT
+      WRAP_ROBOS_ROOT="$(grep -oP '^ROBOS_ROOT="\K[^"]+' "$token" 2>/dev/null | head -n1 || true)"
+      WRAP_ROBOS_ROOT="${WRAP_ROBOS_ROOT/\$HOME/$HOME}"
+      WRAP_APP_DIR="$(grep -oP 'APP_DIR="\K[^"]+' "$token" 2>/dev/null | head -n1 || true)"
+      WRAP_APP_DIR="${WRAP_APP_DIR/\$ROBOS_ROOT/${WRAP_ROBOS_ROOT:-$SCRIPT_ROBOS_ROOT}}"
+      WRAP_APP_DIR="${WRAP_APP_DIR/\$HOME/$HOME}"
+      if [[ -n "$WRAP_APP_DIR" && -d "$WRAP_APP_DIR" ]]; then
+        DETECT_DIR="$WRAP_APP_DIR"
+        break
+      fi
+    fi
+  done
+fi
+
+if [[ -z "$DETECT_DIR" ]]; then
+  for cand in \
+    "${SCRIPT_ROBOS_ROOT}/packages/${APP_ID}" \
+    "${SCRIPT_ROBOS_ROOT}/packages/${STRIPPED_APP_ID}" \
+    "$HOME/source/robos/packages/${APP_ID}" \
+    "$HOME/source/robos/packages/${STRIPPED_APP_ID}" \
+    "/usr/local/share/robos/${APP_ID}" \
+    "/usr/local/share/robos/${STRIPPED_APP_ID}"; do
+    if [[ -n "$cand" && -d "$cand" && ( -f "$cand/package.json" || -f "$cand/main.js" ) ]]; then
+      DETECT_DIR="$cand"
+      break
+    fi
+  done
+fi
+
+if [[ -n "$DETECT_DIR" && -d "$DETECT_DIR" ]]; then
+  if [[ -z "$WORK_DIR" ]]; then
+    WORK_DIR="$DETECT_DIR"
+  fi
+  if [[ -z "$ICON_PATH" ]]; then
+    if [[ -f "$DETECT_DIR/icon.svg" ]]; then
+      ICON_PATH="$DETECT_DIR/icon.svg"
+    elif [[ -f "$DETECT_DIR/icon.png" ]]; then
+      ICON_PATH="$DETECT_DIR/icon.png"
+    fi
+  fi
+fi
+
+if [[ -z "$STARTUP_WM_CLASS" ]]; then
+  if [[ -n "$DETECT_DIR" && -d "$DETECT_DIR" ]]; then
+    if [[ -f "$DETECT_DIR/main.js" ]]; then
+      FOUND_NAME="$(grep -oP "app\.setName(?:\?\.)?\(['\"]\K[^'\"]+" "$DETECT_DIR/main.js" 2>/dev/null | head -n1 || true)"
+      if [[ -n "$FOUND_NAME" ]]; then
+        STARTUP_WM_CLASS="$FOUND_NAME"
+      fi
+    fi
+    if [[ -z "$STARTUP_WM_CLASS" && -f "$DETECT_DIR/package.json" ]]; then
+      FOUND_PKG="$(grep -oP '"name"\s*:\s*"\K[^"]+' "$DETECT_DIR/package.json" 2>/dev/null | head -n1 || true)"
+      if [[ -n "$FOUND_PKG" ]]; then
+        STARTUP_WM_CLASS="$FOUND_PKG"
+      fi
+    fi
+    if [[ -z "$STARTUP_WM_CLASS" ]]; then
+      for df in "$DETECT_DIR/${APP_ID}.desktop" "$DETECT_DIR/${STRIPPED_APP_ID}.desktop"; do
+        if [[ -f "$df" ]]; then
+          FOUND_WM="$(grep -oP '^StartupWMClass=\K.+' "$df" 2>/dev/null | head -n1 || true)"
+          if [[ -n "$FOUND_WM" ]]; then
+            STARTUP_WM_CLASS="$FOUND_WM"
+            break
+          fi
+        fi
+      done
+    fi
+  fi
+
+  if [[ -z "$STARTUP_WM_CLASS" ]]; then
+    if [[ -n "$DETECT_DIR" && -f "$DETECT_DIR/main.js" ]]; then
+      STARTUP_WM_CLASS="$PREF_APP_ID"
+    else
+      STARTUP_WM_CLASS="$APP_ID"
+    fi
+  fi
+fi
+
+# Step 2: Optional Wrapper Generation
 FINAL_EXEC="$EXEC_CMD"
 if [[ "$CREATE_WRAPPER" = true ]]; then
   WRAPPER_SCRIPT="${BIN_DIR}/${APP_ID}"
@@ -215,6 +309,7 @@ if [[ "$CREATE_WRAPPER" = true ]]; then
       cat << EOFWRAP | ${SUDO_PREFIX} tee "${WRAPPER_SCRIPT}" > /dev/null
 #!/usr/bin/env bash
 set -e
+export CHROME_DESKTOP="${APP_ID}.desktop"
 ${WORK_DIR:+cd "$WORK_DIR"}
 exec $EXEC_CMD "\$@"
 EOFWRAP
@@ -226,41 +321,6 @@ EOFWRAP
   FINAL_EXEC="${WRAPPER_SCRIPT} %U"
 fi
 
-# Step 2: Intelligent StartupWMClass Auto-Detection
-if [[ -z "$STARTUP_WM_CLASS" ]]; then
-  DETECT_DIR="${WORK_DIR:-}"
-  if [[ -z "$DETECT_DIR" && -n "$EXEC_CMD" ]]; then
-    for token in $EXEC_CMD; do
-      if [[ -d "$token" && -f "$token/package.json" ]]; then
-        DETECT_DIR="$token"
-        break
-      elif [[ -f "$token" && "$token" == *"/main.js" ]]; then
-        DETECT_DIR="$(dirname "$token")"
-        break
-      fi
-    done
-  fi
-
-  if [[ -n "$DETECT_DIR" && -d "$DETECT_DIR" ]]; then
-    if [[ -f "$DETECT_DIR/main.js" ]]; then
-      FOUND_NAME="$(grep -oP "app\.setName\(['\"]\K[^'\"]+" "$DETECT_DIR/main.js" 2>/dev/null | head -n1 || true)"
-      if [[ -n "$FOUND_NAME" ]]; then
-        STARTUP_WM_CLASS="$FOUND_NAME"
-      fi
-    fi
-    if [[ -z "$STARTUP_WM_CLASS" && -f "$DETECT_DIR/package.json" ]]; then
-      FOUND_PKG="$(grep -oP '"name"\s*:\s*"\K[^"]+' "$DETECT_DIR/package.json" 2>/dev/null | head -n1 || true)"
-      if [[ -n "$FOUND_PKG" ]]; then
-        STARTUP_WM_CLASS="$FOUND_PKG"
-      fi
-    fi
-  fi
-
-  if [[ -z "$STARTUP_WM_CLASS" ]]; then
-    STARTUP_WM_CLASS="$APP_ID"
-  fi
-fi
-
 # Step 3: Icon Resolution & Multi-Scale Rasterization
 FINAL_ICON_NAME="$APP_ID"
 if [[ -n "$ICON_PATH" ]]; then
@@ -270,11 +330,25 @@ if [[ -n "$ICON_PATH" ]]; then
 
     SIZES=(16 24 32 48 64 128 256 512)
 
-    # Determine all alias names (APP_ID and STARTUP_WM_CLASS)
-    ALIAS_NAMES=("$APP_ID")
-    if [[ -n "$STARTUP_WM_CLASS" && "$STARTUP_WM_CLASS" != "$APP_ID" ]]; then
-      ALIAS_NAMES+=("$STARTUP_WM_CLASS")
+    # Determine all alias names (APP_ID, stripped id, robos-prefixed id, and STARTUP_WM_CLASS)
+    RAW_ALIASES=("$APP_ID" "$STRIPPED_APP_ID" "$PREF_APP_ID")
+    if [[ -n "$STARTUP_WM_CLASS" && "$STARTUP_WM_CLASS" != *" "* ]]; then
+      RAW_ALIASES+=("$STARTUP_WM_CLASS")
     fi
+    ALIAS_NAMES=()
+    for cand_alias in "${RAW_ALIASES[@]}"; do
+      [[ -z "$cand_alias" ]] && continue
+      already=false
+      for existing in "${ALIAS_NAMES[@]:-}"; do
+        if [[ "$existing" == "$cand_alias" ]]; then
+          already=true
+          break
+        fi
+      done
+      if [[ "$already" = false ]]; then
+        ALIAS_NAMES+=("$cand_alias")
+      fi
+    done
 
     echo "Installing icons for aliases: ${ALIAS_NAMES[*]}..."
 

@@ -3,6 +3,8 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+app.setName?.('robos-schema-studio');
+
 let _debugServer;
 try {
   _debugServer = require('/usr/local/share/robos/robos-lib/dom-snapshot');

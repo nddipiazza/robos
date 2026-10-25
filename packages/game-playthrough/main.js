@@ -449,7 +449,7 @@ function createWindow() {
     minHeight: 640,
     title: 'RobOS Game Playthrough',
     backgroundColor: '#0d1117',
-    icon: path.join(__dirname, 'icon.svg'),
+    icon: fs.existsSync(path.join(__dirname, 'icon.png')) ? path.join(__dirname, 'icon.png') : path.join(__dirname, 'icon.svg'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

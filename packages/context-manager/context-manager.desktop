@@ -8,4 +8,4 @@ Exec=/usr/bin/electron /usr/local/share/robos/context-manager/main.js --no-sandb
 Icon=/usr/local/share/robos/context-manager/icon.svg
 Terminal=false
 Categories=Development;
-StartupWMClass=robos-context-manager
+StartupWMClass=context-manager
