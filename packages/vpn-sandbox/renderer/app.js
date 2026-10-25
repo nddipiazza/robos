@@ -173,12 +173,12 @@ function renderSessions() {
 
           <div class="traffic-grid">
             <div class="traffic-box ok">
-              <span class="traffic-label">App Public IP (VPN)</span>
+              <span class="traffic-label">VPN Exit IP (What Websites &amp; Peers See)</span>
               <strong>✓ ${esc(s.vpnExitIp)}</strong> (${esc(s.serverHost)})
             </div>
-            <div class="traffic-box">
-              <span class="traffic-label">Your Normal IP (${esc(formatNormalIp(s.hostNormalIp))})</span>
-              <strong>Blocked for this app</strong>
+            <div class="traffic-box ok">
+              <span class="traffic-label">Kill-Switch &amp; Real IP Protection</span>
+              <strong>🔒 Protected</strong> — Real IP (${esc(formatNormalIp(s.hostNormalIp))}) hidden; traffic stops if VPN drops
             </div>
           </div>
         </div>

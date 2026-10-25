@@ -1226,7 +1226,7 @@ function createVpnSandboxEngine(options = {}) {
       accountLabel: session?.accountLabel || audit.accountLabel,
       checkedAt: new Date().toISOString(),
       summary: connectedViaVpn
-        ? `Verified: Traffic is exiting via VPN (${vpnIp} — ${serverHost}). Your normal IP (${maskIp(normalIp)}) is blocked for this app.`
+        ? `✓ Connected via VPN: Websites & peers see ${vpnIp} (${serverHost}). Your real IP (${maskIp(normalIp)}) is hidden and protected by the kill-switch.`
         : `Could not verify VPN connection.`,
     };
   }
