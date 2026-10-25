@@ -14,9 +14,10 @@
         <p class="subtitle">Launch any app so its internet traffic only goes through your VPN.</p>
       </div>
       <div class="header-right">
-        <div class="ip-box">
+        <div class="ip-box" style="display:flex;align-items:center;gap:8px;">
           <span class="ip-label">Your Normal IP</span>
           <strong id="normal-ip-value">—</strong>
+          <button type="button" class="btn" id="btn-toggle-normal-ip" style="padding:2px 7px;font-size:11px;" title="Show or hide your full normal IP address">Show</button>
         </div>
         <button type="button" class="btn" id="btn-open-vpn-servers">VPN Servers &amp; Accounts…</button>
         <button type="button" class="btn btn-danger hidden" id="btn-stop-all">Stop All Apps</button>
