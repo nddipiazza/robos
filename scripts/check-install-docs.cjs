@@ -94,10 +94,10 @@ for (const rel of seoCheckedPages) {
   assert.ok(/<meta property="og:description" content="[^"]+"/.test(html), `${rel}: missing og:description`);
   assert.ok(/<meta property="og:url" content="https:\/\/rowbose\.com\//.test(html), `${rel}: missing og:url`);
   assert.ok(/<meta property="og:image" content="https:\/\/rowbose\.com\//.test(html), `${rel}: missing absolute og:image`);
-  assert.ok(/<meta name="twitter:card" content="summary_large_image"/.test(html), `${rel}: missing twitter:card`);
-  assert.ok(/<meta name="twitter:title" content="[^"]+"/.test(html), `${rel}: missing twitter:title`);
-  assert.ok(/<meta name="twitter:description" content="[^"]+"/.test(html), `${rel}: missing twitter:description`);
-  assert.ok(/<meta name="twitter:image" content="https:\/\/rowbose\.com\//.test(html), `${rel}: missing absolute twitter:image`);
+  assert.ok(/<meta (?:name|property)="twitter:card" content="summary_large_image"/.test(html), `${rel}: missing twitter:card`);
+  assert.ok(/<meta (?:name|property)="twitter:title" content="[^"]+"/.test(html), `${rel}: missing twitter:title`);
+  assert.ok(/<meta (?:name|property)="twitter:description" content="[^"]+"/.test(html), `${rel}: missing twitter:description`);
+  assert.ok(/<meta (?:name|property)="twitter:image" content="https:\/\/rowbose\.com\//.test(html), `${rel}: missing absolute twitter:image`);
 }
 
 console.log(`Install documentation and SEO meta tags verified across ${seoCheckedPages.length} sections for v${version}.`);

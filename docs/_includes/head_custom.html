@@ -46,6 +46,8 @@
 
 <!-- Search engine & AI crawler discovery metadata (complements jekyll-seo-tag) -->
 {%- assign doc_robots = page.robots | default: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' -%}
+{%- assign doc_title = page.title | default: site.title | default: 'RobOS Documentation' -%}
+{%- assign doc_desc = page.description | default: site.description | strip_html | normalize_whitespace -%}
 {%- if page.keywords and site.keywords -%}
   {%- assign doc_keywords = page.keywords | append: ', ' | append: site.keywords -%}
 {%- elsif page.title and site.keywords -%}
@@ -60,6 +62,9 @@
 <meta name="author" content="{{ page.author | default: site.author | default: 'RobOS Project' | escape }}">
 <meta name="application-name" content="RobOS">
 <meta name="apple-mobile-web-app-title" content="RobOS">
+<meta name="twitter:title" content="{{ doc_title | escape }}">
+<meta name="twitter:description" content="{{ doc_desc | escape }}">
+<meta name="twitter:image" content="{{ '/assets/images/og.png' | absolute_url }}">
 <link rel="alternate" hreflang="en" href="{{ page.url | absolute_url }}">
 <link rel="alternate" hreflang="x-default" href="{{ page.url | absolute_url }}">
 <link rel="sitemap" type="application/xml" title="Sitemap" href="https://rowbose.com/sitemap.xml">
