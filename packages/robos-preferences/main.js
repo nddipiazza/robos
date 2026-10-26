@@ -491,6 +491,16 @@ ipcMain.handle('cloud-accounts-configure-thunderbird', async (_, payload) => {
 ipcMain.handle('launch-robos-app', async (_, appId) => {
   try {
     const { spawn } = require('node:child_process');
+    const wrapperCandidates = [
+      path.join(HOME_DIR, '.local', 'bin', `robos-${appId}`),
+      path.join(HOME_DIR, '.local', 'bin', appId),
+    ];
+    const wrapper = wrapperCandidates.find(w => fs.existsSync(w));
+    if (wrapper) {
+      const child = spawn(wrapper, [], { detached: true, stdio: 'ignore', env: { ...process.env } });
+      child.unref();
+      return { ok: true, appId };
+    }
     const candidates = [
       path.resolve(__dirname, '..', appId, 'main.js'),
       `/usr/local/share/robos/${appId}/main.js`,
