@@ -9,6 +9,7 @@
 - [Build Apps on Your Own (Solo Guide)](https://rowbose.com/build-apps/solo/): Step-by-step solo developer guide with real app screenshots
 - [Build Apps as a Team (Team Guide)](https://rowbose.com/build-apps/teams/): Step-by-step team workflow guide with Dev Central and Reviewer mode
 - [Documentation Hub](https://rowbose.com/docs/): Entry point to RobOS user guides, architecture, schemas, and reference docs
+- [RobOS on Your Smart TV](https://rowbose.com/tv/): Developer Mode sideloading (LG webOS, Samsung Tizen, Google TV / Android TV ADB, Roku OS), 10-Foot Big-Screen Portal (:19210), and Moonlight/Sunshine 4K game streaming
 - [Security & Isolation Proofs](https://rowbose.com/security/): Live kernel E2E proofs for the RobOS VPN Sandbox (`ip netns` + 3-barrier `iptables` kill-switch) and RobOS VPN Servers
 - [Download](https://rowbose.com/download/): Install RobOS on Windows, Linux, and macOS, or boot the Ubuntu appliance VM/USB
 - [Engineering Blog](https://rowbose.com/blog/): What changed in RobOS and why, with links to docs, recordings, and commits

@@ -320,4 +320,9 @@ packages:
     type: "robos:DesktopApp"
     repository: "packages/vpn-servers"
     technology: "Electron 28 / OpenVPN / Pass"
+  - id: "urn:robos:desktop-app:robos-tv"
+    title: "RobOS Smart TV Studio"
+    type: "robos:DesktopApp"
+    repository: "packages/robos-tv"
+    technology: "Electron 28 / Smart TV Developer Mode (webOS, Tizen, ADB, Roku) / 10-Foot Portal"
 

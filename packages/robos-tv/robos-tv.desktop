@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Smart TV Studio
+Comment=Pair Smart TVs, generate & sideload Developer Mode TV apps (LG webOS, Samsung Tizen, Google TV/ADB, Roku), serve the 10-foot TV portal, and stream 4K games
+Exec=/usr/bin/electron /usr/local/share/robos/robos-tv/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/robos-tv/icon.svg
+Terminal=false
+Categories=AudioVideo;Network;System;
+X-RobOS-Category=System
+StartupWMClass=robos-tv

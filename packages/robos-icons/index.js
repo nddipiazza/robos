@@ -549,6 +549,12 @@ const BUILTIN_APPS = [
     iconSvg: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"48\" height=\"48\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#eab308\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2 4 5v6c0 5.5 3.4 10.3 8 11 4.6-.7 8-5.5 8-11V5l-8-3z\"/><circle cx=\"12\" cy=\"10\" r=\"2.2\"/><path d=\"M8.5 16c.6-1.8 2-2.8 3.5-2.8s2.9 1 3.5 2.8\"/></svg>"
   },
   {
+    appId: 'robos-tv',
+    label: 'RobOS Smart TV Studio',
+    category: 'System',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="40" height="26" rx="3"/><polyline points="17 4 24 10 31 4"/><line x1="16" y1="42" x2="32" y2="42"/><line x1="24" y1="36" x2="24" y2="42"/><polygon points="21 18 29 23 21 28 21 18" fill="#00bcd4" fill-opacity="0.25"/></svg>'
+  },
+  {
     appId: 'software-center',
     label: "Software Center",
     category: "core-desktop",

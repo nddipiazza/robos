@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' http://localhost:* http://127.0.0.1:* http://192.168.* http://10.*; frame-src *;" />
+  <title>RobOS Smart TV Studio</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="brand-row">
+        <div class="brand-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="10" width="40" height="26" rx="3" />
+            <polyline points="17 4 24 10 31 4" />
+            <line x1="16" y1="42" x2="32" y2="42" />
+            <line x1="24" y1="36" x2="24" y2="42" />
+            <polygon points="21 18 29 23 21 28 21 18" fill="#00bcd4" fill-opacity="0.25" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="title">RobOS Smart TV Studio</h1>
+          <p class="subtitle">Developer Mode TV App Builder, LAN Sideloader, 10-Foot Big-Screen Portal &amp; Moonlight Game Streamer</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="portal-pill" id="portal-url-pill" title="Live 10-Foot Smart TV Portal HTTP endpoint">
+          <span class="dot online"></span>
+          <span class="pill-label">10-Foot TV Portal:</span>
+          <code id="portal-url-text">http://192.168.1.100:19210</code>
+        </div>
+        <button type="button" class="btn" id="btn-scan-tvs">Scan LAN for TVs</button>
+        <button type="button" class="btn btn-primary" id="btn-open-portal">Open 10-Foot Portal</button>
+      </div>
+    </header>
+
+    <div id="status-banner" class="banner hidden" role="status" aria-live="polite"></div>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs" role="tablist">
+      <button type="button" class="tab-btn active" data-tab="tab-devices" role="tab">Paired Smart TVs &amp; Remote</button>
+      <button type="button" class="tab-btn" data-tab="tab-sideload" role="tab">Developer Mode Sideloader (webOS / Tizen / ADB / Roku)</button>
+      <button type="button" class="tab-btn" data-tab="tab-portal" role="tab">10-Foot TV Portal &amp; Big-Screen Launcher</button>
+    </nav>
+
+    <main class="main">
+      <!-- TAB 1: Paired TVs, Add TV & Live Remote Control -->
+      <section id="tab-devices" class="tab-pane active">
+        <div class="columns">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Paired Smart TVs on Your LAN</h2>
+              <span class="badge" id="tv-count-badge">3 TVs</span>
+            </div>
+            <div id="tv-devices-list" class="list"></div>
+
+            <div class="divider"></div>
+
+            <h3 class="sub-heading">Pair Another Smart TV</h3>
+            <div class="form-grid">
+              <div class="field">
+                <label for="input-tv-name">TV Name</label>
+                <input type="text" id="input-tv-name" class="input" placeholder="e.g. Bedroom LG OLED" />
+              </div>
+              <div class="field">
+                <label for="input-tv-ip">TV LAN IP Address</label>
+                <input type="text" id="input-tv-ip" class="input" placeholder="e.g. 192.168.1.85" />
+              </div>
+              <div class="field">
+                <label for="select-tv-platform">TV Operating System</label>
+                <select id="select-tv-platform" class="select"></select>
+              </div>
+              <div class="field field-end">
+                <button type="button" class="btn btn-primary" id="btn-add-tv">Pair &amp; Save TV</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Virtual TV Remote & Quick App Cast -->
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">TV D-Pad Remote &amp; Instant App Launch</h2>
+              <select id="select-remote-target" class="select select-sm"></select>
+            </div>
+            <p class="muted-text">Send directional D-Pad keys (`ADB keyevent`, `Roku ECP`, or `Portal Spatial Nav`) and launch RobOS experiences directly onto the selected TV screen.</p>
+
+            <div class="remote-layout">
+              <div class="dpad-box">
+                <button type="button" class="btn dpad-btn dpad-up" data-rkey="DPAD_UP">▲ Up</button>
+                <div class="dpad-mid">
+                  <button type="button" class="btn dpad-btn" data-rkey="DPAD_LEFT">◀ Left</button>
+                  <button type="button" class="btn btn-primary dpad-btn dpad-ok" data-rkey="DPAD_CENTER">OK</button>
+                  <button type="button" class="btn dpad-btn" data-rkey="DPAD_RIGHT">Right ▶</button>
+                </div>
+                <button type="button" class="btn dpad-btn dpad-down" data-rkey="DPAD_DOWN">▼ Down</button>
+                <div class="dpad-aux">
+                  <button type="button" class="btn btn-sm" data-rkey="BACK">↩ Back</button>
+                  <button type="button" class="btn btn-sm" data-rkey="HOME">⌂ TV Home</button>
+                  <button type="button" class="btn btn-sm" data-rkey="PLAY_PAUSE">⏯ Play/Pause</button>
+                </div>
+              </div>
+
+              <div class="quick-cast-box">
+                <div class="sub-label">Active TV Screen Experience</div>
+                <div class="active-tile-card" id="active-tile-summary"></div>
+                <div class="sub-label" style="margin-top:12px;">Switch TV Experience</div>
+                <div id="quick-tiles-list" class="quick-tiles-grid"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: Developer Mode Sideloader Wizard -->
+      <section id="tab-sideload" class="tab-pane">
+        <div class="columns">
+          <div class="card">
+            <h2 class="card-title">Build &amp; Sideload Native Smart TV App via Developer Mode</h2>
+            <p class="muted-text">Smart TV stores lock down third-party OS suites—so RobOS generates native Developer Mode packages that install a first-class <strong>RobOS TV</strong> icon directly onto your TV's home row.</p>
+
+            <div class="field" style="margin-top:12px;">
+              <label for="select-builder-platform">1. Select Target Smart TV Platform</label>
+              <select id="select-builder-platform" class="select"></select>
+            </div>
+
+            <div class="form-grid" style="margin-top:10px;">
+              <div class="field">
+                <label for="input-builder-tv-ip">2. Target TV IP Address</label>
+                <input type="text" id="input-builder-tv-ip" class="input" value="192.168.1.64" />
+              </div>
+              <div class="field">
+                <label for="input-builder-passphrase">LG Key Server Passphrase (webOS only)</label>
+                <input type="text" id="input-builder-passphrase" class="input" placeholder="e.g. A9F31C" value="A9F31C" />
+              </div>
+            </div>
+
+            <div class="dev-steps-box" id="platform-dev-steps"></div>
+
+            <div class="actions-row" style="margin-top:14px;">
+              <button type="button" class="btn btn-primary" id="btn-build-package">Generate TV Sideload Package</button>
+              <button type="button" class="btn" id="btn-renew-webos" title="Extend LG webOS 1,000-hour Developer Mode timer via ares-extend-dev">Renew LG webOS 1,000h Timer</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Generated TV Sideload Bundles &amp; Auto-Renew</h2>
+              <span class="badge badge-green" id="webos-timer-badge">LG Auto-Renew: 998h left</span>
+            </div>
+            <div id="generated-packages-list" class="list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: 10-Foot Big-Screen Portal Preview -->
+      <section id="tab-portal" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Live 10-Foot Big-Screen Portal Preview</h2>
+              <p class="muted-text">This is the exact 1080p/4K spatial-navigation interface your Smart TV renders when it opens the sideloaded RobOS TV app.</p>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span class="badge" id="last-remote-key-badge">Remote Ready</span>
+            </div>
+          </div>
+          <div id="portal-preview-cards" class="portal-preview-grid"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

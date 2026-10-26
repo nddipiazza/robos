@@ -51,6 +51,7 @@ const seoCheckedPages = [
   'build-apps/solo/index.html',
   'build-apps/teams/index.html',
   'docs/index.html',
+  'tv/index.html',
   'security/index.html',
   'download/index.html',
   'contribute/index.html',

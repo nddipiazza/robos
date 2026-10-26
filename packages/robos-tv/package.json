@@ -1,0 +1,9 @@
+{
+  "name": "robos-tv",
+  "version": "0.1.0",
+  "description": "Smart TV Studio, Developer Mode Sideloader (LG webOS, Samsung Tizen, Google TV/ADB, Roku), 10-Foot Big-Screen Portal, and Moonlight/Sunshine Game Streamer for RobOS.",
+  "main": "main.js",
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

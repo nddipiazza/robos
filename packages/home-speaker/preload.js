@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('robosSpeaker', {
   stopPlayback: (targetIp) => ipcRenderer.invoke('speakers:stop', targetIp),
   pausePlayback: (targetIp) => ipcRenderer.invoke('speakers:pause', targetIp),
   resumePlayback: (targetIp) => ipcRenderer.invoke('speakers:resume', targetIp),
+  openTvStudio: () => ipcRenderer.invoke('speakers:openTvStudio'),
   castFile: (target, filePath, metadata) => ipcRenderer.invoke('speakers:castFile', target, filePath, metadata),
   castTTS: (target, text, options) => ipcRenderer.invoke('speakers:castTTS', target, text, options),
   castVoiceRecording: (target, arrayBuffer, options) => ipcRenderer.invoke('speakers:castVoiceRecording', target, arrayBuffer, options),

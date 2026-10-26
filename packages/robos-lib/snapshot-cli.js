@@ -125,6 +125,7 @@ const PORT_REGISTRY = {
   'game-playthrough':  19203,
   'vpn-sandbox':       19204,
   'vpn-servers':       19205,
+  'robos-tv':          19206,
 };
 
 
