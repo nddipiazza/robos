@@ -19192,7 +19192,7 @@
         className: "btn-secondary lib-shuffle-all",
         disabled: !index.tracks.length,
         title: "Repair and enrich track metadata & cover art using your RobOS agent and open-source media tools",
-        onClick: onAiFixMetadata
+        onClick: () => onAiFixMetadata(scopeFolder ? index.tracks : [])
       },
       "\u2726 AI Fix Metadata"
     ), /* @__PURE__ */ import_react16.default.createElement(
@@ -22538,7 +22538,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           searchInputRef,
           isScanning: isScanningLibrary,
           onAiPlaylist: () => setShowAiPlaylist(true),
-          onAiFixMetadata: () => setTracksForAiFix([]),
+          onAiFixMetadata: (scopedTracks) => setTracksForAiFix(Array.isArray(scopedTracks) ? scopedTracks : []),
           onAddFolder: handleSelectFolder,
           onAddFiles: handleAddFiles,
           onRefresh: async () => {

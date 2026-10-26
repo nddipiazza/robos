@@ -2114,7 +2114,7 @@ export default function App() {
               searchInputRef={searchInputRef}
               isScanning={isScanningLibrary}
               onAiPlaylist={() => setShowAiPlaylist(true)}
-              onAiFixMetadata={() => setTracksForAiFix([])}
+              onAiFixMetadata={(scopedTracks) => setTracksForAiFix(Array.isArray(scopedTracks) ? scopedTracks : [])}
               onAddFolder={handleSelectFolder}
               onAddFiles={handleAddFiles}
               onRefresh={async () => {
