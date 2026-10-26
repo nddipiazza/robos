@@ -14,6 +14,7 @@ const { createTagQueue } = require('./lib/cloud-tags');
 const lyrics = require('./lib/lyrics');
 const { LibraryFolders } = require('./lib/library-folders');
 const aiPlaylist = require('./lib/ai-playlist');
+const aiMetadata = require('./lib/ai-metadata');
 
 // Shared RobOS modules: the repo checkout in development, the installed copy on the VM.
 function requireShared(...relPaths) {
@@ -595,9 +596,40 @@ const agentProviders = requireShared('robos-agent-client/providers');
 const agentOneShot = requireShared('robos-agent-client/one-shot');
 const aiJson = requireShared('robos-lib/ai-json');
 const quickAsk = requireShared('robos-lib/quick-ask');
+const skillCatalog = requireShared('robos-lib/skill-catalog');
 if (quickAsk && typeof quickAsk.registerQuickAskIPC === 'function') {
   try { quickAsk.registerQuickAskIPC(ipcMain); } catch {}
 }
+
+ipcMain.handle('robos-skills-list', async () => {
+  try {
+    return skillCatalog && typeof skillCatalog.listSkills === 'function' ? skillCatalog.listSkills() : [];
+  } catch {
+    return [];
+  }
+});
+
+ipcMain.handle('ap-list-path', async (_evt, prefix = '') => {
+  try {
+    const home = os.homedir();
+    const expanded = String(prefix || '').replace(/^~/, home);
+    const isDir = expanded.endsWith('/');
+    const dir = isDir ? expanded : path.dirname(expanded);
+    const partial = isDir ? '' : path.basename(expanded);
+    if (!fs.existsSync(dir)) return { ok: true, items: [] };
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const items = entries
+      .filter(e => !partial || e.name.toLowerCase().startsWith(partial.toLowerCase()))
+      .slice(0, 12)
+      .map(e => ({
+        name: e.name + (e.isDirectory() ? '/' : ''),
+        path: path.join(dir, e.name) + (e.isDirectory() ? '/' : ''),
+      }));
+    return { ok: true, items };
+  } catch (err) {
+    return { ok: false, items: [], error: err.message };
+  }
+});
 
 let ttsEngine = null;
 function getTtsEngine() {
@@ -632,6 +664,54 @@ ipcMain.handle('audio:ai-playlist-generate', async (_evt, { request, count, dj, 
         onProgress: (p) => sendToWindow('audio:ai-progress', p),
       }
     );
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('audio:ai-fix-metadata-preview', async (_evt, { trackIds, scope = 'selected', prompt, agent, enableOpenLookup = true } = {}) => {
+  if (!agentOneShot) return { ok: false, error: AGENT_MISSING };
+  if (!agent || !agent.provider) return { ok: false, error: 'Choose an AI agent.' };
+  try {
+    let targetTracks = [];
+    if (Array.isArray(trackIds) && trackIds.length > 0) {
+      const idSet = new Set(trackIds);
+      targetTracks = mediaLibrary.tracks.filter(t => idSet.has(t.id));
+    } else if (scope === 'missing') {
+      targetTracks = mediaLibrary.tracks.filter(t => aiMetadata.trackNeedsMetadataFix(t));
+    } else {
+      targetTracks = mediaLibrary.tracks.slice(0, 40);
+    }
+
+    if (!targetTracks.length) {
+      return { ok: false, error: 'No tracks matched the selected scope.' };
+    }
+
+    const ask = agentAsk(agent);
+    return await aiMetadata.previewAiMetadataFixes({
+      tracks: targetTracks,
+      prompt: prompt || aiMetadata.DEFAULT_FIX_METADATA_PROMPT,
+      providerId: agent.provider,
+      mediaLibrary,
+      enableOpenLookup: enableOpenLookup !== false,
+      onProgress: (p) => sendToWindow('audio:ai-progress', p),
+      askFn: async (fullPrompt) => {
+        const text = await ask(fullPrompt);
+        return { ok: true, text: typeof text === 'string' ? text : (text && text.text) || '', providerId: agent.provider };
+      },
+    });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('audio:ai-fix-metadata-apply', async (_evt, { fixes, writeFiles = false } = {}) => {
+  try {
+    return await aiMetadata.applyAiMetadataFixes({
+      fixes: Array.isArray(fixes) ? fixes : [],
+      writeFiles: !!writeFiles,
+      mediaLibrary,
+    });
   } catch (err) {
     return { ok: false, error: err.message };
   }

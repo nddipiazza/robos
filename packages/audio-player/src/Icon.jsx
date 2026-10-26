@@ -52,6 +52,7 @@ const ICON_PATHS = {
   grid: <g><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></g>,
   rows: <g><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></g>,
   cast: <g><path d="M2 16a5 5 0 0 1 5 5" /><path d="M2 12a9 9 0 0 1 9 9" /><circle cx="2.5" cy="20.5" r="0.8" fill="currentColor" /><path d="M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" /></g>,
+  sparkle: <g><path d="M12 3l1.9 5.3L19.2 10l-5.3 1.9L12 17.2l-1.9-5.3L4.8 10l5.3-1.7L12 3z" /><path d="M5 3v4" /><path d="M3 5h4" /><path d="M19 17v4" /><path d="M17 19h4" /></g>,
 };
 
 export function Icon({ name, size = 16 }) {
