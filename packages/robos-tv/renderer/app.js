@@ -471,6 +471,18 @@ async function init() {
   if (initial && initial.ok) {
     state = { ...state, ...initial };
     renderAll();
+    const diag = await window.robosTv.diagnoseReadiness(state.tvs[0]?.id);
+    if (diag && diag.ok && !diag.allControlReady) {
+      const blockedCheck = (diag.checks || []).find((c) => !c.ready);
+      if (blockedCheck) {
+        showSetupAlert({
+          blocked: true,
+          setupTitle: `TV Setup Required on ${diag.tv.name} (${diag.tv.ip}) — ${blockedCheck.title} is Blocked`,
+          setupMessage: `Your ${diag.tv.name} returned ${blockedCheck.currentValue} (HTTP ${diag.liveInfo?.httpStatus || 401} Unauthorized). Follow these steps on your physical TV remote so RobOS can control your TV:`,
+          setupSteps: blockedCheck.fixSteps || [],
+        });
+      }
+    }
   }
 }
 
