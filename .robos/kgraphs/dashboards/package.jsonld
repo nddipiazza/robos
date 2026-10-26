@@ -219,6 +219,24 @@
       "robos:package": "dashboards"
     },
     {
+      "@id": "urn:robos:dashboard-widget:live-clock",
+      "@type": "robos:DashboardWidget",
+      "dcterms:title": "Live JavaScript Canvas Clock & World Chronometer",
+      "robos:widgetType": "live-clock",
+      "robos:componentTag": "robos-widget-live-clock",
+      "robos:description": "Live JavaScript HTML5 <canvas> analog & digital chronometer with sweeping second hand, local timezone, and UTC reference clock.",
+      "robos:package": "dashboards"
+    },
+    {
+      "@id": "urn:robos:dashboard-widget:github-repo",
+      "@type": "robos:DashboardWidget",
+      "dcterms:title": "GitHub Repo Activity (Commits, main CI & Release Status)",
+      "robos:widgetType": "github-repo",
+      "robos:componentTag": "robos-widget-github-repo",
+      "robos:description": "Displays live GitHub repository activity for nddipiazza/robos: latest commits, CI workflow status in main, and latest release number + live running status.",
+      "robos:package": "dashboards"
+    },
+    {
       "@id": "urn:robos:dashboard-widget:robos-component",
       "@type": "robos:DashboardWidget",
       "dcterms:title": "Any RobOS Custom Component Widget",
@@ -232,17 +250,61 @@
       "@type": "robos:Dashboard",
       "dcterms:title": "Daily Engineering & Agent Ops Dashboard",
       "robos:dashboardId": "daily-engineering-ops",
-      "robos:description": "Primary operational dashboard featuring the 10 latest commit messages in a compact readable text list, calendar events for the day, and current RobOS agent sessions running with their status lines tailed.",
+      "robos:description": "Primary operational dashboard featuring GitHub repo activity (nddipiazza/robos commits, main CI status, latest release # & running status), live JavaScript <canvas> clock, 10 latest commit messages, dual Google Calendar events for the day, and running RobOS agent sessions with status lines tailed.",
       "robos:layout": {
         "@id": "urn:robos:dashboard-layout:mission-control-3col"
       },
       "robos:tvCompatible": true,
       "robos:package": "dashboards",
       "robos:cards": [
-        { "@id": "urn:robos:dashboard-card:latest-10-commits" },
+        { "@id": "urn:robos:dashboard-card:github-repo-activity" },
         { "@id": "urn:robos:dashboard-card:today-calendar-events" },
+        { "@id": "urn:robos:dashboard-card:live-js-clock" },
+        { "@id": "urn:robos:dashboard-card:latest-10-commits" },
         { "@id": "urn:robos:dashboard-card:running-agent-sessions" }
       ]
+    },
+    {
+      "@id": "urn:robos:dashboard-card:github-repo-activity",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "GitHub Repo Activity (nddipiazza/robos)",
+      "robos:cardId": "github-repo-activity",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:daily-engineering-ops"
+      },
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:github-repo"
+      },
+      "robos:slotId": "col-1",
+      "robos:componentTag": "robos-widget-github-repo",
+      "robos:package": "dashboards",
+      "robos:widgetConfig": {
+        "repo": "nddipiazza/robos",
+        "branch": "main",
+        "commitLimit": 10,
+        "showMainCi": true,
+        "showLatestRelease": true
+      }
+    },
+    {
+      "@id": "urn:robos:dashboard-card:live-js-clock",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Live Clock & Chronometer",
+      "robos:cardId": "live-js-clock",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:daily-engineering-ops"
+      },
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:live-clock"
+      },
+      "robos:slotId": "col-3",
+      "robos:componentTag": "robos-widget-live-clock",
+      "robos:package": "dashboards",
+      "robos:widgetConfig": {
+        "analogCanvas": true,
+        "showUtc": true,
+        "showSeconds": true
+      }
     },
     {
       "@id": "urn:robos:dashboard-card:latest-10-commits",
