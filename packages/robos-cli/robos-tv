@@ -1,0 +1,125 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * robos-tv — CLI tool to control Smart TVs (65" TCL Roku TV, Android TV, LG webOS, Samsung Tizen) in RobOS
+ *
+ * Usage:
+ *   robos-tv status [--ip 192.168.1.15]
+ *   robos-tv on [--ip 192.168.1.15]
+ *   robos-tv off [--ip 192.168.1.15]
+ *   robos-tv key <Up|Down|Left|Right|Select|Home|Back|VolumeUp|VolumeDown|VolumeMute> [--ip 192.168.1.15]
+ *   robos-tv launch <appId|ps5|youtube|netflix|plex> [--ip 192.168.1.15]
+ *   robos-tv list
+ */
+
+const http = require('node:http');
+const { createTvEngine } = require('../robos-lib/tv-engine');
+
+const DEFAULT_ROKU_IP = '192.168.1.15';
+
+const ROKU_SHORTCUT_APPS = {
+  ps5: 'tvinput.hdmi2',
+  playstation: 'tvinput.hdmi2',
+  hdmi1: 'tvinput.hdmi1',
+  hdmi2: 'tvinput.hdmi2',
+  hdmi3: 'tvinput.hdmi3',
+  youtube: '837',
+  youtubetv: '195316',
+  netflix: '12',
+  plex: '13535',
+  prime: '13',
+  disney: '291097',
+  hulu: '2285',
+  max: '61322',
+  spotify: '22297',
+  espn: '34376',
+  appletv: '551012',
+};
+
+function postEcp(ip, endpoint) {
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      {
+        hostname: ip,
+        port: 8060,
+        path: endpoint,
+        method: 'POST',
+        timeout: 2500,
+      },
+      (res) => {
+        res.resume();
+        resolve(res.statusCode);
+      }
+    );
+    req.on('error', reject);
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Request timed out'));
+    });
+    req.end();
+  });
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+  const cmd = (args[0] || 'status').toLowerCase();
+  const ipIdx = args.indexOf('--ip');
+  const ip = ipIdx >= 0 && args[ipIdx + 1] ? args[ipIdx + 1] : DEFAULT_ROKU_IP;
+
+  const engine = createTvEngine();
+
+  if (cmd === 'list') {
+    const ov = engine.getOverview();
+    for (const tv of ov.tvs) {
+      console.log(`${tv.name} — ${tv.ip} (${tv.model})`);
+    }
+    return;
+  }
+
+  if (cmd === 'status') {
+    const st = await engine.queryRokuPowerMode(ip);
+    console.log(JSON.stringify(st, null, 2));
+    return;
+  }
+
+  if (cmd === 'on' || cmd === 'poweron') {
+    const res = await engine.setTvPower({ ip, action: 'on' });
+    console.log(JSON.stringify(res, null, 2));
+    return;
+  }
+
+  if (cmd === 'off' || cmd === 'poweroff') {
+    const res = await engine.setTvPower({ ip, action: 'off' });
+    console.log(JSON.stringify(res, null, 2));
+    return;
+  }
+
+  if (cmd === 'key') {
+    const keyName = args[1] || 'Home';
+    await postEcp(ip, `/keypress/${encodeURIComponent(keyName)}`);
+    console.log(JSON.stringify({ ok: true, ip, key: keyName }));
+    return;
+  }
+
+  if (cmd === 'launch') {
+    const rawApp = (args[1] || 'Home').toLowerCase();
+    const appId = ROKU_SHORTCUT_APPS[rawApp] || args[1];
+    await postEcp(ip, `/launch/${encodeURIComponent(appId)}`);
+    console.log(JSON.stringify({ ok: true, ip, launchedAppId: appId }));
+    return;
+  }
+
+  console.log(`Usage:
+  robos-tv on [--ip 192.168.1.15]
+  robos-tv off [--ip 192.168.1.15]
+  robos-tv status [--ip 192.168.1.15]
+  robos-tv key <Up|Down|Left|Right|Select|Home|Back|VolumeUp|VolumeDown|VolumeMute>
+  robos-tv launch <ps5|youtube|netflix|plex|disney|hulu|max|spotify|appId>
+  robos-tv list`);
+}
+
+main().catch((err) => {
+  console.error(err.message);
+  process.exit(1);
+});

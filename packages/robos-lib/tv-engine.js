@@ -1221,9 +1221,36 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
         BACK: 'Back',
         HOME: 'Home',
         PLAY_PAUSE: 'Play',
+        POWER_ON: 'PowerOn',
+        POWER_OFF: 'PowerOff',
+        VOLUME_UP: 'VolumeUp',
+        VOLUME_DOWN: 'VolumeDown',
+        VOLUME_MUTE: 'VolumeMute',
       };
-      const rKey = rokuKeyMap[key] || 'Select';
-      exec(`curl -s -m 1 -d "" "http://${tv.ip}:8060/keypress/${rKey}"`, () => {});
+      const rKey = rokuKeyMap[key] || key || 'Select';
+      exec(`curl -s -m 2 -d "" "http://${tv.ip}:8060/keypress/${rKey}"`, () => {});
+    }
+
+    if (tv && tv.platformId === 'android-tv' && process.env.ROBOS_TEST !== '1') {
+      const adbKeyMap = {
+        POWER_ON: 'KEYCODE_WAKEUP',
+        POWER_OFF: 'KEYCODE_SLEEP',
+        VOLUME_UP: 'KEYCODE_VOLUME_UP',
+        VOLUME_DOWN: 'KEYCODE_VOLUME_DOWN',
+        VOLUME_MUTE: 'KEYCODE_VOLUME_MUTE',
+        DPAD_UP: 'KEYCODE_DPAD_UP',
+        DPAD_DOWN: 'KEYCODE_DPAD_DOWN',
+        DPAD_LEFT: 'KEYCODE_DPAD_LEFT',
+        DPAD_RIGHT: 'KEYCODE_DPAD_RIGHT',
+        DPAD_CENTER: 'KEYCODE_DPAD_CENTER',
+        BACK: 'KEYCODE_BACK',
+        HOME: 'KEYCODE_HOME',
+        PLAY_PAUSE: 'KEYCODE_MEDIA_PLAY_PAUSE',
+      };
+      const aKey = adbKeyMap[key];
+      if (aKey) {
+        exec(`adb -s "${tv.ip}:5555" shell input keyevent ${aKey}`, () => {});
+      }
     }
 
     return {
@@ -1234,6 +1261,67 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
       activeTile: TEN_FOOT_LAUNCH_TILES[idx],
       lastRemoteKey: state.lastRemoteKey,
     };
+  }
+
+  function queryRokuPowerMode(ip, timeoutMs = 1500) {
+    return new Promise((resolve) => {
+      const req = http.get(`http://${ip}:8060/query/device-info`, { timeout: timeoutMs }, (res) => {
+        let data = '';
+        res.on('data', (c) => (data += c));
+        res.on('end', () => {
+          const pm = (data.match(/<power-mode>(.*?)<\/power-mode>/) || [])[1] || 'Unknown';
+          const name = (data.match(/<user-device-name>(.*?)<\/user-device-name>/) || [])[1] || '';
+          resolve({ ok: true, ip, powerMode: pm, isOn: pm === 'PowerOn', name });
+        });
+      });
+      req.on('error', (err) => resolve({ ok: false, ip, error: err.message }));
+      req.on('timeout', () => {
+        req.destroy();
+        resolve({ ok: false, ip, error: 'timeout' });
+      });
+    });
+  }
+
+  function setTvPower({ tvId, ip, action = 'on' } = {}) {
+    const tv = state.tvs.find((t) => t.id === tvId || t.ip === ip) || state.tvs[0];
+    const targetIp = ip || (tv && tv.ip) || '192.168.1.15';
+    const norm = String(action || 'on').toLowerCase();
+    const key = norm === 'off' ? 'POWER_OFF' : 'POWER_ON';
+    sendRemoteKey({ tvId: tv ? tv.id : undefined, key });
+    return new Promise((resolve) => {
+      if (process.env.ROBOS_TEST === '1') {
+        return resolve({
+          ok: true,
+          ip: targetIp,
+          action: norm,
+          powerMode: norm === 'off' ? 'Ready' : 'PowerOn',
+          isOn: norm !== 'off',
+        });
+      }
+      const rKey = norm === 'off' ? 'PowerOff' : 'PowerOn';
+      const req = http.request(
+        {
+          hostname: targetIp,
+          port: 8060,
+          path: `/keypress/${rKey}`,
+          method: 'POST',
+          timeout: 2000,
+        },
+        (res) => {
+          res.resume();
+          setTimeout(async () => {
+            const status = await queryRokuPowerMode(targetIp);
+            resolve({ ...status, action: norm });
+          }, 900);
+        }
+      );
+      req.on('error', (err) => resolve({ ok: false, ip: targetIp, action: norm, error: err.message }));
+      req.on('timeout', () => {
+        req.destroy();
+        resolve({ ok: false, ip: targetIp, action: norm, error: 'timeout' });
+      });
+      req.end();
+    });
   }
 
   function launchTileOnTv({ tileId, tvId } = {}) {
@@ -1261,6 +1349,8 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     buildTvPackage,
     renewWebosDevSession,
     sendRemoteKey,
+    queryRokuPowerMode,
+    setTvPower,
     launchTileOnTv,
   };
 }
