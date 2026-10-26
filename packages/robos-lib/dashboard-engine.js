@@ -634,20 +634,41 @@ function collectTodayCalendarEvents({ configDir, date } = {}) {
   };
 
   let events = [];
+  let hasLiveThunderbirdEvents = false;
+  const SEEDED_DEMO_IDS = new Set([
+    'evt-daily-standup',
+    'evt-pr-review-theater',
+    'evt-focus-block',
+    'evt-kgraph-sync',
+    'evt-sprint-demo',
+  ]);
+  const todayDateStr = now.toDateString();
 
-  // 1. Read Thunderbird CalDAV SQLite cache if available
+  // 1. Read Thunderbird live CalDAV & SQLite cache if available
   try {
     const tb = require('./thunderbird-google');
     const tbStatus = tb.detectThunderbird();
     if (tbStatus && tbStatus.primaryProfilePath) {
       const tbRows = tb.readThunderbirdCachedEvents(tbStatus.primaryProfilePath, primaryEmail);
-      for (const r of tbRows.slice(0, 4)) {
+      if (tbRows.length > 0) {
+        hasLiveThunderbirdEvents = true;
+      }
+      for (const r of tbRows.slice(0, 8)) {
         const accEmail = r.accountEmail || primaryEmail;
-        const dtShort = r.start ? new Date(r.start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+        const startDate = r.start ? new Date(r.start) : null;
+        const isToday = startDate && !Number.isNaN(startDate.getTime()) && startDate.toDateString() === todayDateStr;
+        const dtShort = startDate && !Number.isNaN(startDate.getTime())
+          ? isToday
+            ? 'Today'
+            : startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          : '';
         events.push({
           id: r.id,
           time: `${dtShort ? dtShort + ' ' : ''}${fmtHm(r.start)}`,
           endTime: fmtHm(r.end),
+          startIso: r.start || null,
+          endIso: r.end || null,
+          startEpochSec: Number(r.startEpochSec) || (startDate ? Math.floor(startDate.getTime() / 1000) : 0),
           title: r.summary || r.title || '(Calendar Event)',
           calendar: accEmail,
           accountEmail: accEmail,
@@ -665,11 +686,17 @@ function collectTodayCalendarEvents({ configDir, date } = {}) {
       const parsed = JSON.parse(fs.readFileSync(eventsFile, 'utf8'));
       const rawList = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.events) ? parsed.events : [];
       for (const item of rawList) {
+        if (hasLiveThunderbirdEvents && item.id && SEEDED_DEMO_IDS.has(item.id)) {
+          continue;
+        }
         const accEmail = item.accountEmail || item.calendar || primaryEmail;
         events.push({
           id: item.id || `evt-${events.length + 1}`,
           time: item.time || fmtHm(item.start),
           endTime: item.endTime || fmtHm(item.end),
+          startIso: item.start || null,
+          endIso: item.end || null,
+          startEpochSec: item.start ? Math.floor(new Date(item.start).getTime() / 1000) : 0,
           title: item.title || item.summary || '(Untitled Event)',
           calendar: accEmail,
           accountEmail: accEmail,
@@ -739,8 +766,12 @@ function collectTodayCalendarEvents({ configDir, date } = {}) {
         color: colorByEmail[primaryEmail.toLowerCase()] || '#00bcd4',
       },
     ];
-  } else if (secondaryEmail && !events.some((e) => String(e.accountEmail).toLowerCase() === secondaryEmail.toLowerCase())) {
-    // Ensure the 2nd Google Calendar account's schedule is also represented on the dashboard
+  } else if (
+    !hasLiveThunderbirdEvents &&
+    secondaryEmail &&
+    !events.some((e) => String(e.accountEmail).toLowerCase() === secondaryEmail.toLowerCase())
+  ) {
+    // Ensure the 2nd Google Calendar account's schedule is also represented when no live Thunderbird events exist
     events.splice(1, 0, {
       id: `evt-${secondaryEmail}-sync`,
       time: '13:00',
@@ -1780,9 +1811,12 @@ function collectNextMeetingCountdown({ configDir, date } = {}) {
   const events = Array.isArray(calData.events) ? calData.events : [];
 
   const parseEventEpochSec = (ev) => {
+    if (Number(ev?.startEpochSec) > 0) {
+      return Number(ev.startEpochSec);
+    }
     const raw = String(ev?.time || '').trim();
-    // Format 1: "16:30" (today)
-    const hmMatch = raw.match(/^(\d{1,2}):(\d{2})$/);
+    // Format 1: "16:30" or "Today 19:00"
+    const hmMatch = raw.match(/^(?:Today\s+)?(\d{1,2}):(\d{2})$/i);
     if (hmMatch) {
       const d = new Date(now);
       d.setHours(Number(hmMatch[1]), Number(hmMatch[2]), 0, 0);

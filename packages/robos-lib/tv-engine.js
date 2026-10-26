@@ -2150,6 +2150,12 @@ sub onPayloadUpdated()
                     end if
                     if tlNode <> invalid then tlNode.text = Left(cleanAscii(ev.title), 44)
                     if lcNode <> invalid then lcNode.text = "Calendar: " + cleanAscii(accEmail) + " | " + cleanAscii(ev.location)
+                else
+                    if bgNode <> invalid then bgNode.visible = false
+                    if stNode <> invalid then stNode.visible = false
+                    if tmNode <> invalid then tmNode.text = ""
+                    if tlNode <> invalid then tlNode.text = ""
+                    if lcNode <> invalid then lcNode.text = ""
                 end if
             end for
         else if cTag = "robos-widget-agent-sessions" and card.liveData <> invalid and card.liveData.sessions <> invalid
