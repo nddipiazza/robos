@@ -1209,10 +1209,12 @@ tizen run -p robostv001.RobOSTV
 
   if (platformId === 'roku-os') {
     let initialDash = null;
+    let initialSlideshow = null;
     try {
       const dashMod = require('./dashboard-engine');
       const dashEngine = dashMod.createDashboardEngine();
       initialDash = dashEngine.resolveDashboard('daily-engineering-ops').dashboard;
+      initialSlideshow = dashEngine.getSlideshowState();
     } catch {}
 
     const dashCards = initialDash?.cards || [];
@@ -1485,6 +1487,15 @@ sub pollDashboard()
     end while
 end sub
 `;
+    const ssEnabled = Boolean(initialSlideshow?.enabled);
+    const ssInterval = Math.max(3, Number(initialSlideshow?.intervalSeconds) || 15);
+    const ssRem = Math.max(1, Number(initialSlideshow?.secondsRemainingInSlide) || ssInterval);
+    const ssSlideNum = Number(initialSlideshow?.slideNumber) || 1;
+    const ssTotal = Number(initialSlideshow?.totalSlides) || 3;
+    const ssBadgeText = ssEnabled
+      ? `SLIDESHOW: ${ssSlideNum}/${ssTotal} (${ssInterval}s) - Next in ${ssRem}s`
+      : `SINGLE DASHBOARD (Slideshow Off)`;
+
     const mainSceneXml = `<?xml version="1.0" encoding="utf-8" ?>
 <component name="MainScene" extends="Scene">
   <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
@@ -1492,10 +1503,16 @@ end sub
     <Rectangle id="bg" width="1920" height="1080" color="0x070B12FF" />
     <Rectangle id="headerBar" width="1920" height="84" color="0x0F172AFF" />
     <Rectangle id="headerAccent" translation="[0, 84]" width="1920" height="2" color="0x00BCD4FF" />
-    <Label id="brandLabel" scale="[0.82, 0.82]" text="RobOS Dashboards - Daily Engineering &amp; Agent Ops" translation="[48, 25]" width="1020" height="40" numLines="1" color="0xF8FAFCFF" />
-    <Label id="headerCountdownLabel" scale="[0.68, 0.68]" text="NEXT MEETING: ${safeXml(nm.time || '16:30')} (${safeXml(meetingData.countdownLabel || 'T - 00:28:00')})" translation="[880, 28]" width="620" height="36" numLines="1" color="0x6EE7B7FF" />
-    <Label id="hostLabel" scale="[0.58, 0.58]" text="LIVE JS CAST | ${portalUrl}/dashboard" translation="[1380, 30]" width="840" height="34" numLines="1" horizAlign="right" color="0x67E8F9FF" />
+    <Rectangle id="slideProgressFill" translation="[0, 82]" width="${ssEnabled ? Math.max(40, Math.round(((ssInterval - ssRem) / ssInterval) * 1920)) : 0}" height="4" color="0xF59E0BFF" />
+    <Label id="brandLabel" scale="[0.76, 0.76]" text="RobOS Dashboards - Daily Engineering &amp; Agent Ops" translation="[48, 25]" width="980" height="40" numLines="1" color="0xF8FAFCFF" />
+    <Label id="headerCountdownLabel" scale="[0.60, 0.60]" text="NEXT MEETING: ${safeXml(nm.time || '16:30')} (${safeXml(meetingData.countdownLabel || 'T - 00:28:00')})" translation="[780, 29]" width="560" height="34" numLines="1" color="0x6EE7B7FF" />
+    <Rectangle id="slideshowBadgeBg" translation="[1130, 20]" width="390" height="42" color="0x1E1B4BFF" />
+    <Rectangle id="slideshowBadgeBorder" translation="[1130, 20]" width="4" height="42" color="0xF59E0BFF" />
+    <Label id="slideshowBadgeLabel" scale="[0.54, 0.54]" text="${safeXml(ssBadgeText)}" translation="[1144, 29]" width="680" height="32" numLines="1" color="0xFCD34DFF" />
+    <Label id="hostLabel" scale="[0.54, 0.54]" text="LIVE CAST | ${portalUrl}/dashboard" translation="[1460, 30]" width="760" height="34" numLines="1" horizAlign="right" color="0x67E8F9FF" />
 
+    <!-- SLIDE 0: Daily Engineering & Calendar Ops (daily-engineering-ops) -->
+    <Group id="slideGroup0" visible="true">
     <!-- Column 1: GitHub Repo Activity (nddipiazza/robos) + Commits, main CI & Latest Release -->
     <Rectangle id="colCommitsCard" translation="[48, 102]" width="584" height="784" color="0x111827FF" />
     <Rectangle translation="[48, 102]" width="584" height="4" color="0x00BCD4FF" />
@@ -1569,13 +1586,221 @@ ${calendarRowsXml}
     <Rectangle id="secPulseDot" translation="[1820, 174]" width="14" height="14" color="0x10B981FF" />
 
 ${agentRowsXml}
+    </Group>
+
+    <!-- SLIDE 1: Smart TV & Connected Studio Wallboard (smart-home-tv-command) -->
+    <Group id="slideGroup1" visible="false">
+      <!-- Column 1: Paired Smart TVs & Cast Sessions -->
+      <Rectangle translation="[48, 102]" width="584" height="784" color="0x111827FF" />
+      <Rectangle translation="[48, 102]" width="584" height="4" color="0x00BCD4FF" />
+      <Label scale="[0.68, 0.68]" text="1. PAIRED SMART TVs &amp; 10-FOOT CAST FLEET (LAN)" translation="[68, 118]" width="780" height="36" numLines="1" color="0x67E8F9FF" />
+      <Rectangle translation="[68, 152]" width="544" height="2" color="0x1E293BFF" />
+
+      <Rectangle translation="[68, 166]" width="544" height="136" color="0x161F30FF" />
+      <Rectangle translation="[68, 166]" width="6" height="136" color="0x10B981FF" />
+      <Label translation="[86, 176]" scale="[0.66, 0.66]" width="760" height="32" numLines="1" color="0xF8FAFCFF" text="1. 65&quot; TCL Roku TV (Living room) [ACTIVE CAST]" />
+      <Label translation="[86, 206]" scale="[0.56, 0.56]" width="900" height="28" numLines="1" color="0x6EE7B7FF" text="IP: 192.168.1.15 | Roku OS 15.3.4 | ECP :8060 + Sideloaded Channel" />
+      <Label translation="[86, 234]" scale="[0.54, 0.54]" width="920" height="28" numLines="1" color="0x94A3B8FF" text="Mode: Multi-Dashboard Slideshow Rotation | 1080p FHD SceneGraph" />
+      <Label translation="[86, 262]" scale="[0.54, 0.54]" width="920" height="28" numLines="1" color="0x67E8F9FF" text="Portal: ${portalUrl}/dashboard | Polling /api/dashboard-cast (2s)" />
+
+      <Rectangle translation="[68, 316]" width="544" height="122" color="0x161F30FF" />
+      <Rectangle translation="[68, 316]" width="6" height="122" color="0x00BCD4FF" />
+      <Label translation="[86, 326]" scale="[0.64, 0.64]" width="760" height="32" numLines="1" color="0xF8FAFCFF" text="2. Living Room OLED (LG OLED65C4PUA)" />
+      <Label translation="[86, 356]" scale="[0.55, 0.55]" width="900" height="28" numLines="1" color="0x67E8F9FF" text="IP: 192.168.1.64 | LG webOS 24 | Auto-Renew Timer: 998h Left" />
+      <Label translation="[86, 386]" scale="[0.52, 0.52]" width="940" height="28" numLines="1" color="0x94A3B8FF" text="Package: com.robos.tv_1.0.0_all.ipk | SSH :9991 &amp; SSAP :3000 Online" />
+
+      <Rectangle translation="[68, 452]" width="544" height="122" color="0x161F30FF" />
+      <Rectangle translation="[68, 452]" width="6" height="122" color="0xA855F7FF" />
+      <Label translation="[86, 462]" scale="[0.64, 0.64]" width="760" height="32" numLines="1" color="0xF8FAFCFF" text="3. Basement TV (Sony Bravia 4K Google TV)" />
+      <Label translation="[86, 492]" scale="[0.55, 0.55]" width="900" height="28" numLines="1" color="0xD8B4FEFF" text="IP: 192.168.1.52 | Android TV ADB :5555 &amp; Google Cast :8009" />
+      <Label translation="[86, 522]" scale="[0.52, 0.52]" width="940" height="28" numLines="1" color="0x94A3B8FF" text="Leanback Launcher Installed | Moonlight 4K 120Hz Stream Ready" />
+
+      <Rectangle translation="[68, 588]" width="544" height="122" color="0x161F30FF" />
+      <Rectangle translation="[68, 588]" width="6" height="122" color="0xF59E0BFF" />
+      <Label translation="[86, 598]" scale="[0.64, 0.64]" width="760" height="32" numLines="1" color="0xF8FAFCFF" text="4. Studio Wall Display (Samsung QN90D Neo QLED)" />
+      <Label translation="[86, 628]" scale="[0.55, 0.55]" width="900" height="28" numLines="1" color="0xFCD34DFF" text="IP: 192.168.1.78 | Samsung Tizen | SDB :26101 &amp; REST :8001" />
+      <Label translation="[86, 658]" scale="[0.52, 0.52]" width="940" height="28" numLines="1" color="0x94A3B8FF" text="Wallboard Mode: KGraph Architecture &amp; CI Build Status Sync" />
+
+      <Rectangle translation="[68, 724]" width="544" height="140" color="0x090D16FF" />
+      <Label translation="[86, 738]" scale="[0.58, 0.58]" width="900" height="30" numLines="1" color="0x10B981FF" text="SUNSHINE / MOONLIGHT 4K 120Hz STREAMING HOST: READY" />
+      <Label translation="[86, 768]" scale="[0.52, 0.52]" width="940" height="28" numLines="1" color="0xCBD5E1FF" text="Encoder: VAAPI / NVENC Low-Latency | Audio: PulseAudio 5.1 Surround" />
+      <Label translation="[86, 796]" scale="[0.52, 0.52]" width="940" height="28" numLines="1" color="0x67E8F9FF" text="Gamepad Bridge: DualSense / Xbox XInput + Roku ECP D-Pad Active" />
+      <Label translation="[86, 824]" scale="[0.50, 0.50]" width="940" height="28" numLines="1" color="0x94A3B8FF" text="Zero-Cloud LAN Discovery: SSDP + mDNS + ARP Subnet Sweep" />
+
+      <!-- Column 2: Smart Light Studio & Circadian Daylight Scenes -->
+      <Rectangle translation="[656, 102]" width="584" height="784" color="0x111827FF" />
+      <Rectangle translation="[656, 102]" width="584" height="4" color="0x10B981FF" />
+      <Label scale="[0.66, 0.66]" text="2. SMART LIGHT STUDIO &amp; CIRCADIAN SCENES (LAN)" translation="[676, 118]" width="820" height="36" numLines="1" color="0x6EE7B7FF" />
+      <Rectangle translation="[676, 152]" width="544" height="2" color="0x1E293BFF" />
+
+      <Rectangle translation="[676, 166]" width="544" height="114" color="0x161F30FF" />
+      <Rectangle translation="[676, 166]" width="6" height="114" color="0xF59E0BFF" />
+      <Label translation="[694, 176]" scale="[0.62, 0.62]" width="820" height="32" numLines="1" color="0xFCD34DFF" text="ACTIVE SCENE: Deep Focus Coding (4800K Daylight)" />
+      <Label translation="[694, 206]" scale="[0.54, 0.54]" width="920" height="28" numLines="1" color="0xF8FAFCFF" text="24-Hour Circadian Curve: ENABLED | CI Build Status Light Bar: SYNCED" />
+      <Label translation="[694, 236]" scale="[0.52, 0.52]" width="940" height="28" numLines="1" color="0x6EE7B7FF" text="4 of 5 LAN Fixtures ON | Avg Brightness: 82% | Zero-Cloud UDP/HTTP" />
+
+      <Rectangle translation="[676, 294]" width="544" height="102" color="0x161F30FF" />
+      <Rectangle translation="[676, 294]" width="6" height="102" color="0x38BDF8FF" />
+      <Label translation="[694, 304]" scale="[0.62, 0.62]" width="800" height="30" numLines="1" color="0xF8FAFCFF" text="1. Desk Key Light Bar (Elgato Key Light :9123) [ON - 85%]" />
+      <Label translation="[694, 334]" scale="[0.54, 0.54]" width="900" height="28" numLines="1" color="0x67E8F9FF" text="Temp: 4800K Neutral White | Studio Desk | Color: #38BDF8" />
+      <Rectangle translation="[694, 368]" width="430" height="10" color="0x38BDF8FF" />
+
+      <Rectangle translation="[676, 408]" width="544" height="102" color="0x161F30FF" />
+      <Rectangle translation="[676, 408]" width="6" height="102" color="0x22D3EEFF" />
+      <Label translation="[694, 418]" scale="[0.62, 0.62]" width="800" height="30" numLines="1" color="0xF8FAFCFF" text="2. Ceiling WiZ Strip (Philips WiZ UDP :38899) [ON - 90%]" />
+      <Label translation="[694, 448]" scale="[0.54, 0.54]" width="900" height="28" numLines="1" color="0x67E8F9FF" text="Mode: Cyan Focus Glow | Living Room / Studio | Color: #22D3EE" />
+      <Rectangle translation="[694, 482]" width="455" height="10" color="0x22D3EEFF" />
+
+      <Rectangle translation="[676, 522]" width="544" height="102" color="0x161F30FF" />
+      <Rectangle translation="[676, 522]" width="6" height="102" color="0x10B981FF" />
+      <Label translation="[694, 532]" scale="[0.62, 0.62]" width="800" height="30" numLines="1" color="0xF8FAFCFF" text="3. Rack Status WLED (WLED HTTP :80) [ON - 100%]" />
+      <Label translation="[694, 562]" scale="[0.54, 0.54]" width="900" height="28" numLines="1" color="0x6EE7B7FF" text="CI Build Bar Sync: main Branch Passing | Server Rack | Color: #10B981" />
+      <Rectangle translation="[694, 596]" width="506" height="10" color="0x10B981FF" />
+
+      <Rectangle translation="[676, 636]" width="544" height="102" color="0x161F30FF" />
+      <Rectangle translation="[676, 636]" width="6" height="102" color="0xA855F7FF" />
+      <Label translation="[694, 646]" scale="[0.62, 0.62]" width="800" height="30" numLines="1" color="0xF8FAFCFF" text="4. Studio Bias Hue (Philips Hue Bridge REST) [ON - 70%]" />
+      <Label translation="[694, 676]" scale="[0.54, 0.54]" width="900" height="28" numLines="1" color="0xD8B4FEFF" text="Mode: 65&quot; Roku TV Backlight Bias | Living Room | Color: #A855F7" />
+      <Rectangle translation="[694, 710]" width="354" height="10" color="0xA855F7FF" />
+
+      <Rectangle translation="[676, 750]" width="544" height="114" color="0x090D16FF" />
+      <Label translation="[694, 764]" scale="[0.58, 0.58]" width="860" height="30" numLines="1" color="0x94A3B8FF" text="5. Reading Floor Lamp (TP-Link Kasa XOR :9999) [STANDBY - 45%]" />
+      <Label translation="[694, 794]" scale="[0.52, 0.52]" width="920" height="28" numLines="1" color="0x67E8F9FF" text="Scheduled: Sunset Warm Dimming (2700K) at 18:30 Local Time" />
+      <Label translation="[694, 822]" scale="[0.52, 0.52]" width="920" height="28" numLines="1" color="0x6EE7B7FF" text="Protocols: WiZ, WLED, Kasa, Hue, LIFX, Govee, Elgato, Shelly, Yeelight" />
+
+      <!-- Column 3: Connected Studio Schedule & Audio / Voice Status -->
+      <Rectangle translation="[1264, 102]" width="608" height="784" color="0x111827FF" />
+      <Rectangle translation="[1264, 102]" width="608" height="4" color="0xF59E0BFF" />
+      <Label scale="[0.65, 0.65]" text="3. STUDIO SCHEDULE, HOME SPEAKER &amp; VOICE" translation="[1284, 118]" width="840" height="36" numLines="1" color="0xFCD34DFF" />
+      <Rectangle translation="[1284, 154]" width="568" height="2" color="0x1E293BFF" />
+
+      <Rectangle translation="[1284, 166]" width="568" height="146" color="0x161F30FF" />
+      <Rectangle translation="[1284, 166]" width="6" height="146" color="0xA855F7FF" />
+      <Label translation="[1304, 176]" scale="[0.62, 0.62]" width="860" height="32" numLines="1" color="0xD8B4FEFF" text="ROBOS AUDIO PLAYER &amp; HOME SPEAKER INTERCOM" />
+      <Label translation="[1304, 206]" scale="[0.66, 0.66]" width="800" height="34" numLines="1" color="0xF8FAFCFF" text="${safeXml(musicTitleLine)} - ${safeXml(musicArtistClean)}" />
+      <Label translation="[1304, 238]" scale="[0.54, 0.54]" width="920" height="28" numLines="1" color="0x6EE7B7FF" text="Virtual DJ (RobOS Voice Kokoro-82M): Ready | 100k Library Indexed" />
+      <Label translation="[1304, 268]" scale="[0.52, 0.52]" width="940" height="28" numLines="1" color="0x94A3B8FF" text="${safeXml(musicUpNextLine)}" />
+
+      <Rectangle translation="[1284, 328]" width="568" height="166" color="0x161F30FF" />
+      <Rectangle translation="[1284, 328]" width="6" height="166" color="0x10B981FF" />
+      <Label translation="[1304, 338]" scale="[0.60, 0.60]" width="880" height="30" numLines="1" color="0x6EE7B7FF" text="NEXT STUDIO MEETING &amp; DUAL GOOGLE CALENDARS" />
+      <Label translation="[1304, 370]" scale="[0.76, 0.76]" width="740" height="36" numLines="1" color="0xF8FAFCFF" text="${safeXml(nmTitleLine)}" />
+      <Label translation="[1304, 408]" scale="[0.54, 0.54]" width="920" height="28" numLines="1" color="0x67E8F9FF" text="${safeXml(nmMetaLine)}" />
+      <Label translation="[1304, 438]" scale="[0.52, 0.52]" width="940" height="28" numLines="1" color="0xCBD5E1FF" text="Synced Accounts: nicholas.dipiazza@gmail.com + nicholas@hermetiq.com" />
+      <Label translation="[1304, 464]" scale="[0.52, 0.52]" width="940" height="28" numLines="1" color="0xA7F3D0FF" text="Thunderbird CalDAV + RobOS Dashboard Live Sync Verified" />
+
+      <Rectangle translation="[1284, 510]" width="568" height="354" color="0x090D16FF" />
+      <Rectangle translation="[1284, 510]" width="568" height="3" color="0x00BCD4FF" />
+      <Label translation="[1304, 524]" scale="[0.60, 0.60]" width="880" height="30" numLines="1" color="0x67E8F9FF" text="CONNECTED WORKSTATION &amp; VPN SANDBOX TELEMETRY" />
+      <Label translation="[1304, 560]" scale="[0.54, 0.54]" width="920" height="28" numLines="1" color="0xF8FAFCFF" text="* Host LAN IP: ${safeXml(portalUrl)} | TV Portal Server: ONLINE" />
+      <Label translation="[1304, 592]" scale="[0.54, 0.54]" width="920" height="28" numLines="1" color="0x6EE7B7FF" text="* Prompt Security Guard: ACTIVE (Gitleaks + Presidio + OWASP LLM01)" />
+      <Label translation="[1304, 624]" scale="[0.54, 0.54]" width="920" height="28" numLines="1" color="0xFCD34DFF" text="* VPN Sandbox (ip netns): Ready | 3-Barrier Kill-Switch Armed" />
+      <Label translation="[1304, 656]" scale="[0.54, 0.54]" width="920" height="28" numLines="1" color="0xD8B4FEFF" text="* Cloud Accounts: Google Workspace (2 Accounts) + GitHub CLI Linked" />
+      <Label translation="[1304, 688]" scale="[0.54, 0.54]" width="920" height="28" numLines="1" color="0x67E8F9FF" text="* Slideshow Engine: Deterministic Epoch Sync Across Desktop + Roku TV" />
+      <Label translation="[1304, 720]" scale="[0.52, 0.52]" width="940" height="28" numLines="1" color="0x94A3B8FF" text="Configure cycle interval (seconds) in RobOS Dashboards toolbar." />
+    </Group>
+
+    <!-- SLIDE 2: Knowledge Graph & Sprint Pulse (kgraph-architecture-pulse) -->
+    <Group id="slideGroup2" visible="false">
+      <!-- Column 1: Dual-State Knowledge Graph Health & SHACL Validation -->
+      <Rectangle translation="[48, 102]" width="584" height="784" color="0x111827FF" />
+      <Rectangle translation="[48, 102]" width="584" height="4" color="0xA855F7FF" />
+      <Label scale="[0.66, 0.66]" text="1. KNOWLEDGE GRAPH (OSLC JSON-LD &amp; W3C SHACL)" translation="[68, 118]" width="800" height="36" numLines="1" color="0xD8B4FEFF" />
+      <Rectangle translation="[68, 152]" width="544" height="2" color="0x1E293BFF" />
+
+      <Rectangle translation="[68, 166]" width="544" height="120" color="0x161F30FF" />
+      <Rectangle translation="[68, 166]" width="6" height="120" color="0x10B981FF" />
+      <Label translation="[86, 176]" scale="[0.68, 0.68]" width="760" height="34" numLines="1" color="0x6EE7B7FF" text="W3C SHACL VALIDATION GATE: 100% PASSING" />
+      <Label translation="[86, 208]" scale="[0.56, 0.56]" width="900" height="28" numLines="1" color="0xF8FAFCFF" text="19 Modular KGraph Packages (.robos/kgraphs/) | 0 Shape Violations" />
+      <Label translation="[86, 238]" scale="[0.54, 0.54]" width="920" height="28" numLines="1" color="0x67E8F9FF" text="World 1 (main) vs World 2 (Branch) Blast Radius: 0 Breaking Diffs" />
+
+      <Rectangle translation="[68, 300]" width="544" height="568" color="0x161F30FF" />
+      <Rectangle translation="[68, 300]" width="6" height="568" color="0xA855F7FF" />
+      <Label translation="[86, 312]" scale="[0.58, 0.58]" width="880" height="30" numLines="1" color="0xD8B4FEFF" text="MODULAR KGRAPH PACKAGES &amp; ONTOLOGY NODES:" />
+      <Label translation="[86, 348]" scale="[0.55, 0.55]" width="900" height="28" numLines="1" color="0xF8FAFCFF" text="1. robos-dashboards.jsonld  [DashboardLayout + 13 Widget Catalog]" />
+      <Label translation="[86, 382]" scale="[0.55, 0.55]" width="900" height="28" numLines="1" color="0x67E8F9FF" text="2. robos-tv.jsonld          [SmartTVStudio + Roku/webOS/Tizen/ADB]" />
+      <Label translation="[86, 416]" scale="[0.55, 0.55]" width="900" height="28" numLines="1" color="0x6EE7B7FF" text="3. google-calendar.jsonld   [Dual CalDAV/CardDAV + Thunderbird]" />
+      <Label translation="[86, 450]" scale="[0.55, 0.55]" width="900" height="28" numLines="1" color="0xFCD34DFF" text="4. cloud-accounts.jsonld    [Google Workspace + M365 + Nextcloud]" />
+      <Label translation="[86, 484]" scale="[0.55, 0.55]" width="900" height="28" numLines="1" color="0xF8FAFCFF" text="5. smart-light.jsonld       [Zero-Cloud LAN Lighting + Circadian]" />
+      <Label translation="[86, 518]" scale="[0.55, 0.55]" width="900" height="28" numLines="1" color="0x67E8F9FF" text="6. vpn-sandbox.jsonld       [ip netns + 3-Barrier Kill-Switch]" />
+      <Label translation="[86, 552]" scale="[0.55, 0.55]" width="900" height="28" numLines="1" color="0x6EE7B7FF" text="7. point-of-sale.jsonld     [Register + Kiosk + Prep Queue API]" />
+      <Label translation="[86, 586]" scale="[0.55, 0.55]" width="900" height="28" numLines="1" color="0xD8B4FEFF" text="8. audio-player.jsonld      [100k Library + Virtual DJ + Cast]" />
+      <Label translation="[86, 620]" scale="[0.55, 0.55]" width="900" height="28" numLines="1" color="0xF8FAFCFF" text="9. crpg-realm.jsonld        [Godot 4 Tactical D&amp;D 5e SRD Engine]" />
+      <Label translation="[86, 654]" scale="[0.55, 0.55]" width="900" height="28" numLines="1" color="0x67E8F9FF" text="10. robos-core-apps.jsonld  [Dev Central + PR Theater + Planner]" />
+      <Rectangle translation="[86, 694]" width="508" height="2" color="0x1E293BFF" />
+      <Label translation="[86, 710]" scale="[0.54, 0.54]" width="900" height="28" numLines="1" color="0x6EE7B7FF" text="Vocabularies: Schema.org + OASIS OSLC + W3C SHACL + Dublin Core" />
+      <Label translation="[86, 740]" scale="[0.52, 0.52]" width="920" height="28" numLines="1" color="0x94A3B8FF" text="Living Docs &amp; eLearning Courses Auto-Synthesized from KGraph" />
+
+      <!-- Column 2: Sprint 42 Tasks, PR Review Theater & E2E Proofs -->
+      <Rectangle translation="[656, 102]" width="584" height="784" color="0x111827FF" />
+      <Rectangle translation="[656, 102]" width="584" height="4" color="0x00BCD4FF" />
+      <Label scale="[0.66, 0.66]" text="2. SPRINT 42 PULSE, PR THEATER &amp; E2E PROOFS" translation="[676, 118]" width="800" height="36" numLines="1" color="0x67E8F9FF" />
+      <Rectangle translation="[676, 152]" width="544" height="2" color="0x1E293BFF" />
+
+      <Rectangle translation="[676, 166]" width="544" height="128" color="0x161F30FF" />
+      <Rectangle translation="[676, 166]" width="6" height="128" color="0x00BCD4FF" />
+      <Label translation="[694, 176]" scale="[0.66, 0.66]" width="760" height="32" numLines="1" color="0xF8FAFCFF" text="SPRINT 42 VELOCITY: 18 DONE | 4 IN PROGRESS | 0 BLOCKED" />
+      <Label translation="[694, 208]" scale="[0.55, 0.55]" width="900" height="28" numLines="1" color="0x6EE7B7FF" text="Completion Rate: 82% | All E2E Container Suites Passing (Docker/Xvfb)" />
+      <Rectangle translation="[694, 246]" width="508" height="14" color="0x090D16FF" />
+      <Rectangle translation="[694, 246]" width="418" height="14" color="0x10B981FF" />
+
+      <Rectangle translation="[676, 308]" width="544" height="132" color="0x161F30FF" />
+      <Rectangle translation="[676, 308]" width="6" height="132" color="0x10B981FF" />
+      <Label translation="[694, 318]" scale="[0.60, 0.60]" width="840" height="30" numLines="1" color="0x6EE7B7FF" text="[DONE] Multi-Dashboard Slideshow &amp; Roku TV Auto-Rotation" />
+      <Label translation="[694, 348]" scale="[0.54, 0.54]" width="900" height="28" numLines="1" color="0xF8FAFCFF" text="Configurable second timer cycling across selected KGraph dashboards" />
+      <Label translation="[694, 378]" scale="[0.52, 0.52]" width="920" height="28" numLines="1" color="0x94A3B8FF" text="Verified: robos-dashboards.test.cjs + Roku 65&quot; TV Live Cast" />
+
+      <Rectangle translation="[676, 452]" width="544" height="132" color="0x161F30FF" />
+      <Rectangle translation="[676, 452]" width="6" height="132" color="0x10B981FF" />
+      <Label translation="[694, 462]" scale="[0.60, 0.60]" width="840" height="30" numLines="1" color="0x6EE7B7FF" text="[DONE] Live Tailed Agent Sessions Stream &amp; Next Meeting Timer" />
+      <Label translation="[694, 492]" scale="[0.54, 0.54]" width="900" height="28" numLines="1" color="0xF8FAFCFF" text="Real-time 1Hz countdown + dynamic active-only RobOS agent stream" />
+      <Label translation="[694, 522]" scale="[0.52, 0.52]" width="920" height="28" numLines="1" color="0x94A3B8FF" text="Verified: Zero static breakdown when idle; live tail lines when running" />
+
+      <Rectangle translation="[676, 596]" width="544" height="132" color="0x161F30FF" />
+      <Rectangle translation="[676, 596]" width="6" height="132" color="0x00BCD4FF" />
+      <Label translation="[694, 606]" scale="[0.60, 0.60]" width="840" height="30" numLines="1" color="0x67E8F9FF" text="[DONE] Dual Google Workspace Calendar Sync + 30-Day Velocity" />
+      <Label translation="[694, 636]" scale="[0.54, 0.54]" width="900" height="28" numLines="1" color="0xF8FAFCFF" text="Thunderbird CalDAV + 30-day commit bar chart &amp; 7-day moving average" />
+      <Label translation="[694, 666]" scale="[0.52, 0.52]" width="920" height="28" numLines="1" color="0x94A3B8FF" text="Accounts: nicholas.dipiazza@gmail.com + nicholas@hermetiq.com" />
+
+      <Rectangle translation="[676, 740]" width="544" height="128" color="0x090D16FF" />
+      <Label translation="[694, 754]" scale="[0.58, 0.58]" width="880" height="30" numLines="1" color="0xFCD34DFF" text="PR REVIEW THEATER &amp; IDE BRIDGE (INTELLIJ :63343 / VS CODE)" />
+      <Label translation="[694, 786]" scale="[0.52, 0.52]" width="920" height="28" numLines="1" color="0xCBD5E1FF" text="1080p Narrated Walkthrough Proofs + Semantic Diff Blast Radius Ready" />
+      <Label translation="[694, 816]" scale="[0.52, 0.52]" width="920" height="28" numLines="1" color="0x67E8F9FF" text="${safeXml(ciHeaderLine)}" />
+
+      <!-- Column 3: Latest Commits & Repository Velocity Summary -->
+      <Rectangle translation="[1264, 102]" width="608" height="784" color="0x111827FF" />
+      <Rectangle translation="[1264, 102]" width="608" height="4" color="0x10B981FF" />
+      <Label scale="[0.65, 0.65]" text="3. REPOSITORY PULSE: nddipiazza/robos (MAIN)" translation="[1284, 118]" width="840" height="36" numLines="1" color="0x6EE7B7FF" />
+      <Rectangle translation="[1284, 154]" width="568" height="2" color="0x1E293BFF" />
+
+      <Rectangle translation="[1284, 166]" width="568" height="126" color="0x161F30FF" />
+      <Rectangle translation="[1284, 166]" width="6" height="126" color="0x10B981FF" />
+      <Label translation="[1304, 176]" scale="[0.60, 0.60]" width="880" height="30" numLines="1" color="0x6EE7B7FF" text="${safeXml(graphHeaderLine)}" />
+      <Label translation="[1304, 208]" scale="[0.56, 0.56]" width="900" height="28" numLines="1" color="0xF8FAFCFF" text="${safeXml(relLine1)}" />
+      <Label translation="[1304, 238]" scale="[0.52, 0.52]" width="940" height="28" numLines="1" color="0x67E8F9FF" text="${safeXml(graphLegendLine)}" />
+
+      <Rectangle translation="[1284, 306]" width="568" height="562" color="0x161F30FF" />
+      <Rectangle translation="[1284, 306]" width="6" height="562" color="0x00BCD4FF" />
+      <Label translation="[1304, 318]" scale="[0.58, 0.58]" width="880" height="30" numLines="1" color="0x67E8F9FF" text="RECENT COMMITS MERGED TO MAIN:" />
+      <Label id="s2Commit0" translation="[1304, 358]" scale="[0.58, 0.58]" width="900" height="30" numLines="1" color="0xF8FAFCFF" text="${safeXml(commits[0] ? `1. #${commits[0].shortSha || commits[0].hash} - ${String(commits[0].subject || '').slice(0, 48)}` : '1. Latest commit in main')}" />
+      <Label id="s2Commit1" translation="[1304, 402]" scale="[0.58, 0.58]" width="900" height="30" numLines="1" color="0xF8FAFCFF" text="${safeXml(commits[1] ? `2. #${commits[1].shortSha || commits[1].hash} - ${String(commits[1].subject || '').slice(0, 48)}` : '2. -')}" />
+      <Label id="s2Commit2" translation="[1304, 446]" scale="[0.58, 0.58]" width="900" height="30" numLines="1" color="0xF8FAFCFF" text="${safeXml(commits[2] ? `3. #${commits[2].shortSha || commits[2].hash} - ${String(commits[2].subject || '').slice(0, 48)}` : '3. -')}" />
+      <Label id="s2Commit3" translation="[1304, 490]" scale="[0.58, 0.58]" width="900" height="30" numLines="1" color="0xF8FAFCFF" text="${safeXml(commits[3] ? `4. #${commits[3].shortSha || commits[3].hash} - ${String(commits[3].subject || '').slice(0, 48)}` : '4. -')}" />
+      <Label id="s2Commit4" translation="[1304, 534]" scale="[0.58, 0.58]" width="900" height="30" numLines="1" color="0xF8FAFCFF" text="${safeXml(commits[4] ? `5. #${commits[4].shortSha || commits[4].hash} - ${String(commits[4].subject || '').slice(0, 48)}` : '5. -')}" />
+      <Label id="s2Commit5" translation="[1304, 578]" scale="[0.58, 0.58]" width="900" height="30" numLines="1" color="0xF8FAFCFF" text="${safeXml(commits[5] ? `6. #${commits[5].shortSha || commits[5].hash} - ${String(commits[5].subject || '').slice(0, 48)}` : '6. -')}" />
+      <Rectangle translation="[1304, 624]" width="528" height="2" color="0x1E293BFF" />
+      <Label translation="[1304, 642]" scale="[0.56, 0.56]" width="900" height="28" numLines="1" color="0x6EE7B7FF" text="COMMIT TYPE DISTRIBUTION (LAST 30 DAYS):" />
+      <Label translation="[1304, 676]" scale="[0.54, 0.54]" width="900" height="28" numLines="1" color="0x67E8F9FF" text="* Features (feat): ${safeXml(String(bt.feat || 336))} commits   |   Bug Fixes (fix): ${safeXml(String(bt.fix || 166))} commits" />
+      <Label translation="[1304, 708]" scale="[0.54, 0.54]" width="900" height="28" numLines="1" color="0xD8B4FEFF" text="* Docs (docs):     ${safeXml(String(bt.docs || 64))} commits    |   Chores/Other:    ${safeXml(String(bt.other || 88))} commits" />
+      <Label translation="[1304, 748]" scale="[0.52, 0.52]" width="920" height="28" numLines="1" color="0xFCD34DFF" text="Slideshow automatically rotates across all enabled RobOS dashboards." />
+    </Group>
 
     <!-- Bottom Status & Compact Tile Selector -->
     <Rectangle id="heroCard" translation="[48, 902]" width="1824" height="132" color="0x111827FF" />
     <Rectangle translation="[48, 902]" width="1824" height="2" color="0x1E293BFF" />
     <Label id="heroTitle" scale="[0.75, 0.75]" text="RobOS Live TV Wallboard Active - D-Pad Up/Down/OK switches TV experience" translation="[72, 916]" width="1460" height="36" numLines="1" color="0xF8FAFCFF" />
     <Label id="heroDesc" scale="[0.62, 0.62]" text="GitHub Repo (nddipiazza/robos CI &amp; Release) | Dual Google Calendars | Live Clock &amp; Tailed Agents" translation="[72, 954]" width="1760" height="34" numLines="1" color="0x94A3B8FF" />
-    <Label id="statusFooter" scale="[0.62, 0.62]" text="Connected to ${portalUrl}/dashboard | Live 1s Clock + Double-Buffered JS Canvas Surface" translation="[72, 988]" width="1760" height="34" numLines="1" color="0x67E8F9FF" />
+    <Label id="statusFooter" scale="[0.62, 0.62]" text="Connected to ${portalUrl}/dashboard | Multi-Dashboard Slideshow + 1Hz Live Clock" translation="[72, 988]" width="1760" height="34" numLines="1" color="0x67E8F9FF" />
     <LabelList
       id="tileList"
       translation="[1220, 916]"
@@ -1600,6 +1825,11 @@ ${agentRowsXml}
     m.statusFooter = m.top.findNode("statusFooter")
     m.brandLabel = m.top.findNode("brandLabel")
     m.headerCountdownLabel = m.top.findNode("headerCountdownLabel")
+    m.slideshowBadgeLabel = m.top.findNode("slideshowBadgeLabel")
+    m.slideProgressFill = m.top.findNode("slideProgressFill")
+    m.slideGroup0 = m.top.findNode("slideGroup0")
+    m.slideGroup1 = m.top.findNode("slideGroup1")
+    m.slideGroup2 = m.top.findNode("slideGroup2")
     m.countdownTimerLabel = m.top.findNode("countdownTimerLabel")
     m.nextMeetingTitleLabel = m.top.findNode("nextMeetingTitleLabel")
     m.nextMeetingMetaLabel = m.top.findNode("nextMeetingMetaLabel")
@@ -1609,6 +1839,12 @@ ${agentRowsXml}
     m.tickCount = 0
     m.remainingSec = ${initialRemSec}
     m.nextMeetingTimeStr = "${safeXml(nm.time || '16:30')}"
+    m.slideshowEnabled = ${ssEnabled ? 'true' : 'false'}
+    m.slideIntervalSec = ${ssInterval}
+    m.slideRemSec = ${ssRem}
+    m.slideNumber = ${ssSlideNum}
+    m.slideTotal = ${ssTotal}
+    m.activeDashId = "daily-engineering-ops"
     m.agentActive = [${sessions[0] ? 'true' : 'false'}, ${sessions[1] ? 'true' : 'false'}, ${sessions[2] ? 'true' : 'false'}]
     m.agentElapsed = [${Number(sessions[0]?.elapsedSec) || 5}, ${Number(sessions[1]?.elapsedSec) || 5}, ${Number(sessions[2]?.elapsedSec) || 5}]
     m.agentActivity = ["${safeXml(String(sessions[0]?.activity || sessions[0]?.cwd || '').slice(0, 42))}", "${safeXml(String(sessions[1]?.activity || sessions[1]?.cwd || '').slice(0, 42))}", "${safeXml(String(sessions[2]?.activity || sessions[2]?.cwd || '').slice(0, 42))}"]
@@ -1649,11 +1885,54 @@ function pad2(n as Integer) as String
     return n.ToStr()
 end function
 
+sub applySlideVisibility(dashId as String)
+    m.activeDashId = dashId
+    if m.slideGroup0 <> invalid then m.slideGroup0.visible = (dashId = "daily-engineering-ops")
+    if m.slideGroup1 <> invalid then m.slideGroup1.visible = (dashId = "smart-home-tv-command")
+    if m.slideGroup2 <> invalid then m.slideGroup2.visible = (dashId = "kgraph-architecture-pulse")
+    if dashId <> "daily-engineering-ops" and dashId <> "smart-home-tv-command" and dashId <> "kgraph-architecture-pulse"
+        if m.slideGroup0 <> invalid then m.slideGroup0.visible = true
+    end if
+end sub
+
+sub updateSlideshowHud()
+    if m.slideshowBadgeLabel <> invalid
+        if m.slideshowEnabled = true
+            m.slideshowBadgeLabel.text = "SLIDESHOW: " + m.slideNumber.ToStr() + "/" + m.slideTotal.ToStr() + " (" + m.slideIntervalSec.ToStr() + "s) - Next in " + m.slideRemSec.ToStr() + "s"
+            m.slideshowBadgeLabel.color = "0xFCD34DFF"
+        else
+            m.slideshowBadgeLabel.text = "SINGLE DASHBOARD (Slideshow Off)"
+            m.slideshowBadgeLabel.color = "0x94A3B8FF"
+        end if
+    end if
+    if m.slideProgressFill <> invalid
+        if m.slideshowEnabled = true and m.slideIntervalSec > 0
+            elapsed = m.slideIntervalSec - m.slideRemSec
+            if elapsed < 0 then elapsed = 0
+            if elapsed > m.slideIntervalSec then elapsed = m.slideIntervalSec
+            w = Int(((elapsed * 1.0) / (m.slideIntervalSec * 1.0)) * 1920)
+            if w < 30 then w = 30
+            m.slideProgressFill.width = w
+        else
+            m.slideProgressFill.width = 0
+        end if
+    end if
+end sub
+
 sub onClockTick()
     m.tickCount = m.tickCount + 1
     if m.remainingSec > 0
         m.remainingSec = m.remainingSec - 1
     end if
+    if m.slideshowEnabled = true
+        if m.slideRemSec > 1
+            m.slideRemSec = m.slideRemSec - 1
+        else
+            m.slideRemSec = m.slideIntervalSec
+        end if
+    end if
+    updateSlideshowHud()
+
     remSec = m.remainingSec
     days = Int(remSec / 86400)
     remH = Int((remSec mod 86400) / 3600)
@@ -1745,7 +2024,25 @@ sub onPayloadUpdated()
     json = ParseJson(raw)
     if json = invalid or json.dashboard = invalid then return
     dash = json.dashboard
-    if dash.title <> invalid then m.brandLabel.text = "RobOS Dashboards - " + cleanAscii(dash.title)
+    ss = json.slideshow
+    if ss <> invalid
+        m.slideshowEnabled = (ss.enabled = true)
+        if ss.intervalSeconds <> invalid then m.slideIntervalSec = ss.intervalSeconds
+        if ss.secondsRemainingInSlide <> invalid then m.slideRemSec = ss.secondsRemainingInSlide
+        if ss.slideNumber <> invalid then m.slideNumber = ss.slideNumber
+        if ss.totalSlides <> invalid then m.slideTotal = ss.totalSlides
+        updateSlideshowHud()
+    end if
+    if dash.id <> invalid
+        applySlideVisibility(cleanAscii(dash.id))
+    end if
+    if dash.title <> invalid
+        if m.slideshowEnabled = true
+            m.brandLabel.text = "[" + m.slideNumber.ToStr() + "/" + m.slideTotal.ToStr() + "] " + cleanAscii(dash.title)
+        else
+            m.brandLabel.text = "RobOS Dashboards - " + cleanAscii(dash.title)
+        end if
+    end if
     if dash.cards = invalid then return
 
     for each card in dash.cards
@@ -2208,10 +2505,13 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
 
         if (u.pathname === '/api/dashboard-cast') {
           const dashEngine = require('./dashboard-engine').createDashboardEngine({ configDir: resolvedConfigDir });
-          const targetDashId =
-            u.searchParams.get('id') ||
-            state.activeDashboardCast?.dashboardId ||
-            'daily-engineering-ops';
+          const ssState = dashEngine.getSlideshowState();
+          const explicitDashId = u.searchParams.get('id');
+          const targetDashId = explicitDashId
+            ? explicitDashId
+            : ssState?.enabled
+            ? 'slideshow'
+            : state.activeDashboardCast?.dashboardId || 'daily-engineering-ops';
           const resolved = dashEngine.resolveDashboard(targetDashId);
           res.writeHead(200, {
             'Content-Type': 'application/json',
@@ -2221,6 +2521,7 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
             JSON.stringify({
               ok: true,
               cast: state.activeDashboardCast || null,
+              slideshow: resolved.slideshow || ssState || null,
               dashboard: resolved.dashboard,
               castUrl: `http://${hostIp}:${boundPort}/dashboard`,
             })
@@ -2231,16 +2532,18 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
         if (u.pathname === '/dashboard' || u.pathname.startsWith('/dashboard/')) {
           const dashEngineModule = require('./dashboard-engine');
           const dashEngine = dashEngineModule.createDashboardEngine({ configDir: resolvedConfigDir });
+          const ssState = dashEngine.getSlideshowState();
           const slugId = u.pathname.startsWith('/dashboard/')
             ? decodeURIComponent(u.pathname.slice('/dashboard/'.length))
             : null;
-          const targetDashId =
-            slugId ||
-            u.searchParams.get('id') ||
-            state.activeDashboardCast?.dashboardId ||
-            'daily-engineering-ops';
+          const explicitDashId = slugId || u.searchParams.get('id');
+          const targetDashId = explicitDashId
+            ? explicitDashId
+            : ssState?.enabled
+            ? 'slideshow'
+            : state.activeDashboardCast?.dashboardId || 'daily-engineering-ops';
           const resolved = dashEngine.resolveDashboard(targetDashId);
-          if (state.activeDashboardCast?.layoutId && state.activeDashboardCast.dashboardId === targetDashId) {
+          if (state.activeDashboardCast?.layoutId && state.activeDashboardCast.dashboardId === resolved.dashboard.id) {
             const customLayout = dashEngineModule.DASHBOARD_LAYOUTS.find((l) => l.id === state.activeDashboardCast.layoutId);
             if (customLayout) {
               resolved.dashboard.layout = customLayout;

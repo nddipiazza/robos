@@ -81,6 +81,32 @@ async function renderAll() {
   document.getElementById('active-kgraph-badge').textContent =
     dash.kgraphId || `urn:robos:dashboard:${dash.id}`;
 
+  const ss = state.slideshow || dash.slideshow || { enabled: false, intervalSeconds: 15, dashboardIds: [] };
+  const toggleBtn = document.getElementById('btn-toggle-slideshow');
+  if (toggleBtn) {
+    toggleBtn.textContent = ss.enabled
+      ? `🎞️ Slideshow: ON (${ss.slideNumber || 1}/${ss.totalSlides || 3})`
+      : '🎞️ Slideshow: OFF';
+    toggleBtn.className = ss.enabled ? 'btn btn-sm btn-primary' : 'btn btn-sm';
+  }
+  const secInput = document.getElementById('input-slideshow-seconds');
+  if (secInput && document.activeElement !== secInput) {
+    secInput.value = String(ss.intervalSeconds || 15);
+  }
+  const builderSecInput = document.getElementById('input-builder-slideshow-sec');
+  if (builderSecInput && document.activeElement !== builderSecInput) {
+    builderSecInput.value = String(ss.intervalSeconds || 15);
+  }
+  const ssPill = document.getElementById('slideshow-status-pill');
+  if (ssPill) {
+    if (ss.enabled) {
+      ssPill.style.display = 'inline-block';
+      ssPill.textContent = `🎞️ Slide ${ss.slideNumber}/${ss.totalSlides} (${ss.intervalSeconds}s) · Next in ${ss.secondsRemainingInSlide}s → ${ss.nextDashboardTitle}`;
+    } else {
+      ssPill.style.display = 'none';
+    }
+  }
+
   const castInd = document.getElementById('tv-cast-live-indicator');
   if (castInd) {
     if (state.activeDashboardCast && state.activeDashboardCast.active) {
@@ -96,10 +122,33 @@ async function renderAll() {
     mainDashEl.dashboard = dash;
   }
 
+  renderSlideshowChecklist(ss);
   renderLayoutsCatalog(activeLayoutId);
   renderWidgetCatalog();
   await renderEmbedAndKGraph(dash);
   renderTvCastTab();
+}
+
+function renderSlideshowChecklist(ss = {}) {
+  const listEl = document.getElementById('slideshow-dashboards-checklist');
+  if (!listEl) return;
+  const selectedIds = new Set(Array.isArray(ss.dashboardIds) ? ss.dashboardIds : []);
+  listEl.innerHTML = (state.allDashboards || [])
+    .map(
+      (d, idx) => `
+      <label class="item-row" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" class="js-slideshow-dash-cb" value="${esc(d.id)}" ${selectedIds.size === 0 || selectedIds.has(d.id) ? 'checked' : ''} />
+          <div>
+            <div style="font-weight:700;font-size:12.5px;">Slide ${idx + 1}: ${esc(d.title)}</div>
+            <div style="font-size:11px;color:#8b949e;">Layout: ${esc(d.layout?.title || d.layoutId)} · ${(d.cards || []).length} cards</div>
+          </div>
+        </div>
+        <span class="badge">${esc(d.id)}</span>
+      </label>
+    `
+    )
+    .join('');
 }
 
 function renderLayoutsCatalog(activeLayoutId) {
@@ -449,18 +498,127 @@ async function init() {
     }
   };
 
+  // Slideshow toolbar controls
+  const toggleSlideshowBtn = document.getElementById('btn-toggle-slideshow');
+  if (toggleSlideshowBtn && window.robosDashboards.configureSlideshow) {
+    toggleSlideshowBtn.onclick = async () => {
+      const curEnabled = Boolean(state.slideshow?.enabled);
+      const sec = Math.max(3, Math.min(3600, Number(document.getElementById('input-slideshow-seconds')?.value) || 15));
+      const res = await window.robosDashboards.configureSlideshow({
+        enabled: !curEnabled,
+        intervalSeconds: sec,
+      });
+      if (res && res.ok) {
+        state = { ...state, ...res };
+        await renderAll();
+        showBanner(
+          res.slideshow?.enabled
+            ? `Started Multi-Dashboard Slideshow (cycling ${res.slideshow.totalSlides} dashboards every ${res.slideshow.intervalSeconds}s).`
+            : 'Paused Multi-Dashboard Slideshow.'
+        );
+      }
+    };
+  }
+
+  const secInputEl = document.getElementById('input-slideshow-seconds');
+  if (secInputEl && window.robosDashboards.configureSlideshow) {
+    secInputEl.onchange = async () => {
+      const sec = Math.max(3, Math.min(3600, Number(secInputEl.value) || 15));
+      const res = await window.robosDashboards.configureSlideshow({
+        intervalSeconds: sec,
+      });
+      if (res && res.ok) {
+        state = { ...state, ...res };
+        await renderAll();
+        showBanner(`Updated slideshow cycle interval to ${sec} seconds.`);
+      }
+    };
+  }
+
+  const prevSlideBtn = document.getElementById('btn-slide-prev');
+  if (prevSlideBtn && window.robosDashboards.stepSlideshow) {
+    prevSlideBtn.onclick = async () => {
+      const res = await window.robosDashboards.stepSlideshow({ direction: -1 });
+      if (res && res.ok) {
+        state = { ...state, ...res };
+        await renderAll();
+        showBanner(`Switched to Slide ${res.slideshow?.slideNumber}/${res.slideshow?.totalSlides}: "${res.dashboard?.title}".`);
+      }
+    };
+  }
+
+  const nextSlideBtn = document.getElementById('btn-slide-next');
+  if (nextSlideBtn && window.robosDashboards.stepSlideshow) {
+    nextSlideBtn.onclick = async () => {
+      const res = await window.robosDashboards.stepSlideshow({ direction: 1 });
+      if (res && res.ok) {
+        state = { ...state, ...res };
+        await renderAll();
+        showBanner(`Switched to Slide ${res.slideshow?.slideNumber}/${res.slideshow?.totalSlides}: "${res.dashboard?.title}".`);
+      }
+    };
+  }
+
+  const saveStartSsBtn = document.getElementById('btn-save-start-slideshow');
+  if (saveStartSsBtn && window.robosDashboards.configureSlideshow) {
+    saveStartSsBtn.onclick = async () => {
+      const checkedIds = Array.from(document.querySelectorAll('.js-slideshow-dash-cb:checked')).map((el) => el.value);
+      const sec = Math.max(3, Math.min(3600, Number(document.getElementById('input-builder-slideshow-sec')?.value) || 15));
+      const res = await window.robosDashboards.configureSlideshow({
+        enabled: true,
+        intervalSeconds: sec,
+        dashboardIds: checkedIds.length > 0 ? checkedIds : undefined,
+      });
+      if (res && res.ok) {
+        state = { ...state, ...res };
+        await renderAll();
+        showBanner(`Started Multi-Dashboard Slideshow (${res.slideshow?.totalSlides} dashboards, cycling every ${sec}s).`);
+      }
+    };
+  }
+
+  const stopSsBtn = document.getElementById('btn-stop-slideshow');
+  if (stopSsBtn && window.robosDashboards.configureSlideshow) {
+    stopSsBtn.onclick = async () => {
+      const res = await window.robosDashboards.configureSlideshow({ enabled: false });
+      if (res && res.ok) {
+        state = { ...state, ...res };
+        await renderAll();
+        showBanner('Stopped Multi-Dashboard Slideshow.');
+      }
+    };
+  }
+
   const initial = await window.robosDashboards.getOverview();
   if (initial && initial.ok) {
     state = { ...state, ...initial };
     await renderAll();
   }
 
-  // Live dynamic polling for in-progress agent sessions, music, and countdown (every 2s)
+  // Live dynamic polling for slideshow transitions, in-progress agent sessions, music, and countdown (every 1s)
   setInterval(async () => {
     try {
-      const fresh = await window.robosDashboards.getOverview(state.dashboard?.id);
+      const prevDashId = state.dashboard?.id;
+      const queryDashId = state.slideshow?.enabled ? undefined : prevDashId;
+      const fresh = await window.robosDashboards.getOverview(queryDashId);
       if (!fresh || !fresh.ok || !fresh.dashboard) return;
+      state.slideshow = fresh.slideshow;
+      if (fresh.dashboard.id !== prevDashId) {
+        state = { ...state, ...fresh };
+        await renderAll();
+        return;
+      }
       state.dashboard = fresh.dashboard;
+      const ss = fresh.slideshow;
+      const ssPill = document.getElementById('slideshow-status-pill');
+      if (ssPill) {
+        if (ss && ss.enabled) {
+          ssPill.style.display = 'inline-block';
+          ssPill.textContent = `🎞️ Slide ${ss.slideNumber}/${ss.totalSlides} (${ss.intervalSeconds}s) · Next in ${ss.secondsRemainingInSlide}s → ${ss.nextDashboardTitle}`;
+        } else {
+          ssPill.style.display = 'none';
+        }
+      }
       const cards = Array.isArray(fresh.dashboard.cards) ? fresh.dashboard.cards : [];
       const agentCard = cards.find((c) => c.widgetType === 'agent-sessions');
       if (agentCard && window.RobOSDashboardUI) {
@@ -470,7 +628,7 @@ async function init() {
         }
       }
     } catch {}
-  }, 2000);
+  }, 1000);
 }
 
 init();

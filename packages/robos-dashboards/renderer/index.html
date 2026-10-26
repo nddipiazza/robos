@@ -29,6 +29,13 @@
           <label for="select-active-dashboard" class="sr-label">Dashboard</label>
           <select id="select-active-dashboard" class="select select-sm" title="Select Active Dashboard"></select>
         </div>
+        <div class="toolbar-field" style="display:flex;align-items:center;gap:4px;background:#161b22;border:1px solid #30363d;border-radius:6px;padding:2px 6px;">
+          <button type="button" class="btn btn-sm" id="btn-toggle-slideshow" title="Cycle through multiple dashboards like a slideshow">🎞️ Slideshow: OFF</button>
+          <input type="number" id="input-slideshow-seconds" class="input input-sm" min="3" max="3600" value="15" style="width:58px;text-align:center;" title="Slideshow cycle interval in seconds" />
+          <span style="font-size:11px;color:#8b949e;">sec</span>
+          <button type="button" class="btn btn-sm" id="btn-slide-prev" title="Previous Dashboard Slide">◀</button>
+          <button type="button" class="btn btn-sm" id="btn-slide-next" title="Next Dashboard Slide">▶</button>
+        </div>
         <div class="toolbar-field">
           <label for="select-active-layout" class="sr-label">Card Layout</label>
           <select id="select-active-layout" class="select select-sm" title="Switch KGraph Card Layout"></select>
@@ -59,6 +66,7 @@
             <strong id="active-dashboard-heading">Daily Engineering &amp; Agent Ops Dashboard</strong>
             <span class="badge" id="active-layout-badge">Mission Control 3-Column</span>
             <span class="badge badge-green" id="active-kgraph-badge">urn:robos:dashboard:daily-engineering-ops</span>
+            <span class="badge" id="slideshow-status-pill" style="display:none;background:rgba(245,158,11,0.18);color:#fcd34d;border:1px solid #f59e0b;">🎞️ Slideshow Active</span>
           </div>
           <div id="tv-cast-live-indicator" class="cast-pill">Ready for Smart TV Cast</div>
         </div>
@@ -117,6 +125,18 @@
             <div style="margin-top:12px;display:flex;gap:8px;">
               <button type="button" class="btn btn-primary" id="btn-create-dashboard">+ Create Dashboard</button>
               <button type="button" class="btn btn-danger" id="btn-delete-dashboard">Delete Current Dashboard</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <h3 class="sub-heading">🎞️ Multi-Dashboard Slideshow Rotation (Auto-Cycle)</h3>
+            <p class="muted-text">Select multiple dashboards to cycle through like a slideshow on your desktop and Smart TV wallboard:</p>
+            <div id="slideshow-dashboards-checklist" class="list" style="margin-top:8px;"></div>
+            <div class="form-row" style="margin-top:10px;">
+              <label for="input-builder-slideshow-sec" style="font-size:12px;color:#c9d1d9;">Cycle Interval (seconds):</label>
+              <input type="number" id="input-builder-slideshow-sec" class="input input-sm" min="3" max="3600" value="15" style="width:80px;" />
+              <button type="button" class="btn btn-sm btn-primary" id="btn-save-start-slideshow">🎞️ Save &amp; Start Slideshow</button>
+              <button type="button" class="btn btn-sm" id="btn-stop-slideshow">Stop Slideshow</button>
             </div>
 
             <div class="divider"></div>
