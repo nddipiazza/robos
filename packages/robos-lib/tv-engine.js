@@ -1225,6 +1225,9 @@ tizen run -p robostv001.RobOSTV
     const calendarCard = dashCards.find(
       (c) => (c.componentTag || c.widgetTag) === 'robos-widget-calendar-today'
     );
+    const musicCard = dashCards.find(
+      (c) => (c.componentTag || c.widgetTag) === 'robos-widget-music-player'
+    );
     const clockCard = dashCards.find(
       (c) => (c.componentTag || c.widgetTag) === 'robos-widget-live-clock'
     );
@@ -1266,7 +1269,22 @@ tizen run -p robostv001.RobOSTV
       (commitsCard && commitsCard.liveData && commitsCard.liveData.commits) ||
       []
     ).slice(0, 8);
-    const events = ((calendarCard && calendarCard.liveData && calendarCard.liveData.events) || []).slice(0, 6);
+    const events = ((calendarCard && calendarCard.liveData && calendarCard.liveData.events) || []).slice(0, 5);
+    const musicData = (musicCard && musicCard.liveData) || {
+      title: 'Ambience & Music',
+      artist: "Baldur's Gate 3",
+      album: 'video game music',
+      artistAlbum: "Baldur's Gate 3 - video game music",
+      elapsed: '24:45',
+      duration: '46:07',
+      progressPct: 54,
+      isPlaying: true,
+      output: 'Desktop (Local Audio)',
+      upNext: [
+        { title: 'Lux Aeterna (Requiem for a Dream) 4', artist: 'Clint Mansell' },
+        { title: '8BitStereo mixed', artist: 'Copy of Dragon Warrior (NES) Soundtrack' },
+      ],
+    };
     const sessions = ((agentsCard && agentsCard.liveData && agentsCard.liveData.sessions) || []).slice(0, 3);
     const clockData = (clockCard && clockCard.liveData) || {
       time24: new Date().toLocaleTimeString('en-US', { hour12: false }),
@@ -1301,9 +1319,29 @@ tizen run -p robostv001.RobOSTV
     <Rectangle translation="[68, ${y + 52}]" width="544" height="1" color="0x1E293BFF" />`;
     }).join('\n');
 
-    const calendarRowsXml = Array.from({ length: 6 }, (_, i) => {
+    const musicPlaying = Boolean(musicData.isPlaying !== false);
+    const musicStatusLine = `NOW PLAYING [${musicPlaying ? 'PLAYING' : 'PAUSED'}]  ${musicData.elapsed || '24:45'} / ${musicData.duration || '46:07'}  |  ${musicData.output || 'Local Audio'}`;
+    const musicTitleLine = `${musicData.title || 'Ambience & Music'}`;
+    const musicArtistClean = String(musicData.artistAlbum || `${musicData.artist || ''} - ${musicData.album || ''}`).replace(/[^\x20-\x7E]/g, '-');
+    const musicArtistLine = `${musicArtistClean}  (${musicData.source || 'Google Drive'})`;
+    const musicPct = Math.max(4, Math.min(100, Number(musicData.progressPct) || 54));
+    const musicBarW = Math.max(16, Math.round((musicPct / 100) * 512));
+    const upNextArr = Array.isArray(musicData.upNext) ? musicData.upNext : [];
+    const musicUpNextLine = upNextArr.length
+      ? `Up Next: ${upNextArr.map((u) => `${u.title} (${u.artist})`).join(' | ')}`
+      : 'Up Next: Lux Aeterna (Clint Mansell) | 8BitStereo mixed';
+
+    const eqBarsXml = Array.from({ length: 8 }, (_, i) => {
+      const bx = 1116 + i * 11;
+      const bh = 10 + ((i * 7) % 22);
+      const by = 228 - bh;
+      const bColor = i % 3 === 0 ? '0xA855F7FF' : i % 2 === 0 ? '0x00BCD4FF' : '0x10B981FF';
+      return `    <Rectangle id="eqBar${i}" translation="[${bx}, ${by}]" width="7" height="${bh}" color="${bColor}" />`;
+    }).join('\n');
+
+    const calendarRowsXml = Array.from({ length: 5 }, (_, i) => {
       const ev = events[i];
-      const y = 170 + i * 114;
+      const y = 310 + i * 112;
       const status = String(ev?.status || 'upcoming').toUpperCase();
       const accEmail = ev?.accountEmail || ev?.calendar || 'nicholas.dipiazza@gmail.com';
       const isSecondCal = String(accEmail).toLowerCase().includes('hermetiq') || ev?.color === '#10b981';
@@ -1312,11 +1350,11 @@ tizen run -p robostv001.RobOSTV
       const timeText = ev ? `${ev.time}  [${status}]  (${accEmail})` : '';
       const titleText = ev ? String(ev.title || '').slice(0, 44) : '';
       const locText = ev ? `Calendar: ${accEmail} | ${ev.location || 'Workspace'}` : '';
-      return `    <Rectangle id="calBg${i}" translation="[676, ${y}]" width="544" height="100" color="0x161F30FF" visible="${ev ? 'true' : 'false'}" />
-    <Rectangle id="calStripe${i}" translation="[676, ${y}]" width="6" height="100" color="${stripeColor}" visible="${ev ? 'true' : 'false'}" />
-    <Label id="calTime${i}" translation="[696, ${y + 10}]" scale="[0.56, 0.56]" width="900" height="34" numLines="1" color="${timeColor}" text="${safeXml(timeText)}" />
-    <Label id="calTitle${i}" translation="[696, ${y + 38}]" scale="[0.68, 0.68]" width="740" height="36" numLines="1" color="0xF8FAFCFF" text="${safeXml(titleText)}" />
-    <Label id="calLoc${i}" translation="[696, ${y + 68}]" scale="[0.55, 0.55]" width="900" height="34" numLines="1" color="0x94A3B8FF" text="${safeXml(locText)}" />`;
+      return `    <Rectangle id="calBg${i}" translation="[676, ${y}]" width="544" height="98" color="0x161F30FF" visible="${ev ? 'true' : 'false'}" />
+    <Rectangle id="calStripe${i}" translation="[676, ${y}]" width="6" height="98" color="${stripeColor}" visible="${ev ? 'true' : 'false'}" />
+    <Label id="calTime${i}" translation="[696, ${y + 8}]" scale="[0.56, 0.56]" width="900" height="32" numLines="1" color="${timeColor}" text="${safeXml(timeText)}" />
+    <Label id="calTitle${i}" translation="[696, ${y + 36}]" scale="[0.66, 0.66]" width="740" height="34" numLines="1" color="0xF8FAFCFF" text="${safeXml(titleText)}" />
+    <Label id="calLoc${i}" translation="[696, ${y + 66}]" scale="[0.54, 0.54]" width="900" height="32" numLines="1" color="0x94A3B8FF" text="${safeXml(locText)}" />`;
     }).join('\n');
 
     const agentRowsXml = Array.from({ length: 3 }, (_, i) => {
@@ -1415,11 +1453,23 @@ end sub
     <Label id="ghCommitsSubheader" translation="[68, 346]" scale="[0.56, 0.56]" width="900" height="28" numLines="1" color="0x94A3B8FF" text="LATEST ROBOS COMMITS IN MAIN:" />
 ${commitRowsXml}
 
-    <!-- Column 2: Calendar Events for the Day (Both Google Calendars) -->
+    <!-- Column 2: Now Playing Music + Calendar Events for the Day (Both Google Calendars) -->
     <Rectangle id="colCalendarCard" translation="[656, 102]" width="584" height="784" color="0x111827FF" />
     <Rectangle translation="[656, 102]" width="584" height="4" color="0x10B981FF" />
-    <Label id="colCalendarHeader" scale="[0.66, 0.66]" text="2. CALENDARS: nicholas.dipiazza@gmail.com + nicholas@hermetiq.com" translation="[676, 120]" width="820" height="36" numLines="1" color="0x6EE7B7FF" />
-    <Rectangle translation="[676, 154]" width="544" height="2" color="0x1E293BFF" />
+    <Label id="colCalendarHeader" scale="[0.65, 0.65]" text="2. NOW PLAYING MUSIC &amp; DUAL GOOGLE CALENDARS" translation="[676, 118]" width="820" height="36" numLines="1" color="0x6EE7B7FF" />
+    <Rectangle translation="[676, 152]" width="544" height="2" color="0x1E293BFF" />
+
+    <!-- Now Playing Music Widget Box -->
+    <Rectangle id="musicCardBg" translation="[676, 162]" width="544" height="136" color="0x161F30FF" />
+    <Rectangle id="musicStripe" translation="[676, 162]" width="6" height="136" color="0xA855F7FF" />
+    <Label id="musicStatusLabel" translation="[694, 170]" scale="[0.54, 0.54]" width="760" height="28" numLines="1" color="0x6EE7B7FF" text="${safeXml(musicStatusLine)}" />
+    <Label id="musicTitleLabel" translation="[694, 194]" scale="[0.76, 0.76]" width="540" height="36" numLines="1" color="0xF8FAFCFF" text="${safeXml(musicTitleLine)}" />
+    <Label id="musicArtistLabel" translation="[694, 224]" scale="[0.58, 0.58]" width="720" height="30" numLines="1" color="0xD8B4FEFF" text="${safeXml(musicArtistLine)}" />
+${eqBarsXml}
+    <Rectangle id="musicProgTrack" translation="[694, 254]" width="512" height="10" color="0x090D16FF" />
+    <Rectangle id="musicProgFill" translation="[694, 254]" width="${musicBarW}" height="10" color="0xA855F7FF" />
+    <Label id="musicUpNextLabel" translation="[694, 270]" scale="[0.52, 0.52]" width="960" height="28" numLines="1" color="0x94A3B8FF" text="${safeXml(musicUpNextLine)}" />
+
 ${calendarRowsXml}
 
     <!-- Column 3: Live Clock Widget + Running RobOS Agent Sessions (Tailed) -->
@@ -1583,6 +1633,17 @@ sub onClockTick()
             m.secPulseDot.color = "0x00BCD4FF"
         end if
     end if
+
+    for i = 0 to 7
+        eqNode = m.top.findNode("eqBar" + i.ToStr())
+        if eqNode <> invalid
+            bx = 1116 + i * 11
+            bh = 8 + (((m.tickCount * 5) + (i * 9)) mod 26)
+            by = 236 - bh
+            eqNode.height = bh
+            eqNode.translation = [bx, by]
+        end if
+    end for
 end sub
 
 function cleanAscii(s as Dynamic) as String
@@ -1646,9 +1707,36 @@ sub onPayloadUpdated()
                     if mNode <> invalid then mNode.text = "   #" + cleanAscii(sha) + " | " + cleanAscii(c.author) + " | " + cleanAscii(c.relativeTime)
                 end if
             end for
+        else if cTag = "robos-widget-music-player" and card.liveData <> invalid
+            md = card.liveData
+            msNode = m.top.findNode("musicStatusLabel")
+            mtNode = m.top.findNode("musicTitleLabel")
+            maNode = m.top.findNode("musicArtistLabel")
+            mpNode = m.top.findNode("musicProgFill")
+            muNode = m.top.findNode("musicUpNextLabel")
+            pState = "PLAYING"
+            if md.isPlaying = false then pState = "PAUSED"
+            if msNode <> invalid then msNode.text = "NOW PLAYING [" + pState + "]  " + cleanAscii(md.elapsed) + " / " + cleanAscii(md.duration) + "  |  " + cleanAscii(md.output)
+            if mtNode <> invalid then mtNode.text = Left(cleanAscii(md.title), 42)
+            if maNode <> invalid then maNode.text = cleanAscii(md.artistAlbum) + "  (" + cleanAscii(md.source) + ")"
+            if mpNode <> invalid and md.progressPct <> invalid
+                pct = md.progressPct
+                if pct < 4 then pct = 4
+                if pct > 100 then pct = 100
+                mpNode.width = Int((pct / 100.0) * 512)
+            end if
+            if muNode <> invalid and md.upNext <> invalid and md.upNext.Count() > 0
+                u0 = md.upNext[0]
+                uStr = "Up Next: " + cleanAscii(u0.title) + " (" + cleanAscii(u0.artist) + ")"
+                if md.upNext.Count() > 1
+                    u1 = md.upNext[1]
+                    uStr = uStr + " | " + cleanAscii(u1.title)
+                end if
+                muNode.text = Left(uStr, 68)
+            end if
         else if cTag = "robos-widget-calendar-today" and card.liveData <> invalid and card.liveData.events <> invalid
             events = card.liveData.events
-            for i = 0 to 5
+            for i = 0 to 4
                 bgNode = m.top.findNode("calBg" + i.ToStr())
                 stNode = m.top.findNode("calStripe" + i.ToStr())
                 tmNode = m.top.findNode("calTime" + i.ToStr())

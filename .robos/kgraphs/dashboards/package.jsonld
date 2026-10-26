@@ -237,6 +237,15 @@
       "robos:package": "dashboards"
     },
     {
+      "@id": "urn:robos:dashboard-widget:music-now-playing",
+      "@type": "robos:DashboardWidget",
+      "dcterms:title": "RobOS Music Player (Now Playing Song)",
+      "robos:widgetType": "music-now-playing",
+      "robos:componentTag": "robos-widget-music-player",
+      "robos:description": "Displays the currently playing song from RobOS Audio Player with artist, album, elapsed/total time, output device, Up Next queue, and live HTML5 <canvas> audio spectrum visualizer.",
+      "robos:package": "dashboards"
+    },
+    {
       "@id": "urn:robos:dashboard-widget:robos-component",
       "@type": "robos:DashboardWidget",
       "dcterms:title": "Any RobOS Custom Component Widget",
@@ -258,11 +267,32 @@
       "robos:package": "dashboards",
       "robos:cards": [
         { "@id": "urn:robos:dashboard-card:github-repo-activity" },
+        { "@id": "urn:robos:dashboard-card:music-now-playing" },
         { "@id": "urn:robos:dashboard-card:today-calendar-events" },
         { "@id": "urn:robos:dashboard-card:live-js-clock" },
         { "@id": "urn:robos:dashboard-card:latest-10-commits" },
         { "@id": "urn:robos:dashboard-card:running-agent-sessions" }
       ]
+    },
+    {
+      "@id": "urn:robos:dashboard-card:music-now-playing",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Now Playing Music (RobOS Audio Player)",
+      "robos:cardId": "music-now-playing",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:daily-engineering-ops"
+      },
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:music-now-playing"
+      },
+      "robos:slotId": "col-2",
+      "robos:componentTag": "robos-widget-music-player",
+      "robos:package": "dashboards",
+      "robos:widgetConfig": {
+        "showSpectrumCanvas": true,
+        "showUpNext": true,
+        "upNextLimit": 3
+      }
     },
     {
       "@id": "urn:robos:dashboard-card:github-repo-activity",

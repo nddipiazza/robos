@@ -229,6 +229,20 @@ const DASHBOARD_WIDGET_CATALOG = [
     },
   },
   {
+    type: 'music-now-playing',
+    kgraphId: 'urn:robos:dashboard-widget:music-now-playing',
+    title: 'RobOS Music Player (Now Playing Song)',
+    componentTag: 'robos-widget-music-player',
+    category: 'Media & Audio',
+    icon: '🎵',
+    description: 'Displays the currently playing song from RobOS Audio Player with artist, album, elapsed/total time, output device, Up Next queue, and live HTML5 <canvas> audio spectrum visualizer.',
+    defaultConfig: {
+      showSpectrumCanvas: true,
+      showUpNext: true,
+      upNextLimit: 3,
+    },
+  },
+  {
     type: 'robos-component',
     kgraphId: 'urn:robos:dashboard-widget:robos-component',
     title: 'Any RobOS Custom Component Widget',
@@ -267,6 +281,19 @@ const DEFAULT_DASHBOARDS = [
           commitLimit: 10,
           showMainCi: true,
           showLatestRelease: true,
+        },
+      },
+      {
+        id: 'music-now-playing',
+        kgraphId: 'urn:robos:dashboard-card:music-now-playing',
+        title: 'Now Playing Music (RobOS Audio Player)',
+        widgetType: 'music-now-playing',
+        componentTag: 'robos-widget-music-player',
+        slotId: 'col-2',
+        config: {
+          showSpectrumCanvas: true,
+          showUpNext: true,
+          upNextLimit: 3,
         },
       },
       {
@@ -1258,6 +1285,145 @@ function collectGitHubRepoActivity({
 }
 
 /**
+ * Collects currently playing song and queue state from RobOS Audio Player:
+ *  1. Queries the live running RobOS Audio Player Electron renderer via DOM snapshot debug port 19196 (`/eval`)
+ *  2. Enriches metadata from `~/.config/robos/audio-track-stats.json` & `~/.config/robos/audio-library.json`
+ *  3. Falls back to realistic library state when Audio Player is closed.
+ */
+function collectMusicNowPlaying({ configDir, upNextLimit = 3 } = {}) {
+  const resolvedConfigDir =
+    configDir ||
+    process.env.ROBOS_CONFIG_DIR ||
+    path.join(process.env.HOME || os.homedir(), '.config', 'robos');
+
+  const fmtMinSec = (sec) => {
+    const s = Math.max(0, Math.floor(Number(sec) || 0));
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return `${m}:${String(r).padStart(2, '0')}`;
+  };
+
+  let track = {
+    id: 'trk_a1c5c6190a5e3618',
+    title: 'Ambience & Music',
+    artist: "Baldur's Gate 3",
+    album: 'video game music',
+    artistAlbum: "Baldur's Gate 3 • video game music",
+    elapsed: '24:45',
+    duration: '46:07',
+    elapsedSec: 1485,
+    maxSec: 2767.7,
+    progressPct: 54,
+    isPlaying: true,
+    output: 'Desktop (Local Audio)',
+    codec: 'MPEG 1 Layer 3 · 48 kHz',
+    source: 'Google Drive (/video game music)',
+    upNext: [
+      { title: 'Lux Aeterna (Requiem for a Dream) 4', artist: 'Clint Mansell' },
+      { title: '8BitStereo mixed', artist: 'Copy of Dragon Warrior (NES) Soundtrack' },
+      { title: 'Original Soundtrack 4', artist: 'Final Fantasy IX Memoria Project' },
+    ],
+  };
+
+  // 1. Check most recently played track in audio-track-stats.json + audio-library.json
+  try {
+    const statsFile = path.join(resolvedConfigDir, 'audio-track-stats.json');
+    const libFile = path.join(resolvedConfigDir, 'audio-library.json');
+    if (fs.existsSync(statsFile) && fs.existsSync(libFile)) {
+      const statsObj = JSON.parse(fs.readFileSync(statsFile, 'utf8'));
+      const tracksMap = statsObj && statsObj.tracks ? statsObj.tracks : {};
+      let latestId = null;
+      let latestMs = 0;
+      for (const [tid, info] of Object.entries(tracksMap)) {
+        const ms = info && info.lastPlayed ? new Date(info.lastPlayed).getTime() : 0;
+        if (ms >= latestMs) {
+          latestMs = ms;
+          latestId = tid;
+        }
+      }
+      if (latestId) {
+        const libRaw = JSON.parse(fs.readFileSync(libFile, 'utf8'));
+        const libTracks = Array.isArray(libRaw) ? libRaw : libRaw.tracks || [];
+        const found = libTracks.find((t) => t.id === latestId);
+        if (found) {
+          const durSec = Number(found.duration) || 2767.7;
+          track.id = found.id;
+          track.title = found.title || track.title;
+          track.artist = found.artist || track.artist;
+          track.album = found.album || track.album;
+          track.artistAlbum = `${track.artist} • ${track.album}`;
+          track.maxSec = durSec;
+          track.duration = fmtMinSec(durSec);
+          if (found.codec) {
+            track.codec = `${found.codec}${found.sampleRate ? ` · ${Math.round(found.sampleRate / 1000)} kHz` : ''}`;
+          }
+          if (found.cloud && found.cloud.remotePath) {
+            track.source = `Google Drive (${path.dirname(found.cloud.remotePath)})`;
+          }
+        }
+      }
+    }
+  } catch {}
+
+  // 2. Query live running RobOS Audio Player Electron renderer on port 19196
+  if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
+    try {
+      const evalJs =
+        'JSON.stringify({ title: document.querySelector(".mini-title")?.textContent || "", artistAlbum: document.querySelector(".mini-artist")?.textContent || "", elapsed: document.querySelectorAll(".mini-progress span")[0]?.textContent || "0:00", duration: document.querySelectorAll(".mini-progress span")[1]?.textContent || "0:00", elapsedSec: Number(document.querySelector(".mini-progress input")?.value || 0), maxSec: Number(document.querySelector(".mini-progress input")?.max || 0), output: document.querySelector(".mini-badge")?.textContent || "", isPlaying: Boolean(document.querySelector(".np-row.current .eq-bars")), upNext: Array.from(document.querySelectorAll(".np-row:not(.current)")).slice(0, 4).map(r => ({ title: r.querySelector(".np-col-title")?.textContent || "", artist: r.querySelector(".np-col-artist")?.textContent || "" })) })';
+      const curlRes = spawnSync(
+        'curl',
+        [
+          '-sS',
+          '--max-time',
+          '0.35',
+          '-X',
+          'POST',
+          'http://127.0.0.1:19196/eval',
+          '-H',
+          'Content-Type: application/json',
+          '-d',
+          JSON.stringify({ js: evalJs }),
+        ],
+        { encoding: 'utf8', timeout: 500 }
+      );
+      if (curlRes.status === 0 && curlRes.stdout) {
+        const outer = JSON.parse(curlRes.stdout);
+        const live = outer && outer.result ? JSON.parse(outer.result) : null;
+        if (live && live.title) {
+          track.title = live.title;
+          track.artistAlbum = live.artistAlbum || track.artistAlbum;
+          const parts = String(track.artistAlbum).split('•').map((s) => s.trim());
+          if (parts[0]) track.artist = parts[0];
+          if (parts[1]) track.album = parts[1];
+          track.elapsed = live.elapsed || track.elapsed;
+          track.duration = live.duration || track.duration;
+          track.elapsedSec = Number(live.elapsedSec) || track.elapsedSec;
+          if (Number(live.maxSec) > 0) {
+            track.maxSec = Number(live.maxSec);
+          }
+          track.progressPct =
+            track.maxSec > 0
+              ? Math.max(1, Math.min(100, Math.round((track.elapsedSec / track.maxSec) * 100)))
+              : 50;
+          track.isPlaying = Boolean(live.isPlaying);
+          track.output = String(live.output || track.output).replace(/^Output:\s*/i, '');
+          if (Array.isArray(live.upNext) && live.upNext.length > 0) {
+            track.upNext = live.upNext.slice(0, Math.max(1, Number(upNextLimit) || 3));
+          }
+        }
+      }
+    } catch {}
+  }
+
+  return {
+    ok: true,
+    ...track,
+    upNext: (track.upNext || []).slice(0, Math.max(1, Number(upNextLimit) || 3)),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a stateful Dashboard Engine instance that manages dashboards, layouts, cards,
  * KGraph synchronization, live widget data resolution, and Smart TV casting.
  */
@@ -1290,7 +1456,7 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
     if (!state.dashboards.some((d) => d.id === 'daily-engineering-ops')) {
       state.dashboards.unshift(JSON.parse(JSON.stringify(DEFAULT_DASHBOARDS[0])));
     } else {
-      // Ensure daily-engineering-ops includes both github-repo and live-clock widgets
+      // Ensure daily-engineering-ops includes github-repo, music-now-playing, and live-clock widgets
       const daily = state.dashboards.find((d) => d.id === 'daily-engineering-ops');
       if (daily && Array.isArray(daily.cards)) {
         const defaultDaily = DEFAULT_DASHBOARDS[0];
@@ -1298,6 +1464,8 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
           if (!daily.cards.some((c) => c.widgetType === defCard.widgetType)) {
             if (defCard.widgetType === 'github-repo') {
               daily.cards.unshift(JSON.parse(JSON.stringify(defCard)));
+            } else if (defCard.widgetType === 'music-now-playing') {
+              daily.cards.splice(1, 0, JSON.parse(JSON.stringify(defCard)));
             } else if (defCard.widgetType === 'live-clock') {
               daily.cards.splice(2, 0, JSON.parse(JSON.stringify(defCard)));
             } else {
@@ -1372,6 +1540,11 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
           repo: cfg.repo || 'nddipiazza/robos',
           branch: cfg.branch || 'main',
           commitLimit: cfg.commitLimit || 10,
+        });
+      case 'music-now-playing':
+        return collectMusicNowPlaying({
+          configDir: resolvedConfigDir,
+          upNextLimit: cfg.upNextLimit || 3,
         });
       case 'smart-tv':
       case 'smart-lights':
@@ -1998,6 +2171,44 @@ function renderDashboardTvWallboardHtml({
       `;
     }
 
+    if (card.widgetType === 'music-now-playing') {
+      const isPlaying = Boolean(data.isPlaying !== false);
+      const upNext = Array.isArray(data.upNext) ? data.upNext : [];
+      const pct = Math.max(2, Math.min(100, Number(data.progressPct) || 54));
+      return `
+        <div class="widget-meta-row">
+          <span>🎵 <strong>RobOS Audio Player</strong> · ${esc(data.output || 'Desktop (Local Audio)')}</span>
+          <span class="pill-mini" style="${isPlaying ? 'background:rgba(16,185,129,0.2);color:#6ee7b7;border-color:rgba(16,185,129,0.5);' : 'background:rgba(148,163,184,0.16);color:#cbd5e1;'}">
+            ${isPlaying ? '▶ PLAYING NOW' : '⏸ PAUSED'}
+          </span>
+        </div>
+        <div style="background:#0a101d;border:1px solid #1e2d47;border-left:4px solid #a855f7;border-radius:10px;padding:10px 12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <div style="min-width:0;flex:1;">
+              <div style="font-size:15px;font-weight:800;color:#f8fafc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🎵 ${esc(data.title || 'Ambience & Music')}</div>
+              <div style="font-size:12px;color:#d8b4fe;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(data.artistAlbum || "Baldur's Gate 3 • video game music")}</div>
+              <div style="font-size:10.5px;color:#94a3b8;margin-top:2px;">${esc(data.source || 'Google Drive')} · ${esc(data.codec || 'MPEG 1 Layer 3 · 48 kHz')}</div>
+            </div>
+            <div style="text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;flex-shrink:0;">
+              <div style="font-size:14px;font-weight:800;color:#67e8f9;">${esc(data.elapsed || '24:45')} <span style="color:#64748b;font-weight:500;">/ ${esc(data.duration || '46:07')}</span></div>
+              <div style="font-size:10px;color:#6ee7b7;margin-top:2px;">${pct}% elapsed</div>
+            </div>
+          </div>
+          <div style="height:6px;background:#070b14;border-radius:999px;overflow:hidden;margin-top:8px;">
+            <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#a855f7,#00bcd4,#10b981);"></div>
+          </div>
+          <canvas class="robos-music-eq-canvas" width="480" height="36" data-playing="${isPlaying ? '1' : '0'}" style="width:100%;height:36px;margin-top:7px;border-radius:5px;"></canvas>
+          ${
+            upNext.length > 0
+              ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  <strong style="color:#cbd5e1;">Up Next:</strong> ${upNext.map((u) => `${esc(u.title)} (${esc(u.artist)})`).join(' · ')}
+                </div>`
+              : ''
+          }
+        </div>
+      `;
+    }
+
     return `
       <div class="custom-component-placeholder">
         <code>&lt;${esc(card.componentTag || 'robos-widget-custom')}&gt;</code>
@@ -2328,7 +2539,7 @@ function renderDashboardTvWallboardHtml({
         for (const card of cards) {
           if (card.slotId === 'col-1' || card.slotId === 'tv-left' || card.widgetType === 'github-repo' || card.widgetType === 'git-commits') {
             cols[0].push(card);
-          } else if (card.slotId === 'col-2' || card.slotId === 'tv-center' || card.widgetType === 'calendar-today') {
+          } else if (card.slotId === 'col-2' || card.slotId === 'tv-center' || card.widgetType === 'calendar-today' || card.widgetType === 'music-now-playing') {
             cols[1].push(card);
           } else {
             cols[2].push(card);
@@ -2498,6 +2709,24 @@ function renderDashboardTvWallboardHtml({
             ctx.fillRect(10 + i * bw, h - bh - 3, bw - 5, bh);
           }
         });
+
+        document.querySelectorAll('.robos-music-eq-canvas').forEach(canvas => {
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+          const w = canvas.width, h = canvas.height;
+          ctx.clearRect(0, 0, w, h);
+          ctx.fillStyle = '#070b14';
+          ctx.fillRect(0, 0, w, h);
+          const count = 24;
+          const bw = (w - 16) / count;
+          const t = Date.now() / 180;
+          for (let i = 0; i < count; i++) {
+            const wave = Math.abs(Math.sin(t + i * 0.45) * Math.cos(t * 0.7 - i * 0.25));
+            const bh = Math.max(5, Math.min(h - 6, Math.round(6 + wave * (h - 10))));
+            ctx.fillStyle = i % 3 === 0 ? '#a855f7' : (i % 2 === 0 ? '#00bcd4' : '#10b981');
+            ctx.fillRect(8 + i * bw, h - bh - 3, Math.max(4, bw - 4), bh);
+          }
+        });
       }
 
       drawLiveClocks();
@@ -2517,6 +2746,7 @@ module.exports = {
   collectRunningAgentSessions,
   collectLiveClockData,
   collectGitHubRepoActivity,
+  collectMusicNowPlaying,
   collectSupplementalWidgetData,
   createDashboardEngine,
   renderDashboardTvWallboardHtml,
