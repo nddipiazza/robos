@@ -1454,7 +1454,11 @@ function getThunderbirdGoogleLib() {
     '/usr/local/share/robos/robos-lib/thunderbird-google',
   ].filter(Boolean);
   for (const modPath of candidates) {
-    try { return require(modPath); } catch {}
+    try {
+      const resolved = require.resolve(modPath);
+      delete require.cache[resolved];
+      return require(resolved);
+    } catch {}
   }
   return null;
 }
