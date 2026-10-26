@@ -103,14 +103,20 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
     assert.equal(calCard.componentTag, 'robos-widget-calendar-today');
     assert.ok(calCard.liveData.events.length >= 4);
 
-    // Card 3: Running RobOS agent sessions with status lines tailed
+    // Card 3: Running RobOS agent sessions (live dynamic: empty when no sessions are running, shows in-progress sessions without agent-type breakdown when active)
     const agentsCard = ov.dashboard.cards.find((c) => c.widgetType === 'agent-sessions');
     assert.ok(agentsCard);
     assert.equal(agentsCard.componentTag, 'robos-widget-agent-sessions');
-    assert.ok(agentsCard.liveData.sessions.length >= 3);
-    for (const s of agentsCard.liveData.sessions) {
-      assert.ok(Array.isArray(s.statusLines) && s.statusLines.length > 0, `Session ${s.id} should have tailed statusLines`);
-    }
+    assert.ok(Array.isArray(agentsCard.liveData.sessions));
+
+    const idleSessions = collectRunningAgentSessions({ configDir: tmpDir, scanSystemAgents: false });
+    assert.equal(idleSessions.runningCount, 0);
+    assert.equal(idleSessions.sessions.length, 0);
+    const emptyWidgetHtml = RobOSDashboardUI.renderWidgetInnerHtml({
+      widgetType: 'agent-sessions',
+      liveData: idleSessions,
+    });
+    assert.ok(!emptyWidgetHtml.includes('robos-agent-card'), 'Should show nothing when no sessions are running');
   });
 
   await t.test('3. Supports switching KGraph card layouts, adding RobOS component widgets, and live data updates', () => {

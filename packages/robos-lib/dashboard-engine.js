@@ -794,13 +794,85 @@ function tailFileLines(filePath, maxLines = 5) {
 /**
  * Collects currently running RobOS agent sessions and tails their latest status lines.
  */
-function collectRunningAgentSessions({ configDir, homeDir, tailLines = 5 } = {}) {
+function isPidAlive(pid) {
+  const n = Number(pid);
+  if (!Number.isInteger(n) || n <= 0) return false;
+  try {
+    process.kill(n, 0);
+    return true;
+  } catch (err) {
+    return Boolean(err && err.code === 'EPERM');
+  }
+}
+
+function formatDurationClock(totalSec) {
+  const s = Math.max(0, Math.floor(Number(totalSec) || 0));
+  const hrs = Math.floor(s / 3600);
+  const mins = Math.floor((s % 3600) / 60);
+  const secs = s % 60;
+  const pad = (v) => String(v).padStart(2, '0');
+  if (hrs > 0) return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+  return `${pad(mins)}:${pad(secs)}`;
+}
+
+function readTailText(filePath, maxBytes = 48 * 1024) {
+  try {
+    const st = fs.statSync(filePath);
+    if (!st.isFile() || st.size === 0) return '';
+    const fd = fs.openSync(filePath, 'r');
+    const len = Math.min(st.size, maxBytes);
+    const buf = Buffer.alloc(len);
+    fs.readSync(fd, buf, 0, len, st.size - len);
+    fs.closeSync(fd);
+    let text = buf.toString('utf8');
+    if (st.size > len) {
+      const nl = text.indexOf('\n');
+      if (nl >= 0) text = text.slice(nl + 1);
+    }
+    return text;
+  } catch {
+    return '';
+  }
+}
+
+function cleanUserPromptSummary(rawContent) {
+  let s = String(rawContent || '');
+  s = s.replace(/<CONTEXT_SUMMARY>[\s\S]*?<\/CONTEXT_SUMMARY>/gi, '');
+  const reqMatch = s.match(/<USER_REQUEST>([\s\S]*?)<\/USER_REQUEST>/i);
+  if (reqMatch) {
+    s = reqMatch[1];
+  } else {
+    s = s.replace(/<ADDITIONAL_METADATA>[\s\S]*?<\/ADDITIONAL_METADATA>/gi, '');
+  }
+  s = s.replace(/\s+/g, ' ').trim();
+  if (!s) return 'Active Workspace Task';
+  return s.length > 68 ? `${s.slice(0, 67)}…` : s;
+}
+
+function formatStepClock(isoStr) {
+  try {
+    const d = isoStr ? new Date(isoStr) : new Date();
+    if (Number.isNaN(d.getTime())) return new Date().toTimeString().slice(0, 8);
+    return d.toTimeString().slice(0, 8);
+  } catch {
+    return new Date().toTimeString().slice(0, 8);
+  }
+}
+
+/**
+ * Collects ONLY live, currently running & in-progress RobOS agent sessions across any agent,
+ * ordered by most recent activity (not broken down by agent type). When no sessions are running,
+ * returns an empty `sessions: []` list so the widget shows nothing.
+ */
+function collectRunningAgentSessions({ configDir, homeDir, tailLines = 5, scanSystemAgents = true } = {}) {
   const resolvedHome = homeDir || process.env.HOME || os.homedir();
   const resolvedConfigDir =
     configDir ||
     process.env.ROBOS_CONFIG_DIR ||
     path.join(resolvedHome, '.config', 'robos');
   const maxTail = Math.max(1, Math.min(20, Number(tailLines) || 5));
+  const nowMs = Date.now();
+  const nowEpochSec = Math.floor(nowMs / 1000);
   const sessions = [];
 
   // 1. Check custom/live agent sessions file in configDir (`agent-sessions-live.json`)
@@ -810,144 +882,342 @@ function collectRunningAgentSessions({ configDir, homeDir, tailLines = 5 } = {})
       const parsed = JSON.parse(fs.readFileSync(customSessionsFile, 'utf8'));
       if (Array.isArray(parsed.sessions)) {
         for (const s of parsed.sessions) {
+          if (!s || (s.status !== 'running' && s.status !== 'in_progress')) continue;
+          if (s.pid && !s.allowTestPid && !isPidAlive(s.pid)) continue;
+          const startedMs = s.startedAt ? new Date(s.startedAt).getTime() : nowMs;
+          const updatedMs = s.updatedAt ? new Date(s.updatedAt).getTime() : startedMs;
+          if (Number.isFinite(updatedMs) && nowMs - updatedMs > 15 * 60 * 1000) continue;
+          const startedEpochSec = Math.floor((Number.isFinite(startedMs) ? startedMs : nowMs) / 1000);
+          const updatedEpochSec = Math.floor((Number.isFinite(updatedMs) ? updatedMs : nowMs) / 1000);
+          const elapsedSec = Math.max(1, nowEpochSec - startedEpochSec);
+          const lines = Array.isArray(s.statusLines) ? s.statusLines.slice(-maxTail) : [];
           sessions.push({
-            ...s,
-            statusLines: Array.isArray(s.statusLines) ? s.statusLines.slice(-maxTail) : [],
+            id: s.id || `session-${sessions.length + 1}`,
+            name: String(s.name || s.title || s.activity || 'In-Progress Agent Session').replace(/^[^·]+·\s*/, ''),
+            status: 'running',
+            pid: s.pid || null,
+            cwd: s.cwd || '/home/ndipiazza/source/robos',
+            taskRef: s.taskRef || null,
+            activity: s.activity || (lines[lines.length - 1] || 'Executing task').replace(/^\[[^\]]+\]\s*/, ''),
+            startedAt: new Date(startedEpochSec * 1000).toISOString(),
+            startedEpochSec,
+            updatedAt: new Date(updatedEpochSec * 1000).toISOString(),
+            updatedEpochSec,
+            elapsedSec,
+            elapsedFormatted: formatDurationClock(elapsedSec),
+            statusLines: lines,
           });
         }
       }
     }
   } catch {}
 
-  // 2. Check ~/.robos/agent-jobs/*.json
-  const jobsDir = path.join(resolvedHome, '.robos', 'agent-jobs');
-  try {
-    if (fs.existsSync(jobsDir)) {
-      const files = fs.readdirSync(jobsDir).filter((f) => f.endsWith('.json'));
-      for (const f of files.slice(0, 6)) {
-        try {
-          const job = JSON.parse(fs.readFileSync(path.join(jobsDir, f), 'utf8'));
-          if (job && job.sessionId) {
-            sessions.push({
-              id: job.sessionId,
-              name: job.agentName || `Codex Job ${job.sessionId.slice(0, 8)}`,
-              provider: job.provider || 'codex',
-              providerLabel: 'OpenAI Codex CLI',
-              status: job.status === 'running' ? 'running' : 'active',
-              pid: job.childPid || job.ownerPid || null,
-              cwd: job.cwd || '/home/ndipiazza/source/robos',
-              startedAt: job.updatedAt ? new Date(job.updatedAt).toISOString() : new Date().toISOString(),
-              statusLines: [
-                `[pid:${job.childPid || job.ownerPid || 'live'}] ${job.activity || 'Executing workspace task'}`,
-                ...(Array.isArray(job.logs) ? job.logs.slice(-maxTail) : []),
-              ].slice(-maxTail),
-            });
-          }
-        } catch {}
-      }
-    }
-  } catch {}
-
-  // 3. Check ~/.copilot/session-state/<id>
-  const copilotDir = path.join(resolvedHome, '.copilot', 'session-state');
-  try {
-    if (fs.existsSync(copilotDir)) {
-      const ids = fs.readdirSync(copilotDir).slice(0, 3);
-      for (const id of ids) {
-        const eventsPath = path.join(copilotDir, id, 'events.jsonl');
-        const rawLines = tailFileLines(eventsPath, maxTail * 2);
-        const parsedLines = [];
-        for (const l of rawLines) {
+  if (scanSystemAgents) {
+    // 2. Check live Dev Central / RobOS Task Runs in ~/.robos/agent-runs/*.json
+    const runsDir = path.join(resolvedHome, '.robos', 'agent-runs');
+    try {
+      if (fs.existsSync(runsDir)) {
+        const files = fs.readdirSync(runsDir).filter((f) => f.endsWith('.json'));
+        for (const f of files) {
           try {
-            const ev = JSON.parse(l);
-            const msg = ev.data?.content || ev.data?.message || ev.type;
-            if (msg) parsedLines.push(`[${ev.type || 'event'}] ${String(msg).slice(0, 110)}`);
+            const run = JSON.parse(fs.readFileSync(path.join(runsDir, f), 'utf8'));
+            if (!run || run.status !== 'running' || !isPidAlive(run.pid)) continue;
+            const startedMs = Number(run.startedAt) || nowMs;
+            const updatedMs = Number(run.updatedAt) || startedMs;
+            const startedEpochSec = Math.floor(startedMs / 1000);
+            const updatedEpochSec = Math.floor(updatedMs / 1000);
+            const elapsedSec = Math.max(1, nowEpochSec - startedEpochSec);
+            const statusLines = [];
+            if (run.log && fs.existsSync(run.log)) {
+              const rawTail = tailFileLines(run.log, maxTail * 3);
+              for (const line of rawTail) {
+                try {
+                  const obj = JSON.parse(line);
+                  if (obj.type === 'assistant' && Array.isArray(obj.message?.content)) {
+                    for (const b of obj.message.content) {
+                      if (b.type === 'tool_use') statusLines.push(`⚙ ${b.name}: ${String(JSON.stringify(b.input || {})).slice(0, 72)}`);
+                      else if (b.type === 'text' && b.text) statusLines.push(`● ${String(b.text).replace(/\s+/g, ' ').slice(0, 80)}`);
+                    }
+                  } else if (obj.type === 'item.completed' && obj.item?.text) {
+                    statusLines.push(`● ${String(obj.item.text).replace(/\s+/g, ' ').slice(0, 80)}`);
+                  }
+                } catch {
+                  statusLines.push(line.slice(0, 90));
+                }
+              }
+            }
+            if (statusLines.length === 0 && run.activity) {
+              statusLines.push(`[${formatStepClock(new Date(updatedMs).toISOString())}] ⚙ ${run.activity}`);
+            }
+            sessions.push({
+              id: run.runId || run.sessionId || f.replace(/\.json$/, ''),
+              name: run.title || run.taskKey || 'In-Progress Task Run',
+              status: 'running',
+              pid: run.pid,
+              cwd: run.cwd || '/home/ndipiazza/source/robos',
+              taskRef: run.taskKey || run.taskId || null,
+              activity: run.activity || 'Running task',
+              startedAt: new Date(startedMs).toISOString(),
+              startedEpochSec,
+              updatedAt: new Date(updatedMs).toISOString(),
+              updatedEpochSec,
+              elapsedSec,
+              elapsedFormatted: formatDurationClock(elapsedSec),
+              statusLines: statusLines.slice(-maxTail),
+            });
           } catch {}
         }
-        if (parsedLines.length > 0) {
+      }
+    } catch {}
+
+    // 3. Check live ~/.robos/agent-jobs/*.json
+    const jobsDir = path.join(resolvedHome, '.robos', 'agent-jobs');
+    try {
+      if (fs.existsSync(jobsDir)) {
+        const files = fs.readdirSync(jobsDir).filter((f) => f.endsWith('.json'));
+        for (const f of files) {
+          try {
+            const job = JSON.parse(fs.readFileSync(path.join(jobsDir, f), 'utf8'));
+            if (!job || !job.sessionId || job.status !== 'running') continue;
+            const livePid = isPidAlive(job.childPid) ? job.childPid : isPidAlive(job.ownerPid) ? job.ownerPid : null;
+            if (!livePid) continue;
+            if (sessions.some((s) => s.id === job.sessionId || s.id === job.runId)) continue;
+            const startedMs = Number(job.startedAt) || Number(job.updatedAt) || nowMs;
+            const updatedMs = Number(job.updatedAt) || startedMs;
+            const startedEpochSec = Math.floor(startedMs / 1000);
+            const updatedEpochSec = Math.floor(updatedMs / 1000);
+            const elapsedSec = Math.max(1, nowEpochSec - startedEpochSec);
+            const lines = [
+              `[${formatStepClock(new Date(updatedMs).toISOString())}] ⚙ ${job.activity || 'Executing workspace task'}`,
+              ...(Array.isArray(job.logs) ? job.logs.slice(-maxTail) : []),
+            ].slice(-maxTail);
+            sessions.push({
+              id: job.sessionId,
+              name: job.agentName || job.activity || `Session ${job.sessionId.slice(0, 8)}`,
+              status: 'running',
+              pid: livePid,
+              cwd: job.cwd || '/home/ndipiazza/source/robos',
+              taskRef: job.taskKey || job.taskId || null,
+              activity: job.activity || 'Executing workspace task',
+              startedAt: new Date(startedMs).toISOString(),
+              startedEpochSec,
+              updatedAt: new Date(updatedMs).toISOString(),
+              updatedEpochSec,
+              elapsedSec,
+              elapsedFormatted: formatDurationClock(elapsedSec),
+              statusLines: lines,
+            });
+          } catch {}
+        }
+      }
+    } catch {}
+
+    // 4. Check live in-progress sessions in ~/.gemini/antigravity/brain/<id>/.system_generated/logs/transcript.jsonl
+    const brainDir = path.join(resolvedHome, '.gemini', 'antigravity', 'brain');
+    try {
+      if (fs.existsSync(brainDir)) {
+        const entries = fs.readdirSync(brainDir);
+        for (const id of entries) {
+          if (id.startsWith('.') || id === 'tempmediaStorage') continue;
+          const tf = path.join(brainDir, id, '.system_generated', 'logs', 'transcript.jsonl');
+          let st;
+          try {
+            st = fs.statSync(tf);
+          } catch {
+            continue;
+          }
+          const ageMs = nowMs - st.mtimeMs;
+          // Only consider conversations that have active transcript activity within the last 180 seconds
+          if (ageMs > 180 * 1000) continue;
+
+          const tailText = readTailText(tf, 96 * 1024);
+          if (!tailText) continue;
+          const rawLines = tailText.split('\n').map((l) => l.trim()).filter(Boolean);
+          const steps = [];
+          for (const l of rawLines.slice(-24)) {
+            try {
+              steps.push(JSON.parse(l));
+            } catch {}
+          }
+          if (steps.length === 0) continue;
+
+          const lastStep = steps[steps.length - 1];
+          const lastTools = Array.isArray(lastStep.tool_calls) ? lastStep.tool_calls : [];
+          // If the last step is a completed PLANNER_RESPONSE with no tool calls, the turn is finished (idle)
+          const isTurnFinished =
+            lastStep.type === 'PLANNER_RESPONSE' &&
+            lastTools.length === 0 &&
+            lastStep.status === 'DONE' &&
+            ageMs > 1500;
+          if (isTurnFinished) continue;
+
+          // Find the latest USER_INPUT in rawLines to determine the active prompt & turn start time
+          let promptTitle = `Session ${id.slice(0, 8)}`;
+          let turnStartedIso = steps[0].created_at || new Date(st.mtimeMs).toISOString();
+          let turnStartIdx = 0;
+          for (let i = rawLines.length - 1; i >= 0; i--) {
+            if (!rawLines[i].includes('"USER_INPUT"')) continue;
+            try {
+              const uObj = JSON.parse(rawLines[i]);
+              if (uObj.type === 'USER_INPUT') {
+                promptTitle = cleanUserPromptSummary(uObj.content);
+                turnStartedIso = uObj.created_at || turnStartedIso;
+                break;
+              }
+            } catch {}
+          }
+          for (let i = steps.length - 1; i >= 0; i--) {
+            if (steps[i].type === 'USER_INPUT') {
+              turnStartIdx = i;
+              break;
+            }
+          }
+
+          const statusLines = [];
+          let latestActivity = 'Processing step…';
+          for (const step of steps.slice(turnStartIdx)) {
+            const clk = formatStepClock(step.created_at);
+            if (step.type === 'USER_INPUT') {
+              const p = cleanUserPromptSummary(step.content);
+              statusLines.push(`[${clk}] ▶ ${p}`);
+              latestActivity = `Prompt: ${p}`;
+            } else if (step.type === 'PLANNER_RESPONSE') {
+              const tcs = Array.isArray(step.tool_calls) ? step.tool_calls : [];
+              for (const tc of tcs) {
+                const rawSum =
+                  tc.args?.toolSummary ||
+                  tc.args?.Path ||
+                  tc.args?.CommandLine ||
+                  tc.name ||
+                  'tool';
+                const cleanSum = String(rawSum).replace(/^"+|"+$/g, '').replace(/\s+/g, ' ').trim().slice(0, 68);
+                statusLines.push(`[${clk}] ⚙ ${tc.name}: ${cleanSum}`);
+                latestActivity = `${tc.name}: ${cleanSum}`;
+              }
+            } else if (step.type === 'GENERIC' && step.step_index != null) {
+              statusLines.push(`[${clk}] ✔ Completed step #${step.step_index}`);
+            }
+          }
+
+          const startedMs = new Date(turnStartedIso).getTime() || st.mtimeMs;
+          const updatedMs = st.mtimeMs;
+          const startedEpochSec = Math.floor(startedMs / 1000);
+          const updatedEpochSec = Math.floor(updatedMs / 1000);
+          const elapsedSec = Math.max(1, nowEpochSec - startedEpochSec);
+
           sessions.push({
-            id: `copilot-${id.slice(0, 8)}`,
-            name: `GitHub Copilot Session (${id.slice(0, 8)})`,
-            provider: 'github-copilot',
-            providerLabel: 'GitHub Copilot CLI',
+            id: `session-${id.slice(0, 8)}`,
+            sessionId: id,
+            name: promptTitle,
             status: 'running',
             cwd: '/home/ndipiazza/source/robos',
-            startedAt: new Date().toISOString(),
-            statusLines: parsedLines.slice(-maxTail),
+            taskRef: `turn #${lastStep.step_index || steps.length}`,
+            activity: latestActivity,
+            startedAt: new Date(startedMs).toISOString(),
+            startedEpochSec,
+            updatedAt: new Date(updatedMs).toISOString(),
+            updatedEpochSec,
+            elapsedSec,
+            elapsedFormatted: formatDurationClock(elapsedSec),
+            statusLines: statusLines.slice(-maxTail),
           });
         }
       }
-    }
-  } catch {}
+    } catch {}
 
-  // 4. Always ensure realistic live RobOS agent sessions with tailed status lines are available
-  const defaultRunningSessions = [
-    {
-      id: 'session-antigravity-dashboards',
-      name: 'Antigravity · RobOS Dashboards & Smart TV Cast',
-      provider: 'antigravity',
-      providerLabel: 'Antigravity / Gemini 4 Argon',
-      status: 'running',
-      pid: process.pid,
-      cwd: '/home/ndipiazza/source/robos',
-      taskRef: 'FEAT-DASHBOARDS',
-      startedAt: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
-      statusLines: [
-        '[14:02:11] ✔ Validated .robos/kgraphs/dashboards/package.jsonld (0 SHACL violations)',
-        '[14:03:05] ⚙ Building <robos-dashboard> & <robos-dashboard-widget> Web Components',
-        '[14:03:42] ⎇ Tailing 10 latest Git commits + syncing Google Calendar CalDAV events',
-        '[14:04:18] 📺 Mounting /dashboard 10-foot wallboard route on Smart TV Portal (:19210)',
-        '[14:04:55] ● STREAMING: Ready to cast Daily Engineering & Agent Ops Dashboard to TV',
-      ].slice(-maxTail),
-    },
-    {
-      id: 'session-claude-kgraph-sync',
-      name: 'Claude Code · KGraph Blast-Radius & SHACL Verifier',
-      provider: 'claude-code',
-      providerLabel: 'Claude Code CLI',
-      status: 'running',
-      pid: 48219,
-      cwd: '/home/ndipiazza/source/robos/packages/robos-graph',
-      taskRef: 'TASK-412',
-      startedAt: new Date(Date.now() - 19 * 60 * 1000).toISOString(),
-      statusLines: [
-        '[13:58:10] $ node packages/robos-graph/bin/kgraph-cli.js validate dashboards --json',
-        '[13:59:02] ✔ Evaluated 179 SHACL shapes across 18 modular KGraph packages',
-        '[14:01:14] ↻ Indexing robos:DashboardLayout (6 card layouts) & robos:DashboardWidget (8 widgets)',
-        '[14:03:30] ✔ Semantic diff World 1 (main) vs World 2 (branch) clean',
-      ].slice(-maxTail),
-    },
-    {
-      id: 'session-agentd-edd-runner',
-      name: 'robos-agentd · Headless E2E & TV Portal Proof',
-      provider: 'robos-agentd',
-      providerLabel: 'RobOS Agent Daemon',
-      status: 'running',
-      pid: 51044,
-      cwd: '/home/ndipiazza/source/robos/packages/robos-tv',
-      taskRef: 'EDD-TV-206',
-      startedAt: new Date(Date.now() - 14 * 60 * 1000).toISOString(),
-      statusLines: [
-        '[14:00:12] [agentd] Listening on ~/.config/robos/agentd/agentd.sock',
-        '[14:01:45] [tv-portal] 10-Foot Smart TV Portal online at http://192.168.1.100:19210',
-        '[14:02:50] [probe] 65" TCL Roku TV (192.168.1.15:8060) & Living Room OLED online',
-        '[14:04:10] [tail] Watching dashboard cast state for live 10-foot wallboard refresh',
-      ].slice(-maxTail),
-    },
-  ];
+    // 5. Check live Claude Code sessions in ~/.claude/sessions/*.json (must have live PID + recent activity)
+    const claudeSessionsDir = path.join(resolvedHome, '.claude', 'sessions');
+    try {
+      if (fs.existsSync(claudeSessionsDir)) {
+        const files = fs.readdirSync(claudeSessionsDir).filter((f) => f.endsWith('.json'));
+        for (const f of files) {
+          try {
+            const fullPath = path.join(claudeSessionsDir, f);
+            const st = fs.statSync(fullPath);
+            const data = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+            if (!data || !data.pid || !isPidAlive(data.pid)) continue;
+            if (nowMs - st.mtimeMs > 120 * 1000) continue;
+            const startedMs = data.startedAt ? new Date(data.startedAt).getTime() : st.mtimeMs;
+            const startedEpochSec = Math.floor(startedMs / 1000);
+            const updatedEpochSec = Math.floor(st.mtimeMs / 1000);
+            const elapsedSec = Math.max(1, nowEpochSec - startedEpochSec);
+            sessions.push({
+              id: data.sessionId || `session-${data.pid}`,
+              name: data.cwd ? `Workspace Session (${path.basename(data.cwd)})` : `Session ${String(data.sessionId || data.pid).slice(0, 8)}`,
+              status: 'running',
+              pid: data.pid,
+              cwd: data.cwd || '/home/ndipiazza/source/robos',
+              activity: 'Executing in workspace',
+              startedAt: new Date(startedMs).toISOString(),
+              startedEpochSec,
+              updatedAt: new Date(st.mtimeMs).toISOString(),
+              updatedEpochSec,
+              elapsedSec,
+              elapsedFormatted: formatDurationClock(elapsedSec),
+              statusLines: [`[${formatStepClock(new Date(st.mtimeMs).toISOString())}] ⚙ Active PID ${data.pid} in ${data.cwd || 'workspace'}`],
+            });
+          } catch {}
+        }
+      }
+    } catch {}
 
-  const existingIds = new Set(sessions.map((s) => s.id));
-  for (const def of defaultRunningSessions) {
-    if (!existingIds.has(def.id)) {
-      sessions.push(def);
-    }
+    // 6. Check live GitHub Copilot sessions (ONLY if events.jsonl was modified in the last 45s and is mid-turn)
+    const copilotDir = path.join(resolvedHome, '.copilot', 'session-state');
+    try {
+      if (fs.existsSync(copilotDir)) {
+        const ids = fs.readdirSync(copilotDir);
+        for (const id of ids) {
+          if (id.startsWith('.')) continue;
+          const eventsPath = path.join(copilotDir, id, 'events.jsonl');
+          let st;
+          try {
+            st = fs.statSync(eventsPath);
+          } catch {
+            continue;
+          }
+          if (nowMs - st.mtimeMs > 45 * 1000) continue;
+          const rawLines = tailFileLines(eventsPath, maxTail * 2);
+          const parsedLines = [];
+          for (const l of rawLines) {
+            try {
+              const ev = JSON.parse(l);
+              const msg = ev.data?.content || ev.data?.message || ev.type;
+              if (msg) parsedLines.push(`[${formatStepClock(ev.timestamp)}] ${String(msg).replace(/\s+/g, ' ').slice(0, 90)}`);
+            } catch {}
+          }
+          if (parsedLines.length > 0) {
+            const startedEpochSec = Math.floor((st.birthtimeMs || st.mtimeMs) / 1000);
+            const updatedEpochSec = Math.floor(st.mtimeMs / 1000);
+            const elapsedSec = Math.max(1, nowEpochSec - startedEpochSec);
+            sessions.push({
+              id: `session-${id.slice(0, 8)}`,
+              name: parsedLines[parsedLines.length - 1].replace(/^\[[^\]]+\]\s*/, '').slice(0, 64) || `Session ${id.slice(0, 8)}`,
+              status: 'running',
+              cwd: '/home/ndipiazza/source/robos',
+              activity: 'Streaming session output',
+              startedAt: new Date(startedEpochSec * 1000).toISOString(),
+              startedEpochSec,
+              updatedAt: new Date(updatedEpochSec * 1000).toISOString(),
+              updatedEpochSec,
+              elapsedSec,
+              elapsedFormatted: formatDurationClock(elapsedSec),
+              statusLines: parsedLines.slice(-maxTail),
+            });
+          }
+        }
+      }
+    } catch {}
   }
+
+  // Sort all live in-progress sessions by latest update descending (unified flat list, not grouped by agent type)
+  sessions.sort((a, b) => (b.updatedEpochSec || 0) - (a.updatedEpochSec || 0));
 
   return {
     ok: true,
     tailLines: maxTail,
-    runningCount: sessions.filter((s) => s.status === 'running').length,
+    runningCount: sessions.length,
     totalCount: sessions.length,
+    updatedAt: new Date(nowMs).toISOString(),
     sessions,
   };
 }
@@ -1981,17 +2251,43 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
     if (!line || !String(line).trim()) {
       return { ok: false, error: 'Status line text is required' };
     }
-    const current = collectRunningAgentSessions({ configDir: resolvedConfigDir, tailLines: 10 });
-    const sessions = current.sessions || [];
-    const target = sessions.find((s) => s.id === sessionId) || sessions[0];
-    if (target) {
-      const ts = new Date().toTimeString().slice(0, 8);
-      const formatted = line.startsWith('[') ? line : `[${ts}] ${line}`;
-      target.statusLines = [...(target.statusLines || []), formatted].slice(-10);
+    const nowIso = new Date().toISOString();
+    const ts = new Date().toTimeString().slice(0, 8);
+    const formatted = line.startsWith('[') ? line : `[${ts}] ${line}`;
+
+    let customSessions = [];
+    try {
+      if (fs.existsSync(liveAgentsFile)) {
+        const parsed = JSON.parse(fs.readFileSync(liveAgentsFile, 'utf8'));
+        if (Array.isArray(parsed.sessions)) customSessions = parsed.sessions;
+      }
+    } catch {}
+
+    let target = customSessions.find((s) => s && (sessionId ? s.id === sessionId : true));
+    if (!target) {
+      const current = collectRunningAgentSessions({ configDir: resolvedConfigDir, tailLines: 10 });
+      const liveFirst = (current.sessions || []).find((s) => (sessionId ? s.id === sessionId : true));
+      target = {
+        id: sessionId || liveFirst?.id || 'session-live-1',
+        name: liveFirst?.name || String(line).replace(/^\[[^\]]+\]\s*/, '').slice(0, 64) || 'In-Progress Session',
+        status: 'running',
+        allowTestPid: true,
+        cwd: liveFirst?.cwd || resolvedRepoDir,
+        startedAt: liveFirst?.startedAt || nowIso,
+        updatedAt: nowIso,
+        statusLines: [...(liveFirst?.statusLines || [])],
+      };
+      customSessions.unshift(target);
     }
+
+    target.status = 'running';
+    target.updatedAt = nowIso;
+    target.activity = String(line).replace(/^\[[^\]]+\]\s*/, '').trim();
+    target.statusLines = [...(target.statusLines || []), formatted].slice(-10);
+
     try {
       fs.mkdirSync(resolvedConfigDir, { recursive: true });
-      fs.writeFileSync(liveAgentsFile, JSON.stringify({ sessions }, null, 2), 'utf8');
+      fs.writeFileSync(liveAgentsFile, JSON.stringify({ sessions: customSessions }, null, 2), 'utf8');
     } catch {}
     return getOverview(state.activeDashboardId);
   }
@@ -2137,24 +2433,27 @@ function renderDashboardTvWallboardHtml({
 
     if (card.widgetType === 'agent-sessions') {
       const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+      if (sessions.length === 0) {
+        return `<div class="agent-sessions-list" data-live-agents-root="true"></div>`;
+      }
       return `
-        <div class="widget-meta-row">
-          <span>🟢 ${esc(data.runningCount ?? sessions.length)} Running Sessions</span>
-          <span class="pill-mini">Live Status Tail (${esc(data.tailLines || 5)} lines)</span>
+        <div class="widget-meta-row" data-live-agents-meta="true">
+          <span>🟢 <strong class="js-live-agents-count">${esc(sessions.length)}</strong> In-Progress Session${sessions.length === 1 ? '' : 's'} Running Now</span>
+          <span class="pill-mini">⚡ Live Dynamic Stream</span>
         </div>
-        <div class="agent-sessions-list">
+        <div class="agent-sessions-list" data-live-agents-root="true">
           ${sessions
             .map(
               (s) => `
-            <div class="agent-session-box">
+            <div class="agent-session-box" data-session-id="${esc(s.id)}">
               <div class="agent-head">
                 <div>
-                  <span class="agent-dot ${s.status === 'running' ? 'running' : ''}"></span>
+                  <span class="agent-dot running"></span>
                   <strong class="agent-name">${esc(s.name)}</strong>
                 </div>
-                <span class="agent-provider-badge">${esc(s.providerLabel || s.provider)}</span>
+                <span class="pill-mini js-agent-elapsed" data-started-epoch="${esc(s.startedEpochSec || '')}">⏱ ${esc(s.elapsedFormatted || '00:05')}</span>
               </div>
-              <div class="agent-cwd">cwd: <code>${esc(s.cwd || '/home/ndipiazza/source/robos')}</code>${s.taskRef ? ` · <span>${esc(s.taskRef)}</span>` : ''}</div>
+              <div class="agent-cwd">cwd: <code>${esc(s.cwd || '/home/ndipiazza/source/robos')}</code>${s.activity ? ` · <span style="color:#67e8f9;">${esc(s.activity)}</span>` : ''}</div>
               <pre class="agent-tail-log">${(s.statusLines || []).map((l) => esc(l)).join('\n')}</pre>
             </div>
           `
@@ -3040,10 +3339,60 @@ function renderDashboardTvWallboardHtml({
           ctx.font = '10px sans-serif';
           ctx.fillText('UNTIL', cx, cy + 11);
         });
+
+        document.querySelectorAll('.js-agent-elapsed').forEach(el => {
+          const started = Number(el.getAttribute('data-started-epoch')) || 0;
+          if (!started) return;
+          const elSec = Math.max(1, nowEpoch - started);
+          const eh = Math.floor(elSec / 3600);
+          const em = Math.floor((elSec % 3600) / 60);
+          const es = elSec % 60;
+          el.textContent = '⏱ ' + (eh > 0 ? pad2(eh) + ':' : '') + pad2(em) + ':' + pad2(es);
+        });
+      }
+
+      const escHtml = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+      async function pollLiveAgentSessions() {
+        try {
+          const res = await fetch('/api/dashboard-cast', { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          const cards = (json && json.dashboard && Array.isArray(json.dashboard.cards)) ? json.dashboard.cards : [];
+          const agentCard = cards.find(c => c.widgetType === 'agent-sessions');
+          if (!agentCard) return;
+          const secEl = document.querySelector('section[data-widget-type="agent-sessions"]');
+          if (!secEl) return;
+          const headerHtml = secEl.querySelector('.card-header-bar') ? secEl.querySelector('.card-header-bar').outerHTML : '';
+          const sessions = Array.isArray(agentCard.liveData && agentCard.liveData.sessions) ? agentCard.liveData.sessions : [];
+          if (sessions.length === 0) {
+            secEl.innerHTML = headerHtml + '<div class="agent-sessions-list" data-live-agents-root="true"></div>';
+            return;
+          }
+          const bodyHtml =
+            '<div class="widget-meta-row" data-live-agents-meta="true">' +
+              '<span>🟢 <strong class="js-live-agents-count">' + sessions.length + '</strong> In-Progress Session' + (sessions.length === 1 ? '' : 's') + ' Running Now</span>' +
+              '<span class="pill-mini">⚡ Live Dynamic Stream</span>' +
+            '</div>' +
+            '<div class="agent-sessions-list" data-live-agents-root="true">' +
+              sessions.map(s =>
+                '<div class="agent-session-box" data-session-id="' + escHtml(s.id) + '">' +
+                  '<div class="agent-head">' +
+                    '<div><span class="agent-dot running"></span><strong class="agent-name">' + escHtml(s.name) + '</strong></div>' +
+                    '<span class="pill-mini js-agent-elapsed" data-started-epoch="' + escHtml(s.startedEpochSec || '') + '">⏱ ' + escHtml(s.elapsedFormatted || '00:05') + '</span>' +
+                  '</div>' +
+                  '<div class="agent-cwd">cwd: <code>' + escHtml(s.cwd || '/home/ndipiazza/source/robos') + '</code>' + (s.activity ? ' · <span style="color:#67e8f9;">' + escHtml(s.activity) + '</span>' : '') + '</div>' +
+                  '<pre class="agent-tail-log">' + (s.statusLines || []).map(l => escHtml(l)).join('\n') + '</pre>' +
+                '</div>'
+              ).join('') +
+            '</div>';
+          secEl.innerHTML = headerHtml + bodyHtml;
+        } catch {}
       }
 
       drawLiveClocks();
       setInterval(drawLiveClocks, 250);
+      setInterval(pollLiveAgentSessions, 2000);
     })();
   </script>
 </body>
