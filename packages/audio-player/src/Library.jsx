@@ -199,7 +199,7 @@ export default function Library({
               className="btn-secondary lib-shuffle-all"
               disabled={!index.tracks.length}
               title="Repair and enrich track metadata & cover art using your RobOS agent and open-source media tools"
-              onClick={onAiFixMetadata}
+              onClick={() => onAiFixMetadata(scopeFolder ? index.tracks : [])}
             >
               ✦ AI Fix Metadata
             </button>
