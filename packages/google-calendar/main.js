@@ -33,7 +33,13 @@ function requireShared(modName) {
     path.resolve(__dirname, '..', 'robos-lib', modName),
     `/usr/local/share/robos/robos-lib/${modName}`,
   ].filter(Boolean)) {
-    try { return require(p); } catch {}
+    try {
+      const resolved = require.resolve(p);
+      if (modName === 'thunderbird-google' || modName === 'cloud-accounts') {
+        delete require.cache[resolved];
+      }
+      return require(resolved);
+    } catch {}
   }
   throw new Error(`RobOS shared module "${modName}" not found.`);
 }
@@ -196,6 +202,9 @@ ipcMain.handle('gcal:install-and-configure', async (_, payload) => {
         dryRun: Boolean(dryRun),
         onLog: (chunk) => sendInstallLog(chunk),
       });
+      if (!installResult.ok && !dryRun) {
+        throw new Error(installResult.error || 'Mozilla Thunderbird installation failed. Check the provisioning log.');
+      }
     } else {
       sendInstallLog(`Mozilla Thunderbird is already installed at ${status.binaryPath} (${status.version || 'ready'}).\n`);
     }

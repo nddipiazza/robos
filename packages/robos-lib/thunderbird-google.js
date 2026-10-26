@@ -63,6 +63,8 @@ function detectThunderbird(options = {}) {
     packageType = binaryPath ? 'apt' : null;
   } else {
     const candidates = [
+      path.join(home, '.local', 'bin', 'thunderbird'),
+      path.join(home, '.local', 'opt', 'thunderbird', 'thunderbird'),
       '/usr/bin/thunderbird',
       '/snap/bin/thunderbird',
       '/usr/local/bin/thunderbird',
@@ -80,11 +82,37 @@ function detectThunderbird(options = {}) {
       } catch {}
     }
     if (binaryPath) {
-      packageType = binaryPath.includes('/snap/') || fs.existsSync('/snap/thunderbird') ? 'snap' : 'apt';
-      try {
-        version = execFileSync(binaryPath, ['--version'], { encoding: 'utf8', timeout: 4000 }).trim();
-      } catch {
-        version = 'Mozilla Thunderbird';
+      packageType = binaryPath.includes('/snap/')
+        ? 'snap'
+        : binaryPath.includes('.local/')
+          ? 'mozilla-official'
+          : 'apt';
+      const appIniCandidates = [
+        path.join(home, '.local', 'opt', 'thunderbird', 'application.ini'),
+        '/usr/lib/thunderbird/application.ini',
+      ];
+      for (const iniFile of appIniCandidates) {
+        if (fs.existsSync(iniFile)) {
+          try {
+            const iniText = fs.readFileSync(iniFile, 'utf8');
+            const m = iniText.match(/^Version=(.+)$/m);
+            if (m) {
+              version = `Mozilla Thunderbird ${m[1].trim()}`;
+              break;
+            }
+          } catch {}
+        }
+      }
+      if (!version) {
+        try {
+          version = execFileSync(binaryPath, ['--version'], {
+            encoding: 'utf8',
+            timeout: 1500,
+            env: { ...process.env, MOZ_DISABLE_CONTENT_SANDBOX: '1' },
+          }).trim().split('\n').pop().trim();
+        } catch {
+          version = 'Mozilla Thunderbird';
+        }
       }
     }
   }
@@ -231,18 +259,37 @@ function ensureThunderbirdProfiles(options = {}) {
 }
 
 /**
- * Installs Mozilla Thunderbird via apt-get (or snap fallback), streaming progress logs.
+ * Installs Mozilla Thunderbird via passwordless apt-get when available, or downloads and
+ * extracts the official Mozilla Thunderbird Linux x86_64 release into `~/.local/opt/thunderbird`
+ * and `~/.local/bin/thunderbird` (zero root/sudo required on desktop workstations).
  */
 function installThunderbird(options = {}) {
   const onLog = typeof options.onLog === 'function' ? options.onLog : () => {};
   if (options.dryRun) {
-    onLog('[dry-run] Would run: sudo apt-get update && sudo apt-get install -y thunderbird\n');
+    onLog('[dry-run] Would install Mozilla Thunderbird into ~/.local/opt/thunderbird or via apt-get\n');
     return Promise.resolve({ ok: true, dryRun: true });
   }
 
   return new Promise((resolve) => {
-    const cmd = 'sudo DEBIAN_FRONTEND=noninteractive apt-get update -y && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y thunderbird || sudo snap install thunderbird';
-    onLog(`$ ${cmd}\n`);
+    const cmd = [
+      'set -e',
+      'if sudo -n true >/dev/null 2>&1; then',
+      '  sudo DEBIAN_FRONTEND=noninteractive apt-get update -y && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y thunderbird',
+      'else',
+      '  echo "Installing official Mozilla Thunderbird Linux x86_64 into ~/.local/opt/thunderbird (no root required)..."',
+      '  mkdir -p "$HOME/.local/opt" "$HOME/.local/bin" "$HOME/.local/share/applications"',
+      '  curl -fL "https://download.mozilla.org/?product=thunderbird-latest-SSL&os=linux64&lang=en-US" -o /tmp/robos-thunderbird-latest.tar.xz',
+      '  tar -xJf /tmp/robos-thunderbird-latest.tar.xz -C "$HOME/.local/opt/"',
+      '  rm -f /tmp/robos-thunderbird-latest.tar.xz',
+      '  cat > "$HOME/.local/bin/thunderbird" << \'WRAPPER\'',
+      '#!/usr/bin/env bash',
+      'export MOZ_DISABLE_CONTENT_SANDBOX=1',
+      'exec "$HOME/.local/opt/thunderbird/thunderbird" "$@"',
+      'WRAPPER',
+      '  chmod +x "$HOME/.local/bin/thunderbird"',
+      'fi',
+    ].join('\n');
+    onLog('$ Installing Mozilla Thunderbird...\n');
     const child = spawn('bash', ['-lc', cmd], {
       env: { ...process.env, DEBIAN_FRONTEND: 'noninteractive' },
     });
@@ -263,7 +310,7 @@ function installThunderbird(options = {}) {
     child.on('close', (code) => {
       const after = detectThunderbird(options);
       resolve({
-        ok: code === 0 || after.installed,
+        ok: code === 0 && after.installed,
         exitCode: code,
         installed: after.installed,
         binaryPath: after.binaryPath,
@@ -585,7 +632,8 @@ async function fetchGoogleCalendarOverview(accountIdOrEmail, options = {}) {
 }
 
 /**
- * Launches Thunderbird (optionally directly into the Calendar tab via `-calendar`).
+ * Launches Thunderbird (optionally directly into the Calendar tab via `-calendar`)
+ * with the RobOS-configured Google Calendar/Contacts profile (`--profile <primaryProfilePath>`).
  */
 function launchThunderbird(launchOptions = {}, options = {}) {
   const status = detectThunderbird(options);
@@ -594,6 +642,9 @@ function launchThunderbird(launchOptions = {}, options = {}) {
   }
 
   const args = [];
+  if (status.primaryProfilePath && fs.existsSync(status.primaryProfilePath)) {
+    args.push('--profile', status.primaryProfilePath);
+  }
   if (launchOptions.mode === 'calendar') {
     args.push('-calendar');
   } else if (launchOptions.mode === 'addressbook') {
@@ -607,7 +658,7 @@ function launchThunderbird(launchOptions = {}, options = {}) {
   const child = spawn(status.binaryPath, args, {
     detached: true,
     stdio: 'ignore',
-    env: { ...process.env },
+    env: { ...process.env, MOZ_DISABLE_CONTENT_SANDBOX: '1' },
   });
   child.unref();
   return { ok: true, binaryPath: status.binaryPath, args, pid: child.pid };
