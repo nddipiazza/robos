@@ -131,7 +131,7 @@ test('RobOS Smart TV Studio & 10-Foot Portal E2E Verification', async (t) => {
         platformId: 'roku-os',
       });
       assert.equal(pairRes.ok, true);
-      assert.equal(pairRes.tvs.length, 4);
+      assert.equal(pairRes.tvs.length, 5);
 
       // Navigate right on D-Pad
       const navRes = engine.sendRemoteKey({ key: 'DPAD_RIGHT' });
