@@ -90,6 +90,8 @@ function renderDevicesList() {
           <div class="item-meta">Developer Mode: ${tv.devModeEnabled ? 'Enabled' : 'Off'} · ${esc(tv.sideloadStatus)}</div>
         </div>
         <div style="display:flex;gap:6px;">
+          <button type="button" class="btn btn-sm btn-primary" data-power-on-tv="${esc(tv.id)}" title="Turn TV On">On</button>
+          <button type="button" class="btn btn-sm btn-danger" data-power-off-tv="${esc(tv.id)}" title="Turn TV Off">Off</button>
           <button type="button" class="btn btn-sm" data-sideload-tv="${esc(tv.id)}">Sideload App</button>
           <button type="button" class="btn btn-sm btn-danger" data-remove-tv="${esc(tv.id)}" title="Unpair TV">✕</button>
         </div>
@@ -97,6 +99,28 @@ function renderDevicesList() {
     `
     )
     .join('');
+
+  listEl.querySelectorAll('[data-power-on-tv]').forEach((btn) => {
+    btn.onclick = async () => {
+      const res = await window.robosTv.sendRemoteKey({ tvId: btn.dataset.powerOnTv, key: 'POWER_ON' });
+      if (res.ok) {
+        state.lastRemoteKey = res.lastRemoteKey;
+        renderAll();
+        showBanner(`Sent POWER_ON to ${res.targetTv}`);
+      }
+    };
+  });
+
+  listEl.querySelectorAll('[data-power-off-tv]').forEach((btn) => {
+    btn.onclick = async () => {
+      const res = await window.robosTv.sendRemoteKey({ tvId: btn.dataset.powerOffTv, key: 'POWER_OFF' });
+      if (res.ok) {
+        state.lastRemoteKey = res.lastRemoteKey;
+        renderAll();
+        showBanner(`Sent POWER_OFF to ${res.targetTv}`);
+      }
+    };
+  });
 
   listEl.querySelectorAll('[data-sideload-tv]').forEach((btn) => {
     btn.onclick = async () => {
