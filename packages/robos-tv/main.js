@@ -170,6 +170,22 @@ ipcMain.handle('tv:launchTile', async (_e, payload) => {
   return tvEngine.launchTileOnTv(payload);
 });
 
+ipcMain.handle('tv:castDashboard', async (_e, payload) => {
+  return tvEngine.castDashboard(payload);
+});
+
+ipcMain.handle('tv:stopDashboardCast', async (_e, payload) => {
+  return tvEngine.stopDashboardCast(payload);
+});
+
+ipcMain.handle('tv:openDashboardExternal', async () => {
+  const info = tvEngine.getOverview();
+  if (shell && typeof shell.openExternal === 'function') {
+    await shell.openExternal(info.dashboardCastUrl || `${info.portalUrl}/dashboard`);
+  }
+  return { ok: true, dashboardCastUrl: info.dashboardCastUrl || `${info.portalUrl}/dashboard` };
+});
+
 ipcMain.handle('tv:openPortalExternal', async () => {
   const info = tvEngine.getOverview();
   if (shell && typeof shell.openExternal === 'function') {

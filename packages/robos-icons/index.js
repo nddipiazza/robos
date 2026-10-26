@@ -561,6 +561,12 @@ const BUILTIN_APPS = [
     iconSvg: "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"48\" height=\"48\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#eab308\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2 4 5v6c0 5.5 3.4 10.3 8 11 4.6-.7 8-5.5 8-11V5l-8-3z\"/><circle cx=\"12\" cy=\"10\" r=\"2.2\"/><path d=\"M8.5 16c.6-1.8 2-2.8 3.5-2.8s2.9 1 3.5 2.8\"/></svg>"
   },
   {
+    appId: 'robos-dashboards',
+    label: 'RobOS Dashboards',
+    category: 'Tools',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="16" height="20" rx="2.5" fill="#00bcd4" fill-opacity="0.15"/><rect x="26" y="6" width="16" height="12" rx="2.5"/><rect x="26" y="22" width="16" height="20" rx="2.5" fill="#00bcd4" fill-opacity="0.15"/><rect x="6" y="30" width="16" height="12" rx="2.5"/><line x1="10" y1="12" x2="18" y2="12"/><line x1="10" y1="16" x2="18" y2="16"/><line x1="10" y1="20" x2="15" y2="20"/><polyline points="30 34 33 30 36 33 39 27"/></svg>'
+  },
+  {
     appId: 'robos-tv',
     label: 'RobOS Smart TV Studio',
     category: 'System',

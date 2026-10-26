@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -e
+
+ROBOS_ROOT="/home/ndipiazza/source/robos"
+if [ -d "/home/ndipiazza/source/robos/packages/robos-dashboards" ]; then
+  APP_DIR="/home/ndipiazza/source/robos/packages/robos-dashboards"
+elif [ -d "/usr/local/share/robos/robos-dashboards" ]; then
+  APP_DIR="/usr/local/share/robos/robos-dashboards"
+else
+  echo "Error: RobOS app directory not found for robos-dashboards" >&2
+  exit 1
+fi
+
+if [ -x "$APP_DIR/node_modules/.bin/electron" ]; then
+  ELECTRON_BIN="$APP_DIR/node_modules/.bin/electron"
+elif [ -x "$ROBOS_ROOT/packages/app-launcher/node_modules/.bin/electron" ]; then
+  ELECTRON_BIN="$ROBOS_ROOT/packages/app-launcher/node_modules/.bin/electron"
+elif [ -x "$ROBOS_ROOT/packages/robos-test/node_modules/.bin/electron" ]; then
+  ELECTRON_BIN="$ROBOS_ROOT/packages/robos-test/node_modules/.bin/electron"
+elif [ -x "$ROBOS_ROOT/packages/crpg-editor/node_modules/.bin/electron" ]; then
+  ELECTRON_BIN="$ROBOS_ROOT/packages/crpg-editor/node_modules/.bin/electron"
+elif [ -x "$ROBOS_ROOT/packages/robos-tabletop/node_modules/.bin/electron" ]; then
+  ELECTRON_BIN="$ROBOS_ROOT/packages/robos-tabletop/node_modules/.bin/electron"
+elif command -v electron >/dev/null 2>&1; then
+  ELECTRON_BIN="$(command -v electron)"
+elif [ -x "/usr/bin/electron" ]; then
+  ELECTRON_BIN="/usr/bin/electron"
+else
+  echo "Error: Electron binary not found." >&2
+  exit 1
+fi
+
+cd "$APP_DIR"
+export CHROME_DESKTOP="robos-dashboards.desktop"
+exec "$ELECTRON_BIN" "$APP_DIR" --no-sandbox --disable-gpu --disable-dev-shm-usage "$@"

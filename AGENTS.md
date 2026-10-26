@@ -149,6 +149,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **RobOS Cloud Accounts** | Unified Cloud Suite account manager (Google Workspace, Microsoft 365/OneDrive, Nextcloud, Dropbox, S3) that auto-imports Data Sources logins and shares credentials across Drive, Calendar, Contacts, Gmail, and Audio Player (`packages/cloud-accounts`) |
 | **RobOS Google Calendar** | Automatically installs Mozilla Thunderbird and configures Google Calendar (CalDAV), Google Contacts (CardDAV), and optional Gmail (IMAP/SMTP) using your logged-in RobOS Google Cloud Account (`packages/google-calendar`) |
 | **RobOS Smart Light** | Zero-cloud LAN Smart Light Studio (Philips WiZ UDP `:38899`, WLED HTTP `:80`, TP-Link Kasa XOR `:9999`, Philips Hue Bridge REST, LIFX UDP `:56700`, Govee LAN `:4003`, Elgato Key Light `:9123`, Shelly, Yeelight, Home Assistant), room & mood scenes, optional AI Lighting Designer, 24-hour Circadian Daylight curves, sunrise schedules, and Dev/CI Build Status Light Bar sync (`packages/smart-light`) |
+| **RobOS Dashboards** | Graphical KGraph dashboard studio where every widget is a composable RobOS component (`<robos-widget-git-commits>`, `<robos-widget-calendar-today>`, `<robos-widget-agent-sessions>`, or any `<robos-...>` element) arranged in KGraph card layouts (`robos:DashboardLayout`), embeddable via `<robos-dashboard>` (`packages/robos-ui/robos-dashboard.js`), and castable to RobOS Smart TV Studio (`:19210/dashboard`) (`packages/robos-dashboards`) |
 
 ## Shared Libraries
 

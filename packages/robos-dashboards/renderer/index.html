@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' http://localhost:* http://127.0.0.1:* http://192.168.* http://10.*; frame-src *;" />
+  <title>RobOS Dashboards</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="brand-row">
+        <div class="brand-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="6" width="16" height="20" rx="2.5" fill="#00bcd4" fill-opacity="0.2" />
+            <rect x="26" y="6" width="16" height="12" rx="2.5" />
+            <rect x="26" y="22" width="16" height="20" rx="2.5" fill="#00bcd4" fill-opacity="0.2" />
+            <rect x="6" y="30" width="16" height="12" rx="2.5" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="title">RobOS Dashboards</h1>
+          <p class="subtitle">Composable KGraph Graphical Dashboards · Any RobOS Component Widget · Embeddable <code>&lt;robos-dashboard&gt;</code> · Smart TV 10-Foot Cast</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="toolbar-field">
+          <label for="select-active-dashboard" class="sr-label">Dashboard</label>
+          <select id="select-active-dashboard" class="select select-sm" title="Select Active Dashboard"></select>
+        </div>
+        <div class="toolbar-field">
+          <label for="select-active-layout" class="sr-label">Card Layout</label>
+          <select id="select-active-layout" class="select select-sm" title="Switch KGraph Card Layout"></select>
+        </div>
+        <div class="toolbar-field">
+          <select id="select-target-tv" class="select select-sm" title="Select Target Smart TV"></select>
+        </div>
+        <button type="button" class="btn btn-primary" id="btn-cast-tv">📺 Show on Smart TV</button>
+        <button type="button" class="btn" id="btn-refresh-dashboard">↻ Refresh</button>
+      </div>
+    </header>
+
+    <div id="status-banner" class="banner hidden" role="status" aria-live="polite"></div>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs" role="tablist">
+      <button type="button" class="tab-btn active" data-tab="tab-canvas" role="tab">Live Dashboard Canvas</button>
+      <button type="button" class="tab-btn" data-tab="tab-builder" role="tab">Create Dashboard, Layouts &amp; RobOS Widgets</button>
+      <button type="button" class="tab-btn" data-tab="tab-kgraph" role="tab">Embed <code>&lt;robos-dashboard&gt;</code> &amp; KGraph JSON-LD</button>
+      <button type="button" class="tab-btn" data-tab="tab-tv" role="tab">RobOS Smart TV Wallboard Cast</button>
+    </nav>
+
+    <main class="main">
+      <!-- TAB 1: Live Dashboard Canvas -->
+      <section id="tab-canvas" class="tab-pane active">
+        <div class="canvas-meta-bar">
+          <div>
+            <strong id="active-dashboard-heading">Daily Engineering &amp; Agent Ops Dashboard</strong>
+            <span class="badge" id="active-layout-badge">Mission Control 3-Column</span>
+            <span class="badge badge-green" id="active-kgraph-badge">urn:robos:dashboard:daily-engineering-ops</span>
+          </div>
+          <div id="tv-cast-live-indicator" class="cast-pill">Ready for Smart TV Cast</div>
+        </div>
+
+        <!-- Embedded <robos-dashboard> custom web component -->
+        <robos-dashboard id="main-robos-dashboard" editable="true"></robos-dashboard>
+
+        <!-- Quick Live Data Feed Controls (Calendar Events & Tailed Agent Status Lines) -->
+        <div class="columns" style="margin-top:16px;">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📅 Add Calendar Event for Today</h3>
+              <span class="badge">Live Widget Feed</span>
+            </div>
+            <div class="form-row">
+              <input type="text" id="input-cal-time" class="input input-sm" value="15:30" style="width:85px;" placeholder="15:30" />
+              <input type="text" id="input-cal-title" class="input input-sm" style="flex:1;" placeholder="e.g. Architecture Sync on Smart TV Wallboard" />
+              <input type="text" id="input-cal-location" class="input input-sm" style="width:160px;" placeholder="Room / Meet" value="Studio TV :19210" />
+              <button type="button" class="btn btn-sm btn-primary" id="btn-add-cal-event">+ Add Event</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">🤖 Stream / Tail Status Line to Running Agent Session</h3>
+              <span class="badge">Live Agent Tail</span>
+            </div>
+            <div class="form-row">
+              <input type="text" id="input-agent-line" class="input input-sm" style="flex:1;" placeholder="e.g. ✔ Completed E2E verification of Smart TV dashboard cast" />
+              <button type="button" class="btn btn-sm btn-primary" id="btn-tail-agent-line">Append to Tail</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: Dashboard Builder, Layout Picker & Widget Catalog -->
+      <section id="tab-builder" class="tab-pane">
+        <div class="columns">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Create New Graphical Dashboard</h2>
+              <span class="badge">KGraph Backed</span>
+            </div>
+            <div class="field">
+              <label for="input-new-dash-title">Dashboard Title</label>
+              <input type="text" id="input-new-dash-title" class="input" placeholder="e.g. Release Engineering &amp; Incident Wallboard" />
+            </div>
+            <div class="field" style="margin-top:8px;">
+              <label for="input-new-dash-desc">Description</label>
+              <input type="text" id="input-new-dash-desc" class="input" placeholder="Describe what this dashboard monitors…" />
+            </div>
+            <div class="field" style="margin-top:8px;">
+              <label for="select-new-dash-layout">Initial Card Layout (from KGraph <code>robos:DashboardLayout</code>)</label>
+              <select id="select-new-dash-layout" class="select"></select>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px;">
+              <button type="button" class="btn btn-primary" id="btn-create-dashboard">+ Create Dashboard</button>
+              <button type="button" class="btn btn-danger" id="btn-delete-dashboard">Delete Current Dashboard</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <h3 class="sub-heading">Switch Active Dashboard Layout (Set of Card Layouts)</h3>
+            <div id="layouts-catalog-grid" class="layouts-grid"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Add Any RobOS Component Widget Card</h2>
+              <span class="badge">8 Built-In + Custom <code>&lt;robos-*&gt;</code></span>
+            </div>
+            <p class="muted-text">Every dashboard card is a RobOS component that can display any RobOS-powered data source or mount any custom <code>&lt;robos-...&gt;</code> element.</p>
+
+            <div class="field" style="margin-top:10px;">
+              <label for="select-widget-type">RobOS Widget / Component Type</label>
+              <select id="select-widget-type" class="select"></select>
+            </div>
+            <div class="field" style="margin-top:8px;">
+              <label for="input-widget-title">Card Title</label>
+              <input type="text" id="input-widget-title" class="input" placeholder="e.g. 10 Latest Commit Messages" />
+            </div>
+            <div class="field" style="margin-top:8px;">
+              <label for="input-custom-tag">RobOS Custom Element Tag (<code>robos-widget-*</code> or any <code>robos-*</code> component)</label>
+              <input type="text" id="input-custom-tag" class="input" placeholder="e.g. robos-widget-git-commits or robos-ai-textarea" />
+            </div>
+            <div style="margin-top:12px;">
+              <button type="button" class="btn btn-primary" id="btn-add-widget-card">+ Add Widget Card to Dashboard</button>
+            </div>
+
+            <div class="divider"></div>
+            <h3 class="sub-heading">RobOS Component Widget Catalog</h3>
+            <div id="widget-catalog-list" class="list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: Embed <robos-dashboard> Library & KGraph JSON-LD -->
+      <section id="tab-kgraph" class="tab-pane">
+        <div class="columns">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Embed Any Dashboard in Any RobOS App</h2>
+              <span class="badge badge-green">robos-ui/robos-dashboard.js</span>
+            </div>
+            <p class="muted-text">Include <code>robos-dashboard.js</code> in any RobOS application or web portal and drop in <code>&lt;robos-dashboard&gt;</code> or individual <code>&lt;robos-dashboard-widget&gt;</code> tags:</p>
+            <pre id="embed-code-snippet" class="code-block"></pre>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Knowledge Graph JSON-LD (<code>.robos/kgraphs/dashboards/package.jsonld</code>)</h2>
+              <span class="badge">SHACL Validated</span>
+            </div>
+            <p class="muted-text">Live <code>robos:Dashboard</code>, <code>robos:DashboardLayout</code>, and <code>robos:DashboardCard</code> nodes for the active dashboard:</p>
+            <pre id="kgraph-jsonld-preview" class="code-block" style="max-height:420px;overflow:auto;"></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: Smart TV Wallboard Cast -->
+      <section id="tab-tv" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Show Dashboard on RobOS Smart TV Studio (<code>:19210/dashboard</code>)</h2>
+              <p class="muted-text">Cast any graphical dashboard directly to your paired Roku OS, LG webOS, Samsung Tizen, or Google TV / Android TV screen via the RobOS 10-Foot Smart TV Portal.</p>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button type="button" class="btn btn-primary" id="btn-cast-tv-tab">📺 Cast Active Dashboard to TV Now</button>
+              <button type="button" class="btn" id="btn-open-tv-wallboard">Open TV Wallboard URL</button>
+              <button type="button" class="btn" id="btn-launch-smart-tv-app">Open RobOS Smart TV Studio App</button>
+              <button type="button" class="btn btn-danger" id="btn-stop-tv-cast">Stop TV Cast</button>
+            </div>
+          </div>
+          <div id="tv-devices-cast-grid" class="layouts-grid" style="margin-top:12px;"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../../robos-ui/robos-ui.js"></script>
+  <script src="../../robos-ui/robos-dashboard.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

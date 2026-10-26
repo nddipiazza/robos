@@ -712,7 +712,7 @@ function renderDevCentralWallboardHtml({ hostIp, portalPort, devCentralCast = nu
  * Generates the self-contained 10-Foot Smart TV Web UI HTML served by the RobOS TV Portal
  * and embedded inside sideloaded LG webOS, Samsung Tizen, and Android TV packages.
  */
-function renderTenFootPortalHtml({ hostIp, portalPort, activeTileId = 'portal-home', tvDevices = [], lastKey = null, devCentralCast = null }) {
+function renderTenFootPortalHtml({ hostIp, portalPort, activeTileId = 'portal-home', tvDevices = [], lastKey = null, devCentralCast = null, activeDashboardCast = null }) {
   const portalUrl = `http://${hostIp}:${portalPort}`;
   const tilesJson = JSON.stringify(TEN_FOOT_LAUNCH_TILES);
   return `<!DOCTYPE html>
@@ -908,6 +908,24 @@ function renderTenFootPortalHtml({ hostIp, portalPort, activeTileId = 'portal-ho
     </div>
     <div class="tv-pill online" id="last-action-pill">${lastKey ? 'Last Remote Input: ' + lastKey : 'Ready for Remote Input'}</div>
   </section>
+
+  ${
+    activeDashboardCast && activeDashboardCast.active
+      ? `<section class="tv-hero" id="robos-dashboard-cast-banner" style="border-color:#10b981;background:linear-gradient(135deg, rgba(14,22,40,0.98), rgba(6,78,59,0.52));margin-bottom:24px;">
+          <div>
+            <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#6ee7b7;margin-bottom:6px;">
+              ● LIVE ROBOS DASHBOARD ON TV → ${String(activeDashboardCast.tvName || 'Smart TV')} (${String(activeDashboardCast.tvIp || hostIp)})
+            </div>
+            <h2 style="margin:0 0 6px;font-size:22px;">${String(activeDashboardCast.title || 'Daily Engineering & Agent Ops Dashboard')}</h2>
+            <p style="margin:0;color:#cbd5e1;font-size:15px;">
+              Layout: <strong>${String(activeDashboardCast.layoutTitle || activeDashboardCast.layoutId || 'Mission Control 3-Column')}</strong> ·
+              Cards: <strong>${Number(activeDashboardCast.cardsCount || 3)} RobOS Widgets</strong> (10 Latest Commits · Daily Calendar Events · Tailed Agent Sessions)
+            </p>
+          </div>
+          <a href="/dashboard" class="tv-pill online" style="text-decoration:none;border-color:#10b981;color:#6ee7b7;">📊 Open Full RobOS Dashboard on TV →</a>
+        </section>`
+      : ''
+  }
 
   ${
     devCentralCast && devCentralCast.active
@@ -1491,6 +1509,7 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
             activeTileId: state.activeTileId,
             lastRemoteKey: state.lastRemoteKey,
             devCentralCast: state.devCentralCast || null,
+            activeDashboardCast: state.activeDashboardCast || null,
             tvCount: state.tvs.length,
             tiles: TEN_FOOT_LAUNCH_TILES,
           });
@@ -1499,6 +1518,59 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
             'Access-Control-Allow-Origin': '*',
           });
           res.end(payload);
+          return;
+        }
+
+        if (u.pathname === '/api/dashboard-cast') {
+          const dashEngine = require('./dashboard-engine').createDashboardEngine({ configDir: resolvedConfigDir });
+          const targetDashId =
+            u.searchParams.get('id') ||
+            state.activeDashboardCast?.dashboardId ||
+            'daily-engineering-ops';
+          const resolved = dashEngine.resolveDashboard(targetDashId);
+          res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          });
+          res.end(
+            JSON.stringify({
+              ok: true,
+              cast: state.activeDashboardCast || null,
+              dashboard: resolved.dashboard,
+              castUrl: `http://${hostIp}:${boundPort}/dashboard`,
+            })
+          );
+          return;
+        }
+
+        if (u.pathname === '/dashboard' || u.pathname.startsWith('/dashboard/')) {
+          const dashEngineModule = require('./dashboard-engine');
+          const dashEngine = dashEngineModule.createDashboardEngine({ configDir: resolvedConfigDir });
+          const slugId = u.pathname.startsWith('/dashboard/')
+            ? decodeURIComponent(u.pathname.slice('/dashboard/'.length))
+            : null;
+          const targetDashId =
+            slugId ||
+            u.searchParams.get('id') ||
+            state.activeDashboardCast?.dashboardId ||
+            'daily-engineering-ops';
+          const resolved = dashEngine.resolveDashboard(targetDashId);
+          if (state.activeDashboardCast?.layoutId && state.activeDashboardCast.dashboardId === targetDashId) {
+            const customLayout = dashEngineModule.DASHBOARD_LAYOUTS.find((l) => l.id === state.activeDashboardCast.layoutId);
+            if (customLayout) {
+              resolved.dashboard.layout = customLayout;
+              resolved.dashboard.layoutId = customLayout.id;
+            }
+          }
+          const dashHtml = dashEngineModule.renderDashboardTvWallboardHtml({
+            hostIp,
+            portalPort: boundPort,
+            resolvedDashboard: resolved,
+            tvName: state.activeDashboardCast?.tvName || state.tvs[0]?.name || 'Living Room Smart TV',
+            tvIp: state.activeDashboardCast?.tvIp || state.tvs[0]?.ip || hostIp,
+          });
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(dashHtml);
           return;
         }
 
@@ -1553,6 +1625,7 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
           tvDevices: state.tvs,
           lastKey: state.lastRemoteKey,
           devCentralCast: state.devCentralCast || null,
+          activeDashboardCast: state.activeDashboardCast || null,
         });
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(html);
@@ -1588,15 +1661,31 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
   function getOverview() {
     loadState();
     const hostIp = detectLanIp();
+    let dashboards = [];
+    let dashboardLayouts = [];
+    let activeDashboardResolved = null;
+    try {
+      const dashMod = require('./dashboard-engine');
+      const dashEngine = dashMod.createDashboardEngine({ configDir: resolvedConfigDir });
+      dashboards = dashEngine.listDashboards();
+      dashboardLayouts = dashMod.DASHBOARD_LAYOUTS;
+      const targetDashId = state.activeDashboardCast?.dashboardId || 'daily-engineering-ops';
+      activeDashboardResolved = dashEngine.resolveDashboard(targetDashId).dashboard;
+    } catch {}
     return {
       ok: true,
       hostIp,
       portalPort: boundPort,
       portalUrl: `http://${hostIp}:${boundPort}`,
       castUrl: `http://${hostIp}:${boundPort}/dev-central`,
+      dashboardCastUrl: `http://${hostIp}:${boundPort}/dashboard`,
       portalRunning: Boolean(server && server.listening),
       activeTileId: state.activeTileId,
       devCentralCast: state.devCentralCast || null,
+      activeDashboardCast: state.activeDashboardCast || null,
+      dashboards,
+      dashboardLayouts,
+      activeDashboardResolved,
       webosAutoRenew: state.webosAutoRenew,
       webosLastRenewedAt: state.webosLastRenewedAt,
       webosSessionRemainingHours: state.webosSessionRemainingHours,
@@ -2159,6 +2248,113 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     };
   }
 
+  async function castDashboard({ tvId, dashboardId = 'daily-engineering-ops', layoutId } = {}) {
+    loadState();
+    const tv = state.tvs.find((t) => t.id === tvId) || state.tvs[0];
+    if (!tv) {
+      return { ok: false, error: 'No Smart TV found in paired TV list' };
+    }
+    const dashMod = require('./dashboard-engine');
+    const dashEngine = dashMod.createDashboardEngine({ configDir: resolvedConfigDir });
+    if (layoutId) {
+      dashEngine.setDashboardLayout({ dashboardId, layoutId });
+    }
+    const resolved = dashEngine.resolveDashboard(dashboardId);
+    const dash = resolved.dashboard;
+
+    const hostIp = detectLanIp();
+    const portalPortToUse = boundPort || DEFAULT_PORTAL_PORT;
+    const portalUrl = `http://${hostIp}:${portalPortToUse}`;
+    const castUrl = `${portalUrl}/dashboard`;
+
+    const castSession = {
+      active: true,
+      tvId: tv.id,
+      tvName: tv.name,
+      tvIp: tv.ip,
+      platformId: tv.platformId,
+      platformName: tv.platformName,
+      dashboardId: dash.id,
+      title: dash.title,
+      layoutId: dash.layout?.id || dash.layoutId,
+      layoutTitle: dash.layout?.title || 'Mission Control 3-Column',
+      cardsCount: Array.isArray(dash.cards) ? dash.cards.length : 0,
+      castAt: new Date().toISOString(),
+    };
+
+    state.activeDashboardCast = castSession;
+    state.activeTileId = 'portal-home';
+    state.lastRemoteKey = `SHOW DASHBOARD "${dash.title}" → ${tv.name}`;
+    saveState();
+
+    if (tv.platformId === 'roku-os' && process.env.ROBOS_TEST !== '1' && !process.env.NODE_TEST_CONTEXT) {
+      const readiness = await diagnoseTvReadiness(tv.id);
+      const dispatch = await sendRemoteKey({ tvId: tv.id, key: 'HOME' });
+      if (dispatch && dispatch.blocked) {
+        return {
+          ok: false,
+          blocked: true,
+          tv,
+          castSession,
+          dashboard: dash,
+          portalUrl,
+          castUrl,
+          readiness,
+          setupTitle: dispatch.setupTitle,
+          setupMessage: dispatch.setupMessage,
+          setupSteps: dispatch.setupSteps || [],
+          message: `Dashboard "${dash.title}" is live at ${castUrl}, but ${tv.name} blocked the remote wake/switch command.`,
+        };
+      }
+      return {
+        ok: true,
+        blocked: false,
+        tv,
+        castSession,
+        dashboard: dash,
+        portalUrl,
+        castUrl,
+        readiness,
+        message: `Showing "${dash.title}" on ${tv.name} (${tv.ip}) · Live at ${castUrl}`,
+      };
+    }
+
+    if (tv.platformId === 'android-tv' && process.env.ROBOS_TEST !== '1' && !process.env.NODE_TEST_CONTEXT) {
+      exec(`adb -s "${tv.ip}:5555" shell am start -a android.intent.action.VIEW -d "${castUrl}"`, () => {});
+    }
+
+    const readiness = await diagnoseTvReadiness(tv.id);
+    return {
+      ok: true,
+      blocked: false,
+      tv,
+      castSession,
+      dashboard: dash,
+      portalUrl,
+      castUrl,
+      readiness,
+      message: `Showing "${dash.title}" on ${tv.name} (${tv.ip}) · Live at ${castUrl}`,
+    };
+  }
+
+  function stopDashboardCast({ tvId } = {}) {
+    loadState();
+    const prev = state.activeDashboardCast;
+    state.activeDashboardCast = {
+      ...(prev || {}),
+      active: false,
+      stoppedAt: new Date().toISOString(),
+    };
+    if (tvId) state.activeDashboardCast.tvId = tvId;
+    state.lastRemoteKey = 'STOP Dashboard TV Cast';
+    saveState();
+    return {
+      ok: true,
+      activeDashboardCast: state.activeDashboardCast,
+      message: 'Stopped showing RobOS Dashboard on Smart TV.',
+    };
+  }
+
   return {
     startPortalServer,
     stopPortalServer,
@@ -2175,6 +2371,8 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     launchTileOnTv,
     castDevCentralDashboard,
     stopDevCentralCast,
+    castDashboard,
+    stopDashboardCast,
   };
 }
 

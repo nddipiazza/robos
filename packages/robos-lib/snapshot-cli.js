@@ -129,6 +129,7 @@ const PORT_REGISTRY = {
   'cloud-accounts':    19207,
   'google-calendar':   19208,
   'smart-light':       19209,
+  'robos-dashboards':  19211,
 };
 
 
