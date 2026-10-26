@@ -1254,15 +1254,18 @@ tizen run -p robostv001.RobOSTV
       const ev = events[i];
       const y = 170 + i * 114;
       const status = String(ev?.status || 'upcoming').toUpperCase();
-      const stripeColor = status === 'IN-PROGRESS' || status === 'NOW' ? '0x10B981FF' : status === 'COMPLETED' ? '0x64748BFF' : '0x00BCD4FF';
-      const timeText = ev ? `${ev.time}   [${status}]` : '';
+      const accEmail = ev?.accountEmail || ev?.calendar || 'nicholas.dipiazza@gmail.com';
+      const isSecondCal = String(accEmail).toLowerCase().includes('hermetiq') || ev?.color === '#10b981';
+      const stripeColor = isSecondCal ? '0x10B981FF' : '0x00BCD4FF';
+      const timeColor = isSecondCal ? '0x6EE7B7FF' : '0x67E8F9FF';
+      const timeText = ev ? `${ev.time}  [${status}]  (${accEmail})` : '';
       const titleText = ev ? String(ev.title || '').slice(0, 44) : '';
-      const locText = ev ? `Location: ${ev.location || 'Desk'}` : '';
+      const locText = ev ? `Calendar: ${accEmail} | ${ev.location || 'Workspace'}` : '';
       return `    <Rectangle id="calBg${i}" translation="[676, ${y}]" width="544" height="100" color="0x161F30FF" visible="${ev ? 'true' : 'false'}" />
     <Rectangle id="calStripe${i}" translation="[676, ${y}]" width="6" height="100" color="${stripeColor}" visible="${ev ? 'true' : 'false'}" />
-    <Label id="calTime${i}" translation="[696, ${y + 10}]" scale="[0.58, 0.58]" width="860" height="34" numLines="1" color="0x6EE7B7FF" text="${safeXml(timeText)}" />
-    <Label id="calTitle${i}" translation="[696, ${y + 38}]" scale="[0.70, 0.70]" width="720" height="36" numLines="1" color="0xF8FAFCFF" text="${safeXml(titleText)}" />
-    <Label id="calLoc${i}" translation="[696, ${y + 68}]" scale="[0.58, 0.58]" width="860" height="34" numLines="1" color="0x94A3B8FF" text="${safeXml(locText)}" />`;
+    <Label id="calTime${i}" translation="[696, ${y + 10}]" scale="[0.56, 0.56]" width="900" height="34" numLines="1" color="${timeColor}" text="${safeXml(timeText)}" />
+    <Label id="calTitle${i}" translation="[696, ${y + 38}]" scale="[0.68, 0.68]" width="740" height="36" numLines="1" color="0xF8FAFCFF" text="${safeXml(titleText)}" />
+    <Label id="calLoc${i}" translation="[696, ${y + 68}]" scale="[0.55, 0.55]" width="900" height="34" numLines="1" color="0x94A3B8FF" text="${safeXml(locText)}" />`;
     }).join('\n');
 
     const agentRowsXml = Array.from({ length: 3 }, (_, i) => {
@@ -1348,7 +1351,7 @@ ${commitRowsXml}
     <!-- Column 2: Calendar Events for the Day -->
     <Rectangle id="colCalendarCard" translation="[656, 102]" width="584" height="784" color="0x111827FF" />
     <Rectangle translation="[656, 102]" width="584" height="4" color="0x10B981FF" />
-    <Label id="colCalendarHeader" scale="[0.76, 0.76]" text="2. CALENDAR EVENTS FOR THE DAY" translation="[676, 118]" width="700" height="36" numLines="1" color="0x6EE7B7FF" />
+    <Label id="colCalendarHeader" scale="[0.66, 0.66]" text="2. CALENDARS: nicholas.dipiazza@gmail.com + nicholas@hermetiq.com" translation="[676, 120]" width="820" height="36" numLines="1" color="0x6EE7B7FF" />
     <Rectangle translation="[676, 154]" width="544" height="2" color="0x1E293BFF" />
 ${calendarRowsXml}
 
@@ -1462,11 +1465,21 @@ sub onPayloadUpdated()
                 lcNode = m.top.findNode("calLoc" + i.ToStr())
                 if i < events.Count()
                     ev = events[i]
+                    accEmail = ev.accountEmail
+                    if accEmail = invalid then accEmail = ev.calendar
+                    if accEmail = invalid then accEmail = "nicholas.dipiazza@gmail.com"
+                    isSecond = (Instr(1, LCase(cleanAscii(accEmail)), "hermetiq") > 0)
                     if bgNode <> invalid then bgNode.visible = true
-                    if stNode <> invalid then stNode.visible = true
-                    if tmNode <> invalid then tmNode.text = cleanAscii(ev.time) + "   [" + UCase(cleanAscii(ev.status)) + "]"
+                    if stNode <> invalid
+                        stNode.visible = true
+                        if isSecond then stNode.color = "0x10B981FF" else stNode.color = "0x00BCD4FF"
+                    end if
+                    if tmNode <> invalid
+                        if isSecond then tmNode.color = "0x6EE7B7FF" else tmNode.color = "0x67E8F9FF"
+                        tmNode.text = cleanAscii(ev.time) + "  [" + UCase(cleanAscii(ev.status)) + "]  (" + cleanAscii(accEmail) + ")"
+                    end if
                     if tlNode <> invalid then tlNode.text = Left(cleanAscii(ev.title), 44)
-                    if lcNode <> invalid then lcNode.text = "Location: " + cleanAscii(ev.location)
+                    if lcNode <> invalid then lcNode.text = "Calendar: " + cleanAscii(accEmail) + " | " + cleanAscii(ev.location)
                 end if
             end for
         else if cTag = "robos-widget-agent-sessions" and card.liveData <> invalid and card.liveData.sessions <> invalid

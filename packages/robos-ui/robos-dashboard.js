@@ -354,16 +354,29 @@ robos-widget-sprint-radar, robos-widget-custom {
 
     if (widgetType === 'calendar-today') {
       const events = Array.isArray(data.events) ? data.events : [];
+      const calendars = Array.isArray(data.calendars) ? data.calendars : [];
+      const calPillsHtml =
+        calendars.length > 0
+          ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;">
+              ${calendars
+                .map(
+                  (c) =>
+                    `<span class="robos-w-pill" style="border:1px solid ${esc(c.color || '#00bcd4')};color:${esc(c.color || '#67e8f9')};">● ${esc(c.email)}</span>`
+                )
+                .join('')}
+            </div>`
+          : '';
       return `
         <div class="robos-w-meta">
           <span>📅 ${esc(data.dateLabel || 'Today')}</span>
-          <span class="robos-w-pill">${esc(data.syncedAccountEmail || 'CalDAV Synced')}</span>
+          <span class="robos-w-pill">${esc(calendars.length > 1 ? `${calendars.length} Calendars Synced` : data.syncedAccountEmail || 'CalDAV Synced')}</span>
         </div>
+        ${calPillsHtml}
         <div class="robos-cal-list">
           ${events
             .map(
               (ev) => `
-            <div class="robos-cal-row ${esc(ev.status || 'upcoming')}" data-event-id="${esc(ev.id)}">
+            <div class="robos-cal-row ${esc(ev.status || 'upcoming')}" data-event-id="${esc(ev.id)}" style="border-left-color:${esc(ev.color || '#00bcd4')};">
               <div class="robos-cal-time">
                 <div>${esc(ev.time)}</div>
                 <div class="robos-cal-end">${esc(ev.endTime || '')}</div>
@@ -373,7 +386,7 @@ robos-widget-sprint-radar, robos-widget-custom {
                   <span class="robos-cal-title">${esc(ev.title)}</span>
                   <span class="robos-cal-badge ${esc(ev.status || 'upcoming')}">${esc((ev.status || 'upcoming').toUpperCase())}</span>
                 </div>
-                <div class="robos-cal-sub">${esc(ev.calendar || 'Calendar')} · ${esc(ev.location || 'Workspace')}</div>
+                <div class="robos-cal-sub"><strong style="color:${esc(ev.color || '#67e8f9')};">${esc(ev.accountEmail || ev.calendar || 'Calendar')}</strong> · ${esc(ev.location || 'Workspace')}</div>
               </div>
             </div>
           `

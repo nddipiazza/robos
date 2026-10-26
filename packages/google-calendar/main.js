@@ -179,8 +179,10 @@ ipcMain.handle('gcal:configure-only', async (_, payload) => {
       calendarColor,
       refreshMinutes,
     });
+    const allRes = tb.configureAllGoogleAccountsInThunderbird();
     return {
       ...res,
+      allAccountsConfigured: allRes.accountsConfigured,
       thunderbird: tb.detectThunderbird(),
     };
   } catch (err) {
@@ -209,7 +211,7 @@ ipcMain.handle('gcal:install-and-configure', async (_, payload) => {
       sendInstallLog(`Mozilla Thunderbird is already installed at ${status.binaryPath} (${status.version || 'ready'}).\n`);
     }
 
-    sendInstallLog('Writing Google Calendar (CalDAV), Google Contacts (CardDAV), and OAuth2 configuration to Thunderbird profile…\n');
+    sendInstallLog('Writing Google Calendar (CalDAV), Google Contacts (CardDAV), and OAuth2 configuration for all Google accounts to Thunderbird profile…\n');
     const configResult = tb.configureThunderbirdForGoogleAccount(accountId, {
       enableCalendar,
       enableContacts,
@@ -217,12 +219,14 @@ ipcMain.handle('gcal:install-and-configure', async (_, payload) => {
       calendarColor,
       refreshMinutes,
     });
-    sendInstallLog(`✓ Configured ${configResult.writtenFiles.join(', ')}\n`);
+    const allRes = tb.configureAllGoogleAccountsInThunderbird();
+    sendInstallLog(`✓ Configured ${allRes.count} Google calendar(s): ${(allRes.accountsConfigured || []).map((a) => a.email).join(', ')}\n`);
 
     return {
       ok: true,
       installResult,
       ...configResult,
+      allAccountsConfigured: allRes.accountsConfigured,
       thunderbird: tb.detectThunderbird(),
     };
   } catch (err) {
