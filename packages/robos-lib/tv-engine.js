@@ -1215,38 +1215,79 @@ tizen run -p robostv001.RobOSTV
       initialDash = dashEngine.resolveDashboard('daily-engineering-ops').dashboard;
     } catch {}
 
-    const commitsCard = (initialDash?.cards || []).find((c) => c.widgetTag === 'robos-widget-git-commits');
-    const calendarCard = (initialDash?.cards || []).find((c) => c.widgetTag === 'robos-widget-calendar-today');
-    const agentsCard = (initialDash?.cards || []).find((c) => c.widgetTag === 'robos-widget-agent-sessions');
+    const commitsCard = (initialDash?.cards || []).find(
+      (c) => (c.componentTag || c.widgetTag) === 'robos-widget-git-commits'
+    );
+    const calendarCard = (initialDash?.cards || []).find(
+      (c) => (c.componentTag || c.widgetTag) === 'robos-widget-calendar-today'
+    );
+    const agentsCard = (initialDash?.cards || []).find(
+      (c) => (c.componentTag || c.widgetTag) === 'robos-widget-agent-sessions'
+    );
 
-    const safeBrsStr = (str) =>
+    const safeXml = (str) =>
       String(str || '')
-        .replace(/"/g, "'")
-        .replace(/[\r\n]+/g, ' ');
+        .replace(/[^\x20-\x7E]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
 
-    const commitLinesBrs = ((commitsCard && commitsCard.liveData && commitsCard.liveData.commits) || [])
-      .slice(0, 10)
-      .map(
-        (c, idx) =>
-          `"${idx + 1}. [${safeBrsStr(c.hash)}] ${safeBrsStr(String(c.subject || '').slice(0, 44))} (${safeBrsStr(c.relativeTime || 'recent')})"`
-      )
-      .join(' + chr(10) + ');
-    const calendarLinesBrs = ((calendarCard && calendarCard.liveData && calendarCard.liveData.events) || [])
-      .map(
-        (ev) =>
-          `"• ${safeBrsStr(ev.time)}  ${safeBrsStr(ev.title)} [${safeBrsStr(ev.status || 'upcoming')}]" + chr(10) + "   ${safeBrsStr(ev.location || 'Desk')}"`
-      )
-      .join(' + chr(10) + ');
-    const agentLinesBrs = ((agentsCard && agentsCard.liveData && agentsCard.liveData.sessions) || [])
-      .map((s) => {
-        const tails = (Array.isArray(s.tailLines) ? s.tailLines.slice(-2) : [])
-          .map((t) => `"  ${safeBrsStr(String(t).slice(0, 50))}"`)
-          .join(' + chr(10) + ');
-        return `"● ${safeBrsStr(s.title)} [${safeBrsStr(s.provider)} · ${safeBrsStr(s.status)}]"${tails ? ' + chr(10) + ' + tails : ''}`;
-      })
-      .join(' + chr(10) + chr(10) + ');
+    const commits = ((commitsCard && commitsCard.liveData && commitsCard.liveData.commits) || []).slice(0, 10);
+    const events = ((calendarCard && calendarCard.liveData && calendarCard.liveData.events) || []).slice(0, 6);
+    const sessions = ((agentsCard && agentsCard.liveData && agentsCard.liveData.sessions) || []).slice(0, 3);
 
-    const manifest = `title=${appName}\nsubtitle=RobOS 10-Foot Smart TV & Live Dashboards Suite\nmajor_version=1\nminor_version=1\nbuild_version=2\nui_resolutions=fhd\n`;
+    const commitRowsXml = Array.from({ length: 10 }, (_, i) => {
+      const c = commits[i];
+      const y = 166 + i * 70;
+      const sha = c ? c.shortSha || c.hash || String(c.sha || '').slice(0, 8) : '';
+      const line1 = c ? `${i + 1}. ${String(c.subject || '').slice(0, 48)}` : `${i + 1}. -`;
+      const line2 = c ? `   #${sha} | ${c.author || 'dev'} | ${c.relativeTime || 'recent'}` : '';
+      return `    <Label id="commitTitle${i}" translation="[68, ${y}]" scale="[0.68, 0.68]" width="790" height="36" numLines="1" color="0xF8FAFCFF" text="${safeXml(line1)}" />
+    <Label id="commitMeta${i}" translation="[68, ${y + 28}]" scale="[0.58, 0.58]" width="920" height="34" numLines="1" color="0x67E8F9FF" text="${safeXml(line2)}" />
+    <Rectangle translation="[68, ${y + 58}]" width="544" height="1" color="0x1E293BFF" />`;
+    }).join('\n');
+
+    const calendarRowsXml = Array.from({ length: 6 }, (_, i) => {
+      const ev = events[i];
+      const y = 170 + i * 114;
+      const status = String(ev?.status || 'upcoming').toUpperCase();
+      const stripeColor = status === 'IN-PROGRESS' || status === 'NOW' ? '0x10B981FF' : status === 'COMPLETED' ? '0x64748BFF' : '0x00BCD4FF';
+      const timeText = ev ? `${ev.time}   [${status}]` : '';
+      const titleText = ev ? String(ev.title || '').slice(0, 44) : '';
+      const locText = ev ? `Location: ${ev.location || 'Desk'}` : '';
+      return `    <Rectangle id="calBg${i}" translation="[676, ${y}]" width="544" height="100" color="0x161F30FF" visible="${ev ? 'true' : 'false'}" />
+    <Rectangle id="calStripe${i}" translation="[676, ${y}]" width="6" height="100" color="${stripeColor}" visible="${ev ? 'true' : 'false'}" />
+    <Label id="calTime${i}" translation="[696, ${y + 10}]" scale="[0.58, 0.58]" width="860" height="34" numLines="1" color="0x6EE7B7FF" text="${safeXml(timeText)}" />
+    <Label id="calTitle${i}" translation="[696, ${y + 38}]" scale="[0.70, 0.70]" width="720" height="36" numLines="1" color="0xF8FAFCFF" text="${safeXml(titleText)}" />
+    <Label id="calLoc${i}" translation="[696, ${y + 68}]" scale="[0.58, 0.58]" width="860" height="34" numLines="1" color="0x94A3B8FF" text="${safeXml(locText)}" />`;
+    }).join('\n');
+
+    const agentRowsXml = Array.from({ length: 3 }, (_, i) => {
+      const s = sessions[i];
+      const y = 170 + i * 230;
+      const sTitle = s ? s.name || s.title || s.id || 'Agent Session' : '';
+      const sRef = s ? s.taskRef || s.branch || 'main' : 'main';
+      const titleText = s ? `* ${String(sTitle).slice(0, 44)}` : '';
+      const metaText = s ? `${s.providerLabel || s.provider || 'Agent'} | ${sRef} | [${String(s.status || 'running').toUpperCase()}]` : '';
+      const rawLines = Array.isArray(s?.statusLines) ? s.statusLines : Array.isArray(s?.tailLines) ? s.tailLines : [];
+      const tails = rawLines.slice(-4);
+      const tailLabels = Array.from({ length: 4 }, (__, tIdx) => {
+        const ty = y + 78 + tIdx * 30;
+        const tLine = tails[tIdx] ? String(tails[tIdx]).replace(/[^\x20-\x7E]/g, '').trim().slice(0, 56) : '';
+        return `    <Label id="agentTail${i}_${tIdx}" translation="[1310, ${ty}]" scale="[0.55, 0.55]" width="940" height="34" numLines="1" color="0xA7F3D0FF" text="${safeXml(tLine)}" />`;
+      }).join('\n');
+      return `    <Rectangle id="agentCard${i}" translation="[1284, ${y}]" width="568" height="214" color="0x161F30FF" visible="${s ? 'true' : 'false'}" />
+    <Rectangle id="agentStripe${i}" translation="[1284, ${y}]" width="568" height="3" color="0xF59E0BFF" visible="${s ? 'true' : 'false'}" />
+    <Label id="agentTitle${i}" translation="[1300, ${y + 10}]" scale="[0.68, 0.68]" width="780" height="36" numLines="1" color="0xF8FAFCFF" text="${safeXml(titleText)}" />
+    <Label id="agentMeta${i}" translation="[1300, ${y + 38}]" scale="[0.56, 0.56]" width="940" height="34" numLines="1" color="0xFCD34DFF" text="${safeXml(metaText)}" />
+    <Rectangle id="agentTermBg${i}" translation="[1298, ${y + 68}]" width="540" height="134" color="0x090D16FF" visible="${s ? 'true' : 'false'}" />
+${tailLabels}`;
+    }).join('\n');
+
+    const manifest = `title=${appName}\nsubtitle=RobOS 10-Foot Smart TV & Live Dashboards Suite\nmajor_version=1\nminor_version=2\nbuild_version=3\nui_resolutions=fhd\n`;
     const mainBrs = `sub Main()
     screen = CreateObject("roSGScreen")
     m.port = CreateObject("roMessagePort")
@@ -1263,10 +1304,7 @@ end sub
 <component name="DashboardTask" extends="Task">
   <interface>
     <field id="apiUrl" type="string" />
-    <field id="commitsText" type="string" />
-    <field id="calendarText" type="string" />
-    <field id="agentsText" type="string" />
-    <field id="dashboardTitle" type="string" />
+    <field id="payloadJson" type="string" />
   </interface>
   <script type="text/brightscript" uri="pkg:/components/DashboardTask.brs" />
 </component>
@@ -1283,44 +1321,7 @@ sub pollDashboard()
             http.SetUrl(url)
             raw = http.GetToString()
             if raw <> ""
-                json = ParseJson(raw)
-                if json <> invalid and json.dashboard <> invalid
-                    dash = json.dashboard
-                    if dash.title <> invalid then m.top.dashboardTitle = dash.title
-                    if dash.cards <> invalid
-                        for each card in dash.cards
-                            if card.widgetTag = "robos-widget-git-commits" and card.liveData <> invalid and card.liveData.commits <> invalid
-                                lines = ""
-                                idx = 1
-                                for each c in card.liveData.commits
-                                    if idx <= 10
-                                        lines = lines + idx.ToStr() + ". [" + c.hash + "] " + Left(c.subject, 46) + " (" + c.relativeTime + ")" + chr(10)
-                                        idx = idx + 1
-                                    end if
-                                end for
-                                m.top.commitsText = lines
-                            else if card.widgetTag = "robos-widget-calendar-today" and card.liveData <> invalid and card.liveData.events <> invalid
-                                lines = ""
-                                for each ev in card.liveData.events
-                                    lines = lines + "• " + ev.time + "  " + ev.title + " [" + ev.status + "]" + chr(10) + "   " + ev.location + chr(10)
-                                end for
-                                m.top.calendarText = lines
-                            else if card.widgetTag = "robos-widget-agent-sessions" and card.liveData <> invalid and card.liveData.sessions <> invalid
-                                lines = ""
-                                for each s in card.liveData.sessions
-                                    lines = lines + "● " + s.title + " [" + s.provider + " · " + s.status + "]" + chr(10)
-                                    if s.tailLines <> invalid
-                                        for each tl in s.tailLines
-                                            lines = lines + "  " + Left(tl, 54) + chr(10)
-                                        end for
-                                    end if
-                                    lines = lines + chr(10)
-                                end for
-                                m.top.agentsText = lines
-                            end if
-                        end for
-                    end if
-                end if
+                m.top.payloadJson = raw
             end if
         end if
         sleep(10000)
@@ -1332,38 +1333,47 @@ end sub
   <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
   <children>
     <Rectangle id="bg" width="1920" height="1080" color="0x070B12FF" />
-    <Rectangle id="headerBar" width="1920" height="86" color="0x111827FF" />
-    <Label id="brandLabel" text="RobOS Dashboards — Daily Engineering &amp; Agent Ops Dashboard" translation="[48, 24]" width="1180" />
-    <Label id="hostLabel" text="Live Cast: ${portalUrl}/dashboard (${tvIp})" translation="[1240, 26]" width="632" horizAlign="right" />
+    <Rectangle id="headerBar" width="1920" height="84" color="0x0F172AFF" />
+    <Rectangle id="headerAccent" translation="[0, 84]" width="1920" height="2" color="0x00BCD4FF" />
+    <Label id="brandLabel" scale="[0.90, 0.90]" text="RobOS Dashboards - Daily Engineering &amp; Agent Ops" translation="[48, 24]" width="1280" height="40" numLines="1" color="0xF8FAFCFF" />
+    <Label id="hostLabel" scale="[0.62, 0.62]" text="LIVE CAST | ${portalUrl}/dashboard (${tvIp})" translation="[1240, 30]" width="1000" height="34" numLines="1" horizAlign="right" color="0x67E8F9FF" />
 
     <!-- Column 1: 10 Latest Commit Messages -->
-    <Rectangle id="colCommitsCard" translation="[48, 104]" width="584" height="630" color="0x111827FF" />
-    <Label id="colCommitsHeader" font="font:SmallBoldSystemFont" text="1. 10 LATEST COMMIT MESSAGES (SMALL READABLE LIST)" translation="[68, 122]" width="544" color="0x67E8F9FF" />
-    <Label id="colCommitsBody" font="font:SmallestSystemFont" translation="[68, 162]" width="544" height="554" wrap="true" numLines="24" lineSpacing="2" text="Loading 10 latest git commits..." />
+    <Rectangle id="colCommitsCard" translation="[48, 102]" width="584" height="784" color="0x111827FF" />
+    <Rectangle translation="[48, 102]" width="584" height="4" color="0x00BCD4FF" />
+    <Label id="colCommitsHeader" scale="[0.76, 0.76]" text="1. 10 LATEST COMMIT MESSAGES" translation="[68, 118]" width="700" height="36" numLines="1" color="0x67E8F9FF" />
+    <Rectangle translation="[68, 154]" width="544" height="2" color="0x1E293BFF" />
+${commitRowsXml}
 
     <!-- Column 2: Calendar Events for the Day -->
-    <Rectangle id="colCalendarCard" translation="[656, 104]" width="584" height="630" color="0x111827FF" />
-    <Label id="colCalendarHeader" font="font:SmallBoldSystemFont" text="2. CALENDAR EVENTS FOR THE DAY" translation="[676, 122]" width="544" color="0x6EE7B7FF" />
-    <Label id="colCalendarBody" font="font:SmallestSystemFont" translation="[676, 162]" width="544" height="554" wrap="true" numLines="24" lineSpacing="4" text="Loading today's calendar events..." />
+    <Rectangle id="colCalendarCard" translation="[656, 102]" width="584" height="784" color="0x111827FF" />
+    <Rectangle translation="[656, 102]" width="584" height="4" color="0x10B981FF" />
+    <Label id="colCalendarHeader" scale="[0.76, 0.76]" text="2. CALENDAR EVENTS FOR THE DAY" translation="[676, 118]" width="700" height="36" numLines="1" color="0x6EE7B7FF" />
+    <Rectangle translation="[676, 154]" width="544" height="2" color="0x1E293BFF" />
+${calendarRowsXml}
 
     <!-- Column 3: Running RobOS Agent Sessions & Tailed Status Lines -->
-    <Rectangle id="colAgentsCard" translation="[1264, 104]" width="608" height="630" color="0x111827FF" />
-    <Label id="colAgentsHeader" font="font:SmallBoldSystemFont" text="3. RUNNING ROBOS AGENT SESSIONS (TAILED STATUS)" translation="[1284, 122]" width="568" color="0xFCD34DFF" />
-    <Label id="colAgentsBody" font="font:SmallestSystemFont" translation="[1284, 162]" width="568" height="554" wrap="true" numLines="24" lineSpacing="2" text="Loading running RobOS agent sessions..." />
+    <Rectangle id="colAgentsCard" translation="[1264, 102]" width="608" height="784" color="0x111827FF" />
+    <Rectangle translation="[1264, 102]" width="608" height="4" color="0xF59E0BFF" />
+    <Label id="colAgentsHeader" scale="[0.72, 0.72]" text="3. RUNNING ROBOS AGENT SESSIONS (TAILED)" translation="[1284, 118]" width="780" height="36" numLines="1" color="0xFCD34DFF" />
+    <Rectangle translation="[1284, 154]" width="568" height="2" color="0x1E293BFF" />
+${agentRowsXml}
 
-    <!-- Bottom D-Pad App Launcher Strip -->
-    <Rectangle id="heroCard" translation="[48, 750]" width="1824" height="72" color="0x161B22FF" />
-    <Label id="heroTitle" text="RobOS Dashboard Active — Use Roku D-Pad Up/Down/OK to switch RobOS TV experiences" translation="[72, 762]" width="1760" />
-    <Label id="heroDesc" text="Live polling ${portalUrl}/api/dashboard-cast every 10s" translation="[72, 792]" width="1760" color="0x94A3B8FF" />
+    <!-- Bottom Status & Compact Tile Selector -->
+    <Rectangle id="heroCard" translation="[48, 902]" width="1824" height="132" color="0x111827FF" />
+    <Rectangle translation="[48, 902]" width="1824" height="2" color="0x1E293BFF" />
+    <Label id="heroTitle" scale="[0.75, 0.75]" text="RobOS Live TV Wallboard Active - D-Pad Up/Down/OK switches TV experience" translation="[72, 916]" width="1460" height="36" numLines="1" color="0xF8FAFCFF" />
+    <Label id="heroDesc" scale="[0.62, 0.62]" text="10 Latest Git Commits | Today's Calendar Schedule | Active Coding Agent Sessions &amp; Tailed Logs" translation="[72, 954]" width="1760" height="34" numLines="1" color="0x94A3B8FF" />
+    <Label id="statusFooter" scale="[0.62, 0.62]" text="Connected to ${portalUrl}/dashboard | Auto-refreshing every 10s" translation="[72, 988]" width="1760" height="34" numLines="1" color="0x67E8F9FF" />
     <LabelList
       id="tileList"
-      translation="[48, 834]"
-      itemSize="[1824, 54]"
-      itemSpacing="[0, 8]"
+      translation="[1220, 916]"
+      scale="[0.66, 0.66]"
+      itemSize="[940, 42]"
+      itemSpacing="[0, 6]"
       numRows="3"
       color="0xF8FAFCFF"
       focusedColor="0x061318FF" />
-    <Label id="statusFooter" text="Ready — Showing Daily Engineering &amp; Agent Ops Dashboard on Roku (${portalUrl}/dashboard)" translation="[48, 1026]" width="1824" />
   </children>
 </component>
 `;
@@ -1373,23 +1383,16 @@ end sub
     m.heroDesc = m.top.findNode("heroDesc")
     m.statusFooter = m.top.findNode("statusFooter")
     m.brandLabel = m.top.findNode("brandLabel")
-    m.colCommitsBody = m.top.findNode("colCommitsBody")
-    m.colCalendarBody = m.top.findNode("colCalendarBody")
-    m.colAgentsBody = m.top.findNode("colAgentsBody")
-
-    m.colCommitsBody.text = ${commitLinesBrs || '"No commits found"'}
-    m.colCalendarBody.text = ${calendarLinesBrs || '"No calendar events today"'}
-    m.colAgentsBody.text = ${agentLinesBrs || '"No running agent sessions"'}
 
     m.tiles = [
-        { id: "portal-home", title: "1. Daily Engineering & Agent Ops Dashboard  [10 Commits · Calendar · Agent Tails]", desc: "3-column live graphical dashboard from RobOS Dashboards (${portalUrl}/dashboard)." },
-        { id: "crpg-realm", title: "2. Realm of Heroes cRPG  [Godot 4 Game]", desc: "Party-based tactical isometric D&D 5e cRPG in Godot 4 with gamepad & couch co-op support." },
-        { id: "quest-warrior-dragon", title: "3. Quest: Warrior Dragon  [D-Pad 2D JRPG]", desc: "Clean-room NES-authentic 2D JRPG in Godot 4 — play with your TV remote D-Pad or controller." },
-        { id: "tabletop-rpg", title: "4. RobOS Tabletop RPG  [Living Room Dungeon Board]", desc: "HeroQuest-inspired 26x19 tactical dungeon crawler designed for big-screen tabletop nights." },
-        { id: "audio-jukebox", title: "5. Audio Player & Virtual DJ  [100k Song Jukebox]", desc: "100,000-song library with synchronized full-screen TV lyrics, AI Playlists, and Kokoro Virtual DJ." },
-        { id: "home-intercom", title: "6. Home Speaker Intercom  [Multi-Room TTS]", desc: "Broadcast voice notes, Kokoro neural TTS announcements, and soundscapes across every room." },
-        { id: "pr-review-theater", title: "7. PR Review Theater  [1080p Cinema Mode]", desc: "Watch narrated 1080p agent proof-of-work walkthroughs and semantic KGraph blast-radius diffs." },
-        { id: "pos-menu-board", title: "8. POS Order & Prep Display  [Wall Kiosk]", desc: "Live cafe/bar order prep queue and digital menu board powered by RobOS Point of Sale." }
+        { id: "portal-home", title: "1. Daily Engineering & Agent Ops Dashboard", desc: "3-column live graphical dashboard from RobOS Dashboards (${portalUrl}/dashboard)." },
+        { id: "crpg-realm", title: "2. Realm of Heroes cRPG [Godot 4]", desc: "Party-based tactical isometric D&D 5e cRPG in Godot 4." },
+        { id: "quest-warrior-dragon", title: "3. Quest: Warrior Dragon [2D JRPG]", desc: "Clean-room NES-authentic 2D JRPG in Godot 4." },
+        { id: "tabletop-rpg", title: "4. RobOS Tabletop RPG [Dungeon Board]", desc: "HeroQuest-inspired 26x19 tactical dungeon crawler." },
+        { id: "audio-jukebox", title: "5. Audio Player & Virtual DJ [100k Songs]", desc: "100,000-song library with synchronized TV lyrics and Virtual DJ." },
+        { id: "home-intercom", title: "6. Home Speaker Intercom [Multi-Room]", desc: "Broadcast voice notes and Kokoro neural TTS announcements." },
+        { id: "pr-review-theater", title: "7. PR Review Theater [1080p Cinema]", desc: "Watch narrated 1080p agent proof-of-work walkthroughs." },
+        { id: "pos-menu-board", title: "8. POS Order & Prep Display [Wall Kiosk]", desc: "Live cafe/bar order prep queue and digital menu board." }
     ]
 
     content = CreateObject("roSGNode", "ContentNode")
@@ -1404,27 +1407,95 @@ end sub
 
     m.dashTask = CreateObject("roSGNode", "DashboardTask")
     m.dashTask.apiUrl = "${portalUrl}/api/dashboard-cast"
-    m.dashTask.observeField("commitsText", "onCommitsUpdated")
-    m.dashTask.observeField("calendarText", "onCalendarUpdated")
-    m.dashTask.observeField("agentsText", "onAgentsUpdated")
-    m.dashTask.observeField("dashboardTitle", "onTitleUpdated")
+    m.dashTask.observeField("payloadJson", "onPayloadUpdated")
     m.dashTask.control = "RUN"
 end sub
 
-sub onCommitsUpdated()
-    if m.dashTask.commitsText <> "" then m.colCommitsBody.text = m.dashTask.commitsText
-end sub
+function cleanAscii(s as Dynamic) as String
+    if s = invalid then return ""
+    str = s.ToStr()
+    out = ""
+    for i = 0 to Len(str) - 1
+        ch = Mid(str, i + 1, 1)
+        code = Asc(ch)
+        if code >= 32 and code <= 126
+            out = out + ch
+        else if code = 183 or code = 8212
+            out = out + "-"
+        end if
+    end for
+    return out
+end function
 
-sub onCalendarUpdated()
-    if m.dashTask.calendarText <> "" then m.colCalendarBody.text = m.dashTask.calendarText
-end sub
+sub onPayloadUpdated()
+    raw = m.dashTask.payloadJson
+    if raw = "" then return
+    json = ParseJson(raw)
+    if json = invalid or json.dashboard = invalid then return
+    dash = json.dashboard
+    if dash.title <> invalid then m.brandLabel.text = "RobOS Dashboards - " + cleanAscii(dash.title)
+    if dash.cards = invalid then return
 
-sub onAgentsUpdated()
-    if m.dashTask.agentsText <> "" then m.colAgentsBody.text = m.dashTask.agentsText
-end sub
-
-sub onTitleUpdated()
-    if m.dashTask.dashboardTitle <> "" then m.brandLabel.text = "RobOS Dashboards — " + m.dashTask.dashboardTitle
+    for each card in dash.cards
+        cTag = card.componentTag
+        if cTag = invalid then cTag = card.widgetTag
+        if cTag = "robos-widget-git-commits" and card.liveData <> invalid and card.liveData.commits <> invalid
+            commits = card.liveData.commits
+            for i = 0 to 9
+                tNode = m.top.findNode("commitTitle" + i.ToStr())
+                mNode = m.top.findNode("commitMeta" + i.ToStr())
+                if i < commits.Count()
+                    c = commits[i]
+                    sha = c.shortSha
+                    if sha = invalid then sha = c.hash
+                    if tNode <> invalid then tNode.text = (i + 1).ToStr() + ". " + Left(cleanAscii(c.subject), 48)
+                    if mNode <> invalid then mNode.text = "   #" + cleanAscii(sha) + " | " + cleanAscii(c.author) + " | " + cleanAscii(c.relativeTime)
+                end if
+            end for
+        else if cTag = "robos-widget-calendar-today" and card.liveData <> invalid and card.liveData.events <> invalid
+            events = card.liveData.events
+            for i = 0 to 5
+                bgNode = m.top.findNode("calBg" + i.ToStr())
+                stNode = m.top.findNode("calStripe" + i.ToStr())
+                tmNode = m.top.findNode("calTime" + i.ToStr())
+                tlNode = m.top.findNode("calTitle" + i.ToStr())
+                lcNode = m.top.findNode("calLoc" + i.ToStr())
+                if i < events.Count()
+                    ev = events[i]
+                    if bgNode <> invalid then bgNode.visible = true
+                    if stNode <> invalid then stNode.visible = true
+                    if tmNode <> invalid then tmNode.text = cleanAscii(ev.time) + "   [" + UCase(cleanAscii(ev.status)) + "]"
+                    if tlNode <> invalid then tlNode.text = Left(cleanAscii(ev.title), 44)
+                    if lcNode <> invalid then lcNode.text = "Location: " + cleanAscii(ev.location)
+                end if
+            end for
+        else if cTag = "robos-widget-agent-sessions" and card.liveData <> invalid and card.liveData.sessions <> invalid
+            sessions = card.liveData.sessions
+            for i = 0 to 2
+                if i < sessions.Count()
+                    s = sessions[i]
+                    atNode = m.top.findNode("agentTitle" + i.ToStr())
+                    amNode = m.top.findNode("agentMeta" + i.ToStr())
+                    sTitle = s.name
+                    if sTitle = invalid then sTitle = s.title
+                    sRef = s.taskRef
+                    if sRef = invalid then sRef = "main"
+                    if atNode <> invalid and sTitle <> invalid then atNode.text = "* " + Left(cleanAscii(sTitle), 44)
+                    if amNode <> invalid then amNode.text = cleanAscii(s.provider) + " | " + cleanAscii(sRef) + " | [" + UCase(cleanAscii(s.status)) + "]"
+                    linesArr = s.statusLines
+                    if linesArr = invalid then linesArr = s.tailLines
+                    if linesArr <> invalid
+                        for tIdx = 0 to 3
+                            tlNode = m.top.findNode("agentTail" + i.ToStr() + "_" + tIdx.ToStr())
+                            if tlNode <> invalid and tIdx < linesArr.Count()
+                                tlNode.text = Left(cleanAscii(linesArr[tIdx]), 56)
+                            end if
+                        end for
+                    end if
+                end if
+            end for
+        end if
+    end for
 end sub
 
 sub onItemFocused()
@@ -2453,34 +2524,40 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     if (tv.platformId === 'roku-os' && process.env.ROBOS_TEST !== '1' && !process.env.NODE_TEST_CONTEXT) {
       const pkg = buildTvPackage({ platformId: 'roku-os', tvId: tv.id, tvIp: tv.ip });
       const readiness = await diagnoseTvReadiness(tv.id);
+      let sideloadedNow = false;
       if (readiness && readiness.allSideloadReady && pkg && pkg.targetDir) {
         try {
-          spawnSync('bash', ['sideload-roku.sh'], { cwd: pkg.targetDir, timeout: 6000 });
+          const sl = spawnSync('bash', ['sideload-roku.sh'], { cwd: pkg.targetDir, timeout: 6000, encoding: 'utf8' });
+          if (sl.status === 0 && /Install Success|Application Received/i.test(String(sl.stdout || ''))) {
+            sideloadedNow = true;
+          }
         } catch {}
       }
-      const launchStatus = await new Promise((resolve) => {
-        const req = http.request(
-          {
-            hostname: tv.ip,
-            port: 8060,
-            path: '/launch/dev',
-            method: 'POST',
-            agent: false,
-            headers: { 'Content-Length': '0', Connection: 'close' },
-            timeout: 2000,
-          },
-          (res) => {
-            res.resume();
-            resolve(res.statusCode || 0);
-          }
-        );
-        req.on('error', () => resolve(0));
-        req.on('timeout', () => {
-          req.destroy();
-          resolve(0);
-        });
-        req.end();
-      });
+      const launchStatus = sideloadedNow
+        ? 200
+        : await new Promise((resolve) => {
+            const req = http.request(
+              {
+                hostname: tv.ip,
+                port: 8060,
+                path: '/launch/dev',
+                method: 'POST',
+                agent: false,
+                headers: { 'Content-Length': '0', Connection: 'close' },
+                timeout: 2000,
+              },
+              (res) => {
+                res.resume();
+                resolve(res.statusCode || 0);
+              }
+            );
+            req.on('error', () => resolve(0));
+            req.on('timeout', () => {
+              req.destroy();
+              resolve(0);
+            });
+            req.end();
+          });
 
       const rokuChannelLaunched = launchStatus >= 200 && launchStatus < 300;
       const dispatch = rokuChannelLaunched
