@@ -357,7 +357,7 @@ function generateThunderbirdUserJsBlock(account, configOptions = {}) {
     configOptions.calendarColor ||
     account.calendarColor ||
     (account.isDefault ? '#00bcd4' : ACCOUNT_PALETTE[defaultColorIdx === 0 ? 1 : defaultColorIdx]);
-  const refreshMinutes = Number(configOptions.refreshMinutes) || 15;
+  const refreshMinutes = Number(configOptions.refreshMinutes) || 1;
   const displayName = configOptions.displayName || account.label || email;
   const isDefaultCalendar =
     configOptions.isDefaultCalendar !== undefined ? Boolean(configOptions.isDefaultCalendar) : Boolean(account.isDefault);
@@ -901,8 +901,302 @@ function deleteCalendarEvent(eventId, options = {}) {
  * Copies `cache.sqlite` + WAL/SHM to a temporary directory before querying so it succeeds even
  * while Thunderbird is actively running and holding a write lock.
  */
+let _tbLiveCaldavCache = {
+  profilePath: '',
+  expiresAt: 0,
+  events: null,
+};
+
+/**
+ * Queries Thunderbird's configured CalDAV endpoints directly using Thunderbird's NSS-stored
+ * OAuth2 refresh token (`logins.json` + `key4.db`) so external calendar additions, edits,
+ * and deletions that appear in Thunderbird show up dynamically on the RobOS Dashboard within
+ * seconds (even while Thunderbird holds `cache.sqlite` in `PRAGMA locking_mode = EXCLUSIVE`).
+ */
+function readThunderbirdLiveCaldavEvents(profilePath, email = '') {
+  if (!profilePath || process.env.ROBOS_TEST === '1' || process.env.ROBOS_TEST_MODE === '1') {
+    return [];
+  }
+  const loginsPath = path.join(profilePath, 'logins.json');
+  const keyDbPath = path.join(profilePath, 'key4.db');
+  if (!fs.existsSync(loginsPath) || !fs.existsSync(keyDbPath)) {
+    return [];
+  }
+
+  const nowMs = Date.now();
+  if (
+    _tbLiveCaldavCache.events &&
+    _tbLiveCaldavCache.profilePath === profilePath &&
+    nowMs < _tbLiveCaldavCache.expiresAt
+  ) {
+    return _tbLiveCaldavCache.events;
+  }
+
+  // Parse calendar registry from user.js / prefs.js
+  const calMap = {};
+  for (const prefFile of ['user.js', 'prefs.js']) {
+    const pPath = path.join(profilePath, prefFile);
+    if (!fs.existsSync(pPath)) continue;
+    try {
+      const content = fs.readFileSync(pPath, 'utf8');
+      for (const m of content.matchAll(
+        /calendar\.registry\.([0-9a-f-]{36})\.(name|username|color|uri)",\s*"([^"]+)"/g
+      )) {
+        const [, uuid, key, val] = m;
+        if (!calMap[uuid]) calMap[uuid] = { uuid };
+        calMap[uuid][key] = val;
+      }
+    } catch {}
+  }
+
+  const tokenCachePath = path.join(os.tmpdir(), 'robos-tb-oauth-token-cache.json');
+  const pyScript = `
+import ctypes, json, base64, os, sys, time, urllib.request, urllib.parse, re
+from datetime import datetime, timezone, timedelta
+
+prof = sys.argv[1]
+token_cache_file = sys.argv[2]
+cal_map = json.loads(sys.argv[3])
+default_email = sys.argv[4]
+
+class SECItem(ctypes.Structure):
+    _fields_ = [("type", ctypes.c_uint), ("data", ctypes.c_char_p), ("len", ctypes.c_uint)]
+
+nss = ctypes.CDLL("libnss3.so")
+if nss.NSS_Init(prof.encode("utf-8")) != 0:
+    print("[]")
+    sys.exit(0)
+
+def decrypt(b64):
+    raw = base64.b64decode(b64)
+    inp = SECItem(0, ctypes.c_char_p(raw), len(raw))
+    out = SECItem(0, None, 0)
+    if nss.PK11SDR_Decrypt(ctypes.byref(inp), ctypes.byref(out), None) == 0:
+        return ctypes.string_at(out.data, out.len).decode("utf-8")
+    return None
+
+refresh_tokens = {}
+try:
+    with open(os.path.join(prof, "logins.json"), "r", encoding="utf-8") as f:
+        j = json.load(f)
+    for l in j.get("logins", []):
+        realm = l.get("httpRealm", "")
+        if "calendar" in realm or "caldav" in realm:
+            u = decrypt(l.get("encryptedUsername", ""))
+            rt = decrypt(l.get("encryptedPassword", ""))
+            if u and rt:
+                refresh_tokens[u.lower()] = (u, rt)
+finally:
+    nss.NSS_Shutdown()
+
+if not refresh_tokens:
+    print("[]")
+    sys.exit(0)
+
+tok_cache = {}
+if os.path.exists(token_cache_file):
+    try:
+        with open(token_cache_file, "r", encoding="utf-8") as f:
+            tok_cache = json.load(f)
+    except Exception:
+        tok_cache = {}
+
+now_ts = time.time()
+access_tokens = {}
+cache_dirty = False
+
+for u_lower, (u_orig, rt) in refresh_tokens.items():
+    cached = tok_cache.get(u_lower)
+    if cached and cached.get("expires_at", 0) > now_ts + 60 and cached.get("access_token"):
+        access_tokens[u_lower] = cached["access_token"]
+        continue
+    try:
+        data = urllib.parse.urlencode({
+            "client_id": "406964657835-aq8lmia8j95dhl1a2bvharmfk3t1hgqj.apps.googleusercontent.com",
+            "client_secret": "kSmqreRr0qwBWJgbf5Y-PjSU",
+            "refresh_token": rt,
+            "grant_type": "refresh_token",
+        }).encode("utf-8")
+        req = urllib.request.Request("https://www.googleapis.com/oauth2/v3/token", data=data)
+        resp = json.loads(urllib.request.urlopen(req, timeout=4).read().decode("utf-8"))
+        at = resp.get("access_token")
+        if at:
+            access_tokens[u_lower] = at
+            tok_cache[u_lower] = {
+                "access_token": at,
+                "expires_at": now_ts + int(resp.get("expires_in", 3500))
+            }
+            cache_dirty = True
+    except Exception:
+        pass
+
+if cache_dirty:
+    try:
+        with open(token_cache_file, "w", encoding="utf-8") as f:
+            json.dump(tok_cache, f)
+    except Exception:
+        pass
+
+now_utc = datetime.now(timezone.utc)
+start_range = (now_utc - timedelta(days=1)).strftime("%Y%m%dT000000Z")
+end_range = (now_utc + timedelta(days=21)).strftime("%Y%m%dT235959Z")
+local_now = datetime.now()
+today_start_local = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+def parse_ical_dt(val):
+    s = val.strip()
+    if re.match(r"^\\d{8}$", s):
+        return datetime.strptime(s, "%Y%m%d"), True
+    if s.endswith("Z"):
+        dt_utc = datetime.strptime(s[:15], "%Y%m%dT%H%M%S").replace(tzinfo=timezone.utc)
+        return dt_utc.astimezone().replace(tzinfo=None), False
+    return datetime.strptime(s[:15], "%Y%m%dT%H%M%S"), False
+
+def advance_rrule(dt_start, dt_end, rrule_str):
+    if not rrule_str or dt_end > today_start_local:
+        return dt_start, dt_end
+    dur = dt_end - dt_start
+    until_m = re.search(r"UNTIL=(\\d{8})", rrule_str)
+    if until_m:
+        until_dt = datetime.strptime(until_m.group(1), "%Y%m%d") + timedelta(days=1)
+        if until_dt <= today_start_local:
+            return None, None
+    interval = 1
+    int_m = re.search(r"INTERVAL=(\\d+)", rrule_str)
+    if int_m:
+        interval = max(1, int(int_m.group(1)))
+    if "FREQ=DAILY" in rrule_str:
+        step = timedelta(days=interval)
+        while dt_end <= today_start_local:
+            dt_start += step
+            dt_end = dt_start + dur
+        return dt_start, dt_end
+    if "FREQ=WEEKLY" in rrule_str:
+        step = timedelta(weeks=interval)
+        while dt_end <= today_start_local:
+            dt_start += step
+            dt_end = dt_start + dur
+        return dt_start, dt_end
+    return None, None
+
+out_events = []
+for uuid, meta in cal_map.items():
+    uname = (meta.get("username") or default_email or "").strip()
+    u_lower = uname.lower()
+    at = access_tokens.get(u_lower)
+    if not at:
+        continue
+    caldav_url = meta.get("uri") or f"https://apidata.googleusercontent.com/caldav/v2/{urllib.parse.quote(uname)}/events"
+    report_xml = f"""<?xml version="1.0" encoding="utf-8" ?>
+<C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+  <D:prop>
+    <D:getetag/>
+    <C:calendar-data/>
+  </D:prop>
+  <C:filter>
+    <C:comp-filter name="VCALENDAR">
+      <C:comp-filter name="VEVENT">
+        <C:time-range start="{start_range}" end="{end_range}"/>
+      </C:comp-filter>
+    </C:comp-filter>
+  </C:filter>
+</C:calendar-query>""".encode("utf-8")
+    try:
+        r2 = urllib.request.Request(caldav_url, data=report_xml, method="REPORT", headers={
+            "Authorization": f"Bearer {at}",
+            "Depth": "1",
+            "Content-Type": "application/xml; charset=utf-8"
+        })
+        xml_text = urllib.request.urlopen(r2, timeout=4).read().decode("utf-8", "ignore")
+        for vev in xml_text.split("BEGIN:VEVENT")[1:]:
+            block = vev.split("END:VEVENT")[0].replace("\\r\\n ", "").replace("\\n ", "")
+            status_m = re.search(r"^STATUS:(.*)$", block, re.M)
+            if status_m and status_m.group(1).strip().upper() == "CANCELLED":
+                continue
+            uid_m = re.search(r"^UID:(.*)$", block, re.M)
+            sum_m = re.search(r"^SUMMARY:(.*)$", block, re.M)
+            dt_m = re.search(r"^DTSTART[^:]*:(.*)$", block, re.M)
+            de_m = re.search(r"^DTEND[^:]*:(.*)$", block, re.M)
+            loc_m = re.search(r"^LOCATION:(.*)$", block, re.M)
+            rr_m = re.search(r"^RRULE:(.*)$", block, re.M)
+            mod_m = re.search(r"^LAST-MODIFIED:(.*)$", block, re.M)
+            if not dt_m:
+                continue
+            dt_s, is_all_day = parse_ical_dt(dt_m.group(1))
+            dt_e, _ = parse_ical_dt(de_m.group(1)) if de_m else (dt_s + timedelta(hours=1), is_all_day)
+            rrule_val = rr_m.group(1).strip() if rr_m else ""
+            if rrule_val:
+                dt_s, dt_e = advance_rrule(dt_s, dt_e, rrule_val)
+                if not dt_s:
+                    continue
+            uid_val = uid_m.group(1).strip() if uid_m else f"caldav-{len(out_events)}"
+            summary_val = (sum_m.group(1).strip() if sum_m else "(Untitled Event)").replace("\\\\,", ",").replace("\\\\;", ";")
+            loc_val = (loc_m.group(1).strip() if loc_m else "").replace("\\\\,", ",").replace("\\\\n", " ")
+            out_events.append({
+                "id": f"tb-{uid_val}",
+                "calId": uuid,
+                "summary": summary_val,
+                "start": dt_s.astimezone().isoformat(),
+                "end": dt_e.astimezone().isoformat(),
+                "startEpochSec": int(dt_s.astimezone().timestamp()),
+                "endEpochSec": int(dt_e.astimezone().timestamp()),
+                "allDay": is_all_day,
+                "recurring": bool(rrule_val),
+                "lastModified": mod_m.group(1).strip() if mod_m else "",
+                "category": "meeting",
+                "source": "thunderbird-caldav-live",
+                "calendarName": meta.get("name") or f"Google Calendar ({uname})",
+                "accountEmail": uname,
+                "color": meta.get("color") or "#00bcd4",
+                "location": loc_val
+            })
+    except Exception:
+        pass
+
+out_events.sort(key=lambda x: x["startEpochSec"])
+print(json.dumps(out_events))
+`;
+
+  try {
+    const out = execFileSync(
+      'python3',
+      ['-c', pyScript, profilePath, tokenCachePath, JSON.stringify(calMap), email || 'nicholas.dipiazza@gmail.com'],
+      { encoding: 'utf8', timeout: 5500 }
+    ).trim();
+    if (out) {
+      const parsed = JSON.parse(out);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        _tbLiveCaldavCache = {
+          profilePath,
+          expiresAt: nowMs + 4000,
+          events: parsed,
+        };
+        return parsed;
+      }
+    }
+  } catch {}
+
+  if (_tbLiveCaldavCache.events && _tbLiveCaldavCache.profilePath === profilePath) {
+    return _tbLiveCaldavCache.events;
+  }
+  return [];
+}
+
+/**
+ * Reads any cached CalDAV events from Thunderbird:
+ *   1. Queries Thunderbird's live CalDAV feed using Thunderbird's NSS `logins.json` OAuth2 token
+ *      (`readThunderbirdLiveCaldavEvents`) so external calendar updates appear dynamically within seconds.
+ *   2. Falls back to / merges with Thunderbird's local SQLite cache (`calendar-data/cache.sqlite`).
+ */
 function readThunderbirdCachedEvents(profilePath, email = '') {
   if (!profilePath) return [];
+
+  // 1. Live CalDAV sync via Thunderbird's OAuth2 credentials (picks up external changes immediately)
+  const liveEvents = readThunderbirdLiveCaldavEvents(profilePath, email);
+  if (liveEvents.length > 0) {
+    return liveEvents;
+  }
+
   const calDataDir = path.join(profilePath, 'calendar-data');
   const dbPath = path.join(calDataDir, 'cache.sqlite');
   if (!fs.existsSync(dbPath)) return [];
@@ -933,7 +1227,7 @@ function readThunderbirdCachedEvents(profilePath, email = '') {
     }
     const tmpDb = path.join(tmpDir, 'cache.sqlite');
     const nowUs = Date.now() * 1000;
-    const windowStartUs = nowUs - 7 * 86400 * 1000000;
+    const windowStartUs = nowUs - 2 * 86400 * 1000000;
     const pyScript = [
       'import sqlite3, json, sys',
       'conn = sqlite3.connect(sys.argv[1])',
@@ -953,12 +1247,16 @@ function readThunderbirdCachedEvents(profilePath, email = '') {
       const resolvedEmail = meta.username || email || 'nicholas.dipiazza@gmail.com';
       const resolvedName = meta.name || `Google Calendar (${resolvedEmail})`;
       const resolvedColor = meta.color || '#00bcd4';
+      const startMs = r.event_start ? Math.floor(Number(r.event_start) / 1000) : Date.now();
+      const endMs = r.event_end ? Math.floor(Number(r.event_end) / 1000) : startMs + 3600000;
       return {
         id: `tb-${r.id}`,
         calId: r.cal_id,
         summary: r.title || '(Untitled Event)',
-        start: r.event_start ? new Date(Number(r.event_start) / 1000).toISOString() : new Date().toISOString(),
-        end: r.event_end ? new Date(Number(r.event_end) / 1000).toISOString() : new Date().toISOString(),
+        start: new Date(startMs).toISOString(),
+        end: new Date(endMs).toISOString(),
+        startEpochSec: Math.floor(startMs / 1000),
+        endEpochSec: Math.floor(endMs / 1000),
         category: 'meeting',
         source: 'thunderbird-caldav',
         calendarName: resolvedName,
@@ -1075,6 +1373,7 @@ module.exports = {
   saveLocalCalendarEvents,
   addCalendarEvent,
   deleteCalendarEvent,
+  readThunderbirdLiveCaldavEvents,
   readThunderbirdCachedEvents,
   getUnifiedCalendarEvents,
 };
