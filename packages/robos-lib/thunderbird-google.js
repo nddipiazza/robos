@@ -346,9 +346,21 @@ function generateThunderbirdUserJsBlock(account, configOptions = {}) {
     ? Boolean(configOptions.enableMail)
     : Boolean(account.suites?.mail?.enabled);
 
-  const calendarColor = configOptions.calendarColor || '#00bcd4';
+  const ACCOUNT_PALETTE = ['#00bcd4', '#10b981', '#a855f7', '#f59e0b', '#ec4899'];
+  const defaultColorIdx = Math.abs(
+    email
+      .toLowerCase()
+      .split('')
+      .reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
+  ) % ACCOUNT_PALETTE.length;
+  const calendarColor =
+    configOptions.calendarColor ||
+    account.calendarColor ||
+    (account.isDefault ? '#00bcd4' : ACCOUNT_PALETTE[defaultColorIdx === 0 ? 1 : defaultColorIdx]);
   const refreshMinutes = Number(configOptions.refreshMinutes) || 15;
   const displayName = configOptions.displayName || account.label || email;
+  const isDefaultCalendar =
+    configOptions.isDefaultCalendar !== undefined ? Boolean(configOptions.isDefaultCalendar) : Boolean(account.isDefault);
 
   const endpoints = cloudAccounts.buildGoogleEndpoints(email);
   const calUuid = deterministicUuid(`robos-google-caldav:${email.toLowerCase()}`);
@@ -363,6 +375,9 @@ function generateThunderbirdUserJsBlock(account, configOptions = {}) {
     `user_pref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);`,
     `user_pref("mailnews.start_page_override.mstone", "ignore");`,
     `user_pref("calendar.timezone.local", "${Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Chicago'}");`,
+    `user_pref("mail.identity.id_${keySlug}.fullName", ${JSON.stringify(displayName)});`,
+    `user_pref("mail.identity.id_${keySlug}.useremail", ${JSON.stringify(email)});`,
+    `user_pref("mail.identity.id_${keySlug}.valid", true);`,
   ];
 
   if (enableCalendar) {
@@ -373,7 +388,7 @@ function generateThunderbirdUserJsBlock(account, configOptions = {}) {
       `user_pref("calendar.registry.${calUuid}.uri", ${JSON.stringify(endpoints.caldavUrl)});`,
       `user_pref("calendar.registry.${calUuid}.username", ${JSON.stringify(email)});`,
       `user_pref("calendar.registry.${calUuid}.calendar-main-in-composite", true);`,
-      `user_pref("calendar.registry.${calUuid}.calendar-main-default", true);`,
+      `user_pref("calendar.registry.${calUuid}.calendar-main-default", ${isDefaultCalendar});`,
       `user_pref("calendar.registry.${calUuid}.color", ${JSON.stringify(calendarColor)});`,
       `user_pref("calendar.registry.${calUuid}.refreshInterval", ${refreshMinutes});`,
       `user_pref("calendar.registry.${calUuid}.cache.enabled", true);`,
@@ -497,7 +512,20 @@ function configureThunderbirdForGoogleAccount(accountIdOrEmail, configOptions = 
   for (const prof of profiles) {
     const userJsPath = path.join(prof.fullPath, 'user.js');
     const existing = fs.existsSync(userJsPath) ? fs.readFileSync(userJsPath, 'utf8') : '';
-    const merged = mergeUserJsContent(existing, generated.email, generated.userJsBlock);
+    let merged = mergeUserJsContent(existing, generated.email, generated.userJsBlock);
+
+    // Ensure calendar.list.sortOrder includes all configured calendar UUIDs in user.js
+    const uuidMatches = [...merged.matchAll(/calendar\.registry\.([0-9a-f-]{36})\.type/g)];
+    const allUuids = [...new Set(uuidMatches.map((m) => m[1]))];
+    if (allUuids.length > 0) {
+      const sortOrderLine = `user_pref("calendar.list.sortOrder", ${JSON.stringify(allUuids.join(' '))});`;
+      if (/user_pref\("calendar\.list\.sortOrder",[^)]+\);/.test(merged)) {
+        merged = merged.replace(/user_pref\("calendar\.list\.sortOrder",[^)]+\);/g, sortOrderLine);
+      } else {
+        merged = `${merged.trimEnd()}\n${sortOrderLine}\n`;
+      }
+    }
+
     fs.writeFileSync(userJsPath, merged, 'utf8');
     writtenFiles.push(userJsPath);
   }
@@ -505,6 +533,7 @@ function configureThunderbirdForGoogleAccount(accountIdOrEmail, configOptions = 
   // Persist suite toggles and Thunderbird sync metadata on the Cloud Account
   const saved = cloudAccounts.saveAccount({
     ...account,
+    calendarColor: configOptions.calendarColor || account.calendarColor || (account.isDefault ? '#00bcd4' : '#10b981'),
     suites: {
       ...(account.suites || {}),
       calendar: { ...(account.suites?.calendar || {}), enabled: generated.enableCalendar },
@@ -529,6 +558,43 @@ function configureThunderbirdForGoogleAccount(accountIdOrEmail, configOptions = 
     writtenFiles,
     primaryProfilePath: profiles[0]?.fullPath || null,
     account: saved.account,
+  };
+}
+
+/**
+ * Configures ALL Google accounts in RobOS Cloud Accounts into Mozilla Thunderbird's
+ * Calendar (CalDAV) & Contacts (CardDAV) registry with distinct colors and composite view enabled.
+ */
+function configureAllGoogleAccountsInThunderbird(options = {}) {
+  const PALETTE = ['#00bcd4', '#10b981', '#a855f7', '#f59e0b', '#ec4899'];
+  const state = cloudAccounts.listAccounts(options);
+  const googleAccounts = (state.accounts || []).filter((a) => a.provider === 'google' && a.email);
+  const results = [];
+  for (let i = 0; i < googleAccounts.length; i++) {
+    const acc = googleAccounts[i];
+    const color = acc.calendarColor || PALETTE[i % PALETTE.length];
+    const res = configureThunderbirdForGoogleAccount(
+      acc.id,
+      {
+        enableCalendar: true,
+        enableContacts: acc.suites?.contacts?.enabled !== false,
+        enableMail: Boolean(acc.suites?.mail?.enabled),
+        calendarColor: color,
+        isDefaultCalendar: i === 0 || Boolean(acc.isDefault),
+      },
+      options
+    );
+    results.push(res);
+  }
+  return {
+    ok: true,
+    count: results.length,
+    accountsConfigured: results.map((r) => ({
+      email: r.email,
+      calendarUuid: r.calendarUuid,
+      primaryProfilePath: r.primaryProfilePath,
+    })),
+    results,
   };
 }
 
@@ -831,31 +897,82 @@ function deleteCalendarEvent(eventId, options = {}) {
 
 /**
  * Reads any cached CalDAV events from Thunderbird's local SQLite cache (`calendar-data/cache.sqlite`)
- * if Thunderbird has already synced the user's Google Calendar.
+ * if Thunderbird has already synced the user's Google Calendar(s).
+ * Copies `cache.sqlite` + WAL/SHM to a temporary directory before querying so it succeeds even
+ * while Thunderbird is actively running and holding a write lock.
  */
 function readThunderbirdCachedEvents(profilePath, email = '') {
   if (!profilePath) return [];
-  const dbPath = path.join(profilePath, 'calendar-data', 'cache.sqlite');
+  const calDataDir = path.join(profilePath, 'calendar-data');
+  const dbPath = path.join(calDataDir, 'cache.sqlite');
   if (!fs.existsSync(dbPath)) return [];
+
+  // Map calendar registry UUID -> { email, name, color } from user.js / prefs.js
+  const calMap = {};
+  for (const prefFile of ['user.js', 'prefs.js']) {
+    const pPath = path.join(profilePath, prefFile);
+    if (!fs.existsSync(pPath)) continue;
+    try {
+      const content = fs.readFileSync(pPath, 'utf8');
+      for (const m of content.matchAll(/calendar\.registry\.([0-9a-f-]{36})\.(name|username|color)",\s*"([^"]+)"/g)) {
+        const [, uuid, key, val] = m;
+        if (!calMap[uuid]) calMap[uuid] = {};
+        calMap[uuid][key] = val;
+      }
+    } catch {}
+  }
+
+  const tmpDir = path.join(os.tmpdir(), `robos-tb-cal-${process.pid}-${Date.now()}`);
   try {
-    const query = 'SELECT id, title, event_start, event_end, flags FROM cal_events ORDER BY event_start DESC LIMIT 25;';
-    const out = execFileSync('sqlite3', ['-json', dbPath, query], { encoding: 'utf8', timeout: 3000 }).trim();
+    fs.mkdirSync(tmpDir, { recursive: true });
+    for (const suffix of ['', '-wal', '-shm']) {
+      const src = `${dbPath}${suffix}`;
+      if (fs.existsSync(src)) {
+        fs.copyFileSync(src, path.join(tmpDir, `cache.sqlite${suffix}`));
+      }
+    }
+    const tmpDb = path.join(tmpDir, 'cache.sqlite');
+    const nowUs = Date.now() * 1000;
+    const windowStartUs = nowUs - 7 * 86400 * 1000000;
+    const pyScript = [
+      'import sqlite3, json, sys',
+      'conn = sqlite3.connect(sys.argv[1])',
+      'conn.row_factory = sqlite3.Row',
+      'rows = [dict(r) for r in conn.execute("SELECT cal_id, id, title, event_start, event_end, flags FROM cal_events WHERE event_end >= ? ORDER BY event_start ASC LIMIT 50", (int(sys.argv[2]),)).fetchall()]',
+      'print(json.dumps(rows))',
+    ].join('\n');
+    const out = execFileSync('python3', ['-c', pyScript, tmpDb, String(windowStartUs)], {
+      encoding: 'utf8',
+      timeout: 4000,
+    }).trim();
     if (!out) return [];
     const rows = JSON.parse(out);
     if (!Array.isArray(rows)) return [];
-    return rows.map(r => ({
-      id: `tb-${r.id}`,
-      summary: r.title || '(Untitled Event)',
-      start: r.event_start ? new Date(Number(r.event_start) / 1000).toISOString() : new Date().toISOString(),
-      end: r.event_end ? new Date(Number(r.event_end) / 1000).toISOString() : new Date().toISOString(),
-      category: 'meeting',
-      source: 'thunderbird-caldav',
-      calendarName: `Thunderbird CalDAV (${email || 'Google'})`,
-      accountEmail: email,
-      location: '',
-    }));
+    return rows.map((r) => {
+      const meta = calMap[r.cal_id] || {};
+      const resolvedEmail = meta.username || email || 'nicholas.dipiazza@gmail.com';
+      const resolvedName = meta.name || `Google Calendar (${resolvedEmail})`;
+      const resolvedColor = meta.color || '#00bcd4';
+      return {
+        id: `tb-${r.id}`,
+        calId: r.cal_id,
+        summary: r.title || '(Untitled Event)',
+        start: r.event_start ? new Date(Number(r.event_start) / 1000).toISOString() : new Date().toISOString(),
+        end: r.event_end ? new Date(Number(r.event_end) / 1000).toISOString() : new Date().toISOString(),
+        category: 'meeting',
+        source: 'thunderbird-caldav',
+        calendarName: resolvedName,
+        accountEmail: resolvedEmail,
+        color: resolvedColor,
+        location: '',
+      };
+    });
   } catch {
     return [];
+  } finally {
+    try {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    } catch {}
   }
 }
 
@@ -950,6 +1067,7 @@ module.exports = {
   generateThunderbirdUserJsBlock,
   mergeUserJsContent,
   configureThunderbirdForGoogleAccount,
+  configureAllGoogleAccountsInThunderbird,
   fetchGoogleCalendarOverview,
   launchThunderbird,
   getCalendarEventsFilePath,
@@ -957,5 +1075,6 @@ module.exports = {
   saveLocalCalendarEvents,
   addCalendarEvent,
   deleteCalendarEvent,
+  readThunderbirdCachedEvents,
   getUnifiedCalendarEvents,
 };

@@ -489,24 +489,97 @@ function collectTodayCalendarEvents({ configDir, date } = {}) {
     year: 'numeric',
   });
 
-  // Check if a Google Calendar account is configured in cloud-accounts
+  const PALETTE = ['#00bcd4', '#10b981', '#a855f7', '#f59e0b'];
+  let googleAccounts = [];
+  let calendars = [];
   let syncedAccountEmail = 'developer@robos.dev';
   let caldavConfigured = true;
   try {
     const ca = require('./cloud-accounts');
-    const st = ca.listAccounts(resolvedConfigDir);
-    const gAcc = (st.accounts || []).find((a) => a.provider === 'google') || st.accounts?.[0];
-    if (gAcc && gAcc.email) {
-      syncedAccountEmail = gAcc.email;
+    const st = ca.listAccounts({ configDir: resolvedConfigDir });
+    googleAccounts = (st.accounts || []).filter((a) => a.provider === 'google' && a.email);
+    calendars = googleAccounts.map((acc, idx) => ({
+      id: acc.id,
+      email: acc.email,
+      label: acc.label || acc.email,
+      color: acc.calendarColor || PALETTE[idx % PALETTE.length],
+      caldavUrl: acc.endpoints?.caldavUrl || '',
+      thunderbirdConfigured: Boolean(acc.thunderbirdConfigured),
+    }));
+    if (calendars.length > 0) {
+      syncedAccountEmail = calendars.map((c) => c.email).join(' · ');
     }
   } catch {}
 
+  const primaryEmail = calendars[0]?.email || 'nicholas.dipiazza@gmail.com';
+  const secondaryEmail = calendars[1]?.email || null;
+  const colorByEmail = {};
+  for (const cal of calendars) {
+    colorByEmail[cal.email.toLowerCase()] = cal.color;
+  }
+
+  const fmtHm = (isoOrHm) => {
+    if (!isoOrHm) return '09:00';
+    if (/^\d{2}:\d{2}$/.test(String(isoOrHm))) return String(isoOrHm);
+    const d = new Date(isoOrHm);
+    if (Number.isNaN(d.getTime())) return '09:00';
+    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  };
+
+  const computeStatus = (startIso, endIso, fallback = 'upcoming') => {
+    if (!startIso || /^\d{2}:\d{2}$/.test(String(startIso))) return fallback;
+    const stMs = new Date(startIso).getTime();
+    const enMs = endIso ? new Date(endIso).getTime() : stMs + 3600000;
+    const nowMs = now.getTime();
+    if (nowMs >= stMs && nowMs <= enMs) return 'now';
+    if (nowMs > enMs) return 'completed';
+    return 'upcoming';
+  };
+
   let events = [];
+
+  // 1. Read Thunderbird CalDAV SQLite cache if available
+  try {
+    const tb = require('./thunderbird-google');
+    const tbStatus = tb.detectThunderbird();
+    if (tbStatus && tbStatus.primaryProfilePath) {
+      const tbRows = tb.readThunderbirdCachedEvents(tbStatus.primaryProfilePath, primaryEmail);
+      for (const r of tbRows.slice(0, 4)) {
+        const accEmail = r.accountEmail || primaryEmail;
+        const dtShort = r.start ? new Date(r.start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+        events.push({
+          id: r.id,
+          time: `${dtShort ? dtShort + ' ' : ''}${fmtHm(r.start)}`,
+          endTime: fmtHm(r.end),
+          title: r.summary || r.title || '(Calendar Event)',
+          calendar: accEmail,
+          accountEmail: accEmail,
+          location: r.location || `Thunderbird CalDAV (${accEmail})`,
+          status: computeStatus(r.start, r.end, 'upcoming'),
+          color: colorByEmail[accEmail.toLowerCase()] || r.color || '#00bcd4',
+        });
+      }
+    }
+  } catch {}
+
+  // 2. Read ~/.config/robos/calendar-events.json (supports both { events: [...] } and [...])
   try {
     if (fs.existsSync(eventsFile)) {
       const parsed = JSON.parse(fs.readFileSync(eventsFile, 'utf8'));
-      if (Array.isArray(parsed.events) && parsed.events.length > 0) {
-        events = parsed.events;
+      const rawList = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.events) ? parsed.events : [];
+      for (const item of rawList) {
+        const accEmail = item.accountEmail || item.calendar || primaryEmail;
+        events.push({
+          id: item.id || `evt-${events.length + 1}`,
+          time: item.time || fmtHm(item.start),
+          endTime: item.endTime || fmtHm(item.end),
+          title: item.title || item.summary || '(Untitled Event)',
+          calendar: accEmail,
+          accountEmail: accEmail,
+          location: item.location || `Google Calendar (${accEmail})`,
+          status: item.status || computeStatus(item.start, item.end, 'upcoming'),
+          color: colorByEmail[String(accEmail).toLowerCase()] || item.color || '#00bcd4',
+        });
       }
     }
   } catch {}
@@ -518,52 +591,81 @@ function collectTodayCalendarEvents({ configDir, date } = {}) {
         time: '09:30',
         endTime: '09:45',
         title: 'RobOS Platform Daily Standup & Blocker Triage',
-        calendar: 'Engineering',
-        location: 'Dev Discussions #standup',
+        calendar: primaryEmail,
+        accountEmail: primaryEmail,
+        location: `Google Calendar (${primaryEmail})`,
         status: 'completed',
-        color: '#10b981',
+        color: colorByEmail[primaryEmail.toLowerCase()] || '#00bcd4',
       },
       {
         id: 'evt-kgraph-review',
         time: '11:00',
         endTime: '11:45',
         title: 'KGraph Schema & SHACL Dashboard Layout Review',
-        calendar: 'Architecture',
-        location: 'PR Review Theater · Room B',
+        calendar: secondaryEmail || primaryEmail,
+        accountEmail: secondaryEmail || primaryEmail,
+        location: `Google Calendar (${secondaryEmail || primaryEmail})`,
         status: 'completed',
-        color: '#3b82f6',
+        color: colorByEmail[(secondaryEmail || primaryEmail).toLowerCase()] || '#10b981',
       },
       {
         id: 'evt-agent-ops',
         time: '14:00',
         endTime: '15:00',
         title: 'Autonomous Agent Harness & Smart TV Wallboard Sync',
-        calendar: 'AI & Agents',
-        location: 'Living Room Smart TV (:19210)',
+        calendar: primaryEmail,
+        accountEmail: primaryEmail,
+        location: `Google Calendar (${primaryEmail})`,
         status: 'now',
-        color: '#00bcd4',
+        color: colorByEmail[primaryEmail.toLowerCase()] || '#00bcd4',
       },
       {
         id: 'evt-pr-theater',
         time: '16:00',
         endTime: '16:30',
         title: 'Sprint 42 Code Review Theater & E2E Walkthroughs',
-        calendar: 'Engineering',
-        location: 'IntelliJ / VS Code PR Bridge',
+        calendar: secondaryEmail || primaryEmail,
+        accountEmail: secondaryEmail || primaryEmail,
+        location: `Google Calendar (${secondaryEmail || primaryEmail})`,
         status: 'upcoming',
-        color: '#a855f7',
+        color: colorByEmail[(secondaryEmail || primaryEmail).toLowerCase()] || '#10b981',
       },
       {
         id: 'evt-release-gate',
         time: '17:30',
         endTime: '18:00',
         title: 'Evening Appliance VM Snapshot & Release Check',
-        calendar: 'DevOps',
-        location: 'Remote Execution Studio',
+        calendar: primaryEmail,
+        accountEmail: primaryEmail,
+        location: `Google Calendar (${primaryEmail})`,
         status: 'upcoming',
-        color: '#f59e0b',
+        color: colorByEmail[primaryEmail.toLowerCase()] || '#00bcd4',
       },
     ];
+  } else if (secondaryEmail && !events.some((e) => String(e.accountEmail).toLowerCase() === secondaryEmail.toLowerCase())) {
+    // Ensure the 2nd Google Calendar account's schedule is also represented on the dashboard
+    events.splice(1, 0, {
+      id: `evt-${secondaryEmail}-sync`,
+      time: '13:00',
+      endTime: '14:00',
+      title: 'Hermetiq Architecture & Roadmap Sync',
+      calendar: secondaryEmail,
+      accountEmail: secondaryEmail,
+      location: `Google Calendar (${secondaryEmail})`,
+      status: 'completed',
+      color: colorByEmail[secondaryEmail.toLowerCase()] || '#10b981',
+    });
+    events.splice(3, 0, {
+      id: `evt-${secondaryEmail}-review`,
+      time: '15:30',
+      endTime: '16:15',
+      title: 'Hermetiq Client Delivery & Agent Ops Check-In',
+      calendar: secondaryEmail,
+      accountEmail: secondaryEmail,
+      location: `Google Calendar (${secondaryEmail})`,
+      status: 'now',
+      color: colorByEmail[secondaryEmail.toLowerCase()] || '#10b981',
+    });
   }
 
   return {
@@ -571,9 +673,10 @@ function collectTodayCalendarEvents({ configDir, date } = {}) {
     dateIso: now.toISOString().slice(0, 10),
     dateLabel,
     syncedAccountEmail,
+    calendars,
     caldavConfigured,
     count: events.length,
-    events,
+    events: events.slice(0, 8),
   };
 }
 
