@@ -66,6 +66,13 @@ contextBridge.exposeInMainWorld('robos', {
   castDashboardToTv:      (p)      => ipcRenderer.invoke('dc-tv-cast-dashboard', p),
   stopTvCast:             (p)      => ipcRenderer.invoke('dc-tv-stop-cast', p),
   openTvStudio:           ()       => ipcRenderer.invoke('dc-open-tv-studio'),
+
+  // RobOS Calendar Events & Google / Thunderbird Integration API
+  getCalendarEvents:      (accId)  => ipcRenderer.invoke('dc-get-calendar-events', accId),
+  addCalendarEvent:       (p)      => ipcRenderer.invoke('dc-add-calendar-event', p),
+  deleteCalendarEvent:    (id)     => ipcRenderer.invoke('dc-delete-calendar-event', id),
+  syncThunderbirdCalendar:(accId)  => ipcRenderer.invoke('dc-sync-thunderbird-calendar', accId),
+  openCalendarApp:        (target) => ipcRenderer.invoke('dc-open-calendar-app', target),
 });
 
 // Alias window.notifs for standalone notification callers and tests

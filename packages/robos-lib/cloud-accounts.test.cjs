@@ -140,3 +140,35 @@ test('configures Thunderbird profile user.js with CalDAV Calendar, CardDAV Conta
   const startMarkers = userJs2.split(thunderbirdGoogle.ROBOS_BLOCK_START).length - 1;
   assert.equal(startMarkers, 1, 'Should replace existing RobOS block for the same account idempotently');
 });
+
+test('Dev Central unified calendar events store seeds, adds, and deletes events tied to the active Google Cloud Account', async () => {
+  const env = createTempHome();
+  cloudAccounts.saveAccount({
+    provider: 'google',
+    email: 'nicholas.dipiazza@gmail.com',
+    label: 'Nicholas DiPiazza',
+    accessToken: 'ya29.test_token',
+    refreshToken: '1//0test_refresh',
+    loggedIn: true,
+  }, env);
+
+  const initial = await thunderbirdGoogle.getUnifiedCalendarEvents(null, { ...env, skipNetwork: true });
+  assert.equal(initial.ok, true);
+  assert.equal(initial.account.email, 'nicholas.dipiazza@gmail.com');
+  assert.ok(initial.events.length >= 5, 'Should seed initial sprint and standup calendar events');
+
+  const added = thunderbirdGoogle.addCalendarEvent({
+    summary: 'Sprint 42 Architecture Review with KGraph',
+    category: 'sprint',
+    location: 'Google Meet',
+  }, env);
+  assert.equal(added.ok, true);
+  assert.equal(added.event.accountEmail, 'nicholas.dipiazza@gmail.com');
+
+  const afterAdd = await thunderbirdGoogle.getUnifiedCalendarEvents(null, { ...env, skipNetwork: true });
+  assert.ok(afterAdd.events.some(e => e.id === added.event.id));
+
+  thunderbirdGoogle.deleteCalendarEvent(added.event.id, env);
+  const afterDel = await thunderbirdGoogle.getUnifiedCalendarEvents(null, { ...env, skipNetwork: true });
+  assert.ok(!afterDel.events.some(e => e.id === added.event.id));
+});

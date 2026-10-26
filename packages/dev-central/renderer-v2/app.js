@@ -57,6 +57,7 @@
     send: '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
     x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
     git: '<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="9" x2="6" y2="21"/>',
+    calendar: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
   };
   const icon = (n, size = 16) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_PATHS[n]}</svg>`;
   const emptyArt = n => `<div class="empty-art">${icon(n, 28)}</div>`;
@@ -66,6 +67,7 @@
     { id: 'attention', icon: 'alert', label: 'Needs attention', warn: true, test: t => t.mine && !isDone(t) && needsAttention(t) },
     { id: 'unassigned', icon: 'circle', label: 'Unassigned', test: t => !t.assignee && !isDone(t) },
     { id: 'all', icon: 'list', label: 'All tasks', test: () => true },
+    { id: 'calendar', icon: 'calendar', label: 'Calendar & Events', isCalendar: true, test: () => false },
   ];
   let VIEWS = BASE_VIEWS, STAGE_VIEWS = [];
   function buildViews() {
@@ -84,6 +86,7 @@
     toggled: new Set(),            // tasks whose default expand state was flipped by the user
     showAll: new Set(),            // epics showing every child regardless of view/filters
     colW: {}, cols: null, agents: { runs: [], byTask: {}, running: 0 }, agentBusy: new Set(), runStatus: null, busy: new Set(), selected: null, rows: [], menu: null, loaded: false, narrow: false, syncing: false, errors: [],
+    calendar: { events: [], account: null, status: null, filter: 'all', showAdd: false, syncing: false },
   };
 
   // ── small helpers ─────────────────────────────────────────────────────────
@@ -181,14 +184,14 @@
   // ── render: sidebar & filters ─────────────────────────────────────────────
   function renderSidebar() {
     const vrow = v => {
-      const n = S.tasks.filter(v.test).length;
+      const n = v.isCalendar ? (S.calendar.events || []).length : S.tasks.filter(v.test).length;
       const ic = v.stage ? `<span class="stage-dot" style="background:${v.stage.color}"></span>` : icon(v.icon, 15);
       return `<li><button data-view="${v.id}" class="${S.view === v.id ? 'on' : ''}"><span class="vi">${ic}</span><span class="vl">${esc(v.label)}</span><span class="vc ${v.warn && n ? 'warn' : ''}">${n}</span></button></li>`;
     };
     $('#views').innerHTML = BASE_VIEWS.map(vrow).join('') + '<li class="sb-sub">My tasks by stage</li>' + STAGE_VIEWS.map(vrow).join('');
-    const v = VIEWS.find(x => x.id === S.view);
+    const v = VIEWS.find(x => x.id === S.view) || VIEWS[0];
     $('#epic-list').innerHTML = S.epics.filter(e => !e.loose).map(e => {
-      const n = S.tasks.filter(t => t.epicId === e.id && v.test(t)).length;
+      const n = S.tasks.filter(t => t.epicId === e.id && (v.isCalendar ? true : v.test(t))).length;
       return `<li><button data-epic="${esc(e.id)}" class="${S.filters.epic.has(e.id) ? 'on' : ''}" title="${esc(e.name)}"><span class="epic-dot" style="background:${epicColor(e.id)}"></span><span class="vl">${esc(e.code)}</span><span class="vc">${n}</span></button></li>`;
     }).join('');
   }
@@ -417,16 +420,23 @@
     $('#tbody').innerHTML = html;
     renderHead();
 
-    const v = VIEWS.find(x => x.id === S.view);
+    const v = VIEWS.find(x => x.id === S.view) || VIEWS[0];
+    const isCal = S.view === 'calendar';
     $('#view-title').textContent = v.label;
-    $('#view-count').textContent = S.mode === 'epics' ? `${epicCount} epic${epicCount === 1 ? '' : 's'} · ${vis.length} task${vis.length === 1 ? '' : 's'}` : `${vis.length} task${vis.length === 1 ? '' : 's'}`;
+    $('#view-count').textContent = isCal
+      ? `${(S.calendar.events || []).length} event${(S.calendar.events || []).length === 1 ? '' : 's'}${S.calendar.account ? ' · ' + S.calendar.account.email : ''}`
+      : (S.mode === 'epics' ? `${epicCount} epic${epicCount === 1 ? '' : 's'} · ${vis.length} task${vis.length === 1 ? '' : 's'}` : `${vis.length} task${vis.length === 1 ? '' : 's'}`);
     $('#btn-refresh').classList.toggle('spinning', !!S.syncing);
     $('#sb-left').innerHTML = `${vis.length} shown · ${S.tasks.length} total · ${S.tasks.filter(t => t.mine && !isDone(t)).length} open assigned to you` + (S.syncing ? ' · <span class="spin"></span> syncing…' : '') + (S.errors.length ? ` · ⚠ ${esc(S.errors.map(e => e.server + ': ' + e.error).join('; '))}` : '') + ` · <span class="dim" title="Renderer build — if this doesn't change after an edit, the app is not running this folder in dev mode">build ${BUILD}</span>`;
     const empty = $('#empty');
     const nothing = !S.rows.length;
-    empty.classList.toggle('hidden', !nothing);
-    $('#tt').classList.toggle('hidden', nothing);
-    if (nothing) {
+    empty.classList.toggle('hidden', !nothing || isCal);
+    $('#tt').classList.toggle('hidden', nothing || isCal);
+    $('#table-wrap').classList.toggle('hidden', isCal);
+    $('#filters').classList.toggle('hidden', isCal);
+    $('#calendar-view-wrap').classList.toggle('hidden', !isCal);
+    $('#calendar-agenda-strip').style.display = isCal ? 'none' : 'flex';
+    if (!isCal && nothing) {
       const filtered = S.q || Object.values(S.filters).some(s => s.size);
       empty.innerHTML = !S.loaded ? '<h3>Loading tasks…</h3>'
         : filtered ? emptyArt('search') + '<h3>No tasks match these filters</h3><div>Try clearing a filter or searching all tasks.</div><button class="btn" data-clear="1">Clear filters</button>'
@@ -435,10 +445,170 @@
     }
     const realEpics = S.epics.filter(e => !e.loose);
     $('#btn-expand').textContent = S.mode === 'epics' && realEpics.every(e => S.collapsed.has(e.id)) ? 'Expand all' : 'Collapse all';
-    $('#btn-expand').classList.toggle('hidden', S.mode !== 'epics');
-    $('#grp-wrap').classList.toggle('hidden', S.mode !== 'tasks');
+    $('#btn-expand').classList.toggle('hidden', S.mode !== 'epics' || isCal);
+    $('#btn-cols').classList.toggle('hidden', isCal);
+    $('#mode-seg').classList.toggle('hidden', isCal);
+    $('#vb-label').classList.toggle('hidden', isCal);
+    $('#grp-wrap').classList.toggle('hidden', S.mode !== 'tasks' || isCal);
     $('#groupby').value = S.groupBy;
     document.querySelectorAll('#mode-seg button').forEach(b => b.classList.toggle('on', b.dataset.mode === S.mode));
+    renderCalendarAgendaStrip();
+    if (isCal) renderCalendarView();
+  }
+
+  // ── RobOS Calendar Events (Google Cloud Account + Thunderbird CalDAV) ─────
+  function fmtCalRange(startIso, endIso) {
+    if (!startIso) return 'All day';
+    try {
+      const s = new Date(startIso), e = endIso ? new Date(endIso) : null;
+      const now = new Date();
+      const today = s.getFullYear() === now.getFullYear() && s.getMonth() === now.getMonth() && s.getDate() === now.getDate();
+      const day = today ? 'Today' : s.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+      const t1 = s.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const t2 = e ? e.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+      return `${day} · ${t1}${t2 ? ' – ' + t2 : ''}`;
+    } catch { return String(startIso); }
+  }
+  function isCalToday(iso) {
+    if (!iso) return false;
+    const d = new Date(iso), n = new Date();
+    return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+  }
+  function renderCalendarAgendaStrip() {
+    const strip = $('#calendar-agenda-strip');
+    const badge = $('#top-cal-badge');
+    const evs = S.calendar.events || [];
+    const todayEvs = evs.filter(e => isCalToday(e.start));
+    if (badge) badge.textContent = String(todayEvs.length || evs.length);
+    if (!strip) return;
+    const acct = S.calendar.account;
+    const st = S.calendar.status;
+    const next = evs.find(e => new Date(e.end || e.start).getTime() >= Date.now() - 3600000) || evs[0];
+    const caldavBadge = acct
+      ? `<span style="padding:2px 7px;border-radius:10px;background:rgba(34,197,94,0.14);color:#22c55e;font-size:11px;font-weight:600">Google CalDAV · ${esc(acct.email)}</span>`
+      : `<span style="padding:2px 7px;border-radius:10px;background:rgba(245,158,11,0.15);color:#f59e0b;font-size:11px">Local Calendar</span>`;
+    const tbBadge = st && st.configured
+      ? `<span style="padding:2px 7px;border-radius:10px;background:rgba(168,85,247,0.14);color:#c084fc;font-size:11px">Thunderbird Synced</span>`
+      : '';
+    strip.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;overflow:hidden">
+        <span style="color:#00d4ff;font-weight:700;white-space:nowrap">📅 RobOS Calendar</span>
+        ${caldavBadge}${tbBadge}
+        ${next ? `<span style="color:var(--fg);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Next: ${esc(next.title)}</span><span class="dim" style="white-space:nowrap">(${esc(fmtCalRange(next.start, next.end))}${next.location ? ' · ' + esc(next.location) : ''})</span>` : '<span class="dim">No upcoming events scheduled</span>'}
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <button class="btn btn-sm btn-ghost" data-cal-open-view="1" style="font-size:11px;color:#00d4ff">View All (${evs.length})</button>
+        <button class="btn btn-sm btn-ghost" data-cal-quick-add="1" style="font-size:11px">+ Event</button>
+        <button class="btn btn-sm btn-ghost" data-cal-sync="1" style="font-size:11px" title="Sync Thunderbird CalDAV &amp; Google Calendar">${S.calendar.syncing ? 'Syncing…' : '↻ Sync'}</button>
+      </div>`;
+  }
+  function renderCalendarView() {
+    const wrap = $('#calendar-view-wrap');
+    if (!wrap) return;
+    const evs = S.calendar.events || [];
+    const acct = S.calendar.account;
+    const st = S.calendar.status;
+    const f = S.calendar.filter || 'all';
+    const q = (S.q || '').trim().toLowerCase();
+    const filtered = evs.filter(ev => {
+      if (f === 'today' && !isCalToday(ev.start)) return false;
+      if (f === 'upcoming' && new Date(ev.start).getTime() < Date.now() - 3600000) return false;
+      if (f === 'sprint' && !['standup', 'sprint', 'review'].includes(ev.category)) return false;
+      if (q) {
+        const hay = `${ev.title || ''} ${ev.location || ''} ${ev.description || ''} ${ev.category || ''} ${ev.accountEmail || ''}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    const defStart = (() => { const d = new Date(Date.now() + 3600000); d.setMinutes(0, 0, 0); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); })();
+    const defEnd = (() => { const d = new Date(Date.now() + 5400000); d.setMinutes(30, 0, 0); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); })();
+    const catColors = { standup: '#00d4ff', sprint: '#a855f7', review: '#f59e0b', sync: '#22c55e', focus: '#38bdf8', general: '#94a3b8' };
+
+    wrap.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:12px 14px;margin-bottom:14px;border-radius:8px;background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.18)">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-weight:700;font-size:13px;color:#00d4ff">Google Cloud &amp; Thunderbird CalDAV Integration</span>
+          ${acct ? `<span style="padding:2px 8px;border-radius:12px;background:rgba(34,197,94,0.15);color:#22c55e;font-size:11px;font-weight:600">✓ ${esc(acct.email)}</span>` : `<span style="padding:2px 8px;border-radius:12px;background:rgba(245,158,11,0.15);color:#f59e0b;font-size:11px">No Google Account Connected</span>`}
+          ${st && st.configured ? `<span style="padding:2px 8px;border-radius:12px;background:rgba(168,85,247,0.15);color:#c084fc;font-size:11px">Thunderbird CalDAV + CardDAV Ready (${esc((st.profiles || []).length)} profile${(st.profiles || []).length === 1 ? '' : 's'})</span>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-sm btn-primary" data-cal-toggle-add="1">+ New Event</button>
+          <button class="btn btn-sm" data-cal-sync="1">${S.calendar.syncing ? 'Syncing…' : '↻ Sync CalDAV'}</button>
+          <button class="btn btn-sm" data-cal-app="google-calendar">Google Calendar Setup</button>
+          <button class="btn btn-sm" data-cal-app="thunderbird">Open Thunderbird</button>
+          <button class="btn btn-sm" data-cal-app="cloud-accounts">Cloud Accounts</button>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+        ${[['all', 'All Events'], ['today', 'Today'], ['upcoming', 'Upcoming'], ['sprint', 'Sprint & Standup']].map(([k, l]) =>
+          `<button class="btn btn-sm ${f === k ? 'btn-primary' : 'btn-ghost'}" data-cal-filter="${k}">${esc(l)}</button>`
+        ).join('')}
+      </div>
+
+      ${S.calendar.showAdd ? `
+      <div style="padding:12px 14px;margin-bottom:14px;border-radius:8px;background:rgba(15,23,42,0.75);border:1px solid rgba(0,212,255,0.28);display:flex;flex-direction:column;gap:10px">
+        <div style="font-size:12px;font-weight:700;color:#00d4ff">Add Calendar Event (${esc(acct ? acct.email : 'RobOS Calendar')})</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px">
+          <input id="v2-cal-title" type="text" placeholder="Event title (e.g. Architecture Review, PR Pairing)" class="sel" style="padding:6px 10px">
+          <input id="v2-cal-start" type="datetime-local" value="${defStart}" class="sel" style="padding:6px 8px">
+          <input id="v2-cal-end" type="datetime-local" value="${defEnd}" class="sel" style="padding:6px 8px">
+          <select id="v2-cal-cat" class="sel" style="padding:6px 8px">
+            <option value="standup">Standup</option>
+            <option value="sprint">Sprint</option>
+            <option value="review">PR / Code Review</option>
+            <option value="sync">Team Sync</option>
+            <option value="focus">Focus Time</option>
+            <option value="general">General</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:center">
+          <input id="v2-cal-loc" type="text" placeholder="Location or room (e.g. RobOS Dev Central / Google Meet)" class="sel" style="padding:6px 10px">
+          <input id="v2-cal-url" type="text" placeholder="Meeting URL (optional)" class="sel" style="padding:6px 10px">
+          <button class="btn btn-sm btn-primary" data-cal-save="1">Save Event</button>
+          <button class="btn btn-sm btn-ghost" data-cal-toggle-add="1">Cancel</button>
+        </div>
+      </div>` : ''}
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${filtered.length ? filtered.map(ev => {
+          const c = catColors[ev.category] || catColors.general;
+          const src = ev.source === 'google-api' ? 'Google API' : ev.source === 'thunderbird-caldav' ? 'Thunderbird CalDAV' : 'Google CalDAV';
+          return `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:8px;background:rgba(30,41,59,0.55);border:1px solid rgba(148,163,184,0.16);border-left:3px solid ${c}">
+            <div style="min-width:0;flex:1">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <span style="font-weight:600;font-size:13px">${esc(ev.title)}</span>
+                <span style="font-size:10px;padding:1px 6px;border-radius:8px;background:${c}22;color:${c};text-transform:uppercase;font-weight:700">${esc(ev.category || 'event')}</span>
+                <span style="font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(148,163,184,0.14);color:#94a3b8">${esc(src)}</span>
+              </div>
+              <div style="font-size:12px;color:#94a3b8;margin-top:4px;display:flex;gap:12px;flex-wrap:wrap">
+                <span>🕒 ${esc(fmtCalRange(ev.start, ev.end))}</span>
+                ${ev.location ? `<span>📍 ${esc(ev.location)}</span>` : ''}
+                ${ev.accountEmail ? `<span>👤 ${esc(ev.accountEmail)}</span>` : ''}
+              </div>
+              ${ev.description ? `<div style="font-size:11px;color:#64748b;margin-top:4px">${esc(ev.description)}</div>` : ''}
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+              ${ev.meetingUrl ? `<button class="btn btn-sm" data-open="${esc(ev.meetingUrl)}">Join ↗</button>` : ''}
+              <button class="btn btn-sm btn-ghost" data-cal-del="${esc(ev.id)}" title="Delete event">✕</button>
+            </div>
+          </div>`;
+        }).join('') : `<div style="padding:32px;text-align:center;color:#94a3b8">No calendar events match this filter. Click <b>+ New Event</b> to schedule one.</div>`}
+      </div>`;
+  }
+  async function loadCalendar() {
+    if (!api.getCalendarEvents) return;
+    try {
+      const r = await api.getCalendarEvents();
+      if (r && r.ok) {
+        S.calendar.events = r.events || [];
+        S.calendar.account = r.account || null;
+        S.calendar.status = r.thunderbirdStatus || null;
+        renderSidebar();
+        renderCalendarAgendaStrip();
+        if (S.view === 'calendar') renderCalendarView();
+      }
+    } catch {}
   }
 
   // ── detail panel ──────────────────────────────────────────────────────────
@@ -1036,6 +1206,68 @@
       if ((el = tgt.closest('[data-open]'))) { ev.preventDefault(); ev.stopPropagation(); api.openUrl(el.dataset.open); return; }
       if ((el = tgt.closest('a[data-selectid]'))) { ev.preventDefault(); select(el.dataset.selectid); return; }
       if ((el = tgt.closest('[data-view]'))) { S.view = el.dataset.view; store.set('view', S.view); renderAll(); return; }
+      if (tgt.closest('[data-cal-open-view]') || tgt.closest('#btn-calendar-top')) { S.view = S.view === 'calendar' ? 'mine' : 'calendar'; store.set('view', S.view); renderAll(); return; }
+      if (tgt.closest('[data-cal-quick-add]')) { S.view = 'calendar'; S.calendar.showAdd = true; store.set('view', S.view); renderAll(); setTimeout(() => $('#v2-cal-title')?.focus(), 30); return; }
+      if (tgt.closest('[data-cal-toggle-add]')) { S.calendar.showAdd = !S.calendar.showAdd; renderCalendarView(); if (S.calendar.showAdd) setTimeout(() => $('#v2-cal-title')?.focus(), 30); return; }
+      if ((el = tgt.closest('[data-cal-filter]'))) { S.calendar.filter = el.dataset.calFilter; renderCalendarView(); return; }
+      if (tgt.closest('[data-cal-save]')) {
+        const title = ($('#v2-cal-title')?.value || '').trim();
+        if (!title) { toast('Enter an event title', { err: true }); return; }
+        const startVal = $('#v2-cal-start')?.value;
+        const endVal = $('#v2-cal-end')?.value;
+        const category = $('#v2-cal-cat')?.value || 'general';
+        const location = ($('#v2-cal-loc')?.value || '').trim();
+        const meetingUrl = ($('#v2-cal-url')?.value || '').trim();
+        api.addCalendarEvent && api.addCalendarEvent({
+          title,
+          start: startVal ? new Date(startVal).toISOString() : new Date().toISOString(),
+          end: endVal ? new Date(endVal).toISOString() : new Date(Date.now() + 1800000).toISOString(),
+          category,
+          location,
+          meetingUrl,
+        }).then(r => {
+          if (r && r.ok) {
+            S.calendar.events = r.events || S.calendar.events;
+            S.calendar.showAdd = false;
+            renderSidebar(); renderCalendarAgendaStrip(); renderCalendarView();
+            toast(`Added "${title}"`);
+          } else toast((r && r.error) || 'Failed to add event', { err: true });
+        });
+        return;
+      }
+      if ((el = tgt.closest('[data-cal-del]'))) {
+        const id = el.dataset.calDel;
+        api.deleteCalendarEvent && api.deleteCalendarEvent(id).then(r => {
+          if (r && r.ok) {
+            S.calendar.events = r.events || [];
+            renderSidebar(); renderCalendarAgendaStrip(); renderCalendarView();
+            toast('Event removed');
+          }
+        });
+        return;
+      }
+      if (tgt.closest('[data-cal-sync]')) {
+        if (S.calendar.syncing) return;
+        S.calendar.syncing = true; renderCalendarAgendaStrip(); if (S.view === 'calendar') renderCalendarView();
+        api.syncThunderbirdCalendar && api.syncThunderbirdCalendar().then(r => {
+          S.calendar.syncing = false;
+          if (r && r.ok) {
+            S.calendar.events = r.events || S.calendar.events;
+            S.calendar.account = r.account || S.calendar.account;
+            S.calendar.status = r.thunderbirdStatus || S.calendar.status;
+            toast(`Synced ${S.calendar.events.length} calendar events (${S.calendar.account ? S.calendar.account.email : 'local'})`);
+          } else toast((r && r.error) || 'Calendar sync failed', { err: true });
+          renderSidebar(); renderCalendarAgendaStrip(); if (S.view === 'calendar') renderCalendarView();
+        }).catch(() => { S.calendar.syncing = false; renderCalendarAgendaStrip(); });
+        return;
+      }
+      if ((el = tgt.closest('[data-cal-app]'))) {
+        api.openCalendarApp && api.openCalendarApp(el.dataset.calApp).then(r => {
+          if (r && r.ok) toast(`Launched ${el.dataset.calApp}`);
+          else toast((r && r.error) || 'Failed to launch app', { err: true });
+        });
+        return;
+      }
       if ((el = tgt.closest('[data-epic]'))) { const id = el.dataset.epic; S.filters.epic = S.filters.epic.has(id) ? new Set() : new Set([id]); renderAll(); return; }
       if ((el = tgt.closest('[data-fmenu]'))) { S.menu = S.menu === el.dataset.fmenu ? null : el.dataset.fmenu; renderFilters(); return; }
       if (tgt.closest('[data-clear]')) { Object.values(S.filters).forEach(s => s.clear()); S.q = ''; $('#q').value = ''; renderAll(); return; }
@@ -1126,8 +1358,11 @@
     window.addEventListener('resize', closeContext);
     $('#table-wrap').addEventListener('scroll', closeContext);
     new ResizeObserver(es => es.forEach(en => { const n = en.contentRect.width < 940; if (n !== S.narrow) { S.narrow = n; renderTable(); } })).observe($('#table-wrap'));
-    if (api && api.onDataUpdated) api.onDataUpdated(() => reloadSoon());
+    if (api && api.onDataUpdated) api.onDataUpdated(() => { reloadSoon(); loadCalendar(); });
     if (api && api.onV2Job) api.onV2Job(onJob);
+    if (api && api.onSwitchTab) api.onSwitchTab(tab => {
+      if (tab === 'calendar') { S.view = 'calendar'; store.set('view', S.view); renderAll(); }
+    });
   }
   function toggleEpic(id) { S.collapsed.has(id) ? S.collapsed.delete(id) : S.collapsed.add(id); store.set('collapsed', [...S.collapsed]); renderTable(); }
 
@@ -1186,6 +1421,8 @@
     epics: S.epics.map(e => ({ id: e.id, code: e.code, number: e.number, name: e.name, status: e.status, loose: !!e.loose })),
     rows: [...document.querySelectorAll('#tbody tr.row')].slice(0, 150).map(r => r.dataset.kind + ' ' + (r.dataset.row || r.dataset.gkey)),
     taskCount: S.tasks.length, agents: S.agents.runs.map(r => [r.runId, r.status, r.taskId]),
+    calendarEvents: S.calendar.events.length,
+    calendarAccount: S.calendar.account ? S.calendar.account.email : null,
   });
 
   // ── boot ──────────────────────────────────────────────────────────────────
@@ -1201,6 +1438,7 @@
     store.set('colsV', 2);
     if (!VIEWS.some(v => v.id === S.view)) S.view = 'mine';   // legacy ids (in_progress/review/done) fall back; stage views re-validated on first tree load
     wire(); renderAll();
+    loadCalendar();
     try {
       const r = await api.v2GetTree();
       applyTree(r);
