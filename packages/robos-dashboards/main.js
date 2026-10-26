@@ -143,6 +143,14 @@ ipcMain.handle('dashboards:setActive', async (_e, dashboardId) => {
   return dashEngine.setActiveDashboard(dashboardId);
 });
 
+ipcMain.handle('dashboards:configureSlideshow', async (_e, payload) => {
+  return dashEngine.configureSlideshow(payload || {});
+});
+
+ipcMain.handle('dashboards:stepSlideshow', async (_e, payload) => {
+  return dashEngine.stepSlideshow(payload || {});
+});
+
 ipcMain.handle('dashboards:setLayout', async (_e, payload) => {
   return dashEngine.setDashboardLayout(payload);
 });

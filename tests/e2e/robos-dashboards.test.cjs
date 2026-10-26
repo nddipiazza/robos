@@ -198,6 +198,45 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
       assert.equal(homeRes.status, 200);
       assert.ok(homeRes.body.includes('LIVE ROBOS DASHBOARD ON TV'));
       assert.ok(homeRes.body.includes('/dashboard'));
+
+      // 5. Verify Multi-Dashboard Slideshow auto-cycling across configurable seconds
+      const dashEngine = createDashboardEngine({ configDir: tmpDir });
+      const slideIds = ['daily-engineering-ops', 'smart-home-tv-command', 'kgraph-architecture-pulse'];
+      const cfg1 = dashEngine.configureSlideshow({
+        enabled: true,
+        intervalSeconds: 10,
+        dashboardIds: slideIds,
+        startedEpochMs: Date.now(),
+      });
+      assert.equal(cfg1.ok, true);
+      assert.equal(cfg1.slideshow.enabled, true);
+      assert.equal(cfg1.slideshow.intervalSeconds, 10);
+      assert.equal(cfg1.slideshow.totalSlides, 3);
+      assert.equal(cfg1.slideshow.slideNumber, 1);
+      assert.equal(cfg1.dashboard.id, 'daily-engineering-ops');
+
+      // Simulate 11 seconds elapsed -> should automatically resolve slide 2 (smart-home-tv-command)
+      const cfg2 = dashEngine.configureSlideshow({
+        enabled: true,
+        intervalSeconds: 10,
+        dashboardIds: slideIds,
+        startedEpochMs: Date.now() - 11000,
+      });
+      assert.equal(cfg2.slideshow.slideNumber, 2);
+      assert.equal(cfg2.dashboard.id, 'smart-home-tv-command');
+
+      // /api/dashboard-cast should return the current slide's dashboard & slideshow metadata
+      const slideApiRes = await httpGet(`http://127.0.0.1:${srv.port}/api/dashboard-cast`);
+      const slideApiJson = JSON.parse(slideApiRes.body);
+      assert.equal(slideApiJson.slideshow.enabled, true);
+      assert.equal(slideApiJson.slideshow.slideNumber, 2);
+      assert.equal(slideApiJson.dashboard.id, 'smart-home-tv-command');
+
+      // Step manually to next slide (slide 3: kgraph-architecture-pulse)
+      const stepRes = dashEngine.stepSlideshow({ direction: 1 });
+      assert.equal(stepRes.ok, true);
+      assert.equal(stepRes.slideshow.slideNumber, 3);
+      assert.equal(stepRes.dashboard.id, 'kgraph-architecture-pulse');
     } finally {
       await tvEngine.stopPortalServer();
     }

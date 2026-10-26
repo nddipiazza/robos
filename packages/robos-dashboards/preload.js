@@ -5,6 +5,8 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('robosDashboards', {
   getOverview: (dashboardId) => ipcRenderer.invoke('dashboards:getOverview', dashboardId),
   setActiveDashboard: (dashboardId) => ipcRenderer.invoke('dashboards:setActive', dashboardId),
+  configureSlideshow: (payload) => ipcRenderer.invoke('dashboards:configureSlideshow', payload),
+  stepSlideshow: (payload) => ipcRenderer.invoke('dashboards:stepSlideshow', payload),
   setLayout: (payload) => ipcRenderer.invoke('dashboards:setLayout', payload),
   createDashboard: (payload) => ipcRenderer.invoke('dashboards:create', payload),
   deleteDashboard: (dashboardId) => ipcRenderer.invoke('dashboards:delete', dashboardId),

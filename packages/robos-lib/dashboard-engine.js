@@ -1883,6 +1883,17 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
     activeDashboardId: 'daily-engineering-ops',
     lastCastTvId: 'tv-livingroom-tcl-roku',
     lastCastAt: null,
+    slideshow: {
+      enabled: false,
+      intervalSeconds: 15,
+      dashboardIds: [
+        'daily-engineering-ops',
+        'smart-home-tv-command',
+        'kgraph-architecture-pulse',
+      ],
+      startedEpochMs: 0,
+      currentIndex: 0,
+    },
     dashboards: JSON.parse(JSON.stringify(DEFAULT_DASHBOARDS)),
   };
 
@@ -1918,6 +1929,17 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
         }
       }
     }
+    const rawSs = state.slideshow || {};
+    const validIds = Array.isArray(rawSs.dashboardIds)
+      ? rawSs.dashboardIds.filter((id) => state.dashboards.some((d) => d.id === id))
+      : [];
+    state.slideshow = {
+      enabled: Boolean(rawSs.enabled),
+      intervalSeconds: Math.max(3, Math.min(3600, Number(rawSs.intervalSeconds) || 15)),
+      dashboardIds: validIds.length > 0 ? validIds : state.dashboards.map((d) => d.id),
+      startedEpochMs: Number(rawSs.startedEpochMs) || Date.now(),
+      currentIndex: Math.max(0, Number(rawSs.currentIndex) || 0),
+    };
   }
 
   function saveState() {
@@ -2016,8 +2038,75 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
     }
   }
 
+  function computeSlideshowState(nowMs = Date.now()) {
+    loadState();
+    const validIds = (state.slideshow?.dashboardIds || []).filter((id) =>
+      state.dashboards.some((d) => d.id === id)
+    );
+    const ids = validIds.length > 0 ? validIds : state.dashboards.map((d) => d.id);
+    const intervalSeconds = Math.max(3, Math.min(3600, Number(state.slideshow?.intervalSeconds) || 15));
+    const intervalMs = intervalSeconds * 1000;
+    const enabled = Boolean(state.slideshow?.enabled && ids.length > 0);
+    let currentIndex = 0;
+    let elapsedInSlideSec = 0;
+    let secondsRemainingInSlide = intervalSeconds;
+
+    if (enabled) {
+      const startedMs = Number(state.slideshow?.startedEpochMs) || nowMs;
+      const totalElapsedMs = Math.max(0, nowMs - startedMs);
+      currentIndex = Math.floor(totalElapsedMs / intervalMs) % ids.length;
+      elapsedInSlideSec = Math.floor((totalElapsedMs % intervalMs) / 1000);
+      secondsRemainingInSlide = Math.max(1, intervalSeconds - elapsedInSlideSec);
+    } else {
+      const activeIdx = ids.indexOf(state.activeDashboardId);
+      currentIndex = activeIdx >= 0 ? activeIdx : 0;
+    }
+
+    const currentDashboardId = ids[currentIndex] || state.activeDashboardId || 'daily-engineering-ops';
+    const nextIndex = (currentIndex + 1) % ids.length;
+    const prevIndex = (currentIndex - 1 + ids.length) % ids.length;
+    const nextDashboardId = ids[nextIndex] || currentDashboardId;
+    const prevDashboardId = ids[prevIndex] || currentDashboardId;
+    const currentDash = state.dashboards.find((d) => d.id === currentDashboardId) || state.dashboards[0];
+    const nextDash = state.dashboards.find((d) => d.id === nextDashboardId) || currentDash;
+
+    return {
+      enabled,
+      intervalSeconds,
+      dashboardIds: ids,
+      slides: ids.map((id, idx) => {
+        const d = state.dashboards.find((x) => x.id === id);
+        return {
+          index: idx,
+          slideNumber: idx + 1,
+          id,
+          title: d ? d.title : id,
+          layoutId: d ? d.layoutId : 'mission-control-3col',
+          cardsCount: d && Array.isArray(d.cards) ? d.cards.length : 0,
+        };
+      }),
+      currentIndex,
+      slideNumber: currentIndex + 1,
+      totalSlides: ids.length,
+      currentDashboardId,
+      currentDashboardTitle: currentDash ? currentDash.title : currentDashboardId,
+      nextDashboardId,
+      nextDashboardTitle: nextDash ? nextDash.title : nextDashboardId,
+      prevDashboardId,
+      elapsedInSlideSec,
+      secondsRemainingInSlide,
+      progressPct: Math.min(100, Math.max(5, Math.round(((intervalSeconds - secondsRemainingInSlide) / intervalSeconds) * 100))),
+      startedEpochMs: state.slideshow?.startedEpochMs || nowMs,
+    };
+  }
+
   function resolveDashboard(dashboardId) {
-    const dashboard = getDashboard(dashboardId);
+    const slideshow = computeSlideshowState();
+    const effectiveDashId =
+      (!dashboardId || dashboardId === 'slideshow') && slideshow.enabled
+        ? slideshow.currentDashboardId
+        : dashboardId;
+    const dashboard = getDashboard(effectiveDashId);
     const layout = getLayout(dashboard.layoutId);
     const resolvedCards = (dashboard.cards || []).map((card, index) => {
       const slot = layout.slots[index] || layout.slots[layout.slots.length - 1] || {
@@ -2044,7 +2133,9 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
         ...dashboard,
         layout,
         cards: resolvedCards,
+        slideshow,
       },
+      slideshow,
       layouts: DASHBOARD_LAYOUTS,
       widgetCatalog: DASHBOARD_WIDGET_CATALOG,
       allDashboards: listDashboards(),
@@ -2055,9 +2146,12 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
     };
   }
 
-  function getOverview(dashboardId) {
+  function getOverview(dashboardId, options = {}) {
     loadState();
-    if (dashboardId && state.dashboards.some((d) => d.id === dashboardId)) {
+    const ss = computeSlideshowState();
+    if (ss.enabled && (!dashboardId || options.respectSlideshow)) {
+      state.activeDashboardId = ss.currentDashboardId;
+    } else if (dashboardId && state.dashboards.some((d) => d.id === dashboardId)) {
       state.activeDashboardId = dashboardId;
       saveState();
     }
@@ -2071,6 +2165,50 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
       tvs: supp.smartTvs.tvs || [],
       activeDashboardCast: supp.smartTvs.activeDashboardCast || null,
     };
+  }
+
+  function configureSlideshow({ enabled, intervalSeconds, dashboardIds, startDashboardId, startedEpochMs } = {}) {
+    loadState();
+    if (enabled !== undefined) {
+      state.slideshow.enabled = Boolean(enabled);
+    }
+    if (intervalSeconds !== undefined) {
+      state.slideshow.intervalSeconds = Math.max(3, Math.min(3600, Number(intervalSeconds) || 15));
+    }
+    if (Array.isArray(dashboardIds)) {
+      const filtered = dashboardIds.filter((id) => state.dashboards.some((d) => d.id === id));
+      if (filtered.length > 0) {
+        state.slideshow.dashboardIds = filtered;
+      }
+    }
+    const ids = state.slideshow.dashboardIds || [];
+    const targetStartIdx = startDashboardId ? Math.max(0, ids.indexOf(startDashboardId)) : 0;
+    const baseMs = startedEpochMs !== undefined ? Number(startedEpochMs) : Date.now();
+    state.slideshow.currentIndex = targetStartIdx;
+    state.slideshow.startedEpochMs = baseMs - targetStartIdx * state.slideshow.intervalSeconds * 1000;
+    if (state.slideshow.enabled && ids[targetStartIdx]) {
+      state.activeDashboardId = ids[targetStartIdx];
+    }
+    saveState();
+    return getOverview(undefined, { respectSlideshow: true });
+  }
+
+  function stepSlideshow({ direction = 1, targetIndex } = {}) {
+    loadState();
+    const ss = computeSlideshowState();
+    const ids = ss.dashboardIds;
+    const len = ids.length || 1;
+    const nextIdx =
+      targetIndex !== undefined
+        ? ((Number(targetIndex) % len) + len) % len
+        : (((ss.currentIndex + (Number(direction) || 1)) % len) + len) % len;
+    state.slideshow.currentIndex = nextIdx;
+    state.slideshow.startedEpochMs = Date.now() - nextIdx * ss.intervalSeconds * 1000;
+    if (ids[nextIdx]) {
+      state.activeDashboardId = ids[nextIdx];
+    }
+    saveState();
+    return getOverview(state.activeDashboardId);
   }
 
   function setActiveDashboard(dashboardId) {
@@ -2339,6 +2477,9 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
     listDashboards,
     getDashboard,
     resolveDashboard,
+    getSlideshowState: computeSlideshowState,
+    configureSlideshow,
+    stepSlideshow,
     setActiveDashboard,
     setDashboardLayout,
     createDashboard,
@@ -3061,6 +3202,11 @@ function renderDashboardTvWallboardHtml({
       </div>
     </div>
     <div class="tv-dash-pills">
+      ${
+        dash.slideshow?.enabled
+          ? `<span class="tv-pill accent js-tv-slideshow-pill" style="border-color:#f59e0b;color:#fcd34d;background:rgba(245,158,11,0.16);">🎞️ SLIDE ${esc(dash.slideshow.slideNumber)}/${esc(dash.slideshow.totalSlides)} (${esc(dash.slideshow.intervalSeconds)}s) · Next in ${esc(dash.slideshow.secondsRemainingInSlide)}s</span>`
+          : `<span class="tv-pill js-tv-slideshow-pill" style="display:none;"></span>`
+      }
       <span class="tv-pill accent js-header-live-clock" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">🕒 ${esc(new Date().toLocaleTimeString('en-US', { hour12: false }))}</span>
       <span class="tv-pill accent">📺 Smart TV: ${esc(tvName)}</span>
       <span class="tv-pill">🕸️ KGraph: ${esc(dash.kgraphId || 'urn:robos:dashboard:' + dash.id)}</span>
@@ -3353,11 +3499,30 @@ function renderDashboardTvWallboardHtml({
 
       const escHtml = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+      const currentRenderedDashId = ${JSON.stringify(dash.id)};
+
       async function pollLiveAgentSessions() {
         try {
           const res = await fetch('/api/dashboard-cast', { cache: 'no-store' });
           if (!res.ok) return;
           const json = await res.json();
+          const ss = json && (json.slideshow || (json.dashboard && json.dashboard.slideshow));
+          const ssPill = document.querySelector('.js-tv-slideshow-pill');
+          if (ssPill) {
+            if (ss && ss.enabled) {
+              ssPill.style.display = '';
+              ssPill.style.borderColor = '#f59e0b';
+              ssPill.style.color = '#fcd34d';
+              ssPill.style.background = 'rgba(245,158,11,0.16)';
+              ssPill.textContent = '🎞️ SLIDE ' + ss.slideNumber + '/' + ss.totalSlides + ' (' + ss.intervalSeconds + 's) · Next in ' + ss.secondsRemainingInSlide + 's';
+            } else {
+              ssPill.style.display = 'none';
+            }
+          }
+          if (json && json.dashboard && json.dashboard.id && json.dashboard.id !== currentRenderedDashId) {
+            window.location.reload();
+            return;
+          }
           const cards = (json && json.dashboard && Array.isArray(json.dashboard.cards)) ? json.dashboard.cards : [];
           const agentCard = cards.find(c => c.widgetType === 'agent-sessions');
           if (!agentCard) return;
