@@ -47,7 +47,8 @@
     "robos-github-auth",
     "vpn-sandbox",
     "publish-blog-post",
-    "fix-media-metadata"
+    "fix-media-metadata",
+    "robos-blog"
   ],
   "commands": [
     "view-task-plan",
@@ -87,7 +88,9 @@
     "robos-github-auth",
     "vpn-sandbox",
     "publish-blog-post",
-    "fix-media-metadata"
+    "fix-media-metadata",
+    "robos-blog",
+    "blog"
   ],
   "compatibility": {
     "claude": ">=1.0.0",

@@ -16,6 +16,7 @@ keywords: "RobOS engineering blog, release notes, OBD-II Auto Center, Audio Play
     <p class="lead">What changed in RobOS and why, newest first. Each post links to the docs and the commits behind it.</p>
   </div>
   <nav class="blog-jump" aria-label="Jump to blog post">
+    <a href="#audio-player-ai-fix-metadata">Audio Player AI Fix Metadata</a>
     <a href="#vpn-sandbox-and-killswitch-proof">VPN Sandbox &amp; Kill-Switch Proof</a>
     <a href="#frontier-hunters-live-map-editor">RTS: Frontier Hunters &amp; Map Editor</a>
     <a href="#quest-warrior-dragon-ai-walkthrough">Quest: Warrior Dragon AI</a>
@@ -38,6 +39,44 @@ keywords: "RobOS engineering blog, release notes, OBD-II Auto Center, Audio Play
 </section>
 
 <div class="blog-feed">
+
+  <article class="blog-entry" id="audio-player-ai-fix-metadata">
+    <div class="blog-meta">
+      <time class="blog-date" datetime="2026-10-26">Oct 26, 2026</time>
+      <span class="blog-tag">RobOS Audio Player</span>
+      <span class="blog-tag">AI Fix Metadata &amp; Artwork</span>
+      <span class="blog-tag">Open-Source Media Skill</span>
+      <span class="blog-tag">MusicBrainz &amp; FFmpeg</span>
+    </div>
+    <h2><a href="#audio-player-ai-fix-metadata">RobOS Audio Player: AI Fix Metadata &amp; Artwork with Open-Source Media Probing, MusicBrainz CC0, and FFmpeg</a></h2>
+    <p class="blog-summary"><strong>RobOS Audio Player</strong> (<code>packages/audio-player</code>) now includes <strong>✦ AI Fix Metadata &amp; Artwork</strong>, built on the shared <code>&lt;robos-agent-selector&gt;</code> and <code>&lt;robos-ai-textarea&gt;</code> components and backed by the new <code>fix-media-metadata</code> agent skill. It inspects local and cloud audio/video containers (<code>.mp3</code>, <code>.flac</code>, <code>.m4a</code>, <code>.ogg</code>, <code>.opus</code>, <code>.wav</code>, <code>.mkv</code>, <code>.webm</code>), sidecar files (<code>.cue</code>, <code>.lrc</code>, <code>.nfo</code>), and strictly legal open-data APIs (<strong>MusicBrainz WS/2 CC0</strong>, <strong>Cover Art Archive</strong>, and <strong>LRCLIB</strong>) to repair messy titles, resolve canonical artists/albums/composers/years, extract or synthesize cover art, and optionally write lossless tags back to disk via <code>ffmpeg</code>.</p>
+    <div class="blog-body">
+      <figure class="blog-fig">
+        <img src="{{ '/assets/blog/audio-player-ai-fix-metadata/library-albums-enriched.png' | relative_url }}" alt="RobOS Audio Player showing the enriched Video Game Music album grid with extracted and open-source generated cover art" loading="lazy">
+        <figcaption><strong>RobOS Audio Player</strong> after running <strong>✦ AI Fix Metadata</strong> on a 12-track Google Drive <code>video game music</code> folder: what started as 1 generic folder album and 6 unknown/uploader artists was automatically organized into 11 canonical game soundtrack albums, 12 artists, 9 composers, 4 decades, and 100% cover art.</figcaption>
+      </figure>
+      <p><strong>Reusable RobOS UI components and the <code>fix-media-metadata</code> skill.</strong> Rather than inventing custom prompt controls, <strong>AI Fix Metadata</strong> embeds the standard <code>&lt;robos-agent-selector&gt;</code> and <code>&lt;robos-ai-textarea&gt;</code> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/audio-player/src/AiFixMetadata.jsx"><code>packages/audio-player/src/AiFixMetadata.jsx</code></a>) with <code>/skills</code> command browsing and <code>@mention</code> file typeahead wired to <code>packages/robos-lib/skill-catalog.js</code>. The textarea opens pre-populated with <code>@skill(robos:fix-media-metadata)</code> (<a href="https://github.com/nddipiazza/robos/blob/main/plugins/robos/skills/fix-media-metadata/SKILL.md"><code>plugins/robos/skills/fix-media-metadata/SKILL.md</code></a>), giving your chosen coding agent (AGY, Claude Code, Codex, Gemini CLI, or GitHub Copilot) full domain instructions on container tag layouts, scene/ripper filename noise removal, open-data cross-referencing, and cover art selection.</p>
+      <div class="blog-fig-grid">
+        <figure class="blog-fig"><img src="{{ '/assets/blog/audio-player-ai-fix-metadata/ai-fix-metadata-modal.png' | relative_url }}" alt="AI Fix Metadata modal in RobOS Audio Player with robos-agent-selector and robos-ai-textarea pre-populated with @skill(robos:fix-media-metadata)" loading="lazy"><figcaption>The <strong>✦ AI Fix Metadata &amp; Artwork</strong> modal reusing <code>&lt;robos-agent-selector&gt;</code> and <code>&lt;robos-ai-textarea&gt;</code> with <code>@skill(robos:fix-media-metadata)</code>.</figcaption></figure>
+        <figure class="blog-fig"><img src="{{ '/assets/blog/audio-player-ai-fix-metadata/library-songs-enriched.png' | relative_url }}" alt="Enriched Songs table in RobOS Audio Player showing canonical titles, composers, albums, years, and Video Game Music genres" loading="lazy"><figcaption>The enriched <strong>Songs</strong> view with cleaned titles, canonical soundtrack albums, release years, and genres.</figcaption></figure>
+      </div>
+      <p><strong>100% open-source, legal media probing and artwork pipeline.</strong> For every track in the selected scope (selected rows, active folder, tracks missing metadata/art, or a library batch), <a href="https://github.com/nddipiazza/robos/blob/main/packages/audio-player/lib/ai-metadata.js"><code>packages/audio-player/lib/ai-metadata.js</code></a> runs a multi-stage open-source pipeline: it parses container tags with MIT-licensed <code>music-metadata</code>, probes stream/container headers and attached pictures with <code>ffprobe</code>, inspects sibling <code>.cue</code>, <code>.lrc</code>, and <code>.nfo</code> sidecars, and queries the CC0 <strong>MusicBrainz WS/2 API</strong> and <strong>LRCLIB</strong>. For tracks missing cover art, it extracts embedded <code>APIC</code> / <code>METADATA_BLOCK_PICTURE</code> / <code>covr</code> streams or representative video frames via <code>ffmpeg</code>, checks folder images (<code>cover.jpg</code>, <code>folder.png</code>), downloads official sleeves from the <strong>Cover Art Archive</strong>, or synthesizes an open-source FFmpeg waveform / SVG album sleeve. Every proposed change is presented as an interactive before→after diff card so you can review and selectively apply updates to the library index, playlists, and (optionally) directly into local media files via lossless <code>ffmpeg -c copy</code> stream muxing.</p>
+      <div class="blog-log"># Run the open-source media metadata &amp; FFmpeg tag-writing unit tests
+node --test packages/audio-player/lib/*.test.js
+
+# Trigger AI Fix Metadata on the running Audio Player via DOM Snapshot IPC (port 19196)
+node packages/robos-lib/snapshot-cli.js audio-player --click 'button#btn-library-ai-fix-metadata'
+node packages/robos-lib/snapshot-cli.js audio-player --click 'button#btn-ai-fix-metadata-run'
+node packages/robos-lib/snapshot-cli.js audio-player --click 'button#btn-ai-fix-metadata-apply'</div>
+    </div>
+    <div class="blog-links">
+      <a href="{{ '/v1/apps/audio-player/' | relative_url }}">RobOS Audio Player docs →</a>
+      <a href="https://github.com/nddipiazza/robos/blob/main/plugins/robos/skills/fix-media-metadata/SKILL.md">fix-media-metadata skill →</a>
+      <a href="https://github.com/nddipiazza/robos/blob/main/packages/audio-player/lib/ai-metadata.js">ai-metadata.js engine →</a>
+      <a href="https://github.com/nddipiazza/robos/blob/main/packages/audio-player/lib/ai-metadata.test.js">Unit &amp; FFmpeg E2E tests →</a>
+      <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/164e8713">164e8713</a> · <a href="https://github.com/nddipiazza/robos/commit/d4c0f112">d4c0f112</a></span>
+    </div>
+  </article>
 
   <article class="blog-entry" id="vpn-sandbox-and-killswitch-proof">
     <div class="blog-meta">
