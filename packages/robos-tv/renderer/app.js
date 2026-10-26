@@ -29,6 +29,21 @@ function showBanner(msg, isError = false) {
   window._bannerTimer = setTimeout(() => el.classList.add('hidden'), 6000);
 }
 
+function showSetupAlert(res) {
+  const box = document.getElementById('setup-alert-box');
+  if (!box) return;
+  if (!res || !res.blocked) {
+    box.classList.add('hidden');
+    return;
+  }
+  document.getElementById('setup-alert-title').textContent = res.setupTitle || 'TV Setup Step Required on Your Remote';
+  document.getElementById('setup-alert-msg').textContent = res.setupMessage || '';
+  const stepsEl = document.getElementById('setup-alert-steps');
+  const steps = res.setupSteps || [];
+  stepsEl.innerHTML = steps.map((s) => `<li>${esc(s)}</li>`).join('');
+  box.classList.remove('hidden');
+}
+
 function renderAll() {
   document.getElementById('portal-url-text').textContent = state.portalUrl;
   document.getElementById('tv-count-badge').textContent = `${state.tvs.length} TV${state.tvs.length === 1 ? '' : 's'}`;
@@ -38,6 +53,7 @@ function renderAll() {
   renderPlatformSelectors();
   renderDevicesList();
   renderRemoteAndTiles();
+  renderAllChecklists();
   renderDevSteps();
   renderGeneratedPackages();
   renderPortalPreview();
@@ -103,9 +119,13 @@ function renderDevicesList() {
   listEl.querySelectorAll('[data-power-on-tv]').forEach((btn) => {
     btn.onclick = async () => {
       const res = await window.robosTv.sendRemoteKey({ tvId: btn.dataset.powerOnTv, key: 'POWER_ON' });
-      if (res.ok) {
-        state.lastRemoteKey = res.lastRemoteKey;
-        renderAll();
+      state.lastRemoteKey = res.lastRemoteKey;
+      renderAll();
+      if (res.blocked) {
+        showSetupAlert(res);
+        showBanner(res.setupTitle || 'TV setup required', true);
+      } else {
+        showSetupAlert(null);
         showBanner(`Sent POWER_ON to ${res.targetTv}`);
       }
     };
@@ -114,9 +134,13 @@ function renderDevicesList() {
   listEl.querySelectorAll('[data-power-off-tv]').forEach((btn) => {
     btn.onclick = async () => {
       const res = await window.robosTv.sendRemoteKey({ tvId: btn.dataset.powerOffTv, key: 'POWER_OFF' });
-      if (res.ok) {
-        state.lastRemoteKey = res.lastRemoteKey;
-        renderAll();
+      state.lastRemoteKey = res.lastRemoteKey;
+      renderAll();
+      if (res.blocked) {
+        showSetupAlert(res);
+        showBanner(res.setupTitle || 'TV setup required', true);
+      } else {
+        showSetupAlert(null);
         showBanner(`Sent POWER_OFF to ${res.targetTv}`);
       }
     };
@@ -193,6 +217,37 @@ function renderRemoteAndTiles() {
       }
     };
   });
+}
+
+function renderAllChecklists() {
+  const el = document.getElementById('all-platforms-checklists');
+  if (!el) return;
+  const platforms = state.platforms || [];
+  el.innerHTML = platforms
+    .map(
+      (p) => `
+      <div class="item-row" style="flex-direction:column;align-items:stretch;gap:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="item-title" style="color:#67e8f9;">${esc(p.name)}</div>
+          <code style="font-size:11.5px;color:#8b949e;">${esc(p.protocol)}</code>
+        </div>
+        ${(p.requiredPermissions || [])
+          .map(
+            (perm) => `
+            <div style="background:#111827;border:1px solid #263248;border-radius:6px;padding:10px 12px;">
+              <div style="font-weight:650;font-size:13px;color:#f8fafc;">${esc(perm.title)}</div>
+              <div style="font-size:11.5px;color:#fca5a5;margin-top:2px;">If disabled: ${esc(perm.blockedSymptom)}</div>
+              <ol style="margin:6px 0 0;padding-left:18px;font-size:12.5px;color:#e2e8f0;">
+                ${(perm.steps || []).map((st) => `<li>${esc(st)}</li>`).join('')}
+              </ol>
+            </div>
+          `
+          )
+          .join('')}
+      </div>
+    `
+    )
+    .join('');
 }
 
 function renderDevSteps() {
@@ -294,14 +349,58 @@ async function init() {
         tvId,
         key: btn.dataset.rkey,
       });
-      if (res.ok) {
-        state.activeTileId = res.activeTileId;
-        state.lastRemoteKey = res.lastRemoteKey;
-        renderAll();
-        showBanner(`Sent ${res.key} to ${res.targetTv} (Selected: ${res.activeTile.title})`);
+      state.activeTileId = res.activeTileId || state.activeTileId;
+      state.lastRemoteKey = res.lastRemoteKey || state.lastRemoteKey;
+      renderAll();
+      if (res.blocked) {
+        showSetupAlert(res);
+        showBanner(res.setupTitle || 'TV setup step required', true);
+      } else if (res.ok) {
+        showSetupAlert(null);
+        showBanner(`Sent ${res.key} to ${res.targetTv} (Selected: ${res.activeTile?.title || 'OK'})`);
       }
     };
   });
+
+  const dismissBtn = document.getElementById('btn-dismiss-setup-alert');
+  if (dismissBtn) {
+    dismissBtn.onclick = () => showSetupAlert(null);
+  }
+
+  const checkBtn = document.getElementById('btn-run-readiness-check');
+  if (checkBtn) {
+    checkBtn.onclick = async () => {
+      const tvId = document.getElementById('select-remote-target').value;
+      const diag = await window.robosTv.diagnoseReadiness(tvId);
+      const out = document.getElementById('live-readiness-results');
+      if (!diag || !diag.ok || !out) return;
+      out.innerHTML = (diag.checks || [])
+        .map(
+          (c) => `
+          <div class="item-row" style="margin-bottom:6px;border-color:${c.ready ? 'rgba(34,197,94,0.5)' : 'rgba(239,68,68,0.6)'};">
+            <div>
+              <div class="item-title">
+                <span class="dot ${c.ready ? 'online' : ''}" style="${c.ready ? '' : 'background:#ef4444;'}"></span>
+                <span>${esc(c.title)}</span>
+              </div>
+              <div class="item-sub">Live TV Reported State: <code>${esc(c.currentValue)}</code></div>
+              ${
+                !c.ready
+                  ? `<ol style="margin:6px 0 0;padding-left:18px;font-size:12px;color:#fecdd3;">${(c.fixSteps || [])
+                      .map((s) => `<li>${esc(s)}</li>`)
+                      .join('')}</ol>`
+                  : ''
+              }
+            </div>
+            <span class="badge ${c.ready ? 'badge-green' : ''}" style="${c.ready ? '' : 'color:#fca5a5;border-color:#ef4444;'}">
+              ${c.ready ? 'READY' : 'ACTION NEEDED'}
+            </span>
+          </div>
+        `
+        )
+        .join('');
+    };
+  }
 
   document.getElementById('btn-scan-tvs').onclick = async () => {
     const res = await window.robosTv.scanLan();
