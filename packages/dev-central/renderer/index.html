@@ -183,6 +183,24 @@
           <span class="kpi-label">Pipeline Health</span>
         </div>
       </div>
+
+      <div class="kpi-card" id="kpi-card-calendar" onclick="window.switchTab('calendar')" style="cursor:pointer;">
+        <div class="kpi-icon-wrap kpi-cyan">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-top">
+            <span class="kpi-value" id="kpi-calendar-val">0</span>
+            <span class="kpi-delta positive" id="kpi-calendar-delta">CalDAV Synced</span>
+          </div>
+          <span class="kpi-label">Calendar Events</span>
+        </div>
+      </div>
     </section>
 
     <!-- Interactive View Navigation Tabs -->
@@ -205,6 +223,11 @@
         <span class="tab-icon">🌿</span>
         <span>My PRs</span>
         <span class="tab-badge" id="tab-prs-badge">0</span>
+      </button>
+      <button class="tab-btn" data-tab="calendar" id="tab-btn-calendar">
+        <span class="tab-icon">📅</span>
+        <span>Calendar</span>
+        <span class="tab-badge" id="tab-calendar-badge">0</span>
       </button>
       <button class="tab-btn" data-tab="notifications" id="tab-btn-notifications">
         <span class="tab-icon">🔔</span>
@@ -532,6 +555,59 @@
         </div>
         <div class="card-body" id="standup-content">
           <div class="placeholder">Preparing standup...</div>
+        </div>
+      </section>
+
+      <!-- RobOS Calendar Events & Google / Thunderbird Integration Card -->
+      <section class="card wide" id="calendar-card" data-section="calendar">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon">📅</span>
+            <span class="card-title">RobOS Calendar Events</span>
+            <span class="card-count" id="calendar-events-count">0</span>
+            <span class="badge-subtle" id="calendar-account-badge">Google CalDAV</span>
+          </div>
+          <div class="card-actions" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div class="card-filters" id="calendar-filter-chips">
+              <button class="filter-chip active" data-cal-filter="all">All</button>
+              <button class="filter-chip" data-cal-filter="today">Today</button>
+              <button class="filter-chip" data-cal-filter="upcoming">Upcoming</button>
+              <button class="filter-chip" data-cal-filter="sprint">Sprint &amp; Standup</button>
+            </div>
+            <button class="btn btn-secondary-sm" id="btn-toggle-add-event" onclick="window.toggleAddCalendarEventForm()">+ Add Event</button>
+            <button class="btn btn-secondary-sm" id="btn-sync-calendar" onclick="window.syncDevCentralCalendar()">🔄 Sync CalDAV</button>
+            <button class="btn btn-secondary-sm" id="btn-open-gcal-setup" onclick="window.openGoogleCalendarSetup()">⚙️ Calendar &amp; Thunderbird</button>
+          </div>
+        </div>
+
+        <div class="card-body" id="calendar-body">
+          <!-- Collapsible Quick-Add Event Bar -->
+          <div id="calendar-add-form" class="hidden" style="margin-bottom:14px;padding:12px 14px;border-radius:8px;background:#0d1117;border:1px solid #30363d;">
+            <div style="font-size:12px;font-weight:700;color:#00bcd4;margin-bottom:8px;">Schedule New RobOS / Google Calendar Event</div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 1.2fr 1.2fr 1.4fr auto;gap:8px;align-items:center;">
+              <input type="text" id="cal-input-title" class="search-input-sm" placeholder="Event title (e.g. Architecture Review, Focus Block)..." style="width:100%;" />
+              <select id="cal-input-category" class="filter-sel" style="width:100%;">
+                <option value="meeting">📅 Meeting</option>
+                <option value="standup">🤖 Standup</option>
+                <option value="sprint">🏃 Sprint Ceremony</option>
+                <option value="review">👀 Code Review</option>
+                <option value="focus">🎯 Deep Focus</option>
+              </select>
+              <input type="datetime-local" id="cal-input-start" class="search-input-sm" style="width:100%;" />
+              <input type="datetime-local" id="cal-input-end" class="search-input-sm" style="width:100%;" />
+              <input type="text" id="cal-input-location" class="search-input-sm" placeholder="Location or Meet URL..." style="width:100%;" />
+              <button class="btn btn-primary" id="btn-save-cal-event" onclick="window.submitNewCalendarEvent()">Save Event</button>
+            </div>
+          </div>
+
+          <div id="calendar-status-strip" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;padding:8px 12px;border-radius:6px;background:rgba(0,188,212,0.07);border:1px solid rgba(0,188,212,0.22);font-size:12px;">
+            <span id="calendar-sync-summary">Connected to RobOS Cloud Accounts · Google Calendar CalDAV &amp; Thunderbird ready</span>
+            <button class="btn btn-secondary-sm" id="btn-open-tb-calendar" onclick="window.openThunderbirdCalendarApp()">🚀 Open in Thunderbird</button>
+          </div>
+
+          <div id="calendar-events-list">
+            <div class="placeholder">Loading calendar events...</div>
+          </div>
         </div>
       </section>
 

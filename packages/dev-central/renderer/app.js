@@ -32,6 +32,13 @@ const appState = {
   tvCastSession: null,
   tvPortalUrl: 'http://127.0.0.1:19210',
   tvCastUrl: 'http://127.0.0.1:19210/dev-central',
+
+  // RobOS Calendar Events & Google / Thunderbird State
+  calendarEvents: [],
+  calendarFilter: 'all',
+  calendarAccount: null,
+  calendarThunderbird: null,
+  calendarSyncMode: 'caldav-ready',
 };
 
 // ── Utility Functions ────────────────────────────────────────────────────────
@@ -124,6 +131,14 @@ function generateStandup(issues, prs, blockers) {
       today.push(`#${issue.number}: ${issue.title}`);
     }
   }
+  // Include today's scheduled calendar events in today's standup plan
+  const todayDateStr = new Date().toDateString();
+  for (const ev of (appState.calendarEvents || [])) {
+    if (ev.start && new Date(ev.start).toDateString() === todayDateStr) {
+      const timeStr = new Date(ev.start).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      today.push(`📅 ${timeStr} — ${ev.summary}`);
+    }
+  }
   for (const b of (blockers || [])) {
     blockerList.push(`${b.label}: ${b.text}`);
   }
@@ -160,11 +175,19 @@ function updateKPIRibbon() {
   const featStEl = document.getElementById('kpi-feature-status');
   const notifsValEl = document.getElementById('kpi-notifs-val');
   const notifsDeltaEl = document.getElementById('kpi-notifs-delta');
+  const calValEl = document.getElementById('kpi-calendar-val');
+  const calDeltaEl = document.getElementById('kpi-calendar-delta');
 
   if (tasksEl) tasksEl.textContent = appState.allIssues.length;
   if (prsEl) prsEl.textContent = appState.allPRs.length;
   if (reviewsEl) reviewsEl.textContent = appState.allReviews.length;
   if (blockersEl) blockersEl.textContent = appState.allBlockers.length;
+  if (calValEl) calValEl.textContent = appState.calendarEvents.length;
+  if (calDeltaEl) {
+    const todayStr = new Date().toDateString();
+    const todayCount = appState.calendarEvents.filter(e => e.start && new Date(e.start).toDateString() === todayStr).length;
+    calDeltaEl.textContent = todayCount > 0 ? `${todayCount} today · CalDAV` : (appState.calendarAccount?.email ? 'CalDAV Ready' : 'Local Agenda');
+  }
 
   if (healthEl) {
     if (!appState.allPRs.length) {
@@ -193,6 +216,7 @@ function updateKPIRibbon() {
   const tabBlockersBadge = document.getElementById('tab-blockers-badge');
   const tabFeatureBadge = document.getElementById('tab-feature-badge');
   const tabNotifsBadge = document.getElementById('tab-notifs-badge');
+  const tabCalendarBadge = document.getElementById('tab-calendar-badge');
   const headerNotifBadge = document.getElementById('header-notif-badge');
   const headerNotifBtn = document.getElementById('btn-header-notifs');
 
@@ -201,6 +225,7 @@ function updateKPIRibbon() {
   if (tabBlockersBadge) tabBlockersBadge.textContent = appState.allBlockers.length;
   if (tabFeatureBadge && appState.activeFeature) tabFeatureBadge.textContent = appState.activeFeature.status;
   if (tabNotifsBadge) tabNotifsBadge.textContent = unread;
+  if (tabCalendarBadge) tabCalendarBadge.textContent = appState.calendarEvents.length;
   if (headerNotifBadge) headerNotifBadge.textContent = unread;
 
   if (headerNotifBtn) {
@@ -224,6 +249,7 @@ function applyViewTab(tab) {
     reviews:   document.getElementById('reviews-card'),
     blockers:  document.getElementById('blockers-card'),
     standup:   document.getElementById('standup-card'),
+    calendar:  document.getElementById('calendar-card'),
     activity:  document.getElementById('activity-card'),
   };
 
@@ -232,6 +258,7 @@ function applyViewTab(tab) {
     // In overview Mission Control, show top cards
     if (cards.notifications) cards.notifications.style.display = '';
     if (cards.feature) cards.feature.style.display = '';
+    if (cards.calendar) cards.calendar.style.display = '';
   } else if (tab === 'feature') {
     Object.values(cards).forEach(c => { if (c) c.style.display = 'none'; });
     if (cards.feature) cards.feature.style.display = '';
@@ -245,6 +272,9 @@ function applyViewTab(tab) {
     Object.values(cards).forEach(c => { if (c) c.style.display = 'none'; });
     if (cards.prs) cards.prs.style.display = '';
     if (cards.reviews) cards.reviews.style.display = '';
+  } else if (tab === 'calendar') {
+    Object.values(cards).forEach(c => { if (c) c.style.display = 'none'; });
+    if (cards.calendar) cards.calendar.style.display = '';
   } else if (tab === 'blockers') {
     Object.values(cards).forEach(c => { if (c) c.style.display = 'none'; });
     if (cards.blockers) cards.blockers.style.display = '';
@@ -1106,6 +1136,214 @@ window.openSmartTvStudioApp = function() {
   }
 };
 
+// ── RobOS Calendar Events & Google / Thunderbird Integration ─────────────────
+
+function formatEventTimeRange(startStr, endStr) {
+  if (!startStr) return 'All Day';
+  const start = new Date(startStr);
+  const end = endStr ? new Date(endStr) : null;
+  const now = new Date();
+  const isToday = start.toDateString() === now.toDateString();
+  const dayLabel = isToday
+    ? 'Today'
+    : start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const t1 = start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const t2 = end ? end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '';
+  return t2 ? `${dayLabel} · ${t1} – ${t2}` : `${dayLabel} · ${t1}`;
+}
+
+function renderCalendarEvents(events = appState.calendarEvents) {
+  const listEl = document.getElementById('calendar-events-list');
+  const countEl = document.getElementById('calendar-events-count');
+  const acctBadgeEl = document.getElementById('calendar-account-badge');
+  const summaryEl = document.getElementById('calendar-sync-summary');
+
+  const acctEmail = appState.calendarAccount?.email || 'nicholas.dipiazza@gmail.com';
+  if (acctBadgeEl) {
+    acctBadgeEl.textContent = `Google (${acctEmail})`;
+  }
+  if (summaryEl) {
+    const tbConfigured = appState.calendarAccount?.thunderbirdConfigured || appState.calendarThunderbird?.configuredAccounts?.length > 0;
+    summaryEl.innerHTML = `Connected to <strong>RobOS Cloud Accounts</strong> (<code>${acctEmail}</code>) · ${tbConfigured ? '<span style="color:#3fb950;">✓ Thunderbird CalDAV &amp; CardDAV Synced</span>' : 'CalDAV Endpoint Ready'}`;
+  }
+
+  const now = new Date();
+  const todayStr = now.toDateString();
+  const q = (appState.searchQuery || '').toLowerCase();
+
+  const filtered = (events || []).filter(ev => {
+    if (q) {
+      const hay = `${ev.summary || ''} ${ev.description || ''} ${ev.location || ''} ${ev.category || ''}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (appState.calendarFilter === 'today') {
+      return ev.start && new Date(ev.start).toDateString() === todayStr;
+    }
+    if (appState.calendarFilter === 'upcoming') {
+      return ev.start && new Date(ev.end || ev.start).getTime() >= now.getTime() - 1800000;
+    }
+    if (appState.calendarFilter === 'sprint') {
+      return ['standup', 'sprint', 'review'].includes(ev.category);
+    }
+    return true;
+  });
+
+  if (countEl) countEl.textContent = filtered.length;
+  if (!listEl) return;
+
+  if (!filtered.length) {
+    listEl.innerHTML = '<div class="placeholder">No matching calendar events. Click "+ Add Event" to schedule a meeting or focus block.</div>';
+    return;
+  }
+
+  const categoryMeta = {
+    standup: { icon: '🤖', label: 'Standup', color: '#00bcd4' },
+    sprint:  { icon: '🏃', label: 'Sprint', color: '#a855f7' },
+    review:  { icon: '👀', label: 'Code Review', color: '#3b82f6' },
+    focus:   { icon: '🎯', label: 'Deep Focus', color: '#22c55e' },
+    meeting: { icon: '📅', label: 'Google Calendar', color: '#eab308' },
+  };
+
+  listEl.innerHTML = filtered.map(ev => {
+    const cat = categoryMeta[ev.category] || categoryMeta.meeting;
+    const isToday = ev.start && new Date(ev.start).toDateString() === todayStr;
+    const safeSummary = String(ev.summary || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const safeDesc = String(ev.description || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const safeLoc = String(ev.location || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    return `
+      <div class="list-item calendar-event-row" data-event-id="${ev.id}" style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:11px 14px;border-bottom:1px solid #21262d;">
+        <div style="display:flex;align-items:flex-start;gap:11px;min-width:0;flex:1;">
+          <div style="width:34px;height:34px;border-radius:8px;background:rgba(0,188,212,0.12);border:1px solid ${cat.color}55;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">
+            ${cat.icon}
+          </div>
+          <div style="min-width:0;flex:1;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <strong style="font-size:13.5px;color:#f0f6fc;">${safeSummary}</strong>
+              <span class="badge-subtle" style="border:1px solid ${cat.color}66;color:${cat.color};">${cat.label}</span>
+              ${isToday ? '<span class="badge-subtle" style="background:rgba(63,185,80,0.15);color:#3fb950;">Today</span>' : ''}
+            </div>
+            ${safeDesc ? `<div style="font-size:12px;color:#8b949e;margin-top:3px;">${safeDesc}</div>` : ''}
+            <div style="font-size:11.5px;color:#8b949e;margin-top:5px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <span style="color:#58a6ff;font-weight:600;">🕒 ${formatEventTimeRange(ev.start, ev.end)}</span>
+              ${safeLoc ? `<span>📍 ${safeLoc}</span>` : ''}
+              <span>☁️ ${ev.calendarName || `Google Calendar (${acctEmail})`}</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+          ${ev.meetingUrl ? `<button class="btn btn-secondary-sm" onclick="window.robos.openUrl('${String(ev.meetingUrl).replace(/'/g, "\\'")}')">Join / Open</button>` : ''}
+          <button class="btn btn-secondary-sm" title="Remove event" onclick="window.deleteDevCentralCalendarEvent('${String(ev.id).replace(/'/g, "\\'")}')">✕</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function loadCalendarEvents() {
+  if (!window.robos || typeof window.robos.getCalendarEvents !== 'function') return;
+  try {
+    const res = await window.robos.getCalendarEvents();
+    if (res && res.ok) {
+      appState.calendarEvents = Array.isArray(res.events) ? res.events : [];
+      appState.calendarAccount = res.account || null;
+      appState.calendarThunderbird = res.thunderbird || null;
+      appState.calendarSyncMode = res.syncMode || 'caldav-ready';
+      renderCalendarEvents(appState.calendarEvents);
+      renderStandup(generateStandup(appState.allIssues, appState.allPRs, appState.allBlockers));
+      updateKPIRibbon();
+    }
+  } catch {}
+}
+
+window.toggleAddCalendarEventForm = function() {
+  const form = document.getElementById('calendar-add-form');
+  if (!form) return;
+  form.classList.toggle('hidden');
+  if (!form.classList.contains('hidden')) {
+    const startInput = document.getElementById('cal-input-start');
+    const endInput = document.getElementById('cal-input-end');
+    if (startInput && !startInput.value) {
+      const s = new Date(Date.now() + 3600000);
+      const e = new Date(Date.now() + 5400000);
+      const toLocal = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      startInput.value = toLocal(s);
+      if (endInput) endInput.value = toLocal(e);
+    }
+    document.getElementById('cal-input-title')?.focus();
+  }
+};
+
+window.submitNewCalendarEvent = async function() {
+  const titleEl = document.getElementById('cal-input-title');
+  const catEl = document.getElementById('cal-input-category');
+  const startEl = document.getElementById('cal-input-start');
+  const endEl = document.getElementById('cal-input-end');
+  const locEl = document.getElementById('cal-input-location');
+  const summary = titleEl ? titleEl.value.trim() : '';
+  if (!summary) return;
+
+  const res = await window.robos.addCalendarEvent({
+    summary,
+    category: catEl ? catEl.value : 'meeting',
+    start: startEl && startEl.value ? new Date(startEl.value).toISOString() : undefined,
+    end: endEl && endEl.value ? new Date(endEl.value).toISOString() : undefined,
+    location: locEl ? locEl.value.trim() : '',
+    meetingUrl: locEl && locEl.value.trim().startsWith('http') ? locEl.value.trim() : '',
+  });
+  if (res && res.ok) {
+    if (titleEl) titleEl.value = '';
+    if (locEl) locEl.value = '';
+    document.getElementById('calendar-add-form')?.classList.add('hidden');
+    appState.calendarEvents = res.events || [];
+    renderCalendarEvents(appState.calendarEvents);
+    renderStandup(generateStandup(appState.allIssues, appState.allPRs, appState.allBlockers));
+    updateKPIRibbon();
+  }
+};
+
+window.deleteDevCentralCalendarEvent = async function(eventId) {
+  if (!eventId || !window.robos?.deleteCalendarEvent) return;
+  const res = await window.robos.deleteCalendarEvent(eventId);
+  if (res && res.ok) {
+    appState.calendarEvents = res.events || [];
+    renderCalendarEvents(appState.calendarEvents);
+    renderStandup(generateStandup(appState.allIssues, appState.allPRs, appState.allBlockers));
+    updateKPIRibbon();
+  }
+};
+
+window.syncDevCentralCalendar = async function() {
+  const btn = document.getElementById('btn-sync-calendar');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '🔄 Syncing...';
+  }
+  try {
+    const res = await window.robos.syncThunderbirdCalendar(appState.calendarAccount?.id || null);
+    if (res && res.ok) {
+      appState.calendarEvents = res.events || [];
+      appState.calendarAccount = res.account || appState.calendarAccount;
+      appState.calendarThunderbird = res.thunderbird || appState.calendarThunderbird;
+      renderCalendarEvents(appState.calendarEvents);
+      updateKPIRibbon();
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '🔄 Sync CalDAV';
+    }
+  }
+};
+
+window.openGoogleCalendarSetup = function() {
+  window.robos?.openCalendarApp?.('google-calendar');
+};
+
+window.openThunderbirdCalendarApp = function() {
+  window.robos?.openCalendarApp?.('thunderbird');
+};
+
 // ── Wire Navigation & Filter Events ──────────────────────────────────────────
 function wireInteractivity() {
   // Tabs
@@ -1150,6 +1388,16 @@ function wireInteractivity() {
     });
   });
 
+  // Calendar Filter Chips
+  document.querySelectorAll('#calendar-filter-chips .filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#calendar-filter-chips .filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      appState.calendarFilter = chip.dataset.calFilter || 'all';
+      renderCalendarEvents(appState.calendarEvents);
+    });
+  });
+
   // Global Search Bar
   const searchInput = document.getElementById('global-search');
   if (searchInput) {
@@ -1158,6 +1406,7 @@ function wireInteractivity() {
       renderTasks(appState.allIssues);
       renderPRs(appState.allPRs);
       renderBlockers(appState.allBlockers);
+      renderCalendarEvents(appState.calendarEvents);
     });
 
     // Keyboard shortcut ⌘K / Ctrl+K
@@ -1315,6 +1564,7 @@ async function init() {
 
   updateKPIRibbon();
   loadSmartTvs();
+  loadCalendarEvents();
 
   // Show error if no task server
   if (!ts && !issuesRes.ok) {

@@ -613,6 +613,275 @@ function launchThunderbird(launchOptions = {}, options = {}) {
   return { ok: true, binaryPath: status.binaryPath, args, pid: child.pid };
 }
 
+// ── RobOS Unified Calendar Events Store & Dev Central Integration ────────────
+
+function getCalendarEventsFilePath(options = {}) {
+  const configDir = options.configDir || path.join(getHomeDir(options), '.config', 'robos');
+  return path.join(configDir, 'calendar-events.json');
+}
+
+function buildSeedCalendarEvents(email = 'nicholas.dipiazza@gmail.com') {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  const d = now.getDate();
+
+  const atTime = (dayOffset, hour, minute) => new Date(y, m, d + dayOffset, hour, minute, 0).toISOString();
+
+  return [
+    {
+      id: 'evt-daily-standup',
+      summary: 'Daily AI Standup & Blocker Radar Triage',
+      description: 'Review Sprint 42 in-flight tasks, CI pipeline health, and PR review requests in Dev Central.',
+      start: atTime(0, 9, 30),
+      end: atTime(0, 9, 50),
+      category: 'standup',
+      source: 'google-caldav',
+      calendarName: `Google Calendar (${email})`,
+      accountEmail: email,
+      location: 'Dev Central · Sprint 42 Room',
+      meetingUrl: 'https://meet.google.com/robos-standup',
+      attendees: [email, 'sarah-lead@acme.io', 'alex-architect@acme.io'],
+    },
+    {
+      id: 'evt-pr-review-theater',
+      summary: 'Code Review Theater: TASK-201 Multi-Step Form Validation (#84)',
+      description: 'Walkthrough of 1080p proof-of-work video, Pact consumer contracts, and SHACL shape validation.',
+      start: atTime(0, 11, 0),
+      end: atTime(0, 11, 45),
+      category: 'review',
+      source: 'google-caldav',
+      calendarName: `Google Calendar (${email})`,
+      accountEmail: email,
+      location: 'RobOS PR Review Theater',
+      meetingUrl: 'https://github.com/acme-corp/buildbarn-forms/pull/84',
+      attendees: [email, 'sarah-lead@acme.io'],
+    },
+    {
+      id: 'evt-focus-block',
+      summary: 'Deep Focus Block: FEAT-201 Implementation & E2E Verification',
+      description: 'Protected engineering block with Do-Not-Disturb toast throttling enabled.',
+      start: atTime(0, 14, 0),
+      end: atTime(0, 16, 0),
+      category: 'focus',
+      source: 'robos-calendar',
+      calendarName: `Google Calendar (${email})`,
+      accountEmail: email,
+      location: 'Local Workstation / Ephemeral Sandbox',
+      meetingUrl: '',
+      attendees: [email],
+    },
+    {
+      id: 'evt-kgraph-sync',
+      summary: 'Architecture & Dual-State Knowledge Graph Blast-Radius Sync',
+      description: 'Compare World 1 (main) vs World 2 (feature branch) semantic diffs before Sprint 42 cut.',
+      start: atTime(0, 16, 30),
+      end: atTime(0, 17, 0),
+      category: 'sprint',
+      source: 'google-caldav',
+      calendarName: `Google Calendar (${email})`,
+      accountEmail: email,
+      location: 'KGraph Explorer · Google Meet',
+      meetingUrl: 'https://meet.google.com/robos-kgraph',
+      attendees: [email, 'dave-k@acme.io', 'priya-n@acme.io'],
+    },
+    {
+      id: 'evt-sprint-demo',
+      summary: 'Sprint 42 Demo & Release Sign-Off',
+      description: 'Live showcase of Cloud Suite Accounts, Thunderbird CalDAV/CardDAV integration, and Dev Central.',
+      start: atTime(1, 10, 30),
+      end: atTime(1, 11, 30),
+      category: 'sprint',
+      source: 'google-caldav',
+      calendarName: `Google Calendar (${email})`,
+      accountEmail: email,
+      location: 'Engineering All-Hands',
+      meetingUrl: 'https://meet.google.com/robos-demo',
+      attendees: [email, 'sarah-lead@acme.io', 'alex-architect@acme.io'],
+    },
+  ];
+}
+
+function loadLocalCalendarEvents(options = {}) {
+  const filePath = getCalendarEventsFilePath(options);
+  try {
+    if (fs.existsSync(filePath)) {
+      const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {}
+  const defaultAcc = cloudAccounts.getAccountById(null, options);
+  const email = defaultAcc?.email || 'nicholas.dipiazza@gmail.com';
+  const seeded = buildSeedCalendarEvents(email);
+  saveLocalCalendarEvents(seeded, options);
+  return seeded;
+}
+
+function saveLocalCalendarEvents(events, options = {}) {
+  const filePath = getCalendarEventsFilePath(options);
+  try {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, JSON.stringify(events, null, 2), 'utf8');
+  } catch {}
+  return events;
+}
+
+function addCalendarEvent(eventInput = {}, options = {}) {
+  const summary = String(eventInput.summary || eventInput.title || '').trim();
+  if (!summary) {
+    throw new Error('Event title / summary is required.');
+  }
+  const defaultAcc = cloudAccounts.getAccountById(eventInput.accountId || null, options);
+  const email = eventInput.accountEmail || defaultAcc?.email || 'nicholas.dipiazza@gmail.com';
+
+  const now = new Date();
+  const startIso = eventInput.start
+    ? new Date(eventInput.start).toISOString()
+    : new Date(now.getTime() + 30 * 60000).toISOString();
+  const endIso = eventInput.end
+    ? new Date(eventInput.end).toISOString()
+    : new Date(new Date(startIso).getTime() + 30 * 60000).toISOString();
+
+  const newEvent = {
+    id: eventInput.id || `evt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    summary,
+    description: String(eventInput.description || '').trim(),
+    start: startIso,
+    end: endIso,
+    category: eventInput.category || 'meeting',
+    source: eventInput.source || 'google-caldav',
+    calendarName: eventInput.calendarName || `Google Calendar (${email})`,
+    accountEmail: email,
+    location: String(eventInput.location || '').trim(),
+    meetingUrl: String(eventInput.meetingUrl || '').trim(),
+    attendees: Array.isArray(eventInput.attendees) ? eventInput.attendees : [email],
+    createdAt: new Date().toISOString(),
+  };
+
+  const list = loadLocalCalendarEvents(options);
+  list.push(newEvent);
+  list.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+  saveLocalCalendarEvents(list, options);
+  return { ok: true, event: newEvent, events: list };
+}
+
+function deleteCalendarEvent(eventId, options = {}) {
+  const list = loadLocalCalendarEvents(options);
+  const filtered = list.filter(e => e.id !== eventId);
+  saveLocalCalendarEvents(filtered, options);
+  return { ok: true, deletedId: eventId, events: filtered };
+}
+
+/**
+ * Reads any cached CalDAV events from Thunderbird's local SQLite cache (`calendar-data/cache.sqlite`)
+ * if Thunderbird has already synced the user's Google Calendar.
+ */
+function readThunderbirdCachedEvents(profilePath, email = '') {
+  if (!profilePath) return [];
+  const dbPath = path.join(profilePath, 'calendar-data', 'cache.sqlite');
+  if (!fs.existsSync(dbPath)) return [];
+  try {
+    const query = 'SELECT id, title, event_start, event_end, flags FROM cal_events ORDER BY event_start DESC LIMIT 25;';
+    const out = execFileSync('sqlite3', ['-json', dbPath, query], { encoding: 'utf8', timeout: 3000 }).trim();
+    if (!out) return [];
+    const rows = JSON.parse(out);
+    if (!Array.isArray(rows)) return [];
+    return rows.map(r => ({
+      id: `tb-${r.id}`,
+      summary: r.title || '(Untitled Event)',
+      start: r.event_start ? new Date(Number(r.event_start) / 1000).toISOString() : new Date().toISOString(),
+      end: r.event_end ? new Date(Number(r.event_end) / 1000).toISOString() : new Date().toISOString(),
+      category: 'meeting',
+      source: 'thunderbird-caldav',
+      calendarName: `Thunderbird CalDAV (${email || 'Google'})`,
+      accountEmail: email,
+      location: '',
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Returns unified calendar events combining:
+ *   1. RobOS & Google Calendar events (`~/.config/robos/calendar-events.json`)
+ *   2. Live Google Calendar REST API events (when Calendar scope token is active)
+ *   3. Thunderbird CalDAV SQLite cached events (`calendar-data/cache.sqlite`)
+ */
+async function getUnifiedCalendarEvents(accountIdOrEmail = null, options = {}) {
+  const state = cloudAccounts.listAccounts(options);
+  const googleAccounts = state.accounts.filter(a => a.provider === 'google');
+  const activeAccount = (accountIdOrEmail && state.accounts.find(a => a.id === accountIdOrEmail || a.email === accountIdOrEmail))
+    || googleAccounts.find(a => a.id === state.defaultAccountId)
+    || googleAccounts[0]
+    || null;
+
+  const email = activeAccount?.email || 'nicholas.dipiazza@gmail.com';
+  const tbStatus = detectThunderbird(options);
+  const localEvents = loadLocalCalendarEvents(options);
+  const tbCached = readThunderbirdCachedEvents(tbStatus.primaryProfilePath, email);
+
+  let liveApiEvents = [];
+  let syncMode = activeAccount?.thunderbirdConfigured ? 'thunderbird-caldav-synced' : 'caldav-ready';
+
+  if (activeAccount && !options.skipNetwork) {
+    try {
+      const ov = await fetchGoogleCalendarOverview(activeAccount.id, options);
+      if (ov && ov.mode === 'live-api') {
+        syncMode = 'google-api-live';
+      }
+      if (ov && Array.isArray(ov.upcomingEvents) && ov.upcomingEvents.length > 0) {
+        liveApiEvents = ov.upcomingEvents.map(ev => ({
+          id: `gapi-${ev.id}`,
+          summary: ev.summary,
+          start: ev.start,
+          end: ev.end || ev.start,
+          category: /standup|scrum/i.test(ev.summary) ? 'standup' : /review|pr/i.test(ev.summary) ? 'review' : /sprint|demo|planning/i.test(ev.summary) ? 'sprint' : 'meeting',
+          source: 'google-api',
+          calendarName: `Google Calendar (${email})`,
+          accountEmail: email,
+          location: ev.location || '',
+          meetingUrl: ev.htmlLink || '',
+        }));
+      }
+    } catch {}
+  }
+
+  // Merge and deduplicate by summary + start timestamp
+  const seen = new Set();
+  const merged = [];
+  for (const ev of [...liveApiEvents, ...tbCached, ...localEvents]) {
+    if (!ev || !ev.summary) continue;
+    const key = `${ev.summary.toLowerCase()}::${String(ev.start).slice(0, 16)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push({
+      ...ev,
+      accountEmail: ev.accountEmail || email,
+      calendarName: ev.calendarName || `Google Calendar (${email})`,
+    });
+  }
+
+  merged.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+
+  const now = new Date();
+  const todayStr = now.toDateString();
+  const todayEvents = merged.filter(e => new Date(e.start).toDateString() === todayStr);
+  const upcomingEvents = merged.filter(e => new Date(e.end || e.start).getTime() >= now.getTime() - 3600000);
+
+  return {
+    ok: true,
+    syncMode,
+    account: activeAccount,
+    accounts: googleAccounts,
+    thunderbird: tbStatus,
+    caldavUrl: activeAccount?.endpoints?.caldavUrl || cloudAccounts.buildGoogleEndpoints(email).caldavUrl,
+    events: merged,
+    todayCount: todayEvents.length,
+    upcomingCount: upcomingEvents.length,
+  };
+}
+
 module.exports = {
   ROBOS_BLOCK_START,
   ROBOS_BLOCK_END,
@@ -626,4 +895,10 @@ module.exports = {
   configureThunderbirdForGoogleAccount,
   fetchGoogleCalendarOverview,
   launchThunderbird,
+  getCalendarEventsFilePath,
+  loadLocalCalendarEvents,
+  saveLocalCalendarEvents,
+  addCalendarEvent,
+  deleteCalendarEvent,
+  getUnifiedCalendarEvents,
 };
