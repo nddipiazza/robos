@@ -72,6 +72,14 @@ keywords: "RobOS apps, app directory, desktop applications, Point of Sale, Auto 
           <p>Launch any app inside an isolated Linux network namespace (<code>ip netns</code>) routed through OpenVPN (3,598 IPVanish profiles built in) with a live E2E-proven 3-barrier kernel kill-switch.</p>
         </div>
       </a>
+      <a class="card app-card" href="{{ '/tv/' | relative_url }}" data-s="robos smart tv studio robos-tv developer mode sideload lg webos ipk ares-install samsung tizen wgt sdb google android tv adb leanback roku 10-foot portal moonlight sunshine">
+        <img src="{{ '/v1/assets/images/icons/robos-tv.svg' | relative_url }}" width="40" height="40" alt="" loading="lazy">
+        <div>
+          <h3>RobOS Smart TV Studio</h3>
+          <code class="app-pkg">Big-Screen Guide · /tv/</code>
+          <p>Sideload a native RobOS TV app via Developer Mode (LG webOS, Samsung Tizen, Google TV/ADB, Roku), navigate the 10-Foot Portal (<code>:19210</code>) with your TV remote D-Pad, and stream 4K 120Hz games.</p>
+        </div>
+      </a>
     </div>
   </div>
 

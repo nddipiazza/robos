@@ -102,6 +102,20 @@ ipcMain.handle('speakers:resume', async (_event, targetIp) => {
   return speakerService.resume(targetIp);
 });
 
+ipcMain.handle('speakers:openTvStudio', async () => {
+  const { spawn } = require('child_process');
+  const tvMain = path.resolve(__dirname, '..', 'robos-tv', 'main.js');
+  if (fs.existsSync(tvMain)) {
+    const child = spawn(process.execPath, [tvMain, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'], {
+      detached: true,
+      stdio: 'ignore',
+    });
+    child.unref();
+    return { ok: true, path: tvMain };
+  }
+  return { ok: false, error: 'robos-tv not found' };
+});
+
 ipcMain.handle('speakers:castFile', async (_event, target, filePath, metadata) => {
   return speakerService.castFile(target, filePath, metadata);
 });

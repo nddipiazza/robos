@@ -48,7 +48,7 @@ keywords: "RobOS documentation, developer guides, knowledge graph reference, PR 
       </div>
       <div class="h-index-row">
         <h3>App suite guides</h3>
-        <p><a href="{{ '/point-of-sale/' | relative_url }}">Point of Sale</a> (<a href="{{ '/point-of-sale/retail/' | relative_url }}">Retail</a>, <a href="{{ '/point-of-sale/coffee/' | relative_url }}">Coffee shop</a>, <a href="{{ '/point-of-sale/bar/' | relative_url }}">Bar</a>), <a href="{{ '/auto-center/' | relative_url }}">Auto Center</a>, <a href="{{ '/family-finances/' | relative_url }}">Family finances</a>, <a href="{{ '/games/' | relative_url }}">Games</a></p>
+        <p><a href="{{ '/point-of-sale/' | relative_url }}">Point of Sale</a> (<a href="{{ '/point-of-sale/retail/' | relative_url }}">Retail</a>, <a href="{{ '/point-of-sale/coffee/' | relative_url }}">Coffee shop</a>, <a href="{{ '/point-of-sale/bar/' | relative_url }}">Bar</a>), <a href="{{ '/auto-center/' | relative_url }}">Auto Center</a>, <a href="{{ '/family-finances/' | relative_url }}">Family finances</a>, <a href="{{ '/games/' | relative_url }}">Games</a>, <a href="{{ '/tv/' | relative_url }}">RobOS on Smart TVs</a></p>
       </div>
       <div class="h-index-row">
         <h3>Build apps</h3>
