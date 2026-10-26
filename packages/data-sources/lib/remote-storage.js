@@ -338,6 +338,17 @@ async function getServiceAccountToken(saJson) {
   return data.access_token;
 }
 
+function loadCloudAccountsLib() {
+  for (const p of [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'cloud-accounts'),
+    path.resolve(__dirname, '..', '..', 'robos-lib', 'cloud-accounts'),
+    '/usr/local/share/robos/robos-lib/cloud-accounts',
+  ].filter(Boolean)) {
+    try { return require(p); } catch {}
+  }
+  return null;
+}
+
 function getDataSourcesConfigPath() {
   return path.join(getHomeDir(), '.config', 'robos', 'data-sources.json');
 }
@@ -346,15 +357,30 @@ function syncDsCredentialsFromDisk(ds) {
   if (!ds || !ds.id) return ds;
   try {
     const p = getDataSourcesConfigPath();
-    if (!fs.existsSync(p)) return ds;
-    const list = JSON.parse(fs.readFileSync(p, 'utf8'));
-    if (!Array.isArray(list)) return ds;
-    const diskDs = list.find(d => d && d.id === ds.id);
-    if (!diskDs) return ds;
-    if (diskDs.refreshToken && !ds.refreshToken) ds.refreshToken = diskDs.refreshToken;
-    if (diskDs.accessToken && diskDs.accessToken !== ds.accessToken) ds.accessToken = diskDs.accessToken;
-    if (diskDs.clientId && !ds.clientId) ds.clientId = diskDs.clientId;
-    if (diskDs.clientSecret && !ds.clientSecret) ds.clientSecret = diskDs.clientSecret;
+    if (fs.existsSync(p)) {
+      const list = JSON.parse(fs.readFileSync(p, 'utf8'));
+      if (Array.isArray(list)) {
+        const diskDs = list.find(d => d && d.id === ds.id);
+        if (diskDs) {
+          if (diskDs.refreshToken && !ds.refreshToken) ds.refreshToken = diskDs.refreshToken;
+          if (diskDs.accessToken && diskDs.accessToken !== ds.accessToken) ds.accessToken = diskDs.accessToken;
+          if (diskDs.clientId && !ds.clientId) ds.clientId = diskDs.clientId;
+          if (diskDs.clientSecret && !ds.clientSecret) ds.clientSecret = diskDs.clientSecret;
+        }
+      }
+    }
+    // Also fallback to unified Cloud Accounts registry if ds is missing tokens
+    if (!ds.refreshToken && !ds.accessToken && (ds.driverType === 'gdrive' || ds.driverType === 'onedrive')) {
+      const ca = loadCloudAccountsLib();
+      if (ca) {
+        const acc = ca.getAccountById(ds.user || null);
+        if (acc && ((ds.driverType === 'gdrive' && acc.provider === 'google') || (ds.driverType === 'onedrive' && acc.provider === 'microsoft'))) {
+          if (acc.refreshToken) ds.refreshToken = acc.refreshToken;
+          if (acc.accessToken) ds.accessToken = acc.accessToken;
+          if (acc.email && !ds.user) ds.user = acc.email;
+        }
+      }
+    }
   } catch {}
   return ds;
 }
@@ -373,6 +399,8 @@ function persistRefreshedTokenToDisk(dsId, newAccessToken) {
       list[idx].loggedIn = true;
       list[idx].status = 'Connected';
       fs.writeFileSync(p, JSON.stringify(list, null, 2), { encoding: 'utf8', mode: 0o600 });
+      const ca = loadCloudAccountsLib();
+      if (ca) ca.syncFromDataSources();
     }
   } catch {}
 }

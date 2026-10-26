@@ -439,6 +439,13 @@ function saveDataSources(data) {
   try {
     fs.mkdirSync(path.dirname(CONFIG_FILE), { recursive: true });
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(data, null, 2), { encoding: 'utf8', mode: 0o600 });
+    for (const p of [
+      process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'cloud-accounts'),
+      path.resolve(__dirname, '..', 'robos-lib', 'cloud-accounts'),
+      '/usr/local/share/robos/robos-lib/cloud-accounts',
+    ].filter(Boolean)) {
+      try { require(p).syncFromDataSources(); break; } catch {}
+    }
   } catch {}
 }
 

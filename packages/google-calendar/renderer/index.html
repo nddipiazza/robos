@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RobOS Google Calendar &amp; Thunderbird Integration</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">📅</div>
+      <div>
+        <h1>RobOS Google Calendar &amp; Thunderbird Integration</h1>
+        <p class="subtitle">Re-use your logged-in RobOS Google Cloud Account to automatically install &amp; configure Mozilla Thunderbird with Google Calendar (CalDAV), Contacts (CardDAV), and optional Gmail</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button id="btn-open-cloud-accounts" class="btn">☁️ Manage Cloud Accounts</button>
+      <button id="btn-launch-tb-calendar" class="btn">🚀 Launch Thunderbird Calendar</button>
+      <button id="btn-refresh" class="btn">↻ Refresh</button>
+    </div>
+  </header>
+
+  <main class="main-grid">
+    <section class="left-col">
+      <div id="status-banner" class="status-banner hidden" role="status" aria-live="polite"></div>
+
+      <!-- Step 1: Select Google Account from RobOS Cloud Accounts -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="step-pill">Step 1 · RobOS Cloud Account</div>
+            <h2 class="card-title">Google Account (Shared from Google Drive Login)</h2>
+          </div>
+          <button id="btn-google-signin" class="btn">+ Sign in / Switch Google Account</button>
+        </div>
+        <div class="form-row">
+          <label for="account-select">Active Google Account</label>
+          <select id="account-select" class="select-input"></select>
+        </div>
+        <div id="account-summary" class="info-box">Loading Google account from RobOS Cloud Accounts…</div>
+      </div>
+
+      <!-- Step 2: Choose Google Suite Services to Configure in Thunderbird -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="step-pill">Step 2 · Suite Services</div>
+            <h2 class="card-title">Google Services to Configure in Mozilla Thunderbird</h2>
+          </div>
+        </div>
+
+        <div class="toggle-list">
+          <label class="toggle-row" for="chk-calendar">
+            <input type="checkbox" id="chk-calendar" checked />
+            <div class="toggle-copy">
+              <div class="toggle-title">📅 Google Calendar (CalDAV — Recommended)</div>
+              <div class="toggle-desc">Configures bi-directional CalDAV calendar sync (<code>https://apidata.googleusercontent.com/caldav/v2/&lt;email&gt;/events</code>) with offline cache and 15-minute auto-refresh.</div>
+            </div>
+          </label>
+
+          <label class="toggle-row" for="chk-contacts">
+            <input type="checkbox" id="chk-contacts" checked />
+            <div class="toggle-copy">
+              <div class="toggle-title">👥 Google Contacts (CardDAV — Recommended)</div>
+              <div class="toggle-desc">Configures Google Contacts CardDAV address book (<code>dirType = 102</code>) in Thunderbird for contact sync and attendee autocomplete.</div>
+            </div>
+          </label>
+
+          <label class="toggle-row" for="chk-mail">
+            <input type="checkbox" id="chk-mail" />
+            <div class="toggle-copy">
+              <div class="toggle-title">✉️ Gmail (IMAP &amp; SMTP — Optional)</div>
+              <div class="toggle-desc">Optionally configures <code>imap.gmail.com:993</code> and <code>smtp.gmail.com:465</code> with OAuth 2.0 authentication (<code>authMethod = 10</code>).</div>
+            </div>
+          </label>
+        </div>
+
+        <div class="form-grid" style="margin-top:14px;">
+          <div>
+            <label for="calendar-color">Calendar Accent Color</label>
+            <input type="text" id="calendar-color" class="text-input" value="#00bcd4" />
+          </div>
+          <div>
+            <label for="refresh-minutes">Sync Interval (Minutes)</label>
+            <input type="number" id="refresh-minutes" class="text-input" value="15" min="5" max="120" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Install & Configure Thunderbird -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="step-pill">Step 3 · Automated Provisioning</div>
+            <h2 class="card-title">Mozilla Thunderbird Status &amp; One-Click Setup</h2>
+          </div>
+        </div>
+        <div id="thunderbird-status-box" class="info-box">Checking Mozilla Thunderbird installation…</div>
+        <div class="action-bar">
+          <button id="btn-install-and-configure" class="btn btn-primary">⚡ Install &amp; Configure Thunderbird</button>
+          <button id="btn-configure-only" class="btn">✓ Write Configuration to Thunderbird Profile</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="right-col">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Generated Thunderbird <code>user.js</code> Configuration</h2>
+            <p class="card-subtitle">Idempotent CalDAV, CardDAV, and OAuth2 rules written to your Thunderbird profile</p>
+          </div>
+        </div>
+        <pre id="config-preview" class="code-box">// Select a Google account to preview generated Thunderbird user.js…</pre>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Calendar Endpoints &amp; Provisioning Log</h2>
+            <p class="card-subtitle">Live status of Google Calendar endpoints and Thunderbird installation output</p>
+          </div>
+        </div>
+        <div id="calendar-overview-box" class="info-box" style="margin-bottom:10px;"></div>
+        <pre id="install-log" class="code-box log-box">Ready. Click "Write Configuration to Thunderbird Profile" or "Install &amp; Configure Thunderbird".</pre>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
