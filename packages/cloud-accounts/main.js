@@ -58,6 +58,7 @@ app.setPath?.('userData', path.join(CONFIG_DIR, 'electron', 'cloud-accounts'));
 let mainWindow = null;
 
 function createWindow() {
+  const iconPng = path.join(__dirname, 'icon.png');
   mainWindow = new BrowserWindow({
     title: 'RobOS Cloud Accounts',
     width: 1120,
@@ -65,7 +66,7 @@ function createWindow() {
     minWidth: 820,
     minHeight: 540,
     backgroundColor: '#0d1117',
-    icon: path.join(__dirname, 'icon.svg'),
+    icon: fs.existsSync(iconPng) ? iconPng : path.join(__dirname, 'icon.svg'),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -191,6 +192,16 @@ ipcMain.handle('ca:configure-thunderbird', async (_, payload) => {
 
 ipcMain.handle('ca:launch-app', async (_, appId) => {
   try {
+    const wrapperCandidates = [
+      path.join(HOME_DIR, '.local', 'bin', `robos-${appId}`),
+      path.join(HOME_DIR, '.local', 'bin', appId),
+    ];
+    const wrapper = wrapperCandidates.find(w => fs.existsSync(w));
+    if (wrapper) {
+      const child = spawn(wrapper, [], { detached: true, stdio: 'ignore', env: { ...process.env } });
+      child.unref();
+      return { ok: true, appId };
+    }
     const candidates = [
       path.resolve(__dirname, '..', appId, 'main.js'),
       `/usr/local/share/robos/${appId}/main.js`,
