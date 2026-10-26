@@ -454,6 +454,23 @@ async function init() {
     state = { ...state, ...initial };
     await renderAll();
   }
+
+  // Live dynamic polling for in-progress agent sessions, music, and countdown (every 2s)
+  setInterval(async () => {
+    try {
+      const fresh = await window.robosDashboards.getOverview(state.dashboard?.id);
+      if (!fresh || !fresh.ok || !fresh.dashboard) return;
+      state.dashboard = fresh.dashboard;
+      const cards = Array.isArray(fresh.dashboard.cards) ? fresh.dashboard.cards : [];
+      const agentCard = cards.find((c) => c.widgetType === 'agent-sessions');
+      if (agentCard && window.RobOSDashboardUI) {
+        const bodyEl = document.querySelector('section[data-widget-type="agent-sessions"] .robos-embed-card-body');
+        if (bodyEl) {
+          bodyEl.innerHTML = window.RobOSDashboardUI.renderWidgetInnerHtml(agentCard);
+        }
+      }
+    } catch {}
+  }, 2000);
 }
 
 init();

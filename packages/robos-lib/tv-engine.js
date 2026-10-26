@@ -1422,22 +1422,25 @@ tizen run -p robostv001.RobOSTV
     const agentRowsXml = Array.from({ length: 3 }, (_, i) => {
       const s = sessions[i];
       const y = 320 + i * 182;
-      const sTitle = s ? s.name || s.title || s.id || 'Agent Session' : '';
-      const sRef = s ? s.taskRef || s.branch || 'main' : 'main';
-      const titleText = s ? `* ${String(sTitle).slice(0, 44)}` : '';
-      const metaText = s ? `${s.providerLabel || s.provider || 'Agent'} | ${sRef} | [${String(s.status || 'running').toUpperCase()}]` : '';
+      const isVis = s ? 'true' : 'false';
+      const sTitle = s ? s.name || s.title || s.id || 'In-Progress Session' : '';
+      const sAct = s ? s.activity || s.cwd || '/home/ndipiazza/source/robos' : '';
+      const sEl = s ? s.elapsedFormatted || '00:05' : '00:00';
+      const titleText = s ? `* ${String(sTitle).slice(0, 46)}` : '';
+      const metaText = s ? `IN PROGRESS [${sEl}] | ${String(sAct).slice(0, 42)}` : '';
       const rawLines = Array.isArray(s?.statusLines) ? s.statusLines : Array.isArray(s?.tailLines) ? s.tailLines : [];
       const tails = rawLines.slice(-3);
       const tailLabels = Array.from({ length: 3 }, (__, tIdx) => {
         const ty = y + 70 + tIdx * 28;
         const tLine = tails[tIdx] ? String(tails[tIdx]).replace(/[^\x20-\x7E]/g, '').trim().slice(0, 56) : '';
-        return `    <Label id="agentTail${i}_${tIdx}" translation="[1310, ${ty}]" scale="[0.54, 0.54]" width="940" height="32" numLines="1" color="0xA7F3D0FF" text="${safeXml(tLine)}" />`;
+        return `    <Label id="agentTail${i}_${tIdx}" translation="[1310, ${ty}]" scale="[0.54, 0.54]" width="940" height="32" numLines="1" color="0xA7F3D0FF" visible="${isVis}" text="${safeXml(tLine)}" />`;
       }).join('\n');
-      return `    <Rectangle id="agentCard${i}" translation="[1284, ${y}]" width="568" height="170" color="0x161F30FF" visible="${s ? 'true' : 'false'}" />
-    <Rectangle id="agentStripe${i}" translation="[1284, ${y}]" width="568" height="3" color="0xF59E0BFF" visible="${s ? 'true' : 'false'}" />
-    <Label id="agentTitle${i}" translation="[1300, ${y + 8}]" scale="[0.65, 0.65]" width="780" height="34" numLines="1" color="0xF8FAFCFF" text="${safeXml(titleText)}" />
-    <Label id="agentMeta${i}" translation="[1300, ${y + 34}]" scale="[0.54, 0.54]" width="940" height="32" numLines="1" color="0xFCD34DFF" text="${safeXml(metaText)}" />
-    <Rectangle id="agentTermBg${i}" translation="[1298, ${y + 62}]" width="540" height="98" color="0x090D16FF" visible="${s ? 'true' : 'false'}" />
+      return `    <Rectangle id="agentCard${i}" translation="[1284, ${y}]" width="568" height="170" color="0x161F30FF" visible="${isVis}" />
+    <Rectangle id="agentStripe${i}" translation="[1284, ${y}]" width="568" height="3" color="0x10B981FF" visible="${isVis}" />
+    <Rectangle id="agentDot${i}" translation="[1300, ${y + 13}]" width="10" height="10" color="0x10B981FF" visible="${isVis}" />
+    <Label id="agentTitle${i}" translation="[1316, ${y + 8}]" scale="[0.64, 0.64]" width="760" height="34" numLines="1" color="0xF8FAFCFF" visible="${isVis}" text="${safeXml(titleText)}" />
+    <Label id="agentMeta${i}" translation="[1300, ${y + 34}]" scale="[0.54, 0.54]" width="940" height="32" numLines="1" color="0x6EE7B7FF" visible="${isVis}" text="${safeXml(metaText)}" />
+    <Rectangle id="agentTermBg${i}" translation="[1298, ${y + 62}]" width="540" height="98" color="0x090D16FF" visible="${isVis}" />
 ${tailLabels}`;
     }).join('\n');
 
@@ -1478,7 +1481,7 @@ sub pollDashboard()
                 m.top.payloadJson = raw
             end if
         end if
-        sleep(8000)
+        sleep(2000)
     end while
 end sub
 `;
@@ -1606,6 +1609,9 @@ ${agentRowsXml}
     m.tickCount = 0
     m.remainingSec = ${initialRemSec}
     m.nextMeetingTimeStr = "${safeXml(nm.time || '16:30')}"
+    m.agentActive = [${sessions[0] ? 'true' : 'false'}, ${sessions[1] ? 'true' : 'false'}, ${sessions[2] ? 'true' : 'false'}]
+    m.agentElapsed = [${Number(sessions[0]?.elapsedSec) || 5}, ${Number(sessions[1]?.elapsedSec) || 5}, ${Number(sessions[2]?.elapsedSec) || 5}]
+    m.agentActivity = ["${safeXml(String(sessions[0]?.activity || sessions[0]?.cwd || '').slice(0, 42))}", "${safeXml(String(sessions[1]?.activity || sessions[1]?.cwd || '').slice(0, 42))}", "${safeXml(String(sessions[2]?.activity || sessions[2]?.cwd || '').slice(0, 42))}"]
 
     m.clockTimer.observeField("fire", "onClockTick")
     m.clockTimer.control = "start"
@@ -1693,6 +1699,28 @@ sub onClockTick()
             todayBar.color = "0x10B981FF"
         end if
     end if
+
+    for i = 0 to 2
+        if m.agentActive[i] = true
+            m.agentElapsed[i] = m.agentElapsed[i] + 1
+            elSec = m.agentElapsed[i]
+            elMin = Int(elSec / 60)
+            elRem = elSec mod 60
+            elStr = pad2(elMin) + ":" + pad2(elRem)
+            amNode = m.top.findNode("agentMeta" + i.ToStr())
+            if amNode <> invalid
+                amNode.text = "IN PROGRESS [" + elStr + "] | " + m.agentActivity[i]
+            end if
+            adNode = m.top.findNode("agentDot" + i.ToStr())
+            if adNode <> invalid
+                if (m.tickCount mod 2) = 0
+                    adNode.color = "0x10B981FF"
+                else
+                    adNode.color = "0x00BCD4FF"
+                end if
+            end if
+        end if
+    end for
 end sub
 
 function cleanAscii(s as Dynamic) as String
@@ -1830,26 +1858,65 @@ sub onPayloadUpdated()
         else if cTag = "robos-widget-agent-sessions" and card.liveData <> invalid and card.liveData.sessions <> invalid
             sessions = card.liveData.sessions
             for i = 0 to 2
+                cardNode = m.top.findNode("agentCard" + i.ToStr())
+                stripeNode = m.top.findNode("agentStripe" + i.ToStr())
+                dotNode = m.top.findNode("agentDot" + i.ToStr())
+                atNode = m.top.findNode("agentTitle" + i.ToStr())
+                amNode = m.top.findNode("agentMeta" + i.ToStr())
+                termNode = m.top.findNode("agentTermBg" + i.ToStr())
                 if i < sessions.Count()
                     s = sessions[i]
-                    atNode = m.top.findNode("agentTitle" + i.ToStr())
-                    amNode = m.top.findNode("agentMeta" + i.ToStr())
+                    m.agentActive[i] = true
+                    if s.elapsedSec <> invalid then m.agentElapsed[i] = s.elapsedSec
+                    actStr = cleanAscii(s.activity)
+                    if actStr = "" then actStr = cleanAscii(s.cwd)
+                    m.agentActivity[i] = Left(actStr, 42)
+                    if cardNode <> invalid then cardNode.visible = true
+                    if stripeNode <> invalid then stripeNode.visible = true
+                    if dotNode <> invalid then dotNode.visible = true
+                    if atNode <> invalid then atNode.visible = true
+                    if amNode <> invalid then amNode.visible = true
+                    if termNode <> invalid then termNode.visible = true
                     sTitle = s.name
                     if sTitle = invalid then sTitle = s.title
-                    sRef = s.taskRef
-                    if sRef = invalid then sRef = "main"
-                    if atNode <> invalid and sTitle <> invalid then atNode.text = "* " + Left(cleanAscii(sTitle), 44)
-                    if amNode <> invalid then amNode.text = cleanAscii(s.provider) + " | " + cleanAscii(sRef) + " | [" + UCase(cleanAscii(s.status)) + "]"
+                    if atNode <> invalid and sTitle <> invalid then atNode.text = "* " + Left(cleanAscii(sTitle), 46)
+                    elFmt = cleanAscii(s.elapsedFormatted)
+                    if elFmt = "" then elFmt = "00:05"
+                    if amNode <> invalid then amNode.text = "IN PROGRESS [" + elFmt + "] | " + m.agentActivity[i]
                     linesArr = s.statusLines
                     if linesArr = invalid then linesArr = s.tailLines
-                    if linesArr <> invalid
-                        for tIdx = 0 to 2
-                            tlNode = m.top.findNode("agentTail" + i.ToStr() + "_" + tIdx.ToStr())
-                            if tlNode <> invalid and tIdx < linesArr.Count()
+                    for tIdx = 0 to 2
+                        tlNode = m.top.findNode("agentTail" + i.ToStr() + "_" + tIdx.ToStr())
+                        if tlNode <> invalid
+                            tlNode.visible = true
+                            if linesArr <> invalid and tIdx < linesArr.Count()
                                 tlNode.text = Left(cleanAscii(linesArr[tIdx]), 56)
+                            else
+                                tlNode.text = ""
                             end if
-                        end for
+                        end if
+                    end for
+                else
+                    m.agentActive[i] = false
+                    if cardNode <> invalid then cardNode.visible = false
+                    if stripeNode <> invalid then stripeNode.visible = false
+                    if dotNode <> invalid then dotNode.visible = false
+                    if atNode <> invalid
+                        atNode.visible = false
+                        atNode.text = ""
                     end if
+                    if amNode <> invalid
+                        amNode.visible = false
+                        amNode.text = ""
+                    end if
+                    if termNode <> invalid then termNode.visible = false
+                    for tIdx = 0 to 2
+                        tlNode = m.top.findNode("agentTail" + i.ToStr() + "_" + tIdx.ToStr())
+                        if tlNode <> invalid
+                            tlNode.visible = false
+                            tlNode.text = ""
+                        end if
+                    end for
                 end if
             end for
         end if

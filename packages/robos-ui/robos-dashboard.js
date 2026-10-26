@@ -398,12 +398,15 @@ robos-widget-sprint-radar, robos-widget-custom {
 
     if (widgetType === 'agent-sessions') {
       const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+      if (sessions.length === 0) {
+        return `<div class="robos-agents-list" data-live-agents-root="true"></div>`;
+      }
       return `
         <div class="robos-w-meta">
-          <span>🟢 ${esc(data.runningCount ?? sessions.length)} Running Agent Sessions</span>
-          <span class="robos-w-pill">Status Lines Tailed (${esc(data.tailLines || 5)})</span>
+          <span>🟢 <strong class="js-live-agents-count">${esc(sessions.length)}</strong> In-Progress Session${sessions.length === 1 ? '' : 's'} Running Now</span>
+          <span class="robos-w-pill">⚡ Live Dynamic Stream</span>
         </div>
-        <div class="robos-agents-list">
+        <div class="robos-agents-list" data-live-agents-root="true">
           ${sessions
             .map(
               (s) => `
@@ -413,9 +416,9 @@ robos-widget-sprint-radar, robos-widget-custom {
                   <span class="robos-agent-dot"></span>
                   <span class="robos-agent-name">${esc(s.name)}</span>
                 </div>
-                <span class="robos-agent-prov">${esc(s.providerLabel || s.provider)}</span>
+                <span class="robos-w-pill js-agent-elapsed" data-started-epoch="${esc(s.startedEpochSec || '')}" style="font-family:ui-monospace,monospace;">⏱ ${esc(s.elapsedFormatted || '00:05')}</span>
               </div>
-              <div class="robos-agent-cwd">cwd: <code>${esc(s.cwd || '/home/ndipiazza/source/robos')}</code>${s.taskRef ? ` · <span>${esc(s.taskRef)}</span>` : ''}</div>
+              <div class="robos-agent-cwd">cwd: <code>${esc(s.cwd || '/home/ndipiazza/source/robos')}</code>${s.activity ? ` · <span style="color:#67e8f9;">${esc(s.activity)}</span>` : ''}</div>
               <pre class="robos-agent-tail">${(s.statusLines || []).map((l) => esc(l)).join('\n')}</pre>
             </div>
           `
@@ -1074,6 +1077,16 @@ robos-widget-sprint-radar, robos-widget-custom {
         ctx.fillStyle = '#67e8f9';
         ctx.font = '9px sans-serif';
         ctx.fillText('UNTIL', cx, cy + 10);
+      });
+
+      document.querySelectorAll('.js-agent-elapsed').forEach((el) => {
+        const started = Number(el.getAttribute('data-started-epoch')) || 0;
+        if (!started) return;
+        const elSec = Math.max(1, nowEpoch - started);
+        const eh = Math.floor(elSec / 3600);
+        const em = Math.floor((elSec % 3600) / 60);
+        const es = elSec % 60;
+        el.textContent = '⏱ ' + (eh > 0 ? pad2(eh) + ':' : '') + pad2(em) + ':' + pad2(es);
       });
     }
 
