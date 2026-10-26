@@ -1228,8 +1228,8 @@ tizen run -p robostv001.RobOSTV
     const musicCard = dashCards.find(
       (c) => (c.componentTag || c.widgetTag) === 'robos-widget-music-player'
     );
-    const clockCard = dashCards.find(
-      (c) => (c.componentTag || c.widgetTag) === 'robos-widget-live-clock'
+    const meetingCard = dashCards.find(
+      (c) => (c.componentTag || c.widgetTag) === 'robos-widget-next-meeting'
     );
     const agentsCard = dashCards.find(
       (c) => (c.componentTag || c.widgetTag) === 'robos-widget-agent-sessions'
@@ -1286,12 +1286,28 @@ tizen run -p robostv001.RobOSTV
       ],
     };
     const sessions = ((agentsCard && agentsCard.liveData && agentsCard.liveData.sessions) || []).slice(0, 3);
-    const clockData = (clockCard && clockCard.liveData) || {
-      time24: new Date().toLocaleTimeString('en-US', { hour12: false }),
-      utcTime: new Date().toISOString().slice(11, 19) + ' UTC',
-      dateLabel: 'Mon, Oct 26, 2026',
-      timezone: 'America/Chicago',
+    const meetingData = (meetingCard && meetingCard.liveData) || {
+      secondsUntil: 1680,
+      countdownLabel: 'T - 00:28:00',
+      urgencyPct: 76,
+      nextMeeting: {
+        time: '16:30',
+        title: 'Hermetiq Client Delivery & Agent Ops Check-In',
+        accountEmail: 'nicholas@hermetiq.com',
+        location: 'Google Calendar (nicholas@hermetiq.com)',
+      },
+      followingMeeting: {
+        time: 'Oct 31 08:30',
+        title: 'Comprehensive Eye Exam - Dr. Jennifer Caine',
+        accountEmail: 'nicholas.dipiazza@gmail.com',
+      },
     };
+    const nm = meetingData.nextMeeting || {};
+    const fm = meetingData.followingMeeting || {};
+    const initialRemSec = Math.max(60, Number(meetingData.secondsUntil) || 1680);
+    const nmTitleLine = `${nm.time || '16:30'} - ${nm.title || 'Hermetiq Client Delivery & Agent Ops Check-In'}`;
+    const nmMetaLine = `Calendar: ${nm.accountEmail || 'nicholas@hermetiq.com'} | After: ${fm.time || 'Oct 31 08:30'} ${String(fm.title || '').slice(0, 22)}`;
+    const nmBarW = Math.max(24, Math.min(528, Math.round(((Number(meetingData.urgencyPct) || 70) / 100) * 528)));
 
     const relRunning = Boolean(ghRel.isRunningNow);
     const relStripeColor = relRunning ? '0xF59E0BFF' : '0x10B981FF';
@@ -1474,7 +1490,7 @@ end sub
     <Rectangle id="headerBar" width="1920" height="84" color="0x0F172AFF" />
     <Rectangle id="headerAccent" translation="[0, 84]" width="1920" height="2" color="0x00BCD4FF" />
     <Label id="brandLabel" scale="[0.82, 0.82]" text="RobOS Dashboards - Daily Engineering &amp; Agent Ops" translation="[48, 25]" width="1020" height="40" numLines="1" color="0xF8FAFCFF" />
-    <Label id="headerClockLabel" scale="[0.70, 0.70]" text="CLOCK ${safeXml(clockData.time24)} | ${safeXml(clockData.utcTime)}" translation="[920, 28]" width="520" height="36" numLines="1" color="0x6EE7B7FF" />
+    <Label id="headerCountdownLabel" scale="[0.68, 0.68]" text="NEXT MEETING: ${safeXml(nm.time || '16:30')} (${safeXml(meetingData.countdownLabel || 'T - 00:28:00')})" translation="[880, 28]" width="620" height="36" numLines="1" color="0x6EE7B7FF" />
     <Label id="hostLabel" scale="[0.58, 0.58]" text="LIVE JS CAST | ${portalUrl}/dashboard" translation="[1380, 30]" width="840" height="34" numLines="1" horizAlign="right" color="0x67E8F9FF" />
 
     <!-- Column 1: GitHub Repo Activity (nddipiazza/robos) + Commits, main CI & Latest Release -->
@@ -1532,37 +1548,21 @@ ${eqBarsXml}
 
 ${calendarRowsXml}
 
-    <!-- Column 3: Live Clock Widget + Running RobOS Agent Sessions (Tailed) -->
+    <!-- Column 3: Countdown Until Next Meeting + Running RobOS Agent Sessions (Tailed) -->
     <Rectangle id="colAgentsCard" translation="[1264, 102]" width="608" height="784" color="0x111827FF" />
     <Rectangle translation="[1264, 102]" width="608" height="4" color="0xF59E0BFF" />
-    <Label id="colAgentsHeader" scale="[0.68, 0.68]" text="3. LIVE CLOCK &amp; RUNNING AGENT SESSIONS (TAILED)" translation="[1284, 118]" width="800" height="36" numLines="1" color="0xFCD34DFF" />
+    <Label id="colAgentsHeader" scale="[0.65, 0.65]" text="3. NEXT MEETING COUNTDOWN &amp; RUNNING AGENTS (TAILED)" translation="[1284, 118]" width="840" height="36" numLines="1" color="0xFCD34DFF" />
     <Rectangle translation="[1284, 154]" width="568" height="2" color="0x1E293BFF" />
 
-    <!-- Live Clock & Chronometer Widget Box -->
-    <Rectangle id="liveClockCardBg" translation="[1284, 164]" width="568" height="142" color="0x161F30FF" />
-    <Rectangle id="liveClockStripe" translation="[1284, 164]" width="6" height="142" color="0x00BCD4FF" />
-    <Label id="clockWidgetTitle" translation="[1304, 172]" scale="[0.56, 0.56]" width="900" height="28" numLines="1" color="0x67E8F9FF" text="LIVE ANALOG &amp; DIGITAL CHRONOMETER (1Hz REAL-TIME)" />
-    <!-- Analog Clock Dial (center [1336, 231]) -->
-    <Rectangle id="clockDialBox" translation="[1304, 199]" width="64" height="64" color="0x090D16FF" />
-    <Rectangle translation="[1334, 202]" width="4" height="6" color="0x00BCD4FF" />
-    <Rectangle translation="[1360, 229]" width="6" height="4" color="0x00BCD4FF" />
-    <Rectangle translation="[1334, 255]" width="4" height="6" color="0x00BCD4FF" />
-    <Rectangle translation="[1306, 229]" width="6" height="4" color="0x00BCD4FF" />
-    <Rectangle id="hrDot1" translation="[1334, 224]" width="5" height="5" color="0xF8FAFCFF" />
-    <Rectangle id="hrDot2" translation="[1334, 217]" width="5" height="5" color="0xF8FAFCFF" />
-    <Rectangle id="minDot1" translation="[1334, 222]" width="4" height="4" color="0x00BCD4FF" />
-    <Rectangle id="minDot2" translation="[1334, 214]" width="4" height="4" color="0x00BCD4FF" />
-    <Rectangle id="minDot3" translation="[1334, 207]" width="4" height="4" color="0x00BCD4FF" />
-    <Rectangle id="secDot1" translation="[1335, 221]" width="3" height="3" color="0x10B981FF" />
-    <Rectangle id="secDot2" translation="[1335, 213]" width="4" height="4" color="0x10B981FF" />
-    <Rectangle id="secDot3" translation="[1334, 205]" width="6" height="6" color="0x10B981FF" />
-    <Rectangle id="clockCenterHub" translation="[1333, 228]" width="6" height="6" color="0xF59E0BFF" />
-    <Label id="clockDigitalLabel" translation="[1380, 202]" scale="[1.10, 1.10]" width="300" height="48" numLines="1" color="0xF8FAFCFF" text="${safeXml(clockData.time24)}" />
-    <Label id="clockUtcLabel" translation="[1604, 204]" scale="[0.60, 0.60]" width="380" height="32" numLines="1" color="0x6EE7B7FF" text="${safeXml(clockData.utcTime)}" />
-    <Label id="clockDateLabel" translation="[1604, 234]" scale="[0.54, 0.54]" width="420" height="30" numLines="1" color="0x94A3B8FF" text="${safeXml(clockData.dateLabel)} (${safeXml(clockData.timezone)})" />
-    <!-- Animated 60-Second Progress Sweep Bar -->
-    <Rectangle id="secBarTrack" translation="[1304, 274]" width="528" height="14" color="0x090D16FF" />
-    <Rectangle id="secBarFill" translation="[1304, 274]" width="240" height="14" color="0x10B981FF" />
+    <!-- Countdown Until Next Meeting Widget Box -->
+    <Rectangle id="nextMeetingCardBg" translation="[1284, 164]" width="568" height="142" color="0x161F30FF" />
+    <Rectangle id="nextMeetingStripe" translation="[1284, 164]" width="6" height="142" color="0x10B981FF" />
+    <Label id="countdownWidgetTitle" translation="[1304, 172]" scale="[0.55, 0.55]" width="920" height="28" numLines="1" color="0x6EE7B7FF" text="COUNTDOWN UNTIL NEXT MEETING (LIVE 1Hz SECOND-BY-SECOND)" />
+    <Label id="countdownTimerLabel" translation="[1304, 198]" scale="[1.02, 1.02]" width="520" height="44" numLines="1" color="0xF8FAFCFF" text="${safeXml(meetingData.countdownLabel || 'T - 00:28:00')}" />
+    <Label id="nextMeetingTitleLabel" translation="[1304, 236]" scale="[0.58, 0.58]" width="900" height="30" numLines="1" color="0x67E8F9FF" text="${safeXml(nmTitleLine)}" />
+    <Label id="nextMeetingMetaLabel" translation="[1304, 258]" scale="[0.52, 0.52]" width="980" height="28" numLines="1" color="0x94A3B8FF" text="${safeXml(nmMetaLine)}" />
+    <Rectangle id="secBarTrack" translation="[1304, 282]" width="528" height="12" color="0x090D16FF" />
+    <Rectangle id="secBarFill" translation="[1304, 282]" width="${nmBarW}" height="12" color="0x10B981FF" />
     <Rectangle id="secPulseDot" translation="[1820, 174]" width="14" height="14" color="0x10B981FF" />
 
 ${agentRowsXml}
@@ -1596,21 +1596,16 @@ ${agentRowsXml}
     m.heroDesc = m.top.findNode("heroDesc")
     m.statusFooter = m.top.findNode("statusFooter")
     m.brandLabel = m.top.findNode("brandLabel")
-    m.headerClockLabel = m.top.findNode("headerClockLabel")
-    m.clockDigitalLabel = m.top.findNode("clockDigitalLabel")
-    m.clockUtcLabel = m.top.findNode("clockUtcLabel")
+    m.headerCountdownLabel = m.top.findNode("headerCountdownLabel")
+    m.countdownTimerLabel = m.top.findNode("countdownTimerLabel")
+    m.nextMeetingTitleLabel = m.top.findNode("nextMeetingTitleLabel")
+    m.nextMeetingMetaLabel = m.top.findNode("nextMeetingMetaLabel")
     m.secBarFill = m.top.findNode("secBarFill")
     m.secPulseDot = m.top.findNode("secPulseDot")
-    m.hrDot1 = m.top.findNode("hrDot1")
-    m.hrDot2 = m.top.findNode("hrDot2")
-    m.minDot1 = m.top.findNode("minDot1")
-    m.minDot2 = m.top.findNode("minDot2")
-    m.minDot3 = m.top.findNode("minDot3")
-    m.secDot1 = m.top.findNode("secDot1")
-    m.secDot2 = m.top.findNode("secDot2")
-    m.secDot3 = m.top.findNode("secDot3")
     m.clockTimer = m.top.findNode("clockTimer")
     m.tickCount = 0
+    m.remainingSec = ${initialRemSec}
+    m.nextMeetingTimeStr = "${safeXml(nm.time || '16:30')}"
 
     m.clockTimer.observeField("fire", "onClockTick")
     m.clockTimer.control = "start"
@@ -1650,41 +1645,26 @@ end function
 
 sub onClockTick()
     m.tickCount = m.tickCount + 1
-    dtLocal = CreateObject("roDateTime")
-    dtLocal.ToLocalTime()
-    hh = pad2(dtLocal.GetHours())
-    mm = pad2(dtLocal.GetMinutes())
-    ss = pad2(dtLocal.GetSeconds())
-    localStr = hh + ":" + mm + ":" + ss
+    if m.remainingSec > 0
+        m.remainingSec = m.remainingSec - 1
+    end if
+    remSec = m.remainingSec
+    days = Int(remSec / 86400)
+    remH = Int((remSec mod 86400) / 3600)
+    remM = Int((remSec mod 3600) / 60)
+    remS = remSec mod 60
+    cdStr = "T - "
+    if days > 0 then cdStr = cdStr + days.ToStr() + "d "
+    cdStr = cdStr + pad2(remH) + ":" + pad2(remM) + ":" + pad2(remS)
 
-    dtUtc = CreateObject("roDateTime")
-    utcStr = pad2(dtUtc.GetHours()) + ":" + pad2(dtUtc.GetMinutes()) + ":" + pad2(dtUtc.GetSeconds()) + " UTC"
-
-    if m.clockDigitalLabel <> invalid then m.clockDigitalLabel.text = localStr
-    if m.clockUtcLabel <> invalid then m.clockUtcLabel.text = utcStr
-    if m.headerClockLabel <> invalid then m.headerClockLabel.text = "CLOCK " + localStr + " | " + utcStr
-
-    secVal = dtLocal.GetSeconds()
-    minVal = dtLocal.GetMinutes()
-    hrVal = dtLocal.GetHours() mod 12
-    pi = 3.14159265
-    hrAngle = ((hrVal + (minVal / 60.0)) / 12.0) * 2.0 * pi
-    minAngle = ((minVal + (secVal / 60.0)) / 60.0) * 2.0 * pi
-    secAngle = (secVal / 60.0) * 2.0 * pi
-    cx = 1334.0
-    cy = 229.0
-    if m.hrDot1 <> invalid then m.hrDot1.translation = [Int(cx + Sin(hrAngle) * 8.0), Int(cy - Cos(hrAngle) * 8.0)]
-    if m.hrDot2 <> invalid then m.hrDot2.translation = [Int(cx + Sin(hrAngle) * 15.0), Int(cy - Cos(hrAngle) * 15.0)]
-    if m.minDot1 <> invalid then m.minDot1.translation = [Int(cx + Sin(minAngle) * 8.0), Int(cy - Cos(minAngle) * 8.0)]
-    if m.minDot2 <> invalid then m.minDot2.translation = [Int(cx + Sin(minAngle) * 15.0), Int(cy - Cos(minAngle) * 15.0)]
-    if m.minDot3 <> invalid then m.minDot3.translation = [Int(cx + Sin(minAngle) * 22.0), Int(cy - Cos(minAngle) * 22.0)]
-    if m.secDot1 <> invalid then m.secDot1.translation = [Int(cx + Sin(secAngle) * 9.0), Int(cy - Cos(secAngle) * 9.0)]
-    if m.secDot2 <> invalid then m.secDot2.translation = [Int(cx + Sin(secAngle) * 17.0), Int(cy - Cos(secAngle) * 17.0)]
-    if m.secDot3 <> invalid then m.secDot3.translation = [Int(cx + Sin(secAngle) * 25.0), Int(cy - Cos(secAngle) * 25.0)]
+    if m.countdownTimerLabel <> invalid then m.countdownTimerLabel.text = cdStr
+    if m.headerCountdownLabel <> invalid then m.headerCountdownLabel.text = "NEXT MEETING: " + m.nextMeetingTimeStr + " (" + cdStr + ")"
 
     if m.secBarFill <> invalid
-        w = 12 + Int((secVal / 60.0) * 516)
-        m.secBarFill.width = w
+        ratio = 1.0 - (remSec / 3600.0)
+        if ratio < 0.08 then ratio = 0.08
+        if ratio > 1.0 then ratio = 1.0
+        m.secBarFill.width = Int(ratio * 528)
     end if
     if m.secPulseDot <> invalid
         if (m.tickCount mod 2) = 0
@@ -1776,6 +1756,23 @@ sub onPayloadUpdated()
                     if mNode <> invalid then mNode.text = "   #" + cleanAscii(sha) + " | " + cleanAscii(c.author) + " | " + cleanAscii(c.relativeTime)
                 end if
             end for
+        else if cTag = "robos-widget-next-meeting" and card.liveData <> invalid
+            nd = card.liveData
+            if nd.secondsUntil <> invalid then m.remainingSec = nd.secondsUntil
+            if nd.nextMeeting <> invalid
+                nmObj = nd.nextMeeting
+                if nmObj.time <> invalid then m.nextMeetingTimeStr = cleanAscii(nmObj.time)
+                if m.nextMeetingTitleLabel <> invalid
+                    m.nextMeetingTitleLabel.text = cleanAscii(nmObj.time) + " - " + Left(cleanAscii(nmObj.title), 46)
+                end if
+                if m.nextMeetingMetaLabel <> invalid
+                    afterStr = ""
+                    if nd.followingMeeting <> invalid
+                        afterStr = " | After: " + cleanAscii(nd.followingMeeting.time) + " " + Left(cleanAscii(nd.followingMeeting.title), 20)
+                    end if
+                    m.nextMeetingMetaLabel.text = "Calendar: " + cleanAscii(nmObj.accountEmail) + afterStr
+                end if
+            end if
         else if cTag = "robos-widget-music-player" and card.liveData <> invalid
             md = card.liveData
             msNode = m.top.findNode("musicStatusLabel")
