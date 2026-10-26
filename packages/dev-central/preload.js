@@ -59,6 +59,13 @@ contextBridge.exposeInMainWorld('robos', {
 
   // Absorbed Notifications API
   notifications:          notificationApi,
+
+  // Smart TV Dashboard Casting API
+  getSmartTvs:            ()       => ipcRenderer.invoke('dc-tv-list'),
+  diagnoseSmartTv:        (tvId)   => ipcRenderer.invoke('dc-tv-diagnose', tvId),
+  castDashboardToTv:      (p)      => ipcRenderer.invoke('dc-tv-cast-dashboard', p),
+  stopTvCast:             (p)      => ipcRenderer.invoke('dc-tv-stop-cast', p),
+  openTvStudio:           ()       => ipcRenderer.invoke('dc-open-tv-studio'),
 });
 
 // Alias window.notifs for standalone notification callers and tests

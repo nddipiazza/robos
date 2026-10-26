@@ -371,11 +371,348 @@ function probeTcpPort(ip, port, timeoutMs = 450) {
   });
 }
 
+function renderDevCentralWallboardHtml({ hostIp, portalPort, devCentralCast = null, tvDevices = [] }) {
+  const portalUrl = `http://${hostIp}:${portalPort}`;
+  const cast = devCentralCast || {};
+  const kpis = cast.kpis || {
+    featureCode: 'FEAT-42',
+    featureStatus: 'IN PROGRESS',
+    tasksCount: 4,
+    prsCount: 3,
+    reviewsCount: 2,
+    blockersCount: 2,
+    ciHealth: '75%',
+  };
+  const feat = cast.activeFeature || {
+    code: 'FEAT-42',
+    name: 'Multi-Step Dynamic Form Validation & TypeSpec Contracts',
+    status: 'IN_PROGRESS',
+    repository: 'acme-corp/buildbarn-forms',
+    service: 'forms-api',
+    progressPct: 75,
+  };
+  const issues = Array.isArray(cast.issues) ? cast.issues.slice(0, 5) : [];
+  const prs = Array.isArray(cast.prs) ? cast.prs.slice(0, 4) : [];
+  const blockers = Array.isArray(cast.blockers) ? cast.blockers.slice(0, 4) : [];
+  const standup = cast.standup || { yesterday: [], today: [], blockers: [] };
+
+  const esc = (s) =>
+    String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="refresh" content="8" />
+  <title>RobOS Dev Central — 10-Foot Smart TV Dashboard Cast</title>
+  <style>
+    :root {
+      --bg: #070b12;
+      --surface: #0e1628;
+      --surface-elev: #131f38;
+      --border: #1e293b;
+      --accent: #00bcd4;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(circle at 15% 0%, rgba(0, 188, 212, 0.14), transparent 42%),
+                  radial-gradient(circle at 85% 100%, rgba(59, 130, 246, 0.1), transparent 42%),
+                  var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 28px 42px;
+      min-height: 100vh;
+    }
+    .wb-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 18px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .wb-brand { display: flex; align-items: center; gap: 16px; }
+    .wb-badge-live {
+      background: rgba(16, 185, 129, 0.16);
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      color: #6ee7b7;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .wb-title { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+    .wb-sub { font-size: 14px; color: var(--muted); margin-top: 3px; }
+    .wb-pills { display: flex; align-items: center; gap: 12px; }
+    .wb-pill {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .wb-pill.tv-target {
+      border-color: rgba(0, 188, 212, 0.5);
+      color: #67e8f9;
+      background: rgba(0, 188, 212, 0.1);
+    }
+    .wb-kpis {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .wb-kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+    }
+    .wb-kpi-val { font-size: 28px; font-weight: 800; color: var(--text); }
+    .wb-kpi-lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; }
+    .wb-feature {
+      background: linear-gradient(135deg, rgba(14, 22, 40, 0.96), rgba(19, 31, 56, 0.92));
+      border: 1px solid rgba(0, 188, 212, 0.4);
+      border-radius: 16px;
+      padding: 18px 24px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .wb-feat-code {
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+    .wb-feat-name { font-size: 21px; font-weight: 700; margin: 4px 0; }
+    .wb-feat-meta { font-size: 13px; color: var(--muted); }
+    .wb-prog-wrap { min-width: 260px; text-align: right; }
+    .wb-prog-bar {
+      width: 260px;
+      height: 12px;
+      background: #070b12;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin-bottom: 6px;
+    }
+    .wb-prog-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00bcd4, #10b981);
+    }
+    .wb-cols {
+      display: grid;
+      grid-template-columns: 1.1fr 1.1fr 0.9fr;
+      gap: 18px;
+    }
+    .wb-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 20px;
+    }
+    .wb-card h3 {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .wb-item {
+      padding: 11px 12px;
+      border-radius: 10px;
+      background: var(--surface-elev);
+      border: 1px solid var(--border);
+      margin-bottom: 10px;
+    }
+    .wb-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .wb-item-title { font-size: 15px; font-weight: 600; color: var(--text); }
+    .wb-tag {
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(0, 188, 212, 0.15);
+      color: #67e8f9;
+    }
+    .wb-tag.alert { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+    .wb-tag.pass { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+    .wb-footer {
+      margin-top: 20px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    a.wb-link { color: var(--accent); text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header class="wb-header">
+    <div class="wb-brand">
+      <span class="wb-badge-live">● LIVE TV CAST</span>
+      <div>
+        <div class="wb-title">RobOS Dev Central — Mission Control Wallboard</div>
+        <div class="wb-sub">Cast to ${esc(cast.tvName || 'Living Room Smart TV')} (${esc(cast.tvIp || hostIp)}) · ${esc(cast.sprintName || 'Sprint 42')}</div>
+      </div>
+    </div>
+    <div class="wb-pills">
+      <span class="wb-pill tv-target">📺 Target TV: ${esc(cast.tvName || (tvDevices[0] && tvDevices[0].name) || 'Smart TV')}</span>
+      <a class="wb-pill wb-link" href="/">⇄ Switch to 10-Foot App Grid</a>
+    </div>
+  </header>
+
+  <section class="wb-kpis">
+    <div class="wb-kpi">
+      <div class="wb-kpi-val" style="color:#67e8f9">${esc(kpis.featureCode || feat.code || 'FEAT-42')}</div>
+      <div class="wb-kpi-lbl">Active Feature (${esc(kpis.featureStatus || 'IN PROGRESS')})</div>
+    </div>
+    <div class="wb-kpi">
+      <div class="wb-kpi-val">${esc(kpis.tasksCount ?? issues.length)}</div>
+      <div class="wb-kpi-lbl">Assigned Tasks</div>
+    </div>
+    <div class="wb-kpi">
+      <div class="wb-kpi-val">${esc(kpis.prsCount ?? prs.length)}</div>
+      <div class="wb-kpi-lbl">Open Pull Requests</div>
+    </div>
+    <div class="wb-kpi">
+      <div class="wb-kpi-val">${esc(kpis.reviewsCount ?? 0)}</div>
+      <div class="wb-kpi-lbl">Review Requests</div>
+    </div>
+    <div class="wb-kpi">
+      <div class="wb-kpi-val" style="color:${Number(kpis.blockersCount) > 0 ? '#f87171' : '#6ee7b7'}">${esc(kpis.blockersCount ?? blockers.length)}</div>
+      <div class="wb-kpi-lbl">Active Blockers</div>
+    </div>
+    <div class="wb-kpi">
+      <div class="wb-kpi-val" style="color:#6ee7b7">${esc(kpis.ciHealth || '100%')}</div>
+      <div class="wb-kpi-lbl">Pipeline Health</div>
+    </div>
+  </section>
+
+  <section class="wb-feature">
+    <div>
+      <div class="wb-feat-code">🎯 Active Feature In Progress · ${esc(feat.code || 'FEAT-42')}</div>
+      <div class="wb-feat-name">${esc(feat.name || 'RobOS Feature Delivery')}</div>
+      <div class="wb-feat-meta">Repository: ${esc(feat.repository || 'acme-corp/buildbarn-forms')} · Service: ${esc(feat.service || 'forms-api')}</div>
+    </div>
+    <div class="wb-prog-wrap">
+      <div class="wb-prog-bar"><div class="wb-prog-fill" style="width:${Number(feat.progressPct || 75)}%"></div></div>
+      <div style="font-size:14px;font-weight:700;color:#6ee7b7">${Number(feat.progressPct || 75)}% Complete</div>
+    </div>
+  </section>
+
+  <main class="wb-cols">
+    <div class="wb-card">
+      <h3><span>📋 Assigned Sprint Tasks</span><span>${issues.length}</span></h3>
+      ${
+        issues.length
+          ? issues
+              .map(
+                (i) => `
+        <div class="wb-item">
+          <div class="wb-item-top">
+            <span>#${esc(i.number)}</span>
+            <span class="wb-tag">${esc(i.state || 'OPEN')}</span>
+          </div>
+          <div class="wb-item-title">${esc(i.title)}</div>
+        </div>`
+              )
+              .join('')
+          : '<div class="wb-item"><div class="wb-item-title">All sprint tasks complete</div></div>'
+      }
+    </div>
+
+    <div class="wb-card">
+      <h3><span>🌿 Pull Requests &amp; CI</span><span>${prs.length}</span></h3>
+      ${
+        prs.length
+          ? prs
+              .map(
+                (p) => `
+        <div class="wb-item">
+          <div class="wb-item-top">
+            <span>PR #${esc(p.number)} · ${esc(p.headRefName || 'main')}</span>
+            <span class="wb-tag ${p.reviewDecision === 'APPROVED' ? 'pass' : ''}">${esc(p.reviewDecision || p.state || 'OPEN')}</span>
+          </div>
+          <div class="wb-item-title">${esc(p.title)}</div>
+        </div>`
+              )
+              .join('')
+          : '<div class="wb-item"><div class="wb-item-title">No open pull requests</div></div>'
+      }
+    </div>
+
+    <div class="wb-card">
+      <h3><span>🚨 Blockers &amp; Standup</span><span>${blockers.length} Alert${blockers.length === 1 ? '' : 's'}</span></h3>
+      ${
+        blockers.length
+          ? blockers
+              .map(
+                (b) => `
+        <div class="wb-item">
+          <div class="wb-item-top">
+            <span>${esc(b.label || 'Blocker')}</span>
+            <span class="wb-tag alert">${esc(b.severity || 'high')}</span>
+          </div>
+          <div class="wb-item-title">${esc(b.text)}</div>
+        </div>`
+              )
+              .join('')
+          : '<div class="wb-item"><div class="wb-item-title" style="color:#6ee7b7">✓ Zero active blockers across pipelines</div></div>'
+      }
+      ${
+        standup && Array.isArray(standup.today) && standup.today.length
+          ? `<div class="wb-item" style="margin-top:12px;border-color:rgba(0,188,212,0.35)">
+              <div class="wb-item-top"><span>🤖 AI Standup Focus</span><span class="wb-tag">Today</span></div>
+              <div class="wb-item-title" style="font-size:13px;line-height:1.45">${esc(standup.today.slice(0, 2).join(' · '))}</div>
+            </div>`
+          : ''
+      }
+    </div>
+  </main>
+
+  <footer class="wb-footer">
+    <div>RobOS Dev Central Live TV Cast · Serving on ${portalUrl}/dev-central</div>
+    <div>Auto-refreshing every 8s · Cast Timestamp: ${esc(cast.castAt ? new Date(cast.castAt).toLocaleTimeString() : 'Live')}</div>
+  </footer>
+</body>
+</html>`;
+}
+
 /**
  * Generates the self-contained 10-Foot Smart TV Web UI HTML served by the RobOS TV Portal
  * and embedded inside sideloaded LG webOS, Samsung Tizen, and Android TV packages.
  */
-function renderTenFootPortalHtml({ hostIp, portalPort, activeTileId = 'portal-home', tvDevices = [], lastKey = null }) {
+function renderTenFootPortalHtml({ hostIp, portalPort, activeTileId = 'portal-home', tvDevices = [], lastKey = null, devCentralCast = null }) {
   const portalUrl = `http://${hostIp}:${portalPort}`;
   const tilesJson = JSON.stringify(TEN_FOOT_LAUNCH_TILES);
   return `<!DOCTYPE html>
@@ -571,6 +908,27 @@ function renderTenFootPortalHtml({ hostIp, portalPort, activeTileId = 'portal-ho
     </div>
     <div class="tv-pill online" id="last-action-pill">${lastKey ? 'Last Remote Input: ' + lastKey : 'Ready for Remote Input'}</div>
   </section>
+
+  ${
+    devCentralCast && devCentralCast.active
+      ? `<section class="tv-hero" id="dev-central-cast-banner" style="border-color:#00bcd4;background:linear-gradient(135deg, rgba(14,22,40,0.98), rgba(6,78,59,0.45));margin-bottom:24px;">
+          <div>
+            <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#6ee7b7;margin-bottom:6px;">
+              ● LIVE CAST FROM ROBOS DEV CENTRAL → ${String(devCentralCast.tvName || 'Smart TV')} (${String(devCentralCast.tvIp || hostIp)})
+            </div>
+            <h2 style="margin:0 0 6px;font-size:22px;">${String((devCentralCast.activeFeature && devCentralCast.activeFeature.code) || 'FEAT-42')}: ${String((devCentralCast.activeFeature && devCentralCast.activeFeature.name) || 'Sprint 42 Delivery')}</h2>
+            <p style="margin:0;color:#cbd5e1;font-size:15px;">
+              Tasks: <strong>${Number((devCentralCast.kpis && devCentralCast.kpis.tasksCount) ?? 0)}</strong> ·
+              Open PRs: <strong>${Number((devCentralCast.kpis && devCentralCast.kpis.prsCount) ?? 0)}</strong> ·
+              Reviews: <strong>${Number((devCentralCast.kpis && devCentralCast.kpis.reviewsCount) ?? 0)}</strong> ·
+              Blockers: <strong>${Number((devCentralCast.kpis && devCentralCast.kpis.blockersCount) ?? 0)}</strong> ·
+              Pipeline Health: <strong>${String((devCentralCast.kpis && devCentralCast.kpis.ciHealth) || '100%')}</strong>
+            </p>
+          </div>
+          <a href="/dev-central" class="tv-pill online" style="text-decoration:none;border-color:#00bcd4;color:#67e8f9;">📺 Open Full Dev Central TV Wallboard →</a>
+        </section>`
+      : ''
+  }
 
   <main class="tv-grid" id="tv-grid" role="grid" aria-label="RobOS 10-Foot App Launcher"></main>
 
@@ -1119,6 +1477,7 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     }
     return new Promise((resolve) => {
       server = http.createServer((req, res) => {
+        loadState();
         const hostIp = detectLanIp();
         const u = new URL(req.url || '/', `http://${hostIp}:${boundPort}`);
 
@@ -1131,6 +1490,7 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
             portalUrl: `http://${hostIp}:${boundPort}`,
             activeTileId: state.activeTileId,
             lastRemoteKey: state.lastRemoteKey,
+            devCentralCast: state.devCentralCast || null,
             tvCount: state.tvs.length,
             tiles: TEN_FOOT_LAUNCH_TILES,
           });
@@ -1139,6 +1499,33 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
             'Access-Control-Allow-Origin': '*',
           });
           res.end(payload);
+          return;
+        }
+
+        if (u.pathname === '/api/dev-central-cast') {
+          res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          });
+          res.end(
+            JSON.stringify({
+              ok: true,
+              cast: state.devCentralCast || null,
+              castUrl: `http://${hostIp}:${boundPort}/dev-central`,
+            })
+          );
+          return;
+        }
+
+        if (u.pathname === '/dev-central') {
+          const wbHtml = renderDevCentralWallboardHtml({
+            hostIp,
+            portalPort: boundPort,
+            devCentralCast: state.devCentralCast,
+            tvDevices: state.tvs,
+          });
+          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end(wbHtml);
           return;
         }
 
@@ -1165,6 +1552,7 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
           activeTileId: state.activeTileId,
           tvDevices: state.tvs,
           lastKey: state.lastRemoteKey,
+          devCentralCast: state.devCentralCast || null,
         });
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(html);
@@ -1198,14 +1586,17 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
   }
 
   function getOverview() {
+    loadState();
     const hostIp = detectLanIp();
     return {
       ok: true,
       hostIp,
       portalPort: boundPort,
       portalUrl: `http://${hostIp}:${boundPort}`,
+      castUrl: `http://${hostIp}:${boundPort}/dev-central`,
       portalRunning: Boolean(server && server.listening),
       activeTileId: state.activeTileId,
+      devCentralCast: state.devCentralCast || null,
       webosAutoRenew: state.webosAutoRenew,
       webosLastRenewedAt: state.webosLastRenewedAt,
       webosSessionRemainingHours: state.webosSessionRemainingHours,
@@ -1652,6 +2043,7 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
   }
 
   function launchTileOnTv({ tileId, tvId } = {}) {
+    loadState();
     const tile = TEN_FOOT_LAUNCH_TILES.find((t) => t.id === tileId) || TEN_FOOT_LAUNCH_TILES[0];
     const tv = state.tvs.find((t) => t.id === tvId) || state.tvs[0];
     state.activeTileId = tile.id;
@@ -1663,6 +2055,107 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
       tv,
       portalUrl: `http://${detectLanIp()}:${boundPort}`,
       message: `Now displaying "${tile.title}" on ${tv ? tv.name : 'RobOS 10-Foot TV Portal'}`,
+    };
+  }
+
+  async function castDevCentralDashboard({ tvId, dashboard = {} } = {}) {
+    loadState();
+    const tv = state.tvs.find((t) => t.id === tvId) || state.tvs[0];
+    if (!tv) {
+      return { ok: false, error: 'No Smart TV found in paired TV list' };
+    }
+    const hostIp = detectLanIp();
+    const portalPortToUse = boundPort || DEFAULT_PORTAL_PORT;
+    const portalUrl = `http://${hostIp}:${portalPortToUse}`;
+    const castUrl = `${portalUrl}/dev-central`;
+
+    const castSession = {
+      active: true,
+      tvId: tv.id,
+      tvName: tv.name,
+      tvIp: tv.ip,
+      platformId: tv.platformId,
+      platformName: tv.platformName,
+      castAt: new Date().toISOString(),
+      sprintName: dashboard.sprintName || 'Sprint 42',
+      activeTab: dashboard.activeTab || 'all',
+      activeFeature: dashboard.activeFeature || null,
+      kpis: dashboard.kpis || {},
+      issues: Array.isArray(dashboard.issues) ? dashboard.issues.slice(0, 8) : [],
+      prs: Array.isArray(dashboard.prs) ? dashboard.prs.slice(0, 6) : [],
+      reviews: Array.isArray(dashboard.reviews) ? dashboard.reviews.slice(0, 6) : [],
+      blockers: Array.isArray(dashboard.blockers) ? dashboard.blockers.slice(0, 6) : [],
+      standup: dashboard.standup || null,
+    };
+
+    state.devCentralCast = castSession;
+    state.activeTileId = 'portal-home';
+    state.lastRemoteKey = `CAST Dev Central Dashboard → ${tv.name}`;
+    saveState();
+
+    // If casting to a Roku TV on a live LAN, check ECP readiness and send wake/launch command
+    if (tv.platformId === 'roku-os' && process.env.ROBOS_TEST !== '1' && !process.env.NODE_TEST_CONTEXT) {
+      const readiness = await diagnoseTvReadiness(tv.id);
+      const dispatch = await sendRemoteKey({ tvId: tv.id, key: 'HOME' });
+      if (dispatch && dispatch.blocked) {
+        return {
+          ok: false,
+          blocked: true,
+          tv,
+          castSession,
+          portalUrl,
+          castUrl,
+          readiness,
+          setupTitle: dispatch.setupTitle,
+          setupMessage: dispatch.setupMessage,
+          setupSteps: dispatch.setupSteps || [],
+          message: `Dev Central Wallboard is live at ${castUrl}, but ${tv.name} blocked the remote wake/switch command.`,
+        };
+      }
+      return {
+        ok: true,
+        blocked: false,
+        tv,
+        castSession,
+        portalUrl,
+        castUrl,
+        readiness,
+        message: `Casting RobOS Dev Central Dashboard to ${tv.name} (${tv.ip}) · Live at ${castUrl}`,
+      };
+    }
+
+    if (tv.platformId === 'android-tv' && process.env.ROBOS_TEST !== '1' && !process.env.NODE_TEST_CONTEXT) {
+      exec(`adb -s "${tv.ip}:5555" shell am start -a android.intent.action.VIEW -d "${castUrl}"`, () => {});
+    }
+
+    const readiness = await diagnoseTvReadiness(tv.id);
+    return {
+      ok: true,
+      blocked: false,
+      tv,
+      castSession,
+      portalUrl,
+      castUrl,
+      readiness,
+      message: `Casting RobOS Dev Central Dashboard to ${tv.name} (${tv.ip}) · Live at ${castUrl}`,
+    };
+  }
+
+  function stopDevCentralCast({ tvId } = {}) {
+    loadState();
+    const prev = state.devCentralCast;
+    state.devCentralCast = {
+      ...(prev || {}),
+      active: false,
+      stoppedAt: new Date().toISOString(),
+    };
+    if (tvId) state.devCentralCast.tvId = tvId;
+    state.lastRemoteKey = 'STOP Dev Central Cast';
+    saveState();
+    return {
+      ok: true,
+      devCentralCast: state.devCentralCast,
+      message: 'Stopped casting Dev Central Dashboard to Smart TV.',
     };
   }
 
@@ -1680,6 +2173,8 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     diagnoseTvReadiness,
     setTvPower,
     launchTileOnTv,
+    castDevCentralDashboard,
+    stopDevCentralCast,
   };
 }
 
@@ -1689,6 +2184,7 @@ module.exports = {
   TEN_FOOT_LAUNCH_TILES,
   detectLanIp,
   detectToolingStatus,
+  renderDevCentralWallboardHtml,
   renderTenFootPortalHtml,
   generateSideloadPackage,
   createTvEngine,

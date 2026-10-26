@@ -1870,3 +1870,191 @@ button:focus-visible,input:focus-visible {outline:2px solid var(--accent);outlin
 #dashboard {align-content:start;}
 .kpi-ribbon {display:flex;flex-wrap:wrap;}
 .kpi-card {flex:1 1 140px;}
+
+/* ── Smart TV Cast Button & Modal ────────────────────────────────────────── */
+.header-cast-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-bright);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.header-cast-btn:hover {
+  border-color: var(--accent);
+}
+.header-cast-btn.casting-active {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.14);
+  color: #6ee7b7;
+}
+.cast-badge {
+  background: rgba(148, 184, 232, 0.16);
+  color: var(--accent);
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.header-cast-btn.casting-active .cast-badge {
+  background: rgba(16, 185, 129, 0.25);
+  color: #6ee7b7;
+}
+
+.tv-cast-dialog {
+  width: min(740px, 94vw);
+  max-height: 86vh;
+  overflow-y: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 22px 24px;
+  color: var(--text);
+}
+.tv-cast-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.tv-cast-title-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.tv-cast-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+.tv-cast-title-group h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: 4px;
+}
+.tv-cast-subtitle {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+.tv-cast-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.tv-cast-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.tv-cast-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.tv-cast-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 15px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+.tv-cast-item:hover {
+  border-color: var(--border-accent);
+  background: var(--bg-surface-elevated);
+}
+.tv-cast-item.selected {
+  border-color: var(--accent);
+  background: rgba(148, 184, 232, 0.1);
+}
+.tv-cast-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.tv-cast-item-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+.tv-cast-item-meta {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.tv-cast-item-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.tv-cast-pill {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+.tv-cast-Banner {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #a7f3d0;
+  font-size: 13px;
+  margin-bottom: 14px;
+  line-height: 1.45;
+}
+.tv-cast-alert {
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #fde68a;
+  font-size: 12.5px;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.tv-cast-alert ol {
+  margin: 8px 0 0 18px;
+}
+.tv-cast-actions-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.btn-primary-cast {
+  padding: 9px 16px;
+  background: #28643e;
+  border: 1px solid #49895e;
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-primary-cast:hover {
+  filter: brightness(1.12);
+}

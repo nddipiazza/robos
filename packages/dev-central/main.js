@@ -1379,6 +1379,68 @@ ipcMain.handle('dc-simulate-traffic', async (_, payload = {}) => {
   return { ok: true, unreadCount: getUnreadCount() };
 });
 
+// ── Smart TV Dashboard Casting IPC Handlers ──────────────────────────────────
+
+let tvEngineInstance = null;
+function getTvEngine() {
+  if (tvEngineInstance) return tvEngineInstance;
+  const candidates = [
+    path.resolve(__dirname, '../robos-lib/tv-engine'),
+    '/usr/local/share/robos/robos-lib/tv-engine',
+  ];
+  for (const modPath of candidates) {
+    try {
+      const { createTvEngine } = require(modPath);
+      tvEngineInstance = createTvEngine({ configDir: CONFIG_DIR });
+      return tvEngineInstance;
+    } catch {}
+  }
+  return null;
+}
+
+ipcMain.handle('dc-tv-list', async () => {
+  const engine = getTvEngine();
+  if (!engine) return { ok: false, error: 'tv-engine unavailable', tvs: [] };
+  await engine.startPortalServer();
+  return engine.getOverview();
+});
+
+ipcMain.handle('dc-tv-diagnose', async (_, tvId) => {
+  const engine = getTvEngine();
+  if (!engine) return { ok: false, error: 'tv-engine unavailable' };
+  return engine.diagnoseTvReadiness(tvId);
+});
+
+ipcMain.handle('dc-tv-cast-dashboard', async (_, payload = {}) => {
+  const engine = getTvEngine();
+  if (!engine) return { ok: false, error: 'tv-engine unavailable' };
+  await engine.startPortalServer();
+  return engine.castDevCentralDashboard(payload);
+});
+
+ipcMain.handle('dc-tv-stop-cast', async (_, payload = {}) => {
+  const engine = getTvEngine();
+  if (!engine) return { ok: false, error: 'tv-engine unavailable' };
+  return engine.stopDevCentralCast(payload);
+});
+
+ipcMain.handle('dc-open-tv-studio', async () => {
+  const launcherBin = path.join(os.homedir(), '.local', 'bin', 'robos-tv');
+  const pkgDir = path.resolve(__dirname, '../robos-tv');
+  try {
+    if (fs.existsSync(launcherBin)) {
+      const child = cp.spawn(launcherBin, [], { detached: true, stdio: 'ignore' });
+      child.unref();
+      return { ok: true };
+    }
+    const child = cp.spawn('npx', ['electron', pkgDir, '--no-sandbox'], { detached: true, stdio: 'ignore' });
+    child.unref();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
 module.exports = {
   loadNotifications,
   saveNotifications,
