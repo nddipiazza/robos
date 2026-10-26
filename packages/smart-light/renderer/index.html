@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' http://localhost:* http://127.0.0.1:* http://192.168.* http://10.*;" />
+  <title>RobOS Smart Light Studio</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="brand-row">
+        <div class="brand-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 48 48" fill="none" stroke="#eab308" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 34h12" stroke="#00bcd4"/>
+            <path d="M20 40h8" stroke="#00bcd4"/>
+            <path d="M24 6v3M9 21H6M42 21h-3M12.5 9.5l2.2 2.2M35.5 9.5l-2.2 2.2"/>
+            <path d="M17 29c-2.8-2.1-4.5-5.3-4.5-9a11.5 11.5 0 0 1 23 0c0 3.7-1.7 6.9-4.5 9l-1.5 5h-11L17 29Z" fill="#eab308" fill-opacity="0.25"/>
+            <path d="M21 23l3-4 3 4" stroke="#00bcd4"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="title">RobOS Smart Light Studio</h1>
+          <p class="subtitle">Zero-Cloud LAN Lighting (WiZ · WLED · Hue · Kasa · LIFX · Govee · Elgato), Mood Scenes, Circadian Daylight &amp; CI Build Sync</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="kpi-strip">
+          <div class="kpi-chip">
+            <span class="kpi-label">Active Lights</span>
+            <strong id="kpi-active-lights">6 / 7</strong>
+          </div>
+          <div class="kpi-chip">
+            <span class="kpi-label">Avg Brightness</span>
+            <strong id="kpi-avg-bri">72%</strong>
+          </div>
+          <div class="kpi-chip">
+            <span class="kpi-label">Est. Draw</span>
+            <strong id="kpi-watts">68.5 W</strong>
+          </div>
+        </div>
+        <button type="button" class="btn" id="btn-scan-lan">Scan LAN for Lights</button>
+        <button type="button" class="btn btn-primary" id="btn-all-on">All Lights On</button>
+        <button type="button" class="btn btn-danger" id="btn-all-off">All Off</button>
+      </div>
+    </header>
+
+    <div id="status-banner" class="banner hidden" role="status" aria-live="polite"></div>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs" role="tablist">
+      <button type="button" class="tab-btn active" data-tab="tab-lights" role="tab">Rooms &amp; Smart Lights</button>
+      <button type="button" class="tab-btn" data-tab="tab-scenes" role="tab">Mood Scenes &amp; AI Designer</button>
+      <button type="button" class="tab-btn" data-tab="tab-schedules" role="tab">Circadian Daylight &amp; Schedules</button>
+      <button type="button" class="tab-btn" data-tab="tab-integrations" role="tab">Dev / CI Status Light Bar &amp; TV Sync</button>
+      <button type="button" class="tab-btn" data-tab="tab-protocols" role="tab">LAN Protocol Inspector &amp; Setup Guides</button>
+    </nav>
+
+    <main class="main">
+      <!-- TAB 1: Rooms & Smart Lights -->
+      <section id="tab-lights" class="tab-pane active">
+        <div class="toolbar-row">
+          <div class="room-pills" id="room-filter-pills"></div>
+          <div class="quick-global-actions">
+            <button type="button" class="btn btn-sm" id="btn-room-warm">🌅 Warm 2700K</button>
+            <button type="button" class="btn btn-sm" id="btn-room-daylight">☀️ Daylight 5200K</button>
+            <button type="button" class="btn btn-sm" id="btn-room-cyan">💎 RobOS Cyan</button>
+            <button type="button" class="btn btn-sm" id="btn-room-dim">🌙 Dim 25%</button>
+          </div>
+        </div>
+
+        <div class="columns-main">
+          <div>
+            <div id="lights-grid" class="lights-grid"></div>
+          </div>
+
+          <div class="side-stack">
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Pair / Add LAN Smart Light</h2>
+                <span class="badge" id="paired-count-badge">7 Lights</span>
+              </div>
+              <p class="muted-text">Add any local Wi-Fi or Zigbee Bridge light by IP. Zero cloud accounts required.</p>
+              <div class="form-stack">
+                <div class="field">
+                  <label for="input-light-name">Light Name</label>
+                  <input type="text" id="input-light-name" class="input" placeholder="e.g. Bookshelf Accent Strip" />
+                </div>
+                <div class="form-row-2">
+                  <div class="field">
+                    <label for="select-light-room">Room / Zone</label>
+                    <select id="select-light-room" class="select"></select>
+                  </div>
+                  <div class="field">
+                    <label for="select-light-form">Fixture Type</label>
+                    <select id="select-light-form" class="select">
+                      <option value="bulb">A19 / BR30 Bulb</option>
+                      <option value="strip">Addressable LED Strip</option>
+                      <option value="bar">Light Bar / Sconce</option>
+                      <option value="panel">Studio Key Light Panel</option>
+                      <option value="lamp">Floor / Desk Lamp</option>
+                      <option value="pendant">Ceiling Pendant</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="select-light-protocol">LAN Protocol</label>
+                  <select id="select-light-protocol" class="select"></select>
+                </div>
+                <div class="form-row-2">
+                  <div class="field">
+                    <label for="input-light-ip">LAN IP Address</label>
+                    <input type="text" id="input-light-ip" class="input" placeholder="e.g. 192.168.1.92" />
+                  </div>
+                  <div class="field">
+                    <label for="input-light-key">Light ID / Bridge Key (Optional)</label>
+                    <input type="text" id="input-light-key" class="input" placeholder="e.g. 1 or entity_id" />
+                  </div>
+                </div>
+                <button type="button" class="btn btn-primary" id="btn-add-light">Pair &amp; Save Light</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Philips Hue Bridge Link-Button Pairing</h2>
+              </div>
+              <p class="muted-text">Press the physical button on top of your Hue Bridge, then click below within 30 seconds.</p>
+              <div class="form-row-2" style="align-items:flex-end;">
+                <div class="field">
+                  <label for="input-hue-bridge-ip">Hue Bridge IP</label>
+                  <input type="text" id="input-hue-bridge-ip" class="input" value="192.168.1.87" />
+                </div>
+                <button type="button" class="btn" id="btn-pair-hue">Pair Hue Bridge</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: Mood Scenes & Optional AI Lighting Designer -->
+      <section id="tab-scenes" class="tab-pane">
+        <div class="columns-main">
+          <div>
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2 class="card-title">One-Click Room &amp; Whole-Home Mood Scenes</h2>
+                  <p class="muted-text">Apply calibrated Kelvin temperatures, RGB palettes, and WLED animations across any room or your entire home.</p>
+                </div>
+                <select id="select-scene-scope" class="select select-sm"></select>
+              </div>
+              <div id="scenes-grid" class="scenes-grid"></div>
+            </div>
+          </div>
+
+          <div class="side-stack">
+            <div class="card ai-card">
+              <div class="card-header">
+                <h2 class="card-title">✨ AI Mood Lighting Designer (Optional)</h2>
+                <span class="badge badge-cyan">Works Offline &amp; With AI</span>
+              </div>
+              <p class="muted-text">Describe any atmosphere, game session, weather, or mood—RobOS synthesizes a coordinated multi-fixture color &amp; Kelvin scene and applies it immediately.</p>
+              <div class="field">
+                <label for="input-ai-scene-prompt">Describe Your Desired Atmosphere</label>
+                <textarea id="input-ai-scene-prompt" class="textarea" rows="3" placeholder="e.g. Rainy neon Tokyo lo-fi coding session, or D&D dragon boss battle"></textarea>
+              </div>
+              <div class="preset-chips">
+                <button type="button" class="chip-btn" data-aiprompt="Rainy neon Tokyo synthwave coding session">🌧️ Neon Tokyo</button>
+                <button type="button" class="chip-btn" data-aiprompt="Sunset beach bonfire warm embers">🔥 Sunset Bonfire</button>
+                <button type="button" class="chip-btn" data-aiprompt="D&D dungeon dragon boss battle">🐉 Dragon Lair</button>
+                <button type="button" class="chip-btn" data-aiprompt="Abyssal coral reef bioluminescence">🌊 Coral Reef</button>
+              </div>
+              <button type="button" class="btn btn-primary" id="btn-design-ai-scene" style="width:100%;margin-top:8px;">✨ Synthesize &amp; Apply Mood Scene</button>
+            </div>
+
+            <div class="card">
+              <h2 class="card-title">Snapshot Current Lights as Custom Scene</h2>
+              <p class="muted-text">Save your current room brightness, Kelvin, and RGB settings as a reusable preset tile.</p>
+              <div class="form-stack">
+                <div class="field">
+                  <label for="input-custom-scene-name">Custom Scene Name</label>
+                  <input type="text" id="input-custom-scene-name" class="input" placeholder="e.g. Late Night Rust Refactor" />
+                </div>
+                <button type="button" class="btn" id="btn-save-custom-scene">Save Current Lighting as Scene</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: Circadian Daylight & Sunrise Schedules -->
+      <section id="tab-schedules" class="tab-pane">
+        <div class="columns-main">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">24-Hour Solar Circadian Rhythm Curve</h2>
+                <p class="muted-text">Automatically shifts active lights from 2500K sunrise warmth → 5800K solar noon focus → 2200K melatonin-friendly evening amber.</p>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <button type="button" class="btn btn-primary" id="btn-apply-circadian-now">Sync Lights to Current Solar Time</button>
+              </div>
+            </div>
+
+            <div id="circadian-current-banner" class="circadian-banner"></div>
+            <div id="circadian-timeline" class="circadian-timeline"></div>
+
+            <div class="divider"></div>
+            <h3 class="sub-heading">Preview Any Hour of the Day</h3>
+            <div class="slider-row">
+              <span class="slider-label">Solar Time Preview: <strong id="label-circadian-hour">12:00</strong></span>
+              <input type="range" id="slider-circadian-hour" min="0" max="23.5" step="0.5" value="12" class="range-input" />
+              <button type="button" class="btn btn-sm" id="btn-preview-circadian-hour">Apply Selected Hour</button>
+            </div>
+          </div>
+
+          <div class="side-stack">
+            <div class="card">
+              <div class="card-header">
+                <h2 class="card-title">Sunrise Alarms &amp; Automation Schedules</h2>
+              </div>
+              <div id="schedules-list" class="list"></div>
+              <div class="divider"></div>
+              <h3 class="sub-heading">Add Automation Schedule</h3>
+              <div class="form-stack">
+                <div class="field">
+                  <label for="input-sched-name">Schedule Name</label>
+                  <input type="text" id="input-sched-name" class="input" placeholder="e.g. Morning Standup Prep" />
+                </div>
+                <div class="form-row-2">
+                  <div class="field">
+                    <label for="input-sched-time">Time (24h)</label>
+                    <input type="time" id="input-sched-time" class="input" value="08:00" />
+                  </div>
+                  <div class="field">
+                    <label for="select-sched-scene">Target Scene</label>
+                    <select id="select-sched-scene" class="select"></select>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-primary" id="btn-add-schedule">Add Schedule</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: Dev / CI Build Status Light Bar & Smart TV Sync -->
+      <section id="tab-integrations" class="tab-pane">
+        <div class="columns-2">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Dev Central &amp; CI Build Status Light Bar</h2>
+                <p class="muted-text">Bind a desk strip or bulb to your RobOS engineering workflow so you can see CI health, running agents, and P0 blockers in ambient peripheral vision.</p>
+              </div>
+              <span class="badge badge-green" id="ci-sync-badge">Active</span>
+            </div>
+
+            <div class="field" style="margin-bottom:14px;">
+              <label for="select-ci-target-light">Target Status Fixture</label>
+              <select id="select-ci-target-light" class="select"></select>
+            </div>
+
+            <div id="ci-status-cards" class="ci-status-grid"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">RobOS Cross-App Ambient Bridges</h2>
+            </div>
+            <p class="muted-text">Connect your smart lighting directly with RobOS Smart TV Studio, Audio Player, and Dev Central.</p>
+
+            <div class="bridge-list">
+              <div class="bridge-item">
+                <div>
+                  <strong>📺 RobOS Smart TV Cinema Bias Sync</strong>
+                  <p class="muted-text">Automatically dims living room bulbs and activates 65" TV bias backlight when launching Cinema Mode.</p>
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button type="button" class="btn btn-sm btn-primary" id="btn-trigger-tv-bias">Activate TV Bias</button>
+                  <button type="button" class="btn btn-sm" data-launch-app="robos-tv">Open TV Studio</button>
+                </div>
+              </div>
+
+              <div class="bridge-item">
+                <div>
+                  <strong>🎧 RobOS Audio Player &amp; Home Speaker</strong>
+                  <p class="muted-text">Pair Virtual DJ playlists and room intercom broadcasts with synchronized room color palettes.</p>
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button type="button" class="btn btn-sm" data-launch-app="audio-player">Open Audio Player</button>
+                  <button type="button" class="btn btn-sm" data-launch-app="home-speaker">Open Home Speaker</button>
+                </div>
+              </div>
+
+              <div class="bridge-item">
+                <div>
+                  <strong>📊 RobOS Dev Central &amp; CI Monitor</strong>
+                  <p class="muted-text">Sync blocker radar and PR review alerts directly to your studio WLED strip or Elgato Key Light.</p>
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <button type="button" class="btn btn-sm" data-launch-app="dev-central">Open Dev Central</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: LAN Protocol Inspector & Setup Guides -->
+      <section id="tab-protocols" class="tab-pane">
+        <div class="columns-main">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Live LAN Wire-Protocol Packet Inspector</h2>
+                <p class="muted-text">Every light adjustment generates real zero-cloud UDP, TCP, or HTTP payloads with copyable CLI equivalents (`nc`, `curl`, `xxd`).</p>
+              </div>
+              <code class="api-pill" id="local-api-url">http://127.0.0.1:19219</code>
+            </div>
+            <div id="protocol-log-list" class="list"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Zero-Cloud LAN Setup Checklists (10 Protocols)</h2>
+            </div>
+            <div id="protocols-guide-list" class="list"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

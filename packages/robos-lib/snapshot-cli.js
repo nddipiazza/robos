@@ -128,6 +128,7 @@ const PORT_REGISTRY = {
   'robos-tv':          19206,
   'cloud-accounts':    19207,
   'google-calendar':   19208,
+  'smart-light':       19209,
 };
 
 
