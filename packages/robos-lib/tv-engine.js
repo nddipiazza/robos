@@ -1208,7 +1208,34 @@ tizen run -p robostv001.RobOSTV
   }
 
   if (platformId === 'roku-os') {
-    const manifest = `title=${appName}\nsubtitle=RobOS 10-Foot Smart TV Suite\nmajor_version=1\nminor_version=0\nbuild_version=1\nui_resolutions=fhd\n`;
+    let initialDash = null;
+    try {
+      const dashMod = require('./dashboard-engine');
+      const dashEngine = dashMod.createDashboardEngine();
+      initialDash = dashEngine.resolveDashboard('daily-engineering-ops').dashboard;
+    } catch {}
+
+    const commitsCard = (initialDash?.cards || []).find((c) => c.widgetTag === 'robos-widget-git-commits');
+    const calendarCard = (initialDash?.cards || []).find((c) => c.widgetTag === 'robos-widget-calendar-today');
+    const agentsCard = (initialDash?.cards || []).find((c) => c.widgetTag === 'robos-widget-agent-sessions');
+
+    const commitLines = ((commitsCard && commitsCard.liveData && commitsCard.liveData.commits) || [])
+      .slice(0, 10)
+      .map((c, idx) => `${idx + 1}. [${c.hash}] ${String(c.subject || '').slice(0, 46)} (${c.relativeTime || 'recent'})`)
+      .join('\\n');
+    const calendarLines = ((calendarCard && calendarCard.liveData && calendarCard.liveData.events) || [])
+      .map((ev) => `• ${ev.time}  ${ev.title} (${ev.location || 'Desk'}) [${ev.status || 'upcoming'}]`)
+      .join('\\n');
+    const agentLines = ((agentsCard && agentsCard.liveData && agentsCard.liveData.sessions) || [])
+      .map((s) => {
+        const tail = Array.isArray(s.tailLines) ? s.tailLines.slice(-2).join(' | ') : '';
+        return `● ${s.title} [${s.provider} · ${s.status}]\\n   ${tail}`;
+      })
+      .join('\\n\\n');
+
+    const safeBrsStr = (str) => String(str || '').replace(/"/g, "'");
+
+    const manifest = `title=${appName}\nsubtitle=RobOS 10-Foot Smart TV & Live Dashboards Suite\nmajor_version=1\nminor_version=1\nbuild_version=2\nui_resolutions=fhd\n`;
     const mainBrs = `sub Main()
     screen = CreateObject("roSGScreen")
     m.port = CreateObject("roMessagePort")
@@ -1221,26 +1248,111 @@ tizen run -p robostv001.RobOSTV
     end while
 end sub
 `;
+    const dashboardTaskXml = `<?xml version="1.0" encoding="utf-8" ?>
+<component name="DashboardTask" extends="Task">
+  <interface>
+    <field id="apiUrl" type="string" />
+    <field id="commitsText" type="string" />
+    <field id="calendarText" type="string" />
+    <field id="agentsText" type="string" />
+    <field id="dashboardTitle" type="string" />
+  </interface>
+  <script type="text/brightscript" uri="pkg:/components/DashboardTask.brs" />
+</component>
+`;
+    const dashboardTaskBrs = `sub init()
+    m.top.functionName = "pollDashboard"
+end sub
+
+sub pollDashboard()
+    while true
+        url = m.top.apiUrl
+        if url <> ""
+            http = CreateObject("roUrlTransfer")
+            http.SetUrl(url)
+            raw = http.GetToString()
+            if raw <> ""
+                json = ParseJson(raw)
+                if json <> invalid and json.dashboard <> invalid
+                    dash = json.dashboard
+                    if dash.title <> invalid then m.top.dashboardTitle = dash.title
+                    if dash.cards <> invalid
+                        for each card in dash.cards
+                            if card.widgetTag = "robos-widget-git-commits" and card.liveData <> invalid and card.liveData.commits <> invalid
+                                lines = ""
+                                idx = 1
+                                for each c in card.liveData.commits
+                                    if idx <= 10
+                                        lines = lines + idx.ToStr() + ". [" + c.hash + "] " + Left(c.subject, 46) + " (" + c.relativeTime + ")" + chr(10)
+                                        idx = idx + 1
+                                    end if
+                                end for
+                                m.top.commitsText = lines
+                            else if card.widgetTag = "robos-widget-calendar-today" and card.liveData <> invalid and card.liveData.events <> invalid
+                                lines = ""
+                                for each ev in card.liveData.events
+                                    lines = lines + "• " + ev.time + "  " + ev.title + " [" + ev.status + "]" + chr(10) + "   " + ev.location + chr(10)
+                                end for
+                                m.top.calendarText = lines
+                            else if card.widgetTag = "robos-widget-agent-sessions" and card.liveData <> invalid and card.liveData.sessions <> invalid
+                                lines = ""
+                                for each s in card.liveData.sessions
+                                    lines = lines + "● " + s.title + " [" + s.provider + " · " + s.status + "]" + chr(10)
+                                    if s.tailLines <> invalid
+                                        for each tl in s.tailLines
+                                            lines = lines + "  " + Left(tl, 54) + chr(10)
+                                        end for
+                                    end if
+                                    lines = lines + chr(10)
+                                end for
+                                m.top.agentsText = lines
+                            end if
+                        end for
+                    end if
+                end if
+            end if
+        end if
+        sleep(10000)
+    end while
+end sub
+`;
     const mainSceneXml = `<?xml version="1.0" encoding="utf-8" ?>
 <component name="MainScene" extends="Scene">
   <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
   <children>
     <Rectangle id="bg" width="1920" height="1080" color="0x070B12FF" />
-    <Rectangle id="headerBar" width="1920" height="96" color="0x111827FF" />
-    <Label id="brandLabel" text="RobOS TV — 10-Foot Living Room Suite" translation="[80, 28]" width="1100" />
-    <Label id="hostLabel" text="Connected to ${portalUrl} (${tvIp})" translation="[1220, 32]" width="620" horizAlign="right" />
-    <Rectangle id="heroCard" translation="[80, 126]" width="1760" height="150" color="0x161B22FF" />
-    <Label id="heroTitle" text="Select a RobOS Experience with Your Roku D-Pad (Up/Down/OK)" translation="[112, 150]" width="1680" />
-    <Label id="heroDesc" text="Press OK on any RobOS app below to launch or trigger it over your local network." translation="[112, 204]" width="1680" />
+    <Rectangle id="headerBar" width="1920" height="86" color="0x111827FF" />
+    <Label id="brandLabel" text="RobOS Dashboards — Daily Engineering &amp; Agent Ops Dashboard" translation="[48, 24]" width="1180" />
+    <Label id="hostLabel" text="Live Cast: ${portalUrl}/dashboard (${tvIp})" translation="[1240, 26]" width="632" horizAlign="right" />
+
+    <!-- Column 1: 10 Latest Commit Messages -->
+    <Rectangle id="colCommitsCard" translation="[48, 104]" width="584" height="630" color="0x111827FF" />
+    <Label id="colCommitsHeader" text="1. 10 LATEST COMMIT MESSAGES (SMALL READABLE LIST)" translation="[68, 122]" width="544" color="0x67E8F9FF" />
+    <Label id="colCommitsBody" translation="[68, 166]" width="544" height="550" wrap="true" numLines="22" lineSpacing="2" text="${safeBrsStr(commitLines)}" />
+
+    <!-- Column 2: Calendar Events for the Day -->
+    <Rectangle id="colCalendarCard" translation="[656, 104]" width="584" height="630" color="0x111827FF" />
+    <Label id="colCalendarHeader" text="2. CALENDAR EVENTS FOR THE DAY" translation="[676, 122]" width="544" color="0x6EE7B7FF" />
+    <Label id="colCalendarBody" translation="[676, 166]" width="544" height="550" wrap="true" numLines="22" lineSpacing="4" text="${safeBrsStr(calendarLines)}" />
+
+    <!-- Column 3: Running RobOS Agent Sessions & Tailed Status Lines -->
+    <Rectangle id="colAgentsCard" translation="[1264, 104]" width="608" height="630" color="0x111827FF" />
+    <Label id="colAgentsHeader" text="3. RUNNING ROBOS AGENT SESSIONS (TAILED STATUS)" translation="[1284, 122]" width="568" color="0xFCD34DFF" />
+    <Label id="colAgentsBody" translation="[1284, 166]" width="568" height="550" wrap="true" numLines="22" lineSpacing="2" text="${safeBrsStr(agentLines)}" />
+
+    <!-- Bottom D-Pad App Launcher Strip -->
+    <Rectangle id="heroCard" translation="[48, 750]" width="1824" height="72" color="0x161B22FF" />
+    <Label id="heroTitle" text="RobOS Dashboard Active — Use Roku D-Pad Up/Down/OK to switch RobOS TV experiences" translation="[72, 762]" width="1760" />
+    <Label id="heroDesc" text="Live polling ${portalUrl}/api/dashboard-cast every 10s" translation="[72, 792]" width="1760" color="0x94A3B8FF" />
     <LabelList
       id="tileList"
-      translation="[80, 310]"
-      itemSize="[1760, 76]"
-      itemSpacing="[0, 12]"
-      numRows="7"
+      translation="[48, 834]"
+      itemSize="[1824, 54]"
+      itemSpacing="[0, 8]"
+      numRows="3"
       color="0xF8FAFCFF"
       focusedColor="0x061318FF" />
-    <Label id="statusFooter" text="Ready — Use Roku D-Pad Up/Down and press OK to launch on RobOS (${portalUrl})" translation="[80, 995]" width="1760" />
+    <Label id="statusFooter" text="Ready — Showing Daily Engineering &amp; Agent Ops Dashboard on Roku (${portalUrl}/dashboard)" translation="[48, 1026]" width="1824" />
   </children>
 </component>
 `;
@@ -1249,9 +1361,13 @@ end sub
     m.heroTitle = m.top.findNode("heroTitle")
     m.heroDesc = m.top.findNode("heroDesc")
     m.statusFooter = m.top.findNode("statusFooter")
+    m.brandLabel = m.top.findNode("brandLabel")
+    m.colCommitsBody = m.top.findNode("colCommitsBody")
+    m.colCalendarBody = m.top.findNode("colCalendarBody")
+    m.colAgentsBody = m.top.findNode("colAgentsBody")
 
     m.tiles = [
-        { id: "portal-home", title: "1. RobOS 10-Foot Home  [TV Dashboard]", desc: "Big-screen overview of active agents, sprint status, media playback, and quick actions." },
+        { id: "portal-home", title: "1. Daily Engineering & Agent Ops Dashboard  [10 Commits · Calendar · Agent Tails]", desc: "3-column live graphical dashboard from RobOS Dashboards (${portalUrl}/dashboard)." },
         { id: "crpg-realm", title: "2. Realm of Heroes cRPG  [Godot 4 Game]", desc: "Party-based tactical isometric D&D 5e cRPG in Godot 4 with gamepad & couch co-op support." },
         { id: "quest-warrior-dragon", title: "3. Quest: Warrior Dragon  [D-Pad 2D JRPG]", desc: "Clean-room NES-authentic 2D JRPG in Godot 4 — play with your TV remote D-Pad or controller." },
         { id: "tabletop-rpg", title: "4. RobOS Tabletop RPG  [Living Room Dungeon Board]", desc: "HeroQuest-inspired 26x19 tactical dungeon crawler designed for big-screen tabletop nights." },
@@ -1270,6 +1386,30 @@ end sub
     m.tileList.observeField("itemFocused", "onItemFocused")
     m.tileList.observeField("itemSelected", "onItemSelected")
     m.tileList.setFocus(true)
+
+    m.dashTask = CreateObject("roSGNode", "DashboardTask")
+    m.dashTask.apiUrl = "${portalUrl}/api/dashboard-cast"
+    m.dashTask.observeField("commitsText", "onCommitsUpdated")
+    m.dashTask.observeField("calendarText", "onCalendarUpdated")
+    m.dashTask.observeField("agentsText", "onAgentsUpdated")
+    m.dashTask.observeField("dashboardTitle", "onTitleUpdated")
+    m.dashTask.control = "RUN"
+end sub
+
+sub onCommitsUpdated()
+    if m.dashTask.commitsText <> "" then m.colCommitsBody.text = m.dashTask.commitsText
+end sub
+
+sub onCalendarUpdated()
+    if m.dashTask.calendarText <> "" then m.colCalendarBody.text = m.dashTask.calendarText
+end sub
+
+sub onAgentsUpdated()
+    if m.dashTask.agentsText <> "" then m.colAgentsBody.text = m.dashTask.agentsText
+end sub
+
+sub onTitleUpdated()
+    if m.dashTask.dashboardTitle <> "" then m.brandLabel.text = "RobOS Dashboards — " + m.dashTask.dashboardTitle
 end sub
 
 sub onItemFocused()
@@ -1291,6 +1431,8 @@ end sub
 `;
     write('manifest', manifest);
     write('source/Main.brs', mainBrs);
+    write('components/DashboardTask.xml', dashboardTaskXml);
+    write('components/DashboardTask.brs', dashboardTaskBrs);
     write('components/MainScene.xml', mainSceneXml);
     write('components/MainScene.brs', mainSceneBrs);
     write(
@@ -1884,6 +2026,8 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
               port: 8060,
               path: `/keypress/${encodeURIComponent(rKey)}`,
               method: 'POST',
+              agent: false,
+              headers: { 'Content-Length': '0', Connection: 'close' },
               timeout: 2000,
             },
             (res) => {
@@ -1974,7 +2118,10 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
 
   function queryRokuPowerMode(ip, timeoutMs = 1500) {
     return new Promise((resolve) => {
-      const req = http.get(`http://${ip}:8060/query/device-info`, { timeout: timeoutMs }, (res) => {
+      const req = http.get(
+        `http://${ip}:8060/query/device-info`,
+        { timeout: timeoutMs, agent: false, headers: { Connection: 'close' } },
+        (res) => {
         let data = '';
         res.on('data', (c) => (data += c));
         res.on('end', () => {
@@ -2112,6 +2259,7 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
           port: 8060,
           path: `/keypress/${rKey}`,
           method: 'POST',
+          headers: { 'Content-Length': '0' },
           timeout: 2000,
         },
         (res) => {
@@ -2288,8 +2436,42 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     saveState();
 
     if (tv.platformId === 'roku-os' && process.env.ROBOS_TEST !== '1' && !process.env.NODE_TEST_CONTEXT) {
+      const pkg = buildTvPackage({ platformId: 'roku-os', tvId: tv.id, tvIp: tv.ip });
       const readiness = await diagnoseTvReadiness(tv.id);
-      const dispatch = await sendRemoteKey({ tvId: tv.id, key: 'HOME' });
+      if (readiness && readiness.allSideloadReady && pkg && pkg.targetDir) {
+        try {
+          spawnSync('bash', ['sideload-roku.sh'], { cwd: pkg.targetDir, timeout: 6000 });
+        } catch {}
+      }
+      const launchStatus = await new Promise((resolve) => {
+        const req = http.request(
+          {
+            hostname: tv.ip,
+            port: 8060,
+            path: '/launch/dev',
+            method: 'POST',
+            agent: false,
+            headers: { 'Content-Length': '0', Connection: 'close' },
+            timeout: 2000,
+          },
+          (res) => {
+            res.resume();
+            resolve(res.statusCode || 0);
+          }
+        );
+        req.on('error', () => resolve(0));
+        req.on('timeout', () => {
+          req.destroy();
+          resolve(0);
+        });
+        req.end();
+      });
+
+      const rokuChannelLaunched = launchStatus >= 200 && launchStatus < 300;
+      const dispatch = rokuChannelLaunched
+        ? { ok: true, blocked: false, httpStatus: launchStatus }
+        : await sendRemoteKey({ tvId: tv.id, key: 'HOME' });
+
       if (dispatch && dispatch.blocked) {
         return {
           ok: false,
@@ -2300,6 +2482,8 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
           portalUrl,
           castUrl,
           readiness,
+          rokuChannelLaunched: false,
+          rokuPackage: pkg,
           setupTitle: dispatch.setupTitle,
           setupMessage: dispatch.setupMessage,
           setupSteps: dispatch.setupSteps || [],
@@ -2315,7 +2499,11 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
         portalUrl,
         castUrl,
         readiness,
-        message: `Showing "${dash.title}" on ${tv.name} (${tv.ip}) · Live at ${castUrl}`,
+        rokuChannelLaunched,
+        rokuPackage: pkg,
+        message: rokuChannelLaunched
+          ? `Launched RobOS TV channel showing "${dash.title}" on ${tv.name} (${tv.ip}) · Live at ${castUrl}`
+          : `Showing "${dash.title}" on ${tv.name} (${tv.ip}) · Live at ${castUrl} (Roku package built at ${pkg.targetDir}/robos-tv-roku.zip)`,
       };
     }
 
