@@ -1,0 +1,9 @@
+{
+  "name": "robos-cloud-accounts",
+  "version": "0.1.0",
+  "description": "Unified Cloud Accounts manager for Google Workspace, Microsoft 365/OneDrive, Nextcloud, Dropbox, and S3 with suite reuse across Drive, Calendar, Contacts, Mail, and Audio Player",
+  "main": "main.js",
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

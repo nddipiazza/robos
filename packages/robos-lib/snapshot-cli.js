@@ -126,6 +126,8 @@ const PORT_REGISTRY = {
   'vpn-sandbox':       19204,
   'vpn-servers':       19205,
   'robos-tv':          19206,
+  'cloud-accounts':    19207,
+  'google-calendar':   19208,
 };
 
 
