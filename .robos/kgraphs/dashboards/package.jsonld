@@ -1,0 +1,458 @@
+{
+  "@context": {
+    "c4": "https://c4model.com/ns#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "oslc": "http://open-services.net/ns/core#",
+    "oslc_am": "http://open-services.net/ns/am#",
+    "oslc_cm": "http://open-services.net/ns/cm#",
+    "oslc_qm": "http://open-services.net/ns/qm#",
+    "oslc_rm": "http://open-services.net/ns/rm#",
+    "pact": "https://pact.io/ns#",
+    "robos": "https://robos.dev/ns/sdlc#",
+    "robos:cards": {
+      "@container": "@set",
+      "@id": "robos:cards",
+      "@type": "@id"
+    },
+    "robos:dashboard": {
+      "@id": "robos:dashboard",
+      "@type": "@id"
+    },
+    "robos:layout": {
+      "@id": "robos:layout",
+      "@type": "@id"
+    },
+    "robos:slots": {
+      "@id": "robos:slots",
+      "@type": "@json"
+    },
+    "robos:widget": {
+      "@id": "robos:widget",
+      "@type": "@id"
+    },
+    "robos:widgetConfig": {
+      "@id": "robos:widgetConfig",
+      "@type": "@json"
+    },
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "urn:robos:package:dashboards",
+  "@type": [
+    "robos:KGraphPackage"
+  ],
+  "dcterms:title": "dashboards",
+  "robos:namespace": "robos.dashboards",
+  "robos:package": "dashboards",
+  "robos:nodes": [
+    {
+      "@id": "urn:robos:app:robos-dashboards",
+      "@type": "robos:DesktopApp",
+      "dcterms:title": "RobOS Dashboards",
+      "robos:description": "Graphical dashboard studio and builder where every widget is a composable RobOS component displaying live RobOS data, modeled as card layouts in the Knowledge Graph, embeddable via <robos-dashboard>, and castable to RobOS Smart TV Studio.",
+      "robos:desktopFramework": "Electron",
+      "robos:package": "dashboards",
+      "robos:repository": "https://github.com/nddipiazza/robos",
+      "robos:sourcePath": "packages/robos-dashboards",
+      "robos:technology": "Electron 28 / RobOS UI Web Components / Smart TV 10-Foot Cast"
+    },
+    {
+      "@id": "urn:robos:library:robos-dashboard-component",
+      "@type": "robos:Library",
+      "dcterms:title": "RobOS Embeddable Dashboard Component Library",
+      "robos:description": "Shared library (robos-lib/dashboard-engine) and custom Web Components (<robos-dashboard> and <robos-dashboard-widget> in robos-ui/robos-dashboard.js) that can embed any KGraph-modeled graphical dashboard or individual RobOS component widget inside any desktop app or 10-foot Smart TV portal.",
+      "robos:package": "dashboards",
+      "robos:repository": "https://github.com/nddipiazza/robos",
+      "robos:sourcePath": "packages/robos-ui/robos-dashboard.js",
+      "robos:technology": "Custom Elements v1 / Vanilla JavaScript / Node.js"
+    },
+    {
+      "@id": "urn:robos:dashboard-layout:mission-control-3col",
+      "@type": "robos:DashboardLayout",
+      "dcterms:title": "Mission Control 3-Column",
+      "robos:layoutId": "mission-control-3col",
+      "robos:gridTemplate": "repeat(3, minmax(0, 1fr))",
+      "robos:slotCount": 3,
+      "robos:description": "Three balanced vertical card columns ideal for side-by-side commit history, daily calendar agenda, and live tailed agent sessions.",
+      "robos:package": "dashboards",
+      "robos:slots": [
+        { "slotId": "col-1", "label": "Left Column", "colSpan": 1, "rowSpan": 1 },
+        { "slotId": "col-2", "label": "Center Column", "colSpan": 1, "rowSpan": 1 },
+        { "slotId": "col-3", "label": "Right Column", "colSpan": 1, "rowSpan": 1 }
+      ]
+    },
+    {
+      "@id": "urn:robos:dashboard-layout:hero-top-split",
+      "@type": "robos:DashboardLayout",
+      "dcterms:title": "Hero Top + 2-Card Split",
+      "robos:layoutId": "hero-top-split",
+      "robos:gridTemplate": "repeat(2, minmax(0, 1fr))",
+      "robos:slotCount": 3,
+      "robos:description": "Full-width top hero card spanning 2 columns above two equal bottom cards.",
+      "robos:package": "dashboards",
+      "robos:slots": [
+        { "slotId": "hero-top", "label": "Top Hero Banner Card", "colSpan": 2, "rowSpan": 1 },
+        { "slotId": "bottom-left", "label": "Bottom Left Card", "colSpan": 1, "rowSpan": 1 },
+        { "slotId": "bottom-right", "label": "Bottom Right Card", "colSpan": 1, "rowSpan": 1 }
+      ]
+    },
+    {
+      "@id": "urn:robos:dashboard-layout:sidebar-focus",
+      "@type": "robos:DashboardLayout",
+      "dcterms:title": "Sidebar Focus (1/3 + 2/3 Stack)",
+      "robos:layoutId": "sidebar-focus",
+      "robos:gridTemplate": "1fr 2fr",
+      "robos:slotCount": 3,
+      "robos:description": "Compact left rail for commit feed or calendar paired with a wide two-thirds right workspace stack.",
+      "robos:package": "dashboards",
+      "robos:slots": [
+        { "slotId": "sidebar-left", "label": "Left Sidebar Rail", "colSpan": 1, "rowSpan": 2 },
+        { "slotId": "main-top", "label": "Main Top Primary Card", "colSpan": 1, "rowSpan": 1 },
+        { "slotId": "main-bottom", "label": "Main Bottom Secondary Card", "colSpan": 1, "rowSpan": 1 }
+      ]
+    },
+    {
+      "@id": "urn:robos:dashboard-layout:quad-grid-2x2",
+      "@type": "robos:DashboardLayout",
+      "dcterms:title": "Quad 2x2 Card Grid",
+      "robos:layoutId": "quad-grid-2x2",
+      "robos:gridTemplate": "repeat(2, minmax(0, 1fr))",
+      "robos:slotCount": 4,
+      "robos:description": "Four symmetrical cards in a 2x2 matrix for multi-domain monitoring.",
+      "robos:package": "dashboards",
+      "robos:slots": [
+        { "slotId": "quad-tl", "label": "Top Left", "colSpan": 1, "rowSpan": 1 },
+        { "slotId": "quad-tr", "label": "Top Right", "colSpan": 1, "rowSpan": 1 },
+        { "slotId": "quad-bl", "label": "Bottom Left", "colSpan": 1, "rowSpan": 1 },
+        { "slotId": "quad-br", "label": "Bottom Right", "colSpan": 1, "rowSpan": 1 }
+      ]
+    },
+    {
+      "@id": "urn:robos:dashboard-layout:tv-wallboard-10ft",
+      "@type": "robos:DashboardLayout",
+      "dcterms:title": "10-Foot Smart TV Wallboard",
+      "robos:layoutId": "tv-wallboard-10ft",
+      "robos:gridTemplate": "1.1fr 0.95fr 1.25fr",
+      "robos:slotCount": 3,
+      "robos:description": "High-contrast 1080p/4K living-room and studio wallboard layout designed for RobOS Smart TV Studio with D-Pad spatial focus.",
+      "robos:package": "dashboards",
+      "robos:slots": [
+        { "slotId": "tv-left", "label": "TV Left Panel (Commits)", "colSpan": 1, "rowSpan": 1 },
+        { "slotId": "tv-center", "label": "TV Center Panel (Daily Schedule)", "colSpan": 1, "rowSpan": 1 },
+        { "slotId": "tv-right", "label": "TV Right Panel (Live Agent Sessions)", "colSpan": 1, "rowSpan": 1 }
+      ]
+    },
+    {
+      "@id": "urn:robos:dashboard-layout:single-focus",
+      "@type": "robos:DashboardLayout",
+      "dcterms:title": "Single Full-Canvas Card",
+      "robos:layoutId": "single-focus",
+      "robos:gridTemplate": "1fr",
+      "robos:slotCount": 1,
+      "robos:description": "Single full-bleed card embedding any standalone RobOS component or application view.",
+      "robos:package": "dashboards",
+      "robos:slots": [
+        { "slotId": "canvas-main", "label": "Full Canvas", "colSpan": 1, "rowSpan": 1 }
+      ]
+    },
+    {
+      "@id": "urn:robos:dashboard-widget:git-commits",
+      "@type": "robos:DashboardWidget",
+      "dcterms:title": "Latest Git Commit Messages",
+      "robos:widgetType": "git-commits",
+      "robos:componentTag": "robos-widget-git-commits",
+      "robos:description": "Displays the 10 latest Git commit messages in a clean, small, high-density readable text list format with short SHA, subject, author, branch, and relative time.",
+      "robos:package": "dashboards"
+    },
+    {
+      "@id": "urn:robos:dashboard-widget:calendar-today",
+      "@type": "robos:DashboardWidget",
+      "dcterms:title": "Calendar Events for the Day",
+      "robos:widgetType": "calendar-today",
+      "robos:componentTag": "robos-widget-calendar-today",
+      "robos:description": "Displays today's calendar events and agenda synced with RobOS Google Calendar / Thunderbird CalDAV and local workspace schedules.",
+      "robos:package": "dashboards"
+    },
+    {
+      "@id": "urn:robos:dashboard-widget:agent-sessions",
+      "@type": "robos:DashboardWidget",
+      "dcterms:title": "Running RobOS Agent Sessions (Status Tailed)",
+      "robos:widgetType": "agent-sessions",
+      "robos:componentTag": "robos-widget-agent-sessions",
+      "robos:description": "Displays currently running RobOS coding-agent sessions (Copilot CLI, Claude Code, Codex, Antigravity, robos-agentd) with their live status lines tailed.",
+      "robos:package": "dashboards"
+    },
+    {
+      "@id": "urn:robos:dashboard-widget:smart-tv",
+      "@type": "robos:DashboardWidget",
+      "dcterms:title": "RobOS Smart TV & 10-Foot Portal Status",
+      "robos:widgetType": "smart-tv",
+      "robos:componentTag": "robos-widget-smart-tv",
+      "robos:description": "Displays paired LAN Smart TVs, active 10-foot portal experience, and one-click dashboard casting controls.",
+      "robos:package": "dashboards"
+    },
+    {
+      "@id": "urn:robos:dashboard-widget:smart-lights",
+      "@type": "robos:DashboardWidget",
+      "dcterms:title": "RobOS Smart Light Studio Controller",
+      "robos:widgetType": "smart-lights",
+      "robos:componentTag": "robos-widget-smart-lights",
+      "robos:description": "Displays LAN smart bulb rooms, circadian daylight state, and quick scene triggers.",
+      "robos:package": "dashboards"
+    },
+    {
+      "@id": "urn:robos:dashboard-widget:kgraph-summary",
+      "@type": "robos:DashboardWidget",
+      "dcterms:title": "Knowledge Graph & SHACL Health",
+      "robos:widgetType": "kgraph-summary",
+      "robos:componentTag": "robos-widget-kgraph",
+      "robos:description": "Displays modular Knowledge Graph packages, entity counts, and W3C SHACL shape conformance.",
+      "robos:package": "dashboards"
+    },
+    {
+      "@id": "urn:robos:dashboard-widget:sprint-radar",
+      "@type": "robos:DashboardWidget",
+      "dcterms:title": "Dev Central Sprint & PR Radar",
+      "robos:widgetType": "sprint-radar",
+      "robos:componentTag": "robos-widget-sprint-radar",
+      "robos:description": "Displays active sprint tasks, pull request review health, and CI blockers.",
+      "robos:package": "dashboards"
+    },
+    {
+      "@id": "urn:robos:dashboard-widget:robos-component",
+      "@type": "robos:DashboardWidget",
+      "dcterms:title": "Any RobOS Custom Component Widget",
+      "robos:widgetType": "robos-component",
+      "robos:componentTag": "robos-widget-custom",
+      "robos:description": "Universal wrapper capable of mounting any RobOS custom element (<robos-ai-textarea>, <robos-voice-button>, <robos-agent-job-status>, or any app view).",
+      "robos:package": "dashboards"
+    },
+    {
+      "@id": "urn:robos:dashboard:daily-engineering-ops",
+      "@type": "robos:Dashboard",
+      "dcterms:title": "Daily Engineering & Agent Ops Dashboard",
+      "robos:dashboardId": "daily-engineering-ops",
+      "robos:description": "Primary operational dashboard featuring the 10 latest commit messages in a compact readable text list, calendar events for the day, and current RobOS agent sessions running with their status lines tailed.",
+      "robos:layout": {
+        "@id": "urn:robos:dashboard-layout:mission-control-3col"
+      },
+      "robos:tvCompatible": true,
+      "robos:package": "dashboards",
+      "robos:cards": [
+        { "@id": "urn:robos:dashboard-card:latest-10-commits" },
+        { "@id": "urn:robos:dashboard-card:today-calendar-events" },
+        { "@id": "urn:robos:dashboard-card:running-agent-sessions" }
+      ]
+    },
+    {
+      "@id": "urn:robos:dashboard-card:latest-10-commits",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "10 Latest Commit Messages",
+      "robos:cardId": "latest-10-commits",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:daily-engineering-ops"
+      },
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:git-commits"
+      },
+      "robos:slotId": "col-1",
+      "robos:componentTag": "robos-widget-git-commits",
+      "robos:package": "dashboards",
+      "robos:widgetConfig": {
+        "limit": 10,
+        "compactTextList": true,
+        "fontSize": "small",
+        "showSha": true,
+        "showAuthor": true,
+        "showRelativeTime": true
+      }
+    },
+    {
+      "@id": "urn:robos:dashboard-card:today-calendar-events",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Calendar Events for the Day",
+      "robos:cardId": "today-calendar-events",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:daily-engineering-ops"
+      },
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:calendar-today"
+      },
+      "robos:slotId": "col-2",
+      "robos:componentTag": "robos-widget-calendar-today",
+      "robos:package": "dashboards",
+      "robos:widgetConfig": {
+        "scope": "today",
+        "includeGoogleCalendar": true,
+        "showStatusBadges": true
+      }
+    },
+    {
+      "@id": "urn:robos:dashboard-card:running-agent-sessions",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Running RobOS Agent Sessions (Status Tailed)",
+      "robos:cardId": "running-agent-sessions",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:daily-engineering-ops"
+      },
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:agent-sessions"
+      },
+      "robos:slotId": "col-3",
+      "robos:componentTag": "robos-widget-agent-sessions",
+      "robos:package": "dashboards",
+      "robos:widgetConfig": {
+        "tailLines": 5,
+        "onlyRunningOrActive": true,
+        "providers": ["antigravity", "claude-code", "codex", "github-copilot", "robos-agentd"]
+      }
+    },
+    {
+      "@id": "urn:robos:dashboard:smart-home-tv-command",
+      "@type": "robos:Dashboard",
+      "dcterms:title": "Smart TV & Connected Studio Wallboard",
+      "robos:dashboardId": "smart-home-tv-command",
+      "robos:description": "Quad 2x2 wallboard combining Smart TV Studio status, Smart Light rooms, today's calendar agenda, and active agent sessions.",
+      "robos:layout": {
+        "@id": "urn:robos:dashboard-layout:quad-grid-2x2"
+      },
+      "robos:tvCompatible": true,
+      "robos:package": "dashboards",
+      "robos:cards": [
+        { "@id": "urn:robos:dashboard-card:studio-smart-tv" },
+        { "@id": "urn:robos:dashboard-card:studio-smart-lights" },
+        { "@id": "urn:robos:dashboard-card:studio-calendar" },
+        { "@id": "urn:robos:dashboard-card:studio-agents" }
+      ]
+    },
+    {
+      "@id": "urn:robos:dashboard-card:studio-smart-tv",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Paired Smart TVs & 10-Foot Portal",
+      "robos:cardId": "studio-smart-tv",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:smart-home-tv-command"
+      },
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:smart-tv"
+      },
+      "robos:slotId": "quad-tl",
+      "robos:componentTag": "robos-widget-smart-tv",
+      "robos:package": "dashboards",
+      "robos:widgetConfig": {}
+    },
+    {
+      "@id": "urn:robos:dashboard-card:studio-smart-lights",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Smart Light Rooms & Scenes",
+      "robos:cardId": "studio-smart-lights",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:smart-home-tv-command"
+      },
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:smart-lights"
+      },
+      "robos:slotId": "quad-tr",
+      "robos:componentTag": "robos-widget-smart-lights",
+      "robos:package": "dashboards",
+      "robos:widgetConfig": {}
+    },
+    {
+      "@id": "urn:robos:dashboard-card:studio-calendar",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Today's Studio Schedule",
+      "robos:cardId": "studio-calendar",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:smart-home-tv-command"
+      },
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:calendar-today"
+      },
+      "robos:slotId": "quad-bl",
+      "robos:componentTag": "robos-widget-calendar-today",
+      "robos:package": "dashboards",
+      "robos:widgetConfig": { "scope": "today" }
+    },
+    {
+      "@id": "urn:robos:dashboard-card:studio-agents",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Running Agent Sessions",
+      "robos:cardId": "studio-agents",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:smart-home-tv-command"
+      },
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:agent-sessions"
+      },
+      "robos:slotId": "quad-br",
+      "robos:componentTag": "robos-widget-agent-sessions",
+      "robos:package": "dashboards",
+      "robos:widgetConfig": { "tailLines": 4 }
+    },
+    {
+      "@id": "urn:robos:dashboard:kgraph-architecture-pulse",
+      "@type": "robos:Dashboard",
+      "dcterms:title": "Knowledge Graph & Sprint Pulse",
+      "robos:dashboardId": "kgraph-architecture-pulse",
+      "robos:description": "Hero-top split layout highlighting Knowledge Graph ontology health atop sprint radar and recent commits.",
+      "robos:layout": {
+        "@id": "urn:robos:dashboard-layout:hero-top-split"
+      },
+      "robos:tvCompatible": true,
+      "robos:package": "dashboards",
+      "robos:cards": [
+        { "@id": "urn:robos:dashboard-card:pulse-kgraph" },
+        { "@id": "urn:robos:dashboard-card:pulse-sprint" },
+        { "@id": "urn:robos:dashboard-card:pulse-commits" }
+      ]
+    },
+    {
+      "@id": "urn:robos:dashboard-card:pulse-kgraph",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Knowledge Graph Ontology & SHACL Status",
+      "robos:cardId": "pulse-kgraph",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:kgraph-architecture-pulse"
+      },
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:kgraph-summary"
+      },
+      "robos:slotId": "hero-top",
+      "robos:componentTag": "robos-widget-kgraph",
+      "robos:package": "dashboards",
+      "robos:widgetConfig": {}
+    },
+    {
+      "@id": "urn:robos:dashboard-card:pulse-sprint",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Sprint Tasks & PR Health",
+      "robos:cardId": "pulse-sprint",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:kgraph-architecture-pulse"
+      },
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:sprint-radar"
+      },
+      "robos:slotId": "bottom-left",
+      "robos:componentTag": "robos-widget-sprint-radar",
+      "robos:package": "dashboards",
+      "robos:widgetConfig": {}
+    },
+    {
+      "@id": "urn:robos:dashboard-card:pulse-commits",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "10 Latest Commits",
+      "robos:cardId": "pulse-commits",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:kgraph-architecture-pulse"
+      },
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:git-commits"
+      },
+      "robos:slotId": "bottom-right",
+      "robos:componentTag": "robos-widget-git-commits",
+      "robos:package": "dashboards",
+      "robos:widgetConfig": { "limit": 10, "compactTextList": true }
+    }
+  ]
+}

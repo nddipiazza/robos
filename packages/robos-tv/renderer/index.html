@@ -131,6 +131,19 @@
               </div>
 
               <div class="quick-cast-box">
+                <div class="sub-label">Show RobOS Dashboard on Smart TV</div>
+                <div class="active-tile-card" id="tv-dashboard-cast-box" style="margin-bottom:12px;">
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+                    <select id="select-tv-dashboard" class="select select-sm" style="flex:1;min-width:170px;"></select>
+                    <select id="select-tv-dashboard-layout" class="select select-sm" style="flex:1;min-width:140px;"></select>
+                  </div>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                    <button type="button" class="btn btn-sm btn-primary" id="btn-show-dashboard-tv">📺 Show Dashboard on TV</button>
+                    <button type="button" class="btn btn-sm" id="btn-open-dashboard-tv">Open TV Dashboard URL</button>
+                    <button type="button" class="btn btn-sm btn-danger" id="btn-stop-dashboard-tv">Stop</button>
+                  </div>
+                  <div id="tv-dashboard-cast-status" class="item-sub" style="margin-top:6px;"></div>
+                </div>
                 <div class="sub-label">Active TV Screen Experience</div>
                 <div class="active-tile-card" id="active-tile-summary"></div>
                 <div class="sub-label" style="margin-top:12px;">Switch TV Experience</div>
@@ -197,8 +210,18 @@
         </div>
       </section>
 
-      <!-- TAB 3: 10-Foot Big-Screen Portal Preview -->
+      <!-- TAB 4: 10-Foot Big-Screen Portal Preview -->
       <section id="tab-portal" class="tab-pane">
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Embedded RobOS Dashboard on Smart TV (<code style="font-size:12px;color:#00bcd4;">&lt;robos-dashboard&gt;</code>)</h2>
+              <p class="muted-text">Live preview of the active KGraph graphical dashboard (10 latest commits, daily calendar events, and running RobOS agent sessions with tailed status lines) served on your TV at <code id="dashboard-cast-url-code">http://192.168.1.100:19210/dashboard</code>.</p>
+            </div>
+            <span class="badge badge-green" id="dashboard-cast-pill">Ready to Cast</span>
+          </div>
+          <robos-dashboard id="tv-embedded-robos-dashboard"></robos-dashboard>
+        </div>
         <div class="card">
           <div class="card-header">
             <div>
@@ -214,6 +237,7 @@
       </section>
     </main>
   </div>
+  <script src="../../robos-ui/robos-dashboard.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

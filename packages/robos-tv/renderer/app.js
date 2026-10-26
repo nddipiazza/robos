@@ -53,10 +53,68 @@ function renderAll() {
   renderPlatformSelectors();
   renderDevicesList();
   renderRemoteAndTiles();
+  renderDashboardCastControls();
   renderAllChecklists();
   renderDevSteps();
   renderGeneratedPackages();
   renderPortalPreview();
+}
+
+function renderDashboardCastControls() {
+  const dashSel = document.getElementById('select-tv-dashboard');
+  const layoutSel = document.getElementById('select-tv-dashboard-layout');
+  const statusEl = document.getElementById('tv-dashboard-cast-status');
+  const pillEl = document.getElementById('dashboard-cast-pill');
+  const urlCodeEl = document.getElementById('dashboard-cast-url-code');
+  const embedEl = document.getElementById('tv-embedded-robos-dashboard');
+
+  const dashboards = state.dashboards || [];
+  const layouts = state.dashboardLayouts || [];
+  const cast = state.activeDashboardCast;
+  const activeDashId = cast?.dashboardId || state.activeDashboardResolved?.id || 'daily-engineering-ops';
+  const activeLayoutId =
+    cast?.layoutId ||
+    state.activeDashboardResolved?.layout?.id ||
+    state.activeDashboardResolved?.layoutId ||
+    'mission-control-3col';
+
+  if (dashSel && dashboards.length) {
+    dashSel.innerHTML = dashboards
+      .map(
+        (d) =>
+          `<option value="${esc(d.id)}"${d.id === activeDashId ? ' selected' : ''}>${esc(d.title)}</option>`
+      )
+      .join('');
+  }
+
+  if (layoutSel && layouts.length) {
+    layoutSel.innerHTML = layouts
+      .map(
+        (l) =>
+          `<option value="${esc(l.id)}"${l.id === activeLayoutId ? ' selected' : ''}>${esc(l.title)} (${esc(l.badge)})</option>`
+      )
+      .join('');
+  }
+
+  if (urlCodeEl) {
+    urlCodeEl.textContent = state.dashboardCastUrl || `${state.portalUrl}/dashboard`;
+  }
+
+  if (statusEl) {
+    if (cast && cast.active) {
+      statusEl.innerHTML = `<span style="color:#6ee7b7;font-weight:650;">● Showing "${esc(cast.title)}"</span> on <strong>${esc(cast.tvName)}</strong> · Layout: <code>${esc(cast.layoutTitle || cast.layoutId)}</code>`;
+    } else {
+      statusEl.textContent = 'Select a RobOS Dashboard and layout above to display it on your Smart TV.';
+    }
+  }
+
+  if (pillEl) {
+    pillEl.textContent = cast && cast.active ? `Live on ${cast.tvName}` : 'Ready to Cast';
+  }
+
+  if (embedEl && state.activeDashboardResolved) {
+    embedEl.dashboard = state.activeDashboardResolved;
+  }
 }
 
 function renderPlatformSelectors() {
@@ -456,6 +514,50 @@ async function init() {
       showBanner(`Opened 10-Foot Smart TV Portal at ${res.portalUrl}`);
     }
   };
+
+  const showDashBtn = document.getElementById('btn-show-dashboard-tv');
+  if (showDashBtn) {
+    showDashBtn.onclick = async () => {
+      const tvId = document.getElementById('select-remote-target')?.value;
+      const dashboardId = document.getElementById('select-tv-dashboard')?.value || 'daily-engineering-ops';
+      const layoutId = document.getElementById('select-tv-dashboard-layout')?.value;
+      const res = await window.robosTv.castDashboard({ tvId, dashboardId, layoutId });
+      const fresh = await window.robosTv.getOverview();
+      if (fresh && fresh.ok) state = { ...state, ...fresh };
+      renderAll();
+      if (res && res.blocked) {
+        showSetupAlert(res);
+        showBanner(res.setupTitle || 'TV setup required', true);
+      } else if (res && res.ok) {
+        showSetupAlert(null);
+        showBanner(res.message);
+      }
+    };
+  }
+
+  const openDashBtn = document.getElementById('btn-open-dashboard-tv');
+  if (openDashBtn) {
+    openDashBtn.onclick = async () => {
+      const res = await window.robosTv.openDashboardExternal();
+      if (res && res.ok) {
+        showBanner(`Opened Smart TV Dashboard Wallboard at ${res.dashboardCastUrl}`);
+      }
+    };
+  }
+
+  const stopDashBtn = document.getElementById('btn-stop-dashboard-tv');
+  if (stopDashBtn) {
+    stopDashBtn.onclick = async () => {
+      const tvId = document.getElementById('select-remote-target')?.value;
+      const res = await window.robosTv.stopDashboardCast({ tvId });
+      const fresh = await window.robosTv.getOverview();
+      if (fresh && fresh.ok) state = { ...state, ...fresh };
+      renderAll();
+      if (res && res.ok) {
+        showBanner(res.message);
+      }
+    };
+  }
 
   document.getElementById('btn-add-tv').onclick = async () => {
     const name = document.getElementById('input-tv-name').value.trim();
