@@ -30,71 +30,208 @@ const DEFAULT_PORTAL_PORT = 19210;
 
 const TV_PLATFORMS = [
   {
+    id: 'roku-os',
+    name: 'Roku OS TV & Streaming Players (TCL, Hisense, Sharp, Onn, Roku Ultra)',
+    vendor: 'TCL Roku TV / Hisense / Roku OS 14 & 15',
+    protocol: 'Roku External Control Protocol ECP (:8060) & Dev Installer (:80)',
+    packageFormat: 'Roku SceneGraph Channel Bundle (robos-tv-roku.zip)',
+    cliTool: 'curl',
+    requiredPermissions: [
+      {
+        id: 'roku-ecp-network-access',
+        title: '1. Enable Local Network Remote Control (Required for D-Pad, Power & App Launch)',
+        xmlField: '<ecp-setting-mode>enabled</ecp-setting-mode>',
+        blockedSymptom: 'HTTP 403 Forbidden on :8060/keypress/* or <ecp-setting-mode>limited|disabled</ecp-setting-mode> (Roku OS 14.1+ default)',
+        steps: [
+          'Press the Home (🏠) button on your physical Roku remote.',
+          'Scroll down and select Settings → System → Advanced system settings.',
+          'Select Control by mobile apps → Network access.',
+          'Change the setting from "Default" (or "Disabled") to "Enabled" (or "Permissive") and confirm.',
+        ],
+      },
+      {
+        id: 'roku-fast-tv-start',
+        title: '2. Enable Fast TV Start / Wake-on-WLAN (Required to Power ON the TV After Deep Standby)',
+        xmlField: '<supports-wake-on-wlan>true</supports-wake-on-wlan>',
+        blockedSymptom: 'TV turns OFF via RobOS, but stops responding to PowerOn after 15 minutes of standby because Wi-Fi powered down',
+        steps: [
+          'On your Roku TV, open Settings → System → Power.',
+          'Select Fast TV Start and check "Enable Fast TV Start".',
+          'This keeps the Roku Wi-Fi/Ethernet card listening on port 8060 while the screen is off so RobOS can always wake it with PowerOn.',
+        ],
+      },
+      {
+        id: 'roku-dev-installer',
+        title: '3. Enable Developer Application Installer (Required Only to Sideload Custom RobOS TV Channel ZIP)',
+        xmlField: '<developer-enabled>true</developer-enabled>',
+        blockedSymptom: 'Port 80 connection refused when running sideload-roku.sh (<developer-enabled>false</developer-enabled>)',
+        steps: [
+          'Using the physical Roku remote (Roku OS 15 blocks this combo over Wi-Fi), press Home once so the highlight is at the top.',
+          'Press these 10 buttons briskly without pausing: Home, Home, Home, Up, Up, Right, Left, Right, Left, Right.',
+          'On the "Developer Settings" screen that appears, select "Enable installer and restart".',
+          'Accept the Developer Tools License Agreement, enter a webserver password (e.g. "robos"), and select "Set password and reboot".',
+          'After reboot, run sideload-roku.sh (or click Sideload App in RobOS Smart TV Studio) to upload robos-tv-roku.zip to http://<TV-IP>/plugin_install.',
+        ],
+      },
+    ],
+    devModeSteps: [
+      'Remote Control (D-Pad / Power / Volume / Input Switch): Settings → System → Advanced system settings → Control by mobile apps → Network access → set to "Enabled" / "Permissive".',
+      'Wake from Off (PowerOn): Settings → System → Power → Fast TV Start → check "Enable Fast TV Start".',
+      'Sideload Custom RobOS Channel (:80): On physical Roku remote press Home (3x), Up (2x), Right, Left, Right, Left, Right → Enable installer & set password.',
+    ],
+  },
+  {
     id: 'android-tv',
     name: 'Google TV / Android TV / Fire TV',
-    vendor: 'Google / Sony / TCL / Hisense / NVIDIA Shield / Amazon',
+    vendor: 'Google / Sony Bravia / TCL Google TV / Hisense / NVIDIA Shield / Amazon Fire TV',
     protocol: 'ADB Network Debugging (:5555) & Google Cast (:8009)',
     packageFormat: 'Android TV Leanback APK / WebAPK (com.robos.tv)',
     cliTool: 'adb',
+    requiredPermissions: [
+      {
+        id: 'android-developer-options',
+        title: '1. Unlock Hidden Developer Options Menu',
+        blockedSymptom: 'Developer Options menu is hidden in Settings → System',
+        steps: [
+          'On your Google TV / Android TV, open Settings (⚙️) → System → About.',
+          'Scroll down to "Android TV OS Build" (On Fire TV: Settings → My Fire TV → About → highlight your Fire TV device name).',
+          'Press the Select / OK button on your remote 7 times rapidly until the toast "You are now a developer!" appears.',
+        ],
+      },
+      {
+        id: 'android-network-adb',
+        title: '2. Enable Network / Wireless ADB Debugging (:5555) & Authorize RSA Key',
+        blockedSymptom: 'Connection refused on port 5555, or adb devices reports "unauthorized"',
+        steps: [
+          'Go back to Settings → System → Developer options (On Fire TV: Settings → My Fire TV → Developer Options).',
+          'Toggle ON "USB debugging" AND "Network debugging" (or "ADB debugging" on Fire TV; on Sony Bravia / Android 11+, toggle ON "Wireless debugging").',
+          'When RobOS connects (`adb connect <TV-IP>:5555`), look at your TV screen for the popup "Allow USB/Network debugging from this computer?".',
+          'Check the box "Always allow from this computer" and click "Allow" on your TV remote.',
+        ],
+      },
+      {
+        id: 'android-unknown-sources',
+        title: '3. Allow Sideloading Unknown Apps & Stay Awake on LAN',
+        blockedSymptom: 'INSTALL_FAILED_USER_RESTRICTED or TV drops ADB when screen sleeps',
+        steps: [
+          'In Settings → Apps → Security & Restrictions → Unknown sources, toggle ON permission for ADB / Package Installer.',
+          'In Settings → System → Power & Energy (or Network → Wake on LAN / Renderer Control), enable "Wake on network" so RobOS can wake the TV with KEYCODE_WAKEUP.',
+        ],
+      },
+    ],
     devModeSteps: [
-      'On your TV, open Settings → System → About.',
-      'Highlight "Android TV OS Build" and press Select/OK on your remote 7 times until "You are now a developer!" appears.',
-      'Return to Settings → System → Developer Options and enable "USB Debugging" and "Network Debugging" (or Wireless Debugging).',
-      'Enter your TV IP below and click "Pair & Connect ADB" or "Push RobOS TV Launcher".',
+      'On your TV, open Settings → System → About and press Select/OK on "Android TV OS Build" 7 times.',
+      'Open Settings → System → Developer Options and enable "USB Debugging" and "Network Debugging" (:5555).',
+      'When prompted on the TV screen, check "Always allow from this computer" and select Allow.',
+      'Enter your TV IP below and click "Generate TV Sideload Package" to install the Leanback launcher.',
     ],
   },
   {
     id: 'lg-webos',
     name: 'LG webOS Smart TV',
-    vendor: 'LG OLED / QNED / UHD (webOS 4.0 – 26)',
-    protocol: 'webOS Developer Mode SSH (:9991) & SSAP (:3000)',
+    vendor: 'LG OLED (C/G/B Series) / QNED / NanoCell / UHD (webOS 4.0 – 26)',
+    protocol: 'webOS Developer Mode SSH (:9991) & SSAP (:3000 / :3001)',
     packageFormat: 'webOS IPK Package (com.robos.tv_1.0.0_all.ipk)',
     cliTool: 'ares-install',
+    requiredPermissions: [
+      {
+        id: 'lg-connect-apps-ssap',
+        title: '1. Enable LG Connect Apps (Required for Network Remote Control, Volume & Power)',
+        blockedSymptom: 'Port 3000/3001 WebSocket SSAP connection refused or pairing prompt never appears',
+        steps: [
+          'On your LG Magic Remote, press the Settings (⚙️) button → All Settings → General → External Devices (or Network on older webOS).',
+          'Select TV On With Mobile → turn ON "Turn on via Wi-Fi" (so RobOS can wake the TV).',
+          'Ensure "LG Connect Apps" is toggled ON.',
+          'On first connection from RobOS, click "Accept" on the pairing confirmation toast on your LG TV screen.',
+        ],
+      },
+      {
+        id: 'lg-dev-mode-app',
+        title: '2. Install LG Developer Mode App & Enable Key Server (:9991)',
+        blockedSymptom: 'Port 9991 closed — ares-install / ares-novacom cannot sideload .ipk packages',
+        steps: [
+          'Create a free developer account at https://webostv.developer.lge.com.',
+          'Open the LG Content Store (Apps) on your TV, search for "Developer Mode", and install the official LG Developer Mode app.',
+          'Sign in with your LG Developer account, toggle "Dev Mode Status" to ON, and allow the TV to reboot.',
+          'After reboot, open the Developer Mode app again and toggle "Key Server" to ON.',
+          'Copy the 6-character Passphrase shown on the TV screen into RobOS Smart TV Studio so ares-novacom can fetch the prisoner@<TV-IP>:9991 SSH key.',
+        ],
+      },
+      {
+        id: 'lg-1000h-timer',
+        title: '3. Keep the 1,000-Hour Developer Mode Session Alive',
+        blockedSymptom: 'LG webOS automatically wipes sideloaded apps if the 1,000-hour countdown reaches 0:00',
+        steps: [
+          'Leave "Auto-Renew 1,000h Dev Session" enabled in RobOS Smart TV Studio (or click "Renew LG webOS 1,000h Timer") so RobOS periodically runs `ares-extend-dev` before expiration.',
+        ],
+      },
+    ],
     devModeSteps: [
-      'Open the LG Content Store on your TV, search for "Developer Mode", and install the official LG Developer Mode app.',
-      'Sign in with your free LG Developer account and toggle "Dev Mode Status" to ON (the TV will reboot).',
-      'Re-open the Developer Mode app and toggle "Key Server" to ON. Note the 6-character Passphrase shown on screen.',
-      'In RobOS Smart TV Studio, enter your TV IP and Passphrase, generate the webOS IPK bundle, and enable "Auto-Renew 1,000h Dev Session".',
+      'Remote Control & Wake: Settings → All Settings → General → External Devices → TV On With Mobile → enable "Turn on via Wi-Fi" and "LG Connect Apps".',
+      'Sideload IPK: Install "Developer Mode" from LG Content Store, sign in, turn ON "Dev Mode Status" (reboots TV), then turn ON "Key Server" (:9991).',
+      'Enter the 6-character Key Server Passphrase into RobOS Smart TV Studio to install com.robos.tv and auto-renew the 1,000h timer.',
     ],
   },
   {
     id: 'samsung-tizen',
     name: 'Samsung Tizen Smart TV',
-    vendor: 'Samsung Neo QLED / OLED / Crystal UHD / The Frame (Tizen)',
-    protocol: 'Tizen Smart Development Bridge SDB (:26101) & TV REST (:8001)',
+    vendor: 'Samsung Neo QLED / OLED / Crystal UHD / The Frame (Tizen OS)',
+    protocol: 'Tizen Smart Development Bridge SDB (:26101) & SmartView REST/WSS (:8001 / :8002)',
     packageFormat: 'Tizen Web Application Widget (RobOSTV.wgt)',
     cliTool: 'sdb',
-    devModeSteps: [
-      'On your Samsung TV, open the "Apps" panel from the Smart Hub home bar.',
-      'Using your remote (or on-screen number pad), press 1-2-3-4-5 in sequence to open the Developer Mode dialog.',
-      'Toggle "Developer Mode" to ON and enter your RobOS Host LAN IP address shown in the header above.',
-      'Hold the TV power button for 5 seconds until the TV reboots, then click "Build & Sideload .wgt" in RobOS Smart TV Studio.',
+    requiredPermissions: [
+      {
+        id: 'samsung-ip-remote',
+        title: '1. Enable IP Remote & Access Notification (Required for LAN Remote Control & Power)',
+        blockedSymptom: 'WebSocket connection to :8001/:8002 is rejected or ignored by the Samsung TV',
+        steps: [
+          'On your Samsung TV, open Settings → General & Privacy (or General) → Network → Expert Settings.',
+          'Toggle ON "Power On with Mobile" and toggle ON "IP Remote".',
+          'Open Settings → General & Privacy → External Device Manager → Device Connection Manager → Access Notification and set it to "First Time Only".',
+          'When RobOS connects for the first time, use your Samsung remote to click "Allow" on the top-right TV popup within 30 seconds.',
+        ],
+      },
+      {
+        id: 'samsung-dev-mode-12345',
+        title: '2. Unlock Tizen Developer Mode (1-2-3-4-5) & Whitelist RobOS Host IP (:26101)',
+        blockedSymptom: 'Port 26101 (SDB) closed or refuses connection from your RobOS PC IP',
+        steps: [
+          'Open the "Apps" panel on your Samsung TV from the Smart Hub menu.',
+          'Press 1-2-3-4-5 in sequence on your remote (or via the on-screen 123 number pad) to open the hidden Developer Mode dialog.',
+          'Toggle "Developer Mode" to ON and enter the exact LAN IPv4 address of your RobOS machine (shown in the top bar of RobOS Smart TV Studio) into the "Host PC IP" field.',
+          'Hold down the Power button on your remote for 5 seconds until the Samsung TV performs a full cold reboot.',
+          'After reboot, click "Generate TV Sideload Package" in RobOS to connect via `sdb connect <TV-IP>:26101` and install RobOSTV.wgt.',
+        ],
+      },
     ],
-  },
-  {
-    id: 'roku-os',
-    name: 'Roku OS TV & Streaming Players',
-    vendor: 'Roku Ultra / TCL Roku TV / Hisense Roku TV',
-    protocol: 'Roku External Control Protocol ECP (:8060) & Dev Installer (:80)',
-    packageFormat: 'Roku SceneGraph Channel Bundle (robos-tv-roku.zip)',
-    cliTool: 'curl',
     devModeSteps: [
-      'On your Roku remote, press: Home (3x), Up (2x), Right, Left, Right, Left, Right.',
-      'Enable the Developer Application Installer, set a developer password, and reboot the Roku.',
-      'Roku ECP (:8060) works immediately with zero authentication for remote control, launch, and status queries.',
+      'Remote Control: Settings → General → Network → Expert Settings → enable "IP Remote" and "Power On with Mobile", then click "Allow" on TV popup.',
+      'Sideload WGT (:26101): Open "Apps" panel, press 1-2-3-4-5 on remote, turn Developer Mode ON, enter your RobOS Host LAN IP, and cold-reboot the TV (hold Power 5s).',
     ],
   },
   {
     id: 'moonlight-sunshine',
     name: 'Moonlight / Sunshine 4K 120Hz Game & Desktop Stream',
-    vendor: 'Any Smart TV or Apple TV running Moonlight Client',
-    protocol: 'NVIDIA GameStream / Sunshine RTSP + ENet (:47984 / :47989)',
+    vendor: 'Any Smart TV, Apple TV, or Streaming Stick running Moonlight',
+    protocol: 'NVIDIA GameStream / Sunshine RTSP + ENet (:47984 / :47989 / :47990)',
     packageFormat: 'Full RobOS Desktop & Godot 4 Game Stream (H.265 / AV1)',
     cliTool: 'sunshine',
+    requiredPermissions: [
+      {
+        id: 'moonlight-pin-pairing',
+        title: '1. Install Moonlight Client on TV & Pair 4-Digit PIN with Sunshine Host',
+        blockedSymptom: 'RobOS host appears with a lock icon inside Moonlight on the TV',
+        steps: [
+          'Install the Moonlight app on your TV (Google Play Store on Android TV, Amazon Appstore on Fire TV, App Store on Apple TV, or webOS Homebrew on LG).',
+          'Ensure Sunshine is running on your RobOS host (`sunshine` listening on ports 47984–47990 TCP/UDP).',
+          'Select your RobOS PC inside Moonlight on the TV—the TV will display a 4-digit pairing PIN.',
+          'Enter that 4-digit PIN in the Sunshine / RobOS pairing prompt to authorize 4K 120Hz streaming and gamepad input.',
+        ],
+      },
+    ],
     devModeSteps: [
-      'Install the native Moonlight app from your TV app store (Google Play, Fire TV, Apple TV, or LG Homebrew / webOS Dev Mode).',
-      'Enable the Sunshine Streaming Host in RobOS Smart TV Studio to broadcast the full RobOS desktop and Godot 4 games at 4K 60/120fps.',
-      'Enter the 4-digit Moonlight PIN from your TV into RobOS to pair controllers, remotes, and surround audio.',
+      'Install Moonlight on your TV (Google TV, Fire TV, Apple TV, or LG webOS).',
+      'Click your RobOS Host on the TV screen and enter the 4-digit PIN shown on the TV into RobOS / Sunshine (:47990).',
     ],
   },
 ];
@@ -1210,8 +1347,8 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     state.activeTileId = TEN_FOOT_LAUNCH_TILES[idx].id;
     saveState();
 
-    // If ADB or Roku ECP is requested on a real LAN device, dispatch non-blocking
-    if (tv && tv.platformId === 'roku-os' && process.env.ROBOS_TEST !== '1') {
+    // If Roku ECP is requested on a real LAN device, inspect device-info + HTTP response for permission blocks
+    if (tv && tv.platformId === 'roku-os' && process.env.ROBOS_TEST !== '1' && !process.env.NODE_TEST_CONTEXT) {
       const rokuKeyMap = {
         DPAD_UP: 'Up',
         DPAD_DOWN: 'Down',
@@ -1228,7 +1365,99 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
         VOLUME_MUTE: 'VolumeMute',
       };
       const rKey = rokuKeyMap[key] || key || 'Select';
-      exec(`curl -s -m 2 -d "" "http://${tv.ip}:8060/keypress/${rKey}"`, () => {});
+      return new Promise((resolve) => {
+        queryRokuPowerMode(tv.ip, 1500).then((info) => {
+          if (!info.ok) {
+            return resolve({
+              ok: false,
+              blocked: true,
+              key,
+              targetTv: tv.name,
+              activeTileId: state.activeTileId,
+              activeTile: TEN_FOOT_LAUNCH_TILES[idx],
+              lastRemoteKey: state.lastRemoteKey,
+              setupTitle: `Cannot Reach ${tv.name} (${tv.ip}:8060)`,
+              setupMessage: `Your Roku TV did not respond on port 8060. If the TV is off, enable "Fast TV Start" on your Roku remote: Settings → System → Power → Fast TV Start → Enable Fast TV Start.`,
+              setupSteps: TV_PLATFORMS.find((p) => p.id === 'roku-os')?.requiredPermissions?.[1]?.steps || [],
+            });
+          }
+
+          if (info.ecpMode && info.ecpMode !== 'enabled' && info.ecpMode !== 'permissive') {
+            return resolve({
+              ok: false,
+              blocked: true,
+              ecpMode: info.ecpMode,
+              key,
+              targetTv: tv.name,
+              activeTileId: state.activeTileId,
+              activeTile: TEN_FOOT_LAUNCH_TILES[idx],
+              lastRemoteKey: state.lastRemoteKey,
+              setupTitle: `Roku Network Remote Control is Blocked (<ecp-setting-mode>${info.ecpMode}</ecp-setting-mode>)`,
+              setupMessage: `Your ${tv.name} (${tv.ip}) rejected "${rKey}" because "Control by mobile apps / Network access" is currently set to "${info.ecpMode}". To re-enable RobOS remote control: on your Roku remote go to Settings → System → Advanced system settings → Control by mobile apps → Network access → select "Enabled" (or "Permissive").`,
+              setupSteps: TV_PLATFORMS.find((p) => p.id === 'roku-os')?.requiredPermissions?.[0]?.steps || [],
+            });
+          }
+
+          const req = http.request(
+            {
+              hostname: tv.ip,
+              port: 8060,
+              path: `/keypress/${encodeURIComponent(rKey)}`,
+              method: 'POST',
+              timeout: 2000,
+            },
+            (res) => {
+              res.resume();
+              if (res.statusCode === 403 || res.statusCode === 401) {
+                return resolve({
+                  ok: false,
+                  blocked: true,
+                  httpStatus: res.statusCode,
+                  ecpMode: info.ecpMode || 'limited',
+                  key,
+                  targetTv: tv.name,
+                  activeTileId: state.activeTileId,
+                  activeTile: TEN_FOOT_LAUNCH_TILES[idx],
+                  lastRemoteKey: state.lastRemoteKey,
+                  setupTitle: `Roku Returned HTTP ${res.statusCode} Forbidden — Network Control Disabled`,
+                  setupMessage: `Your ${tv.name} (${tv.ip}) blocked the "${rKey}" command (HTTP ${res.statusCode}). To fix on your Roku remote: open Settings → System → Advanced system settings → Control by mobile apps → Network access → set to "Enabled" (or "Permissive").`,
+                  setupSteps: TV_PLATFORMS.find((p) => p.id === 'roku-os')?.requiredPermissions?.[0]?.steps || [],
+                });
+              }
+              resolve({
+                ok: true,
+                httpStatus: res.statusCode,
+                ecpMode: info.ecpMode,
+                powerMode: info.powerMode,
+                key,
+                targetTv: tv.name,
+                activeTileId: state.activeTileId,
+                activeTile: TEN_FOOT_LAUNCH_TILES[idx],
+                lastRemoteKey: state.lastRemoteKey,
+              });
+            }
+          );
+          req.on('error', (err) =>
+            resolve({
+              ok: false,
+              blocked: true,
+              error: err.message,
+              key,
+              targetTv: tv.name,
+              activeTileId: state.activeTileId,
+              activeTile: TEN_FOOT_LAUNCH_TILES[idx],
+              lastRemoteKey: state.lastRemoteKey,
+              setupTitle: `Network Error Talking to ${tv.name} (${tv.ip}:8060)`,
+              setupMessage: `Could not send "${rKey}" (${err.message}). Ensure the TV is on the same Wi-Fi/LAN and "Fast TV Start" is enabled under Settings → System → Power → Fast TV Start.`,
+            })
+          );
+          req.on('timeout', () => {
+            req.destroy();
+            resolve({ ok: false, blocked: true, error: 'timeout', key, targetTv: tv.name });
+          });
+          req.end();
+        });
+      });
     }
 
     if (tv && tv.platformId === 'android-tv' && process.env.ROBOS_TEST !== '1') {
@@ -1270,8 +1499,25 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
         res.on('data', (c) => (data += c));
         res.on('end', () => {
           const pm = (data.match(/<power-mode>(.*?)<\/power-mode>/) || [])[1] || 'Unknown';
+          const ecpMode = (data.match(/<ecp-setting-mode>(.*?)<\/ecp-setting-mode>/) || [])[1] || 'enabled';
+          const devEnabled = ((data.match(/<developer-enabled>(.*?)<\/developer-enabled>/) || [])[1] || 'false') === 'true';
+          const wakeOnWlan = ((data.match(/<supports-wake-on-wlan>(.*?)<\/supports-wake-on-wlan>/) || [])[1] || 'false') === 'true';
           const name = (data.match(/<user-device-name>(.*?)<\/user-device-name>/) || [])[1] || '';
-          resolve({ ok: true, ip, powerMode: pm, isOn: pm === 'PowerOn', name });
+          const model = (data.match(/<model-name>(.*?)<\/model-name>/) || [])[1] || '';
+          const osVersion = (data.match(/<software-version>(.*?)<\/software-version>/) || [])[1] || '';
+          resolve({
+            ok: true,
+            ip,
+            powerMode: pm,
+            isOn: pm === 'PowerOn',
+            ecpMode,
+            ecpAllowed: ecpMode === 'enabled' || ecpMode === 'permissive',
+            developerEnabled: devEnabled,
+            supportsWakeOnWlan: wakeOnWlan,
+            name,
+            model,
+            osVersion,
+          });
         });
       });
       req.on('error', (err) => resolve({ ok: false, ip, error: err.message }));
@@ -1280,6 +1526,68 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
         resolve({ ok: false, ip, error: 'timeout' });
       });
     });
+  }
+
+  async function diagnoseTvReadiness(tvId) {
+    const tv = state.tvs.find((t) => t.id === tvId) || state.tvs[0];
+    if (!tv) return { ok: false, error: 'No TV selected' };
+    const platform = TV_PLATFORMS.find((p) => p.id === tv.platformId) || TV_PLATFORMS[0];
+
+    if (tv.platformId === 'roku-os' && process.env.ROBOS_TEST !== '1') {
+      const info = await queryRokuPowerMode(tv.ip, 1500);
+      const devPort80 = await probeTcpPort(tv.ip, 80, 400);
+      const checks = [
+        {
+          id: 'roku-ecp-network-access',
+          title: 'Local Network Remote Control (:8060 ECP)',
+          ready: Boolean(info.ok && info.ecpAllowed),
+          currentValue: info.ok ? `<ecp-setting-mode>${info.ecpMode}</ecp-setting-mode>` : 'Unreachable',
+          fixSteps: platform.requiredPermissions?.[0]?.steps || [],
+        },
+        {
+          id: 'roku-fast-tv-start',
+          title: 'Wake-on-WLAN / Fast TV Start (PowerOn from Standby)',
+          ready: Boolean(info.ok && info.supportsWakeOnWlan),
+          currentValue: info.ok ? `power-mode=${info.powerMode}, wake-on-wlan=${info.supportsWakeOnWlan}` : 'Unreachable',
+          fixSteps: platform.requiredPermissions?.[1]?.steps || [],
+        },
+        {
+          id: 'roku-dev-installer',
+          title: 'Roku Developer Application Installer (:80 ZIP Sideloader)',
+          ready: Boolean(info.ok && (info.developerEnabled || devPort80)),
+          currentValue: `<developer-enabled>${Boolean(info.developerEnabled || devPort80)}</developer-enabled>`,
+          fixSteps: platform.requiredPermissions?.[2]?.steps || [],
+        },
+      ];
+      return {
+        ok: true,
+        tv,
+        platform,
+        liveInfo: info,
+        allControlReady: checks[0].ready,
+        allSideloadReady: checks[2].ready,
+        checks,
+      };
+    }
+
+    // Generic port-based readiness check for Android TV, LG webOS, Samsung Tizen
+    const checks = await Promise.all(
+      (platform.requiredPermissions || []).map(async (perm) => ({
+        id: perm.id,
+        title: perm.title,
+        ready: tv.devModeEnabled !== false,
+        currentValue: tv.sideloadStatus || 'Configured',
+        fixSteps: perm.steps || [],
+      }))
+    );
+    return {
+      ok: true,
+      tv,
+      platform,
+      allControlReady: true,
+      allSideloadReady: tv.devModeEnabled !== false,
+      checks,
+    };
   }
 
   function setTvPower({ tvId, ip, action = 'on' } = {}) {
@@ -1350,6 +1658,7 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     renewWebosDevSession,
     sendRemoteKey,
     queryRokuPowerMode,
+    diagnoseTvReadiness,
     setTvPower,
     launchTileOnTv,
   };

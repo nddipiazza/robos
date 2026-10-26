@@ -162,6 +162,10 @@ ipcMain.handle('tv:sendRemoteKey', async (_e, payload) => {
   return tvEngine.sendRemoteKey(payload);
 });
 
+ipcMain.handle('tv:diagnoseReadiness', async (_e, tvId) => {
+  return tvEngine.diagnoseTvReadiness(tvId);
+});
+
 ipcMain.handle('tv:launchTile', async (_e, payload) => {
   return tvEngine.launchTileOnTv(payload);
 });

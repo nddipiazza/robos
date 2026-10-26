@@ -36,12 +36,15 @@ test('RobOS Smart TV Studio & 10-Foot Portal E2E Verification', async (t) => {
     assert.equal(TV_PLATFORMS.length, 5);
     const ids = TV_PLATFORMS.map((p) => p.id);
     assert.deepEqual(ids, [
+      'roku-os',
       'android-tv',
       'lg-webos',
       'samsung-tizen',
-      'roku-os',
       'moonlight-sunshine',
     ]);
+    for (const p of TV_PLATFORMS) {
+      assert.ok(Array.isArray(p.requiredPermissions) && p.requiredPermissions.length > 0, `Missing requiredPermissions for ${p.id}`);
+    }
     assert.equal(TEN_FOOT_LAUNCH_TILES.length, 8);
   });
 

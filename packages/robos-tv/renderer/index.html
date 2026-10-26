@@ -38,9 +38,22 @@
 
     <div id="status-banner" class="banner hidden" role="status" aria-live="polite"></div>
 
+    <!-- Setup Required / Permission Blocked Diagnostic Alert Box -->
+    <div id="setup-alert-box" class="setup-alert hidden" role="alert">
+      <div class="setup-alert-head">
+        <div>
+          <strong id="setup-alert-title">TV Setup Step Required</strong>
+          <p id="setup-alert-msg" class="setup-alert-msg"></p>
+        </div>
+        <button type="button" class="btn btn-sm" id="btn-dismiss-setup-alert">Dismiss</button>
+      </div>
+      <ol id="setup-alert-steps" class="setup-alert-steps"></ol>
+    </div>
+
     <!-- Navigation Tabs -->
     <nav class="tabs" role="tablist">
       <button type="button" class="tab-btn active" data-tab="tab-devices" role="tab">Paired Smart TVs &amp; Remote</button>
+      <button type="button" class="tab-btn" data-tab="tab-checklist" role="tab">TV Setup Checklists (All Brands)</button>
       <button type="button" class="tab-btn" data-tab="tab-sideload" role="tab">Developer Mode Sideloader (webOS / Tizen / ADB / Roku)</button>
       <button type="button" class="tab-btn" data-tab="tab-portal" role="tab">10-Foot TV Portal &amp; Big-Screen Launcher</button>
     </nav>
@@ -122,7 +135,22 @@
         </div>
       </section>
 
-      <!-- TAB 2: Developer Mode Sideloader Wizard -->
+      <!-- TAB 2: Exhaustive Setup Checklists & Live Permission Verifier -->
+      <section id="tab-checklist" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Exhaustive Smart TV Setup Checklists &amp; Live Readiness Probe</h2>
+              <p class="muted-text">Every setting required on your physical TV so RobOS can control power, volume, D-Pad navigation, and Developer Mode app sideloading.</p>
+            </div>
+            <button type="button" class="btn btn-primary" id="btn-run-readiness-check">Check Selected TV Readiness Now</button>
+          </div>
+          <div id="live-readiness-results" style="margin-bottom:14px;"></div>
+          <div id="all-platforms-checklists" class="list"></div>
+        </div>
+      </section>
+
+      <!-- TAB 3: Developer Mode Sideloader Wizard -->
       <section id="tab-sideload" class="tab-pane">
         <div class="columns">
           <div class="card">

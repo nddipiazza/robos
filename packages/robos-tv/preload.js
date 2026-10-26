@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('robosTv', {
   buildPackage: (options) => ipcRenderer.invoke('tv:buildPackage', options),
   renewWebos: (tvId) => ipcRenderer.invoke('tv:renewWebos', tvId),
   sendRemoteKey: (payload) => ipcRenderer.invoke('tv:sendRemoteKey', payload),
+  diagnoseReadiness: (tvId) => ipcRenderer.invoke('tv:diagnoseReadiness', tvId),
   launchTile: (payload) => ipcRenderer.invoke('tv:launchTile', payload),
   openPortalExternal: () => ipcRenderer.invoke('tv:openPortalExternal'),
 });
