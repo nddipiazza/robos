@@ -269,7 +269,9 @@ async function castActiveDashboardToTv(tvIdOverride) {
     state = { ...state, ...fresh };
   }
   await renderAll();
-  if (res && res.ok) {
+  if (res && (res.blocked || res.sideloadRequired)) {
+    showBanner(res.message || res.setupTitle || 'Roku Developer Mode required to sideload channel', true);
+  } else if (res && res.ok) {
     showBanner(res.message);
   } else {
     showBanner(res?.message || res?.error || 'Cast initiated on Smart TV portal', Boolean(res?.error));

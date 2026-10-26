@@ -525,9 +525,9 @@ async function init() {
       const fresh = await window.robosTv.getOverview();
       if (fresh && fresh.ok) state = { ...state, ...fresh };
       renderAll();
-      if (res && res.blocked) {
-        showSetupAlert(res);
-        showBanner(res.setupTitle || 'TV setup required', true);
+      if (res && (res.blocked || res.sideloadRequired)) {
+        showSetupAlert({ ...res, blocked: true });
+        showBanner(res.message || res.setupTitle || 'TV setup required', true);
       } else if (res && res.ok) {
         showSetupAlert(null);
         showBanner(res.message);
