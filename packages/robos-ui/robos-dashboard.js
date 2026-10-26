@@ -663,6 +663,47 @@ robos-widget-sprint-radar, robos-widget-custom {
       `;
     }
 
+    if (widgetType === 'next-meeting-countdown') {
+      const nm = data.nextMeeting || {};
+      const fm = data.followingMeeting || null;
+      const targetSec = Number(data.targetEpochSec) || 0;
+      const pct = Math.max(8, Math.min(100, Number(data.urgencyPct) || 50));
+      return `
+        <div class="robos-w-meta">
+          <span>⏳ <strong>Countdown Until Next Meeting</strong></span>
+          <span class="robos-w-pill" style="background:rgba(16,185,129,0.16);color:#6ee7b7;border-color:rgba(16,185,129,0.45);">
+            📅 ${esc(nm.accountEmail || nm.calendar || 'nicholas@hermetiq.com')}
+          </span>
+        </div>
+        <div style="background:#0d1117;border:1px solid #21262d;border-left:3px solid #10b981;border-radius:8px;padding:9px 10px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <canvas class="robos-meeting-countdown-canvas" width="88" height="88" data-target-epoch="${esc(targetSec)}" style="width:88px;height:88px;flex-shrink:0;"></canvas>
+            <div style="flex:1;min-width:0;">
+              <div class="js-next-meeting-countdown" data-target-epoch="${esc(targetSec)}" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:22px;font-weight:800;color:#6ee7b7;letter-spacing:0.03em;">
+                ${esc(data.countdownLabel || 'T - 00:30:00')}
+              </div>
+              <div style="font-size:12.5px;font-weight:800;color:#f0f6fc;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                ${esc(nm.time || '16:30')} · ${esc(nm.title || 'Hermetiq Client Delivery & Agent Ops Check-In')}
+              </div>
+              <div style="font-size:10.5px;color:#8b949e;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                📍 ${esc(nm.location || 'Google Calendar')}
+              </div>
+              <div style="height:5px;background:#070b14;border-radius:999px;overflow:hidden;margin-top:6px;">
+                <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#10b981,#00bcd4,#f59e0b);"></div>
+              </div>
+            </div>
+          </div>
+          ${
+            fm
+              ? `<div style="margin-top:6px;padding-top:5px;border-top:1px solid #21262d;font-size:10.5px;color:#8b949e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  <strong style="color:#c9d1d9;">Following:</strong> ${esc(fm.time || '')} — ${esc(fm.title || '')} (${esc(fm.accountEmail || '')})
+                </div>`
+              : ''
+          }
+        </div>
+      `;
+    }
+
     const customTag = data.customElementTag || card.config?.customElementTag || 'robos-ai-textarea';
     const placeholder = data.placeholder || card.config?.placeholder || 'Ask RobOS AI or trigger a workflow…';
     return `
@@ -787,6 +828,7 @@ robos-widget-sprint-radar, robos-widget-custom {
       ['robos-widget-live-clock', 'live-clock'],
       ['robos-widget-github-repo', 'github-repo'],
       ['robos-widget-music-player', 'music-now-playing'],
+      ['robos-widget-next-meeting', 'next-meeting-countdown'],
       ['robos-widget-smart-tv', 'smart-tv'],
       ['robos-widget-smart-lights', 'smart-lights'],
       ['robos-widget-kgraph', 'kgraph-summary'],
@@ -981,6 +1023,57 @@ robos-widget-sprint-radar, robos-widget-custom {
           ctx.fillStyle = i % 3 === 0 ? '#a855f7' : i % 2 === 0 ? '#00bcd4' : '#10b981';
           ctx.fillRect(8 + i * bw, h - bh - 2, Math.max(4, bw - 4), bh);
         }
+      });
+
+      const nowEpoch = Math.floor(Date.now() / 1000);
+      const pad2 = (n) => String(n).padStart(2, '0');
+      document.querySelectorAll('.js-next-meeting-countdown').forEach((el) => {
+        const target = Number(el.getAttribute('data-target-epoch')) || 0;
+        if (!target) return;
+        const rem = Math.max(0, target - nowEpoch);
+        const d = Math.floor(rem / 86400);
+        const h = Math.floor((rem % 86400) / 3600);
+        const m = Math.floor((rem % 3600) / 60);
+        const s = rem % 60;
+        el.textContent =
+          'T - ' + (d > 0 ? d + 'd ' : '') + pad2(h) + ':' + pad2(m) + ':' + pad2(s);
+      });
+
+      document.querySelectorAll('.robos-meeting-countdown-canvas').forEach((canvas) => {
+        const ctx = canvas.getContext && canvas.getContext('2d');
+        if (!ctx) return;
+        const target = Number(canvas.getAttribute('data-target-epoch')) || nowEpoch + 1800;
+        const rem = Math.max(0, target - nowEpoch);
+        const ratio = 1 - Math.min(3600, rem) / 3600;
+        const w = canvas.width;
+        const h = canvas.height;
+        const cx = w / 2;
+        const cy = h / 2;
+        const r = Math.min(cx, cy) - 6;
+        ctx.clearRect(0, 0, w, h);
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = '#070b14';
+        ctx.fill();
+        ctx.lineWidth = 4.5;
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.max(0.08, ratio) * Math.PI * 2);
+        ctx.lineWidth = 4.5;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = rem < 900 ? '#f59e0b' : '#10b981';
+        ctx.stroke();
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = 'bold 13px ui-monospace, monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(Math.ceil(rem / 60) + 'm', cx, cy - 4);
+        ctx.fillStyle = '#67e8f9';
+        ctx.font = '9px sans-serif';
+        ctx.fillText('UNTIL', cx, cy + 10);
       });
     }
 

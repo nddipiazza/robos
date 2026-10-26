@@ -246,6 +246,15 @@
       "robos:package": "dashboards"
     },
     {
+      "@id": "urn:robos:dashboard-widget:next-meeting-countdown",
+      "@type": "robos:DashboardWidget",
+      "dcterms:title": "Countdown Until Next Meeting",
+      "robos:widgetType": "next-meeting-countdown",
+      "robos:componentTag": "robos-widget-next-meeting",
+      "robos:description": "Live second-by-second countdown timer until the next scheduled meeting across all synced Google Calendar / Thunderbird CalDAV accounts, with meeting title, time, calendar badge, and HTML5 <canvas> urgency gauge.",
+      "robos:package": "dashboards"
+    },
+    {
       "@id": "urn:robos:dashboard-widget:robos-component",
       "@type": "robos:DashboardWidget",
       "dcterms:title": "Any RobOS Custom Component Widget",
@@ -269,10 +278,29 @@
         { "@id": "urn:robos:dashboard-card:github-repo-activity" },
         { "@id": "urn:robos:dashboard-card:music-now-playing" },
         { "@id": "urn:robos:dashboard-card:today-calendar-events" },
-        { "@id": "urn:robos:dashboard-card:live-js-clock" },
+        { "@id": "urn:robos:dashboard-card:next-meeting-countdown" },
         { "@id": "urn:robos:dashboard-card:latest-10-commits" },
         { "@id": "urn:robos:dashboard-card:running-agent-sessions" }
       ]
+    },
+    {
+      "@id": "urn:robos:dashboard-card:next-meeting-countdown",
+      "@type": "robos:DashboardCard",
+      "dcterms:title": "Countdown Until Next Meeting",
+      "robos:cardId": "next-meeting-countdown",
+      "robos:dashboard": {
+        "@id": "urn:robos:dashboard:daily-engineering-ops"
+      },
+      "robos:widget": {
+        "@id": "urn:robos:dashboard-widget:next-meeting-countdown"
+      },
+      "robos:slotId": "col-3",
+      "robos:componentTag": "robos-widget-next-meeting",
+      "robos:package": "dashboards",
+      "robos:widgetConfig": {
+        "showCanvasGauge": true,
+        "includeAllCalendars": true
+      }
     },
     {
       "@id": "urn:robos:dashboard-card:music-now-playing",

@@ -57,7 +57,9 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
     assert.equal(ov.dashboard.layout.id, 'mission-control-3col');
     assert.equal(ov.dashboard.cards.length, 6);
     assert.equal(DASHBOARD_LAYOUTS.length, 6);
-    assert.equal(DASHBOARD_WIDGET_CATALOG.length, 11);
+    assert.equal(DASHBOARD_WIDGET_CATALOG.length, 12);
+    assert.ok(DASHBOARD_WIDGET_CATALOG.some((w) => w.type === 'live-clock'));
+    assert.ok(!ov.dashboard.cards.some((c) => c.widgetType === 'live-clock'));
 
     // Music Now Playing card (RobOS Audio Player)
     const musicCard = ov.dashboard.cards.find((c) => c.widgetType === 'music-now-playing');
@@ -79,12 +81,13 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
     assert.equal(ghCard.liveData.commits30d.dailySeries.length, 30);
     assert.ok(ghCard.liveData.commits30d.total > 0);
 
-    // Live JS Canvas Clock card
-    const clockCard = ov.dashboard.cards.find((c) => c.widgetType === 'live-clock');
-    assert.ok(clockCard);
-    assert.equal(clockCard.componentTag, 'robos-widget-live-clock');
-    assert.ok(clockCard.liveData.time24);
-    assert.ok(clockCard.liveData.utcTime);
+    // Countdown Until Next Meeting card
+    const countdownCard = ov.dashboard.cards.find((c) => c.widgetType === 'next-meeting-countdown');
+    assert.ok(countdownCard);
+    assert.equal(countdownCard.componentTag, 'robos-widget-next-meeting');
+    assert.ok(countdownCard.liveData.countdownLabel);
+    assert.ok(countdownCard.liveData.nextMeeting.title);
+    assert.ok(countdownCard.liveData.secondsUntil > 0);
 
     // Card 1: 10 latest commit messages in compact readable list format
     const commitsCard = ov.dashboard.cards.find((c) => c.widgetType === 'git-commits');

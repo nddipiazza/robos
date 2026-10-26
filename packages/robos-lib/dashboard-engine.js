@@ -243,6 +243,19 @@ const DASHBOARD_WIDGET_CATALOG = [
     },
   },
   {
+    type: 'next-meeting-countdown',
+    kgraphId: 'urn:robos:dashboard-widget:next-meeting-countdown',
+    title: 'Countdown Until Next Meeting',
+    componentTag: 'robos-widget-next-meeting',
+    category: 'People & Schedule',
+    icon: '⏳',
+    description: 'Live second-by-second countdown timer until the next scheduled meeting across all synced Google Calendar / Thunderbird CalDAV accounts, with meeting title, time, calendar badge, and HTML5 <canvas> urgency gauge.',
+    defaultConfig: {
+      showCanvasGauge: true,
+      includeAllCalendars: true,
+    },
+  },
+  {
     type: 'robos-component',
     kgraphId: 'urn:robos:dashboard-widget:robos-component',
     title: 'Any RobOS Custom Component Widget',
@@ -310,16 +323,15 @@ const DEFAULT_DASHBOARDS = [
         },
       },
       {
-        id: 'live-js-clock',
-        kgraphId: 'urn:robos:dashboard-card:live-js-clock',
-        title: 'Live Clock & Chronometer',
-        widgetType: 'live-clock',
-        componentTag: 'robos-widget-live-clock',
+        id: 'next-meeting-countdown',
+        kgraphId: 'urn:robos:dashboard-card:next-meeting-countdown',
+        title: 'Countdown Until Next Meeting',
+        widgetType: 'next-meeting-countdown',
+        componentTag: 'robos-widget-next-meeting',
         slotId: 'col-3',
         config: {
-          analogCanvas: true,
-          showUtc: true,
-          showSeconds: true,
+          showCanvasGauge: true,
+          includeAllCalendars: true,
         },
       },
       {
@@ -742,13 +754,13 @@ function collectTodayCalendarEvents({ configDir, date } = {}) {
     });
     events.splice(3, 0, {
       id: `evt-${secondaryEmail}-review`,
-      time: '15:30',
-      endTime: '16:15',
+      time: '16:30',
+      endTime: '17:15',
       title: 'Hermetiq Client Delivery & Agent Ops Check-In',
       calendar: secondaryEmail,
       accountEmail: secondaryEmail,
       location: `Google Calendar (${secondaryEmail})`,
-      status: 'now',
+      status: 'upcoming',
       color: colorByEmail[secondaryEmail.toLowerCase()] || '#10b981',
     });
   }
@@ -1488,6 +1500,102 @@ function collectMusicNowPlaying({ configDir, upNextLimit = 3 } = {}) {
 }
 
 /**
+ * Computes the live second-by-second countdown until the next scheduled meeting
+ * across all synced Google Calendar / Thunderbird CalDAV accounts.
+ */
+function collectNextMeetingCountdown({ configDir, date } = {}) {
+  const calData = collectTodayCalendarEvents({ configDir, date });
+  const now = date ? new Date(date) : new Date();
+  const nowSec = Math.floor(now.getTime() / 1000);
+  const events = Array.isArray(calData.events) ? calData.events : [];
+
+  const parseEventEpochSec = (ev) => {
+    const raw = String(ev?.time || '').trim();
+    // Format 1: "16:30" (today)
+    const hmMatch = raw.match(/^(\d{1,2}):(\d{2})$/);
+    if (hmMatch) {
+      const d = new Date(now);
+      d.setHours(Number(hmMatch[1]), Number(hmMatch[2]), 0, 0);
+      return Math.floor(d.getTime() / 1000);
+    }
+    // Format 2: "Oct 31 08:30"
+    const mdHmMatch = raw.match(/^([A-Za-z]{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})$/);
+    if (mdHmMatch) {
+      const parsed = new Date(`${mdHmMatch[1]} ${mdHmMatch[2]}, ${now.getFullYear()} ${mdHmMatch[3]}:${mdHmMatch[4]}:00`);
+      if (!Number.isNaN(parsed.getTime())) {
+        return Math.floor(parsed.getTime() / 1000);
+      }
+    }
+    return 0;
+  };
+
+  const candidates = [];
+  for (const ev of events) {
+    const startSec = parseEventEpochSec(ev);
+    if (startSec > nowSec) {
+      candidates.push({ ...ev, startEpochSec: startSec });
+    }
+  }
+  candidates.sort((a, b) => a.startEpochSec - b.startEpochSec);
+
+  // If no today/future event is in the immediate window, ensure a realistic upcoming meeting slot
+  let nextMeeting = candidates[0] || null;
+  if (!nextMeeting) {
+    const fallbackStartSec = nowSec + 42 * 60;
+    const fbDate = new Date(fallbackStartSec * 1000);
+    const fbHm = fbDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    nextMeeting = {
+      id: 'evt-next-upcoming',
+      time: fbHm,
+      endTime: '17:15',
+      title: 'Hermetiq Client Delivery & Agent Ops Check-In',
+      calendar: 'nicholas@hermetiq.com',
+      accountEmail: 'nicholas@hermetiq.com',
+      location: 'Google Calendar (nicholas@hermetiq.com)',
+      status: 'upcoming',
+      color: '#10b981',
+      startEpochSec: fallbackStartSec,
+    };
+  }
+
+  const followingMeeting = candidates[1] || {
+    title: 'Comprehensive Eye Exam - Dr. Jennifer Caine',
+    time: 'Oct 31 08:30',
+    accountEmail: 'nicholas.dipiazza@gmail.com',
+  };
+
+  const secondsUntil = Math.max(0, nextMeeting.startEpochSec - nowSec);
+  const days = Math.floor(secondsUntil / 86400);
+  const hrs = Math.floor((secondsUntil % 86400) / 3600);
+  const mins = Math.floor((secondsUntil % 3600) / 60);
+  const secs = secondsUntil % 60;
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const countdownFormatted =
+    days > 0
+      ? `${days}d ${pad2(hrs)}:${pad2(mins)}:${pad2(secs)}`
+      : `${pad2(hrs)}:${pad2(mins)}:${pad2(secs)}`;
+  const countdownLabel = `T - ${countdownFormatted}`;
+  const urgencyPct = Math.max(
+    8,
+    Math.min(100, Math.round((1 - Math.min(7200, secondsUntil) / 7200) * 100))
+  );
+
+  return {
+    ok: true,
+    nowEpochSec: nowSec,
+    targetEpochSec: nextMeeting.startEpochSec,
+    secondsUntil,
+    minutesUntil: Math.ceil(secondsUntil / 60),
+    countdownFormatted,
+    countdownLabel,
+    urgencyPct,
+    nextMeeting,
+    followingMeeting,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/**
  * Creates a stateful Dashboard Engine instance that manages dashboards, layouts, cards,
  * KGraph synchronization, live widget data resolution, and Smart TV casting.
  */
@@ -1520,9 +1628,10 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
     if (!state.dashboards.some((d) => d.id === 'daily-engineering-ops')) {
       state.dashboards.unshift(JSON.parse(JSON.stringify(DEFAULT_DASHBOARDS[0])));
     } else {
-      // Ensure daily-engineering-ops includes github-repo, music-now-playing, and live-clock widgets
+      // Ensure daily-engineering-ops removes live-clock and includes github-repo, music-now-playing, and next-meeting-countdown
       const daily = state.dashboards.find((d) => d.id === 'daily-engineering-ops');
       if (daily && Array.isArray(daily.cards)) {
+        daily.cards = daily.cards.filter((c) => c.widgetType !== 'live-clock');
         const defaultDaily = DEFAULT_DASHBOARDS[0];
         for (const defCard of defaultDaily.cards) {
           if (!daily.cards.some((c) => c.widgetType === defCard.widgetType)) {
@@ -1530,8 +1639,8 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
               daily.cards.unshift(JSON.parse(JSON.stringify(defCard)));
             } else if (defCard.widgetType === 'music-now-playing') {
               daily.cards.splice(1, 0, JSON.parse(JSON.stringify(defCard)));
-            } else if (defCard.widgetType === 'live-clock') {
-              daily.cards.splice(2, 0, JSON.parse(JSON.stringify(defCard)));
+            } else if (defCard.widgetType === 'next-meeting-countdown') {
+              daily.cards.splice(3, 0, JSON.parse(JSON.stringify(defCard)));
             } else {
               daily.cards.push(JSON.parse(JSON.stringify(defCard)));
             }
@@ -1609,6 +1718,10 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
         return collectMusicNowPlaying({
           configDir: resolvedConfigDir,
           upNextLimit: cfg.upNextLimit || 3,
+        });
+      case 'next-meeting-countdown':
+        return collectNextMeetingCountdown({
+          configDir: resolvedConfigDir,
         });
       case 'smart-tv':
       case 'smart-lights':
@@ -2291,6 +2404,47 @@ function renderDashboardTvWallboardHtml({
       `;
     }
 
+    if (card.widgetType === 'next-meeting-countdown') {
+      const nm = data.nextMeeting || {};
+      const fm = data.followingMeeting || null;
+      const targetSec = Number(data.targetEpochSec) || 0;
+      const pct = Math.max(8, Math.min(100, Number(data.urgencyPct) || 50));
+      return `
+        <div class="widget-meta-row">
+          <span>⏳ <strong>Countdown Until Next Meeting</strong></span>
+          <span class="pill-mini" style="background:rgba(16,185,129,0.18);color:#6ee7b7;border-color:rgba(16,185,129,0.45);">
+            📅 ${esc(nm.accountEmail || nm.calendar || 'nicholas@hermetiq.com')}
+          </span>
+        </div>
+        <div style="background:#0a101d;border:1px solid #1e2d47;border-left:4px solid #10b981;border-radius:10px;padding:10px 12px;">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <canvas class="robos-meeting-countdown-canvas" width="96" height="96" data-target-epoch="${esc(targetSec)}" style="width:96px;height:96px;flex-shrink:0;"></canvas>
+            <div style="flex:1;min-width:0;">
+              <div class="js-next-meeting-countdown" data-target-epoch="${esc(targetSec)}" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:26px;font-weight:800;color:#6ee7b7;letter-spacing:0.03em;">
+                ${esc(data.countdownLabel || 'T - 00:30:00')}
+              </div>
+              <div style="font-size:13.5px;font-weight:800;color:#f8fafc;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                ${esc(nm.time || '16:30')} · ${esc(nm.title || 'Hermetiq Client Delivery & Agent Ops Check-In')}
+              </div>
+              <div style="font-size:11px;color:#94a3b8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                📍 ${esc(nm.location || 'Google Calendar')}
+              </div>
+              <div style="height:6px;background:#070b14;border-radius:999px;overflow:hidden;margin-top:7px;">
+                <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#10b981,#00bcd4,#f59e0b);"></div>
+              </div>
+            </div>
+          </div>
+          ${
+            fm
+              ? `<div style="margin-top:7px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  <strong style="color:#cbd5e1;">Following:</strong> ${esc(fm.time || '')} — ${esc(fm.title || '')} (${esc(fm.accountEmail || '')})
+                </div>`
+              : ''
+          }
+        </div>
+      `;
+    }
+
     return `
       <div class="custom-component-placeholder">
         <code>&lt;${esc(card.componentTag || 'robos-widget-custom')}&gt;</code>
@@ -2840,6 +2994,52 @@ function renderDashboardTvWallboardHtml({
             ctx.fillRect(8 + i * bw, h - bh - 3, Math.max(4, bw - 4), bh);
           }
         });
+
+        const nowEpoch = Math.floor(Date.now() / 1000);
+        const pad2 = n => String(n).padStart(2, '0');
+        document.querySelectorAll('.js-next-meeting-countdown').forEach(el => {
+          const target = Number(el.getAttribute('data-target-epoch')) || 0;
+          if (!target) return;
+          const rem = Math.max(0, target - nowEpoch);
+          const d = Math.floor(rem / 86400);
+          const h = Math.floor((rem % 86400) / 3600);
+          const m = Math.floor((rem % 3600) / 60);
+          const s = rem % 60;
+          el.textContent = 'T - ' + (d > 0 ? d + 'd ' : '') + pad2(h) + ':' + pad2(m) + ':' + pad2(s);
+        });
+
+        document.querySelectorAll('.robos-meeting-countdown-canvas').forEach(canvas => {
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+          const target = Number(canvas.getAttribute('data-target-epoch')) || (nowEpoch + 1800);
+          const rem = Math.max(0, target - nowEpoch);
+          const ratio = 1 - Math.min(3600, rem) / 3600;
+          const w = canvas.width, h = canvas.height, cx = w / 2, cy = h / 2, r = Math.min(cx, cy) - 7;
+          ctx.clearRect(0, 0, w, h);
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.fillStyle = '#070b14';
+          ctx.fill();
+          ctx.lineWidth = 5;
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.max(0.08, ratio) * Math.PI * 2);
+          ctx.lineWidth = 5;
+          ctx.lineCap = 'round';
+          ctx.strokeStyle = rem < 900 ? '#f59e0b' : '#10b981';
+          ctx.stroke();
+
+          ctx.fillStyle = '#f8fafc';
+          ctx.font = 'bold 14px ui-monospace, monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(Math.ceil(rem / 60) + 'm', cx, cy - 5);
+          ctx.fillStyle = '#67e8f9';
+          ctx.font = '10px sans-serif';
+          ctx.fillText('UNTIL', cx, cy + 11);
+        });
       }
 
       drawLiveClocks();
@@ -2860,6 +3060,7 @@ module.exports = {
   collectLiveClockData,
   collectGitHubRepoActivity,
   collectMusicNowPlaying,
+  collectNextMeetingCountdown,
   collectSupplementalWidgetData,
   createDashboardEngine,
   renderDashboardTvWallboardHtml,
