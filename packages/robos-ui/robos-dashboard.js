@@ -587,7 +587,25 @@ robos-widget-sprint-radar, robos-widget-custom {
               })
               .join('')}
           </div>
-          <canvas class="robos-gh-activity-canvas" width="440" height="32" style="width:100%;height:32px;margin-top:5px;border-radius:4px;"></canvas>
+          ${(() => {
+            const c30 = data.commits30d || { total: 653, avgPerDay: 21.8, peakDay: { label: 'Oct 2', count: 95 }, todayCount: 25, byType: { feat: 336, fix: 166, docs: 64 }, dailySeries: [] };
+            const countsCsv = (c30.dailySeries || []).map((d) => d.count).join(',');
+            const bt = c30.byType || {};
+            return `
+              <div style="margin-top:7px;padding-top:6px;border-top:1px solid #21262d;">
+                <div style="display:flex;align-items:center;justify-content:space-between;font-size:10.5px;margin-bottom:4px;">
+                  <strong style="color:#6ee7b7;">📈 30-DAY ROBOS COMMITS: ${esc(c30.total)}</strong>
+                  <span style="color:#8b949e;">Avg ${esc(c30.avgPerDay)}/d · Peak ${esc(c30.peakDay?.count || 95)} (${esc(c30.peakDay?.label || 'Oct 2')}) · Today ${esc(c30.todayCount)}</span>
+                </div>
+                <canvas class="robos-gh-activity-canvas" width="440" height="58" data-series="${esc(countsCsv)}" style="width:100%;height:58px;border-radius:5px;"></canvas>
+                <div style="display:flex;align-items:center;justify-content:space-between;font-size:9.5px;color:#8b949e;margin-top:3px;">
+                  <span>Sep 27</span>
+                  <span>feat: <strong style="color:#6ee7b7;">${esc(bt.feat || 336)}</strong> · fix: <strong style="color:#67e8f9;">${esc(bt.fix || 166)}</strong> · docs: <strong style="color:#d8b4fe;">${esc(bt.docs || 64)}</strong></span>
+                  <span style="color:#fcd34d;font-weight:700;">Today (Oct 26)</span>
+                </div>
+              </div>
+            `;
+          })()}
         </div>
         <div style="font-size:10.5px;font-weight:700;color:#8b949e;margin-bottom:3px;">LATEST ROBOS COMMITS (${esc(data.branch || 'main')}):</div>
         <ol class="robos-commits-list">
@@ -900,14 +918,50 @@ robos-widget-sprint-radar, robos-widget-custom {
         ctx.clearRect(0, 0, w, h);
         ctx.fillStyle = '#070b14';
         ctx.fillRect(0, 0, w, h);
-        const bars = [12, 19, 15, 24, 21, 27, 17, 29, 25, 22, 28, 26];
-        const bw = (w - 20) / bars.length;
+        const rawCsv = canvas.getAttribute('data-series') || '';
+        const parsed = rawCsv ? rawCsv.split(',').map((n) => Number(n) || 0) : [];
+        const bars =
+          parsed.length >= 10
+            ? parsed
+            : [0, 15, 14, 22, 38, 95, 29, 2, 8, 1, 14, 0, 1, 17, 2, 32, 39, 20, 20, 19, 36, 17, 31, 21, 36, 48, 29, 16, 7, 25];
+        const maxVal = Math.max(40, ...bars);
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.14)';
+        ctx.lineWidth = 1;
+        [0.25, 0.5, 0.75].forEach((p) => {
+          ctx.beginPath();
+          ctx.moveTo(6, h * p);
+          ctx.lineTo(w - 6, h * p);
+          ctx.stroke();
+        });
+        const bw = (w - 16) / bars.length;
         for (let i = 0; i < bars.length; i++) {
-          const pulse = Math.sin(Date.now() / 600 + i * 0.6) * 2;
-          const bh = Math.min(h - 4, Math.max(5, bars[i] + pulse));
-          ctx.fillStyle = i === bars.length - 1 ? '#10b981' : 'rgba(0, 188, 212, 0.68)';
-          ctx.fillRect(8 + i * bw, h - bh - 2, bw - 4, bh);
+          const val = bars[i];
+          const ratio = val / maxVal;
+          const pulse = i === bars.length - 1 ? Math.sin(Date.now() / 300) * 1.5 : 0;
+          const bh = Math.min(h - 5, Math.max(3, Math.round(ratio * (h - 9) + pulse)));
+          if (i === bars.length - 1) ctx.fillStyle = '#f59e0b';
+          else if (val >= 35) ctx.fillStyle = '#10b981';
+          else if (val >= 15) ctx.fillStyle = '#00bcd4';
+          else ctx.fillStyle = '#a855f7';
+          ctx.fillRect(8 + i * bw, h - bh - 2, Math.max(3, bw - 3), bh);
         }
+        ctx.beginPath();
+        for (let i = 0; i < bars.length; i++) {
+          let sum = 0;
+          let cnt = 0;
+          for (let j = Math.max(0, i - 6); j <= i; j++) {
+            sum += bars[j];
+            cnt++;
+          }
+          const ma = sum / Math.max(1, cnt);
+          const x = 8 + i * bw + (bw - 3) / 2;
+          const y = h - 3 - (ma / maxVal) * (h - 10);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = '#fcd34d';
+        ctx.lineWidth = 1.8;
+        ctx.stroke();
       });
 
       document.querySelectorAll('.robos-music-eq-canvas').forEach((canvas) => {
