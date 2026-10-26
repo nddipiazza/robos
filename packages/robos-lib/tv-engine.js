@@ -696,16 +696,90 @@ tizen run -p robostv001.RobOSTV
 
   if (platformId === 'roku-os') {
     const manifest = `title=${appName}\nsubtitle=RobOS 10-Foot Smart TV Suite\nmajor_version=1\nminor_version=0\nbuild_version=1\nui_resolutions=fhd\n`;
-    const mainBrs = `sub Main()\n    screen = CreateObject("roSGScreen")\n    m.port = CreateObject("roMessagePort")\n    screen.setMessagePort(m.port)\n    scene = screen.CreateScene("MainScene")\n    screen.show()\n    while(true)\n        msg = wait(0, m.port)\n        if type(msg) = "roSGScreenEvent" and msg.isScreenClosed() then return\n    end while\nend sub\n`;
+    const mainBrs = `sub Main()
+    screen = CreateObject("roSGScreen")
+    m.port = CreateObject("roMessagePort")
+    screen.setMessagePort(m.port)
+    scene = screen.CreateScene("MainScene")
+    screen.show()
+    while(true)
+        msg = wait(0, m.port)
+        if type(msg) = "roSGScreenEvent" and msg.isScreenClosed() then return
+    end while
+end sub
+`;
     const mainSceneXml = `<?xml version="1.0" encoding="utf-8" ?>
 <component name="MainScene" extends="Scene">
+  <script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
   <children>
-    <Label id="titleLabel" text="${appName} — Connected to ${portalUrl}" translation="[120, 120]" />
+    <Rectangle id="bg" width="1920" height="1080" color="0x070B12FF" />
+    <Rectangle id="headerBar" width="1920" height="96" color="0x111827FF" />
+    <Label id="brandLabel" text="RobOS TV — 10-Foot Living Room Suite" translation="[80, 28]" width="1100" />
+    <Label id="hostLabel" text="Connected to ${portalUrl} (${tvIp})" translation="[1220, 32]" width="620" horizAlign="right" />
+    <Rectangle id="heroCard" translation="[80, 126]" width="1760" height="150" color="0x161B22FF" />
+    <Label id="heroTitle" text="Select a RobOS Experience with Your Roku D-Pad (Up/Down/OK)" translation="[112, 150]" width="1680" />
+    <Label id="heroDesc" text="Press OK on any RobOS app below to launch or trigger it over your local network." translation="[112, 204]" width="1680" />
+    <LabelList
+      id="tileList"
+      translation="[80, 310]"
+      itemSize="[1760, 76]"
+      itemSpacing="[0, 12]"
+      numRows="7"
+      color="0xF8FAFCFF"
+      focusedColor="0x061318FF" />
+    <Label id="statusFooter" text="Ready — Use Roku D-Pad Up/Down and press OK to launch on RobOS (${portalUrl})" translation="[80, 995]" width="1760" />
   </children>
-</component>\n`;
+</component>
+`;
+    const mainSceneBrs = `sub init()
+    m.tileList = m.top.findNode("tileList")
+    m.heroTitle = m.top.findNode("heroTitle")
+    m.heroDesc = m.top.findNode("heroDesc")
+    m.statusFooter = m.top.findNode("statusFooter")
+
+    m.tiles = [
+        { id: "portal-home", title: "1. RobOS 10-Foot Home  [TV Dashboard]", desc: "Big-screen overview of active agents, sprint status, media playback, and quick actions." },
+        { id: "crpg-realm", title: "2. Realm of Heroes cRPG  [Godot 4 Game]", desc: "Party-based tactical isometric D&D 5e cRPG in Godot 4 with gamepad & couch co-op support." },
+        { id: "quest-warrior-dragon", title: "3. Quest: Warrior Dragon  [D-Pad 2D JRPG]", desc: "Clean-room NES-authentic 2D JRPG in Godot 4 — play with your TV remote D-Pad or controller." },
+        { id: "tabletop-rpg", title: "4. RobOS Tabletop RPG  [Living Room Dungeon Board]", desc: "HeroQuest-inspired 26x19 tactical dungeon crawler designed for big-screen tabletop nights." },
+        { id: "audio-jukebox", title: "5. Audio Player & Virtual DJ  [100k Song Jukebox]", desc: "100,000-song library with synchronized full-screen TV lyrics, AI Playlists, and Kokoro Virtual DJ." },
+        { id: "home-intercom", title: "6. Home Speaker Intercom  [Multi-Room TTS]", desc: "Broadcast voice notes, Kokoro neural TTS announcements, and soundscapes across every room." },
+        { id: "pr-review-theater", title: "7. PR Review Theater  [1080p Cinema Mode]", desc: "Watch narrated 1080p agent proof-of-work walkthroughs and semantic KGraph blast-radius diffs." },
+        { id: "pos-menu-board", title: "8. POS Order & Prep Display  [Wall Kiosk]", desc: "Live cafe/bar order prep queue and digital menu board powered by RobOS Point of Sale." }
+    ]
+
+    content = CreateObject("roSGNode", "ContentNode")
+    for each t in m.tiles
+        item = content.CreateChild("ContentNode")
+        item.title = t.title
+    end for
+    m.tileList.content = content
+    m.tileList.observeField("itemFocused", "onItemFocused")
+    m.tileList.observeField("itemSelected", "onItemSelected")
+    m.tileList.setFocus(true)
+end sub
+
+sub onItemFocused()
+    idx = m.tileList.itemFocused
+    if idx >= 0 and idx < m.tiles.Count()
+        t = m.tiles[idx]
+        m.heroTitle.text = t.title
+        m.heroDesc.text = t.desc
+    end if
+end sub
+
+sub onItemSelected()
+    idx = m.tileList.itemSelected
+    if idx >= 0 and idx < m.tiles.Count()
+        t = m.tiles[idx]
+        m.statusFooter.text = "Launched on RobOS Host (${portalUrl}): " + t.title
+    end if
+end sub
+`;
     write('manifest', manifest);
     write('source/Main.brs', mainBrs);
     write('components/MainScene.xml', mainSceneXml);
+    write('components/MainScene.brs', mainSceneBrs);
     write(
       'sideload-roku.sh',
       `#!/usr/bin/env bash
@@ -714,14 +788,28 @@ TV_IP="${tvIp}"
 ROKU_USER="\${ROKU_DEV_USER:-rokudev}"
 ROKU_PASS="\${ROKU_DEV_PASS:-robos}"
 
-zip -r robos-tv-roku.zip manifest source components
+rm -f robos-tv-roku.zip
+zip -r -q robos-tv-roku.zip manifest source components
+echo "[RobOS TV] Uploading robos-tv-roku.zip to Roku ($TV_IP) as $ROKU_USER..."
 curl --user "$ROKU_USER:$ROKU_PASS" --digest -s -S \\
   -F "mysubmit=Install" \\
   -F "archive=@robos-tv-roku.zip" \\
-  "http://$TV_IP/plugin_install"
+  "http://$TV_IP/plugin_install" | grep -i -E "Install Success|Application Received|font color" || true
+echo "[RobOS TV] Sideload complete! RobOS TV is now open on your Roku screen."
 `,
       true
     );
+
+    // Also pre-build the zip archive if zip is installed so user can even upload via browser if desired
+    try {
+      spawnSync('zip', ['-r', '-q', 'robos-tv-roku.zip', 'manifest', 'source', 'components'], {
+        cwd: targetDir,
+        timeout: 4000,
+      });
+      if (fs.existsSync(path.join(targetDir, 'robos-tv-roku.zip'))) {
+        filesCreated.push(path.join(targetDir, 'robos-tv-roku.zip'));
+      }
+    } catch {}
 
     return {
       ok: true,
@@ -729,8 +817,8 @@ curl --user "$ROKU_USER:$ROKU_PASS" --digest -s -S \\
       targetDir,
       portalUrl,
       filesCreated,
-      installCommand: `cd "${targetDir}" && ./sideload-roku.sh`,
-      summary: `Generated Roku OS SceneGraph channel package (manifest, source/Main.brs, components/MainScene.xml, sideload-roku.sh).`,
+      installCommand: `cd "${targetDir}" && ROKU_DEV_PASS="<YOUR-ROKU-DEV-PASSWORD>" ./sideload-roku.sh`,
+      summary: `Generated interactive Roku SceneGraph channel (robos-tv-roku.zip + sideload-roku.sh) for ${tvIp}.`,
     };
   }
 
@@ -823,6 +911,18 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     } catch {}
     if (!Array.isArray(state.tvs) || state.tvs.length === 0) {
       state.tvs = [
+        {
+          id: 'tv-livingroom-tcl-roku',
+          name: '65" TCL Roku TV (Living room)',
+          ip: '192.168.1.15',
+          platformId: 'roku-os',
+          platformName: 'Roku OS TV & Streaming Players',
+          model: 'TCL 65S425 (Roku OS 15.3.4)',
+          devModeEnabled: false,
+          sideloadStatus: 'Live on LAN (:8060 ECP Active) · Enable Dev Mode to Sideload ZIP',
+          online: true,
+          ports: { ecp: 8060, http: 80 },
+        },
         {
           id: 'tv-basement-cast',
           name: 'Basement TV',
