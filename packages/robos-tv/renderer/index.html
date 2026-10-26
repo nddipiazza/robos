@@ -45,7 +45,10 @@
           <strong id="setup-alert-title">TV Setup Step Required</strong>
           <p id="setup-alert-msg" class="setup-alert-msg"></p>
         </div>
-        <button type="button" class="btn btn-sm" id="btn-dismiss-setup-alert">Dismiss</button>
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+          <button type="button" class="btn btn-sm btn-primary" id="btn-retry-setup-alert">↻ Refresh / Try Again</button>
+          <button type="button" class="btn btn-sm" id="btn-dismiss-setup-alert">Dismiss</button>
+        </div>
       </div>
       <ol id="setup-alert-steps" class="setup-alert-steps"></ol>
     </div>
@@ -95,7 +98,10 @@
           <div class="card">
             <div class="card-header">
               <h2 class="card-title">TV D-Pad Remote &amp; Instant App Launch</h2>
-              <select id="select-remote-target" class="select select-sm"></select>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <select id="select-remote-target" class="select select-sm"></select>
+                <button type="button" class="btn btn-sm" id="btn-refresh-tv-status" title="Re-verify TV connection and permission settings">↻ Refresh Status</button>
+              </div>
             </div>
             <p class="muted-text">Send directional D-Pad keys (`ADB keyevent`, `Roku ECP`, or `Portal Spatial Nav`) and launch RobOS experiences directly onto the selected TV screen.</p>
 

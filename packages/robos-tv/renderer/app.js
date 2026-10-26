@@ -367,13 +367,15 @@ async function init() {
     dismissBtn.onclick = () => showSetupAlert(null);
   }
 
-  const checkBtn = document.getElementById('btn-run-readiness-check');
-  if (checkBtn) {
-    checkBtn.onclick = async () => {
-      const tvId = document.getElementById('select-remote-target').value;
-      const diag = await window.robosTv.diagnoseReadiness(tvId);
-      const out = document.getElementById('live-readiness-results');
-      if (!diag || !diag.ok || !out) return;
+  async function verifyAndRefreshSelectedTv(showSuccessToast = true) {
+    const tvId = document.getElementById('select-remote-target')?.value || state.tvs[0]?.id;
+    const retryBtn = document.getElementById('btn-retry-setup-alert');
+    if (retryBtn) retryBtn.textContent = 'Checking TV…';
+    const diag = await window.robosTv.diagnoseReadiness(tvId);
+    if (retryBtn) retryBtn.textContent = '↻ Refresh / Try Again';
+
+    const out = document.getElementById('live-readiness-results');
+    if (diag && diag.ok && out) {
       out.innerHTML = (diag.checks || [])
         .map(
           (c) => `
@@ -399,7 +401,44 @@ async function init() {
         `
         )
         .join('');
-    };
+    }
+
+    if (diag && diag.ok && !diag.allControlReady) {
+      const blockedCheck = (diag.checks || []).find((c) => !c.ready);
+      if (blockedCheck) {
+        showSetupAlert({
+          blocked: true,
+          setupTitle: `TV Setup Required on ${diag.tv.name} (${diag.tv.ip}) — ${blockedCheck.title} is Blocked`,
+          setupMessage: `Your ${diag.tv.name} returned ${blockedCheck.currentValue} (HTTP ${diag.liveInfo?.httpStatus || 401} Unauthorized). Follow these steps on your physical TV remote, then click "↻ Refresh / Try Again":`,
+          setupSteps: blockedCheck.fixSteps || [],
+        });
+        if (showSuccessToast) {
+          showBanner(`Still blocked on ${diag.tv.name}: ${blockedCheck.currentValue}`, true);
+        }
+      }
+      return false;
+    }
+
+    showSetupAlert(null);
+    if (showSuccessToast && diag?.tv) {
+      showBanner(`Connected! ${diag.tv.name} (${diag.tv.ip}) is ready for RobOS remote control (${diag.liveInfo?.powerMode || 'Online'}).`);
+    }
+    return true;
+  }
+
+  const retryAlertBtn = document.getElementById('btn-retry-setup-alert');
+  if (retryAlertBtn) {
+    retryAlertBtn.onclick = () => verifyAndRefreshSelectedTv(true);
+  }
+
+  const refreshStatusBtn = document.getElementById('btn-refresh-tv-status');
+  if (refreshStatusBtn) {
+    refreshStatusBtn.onclick = () => verifyAndRefreshSelectedTv(true);
+  }
+
+  const checkBtn = document.getElementById('btn-run-readiness-check');
+  if (checkBtn) {
+    checkBtn.onclick = () => verifyAndRefreshSelectedTv(true);
   }
 
   document.getElementById('btn-scan-tvs').onclick = async () => {
@@ -471,18 +510,7 @@ async function init() {
   if (initial && initial.ok) {
     state = { ...state, ...initial };
     renderAll();
-    const diag = await window.robosTv.diagnoseReadiness(state.tvs[0]?.id);
-    if (diag && diag.ok && !diag.allControlReady) {
-      const blockedCheck = (diag.checks || []).find((c) => !c.ready);
-      if (blockedCheck) {
-        showSetupAlert({
-          blocked: true,
-          setupTitle: `TV Setup Required on ${diag.tv.name} (${diag.tv.ip}) — ${blockedCheck.title} is Blocked`,
-          setupMessage: `Your ${diag.tv.name} returned ${blockedCheck.currentValue} (HTTP ${diag.liveInfo?.httpStatus || 401} Unauthorized). Follow these steps on your physical TV remote so RobOS can control your TV:`,
-          setupSteps: blockedCheck.fixSteps || [],
-        });
-      }
-    }
+    await verifyAndRefreshSelectedTv(false);
   }
 }
 
