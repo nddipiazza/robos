@@ -55,9 +55,25 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
     assert.equal(ov.ok, true);
     assert.equal(ov.dashboard.id, 'daily-engineering-ops');
     assert.equal(ov.dashboard.layout.id, 'mission-control-3col');
-    assert.equal(ov.dashboard.cards.length, 3);
+    assert.equal(ov.dashboard.cards.length, 5);
     assert.equal(DASHBOARD_LAYOUTS.length, 6);
-    assert.equal(DASHBOARD_WIDGET_CATALOG.length, 8);
+    assert.equal(DASHBOARD_WIDGET_CATALOG.length, 10);
+
+    // GitHub Repo Activity card (nddipiazza/robos commits, main CI, latest release # & running status)
+    const ghCard = ov.dashboard.cards.find((c) => c.widgetType === 'github-repo');
+    assert.ok(ghCard);
+    assert.equal(ghCard.componentTag, 'robos-widget-github-repo');
+    assert.equal(ghCard.liveData.repo, 'nddipiazza/robos');
+    assert.ok(ghCard.liveData.mainCi.workflows.length >= 3);
+    assert.ok(ghCard.liveData.latestRelease.tag);
+    assert.equal(typeof ghCard.liveData.latestRelease.isRunningNow, 'boolean');
+
+    // Live JS Canvas Clock card
+    const clockCard = ov.dashboard.cards.find((c) => c.widgetType === 'live-clock');
+    assert.ok(clockCard);
+    assert.equal(clockCard.componentTag, 'robos-widget-live-clock');
+    assert.ok(clockCard.liveData.time24);
+    assert.ok(clockCard.liveData.utcTime);
 
     // Card 1: 10 latest commit messages in compact readable list format
     const commitsCard = ov.dashboard.cards.find((c) => c.widgetType === 'git-commits');
@@ -155,7 +171,7 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
       assert.equal(apiJson.ok, true);
       assert.equal(apiJson.cast.active, true);
       assert.equal(apiJson.dashboard.id, 'daily-engineering-ops');
-      assert.equal(apiJson.dashboard.cards.length, 3);
+      assert.equal(apiJson.dashboard.cards.length, 5);
 
       // Verify 10-Foot Portal Home (/) shows the live dashboard cast banner
       const homeRes = await httpGet(`http://127.0.0.1:${srv.port}/`);
