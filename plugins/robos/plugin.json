@@ -46,7 +46,8 @@
     "manage-agent-personas",
     "robos-github-auth",
     "vpn-sandbox",
-    "publish-blog-post"
+    "publish-blog-post",
+    "fix-media-metadata"
   ],
   "commands": [
     "view-task-plan",
@@ -85,7 +86,8 @@
     "manage-agent-personas",
     "robos-github-auth",
     "vpn-sandbox",
-    "publish-blog-post"
+    "publish-blog-post",
+    "fix-media-metadata"
   ],
   "compatibility": {
     "claude": ">=1.0.0",

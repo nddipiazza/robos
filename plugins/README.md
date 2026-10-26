@@ -179,6 +179,7 @@ plugins/
 | **`vm-status`** | `/vm-status` | Check VM running state, SSH connectivity, memory, and disk usage |
 | **`vpn-sandbox`** | `/vpn-sandbox` | Configure OpenVPN accounts/servers, launch apps inside isolated `ip netns` namespaces, and run the 5-step live E2E kill-switch proof |
 | **`publish-blog-post`** | `/publish-blog-post` | Write and publish a new Engineering Blog entry in `site/blog/index.md` with jump navigation, E2E screenshots, and commit references |
+| **`fix-media-metadata`** | `/fix-media-metadata` | Inspect, extract, enrich, and write media metadata and cover art across all known formats using open-source tools (`music-metadata`, `ffmpeg`/`ffprobe`, MusicBrainz CC0, Cover Art Archive, LRCLIB) |
 
 ---
 

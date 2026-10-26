@@ -30,6 +30,8 @@ contextBridge.exposeInMainWorld('robosAudio', {
   setLoved: (ids, loved) => ipcRenderer.invoke('audio:set-loved', { ids, loved }),
   showInFolder: (filePath) => ipcRenderer.invoke('audio:show-in-folder', filePath),
   aiPlaylistGenerate: (request, count, dj, agent) => ipcRenderer.invoke('audio:ai-playlist-generate', { request, count, dj, agent }),
+  aiFixMetadataPreview: (opts) => ipcRenderer.invoke('audio:ai-fix-metadata-preview', opts || {}),
+  aiFixMetadataApply: (opts) => ipcRenderer.invoke('audio:ai-fix-metadata-apply', opts || {}),
   onAiProgress: (callback) => {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on('audio:ai-progress', handler);
@@ -117,6 +119,12 @@ contextBridge.exposeInMainWorld('robosAudio', {
 // Provider catalog for the shared <robos-agent-selector> (same API as PR Review).
 contextBridge.exposeInMainWorld('robosProviders', {
   list: (options) => ipcRenderer.invoke('audio:agent-providers', options),
+});
+
+// Skills catalog and @mention file typeahead for the shared <robos-ai-textarea>.
+contextBridge.exposeInMainWorld('robos', {
+  skillsList: () => ipcRenderer.invoke('robos-skills-list'),
+  searchIndex: (prefix) => ipcRenderer.invoke('ap-list-path', prefix),
 });
 
 // Answers the <robos-ai-textarea> "?" button through the shared quick-ask handler.

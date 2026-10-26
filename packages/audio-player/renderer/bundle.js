@@ -782,7 +782,7 @@
   var require_react_dom_production = __commonJS({
     "node_modules/react-dom/cjs/react-dom.production.js"(exports) {
       "use strict";
-      var React19 = require_react();
+      var React20 = require_react();
       function formatProdErrorMessage(code) {
         var url = "https://react.dev/errors/" + code;
         if (1 < arguments.length) {
@@ -824,7 +824,7 @@
           implementation
         };
       }
-      var ReactSharedInternals = React19.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      var ReactSharedInternals = React20.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       function getCrossOriginStringAs(as, input) {
         if ("font" === as) return "";
         if ("string" === typeof input)
@@ -966,7 +966,7 @@
     "node_modules/react-dom/cjs/react-dom-client.production.js"(exports) {
       "use strict";
       var Scheduler = require_scheduler();
-      var React19 = require_react();
+      var React20 = require_react();
       var ReactDOM = require_react_dom();
       function formatProdErrorMessage(code) {
         var url = "https://react.dev/errors/" + code;
@@ -1257,7 +1257,7 @@
         return null;
       }
       var isArrayImpl = Array.isArray;
-      var ReactSharedInternals = React19.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+      var ReactSharedInternals = React20.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       var ReactDOMSharedInternals = ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
       var sharedNotPendingObject = {
         pending: false,
@@ -14406,7 +14406,7 @@
           0 === i && attemptExplicitHydrationTarget(target);
         }
       };
-      var isomorphicReactPackageVersion$jscomp$inline_2043 = React19.version;
+      var isomorphicReactPackageVersion$jscomp$inline_2043 = React20.version;
       if ("19.3.0" !== isomorphicReactPackageVersion$jscomp$inline_2043)
         throw Error(
           formatProdErrorMessage(
@@ -14900,7 +14900,7 @@
         if (days > 0) return `${days}d ${hours}h`;
         return mins ? `${hours} hr ${mins} min` : `${hours} hr`;
       }
-      function plural3(n, word, pluralWord) {
+      function plural4(n, word, pluralWord) {
         return `${Number(n).toLocaleString()} ${n === 1 ? word : pluralWord || `${word}s`}`;
       }
       module.exports = {
@@ -14925,17 +14925,17 @@
         unplayedTracks,
         formatDuration: formatDuration5,
         formatLongDuration: formatLongDuration4,
-        plural: plural3
+        plural: plural4
       };
     }
   });
 
   // src/index.jsx
-  var import_react23 = __toESM(require_react());
+  var import_react24 = __toESM(require_react());
   var import_client = __toESM(require_client());
 
   // src/App.jsx
-  var import_react22 = __toESM(require_react());
+  var import_react23 = __toESM(require_react());
 
   // node_modules/react-h5-audio-player/es/index.js
   var import_react6 = __toESM(require_react());
@@ -17843,7 +17843,8 @@
     plus: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("line", { x1: "12", y1: "5", x2: "12", y2: "19" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "5", y1: "12", x2: "19", y2: "12" })),
     grid: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("rect", { x: "3", y: "3", width: "7", height: "7", rx: "1" }), /* @__PURE__ */ import_react8.default.createElement("rect", { x: "14", y: "3", width: "7", height: "7", rx: "1" }), /* @__PURE__ */ import_react8.default.createElement("rect", { x: "3", y: "14", width: "7", height: "7", rx: "1" }), /* @__PURE__ */ import_react8.default.createElement("rect", { x: "14", y: "14", width: "7", height: "7", rx: "1" })),
     rows: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "6", x2: "21", y2: "6" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "12", x2: "21", y2: "12" }), /* @__PURE__ */ import_react8.default.createElement("line", { x1: "3", y1: "18", x2: "21", y2: "18" })),
-    cast: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M2 16a5 5 0 0 1 5 5" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M2 12a9 9 0 0 1 9 9" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "2.5", cy: "20.5", r: "0.8", fill: "currentColor" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" }))
+    cast: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M2 16a5 5 0 0 1 5 5" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M2 12a9 9 0 0 1 9 9" }), /* @__PURE__ */ import_react8.default.createElement("circle", { cx: "2.5", cy: "20.5", r: "0.8", fill: "currentColor" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6" })),
+    sparkle: /* @__PURE__ */ import_react8.default.createElement("g", null, /* @__PURE__ */ import_react8.default.createElement("path", { d: "M12 3l1.9 5.3L19.2 10l-5.3 1.9L12 17.2l-1.9-5.3L4.8 10l5.3-1.7L12 3z" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M5 3v4" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M3 5h4" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M19 17v4" }), /* @__PURE__ */ import_react8.default.createElement("path", { d: "M17 19h4" }))
   };
   function Icon2({ name, size = 16 }) {
     return /* @__PURE__ */ import_react8.default.createElement("svg", { className: "icon", xmlns: "http://www.w3.org/2000/svg", width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, ICON_PATHS[name]);
@@ -18718,6 +18719,7 @@
       { label: "Add to queue", icon: "queueAdd", onClick: () => actions.queueTracks(tracks, "end") },
       { separator: true },
       { label: "Add to playlist\u2026", icon: "list", onClick: () => actions.addToPlaylist(tracks) },
+      actions.fixMetadata ? { label: "\u2726 AI Fix Metadata\u2026", icon: "sparkle", onClick: () => actions.fixMetadata(tracks) } : null,
       { label: allLoved ? "Remove from Loved" : "Love", icon: allLoved ? "heartFill" : "heart", onClick: () => actions.setLoved(tracks, !allLoved) },
       actions.hasSpeakers ? { label: "Cast to speaker", icon: "cast", onClick: () => actions.castTracks(tracks) } : null
     ];
@@ -18739,6 +18741,7 @@
       ...extra,
       { separator: true },
       { label: "Add to playlist\u2026", icon: "list", onClick: () => actions.addToPlaylist(tracks) },
+      actions.fixMetadata ? { label: "\u2726 AI Fix Metadata\u2026", icon: "sparkle", onClick: () => actions.fixMetadata(tracks) } : null,
       { label: allLoved ? "Remove from Loved" : "Love", icon: allLoved ? "heartFill" : "heart", onClick: () => actions.setLoved(tracks, !allLoved) },
       actions.hasSpeakers ? { label: "Cast to speaker", icon: "cast", onClick: () => actions.castTracks(tracks) } : null
     ];
@@ -18961,7 +18964,7 @@
         )
       );
     }
-    return /* @__PURE__ */ import_react15.default.createElement("div", { className: "track-list", id }, selected.size > 1 && /* @__PURE__ */ import_react15.default.createElement("div", { className: "selection-bar" }, /* @__PURE__ */ import_react15.default.createElement("span", null, /* @__PURE__ */ import_react15.default.createElement("strong", null, selected.size), " selected"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => actions.playTracks(selectedTracks(), 0) }, /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "play", size: 11 }), " Play"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => actions.queueTracks(selectedTracks(), "next") }, "Play next"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => actions.queueTracks(selectedTracks(), "end") }, "Add to queue"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => actions.addToPlaylist(selectedTracks()) }, "Add to playlist\u2026"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: (e) => openMenu(e, collectionMenuItems(selectedTracks(), ctx)) }, /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "more", size: 12 })), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => setSelected(/* @__PURE__ */ new Set()) }, "Clear")), header, /* @__PURE__ */ import_react15.default.createElement("div", { className: "tl-body", ref: listRef, tabIndex: 0, onKeyDown: handleKeyDown, style: { height: rowCount * ROW_HEIGHT } }, rows));
+    return /* @__PURE__ */ import_react15.default.createElement("div", { className: "track-list", id }, selected.size > 1 && /* @__PURE__ */ import_react15.default.createElement("div", { className: "selection-bar" }, /* @__PURE__ */ import_react15.default.createElement("span", null, /* @__PURE__ */ import_react15.default.createElement("strong", null, selected.size), " selected"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => actions.playTracks(selectedTracks(), 0) }, /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "play", size: 11 }), " Play"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => actions.queueTracks(selectedTracks(), "next") }, "Play next"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => actions.queueTracks(selectedTracks(), "end") }, "Add to queue"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => actions.addToPlaylist(selectedTracks()) }, "Add to playlist\u2026"), actions.fixMetadata && /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => actions.fixMetadata(selectedTracks()) }, "\u2726 AI Fix Metadata"), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: (e) => openMenu(e, collectionMenuItems(selectedTracks(), ctx)) }, /* @__PURE__ */ import_react15.default.createElement(Icon2, { name: "more", size: 12 })), /* @__PURE__ */ import_react15.default.createElement("button", { className: "btn-chip", onClick: () => setSelected(/* @__PURE__ */ new Set()) }, "Clear")), header, /* @__PURE__ */ import_react15.default.createElement("div", { className: "tl-body", ref: listRef, tabIndex: 0, onKeyDown: handleKeyDown, style: { height: rowCount * ROW_HEIGHT } }, rows));
   }
   var COLUMN_SIZES = {
     num: { width: "42px", fixed: true },
@@ -19086,7 +19089,8 @@
     onAddFolder,
     onAddFiles,
     isScanning,
-    onAiPlaylist
+    onAiPlaylist,
+    onAiFixMetadata
   }) {
     const { stats, actions } = useLibrary();
     const [prefs, setPrefs] = (0, import_react16.useState)(loadPrefs);
@@ -19181,6 +19185,16 @@
         onClick: onAiPlaylist
       },
       "\u2726 AI Playlist"
+    ), onAiFixMetadata && /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        id: "btn-library-ai-fix-metadata",
+        className: "btn-secondary lib-shuffle-all",
+        disabled: !index.tracks.length,
+        title: "Repair and enrich track metadata & cover art using your RobOS agent and open-source media tools",
+        onClick: onAiFixMetadata
+      },
+      "\u2726 AI Fix Metadata"
     ), /* @__PURE__ */ import_react16.default.createElement(
       "button",
       {
@@ -19899,7 +19913,10 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
     } }, /* @__PURE__ */ import_react18.default.createElement(Icon2, { name: "play", size: 10 }), " Play"), /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-chip", onClick: () => {
       onClose();
       actions.goToAlbumOf(track);
-    } }, "Go to album"), track.filePath && !track.cloud && /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-chip", onClick: () => actions.showInFolder(track) }, "Show in file manager")))), /* @__PURE__ */ import_react18.default.createElement("dl", { className: "track-info-grid" }, rows.map(([k, v]) => /* @__PURE__ */ import_react18.default.createElement(import_react18.default.Fragment, { key: k }, /* @__PURE__ */ import_react18.default.createElement("dt", null, k), /* @__PURE__ */ import_react18.default.createElement("dd", { title: String(v) }, String(v))))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary", onClick: onClose }, "Close"))));
+    } }, "Go to album"), actions.fixMetadata && /* @__PURE__ */ import_react18.default.createElement("button", { id: "btn-track-info-ai-fix", className: "btn-chip", onClick: () => {
+      onClose();
+      actions.fixMetadata([track]);
+    } }, "\u2726 AI Fix Metadata"), track.filePath && !track.cloud && /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-chip", onClick: () => actions.showInFolder(track) }, "Show in file manager")))), /* @__PURE__ */ import_react18.default.createElement("dl", { className: "track-info-grid" }, rows.map(([k, v]) => /* @__PURE__ */ import_react18.default.createElement(import_react18.default.Fragment, { key: k }, /* @__PURE__ */ import_react18.default.createElement("dt", null, k), /* @__PURE__ */ import_react18.default.createElement("dd", { title: String(v) }, String(v))))), /* @__PURE__ */ import_react18.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react18.default.createElement("button", { className: "btn-secondary", onClick: onClose }, "Close"))));
   }
 
   // src/AiPlaylist.jsx
@@ -20156,7 +20173,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
     alternate: "Every other song",
     sometimes: "Now and then (every third song)"
   };
-  function AiPromptBox({ id, placeholder, initialValue = "", minHeight = 100, onChange, onSubmit }) {
+  function AiPromptBox({ id, placeholder, initialValue = "", minHeight = 100, showCommands = false, onChange, onSubmit }) {
     const hostRef = (0, import_react20.useRef)(null);
     const [missing, setMissing] = (0, import_react20.useState)(false);
     const latest = (0, import_react20.useRef)({ onChange, onSubmit });
@@ -20167,7 +20184,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       const el = document.createElement("robos-ai-textarea");
       el.id = id;
       el.setAttribute("show-submit", "false");
-      el.setAttribute("show-commands", "false");
+      el.setAttribute("show-commands", showCommands ? "true" : "false");
       el.setAttribute("show-agent", "false");
       el.setAttribute("placeholder", placeholder);
       el.setAttribute("min-height", String(minHeight));
@@ -20180,6 +20197,15 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           latest.current.onSubmit();
         }
       };
+      const onPathQuery = async (e) => {
+        const prefix = e.detail?.prefix || "";
+        if (window.robos?.searchIndex) {
+          const res = await window.robos.searchIndex(prefix);
+          if (res && res.ok && typeof el.setTypeaheadItems === "function") {
+            el.setTypeaheadItems(res.items || []);
+          }
+        }
+      };
       customElements.whenDefined("robos-ai-textarea").then(() => {
         if (!alive) return;
         if (initialValue && !String(el.value || "").trim()) el.value = initialValue;
@@ -20190,11 +20216,13 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       }, 4e3);
       ["input", "change", "keyup"].forEach((t) => el.addEventListener(t, report));
       el.addEventListener("keydown", onKey);
+      el.addEventListener("robos-path-query", onPathQuery);
       return () => {
         alive = false;
         clearTimeout(timer);
         ["input", "change", "keyup"].forEach((t) => el.removeEventListener(t, report));
         el.removeEventListener("keydown", onKey);
+        el.removeEventListener("robos-path-query", onPathQuery);
         el.remove();
       };
     }, []);
@@ -20392,8 +20420,291 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
     return /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-overlay", onClick: onClose }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-card ai-modal", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react20.default.createElement("div", { className: "ai-modal-head" }, /* @__PURE__ */ import_react20.default.createElement("h3", null, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "mic", size: 16 }), " Virtual DJ"), /* @__PURE__ */ import_react20.default.createElement("span", { className: "ai-note" }, "Your RobOS agent writes a short intro before songs, spoken in the voice you pick.")), /* @__PURE__ */ import_react20.default.createElement(AgentPicker, { value: initialAgent, onChange: pickAgent }), /* @__PURE__ */ import_react20.default.createElement(DjSettingsFields, { value: dj, onChange: setDj, idPrefix: "queue-dj" }), /* @__PURE__ */ import_react20.default.createElement("div", { className: "modal-actions" }, value.enabled && /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: () => onSave({ ...dj, enabled: false }) }, "Turn DJ off"), /* @__PURE__ */ import_react20.default.createElement("button", { className: "btn-secondary", onClick: onClose }, "Cancel"), /* @__PURE__ */ import_react20.default.createElement("button", { id: "btn-dj-save", className: "btn-accent", disabled: !dj.persona.trim() || !agent.ready, onClick: () => onSave({ ...dj, enabled: true }) }, /* @__PURE__ */ import_react20.default.createElement(Icon2, { name: "mic", size: 13 }), " ", value.enabled ? "Save" : "Start DJ"))));
   }
 
-  // src/castClock.jsx
+  // src/AiFixMetadata.jsx
   var import_react21 = __toESM(require_react());
+  var import_library_index6 = __toESM(require_library_index());
+  var DEFAULT_FIX_METADATA_PROMPT = `@skill(robos:fix-media-metadata)
+Inspect all selected media files and fix missing, noisy, or incomplete metadata and artwork using open-source tools and open databases:
+1. Clean noisy titles (strip [Official Video], (Lyrics), bitrate/resolution tags, leading track numbers, and underscores) while preserving legitimate feat./remix/live credits.
+2. Infer missing artist, albumArtist, album, year, genre, composer, trackNumber/trackTotal, and discNumber/discTotal from container streams, folder/filename hierarchy, .cue/.lrc/.nfo sidecars, and MusicBrainz / LRCLIB open-data matches.
+3. Ensure every track gets high-quality artwork: extract embedded pictures or video frames, use folder cover images, fetch Cover Art Archive release covers, or generate an open-source waveform/album cover when none exists.`;
+  var NOISE_RE = /(\[\s*(?:official|hd|hq|4k|1080p|720p|lyrics?|audio|flac|320\s*kbps|mp3)[^\]]*\]|\(\s*(?:official|hd|hq|4k|1080p|720p|lyrics?)[^)]*\)|^\d{1,3}\s*[-._]\s*\S+)/i;
+  function trackNeedsFixClient(t) {
+    if (!t) return false;
+    if (!t.artist || t.artist === "Unknown Artist" || t.artist === "Cloud Stream") return true;
+    if (!t.album || t.album === "Unknown Album" || t.album === "Imported Playlist") return true;
+    if (!t.title || NOISE_RE.test(t.title) || t.title.includes("_")) return true;
+    if (!t.artId) return true;
+    if (!t.year || !t.genre) return true;
+    return false;
+  }
+  var COVER_BADGE_LABELS = {
+    embedded: "Embedded Stream",
+    "video-frame": "FFmpeg Frame",
+    folder: "Folder Cover",
+    coverartarchive: "Cover Art Archive",
+    caa: "Cover Art Archive",
+    waveform: "FFmpeg Waveform",
+    generated: "Open-Source SVG Cover",
+    existing: "Existing Cover"
+  };
+  function AiFixMetadataModal({
+    tracks = [],
+    initialTracks = [],
+    agent: initialAgent,
+    onAgentChange,
+    onApplied,
+    onClose
+  }) {
+    const hasInitialSubset = Array.isArray(initialTracks) && initialTracks.length > 0;
+    const missingTracks = (0, import_react21.useMemo)(() => tracks.filter(trackNeedsFixClient), [tracks]);
+    const [scope, setScope] = (0, import_react21.useState)(() => {
+      if (hasInitialSubset) return "selected";
+      if (missingTracks.length > 0) return "missing";
+      return "all";
+    });
+    const [prompt, setPrompt] = (0, import_react21.useState)(DEFAULT_FIX_METADATA_PROMPT);
+    const [enableOpenLookup, setEnableOpenLookup] = (0, import_react21.useState)(true);
+    const [writeFiles, setWriteFiles] = (0, import_react21.useState)(false);
+    const [agent, setAgent] = (0, import_react21.useState)({ ...initialAgent || {}, ready: false });
+    const pickAgent = (next) => {
+      setAgent(next);
+      if (next.provider && onAgentChange) {
+        onAgentChange({ provider: next.provider, model: next.model, effort: next.effort });
+      }
+    };
+    const [busy, setBusy] = (0, import_react21.useState)(false);
+    const [progress, setProgress] = (0, import_react21.useState)("");
+    const [error, setError] = (0, import_react21.useState)("");
+    const [previewResult, setPreviewResult] = (0, import_react21.useState)(null);
+    const [selectedIds, setSelectedIds] = (0, import_react21.useState)(() => /* @__PURE__ */ new Set());
+    (0, import_react21.useEffect)(() => {
+      const off = window.robosAudio?.onAiProgress?.((p) => p && p.message && setProgress(p.message));
+      return () => {
+        if (typeof off === "function") off();
+      };
+    }, []);
+    const targetList = (0, import_react21.useMemo)(() => {
+      if (scope === "selected" && hasInitialSubset) return initialTracks.slice(0, 40);
+      if (scope === "missing") return missingTracks.slice(0, 40);
+      return tracks.slice(0, 40);
+    }, [scope, hasInitialSubset, initialTracks, missingTracks, tracks]);
+    const canRunPreview = !busy && prompt.trim().length > 0 && targetList.length > 0 && !!(agent && agent.provider && agent.ready);
+    const runPreview = async () => {
+      if (!canRunPreview) return;
+      setBusy(true);
+      setError("");
+      setProgress(`Starting open-source metadata & artwork analysis for ${(0, import_library_index6.plural)(targetList.length, "track")}\u2026`);
+      try {
+        const res = await window.robosAudio.aiFixMetadataPreview({
+          trackIds: targetList.map((t) => t.id),
+          scope,
+          prompt: prompt.trim(),
+          agent: { provider: agent.provider, model: agent.model, effort: agent.effort },
+          enableOpenLookup
+        });
+        if (!res || !res.ok) {
+          setError(res && res.error || "Could not analyze track metadata.");
+          return;
+        }
+        setPreviewResult(res);
+        const changedSet = new Set(
+          (res.proposals || []).filter((p) => p.changed).map((p) => p.id)
+        );
+        if (changedSet.size === 0) {
+          (res.proposals || []).forEach((p) => changedSet.add(p.id));
+        }
+        setSelectedIds(changedSet);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setBusy(false);
+        setProgress("");
+      }
+    };
+    const toggleProposal = (id) => {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+      });
+    };
+    const applySelected = async () => {
+      if (!previewResult || !selectedIds.size || busy) return;
+      setBusy(true);
+      setError("");
+      setProgress(`Applying metadata & cover art fixes to ${(0, import_library_index6.plural)(selectedIds.size, "track")}\u2026`);
+      try {
+        const chosen = (previewResult.proposals || []).filter((p) => selectedIds.has(p.id));
+        const res = await window.robosAudio.aiFixMetadataApply({
+          fixes: chosen,
+          writeFiles
+        });
+        if (!res || !res.ok) {
+          setError(res && res.error || "Failed to apply metadata fixes.");
+          return;
+        }
+        if (onApplied) onApplied(res);
+        onClose();
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setBusy(false);
+        setProgress("");
+      }
+    };
+    return /* @__PURE__ */ import_react21.default.createElement("div", { className: "modal-overlay", onClick: busy ? void 0 : onClose }, /* @__PURE__ */ import_react21.default.createElement("div", { className: "modal-card ai-modal ai-fix-metadata-modal", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-modal-head" }, /* @__PURE__ */ import_react21.default.createElement("h3", null, /* @__PURE__ */ import_react21.default.createElement("span", { className: "ai-spark" }, "\u2726"), " AI Fix Metadata & Artwork"), /* @__PURE__ */ import_react21.default.createElement("span", { className: "ai-note" }, "Your RobOS agent inspects media streams, paths, sidecars, and open databases (", /* @__PURE__ */ import_react21.default.createElement("strong", null, "MusicBrainz CC0"), ", ", /* @__PURE__ */ import_react21.default.createElement("strong", null, "Cover Art Archive"), ", ", /* @__PURE__ */ import_react21.default.createElement("strong", null, "LRCLIB"), ", ", /* @__PURE__ */ import_react21.default.createElement("strong", null, "FFmpeg"), ") to repair tags and artwork.")), /* @__PURE__ */ import_react21.default.createElement(AgentPicker, { value: initialAgent, onChange: pickAgent }), /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-scope-group" }, /* @__PURE__ */ import_react21.default.createElement("label", { className: "modal-label" }, "Tracks to Inspect"), /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-scope-pills" }, hasInitialSubset && /* @__PURE__ */ import_react21.default.createElement(
+      "button",
+      {
+        type: "button",
+        id: "btn-ai-fix-scope-selected",
+        className: scope === "selected" ? "btn-accent" : "btn-secondary",
+        onClick: () => {
+          setScope("selected");
+          setPreviewResult(null);
+        },
+        disabled: busy
+      },
+      "Selected (",
+      initialTracks.length > 40 ? "40 max" : initialTracks.length,
+      ")"
+    ), /* @__PURE__ */ import_react21.default.createElement(
+      "button",
+      {
+        type: "button",
+        id: "btn-ai-fix-scope-missing",
+        className: scope === "missing" ? "btn-accent" : "btn-secondary",
+        onClick: () => {
+          setScope("missing");
+          setPreviewResult(null);
+        },
+        disabled: busy
+      },
+      "Needs Metadata / Art (",
+      missingTracks.length > 40 ? `40 of ${missingTracks.length}` : missingTracks.length,
+      ")"
+    ), /* @__PURE__ */ import_react21.default.createElement(
+      "button",
+      {
+        type: "button",
+        id: "btn-ai-fix-scope-all",
+        className: scope === "all" ? "btn-accent" : "btn-secondary",
+        onClick: () => {
+          setScope("all");
+          setPreviewResult(null);
+        },
+        disabled: busy
+      },
+      "Library Batch (",
+      Math.min(tracks.length, 40),
+      " of ",
+      tracks.length,
+      ")"
+    ))), /* @__PURE__ */ import_react21.default.createElement("label", { className: "modal-label" }, "Instructions & Open-Source Media Skill (use ", /* @__PURE__ */ import_react21.default.createElement("code", null, "/skills"), " or ", /* @__PURE__ */ import_react21.default.createElement("code", null, "@"), " to attach files)"), /* @__PURE__ */ import_react21.default.createElement(
+      AiPromptBox,
+      {
+        id: "ai-fix-metadata-prompt",
+        placeholder: "Describe how to clean or enrich metadata and cover art\u2026",
+        initialValue: DEFAULT_FIX_METADATA_PROMPT,
+        minHeight: 108,
+        showCommands: true,
+        onChange: setPrompt,
+        onSubmit: runPreview
+      }
+    ), /* @__PURE__ */ import_react21.default.createElement("div", { className: "dj-row ai-fix-options-row" }, /* @__PURE__ */ import_react21.default.createElement("label", { className: "dj-toggle" }, /* @__PURE__ */ import_react21.default.createElement(
+      "input",
+      {
+        id: "ai-fix-open-lookup",
+        type: "checkbox",
+        checked: enableOpenLookup,
+        onChange: (e) => setEnableOpenLookup(e.target.checked),
+        disabled: busy
+      }
+    ), /* @__PURE__ */ import_react21.default.createElement("span", null, "Query open-data APIs (MusicBrainz CC0, Cover Art Archive, LRCLIB)")), /* @__PURE__ */ import_react21.default.createElement("label", { className: "dj-toggle" }, /* @__PURE__ */ import_react21.default.createElement(
+      "input",
+      {
+        id: "ai-fix-write-files",
+        type: "checkbox",
+        checked: writeFiles,
+        onChange: (e) => setWriteFiles(e.target.checked),
+        disabled: busy
+      }
+    ), /* @__PURE__ */ import_react21.default.createElement("span", null, "Also write updated tags & cover art to local media files via FFmpeg"))), previewResult && Array.isArray(previewResult.proposals) && /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-preview-section" }, /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-preview-head" }, /* @__PURE__ */ import_react21.default.createElement("div", null, /* @__PURE__ */ import_react21.default.createElement("strong", null, "Proposed Fixes (", selectedIds.size, " of ", previewResult.proposals.length, " selected)"), previewResult.summary && /* @__PURE__ */ import_react21.default.createElement("p", { className: "ai-note" }, previewResult.summary)), /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-preview-actions" }, /* @__PURE__ */ import_react21.default.createElement(
+      "button",
+      {
+        type: "button",
+        className: "btn-chip",
+        onClick: () => setSelectedIds(new Set(previewResult.proposals.map((p) => p.id))),
+        disabled: busy
+      },
+      "Select All"
+    ), /* @__PURE__ */ import_react21.default.createElement(
+      "button",
+      {
+        type: "button",
+        className: "btn-chip",
+        onClick: () => setSelectedIds(/* @__PURE__ */ new Set()),
+        disabled: busy
+      },
+      "Clear"
+    ))), /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-proposal-list" }, previewResult.proposals.map((prop) => {
+      const checked = selectedIds.has(prop.id);
+      const coverSourceLabel = COVER_BADGE_LABELS[prop.after.coverSource || prop.after.coverAction] || "Artwork";
+      return /* @__PURE__ */ import_react21.default.createElement(
+        "div",
+        {
+          key: prop.id,
+          className: `ai-fix-proposal-card ${checked ? "is-selected" : ""} ${prop.changed ? "has-changes" : ""}`,
+          onClick: () => !busy && toggleProposal(prop.id)
+        },
+        /* @__PURE__ */ import_react21.default.createElement(
+          "input",
+          {
+            type: "checkbox",
+            checked,
+            onChange: () => toggleProposal(prop.id),
+            onClick: (e) => e.stopPropagation(),
+            disabled: busy
+          }
+        ),
+        /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-cover-col" }, /* @__PURE__ */ import_react21.default.createElement(
+          Cover,
+          {
+            artId: prop.after.artId || prop.before.artId,
+            name: prop.after.album || prop.after.title,
+            size: 48
+          }
+        ), prop.after.artId && prop.after.artId !== prop.before.artId && /* @__PURE__ */ import_react21.default.createElement("span", { className: "ai-fix-cover-badge", title: `Cover source: ${coverSourceLabel}` }, coverSourceLabel)),
+        /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-details-col" }, /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-title-line" }, /* @__PURE__ */ import_react21.default.createElement("strong", null, prop.after.title), /* @__PURE__ */ import_react21.default.createElement("span", { className: "ai-note" }, " \u2014 ", prop.after.artist), prop.after.album && /* @__PURE__ */ import_react21.default.createElement("span", { className: "ai-note" }, " \xB7 ", prop.after.album), prop.after.year && /* @__PURE__ */ import_react21.default.createElement("span", { className: "ai-note" }, " (", prop.after.year, ")")), prop.changes.length > 0 ? /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-diff-chips" }, prop.changes.map((c, idx) => /* @__PURE__ */ import_react21.default.createElement("span", { key: idx, className: "ai-fix-diff-chip" }, /* @__PURE__ */ import_react21.default.createElement("b", null, c.field, ":"), " ", /* @__PURE__ */ import_react21.default.createElement("span", { className: "diff-from" }, c.from ?? "\u2014"), " \u2192", " ", /* @__PURE__ */ import_react21.default.createElement("span", { className: "diff-to" }, c.to)))) : /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-note" }, "Metadata already clean"), prop.reason && /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-fix-reason ai-note" }, prop.reason))
+      );
+    }))), error && /* @__PURE__ */ import_react21.default.createElement("p", { className: "ai-note error", role: "alert" }, error), busy && /* @__PURE__ */ import_react21.default.createElement("div", { className: "ai-progress", role: "status" }, /* @__PURE__ */ import_react21.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react21.default.createElement("span", null, progress || "Analyzing media\u2026")), /* @__PURE__ */ import_react21.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react21.default.createElement("button", { className: "btn-secondary", onClick: onClose, disabled: busy }, "Cancel"), /* @__PURE__ */ import_react21.default.createElement(
+      "button",
+      {
+        id: "btn-ai-fix-metadata-run",
+        className: previewResult ? "btn-secondary" : "btn-accent",
+        onClick: runPreview,
+        disabled: !canRunPreview,
+        title: !agent.ready ? "Choose a ready AI agent first" : !prompt.trim() ? "Enter metadata instructions first" : "Inspect tracks and preview metadata & artwork fixes"
+      },
+      "\u2726 ",
+      busy ? "Working\u2026" : previewResult ? "Re-Analyze with AI" : `Fix Metadata with AI (${targetList.length})`
+    ), previewResult && /* @__PURE__ */ import_react21.default.createElement(
+      "button",
+      {
+        id: "btn-ai-fix-metadata-apply",
+        className: "btn-accent",
+        onClick: applySelected,
+        disabled: busy || selectedIds.size === 0
+      },
+      /* @__PURE__ */ import_react21.default.createElement(Icon2, { name: "check", size: 13 }),
+      " Apply ",
+      (0, import_library_index6.plural)(selectedIds.size, "Fix", "Fixes")
+    ))));
+  }
+
+  // src/castClock.jsx
+  var import_react22 = __toESM(require_react());
   var state = { position: 0, duration: 0, playing: false, at: 0 };
   var listeners = /* @__PURE__ */ new Set();
   var castClock = {
@@ -20413,9 +20724,9 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
     }
   };
   function useCastTime() {
-    const s = (0, import_react21.useSyncExternalStore)(castClock.subscribe, castClock.get);
-    const [, tick] = (0, import_react21.useState)(0);
-    (0, import_react21.useEffect)(() => {
+    const s = (0, import_react22.useSyncExternalStore)(castClock.subscribe, castClock.get);
+    const [, tick] = (0, import_react22.useState)(0);
+    (0, import_react22.useEffect)(() => {
       if (!s.playing) return void 0;
       const timer = setInterval(() => tick((n) => n + 1), 250);
       return () => clearInterval(timer);
@@ -20430,8 +20741,8 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
   };
   function CastProgress({ onSeek, className = "mini-progress", id }) {
     const { current, duration } = useCastTime();
-    const [dragging, setDragging] = (0, import_react21.useState)(null);
-    const commitTimer = (0, import_react21.useRef)(null);
+    const [dragging, setDragging] = (0, import_react22.useState)(null);
+    const commitTimer = (0, import_react22.useRef)(null);
     const value = dragging != null ? dragging : current;
     const pct = duration ? Math.min(value, duration) / duration * 100 : 0;
     const commit = (v) => {
@@ -20442,8 +20753,8 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         onSeek(v);
       }, 250);
     };
-    (0, import_react21.useEffect)(() => () => clearTimeout(commitTimer.current), []);
-    return /* @__PURE__ */ import_react21.default.createElement("div", { className: `cast-progress ${className}`, id }, /* @__PURE__ */ import_react21.default.createElement("span", null, fmt(value)), /* @__PURE__ */ import_react21.default.createElement(
+    (0, import_react22.useEffect)(() => () => clearTimeout(commitTimer.current), []);
+    return /* @__PURE__ */ import_react22.default.createElement("div", { className: `cast-progress ${className}`, id }, /* @__PURE__ */ import_react22.default.createElement("span", null, fmt(value)), /* @__PURE__ */ import_react22.default.createElement(
       "input",
       {
         type: "range",
@@ -20460,14 +20771,14 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           commit(v);
         }
       }
-    ), /* @__PURE__ */ import_react21.default.createElement("span", null, fmt(duration)));
+    ), /* @__PURE__ */ import_react22.default.createElement("span", null, fmt(duration)));
   }
   function useCastPlaying() {
-    return (0, import_react21.useSyncExternalStore)(castClock.subscribe, () => castClock.get().playing);
+    return (0, import_react22.useSyncExternalStore)(castClock.subscribe, () => castClock.get().playing);
   }
 
   // src/App.jsx
-  var import_library_index6 = __toESM(require_library_index());
+  var import_library_index7 = __toESM(require_library_index());
   var DEFAULT_QUEUE = [
     {
       id: "default-1",
@@ -20505,54 +20816,55 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
     { key: "actions", width: "120px", fixed: true }
   ];
   function App() {
-    const [initial] = (0, import_react22.useState)(restoredQueue);
-    const [playerPrefs] = (0, import_react22.useState)(() => loadJson(PLAYER_PREFS_KEY) || {});
-    const [activeTab, setActiveTab] = (0, import_react22.useState)("player");
-    const [playlist, setPlaylist] = (0, import_react22.useState)(initial.queue);
-    const [currentTrackIndex, setCurrentTrackIndex] = (0, import_react22.useState)(initial.index);
-    const [folders, setFolders] = (0, import_react22.useState)([]);
-    const [syncingFolder, setSyncingFolder] = (0, import_react22.useState)(null);
-    const [outputTarget, setOutputTarget] = (0, import_react22.useState)("local");
-    const [speakers, setSpeakers] = (0, import_react22.useState)([]);
-    const [library, setLibrary] = (0, import_react22.useState)({ tracks: [], artists: [], albums: [] });
-    const [stats, setStats] = (0, import_react22.useState)({});
-    const [artBase, setArtBase] = (0, import_react22.useState)({ local: null, cast: null });
-    const [repeatMode, setRepeatMode] = (0, import_react22.useState)(playerPrefs.repeat || "all");
-    const [shuffleMode, setShuffleMode] = (0, import_react22.useState)(!!playerPrefs.shuffle);
-    const [dockCollapsed, setDockCollapsed] = (0, import_react22.useState)(!!playerPrefs.dockCollapsed);
+    const [initial] = (0, import_react23.useState)(restoredQueue);
+    const [playerPrefs] = (0, import_react23.useState)(() => loadJson(PLAYER_PREFS_KEY) || {});
+    const [activeTab, setActiveTab] = (0, import_react23.useState)("player");
+    const [playlist, setPlaylist] = (0, import_react23.useState)(initial.queue);
+    const [currentTrackIndex, setCurrentTrackIndex] = (0, import_react23.useState)(initial.index);
+    const [folders, setFolders] = (0, import_react23.useState)([]);
+    const [syncingFolder, setSyncingFolder] = (0, import_react23.useState)(null);
+    const [outputTarget, setOutputTarget] = (0, import_react23.useState)("local");
+    const [speakers, setSpeakers] = (0, import_react23.useState)([]);
+    const [library, setLibrary] = (0, import_react23.useState)({ tracks: [], artists: [], albums: [] });
+    const [stats, setStats] = (0, import_react23.useState)({});
+    const [artBase, setArtBase] = (0, import_react23.useState)({ local: null, cast: null });
+    const [repeatMode, setRepeatMode] = (0, import_react23.useState)(playerPrefs.repeat || "all");
+    const [shuffleMode, setShuffleMode] = (0, import_react23.useState)(!!playerPrefs.shuffle);
+    const [dockCollapsed, setDockCollapsed] = (0, import_react23.useState)(!!playerPrefs.dockCollapsed);
     const [playlistSidebarWidth, setPlaylistSidebarWidth] = useLayoutPref("playlistSidebarWidth", PLAYLIST_SIDEBAR_WIDTH);
     const playlistColumns = useColumns("playlist", PLAYLIST_COLUMNS);
-    const [libNav, setLibNav] = (0, import_react22.useState)([{ section: playerPrefs.librarySection || "albums" }]);
-    const [menu, setMenu] = (0, import_react22.useState)(null);
-    const [infoTrack, setInfoTrack] = (0, import_react22.useState)(null);
-    const [isScanning, setIsScanning] = (0, import_react22.useState)(false);
-    const [isScanningLibrary, setIsScanningLibrary] = (0, import_react22.useState)(false);
-    const [libraryScanStatus, setLibraryScanStatus] = (0, import_react22.useState)(null);
-    const [activeCastSession, setActiveCastSession] = (0, import_react22.useState)(null);
-    const [statusMsg, setStatusMsg] = (0, import_react22.useState)("");
-    const [activeAmbient, setActiveAmbient] = (0, import_react22.useState)(null);
-    const [isPlaying, setIsPlaying] = (0, import_react22.useState)(false);
-    const [playlists, setPlaylists] = (0, import_react22.useState)([]);
-    const [selectedPlaylistId, setSelectedPlaylistId] = (0, import_react22.useState)(null);
-    const [showCreatePlaylistModal, setShowCreatePlaylistModal] = (0, import_react22.useState)(false);
-    const [newPlaylistName, setNewPlaylistName] = (0, import_react22.useState)("");
-    const [newPlaylistDesc, setNewPlaylistDesc] = (0, import_react22.useState)("");
-    const [showSaveQueueModal, setShowSaveQueueModal] = (0, import_react22.useState)(false);
-    const [saveQueueName, setSaveQueueName] = (0, import_react22.useState)("");
-    const [saveQueueDesc, setSaveQueueDesc] = (0, import_react22.useState)("");
-    const [tracksForPlaylist, setTracksForPlaylist] = (0, import_react22.useState)(null);
-    const [showAiPlaylist, setShowAiPlaylist] = (0, import_react22.useState)(false);
-    const [showDjSettings, setShowDjSettings] = (0, import_react22.useState)(false);
-    const [aiAgent, setAiAgent] = (0, import_react22.useState)(playerPrefs.aiAgent || null);
-    const [quickPlaylistName, setQuickPlaylistName] = (0, import_react22.useState)("");
-    const playerRef = (0, import_react22.useRef)(null);
-    const audioCtxRef = (0, import_react22.useRef)(null);
-    const ambientNodeRef = (0, import_react22.useRef)(null);
-    const toastTimerRef = (0, import_react22.useRef)(null);
-    const searchInputRef = (0, import_react22.useRef)(null);
-    const playedRef = (0, import_react22.useRef)({ key: null, counted: false });
-    const shuffleHistoryRef = (0, import_react22.useRef)([]);
-    const latestRef = (0, import_react22.useRef)({});
+    const [libNav, setLibNav] = (0, import_react23.useState)([{ section: playerPrefs.librarySection || "albums" }]);
+    const [menu, setMenu] = (0, import_react23.useState)(null);
+    const [infoTrack, setInfoTrack] = (0, import_react23.useState)(null);
+    const [isScanning, setIsScanning] = (0, import_react23.useState)(false);
+    const [isScanningLibrary, setIsScanningLibrary] = (0, import_react23.useState)(false);
+    const [libraryScanStatus, setLibraryScanStatus] = (0, import_react23.useState)(null);
+    const [activeCastSession, setActiveCastSession] = (0, import_react23.useState)(null);
+    const [statusMsg, setStatusMsg] = (0, import_react23.useState)("");
+    const [activeAmbient, setActiveAmbient] = (0, import_react23.useState)(null);
+    const [isPlaying, setIsPlaying] = (0, import_react23.useState)(false);
+    const [playlists, setPlaylists] = (0, import_react23.useState)([]);
+    const [selectedPlaylistId, setSelectedPlaylistId] = (0, import_react23.useState)(null);
+    const [showCreatePlaylistModal, setShowCreatePlaylistModal] = (0, import_react23.useState)(false);
+    const [newPlaylistName, setNewPlaylistName] = (0, import_react23.useState)("");
+    const [newPlaylistDesc, setNewPlaylistDesc] = (0, import_react23.useState)("");
+    const [showSaveQueueModal, setShowSaveQueueModal] = (0, import_react23.useState)(false);
+    const [saveQueueName, setSaveQueueName] = (0, import_react23.useState)("");
+    const [saveQueueDesc, setSaveQueueDesc] = (0, import_react23.useState)("");
+    const [tracksForPlaylist, setTracksForPlaylist] = (0, import_react23.useState)(null);
+    const [showAiPlaylist, setShowAiPlaylist] = (0, import_react23.useState)(false);
+    const [showDjSettings, setShowDjSettings] = (0, import_react23.useState)(false);
+    const [tracksForAiFix, setTracksForAiFix] = (0, import_react23.useState)(null);
+    const [aiAgent, setAiAgent] = (0, import_react23.useState)(playerPrefs.aiAgent || null);
+    const [quickPlaylistName, setQuickPlaylistName] = (0, import_react23.useState)("");
+    const playerRef = (0, import_react23.useRef)(null);
+    const audioCtxRef = (0, import_react23.useRef)(null);
+    const ambientNodeRef = (0, import_react23.useRef)(null);
+    const toastTimerRef = (0, import_react23.useRef)(null);
+    const searchInputRef = (0, import_react23.useRef)(null);
+    const playedRef = (0, import_react23.useRef)({ key: null, counted: false });
+    const shuffleHistoryRef = (0, import_react23.useRef)([]);
+    const latestRef = (0, import_react23.useRef)({});
     const formatDuration5 = (sec) => {
       if (!sec || isNaN(sec)) return "--:--";
       const totalSec = Math.round(sec);
@@ -20577,7 +20889,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       const found = speakers.find((s) => s.ip === ip);
       return found ? found.name : `Speaker (${ip})`;
     };
-    (0, import_react22.useEffect)(() => {
+    (0, import_react23.useEffect)(() => {
       refreshSpeakers();
       loadLibrary();
       loadStats();
@@ -21086,7 +21398,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
     };
     const handleSortQueue = (key, dir) => {
       const current = playlist[currentTrackIndex];
-      const next = (0, import_library_index6.sortTracks)(playlist, key, dir, stats);
+      const next = (0, import_library_index7.sortTracks)(playlist, key, dir, stats);
       setPlaylist(next);
       setCurrentTrackIndex(Math.max(0, next.indexOf(current)));
     };
@@ -21110,7 +21422,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       showStatus("Cleared other tracks from queue");
     };
     const currentTrack = playlist[currentTrackIndex] || playlist[0] || null;
-    const libraryById = (0, import_react22.useMemo)(() => new Map(library.tracks.map((t) => [t.id, t])), [library.tracks]);
+    const libraryById = (0, import_react23.useMemo)(() => new Map(library.tracks.map((t) => [t.id, t])), [library.tracks]);
     const resolveSrc = (t) => {
       if (!t) return "";
       if (t.cloud) {
@@ -21158,8 +21470,8 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         showStatus("Error toggling pause: " + err.message);
       }
     };
-    const pendingLocalSeekRef = (0, import_react22.useRef)(null);
-    const songLoadsRef = (0, import_react22.useRef)(/* @__PURE__ */ new Set());
+    const pendingLocalSeekRef = (0, import_react23.useRef)(null);
+    const songLoadsRef = (0, import_react23.useRef)(/* @__PURE__ */ new Set());
     const handleCastSeek = (seconds) => {
       castClock.set({ position: seconds });
       if (outputTarget !== "local") window.robosAudio.castSeek(outputTarget, seconds).catch(() => {
@@ -21383,19 +21695,19 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       const idx = pickNextIndex(false);
       if (idx != null) goToIndex(idx);
     };
-    const plannedNextIndex = (0, import_react22.useMemo)(
+    const plannedNextIndex = (0, import_react23.useMemo)(
       () => shuffleMode ? pickNextIndex(true) : null,
       [shuffleMode, currentTrackIndex, playlist, repeatMode]
       // eslint-disable-line react-hooks/exhaustive-deps
     );
-    const upcomingTracks = (0, import_react22.useMemo)(() => {
+    const upcomingTracks = (0, import_react23.useMemo)(() => {
       if (shuffleMode) return plannedNextIndex != null ? [playlist[plannedNextIndex]] : [];
       const next = playlist.slice(currentTrackIndex + 1, currentTrackIndex + 4);
       if (next.length < 3 && repeatMode === "all") next.push(...playlist.slice(0, 3 - next.length));
       return next;
     }, [shuffleMode, plannedNextIndex, playlist, currentTrackIndex, repeatMode]);
     const nextCloudPath = upcomingTracks[0] && upcomingTracks[0].cloud && !upcomingTracks[0].cloud.cached ? upcomingTracks[0].filePath : null;
-    (0, import_react22.useEffect)(() => {
+    (0, import_react23.useEffect)(() => {
       if (!nextCloudPath || !isPlaying || !window.robosAudio?.prefetchTrack) return void 0;
       const timer = setTimeout(() => {
         window.robosAudio.prefetchTrack(nextCloudPath).catch(() => {
@@ -21536,9 +21848,9 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       });
     };
     const libraryBack = () => setLibNav((prev) => prev.length > 1 ? prev.slice(0, -1) : prev);
-    const goToAlbumOf = (track) => navigateLibrary({ section: "albums", detail: { type: "album", key: (0, import_library_index6.albumKeyOf)(track) } });
-    const goToArtist = (name) => navigateLibrary({ section: "artists", detail: { type: "artist", key: (0, import_library_index6.fold)(name || "Unknown Artist") } });
-    const goToGenre = (genre) => navigateLibrary({ section: "genres", detail: { type: "genre", key: (0, import_library_index6.fold)((0, import_library_index6.splitGenres)(genre)[0] || genre) } });
+    const goToAlbumOf = (track) => navigateLibrary({ section: "albums", detail: { type: "album", key: (0, import_library_index7.albumKeyOf)(track) } });
+    const goToArtist = (name) => navigateLibrary({ section: "artists", detail: { type: "artist", key: (0, import_library_index7.fold)(name || "Unknown Artist") } });
+    const goToGenre = (genre) => navigateLibrary({ section: "genres", detail: { type: "genre", key: (0, import_library_index7.fold)((0, import_library_index7.splitGenres)(genre)[0] || genre) } });
     const setLovedTracks = async (tracks, loved) => {
       const ids = [...new Set((tracks || []).map((t) => t.id).filter(Boolean))];
       if (!ids.length) return;
@@ -21567,12 +21879,26 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       const res = await window.robosAudio.showInFolder(track.filePath).catch(() => null);
       if (!res || !res.ok) showStatus("That file is not reachable right now.");
     };
-    const openMenu = (0, import_react22.useCallback)((e, items) => {
+    const openMenu = (0, import_react23.useCallback)((e, items) => {
       e.preventDefault?.();
       e.stopPropagation?.();
       setMenu({ x: e.clientX, y: e.clientY, items });
     }, []);
-    const closeMenu = (0, import_react22.useCallback)(() => setMenu(null), []);
+    const closeMenu = (0, import_react23.useCallback)(() => setMenu(null), []);
+    const handleAiMetadataApplied = async (res) => {
+      if (res && res.library) {
+        setLibrary(res.library);
+      } else {
+        await loadLibrary();
+      }
+      await refreshPlaylists();
+      if (Array.isArray(res?.tracks) && res.tracks.length) {
+        const updatedById = new Map(res.tracks.map((t) => [t.id, t]));
+        setPlaylist((prev) => prev.map((pt) => pt && updatedById.has(pt.id) ? { ...pt, ...updatedById.get(pt.id) } : pt));
+        setInfoTrack((prev) => prev && updatedById.has(prev.id) ? { ...prev, ...updatedById.get(prev.id) } : prev);
+      }
+      showStatus(`\u2726 AI updated metadata & artwork for ${res?.updatedCount || 0} track(s)!`);
+    };
     const libraryCtx = {
       artBase: artBase.local,
       stats,
@@ -21588,6 +21914,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           setQuickPlaylistName("");
           setTracksForPlaylist(tracks);
         },
+        fixMetadata: (tracks) => setTracksForAiFix(Array.isArray(tracks) ? tracks : []),
         setLoved: setLovedTracks,
         showInfo: setInfoTrack,
         showInFolder,
@@ -21713,7 +22040,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
     latestRef.current.currentTrack = currentTrack;
     latestRef.current.currentIndex = currentTrackIndex;
     latestRef.current.recordPlay = recordPlay;
-    (0, import_react22.useEffect)(() => {
+    (0, import_react23.useEffect)(() => {
       const audio = playerRef.current?.audio?.current;
       if (!audio) return void 0;
       const onTime = () => {
@@ -21738,7 +22065,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         audio.removeEventListener("ended", onEnded);
       };
     }, []);
-    (0, import_react22.useEffect)(() => {
+    (0, import_react23.useEffect)(() => {
       if (!("mediaSession" in navigator)) return;
       const isPaused = () => {
         const audio = playerRef.current?.audio?.current;
@@ -21761,7 +22088,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         }
       }
     }, []);
-    (0, import_react22.useEffect)(() => {
+    (0, import_react23.useEffect)(() => {
       if (!("mediaSession" in navigator) || !currentTrack || typeof MediaMetadata === "undefined") return;
       const art = artUrlFor(artBase.local, currentTrack.artId);
       try {
@@ -21774,7 +22101,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       } catch {
       }
     }, [currentTrack?.id, currentTrack?.title, currentTrack?.artId, artBase.local]);
-    (0, import_react22.useEffect)(() => {
+    (0, import_react23.useEffect)(() => {
       const onKey = (e) => {
         const tag = (e.target.tagName || "").toLowerCase();
         const typing = tag === "input" || tag === "textarea" || tag === "select" || e.target.isContentEditable;
@@ -21801,7 +22128,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       window.addEventListener("keydown", onKey);
       return () => window.removeEventListener("keydown", onKey);
     }, []);
-    (0, import_react22.useEffect)(() => {
+    (0, import_react23.useEffect)(() => {
       const timer = setTimeout(() => {
         try {
           const start = Math.max(0, Math.min(currentTrackIndex - 500, playlist.length - MAX_SAVED_QUEUE));
@@ -21812,7 +22139,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       }, 400);
       return () => clearTimeout(timer);
     }, [playlist, currentTrackIndex]);
-    (0, import_react22.useEffect)(() => {
+    (0, import_react23.useEffect)(() => {
       try {
         localStorage.setItem(PLAYER_PREFS_KEY, JSON.stringify({
           repeat: repeatMode,
@@ -21825,14 +22152,14 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       } catch {
       }
     }, [repeatMode, shuffleMode, dockCollapsed, libraryNav.section, dj.settings, aiAgent]);
-    return /* @__PURE__ */ import_react22.default.createElement(LibraryContext.Provider, { value: libraryCtx }, /* @__PURE__ */ import_react22.default.createElement(
+    return /* @__PURE__ */ import_react23.default.createElement(LibraryContext.Provider, { value: libraryCtx }, /* @__PURE__ */ import_react23.default.createElement(
       "div",
       {
         className: "react-audio-app",
         onDragOver: (e) => e.preventDefault(),
         onDrop: handleDrop
       },
-      /* @__PURE__ */ import_react22.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react22.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react22.default.createElement("path", { d: "M3 18v-6a9 9 0 0 1 18 0v6" }), /* @__PURE__ */ import_react22.default.createElement("path", { d: "M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" }), /* @__PURE__ */ import_react22.default.createElement("polygon", { points: "10 10 15 12 10 14 10 10", fill: "#e8a33d" })), /* @__PURE__ */ import_react22.default.createElement("div", null, /* @__PURE__ */ import_react22.default.createElement("h1", null, "RobOS Audio Player"), /* @__PURE__ */ import_react22.default.createElement("span", { className: "subtitle" }, "Local library, cloud storage and Google Cast"))), /* @__PURE__ */ import_react22.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react22.default.createElement(
+      /* @__PURE__ */ import_react23.default.createElement("header", { className: "app-header" }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "header-brand" }, /* @__PURE__ */ import_react23.default.createElement("svg", { className: "brand-icon", xmlns: "http://www.w3.org/2000/svg", width: "28", height: "28", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react23.default.createElement("path", { d: "M3 18v-6a9 9 0 0 1 18 0v6" }), /* @__PURE__ */ import_react23.default.createElement("path", { d: "M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" }), /* @__PURE__ */ import_react23.default.createElement("polygon", { points: "10 10 15 12 10 14 10 10", fill: "#e8a33d" })), /* @__PURE__ */ import_react23.default.createElement("div", null, /* @__PURE__ */ import_react23.default.createElement("h1", null, "RobOS Audio Player"), /* @__PURE__ */ import_react23.default.createElement("span", { className: "subtitle" }, "Local library, cloud storage and Google Cast"))), /* @__PURE__ */ import_react23.default.createElement("div", { className: "header-actions" }, /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "btn-header-add-folder",
@@ -21840,9 +22167,9 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           onClick: handleSelectFolder,
           title: "Open built-in system file manager to add music folder"
         },
-        /* @__PURE__ */ import_react22.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react22.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" }), /* @__PURE__ */ import_react22.default.createElement("line", { x1: "12", y1: "10", x2: "12", y2: "16" }), /* @__PURE__ */ import_react22.default.createElement("line", { x1: "9", y1: "13", x2: "15", y2: "13" })),
-        /* @__PURE__ */ import_react22.default.createElement("span", null, "Add Folder")
-      ), /* @__PURE__ */ import_react22.default.createElement(
+        /* @__PURE__ */ import_react23.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react23.default.createElement("path", { d: "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" }), /* @__PURE__ */ import_react23.default.createElement("line", { x1: "12", y1: "10", x2: "12", y2: "16" }), /* @__PURE__ */ import_react23.default.createElement("line", { x1: "9", y1: "13", x2: "15", y2: "13" })),
+        /* @__PURE__ */ import_react23.default.createElement("span", null, "Add Folder")
+      ), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "btn-header-add-files",
@@ -21850,9 +22177,9 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           onClick: handleAddFiles,
           title: "Open file picker to select individual audio files"
         },
-        /* @__PURE__ */ import_react22.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react22.default.createElement("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }), /* @__PURE__ */ import_react22.default.createElement("polyline", { points: "14 2 14 8 20 8" }), /* @__PURE__ */ import_react22.default.createElement("line", { x1: "12", y1: "18", x2: "12", y2: "12" }), /* @__PURE__ */ import_react22.default.createElement("line", { x1: "9", y1: "15", x2: "15", y2: "15" })),
-        /* @__PURE__ */ import_react22.default.createElement("span", null, "Add Files")
-      )), /* @__PURE__ */ import_react22.default.createElement("div", { className: "output-selector-wrapper" }, /* @__PURE__ */ import_react22.default.createElement("label", null, "Audio Output:"), /* @__PURE__ */ import_react22.default.createElement("div", { className: "select-group" }, /* @__PURE__ */ import_react22.default.createElement(
+        /* @__PURE__ */ import_react23.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react23.default.createElement("path", { d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" }), /* @__PURE__ */ import_react23.default.createElement("polyline", { points: "14 2 14 8 20 8" }), /* @__PURE__ */ import_react23.default.createElement("line", { x1: "12", y1: "18", x2: "12", y2: "12" }), /* @__PURE__ */ import_react23.default.createElement("line", { x1: "9", y1: "15", x2: "15", y2: "15" })),
+        /* @__PURE__ */ import_react23.default.createElement("span", null, "Add Files")
+      )), /* @__PURE__ */ import_react23.default.createElement("div", { className: "output-selector-wrapper" }, /* @__PURE__ */ import_react23.default.createElement("label", null, "Audio Output:"), /* @__PURE__ */ import_react23.default.createElement("div", { className: "select-group" }, /* @__PURE__ */ import_react23.default.createElement(
         "select",
         {
           id: "output-select",
@@ -21878,10 +22205,10 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             showStatus(`Switched output to: ${e.target.options[e.target.selectedIndex].text}`);
           }
         },
-        /* @__PURE__ */ import_react22.default.createElement("option", { value: "local" }, "Desktop (Local Audio)"),
-        speakers.map((s) => /* @__PURE__ */ import_react22.default.createElement("option", { key: s.ip, value: s.ip }, s.name, " (", s.ip, ")")),
-        speakers.length > 0 && /* @__PURE__ */ import_react22.default.createElement("option", { value: "all" }, "Broadcast to All Speakers")
-      ), /* @__PURE__ */ import_react22.default.createElement(
+        /* @__PURE__ */ import_react23.default.createElement("option", { value: "local" }, "Desktop (Local Audio)"),
+        speakers.map((s) => /* @__PURE__ */ import_react23.default.createElement("option", { key: s.ip, value: s.ip }, s.name, " (", s.ip, ")")),
+        speakers.length > 0 && /* @__PURE__ */ import_react23.default.createElement("option", { value: "all" }, "Broadcast to All Speakers")
+      ), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "btn-scan-speakers",
@@ -21889,64 +22216,64 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           onClick: refreshSpeakers,
           title: "Scan LAN for Google Cast speakers"
         },
-        /* @__PURE__ */ import_react22.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react22.default.createElement("path", { d: "M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" }), /* @__PURE__ */ import_react22.default.createElement("path", { d: "M3 3v5h5" }), /* @__PURE__ */ import_react22.default.createElement("path", { d: "M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" }), /* @__PURE__ */ import_react22.default.createElement("path", { d: "M16 21h5v-5" })),
-        /* @__PURE__ */ import_react22.default.createElement("span", null, "Scan Speakers")
+        /* @__PURE__ */ import_react23.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round" }, /* @__PURE__ */ import_react23.default.createElement("path", { d: "M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" }), /* @__PURE__ */ import_react23.default.createElement("path", { d: "M3 3v5h5" }), /* @__PURE__ */ import_react23.default.createElement("path", { d: "M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" }), /* @__PURE__ */ import_react23.default.createElement("path", { d: "M16 21h5v-5" })),
+        /* @__PURE__ */ import_react23.default.createElement("span", null, "Scan Speakers")
       )))),
-      /* @__PURE__ */ import_react22.default.createElement("nav", { className: "nav-tabs" }, /* @__PURE__ */ import_react22.default.createElement(
+      /* @__PURE__ */ import_react23.default.createElement("nav", { className: "nav-tabs" }, /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "tab-btn-player",
           className: `tab-btn ${activeTab === "player" ? "active" : ""}`,
           onClick: () => setActiveTab("player")
         },
-        /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "note" }),
-        /* @__PURE__ */ import_react22.default.createElement("span", null, "Now Playing")
-      ), /* @__PURE__ */ import_react22.default.createElement(
+        /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "note" }),
+        /* @__PURE__ */ import_react23.default.createElement("span", null, "Now Playing")
+      ), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "tab-btn-playlists",
           className: `tab-btn ${activeTab === "playlists" ? "active" : ""}`,
           onClick: () => setActiveTab("playlists")
         },
-        /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "list" }),
-        /* @__PURE__ */ import_react22.default.createElement("span", null, "Playlists (", playlists.length, ")")
-      ), /* @__PURE__ */ import_react22.default.createElement(
+        /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "list" }),
+        /* @__PURE__ */ import_react23.default.createElement("span", null, "Playlists (", playlists.length, ")")
+      ), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "tab-btn-library",
           className: `tab-btn ${activeTab === "library" ? "active" : ""}`,
           onClick: () => setActiveTab("library")
         },
-        /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "library" }),
-        /* @__PURE__ */ import_react22.default.createElement("span", null, "Library (", library.tracks.length, ")")
-      ), /* @__PURE__ */ import_react22.default.createElement(
+        /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "library" }),
+        /* @__PURE__ */ import_react23.default.createElement("span", null, "Library (", library.tracks.length, ")")
+      ), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "tab-btn-cloud",
           className: `tab-btn ${activeTab === "cloud" ? "active" : ""}`,
           onClick: () => setActiveTab("cloud")
         },
-        /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "cloud" }),
-        /* @__PURE__ */ import_react22.default.createElement("span", null, "Cloud Storage")
-      ), /* @__PURE__ */ import_react22.default.createElement(
+        /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "cloud" }),
+        /* @__PURE__ */ import_react23.default.createElement("span", null, "Cloud Storage")
+      ), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "tab-btn-ambient",
           className: `tab-btn ${activeTab === "ambient" ? "active" : ""}`,
           onClick: () => setActiveTab("ambient")
         },
-        /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "wave" }),
-        /* @__PURE__ */ import_react22.default.createElement("span", null, "Ambient")
-      ), /* @__PURE__ */ import_react22.default.createElement(
+        /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "wave" }),
+        /* @__PURE__ */ import_react23.default.createElement("span", null, "Ambient")
+      ), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "tab-btn-speakers",
           className: `tab-btn ${activeTab === "speakers" ? "active" : ""}`,
           onClick: () => setActiveTab("speakers")
         },
-        /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "speaker" }),
-        /* @__PURE__ */ import_react22.default.createElement("span", null, "Speakers (", speakers.length, ")")
-      ), /* @__PURE__ */ import_react22.default.createElement("span", { className: "nav-spacer" }), /* @__PURE__ */ import_react22.default.createElement(
+        /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "speaker" }),
+        /* @__PURE__ */ import_react23.default.createElement("span", null, "Speakers (", speakers.length, ")")
+      ), /* @__PURE__ */ import_react23.default.createElement("span", { className: "nav-spacer" }), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "btn-toggle-queue-panel",
@@ -21954,10 +22281,10 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           onClick: () => setDockCollapsed((c) => !c),
           title: "Show or hide the Now Playing playlist"
         },
-        /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "panel" }),
-        /* @__PURE__ */ import_react22.default.createElement("span", null, "Now Playing list")
+        /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "panel" }),
+        /* @__PURE__ */ import_react23.default.createElement("span", null, "Now Playing list")
       )),
-      /* @__PURE__ */ import_react22.default.createElement("div", { className: "app-body" }, /* @__PURE__ */ import_react22.default.createElement("main", { className: `tab-content ${activeTab === "library" ? "library-active" : ""}` }, isScanningLibrary && /* @__PURE__ */ import_react22.default.createElement("div", { className: "scan-progress-banner" }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "scan-progress-info" }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react22.default.createElement("div", { className: "scan-text" }, /* @__PURE__ */ import_react22.default.createElement("strong", null, "Background Library Scanning Active"), /* @__PURE__ */ import_react22.default.createElement("span", { className: "scan-details" }, libraryScanStatus?.total > 0 ? `${libraryScanStatus.current || 0} / ${libraryScanStatus.total} files (${Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)}%)` : "Discovering audio files in folder(s)...", libraryScanStatus?.file ? ` \u2014 ${libraryScanStatus.file.split("/").slice(-2).join("/")}` : ""))), /* @__PURE__ */ import_react22.default.createElement("div", { className: "scan-bar-container" }, /* @__PURE__ */ import_react22.default.createElement(
+      /* @__PURE__ */ import_react23.default.createElement("div", { className: "app-body" }, /* @__PURE__ */ import_react23.default.createElement("main", { className: `tab-content ${activeTab === "library" ? "library-active" : ""}` }, isScanningLibrary && /* @__PURE__ */ import_react23.default.createElement("div", { className: "scan-progress-banner" }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "scan-progress-info" }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "scan-spinner" }), /* @__PURE__ */ import_react23.default.createElement("div", { className: "scan-text" }, /* @__PURE__ */ import_react23.default.createElement("strong", null, "Background Library Scanning Active"), /* @__PURE__ */ import_react23.default.createElement("span", { className: "scan-details" }, libraryScanStatus?.total > 0 ? `${libraryScanStatus.current || 0} / ${libraryScanStatus.total} files (${Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)}%)` : "Discovering audio files in folder(s)...", libraryScanStatus?.file ? ` \u2014 ${libraryScanStatus.file.split("/").slice(-2).join("/")}` : ""))), /* @__PURE__ */ import_react23.default.createElement("div", { className: "scan-bar-container" }, /* @__PURE__ */ import_react23.default.createElement(
         "div",
         {
           className: "scan-bar-fill",
@@ -21965,16 +22292,16 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             width: `${libraryScanStatus?.total > 0 ? Math.min(100, Math.round((libraryScanStatus.current || 0) / libraryScanStatus.total * 100)) : 100}%`
           }
         }
-      )), /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelScan }, "Cancel Scan")), /* @__PURE__ */ import_react22.default.createElement("div", { className: "player-deck-container", style: { display: activeTab === "player" ? "block" : "none" } }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "deck-card" }, (outputTarget !== "local" || activeCastSession) && /* @__PURE__ */ import_react22.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react22.default.createElement(
+      )), /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-cancel-scan", onClick: handleCancelScan }, "Cancel Scan")), /* @__PURE__ */ import_react23.default.createElement("div", { className: "player-deck-container", style: { display: activeTab === "player" ? "block" : "none" } }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "deck-card" }, (outputTarget !== "local" || activeCastSession) && /* @__PURE__ */ import_react23.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react23.default.createElement(
         "span",
         {
           className: "cast-pulse-dot",
           style: { background: activeCastSession?.isPaused ? "#eab308" : "#22c55e" }
         }
-      ), /* @__PURE__ */ import_react22.default.createElement("span", null, activeCastSession ? `Casting "${currentTrack?.title || "Track"}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? " (Paused)" : " (Live)"}` : `Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`)), /* @__PURE__ */ import_react22.default.createElement("div", { className: "cast-bar-controls" }, activeCastSession && /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume cast" : "Pause cast"), activeCastSession && /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "Stop Cast"), outputTarget !== "local" && /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-chip", onClick: () => {
+      ), /* @__PURE__ */ import_react23.default.createElement("span", null, activeCastSession ? `Casting "${currentTrack?.title || "Track"}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? " (Paused)" : " (Live)"}` : `Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`)), /* @__PURE__ */ import_react23.default.createElement("div", { className: "cast-bar-controls" }, activeCastSession && /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume cast" : "Pause cast"), activeCastSession && /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "Stop Cast"), outputTarget !== "local" && /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-chip", onClick: () => {
         setOutputTarget("local");
         handleStopCast();
-      } }, "Switch to Local Desktop"))), /* @__PURE__ */ import_react22.default.createElement("div", { className: "track-hero" }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "album-art-box" }, /* @__PURE__ */ import_react22.default.createElement(Cover, { artId: currentTrack?.artId, name: currentTrack?.album || currentTrack?.title, icon: currentTrack?.artId ? null : "disc" })), /* @__PURE__ */ import_react22.default.createElement("div", { className: "track-details" }, /* @__PURE__ */ import_react22.default.createElement("h2", { id: "track-title" }, currentTrack?.title || "No Track Selected", currentTrack && /* @__PURE__ */ import_react22.default.createElement(LoveButton, { track: currentTrack, size: 16 })), /* @__PURE__ */ import_react22.default.createElement("p", { id: "track-artist" }, /* @__PURE__ */ import_react22.default.createElement("a", { className: "link", onClick: () => currentTrack && goToArtist(currentTrack.artist) }, currentTrack?.artist || "Unknown Artist"), " ", "\u2022", " ", /* @__PURE__ */ import_react22.default.createElement("a", { className: "link", onClick: () => currentTrack && goToAlbumOf(currentTrack) }, currentTrack?.album || "RobOS Library")), /* @__PURE__ */ import_react22.default.createElement("div", { className: "track-meta-pills" }, /* @__PURE__ */ import_react22.default.createElement("span", { className: "badge" }, "Output: ", getSpeakerName(outputTarget)), activeCastSession && /* @__PURE__ */ import_react22.default.createElement("span", { className: "badge", style: { color: "#22c55e", borderColor: "#22c55e" } }, activeCastSession.isPaused ? "Cast Paused" : "Casting Active"), currentTrack?.genre && /* @__PURE__ */ import_react22.default.createElement("span", { className: "badge link", onClick: () => goToGenre(currentTrack.genre) }, currentTrack.genre), currentTrack?.year && /* @__PURE__ */ import_react22.default.createElement("span", { className: "badge" }, currentTrack.year))), /* @__PURE__ */ import_react22.default.createElement("div", { className: "hero-quick-actions" }, /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-secondary", onClick: handleSelectFolder, title: "Add folder via file manager" }, "Add Folder"), /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles, title: "Add files" }, "Add Files"))), /* @__PURE__ */ import_react22.default.createElement("div", { className: "react-h5-wrapper" }, /* @__PURE__ */ import_react22.default.createElement(
+      } }, "Switch to Local Desktop"))), /* @__PURE__ */ import_react23.default.createElement("div", { className: "track-hero" }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "album-art-box" }, /* @__PURE__ */ import_react23.default.createElement(Cover, { artId: currentTrack?.artId, name: currentTrack?.album || currentTrack?.title, icon: currentTrack?.artId ? null : "disc" })), /* @__PURE__ */ import_react23.default.createElement("div", { className: "track-details" }, /* @__PURE__ */ import_react23.default.createElement("h2", { id: "track-title" }, currentTrack?.title || "No Track Selected", currentTrack && /* @__PURE__ */ import_react23.default.createElement(LoveButton, { track: currentTrack, size: 16 })), /* @__PURE__ */ import_react23.default.createElement("p", { id: "track-artist" }, /* @__PURE__ */ import_react23.default.createElement("a", { className: "link", onClick: () => currentTrack && goToArtist(currentTrack.artist) }, currentTrack?.artist || "Unknown Artist"), " ", "\u2022", " ", /* @__PURE__ */ import_react23.default.createElement("a", { className: "link", onClick: () => currentTrack && goToAlbumOf(currentTrack) }, currentTrack?.album || "RobOS Library")), /* @__PURE__ */ import_react23.default.createElement("div", { className: "track-meta-pills" }, /* @__PURE__ */ import_react23.default.createElement("span", { className: "badge" }, "Output: ", getSpeakerName(outputTarget)), activeCastSession && /* @__PURE__ */ import_react23.default.createElement("span", { className: "badge", style: { color: "#22c55e", borderColor: "#22c55e" } }, activeCastSession.isPaused ? "Cast Paused" : "Casting Active"), currentTrack?.genre && /* @__PURE__ */ import_react23.default.createElement("span", { className: "badge link", onClick: () => goToGenre(currentTrack.genre) }, currentTrack.genre), currentTrack?.year && /* @__PURE__ */ import_react23.default.createElement("span", { className: "badge" }, currentTrack.year))), /* @__PURE__ */ import_react23.default.createElement("div", { className: "hero-quick-actions" }, /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-secondary", onClick: handleSelectFolder, title: "Add folder via file manager" }, "Add Folder"), /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-secondary", onClick: handleAddFiles, title: "Add files" }, "Add Files"))), /* @__PURE__ */ import_react23.default.createElement("div", { className: "react-h5-wrapper" }, /* @__PURE__ */ import_react23.default.createElement(
         es_default,
         {
           ref: playerRef,
@@ -21987,8 +22314,8 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
               a.currentTime = at;
             }
           },
-          customProgressBarSection: outputTarget !== "local" ? [/* @__PURE__ */ import_react22.default.createElement(CastProgress, { key: "cast-progress", className: "mini-progress rhap-cast-progress", id: "cast-progress", onSeek: handleCastSeek })] : void 0,
-          customControlsSection: outputTarget !== "local" ? [RHAP_UI.ADDITIONAL_CONTROLS, /* @__PURE__ */ import_react22.default.createElement(CastControls, { key: "cast-controls", onPrev: handlePlayPrev, onToggle: handleTogglePlayPause, onNext: handlePlayNext }), /* @__PURE__ */ import_react22.default.createElement("div", { key: "cast-spacer", className: "rhap_volume-controls" })] : void 0,
+          customProgressBarSection: outputTarget !== "local" ? [/* @__PURE__ */ import_react23.default.createElement(CastProgress, { key: "cast-progress", className: "mini-progress rhap-cast-progress", id: "cast-progress", onSeek: handleCastSeek })] : void 0,
+          customControlsSection: outputTarget !== "local" ? [RHAP_UI.ADDITIONAL_CONTROLS, /* @__PURE__ */ import_react23.default.createElement(CastControls, { key: "cast-controls", onPrev: handlePlayPrev, onToggle: handleTogglePlayPause, onNext: handlePlayNext }), /* @__PURE__ */ import_react23.default.createElement("div", { key: "cast-spacer", className: "rhap_volume-controls" })] : void 0,
           showSkipControls: true,
           showJumpControls: false,
           autoPlayAfterSrcChange: true,
@@ -22007,18 +22334,18 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           },
           className: "robos-rhap-theme",
           customIcons: {
-            play: /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "play", size: 34 }),
-            pause: /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "pause", size: 34 }),
-            previous: /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "prev", size: 24 }),
-            next: /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "next", size: 24 }),
-            volume: /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "volume", size: 20 }),
-            volumeMute: /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "volumeMute", size: 20 })
+            play: /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "play", size: 34 }),
+            pause: /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "pause", size: 34 }),
+            previous: /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "prev", size: 24 }),
+            next: /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "next", size: 24 }),
+            volume: /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "volume", size: 20 }),
+            volumeMute: /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "volumeMute", size: 20 })
           },
           layout: "stacked",
           customAdditionalControls: [],
           muted: outputTarget !== "local"
         }
-      )), /* @__PURE__ */ import_react22.default.createElement(
+      )), /* @__PURE__ */ import_react23.default.createElement(
         Lyrics,
         {
           track: currentTrack,
@@ -22028,7 +22355,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             else if (playerRef.current?.audio?.current) playerRef.current.audio.current.currentTime = t;
           }
         }
-      ))), activeTab === "playlists" && /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlists-view-container" }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlists-header" }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlists-title-group" }, /* @__PURE__ */ import_react22.default.createElement("h3", null, "Custom Playlists (", playlists.length, ")"), /* @__PURE__ */ import_react22.default.createElement("p", { className: "subtitle" }, "Curate custom music collections, import/export M3U playlists, and cast directly to speakers")), /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlists-header-actions" }, /* @__PURE__ */ import_react22.default.createElement(
+      ))), activeTab === "playlists" && /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlists-view-container" }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlists-header" }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlists-title-group" }, /* @__PURE__ */ import_react23.default.createElement("h3", null, "Custom Playlists (", playlists.length, ")"), /* @__PURE__ */ import_react23.default.createElement("p", { className: "subtitle" }, "Curate custom music collections, import/export M3U playlists, and cast directly to speakers")), /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlists-header-actions" }, /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "btn-create-playlist",
@@ -22036,7 +22363,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           onClick: () => setShowCreatePlaylistModal(true)
         },
         "New Playlist"
-      ), /* @__PURE__ */ import_react22.default.createElement(
+      ), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "btn-ai-playlist",
@@ -22045,7 +22372,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           title: "Describe a playlist and let your RobOS agent build it"
         },
         "\u2726 AI Playlist"
-      ), /* @__PURE__ */ import_react22.default.createElement(
+      ), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "btn-import-m3u",
@@ -22054,16 +22381,16 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           title: "Import external .m3u or .m3u8 playlist file"
         },
         "Import M3U"
-      ))), /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlists-layout" }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlists-sidebar", style: { width: playlistSidebarWidth } }, playlists.length === 0 ? /* @__PURE__ */ import_react22.default.createElement("div", { className: "empty-playlists-sidebar" }, /* @__PURE__ */ import_react22.default.createElement("p", null, "No playlists created yet."), /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "8px" } }, "Create Playlist")) : playlists.map((pl) => /* @__PURE__ */ import_react22.default.createElement(
+      ))), /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlists-layout" }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlists-sidebar", style: { width: playlistSidebarWidth } }, playlists.length === 0 ? /* @__PURE__ */ import_react23.default.createElement("div", { className: "empty-playlists-sidebar" }, /* @__PURE__ */ import_react23.default.createElement("p", null, "No playlists created yet."), /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "8px" } }, "Create Playlist")) : playlists.map((pl) => /* @__PURE__ */ import_react23.default.createElement(
         "div",
         {
           key: pl.id,
           className: `playlist-sidebar-card ${selectedPlaylistId === pl.id ? "active" : ""}`,
           onClick: () => setSelectedPlaylistId(pl.id)
         },
-        /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlist-sidebar-icon" }, /* @__PURE__ */ import_react22.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.5" }, /* @__PURE__ */ import_react22.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react22.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react22.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))),
-        /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlist-sidebar-info" }, /* @__PURE__ */ import_react22.default.createElement("span", { className: "playlist-sidebar-name" }, pl.name), /* @__PURE__ */ import_react22.default.createElement("span", { className: "playlist-sidebar-meta" }, pl.tracks?.length || 0, " track", (pl.tracks?.length || 0) === 1 ? "" : "s")),
-        /* @__PURE__ */ import_react22.default.createElement(
+        /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlist-sidebar-icon" }, /* @__PURE__ */ import_react23.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.5" }, /* @__PURE__ */ import_react23.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react23.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react23.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))),
+        /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlist-sidebar-info" }, /* @__PURE__ */ import_react23.default.createElement("span", { className: "playlist-sidebar-name" }, pl.name), /* @__PURE__ */ import_react23.default.createElement("span", { className: "playlist-sidebar-meta" }, pl.tracks?.length || 0, " track", (pl.tracks?.length || 0) === 1 ? "" : "s")),
+        /* @__PURE__ */ import_react23.default.createElement(
           "button",
           {
             className: "btn-playlist-quick-play",
@@ -22073,9 +22400,9 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
               handlePlayPlaylist(pl, true);
             }
           },
-          /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "play", size: 14 })
+          /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "play", size: 14 })
         )
-      ))), /* @__PURE__ */ import_react22.default.createElement(
+      ))), /* @__PURE__ */ import_react23.default.createElement(
         Splitter,
         {
           id: "playlists-splitter",
@@ -22086,7 +22413,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           max: () => Math.max(220, Math.min(560, window.innerWidth - 700)),
           defaultWidth: PLAYLIST_SIDEBAR_WIDTH
         }
-      ), /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlist-detail-pane" }, selectedPlaylist ? /* @__PURE__ */ import_react22.default.createElement(import_react22.default.Fragment, null, /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlist-detail-header" }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlist-detail-meta" }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlist-cover-icon" }, /* @__PURE__ */ import_react22.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "36", height: "36", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5" }, /* @__PURE__ */ import_react22.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react22.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react22.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))), /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlist-text-meta" }, /* @__PURE__ */ import_react22.default.createElement("h2", null, selectedPlaylist.name), /* @__PURE__ */ import_react22.default.createElement("p", { className: "playlist-description" }, selectedPlaylist.description || "No description provided."), /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlist-stats" }, /* @__PURE__ */ import_react22.default.createElement("span", { className: "badge" }, selectedPlaylist.tracks?.length || 0, " Tracks"), /* @__PURE__ */ import_react22.default.createElement("span", { className: "badge" }, "Duration: ", formatTotalDuration(selectedPlaylist.tracks)), selectedPlaylist.ai && /* @__PURE__ */ import_react22.default.createElement("span", { className: "badge", title: selectedPlaylist.ai.request }, "\u2726 AI playlist"), selectedPlaylist.dj && /* @__PURE__ */ import_react22.default.createElement("span", { className: "badge", title: selectedPlaylist.dj.persona }, "\u{1F399} Virtual DJ"), /* @__PURE__ */ import_react22.default.createElement("span", { className: "badge" }, "Updated: ", new Date(selectedPlaylist.updatedAt || selectedPlaylist.createdAt || Date.now()).toLocaleDateString())))), /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlist-actions-bar" }, /* @__PURE__ */ import_react22.default.createElement(
+      ), /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlist-detail-pane" }, selectedPlaylist ? /* @__PURE__ */ import_react23.default.createElement(import_react23.default.Fragment, null, /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlist-detail-header" }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlist-detail-meta" }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlist-cover-icon" }, /* @__PURE__ */ import_react23.default.createElement("svg", { xmlns: "http://www.w3.org/2000/svg", width: "36", height: "36", viewBox: "0 0 24 24", fill: "none", stroke: "#e8a33d", "stroke-width": "1.5" }, /* @__PURE__ */ import_react23.default.createElement("path", { d: "M9 18V5l12-2v13" }), /* @__PURE__ */ import_react23.default.createElement("circle", { cx: "6", cy: "18", r: "3" }), /* @__PURE__ */ import_react23.default.createElement("circle", { cx: "18", cy: "16", r: "3" }))), /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlist-text-meta" }, /* @__PURE__ */ import_react23.default.createElement("h2", null, selectedPlaylist.name), /* @__PURE__ */ import_react23.default.createElement("p", { className: "playlist-description" }, selectedPlaylist.description || "No description provided."), /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlist-stats" }, /* @__PURE__ */ import_react23.default.createElement("span", { className: "badge" }, selectedPlaylist.tracks?.length || 0, " Tracks"), /* @__PURE__ */ import_react23.default.createElement("span", { className: "badge" }, "Duration: ", formatTotalDuration(selectedPlaylist.tracks)), selectedPlaylist.ai && /* @__PURE__ */ import_react23.default.createElement("span", { className: "badge", title: selectedPlaylist.ai.request }, "\u2726 AI playlist"), selectedPlaylist.dj && /* @__PURE__ */ import_react23.default.createElement("span", { className: "badge", title: selectedPlaylist.dj.persona }, "\u{1F399} Virtual DJ"), /* @__PURE__ */ import_react23.default.createElement("span", { className: "badge" }, "Updated: ", new Date(selectedPlaylist.updatedAt || selectedPlaylist.createdAt || Date.now()).toLocaleDateString())))), /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlist-actions-bar" }, /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "btn-play-all-playlist",
@@ -22096,7 +22423,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           title: "Play all tracks in order (replaces queue)"
         },
         "Play All"
-      ), /* @__PURE__ */ import_react22.default.createElement(
+      ), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "btn-append-playlist",
@@ -22106,7 +22433,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           title: "Append all tracks to current queue"
         },
         "Append to Queue"
-      ), speakers.length > 0 && /* @__PURE__ */ import_react22.default.createElement(
+      ), speakers.length > 0 && /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "btn-cast-playlist",
@@ -22116,7 +22443,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           title: `Cast playlist to ${getSpeakerName(outputTarget !== "local" ? outputTarget : speakers[0].ip)}`
         },
         "Cast Playlist"
-      ), /* @__PURE__ */ import_react22.default.createElement(
+      ), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "btn-export-m3u",
@@ -22125,7 +22452,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           title: "Export playlist to .m3u file"
         },
         "Export M3U"
-      ), /* @__PURE__ */ import_react22.default.createElement(
+      ), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           id: "btn-delete-playlist",
@@ -22134,7 +22461,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           title: "Delete playlist"
         },
         "Delete"
-      ))), /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlist-tracks-container" }, !selectedPlaylist.tracks || selectedPlaylist.tracks.length === 0 ? /* @__PURE__ */ import_react22.default.createElement("div", { className: "empty-playlist-tracks" }, /* @__PURE__ */ import_react22.default.createElement("p", null, "This playlist has no tracks yet."), /* @__PURE__ */ import_react22.default.createElement("span", { className: "hint" }, "Choose tracks from your Media Library below or import local files."), /* @__PURE__ */ import_react22.default.createElement(
+      ))), /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlist-tracks-container" }, !selectedPlaylist.tracks || selectedPlaylist.tracks.length === 0 ? /* @__PURE__ */ import_react23.default.createElement("div", { className: "empty-playlist-tracks" }, /* @__PURE__ */ import_react23.default.createElement("p", null, "This playlist has no tracks yet."), /* @__PURE__ */ import_react23.default.createElement("span", { className: "hint" }, "Choose tracks from your Media Library below or import local files."), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           className: "btn-accent",
@@ -22142,15 +22469,15 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           style: { marginTop: "12px" }
         },
         "Add Audio Files from Disk"
-      )) : /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlist-tracks-table", style: { "--pl-grid": playlistColumns.template } }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlist-table-header" }, /* @__PURE__ */ import_react22.default.createElement("span", { className: "col-num" }, "#"), /* @__PURE__ */ import_react22.default.createElement("span", { className: "col-title col-resizable" }, "Title", playlistColumns.handleFor("title")), /* @__PURE__ */ import_react22.default.createElement("span", { className: "col-artist col-resizable" }, "Artist", playlistColumns.handleFor("artist")), /* @__PURE__ */ import_react22.default.createElement("span", { className: "col-album col-resizable" }, "Album", playlistColumns.handleFor("album")), /* @__PURE__ */ import_react22.default.createElement("span", { className: "col-duration" }, "Duration"), /* @__PURE__ */ import_react22.default.createElement("span", { className: "col-actions" }, "Actions")), /* @__PURE__ */ import_react22.default.createElement("div", { className: "playlist-table-body" }, selectedPlaylist.tracks.map((track, tIdx) => /* @__PURE__ */ import_react22.default.createElement("div", { key: track.id || tIdx, className: "playlist-table-row" }, /* @__PURE__ */ import_react22.default.createElement("span", { className: "col-num" }, tIdx + 1), /* @__PURE__ */ import_react22.default.createElement("span", { className: "col-title", title: track.title }, track.title), /* @__PURE__ */ import_react22.default.createElement("span", { className: "col-artist", title: track.artist }, track.artist), /* @__PURE__ */ import_react22.default.createElement("span", { className: "col-album", title: track.album }, track.album), /* @__PURE__ */ import_react22.default.createElement("span", { className: "col-duration" }, formatDuration5(track.duration)), /* @__PURE__ */ import_react22.default.createElement("span", { className: "col-actions" }, /* @__PURE__ */ import_react22.default.createElement(
+      )) : /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlist-tracks-table", style: { "--pl-grid": playlistColumns.template } }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlist-table-header" }, /* @__PURE__ */ import_react23.default.createElement("span", { className: "col-num" }, "#"), /* @__PURE__ */ import_react23.default.createElement("span", { className: "col-title col-resizable" }, "Title", playlistColumns.handleFor("title")), /* @__PURE__ */ import_react23.default.createElement("span", { className: "col-artist col-resizable" }, "Artist", playlistColumns.handleFor("artist")), /* @__PURE__ */ import_react23.default.createElement("span", { className: "col-album col-resizable" }, "Album", playlistColumns.handleFor("album")), /* @__PURE__ */ import_react23.default.createElement("span", { className: "col-duration" }, "Duration"), /* @__PURE__ */ import_react23.default.createElement("span", { className: "col-actions" }, "Actions")), /* @__PURE__ */ import_react23.default.createElement("div", { className: "playlist-table-body" }, selectedPlaylist.tracks.map((track, tIdx) => /* @__PURE__ */ import_react23.default.createElement("div", { key: track.id || tIdx, className: "playlist-table-row" }, /* @__PURE__ */ import_react23.default.createElement("span", { className: "col-num" }, tIdx + 1), /* @__PURE__ */ import_react23.default.createElement("span", { className: "col-title", title: track.title }, track.title), /* @__PURE__ */ import_react23.default.createElement("span", { className: "col-artist", title: track.artist }, track.artist), /* @__PURE__ */ import_react23.default.createElement("span", { className: "col-album", title: track.album }, track.album), /* @__PURE__ */ import_react23.default.createElement("span", { className: "col-duration" }, formatDuration5(track.duration)), /* @__PURE__ */ import_react23.default.createElement("span", { className: "col-actions" }, /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           className: "btn-row-action",
           title: "Play track",
           onClick: () => playTrack(track)
         },
-        /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "play", size: 14 })
-      ), /* @__PURE__ */ import_react22.default.createElement(
+        /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "play", size: 14 })
+      ), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           className: "btn-row-action",
@@ -22158,8 +22485,8 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           disabled: tIdx === 0,
           onClick: () => handleMoveTrackInPlaylist(selectedPlaylist.id, tIdx, tIdx - 1)
         },
-        /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "up", size: 14 })
-      ), /* @__PURE__ */ import_react22.default.createElement(
+        /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "up", size: 14 })
+      ), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           className: "btn-row-action",
@@ -22167,16 +22494,16 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           disabled: tIdx === selectedPlaylist.tracks.length - 1,
           onClick: () => handleMoveTrackInPlaylist(selectedPlaylist.id, tIdx, tIdx + 1)
         },
-        /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "down", size: 14 })
-      ), /* @__PURE__ */ import_react22.default.createElement(
+        /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "down", size: 14 })
+      ), /* @__PURE__ */ import_react23.default.createElement(
         "button",
         {
           className: "btn-row-action btn-danger",
           title: "Remove from playlist",
           onClick: () => handleRemoveTrackFromPlaylist(selectedPlaylist.id, tIdx)
         },
-        /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "x", size: 14 })
-      )))))), library.tracks.length > 0 && /* @__PURE__ */ import_react22.default.createElement("div", { className: "quick-add-from-library" }, /* @__PURE__ */ import_react22.default.createElement("h4", null, "Add Tracks from Media Library"), /* @__PURE__ */ import_react22.default.createElement("div", { className: "quick-add-controls" }, /* @__PURE__ */ import_react22.default.createElement(
+        /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "x", size: 14 })
+      )))))), library.tracks.length > 0 && /* @__PURE__ */ import_react23.default.createElement("div", { className: "quick-add-from-library" }, /* @__PURE__ */ import_react23.default.createElement("h4", null, "Add Tracks from Media Library"), /* @__PURE__ */ import_react23.default.createElement("div", { className: "quick-add-controls" }, /* @__PURE__ */ import_react23.default.createElement(
         "select",
         {
           id: "select-track-to-add",
@@ -22191,15 +22518,15 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             }
           }
         },
-        /* @__PURE__ */ import_react22.default.createElement("option", { value: "", disabled: true }, 'Select track to add to "', selectedPlaylist.name, '"...'),
-        library.tracks.map((t, idx) => /* @__PURE__ */ import_react22.default.createElement("option", { key: t.id || idx, value: t.id || t.filePath }, t.title, " \u2014 ", t.artist, " (", formatDuration5(t.duration), ")"))
-      ), /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-secondary", onClick: handleAddFilesToSelectedPlaylist }, "Add Audio Files"))))) : /* @__PURE__ */ import_react22.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react22.default.createElement("p", null, "Select a playlist from the left or create a new one."), /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "12px" } }, "Create Playlist"))))), activeTab === "library" && /* @__PURE__ */ import_react22.default.createElement("div", { className: "library-tab" }, activeCastSession && /* @__PURE__ */ import_react22.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react22.default.createElement(
+        /* @__PURE__ */ import_react23.default.createElement("option", { value: "", disabled: true }, 'Select track to add to "', selectedPlaylist.name, '"...'),
+        library.tracks.map((t, idx) => /* @__PURE__ */ import_react23.default.createElement("option", { key: t.id || idx, value: t.id || t.filePath }, t.title, " \u2014 ", t.artist, " (", formatDuration5(t.duration), ")"))
+      ), /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-secondary", onClick: handleAddFilesToSelectedPlaylist }, "Add Audio Files"))))) : /* @__PURE__ */ import_react23.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react23.default.createElement("p", null, "Select a playlist from the left or create a new one."), /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "12px" } }, "Create Playlist"))))), activeTab === "library" && /* @__PURE__ */ import_react23.default.createElement("div", { className: "library-tab" }, activeCastSession && /* @__PURE__ */ import_react23.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react23.default.createElement(
         "span",
         {
           className: "cast-pulse-dot",
           style: { background: activeCastSession.isPaused ? "#eab308" : "#22c55e" }
         }
-      ), /* @__PURE__ */ import_react22.default.createElement("span", null, "Currently casting to ", /* @__PURE__ */ import_react22.default.createElement("strong", null, getSpeakerName(activeCastSession.ip)))), /* @__PURE__ */ import_react22.default.createElement("div", { className: "cast-bar-controls" }, /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume" : "Pause"), /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "Stop Cast"))), /* @__PURE__ */ import_react22.default.createElement(
+      ), /* @__PURE__ */ import_react23.default.createElement("span", null, "Currently casting to ", /* @__PURE__ */ import_react23.default.createElement("strong", null, getSpeakerName(activeCastSession.ip)))), /* @__PURE__ */ import_react23.default.createElement("div", { className: "cast-bar-controls" }, /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-chip", onClick: handleToggleCastPause }, activeCastSession.isPaused ? "Resume" : "Pause"), /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(activeCastSession.ip) }, "Stop Cast"))), /* @__PURE__ */ import_react23.default.createElement(
         Library,
         {
           tracks: library.tracks,
@@ -22211,6 +22538,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           searchInputRef,
           isScanning: isScanningLibrary,
           onAiPlaylist: () => setShowAiPlaylist(true),
+          onAiFixMetadata: () => setTracksForAiFix([]),
           onAddFolder: handleSelectFolder,
           onAddFiles: handleAddFiles,
           onRefresh: async () => {
@@ -22228,7 +22556,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             busyId: syncingFolder === "all" ? "__all__" : syncingFolder
           }
         }
-      )), activeTab === "cloud" && /* @__PURE__ */ import_react22.default.createElement(
+      )), activeTab === "cloud" && /* @__PURE__ */ import_react23.default.createElement(
         CloudBrowser,
         {
           folders,
@@ -22241,14 +22569,14 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             if (lib) setLibrary(lib);
           }
         }
-      ), activeTab === "ambient" && /* @__PURE__ */ import_react22.default.createElement("div", { className: "ambient-container" }, /* @__PURE__ */ import_react22.default.createElement("h3", null, "Procedural Focus Soundscapes"), /* @__PURE__ */ import_react22.default.createElement("p", { className: "subtitle" }, "Synthesized in real-time with Web Audio API nodes (zero external files)"), /* @__PURE__ */ import_react22.default.createElement("div", { className: "ambient-grid" }, [
+      ), activeTab === "ambient" && /* @__PURE__ */ import_react23.default.createElement("div", { className: "ambient-container" }, /* @__PURE__ */ import_react23.default.createElement("h3", null, "Procedural Focus Soundscapes"), /* @__PURE__ */ import_react23.default.createElement("p", { className: "subtitle" }, "Synthesized in real-time with Web Audio API nodes (zero external files)"), /* @__PURE__ */ import_react23.default.createElement("div", { className: "ambient-grid" }, [
         { id: "rain", icon: "rain", name: "Coding Rain", desc: "Resonant filtered pink noise mimicking rainfall" },
         { id: "synth", icon: "synth", name: "Cyber Synth", desc: "Dual detuned sawtooth oscillators with analog low-pass filter" },
         { id: "pink", icon: "noise", name: "Pink Noise", desc: "Voss-McCartney noise buffer for deep technical focus" }
-      ].map((s) => /* @__PURE__ */ import_react22.default.createElement("div", { key: s.id, className: `ambient-card-item ${activeAmbient === s.id ? "active" : ""}`, onClick: () => playAmbient(s.id) }, /* @__PURE__ */ import_react22.default.createElement("span", { className: "card-emoji" }, /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: s.icon, size: 28 })), /* @__PURE__ */ import_react22.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react22.default.createElement("p", null, s.desc), /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-accent" }, activeAmbient === s.id ? "Stop" : "Start"))))), activeTab === "speakers" && /* @__PURE__ */ import_react22.default.createElement("div", { className: "speakers-container" }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "speakers-header" }, /* @__PURE__ */ import_react22.default.createElement("h3", null, "Connected Google Cast Smart Speakers"), /* @__PURE__ */ import_react22.default.createElement("div", { style: { display: "flex", gap: "8px" } }, /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast() }, "Stop All Speakers"), /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-secondary", onClick: refreshSpeakers }, "Refresh Subnet Scan"))), /* @__PURE__ */ import_react22.default.createElement("div", { className: "speakers-grid" }, speakers.map((s) => /* @__PURE__ */ import_react22.default.createElement("div", { key: s.ip, className: "speaker-card" }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "speaker-badge" }, "ONLINE"), /* @__PURE__ */ import_react22.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react22.default.createElement("p", { className: "speaker-ip" }, "IP Address: ", /* @__PURE__ */ import_react22.default.createElement("code", null, s.ip)), /* @__PURE__ */ import_react22.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model), /* @__PURE__ */ import_react22.default.createElement("div", { className: "speaker-actions" }, /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-accent", onClick: () => {
+      ].map((s) => /* @__PURE__ */ import_react23.default.createElement("div", { key: s.id, className: `ambient-card-item ${activeAmbient === s.id ? "active" : ""}`, onClick: () => playAmbient(s.id) }, /* @__PURE__ */ import_react23.default.createElement("span", { className: "card-emoji" }, /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: s.icon, size: 28 })), /* @__PURE__ */ import_react23.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react23.default.createElement("p", null, s.desc), /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-accent" }, activeAmbient === s.id ? "Stop" : "Start"))))), activeTab === "speakers" && /* @__PURE__ */ import_react23.default.createElement("div", { className: "speakers-container" }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "speakers-header" }, /* @__PURE__ */ import_react23.default.createElement("h3", null, "Connected Google Cast Smart Speakers"), /* @__PURE__ */ import_react23.default.createElement("div", { style: { display: "flex", gap: "8px" } }, /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast() }, "Stop All Speakers"), /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-secondary", onClick: refreshSpeakers }, "Refresh Subnet Scan"))), /* @__PURE__ */ import_react23.default.createElement("div", { className: "speakers-grid" }, speakers.map((s) => /* @__PURE__ */ import_react23.default.createElement("div", { key: s.ip, className: "speaker-card" }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "speaker-badge" }, "ONLINE"), /* @__PURE__ */ import_react23.default.createElement("h4", null, s.name), /* @__PURE__ */ import_react23.default.createElement("p", { className: "speaker-ip" }, "IP Address: ", /* @__PURE__ */ import_react23.default.createElement("code", null, s.ip)), /* @__PURE__ */ import_react23.default.createElement("p", { className: "speaker-model" }, "Model: ", s.model), /* @__PURE__ */ import_react23.default.createElement("div", { className: "speaker-actions" }, /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-accent", onClick: () => {
         setOutputTarget(s.ip);
         setActiveTab("player");
-      } }, "Set as Output"), /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(s.ip) }, "Stop Playback"), /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-secondary", onClick: async () => {
+      } }, "Set as Output"), /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-chip btn-stop-cast", onClick: () => handleStopCast(s.ip) }, "Stop Playback"), /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-secondary", onClick: async () => {
         showStatus(`Playing harmonic test chime on ${s.name}...`);
         try {
           await window.robosAudio.playTestChime(s.ip);
@@ -22256,7 +22584,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
         } catch (err) {
           showStatus("Test chime error: " + err.message);
         }
-      } }, "Play Test Chime"))))))), /* @__PURE__ */ import_react22.default.createElement(
+      } }, "Play Test Chime"))))))), /* @__PURE__ */ import_react23.default.createElement(
         NowPlayingPanel,
         {
           queue: playlist,
@@ -22287,8 +22615,8 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           }
         }
       )),
-      activeTab !== "player" && currentTrack && /* @__PURE__ */ import_react22.default.createElement("footer", { className: "mini-player-bar" }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "mini-player-info", onClick: () => setActiveTab("player") }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "mini-art" }, /* @__PURE__ */ import_react22.default.createElement(Cover, { artId: currentTrack.artId, name: currentTrack.album || currentTrack.title, size: 38 })), /* @__PURE__ */ import_react22.default.createElement("div", { className: "mini-text" }, /* @__PURE__ */ import_react22.default.createElement("span", { className: "mini-title" }, currentTrack.title), /* @__PURE__ */ import_react22.default.createElement("span", { className: "mini-artist" }, currentTrack.artist || "Unknown", " \u2022 ", currentTrack.album || ""))), /* @__PURE__ */ import_react22.default.createElement(LoveButton, { track: currentTrack, size: 15 }), /* @__PURE__ */ import_react22.default.createElement("div", { className: "mini-player-center" }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "mini-player-controls" }, /* @__PURE__ */ import_react22.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${shuffleMode ? "on" : ""}`, title: shuffleMode ? "Random: on" : "Random: off", onClick: toggleShuffleMode }, /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "shuffle", size: 15 })), /* @__PURE__ */ import_react22.default.createElement("button", { className: "mini-ctrl-btn", title: "Previous (Ctrl+\u2190)", onClick: handlePlayPrev }, /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "prev", size: 18 })), /* @__PURE__ */ import_react22.default.createElement("button", { className: "mini-ctrl-btn mini-btn-play", title: isPlaying ? "Pause (Space)" : "Play (Space)", onClick: handleTogglePlayPause }, /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 18 })), /* @__PURE__ */ import_react22.default.createElement("button", { className: "mini-ctrl-btn", title: "Next (Ctrl+\u2192)", onClick: handlePlayNext }, /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "next", size: 18 })), /* @__PURE__ */ import_react22.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${repeatMode !== "off" ? "on" : ""}`, title: `Repeat: ${repeatMode}`, onClick: cycleRepeat }, /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: repeatMode === "one" ? "repeatOne" : "repeat", size: 15 }))), outputTarget !== "local" ? /* @__PURE__ */ import_react22.default.createElement(CastProgress, { onSeek: handleCastSeek }) : /* @__PURE__ */ import_react22.default.createElement(MiniProgress, { getAudio: () => playerRef.current?.audio?.current })), /* @__PURE__ */ import_react22.default.createElement("div", { className: "mini-player-right" }, /* @__PURE__ */ import_react22.default.createElement("span", { className: "badge mini-badge" }, "Output: ", getSpeakerName(outputTarget)), /* @__PURE__ */ import_react22.default.createElement("button", { id: "btn-mini-now-playing", className: "btn-chip", onClick: () => setActiveTab("player") }, "Now Playing"))),
-      showAiPlaylist && /* @__PURE__ */ import_react22.default.createElement(
+      activeTab !== "player" && currentTrack && /* @__PURE__ */ import_react23.default.createElement("footer", { className: "mini-player-bar" }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "mini-player-info", onClick: () => setActiveTab("player") }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "mini-art" }, /* @__PURE__ */ import_react23.default.createElement(Cover, { artId: currentTrack.artId, name: currentTrack.album || currentTrack.title, size: 38 })), /* @__PURE__ */ import_react23.default.createElement("div", { className: "mini-text" }, /* @__PURE__ */ import_react23.default.createElement("span", { className: "mini-title" }, currentTrack.title), /* @__PURE__ */ import_react23.default.createElement("span", { className: "mini-artist" }, currentTrack.artist || "Unknown", " \u2022 ", currentTrack.album || ""))), /* @__PURE__ */ import_react23.default.createElement(LoveButton, { track: currentTrack, size: 15 }), /* @__PURE__ */ import_react23.default.createElement("div", { className: "mini-player-center" }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "mini-player-controls" }, /* @__PURE__ */ import_react23.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${shuffleMode ? "on" : ""}`, title: shuffleMode ? "Random: on" : "Random: off", onClick: toggleShuffleMode }, /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "shuffle", size: 15 })), /* @__PURE__ */ import_react23.default.createElement("button", { className: "mini-ctrl-btn", title: "Previous (Ctrl+\u2190)", onClick: handlePlayPrev }, /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "prev", size: 18 })), /* @__PURE__ */ import_react23.default.createElement("button", { className: "mini-ctrl-btn mini-btn-play", title: isPlaying ? "Pause (Space)" : "Play (Space)", onClick: handleTogglePlayPause }, /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: isPlaying ? "pause" : "play", size: 18 })), /* @__PURE__ */ import_react23.default.createElement("button", { className: "mini-ctrl-btn", title: "Next (Ctrl+\u2192)", onClick: handlePlayNext }, /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "next", size: 18 })), /* @__PURE__ */ import_react23.default.createElement("button", { className: `mini-ctrl-btn mini-mode ${repeatMode !== "off" ? "on" : ""}`, title: `Repeat: ${repeatMode}`, onClick: cycleRepeat }, /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: repeatMode === "one" ? "repeatOne" : "repeat", size: 15 }))), outputTarget !== "local" ? /* @__PURE__ */ import_react23.default.createElement(CastProgress, { onSeek: handleCastSeek }) : /* @__PURE__ */ import_react23.default.createElement(MiniProgress, { getAudio: () => playerRef.current?.audio?.current })), /* @__PURE__ */ import_react23.default.createElement("div", { className: "mini-player-right" }, /* @__PURE__ */ import_react23.default.createElement("span", { className: "badge mini-badge" }, "Output: ", getSpeakerName(outputTarget)), /* @__PURE__ */ import_react23.default.createElement("button", { id: "btn-mini-now-playing", className: "btn-chip", onClick: () => setActiveTab("player") }, "Now Playing"))),
+      showAiPlaylist && /* @__PURE__ */ import_react23.default.createElement(
         AiPlaylistModal,
         {
           initialDj: dj.settings,
@@ -22299,7 +22627,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           onSave: handleAiPlaylistSave
         }
       ),
-      showDjSettings && /* @__PURE__ */ import_react22.default.createElement(
+      showDjSettings && /* @__PURE__ */ import_react23.default.createElement(
         DjSettingsModal,
         {
           value: dj.settings,
@@ -22313,7 +22641,18 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           }
         }
       ),
-      showCreatePlaylistModal && /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-overlay", onClick: () => setShowCreatePlaylistModal(false) }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react22.default.createElement("h3", null, "Create New Playlist"), /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react22.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react22.default.createElement(
+      tracksForAiFix !== null && /* @__PURE__ */ import_react23.default.createElement(
+        AiFixMetadataModal,
+        {
+          tracks: library.tracks,
+          initialTracks: tracksForAiFix,
+          agent: aiAgent,
+          onAgentChange: setAiAgent,
+          onApplied: handleAiMetadataApplied,
+          onClose: () => setTracksForAiFix(null)
+        }
+      ),
+      showCreatePlaylistModal && /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-overlay", onClick: () => setShowCreatePlaylistModal(false) }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react23.default.createElement("h3", null, "Create New Playlist"), /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react23.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react23.default.createElement(
         "input",
         {
           id: "input-playlist-name",
@@ -22326,7 +22665,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             if (e.key === "Enter") handleCreatePlaylist();
           }
         }
-      )), /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react22.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react22.default.createElement(
+      )), /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react23.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react23.default.createElement(
         "textarea",
         {
           id: "input-playlist-desc",
@@ -22335,8 +22674,8 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           value: newPlaylistDesc,
           onChange: (e) => setNewPlaylistDesc(e.target.value)
         }
-      )), /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-secondary", onClick: () => setShowCreatePlaylistModal(false) }, "Cancel"), /* @__PURE__ */ import_react22.default.createElement("button", { id: "btn-modal-create-playlist", className: "btn-accent", onClick: handleCreatePlaylist }, "Create Playlist")))),
-      showSaveQueueModal && /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-overlay", onClick: () => setShowSaveQueueModal(false) }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react22.default.createElement("h3", null, "Save Queue as Playlist"), /* @__PURE__ */ import_react22.default.createElement("p", { className: "subtitle", style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "Save all ", playlist.length, " track(s) from your current playback queue into a permanent playlist."), /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react22.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react22.default.createElement(
+      )), /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-secondary", onClick: () => setShowCreatePlaylistModal(false) }, "Cancel"), /* @__PURE__ */ import_react23.default.createElement("button", { id: "btn-modal-create-playlist", className: "btn-accent", onClick: handleCreatePlaylist }, "Create Playlist")))),
+      showSaveQueueModal && /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-overlay", onClick: () => setShowSaveQueueModal(false) }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react23.default.createElement("h3", null, "Save Queue as Playlist"), /* @__PURE__ */ import_react23.default.createElement("p", { className: "subtitle", style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "Save all ", playlist.length, " track(s) from your current playback queue into a permanent playlist."), /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react23.default.createElement("label", null, "Playlist Name"), /* @__PURE__ */ import_react23.default.createElement(
         "input",
         {
           id: "input-save-queue-name",
@@ -22349,7 +22688,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             if (e.key === "Enter") handleSaveQueueAsPlaylist();
           }
         }
-      )), /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react22.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react22.default.createElement(
+      )), /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react23.default.createElement("label", null, "Description (Optional)"), /* @__PURE__ */ import_react23.default.createElement(
         "textarea",
         {
           id: "input-save-queue-desc",
@@ -22358,17 +22697,17 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           value: saveQueueDesc,
           onChange: (e) => setSaveQueueDesc(e.target.value)
         }
-      )), /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-secondary", onClick: () => setShowSaveQueueModal(false) }, "Cancel"), /* @__PURE__ */ import_react22.default.createElement("button", { id: "btn-modal-save-queue", className: "btn-accent", onClick: handleSaveQueueAsPlaylist }, "Save Playlist")))),
-      tracksForPlaylist && tracksForPlaylist.length > 0 && /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-overlay", onClick: () => setTracksForPlaylist(null) }, /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react22.default.createElement("h3", null, "Add to Playlist"), /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-selected-track-info" }, tracksForPlaylist.length === 1 ? /* @__PURE__ */ import_react22.default.createElement(import_react22.default.Fragment, null, /* @__PURE__ */ import_react22.default.createElement("strong", null, tracksForPlaylist[0].title), /* @__PURE__ */ import_react22.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, tracksForPlaylist[0].artist, " \u2022 ", tracksForPlaylist[0].album)) : /* @__PURE__ */ import_react22.default.createElement(import_react22.default.Fragment, null, /* @__PURE__ */ import_react22.default.createElement("strong", null, tracksForPlaylist.length, " tracks"), /* @__PURE__ */ import_react22.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, formatTotalDuration(tracksForPlaylist)))), /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react22.default.createElement("label", null, "Choose Destination Playlist"), playlists.length === 0 ? /* @__PURE__ */ import_react22.default.createElement("p", { style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "No playlists exist yet.") : /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-playlist-select-list" }, playlists.map((pl) => /* @__PURE__ */ import_react22.default.createElement(
+      )), /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-secondary", onClick: () => setShowSaveQueueModal(false) }, "Cancel"), /* @__PURE__ */ import_react23.default.createElement("button", { id: "btn-modal-save-queue", className: "btn-accent", onClick: handleSaveQueueAsPlaylist }, "Save Playlist")))),
+      tracksForPlaylist && tracksForPlaylist.length > 0 && /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-overlay", onClick: () => setTracksForPlaylist(null) }, /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-card", onClick: (e) => e.stopPropagation() }, /* @__PURE__ */ import_react23.default.createElement("h3", null, "Add to Playlist"), /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-selected-track-info" }, tracksForPlaylist.length === 1 ? /* @__PURE__ */ import_react23.default.createElement(import_react23.default.Fragment, null, /* @__PURE__ */ import_react23.default.createElement("strong", null, tracksForPlaylist[0].title), /* @__PURE__ */ import_react23.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, tracksForPlaylist[0].artist, " \u2022 ", tracksForPlaylist[0].album)) : /* @__PURE__ */ import_react23.default.createElement(import_react23.default.Fragment, null, /* @__PURE__ */ import_react23.default.createElement("strong", null, tracksForPlaylist.length, " tracks"), /* @__PURE__ */ import_react23.default.createElement("span", { style: { fontSize: "0.75rem", color: "var(--text-muted)" } }, formatTotalDuration(tracksForPlaylist)))), /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react23.default.createElement("label", null, "Choose Destination Playlist"), playlists.length === 0 ? /* @__PURE__ */ import_react23.default.createElement("p", { style: { fontSize: "0.8rem", color: "var(--text-muted)" } }, "No playlists exist yet.") : /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-playlist-select-list" }, playlists.map((pl) => /* @__PURE__ */ import_react23.default.createElement(
         "div",
         {
           key: pl.id,
           className: "modal-playlist-select-item",
           onClick: () => handleAddTracksToPlaylist(pl.id, tracksForPlaylist)
         },
-        /* @__PURE__ */ import_react22.default.createElement("div", null, /* @__PURE__ */ import_react22.default.createElement("strong", null, pl.name), /* @__PURE__ */ import_react22.default.createElement("span", { style: { display: "block", fontSize: "0.72rem", color: "var(--text-muted)" } }, pl.tracks?.length || 0, " track(s)")),
-        /* @__PURE__ */ import_react22.default.createElement("span", { className: "btn-chip" }, "Add")
-      )))), /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react22.default.createElement("label", null, "\u2026or create a new playlist with ", tracksForPlaylist.length === 1 ? "this track" : "these tracks"), /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-inline-create" }, /* @__PURE__ */ import_react22.default.createElement(
+        /* @__PURE__ */ import_react23.default.createElement("div", null, /* @__PURE__ */ import_react23.default.createElement("strong", null, pl.name), /* @__PURE__ */ import_react23.default.createElement("span", { style: { display: "block", fontSize: "0.72rem", color: "var(--text-muted)" } }, pl.tracks?.length || 0, " track(s)")),
+        /* @__PURE__ */ import_react23.default.createElement("span", { className: "btn-chip" }, "Add")
+      )))), /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-input-group" }, /* @__PURE__ */ import_react23.default.createElement("label", null, "\u2026or create a new playlist with ", tracksForPlaylist.length === 1 ? "this track" : "these tracks"), /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-inline-create" }, /* @__PURE__ */ import_react23.default.createElement(
         "input",
         {
           id: "input-quick-playlist-name",
@@ -22380,19 +22719,19 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
             if (e.key === "Enter") handleCreatePlaylistFromTracks();
           }
         }
-      ), /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-accent", onClick: handleCreatePlaylistFromTracks }, "Create"))), /* @__PURE__ */ import_react22.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react22.default.createElement("button", { className: "btn-secondary", onClick: () => setTracksForPlaylist(null) }, "Cancel")))),
-      /* @__PURE__ */ import_react22.default.createElement(ContextMenu, { menu, onClose: closeMenu }),
-      infoTrack && /* @__PURE__ */ import_react22.default.createElement(TrackInfo, { track: infoTrack, onClose: () => setInfoTrack(null) }),
-      statusMsg && /* @__PURE__ */ import_react22.default.createElement("div", { className: "toast" }, statusMsg)
+      ), /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-accent", onClick: handleCreatePlaylistFromTracks }, "Create"))), /* @__PURE__ */ import_react23.default.createElement("div", { className: "modal-actions" }, /* @__PURE__ */ import_react23.default.createElement("button", { className: "btn-secondary", onClick: () => setTracksForPlaylist(null) }, "Cancel")))),
+      /* @__PURE__ */ import_react23.default.createElement(ContextMenu, { menu, onClose: closeMenu }),
+      infoTrack && /* @__PURE__ */ import_react23.default.createElement(TrackInfo, { track: infoTrack, onClose: () => setInfoTrack(null) }),
+      statusMsg && /* @__PURE__ */ import_react23.default.createElement("div", { className: "toast" }, statusMsg)
     ));
   }
   function CastControls({ onPrev, onToggle, onNext }) {
     const playing = useCastPlaying();
-    return /* @__PURE__ */ import_react22.default.createElement("div", { className: "rhap_main-controls" }, /* @__PURE__ */ import_react22.default.createElement("button", { type: "button", className: "rhap_button-clear rhap_main-controls-button rhap_skip-button", "aria-label": "Previous", onClick: onPrev }, /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "prev", size: 24 })), /* @__PURE__ */ import_react22.default.createElement("button", { type: "button", id: "cast-play-pause", className: "rhap_button-clear rhap_main-controls-button rhap_play-pause-button", "aria-label": playing ? "Pause" : "Play", onClick: onToggle }, /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: playing ? "pause" : "play", size: 34 })), /* @__PURE__ */ import_react22.default.createElement("button", { type: "button", className: "rhap_button-clear rhap_main-controls-button rhap_skip-button", "aria-label": "Next", onClick: onNext }, /* @__PURE__ */ import_react22.default.createElement(Icon2, { name: "next", size: 24 })));
+    return /* @__PURE__ */ import_react23.default.createElement("div", { className: "rhap_main-controls" }, /* @__PURE__ */ import_react23.default.createElement("button", { type: "button", className: "rhap_button-clear rhap_main-controls-button rhap_skip-button", "aria-label": "Previous", onClick: onPrev }, /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "prev", size: 24 })), /* @__PURE__ */ import_react23.default.createElement("button", { type: "button", id: "cast-play-pause", className: "rhap_button-clear rhap_main-controls-button rhap_play-pause-button", "aria-label": playing ? "Pause" : "Play", onClick: onToggle }, /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: playing ? "pause" : "play", size: 34 })), /* @__PURE__ */ import_react23.default.createElement("button", { type: "button", className: "rhap_button-clear rhap_main-controls-button rhap_skip-button", "aria-label": "Next", onClick: onNext }, /* @__PURE__ */ import_react23.default.createElement(Icon2, { name: "next", size: 24 })));
   }
   function MiniProgress({ getAudio }) {
-    const [time, setTime] = (0, import_react22.useState)({ current: 0, duration: 0 });
-    (0, import_react22.useEffect)(() => {
+    const [time, setTime] = (0, import_react23.useState)({ current: 0, duration: 0 });
+    (0, import_react23.useEffect)(() => {
       const audio = getAudio();
       if (!audio) return void 0;
       const update = () => setTime({ current: audio.currentTime || 0, duration: audio.duration || 0 });
@@ -22413,7 +22752,7 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
       return `${m}:${ss < 10 ? "0" : ""}${ss}`;
     };
     const pct = time.duration ? time.current / time.duration * 100 : 0;
-    return /* @__PURE__ */ import_react22.default.createElement("div", { className: "mini-progress" }, /* @__PURE__ */ import_react22.default.createElement("span", null, fmt2(time.current)), /* @__PURE__ */ import_react22.default.createElement(
+    return /* @__PURE__ */ import_react23.default.createElement("div", { className: "mini-progress" }, /* @__PURE__ */ import_react23.default.createElement("span", null, fmt2(time.current)), /* @__PURE__ */ import_react23.default.createElement(
       "input",
       {
         type: "range",
@@ -22429,14 +22768,14 @@ ${t.artist || ""}${t.album ? ` \u2014 ${t.album}` : ""}`,
           if (audio) audio.currentTime = Number(e.target.value);
         }
       }
-    ), /* @__PURE__ */ import_react22.default.createElement("span", null, fmt2(time.duration)));
+    ), /* @__PURE__ */ import_react23.default.createElement("span", null, fmt2(time.duration)));
   }
 
   // src/index.jsx
   var container = document.getElementById("root");
   if (container) {
     const root = (0, import_client.createRoot)(container);
-    root.render(/* @__PURE__ */ import_react23.default.createElement(App, null));
+    root.render(/* @__PURE__ */ import_react24.default.createElement(App, null));
   }
 })();
 /*! Bundled license information:

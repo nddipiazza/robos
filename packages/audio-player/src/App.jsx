@@ -7,6 +7,7 @@ import Library from './Library.jsx';
 import NowPlayingPanel from './NowPlayingPanel.jsx';
 import TrackInfo from './TrackInfo.jsx';
 import { AiPlaylistModal, DjSettingsModal } from './AiPlaylist.jsx';
+import { AiFixMetadataModal } from './AiFixMetadata.jsx';
 import { Splitter, useColumns, useLayoutPref } from './resizable.jsx';
 import { castClock, CastProgress, useCastPlaying } from './castClock.jsx';
 import { useVirtualDj } from './useVirtualDj.js';
@@ -92,6 +93,7 @@ export default function App() {
   const [tracksForPlaylist, setTracksForPlaylist] = useState(null);
   const [showAiPlaylist, setShowAiPlaylist] = useState(false);
   const [showDjSettings, setShowDjSettings] = useState(false);
+  const [tracksForAiFix, setTracksForAiFix] = useState(null); // null = closed, [] = open for library, [t1, t2] = open for subset
   // Agent, model and effort picked in <robos-agent-selector>, remembered between sessions.
   const [aiAgent, setAiAgent] = useState(playerPrefs.aiAgent || null);
   const [quickPlaylistName, setQuickPlaylistName] = useState('');
@@ -1236,6 +1238,21 @@ export default function App() {
   }, []);
   const closeMenu = useCallback(() => setMenu(null), []);
 
+  const handleAiMetadataApplied = async (res) => {
+    if (res && res.library) {
+      setLibrary(res.library);
+    } else {
+      await loadLibrary();
+    }
+    await refreshPlaylists();
+    if (Array.isArray(res?.tracks) && res.tracks.length) {
+      const updatedById = new Map(res.tracks.map(t => [t.id, t]));
+      setPlaylist(prev => prev.map(pt => (pt && updatedById.has(pt.id) ? { ...pt, ...updatedById.get(pt.id) } : pt)));
+      setInfoTrack(prev => (prev && updatedById.has(prev.id) ? { ...prev, ...updatedById.get(prev.id) } : prev));
+    }
+    showStatus(`✦ AI updated metadata & artwork for ${res?.updatedCount || 0} track(s)!`);
+  };
+
   const libraryCtx = {
     artBase: artBase.local,
     stats,
@@ -1248,6 +1265,7 @@ export default function App() {
       castTracks,
       hasSpeakers: speakers.length > 0,
       addToPlaylist: (tracks) => { setQuickPlaylistName(''); setTracksForPlaylist(tracks); },
+      fixMetadata: (tracks) => setTracksForAiFix(Array.isArray(tracks) ? tracks : []),
       setLoved: setLovedTracks,
       showInfo: setInfoTrack,
       showInFolder,
@@ -2096,6 +2114,7 @@ export default function App() {
               searchInputRef={searchInputRef}
               isScanning={isScanningLibrary}
               onAiPlaylist={() => setShowAiPlaylist(true)}
+              onAiFixMetadata={() => setTracksForAiFix([])}
               onAddFolder={handleSelectFolder}
               onAddFiles={handleAddFiles}
               onRefresh={async () => {
@@ -2288,6 +2307,17 @@ export default function App() {
             setShowDjSettings(false);
             showStatus(next.enabled ? '🎙 Virtual DJ is on — they’ll talk between songs.' : 'Virtual DJ is off.');
           }}
+        />
+      )}
+
+      {tracksForAiFix !== null && (
+        <AiFixMetadataModal
+          tracks={library.tracks}
+          initialTracks={tracksForAiFix}
+          agent={aiAgent}
+          onAgentChange={setAiAgent}
+          onApplied={handleAiMetadataApplied}
+          onClose={() => setTracksForAiFix(null)}
         />
       )}
 

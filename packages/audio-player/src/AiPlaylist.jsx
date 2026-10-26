@@ -13,7 +13,7 @@ export const DJ_FREQUENCY_LABELS = {
  * The shared RobOS <robos-ai-textarea> (robos-ui), wrapped for React: multi-line,
  * reports its text through onChange and submits on Ctrl+Enter.
  */
-export function AiPromptBox({ id, placeholder, initialValue = '', minHeight = 100, onChange, onSubmit }) {
+export function AiPromptBox({ id, placeholder, initialValue = '', minHeight = 100, showCommands = false, onChange, onSubmit }) {
   const hostRef = useRef(null);
   const [missing, setMissing] = useState(false);
   const latest = useRef({ onChange, onSubmit });
@@ -27,7 +27,7 @@ export function AiPromptBox({ id, placeholder, initialValue = '', minHeight = 10
     const el = document.createElement('robos-ai-textarea');
     el.id = id;
     el.setAttribute('show-submit', 'false');
-    el.setAttribute('show-commands', 'false');
+    el.setAttribute('show-commands', showCommands ? 'true' : 'false');
     // The agent is chosen in <robos-agent-selector> next to the prompt, not per box.
     el.setAttribute('show-agent', 'false');
     el.setAttribute('placeholder', placeholder);
@@ -42,6 +42,15 @@ export function AiPromptBox({ id, placeholder, initialValue = '', minHeight = 10
         latest.current.onSubmit();
       }
     };
+    const onPathQuery = async (e) => {
+      const prefix = e.detail?.prefix || '';
+      if (window.robos?.searchIndex) {
+        const res = await window.robos.searchIndex(prefix);
+        if (res && res.ok && typeof el.setTypeaheadItems === 'function') {
+          el.setTypeaheadItems(res.items || []);
+        }
+      }
+    };
     // Set the starting text only once the element is upgraded, so it lands in the editor.
     customElements.whenDefined('robos-ai-textarea').then(() => {
       if (!alive) return;
@@ -51,11 +60,13 @@ export function AiPromptBox({ id, placeholder, initialValue = '', minHeight = 10
     const timer = setTimeout(() => { if (alive && !customElements.get('robos-ai-textarea')) setMissing(true); }, 4000);
     ['input', 'change', 'keyup'].forEach(t => el.addEventListener(t, report));
     el.addEventListener('keydown', onKey);
+    el.addEventListener('robos-path-query', onPathQuery);
     return () => {
       alive = false;
       clearTimeout(timer);
       ['input', 'change', 'keyup'].forEach(t => el.removeEventListener(t, report));
       el.removeEventListener('keydown', onKey);
+      el.removeEventListener('robos-path-query', onPathQuery);
       el.remove();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

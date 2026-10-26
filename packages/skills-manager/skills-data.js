@@ -83,6 +83,9 @@ const BUILTIN_SKILLS = [
   { id: 'python-version',         name: 'Python Version',                category: 'Development',        tags: ['python','version'],         command: 'python3 --version && pip3 --version 2>/dev/null',                                    description: 'Show installed Python and pip versions', source: 'builtin' },
   { id: 'env-vars',               name: 'Current Environment Variables', category: 'Development',        tags: ['env','vars','export'],      command: 'env | sort | grep -v -E "^(LS_COLORS|BASH_FUNC)" | head -40',                        description: 'List all current environment variables (sorted)', source: 'builtin' },
   { id: 'port-in-use',            name: 'What is Using a Port?',         category: 'Development',        tags: ['ss','lsof','port'],         command: 'ss -tlnp | grep "$PORT" || lsof -i :"$PORT" 2>/dev/null',                            description: 'Find which process is using a specific port', source: 'builtin' },
+
+  // Media & Audio
+  { id: 'fix-media-metadata',     name: 'Open-Source Media Metadata & Artwork', category: 'Media & Audio', tags: ['audio','media','metadata','ffmpeg','musicbrainz','artwork','id3','flac'], command: 'ffprobe -v quiet -print_format json -show_format -show_streams "$FILE"', description: 'Inspect, extract, enrich, and write media metadata and cover art across all known formats (MP3, FLAC, M4A, OGG, Opus, WAV, MKV, WebM) using music-metadata, FFmpeg, MusicBrainz CC0, Cover Art Archive, and LRCLIB', source: 'builtin' },
 ];
 
 module.exports = { BUILTIN_SKILLS };
