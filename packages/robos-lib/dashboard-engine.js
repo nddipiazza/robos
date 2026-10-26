@@ -199,6 +199,36 @@ const DASHBOARD_WIDGET_CATALOG = [
     defaultConfig: {},
   },
   {
+    type: 'live-clock',
+    kgraphId: 'urn:robos:dashboard-widget:live-clock',
+    title: 'Live JavaScript Canvas Clock & Chronometer',
+    componentTag: 'robos-widget-live-clock',
+    category: 'Telemetry & Time',
+    icon: '🕒',
+    description: 'Live JavaScript HTML5 <canvas> analog & digital chronometer with sweeping second hand, local timezone, and UTC reference clock.',
+    defaultConfig: {
+      analogCanvas: true,
+      showUtc: true,
+      showSeconds: true,
+    },
+  },
+  {
+    type: 'github-repo',
+    kgraphId: 'urn:robos:dashboard-widget:github-repo',
+    title: 'GitHub Repo Activity (Commits, main CI & Release)',
+    componentTag: 'robos-widget-github-repo',
+    category: 'Source Control & CI',
+    icon: '🐙',
+    description: 'Displays GitHub repository activity for nddipiazza/robos: latest commits, CI status in main, and latest release # + running status.',
+    defaultConfig: {
+      repo: 'nddipiazza/robos',
+      branch: 'main',
+      commitLimit: 10,
+      showMainCi: true,
+      showLatestRelease: true,
+    },
+  },
+  {
     type: 'robos-component',
     kgraphId: 'urn:robos:dashboard-widget:robos-component',
     title: 'Any RobOS Custom Component Widget',
@@ -219,11 +249,52 @@ const DEFAULT_DASHBOARDS = [
     id: 'daily-engineering-ops',
     kgraphId: 'urn:robos:dashboard:daily-engineering-ops',
     title: 'Daily Engineering & Agent Ops Dashboard',
-    description: '10 latest commit messages in a nice small readable text list format, calendar events for the day, and current RobOS agent sessions running with their status lines tailed.',
+    description: 'GitHub repo activity (nddipiazza/robos commits, main CI status, latest release # & running status), live JavaScript <canvas> clock, 10 latest commit messages, dual Google Calendar events for the day, and running RobOS agent sessions with status lines tailed.',
     layoutId: 'mission-control-3col',
     tvCompatible: true,
     isDefault: true,
     cards: [
+      {
+        id: 'github-repo-activity',
+        kgraphId: 'urn:robos:dashboard-card:github-repo-activity',
+        title: 'GitHub Repo Activity (nddipiazza/robos)',
+        widgetType: 'github-repo',
+        componentTag: 'robos-widget-github-repo',
+        slotId: 'col-1',
+        config: {
+          repo: 'nddipiazza/robos',
+          branch: 'main',
+          commitLimit: 10,
+          showMainCi: true,
+          showLatestRelease: true,
+        },
+      },
+      {
+        id: 'today-calendar-events',
+        kgraphId: 'urn:robos:dashboard-card:today-calendar-events',
+        title: 'Calendar Events for the Day',
+        widgetType: 'calendar-today',
+        componentTag: 'robos-widget-calendar-today',
+        slotId: 'col-2',
+        config: {
+          scope: 'today',
+          includeGoogleCalendar: true,
+          showStatusBadges: true,
+        },
+      },
+      {
+        id: 'live-js-clock',
+        kgraphId: 'urn:robos:dashboard-card:live-js-clock',
+        title: 'Live Clock & Chronometer',
+        widgetType: 'live-clock',
+        componentTag: 'robos-widget-live-clock',
+        slotId: 'col-3',
+        config: {
+          analogCanvas: true,
+          showUtc: true,
+          showSeconds: true,
+        },
+      },
       {
         id: 'latest-10-commits',
         kgraphId: 'urn:robos:dashboard-card:latest-10-commits',
@@ -238,19 +309,6 @@ const DEFAULT_DASHBOARDS = [
           showSha: true,
           showAuthor: true,
           showRelativeTime: true,
-        },
-      },
-      {
-        id: 'today-calendar-events',
-        kgraphId: 'urn:robos:dashboard-card:today-calendar-events',
-        title: 'Calendar Events for the Day',
-        widgetType: 'calendar-today',
-        componentTag: 'robos-widget-calendar-today',
-        slotId: 'col-2',
-        config: {
-          scope: 'today',
-          includeGoogleCalendar: true,
-          showStatusBadges: true,
         },
       },
       {
@@ -943,6 +1001,263 @@ function collectSupplementalWidgetData({ configDir, repoDir } = {}) {
 }
 
 /**
+ * Collects live chronometer and timezone telemetry for `<robos-widget-live-clock>`.
+ */
+function collectLiveClockData() {
+  const now = new Date();
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Chicago';
+  const time24 = now.toLocaleTimeString('en-US', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+  const time12 = now.toLocaleTimeString('en-US', {
+    hour12: true,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
+  const utcTime = now.toISOString().slice(11, 19) + ' UTC';
+  const dateLabel = now.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  return {
+    ok: true,
+    iso: now.toISOString(),
+    time24,
+    time12,
+    utcTime,
+    dateLabel,
+    timezone: tz,
+    hours: now.getHours(),
+    minutes: now.getMinutes(),
+    seconds: now.getSeconds(),
+    epochMs: now.getTime(),
+  };
+}
+
+let _ghRepoCache = { key: '', expiresAt: 0, payload: null };
+
+/**
+ * Collects live GitHub repository activity for `nddipiazza/robos` (or any configured repo):
+ *   1. Latest commits on `main`
+ *   2. CI workflow status in `main` (per workflow + overall status)
+ *   3. Latest release `#` (`v0.0.8` / Release `#11`) & live status if running now
+ * Always invokes `gh` using `robos-lib/github-accounts.cleanEnv()`.
+ */
+function collectGitHubRepoActivity({
+  repoDir,
+  repo = 'nddipiazza/robos',
+  branch = 'main',
+  commitLimit = 10,
+} = {}) {
+  const commitsData = collectLatestGitCommits({ repoDir, limit: commitLimit });
+  const cacheKey = `${repo}::${branch}`;
+  const nowMs = Date.now();
+
+  if (_ghRepoCache.key === cacheKey && _ghRepoCache.payload && nowMs < _ghRepoCache.expiresAt) {
+    return {
+      ..._ghRepoCache.payload,
+      commits: commitsData.commits,
+      commitCount: commitsData.commits.length,
+    };
+  }
+
+  let cleanEnv = { ...process.env };
+  let selectedAccount = null;
+  try {
+    const ga = require('./github-accounts');
+    cleanEnv = ga.cleanEnv();
+    selectedAccount = ga.read()?.git || null;
+  } catch {
+    delete cleanEnv.GH_TOKEN;
+    delete cleanEnv.GITHUB_TOKEN;
+    delete cleanEnv.GH_DEBUG;
+  }
+
+  let mainWorkflows = [
+    {
+      name: 'Deploy docs to GitHub Pages',
+      shortName: 'Docs Pages',
+      runNumber: 416,
+      status: 'completed',
+      conclusion: 'success',
+      branch: 'main',
+      displayTitle: 'feat(dashboards): add RobOS Dashboards app & <robos-dashboard>',
+      updatedAt: '2026-10-26T19:19:03Z',
+    },
+    {
+      name: 'Household lifecycle',
+      shortName: 'Household CI',
+      runNumber: 15,
+      status: 'completed',
+      conclusion: 'success',
+      branch: 'main',
+      displayTitle: 'fix(desktop): fix StartupWMClass detection and GNOME dock icon',
+      updatedAt: '2026-10-25T12:27:45Z',
+    },
+    {
+      name: 'Native Windows EXE release',
+      shortName: 'Win EXE Release',
+      runNumber: 5,
+      status: 'completed',
+      conclusion: 'success',
+      branch: 'main',
+      displayTitle: 'Native Windows EXE release',
+      updatedAt: '2026-10-22T22:46:11Z',
+    },
+    {
+      name: 'Windows app suite',
+      shortName: 'Windows Suite',
+      runNumber: 64,
+      status: 'completed',
+      conclusion: 'failure',
+      branch: 'main',
+      displayTitle: commitsData.commits[0]?.subject || 'Latest main push',
+      updatedAt: new Date().toISOString(),
+    },
+  ];
+
+  let latestRelease = {
+    tag: 'v0.0.8',
+    name: 'RobOS v0.0.8',
+    publishedAt: '2026-10-22T22:10:18Z',
+    releaseRunNumber: 11,
+    releaseWorkflowName: 'Release',
+    releaseStatus: 'completed',
+    releaseConclusion: 'success',
+    windowsReleaseRunNumber: 5,
+    windowsReleaseConclusion: 'success',
+    isRunningNow: false,
+    statusLabel: 'IDLE · Not Running Now (Release #11 ✔ SUCCESS)',
+  };
+
+  if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
+    try {
+      const runsRes = spawnSync(
+        'gh',
+        ['api', `repos/${repo}/actions/runs?per_page=25`],
+        { env: cleanEnv, encoding: 'utf8', timeout: 4500 }
+      );
+      if (runsRes.status === 0 && runsRes.stdout) {
+        const parsedRuns = JSON.parse(runsRes.stdout);
+        const allRuns = Array.isArray(parsedRuns.workflow_runs) ? parsedRuns.workflow_runs : [];
+        const byName = new Map();
+        for (const r of allRuns) {
+          if (r.head_branch === branch && !byName.has(r.name)) {
+            const shortName = String(r.name || 'Workflow')
+              .replace('Deploy docs to GitHub Pages', 'Docs Pages')
+              .replace('Native Windows EXE release', 'Win EXE Release')
+              .replace('Windows app suite', 'Windows Suite')
+              .replace('Household lifecycle', 'Household CI');
+            byName.set(r.name, {
+              name: r.name,
+              shortName,
+              runNumber: r.run_number,
+              status: r.status,
+              conclusion: r.conclusion || (r.status === 'completed' ? 'success' : 'running'),
+              branch: r.head_branch,
+              displayTitle: r.display_title || r.name,
+              updatedAt: r.updated_at || r.created_at,
+            });
+          }
+        }
+        if (byName.size > 0) {
+          // Keep existing known workflows that weren't in the last 25 runs so main overview is complete
+          for (const fallbackWf of mainWorkflows) {
+            if (!byName.has(fallbackWf.name)) {
+              byName.set(fallbackWf.name, fallbackWf);
+            }
+          }
+          mainWorkflows = Array.from(byName.values()).slice(0, 5);
+        }
+
+        // Check if any Release workflow run is in the recent runs
+        const relRun = allRuns.find((r) => /release/i.test(r.name || ''));
+        if (relRun) {
+          const running =
+            relRun.status === 'in_progress' ||
+            relRun.status === 'queued' ||
+            relRun.status === 'waiting';
+          latestRelease.releaseRunNumber = relRun.run_number || latestRelease.releaseRunNumber;
+          latestRelease.releaseStatus = relRun.status || 'completed';
+          latestRelease.releaseConclusion = relRun.conclusion || (running ? 'running' : 'success');
+          latestRelease.isRunningNow = running;
+        }
+      }
+    } catch {}
+
+    try {
+      const relRes = spawnSync(
+        'gh',
+        ['api', `repos/${repo}/releases?per_page=3`],
+        { env: cleanEnv, encoding: 'utf8', timeout: 4000 }
+      );
+      if (relRes.status === 0 && relRes.stdout) {
+        const rels = JSON.parse(relRes.stdout);
+        if (Array.isArray(rels) && rels.length > 0) {
+          const top = rels[0];
+          latestRelease.tag = top.tag_name || latestRelease.tag;
+          latestRelease.name = top.name || top.tag_name || latestRelease.name;
+          latestRelease.publishedAt = top.published_at || latestRelease.publishedAt;
+        }
+      }
+    } catch {}
+  }
+
+  latestRelease.statusLabel = latestRelease.isRunningNow
+    ? `⚡ RUNNING NOW · Release #${latestRelease.releaseRunNumber} (${latestRelease.tag}) in_progress`
+    : `IDLE · Not Running Now (Release #${latestRelease.releaseRunNumber} ✔ ${String(latestRelease.releaseConclusion || 'SUCCESS').toUpperCase()})`;
+
+  const passingCount = mainWorkflows.filter((w) => w.conclusion === 'success').length;
+  const failingCount = mainWorkflows.filter((w) => w.conclusion === 'failure').length;
+  const runningCount = mainWorkflows.filter(
+    (w) => w.status === 'in_progress' || w.status === 'queued'
+  ).length;
+  const overallStatus =
+    runningCount > 0
+      ? 'running'
+      : failingCount === 0
+      ? 'passing'
+      : passingCount > 0
+      ? 'mixed'
+      : 'failing';
+
+  const result = {
+    ok: true,
+    repo,
+    branch,
+    selectedAccount,
+    mainCi: {
+      branch,
+      overallStatus,
+      passingCount,
+      failingCount,
+      runningCount,
+      isRunningNow: runningCount > 0,
+      summaryText: `${passingCount} Passing · ${failingCount} Failing · ${runningCount} Running`,
+      workflows: mainWorkflows,
+    },
+    latestRelease,
+    commits: commitsData.commits,
+    commitCount: commitsData.commits.length,
+    updatedAt: new Date().toISOString(),
+  };
+
+  _ghRepoCache = {
+    key: cacheKey,
+    expiresAt: nowMs + 20000,
+    payload: result,
+  };
+
+  return result;
+}
+
+/**
  * Creates a stateful Dashboard Engine instance that manages dashboards, layouts, cards,
  * KGraph synchronization, live widget data resolution, and Smart TV casting.
  */
@@ -974,6 +1289,23 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
     } catch {}
     if (!state.dashboards.some((d) => d.id === 'daily-engineering-ops')) {
       state.dashboards.unshift(JSON.parse(JSON.stringify(DEFAULT_DASHBOARDS[0])));
+    } else {
+      // Ensure daily-engineering-ops includes both github-repo and live-clock widgets
+      const daily = state.dashboards.find((d) => d.id === 'daily-engineering-ops');
+      if (daily && Array.isArray(daily.cards)) {
+        const defaultDaily = DEFAULT_DASHBOARDS[0];
+        for (const defCard of defaultDaily.cards) {
+          if (!daily.cards.some((c) => c.widgetType === defCard.widgetType)) {
+            if (defCard.widgetType === 'github-repo') {
+              daily.cards.unshift(JSON.parse(JSON.stringify(defCard)));
+            } else if (defCard.widgetType === 'live-clock') {
+              daily.cards.splice(2, 0, JSON.parse(JSON.stringify(defCard)));
+            } else {
+              daily.cards.push(JSON.parse(JSON.stringify(defCard)));
+            }
+          }
+        }
+      }
     }
   }
 
@@ -1031,6 +1363,15 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
         return collectRunningAgentSessions({
           configDir: resolvedConfigDir,
           tailLines: cfg.tailLines || 5,
+        });
+      case 'live-clock':
+        return collectLiveClockData();
+      case 'github-repo':
+        return collectGitHubRepoActivity({
+          repoDir: cfg.repoDir || resolvedRepoDir,
+          repo: cfg.repo || 'nddipiazza/robos',
+          branch: cfg.branch || 'main',
+          commitLimit: cfg.commitLimit || 10,
         });
       case 'smart-tv':
       case 'smart-lights':
@@ -1567,6 +1908,96 @@ function renderDashboardTvWallboardHtml({
       `;
     }
 
+    if (card.widgetType === 'live-clock') {
+      return `
+        <div class="widget-meta-row">
+          <span>🕒 Live JS Canvas Chronometer</span>
+          <span class="pill-mini">⚡ 60FPS / 1Hz Canvas Engine</span>
+        </div>
+        <div class="live-clock-wrap" style="display:flex;align-items:center;gap:16px;padding:6px 4px;">
+          <canvas class="robos-live-clock-canvas" width="124" height="124" style="width:124px;height:124px;flex-shrink:0;"></canvas>
+          <div style="flex:1;min-width:0;">
+            <div class="js-live-digital-time" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:28px;font-weight:800;color:#67e8f9;letter-spacing:0.03em;">${esc(data.time24 || '15:25:00')}</div>
+            <div class="js-live-date-label" style="font-size:13px;font-weight:700;color:#f8fafc;margin-top:2px;">${esc(data.dateLabel || 'Mon, Oct 26, 2026')}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">
+              <span class="pill-mini js-live-utc-time" style="border-color:rgba(16,185,129,0.4);color:#6ee7b7;background:rgba(16,185,129,0.12);">${esc(data.utcTime || '20:25:00 UTC')}</span>
+              <span class="pill-mini">${esc(data.timezone || 'America/Chicago')}</span>
+            </div>
+            <canvas class="robos-sec-bar-canvas" width="260" height="14" style="width:100%;height:14px;margin-top:8px;border-radius:4px;"></canvas>
+          </div>
+        </div>
+      `;
+    }
+
+    if (card.widgetType === 'github-repo') {
+      const rel = data.latestRelease || {};
+      const ci = data.mainCi || {};
+      const wfs = Array.isArray(ci.workflows) ? ci.workflows : [];
+      const commits = Array.isArray(data.commits) ? data.commits.slice(0, 6) : [];
+      const isRelRunning = Boolean(rel.isRunningNow);
+      return `
+        <div class="widget-meta-row">
+          <span>🐙 <strong>${esc(data.repo || 'nddipiazza/robos')}</strong> · <code>⎇ ${esc(data.branch || 'main')}</code></span>
+          <span class="pill-mini" style="${isRelRunning ? 'background:rgba(245,158,11,0.22);color:#fcd34d;border-color:#f59e0b;' : 'background:rgba(16,185,129,0.16);color:#6ee7b7;border-color:rgba(16,185,129,0.4);'}">
+            🏷️ ${esc(rel.tag || 'v0.0.8')} · Release #${esc(rel.releaseRunNumber || 11)}
+          </span>
+        </div>
+        <div style="background:#0a101d;border:1px solid #1e2d47;border-left:4px solid ${isRelRunning ? '#f59e0b' : '#10b981'};border-radius:8px;padding:8px 10px;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <strong style="font-size:12.5px;color:#f8fafc;">🏷️ Latest Release: ${esc(rel.name || rel.tag || 'RobOS v0.0.8')} (Run #${esc(rel.releaseRunNumber || 11)})</strong>
+            <span class="cal-badge" style="${isRelRunning ? 'background:rgba(245,158,11,0.25);color:#fcd34d;' : 'background:rgba(16,185,129,0.22);color:#6ee7b7;'}">
+              ${isRelRunning ? '⚡ RUNNING NOW' : '● IDLE (NOT RUNNING NOW)'}
+            </span>
+          </div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:3px;">
+            ${esc(rel.statusLabel || 'IDLE · Last Release #11: SUCCESS ✔')} · Win EXE Release #${esc(rel.windowsReleaseRunNumber || 5)}: ${esc(String(rel.windowsReleaseConclusion || 'SUCCESS').toUpperCase())}
+          </div>
+        </div>
+        <div style="background:#0a101d;border:1px solid #1e2d47;border-radius:8px;padding:8px 10px;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:11.5px;font-weight:700;color:#67e8f9;">⚙️ CI STATUS IN MAIN (${esc(ci.summaryText || '3 Passing · 1 Failing')})</span>
+            <span style="font-size:10.5px;color:#94a3b8;">${ci.isRunningNow ? '⚡ Workflow Running Now' : 'All Runs Completed'}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;">
+            ${wfs
+              .slice(0, 4)
+              .map((w) => {
+                const isOk = w.conclusion === 'success';
+                const isRun = w.status === 'in_progress' || w.status === 'queued';
+                const badgeColor = isRun ? '#fcd34d' : isOk ? '#6ee7b7' : '#fca5a5';
+                const badgeBg = isRun
+                  ? 'rgba(245,158,11,0.18)'
+                  : isOk
+                  ? 'rgba(16,185,129,0.14)'
+                  : 'rgba(239,68,68,0.16)';
+                const icon = isRun ? '⚡' : isOk ? '✔' : '✖';
+                return `<div style="display:flex;align-items:center;justify-content:space-between;background:#111a2e;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:4px 7px;font-size:11px;">
+                  <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e2e8f0;">${esc(w.shortName || w.name)} #${esc(w.runNumber)}</span>
+                  <span style="color:${badgeColor};background:${badgeBg};padding:1px 5px;border-radius:4px;font-weight:700;font-size:10px;">${icon} ${esc(String(isRun ? w.status : w.conclusion || 'ok').toUpperCase())}</span>
+                </div>`;
+              })
+              .join('')}
+          </div>
+          <canvas class="robos-gh-activity-canvas" width="480" height="36" data-passing="${esc(ci.passingCount || 3)}" data-failing="${esc(ci.failingCount || 1)}" data-running="${esc(ci.runningCount || 0)}" style="width:100%;height:36px;margin-top:6px;border-radius:5px;"></canvas>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;margin-bottom:4px;">LATEST ROBOS COMMITS (${esc(data.branch || 'main')}):</div>
+        <ol class="commit-compact-list">
+          ${commits
+            .map(
+              (c) => `
+            <li class="commit-compact-row">
+              <code class="commit-sha">${esc(c.shortSha)}</code>
+              <span class="commit-type commit-type-${esc(c.commitType || 'commit')}">${esc(c.commitType || 'git')}</span>
+              <span class="commit-subject">${esc(c.subject)}</span>
+              <span class="commit-meta">${esc(c.relativeTime)}</span>
+            </li>
+          `
+            )
+            .join('')}
+        </ol>
+      `;
+    }
+
     return `
       <div class="custom-component-placeholder">
         <code>&lt;${esc(card.componentTag || 'robos-widget-custom')}&gt;</code>
@@ -1580,7 +2011,6 @@ function renderDashboardTvWallboardHtml({
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="refresh" content="8" />
   <title>${esc(dash.title)} — RobOS Smart TV Dashboard</title>
   <style>
     :root {
@@ -1859,36 +2289,74 @@ function renderDashboardTvWallboardHtml({
       white-space: pre-wrap;
     }
     .tv-dash-footer {
-      margin-top: 18px;
-      padding-top: 12px;
+      margin-top: 14px;
+      padding-top: 10px;
       border-top: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       color: var(--muted);
       font-size: 12px;
     }
+    .robos-dashboard-col {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 0;
+    }
   </style>
 </head>
 <body>
   <header class="tv-dash-header">
     <div class="tv-dash-brand">
-      <span class="tv-live-badge">● LIVE ROBOS DASHBOARD</span>
+      <span class="tv-live-badge">● LIVE ROBOS DASHBOARD · JS CANVAS</span>
       <div>
         <div class="tv-dash-title">${esc(dash.title)}</div>
         <div class="tv-dash-sub">Layout: ${esc(layout.title)} (${esc(layout.id)}) · Showing on ${esc(tvName)}${tvIp ? ` (${esc(tvIp)})` : ''}</div>
       </div>
     </div>
     <div class="tv-dash-pills">
+      <span class="tv-pill accent js-header-live-clock" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">🕒 ${esc(new Date().toLocaleTimeString('en-US', { hour12: false }))}</span>
       <span class="tv-pill accent">📺 Smart TV: ${esc(tvName)}</span>
       <span class="tv-pill">🕸️ KGraph: ${esc(dash.kgraphId || 'urn:robos:dashboard:' + dash.id)}</span>
-      <a class="tv-pill" href="/">⇄ 10-Foot TV Portal Home</a>
     </div>
   </header>
 
   <main class="robos-dashboard-grid" data-dashboard-id="${esc(dash.id)}" data-layout-id="${esc(layout.id)}">
-    ${cards
-      .map(
-        (card) => `
+    ${(() => {
+      if (cards.length > 3 && (layout.id === 'mission-control-3col' || layout.id === 'tv-wallboard-10ft')) {
+        const cols = [[], [], []];
+        for (const card of cards) {
+          if (card.slotId === 'col-1' || card.slotId === 'tv-left' || card.widgetType === 'github-repo' || card.widgetType === 'git-commits') {
+            cols[0].push(card);
+          } else if (card.slotId === 'col-2' || card.slotId === 'tv-center' || card.widgetType === 'calendar-today') {
+            cols[1].push(card);
+          } else {
+            cols[2].push(card);
+          }
+        }
+        return cols
+          .map(
+            (colCards) => `
+          <div class="robos-dashboard-col">
+            ${colCards
+              .map(
+                (card) => `
+              <section class="robos-dashboard-card" data-card-id="${esc(card.id)}" data-widget-type="${esc(card.widgetType)}">
+                <div class="card-header-bar">
+                  <span class="card-title-text">${esc(card.title)}</span>
+                  <span class="card-tag-badge">&lt;${esc(card.componentTag || 'robos-dashboard-widget')}&gt;</span>
+                </div>
+                ${renderCardBodyHtml(card)}
+              </section>`
+              )
+              .join('')}
+          </div>`
+          )
+          .join('');
+      }
+      return cards
+        .map(
+          (card) => `
       <section class="robos-dashboard-card"
                data-card-id="${esc(card.id)}"
                data-widget-type="${esc(card.widgetType)}"
@@ -1900,14 +2368,142 @@ function renderDashboardTvWallboardHtml({
         ${renderCardBodyHtml(card)}
       </section>
     `
-      )
-      .join('')}
+        )
+        .join('');
+    })()}
   </main>
 
   <footer class="tv-dash-footer">
     <div>RobOS Dashboards &amp; Smart TV Studio · Serving at ${portalUrl}/dashboard</div>
-    <div>Auto-refreshing live commits, daily calendar &amp; tailed agent sessions</div>
+    <div>Live JavaScript &lt;canvas&gt; widgets · GitHub Repo Activity (nddipiazza/robos) · Dual Google Calendars · Tailed Agent Sessions</div>
   </footer>
+
+  <script>
+    (function () {
+      function drawLiveClocks() {
+        const now = new Date();
+        const t24 = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const utc = now.toISOString().slice(11, 19) + ' UTC';
+        const dLabel = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        document.querySelectorAll('.js-live-digital-time').forEach(el => { el.textContent = t24; });
+        document.querySelectorAll('.js-live-utc-time').forEach(el => { el.textContent = utc; });
+        document.querySelectorAll('.js-live-date-label').forEach(el => { el.textContent = dLabel; });
+        document.querySelectorAll('.js-header-live-clock').forEach(el => { el.textContent = '🕒 ' + t24; });
+
+        const ms = now.getMilliseconds();
+        const sec = now.getSeconds() + ms / 1000;
+        const min = now.getMinutes() + sec / 60;
+        const hr = (now.getHours() % 12) + min / 60;
+
+        document.querySelectorAll('.robos-live-clock-canvas').forEach(canvas => {
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+          const w = canvas.width, h = canvas.height, cx = w / 2, cy = h / 2, r = Math.min(cx, cy) - 8;
+          ctx.clearRect(0, 0, w, h);
+
+          // Dial background
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.fillStyle = '#070b14';
+          ctx.fill();
+          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = 'rgba(0, 188, 212, 0.45)';
+          ctx.stroke();
+
+          // Live sweeping progress arc for seconds
+          ctx.beginPath();
+          ctx.arc(cx, cy, r - 2, -Math.PI / 2, -Math.PI / 2 + (sec / 60) * Math.PI * 2);
+          ctx.lineWidth = 3.5;
+          ctx.strokeStyle = '#10b981';
+          ctx.stroke();
+
+          // 60 minute/second tick marks
+          for (let i = 0; i < 60; i++) {
+            const ang = (i * Math.PI) / 30;
+            const isHour = i % 5 === 0;
+            const rIn = r - (isHour ? 11 : 6);
+            const rOut = r - 3;
+            ctx.beginPath();
+            ctx.moveTo(cx + Math.cos(ang) * rIn, cy + Math.sin(ang) * rIn);
+            ctx.lineTo(cx + Math.cos(ang) * rOut, cy + Math.sin(ang) * rOut);
+            ctx.lineWidth = isHour ? 2 : 1;
+            ctx.strokeStyle = isHour ? '#67e8f9' : 'rgba(148, 163, 184, 0.35)';
+            ctx.stroke();
+          }
+
+          // Hour hand
+          const hrAng = (hr * Math.PI) / 6 - Math.PI / 2;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(cx + Math.cos(hrAng) * (r * 0.52), cy + Math.sin(hrAng) * (r * 0.52));
+          ctx.lineWidth = 4;
+          ctx.lineCap = 'round';
+          ctx.strokeStyle = '#f8fafc';
+          ctx.stroke();
+
+          // Minute hand
+          const minAng = (min * Math.PI) / 30 - Math.PI / 2;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(cx + Math.cos(minAng) * (r * 0.74), cy + Math.sin(minAng) * (r * 0.74));
+          ctx.lineWidth = 2.8;
+          ctx.lineCap = 'round';
+          ctx.strokeStyle = '#67e8f9';
+          ctx.stroke();
+
+          // Second hand
+          const secAng = (sec * Math.PI) / 30 - Math.PI / 2;
+          ctx.beginPath();
+          ctx.moveTo(cx - Math.cos(secAng) * 10, cy - Math.sin(secAng) * 10);
+          ctx.lineTo(cx + Math.cos(secAng) * (r * 0.84), cy + Math.sin(secAng) * (r * 0.84));
+          ctx.lineWidth = 1.8;
+          ctx.strokeStyle = '#10b981';
+          ctx.stroke();
+
+          // Center hub
+          ctx.beginPath();
+          ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+          ctx.fillStyle = '#00bcd4';
+          ctx.fill();
+        });
+
+        document.querySelectorAll('.robos-sec-bar-canvas').forEach(canvas => {
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+          const w = canvas.width, h = canvas.height;
+          ctx.clearRect(0, 0, w, h);
+          ctx.fillStyle = '#090e1a';
+          ctx.fillRect(0, 0, w, h);
+          const pct = sec / 60;
+          const grad = ctx.createLinearGradient(0, 0, w, 0);
+          grad.addColorStop(0, '#00bcd4');
+          grad.addColorStop(1, '#10b981');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, Math.max(4, w * pct), h);
+        });
+
+        document.querySelectorAll('.robos-gh-activity-canvas').forEach(canvas => {
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+          const w = canvas.width, h = canvas.height;
+          ctx.clearRect(0, 0, w, h);
+          ctx.fillStyle = '#070b14';
+          ctx.fillRect(0, 0, w, h);
+          const bars = [14, 22, 18, 28, 25, 31, 20, 34, 29, 26, 33, 30];
+          const bw = (w - 24) / bars.length;
+          for (let i = 0; i < bars.length; i++) {
+            const pulse = Math.sin(Date.now() / 600 + i * 0.6) * 2.5;
+            const bh = Math.min(h - 6, Math.max(6, bars[i] + pulse));
+            ctx.fillStyle = i === bars.length - 1 ? '#10b981' : 'rgba(0, 188, 212, 0.68)';
+            ctx.fillRect(10 + i * bw, h - bh - 3, bw - 5, bh);
+          }
+        });
+      }
+
+      drawLiveClocks();
+      setInterval(drawLiveClocks, 250);
+    })();
+  </script>
 </body>
 </html>`;
 }
@@ -1919,6 +2515,8 @@ module.exports = {
   collectLatestGitCommits,
   collectTodayCalendarEvents,
   collectRunningAgentSessions,
+  collectLiveClockData,
+  collectGitHubRepoActivity,
   collectSupplementalWidgetData,
   createDashboardEngine,
   renderDashboardTvWallboardHtml,

@@ -73,10 +73,12 @@ app.commandLine?.appendSwitch('disable-gpu');
 app.commandLine?.appendSwitch('disable-dev-shm-usage');
 
 let mainWindow = null;
+let wallboardWindow = null;
+let wallboardTimer = null;
 app.setName?.('robos-tv');
 
 app.whenReady?.().then(async () => {
-  await tvEngine.startPortalServer();
+  const srv = await tvEngine.startPortalServer();
 
   const iconPng = path.join(__dirname, 'icon.png');
   mainWindow = new BrowserWindow({
@@ -103,6 +105,40 @@ app.whenReady?.().then(async () => {
     mainWindow.focus();
   });
 
+  // Hidden 1920x1080 Chromium compositor window for streaming live JS <canvas> widgets to Roku / Smart TVs
+  try {
+    wallboardWindow = new BrowserWindow({
+      title: 'RobOS TV 1080p Live JS Compositor',
+      width: 1920,
+      height: 1080,
+      show: false,
+      frame: false,
+      paintWhenInitiallyHidden: true,
+      backgroundColor: '#070b12',
+      webPreferences: {
+        contextIsolation: true,
+        nodeIntegration: false,
+        backgroundThrottling: false,
+      },
+    });
+    wallboardWindow.loadURL(`http://127.0.0.1:${srv.port || 19210}/dashboard`);
+    let tick = 0;
+    wallboardTimer = setInterval(async () => {
+      if (!wallboardWindow || wallboardWindow.isDestroyed()) return;
+      try {
+        tick++;
+        if (tick % 12 === 0) {
+          wallboardWindow.webContents.reloadIgnoringCache();
+        }
+        const img = await wallboardWindow.webContents.capturePage();
+        const jpg = img.toJPEG(90);
+        if (jpg && jpg.length > 5000) {
+          tvEngine.setLiveDashboardFrame?.(jpg);
+        }
+      } catch {}
+    }, 1000);
+  } catch {}
+
   if (_debugServer) {
     try {
       if (typeof _debugServer.registerSnapshotIPC === 'function') {
@@ -114,6 +150,7 @@ app.whenReady?.().then(async () => {
 });
 
 app.on?.('window-all-closed', async () => {
+  if (wallboardTimer) clearInterval(wallboardTimer);
   await tvEngine.stopPortalServer();
   app.quit();
 });

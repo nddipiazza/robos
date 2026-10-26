@@ -517,6 +517,96 @@ robos-widget-sprint-radar, robos-widget-custom {
       `;
     }
 
+    if (widgetType === 'live-clock') {
+      return `
+        <div class="robos-w-meta">
+          <span>🕒 Live JS Canvas Chronometer</span>
+          <span class="robos-w-pill">⚡ 60FPS / 1Hz Canvas Engine</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;padding:4px 2px;">
+          <canvas class="robos-live-clock-canvas" width="116" height="116" style="width:116px;height:116px;flex-shrink:0;"></canvas>
+          <div style="flex:1;min-width:0;">
+            <div class="js-live-digital-time" style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:24px;font-weight:800;color:#67e8f9;letter-spacing:0.03em;">${esc(data.time24 || '15:25:00')}</div>
+            <div class="js-live-date-label" style="font-size:12px;font-weight:700;color:#f0f6fc;margin-top:2px;">${esc(data.dateLabel || 'Mon, Oct 26, 2026')}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;">
+              <span class="robos-w-pill js-live-utc-time" style="border-color:rgba(16,185,129,0.4);color:#6ee7b7;background:rgba(16,185,129,0.12);">${esc(data.utcTime || '20:25:00 UTC')}</span>
+              <span class="robos-w-pill">${esc(data.timezone || 'America/Chicago')}</span>
+            </div>
+            <canvas class="robos-sec-bar-canvas" width="240" height="12" style="width:100%;height:12px;margin-top:6px;border-radius:4px;"></canvas>
+          </div>
+        </div>
+      `;
+    }
+
+    if (widgetType === 'github-repo') {
+      const rel = data.latestRelease || {};
+      const ci = data.mainCi || {};
+      const wfs = Array.isArray(ci.workflows) ? ci.workflows : [];
+      const commits = Array.isArray(data.commits) ? data.commits.slice(0, 6) : [];
+      const isRelRunning = Boolean(rel.isRunningNow);
+      return `
+        <div class="robos-w-meta">
+          <span>🐙 <code>${esc(data.repo || 'nddipiazza/robos')}</code> · ⎇ ${esc(data.branch || 'main')}</span>
+          <span class="robos-w-pill" style="${isRelRunning ? 'background:rgba(245,158,11,0.22);color:#fcd34d;border-color:#f59e0b;' : 'background:rgba(16,185,129,0.16);color:#6ee7b7;border-color:rgba(16,185,129,0.4);'}">
+            🏷️ ${esc(rel.tag || 'v0.0.8')} · Release #${esc(rel.releaseRunNumber || 11)}
+          </span>
+        </div>
+        <div style="background:#0d1117;border:1px solid #21262d;border-left:3px solid ${isRelRunning ? '#f59e0b' : '#10b981'};border-radius:7px;padding:7px 9px;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+            <strong style="font-size:12px;color:#f0f6fc;">🏷️ Latest Release: ${esc(rel.name || rel.tag || 'RobOS v0.0.8')} (#${esc(rel.releaseRunNumber || 11)})</strong>
+            <span class="robos-cal-badge" style="${isRelRunning ? 'background:rgba(245,158,11,0.24);color:#fcd34d;' : 'background:rgba(16,185,129,0.2);color:#6ee7b7;'}">
+              ${isRelRunning ? '⚡ RUNNING NOW' : '● IDLE (NOT RUNNING NOW)'}
+            </span>
+          </div>
+          <div style="font-size:10.5px;color:#8b949e;margin-top:2px;">
+            ${esc(rel.statusLabel || 'IDLE · Last Release #11: SUCCESS ✔')} · Win EXE Release #${esc(rel.windowsReleaseRunNumber || 5)}: ${esc(String(rel.windowsReleaseConclusion || 'SUCCESS').toUpperCase())}
+          </div>
+        </div>
+        <div style="background:#0d1117;border:1px solid #21262d;border-radius:7px;padding:7px 9px;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+            <span style="font-size:11px;font-weight:700;color:#67e8f9;">⚙️ CI STATUS IN MAIN (${esc(ci.summaryText || '3 Passing · 1 Failing')})</span>
+            <span style="font-size:10px;color:#8b949e;">${ci.isRunningNow ? '⚡ Running Now' : 'Completed'}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;">
+            ${wfs
+              .slice(0, 4)
+              .map((w) => {
+                const isOk = w.conclusion === 'success';
+                const isRun = w.status === 'in_progress' || w.status === 'queued';
+                const badgeColor = isRun ? '#fcd34d' : isOk ? '#6ee7b7' : '#fca5a5';
+                const badgeBg = isRun
+                  ? 'rgba(245,158,11,0.18)'
+                  : isOk
+                  ? 'rgba(16,185,129,0.14)'
+                  : 'rgba(239,68,68,0.16)';
+                const icon = isRun ? '⚡' : isOk ? '✔' : '✖';
+                return `<div style="display:flex;align-items:center;justify-content:space-between;background:#161b22;border:1px solid #21262d;border-radius:5px;padding:3px 6px;font-size:10.5px;">
+                  <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e6edf3;">${esc(w.shortName || w.name)} #${esc(w.runNumber)}</span>
+                  <span style="color:${badgeColor};background:${badgeBg};padding:1px 4px;border-radius:3px;font-weight:700;font-size:9.5px;">${icon} ${esc(String(isRun ? w.status : w.conclusion || 'ok').toUpperCase())}</span>
+                </div>`;
+              })
+              .join('')}
+          </div>
+          <canvas class="robos-gh-activity-canvas" width="440" height="32" style="width:100%;height:32px;margin-top:5px;border-radius:4px;"></canvas>
+        </div>
+        <div style="font-size:10.5px;font-weight:700;color:#8b949e;margin-bottom:3px;">LATEST ROBOS COMMITS (${esc(data.branch || 'main')}):</div>
+        <ol class="robos-commits-list">
+          ${commits
+            .map(
+              (c) => `
+            <li class="robos-commit-item" data-commit-sha="${esc(c.shortSha)}">
+              <code class="robos-commit-sha">${esc(c.shortSha)}</code>
+              <span class="robos-commit-type ${esc(c.commitType || 'commit')}">${esc(c.commitType || 'git')}</span>
+              <span class="robos-commit-subject" title="${esc(c.subject)}">${esc(c.subject)}</span>
+              <span class="robos-commit-time">${esc(c.relativeTime)}</span>
+            </li>
+          `
+            )
+            .join('')}
+        </ol>
+      `;
+    }
+
     const customTag = data.customElementTag || card.config?.customElementTag || 'robos-ai-textarea';
     const placeholder = data.placeholder || card.config?.placeholder || 'Ask RobOS AI or trigger a workflow…';
     return `
@@ -540,37 +630,59 @@ robos-widget-sprint-radar, robos-widget-custom {
     const cards = Array.isArray(dash.cards) ? dash.cards : [];
     const editable = Boolean(options.editable);
 
+    const renderOneCard = (card) => `
+      <section class="robos-embed-card"
+               data-card-id="${esc(card.id)}"
+               data-widget-type="${esc(card.widgetType)}"
+               style="grid-column: span ${Number(card.colSpan || 1)}; grid-row: span ${Number(card.rowSpan || 1)};">
+        <div class="robos-embed-card-head">
+          <div class="robos-embed-card-title">
+            <span>${esc(card.widgetMeta?.icon || '❖')}</span>
+            <span>${esc(card.title)}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <code class="robos-embed-card-tag">&lt;${esc(card.componentTag || 'robos-dashboard-widget')}&gt;</code>
+            ${
+              editable
+                ? `<button type="button" class="robos-embed-card-remove" data-remove-card="${esc(card.id)}" title="Remove widget card">✕</button>`
+                : ''
+            }
+          </div>
+        </div>
+        <div class="robos-embed-card-body">
+          ${renderWidgetInnerHtml(card)}
+        </div>
+      </section>
+    `;
+
+    let gridInnerHtml = '';
+    if (cards.length > 3 && (layoutId === 'mission-control-3col' || layoutId === 'tv-wallboard-10ft')) {
+      const cols = [[], [], []];
+      for (const card of cards) {
+        if (card.slotId === 'col-1' || card.slotId === 'tv-left' || card.widgetType === 'github-repo' || card.widgetType === 'git-commits') {
+          cols[0].push(card);
+        } else if (card.slotId === 'col-2' || card.slotId === 'tv-center' || card.widgetType === 'calendar-today') {
+          cols[1].push(card);
+        } else {
+          cols[2].push(card);
+        }
+      }
+      gridInnerHtml = cols
+        .map(
+          (colCards) =>
+            `<div class="robos-embed-col" style="display:flex;flex-direction:column;gap:14px;min-width:0;">${colCards
+              .map(renderOneCard)
+              .join('')}</div>`
+        )
+        .join('');
+    } else {
+      gridInnerHtml = cards.map(renderOneCard).join('');
+    }
+
     return `
       <div class="robos-embed-dashboard" data-dashboard-id="${esc(dash.id || 'daily-engineering-ops')}" data-layout-id="${esc(layoutId)}">
         <div class="robos-embed-grid" style="grid-template-columns: ${esc(gridTemplate)};">
-          ${cards
-            .map(
-              (card) => `
-            <section class="robos-embed-card"
-                     data-card-id="${esc(card.id)}"
-                     data-widget-type="${esc(card.widgetType)}"
-                     style="grid-column: span ${Number(card.colSpan || 1)}; grid-row: span ${Number(card.rowSpan || 1)};">
-              <div class="robos-embed-card-head">
-                <div class="robos-embed-card-title">
-                  <span>${esc(card.widgetMeta?.icon || '❖')}</span>
-                  <span>${esc(card.title)}</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <code class="robos-embed-card-tag">&lt;${esc(card.componentTag || 'robos-dashboard-widget')}&gt;</code>
-                  ${
-                    editable
-                      ? `<button type="button" class="robos-embed-card-remove" data-remove-card="${esc(card.id)}" title="Remove widget card">✕</button>`
-                      : ''
-                  }
-                </div>
-              </div>
-              <div class="robos-embed-card-body">
-                ${renderWidgetInnerHtml(card)}
-              </div>
-            </section>
-          `
-            )
-            .join('')}
+          ${gridInnerHtml}
         </div>
       </div>
     `;
@@ -616,12 +728,153 @@ robos-widget-sprint-radar, robos-widget-custom {
       ['robos-widget-git-commits', 'git-commits'],
       ['robos-widget-calendar-today', 'calendar-today'],
       ['robos-widget-agent-sessions', 'agent-sessions'],
+      ['robos-widget-live-clock', 'live-clock'],
+      ['robos-widget-github-repo', 'github-repo'],
       ['robos-widget-smart-tv', 'smart-tv'],
       ['robos-widget-smart-lights', 'smart-lights'],
       ['robos-widget-kgraph', 'kgraph-summary'],
       ['robos-widget-sprint-radar', 'sprint-radar'],
       ['robos-widget-custom', 'robos-component'],
     ];
+
+    function drawLiveDashboardCanvases() {
+      if (typeof document === 'undefined') return;
+      const now = new Date();
+      const t24 = now.toLocaleTimeString('en-US', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+      const utc = now.toISOString().slice(11, 19) + ' UTC';
+      const dLabel = now.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+      document.querySelectorAll('.js-live-digital-time').forEach((el) => {
+        el.textContent = t24;
+      });
+      document.querySelectorAll('.js-live-utc-time').forEach((el) => {
+        el.textContent = utc;
+      });
+      document.querySelectorAll('.js-live-date-label').forEach((el) => {
+        el.textContent = dLabel;
+      });
+
+      const ms = now.getMilliseconds();
+      const sec = now.getSeconds() + ms / 1000;
+      const min = now.getMinutes() + sec / 60;
+      const hr = (now.getHours() % 12) + min / 60;
+
+      document.querySelectorAll('.robos-live-clock-canvas').forEach((canvas) => {
+        const ctx = canvas.getContext && canvas.getContext('2d');
+        if (!ctx) return;
+        const w = canvas.width;
+        const h = canvas.height;
+        const cx = w / 2;
+        const cy = h / 2;
+        const r = Math.min(cx, cy) - 6;
+        ctx.clearRect(0, 0, w, h);
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = '#070b14';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(0, 188, 212, 0.45)';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r - 2, -Math.PI / 2, -Math.PI / 2 + (sec / 60) * Math.PI * 2);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#10b981';
+        ctx.stroke();
+
+        for (let i = 0; i < 60; i++) {
+          const ang = (i * Math.PI) / 30;
+          const isHour = i % 5 === 0;
+          const rIn = r - (isHour ? 10 : 5);
+          const rOut = r - 3;
+          ctx.beginPath();
+          ctx.moveTo(cx + Math.cos(ang) * rIn, cy + Math.sin(ang) * rIn);
+          ctx.lineTo(cx + Math.cos(ang) * rOut, cy + Math.sin(ang) * rOut);
+          ctx.lineWidth = isHour ? 2 : 1;
+          ctx.strokeStyle = isHour ? '#67e8f9' : 'rgba(148, 163, 184, 0.35)';
+          ctx.stroke();
+        }
+
+        const hrAng = (hr * Math.PI) / 6 - Math.PI / 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(hrAng) * (r * 0.5), cy + Math.sin(hrAng) * (r * 0.5));
+        ctx.lineWidth = 3.5;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#f8fafc';
+        ctx.stroke();
+
+        const minAng = (min * Math.PI) / 30 - Math.PI / 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + Math.cos(minAng) * (r * 0.72), cy + Math.sin(minAng) * (r * 0.72));
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#67e8f9';
+        ctx.stroke();
+
+        const secAng = (sec * Math.PI) / 30 - Math.PI / 2;
+        ctx.beginPath();
+        ctx.moveTo(cx - Math.cos(secAng) * 8, cy - Math.sin(secAng) * 8);
+        ctx.lineTo(cx + Math.cos(secAng) * (r * 0.82), cy + Math.sin(secAng) * (r * 0.82));
+        ctx.lineWidth = 1.6;
+        ctx.strokeStyle = '#10b981';
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#00bcd4';
+        ctx.fill();
+      });
+
+      document.querySelectorAll('.robos-sec-bar-canvas').forEach((canvas) => {
+        const ctx = canvas.getContext && canvas.getContext('2d');
+        if (!ctx) return;
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#090e1a';
+        ctx.fillRect(0, 0, w, h);
+        const pct = sec / 60;
+        const grad = ctx.createLinearGradient(0, 0, w, 0);
+        grad.addColorStop(0, '#00bcd4');
+        grad.addColorStop(1, '#10b981');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, Math.max(4, w * pct), h);
+      });
+
+      document.querySelectorAll('.robos-gh-activity-canvas').forEach((canvas) => {
+        const ctx = canvas.getContext && canvas.getContext('2d');
+        if (!ctx) return;
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#070b14';
+        ctx.fillRect(0, 0, w, h);
+        const bars = [12, 19, 15, 24, 21, 27, 17, 29, 25, 22, 28, 26];
+        const bw = (w - 20) / bars.length;
+        for (let i = 0; i < bars.length; i++) {
+          const pulse = Math.sin(Date.now() / 600 + i * 0.6) * 2;
+          const bh = Math.min(h - 4, Math.max(5, bars[i] + pulse));
+          ctx.fillStyle = i === bars.length - 1 ? '#10b981' : 'rgba(0, 188, 212, 0.68)';
+          ctx.fillRect(8 + i * bw, h - bh - 2, bw - 4, bh);
+        }
+      });
+    }
+
+    if (!global.__robosDashboardCanvasTimer) {
+      global.__robosDashboardCanvasTimer = setInterval(drawLiveDashboardCanvases, 250);
+    }
 
     for (const [tagName, defaultType] of WIDGET_TAGS) {
       if (!global.customElements.get(tagName)) {
@@ -678,6 +931,7 @@ robos-widget-sprint-radar, robos-widget-custom {
             );
           };
         });
+        setTimeout(drawLiveDashboardCanvases, 15);
       }
     }
 

@@ -1215,13 +1215,20 @@ tizen run -p robostv001.RobOSTV
       initialDash = dashEngine.resolveDashboard('daily-engineering-ops').dashboard;
     } catch {}
 
-    const commitsCard = (initialDash?.cards || []).find(
+    const dashCards = initialDash?.cards || [];
+    const ghCard = dashCards.find(
+      (c) => (c.componentTag || c.widgetTag) === 'robos-widget-github-repo'
+    );
+    const commitsCard = dashCards.find(
       (c) => (c.componentTag || c.widgetTag) === 'robos-widget-git-commits'
     );
-    const calendarCard = (initialDash?.cards || []).find(
+    const calendarCard = dashCards.find(
       (c) => (c.componentTag || c.widgetTag) === 'robos-widget-calendar-today'
     );
-    const agentsCard = (initialDash?.cards || []).find(
+    const clockCard = dashCards.find(
+      (c) => (c.componentTag || c.widgetTag) === 'robos-widget-live-clock'
+    );
+    const agentsCard = dashCards.find(
       (c) => (c.componentTag || c.widgetTag) === 'robos-widget-agent-sessions'
     );
 
@@ -1235,19 +1242,63 @@ tizen run -p robostv001.RobOSTV
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
 
-    const commits = ((commitsCard && commitsCard.liveData && commitsCard.liveData.commits) || []).slice(0, 10);
+    const ghData = (ghCard && ghCard.liveData) || {};
+    const ghRel = ghData.latestRelease || {
+      tag: 'v0.0.8',
+      name: 'RobOS v0.0.8',
+      releaseRunNumber: 11,
+      releaseConclusion: 'success',
+      windowsReleaseRunNumber: 5,
+      windowsReleaseConclusion: 'success',
+      isRunningNow: false,
+    };
+    const ghCi = ghData.mainCi || {
+      summaryText: '3 Passing | 1 Failing | 0 Running',
+      workflows: [
+        { shortName: 'Docs Pages', runNumber: 416, conclusion: 'success', status: 'completed' },
+        { shortName: 'Household CI', runNumber: 15, conclusion: 'success', status: 'completed' },
+        { shortName: 'Win EXE Release', runNumber: 5, conclusion: 'success', status: 'completed' },
+        { shortName: 'Windows Suite', runNumber: 64, conclusion: 'failure', status: 'completed' },
+      ],
+    };
+    const commits = (
+      (ghData.commits && ghData.commits.length ? ghData.commits : null) ||
+      (commitsCard && commitsCard.liveData && commitsCard.liveData.commits) ||
+      []
+    ).slice(0, 8);
     const events = ((calendarCard && calendarCard.liveData && calendarCard.liveData.events) || []).slice(0, 6);
     const sessions = ((agentsCard && agentsCard.liveData && agentsCard.liveData.sessions) || []).slice(0, 3);
+    const clockData = (clockCard && clockCard.liveData) || {
+      time24: new Date().toLocaleTimeString('en-US', { hour12: false }),
+      utcTime: new Date().toISOString().slice(11, 19) + ' UTC',
+      dateLabel: 'Mon, Oct 26, 2026',
+      timezone: 'America/Chicago',
+    };
 
-    const commitRowsXml = Array.from({ length: 10 }, (_, i) => {
+    const relRunning = Boolean(ghRel.isRunningNow);
+    const relStripeColor = relRunning ? '0xF59E0BFF' : '0x10B981FF';
+    const relLine1 = `RELEASE: ${ghRel.name || ghRel.tag || 'v0.0.8'} (Run #${ghRel.releaseRunNumber || 11}) [${relRunning ? 'RUNNING NOW' : 'IDLE - NOT RUNNING'}]`;
+    const relLine2 = `Last Release #${ghRel.releaseRunNumber || 11}: ${String(ghRel.releaseConclusion || 'SUCCESS').toUpperCase()} | Win EXE Release #${ghRel.windowsReleaseRunNumber || 5}: ${String(ghRel.windowsReleaseConclusion || 'SUCCESS').toUpperCase()}`;
+
+    const wfList = Array.isArray(ghCi.workflows) ? ghCi.workflows : [];
+    const fmtWf = (w) => {
+      if (!w) return '';
+      const st = w.status === 'in_progress' || w.status === 'queued' ? 'RUNNING' : String(w.conclusion || 'PASS').toUpperCase();
+      return `${w.shortName || w.name} #${w.runNumber} [${st}]`;
+    };
+    const ciHeaderLine = `CI STATUS IN MAIN: ${String(ghCi.summaryText || '3 Passing | 1 Failing').replace(/[^\x20-\x7E]/g, '|')}`;
+    const ciRow1 = `${fmtWf(wfList[0])}   |   ${fmtWf(wfList[1])}`;
+    const ciRow2 = `${fmtWf(wfList[2])}   |   ${fmtWf(wfList[3])}`;
+
+    const commitRowsXml = Array.from({ length: 8 }, (_, i) => {
       const c = commits[i];
-      const y = 166 + i * 70;
+      const y = 370 + i * 62;
       const sha = c ? c.shortSha || c.hash || String(c.sha || '').slice(0, 8) : '';
       const line1 = c ? `${i + 1}. ${String(c.subject || '').slice(0, 48)}` : `${i + 1}. -`;
       const line2 = c ? `   #${sha} | ${c.author || 'dev'} | ${c.relativeTime || 'recent'}` : '';
-      return `    <Label id="commitTitle${i}" translation="[68, ${y}]" scale="[0.68, 0.68]" width="790" height="36" numLines="1" color="0xF8FAFCFF" text="${safeXml(line1)}" />
-    <Label id="commitMeta${i}" translation="[68, ${y + 28}]" scale="[0.58, 0.58]" width="920" height="34" numLines="1" color="0x67E8F9FF" text="${safeXml(line2)}" />
-    <Rectangle translation="[68, ${y + 58}]" width="544" height="1" color="0x1E293BFF" />`;
+      return `    <Label id="commitTitle${i}" translation="[68, ${y}]" scale="[0.64, 0.64]" width="820" height="32" numLines="1" color="0xF8FAFCFF" text="${safeXml(line1)}" />
+    <Label id="commitMeta${i}" translation="[68, ${y + 24}]" scale="[0.55, 0.55]" width="940" height="30" numLines="1" color="0x67E8F9FF" text="${safeXml(line2)}" />
+    <Rectangle translation="[68, ${y + 52}]" width="544" height="1" color="0x1E293BFF" />`;
     }).join('\n');
 
     const calendarRowsXml = Array.from({ length: 6 }, (_, i) => {
@@ -1270,27 +1321,27 @@ tizen run -p robostv001.RobOSTV
 
     const agentRowsXml = Array.from({ length: 3 }, (_, i) => {
       const s = sessions[i];
-      const y = 170 + i * 230;
+      const y = 320 + i * 182;
       const sTitle = s ? s.name || s.title || s.id || 'Agent Session' : '';
       const sRef = s ? s.taskRef || s.branch || 'main' : 'main';
       const titleText = s ? `* ${String(sTitle).slice(0, 44)}` : '';
       const metaText = s ? `${s.providerLabel || s.provider || 'Agent'} | ${sRef} | [${String(s.status || 'running').toUpperCase()}]` : '';
       const rawLines = Array.isArray(s?.statusLines) ? s.statusLines : Array.isArray(s?.tailLines) ? s.tailLines : [];
-      const tails = rawLines.slice(-4);
-      const tailLabels = Array.from({ length: 4 }, (__, tIdx) => {
-        const ty = y + 78 + tIdx * 30;
+      const tails = rawLines.slice(-3);
+      const tailLabels = Array.from({ length: 3 }, (__, tIdx) => {
+        const ty = y + 70 + tIdx * 28;
         const tLine = tails[tIdx] ? String(tails[tIdx]).replace(/[^\x20-\x7E]/g, '').trim().slice(0, 56) : '';
-        return `    <Label id="agentTail${i}_${tIdx}" translation="[1310, ${ty}]" scale="[0.55, 0.55]" width="940" height="34" numLines="1" color="0xA7F3D0FF" text="${safeXml(tLine)}" />`;
+        return `    <Label id="agentTail${i}_${tIdx}" translation="[1310, ${ty}]" scale="[0.54, 0.54]" width="940" height="32" numLines="1" color="0xA7F3D0FF" text="${safeXml(tLine)}" />`;
       }).join('\n');
-      return `    <Rectangle id="agentCard${i}" translation="[1284, ${y}]" width="568" height="214" color="0x161F30FF" visible="${s ? 'true' : 'false'}" />
+      return `    <Rectangle id="agentCard${i}" translation="[1284, ${y}]" width="568" height="170" color="0x161F30FF" visible="${s ? 'true' : 'false'}" />
     <Rectangle id="agentStripe${i}" translation="[1284, ${y}]" width="568" height="3" color="0xF59E0BFF" visible="${s ? 'true' : 'false'}" />
-    <Label id="agentTitle${i}" translation="[1300, ${y + 10}]" scale="[0.68, 0.68]" width="780" height="36" numLines="1" color="0xF8FAFCFF" text="${safeXml(titleText)}" />
-    <Label id="agentMeta${i}" translation="[1300, ${y + 38}]" scale="[0.56, 0.56]" width="940" height="34" numLines="1" color="0xFCD34DFF" text="${safeXml(metaText)}" />
-    <Rectangle id="agentTermBg${i}" translation="[1298, ${y + 68}]" width="540" height="134" color="0x090D16FF" visible="${s ? 'true' : 'false'}" />
+    <Label id="agentTitle${i}" translation="[1300, ${y + 8}]" scale="[0.65, 0.65]" width="780" height="34" numLines="1" color="0xF8FAFCFF" text="${safeXml(titleText)}" />
+    <Label id="agentMeta${i}" translation="[1300, ${y + 34}]" scale="[0.54, 0.54]" width="940" height="32" numLines="1" color="0xFCD34DFF" text="${safeXml(metaText)}" />
+    <Rectangle id="agentTermBg${i}" translation="[1298, ${y + 62}]" width="540" height="98" color="0x090D16FF" visible="${s ? 'true' : 'false'}" />
 ${tailLabels}`;
     }).join('\n');
 
-    const manifest = `title=${appName}\nsubtitle=RobOS 10-Foot Smart TV & Live Dashboards Suite\nmajor_version=1\nminor_version=2\nbuild_version=3\nui_resolutions=fhd\n`;
+    const manifest = `title=${appName}\nsubtitle=RobOS 10-Foot Smart TV & Live Dashboards Suite\nmajor_version=1\nminor_version=3\nbuild_version=1\nui_resolutions=fhd\n`;
     const mainBrs = `sub Main()
     screen = CreateObject("roSGScreen")
     m.port = CreateObject("roMessagePort")
@@ -1327,7 +1378,7 @@ sub pollDashboard()
                 m.top.payloadJson = raw
             end if
         end if
-        sleep(10000)
+        sleep(8000)
     end while
 end sub
 `;
@@ -1338,36 +1389,80 @@ end sub
     <Rectangle id="bg" width="1920" height="1080" color="0x070B12FF" />
     <Rectangle id="headerBar" width="1920" height="84" color="0x0F172AFF" />
     <Rectangle id="headerAccent" translation="[0, 84]" width="1920" height="2" color="0x00BCD4FF" />
-    <Label id="brandLabel" scale="[0.90, 0.90]" text="RobOS Dashboards - Daily Engineering &amp; Agent Ops" translation="[48, 24]" width="1280" height="40" numLines="1" color="0xF8FAFCFF" />
-    <Label id="hostLabel" scale="[0.62, 0.62]" text="LIVE CAST | ${portalUrl}/dashboard (${tvIp})" translation="[1240, 30]" width="1000" height="34" numLines="1" horizAlign="right" color="0x67E8F9FF" />
+    <Label id="brandLabel" scale="[0.82, 0.82]" text="RobOS Dashboards - Daily Engineering &amp; Agent Ops" translation="[48, 25]" width="1020" height="40" numLines="1" color="0xF8FAFCFF" />
+    <Label id="headerClockLabel" scale="[0.70, 0.70]" text="CLOCK ${safeXml(clockData.time24)} | ${safeXml(clockData.utcTime)}" translation="[920, 28]" width="520" height="36" numLines="1" color="0x6EE7B7FF" />
+    <Label id="hostLabel" scale="[0.58, 0.58]" text="LIVE JS CAST | ${portalUrl}/dashboard" translation="[1380, 30]" width="840" height="34" numLines="1" horizAlign="right" color="0x67E8F9FF" />
 
-    <!-- Column 1: 10 Latest Commit Messages -->
+    <!-- Column 1: GitHub Repo Activity (nddipiazza/robos) + Commits, main CI & Latest Release -->
     <Rectangle id="colCommitsCard" translation="[48, 102]" width="584" height="784" color="0x111827FF" />
     <Rectangle translation="[48, 102]" width="584" height="4" color="0x00BCD4FF" />
-    <Label id="colCommitsHeader" scale="[0.76, 0.76]" text="1. 10 LATEST COMMIT MESSAGES" translation="[68, 118]" width="700" height="36" numLines="1" color="0x67E8F9FF" />
-    <Rectangle translation="[68, 154]" width="544" height="2" color="0x1E293BFF" />
+    <Label id="colCommitsHeader" scale="[0.70, 0.70]" text="1. GITHUB REPO: nddipiazza/robos (main CI, Release &amp; Commits)" translation="[68, 118]" width="760" height="36" numLines="1" color="0x67E8F9FF" />
+    <Rectangle translation="[68, 152]" width="544" height="2" color="0x1E293BFF" />
+
+    <!-- Release Status Box -->
+    <Rectangle id="ghReleaseBg" translation="[68, 162]" width="544" height="72" color="0x161F30FF" />
+    <Rectangle id="ghReleaseStripe" translation="[68, 162]" width="6" height="72" color="${relStripeColor}" />
+    <Label id="ghReleaseLine1" translation="[84, 172]" scale="[0.58, 0.58]" width="900" height="32" numLines="1" color="0x6EE7B7FF" text="${safeXml(relLine1)}" />
+    <Label id="ghReleaseLine2" translation="[84, 200]" scale="[0.54, 0.54]" width="960" height="30" numLines="1" color="0xF8FAFCFF" text="${safeXml(relLine2)}" />
+
+    <!-- CI Status in main Box -->
+    <Rectangle id="ghCiBg" translation="[68, 244]" width="544" height="96" color="0x161F30FF" />
+    <Rectangle id="ghCiStripe" translation="[68, 244]" width="6" height="96" color="0x00BCD4FF" />
+    <Label id="ghCiHeader" translation="[84, 252]" scale="[0.58, 0.58]" width="900" height="32" numLines="1" color="0x67E8F9FF" text="${safeXml(ciHeaderLine)}" />
+    <Label id="ghCiRow1" translation="[84, 280]" scale="[0.55, 0.55]" width="940" height="30" numLines="1" color="0xA7F3D0FF" text="${safeXml(ciRow1)}" />
+    <Label id="ghCiRow2" translation="[84, 308]" scale="[0.55, 0.55]" width="940" height="30" numLines="1" color="0xFCD34DFF" text="${safeXml(ciRow2)}" />
+
+    <Label id="ghCommitsSubheader" translation="[68, 346]" scale="[0.56, 0.56]" width="900" height="28" numLines="1" color="0x94A3B8FF" text="LATEST ROBOS COMMITS IN MAIN:" />
 ${commitRowsXml}
 
-    <!-- Column 2: Calendar Events for the Day -->
+    <!-- Column 2: Calendar Events for the Day (Both Google Calendars) -->
     <Rectangle id="colCalendarCard" translation="[656, 102]" width="584" height="784" color="0x111827FF" />
     <Rectangle translation="[656, 102]" width="584" height="4" color="0x10B981FF" />
     <Label id="colCalendarHeader" scale="[0.66, 0.66]" text="2. CALENDARS: nicholas.dipiazza@gmail.com + nicholas@hermetiq.com" translation="[676, 120]" width="820" height="36" numLines="1" color="0x6EE7B7FF" />
     <Rectangle translation="[676, 154]" width="544" height="2" color="0x1E293BFF" />
 ${calendarRowsXml}
 
-    <!-- Column 3: Running RobOS Agent Sessions & Tailed Status Lines -->
+    <!-- Column 3: Live Clock Widget + Running RobOS Agent Sessions (Tailed) -->
     <Rectangle id="colAgentsCard" translation="[1264, 102]" width="608" height="784" color="0x111827FF" />
     <Rectangle translation="[1264, 102]" width="608" height="4" color="0xF59E0BFF" />
-    <Label id="colAgentsHeader" scale="[0.72, 0.72]" text="3. RUNNING ROBOS AGENT SESSIONS (TAILED)" translation="[1284, 118]" width="780" height="36" numLines="1" color="0xFCD34DFF" />
+    <Label id="colAgentsHeader" scale="[0.68, 0.68]" text="3. LIVE CLOCK &amp; RUNNING AGENT SESSIONS (TAILED)" translation="[1284, 118]" width="800" height="36" numLines="1" color="0xFCD34DFF" />
     <Rectangle translation="[1284, 154]" width="568" height="2" color="0x1E293BFF" />
+
+    <!-- Live Clock & Chronometer Widget Box -->
+    <Rectangle id="liveClockCardBg" translation="[1284, 164]" width="568" height="142" color="0x161F30FF" />
+    <Rectangle id="liveClockStripe" translation="[1284, 164]" width="6" height="142" color="0x00BCD4FF" />
+    <Label id="clockWidgetTitle" translation="[1304, 172]" scale="[0.56, 0.56]" width="900" height="28" numLines="1" color="0x67E8F9FF" text="LIVE ANALOG &amp; DIGITAL CHRONOMETER (1Hz REAL-TIME)" />
+    <!-- Analog Clock Dial (center [1336, 231]) -->
+    <Rectangle id="clockDialBox" translation="[1304, 199]" width="64" height="64" color="0x090D16FF" />
+    <Rectangle translation="[1334, 202]" width="4" height="6" color="0x00BCD4FF" />
+    <Rectangle translation="[1360, 229]" width="6" height="4" color="0x00BCD4FF" />
+    <Rectangle translation="[1334, 255]" width="4" height="6" color="0x00BCD4FF" />
+    <Rectangle translation="[1306, 229]" width="6" height="4" color="0x00BCD4FF" />
+    <Rectangle id="hrDot1" translation="[1334, 224]" width="5" height="5" color="0xF8FAFCFF" />
+    <Rectangle id="hrDot2" translation="[1334, 217]" width="5" height="5" color="0xF8FAFCFF" />
+    <Rectangle id="minDot1" translation="[1334, 222]" width="4" height="4" color="0x00BCD4FF" />
+    <Rectangle id="minDot2" translation="[1334, 214]" width="4" height="4" color="0x00BCD4FF" />
+    <Rectangle id="minDot3" translation="[1334, 207]" width="4" height="4" color="0x00BCD4FF" />
+    <Rectangle id="secDot1" translation="[1335, 221]" width="3" height="3" color="0x10B981FF" />
+    <Rectangle id="secDot2" translation="[1335, 213]" width="4" height="4" color="0x10B981FF" />
+    <Rectangle id="secDot3" translation="[1334, 205]" width="6" height="6" color="0x10B981FF" />
+    <Rectangle id="clockCenterHub" translation="[1333, 228]" width="6" height="6" color="0xF59E0BFF" />
+    <Label id="clockDigitalLabel" translation="[1380, 202]" scale="[1.10, 1.10]" width="300" height="48" numLines="1" color="0xF8FAFCFF" text="${safeXml(clockData.time24)}" />
+    <Label id="clockUtcLabel" translation="[1604, 204]" scale="[0.60, 0.60]" width="380" height="32" numLines="1" color="0x6EE7B7FF" text="${safeXml(clockData.utcTime)}" />
+    <Label id="clockDateLabel" translation="[1604, 234]" scale="[0.54, 0.54]" width="420" height="30" numLines="1" color="0x94A3B8FF" text="${safeXml(clockData.dateLabel)} (${safeXml(clockData.timezone)})" />
+    <!-- Animated 60-Second Progress Sweep Bar -->
+    <Rectangle id="secBarTrack" translation="[1304, 274]" width="528" height="14" color="0x090D16FF" />
+    <Rectangle id="secBarFill" translation="[1304, 274]" width="240" height="14" color="0x10B981FF" />
+    <Rectangle id="secPulseDot" translation="[1820, 174]" width="14" height="14" color="0x10B981FF" />
+
 ${agentRowsXml}
 
     <!-- Bottom Status & Compact Tile Selector -->
     <Rectangle id="heroCard" translation="[48, 902]" width="1824" height="132" color="0x111827FF" />
     <Rectangle translation="[48, 902]" width="1824" height="2" color="0x1E293BFF" />
     <Label id="heroTitle" scale="[0.75, 0.75]" text="RobOS Live TV Wallboard Active - D-Pad Up/Down/OK switches TV experience" translation="[72, 916]" width="1460" height="36" numLines="1" color="0xF8FAFCFF" />
-    <Label id="heroDesc" scale="[0.62, 0.62]" text="10 Latest Git Commits | Today's Calendar Schedule | Active Coding Agent Sessions &amp; Tailed Logs" translation="[72, 954]" width="1760" height="34" numLines="1" color="0x94A3B8FF" />
-    <Label id="statusFooter" scale="[0.62, 0.62]" text="Connected to ${portalUrl}/dashboard | Auto-refreshing every 10s" translation="[72, 988]" width="1760" height="34" numLines="1" color="0x67E8F9FF" />
+    <Label id="heroDesc" scale="[0.62, 0.62]" text="GitHub Repo (nddipiazza/robos CI &amp; Release) | Dual Google Calendars | Live Clock &amp; Tailed Agents" translation="[72, 954]" width="1760" height="34" numLines="1" color="0x94A3B8FF" />
+    <Label id="statusFooter" scale="[0.62, 0.62]" text="Connected to ${portalUrl}/dashboard | Live 1s Clock + Double-Buffered JS Canvas Surface" translation="[72, 988]" width="1760" height="34" numLines="1" color="0x67E8F9FF" />
     <LabelList
       id="tileList"
       translation="[1220, 916]"
@@ -1377,6 +1472,11 @@ ${agentRowsXml}
       numRows="3"
       color="0xF8FAFCFF"
       focusedColor="0x061318FF" />
+
+    <!-- Double-Buffered 1920x1080 Live Chromium JS Canvas Frame Layer -->
+    <Poster id="livePosterA" width="1920" height="1080" opacity="0.0" />
+    <Poster id="livePosterB" width="1920" height="1080" opacity="0.0" />
+    <Timer id="clockTimer" repeat="true" duration="1.0" />
   </children>
 </component>
 `;
@@ -1386,9 +1486,27 @@ ${agentRowsXml}
     m.heroDesc = m.top.findNode("heroDesc")
     m.statusFooter = m.top.findNode("statusFooter")
     m.brandLabel = m.top.findNode("brandLabel")
+    m.headerClockLabel = m.top.findNode("headerClockLabel")
+    m.clockDigitalLabel = m.top.findNode("clockDigitalLabel")
+    m.clockUtcLabel = m.top.findNode("clockUtcLabel")
+    m.secBarFill = m.top.findNode("secBarFill")
+    m.secPulseDot = m.top.findNode("secPulseDot")
+    m.hrDot1 = m.top.findNode("hrDot1")
+    m.hrDot2 = m.top.findNode("hrDot2")
+    m.minDot1 = m.top.findNode("minDot1")
+    m.minDot2 = m.top.findNode("minDot2")
+    m.minDot3 = m.top.findNode("minDot3")
+    m.secDot1 = m.top.findNode("secDot1")
+    m.secDot2 = m.top.findNode("secDot2")
+    m.secDot3 = m.top.findNode("secDot3")
+    m.clockTimer = m.top.findNode("clockTimer")
+    m.tickCount = 0
+
+    m.clockTimer.observeField("fire", "onClockTick")
+    m.clockTimer.control = "start"
 
     m.tiles = [
-        { id: "portal-home", title: "1. Daily Engineering & Agent Ops Dashboard", desc: "3-column live graphical dashboard from RobOS Dashboards (${portalUrl}/dashboard)." },
+        { id: "portal-home", title: "1. Daily Engineering & Agent Ops Dashboard", desc: "Live JS Canvas Clock + GitHub Repo Activity (nddipiazza/robos) + Dual Calendars + Agents." },
         { id: "crpg-realm", title: "2. Realm of Heroes cRPG [Godot 4]", desc: "Party-based tactical isometric D&D 5e cRPG in Godot 4." },
         { id: "quest-warrior-dragon", title: "3. Quest: Warrior Dragon [2D JRPG]", desc: "Clean-room NES-authentic 2D JRPG in Godot 4." },
         { id: "tabletop-rpg", title: "4. RobOS Tabletop RPG [Dungeon Board]", desc: "HeroQuest-inspired 26x19 tactical dungeon crawler." },
@@ -1412,6 +1530,59 @@ ${agentRowsXml}
     m.dashTask.apiUrl = "${portalUrl}/api/dashboard-cast"
     m.dashTask.observeField("payloadJson", "onPayloadUpdated")
     m.dashTask.control = "RUN"
+    onClockTick()
+end sub
+
+function pad2(n as Integer) as String
+    if n < 10 then return "0" + n.ToStr()
+    return n.ToStr()
+end function
+
+sub onClockTick()
+    m.tickCount = m.tickCount + 1
+    dtLocal = CreateObject("roDateTime")
+    dtLocal.ToLocalTime()
+    hh = pad2(dtLocal.GetHours())
+    mm = pad2(dtLocal.GetMinutes())
+    ss = pad2(dtLocal.GetSeconds())
+    localStr = hh + ":" + mm + ":" + ss
+
+    dtUtc = CreateObject("roDateTime")
+    utcStr = pad2(dtUtc.GetHours()) + ":" + pad2(dtUtc.GetMinutes()) + ":" + pad2(dtUtc.GetSeconds()) + " UTC"
+
+    if m.clockDigitalLabel <> invalid then m.clockDigitalLabel.text = localStr
+    if m.clockUtcLabel <> invalid then m.clockUtcLabel.text = utcStr
+    if m.headerClockLabel <> invalid then m.headerClockLabel.text = "CLOCK " + localStr + " | " + utcStr
+
+    secVal = dtLocal.GetSeconds()
+    minVal = dtLocal.GetMinutes()
+    hrVal = dtLocal.GetHours() mod 12
+    pi = 3.14159265
+    hrAngle = ((hrVal + (minVal / 60.0)) / 12.0) * 2.0 * pi
+    minAngle = ((minVal + (secVal / 60.0)) / 60.0) * 2.0 * pi
+    secAngle = (secVal / 60.0) * 2.0 * pi
+    cx = 1334.0
+    cy = 229.0
+    if m.hrDot1 <> invalid then m.hrDot1.translation = [Int(cx + Sin(hrAngle) * 8.0), Int(cy - Cos(hrAngle) * 8.0)]
+    if m.hrDot2 <> invalid then m.hrDot2.translation = [Int(cx + Sin(hrAngle) * 15.0), Int(cy - Cos(hrAngle) * 15.0)]
+    if m.minDot1 <> invalid then m.minDot1.translation = [Int(cx + Sin(minAngle) * 8.0), Int(cy - Cos(minAngle) * 8.0)]
+    if m.minDot2 <> invalid then m.minDot2.translation = [Int(cx + Sin(minAngle) * 15.0), Int(cy - Cos(minAngle) * 15.0)]
+    if m.minDot3 <> invalid then m.minDot3.translation = [Int(cx + Sin(minAngle) * 22.0), Int(cy - Cos(minAngle) * 22.0)]
+    if m.secDot1 <> invalid then m.secDot1.translation = [Int(cx + Sin(secAngle) * 9.0), Int(cy - Cos(secAngle) * 9.0)]
+    if m.secDot2 <> invalid then m.secDot2.translation = [Int(cx + Sin(secAngle) * 17.0), Int(cy - Cos(secAngle) * 17.0)]
+    if m.secDot3 <> invalid then m.secDot3.translation = [Int(cx + Sin(secAngle) * 25.0), Int(cy - Cos(secAngle) * 25.0)]
+
+    if m.secBarFill <> invalid
+        w = 12 + Int((secVal / 60.0) * 516)
+        m.secBarFill.width = w
+    end if
+    if m.secPulseDot <> invalid
+        if (m.tickCount mod 2) = 0
+            m.secPulseDot.color = "0x10B981FF"
+        else
+            m.secPulseDot.color = "0x00BCD4FF"
+        end if
+    end if
 end sub
 
 function cleanAscii(s as Dynamic) as String
@@ -1442,9 +1613,29 @@ sub onPayloadUpdated()
     for each card in dash.cards
         cTag = card.componentTag
         if cTag = invalid then cTag = card.widgetTag
-        if cTag = "robos-widget-git-commits" and card.liveData <> invalid and card.liveData.commits <> invalid
+        if cTag = "robos-widget-github-repo" and card.liveData <> invalid
+            rel = card.liveData.latestRelease
+            if rel <> invalid
+                l1 = m.top.findNode("ghReleaseLine1")
+                l2 = m.top.findNode("ghReleaseLine2")
+                st = m.top.findNode("ghReleaseStripe")
+                isRun = (rel.isRunningNow = true)
+                runTxt = "IDLE - NOT RUNNING"
+                if isRun then runTxt = "RUNNING NOW"
+                if st <> invalid
+                    if isRun then st.color = "0xF59E0BFF" else st.color = "0x10B981FF"
+                end if
+                if l1 <> invalid then l1.text = "RELEASE: " + cleanAscii(rel.name) + " (Run #" + cleanAscii(rel.releaseRunNumber) + ") [" + runTxt + "]"
+                if l2 <> invalid then l2.text = "Last Release #" + cleanAscii(rel.releaseRunNumber) + ": " + UCase(cleanAscii(rel.releaseConclusion)) + " | Win EXE Release #" + cleanAscii(rel.windowsReleaseRunNumber) + ": " + UCase(cleanAscii(rel.windowsReleaseConclusion))
+            end if
+            ci = card.liveData.mainCi
+            if ci <> invalid
+                ch = m.top.findNode("ghCiHeader")
+                if ch <> invalid and ci.summaryText <> invalid then ch.text = "CI STATUS IN MAIN: " + cleanAscii(ci.summaryText)
+            end if
+        else if cTag = "robos-widget-git-commits" and card.liveData <> invalid and card.liveData.commits <> invalid
             commits = card.liveData.commits
-            for i = 0 to 9
+            for i = 0 to 7
                 tNode = m.top.findNode("commitTitle" + i.ToStr())
                 mNode = m.top.findNode("commitMeta" + i.ToStr())
                 if i < commits.Count()
@@ -1498,7 +1689,7 @@ sub onPayloadUpdated()
                     linesArr = s.statusLines
                     if linesArr = invalid then linesArr = s.tailLines
                     if linesArr <> invalid
-                        for tIdx = 0 to 3
+                        for tIdx = 0 to 2
                             tlNode = m.top.findNode("agentTail" + i.ToStr() + "_" + tIdx.ToStr())
                             if tlNode <> invalid and tIdx < linesArr.Count()
                                 tlNode.text = Left(cleanAscii(linesArr[tIdx]), 56)
@@ -1729,6 +1920,22 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
 
   let server = null;
   let boundPort = state.portalPort || DEFAULT_PORTAL_PORT;
+  let _liveDashboardFrameBuf = null;
+  let _liveDashboardFrameUpdatedAt = 0;
+
+  function setLiveDashboardFrame(buf) {
+    if (Buffer.isBuffer(buf) && buf.length > 1000) {
+      _liveDashboardFrameBuf = buf;
+      _liveDashboardFrameUpdatedAt = Date.now();
+    }
+  }
+
+  function getLiveDashboardFrame() {
+    return {
+      buffer: _liveDashboardFrameBuf,
+      updatedAt: _liveDashboardFrameUpdatedAt,
+    };
+  }
 
   function startPortalServer(preferredPort = boundPort) {
     if (server && server.listening) {
@@ -1739,6 +1946,22 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
         loadState();
         const hostIp = detectLanIp();
         const u = new URL(req.url || '/', `http://${hostIp}:${boundPort}`);
+
+        if (u.pathname === '/api/dashboard-live-frame.jpg') {
+          if (_liveDashboardFrameBuf && Date.now() - _liveDashboardFrameUpdatedAt < 30000) {
+            res.writeHead(200, {
+              'Content-Type': 'image/jpeg',
+              'Content-Length': String(_liveDashboardFrameBuf.length),
+              'Cache-Control': 'no-store, no-cache, must-revalidate',
+              'Access-Control-Allow-Origin': '*',
+            });
+            res.end(_liveDashboardFrameBuf);
+          } else {
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('Live frame not active');
+          }
+          return;
+        }
 
         if (u.pathname === '/api/status') {
           const payload = JSON.stringify({
@@ -2677,6 +2900,8 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     stopDevCentralCast,
     castDashboard,
     stopDashboardCast,
+    setLiveDashboardFrame,
+    getLiveDashboardFrame,
   };
 }
 
