@@ -2493,6 +2493,8 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
       return {
         ok: true,
         blocked: false,
+        sideloadRequired: !rokuChannelLaunched,
+        developerEnabled: Boolean(readiness && readiness.allSideloadReady),
         tv,
         castSession,
         dashboard: dash,
@@ -2501,9 +2503,18 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
         readiness,
         rokuChannelLaunched,
         rokuPackage: pkg,
+        setupTitle: !rokuChannelLaunched
+          ? `Roku Developer Channel Not Installed Yet on ${tv.name} (<developer-enabled>${Boolean(readiness && readiness.allSideloadReady)}</developer-enabled>)`
+          : undefined,
+        setupMessage: !rokuChannelLaunched
+          ? `Roku TVs do not have a web browser, and POST http://${tv.ip}:8060/launch/dev returned HTTP 404 because the RobOS TV channel is not sideloaded yet. Enable Roku Developer Mode once on your physical Roku remote so RobOS can install robos-tv-roku.zip onto ${tv.name}.`
+          : undefined,
+        setupSteps: !rokuChannelLaunched
+          ? TV_PLATFORMS.find((p) => p.id === 'roku-os')?.requiredPermissions?.[2]?.steps || []
+          : undefined,
         message: rokuChannelLaunched
           ? `Launched RobOS TV channel showing "${dash.title}" on ${tv.name} (${tv.ip}) · Live at ${castUrl}`
-          : `Showing "${dash.title}" on ${tv.name} (${tv.ip}) · Live at ${castUrl} (Roku package built at ${pkg.targetDir}/robos-tv-roku.zip)`,
+          : `Portal live at ${castUrl}, but ${tv.name} (${tv.ip}) returned HTTP 404 for /launch/dev because Roku Developer Mode is off (<developer-enabled>false</developer-enabled>). Enable Developer Mode on your Roku remote to sideload robos-tv-roku.zip.`,
       };
     }
 
