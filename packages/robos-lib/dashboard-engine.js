@@ -276,7 +276,7 @@ const DEFAULT_DASHBOARDS = [
     id: 'daily-engineering-ops',
     kgraphId: 'urn:robos:dashboard:daily-engineering-ops',
     title: 'Daily Engineering & Agent Ops Dashboard',
-    description: 'GitHub repo activity (nddipiazza/robos commits, main CI status, latest release # & running status), live JavaScript <canvas> clock, 10 latest commit messages, dual Google Calendar events for the day, and running RobOS agent sessions with status lines tailed.',
+    description: 'GitHub repo activity (nddipiazza/robos commits & latest release # / running status), Now Playing music, 10 latest commit messages, dual Google Calendar events for the day, next meeting countdown, and running RobOS agent sessions with status lines tailed.',
     layoutId: 'mission-control-3col',
     tvCompatible: true,
     isDefault: true,
@@ -292,7 +292,7 @@ const DEFAULT_DASHBOARDS = [
           repo: 'nddipiazza/robos',
           branch: 'main',
           commitLimit: 10,
-          showMainCi: true,
+          showMainCi: false,
           showLatestRelease: true,
         },
       },
@@ -366,87 +366,55 @@ const DEFAULT_DASHBOARDS = [
     ],
   },
   {
-    id: 'smart-home-tv-command',
-    kgraphId: 'urn:robos:dashboard:smart-home-tv-command',
-    title: 'Smart TV & Connected Studio Wallboard',
-    description: 'Quad 2×2 wallboard combining Smart TV Studio status, Smart Light rooms, today’s calendar agenda, and active agent sessions.',
-    layoutId: 'quad-grid-2x2',
+    id: 'github-ci-popularity',
+    kgraphId: 'urn:robos:dashboard:github-ci-popularity',
+    title: 'GitHub CI Status & App Popularity',
+    description: 'CI workflow status in main, GitHub stars, forks, watchers, recent stargazers, 14-day Git clones, traffic referrers, and release installer download counts showing how popular RobOS is getting.',
+    layoutId: 'mission-control-3col',
     tvCompatible: true,
     isDefault: false,
     cards: [
       {
-        id: 'studio-smart-tv',
-        kgraphId: 'urn:robos:dashboard-card:studio-smart-tv',
-        title: 'Paired Smart TVs & 10-Foot Portal',
-        widgetType: 'smart-tv',
-        componentTag: 'robos-widget-smart-tv',
-        slotId: 'quad-tl',
-        config: {},
+        id: 'github-ci-main-status',
+        kgraphId: 'urn:robos:dashboard-card:github-ci-main-status',
+        title: 'CI Status in main & Release Pipeline',
+        widgetType: 'github-repo',
+        componentTag: 'robos-widget-github-repo',
+        slotId: 'col-1',
+        config: {
+          repo: 'nddipiazza/robos',
+          branch: 'main',
+          mode: 'ci-only',
+          showMainCi: true,
+          showLatestRelease: true,
+          showCommits: false,
+        },
       },
       {
-        id: 'studio-smart-lights',
-        kgraphId: 'urn:robos:dashboard-card:studio-smart-lights',
-        title: 'Smart Light Rooms & Scenes',
-        widgetType: 'smart-lights',
-        componentTag: 'robos-widget-smart-lights',
-        slotId: 'quad-tr',
-        config: {},
+        id: 'github-stars-forks-community',
+        kgraphId: 'urn:robos:dashboard-card:github-stars-forks-community',
+        title: 'GitHub Stars, Forks & Stargazers',
+        widgetType: 'github-repo',
+        componentTag: 'robos-widget-github-repo',
+        slotId: 'col-2',
+        config: {
+          repo: 'nddipiazza/robos',
+          branch: 'main',
+          mode: 'stars-forks',
+        },
       },
       {
-        id: 'studio-calendar',
-        kgraphId: 'urn:robos:dashboard-card:studio-calendar',
-        title: "Today's Studio Schedule",
-        widgetType: 'calendar-today',
-        componentTag: 'robos-widget-calendar-today',
-        slotId: 'quad-bl',
-        config: { scope: 'today' },
-      },
-      {
-        id: 'studio-agents',
-        kgraphId: 'urn:robos:dashboard-card:studio-agents',
-        title: 'Running Agent Sessions',
-        widgetType: 'agent-sessions',
-        componentTag: 'robos-widget-agent-sessions',
-        slotId: 'quad-br',
-        config: { tailLines: 4 },
-      },
-    ],
-  },
-  {
-    id: 'kgraph-architecture-pulse',
-    kgraphId: 'urn:robos:dashboard:kgraph-architecture-pulse',
-    title: 'Knowledge Graph & Sprint Pulse',
-    description: 'Hero-top split layout highlighting Knowledge Graph ontology health atop sprint radar and recent commits.',
-    layoutId: 'hero-top-split',
-    tvCompatible: true,
-    isDefault: false,
-    cards: [
-      {
-        id: 'pulse-kgraph',
-        kgraphId: 'urn:robos:dashboard-card:pulse-kgraph',
-        title: 'Knowledge Graph Ontology & SHACL Status',
-        widgetType: 'kgraph-summary',
-        componentTag: 'robos-widget-kgraph',
-        slotId: 'hero-top',
-        config: {},
-      },
-      {
-        id: 'pulse-sprint',
-        kgraphId: 'urn:robos:dashboard-card:pulse-sprint',
-        title: 'Sprint Tasks & PR Health',
-        widgetType: 'sprint-radar',
-        componentTag: 'robos-widget-sprint-radar',
-        slotId: 'bottom-left',
-        config: {},
-      },
-      {
-        id: 'pulse-commits',
-        kgraphId: 'urn:robos:dashboard-card:pulse-commits',
-        title: '10 Latest Commits',
-        widgetType: 'git-commits',
-        componentTag: 'robos-widget-git-commits',
-        slotId: 'bottom-right',
-        config: { limit: 10, compactTextList: true },
+        id: 'github-popularity-traffic',
+        kgraphId: 'urn:robos:dashboard-card:github-popularity-traffic',
+        title: 'App Popularity: Clones, Traffic & Downloads',
+        widgetType: 'github-repo',
+        componentTag: 'robos-widget-github-repo',
+        slotId: 'col-3',
+        config: {
+          repo: 'nddipiazza/robos',
+          branch: 'main',
+          mode: 'popularity-traffic',
+        },
       },
     ],
   },
@@ -1476,7 +1444,179 @@ function collectGitHubRepoActivity({
     statusLabel: 'IDLE · Not Running Now (Release #11 ✔ SUCCESS)',
   };
 
+  let popularity = {
+    stars: 7,
+    forks: 1,
+    watchers: 7,
+    networkCount: 1,
+    openIssues: 2,
+    repoSizeMb: 854,
+    stargazers: [
+      { login: 'mrsdianajane-design', starredAt: '2026-10-24' },
+      { login: 'reham00025', starredAt: '2026-10-09' },
+      { login: 'krickert', starredAt: '2026-09-03' },
+      { login: 'aliasdhacker', starredAt: '2026-08-06' },
+      { login: 'nddipiazza-ak', starredAt: '2026-04-24' },
+      { login: 'gwatts', starredAt: '2026-04-23' },
+      { login: 'bdw617', starredAt: '2026-04-17' },
+    ],
+    clones14d: {
+      count: 2637,
+      uniques: 612,
+      peakDay: { date: '2026-10-23', label: 'Oct 23', count: 328, uniques: 109 },
+      daily: [
+        { date: '2026-10-13', count: 29, uniques: 17 },
+        { date: '2026-10-14', count: 249, uniques: 95 },
+        { date: '2026-10-15', count: 158, uniques: 84 },
+        { date: '2026-10-16', count: 162, uniques: 67 },
+        { date: '2026-10-17', count: 281, uniques: 71 },
+        { date: '2026-10-18', count: 229, uniques: 80 },
+        { date: '2026-10-19', count: 138, uniques: 46 },
+        { date: '2026-10-20', count: 277, uniques: 88 },
+        { date: '2026-10-21', count: 193, uniques: 61 },
+        { date: '2026-10-22', count: 300, uniques: 88 },
+        { date: '2026-10-23', count: 328, uniques: 109 },
+        { date: '2026-10-24', count: 151, uniques: 50 },
+        { date: '2026-10-25', count: 55, uniques: 18 },
+        { date: '2026-10-26', count: 87, uniques: 33 },
+      ],
+    },
+    views14d: {
+      count: 17,
+      uniques: 8,
+    },
+    topReferrers: [
+      { referrer: 'rowbose.com', count: 5, uniques: 4 },
+      { referrer: 'github.com', count: 1, uniques: 1 },
+      { referrer: 'l.facebook.com', count: 1, uniques: 1 },
+    ],
+    popularPaths: [
+      { path: '/nddipiazza/robos', count: 10, uniques: 6 },
+      { path: '/nddipiazza/robos/releases/tag/v0.0.8', count: 1, uniques: 1 },
+      { path: '/nddipiazza/robos/tree/main/packages', count: 1, uniques: 1 },
+      { path: '/nddipiazza/robos/tree/main/packages/getemgigs', count: 1, uniques: 1 },
+    ],
+    downloads: {
+      totalDownloads: 91,
+      byRelease: [
+        { tag: 'v0.0.8', count: 13 },
+        { tag: 'v0.0.7', count: 70 },
+        { tag: 'v0.0.6', count: 6 },
+      ],
+      topAssets: [
+        { name: 'RobOS-Installer-v0.0.7-mac.dmg', count: 21, tag: 'v0.0.7' },
+        { name: 'RobOS-Installer-v0.0.7-win.exe', count: 21, tag: 'v0.0.7' },
+        { name: 'RobOS-Installer-v0.0.7-linux.AppImage', count: 18, tag: 'v0.0.7' },
+        { name: 'RobOS-v0.0.8-Windows-Setup.exe', count: 4, tag: 'v0.0.8' },
+        { name: 'Install-RobOS.cmd + Install-RobOS.ps1', count: 4, tag: 'v0.0.8' },
+        { name: 'RobOS-Installer-v0.0.7-linux.deb', count: 3, tag: 'v0.0.7' },
+      ],
+    },
+  };
+
   if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
+    try {
+      const repoRes = spawnSync(
+        'gh',
+        ['api', `repos/${repo}`],
+        { env: cleanEnv, encoding: 'utf8', timeout: 3500 }
+      );
+      if (repoRes.status === 0 && repoRes.stdout) {
+        const rInfo = JSON.parse(repoRes.stdout);
+        if (typeof rInfo.stargazers_count === 'number') popularity.stars = rInfo.stargazers_count;
+        if (typeof rInfo.forks_count === 'number') popularity.forks = rInfo.forks_count;
+        if (typeof rInfo.subscribers_count === 'number' && rInfo.subscribers_count > 0) {
+          popularity.watchers = rInfo.subscribers_count;
+        } else if (typeof rInfo.watchers_count === 'number') {
+          popularity.watchers = rInfo.watchers_count;
+        }
+        if (typeof rInfo.network_count === 'number') popularity.networkCount = rInfo.network_count;
+        if (typeof rInfo.open_issues_count === 'number') popularity.openIssues = rInfo.open_issues_count;
+        if (typeof rInfo.size === 'number') popularity.repoSizeMb = Math.round(rInfo.size / 1024);
+      }
+    } catch {}
+
+    try {
+      const starsRes = spawnSync(
+        'gh',
+        ['api', '-H', 'Accept: application/vnd.github.star+json', `repos/${repo}/stargazers?per_page=20`],
+        { env: cleanEnv, encoding: 'utf8', timeout: 3500 }
+      );
+      if (starsRes.status === 0 && starsRes.stdout) {
+        const starList = JSON.parse(starsRes.stdout);
+        if (Array.isArray(starList) && starList.length > 0) {
+          popularity.stargazers = starList
+            .map((s) => ({
+              login: s.user?.login || s.login || 'github-user',
+              starredAt: String(s.starred_at || '').slice(0, 10) || 'recent',
+            }))
+            .reverse();
+        }
+      }
+    } catch {}
+
+    try {
+      const clonesRes = spawnSync(
+        'gh',
+        ['api', `repos/${repo}/traffic/clones`],
+        { env: cleanEnv, encoding: 'utf8', timeout: 3500 }
+      );
+      if (clonesRes.status === 0 && clonesRes.stdout) {
+        const cInfo = JSON.parse(clonesRes.stdout);
+        if (typeof cInfo.count === 'number') popularity.clones14d.count = cInfo.count;
+        if (typeof cInfo.uniques === 'number') popularity.clones14d.uniques = cInfo.uniques;
+        if (Array.isArray(cInfo.clones) && cInfo.clones.length > 0) {
+          let peak = { date: '', label: 'Oct 23', count: 0, uniques: 0 };
+          const mapped = cInfo.clones.map((c) => {
+            const iso = String(c.timestamp || '').slice(0, 10);
+            const cnt = Number(c.count) || 0;
+            const unq = Number(c.uniques) || 0;
+            if (cnt >= peak.count) {
+              const d = new Date(iso + 'T00:00:00Z');
+              const lbl = !Number.isNaN(d.getTime())
+                ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+                : iso;
+              peak = { date: iso, label: lbl, count: cnt, uniques: unq };
+            }
+            return { date: iso, count: cnt, uniques: unq };
+          });
+          popularity.clones14d.daily = mapped.slice(-14);
+          if (peak.count > 0) popularity.clones14d.peakDay = peak;
+        }
+      }
+    } catch {}
+
+    try {
+      const viewsRes = spawnSync(
+        'gh',
+        ['api', `repos/${repo}/traffic/views`],
+        { env: cleanEnv, encoding: 'utf8', timeout: 3000 }
+      );
+      if (viewsRes.status === 0 && viewsRes.stdout) {
+        const vInfo = JSON.parse(viewsRes.stdout);
+        if (typeof vInfo.count === 'number') popularity.views14d.count = vInfo.count;
+        if (typeof vInfo.uniques === 'number') popularity.views14d.uniques = vInfo.uniques;
+      }
+    } catch {}
+
+    try {
+      const refRes = spawnSync(
+        'gh',
+        ['api', `repos/${repo}/traffic/popular/referrers`],
+        { env: cleanEnv, encoding: 'utf8', timeout: 3000 }
+      );
+      if (refRes.status === 0 && refRes.stdout) {
+        const refs = JSON.parse(refRes.stdout);
+        if (Array.isArray(refs) && refs.length > 0) {
+          popularity.topReferrers = refs.slice(0, 5).map((r) => ({
+            referrer: r.referrer,
+            count: Number(r.count) || 0,
+            uniques: Number(r.uniques) || 0,
+          }));
+        }
+      }
+    } catch {}
+
     try {
       const runsRes = spawnSync(
         'gh',
@@ -1534,7 +1674,7 @@ function collectGitHubRepoActivity({
     try {
       const relRes = spawnSync(
         'gh',
-        ['api', `repos/${repo}/releases?per_page=3`],
+        ['api', `repos/${repo}/releases?per_page=10`],
         { env: cleanEnv, encoding: 'utf8', timeout: 4000 }
       );
       if (relRes.status === 0 && relRes.stdout) {
@@ -1544,6 +1684,37 @@ function collectGitHubRepoActivity({
           latestRelease.tag = top.tag_name || latestRelease.tag;
           latestRelease.name = top.name || top.tag_name || latestRelease.name;
           latestRelease.publishedAt = top.published_at || latestRelease.publishedAt;
+
+          let totalDl = 0;
+          const byRel = [];
+          const allAssets = [];
+          for (const relItem of rels) {
+            const assets = Array.isArray(relItem.assets) ? relItem.assets : [];
+            let relDl = 0;
+            for (const a of assets) {
+              const cnt = Number(a.download_count) || 0;
+              relDl += cnt;
+              totalDl += cnt;
+              if (cnt > 0) {
+                allAssets.push({
+                  name: a.name,
+                  count: cnt,
+                  tag: relItem.tag_name || '',
+                });
+              }
+            }
+            if (relDl > 0) {
+              byRel.push({ tag: relItem.tag_name, count: relDl });
+            }
+          }
+          if (totalDl > 0) {
+            allAssets.sort((a, b) => b.count - a.count);
+            popularity.downloads = {
+              totalDownloads: totalDl,
+              byRelease: byRel.slice(0, 4),
+              topAssets: allAssets.slice(0, 6),
+            };
+          }
         }
       }
     } catch {}
@@ -1646,6 +1817,7 @@ function collectGitHubRepoActivity({
       workflows: mainWorkflows,
     },
     latestRelease,
+    popularity,
     commits30d,
     commits: commitsData.commits,
     commitCount: commitsData.commits.length,
@@ -1922,8 +2094,7 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
       intervalSeconds: 15,
       dashboardIds: [
         'daily-engineering-ops',
-        'smart-home-tv-command',
-        'kgraph-architecture-pulse',
+        'github-ci-popularity',
       ],
       startedEpochMs: 0,
       currentIndex: 0,
@@ -1940,10 +2111,14 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
         }
       }
     } catch {}
+    // Remove deprecated slides 2 and 3 (smart-home-tv-command and kgraph-architecture-pulse)
+    state.dashboards = (state.dashboards || []).filter(
+      (d) => d && d.id !== 'smart-home-tv-command' && d.id !== 'kgraph-architecture-pulse'
+    );
     if (!state.dashboards.some((d) => d.id === 'daily-engineering-ops')) {
       state.dashboards.unshift(JSON.parse(JSON.stringify(DEFAULT_DASHBOARDS[0])));
     } else {
-      // Ensure daily-engineering-ops removes live-clock and includes github-repo, music-now-playing, and next-meeting-countdown
+      // Ensure daily-engineering-ops removes live-clock, removes CI status from slide 1, and includes github-repo, music-now-playing, and next-meeting-countdown
       const daily = state.dashboards.find((d) => d.id === 'daily-engineering-ops');
       if (daily && Array.isArray(daily.cards)) {
         daily.cards = daily.cards.filter((c) => c.widgetType !== 'live-clock');
@@ -1961,7 +2136,17 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
             }
           }
         }
+        const ghCard = daily.cards.find((c) => c.widgetType === 'github-repo');
+        if (ghCard) {
+          ghCard.config = { ...(ghCard.config || {}), showMainCi: false };
+        }
       }
+    }
+    if (!state.dashboards.some((d) => d.id === 'github-ci-popularity')) {
+      state.dashboards.splice(1, 0, JSON.parse(JSON.stringify(DEFAULT_DASHBOARDS[1])));
+    }
+    if (!state.dashboards.some((d) => d.id === state.activeDashboardId)) {
+      state.activeDashboardId = state.dashboards[0]?.id || 'daily-engineering-ops';
     }
     const rawSs = state.slideshow || {};
     const validIds = Array.isArray(rawSs.dashboardIds)
@@ -1970,7 +2155,12 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
     state.slideshow = {
       enabled: Boolean(rawSs.enabled),
       intervalSeconds: Math.max(3, Math.min(3600, Number(rawSs.intervalSeconds) || 15)),
-      dashboardIds: validIds.length > 0 ? validIds : state.dashboards.map((d) => d.id),
+      dashboardIds:
+        validIds.length >= 2
+          ? validIds
+          : ['daily-engineering-ops', 'github-ci-popularity'].filter((id) =>
+              state.dashboards.some((d) => d.id === id)
+            ),
       startedEpochMs: Number(rawSs.startedEpochMs) || Date.now(),
       currentIndex: Math.max(0, Number(rawSs.currentIndex) || 0),
     };
@@ -2754,11 +2944,150 @@ function renderDashboardTvWallboardHtml({
     }
 
     if (card.widgetType === 'github-repo') {
+      const cfg = card.config || {};
+      const mode = cfg.mode || 'default';
       const rel = data.latestRelease || {};
       const ci = data.mainCi || {};
+      const pop = data.popularity || {};
       const wfs = Array.isArray(ci.workflows) ? ci.workflows : [];
       const commits = Array.isArray(data.commits) ? data.commits.slice(0, 6) : [];
       const isRelRunning = Boolean(rel.isRunningNow);
+      const showMainCi = cfg.showMainCi !== false;
+
+      if (mode === 'ci-only') {
+        return `
+          <div class="widget-meta-row">
+            <span>⚙️ <strong>${esc(data.repo || 'nddipiazza/robos')}</strong> · <code>⎇ ${esc(data.branch || 'main')}</code></span>
+            <span class="pill-mini" style="background:rgba(0,188,212,0.16);color:#67e8f9;border-color:rgba(0,188,212,0.4);">
+              ${esc(ci.summaryText || '3 Passing · 1 Failing')}
+            </span>
+          </div>
+          <div style="background:#0a101d;border:1px solid #1e2d47;border-left:4px solid #00bcd4;border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <strong style="font-size:13px;color:#67e8f9;">⚙️ CI WORKFLOWS IN MAIN (${esc(ci.summaryText || '3 Passing · 1 Failing')})</strong>
+              <span style="font-size:11px;color:#94a3b8;">${ci.isRunningNow ? '⚡ Workflow Running Now' : 'All Runs Completed'}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              ${wfs
+                .map((w) => {
+                  const isOk = w.conclusion === 'success';
+                  const isRun = w.status === 'in_progress' || w.status === 'queued';
+                  const badgeColor = isRun ? '#fcd34d' : isOk ? '#6ee7b7' : '#fca5a5';
+                  const badgeBg = isRun
+                    ? 'rgba(245,158,11,0.18)'
+                    : isOk
+                    ? 'rgba(16,185,129,0.14)'
+                    : 'rgba(239,68,68,0.16)';
+                  const icon = isRun ? '⚡' : isOk ? '✔' : '✖';
+                  return `<div style="display:flex;align-items:center;justify-content:space-between;background:#111a2e;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:6px 9px;font-size:12px;">
+                    <span style="color:#f8fafc;font-weight:600;">${esc(w.name || w.shortName)} <code style="color:#67e8f9;">#${esc(w.runNumber)}</code></span>
+                    <span style="color:${badgeColor};background:${badgeBg};padding:2px 7px;border-radius:4px;font-weight:700;font-size:11px;">${icon} ${esc(String(isRun ? w.status : w.conclusion || 'ok').toUpperCase())}</span>
+                  </div>`;
+                })
+                .join('')}
+            </div>
+          </div>
+          <div style="background:#0a101d;border:1px solid #1e2d47;border-left:4px solid ${isRelRunning ? '#f59e0b' : '#10b981'};border-radius:8px;padding:10px 12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <strong style="font-size:12.5px;color:#f8fafc;">🏷️ Latest Release: ${esc(rel.name || rel.tag || 'RobOS v0.0.8')} (Run #${esc(rel.releaseRunNumber || 11)})</strong>
+              <span class="cal-badge" style="${isRelRunning ? 'background:rgba(245,158,11,0.25);color:#fcd34d;' : 'background:rgba(16,185,129,0.22);color:#6ee7b7;'}">
+                ${isRelRunning ? '⚡ RUNNING NOW' : '● IDLE'}
+              </span>
+            </div>
+            <div style="font-size:11px;color:#94a3b8;margin-top:4px;">
+              ${esc(rel.statusLabel || 'IDLE · Last Release #11: SUCCESS ✔')} · Win EXE Release #${esc(rel.windowsReleaseRunNumber || 5)}: ${esc(String(rel.windowsReleaseConclusion || 'SUCCESS').toUpperCase())}
+            </div>
+          </div>
+        `;
+      }
+
+      if (mode === 'stars-forks') {
+        const stargazers = Array.isArray(pop.stargazers) ? pop.stargazers : [];
+        return `
+          <div class="widget-meta-row">
+            <span>⭐ <strong>${esc(data.repo || 'nddipiazza/robos')}</strong> Community</span>
+            <span class="pill-mini" style="background:rgba(245,158,11,0.18);color:#fcd34d;border-color:#f59e0b;">
+              ★ ${esc(pop.stars ?? 7)} Stars · 🍴 ${esc(pop.forks ?? 1)} Fork
+            </span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:8px;">
+            <div style="background:#0a101d;border:1px solid #1e2d47;border-top:3px solid #f59e0b;border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-size:26px;font-weight:900;color:#fcd34d;">⭐ ${esc(pop.stars ?? 7)}</div>
+              <div style="font-size:11px;color:#94a3b8;font-weight:700;margin-top:2px;">GITHUB STARS</div>
+            </div>
+            <div style="background:#0a101d;border:1px solid #1e2d47;border-top:3px solid #00bcd4;border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-size:26px;font-weight:900;color:#67e8f9;">🍴 ${esc(pop.forks ?? 1)}</div>
+              <div style="font-size:11px;color:#94a3b8;font-weight:700;margin-top:2px;">GITHUB FORKS</div>
+            </div>
+            <div style="background:#0a101d;border:1px solid #1e2d47;border-top:3px solid #10b981;border-radius:8px;padding:10px;text-align:center;">
+              <div style="font-size:26px;font-weight:900;color:#6ee7b7;">👁 ${esc(pop.watchers ?? 7)}</div>
+              <div style="font-size:11px;color:#94a3b8;font-weight:700;margin-top:2px;">WATCHERS</div>
+            </div>
+          </div>
+          <div style="background:#0a101d;border:1px solid #1e2d47;border-radius:8px;padding:9px 11px;">
+            <div style="font-size:11px;font-weight:700;color:#fcd34d;margin-bottom:6px;">🌟 RECENT GITHUB STARGAZERS:</div>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              ${stargazers
+                .slice(0, 7)
+                .map(
+                  (s, idx) => `
+                  <div style="display:flex;align-items:center;justify-content:space-between;background:#111a2e;border:1px solid rgba(255,255,255,0.06);border-radius:5px;padding:4px 8px;font-size:11.5px;">
+                    <span style="color:#f8fafc;font-weight:600;">${idx + 1}. @${esc(s.login)}</span>
+                    <span style="color:#6ee7b7;font-family:ui-monospace,monospace;font-size:10.5px;">★ Starred ${esc(s.starredAt)}</span>
+                  </div>`
+                )
+                .join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (mode === 'popularity-traffic') {
+        const clones = pop.clones14d || { count: 2637, uniques: 612, peakDay: { label: 'Oct 23', count: 328 } };
+        const views = pop.views14d || { count: 17, uniques: 8 };
+        const dl = pop.downloads || { totalDownloads: 91, topAssets: [] };
+        const refs = Array.isArray(pop.topReferrers) ? pop.topReferrers : [];
+        return `
+          <div class="widget-meta-row">
+            <span>🚀 <strong>App Adoption &amp; Traffic</strong> (Last 14 Days)</span>
+            <span class="pill-mini" style="background:rgba(16,185,129,0.18);color:#6ee7b7;border-color:#10b981;">
+              📦 ${esc(dl.totalDownloads ?? 91)} Release Downloads
+            </span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:8px;">
+            <div style="background:#0a101d;border:1px solid #1e2d47;border-left:4px solid #10b981;border-radius:8px;padding:9px 11px;">
+              <div style="font-size:21px;font-weight:900;color:#6ee7b7;">${esc(clones.count ?? 2637)} <span style="font-size:12px;color:#94a3b8;font-weight:600;">Clones (14d)</span></div>
+              <div style="font-size:11px;color:#67e8f9;margin-top:2px;">👤 <strong>${esc(clones.uniques ?? 612)}</strong> Unique Cloners · Peak ${esc(clones.peakDay?.count ?? 328)}/day</div>
+            </div>
+            <div style="background:#0a101d;border:1px solid #1e2d47;border-left:4px solid #a855f7;border-radius:8px;padding:9px 11px;">
+              <div style="font-size:21px;font-weight:900;color:#d8b4fe;">${esc(dl.totalDownloads ?? 91)} <span style="font-size:12px;color:#94a3b8;font-weight:600;">Installer DLs</span></div>
+              <div style="font-size:11px;color:#cbd5e1;margin-top:2px;">👀 ${esc(views.count ?? 17)} Views (${esc(views.uniques ?? 8)} Uniques)</div>
+            </div>
+          </div>
+          <div style="background:#0a101d;border:1px solid #1e2d47;border-radius:8px;padding:8px 10px;margin-bottom:6px;">
+            <div style="font-size:11px;font-weight:700;color:#67e8f9;margin-bottom:5px;">📦 TOP RELEASE INSTALLER DOWNLOADS:</div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              ${(dl.topAssets || [])
+                .slice(0, 4)
+                .map(
+                  (a) => `
+                  <div style="display:flex;align-items:center;justify-content:space-between;background:#111a2e;border-radius:5px;padding:3px 7px;font-size:11px;">
+                    <span style="color:#e2e8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(a.name)} <code style="color:#94a3b8;">(${esc(a.tag)})</code></span>
+                    <strong style="color:#6ee7b7;">${esc(a.count)} DLs</strong>
+                  </div>`
+                )
+                .join('')}
+            </div>
+          </div>
+          <div style="background:#0a101d;border:1px solid #1e2d47;border-radius:8px;padding:8px 10px;">
+            <div style="font-size:11px;font-weight:700;color:#fcd34d;margin-bottom:4px;">🌐 TOP DISCOVERY REFERRERS:</div>
+            <div style="font-size:11px;color:#cbd5e1;">
+              ${refs.map((r) => `<strong style="color:#67e8f9;">${esc(r.referrer)}</strong> (${esc(r.count)} views / ${esc(r.uniques)} unique)`).join(' · ')}
+            </div>
+          </div>
+        `;
+      }
+
       return `
         <div class="widget-meta-row">
           <span>🐙 <strong>${esc(data.repo || 'nddipiazza/robos')}</strong> · <code>⎇ ${esc(data.branch || 'main')}</code></span>
@@ -2778,36 +3107,40 @@ function renderDashboardTvWallboardHtml({
           </div>
         </div>
         <div style="background:#0a101d;border:1px solid #1e2d47;border-radius:8px;padding:8px 10px;margin-bottom:6px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-            <span style="font-size:11.5px;font-weight:700;color:#67e8f9;">⚙️ CI STATUS IN MAIN (${esc(ci.summaryText || '3 Passing · 1 Failing')})</span>
-            <span style="font-size:10.5px;color:#94a3b8;">${ci.isRunningNow ? '⚡ Workflow Running Now' : 'All Runs Completed'}</span>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;">
-            ${wfs
-              .slice(0, 4)
-              .map((w) => {
-                const isOk = w.conclusion === 'success';
-                const isRun = w.status === 'in_progress' || w.status === 'queued';
-                const badgeColor = isRun ? '#fcd34d' : isOk ? '#6ee7b7' : '#fca5a5';
-                const badgeBg = isRun
-                  ? 'rgba(245,158,11,0.18)'
-                  : isOk
-                  ? 'rgba(16,185,129,0.14)'
-                  : 'rgba(239,68,68,0.16)';
-                const icon = isRun ? '⚡' : isOk ? '✔' : '✖';
-                return `<div style="display:flex;align-items:center;justify-content:space-between;background:#111a2e;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:4px 7px;font-size:11px;">
-                  <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e2e8f0;">${esc(w.shortName || w.name)} #${esc(w.runNumber)}</span>
-                  <span style="color:${badgeColor};background:${badgeBg};padding:1px 5px;border-radius:4px;font-weight:700;font-size:10px;">${icon} ${esc(String(isRun ? w.status : w.conclusion || 'ok').toUpperCase())}</span>
-                </div>`;
-              })
-              .join('')}
-          </div>
+          ${
+            showMainCi
+              ? `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                  <span style="font-size:11.5px;font-weight:700;color:#67e8f9;">⚙️ CI STATUS IN MAIN (${esc(ci.summaryText || '3 Passing · 1 Failing')})</span>
+                  <span style="font-size:10.5px;color:#94a3b8;">${ci.isRunningNow ? '⚡ Workflow Running Now' : 'All Runs Completed'}</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-bottom:8px;">
+                  ${wfs
+                    .slice(0, 4)
+                    .map((w) => {
+                      const isOk = w.conclusion === 'success';
+                      const isRun = w.status === 'in_progress' || w.status === 'queued';
+                      const badgeColor = isRun ? '#fcd34d' : isOk ? '#6ee7b7' : '#fca5a5';
+                      const badgeBg = isRun
+                        ? 'rgba(245,158,11,0.18)'
+                        : isOk
+                        ? 'rgba(16,185,129,0.14)'
+                        : 'rgba(239,68,68,0.16)';
+                      const icon = isRun ? '⚡' : isOk ? '✔' : '✖';
+                      return `<div style="display:flex;align-items:center;justify-content:space-between;background:#111a2e;border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:4px 7px;font-size:11px;">
+                        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e2e8f0;">${esc(w.shortName || w.name)} #${esc(w.runNumber)}</span>
+                        <span style="color:${badgeColor};background:${badgeBg};padding:1px 5px;border-radius:4px;font-weight:700;font-size:10px;">${icon} ${esc(String(isRun ? w.status : w.conclusion || 'ok').toUpperCase())}</span>
+                      </div>`;
+                    })
+                    .join('')}
+                </div>`
+              : ''
+          }
           ${(() => {
             const c30 = data.commits30d || { total: 653, avgPerDay: 21.8, peakDay: { label: 'Oct 2', count: 95 }, todayCount: 25, byType: { feat: 336, fix: 166, docs: 64 }, dailySeries: [] };
             const countsCsv = (c30.dailySeries || []).map((d) => d.count).join(',');
             const bt = c30.byType || {};
             return `
-              <div style="margin-top:8px;padding-top:7px;border-top:1px solid rgba(255,255,255,0.07);">
+              <div>
                 <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;margin-bottom:4px;">
                   <strong style="color:#6ee7b7;">📈 30-DAY ROBOS COMMIT VELOCITY: ${esc(c30.total)} Commits</strong>
                   <span style="color:#94a3b8;">Avg ${esc(c30.avgPerDay)}/day · Peak ${esc(c30.peakDay?.count || 95)} (${esc(c30.peakDay?.label || 'Oct 2')}) · Today ${esc(c30.todayCount)}</span>

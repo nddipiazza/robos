@@ -340,7 +340,7 @@
         "repo": "nddipiazza/robos",
         "branch": "main",
         "commitLimit": 10,
-        "showMainCi": true,
+        "showMainCi": false,
         "showLatestRelease": true
       }
     },
@@ -428,151 +428,84 @@
       }
     },
     {
-      "@id": "urn:robos:dashboard:smart-home-tv-command",
+      "@id": "urn:robos:dashboard:github-ci-popularity",
       "@type": "robos:Dashboard",
-      "dcterms:title": "Smart TV & Connected Studio Wallboard",
-      "robos:dashboardId": "smart-home-tv-command",
-      "robos:description": "Quad 2x2 wallboard combining Smart TV Studio status, Smart Light rooms, today's calendar agenda, and active agent sessions.",
+      "dcterms:title": "GitHub CI Status & App Popularity",
+      "robos:dashboardId": "github-ci-popularity",
+      "robos:description": "CI workflow status in main, GitHub stars, forks, watchers, recent stargazers, 14-day Git clones, traffic referrers, and release installer download counts showing how popular RobOS is getting.",
       "robos:layout": {
-        "@id": "urn:robos:dashboard-layout:quad-grid-2x2"
+        "@id": "urn:robos:dashboard-layout:mission-control-3col"
       },
       "robos:tvCompatible": true,
       "robos:package": "dashboards",
       "robos:cards": [
-        { "@id": "urn:robos:dashboard-card:studio-smart-tv" },
-        { "@id": "urn:robos:dashboard-card:studio-smart-lights" },
-        { "@id": "urn:robos:dashboard-card:studio-calendar" },
-        { "@id": "urn:robos:dashboard-card:studio-agents" }
+        { "@id": "urn:robos:dashboard-card:github-ci-main-status" },
+        { "@id": "urn:robos:dashboard-card:github-stars-forks-community" },
+        { "@id": "urn:robos:dashboard-card:github-popularity-traffic" }
       ]
     },
     {
-      "@id": "urn:robos:dashboard-card:studio-smart-tv",
+      "@id": "urn:robos:dashboard-card:github-ci-main-status",
       "@type": "robos:DashboardCard",
-      "dcterms:title": "Paired Smart TVs & 10-Foot Portal",
-      "robos:cardId": "studio-smart-tv",
+      "dcterms:title": "CI Status in main & Release Pipeline",
+      "robos:cardId": "github-ci-main-status",
       "robos:dashboard": {
-        "@id": "urn:robos:dashboard:smart-home-tv-command"
+        "@id": "urn:robos:dashboard:github-ci-popularity"
       },
       "robos:widget": {
-        "@id": "urn:robos:dashboard-widget:smart-tv"
+        "@id": "urn:robos:dashboard-widget:github-repo"
       },
-      "robos:slotId": "quad-tl",
-      "robos:componentTag": "robos-widget-smart-tv",
+      "robos:slotId": "col-1",
+      "robos:componentTag": "robos-widget-github-repo",
       "robos:package": "dashboards",
-      "robos:widgetConfig": {}
+      "robos:widgetConfig": {
+        "repo": "nddipiazza/robos",
+        "branch": "main",
+        "mode": "ci-only",
+        "showMainCi": true,
+        "showLatestRelease": true,
+        "showCommits": false
+      }
     },
     {
-      "@id": "urn:robos:dashboard-card:studio-smart-lights",
+      "@id": "urn:robos:dashboard-card:github-stars-forks-community",
       "@type": "robos:DashboardCard",
-      "dcterms:title": "Smart Light Rooms & Scenes",
-      "robos:cardId": "studio-smart-lights",
+      "dcterms:title": "GitHub Stars, Forks & Stargazers",
+      "robos:cardId": "github-stars-forks-community",
       "robos:dashboard": {
-        "@id": "urn:robos:dashboard:smart-home-tv-command"
+        "@id": "urn:robos:dashboard:github-ci-popularity"
       },
       "robos:widget": {
-        "@id": "urn:robos:dashboard-widget:smart-lights"
+        "@id": "urn:robos:dashboard-widget:github-repo"
       },
-      "robos:slotId": "quad-tr",
-      "robos:componentTag": "robos-widget-smart-lights",
+      "robos:slotId": "col-2",
+      "robos:componentTag": "robos-widget-github-repo",
       "robos:package": "dashboards",
-      "robos:widgetConfig": {}
+      "robos:widgetConfig": {
+        "repo": "nddipiazza/robos",
+        "branch": "main",
+        "mode": "stars-forks"
+      }
     },
     {
-      "@id": "urn:robos:dashboard-card:studio-calendar",
+      "@id": "urn:robos:dashboard-card:github-popularity-traffic",
       "@type": "robos:DashboardCard",
-      "dcterms:title": "Today's Studio Schedule",
-      "robos:cardId": "studio-calendar",
+      "dcterms:title": "App Popularity: Clones, Traffic & Downloads",
+      "robos:cardId": "github-popularity-traffic",
       "robos:dashboard": {
-        "@id": "urn:robos:dashboard:smart-home-tv-command"
+        "@id": "urn:robos:dashboard:github-ci-popularity"
       },
       "robos:widget": {
-        "@id": "urn:robos:dashboard-widget:calendar-today"
+        "@id": "urn:robos:dashboard-widget:github-repo"
       },
-      "robos:slotId": "quad-bl",
-      "robos:componentTag": "robos-widget-calendar-today",
+      "robos:slotId": "col-3",
+      "robos:componentTag": "robos-widget-github-repo",
       "robos:package": "dashboards",
-      "robos:widgetConfig": { "scope": "today" }
-    },
-    {
-      "@id": "urn:robos:dashboard-card:studio-agents",
-      "@type": "robos:DashboardCard",
-      "dcterms:title": "Running Agent Sessions",
-      "robos:cardId": "studio-agents",
-      "robos:dashboard": {
-        "@id": "urn:robos:dashboard:smart-home-tv-command"
-      },
-      "robos:widget": {
-        "@id": "urn:robos:dashboard-widget:agent-sessions"
-      },
-      "robos:slotId": "quad-br",
-      "robos:componentTag": "robos-widget-agent-sessions",
-      "robos:package": "dashboards",
-      "robos:widgetConfig": { "tailLines": 4 }
-    },
-    {
-      "@id": "urn:robos:dashboard:kgraph-architecture-pulse",
-      "@type": "robos:Dashboard",
-      "dcterms:title": "Knowledge Graph & Sprint Pulse",
-      "robos:dashboardId": "kgraph-architecture-pulse",
-      "robos:description": "Hero-top split layout highlighting Knowledge Graph ontology health atop sprint radar and recent commits.",
-      "robos:layout": {
-        "@id": "urn:robos:dashboard-layout:hero-top-split"
-      },
-      "robos:tvCompatible": true,
-      "robos:package": "dashboards",
-      "robos:cards": [
-        { "@id": "urn:robos:dashboard-card:pulse-kgraph" },
-        { "@id": "urn:robos:dashboard-card:pulse-sprint" },
-        { "@id": "urn:robos:dashboard-card:pulse-commits" }
-      ]
-    },
-    {
-      "@id": "urn:robos:dashboard-card:pulse-kgraph",
-      "@type": "robos:DashboardCard",
-      "dcterms:title": "Knowledge Graph Ontology & SHACL Status",
-      "robos:cardId": "pulse-kgraph",
-      "robos:dashboard": {
-        "@id": "urn:robos:dashboard:kgraph-architecture-pulse"
-      },
-      "robos:widget": {
-        "@id": "urn:robos:dashboard-widget:kgraph-summary"
-      },
-      "robos:slotId": "hero-top",
-      "robos:componentTag": "robos-widget-kgraph",
-      "robos:package": "dashboards",
-      "robos:widgetConfig": {}
-    },
-    {
-      "@id": "urn:robos:dashboard-card:pulse-sprint",
-      "@type": "robos:DashboardCard",
-      "dcterms:title": "Sprint Tasks & PR Health",
-      "robos:cardId": "pulse-sprint",
-      "robos:dashboard": {
-        "@id": "urn:robos:dashboard:kgraph-architecture-pulse"
-      },
-      "robos:widget": {
-        "@id": "urn:robos:dashboard-widget:sprint-radar"
-      },
-      "robos:slotId": "bottom-left",
-      "robos:componentTag": "robos-widget-sprint-radar",
-      "robos:package": "dashboards",
-      "robos:widgetConfig": {}
-    },
-    {
-      "@id": "urn:robos:dashboard-card:pulse-commits",
-      "@type": "robos:DashboardCard",
-      "dcterms:title": "10 Latest Commits",
-      "robos:cardId": "pulse-commits",
-      "robos:dashboard": {
-        "@id": "urn:robos:dashboard:kgraph-architecture-pulse"
-      },
-      "robos:widget": {
-        "@id": "urn:robos:dashboard-widget:git-commits"
-      },
-      "robos:slotId": "bottom-right",
-      "robos:componentTag": "robos-widget-git-commits",
-      "robos:package": "dashboards",
-      "robos:widgetConfig": { "limit": 10, "compactTextList": true }
+      "robos:widgetConfig": {
+        "repo": "nddipiazza/robos",
+        "branch": "main",
+        "mode": "popularity-traffic"
+      }
     }
   ]
 }

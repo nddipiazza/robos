@@ -199,9 +199,9 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
       assert.ok(homeRes.body.includes('LIVE ROBOS DASHBOARD ON TV'));
       assert.ok(homeRes.body.includes('/dashboard'));
 
-      // 5. Verify Multi-Dashboard Slideshow auto-cycling across configurable seconds
+      // 5. Verify Multi-Dashboard Slideshow auto-cycling across configurable seconds (Slide 1 + Slide 2)
       const dashEngine = createDashboardEngine({ configDir: tmpDir });
-      const slideIds = ['daily-engineering-ops', 'smart-home-tv-command', 'kgraph-architecture-pulse'];
+      const slideIds = ['daily-engineering-ops', 'github-ci-popularity'];
       const cfg1 = dashEngine.configureSlideshow({
         enabled: true,
         intervalSeconds: 10,
@@ -211,11 +211,14 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
       assert.equal(cfg1.ok, true);
       assert.equal(cfg1.slideshow.enabled, true);
       assert.equal(cfg1.slideshow.intervalSeconds, 10);
-      assert.equal(cfg1.slideshow.totalSlides, 3);
+      assert.equal(cfg1.slideshow.totalSlides, 2);
       assert.equal(cfg1.slideshow.slideNumber, 1);
       assert.equal(cfg1.dashboard.id, 'daily-engineering-ops');
+      const slide1GhCard = cfg1.dashboard.cards.find(c => c.id === 'github-repo-activity');
+      assert.ok(slide1GhCard, 'Slide 1 should contain github-repo-activity card');
+      assert.equal(slide1GhCard.config.showMainCi, false, 'Slide 1 should have CI status removed (showMainCi: false)');
 
-      // Simulate 11 seconds elapsed -> should automatically resolve slide 2 (smart-home-tv-command)
+      // Simulate 11 seconds elapsed -> should automatically resolve slide 2 (github-ci-popularity)
       const cfg2 = dashEngine.configureSlideshow({
         enabled: true,
         intervalSeconds: 10,
@@ -223,20 +226,29 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
         startedEpochMs: Date.now() - 11000,
       });
       assert.equal(cfg2.slideshow.slideNumber, 2);
-      assert.equal(cfg2.dashboard.id, 'smart-home-tv-command');
+      assert.equal(cfg2.dashboard.id, 'github-ci-popularity');
+      assert.equal(cfg2.dashboard.cards.length, 3);
+      const ciCard = cfg2.dashboard.cards.find(c => c.id === 'github-ci-main-status');
+      const starsCard = cfg2.dashboard.cards.find(c => c.id === 'github-stars-forks-community');
+      const popCard = cfg2.dashboard.cards.find(c => c.id === 'github-popularity-traffic');
+      assert.ok(ciCard && starsCard && popCard, 'Slide 2 should have CI status, Stars/Forks, and App Popularity cards');
+      assert.ok(starsCard.liveData.popularity.stars >= 7, 'Stars metric should be populated');
+      assert.ok(starsCard.liveData.popularity.forks >= 1, 'Forks metric should be populated');
+      assert.ok(popCard.liveData.popularity.clones14d.count >= 2000, '14-day clones metric should be populated');
+      assert.ok(popCard.liveData.popularity.downloads.totalDownloads >= 80, 'Release downloads metric should be populated');
 
       // /api/dashboard-cast should return the current slide's dashboard & slideshow metadata
       const slideApiRes = await httpGet(`http://127.0.0.1:${srv.port}/api/dashboard-cast`);
       const slideApiJson = JSON.parse(slideApiRes.body);
       assert.equal(slideApiJson.slideshow.enabled, true);
       assert.equal(slideApiJson.slideshow.slideNumber, 2);
-      assert.equal(slideApiJson.dashboard.id, 'smart-home-tv-command');
+      assert.equal(slideApiJson.dashboard.id, 'github-ci-popularity');
 
-      // Step manually to next slide (slide 3: kgraph-architecture-pulse)
+      // Step manually to next slide -> wraps back to slide 1 (daily-engineering-ops)
       const stepRes = dashEngine.stepSlideshow({ direction: 1 });
       assert.equal(stepRes.ok, true);
-      assert.equal(stepRes.slideshow.slideNumber, 3);
-      assert.equal(stepRes.dashboard.id, 'kgraph-architecture-pulse');
+      assert.equal(stepRes.slideshow.slideNumber, 1);
+      assert.equal(stepRes.dashboard.id, 'daily-engineering-ops');
     } finally {
       await tvEngine.stopPortalServer();
     }

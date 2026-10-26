@@ -542,11 +542,150 @@ robos-widget-sprint-radar, robos-widget-custom {
     }
 
     if (widgetType === 'github-repo') {
+      const cfg = card.config || {};
+      const mode = cfg.mode || 'default';
       const rel = data.latestRelease || {};
       const ci = data.mainCi || {};
+      const pop = data.popularity || {};
       const wfs = Array.isArray(ci.workflows) ? ci.workflows : [];
       const commits = Array.isArray(data.commits) ? data.commits.slice(0, 6) : [];
       const isRelRunning = Boolean(rel.isRunningNow);
+      const showMainCi = cfg.showMainCi !== false;
+
+      if (mode === 'ci-only') {
+        return `
+          <div class="robos-w-meta">
+            <span>⚙️ <code>${esc(data.repo || 'nddipiazza/robos')}</code> · ⎇ ${esc(data.branch || 'main')}</span>
+            <span class="robos-w-pill" style="background:rgba(0,188,212,0.16);color:#67e8f9;border-color:rgba(0,188,212,0.4);">
+              ${esc(ci.summaryText || '3 Passing · 1 Failing')}
+            </span>
+          </div>
+          <div style="background:#0d1117;border:1px solid #21262d;border-left:3px solid #00bcd4;border-radius:7px;padding:8px 10px;margin-bottom:6px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:11.5px;font-weight:700;color:#67e8f9;">⚙️ CI STATUS IN MAIN (${esc(ci.summaryText || '3 Passing · 1 Failing')})</span>
+              <span style="font-size:10px;color:#8b949e;">${ci.isRunningNow ? '⚡ Running Now' : 'Completed'}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              ${wfs
+                .map((w) => {
+                  const isOk = w.conclusion === 'success';
+                  const isRun = w.status === 'in_progress' || w.status === 'queued';
+                  const badgeColor = isRun ? '#fcd34d' : isOk ? '#6ee7b7' : '#fca5a5';
+                  const badgeBg = isRun
+                    ? 'rgba(245,158,11,0.18)'
+                    : isOk
+                    ? 'rgba(16,185,129,0.14)'
+                    : 'rgba(239,68,68,0.16)';
+                  const icon = isRun ? '⚡' : isOk ? '✔' : '✖';
+                  return `<div style="display:flex;align-items:center;justify-content:space-between;background:#161b22;border:1px solid #21262d;border-radius:5px;padding:5px 8px;font-size:11px;">
+                    <span style="color:#e6edf3;font-weight:600;">${esc(w.name || w.shortName)} <code style="color:#67e8f9;">#${esc(w.runNumber)}</code></span>
+                    <span style="color:${badgeColor};background:${badgeBg};padding:1px 6px;border-radius:3px;font-weight:700;font-size:10px;">${icon} ${esc(String(isRun ? w.status : w.conclusion || 'ok').toUpperCase())}</span>
+                  </div>`;
+                })
+                .join('')}
+            </div>
+          </div>
+          <div style="background:#0d1117;border:1px solid #21262d;border-left:3px solid ${isRelRunning ? '#f59e0b' : '#10b981'};border-radius:7px;padding:8px 10px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+              <strong style="font-size:12px;color:#f0f6fc;">🏷️ Latest Release: ${esc(rel.name || rel.tag || 'RobOS v0.0.8')} (#${esc(rel.releaseRunNumber || 11)})</strong>
+              <span class="robos-cal-badge" style="${isRelRunning ? 'background:rgba(245,158,11,0.24);color:#fcd34d;' : 'background:rgba(16,185,129,0.2);color:#6ee7b7;'}">
+                ${isRelRunning ? '⚡ RUNNING NOW' : '● IDLE'}
+              </span>
+            </div>
+            <div style="font-size:10.5px;color:#8b949e;margin-top:3px;">
+              ${esc(rel.statusLabel || 'IDLE · Last Release #11: SUCCESS ✔')} · Win EXE Release #${esc(rel.windowsReleaseRunNumber || 5)}: ${esc(String(rel.windowsReleaseConclusion || 'SUCCESS').toUpperCase())}
+            </div>
+          </div>
+        `;
+      }
+
+      if (mode === 'stars-forks') {
+        const stargazers = Array.isArray(pop.stargazers) ? pop.stargazers : [];
+        return `
+          <div class="robos-w-meta">
+            <span>⭐ <code>${esc(data.repo || 'nddipiazza/robos')}</code> Community</span>
+            <span class="robos-w-pill" style="background:rgba(245,158,11,0.18);color:#fcd34d;border-color:#f59e0b;">
+              ★ ${esc(pop.stars ?? 7)} Stars · 🍴 ${esc(pop.forks ?? 1)} Fork
+            </span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:6px;">
+            <div style="background:#0d1117;border:1px solid #21262d;border-top:3px solid #f59e0b;border-radius:7px;padding:8px;text-align:center;">
+              <div style="font-size:22px;font-weight:900;color:#fcd34d;">⭐ ${esc(pop.stars ?? 7)}</div>
+              <div style="font-size:10px;color:#8b949e;font-weight:700;margin-top:2px;">STARS</div>
+            </div>
+            <div style="background:#0d1117;border:1px solid #21262d;border-top:3px solid #00bcd4;border-radius:7px;padding:8px;text-align:center;">
+              <div style="font-size:22px;font-weight:900;color:#67e8f9;">🍴 ${esc(pop.forks ?? 1)}</div>
+              <div style="font-size:10px;color:#8b949e;font-weight:700;margin-top:2px;">FORKS</div>
+            </div>
+            <div style="background:#0d1117;border:1px solid #21262d;border-top:3px solid #10b981;border-radius:7px;padding:8px;text-align:center;">
+              <div style="font-size:22px;font-weight:900;color:#6ee7b7;">👁 ${esc(pop.watchers ?? 7)}</div>
+              <div style="font-size:10px;color:#8b949e;font-weight:700;margin-top:2px;">WATCHERS</div>
+            </div>
+          </div>
+          <div style="background:#0d1117;border:1px solid #21262d;border-radius:7px;padding:8px 10px;">
+            <div style="font-size:10.5px;font-weight:700;color:#fcd34d;margin-bottom:5px;">🌟 RECENT GITHUB STARGAZERS:</div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              ${stargazers
+                .slice(0, 7)
+                .map(
+                  (s, idx) => `
+                  <div style="display:flex;align-items:center;justify-content:space-between;background:#161b22;border:1px solid #21262d;border-radius:5px;padding:3px 7px;font-size:11px;">
+                    <span style="color:#f0f6fc;font-weight:600;">${idx + 1}. @${esc(s.login)}</span>
+                    <span style="color:#6ee7b7;font-family:ui-monospace,monospace;font-size:10px;">★ ${esc(s.starredAt)}</span>
+                  </div>`
+                )
+                .join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (mode === 'popularity-traffic') {
+        const clones = pop.clones14d || { count: 2637, uniques: 612, peakDay: { label: 'Oct 23', count: 328 } };
+        const views = pop.views14d || { count: 17, uniques: 8 };
+        const dl = pop.downloads || { totalDownloads: 91, topAssets: [] };
+        const refs = Array.isArray(pop.topReferrers) ? pop.topReferrers : [];
+        return `
+          <div class="robos-w-meta">
+            <span>🚀 <strong>App Popularity &amp; Traffic</strong> (14d)</span>
+            <span class="robos-w-pill" style="background:rgba(16,185,129,0.18);color:#6ee7b7;border-color:#10b981;">
+              📦 ${esc(dl.totalDownloads ?? 91)} Downloads
+            </span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:6px;">
+            <div style="background:#0d1117;border:1px solid #21262d;border-left:3px solid #10b981;border-radius:7px;padding:7px 9px;">
+              <div style="font-size:18px;font-weight:900;color:#6ee7b7;">${esc(clones.count ?? 2637)} <span style="font-size:11px;color:#8b949e;font-weight:600;">Clones</span></div>
+              <div style="font-size:10px;color:#67e8f9;margin-top:2px;">👤 <strong>${esc(clones.uniques ?? 612)}</strong> Uniques · Peak ${esc(clones.peakDay?.count ?? 328)}/d</div>
+            </div>
+            <div style="background:#0d1117;border:1px solid #21262d;border-left:3px solid #a855f7;border-radius:7px;padding:7px 9px;">
+              <div style="font-size:18px;font-weight:900;color:#d8b4fe;">${esc(dl.totalDownloads ?? 91)} <span style="font-size:11px;color:#8b949e;font-weight:600;">Installer DLs</span></div>
+              <div style="font-size:10px;color:#cbd5e1;margin-top:2px;">👀 ${esc(views.count ?? 17)} Views (${esc(views.uniques ?? 8)} Uniques)</div>
+            </div>
+          </div>
+          <div style="background:#0d1117;border:1px solid #21262d;border-radius:7px;padding:7px 9px;margin-bottom:5px;">
+            <div style="font-size:10.5px;font-weight:700;color:#67e8f9;margin-bottom:4px;">📦 TOP RELEASE INSTALLER DOWNLOADS:</div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              ${(dl.topAssets || [])
+                .slice(0, 4)
+                .map(
+                  (a) => `
+                  <div style="display:flex;align-items:center;justify-content:space-between;background:#161b22;border-radius:4px;padding:3px 6px;font-size:10.5px;">
+                    <span style="color:#e6edf3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(a.name)} <code style="color:#8b949e;">(${esc(a.tag)})</code></span>
+                    <strong style="color:#6ee7b7;">${esc(a.count)} DLs</strong>
+                  </div>`
+                )
+                .join('')}
+            </div>
+          </div>
+          <div style="background:#0d1117;border:1px solid #21262d;border-radius:7px;padding:7px 9px;">
+            <div style="font-size:10.5px;font-weight:700;color:#fcd34d;margin-bottom:3px;">🌐 TOP DISCOVERY REFERRERS:</div>
+            <div style="font-size:10.5px;color:#cbd5e1;">
+              ${refs.map((r) => `<strong style="color:#67e8f9;">${esc(r.referrer)}</strong> (${esc(r.count)} / ${esc(r.uniques)}u)`).join(' · ')}
+            </div>
+          </div>
+        `;
+      }
+
       return `
         <div class="robos-w-meta">
           <span>🐙 <code>${esc(data.repo || 'nddipiazza/robos')}</code> · ⎇ ${esc(data.branch || 'main')}</span>
@@ -566,36 +705,40 @@ robos-widget-sprint-radar, robos-widget-custom {
           </div>
         </div>
         <div style="background:#0d1117;border:1px solid #21262d;border-radius:7px;padding:7px 9px;margin-bottom:6px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
-            <span style="font-size:11px;font-weight:700;color:#67e8f9;">⚙️ CI STATUS IN MAIN (${esc(ci.summaryText || '3 Passing · 1 Failing')})</span>
-            <span style="font-size:10px;color:#8b949e;">${ci.isRunningNow ? '⚡ Running Now' : 'Completed'}</span>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;">
-            ${wfs
-              .slice(0, 4)
-              .map((w) => {
-                const isOk = w.conclusion === 'success';
-                const isRun = w.status === 'in_progress' || w.status === 'queued';
-                const badgeColor = isRun ? '#fcd34d' : isOk ? '#6ee7b7' : '#fca5a5';
-                const badgeBg = isRun
-                  ? 'rgba(245,158,11,0.18)'
-                  : isOk
-                  ? 'rgba(16,185,129,0.14)'
-                  : 'rgba(239,68,68,0.16)';
-                const icon = isRun ? '⚡' : isOk ? '✔' : '✖';
-                return `<div style="display:flex;align-items:center;justify-content:space-between;background:#161b22;border:1px solid #21262d;border-radius:5px;padding:3px 6px;font-size:10.5px;">
-                  <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e6edf3;">${esc(w.shortName || w.name)} #${esc(w.runNumber)}</span>
-                  <span style="color:${badgeColor};background:${badgeBg};padding:1px 4px;border-radius:3px;font-weight:700;font-size:9.5px;">${icon} ${esc(String(isRun ? w.status : w.conclusion || 'ok').toUpperCase())}</span>
-                </div>`;
-              })
-              .join('')}
-          </div>
+          ${
+            showMainCi
+              ? `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+                  <span style="font-size:11px;font-weight:700;color:#67e8f9;">⚙️ CI STATUS IN MAIN (${esc(ci.summaryText || '3 Passing · 1 Failing')})</span>
+                  <span style="font-size:10px;color:#8b949e;">${ci.isRunningNow ? '⚡ Running Now' : 'Completed'}</span>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;margin-bottom:7px;">
+                  ${wfs
+                    .slice(0, 4)
+                    .map((w) => {
+                      const isOk = w.conclusion === 'success';
+                      const isRun = w.status === 'in_progress' || w.status === 'queued';
+                      const badgeColor = isRun ? '#fcd34d' : isOk ? '#6ee7b7' : '#fca5a5';
+                      const badgeBg = isRun
+                        ? 'rgba(245,158,11,0.18)'
+                        : isOk
+                        ? 'rgba(16,185,129,0.14)'
+                        : 'rgba(239,68,68,0.16)';
+                      const icon = isRun ? '⚡' : isOk ? '✔' : '✖';
+                      return `<div style="display:flex;align-items:center;justify-content:space-between;background:#161b22;border:1px solid #21262d;border-radius:5px;padding:3px 6px;font-size:10.5px;">
+                        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#e6edf3;">${esc(w.shortName || w.name)} #${esc(w.runNumber)}</span>
+                        <span style="color:${badgeColor};background:${badgeBg};padding:1px 4px;border-radius:3px;font-weight:700;font-size:9.5px;">${icon} ${esc(String(isRun ? w.status : w.conclusion || 'ok').toUpperCase())}</span>
+                      </div>`;
+                    })
+                    .join('')}
+                </div>`
+              : ''
+          }
           ${(() => {
             const c30 = data.commits30d || { total: 653, avgPerDay: 21.8, peakDay: { label: 'Oct 2', count: 95 }, todayCount: 25, byType: { feat: 336, fix: 166, docs: 64 }, dailySeries: [] };
             const countsCsv = (c30.dailySeries || []).map((d) => d.count).join(',');
             const bt = c30.byType || {};
             return `
-              <div style="margin-top:7px;padding-top:6px;border-top:1px solid #21262d;">
+              <div>
                 <div style="display:flex;align-items:center;justify-content:space-between;font-size:10.5px;margin-bottom:4px;">
                   <strong style="color:#6ee7b7;">📈 30-DAY ROBOS COMMITS: ${esc(c30.total)}</strong>
                   <span style="color:#8b949e;">Avg ${esc(c30.avgPerDay)}/d · Peak ${esc(c30.peakDay?.count || 95)} (${esc(c30.peakDay?.label || 'Oct 2')}) · Today ${esc(c30.todayCount)}</span>
