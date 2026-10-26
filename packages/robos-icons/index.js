@@ -567,6 +567,12 @@ const BUILTIN_APPS = [
     iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#00bcd4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="40" height="26" rx="3"/><polyline points="17 4 24 10 31 4"/><line x1="16" y1="42" x2="32" y2="42"/><line x1="24" y1="36" x2="24" y2="42"/><polygon points="21 18 29 23 21 28 21 18" fill="#00bcd4" fill-opacity="0.25"/></svg>'
   },
   {
+    appId: 'smart-light',
+    label: 'RobOS Smart Light',
+    category: 'Tools',
+    iconSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#eab308" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 34h12" stroke="#00bcd4"/><path d="M20 40h8" stroke="#00bcd4"/><path d="M24 6v3M9 21H6M42 21h-3M12.5 9.5l2.2 2.2M35.5 9.5l-2.2 2.2"/><path d="M17 29c-2.8-2.1-4.5-5.3-4.5-9a11.5 11.5 0 0 1 23 0c0 3.7-1.7 6.9-4.5 9l-1.5 5h-11L17 29Z" fill="#eab308" fill-opacity="0.22"/><path d="M21 23l3-4 3 4" stroke="#00bcd4"/></svg>'
+  },
+  {
     appId: 'software-center',
     label: "Software Center",
     category: "core-desktop",

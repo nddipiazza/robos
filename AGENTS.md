@@ -148,6 +148,7 @@ All apps are Electron + vanilla JavaScript (no React/Vue/Angular framework overh
 | **RobOS Smart TV Studio** | Pair Smart TVs on the LAN, build & sideload Developer Mode TV apps (LG webOS `.ipk`, Samsung Tizen `.wgt`, Google TV/Android TV ADB Leanback, Roku OS), auto-renew LG webOS 1,000-hour dev timers, serve the 10-foot D-Pad/Gamepad TV Portal (`:19210`), and stream 4K 120Hz desktops/games via Moonlight & Sunshine (`packages/robos-tv`) |
 | **RobOS Cloud Accounts** | Unified Cloud Suite account manager (Google Workspace, Microsoft 365/OneDrive, Nextcloud, Dropbox, S3) that auto-imports Data Sources logins and shares credentials across Drive, Calendar, Contacts, Gmail, and Audio Player (`packages/cloud-accounts`) |
 | **RobOS Google Calendar** | Automatically installs Mozilla Thunderbird and configures Google Calendar (CalDAV), Google Contacts (CardDAV), and optional Gmail (IMAP/SMTP) using your logged-in RobOS Google Cloud Account (`packages/google-calendar`) |
+| **RobOS Smart Light** | Zero-cloud LAN Smart Light Studio (Philips WiZ UDP `:38899`, WLED HTTP `:80`, TP-Link Kasa XOR `:9999`, Philips Hue Bridge REST, LIFX UDP `:56700`, Govee LAN `:4003`, Elgato Key Light `:9123`, Shelly, Yeelight, Home Assistant), room & mood scenes, optional AI Lighting Designer, 24-hour Circadian Daylight curves, sunrise schedules, and Dev/CI Build Status Light Bar sync (`packages/smart-light`) |
 
 ## Shared Libraries
 
