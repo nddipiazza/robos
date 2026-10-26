@@ -1219,21 +1219,32 @@ tizen run -p robostv001.RobOSTV
     const calendarCard = (initialDash?.cards || []).find((c) => c.widgetTag === 'robos-widget-calendar-today');
     const agentsCard = (initialDash?.cards || []).find((c) => c.widgetTag === 'robos-widget-agent-sessions');
 
-    const commitLines = ((commitsCard && commitsCard.liveData && commitsCard.liveData.commits) || [])
-      .slice(0, 10)
-      .map((c, idx) => `${idx + 1}. [${c.hash}] ${String(c.subject || '').slice(0, 46)} (${c.relativeTime || 'recent'})`)
-      .join('\\n');
-    const calendarLines = ((calendarCard && calendarCard.liveData && calendarCard.liveData.events) || [])
-      .map((ev) => `• ${ev.time}  ${ev.title} (${ev.location || 'Desk'}) [${ev.status || 'upcoming'}]`)
-      .join('\\n');
-    const agentLines = ((agentsCard && agentsCard.liveData && agentsCard.liveData.sessions) || [])
-      .map((s) => {
-        const tail = Array.isArray(s.tailLines) ? s.tailLines.slice(-2).join(' | ') : '';
-        return `● ${s.title} [${s.provider} · ${s.status}]\\n   ${tail}`;
-      })
-      .join('\\n\\n');
+    const safeBrsStr = (str) =>
+      String(str || '')
+        .replace(/"/g, "'")
+        .replace(/[\r\n]+/g, ' ');
 
-    const safeBrsStr = (str) => String(str || '').replace(/"/g, "'");
+    const commitLinesBrs = ((commitsCard && commitsCard.liveData && commitsCard.liveData.commits) || [])
+      .slice(0, 10)
+      .map(
+        (c, idx) =>
+          `"${idx + 1}. [${safeBrsStr(c.hash)}] ${safeBrsStr(String(c.subject || '').slice(0, 44))} (${safeBrsStr(c.relativeTime || 'recent')})"`
+      )
+      .join(' + chr(10) + ');
+    const calendarLinesBrs = ((calendarCard && calendarCard.liveData && calendarCard.liveData.events) || [])
+      .map(
+        (ev) =>
+          `"• ${safeBrsStr(ev.time)}  ${safeBrsStr(ev.title)} [${safeBrsStr(ev.status || 'upcoming')}]" + chr(10) + "   ${safeBrsStr(ev.location || 'Desk')}"`
+      )
+      .join(' + chr(10) + ');
+    const agentLinesBrs = ((agentsCard && agentsCard.liveData && agentsCard.liveData.sessions) || [])
+      .map((s) => {
+        const tails = (Array.isArray(s.tailLines) ? s.tailLines.slice(-2) : [])
+          .map((t) => `"  ${safeBrsStr(String(t).slice(0, 50))}"`)
+          .join(' + chr(10) + ');
+        return `"● ${safeBrsStr(s.title)} [${safeBrsStr(s.provider)} · ${safeBrsStr(s.status)}]"${tails ? ' + chr(10) + ' + tails : ''}`;
+      })
+      .join(' + chr(10) + chr(10) + ');
 
     const manifest = `title=${appName}\nsubtitle=RobOS 10-Foot Smart TV & Live Dashboards Suite\nmajor_version=1\nminor_version=1\nbuild_version=2\nui_resolutions=fhd\n`;
     const mainBrs = `sub Main()
@@ -1327,18 +1338,18 @@ end sub
 
     <!-- Column 1: 10 Latest Commit Messages -->
     <Rectangle id="colCommitsCard" translation="[48, 104]" width="584" height="630" color="0x111827FF" />
-    <Label id="colCommitsHeader" text="1. 10 LATEST COMMIT MESSAGES (SMALL READABLE LIST)" translation="[68, 122]" width="544" color="0x67E8F9FF" />
-    <Label id="colCommitsBody" translation="[68, 166]" width="544" height="550" wrap="true" numLines="22" lineSpacing="2" text="${safeBrsStr(commitLines)}" />
+    <Label id="colCommitsHeader" font="font:SmallBoldSystemFont" text="1. 10 LATEST COMMIT MESSAGES (SMALL READABLE LIST)" translation="[68, 122]" width="544" color="0x67E8F9FF" />
+    <Label id="colCommitsBody" font="font:SmallestSystemFont" translation="[68, 162]" width="544" height="554" wrap="true" numLines="24" lineSpacing="2" text="Loading 10 latest git commits..." />
 
     <!-- Column 2: Calendar Events for the Day -->
     <Rectangle id="colCalendarCard" translation="[656, 104]" width="584" height="630" color="0x111827FF" />
-    <Label id="colCalendarHeader" text="2. CALENDAR EVENTS FOR THE DAY" translation="[676, 122]" width="544" color="0x6EE7B7FF" />
-    <Label id="colCalendarBody" translation="[676, 166]" width="544" height="550" wrap="true" numLines="22" lineSpacing="4" text="${safeBrsStr(calendarLines)}" />
+    <Label id="colCalendarHeader" font="font:SmallBoldSystemFont" text="2. CALENDAR EVENTS FOR THE DAY" translation="[676, 122]" width="544" color="0x6EE7B7FF" />
+    <Label id="colCalendarBody" font="font:SmallestSystemFont" translation="[676, 162]" width="544" height="554" wrap="true" numLines="24" lineSpacing="4" text="Loading today's calendar events..." />
 
     <!-- Column 3: Running RobOS Agent Sessions & Tailed Status Lines -->
     <Rectangle id="colAgentsCard" translation="[1264, 104]" width="608" height="630" color="0x111827FF" />
-    <Label id="colAgentsHeader" text="3. RUNNING ROBOS AGENT SESSIONS (TAILED STATUS)" translation="[1284, 122]" width="568" color="0xFCD34DFF" />
-    <Label id="colAgentsBody" translation="[1284, 166]" width="568" height="550" wrap="true" numLines="22" lineSpacing="2" text="${safeBrsStr(agentLines)}" />
+    <Label id="colAgentsHeader" font="font:SmallBoldSystemFont" text="3. RUNNING ROBOS AGENT SESSIONS (TAILED STATUS)" translation="[1284, 122]" width="568" color="0xFCD34DFF" />
+    <Label id="colAgentsBody" font="font:SmallestSystemFont" translation="[1284, 162]" width="568" height="554" wrap="true" numLines="24" lineSpacing="2" text="Loading running RobOS agent sessions..." />
 
     <!-- Bottom D-Pad App Launcher Strip -->
     <Rectangle id="heroCard" translation="[48, 750]" width="1824" height="72" color="0x161B22FF" />
@@ -1365,6 +1376,10 @@ end sub
     m.colCommitsBody = m.top.findNode("colCommitsBody")
     m.colCalendarBody = m.top.findNode("colCalendarBody")
     m.colAgentsBody = m.top.findNode("colAgentsBody")
+
+    m.colCommitsBody.text = ${commitLinesBrs || '"No commits found"'}
+    m.colCalendarBody.text = ${calendarLinesBrs || '"No calendar events today"'}
+    m.colAgentsBody.text = ${agentLinesBrs || '"No running agent sessions"'}
 
     m.tiles = [
         { id: "portal-home", title: "1. Daily Engineering & Agent Ops Dashboard  [10 Commits · Calendar · Agent Tails]", desc: "3-column live graphical dashboard from RobOS Dashboards (${portalUrl}/dashboard)." },
