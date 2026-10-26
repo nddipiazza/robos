@@ -1498,6 +1498,24 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
         let data = '';
         res.on('data', (c) => (data += c));
         res.on('end', () => {
+          const httpStatus = res.statusCode || 200;
+          if (httpStatus === 401 || httpStatus === 403 || !data.includes('<device-info>')) {
+            return resolve({
+              ok: true,
+              ip,
+              httpStatus,
+              serverHeader: res.headers?.server || 'Roku UPnP',
+              powerMode: 'Unknown (Blocked by Roku Network Access = Disabled)',
+              isOn: false,
+              ecpMode: 'disabled',
+              ecpAllowed: false,
+              developerEnabled: false,
+              supportsWakeOnWlan: false,
+              name: '65" TCL Roku TV',
+              model: 'TCL Roku TV',
+              osVersion: (res.headers?.server?.match(/Roku\/([\d.]+)/) || [])[1] || '15.3.4',
+            });
+          }
           const pm = (data.match(/<power-mode>(.*?)<\/power-mode>/) || [])[1] || 'Unknown';
           const ecpMode = (data.match(/<ecp-setting-mode>(.*?)<\/ecp-setting-mode>/) || [])[1] || 'enabled';
           const devEnabled = ((data.match(/<developer-enabled>(.*?)<\/developer-enabled>/) || [])[1] || 'false') === 'true';
@@ -1508,6 +1526,7 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
           resolve({
             ok: true,
             ip,
+            httpStatus,
             powerMode: pm,
             isOn: pm === 'PowerOn',
             ecpMode,
