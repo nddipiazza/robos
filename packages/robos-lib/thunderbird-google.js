@@ -280,11 +280,13 @@ function installThunderbird(options = {}) {
       '  mkdir -p "$HOME/.local/opt" "$HOME/.local/bin" "$HOME/.local/share/applications"',
       '  curl -fL "https://download.mozilla.org/?product=thunderbird-latest-SSL&os=linux64&lang=en-US" -o /tmp/robos-thunderbird-latest.tar.xz',
       '  tar -xJf /tmp/robos-thunderbird-latest.tar.xz -C "$HOME/.local/opt/"',
-      '  rm -f /tmp/robos-thunderbird-latest.tar.xz',
+      '  rm -f /tmp/robos-thunderbird-latest.tar.xz "$HOME/.local/bin/thunderbird"',
       '  cat > "$HOME/.local/bin/thunderbird" << \'WRAPPER\'',
       '#!/usr/bin/env bash',
+      'unset GDK_BACKEND',
+      'unset EGL_PLATFORM',
       'export MOZ_DISABLE_CONTENT_SANDBOX=1',
-      'exec "$HOME/.local/opt/thunderbird/thunderbird" "$@"',
+      'exec "$HOME/.local/opt/thunderbird/thunderbird-bin" "$@"',
       'WRAPPER',
       '  chmod +x "$HOME/.local/bin/thunderbird"',
       'fi',
@@ -655,10 +657,14 @@ function launchThunderbird(launchOptions = {}, options = {}) {
     return { ok: true, binaryPath: status.binaryPath, args, dryRun: true };
   }
 
+  const cleanEnv = { ...process.env, MOZ_DISABLE_CONTENT_SANDBOX: '1' };
+  delete cleanEnv.GDK_BACKEND;
+  delete cleanEnv.EGL_PLATFORM;
+
   const child = spawn(status.binaryPath, args, {
     detached: true,
     stdio: 'ignore',
-    env: { ...process.env, MOZ_DISABLE_CONTENT_SANDBOX: '1' },
+    env: cleanEnv,
   });
   child.unref();
   return { ok: true, binaryPath: status.binaryPath, args, pid: child.pid };
