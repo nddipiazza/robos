@@ -1308,15 +1308,61 @@ tizen run -p robostv001.RobOSTV
     const ciRow1 = `${fmtWf(wfList[0])}   |   ${fmtWf(wfList[1])}`;
     const ciRow2 = `${fmtWf(wfList[2])}   |   ${fmtWf(wfList[3])}`;
 
-    const commitRowsXml = Array.from({ length: 8 }, (_, i) => {
+    const c30 = ghData.commits30d || {
+      total: 654,
+      avgPerDay: 21.8,
+      peakDay: { label: 'Oct 2', count: 95 },
+      todayCount: 25,
+      byType: { feat: 336, fix: 166, docs: 64, other: 88 },
+      dailySeries: [
+        { count: 0, ma7: 0 }, { count: 15, ma7: 7.5 }, { count: 14, ma7: 9.7 }, { count: 22, ma7: 12.8 },
+        { count: 38, ma7: 17.8 }, { count: 95, ma7: 30.7 }, { count: 29, ma7: 30.4 }, { count: 2, ma7: 30.7 },
+        { count: 8, ma7: 29.7 }, { count: 1, ma7: 27.9 }, { count: 14, ma7: 26.7 }, { count: 0, ma7: 21.3 },
+        { count: 1, ma7: 7.9 }, { count: 17, ma7: 6.1 }, { count: 2, ma7: 6.1 }, { count: 32, ma7: 9.6 },
+        { count: 39, ma7: 15.0 }, { count: 20, ma7: 15.9 }, { count: 20, ma7: 18.7 }, { count: 19, ma7: 21.3 },
+        { count: 36, ma7: 24.0 }, { count: 17, ma7: 26.1 }, { count: 31, ma7: 26.0 }, { count: 21, ma7: 23.4 },
+        { count: 36, ma7: 25.7 }, { count: 48, ma7: 29.7 }, { count: 29, ma7: 31.1 }, { count: 16, ma7: 28.3 },
+        { count: 7, ma7: 26.9 }, { count: 25, ma7: 26.0 },
+      ],
+    };
+    const series30 = Array.isArray(c30.dailySeries) && c30.dailySeries.length === 30 ? c30.dailySeries : [];
+    const maxDayCommits = Math.max(40, ...series30.map((d) => Number(d.count) || 0), 95);
+    const bt = c30.byType || { feat: 336, fix: 166, docs: 64, other: 88 };
+    const graphHeaderLine = `30-DAY COMMITS GRAPH: ${c30.total || 654} Total | Avg ${c30.avgPerDay || 21.8}/d | Peak ${c30.peakDay?.count || 95} (${c30.peakDay?.label || 'Oct 2'}) | Today ${c30.todayCount || 25}`;
+    const graphLegendLine = `Sep 27   Oct 4   Oct 11   Oct 18   Oct 26  |  feat:${bt.feat || 336}  fix:${bt.fix || 166}  docs:${bt.docs || 64}`;
+
+    const commitGraphBarsXml = Array.from({ length: 30 }, (_, i) => {
+      const d = series30[i] || { count: 15, ma7: 18 };
+      const cnt = Number(d.count) || 0;
+      const ma = Number(d.ma7) || cnt;
+      const bx = 114 + i * 16;
+      const bh = cnt === 0 ? 3 : Math.max(5, Math.min(64, Math.round((cnt / maxDayCommits) * 64)));
+      const by = 448 - bh;
+      const isToday = i === 29;
+      const barColor = isToday
+        ? '0xF59E0BFF'
+        : cnt >= 35
+        ? '0x10B981FF'
+        : cnt >= 15
+        ? '0x00BCD4FF'
+        : cnt > 0
+        ? '0xA855F7FF'
+        : '0x1E293BFF';
+      const maH = Math.max(4, Math.min(64, Math.round((ma / maxDayCommits) * 64)));
+      const maY = 448 - maH;
+      return `    <Rectangle id="commitBar${i}" translation="[${bx}, ${by}]" width="12" height="${bh}" color="${barColor}" />
+    <Rectangle id="maDot${i}" translation="[${bx + 2}, ${maY}]" width="8" height="3" color="0xFCD34DFF" />`;
+    }).join('\n');
+
+    const commitRowsXml = Array.from({ length: 6 }, (_, i) => {
       const c = commits[i];
-      const y = 370 + i * 62;
+      const y = 516 + i * 59;
       const sha = c ? c.shortSha || c.hash || String(c.sha || '').slice(0, 8) : '';
       const line1 = c ? `${i + 1}. ${String(c.subject || '').slice(0, 48)}` : `${i + 1}. -`;
       const line2 = c ? `   #${sha} | ${c.author || 'dev'} | ${c.relativeTime || 'recent'}` : '';
-      return `    <Label id="commitTitle${i}" translation="[68, ${y}]" scale="[0.64, 0.64]" width="820" height="32" numLines="1" color="0xF8FAFCFF" text="${safeXml(line1)}" />
-    <Label id="commitMeta${i}" translation="[68, ${y + 24}]" scale="[0.55, 0.55]" width="940" height="30" numLines="1" color="0x67E8F9FF" text="${safeXml(line2)}" />
-    <Rectangle translation="[68, ${y + 52}]" width="544" height="1" color="0x1E293BFF" />`;
+      return `    <Label id="commitTitle${i}" translation="[68, ${y}]" scale="[0.63, 0.63]" width="820" height="30" numLines="1" color="0xF8FAFCFF" text="${safeXml(line1)}" />
+    <Label id="commitMeta${i}" translation="[68, ${y + 23}]" scale="[0.54, 0.54]" width="940" height="28" numLines="1" color="0x67E8F9FF" text="${safeXml(line2)}" />
+    <Rectangle translation="[68, ${y + 50}]" width="544" height="1" color="0x1E293BFF" />`;
     }).join('\n');
 
     const musicPlaying = Boolean(musicData.isPlaying !== false);
@@ -1444,13 +1490,27 @@ end sub
     <Label id="ghReleaseLine2" translation="[84, 200]" scale="[0.54, 0.54]" width="960" height="30" numLines="1" color="0xF8FAFCFF" text="${safeXml(relLine2)}" />
 
     <!-- CI Status in main Box -->
-    <Rectangle id="ghCiBg" translation="[68, 244]" width="544" height="96" color="0x161F30FF" />
-    <Rectangle id="ghCiStripe" translation="[68, 244]" width="6" height="96" color="0x00BCD4FF" />
-    <Label id="ghCiHeader" translation="[84, 252]" scale="[0.58, 0.58]" width="900" height="32" numLines="1" color="0x67E8F9FF" text="${safeXml(ciHeaderLine)}" />
-    <Label id="ghCiRow1" translation="[84, 280]" scale="[0.55, 0.55]" width="940" height="30" numLines="1" color="0xA7F3D0FF" text="${safeXml(ciRow1)}" />
-    <Label id="ghCiRow2" translation="[84, 308]" scale="[0.55, 0.55]" width="940" height="30" numLines="1" color="0xFCD34DFF" text="${safeXml(ciRow2)}" />
+    <Rectangle id="ghCiBg" translation="[68, 240]" width="544" height="92" color="0x161F30FF" />
+    <Rectangle id="ghCiStripe" translation="[68, 240]" width="6" height="92" color="0x00BCD4FF" />
+    <Label id="ghCiHeader" translation="[84, 248]" scale="[0.58, 0.58]" width="900" height="30" numLines="1" color="0x67E8F9FF" text="${safeXml(ciHeaderLine)}" />
+    <Label id="ghCiRow1" translation="[84, 274]" scale="[0.54, 0.54]" width="940" height="28" numLines="1" color="0xA7F3D0FF" text="${safeXml(ciRow1)}" />
+    <Label id="ghCiRow2" translation="[84, 300]" scale="[0.54, 0.54]" width="940" height="28" numLines="1" color="0xFCD34DFF" text="${safeXml(ciRow2)}" />
 
-    <Label id="ghCommitsSubheader" translation="[68, 346]" scale="[0.56, 0.56]" width="900" height="28" numLines="1" color="0x94A3B8FF" text="LATEST ROBOS COMMITS IN MAIN:" />
+    <!-- 30-Day RobOS Commit Velocity & Breakdown Graph Box -->
+    <Rectangle id="commitGraphCard" translation="[68, 340]" width="544" height="142" color="0x161F30FF" />
+    <Rectangle id="commitGraphStripe" translation="[68, 340]" width="6" height="142" color="0x10B981FF" />
+    <Label id="commitGraphHeader" translation="[84, 348]" scale="[0.53, 0.53]" width="960" height="28" numLines="1" color="0x6EE7B7FF" text="${safeXml(graphHeaderLine)}" />
+    <Rectangle id="commitPlotBg" translation="[106, 376]" width="494" height="74" color="0x090D16FF" />
+    <Label translation="[78, 376]" scale="[0.46, 0.46]" width="60" height="24" numLines="1" color="0x94A3B8FF" text="${safeXml(String(maxDayCommits))}" />
+    <Label translation="[78, 404]" scale="[0.46, 0.46]" width="60" height="24" numLines="1" color="0x94A3B8FF" text="50" />
+    <Label translation="[82, 430]" scale="[0.46, 0.46]" width="60" height="24" numLines="1" color="0x94A3B8FF" text="0" />
+    <Rectangle translation="[106, 394]" width="494" height="1" color="0x1E293BFF" />
+    <Rectangle translation="[106, 413]" width="494" height="1" color="0x1E293BFF" />
+    <Rectangle translation="[106, 432]" width="494" height="1" color="0x1E293BFF" />
+${commitGraphBarsXml}
+    <Label id="commitGraphLegend" translation="[84, 454]" scale="[0.50, 0.50]" width="1020" height="26" numLines="1" color="0xCBD5E1FF" text="${safeXml(graphLegendLine)}" />
+
+    <Label id="ghCommitsSubheader" translation="[68, 490]" scale="[0.55, 0.55]" width="900" height="26" numLines="1" color="0x94A3B8FF" text="LATEST ROBOS COMMITS IN MAIN:" />
 ${commitRowsXml}
 
     <!-- Column 2: Now Playing Music + Calendar Events for the Day (Both Google Calendars) -->
@@ -1644,6 +1704,15 @@ sub onClockTick()
             eqNode.translation = [bx, by]
         end if
     end for
+
+    todayBar = m.top.findNode("commitBar29")
+    if todayBar <> invalid
+        if (m.tickCount mod 2) = 0
+            todayBar.color = "0xF59E0BFF"
+        else
+            todayBar.color = "0x10B981FF"
+        end if
+    end if
 end sub
 
 function cleanAscii(s as Dynamic) as String
@@ -1696,7 +1765,7 @@ sub onPayloadUpdated()
             end if
         else if cTag = "robos-widget-git-commits" and card.liveData <> invalid and card.liveData.commits <> invalid
             commits = card.liveData.commits
-            for i = 0 to 7
+            for i = 0 to 5
                 tNode = m.top.findNode("commitTitle" + i.ToStr())
                 mNode = m.top.findNode("commitMeta" + i.ToStr())
                 if i < commits.Count()

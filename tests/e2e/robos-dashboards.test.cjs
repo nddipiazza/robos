@@ -75,6 +75,9 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
     assert.ok(ghCard.liveData.mainCi.workflows.length >= 3);
     assert.ok(ghCard.liveData.latestRelease.tag);
     assert.equal(typeof ghCard.liveData.latestRelease.isRunningNow, 'boolean');
+    assert.ok(ghCard.liveData.commits30d);
+    assert.equal(ghCard.liveData.commits30d.dailySeries.length, 30);
+    assert.ok(ghCard.liveData.commits30d.total > 0);
 
     // Live JS Canvas Clock card
     const clockCard = ov.dashboard.cards.find((c) => c.widgetType === 'live-clock');
