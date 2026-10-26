@@ -46,6 +46,15 @@
           <span class="status-dot-pulse"></span>
           <span id="server-badge" class="badge">GitHub</span>
         </div>
+        <button id="btn-cast-tv" class="header-cast-btn" title="Cast Dev Central Dashboard to Smart TV" onclick="window.openTvCastModal()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          <span id="btn-cast-tv-label">Cast to TV</span>
+          <span id="tv-cast-status-badge" class="header-badge cast-badge">TV</span>
+        </button>
         <button id="btn-header-notifs" class="header-notif-btn" title="Open Notifications" onclick="window.switchTab('notifications')">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -549,6 +558,50 @@
     <div class="modal-backdrop hidden" id="review-modal">
       <div class="modal-dialog" id="review-modal-body">
         <!-- Rendered by walkthrough-viewer.js -->
+      </div>
+    </div>
+
+    <!-- Cast Dev Central Dashboard to Smart TV Modal -->
+    <div class="modal-backdrop hidden" id="tv-cast-modal">
+      <div class="modal-dialog tv-cast-dialog" role="dialog" aria-labelledby="tv-cast-modal-title">
+        <div class="tv-cast-header">
+          <div class="tv-cast-title-group">
+            <span class="tv-cast-icon">📺</span>
+            <div>
+              <h2 id="tv-cast-modal-title">Cast Dev Central Dashboard to Smart TV</h2>
+              <p class="tv-cast-subtitle" id="tv-cast-portal-url">Select a paired Smart TV on your LAN to display your live Sprint, Active Feature, Tasks, PRs &amp; Blockers wallboard.</p>
+            </div>
+          </div>
+          <div class="tv-cast-header-actions">
+            <button class="btn btn-secondary-sm" id="btn-tv-cast-refresh" onclick="window.refreshSmartTvList()" title="Re-check TV status and permissions">↻ Refresh / Try Again</button>
+            <button class="btn btn-secondary-sm" id="btn-tv-cast-close" onclick="window.closeTvCastModal()">✕ Close</button>
+          </div>
+        </div>
+
+        <div class="tv-cast-body">
+          <div class="tv-cast-Banner hidden" id="tv-cast-active-banner"></div>
+          <div class="tv-cast-alert hidden" id="tv-cast-permission-alert"></div>
+
+          <div class="tv-cast-section-label">Paired Smart TVs on Local Network (Click a TV to Select)</div>
+          <div class="tv-cast-list" id="tv-cast-list">
+            <div class="placeholder">Loading paired Smart TVs...</div>
+          </div>
+
+          <div class="tv-cast-actions-bar">
+            <button class="btn btn-primary-cast" id="btn-cast-dashboard-now" onclick="window.castDashboardToSelectedTv()">
+              📺 Cast Dashboard to Selected TV
+            </button>
+            <button class="btn btn-secondary-sm" id="btn-preview-tv-wallboard" onclick="window.previewTvWallboard()">
+              🌐 Preview 10-Foot TV Wallboard
+            </button>
+            <button class="btn btn-secondary-sm" id="btn-stop-tv-cast" onclick="window.stopDashboardTvCast()">
+              ⏹ Stop Cast
+            </button>
+            <button class="btn btn-secondary-sm" id="btn-open-tv-studio" onclick="window.openSmartTvStudioApp()">
+              ⚙️ Open Smart TV Studio
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

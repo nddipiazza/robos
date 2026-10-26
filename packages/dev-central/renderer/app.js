@@ -25,6 +25,13 @@ const appState = {
   notifTierFilters: { critical: true, warning: true, info: true },
   notifDateFilter: '',
   notifPrefs: { quietHours: { enabled: false, start: '22:00', end: '07:00' }, dnd: false },
+
+  // Smart TV Casting State
+  smartTvs: [],
+  selectedTvId: null,
+  tvCastSession: null,
+  tvPortalUrl: 'http://127.0.0.1:19210',
+  tvCastUrl: 'http://127.0.0.1:19210/dev-central',
 };
 
 // ── Utility Functions ────────────────────────────────────────────────────────
@@ -869,6 +876,236 @@ window.regenerateStandup = function() {
   }
 };
 
+// ── Smart TV Dashboard Casting ───────────────────────────────────────────────
+
+function buildDashboardCastSnapshot() {
+  const failedPrs = appState.allPRs.filter(pr => ciStatus(pr) === 'fail').length;
+  const ciPct = appState.allPRs.length
+    ? `${Math.round(((appState.allPRs.length - failedPrs) / appState.allPRs.length) * 100)}%`
+    : '100%';
+  const feat = appState.activeFeature;
+  const featTasks = (feat && Array.isArray(feat.tasks)) ? feat.tasks : [];
+  const featDone = featTasks.filter(t => t.status === 'DONE' || t.status === 'MERGED').length;
+  const progressPct = featTasks.length ? Math.round((featDone / featTasks.length) * 100) : 75;
+
+  return {
+    sprintName: document.getElementById('sprint-pill')?.textContent || 'Sprint 42',
+    activeTab: appState.activeTab || 'all',
+    activeFeature: feat
+      ? {
+          id: feat.id,
+          code: feat.code,
+          name: feat.name,
+          status: feat.status,
+          repository: feat.repository,
+          service: feat.service,
+          progressPct,
+        }
+      : null,
+    kpis: {
+      featureCode: feat ? feat.code : 'FEAT-42',
+      featureStatus: feat ? feat.status.replace('_', ' ') : 'IN PROGRESS',
+      tasksCount: appState.allIssues.length,
+      prsCount: appState.allPRs.length,
+      reviewsCount: appState.allReviews.length,
+      blockersCount: appState.allBlockers.length,
+      ciHealth: ciPct,
+    },
+    issues: appState.allIssues.slice(0, 6),
+    prs: appState.allPRs.slice(0, 5),
+    reviews: appState.allReviews.slice(0, 5),
+    blockers: appState.allBlockers.slice(0, 5),
+    standup: generateStandup(appState.allIssues, appState.allPRs, appState.allBlockers),
+  };
+}
+
+function updateHeaderCastButton() {
+  const btn = document.getElementById('btn-cast-tv');
+  const label = document.getElementById('btn-cast-tv-label');
+  const badge = document.getElementById('tv-cast-status-badge');
+  if (!btn) return;
+
+  const isActive = Boolean(appState.tvCastSession && appState.tvCastSession.active);
+  btn.classList.toggle('casting-active', isActive);
+  if (isActive) {
+    if (label) label.textContent = `Casting: ${appState.tvCastSession.tvName || 'Smart TV'}`;
+    if (badge) badge.textContent = 'LIVE';
+  } else {
+    if (label) label.textContent = 'Cast to TV';
+    if (badge) badge.textContent = appState.smartTvs.length ? `${appState.smartTvs.length} TVs` : 'TV';
+  }
+}
+
+function renderSmartTvCastList() {
+  const listEl = document.getElementById('tv-cast-list');
+  const subEl = document.getElementById('tv-cast-portal-url');
+  const bannerEl = document.getElementById('tv-cast-active-banner');
+  if (!listEl) return;
+
+  if (subEl && appState.tvCastUrl) {
+    subEl.textContent = `10-Foot TV Wallboard Endpoint: ${appState.tvCastUrl} · Select any paired Smart TV below to cast your live Dev Central dashboard.`;
+  }
+
+  if (bannerEl) {
+    if (appState.tvCastSession && appState.tvCastSession.active) {
+      bannerEl.classList.remove('hidden');
+      bannerEl.innerHTML = `<strong>● Live Dashboard Cast Active</strong> → <strong>${appState.tvCastSession.tvName}</strong> (${appState.tvCastSession.tvIp}) · Serving 10-foot wallboard at <code>${appState.tvCastUrl}</code>`;
+    } else {
+      bannerEl.classList.add('hidden');
+      bannerEl.innerHTML = '';
+    }
+  }
+
+  if (!appState.smartTvs.length) {
+    listEl.innerHTML = '<div class="placeholder">No paired Smart TVs found. Click "Open Smart TV Studio" to discover or pair a TV on your LAN.</div>';
+    return;
+  }
+
+  if (!appState.selectedTvId || !appState.smartTvs.some(t => t.id === appState.selectedTvId)) {
+    appState.selectedTvId = (appState.tvCastSession && appState.tvCastSession.tvId) || appState.smartTvs[0].id;
+  }
+
+  listEl.innerHTML = appState.smartTvs
+    .map(tv => {
+      const selected = tv.id === appState.selectedTvId;
+      const isCurrentlyCasting = Boolean(
+        appState.tvCastSession && appState.tvCastSession.active && appState.tvCastSession.tvId === tv.id
+      );
+      return `
+        <button type="button" class="tv-cast-item ${selected ? 'selected' : ''}" data-tv-id="${tv.id}">
+          <div class="tv-cast-item-main">
+            <div class="tv-cast-item-name">📺 ${tv.name} ${isCurrentlyCasting ? '· (Casting Now)' : ''}</div>
+            <div class="tv-cast-item-meta">${tv.ip} · ${tv.model || tv.platformName} · ${tv.sideloadStatus || 'Ready'}</div>
+          </div>
+          <div class="tv-cast-item-right">
+            <span class="tv-cast-pill">${isCurrentlyCasting ? '● LIVE CAST' : selected ? '✓ Selected' : 'Select TV'}</span>
+          </div>
+        </button>
+      `;
+    })
+    .join('');
+
+  listEl.querySelectorAll('.tv-cast-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      appState.selectedTvId = btn.dataset.tvId;
+      renderSmartTvCastList();
+    });
+  });
+}
+
+async function loadSmartTvs() {
+  if (!window.robos || typeof window.robos.getSmartTvs !== 'function') return;
+  try {
+    const res = await window.robos.getSmartTvs();
+    if (res && res.ok) {
+      appState.smartTvs = Array.isArray(res.tvs) ? res.tvs : [];
+      appState.tvCastSession = res.devCentralCast || null;
+      if (res.portalUrl) appState.tvPortalUrl = res.portalUrl;
+      if (res.castUrl) appState.tvCastUrl = res.castUrl;
+      if (!appState.selectedTvId && appState.smartTvs.length) {
+        appState.selectedTvId = (res.devCentralCast && res.devCentralCast.tvId) || appState.smartTvs[0].id;
+      }
+      updateHeaderCastButton();
+      renderSmartTvCastList();
+    }
+  } catch {}
+}
+
+window.openTvCastModal = async function() {
+  const modal = document.getElementById('tv-cast-modal');
+  if (modal) modal.classList.remove('hidden');
+  await loadSmartTvs();
+};
+
+window.closeTvCastModal = function() {
+  const modal = document.getElementById('tv-cast-modal');
+  if (modal) modal.classList.add('hidden');
+};
+
+window.refreshSmartTvList = async function() {
+  const alertEl = document.getElementById('tv-cast-permission-alert');
+  await loadSmartTvs();
+  if (appState.selectedTvId && window.robos && typeof window.robos.diagnoseSmartTv === 'function') {
+    const diag = await window.robos.diagnoseSmartTv(appState.selectedTvId);
+    if (diag && diag.ok && diag.allControlReady && alertEl) {
+      alertEl.classList.add('hidden');
+      alertEl.innerHTML = '';
+    }
+  }
+};
+
+window.castDashboardToSelectedTv = async function() {
+  if (!window.robos || typeof window.robos.castDashboardToTv !== 'function') return;
+  const tvId = appState.selectedTvId || (appState.smartTvs[0] && appState.smartTvs[0].id);
+  const dashboard = buildDashboardCastSnapshot();
+  const btn = document.getElementById('btn-cast-dashboard-now');
+  const alertEl = document.getElementById('tv-cast-permission-alert');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '📡 Casting Dashboard to TV...';
+  }
+  try {
+    const res = await window.robos.castDashboardToTv({ tvId, dashboard });
+    if (res.castSession) appState.tvCastSession = res.castSession;
+    if (res.castUrl) appState.tvCastUrl = res.castUrl;
+    if (res.portalUrl) appState.tvPortalUrl = res.portalUrl;
+    updateHeaderCastButton();
+    renderSmartTvCastList();
+
+    if (res.blocked && alertEl) {
+      const stepsHtml = Array.isArray(res.setupSteps) && res.setupSteps.length
+        ? `<ol>${res.setupSteps.map(s => `<li>${s}</li>`).join('')}</ol>`
+        : '';
+      alertEl.classList.remove('hidden');
+      alertEl.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <strong>⚠️ ${res.setupTitle || 'TV Remote Control Permission Required'}</strong>
+          <button class="btn btn-secondary-sm" onclick="window.castDashboardToSelectedTv()">↻ Refresh / Try Again</button>
+        </div>
+        <div style="margin-top:6px;">${res.setupMessage || res.message || ''}</div>
+        ${stepsHtml}
+        <div style="margin-top:8px;color:#a7f3d0;">✓ Note: Your 10-Foot Dev Central Wallboard is already live at <code>${appState.tvCastUrl}</code>. Once you re-enable the TV setting above, click <strong>↻ Refresh / Try Again</strong>.</div>
+      `;
+    } else if (alertEl) {
+      alertEl.classList.add('hidden');
+      alertEl.innerHTML = '';
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '📺 Cast Dashboard to Selected TV';
+    }
+  }
+};
+
+window.stopDashboardTvCast = async function() {
+  if (!window.robos || typeof window.robos.stopTvCast !== 'function') return;
+  const res = await window.robos.stopTvCast({ tvId: appState.selectedTvId });
+  if (res && res.ok) {
+    appState.tvCastSession = res.devCentralCast || null;
+    const alertEl = document.getElementById('tv-cast-permission-alert');
+    if (alertEl) {
+      alertEl.classList.add('hidden');
+      alertEl.innerHTML = '';
+    }
+    updateHeaderCastButton();
+    renderSmartTvCastList();
+  }
+};
+
+window.previewTvWallboard = function() {
+  const url = appState.tvCastUrl || 'http://127.0.0.1:19210/dev-central';
+  if (window.robos && typeof window.robos.openUrl === 'function') {
+    window.robos.openUrl(url);
+  }
+};
+
+window.openSmartTvStudioApp = function() {
+  if (window.robos && typeof window.robos.openTvStudio === 'function') {
+    window.robos.openTvStudio();
+  }
+};
+
 // ── Wire Navigation & Filter Events ──────────────────────────────────────────
 function wireInteractivity() {
   // Tabs
@@ -1077,6 +1314,7 @@ async function init() {
   renderActivity(appState.allEvents);
 
   updateKPIRibbon();
+  loadSmartTvs();
 
   // Show error if no task server
   if (!ts && !issuesRes.ok) {
