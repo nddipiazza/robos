@@ -55,9 +55,17 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
     assert.equal(ov.ok, true);
     assert.equal(ov.dashboard.id, 'daily-engineering-ops');
     assert.equal(ov.dashboard.layout.id, 'mission-control-3col');
-    assert.equal(ov.dashboard.cards.length, 5);
+    assert.equal(ov.dashboard.cards.length, 6);
     assert.equal(DASHBOARD_LAYOUTS.length, 6);
-    assert.equal(DASHBOARD_WIDGET_CATALOG.length, 10);
+    assert.equal(DASHBOARD_WIDGET_CATALOG.length, 11);
+
+    // Music Now Playing card (RobOS Audio Player)
+    const musicCard = ov.dashboard.cards.find((c) => c.widgetType === 'music-now-playing');
+    assert.ok(musicCard);
+    assert.equal(musicCard.componentTag, 'robos-widget-music-player');
+    assert.ok(musicCard.liveData.title);
+    assert.ok(musicCard.liveData.artist);
+    assert.ok(musicCard.liveData.duration);
 
     // GitHub Repo Activity card (nddipiazza/robos commits, main CI, latest release # & running status)
     const ghCard = ov.dashboard.cards.find((c) => c.widgetType === 'github-repo');
@@ -171,7 +179,7 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
       assert.equal(apiJson.ok, true);
       assert.equal(apiJson.cast.active, true);
       assert.equal(apiJson.dashboard.id, 'daily-engineering-ops');
-      assert.equal(apiJson.dashboard.cards.length, 5);
+      assert.equal(apiJson.dashboard.cards.length, 6);
 
       // Verify 10-Foot Portal Home (/) shows the live dashboard cast banner
       const homeRes = await httpGet(`http://127.0.0.1:${srv.port}/`);

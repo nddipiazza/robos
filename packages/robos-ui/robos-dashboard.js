@@ -607,6 +607,44 @@ robos-widget-sprint-radar, robos-widget-custom {
       `;
     }
 
+    if (widgetType === 'music-now-playing') {
+      const isPlaying = Boolean(data.isPlaying !== false);
+      const upNext = Array.isArray(data.upNext) ? data.upNext : [];
+      const pct = Math.max(2, Math.min(100, Number(data.progressPct) || 54));
+      return `
+        <div class="robos-w-meta">
+          <span>🎵 <strong>RobOS Audio Player</strong> · ${esc(data.output || 'Desktop (Local Audio)')}</span>
+          <span class="robos-w-pill" style="${isPlaying ? 'background:rgba(16,185,129,0.2);color:#6ee7b7;border-color:rgba(16,185,129,0.5);' : 'background:rgba(148,163,184,0.16);color:#cbd5e1;'}">
+            ${isPlaying ? '▶ PLAYING NOW' : '⏸ PAUSED'}
+          </span>
+        </div>
+        <div style="background:#0d1117;border:1px solid #21262d;border-left:3px solid #a855f7;border-radius:8px;padding:9px 10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <div style="min-width:0;flex:1;">
+              <div style="font-size:13.5px;font-weight:800;color:#f0f6fc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">🎵 ${esc(data.title || 'Ambience & Music')}</div>
+              <div style="font-size:11.5px;color:#d8b4fe;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(data.artistAlbum || "Baldur's Gate 3 • video game music")}</div>
+              <div style="font-size:10px;color:#8b949e;margin-top:2px;">${esc(data.source || 'Google Drive')} · ${esc(data.codec || 'MPEG 1 Layer 3 · 48 kHz')}</div>
+            </div>
+            <div style="text-align:right;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;flex-shrink:0;">
+              <div style="font-size:12.5px;font-weight:800;color:#67e8f9;">${esc(data.elapsed || '24:45')} <span style="color:#6e7681;font-weight:500;">/ ${esc(data.duration || '46:07')}</span></div>
+              <div style="font-size:9.5px;color:#6ee7b7;margin-top:2px;">${pct}% elapsed</div>
+            </div>
+          </div>
+          <div style="height:5px;background:#070b14;border-radius:999px;overflow:hidden;margin-top:7px;">
+            <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#a855f7,#00bcd4,#10b981);"></div>
+          </div>
+          <canvas class="robos-music-eq-canvas" width="440" height="32" style="width:100%;height:32px;margin-top:6px;border-radius:4px;"></canvas>
+          ${
+            upNext.length > 0
+              ? `<div style="margin-top:5px;padding-top:5px;border-top:1px solid #21262d;font-size:10.5px;color:#8b949e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  <strong style="color:#c9d1d9;">Up Next:</strong> ${upNext.map((u) => `${esc(u.title)} (${esc(u.artist)})`).join(' · ')}
+                </div>`
+              : ''
+          }
+        </div>
+      `;
+    }
+
     const customTag = data.customElementTag || card.config?.customElementTag || 'robos-ai-textarea';
     const placeholder = data.placeholder || card.config?.placeholder || 'Ask RobOS AI or trigger a workflow…';
     return `
@@ -661,7 +699,7 @@ robos-widget-sprint-radar, robos-widget-custom {
       for (const card of cards) {
         if (card.slotId === 'col-1' || card.slotId === 'tv-left' || card.widgetType === 'github-repo' || card.widgetType === 'git-commits') {
           cols[0].push(card);
-        } else if (card.slotId === 'col-2' || card.slotId === 'tv-center' || card.widgetType === 'calendar-today') {
+        } else if (card.slotId === 'col-2' || card.slotId === 'tv-center' || card.widgetType === 'calendar-today' || card.widgetType === 'music-now-playing') {
           cols[1].push(card);
         } else {
           cols[2].push(card);
@@ -730,6 +768,7 @@ robos-widget-sprint-radar, robos-widget-custom {
       ['robos-widget-agent-sessions', 'agent-sessions'],
       ['robos-widget-live-clock', 'live-clock'],
       ['robos-widget-github-repo', 'github-repo'],
+      ['robos-widget-music-player', 'music-now-playing'],
       ['robos-widget-smart-tv', 'smart-tv'],
       ['robos-widget-smart-lights', 'smart-lights'],
       ['robos-widget-kgraph', 'kgraph-summary'],
@@ -868,6 +907,25 @@ robos-widget-sprint-radar, robos-widget-custom {
           const bh = Math.min(h - 4, Math.max(5, bars[i] + pulse));
           ctx.fillStyle = i === bars.length - 1 ? '#10b981' : 'rgba(0, 188, 212, 0.68)';
           ctx.fillRect(8 + i * bw, h - bh - 2, bw - 4, bh);
+        }
+      });
+
+      document.querySelectorAll('.robos-music-eq-canvas').forEach((canvas) => {
+        const ctx = canvas.getContext && canvas.getContext('2d');
+        if (!ctx) return;
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#070b14';
+        ctx.fillRect(0, 0, w, h);
+        const count = 24;
+        const bw = (w - 16) / count;
+        const t = Date.now() / 180;
+        for (let i = 0; i < count; i++) {
+          const wave = Math.abs(Math.sin(t + i * 0.45) * Math.cos(t * 0.7 - i * 0.25));
+          const bh = Math.max(4, Math.min(h - 4, Math.round(5 + wave * (h - 8))));
+          ctx.fillStyle = i % 3 === 0 ? '#a855f7' : i % 2 === 0 ? '#00bcd4' : '#10b981';
+          ctx.fillRect(8 + i * bw, h - bh - 2, Math.max(4, bw - 4), bh);
         }
       });
     }
