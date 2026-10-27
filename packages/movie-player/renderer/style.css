@@ -2556,6 +2556,9 @@ body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-selec
 /* ── Netflix / Plex Cinema Hero Billboard & Poster Cards ─────────────────── */
 .cinema-hero-billboard {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 24px;
   border-radius: 14px;
   border: 1px solid rgba(232, 163, 61, 0.28);
   background: linear-gradient(110deg, #0d0b09 0%, #1a1410 55%, #231912 100%);
@@ -2574,8 +2577,9 @@ body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-selec
 }
 
 .cinema-hero-poster {
-  width: 118px;
-  height: 174px;
+  position: relative;
+  width: 176px;
+  height: 176px;
   border-radius: 10px;
   overflow: hidden;
   flex-shrink: 0;
@@ -2585,12 +2589,14 @@ body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-selec
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
+.cinema-hero-poster .cover,
 .cinema-hero-poster img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .cinema-hero-poster-fallback {
@@ -2788,17 +2794,17 @@ body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-selec
   color: var(--text-muted);
 }
 
-/* 2:3 Cinema Poster Card */
+/* 1:1 Cinema Preview Card (matches 320x320 Library Preview Images) */
 .movie-poster-art {
-  aspect-ratio: 2 / 3 !important;
+  aspect-ratio: 1 / 1;
   background: linear-gradient(160deg, #231b15 0%, #110e0b 100%);
 }
 
 .poster-badge-top {
   position: absolute;
-  top: 8px;
+  bottom: 8px;
   left: 8px;
-  background: rgba(15, 12, 10, 0.86);
+  background: rgba(15, 12, 10, 0.88);
   border: 1px solid rgba(232, 163, 61, 0.45);
   color: var(--accent);
   font-size: 0.62rem;
@@ -2811,9 +2817,9 @@ body.is-resizing, body.is-resizing * { cursor: col-resize !important; user-selec
 
 .poster-badge-year {
   position: absolute;
-  top: 8px;
+  bottom: 8px;
   right: 8px;
-  background: rgba(15, 12, 10, 0.84);
+  background: rgba(15, 12, 10, 0.86);
   color: #e2e8f0;
   font-size: 0.62rem;
   font-weight: 700;

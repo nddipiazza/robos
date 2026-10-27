@@ -2014,136 +2014,136 @@ ${voiceSlide2RowsXml}
         color="0xE2E8F0FF"
         focusedColor="0x110E18FF" />
 
-      <!-- TOP-RIGHT STAGE: Netflix / Plex Hero Spotlight Billboard (x=436, y=94, w=1448, h=426) -->
-      <Rectangle id="cinemaHeroBg" translation="[436, 94]" width="1448" height="426" color="0x151221FF" />
+      <!-- TOP-RIGHT STAGE: Netflix / Plex Hero Spotlight Billboard (x=436, y=94, w=1448, h=392) -->
+      <Rectangle id="cinemaHeroBg" translation="[436, 94]" width="1448" height="392" color="0x151221FF" />
       <Rectangle id="cinemaHeroAccentTop" translation="[436, 94]" width="1448" height="4" color="0xE50914FF" />
       <!-- Atmospheric decorative backdrop glow bars -->
-      <Rectangle id="cinemaHeroGlow1" translation="[1320, 110]" width="540" height="390" color="0x1E1830FF" />
-      <Rectangle id="cinemaHeroGlow2" translation="[1480, 130]" width="360" height="350" color="0x271D3DFF" />
+      <Rectangle id="cinemaHeroGlow1" translation="[1320, 106]" width="540" height="364" color="0x1E1830FF" />
+      <Rectangle id="cinemaHeroGlow2" translation="[1480, 120]" width="360" height="336" color="0x271D3DFF" />
 
-      <!-- Hero 2:3 Vertical Cinema Poster Card (x=464, y=114, w=256, h=384) -->
-      <Rectangle id="cinemaHeroPosterFrame" translation="[460, 110]" width="264" height="392" color="0xE8A33DFF" />
-      <Rectangle id="cinemaHeroPosterFallbackBg" translation="[464, 114]" width="256" height="384" color="0x1E1B2EFF" />
-      <Rectangle id="cinemaHeroPosterTopBar" translation="[464, 114]" width="256" height="36" color="0xE50914FF" />
-      <Label id="cinemaHeroPosterRibbon" translation="[476, 122]" scale="[0.50, 0.50]" width="460" height="26" numLines="1" color="0xFFFFFFFF" text="ROBOS CINEMA FEATURE" />
-      <Label id="cinemaHeroPosterMonogram" translation="[464, 224]" scale="[1.85, 1.85]" width="138" height="70" numLines="1" horizAlign="center" color="0xFCD34DFF" text="RC" />
-      <Label id="cinemaHeroPosterFallbackTitle" translation="[478, 356]" scale="[0.56, 0.56]" width="410" height="60" numLines="2" horizAlign="center" color="0xF8FAFCFF" text="RobOS Cinema" />
-      <Label id="cinemaHeroPosterFallbackYear" translation="[478, 456]" scale="[0.52, 0.52]" width="410" height="28" numLines="1" horizAlign="center" color="0xE8A33DFF" text="1080p BluRay" />
-      <Poster id="cinemaLibPoster" translation="[464, 114]" width="256" height="384" loadDisplayMode="scaleToZoom" />
+      <!-- Hero 1:1 Library Preview Image Card (x=460, y=114, w=352, h=352 — matches 320x320 Library Preview Images) -->
+      <Rectangle id="cinemaHeroPosterFrame" translation="[456, 110]" width="360" height="360" color="0xE8A33DFF" />
+      <Rectangle id="cinemaHeroPosterFallbackBg" translation="[460, 114]" width="352" height="352" color="0x1E1B2EFF" />
+      <Rectangle id="cinemaHeroPosterTopBar" translation="[460, 114]" width="352" height="36" color="0xE50914FF" />
+      <Label id="cinemaHeroPosterRibbon" translation="[474, 122]" scale="[0.50, 0.50]" width="640" height="26" numLines="1" color="0xFFFFFFFF" text="ROBOS CINEMA FEATURE" />
+      <Label id="cinemaHeroPosterMonogram" translation="[460, 212]" scale="[1.85, 1.85]" width="190" height="70" numLines="1" horizAlign="center" color="0xFCD34DFF" text="RC" />
+      <Label id="cinemaHeroPosterFallbackTitle" translation="[476, 336]" scale="[0.56, 0.56]" width="560" height="60" numLines="2" horizAlign="center" color="0xF8FAFCFF" text="RobOS Cinema" />
+      <Label id="cinemaHeroPosterFallbackYear" translation="[476, 424]" scale="[0.52, 0.52]" width="560" height="28" numLines="1" horizAlign="center" color="0xE8A33DFF" text="1080p BluRay" />
+      <Poster id="cinemaLibPoster" translation="[460, 114]" width="352" height="352" loadDisplayMode="scaleToFit" />
 
-      <!-- Hero Spotlight Details (x=754, y=114) -->
-      <Rectangle translation="[754, 116]" width="150" height="28" color="0xE50914FF" />
-      <Label translation="[766, 121]" scale="[0.48, 0.48]" width="280" height="24" numLines="1" color="0xFFFFFFFF" text="SPOTLIGHT FEATURE" />
-      <Label id="cinemaHeroEyebrow" translation="[918, 120]" scale="[0.54, 0.54]" width="1600" height="28" numLines="1" color="0xFCD34DFF" text="ROBOS CINEMA+  •  DIRECT LAN STREAM" />
+      <!-- Hero Spotlight Details (x=838, y=114) -->
+      <Rectangle translation="[838, 114]" width="150" height="28" color="0xE50914FF" />
+      <Label translation="[850, 119]" scale="[0.48, 0.48]" width="280" height="24" numLines="1" color="0xFFFFFFFF" text="SPOTLIGHT FEATURE" />
+      <Label id="cinemaHeroEyebrow" translation="[1002, 118]" scale="[0.54, 0.54]" width="1500" height="28" numLines="1" color="0xFCD34DFF" text="ROBOS CINEMA+  •  DIRECT LAN STREAM" />
 
-      <Label id="cinemaLibDetailTitle" translation="[754, 154]" scale="[1.02, 1.02]" width="1060" height="52" numLines="1" color="0xFFFFFFFF" text="Select a Movie" />
+      <Label id="cinemaLibDetailTitle" translation="[838, 150]" scale="[0.98, 0.98]" width="1020" height="50" numLines="1" color="0xFFFFFFFF" text="Select a Movie" />
 
       <!-- Metadata Badges Row (Year, Quality, Genre, Format) -->
-      <Rectangle translation="[754, 214]" width="104" height="34" color="0x262136FF" />
-      <Rectangle translation="[754, 214]" width="4" height="34" color="0xE8A33DFF" />
-      <Label id="cinemaBadgeYear" translation="[768, 221]" scale="[0.54, 0.54]" width="160" height="28" numLines="1" color="0xFCD34DFF" text="2024" />
+      <Rectangle translation="[838, 206]" width="104" height="34" color="0x262136FF" />
+      <Rectangle translation="[838, 206]" width="4" height="34" color="0xE8A33DFF" />
+      <Label id="cinemaBadgeYear" translation="[852, 213]" scale="[0.54, 0.54]" width="160" height="28" numLines="1" color="0xFCD34DFF" text="2024" />
 
-      <Rectangle translation="[870, 214]" width="210" height="34" color="0x162436FF" />
-      <Rectangle translation="[870, 214]" width="4" height="34" color="0x38BDF8FF" />
-      <Label id="cinemaBadgeQuality" translation="[884, 221]" scale="[0.54, 0.54]" width="360" height="28" numLines="1" color="0x67E8F9FF" text="1080p HD • BluRay" />
+      <Rectangle translation="[954, 206]" width="210" height="34" color="0x162436FF" />
+      <Rectangle translation="[954, 206]" width="4" height="34" color="0x38BDF8FF" />
+      <Label id="cinemaBadgeQuality" translation="[968, 213]" scale="[0.54, 0.54]" width="360" height="28" numLines="1" color="0x67E8F9FF" text="1080p HD • BluRay" />
 
-      <Rectangle translation="[1092, 214]" width="360" height="34" color="0x231836FF" />
-      <Rectangle translation="[1092, 214]" width="4" height="34" color="0xA855F7FF" />
-      <Label id="cinemaBadgeGenre" translation="[1106, 221]" scale="[0.54, 0.54]" width="620" height="28" numLines="1" color="0xD8B4FEFF" text="Sci-Fi &amp; Fantasy" />
+      <Rectangle translation="[1176, 206]" width="340" height="34" color="0x231836FF" />
+      <Rectangle translation="[1176, 206]" width="4" height="34" color="0xA855F7FF" />
+      <Label id="cinemaBadgeGenre" translation="[1190, 213]" scale="[0.54, 0.54]" width="580" height="28" numLines="1" color="0xD8B4FEFF" text="Sci-Fi &amp; Fantasy" />
 
-      <Rectangle translation="[1464, 214]" width="164" height="34" color="0x0F2922FF" />
-      <Rectangle translation="[1464, 214]" width="4" height="34" color="0x10B981FF" />
-      <Label id="cinemaBadgeFormat" translation="[1478, 221]" scale="[0.54, 0.54]" width="260" height="28" numLines="1" color="0x6EE7B7FF" text="INSTANT STREAM" />
+      <Rectangle translation="[1528, 206]" width="164" height="34" color="0x0F2922FF" />
+      <Rectangle translation="[1528, 206]" width="4" height="34" color="0x10B981FF" />
+      <Label id="cinemaBadgeFormat" translation="[1542, 213]" scale="[0.54, 0.54]" width="260" height="28" numLines="1" color="0x6EE7B7FF" text="INSTANT STREAM" />
 
       <!-- Synopsis / Franchise / Audio-Video Stream Description -->
-      <Label id="cinemaLibDetailMeta" translation="[754, 264]" scale="[0.64, 0.64]" width="1680" height="34" numLines="1" color="0xE2E8F0FF" text="1080p WEBRip  |  RobOS Cinema" />
-      <Label id="cinemaLibDetailSub" translation="[754, 298]" scale="[0.56, 0.56]" width="1900" height="32" numLines="1" color="0x94A3B8FF" text="Zero-Cloud LAN Direct Stream (HTTP 206 Byte-Range)" />
-      <Label id="cinemaHeroSynopsis" translation="[754, 330]" scale="[0.54, 0.54]" width="1960" height="30" numLines="1" color="0xCBD5E1FF" text="Full HD home theater playback with instant chapter seeking and Roku hardware decoding." />
+      <Label id="cinemaLibDetailMeta" translation="[838, 252]" scale="[0.62, 0.62]" width="1600" height="32" numLines="1" color="0xE2E8F0FF" text="1080p WEBRip  |  RobOS Cinema" />
+      <Label id="cinemaLibDetailSub" translation="[838, 284]" scale="[0.54, 0.54]" width="1800" height="30" numLines="1" color="0x94A3B8FF" text="Zero-Cloud LAN Direct Stream (HTTP 206 Byte-Range)" />
+      <Label id="cinemaHeroSynopsis" translation="[838, 314]" scale="[0.52, 0.52]" width="1880" height="28" numLines="1" color="0xCBD5E1FF" text="Full HD home theater playback with instant chapter seeking and Roku hardware decoding." />
 
       <!-- Netflix / Plex Hero Action Buttons -->
-      <Rectangle id="cinemaPlayBtnBg" translation="[754, 374]" width="480" height="60" color="0xE50914FF" />
-      <Label id="cinemaLibPlayPrompt" translation="[780, 392]" scale="[0.66, 0.66]" width="680" height="34" numLines="1" color="0xFFFFFFFF" text="▶  WATCH NOW (PRESS OK)" />
+      <Rectangle id="cinemaPlayBtnBg" translation="[838, 356]" width="440" height="58" color="0xE50914FF" />
+      <Label id="cinemaLibPlayPrompt" translation="[862, 373]" scale="[0.64, 0.64]" width="640" height="34" numLines="1" color="0xFFFFFFFF" text="▶  WATCH NOW (PRESS OK)" />
 
-      <Rectangle translation="[1252, 374]" width="596" height="60" color="0x1E1B2EFF" />
-      <Rectangle translation="[1252, 374]" width="4" height="60" color="0x38BDF8FF" />
-      <Label id="cinemaHeroNavHint" translation="[1272, 393]" scale="[0.54, 0.54]" width="1040" height="30" numLines="1" color="0x67E8F9FF" text="◀ LEFT: SWITCH CATEGORY   |   ▲/▼: BROWSE POSTER SHELF" />
+      <Rectangle translation="[1294, 356]" width="566" height="58" color="0x1E1B2EFF" />
+      <Rectangle translation="[1294, 356]" width="4" height="58" color="0x38BDF8FF" />
+      <Label id="cinemaHeroNavHint" translation="[1312, 374]" scale="[0.52, 0.52]" width="1020" height="30" numLines="1" color="0x67E8F9FF" text="◀ LEFT: SWITCH CATEGORY   |   ▲/▼: BROWSE PREVIEW CARDS" />
 
-      <Label translation="[754, 448]" scale="[0.50, 0.50]" width="2100" height="26" numLines="1" color="0x64748BFF" text="During playback: Left/Right seeks 15s  •  Play/Pause toggles  •  Back returns to this Cinema Library" />
+      <Label translation="[838, 428]" scale="[0.48, 0.48]" width="2040" height="26" numLines="1" color="0x64748BFF" text="During playback: Left/Right seeks 15s  •  Play/Pause toggles  •  Back returns to this Cinema Library" />
 
-      <!-- MIDDLE-RIGHT STAGE: 5-Poster Visual Cinema Carousel Shelf (x=436, y=532, w=1448, h=242) -->
-      <Rectangle translation="[436, 532]" width="1448" height="242" color="0x12101BFF" />
-      <Rectangle id="cinemaShelfAccent" translation="[436, 532]" width="1448" height="3" color="0xE8A33DFF" />
-      <Label id="cinemaShelfTitleLabel" translation="[456, 542]" scale="[0.56, 0.56]" width="1600" height="28" numLines="1" color="0xFCD34DFF" text="POSTER CAROUSEL  •  FEATURED ROW" />
-      <Label id="cinemaShelfPosLabel" translation="[1320, 542]" scale="[0.52, 0.52]" width="1040" height="28" numLines="1" horizAlign="right" color="0x94A3B8FF" text="Showing 5-Poster Window" />
+      <!-- MIDDLE-RIGHT STAGE: 5-Card Visual Library Preview Carousel Shelf (x=436, y=496, w=1448, h=288) -->
+      <Rectangle translation="[436, 496]" width="1448" height="288" color="0x12101BFF" />
+      <Rectangle id="cinemaShelfAccent" translation="[436, 496]" width="1448" height="3" color="0xE8A33DFF" />
+      <Label id="cinemaShelfTitleLabel" translation="[456, 506]" scale="[0.56, 0.56]" width="1600" height="28" numLines="1" color="0xFCD34DFF" text="POSTER CAROUSEL  •  FEATURED ROW" />
+      <Label id="cinemaShelfPosLabel" translation="[1320, 506]" scale="[0.52, 0.52]" width="1040" height="28" numLines="1" horizAlign="right" color="0x94A3B8FF" text="Showing 5-Poster Window" />
 
-      <!-- 5 Poster Cards (i = 0..4, each width=272, height=192, x = 452 + i * 284, y = 572) -->
+      <!-- 5 Library Preview Cards (i = 0..4, each width=272, height=238, x = 450 + i * 284, y = 536) -->
       <Group id="cinemaPosterShelf">
         <!-- Card 0 -->
-        <Rectangle id="cinemaCardBorder0" translation="[450, 570]" width="272" height="194" color="0x262136FF" />
-        <Rectangle id="cinemaCardBg0" translation="[453, 573]" width="266" height="188" color="0x191626FF" />
-        <Rectangle id="cinemaCardArtBg0" translation="[463, 583]" width="104" height="152" color="0x2D1B36FF" />
-        <Label id="cinemaCardMono0" translation="[463, 636]" scale="[0.95, 0.95]" width="108" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M1" />
-        <Poster id="cinemaCardPoster0" translation="[463, 583]" width="104" height="152" loadDisplayMode="scaleToZoom" />
-        <Label id="cinemaCardBadge0" translation="[579, 585]" scale="[0.46, 0.46]" width="280" height="24" numLines="1" color="0x67E8F9FF" text="2024 • 1080p" />
-        <Label id="cinemaCardTitle0" translation="[579, 610]" scale="[0.54, 0.54]" width="240" height="56" numLines="2" color="0xF8FAFCFF" text="Movie 1" />
-        <Label id="cinemaCardGenre0" translation="[579, 672]" scale="[0.46, 0.46]" width="280" height="24" numLines="1" color="0xD8B4FEFF" text="Cinema" />
-        <Label id="cinemaCardState0" translation="[579, 712]" scale="[0.46, 0.46]" width="280" height="24" numLines="1" color="0x94A3B8FF" text="#1" />
+        <Rectangle id="cinemaCardBorder0" translation="[450, 536]" width="272" height="238" color="0x262136FF" />
+        <Rectangle id="cinemaCardBg0" translation="[453, 539]" width="266" height="232" color="0x191626FF" />
+        <Rectangle id="cinemaCardArtBg0" translation="[502, 546]" width="168" height="168" color="0x2D1B36FF" />
+        <Label id="cinemaCardMono0" translation="[502, 610]" scale="[0.95, 0.95]" width="176" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M1" />
+        <Poster id="cinemaCardPoster0" translation="[502, 546]" width="168" height="168" loadDisplayMode="scaleToFit" />
+        <Label id="cinemaCardTitle0" translation="[460, 720]" scale="[0.50, 0.50]" width="504" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="Movie 1" />
+        <Label id="cinemaCardBadge0" translation="[462, 744]" scale="[0.42, 0.42]" width="340" height="22" numLines="1" color="0x67E8F9FF" text="2024 • 1080p" />
+        <Label id="cinemaCardGenre0" translation="[462, 548]" scale="[0.38, 0.38]" width="100" height="20" numLines="1" visible="false" color="0xD8B4FEFF" text="Cinema" />
+        <Label id="cinemaCardState0" translation="[602, 744]" scale="[0.42, 0.42]" width="260" height="22" numLines="1" horizAlign="right" color="0x94A3B8FF" text="#1" />
 
         <!-- Card 1 -->
-        <Rectangle id="cinemaCardBorder1" translation="[734, 570]" width="272" height="194" color="0x262136FF" />
-        <Rectangle id="cinemaCardBg1" translation="[737, 573]" width="266" height="188" color="0x191626FF" />
-        <Rectangle id="cinemaCardArtBg1" translation="[747, 583]" width="104" height="152" color="0x1E293BFF" />
-        <Label id="cinemaCardMono1" translation="[747, 636]" scale="[0.95, 0.95]" width="108" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M2" />
-        <Poster id="cinemaCardPoster1" translation="[747, 583]" width="104" height="152" loadDisplayMode="scaleToZoom" />
-        <Label id="cinemaCardBadge1" translation="[863, 585]" scale="[0.46, 0.46]" width="280" height="24" numLines="1" color="0x67E8F9FF" text="2024 • 1080p" />
-        <Label id="cinemaCardTitle1" translation="[863, 610]" scale="[0.54, 0.54]" width="240" height="56" numLines="2" color="0xF8FAFCFF" text="Movie 2" />
-        <Label id="cinemaCardGenre1" translation="[863, 672]" scale="[0.46, 0.46]" width="280" height="24" numLines="1" color="0xD8B4FEFF" text="Cinema" />
-        <Label id="cinemaCardState1" translation="[863, 712]" scale="[0.46, 0.46]" width="280" height="24" numLines="1" color="0x94A3B8FF" text="#2" />
+        <Rectangle id="cinemaCardBorder1" translation="[734, 536]" width="272" height="238" color="0x262136FF" />
+        <Rectangle id="cinemaCardBg1" translation="[737, 539]" width="266" height="232" color="0x191626FF" />
+        <Rectangle id="cinemaCardArtBg1" translation="[786, 546]" width="168" height="168" color="0x1E293BFF" />
+        <Label id="cinemaCardMono1" translation="[786, 610]" scale="[0.95, 0.95]" width="176" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M2" />
+        <Poster id="cinemaCardPoster1" translation="[786, 546]" width="168" height="168" loadDisplayMode="scaleToFit" />
+        <Label id="cinemaCardTitle1" translation="[744, 720]" scale="[0.50, 0.50]" width="504" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="Movie 2" />
+        <Label id="cinemaCardBadge1" translation="[746, 744]" scale="[0.42, 0.42]" width="340" height="22" numLines="1" color="0x67E8F9FF" text="2024 • 1080p" />
+        <Label id="cinemaCardGenre1" translation="[746, 548]" scale="[0.38, 0.38]" width="100" height="20" numLines="1" visible="false" color="0xD8B4FEFF" text="Cinema" />
+        <Label id="cinemaCardState1" translation="[886, 744]" scale="[0.42, 0.42]" width="260" height="22" numLines="1" horizAlign="right" color="0x94A3B8FF" text="#2" />
 
         <!-- Card 2 -->
-        <Rectangle id="cinemaCardBorder2" translation="[1018, 570]" width="272" height="194" color="0x262136FF" />
-        <Rectangle id="cinemaCardBg2" translation="[1021, 573]" width="266" height="188" color="0x191626FF" />
-        <Rectangle id="cinemaCardArtBg2" translation="[1031, 583]" width="104" height="152" color="0x31102FFF" />
-        <Label id="cinemaCardMono2" translation="[1031, 636]" scale="[0.95, 0.95]" width="108" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M3" />
-        <Poster id="cinemaCardPoster2" translation="[1031, 583]" width="104" height="152" loadDisplayMode="scaleToZoom" />
-        <Label id="cinemaCardBadge2" translation="[1147, 585]" scale="[0.46, 0.46]" width="280" height="24" numLines="1" color="0x67E8F9FF" text="2024 • 1080p" />
-        <Label id="cinemaCardTitle2" translation="[1147, 610]" scale="[0.54, 0.54]" width="240" height="56" numLines="2" color="0xF8FAFCFF" text="Movie 3" />
-        <Label id="cinemaCardGenre2" translation="[1147, 672]" scale="[0.46, 0.46]" width="280" height="24" numLines="1" color="0xD8B4FEFF" text="Cinema" />
-        <Label id="cinemaCardState2" translation="[1147, 712]" scale="[0.46, 0.46]" width="280" height="24" numLines="1" color="0x94A3B8FF" text="#3" />
+        <Rectangle id="cinemaCardBorder2" translation="[1018, 536]" width="272" height="238" color="0x262136FF" />
+        <Rectangle id="cinemaCardBg2" translation="[1021, 539]" width="266" height="232" color="0x191626FF" />
+        <Rectangle id="cinemaCardArtBg2" translation="[1070, 546]" width="168" height="168" color="0x31102FFF" />
+        <Label id="cinemaCardMono2" translation="[1070, 610]" scale="[0.95, 0.95]" width="176" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M3" />
+        <Poster id="cinemaCardPoster2" translation="[1070, 546]" width="168" height="168" loadDisplayMode="scaleToFit" />
+        <Label id="cinemaCardTitle2" translation="[1028, 720]" scale="[0.50, 0.50]" width="504" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="Movie 3" />
+        <Label id="cinemaCardBadge2" translation="[1030, 744]" scale="[0.42, 0.42]" width="340" height="22" numLines="1" color="0x67E8F9FF" text="2024 • 1080p" />
+        <Label id="cinemaCardGenre2" translation="[1030, 548]" scale="[0.38, 0.38]" width="100" height="20" numLines="1" visible="false" color="0xD8B4FEFF" text="Cinema" />
+        <Label id="cinemaCardState2" translation="[1170, 744]" scale="[0.42, 0.42]" width="260" height="22" numLines="1" horizAlign="right" color="0x94A3B8FF" text="#3" />
 
         <!-- Card 3 -->
-        <Rectangle id="cinemaCardBorder3" translation="[1302, 570]" width="272" height="194" color="0x262136FF" />
-        <Rectangle id="cinemaCardBg3" translation="[1305, 573]" width="266" height="188" color="0x191626FF" />
-        <Rectangle id="cinemaCardArtBg3" translation="[1315, 583]" width="104" height="152" color="0x142E24FF" />
-        <Label id="cinemaCardMono3" translation="[1315, 636]" scale="[0.95, 0.95]" width="108" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M4" />
-        <Poster id="cinemaCardPoster3" translation="[1315, 583]" width="104" height="152" loadDisplayMode="scaleToZoom" />
-        <Label id="cinemaCardBadge3" translation="[1431, 585]" scale="[0.46, 0.46]" width="280" height="24" numLines="1" color="0x67E8F9FF" text="2024 • 1080p" />
-        <Label id="cinemaCardTitle3" translation="[1431, 610]" scale="[0.54, 0.54]" width="240" height="56" numLines="2" color="0xF8FAFCFF" text="Movie 4" />
-        <Label id="cinemaCardGenre3" translation="[1431, 672]" scale="[0.46, 0.46]" width="280" height="24" numLines="1" color="0xD8B4FEFF" text="Cinema" />
-        <Label id="cinemaCardState3" translation="[1431, 712]" scale="[0.46, 0.46]" width="280" height="24" numLines="1" color="0x94A3B8FF" text="#4" />
+        <Rectangle id="cinemaCardBorder3" translation="[1302, 536]" width="272" height="238" color="0x262136FF" />
+        <Rectangle id="cinemaCardBg3" translation="[1305, 539]" width="266" height="232" color="0x191626FF" />
+        <Rectangle id="cinemaCardArtBg3" translation="[1354, 546]" width="168" height="168" color="0x142E24FF" />
+        <Label id="cinemaCardMono3" translation="[1354, 610]" scale="[0.95, 0.95]" width="176" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M4" />
+        <Poster id="cinemaCardPoster3" translation="[1354, 546]" width="168" height="168" loadDisplayMode="scaleToFit" />
+        <Label id="cinemaCardTitle3" translation="[1312, 720]" scale="[0.50, 0.50]" width="504" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="Movie 4" />
+        <Label id="cinemaCardBadge3" translation="[1314, 744]" scale="[0.42, 0.42]" width="340" height="22" numLines="1" color="0x67E8F9FF" text="2024 • 1080p" />
+        <Label id="cinemaCardGenre3" translation="[1314, 548]" scale="[0.38, 0.38]" width="100" height="20" numLines="1" visible="false" color="0xD8B4FEFF" text="Cinema" />
+        <Label id="cinemaCardState3" translation="[1454, 744]" scale="[0.42, 0.42]" width="260" height="22" numLines="1" horizAlign="right" color="0x94A3B8FF" text="#4" />
 
         <!-- Card 4 -->
-        <Rectangle id="cinemaCardBorder4" translation="[1586, 570]" width="272" height="194" color="0x262136FF" />
-        <Rectangle id="cinemaCardBg4" translation="[1589, 573]" width="266" height="188" color="0x191626FF" />
-        <Rectangle id="cinemaCardArtBg4" translation="[1599, 583]" width="104" height="152" color="0x3B1D1DFF" />
-        <Label id="cinemaCardMono4" translation="[1599, 636]" scale="[0.95, 0.95]" width="108" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M5" />
-        <Poster id="cinemaCardPoster4" translation="[1599, 583]" width="104" height="152" loadDisplayMode="scaleToZoom" />
-        <Label id="cinemaCardBadge4" translation="[1715, 585]" scale="[0.46, 0.46]" width="280" height="24" numLines="1" color="0x67E8F9FF" text="2024 • 1080p" />
-        <Label id="cinemaCardTitle4" translation="[1715, 610]" scale="[0.54, 0.54]" width="240" height="56" numLines="2" color="0xF8FAFCFF" text="Movie 5" />
-        <Label id="cinemaCardGenre4" translation="[1715, 672]" scale="[0.46, 0.46]" width="280" height="24" numLines="1" color="0xD8B4FEFF" text="Cinema" />
-        <Label id="cinemaCardState4" translation="[1715, 712]" scale="[0.46, 0.46]" width="280" height="24" numLines="1" color="0x94A3B8FF" text="#5" />
+        <Rectangle id="cinemaCardBorder4" translation="[1586, 536]" width="272" height="238" color="0x262136FF" />
+        <Rectangle id="cinemaCardBg4" translation="[1589, 539]" width="266" height="232" color="0x191626FF" />
+        <Rectangle id="cinemaCardArtBg4" translation="[1638, 546]" width="168" height="168" color="0x3B1D1DFF" />
+        <Label id="cinemaCardMono4" translation="[1638, 610]" scale="[0.95, 0.95]" width="176" height="44" numLines="1" horizAlign="center" color="0xFCD34DFF" text="M5" />
+        <Poster id="cinemaCardPoster4" translation="[1638, 546]" width="168" height="168" loadDisplayMode="scaleToFit" />
+        <Label id="cinemaCardTitle4" translation="[1596, 720]" scale="[0.50, 0.50]" width="504" height="26" numLines="1" horizAlign="center" color="0xF8FAFCFF" text="Movie 5" />
+        <Label id="cinemaCardBadge4" translation="[1598, 744]" scale="[0.42, 0.42]" width="340" height="22" numLines="1" color="0x67E8F9FF" text="2024 • 1080p" />
+        <Label id="cinemaCardGenre4" translation="[1598, 548]" scale="[0.38, 0.38]" width="100" height="20" numLines="1" visible="false" color="0xD8B4FEFF" text="Cinema" />
+        <Label id="cinemaCardState4" translation="[1738, 744]" scale="[0.42, 0.42]" width="260" height="22" numLines="1" horizAlign="right" color="0x94A3B8FF" text="#5" />
       </Group>
 
-      <!-- BOTTOM-RIGHT STAGE: Scrollable Category Title List (x=436, y=784, w=1448, h=204) -->
-      <Rectangle id="cinemaListPaneBg" translation="[436, 784]" width="1448" height="204" color="0x12101BFF" />
-      <Rectangle id="cinemaListFocusStripe" translation="[436, 784]" width="1448" height="4" color="0x38BDF8FF" />
-      <Label id="cinemaLibCountLabel" translation="[456, 796]" scale="[0.56, 0.56]" width="2200" height="30" numLines="1" color="0x67E8F9FF" text="TITLES IN CATEGORY (D-PAD UP/DOWN TO BROWSE, OK TO PLAY, LEFT FOR CATEGORIES):" />
+      <!-- BOTTOM-RIGHT STAGE: Scrollable Category Title List (x=436, y=792, w=1448, h=196) -->
+      <Rectangle id="cinemaListPaneBg" translation="[436, 792]" width="1448" height="196" color="0x12101BFF" />
+      <Rectangle id="cinemaListFocusStripe" translation="[436, 792]" width="1448" height="4" color="0x38BDF8FF" />
+      <Label id="cinemaLibCountLabel" translation="[456, 802]" scale="[0.56, 0.56]" width="2200" height="30" numLines="1" color="0x67E8F9FF" text="TITLES IN CATEGORY (D-PAD UP/DOWN TO BROWSE, OK TO PLAY, LEFT FOR CATEGORIES):" />
       <LabelList
         id="cinemaLibList"
-        translation="[456, 828]"
+        translation="[456, 834]"
         scale="[0.66, 0.66]"
-        itemSize="[2120, 46]"
-        itemSpacing="[0, 6]"
+        itemSize="[2120, 44]"
+        itemSpacing="[0, 5]"
         numRows="3"
         color="0xF1E9DCFF"
         focusedColor="0x110E18FF" />
