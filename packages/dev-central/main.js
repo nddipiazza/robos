@@ -1500,10 +1500,8 @@ ipcMain.handle('dc-sync-thunderbird-calendar', async (_, accountId = null) => {
   const tb = getThunderbirdGoogleLib();
   if (!tb) return { ok: false, error: 'thunderbird-google library unavailable' };
   try {
-    const cfg = tb.configureThunderbirdForGoogleAccount(accountId, {
-      enableCalendar: true,
-      enableContacts: true,
-    }, { configDir: CONFIG_DIR });
+    // Leave the suite flags unset so the account's stored Calendar/Contacts choices are kept.
+    const cfg = tb.configureThunderbirdForGoogleAccount(accountId, {}, { configDir: CONFIG_DIR });
     const unified = await tb.getUnifiedCalendarEvents(accountId, { configDir: CONFIG_DIR });
     return { ...unified, configuredProfile: cfg.primaryProfilePath };
   } catch (err) {

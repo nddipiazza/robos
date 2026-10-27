@@ -36,24 +36,24 @@ Each account gets a block between `// >>> ROBOS-GOOGLE-INTEGRATION-START (<email
 
 | Service | Prefs | Endpoint |
 |---|---|---|
-| Google Calendar | `calendar.registry.<uuid>.*`, type `caldav`, offline cache on | `https://apidata.googleusercontent.com/caldav/v2/<email>/events` |
+| Google Calendar | `calendar.registry.<uuid>.*`, type `caldav`, offline cache on, `refreshInterval` from **Sync Interval** | `https://apidata.googleusercontent.com/caldav/v2/<email>/events` |
 | Google Contacts | `ldap_2.servers.robos_gcontacts_<key>.*`, `dirType` 102, sync every 30 minutes | `https://www.googleapis.com/carddav/v1/principals/<email>/lists/default/` |
 | Gmail (off by default) | `mail.account`, `mail.server`, `mail.smtpserver` entries, OAuth2 (`authMethod` 10) | `imap.gmail.com:993` (SSL), `smtp.gmail.com:465` |
 
-It also sets an identity, `calendar.timezone.local` from the system time zone, and `calendar.list.sortOrder` listing every RobOS calendar in the file. The calendar UUID is derived from the email address, so repeat runs update the same calendar instead of adding a new one. The right-hand pane previews the block before anything is written.
+It also sets an identity, `calendar.timezone.local` from the system time zone, and `calendar.list.sortOrder` listing every RobOS calendar in the file (the line is removed when no account has Calendar ticked). The calendar UUID is derived from the email address, so repeat runs update the same calendar instead of adding a new one. The right-hand pane previews the block before anything is written.
 
 No access or refresh token is written into Thunderbird. Thunderbird has to complete its own Google sign-in the first time it connects to these endpoints.
 
-After writing, the app marks the account in `cloud-accounts.json` with `thunderbirdConfigured`, `thunderbirdLastSyncedAt`, `thunderbirdProfilePath`, the calendar color and the service toggles.
+After writing, the app marks the account in `cloud-accounts.json` with `thunderbirdConfigured`, `thunderbirdLastSyncedAt`, `thunderbirdProfilePath`, the calendar color, the sync interval (`calendarRefreshMinutes`) and the service toggles. When you pick an account, the form loads these stored values.
 
 ## Use it
 
 1. Pick an account under **Active Google Account**.
-2. Tick the services and set the calendar color.
+2. Tick the services and set the calendar color and **Sync Interval (Minutes)**.
 3. Click **Install & Configure Thunderbird**, or **Write Configuration to Thunderbird Profile** to write the profile without installing.
 4. Click **Launch Thunderbird Calendar**, which starts Thunderbird with `--profile <default profile> -calendar`.
 
-Both buttons configure the selected account and then run the same configuration for every Google account in Cloud Accounts. That second pass forces Calendar on and does not pass the sync interval, so the **Sync Interval (Minutes)** value only affects the preview: the written `refreshInterval` is always 1 minute, and unticking Google Calendar is undone. The Contacts and Gmail choices are kept.
+Both buttons configure the selected account and then run the configuration again for every Google account in Cloud Accounts. That second pass reuses each account's stored choices (services, calendar color and sync interval), so what you set for the selected account is what ends up in `user.js`. An account that has never been configured gets a 15-minute `refreshInterval`, the field's default. Unticking Google Calendar leaves that account's calendar out of the RobOS block. Thunderbird copies prefs from `user.js` into its own `prefs.js` when it starts, though, so a calendar it has already loaded stays in Thunderbird until you delete it there.
 
 The "Discovered Calendars" box calls the Google Calendar API with the account's stored access token. Because sign-in from this app only grants the Drive scope, it usually shows just the primary calendar and a note.
 
