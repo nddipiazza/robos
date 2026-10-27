@@ -1568,7 +1568,6 @@ end sub
 end sub
 
 sub pollDashboard()
-    pollCount = 0
     while true
         url = m.top.apiUrl
         if url <> ""
@@ -1579,18 +1578,11 @@ sub pollDashboard()
                 m.top.payloadJson = raw
             end if
         end if
-        pollCount = pollCount + 1
-        if (pollCount mod 20) = 0
-            ' Silent ECP keep-alive pulse every 40s to reset Roku OS screensaver & auto-standby idle timers
-            ka = CreateObject("roUrlTransfer")
-            ka.SetUrl("http://127.0.0.1:8060/keypress/Lit_%7E")
-            ka.PostFromString("")
-        end if
         sleep(2000)
     end while
 end sub
 `;
-    const ssEnabled = Boolean(initialSlideshow?.enabled);
+    const ssEnabled = initialSlideshow ? Boolean(initialSlideshow.enabled) : true;
     const ssInterval = Math.max(3, Number(initialSlideshow?.intervalSeconds) || 15);
     const ssRem = Math.max(1, Number(initialSlideshow?.secondsRemainingInSlide) || ssInterval);
     const ssSlideNum = Number(initialSlideshow?.slideNumber) || 1;
@@ -1802,6 +1794,8 @@ ${cloneBarsXml}
       color="0xF8FAFCFF"
       focusedColor="0x061318FF" />
 
+    <!-- Silent 1x1 looping video node (no audio track) to suppress Roku OS screensaver & auto-standby without ECP keypress sounds -->
+    <Video id="keepAliveVideo" translation="[0, 0]" width="1" height="1" opacity="0.0" mute="true" loop="true" enableUI="false" />
     <!-- Double-Buffered 1920x1080 Live Chromium JS Canvas Frame Layer -->
     <Poster id="livePosterA" width="1920" height="1080" opacity="0.0" />
     <Poster id="livePosterB" width="1920" height="1080" opacity="0.0" />
@@ -1825,6 +1819,7 @@ ${cloneBarsXml}
     m.nextMeetingMetaLabel = m.top.findNode("nextMeetingMetaLabel")
     m.secBarFill = m.top.findNode("secBarFill")
     m.secPulseDot = m.top.findNode("secPulseDot")
+    m.keepAliveVideo = m.top.findNode("keepAliveVideo")
     m.clockTimer = m.top.findNode("clockTimer")
     m.tickCount = 0
     m.remainingSec = ${initialRemSec}
@@ -1839,6 +1834,16 @@ ${cloneBarsXml}
     m.agentActive = [${sessions[0] ? 'true' : 'false'}, ${sessions[1] ? 'true' : 'false'}, ${sessions[2] ? 'true' : 'false'}]
     m.agentElapsed = [${Number(sessions[0]?.elapsedSec) || 5}, ${Number(sessions[1]?.elapsedSec) || 5}, ${Number(sessions[2]?.elapsedSec) || 5}]
     m.agentActivity = ["${safeXml(String(sessions[0]?.activity || sessions[0]?.cwd || '').slice(0, 42))}", "${safeXml(String(sessions[1]?.activity || sessions[1]?.cwd || '').slice(0, 42))}", "${safeXml(String(sessions[2]?.activity || sessions[2]?.cwd || '').slice(0, 42))}"]
+
+    if m.keepAliveVideo <> invalid
+        vidContent = CreateObject("roSGNode", "ContentNode")
+        vidContent.url = "pkg:/source/keepalive.mp4"
+        vidContent.streamFormat = "mp4"
+        m.keepAliveVideo.content = vidContent
+        m.keepAliveVideo.mute = true
+        m.keepAliveVideo.loop = true
+        m.keepAliveVideo.control = "play"
+    end if
 
     m.clockTimer.observeField("fire", "onClockTick")
     m.clockTimer.control = "start"
@@ -1911,6 +1916,12 @@ end sub
 
 sub onClockTick()
     m.tickCount = m.tickCount + 1
+    if m.keepAliveVideo <> invalid
+        vState = m.keepAliveVideo.state
+        if vState = "finished" or vState = "stopped" or vState = "error"
+            m.keepAliveVideo.control = "play"
+        end if
+    end if
     if m.remainingSec > 0
         m.remainingSec = m.remainingSec - 1
     end if
@@ -1919,6 +1930,15 @@ sub onClockTick()
             m.slideRemSec = m.slideRemSec - 1
         else
             m.slideRemSec = m.slideIntervalSec
+            if m.activeDashId = "daily-engineering-ops"
+                m.slideNumber = 2
+                applySlideVisibility("github-ci-popularity")
+                if m.brandLabel <> invalid then m.brandLabel.text = "[2/" + m.slideTotal.ToStr() + "] GitHub CI Status & App Popularity"
+            else
+                m.slideNumber = 1
+                applySlideVisibility("daily-engineering-ops")
+                if m.brandLabel <> invalid then m.brandLabel.text = "[1/" + m.slideTotal.ToStr() + "] Daily Engineering & Agent Ops Dashboard"
+            end if
         end if
     end if
     updateSlideshowHud()
@@ -2023,26 +2043,35 @@ sub onPayloadUpdated()
     dash = json.dashboard
     ss = json.slideshow
     if ss <> invalid
+        wasEnabled = m.slideshowEnabled
         m.slideshowEnabled = (ss.enabled = true)
-        if ss.intervalSeconds <> invalid then m.slideIntervalSec = ss.intervalSeconds
-        if ss.secondsRemainingInSlide <> invalid then m.slideRemSec = ss.secondsRemainingInSlide
-        if ss.slideNumber <> invalid then m.slideNumber = ss.slideNumber
-        if ss.totalSlides <> invalid then m.slideTotal = ss.totalSlides
+        if ss.intervalSeconds <> invalid and ss.intervalSeconds > 0
+            if m.slideIntervalSec <> ss.intervalSeconds
+                m.slideIntervalSec = ss.intervalSeconds
+                if m.slideRemSec > m.slideIntervalSec then m.slideRemSec = m.slideIntervalSec
+            end if
+        end if
+        if ss.totalSlides <> invalid and ss.totalSlides > 0 then m.slideTotal = ss.totalSlides
+        if wasEnabled = false and m.slideshowEnabled = true
+            if ss.slideNumber <> invalid then m.slideNumber = ss.slideNumber
+            if ss.secondsRemainingInSlide <> invalid then m.slideRemSec = ss.secondsRemainingInSlide
+            if dash.id <> invalid then applySlideVisibility(cleanAscii(dash.id))
+        end if
         updateSlideshowHud()
     end if
-    if dash.id <> invalid
-        applySlideVisibility(cleanAscii(dash.id))
-    end if
-    if dash.title <> invalid
-        if m.slideshowEnabled = true
-            m.brandLabel.text = "[" + m.slideNumber.ToStr() + "/" + m.slideTotal.ToStr() + "] " + cleanAscii(dash.title)
-        else
+    if m.slideshowEnabled = false
+        if dash.id <> invalid
+            applySlideVisibility(cleanAscii(dash.id))
+        end if
+        if dash.title <> invalid and m.brandLabel <> invalid
             m.brandLabel.text = "RobOS Dashboards - " + cleanAscii(dash.title)
         end if
     end if
-    if dash.cards = invalid then return
+    cardsToProcess = dash.cards
+    if json.allSlideCards <> invalid then cardsToProcess = json.allSlideCards
+    if cardsToProcess = invalid then return
 
-    for each card in dash.cards
+    for each card in cardsToProcess
         cTag = card.componentTag
         if cTag = invalid then cTag = card.widgetTag
         if cTag = "robos-widget-github-repo" and card.liveData <> invalid
@@ -2298,6 +2327,13 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
     return false
 end function
 `;
+    const keepAliveMp4B64 =
+      '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';
+    const keepAliveFull = path.join(targetDir, 'source/keepalive.mp4');
+    fs.mkdirSync(path.dirname(keepAliveFull), { recursive: true });
+    fs.writeFileSync(keepAliveFull, Buffer.from(keepAliveMp4B64, 'base64'));
+    filesCreated.push(keepAliveFull);
+
     write('manifest', manifest);
     write('source/Main.brs', mainBrs);
     write('components/DashboardTask.xml', dashboardTaskXml);
@@ -2565,11 +2601,7 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
         }
 
         if (u.pathname === '/api/dashboard-cast') {
-          let dashMod;
-          try {
-            delete require.cache[require.resolve('./dashboard-engine')];
-          } catch {}
-          dashMod = require('./dashboard-engine');
+          const dashMod = require('./dashboard-engine');
           const dashEngine = dashMod.createDashboardEngine({ configDir: resolvedConfigDir });
           const ssState = dashEngine.getSlideshowState();
           const explicitDashId = u.searchParams.get('id');
@@ -2579,49 +2611,33 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
             ? 'slideshow'
             : state.activeDashboardCast?.dashboardId || 'daily-engineering-ops';
           const resolved = dashEngine.resolveDashboard(targetDashId);
-
-          // Send periodic silent ECP keep-alive pulse (every 45s) to prevent Roku screensaver & auto-standby
-          if (process.env.ROBOS_TEST !== '1' && process.env.ROBOS_TEST_MODE !== '1') {
-            const remoteIp = String(req.socket?.remoteAddress || '').replace(/^::ffff:/, '');
-            const targetRokuIp =
-              (remoteIp && remoteIp !== '127.0.0.1' && remoteIp !== '::1' ? remoteIp : null) ||
-              state.activeDashboardCast?.tvIp ||
-              state.tvs.find((t) => t.platformId === 'roku-os')?.ip;
-            if (targetRokuIp) {
-              if (!global.__robosRokuKeepAliveMap) global.__robosRokuKeepAliveMap = new Map();
-              const lastKa = global.__robosRokuKeepAliveMap.get(targetRokuIp) || 0;
-              if (Date.now() - lastKa >= 45000) {
-                global.__robosRokuKeepAliveMap.set(targetRokuIp, Date.now());
-                const kaReq = http.request(
-                  {
-                    hostname: targetRokuIp,
-                    port: 8060,
-                    path: '/keypress/Lit_%7E',
-                    method: 'POST',
-                    timeout: 1500,
-                  },
-                  (kaRes) => kaRes.resume()
-                );
-                kaReq.on('error', () => {});
-                kaReq.end();
-              }
+          let allSlideCards = resolved.dashboard?.cards || [];
+          try {
+            const otherId =
+              resolved.dashboard?.id === 'daily-engineering-ops'
+                ? 'github-ci-popularity'
+                : 'daily-engineering-ops';
+            const otherResolved = dashEngine.resolveDashboard(otherId);
+            if (otherResolved?.dashboard?.cards) {
+              allSlideCards = [...allSlideCards, ...otherResolved.dashboard.cards];
             }
-          }
+          } catch {}
 
+          const bodyJson = JSON.stringify({
+            ok: true,
+            cast: state.activeDashboardCast || null,
+            slideshow: resolved.slideshow || ssState || null,
+            dashboard: resolved.dashboard,
+            allSlideCards,
+            keepAliveActive: true,
+            castUrl: `http://${hostIp}:${boundPort}/dashboard`,
+          });
           res.writeHead(200, {
             'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(bodyJson),
             'Access-Control-Allow-Origin': '*',
           });
-          res.end(
-            JSON.stringify({
-              ok: true,
-              cast: state.activeDashboardCast || null,
-              slideshow: resolved.slideshow || ssState || null,
-              dashboard: resolved.dashboard,
-              keepAliveActive: true,
-              castUrl: `http://${hostIp}:${boundPort}/dashboard`,
-            })
-          );
+          res.end(bodyJson);
           return;
         }
 
