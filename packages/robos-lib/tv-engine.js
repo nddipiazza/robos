@@ -362,6 +362,67 @@ function detectToolingStatus() {
   };
 }
 
+// ── Portal ownership ─────────────────────────────────────────────────────
+// Only one process can bind :19210; every other RobOS app reuses it. Each
+// server reports who it is (pid, app, hash of the tv-engine code it loaded)
+// in /api/status so a newer app can spot a stale server and ask it to hand
+// the port over via the loopback-only POST /api/portal/shutdown.
+const PORTAL_CODE_VERSION = (() => {
+  try {
+    return crypto.createHash('sha256').update(fs.readFileSync(__filename)).digest('hex').slice(0, 12);
+  } catch {
+    return 'unknown';
+  }
+})();
+const PORTAL_FEATURES = ['owner', 'shutdown', 'live-frame-push'];
+const ROBOS_PORTAL_APPS = ['robos-tv', 'robos-dashboards', 'party-game', 'dev-central'];
+const PORTAL_SHUTDOWN_HEADER = 'x-robos-portal';
+
+function defaultPortalAppName() {
+  const main = require.main && require.main.filename;
+  return main ? path.basename(path.dirname(main)) : 'node-script';
+}
+
+function requestLocalPortal(port, { method = 'GET', pathname = '/api/status', headers = {}, body = null, timeoutMs = 1500 } = {}) {
+  return new Promise((resolve) => {
+    const req = http.request(
+      { host: '127.0.0.1', port, method, path: pathname, headers, timeout: timeoutMs },
+      (res) => {
+        const chunks = [];
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () => {
+          const text = Buffer.concat(chunks).toString('utf8');
+          let json = null;
+          try {
+            json = JSON.parse(text);
+          } catch {}
+          resolve({ reachable: true, status: res.statusCode, json });
+        });
+      }
+    );
+    req.on('timeout', () => req.destroy(new Error('timeout')));
+    req.on('error', () => resolve({ reachable: false, status: 0, json: null }));
+    req.end(body || undefined);
+  });
+}
+
+// Which local process is listening on the port (Linux `ss`); null elsewhere.
+function findPortListener(port) {
+  try {
+    const res = spawnSync('ss', ['-ltnpH', `sport = :${port}`], { encoding: 'utf8', timeout: 1500 });
+    const m = String(res.stdout || '').match(/pid=(\d+)/);
+    if (!m) return null;
+    const pid = Number(m[1]);
+    let command = '';
+    try {
+      command = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8').split('\0').filter(Boolean).join(' ');
+    } catch {}
+    return { pid, command: command.length > 240 ? `${command.slice(0, 237)}...` : command };
+  } catch {
+    return null;
+  }
+}
+
 function probeTcpPort(ip, port, timeoutMs = 450) {
   return new Promise((resolve) => {
     const socket = new net.Socket();
@@ -2598,7 +2659,14 @@ adb -s "$TV_IP:5555" shell am start -a android.intent.action.VIEW -d "$PORTAL_UR
   };
 }
 
-function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
+function createTvEngine({
+  configDir,
+  portalPort = DEFAULT_PORTAL_PORT,
+  appName = defaultPortalAppName(),
+  codeVersion = PORTAL_CODE_VERSION,
+  reusePortal,
+  onPortalReleased,
+} = {}) {
   const resolvedConfigDir =
     configDir ||
     process.env.ROBOS_CONFIG_DIR ||
@@ -2693,11 +2761,37 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
   let boundPort = state.portalPort || DEFAULT_PORTAL_PORT;
   let _liveDashboardFrameBuf = null;
   let _liveDashboardFrameUpdatedAt = 0;
+  // Set when another process already serves the portal and this engine reuses it.
+  let reusedOwner = null;
+  let releasedAt = 0;
+  const ownerInfo = {
+    pid: process.pid,
+    appName: String(appName || 'node-script'),
+    codeVersion: String(codeVersion || 'unknown'),
+    startedAt: new Date().toISOString(),
+    features: PORTAL_FEATURES,
+  };
 
-  function setLiveDashboardFrame(buf) {
+  function storeLiveDashboardFrame(buf) {
     if (Buffer.isBuffer(buf) && buf.length > 1000) {
       _liveDashboardFrameBuf = buf;
       _liveDashboardFrameUpdatedAt = Date.now();
+      return true;
+    }
+    return false;
+  }
+
+  function setLiveDashboardFrame(buf) {
+    if (!storeLiveDashboardFrame(buf)) return;
+    // Frames live in the memory of the process serving the portal, so a
+    // reusing app pushes them there instead of keeping them to itself.
+    if (!(server && server.listening) && (reusedOwner?.features || []).includes('live-frame-push')) {
+      requestLocalPortal(boundPort, {
+        method: 'POST',
+        pathname: '/api/dashboard-live-frame',
+        headers: { 'Content-Type': 'image/jpeg', 'Content-Length': String(buf.length) },
+        body: buf,
+      }).catch(() => {});
     }
   }
 
@@ -2814,15 +2908,62 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     return Object.values(state.appCasts || {}).filter((c) => c && c.active);
   }
 
-  function startPortalServer(preferredPort = boundPort) {
+  function startPortalServer(preferredPort = boundPort, { reuse } = {}) {
     if (server && server.listening) {
       return Promise.resolve({ ok: true, port: boundPort, url: `http://${detectLanIp()}:${boundPort}` });
+    }
+    const mayReuse =
+      reuse !== false &&
+      Boolean(preferredPort) &&
+      (reusePortal ?? (preferredPort === DEFAULT_PORTAL_PORT && process.env.ROBOS_TEST !== '1'));
+    if (mayReuse && reusedOwner && Date.now() - releasedAt < 10000) {
+      // Just handed the port to a newer app; don't race it for the bind.
+      return Promise.resolve({ ok: true, port: boundPort, reused: true, owner: reusedOwner, url: `http://${detectLanIp()}:${boundPort}` });
     }
     return new Promise((resolve) => {
       server = http.createServer((req, res) => {
         loadState();
         const hostIp = detectLanIp();
         const u = new URL(req.url || '/', `http://${hostIp}:${boundPort}`);
+
+        if (u.pathname === '/api/portal/shutdown') {
+          // Hand :19210 to a newer RobOS app. Loopback only, and the custom
+          // header plus no Origin keeps web pages in a local browser out.
+          if (req.method !== 'POST' || !isLoopback(req) || req.headers.origin || req.headers[PORTAL_SHUTDOWN_HEADER] !== 'shutdown') {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ ok: false, error: 'Portal shutdown is only accepted from RobOS apps on this computer' }));
+            return;
+          }
+          const requestedBy = {
+            pid: Number(req.headers['x-robos-portal-pid']) || null,
+            appName: String(req.headers['x-robos-portal-app'] || '').slice(0, 64) || null,
+          };
+          const closing = server;
+          res.writeHead(200, { 'Content-Type': 'application/json', Connection: 'close' });
+          res.end(JSON.stringify({ ok: true, released: true, owner: ownerInfo }));
+          res.on('finish', () => releasePortal(closing, requestedBy));
+          return;
+        }
+
+        if (u.pathname === '/api/dashboard-live-frame' && req.method === 'POST') {
+          if (!isLoopback(req)) {
+            res.writeHead(403, { 'Content-Type': 'text/plain' });
+            res.end('Frames may only be pushed from this computer');
+            return;
+          }
+          const chunks = [];
+          let size = 0;
+          req.on('data', (c) => {
+            size += c.length;
+            if (size <= 4 * 1024 * 1024) chunks.push(c);
+          });
+          req.on('end', () => {
+            const ok = size <= 4 * 1024 * 1024 && storeLiveDashboardFrame(Buffer.concat(chunks));
+            res.writeHead(ok ? 204 : 400, { 'Content-Type': 'text/plain' });
+            res.end();
+          });
+          return;
+        }
 
         if (u.pathname === '/api/dashboard-live-frame.jpg') {
           if (_liveDashboardFrameBuf && Date.now() - _liveDashboardFrameUpdatedAt < 30000) {
@@ -2894,6 +3035,7 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
           const payload = JSON.stringify({
             ok: true,
             app: 'robos-tv-portal',
+            owner: ownerInfo,
             hostIp,
             portalPort: boundPort,
             portalUrl: `http://${hostIp}:${boundPort}`,
@@ -3048,18 +3190,26 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
 
       const onListening = () => {
         boundPort = server.address().port;
+        reusedOwner = null;
         server.unref();
         resolve({ ok: true, port: boundPort, url: `http://${detectLanIp()}:${boundPort}` });
       };
 
-      server.once('error', (err) => {
+      server.once('error', async (err) => {
         server.removeListener('listening', onListening);
-        if (err && err.code === 'EADDRINUSE' && preferredPort === DEFAULT_PORTAL_PORT && process.env.ROBOS_TEST !== '1') {
+        if (err && err.code === 'EADDRINUSE' && mayReuse) {
           // Another RobOS app (e.g. robos-tv or robos-dashboards) is already serving the 10-foot portal on :19210.
           // Reuse :19210 rather than overwriting tv-studio.json / Roku channel URLs with a random ephemeral port.
           boundPort = preferredPort;
           server = null;
-          resolve({ ok: true, port: boundPort, reused: true, url: `http://${detectLanIp()}:${boundPort}` });
+          const probe = await requestLocalPortal(preferredPort, { timeoutMs: 1000 });
+          reusedOwner = (probe.json && probe.json.owner) || { legacy: true };
+          resolve({ ok: true, port: boundPort, reused: true, owner: reusedOwner, url: `http://${detectLanIp()}:${boundPort}` });
+          return;
+        }
+        if (reuse === false) {
+          server = null;
+          resolve({ ok: false, port: preferredPort, inUse: err && err.code === 'EADDRINUSE', error: err ? err.message : 'listen failed' });
           return;
         }
         // Fallback to ephemeral port if preferredPort is already bound in test mode
@@ -3068,6 +3218,84 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
 
       server.listen(preferredPort, '0.0.0.0', onListening);
     });
+  }
+
+  function releasePortal(closing, requestedBy) {
+    if (!closing) return;
+    if (server === closing) server = null;
+    releasedAt = Date.now();
+    reusedOwner = { ...(requestedBy || {}), features: PORTAL_FEATURES };
+    closing.close();
+    closing.closeAllConnections?.();
+    try {
+      onPortalReleased?.(requestedBy);
+    } catch {}
+  }
+
+  async function getPortalOwnership(port = boundPort) {
+    const serving = Boolean(server && server.listening);
+    const base = { ok: true, port, serving, self: ownerInfo, portalUrl: `http://${detectLanIp()}:${port}` };
+    if (serving) return { ...base, owner: ownerInfo, stale: false, robosApp: true, sameVersion: true, canRestart: false };
+    const probe = await requestLocalPortal(port, { timeoutMs: 1200 });
+    const owner = (probe.json && probe.json.owner) || null;
+    const portalApp = probe.json && probe.json.app === 'robos-tv-portal';
+    const listener = probe.reachable ? findPortListener(port) : null;
+    const robosApp = Boolean(owner && ROBOS_PORTAL_APPS.includes(owner.appName));
+    const sameVersion = Boolean(owner && owner.codeVersion === ownerInfo.codeVersion);
+    return {
+      ...base,
+      reachable: probe.reachable,
+      owner,
+      // Answered /api/status like a portal but predates owner reporting.
+      legacy: Boolean(probe.reachable && portalApp && !owner),
+      foreign: Boolean(probe.reachable && !portalApp),
+      listener,
+      robosApp,
+      sameVersion,
+      stale: Boolean(probe.reachable && (!sameVersion || !robosApp)),
+      canRestart: !probe.reachable || Boolean(owner && (owner.features || []).includes('shutdown')),
+    };
+  }
+
+  // Ask whoever holds the portal port to release it, then bind it here.
+  // Only talks to tv-engine servers over the shutdown handshake; never kills.
+  async function restartPortal({ port = boundPort, timeoutMs = 6000 } = {}) {
+    if (server && server.listening) return { ok: true, port: boundPort, alreadyServing: true, owner: ownerInfo };
+    const before = await getPortalOwnership(port);
+    if (before.reachable) {
+      if (!before.canRestart) {
+        const who = before.listener ? `pid ${before.listener.pid} (${before.listener.command || 'unknown command'})` : 'another process';
+        return {
+          ok: false,
+          port,
+          ownership: before,
+          error: before.legacy
+            ? `The TV portal on :${port} is served by an older RobOS build in ${who} that cannot be asked to restart. Quit that app or process, then try again.`
+            : `Port ${port} is held by ${who}, which is not a RobOS TV portal. Quit it, then try again.`,
+        };
+      }
+      const res = await requestLocalPortal(port, {
+        method: 'POST',
+        pathname: '/api/portal/shutdown',
+        headers: {
+          [PORTAL_SHUTDOWN_HEADER]: 'shutdown',
+          'x-robos-portal-pid': String(process.pid),
+          'x-robos-portal-app': ownerInfo.appName,
+        },
+      });
+      if (!(res.json && res.json.ok)) {
+        return { ok: false, port, ownership: before, error: `The TV portal owner refused to shut down (HTTP ${res.status || 'no response'}).` };
+      }
+    }
+    const deadline = Date.now() + timeoutMs;
+    for (;;) {
+      const bound = await startPortalServer(port, { reuse: false });
+      if (bound.ok) return { ok: true, port: bound.port, url: bound.url, previousOwner: before.owner || null, owner: ownerInfo };
+      if (!bound.inUse || Date.now() > deadline) {
+        return { ok: false, port, ownership: before, error: `Could not bind :${port} after the old portal shut down (${bound.error}).` };
+      }
+      await new Promise((r) => setTimeout(r, 150));
+    }
   }
 
   function stopPortalServer() {
@@ -3854,6 +4082,8 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
   return {
     startPortalServer,
     stopPortalServer,
+    getPortalOwnership,
+    restartPortal,
     getOverview,
     addOrUpdateTv,
     removeTv,
@@ -3881,6 +4111,9 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
 
 module.exports = {
   DEFAULT_PORTAL_PORT,
+  PORTAL_CODE_VERSION,
+  ROBOS_PORTAL_APPS,
+  findPortListener,
   TV_PLATFORMS,
   TEN_FOOT_LAUNCH_TILES,
   detectLanIp,
