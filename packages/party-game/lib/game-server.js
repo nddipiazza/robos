@@ -24,6 +24,7 @@ const MIME = {
   '.svg': 'image/svg+xml',
   '.wav': 'audio/wav',
   '.mp3': 'audio/mpeg',
+  '.mp4': 'video/mp4',
 };
 
 let QRCode = null;
@@ -188,9 +189,11 @@ function createGameServer({ engine, port = 19213, host = '0.0.0.0', getNarration
       }
 
       if (p.startsWith('/api/narration/')) {
-        const id = decodeURIComponent(p.slice('/api/narration/'.length)).replace(/\.mp3$/, '');
-        log({ msg: 'narration request', id, from: req.socket.remoteAddress, range: req.headers.range || null, ua: req.headers['user-agent'] || null });
-        const file = await getNarrationAudio(id);
+        const name = decodeURIComponent(p.slice('/api/narration/'.length));
+        const format = name.endsWith('.mp4') ? 'mp4' : 'mp3';
+        const id = name.replace(/\.(mp3|mp4)$/, '');
+        log({ msg: 'narration request', id, format, from: req.socket.remoteAddress, range: req.headers.range || null });
+        const file = await getNarrationAudio(id, format);
         if (!file || !fs.existsSync(file)) return sendJson(res, 404, { error: 'no audio' });
         return sendFileWithRanges(req, res, file);
       }

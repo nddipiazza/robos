@@ -139,7 +139,7 @@ const server = createGameServer({
   engine,
   port: GAME_PORT,
   log,
-  getNarrationAudio: (id) => narration.clip(id),
+  getNarrationAudio: (id, format) => narration.clip(id, format),
 });
 // The host's voice goes to this computer, the TVs and/or an Audio Player speaker.
 const narration = createNarrationRouter({

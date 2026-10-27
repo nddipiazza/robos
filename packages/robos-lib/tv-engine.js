@@ -1822,8 +1822,6 @@ ${cloneBarsXml}
     <!-- Double-Buffered 1920x1080 Live Chromium JS Canvas Frame Layer -->
     <Poster id="livePosterA" width="1920" height="1080" opacity="0.0" />
     <Poster id="livePosterB" width="1920" height="1080" opacity="0.0" />
-    <!-- Spoken lines from apps cast to this TV (e.g. the Party Game host) -->
-    <Audio id="castAudio" />
     <Timer id="clockTimer" repeat="true" duration="1.0" />
   </children>
 </component>
@@ -1945,7 +1943,9 @@ end sub
 
 sub onClockTick()
     m.tickCount = m.tickCount + 1
-    if m.keepAliveVideo <> invalid
+    ' While an app cast's narration owns the video player, its own handlers
+    ' bring the keep-alive back.
+    if m.keepAliveVideo <> invalid and m.castAudioActive <> true
         vState = m.keepAliveVideo.state
         if vState = "finished" or vState = "stopped" or vState = "error"
             startKeepAliveVideo()
@@ -2092,37 +2092,72 @@ sub onLivePosterLoaded(evt as Object)
     end if
 end sub
 
-' Plays an app cast's narration once per new id. The Roku has one media
-' pipeline, so the keep-alive video is stopped while the line plays and
-' restarted afterwards.
+' Plays an app cast's narration once per new id through the keep-alive Video
+' node, which is the media player Roku TVs reliably output sound from. The
+' line is an MP4 (tiny black video + AAC) like the keep-alive clip:
+'   stop keep-alive -> play the line unmuted -> restart the muted keep-alive
+'   new line mid-sentence  -> cut over to it
+'   line hangs             -> the watchdog restarts the keep-alive
+'   app cast ends mid-line -> stopCastAudio() restarts the keep-alive
 sub playAppCastAudio(narration as Object)
     if narration = invalid or narration.id = invalid or narration.url = invalid then return
     if type(m.lastCastAudioId) <> "roString" and type(m.lastCastAudioId) <> "String" then m.lastCastAudioId = ""
     if m.lastCastAudioId = narration.id then return
     m.lastCastAudioId = narration.id
-    if m.castAudio = invalid
-        m.castAudio = m.top.findNode("castAudio")
-        m.castAudio.observeField("state", "onCastAudioState")
+    if m.keepAliveVideo = invalid then return
+    if m.castAudioWatchdog = invalid
+        m.keepAliveVideo.observeField("state", "onCastVideoState")
+        m.castAudioWatchdog = CreateObject("roSGNode", "Timer")
+        m.castAudioWatchdog.repeat = false
+        m.castAudioWatchdog.duration = 45
+        m.castAudioWatchdog.observeField("fire", "onCastAudioWatchdog")
+        m.top.appendChild(m.castAudioWatchdog)
     end if
-    print "RobOS castAudio play "; narration.url
-    if m.keepAliveVideo <> invalid then m.keepAliveVideo.control = "stop"
-    m.castAudio.control = "stop"
+    print "RobOS narration play "; narration.url
+    m.castAudioActive = true
+    m.castAudioWatchdog.control = "stop"
+    m.castAudioWatchdog.control = "start"
+    v = m.keepAliveVideo
+    v.control = "stop"
     content = CreateObject("roSGNode", "ContentNode")
     content.url = narration.url
-    content.streamFormat = "mp3"
-    m.castAudio.content = content
-    m.castAudio.control = "play"
+    content.streamFormat = "mp4"
+    v.loop = false
+    v.mute = false
+    v.content = content
+    v.control = "play"
 end sub
 
-sub onCastAudioState()
-    st = m.castAudio.state
-    print "RobOS castAudio state "; st; " "; m.castAudio.errorMsg
-    if st = "finished" or st = "error"
-        startKeepAliveVideo()
+sub onCastVideoState()
+    st = m.keepAliveVideo.state
+    if m.castAudioActive = true
+        print "RobOS narration state "; st; " "; m.keepAliveVideo.errorMsg
+        if st = "finished" or st = "error" then endCastAudio()
+    end if
+end sub
+
+sub onCastAudioWatchdog()
+    print "RobOS narration watchdog: giving the TV back to the keep-alive"
+    stopCastAudio()
+end sub
+
+' Back to the muted, looping keep-alive once a line is over (once per line).
+sub endCastAudio()
+    if m.castAudioActive <> true then return
+    m.castAudioActive = false
+    if m.castAudioWatchdog <> invalid then m.castAudioWatchdog.control = "stop"
+    startKeepAliveVideo()
+end sub
+
+sub stopCastAudio()
+    if m.castAudioActive = true
+        m.keepAliveVideo.control = "stop"
+        endCastAudio()
     end if
 end sub
 
 sub hideAppCastFrames()
+    stopCastAudio()
     if m.livePosterA <> invalid
         m.livePosterA.opacity = 0.0
         m.livePosterB.opacity = 0.0
