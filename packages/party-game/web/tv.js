@@ -7,7 +7,7 @@
 
   var params = new URLSearchParams(location.search);
   var screen = params.get('screen') || 'stage';
-  var face = window.createHostFace(document.getElementById('face'));
+  var face = null; // built from the first view, rebuilt if the host face changes
   var content = document.getElementById('content');
   var caption = document.getElementById('caption');
   var strip = document.getElementById('strip');
@@ -293,6 +293,15 @@
     if (!view) return;
     document.getElementById('title').textContent = view.title;
     document.getElementById('phaseLabel').textContent = PHASES[view.phase] || '';
+    var faceStyle = view.hostFace || 'mask';
+    if (!face || face.style !== faceStyle) {
+      if (face) face.destroy();
+      face = window.createHostFace(document.getElementById('face'), {
+        style: faceStyle,
+        color: view.personality ? view.personality.faceColor : undefined,
+      });
+      lastNarrationId = null; // let the new face say the current line
+    }
     if (view.personality) {
       face.setColor(view.personality.faceColor);
       document.documentElement.style.setProperty('--host', view.personality.faceColor);

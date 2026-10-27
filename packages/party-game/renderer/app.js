@@ -107,6 +107,7 @@ function fillForm(st) {
   $('personalityDesc').textContent = st.personalities.find((p) => p.id === s.personality)?.description || '';
   for (const id of ['aiWaitSeconds', 'roundsPerGame', 'answerSeconds', 'revealSeconds', 'minGuests']) $(id).value = s[id];
   $('narrationAudio').value = s.narrationAudio;
+  $('hostFace').value = s.hostFace;
   $('autoAdvance').checked = s.autoAdvance;
   $('secretRoles').checked = s.secretRoles;
   $('customQuestions').value = (s.customQuestions || []).map((q) => q.prompt).join('\n');
@@ -130,6 +131,7 @@ function readForm() {
   return {
     title: $('title').value.trim() || 'RobOS Party Game',
     personality: $('personality').value,
+    hostFace: $('hostFace').value,
     aiWaitSeconds: Number($('aiWaitSeconds').value),
     roundsPerGame: Number($('roundsPerGame').value),
     answerSeconds: Number($('answerSeconds').value),

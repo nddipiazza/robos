@@ -56,7 +56,8 @@ const RULES =
 
 function oneLine(s, max = 220) {
   if (typeof s !== 'string') return null;
-  const line = s.replace(/\s+/g, ' ').replace(/^["'\s]+|["'\s]+$/g, '').trim();
+  // Agents like markdown emphasis; it should not reach a TV caption.
+  const line = s.replace(/\*\*?|__/g, '').replace(/\s+/g, ' ').replace(/^["'\s]+|["'\s]+$/g, '').trim();
   return line && line.length <= max ? line : line ? line.slice(0, max).replace(/\s+\S*$/, '…') : null;
 }
 
