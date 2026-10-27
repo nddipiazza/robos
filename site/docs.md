@@ -52,7 +52,7 @@ keywords: "RobOS documentation, developer guides, knowledge graph reference, PR 
       </div>
       <div class="h-index-row">
         <h3>Build apps</h3>
-        <p><a href="{{ '/build-apps/' | relative_url }}">How the loop works</a>, <a href="{{ '/build-apps/solo/' | relative_url }}">Guide: building on your own</a>, <a href="{{ '/build-apps/teams/' | relative_url }}">Guide: building as a team</a>, <a href="{{ '/v1/app-development-flow.html' | relative_url }}">Starting a new project</a></p>
+        <p><a href="{{ '/build-apps/' | relative_url }}">How the loop works</a>, <a href="{{ '/build-apps/solo/' | relative_url }}">Guide: building on your own</a>, <a href="{{ '/build-apps/teams/' | relative_url }}">Guide: building as a team</a>, <a href="{{ '/task-planner/' | relative_url }}">Task Planner</a>, <a href="{{ '/task-implementer/' | relative_url }}">Task Implementer</a>, <a href="{{ '/v1/app-development-flow.html' | relative_url }}">Starting a new project</a></p>
       </div>
       <div class="h-index-row">
         <h3>Review and governance</h3>

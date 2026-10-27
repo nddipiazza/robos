@@ -45,8 +45,8 @@ keywords: "build apps with AI, RobOS Task Planner, Task Implementer, Agent Code 
 <table>
 <thead><tr><th>Step</th><th>App</th><th>What happens</th></tr></thead>
 <tbody>
-<tr><td>1. Plan</td><td>Task Planner (its window is titled <strong>Task Explorer</strong>)</td><td>You describe the work or fill in a template. An agent drafts epics and tasks, each with acceptance criteria and a developer persona. You edit them and create them as issues on GitHub or Jira.</td></tr>
-<tr><td>2. Implement</td><td>Task Implementer</td><td>You pick an issue and click <strong>Start Agent</strong>. The agent creates a branch (<code>codex/&lt;task-key&gt;</code> by default), implements and tests the task, commits and pushes. It does not open a pull request.</td></tr>
+<tr><td>1. Plan</td><td><a href="{{ '/task-planner/' | relative_url }}">Task Planner</a> (its window is titled <strong>Task Explorer</strong>)</td><td>You describe the work or fill in a template. An agent drafts epics and tasks, each with acceptance criteria and a developer persona. You edit them and create them as issues on GitHub or Jira.</td></tr>
+<tr><td>2. Implement</td><td><a href="{{ '/task-implementer/' | relative_url }}">Task Implementer</a></td><td>You pick an issue and click <strong>Start Agent</strong>. The agent creates a branch (<code>codex/&lt;task-key&gt;</code> by default), implements and tests the task, commits and pushes. It does not open a pull request.</td></tr>
 <tr><td>3. Review</td><td>Agent Code Review (PR Review Theater)</td><td>You read the diff, ask for changes in plain language, check the evidence and take an agent-led walkthrough of the changed behavior.</td></tr>
 <tr><td>4. Publish</td><td>Agent Code Review, <strong>Pull Request</strong> tab</td><td>You check the description and click <strong>Create PR</strong>, as a draft if you like, then watch CI from the same window.</td></tr>
 <tr><td>5. Merge</td><td>GitHub</td><td>The author merges on GitHub. RobOS has no merge button.</td></tr>
@@ -96,7 +96,8 @@ keywords: "build apps with AI, RobOS Task Planner, Task Implementer, Agent Code 
 
 <h2 id="reference">Reference</h2>
 <ul>
-<li><a href="{{ '/v1/apps/task-planner/' | relative_url }}">Task Planner</a>, <a href="{{ '/v1/apps/task-implementer/' | relative_url }}">Task Implementer</a> and <a href="{{ '/v1/apps/pr-review/' | relative_url }}">Agent Code Review</a>: one page per app.</li>
+<li><a href="{{ '/task-planner/' | relative_url }}">Task Planner</a> and <a href="{{ '/task-implementer/' | relative_url }}">Task Implementer</a>: a full guide to each app, with every tab, the personas and where things are saved.</li>
+<li><a href="{{ '/v1/apps/task-planner/' | relative_url }}">Task Planner</a>, <a href="{{ '/v1/apps/task-implementer/' | relative_url }}">Task Implementer</a> and <a href="{{ '/v1/apps/pr-review/' | relative_url }}">Agent Code Review</a>: one page per app in the classic docs.</li>
 <li><a href="{{ '/v1/pr-review-theater.html' | relative_url }}">PR Review Theater</a>: every tab of the review window, the launch manifest and the walkthrough process format.</li>
 <li><a href="{{ '/v1/day-in-the-life.html' | relative_url }}">A day with RobOS</a>: the recording above, written out step by step.</li>
 <li><a href="{{ '/v1/app-development-flow.html' | relative_url }}">Building apps</a>: starting a new project with the App Wizard, or importing one you already have.</li>
