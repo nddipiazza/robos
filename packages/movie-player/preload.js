@@ -1,119 +1,145 @@
+'use strict';
+
 const { contextBridge, ipcRenderer } = require('electron');
 
-const api = {
-  // Library & metadata (100k-item indexed query API)
+contextBridge.exposeInMainWorld('robosAudio', {
+  discoverSpeakers: () => ipcRenderer.invoke('audio:discover-speakers'),
+  getSpeakerStatus: (ip) => ipcRenderer.invoke('audio:get-speaker-status', ip),
+  setSpeakerVolume: (ip, level, muted) => ipcRenderer.invoke('audio:set-speaker-volume', { ip, level, muted }),
+  castFile: (ip, filePath, metadata) => ipcRenderer.invoke('audio:cast-file', { ip, filePath, metadata }),
+  castUrl: (ip, url, metadata) => ipcRenderer.invoke('audio:cast-url', { ip, url, metadata }),
+  castPause: (ip) => ipcRenderer.invoke('audio:cast-pause', ip),
+  castResume: (ip) => ipcRenderer.invoke('audio:cast-resume', ip),
+  castStop: (ip) => ipcRenderer.invoke('audio:cast-stop', ip),
+  castSeek: (ip, seconds) => ipcRenderer.invoke('audio:cast-seek', { ip, seconds }),
+  prefetchTrack: (filePath) => ipcRenderer.invoke('audio:prefetch-track', filePath),
+  castStopAll: () => ipcRenderer.invoke('audio:cast-stop-all'),
+  playTestChime: (ip) => ipcRenderer.invoke('audio:play-test-chime', ip),
+  openFileDialog: () => ipcRenderer.invoke('audio:open-file-dialog'),
+  ensureFileAccessible: (filePath) => ipcRenderer.invoke('audio:ensure-file-accessible', filePath),
   getLibrary: () => ipcRenderer.invoke('audio:get-library'),
-  getLibrarySummary: () => ipcRenderer.invoke('audio:get-library-summary'),
-  queryTracks: (opts) => ipcRenderer.invoke('audio:query-tracks', opts),
-  getTrackById: (id) => ipcRenderer.invoke('audio:get-track', id),
-  recordPlay: (id) => ipcRenderer.invoke('audio:record-play', id),
-  toggleLoved: (id, loved) => ipcRenderer.invoke('audio:toggle-loved', id, loved),
-  getArtUrl: (artId) => ipcRenderer.invoke('audio:get-art-url', artId),
-  getLyrics: (trackId) => ipcRenderer.invoke('audio:get-lyrics', trackId),
-  getSubtitles: (trackId) => ipcRenderer.invoke('audio:get-lyrics', trackId),
-  importSubtitles: (trackId) => ipcRenderer.invoke('movie:import-subtitles', trackId),
-  saveSnapshotFrame: (payload) => ipcRenderer.invoke('movie:save-snapshot', payload),
-  scanFolders: (dirs) => ipcRenderer.invoke('audio:scan-folders', dirs),
-  pickFolder: () => ipcRenderer.invoke('audio:pick-folder'),
-  pickFiles: () => ipcRenderer.invoke('audio:pick-files'),
-  onScanProgress: (cb) => {
-    const handler = (_e, data) => cb(data);
-    ipcRenderer.on('audio:scan-progress', handler);
-    return () => ipcRenderer.removeListener('audio:scan-progress', handler);
+  selectLibraryFolder: () => ipcRenderer.invoke('audio:select-library-folder'),
+  scanFolders: (folders) => ipcRenderer.invoke('audio:scan-folders', folders),
+  cancelLibraryScan: () => ipcRenderer.invoke('audio:cancel-scan'),
+  importPaths: (paths) => ipcRenderer.invoke('audio:import-paths', paths),
+  scanDefaultLibrary: () => ipcRenderer.invoke('audio:scan-default-library'),
+  getLyrics: (track) => ipcRenderer.invoke('audio:get-lyrics', track),
+  getArtBase: () => ipcRenderer.invoke('audio:get-art-base'),
+  getTrackStats: () => ipcRenderer.invoke('audio:get-track-stats'),
+  recordPlay: (trackId) => ipcRenderer.invoke('audio:record-play', trackId),
+  setLoved: (ids, loved) => ipcRenderer.invoke('audio:set-loved', { ids, loved }),
+  showInFolder: (filePath) => ipcRenderer.invoke('audio:show-in-folder', filePath),
+  aiPlaylistGenerate: (request, count, dj, agent) => ipcRenderer.invoke('audio:ai-playlist-generate', { request, count, dj, agent }),
+  aiFixMetadataPreview: (opts) => ipcRenderer.invoke('audio:ai-fix-metadata-preview', opts || {}),
+  aiFixMetadataApply: (opts) => ipcRenderer.invoke('audio:ai-fix-metadata-apply', opts || {}),
+  onAiProgress: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:ai-progress', handler);
+    return () => ipcRenderer.removeListener('audio:ai-progress', handler);
   },
-
-  // Managed Library Folders
-  listLibraryFolders: () => ipcRenderer.invoke('audio:folders-list'),
-  addLibraryFolder: () => ipcRenderer.invoke('audio:folders-add'),
-  removeLibraryFolder: (dirPath) => ipcRenderer.invoke('audio:folders-remove', dirPath),
-  rescanLibraryFolder: (dirPath) => ipcRenderer.invoke('audio:folders-rescan', dirPath),
-
-  // Cloud Storage (Google Drive, OneDrive, Dropbox, S3, SFTP)
-  getCloudSources: () => ipcRenderer.invoke('audio:cloud-sources'),
-  browseCloud: (sourceId, remotePath) => ipcRenderer.invoke('audio:cloud-browse', sourceId, remotePath),
-  indexCloudSource: (sourceId, remotePath) => ipcRenderer.invoke('audio:cloud-index', sourceId, remotePath),
-  removeCloudSourceTracks: (sourceId) => ipcRenderer.invoke('audio:cloud-remove-tracks', sourceId),
-  getCloudStreamUrl: (trackId) => ipcRenderer.invoke('audio:cloud-stream-url', trackId),
-  getCloudCacheStatus: () => ipcRenderer.invoke('audio:cloud-cache-status'),
-  setCloudCacheMaxBytes: (maxBytes) => ipcRenderer.invoke('audio:cloud-cache-set-max', maxBytes),
-  clearCloudCache: () => ipcRenderer.invoke('audio:cloud-cache-clear'),
-  enrichCloudTrack: (trackId) => ipcRenderer.invoke('audio:cloud-enrich-track', trackId),
-  openDataSourcesApp: () => ipcRenderer.invoke('audio:open-data-sources'),
-  openCloudAccountsApp: () => ipcRenderer.invoke('audio:open-cloud-accounts'),
-  onCloudIndexProgress: (cb) => {
-    const handler = (_e, data) => cb(data);
-    ipcRenderer.on('audio:cloud-index-progress', handler);
-    return () => ipcRenderer.removeListener('audio:cloud-index-progress', handler);
+  djLines: (persona, upcoming, agent) => ipcRenderer.invoke('audio:dj-lines', { persona, upcoming, agent }),
+  djVoices: () => ipcRenderer.invoke('audio:dj-voices'),
+  djSynthesize: (text, voice, level) => ipcRenderer.invoke('audio:dj-synthesize', { text, voice, level }),
+  djWarmup: () => ipcRenderer.invoke('audio:dj-warmup'),
+  listFolders: () => ipcRenderer.invoke('audio:folders-list'),
+  setFolderEnabled: (id, enabled) => ipcRenderer.invoke('audio:folders-set-enabled', { id, enabled }),
+  onFoldersUpdated: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:folders-updated', handler);
+    return () => ipcRenderer.removeListener('audio:folders-updated', handler);
   },
-
-  // Playlists / Watchlists
+  addLocalFolder: () => ipcRenderer.invoke('audio:folders-add-local'),
+  addCloudFolder: (connectionId, path, label) => ipcRenderer.invoke('audio:folders-add-cloud', { connectionId, path, label }),
+  rescanFolders: (id) => ipcRenderer.invoke('audio:folders-rescan', id),
+  renameFolder: (id, label) => ipcRenderer.invoke('audio:folders-rename', { id, label }),
+  removeFolder: (id, removeTracks) => ipcRenderer.invoke('audio:folders-remove', { id, removeTracks }),
+  cloudConnections: () => ipcRenderer.invoke('audio:cloud-connections'),
+  cloudList: (id, path, forceRefresh = false) => ipcRenderer.invoke('audio:cloud-list', { id, path, forceRefresh }),
+  cloudImport: (id, paths) => ipcRenderer.invoke('audio:cloud-import', { id, paths }),
+  cloudCacheStats: () => ipcRenderer.invoke('audio:cloud-cache-stats'),
+  cloudCacheSetMax: (maxBytes) => ipcRenderer.invoke('audio:cloud-cache-set-max', maxBytes),
+  cloudCacheClear: () => ipcRenderer.invoke('audio:cloud-cache-clear'),
+  onCloudProgress: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:cloud-progress', handler);
+    return () => ipcRenderer.removeListener('audio:cloud-progress', handler);
+  },
   getPlaylists: () => ipcRenderer.invoke('audio:get-playlists'),
-  savePlaylists: (playlists) => ipcRenderer.invoke('audio:save-playlists', playlists),
-  importM3U: () => ipcRenderer.invoke('audio:import-m3u'),
-  exportM3U: (playlist) => ipcRenderer.invoke('audio:export-m3u', playlist),
-
-  // AI Watchlist / Movie Marathon & Virtual Cinema Host (optional)
-  generateAiPlaylist: (opts) => ipcRenderer.invoke('audio:ai-generate-playlist', opts),
-  generateDjIntros: (opts) => ipcRenderer.invoke('audio:ai-generate-dj-intros', opts),
-  synthesizeDjSpeech: (opts) => ipcRenderer.invoke('audio:ai-dj-speak', opts),
-
-  // AI & Open-Data Movie Metadata / Poster Fixer
-  fixTrackMetadata: (opts) => ipcRenderer.invoke('audio:ai-fix-metadata', opts),
-  onFixMetadataProgress: (cb) => {
-    const handler = (_e, data) => cb(data);
-    ipcRenderer.on('audio:fix-metadata-progress', handler);
-    return () => ipcRenderer.removeListener('audio:fix-metadata-progress', handler);
+  getPlaylist: (id) => ipcRenderer.invoke('audio:get-playlist', id),
+  createPlaylist: (data) => ipcRenderer.invoke('audio:create-playlist', data),
+  updatePlaylist: (id, updates) => ipcRenderer.invoke('audio:update-playlist', { id, updates }),
+  deletePlaylist: (id) => ipcRenderer.invoke('audio:delete-playlist', id),
+  addTracksToPlaylist: (id, tracks) => ipcRenderer.invoke('audio:add-tracks-to-playlist', { id, tracks }),
+  removeTrackFromPlaylist: (id, trackIndex) => ipcRenderer.invoke('audio:remove-track-from-playlist', { id, trackIndex }),
+  reorderPlaylistTracks: (id, fromIndex, toIndex) => ipcRenderer.invoke('audio:reorder-playlist-tracks', { id, fromIndex, toIndex }),
+  exportPlaylistM3u: (id) => ipcRenderer.invoke('audio:export-playlist-m3u', id),
+  importPlaylistM3u: () => ipcRenderer.invoke('audio:import-playlist-m3u'),
+  onLibraryScanDiscovered: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:library-scan-discovered', handler);
+    return () => ipcRenderer.removeListener('audio:library-scan-discovered', handler);
   },
-
-  // Google Home / Smart TV / Chromecast LAN Cast
-  getCastDevices: () => ipcRenderer.invoke('audio:cast-devices'),
-  addManualCastDevice: (info) => ipcRenderer.invoke('audio:cast-add-manual', info),
-  castTrack: (device, track, startTime) => ipcRenderer.invoke('audio:cast-track', device, track, startTime),
-  castPlaylist: (device, tracks, startIndex) => ipcRenderer.invoke('audio:cast-playlist', device, tracks, startIndex),
-  testCastSpeaker: (device) => ipcRenderer.invoke('audio:cast-test', device),
-  castControl: (action, value) => ipcRenderer.invoke('audio:cast-control', action, value),
-  castDisconnect: () => ipcRenderer.invoke('audio:cast-disconnect'),
-  castClockStart: (opts) => ipcRenderer.invoke('audio:cast-clock-start', opts),
-  castClockStop: () => ipcRenderer.invoke('audio:cast-clock-stop'),
-  castClockStatus: () => ipcRenderer.invoke('audio:cast-clock-status'),
-  castAmbientStart: (opts) => ipcRenderer.invoke('audio:cast-ambient-start', opts),
-  castAmbientStop: () => ipcRenderer.invoke('audio:cast-ambient-stop'),
-  castAmbientStatus: () => ipcRenderer.invoke('audio:cast-ambient-status'),
-
-  // Events from main process
-  onCastDevicesUpdated: (cb) => {
-    const handler = (_e, devices) => cb(devices);
-    ipcRenderer.on('audio:cast-devices-updated', handler);
-    return () => ipcRenderer.removeListener('audio:cast-devices-updated', handler);
+  onLibraryScanProgress: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:library-scan-progress', handler);
+    return () => ipcRenderer.removeListener('audio:library-scan-progress', handler);
   },
-  onCastStatus: (cb) => {
-    const handler = (_e, status) => cb(status);
-    ipcRenderer.on('audio:cast-status', handler);
-    return () => ipcRenderer.removeListener('audio:cast-status', handler);
+  onLibraryScanBatch: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:library-scan-batch', handler);
+    return () => ipcRenderer.removeListener('audio:library-scan-batch', handler);
   },
-
-  // Companion app remote control sync
-  reportPlaybackState: (state) => ipcRenderer.invoke('audio:report-state', state),
-  onRemoteCommand: (cb) => {
-    const handler = (_e, cmd) => cb(cmd);
-    ipcRenderer.on('audio:remote-command', handler);
-    return () => ipcRenderer.removeListener('audio:remote-command', handler);
+  onLibraryScanComplete: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:library-scan-complete', handler);
+    return () => ipcRenderer.removeListener('audio:library-scan-complete', handler);
   },
-
-  // Live speaker takeover detector
-  speakerWatchStatus: () => ipcRenderer.invoke('audio:speaker-watch-status'),
-  speakerWatchConfigure: (opts) => ipcRenderer.invoke('audio:speaker-watch-configure', opts),
-  onSpeakerTakeover: (cb) => {
-    const handler = (_e, evt) => cb(evt);
-    ipcRenderer.on('audio:speaker-takeover', handler);
-    return () => ipcRenderer.removeListener('audio:speaker-takeover', handler);
+  onLibraryScanCanceled: (callback) => {
+    const handler = (_event) => callback();
+    ipcRenderer.on('audio:library-scan-canceled', handler);
+    return () => ipcRenderer.removeListener('audio:library-scan-canceled', handler);
   },
-  onSpeakerState: (cb) => {
-    const handler = (_e, evt) => cb(evt);
-    ipcRenderer.on('audio:speaker-state', handler);
-    return () => ipcRenderer.removeListener('audio:speaker-state', handler);
+  onLibraryScanError: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:library-scan-error', handler);
+    return () => ipcRenderer.removeListener('audio:library-scan-error', handler);
+  },
+  onSpeakerStatusChange: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:speaker-status-change', handler);
+    return () => ipcRenderer.removeListener('audio:speaker-status-change', handler);
+  },
+  // Calls from other RobOS apps (lib/control-server.js): `callback` answers each.
+  onControlRequest: (callback) => {
+    const handler = async (_event, { requestId, action, payload }) => {
+      let result;
+      try { result = await callback(action, payload); } catch (err) { result = { ok: false, error: err.message }; }
+      ipcRenderer.invoke('audio:control-reply', { requestId, result });
+    };
+    ipcRenderer.on('audio:control-request', handler);
+    return () => ipcRenderer.removeListener('audio:control-request', handler);
+  },
+  onSpeakerPlaybackStopped: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('audio:speaker-playback-stopped', handler);
+    return () => ipcRenderer.removeListener('audio:speaker-playback-stopped', handler);
   }
-};
+});
 
-contextBridge.exposeInMainWorld('robosMovie', api);
-contextBridge.exposeInMainWorld('robosAudio', api);
+// Provider catalog for the shared <robos-agent-selector> (same API as PR Review).
+contextBridge.exposeInMainWorld('robosProviders', {
+  list: (options) => ipcRenderer.invoke('audio:agent-providers', options),
+});
+
+// Skills catalog and @mention file typeahead for the shared <robos-ai-textarea>.
+contextBridge.exposeInMainWorld('robos', {
+  skillsList: () => ipcRenderer.invoke('robos-skills-list'),
+  searchIndex: (prefix) => ipcRenderer.invoke('ap-list-path', prefix),
+});
+
+// Answers the <robos-ai-textarea> "?" button through the shared quick-ask handler.
+contextBridge.exposeInMainWorld('robosQuickAsk', (question, context, contextFiles, onChunk, onDone, onError) => {
+  ipcRenderer.invoke('robos-quick-ask', { question, context, contextFiles })
+    .then(r => { if (r && r.ok) { onChunk(r.text); onDone(); } else onError((r && r.error) || 'No answer'); })
+    .catch(e => onError(e.message));
+});

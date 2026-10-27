@@ -1,776 +1,587 @@
-/**
- * Cloud Storage & On-Demand Video Streaming Service for RobOS Movie Player
- *
- * Bridges `~/.config/robos/data-sources.json` (configured in the RobOS Data Sources app)
- * and `~/.config/robos/cloud-accounts.json` with the Movie Player:
- *
- *   1. Reads all configured cloud & remote filesystem sources:
- *      - Google Drive (`google-drive`)
- *      - Microsoft OneDrive (`onedrive`)
- *      - Dropbox (`dropbox`)
- *      - S3 / MinIO (`s3`)
- *      - SFTP / SSH (`sftp`)
- *      - FTP / FTPS (`ftp`)
- *      - Local / NFS / SMB mounted folders (`filesystem`)
- *   2. Metadata-Only Indexing (`indexSource`):
- *      Recursively walks a source's remote movie folders and builds `LibraryIndex`
- *      movie records WITHOUT downloading video bodies — so a 50,000-movie cloud
- *      library indexes in seconds and uses zero disk space.
- *   3. Local HTTP Byte-Range Streaming Proxy (`/cloud-stream/:trackId`):
- *      When a cloud movie is played or cast to a Google TV / Chromecast, streams
- *      it on-demand via an internal HTTP server supporting `Range: bytes=...`
- *      and caches recently watched movies in a bounded LRU cache
- *      (`~/.cache/robos/movie-player/cloud`, default 2 GB max).
- */
+'use strict';
+// Bridges the Audio Player to RobOS cloud storage connections configured in
+// Data Sources (~/.config/robos/data-sources.json).
+//
+// Design:
+// 1. Metadata-only indexing: Adding or syncing a cloud folder NEVER downloads all
+//    audio files upfront. It lists/walks the remote folder and returns lightweight
+//    track descriptors pointing to their future local cache path.
+// 2. Stream-to-file upon play: When a cloud track is played (locally or via Cast),
+//    it is streamed immediately to the HTTP response while tee-writing to a
+//    temporary `.part` file in `~/.cache/robos/audio-player/cloud/`. Once the
+//    stream finishes, `.part` is atomically renamed to the final cache path so
+//    subsequent plays/seeks are served directly from the local cache.
+// 3. Bounded LRU cache: After any file is cached (or when the max size setting
+//    is updated), `enforceCacheLimit()` evicts the least-recently-used cached
+//    audio files so total disk usage stays within `maxCacheBytes` (default 500 MB).
 
 const fs = require('fs');
-const path = require('path');
 const os = require('os');
-const http = require('http');
-const https = require('https');
-const { spawn } = require('child_process');
-const { AUDIO_EXTENSIONS, guessFromRemotePath, readTrackMetadata } = require('./track-metadata');
-const { enrichCloudTrackTags } = require('./cloud-tags');
+const path = require('path');
 
-const DATA_SOURCES_PATH = path.join(os.homedir(), '.config', 'robos', 'data-sources.json');
-const CACHE_SETTINGS_PATH = path.join(os.homedir(), '.config', 'robos', 'movie-cache-settings.json');
-const CLOUD_CACHE_DIR = path.join(os.homedir(), '.cache', 'robos', 'movie-player', 'cloud');
-const DEFAULT_MAX_CACHE_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB LRU budget for video
-
-const CLOUD_SOURCE_TYPES = new Set([
-  'google-drive',
-  'onedrive',
-  'dropbox',
-  's3',
-  'sftp',
-  'ftp',
-  'filesystem'
+const CONFIG_DIR = path.join(process.env.HOME || os.homedir(), '.config', 'robos');
+const CONFIG_FILE = path.join(CONFIG_DIR, 'data-sources.json');
+const CACHE_SETTINGS_FILE = path.join(CONFIG_DIR, 'movie-cache-settings.json');
+const CACHE_ROOT = path.join(process.env.HOME || os.homedir(), '.cache', 'robos', 'movie-player', 'cloud');
+const AUDIO_EXTENSIONS = new Set([
+  '.mp4', '.mkv', '.webm', '.mov', '.m4v', '.avi', '.ogv', '.ts', '.m2ts', '.mpg', '.mpeg', '.flv', '.wmv', '.3gp',
+  '.mp3', '.m4a', '.flac', '.ogg', '.wav', '.aac', '.opus', '.wma',
 ]);
 
-const MIME_BY_EXT = {
-  '.mp4': 'video/mp4',
-  '.m4v': 'video/mp4',
-  '.webm': 'video/webm',
-  '.mkv': 'video/x-matroska',
-  '.mov': 'video/quicktime',
-  '.avi': 'video/x-msvideo',
-  '.ogv': 'video/ogg',
-  '.ts': 'video/mp2t',
-  '.m2ts': 'video/mp2t',
-  '.flv': 'video/x-flv',
-  '.wmv': 'video/x-ms-wmv',
-  '.mpg': 'video/mpeg',
-  '.mpeg': 'video/mpeg',
-  '.3gp': 'video/3gpp',
-  '.mp3': 'audio/mpeg',
-  '.flac': 'audio/flac',
-  '.wav': 'audio/wav',
-  '.ogg': 'audio/ogg',
-  '.m4a': 'audio/mp4',
-  '.aac': 'audio/aac',
-  '.opus': 'audio/ogg'
-};
+const DEFAULT_MAX_CACHE_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB default
+const MIN_MAX_CACHE_BYTES = 50 * 1024 * 1024;           // 50 MB minimum
 
-function readPassSecret(passPath) {
-  if (!passPath) return '';
-  return new Promise(resolve => {
-    const proc = spawn('pass', ['show', passPath], { timeout: 5000 });
-    let out = '';
-    proc.stdout.on('data', d => { out += d.toString(); });
-    proc.on('close', code => {
-      resolve(code === 0 ? out.split('\n')[0].trim() : '');
-    });
-    proc.on('error', () => resolve(''));
-  });
+// Track active background downloads to avoid duplicate concurrent streams to the same file
+// cachePath -> Promise<string>
+const activeCacheWrites = new Map();
+
+function loadRemoteStorage() {
+  const candidates = [
+    path.resolve(__dirname, '..', '..', 'data-sources', 'lib', 'remote-storage'),
+    '/usr/local/share/robos/data-sources/lib/remote-storage',
+  ];
+  for (const c of candidates) {
+    try { return require(c); } catch (err) { if (err.code !== 'MODULE_NOT_FOUND') throw err; }
+  }
+  throw new Error('RobOS Data Sources is not installed; cannot reach cloud storage.');
 }
 
-function httpsJsonRequest(options, body = null) {
-  return new Promise((resolve, reject) => {
-    const req = https.request(options, res => {
-      const chunks = [];
-      res.on('data', c => chunks.push(c));
-      res.on('end', () => {
-        const text = Buffer.concat(chunks).toString('utf8');
-        try {
-          resolve({ status: res.statusCode, data: JSON.parse(text), headers: res.headers });
-        } catch (_) {
-          resolve({ status: res.statusCode, data: text, headers: res.headers });
-        }
-      });
-    });
-    req.on('error', reject);
-    req.setTimeout(15000, () => req.destroy(new Error('Cloud API timeout')));
-    if (body) req.write(body);
-    req.end();
-  });
+function readConnections() {
+  try {
+    const data = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+    return Array.isArray(data) ? data.filter(d => d.category === 'storage') : [];
+  } catch {
+    return [];
+  }
 }
 
-function downloadHttpsToFile(options, destPath) {
-  return new Promise((resolve, reject) => {
-    fs.mkdirSync(path.dirname(destPath), { recursive: true });
-    const tmp = `${destPath}.part-${process.pid}-${Date.now()}`;
-    const out = fs.createWriteStream(tmp);
-    const req = https.request(options, res => {
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        out.close();
-        try { fs.unlinkSync(tmp); } catch (_) {}
-        const redirected = new URL(res.headers.location);
-        downloadHttpsToFile({
-          hostname: redirected.hostname,
-          path: redirected.pathname + redirected.search,
-          method: 'GET',
-          headers: options.headers
-        }, destPath).then(resolve, reject);
-        return;
-      }
-      if (res.statusCode !== 200 && res.statusCode !== 206) {
-        out.close();
-        try { fs.unlinkSync(tmp); } catch (_) {}
-        reject(new Error(`HTTP ${res.statusCode}`));
-        return;
-      }
-      res.pipe(out);
-      out.on('finish', () => {
-        out.close(() => {
-          try {
-            fs.renameSync(tmp, destPath);
-            resolve(destPath);
-          } catch (e) {
-            reject(e);
-          }
-        });
-      });
-    });
-    req.on('error', err => {
-      out.close();
-      try { fs.unlinkSync(tmp); } catch (_) {}
-      reject(err);
-    });
-    req.end();
-  });
+function resolveKey(ds) {
+  if (ds.privateKeyPath && ds.privateKeyPath.startsWith('~')) {
+    return { ...ds, privateKeyPath: path.join(process.env.HOME || os.homedir(), ds.privateKeyPath.slice(1)) };
+  }
+  return ds;
 }
 
-class CloudStorageManager {
-  constructor({ libraryIndex, artDir }) {
-    this.libraryIndex = libraryIndex;
-    this.artDir = artDir;
-    this.server = null;
-    this.port = 0;
-    this.inflightDownloads = new Map();
-    this.maxCacheBytes = DEFAULT_MAX_CACHE_BYTES;
-    fs.mkdirSync(CLOUD_CACHE_DIR, { recursive: true });
-    this._loadSettings();
-  }
+function getConnection(id) {
+  const ds = readConnections().find(d => d.id === id);
+  if (!ds) throw new Error('Cloud storage connection not found. Check Data Sources.');
+  return resolveKey(ds);
+}
 
-  _loadSettings() {
-    try {
-      if (fs.existsSync(CACHE_SETTINGS_PATH)) {
-        const raw = JSON.parse(fs.readFileSync(CACHE_SETTINGS_PATH, 'utf8'));
-        if (Number(raw.maxCacheBytes) >= 64 * 1024 * 1024) {
-          this.maxCacheBytes = Number(raw.maxCacheBytes);
-        }
-      }
-    } catch (_) {}
-  }
-
-  _saveSettings() {
-    try {
-      fs.mkdirSync(path.dirname(CACHE_SETTINGS_PATH), { recursive: true });
-      fs.writeFileSync(CACHE_SETTINGS_PATH, JSON.stringify({
-        maxCacheBytes: this.maxCacheBytes,
-        updatedAt: new Date().toISOString()
-      }, null, 2));
-    } catch (_) {}
-  }
-
-  setMaxCacheBytes(bytes) {
-    const val = Number(bytes);
-    if (!Number.isFinite(val) || val < 64 * 1024 * 1024) {
-      throw new Error('Max cache size must be at least 64 MB');
-    }
-    this.maxCacheBytes = Math.round(val);
-    this._saveSettings();
-    this.enforceCacheBudget(0);
-    return this.getCacheStatus();
-  }
-
-  clearCache() {
-    let removed = 0;
-    try {
-      const files = fs.readdirSync(CLOUD_CACHE_DIR);
-      for (const f of files) {
-        const full = path.join(CLOUD_CACHE_DIR, f);
-        try {
-          fs.unlinkSync(full);
-          removed++;
-        } catch (_) {}
-      }
-    } catch (_) {}
-    return { removed, ...this.getCacheStatus() };
-  }
-
-  loadConfiguredSources() {
-    try {
-      if (!fs.existsSync(DATA_SOURCES_PATH)) return [];
-      const data = JSON.parse(fs.readFileSync(DATA_SOURCES_PATH, 'utf8'));
-      const sources = Array.isArray(data.sources) ? data.sources : [];
-      return sources
-        .filter(s => CLOUD_SOURCE_TYPES.has(s.type))
-        .map(s => ({
-          id: s.id,
-          name: s.name,
-          type: s.type,
-          status: s.status || 'unknown',
-          description: s.description || '',
-          tags: s.tags || [],
-          config: s.config || {}
-        }));
-    } catch (_) {
-      return [];
-    }
-  }
-
-  getSourceById(sourceId) {
-    const all = this.loadConfiguredSources();
-    return all.find(s => s.id === sourceId) || null;
-  }
-
-  async resolveAccessToken(source) {
-    const cfg = source.config || {};
-    if (cfg.accessToken) return cfg.accessToken;
-    const passPath = cfg.passStorePath || `robos/data-sources/${source.id}`;
-    const secret = await readPassSecret(passPath);
-    if (!secret) return '';
-
-    if (source.type === 'google-drive' && cfg.clientId && secret.startsWith('1//')) {
-      const clientSecret = await readPassSecret(`${passPath}-client-secret`);
-      const form = new URLSearchParams({
-        client_id: cfg.clientId,
-        client_secret: clientSecret,
-        refresh_token: secret,
-        grant_type: 'refresh_token'
-      }).toString();
-      const resp = await httpsJsonRequest({
-        hostname: 'oauth2.googleapis.com',
-        path: '/token',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Content-Length': Buffer.byteLength(form)
-        }
-      }, form);
-      if (resp.data && resp.data.access_token) return resp.data.access_token;
-    }
-
-    if (source.type === 'onedrive' && cfg.clientId && secret.length > 40 && !secret.startsWith('ey')) {
-      const tenant = cfg.tenantId || 'common';
-      const form = new URLSearchParams({
-        client_id: cfg.clientId,
-        refresh_token: secret,
-        grant_type: 'refresh_token',
-        scope: 'Files.Read offline_access'
-      }).toString();
-      const resp = await httpsJsonRequest({
-        hostname: 'login.microsoftonline.com',
-        path: `/${tenant}/oauth2/v2.0/token`,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Content-Length': Buffer.byteLength(form)
-        }
-      }, form);
-      if (resp.data && resp.data.access_token) return resp.data.access_token;
-    }
-
-    return secret;
-  }
-
-  resolveLocalMirrorPath(source, subPath = '') {
-    const cfg = source.config || {};
-    const candidates = [
-      cfg.localSyncPath,
-      cfg.rootPath,
-      cfg.mountPath,
-      source.type === 'google-drive' ? path.join(os.homedir(), 'GoogleDrive') : null,
-      source.type === 'google-drive' ? path.join(os.homedir(), 'Google Drive') : null,
-      source.type === 'onedrive' ? path.join(os.homedir(), 'OneDrive') : null,
-      source.type === 'dropbox' ? path.join(os.homedir(), 'Dropbox') : null
-    ].filter(Boolean);
-
-    for (const root of candidates) {
-      const expanded = root.replace(/^~(?=$|\/)/, os.homedir());
-      if (fs.existsSync(expanded)) {
-        const cleanSub = String(subPath || '').replace(/^\/+/, '');
-        const joined = path.resolve(expanded, cleanSub);
-        if (joined.startsWith(path.resolve(expanded)) && fs.existsSync(joined)) {
-          return joined;
-        }
-      }
-    }
-    return null;
-  }
-
-  async browse(sourceId, remotePath = '/') {
-    const source = this.getSourceById(sourceId);
-    if (!source) throw new Error(`Cloud source not found: ${sourceId}`);
-
-    const localDir = this.resolveLocalMirrorPath(source, remotePath);
-    if (localDir && fs.existsSync(localDir)) {
-      const entries = fs.readdirSync(localDir, { withFileTypes: true });
-      const items = [];
-      for (const e of entries) {
-        if (e.name.startsWith('.')) continue;
-        const full = path.join(localDir, e.name);
-        const rel = path.posix.join(remotePath || '/', e.name);
-        if (e.isDirectory()) {
-          items.push({ name: e.name, path: rel, type: 'folder', size: 0 });
-        } else if (e.isFile()) {
-          const ext = path.extname(e.name).toLowerCase();
-          if (AUDIO_EXTENSIONS.has(ext)) {
-            let st = null;
-            try { st = fs.statSync(full); } catch (_) {}
-            items.push({
-              name: e.name,
-              path: rel,
-              type: 'audio',
-              size: st ? st.size : 0,
-              mtime: st ? st.mtime.toISOString() : null
-            });
-          }
-        }
-      }
-      items.sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name) : a.type === 'folder' ? -1 : 1));
-      return { source, path: remotePath, mode: 'local-mirror', items };
-    }
-
-    if (source.type === 'google-drive') {
-      const token = await this.resolveAccessToken(source);
-      if (!token) {
-        return {
-          source,
-          path: remotePath,
-          mode: 'unauthenticated',
-          items: [],
-          hint: 'Configure Google Drive OAuth token in RobOS Cloud Accounts / Data Sources or set a local sync folder (~/GoogleDrive).'
-        };
-      }
-      const parentId = (!remotePath || remotePath === '/')
-        ? (source.config.rootFolderId || 'root')
-        : remotePath;
-      const q = encodeURIComponent(`'${parentId}' in parents and trashed = false`);
-      const fields = encodeURIComponent('files(id,name,mimeType,size,modifiedTime)');
-      const resp = await httpsJsonRequest({
-        hostname: 'www.googleapis.com',
-        path: `/drive/v3/files?q=${q}&pageSize=500&fields=${fields}`,
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const files = (resp.data && Array.isArray(resp.data.files)) ? resp.data.files : [];
-      const items = [];
-      for (const f of files) {
-        if (f.mimeType === 'application/vnd.google-apps.folder') {
-          items.push({ name: f.name, path: f.id, displayPath: `${remotePath}/${f.name}`, type: 'folder', size: 0 });
-        } else {
-          const ext = path.extname(f.name).toLowerCase();
-          if (AUDIO_EXTENSIONS.has(ext) || (f.mimeType && (f.mimeType.startsWith('video/') || f.mimeType.startsWith('audio/')))) {
-            items.push({
-              id: f.id,
-              name: f.name,
-              path: `${remotePath === '/' ? '' : remotePath}/${f.name}`,
-              driveFileId: f.id,
-              type: 'audio',
-              size: Number(f.size) || 0,
-              mtime: f.modifiedTime || null
-            });
-          }
-        }
-      }
-      return { source, path: remotePath, mode: 'google-drive-api', items };
-    }
-
-    if (source.type === 'onedrive') {
-      const token = await this.resolveAccessToken(source);
-      if (!token) {
-        return {
-          source,
-          path: remotePath,
-          mode: 'unauthenticated',
-          items: [],
-          hint: 'Configure OneDrive OAuth token in RobOS Cloud Accounts / Data Sources or mount ~/OneDrive locally.'
-        };
-      }
-      const cleanPath = (!remotePath || remotePath === '/')
-        ? '/me/drive/root/children'
-        : `/me/drive/root:${encodeURI(remotePath)}:/children`;
-      const resp = await httpsJsonRequest({
-        hostname: 'graph.microsoft.com',
-        path: `/v1.0${cleanPath}?$top=500&$select=id,name,size,folder,file,video,audio,lastModifiedDateTime`,
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const values = (resp.data && Array.isArray(resp.data.value)) ? resp.data.value : [];
-      const items = [];
-      for (const v of values) {
-        const itemPath = `${remotePath === '/' ? '' : remotePath}/${v.name}`;
-        if (v.folder) {
-          items.push({ name: v.name, path: itemPath, type: 'folder', size: v.size || 0 });
-        } else {
-          const ext = path.extname(v.name).toLowerCase();
-          if (AUDIO_EXTENSIONS.has(ext) || v.video || v.audio) {
-            items.push({
-              id: v.id,
-              name: v.name,
-              path: itemPath,
-              onedriveItemId: v.id,
-              type: 'audio',
-              size: Number(v.size) || 0,
-              mtime: v.lastModifiedDateTime || null,
-              videoMeta: v.video || null
-            });
-          }
-        }
-      }
-      return { source, path: remotePath, mode: 'onedrive-graph-api', items };
-    }
-
-    if (source.type === 'dropbox') {
-      const token = await this.resolveAccessToken(source);
-      if (!token) {
-        return {
-          source,
-          path: remotePath,
-          mode: 'unauthenticated',
-          items: [],
-          hint: 'Configure Dropbox access token in RobOS Data Sources or mount ~/Dropbox.'
-        };
-      }
-      const body = JSON.stringify({
-        path: (!remotePath || remotePath === '/') ? '' : remotePath,
-        recursive: false,
-        limit: 500
-      });
-      const resp = await httpsJsonRequest({
-        hostname: 'api.dropboxapi.com',
-        path: '/2/files/list_folder',
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(body)
-        }
-      }, body);
-      const entries = (resp.data && Array.isArray(resp.data.entries)) ? resp.data.entries : [];
-      const items = [];
-      for (const e of entries) {
-        if (e['.tag'] === 'folder') {
-          items.push({ name: e.name, path: e.path_display || e.path_lower, type: 'folder', size: 0 });
-        } else if (e['.tag'] === 'file') {
-          const ext = path.extname(e.name).toLowerCase();
-          if (AUDIO_EXTENSIONS.has(ext)) {
-            items.push({
-              id: e.id,
-              name: e.name,
-              path: e.path_display || e.path_lower,
-              type: 'audio',
-              size: Number(e.size) || 0,
-              mtime: e.server_modified || null
-            });
-          }
-        }
-      }
-      return { source, path: remotePath, mode: 'dropbox-api', items };
-    }
-
+// Never hands passwords/tokens to the renderer.
+function listConnections() {
+  const rs = (() => { try { return loadRemoteStorage(); } catch { return null; } })();
+  return readConnections().map(d => {
+    const rawStart = d.database || '/';
+    const startPath = (d.driverType === 'sftp' || d.driverType === 'ftp')
+      ? rawStart
+      : (String(rawStart).startsWith('/') ? rawStart : '/');
+    const rawLinked = (rs && (d.driverType === 'gdrive' || d.driverType === 'onedrive'))
+      ? rs.normalizeCloudFoldersArray(d)
+      : [];
+    const linkedFolders = rawLinked.map((f, _idx, arr) => ({
+      id: f.id,
+      folderId: f.id,
+      label: f.label || f.id,
+      virtualName: f.virtualName || f.label || f.id,
+      remotePath: arr.length > 1 ? `/${f.virtualName || f.label || f.id}` : '/',
+    }));
+    const folderSummary = linkedFolders.length > 1
+      ? `${linkedFolders.length} folders (${linkedFolders.map(f => f.label || f.id).join(', ')})`
+      : (linkedFolders[0]?.label || d.folderId);
     return {
-      source,
-      path: remotePath,
-      mode: 'unsupported-live',
-      items: [],
-      hint: `Mount or sync "${source.name}" to a local folder or configure OAuth credentials in RobOS Cloud Accounts.`
+      id: d.id,
+      name: d.name,
+      user: d.user || '',
+      driverType: d.driverType,
+      folders: linkedFolders,
+      host: d.driverType === 'gdrive'
+        ? (folderSummary || 'My Drive')
+        : d.driverType === 'onedrive'
+          ? (folderSummary || d.user || 'OneDrive')
+          : (d.host || d.bucket || 'local'),
+      startPath,
+      browsable: !!(rs && rs.isRemoteDriver(d.driverType)),
     };
-  }
+  });
+}
 
-  async indexSource(sourceId, rootRemotePath = '/', maxDepth = 4, onProgress = null) {
-    const source = this.getSourceById(sourceId);
-    if (!source) throw new Error(`Cloud source not found: ${sourceId}`);
+async function list(id, remotePath, options = {}) {
+  const ds = getConnection(id);
+  const listing = await loadRemoteStorage().listDir(ds, remotePath, options);
+  return {
+    path: listing.path,
+    entries: listing.entries.filter(e => e.type === 'dir' || AUDIO_EXTENSIONS.has(path.extname(e.name).toLowerCase())),
+  };
+}
 
-    const discovered = [];
-    const queue = [{ path: rootRemotePath, depth: 0 }];
+function cachePathFor(id, remoteFile) {
+  const rel = path.posix.normalize('/' + remoteFile).split('/').filter(p => p && p !== '..').join(path.sep);
+  return path.join(CACHE_ROOT, String(id).replace(/[^a-zA-Z0-9._-]/g, '_'), rel);
+}
 
-    while (queue.length > 0 && discovered.length < 50000) {
-      const current = queue.shift();
-      const res = await this.browse(sourceId, current.path);
-      for (const item of (res.items || [])) {
-        if (item.type === 'folder' && current.depth < maxDepth) {
-          queue.push({ path: item.path, depth: current.depth + 1 });
-        } else if (item.type === 'audio') {
-          const localMirror = this.resolveLocalMirrorPath(source, item.path);
-          let track;
-          if (localMirror && fs.existsSync(localMirror)) {
-            track = await readTrackMetadata(localMirror, { artDir: this.artDir });
-            track.source = 'cloud';
-            track.sourceId = source.id;
-            track.sourceName = source.name;
-            track.sourceType = source.type;
-            track.remotePath = item.path;
-          } else {
-            track = guessFromRemotePath({
-              sourceId: source.id,
-              sourceName: source.name,
-              sourceType: source.type,
-              remotePath: item.path,
-              size: item.size,
-              mtime: item.mtime
-            });
-            if (item.driveFileId) track.driveFileId = item.driveFileId;
-            if (item.onedriveItemId) track.onedriveItemId = item.onedriveItemId;
-            if (item.videoMeta) {
-              if (item.videoMeta.duration) track.duration = Math.round(item.videoMeta.duration / 1000);
-              if (item.videoMeta.height) {
-                track.height = item.videoMeta.height;
-                track.width = item.videoMeta.width;
-                track.resolution = item.videoMeta.height >= 2160 ? '4K' : item.videoMeta.height >= 1080 ? '1080p' : '720p';
-              }
-            }
-          }
-          discovered.push(track);
-        }
+// Local directory that mirrors a remote folder in the download cache.
+function localDirFor(id, remoteDir) {
+  return cachePathFor(id, remoteDir);
+}
+
+// ── Bounded LRU Audio Cache Management ──────────────────────────────────────
+
+function getCacheSettings() {
+  try {
+    if (fs.existsSync(CACHE_SETTINGS_FILE)) {
+      const parsed = JSON.parse(fs.readFileSync(CACHE_SETTINGS_FILE, 'utf8'));
+      const maxBytes = Number(parsed.maxCacheBytes);
+      if (Number.isFinite(maxBytes) && maxBytes >= MIN_MAX_CACHE_BYTES) {
+        return { maxCacheBytes: maxBytes };
       }
-      if (onProgress) onProgress({ indexed: discovered.length, currentPath: current.path });
     }
+  } catch {}
+  return { maxCacheBytes: DEFAULT_MAX_CACHE_BYTES };
+}
 
-    if (this.libraryIndex && discovered.length > 0) {
-      this.libraryIndex.upsertTracks(discovered);
-    }
-    return { source, indexedCount: discovered.length, tracks: discovered };
-  }
+function setMaxCacheBytes(maxBytes) {
+  const normalized = Math.max(MIN_MAX_CACHE_BYTES, Number(maxBytes) || DEFAULT_MAX_CACHE_BYTES);
+  try {
+    fs.mkdirSync(path.dirname(CACHE_SETTINGS_FILE), { recursive: true });
+    fs.writeFileSync(CACHE_SETTINGS_FILE, JSON.stringify({
+      maxCacheBytes: normalized,
+      updatedAt: new Date().toISOString()
+    }, null, 2));
+  } catch {}
+  enforceCacheLimit();
+  return getCacheStats();
+}
 
-  getCacheStatus() {
-    let usedBytes = 0;
-    let fileCount = 0;
-    try {
-      const entries = fs.readdirSync(CLOUD_CACHE_DIR);
-      for (const name of entries) {
-        if (name.includes('.part-')) continue;
-        const full = path.join(CLOUD_CACHE_DIR, name);
-        const st = fs.statSync(full);
-        if (st.isFile()) {
-          usedBytes += st.size;
-          fileCount++;
-        }
-      }
-    } catch (_) {}
-    return {
-      cacheDir: CLOUD_CACHE_DIR,
-      usedBytes,
-      maxBytes: this.maxCacheBytes,
-      fileCount
-    };
-  }
-
-  enforceCacheBudget(extraBytesNeeded = 0) {
-    try {
-      const entries = fs.readdirSync(CLOUD_CACHE_DIR)
-        .filter(n => !n.includes('.part-'))
-        .map(name => {
-          const full = path.join(CLOUD_CACHE_DIR, name);
-          const st = fs.statSync(full);
-          return { full, size: st.size, atimeMs: st.atimeMs || st.mtimeMs || 0 };
-        })
-        .sort((a, b) => a.atimeMs - b.atimeMs);
-
-      let total = entries.reduce((s, e) => s + e.size, 0);
-      for (const entry of entries) {
-        if (total + extraBytesNeeded <= this.maxCacheBytes) break;
-        try {
-          fs.unlinkSync(entry.full);
-          total -= entry.size;
-        } catch (_) {}
-      }
-    } catch (_) {}
-  }
-
-  async ensureCachedFile(track) {
-    if (!track) throw new Error('Track is required');
-    if (track.source !== 'cloud' && fs.existsSync(track.path)) {
-      return track.path;
-    }
-    const source = this.getSourceById(track.sourceId);
-    if (source) {
-      const mirror = this.resolveLocalMirrorPath(source, track.remotePath);
-      if (mirror && fs.existsSync(mirror)) return mirror;
-    }
-    if (!track.path.startsWith('cloud://') && fs.existsSync(track.path)) {
-      return track.path;
-    }
-
-    const ext = path.extname(track.remotePath || track.path || '.mp4') || '.mp4';
-    const cachedPath = path.join(CLOUD_CACHE_DIR, `${track.id}${ext}`);
-    if (fs.existsSync(cachedPath)) {
+function touchCacheFile(filePath) {
+  try {
+    if (fs.existsSync(filePath)) {
       const now = new Date();
-      try { fs.utimesSync(cachedPath, now, now); } catch (_) {}
-      return cachedPath;
+      fs.utimesSync(filePath, now, now);
     }
+  } catch {}
+}
 
-    if (this.inflightDownloads.has(track.id)) {
-      return this.inflightDownloads.get(track.id);
+function listCachedAudioFiles(dir = CACHE_ROOT) {
+  const results = [];
+  if (!fs.existsSync(dir)) return results;
+
+  const walk = (currentDir) => {
+    let entries;
+    try {
+      entries = fs.readdirSync(currentDir, { withFileTypes: true });
+    } catch {
+      return;
     }
-
-    const promise = (async () => {
-      if (!source) throw new Error(`Cloud source "${track.sourceId}" is not configured`);
-      const token = await this.resolveAccessToken(source);
-      if (!token) throw new Error(`No credentials available for cloud source "${source.name}"`);
-
-      this.enforceCacheBudget(track.size || 50 * 1024 * 1024);
-
-      if (source.type === 'google-drive') {
-        const fileId = track.driveFileId || track.remotePath;
-        await downloadHttpsToFile({
-          hostname: 'www.googleapis.com',
-          path: `/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`,
-          method: 'GET',
-          headers: { Authorization: `Bearer ${token}` }
-        }, cachedPath);
-      } else if (source.type === 'onedrive') {
-        const itemPath = track.onedriveItemId
-          ? `/v1.0/me/drive/items/${encodeURIComponent(track.onedriveItemId)}/content`
-          : `/v1.0/me/drive/root:${encodeURI(track.remotePath)}:/content`;
-        await downloadHttpsToFile({
-          hostname: 'graph.microsoft.com',
-          path: itemPath,
-          method: 'GET',
-          headers: { Authorization: `Bearer ${token}` }
-        }, cachedPath);
-      } else if (source.type === 'dropbox') {
-        await downloadHttpsToFile({
-          hostname: 'content.dropboxapi.com',
-          path: '/2/files/download',
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Dropbox-API-Arg': JSON.stringify({ path: track.remotePath })
-          }
-        }, cachedPath);
-      } else {
-        throw new Error(`On-demand streaming for source type "${source.type}" requires a local mount path`);
-      }
-      return cachedPath;
-    })().finally(() => {
-      this.inflightDownloads.delete(track.id);
-    });
-
-    this.inflightDownloads.set(track.id, promise);
-    return promise;
-  }
-
-  async enrichTrackMetadata(trackId) {
-    const track = this.libraryIndex && this.libraryIndex.byId.get(trackId);
-    if (!track) throw new Error('Track not found');
-    const source = this.getSourceById(track.sourceId);
-    if (!source) throw new Error(`Cloud source "${track.sourceId}" not found`);
-
-    const mirror = this.resolveLocalMirrorPath(source, track.remotePath);
-    if (mirror && fs.existsSync(mirror)) {
-      const full = await readTrackMetadata(mirror, { artDir: this.artDir });
-      Object.assign(track, {
-        title: full.title || track.title,
-        artist: full.artist || track.artist,
-        album: full.album || track.album,
-        year: full.year || track.year,
-        genre: full.genre || track.genre,
-        duration: full.duration || track.duration,
-        artId: full.artId || track.artId
-      });
-      this.libraryIndex.upsertTracks([track]);
-      return track;
-    }
-
-    const token = await this.resolveAccessToken(source);
-    if (!token) throw new Error(`No credentials configured for ${source.name}`);
-    const enriched = await enrichCloudTrackTags({
-      track,
-      source,
-      token,
-      artDir: this.artDir
-    });
-    this.libraryIndex.upsertTracks([enriched]);
-    return enriched;
-  }
-
-  async startStreamServer() {
-    if (this.server) return this.port;
-    return new Promise((resolve, reject) => {
-      this.server = http.createServer(async (req, res) => {
+    for (const entry of entries) {
+      const fullPath = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        walk(fullPath);
+      } else if (entry.isFile()) {
+        if (entry.name.endsWith('.part') || entry.name.startsWith('.')) continue;
         try {
-          const urlObj = new URL(req.url, 'http://127.0.0.1');
-          const m = urlObj.pathname.match(/^\/cloud-stream\/([a-f0-9]+)$/i);
-          if (!m) {
-            res.writeHead(404);
-            res.end('Not found');
-            return;
-          }
-          const trackId = m[1];
-          const track = this.libraryIndex && this.libraryIndex.byId.get(trackId);
-          if (!track) {
-            res.writeHead(404);
-            res.end('Track not found');
-            return;
-          }
+          const stat = fs.statSync(fullPath);
+          results.push({
+            path: fullPath,
+            name: entry.name,
+            size: stat.size,
+            LastUsedMs: Math.max(stat.mtimeMs || 0, stat.atimeMs || 0),
+          });
+        } catch {}
+      }
+    }
+  };
 
-          const localFile = await this.ensureCachedFile(track);
-          const stat = fs.statSync(localFile);
-          const ext = path.extname(localFile).toLowerCase();
-          const mime = MIME_BY_EXT[ext] || 'video/mp4';
-          const range = req.headers.range;
+  walk(dir);
+  return results;
+}
 
-          res.setHeader('Access-Control-Allow-Origin', '*');
-          res.setHeader('Accept-Ranges', 'bytes');
-          res.setHeader('Content-Type', mime);
-
-          if (range) {
-            const parts = range.replace(/bytes=/, '').split('-');
-            const start = parseInt(parts[0], 10) || 0;
-            const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
-            const chunkSize = (end - start) + 1;
-            res.writeHead(206, {
-              'Content-Range': `bytes ${start}-${end}/${stat.size}`,
-              'Content-Length': chunkSize
-            });
-            fs.createReadStream(localFile, { start, end }).pipe(res);
-          } else {
-            res.writeHead(200, { 'Content-Length': stat.size });
-            fs.createReadStream(localFile).pipe(res);
-          }
-        } catch (err) {
-          res.writeHead(502, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: err.message }));
-        }
-      });
-
-      this.server.listen(0, '0.0.0.0', () => {
-        this.port = this.server.address().port;
-        resolve(this.port);
-      });
-      this.server.on('error', reject);
-    });
+/**
+ * Enforces the LRU cache size limit by evicting least-recently-used cached audio
+ * files until total cache size is <= maxCacheBytes.
+ * @param {string[]} [protectedPaths] - Optional file paths that should not be evicted right now
+ */
+function enforceCacheLimit(protectedPaths = []) {
+  const { maxCacheBytes } = getCacheSettings();
+  const protectedSet = new Set(protectedPaths.filter(Boolean));
+  for (const activePath of activeCacheWrites.keys()) {
+    protectedSet.add(activePath);
   }
 
-  async getStreamUrl(track, hostIp = '127.0.0.1') {
-    const port = await this.startStreamServer();
-    return `http://${hostIp}:${port}/cloud-stream/${track.id}`;
+  const files = listCachedAudioFiles();
+  let totalBytes = files.reduce((acc, f) => acc + f.size, 0);
+  const evicted = [];
+
+  if (totalBytes <= maxCacheBytes) {
+    return { totalBytes, maxCacheBytes, fileCount: files.length, evicted };
   }
 
-  shutdown() {
-    if (this.server) {
-      try { this.server.close(); } catch (_) {}
-      this.server = null;
-      this.port = 0;
+  // Sort ascending by LastUsedMs (oldest / least recently used first)
+  files.sort((a, b) => a.LastUsedMs - b.LastUsedMs);
+
+  for (const file of files) {
+    if (totalBytes <= maxCacheBytes) break;
+    if (protectedSet.has(file.path)) continue;
+    try {
+      fs.unlinkSync(file.path);
+      totalBytes -= file.size;
+      evicted.push(file.path);
+    } catch {}
+  }
+
+  return {
+    totalBytes: Math.max(0, totalBytes),
+    maxCacheBytes,
+    fileCount: Math.max(0, files.length - evicted.length),
+    evicted,
+  };
+}
+
+function getCacheStats() {
+  const { maxCacheBytes } = getCacheSettings();
+  const files = listCachedAudioFiles();
+  const usedBytes = files.reduce((acc, f) => acc + f.size, 0);
+  return {
+    cacheRoot: CACHE_ROOT,
+    usedBytes,
+    maxCacheBytes,
+    fileCount: files.length,
+    activeStreams: activeCacheWrites.size,
+  };
+}
+
+function clearCache(protectedPaths = []) {
+  const protectedSet = new Set(protectedPaths.filter(Boolean));
+  const files = listCachedAudioFiles();
+  let removed = 0;
+  for (const file of files) {
+    if (protectedSet.has(file.path)) continue;
+    try {
+      fs.unlinkSync(file.path);
+      removed++;
+    } catch {}
+  }
+  return { removed, ...getCacheStats() };
+}
+
+function isTrackCached(localPath, expectedSize = null) {
+  try {
+    if (!localPath || !fs.existsSync(localPath)) return false;
+    const stat = fs.statSync(localPath);
+    if (stat.size <= 0) return false;
+    if (expectedSize != null && expectedSize > 0 && stat.size !== expectedSize) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ── Metadata-Only Cloud Indexing (No Bulk Upfront Downloads) ────────────────
+
+/**
+ * Indexes audio files from a remote connection/path WITHOUT downloading the
+ * audio files upfront. Returns track metadata descriptors pointing to their
+ * future local cache path.
+ */
+async function indexCloudAudio(id, remotePaths, onProgress, options = {}) {
+  const ds = getConnection(id);
+  const rs = loadRemoteStorage();
+  const isAudio = (n) => AUDIO_EXTENSIONS.has(path.extname(n).toLowerCase());
+
+  const descriptors = [];
+  for (const rp of remotePaths) {
+    if (isAudio(rp)) {
+      const localPath = cachePathFor(id, rp);
+      descriptors.push({
+        connectionId: id,
+        driverType: ds.driverType,
+        remotePath: path.posix.normalize('/' + rp),
+        driveId: null,
+        name: path.posix.basename(rp),
+        size: null,
+        modified: null,
+        localPath,
+        cached: isTrackCached(localPath),
+      });
+      continue;
+    }
+    onProgress && onProgress({ phase: 'scanning', path: rp });
+    const walked = await rs.walk(ds, rp, isAudio, Number.MAX_SAFE_INTEGER, options);
+    for (const e of walked) {
+      const localPath = cachePathFor(id, e.path);
+      descriptors.push({
+        connectionId: id,
+        driverType: ds.driverType,
+        remotePath: e.path,
+        driveId: e.driveId || null,
+        name: e.name || path.posix.basename(e.path),
+        size: e.size != null ? e.size : null,
+        modified: e.modified || null,
+        localPath,
+        cached: isTrackCached(localPath, e.size),
+      });
     }
   }
+
+  onProgress && onProgress({ phase: 'done', done: descriptors.length, total: descriptors.length });
+  return descriptors;
+}
+
+/**
+ * Ensures a single cloud track is downloaded into the local cache on demand,
+ * then enforces the LRU cache size limit.
+ */
+async function ensureTrackCached({ connectionId, remotePath, driveId, size }) {
+  const localPath = cachePathFor(connectionId, remotePath);
+  if (isTrackCached(localPath, size)) {
+    touchCacheFile(localPath);
+    return localPath;
+  }
+
+  if (activeCacheWrites.has(localPath)) {
+    return activeCacheWrites.get(localPath);
+  }
+
+  const downloadPromise = (async () => {
+    const ds = getConnection(connectionId);
+    const rs = loadRemoteStorage();
+    fs.mkdirSync(path.dirname(localPath), { recursive: true });
+    const partPath = `${localPath}.part.${process.pid}.${Date.now()}`;
+
+    try {
+      if (ds.driverType === 'gdrive' && typeof rs.openGDriveMediaStream === 'function') {
+        const { stream } = await rs.openGDriveMediaStream(ds, {
+          remoteFile: remotePath,
+          driveId: driveId || null,
+        });
+        await new Promise((resolve, reject) => {
+          const out = fs.createWriteStream(partPath);
+          stream.pipe(out);
+          out.on('finish', () => out.close(resolve));
+          out.on('error', reject);
+          stream.on('error', reject);
+        });
+      } else if (ds.driverType === 'onedrive' && typeof rs.openOneDriveMediaStream === 'function') {
+        const { stream } = await rs.openOneDriveMediaStream(ds, {
+          remoteFile: remotePath,
+          driveId: driveId || null,
+        });
+        await new Promise((resolve, reject) => {
+          const out = fs.createWriteStream(partPath);
+          stream.pipe(out);
+          out.on('finish', () => out.close(resolve));
+          out.on('error', reject);
+          stream.on('error', reject);
+        });
+      } else {
+        await rs.download(ds, remotePath, partPath, { driveId: driveId || '' });
+      }
+
+      fs.renameSync(partPath, localPath);
+      touchCacheFile(localPath);
+      enforceCacheLimit([localPath]);
+      return localPath;
+    } catch (err) {
+      try { if (fs.existsSync(partPath)) fs.unlinkSync(partPath); } catch {}
+      throw err;
+    } finally {
+      activeCacheWrites.delete(localPath);
+    }
+  })();
+
+  activeCacheWrites.set(localPath, downloadPromise);
+  return downloadPromise;
+}
+
+function serveFromLocalCache(req, res, localPath, contentType = 'audio/mpeg', cacheHeader = 'HIT') {
+  touchCacheFile(localPath);
+  const stat = fs.statSync(localPath);
+  const total = stat.size;
+  const range = req.headers && req.headers.range;
+
+  if (range) {
+    const parts = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10) || 0;
+    const end = parts[1] ? Math.min(parseInt(parts[1], 10), total - 1) : total - 1;
+    const chunksize = Math.max(0, (end - start) + 1);
+    res.writeHead(206, {
+      'Content-Range': `bytes ${start}-${end}/${total}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': chunksize,
+      'Content-Type': contentType,
+      'X-RobOS-Cache': cacheHeader,
+    });
+    fs.createReadStream(localPath, { start, end }).pipe(res);
+  } else {
+    res.writeHead(200, {
+      'Content-Length': total,
+      'Accept-Ranges': 'bytes',
+      'Content-Type': contentType,
+      'X-RobOS-Cache': cacheHeader,
+    });
+    fs.createReadStream(localPath).pipe(res);
+  }
+}
+
+/**
+ * Streams a cloud track to an HTTP response (`res`) using single-flight caching.
+ * If the track is already in the local cache, serves it directly from disk with
+ * full byte-range support (0 API calls). On a cache miss, deduplicates concurrent
+ * browser Range requests through `ensureTrackCached` (`activeCacheWrites`) so at
+ * most ONE Google Drive / OneDrive request is made per song, then serves from disk.
+ */
+function mediaMimeForPath(filePath, fallback = 'video/mp4') {
+  const ext = path.extname(String(filePath || '')).toLowerCase();
+  const map = {
+    '.mp4': 'video/mp4',
+    '.m4v': 'video/mp4',
+    '.mkv': 'video/x-matroska',
+    '.webm': 'video/webm',
+    '.mov': 'video/quicktime',
+    '.avi': 'video/x-msvideo',
+    '.ogv': 'video/ogg',
+    '.ts': 'video/mp2t',
+    '.m2ts': 'video/mp2t',
+    '.mpg': 'video/mpeg',
+    '.mpeg': 'video/mpeg',
+    '.mp3': 'audio/mpeg',
+    '.m4a': 'audio/mp4',
+    '.flac': 'audio/flac',
+    '.ogg': 'audio/ogg',
+    '.opus': 'audio/ogg',
+    '.wav': 'audio/wav',
+    '.aac': 'audio/aac',
+  };
+  return map[ext] || fallback;
+}
+
+async function streamCloudTrackToHttp(req, res, cloudMeta, onCached = null) {
+  const { connectionId, remotePath, driveId, size } = cloudMeta;
+  const contentType = cloudMeta.contentType || mediaMimeForPath(remotePath);
+  const localPath = cachePathFor(connectionId, remotePath);
+
+  // 1. Cache Hit: serve directly from local cache with Range support & touch LRU (0 API calls)
+  if (isTrackCached(localPath, size)) {
+    serveFromLocalCache(req, res, localPath, contentType, 'HIT');
+    return;
+  }
+
+  // 2. Direct SFTP byte-range streaming for uncached remote video files so playback & seeking start immediately
+  const ds = getConnection(connectionId);
+  const rs = loadRemoteStorage();
+  if (ds && ds.driverType === 'sftp' && typeof rs.withSftp === 'function') {
+    await rs.withSftp(ds, async (sftp) => {
+      let total = Number(size) || 0;
+      if (!total) {
+        const st = await sftp.stat(remotePath);
+        total = st.size;
+      }
+      const range = req.headers && req.headers.range;
+      let start = 0;
+      let end = total - 1;
+      if (range) {
+        const parts = range.replace(/bytes=/, '').split('-');
+        start = parseInt(parts[0], 10) || 0;
+        end = parts[1] ? Math.min(parseInt(parts[1], 10), total - 1) : total - 1;
+      }
+      const chunksize = Math.max(0, (end - start) + 1);
+      res.writeHead(range ? 206 : 200, {
+        ...(range ? { 'Content-Range': `bytes ${start}-${end}/${total}` } : {}),
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunksize,
+        'Content-Type': contentType,
+        'X-RobOS-Cache': 'SFTP-DIRECT-STREAM',
+      });
+      await new Promise((resolve, reject) => {
+        const stream = sftp.createReadStream(remotePath, { start, end });
+        const cleanup = () => { try { stream.destroy(); } catch {} resolve(); };
+        res.on('close', cleanup);
+        stream.on('end', resolve);
+        stream.on('error', (err) => {
+          if (res.destroyed || res.writableEnded) return resolve();
+          reject(err);
+        });
+        stream.pipe(res);
+      });
+    });
+    return;
+  }
+
+  // 3. Cache Miss: Single-flight download into cache (deduplicating concurrent Range requests)
+  const wasAlreadyDownloading = activeCacheWrites.has(localPath);
+  const cachedFile = await ensureTrackCached({ connectionId, remotePath, driveId, size });
+  if (!wasAlreadyDownloading && typeof onCached === 'function') {
+    try { onCached(cachedFile); } catch {}
+  }
+  serveFromLocalCache(req, res, cachedFile, contentType, 'MISS-CACHED');
+}
+
+/**
+ * Reads bytes [start, end] of a cloud audio file without caching it (used to read
+ * tags). Resolves { buffer, totalSize }, or null for connections that cannot
+ * fetch byte ranges (FTP / SFTP).
+ */
+async function readRemoteRange({ connectionId, remotePath, driveId }, start, end) {
+  const ds = getConnection(connectionId);
+  const rs = loadRemoteStorage();
+  const open = ds.driverType === 'gdrive' ? rs.openGDriveMediaStream
+    : ds.driverType === 'onedrive' ? rs.openOneDriveMediaStream
+      : null;
+  if (typeof open !== 'function') return null;
+  const res = await open(ds, { remoteFile: remotePath, driveId: driveId || '', range: `bytes=${start}-${end}` });
+  // A server that ignores Range sends the whole file from byte 0.
+  const skip = res.status === 206 ? 0 : start;
+  const want = end - start + 1;
+  const chunks = [];
+  let seen = 0;
+  let kept = 0;
+  await new Promise((resolve, reject) => {
+    const stream = res.stream;
+    const finish = () => { stream.removeAllListeners('data'); stream.destroy(); resolve(); };
+    stream.on('data', (chunk) => {
+      let c = chunk;
+      if (seen < skip) {
+        const drop = Math.min(skip - seen, c.length);
+        seen += drop;
+        c = c.subarray(drop);
+      }
+      if (c.length) {
+        c = c.subarray(0, want - kept);
+        chunks.push(c);
+        kept += c.length;
+      }
+      if (kept >= want) finish();
+    });
+    stream.on('end', resolve);
+    stream.on('error', reject);
+  });
+  const m = /\/(\d+)\s*$/.exec(res.contentRange || '');
+  const totalSize = m ? Number(m[1]) : (res.status !== 206 && res.contentLength ? Number(res.contentLength) : null);
+  return { buffer: Buffer.concat(chunks), totalSize };
+}
+
+// Legacy alias kept for compatibility, but now indexes metadata only unless explicitly requested
+async function fetchAudio(id, remotePaths, onProgress) {
+  const descriptors = await indexCloudAudio(id, remotePaths, onProgress);
+  return descriptors.map(d => d.localPath);
 }
 
 module.exports = {
-  CloudStorageManager,
-  CLOUD_CACHE_DIR,
-  DATA_SOURCES_PATH
+  CACHE_ROOT,
+  DEFAULT_MAX_CACHE_BYTES,
+  listConnections,
+  list,
+  cachePathFor,
+  localDirFor,
+  indexCloudAudio,
+  fetchAudio,
+  ensureTrackCached,
+  streamCloudTrackToHttp,
+  readRemoteRange,
+  isTrackCached,
+  touchCacheFile,
+  enforceCacheLimit,
+  getCacheStats,
+  setMaxCacheBytes,
+  clearCache,
 };

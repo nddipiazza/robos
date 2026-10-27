@@ -1,136 +1,174 @@
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+
+// The library pages scroll inside `.lib-content`. Lists and grids inside it render
+// only the rows near the visible part of that container, so a 100,000-track library
+// keeps a few hundred DOM nodes no matter how far you scroll.
+export const ScrollContainerContext = createContext(null);
+
+const OVERSCAN_PX = 600;
+
 /**
- * Windowed Virtual Table & Virtual Card Grid for 100,000+ Movie Libraries
+ * Tracks which vertical slice of `rootRef` is visible inside the scroll container.
+ * Returns { top, bottom, width, container } in the root's own coordinates, or null
+ * when there is no scroll container (render everything).
  */
+export function useViewport(rootRef, active = true) {
+  const containerRef = useContext(ScrollContainerContext);
+  const [view, setView] = useState(null);
 
-import React, { useState, useEffect, useRef } from 'react';
-
-export function VirtualTable({
-  items = [],
-  rowHeight = 40,
-  overscan = 10,
-  className = '',
-  renderRow
-}) {
-  const containerRef = useRef(null);
-  const [scrollTop, setScrollTop] = useState(0);
-  const [viewportHeight, setViewportHeight] = useState(520);
-
+  // A passive effect on purpose: the scroll container's ref (owned by a parent)
+  // is only attached after child layout effects have run on first mount.
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return undefined;
-    const updateSize = () => {
-      if (el.clientHeight > 0) setViewportHeight(el.clientHeight);
+    const container = containerRef && containerRef.current;
+    if (!container || !rootRef.current) return undefined;
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      const root = rootRef.current;
+      if (!root) return;
+      const offset = root.getBoundingClientRect().top - container.getBoundingClientRect().top;
+      const top = -offset;
+      const bottom = top + container.clientHeight;
+      const width = root.clientWidth;
+      setView(v => (v && Math.abs(v.top - top) < 1 && Math.abs(v.bottom - bottom) < 1 && v.width === width
+        ? v
+        : { top, bottom, width, container }));
     };
-    updateSize();
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateSize) : null;
-    if (ro) ro.observe(el);
-    window.addEventListener('resize', updateSize);
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(measure); };
+    measure();
+    container.addEventListener('scroll', schedule, { passive: true });
+    const ro = new ResizeObserver(schedule);
+    ro.observe(container);
+    ro.observe(rootRef.current);
     return () => {
-      if (ro) ro.disconnect();
-      window.removeEventListener('resize', updateSize);
+      container.removeEventListener('scroll', schedule);
+      ro.disconnect();
+      if (frame) cancelAnimationFrame(frame);
     };
-  }, []);
+  }, [containerRef, rootRef, active]);
 
-  const totalHeight = items.length * rowHeight;
-  const startIdx = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
-  const visibleCount = Math.ceil(viewportHeight / rowHeight) + overscan * 2;
-  const endIdx = Math.min(items.length, startIdx + visibleCount);
-  const offsetY = startIdx * rowHeight;
-
-  const visibleItems = items.slice(startIdx, endIdx);
-
-  return (
-    <div
-      ref={containerRef}
-      className={`vt-scroll-container ${className}`}
-      onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
-      style={{ overflowY: 'auto', flex: 1, position: 'relative' }}
-    >
-      <div style={{ height: totalHeight, position: 'relative', width: '100%' }}>
-        <div style={{ transform: `translateY(${offsetY}px)`, position: 'absolute', left: 0, right: 0, top: 0 }}>
-          {visibleItems.map((item, i) => renderRow(item, startIdx + i))}
-        </div>
-      </div>
-    </div>
-  );
+  return view;
 }
 
+/** Scrolls the container so that `y` (root coordinates) sits `margin` px from the top. */
+export function scrollRootTo(view, rootRef, y, margin = 0) {
+  if (!view || !rootRef.current) return;
+  const { container } = view;
+  const offset = rootRef.current.getBoundingClientRect().top - container.getBoundingClientRect().top;
+  container.scrollTop += offset + y - margin;
+}
+
+// First index whose row ends below `y` (rows sorted by top).
+function firstRowAt(rows, y) {
+  let lo = 0;
+  let hi = rows.length - 1;
+  let ans = rows.length;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (rows[mid].top + rows[mid].height >= y) { ans = mid; hi = mid - 1; } else lo = mid + 1;
+  }
+  return ans;
+}
+
+const DEFAULT_GRID = { minWidth: 150, gapX: 16, gapY: 20, textHeight: 46, headingHeight: 50 };
+const RAIL_WIDTH = 26;
+
+/**
+ * Windowed card grid. Cards are square art + `textHeight` of captions unless
+ * `itemHeight` is given. With `letterOf`, items are split under A–Z headings and a
+ * jump rail is shown. Lists shorter than `virtualizeFrom` render as a plain grid.
+ */
 export function VirtualGrid({
-  items = [],
-  minCardWidth = 168,
-  cardHeight = 224,
-  gap = 14,
-  overscanRows = 3,
-  renderItem
+  items,
+  renderItem,
+  keyOf,
+  letterOf = null,
+  className = '',
+  virtualizeFrom = 60,
+  ...options
 }) {
-  const containerRef = useRef(null);
-  const [scrollTop, setScrollTop] = useState(0);
-  const [dims, setDims] = useState({ width: 900, height: 520 });
+  const opts = { ...DEFAULT_GRID, ...options };
+  const rootRef = useRef(null);
+  const view = useViewport(rootRef);
+  const width = view ? view.width - (letterOf ? RAIL_WIDTH : 0) : 0;
+  const virtual = items.length >= virtualizeFrom && !!view && width > 0;
 
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return undefined;
-    const measure = () => {
-      setDims({
-        width: el.clientWidth || 900,
-        height: el.clientHeight || 520
-      });
-    };
-    measure();
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
-    if (ro) ro.observe(el);
-    window.addEventListener('resize', measure);
-    return () => {
-      if (ro) ro.disconnect();
-      window.removeEventListener('resize', measure);
-    };
-  }, []);
+  const layout = useMemo(() => {
+    if (!virtual) return null;
+    const cols = Math.max(1, Math.floor((width + opts.gapX) / (opts.minWidth + opts.gapX)));
+    const cardWidth = (width - opts.gapX * (cols - 1)) / cols;
+    const rowHeight = (opts.itemHeight || cardWidth + opts.textHeight) + opts.gapY;
+    const rows = [];
+    const letterTops = [];
+    let top = 0;
+    let i = 0;
+    while (i < items.length) {
+      const letter = letterOf ? letterOf(items[i]) : null;
+      if (letterOf) {
+        letterTops.push({ letter, top });
+        rows.push({ kind: 'heading', letter, top, height: opts.headingHeight });
+        top += opts.headingHeight;
+      }
+      // Fill rows until the letter changes (or the list ends).
+      while (i < items.length && (!letterOf || letterOf(items[i]) === letter)) {
+        const start = i;
+        const chunk = [];
+        while (chunk.length < cols && i < items.length && (!letterOf || letterOf(items[i]) === letter)) {
+          chunk.push(items[i]);
+          i++;
+        }
+        rows.push({ kind: 'cards', items: chunk, start, top, height: rowHeight });
+        top += rowHeight;
+      }
+    }
+    return { cols, rows, total: top, letterTops };
+  }, [virtual, items, width, letterOf, opts.minWidth, opts.gapX, opts.gapY, opts.textHeight, opts.itemHeight, opts.headingHeight]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const cols = Math.max(1, Math.floor((dims.width + gap) / (minCardWidth + gap)));
-  const rowCount = Math.ceil(items.length / cols);
-  const rowStride = cardHeight + gap;
-  const totalHeight = rowCount * rowStride;
+  const plainGrid = () => (
+    <div className={`card-grid ${className}`} style={opts.itemHeight ? { gridAutoRows: opts.itemHeight } : undefined}>
+      {items.map(item => <React.Fragment key={keyOf(item)}>{renderItem(item)}</React.Fragment>)}
+    </div>
+  );
 
-  const startRow = Math.max(0, Math.floor(scrollTop / rowStride) - overscanRows);
-  const visibleRows = Math.ceil(dims.height / rowStride) + overscanRows * 2;
-  const endRow = Math.min(rowCount, startRow + visibleRows);
+  // One root element in every mode: useViewport measures it.
+  if (!virtual) {
+    // Big lists wait for the first measurement (same frame) instead of mounting every card.
+    const waitingForMeasure = items.length >= virtualizeFrom;
+    return (
+      <div ref={rootRef} className={`vgrid ${letterOf ? 'with-rail' : ''}`}>
+        {waitingForMeasure ? null : plainGrid()}
+      </div>
+    );
+  }
 
-  const rows = [];
-  for (let r = startRow; r < endRow; r++) {
-    const slice = items.slice(r * cols, (r + 1) * cols);
-    rows.push({ rowIndex: r, items: slice, top: r * rowStride });
+  const first = firstRowAt(layout.rows, view.top - OVERSCAN_PX);
+  const visible = [];
+  for (let r = first; r < layout.rows.length && layout.rows[r].top < view.bottom + OVERSCAN_PX; r++) {
+    visible.push(layout.rows[r]);
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="vg-scroll-container"
-      onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
-      style={{ overflowY: 'auto', flex: 1, position: 'relative', padding: '8px 12px' }}
-    >
-      <div style={{ height: totalHeight, position: 'relative', width: '100%' }}>
-        {rows.map(row => (
-          <div
-            key={row.rowIndex}
-            style={{
-              position: 'absolute',
-              top: row.top,
-              left: 0,
-              right: 0,
-              height: cardHeight,
-              display: 'grid',
-              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-              gap
-            }}
-          >
-            {row.items.map((item, idx) => (
-              <React.Fragment key={item.key || item.id || idx}>
-                {renderItem(item, row.rowIndex * cols + idx)}
-              </React.Fragment>
+    <div ref={rootRef} className={`vgrid virtual ${letterOf ? 'with-rail' : ''}`} style={{ height: layout.total }}>
+      {letterOf && layout.letterTops.length > 1 && (
+        <div className="letter-rail-track">
+          <div className="letter-rail">
+            {layout.letterTops.map(({ letter, top }) => (
+              <button key={letter} title={`Jump to ${letter}`} onClick={() => scrollRootTo(view, rootRef, top, 4)}>{letter}</button>
             ))}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+      {visible.map(row => (row.kind === 'heading' ? (
+        <h4 key={`h-${row.letter}`} className="letter-heading vgrid-heading" style={{ top: row.top }}>{row.letter}</h4>
+      ) : (
+        <div
+          key={`r-${row.start}`}
+          className={`card-grid vgrid-row ${className}`}
+          style={{ top: row.top, height: row.height - opts.gapY, gridTemplateColumns: `repeat(${layout.cols}, minmax(0, 1fr))` }}
+        >
+          {row.items.map(item => <React.Fragment key={keyOf(item)}>{renderItem(item)}</React.Fragment>)}
+        </div>
+      )))}
     </div>
   );
 }

@@ -1,170 +1,115 @@
-/**
- * Synced Subtitles, Closed Captions & Dialogue Panel for RobOS Movie Player
- *
- * Mirrors the Audio Player's Synced Lyrics panel (`Lyrics.jsx`), adapted for movies:
- *   - Displays synced `.srt`, `.vtt`, `.lrc`, or embedded subtitle streams
- *   - Highlights and auto-scrolls the current dialogue line at `currentTime`
- *   - Clicking any subtitle line seeks the movie directly to that timestamp
- *   - Supports importing an external `.srt`/`.vtt` file and notifies the parent
- *     `<video>` stage of the active subtitle line so live on-screen captions render
- */
+import React, { useState, useEffect, useRef } from 'react';
+import { Icon } from './Icon.jsx';
+import { useLayoutPref } from './resizable.jsx';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Icon } from './Icon';
-import { formatTime } from './library-ui';
-
-export function LyricsPanel({ currentTrack, currentTime = 0, onSeek, onActiveCueChange }) {
-  const [lyrics, setLyrics] = useState({ found: false, source: 'none', synced: [], plain: '' });
-  const [loading, setLoading] = useState(false);
-  const [autoFollow, setAutoFollow] = useState(true);
-  const [collapsed, setCollapsed] = useState(false);
-  const activeLineRef = useRef(null);
-  const containerRef = useRef(null);
+// Time-synced lyrics. `getTime()` is the song position (the local player, or the
+// speaker while casting) and `onSeek(t)` jumps there. Both switches stick: lyrics
+// on/off, and "Follow" (keep the current line in view). Scrolling the lyrics by
+// hand turns Follow off; the Follow button turns it back on.
+export default function Lyrics({ track, getTime, onSeek }) {
+  const [enabled, setEnabled] = useLayoutPref('lyricsEnabled', true);
+  const [follow, setFollow] = useLayoutPref('lyricsFollow', true);
+  const [data, setData] = useState(null); // null = loading
+  const [active, setActive] = useState(-1);
+  const boxRef = useRef(null);
+  const lineRefs = useRef([]);
 
   useEffect(() => {
-    if (!currentTrack || !currentTrack.id) {
-      setLyrics({ found: false, source: 'none', synced: [], plain: '' });
-      if (onActiveCueChange) onActiveCueChange(null);
-      return;
-    }
     let cancelled = false;
-    setLoading(true);
-    window.robosAudio.getLyrics(currentTrack.id).then(res => {
-      if (!cancelled) {
-        setLyrics(res || { found: false, source: 'none', synced: [], plain: '' });
-        setLoading(false);
-      }
-    }).catch(() => {
-      if (!cancelled) {
-        setLyrics({ found: false, source: 'none', synced: [], plain: '' });
-        setLoading(false);
-      }
-    });
+    setData(null);
+    setActive(-1);
+    if (!enabled) return undefined;
+    if (!track || !window.robosAudio?.getLyrics) { setData({ found: false }); return undefined; }
+    window.robosAudio.getLyrics({ title: track.title, artist: track.artist, album: track.album, duration: track.duration, filePath: track.filePath })
+      .then(r => { if (!cancelled) setData(r); })
+      .catch(() => { if (!cancelled) setData({ found: false }); });
     return () => { cancelled = true; };
-  }, [currentTrack && currentTrack.id]);
+  }, [enabled, track?.id, track?.filePath, track?.title, track?.artist]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const activeIdx = useMemo(() => {
-    const list = lyrics.synced || [];
-    if (list.length === 0) return -1;
-    let idx = -1;
-    for (let i = 0; i < list.length; i++) {
-      if (currentTime + 0.12 >= list[i].t) {
-        idx = i;
-      } else {
-        break;
-      }
-    }
-    return idx;
-  }, [lyrics.synced, currentTime]);
+  const synced = (enabled && data?.synced) || [];
 
   useEffect(() => {
-    if (!onActiveCueChange) return;
-    const list = lyrics.synced || [];
-    if (activeIdx >= 0 && list[activeIdx]) {
-      const cue = list[activeIdx];
-      const end = cue.end != null ? cue.end : (list[activeIdx + 1] ? list[activeIdx + 1].t : cue.t + 5);
-      if (currentTime <= end + 0.25) {
-        onActiveCueChange(cue);
-        return;
+    if (!synced.length) return undefined;
+    const tick = () => {
+      const time = getTime();
+      if (time == null) return;
+      const t = time + 0.15; // read slightly ahead so the line lands on the beat
+      let lo = 0, hi = synced.length - 1, idx = -1;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (synced[mid].t <= t) { idx = mid; lo = mid + 1; } else hi = mid - 1;
       }
-    }
-    onActiveCueChange(null);
-  }, [activeIdx, currentTime, lyrics.synced]);
+      setActive(prev => (prev === idx ? prev : idx));
+    };
+    const timer = setInterval(tick, 120);
+    tick();
+    return () => clearInterval(timer);
+  }, [data, enabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (!autoFollow || collapsed || activeIdx < 0 || !activeLineRef.current || !containerRef.current) return;
-    const el = activeLineRef.current;
-    const parent = containerRef.current;
-    const targetTop = el.offsetTop - parent.clientHeight / 2 + el.clientHeight / 2;
-    parent.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
-  }, [activeIdx, autoFollow, collapsed]);
-
-  const handleImportSubtitles = async () => {
-    if (!currentTrack || !window.robosMovie || !window.robosMovie.importSubtitles) return;
-    const res = await window.robosMovie.importSubtitles(currentTrack.id);
-    if (res && res.ok && res.subtitles) {
-      setLyrics(res.subtitles);
-    }
+  const scrollToActive = (smooth = true) => {
+    const el = lineRefs.current[active];
+    const box = boxRef.current;
+    if (el && box) box.scrollTo({ top: el.offsetTop - box.clientHeight / 2 + el.clientHeight / 2, behavior: smooth ? 'smooth' : 'auto' });
   };
 
+  useEffect(() => { if (follow) scrollToActive(); }, [active, follow]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Only the user's own scrolling (wheel, touch, scrollbar drag, keys) stops Follow;
+  // the panel's own smooth scrolling also fires "scroll" events, so those don't count.
+  const stopFollowing = () => { if (follow && synced.length) setFollow(false); };
+
+  let body;
+  if (data === null) body = <div className="lyrics-empty">Looking up lyrics...</div>;
+  else if (synced.length) {
+    body = synced.map((l, i) => (
+      <div key={i} ref={el => { lineRefs.current[i] = el; }}
+        className={`lyric-line ${i === active ? 'active' : i < active ? 'past' : ''}`}
+        onClick={() => onSeek(l.t)}>
+        {l.text || ' '}
+      </div>
+    ));
+  } else if (data.plain) body = <pre className="lyrics-plain">{data.plain}</pre>;
+  else body = <div className="lyrics-empty">{data.error || 'No synced lyrics found for this track.'}</div>;
+
   return (
-    <div className={`lyrics-panel ${collapsed ? 'collapsed' : ''}`}>
-      <div className="lyrics-header">
-        <div className="lyrics-title-row">
-          <Icon name="subtitles" size={14} />
-          <span>Subtitles &amp; Synced Dialogue</span>
-          {lyrics.found && (
-            <span className="lyrics-source-badge">
-              {lyrics.synced && lyrics.synced.length > 0 ? `Synced (${lyrics.source})` : lyrics.source}
-            </span>
-          )}
-        </div>
-        <div className="lyrics-actions">
-          {currentTrack && (
+    <div className={`lyrics-panel ${enabled ? '' : 'off'}`}>
+      <div className="lyrics-head">
+        <span><Icon name="mic" size={14} /> Lyrics</span>
+        <span className="lyrics-tools">
+          {enabled && synced.length > 0 && <span className="lyrics-src">Synced{data.source === 'lrclib' ? ' via LRCLIB' : ' from .lrc file'}</span>}
+          {enabled && synced.length > 0 && (
             <button
-              className="btn btn-xs"
-              onClick={handleImportSubtitles}
-              title="Load external .srt, .vtt, or .lrc subtitle file"
+              id="btn-lyrics-follow"
+              className={`btn-chip lyrics-btn ${follow ? 'on' : ''}`}
+              aria-pressed={follow}
+              title={follow ? 'Following the song: the current line stays in view' : 'Follow the song: keep the current line in view'}
+              onClick={() => { const next = !follow; setFollow(next); if (next) scrollToActive(); }}
             >
-              Load .SRT/.VTT
-            </button>
-          )}
-          {lyrics.synced && lyrics.synced.length > 0 && !collapsed && (
-            <button
-              className={`btn btn-xs ${autoFollow ? 'btn-active-pill' : ''}`}
-              onClick={() => setAutoFollow(v => !v)}
-              title="Auto-scroll subtitles with movie playback"
-            >
-              Follow
+              <Icon name="locate" size={12} /> Follow
             </button>
           )}
           <button
-            className="btn btn-xs"
-            onClick={() => setCollapsed(v => !v)}
-            title={collapsed ? 'Show subtitles panel' : 'Hide subtitles panel'}
+            id="btn-lyrics-toggle"
+            className={`btn-chip lyrics-btn ${enabled ? 'on' : ''}`}
+            aria-pressed={enabled}
+            title={enabled ? 'Turn lyrics off' : 'Turn lyrics on'}
+            onClick={() => setEnabled(!enabled)}
           >
-            {collapsed ? 'Show' : 'Hide'}
+            {enabled ? 'On' : 'Off'}
           </button>
-        </div>
+        </span>
       </div>
-
-      {!collapsed && (
-        <div className="lyrics-body" ref={containerRef}>
-          {!currentTrack ? (
-            <div className="lyrics-empty">Select a movie or video to view synchronized subtitles &amp; dialogue</div>
-          ) : loading ? (
-            <div className="lyrics-empty">Loading subtitles for &ldquo;{currentTrack.title}&rdquo;…</div>
-          ) : !lyrics.found ? (
-            <div className="lyrics-empty">
-              No subtitles found for &ldquo;{currentTrack.title}&rdquo;.
-              <div className="lyrics-hint">
-                Drop a <code>.srt</code> or <code>.vtt</code> file next to the video or click <strong>Load .SRT/.VTT</strong> above.
-              </div>
-            </div>
-          ) : lyrics.synced && lyrics.synced.length > 0 ? (
-            <div className="lyrics-synced-list">
-              {lyrics.synced.map((line, i) => {
-                const isActive = i === activeIdx;
-                const isPast = i < activeIdx;
-                return (
-                  <div
-                    key={`${line.t}-${i}`}
-                    ref={isActive ? activeLineRef : null}
-                    className={`lyrics-line ${isActive ? 'active' : ''} ${isPast ? 'past' : ''}`}
-                    onClick={() => onSeek && onSeek(line.t)}
-                    title={`Jump to ${formatTime(line.t)}`}
-                  >
-                    <span style={{ fontSize: 11, opacity: 0.55, marginRight: 8, fontFamily: 'monospace' }}>
-                      {formatTime(line.t)}
-                    </span>
-                    {line.text}
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <pre className="lyrics-plain">{lyrics.plain}</pre>
-          )}
+      {enabled && (
+        <div
+          className="lyrics-scroll"
+          ref={boxRef}
+          tabIndex={0}
+          onWheel={stopFollowing}
+          onTouchMove={stopFollowing}
+          onPointerDown={(e) => { if (e.target === boxRef.current) stopFollowing(); }}
+          onKeyDown={(e) => { if (['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) stopFollowing(); }}
+        >
+          {body}
         </div>
       )}
     </div>

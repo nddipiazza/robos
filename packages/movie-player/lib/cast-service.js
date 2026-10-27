@@ -1,430 +1,641 @@
-/**
- * Zero-Cloud Local Network Cast Service for RobOS Movie Player
- *
- * Discovers Google TV, Chromecast, Nest Hub, and Google Home devices on the local LAN via mDNS
- * (`_googlecast._tcp.local`) and streams local movies, videos, or audio directly over an
- * embedded HTTP byte-range server using CastV2 (`castv2-client`).
- *
- * No cloud accounts, API keys, or external servers are required.
- */
+'use strict';
 
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const EventEmitter = require('events');
+const net = require('net');
+const { Client, DefaultMediaReceiver } = require('castv2-client');
 
-let mdnsFactory = null;
-let CastClient = null;
-let DefaultMediaReceiver = null;
-
-try {
-  mdnsFactory = require('multicast-dns');
-} catch (_) {}
-
-try {
-  const castv2 = require('castv2-client');
-  CastClient = castv2.Client;
-  DefaultMediaReceiver = castv2.DefaultMediaReceiver;
-} catch (_) {}
-
-const MIME_TYPES = {
-  '.mp4': 'video/mp4',
-  '.m4v': 'video/mp4',
-  '.webm': 'video/webm',
-  '.mkv': 'video/x-matroska',
-  '.mov': 'video/quicktime',
-  '.avi': 'video/x-msvideo',
-  '.ogv': 'video/ogg',
-  '.ts': 'video/mp2t',
-  '.m2ts': 'video/mp2t',
-  '.mp3': 'audio/mpeg',
-  '.flac': 'audio/flac',
-  '.wav': 'audio/wav',
-  '.ogg': 'audio/ogg',
-  '.m4a': 'audio/mp4',
-  '.aac': 'audio/aac',
-  '.opus': 'audio/ogg'
+const AUDIO_MIME = {
+  '.mp4': 'video/mp4', '.m4v': 'video/mp4', '.mkv': 'video/x-matroska', '.webm': 'video/webm',
+  '.mov': 'video/quicktime', '.avi': 'video/x-msvideo', '.ogv': 'video/ogg', '.ts': 'video/mp2t',
+  '.m2ts': 'video/mp2t', '.mpg': 'video/mpeg', '.mpeg': 'video/mpeg',
+  '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.aac': 'audio/aac', '.flac': 'audio/flac',
+  '.ogg': 'audio/ogg', '.opus': 'audio/ogg', '.wav': 'audio/wav',
 };
 
-function getLocalLanIp(targetHost = null) {
-  const interfaces = os.networkInterfaces();
-  const candidates = [];
+function audioMimeType(filePath) {
+  return AUDIO_MIME[path.extname(String(filePath || '')).toLowerCase()] || 'video/mp4';
+}
 
-  for (const [name, addrs] of Object.entries(interfaces)) {
-    for (const addr of addrs || []) {
-      if (addr.family === 'IPv4' && !addr.internal) {
-        candidates.push({ name, address: addr.address, netmask: addr.netmask });
+// The file's real type from its first bytes (an MP3 saved as .wav, e.g. by a voice
+// cache, must still go out as audio/mpeg); falls back to the extension.
+function sniffAudioType(filePath) {
+  let head = null;
+  try {
+    const fd = fs.openSync(filePath, 'r');
+    head = Buffer.alloc(12);
+    fs.readSync(fd, head, 0, 12, 0);
+    fs.closeSync(fd);
+  } catch { return audioMimeType(filePath); }
+  const tag = head.toString('latin1', 0, 4);
+  if (tag === 'RIFF' && head.toString('latin1', 8, 12) === 'WAVE') return 'audio/wav';
+  if (tag.startsWith('ID3') || (head[0] === 0xff && (head[1] & 0xe0) === 0xe0 && (head[1] & 0x06) !== 0)) return 'audio/mpeg';
+  if (tag === 'fLaC') return 'audio/flac';
+  if (tag === 'OggS') return 'audio/ogg';
+  if (head.toString('latin1', 4, 8) === 'ftyp') {
+    const ext = path.extname(String(filePath || '')).toLowerCase();
+    return (ext === '.mp4' || ext === '.m4v' || ext === '.mov') ? 'video/mp4' : 'audio/mp4';
+  }
+  if (head[0] === 0x1a && head[1] === 0x45 && head[2] === 0xdf && head[3] === 0xa3) {
+    return path.extname(String(filePath || '')).toLowerCase() === '.webm' ? 'video/webm' : 'video/x-matroska';
+  }
+  if (head[0] === 0xff && (head[1] & 0xf6) === 0xf0) return 'audio/aac';
+  return audioMimeType(filePath);
+}
+
+const EXT_FOR_MIME = {
+  'video/mp4': 'mp4', 'video/x-matroska': 'mkv', 'video/webm': 'webm', 'video/quicktime': 'mov', 'video/x-msvideo': 'avi',
+  'audio/mpeg': 'mp3', 'audio/wav': 'wav', 'audio/flac': 'flac', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/aac': 'aac', 'audio/webm': 'webm',
+};
+
+// What the app needs from a speaker's media status, plus which load it is about.
+function normalizeStatus(st, conn) {
+  if (!st) return null;
+  return {
+    playerState: st.playerState,
+    idleReason: st.idleReason || null,
+    currentTime: typeof st.currentTime === 'number' ? st.currentTime : null,
+    duration: (st.media && st.media.duration) || conn.duration || null,
+    role: conn.role,
+    loadId: conn.loadId,
+  };
+}
+
+class CastService {
+  constructor() {
+    this.speakers = new Map(); // ip -> speaker info
+    this.loadCounter = 0;
+    this.activeConnections = new Map(); // ip -> { client, player, currentMedia, mediaServer }
+    this.mediaRegistry = new Map(); // id -> { filePath, buffer, contentType, length }
+    this.nextMediaId = 1;
+    this.streamServer = null;
+    this.streamPort = 0;
+    this.hostIp = this._detectHostIp();
+
+    this._initStreamServer();
+  }
+
+  _detectHostIp() {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      for (const iface of interfaces[name]) {
+        // Skip internal/loopback and non-IPv4
+        if (!iface.internal && iface.family === 'IPv4') {
+          // Prefer 192.168.x.x or 10.x.x.x
+          if (iface.address.startsWith('192.168.') || iface.address.startsWith('10.')) {
+            return iface.address;
+          }
+        }
       }
     }
-  }
-
-  if (targetHost && candidates.length > 1) {
-    const prefix = targetHost.split('.').slice(0, 3).join('.');
-    const match = candidates.find(c => c.address.startsWith(prefix + '.'));
-    if (match) return match.address;
-  }
-
-  return candidates[0]?.address || '127.0.0.1';
-}
-
-function parseTxtRecords(txtBuffers) {
-  const result = {};
-  const list = Array.isArray(txtBuffers) ? txtBuffers : [txtBuffers];
-  for (const buf of list) {
-    if (!buf) continue;
-    const str = Buffer.isBuffer(buf) ? buf.toString('utf8') : String(buf);
-    const idx = str.indexOf('=');
-    if (idx > 0) {
-      result[str.slice(0, idx)] = str.slice(idx + 1);
-    }
-  }
-  return result;
-}
-
-class CastService extends EventEmitter {
-  constructor() {
-    super();
-    this.devices = new Map();
-    this.mdns = null;
-    this.httpServer = null;
-    this.httpPort = 0;
-    this.currentFile = null;
-    this.servedFiles = new Map();
-    this.activeClient = null;
-    this.activePlayer = null;
-    this.activeDevice = null;
-  }
-
-  startDiscovery() {
-    if (!mdnsFactory) {
-      return Array.from(this.devices.values());
-    }
-    if (this.mdns) {
-      this.queryMdns();
-      return Array.from(this.devices.values());
-    }
-
-    try {
-      this.mdns = mdnsFactory();
-      this.mdns.on('response', (packet) => this.handleMdnsPacket(packet));
-      this.mdns.on('error', () => {});
-      this.queryMdns();
-    } catch (_) {}
-
-    return Array.from(this.devices.values());
-  }
-
-  queryMdns() {
-    if (!this.mdns) return;
-    try {
-      this.mdns.query({
-        questions: [{ name: '_googlecast._tcp.local', type: 'PTR' }]
-      });
-    } catch (_) {}
-  }
-
-  handleMdnsPacket(packet) {
-    const records = [...(packet.answers || []), ...(packet.additionals || [])];
-    const srvRecords = records.filter(r => r.type === 'SRV');
-    const txtRecords = records.filter(r => r.type === 'TXT');
-    const aRecords = records.filter(r => r.type === 'A');
-
-    for (const srv of srvRecords) {
-      if (!srv.name || !srv.name.includes('_googlecast._tcp.local')) continue;
-      const txtRec = txtRecords.find(t => t.name === srv.name);
-      const txt = txtRec ? parseTxtRecords(txtRec.data) : {};
-      const aRec = aRecords.find(a => a.name === srv.data.target) || aRecords[0];
-      if (!aRec || !aRec.data) continue;
-
-      const id = txt.id || srv.name.split('._googlecast')[0];
-      const friendlyName = txt.fn || srv.name.split('._googlecast')[0];
-      const model = txt.md || 'Google Cast TV / Display';
-      const device = {
-        id,
-        name: friendlyName,
-        model,
-        host: aRec.data,
-        port: srv.data.port || 8009,
-        lastSeen: Date.now()
-      };
-      this.devices.set(id, device);
-      this.emit('devices-updated', Array.from(this.devices.values()));
-    }
-  }
-
-  addManualDevice({ name, host, port = 8009, model = 'Smart TV / Chromecast (Manual)' }) {
-    const id = `manual-${host}:${port}`;
-    const device = { id, name: name || host, model, host, port: Number(port) || 8009, lastSeen: Date.now() };
-    this.devices.set(id, device);
-    this.emit('devices-updated', Array.from(this.devices.values()));
-    return device;
-  }
-
-  getDevices() {
-    return Array.from(this.devices.values());
-  }
-
-  registerStreamFile(filePath) {
-    const token = Buffer.from(filePath).toString('base64url');
-    this.servedFiles.set(token, filePath);
-    this.currentFile = filePath;
-    return token;
-  }
-
-  async ensureHttpServer() {
-    if (this.httpServer && this.httpPort) {
-      return this.httpPort;
-    }
-
-    return new Promise((resolve, reject) => {
-      const server = http.createServer((req, res) => {
-        const cleanUrl = (req.url || '/').split('?')[0];
-        let filePath = this.currentFile;
-        if (cleanUrl.startsWith('/media/')) {
-          const token = cleanUrl.slice('/media/'.length);
-          if (this.servedFiles.has(token)) filePath = this.servedFiles.get(token);
+    // Fallback to first non-internal IPv4
+    for (const name of Object.keys(interfaces)) {
+      for (const iface of interfaces[name]) {
+        if (!iface.internal && iface.family === 'IPv4') {
+          return iface.address;
         }
+      }
+    }
+    return '127.0.0.1';
+  }
 
-        if (!filePath || !fs.existsSync(filePath)) {
-          res.writeHead(404);
-          res.end('No media file queued');
+  _initStreamServer() {
+    this.streamServer = http.createServer((req, res) => {
+      const parsedUrl = new URL(req.url, `http://${this.hostIp}:${this.streamPort}`);
+
+      // Handle Album Art requests
+      if (parsedUrl.pathname.startsWith('/art/')) {
+        const artId = parsedUrl.pathname.replace(/^\/art\//, '').replace(/\.[^.]+$/, '');
+        const lookup = this.mediaLibrary && typeof this.mediaLibrary.getArtAsync === 'function'
+          ? this.mediaLibrary.getArtAsync(artId)
+          : Promise.resolve(this.mediaLibrary ? this.mediaLibrary.getArt(artId) : null);
+        lookup.catch(() => null).then((found) => {
+          let art = found;
+          if (!art && this.mediaRegistry.has(artId)) {
+            art = this.mediaRegistry.get(artId);
+          }
+          if (art && art.buffer) {
+            res.writeHead(200, {
+              'Content-Type': art.format || 'image/jpeg',
+              'Content-Length': art.buffer.length,
+              'Cache-Control': 'public, max-age=86400',
+              'Access-Control-Allow-Origin': '*'
+            });
+            res.end(art.buffer);
+            return;
+          }
+          res.writeHead(404, { 'Content-Type': 'text/plain' });
+          res.end('Art not found');
+        });
+        return;
+      }
+
+      // Handle Cloud Track on-demand streaming + LRU cache route (/cloud-stream/:trackId)
+      if (parsedUrl.pathname.startsWith('/cloud-stream/')) {
+        const trackId = decodeURIComponent(parsedUrl.pathname.replace(/^\/cloud-stream\//, '').replace(/\.[^.]+$/, ''));
+        const track = this.mediaLibrary && Array.isArray(this.mediaLibrary.tracks)
+          ? this.mediaLibrary.tracks.find(t => t.id === trackId)
+          : null;
+
+        if (!track || !track.cloud) {
+          res.writeHead(404, { 'Content-Type': 'text/plain' });
+          res.end('Cloud track not found');
           return;
         }
 
-        const stat = fs.statSync(filePath);
-        const ext = path.extname(filePath).toLowerCase();
-        const contentType = MIME_TYPES[ext] || 'video/mp4';
-        const range = req.headers.range;
+        if (this.cloudStorage && typeof this.cloudStorage.streamCloudTrackToHttp === 'function') {
+          this.cloudStorage.streamCloudTrackToHttp(req, res, track.cloud, (cachedFile) => {
+            if (cachedFile && fs.existsSync(cachedFile)) {
+              track.cloud.cached = true;
+              // The full file is here now: let the app re-read its tags from disk.
+              if (typeof this.onCloudTrackCached === 'function') this.onCloudTrackCached(track);
+            }
+          }).catch((err) => {
+            console.error('[CastService] Cloud stream error:', err.message);
+            if (!res.headersSent) {
+              res.writeHead(502, { 'Content-Type': 'text/plain' });
+              res.end(`Cloud stream error: ${err.message}`);
+            }
+          });
+          return;
+        }
+      }
 
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Accept-Ranges', 'bytes');
+      const mediaId = parsedUrl.pathname.replace(/^\/media\//, '').replace(/\.[^.]+$/, '');
+      const item = this.mediaRegistry.get(mediaId);
+
+      if (!item) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('Media not found');
+        return;
+      }
+
+      if (item.buffer) {
+        res.writeHead(200, {
+          'Content-Type': item.contentType || 'audio/mp3',
+          'Content-Length': item.buffer.length,
+          'Accept-Ranges': 'bytes',
+          'Cache-Control': 'no-cache'
+        });
+        res.end(item.buffer);
+        return;
+      }
+
+      if (item.filePath && fs.existsSync(item.filePath)) {
+        const stat = fs.statSync(item.filePath);
+        const total = stat.size;
+        const range = req.headers.range;
 
         if (range) {
           const parts = range.replace(/bytes=/, '').split('-');
-          const start = parseInt(parts[0], 10);
-          const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
-          const chunkSize = (end - start) + 1;
+          const partialstart = parts[0];
+          const partialend = parts[1];
+          const start = parseInt(partialstart, 10);
+          const end = partialend ? parseInt(partialend, 10) : total - 1;
+          const chunksize = (end - start) + 1;
 
+          const file = fs.createReadStream(item.filePath, { start, end });
           res.writeHead(206, {
-            'Content-Range': `bytes ${start}-${end}/${stat.size}`,
-            'Content-Length': chunkSize,
-            'Content-Type': contentType
+            'Content-Range': `bytes ${start}-${end}/${total}`,
+            'Accept-Ranges': 'bytes',
+            'Content-Length': chunksize,
+            'Content-Type': item.contentType || 'audio/mpeg'
           });
-          fs.createReadStream(filePath, { start, end }).pipe(res);
+          file.pipe(res);
         } else {
           res.writeHead(200, {
-            'Content-Length': stat.size,
-            'Content-Type': contentType
+            'Content-Length': total,
+            'Accept-Ranges': 'bytes',
+            'Content-Type': item.contentType || 'audio/mpeg'
           });
-          fs.createReadStream(filePath).pipe(res);
+          fs.createReadStream(item.filePath).pipe(res);
         }
-      });
-
-      server.listen(0, '0.0.0.0', () => {
-        this.httpServer = server;
-        this.httpPort = server.address().port;
-        resolve(this.httpPort);
-      });
-      server.on('error', reject);
-    });
-  }
-
-  async castTrack(device, track, startTime = 0) {
-    return this.castQueue(device, [track], 0, startTime);
-  }
-
-  async castQueue(device, tracks, startIndex = 0, startTime = 0) {
-    if (!CastClient || !DefaultMediaReceiver) {
-      throw new Error('castv2-client not available');
-    }
-    const list = (Array.isArray(tracks) ? tracks : [tracks]).filter(Boolean);
-    if (list.length === 0) {
-      throw new Error('No movies to cast');
-    }
-
-    this.disconnect();
-    const port = await this.ensureHttpServer();
-    const lanIp = getLocalLanIp(device.host);
-
-    const queueItems = list.map((t, idx) => {
-      let streamUrl = t.path;
-      let ext = path.extname(t.path || '').toLowerCase() || '.mp4';
-      if (!t.path.startsWith('http://') && !t.path.startsWith('https://')) {
-        if (!fs.existsSync(t.path)) {
-          throw new Error(`Movie file not found: ${t.path}`);
-        }
-        const token = this.registerStreamFile(t.path);
-        streamUrl = `http://${lanIp}:${port}/media/${token}`;
+      } else {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('File not found');
       }
-      const contentType = MIME_TYPES[ext] || 'video/mp4';
-      const isVideo = contentType.startsWith('video/');
-      return {
-        autoplay: true,
-        preloadTime: 4,
-        startTime: idx === startIndex ? startTime : 0,
-        media: {
-          contentId: streamUrl,
-          contentType,
-          streamType: 'BUFFERED',
-          metadata: {
-            type: isVideo ? 1 : 3,
-            metadataType: isVideo ? 1 : 3,
-            title: t.title || path.basename(t.path),
-            subtitle: t.artist || '',
-            studio: t.composer || t.artist || 'RobOS Cinema'
-          }
-        }
-      };
     });
 
-    const firstTrack = list[startIndex] || list[0];
+    this.streamServer.listen(0, '0.0.0.0', () => {
+      this.streamPort = this.streamServer.address().port;
+      this.streamServer.unref();
+      console.log(`[CastService] Audio stream server ready at http://${this.hostIp}:${this.streamPort}`);
+    });
+  }
+
+  // The real type matters: speakers may refuse a WAV (e.g. a DJ voice clip) sent as MP3.
+  registerFile(filePath, contentType = null) {
+    const id = `f_${this.nextMediaId++}_${Date.now()}`;
+    const type = contentType || sniffAudioType(filePath);
+    this.mediaRegistry.set(id, { filePath, contentType: type });
+    return `http://${this.hostIp}:${this.streamPort}/media/${id}.${EXT_FOR_MIME[type] || 'mp3'}`;
+  }
+
+  registerBuffer(buffer, contentType = 'audio/mp3') {
+    const id = `b_${this.nextMediaId++}_${Date.now()}`;
+    this.mediaRegistry.set(id, {
+      buffer,
+      contentType,
+    });
+    return `http://${this.hostIp}:${this.streamPort}/media/${id}.mp3`;
+  }
+
+  getCloudStreamUrl(trackId, forCast = false) {
+    const host = forCast ? this.hostIp : '127.0.0.1';
+    return `http://${host}:${this.streamPort}/cloud-stream/${encodeURIComponent(trackId)}.mp4`;
+  }
+
+  /**
+   * Scan local subnet for Google Cast / Nest devices
+   */
+  async scanSubnet(timeoutMs = 1500) {
+    const subnetPrefix = this.hostIp.split('.').slice(0, 3).join('.');
+    const promises = [];
+
+    for (let i = 1; i <= 254; i++) {
+      const ip = `${subnetPrefix}.${i}`;
+      promises.push(this._probeCastDevice(ip, timeoutMs));
+    }
+
+    const results = await Promise.all(promises);
+    for (const dev of results) {
+      if (dev) {
+        this.speakers.set(dev.ip, dev);
+      }
+    }
+
+    return Array.from(this.speakers.values());
+  }
+
+  _probeCastDevice(ip, timeoutMs = 1200) {
+    return new Promise((resolve) => {
+      const socket = new net.Socket();
+      socket.setTimeout(timeoutMs);
+
+      socket.on('connect', () => {
+        socket.destroy();
+        // If port 8009 is open, query eureka_info over HTTP 8008
+        this._queryEurekaInfo(ip).then((info) => {
+          resolve({
+            ip,
+            name: info.name || `Google Cast (${ip})`,
+            model: info.model || 'Google Nest / Cast Device',
+            volume: info.volume || 0.65,
+            muted: info.muted || false,
+            build: info.build || '',
+            online: true,
+            lastSeen: Date.now()
+          });
+        }).catch(() => {
+          resolve({
+            ip,
+            name: `Google Cast (${ip})`,
+            model: 'Google Cast Device',
+            volume: 0.65,
+            muted: false,
+            online: true,
+            lastSeen: Date.now()
+          });
+        });
+      });
+
+      socket.on('timeout', () => {
+        socket.destroy();
+        resolve(null);
+      });
+
+      socket.on('error', () => {
+        socket.destroy();
+        resolve(null);
+      });
+
+      socket.connect(8009, ip);
+    });
+  }
+
+  _queryEurekaInfo(ip) {
+    return new Promise((resolve, reject) => {
+      const req = http.get(`http://${ip}:8008/setup/eureka_info?params=name,device_info`, { timeout: 1200 }, (res) => {
+        let raw = '';
+        res.on('data', chunk => raw += chunk);
+        res.on('end', () => {
+          try {
+            const data = JSON.parse(raw);
+            resolve({
+              name: data.name || data.device_info?.legal_name,
+              model: data.device_info?.model_name || 'Google Cast Speaker',
+              build: data.cast_build_revision || data.build_version
+            });
+          } catch {
+            reject(new Error('Invalid eureka JSON'));
+          }
+        });
+      });
+      req.on('error', reject);
+      req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
+    });
+  }
+
+  async getSpeakerStatus(ip) {
+    return new Promise((resolve, reject) => {
+      const client = new Client();
+      client.connect(ip, () => {
+        client.getStatus((err, status) => {
+          client.close();
+          if (err) return reject(err);
+          resolve({
+            ip,
+            volume: status.volume?.level ?? 0.5,
+            muted: status.volume?.muted ?? false,
+            equalizer: status.userEq
+          });
+        });
+      });
+      client.on('error', (err) => reject(err));
+    });
+  }
+
+  async setSpeakerVolume(ip, level, muted = false) {
+    return new Promise((resolve, reject) => {
+      const client = new Client();
+      client.connect(ip, () => {
+        const volumeOpts = { level: Math.max(0, Math.min(1, level)) };
+        if (typeof muted === 'boolean') volumeOpts.muted = muted;
+        client.setVolume(volumeOpts, (err, vol) => {
+          client.close();
+          if (err) return reject(err);
+          resolve(vol);
+        });
+      });
+      client.on('error', (err) => reject(err));
+    });
+  }
+
+  async castMediaUrl(ip, mediaUrl, metadata = {}, onStatusUpdate = null) {
+    const media = {
+      contentId: mediaUrl,
+      contentType: metadata.contentType || 'audio/mpeg',
+      streamType: 'BUFFERED',
+      metadata: {
+        type: 0,
+        metadataType: 0,
+        title: metadata.title || 'RobOS Audio Stream',
+        artist: metadata.artist || 'RobOS Audio Player',
+        images: metadata.images || []
+      }
+    };
+
+    // `currentTime` starts the song part-way (resuming after a DJ preview).
+    const loadOpts = { autoplay: true };
+    if (metadata.currentTime > 0) loadOpts.currentTime = metadata.currentTime;
+    // 'song' or 'dj' (a Virtual DJ line): status updates say which load they are about.
+    const role = metadata.role || 'song';
+    const loadId = ++this.loadCounter;
+
+    // Next song on a speaker we're already casting to: load it into the same
+    // receiver session. Stopping and relaunching the receiver for every song made
+    // speakers go silent (and chime) between tracks.
+    const conn = this.activeConnections.get(ip);
+    if (conn && conn.player) {
+      try {
+        const status = await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error('Cast load timed out')), 15000);
+          conn.player.load(media, loadOpts, (err, st) => {
+            clearTimeout(timer);
+            if (err) reject(err); else resolve(st);
+          });
+        });
+        Object.assign(conn, { mediaUrl, onStatusUpdate, role, loadId, duration: status?.media?.duration || null });
+        this._startProgress(ip, conn);
+        return { ok: true, playerState: status?.playerState, ip, sessionId: conn.sessionId, reused: true, loadId, duration: conn.duration };
+      } catch (err) {
+        // The session went away (speaker restarted, another app took over): start fresh.
+        console.warn(`[CastService] Reusing the session on ${ip} failed (${err.message}); relaunching.`);
+        this._dropConnection(ip, conn);
+      }
+    } else {
+      // First cast to this speaker: end whatever else it is playing.
+      await this.stopPlayback(ip);
+    }
 
     return new Promise((resolve, reject) => {
-      const client = new CastClient();
-      this.activeClient = client;
-      this.activeDevice = device;
-
-      client.connect(device.host, () => {
+      const client = new Client();
+      let settled = false;
+      client.connect(ip, () => {
         client.launch(DefaultMediaReceiver, (err, player) => {
           if (err) {
-            this.disconnect();
+            client.close();
+            settled = true;
             return reject(err);
           }
-          this.activePlayer = player;
-          player.on('status', status => {
-            this.emit('status', { device, status });
-          });
 
-          if (queueItems.length === 1) {
-            player.load(
-              queueItems[0].media,
-              { autoplay: true, currentTime: startTime },
-              (loadErr, status) => {
-                if (loadErr) return reject(loadErr);
-                this.emit('connected', { device, track: firstTrack, status });
-                resolve({ device, streamUrl: queueItems[0].media.contentId, status, count: 1 });
-              }
-            );
-          } else if (typeof player.queueLoad === 'function') {
-            player.queueLoad(
-              queueItems,
-              { startIndex, repeatMode: 'REPEAT_OFF' },
-              (loadErr, status) => {
-                if (loadErr) return reject(loadErr);
-                this.emit('connected', { device, track: firstTrack, status, queueCount: queueItems.length });
-                resolve({ device, streamUrl: queueItems[startIndex].media.contentId, status, count: queueItems.length });
-              }
-            );
-          } else {
-            player.load(
-              queueItems[startIndex].media,
-              { autoplay: true, currentTime: startTime },
-              (loadErr, status) => {
-                if (loadErr) return reject(loadErr);
-                this.emit('connected', { device, track: firstTrack, status });
-                resolve({ device, streamUrl: queueItems[startIndex].media.contentId, status, count: 1 });
-              }
-            );
-          }
+          player.load(media, loadOpts, (err, status) => {
+            if (err) {
+              client.close();
+              settled = true;
+              return reject(err);
+            }
+
+            const sessionId = player.session?.sessionId;
+            const entry = { client, player, mediaUrl, sessionId, onStatusUpdate, role, loadId, duration: status?.media?.duration || null };
+            this.activeConnections.set(ip, entry);
+
+            // One listener for the session's lifetime; each load swaps the callback.
+            player.on('status', (st) => {
+              if (st && st.media && st.media.duration) entry.duration = st.media.duration;
+              const out = normalizeStatus(st, entry);
+              if (out && typeof entry.onStatusUpdate === 'function') entry.onStatusUpdate(out);
+            });
+            player.on('close', () => this._dropConnection(ip, entry));
+            this._startProgress(ip, entry);
+
+            settled = true;
+            resolve({ ok: true, playerState: status?.playerState, ip, sessionId, loadId, duration: entry.duration });
+          });
         });
       });
 
       client.on('error', (err) => {
-        this.emit('error', err);
-        this.disconnect();
+        const entry = this.activeConnections.get(ip);
+        if (entry && entry.client === client) this._dropConnection(ip, entry);
+        if (!settled) { settled = true; reject(err); }
       });
     });
   }
 
-  generateTestToneWav() {
-    const tmpFile = path.join(os.tmpdir(), 'robos-cinema-test-chime.wav');
-    if (fs.existsSync(tmpFile)) return tmpFile;
-    const sampleRate = 44100;
-    const durationSec = 2.0;
-    const totalSamples = Math.floor(sampleRate * durationSec);
-    const dataSize = totalSamples * 2;
-    const buffer = Buffer.alloc(44 + dataSize);
+  // Speakers only report their position on state changes; ask every second so
+  // the app's progress bar follows the speaker.
+  _startProgress(ip, conn) {
+    if (conn.progressTimer) return;
+    conn.progressTimer = setInterval(() => {
+      if (this.activeConnections.get(ip) !== conn) { clearInterval(conn.progressTimer); conn.progressTimer = null; return; }
+      try {
+        conn.player.getStatus((err, st) => {
+          if (err || !st) return;
+          if (st.media && st.media.duration) conn.duration = st.media.duration;
+          const out = normalizeStatus(st, conn);
+          if (out && typeof conn.onStatusUpdate === 'function') conn.onStatusUpdate(out);
+        });
+      } catch {}
+    }, 1000);
+    if (conn.progressTimer.unref) conn.progressTimer.unref();
+  }
 
+  seekPlayback(ip, seconds) {
+    const conn = this.activeConnections.get(ip);
+    if (!conn || !conn.player) return Promise.resolve({ ok: false });
+    return new Promise((resolve) => {
+      conn.player.seek(Math.max(0, Number(seconds) || 0), (err) => resolve(err ? { ok: false, error: err.message } : { ok: true }));
+    });
+  }
+
+  _dropConnection(ip, conn) {
+    if (this.activeConnections.get(ip) === conn) this.activeConnections.delete(ip);
+    if (conn.progressTimer) { clearInterval(conn.progressTimer); conn.progressTimer = null; }
+    try { conn.client.close(); } catch {}
+  }
+
+  async stopPlayback(ip) {
+    if (!ip) return { ok: false, error: 'No IP specified' };
+
+    const conn = this.activeConnections.get(ip);
+    if (conn) {
+      this.activeConnections.delete(ip);
+      if (conn.progressTimer) { clearInterval(conn.progressTimer); conn.progressTimer = null; }
+      try {
+        const sessionId = conn.player?.session?.sessionId || conn.sessionId;
+        if (conn.client && conn.client.receiver && sessionId) {
+          await new Promise((resolve) => {
+            conn.client.receiver.stop(sessionId, () => resolve());
+            setTimeout(resolve, 800);
+          });
+        }
+      } catch (err) {
+        console.warn(`[CastService] Receiver stop error on ${ip}:`, err.message);
+      }
+
+      try {
+        if (conn.client) {
+          conn.client.close();
+        }
+      } catch {}
+      return { ok: true, stopped: true, ip };
+    }
+
+    // Fallback: connect directly and terminate any running session
+    return new Promise((resolve) => {
+      const client = new Client();
+      const timer = setTimeout(() => {
+        try { client.close(); } catch {}
+        resolve({ ok: false, stopped: false, ip });
+      }, 2500);
+
+      client.connect(ip, () => {
+        client.getSessions((err, sessions) => {
+          if (!err && sessions && sessions.length > 0) {
+            let pending = sessions.length;
+            for (const s of sessions) {
+              client.receiver.stop(s.sessionId, () => {
+                pending--;
+                if (pending <= 0) {
+                  clearTimeout(timer);
+                  try { client.close(); } catch {}
+                  resolve({ ok: true, stopped: true, ip });
+                }
+              });
+            }
+          } else {
+            clearTimeout(timer);
+            try { client.close(); } catch {}
+            resolve({ ok: true, stopped: false, ip });
+          }
+        });
+      });
+
+      client.on('error', () => {
+        clearTimeout(timer);
+        try { client.close(); } catch {}
+        resolve({ ok: false, error: 'Connection failed', ip });
+      });
+    });
+  }
+
+  async stopAllPlayback() {
+    const ips = new Set([
+      ...this.activeConnections.keys(),
+      ...this.speakers.keys()
+    ]);
+    const results = [];
+    for (const ip of ips) {
+      results.push(await this.stopPlayback(ip));
+    }
+    return results;
+  }
+
+  pausePlayback(ip) {
+    const conn = this.activeConnections.get(ip);
+    if (conn && conn.player) {
+      conn.player.pause();
+      return { ok: true };
+    }
+    return { ok: false };
+  }
+
+  resumePlayback(ip) {
+    const conn = this.activeConnections.get(ip);
+    if (conn && conn.player) {
+      conn.player.play();
+      return { ok: true };
+    }
+    return { ok: false };
+  }
+
+  generateChimeBuffer() {
+    const sampleRate = 44100;
+    const duration = 0.8;
+    const numSamples = Math.floor(sampleRate * duration);
+    const buffer = Buffer.alloc(44 + numSamples * 2);
+
+    // Write standard 16-bit PCM mono WAV header
     buffer.write('RIFF', 0);
-    buffer.writeUInt32LE(36 + dataSize, 4);
+    buffer.writeUInt32LE(36 + numSamples * 2, 4);
     buffer.write('WAVE', 8);
     buffer.write('fmt ', 12);
     buffer.writeUInt32LE(16, 16);
-    buffer.writeUInt16LE(1, 20);
-    buffer.writeUInt16LE(1, 22);
+    buffer.writeUInt16LE(1, 20); // PCM
+    buffer.writeUInt16LE(1, 22); // Mono
     buffer.writeUInt32LE(sampleRate, 24);
     buffer.writeUInt32LE(sampleRate * 2, 28);
     buffer.writeUInt16LE(2, 32);
     buffer.writeUInt16LE(16, 34);
     buffer.write('data', 36);
-    buffer.writeUInt32LE(dataSize, 40);
+    buffer.writeUInt32LE(numSamples * 2, 40);
 
-    const notes = [261.63, 329.63, 392.00, 523.25]; // C4 -> E4 -> G4 -> C5 cinema chord arpeggio
-    for (let i = 0; i < totalSamples; i++) {
+    // Two-tone harmonic chime (C5 523Hz -> E5 659Hz)
+    for (let i = 0; i < numSamples; i++) {
       const t = i / sampleRate;
-      const idx = Math.min(notes.length - 1, Math.floor(t / (durationSec / notes.length)));
-      const localT = t - idx * (durationSec / notes.length);
-      const env = Math.exp(-localT * 4.5);
-      const sample = Math.sin(2 * Math.PI * notes[idx] * t) * env * 0.45;
-      buffer.writeInt16LE(Math.max(-32767, Math.min(32767, Math.floor(sample * 32767))), 44 + i * 2);
+      const freq = t < 0.35 ? 523.25 : 659.25;
+      const decay = Math.exp(-t * 3.0);
+      const val = Math.floor(Math.sin(2 * Math.PI * freq * t) * decay * 18000);
+      buffer.writeInt16LE(Math.max(-32767, Math.min(32767, val)), 44 + i * 2);
     }
-    fs.writeFileSync(tmpFile, buffer);
-    return tmpFile;
+
+    return buffer;
   }
 
-  async testSpeaker(device) {
-    const wavPath = this.generateTestToneWav();
-    return this.castTrack(device, {
-      id: 'robos-cinema-test-chime',
-      title: 'RobOS Cinema Test Chime',
-      artist: 'RobOS Movie Player',
-      album: 'LAN Cast Verification',
-      path: wavPath
-    }, 0);
-  }
-
-  control(action, value) {
-    if (!this.activePlayer) return false;
-    try {
-      if (action === 'play') this.activePlayer.play(() => {});
-      else if (action === 'pause') this.activePlayer.pause(() => {});
-      else if (action === 'stop') this.activePlayer.stop(() => {});
-      else if (action === 'seek') this.activePlayer.seek(Number(value) || 0, () => {});
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  disconnect() {
-    if (this.activeClient) {
-      try {
-        this.activeClient.close();
-      } catch (_) {}
-    }
-    this.activeClient = null;
-    this.activePlayer = null;
-    this.activeDevice = null;
-    this.emit('disconnected');
-  }
-
-  shutdown() {
-    this.disconnect();
-    if (this.mdns) {
-      try {
-        this.mdns.destroy();
-      } catch (_) {}
-      this.mdns = null;
-    }
-    if (this.httpServer) {
-      try {
-        this.httpServer.close();
-      } catch (_) {}
-      this.httpServer = null;
-      this.httpPort = 0;
-    }
+  async playTestChime(ip) {
+    const buffer = this.generateChimeBuffer();
+    const streamUrl = this.registerBuffer(buffer, 'audio/wav');
+    return this.castMediaUrl(ip, streamUrl, {
+      title: 'Speaker Test Chime',
+      artist: 'RobOS Audio Player',
+      album: 'Diagnostics',
+      contentType: 'audio/wav'
+    });
   }
 }
 
-module.exports = { CastService, getLocalLanIp, parseTxtRecords };
+module.exports = { CastService, audioMimeType, sniffAudioType };

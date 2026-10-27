@@ -1,787 +1,1014 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+'use strict';
+
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const crypto = require('crypto');
 const { spawn } = require('child_process');
-const {
-  ART_CACHE_DIR,
-  getArtPath,
-  readTrackMetadata,
-  scanInWorker,
-  loadLibrary,
-  saveLibrary,
-  loadStatsDisk,
-  saveStatsDisk,
-  loadPlaylists,
-  savePlaylists,
-  parseM3U,
-  exportM3U,
-  LibraryIndex
-} = require('./lib/media-library');
-const { CastService } = require('./lib/cast-service');
-const { CloudStorageManager } = require('./lib/cloud-storage');
-const { LibraryFoldersManager } = require('./lib/library-folders');
-const { getLyrics, saveCustomSubtitles } = require('./lib/lyrics');
+const { pathToFileURL } = require('url');
+const { CastService, audioMimeType, sniffAudioType } = require('./lib/cast-service');
+const { MediaLibrary } = require('./lib/media-library');
+const cloud = require('./lib/cloud-storage');
+const { createTagQueue } = require('./lib/cloud-tags');
+const lyrics = require('./lib/lyrics');
+const { LibraryFolders } = require('./lib/library-folders');
+const aiPlaylist = require('./lib/ai-playlist');
+const aiMetadata = require('./lib/ai-metadata');
 const { createControlServer } = require('./lib/control-server');
-const { generateAiPlaylist, generateDjIntros } = require('./lib/ai-playlist');
-const { enrichTracksMetadata } = require('./lib/ai-metadata');
 
-let ttsEngine = null;
-try {
-  ttsEngine = require('/usr/local/share/robos/robos-voice/tts-engine');
-} catch (_) {
-  try {
-    ttsEngine = require('../robos-voice/tts-engine');
-  } catch (_) {}
+// Shared RobOS modules: the repo checkout in development, the installed copy on the VM.
+function requireShared(...relPaths) {
+  for (const rel of relPaths) {
+    const candidates = [
+      process.env.ROBOS_LIB_PATH && rel.startsWith('robos-lib/') && path.join(process.env.ROBOS_LIB_PATH, rel.slice('robos-lib/'.length)),
+      path.resolve(__dirname, '..', rel),
+      path.join('/usr/local/share/robos', rel),
+    ].filter(Boolean);
+    for (const p of candidates) {
+      try { return require(p); } catch {}
+    }
+  }
+  return null;
 }
 
-let castClock = null;
-try {
-  castClock = require('/usr/local/share/robos/robos-lib/cast-clock');
-} catch (_) {
-  try {
-    castClock = require('../robos-lib/cast-clock');
-  } catch (_) {}
+function ensureFileAccessible(filePath) {
+  if (!filePath || typeof filePath !== 'string') return false;
+  if (fs.existsSync(filePath)) return true;
+  // If it's a GVFS SFTP mount that timed out or disconnected, attempt auto-reconnect via gio mount
+  const match = filePath.match(/\/run\/user\/\d+\/gvfs\/sftp:host=([^/]+)/);
+  if (match) {
+    const host = match[1];
+    try {
+      const { execFileSync } = require('child_process');
+      execFileSync('gio', ['mount', `sftp://${host}`], { stdio: 'ignore', timeout: 5000 });
+      return fs.existsSync(filePath);
+    } catch {}
+  }
+  return false;
 }
 
-let castAmbient = null;
+// Optional snapshot debug server
+let _debugServer = null;
 try {
-  castAmbient = require('/usr/local/share/robos/robos-lib/cast-ambient');
-} catch (_) {
-  try {
-    castAmbient = require('../robos-lib/cast-ambient');
-  } catch (_) {}
+  const libPaths = [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'dom-snapshot'),
+    path.resolve(__dirname, '..', 'robos-lib', 'dom-snapshot'),
+    '/usr/local/share/robos/robos-lib/dom-snapshot',
+  ].filter(Boolean);
+  for (const p of libPaths) {
+    try { _debugServer = require(p); break; } catch {}
+  }
+} catch {}
+
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+  process.exit(0);
 }
 
-let CastSpeakerWatcher = null;
-try {
-  ({ CastSpeakerWatcher } = require('/usr/local/share/robos/robos-lib/cast-speaker-watcher'));
-} catch (_) {
-  try {
-    ({ CastSpeakerWatcher } = require('../robos-lib/cast-speaker-watcher'));
-  } catch (_) {}
-}
+app.commandLine.appendSwitch('no-sandbox');
+app.commandLine.appendSwitch('disable-gpu');
+app.commandLine.appendSwitch('disable-dev-shm-usage');
 
 let mainWindow = null;
+app.on('second-instance', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    if (app.isReady()) createWindow();
+    return;
+  }
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+});
 const castService = new CastService();
-const libraryIndex = new LibraryIndex();
-const cloudManager = new CloudStorageManager({
-  libraryIndex,
-  artDir: ART_CACHE_DIR
-});
-const foldersManager = new LibraryFoldersManager();
-const speakerWatcher = CastSpeakerWatcher ? new CastSpeakerWatcher() : null;
+const mediaLibrary = new MediaLibrary();
+castService.mediaLibrary = mediaLibrary;
+castService.cloudStorage = cloud;
+const libraryFolders = new LibraryFolders({ mediaLibrary, cloud, castService });
 
-const controlServer = createControlServer({
-  getState: () => controlServer.getCachedState(),
-  getLibraryTracks: () => libraryIndex.tracks,
-  getPlaylists: () => loadPlaylists(),
-  onCommand: async (cmd) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('audio:remote-command', cmd);
+// Refresh cloud track stream URLs once CastService streamServer allocates its port,
+// and migrate any legacy cloud tracks stored under ~/.cache/robos/audio-player/cloud/
+function refreshCloudTrackUrls() {
+  if (!castService.streamPort) return;
+  let updated = false;
+  for (const track of mediaLibrary.tracks) {
+    if (!track.cloud && track.filePath && track.filePath.startsWith(cloud.CACHE_ROOT + path.sep)) {
+      const rel = path.relative(cloud.CACHE_ROOT, track.filePath);
+      const parts = rel.split(path.sep);
+      if (parts.length >= 2) {
+        const connId = parts[0];
+        const remotePath = '/' + parts.slice(1).join('/');
+        track.cloud = {
+          connectionId: connId,
+          driverType: 'gdrive',
+          remotePath,
+          driveId: null,
+          size: fs.existsSync(track.filePath) ? fs.statSync(track.filePath).size : null,
+          cached: fs.existsSync(track.filePath),
+        };
+        updated = true;
+      }
     }
-    return { forwarded: true, action: cmd && cmd.action };
+    if (track.cloud) {
+      track.cloud.cached = cloud.isTrackCached(track.filePath, track.cloud.size);
+      const nextSrc = castService.getCloudStreamUrl(track.id, false);
+      if (track.src !== nextSrc) {
+        track.src = nextSrc;
+        updated = true;
+      }
+    }
   }
+  if (updated) {
+    mediaLibrary._saveCache();
+  }
+}
+
+// ── Cloud song tags ─────────────────────────────────────────────────────────
+// Cloud songs are listed without downloading them, so their tags are read in the
+// background, fetching only the bytes that hold them (lib/cloud-tags).
+const cloudTagQueue = createTagQueue({
+  read: (track) => mediaLibrary.refreshCloudTags(track, cloud.readRemoteRange),
+  flush: () => {
+    mediaLibrary._rebuildIndexes();
+    mediaLibrary._saveCacheSoon();
+    sendToWindow('audio:library-scan-batch', { library: mediaLibrary.getLibrary() });
+  },
+  flushMs: 2500,
+  onAuthRequired: () => {}, // Data Sources already shows its "sign in" toast
 });
 
-// Ensure default sample videos are always indexed in the library so first launch has playable content
-function seedInitialSampleTracks() {
-  const playlists = loadPlaylists();
-  const samplePlaylist = playlists.find(p => p.id === 'scifi-cinema');
-  if (samplePlaylist && Array.isArray(samplePlaylist.tracks) && libraryIndex.tracks.length === 0) {
-    libraryIndex.upsertTracks(samplePlaylist.tracks);
-  }
+function readCloudTagsInBackground(tracks = mediaLibrary.cloudTracksNeedingTags()) {
+  if (tracks.length) cloudTagQueue.add(tracks);
 }
 
-// Hydrate library index + watch stats on startup
-libraryIndex.loadStats(loadStatsDisk());
-libraryIndex.setTracks(loadLibrary());
-seedInitialSampleTracks();
+castService.onCloudTrackCached = (track) => cloudTagQueue.add([track]);
 
-function getAggregatePayload() {
-  return {
-    summary: libraryIndex.getSummary(),
-    albums: libraryIndex.albums,
-    artists: libraryIndex.artists,
-    genres: libraryIndex.genres,
-    decades: libraryIndex.decades,
-    composers: libraryIndex.composers,
-    folders: libraryIndex.folders
-  };
-}
-
-function sendScanProgress(payload) {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('audio:scan-progress', payload);
-  }
-}
+setTimeout(refreshCloudTrackUrls, 200);
+setTimeout(() => {
+  mediaLibrary.upgradeCloudGuesses();
+  readCloudTagsInBackground();
+}, 3000);
+try { cloud.enforceCacheLimit(); } catch {}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1400,
-    height: 880,
-    minWidth: 1020,
-    minHeight: 660,
+    width: 1360,
+    height: 860,
+    minWidth: 840,
+    minHeight: 580,
+    backgroundColor: '#0d1117',
     title: 'RobOS Movie Player',
-    backgroundColor: '#15120f',
+    icon: fs.existsSync(path.join(__dirname, 'icon.png')) ? path.join(__dirname, 'icon.png') : path.join(__dirname, 'icon.svg'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      sandbox: false
     }
   });
 
-  mainWindow.setMenuBarVisibility(false);
+  app.setName('robos-movie-player');
+
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
-  try {
-    const { registerSnapshotIPC, startDebugServer } = require('/usr/local/share/robos/robos-lib/dom-snapshot');
-    registerSnapshotIPC(mainWindow);
-    startDebugServer(mainWindow, 19213, 'movie-player');
-  } catch (_) {
+  // Wire snapshot server on port 19214
+  if (_debugServer) {
     try {
-      const { registerSnapshotIPC, startDebugServer } = require('../robos-lib/dom-snapshot');
-      registerSnapshotIPC(mainWindow);
-      startDebugServer(mainWindow, 19213, 'movie-player');
-    } catch (_) {}
+      if (typeof _debugServer.registerSnapshotIPC === 'function') {
+        _debugServer.registerSnapshotIPC(mainWindow);
+      }
+      if (typeof _debugServer.startDebugServer === 'function') {
+        _debugServer.startDebugServer(mainWindow, 19214, 'movie-player');
+      }
+    } catch (e) {
+      console.warn('[MoviePlayer] Could not start debug snapshot server:', e.message);
+    }
   }
 
-  castService.on('devices-updated', (devices) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('audio:cast-devices-updated', devices);
-    }
+  mainWindow.on('closed', () => {
+    mainWindow = null;
   });
-
-  castService.on('status', (status) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('audio:cast-status', status);
-    }
-  });
-
-  castService.startDiscovery();
-
-  if (speakerWatcher) {
-    speakerWatcher.on('takeover', (evt) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:speaker-takeover', evt);
-      }
-    });
-    speakerWatcher.on('speaker-state', (evt) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:speaker-state', evt);
-      }
-    });
-  }
 }
 
-// ── High-scale Library Query IPC ───────────────────────────────────────────
-
-ipcMain.handle('audio:get-library', async () => {
-  if (libraryIndex.tracks.length === 0) {
-    const defaultDirs = [
-      path.join(os.homedir(), 'Videos'),
-      path.join(os.homedir(), 'Movies'),
-      '/usr/share/backgrounds'
-    ].filter(d => fs.existsSync(d));
-
-    if (defaultDirs.length > 0) {
-      await runBackgroundScan({ directories: defaultDirs });
-    }
-    seedInitialSampleTracks();
-  }
-  const initialPage = libraryIndex.queryTracks({ offset: 0, limit: 500, sortBy: 'title', sortDir: 'asc' });
-  return {
-    ...getAggregatePayload(),
-    tracks: initialPage.tracks,
-    total: initialPage.total
-  };
-});
-
-ipcMain.handle('audio:get-library-summary', async () => {
-  return getAggregatePayload();
-});
-
-ipcMain.handle('audio:query-tracks', async (_e, opts = {}) => {
-  return libraryIndex.queryTracks(opts);
-});
-
-ipcMain.handle('audio:get-track', async (_e, id) => {
-  return libraryIndex.byId.get(id) || null;
-});
-
-ipcMain.handle('audio:record-play', async (_e, trackId) => {
-  const st = libraryIndex.recordPlay(trackId);
-  saveStatsDisk(libraryIndex.exportStats());
-  return st;
-});
-
-ipcMain.handle('audio:toggle-loved', async (_e, trackId, loved) => {
-  const st = libraryIndex.toggleLoved(trackId, loved);
-  saveStatsDisk(libraryIndex.exportStats());
-  return st;
-});
-
-ipcMain.handle('audio:get-art-url', async (_e, artId) => {
-  const p = getArtPath(artId);
-  return p ? `file://${p}` : null;
-});
-
-ipcMain.handle('audio:get-lyrics', async (_e, trackId) => {
-  const track = libraryIndex.byId.get(trackId);
-  return getLyrics(track);
-});
-
-ipcMain.handle('movie:import-subtitles', async (_e, trackId) => {
-  if (!trackId) return { ok: false, error: 'No active movie selected' };
-  const res = await dialog.showOpenDialog(mainWindow, {
-    title: 'Import Subtitle File (.srt, .vtt, .lrc)',
-    properties: ['openFile'],
-    filters: [
-      { name: 'Subtitle Files', extensions: ['srt', 'vtt', 'lrc', 'txt'] }
-    ]
-  });
-  if (res.canceled || res.filePaths.length === 0) return { ok: false, canceled: true };
-  const filePath = res.filePaths[0];
-  const content = fs.readFileSync(filePath, 'utf8');
-  const saved = saveCustomSubtitles(trackId, content);
-  const track = libraryIndex.byId.get(trackId);
-  if (track) {
-    track.hasSubtitles = true;
-    libraryIndex.upsertTracks([track]);
-  }
-  return { ok: true, subtitles: saved, filePath };
-});
-
-ipcMain.handle('movie:save-snapshot', async (_e, { dataUrl, title = 'movie-frame', timestamp = 0 } = {}) => {
-  if (!dataUrl || !dataUrl.startsWith('data:image/')) {
-    return { ok: false, error: 'Invalid frame snapshot data' };
-  }
-  const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
-  const buf = Buffer.from(base64, 'base64');
-  const picturesDir = path.join(os.homedir(), 'Pictures', 'RobOS Movie Snapshots');
-  fs.mkdirSync(picturesDir, { recursive: true });
-  const safeTitle = String(title).replace(/[^a-z0-9-_]+/gi, '_').slice(0, 40) || 'frame';
-  const timeStr = Math.floor(Number(timestamp) || 0);
-  const outPath = path.join(picturesDir, `${safeTitle}_${timeStr}s_${Date.now()}.png`);
-  fs.writeFileSync(outPath, buf);
-  return { ok: true, path: outPath, bytes: buf.length };
-});
-
-async function runBackgroundScan({ directories = [], files = [] }) {
-  sendScanProgress({ active: true, processed: 0, total: 0 });
-  const res = await scanInWorker({
-    directories,
-    files,
-    existingTracks: libraryIndex.tracks,
-    onDiscovered: (total) => {
-      sendScanProgress({ active: true, processed: 0, total });
-    },
-    onBatch: (batchMsg) => {
-      libraryIndex.upsertTracks(batchMsg.tracks);
-      sendScanProgress({
-        active: true,
-        processed: batchMsg.processed,
-        total: batchMsg.total,
-        reused: batchMsg.reused,
-        parsed: batchMsg.parsed
-      });
-    }
-  });
-  saveLibrary(libraryIndex.tracks, true);
-  sendScanProgress({ active: false, processed: res.total, total: res.total });
-  return res;
-}
-
-ipcMain.handle('audio:scan-folders', async (_event, dirs) => {
-  const targetDirs = Array.isArray(dirs) && dirs.length > 0
-    ? dirs
-    : [path.join(os.homedir(), 'Videos'), path.join(os.homedir(), 'Movies')];
-
-  await runBackgroundScan({ directories: targetDirs });
-  for (const d of targetDirs) foldersManager.markScanned(d);
-  const page = libraryIndex.queryTracks({ offset: 0, limit: 500 });
-  return {
-    ...getAggregatePayload(),
-    tracks: page.tracks,
-    total: page.total
-  };
-});
-
-// ── Managed Library Folders IPC ─────────────────────────────────────────────
-
-ipcMain.handle('audio:folders-list', async () => {
-  return foldersManager.listWithStats(libraryIndex);
-});
-
-ipcMain.handle('audio:folders-add', async () => {
-  const res = await dialog.showOpenDialog(mainWindow, {
-    title: 'Add Movie Library Folder',
-    properties: ['openDirectory']
-  });
-  if (res.canceled || res.filePaths.length === 0) return null;
-  const dirPath = res.filePaths[0];
-  foldersManager.addFolder(dirPath);
-  await runBackgroundScan({ directories: [dirPath] });
-  foldersManager.markScanned(dirPath);
-  return {
-    folders: foldersManager.listWithStats(libraryIndex),
-    library: getAggregatePayload()
-  };
-});
-
-ipcMain.handle('audio:folders-remove', async (_e, dirPath) => {
-  if (!dirPath) return null;
-  foldersManager.removeFolder(dirPath);
-  const prefix = dirPath.endsWith(path.sep) ? dirPath : dirPath + path.sep;
-  libraryIndex.removeByPredicate(t => t.source !== 'cloud' && t.path && (t.path === dirPath || t.path.startsWith(prefix)));
-  saveLibrary(libraryIndex.tracks, true);
-  return {
-    folders: foldersManager.listWithStats(libraryIndex),
-    library: getAggregatePayload()
-  };
-});
-
-ipcMain.handle('audio:folders-rescan', async (_e, dirPath) => {
-  const targets = dirPath
-    ? [dirPath]
-    : foldersManager.listWithStats(libraryIndex).map(f => f.path).filter(p => fs.existsSync(p));
-  if (targets.length > 0) {
-    await runBackgroundScan({ directories: targets });
-    for (const d of targets) foldersManager.markScanned(d);
-  }
-  return {
-    folders: foldersManager.listWithStats(libraryIndex),
-    library: getAggregatePayload()
-  };
-});
-
-ipcMain.handle('audio:pick-folder', async () => {
-  const res = await dialog.showOpenDialog(mainWindow, {
-    title: 'Select Movie Folder to Scan',
-    properties: ['openDirectory', 'multiSelections']
-  });
-  if (res.canceled || res.filePaths.length === 0) return null;
-  await runBackgroundScan({ directories: res.filePaths });
-  const page = libraryIndex.queryTracks({ offset: 0, limit: 500 });
-  return {
-    folders: res.filePaths,
-    ...getAggregatePayload(),
-    tracks: page.tracks,
-    total: page.total
-  };
-});
-
-ipcMain.handle('audio:pick-files', async () => {
-  const res = await dialog.showOpenDialog(mainWindow, {
-    title: 'Add Movie / Video Files',
-    properties: ['openFile', 'multiSelections'],
-    filters: [
-      { name: 'Video & Movie Files', extensions: ['mp4', 'mkv', 'webm', 'mov', 'm4v', 'avi', 'ogv', 'ts', 'm2ts', 'mpg', 'mpeg', 'mp3', 'flac', 'wav'] }
-    ]
-  });
-  if (res.canceled || res.filePaths.length === 0) return null;
-  await runBackgroundScan({ files: res.filePaths });
-  const page = libraryIndex.queryTracks({ offset: 0, limit: 500 });
-  return {
-    ...getAggregatePayload(),
-    tracks: page.tracks,
-    total: page.total
-  };
-});
-
-// ── Cloud Storage IPC (Google Drive, OneDrive, Dropbox, S3, SFTP) ──────────
-
-ipcMain.handle('audio:cloud-sources', async () => {
-  return {
-    sources: cloudManager.loadConfiguredSources(),
-    cache: cloudManager.getCacheStatus()
-  };
-});
-
-ipcMain.handle('audio:cloud-browse', async (_e, sourceId, remotePath = '/') => {
-  return cloudManager.browse(sourceId, remotePath);
-});
-
-ipcMain.handle('audio:cloud-index', async (_e, sourceId, remotePath = '/') => {
-  const res = await cloudManager.indexSource(sourceId, remotePath, 4, (prog) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('audio:cloud-index-progress', { sourceId, ...prog });
-    }
-  });
-  saveLibrary(libraryIndex.tracks, true);
-  return {
-    indexedCount: res.indexedCount,
-    ...getAggregatePayload()
-  };
-});
-
-ipcMain.handle('audio:cloud-remove-tracks', async (_e, sourceId) => {
-  const removed = libraryIndex.removeByPredicate(t => t.source === 'cloud' && (!sourceId || t.sourceId === sourceId));
-  saveLibrary(libraryIndex.tracks, true);
-  return { removed, ...getAggregatePayload() };
-});
-
-ipcMain.handle('audio:cloud-stream-url', async (_e, trackId) => {
-  const track = libraryIndex.byId.get(trackId);
-  if (!track) throw new Error('Movie not found in library');
-  if (track.source !== 'cloud') {
-    return track.path.startsWith('http') ? track.path : `file://${track.path}`;
-  }
-  return cloudManager.getStreamUrl(track, '127.0.0.1');
-});
-
-ipcMain.handle('audio:cloud-cache-status', async () => {
-  return cloudManager.getCacheStatus();
-});
-
-ipcMain.handle('audio:cloud-cache-set-max', async (_e, maxBytes) => {
-  return cloudManager.setMaxCacheBytes(maxBytes);
-});
-
-ipcMain.handle('audio:cloud-cache-clear', async () => {
-  return cloudManager.clearCache();
-});
-
-ipcMain.handle('audio:cloud-enrich-track', async (_e, trackId) => {
-  const updated = await cloudManager.enrichTrackMetadata(trackId);
-  saveLibrary(libraryIndex.tracks);
-  return updated;
-});
-
-ipcMain.handle('audio:open-data-sources', async () => {
-  const candidates = [
-    '/usr/local/share/robos/data-sources',
-    path.resolve(__dirname, '..', 'data-sources')
-  ];
-  const appPath = candidates.find(p => fs.existsSync(p));
-  if (!appPath) return { launched: false };
-  const child = spawn('electron', [appPath, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'], {
-    detached: true,
-    stdio: 'ignore'
-  });
-  child.unref();
-  return { launched: true, appPath };
-});
-
-ipcMain.handle('audio:open-cloud-accounts', async () => {
-  const candidates = [
-    '/usr/local/share/robos/cloud-accounts',
-    path.resolve(__dirname, '..', 'cloud-accounts')
-  ];
-  const appPath = candidates.find(p => fs.existsSync(p));
-  if (!appPath) return { launched: false };
-  const child = spawn('electron', [appPath, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'], {
-    detached: true,
-    stdio: 'ignore'
-  });
-  child.unref();
-  return { launched: true, appPath };
-});
-
-// ── Playlists / Watchlists IPC ──────────────────────────────────────────────
-
-ipcMain.handle('audio:get-playlists', async () => loadPlaylists());
-
-ipcMain.handle('audio:save-playlists', async (_event, playlists) => {
-  savePlaylists(playlists);
-  return playlists;
-});
-
-ipcMain.handle('audio:import-m3u', async () => {
-  const res = await dialog.showOpenDialog(mainWindow, {
-    title: 'Import M3U / M3U8 Movie Watchlist',
-    properties: ['openFile'],
-    filters: [{ name: 'M3U Playlists', extensions: ['m3u', 'm3u8'] }]
-  });
-  if (res.canceled || res.filePaths.length === 0) return null;
-  const m3uPath = res.filePaths[0];
-  const content = fs.readFileSync(m3uPath, 'utf8');
-  const entries = parseM3U(content, path.dirname(m3uPath));
-
-  const tracks = [];
-  for (const entry of entries) {
-    if (!entry.path.startsWith('http') && !entry.path.startsWith('cloud://') && fs.existsSync(entry.path)) {
-      tracks.push(await readTrackMetadata(entry.path, { artDir: ART_CACHE_DIR }));
+app.whenReady().then(() => {
+  createWindow();
+  controlServer.start().catch(err => console.warn('[AudioPlayer] Control API unavailable:', err.message));
+  // Wait until the renderer subscribes; checks run without blocking first paint.
+  mainWindow.webContents.once('did-finish-load', () => {
+    libraryFolders.list();
+    const now = Date.now();
+    const targets = libraryFolders.folders.filter(f => {
+      if (f.syncEnabled === false) return false;
+      // Skip immediate re-walk on startup if this cloud folder was already synced within the last 5 minutes
+      if (f.kind === 'cloud' && f.lastSynced && mediaLibrary.tracks.length > 0 && (now - new Date(f.lastSynced).getTime() < 5 * 60 * 1000)) {
+        return false;
+      }
+      return true;
+    });
+    scanLocalFolders(targets);
+    if (targets.some(f => f.kind === 'cloud')) {
+      syncCloudFolders(targets).then(() => {
+        sendToWindow('audio:folders-updated', folderState({ withLibrary: true }));
+      }).catch(err => console.error('Startup folder check failed:', err.message));
     } else {
-      tracks.push({
-        id: Buffer.from(entry.path).toString('base64').slice(0, 24),
-        ...entry
-      });
+      sendToWindow('audio:folders-updated', folderState({ withLibrary: true }));
     }
-  }
+  });
 
-  const playlists = loadPlaylists();
-  const imported = {
-    id: `pl-${Date.now()}`,
-    name: path.basename(m3uPath, path.extname(m3uPath)),
-    description: `Imported from ${path.basename(m3uPath)}`,
-    tracks
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
+
+// Large libraries batch their cache writes; make sure the last one lands.
+app.on('before-quit', () => {
+  try { mediaLibrary.flush(); } catch {}
+  try { controlServer.stop(); } catch {}
+});
+
+// ── Control API for other RobOS apps (lib/control-server.js) ────────────────
+
+// The renderer owns playback, so each call is answered there.
+const controlRequests = new Map(); // requestId → resolve
+let controlRequestSeq = 0;
+function askRenderer(action, payload = {}, timeoutMs = 15000) {
+  if (!mainWindow || mainWindow.isDestroyed()) return Promise.resolve({ ok: false, error: 'The Audio Player window is closed' });
+  const requestId = ++controlRequestSeq;
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      controlRequests.delete(requestId);
+      resolve({ ok: false, error: 'The Audio Player did not answer' });
+    }, timeoutMs);
+    controlRequests.set(requestId, (result) => { clearTimeout(timer); resolve(result); });
+    mainWindow.webContents.send('audio:control-request', { requestId, action, payload });
+  });
+}
+
+ipcMain.handle('audio:control-reply', async (_evt, { requestId, result } = {}) => {
+  const resolve = controlRequests.get(requestId);
+  controlRequests.delete(requestId);
+  if (resolve) resolve(result || { ok: false });
+  return true;
+});
+
+const controlServer = createControlServer({
+  handlers: {
+    status: () => askRenderer('status'),
+    speakClip: (clip) => askRenderer('speak-clip', clip, 60000),
+    pause: () => askRenderer('pause'),
+    resume: () => askRenderer('resume'),
+  },
+  log: (entry) => console.warn('[AudioPlayer] control:', JSON.stringify(entry)),
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
+});
+
+// ── Background scan → renderer updates ─────────────────────────────────────
+
+// Library payloads are large (100k tracks ≈ 30 MB over IPC) and rebuilding the
+// renderer's browse index costs a few hundred ms, so during a scan the renderer
+// receives progress a few times per second and the library itself only every few
+// seconds, scaled to the library size.
+const PROGRESS_INTERVAL_MS = 150;
+
+function libraryPushInterval() {
+  const n = mediaLibrary.tracks.length;
+  return n < 5000 ? 1000 : n < 30000 ? 3000 : 6000;
+}
+
+function scanUpdates({ onDone } = {}) {
+  let lastProgress = 0;
+  let lastLibraryPush = 0;
+  let pendingLibrary = null;
+  const pushLibrary = () => {
+    if (pendingLibrary) { clearTimeout(pendingLibrary); pendingLibrary = null; }
+    lastLibraryPush = Date.now();
+    sendToWindow('audio:library-scan-batch', { library: mediaLibrary.getLibrary() });
   };
-  playlists.push(imported);
-  savePlaylists(playlists);
-  return { playlists, imported };
-});
+  return {
+    onDiscovered: (data) => sendToWindow('audio:library-scan-discovered', data),
+    onProgress: (progress) => {
+      const now = Date.now();
+      if (now - lastProgress < PROGRESS_INTERVAL_MS && progress.current !== progress.total) return;
+      lastProgress = now;
+      sendToWindow('audio:library-scan-progress', { current: progress.current, total: progress.total, file: progress.file });
+    },
+    onBatch: () => {
+      const wait = libraryPushInterval() - (Date.now() - lastLibraryPush);
+      if (wait <= 0) pushLibrary();
+      else if (!pendingLibrary) pendingLibrary = setTimeout(pushLibrary, wait);
+    },
+    onDone: (done) => {
+      if (pendingLibrary) { clearTimeout(pendingLibrary); pendingLibrary = null; }
+      if (onDone) onDone(done);
+      sendToWindow('audio:library-scan-complete', { totalFound: done.totalFound, canceled: done.canceled, library: mediaLibrary.getLibrary() });
+    },
+    onError: (err) => {
+      if (pendingLibrary) { clearTimeout(pendingLibrary); pendingLibrary = null; }
+      sendToWindow('audio:library-scan-error', { error: err.message });
+    },
+  };
+}
 
-ipcMain.handle('audio:export-m3u', async (_event, playlist) => {
-  const res = await dialog.showSaveDialog(mainWindow, {
-    title: 'Export Watchlist as M3U',
-    defaultPath: `${(playlist.name || 'watchlist').replace(/\s+/g, '-')}.m3u`,
-    filters: [{ name: 'M3U Playlist', extensions: ['m3u'] }]
-  });
-  if (res.canceled || !res.filePath) return false;
-  fs.writeFileSync(res.filePath, exportM3U(playlist));
-  return res.filePath;
-});
+// ── IPC Handlers ────────────────────────────────────────────────────────────
 
-// ── AI Watchlist & Virtual Cinema Host IPC (Optional) ───────────────────────
-
-ipcMain.handle('audio:ai-generate-playlist', async (_e, opts = {}) => {
-  const built = await generateAiPlaylist({
-    prompt: opts.prompt || '',
-    libraryIndex,
-    count: opts.count || 15,
-    virtualDj: Boolean(opts.virtualDj),
-    djStyle: opts.djStyle || 'warm classic cinema host'
-  });
-
-  if (opts.save !== false && built.tracks.length > 0) {
-    const playlists = loadPlaylists();
-    const created = {
-      id: `ai-pl-${Date.now()}`,
-      name: built.name,
-      description: built.description,
-      aiGenerated: true,
-      prompt: opts.prompt || '',
-      virtualDj: built.virtualDj,
-      djStyle: built.djStyle,
-      tracks: built.tracks
-    };
-    playlists.push(created);
-    savePlaylists(playlists);
-    return { ...built, playlist: created, playlists };
-  }
-  return built;
-});
-
-ipcMain.handle('audio:ai-generate-dj-intros', async (_e, opts = {}) => {
-  return generateDjIntros({
-    tracks: Array.isArray(opts.tracks) ? opts.tracks : [],
-    playlistName: opts.playlistName || '',
-    djStyle: opts.djStyle || 'warm classic cinema host'
-  });
-});
-
-ipcMain.handle('audio:ai-dj-speak', async (_e, { text, voice } = {}) => {
-  if (!text || !String(text).trim()) {
-    return { ok: false, error: 'Empty cinema host line' };
-  }
-  if (!ttsEngine || typeof ttsEngine.synthesizeSpeech !== 'function') {
-    return { ok: false, error: 'RobOS Voice TTS engine unavailable' };
-  }
+ipcMain.handle('audio:discover-speakers', async () => {
   try {
-    const res = await ttsEngine.synthesizeSpeech(String(text).trim(), {
-      voice: voice || 'af_heart',
-      speed: 1.0
-    });
-    if (res && res.file && fs.existsSync(res.file)) {
-      return {
-        ok: true,
-        fileUrl: `file://${res.file}`,
-        filePath: res.file,
-        engine: res.engine
-      };
-    }
-    return { ok: false, error: 'TTS produced no audio file' };
+    return await castService.scanSubnet();
+  } catch (err) {
+    console.error('[AudioPlayer] Error scanning speakers:', err);
+    return [];
+  }
+});
+
+ipcMain.handle('audio:get-speaker-status', async (_evt, ip) => {
+  try {
+    return await castService.getSpeakerStatus(ip);
   } catch (err) {
     return { ok: false, error: err.message };
   }
 });
 
-// ── AI & Open-Data Movie Metadata / Poster Fixer IPC ────────────────────────
-
-ipcMain.handle('audio:ai-fix-metadata', async (_e, opts = {}) => {
-  const {
-    trackIds = null,
-    scope = 'missing',
-    useAi = true,
-    generateFallbackArt = true,
-    writeFileTags = false
-  } = opts || {};
-
-  let targets = [];
-  if (Array.isArray(trackIds) && trackIds.length > 0) {
-    const idSet = new Set(trackIds);
-    targets = libraryIndex.tracks.filter(t => idSet.has(t.id));
-  } else if (scope === 'all') {
-    targets = libraryIndex.tracks.slice(0, 500);
-  } else {
-    const { trackNeedsFix } = require('./lib/ai-metadata');
-    targets = libraryIndex.tracks.filter(t => {
-      const check = trackNeedsFix(t);
-      return check.needsMetadata || check.needsArt;
-    }).slice(0, 500);
+ipcMain.handle('audio:set-speaker-volume', async (_evt, { ip, level, muted }) => {
+  try {
+    return await castService.setSpeakerVolume(ip, level, muted);
+  } catch (err) {
+    return { ok: false, error: err.message };
   }
+});
 
-  if (targets.length === 0) {
-    return {
-      total: 0,
-      updatedCount: 0,
-      artAddedCount: 0,
-      results: [],
-      library: getAggregatePayload()
-    };
-  }
-
-  const res = await enrichTracksMetadata({
-    tracks: targets,
-    artDir: ART_CACHE_DIR,
-    useAi: Boolean(useAi),
-    generateFallbackArt: Boolean(generateFallbackArt),
-    writeFileTags: Boolean(writeFileTags),
-    onProgress: (prog) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('audio:fix-metadata-progress', prog);
+ipcMain.handle('audio:cast-file', async (_evt, { ip, filePath, metadata }) => {
+  try {
+    let streamUrl;
+    if (fs.existsSync(filePath)) {
+      if (filePath.startsWith(cloud.CACHE_ROOT + path.sep)) {
+        cloud.touchCacheFile(filePath);
       }
+      streamUrl = castService.registerFile(filePath);
+    } else {
+      // Check if it's a cloud track that should be streamed on demand
+      const cloudTrack = mediaLibrary.tracks.find(t => t.filePath === filePath && t.cloud);
+      if (!cloudTrack) throw new Error('File does not exist: ' + filePath);
+      streamUrl = castService.getCloudStreamUrl(cloudTrack.id, true);
     }
+    const meta = { ...(metadata || {}), contentType: (metadata && metadata.contentType) || (fs.existsSync(filePath) ? sniffAudioType(filePath) : audioMimeType(filePath)) };
+    return await castService.castMediaUrl(ip, streamUrl, meta, (status) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:speaker-status-change', { ip, status });
+      }
+    });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+// Downloads the next cloud song into the cache while the current one plays, so
+// the change of song doesn't wait for it (a cache miss downloads the whole file).
+ipcMain.handle('audio:prefetch-track', async (_evt, filePath) => {
+  const track = filePath && mediaLibrary.tracks.find(t => t.filePath === filePath && t.cloud);
+  if (!track) return { ok: false };
+  if (cloud.isTrackCached(track.filePath, track.cloud.size)) return { ok: true, cached: true };
+  try {
+    await cloud.ensureTrackCached(track.cloud);
+    track.cloud.cached = true;
+    cloudTagQueue.add([track]);
+    return { ok: true, cached: true };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('audio:cast-url', async (_evt, { ip, url, metadata }) => {
+  try {
+    return await castService.castMediaUrl(ip, url, metadata, (status) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:speaker-status-change', { ip, status });
+      }
+    });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+
+ipcMain.handle('audio:play-test-chime', async (_evt, ip) => {
+  try {
+    return await castService.playTestChime(ip);
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('audio:cast-pause', async (_evt, ip) => {
+  return castService.pausePlayback(ip);
+});
+
+ipcMain.handle('audio:cast-resume', async (_evt, ip) => {
+  return castService.resumePlayback(ip);
+});
+
+ipcMain.handle('audio:cast-seek', async (_evt, { ip, seconds } = {}) => {
+  if (!ip || ip === 'all') {
+    const results = await Promise.all([...castService.activeConnections.keys()].map(i => castService.seekPlayback(i, seconds)));
+    return { ok: results.some(r => r.ok) };
+  }
+  return castService.seekPlayback(ip, seconds);
+});
+
+ipcMain.handle('audio:cast-stop', async (_evt, ip) => {
+  const res = await castService.stopPlayback(ip);
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('audio:speaker-playback-stopped', { ip });
+  }
+  return res;
+});
+
+ipcMain.handle('audio:cast-stop-all', async () => {
+  const res = await castService.stopAllPlayback();
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('audio:speaker-playback-stopped', { all: true });
+  }
+  return res;
+});
+
+ipcMain.handle('audio:open-file-dialog', async () => {
+  if (!mainWindow) return { canceled: true };
+  const res = await dialog.showOpenDialog(mainWindow, {
+    title: 'Select Movie / Video Files',
+    properties: ['openFile', 'multiSelections'],
+    filters: [
+      { name: 'Movie & Media Files', extensions: ['mp4', 'mkv', 'webm', 'mov', 'm4v', 'avi', 'ogv', 'ts', 'm2ts', 'mpg', 'mpeg', 'mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a'] },
+      { name: 'All Files', extensions: ['*'] }
+    ]
   });
 
-  libraryIndex.upsertTracks(res.tracks);
-  saveLibrary(libraryIndex.tracks, true);
-
-  const playlists = loadPlaylists();
-  let playlistsUpdated = false;
-  for (const pl of playlists) {
-    if (!Array.isArray(pl.tracks)) continue;
-    for (let i = 0; i < pl.tracks.length; i++) {
-      const updated = libraryIndex.byId.get(pl.tracks[i].id);
-      if (updated) {
-        pl.tracks[i] = { ...pl.tracks[i], ...updated };
-        playlistsUpdated = true;
-      }
-    }
+  if (res.canceled || !res.filePaths.length) {
+    return { canceled: true, tracks: [] };
   }
-  if (playlistsUpdated) savePlaylists(playlists);
+
+  const tracks = res.filePaths.map(p => {
+    const filename = path.basename(p);
+    return {
+      id: `trk_${crypto.createHash('sha1').update(p).digest('hex').slice(0, 16)}`,
+      title: path.parse(filename).name,
+      artist: 'Local File',
+      album: 'Local Files',
+      filePath: p,
+      src: pathToFileURL(p).href
+    };
+  });
+
+  return { canceled: false, tracks };
+});
+
+ipcMain.handle('audio:ensure-file-accessible', async (_evt, filePath) => {
+  if (filePath && filePath.startsWith(cloud.CACHE_ROOT + path.sep) && fs.existsSync(filePath)) {
+    cloud.touchCacheFile(filePath);
+    return true;
+  }
+  const cloudTrack = mediaLibrary.tracks.find(t => t.filePath === filePath && t.cloud);
+  if (cloudTrack) return true; // Will be streamed on demand via /cloud-stream/:trackId
+  return ensureFileAccessible(filePath);
+});
+
+ipcMain.handle('audio:get-library', async () => {
+  refreshCloudTrackUrls();
+  return mediaLibrary.getLibrary();
+});
+
+ipcMain.handle('audio:select-library-folder', async () => {
+  if (!mainWindow) return { canceled: true };
+  const res = await dialog.showOpenDialog(mainWindow, {
+    title: 'Select Music Folder(s)',
+    buttonLabel: 'Add Folder',
+    properties: ['openDirectory', 'multiSelections', 'dontAddToRecent']
+  });
+
+  if (res.canceled || !res.filePaths.length) {
+    return { canceled: true };
+  }
+
+  // Launch background scan worker off the main thread
+  mediaLibrary.scanFoldersInBackground(res.filePaths, scanUpdates());
 
   return {
-    total: res.total,
-    updatedCount: res.updatedCount,
-    artAddedCount: res.artAddedCount,
-    results: res.results,
-    playlists,
-    library: getAggregatePayload()
+    canceled: false,
+    started: true,
+    folders: res.filePaths
   };
 });
 
-// ── Google Home / Smart TV / Chromecast LAN Cast IPC ────────────────────────
-
-ipcMain.handle('audio:cast-devices', async () => {
-  return castService.startDiscovery();
+ipcMain.handle('audio:scan-folders', async (_evt, folders) => {
+  if (!Array.isArray(folders) || !folders.length) return { canceled: true };
+  mediaLibrary.scanFoldersInBackground(folders, scanUpdates());
+  return { started: true, folders };
 });
 
-ipcMain.handle('audio:cast-add-manual', async (_event, { name, host, port, model }) => {
-  return castService.addManualDevice({ name, host, port, model });
-});
-
-ipcMain.handle('audio:cast-track', async (_event, device, track, startTime) => {
-  let resolvedTrack = track;
-  if (track && track.source === 'cloud') {
-    const localFile = await cloudManager.ensureCachedFile(track);
-    resolvedTrack = { ...track, path: localFile };
+ipcMain.handle('audio:cancel-scan', async () => {
+  const canceled = mediaLibrary.cancelScan();
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('audio:library-scan-canceled');
   }
-  return castService.castTrack(device, resolvedTrack, startTime);
+  return { canceled };
 });
 
-ipcMain.handle('audio:cast-playlist', async (_event, device, tracks, startIndex = 0) => {
-  const list = Array.isArray(tracks) ? tracks : [];
-  const resolved = [];
-  for (const t of list) {
-    if (!t) continue;
-    if (t.source === 'cloud') {
-      const localFile = await cloudManager.ensureCachedFile(t);
-      resolved.push({ ...t, path: localFile });
-    } else {
-      resolved.push(t);
+ipcMain.handle('audio:import-paths', async (_evt, targetPaths) => {
+  if (!Array.isArray(targetPaths) || !targetPaths.length) return { canceled: true, tracks: [] };
+  
+  const files = [];
+  const dirs = [];
+  for (const p of targetPaths) {
+    try {
+      if (fs.existsSync(p)) {
+        const stat = fs.statSync(p);
+        if (stat.isDirectory()) dirs.push(p);
+        else if (stat.isFile()) files.push(p);
+      }
+    } catch {}
+  }
+
+  const quickTracks = [];
+  for (const f of files) {
+    try {
+      const track = await mediaLibrary.parseTrack(f);
+      quickTracks.push(track);
+    } catch {}
+  }
+  mediaLibrary.mergeTracks(quickTracks);
+
+  if (dirs.length > 0) {
+    mediaLibrary.scanFoldersInBackground(dirs, scanUpdates());
+  }
+
+  return {
+    tracks: quickTracks,
+    scanningDirs: dirs.length > 0,
+    dirs,
+    library: mediaLibrary.getLibrary()
+  };
+});
+
+// ── Managed library folders (local + cloud) ────────────────────────────────
+
+// Only attach the (potentially huge) library when the call changed tracks.
+function folderState({ withLibrary = false } = {}) {
+  const state = { folders: libraryFolders.list() };
+  if (withLibrary) state.library = mediaLibrary.getLibrary();
+  return state;
+}
+
+function scanLocalFolders(folders) {
+  const paths = folders.filter(f => f.kind === 'local' && fs.existsSync(f.path)).map(f => f.path);
+  if (!paths.length) return;
+  mediaLibrary.scanFoldersInBackground(paths, scanUpdates({
+    onDone: () => folders.forEach(f => f.kind === 'local' && libraryFolders.markSynced(f.id)),
+  }));
+}
+
+async function syncCloudFolders(folders) {
+  const results = [];
+  for (const f of folders.filter(x => x.kind === 'cloud')) {
+    try {
+      results.push({ id: f.id, ...(await libraryFolders.syncCloud(f.id, (p) => sendToWindow('audio:cloud-progress', { ...p, folder: f.label }))) });
+    } catch (err) {
+      f.syncError = err.message;
+      results.push({ id: f.id, error: err.message });
     }
   }
-  return castService.castQueue(device, resolved, startIndex, 0);
+  readCloudTagsInBackground();
+  return results;
+}
+
+ipcMain.handle('audio:folders-list', async () => folderState());
+
+ipcMain.handle('audio:folders-set-enabled', async (_evt, { id, enabled }) => {
+  try {
+    const folder = libraryFolders.setEnabled(id, enabled);
+    const results = enabled ? await syncCloudFolders([folder]) : [];
+    if (enabled) scanLocalFolders([folder]);
+    const failed = results.find(r => r.error);
+    return { ok: !failed, error: failed?.error, ...folderState({ withLibrary: true }) };
+  } catch (err) { return { ok: false, error: err.message, ...folderState() }; }
 });
 
-ipcMain.handle('audio:cast-test', async (_event, device) => {
-  return castService.testSpeaker(device);
+ipcMain.handle('audio:folders-add-local', async () => {
+  if (!mainWindow) return { canceled: true };
+  const res = await dialog.showOpenDialog(mainWindow, {
+    title: 'Add Music Folder(s) to Library',
+    buttonLabel: 'Add Folder',
+    properties: ['openDirectory', 'multiSelections', 'dontAddToRecent'],
+  });
+  if (res.canceled || !res.filePaths.length) return { canceled: true };
+  const added = res.filePaths.map(p => libraryFolders.add({ kind: 'local', path: p }));
+  scanLocalFolders(added);
+  return { canceled: false, ...folderState() };
 });
 
-ipcMain.handle('audio:cast-control', async (_event, action, value) => {
-  return castService.control(action, value);
-});
-
-ipcMain.handle('audio:cast-disconnect', async () => {
-  castService.disconnect();
-  return true;
-});
-
-ipcMain.handle('audio:cast-clock-start', async (_event, { device, style, format24h, chimeHourly }) => {
-  if (!castClock) throw new Error('cast-clock library not available');
-  return castClock.startClockCast(device, { style, format24h, chimeHourly });
-});
-
-ipcMain.handle('audio:cast-clock-stop', async () => {
-  if (!castClock) return { active: false };
-  return castClock.stopClockCast();
-});
-
-ipcMain.handle('audio:cast-clock-status', async () => {
-  if (!castClock) return { active: false };
-  return castClock.getClockStatus();
-});
-
-ipcMain.handle('audio:cast-ambient-start', async (_event, { device, presetId, durationSec }) => {
-  if (!castAmbient) throw new Error('cast-ambient library not available');
-  return castAmbient.startAmbientCast(device, { presetId, durationSec });
-});
-
-ipcMain.handle('audio:cast-ambient-stop', async () => {
-  if (!castAmbient) return { active: false };
-  return castAmbient.stopAmbientCast();
-});
-
-ipcMain.handle('audio:cast-ambient-status', async () => {
-  if (!castAmbient) return { active: false };
-  return castAmbient.getAmbientStatus();
-});
-
-ipcMain.handle('audio:speaker-watch-status', async () => {
-  return speakerWatcher ? speakerWatcher.getStatus() : { watching: false, targets: [] };
-});
-
-ipcMain.handle('audio:speaker-watch-configure', async (_e, { enabled, devices, expectedUrlSubstring } = {}) => {
-  if (!speakerWatcher) return { watching: false, targets: [] };
-  if (typeof expectedUrlSubstring === 'string') {
-    speakerWatcher.setExpectedStream(expectedUrlSubstring);
+ipcMain.handle('audio:folders-add-cloud', async (_evt, { connectionId, path: remotePath, label }) => {
+  try {
+    const folder = libraryFolders.add({ kind: 'cloud', connectionId, path: remotePath, label });
+    const [result] = await syncCloudFolders([folder]);
+    if (result && result.error) return { ok: false, error: result.error, ...folderState({ withLibrary: true }) };
+    return { ok: true, ...result, ...folderState({ withLibrary: true }) };
+  } catch (err) {
+    return { ok: false, error: err.message, ...folderState() };
   }
-  if (enabled && Array.isArray(devices) && devices.length > 0) {
-    speakerWatcher.watchDevices(devices);
-  } else if (enabled === false) {
-    speakerWatcher.stop();
+});
+
+ipcMain.handle('audio:folders-rescan', async (_evt, id) => {
+  const targets = id ? [libraryFolders.get(id)].filter(Boolean) : libraryFolders.folders.filter(f => f.syncEnabled !== false);
+  scanLocalFolders(targets);
+  const results = await syncCloudFolders(targets);
+  const failed = results.filter(r => r.error);
+  return { ok: !failed.length, error: failed.map(r => r.error).join('; ') || undefined, ...folderState({ withLibrary: true }) };
+});
+
+ipcMain.handle('audio:folders-rename', async (_evt, { id, label }) => {
+  libraryFolders.rename(id, label);
+  return folderState();
+});
+
+ipcMain.handle('audio:folders-remove', async (_evt, { id, removeTracks }) => {
+  libraryFolders.remove(id, !!removeTracks);
+  return folderState({ withLibrary: !!removeTracks });
+});
+
+ipcMain.handle('audio:get-lyrics', async (_evt, track) => lyrics.getLyrics(track));
+
+// ── AI playlists & Virtual DJ (RobOS agent + RobOS voice) ──────────────────
+
+// The agent, model and effort come from <robos-agent-selector> (the RobOS provider
+// catalog, same as PR Review), never from a fixed default.
+const agentProviders = requireShared('robos-agent-client/providers');
+const agentOneShot = requireShared('robos-agent-client/one-shot');
+const aiJson = requireShared('robos-lib/ai-json');
+const quickAsk = requireShared('robos-lib/quick-ask');
+const skillCatalog = requireShared('robos-lib/skill-catalog');
+if (quickAsk && typeof quickAsk.registerQuickAskIPC === 'function') {
+  try { quickAsk.registerQuickAskIPC(ipcMain); } catch {}
+}
+
+ipcMain.handle('robos-skills-list', async () => {
+  try {
+    return skillCatalog && typeof skillCatalog.listSkills === 'function' ? skillCatalog.listSkills() : [];
+  } catch {
+    return [];
   }
-  return speakerWatcher.getStatus();
 });
 
-ipcMain.handle('audio:report-state', async (_e, state) => {
-  return controlServer.updateState(state);
+ipcMain.handle('ap-list-path', async (_evt, prefix = '') => {
+  try {
+    const home = os.homedir();
+    const expanded = String(prefix || '').replace(/^~/, home);
+    const isDir = expanded.endsWith('/');
+    const dir = isDir ? expanded : path.dirname(expanded);
+    const partial = isDir ? '' : path.basename(expanded);
+    if (!fs.existsSync(dir)) return { ok: true, items: [] };
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const items = entries
+      .filter(e => !partial || e.name.toLowerCase().startsWith(partial.toLowerCase()))
+      .slice(0, 12)
+      .map(e => ({
+        name: e.name + (e.isDirectory() ? '/' : ''),
+        path: path.join(dir, e.name) + (e.isDirectory() ? '/' : ''),
+      }));
+    return { ok: true, items };
+  } catch (err) {
+    return { ok: false, items: [], error: err.message };
+  }
 });
 
-app.whenReady().then(() => {
-  controlServer.start().catch(() => {});
-  createWindow();
+let ttsEngine = null;
+function getTtsEngine() {
+  if (!ttsEngine) {
+    const mod = requireShared('voice-prompt/lib/tts-engine');
+    if (mod && mod.TTSEngine) ttsEngine = new mod.TTSEngine();
+  }
+  return ttsEngine;
+}
+
+const AGENT_MISSING = 'RobOS agent tools are not installed (robos-agent-client). Install RobOS or set ROBOS_LIB_PATH.';
+
+function agentAsk(agent) {
+  const { provider, model = '', effort = '' } = agent || {};
+  return (prompt) => agentOneShot.ask({ provider, model, effort, prompt, timeoutMs: 240000 });
+}
+
+ipcMain.handle('audio:agent-providers', async (_evt, options) => {
+  if (!agentProviders) return [];
+  return agentProviders.options({ refresh: options?.refresh === true });
 });
 
-app.on('before-quit', () => {
-  castService.shutdown();
-  cloudManager.shutdown();
-  controlServer.stop();
-  if (speakerWatcher) speakerWatcher.stop();
+ipcMain.handle('audio:ai-playlist-generate', async (_evt, { request, count, dj, agent } = {}) => {
+  if (!agentOneShot) return { ok: false, error: AGENT_MISSING };
+  if (!agent || !agent.provider) return { ok: false, error: 'Choose an AI agent.' };
+  try {
+    return await aiPlaylist.generateAiPlaylist(
+      { tracks: mediaLibrary.tracks, request, count, dj },
+      {
+        ask: agentAsk(agent),
+        parseJson: aiJson && aiJson.parseAIJson,
+        onProgress: (p) => sendToWindow('audio:ai-progress', p),
+      }
+    );
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
 });
 
-app.on('window-all-closed', () => {
-  app.quit();
+ipcMain.handle('audio:ai-fix-metadata-preview', async (_evt, { trackIds, scope = 'selected', prompt, agent, enableOpenLookup = true } = {}) => {
+  if (!agentOneShot) return { ok: false, error: AGENT_MISSING };
+  if (!agent || !agent.provider) return { ok: false, error: 'Choose an AI agent.' };
+  try {
+    let targetTracks = [];
+    if (Array.isArray(trackIds) && trackIds.length > 0) {
+      const idSet = new Set(trackIds);
+      targetTracks = mediaLibrary.tracks.filter(t => idSet.has(t.id));
+    } else if (scope === 'missing') {
+      targetTracks = mediaLibrary.tracks.filter(t => aiMetadata.trackNeedsMetadataFix(t));
+    } else {
+      targetTracks = mediaLibrary.tracks.slice(0, 40);
+    }
+
+    if (!targetTracks.length) {
+      return { ok: false, error: 'No tracks matched the selected scope.' };
+    }
+
+    const ask = agentAsk(agent);
+    return await aiMetadata.previewAiMetadataFixes({
+      tracks: targetTracks,
+      prompt: prompt || aiMetadata.DEFAULT_FIX_METADATA_PROMPT,
+      providerId: agent.provider,
+      mediaLibrary,
+      enableOpenLookup: enableOpenLookup !== false,
+      onProgress: (p) => sendToWindow('audio:ai-progress', p),
+      askFn: async (fullPrompt) => {
+        const text = await ask(fullPrompt);
+        return { ok: true, text: typeof text === 'string' ? text : (text && text.text) || '', providerId: agent.provider };
+      },
+    });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
 });
+
+ipcMain.handle('audio:ai-fix-metadata-apply', async (_evt, { fixes, writeFiles = false } = {}) => {
+  try {
+    return await aiMetadata.applyAiMetadataFixes({
+      fixes: Array.isArray(fixes) ? fixes : [],
+      writeFiles: !!writeFiles,
+      mediaLibrary,
+    });
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('audio:dj-lines', async (_evt, { persona, upcoming, agent } = {}) => {
+  if (!agentOneShot) return { ok: false, error: AGENT_MISSING, lines: {} };
+  if (!agent || !agent.provider) return { ok: false, error: 'Choose an AI agent in the Virtual DJ settings.', lines: {} };
+  try {
+    return await aiPlaylist.generateDjLines({ persona, upcoming }, { ask: agentAsk(agent), parseJson: aiJson && aiJson.parseAIJson });
+  } catch (err) {
+    return { ok: false, error: err.message, lines: {} };
+  }
+});
+
+ipcMain.handle('audio:dj-voices', async () => {
+  const tts = getTtsEngine();
+  if (!tts) return { ok: false, voices: {} };
+  try {
+    return { ok: true, voices: await tts.listVoices() };
+  } catch (err) {
+    return { ok: false, error: err.message, voices: {} };
+  }
+});
+
+// The voice the user set up in RobOS Voice ("engine:voiceId"), tried when the DJ's
+// own voice can't be produced.
+function robosVoicePref() {
+  try {
+    const file = process.env.ROBOS_VOICE_PREFS_FILE || path.join(os.homedir(), '.config', 'robos', 'voice-prompt-prefs.json');
+    const tts = (JSON.parse(fs.readFileSync(file, 'utf8')) || {}).tts || {};
+    return tts.engine ? `${tts.engine}:${tts.voice || ''}` : '';
+  } catch { return ''; }
+}
+
+// DJ lines are rendered to a loud, level MP3 used both here and on speakers:
+// - voice engines write quiet audio (and WAV, sometimes float, which speakers may
+//   refuse; the voice cache also stores MP3s under .wav names);
+// - a speaker plays the line at the music's volume, so its level must be in the file.
+// The line is normalised to typical music loudness (-14 LUFS), then `level` (% of
+// that; 100 = as loud as the music) is applied, with a limiter against clipping.
+const DJ_LEVEL_DEFAULT = 150;
+const djClipDir = path.join(os.tmpdir(), 'robos-dj-clips');
+function djClip(filePath, level = DJ_LEVEL_DEFAULT) {
+  const pct = Math.max(25, Math.min(300, Number(level) || DJ_LEVEL_DEFAULT));
+  const gainDb = (20 * Math.log10(pct / 100)).toFixed(2);
+  return new Promise((resolve) => {
+    try {
+      fs.mkdirSync(djClipDir, { recursive: true });
+      const key = `${filePath}:${fs.statSync(filePath).mtimeMs}:${pct}`;
+      const out = path.join(djClipDir, `${crypto.createHash('md5').update(key).digest('hex').slice(0, 16)}.mp3`);
+      if (fs.existsSync(out) && fs.statSync(out).size > 0) return resolve(out);
+      const filter = `loudnorm=I=-14:TP=-1.5:LRA=11,volume=${gainDb}dB,alimiter=limit=0.97:level=false`;
+      const ff = spawn('ffmpeg', ['-y', '-hide_banner', '-loglevel', 'error', '-i', filePath, '-af', filter,
+        '-ac', '2', '-ar', '44100', '-codec:a', 'libmp3lame', '-b:a', '160k', out], { stdio: 'ignore' });
+      ff.on('error', () => resolve(filePath));
+      ff.on('close', (code) => resolve(code === 0 && fs.existsSync(out) ? out : filePath));
+    } catch { resolve(filePath); }
+  });
+}
+
+// Start the voice engine (Kokoro loads its model in the background) before the
+// first line is needed.
+ipcMain.handle('audio:dj-warmup', async () => ({ ok: !!getTtsEngine() }));
+
+// Renders a DJ line to an audio file. `voice` is "engine:voiceId" from audio:dj-voices.
+ipcMain.handle('audio:dj-synthesize', async (_evt, { text, voice, level } = {}) => {
+  const tts = getTtsEngine();
+  if (!tts) return { ok: false, error: 'RobOS voice (voice-prompt) is not installed.' };
+  const attempts = [String(voice || ''), robosVoicePref()].filter((v, i, a) => a.indexOf(v) === i);
+  const problems = [];
+  for (const choice of attempts) {
+    try {
+      const [engine, ...rest] = choice.split(':');
+      const opts = engine ? { engine, voice: rest.join(':') || undefined, kokoroTimeoutMs: 60000 } : { kokoroTimeoutMs: 60000 };
+      const res = await tts.synthesize(String(text || ''), opts);
+      // The engine's last resort is a second of silence; treat that as "no voice".
+      if (res && res.ok && res.engine !== 'fallback') {
+        const clip = await djClip(res.filePath, level);
+        return { ok: true, filePath: clip, castPath: clip, sourcePath: res.filePath, durationMs: res.durationMs, engine: res.engine };
+      }
+      for (const e of (res && res.errors) || []) problems.push(`${e.engine}: ${String(e.error).split('\n')[0].slice(0, 160)}`);
+    } catch (err) {
+      problems.push(err.message);
+    }
+  }
+  const unique = [...new Set(problems)];
+  return { ok: false, error: `No text-to-speech engine produced audio${unique.length ? ` — ${unique.join('; ')}` : ''}.` };
+});
+
+// ── Library browsing: cover art, play statistics, loved tracks ─────────────
+
+async function waitForStreamPort(timeoutMs = 3000) {
+  const started = Date.now();
+  while (!castService.streamPort && Date.now() - started < timeoutMs) {
+    await new Promise(r => setTimeout(r, 50));
+  }
+  return castService.streamPort;
+}
+
+// The renderer loads art over loopback; Cast speakers need the LAN address.
+ipcMain.handle('audio:get-art-base', async () => {
+  const port = await waitForStreamPort();
+  if (!port) return { local: null, cast: null };
+  return {
+    local: `http://127.0.0.1:${port}/art/`,
+    cast: `http://${castService.hostIp}:${port}/art/`,
+  };
+});
+
+ipcMain.handle('audio:get-track-stats', async () => mediaLibrary.getStats());
+
+ipcMain.handle('audio:record-play', async (_evt, trackId) => mediaLibrary.recordPlay(trackId));
+
+ipcMain.handle('audio:set-loved', async (_evt, { ids, loved }) => mediaLibrary.setLoved(ids, loved));
+
+ipcMain.handle('audio:show-in-folder', async (_evt, filePath) => {
+  if (!filePath || typeof filePath !== 'string' || !fs.existsSync(filePath)) return { ok: false };
+  shell.showItemInFolder(filePath);
+  return { ok: true };
+});
+
+// ── RobOS cloud storage (Data Sources FTP / SFTP connections) ───────────────
+
+function sendToWindow(channel, payload) {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload);
+}
+
+ipcMain.handle('audio:cloud-connections', async () => {
+  const connections = cloud.listConnections();
+  return connections.map(c => ({ ...c, folders: c.folders.map(f => ({ ...f,
+    cloudKey: libraryFolders.cloudIdentity(c.id, f.remotePath, connections),
+  })) }));
+});
+
+ipcMain.handle('audio:cloud-list', async (_evt, { id, path: remotePath, forceRefresh }) => {
+  try {
+    return { ok: true, ...(await cloud.list(id, remotePath, { forceRefresh: !!forceRefresh, strict: !!forceRefresh })) };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('audio:cloud-import', async (_evt, { id, paths }) => {
+  try {
+    const descriptors = await cloud.indexCloudAudio(id, paths || [], (p) => sendToWindow('audio:cloud-progress', p));
+    const tracks = [];
+    const known = new Map(mediaLibrary.tracks.map(t => [t.filePath, t]));
+    for (const desc of descriptors) {
+      // Re-importing a song whose tags were already read keeps them.
+      const had = known.get(desc.localPath);
+      if (had && had.cloud && had.cloud.tagsRead) continue;
+      try {
+        const trackId = mediaLibrary._generateTrackId(desc.localPath);
+        const streamUrl = castService.getCloudStreamUrl(trackId, false);
+        tracks.push(await mediaLibrary.buildCloudTrack(desc, streamUrl));
+      } catch {}
+    }
+    mediaLibrary.mergeTracks(tracks);
+    readCloudTagsInBackground();
+    return { ok: true, added: tracks.length, library: mediaLibrary.getLibrary() };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
+
+ipcMain.handle('audio:cloud-cache-stats', async () => cloud.getCacheStats());
+
+ipcMain.handle('audio:cloud-cache-set-max', async (_evt, maxBytes) => {
+  const stats = cloud.setMaxCacheBytes(maxBytes);
+  refreshCloudTrackUrls();
+  return stats;
+});
+
+ipcMain.handle('audio:cloud-cache-clear', async () => {
+  const res = cloud.clearCache();
+  refreshCloudTrackUrls();
+  return res;
+});
+
+ipcMain.handle('audio:scan-default-library', async () => {
+  const videosDir = path.join(os.homedir(), 'Videos');
+  if (!fs.existsSync(videosDir)) {
+    fs.mkdirSync(videosDir, { recursive: true });
+  }
+  mediaLibrary.scanFoldersInBackground([videosDir], scanUpdates());
+  return { started: true, folder: videosDir };
+});
+
+// ── Playlist IPC Handlers ───────────────────────────────────────────────────
+
+ipcMain.handle('audio:get-playlists', async () => {
+  return mediaLibrary.getPlaylists();
+});
+
+ipcMain.handle('audio:get-playlist', async (_evt, id) => {
+  return mediaLibrary.getPlaylist(id);
+});
+
+ipcMain.handle('audio:create-playlist', async (_evt, data) => {
+  return mediaLibrary.createPlaylist(data || {});
+});
+
+ipcMain.handle('audio:update-playlist', async (_evt, { id, updates }) => {
+  return mediaLibrary.updatePlaylist(id, updates || {});
+});
+
+ipcMain.handle('audio:delete-playlist', async (_evt, id) => {
+  return mediaLibrary.deletePlaylist(id);
+});
+
+ipcMain.handle('audio:add-tracks-to-playlist', async (_evt, { id, tracks }) => {
+  return mediaLibrary.addTracksToPlaylist(id, tracks || []);
+});
+
+ipcMain.handle('audio:remove-track-from-playlist', async (_evt, { id, trackIndex }) => {
+  return mediaLibrary.removeTrackFromPlaylist(id, trackIndex);
+});
+
+ipcMain.handle('audio:reorder-playlist-tracks', async (_evt, { id, fromIndex, toIndex }) => {
+  return mediaLibrary.reorderPlaylistTracks(id, fromIndex, toIndex);
+});
+
+ipcMain.handle('audio:export-playlist-m3u', async (_evt, id) => {
+  if (!mainWindow) return { canceled: true };
+  const playlist = mediaLibrary.getPlaylist(id);
+  if (!playlist) return { canceled: true, error: 'Playlist not found' };
+  const res = await dialog.showSaveDialog(mainWindow, {
+    title: 'Export Playlist as M3U',
+    defaultPath: `${playlist.name.replace(/[^a-zA-Z0-9_\-\s]/g, '_')}.m3u`,
+    filters: [{ name: 'M3U Playlist', extensions: ['m3u', 'm3u8'] }]
+  });
+  if (res.canceled || !res.filePath) return { canceled: true };
+  return mediaLibrary.exportM3u(id, res.filePath);
+});
+
+ipcMain.handle('audio:import-playlist-m3u', async () => {
+  if (!mainWindow) return { canceled: true };
+  const res = await dialog.showOpenDialog(mainWindow, {
+    title: 'Import M3U Playlist',
+    properties: ['openFile'],
+    filters: [{ name: 'M3U Playlists', extensions: ['m3u', 'm3u8'] }]
+  });
+  if (res.canceled || !res.filePaths.length) return { canceled: true };
+  const playlist = await mediaLibrary.importM3u(res.filePaths[0]);
+  return { canceled: false, playlist };
+});
+
+
+

@@ -1849,6 +1849,49 @@ async function walk(ds, remotePath, filter = () => true, limit = 5000, options =
     }
   }
 
+  if (driver === 'sftp' || driver === 'ftp') {
+    const out = [];
+    const startDefault = ds.database || '/';
+    const queue = [normalizeRemote(remotePath || startDefault)];
+    await withClient(ds, async (c) => {
+      while (queue.length && out.length < limit) {
+        const dir = queue.shift();
+        let cached = !options.forceRefresh ? getCachedDirListing(ds, dir, false) : null;
+        if (!cached) {
+          let rawList = [];
+          try {
+            rawList = await c.list(dir);
+          } catch {
+            continue;
+          }
+          const entries = rawList.map(e => driver === 'sftp' ? ({
+            name: e.name,
+            type: e.type === 'd' ? 'dir' : 'file',
+            size: e.size,
+            modified: e.modifyTime ? new Date(e.modifyTime).toISOString() : null,
+          }) : ({
+            name: e.name,
+            type: e.isDirectory ? 'dir' : 'file',
+            size: e.size,
+            modified: e.modifiedAt ? e.modifiedAt.toISOString() : null,
+          }));
+          entries.sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name, undefined, { numeric: true }) : a.type === 'dir' ? -1 : 1));
+          cached = {
+            path: dir,
+            provider: driver,
+            entries: entries.filter(e => e.name !== '.' && e.name !== '..').map(e => ({ ...e, path: posixPath.join(dir, e.name) })),
+          };
+          cacheDirListing(ds, dir, cached);
+        }
+        for (const e of cached.entries) {
+          if (e.type === 'dir') queue.push(e.path);
+          else if (filter(e.name)) out.push(e);
+        }
+      }
+    });
+    return out;
+  }
+
   const out = [];
   const queue = [normalizeRemote(remotePath)];
   while (queue.length && out.length < limit) {
@@ -2284,6 +2327,7 @@ module.exports = {
   resolveOneDriveAuth,
   openGDriveMediaStream,
   openOneDriveMediaStream,
+  withSftp,
   isRemoteDriver,
   isCloudStorageDriver,
   isOAuthCloudDriver,

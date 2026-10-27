@@ -1,116 +1,84 @@
-/**
- * Cast Clock & Cast Ambient Soundscape Cards for Smart TVs / Speakers
- */
+import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
-import React, { useState } from 'react';
-import { Icon } from './Icon';
+// Where the song is on the speaker while casting. The speaker reports its position
+// about once a second; in between, the time is extrapolated. Kept outside React
+// state so only the progress bars re-render as it moves.
+let state = { position: 0, duration: 0, playing: false, at: 0 };
+const listeners = new Set();
 
-export function CastClockCard({ castDevices = [], activeCastDevice = null }) {
-  const [style, setStyle] = useState('minimal');
-  const [format24h, setFormat24h] = useState(false);
-  const [chimeHourly, setChimeHourly] = useState(false);
-  const [status, setStatus] = useState('');
-
-  const target = activeCastDevice || castDevices[0] || null;
-
-  const handleStart = async () => {
-    if (!target) {
-      setStatus('Select or add a Cast TV / display above first.');
-      return;
+export const castClock = {
+  get: () => state,
+  set(patch) {
+    state = { ...state, ...patch, at: Date.now() };
+    if (typeof window !== 'undefined') {
+      window.__robosCastPlaying = Boolean(state.playing);
     }
-    try {
-      await window.robosAudio.castClockStart({ device: target, style, format24h, chimeHourly });
-      setStatus(`Clock active on ${target.name}`);
-    } catch (err) {
-      setStatus(`Clock error: ${err.message}`);
-    }
-  };
+    listeners.forEach(fn => fn());
+  },
+  now() {
+    if (!state.playing) return state.position;
+    const t = state.position + (Date.now() - state.at) / 1000;
+    return state.duration ? Math.min(state.duration, t) : t;
+  },
+  subscribe(fn) {
+    listeners.add(fn);
+    return () => listeners.delete(fn);
+  },
+};
 
-  const handleStop = async () => {
-    try {
-      await window.robosAudio.castClockStop();
-      setStatus('Clock stopped');
-    } catch (_) {}
-  };
+function useCastTime() {
+  const s = useSyncExternalStore(castClock.subscribe, castClock.get);
+  const [, tick] = useState(0);
+  useEffect(() => {
+    if (!s.playing) return undefined;
+    const timer = setInterval(() => tick(n => n + 1), 250);
+    return () => clearInterval(timer);
+  }, [s.playing]);
+  return { current: castClock.now(), duration: s.duration, playing: s.playing };
+}
 
+const fmt = (sec) => {
+  if (!sec || !isFinite(sec)) return '0:00';
+  const m = Math.floor(sec / 60);
+  const ss = Math.floor(sec % 60);
+  return `${m}:${ss < 10 ? '0' : ''}${ss}`;
+};
+
+/** Seek bar that follows the speaker; dragging it seeks the speaker. */
+export function CastProgress({ onSeek, className = 'mini-progress', id }) {
+  const { current, duration } = useCastTime();
+  const [dragging, setDragging] = useState(null);
+  const commitTimer = useRef(null);
+  const value = dragging != null ? dragging : current;
+  const pct = duration ? (Math.min(value, duration) / duration) * 100 : 0;
+  const commit = (v) => {
+    clearTimeout(commitTimer.current);
+    commitTimer.current = setTimeout(() => {
+      castClock.set({ position: v });
+      setDragging(null);
+      onSeek(v);
+    }, 250);
+  };
+  useEffect(() => () => clearTimeout(commitTimer.current), []);
   return (
-    <div className="cast-feature-card" style={{ marginTop: 14, padding: 12, background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 10 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-        <div>
-          <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Icon name="clock" size={15} /> Theater Lobby Clock Display
-          </h4>
-          <p className="muted" style={{ margin: '4px 0 0 0', fontSize: 12 }}>
-            Cast an ambient theater clock face to your Smart TV or Nest Hub between screenings.
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <select className="select-sm" value={style} onChange={e => setStyle(e.target.value)}>
-            <option value="minimal">Minimal Cinema</option>
-            <option value="retro">Retro Flip</option>
-            <option value="neon">Amber Marquee</option>
-          </select>
-          <label style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
-            <input type="checkbox" checked={format24h} onChange={e => setFormat24h(e.target.checked)} />
-            24h
-          </label>
-          <button className="btn btn-xs btn-accent" onClick={handleStart}>Cast Clock</button>
-          <button className="btn btn-xs" onClick={handleStop}>Stop</button>
-        </div>
-      </div>
-      {status && <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 6 }}>{status}</div>}
+    <div className={`cast-progress ${className}`} id={id}>
+      <span>{fmt(value)}</span>
+      <input
+        type="range"
+        min="0"
+        max={duration || 0}
+        step="0.5"
+        value={Math.min(value, duration || 0)}
+        disabled={!duration}
+        style={{ '--pct': `${pct}%` }}
+        aria-label="Seek on the speaker"
+        onChange={(e) => { const v = Number(e.target.value); setDragging(v); commit(v); }}
+      />
+      <span>{fmt(duration)}</span>
     </div>
   );
 }
 
-export function CastAmbientCard({ castDevices = [], activeCastDevice = null }) {
-  const [presetId, setPresetId] = useState('rain');
-  const [status, setStatus] = useState('');
-
-  const target = activeCastDevice || castDevices[0] || null;
-
-  const handleStart = async () => {
-    if (!target) {
-      setStatus('Select or add a Cast TV / speaker above first.');
-      return;
-    }
-    try {
-      await window.robosAudio.castAmbientStart({ device: target, presetId, durationSec: 3600 });
-      setStatus(`Streaming ambient "${presetId}" to ${target.name}`);
-    } catch (err) {
-      setStatus(`Ambient cast error: ${err.message}`);
-    }
-  };
-
-  const handleStop = async () => {
-    try {
-      await window.robosAudio.castAmbientStop();
-      setStatus('Ambient stream stopped');
-    } catch (_) {}
-  };
-
-  return (
-    <div className="cast-feature-card" style={{ marginTop: 10, padding: 12, background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 10 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-        <div>
-          <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Icon name="waves" size={15} /> Cast Theater Ambient Soundscape
-          </h4>
-          <p className="muted" style={{ margin: '4px 0 0 0', fontSize: 12 }}>
-            Stream procedural theater rain or projector room tone directly to a LAN Cast device.
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <select className="select-sm" value={presetId} onChange={e => setPresetId(e.target.value)}>
-            <option value="rain">Cinema Rain</option>
-            <option value="pink">Projector Hum</option>
-            <option value="brown">Sub-Bass Warmth</option>
-          </select>
-          <button className="btn btn-xs btn-accent" onClick={handleStart}>Cast Ambient</button>
-          <button className="btn btn-xs" onClick={handleStop}>Stop</button>
-        </div>
-      </div>
-      {status && <div style={{ fontSize: 11, color: 'var(--accent)', marginTop: 6 }}>{status}</div>}
-    </div>
-  );
+export function useCastPlaying() {
+  return useSyncExternalStore(castClock.subscribe, () => castClock.get().playing);
 }

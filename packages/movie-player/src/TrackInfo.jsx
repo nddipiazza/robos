@@ -1,74 +1,69 @@
-/**
- * Movie / Video Details Modal for RobOS Movie Player
- */
-
 import React from 'react';
-import { Icon } from './Icon';
-import { CoverThumb, formatTime, formatBytes } from './library-ui';
+import { Icon } from './Icon.jsx';
+import { formatDuration } from '../lib/library-index.js';
+import { useLibrary, Cover, LoveButton } from './library-ui.jsx';
 
-export function TrackInfoModal({ track, onClose, onToggleLoved }) {
+const when = (iso) => (iso ? new Date(iso).toLocaleString() : '—');
+
+export default function TrackInfo({ track, onClose }) {
+  const { stats, actions } = useLibrary();
   if (!track) return null;
-
+  const st = stats[track.id] || {};
   const rows = [
-    ['Title', track.title || '—'],
-    ['Director / Creator', track.artist || 'Unknown Director'],
-    ['Collection / Series', track.album || 'Standalone Films'],
-    ['Lead / Franchise', track.albumArtist || track.artist || '—'],
-    ['Studio / Writer', track.composer || '—'],
-    ['Genre', track.genre || 'Cinema'],
-    ['Release Year', track.year || '—'],
-    ['Season / Episode', (track.discNumber || track.trackNumber)
-      ? `${track.discNumber ? `S${String(track.discNumber).padStart(2, '0')} ` : ''}${track.trackNumber ? `E${String(track.trackNumber).padStart(2, '0')}` : ''}`
-      : 'Feature Film'],
-    ['Runtime', formatTime(track.duration)],
-    ['Resolution', track.resolution || (track.height ? `${track.height}p` : '1080p')],
-    ['Video Codec / Format', [track.videoCodec || track.codec, track.format ? track.format.toUpperCase() : null].filter(Boolean).join(' / ') || '—'],
-    ['Bitrate', track.bitrate ? `${track.bitrate} kbps` : '—'],
-    ['Audio Sample Rate', track.sampleRate ? `${track.sampleRate} Hz` : '—'],
-    ['File Size', track.size ? formatBytes(track.size) : '—'],
-    ['Source', track.source === 'cloud' ? `Cloud (${track.sourceName || track.sourceId})` : track.source === 'stream' ? 'Network Stream' : 'Local Disk'],
-    ['Watch Count', track.playCount || 0],
-    ['Path', track.remotePath || track.path || '—']
-  ];
+    ['Title', track.title],
+    ['Artist', track.artist],
+    ['Album artist', track.albumArtist],
+    ['Album', track.album],
+    ['Track', track.trackNumber ? `${track.trackNumber}${track.trackTotal ? ` of ${track.trackTotal}` : ''}` : null],
+    ['Disc', track.discNumber ? `${track.discNumber}${track.discTotal ? ` of ${track.discTotal}` : ''}` : null],
+    ['Year', track.year],
+    ['Genre', track.genre],
+    ['Composer', track.composer],
+    ['Duration', formatDuration(track.duration)],
+    ['Format', [track.codec, track.lossless ? 'lossless' : null].filter(Boolean).join(', ') || null],
+    ['Bitrate', track.bitrate ? `${Math.round(track.bitrate / 1000)} kbps` : null],
+    ['Sample rate', track.sampleRate ? `${(track.sampleRate / 1000).toFixed(1)} kHz${track.bitsPerSample ? ` · ${track.bitsPerSample}-bit` : ''}` : null],
+    ['Channels', track.channels === 1 ? 'Mono' : track.channels === 2 ? 'Stereo' : track.channels],
+    ['Plays', st.plays || 0],
+    ['Last played', when(st.lastPlayed)],
+    ['Added', when(track.addedAt)],
+    ['Source', track.cloud ? `Cloud (${track.cloud.driverType || 'remote'})${track.cloud.cached ? ', cached locally' : ''}` : (track.filePath ? 'Local file' : 'Stream')],
+    ['Location', track.cloud ? track.cloud.remotePath : (track.filePath || track.src)],
+  ].filter(([, v]) => v !== null && v !== undefined && v !== '');
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-card track-info-modal" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
-          <div className="track-info-header">
-            <CoverThumb artId={track.artId} fallback="film" className="track-info-cover" />
-            <div className="track-info-headings">
-              <h3>{track.title}</h3>
-              <div className="track-info-sub">{track.artist} • {track.album}</div>
-              <div className="track-info-badges">
-                {track.resolution && <span className="pill">{track.resolution}</span>}
-                {track.videoCodec && <span className="pill">{track.videoCodec}</span>}
-                {track.format && <span className="pill">{track.format.toUpperCase()}</span>}
-                {track.year && <span className="pill">{track.year}</span>}
-              </div>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card track-info-card" onClick={(e) => e.stopPropagation()}>
+        <div className="track-info-head">
+          <Cover artId={track.artId} name={track.album || track.title} size={96} />
+          <div className="track-info-title">
+            <h3>{track.title}</h3>
+            <span>{track.artist}{track.album ? ` — ${track.album}` : ''}</span>
+            <div className="track-info-actions">
+              <LoveButton track={track} size={16} />
+              <button className="btn-chip" onClick={() => { onClose(); actions.playTracks([track], 0); }}><Icon name="play" size={10} /> Play</button>
+              <button className="btn-chip" onClick={() => { onClose(); actions.goToAlbumOf(track); }}>Go to album</button>
+              {actions.fixMetadata && (
+                <button id="btn-track-info-ai-fix" className="btn-chip" onClick={() => { onClose(); actions.fixMetadata([track]); }}>
+                  ✦ AI Fix Metadata
+                </button>
+              )}
+              {track.filePath && !track.cloud && (
+                <button className="btn-chip" onClick={() => actions.showInFolder(track)}>Show in file manager</button>
+              )}
             </div>
           </div>
-          <button className="btn-icon" onClick={onClose} title="Close">✕</button>
         </div>
-
-        <div className="track-info-grid">
-          {rows.map(([label, val]) => (
-            <div key={label} className="track-info-row">
-              <span className="track-info-label">{label}</span>
-              <span className="track-info-value">{String(val)}</span>
-            </div>
+        <dl className="track-info-grid">
+          {rows.map(([k, v]) => (
+            <React.Fragment key={k}>
+              <dt>{k}</dt>
+              <dd title={String(v)}>{String(v)}</dd>
+            </React.Fragment>
           ))}
-        </div>
-
-        <div className="modal-footer">
-          <button
-            className={`btn btn-sm ${track.loved ? 'btn-accent' : ''}`}
-            onClick={() => onToggleLoved && onToggleLoved(track)}
-          >
-            <Icon name="heart" size={13} fill={track.loved ? 'currentColor' : 'none'} />
-            <span>{track.loved ? 'In Watchlist (Loved)' : 'Add to Watchlist (Love)'}</span>
-          </button>
-          <button className="btn btn-sm" onClick={onClose}>Close</button>
+        </dl>
+        <div className="modal-actions">
+          <button className="btn-secondary" onClick={onClose}>Close</button>
         </div>
       </div>
     </div>
