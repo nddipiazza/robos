@@ -2702,18 +2702,16 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
         exec(`adb -s "${tv.ip}:5555" shell am start -a android.intent.action.VIEW -d "${url}"`, () => {});
         note = 'Opened on the TV with adb.';
       } else if (isRoku) {
-        const status = await new Promise((resolve) => {
-          const r = http.request(
-            { hostname: tv.ip, port: 8060, path: '/launch/dev', method: 'POST', agent: false, timeout: 2000, headers: { 'Content-Length': '0', Connection: 'close' } },
-            (resp) => { resp.resume(); resolve(resp.statusCode || 0); }
-          );
-          r.on('error', () => resolve(0));
-          r.on('timeout', () => { r.destroy(); resolve(0); });
-          r.end();
-        });
-        note = status >= 200 && status < 300
-          ? 'Launched the RobOS TV channel; it shows live frames of the page.'
-          : 'Open the RobOS TV channel on the Roku (sideload it from Smart TV Studio if needed); it will show live frames.';
+        const launch = await launchRokuChannel(tv);
+        if (launch.dispatch && launch.dispatch.blocked) {
+          note = launch.dispatch.setupMessage || `${tv.name} blocked the remote launch command.`;
+        } else if (launch.rokuChannelLaunched) {
+          note = launch.sideloadedNow
+            ? 'Installed and launched the updated RobOS TV channel; it shows live frames of the game.'
+            : 'Launched the RobOS TV channel; it shows live frames of the game.';
+        } else {
+          note = 'The RobOS TV channel is not installed: enable Roku Developer Mode, then sideload it from Smart TV Studio.';
+        }
       }
     }
     return { ok: true, tv, appCast, message: `${appCast.title} is on ${tv.name}. ${note}` };
@@ -3602,6 +3600,54 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     };
   }
 
+  // Rebuilds the RobOS TV channel (it bakes in this computer's portal URL),
+  // sideloads it when the Roku is in developer mode, and launches it, falling
+  // back to the HOME key. Shared by dashboard casts and app casts.
+  async function launchRokuChannel(tv) {
+    const pkg = buildTvPackage({ platformId: 'roku-os', tvId: tv.id, tvIp: tv.ip });
+    const readiness = await diagnoseTvReadiness(tv.id);
+    let sideloadedNow = false;
+    if (readiness && readiness.allSideloadReady && pkg && pkg.targetDir) {
+      try {
+        const sl = spawnSync('bash', ['sideload-roku.sh'], { cwd: pkg.targetDir, timeout: 6000, encoding: 'utf8' });
+        if (sl.status === 0 && /Install Success|Application Received/i.test(String(sl.stdout || ''))) {
+          sideloadedNow = true;
+        }
+      } catch {}
+    }
+    const launchStatus = sideloadedNow
+      ? 200
+      : await new Promise((resolve) => {
+          const req = http.request(
+            {
+              hostname: tv.ip,
+              port: 8060,
+              path: '/launch/dev',
+              method: 'POST',
+              agent: false,
+              headers: { 'Content-Length': '0', Connection: 'close' },
+              timeout: 2000,
+            },
+            (res) => {
+              res.resume();
+              resolve(res.statusCode || 0);
+            }
+          );
+          req.on('error', () => resolve(0));
+          req.on('timeout', () => {
+            req.destroy();
+            resolve(0);
+          });
+          req.end();
+        });
+
+    const rokuChannelLaunched = launchStatus >= 200 && launchStatus < 300;
+    const dispatch = rokuChannelLaunched
+      ? { ok: true, blocked: false, httpStatus: launchStatus }
+      : await sendRemoteKey({ tvId: tv.id, key: 'HOME' });
+    return { pkg, readiness, sideloadedNow, launchStatus, rokuChannelLaunched, dispatch };
+  }
+
   async function castDashboard({ tvId, dashboardId = 'daily-engineering-ops', layoutId } = {}) {
     loadState();
     const tv = state.tvs.find((t) => t.id === tvId) || state.tvs[0];
@@ -3642,47 +3688,7 @@ function createTvEngine({ configDir, portalPort = DEFAULT_PORTAL_PORT } = {}) {
     saveState();
 
     if (tv.platformId === 'roku-os' && process.env.ROBOS_TEST !== '1' && !process.env.NODE_TEST_CONTEXT) {
-      const pkg = buildTvPackage({ platformId: 'roku-os', tvId: tv.id, tvIp: tv.ip });
-      const readiness = await diagnoseTvReadiness(tv.id);
-      let sideloadedNow = false;
-      if (readiness && readiness.allSideloadReady && pkg && pkg.targetDir) {
-        try {
-          const sl = spawnSync('bash', ['sideload-roku.sh'], { cwd: pkg.targetDir, timeout: 6000, encoding: 'utf8' });
-          if (sl.status === 0 && /Install Success|Application Received/i.test(String(sl.stdout || ''))) {
-            sideloadedNow = true;
-          }
-        } catch {}
-      }
-      const launchStatus = sideloadedNow
-        ? 200
-        : await new Promise((resolve) => {
-            const req = http.request(
-              {
-                hostname: tv.ip,
-                port: 8060,
-                path: '/launch/dev',
-                method: 'POST',
-                agent: false,
-                headers: { 'Content-Length': '0', Connection: 'close' },
-                timeout: 2000,
-              },
-              (res) => {
-                res.resume();
-                resolve(res.statusCode || 0);
-              }
-            );
-            req.on('error', () => resolve(0));
-            req.on('timeout', () => {
-              req.destroy();
-              resolve(0);
-            });
-            req.end();
-          });
-
-      const rokuChannelLaunched = launchStatus >= 200 && launchStatus < 300;
-      const dispatch = rokuChannelLaunched
-        ? { ok: true, blocked: false, httpStatus: launchStatus }
-        : await sendRemoteKey({ tvId: tv.id, key: 'HOME' });
+      const { pkg, readiness, rokuChannelLaunched, dispatch } = await launchRokuChannel(tv);
 
       if (dispatch && dispatch.blocked) {
         return {
