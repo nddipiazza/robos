@@ -4,7 +4,7 @@ RobOS is an app suite you can customize and build on. It ships ready-made deskto
 
 Actions inside the apps also have optional AI-powered features. The Audio Player, for example, can create a Virtual DJ that introduces each song, or build a playlist from a description of a mood. These use the agent you already have (Claude Code, Codex, Copilot, Gemini CLI / Antigravity, or a local Ollama model), and every app works without them.
 
-It is free and open source under the [Apache License 2.0](LICENSE). The current release is [v0.0.8](https://github.com/nddipiazza/robos/releases/tag/v0.0.8).
+It is free and open source under the [Apache License 2.0](LICENSE). The current release is [v0.0.9](https://github.com/nddipiazza/robos/releases/tag/v0.0.9).
 
 [Website](https://rowbose.com/) | [Documentation](https://rowbose.com/docs/) | [Security](https://rowbose.com/security/) | [Future](https://rowbose.com/future/) | [Blog](https://rowbose.com/blog/) | [Download](https://rowbose.com/download/) | [Releases](https://github.com/nddipiazza/robos/releases) | [Discord](https://discord.gg/6PjxzkHujE)
 
