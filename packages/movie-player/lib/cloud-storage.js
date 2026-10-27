@@ -469,8 +469,9 @@ async function streamCloudTrackToHttp(req, res, cloudMeta, onCached = null) {
   // 2. Direct SFTP byte-range streaming for uncached remote video files so playback & seeking start immediately
   const ds = getConnection(connectionId);
   const rs = loadRemoteStorage();
-  if (ds && ds.driverType === 'sftp' && typeof rs.withSftp === 'function') {
-    await rs.withSftp(ds, async (sftp) => {
+  const sftpRunner = typeof rs.withPooledSftp === 'function' ? rs.withPooledSftp : rs.withSftp;
+  if (ds && ds.driverType === 'sftp' && typeof sftpRunner === 'function') {
+    await sftpRunner(ds, async (sftp) => {
       let total = Number(size) || 0;
       if (!total) {
         const st = await sftp.stat(remotePath);
@@ -481,8 +482,9 @@ async function streamCloudTrackToHttp(req, res, cloudMeta, onCached = null) {
       let end = total - 1;
       if (range) {
         const parts = range.replace(/bytes=/, '').split('-');
-        start = parseInt(parts[0], 10) || 0;
+        start = Math.min(parseInt(parts[0], 10) || 0, Math.max(0, total - 1));
         end = parts[1] ? Math.min(parseInt(parts[1], 10), total - 1) : total - 1;
+        if (end < start) end = start;
       }
       const chunksize = Math.max(0, (end - start) + 1);
       res.writeHead(range ? 206 : 200, {
@@ -492,15 +494,23 @@ async function streamCloudTrackToHttp(req, res, cloudMeta, onCached = null) {
         'Content-Type': contentType,
         'X-RobOS-Cache': 'SFTP-DIRECT-STREAM',
       });
-      await new Promise((resolve, reject) => {
-        const stream = sftp.createReadStream(remotePath, { start, end });
-        const cleanup = () => { try { stream.destroy(); } catch {} resolve(); };
+      await new Promise((resolve) => {
+        let settled = false;
+        const done = () => {
+          if (settled) return;
+          settled = true;
+          resolve();
+        };
+        const stream = sftp.createReadStream(remotePath, { start, end, autoClose: false });
+        stream.on('error', done);
+        const cleanup = () => {
+          try { stream.unpipe(res); } catch {}
+          try { stream.destroy(); } catch {}
+          done();
+        };
         res.on('close', cleanup);
-        stream.on('end', resolve);
-        stream.on('error', (err) => {
-          if (res.destroyed || res.writableEnded) return resolve();
-          reject(err);
-        });
+        res.on('finish', done);
+        stream.on('end', done);
         stream.pipe(res);
       });
     });

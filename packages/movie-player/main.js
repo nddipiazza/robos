@@ -152,6 +152,7 @@ setTimeout(() => {
 }, 3000);
 try { cloud.enforceCacheLimit(); } catch {}
 
+let debugServerStarted = false;
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1360,
@@ -179,13 +180,35 @@ function createWindow() {
       if (typeof _debugServer.registerSnapshotIPC === 'function') {
         _debugServer.registerSnapshotIPC(mainWindow);
       }
-      if (typeof _debugServer.startDebugServer === 'function') {
+      if (!debugServerStarted && typeof _debugServer.startDebugServer === 'function') {
+        debugServerStarted = true;
         _debugServer.startDebugServer(mainWindow, 19214, 'movie-player');
       }
     } catch (e) {
       console.warn('[MoviePlayer] Could not start debug snapshot server:', e.message);
     }
   }
+
+  mainWindow.webContents.once('did-finish-load', () => {
+    libraryFolders.list();
+    const now = Date.now();
+    const targets = libraryFolders.folders.filter(f => {
+      if (f.syncEnabled === false) return false;
+      // Skip immediate re-walk on startup if this cloud folder was already synced within the last 5 minutes
+      if (f.kind === 'cloud' && f.lastSynced && mediaLibrary.tracks.length > 0 && (now - new Date(f.lastSynced).getTime() < 5 * 60 * 1000)) {
+        return false;
+      }
+      return true;
+    });
+    scanLocalFolders(targets);
+    if (targets.some(f => f.kind === 'cloud')) {
+      syncCloudFolders(targets).then(() => {
+        sendToWindow('audio:folders-updated', folderState({ withLibrary: true }));
+      }).catch(err => console.error('Startup folder check failed:', err.message));
+    } else {
+      sendToWindow('audio:folders-updated', folderState({ withLibrary: true }));
+    }
+  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -208,27 +231,6 @@ app.whenReady().then(() => {
       }).catch(() => {});
     }
   } catch {}
-  // Wait until the renderer subscribes; checks run without blocking first paint.
-  mainWindow.webContents.once('did-finish-load', () => {
-    libraryFolders.list();
-    const now = Date.now();
-    const targets = libraryFolders.folders.filter(f => {
-      if (f.syncEnabled === false) return false;
-      // Skip immediate re-walk on startup if this cloud folder was already synced within the last 5 minutes
-      if (f.kind === 'cloud' && f.lastSynced && mediaLibrary.tracks.length > 0 && (now - new Date(f.lastSynced).getTime() < 5 * 60 * 1000)) {
-        return false;
-      }
-      return true;
-    });
-    scanLocalFolders(targets);
-    if (targets.some(f => f.kind === 'cloud')) {
-      syncCloudFolders(targets).then(() => {
-        sendToWindow('audio:folders-updated', folderState({ withLibrary: true }));
-      }).catch(err => console.error('Startup folder check failed:', err.message));
-    } else {
-      sendToWindow('audio:folders-updated', folderState({ withLibrary: true }));
-    }
-  });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -277,7 +279,13 @@ const controlServer = createControlServer({
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  try { mediaLibrary.flush(); } catch {}
+  // Keep the background HTTP stream server (:19215) and Smart TV Portal (:19210) alive
+  // so Smart TVs (Roku, LG, Samsung, Google TV) can continue browsing and streaming movies
+  // with the TV remote even after the desktop window is closed.
+  if (process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT) {
+    app.quit();
+  }
 });
 
 // ── Background scan → renderer updates ─────────────────────────────────────
