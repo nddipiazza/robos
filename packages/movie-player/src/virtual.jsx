@@ -97,7 +97,7 @@ export function VirtualGrid({
     if (!virtual) return null;
     const cols = Math.max(1, Math.floor((width + opts.gapX) / (opts.minWidth + opts.gapX)));
     const cardWidth = (width - opts.gapX * (cols - 1)) / cols;
-    const rowHeight = (opts.itemHeight || cardWidth + opts.textHeight) + opts.gapY;
+    const rowHeight = (opts.itemHeight || cardWidth * (opts.aspectRatio || 1) + opts.textHeight) + opts.gapY;
     const rows = [];
     const letterTops = [];
     let top = 0;
