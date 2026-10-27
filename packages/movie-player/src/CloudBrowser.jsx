@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Icon } from './Icon.jsx';
+import { formatFolderMediaSummary } from './FolderPanel.jsx';
 
 const formatSize = (b) => (b == null ? '' : b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
 
@@ -124,7 +125,11 @@ export default function CloudBrowser({ onLibrary, onFolders, showStatus, folders
     onFolders(res);
     if (!res.ok) { showStatus(`Could not add folder: ${res.error}`); return; }
     loadCacheStats();
-    showStatus(`Cloud folder synced: ${res.added} track${res.added === 1 ? '' : 's'} indexed for on-demand streaming.`);
+    const matchedFolder = Array.isArray(res.folders)
+      ? res.folders.find(f => f.connectionId === targetConnId && f.path === p) || res.folders[res.folders.length - 1]
+      : null;
+    const summary = matchedFolder ? formatFolderMediaSummary(matchedFolder) : `${res.added} video${res.added === 1 ? '' : 's'}`;
+    showStatus(`Cloud folder synced: ${summary} indexed for on-demand streaming.`);
   };
 
   const handleMaxCacheChange = async (e) => {
@@ -194,7 +199,12 @@ export default function CloudBrowser({ onLibrary, onFolders, showStatus, folders
                   <input type="checkbox" aria-label={'Keep ' + lf.label + ' synced'} checked={checked} disabled={busy}
                     onChange={e => f ? onEnabled(f.id, e.target.checked) : addFolder(lf.remotePath, c.id)} />
                   <span><strong>{lf.label}</strong><small>{checked ? 'Kept in sync · checks at startup' : 'Sync paused'} · {lf.remotePath}</small>
-                    {f && <small>{f.trackCount} tracks · {f.lastSynced ? 'Last synced ' + new Date(f.lastSynced).toLocaleString() : 'Not synced yet'}</small>}
+                    {f && <small>{formatFolderMediaSummary(f)} · {f.lastSynced ? 'Last synced ' + new Date(f.lastSynced).toLocaleString() : 'Not synced yet'}</small>}
+                    {f && Array.isArray(f.shows) && f.shows.length > 0 && (
+                      <small style={{ color: '#e8a33d' }}>
+                        📺 {f.shows.map(s => `${s.showName}: ${s.seasons.map(sn => `Season ${sn.seasonNumber} (${sn.episodeCount} eps)`).join(', ')}`).join(' · ')}
+                      </small>
+                    )}
                     {f?.syncError && <small className="cloud-error">{f.syncError} · Refresh to retry</small>}
                   </span>
                 </label>

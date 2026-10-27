@@ -99,27 +99,45 @@ function trackFromMetadata(filePath, metadata, parser, coverCache = null) {
     art = { artId: generateArtId(buffer), buffer, format: cover.format || 'image/jpeg' };
   }
 
+  const parentDir = path.basename(path.dirname(filePath));
+  const grandParentDir = path.basename(path.dirname(path.dirname(filePath)));
+  const isVideo = VIDEO_EXTENSIONS.has(path.extname(filePath).toLowerCase());
+  const tvInfo = isVideo ? parseVideoMediaInfo(common.title || path.parse(filePath).name, parentDir, grandParentDir) : null;
+
   const cleaned = cleanMovieTitle(common.title || path.parse(filePath).name);
-  const folderCleaned = cleanMovieTitle(path.basename(path.dirname(filePath)));
+  const folderCleaned = cleanMovieTitle(parentDir);
   const useFolderTitle = (!common.title && folderCleaned.year && !cleaned.year) || /^(movie|video|film|track|sample)$/i.test(cleaned.title);
-  const bestTitle = common.title || (useFolderTitle ? folderCleaned.title : cleaned.title) || path.parse(filePath).name;
-  const bestYear = common.year || cleaned.year || folderCleaned.year || null;
-  const resBadge = [cleaned.resolution || folderCleaned.resolution, cleaned.source || folderCleaned.source].filter(Boolean).join(' ');
+  const bestTitle = (tvInfo && tvInfo.isTvShow)
+    ? tvInfo.displayTitle
+    : (common.title || (useFolderTitle ? folderCleaned.title : cleaned.title) || path.parse(filePath).name);
+  const bestYear = common.year || (tvInfo && tvInfo.year) || cleaned.year || folderCleaned.year || null;
+  const resBadge = [
+    (tvInfo && tvInfo.resolution) || cleaned.resolution || folderCleaned.resolution,
+    (tvInfo && tvInfo.source) || cleaned.source || folderCleaned.source,
+  ].filter(Boolean).join(' ');
 
   const track = {
     id: generateTrackId(filePath),
     filePath,
     title: bestTitle,
-    artist: common.artist || common.albumartist || (resBadge ? resBadge : 'Feature Film'),
-    albumArtist: common.albumartist || null,
-    album: common.album || (bestYear ? `${bestTitle} (${bestYear})` : bestTitle),
+    artist: common.artist || common.albumartist || (resBadge ? resBadge : (tvInfo && tvInfo.isTvShow ? 'TV Series' : 'Feature Film')),
+    albumArtist: common.albumartist || (tvInfo && tvInfo.isTvShow ? tvInfo.showName : null),
+    album: (tvInfo && tvInfo.isTvShow)
+      ? tvInfo.showName
+      : (common.album || (bestYear ? `${bestTitle} (${bestYear})` : bestTitle)),
     year: bestYear,
-    genre: firstOf(common.genre) || (VIDEO_EXTENSIONS.has(path.extname(filePath).toLowerCase()) ? 'Movies' : null),
+    genre: firstOf(common.genre) || (tvInfo && tvInfo.isTvShow ? 'TV Series' : (isVideo ? 'Movies' : null)),
     composer: firstOf(common.composer),
-    trackNumber: common.track?.no || null,
+    trackNumber: (tvInfo && tvInfo.isTvShow && tvInfo.episodeNumber) ? tvInfo.episodeNumber : (common.track?.no || null),
     trackTotal: common.track?.of || null,
-    discNumber: common.disk?.no || null,
+    discNumber: (tvInfo && tvInfo.isTvShow && tvInfo.seasonNumber) ? tvInfo.seasonNumber : (common.disk?.no || null),
     discTotal: common.disk?.of || null,
+    mediaType: isVideo ? ((tvInfo && tvInfo.isTvShow) ? 'tv' : 'movie') : 'audio',
+    showName: (tvInfo && tvInfo.isTvShow) ? tvInfo.showName : null,
+    seasonNumber: (tvInfo && tvInfo.isTvShow) ? tvInfo.seasonNumber : null,
+    episodeNumber: (tvInfo && tvInfo.isTvShow) ? tvInfo.episodeNumber : null,
+    episodeTitle: (tvInfo && tvInfo.isTvShow) ? tvInfo.episodeTitle : null,
+    episodeCode: (tvInfo && tvInfo.isTvShow) ? tvInfo.episodeCode : null,
     duration: format.duration || 0,
     bitrate: format.bitrate || 0,
     sampleRate: format.sampleRate || 0,
@@ -140,20 +158,39 @@ function fallbackTrack(filePath, err, coverCache = null) {
     const buffer = Buffer.from(cover.data);
     art = { artId: generateArtId(buffer), buffer, format: cover.format };
   }
+  const parentDir = path.basename(path.dirname(filePath));
+  const grandParentDir = path.basename(path.dirname(path.dirname(filePath)));
+  const isVideo = VIDEO_EXTENSIONS.has(path.extname(filePath).toLowerCase());
+  const tvInfo = isVideo ? parseVideoMediaInfo(path.parse(filePath).name, parentDir, grandParentDir) : null;
+
   const cleaned = cleanMovieTitle(path.parse(filePath).name);
-  const folderCleaned = cleanMovieTitle(path.basename(path.dirname(filePath)));
-  const bestTitle = (folderCleaned.year && !cleaned.year ? folderCleaned.title : cleaned.title) || path.parse(filePath).name;
-  const bestYear = cleaned.year || folderCleaned.year || null;
-  const resBadge = [cleaned.resolution || folderCleaned.resolution, cleaned.source || folderCleaned.source].filter(Boolean).join(' ');
+  const folderCleaned = cleanMovieTitle(parentDir);
+  const bestTitle = (tvInfo && tvInfo.isTvShow)
+    ? tvInfo.displayTitle
+    : ((folderCleaned.year && !cleaned.year ? folderCleaned.title : cleaned.title) || path.parse(filePath).name);
+  const bestYear = (tvInfo && tvInfo.year) || cleaned.year || folderCleaned.year || null;
+  const resBadge = [
+    (tvInfo && tvInfo.resolution) || cleaned.resolution || folderCleaned.resolution,
+    (tvInfo && tvInfo.source) || cleaned.source || folderCleaned.source,
+  ].filter(Boolean).join(' ');
   return {
     track: {
       id: generateTrackId(filePath),
       filePath,
       title: bestTitle,
-      artist: resBadge || 'Feature Film',
-      album: bestYear ? `${bestTitle} (${bestYear})` : bestTitle,
+      artist: resBadge || (tvInfo && tvInfo.isTvShow ? 'TV Series' : 'Feature Film'),
+      albumArtist: (tvInfo && tvInfo.isTvShow) ? tvInfo.showName : null,
+      album: (tvInfo && tvInfo.isTvShow) ? tvInfo.showName : (bestYear ? `${bestTitle} (${bestYear})` : bestTitle),
       year: bestYear,
-      genre: VIDEO_EXTENSIONS.has(path.extname(filePath).toLowerCase()) ? 'Movies' : null,
+      genre: (tvInfo && tvInfo.isTvShow) ? 'TV Series' : (isVideo ? 'Movies' : null),
+      trackNumber: (tvInfo && tvInfo.isTvShow) ? tvInfo.episodeNumber : null,
+      discNumber: (tvInfo && tvInfo.isTvShow) ? tvInfo.seasonNumber : null,
+      mediaType: isVideo ? ((tvInfo && tvInfo.isTvShow) ? 'tv' : 'movie') : 'audio',
+      showName: (tvInfo && tvInfo.isTvShow) ? tvInfo.showName : null,
+      seasonNumber: (tvInfo && tvInfo.isTvShow) ? tvInfo.seasonNumber : null,
+      episodeNumber: (tvInfo && tvInfo.isTvShow) ? tvInfo.episodeNumber : null,
+      episodeTitle: (tvInfo && tvInfo.isTvShow) ? tvInfo.episodeTitle : null,
+      episodeCode: (tvInfo && tvInfo.isTvShow) ? tvInfo.episodeCode : null,
       duration: 0,
       artId: art ? art.artId : null,
       src: toSafeFileUrl(filePath),
@@ -219,6 +256,188 @@ function cleanMovieTitle(raw) {
 }
 
 /**
+ * Cleans a TV Show name from a filename prefix or season folder name:
+ * e.g. "Atypical.SEASON.01.S01.COMPLETE.720p..." -> "Atypical"
+ * e.g. "Stranger_Things_S04" -> "Stranger Things"
+ */
+function cleanShowName(raw) {
+  const cleaned = cleanMovieTitle(raw).title;
+  return String(cleaned || '')
+    .replace(/\b(?:season|series)\s*\d{1,2}\b.*$/i, ' ')
+    .replace(/\bs\d{1,2}(?:\s*[-–]\s*s?\d{1,2})?\b.*$/i, ' ')
+    .replace(/\bcomplete\b.*$/i, ' ')
+    .replace(/^\s*[-–—:._]+\s*/, '')
+    .replace(/\s*[-–—:._]+\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Distinguishes whether a video file is a TV Show episode or a standalone Movie,
+ * and extracts { isTvShow, mediaType, showName, seasonNumber, episodeNumber, episodeCode, episodeTitle, displayTitle }.
+ */
+function parseVideoMediaInfo(rawName, parentDir = '', grandParentDir = '') {
+  const fileStr = String(rawName || '').trim();
+  const parentStr = String(parentDir || '').trim();
+  const grandStr = String(grandParentDir || '').trim();
+
+  const fileCleaned = cleanMovieTitle(fileStr);
+  const folderCleaned = parentStr && !GENERIC_FOLDERS.has(parentStr.toLowerCase())
+    ? cleanMovieTitle(parentStr)
+    : { title: '', year: null, resolution: null, source: null };
+
+  const year = fileCleaned.year || folderCleaned.year || null;
+  const resolution = fileCleaned.resolution || folderCleaned.resolution || null;
+  const source = fileCleaned.source || folderCleaned.source || null;
+
+  let seasonNumber = null;
+  let episodeNumber = null;
+  let beforeMatch = '';
+  let afterMatch = '';
+
+  // 1. Standard S01E01 / S1E2 / s01.e02 / S01_E02 pattern
+  const seMatch = /(?:^|[.\s_\-([\]])S(\d{1,2})[.\s_-]*E(\d{1,3})(?:[.\s_-]*E?\d{1,3})?(?=[.\s_\-)\]]|$)/i.exec(fileStr);
+  if (seMatch) {
+    seasonNumber = Number(seMatch[1]);
+    episodeNumber = Number(seMatch[2]);
+    beforeMatch = fileStr.slice(0, seMatch.index);
+    afterMatch = fileStr.slice(seMatch.index + seMatch[0].length);
+  }
+
+  // 2. 1x01 / 01x02 pattern (excluding resolutions like 1920x1080 or 720x480)
+  if (seasonNumber == null) {
+    const xMatch = /(?:^|[.\s_\-([\]])(0?[1-9]|[1-4]\d)x(\d{2,3})(?=[.\s_\-)\]]|$)/i.exec(fileStr);
+    if (xMatch && Number(xMatch[2]) <= 200) {
+      seasonNumber = Number(xMatch[1]);
+      episodeNumber = Number(xMatch[2]);
+      beforeMatch = fileStr.slice(0, xMatch.index);
+      afterMatch = fileStr.slice(xMatch.index + xMatch[0].length);
+    }
+  }
+
+  // 3. "Season 1 Episode 2" or folder "Season 1" + filename "Episode 2" / "E02"
+  if (seasonNumber == null) {
+    const folderSeasonMatch = /\b(?:season|series|s)\s*0?(\d{1,2})\b/i.exec(`${parentStr} ${grandStr}`);
+    const fileSeasonMatch = /\b(?:season|series)\s*0?(\d{1,2})\b/i.exec(fileStr);
+    const epWordMatch = /\b(?:episode|ep)\s*0?(\d{1,3})\b/i.exec(fileStr)
+      || (folderSeasonMatch ? /(?:^|[.\s_\-])E0?(\d{1,3})(?=[.\s_\-]|$)/i.exec(fileStr) : null);
+    if (epWordMatch && (fileSeasonMatch || folderSeasonMatch)) {
+      seasonNumber = Number((fileSeasonMatch || folderSeasonMatch)[1]);
+      episodeNumber = Number(epWordMatch[1]);
+      beforeMatch = fileStr.slice(0, (fileSeasonMatch || epWordMatch).index);
+      afterMatch = fileStr.slice(epWordMatch.index + epWordMatch[0].length);
+    }
+  }
+
+  if (seasonNumber != null && episodeNumber != null) {
+    let showName = cleanShowName(beforeMatch);
+    if (!showName && parentStr && !GENERIC_FOLDERS.has(parentStr.toLowerCase())) {
+      showName = cleanShowName(parentStr);
+    }
+    if (!showName && grandStr && !GENERIC_FOLDERS.has(grandStr.toLowerCase())) {
+      showName = cleanShowName(grandStr);
+    }
+    if (!showName) showName = 'TV Series';
+
+    let episodeTitle = cleanMovieTitle(afterMatch).title;
+    // Strip redundant show name or S01E01 prefix from episodeTitle
+    if (episodeTitle && episodeTitle.toLowerCase() === showName.toLowerCase()) {
+      episodeTitle = '';
+    }
+    episodeTitle = episodeTitle
+      .replace(/^[-–—:.\s]+/, '')
+      .replace(/[-–—:.\s]+$/, '')
+      .trim();
+
+    const episodeCode = `S${String(seasonNumber).padStart(2, '0')}E${String(episodeNumber).padStart(2, '0')}`;
+    const displayTitle = episodeTitle
+      ? `${showName} · ${episodeCode} · ${episodeTitle}`
+      : `${showName} · ${episodeCode}`;
+
+    return {
+      isTvShow: true,
+      mediaType: 'tv',
+      showName,
+      seasonNumber,
+      episodeNumber,
+      episodeCode,
+      episodeTitle: episodeTitle || `Episode ${episodeNumber}`,
+      displayTitle,
+      year,
+      resolution,
+      source,
+    };
+  }
+
+  return {
+    isTvShow: false,
+    mediaType: 'movie',
+    showName: null,
+    seasonNumber: null,
+    episodeNumber: null,
+    episodeCode: null,
+    episodeTitle: null,
+    displayTitle: fileCleaned.title || rawName,
+    year,
+    resolution,
+    source,
+  };
+}
+
+/**
+ * Self-heals an existing cached track record so TV Show episodes and Movies
+ * have consistent mediaType, showName, seasonNumber, episodeNumber, and grouped album.
+ * Returns true if any property on `track` was updated.
+ */
+function upgradeTrackVideoGrouping(track) {
+  if (!track) return false;
+  const filePath = String(track.cloud?.remotePath || track.filePath || '');
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext && !VIDEO_EXTENSIONS.has(ext)) return false;
+
+  const parts = filePath.split('/').filter(Boolean);
+  const rawFile = parts.length ? path.parse(parts[parts.length - 1]).name : (track.title || '');
+  const parentDir = parts.length >= 2 ? parts[parts.length - 2] : '';
+  const grandParentDir = parts.length >= 3 ? parts[parts.length - 3] : '';
+
+  // Check raw filename first, then fallback to track.title / track.album
+  let info = parseVideoMediaInfo(rawFile, parentDir, grandParentDir);
+  if (!info.isTvShow && track.title) {
+    info = parseVideoMediaInfo(track.title, parentDir, grandParentDir);
+  }
+  if (!info.isTvShow && track.album) {
+    info = parseVideoMediaInfo(track.album, parentDir, grandParentDir);
+  }
+
+  let changed = false;
+  const set = (k, v) => {
+    if (v !== undefined && track[k] !== v) {
+      track[k] = v;
+      changed = true;
+    }
+  };
+
+  if (info.isTvShow) {
+    set('mediaType', 'tv');
+    set('showName', info.showName);
+    set('seasonNumber', info.seasonNumber);
+    set('episodeNumber', info.episodeNumber);
+    set('episodeCode', info.episodeCode);
+    set('episodeTitle', info.episodeTitle);
+    set('album', info.showName);
+    set('albumArtist', info.showName);
+    set('discNumber', info.seasonNumber);
+    set('trackNumber', info.episodeNumber);
+    set('title', info.displayTitle);
+    if (!track.genre || track.genre === 'Movies') set('genre', 'TV Series');
+  } else if (track.mediaType !== 'movie') {
+    set('mediaType', 'movie');
+  }
+
+  return changed;
+}
+
+/**
  * Best guess at title / artist / album / year from a remote movie or audio path.
  */
 function guessFromRemotePath(remotePath, name = '') {
@@ -238,6 +457,28 @@ function guessFromRemotePath(remotePath, name = '') {
   const grandParentDir = dirs[dirs.length - 2] || '';
 
   if (isVideo) {
+    const tvInfo = parseVideoMediaInfo(rawName, parentDir, grandParentDir);
+    if (tvInfo.isTvShow) {
+      const badge = [tvInfo.resolution, tvInfo.source].filter(Boolean).join(' ');
+      return {
+        title: tvInfo.displayTitle,
+        artist: badge || 'TV Series',
+        albumArtist: tvInfo.showName,
+        album: tvInfo.showName,
+        trackNumber: tvInfo.episodeNumber,
+        discNumber: tvInfo.seasonNumber,
+        year: tvInfo.year,
+        genre: 'TV Series',
+        resolution: tvInfo.resolution,
+        mediaType: 'tv',
+        showName: tvInfo.showName,
+        seasonNumber: tvInfo.seasonNumber,
+        episodeNumber: tvInfo.episodeNumber,
+        episodeTitle: tvInfo.episodeTitle,
+        episodeCode: tvInfo.episodeCode,
+      };
+    }
+
     const fileCleaned = cleanMovieTitle(rawName);
     const folderCleaned = parentDir && !GENERIC_FOLDERS.has(parentDir.toLowerCase())
       ? cleanMovieTitle(parentDir)
@@ -268,6 +509,7 @@ function guessFromRemotePath(remotePath, name = '') {
       year,
       genre: 'Movies',
       resolution,
+      mediaType: 'movie',
     };
   }
 
@@ -305,6 +547,9 @@ function guessFromRemotePath(remotePath, name = '') {
 
 module.exports = {
   cleanMovieTitle,
+  cleanShowName,
+  parseVideoMediaInfo,
+  upgradeTrackVideoGrouping,
   guessFromRemotePath,
   AUDIO_EXTENSIONS,
   VIDEO_EXTENSIONS,

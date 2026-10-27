@@ -14637,6 +14637,102 @@
         const badge = [resolution, source].filter(Boolean).join(" \xB7 ") || resolution || source || container2 || "Cinema";
         return { resolution, source, container: container2, badge };
       }
+      var tvEpisodeCache = /* @__PURE__ */ new WeakMap();
+      function inferTvShowEpisode2(track) {
+        if (!track) return null;
+        if (tvEpisodeCache.has(track)) return tvEpisodeCache.get(track);
+        if (track.mediaType === "tv" && track.showName) {
+          const seasonNumber = Number(track.seasonNumber || track.discNumber || 1);
+          const episodeNumber = Number(track.episodeNumber || track.trackNumber || 1);
+          const episodeCode = track.episodeCode || `S${String(seasonNumber).padStart(2, "0")}E${String(episodeNumber).padStart(2, "0")}`;
+          const result = {
+            isTvShow: true,
+            showName: track.showName,
+            seasonNumber,
+            episodeNumber,
+            episodeCode,
+            episodeTitle: track.episodeTitle || track.title || `Episode ${episodeNumber}`
+          };
+          tvEpisodeCache.set(track, result);
+          return result;
+        }
+        const candidates = [
+          track.title,
+          track.album,
+          track.cloud?.remotePath ? String(track.cloud.remotePath).split("/").pop() : null,
+          track.filePath ? String(track.filePath).split("/").pop() : null
+        ].filter(Boolean);
+        for (const raw of candidates) {
+          const str = String(raw).replace(/\.[a-z0-9]{2,4}$/i, "");
+          const se = /(?:^|[.\s_\-([·])S(\d{1,2})[.\s_-]*E(\d{1,3})(?:[.\s_-]*E?\d{1,3})?(?=[.\s_\-)\]·]|$)/i.exec(str) || /(?:^|[.\s_\-([·])(0?[1-9]|[1-4]\d)x(\d{2,3})(?=[.\s_\-)\]·]|$)/i.exec(str);
+          if (se) {
+            const seasonNumber = Number(se[1]);
+            const episodeNumber = Number(se[2]);
+            let before = str.slice(0, se.index).replace(/[._·]+/g, " ").replace(/\b(?:season|series)\s*\d{1,2}\b.*$/i, "").replace(/^\s*[-–—:]+\s*|\s*[-–—:]+\s*$/g, "").trim();
+            let after = str.slice(se.index + se[0].length).replace(/\b(2160p|4k|1080p|720p|480p|BluRay|BRRip|BDRip|WEBRip|WEB-DL|WEB|HDRip|DVDRip|HDTV|x264|x265|hevc|h264|aac|ac3)\b.*$/i, " ").replace(/\[[^\]]*\]|\([^)]*\)/g, " ").replace(/[._·]+/g, " ").replace(/^\s*[-–—:]+\s*|\s*[-–—:]+\s*$/g, "").replace(/\s+/g, " ").trim();
+            if (!before && track.album) {
+              before = String(track.album).replace(/\bS\d{1,2}\s*E\d{1,3}\b.*$/i, "").trim();
+            }
+            const showName = before || "TV Series";
+            const episodeCode = `S${String(seasonNumber).padStart(2, "0")}E${String(episodeNumber).padStart(2, "0")}`;
+            const result = {
+              isTvShow: true,
+              showName,
+              seasonNumber,
+              episodeNumber,
+              episodeCode,
+              episodeTitle: after || `Episode ${episodeNumber}`
+            };
+            tvEpisodeCache.set(track, result);
+            return result;
+          }
+        }
+        tvEpisodeCache.set(track, null);
+        return null;
+      }
+      function summarizeMediaBreakdown(tracks = []) {
+        let movieCount = 0;
+        let episodeCount = 0;
+        const showMap = /* @__PURE__ */ new Map();
+        for (const t of tracks) {
+          if (!t) continue;
+          const tv = inferTvShowEpisode2(t);
+          if (tv && tv.isTvShow) {
+            episodeCount++;
+            const key = fold4(tv.showName);
+            let entry = showMap.get(key);
+            if (!entry) {
+              entry = { showName: tv.showName, seasons: /* @__PURE__ */ new Map(), episodeCount: 0 };
+              showMap.set(key, entry);
+            }
+            entry.episodeCount++;
+            entry.seasons.set(tv.seasonNumber, (entry.seasons.get(tv.seasonNumber) || 0) + 1);
+          } else {
+            movieCount++;
+          }
+        }
+        const shows = [...showMap.values()].map((s) => {
+          const seasons = [...s.seasons.entries()].sort((a, b) => a[0] - b[0]).map(([seasonNumber, count]) => ({
+            seasonNumber,
+            label: `Season ${seasonNumber}`,
+            episodeCount: count
+          }));
+          return {
+            showName: s.showName,
+            seasonCount: seasons.length,
+            episodeCount: s.episodeCount,
+            seasons
+          };
+        }).sort((a, b) => compareNames(a.showName, b.showName));
+        const seasonCount = shows.reduce((sum, s) => sum + s.seasonCount, 0);
+        return {
+          movieCount,
+          showCount: shows.length,
+          seasonCount,
+          episodeCount,
+          shows
+        };
+      }
       var foldCache = /* @__PURE__ */ new Map();
       var FOLD_CACHE_LIMIT = 3e5;
       function fold4(value) {
@@ -14683,17 +14779,27 @@
         if (!filePath) return "";
         const parts = String(filePath).split("/");
         parts.pop();
-        if (parts.length > 1 && /^(cd|disc|disk)\s*\d+$/i.test(parts[parts.length - 1])) parts.pop();
+        if (parts.length > 1 && /^(cd|disc|disk|season|s|series)\s*\d+$/i.test(parts[parts.length - 1])) parts.pop();
         return parts.join("/");
       }
       function albumKeyOf2(track) {
+        const tv = inferTvShowEpisode2(track);
+        if (tv && tv.isTvShow) {
+          return `tv:${fold4(tv.showName)}`;
+        }
         const title = fold4(track.album || UNKNOWN_ALBUM);
         if (track.albumArtist) return `${title}aa:${fold4(track.albumArtist)}`;
         if (track.filePath) return `${title}dir:${dirOf(track.filePath)}`;
         return `${title}ar:${fold4(track.artist)}`;
       }
       function compareAlbumOrder(a, b) {
-        return (a.discNumber || 1) - (b.discNumber || 1) || (a.trackNumber || 9999) - (b.trackNumber || 9999) || compareNames(a.title, b.title);
+        const tvA = inferTvShowEpisode2(a);
+        const tvB = inferTvShowEpisode2(b);
+        const seasonA = tvA && tvA.seasonNumber || a.seasonNumber || a.discNumber || 1;
+        const seasonB = tvB && tvB.seasonNumber || b.seasonNumber || b.discNumber || 1;
+        const epA = tvA && tvA.episodeNumber || a.episodeNumber || a.trackNumber || 9999;
+        const epB = tvB && tvB.episodeNumber || b.episodeNumber || b.trackNumber || 9999;
+        return seasonA - seasonB || epA - epB || compareNames(a.title, b.title);
       }
       function mostCommon(values) {
         const counts = /* @__PURE__ */ new Map();
@@ -14718,10 +14824,16 @@
       function buildIndex2(tracks = []) {
         const albumMap = /* @__PURE__ */ new Map();
         for (const t of tracks) {
+          const tv = inferTvShowEpisode2(t);
           const key = albumKeyOf2(t);
           let album = albumMap.get(key);
           if (!album) {
-            album = { key, title: t.album || UNKNOWN_ALBUM, tracks: [] };
+            album = {
+              key,
+              title: tv && tv.isTvShow ? tv.showName : t.album || UNKNOWN_ALBUM,
+              isTvShow: !!(tv && tv.isTvShow),
+              tracks: []
+            };
             albumMap.set(key, album);
           }
           album.tracks.push(t);
@@ -14758,7 +14870,8 @@
             duration += t.duration || 0;
             if (t.addedAt && (!addedAt || t.addedAt > addedAt)) addedAt = t.addedAt;
             if (!t.lossless) lossless = false;
-            const disc = t.discNumber || 1;
+            const tv = inferTvShowEpisode2(t);
+            const disc = tv && tv.seasonNumber || t.seasonNumber || t.discNumber || 1;
             if (disc !== lastDisc) {
               discCount++;
               lastDisc = disc;
@@ -14779,7 +14892,37 @@
           album.genre = inferredGenres[0] || (mixedGenres ? mostCommon(list.flatMap((t) => splitGenres2(t.genre))) : splitGenres2(genre)[0] || null);
           album.franchise = inferMovieFranchise(list[0]);
           album.quality = inferQualityMeta(list[0]);
-          album.isTvShow = inferredGenres.includes("TV Series") || /\bs\d{1,2}\s*e\d{1,2}\b|\bseason\s*\d+\b|\bepisode\s*\d+\b/i.test(`${album.title || ""} ${list[0]?.title || ""}`);
+          album.isTvShow = album.isTvShow || inferredGenres.includes("TV Series") || list.some((t) => t.mediaType === "tv" || !!inferTvShowEpisode2(t)) || /\bs\d{1,2}\s*e\d{1,2}\b|\bseason\s*\d+\b|\bepisode\s*\d+\b/i.test(`${album.title || ""} ${list[0]?.title || ""}`);
+          album.mediaType = album.isTvShow ? "tv" : "movie";
+          if (album.isTvShow) {
+            const seasonMap = /* @__PURE__ */ new Map();
+            for (const t of list) {
+              const tv = inferTvShowEpisode2(t);
+              const sNum = tv && tv.seasonNumber || t.seasonNumber || t.discNumber || 1;
+              let season = seasonMap.get(sNum);
+              if (!season) {
+                season = {
+                  seasonNumber: sNum,
+                  label: `Season ${sNum}`,
+                  code: `S${String(sNum).padStart(2, "0")}`,
+                  episodes: [],
+                  duration: 0
+                };
+                seasonMap.set(sNum, season);
+              }
+              season.episodes.push(t);
+              season.duration += t.duration || 0;
+            }
+            album.seasons = [...seasonMap.values()].sort((a, b) => a.seasonNumber - b.seasonNumber);
+            for (const s of album.seasons) s.episodeCount = s.episodes.length;
+            album.seasonCount = album.seasons.length;
+            album.episodeCount = list.length;
+            discCount = Math.max(discCount, album.seasonCount);
+          } else {
+            album.seasons = [];
+            album.seasonCount = 0;
+            album.episodeCount = 0;
+          }
           album.artId = artId;
           album.duration = duration;
           album.discCount = discCount;
@@ -15009,7 +15152,7 @@
       function unplayedTracks(tracks, stats = {}) {
         return tracks.filter((t) => !((stats[t.id] || {}).plays > 0));
       }
-      function formatDuration5(sec) {
+      function formatDuration6(sec) {
         if (!sec || isNaN(sec)) return "--:--";
         const total = Math.round(sec);
         const h = Math.floor(total / 3600);
@@ -15042,6 +15185,8 @@
         inferMovieGenres: inferMovieGenres3,
         inferMovieFranchise,
         inferQualityMeta,
+        inferTvShowEpisode: inferTvShowEpisode2,
+        summarizeMediaBreakdown,
         albumKeyOf: albumKeyOf2,
         buildIndex: buildIndex2,
         searchIndex: searchIndex2,
@@ -15053,7 +15198,7 @@
         recentlyPlayedTracks: recentlyPlayedTracks2,
         mostPlayedTracks: mostPlayedTracks2,
         unplayedTracks,
-        formatDuration: formatDuration5,
+        formatDuration: formatDuration6,
         formatLongDuration: formatLongDuration4,
         plural: plural4
       };
@@ -17982,7 +18127,92 @@
   }
 
   // src/CloudBrowser.jsx
+  var import_react10 = __toESM(require_react());
+
+  // src/FolderPanel.jsx
   var import_react9 = __toESM(require_react());
+  var when = (iso) => {
+    if (!iso) return "Not indexed yet";
+    const d = new Date(iso);
+    return `Synced ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  };
+  var providerLabel = (protocol) => {
+    const p = (protocol || "").toLowerCase();
+    if (p === "gdrive") return "Google Drive";
+    if (p === "onedrive") return "OneDrive";
+    if (p === "dropbox") return "Dropbox";
+    if (p === "s3") return "S3";
+    return p ? p.toUpperCase() : "Cloud";
+  };
+  function formatFolderMediaSummary(f) {
+    if (!f) return "0 movies";
+    const movies = f.movieCount != null ? f.movieCount : f.trackCount || 0;
+    const shows = f.showCount || 0;
+    const seasons = f.seasonCount || 0;
+    const episodes = f.episodeCount || 0;
+    const parts = [];
+    if (movies > 0 || shows === 0) {
+      parts.push(`${movies} Movie${movies === 1 ? "" : "s"}`);
+    }
+    if (shows > 0) {
+      parts.push(`${shows} TV Show${shows === 1 ? "" : "s"} (${seasons} Season${seasons === 1 ? "" : "s"} \xB7 ${episodes} Episode${episodes === 1 ? "" : "s"})`);
+    }
+    return parts.join(" \xB7 ");
+  }
+  function FolderPanel({ folders, activeId, onSelect, onAddLocal, onAddCloud, onRescan, onRename, onRemove, onEnabled, busyId }) {
+    const [confirmId, setConfirmId] = (0, import_react9.useState)(null);
+    const [alsoTracks, setAlsoTracks] = (0, import_react9.useState)(true);
+    const [editId, setEditId] = (0, import_react9.useState)(null);
+    const [editValue, setEditValue] = (0, import_react9.useState)("");
+    const commitRename = (id) => {
+      if (editValue.trim()) onRename(id, editValue);
+      setEditId(null);
+    };
+    return /* @__PURE__ */ import_react9.default.createElement("aside", { className: "folder-panel" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-panel-head" }, /* @__PURE__ */ import_react9.default.createElement("span", null, "Library Folders (", folders.length, ")"), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-head-actions" }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", title: "Add a folder from this computer", onClick: onAddLocal }, "+ Local"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", title: "Browse Cloud Storage folders", onClick: onAddCloud }, "+ Cloud"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", title: "Refresh folders marked Keep synced", onClick: () => onRescan(null), disabled: !folders.length || !!busyId }, "Refresh all"))), /* @__PURE__ */ import_react9.default.createElement("div", { className: `folder-row ${activeId === null ? "active" : ""}`, onClick: () => onSelect(null) }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "library", size: 15 }), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-text" }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-name" }, "All Movies & Shows"), /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-sub" }, "Combined view across all library folders"))), folders.length === 0 && /* @__PURE__ */ import_react9.default.createElement("p", { className: "folder-empty" }, "No folders linked yet. Add a local folder or link folders in RobOS Data Sources (Google Drive, OneDrive, SFTP, FTP)."), folders.map((f) => /* @__PURE__ */ import_react9.default.createElement("div", { key: f.id, className: `folder-item ${activeId === f.id ? "active" : ""} ${f.available ? "" : "unavailable"}` }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-row", onClick: () => onSelect(f.id) }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: f.kind === "cloud" ? "cloud" : "folder", size: 15 }), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-text" }, editId === f.id ? /* @__PURE__ */ import_react9.default.createElement(
+      "input",
+      {
+        className: "folder-edit",
+        autoFocus: true,
+        value: editValue,
+        onClick: (e) => e.stopPropagation(),
+        onChange: (e) => setEditValue(e.target.value),
+        onBlur: () => commitRename(f.id),
+        onKeyDown: (e) => {
+          if (e.key === "Enter") commitRename(f.id);
+          if (e.key === "Escape") setEditId(null);
+        }
+      }
+    ) : /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-name", onDoubleClick: () => {
+      setEditId(f.id);
+      setEditValue(f.label);
+    }, title: "Double-click to rename" }, f.label), /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-sub", title: f.kind === "cloud" ? `${providerLabel(f.protocol)} \xB7 ${f.connectionName || ""} (${f.path})` : f.path }, f.kind === "cloud" ? f.connectionMissing ? "Connection removed from Data Sources" : `${providerLabel(f.protocol)} \xB7 ${f.connectionName}` : f.available ? f.path : `${f.path} (not found)`), /* @__PURE__ */ import_react9.default.createElement("span", { className: "folder-sub" }, /* @__PURE__ */ import_react9.default.createElement("strong", null, formatFolderMediaSummary(f)), " \xB7 ", when(f.lastSynced)), Array.isArray(f.shows) && f.shows.length > 0 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-shows-breakdown" }, f.shows.map((s) => /* @__PURE__ */ import_react9.default.createElement("span", { key: s.showName, className: "folder-show-pill" }, "\u{1F4FA} ", /* @__PURE__ */ import_react9.default.createElement("strong", null, s.showName), ": ", s.seasons.map((sn) => `Season ${sn.seasonNumber} (${sn.episodeCount} ep${sn.episodeCount === 1 ? "" : "s"})`).join(", ")))))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-actions" }, /* @__PURE__ */ import_react9.default.createElement("label", { className: "folder-sub", title: "Keep this folder synced and check for updates at startup" }, /* @__PURE__ */ import_react9.default.createElement(
+      "input",
+      {
+        type: "checkbox",
+        "aria-label": `Keep ${f.label} synced`,
+        checked: f.syncEnabled !== false,
+        disabled: !!busyId,
+        onChange: (e) => onEnabled(f.id, e.target.checked)
+      }
+    ), " Keep synced"), /* @__PURE__ */ import_react9.default.createElement(
+      "button",
+      {
+        className: "row-btn",
+        style: f.trackCount === 0 && !f.lastSynced ? { color: "#00bcd4", borderColor: "rgba(0,188,212,0.4)" } : void 0,
+        onClick: () => onRescan(f.id),
+        disabled: !!busyId || f.connectionMissing || f.syncEnabled === false
+      },
+      busyId === f.id ? "Syncing..." : "Refresh"
+    ), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn row-btn-stop", onClick: () => {
+      setConfirmId(confirmId === f.id ? null : f.id);
+      setAlsoTracks(true);
+    } }, "Remove")), f.syncError && /* @__PURE__ */ import_react9.default.createElement("p", { className: "cloud-error", role: "status" }, "Could not check for updates: ", f.syncError, ". Existing tracks are available; refresh to retry."), confirmId === f.id && /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-confirm" }, /* @__PURE__ */ import_react9.default.createElement("label", null, /* @__PURE__ */ import_react9.default.createElement("input", { type: "checkbox", checked: alsoTracks, onChange: (e) => setAlsoTracks(e.target.checked) }), "Also remove its ", f.trackCount, " video", f.trackCount === 1 ? "" : "s", " (", formatFolderMediaSummary(f), ") from the library", f.kind === "cloud" ? " and delete the downloaded copies" : ""), /* @__PURE__ */ import_react9.default.createElement("div", { className: "folder-confirm-actions" }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", onClick: () => setConfirmId(null) }, "Cancel"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-accent", onClick: () => {
+      setConfirmId(null);
+      onRemove(f.id, alsoTracks);
+    } }, "Remove folder"))))));
+  }
+
+  // src/CloudBrowser.jsx
   var formatSize = (b) => b == null ? "" : b > 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1024))} KB`;
   var CACHE_LIMIT_OPTIONS = [
     { label: "250 MB", bytes: 250 * 1024 * 1024 },
@@ -18000,16 +18230,16 @@
     return { label: (driverType || "Cloud").toUpperCase(), color: "#e8a33d", bg: "rgba(232, 163, 61, 0.12)" };
   };
   function CloudBrowser({ onLibrary, onFolders, showStatus, folders = [], onEnabled, onRescan, busyId }) {
-    const [connections, setConnections] = (0, import_react9.useState)(null);
-    const [connId, setConnId] = (0, import_react9.useState)("");
-    const [listing, setListing] = (0, import_react9.useState)(null);
-    const [loading, setLoading] = (0, import_react9.useState)(false);
-    const [error, setError] = (0, import_react9.useState)("");
-    const [selected, setSelected] = (0, import_react9.useState)(/* @__PURE__ */ new Set());
-    const [progress, setProgress] = (0, import_react9.useState)(null);
-    const [cacheStats, setCacheStats] = (0, import_react9.useState)(null);
-    const importing = (0, import_react9.useRef)(false);
-    const dirCacheRef = (0, import_react9.useRef)(/* @__PURE__ */ new Map());
+    const [connections, setConnections] = (0, import_react10.useState)(null);
+    const [connId, setConnId] = (0, import_react10.useState)("");
+    const [listing, setListing] = (0, import_react10.useState)(null);
+    const [loading, setLoading] = (0, import_react10.useState)(false);
+    const [error, setError] = (0, import_react10.useState)("");
+    const [selected, setSelected] = (0, import_react10.useState)(/* @__PURE__ */ new Set());
+    const [progress, setProgress] = (0, import_react10.useState)(null);
+    const [cacheStats, setCacheStats] = (0, import_react10.useState)(null);
+    const importing = (0, import_react10.useRef)(false);
+    const dirCacheRef = (0, import_react10.useRef)(/* @__PURE__ */ new Map());
     const loadCacheStats = async () => {
       try {
         if (window.robosAudio?.cloudCacheStats) {
@@ -18062,11 +18292,11 @@
       }
       loadCacheStats();
     };
-    (0, import_react9.useEffect)(() => {
+    (0, import_react10.useEffect)(() => {
       loadConnections(false);
       return window.robosAudio.onCloudProgress((p) => setProgress(p.phase === "done" ? null : p));
     }, []);
-    (0, import_react9.useEffect)(() => {
+    (0, import_react10.useEffect)(() => {
       setProgress(null);
     }, [folders]);
     const toggle = (p) => setSelected((prev) => {
@@ -18110,7 +18340,9 @@
         return;
       }
       loadCacheStats();
-      showStatus(`Cloud folder synced: ${res.added} track${res.added === 1 ? "" : "s"} indexed for on-demand streaming.`);
+      const matchedFolder = Array.isArray(res.folders) ? res.folders.find((f) => f.connectionId === targetConnId && f.path === p) || res.folders[res.folders.length - 1] : null;
+      const summary = matchedFolder ? formatFolderMediaSummary(matchedFolder) : `${res.added} video${res.added === 1 ? "" : "s"}`;
+      showStatus(`Cloud folder synced: ${summary} indexed for on-demand streaming.`);
     };
     const handleMaxCacheChange = async (e) => {
       const bytes = Number(e.target.value);
@@ -18134,7 +18366,7 @@
     const other = (connections || []).filter((c) => !c.browsable);
     const activeConn = usable.find((c) => c.id === connId) || usable[0] || null;
     const currentPath = listing ? listing.path : "/";
-    return /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-browser" }, /* @__PURE__ */ import_react9.default.createElement(
+    return /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-browser" }, /* @__PURE__ */ import_react10.default.createElement(
       "select",
       {
         id: "cloud-conn-select",
@@ -18143,20 +18375,20 @@
         onChange: (e) => setConnId(e.target.value),
         disabled: !usable.length
       },
-      !usable.length && /* @__PURE__ */ import_react9.default.createElement("option", { value: "" }, "No Cloud Storage connections"),
-      usable.map((c) => /* @__PURE__ */ import_react9.default.createElement("option", { key: c.id, value: c.id }, c.name, " (", c.driverType.toUpperCase(), ")"))
-    ), /* @__PURE__ */ import_react9.default.createElement("section", { className: "cloud-sync-panel", "aria-label": "Cloud folder sync settings" }, /* @__PURE__ */ import_react9.default.createElement("header", { className: "cloud-sync-heading" }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("h3", null, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "cloud", size: 20 }), " Your cloud & SFTP movies"), /* @__PURE__ */ import_react9.default.createElement("p", null, "Choose the folders to keep synced. Checked folders are saved and checked for updates every time Movie Player starts.")), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", onClick: () => loadConnections(true) }, "Reload Data Sources")), /* @__PURE__ */ import_react9.default.createElement("p", { className: "cloud-sync-summary" }, folders.filter((f) => f.kind === "cloud" && f.syncEnabled !== false).length, " cloud folders selected \xB7 Movies stream on demand when played"), usable.map((c) => {
+      !usable.length && /* @__PURE__ */ import_react10.default.createElement("option", { value: "" }, "No Cloud Storage connections"),
+      usable.map((c) => /* @__PURE__ */ import_react10.default.createElement("option", { key: c.id, value: c.id }, c.name, " (", c.driverType.toUpperCase(), ")"))
+    ), /* @__PURE__ */ import_react10.default.createElement("section", { className: "cloud-sync-panel", "aria-label": "Cloud folder sync settings" }, /* @__PURE__ */ import_react10.default.createElement("header", { className: "cloud-sync-heading" }, /* @__PURE__ */ import_react10.default.createElement("div", null, /* @__PURE__ */ import_react10.default.createElement("h3", null, /* @__PURE__ */ import_react10.default.createElement(Icon2, { name: "cloud", size: 20 }), " Your cloud & SFTP movies"), /* @__PURE__ */ import_react10.default.createElement("p", null, "Choose the folders to keep synced. Checked folders are saved and checked for updates every time Movie Player starts.")), /* @__PURE__ */ import_react10.default.createElement("button", { className: "btn-secondary", onClick: () => loadConnections(true) }, "Reload Data Sources")), /* @__PURE__ */ import_react10.default.createElement("p", { className: "cloud-sync-summary" }, folders.filter((f) => f.kind === "cloud" && f.syncEnabled !== false).length, " cloud folders selected \xB7 Movies stream on demand when played"), usable.map((c) => {
       const badge = providerBadge(c.driverType);
       const linked = c.folders || [];
       const rows = [
         ...linked.map((lf) => ({ ...lf, saved: folders.find((f) => f.cloudKey === lf.cloudKey) })),
         ...folders.filter((f) => f.kind === "cloud" && f.connectionId === c.id && !linked.some((lf) => lf.cloudKey === f.cloudKey)).map((f) => ({ label: f.label, remotePath: f.path, cloudKey: f.cloudKey, saved: f }))
       ];
-      return /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-sync-source", key: c.id }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-sync-source-head" }, /* @__PURE__ */ import_react9.default.createElement("span", { style: { color: badge.color } }, badge.label), /* @__PURE__ */ import_react9.default.createElement("strong", null, c.name), c.user && /* @__PURE__ */ import_react9.default.createElement("span", null, c.user), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", onClick: () => browse(c.id, c.startPath || "/") }, "Browse folders")), rows.map((lf) => {
+      return /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-sync-source", key: c.id }, /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-sync-source-head" }, /* @__PURE__ */ import_react10.default.createElement("span", { style: { color: badge.color } }, badge.label), /* @__PURE__ */ import_react10.default.createElement("strong", null, c.name), c.user && /* @__PURE__ */ import_react10.default.createElement("span", null, c.user), /* @__PURE__ */ import_react10.default.createElement("button", { className: "row-btn", onClick: () => browse(c.id, c.startPath || "/") }, "Browse folders")), rows.map((lf) => {
         const f = lf.saved;
         const checked = !!f && f.syncEnabled !== false;
         const busy = !!progress || !!busyId;
-        return /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-sync-folder", key: lf.cloudKey || lf.remotePath }, /* @__PURE__ */ import_react9.default.createElement("label", { className: "cloud-sync-choice" }, /* @__PURE__ */ import_react9.default.createElement(
+        return /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-sync-folder", key: lf.cloudKey || lf.remotePath }, /* @__PURE__ */ import_react10.default.createElement("label", { className: "cloud-sync-choice" }, /* @__PURE__ */ import_react10.default.createElement(
           "input",
           {
             type: "checkbox",
@@ -18165,7 +18397,7 @@
             disabled: busy,
             onChange: (e) => f ? onEnabled(f.id, e.target.checked) : addFolder(lf.remotePath, c.id)
           }
-        ), /* @__PURE__ */ import_react9.default.createElement("span", null, /* @__PURE__ */ import_react9.default.createElement("strong", null, lf.label), /* @__PURE__ */ import_react9.default.createElement("small", null, checked ? "Kept in sync \xB7 checks at startup" : "Sync paused", " \xB7 ", lf.remotePath), f && /* @__PURE__ */ import_react9.default.createElement("small", null, f.trackCount, " tracks \xB7 ", f.lastSynced ? "Last synced " + new Date(f.lastSynced).toLocaleString() : "Not synced yet"), f?.syncError && /* @__PURE__ */ import_react9.default.createElement("small", { className: "cloud-error" }, f.syncError, " \xB7 Refresh to retry"))), /* @__PURE__ */ import_react9.default.createElement(
+        ), /* @__PURE__ */ import_react10.default.createElement("span", null, /* @__PURE__ */ import_react10.default.createElement("strong", null, lf.label), /* @__PURE__ */ import_react10.default.createElement("small", null, checked ? "Kept in sync \xB7 checks at startup" : "Sync paused", " \xB7 ", lf.remotePath), f && /* @__PURE__ */ import_react10.default.createElement("small", null, formatFolderMediaSummary(f), " \xB7 ", f.lastSynced ? "Last synced " + new Date(f.lastSynced).toLocaleString() : "Not synced yet"), f && Array.isArray(f.shows) && f.shows.length > 0 && /* @__PURE__ */ import_react10.default.createElement("small", { style: { color: "#e8a33d" } }, "\u{1F4FA} ", f.shows.map((s) => `${s.showName}: ${s.seasons.map((sn) => `Season ${sn.seasonNumber} (${sn.episodeCount} eps)`).join(", ")}`).join(" \xB7 ")), f?.syncError && /* @__PURE__ */ import_react10.default.createElement("small", { className: "cloud-error" }, f.syncError, " \xB7 Refresh to retry"))), /* @__PURE__ */ import_react10.default.createElement(
           "button",
           {
             className: "btn-secondary",
@@ -18174,9 +18406,9 @@
             "aria-label": "Refresh " + lf.label
           },
           busyId === f?.id ? "Syncing\u2026" : "Refresh"
-        ), /* @__PURE__ */ import_react9.default.createElement("button", { className: "row-btn", onClick: () => browse(c.id, lf.remotePath) }, "Browse"));
-      }), !rows.length && /* @__PURE__ */ import_react9.default.createElement("p", { className: "cloud-sync-hint" }, "Browse this source and choose a folder to keep synced."));
-    })), cacheStats && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-cache-bar", style: {
+        ), /* @__PURE__ */ import_react10.default.createElement("button", { className: "row-btn", onClick: () => browse(c.id, lf.remotePath) }, "Browse"));
+      }), !rows.length && /* @__PURE__ */ import_react10.default.createElement("p", { className: "cloud-sync-hint" }, "Browse this source and choose a folder to keep synced."));
+    })), cacheStats && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-cache-bar", style: {
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
@@ -18188,7 +18420,7 @@
       borderRadius: "6px",
       fontSize: "12px",
       color: "#94a3b8"
-    } }, /* @__PURE__ */ import_react9.default.createElement("div", null, /* @__PURE__ */ import_react9.default.createElement("strong", { style: { color: "#e2e8f0" } }, "On-Demand Stream & LRU Cache:"), " ", /* @__PURE__ */ import_react9.default.createElement("span", null, formatSize(cacheStats.usedBytes || 0), " used of ", formatSize(cacheStats.maxCacheBytes), " (", cacheStats.fileCount || 0, " cached song", cacheStats.fileCount === 1 ? "" : "s", ")"), /* @__PURE__ */ import_react9.default.createElement("span", { style: { marginLeft: "8px", opacity: 0.8 } }, "\xB7 Songs stream on play and evict oldest files automatically")), /* @__PURE__ */ import_react9.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px" } }, /* @__PURE__ */ import_react9.default.createElement("label", { htmlFor: "cloud-cache-limit", style: { fontSize: "11px" } }, "Max Cache:"), /* @__PURE__ */ import_react9.default.createElement(
+    } }, /* @__PURE__ */ import_react10.default.createElement("div", null, /* @__PURE__ */ import_react10.default.createElement("strong", { style: { color: "#e2e8f0" } }, "On-Demand Stream & LRU Cache:"), " ", /* @__PURE__ */ import_react10.default.createElement("span", null, formatSize(cacheStats.usedBytes || 0), " used of ", formatSize(cacheStats.maxCacheBytes), " (", cacheStats.fileCount || 0, " cached song", cacheStats.fileCount === 1 ? "" : "s", ")"), /* @__PURE__ */ import_react10.default.createElement("span", { style: { marginLeft: "8px", opacity: 0.8 } }, "\xB7 Songs stream on play and evict oldest files automatically")), /* @__PURE__ */ import_react10.default.createElement("div", { style: { display: "flex", alignItems: "center", gap: "8px" } }, /* @__PURE__ */ import_react10.default.createElement("label", { htmlFor: "cloud-cache-limit", style: { fontSize: "11px" } }, "Max Cache:"), /* @__PURE__ */ import_react10.default.createElement(
       "select",
       {
         id: "cloud-cache-limit",
@@ -18196,15 +18428,15 @@
         onChange: handleMaxCacheChange,
         style: { padding: "3px 6px", fontSize: "11px", background: "#0d1117", color: "#e2e8f0", border: "1px solid #30363d", borderRadius: "4px" }
       },
-      CACHE_LIMIT_OPTIONS.map((opt) => /* @__PURE__ */ import_react9.default.createElement("option", { key: opt.bytes, value: opt.bytes }, opt.label))
-    ), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", style: { padding: "3px 8px", fontSize: "11px" }, onClick: handleClearCache, disabled: !cacheStats.fileCount }, "Clear Cache"))), connections && !connections.length && /* @__PURE__ */ import_react9.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react9.default.createElement("p", null, "No cloud storage is linked yet."), /* @__PURE__ */ import_react9.default.createElement("p", { className: "hint" }, "Open RobOS Data Sources, add a Google Drive, Microsoft OneDrive, S3, Dropbox, SFTP, or FTP connection under Cloud & Object Storage, and it will appear here.")), other.length > 0 && /* @__PURE__ */ import_react9.default.createElement("p", { className: "cloud-note" }, other.map((c) => c.name).join(", "), ": browsing ", other.length === 1 ? "this" : "these", " storage type", other.length === 1 ? " is" : "s are", " not supported yet."), progress && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-progress" }, progress.phase === "scanning" && "Indexing remote cloud metadata (no bulk download)...", progress.phase === "downloading" && `Streaming ${progress.done + 1} of ${progress.total}: ${progress.name}`, progress.phase === "done" && "Finishing up..."), listing && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-listing" }, /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-sync-heading" }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-accent", disabled: !selected.size || !!progress, onClick: () => doImport([...selected]) }, "Add selected movies"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "btn-secondary", disabled: !!progress || !!busyId, onClick: () => addFolder(listing.path, connId) }, "Keep this folder synced")), /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-path" }, /* @__PURE__ */ import_react9.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/") }, activeConn && Array.isArray(activeConn.folders) && activeConn.folders.length === 1 ? activeConn.folders[0].label : "Linked Folders"), crumbs.map((c, i) => /* @__PURE__ */ import_react9.default.createElement(import_react9.default.Fragment, { key: i }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "crumb-sep" }, "/"), /* @__PURE__ */ import_react9.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/" + crumbs.slice(0, i + 1).join("/")) }, c)))), /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-rows" }, parentPath && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-row", onClick: () => browse(connId, parentPath) }, /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-check" }), /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: "up", size: 14 }), " Parent folder"), /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-size" })), listing.entries.length === 0 && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-empty" }, "No folders or audio files here."), listing.entries.map((e) => /* @__PURE__ */ import_react9.default.createElement(
+      CACHE_LIMIT_OPTIONS.map((opt) => /* @__PURE__ */ import_react10.default.createElement("option", { key: opt.bytes, value: opt.bytes }, opt.label))
+    ), /* @__PURE__ */ import_react10.default.createElement("button", { className: "btn-secondary", style: { padding: "3px 8px", fontSize: "11px" }, onClick: handleClearCache, disabled: !cacheStats.fileCount }, "Clear Cache"))), connections && !connections.length && /* @__PURE__ */ import_react10.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react10.default.createElement("p", null, "No cloud storage is linked yet."), /* @__PURE__ */ import_react10.default.createElement("p", { className: "hint" }, "Open RobOS Data Sources, add a Google Drive, Microsoft OneDrive, S3, Dropbox, SFTP, or FTP connection under Cloud & Object Storage, and it will appear here.")), other.length > 0 && /* @__PURE__ */ import_react10.default.createElement("p", { className: "cloud-note" }, other.map((c) => c.name).join(", "), ": browsing ", other.length === 1 ? "this" : "these", " storage type", other.length === 1 ? " is" : "s are", " not supported yet."), progress && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-progress" }, progress.phase === "scanning" && "Indexing remote cloud metadata (no bulk download)...", progress.phase === "downloading" && `Streaming ${progress.done + 1} of ${progress.total}: ${progress.name}`, progress.phase === "done" && "Finishing up..."), listing && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-listing" }, /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-sync-heading" }, /* @__PURE__ */ import_react10.default.createElement("button", { className: "btn-accent", disabled: !selected.size || !!progress, onClick: () => doImport([...selected]) }, "Add selected movies"), /* @__PURE__ */ import_react10.default.createElement("button", { className: "btn-secondary", disabled: !!progress || !!busyId, onClick: () => addFolder(listing.path, connId) }, "Keep this folder synced")), /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-path" }, /* @__PURE__ */ import_react10.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/") }, activeConn && Array.isArray(activeConn.folders) && activeConn.folders.length === 1 ? activeConn.folders[0].label : "Linked Folders"), crumbs.map((c, i) => /* @__PURE__ */ import_react10.default.createElement(import_react10.default.Fragment, { key: i }, /* @__PURE__ */ import_react10.default.createElement("span", { className: "crumb-sep" }, "/"), /* @__PURE__ */ import_react10.default.createElement("button", { className: "crumb", onClick: () => browse(connId, "/" + crumbs.slice(0, i + 1).join("/")) }, c)))), /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-rows" }, parentPath && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-row", onClick: () => browse(connId, parentPath) }, /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-check" }), /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react10.default.createElement(Icon2, { name: "up", size: 14 }), " Parent folder"), /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-size" })), listing.entries.length === 0 && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-empty" }, "No folders or audio files here."), listing.entries.map((e) => /* @__PURE__ */ import_react10.default.createElement(
       "div",
       {
         key: e.path,
         className: `cloud-row ${selected.has(e.path) ? "selected" : ""}`,
         onClick: () => e.type === "dir" ? browse(connId, e.path) : toggle(e.path)
       },
-      /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-check", onClick: (ev) => ev.stopPropagation() }, /* @__PURE__ */ import_react9.default.createElement(
+      /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-check", onClick: (ev) => ev.stopPropagation() }, /* @__PURE__ */ import_react10.default.createElement(
         "input",
         {
           type: "checkbox",
@@ -18221,8 +18453,8 @@
           "aria-label": e.type === "dir" ? `Keep ${e.name} synced` : `Select ${e.name}`
         }
       )),
-      /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react9.default.createElement(Icon2, { name: e.type === "dir" ? "folder" : "note", size: 15 }), " ", e.name),
-      /* @__PURE__ */ import_react9.default.createElement("span", { className: "cloud-size" }, e.type === "dir" ? /* @__PURE__ */ import_react9.default.createElement(
+      /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-name" }, /* @__PURE__ */ import_react10.default.createElement(Icon2, { name: e.type === "dir" ? "folder" : "note", size: 15 }), " ", e.name),
+      /* @__PURE__ */ import_react10.default.createElement("span", { className: "cloud-size" }, e.type === "dir" ? /* @__PURE__ */ import_react10.default.createElement(
         "button",
         {
           className: "row-btn",
@@ -18236,14 +18468,14 @@
         },
         "+ Library"
       ) : formatSize(e.size))
-    )))), loading && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-progress" }, "Loading..."), error && /* @__PURE__ */ import_react9.default.createElement("div", { className: "cloud-error" }, error));
+    )))), loading && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-progress" }, "Loading..."), error && /* @__PURE__ */ import_react10.default.createElement("div", { className: "cloud-error" }, error));
   }
 
   // src/Lyrics.jsx
-  var import_react11 = __toESM(require_react());
+  var import_react12 = __toESM(require_react());
 
   // src/resizable.jsx
-  var import_react10 = __toESM(require_react());
+  var import_react11 = __toESM(require_react());
   var STORE_KEY = "robos-audio-layout";
   function readStore() {
     try {
@@ -18262,12 +18494,12 @@
     }
   }
   function useLayoutPref(key, fallback) {
-    const [value, setValue] = (0, import_react10.useState)(() => {
+    const [value, setValue] = (0, import_react11.useState)(() => {
       const stored = readStore()[key];
       return stored === void 0 ? fallback : stored;
     });
-    const first = (0, import_react10.useRef)(true);
-    (0, import_react10.useEffect)(() => {
+    const first = (0, import_react11.useRef)(true);
+    (0, import_react11.useEffect)(() => {
       if (first.current) {
         first.current = false;
         return void 0;
@@ -18323,7 +18555,7 @@
         onChange(hi);
       }
     };
-    return /* @__PURE__ */ import_react10.default.createElement(
+    return /* @__PURE__ */ import_react11.default.createElement(
       "div",
       {
         id,
@@ -18346,12 +18578,12 @@
   function useColumns(storeKey, spec) {
     const [widths, setWidths] = useLayoutPref(`cols:${storeKey}`, {});
     const template = spec.map((c) => !c.fill && !c.fixed && widths[c.key] != null ? `${widths[c.key]}px` : c.width).join(" ");
-    const handleFor = (0, import_react10.useCallback)((key) => {
+    const handleFor = (0, import_react11.useCallback)((key) => {
       const i = spec.findIndex((c) => c.key === key);
       const a = spec[i];
       const b = spec[i + 1];
       if (!a || !b || a.fixed || b.fixed) return null;
-      return /* @__PURE__ */ import_react10.default.createElement(
+      return /* @__PURE__ */ import_react11.default.createElement(
         ColumnBorder,
         {
           key: "col-border",
@@ -18395,7 +18627,7 @@
       const move = onDragStart(cell);
       startDrag(e, move);
     };
-    return /* @__PURE__ */ import_react10.default.createElement(
+    return /* @__PURE__ */ import_react11.default.createElement(
       "span",
       {
         className: "col-border",
@@ -18417,11 +18649,11 @@
   function Lyrics({ track, getTime, onSeek }) {
     const [enabled, setEnabled] = useLayoutPref("lyricsEnabled", true);
     const [follow, setFollow] = useLayoutPref("lyricsFollow", true);
-    const [data, setData] = (0, import_react11.useState)(null);
-    const [active, setActive] = (0, import_react11.useState)(-1);
-    const boxRef = (0, import_react11.useRef)(null);
-    const lineRefs = (0, import_react11.useRef)([]);
-    (0, import_react11.useEffect)(() => {
+    const [data, setData] = (0, import_react12.useState)(null);
+    const [active, setActive] = (0, import_react12.useState)(-1);
+    const boxRef = (0, import_react12.useRef)(null);
+    const lineRefs = (0, import_react12.useRef)([]);
+    (0, import_react12.useEffect)(() => {
       let cancelled = false;
       setData(null);
       setActive(-1);
@@ -18440,7 +18672,7 @@
       };
     }, [enabled, track?.id, track?.filePath, track?.title, track?.artist]);
     const synced = enabled && data?.synced || [];
-    (0, import_react11.useEffect)(() => {
+    (0, import_react12.useEffect)(() => {
       if (!synced.length) return void 0;
       const tick = () => {
         const time = getTime();
@@ -18465,16 +18697,16 @@
       const box = boxRef.current;
       if (el && box) box.scrollTo({ top: el.offsetTop - box.clientHeight / 2 + el.clientHeight / 2, behavior: smooth ? "smooth" : "auto" });
     };
-    (0, import_react11.useEffect)(() => {
+    (0, import_react12.useEffect)(() => {
       if (follow) scrollToActive();
     }, [active, follow]);
     const stopFollowing = () => {
       if (follow && synced.length) setFollow(false);
     };
     let body;
-    if (data === null) body = /* @__PURE__ */ import_react11.default.createElement("div", { className: "lyrics-empty" }, "Looking up subtitles & dialogue...");
+    if (data === null) body = /* @__PURE__ */ import_react12.default.createElement("div", { className: "lyrics-empty" }, "Looking up subtitles & dialogue...");
     else if (synced.length) {
-      body = synced.map((l, i) => /* @__PURE__ */ import_react11.default.createElement(
+      body = synced.map((l, i) => /* @__PURE__ */ import_react12.default.createElement(
         "div",
         {
           key: i,
@@ -18486,9 +18718,9 @@
         },
         l.text || " "
       ));
-    } else if (data.plain) body = /* @__PURE__ */ import_react11.default.createElement("pre", { className: "lyrics-plain" }, data.plain);
-    else body = /* @__PURE__ */ import_react11.default.createElement("div", { className: "lyrics-empty" }, data.error || "No synced subtitles (.srt / .vtt) found for this title.");
-    return /* @__PURE__ */ import_react11.default.createElement("div", { className: `lyrics-panel ${enabled ? "" : "off"}` }, /* @__PURE__ */ import_react11.default.createElement("div", { className: "lyrics-head" }, /* @__PURE__ */ import_react11.default.createElement("span", null, /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "mic", size: 14 }), " Subtitles & Dialogue"), /* @__PURE__ */ import_react11.default.createElement("span", { className: "lyrics-tools" }, enabled && synced.length > 0 && /* @__PURE__ */ import_react11.default.createElement("span", { className: "lyrics-src" }, "Synced", data.source === "lrclib" ? " via OpenSubtitles / LRCLIB" : " from .srt / .vtt file"), enabled && synced.length > 0 && /* @__PURE__ */ import_react11.default.createElement(
+    } else if (data.plain) body = /* @__PURE__ */ import_react12.default.createElement("pre", { className: "lyrics-plain" }, data.plain);
+    else body = /* @__PURE__ */ import_react12.default.createElement("div", { className: "lyrics-empty" }, data.error || "No synced subtitles (.srt / .vtt) found for this title.");
+    return /* @__PURE__ */ import_react12.default.createElement("div", { className: `lyrics-panel ${enabled ? "" : "off"}` }, /* @__PURE__ */ import_react12.default.createElement("div", { className: "lyrics-head" }, /* @__PURE__ */ import_react12.default.createElement("span", null, /* @__PURE__ */ import_react12.default.createElement(Icon2, { name: "mic", size: 14 }), " Subtitles & Dialogue"), /* @__PURE__ */ import_react12.default.createElement("span", { className: "lyrics-tools" }, enabled && synced.length > 0 && /* @__PURE__ */ import_react12.default.createElement("span", { className: "lyrics-src" }, "Synced", data.source === "lrclib" ? " via OpenSubtitles / LRCLIB" : " from .srt / .vtt file"), enabled && synced.length > 0 && /* @__PURE__ */ import_react12.default.createElement(
       "button",
       {
         id: "btn-lyrics-follow",
@@ -18501,9 +18733,9 @@
           if (next) scrollToActive();
         }
       },
-      /* @__PURE__ */ import_react11.default.createElement(Icon2, { name: "locate", size: 12 }),
+      /* @__PURE__ */ import_react12.default.createElement(Icon2, { name: "locate", size: 12 }),
       " Follow"
-    ), /* @__PURE__ */ import_react11.default.createElement(
+    ), /* @__PURE__ */ import_react12.default.createElement(
       "button",
       {
         id: "btn-lyrics-toggle",
@@ -18513,7 +18745,7 @@
         onClick: () => setEnabled(!enabled)
       },
       enabled ? "On" : "Off"
-    ))), enabled && /* @__PURE__ */ import_react11.default.createElement(
+    ))), enabled && /* @__PURE__ */ import_react12.default.createElement(
       "div",
       {
         className: "lyrics-scroll",
@@ -18534,74 +18766,6 @@
 
   // src/Library.jsx
   var import_react16 = __toESM(require_react());
-
-  // src/FolderPanel.jsx
-  var import_react12 = __toESM(require_react());
-  var when = (iso) => {
-    if (!iso) return "Not indexed yet";
-    const d = new Date(iso);
-    return `Synced ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-  };
-  var providerLabel = (protocol) => {
-    const p = (protocol || "").toLowerCase();
-    if (p === "gdrive") return "Google Drive";
-    if (p === "onedrive") return "OneDrive";
-    if (p === "dropbox") return "Dropbox";
-    if (p === "s3") return "S3";
-    return p ? p.toUpperCase() : "Cloud";
-  };
-  function FolderPanel({ folders, activeId, onSelect, onAddLocal, onAddCloud, onRescan, onRename, onRemove, onEnabled, busyId }) {
-    const [confirmId, setConfirmId] = (0, import_react12.useState)(null);
-    const [alsoTracks, setAlsoTracks] = (0, import_react12.useState)(true);
-    const [editId, setEditId] = (0, import_react12.useState)(null);
-    const [editValue, setEditValue] = (0, import_react12.useState)("");
-    const commitRename = (id) => {
-      if (editValue.trim()) onRename(id, editValue);
-      setEditId(null);
-    };
-    return /* @__PURE__ */ import_react12.default.createElement("aside", { className: "folder-panel" }, /* @__PURE__ */ import_react12.default.createElement("div", { className: "folder-panel-head" }, /* @__PURE__ */ import_react12.default.createElement("span", null, "Library Folders (", folders.length, ")"), /* @__PURE__ */ import_react12.default.createElement("div", { className: "folder-head-actions" }, /* @__PURE__ */ import_react12.default.createElement("button", { className: "row-btn", title: "Add a folder from this computer", onClick: onAddLocal }, "+ Local"), /* @__PURE__ */ import_react12.default.createElement("button", { className: "row-btn", title: "Browse Cloud Storage folders", onClick: onAddCloud }, "+ Cloud"), /* @__PURE__ */ import_react12.default.createElement("button", { className: "row-btn", title: "Refresh folders marked Keep synced", onClick: () => onRescan(null), disabled: !folders.length || !!busyId }, "Refresh all"))), /* @__PURE__ */ import_react12.default.createElement("div", { className: `folder-row ${activeId === null ? "active" : ""}`, onClick: () => onSelect(null) }, /* @__PURE__ */ import_react12.default.createElement(Icon2, { name: "library", size: 15 }), /* @__PURE__ */ import_react12.default.createElement("div", { className: "folder-text" }, /* @__PURE__ */ import_react12.default.createElement("span", { className: "folder-name" }, "All Library Tracks"), /* @__PURE__ */ import_react12.default.createElement("span", { className: "folder-sub" }, "Combined view across all folders"))), folders.length === 0 && /* @__PURE__ */ import_react12.default.createElement("p", { className: "folder-empty" }, "No folders linked yet. Add a local folder or link folders in RobOS Data Sources (Google Drive, OneDrive, SFTP, FTP)."), folders.map((f) => /* @__PURE__ */ import_react12.default.createElement("div", { key: f.id, className: `folder-item ${activeId === f.id ? "active" : ""} ${f.available ? "" : "unavailable"}` }, /* @__PURE__ */ import_react12.default.createElement("div", { className: "folder-row", onClick: () => onSelect(f.id) }, /* @__PURE__ */ import_react12.default.createElement(Icon2, { name: f.kind === "cloud" ? "cloud" : "folder", size: 15 }), /* @__PURE__ */ import_react12.default.createElement("div", { className: "folder-text" }, editId === f.id ? /* @__PURE__ */ import_react12.default.createElement(
-      "input",
-      {
-        className: "folder-edit",
-        autoFocus: true,
-        value: editValue,
-        onClick: (e) => e.stopPropagation(),
-        onChange: (e) => setEditValue(e.target.value),
-        onBlur: () => commitRename(f.id),
-        onKeyDown: (e) => {
-          if (e.key === "Enter") commitRename(f.id);
-          if (e.key === "Escape") setEditId(null);
-        }
-      }
-    ) : /* @__PURE__ */ import_react12.default.createElement("span", { className: "folder-name", onDoubleClick: () => {
-      setEditId(f.id);
-      setEditValue(f.label);
-    }, title: "Double-click to rename" }, f.label), /* @__PURE__ */ import_react12.default.createElement("span", { className: "folder-sub", title: f.kind === "cloud" ? `${providerLabel(f.protocol)} \xB7 ${f.connectionName || ""} (${f.path})` : f.path }, f.kind === "cloud" ? f.connectionMissing ? "Connection removed from Data Sources" : `${providerLabel(f.protocol)} \xB7 ${f.connectionName}` : f.available ? f.path : `${f.path} (not found)`), /* @__PURE__ */ import_react12.default.createElement("span", { className: "folder-sub" }, /* @__PURE__ */ import_react12.default.createElement("strong", null, f.trackCount, " track", f.trackCount === 1 ? "" : "s"), " \xB7 ", when(f.lastSynced)))), /* @__PURE__ */ import_react12.default.createElement("div", { className: "folder-actions" }, /* @__PURE__ */ import_react12.default.createElement("label", { className: "folder-sub", title: "Keep this folder synced and check for updates at startup" }, /* @__PURE__ */ import_react12.default.createElement(
-      "input",
-      {
-        type: "checkbox",
-        "aria-label": `Keep ${f.label} synced`,
-        checked: f.syncEnabled !== false,
-        disabled: !!busyId,
-        onChange: (e) => onEnabled(f.id, e.target.checked)
-      }
-    ), " Keep synced"), /* @__PURE__ */ import_react12.default.createElement(
-      "button",
-      {
-        className: "row-btn",
-        style: f.trackCount === 0 && !f.lastSynced ? { color: "#00bcd4", borderColor: "rgba(0,188,212,0.4)" } : void 0,
-        onClick: () => onRescan(f.id),
-        disabled: !!busyId || f.connectionMissing || f.syncEnabled === false
-      },
-      busyId === f.id ? "Syncing..." : "Refresh"
-    ), /* @__PURE__ */ import_react12.default.createElement("button", { className: "row-btn row-btn-stop", onClick: () => {
-      setConfirmId(confirmId === f.id ? null : f.id);
-      setAlsoTracks(true);
-    } }, "Remove")), f.syncError && /* @__PURE__ */ import_react12.default.createElement("p", { className: "cloud-error", role: "status" }, "Could not check for updates: ", f.syncError, ". Existing tracks are available; refresh to retry."), confirmId === f.id && /* @__PURE__ */ import_react12.default.createElement("div", { className: "folder-confirm" }, /* @__PURE__ */ import_react12.default.createElement("label", null, /* @__PURE__ */ import_react12.default.createElement("input", { type: "checkbox", checked: alsoTracks, onChange: (e) => setAlsoTracks(e.target.checked) }), "Also remove its ", f.trackCount, " track", f.trackCount === 1 ? "" : "s", " from the library", f.kind === "cloud" ? " and delete the downloaded copies" : ""), /* @__PURE__ */ import_react12.default.createElement("div", { className: "folder-confirm-actions" }, /* @__PURE__ */ import_react12.default.createElement("button", { className: "btn-secondary", onClick: () => setConfirmId(null) }, "Cancel"), /* @__PURE__ */ import_react12.default.createElement("button", { className: "btn-accent", onClick: () => {
-      setConfirmId(null);
-      onRemove(f.id, alsoTracks);
-    } }, "Remove folder"))))));
-  }
 
   // src/TrackList.jsx
   var import_react15 = __toESM(require_react());
@@ -19508,7 +19672,22 @@
     const sortKey = prefs.albumSort || "title";
     const shows = (0, import_react16.useMemo)(() => (0, import_library_index2.sortAlbums)(index.tvShows || [], sortKey), [index, sortKey]);
     const allEpisodes = (0, import_react16.useMemo)(() => shows.flatMap((s) => s.tracks), [shows]);
-    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { subtitle: `${(0, import_library_index2.plural)(shows.length, "show / episode")} \xB7 Episodic TV & streaming series`, tracks: allEpisodes }, /* @__PURE__ */ import_react16.default.createElement(SortSelect, { id: "tv-sort", value: sortKey, onChange: (v) => setPref("albumSort", v), options: [["title", "Title / Episode (A\u2013Z)"], ["year", "Release Year (newest)"], ["addedAt", "Recently added"]] })), shows.length ? /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: shows, go }), /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: "All Episodes", subtitle: (0, import_library_index2.plural)(allEpisodes.length, "episode") }), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "tv-episodes", tracks: allEpisodes, emptyText: "No TV episodes found." })) : /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "No TV shows or episodes found in your library yet."));
+    const totalSeasons = (0, import_react16.useMemo)(() => shows.reduce((sum, s) => sum + (s.seasonCount || 1), 0), [shows]);
+    return /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(
+      SectionHeader,
+      {
+        subtitle: `${(0, import_library_index2.plural)(shows.length, "TV show")} \xB7 ${(0, import_library_index2.plural)(totalSeasons, "season")} \xB7 ${(0, import_library_index2.plural)(allEpisodes.length, "episode")}`,
+        tracks: allEpisodes
+      },
+      /* @__PURE__ */ import_react16.default.createElement(SortSelect, { id: "tv-sort", value: sortKey, onChange: (v) => setPref("albumSort", v), options: [["title", "Show Title (A\u2013Z)"], ["year", "Release Year (newest)"], ["addedAt", "Recently added"]] })
+    ), shows.length ? /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: shows, go }), shows.map((show) => /* @__PURE__ */ import_react16.default.createElement("div", { key: show.key, className: "tv-show-section-block" }, /* @__PURE__ */ import_react16.default.createElement(
+      SectionHeader,
+      {
+        title: show.title,
+        subtitle: `${(0, import_library_index2.plural)(show.seasonCount || 1, "Season")} \xB7 ${(0, import_library_index2.plural)(show.episodeCount || show.tracks.length, "Episode")}`,
+        tracks: show.tracks
+      }
+    ), /* @__PURE__ */ import_react16.default.createElement(TvShowSeasonsBreakdown, { album: show })))) : /* @__PURE__ */ import_react16.default.createElement("div", { className: "empty-inline" }, "No TV shows or episodes found in your library yet."));
   }
   function FranchisesSection({ index, go }) {
     const franchises = index.franchises || [];
@@ -19599,6 +19778,8 @@
     const ctx = useLibrary();
     const open = () => go({ section: "albums", detail: { type: "album", key: album.key } });
     const qualBadge = album.quality?.resolution || album.quality?.badge || null;
+    const topBadge = album.isTvShow ? `\u{1F4FA} TV SERIES${qualBadge ? ` \xB7 ${qualBadge}` : ""}` : qualBadge;
+    const bottomBadge = album.isTvShow ? `${album.seasonCount || 1}S \xB7 ${album.episodeCount || album.tracks.length}E` : album.year;
     return /* @__PURE__ */ import_react16.default.createElement(
       "div",
       {
@@ -19608,14 +19789,14 @@
           e.preventDefault();
           ctx.openMenu(e, [...collectionMenuItems(album.tracks, ctx, { label: album.title }), { separator: true }, { label: "View release format", icon: "tv", onClick: () => ctx.actions.goToArtist(album.artist) }]);
         },
-        title: `${album.title} \u2014 ${album.genre || album.artist}`
+        title: `${album.title} \u2014 ${album.isTvShow ? `${(0, import_library_index2.plural)(album.seasonCount || 1, "Season")}, ${(0, import_library_index2.plural)(album.episodeCount || album.tracks.length, "Episode")}` : album.genre || album.artist}`
       },
-      /* @__PURE__ */ import_react16.default.createElement("div", { className: "media-card-art movie-poster-art" }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: album.artId, name: album.title }), qualBadge && /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-badge-top" }, qualBadge), album.year && /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-badge-year" }, album.year), /* @__PURE__ */ import_react16.default.createElement("button", { className: "card-play", title: `Watch ${album.title}`, onClick: (e) => {
+      /* @__PURE__ */ import_react16.default.createElement("div", { className: "media-card-art movie-poster-art" }, /* @__PURE__ */ import_react16.default.createElement(Cover, { artId: album.artId, name: album.title }), topBadge && /* @__PURE__ */ import_react16.default.createElement("span", { className: `poster-badge-top ${album.isTvShow ? "tv-badge" : ""}` }, topBadge), bottomBadge && /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-badge-year" }, bottomBadge), /* @__PURE__ */ import_react16.default.createElement("button", { className: "card-play", title: `Watch ${album.title}`, onClick: (e) => {
         e.stopPropagation();
         ctx.actions.playTracks(album.tracks, 0);
       } }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 18 }))),
       /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-title" }, album.title),
-      /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, album.franchise ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-franchise-tag" }, album.franchise) : album.genre || (showArtist ? album.artist : (0, import_library_index2.plural)(album.tracks.length, "title")))
+      /* @__PURE__ */ import_react16.default.createElement("span", { className: "media-card-sub" }, album.isTvShow ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-franchise-tag" }, (0, import_library_index2.plural)(album.seasonCount || 1, "Season"), " \xB7 ", (0, import_library_index2.plural)(album.episodeCount || album.tracks.length, "Episode")) : album.franchise ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "poster-franchise-tag" }, album.franchise) : album.genre || (showArtist ? album.artist : (0, import_library_index2.plural)(album.tracks.length, "title")))
     );
   }
   function ArtistGrid({ artists, go, letterOf = null }) {
@@ -19720,6 +19901,75 @@
     }
     return /* @__PURE__ */ import_react16.default.createElement(NotFound, { go });
   }
+  function TvShowSeasonsBreakdown({ album }) {
+    const ctx = useLibrary();
+    const { actions, currentTrack, isPlaying, openMenu } = ctx;
+    const seasons = album.seasons && album.seasons.length ? album.seasons : [{ seasonNumber: 1, label: "Season 1", code: "S01", episodes: album.tracks, episodeCount: album.tracks.length, duration: album.duration }];
+    const [selectedSeason, setSelectedSeason] = (0, import_react16.useState)("all");
+    const visibleSeasons = selectedSeason === "all" ? seasons : seasons.filter((s) => String(s.seasonNumber) === String(selectedSeason));
+    return /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-seasons-breakdown" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-season-tabs", role: "tablist", "aria-label": "Seasons" }, /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        className: `cinema-cat-chip ${selectedSeason === "all" ? "active" : ""}`,
+        onClick: () => setSelectedSeason("all")
+      },
+      "\u{1F4FA} All Seasons ",
+      /* @__PURE__ */ import_react16.default.createElement("span", { className: "chip-count" }, seasons.length)
+    ), seasons.map((s) => /* @__PURE__ */ import_react16.default.createElement(
+      "button",
+      {
+        key: s.seasonNumber,
+        className: `cinema-cat-chip ${String(selectedSeason) === String(s.seasonNumber) ? "active" : ""}`,
+        onClick: () => setSelectedSeason(String(s.seasonNumber))
+      },
+      s.label,
+      " ",
+      /* @__PURE__ */ import_react16.default.createElement("span", { className: "chip-count" }, (0, import_library_index2.plural)(s.episodeCount, "Episode"))
+    ))), visibleSeasons.map((season) => /* @__PURE__ */ import_react16.default.createElement("div", { key: season.seasonNumber, className: "tv-season-card" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-season-card-header" }, /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-season-card-title" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-season-badge" }, season.code), /* @__PURE__ */ import_react16.default.createElement("h4", null, season.label), /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-season-meta" }, (0, import_library_index2.plural)(season.episodeCount, "Episode"), season.duration > 0 ? ` \xB7 ${(0, import_library_index2.formatLongDuration)(season.duration)}` : "")), /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-season-card-actions" }, /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-accent", onClick: () => actions.playTracks(season.episodes, 0) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 12 }), " Watch ", season.label), /* @__PURE__ */ import_react16.default.createElement("button", { className: "btn-secondary", onClick: () => actions.playTracks(season.episodes, 0, { shuffle: true }) }, /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "shuffle", size: 12 }), " Shuffle"))), /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-episode-list" }, season.episodes.map((ep, idx) => {
+      const tv = (0, import_library_index2.inferTvShowEpisode)(ep);
+      const epNum = tv && tv.episodeNumber || ep.episodeNumber || ep.trackNumber || idx + 1;
+      const epCode = tv && tv.episodeCode || ep.episodeCode || `S${String(season.seasonNumber).padStart(2, "0")}E${String(epNum).padStart(2, "0")}`;
+      const epTitle = tv && tv.episodeTitle || ep.episodeTitle || ep.title;
+      const isCurrent = sameTrack(currentTrack, ep);
+      return /* @__PURE__ */ import_react16.default.createElement(
+        "div",
+        {
+          key: ep.id || ep.filePath || idx,
+          className: `tv-episode-row ${isCurrent ? "current" : ""}`,
+          onDoubleClick: () => actions.playTracks(season.episodes, idx),
+          onContextMenu: (e) => {
+            e.preventDefault();
+            openMenu(e, trackMenuItems([ep], ctx, { allTracks: season.episodes, index: idx }));
+          }
+        },
+        /* @__PURE__ */ import_react16.default.createElement(
+          "button",
+          {
+            className: "tv-episode-play",
+            title: `Play ${epCode} \u2014 ${epTitle}`,
+            onClick: () => actions.playTracks(season.episodes, idx)
+          },
+          isCurrent && isPlaying ? /* @__PURE__ */ import_react16.default.createElement("span", { className: "eq-bars" }, /* @__PURE__ */ import_react16.default.createElement("i", null), /* @__PURE__ */ import_react16.default.createElement("i", null), /* @__PURE__ */ import_react16.default.createElement("i", null)) : /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "play", size: 13 })
+        ),
+        /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-code" }, epCode),
+        /* @__PURE__ */ import_react16.default.createElement("div", { className: "tv-episode-info" }, /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-title" }, "Episode ", epNum, ": ", epTitle), /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-sub" }, album.title, " \xB7 ", season.label, ep.artist && ep.artist !== album.title ? ` \xB7 ${ep.artist}` : "", ep.cloud ? ` \xB7 ${ep.cloud.cached ? "Cloud (Cached)" : "Cloud Stream"}` : "")),
+        /* @__PURE__ */ import_react16.default.createElement(LoveButton, { track: ep, size: 14 }),
+        /* @__PURE__ */ import_react16.default.createElement("span", { className: "tv-episode-duration" }, (0, import_library_index2.formatDuration)(ep.duration)),
+        /* @__PURE__ */ import_react16.default.createElement(
+          "button",
+          {
+            className: "tl-more-btn",
+            title: "More actions",
+            onClick: (e) => {
+              e.stopPropagation();
+              openMenu(e, trackMenuItems([ep], ctx, { allTracks: season.episodes, index: idx }));
+            }
+          },
+          /* @__PURE__ */ import_react16.default.createElement(Icon2, { name: "more", size: 14 })
+        )
+      );
+    })))));
+  }
   function AlbumDetail({ album, index, go }) {
     const { actions } = useLibrary();
     const artist = index.artistByKey.get(album.artistKey);
@@ -19732,7 +19982,14 @@
         eyebrow: album.isTvShow ? "TV Show / Series" : album.franchise || "Feature Film",
         title: album.title,
         subtitle: album.artist === import_library_index2.VARIOUS_ARTISTS ? /* @__PURE__ */ import_react16.default.createElement("span", null, album.artist) : /* @__PURE__ */ import_react16.default.createElement("a", { className: "link strong", onClick: () => actions.goToArtist(album.artist) }, album.artist),
-        meta: [
+        meta: album.isTvShow ? [
+          album.year,
+          album.genre && /* @__PURE__ */ import_react16.default.createElement("a", { className: "link", onClick: () => actions.goToGenre(album.genre) }, album.genre),
+          (0, import_library_index2.plural)(album.seasonCount || 1, "Season"),
+          (0, import_library_index2.plural)(album.episodeCount || album.tracks.length, "Episode"),
+          (0, import_library_index2.formatLongDuration)(album.duration),
+          codec
+        ] : [
           album.year,
           album.genre && /* @__PURE__ */ import_react16.default.createElement("a", { className: "link", onClick: () => actions.goToGenre(album.genre) }, album.genre),
           (0, import_library_index2.plural)(album.tracks.length, "video file"),
@@ -19742,7 +19999,7 @@
         tracks: album.tracks,
         menuLabel: album.title
       }
-    ), /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "album-tracks", tracks: album.tracks, variant: "album", albumArtist: album.artist, showDiscs: album.discCount > 1 }), more.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: `More in ${album.artist}` }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: more, go, showArtist: false })));
+    ), album.isTvShow ? /* @__PURE__ */ import_react16.default.createElement(TvShowSeasonsBreakdown, { album }) : /* @__PURE__ */ import_react16.default.createElement(TrackList, { id: "album-tracks", tracks: album.tracks, variant: "album", albumArtist: album.artist, showDiscs: album.discCount > 1 }), more.length > 0 && /* @__PURE__ */ import_react16.default.createElement(import_react16.default.Fragment, null, /* @__PURE__ */ import_react16.default.createElement(SectionHeader, { title: `More in ${album.artist}` }), /* @__PURE__ */ import_react16.default.createElement(AlbumGrid, { albums: more, go, showArtist: false })));
   }
   function ArtistDetail({ artist, go, stats }) {
     const { actions } = useLibrary();
@@ -21246,7 +21503,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
     const playedRef = (0, import_react24.useRef)({ key: null, counted: false });
     const shuffleHistoryRef = (0, import_react24.useRef)([]);
     const latestRef = (0, import_react24.useRef)({});
-    const formatDuration5 = (sec) => {
+    const formatDuration6 = (sec) => {
       if (!sec || isNaN(sec)) return "--:--";
       const totalSec = Math.round(sec);
       const m = Math.floor(totalSec / 60);
@@ -23170,7 +23427,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           style: { marginTop: "12px" }
         },
         "Add Audio Files from Disk"
-      )) : /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-tracks-table", style: { "--pl-grid": playlistColumns.template } }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-table-header" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-num" }, "#"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-title col-resizable" }, "Title", playlistColumns.handleFor("title")), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-artist col-resizable" }, "Release Format", playlistColumns.handleFor("artist")), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-album col-resizable" }, "Release / Series", playlistColumns.handleFor("album")), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-duration" }, "Runtime"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-actions" }, "Actions")), /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-table-body" }, selectedPlaylist.tracks.map((track, tIdx) => /* @__PURE__ */ import_react24.default.createElement("div", { key: track.id || tIdx, className: "playlist-table-row" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-num" }, tIdx + 1), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-title", title: track.title }, track.title), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-artist", title: track.artist }, track.artist), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-album", title: track.album }, track.album), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-duration" }, formatDuration5(track.duration)), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-actions" }, /* @__PURE__ */ import_react24.default.createElement(
+      )) : /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-tracks-table", style: { "--pl-grid": playlistColumns.template } }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-table-header" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-num" }, "#"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-title col-resizable" }, "Title", playlistColumns.handleFor("title")), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-artist col-resizable" }, "Release Format", playlistColumns.handleFor("artist")), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-album col-resizable" }, "Release / Series", playlistColumns.handleFor("album")), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-duration" }, "Runtime"), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-actions" }, "Actions")), /* @__PURE__ */ import_react24.default.createElement("div", { className: "playlist-table-body" }, selectedPlaylist.tracks.map((track, tIdx) => /* @__PURE__ */ import_react24.default.createElement("div", { key: track.id || tIdx, className: "playlist-table-row" }, /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-num" }, tIdx + 1), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-title", title: track.title }, track.title), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-artist", title: track.artist }, track.artist), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-album", title: track.album }, track.album), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-duration" }, formatDuration6(track.duration)), /* @__PURE__ */ import_react24.default.createElement("span", { className: "col-actions" }, /* @__PURE__ */ import_react24.default.createElement(
         "button",
         {
           className: "btn-row-action",
@@ -23220,7 +23477,7 @@ Inspect all selected media files and fix missing, noisy, or incomplete metadata 
           }
         },
         /* @__PURE__ */ import_react24.default.createElement("option", { value: "", disabled: true }, 'Select track to add to "', selectedPlaylist.name, '"...'),
-        library.tracks.map((t, idx) => /* @__PURE__ */ import_react24.default.createElement("option", { key: t.id || idx, value: t.id || t.filePath }, t.title, " \u2014 ", t.artist, " (", formatDuration5(t.duration), ")"))
+        library.tracks.map((t, idx) => /* @__PURE__ */ import_react24.default.createElement("option", { key: t.id || idx, value: t.id || t.filePath }, t.title, " \u2014 ", t.artist, " (", formatDuration6(t.duration), ")"))
       ), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-secondary", onClick: handleAddFilesToSelectedPlaylist }, "Add Audio Files"))))) : /* @__PURE__ */ import_react24.default.createElement("div", { className: "empty-state" }, /* @__PURE__ */ import_react24.default.createElement("p", null, "Select a playlist from the left or create a new one."), /* @__PURE__ */ import_react24.default.createElement("button", { className: "btn-accent", onClick: () => setShowCreatePlaylistModal(true), style: { marginTop: "12px" } }, "Create Playlist"))))), activeTab === "library" && /* @__PURE__ */ import_react24.default.createElement("div", { className: "library-tab" }, activeCastSession && /* @__PURE__ */ import_react24.default.createElement("div", { className: "active-cast-bar" }, /* @__PURE__ */ import_react24.default.createElement("div", { className: "cast-bar-indicator" }, /* @__PURE__ */ import_react24.default.createElement(
         "span",
         {

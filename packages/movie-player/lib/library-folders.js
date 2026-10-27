@@ -6,6 +6,8 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { summarizeMediaBreakdown } = require('./library-index');
+const { upgradeTrackVideoGrouping } = require('./track-metadata');
 
 class LibraryFolders {
   constructor({ mediaLibrary, cloud, castService, configDir }) {
@@ -131,12 +133,19 @@ class LibraryFolders {
       const legacyRootDir = (f.kind === 'cloud' && f.isPrimaryLinkedFolder && this.cloud && typeof this.cloud.localDirFor === 'function')
         ? this.cloud.localDirFor(f.connectionId, '/')
         : null;
+      const ownedTracks = this.mediaLibrary.tracks.filter(t => this._owns(f, t.filePath));
+      const breakdown = summarizeMediaBreakdown(ownedTracks);
       return {
         ...f,
         cloudKey: f.kind === 'cloud' ? this.cloudIdentity(f.connectionId, f.path, connections) : null,
         localRoot: this.localRoot(f),
         legacyRootDir,
-        trackCount: this.mediaLibrary.tracks.filter(t => this._owns(f, t.filePath)).length,
+        trackCount: ownedTracks.length,
+        movieCount: breakdown.movieCount,
+        showCount: breakdown.showCount,
+        seasonCount: breakdown.seasonCount,
+        episodeCount: breakdown.episodeCount,
+        shows: breakdown.shows,
         connectionName: conn ? conn.name : null,
         connectionMissing: f.kind === 'cloud' && !conn,
         protocol: conn ? conn.driverType : null,
@@ -267,6 +276,7 @@ class LibraryFolders {
         if (this.castService && typeof this.castService.getCloudStreamUrl === 'function') {
           existing.src = this.castService.getCloudStreamUrl(existing.id, false);
         }
+        upgradeTrackVideoGrouping(existing);
         continue;
       }
       try {

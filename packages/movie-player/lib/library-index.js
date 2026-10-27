@@ -115,6 +115,132 @@ function inferQualityMeta(track) {
   return { resolution, source, container, badge };
 }
 
+const tvEpisodeCache = new WeakMap();
+
+/**
+ * Detects whether a track is a TV Show episode (either from pre-parsed fields
+ * or from scene patterns in title/album/filePath) and returns its Show/Season/Episode metadata.
+ */
+function inferTvShowEpisode(track) {
+  if (!track) return null;
+  if (tvEpisodeCache.has(track)) return tvEpisodeCache.get(track);
+
+  if (track.mediaType === 'tv' && track.showName) {
+    const seasonNumber = Number(track.seasonNumber || track.discNumber || 1);
+    const episodeNumber = Number(track.episodeNumber || track.trackNumber || 1);
+    const episodeCode = track.episodeCode || `S${String(seasonNumber).padStart(2, '0')}E${String(episodeNumber).padStart(2, '0')}`;
+    const result = {
+      isTvShow: true,
+      showName: track.showName,
+      seasonNumber,
+      episodeNumber,
+      episodeCode,
+      episodeTitle: track.episodeTitle || track.title || `Episode ${episodeNumber}`,
+    };
+    tvEpisodeCache.set(track, result);
+    return result;
+  }
+
+  const candidates = [
+    track.title,
+    track.album,
+    track.cloud?.remotePath ? String(track.cloud.remotePath).split('/').pop() : null,
+    track.filePath ? String(track.filePath).split('/').pop() : null,
+  ].filter(Boolean);
+
+  for (const raw of candidates) {
+    const str = String(raw).replace(/\.[a-z0-9]{2,4}$/i, '');
+    const se = /(?:^|[.\s_\-([·])S(\d{1,2})[.\s_-]*E(\d{1,3})(?:[.\s_-]*E?\d{1,3})?(?=[.\s_\-)\]·]|$)/i.exec(str)
+      || /(?:^|[.\s_\-([·])(0?[1-9]|[1-4]\d)x(\d{2,3})(?=[.\s_\-)\]·]|$)/i.exec(str);
+    if (se) {
+      const seasonNumber = Number(se[1]);
+      const episodeNumber = Number(se[2]);
+      let before = str.slice(0, se.index)
+        .replace(/[._·]+/g, ' ')
+        .replace(/\b(?:season|series)\s*\d{1,2}\b.*$/i, '')
+        .replace(/^\s*[-–—:]+\s*|\s*[-–—:]+\s*$/g, '')
+        .trim();
+      let after = str.slice(se.index + se[0].length)
+        .replace(/\b(2160p|4k|1080p|720p|480p|BluRay|BRRip|BDRip|WEBRip|WEB-DL|WEB|HDRip|DVDRip|HDTV|x264|x265|hevc|h264|aac|ac3)\b.*$/i, ' ')
+        .replace(/\[[^\]]*\]|\([^)]*\)/g, ' ')
+        .replace(/[._·]+/g, ' ')
+        .replace(/^\s*[-–—:]+\s*|\s*[-–—:]+\s*$/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (!before && track.album) {
+        before = String(track.album).replace(/\bS\d{1,2}\s*E\d{1,3}\b.*$/i, '').trim();
+      }
+      const showName = before || 'TV Series';
+      const episodeCode = `S${String(seasonNumber).padStart(2, '0')}E${String(episodeNumber).padStart(2, '0')}`;
+      const result = {
+        isTvShow: true,
+        showName,
+        seasonNumber,
+        episodeNumber,
+        episodeCode,
+        episodeTitle: after || `Episode ${episodeNumber}`,
+      };
+      tvEpisodeCache.set(track, result);
+      return result;
+    }
+  }
+
+  tvEpisodeCache.set(track, null);
+  return null;
+}
+
+/**
+ * Computes a Movie vs. TV Show (with Season & Episode breakdown) summary for any array of tracks.
+ */
+function summarizeMediaBreakdown(tracks = []) {
+  let movieCount = 0;
+  let episodeCount = 0;
+  const showMap = new Map(); // fold(showName) -> { showName, seasons: Map<seasonNumber, count>, episodeCount }
+
+  for (const t of tracks) {
+    if (!t) continue;
+    const tv = inferTvShowEpisode(t);
+    if (tv && tv.isTvShow) {
+      episodeCount++;
+      const key = fold(tv.showName);
+      let entry = showMap.get(key);
+      if (!entry) {
+        entry = { showName: tv.showName, seasons: new Map(), episodeCount: 0 };
+        showMap.set(key, entry);
+      }
+      entry.episodeCount++;
+      entry.seasons.set(tv.seasonNumber, (entry.seasons.get(tv.seasonNumber) || 0) + 1);
+    } else {
+      movieCount++;
+    }
+  }
+
+  const shows = [...showMap.values()].map(s => {
+    const seasons = [...s.seasons.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([seasonNumber, count]) => ({
+        seasonNumber,
+        label: `Season ${seasonNumber}`,
+        episodeCount: count,
+      }));
+    return {
+      showName: s.showName,
+      seasonCount: seasons.length,
+      episodeCount: s.episodeCount,
+      seasons,
+    };
+  }).sort((a, b) => compareNames(a.showName, b.showName));
+
+  const seasonCount = shows.reduce((sum, s) => sum + s.seasonCount, 0);
+  return {
+    movieCount,
+    showCount: shows.length,
+    seasonCount,
+    episodeCount,
+    shows,
+  };
+}
+
 // Artist, album and genre strings repeat thousands of times in a big library, so
 // the (slow) Unicode normalisation is cached per distinct string.
 const foldCache = new Map();
@@ -177,12 +303,16 @@ function dirOf(filePath) {
   if (!filePath) return '';
   const parts = String(filePath).split('/');
   parts.pop();
-  // Treat ".../Album/CD1" and ".../Album/Disc 2" as the same album folder.
-  if (parts.length > 1 && /^(cd|disc|disk)\s*\d+$/i.test(parts[parts.length - 1])) parts.pop();
+  // Treat ".../Album/CD1", ".../Show/Season 1" and ".../Album/Disc 2" as the same parent folder.
+  if (parts.length > 1 && /^(cd|disc|disk|season|s|series)\s*\d+$/i.test(parts[parts.length - 1])) parts.pop();
   return parts.join('/');
 }
 
 function albumKeyOf(track) {
+  const tv = inferTvShowEpisode(track);
+  if (tv && tv.isTvShow) {
+    return `tv:${fold(tv.showName)}`;
+  }
   const title = fold(track.album || UNKNOWN_ALBUM);
   if (track.albumArtist) return `${title}\u0001aa:${fold(track.albumArtist)}`;
   // Without an album-artist tag, tracks of one album normally share a folder; that
@@ -192,8 +322,14 @@ function albumKeyOf(track) {
 }
 
 function compareAlbumOrder(a, b) {
-  return (a.discNumber || 1) - (b.discNumber || 1)
-    || (a.trackNumber || 9999) - (b.trackNumber || 9999)
+  const tvA = inferTvShowEpisode(a);
+  const tvB = inferTvShowEpisode(b);
+  const seasonA = (tvA && tvA.seasonNumber) || a.seasonNumber || a.discNumber || 1;
+  const seasonB = (tvB && tvB.seasonNumber) || b.seasonNumber || b.discNumber || 1;
+  const epA = (tvA && tvA.episodeNumber) || a.episodeNumber || a.trackNumber || 9999;
+  const epB = (tvB && tvB.episodeNumber) || b.episodeNumber || b.trackNumber || 9999;
+  return seasonA - seasonB
+    || epA - epB
     || compareNames(a.title, b.title);
 }
 
@@ -228,10 +364,16 @@ function latest(a, b) {
 function buildIndex(tracks = []) {
   const albumMap = new Map();
   for (const t of tracks) {
+    const tv = inferTvShowEpisode(t);
     const key = albumKeyOf(t);
     let album = albumMap.get(key);
     if (!album) {
-      album = { key, title: t.album || UNKNOWN_ALBUM, tracks: [] };
+      album = {
+        key,
+        title: (tv && tv.isTvShow) ? tv.showName : (t.album || UNKNOWN_ALBUM),
+        isTvShow: !!(tv && tv.isTvShow),
+        tracks: [],
+      };
       albumMap.set(key, album);
     }
     album.tracks.push(t);
@@ -271,7 +413,8 @@ function buildIndex(tracks = []) {
       duration += t.duration || 0;
       if (t.addedAt && (!addedAt || t.addedAt > addedAt)) addedAt = t.addedAt;
       if (!t.lossless) lossless = false;
-      const disc = t.discNumber || 1;
+      const tv = inferTvShowEpisode(t);
+      const disc = (tv && tv.seasonNumber) || t.seasonNumber || t.discNumber || 1;
       if (disc !== lastDisc) { discCount++; lastDisc = disc; }
       if (t.genre) {
         if (genre === null) genre = t.genre;
@@ -291,7 +434,42 @@ function buildIndex(tracks = []) {
       || (mixedGenres ? mostCommon(list.flatMap(t => splitGenres(t.genre))) : (splitGenres(genre)[0] || null));
     album.franchise = inferMovieFranchise(list[0]);
     album.quality = inferQualityMeta(list[0]);
-    album.isTvShow = inferredGenres.includes('TV Series') || /\bs\d{1,2}\s*e\d{1,2}\b|\bseason\s*\d+\b|\bepisode\s*\d+\b/i.test(`${album.title || ''} ${list[0]?.title || ''}`);
+    album.isTvShow = album.isTvShow
+      || inferredGenres.includes('TV Series')
+      || list.some(t => t.mediaType === 'tv' || !!inferTvShowEpisode(t))
+      || /\bs\d{1,2}\s*e\d{1,2}\b|\bseason\s*\d+\b|\bepisode\s*\d+\b/i.test(`${album.title || ''} ${list[0]?.title || ''}`);
+    album.mediaType = album.isTvShow ? 'tv' : 'movie';
+
+    if (album.isTvShow) {
+      const seasonMap = new Map();
+      for (const t of list) {
+        const tv = inferTvShowEpisode(t);
+        const sNum = (tv && tv.seasonNumber) || t.seasonNumber || t.discNumber || 1;
+        let season = seasonMap.get(sNum);
+        if (!season) {
+          season = {
+            seasonNumber: sNum,
+            label: `Season ${sNum}`,
+            code: `S${String(sNum).padStart(2, '0')}`,
+            episodes: [],
+            duration: 0,
+          };
+          seasonMap.set(sNum, season);
+        }
+        season.episodes.push(t);
+        season.duration += t.duration || 0;
+      }
+      album.seasons = [...seasonMap.values()].sort((a, b) => a.seasonNumber - b.seasonNumber);
+      for (const s of album.seasons) s.episodeCount = s.episodes.length;
+      album.seasonCount = album.seasons.length;
+      album.episodeCount = list.length;
+      discCount = Math.max(discCount, album.seasonCount);
+    } else {
+      album.seasons = [];
+      album.seasonCount = 0;
+      album.episodeCount = 0;
+    }
+
     album.artId = artId;
     album.duration = duration;
     album.discCount = discCount;
@@ -597,6 +775,8 @@ module.exports = {
   inferMovieGenres,
   inferMovieFranchise,
   inferQualityMeta,
+  inferTvShowEpisode,
+  summarizeMediaBreakdown,
   albumKeyOf,
   buildIndex,
   searchIndex,
