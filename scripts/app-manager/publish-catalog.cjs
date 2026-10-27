@@ -84,7 +84,10 @@ async function publish({ output = path.join(repo, 'release/app-manager'), select
       console.log(`Packaging ${item.id} (${platform})`);
       const dir = path.join(stage, item.id);
       const source = item.id === 'graph-data' ? path.join(repo, '.robos') : item.id.startsWith('game-data-') ? path.join(repo, 'games', item.id.slice(10)) : path.join(repo, 'packages', item.id);
-      fs.cpSync(source, dir, { recursive: true, filter: file => !ignored.has(path.basename(file)) && !/\.(?:test|spec)\.[cm]?js$/.test(file) });
+      const gameData = item.id.startsWith('game-data-');
+      // Game Playthrough executes the game's own E2E driver as an app feature.
+      fs.cpSync(source, dir, { recursive: true, filter: file => (!ignored.has(path.basename(file)) || gameData && path.basename(file) === 'tests') &&
+        (gameData || !/\.(?:test|spec)\.[cm]?js$/.test(file)) });
       if (item.id === 'robos-graph') for (const name of ['renderer', 'main.js', 'preload.js']) fs.rmSync(path.join(dir, name), { force: true, recursive: true });
       if (fs.existsSync(path.join(dir, 'package.json'))) {
         const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json')));

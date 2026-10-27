@@ -10,7 +10,7 @@ function catalog(root) {
     const main = path.join(dir, 'main.js');
     if (!fs.existsSync(main) || !/require\(['"]electron['"]\)/.test(fs.readFileSync(main, 'utf8'))) return [];
     // GNOME shell helpers are replaced by the native Windows launcher.
-    if (['app-launcher', 'robos-desktop', 'gnome-desktop-installer', 'pass-unlock'].includes(id)) return [];
+    if (['app-launcher', 'app-manager', 'robos-desktop', 'gnome-desktop-installer', 'pass-unlock'].includes(id)) return [];
     const entry = registry.find(a => a.appId === id);
     return [{ id, label: entry?.label || id, category: entry?.category || 'Apps', iconSvg: entry?.iconSvg || null }];
   }).concat([{ id: 'household', label: 'Household', category: 'Household' }]);

@@ -4,6 +4,7 @@ const path = require('node:path');
 const { EventEmitter } = require('node:events');
 const { plan, validateCatalog, ORIGIN } = require('./catalog.cjs');
 const { download, extract } = require('./download.cjs');
+function atomic(file, value) { fs.writeFileSync(`${file}.tmp`, JSON.stringify(value, null, 2)); fs.renameSync(`${file}.tmp`, file); }
 class Manager extends EventEmitter {
   constructor({ locations, native, version, platform = process.platform, arch = process.arch, downloader = download, extractor = extract, logger = { info() {}, error() {} } }) {
     super(); Object.assign(this, { locations, native, version, platform, arch, downloader, extractor, logger });
@@ -13,7 +14,7 @@ class Manager extends EventEmitter {
     // A killed process leaves a transaction journal; restore the pre-install directory/state.
     this.recover();
   }
-  save() { fs.writeFileSync(`${this.file}.tmp`, JSON.stringify(this.installed, null, 2)); fs.renameSync(`${this.file}.tmp`, this.file); }
+  save() { atomic(this.file, this.installed); }
   recover() {
     const journal = path.join(this.locations.root, 'transaction.json');
     if (!fs.existsSync(journal)) return;
@@ -93,13 +94,13 @@ class Manager extends EventEmitter {
           fs.mkdirSync(path.dirname(destination), { recursive: true });
           const journal = path.join(this.locations.root, 'transaction.json');
           const tx = { item, before: before || null, committed: false };
-          fs.writeFileSync(journal, JSON.stringify(tx));
+          atomic(journal, tx);
           try {
             if (fs.existsSync(destination)) fs.renameSync(destination, backup);
             fs.renameSync(payload, destination);
             if (item.kind === 'app') this.native.shortcut(item);
             this.installed[item.id] = { ...item, installedAt: new Date().toISOString() }; this.save();
-            fs.writeFileSync(journal, JSON.stringify({ ...tx, committed: true }));
+            atomic(journal, { ...tx, committed: true });
             fs.rmSync(backup, { recursive: true, force: true }); fs.rmSync(journal);
           } catch (error) { this.recover(); throw error; }
           this.logger.info({ id: item.id, version: item.version }, 'Installed app component'); this.emit('state', this.state());
