@@ -22,6 +22,7 @@ const { createAiHost } = require('./ai-host');
 const DEFAULT_SETTINGS = Object.freeze({
   title: 'RobOS Party Game',
   personality: 'gameshow',
+  hostFace: 'mask', // mask | robot: the AI host's look on the TVs
   agent: null, // { provider, model, effort } from <robos-agent-selector>; required to play
   surveyPacks: [...survey.DEFAULT_PACKS],
   customQuestions: [],
@@ -55,6 +56,7 @@ function normalizeSettings(input = {}, base = DEFAULT_SETTINGS) {
   s.minGuests = Math.min(12, Math.max(2, Math.round(Number(s.minGuests) || base.minGuests)));
   s.aiWaitSeconds = Math.min(180, Math.max(5, Math.round(Number(s.aiWaitSeconds) || base.aiWaitSeconds || 60)));
   if (!PERSONALITIES[s.personality]) s.personality = 'gameshow';
+  if (!['mask', 'robot'].includes(s.hostFace)) s.hostFace = 'mask';
   if (!['host', 'tv', 'off'].includes(s.narrationAudio)) s.narrationAudio = 'host';
   s.miniGames = (Array.isArray(s.miniGames) ? s.miniGames : []).filter((id) => getMiniGame(id));
   if (s.miniGames.length === 0) s.miniGames = [...DEFAULT_SETTINGS.miniGames];
@@ -884,6 +886,7 @@ function createPartyEngine({
       phase: state.phase,
       title: state.settings.title,
       personality: PERSONALITIES[state.settings.personality],
+      hostFace: state.settings.hostFace,
       joinUrl: state.joinUrl,
       tvs: state.tvs,
       guests: state.guests.map((g) => {

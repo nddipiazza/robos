@@ -14,7 +14,7 @@ description: "AI-hosted party game on your RobOS TVs: guests take a survey on th
 ## What you need
 
 - **At least one RobOS TV** paired in [RobOS Smart TV Studio]({{ '/apps/robos-tv/' | relative_url }}). With two or more, each TV gets a screen: the **main stage** (host face and the action), a live **scoreboard**, and a **spotlight** on the guest each round is about. Browser TVs (LG webOS, Samsung Tizen, Google TV) open the game page; Roku TVs show live frames through the RobOS TV channel.
-- **An AI agent.** The AI host is required: pick it with the shared agent selector (Codex, Antigravity, …). Every agent call runs in the background ahead of when it is needed, so a slow reply never stalls the party, and stock material fills in if a call fails.
+- **An AI agent.** The AI host (a hooded masked figure by default, or a robot) is required: pick it with the shared agent selector (Codex, Antigravity, …). Every agent call runs in the background ahead of when it is needed, so a slow reply never stalls the party, and stock material fills in if a call fails.
 - Guests' phones on the same Wi-Fi. They scan the QR code on the TV.
 
 ## How a party runs

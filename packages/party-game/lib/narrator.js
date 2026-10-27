@@ -179,7 +179,7 @@ function createNarrator({ ask = null, timeoutMs = 45000 } = {}) {
       ]);
       const out = typeof result === 'string' ? result : result?.ok ? result.text : null;
       const line = out ? String(out).trim().split('\n').find(Boolean) : null;
-      return line && line.length < 260 ? line.replace(/^["']|["']$/g, '') : null;
+      return line && line.length < 260 ? line.replace(/\*\*?|__/g, '').replace(/^["']|["']$/g, '') : null;
     } catch {
       return null;
     }
