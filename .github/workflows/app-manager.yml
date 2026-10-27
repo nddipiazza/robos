@@ -23,6 +23,8 @@ jobs:
         run: |
           git config --global user.name "RobOS CI"
           git config --global user.email "ci@robos.dev"
+      - name: Install media test dependency
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Install unit-test dependencies
         working-directory: packages/robos-test
         run: npm install --no-audit --no-fund
@@ -87,7 +89,7 @@ jobs:
           path: run/app-manager-smoke/**
   publish:
     needs: [unit, windows-regression, build]
-    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/codex/release-0.0.9'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
