@@ -21,6 +21,9 @@ test('download buttons distinguish native Windows apps from USB flasher', () => 
   const download = fs.readFileSync(path.join(site, 'download.md'), 'utf8');
   assert.match(download, /id="linux-distro"/);
   assert.match(download, /(?:View|Download) Windows USB flasher/);
-  assert.match(download, /Native Windows app suite/);
+  assert.match(download, /data-os="win">[^\n]*href="[^"]*Windows-Setup\.exe"/);
+  assert.match(download, /data-os="linux">[^\n]*href="[^"]*Linux-x86_64\.AppImage"/);
+  assert.match(download, /data-os="mac">[^\n]*href="[^"]*macOS-arm64\.dmg"/);
+  assert.doesNotMatch(download, /Windows-Portable\.exe/);
   assert.ok(fs.existsSync(path.join(site, 'downloads/Install-RobOS.cmd')));
 });
