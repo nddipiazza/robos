@@ -14,6 +14,7 @@ const os = require('node:os');
 const { createPartyEngine, normalizeSettings, DEFAULT_SETTINGS } = require('./lib/game-engine');
 const { createGameServer } = require('./lib/game-server');
 const { createTvBridge } = require('./lib/tv-bridge');
+const { createNarrationRouter } = require('./lib/narration-outputs');
 
 const APP_ID = 'party-game';
 const DEBUG_PORT = 19212;
@@ -129,20 +130,6 @@ function getTts() {
   return ttsEngine;
 }
 
-const narrationAudio = new Map(); // narration id → Promise<filePath|null>
-
-function synthesize(narration) {
-  if (engine.state.settings.narrationAudio === 'off') return;
-  const tts = getTts();
-  if (!tts) return;
-  const job = tts
-    .synthesize(narration.text, { kokoroTimeoutMs: 30000 })
-    .then((res) => (res && res.ok && res.engine !== 'fallback' ? res.filePath : null))
-    .catch(() => null);
-  narrationAudio.set(narration.id, job);
-  while (narrationAudio.size > 40) narrationAudio.delete(narrationAudio.keys().next().value);
-}
-
 // ── Engine, server, TVs ────────────────────────────────────────────────────
 
 let gamePort = GAME_PORT;
@@ -152,7 +139,18 @@ const server = createGameServer({
   engine,
   port: GAME_PORT,
   log,
-  getNarrationAudio: (id) => narrationAudio.get(id) || null,
+  getNarrationAudio: (id) => narration.clip(id),
+});
+// The host's voice goes to this computer, the TVs and/or an Audio Player speaker.
+const narration = createNarrationRouter({
+  engine,
+  getTts,
+  tvEngine,
+  castModule: requireShared('audio-player/lib/cast-service'),
+  configDir: CONFIG_DIR,
+  getLanIp: lanIp,
+  getGamePort: () => gamePort,
+  log,
 });
 const bridge = createTvBridge({
   tvEngine,
@@ -178,6 +176,8 @@ function hostState() {
     availableTvs: bridge.listTvs(),
     framesStreaming: bridge.streaming(),
     voiceAvailable: Boolean(getTts()),
+    speakers: narration.listSpeakers(),
+    speakersAvailable: narration.speakersAvailable(),
     agentToolsInstalled: Boolean(agentOneShot || aiAgent),
   };
 }
@@ -194,7 +194,7 @@ engine.events.on('change', () => {
 engine.events.on('log', log);
 
 engine.events.on('narration', (n) => {
-  synthesize(n);
+  narration.handle(n);
   sendToRenderer('party:narration', n);
 });
 
@@ -270,6 +270,7 @@ function registerIpc() {
     if (!/^http:\/\/(127\.0\.0\.1|localhost|[\d.]+):\d+\//.test(String(url))) throw new Error('Only party URLs can be opened');
     return shell.openExternal(url);
   }));
+  ipcMain.handle('party:scanSpeakers', wrap(() => narration.scanSpeakers()));
   ipcMain.handle('party:agentProviders', async (_e, options) => {
     if (!agentProviders) return [];
     return agentProviders.options({ refresh: options?.refresh === true });
@@ -342,6 +343,7 @@ if (app) {
     });
     app.on('window-all-closed', async () => {
       bridge.stopAll();
+      narration.stop();
       await server.stop();
       try {
         await tvEngine?.stopPortalServer();

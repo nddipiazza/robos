@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('partyGame', {
   submitSurvey: (id, answers) => ipcRenderer.invoke('party:submitSurvey', id, answers),
   setPartyHost: (id) => ipcRenderer.invoke('party:setPartyHost', id),
   submitHouse: (answers) => ipcRenderer.invoke('party:submitHouse', answers),
+  scanSpeakers: () => ipcRenderer.invoke('party:scanSpeakers'),
   next: () => ipcRenderer.invoke('party:next'),
   skipRound: () => ipcRenderer.invoke('party:skipRound'),
   reset: () => ipcRenderer.invoke('party:reset'),

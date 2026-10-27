@@ -106,7 +106,8 @@ function fillForm(st) {
   $('personality').value = s.personality;
   $('personalityDesc').textContent = st.personalities.find((p) => p.id === s.personality)?.description || '';
   for (const id of ['aiWaitSeconds', 'roundsPerGame', 'answerSeconds', 'revealSeconds', 'minGuests']) $(id).value = s[id];
-  $('narrationAudio').value = s.narrationAudio;
+  for (const cb of document.querySelectorAll('#voiceOutputs input')) cb.checked = (s.narrationOutputs || []).includes(cb.value);
+  renderSpeakers(st);
   $('hostFace').value = s.hostFace;
   $('autoAdvance').checked = s.autoAdvance;
   $('secretRoles').checked = s.secretRoles;
@@ -137,7 +138,8 @@ function readForm() {
     answerSeconds: Number($('answerSeconds').value),
     revealSeconds: Number($('revealSeconds').value),
     minGuests: Number($('minGuests').value),
-    narrationAudio: $('narrationAudio').value,
+    narrationOutputs: [...document.querySelectorAll('#voiceOutputs input:checked')].map((cb) => cb.value),
+    speakerId: $('speakerId').value || null,
     autoAdvance: $('autoAdvance').checked,
     secretRoles: $('secretRoles').checked,
     customQuestions: custom,
@@ -168,10 +170,24 @@ function wireForm() {
     else row.parentNode.insertBefore(sibling, row);
     scheduleSave();
   });
+  $('scanSpeakers').onclick = async () => {
+    $('scanSpeakers').textContent = 'Scanning…';
+    const res = await call(api.scanSpeakers);
+    $('scanSpeakers').textContent = 'Scan for speakers';
+    if (res.ok) renderSpeakers(res.state, res.result);
+  };
   $('resetSettings').onclick = async () => {
     const res = await call(api.resetSettings);
     if (res.ok) fillForm(res.state);
   };
+}
+
+function renderSpeakers(st, list = st.speakers || []) {
+  const sel = $('speakerId');
+  const current = st.settings.speakerId;
+  sel.innerHTML = '<option value="">Choose a speaker…</option>' + list.map((s) =>
+    `<option value="${esc(s.ip)}" ${s.ip === current ? 'selected' : ''}>${esc(s.name)}${s.online ? '' : ' (offline)'} · ${esc(s.ip)}</option>`).join('');
+  $('speakerRow').hidden = !st.speakersAvailable;
 }
 
 // ── TVs ────────────────────────────────────────────────────────────────────
@@ -354,7 +370,7 @@ function renderPreviews(st) {
   lastPreviewKey = key;
   $('previews').innerHTML = screens.map((s) => {
     const names = st.tvs.filter((t) => t.screen === s).map((t) => t.name).join(', ') || 'Preview';
-    return `<figure class="preview"><div class="frame"><iframe src="${st.tvPreviewBase}?screen=${s}" title="${s} screen" tabindex="-1"></iframe></div>
+    return `<figure class="preview"><div class="frame"><iframe src="${st.tvPreviewBase}?screen=${s}&capture=1" title="${s} screen" tabindex="-1"></iframe></div>
       <figcaption><b>${esc(SCREENS.find(([id]) => id === s)?.[1] || s)}</b> · ${esc(names)}
       <button type="button" class="link" data-open="${st.tvPreviewBase}?screen=${s}">Open full screen</button></figcaption></figure>`;
   }).join('');
@@ -439,7 +455,7 @@ function render(st) {
 // Narration on this computer's speakers. The server holds the request until
 // RobOS Voice finishes synthesizing, so the audio may start a moment late.
 api.onNarration((n) => {
-  if (!state || state.settings.narrationAudio !== 'host') return;
+  if (!state || !(state.settings.narrationOutputs || []).includes('host')) return;
   const voice = $('voice');
   voice.src = `http://127.0.0.1:${state.gamePort}/api/narration/${encodeURIComponent(n.id)}`;
   voice.play().catch(() => {});

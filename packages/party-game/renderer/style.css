@@ -127,3 +127,5 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 .req { color: var(--pink); }
 .field { margin-bottom: 14px; }
 .field-label { color: #b9c7d4; font-size: 13px; margin-bottom: 4px; }
+.speaker-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+.speaker-row select { margin: 0; flex: 1; }

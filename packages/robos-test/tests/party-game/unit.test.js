@@ -354,6 +354,60 @@ describe('RobOS Party Game', () => {
     });
   });
 
+  describe('Narration outputs', () => {
+    it('migrates the old narration setting and keeps only known outputs', () => {
+      assert.deepStrictEqual(normalizeSettings({ narrationAudio: 'host' }).narrationOutputs, ['host']);
+      assert.deepStrictEqual(normalizeSettings({ narrationAudio: 'off' }).narrationOutputs, []);
+      assert.deepStrictEqual(normalizeSettings({ narrationOutputs: ['tvs', 'speaker', 'moon', 'tvs'] }).narrationOutputs, ['tvs', 'speaker']);
+      assert.strictEqual('narrationAudio' in normalizeSettings({ narrationAudio: 'tv' }), false);
+    });
+
+    it('sends each spoken line to main-stage Roku TVs and the chosen speaker', async () => {
+      const os = require('node:os');
+      const { createNarrationRouter } = require(path.join(APP_DIR, 'lib', 'narration-outputs'));
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'party-narration-'));
+      // A tiny valid WAV (0.1 s of silence) stands in for RobOS Voice.
+      const pcm = Buffer.alloc(4410 * 2);
+      const header = Buffer.alloc(44);
+      header.write('RIFF', 0); header.writeUInt32LE(36 + pcm.length, 4); header.write('WAVEfmt ', 8);
+      header.writeUInt32LE(16, 16); header.writeUInt16LE(1, 20); header.writeUInt16LE(1, 22);
+      header.writeUInt32LE(44100, 24); header.writeUInt32LE(88200, 28); header.writeUInt16LE(2, 32); header.writeUInt16LE(16, 34);
+      header.write('data', 36); header.writeUInt32LE(pcm.length, 40);
+      const wav = path.join(dir, 'line.wav');
+      fs.writeFileSync(wav, Buffer.concat([header, pcm]));
+
+      const e = createPartyEngine({ seed: 3, settings: { agent: { provider: 'stub' }, narrationOutputs: ['tvs', 'speaker'], speakerId: '192.168.1.6' }, ai: stubAgent() });
+      e.selectTvs([
+        { tvId: 'roku', platformId: 'roku-os', screen: 'stage' },
+        { tvId: 'oled', platformId: 'lg-webos', screen: 'stage' },
+        { tvId: 'roku2', platformId: 'roku-os', screen: 'scoreboard' },
+      ]);
+      const patches = [];
+      const casts = [];
+      class FakeCast {
+        constructor() { this.streamPort = 1234; }
+        registerFile(f) { return `http://host/media/${path.basename(f)}`; }
+        async castMediaUrl(ip, url) { casts.push({ ip, url }); return { ok: true }; }
+      }
+      const router = createNarrationRouter({
+        engine: e,
+        getTts: () => ({ synthesize: async () => ({ ok: true, engine: 'kokoro', filePath: wav }) }),
+        tvEngine: { updateAppCast: (p) => patches.push(p) },
+        castModule: { CastService: FakeCast },
+        configDir: dir,
+        getLanIp: () => '10.0.0.5',
+        getGamePort: () => 19213,
+      });
+      router.handle({ id: 'n1', text: 'Welcome to the party!' });
+      const file = await router.clip('n1');
+      assert.ok(file && fs.existsSync(file), 'line rendered to a playable file');
+      for (let i = 0; i < 50 && !casts.length; i++) await new Promise((r) => setTimeout(r, 20));
+      assert.deepStrictEqual(patches.map((p) => p.tvId), ['roku'], 'only main-stage Roku TVs get the line');
+      assert.deepStrictEqual(patches[0].patch.narration, { id: 'n1', url: 'http://10.0.0.5:19213/api/narration/n1.mp3' });
+      assert.deepStrictEqual(casts.map((c) => c.ip), ['192.168.1.6']);
+    });
+  });
+
   describe('AI JSON parsing', () => {
     it('reads fenced JSON from agent output', () => {
       assert.deepStrictEqual(parseJson('Sure!\n```json\n{"a":1}\n```'), { a: 1 });

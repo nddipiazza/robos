@@ -34,7 +34,10 @@ const DEFAULT_SETTINGS = Object.freeze({
   enabledRoles: null, // null = every role
   secretRoles: true,
   minGuests: 3,
-  narrationAudio: 'host', // host | tv | off
+  // Where the AI host's voice plays: any of host (this computer), tvs (the
+  // main-stage TVs, Roku included) and speaker (an Audio Player device).
+  narrationOutputs: ['tvs'],
+  speakerId: null, // Audio Player device for the 'speaker' output
   aiWaitSeconds: 60, // how long a mini game waits for the AI writers before using stock material
 });
 
@@ -57,7 +60,13 @@ function normalizeSettings(input = {}, base = DEFAULT_SETTINGS) {
   s.aiWaitSeconds = Math.min(180, Math.max(5, Math.round(Number(s.aiWaitSeconds) || base.aiWaitSeconds || 60)));
   if (!PERSONALITIES[s.personality]) s.personality = 'gameshow';
   if (!['mask', 'robot'].includes(s.hostFace)) s.hostFace = 'mask';
-  if (!['host', 'tv', 'off'].includes(s.narrationAudio)) s.narrationAudio = 'host';
+  if (!Array.isArray(input.narrationOutputs) && input.narrationAudio) {
+    // Settings saved before narration outputs existed.
+    s.narrationOutputs = { host: ['host'], tv: ['tvs'], off: [] }[input.narrationAudio] || ['tvs'];
+  }
+  delete s.narrationAudio;
+  s.narrationOutputs = [...new Set((Array.isArray(s.narrationOutputs) ? s.narrationOutputs : []).filter((o) => ['host', 'tvs', 'speaker'].includes(o)))];
+  s.speakerId = s.speakerId ? String(s.speakerId) : null;
   s.miniGames = (Array.isArray(s.miniGames) ? s.miniGames : []).filter((id) => getMiniGame(id));
   if (s.miniGames.length === 0) s.miniGames = [...DEFAULT_SETTINGS.miniGames];
   s.surveyPacks = (Array.isArray(s.surveyPacks) ? s.surveyPacks : []).filter((id) => survey.SURVEY_PACKS[id]);
@@ -909,7 +918,7 @@ function createPartyEngine({
       phaseEndsAt: state.phaseEndsAt,
       serverNow: now(),
       narration: state.narration,
-      narrationAudio: state.settings.narrationAudio,
+      narrationOutputs: state.settings.narrationOutputs,
       winnerIds: state.winnerIds,
       moleResult: finaleMole,
       canStart: state.phase === 'lobby' ? canStart() : null,
