@@ -60,8 +60,11 @@ async function main() {
     // Close managed child processes so removal can proceed. Query the test process
     // tree on Windows; Linux pkill matches only this isolated owner's app argument.
     const { execFileSync } = require('node:child_process');
-    if (process.platform === 'win32') execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
-      `Get-CimInstance Win32_Process | Where-Object { $_.ParentProcessId -eq ${application.process().pid} -and $_.CommandLine -like '*--app=smoke-one*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`], { windowsHide: true });
+    if (process.platform === 'win32') {
+      const lease = JSON.parse(fs.readFileSync(path.join(locations.root, 'running/smoke-one.json')));
+      if (lease.id !== 'smoke-one' || !Number.isSafeInteger(lease.pid)) throw new Error('Invalid fixture process');
+      execFileSync('taskkill.exe', ['/PID', String(lease.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
+    }
     else { try { execFileSync('pkill', ['-P', String(application.process().pid), '-f', '--', '--app=smoke-one']); } catch {} }
     await new Promise(resolve => setTimeout(resolve, 500));
     await narrate('Uninstall the app and remove its native menu entry.');
