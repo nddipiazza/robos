@@ -6,6 +6,7 @@ on:
   pull_request:
     paths: ['scripts/windows/**', 'site/downloads/**', 'packages/**', '.github/workflows/windows-apps.yml']
   workflow_dispatch:
+  workflow_call:
 permissions:
   contents: read
 jobs:

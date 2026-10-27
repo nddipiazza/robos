@@ -2,16 +2,37 @@ name: Modular RobOS apps
 on:
   push:
     tags: ['v*']
-    branches: ['codex/modular-app-manager']
+    branches: ['codex/modular-app-manager', 'codex/release-*']
   pull_request:
-    paths: ['packages/app-manager/**', 'scripts/app-manager/**', '.github/workflows/app-manager.yml']
+    paths: ['packages/**', 'scripts/app-manager/**', 'scripts/windows/**', '.github/workflows/app-manager.yml', '.github/workflows/windows-apps.yml']
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 concurrency:
   group: app-manager-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  unit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Configure test git identity
+        run: |
+          git config --global user.name "RobOS CI"
+          git config --global user.email "ci@robos.dev"
+      - name: Install unit-test dependencies
+        working-directory: packages/robos-test
+        run: npm install --no-audit --no-fund
+      - name: Run core unit tests
+        working-directory: packages/robos-test
+        run: npm run test:unit
+  windows-regression:
+    uses: ./.github/workflows/windows-apps.yml
+    permissions:
+      contents: read
   build:
     strategy:
       fail-fast: false
@@ -26,8 +47,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Read release version
-        id: version
+      - name: Verify release version
         shell: bash
         run: |
           tag="v$(cat VERSION | tr -d '\r\n')"
@@ -35,11 +55,10 @@ jobs:
             echo "::error::Release tag does not match VERSION"
             exit 1
           fi
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
       - name: Install manager build dependencies
         working-directory: packages/app-manager
         run: npm install --no-audit --no-fund
-      - name: Verify component lifecycle and installer boundaries
+      - name: Verify lifecycle, installer boundaries and release assets
         run: node --test packages/app-manager/test/*.test.cjs
       - name: Build platform app manager
         run: node scripts/app-manager/build.cjs
@@ -48,8 +67,7 @@ jobs:
         run: node scripts/app-manager/smoke.cjs
       - name: Build individual app downloads
         run: node scripts/app-manager/publish-catalog.cjs
-      - name: Upload manager and app downloads
-        if: always()
+      - name: Upload release assets
         uses: actions/upload-artifact@v4
         with:
           name: robos-app-manager-${{ runner.os }}-${{ runner.arch }}
@@ -59,18 +77,48 @@ jobs:
             release/app-manager/*.dmg
             release/app-manager/*.tgz
             release/app-manager/robos-catalog-*.json
-            run/app-manager-smoke/**
-      - name: Publish versioned downloads
-        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/codex/modular-app-manager'
+          if-no-files-found: error
+          compression-level: 0
+      - name: Upload Windows smoke evidence
+        if: always() && runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-manager-windows-smoke
+          path: run/app-manager-smoke/**
+  publish:
+    needs: [unit, windows-regression, build]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: robos-app-manager-*
+          path: release/publish
+          merge-multiple: true
+      - name: Verify every platform catalog and archive
+        id: release
+        run: node scripts/app-manager/stage-release.cjs release/publish
+      - name: Publish verified release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
+          tag_name: ${{ steps.release.outputs.tag }}
           target_commitish: ${{ github.sha }}
-          prerelease: ${{ contains(steps.version.outputs.tag, '-') }}
-          name: RobOS App Manager ${{ steps.version.outputs.tag }}
-          body: 'RobOS App Manager for Windows, Ubuntu GNOME and macOS (Intel and Apple Silicon). Install or uninstall one app, multiple selected apps or the complete library in a batch. Uninstall all apps keeps App Manager available; Uninstall RobOS removes the manager and its entire managed library. Personal settings are retained. Each app downloads separately for your OS and CPU and gets a native launcher.'
-          files: |
-            release/app-manager/${{ runner.os == 'Windows' && '*.exe' || runner.os == 'macOS' && '*.dmg' || '*.AppImage' }}
-            release/app-manager/*.tgz
-            release/app-manager/robos-catalog-*.json
+          prerelease: ${{ contains(steps.release.outputs.tag, '-') }}
+          make_latest: ${{ !contains(steps.release.outputs.tag, '-') }}
+          name: RobOS ${{ steps.release.outputs.tag }}
+          body: |
+            RobOS App Manager runs on Windows, Ubuntu GNOME and macOS (Intel and Apple Silicon).
+
+            Install or uninstall one app, several selected apps or the entire library in a batch. Apps download separately for your OS and CPU, with shared components downloaded once and native launchers for each app.
+
+            Uninstall all apps keeps App Manager available. Uninstall RobOS removes the manager and its managed library. Personal settings are retained.
+
+            Publication requires the Windows regression suite, core unit tests and all platform builds to pass. SHA256SUMS and release-manifest.json verify the downloads and source revision.
+          files: release/publish/*
           fail_on_unmatched_files: true

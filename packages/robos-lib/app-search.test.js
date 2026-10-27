@@ -12,7 +12,10 @@ test('every Windows app has intent vocabulary, with ordinary language ranked app
   for (const [query, id] of Object.entries({ music: 'audio-player', songs: 'audio-player', 'listen to my music': 'audio-player',
     'car repair': 'auto-center', 'cash register': 'point-of-sale', budget: 'household', sql: 'db-manager',
     password: 'pass-manager', 'install apps': 'software-center', 'new app': 'app-wizard', docs: 'robos-documentation',
-    'pull requests': 'pr-review', 'k8s': 'kube-studio', 'café': 'point-of-sale' })) {
+    'pull requests': 'pr-review', 'k8s': 'kube-studio', 'café': 'point-of-sale',
+    'watch movies': 'movie-player', 'pair tv': 'robos-tv', 'smart lights': 'smart-light',
+    'vpn locations': 'vpn-servers', 'vpn sandbox': 'vpn-sandbox', 'game playthrough': 'game-playthrough',
+    'custom dashboards': 'robos-dashboards', 'cloud accounts': 'cloud-accounts', appointments: 'google-calendar' })) {
     assert.equal(search(query)[0]?.id, id, query);
   }
 });
