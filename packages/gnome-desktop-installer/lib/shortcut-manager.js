@@ -63,6 +63,7 @@ const CATEGORY_TO_FREEDESKTOP = {
   'Tools': 'Utility;Development;',
   'Game Development': 'Development;Game;RolePlaying;',
   'Games': 'Game;RolePlaying;',
+  'Party Games': 'Game;X-PartyGame;',
   'Education': 'Education;Development;',
   'Auto': 'Utility;Office;',
 };

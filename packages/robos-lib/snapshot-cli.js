@@ -130,6 +130,7 @@ const PORT_REGISTRY = {
   'google-calendar':   19208,
   'smart-light':       19209,
   'robos-dashboards':  19211,
+  'party-game':        19212,
 };
 
 

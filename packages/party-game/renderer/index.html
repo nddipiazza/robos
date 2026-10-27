@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' file:; style-src 'self' 'unsafe-inline'; img-src 'self' data: http://127.0.0.1:*; media-src http://127.0.0.1:* file:; frame-src http://127.0.0.1:*; connect-src 'self' http://127.0.0.1:*">
+  <title>RobOS Party Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="../icon.svg" alt="" width="28" height="28">
+      <div>
+        <div class="app-title">RobOS Party Game</div>
+        <div class="app-sub" id="phaseText">Setup</div>
+      </div>
+    </div>
+    <div class="steps" id="steps"></div>
+    <div class="actions">
+      <span class="pill" id="aiPill" title="AI writers' room">AI host: idle</span>
+      <button type="button" class="ghost" id="skipBtn" hidden>Skip round</button>
+      <button type="button" class="ghost" id="resetBtn" hidden>Play again</button>
+      <button type="button" class="ghost danger" id="endBtn" hidden>End party</button>
+      <button type="button" class="primary" id="nextBtn">Open the lobby</button>
+    </div>
+  </header>
+  <div class="error-bar" id="errorBar" hidden></div>
+
+  <main class="layout">
+    <!-- Setup: TVs, AI host, customization -->
+    <section class="panel" id="setupPanel">
+      <div class="card">
+        <div class="card-head"><h2>1 · RobOS TVs</h2><span class="req">required</span></div>
+        <p class="muted">Pick the TVs that will show the game. With two or more, each gets a screen: the main stage, a live scoreboard, and a spotlight on the guest each round is about. Roku TVs get live frames through the RobOS TV channel.</p>
+        <div id="tvList" class="tv-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>2 · AI host</h2><span class="req">required</span></div>
+        <p class="muted">The AI host writes the show from your guests' answers: personal welcomes, role reveals, superlatives, bluffs, recaps and finale awards.</p>
+        <div id="agentSlot"></div>
+        <div class="grid2">
+          <label>Personality
+            <select id="personality"></select>
+          </label>
+          <label>Wait for AI writers (seconds)
+            <input type="number" id="aiWaitSeconds" min="5" max="180">
+          </label>
+        </div>
+        <div class="muted small" id="personalityDesc"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>3 · Customize the game</h2><button type="button" class="link" id="resetSettings">Reset to defaults</button></div>
+        <label>Party title <input id="title" maxlength="40"></label>
+        <h3>Mini games</h3>
+        <div id="miniGameList" class="mg-list"></div>
+        <div class="grid3">
+          <label>Rounds per mini game <input type="number" id="roundsPerGame" min="1" max="8"></label>
+          <label>Answer timer (s, 0 = default) <input type="number" id="answerSeconds" min="0" max="120"></label>
+          <label>Reveal time (s) <input type="number" id="revealSeconds" min="3" max="60"></label>
+          <label>Minimum guests <input type="number" id="minGuests" min="2" max="12"></label>
+          <label>Narration audio
+            <select id="narrationAudio">
+              <option value="host">This computer's speakers</option>
+              <option value="tv">Main stage TV (browser TVs)</option>
+              <option value="off">Off (captions only)</option>
+            </select>
+          </label>
+        </div>
+        <div class="checks">
+          <label class="check"><input type="checkbox" id="autoAdvance"> Auto-advance when timers run out</label>
+          <label class="check"><input type="checkbox" id="secretRoles"> Secret roles (the Mole)</label>
+        </div>
+        <h3>Survey packs</h3>
+        <div id="packList" class="checks"></div>
+        <label>Your own questions (one per line)
+          <textarea id="customQuestions" rows="3" placeholder="What was your first concert?"></textarea>
+        </label>
+      </div>
+    </section>
+
+    <!-- Guests -->
+    <section class="panel" id="guestPanel">
+      <div class="card join">
+        <img id="qr" alt="Join QR code" width="132" height="132">
+        <div>
+          <h2>Guests join on their phones</h2>
+          <div class="join-url" id="joinUrl"></div>
+          <p class="muted small">Same Wi-Fi as this computer. The QR code is also on the TV.</p>
+          <form id="addGuestForm" class="inline">
+            <input id="guestName" placeholder="Add a guest without a phone" maxlength="24">
+            <button type="submit" class="ghost">Add</button>
+          </form>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Guests</h2><span class="muted" id="guestCount"></span></div>
+        <div id="guestList" class="guest-list"></div>
+        <div class="house-status"><span id="houseStatus"></span> <button type="button" class="link" id="houseBtn" hidden>House details</button></div>
+        <div class="muted small" id="startHint"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>AI writers' room</h2><span class="pill" id="aiStatus"></span></div>
+        <div id="aiDetail" class="ai-detail"></div>
+      </div>
+    </section>
+
+    <!-- Live -->
+    <section class="panel wide" id="livePanel">
+      <div class="card">
+        <div class="card-head"><h2>On the TVs</h2><button type="button" class="link" id="recastBtn">Send to TVs again</button></div>
+        <div id="previews" class="previews"></div>
+        <div id="castResults" class="muted small"></div>
+      </div>
+      <div class="card narration">
+        <div class="speaker">🤖</div>
+        <div id="narration" class="narration-text">The host is warming up…</div>
+      </div>
+      <div class="card">
+        <h2>Play by play</h2>
+        <div id="history" class="history"></div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="surveyDialog">
+    <form method="dialog" id="surveyForm">
+      <h2 id="surveyTitle">Survey</h2>
+      <div id="surveyFields" class="survey-fields"></div>
+      <div class="dialog-actions">
+        <button type="submit" value="cancel" class="ghost">Cancel</button>
+        <button type="submit" value="save" class="primary">Save answers</button>
+      </div>
+    </form>
+  </dialog>
+
+  <audio id="voice"></audio>
+  <script src="app.js"></script>
+</body>
+</html>

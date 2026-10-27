@@ -13,6 +13,8 @@ const CATEGORIES = {
   'System':   { order: 6, label: 'System',        icon: '⚙️' },
   'Internet': { order: 7, label: 'Internet',      icon: '🌐' },
   'Tools':    { order: 8, label: 'Tools',         icon: '🛠️' },
+  'Games':    { order: 11, label: 'Games',        icon: '🎮' },
+  'Party Games': { order: 12, label: 'Party Games', icon: '🎉' },
 };
 
 const CATEGORY_IDS = Object.keys(CATEGORIES);
