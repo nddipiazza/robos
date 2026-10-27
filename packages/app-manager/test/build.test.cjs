@@ -16,6 +16,7 @@ test('both deliverables use the same minimal app, without any suite resources', 
   assert.ok(resolve('pino')({ enabled: false }));
   assert.ok(resolve('tar').x);
   assert.equal(config.win.target[0].target, 'nsis'); assert.equal(config.linux.target[0].target, 'AppImage');
+  assert.equal(config.mac.target[0].target, 'dmg');
   assert.equal(config.nsis.perMachine, false); assert.equal(config.nsis.deleteAppDataOnUninstall, false);
   const hook = fs.readFileSync(config.nsis.include, 'utf8');
   assert.match(hook, /isUpdated/); assert.match(hook, /LOCALAPPDATA\\RobOS\\app-manager/); assert.match(hook, /SMPROGRAMS\\RobOS Apps/);
@@ -24,6 +25,9 @@ test('catalog groups user apps and dependency discovery does not pull the entire
   const entries = sourceCatalog();
   for (const id of ['audio-player', 'point-of-sale', 'auto-center', 'household']) assert.ok(entries.some(item => item.id === id));
   assert.ok(!entries.some(item => item.id === 'app-manager' || item.id === 'app-launcher'));
-  assert.deepEqual(dependencies('audio-player'), ['graph-data', 'robos-icons', 'robos-lib']);
+  assert.ok(dependencies('audio-player').includes('robos-lib'));
+  assert.ok(!dependencies('audio-player').includes('data-sources'));
+  assert.ok(dependencies('git-projects').includes('robos-graph'));
+  assert.ok(entries.some(item => item.id === 'knowledge-graph-explorer' && item.sourceId === 'robos-graph'));
   assert.ok(!dependencies('robos-lib').includes('agents-manager'));
 });

@@ -107,6 +107,16 @@ test('Windows shortcuts point directly to app and its uninstall command', async 
   assert.equal(links.length, 2); assert.equal(links[0].args, '"--app=one"'); assert.equal(links[1].args, '"--remove=one"');
   assert.equal(links[0].appUserModelId, 'com.rowbose.robos.one');
 });
+test('macOS apps get native application bundles with safely quoted launchers', async t => {
+  const { locations } = await fixture(t);
+  const native = integration({ locations, executable: "/Applications/RobOS.app/Contents/MacOS/RobOS", packaged: true, platform: 'darwin' });
+  native.shortcut({ id: 'one', label: 'One & Two' });
+  const bundle = path.join(locations.shortcuts, 'one.app/Contents');
+  assert.match(fs.readFileSync(path.join(bundle, 'Info.plist'), 'utf8'), /One &amp; Two/);
+  assert.match(fs.readFileSync(path.join(bundle, 'MacOS/launch'), 'utf8'), /exec '\/Applications\/RobOS.app\/Contents\/MacOS\/RobOS' '--app=one'/);
+  native.shortcut({ id: 'one', label: 'One & Two' }, true);
+  assert.equal(fs.existsSync(bundle), false);
+});
 test('archive validation rejects links and excess uncompressed data', async t => {
   const { archive, root, buffer } = await fixture(t);
   const target = path.join(root, 'extract'); fs.mkdirSync(target);

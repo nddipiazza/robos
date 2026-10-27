@@ -1,6 +1,6 @@
 # RobOS App Manager distribution
 
-Windows NSIS and Linux AppImage package the same `packages/app-manager` application. Neither installer contains the suite, Git, a second Node runtime, or game assets. Electron is shared by the manager and all its installed apps. The build enforces a 150 MiB base artifact budget.
+Windows NSIS, Linux AppImage and macOS DMG package the same `packages/app-manager` application. The base download contains the manager and one Electron runtime. Apps, their libraries and game assets are separate downloads. The build enforces a 150 MiB base artifact budget.
 
 ```sh
 npm install --prefix packages/app-manager
@@ -9,7 +9,7 @@ node scripts/app-manager/build.cjs
 node scripts/app-manager/publish-catalog.cjs
 ```
 
-Run builds on the target platform so native npm dependencies match the platform. `build.cjs --linux` also requests AppImage packaging explicitly. `.github/workflows/app-manager.yml` builds the Windows EXE and Linux AppImage and publishes independent app archives and catalogs. It replaces the automatic monolithic Windows EXE release workflow. The old PowerShell suite setup and scripts/windows build scripts remain development/legacy tools.
+Run builds on the target platform so native npm dependencies match the platform and CPU. `build.cjs --linux` also requests AppImage packaging explicitly. `.github/workflows/app-manager.yml` builds the Windows EXE, Linux AppImage, and separate Intel and Apple Silicon macOS DMGs, together with independent app archives and catalogs for each OS/CPU. It replaces the automatic monolithic Windows EXE release workflow. The old PowerShell suite setup and scripts/windows build scripts remain development/legacy tools.
 
 `publish-catalog.cjs --apps notifications,point-of-sale` builds a limited catalog for distribution debugging. The default builds the catalog from the desktop app declarations, with explicit shared-library dependencies and per-game data archives. App dependency installation occurs on the build worker. End users do not need npm or Git to install apps. Features which invoke external tools still require those tools through Software Center or the operating system.
 
@@ -18,6 +18,10 @@ The version in `VERSION` and `packages/app-manager/package.json` must match. Cat
 The component manager downloads and verifies each archive, rejects links and traversal entries, extracts into staging, checks free space, and replaces directories using a recovery journal. Shortcuts and installed state participate in recovery. Cancellation happens between components or before committing the current download. Completed components are retained and reusable after cancellation. Shared components are reclaimed after the final dependent app is removed.
 
 Windows payloads live in `%LOCALAPPDATA%\RobOS\app-manager`; shortcuts live in the current user's `RobOS Apps` Start menu folder. NSIS removes both on uninstall, preserving them on upgrades. Linux uses `~/.local/share/robos/app-manager`, `~/.local/share/robos/RobOS.AppImage` and `~/.local/share/applications/robos-managed-*.desktop`. The manager's uninstall action removes these owned paths, retaining personal app settings. Deleting an AppImage directly cannot invoke an uninstall hook.
+
+macOS payloads live in `~/Library/Application Support/RobOS/app-manager`. Individual launchers are small `.app` bundles in `~/Applications/RobOS Apps`, sharing the manager's Electron runtime. Running the manager from a mounted DMG copies it to `~/Applications/RobOS.app` so these launchers continue to work after ejecting the DMG. The manager's uninstall action removes the managed apps and moves its own application bundle to Trash. Personal settings remain under `~/.config/robos`.
+
+Knowledge Graph Explorer is an app component (`knowledge-graph-explorer`) with source in `packages/robos-graph`. The graph library remains a separate shared component (`robos-graph`), so an app needing graph APIs does not install the Explorer UI.
 
 The packaged Windows smoke test exercises the real downloader, extraction, renderer, app launcher and Start menu integration against local fixture downloads:
 

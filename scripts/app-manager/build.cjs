@@ -30,6 +30,10 @@ function prepareApp(output) {
   return destination;
 }
 function configuration(output = path.join(repo, 'release/app-manager')) {
+  fs.mkdirSync(output, { recursive: true });
+  const png = fs.readFileSync(path.join(repo, 'packages/app-launcher/icon.png'));
+  const header = Buffer.alloc(16); header.write('icns', 0); header.writeUInt32BE(png.length + 16, 4); header.write('ic08', 8); header.writeUInt32BE(png.length + 8, 12);
+  const macIcon = path.join(output, 'app-manager.icns'); fs.writeFileSync(macIcon, Buffer.concat([header, png]));
   return { appId: 'com.rowbose.robos', productName: 'RobOS', electronVersion: '33.4.11',
     directories: { app: prepareApp(output), output }, npmRebuild: false, asar: true,
     files: ['main.js', 'preload.js', 'lib/**/*', 'renderer/**/*', 'icon.svg', 'package.json', '!**/test/**'],
@@ -40,6 +44,8 @@ function configuration(output = path.join(repo, 'release/app-manager')) {
     linux: { target: [{ target: 'AppImage', arch: ['x64'] }], category: 'Utility', executableName: 'robos-app-manager',
       icon: path.join(repo, 'packages/app-launcher/icon.png'), artifactName: 'RobOS-v${version}-Linux-x86_64.${ext}',
       desktop: { Name: 'RobOS App Manager', Comment: 'Choose, download, launch and remove RobOS apps', StartupWMClass: 'robos-app-manager' } },
+    mac: { target: [{ target: 'dmg', arch: [process.arch] }], category: 'public.app-category.utilities',
+      icon: macIcon, artifactName: 'RobOS-v${version}-macOS-${arch}.${ext}' },
   };
 }
 async function main() {
@@ -48,7 +54,7 @@ async function main() {
   const { build, Platform, Arch } = require(path.join(manager, 'node_modules/electron-builder'));
   await build({ config: configuration(), publish: 'never', ...(process.argv.includes('--linux') ? { targets: Platform.LINUX.createTarget(['AppImage'], Arch.x64) } : {}) });
   // Enforce a small, stable base; suite payloads must never return to the installer.
-  for (const file of fs.readdirSync(path.join(repo, 'release/app-manager')).filter(file => /\.(exe|AppImage)$/.test(file))) {
+  for (const file of fs.readdirSync(path.join(repo, 'release/app-manager')).filter(file => /\.(exe|AppImage|dmg)$/.test(file))) {
     if (fs.statSync(path.join(repo, 'release/app-manager', file)).size > 150 * 1024 ** 2) throw new Error(`Base installer exceeded 150 MiB budget: ${file}`);
   }
 }

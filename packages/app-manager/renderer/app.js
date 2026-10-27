@@ -54,7 +54,7 @@ function render() {
   $('update-count').textContent = (state.catalog?.components || []).filter(item => item.kind === 'app' && state.installed[item.id] && state.installed[item.id].sha256 !== item.sha256).length;
   $('app-total').textContent = `${apps.length} applications`;
   $('view-title').textContent = { all: 'All apps', installed: 'Installed apps', updates: 'Updates' }[view];
-  $('platform').textContent = `${state.platform === 'win32' ? 'Windows' : 'Linux'} · v${state.version || ''}`;
+  $('platform').textContent = `${{ win32: 'Windows', linux: 'Linux', darwin: 'macOS' }[state.platform] || ''} · v${state.version || ''}`;
   $('browse').classList.toggle('active', view === 'all'); $('installed').classList.toggle('active', view === 'installed'); $('updates').classList.toggle('active', view === 'updates');
   $('select-all').checked = apps.length > 0 && apps.every(item => selected.has(item.id));
   $('select-all').indeterminate = apps.some(item => selected.has(item.id)) && !$('select-all').checked;
