@@ -1288,15 +1288,18 @@ tizen run -p robostv001.RobOSTV
 
   if (platformId === 'roku-os') {
     let initialDash = null;
+    let initialVoiceDash = null;
     let initialSlideshow = null;
     try {
       const dashMod = require('./dashboard-engine');
       const dashEngine = dashMod.createDashboardEngine();
       initialDash = dashEngine.resolveDashboard('daily-engineering-ops').dashboard;
+      initialVoiceDash = dashEngine.resolveDashboard('robos-voice-dictation').dashboard;
       initialSlideshow = dashEngine.getSlideshowState();
     } catch {}
 
     const dashCards = initialDash?.cards || [];
+    const voiceDashCards = initialVoiceDash?.cards || [];
     const ghCard = dashCards.find(
       (c) => (c.componentTag || c.widgetTag) === 'robos-widget-github-repo'
     );
@@ -1312,9 +1315,13 @@ tizen run -p robostv001.RobOSTV
     const meetingCard = dashCards.find(
       (c) => (c.componentTag || c.widgetTag) === 'robos-widget-next-meeting'
     );
-    const voiceCard = dashCards.find(
-      (c) => (c.componentTag || c.widgetTag) === 'robos-widget-voice-dictation'
-    );
+    const voiceCard =
+      voiceDashCards.find(
+        (c) => (c.componentTag || c.widgetTag) === 'robos-widget-voice-dictation'
+      ) ||
+      dashCards.find(
+        (c) => (c.componentTag || c.widgetTag) === 'robos-widget-voice-dictation'
+      );
     const agentsCard = dashCards.find(
       (c) => (c.componentTag || c.widgetTag) === 'robos-widget-agent-sessions'
     );
@@ -1601,6 +1608,7 @@ tizen run -p robostv001.RobOSTV
     const voiceData = (voiceCard && voiceCard.liveData) || {
       active: false,
       pushToTalkKey: 'Super+V',
+      configuredDevice: 'default',
       interimBubble: null,
       bubbles: [],
     };
@@ -1610,17 +1618,18 @@ tizen run -p robostv001.RobOSTV
     }
     const rawVoiceBubbles = Array.isArray(voiceData.bubbles) ? voiceData.bubbles.slice().reverse() : [];
     for (const vb of rawVoiceBubbles) {
-      if (voiceDisplayList.length >= 3) break;
+      if (voiceDisplayList.length >= 6) break;
       voiceDisplayList.push({ ...vb, isInterim: false });
     }
     const voiceIsRec = Boolean(voiceData.active || voiceData.interimBubble);
-    const voiceHeaderStr = voiceIsRec
-      ? `ROBOS VOICE DICTATION [LISTENING LIVE] (${voiceData.pushToTalkKey || 'Super+V'})`
-      : `ROBOS VOICE DICTATION [STANDBY - ${(voiceData.bubbles || []).length} BUBBLES] (${voiceData.pushToTalkKey || 'Super+V'})`;
+    const voiceStatusTitleStr = voiceIsRec
+      ? `LISTENING LIVE - Recording Active (${voiceData.pushToTalkKey || 'Super+V'})`
+      : `STANDBY - ${(voiceData.bubbles || []).length} Recent Dictated Chats (${voiceData.pushToTalkKey || 'Super+V'})`;
+    const voiceStatusSubStr = `Microphone: ${voiceData.configuredDevice || 'default'}  |  Showing Most Recent Chats (Newest First)  |  Live HUD Sync :19188`;
 
-    const voiceRowsXml = Array.from({ length: 3 }, (_, i) => {
+    const voiceSlide2RowsXml = Array.from({ length: 6 }, (_, i) => {
       const vb = voiceDisplayList[i];
-      const by = 338 + i * 68;
+      const by = 248 + i * 102;
       const isVis = vb ? 'true' : 'false';
       const isInt = Boolean(vb && vb.isInterim);
       const stripeCol = isInt
@@ -1628,28 +1637,28 @@ tizen run -p robostv001.RobOSTV
         : vb && vb.commandCard
         ? '0x10B981FF'
         : '0xA855F7FF';
-      let tagSuffix = 'Voice HUD';
+      let tagSuffix = 'RobOS Voice Chat';
       if (isInt) {
-        tagSuffix = 'LISTENING...';
+        tagSuffix = 'LISTENING LIVE (Streaming Utterance...)';
       } else if (vb && vb.commandCard && vb.commandCard.title) {
-        tagSuffix = `Cmd: ${vb.commandCard.title} [${vb.commandCard.statusLabel || 'Done'}]`;
+        tagSuffix = `Matched Command: ${vb.commandCard.title} [${vb.commandCard.statusLabel || 'Done'}]`;
       } else if (vb && Array.isArray(vb.likelySkills) && vb.likelySkills[0]) {
         const sk = vb.likelySkills[0];
-        tagSuffix = `Skill: ${sk.title || sk.name}`;
+        tagSuffix = `Likely Skill: ${sk.title || sk.name} (${sk.category || 'Skill'})`;
       } else if (vb && vb.isAmbient) {
-        tagSuffix = `Ambient: ${vb.ambientReason || 'Audio'}`;
+        tagSuffix = `Ambient Audio: ${vb.ambientReason || 'Background sound'}`;
       }
-      const metaLine = vb ? `[${vb.time || 'Live'}]  ${tagSuffix}` : '';
-      const txtLine = vb ? `"${String(vb.text || vb.msg || '').slice(0, 56)}"` : '';
-      return `    <Rectangle id="voiceBubbleBg${i}" translation="[1298, ${by}]" width="540" height="62" color="0x090D16FF" visible="${isVis}" />
-    <Rectangle id="voiceBubbleStripe${i}" translation="[1298, ${by}]" width="5" height="62" color="${stripeCol}" visible="${isVis}" />
-    <Label id="voiceBubbleMeta${i}" translation="[1312, ${by + 6}]" scale="[0.50, 0.50]" width="980" height="26" numLines="1" color="${isInt ? '0xFCA5A5FF' : '0xD8B4FEFF'}" visible="${isVis}" text="${safeXml(metaLine)}" />
-    <Label id="voiceBubbleText${i}" translation="[1312, ${by + 30}]" scale="[0.58, 0.58]" width="880" height="30" numLines="1" color="0xF8FAFCFF" visible="${isVis}" text="${safeXml(txtLine)}" />`;
+      const metaLine = vb ? `${i + 1}. [${vb.time || 'Live'}]   ${tagSuffix}` : '';
+      const txtLine = vb ? `"${String(vb.text || vb.msg || '').slice(0, 165)}"` : '';
+      return `      <Rectangle id="s2VoiceBubbleBg${i}" translation="[68, ${by}]" width="1784" height="92" color="0x161F30FF" visible="${isVis}" />
+      <Rectangle id="s2VoiceBubbleStripe${i}" translation="[68, ${by}]" width="6" height="92" color="${stripeCol}" visible="${isVis}" />
+      <Label id="s2VoiceBubbleMeta${i}" translation="[88, ${by + 8}]" scale="[0.58, 0.58]" width="2600" height="30" numLines="1" color="${isInt ? '0xFCA5A5FF' : '0xD8B4FEFF'}" visible="${isVis}" text="${safeXml(metaLine)}" />
+      <Label id="s2VoiceBubbleText${i}" translation="[88, ${by + 36}]" scale="[0.70, 0.70]" width="2480" height="54" numLines="2" color="0xF8FAFCFF" visible="${isVis}" text="${safeXml(txtLine)}" />`;
     }).join('\n');
 
     const agentRowsXml = Array.from({ length: 3 }, (_, i) => {
       const s = sessions[i];
-      const y = 558 + i * 108;
+      const y = 316 + i * 190;
       const isVis = s && i < 3 ? 'true' : 'false';
       const sTitle = s ? s.name || s.title || s.id || 'In-Progress Session' : '';
       const sAct = s ? s.activity || s.cwd || '/home/ndipiazza/source/robos' : '';
@@ -1657,18 +1666,18 @@ tizen run -p robostv001.RobOSTV
       const titleText = s ? `* ${String(sTitle).slice(0, 46)}` : '';
       const metaText = s ? `IN PROGRESS [${sEl}] | ${String(sAct).slice(0, 42)}` : '';
       const rawLines = Array.isArray(s?.statusLines) ? s.statusLines : Array.isArray(s?.tailLines) ? s.tailLines : [];
-      const tails = rawLines.slice(-2);
+      const tails = rawLines.slice(-3);
       const tailLabels = Array.from({ length: 3 }, (__, tIdx) => {
-        const ty = y + 54 + tIdx * 22;
-        const tLine = tIdx < 2 && tails[tIdx] ? String(tails[tIdx]).replace(/[^\x20-\x7E]/g, '').trim().slice(0, 56) : '';
-        return `    <Label id="agentTail${i}_${tIdx}" translation="[1310, ${ty}]" scale="[0.50, 0.50]" width="980" height="26" numLines="1" color="0xA7F3D0FF" visible="${tIdx < 2 ? isVis : 'false'}" text="${safeXml(tLine)}" />`;
+        const ty = y + 72 + tIdx * 34;
+        const tLine = tails[tIdx] ? String(tails[tIdx]).replace(/[^\x20-\x7E]/g, '').trim().slice(0, 56) : '';
+        return `    <Label id="agentTail${i}_${tIdx}" translation="[1310, ${ty}]" scale="[0.54, 0.54]" width="980" height="28" numLines="1" color="0xA7F3D0FF" visible="${isVis}" text="${safeXml(tLine)}" />`;
       }).join('\n');
-      return `    <Rectangle id="agentCard${i}" translation="[1284, ${y}]" width="568" height="102" color="0x161F30FF" visible="${isVis}" />
+      return `    <Rectangle id="agentCard${i}" translation="[1284, ${y}]" width="568" height="176" color="0x161F30FF" visible="${isVis}" />
     <Rectangle id="agentStripe${i}" translation="[1284, ${y}]" width="568" height="3" color="0x10B981FF" visible="${isVis}" />
-    <Rectangle id="agentDot${i}" translation="[1300, ${y + 11}]" width="10" height="10" color="0x10B981FF" visible="${isVis}" />
-    <Label id="agentTitle${i}" translation="[1316, ${y + 6}]" scale="[0.58, 0.58]" width="840" height="30" numLines="1" color="0xF8FAFCFF" visible="${isVis}" text="${safeXml(titleText)}" />
-    <Label id="agentMeta${i}" translation="[1300, ${y + 28}]" scale="[0.50, 0.50]" width="980" height="26" numLines="1" color="0x6EE7B7FF" visible="${isVis}" text="${safeXml(metaText)}" />
-    <Rectangle id="agentTermBg${i}" translation="[1298, ${y + 50}]" width="540" height="46" color="0x090D16FF" visible="${isVis}" />
+    <Rectangle id="agentDot${i}" translation="[1300, ${y + 15}]" width="12" height="12" color="0x10B981FF" visible="${isVis}" />
+    <Label id="agentTitle${i}" translation="[1320, ${y + 10}]" scale="[0.64, 0.64]" width="840" height="34" numLines="1" color="0xF8FAFCFF" visible="${isVis}" text="${safeXml(titleText)}" />
+    <Label id="agentMeta${i}" translation="[1300, ${y + 38}]" scale="[0.52, 0.52]" width="980" height="28" numLines="1" color="0x6EE7B7FF" visible="${isVis}" text="${safeXml(metaText)}" />
+    <Rectangle id="agentTermBg${i}" translation="[1298, ${y + 66}]" width="540" height="102" color="0x090D16FF" visible="${isVis}" />
 ${tailLabels}`;
     }).join('\n');
 
@@ -1722,7 +1731,8 @@ end sub
     const ssInterval = Math.max(3, Number(initialSlideshow?.intervalSeconds) || 15);
     const ssRem = Math.max(1, Number(initialSlideshow?.secondsRemainingInSlide) || ssInterval);
     const ssSlideNum = Number(initialSlideshow?.slideNumber) || 1;
-    const ssTotal = Number(initialSlideshow?.totalSlides) || 2;
+    const ssTotal = Number(initialSlideshow?.totalSlides) || 3;
+    const initActiveDashId = initialSlideshow?.currentDashboardId || 'daily-engineering-ops';
     const ssBadgeText = ssEnabled
       ? `SLIDESHOW: ${ssSlideNum}/${ssTotal} (${ssInterval}s) - Next in ${ssRem}s`
       : `SINGLE DASHBOARD (Slideshow Off)`;
@@ -1745,7 +1755,7 @@ end sub
     <Label id="hostLabel" scale="[0.54, 0.54]" text="LIVE CAST | ${portalUrl}/dashboard" translation="[1460, 30]" width="760" height="34" numLines="1" horizAlign="right" color="0x67E8F9FF" />
 
     <!-- SLIDE 0: Daily Engineering & Calendar Ops (daily-engineering-ops) — CI Status removed from Slide 1 -->
-    <Group id="slideGroup0" visible="true">
+    <Group id="slideGroup0" visible="${initActiveDashId === 'daily-engineering-ops' ? 'true' : 'false'}">
     <!-- Column 1: GitHub Repo Activity (nddipiazza/robos) + Latest Release & 30-Day Commits -->
     <Rectangle id="colCommitsCard" translation="[48, 102]" width="584" height="784" color="0x111827FF" />
     <Rectangle translation="[48, 102]" width="584" height="4" color="0x00BCD4FF" />
@@ -1794,34 +1804,28 @@ ${eqBarsXml}
 
 ${calendarRowsXml}
 
-    <!-- Column 3: Countdown Until Next Meeting + RobOS Voice Dictation + Running RobOS Agent Sessions -->
+    <!-- Column 3: Countdown Until Next Meeting + Running RobOS Agent Sessions (Status Tailed Live) -->
     <Rectangle id="colAgentsCard" translation="[1264, 102]" width="608" height="784" color="0x111827FF" />
     <Rectangle translation="[1264, 102]" width="608" height="4" color="0xF59E0BFF" />
-    <Label id="colAgentsHeader" scale="[0.62, 0.62]" text="3. NEXT MEETING, ROBOS VOICE BUBBLES &amp; RUNNING AGENTS" translation="[1284, 118]" width="880" height="36" numLines="1" color="0xFCD34DFF" />
+    <Label id="colAgentsHeader" scale="[0.65, 0.65]" text="3. NEXT MEETING COUNTDOWN &amp; RUNNING AGENTS" translation="[1284, 118]" width="820" height="36" numLines="1" color="0xFCD34DFF" />
     <Rectangle translation="[1284, 152]" width="568" height="2" color="0x1E293BFF" />
 
     <!-- Countdown Until Next Meeting Widget Box -->
-    <Rectangle id="nextMeetingCardBg" translation="[1284, 160]" width="568" height="134" color="0x161F30FF" />
-    <Rectangle id="nextMeetingStripe" translation="[1284, 160]" width="6" height="134" color="0x10B981FF" />
-    <Label id="countdownWidgetTitle" translation="[1304, 166]" scale="[0.54, 0.54]" width="920" height="28" numLines="1" color="0x6EE7B7FF" text="COUNTDOWN UNTIL NEXT MEETING (LIVE 1Hz SECOND-BY-SECOND)" />
-    <Label id="countdownTimerLabel" translation="[1304, 190]" scale="[0.98, 0.98]" width="520" height="42" numLines="1" color="0xF8FAFCFF" text="${safeXml(meetingData.countdownLabel || 'T - 00:28:00')}" />
-    <Label id="nextMeetingTitleLabel" translation="[1304, 226]" scale="[0.56, 0.56]" width="900" height="28" numLines="1" color="0x67E8F9FF" text="${safeXml(nmTitleLine)}" />
-    <Label id="nextMeetingMetaLabel" translation="[1304, 248]" scale="[0.50, 0.50]" width="980" height="26" numLines="1" color="0x94A3B8FF" text="${safeXml(nmMetaLine)}" />
-    <Rectangle id="secBarTrack" translation="[1304, 272]" width="528" height="10" color="0x090D16FF" />
-    <Rectangle id="secBarFill" translation="[1304, 272]" width="${nmBarW}" height="10" color="0x10B981FF" />
-    <Rectangle id="secPulseDot" translation="[1820, 168]" width="14" height="14" color="0x10B981FF" />
-
-    <!-- RobOS Voice Dictation Live Dialogue Bubbles Widget Box -->
-    <Rectangle id="voiceCardBg" translation="[1284, 302]" width="568" height="246" color="0x161F30FF" />
-    <Rectangle id="voiceCardStripe" translation="[1284, 302]" width="6" height="246" color="${voiceIsRec ? '0xEF4444FF' : '0xA855F7FF'}" />
-    <Label id="voiceCardHeader" translation="[1304, 309]" scale="[0.54, 0.54]" width="960" height="28" numLines="1" color="${voiceIsRec ? '0xFCA5A5FF' : '0xD8B4FEFF'}" text="${safeXml(voiceHeaderStr)}" />
-${voiceRowsXml}
+    <Rectangle id="nextMeetingCardBg" translation="[1284, 160]" width="568" height="144" color="0x161F30FF" />
+    <Rectangle id="nextMeetingStripe" translation="[1284, 160]" width="6" height="144" color="0x10B981FF" />
+    <Label id="countdownWidgetTitle" translation="[1304, 168]" scale="[0.55, 0.55]" width="920" height="28" numLines="1" color="0x6EE7B7FF" text="COUNTDOWN UNTIL NEXT MEETING (LIVE 1Hz SECOND-BY-SECOND)" />
+    <Label id="countdownTimerLabel" translation="[1304, 194]" scale="[1.04, 1.04]" width="520" height="44" numLines="1" color="0xF8FAFCFF" text="${safeXml(meetingData.countdownLabel || 'T - 00:28:00')}" />
+    <Label id="nextMeetingTitleLabel" translation="[1304, 234]" scale="[0.58, 0.58]" width="900" height="28" numLines="1" color="0x67E8F9FF" text="${safeXml(nmTitleLine)}" />
+    <Label id="nextMeetingMetaLabel" translation="[1304, 258]" scale="[0.50, 0.50]" width="980" height="26" numLines="1" color="0x94A3B8FF" text="${safeXml(nmMetaLine)}" />
+    <Rectangle id="secBarTrack" translation="[1304, 282]" width="528" height="10" color="0x090D16FF" />
+    <Rectangle id="secBarFill" translation="[1304, 282]" width="${nmBarW}" height="10" color="0x10B981FF" />
+    <Rectangle id="secPulseDot" translation="[1820, 170]" width="14" height="14" color="0x10B981FF" />
 
 ${agentRowsXml}
     </Group>
 
-    <!-- SLIDE 1 (SLIDE 2 OF 2): GitHub CI Status & App Popularity (github-ci-popularity) -->
-    <Group id="slideGroup1" visible="false">
+    <!-- SLIDE 1 (SLIDE 2 OF 3): GitHub CI Status & App Popularity (github-ci-popularity) -->
+    <Group id="slideGroup1" visible="${initActiveDashId === 'github-ci-popularity' ? 'true' : 'false'}">
       <!-- Column 1: CI Status in main & Release Pipeline -->
       <Rectangle translation="[48, 102]" width="584" height="784" color="0x111827FF" />
       <Rectangle translation="[48, 102]" width="584" height="4" color="0x00BCD4FF" />
@@ -1922,11 +1926,26 @@ ${cloneBarsXml}
       <Label translation="[1304, 814]" scale="[0.52, 0.52]" width="960" height="28" numLines="1" color="0xCBD5E1FF" text="Top Paths: /nddipiazza/robos | /releases/tag/v0.0.8 | /packages/getemgigs" />
     </Group>
 
+    <!-- SLIDE 2 (SLIDE 3 OF 3): RobOS Voice Dictation — Most Recent Chats (robos-voice-dictation) -->
+    <Group id="slideGroup2" visible="${initActiveDashId === 'robos-voice-dictation' ? 'true' : 'false'}">
+      <Rectangle translation="[48, 102]" width="1824" height="784" color="0x111827FF" />
+      <Rectangle translation="[48, 102]" width="1824" height="4" color="0xA855F7FF" />
+      <Label scale="[0.72, 0.72]" text="ROBOS VOICE DICTATION - MOST RECENT CHATS (LIVE SPEECH-TO-TEXT DIALOGUE STREAM)" translation="[68, 118]" width="2300" height="38" numLines="1" color="0xD8B4FEFF" />
+      <Rectangle translation="[68, 152]" width="1784" height="2" color="0x1E293BFF" />
+
+      <Rectangle id="s2VoiceStatusBg" translation="[68, 164]" width="1784" height="72" color="0x090D16FF" />
+      <Rectangle id="s2VoiceStatusStripe" translation="[68, 164]" width="8" height="72" color="${voiceIsRec ? '0xEF4444FF' : '0x10B981FF'}" />
+      <Label id="s2VoiceStatusTitle" translation="[92, 174]" scale="[0.68, 0.68]" width="2400" height="34" numLines="1" color="${voiceIsRec ? '0xFCA5A5FF' : '0x6EE7B7FF'}" text="${safeXml(voiceStatusTitleStr)}" />
+      <Label id="s2VoiceStatusSub" translation="[92, 204]" scale="[0.54, 0.54]" width="2800" height="28" numLines="1" color="0x94A3B8FF" text="${safeXml(voiceStatusSubStr)}" />
+
+${voiceSlide2RowsXml}
+    </Group>
+
     <!-- Bottom Status & Compact Tile Selector -->
     <Rectangle id="heroCard" translation="[48, 902]" width="1824" height="132" color="0x111827FF" />
     <Rectangle translation="[48, 902]" width="1824" height="2" color="0x1E293BFF" />
     <Label id="heroTitle" scale="[0.75, 0.75]" text="RobOS Live TV Wallboard Active - D-Pad Up/Down/OK switches TV experience" translation="[72, 916]" width="1460" height="36" numLines="1" color="0xF8FAFCFF" />
-    <Label id="heroDesc" scale="[0.62, 0.62]" text="Slide 1: Engineering, Music, Calendars &amp; Agents | Slide 2: CI Status, Stars/Forks &amp; Popularity" translation="[72, 954]" width="1760" height="34" numLines="1" color="0x94A3B8FF" />
+    <Label id="heroDesc" scale="[0.62, 0.62]" text="Slide 1: Engineering, Music, Calendars &amp; Agents | Slide 2: CI Status &amp; Popularity | Slide 3: RobOS Voice Recent Chats" translation="[72, 954]" width="1760" height="34" numLines="1" color="0x94A3B8FF" />
     <Label id="statusFooter" scale="[0.62, 0.62]" text="Connected to ${portalUrl}/dashboard | Multi-Dashboard Slideshow + 1Hz Live Clock" translation="[72, 988]" width="1760" height="34" numLines="1" color="0x67E8F9FF" />
     <LabelList
       id="tileList"
@@ -1968,6 +1987,7 @@ sub init()
     m.slideProgressFill = m.top.findNode("slideProgressFill")
     m.slideGroup0 = m.top.findNode("slideGroup0")
     m.slideGroup1 = m.top.findNode("slideGroup1")
+    m.slideGroup2 = m.top.findNode("slideGroup2")
     m.countdownTimerLabel = m.top.findNode("countdownTimerLabel")
     m.nextMeetingTitleLabel = m.top.findNode("nextMeetingTitleLabel")
     m.nextMeetingMetaLabel = m.top.findNode("nextMeetingMetaLabel")
@@ -1983,7 +2003,7 @@ sub init()
     m.slideRemSec = ${ssRem}
     m.slideNumber = ${ssSlideNum}
     m.slideTotal = ${ssTotal}
-    m.activeDashId = "daily-engineering-ops"
+    m.activeDashId = "${safeXml(initActiveDashId)}"
     m.musicPlaying = ${musicPlaying ? 'true' : 'false'}
     m.agentActive = [${sessions[0] ? 'true' : 'false'}, ${sessions[1] ? 'true' : 'false'}, ${sessions[2] ? 'true' : 'false'}]
     m.agentElapsed = [${Number(sessions[0]?.elapsedSec) || 5}, ${Number(sessions[1]?.elapsedSec) || 5}, ${Number(sessions[2]?.elapsedSec) || 5}]
@@ -1995,14 +2015,14 @@ sub init()
     m.clockTimer.control = "start"
 
     m.tiles = [
-        { id: "portal-home", title: "1. Daily Engineering & Agent Ops Dashboard", desc: "Slide 1: GitHub Releases & Commits + Music + Dual Calendars + Tailed Agents." },
+        { id: "daily-engineering-ops", title: "1. Daily Engineering & Agent Ops Dashboard", desc: "Slide 1: GitHub Releases & Commits + Music + Dual Calendars + Tailed Agents." },
         { id: "github-ci-popularity", title: "2. GitHub CI Status & App Popularity", desc: "Slide 2: CI Status in main + Stars & Forks + 14-Day Clones & Release Downloads." },
-        { id: "crpg-realm", title: "3. Realm of Heroes cRPG [Godot 4]", desc: "Party-based tactical isometric D&D 5e cRPG in Godot 4." },
-        { id: "quest-warrior-dragon", title: "4. Quest: Warrior Dragon [2D JRPG]", desc: "Clean-room NES-authentic 2D JRPG in Godot 4." },
-        { id: "tabletop-rpg", title: "5. RobOS Tabletop RPG [Dungeon Board]", desc: "HeroQuest-inspired 26x19 tactical dungeon crawler." },
-        { id: "audio-jukebox", title: "6. Audio Player & Virtual DJ [100k Songs]", desc: "100,000-song library with synchronized TV lyrics and Virtual DJ." },
-        { id: "home-intercom", title: "7. Home Speaker Intercom [Multi-Room]", desc: "Broadcast voice notes and Kokoro neural TTS announcements." },
-        { id: "pr-review-theater", title: "8. PR Review Theater [1080p Cinema]", desc: "Watch narrated 1080p agent proof-of-work walkthroughs." }
+        { id: "robos-voice-dictation", title: "3. RobOS Voice Dictation - Most Recent Chats", desc: "Slide 3: Live RobOS Voice dictation dialogue bubbles, commands, and skill badges." },
+        { id: "crpg-realm", title: "4. Realm of Heroes cRPG [Godot 4]", desc: "Party-based tactical isometric D&D 5e cRPG in Godot 4." },
+        { id: "quest-warrior-dragon", title: "5. Quest: Warrior Dragon [2D JRPG]", desc: "Clean-room NES-authentic 2D JRPG in Godot 4." },
+        { id: "tabletop-rpg", title: "6. RobOS Tabletop RPG [Dungeon Board]", desc: "HeroQuest-inspired 26x19 tactical dungeon crawler." },
+        { id: "audio-jukebox", title: "7. Audio Player & Virtual DJ [100k Songs]", desc: "100,000-song library with synchronized TV lyrics and Virtual DJ." },
+        { id: "home-intercom", title: "8. Home Speaker Intercom [Multi-Room]", desc: "Broadcast voice notes and Kokoro neural TTS announcements." }
     ]
 
     content = CreateObject("roSGNode", "ContentNode")
@@ -2031,7 +2051,8 @@ sub applySlideVisibility(dashId as String)
     m.activeDashId = dashId
     if m.slideGroup0 <> invalid then m.slideGroup0.visible = (dashId = "daily-engineering-ops")
     if m.slideGroup1 <> invalid then m.slideGroup1.visible = (dashId = "github-ci-popularity")
-    if dashId <> "daily-engineering-ops" and dashId <> "github-ci-popularity"
+    if m.slideGroup2 <> invalid then m.slideGroup2.visible = (dashId = "robos-voice-dictation")
+    if dashId <> "daily-engineering-ops" and dashId <> "github-ci-popularity" and dashId <> "robos-voice-dictation"
         if m.slideGroup0 <> invalid then m.slideGroup0.visible = true
     end if
 end sub
@@ -2082,6 +2103,10 @@ sub onClockTick()
                 m.slideNumber = 2
                 applySlideVisibility("github-ci-popularity")
                 if m.brandLabel <> invalid then m.brandLabel.text = "[2/" + m.slideTotal.ToStr() + "] GitHub CI Status & App Popularity"
+            else if m.activeDashId = "github-ci-popularity"
+                m.slideNumber = 3
+                applySlideVisibility("robos-voice-dictation")
+                if m.brandLabel <> invalid then m.brandLabel.text = "[3/" + m.slideTotal.ToStr() + "] RobOS Voice Dictation - Most Recent Chats"
             else
                 m.slideNumber = 1
                 applySlideVisibility("daily-engineering-ops")
@@ -2493,40 +2518,46 @@ sub onPayloadUpdated()
             end for
         else if cTag = "robos-widget-voice-dictation" and card.liveData <> invalid
             vd = card.liveData
-            vHead = m.top.findNode("voiceCardHeader")
-            vStripe = m.top.findNode("voiceCardStripe")
+            s2Title = m.top.findNode("s2VoiceStatusTitle")
+            s2Sub = m.top.findNode("s2VoiceStatusSub")
+            s2Stripe = m.top.findNode("s2VoiceStatusStripe")
             isVRec = (vd.active = true or vd.interimBubble <> invalid)
             pttKey = cleanAscii(vd.pushToTalkKey)
             if pttKey = "" then pttKey = "Super+V"
+            micDev = cleanAscii(vd.configuredDevice)
+            if micDev = "" then micDev = "default"
             vList = []
             if vd.interimBubble <> invalid and (vd.interimBubble.text <> invalid or vd.interimBubble.msg <> invalid)
                 vList.Push({ item: vd.interimBubble, isInterim: true })
             end if
             if vd.bubbles <> invalid and vd.bubbles.Count() > 0
                 for bIdx = vd.bubbles.Count() - 1 to 0 step -1
-                    if vList.Count() >= 3 then exit for
+                    if vList.Count() >= 6 then exit for
                     vList.Push({ item: vd.bubbles[bIdx], isInterim: false })
                 end for
             end if
             bTotal = 0
             if vd.bubbles <> invalid then bTotal = vd.bubbles.Count()
-            if vHead <> invalid
+            if s2Title <> invalid
                 if isVRec = true
-                    vHead.text = "ROBOS VOICE DICTATION [LISTENING LIVE] (" + pttKey + ")"
-                    vHead.color = "0xFCA5A5FF"
+                    s2Title.text = "LISTENING LIVE - Recording Active (" + pttKey + ")  |  " + bTotal.ToStr() + " Recent Dictated Chats"
+                    s2Title.color = "0xFCA5A5FF"
                 else
-                    vHead.text = "ROBOS VOICE DICTATION [STANDBY - " + bTotal.ToStr() + " BUBBLES] (" + pttKey + ")"
-                    vHead.color = "0xD8B4FEFF"
+                    s2Title.text = "STANDBY - " + bTotal.ToStr() + " Recent Dictated Chats (" + pttKey + ")"
+                    s2Title.color = "0x6EE7B7FF"
                 end if
             end if
-            if vStripe <> invalid
-                if isVRec = true then vStripe.color = "0xEF4444FF" else vStripe.color = "0xA855F7FF"
+            if s2Sub <> invalid
+                s2Sub.text = "Microphone: " + micDev + "  |  Showing Most Recent Chats (Newest First)  |  Live HUD Sync :19188"
             end if
-            for i = 0 to 2
-                vBg = m.top.findNode("voiceBubbleBg" + i.ToStr())
-                vSt = m.top.findNode("voiceBubbleStripe" + i.ToStr())
-                vMt = m.top.findNode("voiceBubbleMeta" + i.ToStr())
-                vTx = m.top.findNode("voiceBubbleText" + i.ToStr())
+            if s2Stripe <> invalid
+                if isVRec = true then s2Stripe.color = "0xEF4444FF" else s2Stripe.color = "0x10B981FF"
+            end if
+            for i = 0 to 5
+                vBg = m.top.findNode("s2VoiceBubbleBg" + i.ToStr())
+                vSt = m.top.findNode("s2VoiceBubbleStripe" + i.ToStr())
+                vMt = m.top.findNode("s2VoiceBubbleMeta" + i.ToStr())
+                vTx = m.top.findNode("s2VoiceBubbleText" + i.ToStr())
                 if i < vList.Count()
                     entry = vList[i]
                     vb = entry.item
@@ -2542,27 +2573,27 @@ sub onPayloadUpdated()
                             vSt.color = "0xA855F7FF"
                         end if
                     end if
-                    suffix = "Voice HUD"
+                    suffix = "RobOS Voice Chat"
                     if isInt = true
-                        suffix = "LISTENING..."
+                        suffix = "LISTENING LIVE (Streaming Utterance...)"
                     else if vb.commandCard <> invalid and vb.commandCard.title <> invalid
-                        suffix = "Cmd: " + cleanAscii(vb.commandCard.title)
+                        suffix = "Matched Command: " + cleanAscii(vb.commandCard.title)
                     else if vb.likelySkills <> invalid and vb.likelySkills.Count() > 0
                         sk0 = vb.likelySkills[0]
-                        if sk0.title <> invalid then suffix = "Skill: " + cleanAscii(sk0.title)
+                        if sk0.title <> invalid then suffix = "Likely Skill: " + cleanAscii(sk0.title)
                     else if vb.isAmbient = true
                         suffix = "Ambient Audio"
                     end if
                     if vMt <> invalid
                         vMt.visible = true
                         if isInt = true then vMt.color = "0xFCA5A5FF" else vMt.color = "0xD8B4FEFF"
-                        vMt.text = "[" + cleanAscii(vb.time) + "]  " + Left(suffix, 42)
+                        vMt.text = (i + 1).ToStr() + ". [" + cleanAscii(vb.time) + "]   " + Left(suffix, 72)
                     end if
                     if vTx <> invalid
                         vTx.visible = true
                         rawMsg = vb.text
                         if rawMsg = invalid then rawMsg = vb.msg
-                        vTx.text = Chr(34) + Left(cleanAscii(rawMsg), 56) + Chr(34)
+                        vTx.text = Chr(34) + Left(cleanAscii(rawMsg), 165) + Chr(34)
                     end if
                 else
                     if vBg <> invalid then vBg.visible = false
@@ -2658,6 +2689,14 @@ sub onItemSelected()
     idx = m.tileList.itemSelected
     if idx >= 0 and idx < m.tiles.Count()
         t = m.tiles[idx]
+        if t.id = "daily-engineering-ops" or t.id = "github-ci-popularity" or t.id = "robos-voice-dictation"
+            m.slideRemSec = m.slideIntervalSec
+            if t.id = "daily-engineering-ops" then m.slideNumber = 1
+            if t.id = "github-ci-popularity" then m.slideNumber = 2
+            if t.id = "robos-voice-dictation" then m.slideNumber = 3
+            applySlideVisibility(t.id)
+            updateSlideshowHud()
+        end if
         m.statusFooter.text = "Launched on RobOS Host (${portalUrl}): " + t.title
     end if
 end sub
@@ -3209,15 +3248,15 @@ function createTvEngine({
             ? 'slideshow'
             : state.activeDashboardCast?.dashboardId || 'daily-engineering-ops';
           const resolved = dashEngine.resolveDashboard(targetDashId);
-          let allSlideCards = resolved.dashboard?.cards || [];
+          let allSlideCards = [...(resolved.dashboard?.cards || [])];
           try {
-            const otherId =
-              resolved.dashboard?.id === 'daily-engineering-ops'
-                ? 'github-ci-popularity'
-                : 'daily-engineering-ops';
-            const otherResolved = dashEngine.resolveDashboard(otherId);
-            if (otherResolved?.dashboard?.cards) {
-              allSlideCards = [...allSlideCards, ...otherResolved.dashboard.cards];
+            const slideIds = ['daily-engineering-ops', 'github-ci-popularity', 'robos-voice-dictation'];
+            for (const sId of slideIds) {
+              if (sId === resolved.dashboard?.id) continue;
+              const otherResolved = dashEngine.resolveDashboard(sId);
+              if (otherResolved?.dashboard?.cards) {
+                allSlideCards.push(...otherResolved.dashboard.cards);
+              }
             }
           } catch {}
 

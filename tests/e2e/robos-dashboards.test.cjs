@@ -55,16 +55,22 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
     assert.equal(ov.ok, true);
     assert.equal(ov.dashboard.id, 'daily-engineering-ops');
     assert.equal(ov.dashboard.layout.id, 'mission-control-3col');
-    assert.equal(ov.dashboard.cards.length, 7);
+    assert.equal(ov.dashboard.cards.length, 6);
     assert.equal(DASHBOARD_LAYOUTS.length, 6);
     assert.equal(DASHBOARD_WIDGET_CATALOG.length, 13);
     assert.ok(DASHBOARD_WIDGET_CATALOG.some((w) => w.type === 'live-clock'));
     assert.ok(DASHBOARD_WIDGET_CATALOG.some((w) => w.type === 'voice-dictation'));
     assert.ok(!ov.dashboard.cards.some((c) => c.widgetType === 'live-clock'));
+    assert.ok(!ov.dashboard.cards.some((c) => c.widgetType === 'voice-dictation'));
 
-    // RobOS Voice Dictation card (Live Dialogue Bubbles)
-    const voiceCard = ov.dashboard.cards.find((c) => c.widgetType === 'voice-dictation');
-    assert.ok(voiceCard);
+    // Dedicated 3rd Page: RobOS Voice Dictation — Most Recent Chats (single-focus layout with only voice-dictation card)
+    const voiceOv = engine.getOverview('robos-voice-dictation');
+    assert.equal(voiceOv.ok, true);
+    assert.equal(voiceOv.dashboard.id, 'robos-voice-dictation');
+    assert.equal(voiceOv.dashboard.layout.id, 'single-focus');
+    assert.equal(voiceOv.dashboard.cards.length, 1);
+    const voiceCard = voiceOv.dashboard.cards[0];
+    assert.equal(voiceCard.widgetType, 'voice-dictation');
     assert.equal(voiceCard.componentTag, 'robos-widget-voice-dictation');
     assert.ok(Array.isArray(voiceCard.liveData.bubbles));
     assert.ok(voiceCard.liveData.bubbles.length >= 3);
@@ -160,11 +166,13 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
       )
     );
 
-    // Dynamically stream an interim RobOS Voice dictation bubble and then finalize it
+    // Dynamically stream an interim RobOS Voice dictation bubble and then finalize it on Page 3 (robos-voice-dictation)
+    engine.setActiveDashboard('robos-voice-dictation');
     const interimRes = engine.recordVoiceDictationBubble({
       text: 'Open the Knowledge Graph Explorer',
       isFinal: false,
     });
+    assert.equal(interimRes.dashboard.id, 'robos-voice-dictation');
     const voiceCardInterim = interimRes.dashboard.cards.find((c) => c.widgetType === 'voice-dictation');
     assert.equal(voiceCardInterim.liveData.active, true);
     assert.ok(voiceCardInterim.liveData.interimBubble);
@@ -187,13 +195,16 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
       )
     );
 
-    // Embeddable <robos-dashboard> HTML rendering
-    const html = RobOSDashboardUI.renderDashboardHtml(finalRes.dashboard, { editable: true });
+    const voiceHtml = RobOSDashboardUI.renderDashboardHtml(finalRes.dashboard, { editable: true });
+    assert.ok(voiceHtml.includes('robos-widget-voice-dictation'));
+    assert.ok(voiceHtml.includes('Open the Knowledge Graph Explorer and run SHACL validation'));
+
+    // Embeddable <robos-dashboard> HTML rendering for Slide 1
+    const slide1Resolved = engine.resolveDashboard('daily-engineering-ops');
+    const html = RobOSDashboardUI.renderDashboardHtml(slide1Resolved.dashboard, { editable: true });
     assert.ok(html.includes('robos-embed-dashboard'));
     assert.ok(html.includes('robos-widget-git-commits'));
     assert.ok(html.includes('robos-widget-calendar-today'));
-    assert.ok(html.includes('robos-widget-voice-dictation'));
-    assert.ok(html.includes('Open the Knowledge Graph Explorer and run SHACL validation'));
     assert.ok(html.includes('robos-widget-agent-sessions'));
     assert.ok(html.includes('Smart TV Dashboard Demo with Team'));
   });
@@ -230,7 +241,7 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
       assert.equal(apiJson.ok, true);
       assert.equal(apiJson.cast.active, true);
       assert.equal(apiJson.dashboard.id, 'daily-engineering-ops');
-      assert.equal(apiJson.dashboard.cards.length, 7);
+      assert.equal(apiJson.dashboard.cards.length, 6);
 
       // Verify 10-Foot Portal Home (/) shows the live dashboard cast banner
       const homeRes = await httpGet(`http://127.0.0.1:${srv.port}/`);
@@ -238,9 +249,9 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
       assert.ok(homeRes.body.includes('LIVE ROBOS DASHBOARD ON TV'));
       assert.ok(homeRes.body.includes('/dashboard'));
 
-      // 5. Verify Multi-Dashboard Slideshow auto-cycling across configurable seconds (Slide 1 + Slide 2)
+      // 5. Verify Multi-Dashboard Slideshow auto-cycling across configurable seconds (Slide 1 + Slide 2 + Slide 3)
       const dashEngine = createDashboardEngine({ configDir: tmpDir });
-      const slideIds = ['daily-engineering-ops', 'github-ci-popularity'];
+      const slideIds = ['daily-engineering-ops', 'github-ci-popularity', 'robos-voice-dictation'];
       const cfg1 = dashEngine.configureSlideshow({
         enabled: true,
         intervalSeconds: 10,
@@ -250,7 +261,7 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
       assert.equal(cfg1.ok, true);
       assert.equal(cfg1.slideshow.enabled, true);
       assert.equal(cfg1.slideshow.intervalSeconds, 10);
-      assert.equal(cfg1.slideshow.totalSlides, 2);
+      assert.equal(cfg1.slideshow.totalSlides, 3);
       assert.equal(cfg1.slideshow.slideNumber, 1);
       assert.equal(cfg1.dashboard.id, 'daily-engineering-ops');
       const slide1GhCard = cfg1.dashboard.cards.find(c => c.id === 'github-repo-activity');
@@ -283,7 +294,15 @@ test('RobOS Dashboards App, Embeddable <robos-dashboard> Component, KGraph Layou
       assert.equal(slideApiJson.slideshow.slideNumber, 2);
       assert.equal(slideApiJson.dashboard.id, 'github-ci-popularity');
 
-      // Step manually to next slide -> wraps back to slide 1 (daily-engineering-ops)
+      // Step manually to next slide -> advances to slide 3 (robos-voice-dictation)
+      const stepRes3 = dashEngine.stepSlideshow({ direction: 1 });
+      assert.equal(stepRes3.ok, true);
+      assert.equal(stepRes3.slideshow.slideNumber, 3);
+      assert.equal(stepRes3.dashboard.id, 'robos-voice-dictation');
+      assert.equal(stepRes3.dashboard.cards.length, 1);
+      assert.equal(stepRes3.dashboard.cards[0].widgetType, 'voice-dictation');
+
+      // Step manually again -> wraps back to slide 1 (daily-engineering-ops)
       const stepRes = dashEngine.stepSlideshow({ direction: 1 });
       assert.equal(stepRes.ok, true);
       assert.equal(stepRes.slideshow.slideNumber, 1);

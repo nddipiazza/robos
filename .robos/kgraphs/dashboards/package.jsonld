@@ -288,29 +288,44 @@
         { "@id": "urn:robos:dashboard-card:music-now-playing" },
         { "@id": "urn:robos:dashboard-card:today-calendar-events" },
         { "@id": "urn:robos:dashboard-card:next-meeting-countdown" },
-        { "@id": "urn:robos:dashboard-card:voice-dictation-bubbles" },
         { "@id": "urn:robos:dashboard-card:latest-10-commits" },
         { "@id": "urn:robos:dashboard-card:running-agent-sessions" }
       ]
     },
     {
+      "@id": "urn:robos:dashboard:robos-voice-dictation",
+      "@type": "robos:Dashboard",
+      "dcterms:title": "RobOS Voice Dictation — Most Recent Chats",
+      "robos:dashboardId": "robos-voice-dictation",
+      "robos:description": "Dedicated 3rd dashboard page displaying the most recent RobOS Voice dictation chat bubbles, live interim speech stream, timestamps, matched voice commands, and likely AI skills.",
+      "robos:layout": {
+        "@id": "urn:robos:dashboard-layout:single-focus"
+      },
+      "robos:tvCompatible": true,
+      "robos:package": "dashboards",
+      "robos:cards": [
+        { "@id": "urn:robos:dashboard-card:voice-dictation-bubbles" }
+      ]
+    },
+    {
       "@id": "urn:robos:dashboard-card:voice-dictation-bubbles",
       "@type": "robos:DashboardCard",
-      "dcterms:title": "RobOS Voice Dictation (Live Dialogue Bubbles)",
+      "dcterms:title": "RobOS Voice Dictation — Most Recent Chats",
       "robos:cardId": "voice-dictation-bubbles",
       "robos:dashboard": {
-        "@id": "urn:robos:dashboard:daily-engineering-ops"
+        "@id": "urn:robos:dashboard:robos-voice-dictation"
       },
       "robos:widget": {
         "@id": "urn:robos:dashboard-widget:voice-dictation"
       },
-      "robos:slotId": "col-3",
+      "robos:slotId": "canvas-main",
       "robos:componentTag": "robos-widget-voice-dictation",
       "robos:package": "dashboards",
       "robos:widgetConfig": {
-        "limit": 6,
+        "limit": 10,
         "showInterimBubble": true,
-        "showSkillBadges": true
+        "showSkillBadges": true,
+        "fullPage": true
       }
     },
     {
