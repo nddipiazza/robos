@@ -235,6 +235,14 @@ ipcMain.handle('dashboards:appendAgentStatusLine', async (_e, payload) => {
   return dashEngine.appendAgentStatusLine(payload);
 });
 
+ipcMain.handle('dashboards:recordVoiceBubble', async (_e, payload) => {
+  return dashEngine.recordVoiceDictationBubble(payload);
+});
+
+ipcMain.handle('dashboards:clearVoiceBubbles', async () => {
+  return dashEngine.clearVoiceDictationBubbles();
+});
+
 ipcMain.handle('dashboards:getKGraphNodes', async (_e, dashboardId) => {
   return {
     ok: true,

@@ -256,6 +256,20 @@ const DASHBOARD_WIDGET_CATALOG = [
     },
   },
   {
+    type: 'voice-dictation',
+    kgraphId: 'urn:robos:dashboard-widget:voice-dictation',
+    title: 'RobOS Voice Dictation (Live Dialogue Bubbles)',
+    componentTag: 'robos-widget-voice-dictation',
+    category: 'AI & Voice',
+    icon: '🎙️',
+    description: 'Displays live, dynamically updated speech-to-text dialogue bubbles from RobOS Voice with interim listening stream, timestamps, matched voice commands, likely AI skills, and ambient audio classification.',
+    defaultConfig: {
+      limit: 6,
+      showInterimBubble: true,
+      showSkillBadges: true,
+    },
+  },
+  {
     type: 'robos-component',
     kgraphId: 'urn:robos:dashboard-widget:robos-component',
     title: 'Any RobOS Custom Component Widget',
@@ -332,6 +346,19 @@ const DEFAULT_DASHBOARDS = [
         config: {
           showCanvasGauge: true,
           includeAllCalendars: true,
+        },
+      },
+      {
+        id: 'voice-dictation-bubbles',
+        kgraphId: 'urn:robos:dashboard-card:voice-dictation-bubbles',
+        title: 'RobOS Voice Dictation (Live Dialogue Bubbles)',
+        widgetType: 'voice-dictation',
+        componentTag: 'robos-widget-voice-dictation',
+        slotId: 'col-3',
+        config: {
+          limit: 6,
+          showInterimBubble: true,
+          showSkillBadges: true,
         },
       },
       {
@@ -2088,6 +2115,253 @@ function collectNextMeetingCountdown({ configDir, date } = {}) {
   };
 }
 
+let _voiceIntentResolver = null;
+function getVoiceIntentResolver() {
+  if (_voiceIntentResolver) return _voiceIntentResolver;
+  try {
+    const mod = require('../voice-prompt/lib/skill-intent-resolver');
+    _voiceIntentResolver = mod.defaultIntentResolver || new mod.SkillIntentResolver();
+  } catch {}
+  return _voiceIntentResolver;
+}
+
+function normalizeVoiceText(str) {
+  return String(str || '')
+    .toLowerCase()
+    .replace(/[^\w\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function mergeVoiceTexts(prevText, newText) {
+  const normPrev = normalizeVoiceText(prevText);
+  const normNew = normalizeVoiceText(newText);
+  if (!normNew) return { action: 'ignore' };
+  if (!normPrev) return { action: 'append' };
+  if (normPrev === normNew || normPrev.includes(normNew)) return { action: 'ignore' };
+  if (normNew.startsWith(normPrev)) return { action: 'replace', text: newText };
+  const wordsPrev = String(prevText).trim().split(/\s+/);
+  const wordsNew = String(newText).trim().split(/\s+/);
+  const normWordsPrev = wordsPrev.map((w) => normalizeVoiceText(w));
+  const normWordsNew = wordsNew.map((w) => normalizeVoiceText(w));
+  const maxCheck = Math.min(normWordsPrev.length, normWordsNew.length, 12);
+  for (let k = maxCheck; k >= 2; k--) {
+    if (normWordsPrev.slice(-k).join(' ') === normWordsNew.slice(0, k).join(' ')) {
+      const rem = wordsNew.slice(k);
+      if (rem.length === 0) return { action: 'ignore' };
+      return { action: 'replace', text: `${wordsPrev.join(' ')} ${rem.join(' ')}` };
+    }
+  }
+  return { action: 'append' };
+}
+
+function formatVoiceBubbleTime(isoOrDate) {
+  try {
+    const d = typeof isoOrDate === 'string' ? new Date(isoOrDate) : isoOrDate || new Date();
+    if (Number.isNaN(d.getTime())) {
+      return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  } catch {
+    return '12:00:00 PM';
+  }
+}
+
+function enrichVoiceBubble(rawBubble) {
+  const text = String(rawBubble?.text || rawBubble?.msg || '').trim();
+  let likelySkills = Array.isArray(rawBubble?.likelySkills) ? rawBubble.likelySkills : [];
+  let isAmbient = Boolean(rawBubble?.isAmbient);
+  let ambientReason = rawBubble?.ambientReason || null;
+  if (text && likelySkills.length === 0 && rawBubble?.isAmbient === undefined) {
+    const resolver = getVoiceIntentResolver();
+    if (resolver && typeof resolver.resolveLikelySkills === 'function') {
+      try {
+        const analysis = resolver.resolveLikelySkills(text);
+        if (analysis) {
+          likelySkills = Array.isArray(analysis.likelySkills) ? analysis.likelySkills : [];
+          isAmbient = Boolean(analysis.isAmbient);
+          ambientReason = analysis.ambientReason || null;
+        }
+      } catch {}
+    }
+  }
+  const isoTime = rawBubble?.isoTime || rawBubble?.timestamp || new Date().toISOString();
+  const timeStr =
+    rawBubble?.time && /^\d{1,2}:\d{2}/.test(String(rawBubble.time))
+      ? String(rawBubble.time)
+      : formatVoiceBubbleTime(isoTime);
+  return {
+    id: rawBubble?.id || rawBubble?.bubbleId || `vp-${Date.now()}`,
+    text,
+    msg: text,
+    time: timeStr,
+    isoTime,
+    ts: Number(rawBubble?.ts) || new Date(isoTime).getTime() || Date.now(),
+    isFinal: rawBubble?.isFinal !== false,
+    likelySkills,
+    isAmbient,
+    ambientReason,
+    commandCard: rawBubble?.commandCard || null,
+  };
+}
+
+/**
+ * Collects live & recent RobOS Voice dictation dialogue bubbles from
+ * `~/.config/robos/voice-bubbles-live.json` and `~/.config/robos/voice-prompts.json`.
+ */
+function collectVoiceDictationBubbles({ configDir, limit = 6 } = {}) {
+  const resolvedConfigDir =
+    configDir ||
+    process.env.ROBOS_CONFIG_DIR ||
+    path.join(process.env.HOME || os.homedir(), '.config', 'robos');
+  const maxBubbles = Math.max(1, Math.min(20, Number(limit) || 6));
+  const liveFile = path.join(resolvedConfigDir, 'voice-bubbles-live.json');
+  const promptsFile = path.join(resolvedConfigDir, 'voice-prompts.json');
+  const prefsFile = path.join(resolvedConfigDir, 'voice-prompt-prefs.json');
+
+  let configuredDevice = 'default';
+  let pushToTalkKey = 'Super+V';
+  let activeVoiceAgent = 'robos-desktop-assistant';
+  try {
+    if (fs.existsSync(prefsFile)) {
+      const prefs = JSON.parse(fs.readFileSync(prefsFile, 'utf8'));
+      if (prefs.configuredDevice) configuredDevice = prefs.configuredDevice;
+      if (prefs.pushToTalkKey) pushToTalkKey = prefs.pushToTalkKey;
+      if (prefs.activeVoiceAgent) activeVoiceAgent = prefs.activeVoiceAgent;
+    }
+  } catch {}
+
+  let active = false;
+  let backgroundMode = false;
+  let assistantState = 'IDLE';
+  let cleared = false;
+  let interimBubble = null;
+  let bubbles = [];
+
+  // 1. Read live dialogue bubble state (`voice-bubbles-live.json`)
+  try {
+    if (fs.existsSync(liveFile)) {
+      const parsed = JSON.parse(fs.readFileSync(liveFile, 'utf8'));
+      if (parsed && typeof parsed === 'object') {
+        const pidAlive = parsed.allowTestActive || (parsed.pid && isPidAlive(parsed.pid));
+        const ageMs = parsed.updatedAt ? Date.now() - new Date(parsed.updatedAt).getTime() : 0;
+        const freshEnough = !Number.isFinite(ageMs) || ageMs < 60000;
+        active = Boolean(parsed.active && (pidAlive || freshEnough));
+        backgroundMode = Boolean(parsed.backgroundMode && active);
+        assistantState = parsed.assistantState || 'IDLE';
+        cleared = Boolean(parsed.cleared);
+        if (parsed.interimBubble && (parsed.interimBubble.text || parsed.interimBubble.msg) && (active || freshEnough)) {
+          interimBubble = enrichVoiceBubble({ ...parsed.interimBubble, isFinal: false });
+        }
+        if (Array.isArray(parsed.bubbles) && parsed.bubbles.length > 0) {
+          bubbles = parsed.bubbles
+            .filter((b) => b && (b.text || b.msg))
+            .map((b) => enrichVoiceBubble({ ...b, isFinal: true }));
+        }
+      }
+    }
+  } catch {}
+
+  // 2. If no live bubbles are populated yet (and user hasn't explicitly cleared the feed),
+  //    load recent dictated utterances from `voice-prompts.json`, merging sliding-window chunks
+  if (bubbles.length === 0 && !cleared) {
+    try {
+      if (fs.existsSync(promptsFile)) {
+        const rawPrompts = JSON.parse(fs.readFileSync(promptsFile, 'utf8'));
+        if (Array.isArray(rawPrompts) && rawPrompts.length > 0) {
+          // `voice-prompts.json` is stored newest-first; take recent 25 and process chronologically
+          const chronological = rawPrompts
+            .slice(0, 25)
+            .filter((p) => p && p.text && String(p.text).trim())
+            .reverse();
+          const mergedList = [];
+          for (const p of chronological) {
+            const clean = String(p.text).trim();
+            const prev = mergedList[mergedList.length - 1];
+            if (prev) {
+              const m = mergeVoiceTexts(prev.text, clean);
+              if (m.action === 'ignore') continue;
+              if (m.action === 'replace') {
+                prev.text = m.text;
+                prev.msg = m.text;
+                prev.isoTime = p.timestamp || prev.isoTime;
+                prev.time = formatVoiceBubbleTime(prev.isoTime);
+                continue;
+              }
+            }
+            mergedList.push({
+              id: p.id || `vp-${mergedList.length + 1}`,
+              text: clean,
+              msg: clean,
+              isoTime: p.timestamp || new Date().toISOString(),
+              time: formatVoiceBubbleTime(p.timestamp),
+              isFinal: true,
+            });
+          }
+          bubbles = mergedList.slice(-maxBubbles).map((b) => enrichVoiceBubble(b));
+        }
+      }
+    } catch {}
+  }
+
+  // 3. Fallback sample dialogue bubbles if neither file exists yet (e.g. fresh workspace / test dir)
+  if (bubbles.length === 0 && !interimBubble && !cleared) {
+    const nowMs = Date.now();
+    const t1 = new Date(nowMs - 140000).toISOString();
+    const t2 = new Date(nowMs - 75000).toISOString();
+    const t3 = new Date(nowMs - 20000).toISOString();
+    bubbles = [
+      enrichVoiceBubble({
+        id: 'vp-seed-1',
+        text: 'Open RobOS Dashboards and check the Smart TV wallboard status',
+        isoTime: t1,
+        isFinal: true,
+        commandCard: {
+          typeLabel: 'App',
+          typeClass: 'app',
+          title: 'RobOS Dashboards',
+          status: 'done',
+          statusLabel: '✓ Done',
+          resultText: 'Launched RobOS Dashboards',
+        },
+      }),
+      enrichVoiceBubble({
+        id: 'vp-seed-2',
+        text: 'Check the Knowledge Graph diff and validate all SHACL shapes',
+        isoTime: t2,
+        isFinal: true,
+      }),
+      enrichVoiceBubble({
+        id: 'vp-seed-3',
+        text: 'Add a RobOS Voice dictation dashboard widget showing live dialogue bubbles',
+        isoTime: t3,
+        isFinal: true,
+      }),
+    ].slice(-maxBubbles);
+  }
+
+  const trimmedBubbles = bubbles.slice(-maxBubbles);
+
+  return {
+    ok: true,
+    active,
+    backgroundMode,
+    assistantState,
+    statusLabel: active
+      ? interimBubble
+        ? '🎙️ Listening Live — Streaming Utterance'
+        : '🎙️ Recording Active (Super+V)'
+      : '🎙️ Ready · Super+V or Wake Word',
+    configuredDevice,
+    pushToTalkKey,
+    activeVoiceAgent,
+    interimBubble,
+    count: trimmedBubbles.length,
+    bubbles: trimmedBubbles,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 /**
  * Creates a stateful Dashboard Engine instance that manages dashboards, layouts, cards,
  * KGraph synchronization, live widget data resolution, and Smart TV casting.
@@ -2255,6 +2529,11 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
       case 'next-meeting-countdown':
         return collectNextMeetingCountdown({
           configDir: resolvedConfigDir,
+        });
+      case 'voice-dictation':
+        return collectVoiceDictationBubbles({
+          configDir: resolvedConfigDir,
+          limit: cfg.limit || 6,
         });
       case 'smart-tv':
       case 'smart-lights':
@@ -2671,6 +2950,119 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
     return getOverview(state.activeDashboardId);
   }
 
+  function recordVoiceDictationBubble({
+    id,
+    text,
+    msg,
+    isFinal = true,
+    time,
+    isoTime,
+    likelySkills,
+    isAmbient,
+    ambientReason,
+    commandCard,
+    active,
+  } = {}) {
+    const cleanText = String(text || msg || '').trim();
+    if (!cleanText) {
+      return { ok: false, error: 'Voice bubble text is required' };
+    }
+    const liveVoiceFile = path.join(resolvedConfigDir, 'voice-bubbles-live.json');
+    let current = {
+      active: false,
+      backgroundMode: false,
+      assistantState: 'IDLE',
+      allowTestActive: true,
+      cleared: false,
+      interimBubble: null,
+      bubbles: [],
+    };
+    try {
+      if (fs.existsSync(liveVoiceFile)) {
+        const parsed = JSON.parse(fs.readFileSync(liveVoiceFile, 'utf8'));
+        if (parsed && typeof parsed === 'object') {
+          current = { ...current, ...parsed };
+        }
+      }
+    } catch {}
+
+    const enriched = enrichVoiceBubble({
+      id,
+      text: cleanText,
+      time,
+      isoTime: isoTime || new Date().toISOString(),
+      isFinal,
+      likelySkills,
+      isAmbient,
+      ambientReason,
+      commandCard,
+    });
+
+    if (!isFinal) {
+      current.active = true;
+      current.allowTestActive = true;
+      current.cleared = false;
+      current.interimBubble = enriched;
+    } else {
+      const bubbles = Array.isArray(current.bubbles) ? [...current.bubbles] : [];
+      const last = bubbles[bubbles.length - 1];
+      if (last && Date.now() - Number(last.ts || 0) < 15000) {
+        const m = mergeVoiceTexts(last.text || last.msg, cleanText);
+        if (m.action === 'replace') {
+          const mergedEnriched = enrichVoiceBubble({
+            ...last,
+            text: m.text,
+            isoTime: enriched.isoTime,
+            likelySkills: enriched.likelySkills?.length ? enriched.likelySkills : last.likelySkills,
+            commandCard: commandCard || last.commandCard,
+          });
+          bubbles[bubbles.length - 1] = mergedEnriched;
+        } else if (m.action !== 'ignore') {
+          bubbles.push(enriched);
+        }
+      } else {
+        bubbles.push(enriched);
+      }
+      current.bubbles = bubbles.slice(-20);
+      current.interimBubble = null;
+      current.cleared = false;
+      current.allowTestActive = true;
+      if (active !== undefined) current.active = Boolean(active);
+    }
+
+    current.updatedAt = new Date().toISOString();
+    try {
+      fs.mkdirSync(resolvedConfigDir, { recursive: true });
+      fs.writeFileSync(liveVoiceFile, JSON.stringify(current, null, 2), 'utf8');
+    } catch {}
+    return getOverview(state.activeDashboardId);
+  }
+
+  function clearVoiceDictationBubbles() {
+    const liveVoiceFile = path.join(resolvedConfigDir, 'voice-bubbles-live.json');
+    try {
+      fs.mkdirSync(resolvedConfigDir, { recursive: true });
+      fs.writeFileSync(
+        liveVoiceFile,
+        JSON.stringify(
+          {
+            active: false,
+            backgroundMode: false,
+            assistantState: 'IDLE',
+            cleared: true,
+            interimBubble: null,
+            bubbles: [],
+            updatedAt: new Date().toISOString(),
+          },
+          null,
+          2
+        ),
+        'utf8'
+      );
+    } catch {}
+    return getOverview(state.activeDashboardId);
+  }
+
   /**
    * Exports a dashboard and its cards as JSON-LD nodes conforming to `robos:Dashboard`,
    * `robos:DashboardLayout`, and `robos:DashboardCard`.
@@ -2729,6 +3121,8 @@ function createDashboardEngine({ configDir, repoDir } = {}) {
     deleteDashboard,
     addCalendarEvent,
     appendAgentStatusLine,
+    recordVoiceDictationBubble,
+    clearVoiceDictationBubbles,
     toKGraphNodes,
   };
 }
@@ -3265,6 +3659,79 @@ function renderDashboardTvWallboardHtml({
               ? `<div style="margin-top:7px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                   <strong style="color:#cbd5e1;">Following:</strong> ${esc(fm.time || '')} — ${esc(fm.title || '')} (${esc(fm.accountEmail || '')})
                 </div>`
+              : ''
+          }
+        </div>
+      `;
+    }
+
+    if (card.widgetType === 'voice-dictation') {
+      const isRec = Boolean(data.active || data.interimBubble);
+      const interim = data.interimBubble || null;
+      const bubbles = Array.isArray(data.bubbles) ? data.bubbles : [];
+      const renderSkillBadges = (b) => {
+        if (b.isAmbient) {
+          return `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;">
+            <span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:2px 7px;border-radius:5px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7;">🍃 Ambient audio: ${esc(b.ambientReason || 'Background sound')}</span>
+          </div>`;
+        }
+        const skills = Array.isArray(b.likelySkills) ? b.likelySkills.slice(0, 2) : [];
+        const cmd = b.commandCard || null;
+        if (!skills.length && !cmd) return '';
+        return `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;">
+          ${
+            cmd
+              ? `<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:5px;background:rgba(16,185,129,0.18);border:1px solid rgba(16,185,129,0.45);color:#6ee7b7;">⚡ ${esc(cmd.typeLabel || 'Cmd')}: ${esc(cmd.title)} (${esc(cmd.statusLabel || '✓ Done')})</span>`
+              : ''
+          }
+          ${skills
+            .map(
+              (sk) =>
+                `<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 7px;border-radius:5px;background:rgba(0,188,212,0.12);border:1px solid rgba(0,188,212,0.3);color:#67e8f9;">⚡ <strong>${esc(sk.category || 'Skill')}</strong> · ${esc(sk.title || sk.name)}${sk.confidence ? ` (${Math.round(sk.confidence * 100)}%)` : ''}</span>`
+            )
+            .join('')}
+        </div>`;
+      };
+
+      return `
+        <div class="widget-meta-row" data-live-voice-meta="true">
+          <span>🎙️ <strong>RobOS Voice Dictation</strong> · <code>${esc(data.pushToTalkKey || 'Super+V')}</code></span>
+          <span class="pill-mini" style="${isRec ? 'background:rgba(239,68,68,0.2);color:#fca5a5;border-color:rgba(239,68,68,0.5);' : 'background:rgba(0,188,212,0.14);color:#67e8f9;border-color:rgba(0,188,212,0.35);'}">
+            ${isRec ? '● LISTENING LIVE' : `● STANDBY (${bubbles.length} Bubbles)`}
+          </span>
+        </div>
+        <div class="voice-bubbles-feed" data-live-voice-root="true" style="display:flex;flex-direction:column;gap:7px;">
+          ${
+            interim
+              ? `<div class="voice-dialogue-bubble interim" data-bubble-id="${esc(interim.id)}" style="background:rgba(0,188,212,0.09);border:1px dashed rgba(0,188,212,0.55);border-left:4px solid #00bcd4;border-radius:10px;padding:8px 11px;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:#67e8f9;margin-bottom:4px;">
+                    <span style="font-family:ui-monospace,monospace;">${esc(interim.time || ' Live')}</span>
+                    <span style="display:inline-flex;align-items:center;gap:5px;font-weight:700;color:#fca5a5;"><span style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block;"></span>Listening…</span>
+                  </div>
+                  <div class="voice-bubble-text" style="font-size:13px;font-weight:600;color:#f8fafc;line-height:1.38;">“${esc(interim.text || interim.msg)}”</div>
+                  ${renderSkillBadges(interim)}
+                </div>`
+              : ''
+          }
+          ${
+            bubbles.length > 0
+              ? bubbles
+                  .slice()
+                  .reverse()
+                  .map(
+                    (b) => `
+                  <div class="voice-dialogue-bubble" data-bubble-id="${esc(b.id)}" style="background:#0a101d;border:1px solid #1e2d47;border-left:4px solid ${b.commandCard ? '#10b981' : '#a855f7'};border-radius:10px;padding:8px 11px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:#94a3b8;margin-bottom:3px;">
+                      <span style="font-family:ui-monospace,monospace;color:#d8b4fe;font-weight:700;">🗣️ ${esc(b.time)}</span>
+                      <span style="font-size:10px;color:#64748b;">RobOS Voice HUD</span>
+                    </div>
+                    <div class="voice-bubble-text" style="font-size:12.5px;font-weight:600;color:#f8fafc;line-height:1.36;">“${esc(b.text || b.msg)}”</div>
+                    ${renderSkillBadges(b)}
+                  </div>`
+                  )
+                  .join('')
+              : !interim
+              ? `<div style="background:#0a101d;border:1px solid #1e2d47;border-radius:8px;padding:10px;font-size:12px;color:#94a3b8;text-align:center;">No voice dictation bubbles yet. Press <code>Super+V</code> or say <strong>"Hello RobOS"</strong> to dictate.</div>`
               : ''
           }
         </div>
@@ -3924,6 +4391,41 @@ function renderDashboardTvWallboardHtml({
             return;
           }
           const cards = (json && json.dashboard && Array.isArray(json.dashboard.cards)) ? json.dashboard.cards : [];
+          const voiceCard = cards.find(c => c.widgetType === 'voice-dictation');
+          if (voiceCard && voiceCard.liveData) {
+            const vSec = document.querySelector('section[data-widget-type="voice-dictation"]');
+            if (vSec) {
+              const vHeader = vSec.querySelector('.card-header-bar') ? vSec.querySelector('.card-header-bar').outerHTML : '';
+              const vd = voiceCard.liveData;
+              const isRec = Boolean(vd.active || vd.interimBubble);
+              const interim = vd.interimBubble || null;
+              const bubbles = Array.isArray(vd.bubbles) ? vd.bubbles : [];
+              const renderBadges = b => {
+                if (b.isAmbient) {
+                  return '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;"><span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:2px 7px;border-radius:5px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#6ee7b7;">🍃 Ambient audio: ' + escHtml(b.ambientReason || 'Background sound') + '</span></div>';
+                }
+                const skills = Array.isArray(b.likelySkills) ? b.likelySkills.slice(0, 2) : [];
+                const cmd = b.commandCard || null;
+                if (!skills.length && !cmd) return '';
+                return '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;">' +
+                  (cmd ? '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:5px;background:rgba(16,185,129,0.18);border:1px solid rgba(16,185,129,0.45);color:#6ee7b7;">⚡ ' + escHtml(cmd.typeLabel || 'Cmd') + ': ' + escHtml(cmd.title) + ' (' + escHtml(cmd.statusLabel || '✓ Done') + ')</span>' : '') +
+                  skills.map(sk => '<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:2px 7px;border-radius:5px;background:rgba(0,188,212,0.12);border:1px solid rgba(0,188,212,0.3);color:#67e8f9;">⚡ <strong>' + escHtml(sk.category || 'Skill') + '</strong> · ' + escHtml(sk.title || sk.name) + (sk.confidence ? ' (' + Math.round(sk.confidence * 100) + '%)' : '') + '</span>').join('') +
+                '</div>';
+              };
+              const vHtml =
+                '<div class="widget-meta-row" data-live-voice-meta="true">' +
+                  '<span>🎙️ <strong>RobOS Voice Dictation</strong> · <code>' + escHtml(vd.pushToTalkKey || 'Super+V') + '</code></span>' +
+                  '<span class="pill-mini" style="' + (isRec ? 'background:rgba(239,68,68,0.2);color:#fca5a5;border-color:rgba(239,68,68,0.5);' : 'background:rgba(0,188,212,0.14);color:#67e8f9;border-color:rgba(0,188,212,0.35);') + '">' +
+                    (isRec ? '● LISTENING LIVE' : '● STANDBY (' + bubbles.length + ' Bubbles)') +
+                  '</span>' +
+                '</div>' +
+                '<div class="voice-bubbles-feed" data-live-voice-root="true" style="display:flex;flex-direction:column;gap:7px;">' +
+                  (interim ? '<div class="voice-dialogue-bubble interim" data-bubble-id="' + escHtml(interim.id) + '" style="background:rgba(0,188,212,0.09);border:1px dashed rgba(0,188,212,0.55);border-left:4px solid #00bcd4;border-radius:10px;padding:8px 11px;"><div style="display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:#67e8f9;margin-bottom:4px;"><span style="font-family:ui-monospace,monospace;">' + escHtml(interim.time || 'Live') + '</span><span style="display:inline-flex;align-items:center;gap:5px;font-weight:700;color:#fca5a5;"><span style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block;"></span>Listening…</span></div><div class="voice-bubble-text" style="font-size:13px;font-weight:600;color:#f8fafc;line-height:1.38;">“' + escHtml(interim.text || interim.msg) + '”</div>' + renderBadges(interim) + '</div>' : '') +
+                  (bubbles.length > 0 ? bubbles.slice().reverse().map(b => '<div class="voice-dialogue-bubble" data-bubble-id="' + escHtml(b.id) + '" style="background:#0a101d;border:1px solid #1e2d47;border-left:4px solid ' + (b.commandCard ? '#10b981' : '#a855f7') + ';border-radius:10px;padding:8px 11px;"><div style="display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:#94a3b8;margin-bottom:3px;"><span style="font-family:ui-monospace,monospace;color:#d8b4fe;font-weight:700;">🗣️ ' + escHtml(b.time) + '</span><span style="font-size:10px;color:#64748b;">RobOS Voice HUD</span></div><div class="voice-bubble-text" style="font-size:12.5px;font-weight:600;color:#f8fafc;line-height:1.36;">“' + escHtml(b.text || b.msg) + '”</div>' + renderBadges(b) + '</div>').join('') : (!interim ? '<div style="background:#0a101d;border:1px solid #1e2d47;border-radius:8px;padding:10px;font-size:12px;color:#94a3b8;text-align:center;">No voice dictation bubbles yet.</div>' : '')) +
+                '</div>';
+              vSec.innerHTML = vHeader + vHtml;
+            }
+          }
           const agentCard = cards.find(c => c.widgetType === 'agent-sessions');
           if (!agentCard) return;
           const secEl = document.querySelector('section[data-widget-type="agent-sessions"]');
@@ -3975,6 +4477,7 @@ module.exports = {
   collectGitHubRepoActivity,
   collectMusicNowPlaying,
   collectNextMeetingCountdown,
+  collectVoiceDictationBubbles,
   collectSupplementalWidgetData,
   createDashboardEngine,
   renderDashboardTvWallboardHtml,

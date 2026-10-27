@@ -255,6 +255,7 @@ async function renderEmbedAndKGraph(dash) {
 <!-- 3. Or embed any individual RobOS Dashboard Widget component -->
 <robos-widget-git-commits limit="10"></robos-widget-git-commits>
 <robos-widget-calendar-today scope="today"></robos-widget-calendar-today>
+<robos-widget-voice-dictation limit="6"></robos-widget-voice-dictation>
 <robos-widget-agent-sessions tail-lines="5"></robos-widget-agent-sessions>`;
   }
 
@@ -630,7 +631,7 @@ async function init() {
         }
       }
       const cards = Array.isArray(fresh.dashboard.cards) ? fresh.dashboard.cards : [];
-      for (const liveType of ['agent-sessions', 'music-now-playing']) {
+      for (const liveType of ['agent-sessions', 'music-now-playing', 'voice-dictation']) {
         const liveCard = cards.find((c) => c.widgetType === liveType);
         if (liveCard && window.RobOSDashboardUI) {
           const bodyEl = document.querySelector(`section[data-widget-type="${liveType}"] .robos-embed-card-body`);

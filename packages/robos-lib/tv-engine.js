@@ -1312,6 +1312,9 @@ tizen run -p robostv001.RobOSTV
     const meetingCard = dashCards.find(
       (c) => (c.componentTag || c.widgetTag) === 'robos-widget-next-meeting'
     );
+    const voiceCard = dashCards.find(
+      (c) => (c.componentTag || c.widgetTag) === 'robos-widget-voice-dictation'
+    );
     const agentsCard = dashCards.find(
       (c) => (c.componentTag || c.widgetTag) === 'robos-widget-agent-sessions'
     );
@@ -1595,28 +1598,77 @@ tizen run -p robostv001.RobOSTV
     <Label id="calLoc${i}" translation="[696, ${y + 66}]" scale="[0.54, 0.54]" width="900" height="32" numLines="1" color="0x94A3B8FF" text="${safeXml(locText)}" />`;
     }).join('\n');
 
+    const voiceData = (voiceCard && voiceCard.liveData) || {
+      active: false,
+      pushToTalkKey: 'Super+V',
+      interimBubble: null,
+      bubbles: [],
+    };
+    const voiceDisplayList = [];
+    if (voiceData.interimBubble && (voiceData.interimBubble.text || voiceData.interimBubble.msg)) {
+      voiceDisplayList.push({ ...voiceData.interimBubble, isInterim: true });
+    }
+    const rawVoiceBubbles = Array.isArray(voiceData.bubbles) ? voiceData.bubbles.slice().reverse() : [];
+    for (const vb of rawVoiceBubbles) {
+      if (voiceDisplayList.length >= 3) break;
+      voiceDisplayList.push({ ...vb, isInterim: false });
+    }
+    const voiceIsRec = Boolean(voiceData.active || voiceData.interimBubble);
+    const voiceHeaderStr = voiceIsRec
+      ? `ROBOS VOICE DICTATION [LISTENING LIVE] (${voiceData.pushToTalkKey || 'Super+V'})`
+      : `ROBOS VOICE DICTATION [STANDBY - ${(voiceData.bubbles || []).length} BUBBLES] (${voiceData.pushToTalkKey || 'Super+V'})`;
+
+    const voiceRowsXml = Array.from({ length: 3 }, (_, i) => {
+      const vb = voiceDisplayList[i];
+      const by = 338 + i * 68;
+      const isVis = vb ? 'true' : 'false';
+      const isInt = Boolean(vb && vb.isInterim);
+      const stripeCol = isInt
+        ? '0x00BCD4FF'
+        : vb && vb.commandCard
+        ? '0x10B981FF'
+        : '0xA855F7FF';
+      let tagSuffix = 'Voice HUD';
+      if (isInt) {
+        tagSuffix = 'LISTENING...';
+      } else if (vb && vb.commandCard && vb.commandCard.title) {
+        tagSuffix = `Cmd: ${vb.commandCard.title} [${vb.commandCard.statusLabel || 'Done'}]`;
+      } else if (vb && Array.isArray(vb.likelySkills) && vb.likelySkills[0]) {
+        const sk = vb.likelySkills[0];
+        tagSuffix = `Skill: ${sk.title || sk.name}`;
+      } else if (vb && vb.isAmbient) {
+        tagSuffix = `Ambient: ${vb.ambientReason || 'Audio'}`;
+      }
+      const metaLine = vb ? `[${vb.time || 'Live'}]  ${tagSuffix}` : '';
+      const txtLine = vb ? `"${String(vb.text || vb.msg || '').slice(0, 56)}"` : '';
+      return `    <Rectangle id="voiceBubbleBg${i}" translation="[1298, ${by}]" width="540" height="62" color="0x090D16FF" visible="${isVis}" />
+    <Rectangle id="voiceBubbleStripe${i}" translation="[1298, ${by}]" width="5" height="62" color="${stripeCol}" visible="${isVis}" />
+    <Label id="voiceBubbleMeta${i}" translation="[1312, ${by + 6}]" scale="[0.50, 0.50]" width="980" height="26" numLines="1" color="${isInt ? '0xFCA5A5FF' : '0xD8B4FEFF'}" visible="${isVis}" text="${safeXml(metaLine)}" />
+    <Label id="voiceBubbleText${i}" translation="[1312, ${by + 30}]" scale="[0.58, 0.58]" width="880" height="30" numLines="1" color="0xF8FAFCFF" visible="${isVis}" text="${safeXml(txtLine)}" />`;
+    }).join('\n');
+
     const agentRowsXml = Array.from({ length: 3 }, (_, i) => {
       const s = sessions[i];
-      const y = 320 + i * 182;
-      const isVis = s ? 'true' : 'false';
+      const y = 558 + i * 108;
+      const isVis = s && i < 3 ? 'true' : 'false';
       const sTitle = s ? s.name || s.title || s.id || 'In-Progress Session' : '';
       const sAct = s ? s.activity || s.cwd || '/home/ndipiazza/source/robos' : '';
       const sEl = s ? s.elapsedFormatted || '00:05' : '00:00';
       const titleText = s ? `* ${String(sTitle).slice(0, 46)}` : '';
       const metaText = s ? `IN PROGRESS [${sEl}] | ${String(sAct).slice(0, 42)}` : '';
       const rawLines = Array.isArray(s?.statusLines) ? s.statusLines : Array.isArray(s?.tailLines) ? s.tailLines : [];
-      const tails = rawLines.slice(-3);
+      const tails = rawLines.slice(-2);
       const tailLabels = Array.from({ length: 3 }, (__, tIdx) => {
-        const ty = y + 70 + tIdx * 28;
-        const tLine = tails[tIdx] ? String(tails[tIdx]).replace(/[^\x20-\x7E]/g, '').trim().slice(0, 56) : '';
-        return `    <Label id="agentTail${i}_${tIdx}" translation="[1310, ${ty}]" scale="[0.54, 0.54]" width="940" height="32" numLines="1" color="0xA7F3D0FF" visible="${isVis}" text="${safeXml(tLine)}" />`;
+        const ty = y + 54 + tIdx * 22;
+        const tLine = tIdx < 2 && tails[tIdx] ? String(tails[tIdx]).replace(/[^\x20-\x7E]/g, '').trim().slice(0, 56) : '';
+        return `    <Label id="agentTail${i}_${tIdx}" translation="[1310, ${ty}]" scale="[0.50, 0.50]" width="980" height="26" numLines="1" color="0xA7F3D0FF" visible="${tIdx < 2 ? isVis : 'false'}" text="${safeXml(tLine)}" />`;
       }).join('\n');
-      return `    <Rectangle id="agentCard${i}" translation="[1284, ${y}]" width="568" height="170" color="0x161F30FF" visible="${isVis}" />
+      return `    <Rectangle id="agentCard${i}" translation="[1284, ${y}]" width="568" height="102" color="0x161F30FF" visible="${isVis}" />
     <Rectangle id="agentStripe${i}" translation="[1284, ${y}]" width="568" height="3" color="0x10B981FF" visible="${isVis}" />
-    <Rectangle id="agentDot${i}" translation="[1300, ${y + 13}]" width="10" height="10" color="0x10B981FF" visible="${isVis}" />
-    <Label id="agentTitle${i}" translation="[1316, ${y + 8}]" scale="[0.64, 0.64]" width="760" height="34" numLines="1" color="0xF8FAFCFF" visible="${isVis}" text="${safeXml(titleText)}" />
-    <Label id="agentMeta${i}" translation="[1300, ${y + 34}]" scale="[0.54, 0.54]" width="940" height="32" numLines="1" color="0x6EE7B7FF" visible="${isVis}" text="${safeXml(metaText)}" />
-    <Rectangle id="agentTermBg${i}" translation="[1298, ${y + 62}]" width="540" height="98" color="0x090D16FF" visible="${isVis}" />
+    <Rectangle id="agentDot${i}" translation="[1300, ${y + 11}]" width="10" height="10" color="0x10B981FF" visible="${isVis}" />
+    <Label id="agentTitle${i}" translation="[1316, ${y + 6}]" scale="[0.58, 0.58]" width="840" height="30" numLines="1" color="0xF8FAFCFF" visible="${isVis}" text="${safeXml(titleText)}" />
+    <Label id="agentMeta${i}" translation="[1300, ${y + 28}]" scale="[0.50, 0.50]" width="980" height="26" numLines="1" color="0x6EE7B7FF" visible="${isVis}" text="${safeXml(metaText)}" />
+    <Rectangle id="agentTermBg${i}" translation="[1298, ${y + 50}]" width="540" height="46" color="0x090D16FF" visible="${isVis}" />
 ${tailLabels}`;
     }).join('\n');
 
@@ -1742,22 +1794,28 @@ ${eqBarsXml}
 
 ${calendarRowsXml}
 
-    <!-- Column 3: Countdown Until Next Meeting + Running RobOS Agent Sessions (Tailed) -->
+    <!-- Column 3: Countdown Until Next Meeting + RobOS Voice Dictation + Running RobOS Agent Sessions -->
     <Rectangle id="colAgentsCard" translation="[1264, 102]" width="608" height="784" color="0x111827FF" />
     <Rectangle translation="[1264, 102]" width="608" height="4" color="0xF59E0BFF" />
-    <Label id="colAgentsHeader" scale="[0.65, 0.65]" text="3. NEXT MEETING COUNTDOWN &amp; RUNNING AGENTS (TAILED)" translation="[1284, 118]" width="840" height="36" numLines="1" color="0xFCD34DFF" />
-    <Rectangle translation="[1284, 154]" width="568" height="2" color="0x1E293BFF" />
+    <Label id="colAgentsHeader" scale="[0.62, 0.62]" text="3. NEXT MEETING, ROBOS VOICE BUBBLES &amp; RUNNING AGENTS" translation="[1284, 118]" width="880" height="36" numLines="1" color="0xFCD34DFF" />
+    <Rectangle translation="[1284, 152]" width="568" height="2" color="0x1E293BFF" />
 
     <!-- Countdown Until Next Meeting Widget Box -->
-    <Rectangle id="nextMeetingCardBg" translation="[1284, 164]" width="568" height="142" color="0x161F30FF" />
-    <Rectangle id="nextMeetingStripe" translation="[1284, 164]" width="6" height="142" color="0x10B981FF" />
-    <Label id="countdownWidgetTitle" translation="[1304, 172]" scale="[0.55, 0.55]" width="920" height="28" numLines="1" color="0x6EE7B7FF" text="COUNTDOWN UNTIL NEXT MEETING (LIVE 1Hz SECOND-BY-SECOND)" />
-    <Label id="countdownTimerLabel" translation="[1304, 198]" scale="[1.02, 1.02]" width="520" height="44" numLines="1" color="0xF8FAFCFF" text="${safeXml(meetingData.countdownLabel || 'T - 00:28:00')}" />
-    <Label id="nextMeetingTitleLabel" translation="[1304, 236]" scale="[0.58, 0.58]" width="900" height="30" numLines="1" color="0x67E8F9FF" text="${safeXml(nmTitleLine)}" />
-    <Label id="nextMeetingMetaLabel" translation="[1304, 258]" scale="[0.52, 0.52]" width="980" height="28" numLines="1" color="0x94A3B8FF" text="${safeXml(nmMetaLine)}" />
-    <Rectangle id="secBarTrack" translation="[1304, 282]" width="528" height="12" color="0x090D16FF" />
-    <Rectangle id="secBarFill" translation="[1304, 282]" width="${nmBarW}" height="12" color="0x10B981FF" />
-    <Rectangle id="secPulseDot" translation="[1820, 174]" width="14" height="14" color="0x10B981FF" />
+    <Rectangle id="nextMeetingCardBg" translation="[1284, 160]" width="568" height="134" color="0x161F30FF" />
+    <Rectangle id="nextMeetingStripe" translation="[1284, 160]" width="6" height="134" color="0x10B981FF" />
+    <Label id="countdownWidgetTitle" translation="[1304, 166]" scale="[0.54, 0.54]" width="920" height="28" numLines="1" color="0x6EE7B7FF" text="COUNTDOWN UNTIL NEXT MEETING (LIVE 1Hz SECOND-BY-SECOND)" />
+    <Label id="countdownTimerLabel" translation="[1304, 190]" scale="[0.98, 0.98]" width="520" height="42" numLines="1" color="0xF8FAFCFF" text="${safeXml(meetingData.countdownLabel || 'T - 00:28:00')}" />
+    <Label id="nextMeetingTitleLabel" translation="[1304, 226]" scale="[0.56, 0.56]" width="900" height="28" numLines="1" color="0x67E8F9FF" text="${safeXml(nmTitleLine)}" />
+    <Label id="nextMeetingMetaLabel" translation="[1304, 248]" scale="[0.50, 0.50]" width="980" height="26" numLines="1" color="0x94A3B8FF" text="${safeXml(nmMetaLine)}" />
+    <Rectangle id="secBarTrack" translation="[1304, 272]" width="528" height="10" color="0x090D16FF" />
+    <Rectangle id="secBarFill" translation="[1304, 272]" width="${nmBarW}" height="10" color="0x10B981FF" />
+    <Rectangle id="secPulseDot" translation="[1820, 168]" width="14" height="14" color="0x10B981FF" />
+
+    <!-- RobOS Voice Dictation Live Dialogue Bubbles Widget Box -->
+    <Rectangle id="voiceCardBg" translation="[1284, 302]" width="568" height="246" color="0x161F30FF" />
+    <Rectangle id="voiceCardStripe" translation="[1284, 302]" width="6" height="246" color="${voiceIsRec ? '0xEF4444FF' : '0xA855F7FF'}" />
+    <Label id="voiceCardHeader" translation="[1304, 309]" scale="[0.54, 0.54]" width="960" height="28" numLines="1" color="${voiceIsRec ? '0xFCA5A5FF' : '0xD8B4FEFF'}" text="${safeXml(voiceHeaderStr)}" />
+${voiceRowsXml}
 
 ${agentRowsXml}
     </Group>
@@ -2431,6 +2489,92 @@ sub onPayloadUpdated()
                     if tmNode <> invalid then tmNode.text = ""
                     if tlNode <> invalid then tlNode.text = ""
                     if lcNode <> invalid then lcNode.text = ""
+                end if
+            end for
+        else if cTag = "robos-widget-voice-dictation" and card.liveData <> invalid
+            vd = card.liveData
+            vHead = m.top.findNode("voiceCardHeader")
+            vStripe = m.top.findNode("voiceCardStripe")
+            isVRec = (vd.active = true or vd.interimBubble <> invalid)
+            pttKey = cleanAscii(vd.pushToTalkKey)
+            if pttKey = "" then pttKey = "Super+V"
+            vList = []
+            if vd.interimBubble <> invalid and (vd.interimBubble.text <> invalid or vd.interimBubble.msg <> invalid)
+                vList.Push({ item: vd.interimBubble, isInterim: true })
+            end if
+            if vd.bubbles <> invalid and vd.bubbles.Count() > 0
+                for bIdx = vd.bubbles.Count() - 1 to 0 step -1
+                    if vList.Count() >= 3 then exit for
+                    vList.Push({ item: vd.bubbles[bIdx], isInterim: false })
+                end for
+            end if
+            bTotal = 0
+            if vd.bubbles <> invalid then bTotal = vd.bubbles.Count()
+            if vHead <> invalid
+                if isVRec = true
+                    vHead.text = "ROBOS VOICE DICTATION [LISTENING LIVE] (" + pttKey + ")"
+                    vHead.color = "0xFCA5A5FF"
+                else
+                    vHead.text = "ROBOS VOICE DICTATION [STANDBY - " + bTotal.ToStr() + " BUBBLES] (" + pttKey + ")"
+                    vHead.color = "0xD8B4FEFF"
+                end if
+            end if
+            if vStripe <> invalid
+                if isVRec = true then vStripe.color = "0xEF4444FF" else vStripe.color = "0xA855F7FF"
+            end if
+            for i = 0 to 2
+                vBg = m.top.findNode("voiceBubbleBg" + i.ToStr())
+                vSt = m.top.findNode("voiceBubbleStripe" + i.ToStr())
+                vMt = m.top.findNode("voiceBubbleMeta" + i.ToStr())
+                vTx = m.top.findNode("voiceBubbleText" + i.ToStr())
+                if i < vList.Count()
+                    entry = vList[i]
+                    vb = entry.item
+                    isInt = (entry.isInterim = true)
+                    if vBg <> invalid then vBg.visible = true
+                    if vSt <> invalid
+                        vSt.visible = true
+                        if isInt = true
+                            vSt.color = "0x00BCD4FF"
+                        else if vb.commandCard <> invalid
+                            vSt.color = "0x10B981FF"
+                        else
+                            vSt.color = "0xA855F7FF"
+                        end if
+                    end if
+                    suffix = "Voice HUD"
+                    if isInt = true
+                        suffix = "LISTENING..."
+                    else if vb.commandCard <> invalid and vb.commandCard.title <> invalid
+                        suffix = "Cmd: " + cleanAscii(vb.commandCard.title)
+                    else if vb.likelySkills <> invalid and vb.likelySkills.Count() > 0
+                        sk0 = vb.likelySkills[0]
+                        if sk0.title <> invalid then suffix = "Skill: " + cleanAscii(sk0.title)
+                    else if vb.isAmbient = true
+                        suffix = "Ambient Audio"
+                    end if
+                    if vMt <> invalid
+                        vMt.visible = true
+                        if isInt = true then vMt.color = "0xFCA5A5FF" else vMt.color = "0xD8B4FEFF"
+                        vMt.text = "[" + cleanAscii(vb.time) + "]  " + Left(suffix, 42)
+                    end if
+                    if vTx <> invalid
+                        vTx.visible = true
+                        rawMsg = vb.text
+                        if rawMsg = invalid then rawMsg = vb.msg
+                        vTx.text = Chr(34) + Left(cleanAscii(rawMsg), 56) + Chr(34)
+                    end if
+                else
+                    if vBg <> invalid then vBg.visible = false
+                    if vSt <> invalid then vSt.visible = false
+                    if vMt <> invalid
+                        vMt.visible = false
+                        vMt.text = ""
+                    end if
+                    if vTx <> invalid
+                        vTx.visible = false
+                        vTx.text = ""
+                    end if
                 end if
             end for
         else if cTag = "robos-widget-agent-sessions" and card.liveData <> invalid and card.liveData.sessions <> invalid
