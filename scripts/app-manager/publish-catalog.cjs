@@ -52,7 +52,7 @@ function sourceCatalog(root = repo, platform = process.platform) {
     const group = ['point-of-sale', 'auto-center', 'household', 'audio-player', 'home-speaker'].includes(id) ? 'Everyday & business' :
       /game|crpg|tabletop/.test(id) ? 'Games & game tools' : /agent|claude|ai-|context|prompt/.test(id) ? 'AI & agents' :
         /System|Security|Internet/.test(icon?.category || '') ? 'System & security' : 'Developer tools';
-    return [{ id, kind: 'app', label: icon?.label || id, group, description: pkg.description || '' }];
+    return [{ id, kind: 'app', label: icon?.label || id, iconSvg: icon?.iconSvg || null, group, description: pkg.description || '' }];
   });
 }
 function runNpm(dir) {
