@@ -52,7 +52,7 @@ function integration({ locations, executable, host, packaged, shell, platform = 
     if (platform === 'darwin') {
       if (image && path.resolve(image) !== locations.macManager) {
         fs.mkdirSync(path.dirname(locations.macManager), { recursive: true });
-        fs.cpSync(image, locations.macManager, { recursive: true });
+        fs.cpSync(image, locations.macManager, { recursive: true, verbatimSymlinks: true });
       }
       return;
     }
