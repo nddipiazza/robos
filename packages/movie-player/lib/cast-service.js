@@ -421,48 +421,114 @@ class CastService {
     });
   }
 
+  _updateCinemaCastState(mutator) {
+    try {
+      const cfgPath = path.join(os.homedir(), '.config', 'robos', 'tv-studio.json');
+      if (!fs.existsSync(cfgPath)) return;
+      const raw = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+      const next = mutator(raw.activeCinemaCast || {});
+      raw.activeCinemaCast = next;
+      fs.writeFileSync(cfgPath, JSON.stringify(raw, null, 2));
+    } catch {}
+  }
+
+  _ensureRokuDevChannelLaunched(ip, ecpPort = 8060) {
+    if (process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT) return;
+    try {
+      const req = http.get({
+        hostname: ip,
+        port: ecpPort,
+        path: '/query/active-app',
+        timeout: 1200,
+      }, (res) => {
+        let xml = '';
+        res.on('data', (c) => { xml += c; });
+        res.on('end', () => {
+          if (!xml.includes('id="dev"')) {
+            const launchReq = http.request({
+              hostname: ip,
+              port: ecpPort,
+              path: '/launch/dev',
+              method: 'POST',
+              headers: { 'Content-Length': '0' },
+              timeout: 1500,
+            }, (lRes) => { lRes.resume(); });
+            launchReq.on('error', () => {});
+            launchReq.on('timeout', () => { launchReq.destroy(); });
+            launchReq.end();
+          }
+        });
+      });
+      req.on('error', () => {});
+      req.on('timeout', () => { req.destroy(); });
+    } catch {}
+  }
+
+  _queryRokuMediaPlayer(ip, ecpPort = 8060) {
+    return new Promise((resolve) => {
+      if (process.env.ROBOS_TEST === '1' || process.env.NODE_TEST_CONTEXT) return resolve(null);
+      const req = http.get({
+        hostname: ip,
+        port: ecpPort,
+        path: '/query/media-player',
+        timeout: 900,
+      }, (res) => {
+        let xml = '';
+        res.on('data', (c) => { xml += c; });
+        res.on('end', () => {
+          const stateMatch = xml.match(/<player[^>]*state="([^"]+)"/);
+          const posMatch = xml.match(/<position>\s*(\d+)/);
+          const durMatch = xml.match(/<duration>\s*(\d+)/);
+          const resMatch = xml.match(/video_res="([^"]+)"/);
+          if (!stateMatch) return resolve(null);
+          const rState = stateMatch[1];
+          const posMs = posMatch ? Number(posMatch[1]) : null;
+          const durMs = durMatch ? Number(durMatch[1]) : null;
+          const videoRes = resMatch ? resMatch[1] : '';
+          resolve({
+            state: rState,
+            positionSec: posMs != null ? posMs / 1000 : null,
+            durationSec: durMs != null ? durMs / 1000 : null,
+            videoRes,
+            isKeepAlive: durMs === 60000 || videoRes === '160x90',
+          });
+        });
+      });
+      req.on('error', () => resolve(null));
+      req.on('timeout', () => { req.destroy(); resolve(null); });
+    });
+  }
+
   _dispatchSmartTvBridge(ip, tvInfo, mediaUrl, metadata = {}) {
     const platformId = tvInfo?.platformId || 'smart-tv';
     const title = metadata.title || 'RobOS Cinema Stream';
-    // 1. If Roku OS, attempt ECP Play-on-Roku / input launch on port 8060 (non-blocking)
+    const startAt = Math.max(0, Math.floor(Number(metadata.currentTime) || 0));
+    const loadKey = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+    // 1. Record active cinema cast session in ~/.config/robos/tv-studio.json so RobOS Smart TV Portal (:19210)
+    //    and the Roku SceneGraph channel (<Video id="cinemaVideo">) immediately play it full-screen.
+    this._updateCinemaCastState(() => ({
+      active: true,
+      loadKey,
+      tvIp: ip,
+      tvId: tvInfo?.id || `tv-${ip}`,
+      tvName: tvInfo?.name || ip,
+      platformId,
+      mediaUrl,
+      title,
+      artist: metadata.artist || '',
+      startAt,
+      paused: false,
+      seekKey: '',
+      seekSeconds: startAt,
+      startedAt: new Date().toISOString(),
+    }));
+
+    // 2. If Roku OS, ensure the RobOS TV channel (`dev`) is active on the screen
     if (platformId === 'roku-os') {
-      try {
-        const params = new URLSearchParams({
-          t: 'v',
-          u: mediaUrl,
-          videoName: title,
-          videoFormat: 'mp4',
-        });
-        const req = http.request({
-          hostname: ip,
-          port: tvInfo?.ports?.ecp || 8060,
-          path: `/input/15985?${params.toString()}`,
-          method: 'POST',
-          timeout: 1200,
-        }, (res) => { res.resume(); });
-        req.on('error', () => {});
-        req.on('timeout', () => { req.destroy(); });
-        req.end();
-      } catch {}
+      this._ensureRokuDevChannelLaunched(ip, tvInfo?.ports?.ecp || 8060);
     }
-    // 2. Record active cinema cast session in ~/.config/robos/tv-studio.json so RobOS Smart TV Portal (:19210) can display it
-    try {
-      const cfgPath = path.join(os.homedir(), '.config', 'robos', 'tv-studio.json');
-      if (fs.existsSync(cfgPath)) {
-        const raw = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-        raw.activeCinemaCast = {
-          tvIp: ip,
-          tvId: tvInfo?.id || `tv-${ip}`,
-          tvName: tvInfo?.name || ip,
-          platformId,
-          mediaUrl,
-          title,
-          artist: metadata.artist || '',
-          startedAt: new Date().toISOString(),
-        };
-        fs.writeFileSync(cfgPath, JSON.stringify(raw, null, 2));
-      }
-    } catch {}
+    return loadKey;
   }
 
   _startSmartTvBridgeSession(ip, mediaUrl, metadata = {}, onStatusUpdate = null, role = 'song', loadId = 1) {
@@ -479,8 +545,9 @@ class CastService {
     const state = {
       playerState: 'PLAYING',
       currentTime: Number(metadata.currentTime) > 0 ? Number(metadata.currentTime) : 0,
-      duration: Number(metadata.duration) > 0 ? Number(metadata.duration) : 7200,
+      duration: Number(metadata.duration) > 0 ? Number(metadata.duration) : 0,
       idleReason: null,
+      lastSeekAt: Date.now(),
     };
 
     const virtualPlayer = {
@@ -495,18 +562,28 @@ class CastService {
       },
       pause: () => {
         state.playerState = 'PAUSED';
+        this._updateCinemaCastState((prev) => ({ ...prev, paused: true }));
         if (typeof entry.onStatusUpdate === 'function') {
           entry.onStatusUpdate(normalizeStatus({ playerState: 'PAUSED', currentTime: state.currentTime, media: { duration: state.duration } }, entry));
         }
       },
       play: () => {
         state.playerState = 'PLAYING';
+        this._updateCinemaCastState((prev) => ({ ...prev, paused: false }));
         if (typeof entry.onStatusUpdate === 'function') {
           entry.onStatusUpdate(normalizeStatus({ playerState: 'PLAYING', currentTime: state.currentTime, media: { duration: state.duration } }, entry));
         }
       },
       seek: (seconds, cb) => {
-        state.currentTime = Math.max(0, Number(seconds) || 0);
+        const targetSec = Math.max(0, Math.floor(Number(seconds) || 0));
+        state.currentTime = targetSec;
+        state.lastSeekAt = Date.now();
+        this._updateCinemaCastState((prev) => ({
+          ...prev,
+          startAt: targetSec,
+          seekKey: `seek-${Date.now()}`,
+          seekSeconds: targetSec,
+        }));
         if (typeof entry.onStatusUpdate === 'function') {
           entry.onStatusUpdate(normalizeStatus({ playerState: state.playerState, currentTime: state.currentTime, media: { duration: state.duration } }, entry));
         }
@@ -514,8 +591,13 @@ class CastService {
       },
       load: (newMedia, newOpts, cb) => {
         state.currentTime = Number(newOpts?.currentTime) > 0 ? Number(newOpts.currentTime) : 0;
+        if (Number(newMedia?.metadata?.duration) > 0) state.duration = Number(newMedia.metadata.duration);
         state.playerState = 'PLAYING';
-        this._dispatchSmartTvBridge(ip, tvInfo, newMedia?.contentId || mediaUrl, newMedia?.metadata || metadata);
+        state.lastSeekAt = Date.now();
+        this._dispatchSmartTvBridge(ip, tvInfo, newMedia?.contentId || mediaUrl, {
+          ...(newMedia?.metadata || metadata),
+          currentTime: state.currentTime,
+        });
         const st = { playerState: 'PLAYING', currentTime: state.currentTime, media: { duration: state.duration } };
         if (cb) cb(null, st);
       },
@@ -524,7 +606,13 @@ class CastService {
     const entry = {
       client: {
         close: () => {},
-        receiver: { stop: (_sid, cb) => { state.playerState = 'IDLE'; if (cb) cb(); } },
+        receiver: {
+          stop: (_sid, cb) => {
+            state.playerState = 'IDLE';
+            this._updateCinemaCastState((prev) => ({ ...prev, active: false, stoppedAt: new Date().toISOString() }));
+            if (cb) cb();
+          },
+        },
       },
       player: virtualPlayer,
       mediaUrl,
@@ -539,13 +627,33 @@ class CastService {
 
     this.activeConnections.set(ip, entry);
 
-    entry.progressTimer = setInterval(() => {
+    entry.progressTimer = setInterval(async () => {
       if (this.activeConnections.get(ip) !== entry) {
         clearInterval(entry.progressTimer);
         entry.progressTimer = null;
         return;
       }
-      if (state.playerState === 'PLAYING') {
+      let updatedFromRoku = false;
+      if (tvInfo.platformId === 'roku-os') {
+        const rokuSt = await this._queryRokuMediaPlayer(ip, tvInfo?.ports?.ecp || 8060);
+        if (rokuSt && !rokuSt.isKeepAlive) {
+          if (rokuSt.durationSec && rokuSt.durationSec > 65) {
+            state.duration = rokuSt.durationSec;
+            entry.duration = rokuSt.durationSec;
+          }
+          // Only overwrite currentTime from Roku if we didn't just seek within the last 2.5s
+          if (rokuSt.positionSec != null && Date.now() - state.lastSeekAt > 2500) {
+            state.currentTime = rokuSt.positionSec;
+            updatedFromRoku = true;
+          } else if (rokuSt.state === 'startup' || rokuSt.state === 'buffer') {
+            // Hold clock while Roku is buffering so it doesn't run ahead of the TV
+            updatedFromRoku = true;
+          }
+          if (rokuSt.state === 'pause') state.playerState = 'PAUSED';
+          else if (rokuSt.state === 'play') state.playerState = 'PLAYING';
+        }
+      }
+      if (!updatedFromRoku && state.playerState === 'PLAYING') {
         state.currentTime += 1;
         if (state.duration > 0 && state.currentTime >= state.duration) {
           state.playerState = 'IDLE';
@@ -751,6 +859,7 @@ class CastService {
     // Fallback: connect directly and terminate any running session
     const tvInfo = this.speakers.get(ip);
     if (tvInfo && tvInfo.platformId && tvInfo.platformId !== 'android-tv') {
+      this._updateCinemaCastState((prev) => ({ ...prev, active: false, stoppedAt: new Date().toISOString() }));
       return { ok: true, stopped: true, ip };
     }
     return new Promise((resolve) => {

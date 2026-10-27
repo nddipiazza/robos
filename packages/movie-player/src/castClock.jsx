@@ -39,8 +39,13 @@ function useCastTime() {
 
 const fmt = (sec) => {
   if (!sec || !isFinite(sec)) return '0:00';
-  const m = Math.floor(sec / 60);
-  const ss = Math.floor(sec % 60);
+  const total = Math.max(0, Math.floor(sec));
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const ss = total % 60;
+  if (h > 0) {
+    return `${h}:${m < 10 ? '0' : ''}${m}:${ss < 10 ? '0' : ''}${ss}`;
+  }
   return `${m}:${ss < 10 ? '0' : ''}${ss}`;
 };
 
@@ -50,14 +55,21 @@ export function CastProgress({ onSeek, className = 'mini-progress', id }) {
   const [dragging, setDragging] = useState(null);
   const commitTimer = useRef(null);
   const value = dragging != null ? dragging : current;
-  const pct = duration ? (Math.min(value, duration) / duration) * 100 : 0;
-  const commit = (v) => {
+  const maxVal = duration > 0 ? duration : Math.max(value, 1);
+  const pct = maxVal ? (Math.min(value, maxVal) / maxVal) * 100 : 0;
+  const commit = (v, immediate = false) => {
     clearTimeout(commitTimer.current);
+    if (immediate) {
+      castClock.set({ position: v });
+      setDragging(null);
+      onSeek(v);
+      return;
+    }
     commitTimer.current = setTimeout(() => {
       castClock.set({ position: v });
       setDragging(null);
       onSeek(v);
-    }, 250);
+    }, 180);
   };
   useEffect(() => () => clearTimeout(commitTimer.current), []);
   return (
@@ -66,13 +78,15 @@ export function CastProgress({ onSeek, className = 'mini-progress', id }) {
       <input
         type="range"
         min="0"
-        max={duration || 0}
+        max={maxVal}
         step="0.5"
-        value={Math.min(value, duration || 0)}
-        disabled={!duration}
+        value={Math.min(value, maxVal)}
         style={{ '--pct': `${pct}%` }}
-        aria-label="Seek on the speaker"
-        onChange={(e) => { const v = Number(e.target.value); setDragging(v); commit(v); }}
+        aria-label="Seek on the Smart TV"
+        onChange={(e) => { const v = Number(e.target.value); setDragging(v); commit(v, false); }}
+        onMouseUp={() => { if (dragging != null) commit(dragging, true); }}
+        onTouchEnd={() => { if (dragging != null) commit(dragging, true); }}
+        onKeyUp={() => { if (dragging != null) commit(dragging, true); }}
       />
       <span>{fmt(duration)}</span>
     </div>

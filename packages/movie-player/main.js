@@ -194,6 +194,19 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow();
   controlServer.start().catch(err => console.warn('[AudioPlayer] Control API unavailable:', err.message));
+  try {
+    const tvMod = requireShared('robos-lib/tv-engine');
+    if (tvMod && typeof tvMod.createTvEngine === 'function') {
+      const tvEngine = tvMod.createTvEngine({ appName: 'movie-player' });
+      tvEngine.getPortalOwnership().then(async (own) => {
+        if (!own.reachable) {
+          await tvEngine.startPortalServer();
+        } else if (own.stale && own.canRestart) {
+          await tvEngine.restartPortal();
+        }
+      }).catch(() => {});
+    }
+  } catch {}
   // Wait until the renderer subscribes; checks run without blocking first paint.
   mainWindow.webContents.once('did-finish-load', () => {
     libraryFolders.list();
