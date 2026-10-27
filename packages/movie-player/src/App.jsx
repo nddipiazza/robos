@@ -151,6 +151,36 @@ export default function App() {
     if (window.robosAudio?.getArtBase) {
       window.robosAudio.getArtBase().then(base => base && setArtBase(base)).catch(() => {});
     }
+    if (window.robosAudio?.getActiveCast) {
+      window.robosAudio.getActiveCast().then((active) => {
+        if (active && active.active && active.ip) {
+          setOutputTarget(active.ip);
+          setActiveCastSession({
+            ip: active.ip,
+            trackId: active.trackId || null,
+            title: active.title || null,
+            filePath: active.filePath || null,
+            isPaused: Boolean(active.isPaused),
+          });
+          if (active.loadId != null) {
+            songLoadsRef.current = new Set([active.loadId]);
+          }
+          castClock.set({
+            position: Number(active.positionSec) || 0,
+            duration: Number(active.durationSec) || 0,
+            playing: !active.isPaused,
+          });
+          setIsPlaying(!active.isPaused);
+          if (active.trackId) {
+            setPlaylist((prev) => {
+              const idx = prev.findIndex((t) => t.id === active.trackId);
+              if (idx >= 0) setCurrentTrackIndex(idx);
+              return prev;
+            });
+          }
+        }
+      }).catch(() => {});
+    }
 
     const cleanups = [];
     if (window.robosAudio?.onFoldersUpdated) cleanups.push(window.robosAudio.onFoldersUpdated(applyFolderState));
@@ -1801,7 +1831,7 @@ export default function App() {
                     ></span>
                     <span>
                       {activeCastSession
-                        ? `Casting "${currentTrack?.title || 'Track'}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? ' (Paused)' : ' (Live)'}`
+                        ? `Casting "${activeCastSession.title || currentTrack?.title || 'Movie'}" to ${getSpeakerName(activeCastSession.ip)}${activeCastSession.isPaused ? ' (Paused)' : ' (Live)'}`
                         : `Output routed to ${getSpeakerName(outputTarget)} (Local desktop muted)`}
                     </span>
                   </div>
@@ -1811,11 +1841,12 @@ export default function App() {
                         {activeCastSession.isPaused ? 'Resume cast' : 'Pause cast'}
                       </button>
                     )}
-                    {activeCastSession && (
-                      <button className="btn-chip btn-stop-cast" onClick={() => handleStopCast(activeCastSession.ip)}>
-                        Stop Cast
-                      </button>
-                    )}
+                    <button
+                      className="btn-chip btn-stop-cast"
+                      onClick={() => handleStopCast(activeCastSession?.ip || (outputTarget !== 'local' ? outputTarget : speakers[0]?.ip))}
+                    >
+                      Stop Cast
+                    </button>
                     {outputTarget !== 'local' && (
                       <button className="btn-chip" onClick={() => { setOutputTarget('local'); handleStopCast(); }}>
                         Switch to Local Desktop
@@ -1947,6 +1978,18 @@ export default function App() {
                             title="Open the interactive 10-foot Movie Library on your Smart TV so you can browse and play movies with your physical TV remote"
                           >
                             🎮 TV Library (Remote UI)
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-chip btn-stop-cast"
+                            onClick={() => {
+                              const target = activeCastSession?.ip || (outputTarget !== 'local' ? outputTarget : speakers[0].ip);
+                              setOutputTarget('local');
+                              handleStopCast(target);
+                            }}
+                            title={`Stop movie playback on ${getSpeakerName(activeCastSession?.ip || (outputTarget !== 'local' ? outputTarget : speakers[0].ip))}`}
+                          >
+                            ⏹ Stop TV
                           </button>
                         </>
                       )}

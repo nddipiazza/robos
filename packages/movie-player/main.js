@@ -381,6 +381,19 @@ ipcMain.handle('audio:close-tv-library', async (_evt, ip) => {
   }
 });
 
+ipcMain.handle('audio:get-active-cast', async () => {
+  try {
+    refreshCloudTrackUrls();
+    return await castService.getOrReattachActiveCast((ip, status) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('audio:speaker-status-change', { ip, status });
+      }
+    });
+  } catch (err) {
+    return { ok: false, active: false, error: err.message };
+  }
+});
+
 ipcMain.handle('audio:discover-speakers', async (_evt, { scanLan = false } = {}) => {
   try {
     if (!scanLan) {
