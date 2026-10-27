@@ -96,7 +96,8 @@ async function walkthrough(prompt, ws) {
   try {
     say('The page loaded with all six pets. Choosing the Cats species…');
     await sleep(900);
-    await page.selectOption('#species', 'cat');
+    if (await page.$('#chips')) await page.click('#chips button[data-s="cat"]');   // after the chips change
+    else await page.selectOption('#species', 'cat');
     await page.waitForFunction(() => document.querySelectorAll('.pet').length === 2);
     const cats = await names(page);
     say(`Species “Cats” now shows ${cats}.`);
@@ -108,7 +109,7 @@ async function walkthrough(prompt, ws) {
     await page.fill('#q', '');
     await page.waitForFunction(() => document.querySelectorAll('.pet').length === 2);
     const tests = testLine(ws);
-    return { reply: `The app is running in the window below. In it:\n\n• species “Cats” → ${cats}\n• “pep” within cats → Pepper\n• test run → ${tests}\n\nAsk me to change anything you would like to see different.`, checkpointReached: true, guidance: 'The app is open. Ask for any change to how it looks or behaves and watch it update.' };
+    return { reply: `The app is running in its own window. In it:\n\n• species “Cats” → ${cats}\n• “pep” within cats → Pepper\n• test run → ${tests}\n\nAsk me to change anything you would like to see different.`, checkpointReached: true, guidance: 'The app is open. Ask for any change to how it looks or behaves and watch it update.' };
   } finally { await browser.close().catch(() => {}); }
 }
 

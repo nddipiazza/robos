@@ -139,6 +139,7 @@ function syncSettingsToKGraph(settings) {
 // Settings schema with defaults and sections
 const SETTINGS_SCHEMA = {
   sections: [
+    { id: 'cloud_accounts', label: 'Cloud Suite Accounts', fields: [] },
     { id: 'github_accounts', label: 'GitHub accounts', fields: [] },
     { id: 'ovpn_accounts', label: 'OpenVPN & VPN Accounts', fields: [] },
     {id:'code_review',label:'Code Review',fields:[{key:'default_code_reviewer_group',label:'Default code reviewer group',type:'select',options:[],default:''}]},
@@ -290,7 +291,14 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => app.quit());
-app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.show(); win.focus(); win.webContents.send('show-github-accounts'); } });
+app.on('second-instance', () => {
+  if (win && !win.isDestroyed?.()) {
+    if (win.isMinimized?.()) win.restore();
+    win.show();
+    win.focus();
+    win.webContents?.send('show-github-accounts');
+  }
+});
 
 // ── IPC Handlers ─────────────────────────────────────────────────────────────
 
@@ -421,4 +429,98 @@ ipcMain.handle('ovpn-profiles-sync', async (_, providerId) => {
 ipcMain.handle('ovpn-accounts-test', async (_, payload) => {
   try { return await ovpnProviders().testAccountConnection(payload || {}); }
   catch (error) { return { ok: false, error: error.message }; }
+});
+
+// ── Unified Cloud Suite Accounts (Google, Microsoft, Nextcloud, Dropbox, S3) ─
+function cloudAccountsLib() {
+  for (const p of [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'cloud-accounts'),
+    path.resolve(__dirname, '..', 'robos-lib', 'cloud-accounts'),
+    '/usr/local/share/robos/robos-lib/cloud-accounts',
+  ].filter(Boolean)) {
+    try { return require(p); } catch {}
+  }
+  throw new Error('cloud-accounts library is not available.');
+}
+
+function thunderbirdGoogleLib() {
+  for (const p of [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'thunderbird-google'),
+    path.resolve(__dirname, '..', 'robos-lib', 'thunderbird-google'),
+    '/usr/local/share/robos/robos-lib/thunderbird-google',
+  ].filter(Boolean)) {
+    try { return require(p); } catch {}
+  }
+  throw new Error('thunderbird-google library is not available.');
+}
+
+ipcMain.handle('cloud-accounts-list', async () => {
+  try { return { ok: true, ...cloudAccountsLib().listAccounts() }; }
+  catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('cloud-accounts-save', async (_, accountInput) => {
+  try { return { ok: true, ...cloudAccountsLib().saveAccount(accountInput) }; }
+  catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('cloud-accounts-delete', async (_, accountId) => {
+  try { return { ok: true, ...cloudAccountsLib().deleteAccount(accountId) }; }
+  catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('cloud-accounts-set-default', async (_, accountId) => {
+  try { return { ok: true, ...cloudAccountsLib().setDefaultAccount(accountId) }; }
+  catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('cloud-accounts-verify', async (_, accountId) => {
+  try { return await cloudAccountsLib().verifyCloudAccount(accountId); }
+  catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('cloud-accounts-oauth-google', async (_, params) => {
+  try { return await cloudAccountsLib().startGoogleBrowserOAuth(params || {}); }
+  catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('cloud-accounts-configure-thunderbird', async (_, payload) => {
+  try {
+    const { accountId, enableCalendar, enableContacts, enableMail } = payload || {};
+    return thunderbirdGoogleLib().configureThunderbirdForGoogleAccount(accountId, {
+      enableCalendar,
+      enableContacts,
+      enableMail,
+    });
+  } catch (error) { return { ok: false, error: error.message }; }
+});
+
+ipcMain.handle('launch-robos-app', async (_, appId) => {
+  try {
+    const { spawn } = require('node:child_process');
+    const wrapperCandidates = [
+      path.join(HOME_DIR, '.local', 'bin', `robos-${appId}`),
+      path.join(HOME_DIR, '.local', 'bin', appId),
+    ];
+    const wrapper = wrapperCandidates.find(w => fs.existsSync(w));
+    if (wrapper) {
+      const child = spawn(wrapper, [], { detached: true, stdio: 'ignore', env: { ...process.env } });
+      child.unref();
+      return { ok: true, appId };
+    }
+    const candidates = [
+      path.resolve(__dirname, '..', appId, 'main.js'),
+      `/usr/local/share/robos/${appId}/main.js`,
+    ];
+    const mainJs = candidates.find(c => fs.existsSync(c));
+    if (!mainJs) throw new Error(`App "${appId}" is not installed.`);
+    const electronBin = process.execPath || '/usr/bin/electron';
+    const child = spawn(electronBin, [mainJs, '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'], {
+      detached: true,
+      stdio: 'ignore',
+      env: { ...process.env },
+    });
+    child.unref();
+    return { ok: true, appId };
+  } catch (error) { return { ok: false, error: error.message }; }
 });

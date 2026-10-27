@@ -77,7 +77,7 @@ Exec=/usr/bin/electron /usr/local/share/robos/<app-id>/main.js --no-sandbox --di
 Icon=/usr/local/share/robos/<app-id>/icon.svg
 Terminal=false
 Categories=<freedesktop-category>;
-X-RobOS-Category=<Dev|AI|Security|People|Journal|System|Internet|Tools>
+X-RobOS-Category=<Dev|AI|Security|People|Journal|System|Internet|Tools|Games|Party Games>
 StartupWMClass=robos-<app-id>
 ```
 
@@ -157,7 +157,7 @@ ssh -p 2224 -o StrictHostKeyChecking=no robos@localhost \
 
 - Verify all files exist in `packages/<app-id>/`
 - Verify the .desktop file has `X-RobOS-App=true`
-- Verify `X-RobOS-Category` is one of: Dev, AI, Security, People, Journal, System, Internet, Tools
+- Verify `X-RobOS-Category` is one of: Dev, AI, Security, People, Journal, System, Internet, Tools, Games, Party Games
 - Verify icon.svg is valid SVG with 48x48 dimensions
 - Verify the app is registered in `packages/robos-icons/builtin-apps.js`
 - Verify the app is deployed to `/usr/local/share/robos/<app-id>/` on the VM with world-readable permissions

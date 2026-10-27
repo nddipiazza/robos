@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RobOS Cloud Accounts</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">☁️</div>
+      <div>
+        <h1>RobOS Cloud Accounts</h1>
+        <p class="subtitle">Single sign-on &amp; suite credential reuse across Data Sources, Audio Player, File Explorer, and Thunderbird Calendar/Contacts/Mail</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button id="btn-google-oauth" class="btn btn-primary">+ Sign in with Google</button>
+      <button id="btn-open-calendar-app" class="btn">📅 Open Google Calendar &amp; Thunderbird</button>
+      <button id="btn-open-datasources" class="btn">🗄️ Open Data Sources</button>
+      <button id="btn-refresh" class="btn">↻ Refresh</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">Connected Accounts</div>
+      <div id="accounts-sidebar-list" class="account-list"></div>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-header">Add / Link Account</div>
+      <div class="add-card">
+        <label for="add-provider">Provider</label>
+        <select id="add-provider">
+          <option value="google">Google Workspace / Google</option>
+          <option value="microsoft">Microsoft 365 / OneDrive</option>
+          <option value="nextcloud">Nextcloud / WebDAV / CalDAV</option>
+          <option value="dropbox">Dropbox</option>
+          <option value="s3">Amazon S3 / R2 / MinIO</option>
+        </select>
+        <label for="add-email">Account Email / Username</label>
+        <input id="add-email" type="email" placeholder="you@gmail.com" />
+        <label for="add-label">Friendly Label (optional)</label>
+        <input id="add-label" type="text" placeholder="Work Google Account" />
+        <button id="btn-save-account" class="btn btn-primary btn-block">Save / Track Account</button>
+      </div>
+    </aside>
+
+    <section class="detail-pane">
+      <div id="status-banner" class="status-banner hidden" role="status" aria-live="polite"></div>
+      <div id="account-detail">
+        <div class="empty-state">Loading tracked cloud accounts…</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

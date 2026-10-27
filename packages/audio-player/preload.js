@@ -30,6 +30,8 @@ contextBridge.exposeInMainWorld('robosAudio', {
   setLoved: (ids, loved) => ipcRenderer.invoke('audio:set-loved', { ids, loved }),
   showInFolder: (filePath) => ipcRenderer.invoke('audio:show-in-folder', filePath),
   aiPlaylistGenerate: (request, count, dj, agent) => ipcRenderer.invoke('audio:ai-playlist-generate', { request, count, dj, agent }),
+  aiFixMetadataPreview: (opts) => ipcRenderer.invoke('audio:ai-fix-metadata-preview', opts || {}),
+  aiFixMetadataApply: (opts) => ipcRenderer.invoke('audio:ai-fix-metadata-apply', opts || {}),
   onAiProgress: (callback) => {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on('audio:ai-progress', handler);
@@ -107,6 +109,16 @@ contextBridge.exposeInMainWorld('robosAudio', {
     ipcRenderer.on('audio:speaker-status-change', handler);
     return () => ipcRenderer.removeListener('audio:speaker-status-change', handler);
   },
+  // Calls from other RobOS apps (lib/control-server.js): `callback` answers each.
+  onControlRequest: (callback) => {
+    const handler = async (_event, { requestId, action, payload }) => {
+      let result;
+      try { result = await callback(action, payload); } catch (err) { result = { ok: false, error: err.message }; }
+      ipcRenderer.invoke('audio:control-reply', { requestId, result });
+    };
+    ipcRenderer.on('audio:control-request', handler);
+    return () => ipcRenderer.removeListener('audio:control-request', handler);
+  },
   onSpeakerPlaybackStopped: (callback) => {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on('audio:speaker-playback-stopped', handler);
@@ -117,6 +129,12 @@ contextBridge.exposeInMainWorld('robosAudio', {
 // Provider catalog for the shared <robos-agent-selector> (same API as PR Review).
 contextBridge.exposeInMainWorld('robosProviders', {
   list: (options) => ipcRenderer.invoke('audio:agent-providers', options),
+});
+
+// Skills catalog and @mention file typeahead for the shared <robos-ai-textarea>.
+contextBridge.exposeInMainWorld('robos', {
+  skillsList: () => ipcRenderer.invoke('robos-skills-list'),
+  searchIndex: (prefix) => ipcRenderer.invoke('ap-list-path', prefix),
 });
 
 // Answers the <robos-ai-textarea> "?" button through the shared quick-ask handler.

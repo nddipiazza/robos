@@ -1,0 +1,12 @@
+[Desktop Entry]
+X-RobOS-App=true
+Version=1.0
+Type=Application
+Name=RobOS Smart Light
+Comment=Zero-cloud LAN Smart Light Studio (WiZ, WLED, Hue, Kasa, LIFX, Govee, Elgato), Mood Scenes, AI Lighting Designer, Circadian Curves, and CI Status Light Sync
+Exec=/usr/bin/electron /usr/local/share/robos/smart-light/main.js --no-sandbox --disable-gpu --disable-dev-shm-usage
+Icon=/usr/local/share/robos/smart-light/icon.svg
+Terminal=false
+Categories=Utility;
+X-RobOS-Category=Tools
+StartupWMClass=robos-smart-light

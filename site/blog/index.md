@@ -7,7 +7,7 @@ extra_css: /assets/blog.css
 og_image: /assets/hero/poster.jpg
 og_image_alt: "RobOS Engineering Blog — What changed in RobOS and why"
 schema_type: Blog
-keywords: "RobOS engineering blog, release notes, OBD-II Auto Center, Audio Player Virtual DJ, Quest Warrior Dragon AI playthrough, KGraph updates"
+keywords: "RobOS engineering blog, release notes, RobOS Party Game, AI party game on Roku, OBD-II Auto Center, Audio Player Virtual DJ, Quest Warrior Dragon AI playthrough, KGraph updates"
 ---
 <section class="blog-hero">
   <div class="wrap">
@@ -16,6 +16,8 @@ keywords: "RobOS engineering blog, release notes, OBD-II Auto Center, Audio Play
     <p class="lead">What changed in RobOS and why, newest first. Each post links to the docs and the commits behind it.</p>
   </div>
   <nav class="blog-jump" aria-label="Jump to blog post">
+    <a href="#party-game">RobOS Party Game</a>
+    <a href="#audio-player-ai-fix-metadata">Audio Player AI Fix Metadata</a>
     <a href="#vpn-sandbox-and-killswitch-proof">VPN Sandbox &amp; Kill-Switch Proof</a>
     <a href="#frontier-hunters-live-map-editor">RTS: Frontier Hunters &amp; Map Editor</a>
     <a href="#quest-warrior-dragon-ai-walkthrough">Quest: Warrior Dragon AI</a>
@@ -38,6 +40,92 @@ keywords: "RobOS engineering blog, release notes, OBD-II Auto Center, Audio Play
 </section>
 
 <div class="blog-feed">
+
+  <article class="blog-entry" id="party-game">
+    <div class="blog-meta">
+      <time class="blog-date" datetime="2026-10-27">Oct 27, 2026</time>
+      <span class="blog-tag">RobOS Party Game</span>
+      <span class="blog-tag">Party Games</span>
+      <span class="blog-tag">Roku &amp; Smart TVs</span>
+      <span class="blog-tag">AI Host</span>
+    </div>
+    <h2><a href="#party-game">RobOS Party Game: an AI Host That Writes the Party About Your Guests and Your House</a></h2>
+    <p class="blog-summary"><strong>RobOS Party Game</strong> (<code>packages/party-game</code>) is the first game in the new <strong>Party Games</strong> category. An AI host in a hooded mask runs the show on one or more RobOS TVs while guests play on their phones. Before the first round, the AI reads every guest's survey and the party host's description of the house, then writes the night: each guest's role and why, superlatives about this group, trivia about their interests, bluffs, and real challenges that use the rooms and things in the house. The host speaks through the TV (Roku included) and any Google Cast speaker from the RobOS Audio Player.</p>
+    <div class="blog-body">
+      <figure class="blog-fig">
+        <img src="{{ '/assets/blog/party-game/roku-living-room.jpg' | relative_url }}" alt="The Party Game lobby on a TCL Roku TV: the hooded masked AI host welcomes Quinn next to the join QR code" loading="lazy">
+        <figcaption>A screenshot taken from the living-room <strong>TCL Roku TV</strong> through Roku's developer console: the lobby, with the host welcoming each guest by name as they scan the code.</figcaption>
+      </figure>
+      <p><strong>How a party runs.</strong> The host console needs at least one RobOS TV paired in Smart TV Studio and an AI agent picked with the shared <code>&lt;robos-agent-selector&gt;</code>. This is the one RobOS app where AI is required, because the AI host <em>is</em> the game. Guests scan the QR code on the TV and answer a survey: the basics, their interests, a few confessions and some wild cards. Until someone claims it, every phone shows <strong>I'm the party host</strong>. Whoever taps it describes the house: the usable spaces, what is special about them (guitar amps in the basement, a hot tub, a cat named Pancake), the games in the house, craft supplies, gear such as a printer, the vibe, and what is off-limits. The game cannot start until the required house answers are in. A meter on the phone encourages the party host to add more detail, because more detail makes better challenges.</p>
+      <div class="blog-fig-grid">
+        <figure class="blog-fig"><img src="{{ '/assets/games/party-game/lobby.jpg' | relative_url }}" alt="Lobby with the AI host giving a house tour" loading="lazy"><figcaption>The lobby once the house is described: the host's "house tour" name-drops the garage ping pong, the basement rock venue and Pancake.</figcaption></figure>
+        <figure class="blog-fig"><img src="{{ '/assets/games/party-game/roles.jpg' | relative_url }}" alt="Role reveal: Jordan is The Detective" loading="lazy"><figcaption>Role reveal. The AI explains each role from the guest's own answers; the Mole is shown as "The Party Guest" until the finale.</figcaption></figure>
+      </div>
+      <p><strong>The writers' room never makes the room wait.</strong> Agent CLIs take seconds to answer, so every AI call runs in the background ahead of when it is needed (<a href="https://github.com/nddipiazza/robos/blob/main/packages/party-game/lib/ai-host.js"><code>lib/ai-host.js</code></a>). A guest finishes the survey and gets a personal welcome on the TV. The party host finishes the house and the host gives a house tour. Once everyone is ready, three calls run in parallel: the show script (title, opening, role reasons, game intros, Who Said That? teasers, superlatives and bluffs), trivia about each guest's interests, and House Quests built from the house survey. Standings recaps are written during the last reveal of each mini game, and the finale awards during the last mini game. In a real run with Antigravity, each call took 16 to 33 seconds and all of them were ready before the host pressed Start. If a call is slow or fails, the host uses stock material, so no click ever waits on an agent.</p>
+      <div class="blog-fig-grid">
+        <figure class="blog-fig"><img src="{{ '/assets/games/party-game/house-quest.jpg' | relative_url }}" alt="House Quest: The Sourdough Rock Opera in the basement" loading="lazy"><figcaption><strong>House Quest</strong>: the AI sent Maya to the basement drum kit and Priya to the karaoke mic for a sourdough rock anthem. Everyone else judges on their phones.</figcaption></figure>
+        <figure class="blog-fig"><img src="{{ '/assets/games/party-game/trivia.jpg' | relative_url }}" alt="Nerd Alert Trivia question about Fleetwood Mac for Maya" loading="lazy"><figcaption><strong>Nerd Alert Trivia</strong>: Maya listed Fleetwood Mac, so she is the resident expert on this one. Beat the expert for a bonus.</figcaption></figure>
+      </div>
+      <p><strong>Five mini games on one template.</strong> <em>Who Said That?</em>, <em>Most Likely To</em>, <em>House Quest</em>, <em>Nerd Alert Trivia</em> and <em>Two Truths &amp; a Bot</em> are each a small file built on <a href="https://github.com/nddipiazza/robos/blob/main/packages/party-game/lib/minigames/template.js"><code>lib/minigames/template.js</code></a>. A mini game builds its rounds from the guests, the house and whatever the AI wrote, scores the answers, and supplies the host's lines. The engine (<a href="https://github.com/nddipiazza/robos/blob/main/packages/party-game/lib/game-engine.js"><code>lib/game-engine.js</code></a>) handles the TVs, phones, timers, scoreboard and role perks. The Detective sees one wrong answer crossed out, the Wildcard can double down, the Trickster earns a point for every guest they fool, and the Mole has a secret mission that is revealed at the finale.</p>
+      <div class="blog-fig-grid">
+        <figure class="blog-fig"><img src="{{ '/assets/games/party-game/finale.jpg' | relative_url }}" alt="Finale with the winner, the Mole unmasked and an AI award for every guest" loading="lazy"><figcaption>The finale: the winner, the Mole unmasked, and an AI-written award for every guest, including one thanking the party host for the house.</figcaption></figure>
+        <figure class="blog-fig"><img src="{{ '/assets/games/party-game/phones.jpg' | relative_url }}" alt="Phones: the party host's house survey and the Detective's crossed-out answer" loading="lazy"><figcaption>On the phones: the party host's house survey, and the Detective's perk crossing out a wrong answer.</figcaption></figure>
+      </div>
+      <p><strong>Getting a Roku to show and speak the game.</strong> Browser TVs (LG webOS, Samsung Tizen, Android TV) simply load the game's TV page. A Roku has no browser, so the shared TV engine gained <em>app casts</em> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/robos-lib/tv-engine.js"><code>robos-lib/tv-engine.js</code></a>). The party game renders each Roku's screen in an offscreen window and pushes JPEG frames to the TV portal. The RobOS TV channel, rebuilt and sideloaded on cast just as a Dashboards cast does, shows those frames on its poster layer. Sound took two fixes, both confirmed on the TV through Roku's media-player query and debug console. A Roku has a single media pipeline, so the host's lines now play through the channel's keep-alive video player as small MP4 clips. That keep-alive stops the TV from going to standby, and its once-a-second check was restarting it over every line, so the check now steps aside while the host is talking: stop the keep-alive, play the line, start the keep-alive again. The same lines can also go to a <strong>RobOS Audio Player</strong> speaker. If music is playing on that speaker, the Audio Player's new control API plays the line on it and resumes the song where it left off.</p>
+      <div class="blog-log"># Run the Party Game tests (engine, AI writers' room with a stub agent, mini games, LAN server, narration routing)
+cd packages/robos-test && node --test tests/party-game/unit.test.js
+
+# Start the game from source (pair a TV in Smart TV Studio and sign in to an agent first)
+cd packages/party-game && npm install && npx electron . --no-sandbox
+
+# Check what a Roku is playing: the 60000 ms clip is the keep-alive; anything else is the host speaking
+curl http://&lt;roku-ip&gt;:8060/query/media-player</div>
+    </div>
+    <div class="blog-links">
+      <a href="{{ '/games/party-game/' | relative_url }}">RobOS Party Game →</a>
+      <a href="{{ '/games/party-game/docs/' | relative_url }}">Party Game docs →</a>
+      <a href="https://github.com/nddipiazza/robos/tree/main/packages/party-game/lib/minigames">Mini game template &amp; examples →</a>
+      <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/6e4f4314">6e4f4314</a> · <a href="https://github.com/nddipiazza/robos/commit/7c48575b">7c48575b</a> · <a href="https://github.com/nddipiazza/robos/commit/763b802e">763b802e</a> · <a href="https://github.com/nddipiazza/robos/commit/6a1cafbe">6a1cafbe</a> · <a href="https://github.com/nddipiazza/robos/commit/3f2de2b2">3f2de2b2</a> · <a href="https://github.com/nddipiazza/robos/commit/0738f77c">0738f77c</a> · <a href="https://github.com/nddipiazza/robos/commit/20cfe81a">20cfe81a</a> · <a href="https://github.com/nddipiazza/robos/commit/a58803ae">a58803ae</a> · <a href="https://github.com/nddipiazza/robos/commit/12c28cdc">12c28cdc</a></span>
+    </div>
+  </article>
+
+  <article class="blog-entry" id="audio-player-ai-fix-metadata">
+    <div class="blog-meta">
+      <time class="blog-date" datetime="2026-10-26">Oct 26, 2026</time>
+      <span class="blog-tag">RobOS Audio Player</span>
+      <span class="blog-tag">AI Fix Metadata &amp; Artwork</span>
+      <span class="blog-tag">Open-Source Media Skill</span>
+      <span class="blog-tag">MusicBrainz &amp; FFmpeg</span>
+    </div>
+    <h2><a href="#audio-player-ai-fix-metadata">RobOS Audio Player: AI Fix Metadata &amp; Artwork with Open-Source Media Probing, MusicBrainz CC0, and FFmpeg</a></h2>
+    <p class="blog-summary"><strong>RobOS Audio Player</strong> (<code>packages/audio-player</code>) now includes <strong>✦ AI Fix Metadata &amp; Artwork</strong>, built on the shared <code>&lt;robos-agent-selector&gt;</code> and <code>&lt;robos-ai-textarea&gt;</code> components and backed by the new <code>fix-media-metadata</code> agent skill. It inspects local and cloud audio/video containers (<code>.mp3</code>, <code>.flac</code>, <code>.m4a</code>, <code>.ogg</code>, <code>.opus</code>, <code>.wav</code>, <code>.mkv</code>, <code>.webm</code>), sidecar files (<code>.cue</code>, <code>.lrc</code>, <code>.nfo</code>), and strictly legal open-data APIs (<strong>MusicBrainz WS/2 CC0</strong>, <strong>Cover Art Archive</strong>, and <strong>LRCLIB</strong>) to repair messy titles, resolve canonical artists/albums/composers/years, extract or synthesize cover art, and optionally write lossless tags back to disk via <code>ffmpeg</code>.</p>
+    <div class="blog-body">
+      <figure class="blog-fig">
+        <img src="{{ '/assets/blog/audio-player-ai-fix-metadata/library-albums-enriched.png' | relative_url }}" alt="RobOS Audio Player showing the enriched Video Game Music album grid with extracted and open-source generated cover art" loading="lazy">
+        <figcaption><strong>RobOS Audio Player</strong> after running <strong>✦ AI Fix Metadata</strong> on a 12-track Google Drive <code>video game music</code> folder: what started as 1 generic folder album and 6 unknown/uploader artists was automatically organized into 11 canonical game soundtrack albums, 12 artists, 9 composers, 4 decades, and 100% cover art.</figcaption>
+      </figure>
+      <p><strong>Reusable RobOS UI components and the <code>fix-media-metadata</code> skill.</strong> Rather than inventing custom prompt controls, <strong>AI Fix Metadata</strong> embeds the standard <code>&lt;robos-agent-selector&gt;</code> and <code>&lt;robos-ai-textarea&gt;</code> (<a href="https://github.com/nddipiazza/robos/blob/main/packages/audio-player/src/AiFixMetadata.jsx"><code>packages/audio-player/src/AiFixMetadata.jsx</code></a>) with <code>/skills</code> command browsing and <code>@mention</code> file typeahead wired to <code>packages/robos-lib/skill-catalog.js</code>. The textarea opens pre-populated with <code>@skill(robos:fix-media-metadata)</code> (<a href="https://github.com/nddipiazza/robos/blob/main/plugins/robos/skills/fix-media-metadata/SKILL.md"><code>plugins/robos/skills/fix-media-metadata/SKILL.md</code></a>), giving your chosen coding agent (AGY, Claude Code, Codex, Gemini CLI, or GitHub Copilot) full domain instructions on container tag layouts, scene/ripper filename noise removal, open-data cross-referencing, and cover art selection.</p>
+      <div class="blog-fig-grid">
+        <figure class="blog-fig"><img src="{{ '/assets/blog/audio-player-ai-fix-metadata/ai-fix-metadata-modal.png' | relative_url }}" alt="AI Fix Metadata modal in RobOS Audio Player with robos-agent-selector and robos-ai-textarea pre-populated with @skill(robos:fix-media-metadata)" loading="lazy"><figcaption>The <strong>✦ AI Fix Metadata &amp; Artwork</strong> modal reusing <code>&lt;robos-agent-selector&gt;</code> and <code>&lt;robos-ai-textarea&gt;</code> with <code>@skill(robos:fix-media-metadata)</code>.</figcaption></figure>
+        <figure class="blog-fig"><img src="{{ '/assets/blog/audio-player-ai-fix-metadata/library-songs-enriched.png' | relative_url }}" alt="Enriched Songs table in RobOS Audio Player showing canonical titles, composers, albums, years, and Video Game Music genres" loading="lazy"><figcaption>The enriched <strong>Songs</strong> view with cleaned titles, canonical soundtrack albums, release years, and genres.</figcaption></figure>
+      </div>
+      <p><strong>100% open-source, legal media probing and artwork pipeline.</strong> For every track in the selected scope (selected rows, active folder, tracks missing metadata/art, or a library batch), <a href="https://github.com/nddipiazza/robos/blob/main/packages/audio-player/lib/ai-metadata.js"><code>packages/audio-player/lib/ai-metadata.js</code></a> runs a multi-stage open-source pipeline: it parses container tags with MIT-licensed <code>music-metadata</code>, probes stream/container headers and attached pictures with <code>ffprobe</code>, inspects sibling <code>.cue</code>, <code>.lrc</code>, and <code>.nfo</code> sidecars, and queries the CC0 <strong>MusicBrainz WS/2 API</strong> and <strong>LRCLIB</strong>. For tracks missing cover art, it extracts embedded <code>APIC</code> / <code>METADATA_BLOCK_PICTURE</code> / <code>covr</code> streams or representative video frames via <code>ffmpeg</code>, checks folder images (<code>cover.jpg</code>, <code>folder.png</code>), downloads official sleeves from the <strong>Cover Art Archive</strong>, or synthesizes an open-source FFmpeg waveform / SVG album sleeve. Every proposed change is presented as an interactive before→after diff card so you can review and selectively apply updates to the library index, playlists, and (optionally) directly into local media files via lossless <code>ffmpeg -c copy</code> stream muxing.</p>
+      <div class="blog-log"># Run the open-source media metadata &amp; FFmpeg tag-writing unit tests
+node --test packages/audio-player/lib/*.test.js
+
+# Trigger AI Fix Metadata on the running Audio Player via DOM Snapshot IPC (port 19196)
+node packages/robos-lib/snapshot-cli.js audio-player --click 'button#btn-library-ai-fix-metadata'
+node packages/robos-lib/snapshot-cli.js audio-player --click 'button#btn-ai-fix-metadata-run'
+node packages/robos-lib/snapshot-cli.js audio-player --click 'button#btn-ai-fix-metadata-apply'</div>
+    </div>
+    <div class="blog-links">
+      <a href="{{ '/v1/apps/audio-player/' | relative_url }}">RobOS Audio Player docs →</a>
+      <a href="https://github.com/nddipiazza/robos/blob/main/plugins/robos/skills/fix-media-metadata/SKILL.md">fix-media-metadata skill →</a>
+      <a href="https://github.com/nddipiazza/robos/blob/main/packages/audio-player/lib/ai-metadata.js">ai-metadata.js engine →</a>
+      <a href="https://github.com/nddipiazza/robos/blob/main/packages/audio-player/lib/ai-metadata.test.js">Unit &amp; FFmpeg E2E tests →</a>
+      <span class="blog-commits">Commits: <a href="https://github.com/nddipiazza/robos/commit/164e8713">164e8713</a> · <a href="https://github.com/nddipiazza/robos/commit/d4c0f112">d4c0f112</a></span>
+    </div>
+  </article>
 
   <article class="blog-entry" id="vpn-sandbox-and-killswitch-proof">
     <div class="blog-meta">

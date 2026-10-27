@@ -146,6 +146,7 @@ export function collectionMenuItems(tracks, ctx, { label } = {}) {
     { label: 'Add to queue', icon: 'queueAdd', onClick: () => actions.queueTracks(tracks, 'end') },
     { separator: true },
     { label: 'Add to playlist…', icon: 'list', onClick: () => actions.addToPlaylist(tracks) },
+    actions.fixMetadata ? { label: '✦ AI Fix Metadata…', icon: 'sparkle', onClick: () => actions.fixMetadata(tracks) } : null,
     { label: allLoved ? 'Remove from Loved' : 'Love', icon: allLoved ? 'heartFill' : 'heart', onClick: () => actions.setLoved(tracks, !allLoved) },
     actions.hasSpeakers ? { label: 'Cast to speaker', icon: 'cast', onClick: () => actions.castTracks(tracks) } : null,
   ];
@@ -168,6 +169,7 @@ export function trackMenuItems(tracks, ctx, { allTracks = null, index = 0, extra
     ...extra,
     { separator: true },
     { label: 'Add to playlist…', icon: 'list', onClick: () => actions.addToPlaylist(tracks) },
+    actions.fixMetadata ? { label: '✦ AI Fix Metadata…', icon: 'sparkle', onClick: () => actions.fixMetadata(tracks) } : null,
     { label: allLoved ? 'Remove from Loved' : 'Love', icon: allLoved ? 'heartFill' : 'heart', onClick: () => actions.setLoved(tracks, !allLoved) },
     actions.hasSpeakers ? { label: 'Cast to speaker', icon: 'cast', onClick: () => actions.castTracks(tracks) } : null,
   ];

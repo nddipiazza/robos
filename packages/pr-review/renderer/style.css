@@ -3317,6 +3317,11 @@ header h1 { font-size: 15px; font-weight: 600; }
 .theater-stepper .step-btn.active { color: #f0f4f8; border-bottom-color: #79b8ed; background: transparent; box-shadow: none; }
 .theater-stepper .step-num, .theater-stepper .step-status { display: none; }
 .theater-stepper .step-status.done { display: inline; color: #80b69a; }
+/* Team policy on a tab: still required, optional, or locked behind another step. */
+.theater-stepper .step-status.required, .theater-stepper .step-status.optional { display: inline; font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; line-height: 1; padding: 3px 6px; border-radius: 999px; border: 1px solid; }
+.theater-stepper .step-status.required { color: #e8b86a; border-color: #6b5530; }
+.theater-stepper .step-status.optional { color: #8c9aaa; border-color: #3a4552; }
+.theater-stepper .step-status.locked { display: inline; font-size: 11px; }
 .theater-topbar button:focus-visible { outline: 2px solid #79b8ed; outline-offset: -2px; }
 @media (max-width: 700px) { .theater-topbar { padding: 14px 16px 0; gap: 0 12px; } #theater-pr-title { font-size: 17px; } .theater-stepper { gap: 20px; } .theater-app-badge { display: none; } }
 
@@ -3536,3 +3541,12 @@ review-markdown-editor { display: block; margin: 8px 0 20px; }
 .review-activity li { padding:5px 0; line-height:1.5; }
 .review-activity a[href], .pr-ready-intro a[href] { color:#8fc9fa; text-decoration:underline; text-underline-offset:3px; }
 .review-activity a[href]:hover, .pr-ready-intro a[href]:hover { color:#c1e4ff; }
+
+/* Required review steps, listed above Create PR. */
+.review-steps-checklist { margin: 16px 0 8px; padding: 12px 14px; border: 1px solid #384758; border-radius: 8px; background: #0f141b; }
+.review-steps-checklist h4 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #e6edf3; }
+.review-steps-checklist ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.review-steps-checklist li { display: grid; grid-template-columns: 18px 1fr auto; gap: 8px; align-items: baseline; font-size: 13px; }
+.review-steps-checklist li small { color: #8c9aaa; font-size: 12px; }
+.review-steps-checklist li.done .review-step-mark { color: #80b69a; }
+.review-steps-checklist li.missing .review-step-mark { color: #e8b86a; }

@@ -111,8 +111,8 @@ app.whenReady?.().then(() => {
 
 app.on?.('window-all-closed', () => app.quit());
 app.on?.('second-instance', () => {
-  if (mainWindow) {
-    if (mainWindow.isMinimized()) mainWindow.restore();
+  if (mainWindow && !mainWindow.isDestroyed?.()) {
+    if (mainWindow.isMinimized?.()) mainWindow.restore();
     mainWindow.show();
     mainWindow.focus();
   }

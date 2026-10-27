@@ -1,0 +1,9 @@
+{
+  "name": "robos-google-calendar",
+  "version": "0.1.0",
+  "description": "RobOS Google Calendar & Thunderbird Integration — automatically installs Mozilla Thunderbird and configures Google Calendar (CalDAV), Google Contacts (CardDAV), and optional Gmail (IMAP/SMTP) using your RobOS Cloud Account",
+  "main": "main.js",
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

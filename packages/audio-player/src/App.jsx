@@ -7,9 +7,11 @@ import Library from './Library.jsx';
 import NowPlayingPanel from './NowPlayingPanel.jsx';
 import TrackInfo from './TrackInfo.jsx';
 import { AiPlaylistModal, DjSettingsModal } from './AiPlaylist.jsx';
+import { AiFixMetadataModal } from './AiFixMetadata.jsx';
 import { Splitter, useColumns, useLayoutPref } from './resizable.jsx';
 import { castClock, CastProgress, useCastPlaying } from './castClock.jsx';
 import { useVirtualDj } from './useVirtualDj.js';
+import { useSpeakerTakeover } from './useSpeakerTakeover.js';
 import { LibraryContext, ContextMenu, LoveButton, Cover, artUrlFor } from './library-ui.jsx';
 import { albumKeyOf, fold, splitGenres, sortTracks } from '../lib/library-index.js';
 
@@ -92,6 +94,7 @@ export default function App() {
   const [tracksForPlaylist, setTracksForPlaylist] = useState(null);
   const [showAiPlaylist, setShowAiPlaylist] = useState(false);
   const [showDjSettings, setShowDjSettings] = useState(false);
+  const [tracksForAiFix, setTracksForAiFix] = useState(null); // null = closed, [] = open for library, [t1, t2] = open for subset
   // Agent, model and effort picked in <robos-agent-selector>, remembered between sessions.
   const [aiAgent, setAiAgent] = useState(playerPrefs.aiAgent || null);
   const [quickPlaylistName, setQuickPlaylistName] = useState('');
@@ -204,6 +207,8 @@ export default function App() {
     if (window.robosAudio?.onSpeakerPlaybackStopped) {
       cleanups.push(window.robosAudio.onSpeakerPlaybackStopped((data) => {
         setActiveCastSession(null);
+        castClock.set({ playing: false });
+        setIsPlaying(false);
       }));
     }
 
@@ -213,6 +218,11 @@ export default function App() {
         const L = latestRef.current;
         if (L.outputTarget === 'local' || (L.outputTarget !== 'all' && ip !== L.outputTarget)) return;
         const finished = status.playerState === 'IDLE' && status.idleReason === 'FINISHED';
+        // A clip another RobOS app asked for (control API): its end hands back too.
+        if (status.role === 'clip') {
+          if (finished) L.controlClipFinished(status.loadId);
+          return;
+        }
         // A Virtual DJ line on the speaker: its end hands back to the music.
         if (status.role === 'dj') {
           if (finished) L.djCastLineFinished();
@@ -237,7 +247,11 @@ export default function App() {
         } else if (status?.playerState === 'PLAYING') {
           setActiveCastSession(prev => prev ? { ...prev, isPaused: false } : prev);
         }
-        if (status.playerState === 'PLAYING' || status.playerState === 'PAUSED') setIsPlaying(status.playerState === 'PLAYING');
+        if (status.playerState === 'PLAYING' || status.playerState === 'PAUSED') {
+          setIsPlaying(status.playerState === 'PLAYING');
+        } else if (status.playerState === 'IDLE' && !finished) {
+          setIsPlaying(false);
+        }
       }));
     }
 
@@ -734,6 +748,7 @@ export default function App() {
       }
       setActiveCastSession(null);
       castClock.set({ playing: false });
+      setIsPlaying(false);
       if (playerRef.current?.audio?.current) {
         playerRef.current.audio.current.pause();
       }
@@ -1062,6 +1077,11 @@ export default function App() {
     },
   });
 
+  // Other RobOS apps (e.g. RobOS Party Game) can play a clip on the music's
+  // speaker; the song picks up where it was afterwards.
+  const getControlPlayer = useCallback(() => latestRef.current.controlPlayer(), []);
+  const speakerTakeover = useSpeakerTakeover({ getPlayer: getControlPlayer, showStatus });
+
   const handleTrackEnded = () => {
     if (repeatMode === 'one') {
       restartCurrent();
@@ -1236,6 +1256,21 @@ export default function App() {
   }, []);
   const closeMenu = useCallback(() => setMenu(null), []);
 
+  const handleAiMetadataApplied = async (res) => {
+    if (res && res.library) {
+      setLibrary(res.library);
+    } else {
+      await loadLibrary();
+    }
+    await refreshPlaylists();
+    if (Array.isArray(res?.tracks) && res.tracks.length) {
+      const updatedById = new Map(res.tracks.map(t => [t.id, t]));
+      setPlaylist(prev => prev.map(pt => (pt && updatedById.has(pt.id) ? { ...pt, ...updatedById.get(pt.id) } : pt)));
+      setInfoTrack(prev => (prev && updatedById.has(prev.id) ? { ...prev, ...updatedById.get(prev.id) } : prev));
+    }
+    showStatus(`✦ AI updated metadata & artwork for ${res?.updatedCount || 0} track(s)!`);
+  };
+
   const libraryCtx = {
     artBase: artBase.local,
     stats,
@@ -1248,6 +1283,7 @@ export default function App() {
       castTracks,
       hasSpeakers: speakers.length > 0,
       addToPlaylist: (tracks) => { setQuickPlaylistName(''); setTracksForPlaylist(tracks); },
+      fixMetadata: (tracks) => setTracksForAiFix(Array.isArray(tracks) ? tracks : []),
       setLoved: setLovedTracks,
       showInfo: setInfoTrack,
       showInFolder,
@@ -1288,6 +1324,46 @@ export default function App() {
         await window.robosAudio.castPause(outputTarget);
         setActiveCastSession(prev => (prev ? { ...prev, isPaused: true } : prev));
       }
+    },
+    controlClipFinished: (loadId) => speakerTakeover.clipFinished(loadId),
+    // What the control API sees and does (see useSpeakerTakeover).
+    controlPlayer: () => {
+      const audio = playerRef.current?.audio?.current;
+      const casting = outputTarget !== 'local';
+      return {
+        outputTarget,
+        speakers,
+        song: playlist[currentTrackIndex] || null,
+        castActive: !!activeCastSession,
+        position: casting ? castClock.now() : (audio ? audio.currentTime : 0),
+        playing: casting
+          ? (castClock.get().playing || (isPlaying && !!activeCastSession && !activeCastSession.isPaused))
+          : !!(audio && !audio.paused),
+        djSpeaking: !!dj.speaking,
+        holdClock: (position) => castClock.set({ position, playing: false }),
+        resumeCastAt: (song, position, play) => latestRef.current.resumeCastAt(song, position, play),
+        pauseMusic: async () => {
+          if (outputTarget === 'local') {
+            if (audio && !audio.paused) { audio.pause(); setIsPlaying(false); }
+          } else if (activeCastSession && !activeCastSession.isPaused) {
+            await handleToggleCastPause();
+          }
+          return { ok: true, playing: false };
+        },
+        resumeMusic: async () => {
+          const song = playlist[currentTrackIndex];
+          if (!song) return { ok: false, error: 'Nothing to play' };
+          if (outputTarget === 'local') {
+            if (audio && audio.paused) { audio.play().catch(() => {}); setIsPlaying(true); }
+          } else if (activeCastSession) {
+            if (activeCastSession.isPaused) await handleToggleCastPause();
+          } else {
+            await castTrack(outputTarget, song, { startAt: castClock.now() });
+            setIsPlaying(true);
+          }
+          return { ok: true, playing: true };
+        },
+      };
     },
     // After a DJ break the queue may have changed: find the planned song again.
     goToTrack: (track, fallbackIdx) => {
@@ -2096,6 +2172,7 @@ export default function App() {
               searchInputRef={searchInputRef}
               isScanning={isScanningLibrary}
               onAiPlaylist={() => setShowAiPlaylist(true)}
+              onAiFixMetadata={(scopedTracks) => setTracksForAiFix(Array.isArray(scopedTracks) ? scopedTracks : [])}
               onAddFolder={handleSelectFolder}
               onAddFiles={handleAddFiles}
               onRefresh={async () => {
@@ -2288,6 +2365,17 @@ export default function App() {
             setShowDjSettings(false);
             showStatus(next.enabled ? '🎙 Virtual DJ is on — they’ll talk between songs.' : 'Virtual DJ is off.');
           }}
+        />
+      )}
+
+      {tracksForAiFix !== null && (
+        <AiFixMetadataModal
+          tracks={library.tracks}
+          initialTracks={tracksForAiFix}
+          agent={aiAgent}
+          onAgentChange={setAiAgent}
+          onApplied={handleAiMetadataApplied}
+          onClose={() => setTracksForAiFix(null)}
         />
       )}
 

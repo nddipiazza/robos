@@ -1,5 +1,13 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
+  cloudAccounts: () => ipcRenderer.invoke('cloud-accounts-list'),
+  saveCloudAccount: account => ipcRenderer.invoke('cloud-accounts-save', account),
+  deleteCloudAccount: accountId => ipcRenderer.invoke('cloud-accounts-delete', accountId),
+  setDefaultCloudAccount: accountId => ipcRenderer.invoke('cloud-accounts-set-default', accountId),
+  verifyCloudAccount: accountId => ipcRenderer.invoke('cloud-accounts-verify', accountId),
+  startGoogleOAuth: params => ipcRenderer.invoke('cloud-accounts-oauth-google', params),
+  configureThunderbird: payload => ipcRenderer.invoke('cloud-accounts-configure-thunderbird', payload),
+  launchRobosApp: appId => ipcRenderer.invoke('launch-robos-app', appId),
   githubAccounts: () => ipcRenderer.invoke('github-accounts-list'),
   saveGithubAccounts: selection => ipcRenderer.invoke('github-accounts-save', selection),
   addGithubAccount: () => ipcRenderer.invoke('github-accounts-add'),

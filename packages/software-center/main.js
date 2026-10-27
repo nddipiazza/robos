@@ -219,6 +219,16 @@ const TOOLS = [
     installCmd: 'wget -qO /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && sudo dpkg -i /tmp/google-chrome.deb; sudo apt-get install -f -y; rm -f /tmp/google-chrome.deb',
     uninstallCmd: 'sudo apt-get remove -y google-chrome-stable',
   },
+  {
+    id: 'thunderbird',
+    name: 'Mozilla Thunderbird',
+    description: 'Open-source Calendar (CalDAV), Contacts (CardDAV), and Email client integrated with RobOS Google Calendar',
+    category: 'Browser',
+    source: 'apt / snap (thunderbird)',
+    checkCmd: 'which thunderbird || test -x /usr/bin/thunderbird || test -x /snap/bin/thunderbird',
+    installCmd: 'sudo apt-get update -y && sudo apt-get install -y thunderbird || sudo snap install thunderbird',
+    uninstallCmd: 'sudo apt-get remove -y thunderbird || sudo snap remove thunderbird',
+  },
 
   // ── Dev Tools ──  (Software Center)
   {

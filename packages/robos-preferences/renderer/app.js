@@ -13,7 +13,7 @@ async function init() {
   _settings = await window.api.loadSettings();
   renderSidebar();
   renderSections();
-  await Promise.all([loadGithubAccounts(), loadOvpnAccounts(), loadAiApiStatus()]);
+  await Promise.all([loadCloudAccounts(), loadGithubAccounts(), loadOvpnAccounts(), loadAiApiStatus()]);
 }
 
 function renderSidebar() {
@@ -58,6 +58,7 @@ function renderSidebar() {
 function renderSections() {
   const el = document.getElementById('sections');
   el.innerHTML = _schema.sections.map(section => {
+    if (section.id === 'cloud_accounts') return cloudAccountSection();
     if (section.id === 'github_accounts') return githubAccountSection();
     if (section.id === 'ovpn_accounts') return ovpnAccountSection();
     const fields = section.fields.map(f => {
@@ -465,5 +466,138 @@ async function loadAiApiStatus() {
       await loadAiApiStatus();
       statusEl.textContent = `Key saved in pass at ${result.passPath}. ` + statusEl.textContent;
     };
+  }
+}
+
+// ── Unified Cloud Suite Accounts (Google, Microsoft, Nextcloud, Dropbox, S3) ─
+
+function cloudAccountSection() {
+  return `<section class="section" id="section-cloud_accounts">
+    <h2 class="section-title">Cloud Suite Accounts</h2>
+    <p class="section-description">Unified cloud accounts (Google Workspace, Microsoft 365 / OneDrive, Nextcloud, Dropbox, S3) shared across Data Sources, Audio Player, File Explorer, and Thunderbird Calendar/Contacts/Mail. Any Google Drive or OneDrive login is automatically imported here.</p>
+    <div id="cloud-accounts-list-wrap" style="margin-top:12px;"></div>
+    <div class="section-actions">
+      <button type="button" class="btn btn-primary" id="btn-cloud-google-signin">Sign in / Refresh Google Account</button>
+      <button type="button" class="btn" id="btn-open-cloud-accounts-app">Open RobOS Cloud Accounts App</button>
+      <button type="button" class="btn" id="btn-open-google-calendar-app">Open Google Calendar &amp; Thunderbird Setup</button>
+    </div>
+    <p class="section-status" id="cloud-accounts-status" role="status" aria-live="polite">Loading unified cloud accounts…</p>
+  </section>`;
+}
+
+function renderCloudAccountsSection(state) {
+  const listWrap = document.getElementById('cloud-accounts-list-wrap');
+  if (!listWrap) return;
+  const accounts = state.accounts || [];
+  if (!accounts.length) {
+    listWrap.innerHTML = `<div style="padding:10px 12px;border:1px solid #29323e;border-radius:6px;color:var(--muted);font-size:13px;margin-bottom:8px;">No cloud accounts connected yet. Sign in with Google or open RobOS Cloud Accounts.</div>`;
+    return;
+  }
+
+  listWrap.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">` +
+    accounts.map(acc => {
+      const suiteBadges = [];
+      if (acc.suites?.drive?.enabled) suiteBadges.push('Drive');
+      if (acc.suites?.calendar?.enabled) suiteBadges.push('Calendar (CalDAV)');
+      if (acc.suites?.contacts?.enabled) suiteBadges.push('Contacts (CardDAV)');
+      if (acc.suites?.mail?.enabled) suiteBadges.push('Gmail (IMAP/SMTP)');
+      return `
+        <div class="cloud-account-row" data-cloud-id="${esc(acc.id)}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border:1px solid ${acc.isDefault ? '#2e5964' : '#29323e'};background:${acc.isDefault ? '#112229' : '#0d1117'};border-radius:6px;">
+          <div>
+            <div style="font-weight:600;font-size:13.5px;">
+              ${esc(acc.label)}
+              <span style="font-size:11px;padding:2px 7px;border-radius:10px;background:#1f2937;color:#55d6e5;margin-left:6px;">${esc(acc.shortProviderName || acc.provider)}</span>
+              ${acc.loggedIn ? `<span style="font-size:11px;padding:2px 7px;border-radius:10px;background:#153626;color:#94e6b5;margin-left:4px;">Connected</span>` : `<span style="font-size:11px;padding:2px 7px;border-radius:10px;background:#3b1d1d;color:#f87171;margin-left:4px;">Login Required</span>`}
+              ${acc.thunderbirdConfigured ? `<span style="font-size:11px;padding:2px 7px;border-radius:10px;background:#1e293b;color:#38bdf8;margin-left:4px;">Thunderbird Synced</span>` : ''}
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-top:3px;">
+              Account: <code>${esc(acc.email || acc.user)}</code> · Active Suites: <strong>${esc(suiteBadges.join(', ') || 'Drive')}</strong>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex:none;">
+            ${acc.provider === 'google' ? `<button type="button" class="btn" data-cloud-tb="${esc(acc.id)}">Sync to Thunderbird</button>` : ''}
+            <button type="button" class="btn" data-cloud-verify="${esc(acc.id)}">Verify</button>
+          </div>
+        </div>
+      `;
+    }).join('') +
+    `</div>`;
+
+  listWrap.querySelectorAll('[data-cloud-verify]').forEach(btn => {
+    btn.onclick = async () => {
+      const statusEl = document.getElementById('cloud-accounts-status');
+      btn.disabled = true;
+      btn.textContent = 'Verifying…';
+      if (statusEl) statusEl.textContent = 'Verifying cloud account token & endpoints…';
+      const res = await window.api.verifyCloudAccount(btn.dataset.cloudVerify);
+      btn.disabled = false;
+      btn.textContent = 'Verify';
+      if (statusEl) {
+        statusEl.textContent = res.ok
+          ? `✓ Verified ${res.email || 'account'}: ${res.checks?.drive?.detail || 'Connected'}`
+          : `Verification failed: ${res.error || 'Not authenticated'}`;
+      }
+      const fresh = await window.api.cloudAccounts();
+      if (fresh.ok) renderCloudAccountsSection(fresh);
+    };
+  });
+
+  listWrap.querySelectorAll('[data-cloud-tb]').forEach(btn => {
+    btn.onclick = async () => {
+      const statusEl = document.getElementById('cloud-accounts-status');
+      btn.disabled = true;
+      btn.textContent = 'Configuring…';
+      const res = await window.api.configureThunderbird({
+        accountId: btn.dataset.cloudTb,
+        enableCalendar: true,
+        enableContacts: true,
+      });
+      btn.disabled = false;
+      btn.textContent = 'Sync to Thunderbird';
+      if (statusEl) {
+        statusEl.textContent = res.ok
+          ? `✓ Configured Thunderbird Calendar (CalDAV) & Contacts (CardDAV) for ${res.email} (${res.primaryProfilePath}).`
+          : `Error: ${res.error}`;
+      }
+      const fresh = await window.api.cloudAccounts();
+      if (fresh.ok) renderCloudAccountsSection(fresh);
+    };
+  });
+}
+
+async function loadCloudAccounts() {
+  const statusEl = document.getElementById('cloud-accounts-status');
+  if (!statusEl || !window.api.cloudAccounts) return;
+  try {
+    const res = await window.api.cloudAccounts();
+    if (!res.ok) throw new Error(res.error || 'Could not load cloud accounts');
+    renderCloudAccountsSection(res);
+    statusEl.textContent = `${res.accounts?.length || 0} cloud account(s) tracked and synced with Data Sources & Thunderbird.`;
+  } catch (err) {
+    statusEl.textContent = err.message;
+  }
+
+  const signInBtn = document.getElementById('btn-cloud-google-signin');
+  if (signInBtn) {
+    signInBtn.onclick = async () => {
+      statusEl.textContent = 'Opening Google OAuth 2.0 sign-in in your browser…';
+      const res = await window.api.startGoogleOAuth({});
+      if (res.ok) {
+        renderCloudAccountsSection(res);
+        statusEl.textContent = `✓ Signed in as ${res.email}.`;
+      } else {
+        statusEl.textContent = `Sign-in error: ${res.error}`;
+      }
+    };
+  }
+
+  const openCaBtn = document.getElementById('btn-open-cloud-accounts-app');
+  if (openCaBtn) {
+    openCaBtn.onclick = () => window.api.launchRobosApp('cloud-accounts');
+  }
+
+  const openCalBtn = document.getElementById('btn-open-google-calendar-app');
+  if (openCalBtn) {
+    openCalBtn.onclick = () => window.api.launchRobosApp('google-calendar');
   }
 }

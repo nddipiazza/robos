@@ -338,6 +338,17 @@ async function getServiceAccountToken(saJson) {
   return data.access_token;
 }
 
+function loadCloudAccountsLib() {
+  for (const p of [
+    process.env.ROBOS_LIB_PATH && path.join(process.env.ROBOS_LIB_PATH, 'cloud-accounts'),
+    path.resolve(__dirname, '..', '..', 'robos-lib', 'cloud-accounts'),
+    '/usr/local/share/robos/robos-lib/cloud-accounts',
+  ].filter(Boolean)) {
+    try { return require(p); } catch {}
+  }
+  return null;
+}
+
 function getDataSourcesConfigPath() {
   return path.join(getHomeDir(), '.config', 'robos', 'data-sources.json');
 }
@@ -346,15 +357,30 @@ function syncDsCredentialsFromDisk(ds) {
   if (!ds || !ds.id) return ds;
   try {
     const p = getDataSourcesConfigPath();
-    if (!fs.existsSync(p)) return ds;
-    const list = JSON.parse(fs.readFileSync(p, 'utf8'));
-    if (!Array.isArray(list)) return ds;
-    const diskDs = list.find(d => d && d.id === ds.id);
-    if (!diskDs) return ds;
-    if (diskDs.refreshToken && !ds.refreshToken) ds.refreshToken = diskDs.refreshToken;
-    if (diskDs.accessToken && diskDs.accessToken !== ds.accessToken) ds.accessToken = diskDs.accessToken;
-    if (diskDs.clientId && !ds.clientId) ds.clientId = diskDs.clientId;
-    if (diskDs.clientSecret && !ds.clientSecret) ds.clientSecret = diskDs.clientSecret;
+    if (fs.existsSync(p)) {
+      const list = JSON.parse(fs.readFileSync(p, 'utf8'));
+      if (Array.isArray(list)) {
+        const diskDs = list.find(d => d && d.id === ds.id);
+        if (diskDs) {
+          if (diskDs.refreshToken && !ds.refreshToken) ds.refreshToken = diskDs.refreshToken;
+          if (diskDs.accessToken && diskDs.accessToken !== ds.accessToken) ds.accessToken = diskDs.accessToken;
+          if (diskDs.clientId && !ds.clientId) ds.clientId = diskDs.clientId;
+          if (diskDs.clientSecret && !ds.clientSecret) ds.clientSecret = diskDs.clientSecret;
+        }
+      }
+    }
+    // Also fallback to unified Cloud Accounts registry if ds is missing tokens
+    if (!ds.refreshToken && !ds.accessToken && (ds.driverType === 'gdrive' || ds.driverType === 'onedrive')) {
+      const ca = loadCloudAccountsLib();
+      if (ca) {
+        const acc = ca.getAccountById(ds.user || null);
+        if (acc && ((ds.driverType === 'gdrive' && acc.provider === 'google') || (ds.driverType === 'onedrive' && acc.provider === 'microsoft'))) {
+          if (acc.refreshToken) ds.refreshToken = acc.refreshToken;
+          if (acc.accessToken) ds.accessToken = acc.accessToken;
+          if (acc.email && !ds.user) ds.user = acc.email;
+        }
+      }
+    }
   } catch {}
   return ds;
 }
@@ -373,6 +399,8 @@ function persistRefreshedTokenToDisk(dsId, newAccessToken) {
       list[idx].loggedIn = true;
       list[idx].status = 'Connected';
       fs.writeFileSync(p, JSON.stringify(list, null, 2), { encoding: 'utf8', mode: 0o600 });
+      const ca = loadCloudAccountsLib();
+      if (ca) ca.syncFromDataSources();
     }
   } catch {}
 }
@@ -1821,6 +1849,49 @@ async function walk(ds, remotePath, filter = () => true, limit = 5000, options =
     }
   }
 
+  if (driver === 'sftp' || driver === 'ftp') {
+    const out = [];
+    const startDefault = ds.database || '/';
+    const queue = [normalizeRemote(remotePath || startDefault)];
+    await withClient(ds, async (c) => {
+      while (queue.length && out.length < limit) {
+        const dir = queue.shift();
+        let cached = !options.forceRefresh ? getCachedDirListing(ds, dir, false) : null;
+        if (!cached) {
+          let rawList = [];
+          try {
+            rawList = await c.list(dir);
+          } catch {
+            continue;
+          }
+          const entries = rawList.map(e => driver === 'sftp' ? ({
+            name: e.name,
+            type: e.type === 'd' ? 'dir' : 'file',
+            size: e.size,
+            modified: e.modifyTime ? new Date(e.modifyTime).toISOString() : null,
+          }) : ({
+            name: e.name,
+            type: e.isDirectory ? 'dir' : 'file',
+            size: e.size,
+            modified: e.modifiedAt ? e.modifiedAt.toISOString() : null,
+          }));
+          entries.sort((a, b) => (a.type === b.type ? a.name.localeCompare(b.name, undefined, { numeric: true }) : a.type === 'dir' ? -1 : 1));
+          cached = {
+            path: dir,
+            provider: driver,
+            entries: entries.filter(e => e.name !== '.' && e.name !== '..').map(e => ({ ...e, path: posixPath.join(dir, e.name) })),
+          };
+          cacheDirListing(ds, dir, cached);
+        }
+        for (const e of cached.entries) {
+          if (e.type === 'dir') queue.push(e.path);
+          else if (filter(e.name)) out.push(e);
+        }
+      }
+    });
+    return out;
+  }
+
   const out = [];
   const queue = [normalizeRemote(remotePath)];
   while (queue.length && out.length < limit) {
@@ -2256,6 +2327,7 @@ module.exports = {
   resolveOneDriveAuth,
   openGDriveMediaStream,
   openOneDriveMediaStream,
+  withSftp,
   isRemoteDriver,
   isCloudStorageDriver,
   isOAuthCloudDriver,

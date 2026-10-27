@@ -203,9 +203,56 @@ if (typeof document !== 'undefined') {
   }
 
 
+  function syncHudBubblesToMain(cleared = false) {
+    if (!window.robosVoiceHud || typeof window.robosVoiceHud.syncBubbles !== 'function') return;
+    try {
+      let interimObj = null;
+      if (currentInterimBubble) {
+        const iText = currentInterimBubble.querySelector('.bubble-text')?.textContent?.trim() || '';
+        const iTime = currentInterimBubble.querySelector('.bubble-time')?.textContent?.trim() || formatTime();
+        if (iText) {
+          interimObj = {
+            id: 'interim-live',
+            text: iText,
+            msg: iText,
+            time: iTime,
+            isFinal: false,
+            likelySkills: currentInterimBubble._analysis?.likelySkills || [],
+            isAmbient: Boolean(currentInterimBubble._analysis?.isAmbient),
+            ambientReason: currentInterimBubble._analysis?.ambientReason || null,
+          };
+        }
+      }
+      const bubblesList = finalizedMessages.slice(-20).map((m) => {
+        const bEl = chatFeed?.querySelector(`[data-id="${m.id}"]`);
+        const analysis = (bEl && bEl._analysis) || m.analysis || {};
+        const cmdCard = (bEl && bEl._commandCard) || m.commandCard || null;
+        return {
+          id: m.id,
+          text: m.text,
+          msg: m.text,
+          time: m.time,
+          ts: m.ts,
+          isFinal: true,
+          likelySkills: analysis.likelySkills || [],
+          isAmbient: Boolean(analysis.isAmbient),
+          ambientReason: analysis.ambientReason || null,
+          commandCard: cmdCard,
+        };
+      });
+      window.robosVoiceHud.syncBubbles({
+        active: isRecording,
+        interimBubble: interimObj,
+        bubbles: bubblesList,
+        cleared: Boolean(cleared && bubblesList.length === 0 && !interimObj),
+      });
+    } catch {}
+  }
+
   // AI Stream Likely Skills & Ambient Badge Renderer
   function renderBubbleSkills(bubbleEl, analysis) {
     if (!bubbleEl || !analysis) return;
+    bubbleEl._analysis = analysis;
     let container = bubbleEl.querySelector('.ai-skills-stream');
     if (!container) {
       container = document.createElement('div');
@@ -309,8 +356,10 @@ if (typeof document !== 'undefined') {
 
     if (bubbleMeta && (bubbleMeta.likelySkills !== undefined || bubbleMeta.isAmbient !== undefined)) {
       renderBubbleSkills(currentInterimBubble, bubbleMeta);
+      syncHudBubblesToMain();
     } else {
-      resolveAndRenderBubbleSkills(currentInterimBubble, cleanText);
+      resolveAndRenderBubbleSkills(currentInterimBubble, cleanText).then(() => syncHudBubblesToMain());
+      syncHudBubblesToMain();
     }
 
     scrollToBottom();
@@ -368,6 +417,15 @@ if (typeof document !== 'undefined') {
         <div class="command-card-result">Executing <strong>${escapeHtml(cmd.title)}</strong>...</div>
       `;
       bubbleEl.appendChild(cardEl);
+      bubbleEl._commandCard = {
+        typeLabel,
+        typeClass,
+        title: cmd.title,
+        status: 'running',
+        statusLabel: 'Executing',
+        resultText: `Executing ${cmd.title}...`,
+      };
+      syncHudBubblesToMain();
       scrollToBottom();
 
       // 3. Execute the command
@@ -381,18 +439,37 @@ if (typeof document !== 'undefined') {
             statusBadge.className = 'command-status-badge done';
             statusBadge.textContent = '✓ Done';
           }
+          const doneMsg = result.actionDone || result.response || `Successfully executed ${cmd.title}`;
           if (resultText) {
-            resultText.innerHTML = escapeHtml(result.actionDone || result.response || `Successfully executed ${cmd.title}`);
+            resultText.innerHTML = escapeHtml(doneMsg);
           }
+          bubbleEl._commandCard = {
+            typeLabel,
+            typeClass,
+            title: cmd.title,
+            status: 'done',
+            statusLabel: '✓ Done',
+            resultText: doneMsg,
+          };
         } else {
           if (statusBadge) {
             statusBadge.className = 'command-status-badge failed';
             statusBadge.textContent = '✕ Error';
           }
+          const errMsg = (result && result.error) || 'Command failed or encountered an error';
           if (resultText) {
-            resultText.textContent = (result && result.error) || 'Command failed or encountered an error';
+            resultText.textContent = errMsg;
           }
+          bubbleEl._commandCard = {
+            typeLabel,
+            typeClass,
+            title: cmd.title,
+            status: 'failed',
+            statusLabel: '✕ Error',
+            resultText: errMsg,
+          };
         }
+        syncHudBubblesToMain();
         scrollToBottom();
       }
     } catch (err) {
@@ -441,6 +518,7 @@ if (typeof document !== 'undefined') {
           currentInterimBubble.remove();
           currentInterimBubble = null;
         }
+        syncHudBubblesToMain();
         return;
       }
     }
@@ -493,8 +571,10 @@ if (typeof document !== 'undefined') {
 
     if (bubbleMeta && (bubbleMeta.likelySkills !== undefined || bubbleMeta.isAmbient !== undefined)) {
       renderBubbleSkills(bubbleEl, bubbleMeta);
+      syncHudBubblesToMain();
     } else {
-      resolveAndRenderBubbleSkills(bubbleEl, cleanText);
+      resolveAndRenderBubbleSkills(bubbleEl, cleanText).then(() => syncHudBubblesToMain());
+      syncHudBubblesToMain();
     }
 
     scheduleBubbleSettle(bubbleEl, cleanText);
@@ -584,6 +664,7 @@ if (typeof document !== 'undefined') {
       chatFeed.querySelectorAll('.dictation-bubble').forEach(b => b.remove());
       showWelcomeIfEmpty();
     }
+    syncHudBubblesToMain(true);
   });
 
   // Position Cycle Button

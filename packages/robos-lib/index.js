@@ -13,6 +13,8 @@ const CATEGORIES = {
   'System':   { order: 6, label: 'System',        icon: '⚙️' },
   'Internet': { order: 7, label: 'Internet',      icon: '🌐' },
   'Tools':    { order: 8, label: 'Tools',         icon: '🛠️' },
+  'Games':    { order: 11, label: 'Games',        icon: '🎮' },
+  'Party Games': { order: 12, label: 'Party Games', icon: '🎉' },
 };
 
 const CATEGORY_IDS = Object.keys(CATEGORIES);
@@ -121,6 +123,7 @@ const agentPersonas = require('./agent-personas');
 const voiceModule = require('./voice');
 const ovpnProviders = require('./ovpn-providers');
 const vpnSandboxEngine = require('./vpn-sandbox-engine');
+const dashboardEngine = require('./dashboard-engine');
 
 module.exports = {
   CATEGORIES,
@@ -146,6 +149,10 @@ module.exports = {
   voiceClient: voiceModule.voiceClient,
   ovpnProviders,
   vpnSandboxEngine,
+  dashboardEngine,
+  DASHBOARD_LAYOUTS: dashboardEngine.DASHBOARD_LAYOUTS,
+  DASHBOARD_WIDGET_CATALOG: dashboardEngine.DASHBOARD_WIDGET_CATALOG,
+  createDashboardEngine: dashboardEngine.createDashboardEngine,
 };
 
 

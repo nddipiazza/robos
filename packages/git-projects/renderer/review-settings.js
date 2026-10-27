@@ -21,6 +21,17 @@ window.mountProjectReviewSettings = async function(project) {
     const githubLabel=document.createElement('label');githubLabel.textContent='Default GitHub PR reviewers';
     const githubReviewers=document.createElement('input');githubReviewers.type='text';githubReviewers.value=(result.settings.githubReviewers||[]).join(', ');githubReviewers.placeholder='username, organization/team';githubLabel.append(githubReviewers);prHost.append(githubLabel);
     const githubHint=document.createElement('p');githubHint.textContent='Review requests when moving a draft PR to ready. Separate usernames or teams with commas; you can change them for each PR.';prHost.append(githubHint);
+    // Which tabs the local review shows, and which must be finished before Create PR and Move PR to Ready.
+    const stepsHeading=document.createElement('h3');stepsHeading.textContent='Review steps';
+    const stepsIntro=document.createElement('p');stepsIntro.textContent='Choose which review tabs authors see before they open a pull request. Required steps must be finished before Create PR and Move PR to Ready; hidden steps get no tab.';
+    const stepsTable=document.createElement('div');stepsTable.className='review-steps-settings';
+    const stepSelects={};
+    for(const [step,label,done] of [['changes','Changes','Every changed file is marked Viewed.'],['evidence','Evidence','The evidence bundle was captured on the latest commit and every scenario passed.'],['walkthrough','Walkthrough','The walkthrough reached its last checkpoint.']]){
+      const row=document.createElement('label');row.className='review-step-row';const name=document.createElement('strong');name.textContent=label;const hint=document.createElement('span');hint.textContent='Done when: '+done;
+      const select=document.createElement('select');select.setAttribute('aria-label',label+' step');for(const [value,text] of [['required','Required'],['optional','Optional'],['hidden','Hidden']])select.add(new Option(text,value));select.value=result.settings.reviewSteps?.[step]||'optional';select.dataset.step=step;stepSelects[step]=select;
+      row.append(name,hint,select);stepsTable.append(row);
+    }
+    prHost.append(stepsHeading,stepsIntro,stepsTable);
     const prEditor=editor(prHost,'PR description template',result.settings.prTemplate,'Start each pull request with a clear description of the change and how it was verified.');
     const messageEditor=editor(messageHost,result.appName+' review notification template',result.settings.messageTemplate,'Invite your team to review the PR. Include {{url}} so they can open it directly.');
     const server=document.createElement('select'),channel=document.createElement('select');
@@ -34,7 +45,7 @@ window.mountProjectReviewSettings = async function(project) {
     const load=async()=>{const mine=++generation;channel.replaceChildren(new Option('Choose channel',''));await reviewers.load(server.value,result.settings.reviewers || []);if(mine!==generation||prHost.dataset.repo!==selected)return;if(!server.value)return;messageStatus.textContent='Loading channels…';const r=await gp.reviewChannels(server.value);if(mine!==generation||prHost.dataset.repo!==selected)return;if(!r.ok){messageStatus.textContent=r.error;return;}for(const c of r.channels)channel.add(new Option('#'+c.name,c.id));channel.value=result.settings.channel;messageStatus.textContent='';};
     server.onchange=()=>load().catch(e=>messageStatus.textContent=e.message);
     const saveButton=(host,text,status,changes)=>{const save=document.createElement('button');save.className='btn btn-primary';save.textContent=text;save.onclick=async()=>{save.disabled=true;try{const next=changes();const r=await gp.saveReviewSettings({repo:selected,settings:next});status.textContent=r.ok?'Review settings saved.':r.error;if(r.ok)Object.assign(result.settings,r.settings||next);}catch(e){status.textContent=e.message;}finally{save.disabled=false;}};host.append(save);};
-    saveButton(prHost,'Save PR settings',prStatus,()=>({prTemplate:prEditor.value,githubReviewers:githubReviewers.value.split(/[\s,]+/).filter(Boolean)}));
+    saveButton(prHost,'Save PR settings',prStatus,()=>({prTemplate:prEditor.value,githubReviewers:githubReviewers.value.split(/[\s,]+/).filter(Boolean),reviewSteps:Object.fromEntries(Object.entries(stepSelects).map(([step,select])=>[step,select.value]))}));
     saveButton(messageHost,'Save notification settings',messageStatus,()=>({messageTemplate:messageEditor.value,serverId:server.value,channel:channel.value,reviewers:[...(result.settings.reviewers || []).filter(r=>r.serverId!==server.value),...reviewers.configured()]}));
     await load();if(prHost.dataset.repo!==selected)return;
     if(!result.servers.length)messageStatus.textContent='Configure a workspace in Team Chat Servers to enable notifications.';

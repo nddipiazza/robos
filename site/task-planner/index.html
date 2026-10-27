@@ -1,0 +1,179 @@
+---
+layout: default
+title: Task Planner
+permalink: /task-planner/
+body_class: guide
+extra_css: /assets/build-guide.css
+description: "RobOS Task Planner turns a sentence or a template into epics and tasks with acceptance criteria and a developer persona, lets you edit them, and creates them as GitHub or Jira issues. Requirements, every screen, templates, personas, KGraph project plans and where your data is stored."
+og_image: /assets/build-apps/shots/planner-3-generated.jpg
+og_image_alt: "RobOS Task Planner with a generated epic and task, each assigned a developer persona"
+og_type: article
+schema_type: TechArticle
+keywords: "RobOS Task Planner, Task Explorer, AI task planning, epics and tasks, acceptance criteria, GitHub issues, Jira issues, task templates, developer personas, gh copilot, KGraph project plans"
+---
+{%- assign shots = '/assets/build-apps/shots/' | relative_url -%}
+<section class="auto-intro" aria-labelledby="task-planner-title">
+  <div class="wrap">
+    <div class="auto-intro-grid">
+      <div class="auto-intro-copy">
+        <p class="eyebrow">RobOS Task Planner · step 1 of <a href="{{ '/build-apps/' | relative_url }}">the build loop</a></p>
+        <h1 id="task-planner-title">Turn a sentence into issues an agent can finish</h1>
+        <p class="auto-intro-lead">Describe a feature, or fill in one of 67 templates. You get a draft of epics and tasks, edit it, then create the issues on GitHub or Jira.</p>
+        <p>Each task is written with scope, acceptance criteria and test cases, and each card has a <strong>developer persona</strong>: the role the implementing agent should take. <a href="{{ '/task-implementer/' | relative_url }}">Task Implementer</a> picks the issues up from there.</p>
+        <a class="btn" href="#plan">Plan your first feature <span aria-hidden="true">↓</span></a>
+      </div>
+      <div class="auto-intro-demo">
+        <figure class="guide-shot" style="margin:0"><a href="{{ shots }}planner-3-generated.jpg"><img src="{{ shots }}planner-3-generated.jpg" alt="Task Explorer with a generated epic assigned to the Software Architect persona and a task assigned to Backend Systems Developer" loading="eager" width="1600" height="1135"></a><figcaption>An epic and a task drafted from one sentence, each with a persona.</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="guide-page"><div class="wrap"><div class="guide-layout">
+<nav class="guide-toc" aria-label="Task Planner guide"><h4><a href="{{ '/task-planner/' | relative_url }}">Task Planner</a></h4><ol><li><a href="#at-a-glance">At a glance</a></li><li><a href="#before">Before you start</a></li><li><a href="#plan">Plan a feature</a></li><li><a href="#review">Review and edit the plan</a></li><li><a href="#sync">Create the issues</a></li><li><a href="#templates">Task templates</a></li><li><a href="#personas">Developer personas</a></li><li><a href="#project-plans">KGraph project plans</a></li><li><a href="#files">Where things are saved</a></li><li><a href="#limits">Limits and fixes</a></li><li><a href="{{ '/task-implementer/' | relative_url }}">Next: Task Implementer</a></li></ol></nav>
+<article class="guide-body">
+<p class="eyebrow">App guide</p>
+<h2 class="guide-title" id="at-a-glance" style="margin-top:0">Task Planner at a glance</h2>
+<p class="chapter-intro">The package is <code>packages/task-planner</code>. Its window and launcher entry are titled <strong>RobOS Task Explorer</strong>; it is the same app.</p>
+
+<table>
+<thead><tr><th>You want to</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td>Plan a feature from a description</td><td>The prompt box and <strong>Generate with AI</strong></td></tr>
+<tr><td>Plan a common kind of project with a form</td><td><strong>Browse All Templates</strong>, then <strong>Generate Task Plan</strong></td></tr>
+<tr><td>Change the tasks before they become issues</td><td><strong>Project Tasks &amp; Epics</strong>: edit a card, <strong>+ Add Epic</strong>, <strong>+ Add Task</strong></td></tr>
+<tr><td>Keep a draft for later</td><td><strong>Save to Project</strong></td></tr>
+<tr><td>Create the issues on GitHub or Jira</td><td><strong>Sync All to Server</strong></td></tr>
+<tr><td>Change how a role plans and builds</td><td><strong>Agent Personas &amp; Prompts</strong></td></tr>
+<tr><td>Record a reviewed plan over issues that already exist</td><td><strong>KGraph Project Plans</strong></td></tr>
+</tbody>
+</table>
+
+<h2 id="before">Before you start</h2>
+<ul>
+<li class="check"><span class="box"></span><span>RobOS installed, or a clone you run the apps from. See <a href="{{ '/v1/getting-started.html' | relative_url }}">Get started</a>.</span></li>
+<li class="check"><span class="box"></span><span>A <strong>task server</strong>: a GitHub repository or a Jira project, added in <strong>RobOS Task Servers</strong>. Without one, the window shows <strong>Open Task Servers</strong>. See <a href="{{ '/build-apps/solo/#connect' | relative_url }}">Connect your repository</a>.</span></li>
+<li class="check"><span class="box"></span><span>For GitHub, the GitHub CLI <code>gh</code>, signed in (<code>gh auth login</code>). For Jira, its URL, your username and an API token stored in <code>pass</code> at the server's <code>token_pass_path</code>.</span></li>
+<li class="check"><span class="box"></span><span>The GitHub Copilot CLI extension, signed in. <strong>Generate with AI</strong> runs <code>gh copilot -- -p &lt;prompt&gt; --allow-all-tools --silent</code>. Templates do not need it.</span></li>
+</ul>
+<p>Open it from the app launcher, or run <code>npm install &amp;&amp; npm start</code> in <code>packages/task-planner</code>. The active task server shows in the top right corner.</p>
+
+<h2 id="plan">Plan a feature</h2>
+<ol>
+<li><strong>Pick a project.</strong> Choose one in the <strong>Projects</strong> list, or click <strong>+ Plan New Feature</strong> to start one and give it a name.</li>
+<li><strong>Give the agent context.</strong> Fill in <strong>Tech Stack &amp; Architecture Context</strong> and <strong>Bound Microservices &amp; Repositories</strong>. Write what you would tell a new developer: languages, frameworks, where the tests are, conventions to keep. This text goes with every request for the project.</li>
+<li><strong>Optionally choose a parent epic.</strong> On Jira, <strong>Parent Epic</strong> lists the project's existing epics, and new tasks without an epic of their own are created under it.</li>
+<li><strong>Describe the work</strong> in the prompt box and click <strong>Generate with AI</strong>. One sentence is enough to start; the template chips above the box are a shortcut to the most used templates.</li>
+</ol>
+<figure class="guide-shot"><a href="{{ shots }}planner-2-prompt.jpg"><img src="{{ shots }}planner-2-prompt.jpg" alt="Task Explorer with the project's architecture context, the task template chips, and a one-sentence feature description in the prompt box" loading="lazy" width="1600" height="1135"></a><figcaption>The project context above the prompt travels with every request.</figcaption></figure>
+<p>The agent is asked for a list of epics and tasks, each with a Markdown body covering scope, dependencies, acceptance criteria, and happy-path, negative and edge-case checks. Task Planner turns the answer into cards, keeping each one's title, body, labels, issue type and epic. A card's persona starts as <strong>Software Architect</strong> for an epic and <strong>Backend Systems Developer</strong> for a task; change it in the card's drop-down.</p>
+<p>A prompt that asks for questions ("ask me questions first", "clarify") opens the <strong>Interactive Architecture Form</strong> instead: multiple-choice questions you step through with <strong>Previous</strong> and <strong>Next Question</strong> before <strong>Generate Epics &amp; Tasks</strong>. Its questions are a fixed set chosen from words in your prompt (a game, an event-driven service, or a product for non-developers), not questions written by the agent. Plans made this way also keep the dependencies between tasks, shown as <strong>Depends on</strong> on a card.</p>
+
+<h2 id="review">Review and edit the plan</h2>
+<p>The result appears under <strong>Project Tasks &amp; Epics</strong>. Epics come first, with their tasks under them.</p>
+<ol>
+<li>Read every task. Each should be small enough for one branch, with acceptance criteria you could check yourself. If it is not, split it.</li>
+<li>Edit the title, body and labels on the card, change the persona, or remove the task. <strong>Directives</strong> on a card shows the guidance for its persona. <strong>+ Add Epic</strong> and <strong>+ Add Task</strong> add your own.</li>
+<li>Click <strong>Save to Project</strong> to keep the draft on this machine, with every card's persona and directives. You can reopen it from the <strong>Projects</strong> list.</li>
+</ol>
+<figure class="guide-shot"><a href="{{ shots }}planner-3-generated.jpg"><img src="{{ shots }}planner-3-generated.jpg" alt="The generated plan: an epic assigned to the Software Architect persona and a task assigned to Backend Systems Developer, with acceptance criteria and happy-path, negative and edge cases" loading="lazy" width="1600" height="1135"></a><figcaption>An epic with the Software Architect persona and a task with Backend Systems Developer.</figcaption></figure>
+
+<h2 id="sync">Create the issues</h2>
+<p>Click <strong>Sync All to Server</strong>, or <strong>Sync</strong> on one card. Epics are created first so their tasks can go under them. Each card shows its new issue key, and a card that is already synced is updated instead of created again. When it finishes, <strong>Results</strong> lists every issue with a link; <strong>Plan More Tasks</strong> takes you back to the cards.</p>
+<table>
+<thead><tr><th></th><th>GitHub</th><th>Jira</th></tr></thead>
+<tbody>
+<tr><td>How</td><td><code>gh issue create</code> with your <code>gh</code> sign-in</td><td>The Jira REST API with your API token</td></tr>
+<tr><td>What is sent</td><td>Title, body and labels. Missing labels are created in the repository.</td><td>Summary, description and issue type</td></tr>
+<tr><td>Epics</td><td>An ordinary issue, not linked to its tasks</td><td>An Epic with its epic name, and each task created under it (or under <strong>Parent Epic</strong>)</td></tr>
+<tr><td>Dependencies</td><td>Not linked. Note which tasks must go first.</td><td>A <em>Blocks</em> link for each <strong>Depends on</strong> shown on a card</td></tr>
+</tbody>
+</table>
+<figure class="guide-shot"><a href="{{ shots }}planner-4-synced.jpg"><img src="{{ shots }}planner-4-synced.jpg" alt="After Sync All to Server, each card shows its new issue number, #41 and #42, and the status reads Synced 2 tasks" loading="lazy" width="1600" height="1135"></a><figcaption>Synced: the epic is issue #41 and the task is #42.</figcaption></figure>
+<p>The persona drop-down is not sent with the issue. <a href="{{ '/task-implementer/' | relative_url }}">Task Implementer</a> chooses a persona from an issue's <code>role:</code> label, and otherwise from words in its title, body and labels. To fix the persona for a task, add a label such as <code>role:backend-dev</code> or <code>role:frontend-web-dev</code> to its card before you sync.</p>
+
+<h2 id="templates">Task templates</h2>
+<p><strong>Browse All Templates</strong> opens the <strong>Task Templates Library</strong>: 67 built-in templates in ten categories, with a search box and category filters. A template opens a short form; <strong>Generate Task Plan</strong> fills a ready-made plan from your answers on this machine, without calling an agent.</p>
+<figure class="guide-shot"><a href="{{ shots }}planner-5-templates.jpg"><img src="{{ shots }}planner-5-templates.jpg" alt="The Task Templates Library: a search box, category filters and template cards such as back-end web service, gRPC microservice and GraphQL API service" loading="lazy" width="1600" height="1135"></a><figcaption>The template library.</figcaption></figure>
+<table>
+<thead><tr><th>Category</th><th>Templates</th><th>For example</th></tr></thead>
+<tbody>
+<tr><td>Services &amp; APIs</td><td>12</td><td>Back-end web service, gRPC microservice, GraphQL API, Kafka consumer or producer</td></tr>
+<tr><td>Front-End Applications</td><td>9</td><td>React app, Next.js on Vercel, Vue 3 single-page app</td></tr>
+<tr><td>Libraries &amp; SDKs</td><td>7</td><td>Java library, TypeScript npm package, Python package, Go module</td></tr>
+<tr><td>Knowledge Graph &amp; Schemas</td><td>7</td><td>Knowledge graph schema, SHACL validation shape, OpenAPI 3.1 contract</td></tr>
+<tr><td>Game Development</td><td>6</td><td>Godot game, tactical cRPG, Unity 6 PC or mobile game</td></tr>
+<tr><td>Data &amp; Storage</td><td>6</td><td>Relational schema and migrations, document database, Redis cache</td></tr>
+<tr><td>Cloud &amp; Infrastructure</td><td>6</td><td>Helm chart, ArgoCD pipeline, Terraform or OpenTofu stack, Docker Compose</td></tr>
+<tr><td>Mobile Applications</td><td>5</td><td>React Native, Flutter, native iOS</td></tr>
+<tr><td>DevOps &amp; Observability</td><td>5</td><td>GitHub Actions pipeline, OpenTelemetry and Prometheus, Playwright test suite</td></tr>
+<tr><td>RobOS Platform &amp; Agent Extensions</td><td>4</td><td>MCP server, RobOS Electron app, RobOS agent skill, task server connector</td></tr>
+</tbody>
+</table>
+<p><strong>Create Custom Template</strong> saves your own: a title, a category, a description and, optionally, the form fields as JSON. Leave the fields empty for the standard inputs.</p>
+
+<h2 id="personas">Developer personas</h2>
+<p>A persona is the role an agent takes for a task. Task Planner lists them in its prompt and on every card, and Task Implementer uses the same list when it runs the task. The label for each is <code>role:</code> plus the name in brackets.</p>
+<table>
+<thead><tr><th>Persona</th><th>Typical tasks</th></tr></thead>
+<tbody>
+<tr><td>Software Architect (<code>software-architect</code>)</td><td>Epics, service boundaries, architecture decisions, schemas</td></tr>
+<tr><td>Frontend Web Developer (<code>frontend-web-dev</code>)</td><td>Web and Electron interfaces, components, accessibility</td></tr>
+<tr><td>Backend Systems Developer (<code>backend-dev</code>)</td><td>APIs, services, contracts and their tests</td></tr>
+<tr><td>Data &amp; Storage Engineer (<code>data-engineer-dev</code>)</td><td>Database schemas, migrations, event streams, caching</td></tr>
+<tr><td>DevOps &amp; Cloud Engineer (<code>devops-engineer</code>)</td><td>Containers, Kubernetes, CI/CD, monitoring</td></tr>
+<tr><td>Game Developer (<code>game-dev</code>)</td><td>Godot 4 and game systems</td></tr>
+<tr><td>Non-Headless Developer (<code>non-headless-dev</code>)</td><td>Work that needs a display, an IDE or a debugger</td></tr>
+<tr><td>Human + Agent Desktop Co-Pilot (<code>human-agent-copilot</code>)</td><td>Pairing with you in your own desktop session</td></tr>
+</tbody>
+</table>
+<p><strong>Agent Personas &amp; Prompts</strong> edits each persona's four parts: the <em>core system prompt</em>, the <em>planning directive</em> (how it breaks down epics), the <em>implementation directive</em> (how it builds a task) and its <em>development guidance</em>. <strong>+ Add Custom Persona</strong> adds a role, and <strong>Restore Defaults</strong> puts the originals back. Changes are shared with Task Implementer.</p>
+
+<h2 id="project-plans">KGraph project plans</h2>
+<p><strong>KGraph Project Plans</strong> is a separate workflow for a plan over issues that already exist, for example ones your team filed through its own process. It records the plan in the RobOS knowledge graph so other tools, and the <strong>Project Plan</strong> tab in KGraph Explorer, can read it.</p>
+<ol>
+<li>Start the app with <code>ROBOS_GRAPH_ROOT</code> set to the folder that contains <code>.robos</code>.</li>
+<li>Paste a version 1 plan: a summary, design, verification and risks, plus the GitHub issue URLs it covers with their parents and dependencies.</li>
+<li>Click <strong>Preview plan</strong>. It reads each issue with your <code>gh</code> sign-in and checks the plan. A GitHub error stops the preview.</li>
+<li>Click <strong>Save reviewed plan</strong> to write it to the project's node in the graph.</li>
+</ol>
+<p>It never creates, closes or approves GitHub issues; GitHub stays the source of their state. The same steps are available from the command line:</p>
+<pre><code>node packages/task-planner/bin/project-plan.js list
+node packages/task-planner/bin/project-plan.js view &lt;plan-id|issue-url|number&gt;
+node packages/task-planner/bin/project-plan.js propose --file plan.json
+node packages/task-planner/bin/project-plan.js apply --file plan.json</code></pre>
+<p>The plan format, its statuses (<code>draft</code>, <code>review-required</code>, <code>approved</code>) and how to remove a plan are in <a href="https://github.com/nddipiazza/robos/blob/main/packages/task-planner/PROJECT-PLANS.md"><code>PROJECT-PLANS.md</code></a>.</p>
+
+<h2 id="files">Where things are saved</h2>
+<table>
+<thead><tr><th>What</th><th>Where</th></tr></thead>
+<tbody>
+<tr><td>Task servers and the active one</td><td><code>~/.config/robos/settings.json</code></td></tr>
+<tr><td>Projects and their draft tasks</td><td><code>~/.config/robos/task-planner/projects/</code></td></tr>
+<tr><td>Custom templates</td><td><code>~/.config/robos/task-planner/custom-templates/</code></td></tr>
+<tr><td>Edited and custom personas</td><td><code>~/.config/robos/agent-personas.json</code></td></tr>
+<tr><td>KGraph project plans</td><td>The project node under <code>ROBOS_GRAPH_ROOT/.robos</code></td></tr>
+</tbody>
+</table>
+<p>For a team, copy the custom templates and persona file to each teammate who should plan the same way. See <a href="{{ '/build-apps/teams/' | relative_url }}">building as a team</a>.</p>
+
+<h2 id="limits">Limits and fixes</h2>
+<ul>
+<li><strong>Generation gives up after 3 minutes.</strong> Shorten the prompt, or plan one feature at a time.</li>
+<li><strong>"No task server configured."</strong> Click <strong>Open Task Servers</strong>, add one and save, then reopen Task Planner.</li>
+<li><strong>The agent fails or returns nothing.</strong> Check <code>gh copilot</code> works in a terminal and that you are signed in. Templates still work without it.</li>
+<li><strong>GitHub issues have no dependency links.</strong> That is expected; only Jira gets <em>Blocks</em> links. Implement tasks in order, or use Jira if you need the links.</li>
+<li><strong>The agent's persona choices are not kept.</strong> Cards start on the default persona even though the agent is asked to choose one, and Sync does not send the persona. Set it with a <code>role:</code> label, as in <a href="#sync">Create the issues</a>.</li>
+<li><strong>Sync fails on GitHub.</strong> Run <code>gh auth status</code> and check you can create issues in the repository.</li>
+</ul>
+
+<h2 id="next">Next</h2>
+<div class="role-cards">
+<a class="role-card" href="{{ '/task-implementer/' | relative_url }}"><b>Task Implementer →</b><span>Pick one of the new issues and let an agent build it on its own branch.</span></a>
+<a class="role-card" href="{{ '/build-apps/' | relative_url }}"><b>The build loop →</b><span>How Task Planner, Task Implementer and Agent Code Review fit together, with solo and team guides.</span></a>
+</div>
+<p>Reference: <a href="{{ '/v1/apps/task-planner/' | relative_url }}">Task Planner in the classic docs</a> · <a href="https://github.com/nddipiazza/robos/tree/main/packages/task-planner">Source code</a></p>
+
+<div class="guide-pager"><a class="prev" href="{{ '/build-apps/' | relative_url }}"><small>Previous</small>← Build apps</a><a class="next" href="{{ '/task-implementer/' | relative_url }}"><small>Next</small>Task Implementer →</a></div>
+</article>
+</div></div></section>

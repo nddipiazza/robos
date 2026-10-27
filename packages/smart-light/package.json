@@ -1,0 +1,9 @@
+{
+  "name": "robos-smart-light",
+  "version": "0.1.0",
+  "description": "Zero-cloud LAN Smart Light Studio (Philips WiZ, Hue Bridge, WLED, TP-Link Kasa, LIFX, Govee, Elgato Key Light), Room & Mood Scenes, Optional AI Lighting Designer, Circadian Daylight Curves, and Dev/CI Build Status Sync.",
+  "main": "main.js",
+  "dependencies": {
+    "electron": "^28.0.0"
+  }
+}

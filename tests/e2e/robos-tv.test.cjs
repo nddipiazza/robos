@@ -36,12 +36,15 @@ test('RobOS Smart TV Studio & 10-Foot Portal E2E Verification', async (t) => {
     assert.equal(TV_PLATFORMS.length, 5);
     const ids = TV_PLATFORMS.map((p) => p.id);
     assert.deepEqual(ids, [
+      'roku-os',
       'android-tv',
       'lg-webos',
       'samsung-tizen',
-      'roku-os',
       'moonlight-sunshine',
     ]);
+    for (const p of TV_PLATFORMS) {
+      assert.ok(Array.isArray(p.requiredPermissions) && p.requiredPermissions.length > 0, `Missing requiredPermissions for ${p.id}`);
+    }
     assert.equal(TEN_FOOT_LAUNCH_TILES.length, 8);
   });
 
@@ -142,6 +145,55 @@ test('RobOS Smart TV Studio & 10-Foot Portal E2E Verification', async (t) => {
       const renewRes = engine.renewWebosDevSession();
       assert.equal(renewRes.ok, true);
       assert.equal(renewRes.remainingHours, 1000);
+
+      // Cast Dev Central Dashboard to a Smart TV in the list
+      const castRes = await engine.castDevCentralDashboard({
+        tvId: 'tv-livingroom-tcl-roku',
+        dashboard: {
+          sprintName: 'Sprint 42 • 4d left',
+          activeFeature: {
+            code: 'FEAT-42',
+            name: 'Multi-Step Dynamic Form Validation',
+            status: 'IN_PROGRESS',
+            repository: 'acme-corp/buildbarn-forms',
+            service: 'forms-api',
+            progressPct: 75,
+          },
+          kpis: {
+            featureCode: 'FEAT-42',
+            featureStatus: 'IN PROGRESS',
+            tasksCount: 6,
+            prsCount: 4,
+            reviewsCount: 2,
+            blockersCount: 1,
+            ciHealth: '75%',
+          },
+          issues: [{ number: 201, title: 'Multi-Step Dynamic Form Submission', state: 'OPEN' }],
+          prs: [{ number: 84, title: 'feat(forms-api): Multi-step dynamic form validation', reviewDecision: 'APPROVED' }],
+          blockers: [{ label: 'Failed CI', text: 'PR #85: Session memory leak', severity: 'high' }],
+        },
+      });
+      assert.equal(castRes.ok, true);
+      assert.equal(castRes.castSession.active, true);
+      assert.equal(castRes.castSession.tvName, '65" TCL Roku TV (Living room)');
+
+      // Verify /dev-central 10-foot wallboard endpoint and /api/dev-central-cast
+      const wbRes = await httpGet(`http://127.0.0.1:${srv.port}/dev-central`);
+      assert.equal(wbRes.status, 200);
+      assert.ok(wbRes.body.includes('RobOS Dev Central — Mission Control Wallboard'));
+      assert.ok(wbRes.body.includes('65&quot; TCL Roku TV (Living room)'));
+      assert.ok(wbRes.body.includes('FEAT-42'));
+
+      const castApiRes = await httpGet(`http://127.0.0.1:${srv.port}/api/dev-central-cast`);
+      assert.equal(castApiRes.status, 200);
+      const castApiJson = JSON.parse(castApiRes.body);
+      assert.equal(castApiJson.ok, true);
+      assert.equal(castApiJson.cast.active, true);
+
+      // Stop casting
+      const stopRes = engine.stopDevCentralCast({ tvId: 'tv-livingroom-tcl-roku' });
+      assert.equal(stopRes.ok, true);
+      assert.equal(stopRes.devCentralCast.active, false);
     } finally {
       await engine.stopPortalServer();
     }

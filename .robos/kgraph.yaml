@@ -113,3 +113,9 @@ packages:
     title: "RobOS Point of Sale"
     description: "Retail, food-service and bar point of sale: catalog, inventory, orders, cash drawer, self-checkout and the open checkout API."
     path: "kgraphs/point-of-sale/package.jsonld"
+
+  - id: "dashboards"
+    namespace: "robos.dashboards"
+    title: "RobOS Graphical Dashboards, Layouts & Widget Cards"
+    description: "Composable graphical dashboards modeled as layouts of cards from a standard layout catalog where each widget is any RobOS component."
+    path: "kgraphs/dashboards/package.jsonld"
