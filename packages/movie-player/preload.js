@@ -3,7 +3,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('robosAudio', {
-  discoverSpeakers: () => ipcRenderer.invoke('audio:discover-speakers'),
+  discoverSpeakers: (opts) => ipcRenderer.invoke('audio:discover-speakers', opts || {}),
   getSpeakerStatus: (ip) => ipcRenderer.invoke('audio:get-speaker-status', ip),
   setSpeakerVolume: (ip, level, muted) => ipcRenderer.invoke('audio:set-speaker-volume', { ip, level, muted }),
   castFile: (ip, filePath, metadata) => ipcRenderer.invoke('audio:cast-file', { ip, filePath, metadata }),

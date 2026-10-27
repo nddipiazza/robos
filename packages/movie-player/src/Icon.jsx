@@ -10,6 +10,7 @@ const ICON_PATHS = {
   library: <g><path d="M4 19V5" /><path d="M9 19V5" /><path d="M14 19l3-14 4 1-3 14-4-1z" /></g>,
   cloud: <path d="M18 18a4 4 0 0 0 0-8 6 6 0 0 0-11.7 1.5A3.5 3.5 0 0 0 7 18h11z" />,
   wave: <path d="M2 12h3l2-6 4 12 3-9 2 3h6" />,
+  tv: <g><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="8" y1="22" x2="16" y2="22" /><line x1="12" y1="19" x2="12" y2="22" /></g>,
   speaker: <g><rect x="5" y="2" width="14" height="20" rx="2" /><circle cx="12" cy="14" r="4" /><line x1="12" y1="6" x2="12.01" y2="6" /></g>,
   rain: <g><path d="M18 12a4 4 0 0 0 0-8 6 6 0 0 0-11.7 1.5A3.5 3.5 0 0 0 7 12h11z" /><line x1="8" y1="16" x2="7" y2="20" /><line x1="12" y1="16" x2="11" y2="20" /><line x1="16" y1="16" x2="15" y2="20" /></g>,
   synth: <g><rect x="2" y="6" width="20" height="12" rx="1" /><line x1="7" y1="6" x2="7" y2="18" /><line x1="12" y1="6" x2="12" y2="18" /><line x1="17" y1="6" x2="17" y2="18" /></g>,
